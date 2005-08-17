@@ -88,16 +88,16 @@ public class LdapProvisioning extends Provisioning {
      */
     private static final int ENTRY_TTL = 1000*60*15; 
     private static final int MAX_ACCOUNT_CACHE = 5000;
-    private static LiquidLdapEntryCache sAccountCache = new LiquidLdapEntryCache(MAX_ACCOUNT_CACHE, ENTRY_TTL);
+    private static ZimbraLdapEntryCache sAccountCache = new ZimbraLdapEntryCache(MAX_ACCOUNT_CACHE, ENTRY_TTL);
 	
 	private static final int MAX_COS_CACHE = 100;
-    private static LiquidLdapEntryCache sCosCache = new LiquidLdapEntryCache(MAX_COS_CACHE, ENTRY_TTL);
+    private static ZimbraLdapEntryCache sCosCache = new ZimbraLdapEntryCache(MAX_COS_CACHE, ENTRY_TTL);
 	
     private static final int MAX_DOMAIN_CACHE = 100;
-    private static LiquidLdapEntryCache sDomainCache = new LiquidLdapEntryCache(MAX_DOMAIN_CACHE, ENTRY_TTL);
+    private static ZimbraLdapEntryCache sDomainCache = new ZimbraLdapEntryCache(MAX_DOMAIN_CACHE, ENTRY_TTL);
     
     private static final int MAX_SERVER_CACHE = 100;
-    private static LiquidLdapEntryCache sServerCache = new LiquidLdapEntryCache(MAX_SERVER_CACHE, ENTRY_TTL);
+    private static ZimbraLdapEntryCache sServerCache = new ZimbraLdapEntryCache(MAX_SERVER_CACHE, ENTRY_TTL);
 
     private static final int MAX_TIMEZONE_CACHE = 100;
     private static boolean sTimeZoneInited = false;
