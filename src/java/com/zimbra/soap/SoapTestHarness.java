@@ -447,7 +447,7 @@ public class SoapTestHarness {
     private static Map getURIs() {
         if (mURIs == null) {
             mURIs = new HashMap();
-            mURIs.put("liquid", "urn:zimbra");
+            mURIs.put("zimbra", "urn:zimbra");
             mURIs.put("acct", "urn:zimbraAccount");
             mURIs.put("mail", "urn:zimbraMail");
             mURIs.put("admin", "urn:zimbraAdmin");

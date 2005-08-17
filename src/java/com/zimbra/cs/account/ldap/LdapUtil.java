@@ -272,8 +272,8 @@ public class LdapUtil {
     
     /**
      * escape *()\ in specified string to make sure user-supplied string doesn't open a security hole.
-     * i.e., if the format string is "(sn=*%s*)", and the user types in "a)(liquidIsAdminAccount=TRUE)(cn=a",
-     * we don't want to search for "(sn=*a)(liquidIsAdminAccount=TRUE)(cn=a*)".
+     * i.e., if the format string is "(sn=*%s*)", and the user types in "a)(zimbraIsAdminAccount=TRUE)(cn=a",
+     * we don't want to search for "(sn=*a)(zimbraIsAdminAccount=TRUE)(cn=a*)".
      * 
      * @param s
      * @return
@@ -479,7 +479,7 @@ public class LdapUtil {
     }
     
     /**
-     * Given a dn like "uid=liquid,cn=admins,cn=liquid", return the string "liquid".
+     * Given a dn like "uid=zimbra,cn=admins,cn=zimbra", return the string "zimbra".
      * @param dn
      * @return
      */
@@ -581,7 +581,7 @@ public class LdapUtil {
       * %d = domain as foo.com
       * %D = domain as dc=foo,dc=com
       * 
-      * exchange example, where the exchange domian is different then the liquid one
+      * exchange example, where the exchange domian is different then the zimbra one
       * 
       * zimbraAuthMech      ldap
       * zimbraAuthLdapURL   ldap://exch1/
@@ -674,7 +674,7 @@ public class LdapUtil {
 
     /**
      * 
-     * @param ldapAttrMap value of liquidGalLdapAttrMap
+     * @param ldapAttrMap value of zimbraGalLdapAttrMap
      * @param attrsList list of ldap attributes to populate
      * @param attrMap map of ldap attr to address book field to populate
      */

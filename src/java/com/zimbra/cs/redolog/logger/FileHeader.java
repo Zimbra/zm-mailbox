@@ -34,7 +34,7 @@ import java.util.Arrays;
  *                    length  - 1 byte (0 to 127)
  *                    data    - up to 127 bytes of serverId in UTF-8
  *                    padding - 0-value bytes of length = 127 - length(data)
- *                  serverId is the liquidId LDAP attribute of the server entry
+ *                  serverId is the zimbraId LDAP attribute of the server entry
  *   firstOpTstamp  time of first op in file
  *   lastOpTstamp   time of last op in file
  *   padding        0-value bytes to bring total header size to 512
@@ -49,7 +49,7 @@ public class FileHeader {
     private long mFileSize;             // filesize
     private long mSeq;                  // log file sequence number
     private String mServerId;           // host on which the file was created
-                                        // liquidId attribute from LDAP
+                                        // zimbraId attribute from LDAP
     private long mFirstOpTstamp;        // time of first op in log file
     private long mLastOpTstamp;         // time of last op in log file
 

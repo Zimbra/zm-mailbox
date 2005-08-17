@@ -102,8 +102,8 @@ public class Zimbra {
         RedoLogProvider redoLog = RedoLogProvider.getInstance();
         redoLog.startup();
 
-        System.setProperty("javax.net.ssl.keyStore", "/opt/liquid/tomcat/conf/keystore");
-        System.setProperty("javax.net.ssl.keyStorePassword", "liquid");
+        System.setProperty("javax.net.ssl.keyStore", "/opt/zimbra/tomcat/conf/keystore");
+        System.setProperty("javax.net.ssl.keyStorePassword", "zimbra");
 
         if (!redoLog.isSlave()) {
             Server server = Provisioning.getInstance().getLocalServer();

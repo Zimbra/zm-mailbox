@@ -29,10 +29,10 @@ import org.dom4j.DocumentException;
 
 public class SoapEngine {
 
-    public static final String ZIMBRA_CONTEXT = "liquid.context";
-    public static final String DONT_CREATE_SESSION = "liquid.noSession";
-    public static final String IS_AUTH_COMMAND = "liquid.isAuthCommand";
-    private static final String IS_ADMIN_COMMAND = "liquid.isAdminCommand";
+    public static final String ZIMBRA_CONTEXT = "zimbra.context";
+    public static final String DONT_CREATE_SESSION = "zimbra.noSession";
+    public static final String IS_AUTH_COMMAND = "zimbra.isAuthCommand";
+    private static final String IS_ADMIN_COMMAND = "zimbra.isAdminCommand";
 
     /** context name of request IP */
     public static final String REQUEST_IP = "request.ip";

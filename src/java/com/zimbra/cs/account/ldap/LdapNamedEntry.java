@@ -8,7 +8,7 @@ import javax.naming.directory.Attributes;
 
 
 /**
- * And LdapEntry class that has a getId (liquidId attr) and the concept of a name that is unique within the liquid* objectClass.
+ * And LdapEntry class that has a getId (zimbraId attr) and the concept of a name that is unique within the zimbra* objectClass.
  * 
  * @author schemers
  *

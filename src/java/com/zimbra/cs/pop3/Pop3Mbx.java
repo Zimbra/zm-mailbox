@@ -72,7 +72,7 @@ class Pop3Mbx {
     
     /**
      * 
-     * @return the liquid mailbox id
+     * @return the zimbra mailbox id
      */
     int getId() {
         return mId;

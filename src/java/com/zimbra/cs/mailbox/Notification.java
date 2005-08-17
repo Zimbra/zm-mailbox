@@ -201,7 +201,7 @@ public class Notification {
             }
             
             // Auto-Submitted
-            out.setHeader("Auto-Submitted", "auto-replied (liquid; vacation)");
+            out.setHeader("Auto-Submitted", "auto-replied (zimbra; vacation)");
             
             // Precedence (discourage older systems from responding)
             out.setHeader("Precedence", "bulk");

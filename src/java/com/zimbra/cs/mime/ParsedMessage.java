@@ -322,15 +322,15 @@ public class ParsedMessage {
             return -1;
         }
 
-        Date liquidDate = null;
+        Date zimbraDate = null;
         synchronized (sFormat) {
             try {
-                liquidDate = sFormat.parse(zimbraHeader);
+                zimbraDate = sFormat.parse(zimbraHeader);
             } catch (ParseException e) {
                 return -1;
             }
         }
-        return (liquidDate == null ? -1 : liquidDate.getTime());
+        return (zimbraDate == null ? -1 : zimbraDate.getTime());
     }
 
     public List /*<Document>*/ getLuceneDocuments() {

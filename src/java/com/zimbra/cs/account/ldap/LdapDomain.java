@@ -56,7 +56,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
      * @see com.zimbra.cs.account.Domain#getAllAccounts()
      */
     public List getAllAccounts() throws ServiceException {
-        return searchAccounts("(objectclass=liquidAccount)", null, null, true);
+        return searchAccounts("(objectclass=zimbraAccount)", null, null, true);
     }
     
     
@@ -92,7 +92,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
         return results;
     }
     
-    private static final String ZIMBRA_DEF = "liquid";
+    private static final String ZIMBRA_DEF = "zimbra";
 
     public static String getFilterDef(String name) throws ServiceException {
         String queryExprs[] = Provisioning.getInstance().getConfig().getMultiAttr(Provisioning.A_zimbraGalLdapFilterDef);

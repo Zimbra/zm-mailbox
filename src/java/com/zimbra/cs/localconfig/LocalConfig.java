@@ -29,9 +29,9 @@ public class LocalConfig {
     private String mConfigFile;
     
     private String defaultConfigFile() {
-        String lqHome = System.getProperty("liquid.home");
+        String lqHome = System.getProperty("zimbra.home");
         if (lqHome == null) {
-            lqHome = File.separator + "opt" + File.separator + "liquid";
+            lqHome = File.separator + "opt" + File.separator + "zimbra";
         }
         return lqHome + File.separator + "conf" + File.separator + "localconfig.xml";
     }

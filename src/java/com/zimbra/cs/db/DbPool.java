@@ -113,7 +113,7 @@ public class DbPool {
         
         String myAddress = LC.mysql_bind_address.value();
         String myPort = LC.mysql_port.value();
-        String url = "jdbc:mysql://" + myAddress + ":" + myPort + "/liquid";
+        String url = "jdbc:mysql://" + myAddress + ":" + myPort + "/zimbra";
 
         Properties props = getZimbraDbProps();
         // TODO: need to tune these
@@ -133,7 +133,7 @@ public class DbPool {
         	Class.forName("com.mysql.jdbc.Driver");
         	Class.forName("org.apache.commons.dbcp.PoolingDriver");
             mPoolingDriver = (PoolingDriver) DriverManager.getDriver("jdbc:apache:commons:dbcp:");
-            mPoolingDriver.registerPool("liquid", cpool);
+            mPoolingDriver.registerPool("zimbra", cpool);
         } catch (ClassNotFoundException e) {
             mLog.fatal("can't init Pool", e);
             System.exit(1);
@@ -165,9 +165,9 @@ public class DbPool {
         //props.put("maxReconnects", "3""); // max number of reconnects to attempt
 
         // Set/override MySQL Connector/J connection properties from
-        // localconfig.  Localconfig keys with "liquid_mysql_connector."
+        // localconfig.  Localconfig keys with "zimbra_mysql_connector."
         // prefix are used.
-        String prefix = "liquid_mysql_connector.";
+        String prefix = "zimbra_mysql_connector.";
         int prefixLen = prefix.length();
         String[] keys = LC.getAllKeys();
         for (int i = 0; i < keys.length; i++) {
@@ -195,7 +195,7 @@ public class DbPool {
             // props.put("explainSlowQueries", "true");
         }
         
-        // These properties cannot be set with "liquid_mysql_connector." keys.
+        // These properties cannot be set with "zimbra_mysql_connector." keys.
         props.put("user", LC.zimbra_mysql_user.value());
         props.put("password", LC.zimbra_mysql_password.value());
 
@@ -203,7 +203,7 @@ public class DbPool {
     }
     
     /**
-     * return a connection to use for the liquid database.
+     * return a connection to use for the zimbra database.
      * @param 
      * @return
      * @throws ServiceException
@@ -212,7 +212,7 @@ public class DbPool {
         java.sql.Connection conn = null;
 
         try {
-	        String url = "jdbc:apache:commons:dbcp:liquid";
+	        String url = "jdbc:apache:commons:dbcp:zimbra";
 	        conn = DriverManager.getConnection(url);
 	        
 	        if (conn.getAutoCommit() != false)

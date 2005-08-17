@@ -187,7 +187,7 @@ public class Check {
         attrs.put(Provisioning.A_zimbraGalLdapURL, "ldap://exch1.example.zimbra.com/");
         attrs.put(Provisioning.A_zimbraGalLdapBindDn, "zz_gal");
         attrs.put(Provisioning.A_zimbraGalLdapBindPassword, "zz_gal");
-        attrs.put(Provisioning.A_zimbraGalLdapSearchBase, "dc=liquidsys,dc=com");        
+        attrs.put(Provisioning.A_zimbraGalLdapSearchBase, "dc=example,dc=zimbra,dc=com");        
         attrs.put(Provisioning.A_zimbraGalLdapFilter, "ad");
         try {
             Result r = checkGalConfig(attrs, "sam", 10);

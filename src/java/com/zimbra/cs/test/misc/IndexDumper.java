@@ -23,7 +23,7 @@ import com.zimbra.cs.index.LuceneFields;
 public class IndexDumper {
 
     public static void main(String[] args) throws IOException {
-        IndexReader reader = IndexReader.open("/tmp/liquid/index");
+        IndexReader reader = IndexReader.open("/tmp/zimbra/index");
         TermEnum terms = reader.terms();
         while (terms.next()) {
             if (terms.term().field().equals(LuceneFields.L_MAILBOX_BLOB_ID)) {

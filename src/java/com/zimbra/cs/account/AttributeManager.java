@@ -16,7 +16,7 @@ import com.zimbra.cs.util.ZimbraLog;
 
 public class AttributeManager {
 
-    private static final String ZIMBRA_ATTRS_RESOURCE = "liquidattrs.xml";
+    private static final String ZIMBRA_ATTRS_RESOURCE = "zimbraattrs.xml";
 
     private static final String E_ATTRS = "attrs";
     private static final String E_ATTR = "attr";
@@ -184,7 +184,7 @@ public class AttributeManager {
         HashMap attrs = new HashMap();
         attrs.put(Provisioning.A_zimbraAccountStatus, Provisioning.ACCOUNT_STATUS_ACTIVE);
         attrs.put(Provisioning.A_zimbraImapBindPort, "143");
-        attrs.put("xxxliquidImapBindPort", "143");
+        attrs.put("xxxzimbraImapBindPort", "143");
         attrs.put(Provisioning.A_zimbraPrefOutOfOfficeReply, null);
         attrs.put(Provisioning.A_zimbraPrefOutOfOfficeReplyEnabled, "FALSE");
         Map context = new HashMap();

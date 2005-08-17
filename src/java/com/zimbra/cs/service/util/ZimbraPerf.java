@@ -29,7 +29,7 @@ public class ZimbraPerf {
     /**
      * The number of statements that were executed, as reported by
      * the JDBC driver.  This number only gets updated when debug logging
-     * is turned on for the <code>liquid.sqltrace</code> category.
+     * is turned on for the <code>zimbra.sqltrace</code> category.
      */
     private static int sStatementCount = 0;
     
