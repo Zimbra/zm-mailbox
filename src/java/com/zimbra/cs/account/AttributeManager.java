@@ -16,7 +16,7 @@ import com.zimbra.cs.util.ZimbraLog;
 
 public class AttributeManager {
 
-    private static final String LIQUID_ATTRS_RESOURCE = "liquidattrs.xml";
+    private static final String ZIMBRA_ATTRS_RESOURCE = "liquidattrs.xml";
 
     private static final String E_ATTRS = "attrs";
     private static final String E_ATTR = "attr";
@@ -36,7 +36,7 @@ public class AttributeManager {
         if (mInstance == null) synchronized(AttributeManager.class) {
             if (mInstance == null)
                 mInstance = new AttributeManager();
-                String file = LIQUID_ATTRS_RESOURCE;
+                String file = ZIMBRA_ATTRS_RESOURCE;
                 
                 InputStream is = null;
                 try {

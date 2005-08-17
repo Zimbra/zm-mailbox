@@ -16,18 +16,18 @@ import org.dom4j.QName;
  */
 public class ZimbraNamespace {
 	
-	public static final String LIQUID_STR = "urn:liquid";
-	public static final Namespace LIQUID = Namespace.get(LIQUID_STR);
+	public static final String ZIMBRA_STR = "urn:liquid";
+	public static final Namespace ZIMBRA = Namespace.get(ZIMBRA_STR);
 
-    public static final QName E_BATCH_REQUEST = QName.get("BatchRequest", LIQUID);
-    public static final QName E_BATCH_RESPONSE = QName.get("BatchResponse", LIQUID);
-    public static final QName E_CODE = QName.get("Code", LIQUID); 
-    public static final QName E_ERROR = QName.get("Error", LIQUID); 
+    public static final QName E_BATCH_REQUEST = QName.get("BatchRequest", ZIMBRA);
+    public static final QName E_BATCH_RESPONSE = QName.get("BatchResponse", ZIMBRA);
+    public static final QName E_CODE = QName.get("Code", ZIMBRA); 
+    public static final QName E_ERROR = QName.get("Error", ZIMBRA); 
 
     public static final String A_ONERROR = "onerror";
     public static final String DEF_ONERROR = "continue";
     
-	public static final String LIQUID_ACCOUNT_STR = "urn:liquidAccount";
-	public static final Namespace LIQUID_ACCOUNT = Namespace.get(LIQUID_ACCOUNT_STR);
+	public static final String ZIMBRA_ACCOUNT_STR = "urn:liquidAccount";
+	public static final Namespace ZIMBRA_ACCOUNT = Namespace.get(ZIMBRA_ACCOUNT_STR);
 
 }

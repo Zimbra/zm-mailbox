@@ -1832,7 +1832,7 @@ public class LdapProvisioning extends Provisioning {
             Config config = Provisioning.getInstance().getConfig();
             long freq = config.getTimeInterval(
                     Provisioning.A_liquidLastLogonTimestampFrequency,
-                    com.zimbra.cs.util.Config.D_LIQUID_LAST_LOGON_TIMESTAMP_FREQUENCY);
+                    com.zimbra.cs.util.Config.D_ZIMBRA_LAST_LOGON_TIMESTAMP_FREQUENCY);
             long current = System.currentTimeMillis();
             if (current - freq >= lastLogon.getTime()) {
                 HashMap attrs = new HashMap();
@@ -1853,7 +1853,7 @@ public class LdapProvisioning extends Provisioning {
     private void verifyPassword(Account acct, String password) throws ServiceException {
         String encodedPassword = acct.getAttr(Provisioning.A_userPassword);
         
-        String authMech = Provisioning.AM_LIQUID;        
+        String authMech = Provisioning.AM_ZIMBRA;        
 
         Domain d = acct.getDomain();
         // see if it specifies an alternate auth
@@ -1888,7 +1888,7 @@ public class LdapProvisioning extends Provisioning {
             if (bindDn == null)
                 ZimbraLog.account.warn("attr not set "+Provisioning.A_liquidAuthLdapBindDn+", falling back to default mech");            
             // fallback to liquid
-        } else if (!authMech.equals(Provisioning.AM_LIQUID)) {
+        } else if (!authMech.equals(Provisioning.AM_ZIMBRA)) {
             ZimbraLog.account.warn("unknown value for "+Provisioning.A_liquidAuthMech+": "+
                     authMech+", falling back to default mech");
             // fallback to liquid

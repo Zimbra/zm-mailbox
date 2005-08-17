@@ -29,7 +29,7 @@ import org.dom4j.DocumentException;
 
 public class SoapEngine {
 
-    public static final String LIQUID_CONTEXT = "liquid.context";
+    public static final String ZIMBRA_CONTEXT = "liquid.context";
     public static final String DONT_CREATE_SESSION = "liquid.noSession";
     public static final String IS_AUTH_COMMAND = "liquid.isAuthCommand";
     private static final String IS_ADMIN_COMMAND = "liquid.isAdminCommand";
@@ -111,7 +111,7 @@ public class SoapEngine {
             String ip = (String) context.get(REQUEST_IP);
             if (ip != null) ZimbraLog.addToContext(ZimbraLog.C_IP, ip);
 
-            context.put(LIQUID_CONTEXT, liquidContext);
+            context.put(ZIMBRA_CONTEXT, liquidContext);
 
             Element doc = soapProto.getBodyElement(envelope);
 

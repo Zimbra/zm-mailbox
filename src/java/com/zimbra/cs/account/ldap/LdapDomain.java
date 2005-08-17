@@ -77,7 +77,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
         String mode = getAttr(Provisioning.A_liquidGalMode);
         int maxResults = getIntAttr(Provisioning.A_liquidGalMaxResults, DEFAULT_GAL_MAX_RESULTS);
                 
-        if (mode == null || mode.equals(Provisioning.GM_LIQUID))
+        if (mode == null || mode.equals(Provisioning.GM_ZIMBRA))
             return searchZimbraGal(n, maxResults);
         
         List results = null; 
@@ -92,7 +92,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
         return results;
     }
     
-    private static final String LIQUID_DEF = "liquid";
+    private static final String ZIMBRA_DEF = "liquid";
 
     public static String getFilterDef(String name) throws ServiceException {
         String queryExprs[] = Provisioning.getInstance().getConfig().getMultiAttr(Provisioning.A_liquidGalLdapFilterDef);
@@ -134,7 +134,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
      * @see com.zimbra.cs.account.Provisioning#searchGal(java.lang.String)
      */
     private List searchZimbraGal(String n, int maxResults) throws ServiceException {
-        String queryExpr = getFilterDef(LIQUID_DEF);
+        String queryExpr = getFilterDef(ZIMBRA_DEF);
         ArrayList result = new ArrayList();
         if (queryExpr == null)
             return result;

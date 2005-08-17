@@ -21,8 +21,8 @@ import com.zimbra.cs.service.ServiceException;
  */
 public class Config {
 
-	public static final String C_COMMON_LIQUID_HOME = "common.liquidHome";
-	public static final String D_COMMON_LIQUID_HOME = "/opt/liquid";
+	public static final String C_COMMON_ZIMBRA_HOME = "common.liquidHome";
+	public static final String D_COMMON_ZIMBRA_HOME = "/opt/liquid";
 
     public static final String C_STORE_COMPRESS_BLOBS = "store.compressBlobs";
     public static final boolean D_STORE_COMPRESS_BLOBS = false;
@@ -36,7 +36,7 @@ public class Config {
     public static final int D_SMTP_PORT = 25;
 
     // update ever 7 days by default
-    public static final long D_LIQUID_LAST_LOGON_TIMESTAMP_FREQUENCY = 1000*60*60*24*7;
+    public static final long D_ZIMBRA_LAST_LOGON_TIMESTAMP_FREQUENCY = 1000*60*60*24*7;
     
     private static Map mConfigMap;
     private static Timestamp mYoungest;
@@ -122,7 +122,7 @@ public class Config {
         if (first == File.separatorChar || first == '/')
             return new File(path);
 
-    	String home = Config.getString(C_COMMON_LIQUID_HOME, D_COMMON_LIQUID_HOME);
+    	String home = Config.getString(C_COMMON_ZIMBRA_HOME, D_COMMON_ZIMBRA_HOME);
     	return new File(home, path);
     }
 

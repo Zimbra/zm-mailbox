@@ -31,7 +31,7 @@ public class ZimbraContext {
 
 	private static Log mLog = LogFactory.getLog(ZimbraContext.class);
 
-	public static final QName CONTEXT = QName.get("context", ZimbraNamespace.LIQUID);
+	public static final QName CONTEXT = QName.get("context", ZimbraNamespace.ZIMBRA);
     public static final String E_NO_NOTIFY  = "nonotify";
     public static final String E_FORMAT     = "format";
     public static final String A_TYPE       = "type";
@@ -114,7 +114,7 @@ public class ZimbraContext {
         // check for atoken in engine context if not in header  
 		String atoken = (ctxt == null ? null : ctxt.getAttribute(E_AUTH_TOKEN, null));
 		if (atoken == null)
-		    atoken = (String) context.get(SoapServlet.LIQUID_AUTH_TOKEN);
+		    atoken = (String) context.get(SoapServlet.ZIMBRA_AUTH_TOKEN);
 
 		if (atoken != null && !atoken.equals("")) {
 			try {

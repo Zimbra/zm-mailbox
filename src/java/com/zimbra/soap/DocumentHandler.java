@@ -20,7 +20,7 @@ public abstract class DocumentHandler {
 	public abstract Element handle(Element document, Map context) throws ServiceException;
 	
 	public ZimbraContext getZimbraContext(Map context) {
-		return (ZimbraContext) context.get(SoapEngine.LIQUID_CONTEXT);
+		return (ZimbraContext) context.get(SoapEngine.ZIMBRA_CONTEXT);
 	}
 
     public Account getRequestedAccount(ZimbraContext lc) throws ServiceException {

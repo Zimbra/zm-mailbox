@@ -39,7 +39,7 @@ public class StatsImageServlet extends ZimbraServlet {
     //parts of image names
     private static final String IMG_RCVD_DATA = "LmtpRcvdData.";
     private static final String IMG_RCVD_MSGS = "LmtpRcvdMsgs.";
-    private static final String IMG_LIQUID = "liquid.";
+    private static final String IMG_ZIMBRA = "liquid.";
     private static final String IMG_DB = "db.";
     private static final String IMG_STORE = "store.";
     private static final String IMG_INDEX = "index.";
@@ -134,7 +134,7 @@ public class StatsImageServlet extends ZimbraServlet {
         	} else if (reqParts[4].equalsIgnoreCase("rcvdmsgs")) {
         		imgName = imgName.concat(IMG_RCVD_MSGS);        		
         	} else if (reqParts[4].equalsIgnoreCase("liquid")) {
-        		imgName = imgName.concat(IMG_LIQUID);        		
+        		imgName = imgName.concat(IMG_ZIMBRA);        		
         	} else if (reqParts[4].equalsIgnoreCase("db")) {
         		imgName = imgName.concat(IMG_DB);        		
         	} else if (reqParts[4].equalsIgnoreCase("store")) {

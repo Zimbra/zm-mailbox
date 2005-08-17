@@ -84,7 +84,7 @@ public class RedoConfig {
     private static final String D_REDOLOG_PATH = "redolog/redo.log";
     /**
      * The path to the redo.log file.  Relative path is resolved against
-     * LIQUID_HOME.  Default value is "$LIQUID_HOME/redolog/redo.log".
+     * ZIMBRA_HOME.  Default value is "$ZIMBRA_HOME/redolog/redo.log".
      * @return absolute path to redo log file
      */
     public static synchronized String redoLogPath() {

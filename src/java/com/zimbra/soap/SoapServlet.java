@@ -26,7 +26,7 @@ public class SoapServlet extends ZimbraServlet {
     private static final String PARAM_ENGINE_HANDLER = "engine.handler.";
 
     /** context name of auth token extracted from cookie */
-    public static final String LIQUID_AUTH_TOKEN = "liquid.authToken";    
+    public static final String ZIMBRA_AUTH_TOKEN = "liquid.authToken";    
     /** context name of servlet HTTP request */
     public static final String SERVLET_REQUEST = "servlet.request";
     

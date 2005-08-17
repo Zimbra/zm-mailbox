@@ -33,7 +33,7 @@ public abstract class Provisioning {
     /**
      * only use internal
      */
-    public static final String GM_LIQUID = "liquid";
+    public static final String GM_ZIMBRA = "liquid";
     
     /**
      * only use exteranl gal
@@ -48,7 +48,7 @@ public abstract class Provisioning {
     /**
      * liquidAuthMech type of "liquid" means our own (use userPassword)
      */
-    public static final String AM_LIQUID = "liquid";
+    public static final String AM_ZIMBRA = "liquid";
     
     /**
      * liquidAuthMech type of "ldap" means use configured LDAP attrs
@@ -227,7 +227,7 @@ public abstract class Provisioning {
     public static final String A_liquidAuthTokenKey = "liquidAuthTokenKey";
 
     /**
-     * auth mech to use. should be AM_LIQUID or AM_LDAP. 
+     * auth mech to use. should be AM_ZIMBRA or AM_LDAP. 
      */
     public static final String A_liquidAuthMech = "liquidAuthMech";
     
