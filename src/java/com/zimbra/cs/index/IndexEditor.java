@@ -172,10 +172,10 @@ public class IndexEditor {
 	    
 	    public ZimbraQueryResults runQuery(String qstr, byte[] types, int sortBy) throws IOException, MailServiceException, ParseException, ServiceException
 	    {
-	        ZimbraQuery lq = new ZimbraQuery(qstr, Mailbox.getMailboxById(mMailboxId));
+	        ZimbraQuery zq = new ZimbraQuery(qstr, Mailbox.getMailboxById(mMailboxId));
             
-//	        return new SingleQueryResults(mMailbox.search(lq, types, sortBy), mMailbox);
-            return mMailbox.search(lq, types, sortBy, false, false); 
+//	        return new SingleQueryResults(mMailbox.search(zq, types, sortBy), mMailbox);
+            return mMailbox.search(zq, types, sortBy, false, false); 
 	    }
 	}
 	
@@ -209,8 +209,8 @@ public class IndexEditor {
 	    {
 	        ZimbraQueryResults[] res = new ZimbraQueryResults[mMailbox.length];
 	        for (int i = 0; i < mMailbox.length; i++) {
-		        ZimbraQuery lq = new ZimbraQuery(qstr, Mailbox.getMailboxById(mMailboxId[i]));
-	            res[i] = mMailbox[i].search(lq, types, sortBy, false, false);
+		        ZimbraQuery zq = new ZimbraQuery(qstr, Mailbox.getMailboxById(mMailboxId[i]));
+	            res[i] = mMailbox[i].search(zq, types, sortBy, false, false);
 	        }
 	        return new HitIdGrouper(new MultiQueryResults(res, sortBy), sortBy);
 	    }
@@ -229,8 +229,8 @@ public class IndexEditor {
 	        outputStream.println("\n\nTest 1: "+qstr);
 	        long startTime = System.currentTimeMillis();
 	        
-	        //ZimbraQuery lq = new ZimbraQuery(qstr, Mailbox.getMailboxById(mailboxId));
-	        //        		Hits hits = searcher.search(lq);
+	        //ZimbraQuery zq = new ZimbraQuery(qstr, Mailbox.getMailboxById(mailboxId));
+	        //        		Hits hits = searcher.search(zq);
 	        
 //	        int groupBy = MailboxIndex.SEARCH_RETURN_MESSAGES;
 //	        if (conv) {
@@ -332,8 +332,8 @@ public class IndexEditor {
 //        			return;
 //        		}
 //        		outputStream.println("\n\nTest 1: "+qstr);
-//        		ZimbraQuery lq = new ZimbraQuery(qstr);
-//        		SimpleQueryResults hits = searcher.search(lq,1,101);
+//        		ZimbraQuery zq = new ZimbraQuery(qstr);
+//        		SimpleQueryResults hits = searcher.search(zq,1,101);
 //        		try {
 //        		
 //        		    if (hits==null) {

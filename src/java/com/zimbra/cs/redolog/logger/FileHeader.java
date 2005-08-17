@@ -21,7 +21,7 @@ import java.util.Arrays;
  * Header for a redolog file.  Redolog header is exactly 512 bytes long.
  * The fields are:
  * 
- *   MAGIC          7 bytes containing "LQ_REDO"
+ *   MAGIC          7 bytes containing "ZM_REDO"
  *   open           1 byte (1 or 0)
  *                  0 means file was closed normally
  *                  1 means either file is currently open, or process died
@@ -43,7 +43,7 @@ public class FileHeader {
 
     public static final int HEADER_LEN = 512;
     private static final int SERVER_ID_FIELD_LEN = 127;
-    private static final byte[] MAGIC = "LQ_REDO".getBytes();
+    private static final byte[] MAGIC = "ZM_REDO".getBytes();
 
     private byte mOpen;                 // logfile is open or closed
     private long mFileSize;             // filesize
