@@ -26,10 +26,10 @@ public interface Account extends NamedEntry {
     public String getAccountStatus();
     
     /**
-     * combines all liquidPref* attributes from the Account and the COS and returns as a map. Account preferences
+     * combines all zimbraPref* attributes from the Account and the COS and returns as a map. Account preferences
      * override COS preferences.
      *  
-     * @param prefsOnly return only liquidPref* attrs.
+     * @param prefsOnly return only zimbraPref* attrs.
      * @param applyCos apply COS attributes
      * @return
      * @throws ServiceException

@@ -29,8 +29,8 @@ public class ModifyPrefs extends WriteOpDocumentHandler {
             Element e = (Element) it.next();
             String name = e.getAttribute(AccountService.A_NAME);
             String value = e.getText();
-    		    if (!name.startsWith("liquidPref")) {
-    		        throw ServiceException.INVALID_REQUEST("pref name must start with liquidPref", null);
+    		    if (!name.startsWith("zimbraPref")) {
+    		        throw ServiceException.INVALID_REQUEST("pref name must start with zimbraPref", null);
     		    }
     		    prefs.put(name, value);
         }

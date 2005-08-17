@@ -21,8 +21,8 @@ import com.zimbra.cs.service.ServiceException;
  */
 public class Config {
 
-	public static final String C_COMMON_ZIMBRA_HOME = "common.liquidHome";
-	public static final String D_COMMON_ZIMBRA_HOME = "/opt/liquid";
+	public static final String C_COMMON_ZIMBRA_HOME = "common.zimbraHome";
+	public static final String D_COMMON_ZIMBRA_HOME = "/opt/zimbra";
 
     public static final String C_STORE_COMPRESS_BLOBS = "store.compressBlobs";
     public static final boolean D_STORE_COMPRESS_BLOBS = false;

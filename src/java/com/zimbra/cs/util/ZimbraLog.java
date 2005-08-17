@@ -57,99 +57,99 @@ public class ZimbraLog {
     private static final String C_MID = "mid";    
     
     /**
-     * the "liquid.misc" logger. For all events that don't have a specific-catagory.
+     * the "zimbra.misc" logger. For all events that don't have a specific-catagory.
      */
-    public static final org.apache.commons.logging.Log misc = LogFactory.getLog("liquid.misc");
+    public static final org.apache.commons.logging.Log misc = LogFactory.getLog("zimbra.misc");
     
     /**
-     * the "liquid.index" logger. For indexing-related events.
+     * the "zimbra.index" logger. For indexing-related events.
      */
-    public static final org.apache.commons.logging.Log index = LogFactory.getLog("liquid.index");
+    public static final org.apache.commons.logging.Log index = LogFactory.getLog("zimbra.index");
     
     /**
-     * the "liquid.journal" logger. For journal-releated events.
+     * the "zimbra.journal" logger. For journal-releated events.
      */
-    public static final org.apache.commons.logging.Log journal = LogFactory.getLog("liquid.journal");
+    public static final org.apache.commons.logging.Log journal = LogFactory.getLog("zimbra.journal");
     
     /**
-     * the "liquid.lmtp" logger. For LMTP-related events.
+     * the "zimbra.lmtp" logger. For LMTP-related events.
      */
-    public static final org.apache.commons.logging.Log lmtp = LogFactory.getLog("liquid.lmtp");
+    public static final org.apache.commons.logging.Log lmtp = LogFactory.getLog("zimbra.lmtp");
     
     /**
-     * the "liquid.imap" logger. For IMAP-related events.
+     * the "zimbra.imap" logger. For IMAP-related events.
      */
-    public static final org.apache.commons.logging.Log imap = LogFactory.getLog("liquid.imap");
+    public static final org.apache.commons.logging.Log imap = LogFactory.getLog("zimbra.imap");
     
     /**
-     * the "liquid.imap" logger. For POP-related events.
+     * the "zimbra.imap" logger. For POP-related events.
      */
-    public static final org.apache.commons.logging.Log pop = LogFactory.getLog("liquid.pop");
+    public static final org.apache.commons.logging.Log pop = LogFactory.getLog("zimbra.pop");
     
     /**
-     * the "liquid.mailbox" logger. For mailbox-related events.
+     * the "zimbra.mailbox" logger. For mailbox-related events.
      */
-    public static final org.apache.commons.logging.Log mailbox = LogFactory.getLog("liquid.mailbox");
+    public static final org.apache.commons.logging.Log mailbox = LogFactory.getLog("zimbra.mailbox");
     
     /**
-     * the "liquid.calendar" logger. For calendar-related events.
+     * the "zimbra.calendar" logger. For calendar-related events.
      */
-    public static final org.apache.commons.logging.Log calendar = LogFactory.getLog("liquid.calendar");
+    public static final org.apache.commons.logging.Log calendar = LogFactory.getLog("zimbra.calendar");
     
     /**
-     * the "liquid.account" logger. For account-related events.
+     * the "zimbra.account" logger. For account-related events.
      */
-    public static final org.apache.commons.logging.Log account = LogFactory.getLog("liquid.account");
+    public static final org.apache.commons.logging.Log account = LogFactory.getLog("zimbra.account");
     
     /**
-     * the "liquid.security" logger. For security-related events
+     * the "zimbra.security" logger. For security-related events
      */
-    public static final org.apache.commons.logging.Log security = LogFactory.getLog("liquid.security");    
+    public static final org.apache.commons.logging.Log security = LogFactory.getLog("zimbra.security");    
 
     /**
-     * the "liquid.soap" logger. For soap-related events
+     * the "zimbra.soap" logger. For soap-related events
      */
-    public static final org.apache.commons.logging.Log soap = LogFactory.getLog("liquid.soap");
+    public static final org.apache.commons.logging.Log soap = LogFactory.getLog("zimbra.soap");
 
     /**
-     * the "liquid.test" logger. For testing-related events
+     * the "zimbra.test" logger. For testing-related events
      */
-    public static final org.apache.commons.logging.Log test = LogFactory.getLog("liquid.test");
+    public static final org.apache.commons.logging.Log test = LogFactory.getLog("zimbra.test");
 
     /**
-     * the "liquid.sqltrace" logger. For tracing SQL statements sent to the database
+     * the "zimbra.sqltrace" logger. For tracing SQL statements sent to the database
      */
-    public static final org.apache.commons.logging.Log sqltrace = LogFactory.getLog("liquid.sqltrace");
+    public static final org.apache.commons.logging.Log sqltrace = LogFactory.getLog("zimbra.sqltrace");
 
     /**
-     * the "liquid.perf" logger. For logging performance statistics
+     * the "zimbra.perf" logger. For logging performance statistics
      */
-    public static final org.apache.commons.logging.Log perf = LogFactory.getLog("liquid.perf");
+    public static final org.apache.commons.logging.Log perf = LogFactory.getLog("zimbra.perf");
 
     /**
-     * the "liquid.cache" logger. For tracing object cache activity
+     * the "zimbra.cache" logger. For tracing object cache activity
      */
-    public static final org.apache.commons.logging.Log cache = LogFactory.getLog("liquid.cache");
+    public static final org.apache.commons.logging.Log cache = LogFactory.getLog("zimbra.cache");
     
     /**
-     * the "liquid.ozserver" logger. For tracing ozserver framework
+     * the "zimbra.ozserver" logger. For tracing ozserver framework
      */
-    public static final org.apache.commons.logging.Log ozserver = LogFactory.getLog("liquid.ozserver");
+    public static final org.apache.commons.logging.Log ozserver = LogFactory.getLog("zimbra.ozserver");
     
     /**
-     * the "liquid.filter" logger. For filter-related logs.
+     * the "zimbra.filter" logger. For filter-related logs.
      */
-    public static final org.apache.commons.logging.Log filter = LogFactory.getLog("liquid.filter");
+    public static final org.apache.commons.logging.Log filter = LogFactory.getLog("zimbra.filter");
     
     /**
-     * the "liquid.backup" logger. For backup/restore-related logs.
+     * the "zimbra.backup" logger. For backup/restore-related logs.
      */
-    public static final org.apache.commons.logging.Log backup = LogFactory.getLog("liquid.backup");
+    public static final org.apache.commons.logging.Log backup = LogFactory.getLog("zimbra.backup");
     
     /**
-     * the "liquid.system" logger. For startup/shutdown and other related logs.
+     * the "zimbra.system" logger. For startup/shutdown and other related logs.
      */
-    public static final org.apache.commons.logging.Log system = LogFactory.getLog("liquid.system");
+    public static final org.apache.commons.logging.Log system = LogFactory.getLog("zimbra.system");
     
     public static String getContext() {
         return NDC.peek();
@@ -224,11 +224,11 @@ public class ZimbraLog {
     /**
      * Setup log4j for our command line tools.  
      * 
-     * If System.getProperty(liquid.log4j.level) is set then log at that level.
+     * If System.getProperty(zimbra.log4j.level) is set then log at that level.
      * Else log at the specified defaultLevel.
      */
     public static void toolSetupLog4j(String defaultLevel) {
-        String level = System.getProperty("liquid.log4j.level");
+        String level = System.getProperty("zimbra.log4j.level");
         if (level == null) {
             level = defaultLevel;
         }
@@ -242,7 +242,7 @@ public class ZimbraLog {
 
     /**
      * Setup log4j for command line tool using specified log4j.properties file.
-     * If file doesn't exist System.getProperty(liquid.home)/conf/log4j.properties
+     * If file doesn't exist System.getProperty(zimbra.home)/conf/log4j.properties
      * file will be used.
      * @param defaultLevel
      * @param propsFile full path to log4j.properties file

@@ -49,17 +49,17 @@ public class LC {
         // class is run.
     }
 
-    public static final KnownKey liquid_home;
-    public static final KnownKey liquid_java_home;
-    public static final KnownKey liquid_log_directory;
-    public static final KnownKey liquid_index_directory;
-    public static final KnownKey liquid_store_directory;
-    public static final KnownKey liquid_db_directory;
-    public static final KnownKey liquid_mysql_user;
-    public static final KnownKey liquid_mysql_password;
-    public static final KnownKey liquid_ldap_userdn;
-    public static final KnownKey liquid_ldap_password;
-    public static final KnownKey liquid_server_hostname;
+    public static final KnownKey zimbra_home;
+    public static final KnownKey zimbra_java_home;
+    public static final KnownKey zimbra_log_directory;
+    public static final KnownKey zimbra_index_directory;
+    public static final KnownKey zimbra_store_directory;
+    public static final KnownKey zimbra_db_directory;
+    public static final KnownKey zimbra_mysql_user;
+    public static final KnownKey zimbra_mysql_password;
+    public static final KnownKey zimbra_ldap_userdn;
+    public static final KnownKey zimbra_ldap_password;
+    public static final KnownKey zimbra_server_hostname;
     
     public static final KnownKey stats_img_folder;
     
@@ -107,80 +107,80 @@ public class LC {
             uhe.printStackTrace();
         }
 
-        liquid_home = new KnownKey("liquid_home");
-        liquid_home.setDefault(FS + "opt" + FS + "liquid");
-        liquid_home.setForceToEdit(true);
-        liquid_home.setDoc
-            ("Zimbra installation root and home directory of `liquid'" + 
+        zimbra_home = new KnownKey("zimbra_home");
+        zimbra_home.setDefault(FS + "opt" + FS + "zimbra");
+        zimbra_home.setForceToEdit(true);
+        zimbra_home.setDoc
+            ("Zimbra installation root and home directory of `zimbra'" + 
              " UNIX user. You can not relocate install root - do" +
              " not change this setting.");
         
-        liquid_java_home = new KnownKey("liquid_java_home");
-        liquid_java_home.setDefault("${liquid_home}" + FS + "java");
-        liquid_java_home.setDoc
+        zimbra_java_home = new KnownKey("zimbra_java_home");
+        zimbra_java_home.setDefault("${zimbra_home}" + FS + "java");
+        zimbra_java_home.setDoc
             ("Path to a JDK/J2SDK.");
         
-        liquid_log_directory = new KnownKey("liquid_log_directory");
-        liquid_log_directory.setDefault("${liquid_home}" + FS + "log");
-        liquid_log_directory.setDoc
+        zimbra_log_directory = new KnownKey("zimbra_log_directory");
+        zimbra_log_directory.setDefault("${zimbra_home}" + FS + "log");
+        zimbra_log_directory.setDoc
             ("Directory where log files are written.");
 
-        liquid_index_directory = new KnownKey("liquid_index_directory");
-        liquid_index_directory.setDefault("${liquid_home}" + FS + "index");
-        liquid_index_directory.setDoc
+        zimbra_index_directory = new KnownKey("zimbra_index_directory");
+        zimbra_index_directory.setDefault("${zimbra_home}" + FS + "index");
+        zimbra_index_directory.setDoc
             ("Directory for mailbox index files.");
 
-        liquid_store_directory = new KnownKey("liquid_store_directory");
-        liquid_store_directory.setDefault("${liquid_home}" + FS + "store");
-        liquid_store_directory.setDoc
+        zimbra_store_directory = new KnownKey("zimbra_store_directory");
+        zimbra_store_directory.setDefault("${zimbra_home}" + FS + "store");
+        zimbra_store_directory.setDoc
             ("Directory for mailbox messages.");
 
-        liquid_db_directory = new KnownKey("liquid_db_directory");
-        liquid_db_directory.setDefault("${liquid_home}" + FS + "db");
-        liquid_db_directory.setDoc
+        zimbra_db_directory = new KnownKey("zimbra_db_directory");
+        zimbra_db_directory.setDefault("${zimbra_home}" + FS + "db");
+        zimbra_db_directory.setDoc
             ("Directory for database files.");
 
-        liquid_mysql_user = new KnownKey("liquid_mysql_user");
-        liquid_mysql_user.setDefault("liquid");
-        liquid_mysql_user.setDoc
-            ("MySQL username to use to create/access liquid databases" +
+        zimbra_mysql_user = new KnownKey("zimbra_mysql_user");
+        zimbra_mysql_user.setDefault("zimbra");
+        zimbra_mysql_user.setDoc
+            ("MySQL username to use to create/access zimbra databases" +
              " and tables. This is the value you would supply to" +
              " the '-u' option of 'mysql' command line program.");
 
-        liquid_mysql_password = new KnownKey("liquid_mysql_password");
-        liquid_mysql_password.setDefault("liquid");
-        liquid_mysql_password.setForceToEdit(true);
-        liquid_mysql_password.setDoc
-            ("Password for " + liquid_mysql_user.key() + ". Stored in" +
+        zimbra_mysql_password = new KnownKey("zimbra_mysql_password");
+        zimbra_mysql_password.setDefault("zimbra");
+        zimbra_mysql_password.setForceToEdit(true);
+        zimbra_mysql_password.setDoc
+            ("Password for " + zimbra_mysql_user.key() + ". Stored in" +
              " local config for use by the store application to" +
              " authenticate.  If you want to change this password," +
              " please use the lqmypasswd program which will change the" +
              " password in both MySQL and in local config.");
 
-        liquid_ldap_userdn = new KnownKey("liquid_ldap_userdn");
-        liquid_ldap_userdn.setDefault("uid=liquid,cn=admins,cn=liquid");
-        liquid_ldap_userdn.setDoc
+        zimbra_ldap_userdn = new KnownKey("zimbra_ldap_userdn");
+        zimbra_ldap_userdn.setDefault("uid=zimbra,cn=admins,cn=zimbra");
+        zimbra_ldap_userdn.setDoc
             ("LDAP dn used to authenticate the store application with LDAP.");
         
-        liquid_ldap_password = new KnownKey("liquid_ldap_password");
-        liquid_ldap_password.setDefault("liquid");
-        liquid_ldap_password.setForceToEdit(true);
-        liquid_ldap_password.setDoc
-            ("Password for " + liquid_ldap_userdn.key() + ". Stored in" +
+        zimbra_ldap_password = new KnownKey("zimbra_ldap_password");
+        zimbra_ldap_password.setDefault("zimbra");
+        zimbra_ldap_password.setForceToEdit(true);
+        zimbra_ldap_password.setDoc
+            ("Password for " + zimbra_ldap_userdn.key() + ". Stored in" +
              " local config for use by the store application to" +
              " authenticate.  If you want to change this password," +
              " please use the lqldappasswd program which will  change the" +
              " password in both LDAP and in local config.");
 
-        liquid_server_hostname = new KnownKey("liquid_server_hostname");
-        liquid_server_hostname.setDefault(hostname);
-        liquid_server_hostname.setDoc
+        zimbra_server_hostname = new KnownKey("zimbra_server_hostname");
+        zimbra_server_hostname.setDefault(hostname);
+        zimbra_server_hostname.setDoc
             ("The provisioned name of this server. There should exist" +
              " a corresponding `server' entry in LDAP - consult" +
              " documentation for CreateServer command of the lqprov program.");
 
         stats_img_folder = new KnownKey("stats_img_folder");
-        stats_img_folder.setDefault("${liquid_home}" + FS + "liquidmon" + FS + "rrdtool" + FS + "work");
+        stats_img_folder.setDefault("${zimbra_home}" + FS + "zimbramon" + FS + "rrdtool" + FS + "work");
         stats_img_folder.setDoc
             ("Directory for storing generated statistics images.");
 
@@ -193,7 +193,7 @@ public class LC {
         ldap_port.setDoc("LDAP port to use.");
 
         ldap_root_password = new KnownKey("ldap_root_password");
-        ldap_root_password.setDefault("liquid");
+        ldap_root_password.setDefault("zimbra");
         ldap_root_password.setForceToEdit(true);
         ldap_root_password.setDoc
             ("Password for LDAP slapd.conf rootdn.  As a convenience," +
@@ -204,27 +204,27 @@ public class LC {
              " and in local config.");
 
         mysql_directory = new KnownKey("mysql_directory");
-        mysql_directory.setDefault("${liquid_home}" + FS + "mysql");
+        mysql_directory.setDefault("${zimbra_home}" + FS + "mysql");
         mysql_directory.setDoc
             ("Location of MySQL installation.");
 
         mysql_data_directory = new KnownKey("mysql_data_directory");
-        mysql_data_directory.setDefault("${liquid_db_directory}" + FS + "data");
+        mysql_data_directory.setDefault("${zimbra_db_directory}" + FS + "data");
         mysql_data_directory.setDoc
             ("Directory in which MySQL data should reside.");
 
         mysql_socket = new KnownKey("mysql_socket");
-        mysql_socket.setDefault("${liquid_db_directory}" + FS + "mysql.sock");
+        mysql_socket.setDefault("${zimbra_db_directory}" + FS + "mysql.sock");
         mysql_socket.setDoc
             ("Path to MySQL socket for use by MySQL command line tools.");
 
         mysql_pidfile = new KnownKey("mysql_pidfile");
-        mysql_pidfile.setDefault("${liquid_db_directory}" + FS + "mysql.pid");
+        mysql_pidfile.setDefault("${zimbra_db_directory}" + FS + "mysql.pid");
         mysql_pidfile.setDoc
             ("File in which MySQL process id is stored.");
 
         mysql_mycnf = new KnownKey("mysql_mycnf");
-        mysql_mycnf.setDefault("${liquid_home}" + FS + "conf" + FS + "my.cnf");
+        mysql_mycnf.setDefault("${zimbra_home}" + FS + "conf" + FS + "my.cnf");
         mysql_mycnf.setDoc
             ("Path to my.cnf, the MySQL config file.");
 
@@ -265,7 +265,7 @@ public class LC {
              LQMYCNF_CAVEAT);
 
         mysql_root_password = new KnownKey("mysql_root_password");
-        mysql_root_password.setDefault("liquid");
+        mysql_root_password.setDefault("zimbra");
         mysql_root_password.setForceToEdit(true);
         mysql_root_password.setDoc
             ("Password for MySQL's built-in `root' user, not to be" +
@@ -282,7 +282,7 @@ public class LC {
             ("Consult MySQL documentation for table_cache. " + LQMYCNF_CAVEAT);
 
         tomcat_directory = new KnownKey("tomcat_directory");
-        tomcat_directory.setDefault("${liquid_home}" + FS + "tomcat");
+        tomcat_directory.setDefault("${zimbra_home}" + FS + "tomcat");
         tomcat_directory.setDoc("Location of tomcat installation.");
 
         tomcat_java_heap_memory_percent = new KnownKey("tomcat_java_heap_memory_percent");
@@ -297,12 +297,12 @@ public class LC {
             ("JVM options to use when launching Tomcat.");
         
         tomcat_java_home = new KnownKey("tomcat_java_home");
-        tomcat_java_home.setDefault("${liquid_java_home}");
+        tomcat_java_home.setDefault("${zimbra_java_home}");
         tomcat_java_home.setDoc
             ("Path to JDK/JRE to use for running Tomcat.");
         
         tomcat_pidfile = new KnownKey("tomcat_pidfile");
-        tomcat_pidfile.setDefault("${liquid_log_directory}" + FS + "tomcat.pid");
+        tomcat_pidfile.setDefault("${zimbra_log_directory}" + FS + "tomcat.pid");
         tomcat_pidfile.setDoc
             ("File in which process id of Tomcat JVM is stored.");
 

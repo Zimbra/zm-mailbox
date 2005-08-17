@@ -61,7 +61,7 @@ public class GetPrefs extends DocumentHandler  {
     	        String key = (String) entry.getKey();
     	        if (specificPrefs != null && !specificPrefs.contains(key))
     	            continue;
-    	        if (!key.startsWith("liquidPref"))
+    	        if (!key.startsWith("zimbraPref"))
     	            continue;
     	        Object value = entry.getValue();
     	        if (value instanceof String[]) {

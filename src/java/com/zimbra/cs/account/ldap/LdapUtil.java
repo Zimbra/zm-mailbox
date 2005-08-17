@@ -583,15 +583,15 @@ public class LdapUtil {
       * 
       * exchange example, where the exchange domian is different then the liquid one
       * 
-      * liquidAuthMech      ldap
-      * liquidAuthLdapURL   ldap://exch1/
-      * liquidAuthLdapDn    %n@example.zimbra.com
+      * zimbraAuthMech      ldap
+      * zimbraAuthLdapURL   ldap://exch1/
+      * zimbraAuthLdapDn    %n@example.zimbra.com
       * 
       * our own LDAP example:
       * 
-      * liquidAuthMech       ldap
-      * liquidAuthLdapURL    ldap://dogfood.example.zimbra.com/
-      * liquidAuthLdapUserDn uid=%u,ou=people,%D
+      * zimbraAuthMech       ldap
+      * zimbraAuthLdapURL    ldap://dogfood.example.zimbra.com/
+      * zimbraAuthLdapUserDn uid=%u,ou=people,%D
       */
       public static String computeAuthDn(String name, String bindDnRule) {
          if (bindDnRule == null || bindDnRule.equals("") || bindDnRule.equals("%n"))

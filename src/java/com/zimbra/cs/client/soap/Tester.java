@@ -357,8 +357,8 @@ public class Tester {
 		    SoapFaultException
     {
         System.out.println("====== GET PREFS ==========");
-        String prefs[] = new String[] { "liquidPrefMailSignatureEnabled",
-                                        "liquidPrefSaveToSent" };
+        String prefs[] = new String[] { "zimbraPrefMailSignatureEnabled",
+                                        "zimbraPrefSaveToSent" };
         LmcGetPrefsRequest prefReq = new LmcGetPrefsRequest();
         prefReq.setSession(session);
         prefReq.setPrefsToGet(prefs);
@@ -375,8 +375,8 @@ public class Tester {
     {
         System.out.println("=========== MODIFY PREFS ==========");
     	HashMap prefMods = new HashMap();
-        prefMods.put("liquidPrefMailSignatureEnabled", "TRUE");
-        prefMods.put("liquidPrefSaveToSent", "TRUE");
+        prefMods.put("zimbraPrefMailSignatureEnabled", "TRUE");
+        prefMods.put("zimbraPrefSaveToSent", "TRUE");
         
         LmcModifyPrefsRequest mpReq = new LmcModifyPrefsRequest();
         mpReq.setSession(session);

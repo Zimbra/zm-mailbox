@@ -137,9 +137,9 @@ public class LdapAccount extends LdapNamedEntry implements Account {
         try {
             LdapCos cos = (LdapCos) getCOS();
             // get the COS prefs first
-            LdapUtil.getAttrs(cos.mAttrs, prefs, "liquidPref");
+            LdapUtil.getAttrs(cos.mAttrs, prefs, "zimbraPref");
             // and override with the account ones
-            LdapUtil.getAttrs(mAttrs, prefs, "liquidPref");
+            LdapUtil.getAttrs(mAttrs, prefs, "zimbraPref");
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to get prefs", e);
         }
@@ -157,7 +157,7 @@ public class LdapAccount extends LdapNamedEntry implements Account {
         HashMap attrs = new HashMap();
         try {
             // get all the account attrs
-            LdapUtil.getAttrs(mAttrs, attrs, prefsOnly ? "liquidPref" : null);
+            LdapUtil.getAttrs(mAttrs, attrs, prefsOnly ? "zimbraPref" : null);
             
             if (!applyCos)
                 return attrs;
@@ -165,7 +165,7 @@ public class LdapAccount extends LdapNamedEntry implements Account {
             // then enumerate through all inheritable attrs and add them if needed
             String[] inheritable = mProv.getConfig().getMultiAttr(Provisioning.A_zimbraCOSInheritedAttr);
             for (int i = 0; i < inheritable.length; i++) {
-                if (!prefsOnly || inheritable[i].startsWith("liquidPref")) {
+                if (!prefsOnly || inheritable[i].startsWith("zimbraPref")) {
                     Object value = attrs.get(inheritable);
                     if (value == null)
                         value = getMultiAttr(inheritable[i]);

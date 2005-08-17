@@ -48,7 +48,7 @@ public class GetInfo extends DocumentHandler  {
         for (Iterator mi = attrsMap.entrySet().iterator(); mi.hasNext(); ) {
             Map.Entry entry = (Entry) mi.next();
             String key = (String) entry.getKey();
-            if (!key.startsWith("liquidPref"))
+            if (!key.startsWith("zimbraPref"))
                 continue;
             Object value = entry.getValue();
             if (value instanceof String[]) {

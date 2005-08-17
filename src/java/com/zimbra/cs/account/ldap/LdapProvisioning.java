@@ -56,13 +56,13 @@ import com.zimbra.cs.util.ZimbraLog;
 public class LdapProvisioning extends Provisioning {
 
     // object classes
-    public static final String C_liquidAccount = "liquidAccount";
+    public static final String C_zimbraAccount = "zimbraAccount";
     public static final String C_amavisAccount = "amavisAccount";
-    public static final String C_liquidCOS = "liquidCOS";
-    public static final String C_liquidDomain = "liquidDomain";
-    public static final String C_liquidMailList = "liquidDistributionList";
-    public static final String C_liquidMailRecipient = "liquidMailRecipient";
-    public static final String C_liquidServer = "liquidServer";
+    public static final String C_zimbraCOS = "zimbraCOS";
+    public static final String C_zimbraDomain = "zimbraDomain";
+    public static final String C_zimbraMailList = "zimbraDistributionList";
+    public static final String C_zimbraMailRecipient = "zimbraMailRecipient";
+    public static final String C_zimbraServer = "zimbraServer";
 
     private static final long ONE_DAY_IN_MILLIS = 1000*60*60*24;
 
@@ -106,10 +106,10 @@ public class LdapProvisioning extends Provisioning {
     // list of time zones to preserve sort order
     private static List /*<WellKnownTimeZone>*/ sTimeZoneList = new ArrayList(MAX_TIMEZONE_CACHE);
 
-    private static final String CONFIG_BASE = "cn=config,cn=liquid";     
-    private static final String COS_BASE = "cn=cos,cn=liquid"; 
-    private static final String SERVER_BASE = "cn=servers,cn=liquid";
-    private static final String ADMIN_BASE = "cn=admins,cn=liquid";
+    private static final String CONFIG_BASE = "cn=config,cn=zimbra";     
+    private static final String COS_BASE = "cn=cos,cn=zimbra"; 
+    private static final String SERVER_BASE = "cn=servers,cn=zimbra";
+    private static final String ADMIN_BASE = "cn=admins,cn=zimbra";
 
     private static final int BY_ID = 1;
 
@@ -288,27 +288,27 @@ public class LdapProvisioning extends Provisioning {
         return null;
     }
 
-    private synchronized Account getAccountById(String liquidId, DirContext ctxt) throws ServiceException {
-        if (liquidId == null)
+    private synchronized Account getAccountById(String zimbraId, DirContext ctxt) throws ServiceException {
+        if (zimbraId == null)
             return null;
-        LdapAccount a = (LdapAccount) sAccountCache.getById(liquidId);
+        LdapAccount a = (LdapAccount) sAccountCache.getById(zimbraId);
         if (a == null) {
-            liquidId= LdapUtil.escapeSearchFilterArg(liquidId);
-       		a = getAccountByQuery("","(&(liquidId="+liquidId+")(objectclass=liquidAccount))", ctxt);
+            zimbraId= LdapUtil.escapeSearchFilterArg(zimbraId);
+       		a = getAccountByQuery("","(&(zimbraId="+zimbraId+")(objectclass=zimbraAccount))", ctxt);
             sAccountCache.put(a);
         }
         return a;
     }
     
-    public synchronized Account getAccountById(String liquidId) throws ServiceException {
-        return getAccountById(liquidId, null);
+    public synchronized Account getAccountById(String zimbraId) throws ServiceException {
+        return getAccountById(zimbraId, null);
     }
 
     public synchronized Account getAdminAccountByName(String name) throws ServiceException {
         LdapAccount a = (LdapAccount) sAccountCache.getByname(name);
         if (a == null) {
             name = LdapUtil.escapeSearchFilterArg(name);
-            a = getAccountByQuery(ADMIN_BASE, "(&(uid="+name+")(objectclass=liquidAccount))", null);
+            a = getAccountByQuery(ADMIN_BASE, "(&(uid="+name+")(objectclass=zimbraAccount))", null);
             sAccountCache.put(a);
         }
         return a;
@@ -332,7 +332,7 @@ public class LdapProvisioning extends Provisioning {
         LdapAccount account = (LdapAccount) sAccountCache.getByname(emailAddress);
         if (account == null) {
             emailAddress = LdapUtil.escapeSearchFilterArg(emailAddress);
-            account = getAccountByQuery("", "(&(|(liquidMailDeliveryAddress="+emailAddress+")(liquidMailAlias="+emailAddress+"))(objectclass=liquidAccount))", null);
+            account = getAccountByQuery("", "(&(|(zimbraMailDeliveryAddress="+emailAddress+")(zimbraMailAlias="+emailAddress+"))(objectclass=zimbraAccount))", null);
             sAccountCache.put(account);
         }
         return account;
@@ -405,11 +405,11 @@ public class LdapProvisioning extends Provisioning {
             }
             
             Attribute oc = LdapUtil.addAttr(attrs, A_objectClass, "organizationalPerson");
-            oc.add(C_liquidAccount);
+            oc.add(C_zimbraAccount);
             oc.add(C_amavisAccount);
             
-            String liquidIdStr = LdapUtil.generateUUID();
-            attrs.put(A_zimbraId, liquidIdStr);
+            String zimbraIdStr = LdapUtil.generateUUID();
+            attrs.put(A_zimbraId, zimbraIdStr);
 
             // default account status is active
             if (attrs.get(Provisioning.A_zimbraAccountStatus) == null)
@@ -430,7 +430,7 @@ public class LdapProvisioning extends Provisioning {
                 cos = getCosByName(Provisioning.DEFAULT_COS_NAME);
             }
 
-            // if liquidMailHost is not specified, and we have a COS, see if there is a pool to
+            // if zimbraMailHost is not specified, and we have a COS, see if there is a pool to
             // pick from.
             if (cos != null && attrs.get(Provisioning.A_zimbraMailHost) == null) {
                 String mailHostPool[] = cos.getMultiAttr(Provisioning.A_zimbraMailHostPool);
@@ -440,13 +440,13 @@ public class LdapProvisioning extends Provisioning {
                 }
             }
 
-            // if liquidMailHost not specified default to local server's liquidServiceHostname
+            // if zimbraMailHost not specified default to local server's zimbraServiceHostname
             // this means every account will always have a mailbox
             if (attrs.get(Provisioning.A_zimbraMailHost) == null) {
                 attrs.put(Provisioning.A_zimbraMailHost, getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname));
             }
 
-            // set all the mail-related attrs if liquidMailHost was specified
+            // set all the mail-related attrs if zimbraMailHost was specified
             if (attrs.get(Provisioning.A_zimbraMailHost) != null) {
                 // default mail status is enabled
                 if (attrs.get(Provisioning.A_zimbraMailStatus) == null)
@@ -472,8 +472,8 @@ public class LdapProvisioning extends Provisioning {
             String dn = emailToDN(uid, domain);
             Context newCtxt = createSubcontext(ctxt, dn, attrs, "createAccount");
             LdapUtil.closeContext(newCtxt);
-            LdapAccount acct = (LdapAccount) getAccountById(liquidIdStr, ctxt);
-            // set password using the real account object, so we correctly maintain liquidPassword* attrs
+            LdapAccount acct = (LdapAccount) getAccountById(zimbraIdStr, ctxt);
+            // set password using the real account object, so we correctly maintain zimbraPassword* attrs
             // don't reset passwordMustChange attr if we want it changed on first login...
             if (password != null) {
                 setPassword(acct, password, true, false);
@@ -561,7 +561,7 @@ public class LdapProvisioning extends Provisioning {
             
             String dn = domainToAccountBaseDN(domain);
             LdapAccount remoteAccount =
-                getAccountByQuery(dn, "(&(|(uid="+uid+")(liquidMailAlias="+emailAddress+"))(objectclass=liquidAccount))", rctxt);
+                getAccountByQuery(dn, "(&(|(uid="+uid+")(zimbraMailAlias="+emailAddress+"))(objectclass=zimbraAccount))", rctxt);
             Attributes attrs = remoteAccount.getRawAttrs();
             
             String accountDn = emailToDN(uid, domain);
@@ -596,10 +596,10 @@ public class LdapProvisioning extends Provisioning {
             LdapUtil.mapToAttrs(acctAttrs, attrs);
             
             Attribute oc = LdapUtil.addAttr(attrs, A_objectClass, "organizationalPerson");
-            oc.add(C_liquidAccount);
+            oc.add(C_zimbraAccount);
             
-            String liquidIdStr = LdapUtil.generateUUID();
-            attrs.put(A_zimbraId, liquidIdStr);
+            String zimbraIdStr = LdapUtil.generateUUID();
+            attrs.put(A_zimbraId, zimbraIdStr);
             
             if (attrs.get(Provisioning.A_zimbraAccountStatus) == null)
                 attrs.put(A_zimbraAccountStatus, Provisioning.ACCOUNT_STATUS_ACTIVE);
@@ -620,7 +620,7 @@ public class LdapProvisioning extends Provisioning {
             String dn = adminNameToDN(uid);
             Context newCtxt = createSubcontext(ctxt, dn, attrs, "createAdminAccount");
             LdapUtil.closeContext(newCtxt);
-            Account acct = getAccountById(liquidIdStr, ctxt); 
+            Account acct = getAccountById(zimbraIdStr, ctxt); 
             
             AttributeManager.getInstance().postModify(acctAttrs, acct, attrManagerContext, true);
             return acct;            
@@ -636,7 +636,7 @@ public class LdapProvisioning extends Provisioning {
      * @see com.zimbra.cs.account.Provisioning#getAllDomains()
      */
     public List getAllAdminAccounts() throws ServiceException {
-        return searchAccounts("(liquidIsAdminAccount=TRUE)", null, null, true);
+        return searchAccounts("(zimbraIsAdminAccount=TRUE)", null, null, true);
     }
 
     /* (non-Javadoc)
@@ -659,12 +659,12 @@ public class LdapProvisioning extends Provisioning {
         try {
             ctxt = LdapUtil.getDirContext();
             if (query == null || query.equals("")) {
-                query = "(objectclass=liquidAccount)";
+                query = "(objectclass=zimbraAccount)";
             } else {
                 if (query.startsWith("(") && query.endsWith(")")) {
-                    query = "(&"+query+"(objectclass=liquidAccount))";                    
+                    query = "(&"+query+"(objectclass=zimbraAccount))";                    
                 } else {
-                    query = "(&("+query+")(objectclass=liquidAccount))";
+                    query = "(&("+query+")(objectclass=zimbraAccount))";
                 }
             }
             
@@ -681,7 +681,7 @@ public class LdapProvisioning extends Provisioning {
                 srctxt.close();
                 // skip admin accounts
                 // don't cache these, since they don't have a full set of attributes
-                if (!dn.endsWith("cn=liquid"))
+                if (!dn.endsWith("cn=zimbra"))
                     result.add(new LdapAccount(dn, sr.getAttributes(), this));
             }
             ne.close();
@@ -801,7 +801,7 @@ public class LdapProvisioning extends Provisioning {
             ctxt = LdapUtil.getDirContext();
             String aliasDn = LdapProvisioning.emailToDN(aliasName, aliasDomain);
             // the create and addAttr ideally would be in the same transaction
-            LdapUtil.simpleCreate(ctxt, aliasDn, "liquidAlias",
+            LdapUtil.simpleCreate(ctxt, aliasDn, "zimbraAlias",
                     new String[] { Provisioning.A_uid, aliasName, 
                     Provisioning.A_zimbraId, LdapUtil.generateUUID(),
                     Provisioning.A_zimbraAliasTargetId, acct.getId()} );
@@ -853,14 +853,14 @@ public class LdapProvisioning extends Provisioning {
             ctxt = LdapUtil.getDirContext();
             String aliasDn = LdapProvisioning.emailToDN(aliasName, aliasDomain);            
             
-            // remove liquidMailAlias attr first, then alias
+            // remove zimbraMailAlias attr first, then alias
             try {
                 HashMap attrs = new HashMap();
                 attrs.put(Provisioning.A_mail, removeMultiValue(acct, Provisioning.A_mail, alias));
                 attrs.put(Provisioning.A_zimbraMailAlias, removeMultiValue(acct, Provisioning.A_mail, alias));                
                 ((LdapAccount)acct).modifyAttrsInternal(ctxt, attrs);
             } catch (ServiceException e) {
-                ZimbraLog.account.warn("unable to remove liquidMailAlias/mail attrs: "+alias);
+                ZimbraLog.account.warn("unable to remove zimbraMailAlias/mail attrs: "+alias);
                 // try to remove alias
             }
             
@@ -921,10 +921,10 @@ public class LdapProvisioning extends Provisioning {
 
             Attribute oc = LdapUtil.addAttr(attrs, A_objectClass, "dcObject");
             oc.add("organization");
-            oc.add("liquidDomain");
+            oc.add("zimbraDomain");
             
-            String liquidIdStr = LdapUtil.generateUUID();
-            attrs.put(A_zimbraId, liquidIdStr);
+            String zimbraIdStr = LdapUtil.generateUUID();
+            attrs.put(A_zimbraId, zimbraIdStr);
             attrs.put(A_zimbraDomainName, name);
             attrs.put(A_zimbraMailStatus, MAIL_STATUS_ENABLED);
 	    if (domainType.equalsIgnoreCase(DOMAIN_TYPE_ALIAS)) {
@@ -947,7 +947,7 @@ public class LdapProvisioning extends Provisioning {
              * new String[] { A_ou, "groups", A_cn, "groups"});
              */
 
-            Domain domain = getDomainById(liquidIdStr, ctxt);
+            Domain domain = getDomainById(zimbraIdStr, ctxt);
             
             AttributeManager.getInstance().postModify(domainAttrs, domain, attrManagerContext, true);
             return domain;
@@ -989,13 +989,13 @@ public class LdapProvisioning extends Provisioning {
         return null;
     }
 
-    private synchronized Domain getDomainById(String liquidId, DirContext ctxt) throws ServiceException {
-        if (liquidId == null)
+    private synchronized Domain getDomainById(String zimbraId, DirContext ctxt) throws ServiceException {
+        if (zimbraId == null)
             return null;
-        LdapDomain domain = (LdapDomain) sDomainCache.get(liquidId);
+        LdapDomain domain = (LdapDomain) sDomainCache.get(zimbraId);
         if (domain == null) {
-            liquidId = LdapUtil.escapeSearchFilterArg(liquidId);
-            domain = getDomainByQuery("(&(liquidId="+liquidId+")(objectclass=liquidDomain))", ctxt);
+            zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
+            domain = getDomainByQuery("(&(zimbraId="+zimbraId+")(objectclass=zimbraDomain))", ctxt);
             sDomainCache.put(domain);
         }
         return domain;
@@ -1004,8 +1004,8 @@ public class LdapProvisioning extends Provisioning {
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#getDomainById(java.lang.String)
      */
-    public synchronized Domain getDomainById(String liquidId) throws ServiceException {
-        return getDomainById(liquidId, null);
+    public synchronized Domain getDomainById(String zimbraId) throws ServiceException {
+        return getDomainById(zimbraId, null);
     }
 
     /* (non-Javadoc)
@@ -1015,7 +1015,7 @@ public class LdapProvisioning extends Provisioning {
         LdapDomain domain = (LdapDomain) sDomainCache.get(name);
         if (domain == null) {
             name = LdapUtil.escapeSearchFilterArg(name);
-            domain = getDomainByQuery("(&(liquidDomainName="+name+")(objectclass=liquidDomain))", null);
+            domain = getDomainByQuery("(&(zimbraDomainName="+name+")(objectclass=zimbraDomain))", null);
             sDomainCache.put(domain);
         }
         return domain;        
@@ -1029,7 +1029,7 @@ public class LdapProvisioning extends Provisioning {
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
-            NamingEnumeration ne = ctxt.search("", "(objectclass=liquidDomain)", sSubtreeSC);
+            NamingEnumeration ne = ctxt.search("", "(objectclass=zimbraDomain)", sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 Context srctxt = (Context) sr.getObject();
@@ -1089,16 +1089,16 @@ public class LdapProvisioning extends Provisioning {
 
             Attributes attrs = new BasicAttributes(true);
             LdapUtil.mapToAttrs(cosAttrs, attrs);
-            Attribute oc = LdapUtil.addAttr(attrs, A_objectClass, "liquidCOS");
+            Attribute oc = LdapUtil.addAttr(attrs, A_objectClass, "zimbraCOS");
             
-            String liquidIdStr = LdapUtil.generateUUID();
-            attrs.put(A_zimbraId, liquidIdStr);
+            String zimbraIdStr = LdapUtil.generateUUID();
+            attrs.put(A_zimbraId, zimbraIdStr);
             attrs.put(A_cn, name);
             String dn = cosNametoDN(name);
             Context newCtxt = createSubcontext(ctxt, dn, attrs, "createCos");
             LdapUtil.closeContext(newCtxt);
 
-            Cos cos = getCosById(liquidIdStr, ctxt);
+            Cos cos = getCosById(zimbraIdStr, ctxt);
             AttributeManager.getInstance().postModify(cosAttrs, cos, attrManagerContext, true);
             return cos;
         } catch (NameAlreadyBoundException nabe) {
@@ -1111,10 +1111,10 @@ public class LdapProvisioning extends Provisioning {
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#deleteAccountById(java.lang.String)
      */
-    public void renameCos(String liquidId, String newName) throws ServiceException {
-        LdapCos cos = (LdapCos) getCosById(liquidId);
+    public void renameCos(String zimbraId, String newName) throws ServiceException {
+        LdapCos cos = (LdapCos) getCosById(zimbraId);
         if (cos == null)
-            throw AccountServiceException.NO_SUCH_COS(liquidId);
+            throw AccountServiceException.NO_SUCH_COS(zimbraId);
 
         if (cos.getName().equals(DEFAULT_COS_NAME))
             throw ServiceException.INVALID_REQUEST("unable to rename default cos", null);
@@ -1133,7 +1133,7 @@ public class LdapProvisioning extends Provisioning {
         } catch (NameAlreadyBoundException nabe) {
             throw AccountServiceException.COS_EXISTS(newName);            
         } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to rename cos: "+liquidId, e);
+            throw ServiceException.FAILURE("unable to rename cos: "+zimbraId, e);
         } finally {
             LdapUtil.closeContext(ctxt);
         }
@@ -1169,14 +1169,14 @@ public class LdapProvisioning extends Provisioning {
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#getCOSById(java.lang.String)
      */
-    private synchronized Cos getCosById(String liquidId, DirContext ctxt ) throws ServiceException {
-        if (liquidId == null)
+    private synchronized Cos getCosById(String zimbraId, DirContext ctxt ) throws ServiceException {
+        if (zimbraId == null)
             return null;
 
-        LdapCos cos = (LdapCos) sCosCache.get(liquidId);
+        LdapCos cos = (LdapCos) sCosCache.get(zimbraId);
         if (cos == null) {
-            liquidId = LdapUtil.escapeSearchFilterArg(liquidId);
-            cos = getCOSByQuery("(&(liquidId="+liquidId+")(objectclass=liquidCOS))", ctxt);
+            zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
+            cos = getCOSByQuery("(&(zimbraId="+zimbraId+")(objectclass=zimbraCOS))", ctxt);
             sCosCache.put(cos);
         }
         return cos;
@@ -1185,8 +1185,8 @@ public class LdapProvisioning extends Provisioning {
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#getCOSById(java.lang.String)
      */
-    public synchronized Cos getCosById(String liquidId) throws ServiceException {
-        return getCosById(liquidId, null);
+    public synchronized Cos getCosById(String zimbraId) throws ServiceException {
+        return getCosById(zimbraId, null);
     }    
 
     /* (non-Javadoc)
@@ -1224,7 +1224,7 @@ public class LdapProvisioning extends Provisioning {
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
-            NamingEnumeration ne = ctxt.search(COS_BASE, "(objectclass=liquidCOS)", sSubtreeSC);
+            NamingEnumeration ne = ctxt.search(COS_BASE, "(objectclass=zimbraCOS)", sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 Context srctxt = (Context) sr.getObject();
@@ -1244,10 +1244,10 @@ public class LdapProvisioning extends Provisioning {
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#deleteAccountById(java.lang.String)
      */
-    public void deleteAccount(String liquidId) throws ServiceException {
-        LdapAccount acc = (LdapAccount) getAccountById(liquidId);
+    public void deleteAccount(String zimbraId) throws ServiceException {
+        LdapAccount acc = (LdapAccount) getAccountById(zimbraId);
         if (acc == null)
-            throw AccountServiceException.NO_SUCH_ACCOUNT(liquidId);
+            throw AccountServiceException.NO_SUCH_ACCOUNT(zimbraId);
 
         String aliases[] = acc.getAliases();
         if (aliases != null)
@@ -1260,7 +1260,7 @@ public class LdapProvisioning extends Provisioning {
             ctxt.unbind(acc.getDN());
             sAccountCache.remove(acc);
         } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to purge account: "+liquidId, e);
+            throw ServiceException.FAILURE("unable to purge account: "+zimbraId, e);
         } finally {
             LdapUtil.closeContext(ctxt);
         }
@@ -1269,11 +1269,11 @@ public class LdapProvisioning extends Provisioning {
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#deleteAccountById(java.lang.String)
      */
-    public void renameAccount(String liquidId, String newName) throws ServiceException {
+    public void renameAccount(String zimbraId, String newName) throws ServiceException {
 
-        LdapAccount acc = (LdapAccount) getAccountById(liquidId);
+        LdapAccount acc = (LdapAccount) getAccountById(zimbraId);
         if (acc == null)
-            throw AccountServiceException.NO_SUCH_ACCOUNT(liquidId);
+            throw AccountServiceException.NO_SUCH_ACCOUNT(zimbraId);
 
         int loc = newName.indexOf("@"); 
         if (loc == -1)
@@ -1298,7 +1298,7 @@ public class LdapProvisioning extends Provisioning {
             ctxt.rename(acc.mDn, newDn);
             // remove old account from cache
             sAccountCache.remove(acc);
-            acc = (LdapAccount) getAccountById(liquidId,ctxt);
+            acc = (LdapAccount) getAccountById(zimbraId,ctxt);
             HashMap amap = new HashMap();
             amap.put(Provisioning.A_zimbraMailDeliveryAddress, newEmail);
             String mail[] = acc.getMultiAttr(Provisioning.A_mail);
@@ -1311,28 +1311,28 @@ public class LdapProvisioning extends Provisioning {
                 mail = addMultiValue(mail, newEmail);
                 amap.put(Provisioning.A_mail, mail);
             }
-            // this is non-atomic. i.e., rename could succeed and updating liquidMailDeliveryAddress
+            // this is non-atomic. i.e., rename could succeed and updating zimbraMailDeliveryAddress
             // could fail. So catch service exception here and log error            
             try {
                 acc.modifyAttrsInternal(ctxt, amap);
             } catch (ServiceException e) {
                 ZimbraLog.account.error("account renamed to "+newName+
-                        " but failed to update liquidMailDeliveryAddress", e);
-                throw ServiceException.FAILURE("unable to rename account: "+liquidId, e);
+                        " but failed to update zimbraMailDeliveryAddress", e);
+                throw ServiceException.FAILURE("unable to rename account: "+zimbraId, e);
             }
         } catch (NameAlreadyBoundException nabe) {
             throw AccountServiceException.ACCOUNT_EXISTS(newName);            
         } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to rename account: "+liquidId, e);
+            throw ServiceException.FAILURE("unable to rename account: "+zimbraId, e);
         } finally {
             LdapUtil.closeContext(ctxt);
         }
     }
         
-    public void deleteDomain(String liquidId) throws ServiceException {
-        LdapDomain d = (LdapDomain) getDomainById(liquidId);
+    public void deleteDomain(String zimbraId) throws ServiceException {
+        LdapDomain d = (LdapDomain) getDomainById(zimbraId);
         if (d == null)
-            throw AccountServiceException.NO_SUCH_DOMAIN(liquidId);
+            throw AccountServiceException.NO_SUCH_DOMAIN(zimbraId);
         
         // TODO: should only allow a domain delete to succeed if there are no people/groups.
         // if there aren't, we need to delete the group/people trees first, then delete the domain.
@@ -1345,28 +1345,28 @@ public class LdapProvisioning extends Provisioning {
         } catch (ContextNotEmptyException e) {
             throw AccountServiceException.DOMAIN_NOT_EMPTY(d.getName());
         } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to purge domain: "+liquidId, e);
+            throw ServiceException.FAILURE("unable to purge domain: "+zimbraId, e);
         } finally {
             LdapUtil.closeContext(ctxt);
         }
     }
     
-    public void deleteCos(String liquidId) throws ServiceException {
-        LdapCos c = (LdapCos) getCosById(liquidId);
+    public void deleteCos(String zimbraId) throws ServiceException {
+        LdapCos c = (LdapCos) getCosById(zimbraId);
         if (c == null)
-            throw AccountServiceException.NO_SUCH_COS(liquidId);
+            throw AccountServiceException.NO_SUCH_COS(zimbraId);
         
         if (c.getName().equals(DEFAULT_COS_NAME))
             throw ServiceException.INVALID_REQUEST("unable to delete default cos", null);
 
-        // TODO: should we go through all accounts with this cos and remove the liquidCOSId attr?
+        // TODO: should we go through all accounts with this cos and remove the zimbraCOSId attr?
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
             ctxt.unbind(c.getDN());
             sCosCache.remove(c);
         } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to purge cos: "+liquidId, e);
+            throw ServiceException.FAILURE("unable to purge cos: "+zimbraId, e);
         } finally {
             LdapUtil.closeContext(ctxt);
         }
@@ -1387,27 +1387,27 @@ public class LdapProvisioning extends Provisioning {
 
             Attributes attrs = new BasicAttributes(true);
             LdapUtil.mapToAttrs(serverAttrs, attrs);
-            Attribute oc = LdapUtil.addAttr(attrs, A_objectClass, "liquidServer");
+            Attribute oc = LdapUtil.addAttr(attrs, A_objectClass, "zimbraServer");
             
-            String liquidIdStr = LdapUtil.generateUUID();
-            attrs.put(A_zimbraId, liquidIdStr);
+            String zimbraIdStr = LdapUtil.generateUUID();
+            attrs.put(A_zimbraId, zimbraIdStr);
             attrs.put(A_cn, name);
             String dn = serverNametoDN(name);
             
-            String liquidServerHostname = null;
+            String zimbraServerHostname = null;
 
-            Attribute liquidServiceHostnameAttr = attrs.get(Provisioning.A_zimbraServiceHostname);
-            if (liquidServiceHostnameAttr == null) {
-                liquidServerHostname = name;
+            Attribute zimbraServiceHostnameAttr = attrs.get(Provisioning.A_zimbraServiceHostname);
+            if (zimbraServiceHostnameAttr == null) {
+                zimbraServerHostname = name;
                 attrs.put(Provisioning.A_zimbraServiceHostname, name);
             } else {
-                liquidServerHostname = (String) liquidServiceHostnameAttr.get();
+                zimbraServerHostname = (String) zimbraServiceHostnameAttr.get();
             }
             
             Context newCtxt = createSubcontext(ctxt, dn, attrs, "createServer");
             LdapUtil.closeContext(newCtxt);
 
-            Server server = getServerById(liquidIdStr, ctxt, true);
+            Server server = getServerById(zimbraIdStr, ctxt, true);
             AttributeManager.getInstance().postModify(serverAttrs, server, attrManagerContext, true);
             return server;
 
@@ -1448,26 +1448,26 @@ public class LdapProvisioning extends Provisioning {
         return null;
     }
 
-    private synchronized Server getServerById(String liquidId, DirContext ctxt, boolean nocache) throws ServiceException {
-        if (liquidId == null)
+    private synchronized Server getServerById(String zimbraId, DirContext ctxt, boolean nocache) throws ServiceException {
+        if (zimbraId == null)
             return null;
         LdapServer s = null;
         if (!nocache)
-            s = (LdapServer) sServerCache.getById(liquidId);
+            s = (LdapServer) sServerCache.getById(zimbraId);
         if (s == null) {
-            liquidId = LdapUtil.escapeSearchFilterArg(liquidId);
-            s = (LdapServer)getServerByQuery("(&(liquidId="+liquidId+")(objectclass=liquidServer))", ctxt); 
+            zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
+            s = (LdapServer)getServerByQuery("(&(zimbraId="+zimbraId+")(objectclass=zimbraServer))", ctxt); 
             sServerCache.put(s);
         }
         return s;
     }
 
-    public Server getServerById(String liquidId) throws ServiceException {
-        return getServerById(liquidId, null, false);
+    public Server getServerById(String zimbraId) throws ServiceException {
+        return getServerById(zimbraId, null, false);
     }
 
-    public Server getServerById(String liquidId, boolean nocache) throws ServiceException {
-        return getServerById(liquidId, null, nocache);
+    public Server getServerById(String zimbraId, boolean nocache) throws ServiceException {
+        return getServerById(zimbraId, null, nocache);
     }
 
     /* (non-Javadoc)
@@ -1507,7 +1507,7 @@ public class LdapProvisioning extends Provisioning {
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
-            NamingEnumeration ne = ctxt.search(SERVER_BASE, "(objectclass=liquidServer)", sSubtreeSC);
+            NamingEnumeration ne = ctxt.search(SERVER_BASE, "(objectclass=zimbraServer)", sSubtreeSC);
             synchronized (sServerCache) {
                 sServerCache.clear();
                 while (ne.hasMore()) {
@@ -1533,10 +1533,10 @@ public class LdapProvisioning extends Provisioning {
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#purgeServer(java.lang.String)
      */
-    public void deleteServer(String liquidId) throws ServiceException {
-        LdapServer s = (LdapServer) getServerById(liquidId);
+    public void deleteServer(String zimbraId) throws ServiceException {
+        LdapServer s = (LdapServer) getServerById(zimbraId);
         if (s == null)
-            throw AccountServiceException.NO_SUCH_SERVER(liquidId);
+            throw AccountServiceException.NO_SUCH_SERVER(zimbraId);
 
         // TODO: what if accounts still have this server as a mailbox?
         DirContext ctxt = null;
@@ -1545,7 +1545,7 @@ public class LdapProvisioning extends Provisioning {
             ctxt.unbind(s.getDN());
             sServerCache.remove(s);
         } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to purge server: "+liquidId, e);
+            throw ServiceException.FAILURE("unable to purge server: "+zimbraId, e);
         } finally {
             LdapUtil.closeContext(ctxt);
         }
@@ -1563,7 +1563,7 @@ public class LdapProvisioning extends Provisioning {
             DirContext ctxt = null;
             try {
                 ctxt = LdapUtil.getDirContext();
-                NamingEnumeration ne = ctxt.search("cn=timezones," + CONFIG_BASE, "(objectclass=liquidTimeZone)", sSubtreeSC);
+                NamingEnumeration ne = ctxt.search("cn=timezones," + CONFIG_BASE, "(objectclass=zimbraTimeZone)", sSubtreeSC);
                 sTimeZoneMap.clear();
                 while (ne.hasMore()) {
                     SearchResult sr = (SearchResult) ne.next();
@@ -1629,11 +1629,11 @@ public class LdapProvisioning extends Provisioning {
 
             Attributes attrs = new BasicAttributes(true);
             LdapUtil.mapToAttrs(listAttrs, attrs);
-            Attribute oc = LdapUtil.addAttr(attrs, A_objectClass, "liquidDistributionList");
-            oc.add("liquidMailRecipient");
+            Attribute oc = LdapUtil.addAttr(attrs, A_objectClass, "zimbraDistributionList");
+            oc.add("zimbraMailRecipient");
 
-            String liquidIdStr = LdapUtil.generateUUID();
-            attrs.put(A_zimbraId, liquidIdStr);
+            String zimbraIdStr = LdapUtil.generateUUID();
+            attrs.put(A_zimbraId, zimbraIdStr);
             attrs.put(A_zimbraMailAlias, listAddress);
 
             // default a distribution list is always created enabled
@@ -1644,7 +1644,7 @@ public class LdapProvisioning extends Provisioning {
             String dn = emailToDN(list, domain);
             newCtxt = createSubcontext(ctxt, dn, attrs, "createDistributionList");
 
-            DistributionList dlist = getDistributionListById(liquidIdStr, ctxt);
+            DistributionList dlist = getDistributionListById(zimbraIdStr, ctxt);
             AttributeManager.getInstance().postModify(listAttrs, dlist, attrManagerContext, true);
             return dlist;
 
@@ -1684,26 +1684,26 @@ public class LdapProvisioning extends Provisioning {
         return null;
     }
 
-    private DistributionList getDistributionListById(String liquidId, DirContext ctxt) throws ServiceException {
-        //liquidId = LdapUtil.escapeSearchFilterArg(liquidId);
-        return getDistributionListByQuery("","(&(liquidId="+liquidId+")(objectclass=liquidDistributionList))", ctxt);
+    private DistributionList getDistributionListById(String zimbraId, DirContext ctxt) throws ServiceException {
+        //zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
+        return getDistributionListByQuery("","(&(zimbraId="+zimbraId+")(objectclass=zimbraDistributionList))", ctxt);
     }
     
-    public DistributionList getDistributionListById(String liquidId) throws ServiceException {
-        return getDistributionListById(liquidId, null);
+    public DistributionList getDistributionListById(String zimbraId) throws ServiceException {
+        return getDistributionListById(zimbraId, null);
     }
 
-    public void deleteDistributionList(String liquidId) throws ServiceException {
-        LdapDistributionList dl = (LdapDistributionList) getDistributionListById(liquidId);
+    public void deleteDistributionList(String zimbraId) throws ServiceException {
+        LdapDistributionList dl = (LdapDistributionList) getDistributionListById(zimbraId);
         if (dl == null)
-            throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(liquidId);
+            throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(zimbraId);
 
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
             ctxt.unbind(dl.getDN());
         } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to purge distribution list: "+liquidId, e);
+            throw ServiceException.FAILURE("unable to purge distribution list: "+zimbraId, e);
         } finally {
             LdapUtil.closeContext(ctxt);
         }
@@ -1714,7 +1714,7 @@ public class LdapProvisioning extends Provisioning {
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
-            NamingEnumeration ne = ctxt.search("", "(objectclass=liquidDistributionList)", sSubtreeSC);
+            NamingEnumeration ne = ctxt.search("", "(objectclass=zimbraDistributionList)", sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 Context srctxt = (Context) sr.getObject();
@@ -1740,16 +1740,16 @@ public class LdapProvisioning extends Provisioning {
         String uid = LdapUtil.escapeSearchFilterArg(parts[0]);
         String domain = parts[1];
         String dn = "ou=people,"+LdapUtil.domainToDN(domain);
-        return getDistributionListByQuery(dn, "(&(uid="+uid+")(objectclass=liquidDistributionList))", null);
+        return getDistributionListByQuery(dn, "(&(uid="+uid+")(objectclass=zimbraDistributionList))", null);
     }
 
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#getLocalServer()
      */
     public synchronized Server getLocalServer() throws ServiceException {
-        String hostname = LC.liquid_server_hostname.value();
+        String hostname = LC.zimbra_server_hostname.value();
         if (hostname == null) {
-            Zimbra.halt("liquid_server_hostname not specified in localconfig.xml");
+            Zimbra.halt("zimbra_server_hostname not specified in localconfig.xml");
         }
         Server local = getServerByName(hostname);
         if (local == null) {
@@ -1826,7 +1826,7 @@ public class LdapProvisioning extends Provisioning {
             try {
                 acct.modifyAttrs(attrs);
             } catch (ServiceException e) {
-                ZimbraLog.account.warn("updating liquidLastLogonTimestamp", e);
+                ZimbraLog.account.warn("updating zimbraLastLogonTimestamp", e);
             }
         } else {
             Config config = Provisioning.getInstance().getConfig();
@@ -1840,7 +1840,7 @@ public class LdapProvisioning extends Provisioning {
                 try {
                     acct.modifyAttrs(attrs);
                 } catch (ServiceException e) {
-                    ZimbraLog.account.warn("updating liquidLastLogonTimestamp", e);
+                    ZimbraLog.account.warn("updating zimbraLastLogonTimestamp", e);
                 }
             }
         }
@@ -1887,14 +1887,14 @@ public class LdapProvisioning extends Provisioning {
                 ZimbraLog.account.warn("attr not set "+Provisioning.A_zimbraAuthLdapURL+", falling back to default mech");
             if (bindDn == null)
                 ZimbraLog.account.warn("attr not set "+Provisioning.A_zimbraAuthLdapBindDn+", falling back to default mech");            
-            // fallback to liquid
+            // fallback to zimbra
         } else if (!authMech.equals(Provisioning.AM_ZIMBRA)) {
             ZimbraLog.account.warn("unknown value for "+Provisioning.A_zimbraAuthMech+": "+
                     authMech+", falling back to default mech");
-            // fallback to liquid
+            // fallback to zimbra
         }
         
-        // fall back to liquid
+        // fall back to zimbra
         if (encodedPassword == null)
             throw AccountServiceException.AUTH_FAILED(acct.getName());
 
