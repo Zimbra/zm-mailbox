@@ -445,7 +445,7 @@ public class UnitTests extends TestCase {
 //            System.out.println("\nRun Query: "+qstr);
 //            long startTime = System.currentTimeMillis();
             
-            LiquidQuery lq = new LiquidQuery(qstr, Mailbox.getMailboxById(mailboxId));
+            ZimbraQuery lq = new ZimbraQuery(qstr, Mailbox.getMailboxById(mailboxId));
             
             int groupBy = MailboxIndex.SEARCH_RETURN_MESSAGES;
             if (conv) {

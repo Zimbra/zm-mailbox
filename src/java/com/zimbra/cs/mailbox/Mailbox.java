@@ -26,7 +26,7 @@ import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbMailItem.SearchResult;
 import com.zimbra.cs.db.DbPool.Connection;
-import com.zimbra.cs.index.LiquidQuery;
+import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.MailboxIndex;
@@ -1876,7 +1876,7 @@ public class Mailbox {
         try {
             beginTransaction("search", null);
 
-            LiquidQuery lq = new LiquidQuery(queryString, this); 
+            ZimbraQuery lq = new ZimbraQuery(queryString, this); 
             ZimbraQueryResults results = getMailboxIndex().search(lq, types, sortBy, includeTrash, includeSpam);
             success = true;
             return results;

@@ -39,7 +39,7 @@ import com.zimbra.cs.service.ServiceException;
  * Very simple wrapper classes that each represent a node in the parse tree for the
  * query string.
  */
-public final class LiquidQuery {
+public final class ZimbraQuery {
      
     
     
@@ -1118,7 +1118,7 @@ public final class LiquidQuery {
 //////////////////////////////////////////////////////////////////////    
 //////////////////////////////////////////////////////////////////////
     
-    private static Log mLog = LogFactory.getLog(LiquidQuery.class);
+    private static Log mLog = LogFactory.getLog(ZimbraQuery.class);
 
     private static final int SUBQUERY_TOKEN = 9999;
 
@@ -1376,9 +1376,9 @@ public final class LiquidQuery {
             top.add(cur);
             
             for (Iterator iter = clauses.iterator(); iter.hasNext();) {
-                LiquidQuery.BaseQuery q = (LiquidQuery.BaseQuery)iter.next();
+                ZimbraQuery.BaseQuery q = (ZimbraQuery.BaseQuery)iter.next();
                 
-                if (q instanceof LiquidQuery.ConjQuery) {
+                if (q instanceof ZimbraQuery.ConjQuery) {
                     if (((ConjQuery)q).isOr()) {
                         cur = new OperatorNode(STATE_AND);
                         top.add(cur);
@@ -1408,7 +1408,7 @@ public final class LiquidQuery {
 	 * @throws ServiceException
 	 * 
 	 */
-	public LiquidQuery(String queryString, Mailbox mbx) throws ParseException, ServiceException
+	public ZimbraQuery(String queryString, Mailbox mbx) throws ParseException, ServiceException
 	{
         ZimbraQueryParser parser = new ZimbraQueryParser(new StringReader(queryString));
         parser.init(new ZimbraAnalyzer(), mbx);

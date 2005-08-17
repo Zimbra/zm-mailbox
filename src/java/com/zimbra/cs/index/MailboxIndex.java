@@ -281,7 +281,7 @@ public final class MailboxIndex
     }
     
     // you **MUST** call ZimbraQueryResults.doneWithSearchResults() when you are done with them!
-    public synchronized ZimbraQueryResults search(LiquidQuery query, byte[] types, int searchOrder,
+    public synchronized ZimbraQueryResults search(ZimbraQuery query, byte[] types, int searchOrder,
             boolean includeTrash, boolean includeSpam) throws IOException
     {
         if (searchOrder < MailboxIndex.FIRST_SEARCH_ORDER_NUM || searchOrder > MailboxIndex.LAST_SEARCH_ORDER_NUM) {
