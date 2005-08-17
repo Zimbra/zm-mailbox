@@ -17,7 +17,7 @@ JAVA_SOURCES =  $(SRC)/java/com/zimbra/znative/IO.java \
 
 $(CLASSES)/com/zimbra/znative/IO.class: $(JAVA_SOURCES)
 	mkdir -p $(CLASSES)
-	javac -d $(CLASSES) $?
+	javac -source 1.4 -target 1.4 -d $(CLASSES) $?
 
 $(BUILD)/libzimbra-native.so: $(BUILD)/IO.o
 	gcc -shared -o $@ $<
