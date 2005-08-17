@@ -71,7 +71,7 @@ public class LmtpServer extends TcpServer {
 	
 	public void setConfigName(String name) {
 		mConfigName = name;
-		m220Greeting = new String("220 " + name + " Liquid LMTP ready");
+		m220Greeting = new String("220 " + name + " Zimbra LMTP ready");
 		m221Goodbye = new String("221 " + name + " closing connection");
         m421Error = new String("421 4.3.2 " + name + " Service not available, closing transmission channel");
 	}

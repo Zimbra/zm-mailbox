@@ -34,7 +34,7 @@ import com.zimbra.cs.localconfig.LC;
  * by any process that adds mail items.  Services under control include redo
  * logging and indexing.
  */
-public class Liquid {
+public class Zimbra {
 	private static boolean sInited = false;
 
     private static void checkForClass(String clzName, String jarName) {

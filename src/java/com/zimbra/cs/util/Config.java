@@ -113,7 +113,7 @@ public class Config {
 
     /**
      * Returns a File object representing the path relative to the
-     * Liquid home directory.
+     * Zimbra home directory.
      * @param path
      * @return
      */
