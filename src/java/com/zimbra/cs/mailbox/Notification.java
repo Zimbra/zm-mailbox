@@ -21,7 +21,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.EmailUtil;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.cs.util.StringUtil;
 import com.sun.mail.smtp.SMTPMessage;
 
@@ -52,8 +52,8 @@ public class Notification {
         String destination = null;
         
         boolean replyEnabled = account.getBooleanAttr(Provisioning.A_liquidPrefOutOfOfficeReplyEnabled, false);
-        if (LiquidLog.mailbox.isDebugEnabled()) {
-            LiquidLog.mailbox.debug("outofoffice reply enabled=" + replyEnabled + " rcpt='" + rcpt + "' mid=" + msg.getId());
+        if (ZimbraLog.mailbox.isDebugEnabled()) {
+            ZimbraLog.mailbox.debug("outofoffice reply enabled=" + replyEnabled + " rcpt='" + rcpt + "' mid=" + msg.getId());
         }
         if (!replyEnabled) {
             return;
@@ -214,7 +214,7 @@ public class Notification {
 
             Transport.send(out);
             
-            LiquidLog.mailbox.info("outofoffice sent dest='" + destination + "' rcpt='" + rcpt + "' mid=" + msg.getId());
+            ZimbraLog.mailbox.info("outofoffice sent dest='" + destination + "' rcpt='" + rcpt + "' mid=" + msg.getId());
             
             // Save so we will not send to again
             conn = null;
@@ -335,7 +335,7 @@ public class Notification {
             out.setText(body);
             out.setEnvelopeFrom("<>");
             Transport.send(out);
-            LiquidLog.mailbox.info("notification sent dest='" + destination + "' rcpt='" + rcpt + "' mid=" + msg.getId());
+            ZimbraLog.mailbox.info("notification sent dest='" + destination + "' rcpt='" + rcpt + "' mid=" + msg.getId());
         } catch (MessagingException me) {
             nfailed("send failed", destination, rcpt, msg, me);
         }
@@ -366,7 +366,7 @@ public class Notification {
         if (destAddr != null) {
             sb.append(" dest='").append(destAddr).append("'");
         }
-        LiquidLog.mailbox.info(sb, e);
+        ZimbraLog.mailbox.info(sb, e);
     }
 
     private static void nfailed(String why, String destAddr, String rcptAddr, Message msg, Exception e) {

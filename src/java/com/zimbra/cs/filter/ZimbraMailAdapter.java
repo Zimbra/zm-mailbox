@@ -24,7 +24,7 @@ import com.zimbra.cs.filter.jsieve.ActionTag;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * <p>Class ZimbraMailAdapter implements a mock MailAdapter for testing purposes.</p>
@@ -72,7 +72,7 @@ public class ZimbraMailAdapter implements MailAdapter
             if (spamRegex != null)
                 sSpamHeaderValue = Pattern.compile(spamRegex);
         } catch (Exception e) {
-            LiquidLog.filter.fatal("Unable to get spam header from provisioning", e);
+            ZimbraLog.filter.fatal("Unable to get spam header from provisioning", e);
             throw new RuntimeException("Unable to get spam header from provisioning", e);
         }
     }
@@ -212,7 +212,7 @@ public class ZimbraMailAdapter implements MailAdapter
                     try {
                         folderId = mMailbox.getFolderByPath(folderName).getId();
                     } catch (MailServiceException.NoSuchItemException nsie) {
-                        LiquidLog.filter.warn("Folder " + folderName + " not found; message saved to INBOX for " + mRecipient);
+                        ZimbraLog.filter.warn("Folder " + folderName + " not found; message saved to INBOX for " + mRecipient);
                     }
                     // save the message to the specified folder;
                     // The message will not be filed into the same folder multiple times because of
@@ -245,7 +245,7 @@ public class ZimbraMailAdapter implements MailAdapter
                 }
             }
             if (dup) {
-                LiquidLog.filter.debug("filter actions ignored for duplicate messages that are not delivered");
+                ZimbraLog.filter.debug("filter actions ignored for duplicate messages that are not delivered");
             } else {
                 // there may be non-terminal actions left; file a message to INBOX and apply the non-terminal actions on that message
                 if (!nontermActions.isEmpty()) {
@@ -287,7 +287,7 @@ public class ZimbraMailAdapter implements MailAdapter
                         tagsBuf.append(",").append(tag.getId());
                     }
                 } catch (MailServiceException.NoSuchItemException nsie) {
-                    LiquidLog.filter.warn("Tag " + tagName + " does not exist; cannot tag message " +
+                    ZimbraLog.filter.warn("Tag " + tagName + " does not exist; cannot tag message " +
                             " for " + mRecipient);
                 }                
             } else if (action.getClass() == ActionFlag.class) {
@@ -302,7 +302,7 @@ public class ZimbraMailAdapter implements MailAdapter
                     else
                         flagBits &= (~flag.getBitmask());
                 } catch (ServiceException e) {
-                    LiquidLog.filter.warn("Unable to flag message", e);
+                    ZimbraLog.filter.warn("Unable to flag message", e);
                 }
             }
         }
@@ -313,8 +313,8 @@ public class ZimbraMailAdapter implements MailAdapter
         Message msg = mMailbox.addMessage(null, mParsedMessage, folderId, flagBits, tags, mRecipient, mSharedDeliveryCtxt);
         if (msg != null) {
             mMessages.add(msg);
-            if (LiquidLog.filter.isDebugEnabled())
-                LiquidLog.filter.debug("Saved message " + msg.getId() + " to mailbox: " + msg.getMailboxId() + " folder: " + folderId + 
+            if (ZimbraLog.filter.isDebugEnabled())
+                ZimbraLog.filter.debug("Saved message " + msg.getId() + " to mailbox: " + msg.getMailboxId() + " folder: " + folderId + 
                     " tags: " + tags + " flags: 0x" + Integer.toHexString(flagBits));
         }
         return msg;

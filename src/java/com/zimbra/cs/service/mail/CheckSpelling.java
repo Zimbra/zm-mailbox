@@ -8,7 +8,7 @@ import java.util.Map;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.util.RemoteServerRequest;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.cs.util.StringUtil;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraContext;
@@ -40,7 +40,7 @@ public class CheckSpelling extends DocumentHandler  {
 
         // Make sure that the hostname is specified
         String spellServerUrl = getSpellServerUrl();
-        LiquidLog.mailbox.debug(
+        ZimbraLog.mailbox.debug(
             "CheckSpelling: spellServerUrl='" + spellServerUrl + "', mWasSuccessful=" +
             mWasSuccessful + ", mFailTimestamp=" + mFailTimestamp);
         if (spellServerUrl == null) {
@@ -91,10 +91,10 @@ public class CheckSpelling extends DocumentHandler  {
                 }
             }
             response.addAttribute(MailService.A_AVAILABLE, true);
-            LiquidLog.mailbox.debug(
+            ZimbraLog.mailbox.debug(
                 "CheckSpelling: found " + numMisspelled + " misspelled words in " + numLines + " lines");
         } catch (IOException ex) {
-            LiquidLog.mailbox.error("An error occurred while contacting the spelling server", ex);
+            ZimbraLog.mailbox.error("An error occurred while contacting the spelling server", ex);
             mWasSuccessful = false;
             mFailTimestamp = System.currentTimeMillis();
             response.addAttribute(MailService.A_AVAILABLE, false);

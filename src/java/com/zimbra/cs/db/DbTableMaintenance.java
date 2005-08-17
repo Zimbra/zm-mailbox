@@ -13,7 +13,7 @@ import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.MailboxLock;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 
 public class DbTableMaintenance {
     
@@ -53,7 +53,7 @@ public class DbTableMaintenance {
         operation = operation.toUpperCase();
         if (!operation.equals(OPERATION_ANALYZE) &&
             !operation.equals(OPERATION_OPTIMIZE)) {
-            LiquidLog.mailbox.error(
+            ZimbraLog.mailbox.error(
                 "Invalid table maintenance operation setting: '" + operation + "'."
                 + "  Setting operation to " + OPERATION_ANALYZE);
             operation = OPERATION_ANALYZE;
@@ -67,7 +67,7 @@ public class DbTableMaintenance {
         int tableCount = 0;
         int[] mailboxIds = Mailbox.getMailboxIds();
         
-        LiquidLog.mailbox.info(
+        ZimbraLog.mailbox.info(
             "Starting table maintenance.  MinRows=" + getMinRows() + ", MaxRows=" + getMaxRows() +
             ", GrowthFactor=" + getGrowthFactor());
         
@@ -81,7 +81,7 @@ public class DbTableMaintenance {
                 int numRows = results.getInt(row, "Rows");
                 if (numRows < getMinRows() || numRows > getMaxRows()) {
                     // Skip tables that are too small or too big
-                    LiquidLog.mailbox.debug(
+                    ZimbraLog.mailbox.debug(
                         "Skipping table " + tableName + ", which has " + numRows + " rows.");
                     continue;
                 }
@@ -91,13 +91,13 @@ public class DbTableMaintenance {
                 
                 // Check for 0 rows is necessary, since (0 >= 0 * GrowthFactor) evaluates to true
                 if (numRows > 0 && numRows >= lastNumRows * getGrowthFactor()) {
-                    LiquidLog.mailbox.info("Maintaining table " + tableName + summary);
+                    ZimbraLog.mailbox.info("Maintaining table " + tableName + summary);
                     Mailbox mbox = Mailbox.getMailboxById(id);
                     if (maintainTable(mbox, tableName, numRows)) {
                         tableCount++;
                     }
                 } else {
-                    LiquidLog.mailbox.debug("Skipping table " + tableName + summary);
+                    ZimbraLog.mailbox.debug("Skipping table " + tableName + summary);
                 }
             }
         }
@@ -153,7 +153,7 @@ public class DbTableMaintenance {
         Connection conn = null;
         PreparedStatement stmt = null;
         String sql = getOperation() + " TABLE `" + dbName + "`.`" + tableName + "`";
-        LiquidLog.mailbox.info("Running '" + sql + "'");
+        ZimbraLog.mailbox.info("Running '" + sql + "'");
         MailboxLock lock = null;
         boolean success = false;
         
@@ -169,7 +169,7 @@ public class DbTableMaintenance {
             String error = 
                 DbTableMaintenance.class.getName() + ".maintainTable(" +
                 mbox.getId() + ", " + tableName + "): error while running '" + sql + "': " + e.toString();
-            LiquidLog.mailbox.error(error);
+            ZimbraLog.mailbox.error(error);
             return false;
         } finally {
             if (lock != null)

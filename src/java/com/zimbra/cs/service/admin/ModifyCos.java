@@ -10,7 +10,7 @@ import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.ZimbraContext;
 
 /**
@@ -33,7 +33,7 @@ public class ModifyCos extends AdminDocumentHandler {
         // pass in true to checkImmutable
         cos.modifyAttrs(attrs, true);
 
-        LiquidLog.security.info(LiquidLog.encodeAttrs(
+        ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "ModifyCos","name", cos.getName()}, attrs));
         
 	    Element response = lc.createElement(AdminService.MODIFY_COS_RESPONSE);

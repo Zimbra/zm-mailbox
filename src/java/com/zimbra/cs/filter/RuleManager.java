@@ -27,7 +27,7 @@ import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * @author kchen
@@ -168,14 +168,14 @@ public class RuleManager {
                     throw (MessagingException) t;
                 }
             } else {
-                LiquidLog.filter.warn("Sieve error:", e);
+                ZimbraLog.filter.warn("Sieve error:", e);
                 // filtering system generates errors; 
                 // ignore filtering and file the message into INBOX
                 msg = mailbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX,
                         Flag.FLAG_UNREAD, null, recipient, sharedDeliveryCtxt);
             }
         } catch (ParseException e) {
-            LiquidLog.filter.warn("Sieve script parsing error:", e);
+            ZimbraLog.filter.warn("Sieve script parsing error:", e);
             // filtering system generates errors; 
             // ignore filtering and file the message into INBOX
             msg = mailbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX,

@@ -2,7 +2,7 @@ package com.zimbra.cs.ozserver;
 
 import java.nio.ByteBuffer;
 
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 
 public class OzCountingMatcher implements OzMatcher {
 
@@ -16,7 +16,7 @@ public class OzCountingMatcher implements OzMatcher {
 
     public int match(ByteBuffer buffer) {
         int nb = buffer.limit() - buffer.position();
-        LiquidLog.ozserver.debug("counting matcher: position="+ buffer.position() + " limit=" + buffer.limit() +
+        ZimbraLog.ozserver.debug("counting matcher: position="+ buffer.position() + " limit=" + buffer.limit() +
                 " new=" + nb + " matched=" + mMatched + " target=" + mTarget);
         if ((nb + mMatched) < mTarget) {
             mMatched += nb;

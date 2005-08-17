@@ -214,7 +214,7 @@ public class StringUtil {
             line = br.readLine();
         }
         catch (IOException ex) {
-            LiquidLog.misc.error("Unable to process template", ex);
+            ZimbraLog.misc.error("Unable to process template", ex);
         }
         Matcher matcher = templatePattern.matcher(line);
         
@@ -224,7 +224,7 @@ public class StringUtil {
                 String key = matcher.group(2);
                 Object value = vars.get(key);
                 if (value == null) {
-                    LiquidLog.misc.info("fillTemplate(): could not find key '" + key + "'");
+                    ZimbraLog.misc.info("fillTemplate(): could not find key '" + key + "'");
                     value = "";
                 }
                 line = matcher.group(1) + value + matcher.group(3);
@@ -238,7 +238,7 @@ public class StringUtil {
                 line = br.readLine();
             }
             catch (IOException ex) {
-                LiquidLog.misc.error("Unable to process template", ex);
+                ZimbraLog.misc.error("Unable to process template", ex);
             }
             if (line != null) {
                 matcher.reset(line);

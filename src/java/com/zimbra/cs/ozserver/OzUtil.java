@@ -3,7 +3,7 @@ package com.zimbra.cs.ozserver;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 
 class OzUtil {
 
@@ -85,13 +85,13 @@ class OzUtil {
 	public static void logSelectionKey(SelectionKey selectionKey, int id, String where) {
         synchronized (selectionKey) {
         	if (selectionKey.isValid()) {
-        		LiquidLog.ozserver.debug(where +
+        		ZimbraLog.ozserver.debug(where +
         				" cid=" + id + 
 						" iops=" + selectionKey.interestOps() + 
 						" rops=" + selectionKey.readyOps() + 
 						" key=" + Integer.toHexString(selectionKey.hashCode()));
             } else {
-            	LiquidLog.ozserver.debug(where + 
+            	ZimbraLog.ozserver.debug(where + 
                         " invalid cid=" + id + 
                         " key=" + Integer.toHexString(selectionKey.hashCode()));
             }

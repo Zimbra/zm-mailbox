@@ -13,7 +13,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * @author dkarp
@@ -222,7 +222,7 @@ public class ImapSession extends Session {
 
         // add new messages to the currently selected mailbox
         if (mSelectedFolder != null && newMessages != null && newMessages.size() != 0) {
-            boolean debug = LiquidLog.imap.isDebugEnabled();
+            boolean debug = ZimbraLog.imap.isDebugEnabled();
             Collections.sort(newMessages, new Message.SortImapUID());
             boolean renumber = ((Message) newMessages.get(0)).getImapUID() < mSelectedFolder.getHighwaterUID();
 
@@ -235,7 +235,7 @@ public class ImapSession extends Session {
                     i4msg.added = true;
                     mSelectedFolder.dirtyMessage(i4msg);
                 }
-                if (debug)  LiquidLog.imap.debug(added);
+                if (debug)  ZimbraLog.imap.debug(added);
             } else {
                 // 2.3.1.1: "Unique identifiers are assigned in a strictly ascending fashion in
                 //           the mailbox; as each message is added to the mailbox it is assigned
@@ -248,11 +248,11 @@ public class ImapSession extends Session {
                 }
                 Mailbox mbox = ((Message) newMessages.get(0)).getMailbox();
                 try {
-                    if (debug)  LiquidLog.imap.debug("  ** moved; changing imap uid (ntfn):" + added);
+                    if (debug)  ZimbraLog.imap.debug("  ** moved; changing imap uid (ntfn):" + added);
                     // notification will take care of adding to mailbox
                     mbox.resetImapUid(null, msgIds);
                 } catch (ServiceException e) {
-                    if (debug)  LiquidLog.imap.debug("  ** moved; imap uid change failed; msg hidden (ntfn): " + msgIds);
+                    if (debug)  ZimbraLog.imap.debug("  ** moved; imap uid change failed; msg hidden (ntfn): " + msgIds);
                 }
             }
         }
@@ -288,7 +288,7 @@ public class ImapSession extends Session {
                 ImapMessage i4msg = mSelectedFolder.getById(id);
                 if (i4msg != null) {
                     i4msg.expunged = true;
-                    LiquidLog.imap.debug("  ** deleted (ntfn): " + i4msg.id);
+                    ZimbraLog.imap.debug("  ** deleted (ntfn): " + i4msg.id);
                 }
             }
         }
@@ -309,7 +309,7 @@ public class ImapSession extends Session {
                 if (mSelectedFolder.getById(msgId) != null)
                     continue;
                 newMessages.add(item);
-                LiquidLog.imap.debug("  ** created (ntfn): " + msgId);
+                ZimbraLog.imap.debug("  ** created (ntfn): " + msgId);
             }
         }
         return true;
@@ -318,7 +318,7 @@ public class ImapSession extends Session {
     private boolean handleModifies(Map modified, List newMessages) {
         boolean selected = mSelectedFolder != null;
         boolean virtual = selected && mSelectedFolder.isVirtual();
-        boolean debug = LiquidLog.imap.isDebugEnabled();
+        boolean debug = ZimbraLog.imap.isDebugEnabled();
         for (Iterator it = modified.values().iterator(); it.hasNext(); ) {
             Change chg = (Change) it.next();
             if (chg.what instanceof Tag && (chg.why & Change.MODIFIED_NAME) != 0) {
@@ -357,7 +357,7 @@ public class ImapSession extends Session {
                 if (i4msg == null) {
                     if (inFolder && !virtual) {
                         newMessages.add(chg.what);
-                        if (debug)  LiquidLog.imap.debug("  ** moved (ntfn): " + msg.getId());
+                        if (debug)  ZimbraLog.imap.debug("  ** moved (ntfn): " + msg.getId());
                     }
                 } else if (!inFolder && !virtual)
                     i4msg.expunged = true;
@@ -368,7 +368,7 @@ public class ImapSession extends Session {
                     i4msg.expunged = true;
                     if (!virtual)
                         newMessages.add(chg.what);
-                    if (debug)  LiquidLog.imap.debug("  ** imap uid changed (ntfn): " + msg.getId());
+                    if (debug)  ZimbraLog.imap.debug("  ** imap uid changed (ntfn): " + msg.getId());
                 }
             }
         }

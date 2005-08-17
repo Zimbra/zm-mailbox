@@ -2,7 +2,7 @@ package com.zimbra.cs.ozserver;
 
 import java.nio.ByteBuffer;
 
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 
 public class OzByteArrayMatcher implements OzMatcher {
    
@@ -25,7 +25,7 @@ public class OzByteArrayMatcher implements OzMatcher {
     
     public int match(ByteBuffer buf) {
         assert(mMatched < mMatchSequenceLength);
-        boolean dump = LiquidLog.ozserver.isDebugEnabled(); 
+        boolean dump = ZimbraLog.ozserver.isDebugEnabled(); 
         StringBuffer lsb = null;
         if (dump) lsb = new StringBuffer();
         
@@ -43,7 +43,7 @@ public class OzByteArrayMatcher implements OzMatcher {
                 mMatched++;
                 if (dump) lsb.append("+" + mMatched + " ");
                 if (mMatched == mMatchSequenceLength) {
-                    if (dump) LiquidLog.ozserver.debug(lsb.toString());
+                    if (dump) ZimbraLog.ozserver.debug(lsb.toString());
                     return buf.position();
                 }
             } else {
@@ -52,13 +52,13 @@ public class OzByteArrayMatcher implements OzMatcher {
                     mMatched++;
                     if (dump) lsb.append("+" + mMatched + " ");
                     if (mMatched == mMatchSequenceLength) {
-                        if (dump) LiquidLog.ozserver.debug(lsb.toString());
+                        if (dump) ZimbraLog.ozserver.debug(lsb.toString());
                         return buf.position();
                     }
                 }
             }
         }
-        if (dump) LiquidLog.ozserver.debug(lsb.toString());
+        if (dump) ZimbraLog.ozserver.debug(lsb.toString());
         return -1;
     }
 

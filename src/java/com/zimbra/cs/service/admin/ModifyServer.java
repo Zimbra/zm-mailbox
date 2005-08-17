@@ -11,7 +11,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Config;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.ZimbraContext;
 
 /**
@@ -34,7 +34,7 @@ public class ModifyServer extends AdminDocumentHandler {
         // pass in true to checkImmutable
         server.modifyAttrs(attrs, true);
 
-        LiquidLog.security.info(LiquidLog.encodeAttrs(
+        ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "ModifyServer","name", server.getName()}, attrs));
 
         // If updating user service enable flag on local server, we have to 

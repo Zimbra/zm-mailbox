@@ -10,7 +10,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.ZimbraContext;
 
 /**
@@ -32,7 +32,7 @@ public class SetPassword extends AdminDocumentHandler {
 
         prov.setPassword(account, newPassword);
         
-        LiquidLog.security.info(LiquidLog.encodeAttrs(
+        ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "SetPassword","name", account.getName()}));
 
 	    Element response = lc.createElement(AdminService.SET_PASSWORD_RESPONSE);

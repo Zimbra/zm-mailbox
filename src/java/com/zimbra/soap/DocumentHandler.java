@@ -11,7 +11,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * @author schemers
@@ -36,7 +36,7 @@ public abstract class DocumentHandler {
         String id = lc.getRequestedAccountId();
         Mailbox mbx = Mailbox.getMailboxByAccountId(id);
         if (mbx != null)
-            LiquidLog.addToContext(mbx);
+            ZimbraLog.addToContext(mbx);
 	    return mbx; 
     }
 

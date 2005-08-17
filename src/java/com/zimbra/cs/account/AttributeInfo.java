@@ -8,7 +8,7 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 
 public class AttributeInfo {
     
@@ -90,7 +90,7 @@ public class AttributeInfo {
             } else if (cons[i].startsWith("min=")) {
                 mMin = parseInt(cons[i].substring(4), Integer.MIN_VALUE);                
             } else {
-                LiquidLog.misc.warn("attr("+mName+") unknown constraint: "+cons[i]);
+                ZimbraLog.misc.warn("attr("+mName+") unknown constraint: "+cons[i]);
             }
         }
     }
@@ -230,7 +230,7 @@ public class AttributeInfo {
            else
                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must match the regex: "+mValue, null);
        default:
-           LiquidLog.misc.warn("unknown type("+mType+") for attribute: "+value);
+           ZimbraLog.misc.warn("unknown type("+mType+") for attribute: "+value);
            return;
        }
    }

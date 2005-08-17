@@ -15,7 +15,7 @@ import com.zimbra.cs.service.util.ThreadLocalData;
 import com.zimbra.cs.servlet.LiquidServlet;
 import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.cs.util.Liquid;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * The soap service servlet
@@ -34,7 +34,7 @@ public class SoapServlet extends LiquidServlet {
 
     public void init() throws ServletException {
         String name = getServletName();
-        LiquidLog.soap.info("Servlet " + name + " starting up");
+        ZimbraLog.soap.info("Servlet " + name + " starting up");
         super.init();
 
         mEngine = new SoapEngine();
@@ -51,19 +51,19 @@ public class SoapServlet extends LiquidServlet {
         try {
             Liquid.startup();
         } catch (Throwable t) {
-            LiquidLog.soap.fatal("Unable to start servlet", t);
+            ZimbraLog.soap.fatal("Unable to start servlet", t);
         	throw new UnavailableException(t.getMessage());
         }
     }
 
     public void destroy() {
         String name = getServletName();
-        LiquidLog.soap.info("Servlet " + name + " shutting down");
+        ZimbraLog.soap.info("Servlet " + name + " shutting down");
         try {
             Liquid.shutdown();
         } catch (ServiceException e) {
             // Log as error and ignore.
-        	LiquidLog.soap.error("Exception while shutting down servlet " + name, e);
+        	ZimbraLog.soap.error("Exception while shutting down servlet " + name, e);
         }
         // FIXME: we might want to add mEngine.destroy()
         // to allow the mEngine to cleanup?
@@ -109,7 +109,7 @@ public class SoapServlet extends LiquidServlet {
     public void doPost(HttpServletRequest req, HttpServletResponse resp)
         throws ServletException, IOException
     {
-        if (LiquidLog.perf.isDebugEnabled()) {
+        if (ZimbraLog.perf.isDebugEnabled()) {
             ThreadLocalData.reset();
         }
         
@@ -123,8 +123,8 @@ public class SoapServlet extends LiquidServlet {
             buffer = new byte[len];
             readFully(req.getInputStream(), buffer, 0, len);
         }
-        if (LiquidLog.soap.isDebugEnabled()) {
-            LiquidLog.soap.debug("SOAP request:\n" + new String(buffer, "utf8"));
+        if (ZimbraLog.soap.isDebugEnabled()) {
+            ZimbraLog.soap.debug("SOAP request:\n" + new String(buffer, "utf8"));
         }
         
         String realHost = req.getParameter("host");
@@ -147,7 +147,7 @@ public class SoapServlet extends LiquidServlet {
                 if (e instanceof OutOfMemoryError) {
                     Liquid.halt("handler exception", e);
                 }
-                LiquidLog.soap.warn("handler exception", e);
+                ZimbraLog.soap.warn("handler exception", e);
                 Element fault = SoapProtocol.Soap12.soapFault(ServiceException.FAILURE(e.toString(), e));
                 envelope = SoapProtocol.Soap12.soapEnvelope(fault);
             }
@@ -157,8 +157,8 @@ public class SoapServlet extends LiquidServlet {
                     HttpServletResponse.SC_INTERNAL_SERVER_ERROR : HttpServletResponse.SC_OK;
             
             byte[] soapBytes = envelope.toUTF8();
-            if (LiquidLog.soap.isDebugEnabled()) {
-                LiquidLog.soap.debug("SOAP response: \n" + new String(soapBytes, "utf8"));
+            if (ZimbraLog.soap.isDebugEnabled()) {
+                ZimbraLog.soap.debug("SOAP response: \n" + new String(soapBytes, "utf8"));
             }
             
             resp.setContentType(soapProto.getContentType());
@@ -170,7 +170,7 @@ public class SoapServlet extends LiquidServlet {
             sSoapStopWatch.stop(startTime);
             
             // If perf logging is enabled, track server response times
-            if (LiquidLog.perf.isDebugEnabled()) {
+            if (ZimbraLog.perf.isDebugEnabled()) {
                 long responseTime = System.currentTimeMillis() - startTime;
                 String responseName = soapProto.getBodyElement(envelope).getName();
                 LiquidPerf.writeResponseStats(responseName, responseTime,

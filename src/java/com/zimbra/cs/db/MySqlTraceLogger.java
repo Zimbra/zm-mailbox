@@ -6,7 +6,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.zimbra.cs.service.util.LiquidPerf;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 import com.mysql.jdbc.log.Log;
 
 /**
@@ -64,7 +64,7 @@ public class MySqlTraceLogger implements Log {
                     if (matcher.matches()) {
                         int slowDuration = Integer.parseInt(matcher.group(1));
                         LiquidPerf.writeSlowQuery(matcher.group(2), slowDuration);
-                        LiquidLog.perf.debug(arg);
+                        ZimbraLog.perf.debug(arg);
                         return;
                     }
                 }
@@ -75,7 +75,7 @@ public class MySqlTraceLogger implements Log {
         // gets triggered if either sqltrace or sqlperf is on, so we
         // need to check if the logger is enabled before logging anything.
         if (sql != null) {
-            if (LiquidLog.perf.isDebugEnabled()) {
+            if (ZimbraLog.perf.isDebugEnabled()) {
                 LiquidPerf.updateDbStats(sql, duration);
             }
             
@@ -86,14 +86,14 @@ public class MySqlTraceLogger implements Log {
                 return;
             }
 
-            if (LiquidLog.sqltrace.isDebugEnabled()) {
-                LiquidLog.sqltrace.debug(sql + ", duration: " + duration);
+            if (ZimbraLog.sqltrace.isDebugEnabled()) {
+                ZimbraLog.sqltrace.debug(sql + ", duration: " + duration);
             }
             
             return;
         }
 
-        LiquidLog.sqltrace.debug(arg, t);
+        ZimbraLog.sqltrace.debug(arg, t);
     }
 
     /**
@@ -118,27 +118,27 @@ public class MySqlTraceLogger implements Log {
     //////////// com.mysql.jdbc.log.Log implementation ////////////////
 
     public boolean isDebugEnabled() {
-        return LiquidLog.sqltrace.isDebugEnabled() || LiquidLog.perf.isDebugEnabled();
+        return ZimbraLog.sqltrace.isDebugEnabled() || ZimbraLog.perf.isDebugEnabled();
     }
 
     public boolean isErrorEnabled() {
-        return LiquidLog.sqltrace.isErrorEnabled() || LiquidLog.perf.isErrorEnabled();
+        return ZimbraLog.sqltrace.isErrorEnabled() || ZimbraLog.perf.isErrorEnabled();
     }
 
     public boolean isFatalEnabled() {
-        return LiquidLog.sqltrace.isFatalEnabled() || LiquidLog.perf.isFatalEnabled();
+        return ZimbraLog.sqltrace.isFatalEnabled() || ZimbraLog.perf.isFatalEnabled();
     }
 
     public boolean isInfoEnabled() {
-        return LiquidLog.sqltrace.isInfoEnabled() || LiquidLog.perf.isInfoEnabled();
+        return ZimbraLog.sqltrace.isInfoEnabled() || ZimbraLog.perf.isInfoEnabled();
     }
 
     public boolean isTraceEnabled() {
-        return LiquidLog.sqltrace.isTraceEnabled() || LiquidLog.perf.isTraceEnabled();
+        return ZimbraLog.sqltrace.isTraceEnabled() || ZimbraLog.perf.isTraceEnabled();
     }
 
     public boolean isWarnEnabled() {
-        return LiquidLog.sqltrace.isWarnEnabled() || LiquidLog.perf.isWarnEnabled();
+        return ZimbraLog.sqltrace.isWarnEnabled() || ZimbraLog.perf.isWarnEnabled();
     }
 
     public void logDebug(Object arg0) {
@@ -150,19 +150,19 @@ public class MySqlTraceLogger implements Log {
     }
 
     public void logError(Object arg0) {
-        LiquidLog.sqltrace.error(arg0);
+        ZimbraLog.sqltrace.error(arg0);
     }
 
     public void logError(Object arg0, Throwable arg1) {
-        LiquidLog.sqltrace.error(arg0, arg1);
+        ZimbraLog.sqltrace.error(arg0, arg1);
     }
 
     public void logFatal(Object arg0) {
-        LiquidLog.sqltrace.fatal(arg0);
+        ZimbraLog.sqltrace.fatal(arg0);
     }
 
     public void logFatal(Object arg0, Throwable arg1) {
-        LiquidLog.sqltrace.fatal(arg0, arg1);
+        ZimbraLog.sqltrace.fatal(arg0, arg1);
     }
 
     public void logInfo(Object arg0) {
@@ -174,11 +174,11 @@ public class MySqlTraceLogger implements Log {
     }
 
     public void logTrace(Object arg0) {
-        LiquidLog.sqltrace.trace(arg0);
+        ZimbraLog.sqltrace.trace(arg0);
     }
 
     public void logTrace(Object arg0, Throwable arg1) {
-        LiquidLog.sqltrace.trace(arg0, arg1);
+        ZimbraLog.sqltrace.trace(arg0, arg1);
     }
 
     public void logWarn(Object arg0) {

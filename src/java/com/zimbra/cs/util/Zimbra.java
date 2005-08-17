@@ -40,11 +40,11 @@ public class Liquid {
     private static void checkForClass(String clzName, String jarName) {
         try {
             String s = Class.forName(clzName).getName();
-            LiquidLog.misc.debug("checked for class " + s + " and found it");
+            ZimbraLog.misc.debug("checked for class " + s + " and found it");
         } catch (ClassNotFoundException cnfe) {
-            LiquidLog.misc.error(jarName + " not in your common/lib?", cnfe);
+            ZimbraLog.misc.error(jarName + " not in your common/lib?", cnfe);
         } catch (UnsatisfiedLinkError ule) {
-            LiquidLog.misc.error("error in shared library used by " + jarName + "?", ule);
+            ZimbraLog.misc.error("error in shared library used by " + jarName + "?", ule);
         }
     }
 
@@ -70,7 +70,7 @@ public class Liquid {
     }
 
     public static void toolSetup(String defaultLogLevel) {
-        LiquidLog.toolSetupLog4j(defaultLogLevel);
+        ZimbraLog.toolSetupLog4j(defaultLogLevel);
         if (LC.ssl_allow_untrusted_certs.booleanValue())
             EasySSLProtocolSocketFactory.init();
     }
@@ -79,7 +79,7 @@ public class Liquid {
 		if (sInited)
 			return;
 
-        LiquidLog.misc.info(
+        ZimbraLog.misc.info(
                 "version=" + BuildInfo.VERSION +
                 " release=" + BuildInfo.RELEASE +
                 " builddate=" + BuildInfo.DATE +
@@ -156,7 +156,7 @@ public class Liquid {
      */
     public static void halt(String message) {
         try {
-            LiquidLog.system.fatal(message);
+            ZimbraLog.system.fatal(message);
         } finally {
             Runtime.getRuntime().halt(1);
         }
@@ -170,7 +170,7 @@ public class Liquid {
      */
     public static void halt(String message, Throwable t) {
         try {
-            LiquidLog.system.fatal(message, t);
+            ZimbraLog.system.fatal(message, t);
         } finally {
             Runtime.getRuntime().halt(1);
         }

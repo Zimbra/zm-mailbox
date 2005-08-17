@@ -25,7 +25,7 @@ import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * @author kchen
@@ -327,7 +327,7 @@ class RuleRewriter {
                     try {
                         // create folder
                         mMailbox.createFolder(null, argVal, (byte) 0);
-                        LiquidLog.filter.info("Created folder " + argVal + " referenced in rule \"" + ruleName + "\"");
+                        ZimbraLog.filter.info("Created folder " + argVal + " referenced in rule \"" + ruleName + "\"");
                     } catch (MailServiceException e1) {
                         throw ServiceException.FAILURE("unable to create inexistent folder (" + argVal + ") in rule \"" + ruleName + "\"", e1);
                     }
@@ -338,7 +338,7 @@ class RuleRewriter {
                 } catch (MailServiceException.NoSuchItemException e) {
                     // create tag
                     mMailbox.createTag(null, argVal, Tag.DEFAULT_COLOR);
-                    LiquidLog.filter.info("Created tag " + argVal + " referenced in rule \"" + ruleName + "\"");
+                    ZimbraLog.filter.info("Created tag " + argVal + " referenced in rule \"" + ruleName + "\"");
                 }
             }
             sb.append(" \"").append(argVal).append("\"");

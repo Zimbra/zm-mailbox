@@ -21,7 +21,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Config;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.cs.util.StringUtil;
 
 /**
@@ -81,7 +81,7 @@ public class DbMailbox {
      */
     public static void createMailboxDatabase(int mailboxId)
     throws ServiceException {
-        LiquidLog.mailbox.debug("createMailboxDatabase(" + mailboxId + ")");
+        ZimbraLog.mailbox.debug("createMailboxDatabase(" + mailboxId + ")");
 
         Connection conn = DbPool.getConnection();
         PreparedStatement stmt = null;
@@ -89,7 +89,7 @@ public class DbMailbox {
         try {
             // Create the new database
             String dbName = getDatabaseName(mailboxId);
-            LiquidLog.mailbox.info("Creating database " + dbName);
+            ZimbraLog.mailbox.info("Creating database " + dbName);
 
             File file = Config.getPathRelativeToLiquidHome("db/create_database.sql");
             Map vars = new HashMap();
@@ -129,7 +129,7 @@ public class DbMailbox {
      */
     public static void dropMailboxDatabase(int mailboxId)
     throws ServiceException {
-        LiquidLog.mailbox.debug("dropMailboxDatabase(" + mailboxId + ")");
+        ZimbraLog.mailbox.debug("dropMailboxDatabase(" + mailboxId + ")");
         Connection conn = DbPool.getConnection();
         PreparedStatement stmt = null;
         String dbName = getDatabaseName(mailboxId);
@@ -140,7 +140,7 @@ public class DbMailbox {
         
         try {
             // Create the new database
-            LiquidLog.mailbox.info("Dropping database " + dbName);
+            ZimbraLog.mailbox.info("Dropping database " + dbName);
 
             stmt = conn.prepareStatement("DROP DATABASE IF EXISTS " + dbName);
             stmt.execute(); 
@@ -272,7 +272,7 @@ public class DbMailbox {
             try {
                 mbd.config = new Metadata(rs.getString(8)); 
             } catch (ServiceException e) {
-                LiquidLog.misc.warn("unparseable config metadata in mailbox " + mailboxId);
+                ZimbraLog.misc.warn("unparseable config metadata in mailbox " + mailboxId);
                 mbd.config = new Metadata();
             }
 

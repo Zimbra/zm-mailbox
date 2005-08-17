@@ -17,7 +17,7 @@ import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.mail.Search;
 import com.zimbra.cs.service.util.ParseMailboxID;
 import com.zimbra.cs.util.CrossMailboxSearch;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.ZimbraContext;
 
 
@@ -45,7 +45,7 @@ public class SearchMultipleMailboxes extends Search {
             ZimbraQueryResults results = xmbsearch.getSearchResults(encodedAuthToken, params);
             
             // TODO: log all the requested mailboxes? Is logging the query string too sensitive?
-            LiquidLog.security.info(LiquidLog.encodeAttrs(
+            ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                     new String[] {"cmd", "SearchMultipleMailboxes", "query", params.getQueryStr()}));
 
             Element retVal = null;

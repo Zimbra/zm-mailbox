@@ -10,7 +10,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.stats.StopWatch;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.ZimbraContext;
 
 /**
@@ -37,7 +37,7 @@ public class DeleteMailbox extends AdminDocumentHandler {
 
             String idString = (mbox == null) ?
                 "<no mailbox for account " + accountId + ">" : Integer.toString(mailboxId);
-            LiquidLog.security.info(LiquidLog.encodeAttrs(
+            ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "DeleteMailbox","id", idString}));
             
             Element response = lc.createElement(AdminService.DELETE_MAILBOX_RESPONSE);

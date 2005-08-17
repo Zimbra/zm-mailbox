@@ -1,6 +1,6 @@
 package com.zimbra.cs.localconfig;
 
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 
 /*
  * Log4j is expensive for command line invocation
@@ -13,10 +13,10 @@ public class Logging {
         sQuietMode = value;
     }
 
-    private static boolean sUseLiquidLog = true;
+    private static boolean sUseZimbraLog = true;
 
-    public static void setUseLiquidLog(boolean value) {
-        sUseLiquidLog = value;
+    public static void setUseZimbraLog(boolean value) {
+        sUseZimbraLog = value;
     }
 
     public static void warn(String message) {
@@ -27,8 +27,8 @@ public class Logging {
         if (sQuietMode) {
             return;
         }
-        if (sUseLiquidLog) {
-            LiquidLog.misc.warn(message, e);
+        if (sUseZimbraLog) {
+            ZimbraLog.misc.warn(message, e);
         } else {
             System.err.println("Warning: " + message);
             if (e != null) {
@@ -47,8 +47,8 @@ public class Logging {
         if (sQuietMode) {
             return;
         }
-        if (sUseLiquidLog) {
-            LiquidLog.misc.warn(message, e);
+        if (sUseZimbraLog) {
+            ZimbraLog.misc.warn(message, e);
         } else {
             System.err.println("Error: " + message);
             if (e != null) {

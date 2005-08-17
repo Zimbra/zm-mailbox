@@ -46,7 +46,7 @@ import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Liquid;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * @author schemers
@@ -516,10 +516,10 @@ public class LdapProvisioning extends Provisioning {
                 if (mailHost != null) {
                     return mailHost;
                 } else {
-                    LiquidLog.account.warn("cos("+cosName+") mailHostPool server("+s.getName()+") has no service hostname");
+                    ZimbraLog.account.warn("cos("+cosName+") mailHostPool server("+s.getName()+") has no service hostname");
                 }
             } else {
-                LiquidLog.account.warn("cos("+cosName+") has invalid server in pool: "+mailHostId);
+                ZimbraLog.account.warn("cos("+cosName+") has invalid server in pool: "+mailHostId);
             }
             if (i != max-1) {
                 mailHostPool[i] = mailHostPool[max-1];
@@ -860,7 +860,7 @@ public class LdapProvisioning extends Provisioning {
                 attrs.put(Provisioning.A_liquidMailAlias, removeMultiValue(acct, Provisioning.A_mail, alias));                
                 ((LdapAccount)acct).modifyAttrsInternal(ctxt, attrs);
             } catch (ServiceException e) {
-                LiquidLog.account.warn("unable to remove liquidMailAlias/mail attrs: "+alias);
+                ZimbraLog.account.warn("unable to remove liquidMailAlias/mail attrs: "+alias);
                 // try to remove alias
             }
             
@@ -871,13 +871,13 @@ public class LdapProvisioning extends Provisioning {
                 if ( a != null && ( (String)a.get()).equals(acct.getId())) {
                     ctxt.unbind(aliasDn);
                 } else {
-                    LiquidLog.account.warn("unable to remove alias object: "+alias);
+                    ZimbraLog.account.warn("unable to remove alias object: "+alias);
                 }                
             } catch (NameNotFoundException e) {
-                LiquidLog.account.warn("unable to remove alias object: "+alias);                
+                ZimbraLog.account.warn("unable to remove alias object: "+alias);                
             }
         } catch (NamingException e) {
-            LiquidLog.account.error("unable to remove alias: "+alias, e);                
+            ZimbraLog.account.error("unable to remove alias: "+alias, e);                
             throw ServiceException.FAILURE("unable to remove alias", e);
         } finally {
             LdapUtil.closeContext(ctxt);
@@ -1316,7 +1316,7 @@ public class LdapProvisioning extends Provisioning {
             try {
                 acc.modifyAttrsInternal(ctxt, amap);
             } catch (ServiceException e) {
-                LiquidLog.account.error("account renamed to "+newName+
+                ZimbraLog.account.error("account renamed to "+newName+
                         " but failed to update liquidMailDeliveryAddress", e);
                 throw ServiceException.FAILURE("unable to rename account: "+liquidId, e);
             }
@@ -1826,7 +1826,7 @@ public class LdapProvisioning extends Provisioning {
             try {
                 acct.modifyAttrs(attrs);
             } catch (ServiceException e) {
-                LiquidLog.account.warn("updating liquidLastLogonTimestamp", e);
+                ZimbraLog.account.warn("updating liquidLastLogonTimestamp", e);
             }
         } else {
             Config config = Provisioning.getInstance().getConfig();
@@ -1840,7 +1840,7 @@ public class LdapProvisioning extends Provisioning {
                 try {
                     acct.modifyAttrs(attrs);
                 } catch (ServiceException e) {
-                    LiquidLog.account.warn("updating liquidLastLogonTimestamp", e);
+                    ZimbraLog.account.warn("updating liquidLastLogonTimestamp", e);
                 }
             }
         }
@@ -1884,12 +1884,12 @@ public class LdapProvisioning extends Provisioning {
                 }
             }
             if (url == null)
-                LiquidLog.account.warn("attr not set "+Provisioning.A_liquidAuthLdapURL+", falling back to default mech");
+                ZimbraLog.account.warn("attr not set "+Provisioning.A_liquidAuthLdapURL+", falling back to default mech");
             if (bindDn == null)
-                LiquidLog.account.warn("attr not set "+Provisioning.A_liquidAuthLdapBindDn+", falling back to default mech");            
+                ZimbraLog.account.warn("attr not set "+Provisioning.A_liquidAuthLdapBindDn+", falling back to default mech");            
             // fallback to liquid
         } else if (!authMech.equals(Provisioning.AM_LIQUID)) {
-            LiquidLog.account.warn("unknown value for "+Provisioning.A_liquidAuthMech+": "+
+            ZimbraLog.account.warn("unknown value for "+Provisioning.A_liquidAuthMech+": "+
                     authMech+", falling back to default mech");
             // fallback to liquid
         }

@@ -17,7 +17,7 @@ import com.zimbra.cs.imap.ImapHandler.*;
 import com.zimbra.cs.imap.ImapSession.ImapFlag;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.tcpserver.TcpServerInputStream;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 
 
 class ImapRequest {
@@ -92,8 +92,8 @@ class ImapRequest {
             if (buffer != part)
                 mParts.add(buffer);
             int read = mStream.read(buffer, buffer.length - mLiteral, mLiteral);
-            if (!mUnlogged && LiquidLog.imap.isDebugEnabled())
-                LiquidLog.imap.debug("C: {" + read + "}:" + (read > 100 ? "" : new String(buffer, buffer.length - mLiteral, read)));
+            if (!mUnlogged && ZimbraLog.imap.isDebugEnabled())
+                ZimbraLog.imap.debug("C: {" + read + "}:" + (read > 100 ? "" : new String(buffer, buffer.length - mLiteral, read)));
             mLiteral -= read;
             if (mLiteral > 0)
                 throw new ImapContinuationException(false);
@@ -115,8 +115,8 @@ class ImapRequest {
             if (mUnlogged)
                 logline = line.substring(0, space + 6) + "...";
         }
-        if (LiquidLog.imap.isDebugEnabled())
-            LiquidLog.imap.debug("C: " + logline);
+        if (ZimbraLog.imap.isDebugEnabled())
+            ZimbraLog.imap.debug("C: " + logline);
 
         // if the line ends in a LITERAL+ non-blocking literal, keep reading
         if (line.endsWith("+}")) {

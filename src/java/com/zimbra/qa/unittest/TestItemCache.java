@@ -9,7 +9,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.service.util.LiquidPerf;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * @author bburtin
@@ -21,7 +21,7 @@ public class TestItemCache extends TestCase
     
     protected void setUp()
     throws Exception {
-        LiquidLog.test.debug("TestTags.setUp()");
+        ZimbraLog.test.debug("TestTags.setUp()");
         super.setUp();
 
         mAccount = TestUtil.getAccount("user1");
@@ -33,7 +33,7 @@ public class TestItemCache extends TestCase
      */
     public void testCacheHit()
     throws Exception {
-        LiquidLog.test.debug("testCacheHit");
+        ZimbraLog.test.debug("testCacheHit");
 
         List messages = mMbox.getItemList(MailItem.TYPE_MESSAGE);
         assertTrue("No messages found", messages.size() > 0);

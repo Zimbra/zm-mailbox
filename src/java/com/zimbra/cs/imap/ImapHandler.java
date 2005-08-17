@@ -463,15 +463,15 @@ public class ImapHandler extends ProtocolHandler {
     protected boolean processCommand() throws IOException {
         ImapRequest req = null;
         boolean keepGoing = CONTINUE_PROCESSING;
-        LiquidLog.clearContext();
+        ZimbraLog.clearContext();
         try {
             // FIXME: throw an exception instead?
             if (mInputStream == null)
                 return STOP_PROCESSING;
 
             if (mSession != null)
-                LiquidLog.addAccountNameToContext(mSession.getUsername());
-            LiquidLog.addIpToContext(mRemoteAddress);
+                ZimbraLog.addAccountNameToContext(mSession.getUsername());
+            ZimbraLog.addIpToContext(mRemoteAddress);
 
             req = mIncompleteRequest;
             if (req == null)
@@ -488,11 +488,11 @@ public class ImapHandler extends ProtocolHandler {
                 try {
                     Account account = mMailbox.getAccount();
                     if (account == null || !account.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE)) {
-                        LiquidLog.imap.warn("account missing or not active; dropping connection");
+                        ZimbraLog.imap.warn("account missing or not active; dropping connection");
                         return STOP_PROCESSING;
                     }
                 } catch (ServiceException e) {
-                    LiquidLog.imap.warn("error checking account status; dropping connection", e);
+                    ZimbraLog.imap.warn("error checking account status; dropping connection", e);
                     return STOP_PROCESSING;
                 }
 
@@ -515,11 +515,11 @@ public class ImapHandler extends ProtocolHandler {
             mIncompleteRequest = null;
             keepGoing = STOP_PROCESSING;
         } catch (ImapException ie) {
-            LiquidLog.imap.error("unexpected (and uncaught) IMAP exception type", ie);
+            ZimbraLog.imap.error("unexpected (and uncaught) IMAP exception type", ie);
             mIncompleteRequest = null;
             keepGoing = STOP_PROCESSING;
         } finally {
-            LiquidLog.clearContext();
+            ZimbraLog.clearContext();
         }
 
         return keepGoing;
@@ -591,7 +591,7 @@ public class ImapHandler extends ProtocolHandler {
     boolean doID(String tag, List args) throws IOException {
         Map attrs = (Map) args.remove(0);
         if (attrs != null)
-            LiquidLog.imap.info("IMAP client identified as: " + attrs);
+            ZimbraLog.imap.info("IMAP client identified as: " + attrs);
 
         sendUntagged("ID (\"NAME\" \"Liquid\" \"VERSION\" \"" + BuildInfo.VERSION + "\" \"RELEASE\" \"" + BuildInfo.RELEASE + "\")");
         sendOK(tag, "ID completed");
@@ -611,7 +611,7 @@ public class ImapHandler extends ProtocolHandler {
         SSLSocket tlsconn = (SSLSocket) fac.createSocket(mConnection, mConnection.getInetAddress().getHostName(), mConnection.getPort(), true);
         tlsconn.setUseClientMode(false);
         tlsconn.startHandshake();
-        LiquidLog.imap.debug("suite: " + tlsconn.getSession().getCipherSuite());
+        ZimbraLog.imap.debug("suite: " + tlsconn.getSession().getCipherSuite());
         mInputStream = new TcpServerInputStream(tlsconn.getInputStream());
         mOutputStream = new BufferedOutputStream(tlsconn.getOutputStream());
         mStartedTLS = true;
@@ -672,7 +672,7 @@ public class ImapHandler extends ProtocolHandler {
                 return CONTINUE_PROCESSING;
             } else if (!account.isCorrectHost()) {
                 String correctHost = account.getAttr(Provisioning.A_liquidMailHost);
-                LiquidLog.imap.info("LOGIN failed; should be on host " + correctHost);
+                ZimbraLog.imap.info("LOGIN failed; should be on host " + correctHost);
                 if (correctHost == null || correctHost.equals(""))
                     sendNO(tag, "LOGIN failed [wrong host]");
                 else
@@ -690,7 +690,7 @@ public class ImapHandler extends ProtocolHandler {
         } catch (ServiceException e) {
             if (mSession != null)
             	mSession.clearTagCache();
-            LiquidLog.imap.warn("LOGIN failed", e);
+            ZimbraLog.imap.warn("LOGIN failed", e);
             if (e.getCode() == AccountServiceException.CHANGE_PASSWORD)
                 sendNO(tag, "[ALERT] password must be changed before IMAP login permitted");
             else if (e.getCode() == AccountServiceException.MAINTENANCE_MODE)
@@ -738,9 +738,9 @@ public class ImapHandler extends ProtocolHandler {
             }
         } catch (ServiceException e) {
             if (e.getCode() == MailServiceException.NO_SUCH_FOLDER)
-                LiquidLog.imap.info(command + " failed: no such folder: " + folderName);
+                ZimbraLog.imap.info(command + " failed: no such folder: " + folderName);
             else
-                LiquidLog.imap.warn(command + " failed", e);
+                ZimbraLog.imap.warn(command + " failed", e);
             sendNO(tag, command + " failed");
             return canContinue(e);
         }
@@ -774,7 +774,7 @@ public class ImapHandler extends ProtocolHandler {
         if (!folderName.startsWith("/"))
             folderName = '/' + folderName;
         if (!ImapFolder.isPathCreatable(folderName)) {
-            LiquidLog.imap.info("CREATE failed: hidden folder or parent: " + folderName, null);
+            ZimbraLog.imap.info("CREATE failed: hidden folder or parent: " + folderName, null);
             sendNO(tag, "CREATE failed");
             return CONTINUE_PROCESSING;
         }
@@ -789,7 +789,7 @@ public class ImapHandler extends ProtocolHandler {
                 cause += ": mailbox already exists";
             else if (e.getCode() == MailServiceException.INVALID_NAME)
                 cause += ": invalid mailbox name";
-            LiquidLog.imap.warn(cause, e);
+            ZimbraLog.imap.warn(cause, e);
             sendNO(tag, cause);
             return canContinue(e);
         }
@@ -810,11 +810,11 @@ public class ImapHandler extends ProtocolHandler {
             synchronized (mMailbox) {
                 Folder folder = mMailbox.getFolderByPath(folderName);
                 if (!ImapFolder.isFolderVisible(folder)) {
-                    LiquidLog.imap.info("cannot delete IMAP-invisible folder: " + folder.getPath());
+                    ZimbraLog.imap.info("cannot delete IMAP-invisible folder: " + folder.getPath());
                     sendNO(tag, "DELETE failed");
                     return CONTINUE_PROCESSING;
                 } else if (!folder.isMutable()) {
-                    LiquidLog.imap.info("cannot delete system folder: " + folder.getPath());
+                    ZimbraLog.imap.info("cannot delete system folder: " + folder.getPath());
                     sendNO(tag, "DELETE failed");
                     return CONTINUE_PROCESSING;
                 }
@@ -833,9 +833,9 @@ public class ImapHandler extends ProtocolHandler {
             }
         } catch (ServiceException e) {
             if (e.getCode() == MailServiceException.NO_SUCH_FOLDER)
-                LiquidLog.imap.info("DELETE failed: no such folder: " + folderName);
+                ZimbraLog.imap.info("DELETE failed: no such folder: " + folderName);
             else
-                LiquidLog.imap.warn("DELETE failed", e);
+                ZimbraLog.imap.warn("DELETE failed", e);
             sendNO(tag, "DELETE failed");
             return canContinue(e);
         }
@@ -872,9 +872,9 @@ public class ImapHandler extends ProtocolHandler {
             }
         } catch (ServiceException e) {
             if (e.getCode() == MailServiceException.NO_SUCH_FOLDER)
-                LiquidLog.imap.info("RENAME failed: no such folder: " + oldName);
+                ZimbraLog.imap.info("RENAME failed: no such folder: " + oldName);
             else
-                LiquidLog.imap.warn("RENAME failed", e);
+                ZimbraLog.imap.warn("RENAME failed", e);
             sendNO(tag, "RENAME failed");
             return canContinue(e);
         }
@@ -897,7 +897,7 @@ public class ImapHandler extends ProtocolHandler {
             synchronized (mMailbox) {
                 Folder folder = mMailbox.getFolderByPath(folderName);
                 if (!ImapFolder.isFolderVisible(folder)) {
-                    LiquidLog.imap.info("SUBSCRIBE failed: folder not visible: " + folderName);
+                    ZimbraLog.imap.info("SUBSCRIBE failed: folder not visible: " + folderName);
                     sendNO(tag, "SUBSCRIBE failed");
                     return CONTINUE_PROCESSING;
                 }
@@ -906,9 +906,9 @@ public class ImapHandler extends ProtocolHandler {
             }
         } catch (ServiceException e) {
             if (e.getCode() == MailServiceException.NO_SUCH_FOLDER)
-                LiquidLog.imap.info("SUBSCRIBE failed: no such folder: " + folderName);
+                ZimbraLog.imap.info("SUBSCRIBE failed: no such folder: " + folderName);
             else
-                LiquidLog.imap.warn("SUBSCRIBE failed", e);
+                ZimbraLog.imap.warn("SUBSCRIBE failed", e);
             sendNO(tag, "SUBSCRIBE failed");
             return canContinue(e);
         }
@@ -932,7 +932,7 @@ public class ImapHandler extends ProtocolHandler {
                     mMailbox.setConfig(getContext(), "imap", mSession.getConfig());
             }
         } catch (ServiceException e) {
-            LiquidLog.imap.warn("UNSUBSCRIBE failed", e);
+            ZimbraLog.imap.warn("UNSUBSCRIBE failed", e);
             sendNO(tag, "UNSUBSCRIBE failed");
             return canContinue(e);
         }
@@ -980,7 +980,7 @@ public class ImapHandler extends ProtocolHandler {
                 }
             }
         } catch (ServiceException e) {
-            LiquidLog.imap.warn("LIST failed", e);
+            ZimbraLog.imap.warn("LIST failed", e);
             sendNO(tag, "LIST failed");
             return canContinue(e);
         }
@@ -1044,7 +1044,7 @@ public class ImapHandler extends ProtocolHandler {
                 }
             }
         } catch (ServiceException e) {
-            LiquidLog.imap.warn("LSUB failed", e);
+            ZimbraLog.imap.warn("LSUB failed", e);
             sendNO(tag, "LSUB failed");
             return canContinue(e);
         }
@@ -1108,7 +1108,7 @@ public class ImapHandler extends ProtocolHandler {
         try {
             Folder folder = mMailbox.getFolderByPath(folderName);
             if (!ImapFolder.isFolderVisible(folder)) {
-                LiquidLog.imap.info("STATUS failed: folder not visible: " + folderName);
+                ZimbraLog.imap.info("STATUS failed: folder not visible: " + folderName);
                 sendNO(tag, "STATUS failed");
                 return CONTINUE_PROCESSING;
             }
@@ -1124,9 +1124,9 @@ public class ImapHandler extends ProtocolHandler {
                 data.append(data.length() > 0 ? " " : "").append("UNSEEN ").append(folder.getUnreadCount());
         } catch (ServiceException e) {
             if (e.getCode() == MailServiceException.NO_SUCH_FOLDER)
-                LiquidLog.imap.info("STATUS failed: no such folder: " + folderName);
+                ZimbraLog.imap.info("STATUS failed: no such folder: " + folderName);
             else
-                LiquidLog.imap.warn("STATUS failed", e);
+                ZimbraLog.imap.warn("STATUS failed", e);
             sendNO(tag, "STATUS failed");
             return canContinue(e);
         }
@@ -1148,7 +1148,7 @@ public class ImapHandler extends ProtocolHandler {
 
         // server uses UNIX time, so range-check specified date (is there a better place for this?)
         if (date != null && date.getTime() > Integer.MAX_VALUE * 1000L) {
-            LiquidLog.imap.info("APPEND failed: date out of range");
+            ZimbraLog.imap.info("APPEND failed: date out of range");
             sendNO(tag, "APPEND failed: date out of range");
             return CONTINUE_PROCESSING;
         }
@@ -1159,11 +1159,11 @@ public class ImapHandler extends ProtocolHandler {
             synchronized (mMailbox) {
                 Folder folder = mMailbox.getFolderByPath(folderName);
                 if (!ImapFolder.isFolderVisible(folder)) {
-                    LiquidLog.imap.info("APPEND failed: cannot APPEND to folder: " + folderName);
+                    ZimbraLog.imap.info("APPEND failed: cannot APPEND to folder: " + folderName);
                     sendNO(tag, "APPEND failed");
                     return CONTINUE_PROCESSING;
                 } else if (!ImapFolder.isFolderWritable(folder)) {
-                    LiquidLog.imap.info("APPEND failed: folder is READ-ONLY: " + folderName);
+                    ZimbraLog.imap.info("APPEND failed: folder is READ-ONLY: " + folderName);
                     sendNO(tag, "APPEND failed: mailbox is READ-ONLY");
                     return CONTINUE_PROCESSING;
                 }
@@ -1204,25 +1204,25 @@ public class ImapHandler extends ProtocolHandler {
             deleteTags(newTags);
             String msg = "APPEND failed";
             if (e.getCode() == MailServiceException.NO_SUCH_FOLDER) {
-                LiquidLog.imap.info("APPEND failed: no such folder: " + folderName);
+                ZimbraLog.imap.info("APPEND failed: no such folder: " + folderName);
                 // 6.3.11: "Unless it is certain that the destination mailbox can not be created,
                 //          the server MUST send the response code "[TRYCREATE]" as the prefix
                 //          of the text of the tagged NO response."
                 if (ImapFolder.isPathCreatable('/' + folderName))
                     msg = "[TRYCREATE] APPEND failed: no such mailbox";
             } else
-                LiquidLog.imap.warn("APPEND failed", e);
+                ZimbraLog.imap.warn("APPEND failed", e);
             sendNO(tag, msg);
             return canContinue(e);
         } catch (IOException e) {
             deleteTags(newTags);
-            LiquidLog.imap.warn("APPEND failed", e);
+            ZimbraLog.imap.warn("APPEND failed", e);
             sendNO(tag, "APPEND failed");
             return CONTINUE_PROCESSING;
         } catch (MessagingException e) {
             deleteTags(newTags);
             // FIXME: shouldn't fail if message parse fails; treat as a blob instead
-            LiquidLog.imap.warn("APPEND failed", e);
+            ZimbraLog.imap.warn("APPEND failed", e);
             sendNO(tag, "APPEND failed");
             return CONTINUE_PROCESSING;
         }
@@ -1269,7 +1269,7 @@ public class ImapHandler extends ProtocolHandler {
                 // notification will update mTags hash
                 mMailbox.delete(getContext(), ltag.getId(), MailItem.TYPE_TAG);
             } catch (ServiceException e) {
-                LiquidLog.imap.warn("failed to delete tag: " + ltag.getName(), e);
+                ZimbraLog.imap.warn("failed to delete tag: " + ltag.getName(), e);
             }
         }
     }
@@ -1319,14 +1319,14 @@ public class ImapHandler extends ProtocolHandler {
         try {
             long quota = mMailbox.getAccount().getIntAttr(Provisioning.A_liquidMailQuota, 0);
             if (qroot == null || !qroot.equals("") || quota <= 0) {
-                LiquidLog.imap.info("GETQUOTA failed: unknown quota root: " + qroot, null);
+                ZimbraLog.imap.info("GETQUOTA failed: unknown quota root: " + qroot, null);
                 sendNO(tag, "GETQUOTA failed: unknown quota root");
                 return CONTINUE_PROCESSING;
             }
             // RFC 2087 3: "STORAGE  Sum of messages' RFC822.SIZE, in units of 1024 octets"
             sendUntagged("QUOTA \"\" (STORAGE " + (mMailbox.getSize() / 1024) + ' ' + (quota / 1024) + ')');
         } catch (ServiceException e) {
-            LiquidLog.imap.warn("GETQUOTA failed", e);
+            ZimbraLog.imap.warn("GETQUOTA failed", e);
             sendNO(tag, "GETQUOTA failed");
             return canContinue(e);
         }
@@ -1346,7 +1346,7 @@ public class ImapHandler extends ProtocolHandler {
             // make sure the folder exists and is visible
             Folder folder = mMailbox.getFolderByPath(path);
             if (!ImapFolder.isFolderVisible(folder)) {
-                LiquidLog.imap.info("GETQUOTAROOT failed: folder not visible: " + path);
+                ZimbraLog.imap.info("GETQUOTAROOT failed: folder not visible: " + path);
                 sendNO(tag, "GETQUOTAROOT failed");
                 return CONTINUE_PROCESSING;
             }
@@ -1358,9 +1358,9 @@ public class ImapHandler extends ProtocolHandler {
                 sendUntagged("QUOTA \"\" (STORAGE " + (mMailbox.getSize() / 1024) + ' ' + (quota / 1024) + ')');
         } catch (ServiceException e) {
             if (e.getCode() == MailServiceException.NO_SUCH_FOLDER)
-                LiquidLog.imap.info("GETQUOTAROOT failed: no such folder: " + path);
+                ZimbraLog.imap.info("GETQUOTAROOT failed: no such folder: " + path);
             else
-                LiquidLog.imap.warn("GETQUOTAROOT failed", e);
+                ZimbraLog.imap.warn("GETQUOTAROOT failed", e);
             sendNO(tag, "GETQUOTAROOT failed");
             return canContinue(e);
         }
@@ -1404,7 +1404,7 @@ public class ImapHandler extends ProtocolHandler {
             if (i4folder.isWritable())
                 i4folder.expungeMessages(mMailbox, null);
         } catch (ServiceException e) {
-            LiquidLog.imap.warn("EXPUNGE failed", e);
+            ZimbraLog.imap.warn("EXPUNGE failed", e);
             sendNO(tag, "EXPUNGE failed");
             return canContinue(e);
         }
@@ -1444,7 +1444,7 @@ public class ImapHandler extends ProtocolHandler {
         try {
             mSession.getFolder().expungeMessages(mMailbox, sequenceSet);
         } catch (ServiceException e) {
-            LiquidLog.imap.warn(command + " failed", e);
+            ZimbraLog.imap.warn(command + " failed", e);
             sendNO(tag, command + " failed");
             return canContinue(e);
         }
@@ -1497,7 +1497,7 @@ public class ImapHandler extends ProtocolHandler {
                     search = encodeSequence(i4folder.getSubsequence("1:*", false), false) + " (" + search + ')';
                 else
                     search = '(' + i4folder.getQuery() + ") (" + search + ')';
-                LiquidLog.imap.info("[ search is: " + search + " ]");
+                ZimbraLog.imap.info("[ search is: " + search + " ]");
 
                 ZimbraQueryResults lqr = mMailbox.search(search, MESSAGE_TYPES, MailboxIndex.SEARCH_ORDER_DATE_ASC);
                 try {
@@ -1511,11 +1511,11 @@ public class ImapHandler extends ProtocolHandler {
                 }
             }
 		} catch (ParseException e) {
-            LiquidLog.imap.warn("SEARCH failed (bad query)", e);
+            ZimbraLog.imap.warn("SEARCH failed (bad query)", e);
             sendNO(tag, "SEARCH failed");
             return CONTINUE_PROCESSING;
         } catch (Exception e) {
-            LiquidLog.imap.warn("SEARCH failed", e);
+            ZimbraLog.imap.warn("SEARCH failed", e);
             sendNO(tag, "SEARCH failed");
             return CONTINUE_PROCESSING;
 		}
@@ -1596,7 +1596,7 @@ public class ImapHandler extends ProtocolHandler {
             Set i4set = mSession.getFolder().getSubsequence(sequenceSet, byUID);
             allPresent = byUID || !i4set.contains(null);
             for (Iterator it = i4set.iterator(); it.hasNext(); ) {
-                ByteArrayOutputStream baos = LiquidLog.imap.isDebugEnabled() ? new ByteArrayOutputStream() : null;
+                ByteArrayOutputStream baos = ZimbraLog.imap.isDebugEnabled() ? new ByteArrayOutputStream() : null;
 		        PrintStream result = new PrintStream(new ByteUtil.TeeOutputStream(mOutputStream, baos), false, "utf-8");
             	ImapMessage i4msg = (ImapMessage) it.next();
             	if (i4msg == null)
@@ -1620,7 +1620,7 @@ public class ImapHandler extends ProtocolHandler {
                         StoreManager sm = StoreManager.getInstance();
                         MailboxBlob blob = sm.getMailboxBlob(mMailbox, i4msg.id, i4msg.getRevision(), i4msg.getVolumeId());
                         if (blob == null) {
-                            LiquidLog.imap.error("missing blob for id: " + i4msg.id + ", change: " + i4msg.getRevision());
+                            ZimbraLog.imap.error("missing blob for id: " + i4msg.id + ", change: " + i4msg.getRevision());
                             continue;
                         }
                         raw = ByteUtil.getContent(sm.getContent(blob), i4msg.getSize());
@@ -1662,18 +1662,18 @@ public class ImapHandler extends ProtocolHandler {
                         result.print(empty ? "" : " ");  result.print(i4msg.getFlags(mSession));  empty = false;
                     }
                 } catch (ServiceException e) {
-                    LiquidLog.imap.warn("ignoring error during " + command + ": ", e);
+                    ZimbraLog.imap.warn("ignoring error during " + command + ": ", e);
                     continue;
                 } catch (IOException e) {
-                    LiquidLog.imap.warn("ignoring error during " + command + ": ", e);
+                    ZimbraLog.imap.warn("ignoring error during " + command + ": ", e);
                     continue;
                 } catch (MessagingException e) {
-                    LiquidLog.imap.warn("ignoring error during " + command + ": ", e);
+                    ZimbraLog.imap.warn("ignoring error during " + command + ": ", e);
                     continue;
                 } finally {
                     result.write(')');
                     if (mOutputStream != null)  mOutputStream.write(LINE_SEPARATOR_BYTES);
-                    if (baos != null)           LiquidLog.imap.debug("  S: " + baos);
+                    if (baos != null)           ZimbraLog.imap.debug("  S: " + baos);
                 }
             }
             sendNotifications(false, false);
@@ -1768,7 +1768,7 @@ public class ImapHandler extends ProtocolHandler {
             }
         } catch (ServiceException e) {
             deleteTags(newTags);
-            LiquidLog.imap.warn(command + " failed", e);
+            ZimbraLog.imap.warn(command + " failed", e);
             sendNO(tag, command + " failed");
             return canContinue(e);
         } finally {
@@ -1802,11 +1802,11 @@ public class ImapHandler extends ProtocolHandler {
             synchronized (mMailbox) {
                 Folder folder = mMailbox.getFolderByPath(folderName);
                 if (!ImapFolder.isFolderVisible(folder)) {
-                    LiquidLog.imap.info(command + " failed: folder is hidden: " + folderName);
+                    ZimbraLog.imap.info(command + " failed: folder is hidden: " + folderName);
                     sendNO(tag, command + " failed");
                     return CONTINUE_PROCESSING;
                 } else if (!ImapFolder.isFolderWritable(folder)) {
-                    LiquidLog.imap.info(command + " failed: folder is READ-ONLY: " + folderName);
+                    ZimbraLog.imap.info(command + " failed: folder is READ-ONLY: " + folderName);
                     sendNO(tag, command + " failed: target mailbox is READ-ONLY");
                     return CONTINUE_PROCESSING;
                 }
@@ -1843,7 +1843,7 @@ public class ImapHandler extends ProtocolHandler {
             //         MUST restore the destination mailbox to its state before the COPY attempt."
             deleteMessages(newMessages);
 
-            LiquidLog.imap.warn(command + " failed", e);
+            ZimbraLog.imap.warn(command + " failed", e);
             sendNO(tag, command + " failed");
             return CONTINUE_PROCESSING;
         } catch (ServiceException e) {
@@ -1853,11 +1853,11 @@ public class ImapHandler extends ProtocolHandler {
 
             String rcode = "";
             if (e.getCode() == MailServiceException.NO_SUCH_FOLDER) {
-                LiquidLog.imap.info(command + " failed: no such folder: " + folderName);
+                ZimbraLog.imap.info(command + " failed: no such folder: " + folderName);
                 if (ImapFolder.isPathCreatable('/' + folderName))
                     rcode = "[TRYCREATE] ";
             } else
-                LiquidLog.imap.warn(command + " failed", e);
+                ZimbraLog.imap.warn(command + " failed", e);
             sendNO(tag, rcode + command + " failed");
             return canContinue(e);
         }
@@ -1876,7 +1876,7 @@ public class ImapHandler extends ProtocolHandler {
                 try {
                     mMailbox.delete(getContext(), ((Message) it.next()).getId(), MailItem.TYPE_MESSAGE);
                 } catch (ServiceException e) {
-                    LiquidLog.imap.warn("could not roll back creation of message", e);
+                    ZimbraLog.imap.warn("could not roll back creation of message", e);
                 }
         }
     }
@@ -1957,10 +1957,10 @@ public class ImapHandler extends ProtocolHandler {
     
     private void sendResponse(String status, String msg, boolean flush) throws IOException {
         String response = status + ' ' + (msg == null ? "" : msg);
-        if (LiquidLog.imap.isDebugEnabled())
-            LiquidLog.imap.debug("  S: " + response);
+        if (ZimbraLog.imap.isDebugEnabled())
+            ZimbraLog.imap.debug("  S: " + response);
         else if (status.startsWith("BAD"))
-            LiquidLog.imap.info("  S: " + response);
+            ZimbraLog.imap.info("  S: " + response);
         sendLine(response, flush);
     }
 
@@ -1976,27 +1976,27 @@ public class ImapHandler extends ProtocolHandler {
 
 
     private void INFO(String message, Throwable e) {
-        if (LiquidLog.imap.isInfoEnabled()) LiquidLog.imap.info(withClientInfo(message), e); 
+        if (ZimbraLog.imap.isInfoEnabled()) ZimbraLog.imap.info(withClientInfo(message), e); 
     }
 
     private void INFO(String message) {
-        if (LiquidLog.imap.isInfoEnabled()) LiquidLog.imap.info(withClientInfo(message));
+        if (ZimbraLog.imap.isInfoEnabled()) ZimbraLog.imap.info(withClientInfo(message));
     }
 
     private void DEBUG(String message, Throwable e) {
-        if (LiquidLog.imap.isDebugEnabled()) LiquidLog.imap.debug(withClientInfo(message), e);
+        if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug(withClientInfo(message), e);
     }
 
     private void DEBUG(String message) {
-        if (LiquidLog.imap.isDebugEnabled()) LiquidLog.imap.debug(withClientInfo(message));
+        if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug(withClientInfo(message));
     }
 
     private void WARN(String message, Throwable e) {
-        if (LiquidLog.imap.isWarnEnabled()) LiquidLog.imap.warn(withClientInfo(message), e);
+        if (ZimbraLog.imap.isWarnEnabled()) ZimbraLog.imap.warn(withClientInfo(message), e);
     }
 
     private void WARN(String message) {
-        if (LiquidLog.imap.isWarnEnabled()) LiquidLog.imap.warn(withClientInfo(message));
+        if (ZimbraLog.imap.isWarnEnabled()) ZimbraLog.imap.warn(withClientInfo(message));
     }
 
     private StringBuffer withClientInfo(String message) {

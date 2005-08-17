@@ -84,7 +84,7 @@ public class Mailbox {
             try {
                 loadMailboxMap();
             } catch (ServiceException e) {
-                LiquidLog.mailbox.fatal("when loading mailbox/account id relationship");
+                ZimbraLog.mailbox.fatal("when loading mailbox/account id relationship");
                 throw new RuntimeException(e);
             }
         }
@@ -145,20 +145,20 @@ public class Mailbox {
             if (depth++ == 0) {
                 octxt = ctxt;
                 recorder = op;
-                if (LiquidLog.mailbox.isDebugEnabled())
-                    LiquidLog.mailbox.debug("beginning operation: " + caller);
+                if (ZimbraLog.mailbox.isDebugEnabled())
+                    ZimbraLog.mailbox.debug("beginning operation: " + caller);
             } else
-                if (LiquidLog.mailbox.isDebugEnabled())
-                    LiquidLog.mailbox.debug("  increasing stack depth to " + depth + " (" + caller + ')');
+                if (ZimbraLog.mailbox.isDebugEnabled())
+                    ZimbraLog.mailbox.debug("  increasing stack depth to " + depth + " (" + caller + ')');
         }
         boolean endChange() {
-            if (LiquidLog.mailbox.isDebugEnabled()) {
+            if (ZimbraLog.mailbox.isDebugEnabled()) {
                 if (depth <= 1) {
-                    if (LiquidLog.mailbox.isDebugEnabled())                    
-                        LiquidLog.mailbox.debug("ending operation" + (recorder == null ? "" : ": " + StringUtil.getSimpleClassName(recorder)));
+                    if (ZimbraLog.mailbox.isDebugEnabled())                    
+                        ZimbraLog.mailbox.debug("ending operation" + (recorder == null ? "" : ": " + StringUtil.getSimpleClassName(recorder)));
                 } else {
-                    if (LiquidLog.mailbox.isDebugEnabled())
-                        LiquidLog.mailbox.debug("  decreasing stack depth to " + (depth - 1));
+                    if (ZimbraLog.mailbox.isDebugEnabled())
+                        ZimbraLog.mailbox.debug("  decreasing stack depth to " + (depth - 1));
                 }
             }
             return (--depth == 0);
@@ -168,8 +168,8 @@ public class Mailbox {
         Connection getConnection() throws ServiceException {
             if (conn == null) {
                 conn = DbPool.getConnection();
-                if (LiquidLog.mailbox.isDebugEnabled())
-                    LiquidLog.mailbox.debug("  fetching new DB connection");
+                if (ZimbraLog.mailbox.isDebugEnabled())
+                    ZimbraLog.mailbox.debug("  fetching new DB connection");
             }
             return conn;
         }
@@ -190,8 +190,8 @@ public class Mailbox {
             sync = null;  config = null;
             itemCache = null;  indexItem = null;  indexData = null;
             mDirty.clear();  mOtherDirtyStuff.clear();
-            if (LiquidLog.mailbox.isDebugEnabled())
-                LiquidLog.mailbox.debug("clearing change");
+            if (ZimbraLog.mailbox.isDebugEnabled())
+                ZimbraLog.mailbox.debug("clearing change");
         }
     }
 
@@ -294,7 +294,7 @@ public class Mailbox {
         Account acct = getAccount(getAccountId());
         if (acct != null)
             return acct;
-        LiquidLog.mailbox.warn("no account found in directory for mailbox " + mId +
+        ZimbraLog.mailbox.warn("no account found in directory for mailbox " + mId +
                                " (was expecting " + getAccountId() + ')');
         throw AccountServiceException.NO_SUCH_ACCOUNT(mData.accountId);
     }
@@ -440,7 +440,7 @@ public class Mailbox {
         try {
             return new Metadata(config);
         } catch (ServiceException e) {
-            LiquidLog.mailbox.warn("could not decode config metadata for section:" + section);
+            ZimbraLog.mailbox.warn("could not decode config metadata for section:" + section);
             return null;
         }
     }
@@ -552,7 +552,7 @@ public class Mailbox {
         if (cache == null) {
             cache = new LinkedHashMap(MAX_ITEM_CACHE, (float) 0.75, true);
             mItemCache = new SoftReference(cache);
-            LiquidLog.cache.debug("created a new MailItem cache for mailbox " + getId());
+            ZimbraLog.cache.debug("created a new MailItem cache for mailbox " + getId());
         }
         mCurrentChange.itemCache = (Map) cache;
 
@@ -588,8 +588,8 @@ public class Mailbox {
         } else
             getItemCache().put(new Integer(item.getId()), item);
 
-        if (LiquidLog.cache.isDebugEnabled())
-            LiquidLog.cache.debug("cached " + MailItem.getNameForType(item) + " " + item.getId() + " in mailbox " + getId());
+        if (ZimbraLog.cache.isDebugEnabled())
+            ZimbraLog.cache.debug("cached " + MailItem.getNameForType(item) + " " + item.getId() + " in mailbox " + getId());
     }
     
     void uncache(MailItem item) throws ServiceException {
@@ -607,16 +607,16 @@ public class Mailbox {
         } else
             getItemCache().remove(new Integer(item.getId()));
         
-        if (LiquidLog.cache.isDebugEnabled())
-            LiquidLog.cache.debug("uncached " + MailItem.getNameForType(item) + " " + item.getId() + " in mailbox " + getId());
+        if (ZimbraLog.cache.isDebugEnabled())
+            ZimbraLog.cache.debug("uncached " + MailItem.getNameForType(item) + " " + item.getId() + " in mailbox " + getId());
         
         item.uncacheChildren();
     }
     
     void uncacheItem(Integer itemId) throws ServiceException {
         Object obj = getItemCache().remove(itemId);
-        if (LiquidLog.cache.isDebugEnabled())
-            LiquidLog.cache.debug("uncached item " + itemId + " in mailbox " + getId());
+        if (ZimbraLog.cache.isDebugEnabled())
+            ZimbraLog.cache.debug("uncached item " + itemId + " in mailbox " + getId());
         if (obj != null && obj instanceof MailItem)
             ((MailItem) obj).uncacheChildren();
     }
@@ -630,8 +630,8 @@ public class Mailbox {
             default:                          mItemCache.clear();  break;
         }
 
-        if (LiquidLog.cache.isDebugEnabled())
-            LiquidLog.cache.debug("purged " + MailItem.getNameForType(type) + " cache in mailbox " + getId());
+        if (ZimbraLog.cache.isDebugEnabled())
+            ZimbraLog.cache.debug("purged " + MailItem.getNameForType(type) + " cache in mailbox " + getId());
     }
     
 
@@ -975,7 +975,7 @@ public class Mailbox {
         if (mFolderCache != null && mTagCache != null)
             return;
         
-        LiquidLog.cache.debug("Initializing folder and tag caches for mailbox " + getId());
+        ZimbraLog.cache.debug("Initializing folder and tag caches for mailbox " + getId());
 
         try {
             Map folderData = (mFolderCache == null ? new HashMap() : null);
@@ -985,11 +985,11 @@ public class Mailbox {
             if (stats != null) {
                 if (mData.size != stats.size) {
                     mCurrentChange.mDirty.recordModified(this, Change.MODIFIED_SIZE);
-                    LiquidLog.mailbox.info("setting mailbox size to " + stats.size + " (was " + mData.size + ") for mailbox " + mId);
+                    ZimbraLog.mailbox.info("setting mailbox size to " + stats.size + " (was " + mData.size + ") for mailbox " + mId);
                     mData.size = stats.size;
                 }
                 if (mData.contacts != stats.contacts) {
-                    LiquidLog.mailbox.info("setting contact count to " + stats.contacts + " (was " + mData.contacts + ") for mailbox " + mId);
+                    ZimbraLog.mailbox.info("setting contact count to " + stats.contacts + " (was " + mData.contacts + ") for mailbox " + mId);
                     mData.contacts = stats.contacts;
                 }
             }
@@ -1018,7 +1018,7 @@ public class Mailbox {
                 for (int i = 0; i < mFlags.length; i++) {
                     if (mFlags[i] == null)
                         continue;
-                    LiquidLog.mailbox.debug(i + ": " + mFlags[i]);
+                    ZimbraLog.mailbox.debug(i + ": " + mFlags[i]);
                     cache(mFlags[i]);
                 }
             }
@@ -1200,7 +1200,7 @@ public class Mailbox {
             
             for (Iterator iter = msgs.iterator(); iter.hasNext();) {
                 if ((tried % 1000) == 0) {
-                    LiquidLog.mailbox.info("Re-Indexing: Mailbox "+getId()+" on msg "+tried+" out of "+msgs.size());
+                    ZimbraLog.mailbox.info("Re-Indexing: Mailbox "+getId()+" on msg "+tried+" out of "+msgs.size());
                 }
                 synchronized(this) {
                     tried++;
@@ -1211,7 +1211,7 @@ public class Mailbox {
                         idx.reIndexItem(sr.id, sr.type);
                         successful++;
                     } catch(ServiceException e) {
-                        LiquidLog.mailbox.info("Re-Indexing: Mailbox " +getId()+ " had error on msg "+sr.id+".  Message will not be indexed.", e);
+                        ZimbraLog.mailbox.info("Re-Indexing: Mailbox " +getId()+ " had error on msg "+sr.id+".  Message will not be indexed.", e);
                     }
                 }
             }
@@ -1226,7 +1226,7 @@ public class Mailbox {
                 avg = (end - start) / tried;
                 mps = avg > 0 ? 1000 / avg : 0;
             }
-            LiquidLog.mailbox.info("Re-Indexing: Mailbox " + getId() + " COMPLETED.  Re-indexed "+ successful + " out of "+tried +" msgs in " +
+            ZimbraLog.mailbox.info("Re-Indexing: Mailbox " + getId() + " COMPLETED.  Re-indexed "+ successful + " out of "+tried +" msgs in " +
                     (end-start) + "ms.  (avg "+avg+"ms/msg = "+mps+" msgs/sec)");
             
         } finally {
@@ -1998,7 +1998,7 @@ public class Mailbox {
                 return parentMsg.getConversationId();
         } catch (Exception e) {
             if (!(e instanceof MailServiceException.NoSuchItemException))
-                LiquidLog.mailbox.warn("ignoring error while checking conversation: " + parentID, e);
+                ZimbraLog.mailbox.warn("ignoring error while checking conversation: " + parentID, e);
         }
         return ID_AUTO_INCREMENT;
     }
@@ -2042,7 +2042,7 @@ public class Mailbox {
         if (pm == null)
             throw ServiceException.INVALID_REQUEST("null ParsedMessage when adding message to mailbox " + mId, null);
 
-        boolean debug = LiquidLog.mailbox.isDebugEnabled();
+        boolean debug = ZimbraLog.mailbox.isDebugEnabled();
 
         byte[] data;
         String digest;
@@ -2072,7 +2072,7 @@ public class Mailbox {
             // if we're not dropping the new message, see if it goes in the same conversation as the old sent message
             if (conversationId == ID_AUTO_INCREMENT) {
                 conversationId = getConversationIdFromReferent(pm.getMimeMessage(), sentMsgID.intValue());
-                if (debug)  LiquidLog.mailbox.debug("  duplicate detected but not deduped (" + msgidHeader + "); " +
+                if (debug)  ZimbraLog.mailbox.debug("  duplicate detected but not deduped (" + msgidHeader + "); " +
                                                     "will try to slot into conversation " + conversationId);
             }
         }
@@ -2124,18 +2124,18 @@ public class Mailbox {
                 if (conversationId != ID_AUTO_INCREMENT)
                     try {
                         conv = getConversationById(conversationId);
-                        if (debug)  LiquidLog.mailbox.debug("  fetched explicitly-specified conversation " + conv.getId());
+                        if (debug)  ZimbraLog.mailbox.debug("  fetched explicitly-specified conversation " + conv.getId());
                     } catch (ServiceException e) {
                         if (e.getCode() != MailServiceException.NO_SUCH_CONV)
                             throw e;
-                        if (debug)  LiquidLog.mailbox.debug("  could not find explicitly-specified conversation " + conversationId);
+                        if (debug)  ZimbraLog.mailbox.debug("  could not find explicitly-specified conversation " + conversationId);
                     }
                 else if (conv == null && !isSpam && !isDraft && pm.isReply()) {
                     conv = getConversationByHash(hash = getHash(subject));
-                    if (debug)  LiquidLog.mailbox.debug("  found conversation " + (conv == null ? -1 : conv.getId()) + " for hash: " + hash);
+                    if (debug)  ZimbraLog.mailbox.debug("  found conversation " + (conv == null ? -1 : conv.getId()) + " for hash: " + hash);
                     if (conv != null && timestamp > conv.getDate() + ONE_MONTH_MILLIS) {
                         conv = null;
-                        if (debug)  LiquidLog.mailbox.debug("  but rejected it because it's too old");
+                        if (debug)  ZimbraLog.mailbox.debug("  but rejected it because it's too old");
                     }
                 }
             }
@@ -2144,7 +2144,7 @@ public class Mailbox {
             //         and if the message is also an invite, deal with the appointment
             Conversation convTarget = (conv instanceof VirtualConversation ? null : conv);
             if (convTarget != null && debug)
-                LiquidLog.mailbox.debug("  placing message in existing conversation " + convTarget.getId());
+                ZimbraLog.mailbox.debug("  placing message in existing conversation " + convTarget.getId());
             
             Calendar iCal = pm.getiCalendar();
             msg = Message.create(redoRecorder, redoPlayer, folder, convTarget, pm, msgSize, digest,
@@ -2156,13 +2156,13 @@ public class Mailbox {
             if (!DebugConfig.disableConversation && convTarget == null) {
                 if (conv == null && conversationId == ID_AUTO_INCREMENT) {
                     conv = VirtualConversation.create(this, msg);
-                    if (debug)  LiquidLog.mailbox.debug("  placed message " + msg.getId() + " in vconv " + conv.getId());
+                    if (debug)  ZimbraLog.mailbox.debug("  placed message " + msg.getId() + " in vconv " + conv.getId());
                 } else {
                     VirtualConversation vconv = (VirtualConversation) conv;
                     Message[] contents = (conv == null ? new Message[] { msg } : new Message[] { vconv.getMessage(), msg });
                     conv = createConversation(contents, conversationId);
                     if (vconv != null) {
-                        if (debug)  LiquidLog.mailbox.debug("  removed vconv " + vconv.getId());
+                        if (debug)  ZimbraLog.mailbox.debug("  removed vconv " + vconv.getId());
                         vconv.removeChild(vconv.getMessage());
                     }
                 }
@@ -2274,8 +2274,8 @@ public class Mailbox {
             }
         }
 
-        if (msg != null && LiquidLog.mailbox.isInfoEnabled())
-            LiquidLog.mailbox.info("Added message id=" + msg.getId() + " digest=" + digest +
+        if (msg != null && ZimbraLog.mailbox.isInfoEnabled())
+            ZimbraLog.mailbox.info("Added message id=" + msg.getId() + " digest=" + digest +
                                    " mailbox=" + getId() + " rcpt=" + rcptEmail);
         return msg;
     }
@@ -2305,11 +2305,11 @@ public class Mailbox {
     Conversation createConversation(Message[] contents, int id) throws ServiceException {
         id = Math.max(id, ID_AUTO_INCREMENT);
         Conversation conv = Conversation.create(this, getNextItemId(id), contents);
-        if (LiquidLog.mailbox.isDebugEnabled()) {
+        if (ZimbraLog.mailbox.isDebugEnabled()) {
             StringBuffer sb = new StringBuffer();
             for (int i = 0; i < contents.length; i++)
                 sb.append(i == 0 ? "" : ",").append(contents[i].getId());
-            LiquidLog.mailbox.debug("  created conv " + conv.getId() + " holding msg(s): " + sb);
+            ZimbraLog.mailbox.debug("  created conv " + conv.getId() + " holding msg(s): " + sb);
         }
         return conv;
     }
@@ -2954,7 +2954,7 @@ public class Mailbox {
         // sanity-check the really dangerous value...
         if (globalTimeout > 0 && globalTimeout < ONE_MONTH_SECS) {
             // this min is also used by POP3 EXPIRE command. update Pop3Handler.MIN_EPXIRE_DAYS if it changes.
-            LiquidLog.mailbox.warn("global message timeout < 1 month; defaulting to 31 days");
+            ZimbraLog.mailbox.warn("global message timeout < 1 month; defaulting to 31 days");
             globalTimeout = ONE_MONTH_SECS;
         }
 
@@ -2993,7 +2993,7 @@ public class Mailbox {
     throws ServiceException {
         if (!mCurrentChange.isActive()) {
             // would like to throw here, but it might cover another exception...
-            LiquidLog.mailbox.warn("cannot end a transaction when not inside a transaction", new Exception());
+            ZimbraLog.mailbox.warn("cannot end a transaction when not inside a transaction", new Exception());
             return;
         }
         if (!mCurrentChange.endChange())
@@ -3061,7 +3061,7 @@ public class Mailbox {
                     // not.  Force the server to abort.  Next restart will
                     // redo the operation to ensure the change is made and
                     // committed.  (bug 2121)
-                    LiquidLog.mailbox.fatal("Unable to commit database transaction.  Forcing server to abort.", t);
+                    ZimbraLog.mailbox.fatal("Unable to commit database transaction.  Forcing server to abort.", t);
                     Runtime.getRuntime().exit(1);
                 }
             allGood = true;
@@ -3159,11 +3159,11 @@ public class Mailbox {
                         indexIds[i] = ((Integer) deleted.indexIds.get(i)).intValue();
                     int[] deletedIds = getMailboxIndex().deleteDocuments(indexIds);
                     if (deletedIds != indexIds)
-                        LiquidLog.mailbox.warn("could not delete all index entries for items: " + deleted.itemIds);
+                        ZimbraLog.mailbox.warn("could not delete all index entries for items: " + deleted.itemIds);
                 } catch (IOException e) {
-                    LiquidLog.mailbox.warn("ignoring error while deleting index entries for items: " + deleted.itemIds, e);
+                    ZimbraLog.mailbox.warn("ignoring error while deleting index entries for items: " + deleted.itemIds, e);
                 } catch (ServiceException e) {
-                    LiquidLog.mailbox.warn("ignoring error while getting index to delete entries for items: " + deleted.itemIds, e);
+                    ZimbraLog.mailbox.warn("ignoring error while getting index to delete entries for items: " + deleted.itemIds, e);
                 }
 
             // delete any blobs associated with items deleted from db/index
@@ -3174,11 +3174,11 @@ public class Mailbox {
                     try {
                         sm.delete(blob);
                     } catch (IOException e) {
-                        LiquidLog.mailbox.warn("could not delete blob " + blob.getPath() + " during commit");
+                        ZimbraLog.mailbox.warn("could not delete blob " + blob.getPath() + " during commit");
                     }
                 }
         } catch (RuntimeException e) {
-            LiquidLog.mailbox.error("ignoring error during cache commit", e);
+            ZimbraLog.mailbox.error("ignoring error during cache commit", e);
         } finally {
             // keep our MailItem cache at a reasonable size
             trimItemCache();
@@ -3223,20 +3223,20 @@ public class Mailbox {
                     try {
                         sm.delete(blob);
                     } catch (IOException e) {
-                        LiquidLog.mailbox.warn("could not delete blob " + blob.getPath() + " during rollback");
+                        ZimbraLog.mailbox.warn("could not delete blob " + blob.getPath() + " during rollback");
                     }
                 } else if (obj instanceof Blob) {
                     Blob blob = (Blob) obj;
                     try {
                         sm.delete(blob);
                     } catch (IOException e) {
-                        LiquidLog.mailbox.warn("could not delete blob " + blob.getPath() + " during rollback");
+                        ZimbraLog.mailbox.warn("could not delete blob " + blob.getPath() + " during rollback");
                     }
                 } else if (obj instanceof String && obj != null)
                     mConvHashes.remove(obj);
             }
         } catch (RuntimeException e) {
-            LiquidLog.mailbox.error("ignoring error during cache rollback", e);
+            ZimbraLog.mailbox.error("ignoring error during cache rollback", e);
         } finally {
             // keep our MailItem cache at a reasonable size
             trimItemCache();
@@ -3274,7 +3274,7 @@ public class Mailbox {
                     } catch (ServiceException e) { }
             }
         } catch (RuntimeException e) {
-            LiquidLog.mailbox.error("ignoring error during item cache trim", e);
+            ZimbraLog.mailbox.error("ignoring error during item cache trim", e);
         }
     }
 
@@ -3283,10 +3283,10 @@ public class Mailbox {
     }
 
     private void logCacheActivity(Integer key, MailItem item) {
-        if (!LiquidLog.cache.isDebugEnabled())
+        if (!ZimbraLog.cache.isDebugEnabled())
             return;
         if (item == null) {
-            LiquidLog.cache.debug("Cache miss for item " + key + " in mailbox " + getId());
+            ZimbraLog.cache.debug("Cache miss for item " + key + " in mailbox " + getId());
             return;
         }
 
@@ -3295,7 +3295,7 @@ public class Mailbox {
         byte type = item.getType();
         if (isCachedType(type))
             return;
-        LiquidLog.cache.debug("Cache hit for " + MailItem.getNameForType(type) + " " + key + " in mailbox " + getId());
+        ZimbraLog.cache.debug("Cache hit for " + MailItem.getNameForType(type) + " " + key + " in mailbox " + getId());
     }
 
 

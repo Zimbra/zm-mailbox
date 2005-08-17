@@ -10,7 +10,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.ZimbraContext;
 
 /**
@@ -33,7 +33,7 @@ public class ModifyAccount extends AdminDocumentHandler {
         // pass in true to checkImmutable
         account.modifyAttrs(attrs, true);
 
-        LiquidLog.security.info(LiquidLog.encodeAttrs(
+        ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "ModifyAccount","name", account.getName()}, attrs));
 
         Element response = lc.createElement(AdminService.MODIFY_ACCOUNT_RESPONSE);

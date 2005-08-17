@@ -7,7 +7,7 @@ import java.util.HashMap;
 
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
-//import com.zimbra.cs.util.LiquidLog;
+//import com.zimbra.cs.util.ZimbraLog;
 
 
 public final class PendingModifications {
@@ -49,7 +49,7 @@ public final class PendingModifications {
     }
 
     public void recordCreated(MailItem item) {
-//        LiquidLog.mailbox.debug("--> NOTIFY: created " + item.getId());
+//        ZimbraLog.mailbox.debug("--> NOTIFY: created " + item.getId());
         if (created == null)
             created = new HashMap();
         created.put(new Integer(item.getId()), item);
@@ -63,7 +63,7 @@ public final class PendingModifications {
         delete(new Integer(item.getId()), item);
     }
     private void delete(Integer key, Object value) {
-//        LiquidLog.mailbox.debug("--> NOTIFY: deleted " + key);
+//        ZimbraLog.mailbox.debug("--> NOTIFY: deleted " + key);
         if (created != null)
             if (created.remove(key) != null)
                 return;
@@ -81,7 +81,7 @@ public final class PendingModifications {
         recordModified(new Integer(item.getId()), item, reason);
     }
     private void recordModified(Integer key, Object item, int reason) {
-//        LiquidLog.mailbox.debug("--> NOTIFY: modified " + key + " (" + reason + ')');
+//        ZimbraLog.mailbox.debug("--> NOTIFY: modified " + key + " (" + reason + ')');
         Change chg = null;
         if (created != null && created.containsKey(key))
             return;

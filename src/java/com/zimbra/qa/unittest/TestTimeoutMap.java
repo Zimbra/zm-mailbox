@@ -1,6 +1,6 @@
 package com.zimbra.qa.unittest;
 
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.cs.util.TimeoutMap;
 
 import junit.framework.TestCase;
@@ -9,7 +9,7 @@ public class TestTimeoutMap extends TestCase {
     
     public void testTimeoutMap()
     throws Exception {
-        LiquidLog.test.debug("testTimeoutMap()");
+        ZimbraLog.test.debug("testTimeoutMap()");
         TimeoutMap map = new TimeoutMap(200);
         
         Integer one = new Integer(1);

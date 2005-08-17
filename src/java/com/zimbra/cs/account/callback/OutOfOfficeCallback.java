@@ -11,7 +11,7 @@ import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Notification;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 
 public class OutOfOfficeCallback implements AttributeCallback {
 
@@ -31,7 +31,7 @@ public class OutOfOfficeCallback implements AttributeCallback {
             Object done = context.get(KEY);
             if (done == null) {
                 context.put(KEY, KEY);
-                LiquidLog.misc.info("need to reset vacation info");
+                ZimbraLog.misc.info("need to reset vacation info");
                 if (entry instanceof Account) 
                     handleOutOfOffice((Account)entry);
             }
@@ -46,7 +46,7 @@ public class OutOfOfficeCallback implements AttributeCallback {
             conn = DbPool.getConnection();
             DbOutOfOffice.clear(conn, mbox);
             conn.commit();
-            LiquidLog.misc.info("reset vacation info");
+            ZimbraLog.misc.info("reset vacation info");
             //  Convenient place to prune old data, until we determine that this
             // needs to be a separate scheduled process.
             // TODO: only prune once a day?

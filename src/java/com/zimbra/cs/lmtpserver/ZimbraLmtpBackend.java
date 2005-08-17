@@ -26,7 +26,7 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 
 public class LiquidLmtpBackend implements LmtpBackend {
 	private static Log mLog = LogFactory.getLog(LiquidLmtpBackend.class);
@@ -132,17 +132,17 @@ public class LiquidLmtpBackend implements LmtpBackend {
                 try {
                     account = Provisioning.getInstance().getAccountByName(rcptEmail);
                     if (account == null) {
-                        LiquidLog.mailbox.warn("No account found delivering mail to " + rcptEmail);
+                        ZimbraLog.mailbox.warn("No account found delivering mail to " + rcptEmail);
                         continue;
                     }
                     mbox = Mailbox.getMailboxByAccount(account);
                     if (mbox == null) {
-                        LiquidLog.mailbox.warn("No mailbox found delivering mail to " + rcptEmail);
+                        ZimbraLog.mailbox.warn("No mailbox found delivering mail to " + rcptEmail);
                         continue;
                     }
                     attachmentsIndexingEnabled = mbox.attachmentsIndexingEnabled();
                 } catch (ServiceException se) {
-                    LiquidLog.mailbox.warn("Exception delivering mail to " + rcptEmail, se);
+                    ZimbraLog.mailbox.warn("Exception delivering mail to " + rcptEmail, se);
                 }
 
                 if (account != null && mbox != null) {
@@ -268,15 +268,15 @@ public class LiquidLmtpBackend implements LmtpBackend {
         try {
             Notification.notifyIfNecessary(account, msg, rcptEmail, pm);
         } catch (MessagingException e) {
-            LiquidLog.mailbox.warn("Unable to send new mail notification", e);
+            ZimbraLog.mailbox.warn("Unable to send new mail notification", e);
         }
         
         try {
             Notification.outOfOfficeIfNecessary(account, mbox, msg, rcptEmail, envSender, pm);
         } catch (MessagingException e) {
-            LiquidLog.mailbox.warn("Unable to send out-of-office reply", e);
+            ZimbraLog.mailbox.warn("Unable to send out-of-office reply", e);
         } catch (ServiceException e) {
-            LiquidLog.mailbox.warn("Unable to send out-of-office reply", e);
+            ZimbraLog.mailbox.warn("Unable to send out-of-office reply", e);
         }
     }
     

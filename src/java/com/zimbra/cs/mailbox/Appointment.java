@@ -42,7 +42,7 @@ import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -873,7 +873,7 @@ public class Appointment extends MailItem {
                 Mime.accept(conv, mm);
             } catch (Exception e) {
                 // If the conversion bombs for any reason, revert to the original
-                LiquidLog.mailbox.info(
+                ZimbraLog.mailbox.info(
                     "Unable to convert TNEF attachment for message " + getId(), e);
                 is = getRawMessage();
                 mm = new MimeMessage(JMSession.getSession(), is);
@@ -901,7 +901,7 @@ public class Appointment extends MailItem {
                 Mime.accept(conv, mm);
             } catch (Exception e) {
                 // If the conversion bombs for any reason, revert to the original
-                LiquidLog.mailbox.info(
+                ZimbraLog.mailbox.info(
                     "Unable to convert TNEF attachment for message " + getId(), e);
                 is = getRawMessage();
                 mm = new MimeMessage(JMSession.getSession(), is);

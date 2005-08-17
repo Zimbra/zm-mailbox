@@ -19,7 +19,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.util.LiquidPerf;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * @author bburtin
@@ -44,7 +44,7 @@ public class TestTags extends TestCase
      */
     protected void setUp()
     throws Exception {
-        LiquidLog.test.debug("TestTags.setUp()");
+        ZimbraLog.test.debug("TestTags.setUp()");
         super.setUp();
 
         mAccount = TestUtil.getAccount("user1");
@@ -65,7 +65,7 @@ public class TestTags extends TestCase
 
     public void testManyTags()
     throws Exception {
-        LiquidLog.test.debug("testManyTags()");
+        ZimbraLog.test.debug("testManyTags()");
         
         int numPrepares = LiquidPerf.getPrepareCount();
         
@@ -88,12 +88,12 @@ public class TestTags extends TestCase
         }
         
         numPrepares = LiquidPerf.getPrepareCount() - numPrepares;
-        LiquidLog.test.debug("testManyTags generated " + numPrepares + " SQL statements.");
+        ZimbraLog.test.debug("testManyTags generated " + numPrepares + " SQL statements.");
     }
     
     public void testTagSearch()
     throws Exception {
-        LiquidLog.test.debug("testTagSearch()");
+        ZimbraLog.test.debug("testTagSearch()");
 
         // Create tags
         mTags = new Tag[3];
@@ -154,7 +154,7 @@ public class TestTags extends TestCase
     
     private Set search(String query, byte type)
     throws Exception {
-        LiquidLog.test.debug("Running search: '" + query + "', type=" + type);
+        ZimbraLog.test.debug("Running search: '" + query + "', type=" + type);
         byte[] types = new byte[1];
         types[0] = type;
 
@@ -190,7 +190,7 @@ public class TestTags extends TestCase
     }
     
     protected void tearDown() throws Exception {
-        LiquidLog.test.debug("TestTags.tearDown()");
+        ZimbraLog.test.debug("TestTags.tearDown()");
 
         cleanUp();
         

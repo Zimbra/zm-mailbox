@@ -10,7 +10,7 @@ import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 
 
 class ImapFolder {
@@ -28,8 +28,8 @@ class ImapFolder {
     private boolean   mNotificationsSuspended;
 
     ImapFolder(String name, boolean select, Mailbox mailbox) throws ServiceException {
-        boolean debug = LiquidLog.imap.isDebugEnabled();
-        if (debug)  LiquidLog.imap.debug("  ** loading folder: " + name);
+        boolean debug = ZimbraLog.imap.isDebugEnabled();
+        if (debug)  ZimbraLog.imap.debug("  ** loading folder: " + name);
 
         synchronized (mailbox) {
             Folder folder = mailbox.getFolderByPath(name);
@@ -62,7 +62,7 @@ class ImapFolder {
                     mFirstUnread = i4msg.seq;
                 if (debug)  added.append(' ').append(i4msg.id);
             }
-            if (debug)  LiquidLog.imap.debug(added);
+            if (debug)  ZimbraLog.imap.debug(added);
 
             mLastSize = mSequence.size();
         }
@@ -279,7 +279,7 @@ class ImapFolder {
                         // FIXME: should handle moves separately
                         // FIXME: it'd be nice to have a bulk-delete Mailbox operation
                         try {
-                            LiquidLog.imap.debug("  ** deleting: " + i4msg.id);
+                            ZimbraLog.imap.debug("  ** deleting: " + i4msg.id);
                             mailbox.delete(null, i4msg.id, MailItem.TYPE_MESSAGE);
                         } catch (ServiceException e) {
                             if (!(e instanceof MailServiceException.NoSuchItemException))
@@ -291,15 +291,15 @@ class ImapFolder {
     }
     List collapseExpunged() {
         // FIXME: need synchronization
-        boolean debug = LiquidLog.imap.isDebugEnabled();
+        boolean debug = ZimbraLog.imap.isDebugEnabled();
         List removed = new ArrayList();
         boolean trimmed = false;
         int seq = 1;
-        if (debug)  LiquidLog.imap.debug("  ** iterating (collapseExpunged)");
+        if (debug)  ZimbraLog.imap.debug("  ** iterating (collapseExpunged)");
         for (ListIterator lit = mSequence.listIterator(); lit.hasNext(); seq++) {
             ImapMessage i4msg = (ImapMessage) lit.next();
             if (i4msg.expunged) {
-                if (debug)  LiquidLog.imap.debug("  ** removing: " + i4msg.id);
+                if (debug)  ZimbraLog.imap.debug("  ** removing: " + i4msg.id);
                 // uncache() removes pointers to the message from mUIDs;
                 //   if the message appears again in mSequence, it *must* be later
                 //   and the subsequent call to setIndex() will correctly set the mUIDs mapping

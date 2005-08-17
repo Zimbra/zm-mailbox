@@ -14,7 +14,7 @@ import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.session.SessionCache;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.ZimbraContext;
 import com.zimbra.soap.SoapEngine;
 
@@ -45,13 +45,13 @@ public class Auth extends AdminDocumentHandler {
         if (acct == null)
 			throw AccountServiceException.AUTH_FAILED(name);
         
-        LiquidLog.security.info(LiquidLog.encodeAttrs(
+        ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "AdminAuth","account", name})); 
 
         try {
             prov.authAccount(acct, password);
         } catch (ServiceException se) {
-            LiquidLog.security.warn(LiquidLog.encodeAttrs(
+            ZimbraLog.security.warn(ZimbraLog.encodeAttrs(
                     new String[] {"cmd", "AdminAuth","account", name, "error", se.getMessage()}));             
             throw se;
         }

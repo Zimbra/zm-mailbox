@@ -21,7 +21,7 @@ import com.zimbra.cs.service.ServiceException;
  * @author schemers
  *
  */
-public class LiquidLog {
+public class ZimbraLog {
     
     /**
      * "ip" key for context. IP of requset
@@ -181,12 +181,12 @@ public class LiquidLog {
         try {
             acct = Provisioning.getInstance().getAccountById(id);
         } catch (ServiceException se) {
-            LiquidLog.misc.warn("unable to lookup account for log, id: "+id, se);
+            ZimbraLog.misc.warn("unable to lookup account for log, id: "+id, se);
         }
         if (acct == null) {
-            LiquidLog.addToContext(idOnlyKey, id);
+            ZimbraLog.addToContext(idOnlyKey, id);
         } else {
-            LiquidLog.addToContext(nameKey, acct.getName());
+            ZimbraLog.addToContext(nameKey, acct.getName());
             
         }
     }
@@ -196,7 +196,7 @@ public class LiquidLog {
      * @param name account name
      */
     public static void addAccountNameToContext(String name) {
-        LiquidLog.addToContext(C_NAME, name);
+        ZimbraLog.addToContext(C_NAME, name);
     }
     
     /**
@@ -204,7 +204,7 @@ public class LiquidLog {
      * @param ip ip address
      */
     public static void addIpToContext(String ip) {
-        LiquidLog.addToContext(C_IP, ip);
+        ZimbraLog.addToContext(C_IP, ip);
     }  
     
     public static void addToContext(Mailbox mbx) {

@@ -11,7 +11,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.ZimbraContext;
 
 /**
@@ -45,7 +45,7 @@ public class DeleteAccount extends AdminDocumentHandler {
         prov.deleteAccount(id);
         mbox.deleteMailbox();
         
-        LiquidLog.security.info(LiquidLog.encodeAttrs(
+        ZimbraLog.security.info(ZimbraLog.encodeAttrs(
             new String[] {"cmd", "DeleteAccount","name", account.getName(), "id", account.getId()}));
         
         Element response = lc.createElement(AdminService.DELETE_ACCOUNT_RESPONSE);

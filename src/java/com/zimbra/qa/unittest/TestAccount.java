@@ -12,7 +12,7 @@ import com.zimbra.cs.db.DbResults;
 import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 
 import junit.framework.TestCase;
 
@@ -44,13 +44,13 @@ public class TestAccount extends TestCase {
     
     public void testDeleteAccount()
     throws Exception {
-        LiquidLog.test.debug("testDeleteAccount()");
+        ZimbraLog.test.debug("testDeleteAccount()");
         
         // Get the account and mailbox
         Account account = TestUtil.getAccount(USER_NAME);
         Mailbox mbox = Mailbox.getMailboxByAccount(account);
         String dbName = DbMailbox.getDatabaseName(mbox.getId());
-        LiquidLog.test.debug("Account=" + account.getId() + ", mbox=" + mbox.getId());
+        ZimbraLog.test.debug("Account=" + account.getId() + ", mbox=" + mbox.getId());
         
         // Confirm that the mailbox database exists
         DbResults results = DbUtil.executeQuery(

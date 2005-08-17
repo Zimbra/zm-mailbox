@@ -26,7 +26,7 @@ import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -185,7 +185,7 @@ public class Message extends MailItem {
                 Mime.accept(new TnefConverter(), mm);
             } catch (Exception e) {
                 // If the conversion bombs for any reason, revert to the original
-                LiquidLog.mailbox.info("unable to convert TNEF attachment for message " + mId, e);
+                ZimbraLog.mailbox.info("unable to convert TNEF attachment for message " + mId, e);
                 is = getRawMessage();
                 mm = new MimeMessage(JMSession.getSession(), is);
                 is.close();

@@ -59,7 +59,7 @@ public class Main {
     }
 
     public static void main(String args[]) {
-        Logging.setUseLiquidLog(false);
+        Logging.setUseZimbraLog(false);
         
         CommandLine cl = null;
         CommandLineParser parser = new GnuParser();

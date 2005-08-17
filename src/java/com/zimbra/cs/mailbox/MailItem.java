@@ -12,7 +12,7 @@ import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * @author dkarp
@@ -170,7 +170,7 @@ public abstract class MailItem implements Comparable {
 		        try {
 		            value = Long.parseLong(tags[i]);
 		        } catch (NumberFormatException e) {
-		            LiquidLog.mailbox.error("Unable to parse tags: '" + csv + "'", e);
+		            ZimbraLog.mailbox.error("Unable to parse tags: '" + csv + "'", e);
 		            throw e;
 		        }
 		        if (value == 0)      continue;
@@ -499,7 +499,7 @@ public abstract class MailItem implements Comparable {
                 try {
                     value = Long.parseLong(tags[i]);
                 } catch (NumberFormatException e) {
-                    LiquidLog.mailbox.error("Unable to parse tags: '" + csv + "'", e);
+                    ZimbraLog.mailbox.error("Unable to parse tags: '" + csv + "'", e);
                     throw e;
                 }
                 
@@ -1136,7 +1136,7 @@ public abstract class MailItem implements Comparable {
 			try {
                 MailboxBlob mblob = StoreManager.getInstance().getMailboxBlob(mMailbox, mId, mData.modContent, mData.volumeId);
                 if (mblob == null)
-                    LiquidLog.mailbox.error("missing blob for id: " + mId + ", change: " + mData.modContent);
+                    ZimbraLog.mailbox.error("missing blob for id: " + mId + ", change: " + mData.modContent);
                 else
                     info.blobs.add(mblob);
 			} catch (Exception e) { }

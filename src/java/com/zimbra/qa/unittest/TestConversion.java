@@ -17,7 +17,7 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.mime.TnefExtractor;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 
 
 /**
@@ -27,7 +27,7 @@ public class TestConversion extends TestCase {
 
     public void testTnef()
     throws Exception {
-        LiquidLog.test.debug("testTnef()");
+        ZimbraLog.test.debug("testTnef()");
         
         AttachmentFinder finder = new AttachmentFinder("upload.gif");
         Message msg = getTnefMessage();
@@ -41,7 +41,7 @@ public class TestConversion extends TestCase {
     
     public void testTnefExtractor()
     throws Exception {
-        LiquidLog.test.debug("testTnefExtractor()");
+        ZimbraLog.test.debug("testTnefExtractor()");
         
         TnefExtractor extractor = new TnefExtractor();
         Message msg = getTnefMessage();

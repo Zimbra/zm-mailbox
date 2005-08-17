@@ -9,7 +9,7 @@ import junit.framework.TestCase;
 import com.zimbra.cs.client.LmcSession;
 import com.zimbra.cs.client.soap.LmcCheckSpellingRequest;
 import com.zimbra.cs.client.soap.LmcCheckSpellingResponse;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * @author bburtin
@@ -27,7 +27,7 @@ public class TestSpellCheck extends TestCase {
         "consciousness.";
         
     public void testCheckSpelling() throws Exception {
-        LiquidLog.test.debug("testCheckSpelling");
+        ZimbraLog.test.debug("testCheckSpelling");
 
         // Send the request
         LmcSession session = TestUtil.getSoapSession(USER_NAME);
@@ -37,7 +37,7 @@ public class TestSpellCheck extends TestCase {
             (LmcCheckSpellingResponse)req.invoke(TestUtil.getSoapUrl());
         
         if (!response.isAvailable()) {
-            LiquidLog.test.debug(
+            ZimbraLog.test.debug(
                 "Unable to test spell checking because the service is not available.");
             return;
         }
@@ -55,6 +55,6 @@ public class TestSpellCheck extends TestCase {
         assertTrue("cotnact", response.getSuggestions("cotnact").length > 0);
         assertTrue("whizing", response.getSuggestions("whizing").length > 0);
         assertTrue("nevr", response.getSuggestions("nevr").length > 0);
-        LiquidLog.test.debug("Successfully tested spell checking");
+        ZimbraLog.test.debug("Successfully tested spell checking");
     }
 }

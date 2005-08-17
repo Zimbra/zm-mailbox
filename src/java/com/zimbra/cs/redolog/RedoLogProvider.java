@@ -7,7 +7,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Liquid;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * @author jhahm
@@ -39,7 +39,7 @@ public abstract class RedoLogProvider {
                 providerClass = Class.forName(className);
             } else {
                 providerClass = DefaultRedoLogProvider.class;
-                LiquidLog.misc.info("Redolog provider name not specified.  Using default " +
+                ZimbraLog.misc.info("Redolog provider name not specified.  Using default " +
                                     providerClass.getName());
             }
             provider = (RedoLogProvider) providerClass.newInstance();

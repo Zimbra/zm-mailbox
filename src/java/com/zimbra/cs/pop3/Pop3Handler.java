@@ -24,7 +24,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServerInputStream;
 import com.zimbra.cs.util.Config;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * @author schemers
@@ -107,10 +107,10 @@ public class Pop3Handler extends ProtocolHandler {
      */
     protected boolean processCommand() throws IOException {
         // TODO: catch IOException too?
-        LiquidLog.clearContext();
+        ZimbraLog.clearContext();
         try {
-            if (mAccountName != null) LiquidLog.addAccountNameToContext(mAccountName);
-            LiquidLog.addIpToContext(mRemoteAddress);
+            if (mAccountName != null) ZimbraLog.addAccountNameToContext(mAccountName);
+            ZimbraLog.addIpToContext(mRemoteAddress);
             return processCommandInternal();
         } catch (Pop3CmdException e) {
             sendERR(e.getResponse());
@@ -127,7 +127,7 @@ public class Pop3Handler extends ProtocolHandler {
         } finally {
             if (dropConnection)
                 dropConnection();
-            LiquidLog.clearContext();
+            ZimbraLog.clearContext();
         }
     }
     
@@ -159,7 +159,7 @@ public class Pop3Handler extends ProtocolHandler {
             cmd = cmd.substring(0, space);
         }
         
-        if (LiquidLog.pop.isDebugEnabled()) {
+        if (ZimbraLog.pop.isDebugEnabled()) {
             String darg = "PASS".equals(cmd) ? "<BLOCKED>" : arg;
             DEBUG("command=" + cmd + " arg=" + darg);
         }
@@ -298,27 +298,27 @@ public class Pop3Handler extends ProtocolHandler {
     }
 
     private void INFO(String message, Throwable e) {
-        if (LiquidLog.pop.isInfoEnabled()) LiquidLog.pop.info(message, e); 
+        if (ZimbraLog.pop.isInfoEnabled()) ZimbraLog.pop.info(message, e); 
     }
     
     private void INFO(String message) {
-        if (LiquidLog.pop.isInfoEnabled()) LiquidLog.pop.info(message);
+        if (ZimbraLog.pop.isInfoEnabled()) ZimbraLog.pop.info(message);
     }
 
     private void DEBUG(String message, Throwable e) {
-        if (LiquidLog.pop.isDebugEnabled()) LiquidLog.pop.debug(message, e);
+        if (ZimbraLog.pop.isDebugEnabled()) ZimbraLog.pop.debug(message, e);
     }
 
     private void DEBUG(String message) {
-        if (LiquidLog.pop.isDebugEnabled()) LiquidLog.pop.debug(message);
+        if (ZimbraLog.pop.isDebugEnabled()) ZimbraLog.pop.debug(message);
     }
 
     private void WARN(String message, Throwable e) {
-        if (LiquidLog.pop.isWarnEnabled()) LiquidLog.pop.warn(message, e);
+        if (ZimbraLog.pop.isWarnEnabled()) ZimbraLog.pop.warn(message, e);
     }
 
     private void WARN(String message) {
-        if (LiquidLog.pop.isWarnEnabled()) LiquidLog.pop.warn(message);
+        if (ZimbraLog.pop.isWarnEnabled()) ZimbraLog.pop.warn(message);
     }
 
     private void sendERR(String response) throws IOException {
@@ -336,7 +336,7 @@ public class Pop3Handler extends ProtocolHandler {
     private void sendResponse(String status, String msg, boolean flush) throws IOException {
         String cl = mCurrentCommandLine != null ? mCurrentCommandLine : "<none>";
         String response = (msg == null || msg.length() == 0) ? status : status+" "+msg;
-        if (LiquidLog.pop.isDebugEnabled()) {
+        if (ZimbraLog.pop.isDebugEnabled()) {
             DEBUG(response + " (" + cl + ")");
         } else {
             // only log errors if not debugging...
@@ -512,7 +512,7 @@ public class Pop3Handler extends ProtocolHandler {
         mTlsConnection = (SSLSocket) fac.createSocket(mConnection, mConnection.getInetAddress().getHostName(), mConnection.getPort(), true);
         mTlsConnection.setUseClientMode(false);
         mTlsConnection.startHandshake();
-        LiquidLog.pop.debug("suite: "+mTlsConnection.getSession().getCipherSuite());
+        ZimbraLog.pop.debug("suite: "+mTlsConnection.getSession().getCipherSuite());
         mInputStream = new TcpServerInputStream(mTlsConnection.getInputStream());
         mOutputStream = new BufferedOutputStream(mTlsConnection.getOutputStream());        
     }

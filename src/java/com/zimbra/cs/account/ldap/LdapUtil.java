@@ -35,7 +35,7 @@ import org.doomdark.uuid.UUIDGenerator;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * @author schemers
@@ -632,11 +632,11 @@ public class LdapUtil {
     
         if (url == null || base == null || filter == null) {
             if (url == null)
-                LiquidLog.misc.warn("searchLdapGal url is null");
+                ZimbraLog.misc.warn("searchLdapGal url is null");
             if (base == null)
-                LiquidLog.misc.warn("searchLdapGal base is null");
+                ZimbraLog.misc.warn("searchLdapGal base is null");
             if (filter == null)
-                LiquidLog.misc.warn("searchLdapGal queryExpr is null");
+                ZimbraLog.misc.warn("searchLdapGal queryExpr is null");
             return result;
         }
     

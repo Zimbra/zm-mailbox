@@ -8,7 +8,7 @@ import java.util.Map;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.ZimbraContext;
 
 /**
@@ -26,7 +26,7 @@ public class ModifyConfig extends AdminDocumentHandler {
         // pass in true to checkImmutable
 	    prov.getConfig().modifyAttrs(attrs, true);
 
-        LiquidLog.security.info(LiquidLog.encodeAttrs(
+        ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "ModifyConfig",}, attrs));
         
 	    Element response = lc.createElement(AdminService.MODIFY_CONFIG_RESPONSE);

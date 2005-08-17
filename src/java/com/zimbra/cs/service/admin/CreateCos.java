@@ -7,7 +7,7 @@ import java.util.Map;
 
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.soap.ZimbraContext;
@@ -27,7 +27,7 @@ public class CreateCos extends AdminDocumentHandler {
 	    
 	    Cos cos = prov.createCos(name, attrs);
 
-        LiquidLog.security.info(LiquidLog.encodeAttrs(
+        ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "CreateCos","name", name}, attrs));         
 
 	    Element response = lc.createElement(AdminService.CREATE_COS_RESPONSE);

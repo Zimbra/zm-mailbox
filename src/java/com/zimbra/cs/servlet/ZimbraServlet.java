@@ -27,7 +27,7 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.SoapProtocol;
 
 /**
@@ -233,8 +233,8 @@ public class LiquidServlet extends HttpServlet {
         // Release the connection.
         method.releaseConnection();
 
-        if (LiquidLog.soap.isDebugEnabled())
-            LiquidLog.soap.debug("response: \n" + new String(responseBody, "utf8"));
+        if (ZimbraLog.soap.isDebugEnabled())
+            ZimbraLog.soap.debug("response: \n" + new String(responseBody, "utf8"));
         
         // send response back to client
         resp.setContentType(req.getContentType());

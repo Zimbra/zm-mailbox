@@ -7,7 +7,7 @@ import java.util.Map;
 
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.soap.ZimbraContext;
@@ -28,7 +28,7 @@ public class CreateAccount extends AdminDocumentHandler {
 
 	    Account account = prov.createAccount(name, password, attrs);
 
-        LiquidLog.security.info(LiquidLog.encodeAttrs(
+        ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "CreateAccount","name", name}, attrs));         
 
 	    Element response = lc.createElement(AdminService.CREATE_ACCOUNT_RESPONSE);

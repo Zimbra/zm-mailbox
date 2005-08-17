@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 
 import EDU.oswego.cs.dl.util.concurrent.PooledExecutor;
 import EDU.oswego.cs.dl.util.concurrent.ThreadFactory;
@@ -83,13 +83,13 @@ public class OzServer {
                 int readyCount = 0;
 
                 try {
-                    if (LiquidLog.ozserver.isDebugEnabled()) LiquidLog.ozserver.debug("entering select");
+                    if (ZimbraLog.ozserver.isDebugEnabled()) ZimbraLog.ozserver.debug("entering select");
                     readyCount = mSelector.select();
                 } catch (IOException ioe) {
-                    LiquidLog.ozserver.warn("OzServer IOException in select", ioe);
+                    ZimbraLog.ozserver.warn("OzServer IOException in select", ioe);
                 }
 
-                if (LiquidLog.ozserver.isDebugEnabled()) LiquidLog.ozserver.debug("selected readyCount=" + readyCount);
+                if (ZimbraLog.ozserver.isDebugEnabled()) ZimbraLog.ozserver.debug("selected readyCount=" + readyCount);
 
                 if (readyCount == 0) {
                     continue;
@@ -107,24 +107,24 @@ public class OzServer {
                     }
 
                     if (!readyKey.isValid()) {
-                        LiquidLog.ozserver.info("ready key cid=" + readyKeyConnectionId + " invalid hence ignored");
+                        ZimbraLog.ozserver.info("ready key cid=" + readyKeyConnectionId + " invalid hence ignored");
                     }
                     
-                    if (LiquidLog.ozserver.isDebugEnabled()) {
+                    if (ZimbraLog.ozserver.isDebugEnabled()) {
                     	OzUtil.logSelectionKey(readyKey, readyKeyConnectionId, "ready key");
                     }
                     
                     if (readyKey.isAcceptable()) {
-                        if (LiquidLog.ozserver.isDebugEnabled()) LiquidLog.ozserver.debug("acceptable key");
+                        if (ZimbraLog.ozserver.isDebugEnabled()) ZimbraLog.ozserver.debug("acceptable key");
                         OzConnectionHandler connection = null;
                         try {
                             Socket newSocket = mServerSocket.accept();
                             SocketChannel newChannel = newSocket.getChannel(); 
                             newChannel.configureBlocking(false);
                             connection = new OzConnectionHandler(OzServer.this, newChannel);
-                            LiquidLog.ozserver.info("connected cid=" + connection.getId() + " " + newSocket);
+                            ZimbraLog.ozserver.info("connected cid=" + connection.getId() + " " + newSocket);
                         } catch (Exception e) {
-                            LiquidLog.ozserver.warn("ignoring exception that occurred while handling acceptable key", e);
+                            ZimbraLog.ozserver.warn("ignoring exception that occurred while handling acceptable key", e);
                             if (connection != null) {
                                 connection.close();
                             }
@@ -137,7 +137,7 @@ public class OzServer {
                             connection = (OzConnectionHandler)readyKey.attachment();
                             connection.handleRead();
                         } catch (Exception e) {
-                            LiquidLog.ozserver.warn("ignoring exception that occurred while handling readable key", e);
+                            ZimbraLog.ozserver.warn("ignoring exception that occurred while handling readable key", e);
                             connection.close();
                         }
                     }
@@ -148,23 +148,23 @@ public class OzServer {
                             connection = (OzConnectionHandler)readyKey.attachment();
                             connection.handleWrite();
                         } catch (Exception e) {
-                            LiquidLog.ozserver.warn("ignoring exception that occurred while handling writable key", e);
+                            ZimbraLog.ozserver.warn("ignoring exception that occurred while handling writable key", e);
                             connection.close();
                         }
                     }
                     
                 } /* end of ready keys iteration loop */
 
-                if (LiquidLog.ozserver.isDebugEnabled()) LiquidLog.ozserver.debug("processed " + readyCount + " ready keys");
+                if (ZimbraLog.ozserver.isDebugEnabled()) ZimbraLog.ozserver.debug("processed " + readyCount + " ready keys");
 
                 synchronized (mIoThreadTasks) {
-                    if (LiquidLog.ozserver.isDebugEnabled()) LiquidLog.ozserver.debug("running " + mIoThreadTasks.size() + " IO thread tasks");
+                    if (ZimbraLog.ozserver.isDebugEnabled()) ZimbraLog.ozserver.debug("running " + mIoThreadTasks.size() + " IO thread tasks");
                     for (Iterator taskIter = mIoThreadTasks.iterator(); taskIter.hasNext(); taskIter.remove()) {
                         Runnable task = (Runnable) taskIter.next();
                         try {
                             task.run();
                         } catch (Exception e) {
-                            LiquidLog.ozserver.warn("ignoring exception that occurred while running IO thread tasks", e);
+                            ZimbraLog.ozserver.warn("ignoring exception that occurred while running IO thread tasks", e);
                         }
                     }
                 }
@@ -173,23 +173,23 @@ public class OzServer {
 
             assert(mShutdownRequested);
 
-            LiquidLog.ozserver.info("shutting down thread pool");
+            ZimbraLog.ozserver.info("shutting down thread pool");
             mPooledExecutor.shutdownNow();
 
             try {
-                LiquidLog.ozserver.info("waiting for thread pool to shutdown");
+                ZimbraLog.ozserver.info("waiting for thread pool to shutdown");
                 mPooledExecutor.awaitTerminationAfterShutdown(10*1000);
             } catch (InterruptedException ie) {
-                LiquidLog.ozserver.warn("unexpected exception when waiting for shutdown");
+                ZimbraLog.ozserver.warn("unexpected exception when waiting for shutdown");
             }
-            LiquidLog.ozserver.info("done waiting for thread pool to shutdown");
+            ZimbraLog.ozserver.info("done waiting for thread pool to shutdown");
             
             try {
                 mSelector.close();
             } catch (IOException ioe) {
-                LiquidLog.ozserver.warn("unexpected exception when closing selector");
+                ZimbraLog.ozserver.warn("unexpected exception when closing selector");
             }
-            LiquidLog.ozserver.info("closed selector");
+            ZimbraLog.ozserver.info("closed selector");
         }
     }
 
@@ -210,10 +210,10 @@ public class OzServer {
     
     void runTaskInIoThread(Runnable task) {
         if (Thread.currentThread() == mIoThread) {
-            if (LiquidLog.ozserver.isDebugEnabled()) LiquidLog.ozserver.debug("already in IO thread, just running");
+            if (ZimbraLog.ozserver.isDebugEnabled()) ZimbraLog.ozserver.debug("already in IO thread, just running");
             task.run();
         } else {
-            if (LiquidLog.ozserver.isDebugEnabled()) LiquidLog.ozserver.debug("scheduling for IO Thread later");
+            if (ZimbraLog.ozserver.isDebugEnabled()) ZimbraLog.ozserver.debug("scheduling for IO Thread later");
             synchronized (mIoThreadTasks) {
                 mIoThreadTasks.add(task);
             }

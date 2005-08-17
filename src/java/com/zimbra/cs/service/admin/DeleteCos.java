@@ -10,7 +10,7 @@ import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.ZimbraContext;
 
 /**
@@ -32,7 +32,7 @@ public class DeleteCos extends AdminDocumentHandler {
         
         prov.deleteCos(cos.getId());
 
-        LiquidLog.security.info(LiquidLog.encodeAttrs(
+        ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "DeleteCos","name", cos.getName(), "id", cos.getId()}));
 
 	    Element response = lc.createElement(AdminService.DELETE_COS_RESPONSE);

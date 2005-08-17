@@ -27,7 +27,7 @@ public class AccountUtil {
         try {
             fromAddress = getCanonicalAddress(acct);
         } catch (ServiceException se) {
-            LiquidLog.misc.warn("unexpected exception canonicalizing address, will use account name", se);
+            ZimbraLog.misc.warn("unexpected exception canonicalizing address, will use account name", se);
             fromAddress = acct.getName();
         }
 

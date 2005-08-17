@@ -11,7 +11,7 @@ import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * @author bburtin
@@ -29,7 +29,7 @@ public class TestFolders extends TestCase
      */
     protected void setUp()
     throws Exception {
-        LiquidLog.test.debug("TestFolders.setUp()");
+        ZimbraLog.test.debug("TestFolders.setUp()");
         super.setUp();
 
         mAccount = TestUtil.getAccount("user1");
@@ -43,7 +43,7 @@ public class TestFolders extends TestCase
 
     public void testManySubfolders()
     throws Exception {
-        LiquidLog.test.debug("testManySubfolders");
+        ZimbraLog.test.debug("testManySubfolders");
         final int NUM_LEVELS = 20;
         int parentId = Mailbox.ID_FOLDER_INBOX;
         Folder top = null;
@@ -60,7 +60,7 @@ public class TestFolders extends TestCase
     }
     
     protected void tearDown() throws Exception {
-        LiquidLog.test.debug("TestFolders.tearDown()");
+        ZimbraLog.test.debug("TestFolders.tearDown()");
 
         deleteFolders();
         

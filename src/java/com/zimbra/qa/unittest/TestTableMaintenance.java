@@ -12,7 +12,7 @@ import com.zimbra.cs.client.soap.LmcMaintainTablesRequest;
 import com.zimbra.cs.client.soap.LmcMaintainTablesResponse;
 import com.zimbra.cs.db.DbTableMaintenance;
 import com.zimbra.cs.db.DbUtil;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * @author bburtin
@@ -35,7 +35,7 @@ public class TestTableMaintenance extends TestCase {
     
     public void testAnalyze()
     throws Exception {
-        LiquidLog.test.debug("testAnalyze");
+        ZimbraLog.test.debug("testAnalyze");
         setServerAttrs(0, 1000000, DbTableMaintenance.OPERATION_ANALYZE, 0);
         int numTables = runMaintenance();
         assertTrue(numTables > 0);
@@ -43,7 +43,7 @@ public class TestTableMaintenance extends TestCase {
 
     public void testOptimize()
     throws Exception {
-        LiquidLog.test.debug("testOptimize");
+        ZimbraLog.test.debug("testOptimize");
         setServerAttrs(0, 1000000, DbTableMaintenance.OPERATION_OPTIMIZE, 0);
         int numTables = runMaintenance();
         assertTrue(numTables > 0);
@@ -56,7 +56,7 @@ public class TestTableMaintenance extends TestCase {
     /*
     public void testNotEnoughRows()
     throws Exception {
-        LiquidLog.test.debug("testNotEnoughRows");
+        ZimbraLog.test.debug("testNotEnoughRows");
         setServerAttrs(1000000, 10000000, DbTableMaintenance.OPERATION_ANALYZE, 0);
         int numTables = runMaintenance();
         assertEquals(0, numTables);
@@ -64,7 +64,7 @@ public class TestTableMaintenance extends TestCase {
     
     public void testNotEnoughGrowth()
     throws Exception {
-        LiquidLog.test.debug("testNotEnoughGrowth");
+        ZimbraLog.test.debug("testNotEnoughGrowth");
         testAnalyze();
         setServerAttrs(0, 1000000, DbTableMaintenance.OPERATION_ANALYZE, 10);
         assertEquals(0, runMaintenance());

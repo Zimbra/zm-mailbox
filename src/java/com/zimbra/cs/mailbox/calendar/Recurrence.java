@@ -9,7 +9,7 @@ import net.fortuna.ical4j.model.WeekDayList;
 
 import java.text.ParseException;
 
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.cs.util.ListUtil;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -328,11 +328,11 @@ public class Recurrence
                 }
             } catch (ServiceException se) {
                 // Bugs 3172 and 3240.  Ignore recurrence rules with bad data.
-                LiquidLog.calendar.warn("ServiceException expanding recurrence rule: " + mRecur.toString(), se);
+                ZimbraLog.calendar.warn("ServiceException expanding recurrence rule: " + mRecur.toString(), se);
                 toRet = new ArrayList();
             } catch (IllegalArgumentException iae) {
                 // Bugs 3172 and 3240.  Ignore recurrence rules with bad data.
-            	LiquidLog.calendar.warn("Invalid recurrence rule: " + mRecur.toString(), iae);
+            	ZimbraLog.calendar.warn("Invalid recurrence rule: " + mRecur.toString(), iae);
                 toRet = new ArrayList();
             }
             return toRet;

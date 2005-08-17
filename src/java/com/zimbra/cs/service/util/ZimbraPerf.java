@@ -17,7 +17,7 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.util.Constants;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * A collection of methods for keeping track of server performance statistics.
@@ -169,7 +169,7 @@ public class LiquidPerf {
             }
             writer.close();
         } catch (IOException e) {
-            LiquidLog.perf.warn("Unable to write to " + filename + ": " + e.toString());
+            ZimbraLog.perf.warn("Unable to write to " + filename + ": " + e.toString());
         }
     }
 
@@ -193,7 +193,7 @@ public class LiquidPerf {
                 ",\"" + sql + "\",\"" + DbUtil.normalizeSql(sql) + "\"\n");
             writer.close();
         } catch (IOException e) {
-            LiquidLog.perf.warn("Unable to write to " + filename + ": " + e.toString());
+            ZimbraLog.perf.warn("Unable to write to " + filename + ": " + e.toString());
         }
     }
     
@@ -215,7 +215,7 @@ public class LiquidPerf {
                 requestMillis + "," + dbMillis + "," + statementCount + "\n");
             writer.close();
         } catch (IOException e) {
-            LiquidLog.perf.warn("Unable to write to " + filename + ": " + e.toString());
+            ZimbraLog.perf.warn("Unable to write to " + filename + ": " + e.toString());
         }
     }
 }

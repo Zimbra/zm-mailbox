@@ -22,7 +22,7 @@ import org.apache.commons.pool.impl.GenericObjectPool;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.LiquidPerf;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * @author schemers
@@ -182,11 +182,11 @@ public class DbPool {
             }
         }
 
-        if (LiquidLog.sqltrace.isDebugEnabled() || LiquidLog.perf.isDebugEnabled()) {
+        if (ZimbraLog.sqltrace.isDebugEnabled() || ZimbraLog.perf.isDebugEnabled()) {
             props.put("profileSQL", "true");
             props.put("logger", MySqlTraceLogger.class.getName());
         }
-        if (LiquidLog.perf.isDebugEnabled()) {
+        if (ZimbraLog.perf.isDebugEnabled()) {
             props.put("slowQueryThresholdMillis", "300");
             props.put("logSlowQueries", "true");
             // xxx bburtin: for some reason, using explainSlowQueries causes the subsequent

@@ -10,7 +10,7 @@ import com.zimbra.cs.service.admin.AdminDocumentHandler;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.Liquid;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.SoapProtocol;
 
 import java.io.ByteArrayInputStream;
@@ -94,22 +94,22 @@ public class SoapEngine {
         if (liquidContext.sessionSuppressed())
         	context.put(DONT_CREATE_SESSION, "1");
 
-        LiquidLog.clearContext();
+        ZimbraLog.clearContext();
         try {
             if (context != null) {
                 String id = liquidContext.getRequestedAccountId();
                 if (id != null) {
-                    LiquidLog.addAccountToContext(id, LiquidLog.C_NAME, LiquidLog.C_ID);
+                    ZimbraLog.addAccountToContext(id, ZimbraLog.C_NAME, ZimbraLog.C_ID);
                     String aid = liquidContext.getAuthtokenAccountId();
                     if (!id.equals(aid)) {
-                        LiquidLog.addAccountToContext(aid, LiquidLog.C_ANAME, LiquidLog.C_AID);
+                        ZimbraLog.addAccountToContext(aid, ZimbraLog.C_ANAME, ZimbraLog.C_AID);
                     } else if (liquidContext.getAuthToken().getAdminAccountId() != null) {
-                        LiquidLog.addAccountToContext(liquidContext.getAuthToken().getAdminAccountId(), LiquidLog.C_ANAME, LiquidLog.C_AID);                        
+                        ZimbraLog.addAccountToContext(liquidContext.getAuthToken().getAdminAccountId(), ZimbraLog.C_ANAME, ZimbraLog.C_AID);                        
                     }
                 }
             }
             String ip = (String) context.get(REQUEST_IP);
-            if (ip != null) LiquidLog.addToContext(LiquidLog.C_IP, ip);
+            if (ip != null) ZimbraLog.addToContext(ZimbraLog.C_IP, ip);
 
             context.put(LIQUID_CONTEXT, liquidContext);
 
@@ -185,7 +185,7 @@ public class SoapEngine {
             }
             return responseProto.soapEnvelope(responseBody, responseHeader);
         } finally {
-            LiquidLog.clearContext();
+            ZimbraLog.clearContext();
         }
     }
 

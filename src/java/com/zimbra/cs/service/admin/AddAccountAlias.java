@@ -10,7 +10,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.ZimbraContext;
 
 /**
@@ -31,7 +31,7 @@ public class AddAccountAlias extends AdminDocumentHandler {
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
 
         prov.addAlias(account, alias);
-        LiquidLog.security.info(LiquidLog.encodeAttrs(
+        ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "AddAccountAlias","name", account.getName(), "alias", alias})); 
         
 	    Element response = lc.createElement(AdminService.ADD_ACCOUNT_ALIAS_RESPONSE);

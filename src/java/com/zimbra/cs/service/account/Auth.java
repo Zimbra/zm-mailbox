@@ -14,7 +14,7 @@ import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraContext;
 import com.zimbra.soap.SoapEngine;
@@ -40,10 +40,10 @@ public class Auth extends DocumentHandler  {
 
 		try {
 		    prov.authAccount(acct, password);
-            LiquidLog.security.info(LiquidLog.encodeAttrs(
+            ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                     new String[] {"cmd", "Auth","account", name}));
         } catch (ServiceException se) {
-            LiquidLog.security.warn(LiquidLog.encodeAttrs(
+            ZimbraLog.security.warn(ZimbraLog.encodeAttrs(
                     new String[] {"cmd", "Auth","account", name, "error", se.getMessage()}));             
             throw se;
         }

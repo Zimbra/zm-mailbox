@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.TimerTask;
 
 import com.zimbra.cs.util.Liquid;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 
 class OzBufferManager {
     private static List mFreeBuffers = new LinkedList();
@@ -24,7 +24,7 @@ class OzBufferManager {
         
         if (mFreeBuffers.isEmpty()) {
             buf = ByteBuffer.allocateDirect(BUFFER_SIZE);
-            LiquidLog.ozserver.info("New direct buffer inuse=" + mInUse + " allocated=" + mAllocated);
+            ZimbraLog.ozserver.info("New direct buffer inuse=" + mInUse + " allocated=" + mAllocated);
             mAllocated++;
         } else {
             buf = (ByteBuffer)mFreeBuffers.remove(0);
@@ -44,7 +44,7 @@ class OzBufferManager {
     static {
         TimerTask task = new TimerTask() {
             public void run() {
-                LiquidLog.ozserver.info("Buffer manager inUse=" + mInUse + " allocated=" + mAllocated);
+                ZimbraLog.ozserver.info("Buffer manager inUse=" + mInUse + " allocated=" + mAllocated);
             }
         };
         Liquid.sTimer.scheduleAtFixedRate(task, 300000, 300000);

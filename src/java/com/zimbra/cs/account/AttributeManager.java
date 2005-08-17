@@ -12,7 +12,7 @@ import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ZimbraLog;
 
 public class AttributeManager {
 
@@ -42,15 +42,15 @@ public class AttributeManager {
                 try {
                     is = mInstance.getClass().getResourceAsStream(file);
                     if (is == null) {
-                        LiquidLog.misc.warn("unable to find attr file resource: "+file);
+                        ZimbraLog.misc.warn("unable to find attr file resource: "+file);
                     } else {
                         mInstance.loadAttrs(is, file);
                     }
                 } catch (DocumentException e) {
-                    LiquidLog.misc.warn("unable to parse attr file: "+file+" "+e.getMessage(), e);
+                    ZimbraLog.misc.warn("unable to parse attr file: "+file+" "+e.getMessage(), e);
                 } catch (Exception e) {
                     // swallow all of them
-                    LiquidLog.misc.warn("unable to load attr file: "+file+" "+e.getMessage(), e);                    
+                    ZimbraLog.misc.warn("unable to load attr file: "+file+" "+e.getMessage(), e);                    
                 } finally {
                     if (is != null)
                         try { is.close();}  catch (IOException e) { }
@@ -69,7 +69,7 @@ public class AttributeManager {
             for (Iterator iter = root.elementIterator(); iter.hasNext();) {
                 Element eattr = (Element) iter.next();
                 if (!eattr.getName().equals(E_ATTR)) {
-                    LiquidLog.misc.warn("attrs file("+file+") unknown element: "+eattr.getName());
+                    ZimbraLog.misc.warn("attrs file("+file+") unknown element: "+eattr.getName());
                     continue;
                 }
                 String name = null;
@@ -97,24 +97,24 @@ public class AttributeManager {
                     } else if (aname.equals(A_TYPE)) {
                          type = AttributeInfo.getType(attr.getValue());
                          if (type == AttributeInfo.TYPE_UNKNOWN) {
-                             LiquidLog.misc.warn("attrs file("+file+") unknown <attr> type: "+attr.getValue());
+                             ZimbraLog.misc.warn("attrs file("+file+") unknown <attr> type: "+attr.getValue());
                              ignore = true;
                          }
                          
                     } else if (aname.equals(A_VALUE)) { 
                         value = attr.getValue();
                     } else {
-                        LiquidLog.misc.warn("attrs file("+file+") unknown <attr> attr: "+aname);
+                        ZimbraLog.misc.warn("attrs file("+file+") unknown <attr> attr: "+aname);
                     }
                 }
 
                 if (!ignore) {
                     if (name == null) {
-                        LiquidLog.misc.warn("attrs file("+file+") no name specified for attr");
+                        ZimbraLog.misc.warn("attrs file("+file+") no name specified for attr");
                         continue;
                     }
                     if (type == AttributeInfo.TYPE_UNKNOWN) {
-                        LiquidLog.misc.warn("attrs file("+file+") no type specified for attr: "+name);
+                        ZimbraLog.misc.warn("attrs file("+file+") no type specified for attr: "+name);
                         continue;
                     }
                     AttributeInfo info = new AttributeInfo(name, callback, type, value, immutable, min, max);
@@ -136,7 +136,7 @@ public class AttributeManager {
         try {
             cb = (AttributeCallback) Class.forName(clazz).newInstance();
         } catch (Exception e) {
-            LiquidLog.misc.warn("loadCallback caught exception", e);
+            ZimbraLog.misc.warn("loadCallback caught exception", e);
         }
         return cb;
     }
@@ -153,7 +153,7 @@ public class AttributeManager {
                 if (info.getCallback() != null)
                     info.getCallback().preModify(context, name, value, attrs, entry, isCreate);
             } else {
-                LiquidLog.misc.warn("checkValue: no attribute info for: "+name);
+                ZimbraLog.misc.warn("checkValue: no attribute info for: "+name);
             }
        }
     }
@@ -171,7 +171,7 @@ public class AttributeManager {
                         info.getCallback().postModify(context, name, entry, isCreate);
                     } catch (Exception e) {
                         // need to swallow all exceptions as postModify shouldn't throw any...
-                        LiquidLog.account.warn("postModify caught exception: "+e.getMessage(), e);
+                        ZimbraLog.account.warn("postModify caught exception: "+e.getMessage(), e);
                     }
                 }
             }
@@ -179,7 +179,7 @@ public class AttributeManager {
     }
 
     public static void main(String args[]) throws ServiceException {
-        LiquidLog.toolSetupLog4j("info");
+        ZimbraLog.toolSetupLog4j("info");
         AttributeManager mgr = AttributeManager.getInstance();
         HashMap attrs = new HashMap();
         attrs.put(Provisioning.A_liquidAccountStatus, Provisioning.ACCOUNT_STATUS_ACTIVE);
