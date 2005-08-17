@@ -37,7 +37,7 @@ ThrowIOE(JNIEnv *env, const char *msg)
 }
 
 JNIEXPORT void JNICALL 
-Java_com_zimbra_native_IO_link0(JNIEnv *env, 
+Java_com_zimbra_znative_IO_link0(JNIEnv *env, 
                                jclass clz,
                                jbyteArray joldpath, 
                                jbyteArray jnewpath)
@@ -88,7 +88,7 @@ Java_com_zimbra_native_IO_link0(JNIEnv *env,
     }
 }
 
-JNIEXPORT jint JNICALL Java_com_zimbra_native_IO_linkCount0
+JNIEXPORT jint JNICALL Java_com_zimbra_znative_IO_linkCount0
 (JNIEnv *env, jclass clz, jbyteArray jpath)
 {
     struct stat sb;
