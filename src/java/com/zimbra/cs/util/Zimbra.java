@@ -51,7 +51,7 @@ public class Zimbra {
     private static void checkForClasses() {
         checkForClass("javax.activation.DataSource", "activation.jar");
         checkForClass("javax.mail.internet.MimeMessage", "mail.jar");
-        checkForClass("com.liquidsys.os.IO", "liquidos.jar");
+        checkForClass("com.zimbra.znative.IO", "liquidos.jar");
     }
 
     private static void checkLDAP() {
