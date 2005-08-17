@@ -44,11 +44,11 @@ public class RedoConfig {
         mServiceHostname = config.getAttr(Provisioning.A_liquidServiceHostname);
         mRedoLogEnabled = config.getBooleanAttr(Provisioning.A_liquidRedoLogEnabled, D_REDOLOG_ENABLED);
         mRedoLogPath =
-            Config.getPathRelativeToLiquidHome(
+            Config.getPathRelativeToZimbraHome(
                     config.getAttr(Provisioning.A_liquidRedoLogLogPath,
                                    D_REDOLOG_PATH)).getAbsolutePath();
         mRedoLogArchiveDir =
-            Config.getPathRelativeToLiquidHome(
+            Config.getPathRelativeToZimbraHome(
                     config.getAttr(Provisioning.A_liquidRedoLogArchiveDir,
                                    D_REDOLOG_ARCHIVEDIR)).getAbsolutePath();
         mRedoLogRolloverFileSizeKB =

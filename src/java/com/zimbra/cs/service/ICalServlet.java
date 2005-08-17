@@ -25,7 +25,7 @@ import com.zimbra.cs.mailbox.Mailbox;
  *
  */
 
-public class ICalServlet extends LiquidBasicAuthServlet {
+public class ICalServlet extends ZimbraBasicAuthServlet {
 
     private static final String  WWW_AUTHENTICATE_HEADER = "WWW-Authenticate";
     private static final String  WWW_AUTHENTICATE_VALUE = "BASIC realm=\"LiquidSystems iCal\"";

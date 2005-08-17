@@ -117,7 +117,7 @@ public class Config {
      * @param path
      * @return
      */
-    public static File getPathRelativeToLiquidHome(String path) {
+    public static File getPathRelativeToZimbraHome(String path) {
         char first = path.charAt(0);
         if (first == File.separatorChar || first == '/')
             return new File(path);

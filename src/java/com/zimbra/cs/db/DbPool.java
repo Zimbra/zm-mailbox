@@ -115,7 +115,7 @@ public class DbPool {
         String myPort = LC.mysql_port.value();
         String url = "jdbc:mysql://" + myAddress + ":" + myPort + "/liquid";
 
-        Properties props = getLiquidDbProps();
+        Properties props = getZimbraDbProps();
         // TODO: need to tune these
         int poolSize = 100;
         ObjectPool cpool = new GenericObjectPool(null, poolSize, GenericObjectPool.WHEN_EXHAUSTED_BLOCK, -1, poolSize);
@@ -143,7 +143,7 @@ public class DbPool {
         }
     };
 
-    private static Properties getLiquidDbProps() {
+    private static Properties getZimbraDbProps() {
         Properties props = new Properties();
         
         props.put("cacheResultSetMetadata", "true");

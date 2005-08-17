@@ -91,7 +91,7 @@ public class DbMailbox {
             String dbName = getDatabaseName(mailboxId);
             ZimbraLog.mailbox.info("Creating database " + dbName);
 
-            File file = Config.getPathRelativeToLiquidHome("db/create_database.sql");
+            File file = Config.getPathRelativeToZimbraHome("db/create_database.sql");
             Map vars = new HashMap();
             vars.put("DATABASE_NAME", dbName);
 

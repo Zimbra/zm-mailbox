@@ -75,7 +75,7 @@ public class ParsedMessage {
     public ParsedMessage(MimeMessage msg, boolean indexAttachments) {
         mIndexAttachments = indexAttachments;
         mMimeMessage = msg;
-        setReceivedDate(getLiquidDateHeader());
+        setReceivedDate(getZimbraDateHeader());
 	}
 
     // When re-indexing, we must force the received-date to be correct
@@ -97,7 +97,7 @@ public class ParsedMessage {
         } catch (IOException ioe) {
             // we know ByteArrayInputStream.close() is a no-op
         }
-        setReceivedDate(getLiquidDateHeader());
+        setReceivedDate(getZimbraDateHeader());
     }
 
     public ParsedMessage(byte[] rawData, long receivedDate, boolean indexAttachments) throws MessagingException {
@@ -309,7 +309,7 @@ public class ParsedMessage {
         return mReceivedDate;
     }
 
-    public long getLiquidDateHeader() {
+    public long getZimbraDateHeader() {
         if (mLiquidDate != -1)
             return mLiquidDate;
 

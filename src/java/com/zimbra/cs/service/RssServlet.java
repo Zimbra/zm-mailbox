@@ -29,7 +29,7 @@ import com.zimbra.cs.mailbox.Message;
  *  default query is "is:unread"
  */
 
-public class RssServlet extends LiquidBasicAuthServlet {
+public class RssServlet extends ZimbraBasicAuthServlet {
 
     private static final String  WWW_AUTHENTICATE_HEADER = "WWW-Authenticate";
     private static final String  WWW_AUTHENTICATE_VALUE = "BASIC realm=\"LiquidSystems New Mail Feed\"";

@@ -386,7 +386,7 @@ public class Indexer
         // index writes to fail for the affected mailboxes.  So delete them.
         // ("*-write.lock" and "*-commit.lock" files)
 
-        String defaultTmpDir = Config.getPathRelativeToLiquidHome("tomcat/temp").getAbsolutePath();
+        String defaultTmpDir = Config.getPathRelativeToZimbraHome("tomcat/temp").getAbsolutePath();
         // same lock directory search order as in org.apache.lucene.store.FSDirectory.java
         String luceneTmpDir =
             System.getProperty("org.apache.lucene.lockdir",

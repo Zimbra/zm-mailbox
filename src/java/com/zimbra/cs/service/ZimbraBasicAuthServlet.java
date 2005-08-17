@@ -23,12 +23,12 @@ import com.zimbra.cs.servlet.ZimbraServlet;
  *
  */
 
-public abstract class LiquidBasicAuthServlet extends ZimbraServlet {
+public abstract class ZimbraBasicAuthServlet extends ZimbraServlet {
 
     private static final String  WWW_AUTHENTICATE_HEADER = "WWW-Authenticate";
     private static final String  WWW_AUTHENTICATE_VALUE = "BASIC realm=\"LiquidSystems\"";
     
-    private static Log mLog = LogFactory.getLog(LiquidBasicAuthServlet.class);
+    private static Log mLog = LogFactory.getLog(ZimbraBasicAuthServlet.class);
 
     public abstract void doAuthGet(HttpServletRequest req, HttpServletResponse resp, Account acct, Mailbox mailbox)
     throws ServiceException, IOException;

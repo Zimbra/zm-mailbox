@@ -78,16 +78,16 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
         int maxResults = getIntAttr(Provisioning.A_liquidGalMaxResults, DEFAULT_GAL_MAX_RESULTS);
                 
         if (mode == null || mode.equals(Provisioning.GM_LIQUID))
-            return searchLiquidGal(n, maxResults);
+            return searchZimbraGal(n, maxResults);
         
         List results = null; 
         if (mode.equals(Provisioning.GM_LDAP)) {
             results = searchLdapGal(n, maxResults);
         } else if (mode.equals(Provisioning.GM_BOTH)) {
-            results = searchLiquidGal(n, maxResults/2);
+            results = searchZimbraGal(n, maxResults/2);
             results.addAll(searchLdapGal(n, maxResults/2));
         } else {
-            results = searchLiquidGal(n, maxResults);
+            results = searchZimbraGal(n, maxResults);
         }
         return results;
     }
@@ -133,7 +133,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#searchGal(java.lang.String)
      */
-    private List searchLiquidGal(String n, int maxResults) throws ServiceException {
+    private List searchZimbraGal(String n, int maxResults) throws ServiceException {
         String queryExpr = getFilterDef(LIQUID_DEF);
         ArrayList result = new ArrayList();
         if (queryExpr == null)
