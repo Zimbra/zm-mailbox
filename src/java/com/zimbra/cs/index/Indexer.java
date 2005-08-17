@@ -213,7 +213,7 @@ public class Indexer
 
             String emailStr = emailStrBuf.toString();
             
-            contentText.append(LiquidAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_TO, emailStr));
+            contentText.append(ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_TO, emailStr));
             
             /* put the email addresses in the "To" field so they can be more easily searched */
             doc.add(Field.UnStored(LuceneFields.L_H_TO, emailStr));

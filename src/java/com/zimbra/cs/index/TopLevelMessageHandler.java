@@ -115,9 +115,9 @@ public final class TopLevelMessageHandler {
         addContent(subject);
         
         // Bug 583: add all of the TOKENIZED versions of the email addresses to our CONTENT field...
-        addContent(LiquidAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_FROM, from));
-        addContent(LiquidAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_TO, toValue));
-        addContent(LiquidAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_CC, ccValue));
+        addContent(ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_FROM, from));
+        addContent(ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_TO, toValue));
+        addContent(ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_CC, ccValue));
         
         String text = mContent.toString();
         

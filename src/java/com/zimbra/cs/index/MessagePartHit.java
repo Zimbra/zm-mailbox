@@ -151,7 +151,7 @@ public final class MessagePartHit extends LiquidHit {
     public int getSize() {
         if (mDoc != null) {
             String sizeStr = mDoc.get(LuceneFields.L_SIZE);
-            long sizeLong = LiquidAnalyzer.SizeTokenFilter.DecodeSize(sizeStr);
+            long sizeLong = ZimbraAnalyzer.SizeTokenFilter.DecodeSize(sizeStr);
             return (int)sizeLong;
         } else {
             assert(false);// should never have a parthit without a document

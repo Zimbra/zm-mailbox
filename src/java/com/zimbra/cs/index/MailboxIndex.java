@@ -690,7 +690,7 @@ public final class MailboxIndex
 
         IndexWriter writer = null;
         try {
-            writer = new IndexWriter(mIdxPath, LiquidAnalyzer.getInstance(), false);
+            writer = new IndexWriter(mIdxPath, ZimbraAnalyzer.getInstance(), false);
             //mLog.info("Opening IndexWriter "+ writer+" for "+this);
             
         } catch (IOException e1) {
@@ -716,7 +716,7 @@ public final class MailboxIndex
             } else {
                 idxFile.mkdirs();
             }
-            writer = new IndexWriter(idxFile, LiquidAnalyzer.getInstance(), true);
+            writer = new IndexWriter(idxFile, ZimbraAnalyzer.getInstance(), true);
             // TODO throw error if this fails...?
         }
 
@@ -1699,7 +1699,7 @@ public final class MailboxIndex
             //				closeIndexReader();
             mLog.info("****Deleting index " + mIdxPath);
             File path = new File(mIdxPath);
-            writer = new IndexWriter(path, LiquidAnalyzer.getInstance(), true);
+            writer = new IndexWriter(path, ZimbraAnalyzer.getInstance(), true);
         } finally {
             if (writer != null) {
                 writer.close();

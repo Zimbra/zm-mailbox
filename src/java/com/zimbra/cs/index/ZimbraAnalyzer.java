@@ -22,38 +22,38 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
  * @author tim
  * 
  * Global analyzer wrapper for Liquid Indexer.  You DO NOT need to instantiate multiple 
- * copies of this class -- just call LiquidAnalyzer.getInstance() whenever you need an 
+ * copies of this class -- just call ZimbraAnalyzer.getInstance() whenever you need an 
  * instance of this class. 
  *
  */
-class LiquidAnalyzer extends StandardAnalyzer 
+class ZimbraAnalyzer extends StandardAnalyzer 
 {
-	public static LiquidAnalyzer getInstance()
+	public static ZimbraAnalyzer getInstance()
 	{
 		return sInstance;
 	}
 	
-	private static LiquidAnalyzer sInstance = new LiquidAnalyzer();
+	private static ZimbraAnalyzer sInstance = new ZimbraAnalyzer();
 
     public static void main(String[] args)
 	{
         {
             String src = "\"Tim Brennan\" <first@domain.com>";
-            String concat = LiquidAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_FROM, src);
+            String concat = ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_FROM, src);
             
             System.out.println("SRC="+src+" OUT=\""+concat+"\"");
         }
         
         {
             String src = "dharma@dharma.com";
-            String concat = LiquidAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_FROM, src);
+            String concat = ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_FROM, src);
             
             System.out.println("SRC="+src+" OUT=\""+concat+"\"");
         }        
         
         
     	MultiTokenFilter.sPrintNewTokens = true;
-    	LiquidAnalyzer la = new LiquidAnalyzer();
+    	ZimbraAnalyzer la = new ZimbraAnalyzer();
     	String str = "tim (tim@foo.com),image/jpeg, bugzilla-daemon@eric.liquidsys.com, zug zug [zug@gug.com], Foo.gub, \"My Mom\" <mmm@nnnn.com>,asd foo bar aaa/bbb ccc/ddd/eee fff@ggg.com hhh@iiii";
     	{
     		System.out.print("AddressTokenFilter:\n-------------------------");
@@ -135,7 +135,7 @@ class LiquidAnalyzer extends StandardAnalyzer
         
         StringBuffer toReturn = new StringBuffer();
         
-        TokenStream stream = LiquidAnalyzer.sInstance.tokenStream(fieldName, reader);
+        TokenStream stream = ZimbraAnalyzer.sInstance.tokenStream(fieldName, reader);
         
         try {
         
@@ -152,7 +152,7 @@ class LiquidAnalyzer extends StandardAnalyzer
     }
     
 	
-    public LiquidAnalyzer() {
+    public ZimbraAnalyzer() {
         super();
     }
     
@@ -524,7 +524,7 @@ class LiquidAnalyzer extends StandardAnalyzer
     	}
     	
 			/* (non-Javadoc)
-		 * @see com.zimbra.cs.index.LiquidAnalyzer.MultiTokenFilter#getNextSplit(java.lang.String)
+		 * @see com.zimbra.cs.index.ZimbraAnalyzer.MultiTokenFilter#getNextSplit(java.lang.String)
 		 */
 		protected int getNextSplit(String s) {
 			return s.indexOf("/");

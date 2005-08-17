@@ -154,7 +154,7 @@ public class MessageHit extends LiquidHit {
 //        if (mDoc != null) {
         if (false) {
             String sizeStr = mDoc.get(LuceneFields.L_SIZE);
-            return (int) LiquidAnalyzer.SizeTokenFilter.DecodeSize(sizeStr);
+            return (int) ZimbraAnalyzer.SizeTokenFilter.DecodeSize(sizeStr);
         } else {
             return (int) getMessage().getSize();
         }

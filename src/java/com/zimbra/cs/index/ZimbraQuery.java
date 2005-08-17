@@ -831,7 +831,7 @@ public final class LiquidQuery {
             
 //            System.out.println("Size of \""+size+"\" parsed to "+mSize);
             
-            mSizeStr = LiquidAnalyzer.SizeTokenFilter.EncodeSize(mSize);
+            mSizeStr = ZimbraAnalyzer.SizeTokenFilter.EncodeSize(mSize);
             if (mSizeStr == null) {
                 mSizeStr = "";
             }
@@ -1411,7 +1411,7 @@ public final class LiquidQuery {
 	public LiquidQuery(String queryString, Mailbox mbx) throws ParseException, ServiceException
 	{
         ZimbraQueryParser parser = new ZimbraQueryParser(new StringReader(queryString));
-        parser.init(new LiquidAnalyzer(), mbx);
+        parser.init(new ZimbraAnalyzer(), mbx);
          
         mClauses = parser.Parse();
         
