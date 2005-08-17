@@ -17,12 +17,12 @@ URL for posting to SOAP is:
  
 -------------------------------
  
-urn:liquid  -- top-level namespace for global attributes/elements
+urn:zimbra  -- top-level namespace for global attributes/elements
 
 
 <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
   <soap:Header>
-    <context xmlns="urn:liquid">
+    <context xmlns="urn:zimbra">
        <authToken>...</authToken>
        [<nosession/>]
        [<sessionId>{returned-from-server-in-last-response}</sessionId>]
@@ -91,7 +91,7 @@ element involving the session.)  If there is a session, there will be a
  
 <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
   [<soap:Header>
-     <context xmlns="urn:liquid">
+     <context xmlns="urn:zimbra">
        <sessionId>{session-id}</sessionId>
        <change token="{change-id}"/>
        [<refresh>
@@ -137,7 +137,7 @@ batch requests:
 
 <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
   <soap:Header>
-    <context xmlns="urn:liquid">
+    <context xmlns="urn:zimbra">
        <authToken>...</authToken>
        [<sessionId>{returned-from-server-in-last-response}</sessionId>]
        [<account by="name|id">{account-name-or-id}</account>]
@@ -145,7 +145,7 @@ batch requests:
     </context>
   </soap:Header>
  <soap:Body>
-  <BatchRequest xmlns="urn:liquid" onerror="continue*|stop">
+  <BatchRequest xmlns="urn:zimbra" onerror="continue*|stop">
     <FooRequest id="1">
     </FooRequest>
     <BarRequest id="2">
@@ -158,7 +158,7 @@ response:
 
 <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
   [<soap:Header>
-     <context xmlns="urn:liquid">
+     <context xmlns="urn:zimbra">
        <sessionId>{session-id}</sessionId>
        [<refresh>
           <tags>
@@ -189,7 +189,7 @@ response:
      </context>
    <soap:/Header>] 
  <soap:Body>
-  <BatchResponse xmlns="urn:liquid">
+  <BatchResponse xmlns="urn:zimbra">
     <soap:Fault id="1">
     </soap:Fault>
     <BarResponse ... id="2">
@@ -211,7 +211,7 @@ SOAP 1.2
     </soap:Code>
     <soap:Reason><soap:Text>...</soap:Text><soap:Reason>
     <soap:Detail>
-      <Error xmlns="urn:liquid">
+      <Error xmlns="urn:zimbra">
         <Code>...</Code>
       </Error>      
     </soap:Detail>
@@ -227,7 +227,7 @@ SOAP 1.1
    <soap:faultcode>soap:Server</soap:faultcode>
    <soap:faultstring>Server Error</soap:faultstring>
    <soap:detail>
-     <Error xmlns="urn:liquid">
+     <Error xmlns="urn:zimbra">
         <Code>...</Code>
       </Error>      
     </soap:detail>
@@ -235,7 +235,7 @@ SOAP 1.1
  </soap:Body>
 </soapEnvelope>
 
-global soap/system errors used with liquid:Error/Code:
+global soap/system errors used with zimbra:Error/Code:
 
  service.FAILURE          - generic system failure
  service.INVALID_REQUEST  - bad request (missing args, etc)
@@ -246,7 +246,7 @@ global soap/system errors used with liquid:Error/Code:
  service.AUTH_EXPIRED     - authentication creds have expired
 
 -----------------------------
- urn:liquidAccount
+ urn:zimbraAccount
 
  account error/codes: (includes service.*):
  
@@ -260,7 +260,7 @@ global soap/system errors used with liquid:Error/Code:
    account.INVALID_PREF_NAME    - the specified preference name is invalid
    account.INVALID_PREF_VALUE   - the specified preference value is invalid
    
- <AuthRequest xmlns="urn:liquidAccount">
+ <AuthRequest xmlns="urn:zimbraAccount">
    <account by="name">...</account>
    <password>...</password>
   [<prefs>[<pref name="..."/>...]</prefs>]
@@ -323,7 +323,7 @@ global soap/system errors used with liquid:Error/Code:
   {life-time} = number of milliseconds until auth token expires
   prefs = user-settable preferences
   attrs = account attrs that aren't user-settable, but the front-end needs. 
-          Only attributes listed in liquidAccountClientAttrs will be returned.
+          Only attributes listed in zimbraAccountClientAttrs will be returned.
     
 ----------------------------
 
@@ -346,7 +346,7 @@ global soap/system errors used with liquid:Error/Code:
 
 ---------
 
-urn:liquidMail
+urn:zimbraMail
 
  mail error/codes: (includes service.*):
  
@@ -1094,14 +1094,14 @@ EXAMPLE:
 
 <SearchResponse hits="2" offset="...">
    <c id="12344" n="2" d="10023420023" t="1,12" f="1">
-     <e id="1" p="Roland Schemers" a="schemers@liquidsys.com"/>
-     <e id="2" p="Dan Karp" a="dan@liquidsys.com"/>
+     <e id="1" p="Roland Schemers" a="schemers@example.zimbra.com"/>
+     <e id="2" p="Dan Karp" a="dan@example.zimbra.com"/>
      <su>Speaking of animals</su>
      <fr>I am still looking for my monkey!</fr>
    </c>
    <c id="456" n="2" d="10023420023" t="1,12" a="1">
      <e ref="1"/>
-     <e id="3" p="Ross Dargahi" a="ross@liquidsys.com"/>
+     <e id="3" p="Ross Dargahi" a="ross@example.zimbra.com"/>
      <su>phone numbers</su>
      <fr>(650) 123-4567</fr>
    </c>
@@ -1119,11 +1119,11 @@ EXAMPLE:
   <c id="12345" t="1,12" n="2">
    <su>Speaking of animals</su>
    <m id="123445" f="1" s="1234" d="10002323">
-     <e id="1" p="Dan Karp" a="dan@liquidsys.com"/>
+     <e id="1" p="Dan Karp" a="dan@example.zimbra.com"/>
      <fr>This is the fragment</fr>
    </m>
    <m id="9845" a="1" s="128981" d="10002323">
-     <e t="f" id="2" p="Roland Schemers" a="schemers@liquidsys.com"/>
+     <e t="f" id="2" p="Roland Schemers" a="schemers@example.zimbra.com"/>
      <e t="t" ref="1"/>
      <fr>This is another frag</fr>
      <mp part="" ct="multipart/mixed">
@@ -1167,8 +1167,8 @@ EXAMPLE:
 
 <GetMsgResponse>
    <m id="9845" a="1" s="128981" d="10002323">
-     <e t="f" id="1" p="Roland Schemers" a="schemers@liquidsys.com"/>
-     <e t="t" id="2" p="Dan Karp" a="dan@liquidsys.com"/>
+     <e t="f" id="1" p="Roland Schemers" a="schemers@example.zimbra.com"/>
+     <e t="t" id="2" p="Dan Karp" a="dan@example.zimbra.com"/>
      <su>Speaking of animals</su>
      <fr>This is another frag</fr>
      <mp part="" ct="multipart/mixed"/>
@@ -1189,12 +1189,12 @@ message. blah blah blah</content>
 
 EXAMPLE:
 
-<mail:BrowseRequest xmlns:mail="urn:liquidMail">
+<mail:BrowseRequest xmlns:mail="urn:zimbraMail">
    <query>from:roland</query>
    <browseBy>attachments</browseBy>
 </mail:BrowseRequest>
 
-<mail:BrowseResponse xmlns:mail="urn:liquidMail">
+<mail:BrowseResponse xmlns:mail="urn:zimbraMail">
   <bd>application/pdf</bd>
   <bd>application/msword</bd>
   <bd>application/vnd.ms-powerpoint</bd>
