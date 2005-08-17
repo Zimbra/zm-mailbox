@@ -17,7 +17,7 @@ public class IO {
 		}
 		
 		if (mNativeIO) {
-			System.loadLibrary("liquidos");
+			System.loadLibrary("zimbra-native");
 		}
 	}
 
