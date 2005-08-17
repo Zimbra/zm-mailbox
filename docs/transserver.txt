@@ -13,7 +13,7 @@ email with attachment arrives and needs to be indexed.
 
 We use third-party vendor's software, which is written in native code
 and interfacing Java via JNI, we want to prevent any fatal errors
-occurring in the native code from crashing the liquid server.
+occurring in the native code from crashing the zimbra server.
 
 3. Adaptable
 
@@ -24,7 +24,7 @@ Architecture
 ------------
 
 A separate server process (let's call it transformation server) is
-started with the liquid mail server. This server's function is to
+started with the zimbra mail server. This server's function is to
 accept and process text extraction/conversion requests from the mail
 server and return the result.
 

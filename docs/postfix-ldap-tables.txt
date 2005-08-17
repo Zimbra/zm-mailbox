@@ -17,27 +17,27 @@ attr                           |unknown|       | valid | valid |       | user  |
  |                             |rcpt   | acct  | local | alias | dist  | canon |alias  |port   |all    |canon  |
  v                feature ->   |reject | alias |domain |domain | list  | ical  |domain |maps   |mailbox|ical   |
 -----------------------------------------------------------------------------------------------------------------------
-liquidMailDeliveryAddress      | vmm-v | vam-v |       |       |       | scm-k |       | trm-k | vam-v |       | vam-k
+zimbraMailDeliveryAddress      | vmm-v | vam-v |       |       |       | scm-k |       | trm-k | vam-v |       | vam-k
                                | vmm-k |       |       |       |       |       |       |       |       |       |
 -----------------------------------------------------------------------------------------------------------------------
-liquidMailForwardingAddress    |       | vam-v |       |       | vam-v |       |       |       |       |       | vam-v
+zimbraMailForwardingAddress    |       | vam-v |       |       | vam-v |       |       |       |       |       | vam-v
 -----------------------------------------------------------------------------------------------------------------------
-liquidMailAlias                |       | vam-k |       |       | vam-k | scm-k |       |       |       |       |
+zimbraMailAlias                |       | vam-k |       |       | vam-k | scm-k |       |       |       |       |
 -----------------------------------------------------------------------------------------------------------------------
-liquidMailCanonicalAddress     |       |       |       |       |       | scm-v |       |       |       |       |
+zimbraMailCanonicalAddress     |       |       |       |       |       | scm-v |       |       |       |       |
 -----------------------------------------------------------------------------------------------------------------------
-liquidMailStatus               | vmm-k | vam-k | vmd-k | vad-k | vam-k | scm-k | vam-k | trm-k | vam-k | scm-k | vam-k
+zimbraMailStatus               | vmm-k | vam-k | vmd-k | vad-k | vam-k | scm-k | vam-k | trm-k | vam-k | scm-k | vam-k
 -----------------------------------------------------------------------------------------------------------------------
-liquidDomainName               |       |       | vmd-k | vad-k |       |       |       |       |       |       |
+zimbraDomainName               |       |       | vmd-k | vad-k |       |       |       |       |       |       |
                                |       |       | vmd-v | vad-v |       |       |       |       |       |       |
 -----------------------------------------------------------------------------------------------------------------------
-liquidDomainType               |       |       | vmd-k | vad-k |       |       |       |       |       |       |
+zimbraDomainType               |       |       | vmd-k | vad-k |       |       |       |       |       |       |
 -----------------------------------------------------------------------------------------------------------------------
-liquidCatchAllAddress          |       |       | vmd-k | vad-k |       |       | vam-k |       | vam-k | scm-k |
+zimbraCatchAllAddress          |       |       | vmd-k | vad-k |       |       | vam-k |       | vam-k | scm-k |
 -----------------------------------------------------------------------------------------------------------------------
-liquidCatchAllForwardingAddress|       |       | vmd-k | vad-k |       |       | vam-v |       |       |       |
+zimbraCatchAllForwardingAddress|       |       | vmd-k | vad-k |       |       | vam-v |       |       |       |
 -----------------------------------------------------------------------------------------------------------------------
-liquidMailCanonicalAddress     |       |       |       |       |       |       |       |       |       | scm-v |
+zimbraMailCanonicalAddress     |       |       |       |       |       |       |       |       |       | scm-v |
 -----------------------------------------------------------------------------------------------------------------------
-liquidMailTransport            |       |       |       |       |       |       |       | trm-v |       |       |
+zimbraMailTransport            |       |       |       |       |       |       |       | trm-v |       |       |
 -----------------------------------------------------------------------------------------------------------------------

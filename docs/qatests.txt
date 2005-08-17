@@ -2,10 +2,10 @@ Running QA Test Suite in Eclipse
 --------------------------------
 
 Developers can run QA test suite in Eclipse before check ins.  After building
-ZimbraServer project, check out LiquidQA project and run the test targets in
+ZimbraServer project, check out ZimbraQA project and run the test targets in
 build.xml.  There are two targets defined, "Dev Pre-Checkin Sanity Check" and
 "Run All Tests".  The first one is a minimal set of tests that used to exist
-in ZimbraServer project.  It has been moved into LiquidQA.
+in ZimbraServer project.  It has been moved into ZimbraQA.
 
 The second test is nearly identical to the test run by build machine after
 each build and includes all tests created by QA team.  It may take a while to
@@ -13,7 +13,7 @@ run through the test, and execution time will grow as QA team adds more tests,
 but it's a good thing to run it to avoid introducing bugs.
 
 Run All Tests target executes all *.xml test input files under
-LiquidQA/data/soapvalidator directory and its subdirectories.  Any new files
+ZimbraQA/data/soapvalidator directory and its subdirectories.  Any new files
 added will be processed automatically.
 
 Some of the tests create many test accounts.  These accounts have names that

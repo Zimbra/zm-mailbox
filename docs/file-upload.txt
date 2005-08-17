@@ -10,7 +10,7 @@ The default url to the file upload servlet is http://server:port/service/upload.
 
 For authentication, you must specify your auth token in a cookie.
 
-If you were to submit an html form to upload to the liquid server, it would look like this:
+If you were to submit an html form to upload to the zimbra server, it would look like this:
 
 <html>
 <body>

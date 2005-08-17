@@ -583,5 +583,5 @@ TIMEZONES:
 ----------------
 Each iCalendar object can define custom time zone names.  For our own web
 client, there is a list of well-known time zones.  These are stored in
-LDAP.  See conf/ldap/liquid.ldif for their definition.  The time zone ID
+LDAP.  See conf/ldap/zimbra.ldif for their definition.  The time zone ID
 is the cn attribute.
