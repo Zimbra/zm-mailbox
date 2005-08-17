@@ -92,6 +92,8 @@ class ImapRequest {
             if (buffer != part)
                 mParts.add(buffer);
             int read = mStream.read(buffer, buffer.length - mLiteral, mLiteral);
+            if (read == -1)
+                throw new ImapTerminatedException();
             if (!mUnlogged && ZimbraLog.imap.isDebugEnabled())
                 ZimbraLog.imap.debug("C: {" + read + "}:" + (read > 100 ? "" : new String(buffer, buffer.length - mLiteral, read)));
             mLiteral -= read;
