@@ -1,0 +1,471 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<attrs>
+
+<!--
+
+  This config file is used by the AttributeManager class for multiple purposes:
+  
+  1) check the validity of attributes. value types, as well as whether or not a value can be modified.
+  
+  2) perform callbacks when certain attributes changes
+
+  The AttributeManager is invoked when entries are created/modified. 
+  
+  <attr name="{name}"
+  [class="account,config,cos,domain,server,distributionList"]
+  [immutable="*0|1"]
+  [type="{type-of-attr}"]
+  [value="..."]
+  [max="..."]
+  [min="..."]
+  [callback="..." ]
+  />
+
+  attr-name: name of attribute
+
+  immutable: 1 means attribute can never be changed directly by end-user actions. i.e., it is an attribute that is maintined
+             by the server and shouldn't be changed by SOAP/command-line/APIs. The Entry.modifyAttrs(attrs, checkImmutable) call
+             should be used with checkImmutable set to true for all data obtained outside the server.
+
+  type-of-attr:
+    boolean     TRUE|FALSE
+    duration    ^\d+[hmsd]?$
+    enum        value attr is comma-separated list of valid values
+    email       valid email address. must have a "@" and no personal part.
+    emailp      valid email address. must have a "@" and personal part is optional.
+    id          ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+    integer     32 bit signed, min/max checked
+    port        0-65535
+    regex       value attr is a regular expression. Should explicitely add ^ to front and $ at the end
+    string      currently just checks max length if specified
+
+  value: used with enum and regex
+  
+  min:  min value for integers. defaults to Integer.MIN_VALUE
+  max:  max value for integers, max length for strings/email. defaults to Integer.MAX_VALUE
+
+  callback: class name of AttributeCallback object to invoke on changes to attribute. If package is not specified, defaults
+            to "com.liquidsys.coco.account.callback".
+    
+-->
+
+<attr name="liquidAccountClientAttr" type="string" immutable="1"/>
+
+<attr name="liquidAccountStatus" type="enum" value="active,maintenance,locked,closed"/>
+
+<attr name="liquidAdminAuthTokenLifetime" type="duration"/>
+
+<attr name="liquidAdminPort" type="port"/>
+
+<attr name="liquidAliasTargetId" type="string" immutable="1"/>
+
+<attr name="liquidPrefTimeZoneId" type="string"/>
+
+<attr name="liquidPrefUseTimeZoneListInCalendar" type="boolean"/>
+
+<attr name="liquidPrefImapSearchFoldersEnabled" type="boolean"/>
+
+<attr name="liquidAttachmentsBlocked" type="boolean"/>
+
+<attr name="liquidAttachmentsIndexingEnabled" type="boolean"/>
+
+<attr name="liquidAttachmentsScanEnabled" type="boolean"/>
+
+<attr name="liquidAttachmentsScanClass" type="string" max="256"/>
+
+<attr name="liquidAttachmentsScanURL" type="string" max="256"/>
+
+<attr name="liquidAttachmentsViewInHtmlOnly" type="boolean"/>
+
+<attr name="liquidAuthLdapBindDn" type="string"/>
+
+<attr name="liquidAuthLdapURL" type="string"/>
+
+<attr name="liquidAuthMech" type="enum" value="liquid,ldap,ad"/>
+
+<attr name="liquidAuthTokenKey" type="string" immutable="1"/>
+
+<attr name="liquidAuthTokenLifetime" type="duration"/>
+
+<attr name="liquidCalendarCompatibilityMode" type="enum" value="standard,exchange"/>
+
+<attr name="liquidComponentAvailable" type="string" max="64"/>
+
+<attr name="liquidCOSId" type="id"/> <!-- type "cosId" and check for valid COS id? -->
+
+<attr name="liquidCOSInheritedAttr" type="string" immutable="1" />
+
+<attr name="liquidContactMaxNumEntries" type="integer" min="0"/>
+
+<attr name="liquidDefaultDomainName" type="string" max="256"/>
+
+<attr name="liquidDomainInheritedAttr" type="string" immutable="1"/>
+
+<attr name="liquidDomainName" type="string" immutable="1"/>
+
+<attr name="liquidDomainType" type="enum" value="local,alias" immutable="1"/>
+
+<attr name="liquidFeatureAdvancedSearchEnabled" type="boolean"/>
+
+<attr name="liquidFeatureHtmlComposeEnabled" type="boolean"/>
+
+<attr name="liquidFeatureCalendarEnabled" type="boolean"/>
+
+<attr name="liquidFeatureChangePasswordEnabled" type="boolean"/>
+
+<attr name="liquidFeatureContactsEnabled" type="boolean"/>
+
+<attr name="liquidFeatureConversationsEnabled" type="boolean"/>
+
+<attr name="liquidFeatureFiltersEnabled" type="boolean"/>
+
+<attr name="liquidFeatureGalEnabled" type="boolean"/>
+
+<attr name="liquidFeatureInitialSearchPreferenceEnabled" type="boolean"/>
+
+<attr name="liquidFeatureSavedSearchesEnabled" type="boolean"/>
+
+<attr name="liquidFeatureTaggingEnabled" type="boolean"/>
+
+<attr name="liquidGalLdapAttrMap" type="string" immutable="1"/>
+
+<attr name="liquidGalLdapBindDn" type="string" max="256"/>
+
+<attr name="liquidGalLdapBindPassword" type="string" max="256"/>
+
+<attr name="liquidGalLdapFilter" type="string" max="4096"/>
+
+<attr name="liquidGalLdapFilterDef" type="string" immutable="1"/>
+
+<attr name="liquidGalLdapSearchBase"  type="string" max="256"/>
+
+<attr name="liquidGalLdapURL"  type="string" max="256"/>
+
+<attr name="liquidGalMaxResults" type="integer" min="0"/>
+
+<attr name="liquidGalMode" type="enum" value="liquid,both,ldap"/>
+
+<attr name="liquidId" type="id" immutable="1"/>
+
+<attr name="liquidImapAdvertisedName" type="string" max="128"/>
+
+<attr name="liquidImapBindAddress" type="string" max="128"/>
+
+<attr name="liquidImapBindPort" type="port"/>
+
+<attr name="liquidImapCleartextLoginEnabled" type="boolean"/>
+
+<attr name="liquidImapEnabled" type="boolean"/>
+
+<attr name="liquidImapNumThreads" type="integer"/>
+
+<attr name="liquidImapSSLBindAddress" type="string" max="128"/>
+
+<attr name="liquidImapSSLBindPort" type="port"/>
+
+<attr name="liquidImapSSLServerEnabled" type="boolean"/>
+
+<attr name="liquidImapServerEnabled" type="boolean"/>
+
+<attr name="liquidIsAdminAccount" type="boolean"/>
+
+<attr name="liquidIsMonitorHost" type="boolean"/>
+
+<attr name="liquidLastLogonTimestamp" type="gentime" immutable="1"/>
+
+<attr name="liquidLastLogonTimestampFrequency" type="duration"/>
+
+<attr name="liquidLmtpAdvertisedName" type="string" max="128"/>
+
+<attr name="liquidLmtpBindAddress" type="string" max="128"/>
+
+<attr name="liquidLmtpBindPort" type="port"/>
+
+<attr name="liquidLmtpNumThreads" type="integer" min="0"/>
+
+<attr name="liquidMailAddress" type="email" max="256" immutable="1"/>
+
+<attr name="liquidMailAlias" type="email" max="256" immutable="1"/>
+
+<attr name="liquidMailCanonicalAddress" type="email" max="256"/>
+
+<attr name="liquidMailCatchAllAddress" type="regex" value="^@[A-Za-z0-9-\.]+$"/>
+
+<attr name="liquidMailCatchAllForwardingAddress" type="regex" value="^@[A-Za-z0-9-\.]+$"/>
+
+<attr name="liquidMailCatchAllCanonicalAddress" type="regex" value="^@[A-Za-z0-9-\.]+$"/>
+
+<attr name="liquidMailDeliveryAddress" type="email" max="256" immutable="1"/>
+
+<attr name="liquidMailForwardingAddress" type="email" max="256"/>
+
+<attr name="liquidMailHost" type="string" max="256" callback="MailHost"/>
+
+<attr name="liquidMailHostPool" type="id"/>
+
+<attr name="liquidMailIdleSessionTimeout" type="duration"/>
+
+<attr name="liquidMailMessageLifetime" type="duration"/>
+
+<attr name="liquidMailMinPollingInterval" type="duration"/> 
+
+<attr name="liquidMailPort" type="port"/>
+
+<attr name="liquidMailQuota" type="integer"/>
+
+<attr name="liquidMailSSLPort" type="port"/>
+
+<attr name="liquidMailSieveScript" type="string"/>
+
+<attr name="liquidMailSpamLifetime" type="duration"/>
+
+<attr name="liquidMailStatus" type="enum" value="enabled,disabled"/>
+
+<attr name="liquidMailTrashLifetime" type="duration"/>
+
+<attr name="liquidMimeFileExtension" type="string"/> 
+
+<attr name="liquidMimeHandlerClass" type="string"/>
+
+<attr name="liquidMimeIndexingEnabled" type="boolean"/>
+
+<attr name="liquidMimeType" type="string"/>
+
+<attr name="liquidMtaAuthEnabled" type="boolean"/>
+
+<attr name="liquidMtaBlockedExtension" type="string" max="64"/>
+
+<attr name="liquidMtaCommonBlockedExtension" type="string" max="64"/>
+
+<attr name="liquidMtaDnsLookupsEnabled" type="boolean"/>
+
+<attr name="liquidMtaMaxMessageSize" type="integer" min="0"/>
+
+<attr name="liquidMtaRelayHost" type="string" max="256"/>
+
+<attr name="liquidMtaRestriction" type="string" max="256"/>
+
+<attr name="liquidMtaTlsAuthOnly" type="boolean"/>
+
+<attr name="liquidNewMailNotificationBody" type="string"/>
+
+<attr name="liquidNewMailNotificationFrom" type="string"/>
+
+<attr name="liquidNewMailNotificationSubject" type="string"/>
+
+<attr name="liquidNotes" type="string"/>
+
+<attr name="liquidObjectHandlerClass" type="string"/>
+
+<attr name="liquidObjectHandlerConfig" type="string"/>
+
+<attr name="liquidObjectIndexingEnabled" type="boolean"/>
+
+<attr name="liquidObjectStoreMatched" type="boolean"/>
+
+<attr name="liquidObjectType" type="string"/>
+
+<attr name="liquidPasswordEnforceHistory" type="integer" min="0"/>
+
+<attr name="liquidPasswordHistory" type="string"/>
+
+<attr name="liquidPasswordLocked" type="boolean"/>
+
+<attr name="liquidPasswordMaxAge" type="integer" min="0"/>
+
+<attr name="liquidPasswordMaxLength" type="integer" min="0"/>
+
+<attr name="liquidPasswordMinAge" type="integer" min="0"/>
+
+<attr name="liquidPasswordMinLength" type="integer" min="0"/>
+
+<attr name="liquidPasswordModifiedTime" type="gentime"/>
+
+<attr name="liquidPasswordMustChange" type="boolean"/>
+
+<attr name="liquidPop3AdvertisedName" type="string" max="128"/>
+
+<attr name="liquidPop3BindAddress" type="string" max="128"/>
+
+<attr name="liquidPop3BindPort" type="port"/>
+
+<attr name="liquidPop3CleartextLoginEnabled" type="boolean"/>
+
+<attr name="liquidPop3Enabled" type="boolean"/>
+
+<attr name="liquidPop3NumThreads" type="integer"/>
+
+<attr name="liquidPop3SSLBindAddress" type="string" max="128"/>
+
+<attr name="liquidPop3SSLBindPort" type="port"/>
+
+<attr name="liquidPop3SSLServerEnabled" type="boolean"/>
+
+<attr name="liquidPop3ServerEnabled" type="boolean"/>
+
+<attr name="liquidPrefAutoAddAddressEnabled" type="boolean"/>
+
+<attr name="liquidPrefComposeInNewWindow" type="boolean"/>
+
+<attr name="liquidPrefComposeFormat" type="enum" value="text,html"/>
+
+<attr name="liquidPrefForwardReplyInOriginalFormat" type="boolean"/>
+
+<attr name="liquidPrefContactsInitialView" type="enum" value="cards,list"/>
+
+<attr name="liquidPrefCalendarInitialView" type="enum" value="day,week,workWeek,month"/>
+
+<attr name="liquidPrefContactsPerPage" type="integer"/> <!-- TODO: get min/max? -->
+
+<attr name="liquidPrefDedupeMessagesSentToSelf" type="enum" value="dedupeNone,secondCopyifOnToOrCC,dedupeAll"/>
+
+<attr name="liquidPrefForwardIncludeOriginalText" type="enum" value="includeAsAttachment,includeBody,includeBodyWithPrefix"/> 
+
+<attr name="liquidPrefForwardReplyPrefixChar" type="string"/>
+
+<attr name="liquidPrefGroupMailBy" type="enum" value="conversation,message"/>
+
+<attr name="liquidPrefIncludeSpamInSearch" type="boolean"/>
+
+<attr name="liquidPrefIncludeTrashInSearch" type="boolean"/>
+
+<attr name="liquidPrefMailInitialSearch" type="string" max="512"/>
+
+<attr name="liquidPrefMailItemsPerPage" type="integer"/> <!-- TODO: get min/max? -->
+
+<attr name="liquidPrefMailPollingInterval" type="duration"/>
+
+<attr name="liquidPrefMailSignature" type="string" max="1024"/>
+
+<attr name="liquidPrefMailSignatureEnabled" type="boolean"/>
+
+<attr name="liquidPrefMailSignatureStyle" type="enum" value="outlook,internet"/>
+
+<attr name="liquidPrefMessageViewHtmlPreferred" type="boolean"/>
+
+<attr name="liquidPrefNewMailNotificationAddress" type="string" max="256"/>
+
+<attr name="liquidPrefNewMailNotificationEnabled" type="boolean"/>
+
+<attr name="liquidPrefOutOfOfficeReply" type="string" max="8192" callback="OutOfOfficeCallback"/>
+
+<attr name="liquidPrefOutOfOfficeReplyEnabled" type="boolean" callback="OutOfOfficeCallback"/>
+
+<attr name="liquidPrefReplyIncludeOriginalText" type="enum" value="includeAsAttachment,includeBody,includeBodyWithPrefix,includeNone,includeSmart"/>
+
+<attr name="liquidPrefReplyToAddress" type="string" max="256"/>
+
+<attr name="liquidPrefSaveToSent" type="boolean"/>
+
+<attr name="liquidPrefSentMailFolder" type="string" max="256"/>
+
+<attr name="liquidPrefShowFragments" type="boolean"/>
+
+<attr name="liquidPrefShowSearchString" type="boolean"/>
+
+<attr name="liquidPrefUseKeyboardShortcuts" type="boolean"/>
+
+<attr name="liquidRedologArchiveDir" type="string"/>
+
+<attr name="liquidRedologBacklogDir" type="string"/>
+
+<attr name="liquidRedologEnabled" type="boolean"/>
+
+<attr name="liquidRedologFsyncIntervalMS" type="integer" min="0"/>
+
+<attr name="liquidRedologLogPath" type="string"/>
+
+<attr name="liquidRedologRolloverFileSizeKB" type="integer" min="0"/>
+
+<attr name="liquidServerHostname" type="string" max="256"/>
+
+<attr name="liquidServerInheritedAttr" type="string" immutable="1"/>
+
+<attr name="liquidServiceEnabled" type="string" max="256"/>
+
+<attr name="liquidServiceInstalled" type="string" max="256"/>
+
+<attr name="liquidServiceHostname" type="string" max="256"/>
+
+<attr name="liquidSmtpHostname" type="string" max="256"/>
+
+<attr name="liquidSmtpPort" type="port"/>
+
+<attr name="liquidSmtpTimeout" type="integer" min="0"/>
+
+<attr name="liquidSpamCheckEnabled" type="boolean"/>
+
+<attr name="liquidSpamTagPercent" type="integer" min="0"/>
+
+<attr name="liquidSpamKillPercent" type="integer" min="0"/>
+
+<attr name="liquidSpamSubjectTag" type="string" max="32"/>
+
+<attr name="liquidTableMaintenanceGrowthFactor" type="integer" min="0"/>
+
+<attr name="liquidTableMaintenanceMaxRows" type="integer" min="0"/>
+
+<attr name="liquidTableMaintenanceMinRows" type="integer" min="0"/>
+
+<attr name="liquidTableMaintenanceOperation" type="enum" value="ANALYZE,OPTIMIZE"/>
+
+<attr name="liquidUserServicesEnabled" type="boolean"/>
+
+<attr name="liquidVirusCheckEnabled" type="boolean"/>
+
+<attr name="liquidVirusWarnRecipient" type="boolean"/>
+
+<attr name="liquidVirusWarnAdmin" type="boolean"/>
+
+<attr name="liquidVirusBlockEncryptedArchive" type="boolean"/>
+
+<attr name="liquidVirusDefinitionsUpdateFrequency" type="duration"/>
+
+<attr name="liquidReplicationProvider" type="string" max="256"/>
+
+<attr name="c" type="string"/>
+
+<attr name="co" type="string"/>
+
+<attr name="company" type="string"/>
+
+<attr name="cn" type="string"/>
+
+<attr name="displayName" type="string"/>
+
+<attr name="gn" type="string"/>
+
+<attr name="description" type="string"/>
+
+<attr name="initials" type="string"/>
+
+<attr name="l" type="string"/>
+
+<attr name="mail" type="string" immutable="1"/>
+
+<attr name="objectClass" type="string" immutable="1"/>
+
+<attr name="o" type="string"/>
+
+<attr name="ou" type="string"/>
+
+<attr name="physicalDeliveryOfficeName" type="string"/>
+
+<attr name="postalAddress" type="string"/>
+
+<attr name="postalCode" type="string"/>
+
+<attr name="sn" type="string"/>
+
+<attr name="st" type="string"/>
+
+<attr name="telphoneNumber" type="string"/>
+
+<attr name="title" type="string"/>
+
+<attr name="uid" type="string" immutable="1"/>
+
+<attr name="userPassword" type="string" immutable="1"/>
+
+</attrs>
