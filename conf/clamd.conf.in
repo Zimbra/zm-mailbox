@@ -11,7 +11,7 @@
 # LogFile must be writable for the user running daemon.
 # A full path is required.
 # Default: disabled
-LogFile /opt/liquid/log/clamd.log
+LogFile /opt/zimbra/log/clamd.log
 
 # By default the log file is locked for writing - the lock protects against
 # running clamd multiple times (if want to run another clamd, please
@@ -54,7 +54,7 @@ LogTime
 # This option allows you to save a process identifier of the listening
 # daemon (main thread).
 # Default: disabled
-PidFile /opt/liquid/log/clamd.pid
+PidFile /opt/zimbra/log/clamd.pid
 
 # Optional path to the global temporary directory.
 # Default: system specific (usually /tmp or /var/tmp).
@@ -62,14 +62,14 @@ PidFile /opt/liquid/log/clamd.pid
 
 # Path to the database directory.
 # Default: hardcoded (depends on installation options)
-DatabaseDirectory /opt/liquid/clamav/db
+DatabaseDirectory /opt/zimbra/clamav/db
 
 # The daemon works in a local OR a network mode. Due to security reasons we
 # recommend the local mode.
 
 # Path to a local socket file the daemon will listen on.
 # Default: disabled
-# LocalSocket /opt/liquid/clamav/clamav.sock
+# LocalSocket /opt/zimbra/clamav/clamav.sock
 
 # Remove stale socket after unclean shutdown.
 # Default: disabled
@@ -97,7 +97,7 @@ TCPSocket 3310
 # Close the connection when the data size limit is exceeded.
 # The value should match your MTA's limit for a maximal attachment size.
 # Default: 10M
-StreamMaxLength %%liquidMtaMaxMessageSize%%
+StreamMaxLength %%zimbraMtaMaxMessageSize%%
 
 # Limit port range.
 # Default: 1024
@@ -141,7 +141,7 @@ StreamMaxLength %%liquidMtaMaxMessageSize%%
 
 # Run as a selected user (clamd must be started by root).
 # Default: disabled
-User liquid
+User zimbra
 
 # Initialize supplementary group access (clamd must be started by root).
 # Default: disabled
@@ -265,7 +265,7 @@ ArchiveMaxFileSize 100M
 
 # Mark encrypted archives as viruses (Encrypted.Zip, Encrypted.RAR).
 # Default: disabled
-%%comment VAR:!liquidVirusBlockEncryptedArchive%% ArchiveBlockEncrypted
+%%comment VAR:!zimbraVirusBlockEncryptedArchive%% ArchiveBlockEncrypted
 
 # Mark archives as viruses (e.g. RAR.ExceededFileSize, Zip.ExceededFilesLimit)
 # if ArchiveMaxFiles, ArchiveMaxFileSize, or ArchiveMaxRecursion limit is
