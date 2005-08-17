@@ -30,7 +30,7 @@
         maxThreads="50" minSpareThreads="50" maxSpareThreads="50"
         scheme="https" secure="true"
         clientAuth="false" sslProtocol="TLS"
-        keystoreFile="conf/keystore" keystorePass="liquid"/>
+        keystoreFile="conf/keystore" keystorePass="zimbra"/>
     -->
     <!-- admin services connector; requires SSL -->
     <Connector port="7071"
@@ -38,7 +38,7 @@
         maxThreads="10" minSpareThreads="10" maxSpareThreads="10"
         scheme="https" secure="true"
         clientAuth="false" sslProtocol="TLS"
-        keystoreFile="conf/keystore" keystorePass="liquid"/>
+        keystoreFile="conf/keystore" keystorePass="zimbra"/>
 
     <!-- This is here for compatibility only, not required -->
     <Connector port="8009" protocol="AJP/1.3" />
