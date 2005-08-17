@@ -290,7 +290,6 @@
 			<fileset dir="${src.bin.dir}" includes="*" excludes="*.bat" />
 		</copy>
 		<fixcrlf srcdir="${dist.bin.dir}" eol="unix" includes="**" />
-		<copy todir="${dist.dir}" file="${src.bin.dir}/dev_update.sh" />
 		<copy todir="${dist.conf.dir}" file="${config.dir}/log4j.properties" />
 		<copy todir="${dist.openldap.etc.dir}" file="${config.dir}/ldap/zimbra.ldif" />
 		<copy todir="${dist.openldap.schema.dir}" file="${config.dir}/ldap/zimbra.schema" />
