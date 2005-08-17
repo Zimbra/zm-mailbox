@@ -1,5 +1,5 @@
 -----------------------------
- urn:liquidAdmin
+ urn:zimbraAdmin
 -----------------------------
 
 Attributes for all commands can have multiple values:
@@ -13,7 +13,7 @@ Note that name1 appears twice.
 When updating multiple attributes, you need to specify all the old values at the same time you specify new ones.
 
 ----------------------------
- <AuthRequest xmlns="urn:liquidAdmin">
+ <AuthRequest xmlns="urn:zimbraAdmin">
    <name>...</name>
    <password>...</password>
  </AuthRequest>
@@ -26,7 +26,7 @@ When updating multiple attributes, you need to specify all the old values at the
 Note: Only works with admin accounts
 
 ----------------------------
- <DelegateAuthRequest xmlns="urn:liquidAdmin" [duration="{duration}"]>
+ <DelegateAuthRequest xmlns="urn:zimbraAdmin" [duration="{duration}"]>
    <account by="id|name">...</account> 
  </DelegateAuthRequest>
  
@@ -38,7 +38,7 @@ Note: Only works with admin accounts
 Used to request a new auth token that is valid for the specified account. The id of the auth token will be the id of the target account,
 and the requesting admin's id will be stored in the auth token for auditing purposes.
 
-{duration} = lifetime in seconds of the newly-created authtoken. defaults to 1 hour. Can't be longer then liquidAuthTokenLifetime.
+{duration} = lifetime in seconds of the newly-created authtoken. defaults to 1 hour. Can't be longer then zimbraAuthTokenLifetime.
 
 ----------------------------
  
@@ -60,7 +60,7 @@ Notes:
 
   name must include domain (uid@name), and domain specified in name must exist
 
-  default value for liquidAccountStatus is "active"  
+  default value for zimbraAccountStatus is "active"  
 
 -----------------------------
 
@@ -93,7 +93,7 @@ Notes:
 -----------------------------
 
 <ModifyAccountRequest>
-  <id>{value-of-liquidId}</id>
+  <id>{value-of-zimbraId}</id>
   <a n="...">...</a>+
 </ModifyAccountRequest>
 
@@ -110,7 +110,7 @@ Notes:
 -----------------------------
 
 <RenameAccountRequest>
-  <id>{value-of-liquidId}</id>
+  <id>{value-of-zimbraId}</id>
   <newName>{new-account-name}</newName>
 </RenameAccountRequest>
 
@@ -123,7 +123,7 @@ Notes:
 -----------------------------
 
 <DeleteAccountRequest>
-  <id>{value-of-liquidId}</id>
+  <id>{value-of-zimbraId}</id>
 </DeleteAccountRequest>
 
 <DeleteAccountResponse/>
@@ -131,7 +131,7 @@ Notes:
 -----------------------------
 
 <SetPasswordRequest>
-  <id>{value-of-liquidId}</id>
+  <id>{value-of-zimbraId}</id>
   <newPassword>...</newPassword>
 </SetPasswordRequest>
 
@@ -140,7 +140,7 @@ Notes:
 -----------------------------
 
 <AddAccountAliasRequest>
-  <id>{value-of-liquidId}</id>
+  <id>{value-of-zimbraId}</id>
   <alias>...</alias>
 </AddAliasRequest>
 
@@ -149,7 +149,7 @@ Notes:
 -----------------------------
 
 <RemoveAccountAliasRequest>
-  <id>{value-of-liquidId}</id>
+  <id>{value-of-zimbraId}</id>
   <alias>...</alias>
 </RemoveAccountAliasRequest>
 
@@ -176,7 +176,7 @@ SearchAccountsRequest
 	domain - the domain name to limit the search to
 	applyCos - whether or not (0/1) to apply the COS policy to account. specify 0 if only
 	           requesting attrs that aren't inherited from COS
-	attrs - comma-seperated list of attrs to return ("displayName", "liquidId", "liquidAccountStatus")
+	attrs - comma-seperated list of attrs to return ("displayName", "zimbraId", "zimbraAccountStatus")
 	sortBy - name of attribute to sort on. default is the account name.
 	sortAscending - whether to sort in ascending order (0/1), 1 is default
     more-flag = true if more accounts left to return
@@ -212,7 +212,7 @@ Notes:
   extra attrs:
 
   description
-  liquidNotes
+  zimbraNotes
 
 -----------------------------
 
@@ -245,7 +245,7 @@ Notes:
 -----------------------------
 
 <ModifyDomainRequest>
-  <id>{value-of-liquidId}</id>
+  <id>{value-of-zimbraId}</id>
   <a n="...">...</a>+
 </ModifyDomainRequest>
 
@@ -262,7 +262,7 @@ Notes:
 -----------------------------
 
 <DeleteDomainRequest>
-  <id>{value-of-liquidId}</id>
+  <id>{value-of-zimbraId}</id>
 </DeleteDomainRequest>
 
 <DeleteDomainResponse/>
@@ -284,7 +284,7 @@ Notes:
   extra attrs:
 
   description
-  liquidNotes
+  zimbraNotes
 
 -----------------------------
 
@@ -314,7 +314,7 @@ Notes:
 -----------------------------
 
 <ModifyCosRequest>
-  <id>{value-of-liquidId}</id>
+  <id>{value-of-zimbraId}</id>
   <a n="...">...</a>+
 </ModifyCosRequest>
 
@@ -331,7 +331,7 @@ Notes:
 -----------------------------
 
 <RenameCosRequest>
-  <id>{value-of-liquidId}</id>
+  <id>{value-of-zimbraId}</id>
   <newName>{new-cos-name}</newName>
 </RenameCosRequest>
 
@@ -344,7 +344,7 @@ Notes:
 -----------------------------
 
 <DeleteCosRequest>
-  <id>{value-of-liquidId}</id>
+  <id>{value-of-zimbraId}</id>
 </DeleteCosRequest>
 
 <DeleteCosResponse/>
@@ -370,7 +370,7 @@ Notes:
   extra attrs:
 
   description
-  liquidNotes
+  zimbraNotes
 
 -----------------------------
 
@@ -386,7 +386,7 @@ Notes:
 
 {apply-config} = 0|1 (1 is default)
 
-by "serviceHostname" will return the server that has liquidServiceHostname set to the specified value.
+by "serviceHostname" will return the server that has zimbraServiceHostname set to the specified value.
 
  if {apply-config} is 1, then certain unset attrs on an account will get their value from the global config.
 
@@ -405,7 +405,7 @@ by "serviceHostname" will return the server that has liquidServiceHostname set t
 -----------------------------
 
 <ModifyServerRequest>
-  <id>{value-of-liquidId}</id>
+  <id>{value-of-zimbraId}</id>
   <a n="...">...</a>+
 </ModifyServerRequest>
 
@@ -422,7 +422,7 @@ Notes:
 -----------------------------
 
 <DeleteServerRequest>
-  <id>{value-of-liquidId}</id>
+  <id>{value-of-zimbraId}</id>
 </DeleteServerRequest>
 
 <DeleteServerResponse/>
@@ -677,12 +677,12 @@ checked.
 ------------------------------------------------------------
 
 <CheckGalConfigRequest>
-  <a n='liquidGalMode'>ldap</a>
-  <a n='liquidGalLdapURL'>...</a>
-  <a n='liquidGalLdapSearchBase'>...</a>
-  <a n='liquidGalLdapFilter'>...</a>
-  <a n='liquidGalLdapBindDn'>...</a>*
-  <a n='liquidGalLdapBindPassword'>...</a>*
+  <a n='zimbraGalMode'>ldap</a>
+  <a n='zimbraGalLdapURL'>...</a>
+  <a n='zimbraGalLdapSearchBase'>...</a>
+  <a n='zimbraGalLdapFilter'>...</a>
+  <a n='zimbraGalLdapBindDn'>...</a>*
+  <a n='zimbraGalLdapBindPassword'>...</a>*
   <query limit="...">...</query>
 </CheckGalConfigRequest>
 
@@ -693,15 +693,15 @@ checked.
 </CheckGalConfigResponse>
 
 notes: 
- - liquidGalMode must be set to ldap, even if you eventually want to set it to "both".
+ - zimbraGalMode must be set to ldap, even if you eventually want to set it to "both".
  - bindDn/bindPassword are optional if server allows anonymous binds
 
 ------------------------------------------------------------
 
 <CheckAuthConfigRequest>
-  <a n='liquidAuthMech'>ldap</a>
-  <a n='liquidAuthLdapURL'>...</a>
-  <a n='liquidAuthLdapBindDn'>...</a>
+  <a n='zimbraAuthMech'>ldap</a>
+  <a n='zimbraAuthLdapURL'>...</a>
+  <a n='zimbraAuthLdapBindDn'>...</a>
   <name>...</name>
   <password>...</password>
 </CheckAuthConfigRequest>
@@ -713,6 +713,6 @@ notes:
 </CheckAuthConfigResponse>
 
 notes:
-  - liquidAuthMech must be set to ldap/ad. There is no reason to check liquid.
+  - zimbraAuthMech must be set to ldap/ad. There is no reason to check zimbra.
 
 -----------------------------------
