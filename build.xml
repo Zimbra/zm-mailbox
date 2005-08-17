@@ -368,7 +368,7 @@
 		</waitfor>
 		<echo>LmtpInject messages</echo>
 		<java classname="com.zimbra.cs.lmtpserver.utils.LmtpInject" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-t ${lmtpinject.numthreads} -a ${lmtp.host} -p ${lmtp.port} -r user1@${zimbra.server.hostname} -s ho@zimbrasys.com -d" />
+			<arg line="-t ${lmtpinject.numthreads} -a ${lmtp.host} -p ${lmtp.port} -r user1@${zimbra.server.hostname} -s ho@example.zimbra.com -d" />
 			<arg path="data/TestMailRaw" />
 		</java>
 	</target>
@@ -376,7 +376,7 @@
 	<target name="configure-exch1-gal" description="point gal at local and exch1 gal">
 		<echo>Configuring domain for gal: ${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="md ${zimbra.server.hostname}  zimbraGalMode both zimbraGalLdapBindDn zz_gal zimbraGalLdapBindPassword zz_gal zimbraGalLdapFilter ad zimbraGalLdapSearchBase dc=zimbrasys,dc=com zimbraGalLdapURL ldap://exch1.zimbrasys.com/" />
+			<arg line="md ${zimbra.server.hostname}  zimbraGalMode both zimbraGalLdapBindDn zz_gal zimbraGalLdapBindPassword zz_gal zimbraGalLdapFilter ad zimbraGalLdapSearchBase dc=liquidsys,dc=com zimbraGalLdapURL ldap://exch1.liquidsys.com/" />
 		</java>
 	</target>
 
@@ -478,7 +478,7 @@
 		</java>
 		<echo>Provisioning server entry for ${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="CreateServer ${zimbra.server.hostname} zimbraSmtpHostname exch1.zimbrasys.com zimbraMailPort 7070" />
+			<arg line="CreateServer ${zimbra.server.hostname} zimbraSmtpHostname exch1.liquidsys.com zimbraMailPort 7070" />
 		</java>
 		<echo>Creating domain: ${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
