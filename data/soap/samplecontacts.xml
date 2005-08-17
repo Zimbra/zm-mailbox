@@ -29,7 +29,7 @@
           <a n="email">rossd@example.zimbra.com</a>
           <a n="email2">rdargahi@yahoo.com</a>
           <a n="jobTitle">VP of Engineering</a>
-          <a n="company">Liquid Systems</a>
+          <a n="company">Zimbra</a>
           <a n="workPhone">(408) 973-0500 x112</a>
           <a n="workStreet">1054 S. De Anza Blvd\nSuite 200</a>
           <a n="workCity">San Jose</a>
@@ -55,7 +55,7 @@
           <a n="lastName">Dharmaraj</a>
           <a n="email">satish@example.zimbra.com</a>
           <a n="jobTitle">CEO</a>
-          <a n="company">Liquid Systems</a>
+          <a n="company">Zimbra</a>
           <a n="workPhone">(408) 973-0500 x111</a>
           <a n="fileAs">2</a>
         </cn>
@@ -74,7 +74,7 @@
           <a n="lastName">Schemers</a>
           <a n="email">schemers@example.zimbra.com</a>
           <a n="jobTitle">VP of Technology</a>
-          <a n="company">Liquid Systems</a>
+          <a n="company">Zimbra</a>
           <a n="workPhone">(408) 973-0500 x113</a>
           <a n="workStreet">1054 S. De Anza Blvd\nSuite 200</a>
           <a n="workCity">San Jose</a>
@@ -98,7 +98,7 @@
           <a n="firstName">Dave</a>
           <a n="lastName">Edwards</a>
           <a n="email">dave@example.zimbra.com</a>
-          <a n="company">Liquid Systems</a>
+          <a n="company">Zimbra</a>
           <a n="workPhone">(408) 973-0500 x199</a>
           <a n="fileAs">4</a>
         </cn>
@@ -184,7 +184,7 @@
         <cn>
           <a n="firstName">Joaquin</a>
           <a n="lastName">Ruiz</a>
-          <a n="company">Liquid Systems</a>
+          <a n="company">Zimbra</a>
           <a n="workPhone">(408) 973-0500 x123</a>
         </cn>
       </CreateContactRequest>
@@ -448,7 +448,7 @@
           <a n="firstName">Jiho</a>
           <a n="lastName">Hahm</a>
           <a n="email">jhahm@example.zimbra.com</a>
-          <a n="company">Liquid Systems</a>
+          <a n="company">Zimbra</a>
           <a n="workPhone">(408) 973-0500</a>
           <a n="workStreet">1054 S. De Anza Blvd\nSuite 200</a>
           <a n="workCity">San Jose</a>
@@ -471,7 +471,7 @@
           <a n="firstName">Kirk</a>
           <a n="lastName">Chen</a>
           <a n="email">kchen@example.zimbra.com</a>
-          <a n="company">Liquid Systems</a>
+          <a n="company">Zimbra</a>
           <a n="workPhone">(408) 973-0500</a>
           <a n="workStreet">1054 S. De Anza Blvd\nSuite 200</a>
           <a n="workCity">San Jose</a>
@@ -494,7 +494,7 @@
           <a n="firstName">Marc</a>
           <a n="lastName">Macintyre</a>
           <a n="email">marcmac@example.zimbra.com</a>
-          <a n="company">Liquid Systems</a>
+          <a n="company">Zimbra</a>
           <a n="workPhone">(408) 973-0500</a>
           <a n="workStreet">1054 S. De Anza Blvd\nSuite 200</a>
           <a n="workCity">San Jose</a>

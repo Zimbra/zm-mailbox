@@ -31,7 +31,7 @@ From: Alexey Melnikov <Alexey.Melnikov@isode.com>
 User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.4)
 	Gecko/20030624 Netscape/7.1 (ax)
 X-Accept-Language: en-us, en
-X-Liquid-Object: url
+X-Zimbra-Object: url
 MIME-Version: 1.0
 To: Simon Josefsson <jas@extundo.com>
 CC: "Kurt D. Zeilenga" <Kurt@OpenLDAP.org>, SASL WG <ietf-sasl@imc.org>
