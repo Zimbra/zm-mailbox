@@ -522,7 +522,7 @@
 		<copy todir="${tomcat.home.dir}/common/lib" file="${jars.dir}/activation.jar" />
 		<copy todir="${tomcat.home.dir}/common/lib" file="${jars.dir}/mail.jar" />
 		<copy todir="${tomcat.home.dir}/common/lib" file="${jars.dir}/zimbra-native.jar" />
-		<copy todir="${tomcat.home.dir}/common/endorsed" file="${jars.dir}/zimbracharset.jar" />
+		<copy todir="${tomcat.home.dir}/common/endorsed" file="${jars.dir}/zimbra-charset.jar" />
 		<copy todir="${zimbra.home.dir}/conf" file="${config.dir}/log4j.properties" />
 		<copy todir="${zimbra.home.dir}/lib" file="${dist.lib.dir}/zimbrastore.jar" />
 		<copy todir="${zimbra.home.dir}/lib">
