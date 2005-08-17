@@ -1,7 +1,7 @@
 Mailbox move transfers an account's mailbox from one mailhost to
 another.
 
-On Linux, run lqmailboxmove to see the usage. You need to
+On Linux, run zmmailboxmove to see the usage. You need to
 
 - know the admin username and password on the source host
 - make sure both source and target hosts have been provisioned
@@ -10,12 +10,12 @@ in the LDAP directory
 
 Examples:
 
-lqmailboxmove -s ashcroft -t kchenlaptop -a kchen@ashcroft.liquidsys.com
+zmmailboxmove -s ashcroft -t kchenlaptop -a kchen@ashcroft.liquidsys.com
 
 copies the mailbox of account "kchen@ashcroft.liquidsys.com" from host ashcroft to kchenlaptop.
 
 
-lqmailboxmove -sw -s ashcroft -t kchenlaptop -a kchen@ashcroft.liquidsys.com
+zmmailboxmove -sw -s ashcroft -t kchenlaptop -a kchen@ashcroft.liquidsys.com
 
 does the same thing. Additionally by specifying -s (switch over), the LDAP directory is updated 
 so that further email messages will be delivered to the target host.
@@ -25,7 +25,7 @@ Note on testing:
 
 You can move your real emails from dogfood to your own laptop:
 
-(1) add your laptop hostname to LDAP (run lqprov and use 'cs' and 'gas' commands on dogfood)
+(1) add your laptop hostname to LDAP (run zmprov and use 'cs' and 'gas' commands on dogfood)
 (2) modify your conf/localconfig.xml, and point ldap_host to the LDAP server used by
     the source host (in this case, dogfood). Add liquid_server_hostname to point to your
     laptop.
@@ -35,7 +35,7 @@ You can move your real emails from dogfood to your own laptop:
 (5) for windows, do:
       java com.zimbra.cs.mailbox.MailboxMoveUtil 
         -a <you>@dogfood.liquidsys.com -s dogfood  -t <yourlaptop>
-    for linux, use lqmailboxmove script
+    for linux, use zmmailboxmove script
 (5) sometimes the laptop hostname doesn't work. Use your laptop's IP address.
 (6) if you need to move the mailbox again, you need to specify -ow option to 
 overwrite the existing mailbox on the target host.

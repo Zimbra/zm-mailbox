@@ -1,16 +1,16 @@
 General format is:
 
-<t:tests xmlns:t="urn:liquidTestHarness">
+<t:tests xmlns:t="urn:zimbraTestHarness">
  
  <!-- in order to reference namespaces in the xpath expressions, they need to either be
       pre-defined, or defined with the namespace command.
       
       The following are pre-defined:
       
-      acct   -> urn:liquidAccount
-      mail   -> urn:liquidMail
-      admin  -> urn:liquidAdmin
-      liquid -> urn:liquid
+      acct   -> urn:zimbraAccount
+      mail   -> urn:zimbraMail
+      admin  -> urn:zimbraAdmin
+      zimbra -> urn:zimbra
       soap   -> http://www.w3.org/2003/05/soap-envelope
       soap12 -> http://www.w3.org/2003/05/soap-envelope
 	  soap11 -> http://schemas.xmlsoap.org/soap/envelope/
@@ -83,18 +83,18 @@ General format is:
 
 EXAMPLE
 
-<t:tests xmlns:t="urn:liquidTestHarness">
+<t:tests xmlns:t="urn:zimbraTestHarness">
 
- <t:property name="user" value="user1@liquidsys.com"/>
- <t:property name="password" value="liquid"/>
- <t:property name="tag.name" value="liquid"/>
+ <t:property name="user" value="user1@example.zimbra.com"/>
+ <t:property name="password" value="zimbra"/>
+ <t:property name="tag.name" value="zimbra"/>
  <t:property name="tag.newname" value="test"/>
 
  <t:property name="uri" value="http://localhost:7070/service/soap/"/>
 
  <t:test id="auth" required="true">
   <t:request>
-   <acct:AuthRequest xmlns:acct="urn:liquidAccount">
+   <acct:AuthRequest xmlns:acct="urn:zimbraAccount">
      <account by="name">${user}</account>
      <password>${password}</password>
    </acct:AuthRequest>
@@ -110,7 +110,7 @@ EXAMPLE
 
 <t:test>
  <t:request>
-   <acct:CreateTagRequest xmlns:acct="urn:liquidAccount">
+   <acct:CreateTagRequest xmlns:acct="urn:zimbraAccount">
      <tag name="${tag.name}"/>
    </acct:CreateTagRequest>
  </t:request>
@@ -124,7 +124,7 @@ EXAMPLE
 
 <t:test>
  <t:request>
-   <acct:RenameTagRequest xmlns:acct="urn:liquidAccount">
+   <acct:RenameTagRequest xmlns:acct="urn:zimbraAccount">
      <tag id="${tag.id}" name="${tag.newname}"/>
    </acct:RenameTagRequest>
  </t:request>
@@ -135,7 +135,7 @@ EXAMPLE
 
 <t:test>
  <t:request>
-   <acct:DeleteTagRequest xmlns:acct="urn:liquidAccount">
+   <acct:DeleteTagRequest xmlns:acct="urn:zimbraAccount">
      <tag id="${tag.id}"/>
    </acct:DeleteTagRequest>
  </t:request>
