@@ -169,14 +169,14 @@
 
 	<target name="javacc-LiquidQueryParser">
 		<antcall target="javacc">
-			<param name="target.classdir" value="com/liquidsys/coco/index/queryparser" />
+			<param name="target.classdir" value="com/zimbra/cs/index/queryparser" />
 			<param name="target" value="LiquidQueryParser.jj" />
 		</antcall>
 	</target>
 
 	<target name="javacc-ImapParser">
 		<antcall target="javacc">
-			<param name="target.classdir" value="com/liquidsys/coco/imap/parser" />
+			<param name="target.classdir" value="com/zimbra/cs/imap/parser" />
 			<param name="target" value="ImapParser.jj" />
 		</antcall>
 	</target>
@@ -233,7 +233,7 @@
 	</target>
 
 	<target name="jar" depends="compile" description="Creates the jar file">
-		<copy todir="${build.classes.dir}/com/liquidsys/coco/account/">
+		<copy todir="${build.classes.dir}/com/zimbra/cs/account/">
 			<fileset dir="${config.dir}" includes="liquidattrs.xml" />
 		</copy>
 		<jar destfile="${dist.lib.dir}/liquidstore.jar" basedir="${build.classes.dir}" />
