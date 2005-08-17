@@ -10,10 +10,10 @@ log4j.threshhold=OFF
 
 log4j.rootLogger=INFO,LOGFILE
 
-# Appender LOGFILE writes to the file "/opt/liquid/log/liquid.log".
+# Appender LOGFILE writes to the file "/opt/zimbra/log/zimbra.log".
 #log4j.appender.LOGFILE=org.apache.log4j.FileAppender
 log4j.appender.LOGFILE=org.apache.log4j.DailyRollingFileAppender
-log4j.appender.LOGFILE.File=/opt/liquid/log/liquid.log
+log4j.appender.LOGFILE.File=/opt/zimbra/log/zimbra.log
 log4j.appender.LOGFILE.DatePattern='.'yyyy-MM-dd
 log4j.appender.LOGFILE.Append=true
 log4j.appender.LOGFILE.layout=org.apache.log4j.PatternLayout
@@ -21,19 +21,19 @@ log4j.appender.LOGFILE.layout.ConversionPattern=%d %-5p [%t] [%x] %c{1} - %m%n
 
 # Appender AUDIT writes to the file "audit.log".
 log4j.appender.AUDIT=org.apache.log4j.DailyRollingFileAppender
-log4j.appender.AUDIT.File=/opt/liquid/log/audit.log
+log4j.appender.AUDIT.File=/opt/zimbra/log/audit.log
 log4j.appender.AUDIT.DatePattern='.'yyyy-MM-dd
 log4j.appender.AUDIT.Append=true
 log4j.appender.AUDIT.layout=org.apache.log4j.PatternLayout
 log4j.appender.AUDIT.layout.ConversionPattern=%d %-5p [%t] [%x] %c{1} - %m%n
 
-# Save liquid.security to AUDIT appender 
-log4j.additivity.liquid.security=false
-log4j.logger.liquid.security=INFO,AUDIT
+# Save zimbra.security to AUDIT appender 
+log4j.additivity.zimbra.security=false
+log4j.logger.zimbra.security=INFO,AUDIT
 
 # Appender CONVERTDLOG writes to the file "convertd.log".
 log4j.appender.CONVERTDLOG=org.apache.log4j.DailyRollingFileAppender
-log4j.appender.CONVERTDLOG.File=/opt/liquid/log/convertd.log
+log4j.appender.CONVERTDLOG.File=/opt/zimbra/log/convertd.log
 log4j.appender.CONVERTDLOG.DatePattern='.'yyyy-MM-dd
 log4j.appender.CONVERTDLOG.Append=true
 log4j.appender.CONVERTDLOG.layout=org.apache.log4j.PatternLayout
@@ -52,7 +52,7 @@ log4j.appender.SYSLOG.layout.ConversionPattern=%d %-5p [%t] [%x] %c{1} - %m%n
 
 # Appender STATS writes to file "stats"
 log4j.appender.STATS=com.zimbra.cs.stats.StartTimeFileAppender
-log4j.appender.STATS.File=/opt/liquid/log/liquidstats-%s.log
+log4j.appender.STATS.File=/opt/zimbra/log/zimbrastats-%s.log
 log4j.appender.STATS.Append=false
 log4j.appender.STATS.layout=com.zimbra.cs.stats.AccumulatorLayout
  
@@ -61,6 +61,6 @@ log4j.appender.STATS.layout=com.zimbra.cs.stats.AccumulatorLayout
 log4j.additivity.com.zimbra.cs.stats=false
 log4j.logger.com.zimbra.cs.stats=DEBUG,STATS
 
-log4j.logger.liquid=ERROR,SYSLOG
-log4j.logger.com.liquidsys=OFF
+log4j.logger.zimbra=ERROR,SYSLOG
+log4j.logger.com.zimbrasys=OFF
 log4j.logger.com.zimbra.cs.util.StopWatch=INFO
