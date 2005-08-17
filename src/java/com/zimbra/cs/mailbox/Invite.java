@@ -87,7 +87,8 @@ public class Invite {
             int mailboxId,
             int mailItemId,
             int componentNum,
-            boolean sentByMe)
+            boolean sentByMe,
+            String fragment)
             {
         mMethod = method;
         mTzMap = tzmap;
@@ -114,11 +115,14 @@ public class Invite {
         mMailItemId = mailItemId;
         mComponentNum = componentNum;
         mSentByMe = sentByMe;
+        mFragment = fragment;
             }
     
     private Recurrence.IRecurrence mRecurrence;
     public Recurrence.IRecurrence getRecurrence() { return mRecurrence; }
     private boolean mSentByMe;
+    private String mFragment;
+    public String getFragment() { return mFragment; }
     
     
 //    
@@ -132,6 +136,7 @@ public class Invite {
     
     private static final String FN_INVMSGID = "mid";
     private static final String FN_SENTBYME = "byme";
+    private static final String FN_FRAGMENT = "frag";
     
     static Metadata encodeMetadata(Invite inv) {
         Metadata meta = new Metadata();
@@ -147,6 +152,7 @@ public class Invite {
         meta.put(Metadata.FN_END, inv.mEnd);
         meta.put(Metadata.FN_DURATION, inv.mDuration);
         meta.put(Metadata.FN_METHOD, inv.mMethod.getValue());
+        meta.put(FN_FRAGMENT, inv.mFragment);
         
         if (inv.mRecurrence != null) {
             meta.put(FN_RECURRENCE, inv.mRecurrence.encodeMetadata());
@@ -205,6 +211,7 @@ public class Invite {
         String freebusy = meta.get(Metadata.FN_APPT_FREEBUSY, IcalXmlStrMap.FBTYPE_BUSY);
         String transp = meta.get(Metadata.FN_TRANSP, IcalXmlStrMap.TRANSP_OPAQUE);
         boolean sentByMe = meta.getBool(FN_SENTBYME);
+        String fragment = meta.get(FN_FRAGMENT, "");
         
         ParsedDateTime dtStart = null;
         ParsedDateTime dtEnd = null;
@@ -271,7 +278,7 @@ public class Invite {
                 dtStart, dtEnd, duration, recurrence, org, attendees,
                 name, loc, flags, partStat,
                 recurrenceId, dtstamp, seqno,
-                appt.getMailboxId(), mailItemId, componentNum, sentByMe);
+                appt.getMailboxId(), mailItemId, componentNum, sentByMe, fragment);
     }
     
     public boolean needsReply() {
@@ -336,11 +343,12 @@ public class Invite {
      *                 "IN" (in-process)
      * @throws ServiceException
      */
-    public void modifyPartStat(Mailbox mbx, String partStat)
+    public void modifyPartStat(Mailbox mbx, boolean needsReply, String partStat)
     throws ServiceException {
         int oldFlags = mFlags;
-        setNeedsReply(false);
-        if (mFlags != oldFlags && !mPartStat.equals(partStat)) {
+        boolean oldNeedsReply = needsReply();
+        setNeedsReply(needsReply);
+        if (needsReply() != oldNeedsReply || mFlags != oldFlags || !mPartStat.equals(partStat)) {
             mPartStat = partStat;
             mAppt.saveMetadata();
             if (mbx != null) {
@@ -578,8 +586,9 @@ public class Invite {
     private ArrayList /* VAlarm */ mAlarms = new ArrayList();
     private Method mMethod;
 
-    Invite(Calendar cal, Method method) {
+    Invite(Calendar cal, Method method, String fragment) {
         mMethod = method;
+        mFragment = fragment;
     }
     
     public String getMethod() {
@@ -994,7 +1003,7 @@ public class Invite {
      * @return list of Invites (ie the mComponents list of the to-be-created InviteMessage)
      */
     static List /* Invite */ parseCalendarComponentsForNewMessage(boolean sentByMe, Mailbox mbx, Calendar cal, 
-            int mailItemId, TimeZoneMap tzmap) throws ServiceException {
+            int mailItemId, String fragment, TimeZoneMap tzmap) throws ServiceException {
         
         List /* Invite */ toRet = new ArrayList();
         
@@ -1029,7 +1038,7 @@ public class Invite {
                     tzmap.add((VTimeZone) comp);
             } else if (comp.getName().equals(Component.VEVENT)) {
                 Invite invComp = null;
-                invComp = new Invite(cal, method);
+                invComp = new Invite(cal, method, fragment);
                 toRet.add(invComp);
                 
                 invComp.setComponentNum(compNum);

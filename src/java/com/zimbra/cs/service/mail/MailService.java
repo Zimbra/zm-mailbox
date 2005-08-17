@@ -122,6 +122,9 @@ public class MailService implements DocumentService {
     public static final QName MODIFY_APPOINTMENT_EXCEPTION_RESPONSE= QName.get("ModifyAppointmentExceptionResponse", NAMESPACE);
     public static final QName CANCEL_APPOINTMENT_EXCEPTION_REQUEST = QName.get("CancelAppointmentExceptionRequest", NAMESPACE);
     public static final QName CANCEL_APPOINTMENT_EXCEPTION_RESPONSE= QName.get("CancelAppointmentExceptionResponse", NAMESPACE);
+    public static final QName SET_APPOINTMENT_REQUEST = QName.get("SetAppointmentRequest", NAMESPACE);
+    public static final QName SET_APPOINTMENT_RESPONSE= QName.get("SetAppointmentResponse", NAMESPACE);
+    
     
     public static final QName GET_FREE_BUSY_REQUEST = QName.get("GetFreeBusyRequest", NAMESPACE);
     public static final QName GET_FREE_BUSY_RESPONSE = QName.get("GetFreeBusyResponse", NAMESPACE);
@@ -296,6 +299,8 @@ public class MailService implements DocumentService {
     public static final String E_APPT_RULE_XNAME = "rule-x-name";
 
     public static final String A_UID = "uid";
+    public static final String A_DEFAULT = "default";
+    public static final String A_EXCEPT = "except";
     public static final String A_VERB = "verb";
     public static final String A_APPT_COMPONENT_NUM = "compNum";
     public static final String A_APPT_IS_EXCEPTION = "ex";
@@ -307,6 +312,7 @@ public class MailService implements DocumentService {
     public static final String A_APPT_DATETIME = "d";
     public static final String A_APPT_SUB_ID = "subId";
     public static final String A_APPT_INV_ID = "invId";
+    public static final String A_APPT_ID = "apptId";
     public static final String A_APPT_STATUS = "status";
     public static final String A_APPT_PARTSTAT = "ptst";
     public static final String A_APPT_FREEBUSY = "fb";
@@ -314,6 +320,7 @@ public class MailService implements DocumentService {
     public static final String A_APPT_TRANSPARENCY = "transp";
     public static final String A_APPT_ALLDAY = "allDay";
     public static final String A_APPT_LOCATION = "loc";
+    public static final String A_APPT_NEEDS_REPLY = "needsReply";
     public static final String A_APPT_TYPE = "type";
     public static final String A_APPT_SENDUPDATE = "sendUpd";
     public static final String A_APPT_ROLE = "role";
@@ -429,6 +436,7 @@ public class MailService implements DocumentService {
         dispatcher.registerHandler(CREATE_APPOINTMENT_EXCEPTION_REQUEST, new CreateAppointmentException());
         dispatcher.registerHandler(MODIFY_APPOINTMENT_EXCEPTION_REQUEST, new ModifyAppointmentException());
         dispatcher.registerHandler(CANCEL_APPOINTMENT_EXCEPTION_REQUEST, new CancelAppointmentException());
+        dispatcher.registerHandler(SET_APPOINTMENT_REQUEST, new SetAppointment());
         
         dispatcher.registerHandler(GET_FREE_BUSY_REQUEST, new GetFreeBusy());
         dispatcher.registerHandler(GET_ICAL_REQUEST, new GetICal());

@@ -114,7 +114,7 @@ public class SendInviteReply extends SendMsg {
                     
                 }
 
-                mbox.modifyInvitePartStat(octxt, apptId, inviteMsgId, compNum, verb.getXmlPartStat());
+                mbox.modifyInvitePartStat(octxt, apptId, inviteMsgId, compNum, false, verb.getXmlPartStat());
                     
                     /**
                      * MOVE the replied-to message into the calendar folder: then, depending on user

@@ -170,15 +170,15 @@ RECURRENCE SPECIFIERS!
 
 //////////////////////////////////////////////////////////////////////
 //
-// Add an appointment, for mailbox Migration (ie from exchange)
-//   -- not used by normal mail clients, this API allows you to directly modify
-//      the internal state of an appointment
+// Directly set status of an entire appointment.  This API is intended
+// for mailbox Migration (ie migrating a mailbox onto this server) and
+// is not used by normal mail clients.
 //
-<AddAppointmentRequest>
-  <default needsReply="0|1" partStat="AC|TE|DE|DG|CO|IN">
+<SetAppointmentRequest uid="iCalendar_UID">
+  <default needsReply="0|1" ptst="AC|TE|DE|DG|CO|IN">
      <m> ...see CreateAppointmentRequest... </m>
   </default>
-  <except needsReply="0|1" partStat="AC|TE|DE|DG|CO|IN">
+  <except needsReply="0|1" ptst="AC|TE|DE|DG|CO|IN">
      <m> See CreateAppointmentExceptionRequest
         ...
         <inv>

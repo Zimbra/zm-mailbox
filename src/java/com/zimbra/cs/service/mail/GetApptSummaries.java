@@ -57,7 +57,6 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
                     
                     apptElt.addAttribute("x_uid", appointment.getUid());
                     
-//                    Element apptElt = response.addElement(MailService.E_APPOINTMENT);
                     Invite defaultInvite = appointment.getDefaultInvite();
                     
                     if (defaultInvite == null) {
@@ -112,45 +111,57 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
                                     instElt.addAttribute(MailService.A_APPT_COMPONENT_NUM, inst.getComponentNum());
                                     
                                     // fragment has already been sanitized...
-                                    Message msg = mbx.getMessageById(inst.getMailItemId()); 
-                                    String frag = msg.getFragment();
-                                    if (!frag.equals(""))
+                                    String frag = inv.getFragment();
+                                    if (!frag.equals("")) {
                                         instElt.addAttribute(MailService.E_FRAG, frag, Element.DISP_CONTENT);
+                                    }
                                 }
                                 
                                 
-                                if (defDurationMsecs != inst.getEnd()-inst.getStart())
+                                if (defDurationMsecs != inst.getEnd()-inst.getStart()) {
                                     instElt.addAttribute(MailService.A_APPT_DURATION, inst.getEnd()-inst.getStart());
+                                }
                                 
-                                if (!defaultInvite.getStatus().equals(inv.getStatus()))
+                                if (!defaultInvite.getStatus().equals(inv.getStatus())) {
                                     instElt.addAttribute(MailService.A_APPT_STATUS, inv.getStatus());
+                                }
 
-                                if (!defaultInvite.getPartStat().equals(inv.getPartStat()))
-                                    instElt.addAttribute(MailService.A_APPT_PARTSTAT, inv.getPartStat());
+                                if (!defaultInvite.getPartStat().equals(inv.getPartStat())) {
+                                    instElt.addAttribute(MailService.A_APPT_PARTSTAT, inv.getPartStat()); 
+                                }
 
-                                if (!defaultInvite.getFreeBusy().equals(inv.getFreeBusy()))
+                                if (!defaultInvite.getFreeBusy().equals(inv.getFreeBusy())) {
                                     instElt.addAttribute(MailService.A_APPT_FREEBUSY, inv.getFreeBusy());
+                                }
                                 
-                                if (!defaultInvite.getFreeBusyActual().equals(inv.getFreeBusyActual()))
+                                if (!defaultInvite.getFreeBusyActual().equals(inv.getFreeBusyActual())) {
                                     instElt.addAttribute(MailService.A_APPT_FREEBUSY_ACTUAL, inv.getFreeBusyActual());
+                                }
                                 
-                                if (!defaultInvite.getTransparency().equals(inv.getTransparency()))
+                                if (!defaultInvite.getTransparency().equals(inv.getTransparency())) {
                                     instElt.addAttribute(MailService.A_APPT_TRANSPARENCY, inv.getTransparency());
+                                }
                                 
-                                if (!defaultInvite.getName().equals(inv.getName()))
+                                if (!defaultInvite.getName().equals(inv.getName())) {
                                     instElt.addAttribute(MailService.A_NAME, inv.getName());
+                                }
                                 
-                                if (!defaultInvite.getLocation().equals(inv.getLocation()))
+                                if (!defaultInvite.getLocation().equals(inv.getLocation())) {
                                     instElt.addAttribute(MailService.A_APPT_LOCATION, inv.getLocation());
+                                }
                                 
-                                if (defaultInvite.isAllDayEvent() != inv.isAllDayEvent())
+                                if (defaultInvite.isAllDayEvent() != inv.isAllDayEvent()) {
                                     instElt.addAttribute(MailService.A_APPT_ALLDAY, inv.isAllDayEvent());
-                                if (defaultInvite.hasOtherAttendees() != inv.hasOtherAttendees())
+                                }
+                                if (defaultInvite.hasOtherAttendees() != inv.hasOtherAttendees()) {
                                     instElt.addAttribute(MailService.A_APPT_OTHER_ATTENDEES, inv.hasOtherAttendees());
-                                if (defaultInvite.hasAlarm() != inv.hasAlarm())
+                                }
+                                if (defaultInvite.hasAlarm() != inv.hasAlarm()) {
                                     instElt.addAttribute(MailService.A_APPT_ALARM, inv.hasAlarm());
-                                if (defaultInvite.isRecurrence() != inv.isRecurrence())
+                                }
+                                if (defaultInvite.isRecurrence() != inv.isRecurrence()) {
                                     instElt.addAttribute(MailService.A_APPT_RECUR, inv.isRecurrence());
+                                }
                             }
                         } catch (MailServiceException.NoSuchItemException e) {
                             mLog.info("Error could not get instance "+inst.getMailItemId()+"-"+inst.getComponentNum()+
@@ -177,21 +188,25 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
                         
                         apptElt.addAttribute(MailService.A_APPT_COMPONENT_NUM, defaultInvite.getComponentNum());
                         
-                        if (defaultInvite.isAllDayEvent())
+                        if (defaultInvite.isAllDayEvent()) {
                             apptElt.addAttribute(MailService.A_APPT_ALLDAY, defaultInvite.isAllDayEvent());
-                        if (defaultInvite.hasOtherAttendees())
+                        }
+                        if (defaultInvite.hasOtherAttendees()) {
                             apptElt.addAttribute(MailService.A_APPT_OTHER_ATTENDEES, defaultInvite.hasOtherAttendees());
-                        if (defaultInvite.hasAlarm())
+                        }
+                        if (defaultInvite.hasAlarm()) {
                             apptElt.addAttribute(MailService.A_APPT_ALARM, defaultInvite.hasAlarm());
-                        if (defaultInvite.isRecurrence())
+                        }
+                        if (defaultInvite.isRecurrence()) {
                             apptElt.addAttribute(MailService.A_APPT_RECUR, defaultInvite.isRecurrence());
+                        }
                         
-                        { // FIXME -- shouldn't have to go back to the Mailbox to get the original Message here...
+                        { 
                             // fragment has already been sanitized...
-                            Message defMsg = mbx.getMessageById(defaultInvite.getMailItemId()); 
-                            String fragment = defMsg.getFragment();
-                            if (!fragment.equals(""))
+                            String fragment = defaultInvite.getFragment();
+                            if (!fragment.equals("")) {
                                 apptElt.addAttribute(MailService.E_FRAG, fragment, Element.DISP_CONTENT);
+                            }
                         }
                         
                         response.addElement(apptElt);

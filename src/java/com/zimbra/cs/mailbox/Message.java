@@ -275,7 +275,7 @@ public class Message extends MailItem {
             ICalTimeZone accountTZ = mbox.getAccount().getTimeZone();
             tzmap = new TimeZoneMap(accountTZ);
             
-            components = Invite.parseCalendarComponentsForNewMessage(sentByMe, mbox, cal, id, tzmap);
+            components = Invite.parseCalendarComponentsForNewMessage(sentByMe, mbox, cal, id, pm.getFragment(), tzmap);
             Method method = (Method) cal.getProperties().getProperty(Property.METHOD);
             methodStr = method != null ? method.getValue() : "PUBLISH";
         }

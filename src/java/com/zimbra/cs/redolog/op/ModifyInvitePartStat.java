@@ -18,16 +18,18 @@ public class ModifyInvitePartStat extends RedoableOp {
     private int mInvId = UNKNOWN_ID;  // invite ID
     int mCompNum;                  // component number
     private String mPartStat;      // "AC" (accepted), "TE" (tentative), etc.
+    private boolean mNeedsReply;
 
     public ModifyInvitePartStat() {
     }
 
-    public ModifyInvitePartStat(int mailboxId, int apptId, int inviteId, int compNum, String partStat) {
+    public ModifyInvitePartStat(int mailboxId, int apptId, int inviteId, int compNum, boolean needsReply, String partStat) {
         setMailboxId(mailboxId);
         mApptId = apptId;
         mInvId= inviteId;
         mCompNum = compNum;
         mPartStat = partStat;
+        mNeedsReply = needsReply;
     }
 
     public int getOpCode() {
@@ -36,13 +38,14 @@ public class ModifyInvitePartStat extends RedoableOp {
 
     public void redo() throws Exception {
         Mailbox mbox = Mailbox.getMailboxById(getMailboxId());
-        mbox.modifyInvitePartStat(getOperationContext(), mApptId, mInvId, mCompNum, mPartStat);
+        mbox.modifyInvitePartStat(getOperationContext(), mApptId, mInvId, mCompNum, mNeedsReply, mPartStat);
     }
 
     protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("apptId=").append(mApptId);
         sb.append(", invId=").append(mInvId);
         sb.append(", comp=").append(mCompNum);
+        sb.append(", needsReply=").append(mNeedsReply);
         sb.append(", partStat=").append(mPartStat);
         return sb.toString();
     }
@@ -51,6 +54,11 @@ public class ModifyInvitePartStat extends RedoableOp {
         out.writeInt(mApptId);
         out.writeInt(mInvId);
         out.writeInt(mCompNum);
+        if (mNeedsReply) {
+            out.writeBoolean(true);
+        } else {
+            out.writeBoolean(false);
+        }
         writeUTF8(out, mPartStat);
     }
 
@@ -58,6 +66,7 @@ public class ModifyInvitePartStat extends RedoableOp {
         mApptId = in.readInt();
         mInvId = in.readInt();
         mCompNum = in.readInt();
+        mNeedsReply = in.readBoolean();
         mPartStat = readUTF8(in);
     }
 }

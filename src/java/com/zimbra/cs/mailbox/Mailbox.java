@@ -2412,16 +2412,16 @@ public class Mailbox {
      * @throws ServiceException
      */
     public synchronized void modifyInvitePartStat(OperationContext octxt, int apptId, int inviteId,
-                                                  int componentNum, String partStat)
+                                                  int componentNum, boolean needsReply, String partStat)
     throws ServiceException {
-        ModifyInvitePartStat redoRecorder = new ModifyInvitePartStat(mId, apptId, inviteId, componentNum, partStat);
+        ModifyInvitePartStat redoRecorder = new ModifyInvitePartStat(mId, apptId, inviteId, componentNum, needsReply, partStat);
 
         boolean success = false;
         try {
             beginTransaction("updateInvitePartStat", octxt, redoRecorder);
             Appointment appt = getAppointmentById(apptId);
             Invite inv = appt.getInvite(inviteId,componentNum);
-            inv.modifyPartStat(this, partStat);
+            inv.modifyPartStat(this, needsReply, partStat);
             success = true;
         } finally {
             endTransaction(success);
