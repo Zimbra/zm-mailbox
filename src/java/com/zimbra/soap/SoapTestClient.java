@@ -36,7 +36,7 @@ public class SoapTestClient {
             // get the auth token out, no default, must be present or a service exception is thrown
             String authToken = response.getAttribute(AccountService.E_AUTH_TOKEN);
             // get the session id, if not present, default to null
-            String sessionId = response.getAttribute(LiquidContext.E_SESSION_ID, null);
+            String sessionId = response.getAttribute(ZimbraContext.E_SESSION_ID, null);
 
             // set the auth token and session id in the transport for future requests to use
             trans.setAuthToken(authToken);

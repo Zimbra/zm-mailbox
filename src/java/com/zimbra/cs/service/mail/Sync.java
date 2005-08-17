@@ -18,7 +18,7 @@ import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.soap.DocumentHandler;
-import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.ZimbraContext;
 
 /**
  * @author dkarp
@@ -28,7 +28,7 @@ public class Sync extends DocumentHandler {
     private static final int DEFAULT_FOLDER_ID = Mailbox.ID_FOLDER_ROOT;
 
     public Element handle(Element request, Map context) throws ServiceException {
-        LiquidContext lc = getLiquidContext(context);
+        ZimbraContext lc = getZimbraContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
 
         long begin = request.getAttributeLong(MailService.A_TOKEN, 0);

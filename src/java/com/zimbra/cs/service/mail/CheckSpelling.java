@@ -11,7 +11,7 @@ import com.zimbra.cs.service.util.RemoteServerRequest;
 import com.zimbra.cs.util.LiquidLog;
 import com.zimbra.cs.util.StringUtil;
 import com.zimbra.soap.DocumentHandler;
-import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.ZimbraContext;
 
 /**
  * @author bburtin
@@ -35,7 +35,7 @@ public class CheckSpelling extends DocumentHandler  {
     }
 
     public Element handle(Element request, Map context) {
-        LiquidContext lc = getLiquidContext(context);
+        ZimbraContext lc = getZimbraContext(context);
         Element response = lc.createElement(MailService.CHECK_SPELLING_RESPONSE);
 
         // Make sure that the hostname is specified

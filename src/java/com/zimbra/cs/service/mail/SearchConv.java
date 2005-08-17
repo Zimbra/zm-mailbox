@@ -20,7 +20,7 @@ import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.stats.StopWatch;
-import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.ZimbraContext;
 
 /**
  * @author tim
@@ -37,7 +37,7 @@ public class SearchConv extends Search {
             if (sLog.isDebugEnabled())
                 sLog.debug("**Start SearchConv");
 
-            LiquidContext lc = getLiquidContext(context);
+            ZimbraContext lc = getZimbraContext(context);
             Mailbox mbox = getRequestedMailbox(lc);
             OperationContext octxt = lc.getOperationContext();
 

@@ -11,7 +11,7 @@ import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.cs.util.LiquidLog;
-import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.ZimbraContext;
 
 /**
  * @author dkarp
@@ -22,7 +22,7 @@ public class DeleteMailbox extends AdminDocumentHandler {
 
     public Element handle(Element request, Map context) throws ServiceException {
         long startTime = sWatch.start();
-        LiquidContext lc = getLiquidContext(context);
+        ZimbraContext lc = getZimbraContext(context);
 
         try {
             Element mreq = request.getElement(AdminService.E_MAILBOX);

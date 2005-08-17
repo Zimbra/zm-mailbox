@@ -14,7 +14,7 @@ import org.dom4j.QName;
  *
  * Registry for assigned XML namespaces
  */
-public class LiquidNamespace {
+public class ZimbraNamespace {
 	
 	public static final String LIQUID_STR = "urn:liquid";
 	public static final Namespace LIQUID = Namespace.get(LIQUID_STR);

@@ -10,7 +10,7 @@ import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.DocumentHandler;
-import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.ZimbraContext;
 
 /**
  * @author kchen
@@ -23,7 +23,7 @@ public class GetRules extends DocumentHandler {
     public Element handle(Element document, Map context)
             throws ServiceException {
 
-		LiquidContext lc = getLiquidContext(context);
+		ZimbraContext lc = getZimbraContext(context);
 		// FIXME: need to check that account exists
         Account account = super.getRequestedAccount(lc);
         

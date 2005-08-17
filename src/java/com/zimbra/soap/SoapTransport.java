@@ -78,7 +78,7 @@ public abstract class SoapTransport {
     	if (raw)
     		return SoapProtocol.toString(document, mPrettyPrint);
 
-        Element context = LiquidContext.toCtxt(mSoapProto, mAuthToken, noSession, mSessionId, noNotify);
+        Element context = ZimbraContext.toCtxt(mSoapProto, mAuthToken, noSession, mSessionId, noNotify);
         Element envelope = mSoapProto.soapEnvelope(document, context);
         String soapMessage = SoapProtocol.toString(envelope, getPrettyPrint());
     	return soapMessage;
@@ -109,9 +109,9 @@ public abstract class SoapTransport {
         if (mSoapProto.isFault(e))
             throw mSoapProto.soapFault(e);
 
-        Element context = mSoapProto.getHeader(env, LiquidContext.CONTEXT);
+        Element context = mSoapProto.getHeader(env, ZimbraContext.CONTEXT);
         if (context != null) {
-            String sid = context.getAttribute(LiquidContext.E_SESSION_ID, null);
+            String sid = context.getAttribute(ZimbraContext.E_SESSION_ID, null);
             if (sid != null)
                 mSessionId = sid;
         }

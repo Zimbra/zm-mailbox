@@ -52,7 +52,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.cs.service.util.ParseMailboxID;
 import com.zimbra.cs.servlet.LiquidServlet;
-import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.ZimbraContext;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapHttpTransport;
 import com.zimbra.soap.SoapTransport;
@@ -320,7 +320,7 @@ public class CrossMailboxSearch
             
             Element authResp = transport.invokeWithoutSession(authReq);
             mAuthToken = authResp.getAttribute(AdminService.E_AUTH_TOKEN);
-            String sessionId = authResp.getAttribute(LiquidContext.E_SESSION_ID, null);
+            String sessionId = authResp.getAttribute(ZimbraContext.E_SESSION_ID, null);
             transport.setAuthToken(mAuthToken);
             if (sessionId != null) {
                 transport.setSessionId(sessionId);

@@ -7,7 +7,7 @@ import com.zimbra.soap.DomUtil;
 import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.cs.service.admin.GetAccount;
-import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.ZimbraContext;
 import com.zimbra.cs.client.*;
 import com.zimbra.cs.service.ServiceException;
 
@@ -47,7 +47,7 @@ public class LmcAuthRequest extends LmcSoapRequest {
 		// get the auth token out, no default, must be present or a service exception is thrown
 		String authToken = DomUtil.getString(responseXML, AccountService.E_AUTH_TOKEN);
 		// get the session id, if not present, default to null
-		String sessionId = DomUtil.getString(responseXML, LiquidContext.E_SESSION_ID, null);
+		String sessionId = DomUtil.getString(responseXML, ZimbraContext.E_SESSION_ID, null);
 
 		LmcAuthResponse responseObj = new LmcAuthResponse();
 		LmcSession sess = new LmcSession(authToken, sessionId);

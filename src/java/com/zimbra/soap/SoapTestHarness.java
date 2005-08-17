@@ -420,17 +420,17 @@ public class SoapTestHarness {
 		if (mAuthToken == null)
 			mCurrent.mSoapRequest = mSoapProto.soapEnvelope(mCurrent.mDocRequest);
 		else {
-			mCurrent.mSoapRequest = mSoapProto.soapEnvelope(mCurrent.mDocRequest, LiquidContext.toCtxt(mSoapProto, mAuthToken, false, mSessionId, false));
+			mCurrent.mSoapRequest = mSoapProto.soapEnvelope(mCurrent.mDocRequest, ZimbraContext.toCtxt(mSoapProto, mAuthToken, false, mSessionId, false));
 //            if (Math.random() < 0.1) {
-//                Element context = mCurrent.mSoapRequest.getOptionalElement(mSoapProto.getHeaderQName()).getOptionalElement(LiquidContext.CONTEXT);
+//                Element context = mCurrent.mSoapRequest.getOptionalElement(mSoapProto.getHeaderQName()).getOptionalElement(ZimbraContext.CONTEXT);
 //                if (context != null)
-//                    context.addElement(LiquidContext.E_FORMAT).addAttribute(LiquidContext.A_TYPE, LiquidContext.TYPE_JAVASCRIPT);
+//                    context.addElement(ZimbraContext.E_FORMAT).addAttribute(ZimbraContext.A_TYPE, ZimbraContext.TYPE_JAVASCRIPT);
 //            }
 //            try {
-//                Element ctxt = mCurrent.mSoapRequest.getElement(SoapProtocol.Soap12.mHeaderQName).getElement(LiquidContext.CONTEXT);
-//                ctxt.addElement(LiquidContext.E_CHANGE)
-//                    .addAttribute(LiquidContext.A_TYPE, LiquidContext.CHANGE_CREATED)
-//                    .addAttribute(LiquidContext.A_CHANGE_ID, 190);
+//                Element ctxt = mCurrent.mSoapRequest.getElement(SoapProtocol.Soap12.mHeaderQName).getElement(ZimbraContext.CONTEXT);
+//                ctxt.addElement(ZimbraContext.E_CHANGE)
+//                    .addAttribute(ZimbraContext.A_TYPE, ZimbraContext.CHANGE_CREATED)
+//                    .addAttribute(ZimbraContext.A_CHANGE_ID, 190);
 //            } catch (ServiceException e) { }
         }
 

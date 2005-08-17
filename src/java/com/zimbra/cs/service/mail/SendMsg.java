@@ -36,7 +36,7 @@ import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.ParseMimeMessage.MimeMessageData;
 import com.zimbra.cs.stats.StopWatch;
-import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.ZimbraContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
 
 
@@ -57,7 +57,7 @@ public class SendMsg extends WriteOpDocumentHandler {
         long startTime = sWatch.start();
 
         try {
-            LiquidContext lc = getLiquidContext(context);
+            ZimbraContext lc = getZimbraContext(context);
             Account acct = getRequestedAccount(lc);
             Mailbox mbox = getRequestedMailbox(lc);
             OperationContext octxt = lc.getOperationContext();

@@ -15,7 +15,7 @@ import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.soap.DocumentHandler;
-import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.ZimbraContext;
 
 /**
  * @author schemers
@@ -28,7 +28,7 @@ public class Browse extends DocumentHandler  {
         long startTime = sWatch.start();
         
         try {
-            LiquidContext lc = getLiquidContext(context);
+            ZimbraContext lc = getZimbraContext(context);
             Mailbox mbox = getRequestedMailbox(lc);
 
             String browseBy = request.getAttribute("browseby", null);

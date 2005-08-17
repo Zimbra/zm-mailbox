@@ -15,7 +15,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.util.LiquidLog;
-import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.ZimbraContext;
 import com.zimbra.soap.SoapEngine;
 
 /**
@@ -27,7 +27,7 @@ public class Auth extends AdminDocumentHandler {
 
 	public Element handle(Element request, Map context) throws ServiceException {
 		context.put(SoapEngine.IS_AUTH_COMMAND, "1");
-        LiquidContext lc = getLiquidContext(context);
+        ZimbraContext lc = getZimbraContext(context);
 
         String name = request.getAttribute(AdminService.E_NAME);
 		String password = request.getAttribute(AdminService.E_PASSWORD);
@@ -70,7 +70,7 @@ public class Auth extends AdminDocumentHandler {
         response.addAttribute(AdminService.E_LIFETIME, lifetime, Element.DISP_CONTENT);
         if (context.get(SoapEngine.DONT_CREATE_SESSION) == null) {
             SoapSession session = (SoapSession) SessionCache.getInstance().getNewSession(acct.getId(), SessionCache.SESSION_SOAP);
-            response.addAttribute(LiquidContext.E_SESSION_ID, session.getSessionId().toString(), Element.DISP_CONTENT);
+            response.addAttribute(ZimbraContext.E_SESSION_ID, session.getSessionId().toString(), Element.DISP_CONTENT);
         }
 		return response;
 	}

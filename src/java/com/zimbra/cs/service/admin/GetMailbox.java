@@ -8,7 +8,7 @@ import java.util.Map;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.ZimbraContext;
 
 /**
  * @author dkarp
@@ -16,7 +16,7 @@ import com.zimbra.soap.LiquidContext;
 public class GetMailbox extends AdminDocumentHandler {
 
     public Element handle(Element request, Map context) throws ServiceException {
-        LiquidContext lc = getLiquidContext(context);
+        ZimbraContext lc = getZimbraContext(context);
 
         Element mreq = request.getElement(AdminService.E_MAILBOX);
         String accountId = mreq.getAttribute(AdminService.A_ACCOUNTID);

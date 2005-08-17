@@ -36,7 +36,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.soap.DocumentHandler;
-import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.ZimbraContext;
 
 
 /**
@@ -53,7 +53,7 @@ public class Search extends DocumentHandler  {
         long startTime =  sWatch.start();
         
         try {
-            LiquidContext lc = getLiquidContext(context);
+            ZimbraContext lc = getZimbraContext(context);
             SoapSession session = lc.getSession();
             Mailbox mbox = getRequestedMailbox(lc);
             OperationContext octxt = lc.getOperationContext();
@@ -75,7 +75,7 @@ public class Search extends DocumentHandler  {
         }
     }
     
-    protected SearchParams parseCommonParameters(Element request, LiquidContext lc) throws ServiceException {
+    protected SearchParams parseCommonParameters(Element request, ZimbraContext lc) throws ServiceException {
         String query = request.getAttribute(MailService.E_QUERY, null);
         if (query == null)
             query = getRequestedAccount(lc).getAttr(Provisioning.A_liquidPrefMailInitialSearch);

@@ -27,11 +27,11 @@ import com.zimbra.cs.session.SessionCache;
 /**
  * @author schemers
  */
-public class LiquidContext {
+public class ZimbraContext {
 
-	private static Log mLog = LogFactory.getLog(LiquidContext.class);
+	private static Log mLog = LogFactory.getLog(ZimbraContext.class);
 
-	public static final QName CONTEXT = QName.get("context", LiquidNamespace.LIQUID);
+	public static final QName CONTEXT = QName.get("context", ZimbraNamespace.LIQUID);
     public static final String E_NO_NOTIFY  = "nonotify";
     public static final String E_FORMAT     = "format";
     public static final String A_TYPE       = "type";
@@ -78,7 +78,7 @@ public class LiquidContext {
 	 * @param requestProtocol TODO
 	 * @throws ServiceException
 	 */
-	public LiquidContext(Element ctxt, Map context, SoapProtocol requestProtocol) throws ServiceException {
+	public ZimbraContext(Element ctxt, Map context, SoapProtocol requestProtocol) throws ServiceException {
 	    if (ctxt != null && !ctxt.getQName().equals(CONTEXT)) 
 	        throw new IllegalArgumentException("expected ctxt, got: " + ctxt.getQualifiedName());
         
@@ -132,7 +132,7 @@ public class LiquidContext {
 				// ignore and leave null
 				mAuthToken = null;
 				if (mLog.isDebugEnabled())
-					mLog.debug("LiquidContext AuthToken error: " + e.getMessage(), e);
+					mLog.debug("ZimbraContext AuthToken error: " + e.getMessage(), e);
 			}
 		}
 
@@ -210,7 +210,7 @@ public class LiquidContext {
 	
 	public SoapSession getSession() { return mSession; }
 	
-	private LiquidContext() {
+	private ZimbraContext() {
 	}
 
 	public Element newSessionResponse(boolean includeRefreshBlock) {

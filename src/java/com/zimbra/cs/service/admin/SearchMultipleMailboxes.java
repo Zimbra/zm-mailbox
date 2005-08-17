@@ -18,7 +18,7 @@ import com.zimbra.cs.service.mail.Search;
 import com.zimbra.cs.service.util.ParseMailboxID;
 import com.zimbra.cs.util.CrossMailboxSearch;
 import com.zimbra.cs.util.LiquidLog;
-import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.ZimbraContext;
 
 
 /**
@@ -35,7 +35,7 @@ public class SearchMultipleMailboxes extends Search {
     public Element handle(Element request, Map context) throws ServiceException {
         long startTime =  sWatch.start();
         try {
-            LiquidContext lc = getLiquidContext(context);
+            ZimbraContext lc = getZimbraContext(context);
             String encodedAuthToken = getEncodedAuthToken(lc);
             OperationContext octxt = lc.getOperationContext();
 
@@ -73,7 +73,7 @@ public class SearchMultipleMailboxes extends Search {
         }
     }
     
-    private static String getEncodedAuthToken(LiquidContext lc)  throws ServiceException {
+    private static String getEncodedAuthToken(ZimbraContext lc)  throws ServiceException {
         try {
             return lc.getAuthToken().getEncoded();
         } catch (AuthTokenException e) {

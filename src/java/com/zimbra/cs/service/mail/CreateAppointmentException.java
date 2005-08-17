@@ -17,7 +17,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.ParseMimeMessage;
 import com.zimbra.cs.service.util.ParsedItemID;
 import com.zimbra.cs.stats.StopWatch;
-import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.ZimbraContext;
 
 public class CreateAppointmentException extends CreateAppointment 
 {
@@ -49,7 +49,7 @@ public class CreateAppointmentException extends CreateAppointment
     {
         long startTime = sWatch.start();
         try {
-            LiquidContext lc = getLiquidContext(context);
+            ZimbraContext lc = getZimbraContext(context);
             OperationContext octxt = lc.getOperationContext();            
             Account acct = getRequestedAccount(lc);
             Mailbox mbox = getRequestedMailbox(lc);

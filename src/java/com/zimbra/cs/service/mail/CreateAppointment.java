@@ -14,7 +14,7 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.stats.StopWatch;
-import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.ZimbraContext;
 
 /**
  * @author tim
@@ -38,7 +38,7 @@ public class CreateAppointment extends CalendarRequest {
     public Element handle(Element request, Map context) throws ServiceException {
         long startTime = sWatch.start();
         try {
-            LiquidContext lc = getLiquidContext(context);
+            ZimbraContext lc = getZimbraContext(context);
             Account acct = getRequestedAccount(lc);
             Mailbox mbx = getRequestedMailbox(lc);
             OperationContext octxt = lc.getOperationContext();

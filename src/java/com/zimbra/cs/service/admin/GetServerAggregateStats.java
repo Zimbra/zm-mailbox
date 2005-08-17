@@ -12,7 +12,7 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.ZimbraContext;
 
 /**
  * @author schemers
@@ -21,7 +21,7 @@ public class GetServerAggregateStats extends AdminDocumentHandler {
 
 	public Element handle(Element request, Map context) throws ServiceException {
 
-        LiquidContext lc = getLiquidContext(context);
+        ZimbraContext lc = getZimbraContext(context);
 
         String statName = request.getAttribute(AdminService.E_STAT_NAME);
         long startTime = request.getAttributeLong(AdminService.E_START_TIME);

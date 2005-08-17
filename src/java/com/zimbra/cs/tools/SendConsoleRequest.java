@@ -20,7 +20,7 @@ import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.util.Liquid;
-import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.ZimbraContext;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapHttpTransport;
 import com.zimbra.soap.SoapTransport;
@@ -92,7 +92,7 @@ public class SendConsoleRequest {
         // get the auth token out, no default, must be present or a service exception is thrown
         String authToken = response.getAttribute(AccountService.E_AUTH_TOKEN);
         // get the session id, if not present, default to null
-        String sessionId = response.getAttribute(LiquidContext.E_SESSION_ID, null);
+        String sessionId = response.getAttribute(ZimbraContext.E_SESSION_ID, null);
 
         // set the auth token and session id in the transport for future requests to use
         mTrans.setAuthToken(authToken);

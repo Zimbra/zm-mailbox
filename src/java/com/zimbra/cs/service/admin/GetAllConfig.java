@@ -10,7 +10,7 @@ import java.util.Map.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.ZimbraContext;
 
 /**
  * @author schemers
@@ -19,7 +19,7 @@ public class GetAllConfig extends AdminDocumentHandler {
     
 	public Element handle(Element request, Map context) throws ServiceException {
 
-        LiquidContext lc = getLiquidContext(context);
+        ZimbraContext lc = getZimbraContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 
 	    Map attrs = prov.getConfig().getAttrs();

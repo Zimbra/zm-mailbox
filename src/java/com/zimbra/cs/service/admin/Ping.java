@@ -7,7 +7,7 @@ import java.util.Map;
 
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.ZimbraContext;
 
 /**
  * @author schemers
@@ -19,7 +19,7 @@ public class Ping extends AdminDocumentHandler {
 	 */
 	public Element handle(Element document, Map context)
 			throws ServiceException {
-        LiquidContext lc = getLiquidContext(context);
+        ZimbraContext lc = getZimbraContext(context);
 		Element response = lc.createElement(AdminService.PING_RESPONSE);
 		return response;
 	}

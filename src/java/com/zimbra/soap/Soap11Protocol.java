@@ -81,9 +81,9 @@ class Soap11Protocol extends SoapProtocol {
         eFault.addUniqueElement(FAULTCODE).setText(code.getQualifiedName());
         eFault.addUniqueElement(FAULTSTRING).setText(reason);
         Element eDetail = eFault.addUniqueElement(DETAIL);
-        Element error = eDetail.addUniqueElement(LiquidNamespace.E_ERROR);
+        Element error = eDetail.addUniqueElement(ZimbraNamespace.E_ERROR);
         // FIXME: should really be a qualified "attribute"
-        error.addUniqueElement(LiquidNamespace.E_CODE).setText(e.getCode());
+        error.addUniqueElement(ZimbraNamespace.E_CODE).setText(e.getCode());
         return eFault;
     }
 

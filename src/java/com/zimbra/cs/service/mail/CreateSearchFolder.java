@@ -9,7 +9,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.ZimbraContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
 
 /**
@@ -18,7 +18,7 @@ import com.zimbra.soap.WriteOpDocumentHandler;
 public class CreateSearchFolder extends WriteOpDocumentHandler  {
 
 	public Element handle(Element request, Map context) throws ServiceException {
-		LiquidContext lc = getLiquidContext(context);
+		ZimbraContext lc = getZimbraContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
 
         Element t = request.getElement(MailService.E_SEARCH);

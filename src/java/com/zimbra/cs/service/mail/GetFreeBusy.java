@@ -9,7 +9,7 @@ import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.stats.StopWatch;
-import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.ZimbraContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
 
 import java.util.*;
@@ -41,7 +41,7 @@ public class GetFreeBusy extends WriteOpDocumentHandler {
         
         long startTime = sWatch.start();
         try {
-            LiquidContext lc = getLiquidContext(context);
+            ZimbraContext lc = getZimbraContext(context);
 
             long rangeStart = request.getAttributeLong(MailService.A_APPT_START_TIME);
             long rangeEnd = request.getAttributeLong(MailService.A_APPT_END_TIME);

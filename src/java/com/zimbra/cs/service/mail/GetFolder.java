@@ -13,7 +13,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.DocumentHandler;
-import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.ZimbraContext;
 
 /**
  * @author dkarp
@@ -23,7 +23,7 @@ public class GetFolder extends DocumentHandler {
     private static final int DEFAULT_FOLDER_ID = Mailbox.ID_FOLDER_USER_ROOT;
 
 	public Element handle(Element request, Map context) throws ServiceException {
-		LiquidContext lc = getLiquidContext(context);
+		ZimbraContext lc = getZimbraContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
 
         int parentId = DEFAULT_FOLDER_ID;

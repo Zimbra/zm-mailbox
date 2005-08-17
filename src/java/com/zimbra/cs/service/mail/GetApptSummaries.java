@@ -19,7 +19,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
 import com.zimbra.cs.mailbox.calendar.ParsedDuration;
 import com.zimbra.cs.stats.StopWatch;
-import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.ZimbraContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
 
 
@@ -39,7 +39,7 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
 
         long startTime = sWatch.start();
         try {
-            LiquidContext lc = getLiquidContext(context);
+            ZimbraContext lc = getZimbraContext(context);
             Mailbox mbx = getRequestedMailbox(lc);
 
             long rangeStart = request.getAttributeLong(MailService.A_APPT_START_TIME);

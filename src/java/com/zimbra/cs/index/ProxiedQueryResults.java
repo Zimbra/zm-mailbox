@@ -62,7 +62,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
     /**
      * A search request in the current mailbox on a different server
      * 
-     * @param encodedAuthToken (call LiquidContext.getAuthToken().getEncoded() if necessary) 
+     * @param encodedAuthToken (call ZimbraContext.getAuthToken().getEncoded() if necessary) 
      * @param server hostname of server
      * @param params
      */
@@ -77,7 +77,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
     /**
      * An admin-only request to search ALL mailboxes on the remote server
      * 
-     * @param encodedAuthToken (call LiquidContext.getAuthToken().getEncoded() if necessary) 
+     * @param encodedAuthToken (call ZimbraContext.getAuthToken().getEncoded() if necessary) 
      * @param server
      * @param params
      * @param searchAllMailboxes -- must be set to SEARCH_ALL_MAILBOXES
@@ -97,7 +97,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
     /**
      * An admin-only request to search a set of mailboxes on the remote server
      * 
-     * @param encodedAuthToken (call LiquidContext.getAuthToken().getEncoded() if necessary) 
+     * @param encodedAuthToken (call ZimbraContext.getAuthToken().getEncoded() if necessary) 
      * @param server
      * @param params
      */

@@ -8,7 +8,7 @@ import junit.framework.TestResult;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.util.LiquidLog;
 import com.zimbra.qa.unittest.LiquidSuite;
-import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.ZimbraContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
 
 /**
@@ -22,7 +22,7 @@ public class RunUnitTests extends WriteOpDocumentHandler {
         TestResult result = LiquidSuite.runTestSuite(os);
         LiquidLog.test.debug("Test results:\n" + os);
         
-        LiquidContext lc = getLiquidContext(context);
+        ZimbraContext lc = getZimbraContext(context);
         Element response = lc.createElement(AdminService.RUN_UNIT_TESTS_RESPONSE);
         response.addAttribute(AdminService.A_NUM_EXECUTED, Integer.toString(result.runCount()));
         response.addAttribute(AdminService.A_NUM_FAILED,

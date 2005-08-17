@@ -9,7 +9,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.ZimbraContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
 
 /**
@@ -18,7 +18,7 @@ import com.zimbra.soap.WriteOpDocumentHandler;
 public class CreateTag extends WriteOpDocumentHandler  {
 
 	public Element handle(Element request, Map context) throws ServiceException {
-		LiquidContext lc = getLiquidContext(context);
+		ZimbraContext lc = getZimbraContext(context);
 		// FIXME: need to check that account and mailbox exist
         Mailbox mbox = getRequestedMailbox(lc);
 

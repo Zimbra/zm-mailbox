@@ -19,11 +19,11 @@ import com.zimbra.cs.util.LiquidLog;
 public abstract class DocumentHandler {
 	public abstract Element handle(Element document, Map context) throws ServiceException;
 	
-	public LiquidContext getLiquidContext(Map context) {
-		return (LiquidContext) context.get(SoapEngine.LIQUID_CONTEXT);
+	public ZimbraContext getZimbraContext(Map context) {
+		return (ZimbraContext) context.get(SoapEngine.LIQUID_CONTEXT);
 	}
 
-    public Account getRequestedAccount(LiquidContext lc) throws ServiceException {
+    public Account getRequestedAccount(ZimbraContext lc) throws ServiceException {
         String id = lc.getRequestedAccountId();
 
         Account acct = Provisioning.getInstance().getAccountById(id);
@@ -32,7 +32,7 @@ public abstract class DocumentHandler {
         return acct;
     }
 
-    public Mailbox getRequestedMailbox(LiquidContext lc) throws ServiceException {
+    public Mailbox getRequestedMailbox(ZimbraContext lc) throws ServiceException {
         String id = lc.getRequestedAccountId();
         Mailbox mbx = Mailbox.getMailboxByAccountId(id);
         if (mbx != null)

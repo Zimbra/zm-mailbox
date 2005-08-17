@@ -9,7 +9,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.DocumentHandler;
-import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.ZimbraContext;
 
 /**
  * @author schemers
@@ -17,7 +17,7 @@ import com.zimbra.soap.LiquidContext;
 public class ExportContacts extends DocumentHandler  {
 
     public Element handle(Element request, Map context) throws ServiceException {
-        LiquidContext lc = getLiquidContext(context);
+        ZimbraContext lc = getZimbraContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
 
         String ct = request.getAttribute(MailService.A_CONTENT_TYPE);

@@ -10,7 +10,7 @@ import java.util.Map;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.ZimbraContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
 
 /**
@@ -19,7 +19,7 @@ import com.zimbra.soap.WriteOpDocumentHandler;
 public class ModifyPrefs extends WriteOpDocumentHandler {
 
 	public Element handle(Element request, Map context) throws ServiceException {
-		LiquidContext lc = getLiquidContext(context);
+		ZimbraContext lc = getZimbraContext(context);
         Account acct = getRequestedAccount(lc);
 
         HashMap prefs = new HashMap();

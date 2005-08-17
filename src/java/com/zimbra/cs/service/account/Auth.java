@@ -16,7 +16,7 @@ import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.util.LiquidLog;
 import com.zimbra.soap.DocumentHandler;
-import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.ZimbraContext;
 import com.zimbra.soap.SoapEngine;
 
 /**
@@ -28,7 +28,7 @@ public class Auth extends DocumentHandler  {
 	private static final long DEFAULT_AUTH_LIFETIME = 60*60*12;
 	
 	public Element handle(Element request, Map context) throws ServiceException {
-        LiquidContext lc = getLiquidContext(context);
+        ZimbraContext lc = getZimbraContext(context);
         context.put(SoapEngine.IS_AUTH_COMMAND, "1");
 
 		String name = request.getAttribute(AccountService.E_ACCOUNT);
@@ -70,7 +70,7 @@ public class Auth extends DocumentHandler  {
         if (acct.isCorrectHost()) {
             if (context.get(SoapEngine.DONT_CREATE_SESSION) == null) {
                 Session session = SessionCache.getInstance().getNewSession(acct.getId() + "", SessionCache.SESSION_SOAP);
-                response.addAttribute(LiquidContext.E_SESSION_ID, session.getSessionId().toString(), Element.DISP_CONTENT);
+                response.addAttribute(ZimbraContext.E_SESSION_ID, session.getSessionId().toString(), Element.DISP_CONTENT);
             }
         } else
             response.addAttribute(AccountService.E_REFERRAL, acct.getAttr(Provisioning.A_liquidMailHost), Element.DISP_CONTENT);

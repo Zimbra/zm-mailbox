@@ -16,7 +16,7 @@ import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ParsedItemID;
 import com.zimbra.cs.stats.StopWatch;
-import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.ZimbraContext;
 
 public class CancelAppointmentException extends CancelAppointment {
     private static Log sLog = LogFactory.getLog(CancelAppointment.class);
@@ -25,7 +25,7 @@ public class CancelAppointmentException extends CancelAppointment {
     public Element handle(Element request, Map context) throws ServiceException {
         long startTime = sWatch.start();
         try {
-            LiquidContext lc = getLiquidContext(context);
+            ZimbraContext lc = getZimbraContext(context);
             Account acct = getRequestedAccount(lc);
             Mailbox mbox = getRequestedMailbox(lc);
             OperationContext octxt = lc.getOperationContext();

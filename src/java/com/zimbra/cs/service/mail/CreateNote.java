@@ -10,7 +10,7 @@ import com.zimbra.cs.mailbox.Note;
 import com.zimbra.cs.mailbox.Note.Rectangle;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.ZimbraContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
 
 /**
@@ -19,7 +19,7 @@ import com.zimbra.soap.WriteOpDocumentHandler;
 public class CreateNote extends WriteOpDocumentHandler {
 
 	public Element handle(Element request, Map context) throws ServiceException {
-		LiquidContext lc = getLiquidContext(context);
+		ZimbraContext lc = getZimbraContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
 
         Element t = request.getElement(MailService.E_NOTE);

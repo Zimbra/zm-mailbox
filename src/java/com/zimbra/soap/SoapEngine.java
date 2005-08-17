@@ -82,10 +82,10 @@ public class SoapEngine {
 
         //if (mLog.isDebugEnabled()) mLog.debug("dispatch: soapProto = "+soapProto.getVersion());
 
-        LiquidContext liquidContext = null;
-        Element ectxt = soapProto.getHeader(envelope, LiquidContext.CONTEXT);
+        ZimbraContext liquidContext = null;
+        Element ectxt = soapProto.getHeader(envelope, ZimbraContext.CONTEXT);
         try {
-            liquidContext = new LiquidContext(ectxt, context, soapProto);
+            liquidContext = new ZimbraContext(ectxt, context, soapProto);
         } catch (ServiceException e) {
             return soapProto.soapEnvelope(soapProto.soapFault(e));
         }
@@ -120,11 +120,11 @@ public class SoapEngine {
         
             Element responseBody = null;
             if (!liquidContext.isProxyRequest()) {
-                if (doc.getQName().equals(LiquidNamespace.E_BATCH_REQUEST)) {
+                if (doc.getQName().equals(ZimbraNamespace.E_BATCH_REQUEST)) {
                     
-                    boolean contOnError = doc.getAttribute(LiquidNamespace.A_ONERROR,
-                                LiquidNamespace.DEF_ONERROR).equals("continue");
-            	        responseBody = liquidContext.createElement(LiquidNamespace.E_BATCH_RESPONSE);
+                    boolean contOnError = doc.getAttribute(ZimbraNamespace.A_ONERROR,
+                                ZimbraNamespace.DEF_ONERROR).equals("continue");
+            	        responseBody = liquidContext.createElement(ZimbraNamespace.E_BATCH_RESPONSE);
             	        for (Iterator it = doc.elementIterator(); it.hasNext(); ) {
             	            Element req = (Element) it.next();
             	            if (mLog.isDebugEnabled())
@@ -200,7 +200,7 @@ public class SoapEngine {
      * @return
      */
     private Element dispatchRequest(SoapProtocol soapProto, String path,
-                                    Element doc, Map context, LiquidContext liquidContext) 
+                                    Element doc, Map context, ZimbraContext liquidContext) 
     {
         if (doc == null)
             return soapProto.soapFault(ServiceException.INVALID_REQUEST("no document specified", null));

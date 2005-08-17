@@ -13,7 +13,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.GetFolder;
 import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.ZimbraContext;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -146,14 +146,14 @@ public class SoapSession extends Session {
         }
     }
 
-    public Element putNotifications(LiquidContext lc, Element ctxt) {
+    public Element putNotifications(ZimbraContext lc, Element ctxt) {
         synchronized (this) {
             if (ctxt == null)
-                ctxt = lc.createElement(LiquidContext.CONTEXT);
+                ctxt = lc.createElement(ZimbraContext.CONTEXT);
 
             try {
                 Mailbox mbox = Mailbox.getMailboxByAccountId(lc.getRequestedAccountId());
-                ctxt.addUniqueElement(LiquidContext.E_CHANGE).addAttribute(LiquidContext.A_CHANGE_ID, mbox.getLastChangeID());
+                ctxt.addUniqueElement(ZimbraContext.E_CHANGE).addAttribute(ZimbraContext.A_CHANGE_ID, mbox.getLastChangeID());
             } catch (ServiceException e) {
                 mLog.warn("error putting change checkpoint to SOAP header response", e);
             }

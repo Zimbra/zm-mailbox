@@ -17,7 +17,7 @@ import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ParsedItemID;
 import com.zimbra.cs.stats.StopWatch;
-import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.ZimbraContext;
 
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.parameter.PartStat;
@@ -37,7 +37,7 @@ public class SendInviteReply extends SendMsg {
         long startTime = sWatch.start();
 
         try {
-            LiquidContext lc = getLiquidContext(context);
+            ZimbraContext lc = getZimbraContext(context);
             Mailbox mbox = getRequestedMailbox(lc);
             Account acct = this.getRequestedAccount(lc);
             OperationContext octxt = lc.getOperationContext();

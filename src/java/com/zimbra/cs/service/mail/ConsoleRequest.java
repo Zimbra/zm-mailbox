@@ -10,7 +10,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.ZimbraContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
 
 
@@ -42,7 +42,7 @@ public class ConsoleRequest extends WriteOpDocumentHandler
     public Element handle(Element request, Map context)
             throws ServiceException 
     {
-        LiquidContext lc = getLiquidContext(context);
+        ZimbraContext lc = getZimbraContext(context);
         Element response = lc.createElement(MailService.CONSOLE_RESPONSE);
         
         String name = request.getAttribute(MailService.A_NAME);
@@ -66,7 +66,7 @@ public class ConsoleRequest extends WriteOpDocumentHandler
         return response;
     }
     
-    private String reindex(LiquidContext lc, Element response, 
+    private String reindex(ZimbraContext lc, Element response, 
             String command, Map /*Param*/ params) throws ServiceException 
     {
         Param pMbId = (Param)(params.get("id"));
@@ -88,7 +88,7 @@ public class ConsoleRequest extends WriteOpDocumentHandler
         return "OK";
     }
     
-    private String verifyIndex(LiquidContext lc, Element response, 
+    private String verifyIndex(ZimbraContext lc, Element response, 
             String command, Map /*Param*/ params) throws ServiceException 
     {
         Param pMbId = (Param)(params.get("id"));
@@ -111,7 +111,7 @@ public class ConsoleRequest extends WriteOpDocumentHandler
     }
     
     
-    public String executeCommand(LiquidContext lc, Element response, 
+    public String executeCommand(ZimbraContext lc, Element response, 
             String command, Map /*Param*/ params) throws ServiceException
     {
         try {
