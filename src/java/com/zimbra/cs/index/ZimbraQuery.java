@@ -1491,7 +1491,7 @@ public final class ZimbraQuery {
     }
 	
 	public String toString() {
-        String ret = "LQ:\n";
+        String ret = "ZQ:\n";
         for (BaseQuery q = getHead(); q != null; q = q.getNext()) {
             ret+=q.toString(1)+"\n";
         }

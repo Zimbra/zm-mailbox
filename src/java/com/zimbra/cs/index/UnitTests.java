@@ -445,7 +445,7 @@ public class UnitTests extends TestCase {
 //            System.out.println("\nRun Query: "+qstr);
 //            long startTime = System.currentTimeMillis();
             
-            ZimbraQuery lq = new ZimbraQuery(qstr, Mailbox.getMailboxById(mailboxId));
+            ZimbraQuery zq = new ZimbraQuery(qstr, Mailbox.getMailboxById(mailboxId));
             
             int groupBy = MailboxIndex.SEARCH_RETURN_MESSAGES;
             if (conv) {
@@ -465,7 +465,7 @@ public class UnitTests extends TestCase {
                 break;
             }
             
-            ZimbraQueryResults res = searcher.search(lq, types, MailboxIndex.SEARCH_ORDER_DATE_DESC, false, false);
+            ZimbraQueryResults res = searcher.search(zq, types, MailboxIndex.SEARCH_ORDER_DATE_DESC, false, false);
             try {
                 
 //                long endTime = System.currentTimeMillis();

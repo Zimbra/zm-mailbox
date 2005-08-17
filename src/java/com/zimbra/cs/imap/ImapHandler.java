@@ -1499,15 +1499,15 @@ public class ImapHandler extends ProtocolHandler {
                     search = '(' + i4folder.getQuery() + ") (" + search + ')';
                 ZimbraLog.imap.info("[ search is: " + search + " ]");
 
-                ZimbraQueryResults lqr = mMailbox.search(search, MESSAGE_TYPES, MailboxIndex.SEARCH_ORDER_DATE_ASC);
+                ZimbraQueryResults zqr = mMailbox.search(search, MESSAGE_TYPES, MailboxIndex.SEARCH_ORDER_DATE_ASC);
                 try {
-                    for (ZimbraHit hit = lqr.getFirstHit(); hit != null; hit = lqr.getNext()) {
+                    for (ZimbraHit hit = zqr.getFirstHit(); hit != null; hit = zqr.getNext()) {
                         ImapMessage i4msg = mSession.getFolder().getById(hit.getItemId());
                         if (i4msg != null)
                         	hits.add(new Integer(byUID ? i4msg.uid : i4msg.seq));
                     }
                 } finally {
-                    lqr.doneWithSearchResults();
+                    zqr.doneWithSearchResults();
                 }
             }
 		} catch (ParseException e) {

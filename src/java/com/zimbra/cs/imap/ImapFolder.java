@@ -70,11 +70,11 @@ class ImapFolder {
     private List loadVirtualFolder(SearchFolder search, Mailbox mailbox) throws ServiceException {
         List msgs = new ArrayList();
         try {
-            ZimbraQueryResults lqr = mailbox.search(mQuery, ImapHandler.MESSAGE_TYPES, MailboxIndex.SEARCH_ORDER_DATE_ASC);
+            ZimbraQueryResults zqr = mailbox.search(mQuery, ImapHandler.MESSAGE_TYPES, MailboxIndex.SEARCH_ORDER_DATE_ASC);
             int i = 0, hitIds[] = new int[100];
             Arrays.fill(hitIds, Mailbox.ID_AUTO_INCREMENT);
             try {
-                for (ZimbraHit hit = lqr.getFirstHit(); hit != null || i > 0; ) {
+                for (ZimbraHit hit = zqr.getFirstHit(); hit != null || i > 0; ) {
                     if (hit == null || i == 100) {
                         msgs.addAll(Arrays.asList(mailbox.getItemById(hitIds, MailItem.TYPE_MESSAGE)).subList(0, i));
                         Arrays.fill(hitIds, Mailbox.ID_AUTO_INCREMENT);
@@ -82,11 +82,11 @@ class ImapFolder {
                     }
                     if (hit != null) {
                         hitIds[i++] = hit.getItemId();
-                        hit = lqr.getNext();
+                        hit = zqr.getNext();
                     }
                 }
             } finally {
-                lqr.doneWithSearchResults();
+                zqr.doneWithSearchResults();
             }
         } catch (ServiceException e) {
             throw e;
