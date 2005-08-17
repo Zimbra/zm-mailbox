@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!--
-  Copyright 2004 Liquid Systems, Inc
+  Copyright 2004 Zimbra Systems, Inc
 -->
 
 <!DOCTYPE web-app
@@ -9,7 +9,7 @@
 
 <web-app>
 
-  <display-name>Liquid Service</display-name>
+  <display-name>Zimbra Service</display-name>
   <description>
     SOAP Service
   </description>
