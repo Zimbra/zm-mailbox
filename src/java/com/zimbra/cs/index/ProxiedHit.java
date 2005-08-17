@@ -16,10 +16,10 @@ import com.zimbra.cs.mailbox.MailItem;
 /**
  * @author tim
  *
- * A LiquidHit which is being proxied from another server: ie we did a SOAP request
+ * A ZimbraHit which is being proxied from another server: ie we did a SOAP request
  * somewhere else and are now wrapping results we got from request.
  */
-public class ProxiedHit extends LiquidHit 
+public class ProxiedHit extends ZimbraHit 
 {
     protected long mProxiedDate = -1;
     protected int mProxiedConvId = -1;

@@ -16,7 +16,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.ContactHit;
 import com.zimbra.cs.index.ConversationHit;
-import com.zimbra.cs.index.LiquidHit;
+import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.MessageHit;
@@ -190,7 +190,7 @@ public class Search extends DocumentHandler  {
         if (null == results) {
             mLog.info("Got NULL search results object.  This is a bug, report to Tim");
         } else {
-            for (LiquidHit hit = results.skipToHit(offset); hit != null; hit = results.getNext()) {
+            for (ZimbraHit hit = results.skipToHit(offset); hit != null; hit = results.getNext()) {
                 totalNumHits++;
                 boolean inline = totalNumHits == 1 && params.getFetchFirst();
                 Element e = null;

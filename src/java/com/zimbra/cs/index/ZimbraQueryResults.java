@@ -9,7 +9,7 @@ import com.zimbra.cs.service.ServiceException;
 /**
  * @author tim
  *
- * Interface for iterating through LiquidHits.  This class is the thing
+ * Interface for iterating through ZimbraHits.  This class is the thing
  * that is returned when you do a Search.
  * 
  */
@@ -17,13 +17,13 @@ public interface ZimbraQueryResults {
     
     void resetIterator() throws ServiceException;
     
-    LiquidHit getNext() throws ServiceException;
+    ZimbraHit getNext() throws ServiceException;
     
-    LiquidHit peekNext() throws ServiceException;
+    ZimbraHit peekNext() throws ServiceException;
     
-	LiquidHit getFirstHit() throws ServiceException;
+	ZimbraHit getFirstHit() throws ServiceException;
 	
-    LiquidHit skipToHit(int hitNo) throws ServiceException;
+    ZimbraHit skipToHit(int hitNo) throws ServiceException;
     
     boolean hasNext() throws ServiceException;
     

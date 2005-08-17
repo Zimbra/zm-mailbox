@@ -15,7 +15,7 @@ import org.apache.commons.logging.LogFactory;
 /**
  * @author tim
  * 
- * Take LiquidHits which are already sorted by sort-order and additionally
+ * Take ZimbraHits which are already sorted by sort-order and additionally
  * sort them by mail-item-id
  *
  */
@@ -37,7 +37,7 @@ public class HitIdGrouper extends BufferingResultsGrouper {
             return false;
         }
         
-        LiquidHit curGroupHit = mHits.getNext();
+        ZimbraHit curGroupHit = mHits.getNext();
         mBufferedHit.add(curGroupHit);
 
         // buffer all the hits with the same sort field
@@ -50,7 +50,7 @@ public class HitIdGrouper extends BufferingResultsGrouper {
         }
         
         // sort them by mail-item-id
-        Collections.sort(mBufferedHit, LiquidHit.getSortAndIdComparator(mSortOrder));
+        Collections.sort(mBufferedHit, ZimbraHit.getSortAndIdComparator(mSortOrder));
         
         // we're done
         return true;

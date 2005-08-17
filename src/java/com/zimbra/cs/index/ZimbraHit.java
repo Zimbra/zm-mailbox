@@ -10,7 +10,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.ServiceException;
 
-public abstract class LiquidHit 
+public abstract class ZimbraHit 
 {
     
     Mailbox mMailbox;
@@ -21,7 +21,7 @@ public abstract class LiquidHit
     
     public String getMailboxIdStr() throws ServiceException { return Integer.toString(mMailbox.getId()); } 
     
-    public LiquidHit(ZimbraQueryResultsImpl results, Mailbox mbx,  float score) {
+    public ZimbraHit(ZimbraQueryResultsImpl results, Mailbox mbx,  float score) {
         mMailbox = mbx;
         mResults = results;
         mScore = score;
@@ -126,17 +126,17 @@ public abstract class LiquidHit
         }
     }
     
-    private static class LiquidHitSortAndIdComparator implements Comparator 
+    private static class ZimbraHitSortAndIdComparator implements Comparator 
     {
         int mSortOrder;
         
-        LiquidHitSortAndIdComparator(int sortOrder){
+        ZimbraHitSortAndIdComparator(int sortOrder){
             mSortOrder = sortOrder;
         }
         
         public int compare(Object o1, Object o2) {
-            LiquidHit lhs = (LiquidHit)o1;
-            LiquidHit rhs = (LiquidHit)o2;
+            ZimbraHit lhs = (ZimbraHit)o1;
+            ZimbraHit rhs = (ZimbraHit)o2;
             
             try {
                 int retVal = lhs.compareBySortField(mSortOrder, rhs);
@@ -170,7 +170,7 @@ public abstract class LiquidHit
      * @param sortOrder
      */
     static public Comparator getSortAndIdComparator(int sortOrder) {
-        return new LiquidHitSortAndIdComparator(sortOrder); 
+        return new ZimbraHitSortAndIdComparator(sortOrder); 
     }
     
     /**
@@ -181,7 +181,7 @@ public abstract class LiquidHit
      * @return <0 if "this" is BEFORE other, 0 if EQUAL, <0 if this AFTER other
      * @throws ServiceException
      */
-    final int compareBySortField(int sortOrder, LiquidHit other) throws ServiceException {
+    final int compareBySortField(int sortOrder, ZimbraHit other) throws ServiceException {
         long retVal = 0;
         final boolean dumpComp = false;
         

@@ -31,12 +31,12 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
     // These come from the ZimbraQueryResults interface:
     //
     // void resetIterator() throws ServiceException;
-    // LiquidHit getNext() throws ServiceException;
-    // LiquidHit peekNext() throws ServiceException;
+    // ZimbraHit getNext() throws ServiceException;
+    // ZimbraHit peekNext() throws ServiceException;
     //
     
     public abstract void doneWithSearchResults() throws ServiceException;
-    public abstract LiquidHit skipToHit(int hitNo) throws ServiceException;
+    public abstract ZimbraHit skipToHit(int hitNo) throws ServiceException;
     
     public boolean hasNext() throws ServiceException {
         return (peekNext() != null);
@@ -83,7 +83,7 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
       mNoteHits = new LinkedHashMap();
   };
   
-  public LiquidHit getFirstHit() throws ServiceException {
+  public ZimbraHit getFirstHit() throws ServiceException {
       resetIterator();
       return getNext();
   }

@@ -258,7 +258,7 @@ public class IndexEditor {
 	            int numMessages = 0;
 	            if (false){
                     res.resetIterator();
-	                LiquidHit hit = res.getNext();
+	                ZimbraHit hit = res.getNext();
 	                while (hit != null) {
 	                    numMessages++;
 	                    hit=res.getNext();
@@ -273,7 +273,7 @@ public class IndexEditor {
 	            int totalShown = 0;
 	            
                 res.resetIterator();
-	            LiquidHit hit = res.getNext();
+	            ZimbraHit hit = res.getNext();
 	            while (hit != null) {
 	                for (int i = 0; (hit != null) && (i < HITS_PER_PAGE); i++) {
 	                    displayHit(hit, groupBy);
@@ -295,7 +295,7 @@ public class IndexEditor {
 	    }      
 	}
 	
-	public void displayHit(LiquidHit hit, int groupBy) throws IOException, ParseException, ServiceException 
+	public void displayHit(ZimbraHit hit, int groupBy) throws IOException, ParseException, ServiceException 
 	{
         outputStream.print("HIT: ");
 	    if (groupBy == MailboxIndex.SEARCH_RETURN_CONVERSATIONS) {

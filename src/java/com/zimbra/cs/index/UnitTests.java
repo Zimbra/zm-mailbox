@@ -234,7 +234,7 @@ public class UnitTests extends TestCase {
             ResultValidator val = new ResultValidator() 
             {
                 int cmpId = compFolder.getId();
-                public void validate(LiquidHit hit) throws ServiceException 
+                public void validate(ZimbraHit hit) throws ServiceException 
                 {
                     MessageHit mh = (MessageHit)hit;
                     //                Date date = new Date(mh.getDateHeader());
@@ -254,7 +254,7 @@ public class UnitTests extends TestCase {
             
             ResultValidator val = new ResultValidator() 
             {
-                public void validate(LiquidHit hit) throws ServiceException 
+                public void validate(ZimbraHit hit) throws ServiceException 
                 {
                     MessageHit mh = (MessageHit)hit;
                     Date date = new Date(mh.getDateHeader());
@@ -313,7 +313,7 @@ public class UnitTests extends TestCase {
         
         ResultValidator val = new ResultValidator() 
         {
-            public void validate(LiquidHit hit) throws ServiceException 
+            public void validate(ZimbraHit hit) throws ServiceException 
             {
                 MessageHit mh = (MessageHit)hit;
                 //                Date date = new Date(mh.getDateHeader());
@@ -336,7 +336,7 @@ public class UnitTests extends TestCase {
     }
 
     public static abstract class ResultValidator {
-        public abstract void validate(LiquidHit hit) throws ServiceException;
+        public abstract void validate(ZimbraHit hit) throws ServiceException;
     }
     
     public static final QueryResult[] NO_EXPECTED_CHECK = {}; 
@@ -474,7 +474,7 @@ public class UnitTests extends TestCase {
                 if (true) {
                 int numMessages = 0;
                 {
-                    LiquidHit hit = res.getFirstHit();
+                    ZimbraHit hit = res.getFirstHit();
                     while (hit != null) {
                         numMessages++;
                         hit=res.getNext();
@@ -492,7 +492,7 @@ public class UnitTests extends TestCase {
                 
                 int totalShown = 0;
                 
-                LiquidHit hit = res.skipToHit(0);
+                ZimbraHit hit = res.skipToHit(0);
                 while (hit != null) {
                     for (int i = 0; (hit != null) && (i < HITS_PER_PAGE); i++) {
                         if (conv) {

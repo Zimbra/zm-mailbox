@@ -12,7 +12,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.index.LiquidHit;
+import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.MessageHit;
@@ -67,7 +67,7 @@ public class RssServlet extends LiquidBasicAuthServlet {
             SimpleDateFormat sdf = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
             MailDateFormat mdf = new MailDateFormat();                
             while (results.hasNext()) {
-                LiquidHit hit = results.getNext();
+                ZimbraHit hit = results.getNext();
                 if (hit instanceof MessageHit) {
                     MessageHit mh = (MessageHit) hit;
                     Message m = mh.getMessage();

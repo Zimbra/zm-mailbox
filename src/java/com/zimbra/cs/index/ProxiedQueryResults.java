@@ -118,7 +118,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
         mTransport = null;
     }
 
-    public LiquidHit skipToHit(int hitNo) throws ServiceException {
+    public ZimbraHit skipToHit(int hitNo) throws ServiceException {
         mIterOffset = hitNo;
         
         if (mIterOffset < mBufferStartOffset || mIterOffset > mBufferEndOffset) {
@@ -145,22 +145,22 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
         mAtEndOfList = false;
     }
 
-    public LiquidHit getNext() throws ServiceException {
-        LiquidHit retVal = peekNext();
+    public ZimbraHit getNext() throws ServiceException {
+        ZimbraHit retVal = peekNext();
         if (retVal != null) {
             mIterOffset++;
         }
         return retVal;
     }
 
-    public LiquidHit peekNext() throws ServiceException 
+    public ZimbraHit peekNext() throws ServiceException 
     {
         if (mIterOffset >= mBufferEndOffset) {
             if (!bufferNextHits()) {
                 return null;
             }
         }
-        return (LiquidHit)mHitBuffer.get(mIterOffset - mBufferStartOffset);
+        return (ZimbraHit)mHitBuffer.get(mIterOffset - mBufferStartOffset);
     }
     
     String getServer() { return mServer; }

@@ -22,18 +22,18 @@ class EmptyQueryResults extends ZimbraQueryResultsImpl {
     public void resetIterator()  {
     }
 
-    public LiquidHit getNext() {
+    public ZimbraHit getNext() {
         return null;
     }
 
-    public LiquidHit peekNext() {
+    public ZimbraHit peekNext() {
         return null;
     }
     
     public void doneWithSearchResults() {
     }
 
-    public LiquidHit skipToHit(int hitNo) {
+    public ZimbraHit skipToHit(int hitNo) {
         return null;
     }
 }

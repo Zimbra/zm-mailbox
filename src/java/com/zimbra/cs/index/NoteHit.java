@@ -13,7 +13,7 @@ import com.zimbra.cs.service.ServiceException;
 /**
  * @author tim
  */
-public final class NoteHit extends LiquidHit {
+public final class NoteHit extends ZimbraHit {
     
     public NoteHit(ZimbraQueryResultsImpl results, Mailbox mbx, Document d, float score) {
         super(results, mbx, score);
@@ -25,7 +25,7 @@ public final class NoteHit extends LiquidHit {
     private Note mNote = null;
     
     /* (non-Javadoc)
-     * @see com.zimbra.cs.index.LiquidHit#getDate()
+     * @see com.zimbra.cs.index.ZimbraHit#getDate()
      */
     public long getDate() throws ServiceException {
         if (mCachedDate == -1) {
@@ -51,7 +51,7 @@ public final class NoteHit extends LiquidHit {
     
     
     /* (non-Javadoc)
-     * @see com.zimbra.cs.index.LiquidHit#inTrashOrSpam()
+     * @see com.zimbra.cs.index.ZimbraHit#inTrashOrSpam()
      */
     boolean inMailbox() throws ServiceException {
         return getNote().inMailbox();
@@ -80,7 +80,7 @@ public final class NoteHit extends LiquidHit {
     }
 
     /* (non-Javadoc)
-     * @see com.zimbra.cs.index.LiquidHit#getConversationId()
+     * @see com.zimbra.cs.index.ZimbraHit#getConversationId()
      */
     public int getConversationId() throws ServiceException {
         // TODO Auto-generated method stub
@@ -88,7 +88,7 @@ public final class NoteHit extends LiquidHit {
     }
 
     /* (non-Javadoc)
-     * @see com.zimbra.cs.index.LiquidHit#getMessageId()
+     * @see com.zimbra.cs.index.ZimbraHit#getMessageId()
      */
     public int getItemId() throws ServiceException {
         String mbid = mDocument.get(LuceneFields.L_MAILBOX_BLOB_ID);
@@ -125,7 +125,7 @@ public final class NoteHit extends LiquidHit {
 
 
     /* (non-Javadoc)
-     * @see com.zimbra.cs.index.LiquidHit#getHitType()
+     * @see com.zimbra.cs.index.ZimbraHit#getHitType()
      */
     public int getHitType() {
         // TODO Auto-generated method stub

@@ -106,14 +106,14 @@ class LuceneQueryOperation extends QueryOperation
         }
     }
     
-    public LiquidHit getNext() throws ServiceException {
+    public ZimbraHit getNext() throws ServiceException {
         if (mDBOp != null) {
             return mDBOp.getNext();
         }
         return null;
     }
     
-    public LiquidHit peekNext() throws ServiceException
+    public ZimbraHit peekNext() throws ServiceException
     {
         if (mDBOp != null) {
             return mDBOp.peekNext();

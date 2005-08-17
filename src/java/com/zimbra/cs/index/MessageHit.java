@@ -28,7 +28,7 @@ import org.apache.commons.logging.LogFactory;
  * archive.mailbox.Message can be retrieved, but this should only be done if
  * write-access is necessary.
  */
-public class MessageHit extends LiquidHit {
+public class MessageHit extends ZimbraHit {
 
     private static Log mLog = LogFactory.getLog(MessageHit.class);
     
@@ -57,7 +57,7 @@ public class MessageHit extends LiquidHit {
     }
     
     /* (non-Javadoc)
-     * @see com.zimbra.cs.index.LiquidHit#inTrashOrSpam()
+     * @see com.zimbra.cs.index.ZimbraHit#inTrashOrSpam()
      */
     boolean inMailbox() throws ServiceException {
         return getMessage().inMailbox();

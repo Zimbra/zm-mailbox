@@ -74,11 +74,11 @@ public class NoTermQueryOperation extends QueryOperation {
     public void resetIterator() throws ServiceException {
         }
 
-    public LiquidHit getNext() throws ServiceException {
+    public ZimbraHit getNext() throws ServiceException {
         return null;
     }
 
-    public LiquidHit peekNext() throws ServiceException {
+    public ZimbraHit peekNext() throws ServiceException {
         return null;
     }
 

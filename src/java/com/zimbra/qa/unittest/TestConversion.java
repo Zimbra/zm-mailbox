@@ -8,7 +8,7 @@ import javax.mail.internet.MimeMultipart;
 import junit.framework.TestCase;
 
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.index.LiquidHit;
+import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.MailItem;
@@ -60,7 +60,7 @@ public class TestConversion extends TestCase {
         assertTrue("No results found for '" + query + "'", results.hasNext());
         
         // Make sure that attachments have been extracted out of winmail.dat
-        LiquidHit hit = results.getNext();
+        ZimbraHit hit = results.getNext();
         return mbox.getMessageById(hit.getItemId());
     }
     

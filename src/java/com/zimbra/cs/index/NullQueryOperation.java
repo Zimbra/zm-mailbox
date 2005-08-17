@@ -58,7 +58,7 @@ class NullQueryOperation extends QueryOperation {
     /* (non-Javadoc)
      * @see com.zimbra.cs.index.QueryOperation#getNext()
      */
-    public LiquidHit getNext() throws ServiceException {
+    public ZimbraHit getNext() throws ServiceException {
         return null;
     }
 
@@ -69,7 +69,7 @@ class NullQueryOperation extends QueryOperation {
 //        return false;
 //    }
     
-    public LiquidHit peekNext() throws ServiceException
+    public ZimbraHit peekNext() throws ServiceException
     {
         return null;
     }

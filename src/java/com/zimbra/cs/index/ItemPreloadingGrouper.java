@@ -34,18 +34,18 @@ public class ItemPreloadingGrouper extends BufferingResultsGrouper
             return false;
         }
         
-        ArrayList /* LiquidHit */ toLoad = new ArrayList();
+        ArrayList /* ZimbraHit */ toLoad = new ArrayList();
         
         // FIXME: only preloading for the first mailbox right now
         // ...if this were a cross-mailbox-search, we'd be more efficient
         // if we broke things up into a hash of one load-list-per-mailbox and
         // then did preloading there...but for now we won't worry about it
-        LiquidHit firstHit = mHits.peekNext();
+        ZimbraHit firstHit = mHits.peekNext();
         Mailbox mbx = firstHit.getMailbox();
         
         int numLoaded = 0;
         do {
-            LiquidHit nextHit = mHits.getNext();
+            ZimbraHit nextHit = mHits.getNext();
             mBufferedHit.add(nextHit);
 
             if (nextHit.getMailbox() == mbx) {
@@ -60,11 +60,11 @@ public class ItemPreloadingGrouper extends BufferingResultsGrouper
         return true;
     }
     
-    private void preload(Mailbox mbox, ArrayList /* LiquidHit */ hits) throws ServiceException {
+    private void preload(Mailbox mbox, ArrayList /* ZimbraHit */ hits) throws ServiceException {
         int unloadedIds[] = new int[hits.size()];
         int numToLoad = 0;
         for (int i = 0; i < hits.size(); i++) {
-            LiquidHit cur = (LiquidHit) hits.get(i);
+            ZimbraHit cur = (ZimbraHit) hits.get(i);
             if (!cur.itemIsLoaded()) {
                 numToLoad++;
                 unloadedIds[i] = cur.getItemId();
@@ -78,7 +78,7 @@ public class ItemPreloadingGrouper extends BufferingResultsGrouper
             MailItem[] items = mbox.getItemById(unloadedIds, MailItem.TYPE_UNKNOWN);
             for (int i = 0; i < hits.size(); i++)
                 if (items[i] != null)
-                    ((LiquidHit) hits.get(i)).setItem(items[i]);
+                    ((ZimbraHit) hits.get(i)).setItem(items[i]);
         }
     }
 }

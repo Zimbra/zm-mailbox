@@ -26,12 +26,12 @@ class UngroupedQueryResults extends ZimbraQueryResultsImpl
         mResults.resetIterator();
     }
     
-    public LiquidHit getNext() throws ServiceException
+    public ZimbraHit getNext() throws ServiceException
     {
         return mResults.getNext();
     }
     
-    public LiquidHit peekNext() throws ServiceException
+    public ZimbraHit peekNext() throws ServiceException
     {
         return mResults.peekNext();
     }
@@ -40,7 +40,7 @@ class UngroupedQueryResults extends ZimbraQueryResultsImpl
         mResults.doneWithSearchResults();
     }
 
-    public LiquidHit skipToHit(int hitNo) throws ServiceException {
+    public ZimbraHit skipToHit(int hitNo) throws ServiceException {
         return mResults.skipToHit(hitNo);
     }
 }

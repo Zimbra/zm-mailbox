@@ -53,11 +53,11 @@ class UnionQueryOperation extends QueryOperation
         }
     }
     
-    private LiquidHit mCachedNextHit = null;
+    private ZimbraHit mCachedNextHit = null;
     
-    public LiquidHit getNext() throws ServiceException {
+    public ZimbraHit getNext() throws ServiceException {
         atStart = false;
-        LiquidHit toRet = mCachedNextHit;
+        ZimbraHit toRet = mCachedNextHit;
         if (mCachedNextHit != null) { // this "if" is here so we don't keep calling internalGetNext when we've reached the end of the results...
             mCachedNextHit = null;
             internalGetNext();
@@ -66,7 +66,7 @@ class UnionQueryOperation extends QueryOperation
         return toRet;
     }
     
-    public LiquidHit peekNext() throws ServiceException
+    public ZimbraHit peekNext() throws ServiceException
     {
         return mCachedNextHit;
     }
@@ -78,7 +78,7 @@ class UnionQueryOperation extends QueryOperation
             
             // loop through QueryOperations and find the "best" hit
             int currentBestHitOffset = -1;
-            LiquidHit currentBestHit = null;
+            ZimbraHit currentBestHit = null;
             for (i = 0; i < mQueryOperations.size(); i++) {
                 QueryOperation op = (QueryOperation)(mQueryOperations.get(i));
                 if (op.hasNext()) {
@@ -86,7 +86,7 @@ class UnionQueryOperation extends QueryOperation
                         currentBestHitOffset = i;
                         currentBestHit = op.peekNext();
                     } else {
-                        LiquidHit opNext = op.peekNext();
+                        ZimbraHit opNext = op.peekNext();
                         int result = opNext.compareBySortField(getResultsSet().getSearchOrder(), currentBestHit);
                         if (result < 0) {
                             // "before"

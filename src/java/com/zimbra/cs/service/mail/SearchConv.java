@@ -8,7 +8,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.zimbra.cs.index.LiquidHit;
+import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.MessageHit;
@@ -116,12 +116,12 @@ public class SearchConv extends Search {
         if (iterLen > 0) {
 
             //
-            // Array of LiquidHit ptrs for matches, 1 entry for every message we might return from conv.
-            // NULL means no LiquidHit presumably b/c the message didn't match the search
+            // Array of ZimbraHit ptrs for matches, 1 entry for every message we might return from conv.
+            // NULL means no ZimbraHit presumably b/c the message didn't match the search
             //
             // ***Note that the match for msgs[i] is matched[i-offset]!!!!
             //
-            LiquidHit matched[] = new LiquidHit[iterLen];
+            ZimbraHit matched[] = new ZimbraHit[iterLen];
             for (int i = 0; i < matched.length; i++) {
                 matched[i] = null;
             }
@@ -130,7 +130,7 @@ public class SearchConv extends Search {
             // Foreach hit, see if the hit message is in msgs[] (list of msgs in this conv), and if so 
             //
             HitIter: 
-                for (LiquidHit curHit = results.getFirstHit(); curHit != null; curHit = results.getNext()) {
+                for (ZimbraHit curHit = results.getFirstHit(); curHit != null; curHit = results.getNext()) {
                     // we only bother checking the messages between offset and offset+iterLen, since only they
                     // are getting returned.
                     for (int i = offset; i < offset+iterLen; i++) {

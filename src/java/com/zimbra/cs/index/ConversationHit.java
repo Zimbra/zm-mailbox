@@ -25,7 +25,7 @@ import com.zimbra.cs.service.ServiceException;
      * will do the most efficient possible lookup and caching for read access to
      * the data.
      */
-    public final class ConversationHit extends LiquidHit {
+    public final class ConversationHit extends ZimbraHit {
         
         private Conversation mConversation = null;
 
@@ -41,7 +41,7 @@ import com.zimbra.cs.service.ServiceException;
         }
         
         /* (non-Javadoc)
-         * @see com.zimbra.cs.index.LiquidHit#inTrashOrSpam()
+         * @see com.zimbra.cs.index.ZimbraHit#inTrashOrSpam()
          */
         boolean inMailbox() throws ServiceException {
             // if we have a ConvHit, then we must have at least one matching message hit

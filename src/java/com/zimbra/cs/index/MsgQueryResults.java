@@ -18,7 +18,7 @@ class MsgQueryResults extends ZimbraQueryResultsImpl
         mResults = topLevelQueryOperation;
     }
 
-    LiquidHit mNextHit = null;
+    ZimbraHit mNextHit = null;
     
     HashMap mSeenMsgs = new HashMap();
     
@@ -30,9 +30,9 @@ class MsgQueryResults extends ZimbraQueryResultsImpl
      * @return
      * @throws ServiceException
      */
-    private LiquidHit internalGetNextHit() throws ServiceException {
+    private ZimbraHit internalGetNextHit() throws ServiceException {
         while (mResults.hasNext()) {
-            LiquidHit opNext = mResults.getNext();
+            ZimbraHit opNext = mResults.getNext();
             
             MessageHit curHit = null;
             Integer msgId = new Integer(opNext.getItemId());
@@ -55,7 +55,7 @@ class MsgQueryResults extends ZimbraQueryResultsImpl
                 
                 /* Iterate fwd a bit to see if we can pick up more message parts... */
                 while (mResults.hasNext()) {
-                    LiquidHit nextHit = mResults.peekNext();
+                    ZimbraHit nextHit = mResults.peekNext();
                     
                     int newMsgId = nextHit.getItemId();
                     
@@ -87,27 +87,27 @@ class MsgQueryResults extends ZimbraQueryResultsImpl
         mResults.resetIterator();
     }
     
-    public LiquidHit getNext() throws ServiceException {
+    public ZimbraHit getNext() throws ServiceException {
         bufferNextHit();
-        LiquidHit toRet = mNextHit;
+        ZimbraHit toRet = mNextHit;
         assert(mNextHit == null || mNextHit instanceof MessageHit);
         mNextHit = null;
         return toRet;
     }
     
-    public LiquidHit peekNext() throws ServiceException {
+    public ZimbraHit peekNext() throws ServiceException {
         bufferNextHit();
         assert(mNextHit == null || mNextHit instanceof MessageHit);
         return mNextHit;
     }
     
-//    public LiquidHit getFirstHit() throws ServiceException {
+//    public ZimbraHit getFirstHit() throws ServiceException {
 //        mSeenMsgs.clear();
 //        mResults.resetIterator();
 //        return internalGetNextHit();
 //    }
 //
-//    public LiquidHit getNextHit() throws ServiceException {
+//    public ZimbraHit getNextHit() throws ServiceException {
 //        return internalGetNextHit();
 //    }
 
@@ -115,7 +115,7 @@ class MsgQueryResults extends ZimbraQueryResultsImpl
         mResults.doneWithSearchResults();
     }
 
-    public LiquidHit skipToHit(int hitNo) throws ServiceException {
+    public ZimbraHit skipToHit(int hitNo) throws ServiceException {
         if (hitNo > 0) {
             mResults.skipToHit(hitNo-1);
         } else {

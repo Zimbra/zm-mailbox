@@ -12,7 +12,7 @@ import com.zimbra.cs.service.ServiceException;
 public abstract class BufferingResultsGrouper implements ZimbraQueryResults {
 
     protected ZimbraQueryResults mHits;
-    protected List /* LiquidHit */mBufferedHit = new LinkedList();
+    protected List /* ZimbraHit */mBufferedHit = new LinkedList();
     protected boolean atStart = true;
     
     
@@ -43,20 +43,20 @@ public abstract class BufferingResultsGrouper implements ZimbraQueryResults {
         return bufferHits();
     }
     
-    public LiquidHit getFirstHit() throws ServiceException {
+    public ZimbraHit getFirstHit() throws ServiceException {
         resetIterator();
         return getNext();
     }
     
-    public LiquidHit peekNext() throws ServiceException {
+    public ZimbraHit peekNext() throws ServiceException {
         if (bufferHits()) {
-            return (LiquidHit)(mBufferedHit.get(0));
+            return (ZimbraHit)(mBufferedHit.get(0));
         } else {
             return null;
         }
     }
     
-    public LiquidHit skipToHit(int hitNo) throws ServiceException {
+    public ZimbraHit skipToHit(int hitNo) throws ServiceException {
         resetIterator();
         for (int i = 0; i < hitNo; i++) {
             if (!hasNext()) {
@@ -67,10 +67,10 @@ public abstract class BufferingResultsGrouper implements ZimbraQueryResults {
         return getNext();
     }
     
-    public LiquidHit getNext() throws ServiceException {
+    public ZimbraHit getNext() throws ServiceException {
         atStart = false;
         if (bufferHits()) {
-            return (LiquidHit)(mBufferedHit.remove(0));
+            return (ZimbraHit)(mBufferedHit.remove(0));
         } else {
             return null;
         }

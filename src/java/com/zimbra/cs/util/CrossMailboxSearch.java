@@ -38,7 +38,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.index.HitIdGrouper;
-import com.zimbra.cs.index.LiquidHit;
+import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.MultiQueryResults;
@@ -551,7 +551,7 @@ public class CrossMailboxSearch
         
         private void outputResults(ZimbraQueryResults res, int offset, int limit, File outputDirectory) throws ServiceException 
         {
-            for (LiquidHit cur = res.skipToHit(offset); ((cur != null) && (offset<limit)); cur = res.getNext()) {
+            for (ZimbraHit cur = res.skipToHit(offset); ((cur != null) && (offset<limit)); cur = res.getNext()) {
                 //System.out.println(offset+": "+cur.toString());
                 if (cur instanceof ProxiedHit) {
                     ProxiedHit ph = (ProxiedHit)cur;

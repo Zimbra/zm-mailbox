@@ -20,7 +20,7 @@ public class MultiQueryResults implements ZimbraQueryResults
 {
     int mSortOrder;
     HitIdGrouper[] mGroupedHits;
-    private LiquidHit mCachedNextHit = null;
+    private ZimbraHit mCachedNextHit = null;
     
     public MultiQueryResults(ZimbraQueryResults[] res, int sortOrder)
     {
@@ -32,7 +32,7 @@ public class MultiQueryResults implements ZimbraQueryResults
         }
     }
     
-    public LiquidHit peekNext() throws ServiceException
+    public ZimbraHit peekNext() throws ServiceException
     {
         bufferNextHit();
         return mCachedNextHit;
@@ -45,7 +45,7 @@ public class MultiQueryResults implements ZimbraQueryResults
             
             // loop through QueryOperations and find the "best" hit
             int currentBestHitOffset = -1;
-            LiquidHit currentBestHit = null;
+            ZimbraHit currentBestHit = null;
             for (i = 0; i < mGroupedHits.length; i++) {
                 ZimbraQueryResults op = mGroupedHits[i]; 
                 if (op.hasNext()) {
@@ -53,7 +53,7 @@ public class MultiQueryResults implements ZimbraQueryResults
                         currentBestHitOffset = i;
                         currentBestHit = op.peekNext();
                     } else {
-                        LiquidHit opNext = op.peekNext();
+                        ZimbraHit opNext = op.peekNext();
                         int result = opNext.compareBySortField(mSortOrder, currentBestHit);
                         if (result < 0) {
                             // "before"
@@ -70,7 +70,7 @@ public class MultiQueryResults implements ZimbraQueryResults
         }
     }
     
-    public LiquidHit skipToHit(int hitNo) throws ServiceException {
+    public ZimbraHit skipToHit(int hitNo) throws ServiceException {
         resetIterator();
         for (int i = 0; i < hitNo; i++) {
             if (!hasNext()) {
@@ -98,15 +98,15 @@ public class MultiQueryResults implements ZimbraQueryResults
         }
     }
     
-    public LiquidHit getFirstHit() throws ServiceException
+    public ZimbraHit getFirstHit() throws ServiceException
     {
         resetIterator();
         return getNext();
     }
     
-    public LiquidHit getNext() throws ServiceException {
+    public ZimbraHit getNext() throws ServiceException {
         bufferNextHit();
-        LiquidHit toRet = mCachedNextHit;
+        ZimbraHit toRet = mCachedNextHit;
         mCachedNextHit = null;
         return toRet;
     }

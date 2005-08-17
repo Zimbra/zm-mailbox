@@ -373,7 +373,7 @@ class DBQueryOperation extends QueryOperation
     /* (non-Javadoc)
      * @see com.zimbra.cs.index.QueryOperation#peekNext()
      */
-    public LiquidHit peekNext() throws ServiceException
+    public ZimbraHit peekNext() throws ServiceException
     {
         if (mNextHit != null) {
             return mNextHit;
@@ -384,7 +384,7 @@ class DBQueryOperation extends QueryOperation
         }
         if (mDBHitsIter != null && mDBHitsIter.hasNext()) {
             SearchResult sr = (SearchResult) mDBHitsIter.next();
-            LiquidHit toRet = null;
+            ZimbraHit toRet = null;
             switch(sr.type) {
             case MailItem.TYPE_MESSAGE:
 //            case MailItem.TYPE_INVITE:
@@ -411,18 +411,18 @@ class DBQueryOperation extends QueryOperation
         }
     }
     
-    private LiquidHit mNextHit = null;
+    private ZimbraHit mNextHit = null;
     
     
     /* (non-Javadoc)
      * @see com.zimbra.cs.index.QueryOperation#getNext()
      */
-    public LiquidHit getNext() throws ServiceException {
+    public ZimbraHit getNext() throws ServiceException {
         atStart = false;
         if (mNextHit == null) {
             peekNext();
         }
-        LiquidHit toRet = mNextHit;
+        ZimbraHit toRet = mNextHit;
         mNextHit = null;
         return toRet;
     }

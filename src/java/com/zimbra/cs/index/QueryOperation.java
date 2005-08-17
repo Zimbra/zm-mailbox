@@ -17,7 +17,7 @@ import com.zimbra.cs.service.ServiceException;
  *
  * A QueryOperation is a part of a Search request -- there are potentially mutliple query operations
  * in a search.  QueryOperations return ZimbraQueryResultsImpl sets -- which can be iterated
- * over to get LiquidHit objects.  
+ * over to get ZimbraHit objects.  
  * 
  * The difference between a QueryOperation and a simple ZimbraQueryResultsImpl set is that 
  * a QueryOperation knows how to Optimize and Execute itself -- whereas a QueryResults set is 
@@ -141,12 +141,12 @@ abstract class QueryOperation implements ZimbraQueryResults
      */
     protected abstract void prepare(Mailbox mbx, ZimbraQueryResultsImpl res, MailboxIndex mbidx) throws IOException, ServiceException;
 
-	public LiquidHit getFirstHit() throws ServiceException {
+	public ZimbraHit getFirstHit() throws ServiceException {
 		resetIterator();
 		return getNext();
 	}
 	
-    public LiquidHit skipToHit(int hitNo) throws ServiceException {
+    public ZimbraHit skipToHit(int hitNo) throws ServiceException {
         resetIterator();
         for (int i = 0; i < hitNo; i++) {
             if (!hasNext()) {

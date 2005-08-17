@@ -48,15 +48,15 @@ class IntersectionQueryOperation extends QueryOperation {
         }
     }
 
-    public LiquidHit getNext() throws ServiceException {
+    public ZimbraHit getNext() throws ServiceException {
         if (noHits || !hasNext()) {
             return null;
         }
-        return (LiquidHit) (mBufferedNext.remove(0));
+        return (ZimbraHit) (mBufferedNext.remove(0));
 
     }
 
-    ArrayList /* LiquidHit */mBufferedNext = new ArrayList(1);
+    ArrayList /* ZimbraHit */mBufferedNext = new ArrayList(1);
 
     /**
      * There can be multiple Hits with the same exact sort-field.  This function does
@@ -76,7 +76,7 @@ class IntersectionQueryOperation extends QueryOperation {
                 if (mLog.isDebugEnabled()) {
                     mLog.debug("\nMsgGrp0: "+mMessageGrouper[0].toString());
                 }
-                LiquidHit curHit = mMessageGrouper[0].getGroupHit();
+                ZimbraHit curHit = mMessageGrouper[0].getGroupHit();
                 int msgId = mMessageGrouper[0].getCurMsgId();
                 
                 // for every other op, buffer all the hits for this
@@ -106,7 +106,7 @@ class IntersectionQueryOperation extends QueryOperation {
                         // okay, do the big intersection
                         for (int i = 0; i < mMessageGrouper.length; i++) {
                             mMessageGrouper[i].setMsgId(msgId);
-                            LiquidHit hit = mMessageGrouper[i].getNextHit();
+                            ZimbraHit hit = mMessageGrouper[i].getNextHit();
                             while (hit != null) {
                                 if (!mBufferedNext.contains(hit)) {
                                     boolean ok = true;
@@ -148,7 +148,7 @@ class IntersectionQueryOperation extends QueryOperation {
             } // while true (for easy retry)
         
         for (int i = 0; i < mBufferedNext.size(); i++) {
-            LiquidHit hit = (LiquidHit)(mBufferedNext.get(i));
+            ZimbraHit hit = (ZimbraHit)(mBufferedNext.get(i));
             if (mLog.isDebugEnabled()) {
                 mLog.debug("BUFFERED: "+hit.toString());
             }
@@ -157,13 +157,13 @@ class IntersectionQueryOperation extends QueryOperation {
         }
     }
 
-    public LiquidHit peekNext() throws ServiceException {
+    public ZimbraHit peekNext() throws ServiceException {
         if (noHits) {
             return null;
         } else {
             bufferNextHits();
             if (mBufferedNext.size() > 0) {
-                return (LiquidHit) (mBufferedNext.get(0));
+                return (ZimbraHit) (mBufferedNext.get(0));
             } else {
                 return null;
             }
@@ -177,7 +177,7 @@ class IntersectionQueryOperation extends QueryOperation {
         }
     }
 
-    public LiquidHit skipToHit(int hitNo) throws ServiceException {
+    public ZimbraHit skipToHit(int hitNo) throws ServiceException {
         if (noHits) {
             return null;
         }
@@ -213,7 +213,7 @@ class IntersectionQueryOperation extends QueryOperation {
         public String toString() {
             StringBuffer toRet = new StringBuffer(mSubOp.toString()+"\n\t");
             for (int i = 0; i < mBufferedHit.size(); i++) {
-                    LiquidHit hit = (LiquidHit) (mBufferedHit.get(i));
+                    ZimbraHit hit = (ZimbraHit) (mBufferedHit.get(i));
                     toRet.append(hit.toString()).append("\n\t");
             }
             return toRet.toString();
@@ -233,12 +233,12 @@ class IntersectionQueryOperation extends QueryOperation {
             
         }
 
-        private ArrayList /* LiquidHit */mBufferedHit = new ArrayList();
+        private ArrayList /* ZimbraHit */mBufferedHit = new ArrayList();
 
         int getNextMessageId(ArrayList seenMsgs) throws ServiceException {
             for (int i = 1; i < mBufferedHit.size(); i++) {
                 Integer checkId = new Integer(
-                        ((LiquidHit) (mBufferedHit.get(i))).getItemId());
+                        ((ZimbraHit) (mBufferedHit.get(i))).getItemId());
                 if (!seenMsgs.contains(checkId)) {
                     return checkId.intValue();
                 }
@@ -269,12 +269,12 @@ class IntersectionQueryOperation extends QueryOperation {
             // step 2: buffer all hits with the current stamp
             //
             while (mSubOp.hasNext()) {
-                LiquidHit hit = mSubOp.peekNext();
+                ZimbraHit hit = mSubOp.peekNext();
                 
                 if (hit.compareBySortField(mSortOrder, mGroupHit) == 0) {
                     mBufferedHit.add(hit);
                     // go to next one:
-                    LiquidHit check = mSubOp.getNext();
+                    ZimbraHit check = mSubOp.getNext();
                     assert (check == hit);
                 } else {
                     return !mBufferedHit.isEmpty();
@@ -285,7 +285,7 @@ class IntersectionQueryOperation extends QueryOperation {
 
         private int mCurMsgId = -1;
 
-        private LiquidHit mGroupHit = null; /*
+        private ZimbraHit mGroupHit = null; /*
                                      * ALL hits in this group will have the same
                                      * sort-order as this one
                                      */
@@ -304,11 +304,11 @@ class IntersectionQueryOperation extends QueryOperation {
          * 
          * @return current hit
          */
-        LiquidHit getGroupHit() {
+        ZimbraHit getGroupHit() {
             return mGroupHit;
         }
 
-        //        LiquidHit peekNext() {
+        //        ZimbraHit peekNext() {
         //            return mGroupHit;
         //        }
 
@@ -317,11 +317,11 @@ class IntersectionQueryOperation extends QueryOperation {
             mCurBufPos = 0;
         }
 
-        LiquidHit getNextHit() throws ServiceException {
+        ZimbraHit getNextHit() throws ServiceException {
             while (mCurBufPos < mBufferedHit.size()) {
-                if (((LiquidHit) mBufferedHit.get(mCurBufPos)).getItemId() == mCurMsgId) {
+                if (((ZimbraHit) mBufferedHit.get(mCurBufPos)).getItemId() == mCurMsgId) {
                     mCurBufPos++;
-                    return (LiquidHit) mBufferedHit.get(mCurBufPos - 1);
+                    return (ZimbraHit) mBufferedHit.get(mCurBufPos - 1);
                 }
                 mCurBufPos++;
             }
@@ -331,7 +331,7 @@ class IntersectionQueryOperation extends QueryOperation {
         boolean intersectWithBuffer(MessageHit hit) throws ServiceException {
             int hitMsgId = hit.getItemId();
             for (int i = 0; i < mBufferedHit.size(); i++) {
-                if (((LiquidHit) mBufferedHit.get(i)).getItemId() == hitMsgId) {
+                if (((ZimbraHit) mBufferedHit.get(i)).getItemId() == hitMsgId) {
                     return true;
                 }
             }
@@ -348,7 +348,7 @@ class IntersectionQueryOperation extends QueryOperation {
         boolean intersectWithBuffer(MessagePartHit hit) throws ServiceException {
             int hitMsgId = hit.getItemId();
             for (int i = 0; i < mBufferedHit.size(); i++) {
-                LiquidHit bufHit = (LiquidHit) mBufferedHit.get(i);
+                ZimbraHit bufHit = (ZimbraHit) mBufferedHit.get(i);
                 if (bufHit.getItemId() == hitMsgId) {
                     if (bufHit instanceof MessagePartHit) {
                         MessagePartHit mph = (MessagePartHit) bufHit;
@@ -372,7 +372,7 @@ class IntersectionQueryOperation extends QueryOperation {
          * @return
          * @throws ServiceException
          */
-        boolean bufferNextHits(LiquidHit curHit) throws ServiceException {
+        boolean bufferNextHits(ZimbraHit curHit) throws ServiceException {
             mGroupHit = curHit;
             mBufferedHit.clear();
 
@@ -380,7 +380,7 @@ class IntersectionQueryOperation extends QueryOperation {
                 return false;
             }
 
-            LiquidHit newStamp = null;
+            ZimbraHit newStamp = null;
             while ((newStamp = mSubOp.peekNext()) != null) {
                 int result = newStamp.compareBySortField(mSortOrder, mGroupHit);
                 if (mLog.isDebugEnabled()) {
@@ -389,7 +389,7 @@ class IntersectionQueryOperation extends QueryOperation {
                 if (result == 0) {
                     mBufferedHit.add(newStamp);
                     // go to nex thit
-                    LiquidHit check = mSubOp.getNext();
+                    ZimbraHit check = mSubOp.getNext();
                     assert (check == newStamp);
                 } else if (result < 0) {
                     // newstamp is logically "Before" current...skip it

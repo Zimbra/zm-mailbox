@@ -19,7 +19,7 @@ class ConvQueryResults extends ZimbraQueryResultsImpl {
         mResults = results;
     }
 
-    private LiquidHit mNextHit = null;
+    private ZimbraHit mNextHit = null;
     
     private int mNextHitNo = 0;
     private ArrayList mCachedResults = new ArrayList();
@@ -34,9 +34,9 @@ class ConvQueryResults extends ZimbraQueryResultsImpl {
      * @return
      * @throws ServiceException
      */
-    private LiquidHit internalGetNextHit() throws ServiceException {
+    private ZimbraHit internalGetNextHit() throws ServiceException {
         while (mResults.hasNext()) {
-            LiquidHit opNext = mResults.getNext();
+            ZimbraHit opNext = mResults.getNext();
             
             ConversationHit curHit = null;
             Integer convId = new Integer(opNext.getConversationId());
@@ -60,7 +60,7 @@ class ConvQueryResults extends ZimbraQueryResultsImpl {
                 /* iterate further: try to get all the hits for this result 
                  * Conversation if they happen to be right here with the first one */
                 while (mResults.hasNext()) {
-                    LiquidHit nextHit = mResults.peekNext();
+                    ZimbraHit nextHit = mResults.peekNext();
                     if (nextHit.getConversationId() != convId.intValue()) {
                         return curHit; // no more, all done!
                     } else {
@@ -88,7 +88,7 @@ class ConvQueryResults extends ZimbraQueryResultsImpl {
         return (mNextHit != null);
     }
     
-    public LiquidHit peekNext() throws ServiceException {
+    public ZimbraHit peekNext() throws ServiceException {
         bufferNextHit();
         return mNextHit;
     }
@@ -101,12 +101,12 @@ class ConvQueryResults extends ZimbraQueryResultsImpl {
         mNextHit = null;
     }
     
-//    public LiquidHit getFirstHit() throws ServiceException {
+//    public ZimbraHit getFirstHit() throws ServiceException {
 //        mSeenConversations.clear();
 //        mResults.resetIterator();
 //        mNextHitNo = 0;
 //        mCachedResults.clear(); // must clear since we clear mSeenConversations...
-//        LiquidHit retVal = null;
+//        ZimbraHit retVal = null;
 //        retVal = internalGetNextHit();
 //        if (retVal != null) {
 //            mCachedResults.add(mNextHitNo, retVal);
@@ -117,10 +117,10 @@ class ConvQueryResults extends ZimbraQueryResultsImpl {
 //        return retVal;
 //    }
 
-    public LiquidHit getNext() throws ServiceException {
-        LiquidHit retVal = null;
+    public ZimbraHit getNext() throws ServiceException {
+        ZimbraHit retVal = null;
         if (mCachedResults.size() > mNextHitNo) {
-            retVal = (LiquidHit)mCachedResults.get(mNextHitNo);
+            retVal = (ZimbraHit)mCachedResults.get(mNextHitNo);
         } else {
 //            retVal = internalGetNextHit();
 //            if (retVal != null) {
@@ -142,12 +142,12 @@ class ConvQueryResults extends ZimbraQueryResultsImpl {
         mResults.doneWithSearchResults();
     }
 
-    public LiquidHit skipToHit(int hitNo) throws ServiceException {
+    public ZimbraHit skipToHit(int hitNo) throws ServiceException {
         if (hitNo == 0) {
             resetIterator();
             return getNext();
         } else {
-            LiquidHit retVal = null;
+            ZimbraHit retVal = null;
             if (hitNo < mCachedResults.size()) {
                 mNextHitNo = hitNo;
             } else {

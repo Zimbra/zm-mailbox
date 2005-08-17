@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.zimbra.cs.index.LiquidHit;
+import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.MessageHit;
@@ -50,7 +50,7 @@ class Pop3Mbx {
                 results = mailbox.search(query, new byte[] { MailItem.TYPE_MESSAGE }, MailboxIndex.SEARCH_ORDER_DATE_DESC);
                 items = new ArrayList();
                 while (results.hasNext()) {
-                    LiquidHit hit = results.getNext();
+                    ZimbraHit hit = results.getNext();
                     if (hit instanceof MessageHit) {
                         MessageHit mh = (MessageHit) hit;
                         items.add(mh.getMessage());

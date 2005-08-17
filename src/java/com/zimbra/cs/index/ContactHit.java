@@ -13,7 +13,7 @@ import com.zimbra.cs.service.ServiceException;
 /**
  * @author tim
  */
-public final class ContactHit extends LiquidHit {
+public final class ContactHit extends ZimbraHit {
     
     public ContactHit(ZimbraQueryResultsImpl results, Mailbox mbx, int itemId, Document d, float score) {
         super(results, mbx, score);
@@ -25,7 +25,7 @@ public final class ContactHit extends LiquidHit {
     private int mItemId;
 
     /* (non-Javadoc)
-     * @see com.zimbra.cs.index.LiquidHit#getDate()
+     * @see com.zimbra.cs.index.ZimbraHit#getDate()
      */
     public long getDate() throws ServiceException {
         if (mCachedDate == -1) {
@@ -42,7 +42,7 @@ public final class ContactHit extends LiquidHit {
     }
     
     /* (non-Javadoc)
-     * @see com.zimbra.cs.index.LiquidHit#inTrashOrSpam()
+     * @see com.zimbra.cs.index.ZimbraHit#inTrashOrSpam()
      */
     boolean inMailbox() throws ServiceException {
         return getContact().inMailbox();
@@ -61,7 +61,7 @@ public final class ContactHit extends LiquidHit {
     }
     
     /* (non-Javadoc)
-     * @see com.zimbra.cs.index.LiquidHit#getConversationId()
+     * @see com.zimbra.cs.index.ZimbraHit#getConversationId()
      */
     public int getConversationId() throws ServiceException {
         // TODO Auto-generated method stub
@@ -69,7 +69,7 @@ public final class ContactHit extends LiquidHit {
     }
 
     /* (non-Javadoc)
-     * @see com.zimbra.cs.index.LiquidHit#getMessageId()
+     * @see com.zimbra.cs.index.ZimbraHit#getMessageId()
      */
     public int getItemId() throws ServiceException {
         return mItemId;

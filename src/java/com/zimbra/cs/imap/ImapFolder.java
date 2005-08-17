@@ -5,7 +5,7 @@ package com.zimbra.cs.imap;
 
 import java.util.*;
 
-import com.zimbra.cs.index.LiquidHit;
+import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.*;
@@ -74,7 +74,7 @@ class ImapFolder {
             int i = 0, hitIds[] = new int[100];
             Arrays.fill(hitIds, Mailbox.ID_AUTO_INCREMENT);
             try {
-                for (LiquidHit hit = lqr.getFirstHit(); hit != null || i > 0; ) {
+                for (ZimbraHit hit = lqr.getFirstHit(); hit != null || i > 0; ) {
                     if (hit == null || i == 100) {
                         msgs.addAll(Arrays.asList(mailbox.getItemById(hitIds, MailItem.TYPE_MESSAGE)).subList(0, i));
                         Arrays.fill(hitIds, Mailbox.ID_AUTO_INCREMENT);

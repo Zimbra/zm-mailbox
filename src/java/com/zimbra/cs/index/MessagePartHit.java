@@ -24,7 +24,7 @@ import com.zimbra.cs.service.ServiceException;
  * writable APIs on the Lucene document are probably not useful to us.
  *  
  */
-public final class MessagePartHit extends LiquidHit {
+public final class MessagePartHit extends ZimbraHit {
     
     private Document mDoc = null;
 
@@ -45,7 +45,7 @@ public final class MessagePartHit extends LiquidHit {
     }
     
     /* (non-Javadoc)
-     * @see com.zimbra.cs.index.LiquidHit#inTrashOrSpam()
+     * @see com.zimbra.cs.index.ZimbraHit#inTrashOrSpam()
      */
     boolean inMailbox() throws ServiceException {
         return getMessageResult().inMailbox();

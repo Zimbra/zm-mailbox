@@ -19,7 +19,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.imap.ImapSession.ImapFlag;
-import com.zimbra.cs.index.LiquidHit;
+import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.queryparser.ParseException;
@@ -1501,7 +1501,7 @@ public class ImapHandler extends ProtocolHandler {
 
                 ZimbraQueryResults lqr = mMailbox.search(search, MESSAGE_TYPES, MailboxIndex.SEARCH_ORDER_DATE_ASC);
                 try {
-                    for (LiquidHit hit = lqr.getFirstHit(); hit != null; hit = lqr.getNext()) {
+                    for (ZimbraHit hit = lqr.getFirstHit(); hit != null; hit = lqr.getNext()) {
                         ImapMessage i4msg = mSession.getFolder().getById(hit.getItemId());
                         if (i4msg != null)
                         	hits.add(new Integer(byUID ? i4msg.uid : i4msg.seq));
