@@ -92,7 +92,7 @@ Making logging calls in code
 All loggers will be defined as public static members on the following
 class:
 
-package com.liquidsys.coco.util;
+package com.zimbra.cs.util;
 
 public class LiquidLog {
   public Log misc; // "liquid.misc";
@@ -133,7 +133,7 @@ For example:
     }
 
 Now if someone needs to really debug a particular class, they can enable
-DEBUG for "log4j.logger.com.liquidsys.coco.mailbox.Mailbox".
+DEBUG for "log4j.logger.com.zimbra.cs.mailbox.Mailbox".
 
 NOTE: The class was called LiquidLog because the Liquid class is used
 for another purpose, and there are a billion Log classes already.

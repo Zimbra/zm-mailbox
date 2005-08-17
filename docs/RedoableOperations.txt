@@ -13,7 +13,7 @@ saved_search
 # change in MySQL, Blob Store, and Lucene.
 #
 # The methods are public and are used by either Archiver or
-# the com.liquidsys.coco.service[.*] packages.
+# the com.zimbra.cs.service[.*] packages.
 
 
 # Provisioning

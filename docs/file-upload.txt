@@ -6,7 +6,7 @@ FileUploadServlet is used to transfer content from a client to the server.  Uses
 
 The file upload servlet is an http client that supports RFC 1867, form-based file upload in html.  The RFC is available here: http://www.ietf.org/rfc/rfc1867.txt
 
-The default url to the file upload servlet is http://server:port/service/upload.  By default this url maps to com.liquidsys.coco.service.FileUploadServlet (see web.xml in the tomcat WEB-INF directory for your URL/servlet mapping).
+The default url to the file upload servlet is http://server:port/service/upload.  By default this url maps to com.zimbra.cs.service.FileUploadServlet (see web.xml in the tomcat WEB-INF directory for your URL/servlet mapping).
 
 For authentication, you must specify your auth token in a cookie.
 
