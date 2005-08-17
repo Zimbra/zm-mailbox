@@ -1,4 +1,4 @@
-<project name="Archiver" default="jar">
+<project name="ZimbraServer" default="jar">
 
 	<property environment="env"/>
 
