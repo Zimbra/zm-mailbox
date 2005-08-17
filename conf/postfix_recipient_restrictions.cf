@@ -1,19 +1,19 @@
 reject_non_fqdn_recipient
 permit_sasl_authenticated
 permit_mynetworks
-%%contains VAR:liquidMtaRestriction reject_invalid_hostname%%
-%%contains VAR:liquidMtaRestriction reject_non_fqdn_hostname%%
-%%contains VAR:liquidMtaRestriction reject_non_fqdn_sender%%
-%%contains VAR:liquidMtaRestriction reject_unknown_client%%
-%%contains VAR:liquidMtaRestriction reject_unknown_hostname%%
-%%contains VAR:liquidMtaRestriction reject_unknown_sender_domain%%
-%%contains VAR:liquidMtaRestriction reject_rbl_client dnsbl.njabl.org%%
-%%contains VAR:liquidMtaRestriction reject_rbl_client opm.blitzed.org%%
-%%contains VAR:liquidMtaRestriction reject_rbl_client relays.ordb.org%%
-%%contains VAR:liquidMtaRestriction reject_rbl_client cbl.abuseat.org%%
-%%contains VAR:liquidMtaRestriction reject_rbl_client bl.spamcop.net%%
-%%contains VAR:liquidMtaRestriction reject_rbl_client dnsbl.sorbs.net%%
-%%contains VAR:liquidMtaRestriction reject_rbl_client sbl.spamhaus.org%%
-%%contains VAR:liquidMtaRestriction reject_rbl_client relays.mail-abuse.org%%
+%%contains VAR:zimbraMtaRestriction reject_invalid_hostname%%
+%%contains VAR:zimbraMtaRestriction reject_non_fqdn_hostname%%
+%%contains VAR:zimbraMtaRestriction reject_non_fqdn_sender%%
+%%contains VAR:zimbraMtaRestriction reject_unknown_client%%
+%%contains VAR:zimbraMtaRestriction reject_unknown_hostname%%
+%%contains VAR:zimbraMtaRestriction reject_unknown_sender_domain%%
+%%contains VAR:zimbraMtaRestriction reject_rbl_client dnsbl.njabl.org%%
+%%contains VAR:zimbraMtaRestriction reject_rbl_client opm.blitzed.org%%
+%%contains VAR:zimbraMtaRestriction reject_rbl_client relays.ordb.org%%
+%%contains VAR:zimbraMtaRestriction reject_rbl_client cbl.abuseat.org%%
+%%contains VAR:zimbraMtaRestriction reject_rbl_client bl.spamcop.net%%
+%%contains VAR:zimbraMtaRestriction reject_rbl_client dnsbl.sorbs.net%%
+%%contains VAR:zimbraMtaRestriction reject_rbl_client sbl.spamhaus.org%%
+%%contains VAR:zimbraMtaRestriction reject_rbl_client relays.mail-abuse.org%%
 reject_unauth_destination
 permit
