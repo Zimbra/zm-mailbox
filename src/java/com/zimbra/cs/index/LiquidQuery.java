@@ -22,7 +22,7 @@ import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 
-import com.zimbra.cs.index.queryparser.LiquidQueryParser;
+import com.zimbra.cs.index.queryparser.ZimbraQueryParser;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -117,16 +117,16 @@ public final class LiquidQuery {
         }
         
         boolean isNegated() {
-            return mModifierType == LiquidQueryParser.MINUS;
+            return mModifierType == ZimbraQueryParser.MINUS;
         }
 
         protected final String modToString() {
             String modString = "";
             switch(mModifierType) {
-              case LiquidQueryParser.PLUS:
+              case ZimbraQueryParser.PLUS:
                 modString = "+";
                 break;
-              case LiquidQueryParser.MINUS:
+              case ZimbraQueryParser.MINUS:
                 modString = "-";
                 break;
             }
@@ -165,18 +165,18 @@ public final class LiquidQuery {
         }
         
         public AttachmentQuery(Analyzer analyzer, int modifier, String what) {
-            super(modifier, LiquidQueryParser.TYPE, LuceneFields.L_ATTACHMENTS, lookup(mMap, what));
+            super(modifier, ZimbraQueryParser.TYPE, LuceneFields.L_ATTACHMENTS, lookup(mMap, what));
         }
         
         protected AttachmentQuery(int modifier, String luceneField, String what) {
-            super(modifier, LiquidQueryParser.TYPE, luceneField, lookup(mMap, what));
+            super(modifier, ZimbraQueryParser.TYPE, luceneField, lookup(mMap, what));
         }
     }
     
     public static class ConjQuery extends BaseQuery
     {
-    	private static final int AND = LiquidQueryParser.AND_TOKEN;
-    	private static final int OR = LiquidQueryParser.OR_TOKEN;
+    	private static final int AND = ZimbraQueryParser.AND_TOKEN;
+    	private static final int OR = ZimbraQueryParser.OR_TOKEN;
     	
     	int mOp;
     	
@@ -213,7 +213,7 @@ public final class LiquidQuery {
     {
         private int mConvId;
         public ConvQuery(Analyzer analyzer, int modifier, String target) {
-            super(modifier, LiquidQueryParser.CONV);
+            super(modifier, ZimbraQueryParser.CONV);
             mConvId = 0;
             mConvId = Integer.parseInt(target);
         }
@@ -252,15 +252,15 @@ public final class LiquidQuery {
             long myTime = mDate.getTime();
             
             switch(getQueryType()) {
-            case LiquidQueryParser.BEFORE:
+            case ZimbraQueryParser.BEFORE:
                 lowDate = -1;
                 highDate = myTime;
                 break;
-            case LiquidQueryParser.AFTER:
+            case ZimbraQueryParser.AFTER:
                 lowDate = myTime;
                 highDate = -1;
                 break;
-            case LiquidQueryParser.DATE:
+            case ZimbraQueryParser.DATE:
                 lowDate = myTime;
                 highDate = mEndDate.getTime();
                 break;
@@ -293,9 +293,9 @@ public final class LiquidQuery {
             
             int origType = getQueryType();
             switch (origType) {
-            case LiquidQueryParser.DATE:
-            case LiquidQueryParser.DAY:
-                setQueryType(LiquidQueryParser.DATE);
+            case ZimbraQueryParser.DATE:
+            case ZimbraQueryParser.DAY:
+                setQueryType(ZimbraQueryParser.DATE);
             
                 if (s.equalsIgnoreCase("today")) 
                 {
@@ -325,14 +325,14 @@ public final class LiquidQuery {
                     mEndDate = cal.getTime();
                 }
             break;
-            case LiquidQueryParser.WEEK:
-                setQueryType(LiquidQueryParser.DATE);
+            case ZimbraQueryParser.WEEK:
+                setQueryType(ZimbraQueryParser.DATE);
             break;
-            case LiquidQueryParser.MONTH:
-                setQueryType(LiquidQueryParser.DATE);
+            case ZimbraQueryParser.MONTH:
+                setQueryType(ZimbraQueryParser.DATE);
             break;
-            case LiquidQueryParser.YEAR:
-                setQueryType(LiquidQueryParser.DATE);
+            case ZimbraQueryParser.YEAR:
+                setQueryType(ZimbraQueryParser.DATE);
             break;
             }
             
@@ -358,17 +358,17 @@ public final class LiquidQuery {
                     if (m.start(3) == -1) {
                         // no period specified -- use the defualt for the current operator
                         switch (origType) {
-                        case LiquidQueryParser.DATE:
-                        case LiquidQueryParser.DAY:
+                        case ZimbraQueryParser.DATE:
+                        case ZimbraQueryParser.DAY:
                             field = Calendar.DATE;
                         break;
-                        case LiquidQueryParser.WEEK:
+                        case ZimbraQueryParser.WEEK:
                             field = Calendar.WEEK_OF_YEAR;
                         break;
-                        case LiquidQueryParser.MONTH:
+                        case ZimbraQueryParser.MONTH:
                             field = Calendar.MONTH;
                         break;
-                        case LiquidQueryParser.YEAR:
+                        case ZimbraQueryParser.YEAR:
                             field = Calendar.YEAR;
                         break;
                         }
@@ -455,14 +455,14 @@ public final class LiquidQuery {
                         }
 
                         switch (origType) {
-                        case LiquidQueryParser.DATE:
-                        case LiquidQueryParser.DAY:
+                        case ZimbraQueryParser.DATE:
+                        case ZimbraQueryParser.DAY:
                             throw new ParseException("Error parsing date: \""+s+"\"");
-                        case LiquidQueryParser.WEEK:
+                        case ZimbraQueryParser.WEEK:
                             throw new ParseException("Error parsing date: \""+s+"\"");
-                        case LiquidQueryParser.MONTH:
+                        case ZimbraQueryParser.MONTH:
                             throw new ParseException("Error parsing date: \""+s+"\"");
-                        case LiquidQueryParser.YEAR:
+                        case ZimbraQueryParser.YEAR:
                             month = 1;
                             day = 1;
                             year = num;
@@ -489,20 +489,20 @@ public final class LiquidQuery {
                     mDate = cal.getTime();
                     
                     switch (origType) {
-                    case LiquidQueryParser.DATE:
-                    case LiquidQueryParser.DAY:
+                    case ZimbraQueryParser.DATE:
+                    case ZimbraQueryParser.DAY:
                         cal.add(Calendar.DATE,1);
                         mEndDate = cal.getTime();
                     break;
-                    case LiquidQueryParser.WEEK:
+                    case ZimbraQueryParser.WEEK:
                         cal.add(Calendar.WEEK_OF_YEAR,1);
                         mEndDate = cal.getTime();
                     break;
-                    case LiquidQueryParser.MONTH:
+                    case ZimbraQueryParser.MONTH:
                         cal.add(Calendar.MONTH,1);
                     mEndDate = cal.getTime();
                     break;
-                    case LiquidQueryParser.YEAR:
+                    case ZimbraQueryParser.YEAR:
                         cal.add(Calendar.YEAR,1);
                         mEndDate = cal.getTime();
                     break;
@@ -520,13 +520,13 @@ public final class LiquidQuery {
         public String toString(int expLevel) {
             String str;
             switch (getQueryType()) {
-            case LiquidQueryParser.BEFORE:
+            case ZimbraQueryParser.BEFORE:
                 str = "BEFORE";
             break;
-            case LiquidQueryParser.AFTER:
+            case ZimbraQueryParser.AFTER:
                 str = "AFTER";
             break;
-            case LiquidQueryParser.DATE:
+            case ZimbraQueryParser.DATE:
                 str = "DATE";
             break;
             default:
@@ -620,7 +620,7 @@ public final class LiquidQuery {
         }
         
         public HasQuery(Analyzer analyzer, int modifier, String what) {
-        	super(modifier, LiquidQueryParser.HAS, LuceneFields.L_OBJECTS, lookup(mMap, what));
+        	super(modifier, ZimbraQueryParser.HAS, LuceneFields.L_OBJECTS, lookup(mMap, what));
         }
 	}
     
@@ -652,7 +652,7 @@ public final class LiquidQuery {
         private Folder mFolder;
 
         public InQuery(Mailbox mailbox, Analyzer analyzer, int modifier, Folder folder) {
-            super(modifier, LiquidQueryParser.IN);
+            super(modifier, ZimbraQueryParser.IN);
             assert(folder != null);
             mFolder = folder;
         }
@@ -665,7 +665,7 @@ public final class LiquidQuery {
          * @param modifier
          */
         public InQuery(Mailbox mailbox, Analyzer analyzer, int modifier) {
-            super(modifier, LiquidQueryParser.IN);
+            super(modifier, ZimbraQueryParser.IN);
             mFolder = null;
         }
        
@@ -790,10 +790,10 @@ public final class LiquidQuery {
             
             char ch = mSizeStr.charAt(0);
             if (ch == '>') {
-                setQueryType(LiquidQueryParser.BIGGER);
+                setQueryType(ZimbraQueryParser.BIGGER);
                 mSizeStr = mSizeStr.substring(1);
             } else if (ch == '<') {
-                setQueryType(LiquidQueryParser.SMALLER);
+                setQueryType(ZimbraQueryParser.SMALLER);
                 mSizeStr = mSizeStr.substring(1);
             }
  
@@ -846,15 +846,15 @@ public final class LiquidQuery {
             long highest = -1, lowest = -1;
             
             switch (getQueryType()) {
-            case LiquidQueryParser.BIGGER:
+            case ZimbraQueryParser.BIGGER:
                 highest = -1;
                 lowest = mSize;
                 break;
-            case LiquidQueryParser.SMALLER:
+            case ZimbraQueryParser.SMALLER:
                 highest = mSize;
                 lowest = -1;
                 break;
-            case LiquidQueryParser.SIZE:
+            case ZimbraQueryParser.SIZE:
                 highest = mSize;
                 lowest = mSize;
                 break;
@@ -913,7 +913,7 @@ public final class LiquidQuery {
         
         public TagQuery(Analyzer analyzer, int modifier, Tag tag, boolean truth) 
         {
-            super(modifier, LiquidQueryParser.TAG);
+            super(modifier, ZimbraQueryParser.TAG);
             mTag = tag;
             mTruth = truth;
         }
@@ -937,7 +937,7 @@ public final class LiquidQuery {
         
         public DBTypeQuery(Analyzer analyzer, int modifier, byte type) 
         {
-            super(modifier, LiquidQueryParser.IS);
+            super(modifier, ZimbraQueryParser.IS);
             mType = type;
         }
         
@@ -994,7 +994,7 @@ public final class LiquidQuery {
         
         public ItemQuery(Analyzer analyzer, Mailbox mbx, int modifier, boolean all, boolean none, List ids) 
         {
-            super(modifier, LiquidQueryParser.ITEM);
+            super(modifier, ZimbraQueryParser.ITEM);
             mIsAllQuery = all;
             mIsNoneQuery = none;
             mItemIds = ids;
@@ -1124,38 +1124,38 @@ public final class LiquidQuery {
 
     private static String QueryTypeString(int qType) {
         switch (qType) {
-          case LiquidQueryParser.CONTENT:    return LuceneFields.L_CONTENT;
-          case LiquidQueryParser.FROM:       return LuceneFields.L_H_FROM;
-          case LiquidQueryParser.TO:         return LuceneFields.L_H_TO;
-          case LiquidQueryParser.CC:         return LuceneFields.L_H_CC;
-          case LiquidQueryParser.SUBJECT:    return LuceneFields.L_H_SUBJECT;
-          case LiquidQueryParser.IN:         return "in";
-          case LiquidQueryParser.HAS:        return "has";
-          case LiquidQueryParser.FILENAME:   return LuceneFields.L_FILENAME;
-          case LiquidQueryParser.TYPE:       return LuceneFields.L_MIMETYPE;
-          case LiquidQueryParser.ATTACHMENT: return LuceneFields.L_ATTACHMENTS;
-          case LiquidQueryParser.IS:         return "IS";
-          case LiquidQueryParser.DATE:       return LuceneFields.L_DATE;
-          case LiquidQueryParser.AFTER:      return "after";
-          case LiquidQueryParser.BEFORE:     return "before";
-          case LiquidQueryParser.SIZE:       return "SIZE";
-          case LiquidQueryParser.BIGGER:     return "BIGGER";
-          case LiquidQueryParser.SMALLER:    return "SMALLER";
-          case LiquidQueryParser.TAG:        return "TAG";
-          case LiquidQueryParser.MY:         return "MY";
-          case LiquidQueryParser.MESSAGE:    return "MESSAGE";
-          case LiquidQueryParser.CONV:       return "CONV";
-          case LiquidQueryParser.CONV_COUNT: return "CONV-COUNT";
-          case LiquidQueryParser.CONV_MINM:  return "CONV_MINM";
-          case LiquidQueryParser.CONV_MAXM:  return "CONV_MAXM";
-          case LiquidQueryParser.CONV_START: return "conv-start";
-          case LiquidQueryParser.CONV_END:   return "conv-end";
-          case LiquidQueryParser.AUTHOR:     return "author";
-          case LiquidQueryParser.TITLE:      return "title";
-          case LiquidQueryParser.KEYWORDS:   return "keywords";
-          case LiquidQueryParser.COMPANY:    return "company";
-          case LiquidQueryParser.METADATA:   return "metadata";
-          case LiquidQueryParser.ITEM:       return "itemId";
+          case ZimbraQueryParser.CONTENT:    return LuceneFields.L_CONTENT;
+          case ZimbraQueryParser.FROM:       return LuceneFields.L_H_FROM;
+          case ZimbraQueryParser.TO:         return LuceneFields.L_H_TO;
+          case ZimbraQueryParser.CC:         return LuceneFields.L_H_CC;
+          case ZimbraQueryParser.SUBJECT:    return LuceneFields.L_H_SUBJECT;
+          case ZimbraQueryParser.IN:         return "in";
+          case ZimbraQueryParser.HAS:        return "has";
+          case ZimbraQueryParser.FILENAME:   return LuceneFields.L_FILENAME;
+          case ZimbraQueryParser.TYPE:       return LuceneFields.L_MIMETYPE;
+          case ZimbraQueryParser.ATTACHMENT: return LuceneFields.L_ATTACHMENTS;
+          case ZimbraQueryParser.IS:         return "IS";
+          case ZimbraQueryParser.DATE:       return LuceneFields.L_DATE;
+          case ZimbraQueryParser.AFTER:      return "after";
+          case ZimbraQueryParser.BEFORE:     return "before";
+          case ZimbraQueryParser.SIZE:       return "SIZE";
+          case ZimbraQueryParser.BIGGER:     return "BIGGER";
+          case ZimbraQueryParser.SMALLER:    return "SMALLER";
+          case ZimbraQueryParser.TAG:        return "TAG";
+          case ZimbraQueryParser.MY:         return "MY";
+          case ZimbraQueryParser.MESSAGE:    return "MESSAGE";
+          case ZimbraQueryParser.CONV:       return "CONV";
+          case ZimbraQueryParser.CONV_COUNT: return "CONV-COUNT";
+          case ZimbraQueryParser.CONV_MINM:  return "CONV_MINM";
+          case ZimbraQueryParser.CONV_MAXM:  return "CONV_MAXM";
+          case ZimbraQueryParser.CONV_START: return "conv-start";
+          case ZimbraQueryParser.CONV_END:   return "conv-end";
+          case ZimbraQueryParser.AUTHOR:     return "author";
+          case ZimbraQueryParser.TITLE:      return "title";
+          case ZimbraQueryParser.KEYWORDS:   return "keywords";
+          case ZimbraQueryParser.COMPANY:    return "company";
+          case ZimbraQueryParser.METADATA:   return "metadata";
+          case ZimbraQueryParser.ITEM:       return "itemId";
         }
         return "UNKNOWN:(" + qType + ")";
     }
@@ -1410,7 +1410,7 @@ public final class LiquidQuery {
 	 */
 	public LiquidQuery(String queryString, Mailbox mbx) throws ParseException, ServiceException
 	{
-        LiquidQueryParser parser = new LiquidQueryParser(new StringReader(queryString));
+        ZimbraQueryParser parser = new ZimbraQueryParser(new StringReader(queryString));
         parser.init(new LiquidAnalyzer(), mbx);
          
         mClauses = parser.Parse();
