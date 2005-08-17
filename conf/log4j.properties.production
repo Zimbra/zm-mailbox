@@ -8,17 +8,10 @@
 
 log4j.threshhold=OFF
 
-log4j.rootLogger=INFO,CONSOLE,LOGFILE
+log4j.rootLogger=INFO,LOGFILE
 
-# CONSOLE is set to be a ConsoleAppender which outputs to System.out.
-log4j.appender.CONSOLE=org.apache.log4j.ConsoleAppender
-log4j.appender.CONSOLE.layout=org.apache.log4j.PatternLayout
-
-# The conversion pattern uses format specifiers. You might want to
-# change the pattern an watch the output format change.
-log4j.appender.CONSOLE.layout.ConversionPattern=%-4r %-5p [%t] [%x] %c{1} - %m%n
-
-# Appender LOGFILE writes to the file "liquid.log".
+# Appender LOGFILE writes to the file "/opt/liquid/log/liquid.log".
+#log4j.appender.LOGFILE=org.apache.log4j.FileAppender
 log4j.appender.LOGFILE=org.apache.log4j.DailyRollingFileAppender
 log4j.appender.LOGFILE.File=/opt/liquid/log/liquid.log
 log4j.appender.LOGFILE.DatePattern='.'yyyy-MM-dd
@@ -38,7 +31,6 @@ log4j.appender.AUDIT.layout.ConversionPattern=%d %-5p [%t] [%x] %c{1} - %m%n
 log4j.additivity.liquid.security=false
 log4j.logger.liquid.security=INFO,AUDIT
 
-
 # Appender CONVERTDLOG writes to the file "convertd.log".
 log4j.appender.CONVERTDLOG=org.apache.log4j.DailyRollingFileAppender
 log4j.appender.CONVERTDLOG.File=/opt/liquid/log/convertd.log
@@ -51,42 +43,24 @@ log4j.appender.CONVERTDLOG.layout.ConversionPattern=%d %-5p [%t] [%x] %c{1} - %m
 log4j.additivity.com.zimbra.cs.convertd=false
 log4j.logger.com.zimbra.cs.convertd=DEBUG,CONVERTDLOG
 
+# Syslog appender
+log4j.appender.SYSLOG=org.apache.log4j.net.SyslogAppender
+log4j.appender.SYSLOG.SyslogHost=localhost
+#log4j.appender.SYSLOG.Facility=LOCAL3
+log4j.appender.SYSLOG.layout=org.apache.log4j.PatternLayout
+log4j.appender.SYSLOG.layout.ConversionPattern=%d %-5p [%t] [%x] %c{1} - %m%n
+
 # Appender STATS writes to file "stats"
 log4j.appender.STATS=com.zimbra.cs.stats.StartTimeFileAppender
 log4j.appender.STATS.File=/opt/liquid/log/liquidstats-%s.log
 log4j.appender.STATS.Append=false
 log4j.appender.STATS.layout=com.zimbra.cs.stats.AccumulatorLayout
  
-# Redirect com.zimbra.cs.stats to use STATS appender and ONLY
+# Redirect archive.util.Stats to use STATS appender and ONLY
 # the STATS appender
 log4j.additivity.com.zimbra.cs.stats=false
 log4j.logger.com.zimbra.cs.stats=DEBUG,STATS
 
-#log4j.logger.httpclient=DEBUG
-#log4j.logger.org.apache.commons.httpclient=DEBUG
-
-log4j.logger.liquid.imap=DEBUG
-log4j.logger.liquid.test=DEBUG
-
-log4j.logger.com.liquidsys=INFO
+log4j.logger.liquid=ERROR,SYSLOG
+log4j.logger.com.liquidsys=OFF
 log4j.logger.com.zimbra.cs.util.StopWatch=INFO
-#log4j.logger.com.liquidsys=DEBUG
-log4j.logger.com.liquidsys.soap.SoapEngine=DEBUG
-#log4j.logger.com.zimbra.cs.service.ContentServlet=DEBUG
-#log4j.logger.com.zimbra.cs.mime.handler.TextPlainHandler=DEBUG
-log4j.logger.com.zimbra.cs.mime.handler=DEBUG
-#log4j.logger.com.zimbra.cs.store.BlobChunk=DEBUG
-#log4j.logger.com.zimbra.cs.Archiver=DEBUG
-#log4j.logger.com.zimbra.cs=DEBUG
-#log4j.logger.com.zimbra.cs.index=DEBUG
-log4j.logger.com.zimbra.cs.mailbox.Mailbox=DEBUG
-log4j.logger.liquid.filter=DEBUG
-log4j.logger.liquid.backup=DEBUG
-log4j.logger.com.zimbra.cs.convert=DEBUG
-log4j.logger.com.zimbra.cs.service.admin.MailboxImportServlet=DEBUG
-log4j.logger.com.zimbra.cs.service.ContentServlet=DEBUG
-log4j.logger.com.zimbra.cs.service.ConversionServlet=DEBUG
-log4j.logger.com.zimbra.cs.service.admin.ExportMailbox=DEBUG
-
-#log4j.logger.liquid.sqltrace=DEBUG
-#log4j.logger.liquid.perf=DEBUG
