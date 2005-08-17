@@ -7,7 +7,7 @@ import junit.framework.TestResult;
 
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.util.LiquidLog;
-import com.zimbra.qa.unittest.LiquidSuite;
+import com.zimbra.qa.unittest.ZimbraSuite;
 import com.zimbra.soap.ZimbraContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
 
@@ -19,7 +19,7 @@ public class RunUnitTests extends WriteOpDocumentHandler {
 	public Element handle(Element request, Map context) {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         LiquidLog.test.debug("Running unit test suite");
-        TestResult result = LiquidSuite.runTestSuite(os);
+        TestResult result = ZimbraSuite.runTestSuite(os);
         LiquidLog.test.debug("Test results:\n" + os);
         
         ZimbraContext lc = getZimbraContext(context);

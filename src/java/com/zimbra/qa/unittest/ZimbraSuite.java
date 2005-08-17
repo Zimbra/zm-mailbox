@@ -14,7 +14,7 @@ import junit.textui.TestRunner;
  * @author bburtin
  *
  */
-public class LiquidSuite extends TestSuite
+public class ZimbraSuite extends TestSuite
 {
     public static TestSuite suite() {
         TestSuite suite = new TestSuite();
@@ -57,7 +57,7 @@ public class LiquidSuite extends TestSuite
             runner = new TestRunner(new PrintStream(outputStream));
         }
 
-        Test suite = runner.getTest(LiquidSuite.class.getName());
+        Test suite = runner.getTest(ZimbraSuite.class.getName());
         return runner.doRun(suite);
     }
 }
