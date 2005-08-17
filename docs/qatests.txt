@@ -29,4 +29,4 @@ tests fail for you, try rerunning it after reset-the-world.
 The test driver class is SoapTestCore.  This is what build.xml targets invoke.
 SoapTestCore depends on classes from ZimbraServer project.  So make sure to
 build ZimbraServer project before running test targets.  More specifically,
-liquidstore.jar file must be built (jar target in ZimbraServer/build.xml).
+zimbrastore.jar file must be built (jar target in ZimbraServer/build.xml).

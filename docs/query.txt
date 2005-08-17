@@ -89,9 +89,10 @@ saved-search-related:
 
   my:{name-of-saved-search}
   
-  i.e., could have a saved search of "domain:liquidsys.com" called "liquid" and say:
+  i.e., could have a saved search of "domain:example.zimbra.com"
+  called "zimbra" and say:
   
-  my:liquid
+  my:zimbra
   
 object-related fields:
 
