@@ -12,10 +12,10 @@ import org.apache.jsieve.SieveException;
  * TODO To change the template for this generated type comment go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-public class LiquidSieveException extends SieveException {
+public class ZimbraSieveException extends SieveException {
     private Throwable mCause;
     
-    public LiquidSieveException(Throwable t) {
+    public ZimbraSieveException(Throwable t) {
         mCause = t;
     }
     

@@ -253,11 +253,11 @@ public class ZimbraMailAdapter implements MailAdapter
                 }
             }
         } catch (ServiceException e) {
-            throw new LiquidSieveException(e);
+            throw new ZimbraSieveException(e);
         } catch (IOException e) {
-            throw new LiquidSieveException(e);
+            throw new ZimbraSieveException(e);
         } catch (MessagingException e) {
-            throw new LiquidSieveException(e);
+            throw new ZimbraSieveException(e);
         }
 
     }

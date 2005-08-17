@@ -158,8 +158,8 @@ public class RuleManager {
                 msg = mailAdapter.doDefaultFiling();
             }
         } catch (SieveException e) {
-            if (e instanceof LiquidSieveException) {
-                Throwable t = ((LiquidSieveException) e).getCause();
+            if (e instanceof ZimbraSieveException) {
+                Throwable t = ((ZimbraSieveException) e).getCause();
                 if (t instanceof ServiceException) {
                     throw (ServiceException) t;
                 } else if (t instanceof IOException) {
