@@ -9,11 +9,11 @@ installers to your local machine before installing.
 
 1. Checkout the following from Perforce:
 
-  LiquidArchive - the archive system, including the back-end servlets
+  ZimbraServer - the archive system, including the back-end servlets
 
-  LiquidConsole - the dhtml interface
+  ZimbraWebClient - the dhtml interface
 
-  LiquidAjax - DTML/Ajax toolkit
+  Ajax - DTML/Ajax toolkit
   
   Optional:  ThirdParty - not needed to run, but has javadocs and source for the
   various 3rd party jars/servers. It's very very large since all the built servers and
@@ -42,21 +42,21 @@ installers to your local machine before installing.
   NOTE: You will need to configure the plugin with your Perforce
   information before using the Perforce Perspective.
   
-  Once you get the Perforce Perspective open right click on LiquidArchive
-  and select "Import as project". Do the same for LiquidAjax and LiquidConsole.
+  Once you get the Perforce Perspective open right click on ZimbraServer
+  and select "Import as project". Do the same for Ajax and ZimbraWebClient.
 
 4. Install Tomcat 5.5.x
 
   On Windows, install Tomcat to c:\opt\liquid\tomcat
   
-  copy LiquidArchive/conf/tomcat-5.5/server.xml to {tomcat-install}/conf/
-  copy LiquidArchive/conf/tomcat-5.5/tomcat-users.xml {tomcat-install/conf/
+  copy ZimbraServer/conf/tomcat-5.5/server.xml to {tomcat-install}/conf/
+  copy ZimbraServer/conf/tomcat-5.5/tomcat-users.xml {tomcat-install/conf/
   
   The server.xml file is configured to use port 7070 by
   default. Production would of course use 80, and we'll also need to
   configure SSL
   
-  The LiquidArchive/build.xml relies on a liquid/liquid user in the
+  The ZimbraServer/build.xml relies on a liquid/liquid user in the
   tomcat-users.xml file to deploy
   
   IMPORTANT: Copy the files mail.jar, activation.jar and liquidos.jar
@@ -74,7 +74,7 @@ installers to your local machine before installing.
 
   We expect for now an admin account of "root" with password "liquid".
   This is different then the OS root account (if on Linux). The
-  LiquidArchive/build.xml file relies on the root account to create
+  ZimbraServer/build.xml file relies on the root account to create
   the liquid database and user/pass.
 
   On Linux, you can run the script ./configure in the main directory
@@ -115,17 +115,17 @@ installers to your local machine before installing.
 	
   	Window -> Show View -> Ant
   	
-  	Add: LiquidArchive/build.xml
+  	Add: ZimbraServer/build.xml
   		Run the "reset-the-world" target.
   	This will wipe out parts of /opt/liquid, reload the database, 
   	and run the archiver/indexer on the sample mail.
   	
-  	Add: LiquidConsole/build.xml
+  	Add: ZimbraWebClient/build.xml
     	Run "deploy" and "admin-deploy"
     This will compile/deploy the DHTML interface and the Admin Colsole.
     	
 	If you install ant standalone, you can also run "ant reset-the-world" 
-	from within the LiquidArchive root directory.
+	from within the ZimbraServer root directory.
      
 9. Test deployment
 

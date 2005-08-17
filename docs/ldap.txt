@@ -1,4 +1,4 @@
-LiquidArchive/build.xml now does most steps instructed here.
+ZimbraServer/build.xml now does most steps instructed here.
 
 On windows make sure (a) you have installed OpenLDAP to
 \opt\liquid\openldap and (b) installed it as a service 
@@ -28,8 +28,8 @@ Manual Instructions for Windows
 
    Make sure to set your install directory to C:\opt\liquid\openldap
 
-2. Copy LiquidArchive\conf\ldap\slapd.win.conf to C:\opt\liquid\openldap\slapd.conf   [<== NOTE: RENAMING FILE]
-   Copy LiquidArchive\conf\ldap\liquid.schema  to C:\opt\liquid\openldap\etc\schema\liquid.schema
+2. Copy ZimbraServer\conf\ldap\slapd.win.conf to C:\opt\liquid\openldap\slapd.conf   [<== NOTE: RENAMING FILE]
+   Copy ZimbraServer\conf\ldap\liquid.schema  to C:\opt\liquid\openldap\etc\schema\liquid.schema
 
 3. Start the slapd server from C:\opt\liquid\openldap\slapd (use 
    "-d 10" to see debug output if you have problems).
@@ -44,7 +44,7 @@ Manual Instructions for Windows
    version because Windows dislikes quotes):
 
         cd <path-to-your-workspace>  (e.g. "cd C:\Workspace")
-        C:\opt\liquid\openldap\ldapmodify -a -c -w liquid -D uid=liquid,cn=accounts,cn=liquid -x -f LiquidArchive/conf/ldap/liquid.ldif
+        C:\opt\liquid\openldap\ldapmodify -a -c -w liquid -D uid=liquid,cn=accounts,cn=liquid -x -f ZimbraServer/conf/ldap/liquid.ldif
 
 5. If you'd like, stop slapd and install it as a Windows service
    instead.

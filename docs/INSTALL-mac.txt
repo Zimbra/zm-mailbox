@@ -9,7 +9,7 @@ Installing p4:
 -----------------
 
 Double click to mount the dmg file and copy the binary directly to a directory of your choosing.
-Create client spec and check out LiquidArchive, LiquidConsole, LiquidAjax, and ThirdParty
+Create client spec and check out ZimbraServer, ZimbraWebClient, Ajax, and ThirdParty
 
 --------------------
 Installing Eclipse: 
@@ -21,12 +21,12 @@ Installing Eclipse:
 		Set:  Change all settings to 1.4
 		
 * Create Java projects for:
-	LiquidArchive
-	LiquidConsole
-	LiquidAjax
+	ZimbraServer
+	ZimbraWebClient
+	Ajax
 
 	-> New -> Java -> Java Project
-		ProjectName:  LiquidArchive, etc
+		ProjectName:  ZimbraServer, etc
 		Uncheck "use default"
 		Browse to the appropriate subdirectory in P4 install
 
@@ -36,7 +36,7 @@ Installing mysql:
 -----------------
 * Mount dmg and install both the server and the startup item (so mysql is started upon Mac startup).
 * You may need to restart to get mySql to install fully
-* Set up the root account (see LiquidArchive/docs/INSTALL.txt for more details) :
+* Set up the root account (see ZimbraServer/docs/INSTALL.txt for more details) :
 
 	sh> cd /usr/local/mysql/bin
 	sh> ./mysql -u root
@@ -111,9 +111,9 @@ Installing tomcat:
 3. Make a symbolic link called "tomcat":
 	sh> ln -s jakarta-tomcat-5.0.28 tomcat
 	
-4. Copy LiquidArchive/conf/server.xml to {tomcat-install}/conf/
+4. Copy ZimbraServer/conf/server.xml to {tomcat-install}/conf/
 
-5. Copy LiquidArchive/conf/tomcat-users.xml {tomcat-install/conf/
+5. Copy ZimbraServer/conf/tomcat-users.xml {tomcat-install/conf/
 
 6. Copy <liquid archive>/src/bin/* to /opt/liquid/bin, and chmod +x on them
 	sh> cd /opt/liquid/bin
@@ -130,8 +130,8 @@ Add a line for your local login user:
 	sh> exit	(to get out of root)
 
 	
-5. Build LiquidArchive first
-	* open LiquidArchive/build.xml
+5. Build ZimbraServer first
+	* open ZimbraServer/build.xml
 	
 
 Run "reset-the-world-no-convertd" target
@@ -143,7 +143,7 @@ If service.war deploy step keeps failing, manually deploy for the first time via
 		password: 	liquid
 	Click on "service":  Undeploy
 	"War file to deploy:" Browse to: 
-			LiquidArchive/build/dist/jakarta-tomcat-5.0.28/webapps/service.war
+			ZimbraServer/build/dist/jakarta-tomcat-5.0.28/webapps/service.war
 	Click Deploy
 	Then reset the world again
 	
@@ -151,21 +151,21 @@ If service.war deploy step keeps failing, manually deploy for the first time via
 The war should have been built and it is located at <liquid archive>/build/dist/jakarta-tomcat-*/webapps
 subsequent deploy should then work
 
-6. Build LiquidConsole by running "deploy" target
+6. Build ZimbraWebClient by running "deploy" target
 
 --------------------  FROM INSTALL.txt
 9. Initialize system
 
-  From inside of eclipse, double click on LiquidArchive/build.xml,
+  From inside of eclipse, double click on ZimbraServer/build.xml,
   then right click on "reset-the-world" from Outline panel, then 
   select "Run/Ant Build". This will wipe out parts of /opt/liquid, 
   reload the database, and run the archiver/indexer on the sample 
   mail. If you install ant standalone, you can also run "ant 
-  reset-the-world" from within the LiquidArchive root directory.
+  reset-the-world" from within the ZimbraServer root directory.
    
 10. Deploy application
 
-  From the same LiquidArchive/build.xml file, click on
+  From the same ZimbraServer/build.xml file, click on
   "service-deploy" from Outline panel and run it. This will deploy 
   the service.war file to {tomcat-install}/webapps/service.war and 
   unload/load the war file.
@@ -176,14 +176,14 @@ subsequent deploy should then work
   
   IF YOU GET:
 
-  BUILD FAILED: .../LiquidArchive/build.xml:258: java.io.FileNotFoundException: http://localhost:7070/manager//deploy?path=%2Fservice&update=true
+  BUILD FAILED: .../ZimbraServer/build.xml:258: java.io.FileNotFoundException: http://localhost:7070/manager//deploy?path=%2Fservice&update=true
   
 	deploy the file:
-		  .../LiquidArchive/build/dist/jakarta-tomcat-5.0.28/webapps/service.war
+		  .../ZimbraServer/build/dist/jakarta-tomcat-5.0.28/webapps/service.war
   
 11. Deploy Admin Console
 
-  From within LiquidConsole/build.xml from Outline panel, click on 
+  From within ZimbraWebClient/build.xml from Outline panel, click on 
   "deploy" to deploy the liquid.war to {tomcat-install}/webapps/liquid.war.
   
 12. Test deployment
