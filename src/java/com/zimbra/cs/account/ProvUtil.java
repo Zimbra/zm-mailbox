@@ -28,7 +28,7 @@ public class ProvUtil {
     private boolean mInteractive = false;
     
     private void usage() {
-        System.out.println("lqprov [cmd] [args ...]");
+        System.out.println("zmprov [cmd] [args ...]");
         System.out.println("");
 
         //System.out.println("  CopyAccount(cpa) {name@domain} {ldap-url} {ldap-bind-dn} {ldap-bind-passwd}");

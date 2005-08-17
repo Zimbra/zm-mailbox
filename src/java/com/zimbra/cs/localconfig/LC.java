@@ -94,7 +94,7 @@ public class LC {
     public static final KnownKey ssl_allow_untrusted_certs;
 
     static {
-        final String ZM_MYCNF_CAVEAT = "This value is stored here for use by lqmycnf program.  Changing this setting does not immediately reflect in MySQL server.  You will have to, with abundant precaution, re-generate my.cnf and restart MySQL server for the change to take effect.";
+        final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  Changing this setting does not immediately reflect in MySQL server.  You will have to, with abundant precaution, re-generate my.cnf and restart MySQL server for the change to take effect.";
         final String FS = File.separator;
         String hostname = "lookup.failed";
         try {
@@ -154,7 +154,7 @@ public class LC {
             ("Password for " + zimbra_mysql_user.key() + ". Stored in" +
              " local config for use by the store application to" +
              " authenticate.  If you want to change this password," +
-             " please use the lqmypasswd program which will change the" +
+             " please use the zmmypasswd program which will change the" +
              " password in both MySQL and in local config.");
 
         zimbra_ldap_userdn = new KnownKey("zimbra_ldap_userdn");
@@ -169,7 +169,7 @@ public class LC {
             ("Password for " + zimbra_ldap_userdn.key() + ". Stored in" +
              " local config for use by the store application to" +
              " authenticate.  If you want to change this password," +
-             " please use the lqldappasswd program which will  change the" +
+             " please use the zmldappasswd program which will  change the" +
              " password in both LDAP and in local config.");
 
         zimbra_server_hostname = new KnownKey("zimbra_server_hostname");
@@ -177,7 +177,7 @@ public class LC {
         zimbra_server_hostname.setDoc
             ("The provisioned name of this server. There should exist" +
              " a corresponding `server' entry in LDAP - consult" +
-             " documentation for CreateServer command of the lqprov program.");
+             " documentation for CreateServer command of the zmprov program.");
 
         stats_img_folder = new KnownKey("stats_img_folder");
         stats_img_folder.setDefault("${zimbra_home}" + FS + "zimbramon" + FS + "rrdtool" + FS + "work");
@@ -199,7 +199,7 @@ public class LC {
             ("Password for LDAP slapd.conf rootdn.  As a convenience," +
              " during LDAP initialization a random password is" +
              " generated, saved in local config and in slapd.conf.  If you" +
-             " want to change this password, please use the lqldappasswd" +
+             " want to change this password, please use the zmldappasswd" +
              " program which will change the password in both slapd.conf" +
              " and in local config.");
 
@@ -248,7 +248,7 @@ public class LC {
         mysql_memory_percent.setDefault("40");
         mysql_memory_percent.setDoc
             ("Percentage of system memory that mysql should use. TODO:" +
-             " change docs, and make sure lqmycnf handles " +
+             " change docs, and make sure zmmycnf handles " +
              " innodb_log_buffer_size delicately as change in that " +
              " influencnes changes to the log file sizes. " + ZM_MYCNF_CAVEAT);
 
@@ -272,7 +272,7 @@ public class LC {
              " confused with the UNIX root login.  As a convenience," +
              " during database initialization a random password is" +
              " generated, saved in local config and in MySQL.  If you" +
-             " want to change this password, please use the lqmypasswd" +
+             " want to change this password, please use the zmmypasswd" +
              " program which will change the password in both MySQL" +
              " and in local config.");
 

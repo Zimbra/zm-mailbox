@@ -1876,8 +1876,8 @@ public class Mailbox {
         try {
             beginTransaction("search", null);
 
-            ZimbraQuery lq = new ZimbraQuery(queryString, this); 
-            ZimbraQueryResults results = getMailboxIndex().search(lq, types, sortBy, includeTrash, includeSpam);
+            ZimbraQuery zq = new ZimbraQuery(queryString, this); 
+            ZimbraQueryResults results = getMailboxIndex().search(zq, types, sortBy, includeTrash, includeSpam);
             success = true;
             return results;
         } finally {

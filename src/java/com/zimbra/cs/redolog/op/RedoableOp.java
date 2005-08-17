@@ -33,7 +33,7 @@ public abstract class RedoableOp {
     private static String sPackageName = RedoableOp.class.getPackage().getName();
 
 	// magic marker for each redo item in redo log
-	private static final String REDO_MAGIC = "LQREDO";
+	private static final String REDO_MAGIC = "ZMREDO";
 
 	// versioning of serialization
 	// currently v0.1

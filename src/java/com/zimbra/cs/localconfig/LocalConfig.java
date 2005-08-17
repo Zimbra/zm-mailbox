@@ -29,11 +29,11 @@ public class LocalConfig {
     private String mConfigFile;
     
     private String defaultConfigFile() {
-        String lqHome = System.getProperty("zimbra.home");
-        if (lqHome == null) {
-            lqHome = File.separator + "opt" + File.separator + "zimbra";
+        String zmHome = System.getProperty("zimbra.home");
+        if (zmHome == null) {
+            zmHome = File.separator + "opt" + File.separator + "zimbra";
         }
-        return lqHome + File.separator + "conf" + File.separator + "localconfig.xml";
+        return zmHome + File.separator + "conf" + File.separator + "localconfig.xml";
     }
         
     String getConfigFile() {
