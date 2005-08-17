@@ -167,10 +167,10 @@
 		</antcall>
 	</target>
 
-	<target name="javacc-LiquidQueryParser">
+	<target name="javacc-ZimbraQueryParser">
 		<antcall target="javacc">
 			<param name="target.classdir" value="com/zimbra/cs/index/queryparser" />
-			<param name="target" value="LiquidQueryParser.jj" />
+			<param name="target" value="ZimbraQueryParser.jj" />
 		</antcall>
 	</target>
 
