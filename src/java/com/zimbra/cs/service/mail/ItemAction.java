@@ -12,8 +12,8 @@ import com.liquidsys.coco.mailbox.Mailbox;
 import com.liquidsys.coco.mailbox.Mailbox.OperationContext;
 import com.liquidsys.coco.service.Element;
 import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.soap.LiquidContext;
-import com.liquidsys.soap.WriteOpDocumentHandler;
+import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.WriteOpDocumentHandler;
 
 /**
  * @author dkarp

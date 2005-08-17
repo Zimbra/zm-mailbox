@@ -7,8 +7,8 @@ import java.util.Map;
 
 import com.liquidsys.coco.service.Element;
 import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.soap.DocumentHandler;
-import com.liquidsys.soap.LiquidContext;
+import com.zimbra.soap.DocumentHandler;
+import com.zimbra.soap.LiquidContext;
 
 /**
  * @author schemers

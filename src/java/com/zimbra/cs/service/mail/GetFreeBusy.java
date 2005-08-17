@@ -9,8 +9,8 @@ import com.liquidsys.coco.mailbox.calendar.IcalXmlStrMap;
 import com.liquidsys.coco.service.Element;
 import com.liquidsys.coco.service.ServiceException;
 import com.liquidsys.coco.stats.StopWatch;
-import com.liquidsys.soap.LiquidContext;
-import com.liquidsys.soap.WriteOpDocumentHandler;
+import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.WriteOpDocumentHandler;
 
 import java.util.*;
 

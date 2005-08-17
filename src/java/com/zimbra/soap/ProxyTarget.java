@@ -1,7 +1,7 @@
 /*
  * Created on 2005. 3. 3.
  */
-package com.liquidsys.soap;
+package com.zimbra.soap;
 
 import java.io.IOException;
 

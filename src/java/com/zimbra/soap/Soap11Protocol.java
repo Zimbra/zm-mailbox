@@ -2,7 +2,7 @@
  * Soap11Protocol.java
  */
 
-package com.liquidsys.soap;
+package com.zimbra.soap;
 
 import org.dom4j.Namespace;
 import org.dom4j.QName;
@@ -42,7 +42,7 @@ class Soap11Protocol extends SoapProtocol {
     }
     
     /* (non-Javadoc)
-     * @see com.liquidsys.soap.shared.SoapProtocol#soapFault(org.dom4j.Element)
+     * @see com.zimbra.soap.shared.SoapProtocol#soapFault(org.dom4j.Element)
      */
     public SoapFaultException soapFault(Element fault) {
         if (!isFault(fault))
@@ -64,7 +64,7 @@ class Soap11Protocol extends SoapProtocol {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.soap.SoapProtocol#soapFault(com.liquidsys.coco.service.ServiceException)
+     * @see com.zimbra.soap.SoapProtocol#soapFault(com.liquidsys.coco.service.ServiceException)
      */
     public Element soapFault(ServiceException e) {
         String reason = e.getMessage();

@@ -10,7 +10,7 @@ import com.liquidsys.coco.service.ServiceException;
 import com.liquidsys.coco.util.LiquidLog;
 import com.liquidsys.coco.account.Account;
 import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.soap.LiquidContext;
+import com.zimbra.soap.LiquidContext;
 
 /**
  * @author schemers

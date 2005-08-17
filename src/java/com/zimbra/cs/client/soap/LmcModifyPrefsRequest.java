@@ -8,7 +8,7 @@ import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
 import com.liquidsys.coco.service.account.AccountService;
-import com.liquidsys.soap.DomUtil;
+import com.zimbra.soap.DomUtil;
 
 
 public class LmcModifyPrefsRequest extends LmcSoapRequest {

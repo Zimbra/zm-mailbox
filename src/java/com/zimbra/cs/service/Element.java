@@ -697,7 +697,7 @@ public abstract class Element {
          .addAttribute("firstName", "Satish", DISP_ELEMENT).addAttribute("lastName", "Dharmaraj", DISP_ELEMENT);
         System.out.println(e);
 
-//        System.out.println(com.liquidsys.soap.SoapProtocol.toString(e.toXML(), true));
+//        System.out.println(com.zimbra.soap.SoapProtocol.toString(e.toXML(), true));
         System.out.println(new XMLElement("test").setText("  this\t    is\nthe\rway ").getTextTrim() + "|");
     }
 }

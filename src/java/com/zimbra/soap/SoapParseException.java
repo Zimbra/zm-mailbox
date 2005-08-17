@@ -1,4 +1,4 @@
-package com.liquidsys.soap;
+package com.zimbra.soap;
 
 /**
  * An IOException that SoapTransport.invoke throws if it is unable to

@@ -11,8 +11,8 @@ import java.util.Map.Entry;
 import com.liquidsys.coco.account.Account;
 import com.liquidsys.coco.service.Element;
 import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.soap.DocumentHandler;
-import com.liquidsys.soap.LiquidContext;
+import com.zimbra.soap.DocumentHandler;
+import com.zimbra.soap.LiquidContext;
 
 /**
  * @author schemers
@@ -20,7 +20,7 @@ import com.liquidsys.soap.LiquidContext;
 public class GetPrefs extends DocumentHandler  {
 
 	/* (non-Javadoc)
-	 * @see com.liquidsys.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
+	 * @see com.zimbra.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
 	 */
 	public Element handle(Element request, Map context) throws ServiceException {
 		LiquidContext lc = getLiquidContext(context);

@@ -14,8 +14,8 @@ import org.dom4j.QName;
 import com.liquidsys.coco.service.Element;
 import com.liquidsys.coco.service.ServiceException;
 import com.liquidsys.coco.util.StringUtil;
-import com.liquidsys.soap.DocumentDispatcher;
-import com.liquidsys.soap.DocumentService;
+import com.zimbra.soap.DocumentDispatcher;
+import com.zimbra.soap.DocumentService;
 
 /**
  * @author schemers

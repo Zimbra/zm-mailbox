@@ -8,8 +8,8 @@ import junit.framework.TestResult;
 import com.liquidsys.coco.service.Element;
 import com.liquidsys.coco.util.LiquidLog;
 import com.liquidsys.qa.unittest.LiquidSuite;
-import com.liquidsys.soap.LiquidContext;
-import com.liquidsys.soap.WriteOpDocumentHandler;
+import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.WriteOpDocumentHandler;
 
 /**
  * @author bburtin

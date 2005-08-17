@@ -9,8 +9,8 @@ import com.liquidsys.coco.account.Account;
 import com.liquidsys.coco.filter.RuleManager;
 import com.liquidsys.coco.service.Element;
 import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.soap.DocumentHandler;
-import com.liquidsys.soap.LiquidContext;
+import com.zimbra.soap.DocumentHandler;
+import com.zimbra.soap.LiquidContext;
 
 /**
  * @author kchen
@@ -18,7 +18,7 @@ import com.liquidsys.soap.LiquidContext;
 public class GetRules extends DocumentHandler {
 
     /* (non-Javadoc)
-     * @see com.liquidsys.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
+     * @see com.zimbra.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
      */
     public Element handle(Element document, Map context)
             throws ServiceException {

@@ -11,7 +11,7 @@ import org.dom4j.Element;
 
 import com.liquidsys.coco.service.ServiceException;
 import com.liquidsys.coco.service.mail.MailService;
-import com.liquidsys.soap.SoapParseException;
+import com.zimbra.soap.SoapParseException;
 
 /**
  * @author jhahm

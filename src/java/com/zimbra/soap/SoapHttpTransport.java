@@ -2,7 +2,7 @@
  * SoapHttpTransport.java
  */
 
-package com.liquidsys.soap;
+package com.zimbra.soap;
 
 import java.io.IOException;
 import org.apache.commons.httpclient.HttpClient;
@@ -16,7 +16,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.liquidsys.coco.service.Element;
-import com.liquidsys.soap.SoapProtocol;
+import com.zimbra.soap.SoapProtocol;
 
 /**
  */

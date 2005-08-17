@@ -11,10 +11,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.dom4j.Element;
 
-import com.liquidsys.soap.DomUtil;
-import com.liquidsys.soap.SoapFaultException;
-import com.liquidsys.soap.SoapHttpTransport;
-import com.liquidsys.soap.SoapParseException;
+import com.zimbra.soap.DomUtil;
+import com.zimbra.soap.SoapFaultException;
+import com.zimbra.soap.SoapHttpTransport;
+import com.zimbra.soap.SoapParseException;
 import com.liquidsys.coco.service.ServiceException;
 import com.liquidsys.coco.service.mail.MailService;
 import com.liquidsys.coco.service.admin.AdminService;

@@ -1,7 +1,7 @@
 /*
  * Created on 2005. 1. 7.
  */
-package com.liquidsys.soap;
+package com.zimbra.soap;
 
 /**
  * @author jhahm

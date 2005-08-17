@@ -20,10 +20,10 @@ import com.liquidsys.coco.service.Element;
 import com.liquidsys.coco.service.ServiceException;
 import com.liquidsys.coco.service.account.AccountService;
 import com.liquidsys.coco.util.Liquid;
-import com.liquidsys.soap.LiquidContext;
-import com.liquidsys.soap.SoapFaultException;
-import com.liquidsys.soap.SoapHttpTransport;
-import com.liquidsys.soap.SoapTransport;
+import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.SoapFaultException;
+import com.zimbra.soap.SoapHttpTransport;
+import com.zimbra.soap.SoapTransport;
 import com.liquidsys.coco.service.mail.*;
 import com.liquidsys.coco.servlet.LiquidServlet;
 

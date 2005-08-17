@@ -1,4 +1,4 @@
-package com.liquidsys.soap;
+package com.zimbra.soap;
 
 import com.liquidsys.coco.account.Account;
 import com.liquidsys.coco.account.AuthToken;
@@ -11,7 +11,7 @@ import com.liquidsys.coco.session.SoapSession;
 import com.liquidsys.coco.util.Config;
 import com.liquidsys.coco.util.Liquid;
 import com.liquidsys.coco.util.LiquidLog;
-import com.liquidsys.soap.SoapProtocol;
+import com.zimbra.soap.SoapProtocol;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;

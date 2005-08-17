@@ -1,7 +1,7 @@
 /*
  * Created on May 26, 2004
  */
-package com.liquidsys.soap;
+package com.zimbra.soap;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,8 +19,8 @@ import org.dom4j.DocumentException;
 import com.liquidsys.coco.service.Element;
 import com.liquidsys.coco.util.ByteUtil;
 import com.liquidsys.coco.util.Liquid;
-import com.liquidsys.soap.SoapFaultException;
-import com.liquidsys.soap.SoapHttpTransport;
+import com.zimbra.soap.SoapFaultException;
+import com.zimbra.soap.SoapHttpTransport;
 
 /**
  * @author schemers

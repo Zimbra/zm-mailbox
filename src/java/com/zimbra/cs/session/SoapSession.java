@@ -13,7 +13,7 @@ import com.liquidsys.coco.service.ServiceException;
 import com.liquidsys.coco.service.mail.GetFolder;
 import com.liquidsys.coco.service.mail.ToXML;
 import com.liquidsys.coco.session.PendingModifications.Change;
-import com.liquidsys.soap.LiquidContext;
+import com.zimbra.soap.LiquidContext;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

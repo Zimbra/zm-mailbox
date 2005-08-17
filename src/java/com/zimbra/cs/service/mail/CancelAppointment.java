@@ -22,7 +22,7 @@ import com.liquidsys.coco.service.Element;
 import com.liquidsys.coco.service.ServiceException;
 import com.liquidsys.coco.service.util.ParsedItemID;
 import com.liquidsys.coco.stats.StopWatch;
-import com.liquidsys.soap.LiquidContext;
+import com.zimbra.soap.LiquidContext;
 
 public class CancelAppointment extends CalendarRequest {
 

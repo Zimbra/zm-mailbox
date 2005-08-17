@@ -3,11 +3,11 @@ package com.liquidsys.coco.client.soap;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
-import com.liquidsys.soap.DomUtil;
+import com.zimbra.soap.DomUtil;
 import com.liquidsys.coco.service.account.AccountService;
 import com.liquidsys.coco.service.admin.AdminService;
 import com.liquidsys.coco.service.admin.GetAccount;
-import com.liquidsys.soap.LiquidContext;
+import com.zimbra.soap.LiquidContext;
 import com.liquidsys.coco.client.*;
 import com.liquidsys.coco.service.ServiceException;
 

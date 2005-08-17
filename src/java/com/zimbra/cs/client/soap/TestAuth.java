@@ -10,7 +10,7 @@ import EDU.oswego.cs.dl.util.concurrent.PooledExecutor;
 
 import com.liquidsys.coco.service.ServiceException;
 import com.liquidsys.coco.client.*;
-import com.liquidsys.soap.SoapFaultException;
+import com.zimbra.soap.SoapFaultException;
 import com.liquidsys.coco.util.Liquid;
 
 public class TestAuth implements Runnable {

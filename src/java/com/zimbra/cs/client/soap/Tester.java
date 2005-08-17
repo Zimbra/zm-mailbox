@@ -6,7 +6,7 @@ import java.util.*;
 
 import com.liquidsys.coco.service.ServiceException;
 import com.liquidsys.coco.client.*;
-import com.liquidsys.soap.SoapFaultException;
+import com.zimbra.soap.SoapFaultException;
 import com.liquidsys.coco.index.MailboxIndex;
 import com.liquidsys.coco.service.mail.ItemAction;
 import com.liquidsys.coco.util.Liquid;

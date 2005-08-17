@@ -5,7 +5,7 @@ import org.dom4j.DocumentHelper;
 
 import com.liquidsys.coco.service.ServiceException;
 import com.liquidsys.coco.service.mail.MailService;
-import com.liquidsys.soap.DomUtil;
+import com.zimbra.soap.DomUtil;
 
 public class LmcNoteActionRequest extends LmcSoapRequest {
 

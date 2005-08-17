@@ -12,9 +12,9 @@ import com.liquidsys.coco.service.admin.AdminService;
 import com.liquidsys.coco.service.mail.MailService;
 import com.liquidsys.coco.service.util.ParseMailboxID;
 import com.liquidsys.coco.servlet.LiquidServlet;
-import com.liquidsys.soap.SoapFaultException;
-import com.liquidsys.soap.SoapHttpTransport;
-import com.liquidsys.soap.SoapTransport;
+import com.zimbra.soap.SoapFaultException;
+import com.zimbra.soap.SoapHttpTransport;
+import com.zimbra.soap.SoapTransport;
 
 import java.io.IOException;
 import java.util.ArrayList;

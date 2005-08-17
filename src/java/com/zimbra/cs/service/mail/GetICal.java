@@ -16,8 +16,8 @@ import com.liquidsys.coco.mailbox.Mailbox.OperationContext;
 import com.liquidsys.coco.service.Element;
 import com.liquidsys.coco.service.ServiceException;
 import com.liquidsys.coco.stats.StopWatch;
-import com.liquidsys.soap.LiquidContext;
-import com.liquidsys.soap.WriteOpDocumentHandler;
+import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.WriteOpDocumentHandler;
 
 
 public class GetICal extends WriteOpDocumentHandler {
@@ -25,7 +25,7 @@ public class GetICal extends WriteOpDocumentHandler {
     private static StopWatch sWatch = StopWatch.getInstance("GetICal");
     
     /* (non-Javadoc)
-     * @see com.liquidsys.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
+     * @see com.zimbra.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
      */
     public Element handle(Element request, Map context) throws ServiceException {
         long startTime = sWatch.start();

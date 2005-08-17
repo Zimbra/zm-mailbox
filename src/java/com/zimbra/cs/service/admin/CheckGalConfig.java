@@ -12,7 +12,7 @@ import com.liquidsys.coco.account.ldap.Check;
 import com.liquidsys.coco.service.Element;
 import com.liquidsys.coco.service.ServiceException;
 import com.liquidsys.coco.service.account.SearchGal;
-import com.liquidsys.soap.LiquidContext;
+import com.zimbra.soap.LiquidContext;
 
 /**
  * @author schemers

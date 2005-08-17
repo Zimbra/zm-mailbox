@@ -17,7 +17,7 @@ import com.liquidsys.coco.service.Element;
 import com.liquidsys.coco.service.ServiceException;
 import com.liquidsys.coco.service.util.ParsedItemID;
 import com.liquidsys.coco.stats.StopWatch;
-import com.liquidsys.soap.LiquidContext;
+import com.zimbra.soap.LiquidContext;
 
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.parameter.PartStat;
@@ -31,7 +31,7 @@ public class SendInviteReply extends SendMsg {
     private static StopWatch sWatch = StopWatch.getInstance("SendInviteReply");
     
     /* (non-Javadoc)
-     * @see com.liquidsys.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
+     * @see com.zimbra.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
      */
     public Element handle(Element request, Map context) throws ServiceException {
         long startTime = sWatch.start();

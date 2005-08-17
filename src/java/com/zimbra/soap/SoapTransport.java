@@ -2,11 +2,11 @@
  * SoapTransport.java
  */
 
-package com.liquidsys.soap;
+package com.zimbra.soap;
 
 import com.liquidsys.coco.service.Element;
-import com.liquidsys.soap.SoapProtocol;
-import com.liquidsys.soap.SoapFaultException;
+import com.zimbra.soap.SoapProtocol;
+import com.zimbra.soap.SoapFaultException;
 
 import java.io.IOException;
 

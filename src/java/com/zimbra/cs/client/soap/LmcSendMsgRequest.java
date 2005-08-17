@@ -11,7 +11,7 @@ import org.apache.commons.httpclient.methods.MultipartPostMethod;
 import org.dom4j.Element;
 import org.dom4j.DocumentHelper;
 
-import com.liquidsys.soap.DomUtil;
+import com.zimbra.soap.DomUtil;
 import com.liquidsys.coco.service.ServiceException;
 import com.liquidsys.coco.client.*;
 import com.liquidsys.coco.service.mail.MailService;

@@ -6,7 +6,7 @@ import java.util.Iterator;
 import org.dom4j.Element;
 import org.dom4j.DocumentHelper;
 
-import com.liquidsys.soap.DomUtil;
+import com.zimbra.soap.DomUtil;
 import com.liquidsys.coco.service.account.AccountService;
 import com.liquidsys.coco.service.ServiceException;
 

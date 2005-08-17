@@ -1,4 +1,4 @@
-package com.liquidsys.soap;
+package com.zimbra.soap;
 
 
 import com.liquidsys.coco.service.Element;

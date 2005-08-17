@@ -28,7 +28,7 @@ import com.liquidsys.coco.account.AuthTokenException;
 import com.liquidsys.coco.service.Element;
 import com.liquidsys.coco.service.ServiceException;
 import com.liquidsys.coco.util.LiquidLog;
-import com.liquidsys.soap.SoapProtocol;
+import com.zimbra.soap.SoapProtocol;
 
 /**
  * @author jhahm

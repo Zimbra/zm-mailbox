@@ -1,7 +1,7 @@
 /*
  * Created on May 26, 2004
  */
-package com.liquidsys.soap;
+package com.zimbra.soap;
 
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;

@@ -9,7 +9,7 @@ import com.liquidsys.coco.account.Provisioning;
 import com.liquidsys.coco.db.DbStatus;
 import com.liquidsys.coco.service.Element;
 import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.soap.LiquidContext;
+import com.zimbra.soap.LiquidContext;
 
 /**
  * @author jhahm
@@ -17,7 +17,7 @@ import com.liquidsys.soap.LiquidContext;
 public class CheckHealth extends AdminDocumentHandler {
 
     /* (non-Javadoc)
-     * @see com.liquidsys.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
+     * @see com.zimbra.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
      */
     public Element handle(Element document, Map context)
             throws ServiceException {

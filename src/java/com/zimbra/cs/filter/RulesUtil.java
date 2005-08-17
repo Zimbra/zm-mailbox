@@ -18,9 +18,9 @@ import com.liquidsys.coco.service.mail.MailService;
 import com.liquidsys.coco.servlet.LiquidServlet;
 import com.liquidsys.coco.util.ByteUtil;
 import com.liquidsys.coco.util.Liquid;
-import com.liquidsys.soap.LiquidContext;
-import com.liquidsys.soap.SoapHttpTransport;
-import com.liquidsys.soap.SoapTransport;
+import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.SoapHttpTransport;
+import com.zimbra.soap.SoapTransport;
 
 /**
  * Saves filter rules for an account.

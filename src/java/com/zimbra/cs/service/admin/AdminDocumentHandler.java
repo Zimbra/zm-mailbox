@@ -8,7 +8,7 @@ package com.liquidsys.coco.service.admin;
 
 import java.util.Map;
 
-import com.liquidsys.soap.DocumentHandler;
+import com.zimbra.soap.DocumentHandler;
 
 
 /**

@@ -4,7 +4,7 @@ import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
 import com.liquidsys.coco.service.admin.AdminService;
-import com.liquidsys.soap.DomUtil;
+import com.zimbra.soap.DomUtil;
 
 public class LmcDeleteAccountRequest extends LmcSoapRequest {
     String mAccountId;

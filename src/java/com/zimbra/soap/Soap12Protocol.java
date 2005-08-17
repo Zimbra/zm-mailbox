@@ -2,14 +2,14 @@
  * Soap12Protocol.java
  */
 
-package com.liquidsys.soap;
+package com.zimbra.soap;
 
 import org.dom4j.Namespace;
 import org.dom4j.QName;
 
 import com.liquidsys.coco.service.Element;
 import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.soap.SoapFaultException;
+import com.zimbra.soap.SoapFaultException;
 
 /**
  * Interface to Soap 1.2 Protocol

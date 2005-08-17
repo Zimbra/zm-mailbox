@@ -2,7 +2,7 @@
  * SoapProtocol.java
  */
 
-package com.liquidsys.soap;
+package com.zimbra.soap;
 
 import java.util.Iterator;
 

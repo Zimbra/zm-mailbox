@@ -7,7 +7,7 @@ import org.dom4j.Element;
 import org.dom4j.DocumentHelper;
 import org.dom4j.QName;
 
-import com.liquidsys.soap.DomUtil;
+import com.zimbra.soap.DomUtil;
 import com.liquidsys.coco.service.mail.MailService;
 import com.liquidsys.coco.service.ServiceException;
 

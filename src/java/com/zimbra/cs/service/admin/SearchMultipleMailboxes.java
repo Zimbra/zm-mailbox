@@ -18,7 +18,7 @@ import com.liquidsys.coco.service.mail.Search;
 import com.liquidsys.coco.service.util.ParseMailboxID;
 import com.liquidsys.coco.util.CrossMailboxSearch;
 import com.liquidsys.coco.util.LiquidLog;
-import com.liquidsys.soap.LiquidContext;
+import com.zimbra.soap.LiquidContext;
 
 
 /**

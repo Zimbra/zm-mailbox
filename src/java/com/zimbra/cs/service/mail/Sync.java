@@ -17,8 +17,8 @@ import com.liquidsys.coco.mailbox.Tag;
 import com.liquidsys.coco.service.Element;
 import com.liquidsys.coco.service.ServiceException;
 import com.liquidsys.coco.session.PendingModifications.Change;
-import com.liquidsys.soap.DocumentHandler;
-import com.liquidsys.soap.LiquidContext;
+import com.zimbra.soap.DocumentHandler;
+import com.zimbra.soap.LiquidContext;
 
 /**
  * @author dkarp

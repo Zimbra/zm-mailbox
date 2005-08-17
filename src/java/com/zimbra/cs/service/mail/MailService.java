@@ -7,8 +7,8 @@ package com.liquidsys.coco.service.mail;
 import org.dom4j.Namespace;
 import org.dom4j.QName;
 
-import com.liquidsys.soap.DocumentDispatcher;
-import com.liquidsys.soap.DocumentService;
+import com.zimbra.soap.DocumentDispatcher;
+import com.zimbra.soap.DocumentService;
 
 /**
  * @author schemers

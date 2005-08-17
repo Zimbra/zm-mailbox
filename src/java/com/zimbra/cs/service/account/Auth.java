@@ -15,9 +15,9 @@ import com.liquidsys.coco.service.ServiceException;
 import com.liquidsys.coco.session.Session;
 import com.liquidsys.coco.session.SessionCache;
 import com.liquidsys.coco.util.LiquidLog;
-import com.liquidsys.soap.DocumentHandler;
-import com.liquidsys.soap.LiquidContext;
-import com.liquidsys.soap.SoapEngine;
+import com.zimbra.soap.DocumentHandler;
+import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.SoapEngine;
 
 /**
  * @author schemers

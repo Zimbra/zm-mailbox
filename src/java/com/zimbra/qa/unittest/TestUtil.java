@@ -19,7 +19,7 @@ import com.liquidsys.coco.mailbox.Message;
 import com.liquidsys.coco.mime.ParsedMessage;
 import com.liquidsys.coco.service.ServiceException;
 import com.liquidsys.coco.util.StringUtil;
-import com.liquidsys.soap.SoapFaultException;
+import com.zimbra.soap.SoapFaultException;
 
 /**
  * @author bburtin

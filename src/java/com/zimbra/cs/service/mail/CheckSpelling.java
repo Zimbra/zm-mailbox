@@ -10,8 +10,8 @@ import com.liquidsys.coco.service.Element;
 import com.liquidsys.coco.service.util.RemoteServerRequest;
 import com.liquidsys.coco.util.LiquidLog;
 import com.liquidsys.coco.util.StringUtil;
-import com.liquidsys.soap.DocumentHandler;
-import com.liquidsys.soap.LiquidContext;
+import com.zimbra.soap.DocumentHandler;
+import com.zimbra.soap.LiquidContext;
 
 /**
  * @author bburtin

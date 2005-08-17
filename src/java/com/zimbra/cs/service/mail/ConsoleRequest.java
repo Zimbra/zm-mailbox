@@ -10,8 +10,8 @@ import com.liquidsys.coco.account.Provisioning;
 import com.liquidsys.coco.mailbox.Mailbox;
 import com.liquidsys.coco.service.Element;
 import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.soap.LiquidContext;
-import com.liquidsys.soap.WriteOpDocumentHandler;
+import com.zimbra.soap.LiquidContext;
+import com.zimbra.soap.WriteOpDocumentHandler;
 
 
 /**
@@ -37,7 +37,7 @@ public class ConsoleRequest extends WriteOpDocumentHandler
     }
     
     /* (non-Javadoc)
-     * @see com.liquidsys.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
+     * @see com.zimbra.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
      */
     public Element handle(Element request, Map context)
             throws ServiceException 

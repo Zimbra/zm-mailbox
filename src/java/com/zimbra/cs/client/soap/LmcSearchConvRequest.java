@@ -2,7 +2,7 @@ package com.liquidsys.coco.client.soap;
 
 import org.dom4j.Element;
 
-import com.liquidsys.soap.DomUtil;
+import com.zimbra.soap.DomUtil;
 import com.liquidsys.coco.service.mail.MailService;
 
 public class LmcSearchConvRequest extends LmcSearchRequest {

@@ -1,7 +1,7 @@
 /*
  * Created on May 26, 2004
  */
-package com.liquidsys.soap;
+package com.zimbra.soap;
 
 import java.io.IOException;
 
@@ -11,8 +11,8 @@ import com.liquidsys.coco.service.mail.MailService;
 import com.liquidsys.coco.service.account.AccountService;
 import com.liquidsys.coco.servlet.LiquidServlet;
 import com.liquidsys.coco.util.Liquid;
-import com.liquidsys.soap.SoapFaultException;
-import com.liquidsys.soap.SoapHttpTransport;
+import com.zimbra.soap.SoapFaultException;
+import com.zimbra.soap.SoapHttpTransport;
 
 /**
  * @author schemers

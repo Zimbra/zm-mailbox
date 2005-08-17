@@ -6,8 +6,8 @@ import org.dom4j.Element;
 
 import com.liquidsys.coco.service.ServiceException;
 import com.liquidsys.coco.service.mail.MailService;
-import com.liquidsys.soap.DomUtil;
-import com.liquidsys.soap.SoapParseException;
+import com.zimbra.soap.DomUtil;
+import com.zimbra.soap.SoapParseException;
 import com.liquidsys.coco.client.*;
 
 public class LmcCreateContactRequest extends LmcSoapRequest {
