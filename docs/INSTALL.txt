@@ -22,7 +22,7 @@ installers to your local machine before installing.
 2. Install latest JDK. Need full JDK, not just a JRE, since ant uses
    the compiler.  1.5.x
    
-   Reccomend installing in c:\opt\liquid\java
+   Reccomend installing in c:\opt\zimbra\java
    
    Set the JAVA_HOME environment variable to point to the installed
    JDK location.
@@ -47,7 +47,7 @@ installers to your local machine before installing.
 
 4. Install Tomcat 5.5.x
 
-  On Windows, install Tomcat to c:\opt\liquid\tomcat
+  On Windows, install Tomcat to c:\opt\zimbra\tomcat
   
   copy ZimbraServer/conf/tomcat-5.5/server.xml to {tomcat-install}/conf/
   copy ZimbraServer/conf/tomcat-5.5/tomcat-users.xml {tomcat-install/conf/
@@ -56,26 +56,26 @@ installers to your local machine before installing.
   default. Production would of course use 80, and we'll also need to
   configure SSL
   
-  The ZimbraServer/build.xml relies on a liquid/liquid user in the
+  The ZimbraServer/build.xml relies on a zimbra/zimbra user in the
   tomcat-users.xml file to deploy
   
-  IMPORTANT: Copy the files mail.jar, activation.jar and liquidos.jar
-  from <workspace>\liquidarchive\jars to your <tomcat>\common\lib.
+  IMPORTANT: Copy the files mail.jar, activation.jar and zimbraos.jar
+  from <workspace>\zimbraarchive\jars to your <tomcat>\common\lib.
   
-  Copy \opt\liquid\tomcat\conf\keystore to the conf directory of your
-  Tomcat installation directory if it is not in \opt\liquid\tomcat.
+  Copy \opt\zimbra\tomcat\conf\keystore to the conf directory of your
+  Tomcat installation directory if it is not in \opt\zimbra\tomcat.
   
   On Linux startup with:
       $ JAVA_HOME={java-home} {tomcat-install}/bin/startup.sh
 
 5. Install MySQL 4.1.x
 
-  On Windows, install MySQL to c:\opt\liquid\mysql
+  On Windows, install MySQL to c:\opt\zimbra\mysql
 
-  We expect for now an admin account of "root" with password "liquid".
+  We expect for now an admin account of "root" with password "zimbra".
   This is different then the OS root account (if on Linux). The
   ZimbraServer/build.xml file relies on the root account to create
-  the liquid database and user/pass.
+  the zimbra database and user/pass.
 
   On Linux, you can run the script ./configure in the main directory
   of the binary mysql distribtion.  This script creates
@@ -87,9 +87,9 @@ installers to your local machine before installing.
   line:
 
     $ mysql -u root -p
-    Password: liquid     
+    Password: zimbra     
     
-    mysql> grant all on *.* to "root"@"localhost.localdomain" identified by 'liquid' with grant option;
+    mysql> grant all on *.* to "root"@"localhost.localdomain" identified by 'zimbra' with grant option;
     Query OK, 0 rows affected (0.02 sec)
     mysql> flush privileges;
     Query OK, 0 rows affected (0.00 sec)
@@ -99,7 +99,7 @@ installers to your local machine before installing.
 
 6. Install OpenLDAP (Get pkg from \\kenny)
 
-  On Windows, install to c:\opt\liquid\openldap. Then go to the
+  On Windows, install to c:\opt\zimbra\openldap. Then go to the
   openldap directory and run "slapd install" to install it as a
   Windows service.
 
@@ -107,7 +107,7 @@ installers to your local machine before installing.
    write access to /opt, so you don't have to worry about running as
    root.
   
-   All the index, blobs, data, etc, get installed under /opt/liquid/*.
+   All the index, blobs, data, etc, get installed under /opt/zimbra/*.
   
 8. Initialize system
 
@@ -117,7 +117,7 @@ installers to your local machine before installing.
   	
   	Add: ZimbraServer/build.xml
   		Run the "reset-the-world" target.
-  	This will wipe out parts of /opt/liquid, reload the database, 
+  	This will wipe out parts of /opt/zimbra, reload the database, 
   	and run the archiver/indexer on the sample mail.
   	
   	Add: ZimbraWebClient/build.xml
@@ -131,14 +131,14 @@ installers to your local machine before installing.
 
   You should now be able to go to:
 
-    http://localhost:7070/liquid/
+    http://localhost:7070/zimbra/
   
   and login as "user1[@{hostname}]" (the domain is optional), with password 
   "test123", where {hostname} is the name of your local machine.
   
   You can log into the Admin Console by going to:
   
-    https://localhost:7071/liquid/admin
+    https://localhost:7071/zimbra/admin
     
   and login as "admin@{hostname}" (the domain is mandatory), with the password 
   "test123", where {hostname} is the name of your local machine.

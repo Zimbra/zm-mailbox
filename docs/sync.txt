@@ -6,7 +6,7 @@
   <folder id="11">
     <folder id="9" name="Conversations" l="11"/>
     <folder id="8" name="Tags" l="11">
-      <tag id="64" name="liquid" color="7"/>
+      <tag id="64" name="zimbra" color="7"/>
     </folder>
     <folder id="1" name="USER_ROOT" l="11">
       <folder id="2" name="INBOX" l="1" u="199">

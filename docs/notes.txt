@@ -267,7 +267,7 @@ Content-Length: 243
 
 <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
   <soap:Body>
-    <AddRequest xmlns="urn:liquidCalc">
+    <AddRequest xmlns="urn:zimbraCalc">
       <a>1</a>
       <b>2</b>
     </AddRequest>
@@ -284,7 +284,7 @@ date: Wed, 26 May 2004 01:51:43 GMT
 
 <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
   <soap:Body>
-    <AddResponse xmlns="urn:liquidCalc">
+    <AddResponse xmlns="urn:zimbraCalc">
       <result>3</result>
     </AddResponse>
   </soap:Body>
@@ -300,7 +300,7 @@ Content-Length: 260
 
 <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
   <soapenv:Body>
-    <AddRequest xmlns="http://tests.liquidsys.com/service/calc">
+    <AddRequest xmlns="http://tests.example.zimbra.com/service/calc">
       <a>1</a>
       <b>2</b>
     <AddRequest>
@@ -317,7 +317,7 @@ date: Wed, 26 May 2004 01:54:12 GMT
 
 <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
   <soapenv:Body>
-    <AddResponse xmlns="http://tests.liquidsys.com/service/calc">
+    <AddResponse xmlns="http://tests.example.zimbra.com/service/calc">
       <result>3</result>
     <AddResponse>
   </soapenv:Body>

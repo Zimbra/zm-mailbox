@@ -54,7 +54,7 @@ Alarm types:
 
 1) audio + display
    need to have a sound resource and a text message.
-   this may be a url pointing to the liquid server.
+   this may be a url pointing to the zimbra server.
    how to provision sound resources? is this system-wide or per-mailbox?
    
    dismissible attribute: true/false

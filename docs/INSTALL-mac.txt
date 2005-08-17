@@ -1,5 +1,5 @@
 
-<H1>Install Instructions for LiquidMail on a Mac<H1>
+<H1>Install Instructions for ZimbraMail on a Mac<H1>
 <OL>
 <h2><LI>
 1. Get packages for Mac from http://kenny/public/software/mac/
@@ -40,8 +40,8 @@ Installing mysql:
 
 	sh> cd /usr/local/mysql/bin
 	sh> ./mysql -u root
-	mysql> set password = password("liquid");
-    mysql> grant all on *.* to "root"@"localhost.localdomain" identified by 'liquid' with grant option;
+	mysql> set password = password("zimbra");
+    mysql> grant all on *.* to "root"@"localhost.localdomain" identified by 'zimbra' with grant option;
     mysql> flush privileges;
 	mysql> exit
 
@@ -51,17 +51,17 @@ Installing mysql:
 Installing openldap:
 ---------------------
 
-* create /opt/liquid directory:
+* create /opt/zimbra directory:
 	sh> mkdir /opt
 	sh> cd /opt
-	sh> mkdir liquid
-	sh> cd liquid
+	sh> mkdir zimbra
+	sh> cd zimbra
 	
 * copy:
 		http://kenny/public/software/mac/openldap/openldap-2.2.26.tar
-	into /opt/liquid
+	into /opt/zimbra
 	
-	sh> cd /opt/liquid
+	sh> cd /opt/zimbra
 	sh> tar -xf openldap-2.2.26.tar
 	sh> ln -s openldap-2.2.26 openldap
 
@@ -81,7 +81,7 @@ Installing openldap:
 	sh> exit
 
 * get slapd running (to test)
-	sh> cd /opt/liquid/openldap/libexec
+	sh> cd /opt/zimbra/openldap/libexec
 	sh> ./slapd&
 
   You will see an error message if it didn't work.
@@ -104,7 +104,7 @@ Installing tomcat:
  	Get it from Kenny:
 	 	http://kenny/public/software/mac/tomcat/jakarta-tomcat-5.0.28.tar
 
-2. Move the download to /opt/liquid and untar it, 
+2. Move the download to /opt/zimbra and untar it, 
 	a) either double-click it from the finder, or:
 	b) 	sh> tar xvf jakarta-tomcat-5.0.28.tar
 
@@ -115,10 +115,10 @@ Installing tomcat:
 
 5. Copy ZimbraServer/conf/tomcat-users.xml {tomcat-install/conf/
 
-6. Copy <liquid archive>/src/bin/* to /opt/liquid/bin, and chmod +x on them
-	sh> cd /opt/liquid/bin
+6. Copy <zimbra archive>/src/bin/* to /opt/zimbra/bin, and chmod +x on them
+	sh> cd /opt/zimbra/bin
 	sh> chmod +x *
-	sh> mkdir /opt/liquid/conf
+	sh> mkdir /opt/zimbra/conf
 
 4. Modify /etc/sudoers and allow the local user to start openldap without password
 	sh> su root
@@ -139,8 +139,8 @@ If anything fails, try again
 If service.war deploy step keeps failing, manually deploy for the first time via
 
 	http://localhost:7070/manager/html
-		user: 		liquid 
-		password: 	liquid
+		user: 		zimbra 
+		password: 	zimbra
 	Click on "service":  Undeploy
 	"War file to deploy:" Browse to: 
 			ZimbraServer/build/dist/jakarta-tomcat-5.0.28/webapps/service.war
@@ -148,7 +148,7 @@ If service.war deploy step keeps failing, manually deploy for the first time via
 	Then reset the world again
 	
 	
-The war should have been built and it is located at <liquid archive>/build/dist/jakarta-tomcat-*/webapps
+The war should have been built and it is located at <zimbra archive>/build/dist/jakarta-tomcat-*/webapps
 subsequent deploy should then work
 
 6. Build ZimbraWebClient by running "deploy" target
@@ -158,7 +158,7 @@ subsequent deploy should then work
 
   From inside of eclipse, double click on ZimbraServer/build.xml,
   then right click on "reset-the-world" from Outline panel, then 
-  select "Run/Ant Build". This will wipe out parts of /opt/liquid, 
+  select "Run/Ant Build". This will wipe out parts of /opt/zimbra, 
   reload the database, and run the archiver/indexer on the sample 
   mail. If you install ant standalone, you can also run "ant 
   reset-the-world" from within the ZimbraServer root directory.
@@ -184,15 +184,15 @@ subsequent deploy should then work
 11. Deploy Admin Console
 
   From within ZimbraWebClient/build.xml from Outline panel, click on 
-  "deploy" to deploy the liquid.war to {tomcat-install}/webapps/liquid.war.
+  "deploy" to deploy the zimbra.war to {tomcat-install}/webapps/zimbra.war.
   
 12. Test deployment
 
   You should now be able to go to:
 
-    http://localhost:7070/liquid/
+    http://localhost:7070/zimbra/
   
-  and login as "user1[@liquidsys.com]" (the domain is optional), 
+  and login as "user1[@example.zimbra.com]" (the domain is optional), 
   with password "test123".
   
   NOTE: we should configure things such that going to
@@ -200,9 +200,9 @@ subsequent deploy should then work
 
   You can log into the Admin Console by going to:
   
-    https://localhost:7071/liquid/admin
+    https://localhost:7071/zimbra/admin
     
-  and login as "admin@liquidsys.com" (the domain is mandatory),
+  and login as "admin@example.zimbra.com" (the domain is mandatory),
   with the password "test123".
 
 
@@ -220,7 +220,7 @@ Create the following file, save it as "/Tomcat", !!!change <local user> to your 
 export JAVA_HOME=/usr
 
 if [ "${TOMCAT}" = "-YES-" ]; then
-    su - <local user> -c '/opt/liquid/bin/tomcat start'
+    su - <local user> -c '/opt/zimbra/bin/tomcat start'
 fi
 ------------------
 Create the following file, save it as "/StartupParameters.plist"
@@ -254,7 +254,7 @@ Create the following file, save it as "/Openldap", !!!! change <local user> to y
 . /etc/rc.common
 
 if [ "${OPENLDAP}" = "-YES-" ]; then
-    su - <local user> -c '/opt/liquid/bin/ldap start'
+    su - <local user> -c '/opt/zimbra/bin/ldap start'
 fi
 ------------------
 Create the following file, save it as "/StartupParameters.plist"
@@ -284,7 +284,7 @@ IF you restart and you can't get to:
 	http://localhost:7070
 after a couple of minutes, do:
 
-sh> cd /opt/liquid/bin
+sh> cd /opt/zimbra/bin
 sh> ./ldap start
 sh> ./tomcat start
 
