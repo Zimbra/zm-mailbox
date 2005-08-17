@@ -1,3 +1,0 @@
-<Context path="/" docBase="${catalina.home}/webapps/liquidAdmin" debug="0" >
-
-</Context>
