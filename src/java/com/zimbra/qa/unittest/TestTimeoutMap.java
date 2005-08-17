@@ -1,4 +1,4 @@
-package com.liquidsys.qa.unittest;
+package com.zimbra.qa.unittest;
 
 import com.liquidsys.coco.util.LiquidLog;
 import com.liquidsys.coco.util.TimeoutMap;

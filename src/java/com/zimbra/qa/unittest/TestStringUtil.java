@@ -1,4 +1,4 @@
-package com.liquidsys.qa.unittest;
+package com.zimbra.qa.unittest;
 
 import java.io.StringReader;
 import java.util.HashMap;

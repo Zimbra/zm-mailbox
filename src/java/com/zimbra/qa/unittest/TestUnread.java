@@ -1,4 +1,4 @@
-package com.liquidsys.qa.unittest;
+package com.zimbra.qa.unittest;
 
 import java.util.Iterator;
 import java.util.List;

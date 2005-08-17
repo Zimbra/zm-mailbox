@@ -1,4 +1,4 @@
-package com.liquidsys.qa.unittest;
+package com.zimbra.qa.unittest;
 
 import java.io.OutputStream;
 import java.io.PrintStream;

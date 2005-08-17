@@ -1,4 +1,4 @@
-package com.liquidsys.qa.unittest;
+package com.zimbra.qa.unittest;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeBodyPart;

@@ -2,7 +2,7 @@
  * Created on Mar 29, 2005
  *
  */
-package com.liquidsys.qa.unittest;
+package com.zimbra.qa.unittest;
 
 import junit.framework.TestCase;
 import com.liquidsys.coco.service.util.ParsedItemID;
