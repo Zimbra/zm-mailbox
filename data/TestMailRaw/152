@@ -20,7 +20,7 @@ Received: (qmail 87662 invoked from network); 10 Oct 2003 14:44:54 -0000
 X-Authentication-Warning: www.princetongames.org: ammulder owned process
 	doing -bs
 Date: Fri, 10 Oct 2003 10:47:39 -0400 (EDT)
-X-Liquid-Received: Fri, 10 Oct 2003 10:47:39 -0400 (EDT)
+X-Zimbra-Received: Fri, 10 Oct 2003 10:47:39 -0400 (EDT)
 From: Aaron Mulder <ammulder@alumni.princeton.edu>
 X-X-Sender: ammulder@www.princetongames.org
 To: xmlbeans-user@xml.apache.org

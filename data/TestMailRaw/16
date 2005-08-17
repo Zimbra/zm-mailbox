@@ -19,7 +19,7 @@ Content-Type: multipart/mixed; boundary=Apple-Mail-1-965086687
 From: Roland Smith <smith@stanford.edu>
 Subject: More Attachment testing...
 Date: Thu, 25 Mar 2004 00:40:18 -0800
-X-Liquid-Received: Thu, 25 Mar 2004 00:40:18 -0800
+X-Zimbra-Received: Thu, 25 Mar 2004 00:40:18 -0800
 X-Mailer: Apple Mail (2.613)
 X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
 X-Evolution: 00000010-0030

@@ -19,7 +19,7 @@ Delivered-To: mailing list xmlbeans-dev@xml.apache.org
 Received: (qmail 18550 invoked from network); 16 Oct 2003 21:45:30 -0000
 X-Sent: 16 Oct 2003 21:45:35 GMT
 Date: Thu, 16 Oct 2003 22:48:00 +0100
-X-Liquid-Received: Thu, 16 Oct 2003 22:48:00 +0100
+X-Zimbra-Received: Thu, 16 Oct 2003 22:48:00 +0100
 Mime-Version: 1.0 (Apple Message framework v482)
 Content-Type: text/plain; charset=US-ASCII; format=flowed
 Subject: xml-bean v1 now builds on gump

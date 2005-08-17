@@ -22,7 +22,7 @@ Received: from rocket (localhost [127.0.0.1])
 	by rocket.homelinux.org (Postfix) with ESMTP id 59B01174062
 	for <linux-kernel@vger.kernel.org>; Wed, 16 Jun 2004 09:23:45 +0200 (CEST)
 Date:	Wed, 16 Jun 2004 09:23:44 +0200
-X-Liquid-Received: Wed, 16 Jun 2004 09:23:44 +0200
+X-Zimbra-Received: Wed, 16 Jun 2004 09:23:44 +0200
 From: Andreas Schmidt <andy@space.wh1.tu-dresden.de>
 To: linux-kernel@vger.kernel.org
 Subject: Re: Frequent system freezes after kernel bug

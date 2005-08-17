@@ -21,7 +21,7 @@ Received: from unknown (HELO minotaur.apache.org) (209.237.227.194) by
 	daedalus.apache.org with SMTP; 30 Sep 2003 23:18:01 -0000
 Received: (qmail 53235 invoked by uid 1739); 30 Sep 2003 23:18:15 -0000
 Date: 30 Sep 2003 23:18:15 -0000
-X-Liquid-Received: 30 Sep 2003 23:18:15 -0000
+X-Zimbra-Received: 30 Sep 2003 23:18:15 -0000
 Message-ID: <20030930231815.53234.qmail@minotaur.apache.org>
 From: ericvas@apache.org
 To: xml-xmlbeans-cvs@apache.org

@@ -23,7 +23,7 @@ Received: from red0.cac.washington.edu (red0.cac.washington.edu
 Received: from localhost (dors@localhost)ESMTP id i1RNOhSX009487; Fri, 27
 	Feb 2004 15:24:43 -0800
 Date: Fri, 27 Feb 2004 15:24:43 -0800 (PST)
-X-Liquid-Received: Fri, 27 Feb 2004 15:24:43 -0800 (PST)
+X-Zimbra-Received: Fri, 27 Feb 2004 15:24:43 -0800 (PST)
 From: =?iso-8859-2?Q?Andrzej_K=B1kol?=  <dors@cac.washington.edu>
 To: Jim Fox <fox@cac.washington.edu>, =?iso-8859-2?q?mi=E9rt_nem_jelzi_a_hib=E1t=3F?= <sam@bam.com>
 Subject: CDATA end sequence ]]> test

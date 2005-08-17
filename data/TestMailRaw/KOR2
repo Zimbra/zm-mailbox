@@ -3,7 +3,7 @@ Received:  from liquidsys.com (unknown [10.10.130.37]) by gateway.liquidsys.com 
 Content-class: urn:content-classes:message
 Subject: =?ks_c_5601-1987?B?UkU6IMfRsdsgxde9usauIChLb3JlYW4gdGVzdCk=?=
 Date: Thu, 24 Jun 2004 11:31:13 -0700
-X-Liquid-Received: Thu, 24 Jun 2004 11:31:13 -0700
+X-Zimbra-Received: Thu, 24 Jun 2004 11:31:13 -0700
 Message-ID: <062EF322A9DDF14B887BCAE6C5F7E0755EB2@exch1.liquidsys.com>
 MIME-Version: 1.0
 Content-Type: multipart/alternative;

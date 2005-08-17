@@ -4,7 +4,7 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: 8bit
 Date: Wed, 10 Nov 2003 10:28:06 -0800
-X-Liquid-Received: Wed, 10 Nov 2003 10:28:06 -0800
+X-Zimbra-Received: Wed, 10 Nov 2003 10:28:06 -0800
 Message-ID: <sAsQThehcYKe5BVMgtA@quickmonkey.com>
 Subject: (no ctrl) iso-8859-1 8bit test please don't choke on that NUL byte
 

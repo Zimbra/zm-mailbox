@@ -19,7 +19,7 @@ Received: (qmail 37041 invoked from network); 1 Oct 2003 15:49:35 -0000
 Message-Id: <sf7abf52.056@corp-gw.mantech.com>
 X-Mailer: Novell GroupWise Internet Agent 5.5.6.1
 Date: Wed, 01 Oct 2003 11:49:22 -0400
-X-Liquid-Received: Wed, 01 Oct 2003 11:49:22 -0400
+X-Zimbra-Received: Wed, 01 Oct 2003 11:49:22 -0400
 From: "Darrell Teague" <darrell.teague@mantech.com>
 To: <xmlbeans-dev@xml.apache.org>
 Subject: Re: Finalizers

@@ -21,7 +21,7 @@ Message-Id: <5.2.1.1.0.20030929103344.01f72160@san-francisco.beasys.com>
 X-Sender: pcal@san-francisco.beasys.com (Unverified)
 X-Mailer: QUALCOMM Windows Eudora Version 5.2.1
 Date: Mon, 29 Sep 2003 11:23:48 -0700
-X-Liquid-Received: Mon, 29 Sep 2003 11:23:48 -0700
+X-Zimbra-Received: Mon, 29 Sep 2003 11:23:48 -0700
 To: xmlbeans-dev@xml.apache.org, <christopher.fry@bea.com>, <xmlbeans-dev@xml.apache.org>
 From: Patrick Calahan <pcal@bea.com>
 Subject: RE: V2 Store discussion...

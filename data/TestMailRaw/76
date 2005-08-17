@@ -20,7 +20,7 @@ Received: (qmail 52069 invoked from network); 30 Sep 2003 14:44:57 -0000
 Message-Id: <sf795eab.089@corp-gw.mantech.com>
 X-Mailer: Novell GroupWise Internet Agent 5.5.6.1
 Date: Tue, 30 Sep 2003 10:44:40 -0400
-X-Liquid-Received: Tue, 30 Sep 2003 10:44:40 -0400
+X-Zimbra-Received: Tue, 30 Sep 2003 10:44:40 -0400
 From: "Darrell Teague" <darrell.teague@mantech.com>
 To: <xmlbeans-dev@xml.apache.org>
 Subject: Re: V2 store

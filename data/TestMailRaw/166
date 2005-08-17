@@ -2,7 +2,7 @@ Received:  from jhamm.liquidsys.com ([10.10.130.108]) by scooby.toons.liquidsys.
 Content-class: urn:content-classes:message
 Subject: Test with unspecified MAIL FROM
 Date: Fri, 25 Jun 2004 11:54:30 -0700
-X-Liquid-Received: Fri, 25 Jun 2004 11:54:30 -0700
+X-Zimbra-Received: Fri, 25 Jun 2004 11:54:30 -0700
 Message-ID: <SCOOBYqsMyPASKGu93h00000005@scooby.toons.liquidsys.com>
 MIME-Version: 1.0
 Content-Type: multipart/alternative;

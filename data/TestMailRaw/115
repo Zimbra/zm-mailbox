@@ -20,7 +20,7 @@ Received: (qmail 8072 invoked from network); 10 Oct 2003 14:54:06 -0000
 Message-Id: <sf868fcc.033@corp-gw.mantech.com>
 X-Mailer: Novell GroupWise Internet Agent 5.5.6.1
 Date: Fri, 10 Oct 2003 10:53:37 -0400
-X-Liquid-Received: Fri, 10 Oct 2003 10:53:37 -0400
+X-Zimbra-Received: Fri, 10 Oct 2003 10:53:37 -0400
 From: "Darrell Teague" <darrell.teague@mantech.com>
 To: <xmlbeans-user@xml.apache.org>
 Subject: Re: Parallel Extension Question

@@ -19,7 +19,7 @@ Received: (qmail 46051 invoked from network); 16 Sep 2003 13:29:00 -0000
 Message-Id: <sf66d7de.097@corp-gw.mantech.com>
 X-Mailer: Novell GroupWise Internet Agent 5.5.6.1
 Date: Tue, 16 Sep 2003 09:28:40 -0400
-X-Liquid-Received: Tue, 16 Sep 2003 09:28:40 -0400
+X-Zimbra-Received: Tue, 16 Sep 2003 09:28:40 -0400
 From: "Darrell Teague" <darrell.teague@mantech.com>
 To: <xmlbeans-dev@xml.apache.org>
 Subject: Re: XmlBeans source code has been checked in ...

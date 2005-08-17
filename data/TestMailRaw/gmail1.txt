@@ -16,7 +16,7 @@ Content-Type: multipart/mixed;
 	boundary="----_=_NextPart_001_01C50958.59AFAF54"
 Subject: Zipped document
 Date: Wed, 2 Feb 2005 10:52:27 -0800
-X-Liquid-Received: Wed, 2 Feb 2005 10:52:27 -0800
+X-Zimbra-Received: Wed, 2 Feb 2005 10:52:27 -0800
 Message-ID: <062EF322A9DDF14B887BCAE6C5F7E07517FFAB@exch1.liquidsys.com>
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 

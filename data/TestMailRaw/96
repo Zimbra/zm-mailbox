@@ -21,7 +21,7 @@ Received: from unknown (HELO minotaur.apache.org) (209.237.227.194) by
 	daedalus.apache.org with SMTP; 20 Oct 2003 19:07:25 -0000
 Received: (qmail 10020 invoked by uid 1757); 20 Oct 2003 19:07:34 -0000
 Date: 20 Oct 2003 19:07:34 -0000
-X-Liquid-Received: 20 Oct 2003 19:07:34 -0000
+X-Zimbra-Received: 20 Oct 2003 19:07:34 -0000
 Message-ID: <20031020190734.10019.qmail@minotaur.apache.org>
 From: pcal@apache.org
 To: xml-xmlbeans-cvs@apache.org
