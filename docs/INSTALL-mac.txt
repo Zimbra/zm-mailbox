@@ -1,0 +1,291 @@
+
+<H1>Install Instructions for LiquidMail on a Mac<H1>
+<OL>
+<h2><LI>
+1. Get packages for Mac from http://kenny/public/software/mac/
+
+-----------------
+Installing p4: 
+-----------------
+
+Double click to mount the dmg file and copy the binary directly to a directory of your choosing.
+Create client spec and check out LiquidArchive, LiquidConsole, LiquidAjax, and ThirdParty
+
+--------------------
+Installing Eclipse: 
+--------------------
+
+* install eclipse
+* Set default project settings to use Java 1.4:
+	Window -> Preferences -> Java -> Compiler -> Compliance and Class Files
+		Set:  Change all settings to 1.4
+		
+* Create Java projects for:
+	LiquidArchive
+	LiquidConsole
+	LiquidAjax
+
+	-> New -> Java -> Java Project
+		ProjectName:  LiquidArchive, etc
+		Uncheck "use default"
+		Browse to the appropriate subdirectory in P4 install
+
+
+-----------------
+Installing mysql:
+-----------------
+* Mount dmg and install both the server and the startup item (so mysql is started upon Mac startup).
+* You may need to restart to get mySql to install fully
+* Set up the root account (see LiquidArchive/docs/INSTALL.txt for more details) :
+
+	sh> cd /usr/local/mysql/bin
+	sh> ./mysql -u root
+	mysql> set password = password("liquid");
+    mysql> grant all on *.* to "root"@"localhost.localdomain" identified by 'liquid' with grant option;
+    mysql> flush privileges;
+	mysql> exit
+
+
+
+---------------------
+Installing openldap:
+---------------------
+
+* create /opt/liquid directory:
+	sh> mkdir /opt
+	sh> cd /opt
+	sh> mkdir liquid
+	sh> cd liquid
+	
+* copy:
+		http://kenny/public/software/mac/openldap/openldap-2.2.26.tar
+	into /opt/liquid
+	
+	sh> cd /opt/liquid
+	sh> tar -xf openldap-2.2.26.tar
+	sh> ln -s openldap-2.2.26 openldap
+
+
+* create /usr/loca/lib directory:
+	sh> cd /usr/local
+	sh> su		(type root password)
+	sh> mkdir lib
+
+* copy:
+		http://kenny/public/software/mac/openldap/libdb.tar
+	into /usr/local/lib
+
+	sh> cd /usr/local/lib (create if needed)
+	sh> su    (type root password)
+	sh> tar xvf libdb.tar (so it ends up in /usr/local/lib/*)
+	sh> exit
+
+* get slapd running (to test)
+	sh> cd /opt/liquid/openldap/libexec
+	sh> ./slapd&
+
+  You will see an error message if it didn't work.
+
+-------------------
+Installing tomcat:
+-------------------
+
+
+0. check your java version to make sure it's at least 1.4:
+	sh> java -version
+
+	* if the java version is 1.4  -- use tomcat 5.0
+	* if the java version is 5.0  -- use tomcat 5.5
+
+
+1. Download tomcat from apache website. 
+		http://jakarta.apache.org/site/downloads/downloads_tomcat-5.cgi
+ OR
+ 	Get it from Kenny:
+	 	http://kenny/public/software/mac/tomcat/jakarta-tomcat-5.0.28.tar
+
+2. Move the download to /opt/liquid and untar it, 
+	a) either double-click it from the finder, or:
+	b) 	sh> tar xvf jakarta-tomcat-5.0.28.tar
+
+3. Make a symbolic link called "tomcat":
+	sh> ln -s jakarta-tomcat-5.0.28 tomcat
+	
+4. Copy LiquidArchive/conf/server.xml to {tomcat-install}/conf/
+
+5. Copy LiquidArchive/conf/tomcat-users.xml {tomcat-install/conf/
+
+6. Copy <liquid archive>/src/bin/* to /opt/liquid/bin, and chmod +x on them
+	sh> cd /opt/liquid/bin
+	sh> chmod +x *
+	sh> mkdir /opt/liquid/conf
+
+4. Modify /etc/sudoers and allow the local user to start openldap without password
+	sh> su root
+	sh> visudo
+Add a line for your local login user:
+		YOURNAME    ALL=NOPASSWD: ALL
+		%YOURGROUP  ALL=NOPASSWD: ALL
+	<esc> cd :wq	to quit VI
+	sh> exit	(to get out of root)
+
+	
+5. Build LiquidArchive first
+	* open LiquidArchive/build.xml
+	
+
+Run "reset-the-world-no-convertd" target
+If anything fails, try again
+If service.war deploy step keeps failing, manually deploy for the first time via
+
+	http://localhost:7070/manager/html
+		user: 		liquid 
+		password: 	liquid
+	Click on "service":  Undeploy
+	"War file to deploy:" Browse to: 
+			LiquidArchive/build/dist/jakarta-tomcat-5.0.28/webapps/service.war
+	Click Deploy
+	Then reset the world again
+	
+	
+The war should have been built and it is located at <liquid archive>/build/dist/jakarta-tomcat-*/webapps
+subsequent deploy should then work
+
+6. Build LiquidConsole by running "deploy" target
+
+--------------------  FROM INSTALL.txt
+9. Initialize system
+
+  From inside of eclipse, double click on LiquidArchive/build.xml,
+  then right click on "reset-the-world" from Outline panel, then 
+  select "Run/Ant Build". This will wipe out parts of /opt/liquid, 
+  reload the database, and run the archiver/indexer on the sample 
+  mail. If you install ant standalone, you can also run "ant 
+  reset-the-world" from within the LiquidArchive root directory.
+   
+10. Deploy application
+
+  From the same LiquidArchive/build.xml file, click on
+  "service-deploy" from Outline panel and run it. This will deploy 
+  the service.war file to {tomcat-install}/webapps/service.war and 
+  unload/load the war file.
+  
+  This enables the /service/soap (SoapServlet) and /service/content
+  (ContentServlet) servlets, both of which are contacted by the DHTML
+  client.
+  
+  IF YOU GET:
+
+  BUILD FAILED: .../LiquidArchive/build.xml:258: java.io.FileNotFoundException: http://localhost:7070/manager//deploy?path=%2Fservice&update=true
+  
+	deploy the file:
+		  .../LiquidArchive/build/dist/jakarta-tomcat-5.0.28/webapps/service.war
+  
+11. Deploy Admin Console
+
+  From within LiquidConsole/build.xml from Outline panel, click on 
+  "deploy" to deploy the liquid.war to {tomcat-install}/webapps/liquid.war.
+  
+12. Test deployment
+
+  You should now be able to go to:
+
+    http://localhost:7070/liquid/
+  
+  and login as "user1[@liquidsys.com]" (the domain is optional), 
+  with password "test123".
+  
+  NOTE: we should configure things such that going to
+        http://localhost:7070/ will send you to the dhtml client
+
+  You can log into the Admin Console by going to:
+  
+    https://localhost:7071/liquid/admin
+    
+  and login as "admin@liquidsys.com" (the domain is mandatory),
+  with the password "test123".
+
+
+--------------------
+
+
+7. If things all work, creating the following so that openldap and tomcat automatically start up 
+   when Mac starts up:
+
+Create the following file, save it as "/Tomcat", !!!change <local user> to your login
+------------------
+#!/bin/sh
+
+. /etc/rc.common
+export JAVA_HOME=/usr
+
+if [ "${TOMCAT}" = "-YES-" ]; then
+    su - <local user> -c '/opt/liquid/bin/tomcat start'
+fi
+------------------
+Create the following file, save it as "/StartupParameters.plist"
+------------------
+{
+    Description     = "Tomcat Servlet/JSP Server";
+    Provides        = ("Tomcat");
+    Requires        = ("Resolver");
+    OrderPreference = "None";
+    Messages =
+    {
+        start = "Starting Tomcat Servlet/JSP Server";
+        stop  = "Stopping Tomcat Servlet/JSP Server";
+    };
+}    
+------------------
+
+sh> cd /System/Library/StartupItems
+sh> su root
+sh> mkdir Tomcat
+sh> cd Tomcat
+sh> mv /Tomcat .
+sh> mv /StartupParameters.plist .
+sh> chmod +x *
+
+
+Create the following file, save it as "/Openldap", !!!! change <local user> to your login
+------------------
+#!/bin/sh
+
+. /etc/rc.common
+
+if [ "${OPENLDAP}" = "-YES-" ]; then
+    su - <local user> -c '/opt/liquid/bin/ldap start'
+fi
+------------------
+Create the following file, save it as "/StartupParameters.plist"
+------------------
+{
+    Description     = "OpenLDAP server";
+    Provides        = ("openldap");
+    OrderPreference = "None";
+    Messages =
+    {
+        start = "Starting OpenLDAP server";
+        stop  = "Stopping OpenLDAP server";
+    };
+}    
+------------------
+
+
+
+Edit /etc/hostconfig and add the following at the bottom
+
+TOMCAT=-YES- 
+OPENLDAP=-YES-
+
+
+
+IF you restart and you can't get to:
+	http://localhost:7070
+after a couple of minutes, do:
+
+sh> cd /opt/liquid/bin
+sh> ./ldap start
+sh> ./tomcat start
+
+and wait a minute or so, then try localhost:7070 again

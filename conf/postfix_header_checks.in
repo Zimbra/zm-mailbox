@@ -1,0 +1,4 @@
+%%uncomment VAR:liquidMtaBlockedExtension%%/filename=\"?(.*)\.(%%list VAR:liquidMtaBlockedExtension |%%)\"?$/
+%%uncomment VAR:liquidMtaBlockedExtension%%	REJECT For security reasons we reject attachments of this type
+%%uncomment VAR:liquidMtaBlockedExtension%%/^\s*Content-(Disposition|Type).*name\s*=\s*"?(.+\.(%%list VAR:liquidMtaBlockedExtension |%%))"?\s*$/
+%%uncomment VAR:liquidMtaBlockedExtension%%	REJECT Attachment type not allowed. File "$2" has the unacceptable extension "$3"

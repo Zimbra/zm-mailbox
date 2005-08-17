@@ -1,0 +1,92 @@
+<-- initial sync request -->
+
+<SyncRequest/>   <-- no date = initial sync -->
+
+<SyncResponse token="1077924283000">
+  <folder id="11">
+    <folder id="9" name="Conversations" l="11"/>
+    <folder id="8" name="Tags" l="11">
+      <tag id="64" name="liquid" color="7"/>
+    </folder>
+    <folder id="1" name="USER_ROOT" l="11">
+      <folder id="2" name="INBOX" l="1" u="199">
+	<m ids="399,461,420,386,289,592,474,582,410,571,584,454,576,342,360,369,534,574,320,488,507,338,531,487,498,398,287,537,580,606,604,578,586,428,424,599,598,596,408,412,422,414,418"/>
+      </folder>
+      <folder id="4" name="Junk" l="1"/>
+      <folder id="6" name="Drafts" l="1"/>
+      <folder id="3" name="Trash" l="1"/>
+      <folder id="10" name="Calendar" l="1"/>
+      <folder id="7" name="Contacts" l="1">
+	<cn ids="274,273,272,271,270,269,268,267,266,265,264,263,262,261,260,259,258,257,256"/>
+      </folder>
+      <folder id="5" name="Sent" l="1"/>
+      <search id="636" name="Satish" query="from:satish" sortBy="" types="" l="1"/>
+      <folder id="663" name="old name" l="1"/>
+      <folder id="903" name="empty folder" l="1"/>
+    </folder>
+  </folder>
+</SyncResponse>
+
+
+<-- subsequent sync request -->
+
+<SyncRequest token="1077924283000"/>
+
+<SyncResponse token="1078054283000">
+  <-- handle deletes first -->
+  <deleted>
+    <folder ids="..."/>
+    <tag ids="..."/>
+    <m ids="..."/>
+    <cn ids="..."/>
+  </deleted>
+  <-- modified/created folders (none here) -->
+  <-- modified/created tags (none here) -->
+  <-- other modified/created things (id-only means new or content changed) */
+  <m id="275" l="2" cid="276" f="" t="" mod="1078024283000"/>
+  <m id="321" l="3" cid="312" f="u" t="" mod="1078025663000"/>
+  <tag id="68" name="bob" color="6" mod="1078025983000"/>
+  <cn id="664" l="7" f="" t="" mod="1078026283000"/>
+  <cn id="662"/>
+</SyncResponse>
+
+
+<-- client resolves conflicts and passes back its changes -->
+<--   client goes through the front door (e.g. ConvAction, etc.) -->
+
+<FolderActionRequest>
+  <folder id="903" op="delete"/>
+</FolderActionRequest>
+
+<MsgActionRequest>
+  <m id="5522" op="read/>
+</MsgActionRequest>
+
+<CreateContactRequest>
+  <cn l="7" t="65">
+    <a n="lastName">Khavari</a>
+    <a n="firstName">Brunhilde</a>
+    <a n="email1">bk@hotmail.com</a>
+  </cn>
+</CreateContactRequest>
+
+
+<-- client does another sync and gets back: -->
+<--   * any changes they just made -->
+<--   * any externally-caused changes since the last sync -->
+
+<SyncRequest token="1078054283000"/>
+
+<SyncResponse token="1078054298000">
+  <-- handle deletes first -->
+  <deleted>
+    <folder ids="903"/>
+  </deleted>
+  <-- modified/created folders -->
+  <folder id="663" name="new name" l="1" mod="1078054291000"/>
+  <-- modified/created tags (none here) -->
+  <-- other modified/created things (id-only means new or content changed) */
+  <m id="5526"/>
+  <m id="5522" l="2" cid="5521" f="" t="" mod="1078054297000"/>
+  <cn id="5531"/>
+</SyncResponse>

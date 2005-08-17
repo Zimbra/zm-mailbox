@@ -1,0 +1,718 @@
+-----------------------------
+ urn:liquidAdmin
+-----------------------------
+
+Attributes for all commands can have multiple values:
+
+  <a n="name1">{value}</a>
+  <a n="name2">{value}</a>  
+  <a n="name1">{value}</a>  
+
+Note that name1 appears twice. 
+
+When updating multiple attributes, you need to specify all the old values at the same time you specify new ones.
+
+----------------------------
+ <AuthRequest xmlns="urn:liquidAdmin">
+   <name>...</name>
+   <password>...</password>
+ </AuthRequest>
+ 
+ <AuthResponse>
+   <authToken>...</authToken>
+   <lifetime>...</lifetime>
+ </AuthResponse>
+
+Note: Only works with admin accounts
+
+----------------------------
+ <DelegateAuthRequest xmlns="urn:liquidAdmin" [duration="{duration}"]>
+   <account by="id|name">...</account> 
+ </DelegateAuthRequest>
+ 
+ <DelegateAuthResponse>
+   <authToken>...</authToken>
+   <lifetime>...</lifetime>
+ </DelegateAuthResponse>
+
+Used to request a new auth token that is valid for the specified account. The id of the auth token will be the id of the target account,
+and the requesting admin's id will be stored in the auth token for auditing purposes.
+
+{duration} = lifetime in seconds of the newly-created authtoken. defaults to 1 hour. Can't be longer then liquidAuthTokenLifetime.
+
+----------------------------
+ 
+<CreateAccountRequest>
+  <name>...</name>
+  <password>...</password>*
+  <a n="attr-name>...</a>+
+</CreateAccountRequest>
+
+<CreateAccountResponse>
+  <account name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </account>  
+</CreateAccountResponse>
+
+Notes:
+
+  accounts without passwords can't be logged into
+
+  name must include domain (uid@name), and domain specified in name must exist
+
+  default value for liquidAccountStatus is "active"  
+
+-----------------------------
+
+<GetAccountRequest [applyCos="{apply-cos}"]>
+  <account by="id|name">...</account>
+</GetAccountRequest>
+
+<GetAccountResponse>
+  <account name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </account>  
+</GetAccountResponse>
+
+{apply-cos} = 0|1 (1 is default)
+
+ if {apply-cos} is 1, then COS rules apply and unset attrs on an account will get their value from the COS.
+
+ if {apply-cos} is 0, then only attributes directly set on the account will be returned
+
+-----------------------------
+
+<GetAllAdminAccountsRequest/>
+
+<GetAllAdminAccountsResponse>
+  <account name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </account>  
+</GetAllAdminAccountsResponse>
+
+-----------------------------
+
+<ModifyAccountRequest>
+  <id>{value-of-liquidId}</id>
+  <a n="...">...</a>+
+</ModifyAccountRequest>
+
+<ModifyAccountResponse>
+  <account name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </account>  
+</ModifyAccountResponse>
+
+Notes:
+
+  an empty attribute value removes the specified attr
+
+-----------------------------
+
+<RenameAccountRequest>
+  <id>{value-of-liquidId}</id>
+  <newName>{new-account-name}</newName>
+</RenameAccountRequest>
+
+<RenameAccountResponse>
+  <account name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </account>  
+</RenameAccountResponse>
+
+-----------------------------
+
+<DeleteAccountRequest>
+  <id>{value-of-liquidId}</id>
+</DeleteAccountRequest>
+
+<DeleteAccountResponse/>
+
+-----------------------------
+
+<SetPasswordRequest>
+  <id>{value-of-liquidId}</id>
+  <newPassword>...</newPassword>
+</SetPasswordRequest>
+
+<SetPasswordResponse/>
+
+-----------------------------
+
+<AddAccountAliasRequest>
+  <id>{value-of-liquidId}</id>
+  <alias>...</alias>
+</AddAliasRequest>
+
+<AddAccountAliasResponse/>
+
+-----------------------------
+
+<RemoveAccountAliasRequest>
+  <id>{value-of-liquidId}</id>
+  <alias>...</alias>
+</RemoveAccountAliasRequest>
+
+<RemoveAccountAliasResponse/>
+
+-----------------------------
+
+<SearchAccountsRequest [limit="..."] [offset="..."] [domain="{domain-name}"] [applyCos="{apply-cos}"]
+         [attrs="a1,a2,a3"] [sortBy="{sort-by}"] [sortAscending="{sort-ascending}"]>
+  <query>...</query>
+</SearchAccountsRequest>
+
+<SearchAccountsResponse more="{more-flag}" [searchTotal="{search-total}"]>
+  <account name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </account>
+</SearchAccountsResponse>
+
+Notes:
+SearchAccountsRequest
+	<query> - query string should be an LDAP-style filter string (RFC 2254)
+	limit - the number of accounts to return (0 is default and means all)
+	offset - the starting offset (0, 25, etc)
+	domain - the domain name to limit the search to
+	applyCos - whether or not (0/1) to apply the COS policy to account. specify 0 if only
+	           requesting attrs that aren't inherited from COS
+	attrs - comma-seperated list of attrs to return ("displayName", "liquidId", "liquidAccountStatus")
+	sortBy - name of attribute to sort on. default is the account name.
+	sortAscending - whether to sort in ascending order (0/1), 1 is default
+    more-flag = true if more accounts left to return
+    search-total = total number of accounts that matched search (not affected by limit/offset)
+
+-----------------------------
+
+<GetAllAccountsRequest>
+  [<domain by="id|name">...</domain>]
+<GetAllAccountsRequest/>
+
+<GetAllAccountsResponse>
+  <account name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </account>  
+</GetAllAccountsResponse>
+
+-----------------------------
+
+<CreateDomainRequest>
+  <name>...</name>
+  <a n="...">...</a>+
+</CreateDomainRequest>
+
+<CreateDomainResponse>
+  <domain name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </domain>  
+</CreateDomainResponse>
+
+Notes:
+
+  extra attrs:
+
+  description
+  liquidNotes
+
+-----------------------------
+
+<GetDomainRequest [applyConfig="{apply-config}"]>
+  <domain by="id|name">...</domain>
+</GetDomainRequest>
+
+<GetDomainResponse>
+  <domain name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </domain>
+</GetDomainResponse>
+
+{apply-config} = 0|1 (1 is default)
+
+ if {apply-config} is 1, then certain unset attrs on an account will get their value from the global config.
+
+ if {apply-config} is 0, then only attributes directly set on the server will be returned
+
+-----------------------------
+
+<GetAllDomainsRequest/>
+
+<GetAllDomainsResponse>
+  <domain name="{name}" id="{id}">  
+    <a n="...">...</a>+
+  </domain>+
+</GetAllDomainsResponse>
+
+-----------------------------
+
+<ModifyDomainRequest>
+  <id>{value-of-liquidId}</id>
+  <a n="...">...</a>+
+</ModifyDomainRequest>
+
+<ModifyDomainResponse>
+  <domain name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </domain>
+</ModifyDomainResponse>
+
+Notes:
+
+  an empty attribute value removes the specified attr
+
+-----------------------------
+
+<DeleteDomainRequest>
+  <id>{value-of-liquidId}</id>
+</DeleteDomainRequest>
+
+<DeleteDomainResponse/>
+
+-----------------------------
+<CreateCosRequest>
+  <name>...</name>
+  <a n="...">...</a>+
+</CreateCosRequest>
+
+<CreateCosResponse>
+  <cos name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </cos>
+</CreateCosResponse>
+
+Notes:
+
+  extra attrs:
+
+  description
+  liquidNotes
+
+-----------------------------
+
+<GetCosRequest>
+  <cos by="id|name">...</cos>
+</GetCosRequest>
+
+<GetCosResponse>
+  <cos name="{name}" id="{id}">
+    <a [c="{cos-attr}"] n="...">...</a>+    
+  </cos>
+</GetCosResponse>
+
+{cos-attr} = 0 (default) means the attrs applies to any account's that belong to the cos
+             1 means the attr applies only to the cos object itself
+
+-----------------------------
+
+<GetAllCosRequest/>
+
+<GetAllCosResponse>
+  <cos name="{name}" id="{id}">
+    <a [c="{cos-attr}"] n="...">...</a>+    
+  </cos>+  
+</GetAllCosResponse>
+
+-----------------------------
+
+<ModifyCosRequest>
+  <id>{value-of-liquidId}</id>
+  <a n="...">...</a>+
+</ModifyCosRequest>
+
+<ModifyCosResponse>
+  <cos name="{name}" id="{id}">
+    <a [c="{cos-attr}"] n="...">...</a>+    
+  </cos>+  
+</ModifyCosResponse>
+
+Notes:
+
+  an empty attribute value removes the specified attr
+
+-----------------------------
+
+<RenameCosRequest>
+  <id>{value-of-liquidId}</id>
+  <newName>{new-cos-name}</newName>
+</RenameCosRequest>
+
+<RenameCosResponse>
+  <cos name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </cos>  
+</RenameCosResponse>
+
+-----------------------------
+
+<DeleteCosRequest>
+  <id>{value-of-liquidId}</id>
+</DeleteCosRequest>
+
+<DeleteCosResponse/>
+
+Notes:
+
+  an empty attribute value removes the specified attr
+
+-----------------------------
+<CreateServerRequest>
+  <name>...</name>
+  <a n="...">...</a>+
+</CreateServerRequest>
+
+<CreateServerResponse>
+  <server name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </server>
+</CreateServerResponse>
+
+Notes:
+
+  extra attrs:
+
+  description
+  liquidNotes
+
+-----------------------------
+
+<GetServerRequest [applyConfig="{apply-config}]">
+  <server by="id|name|serviceHostname">...</server>
+</GetServerRequest>
+
+<GetServerResponse>
+  <server name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </server>
+</GetServerResponse>
+
+{apply-config} = 0|1 (1 is default)
+
+by "serviceHostname" will return the server that has liquidServiceHostname set to the specified value.
+
+ if {apply-config} is 1, then certain unset attrs on an account will get their value from the global config.
+
+ if {apply-config} is 0, then only attributes directly set on the server will be returned
+
+-----------------------------
+
+<GetAllServersRequest/>
+
+<GetAllServersResponse>
+  <server name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </server>+
+</GetAllServerResponse>
+
+-----------------------------
+
+<ModifyServerRequest>
+  <id>{value-of-liquidId}</id>
+  <a n="...">...</a>+
+</ModifyServerRequest>
+
+<ModifyServerResponse>
+  <server name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </server>
+</ModifyServerResponse>]
+
+Notes:
+
+  an empty attribute value removes the specified attr
+
+-----------------------------
+
+<DeleteServerRequest>
+  <id>{value-of-liquidId}</id>
+</DeleteServerRequest>
+
+<DeleteServerResponse/>
+
+Notes:
+
+  an empty attribute value removes the specified attr
+
+-----------------------------
+
+<GetConfigRequest>
+ <a n="....">
+</GetServerRequest>
+
+<GetConfigResponse>
+  <a n="...">...</a>+
+</GetConfigResponse>
+
+-----------------------------
+<GetAllConfigRequest/>
+
+<GetAllConfigResponse>
+  <a n="...">...</a>+
+</GetAllConfigResponse>
+
+-----------------------------
+<ModifyConfigRequest>
+  <a n="...">...</a>+
+</ModifyConfigRequest>
+
+<ModifyConfigResponse/>
+
+Notes:
+
+  an empty attribute value removes the specified attr
+
+-----------------------------
+
+<ExportMailboxRequest>
+	<account id="{account email address}" dest="{uri to another server}"
+	    switchover="1|0" overwrite="1|0"/>
+</ExportMailboxRequest>
+
+Notes: when switchover is 1, ldap is updated to use the target server as the 
+mailhost for the account; the original host is not longer in use. 
+When switchover is 0, no ldap setting is updated after the move.
+
+if overwrite = 1, the target mailbox will be replaced if it exists
+
+dest attribute expects an URI to the target host's mailbox import servlet. It 
+looks like:
+
+https://<target host>:<target admin port>/service/admin/mboximport
+
+-----------------------------
+
+<GetServerAggregateStatsRequest>
+ <statName>...</statName>
+ <startTime>{date-time}</startTime>
+ <endTime>{date-time}</endTime>
+ <period>...</period>
+</GetServerAggregateStatsRequest>
+
+<GetServerAggregateStatsResponse>
+  <s n="..." t="{date-time}">{stat-value}</s>*
+</GetServerAggregateStatsResponse>
+
+{date-time} format is number of seconds in 1970, utc time.
+
+-----------------------------
+<GetServiceStatusRequest/>
+
+<GetServiceStatusResponse>
+<status server="..." service="..." t="{date-time}">{value}</status>*
+</GetServiceStatusResponse>
+
+{date-time} format is number of seconds in 1970, utc time.
+
+-----------------------------
+
+<BackupRequest>
+    <backup method="full|incremental|abort" 
+    [target="{path to backup target}"] [sync="1|0"] [label="{full backup label to abort}"]>
+    	<a name="{account email addr}|all"/>+
+    <backup/>
+</BackupRequest>
+
+when sync is 1, the full backup is run synchronously; otherwise full backup is started
+and run in a separate thread and the soap call can return with the backup label.
+
+label is only meaningful and required in the request when method is abort.
+
+<BackupResponse>
+    [<backup label="{full backup set label}"/>]
+</BackupResponse>
+
+
+-----------------------------
+
+<BackupQueryRequest>
+    <query [target={path to backup target}"] [label="{full backup set label}"]  [list="{from date}"] [verbose="1|0"]/>
+</BackupQueryRequest>
+
+<BackupQueryResponse>
+    <query live="1|0" label="{full backup set label}" 
+        start="{start time in millis}" [end="{end time in millis}"]
+        [completionCount="{completion count}"] [total="{total count}"]
+        [completedAccounts="{comma-separated account email addrs}"]
+        [accounts="{comma-separated account email addres}"]>
+        [<errors>
+        	<account id="{account-id}" msg="{error message}">[{stack trace}]</account>*
+        </errors>]    
+    </query>*
+</BackupQueryResponse>
+
+if neither label nor list is specified, info about all backup sets is returned.
+-----------------------------
+
+<BackupAccountQueryRequest>
+    <query [target={path to backup target}"]>
+    	<a name="{account email addr}|all"/>+
+    </query>
+</BackupQueryRequest>
+
+<BackupAccountQueryResponse>
+    <account id={account id} server="{mail server at the latest backup}">
+    	<backup label="{label}" [server="{mail server if different}"] 
+    	    start="{start time in millis}" [end="{end time in millis}"]/>*
+    </account>*
+</BackupQueryResponse>
+
+For each account <backup> is listed from the most recent to earlier ones.
+The server attribute in <backup> is useful when the account is moved to another mail host. In that
+case backup sets will have been created from different hosts.
+-----------------------------
+
+<RestoreRequest>
+    <restore method="mb|ra|ca" [includeIncrementals="1|0"]
+        [label="{label to full backup set}"] [target="{path to backup target}"]
+        [prefix="{prefix}"]>
+        <a name="{account email addr}|all"/>+
+    </restore>
+</RestoreRequest>
+
+when includeIncrementals is 1, any incremental backups from the last full backup
+are also restored. Default to 1.
+
+if label is not specified, restore from the latest full backup.
+
+method:
+mb: just mailbox is restored
+ra: ldap account info is restored
+ca: new account is created and restore to
+
+prefix is used to produce new account names if the name is reused or a new account is to be created
+
+<RestoreResponse>
+</RestoreResponse>
+
+-----------------------------
+
+<PurgeMessagesRequest>
+    [<mbox id="{account-id}"/>]
+</PurgeMessagesRequest>
+
+purges aged messages out of trash, spam, and entire mailbox
+  (if <mbox> element is omitted, purges all mailboxes on server)
+-----------------------------
+
+<DeleteMailboxRequest>
+  <mbox id="{account-id}"/>
+</DeleteMailboxRequest>
+
+the request includes the account ID (uuid) of the target mailbox
+on success, the response includes the mailbox ID (numeric) of the deleted mailbox
+the <mbox> element is left out of the response if no mailbox existed for that account
+
+<DeleteMailboxResponse>
+  [<mbox mbxid="{mailbox-id}"/>]
+</DeleteMailboxResponse>
+
+-----------------------------
+<GetMailboxRequest>
+  <mbox id="{account-id}"/>
+</GetMailboxRequest>
+
+<GetMailboxResponse>
+  <mbox mbxid="{mailbox-id}" s="{size-in-bytes}"/>
+</GetMailboxResponse>
+
+-----------------------------
+
+Runs ANALYZE TABLE or OPTIMIZE TABLE on all tables that have grown
+significantly since the last table maintenance.
+
+<MaintainTablesRequest/>
+
+<MaintainTablesResponse numTables="{number of tables maintained}"/>
+
+-----------------------------
+
+Runs the unit test suite
+
+<UnitTestRequest/>
+
+</UnitTestResponse
+    numExecuted="{number of tests that were executed}"
+    numFailed="{number of failed tests}"
+    output="{test output}"/>
+
+-----------------------------
+All the Check* SOAP calls potentially return the following two things:
+
+<code>{code}</code>
+<message>{message}</message>
+
+where:
+
+code is one of the following Strings:
+
+ code                         description
+ -------                      -----------
+ check.OK                     everything went ok 
+ check.UNKNOWN_HOST           unable to resolve a hostname
+ check.CONNECTION_REFUSED     connection to a port was refused 
+ check.SSL_HANDSHAKE_FAILURE  SSL connect problem, most likely untrusted certificate
+ check.COMMUNICATION_FAILURE  generic communication failure
+ check.AUTH_FAILED            authentication failed. invalid credentials (bad dn/password)
+ check.AUTH_NOT_SUPPORTED     authentication flavor not supported. LDAP server probably 
+                              configured to not allow passwords
+ check.NAME_NOT_FOUND         unable to resolve an LDAP name. most likely invalid search base
+ check.INVALID_SEARCH_FILTER  invalid ldap search filter
+ check.FAILURE                generic failure
+
+message is the detailed Java stack trace, used mainly for diagnosotics where the code
+isn't specific enough. Not user-friendly, but still useful for debugging problems.
+
+Any SOAP faults returned indicate a problem with the request itself, not the thing being
+checked.
+
+----------------------------------------
+
+<CheckHostnameResolveRequest>
+ <hostname>...</hostname>
+</CheckHostnameResolveRequest>
+
+<CheckHostnameResolveResponse>
+  <code>...</code>
+  <message>...</message>*
+</CheckHostnameResolveResponse>
+
+------------------------------------------------------------
+
+<CheckGalConfigRequest>
+  <a n='liquidGalMode'>ldap</a>
+  <a n='liquidGalLdapURL'>...</a>
+  <a n='liquidGalLdapSearchBase'>...</a>
+  <a n='liquidGalLdapFilter'>...</a>
+  <a n='liquidGalLdapBindDn'>...</a>*
+  <a n='liquidGalLdapBindPassword'>...</a>*
+  <query limit="...">...</query>
+</CheckGalConfigRequest>
+
+<CheckGalConfigResponse>
+  <code>...</code>
+  <message>...</message>*
+  <cn>...</cn>*
+</CheckGalConfigResponse>
+
+notes: 
+ - liquidGalMode must be set to ldap, even if you eventually want to set it to "both".
+ - bindDn/bindPassword are optional if server allows anonymous binds
+
+------------------------------------------------------------
+
+<CheckAuthConfigRequest>
+  <a n='liquidAuthMech'>ldap</a>
+  <a n='liquidAuthLdapURL'>...</a>
+  <a n='liquidAuthLdapBindDn'>...</a>
+  <name>...</name>
+  <password>...</password>
+</CheckAuthConfigRequest>
+
+<CheckAuthConfigResponse>
+  <code>...</code>
+  <message>...</message>*
+  <bindDn>{dn-computed-from-supplied-binddn-and-name}</bindDn>
+</CheckAuthConfigResponse>
+
+notes:
+  - liquidAuthMech must be set to ldap/ad. There is no reason to check liquid.
+
+-----------------------------------

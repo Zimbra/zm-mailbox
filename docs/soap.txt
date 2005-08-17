@@ -1,0 +1,1288 @@
+
+URL for requesting content:
+
+/service/content/get?id={message-id}[&fmt={fmt-type}][&part={part-name}][&subId={subId}]
+
+{fmt-type}  if set to outlook return message in outlook format
+
+{part-name} ignored if specifying fmt=outlook
+
+{subId} optional: used to reference a Message stored within an Appointment object
+
+----------------------
+
+URL for posting to SOAP is:
+ 
+/service/soap/
+ 
+-------------------------------
+ 
+urn:liquid  -- top-level namespace for global attributes/elements
+
+
+<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
+  <soap:Header>
+    <context xmlns="urn:liquid">
+       <authToken>...</authToken>
+       [<nosession/>]
+       [<sessionId>{returned-from-server-in-last-response}</sessionId>]
+       [<account by="name|id">{account-name-or-id}</account>]
+       [<change token="{change-id}" [type="mod|new"]/>]
+       [<nonotify/>]
+       [<targetServer>{proxy-target-server-id}</targetServer>]
+    </context>
+  </soap:Header>
+  <soap:Body>
+   <FooRequest ... [id="{client-generated-id}"]>
+   </FooRequest>
+  </soap:Body>
+</soap:Envelope>
+
+Race Conditions
+
+To avoid race conditions, the client may specify the highest change ID
+that it knows about in the <change> header element.  The default behavior
+(type="mod") will cause mail.MODIFY_CONFLICT to be thrown if we try to 
+modify an object that has been touched (flags, tags, folders, etc.) since
+the specified change ID.  Alternatively, type="new" will throw 
+mail.MODIFY_CONFLICT if we try to modify an object that has been created
+or whose content has been modified since the specified change ID.
+
+In general, the sync client will use type="mod" and the web client will
+use type="new".
+
+Proxy Mechanism
+
+The targetServer info is a proxy mechanism to allow a browser client to
+send requests to multiple servers.  This is primarily useful for admin
+commands, but the mechanism is available for all commands.  Proxying is
+needed because some admin commands must be sent to the server being
+affected but the browser admin client can only talk to the server it
+originally logged on to. (JavaScript security restriction)  If
+<targetServer> element is missing, the command is executed on the local
+server.  If the target server specified is the local server, the command
+is executed locally.  Otherwise, it is proxied.  The server is specified
+by id, not by name.
+
+Sessions
+
+Specifying <nosession> in the context prevents creating a session on the
+server.  When <nosession> is specified, any <sessionId> found is ignored.
+
+The session info is only returned if the id has changed, of if
+it is not sent by the client.  If a session ID is returned, the client
+should immediately start using that session ID (and possibly assume the old
+session has expired and act accordingly).
+
+If a new session is created (due to no session being supplied in the request
+or the old session timing out), the response context header will contain a 
+<refresh> block containing the current set of tags and folders.  If there 
+have been any changes to the mailbox since the last soap operation (including 
+changes made due to this operation), there will also be a <notify> block in 
+the response context containing information on the deleted, created, and
+modified items in the mailbox.  (Note that a session will not return any
+notifications if <nonotify/> was ever specified in a <context> request
+element involving the session.)  If there is a session, there will be a
+<change> element specifying the last change ID on the server.
+
+  - deleted has just id
+  - created has full ToXML item dump
+  - modified has type/id, modified fields
+ 
+<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
+  [<soap:Header>
+     <context xmlns="urn:liquid">
+       <sessionId>{session-id}</sessionId>
+       <change token="{change-id}"/>
+       [<refresh>
+          <tags>
+            <-- all tags listed -->
+          </tags>
+          <folder id="1">
+            <folder .../>
+            <folder ...>
+              <folder .../>
+            </folder>
+            <folder .../>
+          </folder>
+        </refresh>]
+       [<notify>
+          <deleted id="665,66,452,883"/>
+          <created>
+            <tag id="66" name="phlox" u="8"/>
+            <folder id="4353" name="a&p" u="2" l="1"/>
+          </created>
+          <modified>
+            <tag id="65" u="0"/>
+            <m id="553" f="ua"/>
+            <note id="774" color="4">
+              This is the new content.
+            </note>
+          </modified>
+        </notify>]
+     </context>
+   <soap:/Header>] 
+  <soap:Body>
+   <FooResponse ... [id="{client-generated-id}"]>
+   </FooResponse>  
+  </soap:Body>
+</soap:Envelope>
+
+
+
+NOTES: The id="..." attribute is optional in the request body. If present, the server will 
+       include it in the response body element.
+       
+batch requests:
+
+<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
+  <soap:Header>
+    <context xmlns="urn:liquid">
+       <authToken>...</authToken>
+       [<sessionId>{returned-from-server-in-last-response}</sessionId>]
+       [<account by="name|id">{account-name-or-id}</account>]
+       [<change token="{change-id}" [type="mod|new"]/>]
+    </context>
+  </soap:Header>
+ <soap:Body>
+  <BatchRequest xmlns="urn:liquid" onerror="continue*|stop">
+    <FooRequest id="1">
+    </FooRequest>
+    <BarRequest id="2">
+    </BarRequest>
+  </BatchRequest>
+ </soap:Body>
+</soap:Envelope>
+
+response:
+
+<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
+  [<soap:Header>
+     <context xmlns="urn:liquid">
+       <sessionId>{session-id}</sessionId>
+       [<refresh>
+          <tags>
+            <-- all tags listed -->
+          </tags>
+          <folder id="1">
+            <folder .../>
+            <folder ...>
+              <folder .../>
+            </folder>
+            <folder .../>
+          </folder>
+        </refresh>]
+       [<notify>
+          <deleted ids="665,66,452,883"/>
+          <created>
+            <tag id="66" name="phlox" u="8"/>
+            <folder id="4353" name="a&p" u="2" l="1"/>
+          </created>
+          <modified>
+            <tag id="65" u="0"/>
+            <m id="553" t="ua"/>
+            <note id="774" color="4">
+              This is the new content.
+            </note>
+          </modified>
+        </notify>]
+     </context>
+   <soap:/Header>] 
+ <soap:Body>
+  <BatchResponse xmlns="urn:liquid">
+    <soap:Fault id="1">
+    </soap:Fault>
+    <BarResponse ... id="2">
+    </BarResponse>
+  </BatchResponse>
+ </soap:Body>
+</soap:Envelope>
+
+
+-----------------------------
+
+SOAP 1.2
+
+<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
+ <soap:Body>
+  <soap:Fault>
+    <soap:Code>
+       <soap:Value>soap:Sender</soap:Value>
+    </soap:Code>
+    <soap:Reason><soap:Text>...</soap:Text><soap:Reason>
+    <soap:Detail>
+      <Error xmlns="urn:liquid">
+        <Code>...</Code>
+      </Error>      
+    </soap:Detail>
+  </soap:Fault>
+ </soap:Body>
+</soap:Envelope>
+
+SOAP 1.1
+
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+ <soap:Body>
+  <soap:Fault>
+   <soap:faultcode>soap:Server</soap:faultcode>
+   <soap:faultstring>Server Error</soap:faultstring>
+   <soap:detail>
+     <Error xmlns="urn:liquid">
+        <Code>...</Code>
+      </Error>      
+    </soap:detail>
+  </soap:Fault>
+ </soap:Body>
+</soapEnvelope>
+
+global soap/system errors used with liquid:Error/Code:
+
+ service.FAILURE          - generic system failure
+ service.INVALID_REQUEST  - bad request (missing args, etc)
+ service.UNKNOWN_DOCUMENT - no handler for specified document
+ service.PARSE_ERROR      - XML parsing error
+ service.PERM_DENIED      - permission denied
+ service.AUTH_REQUIRED    - an authtoken is required
+ service.AUTH_EXPIRED     - authentication creds have expired
+
+-----------------------------
+ urn:liquidAccount
+
+ account error/codes: (includes service.*):
+ 
+   account.AUTH_FAILED          - bad account/password
+   account.CHANGE_PASSWORD      - password must be changed
+   account.PASSWORD_LOCKED      - password can't be changed
+   account.PASSWORD_CHANGE_TOO_SOON = password can't be changed yet
+   account.PASSWORD_RECENTLY_USED = can't use the same password again
+   account.NO_SUCH_ACCOUNT      - no such account
+   account.INVALID_PASSWORD     - new password does not meet the system's rules (length, content, etc.)
+   account.INVALID_PREF_NAME    - the specified preference name is invalid
+   account.INVALID_PREF_VALUE   - the specified preference value is invalid
+   
+ <AuthRequest xmlns="urn:liquidAccount">
+   <account by="name">...</account>
+   <password>...</password>
+  [<prefs>[<pref name="..."/>...]</prefs>]
+ </AuthRequest>
+ 
+ <AuthResponse>
+   <authToken>...</authToken>
+   <lifetime>...</lifetime>
+   <sessionId>...</sessionId>
+   [<prefs><pref name="{name}" modified="{modified-time}">{value}</pref>...</prefs>]
+ </AuthResponse>
+ 
+---------
+
+ <ChangePasswordRequest>
+   <account by="name">...</account>
+   <oldPassword>...</oldPassword>
+   <password>...</password>
+ </ChangePasswordRequest>
+ 
+<ChangePasswordResponse/>
+ 
+---------
+ <GetPrefsRequest>
+   <!-- get only the specified prefs -->
+   [<pref name="{name1}"/>
+    <pref name="{name2}"/>]
+ </GetPrefsRequest>
+ 
+ If no <pref> elements are provided, all known prefs are returned in the response.
+ If <pref> elements are provided, only those prefs are returned in the response.
+ 
+<GetPrefsResponse>
+   <pref name="{name}">{value}</pref>
+   ...
+   <pref name="{name}">{value}</pref>
+ </GetPrefsResponse>
+ 
+----------------------------
+
+<GetInfoRequest>
+</GetInfoRequest>
+ 
+<GetInfoResponse>
+   <name>{account-name}</name>
+   <lifetime>...</lifetime>   
+   <attrs>
+    <attr name="{name}">{value}</a>
+     ...
+    <attr name="{name}">{value}</a>
+   </attrs>
+   <prefs>
+     <pref name="{name}">{value}</pref>
+     ...
+     <pref name="{name}">{value}</pref>
+   </prefs>
+</GetInfoResponse>
+ 
+  {account-name} = email address (user@domain)
+  {life-time} = number of milliseconds until auth token expires
+  prefs = user-settable preferences
+  attrs = account attrs that aren't user-settable, but the front-end needs. 
+          Only attributes listed in liquidAccountClientAttrs will be returned.
+    
+----------------------------
+
+ <SearchGalRequest>
+   <name>...</name>
+ </SearchGalRequest>
+ 
+ <SearchGalResponse>
+   <cn>...</cn>*
+ </SearchGalResponse>
+
+ 
+---------
+  
+ <ModifyPrefsRequest>
+   [<pref name="{name}">{value}</pref>...]+
+ </ModifyPrefsRequest>
+ 
+ <ModifyPrefsResponse/>
+
+---------
+
+urn:liquidMail
+
+ mail error/codes: (includes service.*):
+ 
+   mail.NO_SUCH_CONV       - no such converstation
+   mail.NO_SUCH_MSG        - no such message
+   mail.NO_SUCH_PART       - no such message part
+   mail.NO_SUCH_FOLDER     - no such folder
+   mail.NO_SUCH_TAG        - no such tag
+   mail.QUERY_PARSE_ERROR  - couldn't parse search query
+   mail.NO_SUCH_CONTACT      - the specified contact id did not exist
+   mail.MODIFY_CONFLICT      - if the modified date on a contact is different then one in the request
+<!-- 
+
+defaults aren't normally included in the response, they may
+be shown here in examples though
+
+-->
+ 
+Email addresses:
+ 
+ <e [t="{type}"] [id="{email-id}"|ref="{email-id}"] p="{personal-name}" 
+    a="{email-address}" d="{display-name}">{content}</e>
+   
+   {type} = (f)rom, t(o), c(c). Type is only sent when an individual message message is returned. In the
+            list of conversations, all the email addresseses returned for a conversation are a subset
+            of the participants. In the list of messages in a converstation, the email addressses are
+            the senders. 
+   
+   {email-id} = a unique id within a given document. The first instance of an email address will
+                have an id="..." attr, while any that follow will have ref="..." instead of duplicating
+                the email address
+   {personal-name} = the comment/name part of an address
+   {email-address} = the user@domain part of an address
+   {display-name} = if we have personal, first word in "word1 word2" format, or last word in "word1, word2" format.
+                    if no personal, take string before "@" in email-address.
+   {content} = the original email string as specified by the sender (since we can't reliably reconstruct it
+               out of the components)
+   
+MimeParts:
+ 
+  <mp part="{mime-part-name}" body="{is-body}" s="{size-in-bytes} mid="{message-id} cid="{conv-id}"
+       ct="{content-type}" name="{name}" cd="{content-disposition}" filename="{filename} ci="{content-id} cl="{content-location}">
+    [<content [cte="{cont-encoding}"]>{content}</content>]
+    <mp part="..." ...>
+        <mp part="..." ...>
+        </mp>
+    </mp>
+  </mp>
+
+   {mime-part-name} = MIME part, "" means top-level part, 1 first part, 1.1 first part of a multipart inside of 1.
+
+   {content-type} = MIME Content-Type. The mime type is the content of the element.
+   {name}         = name attribute from the Content-Type param list
+   {cont-disp}    = MIME Content-Disposition
+   {filename}     = filename attribute from the Content-Disposition param list
+   {content-id>   = MIME Content-ID (for display of embedded images)
+   {content-location> = MIME/Microsoft Content-Location (for display of embedded images)   
+   {cont-desc} = MIME Content-Description.  Note cont-desc is not currently used in the code.
+   {cont-encoding} = content-xfer encoding. Only present if "base64"
+   {content} = the content of the part, if requested
+   {is-body} = set to 1, if this part is considered to be the "body" of the message for display
+               purposes.
+  {message-id} = message id. only present if <mp> is not enclosed within a <m> element
+  
+Messages: 
+ 
+  <m id="{message-id}" f="{flags}" s="{size}" d="{date}" cid="{conv-id}" l="{folder} origid="{original-id}">
+   <content>....</content>*
+   <e .../>*
+   <su>{subject}</su>
+   <fr>{fragment}</fr>
+   
+   <mid>{Message-ID header}</mid>
+   [<inv>...</inv>]
+   [<mp>...</mp>]
+   [<content (url="{url}")>...</content>]
+  </m>
+
+  {content} = complete rfc822 message. only present during certain operations that deal with the raw content
+              of a messasage.  There is at most 1 content element.
+  {conv-id}  = converstation id. only present if <m> is not enclosed within a <c> element
+  {size}     = size in bytes
+  {flags}    = (u)nread, (f)lagged, has (a)ttachment, (r)eplied, (s)ent by me, for(w)arded,
+               (d)raft, deleted (x), (n)otification sent, ($)pam
+  {date}     = secs since epoch, from date header in message
+  {original-id} = message id of message being replied to/forwarded (outbound messages only)
+  {url}      = content servlet relative url for retrieving message content
+  {subject}  = subject of the message, only returned on an expanded message
+  {fragment} = first n-bytes of the message (probably between 40-100)
+  <e .../>*  = zero or more addresses in the message, indentified by
+  type (t="f|t|c")
+  <inv ...>...</inv> = Parsed out iCal invite.  See soap-calendar.txt
+  <mp ...>...</mp> =  The root MIME part of the message.  There is exactly 1 MIME part under
+  			   a message element.  The "body" will be tagged with body="1", and the content 
+  			   of the body will also be present
+  <content>  = the raw content of the message.  cannot have more than one of <mp>, <content> url, and <content> body.
+
+Conversations:
+ 
+  <c id="{conv-id}" t="{tags}" n="{num-msgs}" d="{date}" f="{flags}" l="{folder-id}">
+    <e ...>*
+    <su>{subject}</su>
+    <fr>{fragment}</fr>
+    <m>...</m>+
+  </c>
+
+  {date}      = date (secs since epoch) of most recent message in converstation
+  {tags}      = list of tag-ids on conv
+  {flags}     = (u)nread, (f)lagged, has (a)ttachmement (set if any msg in conv has that flag set)
+  {subject}   = subject of conversation
+  {fragment}  = fragment of most recent msg in converstation
+  {folder-id} = location of converstation (numeric folder id)
+  
+  <e ...>*     = zero or more participants in the converstations
+  <m>...</m>+  = one or more messages in the conversation. When doing search, the <m> elements returned
+                 will only have the "id" attribute, and only messages that matched the search will be included.
+                 
+Folders:
+
+  <folder id="{folder-id}" name="{folder-name}" l="{parent-id}" u="{unread}" n="<msg-count}"/>
+  
+  {folder-name} = name of folder; max length 128; whitespace is trimmed by server;
+                  cannot contain ':', '"', '/', or any character below 0x20
+  {parent-id}   = id of parent folder (absent for root folder)
+  {unread}      = number of unread messages in folder
+  {msg-count}   = number of messages/invites in folder
+
+Tags:
+
+  <tag id="{tag-id}" name="{tag-name}" [color="{color}"] u="{unread}"/>
+
+  {tag-name} = name of tag; max length 128; whitespace is trimmed by server;
+               cannot contain ':', '"', '/', or any character below 0x20;
+               cannot begin with '\' (avoid collsions with IMAP)
+  {color}    = numeric; range 0-127; defaults to 0 if not present; client can display only 0-7
+  {unread}   = number of unread messages with this tag
+ 
+----------
+
+<SearchRequest [limit="..."] [offset="..."] [sortBy="{sort-by}"] [groupBy="{group-by}"] [types="{types}"] [fetch="1"] [html="1"] [read="1"] [recip="1"]>
+  [<mbx id="1|foo@bar.com|{UID}|all/>]
+  <query>{query-string}</query>
+</SearchRequest>
+
+mbx is optionally a set of mailboxes to search.  Default is to search in the current connection's mbox.
+limit is an integer specifying the maximum number of results to return
+offset is an integer specifying the 0-based offset into the results list to return as
+	the first result for this search operation.  
+For example, limit=10 offset=30 will return the 31st through 40th results inclusive.
+For a response, the order of the returned results represents the sorted order.  There 
+	is not a separate index attribute or element.
+
+if fetch="1" is specified, the first hit will be expanded inline (messages only at present)
+    + if html="1" is also specified, the inlined first hit will return HTML parts if available
+    + if read="1" is also specified, the inlined first hit will be marked as read
+
+if recip="1" is specified, returned sent messages will contain the set of "To:" recipients
+    instead of the sender (messages only at present)
+
+   {group-by} = DEPRECATED.  Use TYPES instead.	
+   {types} 	= comma-separated list.  Legal values are:
+               conversation|message|contact|appointment|note
+               (default is "conversation")
+
+        **NOTE: only ONE of message, conversation may be set. If
+                both are set, the first is used.
+
+  {sort-by}  = dateDesc|dateAsc|subjDesc|subjAsc|nameDesc|nameAsc(default is "dateDesc")
+  {more-flag} = 1 if there are more search results remaining. 
+  {content-matched} = 1 if the content of the message matched
+  <mp> elements will be present if any attachments matched
+
+	
+conversation result:
+--------------------
+
+<SearchResponse offset="..." more="{more-flag}">
+  <c id="{conv-id}" t="{tags}" n="{num-msgs}" d="{date}" f="{flags} [mbx="UID"]>
+    <e ...>*
+    <su>{subject}</su>
+    <fr>{fragment}</fr>
+  </c>*
+</SearchResponse>
+
+message result:
+---------------
+<SearchResponse offset="..." more="{more-flag}">
+   <m id="{message-id}" f="{flags}" s="{size}" d="{date}" cid="{conv-id}" score="..." [mbx="UID"]>
+     <e .../>  <!- sender only -->
+     <su>{subject}</su>
+     <fr>{fragment}</fr>
+     <mp part="{mime-part-name}"/>
+   </m>
+</SearchResponse>
+
+
+contact result:
+---------------
+DOCUMENT ME
+
+note result:
+------------
+DOCUMENT ME
+
+appointment result:
+-------------------
+DOCUMENT ME
+
+message-part result:
+--------------------
+<SearchResponse offset="..." more="{more-flag}">
+    <mp part="{mime-part-name}" s="{size-in-bytes} mid="{message-id}"
+        ct="{content-type}" name="{name}" filename="{filename}" score="..."/>
+ 
+</SearchResponse>
+
+
+
+-----------
+
+<SearchConvRequest cid="conversation-id" [limit="..."] [offset="..."] [sortBy="{sort-by}"] [types="{types}"] [fetch="1"] [html="1"] [read="1"]>
+  <query>{query-string}</query>
+</SearchConvRequest>
+
+   {conversation-id} = the conversation to search within.  REQUIRED.
+
+   SEE SearchRequest for more info
+
+------------
+
+<SearchConvResponse offset="..." more="{more-flag}">
+   <m id="{message-id}" [cm="1"] f="{flags}" s="{size}" d="{date}" cid="{conv-id}" score="...">
+     <e .../>  <!- sender only -->
+     <su>{subject}</su>
+     <fr>{fragment}</fr>
+     <mp part="{mime-part-name}"/>
+   </m>*
+</SearchConvResponse>
+
+   {cm} = 1 if the message matched the specified query string
+
+   SEE SearchResponse for more info
+   
+
+------------
+
+<BrowseRequest browseBy="{browse-by}"/>
+
+
+<BrowseResponse>
+ <bd>{browse-data}</bd>*
+</BrowseResponse>
+
+  {browse-by} = domains|attachments|objects
+  {browse-data} =  
+      for attachments: content type (application/msword)
+      
+      for objects: object type (url, etc)
+      
+      for domains: domains (stanford.edu, etc)                   
+      
+      domain <bd> also contains the "h" attribute:
+      
+      <bd h="{h-flags}">stanford.edu</bd>
+      
+      which indicates whether or not the domain was from the "From", "To", or "Cc" header. 
+      Valid flags are always one of: "f", "t", "ft", "c", "fc", "tc", "ftc"
+                  
+----------
+
+<GetFolderRequest>
+  [<folder l="{base-folder-id}"/>]
+</GetFolderRequest>
+
+<GetFolderResponse>
+  <folder ...>
+    <folder .../>
+    <folder ...>
+      <folder .../>
+    </folder>
+    <folder .../>
+  </folder>
+</GetFolderResponse>
+
+GetFolderResponse always has exactly 1 folder element within it.  Without a base
+folder ID that folder element will represent the virtual root folder.
+                  
+----------
+
+<GetConvRequest>
+  <c id="{conv-id}"/>
+</GetConvRequest>
+
+GetConvRequest gets information about the 1 conversation named by id's value.
+It will return exactly 1 conversation element.
+
+<GetConvResponse>
+  <c id="{conv-id}" t="{tags}" n="{num-msgs}" d="{date}" f="{flags}" l="{folder}">
+    <su>{subject}</su>
+    <m id="{message-id}" f="{flags}" s="{size}" d="{date}">
+      <e .../>
+      <fr>{fragment}</fr>
+     </m>+
+  </c>
+</GetConvResponse>
+
+------------
+
+<GetMsgRequest>
+  <m id="{msg-id}" [read="1"] [raw="1"] [html="1"] [part="{part}"] [subId="subId"/>
+</GetMsgRequest>
+
+read="1" to mark the message as read, "0" to leave the read status unchanged.  
+	(default is 0.)
+html="1" to return defanged HTML content by default.
+    (default is 0.)
+raw="1" to return the raw message content rather than a parsed mime structure;
+    (default is "0".  if message too big or not ASCII, a content servlet URL is returned)
+supply a "part" and the retrieved data will be on the specified message/rfc822 subpart.
+    if the part does not exist or is not a message/rfc822 part, mail.NO_SUCH_PART
+subId="nn" to return a message which is stored as a subpart of some other mail-item,
+    specifically this is used for Messages which are stored as part of Appointments
+
+<GetMsgResponse>
+  <m id="{message-id}" f="{flags}" t="{tags}" s="{size}" [d="{received-date}"] sd="{date-header}" l="{folder}" (cid="{conv}")>
+   <e .../>*
+   <su>{subject}</su>
+   <fr>{fragment}</fr>
+   <mid>{Message-ID header}</mid>
+   [<mp>...</mp>]
+   [<content (url="...")>...</content>]
+  </m>
+</GetMsgResponse>
+
+------------
+
+<GetNoteRequest>
+  <note id="{note-id}"/>
+</GetNoteRequest>
+
+<GetNoteResponse>
+  <note id="{note-id}" [t="{tags}"] d="{date}" l="{folder}" [pos="{x,y,width,height}"] color="{color}">
+    <content>...</content>
+  </note>
+</GetNoteResponse>
+
+---------
+
+<CreateFolderRequest>
+  <folder name="..." l="{parent-folder}" [fie="1"]/>
+</CreateFolderRequest>
+
+<CreateFolderResponse>
+  <folder id="..." name="..." l="{parent-folder}" [u="{unread count}"] [n="{msg count}"]/>
+</CreateFolderResponse>
+
+u and/or n attributes are present iff count > 0
+name and l are omitted for root folder
+
+if fie="1" is set, the server will fetch the folder if it already exists rather than throwing mail.ALREADY_EXISTS
+---------
+
+<CreateNoteRequest>
+  <note l="{parent-folder}" (pos="{x,y,width,height}") (color="...")>
+    <content>...</content>
+  </note>
+</CreateNoteRequest>
+
+<CreateNoteResponse>
+  <note id="{note-id}" [t="{tags}"] d="{date}" l="{folder}" [pos="{x,y,width,height}"] color="{color}">
+    <content>...</content>
+  </note>
+</CreateNoteResponse>
+
+---------
+
+<ItemActionRequest>
+  <!-- action can be preceeded by a "!" to negate it" -->
+  <action id="{list}" op="delete|read|flag|tag|move|update" [tag="..."] [l="{folder}"]/>
+</ItemActionRequest>
+
+<ItemActionResponse>
+  <action id="{list}" op="delete|read|flag|tag|move|update"/>
+</ItemActionResponse>
+
+  {list} = on input, list of items to act on, on output, list of
+           items that were acted on
+
+  for op="update", caller can specify any or all of: l="{folder}", t="{tag-list}", f="{flags}"
+
+---------
+
+<MsgActionRequest>
+  <!-- action can be preceeded by a "!" to negate it" -->
+  <action id="{list}" op="delete|read|flag|tag|move|update|spam" [tag="..."] [l="{folder}"]/>
+</MsgActionRequest>
+
+<MsgActionResponse>
+  <action id="{list}" op="delete|read|flag|tag|move|update|spam"/>
+</MsgActionResponse>
+
+  {list} = on input, list of messages to act on, on output, list of
+           messages that were acted on
+           list may only have 1 element for action "spam"
+
+  for op="update", caller can specify any or all of: l="{folder}", t="{tag-list}", f="{flags}"
+  for op="!spam", can optionally specify a destination folder
+---------
+
+<ConvActionRequest>
+  <!-- action can be preceeded by a "!" to negate it" -->
+  <action id="{list}" op="delete|read|flag|tag|move|spam" [tag="..."] [l="{folder}"]>
+    <content>...</content>
+  </action>
+</ConvActionRequest>
+
+<ConvActionResponse>
+  <action id="{list}" op="delete|read|flag|tag|move|spam"/>
+</ConvActionResponse>
+
+  {list} = on input, list of conversations to act on, on output, list of
+           conversations that were acted on
+           list may only have 1 element for action "spam"
+
+  for op="!spam", can optionally specify a destination folder
+---------
+
+<FolderActionRequest>
+  <action id="{list}" op="read|delete|rename|move|empty" name="..."  l="{target-folder}"/>
+</FolderActionRequest>
+
+<FolderActionResponse>
+  <action id="{list}" op="read|delete|rename|move|empty"/>
+</FolderActionResponse>
+
+  {list} = on input, list of folders to act on, on output, list of
+           folders that were acted on;
+           list may only have 1 element for action "rename" or "empty"
+           
+note that these actions can be used on search folders as well as standard folders
+
+---------
+
+<NoteActionRequest>
+  <action id="{list}" op="delete|edit|move|repos|flag|tag|color|update" [tag="..."] [l="{target-folder}"] [color="{color}"] [pos="{x,y,width,height}"]/>
+</NoteActionRequest>
+
+<NoteActionResponse>
+  <action id="{list}" op="delete|edit|move|repos|flag|tag|color|update"/>
+</NoteActionResponse>
+
+  {list} = on input, list of notes to act on, on output, list of
+           notes that were acted on;
+           list may only have 1 element for actions "edit", "repos", "color"
+
+  for op="update", caller can specify any or all of: l="{folder}", t="{tag-list}", f="{flags}", color="{color}", pos="{x,y,width,height}"
+
+--------------
+
+<GetTagRequest/>
+
+<GetTagResponse>
+  <tag id="..." name="..." color="..." [u="{unread_count}"]/>+
+</GetTagResponse>
+
+u attribute is present iff count > 0
+---------
+
+<CreateTagRequest>
+  <tag name="..." (color="...")/>
+</CreateTagRequest>
+
+<CreateTagResponse>
+  <tag (same as GetTagResponse)/>
+</CreateTagResponse>
+
+---------
+
+<TagActionRequest>
+  <action op="read|rename|color|delete" id="..." name="..." color="..."/>
+</TagActionRequest>
+
+<TagActionResponse>
+  <action op="read|rename|color|delete" id="..."/> <!-- iff op was successful -->
+</TagActionResponse>
+
+---------
+
+<GetSearchFolderRequest>
+  <!-- get all by default -->
+</GetSearchFolderRequest>
+
+<GetSearchFolderResponse>
+  <search id="..." name="..." query="..." [types="...] [sortBy="..."] l="{folder}"/>+
+</GetSearchFolderResponse>
+
+---------
+
+<CreateSearchFolderRequest>
+  <search name="..." query="..." [types="...] [sortBy="..."] l="{folder}"/>
+</CreateSearchFolderRequest>
+
+<CreateSearchFolderResponse>
+  <search id="..." name="..." query="..." [types="...] [sortBy="..."] l="{folder}"/>
+</CreateSearchFolderResponse>
+
+---------
+
+<ModifySearchFolderRequest>
+  <search id="..." query="..." [types="...] [sortBy="..."]/>
+</ModifySearchFolderRequest>
+
+<ModifySearchFolderResponse>
+  <search id="..." name="..." query="..." [types="...] [sortBy="..."] l="{folder}"/>  <!-- iff it was modified -->
+</ModifySearchFolderResponse>
+
+---------
+
+# origid will be present if this is a reply or forward
+# Can we have more than one From: address?
+# TODO: indicate whether to save in SentMail (or some other folder)
+
++  add="1" on recipient email address means to add to caller's address book (no duplicate checking!)
++  only allowed one top-level <mp> but can nest <mp>s within if multipart/*
++  on reply/forward, set origid on <m> element and set rt to "r" or "w", respectively
+
+<SendMsgRequest>
+  <m [origid="..." rt="r|w"]>
+    <e t="{type}" a="{email-address}" p="{personal-name}" [add="1"]/>+
+    <su>{subject}</su>*
+    [<irt>{Message-ID header for message being replied to}</irt>]
+    <mp ct="{content-type}">
+      <content>...</content>
+    </mp>
+    <attach [aid="{attach-upload-id}"]>
+      [<m id="{message-id}"/>]*
+      [<mp mid="{message-id}" part="{part-id}"/>]*
+    </attach>
+  </m>
+</SendMsgRequest>
+
+   or, if you want to compose the message remotely, upload it via
+   FileUploadServlet, and submit it through our server:
+
+<SendMsgRequest>
+  <m aid="{uploaded-MIME-body-ID}" [origid="..." rt="r|w"]/>
+</SendMsgRequest>
+
+# If the message is saved to the sent folder then the id of the message is returned. 
+# Otherwise, no id is returned -- just a <m></m> is returned.
+<SendMsgResponse>
+  <m id="..." />
+</SendMsgResponse>
+
+
+---------------------------- 
+
+# origid will be present if this is a reply or forward
+# Can we have more than one From: address?
+# TODO: indicate folder to save in (defaults to Drafts)
+
++  only allowed one top-level <mp> but can nest <mp>s within if multipart/*
++  on reply/forward, set origid on <m> element and set rt to "r" or "w", respectively
++  if updating an existing draft, set "id" attr on <m> element
++  can refer to parts of existing draft in <attach> block
+
+<SaveDraftRequest>
+  <m [id="{existing-draft-id}"] [origid="..." rt="r|w"]>
+    <e t="{type}" a="{email-address}" p="{personal-name}"/>+
+    <su>{subject}</su>*
+    [<irt>{Message-ID header for message being replied to}</irt>]
+    <mp ct="{content-type}">
+      <content>...</content>
+    </mp>
+    <attach [aid="{attach-upload-id}"]>
+      [<m id="{message-id}"/>]*
+      [<mp mid="{message-id}" part="{part-id}"/>]*
+    </attach>
+  </m>
+</SaveDraftRequest>
+
+   or, if you want to compose the message remotely, upload it via
+   FileUploadServlet, and submit it through our server:
+
+<SaveDraftRequest>
+  <m aid="{uploaded-MIME-body-ID}" [id="{existing-draft-id}"] [origid="..." rt="r|w"]/>
+</SaveDraftRequest>
+
+
+# The id of the saved draft is returned
+<SaveDraftResponse>
+  <m id="{message-id}" f="{flags}" t="{tags}" s="{size}" [d="{received-date}"] sd="{date-header}" l="{folder}" (cid="{conv}")>
+    <e .../>*
+    <su>{subject}</su>
+    <irt>{Message-ID header for message being replied to}</irt>
+    <fr>{fragment}</fr>
+    <mid>{Message-ID header}</mid>
+    [<mp>...</mp>]
+    [<content (url="...")>...</content>]
+  </m>
+</SaveDraftResponse>
+
+
+---------------------------- 
+
+  <AddMsgRequest>
+    <m t="{tags}" l="{folder}" [d="{received-date}"] [aid="{uploaded-MIME-body-ID}"]>
+      ...
+    </m>
+  </AddMsgRequest>
+
+  {tags} = comma-separated list of tag IDs
+  {folder} = folder pathname (starts with '/') or folder ID
+  {received-date} = (optional) time the message was originally received, in MILLISECONDS since the epoch 
+  {uploaded-MIME-body-ID} = ID of message uploaded via FileUploadServlet
+
+  Note that the <m> element should include the <content> element with the 
+  entire message's content.  (Omit <content> if you specify an "aid" attribute.)
+  No <mp> elements should be provided within <m>.
+
+# Returns the Message's ID just created
+<AddMsgResponse>
+  <m id="..." />
+</AddMsgResponse>
+
+---------------------------- 
+
+Contacts: 
+ 
+  <cn id="{contact-id}" [t="{tags}"] [f="{flags}"] md="{mod-date}" [l="{folder}"]>
+    <a [n="{attr-name}" id="{attr-id}"] [ref="{attr-id}"]>{attr-data}</a>+
+    <!-- <mp>...</mp>* -->
+  </cn>
+
+  {contact-id} = unique contact id
+  {flags} = (f)lagged, has (a)ttachment
+  // {created-date}  = secs since epoch, date contact was created
+  {modified-date}  = secs since epoch, date contact was modified
+  {attr-name} = name of the attribute (firstName, etc)
+  {attr-id} = for the scope of a response, a unique id assigned to the attr-name. The first contact with
+               a given attr will include the name and id, the second will only include the ref.
+  
+  <mp>....</mp> = zero or more (non-nested) mime parts if this contact has attachments
+  {folder-id} = id of folder to create contact in. Un-specified means use the default Contacts folder.
+----------
+
+<CreateContactRequest>
+  <cn [l="{folder-id}"] [t="{tags}"]>
+     <a>...</a>+
+  </cn>
+</CreateContactRequest>
+
+<CreateContactResponse>
+   (<cn> definition above)
+</CreateContactResponse>
+
+  {folder-id} = id of folder to create contact in. Un-specified means use the default Contacts folder.
+  {tags} = list of tags to apply to the created contact
+
+----------
+
+<ModifyContactRequest replace="{replace-mode}">
+  <cn id="...">
+    <a>{attr-value}</a>+
+  </cn>
+</ModifyContactRequest>
+
+ {attr-value} = new attribute value. If empty (<a/>), then the attribute will be removed.
+
+ {replace-mode} = 0|1 (0 is default)
+
+  if replace-mode is 1, all attrs in the specified contact are replaced with specified attrs, otherwise
+  the attrs are merged with the existing contact.
+
+<ModifyContactResponse>
+   <cn id="..." s="..." cd="..."/>
+</ModifyContactResponse>
+
+NOTE: should we return modified attrs in response?
+
+----------
+
+<GetContactsRequest>
+  <a n="..."/>*
+  <cn id="{contact-id}"/>*
+</GetContactsRequest>
+
+if <a n="..."/> present, return only the specified attribute(s).
+
+if <cn id="..."/> present, only get the specified contact(s).
+
+<GetContactsResponse>
+  <cn>...</cn>*
+</GetContactsResponse>
+
+----------
+
+<ContactActionRequest>
+  <!-- some actions can be preceeded by a "!" to negate them -->
+  <action id="{list}" op="move|delete|flag|tag|update" tag="..." l="..."/>
+</ContactActionRequest>
+
+<ContactActionResponse>
+  <action id="{list}" op="move|delete|flag|tag|update"/>
+</ContactActionResponse>
+
+  {list} = on input, list of contacts to act on, on output, list of
+           contacts that were acted on
+
+  for op="update", caller can specify any or all of: l="{folder}", t="{tag-list}", f="{flags}"
+
+----------
+
+<ImportContactsRequest ct="{content-type}">
+  <content [aid="{attach-upload-id}"]>...</content>
+</ImportContactsRequest>
+
+<ImportContactsResponse>
+  <cn ids="{list-of-created-ids} n="{num-imported}"/>
+</ImportContactsResponse>
+
+{content-type} = only currently supported content type is "csv"
+
+{attach-upload-id} = attachment id from upload server. If specified, then body of content is ignored.
+
+TODO: should have an option on import that matches email addresses to existing contacts, and updates/ignores them.
+
+----------
+
+<ExportContactsRequest ct="{content-type}"/>
+
+<ExportContactsResponse>
+  <content>...</content>
+</ExportContactsResponse>
+
+{content-type} = currently, the only supported content type is "csv" (comma-separated values)
+
+----------
+
+EXAMPLE:
+
+<SearchRequest>
+  <query>is:unread</query>
+</SearchRequest>
+
+<SearchResponse hits="2" offset="...">
+   <c id="12344" n="2" d="10023420023" t="1,12" f="1">
+     <e id="1" p="Roland Schemers" a="schemers@liquidsys.com"/>
+     <e id="2" p="Dan Karp" a="dan@liquidsys.com"/>
+     <su>Speaking of animals</su>
+     <fr>I am still looking for my monkey!</fr>
+   </c>
+   <c id="456" n="2" d="10023420023" t="1,12" a="1">
+     <e ref="1"/>
+     <e id="3" p="Ross Dargahi" a="ross@liquidsys.com"/>
+     <su>phone numbers</su>
+     <fr>(650) 123-4567</fr>
+   </c>
+ </SearchResponse>
+ 
+ EXAMPLE:
+
+<GetConvRequest>
+ <c id="12345">
+   <m id=""9845"/>
+ </c> 
+</GetConvRequest>
+
+<GetConvResponse>
+  <c id="12345" t="1,12" n="2">
+   <su>Speaking of animals</su>
+   <m id="123445" f="1" s="1234" d="10002323">
+     <e id="1" p="Dan Karp" a="dan@liquidsys.com"/>
+     <fr>This is the fragment</fr>
+   </m>
+   <m id="9845" a="1" s="128981" d="10002323">
+     <e t="f" id="2" p="Roland Schemers" a="schemers@liquidsys.com"/>
+     <e t="t" ref="1"/>
+     <fr>This is another frag</fr>
+     <mp part="" ct="multipart/mixed">
+       <mp part="1" ct="text/plain" body=1">
+         <content>This is another frag that is part of a bigger
+message. blah blah blah</content>
+       </mp>
+       <mp part="2" ct="message/rfc822">
+         <mp part="2.1" ct="multipart/mixed">
+           <mp part="2.1.1" ct="text/plain" name="README.txt" cd="attachment" filename="README.txt"/>
+           <mp part="2.1.2" ct="image/jpeg" name="shot1.jpg" cd="inline" filename="shot1.jpg"/>
+         </mp>   
+       </mp>
+     </mp>  
+   </m>
+  </c>
+</GetConvResponse>
+ 
+EXAMPLE:
+
+<GetMsgPartRequest>
+  <m id="m1234">
+    <mp part="2.1.3"/>
+  </m>
+</GetMsgPartRequest>
+
+<GetMsgPartResponse>
+  <m id="...">
+   <mp part="2.1.3" ct="image/jpeg">
+      <content cte="base64">RKZezlj1hXbfPePrfm...rOIfTMUY=</content>
+   </mp>
+  </m>
+</GetMsgPartResponse>
+
+
+EXAMPLE:
+
+<GetMsgRequest>
+ <m id="9845"/>
+</GetMsgRequest>
+
+<GetMsgResponse>
+   <m id="9845" a="1" s="128981" d="10002323">
+     <e t="f" id="1" p="Roland Schemers" a="schemers@liquidsys.com"/>
+     <e t="t" id="2" p="Dan Karp" a="dan@liquidsys.com"/>
+     <su>Speaking of animals</su>
+     <fr>This is another frag</fr>
+     <mp part="" ct="multipart/mixed"/>
+       <mp part="1" ct="text/plain" body="1"/>
+        <content>This is another frag that is part of a bigger
+message. blah blah blah</content>
+       </mp>
+       <mp part="2" ct="message/rfc822"/>
+         <mp part="2.1" ct="multipart/mixed"/>
+           <mp part="2.1.1" ct="text/plain"/>
+           <mp part="2.1.2" ct="text/plain" name="README.txt" cd="attachment" filename="README.txt"/>
+           <mp part="2.1.3" ct="image/jpeg" name="shot1.jpg" cd="inline" filename="shot1.jpg"/>
+         </mp>
+       </mp>     
+     </mp>
+   </m>
+</GetMsgResponse>
+
+EXAMPLE:
+
+<mail:BrowseRequest xmlns:mail="urn:liquidMail">
+   <query>from:roland</query>
+   <browseBy>attachments</browseBy>
+</mail:BrowseRequest>
+
+<mail:BrowseResponse xmlns:mail="urn:liquidMail">
+  <bd>application/pdf</bd>
+  <bd>application/msword</bd>
+  <bd>application/vnd.ms-powerpoint</bd>
+  <bd>image/jpeg</bd>
+  <bd>application/octet-stream</bd>
+  <bd>text/plain</bd>
+  <bd>image/gif</bd>
+  <bd>message/rfc822</bd>
+</mail:BrowseResponse>
+
+-----------------------
+
+ <NoOpRequest/>
+ 
+ <NoOpResponse/>
+
+A request that does nothing and always returns nothing. Used to keep a session alive, and return
+any pending notifications.
+
+---------------------------
+
+<GetRulesRequest>
+<GetRulesResponse>
+<SaveRulesRequest>
+<SaveRulesResponse>
+
+Sieve Mail Filtering manipluation.  See MailFiltering.doc for details
+
+---------------------------
+
+Synchronization:
+
+Currently we only support initial sync.  The client sends a sync request with no
+sync token.  The server responds with the folder hierarchy, tag hierarchy, and 
+list of ids of the mail items contained in each folder.
+
+<SyncRequest [token="sync-token"]>
+  (<ChangeList></ChangeList>)*
+</SyncRequest>
+
+    sync-token: absense of sync-token implies client has no previous knowledge of the 
+                state of the mailbox (ie, initial sync)
+
+    ChangeList: TBD
+    
+<SyncResponse token="new-sync-token">
+   <folder id="1">
+     <m ids="x,y,z"/>
+     <cn ids="a,b,c"/>
+     <note ids="1,2,3"/>
+     <folder name="Spam" id="3" l="1"/>
+     <folder name="INBOX" id="2" l="1" n="3">
+       <m ids="555,533,501"/>
+       <cn ids="675,673,671"/>
+       <note ids="603,602,403"/>
+       <folder name="subfolder" id="286" l="1"/>
+     </folder>
+   </folder>
+   <tag name="tag1" id="64" color="3"/>
+</SyncResponse>
+
+
+---------------------------
+
+Console Command:
+
+General-Purpose SOAP command for interfacing simple admin-console
+commands that don't necessarily need their own full SOAP API.
+
+Helper util is coco.tools.SendConsoleCommand.java 
+
+<ConsoleRequest name="REQUEST"> // (REQUEST is the command, e.g. "reindex")
+   (<p name="name">VALUE</p>)*  // parameters
+</ConsoleRequest>
+
+<ConsoleResponse status="OK|FAIL">RESPONSETEXT</ConsoleResponse>
+
+---------------------------
+
+<CheckSpellingRequest>
+    [text to spell check]
+</CheckSpellingRequest>
+
+<CheckSpellingResponse available="true">
+  <misspelled word="chickun" suggestions="chicken,chocking,chucking,Chicky,checking"/>
+</CheckSpellingResponse>
+
+Suggested words are listed in decreasing order of their match score.
+The "available" attribute specifies whether the server-side spell checking
+interface is available or not.
+

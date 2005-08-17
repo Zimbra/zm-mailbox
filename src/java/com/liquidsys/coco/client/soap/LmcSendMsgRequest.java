@@ -1,0 +1,115 @@
+package com.liquidsys.coco.client.soap;
+
+import java.io.File;
+import java.io.IOException;
+
+import org.apache.commons.httpclient.Cookie;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpState;
+import org.apache.commons.httpclient.cookie.CookiePolicy;
+import org.apache.commons.httpclient.methods.MultipartPostMethod;
+import org.dom4j.Element;
+import org.dom4j.DocumentHelper;
+
+import com.liquidsys.soap.DomUtil;
+import com.liquidsys.coco.service.ServiceException;
+import com.liquidsys.coco.client.*;
+import com.liquidsys.coco.service.mail.MailService;
+
+public class LmcSendMsgRequest extends LmcSoapRequest {
+
+    private LmcMessage mMsg;
+    private String mInReplyTo;
+    private String mFwdMsgID;
+    private String[] mFwdPartNumbers;
+
+    /**
+     * Set the message that will be sent
+     * @param m - the message to be sent
+     */
+    public void setMsg(LmcMessage m) { mMsg = m; }
+
+    public LmcMessage getMsg() { return mMsg; }
+
+    public void setReplyInfo(String inReplyTo) {
+        mInReplyTo = inReplyTo;
+    }
+
+    public void setFwdInfo(String inReplyTo, String fwdMsgID, String[] fwdPartNumbers) {
+        mInReplyTo = inReplyTo;
+        mFwdMsgID = fwdMsgID;
+        mFwdPartNumbers = fwdPartNumbers;
+    }
+
+    protected Element getRequestXML() {
+        Element request = DocumentHelper.createElement(MailService.SEND_MSG_REQUEST);
+        addMsg(request, mMsg, mInReplyTo, mFwdMsgID, mFwdPartNumbers);
+        return request;
+    }
+
+    protected LmcSoapResponse parseResponseXML(Element responseXML) 
+        throws ServiceException
+    {
+        // this assumes, per soap.txt, that only the ID attribute is needed
+        Element m = DomUtil.get(responseXML, MailService.E_MSG);
+        LmcSendMsgResponse response = new LmcSendMsgResponse();
+        response.setID(m.attributeValue(MailService.A_ID));
+        return response;
+    }
+    
+    /*
+     * Post the attachment represented by File f and return the attachment ID
+     */ 
+    public String postAttachment(String uploadURL,
+                                 LmcSession session,
+                                 File f,
+                                 String domain,  // cookie domain e.g. ".liquidsys.com"
+                                 int msTimeout)
+        throws LmcSoapClientException
+    {
+        String aid = null;
+        
+        // set the cookie.
+        if (session == null)
+            System.err.println(System.currentTimeMillis() + " " + Thread.currentThread() + " LmcSendMsgRequest.postAttachment session=null");
+        Cookie cookie = new Cookie(domain, "LS_AUTH_TOKEN", session.getAuthToken(), "/", -1, false);
+        HttpState initialState = new HttpState();
+        initialState.addCookie(cookie);
+        initialState.setCookiePolicy(CookiePolicy.COMPATIBILITY);
+        HttpClient client = new HttpClient();
+        client.setState(initialState);
+        
+        // make the post
+        MultipartPostMethod mPost = new MultipartPostMethod(uploadURL);
+        client.setConnectionTimeout(msTimeout);
+        int statusCode = -1;
+        try {
+        	mPost.addParameter(f.getName(), f);
+        	statusCode = client.executeMethod(mPost);
+
+            // parse the response
+            if (statusCode == 200) {
+                // paw through the returned HTML and get the attachment id
+                String response = mPost.getResponseBodyAsString();
+                //System.out.println("response is\n" + response);
+                int lastQuote = response.lastIndexOf("'");
+                int firstQuote = response.indexOf("','") + 3;
+                if (lastQuote == -1 || firstQuote == -1)
+                    throw new LmcSoapClientException("Attachment post failed, unexpected response: " + response);
+                aid = response.substring(firstQuote, lastQuote);
+            } else {
+                throw new LmcSoapClientException("Attachment post failed, status=" + statusCode);
+            }
+        } catch (IOException e) {
+        	e.printStackTrace();
+            throw new LmcSoapClientException("Attachment post failed");
+        } finally {
+        	mPost.releaseConnection();
+        }
+
+        
+        return aid;
+    }
+ 
+
+}

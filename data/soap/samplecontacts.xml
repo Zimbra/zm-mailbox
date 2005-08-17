@@ -1,0 +1,513 @@
+<t:tests xmlns:t="urn:liquidTestHarness">
+
+  <t:property name="uri" value="http://localhost:7070/service/soap/"/>
+
+  <t:property name="user" value="user1"/>
+  <t:property name="password" value="test123"/>
+
+  <t:test id="auth" required="true">
+    <t:request>
+      <AuthRequest xmlns="urn:liquidAccount">
+        <account by="name">${user}</account>
+        <password>${password}</password>
+        <!--<prefs/>-->
+      </AuthRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//acct:AuthResponse/acct:lifetime"  match="^\d+$"/>
+      <t:select path="//acct:AuthResponse/acct:authToken" set="authToken"/>
+      <t:select path="//acct:AuthResponse/acct:sessionId" set="sessionId"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:liquidMail">
+        <cn>
+          <a n="firstName">Ross</a>
+          <a n="lastName">Dargahi</a>
+          <a n="email">rossd@liquidsys.com</a>
+          <a n="email2">rdargahi@yahoo.com</a>
+          <a n="jobTitle">VP of Engineering</a>
+          <a n="company">Liquid Systems</a>
+          <a n="workPhone">(408) 973-0500 x112</a>
+          <a n="workStreet">1054 S. De Anza Blvd\nSuite 200</a>
+          <a n="workCity">San Jose</a>
+          <a n="workState">CA</a>
+          <a n="workPostalCode">95129</a>
+          <a n="workCountry">US</a>
+          <a n="workURL">http://www.liquidsys.com</a>
+          <a n="notes">These are random notes</a>
+          <a n="fileAs">1</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:liquidMail">
+        <cn>
+          <a n="firstName">Satish</a>
+          <a n="lastName">Dharmaraj</a>
+          <a n="email">satish@liquidsys.com</a>
+          <a n="jobTitle">CEO</a>
+          <a n="company">Liquid Systems</a>
+          <a n="workPhone">(408) 973-0500 x111</a>
+          <a n="fileAs">2</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:liquidMail">
+        <cn>
+          <a n="firstName">Roland</a>
+          <a n="lastName">Schemers</a>
+          <a n="email">schemers@liquidsys.com</a>
+          <a n="jobTitle">VP of Technology</a>
+          <a n="company">Liquid Systems</a>
+          <a n="workPhone">(408) 973-0500 x113</a>
+          <a n="workStreet">1054 S. De Anza Blvd\nSuite 200</a>
+          <a n="workCity">San Jose</a>
+          <a n="workState">CA</a>
+          <a n="workPostalCode">95129</a>
+          <a n="workCountry">US</a>
+          <a n="workURL">http://www.liquidsys.com</a>
+          <a n="fileAs">3</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:liquidMail">
+        <cn>
+          <a n="firstName">Dave</a>
+          <a n="lastName">Edwards</a>
+          <a n="email">dave@liquidsys.com</a>
+          <a n="company">Liquid Systems</a>
+          <a n="workPhone">(408) 973-0500 x199</a>
+          <a n="fileAs">4</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:liquidMail">
+        <cn>
+          <a n="firstName">James</a>
+          <a n="lastName">Bond</a>
+          <a n="fileAs">8:Special Agent Jimmy Bond</a>
+          <a n="email">bond@gov.uk</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:liquidMail">
+        <cn>
+          <a n="firstName">Cindy</a>
+          <a n="lastName">Shannon</a>
+          <a n="company">Liquid</a>
+          <a n="email">cindy@liquidsys.com</a>
+          <a n="workPhone">(650) 761-4759</a>
+          <a n="mobilePhone">(650) 281-6692</a>
+          <a n="fileAs">5</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:liquidMail">
+        <cn>
+          <a n="firstName">Mike</a>
+          <a n="lastName">Conners</a>
+          <a n="company">Sun</a>
+          <a n="fileAs">6</a>
+          <a n="email">mike.conners@sun.com</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:liquidMail">
+        <cn>
+          <a n="firstName">John</a>
+          <a n="lastName">Doe</a>
+          <a n="email">jdoe@hotmail.com</a>
+          <a n="company">Doe Enterprises</a>
+          <a n="fileAs">7</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:liquidMail">
+        <cn>
+          <a n="firstName">Joaquin</a>
+          <a n="lastName">Ruiz</a>
+          <a n="company">Liquid Systems</a>
+          <a n="workPhone">(408) 973-0500 x123</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:liquidMail">
+        <cn>
+          <a n="firstName">Bill</a>
+          <a n="lastName">Gates</a>
+          <a n="email">bill@microsoft.com</a>
+          <a n="company">Microsoft</a>
+          <a n="jobTitle">Chairman &amp; Chief Software Architect</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:liquidMail">
+        <cn>
+          <a n="firstName">Bob</a>
+          <a n="lastName">Smith</a>
+          <a n="email">smith@liquidsys.com</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:liquidMail">
+        <cn>
+          <a n="firstName">Dan</a>
+          <a n="lastName">Karp</a>
+          <a n="email">dan@liquidsys.com</a>
+          <a n="workStreet">1054 S. De Anza Blvd\nSuite 200</a>
+          <a n="workCity">San Jose</a>
+          <a n="workState">CA</a>
+          <a n="workPostalCode">95129</a>
+          <a n="workCountry">US</a>
+          <a n="workURL">http://www.liquidsys.com</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:liquidMail">
+        <cn>
+          <a n="firstName">Kevin</a>
+          <a n="lastName">Kluge</a>
+          <a n="email">kevin_kluge@yahoo.com</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:liquidMail">
+        <cn>
+          <a n="firstName">DaveVeryLongNameWithNoSpacesBreaksColumns</a>
+          <a n="lastName">Householder</a>
+          <a n="email">dave.h@gmail.com</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:liquidMail">
+        <cn>
+          <a n="firstName">Edward</a>
+          <a n="lastName">Van Halen</a>
+          <a n="email">eddie@vanhalen.com</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:liquidMail">
+        <cn>
+          <a n="firstName">Martha</a>
+          <a n="lastName">Ballard</a>
+          <a n="email">martha34@aol.com</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:liquidMail">
+        <cn>
+          <a n="firstName">Zachary</a>
+          <a n="lastName">Thomas</a>
+          <a n="email">zach@apple.com</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:liquidMail">
+        <cn>
+          <a n="firstName">Jane</a>
+          <a n="lastName">Doe</a>
+          <a n="email">janedoe@hotmail.com</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:liquidMail">
+        <cn>
+          <a n="firstName">Tim</a>
+          <a n="lastName">Davis</a>
+          <a n="company">HP</a>
+          <a n="workPhone">(408) 234-9812</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:liquidMail">
+        <cn>
+          <a n="firstName">Parag</a>
+          <a n="lastName">Shah</a>
+          <a n="email">pshah@liquidsys.com</a>
+          <a n="workPhone">(408) 973-0500</a>
+          <a n="workStreet">1054 S. De Anza Blvd\nSuite 200</a>
+          <a n="workCity">San Jose</a>
+          <a n="workState">CA</a>
+          <a n="workPostalCode">95129</a>
+          <a n="workCountry">US</a>
+          <a n="workURL">http://www.liquidsys.com</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:liquidMail">
+        <cn>
+          <a n="firstName">Conrad</a>
+          <a n="lastName">Damon</a>
+          <a n="email">cdamon@liquidsys.com</a>
+          <a n="workPhone">(408) 973-0500</a>
+          <a n="workStreet">1054 S. De Anza Blvd\nSuite 200</a>
+          <a n="workCity">San Jose</a>
+          <a n="workState">CA</a>
+          <a n="workPostalCode">95129</a>
+          <a n="workCountry">US</a>
+          <a n="workURL">http://www.liquidsys.com</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:liquidMail">
+        <cn>
+          <a n="firstName">Enrique</a>
+          <a n="lastName">delCampo</a>
+          <a n="email">enrique@liquidsys.com</a>
+          <a n="workPhone">(408) 973-0500</a>
+          <a n="workStreet">1054 S. De Anza Blvd\nSuite 200</a>
+          <a n="workCity">San Jose</a>
+          <a n="workState">CA</a>
+          <a n="workPostalCode">95129</a>
+          <a n="workCountry">US</a>
+          <a n="workURL">http://www.liquidsys.com</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:liquidMail">
+        <cn>
+          <a n="firstName">Greg</a>
+          <a n="lastName">Solovyev</a>
+          <a n="email">greg@liquidsys.com</a>
+          <a n="workPhone">(408) 973-0500</a>
+          <a n="workStreet">1054 S. De Anza Blvd\nSuite 200</a>
+          <a n="workCity">San Jose</a>
+          <a n="workState">CA</a>
+          <a n="workPostalCode">95129</a>
+          <a n="workCountry">US</a>
+          <a n="workURL">http://www.liquidsys.com</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:liquidMail">
+        <cn>
+          <a n="firstName">Jiho</a>
+          <a n="lastName">Hahm</a>
+          <a n="email">jhahm@liquidsys.com</a>
+          <a n="company">Liquid Systems</a>
+          <a n="workPhone">(408) 973-0500</a>
+          <a n="workStreet">1054 S. De Anza Blvd\nSuite 200</a>
+          <a n="workCity">San Jose</a>
+          <a n="workState">CA</a>
+          <a n="workPostalCode">95129</a>
+          <a n="workCountry">US</a>
+          <a n="workURL">http://www.liquidsys.com</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:liquidMail">
+        <cn>
+          <a n="firstName">Kirk</a>
+          <a n="lastName">Chen</a>
+          <a n="email">kchen@liquidsys.com</a>
+          <a n="company">Liquid Systems</a>
+          <a n="workPhone">(408) 973-0500</a>
+          <a n="workStreet">1054 S. De Anza Blvd\nSuite 200</a>
+          <a n="workCity">San Jose</a>
+          <a n="workState">CA</a>
+          <a n="workPostalCode">95129</a>
+          <a n="workCountry">US</a>
+          <a n="workURL">http://www.liquidsys.com</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+  <t:test>
+    <t:request>
+      <CreateContactRequest xmlns="urn:liquidMail">
+        <cn>
+          <a n="firstName">Marc</a>
+          <a n="lastName">Macintyre</a>
+          <a n="email">marcmac@liquidsys.com</a>
+          <a n="company">Liquid Systems</a>
+          <a n="workPhone">(408) 973-0500</a>
+          <a n="workStreet">1054 S. De Anza Blvd\nSuite 200</a>
+          <a n="workCity">San Jose</a>
+          <a n="workState">CA</a>
+          <a n="workPostalCode">95129</a>
+          <a n="workCountry">US</a>
+          <a n="workURL">http://www.liquidsys.com</a>
+        </cn>
+      </CreateContactRequest>
+    </t:request>
+    <t:response>
+      <t:select path="//mail:CreateContactResponse/mail:cn"/>
+    </t:response>
+  </t:test>
+
+</t:tests>

@@ -1,0 +1,129 @@
+Here's a list of status variables returned by SHOW STATUS 
+that are useful in validating the our SQL statements and the 
+MySQL server settings.  Generally we want to watch out for
+operations that hit the disk unnecessarily or search/sort
+data without using an index.
+
+----------------------
+
+INDEX USAGE:
+
+Select_scan
+The number of joins that did a full scan of the first table.
+
+Handler_read_key
+The number of requests to read a row based on a key. If this is high,
+it is a good indication that your queries and tables are properly
+indexed.
+
+Handler_read_next
+The number of requests to read the next row in key order. This will be
+incremented if you are querying an index column with a range
+constraint or if you are doing an index scan.
+
+Handler_read_prev
+The number of requests to read the previous row in key order. This
+read method is mainly used to optimize ORDER BY ... DESC.
+
+Handler_read_rnd
+The number of requests to read a row based on a fixed position. This
+will be high if you are doing a lot of queries that require sorting of
+the result. You probably have a lot of queries that require MySQL to
+scan whole tables or you have joins that don't use keys properly.
+
+Handler_read_rnd_next
+The number of requests to read the next row in the data file. This
+will be high if you are doing a lot of table scans. Generally this
+suggests that your tables are not properly indexed or that your
+queries are not written to take advantage of the indexes you have.
+
+Key_blocks_unused
+
+Key_blocks_used
+The number of used blocks in the key cache. You can use this value to
+determine how much of the key cache is in use; see the discussion of
+key_buffer_size in section 5.2.3 Server System Variables.
+
+Key_read_requests
+The number of requests to read a key block from the cache.
+
+Key_reads
+The number of physical reads of a key block from disk. If Key_reads is
+big, then your key_buffer_size value is probably too small. The cache
+miss rate can be calculated as Key_reads/Key_read_requests.
+
+-----------------
+
+QUERY PERFORMANCE:
+
+Slow_queries
+The number of queries that have taken more than long_query_time
+seconds. See section 5.9.5 The Slow Query Log.
+
+----------------
+
+SORTING:
+
+Sort_merge_passes
+The number of merge passes the sort algorithm has had to do. If this
+value is large, you should consider increasing the value of the
+sort_buffer_size system variable.
+
+Sort_range
+The number of sorts that were done with ranges.
+
+Sort_rows
+The number of sorted rows.
+
+Sort_scan
+The number of sorts that were done by scanning the table.
+
+--------------
+
+QUERY CACHE:
+
+Qcache_free_blocks
+The number of free memory blocks in query cache.
+
+Qcache_free_memory
+The amount of free memory for query cache.
+
+Qcache_hits
+The number of cache hits.
+
+Qcache_inserts
+The number of queries added to the cache.
+
+Qcache_lowmem_prunes
+The number of queries that were deleted from the cache because of low
+memory.
+
+Qcache_not_cached
+The number of non-cached queries (not cachable, or due to
+query_cache_type).
+
+Qcache_queries_in_cache
+The number of queries registered in the cache.
+
+Qcache_total_blocks
+The total number of blocks in the query cache.
+
+----------------
+
+MISC:
+
+Uptime
+The number of seconds the server has been up.
+
+Binlog_cache_disk_use
+The number of transactions that used the temporary binary log cache
+but that exceeded the value of binlog_cache_size and used a temporary
+file to store statements from the transaction.
+
+Created_tmp_disk_tables
+The number of temporary tables on disk created automatically by the
+server while executing statements.
+
+Opened_tables
+The number of tables that have been opened. If Opened_tables is big,
+your table_cache value is probably too small.

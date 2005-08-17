@@ -1,0 +1,144 @@
+NOTE: Most or all binaries needed for installation are available
+on the \\kenny share. For example, Windows installers are located
+at: \\kenny\Public\software\windows. It might be best to copy the
+installers to your local machine before installing.
+
+0. Install Perforce (P4)
+
+  Configure server port to "eric:1666".
+
+1. Checkout the following from Perforce:
+
+  LiquidArchive - the archive system, including the back-end servlets
+
+  LiquidConsole - the dhtml interface
+
+  LiquidAjax - DTML/Ajax toolkit
+  
+  Optional:  ThirdParty - not needed to run, but has javadocs and source for the
+  various 3rd party jars/servers. It's very very large since all the built servers and
+  3rd Party code (multiple versions) are in there.
+
+2. Install latest JDK. Need full JDK, not just a JRE, since ant uses
+   the compiler.  1.5.x
+   
+   Reccomend installing in c:\opt\liquid\java
+   
+   Set the JAVA_HOME environment variable to point to the installed
+   JDK location.
+
+3. Install Eclipse (which you probably have if you are reading this)
+
+  You should install the Perforce plugin for Eclipse. To
+  install, select Help | Software Updates | Find and Install... 
+  Then select the "Search for new features to install" and hit Next. 
+  From this screen, add a new remote site using the URL:
+  
+    http://www.perforce.com/downloads/http/p4-wsad/install/
+  
+  This will add a P4 entry to the list on the left. Select that and 
+  continue through the wizard. 
+  
+  NOTE: You will need to configure the plugin with your Perforce
+  information before using the Perforce Perspective.
+  
+  Once you get the Perforce Perspective open right click on LiquidArchive
+  and select "Import as project". Do the same for LiquidAjax and LiquidConsole.
+
+4. Install Tomcat 5.5.x
+
+  On Windows, install Tomcat to c:\opt\liquid\tomcat
+  
+  copy LiquidArchive/conf/tomcat-5.5/server.xml to {tomcat-install}/conf/
+  copy LiquidArchive/conf/tomcat-5.5/tomcat-users.xml {tomcat-install/conf/
+  
+  The server.xml file is configured to use port 7070 by
+  default. Production would of course use 80, and we'll also need to
+  configure SSL
+  
+  The LiquidArchive/build.xml relies on a liquid/liquid user in the
+  tomcat-users.xml file to deploy
+  
+  IMPORTANT: Copy the files mail.jar, activation.jar and liquidos.jar
+  from <workspace>\liquidarchive\jars to your <tomcat>\common\lib.
+  
+  Copy \opt\liquid\tomcat\conf\keystore to the conf directory of your
+  Tomcat installation directory if it is not in \opt\liquid\tomcat.
+  
+  On Linux startup with:
+      $ JAVA_HOME={java-home} {tomcat-install}/bin/startup.sh
+
+5. Install MySQL 4.1.x
+
+  On Windows, install MySQL to c:\opt\liquid\mysql
+
+  We expect for now an admin account of "root" with password "liquid".
+  This is different then the OS root account (if on Linux). The
+  LiquidArchive/build.xml file relies on the root account to create
+  the liquid database and user/pass.
+
+  On Linux, you can run the script ./configure in the main directory
+  of the binary mysql distribtion.  This script creates
+  a minimal mysql system, and starts up mqsql server.  Use can use
+  "{mysql-path}/mysqld_safe --no-defaults" to start the server and use
+  "kill `cat {mysql-path}/data/{hostname}.pid`" to shut it down.  Also
+  on linux after you have started the server, you have to allow
+  connections to mysql which you can do by running the mqsql command
+  line:
+
+    $ mysql -u root -p
+    Password: liquid     
+    
+    mysql> grant all on *.* to "root"@"localhost.localdomain" identified by 'liquid' with grant option;
+    Query OK, 0 rows affected (0.02 sec)
+    mysql> flush privileges;
+    Query OK, 0 rows affected (0.00 sec)
+
+  On Windows, follow instructions to install MySQL as a service
+  with the required database admin user password.
+
+6. Install OpenLDAP (Get pkg from \\kenny)
+
+  On Windows, install to c:\opt\liquid\openldap. Then go to the
+  openldap directory and run "slapd install" to install it as a
+  Windows service.
+
+7. On Linux, probably want to chown /opt to yourself and/or give group
+   write access to /opt, so you don't have to worry about running as
+   root.
+  
+   All the index, blobs, data, etc, get installed under /opt/liquid/*.
+  
+8. Initialize system
+
+	From inside Eclipse on the Java Perspective select:
+	
+  	Window -> Show View -> Ant
+  	
+  	Add: LiquidArchive/build.xml
+  		Run the "reset-the-world" target.
+  	This will wipe out parts of /opt/liquid, reload the database, 
+  	and run the archiver/indexer on the sample mail.
+  	
+  	Add: LiquidConsole/build.xml
+    	Run "deploy" and "admin-deploy"
+    This will compile/deploy the DHTML interface and the Admin Colsole.
+    	
+	If you install ant standalone, you can also run "ant reset-the-world" 
+	from within the LiquidArchive root directory.
+     
+9. Test deployment
+
+  You should now be able to go to:
+
+    http://localhost:7070/liquid/
+  
+  and login as "user1[@{hostname}]" (the domain is optional), with password 
+  "test123", where {hostname} is the name of your local machine.
+  
+  You can log into the Admin Console by going to:
+  
+    https://localhost:7071/liquid/admin
+    
+  and login as "admin@{hostname}" (the domain is mandatory), with the password 
+  "test123", where {hostname} is the name of your local machine.

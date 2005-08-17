@@ -1,0 +1,26 @@
+Notes on snmp support.
+
+	Traps only - there is no support for snmp queries, since there is no
+	MIB for the product as yet.
+
+Liquid OID:
+	Enterprise number for liquid TBD.
+
+MIB Objects:
+	lqStatus := liquid.1
+	lqServiceName := lqStatus.0 (String)
+	lqServiceStatus := lqStatus.1 (Int)
+		0 for down, 1 for up.
+
+Traps supported:
+	lqtraps := liquid.0
+	lqServiceStatusTrap := lqtraps.0
+		Includes an lqStatus object.
+
+When snmp is configured to run, traps will be generated every 
+time the status of a service changes.
+
+Snmp configuration:
+	- install the liquid-snmp package.
+	- run the createsnmp script, provide requested information (trap host)
+	- start services (lqcontrol startup)

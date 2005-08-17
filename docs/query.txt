@@ -1,0 +1,229 @@
+Tim's short-short summary of the query grammar as of now (updated)
+--------------------------------------------------------
+   content:{TEXT}
+   from:{TEXT|EMAIL_ADDR|DOMAIN} 
+   to:{TEXT|EMAIL_ADDR|DOMAIN}
+   cc:{TEXT|EMAIL|DOMAIN}
+   subject:{TEXT}
+   in:{FOLDER_LABEL}   // or whatever we call folders nowadays
+   has:{"attachment"|OBJECT_TYPE}
+   filename:{FILENAME}
+   type:{RAW_MIME_TYPE|FRIENDLY_MIME_TYPE}
+   attachment:{RAW_MIME_TYPE|FRIENDLY_MIME_TYPE}
+   item:{"all"|"none" -- all items, or no-item
+         | [0-9]+  --> item ID
+         |"{[0-9]+(,\s?[0-9]+)*}" -- ie {1,2,3} or {1} --> set of item_id's
+   is:{"anywhere"|"unread"|"read"|"flagged"|"unflagged"|"sent"|"received"|"replied"|
+       "unreplied"|"forwarded"|"unforwarded"|"invite"}
+   date:{DATE}
+   after:{DATE}
+   before:{DATE}
+   size:{SIZE}
+   larger:{SIZE}
+   smaller:{SIZE}
+   tag:{TAG} // is this the same as folder label?
+   my:{MY_SAVED_SEARCH_NAME}
+   message:{DB_MSG_ID}
+   conv:{DB_CONV_ID}
+*   conv-count:{NUM}
+*   conv-minm:{NUM}
+*   conv-maxm:{NUM}
+*   conv-start:{DATE}
+*   conv-end:{DATE}
+   author:{TEXT}
+   title:{TEXT}
+   keywords: {TEXT}
+   company: {TEXT}
+   metadata: {TEXT}
+
+* : not currently supported
+
+FRIENDLY_MIME_TYPE:"text"|"application"|"word"|"msword"|"excel"|"xls"|"ppt"|"pdf"|"ms-tnef"|"image"|"jpeg"|"gif"|"bmp"|"none"|"any"
+TEXT: text string, must be in "'s if has spaces in it
+EMAIL_ADDR: text string, no spaces, with @ sign
+DOMAIN: such as *.com
+FOLDER_LABEL: mail|trash|spam|anywhere
+TAG: tag_name
+OBJECT_TYPE: "phone" "url" "credit-card" etc...types of parsed objects
+DATE:  absolute-date = mm/dd/yyyy | yyyy/dd/mm  OR
+       relative-date = [+/-]nnnn{minute,hour,day,week,month,year}
+       (need to figure out how to represent "this week", "last
+       week", "this month", etc)
+SIZE: ([<>])?n+{b,kb,mb,gb}    // default is kb?
+DB_MSG_ID: ??
+NUM: ([<>])?n+
+
+----------------------------------------
+ 
+Test Cases
+----------
+
+ski
+after:3/1/2004
+subject:linux
+subject:"code has"
+linux or has:ssn
+larger:1M
+is:flagged
+not is:flagged
+not in:junk
+
+
+
+Fields
+--------
+content-related
+
+  content:  # this should be the default field
+
+    
+header-related
+
+  from:
+  to:
+  cc:{name|domain}
+  subject:
+
+  
+saved-search-related:
+
+  my:{name-of-saved-search}
+  
+  i.e., could have a saved search of "domain:liquidsys.com" called "liquid" and say:
+  
+  my:liquid
+  
+object-related fields:
+
+  has:attachment              constrains search to messages with attachments
+  has:{phone|url|ssn|po...}           messages with "objects" 
+
+    
+mime-related
+
+  filename:{file-name}        constrains search to messages with attachments of given name
+  type:{mime-type}            constrains search to blobs of the given type
+  attachment:{mime-type}      constrains search to messages with attachments of the given type
+
+  mime-type = raw-mime-type | mime-type-alias
+  raw-mime-type = type/sub-type (i.e., text/plain)
+  # aliases are "user-friendly" mime types
+  mime-type-alias = "word" | "excel" | "pdf", "image", "audio", etc...
+
+  EXAMPLES:  
+         type:word "hello"             searches within only words docs for "hello"
+         attachment:word "hello"       searches within messages that have word docs for "hello"
+         attachment:image/*            matches all messages that have image attachments
+
+         
+flags
+
+  is:anywhere --> in any folder (overrides spam-trash setting for that query part)
+  is:unread
+  is:read
+  is:flagged
+  is:unflagged
+  is:sent
+  is:received
+  is:invite
+    
+date-related fields
+
+  after:{date}
+  before:{date}
+  date = {absolute-date} | {relative-date}
+
+  absolute-date = mm/dd/yyyy | yyyy/dd/mm
+  
+  relative-date = [+/-]nnnn{minute,hour,day,week,month,year} 
+
+  NOTE: need to figure out how to represent "this week", "last week", "this month", etc. probably
+        some special casing of relative dates and use with after/before. i.e., maybe "after:-2d AND before:0d" means
+        yesterday? i.e., for relative day/week/month/year, you zero out month/week/day/hour/minute?
+
+  last 4 hours:   after:-4hour 
+  today:          after:0day
+  yesterday:      (after:-2day AND before:0day)
+  this week:      after:0week
+  last week:      (after:-2week AND before:0week)
+  this month:     after:0month
+  last month:     (after:-2month AND before:0month)
+  this year:      after:0year
+  last year:      (after:-2year AND before:0year)
+  last year and older:  before:0year
+
+size-releted fields
+
+  larger:{size}
+  smaller:{size}
+  size:{size}
+  
+  size is [<>]nnnn{b,kb,mb,gb}    # default is kb?
+
+  
+tag-related fields
+
+   tag:{user-defined-tag}
+
+      
+domain-related fields
+
+  domain:{domain-list}
+  EXAMPLES: domain:stanford.edu OR: domain:*.org
+
+    
+db-related fields
+
+  message:{db-message-id}        # constrain searches to a particular message
+
+  
+conversation-related-fields:  
+  conv:{db-conv-id}      # constrain searches to a paritcular conversation
+*  conv-min-count:{num}   # constrain searches to conversations of a particular length
+*  conv-max-count:{num}   # constrain searches to conversations of a particular length
+  conv-start:{date}
+  conv-end:{date}
+
+metadata-related fields
+
+  author:
+  title:
+  keywords:
+  company:
+  metadata:
+  
+  The metadata fields refer to the metadata of a non-textual attachment.
+  The fields author, title, keywords, company refer to the metadata fields 
+  of the same name in the document.
+  The field metadata aggregates all the metadata fields including the above four.
+  E.g.,
+	author:microsoft		finds all attachments whose author is microsoft
+	metadata:microsfot      finds all attachments where microsoft appears in any metadata
+							fields, including author.
+							
+misc fields
+
+*  minm:nnnn                     # constrain to conversations with at least nnnn messages
+*  maxm:nnnn                     # constrain to conversations with at most nnnn messages
+
+  
+other-mime-specific fields
+
+  how do we want to handle doc properties from word, pdf, mp3, etc?
+
+  i.e.:
+         genre:rock OR artist:rush
+         title:"customer visit"
+         keywords:security
+         author:ross
+
+*   maybe {mime-type-alias}.field? i.e.:
+  
+          audio.genre:rock OR audio.artist:rush   (or mp3.*?)
+          word.title:hello
+          
+   where the mime-type-alias can be left off if field is non-ambigious?
+   
+   do we want to try and promote certain fields that we can share between mulitple types? (title, author, keywords)
+
+

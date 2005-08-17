@@ -1,0 +1,13 @@
+
+Restore from backup made at a different host
+
+1. lqbackup -f -acct foo@dogfood.liquidsys.com -t /tmp/bak
+2. zip up everything under /tmp/bak
+3. copy the zip file to another host, say your laptop, unzip to /tmp2/bak
+4. make sure the unzipped path has r/w permissions
+5. use lqprov to create domain at the backup host. e.g, cd dogfood.liquidsys.com
+   either wait for tomcat's cache of ldap data refresehd or restart tomcat
+6. lqrestore -ra -t /tmp2/bak
+7. you may need to reset the restored user account's password using lqprov
+8. login as foo@dogfood.liquidsys.com on the laptop
+

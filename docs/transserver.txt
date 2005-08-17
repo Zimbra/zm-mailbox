@@ -1,0 +1,142 @@
+This document specifies functions of extracting text from attachments for
+indexing and converting attachments into HTML pages for viewing.
+
+Goals
+-----
+
+1. Performance
+
+Text extraction needs to be efficient, as it happens every time an
+email with attachment arrives and needs to be indexed.
+
+2. Process isolation
+
+We use third-party vendor's software, which is written in native code
+and interfacing Java via JNI, we want to prevent any fatal errors
+occurring in the native code from crashing the liquid server.
+
+3. Adaptable
+
+We want this part of the system to be pluggable, so that a different
+vendor's implementation can be integrated.
+
+Architecture
+------------
+
+A separate server process (let's call it transformation server) is
+started with the liquid mail server. This server's function is to
+accept and process text extraction/conversion requests from the mail
+server and return the result.
+
+A binary protocol shared by the mail server and the transformation
+server is defined in this document.
+
+The mail server and transformation server are one-to-one and coexist on
+the same host.
+
+The transformation server needs to be restarted automatically if it is
+crashed while transforming documents.
+
+Configuration
+-------------
+
+1. The name of the extraction/conversion implementation to be used by
+the transformation server. Changing this before the server startup
+switches to another implementation.
+
+2. Other transformation server parameters: thread pool size, etc.
+
+The mail server and transformation server both access the config data
+in the same instance of database.
+
+Startup, shutdown, and Admin
+----------------------------
+
+The transformation server must starts up or shuts down together with
+the mail server together. We use the same mechanisms of starting the
+mail server to start the transformation server (e.g., through shell
+script on Linux).
+
+Other possible admin functions: heartbeat check, statistics gathering.
+
+Caching
+-------
+
+We should maintain an LRU cache keyed by attachment identity for both
+text extraction and conversion. This cache should probably be on the
+mail server side to avoid latency.
+
+Security
+--------
+
+Access to the transformation server is restricted to the localhost.
+
+Binary protocol
+---------------
+
+Each piece of data (in {} notation) is encoded with length and value
+in the stream. If its value is omitted, it is encoded with empty
+string as a placeholder.
+
+If length cannot be determined beforehand, the data is placed as the 
+last segment in the stream, so end-of-stream indicates that the data
+is consumed.
+
+Newline means nothing below.
+
+1. Text extraction
+
+request:
+
+x {identity id} {uri}
+    {number of options}
+    ({name} {value})+
+    {content of the original doc if uri attribute is not specified}
+
+response:
+
+OK {uri}
+    {number of metadata properties}
+    ({name} {value})+
+    {extracted text if uri attribute is not specified}
+
+or
+
+ERR {error message}
+
+2. Document conversion
+
+request:
+
+c {identity id} {uri} {base URL}
+    {number of options}
+    ({name} {value})+
+    {content of the original doc if uri attribute is not specified}
+
+response:
+
+OK {uri}
+
+or 
+
+ERR {error message}
+
+Notes:
+
+- identity id is used to uniquely identify an attachment. It may be a
+concatenation of {mailbox id, message id, part id}.
+
+- uri may point to a path on the filesystem.
+
+- options are arbitrary name-value pairs where parameters needed by
+the transformation engine can be specified.
+
+- document conversion usually results in multiple related files
+(images, css, etc.) for an original document, thus the result of
+conversion is found in a directory. The uri points to the main
+converted HTML file in the resulting directory.
+
+It was noted that SOAP/XML incurs unnecessary overhead in
+encoding/decoding XML elements. Using HTTP POST was also suggested,
+but it involves similar parsing overhead as well. The binary protocol
+is specified for the moment.

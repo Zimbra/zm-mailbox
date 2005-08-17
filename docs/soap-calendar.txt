@@ -1,0 +1,587 @@
+//////////////////////////////////////////////////////////////////////
+// DATETIME Elements are specified as follows:
+//
+//
+// <s DATETIME> means:
+//
+// <s d="YYYYMMDD['T'HHMMSS[Z]]" [tz="timezone_identifier"]>
+//
+//    YYYY - 4 digit year
+//    MM   - 2 digit month
+//    DD   - 2 digit day
+//  Optionally:
+//    'T' the literal char "T" then
+//    HH - 2 digit hour (00-23)
+//    MM - 2 digit minute (00-59)
+//    SS - 2 digit second (00-59)
+//    ...and finally an optional "Z" meaning that the time is UTC,
+//    otherwise the tz="TIMEZONE" param MUST be specified with the DATETIME
+//
+// e.g:
+//     20050612  June 12, 2005
+//     20050315T18302305Z  March 15, 2005 6:30:23.05 PM UTC
+//
+//
+// tz="java timezone identifier" (see list at bottom of this file!)
+//
+//
+// NOTE: if DATETIME has a time component (after the 'T') then it must either be specified
+// in UTC (has a trailing 'Z') or else the tz= MUST be specified!!!
+//
+
+//////////////////////////////////////////////////////////////////////
+// "DURATION" element  (specified-duration)
+//
+//  <dur [neg="1|0"] [w="weeks"] [d="days"] [h="hours"] [m="mins"] [s="secs"]>
+//
+// Special note: if WEEKS are specified, NO OTHER OFFSET MAY BE
+// SPECIFIED (weeks must be alone, per RFC2445)
+//
+
+
+//////////////////////////////////////////////////////////////////////
+//
+// Create a new appointment 
+//
+//
+<CreateAppointmentRequest>
+  <m f="{flags}" l="{folder}">
+     [<e .../>*]  // users to send request to
+     <su>{subject}</su>
+
+     <inv> 
+       [
+       <comp type="event|todo"
+            [status="TENT|CONF|CANC"]  // TENTative, CONFirmed (default), CANCelled -- TIM: remove this!
+            [fb="F|B|T|U"]  // free-busy status:
+                               Free, Busy (default), busy-Tentative, busy-Unavailable (a.k.a. OutOfOffice)
+            [transp="O|T"]  // transparency: Opaque (default) or Transparent
+            [allDay="1|0"]
+            [name="NAME"]
+            [loc="LOCATION"]
+        >
+           <s DATETIME> // Start date-time (required)
+
+           (
+              <e DATETIME> // End date-time
+              OR
+              <dur DURATION>   //<dur [neg="1|0"] [w="weeks"] [d="days"] [h="hours"] [m="mins"] [s="secs"]>  
+           )   // one is required
+
+//           [ <desc>DESCRIPTION</desc> ]? // Will use message FRAGMENT if not specified
+           
+           <or d="friendly name" a="address"> // organizer
+           <at d="friendly name" a="address" role="ROLE" ptst="status"/>* // attendee
+             // role = CHAir, REQuired, OPTional, NON-participant (ie informational), RESource
+             // ptst (ParTSTat - participation status) = NEeds-action, TEntative, ACcept, DEclined,
+             // DG (delegated), COmpleted (todo), IN-process (todo)
+             
+           [ <alarm rel-start="RELATIVE_TIME_POSITIVE_MEANS_BEFORE"/> ]*
+  
+           [
+             <recur>  // see below
+                [ <add|exclude>
+                    [ <date DATETIME>
+                    [ <rule freq="FREQ"
+                         // FREQ: SEC,MIN,HOU,DAI,WEE,MON,YEA
+                      [<until DATETIME/> OR <count num="COUNT"/>]? // optional UNTIL or COUNT param
+                      [  // each of the following can occur at most once
+                        <interval ival="COUNT"/>                  // COUNT: positive integer
+                        <bysecond seclist="second[,second...]"/>  // second: 0 to 59
+                        <byminute minlist="minute[,minute...]"/>  // minute: 0 to 59
+                        <byhour hrlist="hour[,hour...]"/>         // hour: 0 to 23
+                        <byday>
+                          <wkday [ordwk="[[+]|-]num"] day="WEEKDAY"/>  // num: 1 to 53, WEEKDAY: SU,MO,TU,WE,TH,FR,SA
+                          [<wkday>...]
+                        </byday>
+                            // e.g. <byday>
+                            //        <wkday day="MO"/>
+                            //        <wkday ordwk="3" day="TU"/>
+                            //        <wkday ordwk="+4" day="WE"/>
+                            //        <wkday ordwk="-1" day="SU"/>
+                            //      </byday>
+                            //
+                            // means every Monday of the year,
+                            // plus Tuesday of 3rd week of the year,
+                            // plus Wednesday of 4th week,
+                            // plus Sunday of last week of the year.
+                        <bymonthday modaylist="[[+]|-]num[,...]"/>   // num: 1 to 31
+                            // e.g. <bymonthday modaylist="1,+2,-7"/>
+                            // means first day of the month, plus the 2nd day of the month,
+                            // plus the 7th from last day of the month.
+                        <byyearday yrdaylist="[[+]|-]num[,...]"/>    // num: 1 to 366
+                            // e.g. <byyearday yrdaylist="1,+2,-1"/>
+                            // means January 1st, January 2nd, and December 31st.
+                        <byweekno wklist="[[+]|-]num[,...]"/>   // num: 1 to 53
+                            // e.g. <byweekno wklist="1,+2,-1"/>
+                            // means first week, 2nd week, and last week of the year.
+                        <bymonth molist="month[,month...]"/>      // month: 1 to 12
+                        <bysetpos poslist="[[+]|-]num[,...]"/>    // poslist: 1 to 366
+                            // <bysetpos> MUST only be used in conjunction with another
+                            // <byXXX> element.
+                        <wkst day="WEEKDAY"/>  // WEEKDAY: SU,MO,TU,WE,TH,FR,SA
+                      ]*
+                      [
+                        <x-name name="NAME" value="VALUE"/>  // custom fields
+                      ]*
+                    </rule>]*
+                  </add|/exclude>
+
+                  [
+                    <except recurId="INSTANCE_START_SECS_GMT" rangeType="RANGETYPE">
+                      <add|exclude>
+                        ...SAME AS ABOVE...
+                      </add|/exclude>      
+                    </except>
+                  ]*
+                  [
+                    <cancel recurId="INSTANCE_START_SECS_GMT" rangeType="RANGETYPE"/>
+                  ]*
+                ]*
+             </recur>
+           ]
+        </comp>
+        ]+     
+     </inv>
+     <mp>...</mp>
+     [<content (url="{url}")>...</content>]
+   </m>
+</CreateAppointmentRequest>
+
+----------------------
+RECURRENCE SPECIFIERS!
+
+ <recur> holds a recurence.  Note that the initial instance is NOT specified by <recur>, it is implied
+    by the s= and (e=|dur=) parameters.  The initial instance may NOT be modified by an <exclude> parameter
+    inside a <recur>
+ <add>      - dates or rules which ADD instances.  ADDs are evaluated before EXCLUDEs
+ <exclude>  - dates or rules which EXCLUDE instances.  
+ <date>     - an SDATE that is added or excluded.  D+DATE values may ONLY be used if this is an all-day-event!
+ <rule>     - a RULE for specifying added/exluded instances
+ <freq>     - "SEC","MIN","HOU","DAI","WEE","MON","YEA" - event happens every INTERVAL Seconds/Minutes/Hours/etc.
+ <ival>     - Default is 1.  Number of (secs/mins/hours/etc)  between occurences.
+ <until>    - INCLUSIVE date to stop (ie if there is a recurrence on that date, it IS added to list
+ <count>    - number of occurences to be generated by this rule
+ <bymonth>,<byweekno>.... --- TODO 
+----------------------
+
+<CreateAppointmentResponse apptId="APPOINTMENT-ID" invId="invite-message-id"/>
+
+
+//////////////////////////////////////////////////////////////////////
+//
+// Add an appointment, for mailbox Migration (ie from exchange)
+//   -- not used by normal mail clients, this API allows you to directly modify
+//      the internal state of an appointment
+//
+<AddAppointmentRequest>
+  <default needsReply="0|1" partStat="AC|TE|DE|DG|CO|IN">
+     <m> ...see CreateAppointmentRequest... </m>
+  </default>
+  <except needsReply="0|1" partStat="AC|TE|DE|DG|CO|IN">
+     <m> See CreateAppointmentExceptionRequest
+        ...
+        <inv>
+           ...
+           <exceptId DATETIME> // EXCEPTION_ID -- this is the DateTime of some instance in the default appointment
+           ...
+        </inv>
+     </m>
+  </exception>
+</AddAppointmentRequest>
+
+
+
+   
+//////////////////////////////////////////////////////////////////////
+//
+// GetApptSummaries
+//
+// 
+<GetApptSummariesRequest s="RANGE_START_MSECS_GMT" e="RANGE_END_MSECS_GMT/>
+
+<GetApptSummariesResponse>
+ ( <appt id="appointment_mail_item_id" type="event|todo" fba="F|B|T|U" transp="O|T"
+      status="TENT|CONF|CANC"
+      ptst="NE|TE|AC|DE|DG"
+      [allDay="1"] [otherAtt="1"] [alarm="1"] [recur="1"]
+      [name="NAME"] [loc="LOCATION"] 
+      invId="default_invite_mail_item_id" compNum="default_invite_component_number"
+   >
+   <dur DURATION/> // default duration
+   <fr>FRAGMENT</fr>
+      
+      ( <inst s="START_SECS_GMT" [ex="1"] [ANY CHANGED PARAMETERS]>
+          [<f>FRAGMENT IF DIFFERENT FROM DEFAULT</f>]
+          [<dur DURATION>] // duration this instance if not same as default
+        </inst>
+      )+
+        
+   </apt> )*
+</GetApptSummariesResponse>
+
+   -- fba: actual free-busy status: Free, Busy, busy-Tentative, busy-Unavailable (a.k.a. OutOfOffice)
+           While free-busy status is simply a property of an event that
+           is set during creation/update, "actual" free-busy status is the true
+           free-busy state that depends on appt/invite free-busy, event scheduling
+           status (confirmed vs. tentative vs. cancel), and more importantly, the
+           attendee's participation status.  For example, actual free-busy is
+           busy-Tentative for an event with Busy free-busy value until the attendee
+           has acted on the invite.
+   -- transp: transparency: Opaque, Transparent
+   -- status: status of event: TENTative, CONFirmed or CANCelled
+   -- ptst: **your** participation status: NEeds-action, TEntative, ACcept, DEclined, DG (delegated)
+   -- get the summary of appointments for a specified time period...
+   -- otherAtt: 1 if there are other attendees to the meeting
+   -- alarm: 1 if there are some alarms
+   -- recur: 1 if this is a recurring appointment
+   -- id is mail_item id of APPOINTMENT object
+   -- invId is mail_item id of invite message with detailed information
+   -- comp is component number (invite # within the message)
+   -- parameters in the apptSum are "defaults" -- are same in instance unless specified
+   
+
+//////////////////////////////////////////////////////////////////////
+//
+// GetFreeBusyRequest
+//
+// (f)ree (b)usy busy-(t)entative busy-(u)navailable or (n)o-data elements
+//
+<GetFreeBusyRequest s="RANGE_START_MSECS_GMT" e="RANGE_END_MSECS_GMT" [uid="id,..."]/>
+<GetFreeBusyResponse>
+  <usr id="id">
+    <f s="START_MSECS_GMT" e="END_MSECS_GMT"/>*
+    <b s="START_MSECS_GMT" e="END_MSECS_GMT"/>*
+    <t s="START_MSECS_GMT" e="END_MSECS_GMT"/>*
+    <u s="START_MSECS_GMT" e="END_MSECS_GMT"/>* // a.k.a. out of office
+    <n s="START_MSECS_GMT" e="END_MSECS_GMT"/>* // could not retreive data for that user
+  </usr>  
+<GetFreeBusyResponse>
+
+      
+
+
+
+//////////////////////////////////////////////////////////////////////
+//
+// CancelAppointment(DEFAULT-INVITE-ID, COMPONENT-NUMBER)
+//
+//
+<CancelAppointmentRequest id="ID_OF_DEFAULT_INVITE" comp="COMPONENT_NUM_DEFAULT_INVITE">
+   [ <m>
+       [<e.../>*] // users to send update to
+       [<su>{subject of cancellation mail}</su>]
+       <mp>...</mp>
+     </m> ]
+</CancelAppointmentRequest>
+
+<CancelAppointmentResponse>....
+
+
+//////////////////////////////////////////////////////////////////////
+//
+// GetMsgResponse 
+//
+// CALENDAR PART for Invite messages
+//
+<GetMsgResponse> // mesage with invite
+  <m id="{message-id}" f="{flags}" s="{size}" d="{date}" l="{folder}">
+     [<e .../>*]  // optional users to send request to
+     <su>{subject}</su>
+     <f>{fragment}</f>
+
+     <inv>
+       [
+       <comp type="event|todo" status="TENT|CONF|CANC"
+       		fb="F|B|T|U"
+       		fba="F|B|T|U" // Your current status -- what is returned in FreeBusy for you TODO
+       		transp="O|T"
+            [exceptId="EXCEPTION_INSTANCE_ID_MSECS_GMT"] // timestamp of instance this exception overrides
+            [allDay="1|0"] [name="NAME"]
+            [loc="LOCATION"]
+            [rsvp="1|0"] // rsvp - 1 if response requested, 0 if no response requested
+            [x-appt="apptId] // FOR DEBUGGING WILL BE REMOVED: id of appointment
+            [updatedMsgId="id" updatedCompNum="compNum"] // if these are set, then this invite has been
+                                                      // invalidated because a new update was received that
+                                                      // takes precedence over it
+                                                      //
+                                                      // id=0, compnum=0 is a SPECIAL CASE: it means "we don't know
+                                                      // what invite overrides this one, but we do know this one is
+                                                      // not referenced.  This can happen if this is a
+                                                      // recurrence-exception and default-invite is modified in a way
+                                                      // that invalidates this one...or it can happen if there is an
+                                                      // out-of-order message delivery (the exception invite is received
+                                                      // before the initial invite) or if the Appointment object doesn't
+                                                      // exist (ie it was deleted) or various other times...
+                                                      // 
+                                                      
+            [isOrg="1"] // 1 if you are the Organizer of this event
+            >
+           <s DATETIME> // Start date-time (required)
+
+           (
+              <e DATETIME> // End date-time
+              OR
+              <dur DURATION>
+           )   
+           <or d="friendly name" a="address"> // organizer
+           <at d="friendly name" a="address" role="ROLE" ptst="status""/>* // attendee
+             // role = CHAir, REQuired, OPTional, NON-participant (ie informational), RESource
+             // ptst = NEeds-action, TEntative, ACcept, DEclined, DG (delegated), COmpleted (todo), IN-process (todo)
+           <alarm rel-start="RELATIVE_MSECS_MINUS_MEANS_AFTER_START"/>*
+           [
+             <recur>
+                RECURRENCE PART
+             </recur>  
+           ]
+       </comp>
+
+
+       ]+
+     </inv>
+     <mp>...</mp>
+     [<content (url="{url}")>...</content>]
+   </m>
+</GetMsgResponse>
+
+
+//////////////////////////////////////////////////////////////////////
+//
+// ModifyAppointment
+//
+// Modify an appointment, or if the appointment is a recurrence then modify the "default"
+// invites: that is, all instances that do not have exceptions
+//
+// If the appointment has a <recur>, then the following caveats are worth mentioning:
+//        
+//   -- If any of: START, DURATION, END or RECUR change, then all exceptions are implicitly canceled!
+//
+//
+<ModifyAppointmentRequest id="INVITE_ID_OF_DEFAULT_INVITE" comp="COMPONENT_NUM_DEFAULT_INVITE">
+   rest is SAME as CreateAppointmentRequest
+</ModifyAppointmentRequest>
+
+<ModifyAppointmentResponse apptId="appointment-id" invId="invite-message-id/>
+
+
+
+//////////////////////////////////////////////////////////////////////
+//
+// CreateAppointmentException (invId, compNum, instanceid)
+//
+//   The default invite for the appointment MUST have a recurrence rule....
+//      otherwise you should just be using ModifyAppointment!
+//
+//   EXCEPTION_ID is start-time for the particular instance you are overriding
+//     EXCEPTION_ID MUST be some instance that matches the default-invite for
+//     the appointment...that is, it MUST NOT BE the start time of the exception!
+//
+//   **The above is important**   So let me explain:
+//
+//   Given an appointment, happens every Wednesday @ 9am, with an exception that moves
+//      it to 10am on 6/22
+//
+//   So our instances for June, 2005  are:
+//       6/1 9am
+//       6/8 9am
+//       6/15 9am
+//       6/22 10am (an existing EXCEPTION)
+//       6/29 9am
+//
+//  So, if a user clicks on the 6/22 10am appointment and wants to modify it, you MUST NOT
+//  try to use <CreateAppointmentException s="6/22 10am"> to modify it!
+//  You MUST use ModifyAppointmentException instead!!!
+//
+//  On the other hand, if a user clicks on the 6/15 9am appointment and wants to modify it,
+//  then this is the right API to use.
+//
+<CreateAppointmentExceptionRequest id="ID_DEFAULT_INVITE" comp="COMP_DEFAULT_INVITE">
+
+  Just like CreateAppointmentRequest above:
+  <m f="{flags}" l="{folder}">
+    ...
+    <inv>
+      ...
+      <exceptId DATETIME> // EXCEPTION_ID -- this is the DateTime of some instance in the default appointment
+      ...
+    </inv>
+  </m>  
+   
+</CreateAppointmentExceptionRequest>
+
+<CreateAppointmentExceptionResponse>...
+
+
+//////////////////////////////////////////////////////////////////////
+//
+// ModifyAppointmentException
+//
+// ...Could also create a version that took the Appt-ID and INSTANCE-ID, but
+// I don't think it is useful since it would be slower on the backend (would have
+// to expand out the default recurrence rule) and you always have the id/component
+// of the exception anyway since it is returned in the <inst> data for
+//  GetAppointmentSummaries
+//
+<ModifyAppointmentExceptionRequest id="INVITE_ID_OF_EXCEPTION_INVITE" comp="COMPONENT_NUMBER">
+   SAME AS CreateAppointmentRequest above
+</ModifyAppointmentExceptionRequest>   
+
+<ModifyAppointmentExceptionResponse>...
+
+
+//////////////////////////////////////////////////////////////////////
+//
+// CancelAppointmentException
+//
+// NOTE: the original instance (ie the one the exception was "excepting") WILL NOT
+// be restored when you cancel this exception.
+//
+// if <inst> is set, then this cancels just the specified instance or range of instances,
+// otherwise it cancels the entire appointment
+//
+<CancelAppointmentExceptionRequest id="INVITE_ID_OF_EXCEPTION_INVITE" comp="COMPONENT_ID">
+   [<inst [range="THISANDFUTURE|THISANDPRIOR"] DATETTIME/>]?
+   [ <m>
+      [<e.../>*] // users to send update to
+      [<su>{subject of cancellation mail}</su>]
+      <mp>...</mp>
+    </m>
+   ]
+</CancelAppointmentExceptionRequest>
+
+<CancelAppointmentExceptionResponse>...
+
+
+
+//////////////////////////////////////////////////////////////////////
+//
+// ExpandRecur
+//
+// Expand a Recur rule over a set of dates -- not sure if this is useful,
+// but might be useful to the UI if it wants to show occurences???
+//
+<ExpandRecurRequest s="RANGE_START_MSEC_GMT" e="RANGE_END_MSEC_GMT">
+   <recur>
+      ***see CreateAppointment for <recur> details***
+    </recur>
+</ExpandRecurRequest>
+
+<ExpandRecurResponse>
+  <inst s="MSECS_GMT">*
+</ExpandRecurResponse>
+
+
+
+//////////////////////////////////////////////////////////////////////
+//
+// Retrieve the unparsed (but XML-encoded (&quot) iCalendar data for an Invite
+//
+// This is intended for interfacing with 3rd party programs
+//
+<GetICalRequest [id="invMsgId"] [s="RANGE_START_MSECS_GMT" e="RANGE_END_MSECS_GMT"/>
+
+    -- if id is specified, gets iCalendar representation for one
+       Invite
+       
+    -- if id is not specified, then start/end MUST be, Calendar data
+       is returned for entire specified range
+
+<GetICalResponse>               
+   <ical>
+      ICALENDAR DATA
+   </ical>
+</GetICalResponse>               
+
+
+
+//////////////////////////////////////////////////////////////////////
+//
+// SendInviteReply
+//
+//
+<SendInviteReplyRequest id="mail_item_id" compNum="comp_num" verb="VERB" [updateOrganizer="1|0"]>
+  [<m>...</m>]
+</SendInviteReplyRequest>  
+
+  id             : unique ID of the invite (and component therein) you are replying to
+  comp           : component number of the invite
+  verb           : ACCEPT, COMPLETED, DECLINED, DELEGATED, TENTATIVE
+  m              : embedded message, if the user wants to send a custom update message.
+                   The client is responsible for setting the message recipient list in
+                   this case (which should include Organizer, if the client wants to tell
+                   the organizer about this response)
+  updateOrganizer: yes by default, if no then only make the update locally.  This parameter
+                   has no effect if an <m> element is present.
+  
+<SendInviteReplyResponse status="STATUS"/>
+
+   status: OK, OLD (a newer invite exists for that appointment), ALREADY-REPLIED, FAIL   (other failure)
+
+
+//////////////////////////////////////////////////////////////////////
+//
+// GetAppointment
+//
+// FOR TESTING ONLY
+//
+<GetAppointmentRequest id="mail_item_id" compNum="comp_num">
+
+   
+
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+
+NOTES NOTES (not part of soap proto)
+
+
+
+Internal Server-Side Calendar Data Model
+----------------------------------------
+
+An INVITE is an email message with an iCal attachment.  An INVITE has
+a mail_item_id, which uniquely identifies it, and a UID which identifies
+the APPOINTMENT it is about....plus other normal iCal data.  An Invite
+has a START and END time -- which corresponds to the range of time
+where this invite is relevant.
+
+   Some sample invites:
+   
+      INVITE sent on 3/1 with id=5 UID=1234 for an event happening every Monday
+      with subject "Gorilla Discussion" (START=3/1, END=none)
+      
+      INVITE with id=7 UID=1234 for an exception on 3/21
+      for the "Left-Handed Gorilla Discussion" (START=3/21 END=3/21)
+ 
+
+   
+An APPOINTMENT consists of one or more INVITES in the same series --
+ie that have the same UID. From the appointment you can get the INSTANCES
+which are the start/end times of each occurence.  
+
+   Sample Appointment:
+       APPOINTMENT UID=1234 (two INVITES above)
+          ...Instances on every monday with name "Gorilla Discussion"
+          EXCEPT for the 21st, where we talk about lefties instead.
+
+
+An INSTANCE is simply a start-end time and a pointer to an INVITE
+which has detailed information about the meeting (description, etc)
+
+   Instances:
+       3/1 "Gorilla Discussion" id=5
+       3/14 "Gorilla Discussion" id=5
+       3/21 "Left-Handed Gorilla Discussion" id=7
+
+
+
+       
+TIMEZONES:
+----------------
+Each iCalendar object can define custom time zone names.  For our own web
+client, there is a list of well-known time zones.  These are stored in
+LDAP.  See conf/ldap/liquid.ldif for their definition.  The time zone ID
+is the cn attribute.

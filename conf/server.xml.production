@@ -1,0 +1,58 @@
+<Server port="8005" shutdown="SHUTDOWN">
+
+  <GlobalNamingResources>
+    <!-- Used by Manager webapp -->
+    <Resource name="UserDatabase" auth="Container"
+              type="org.apache.catalina.UserDatabase"
+      description="User database that can be updated and saved">
+    </Resource>
+    <ResourceParams name="UserDatabase">
+      <parameter> 
+        <name>factory</name>
+        <value>org.apache.catalina.users.MemoryUserDatabaseFactory</value>
+      </parameter>
+      <parameter>
+        <name>pathname</name>
+        <value>conf/tomcat-users.xml</value>
+      </parameter>
+    </ResourceParams>
+  </GlobalNamingResources>
+
+  <Service name="Catalina">
+    <!-- user services connector, no SSL -->
+    <Connector port="7070" proxyPort="80"
+        enableLookups="false" redirectPort="443"
+        maxThreads="50" minSpareThreads="50" maxSpareThreads="50"/>
+    <!-- user services connector, SSL -->
+    <!--
+    <Connector port="7443" proxyPort="443"
+        enableLookups="false"
+        maxThreads="50" minSpareThreads="50" maxSpareThreads="50"
+        scheme="https" secure="true"
+        clientAuth="false" sslProtocol="TLS"
+        keystoreFile="conf/keystore" keystorePass="liquid"/>
+    -->
+    <!-- admin services connector; requires SSL -->
+    <Connector port="7071"
+        enableLookups="false"
+        maxThreads="10" minSpareThreads="10" maxSpareThreads="10"
+        scheme="https" secure="true"
+        clientAuth="false" sslProtocol="TLS"
+        keystoreFile="conf/keystore" keystorePass="liquid"/>
+
+    <!-- This is here for compatibility only, not required -->
+    <Connector port="8009" protocol="AJP/1.3" />
+
+    <Engine name="Catalina" defaultHost="localhost">
+      <Logger className="org.apache.catalina.logger.FileLogger" />
+
+      <Realm className="org.apache.catalina.realm.UserDatabaseRealm"
+             resourceName="UserDatabase" />
+
+      <Host name="localhost" appBase="webapps" />
+
+      <Valve className="org.apache.catalina.valves.AccessLogValve"
+             pattern="common"/>
+    </Engine>
+  </Service>
+</Server>

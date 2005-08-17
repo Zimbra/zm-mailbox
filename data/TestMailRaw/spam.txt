@@ -1,0 +1,137 @@
+                                                                                                                                                                                                                                                               
+X-Gmail-Received: b71236bf93028e074a31debfd4793af85c659acd
+Delivered-To: kirkxchen@gmail.com
+Received: by 10.54.43.58 with SMTP id q58cs38379wrq;
+        Tue, 14 Jun 2005 15:12:44 -0700 (PDT)
+Received: by 10.38.89.20 with SMTP id m20mr1717230rnb;
+        Tue, 14 Jun 2005 15:12:44 -0700 (PDT)
+Return-Path: <srs0=kdtt3=uu=yebox.com=loud@cs.stanford.edu>
+Received: from agp.stanford.edu (agp.Stanford.EDU [171.67.73.10])
+        by mx.gmail.com with ESMTP id k23si1259156rnb.2005.06.14.15.12.44;
+        Tue, 14 Jun 2005 15:12:44 -0700 (PDT)
+Received-SPF: pass (gmail.com: domain of srs0=kdtt3=uu=yebox.com=loud@cs.stanford.edu designates 171.67.73.10 as permitted sender)
+Received: from cs-smtp-3.stanford.edu ([172.24.64.17])
+	by agp.stanford.edu with esmtps (TLSv1:DES-CBC3-SHA:168)
+	(Exim 4.43)
+	id 1DiJeF-0001L5-S7
+	for kirkxchen@gmail.com; Tue, 14 Jun 2005 15:12:43 -0700
+Received: from mail by cs-smtp-3.Stanford.EDU with spam-scanned (Exim 4.50)
+	id 1DiJeE-000318-5T
+	for kirk@cs.stanford.edu; Tue, 14 Jun 2005 15:12:43 -0700
+Received: from localhost by cs-smtp-3.Stanford.EDU
+	with SpamAssassin (version 3.0.2-cs-csdcf);
+	Tue, 14 Jun 2005 15:12:43 -0700
+From: "Maryellen Downey" <loud@yebox.com>
+To: kirk@cs.stanford.edu
+Cc: kito@cs.stanford.edu, kjd@cs.stanford.edu, kkoster@cs.stanford.edu, klausner@cs.stanford.edu, klee@cs.stanford.edu, klein@cs.stanford.edu, klep@cs.stanford.edu
+Date: Tue, 14 Jun 2005 20:02:54 -0300
+Message-Id: <171.93e558d5.2a9NTL44@qpr.com>
+X-Spam-Flag: YES
+X-Spam-Checker-Version: SpamAssassin 3.0.2-cs-csdcf (2004-11-16) on 
+	cs-smtp-3.Stanford.EDU
+X-Spam-Level: *****************************
+X-Spam-Status: Yes, score=29.4 required=7.0 tests=BAYES_99,DCC_CHECK,
+	DNS_FROM_AHBL_RHSBL,HELO_DYNAMIC_IPADDR2,SELECTED_YOU,SORTED_RECIPS,
+	URIBL_AB_SURBL,URIBL_OB_SURBL,URIBL_SC_SURBL,URIBL_WS_SURBL 
+	autolearn=spam version=3.0.2-cs-csdcf
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="----------=_42AF565B.71518F4F"
+Subject: *SPAM* *****SPAM***** Pre-approved Application #BJROST215
+
+This is a multi-part message in MIME format.
+
+------------=_42AF565B.71518F4F
+Content-Type: text/plain
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+
+
+-------------------- Start SpamAssassin results ----------------------
+This mail is probably spam.  The original message has been altered
+so you can recognise or block similar unwanted mail in future.  If you
+feel that this mail has been marked as spam in error, please forward
+the original message (attached) with all the MAIL HEADERS *and* this
+report to notspam@cs.stanford.edu. Make sure you forward the original
+as a MIME attachment.
+
+You can also adjust your own spam filter settings by logging into
+https://cs.stanford.edu/spam
+
+NOTE: Without the FULL mail headers from the original message, we
+cannot do anything! For instructions on how to display and forward
+the full message headers, see http://cf.stanford.edu/Questions/
+
+
+Content analysis details:   (29.4 hits, 7.0 required)
+ 3.5 HELO_DYNAMIC_IPADDR2   Relay HELO'd using suspicious hostname (IP addr 2)
+ 0.9 SORTED_RECIPS          Recipient list is sorted by address
+ 1.9 SELECTED_YOU           BODY: They have selected you for something
+ 7.0 BAYES_99               BODY: Bayesian spam probability is 99 to 100%
+                            [score: 1.0000]
+ 6.5 DCC_CHECK              Listed in DCC (http://rhyolite.com/anti-spam/dcc/)
+ 0.3 DNS_FROM_AHBL_RHSBL    RBL: From: sender listed in dnsbl.ahbl.org
+ 0.4 URIBL_AB_SURBL         Contains an URL listed in the AB SURBL blocklist
+                            [URIs: sllly.com]
+ 1.5 URIBL_WS_SURBL         Contains an URL listed in the WS SURBL blocklist
+                            [URIs: sllly.com]
+ 3.2 URIBL_OB_SURBL         Contains an URL listed in the OB SURBL blocklist
+                            [URIs: sllly.com]
+ 4.3 URIBL_SC_SURBL         Contains an URL listed in the SC SURBL blocklist
+                            [URIs: sllly.com]
+
+-------------------- End of SpamAssassin results ---------------------
+
+
+
+------------=_42AF565B.71518F4F
+Content-Type: message/rfc822; x-spam-type=original
+Content-Description: original message before SpamAssassin
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+
+Received: from 62-15-74-117.inversas.jazztel.es ([62.15.74.117])
+	by cs-smtp-3.Stanford.EDU with smtp (Exim 4.50)
+	id 1DiJeB-0002zy-2U; Tue, 14 Jun 2005 15:12:42 -0700
+Received: from flounder-pqua.prvz.net (HELO conservatory-rirr.net)
+	by bryce-ext.gtbiy.net (8.9.0) 
+	with ESMTP id GDI12lira;
+	Wed, 15 Jun 2005 03:02:54 +0400
+Date: Tue, 14 Jun 2005 20:02:54 -0300
+From: "Maryellen Downey" <loud@yebox.com>
+Message-ID: <171.93e558d5.2a9NTL44@qpr.com>
+To: kirk@cs.stanford.edu
+Cc: kito@cs.stanford.edu, kjd@cs.stanford.edu, kkoster@cs.stanford.edu, klausner@cs.stanford.edu, klee@cs.stanford.edu, klein@cs.stanford.edu, klep@cs.stanford.edu
+Subject: Pre-approved Application #BJROST215
+X-Mailer: KMail [version 1.0.28]
+Received-SPF: none (cs-smtp-3.Stanford.EDU: 62.15.74.117 is neither permitted nor denied by domain of yebox.com) client-ip=62.15.74.117; envelope-from=loud@yebox.com; helo=62-15-74-117.inversas.jazztel.es;
+X-Scan-Signature: 980022258218d8e0da9e8fd80fb6777b
+
+Hello,
+
+ We tried contacting you awhile ago about your low interest morta(ge rate.
+
+ You have been selected for our lowest rate in years...
+
+ You could get over $420,000 for as little as $400 a month!
+
+ Ba(d credit, Bank*ruptcy? Doesn't matter, low rates are fixed no matter what!
+
+ 
+ To get a free, no obli,gation consultation click below:
+
+ http://www.sllly.com/signs.asp
+
+
+
+ Best Regards,
+
+ Randall Geiger
+ 
+ to be remov(ed:	http://www.sllly.com/deletion.asp
+
+ this process takes one week, so please be patient. we do our 
+ best to take your email/s off but you have to fill out a rem/ove
+ or else you will continue to recieve email/s.
+
+------------=_42AF565B.71518F4F--
+

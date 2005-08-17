@@ -1,0 +1,33 @@
+IMAP protocol and extensions suppoted:
+
+    [IMAP4rev1]        RFC 3501: Internet Message Access Protocol - Version 4rev1
+    [LOGINDISABLED]    RFC 3501: Internet Message Access Protocol - Version 4rev1
+    [STARTTLS]         RFC 3501: Internet Message Access Protocol - Version 4rev1
+    [CHILDREN]         RFC 3348: IMAP4 Child Mailbox Extension
+    [ID]               RFC 2971: IMAP4 ID Extension
+    [IDLE]             RFC 2177: IMAP4 IDLE command
+    [LITERAL+]         RFC 2088: IMAP4 non-synchronizing literals
+    [LOGIN-REFERRALS]  RFC 2221: IMAP4 Login Referrals
+    [NAMESPACE]        RFC 2342: IMAP4 Namespace
+    [QUOTA]            RFC 2087: IMAP4 QUOTA extension
+    [UIDPLUS]          RFC 2359: IMAP4 UIDPLUS extension
+    [UNSELECT]         RFC 3691: IMAP UNSELECT command
+    [$MDNSent]         RFC 3503 Message Disposition Notification (MDN) profile for Internet Message Access Protocol (IMAP)]
+
+POP protocol and extensions supported:
+
+    RFC 1939: Post Office Protocol - Version 3 
+    
+        supported: DELE, LIST, NOOP, PASS, QUIT, RETR, STAT, TOP, UIDL, USER
+      unsupported: APOP (optional, and requires clear-text password to be stored)
+    
+    RFC 2449: POP3 Extension Mechanism
+    
+        supported: CAPA, TOP, USER, UIDL, EXPIRE, IMPLEMENTATION
+      unsupported: SASL, RESP-CODES, LOGIN-DELAY, PIPELINING
+      
+    RFC 2595: Using TLS with IMAP, POP3 and ACAP 
+    
+        supported: STLS
+
+    

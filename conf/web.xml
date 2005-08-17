@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+  Copyright 2004 Liquid Systems, Inc
+-->
+
+<!DOCTYPE web-app
+    PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+    "http://java.sun.com/dtd/web-app_2_3.dtd">
+
+<web-app>
+
+  <display-name>Liquid Service</display-name>
+  <description>
+    SOAP Service
+  </description>
+
+  <servlet>
+    <servlet-name>SoapServlet</servlet-name>
+    <servlet-class>com.liquidsys.soap.SoapServlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
+    <init-param>
+      <param-name>allowed.ports</param-name>
+      <param-value>80, 443, 7070, 7443</param-value>
+    </init-param>
+    <!-- User command handlers only -->
+    <init-param>
+      <param-name>engine.handler.0</param-name>
+      <param-value>com.liquidsys.coco.service.account.AccountService</param-value>
+    </init-param>
+    <init-param>
+      <param-name>engine.handler.1</param-name>
+      <param-value>com.liquidsys.coco.service.mail.MailService</param-value>
+    </init-param>
+  </servlet>
+
+  <servlet>
+    <servlet-name>AdminServlet</servlet-name>
+    <servlet-class>com.liquidsys.soap.SoapServlet</servlet-class>
+    <load-on-startup>2</load-on-startup>
+    <init-param>
+      <param-name>allowed.ports</param-name>
+      <param-value>7071</param-value>
+    </init-param>
+    <!-- Admin servlet allows both admin and user commands -->
+    <init-param>
+      <param-name>engine.handler.0</param-name>
+      <param-value>com.liquidsys.coco.service.admin.AdminService</param-value>
+    </init-param>
+    <init-param>
+      <param-name>engine.handler.1</param-name>
+      <param-value>com.liquidsys.coco.service.account.AccountService</param-value>
+    </init-param>
+    <init-param>
+      <param-name>engine.handler.2</param-name>
+      <param-value>com.liquidsys.coco.service.mail.MailService</param-value>
+    </init-param>
+  </servlet>
+
+  <servlet>
+    <servlet-name>ContentServlet</servlet-name>
+    <servlet-class>com.liquidsys.coco.service.ContentServlet</servlet-class>
+    <load-on-startup>3</load-on-startup>
+    <init-param>
+      <param-name>allowed.ports</param-name>
+      <param-value>80, 443, 7070, 7443, 7071</param-value>
+    </init-param>
+    <init-param>
+      <param-name>errorpage.attachment.blocked</param-name>
+      <param-value>/error/attachment_blocked.jsp</param-value>
+    </init-param>
+  </servlet>
+
+  <servlet>
+    <servlet-name>RssServlet</servlet-name>
+    <servlet-class>com.liquidsys.coco.service.RssServlet</servlet-class>
+    <load-on-startup>3</load-on-startup>
+    <init-param>
+      <param-name>allowed.ports</param-name>
+      <param-value>80, 443, 7070, 7443, 7071</param-value>
+    </init-param>
+  </servlet>
+
+  <servlet>
+    <servlet-name>iCalServlet</servlet-name>
+    <servlet-class>com.liquidsys.coco.service.ICalServlet</servlet-class>
+    <load-on-startup>3</load-on-startup>
+    <init-param>
+      <param-name>allowed.ports</param-name>
+      <param-value>80, 443, 7070, 7443, 7071</param-value>
+    </init-param>
+  </servlet>
+
+  <servlet>
+    <servlet-name>CsvServlet</servlet-name>
+    <servlet-class>com.liquidsys.coco.service.CsvServlet</servlet-class>
+    <load-on-startup>3</load-on-startup>
+    <init-param>
+      <param-name>allowed.ports</param-name>
+      <param-value>80, 443, 7070, 7443, 7071</param-value>
+    </init-param>
+  </servlet>
+
+  <servlet>
+    <servlet-name>FileUploadServlet</servlet-name>
+    <servlet-class>com.liquidsys.coco.service.FileUploadServlet</servlet-class>
+    <load-on-startup>5</load-on-startup>
+    <init-param>
+      <param-name>allowed.ports</param-name>
+      <param-value>80, 443, 7070, 7443, 7071</param-value>
+    </init-param>
+  </servlet>
+
+  <servlet>
+    <servlet-name>StatsImageServlet</servlet-name>
+    <servlet-class>com.liquidsys.coco.service.StatsImageServlet</servlet-class>
+    <load-on-startup>7</load-on-startup>
+    <init-param>
+      <param-name>allowed.ports</param-name>
+      <param-value>7071</param-value>
+    </init-param>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>SoapServlet</servlet-name>
+    <url-pattern>/soap/</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>AdminServlet</servlet-name>
+    <url-pattern>/admin/soap/</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>ContentServlet</servlet-name>
+    <url-pattern>/content/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>RssServlet</servlet-name>
+    <url-pattern>/rss/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>iCalServlet</servlet-name>
+    <url-pattern>/ical/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>CsvServlet</servlet-name>
+    <url-pattern>/csv/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>FileUploadServlet</servlet-name>
+    <url-pattern>/upload</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>StatsImageServlet</servlet-name>
+    <url-pattern>/statsimg/*</url-pattern>
+  </servlet-mapping>
+</web-app>
