@@ -1,7 +1,7 @@
 /*
  * Created on Jul 26, 2004
  */
-package com.liquidsys.coco.index;
+package com.zimbra.cs.index;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,17 +39,17 @@ import org.apache.lucene.search.spans.SpanQuery;
 import org.apache.lucene.search.spans.Spans;
 import org.apache.lucene.store.FSDirectory;
 
-import com.liquidsys.coco.db.DbMailItem;
-import com.liquidsys.coco.db.DbPool;
-import com.liquidsys.coco.db.DbMailItem.SearchResult;
-import com.liquidsys.coco.db.DbPool.Connection;
-import com.liquidsys.coco.mailbox.MailItem;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.Message;
-import com.liquidsys.coco.mime.ParsedMessage;
-import com.liquidsys.coco.redolog.op.IndexItem;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.util.Config;
+import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbMailItem.SearchResult;
+import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.redolog.op.IndexItem;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.Config;
 
 
 /**

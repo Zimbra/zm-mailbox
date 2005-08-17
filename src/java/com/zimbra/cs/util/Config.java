@@ -1,19 +1,19 @@
 /*
  * Created on Apr 19, 2004
  */
-package com.liquidsys.coco.util;
+package com.zimbra.cs.util;
 
 import java.io.File;
 import java.sql.Timestamp;
 import java.util.Iterator;
 import java.util.Map;
 
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.account.Server;
-import com.liquidsys.coco.db.DbConfig;
-import com.liquidsys.coco.db.DbPool;
-import com.liquidsys.coco.db.DbPool.Connection;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.db.DbConfig;
+import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.service.ServiceException;
 
 
 /**

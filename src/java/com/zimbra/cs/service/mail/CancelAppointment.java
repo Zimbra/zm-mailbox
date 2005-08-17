@@ -1,4 +1,4 @@
-package com.liquidsys.coco.service.mail;
+package com.zimbra.cs.service.mail;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,14 +14,14 @@ import net.fortuna.ical4j.model.property.Method;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.mailbox.*;
-import com.liquidsys.coco.mailbox.Mailbox.OperationContext;
-import com.liquidsys.coco.mailbox.calendar.RecurId;
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.service.util.ParsedItemID;
-import com.liquidsys.coco.stats.StopWatch;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.mailbox.*;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.calendar.RecurId;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.ParsedItemID;
+import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.soap.LiquidContext;
 
 public class CancelAppointment extends CalendarRequest {

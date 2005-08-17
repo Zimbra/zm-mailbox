@@ -6,12 +6,12 @@ package com.zimbra.soap;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.LiquidLog;
 
 /**
  * @author schemers

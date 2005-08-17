@@ -1,16 +1,16 @@
 /*
  * Created on Apr 30, 2005
  */
-package com.liquidsys.coco.imap;
+package com.zimbra.cs.imap;
 
 import java.util.*;
 
-import com.liquidsys.coco.index.LiquidHit;
-import com.liquidsys.coco.index.LiquidQueryResults;
-import com.liquidsys.coco.index.MailboxIndex;
-import com.liquidsys.coco.mailbox.*;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.index.LiquidHit;
+import com.zimbra.cs.index.LiquidQueryResults;
+import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.mailbox.*;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.LiquidLog;
 
 
 class ImapFolder {

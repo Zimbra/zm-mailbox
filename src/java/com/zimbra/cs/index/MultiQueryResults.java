@@ -4,9 +4,9 @@
  * A QueryResults set which cross multiple mailboxes...
  * 
  */
-package com.liquidsys.coco.index;
+package com.zimbra.cs.index;
 
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.service.ServiceException;
 
 
 /**

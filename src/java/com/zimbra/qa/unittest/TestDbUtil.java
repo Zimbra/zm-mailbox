@@ -2,7 +2,7 @@ package com.zimbra.qa.unittest;
 
 import junit.framework.TestCase;
 
-import com.liquidsys.coco.db.DbUtil;
+import com.zimbra.cs.db.DbUtil;
 
 /**
  * @author bburtin

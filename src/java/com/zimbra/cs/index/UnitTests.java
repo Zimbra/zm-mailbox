@@ -1,7 +1,7 @@
 /*
  * Created on Sep 10, 2004
  */
-package com.liquidsys.coco.index;
+package com.zimbra.cs.index;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -17,14 +17,14 @@ import junit.framework.TestFailure;
 import junit.framework.TestResult;
 import junit.framework.TestSuite;
 
-import com.liquidsys.coco.index.queryparser.ParseException;
-import com.liquidsys.coco.mailbox.Folder;
-import com.liquidsys.coco.mailbox.MailItem;
-import com.liquidsys.coco.mailbox.MailServiceException;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.Tag;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.util.Liquid;
+import com.zimbra.cs.index.queryparser.ParseException;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.Liquid;
 
 /**
  * @author tim

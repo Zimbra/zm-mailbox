@@ -8,8 +8,8 @@ import java.util.Map;
 
 import org.dom4j.QName;
 
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author schemers

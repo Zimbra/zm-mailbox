@@ -6,7 +6,7 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
-import com.liquidsys.coco.util.StringUtil;
+import com.zimbra.cs.util.StringUtil;
 
 /**
  * @author bburtin

@@ -1,4 +1,4 @@
-package com.liquidsys.coco.scan;
+package com.zimbra.cs.scan;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -8,7 +8,7 @@ import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.service.ServiceException;
 
 public abstract class Scanner {
 

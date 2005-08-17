@@ -1,4 +1,4 @@
-package com.liquidsys.coco.util;
+package com.zimbra.cs.util;
 
 
 import java.util.Properties;
@@ -8,7 +8,7 @@ import javax.mail.Session;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author schemers

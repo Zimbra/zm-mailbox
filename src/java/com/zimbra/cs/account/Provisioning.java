@@ -2,15 +2,15 @@
  * Created on Sep 23, 2004
  *
  */
-package com.liquidsys.coco.account;
+package com.zimbra.cs.account;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.liquidsys.coco.account.ldap.LdapProvisioning;
-import com.liquidsys.coco.mime.MimeTypeInfo;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.account.ldap.LdapProvisioning;
+import com.zimbra.cs.mime.MimeTypeInfo;
+import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author schemers
@@ -608,19 +608,19 @@ public abstract class Provisioning {
 
     /**
      * Email address of the sender of a new email notification message.
-     * @see com.liquidsys.coco.mailbox.MailboxManager#notifyIfNecessary
+     * @see com.zimbra.cs.mailbox.MailboxManager#notifyIfNecessary
      */
     public static final String A_liquidNewMailNotificationFrom               = "liquidNewMailNotificationFrom";
 
     /**
      * Template used to generate the subject of a new email notification message.
-     * @see com.liquidsys.coco.mailbox.MailboxManager#notifyIfNecessary
+     * @see com.zimbra.cs.mailbox.MailboxManager#notifyIfNecessary
      */
     public static final String A_liquidNewMailNotificationSubject            = "liquidNewMailNotificationSubject";
     
     /**
      * Template used to generate the body of a new email notification message.
-     * @see com.liquidsys.coco.mailbox.MailboxManager#notifyIfNecessary
+     * @see com.zimbra.cs.mailbox.MailboxManager#notifyIfNecessary
      */
     public static final String A_liquidNewMailNotificationBody               = "liquidNewMailNotificationBody";
     

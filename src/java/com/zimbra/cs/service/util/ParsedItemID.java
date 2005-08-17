@@ -2,10 +2,10 @@
  * Created on Mar 28, 2005
  *
  */
-package com.liquidsys.coco.service.util;
+package com.zimbra.cs.service.util;
 
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.service.ServiceException;
 
 
 /**

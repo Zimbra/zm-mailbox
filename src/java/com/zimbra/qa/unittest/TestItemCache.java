@@ -4,12 +4,12 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.mailbox.MailItem;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.Message;
-import com.liquidsys.coco.service.util.LiquidPerf;
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.service.util.LiquidPerf;
+import com.zimbra.cs.util.LiquidLog;
 
 /**
  * @author bburtin

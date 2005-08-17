@@ -4,7 +4,7 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package com.liquidsys.coco.servlet;
+package com.zimbra.cs.servlet;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -23,11 +23,11 @@ import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.account.AuthToken;
-import com.liquidsys.coco.account.AuthTokenException;
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.LiquidLog;
 import com.zimbra.soap.SoapProtocol;
 
 /**

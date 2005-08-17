@@ -1,4 +1,4 @@
-package com.liquidsys.coco.account.ldap;
+package com.zimbra.cs.account.ldap;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -32,10 +32,10 @@ import javax.naming.directory.SearchResult;
 import org.apache.commons.codec.binary.Base64;
 import org.doomdark.uuid.UUIDGenerator;
 
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.localconfig.LC;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.localconfig.LC;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.LiquidLog;
 
 /**
  * @author schemers
@@ -615,7 +615,7 @@ public class LdapUtil {
       }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Provisioning#searchGal(java.lang.String)
+     * @see com.zimbra.cs.account.Provisioning#searchGal(java.lang.String)
      */
     public static List searchLdapGal(
             String url,

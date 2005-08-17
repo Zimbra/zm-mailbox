@@ -2,7 +2,7 @@
  * Created on Jan 19, 2005
  *
  */
-package com.liquidsys.coco.convert;
+package com.zimbra.cs.convert;
 
 /**
  * @author kchen

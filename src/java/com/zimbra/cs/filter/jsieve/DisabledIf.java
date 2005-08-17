@@ -2,7 +2,7 @@
  * Created on Apr 11, 2005
  *
  */
-package com.liquidsys.coco.filter.jsieve;
+package com.zimbra.cs.filter.jsieve;
 
 import org.apache.jsieve.Arguments;
 import org.apache.jsieve.Block;

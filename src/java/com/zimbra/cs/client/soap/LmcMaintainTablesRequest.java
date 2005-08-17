@@ -1,9 +1,9 @@
-package com.liquidsys.coco.client.soap;
+package com.zimbra.cs.client.soap;
 
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
-import com.liquidsys.coco.service.admin.AdminService;
+import com.zimbra.cs.service.admin.AdminService;
 
 
 public class LmcMaintainTablesRequest extends LmcSoapRequest {

@@ -2,7 +2,7 @@
  * Created on Feb 14, 2005
  *
  */
-package com.liquidsys.coco.convert;
+package com.zimbra.cs.convert;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;

@@ -1,8 +1,8 @@
-package com.liquidsys.coco.index;
+package com.zimbra.cs.index;
 
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.MailItem;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailItem;
 import java.util.*;
 
 /**

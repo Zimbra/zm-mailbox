@@ -1,6 +1,6 @@
-package com.liquidsys.coco.util;
+package com.zimbra.cs.util;
 
-import com.liquidsys.coco.db.Versions;
+import com.zimbra.cs.db.Versions;
 
 public class BuildInfo {
     
@@ -15,7 +15,7 @@ public class BuildInfo {
         String date = "unknown";
         String host = "unknown";
         try {
-            Class clz = Class.forName("com.liquidsys.coco.util.BuildInfoGenerated");
+            Class clz = Class.forName("com.zimbra.cs.util.BuildInfoGenerated");
             version = (String) clz.getField("VERSION").get(null);
             release = (String) clz.getField("RELEASE").get(null);
             date = (String) clz.getField("DATE").get(null);

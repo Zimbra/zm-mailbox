@@ -4,13 +4,13 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package com.liquidsys.coco.client.soap;
+package com.zimbra.cs.client.soap;
 
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.service.mail.MailService;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.soap.SoapParseException;
 
 /**
@@ -22,7 +22,7 @@ import com.zimbra.soap.SoapParseException;
 public class LmcNoOpRequest extends LmcSoapRequest {
 
 	/* (non-Javadoc)
-	 * @see com.liquidsys.coco.client.soap.LmcSoapRequest#getRequestXML()
+	 * @see com.zimbra.cs.client.soap.LmcSoapRequest#getRequestXML()
 	 */
 	protected Element getRequestXML() throws LmcSoapClientException {
         Element request = DocumentHelper.createElement(MailService.NO_OP_REQUEST);
@@ -30,7 +30,7 @@ public class LmcNoOpRequest extends LmcSoapRequest {
 	}
 
 	/* (non-Javadoc)
-	 * @see com.liquidsys.coco.client.soap.LmcSoapRequest#parseResponseXML(org.dom4j.Element)
+	 * @see com.zimbra.cs.client.soap.LmcSoapRequest#parseResponseXML(org.dom4j.Element)
 	 */
 	protected LmcSoapResponse parseResponseXML(Element responseXML)
 			throws SoapParseException, ServiceException, LmcSoapClientException {

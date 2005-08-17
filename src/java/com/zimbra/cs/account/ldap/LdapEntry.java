@@ -2,7 +2,7 @@
  * Created on Sep 23, 2004
  *
  */
-package com.liquidsys.coco.account.ldap;
+package com.zimbra.cs.account.ldap;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -17,10 +17,10 @@ import javax.naming.directory.InvalidAttributeIdentifierException;
 import javax.naming.directory.InvalidAttributeValueException;
 import javax.naming.directory.InvalidAttributesException;
 
-import com.liquidsys.coco.account.AccountServiceException;
-import com.liquidsys.coco.account.AttributeManager;
-import com.liquidsys.coco.account.Entry;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AttributeManager;
+import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author schemers
@@ -100,14 +100,14 @@ public class LdapEntry implements Entry {
 
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Account#modifyAccount(java.util.Map)
+     * @see com.zimbra.cs.account.Account#modifyAccount(java.util.Map)
      */
     public void modifyAttrs(Map attrs) throws ServiceException {
         modifyAttrs(attrs, false);
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Account#modifyAccount(java.util.Map)
+     * @see com.zimbra.cs.account.Account#modifyAccount(java.util.Map)
      */
     public void modifyAttrs(Map attrs, boolean checkImmutable) throws ServiceException {
         HashMap context = new HashMap();
@@ -118,7 +118,7 @@ public class LdapEntry implements Entry {
 
   
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Account#modifyAccount(java.util.Map)
+     * @see com.zimbra.cs.account.Account#modifyAccount(java.util.Map)
      */
     private void modifyAttrsInternal(Map attrs) throws ServiceException {
         modifyAttrsInternal(null, attrs);

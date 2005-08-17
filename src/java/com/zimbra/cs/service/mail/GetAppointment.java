@@ -1,17 +1,17 @@
-package com.liquidsys.coco.service.mail;
+package com.zimbra.cs.service.mail;
 
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.mailbox.Appointment;
-import com.liquidsys.coco.mailbox.Invite;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.calendar.Recurrence;
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.session.PendingModifications.Change;
+import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.Invite;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.calendar.Recurrence;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.LiquidContext;
 

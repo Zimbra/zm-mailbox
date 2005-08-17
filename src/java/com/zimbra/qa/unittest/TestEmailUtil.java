@@ -1,6 +1,6 @@
 package com.zimbra.qa.unittest;
 
-import com.liquidsys.coco.util.EmailUtil;
+import com.zimbra.cs.util.EmailUtil;
 
 import junit.framework.TestCase;
 

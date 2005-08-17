@@ -1,4 +1,4 @@
-package com.liquidsys.coco.mailbox.calendar;
+package com.zimbra.cs.mailbox.calendar;
 
 import java.text.ParseException;
 import java.util.Calendar;
@@ -13,11 +13,11 @@ import java.util.StringTokenizer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.account.WellKnownTimeZone;
-import com.liquidsys.coco.mailbox.MailServiceException;
-import com.liquidsys.coco.mailbox.Metadata;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.WellKnownTimeZone;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.service.ServiceException;
 
 import net.fortuna.ical4j.model.ComponentList;
 import net.fortuna.ical4j.model.ParameterList;

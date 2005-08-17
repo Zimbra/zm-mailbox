@@ -1,13 +1,13 @@
-package com.liquidsys.coco.client.soap;
+package com.zimbra.cs.client.soap;
 
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
 import com.zimbra.soap.DomUtil;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.service.account.AccountService;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.soap.SoapParseException;
-import com.liquidsys.coco.client.*;
+import com.zimbra.cs.client.*;
 
 public class LmcSearchGalRequest extends LmcSoapRequest {
 

@@ -3,7 +3,7 @@
  *
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package com.liquidsys.coco.account;
+package com.zimbra.cs.account;
 
 import java.util.Date;
 import java.util.Map;
@@ -11,7 +11,7 @@ import java.util.Set;
 
 import javax.naming.NamingException;
 
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author schemers

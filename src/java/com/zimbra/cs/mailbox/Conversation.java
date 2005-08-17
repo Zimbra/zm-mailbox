@@ -1,7 +1,7 @@
 /*
  * Created on Jun 13, 2004
  */
-package com.liquidsys.coco.mailbox;
+package com.zimbra.cs.mailbox;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -10,10 +10,10 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.db.DbMailItem;
-import com.liquidsys.coco.db.DbMailItem.LocationCount;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.session.PendingModifications.Change;
+import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.db.DbMailItem.LocationCount;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.session.PendingModifications.Change;
 
 /**
  * @author schemers

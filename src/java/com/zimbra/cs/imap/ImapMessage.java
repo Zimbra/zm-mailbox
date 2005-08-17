@@ -1,7 +1,7 @@
 /*
  * Created on Apr 30, 2005
  */
-package com.liquidsys.coco.imap;
+package com.zimbra.cs.imap;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -16,12 +16,12 @@ import javax.mail.internet.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.imap.ImapHandler.PartSpecifier;
-import com.liquidsys.coco.mailbox.Flag;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.Message;
-import com.liquidsys.coco.mime.Mime;
-import com.liquidsys.coco.util.ByteUtil;
+import com.zimbra.cs.imap.ImapHandler.PartSpecifier;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.util.ByteUtil;
 
 
 class ImapMessage {

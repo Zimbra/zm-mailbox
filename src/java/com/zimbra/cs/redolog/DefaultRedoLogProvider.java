@@ -1,11 +1,11 @@
 /*
  * Created on 2005. 6. 29.
  */
-package com.liquidsys.coco.redolog;
+package com.zimbra.cs.redolog;
 
 import java.io.File;
 
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author jhahm

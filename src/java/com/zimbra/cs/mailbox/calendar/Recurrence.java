@@ -1,4 +1,4 @@
-package com.liquidsys.coco.mailbox.calendar;
+package com.zimbra.cs.mailbox.calendar;
 
 import java.util.*;
 
@@ -9,14 +9,14 @@ import net.fortuna.ical4j.model.WeekDayList;
 
 import java.text.ParseException;
 
-import com.liquidsys.coco.util.LiquidLog;
-import com.liquidsys.coco.util.ListUtil;
-import com.liquidsys.coco.mailbox.Appointment;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.Metadata;
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.mail.MailService;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.ListUtil;
+import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.service.ServiceException;
 import net.fortuna.ical4j.model.parameter.Value;
 import net.fortuna.ical4j.util.DateTimeFormat;
 

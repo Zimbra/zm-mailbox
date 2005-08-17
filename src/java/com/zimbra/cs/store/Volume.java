@@ -1,4 +1,4 @@
-package com.liquidsys.coco.store;
+package com.zimbra.cs.store;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -6,11 +6,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.liquidsys.coco.db.DbPool;
-import com.liquidsys.coco.db.DbVolume;
-import com.liquidsys.coco.db.DbPool.Connection;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.util.Liquid;
+import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbVolume;
+import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.Liquid;
 
 /**
  * @author jhahm

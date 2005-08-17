@@ -4,7 +4,7 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package com.liquidsys.coco.redolog.op;
+package com.zimbra.cs.redolog.op;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -44,14 +44,14 @@ public class Rollover extends RedoableOp {
 	}
 
 	/* (non-Javadoc)
-	 * @see com.liquidsys.coco.redolog.op.RedoableOp#redo()
+	 * @see com.zimbra.cs.redolog.op.RedoableOp#redo()
 	 */
 	public void redo() throws Exception {
         // nothing to do
 	}
 
 	/* (non-Javadoc)
-	 * @see com.liquidsys.coco.redolog.op.RedoableOp#getPrintableData()
+	 * @see com.zimbra.cs.redolog.op.RedoableOp#getPrintableData()
 	 */
 	protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("seq=");
@@ -61,7 +61,7 @@ public class Rollover extends RedoableOp {
 	}
 
 	/* (non-Javadoc)
-	 * @see com.liquidsys.coco.redolog.op.RedoableOp#serializeData(java.io.DataOutput)
+	 * @see com.zimbra.cs.redolog.op.RedoableOp#serializeData(java.io.DataOutput)
 	 */
 	protected void serializeData(DataOutput out) throws IOException {
         out.writeLong(mSeq);
@@ -69,7 +69,7 @@ public class Rollover extends RedoableOp {
 	}
 
 	/* (non-Javadoc)
-	 * @see com.liquidsys.coco.redolog.op.RedoableOp#deserializeData(java.io.DataInput)
+	 * @see com.zimbra.cs.redolog.op.RedoableOp#deserializeData(java.io.DataInput)
 	 */
 	protected void deserializeData(DataInput in) throws IOException {
         mSeq = in.readLong();

@@ -1,20 +1,20 @@
-package com.liquidsys.coco.service.mail;
+package com.zimbra.cs.service.mail;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.calendar.FreeBusy;
-import com.liquidsys.coco.mailbox.calendar.IcalXmlStrMap;
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.stats.StopWatch;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.calendar.FreeBusy;
+import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.soap.LiquidContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
 
 import java.util.*;
 
-import com.liquidsys.coco.service.util.*;
+import com.zimbra.cs.service.util.*;
 
 public class GetFreeBusy extends WriteOpDocumentHandler {
 

@@ -1,9 +1,9 @@
 /*
  * Created on Apr 7, 2005
  */
-package com.liquidsys.coco.index;
+package com.zimbra.cs.index;
 
-import com.liquidsys.coco.util.StringUtil;
+import com.zimbra.cs.util.StringUtil;
 
 /**
  * @author dkarp

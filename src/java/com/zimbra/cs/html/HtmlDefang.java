@@ -4,7 +4,7 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package com.liquidsys.coco.html;
+package com.zimbra.cs.html;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,7 +19,7 @@ import org.apache.xerces.xni.parser.XMLInputSource;
 import org.apache.xerces.xni.parser.XMLParserConfiguration;
 import org.cyberneko.html.HTMLConfiguration;
 
-import com.liquidsys.coco.util.ByteUtil;
+import com.zimbra.cs.util.ByteUtil;
 
 /**
  * @author schemers

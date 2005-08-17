@@ -2,7 +2,7 @@
  * Created on Aug 8, 2005
  *
  */
-package com.liquidsys.coco.db;
+package com.zimbra.cs.db;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -11,8 +11,8 @@ import java.sql.SQLException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.db.DbPool.Connection;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.service.ServiceException;
 
 public class DbRedologSequence {
 

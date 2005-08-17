@@ -1,4 +1,4 @@
-package com.liquidsys.coco.mailbox;
+package com.zimbra.cs.mailbox;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

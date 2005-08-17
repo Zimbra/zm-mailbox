@@ -1,4 +1,4 @@
-package com.liquidsys.coco.stats;
+package com.zimbra.cs.stats;
 
 import java.util.Iterator;
 import java.util.SortedMap;
@@ -8,7 +8,7 @@ import java.util.TreeMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.util.Liquid;
+import com.zimbra.cs.util.Liquid;
 
 /**
  * Abstraction for a statistic that increases over time.  A single
@@ -23,8 +23,8 @@ import com.liquidsys.coco.util.Liquid;
  *   log4j.appender.STATS.Append=false
  *   log4j.appender.STATS.layout=org.apache.log4j.PatternLayout
  *   log4j.appender.STATS.layout.ConversionPattern=%r,%m%n
- *   log4j.additivity.com.liquidsys.coco.stats=false
- *   log4j.logger.com.liquidsys.coco.stats=DEBUG,STATS
+ *   log4j.additivity.com.zimbra.cs.stats=false
+ *   log4j.logger.com.zimbra.cs.stats=DEBUG,STATS
  */
 abstract class Accumulator {
 

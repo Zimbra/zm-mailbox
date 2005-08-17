@@ -23,10 +23,10 @@ import org.dom4j.DocumentException;
 import org.dom4j.Namespace;
 import org.dom4j.QName;
 
-import com.liquidsys.coco.util.ByteUtil;
-import com.liquidsys.coco.util.Liquid;
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.cs.util.Liquid;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapHttpTransport;
 

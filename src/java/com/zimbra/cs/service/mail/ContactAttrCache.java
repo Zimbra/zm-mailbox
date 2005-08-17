@@ -1,11 +1,11 @@
 /*
  * Created on Jun 14, 2004
  */
-package com.liquidsys.coco.service.mail;
+package com.zimbra.cs.service.mail;
 
 import java.util.HashMap;
 
-import com.liquidsys.coco.service.Element;
+import com.zimbra.cs.service.Element;
 
 /**
  * @author schemers

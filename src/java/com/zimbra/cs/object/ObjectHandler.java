@@ -1,7 +1,7 @@
 /*
  * Created on Apr 30, 2004
  */
-package com.liquidsys.coco.object;
+package com.zimbra.cs.object;
 
 
 import java.util.ArrayList;
@@ -14,8 +14,8 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author schemers
@@ -58,7 +58,7 @@ public abstract class ObjectHandler {
         if (clazz == null)
             return null;
         if (clazz.indexOf('.') == -1)
-            clazz = "com.liquidsys.coco.object.handler." + clazz;
+            clazz = "com.zimbra.cs.object.handler." + clazz;
         try {
             handler = (ObjectHandler) Class.forName(clazz).newInstance();
             handler.mObjectType = dot;

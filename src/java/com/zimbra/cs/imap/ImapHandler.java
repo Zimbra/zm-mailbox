@@ -1,7 +1,7 @@
 /*
  * Created on Apr 9, 2005
  */
-package com.liquidsys.coco.imap;
+package com.zimbra.cs.imap;
 
 import java.io.*;
 import java.net.Socket;
@@ -15,23 +15,23 @@ import javax.mail.internet.MimeMessage;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.account.AccountServiceException;
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.imap.ImapSession.ImapFlag;
-import com.liquidsys.coco.index.LiquidHit;
-import com.liquidsys.coco.index.LiquidQueryResults;
-import com.liquidsys.coco.index.MailboxIndex;
-import com.liquidsys.coco.index.queryparser.ParseException;
-import com.liquidsys.coco.mailbox.*;
-import com.liquidsys.coco.mailbox.Mailbox.OperationContext;
-import com.liquidsys.coco.mime.ParsedMessage;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.session.SessionCache;
-import com.liquidsys.coco.store.StoreManager;
-import com.liquidsys.coco.tcpserver.ProtocolHandler;
-import com.liquidsys.coco.tcpserver.TcpServerInputStream;
-import com.liquidsys.coco.util.*;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.imap.ImapSession.ImapFlag;
+import com.zimbra.cs.index.LiquidHit;
+import com.zimbra.cs.index.LiquidQueryResults;
+import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.index.queryparser.ParseException;
+import com.zimbra.cs.mailbox.*;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.session.SessionCache;
+import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.tcpserver.ProtocolHandler;
+import com.zimbra.cs.tcpserver.TcpServerInputStream;
+import com.zimbra.cs.util.*;
 
 /**
  * @author dkarp

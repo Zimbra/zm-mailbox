@@ -2,7 +2,7 @@
  * Created on Jun 1, 2004
  *
  */
-package com.liquidsys.coco.service;
+package com.zimbra.cs.service;
 
 /**
  * @author schemers

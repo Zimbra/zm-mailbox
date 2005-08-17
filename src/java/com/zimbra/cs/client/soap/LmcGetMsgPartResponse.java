@@ -1,6 +1,6 @@
-package com.liquidsys.coco.client.soap;
+package com.zimbra.cs.client.soap;
 
-import com.liquidsys.coco.client.*;
+import com.zimbra.cs.client.*;
 
 public class LmcGetMsgPartResponse extends LmcSoapResponse {
 

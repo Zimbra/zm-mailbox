@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.liquidsys.coco.mailbox.calendar;
+package com.zimbra.cs.mailbox.calendar;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,8 +9,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.liquidsys.coco.mailbox.Metadata;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.service.ServiceException;
 
 import net.fortuna.ical4j.model.ComponentList;
 import net.fortuna.ical4j.model.Property;

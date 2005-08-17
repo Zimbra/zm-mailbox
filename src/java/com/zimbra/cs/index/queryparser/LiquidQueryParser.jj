@@ -12,12 +12,12 @@ options {
 
 PARSER_BEGIN(LiquidQueryParser)
 
-package com.liquidsys.coco.index.queryparser;
+package com.zimbra.cs.index.queryparser;
 
-import com.liquidsys.coco.index.*;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.mailbox.MailServiceException;
+import com.zimbra.cs.index.*;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.mailbox.MailServiceException;
 
 import org.apache.lucene.analysis.Analyzer;
 

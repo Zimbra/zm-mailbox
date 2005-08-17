@@ -1,4 +1,4 @@
-package com.liquidsys.coco.service;
+package com.zimbra.cs.service;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -22,13 +22,13 @@ import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.account.AuthToken;
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.account.Server;
-import com.liquidsys.coco.account.ldap.LdapUtil;
-import com.liquidsys.coco.servlet.LiquidServlet;
-import com.liquidsys.coco.util.Constants;
-import com.liquidsys.coco.util.Liquid;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.servlet.LiquidServlet;
+import com.zimbra.cs.util.Constants;
+import com.zimbra.cs.util.Liquid;
 
 public class FileUploadServlet extends LiquidServlet {
 

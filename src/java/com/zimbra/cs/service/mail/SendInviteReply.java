@@ -1,7 +1,7 @@
 /*
  * Created on Mar 2, 2005
  */
-package com.liquidsys.coco.service.mail;
+package com.zimbra.cs.service.mail;
 
 import java.util.*;
 import javax.mail.internet.*;
@@ -9,14 +9,14 @@ import javax.mail.internet.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.account.*;
-import com.liquidsys.coco.mailbox.*;
-import com.liquidsys.coco.mailbox.Mailbox.OperationContext;
-import com.liquidsys.coco.mailbox.calendar.IcalXmlStrMap;
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.service.util.ParsedItemID;
-import com.liquidsys.coco.stats.StopWatch;
+import com.zimbra.cs.account.*;
+import com.zimbra.cs.mailbox.*;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.ParsedItemID;
+import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.soap.LiquidContext;
 
 import net.fortuna.ical4j.model.Calendar;

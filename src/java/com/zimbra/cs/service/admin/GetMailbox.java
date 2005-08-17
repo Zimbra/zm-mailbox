@@ -1,13 +1,13 @@
 /*
  * Created on Mar 9, 2005
  */
-package com.liquidsys.coco.service.admin;
+package com.zimbra.cs.service.admin;
 
 import java.util.Map;
 
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.LiquidContext;
 
 /**

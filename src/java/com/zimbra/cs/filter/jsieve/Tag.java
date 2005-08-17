@@ -2,7 +2,7 @@
  * Created on Nov 1, 2004
  *
  */
-package com.liquidsys.coco.filter.jsieve;
+package com.zimbra.cs.filter.jsieve;
 
 import java.util.List;
 

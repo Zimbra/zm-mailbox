@@ -1,13 +1,13 @@
 /*
  * Created on Jun 11, 2004
  */
-package com.liquidsys.coco.mailbox;
+package com.zimbra.cs.mailbox;
 
 import java.util.*;
 
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.service.mail.EmailElementCache;
-import com.liquidsys.coco.service.mail.EmailElementCache.CacheNode;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.mail.EmailElementCache;
+import com.zimbra.cs.service.mail.EmailElementCache.CacheNode;
 
 
 public class SenderList {

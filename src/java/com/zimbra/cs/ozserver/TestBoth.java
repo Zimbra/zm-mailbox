@@ -1,10 +1,10 @@
-package com.liquidsys.coco.ozserver;
+package com.zimbra.cs.ozserver;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import com.liquidsys.coco.util.Liquid;
+import com.zimbra.cs.util.Liquid;
 
 class TestBoth {
 

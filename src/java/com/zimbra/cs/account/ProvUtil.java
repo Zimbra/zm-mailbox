@@ -1,7 +1,7 @@
 /*
  * Created on Sep 23, 2004
  */
-package com.liquidsys.coco.account;
+package com.zimbra.cs.account;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,9 +15,9 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.Map.Entry;
 
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.util.Liquid;
-import com.liquidsys.coco.util.StringUtil;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.Liquid;
+import com.zimbra.cs.util.StringUtil;
 
 /**
  * @author schemers

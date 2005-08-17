@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.liquidsys.coco.service.mail;
+package com.zimbra.cs.service.mail;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

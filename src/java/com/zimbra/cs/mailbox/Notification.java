@@ -1,4 +1,4 @@
-package com.liquidsys.coco.mailbox;
+package com.zimbra.cs.mailbox;
 
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
@@ -11,18 +11,18 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.db.DbOutOfOffice;
-import com.liquidsys.coco.db.DbPool;
-import com.liquidsys.coco.db.DbPool.Connection;
-import com.liquidsys.coco.mime.ParsedMessage;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.util.AccountUtil;
-import com.liquidsys.coco.util.EmailUtil;
-import com.liquidsys.coco.util.JMSession;
-import com.liquidsys.coco.util.LiquidLog;
-import com.liquidsys.coco.util.StringUtil;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.db.DbOutOfOffice;
+import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.EmailUtil;
+import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.StringUtil;
 import com.sun.mail.smtp.SMTPMessage;
 
 public class Notification {

@@ -1,4 +1,4 @@
-package com.liquidsys.coco.lmtpserver;
+package com.zimbra.cs.lmtpserver;
 
 import java.util.Map;
 import java.util.HashMap;

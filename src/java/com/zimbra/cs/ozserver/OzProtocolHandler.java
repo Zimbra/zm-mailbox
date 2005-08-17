@@ -1,4 +1,4 @@
-package com.liquidsys.coco.ozserver;
+package com.zimbra.cs.ozserver;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

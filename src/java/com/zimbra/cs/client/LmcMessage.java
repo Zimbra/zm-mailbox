@@ -1,4 +1,4 @@
-package com.liquidsys.coco.client;
+package com.zimbra.cs.client;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -9,7 +9,7 @@ import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.apache.commons.httpclient.methods.GetMethod;
 
-import com.liquidsys.coco.client.soap.LmcSoapClientException;
+import com.zimbra.cs.client.soap.LmcSoapClientException;
 
 public class LmcMessage {
     private String mID;

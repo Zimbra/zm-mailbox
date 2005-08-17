@@ -1,7 +1,7 @@
 /*
  * Created on Apr 30, 2004
  */
-package com.liquidsys.coco.mime;
+package com.zimbra.cs.mime;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,16 +21,16 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.convert.AttachmentInfo;
-import com.liquidsys.coco.convert.ConversionException;
-import com.liquidsys.coco.index.LuceneFields;
-import com.liquidsys.coco.localconfig.DebugConfig;
-import com.liquidsys.coco.object.MatchedObject;
-import com.liquidsys.coco.object.ObjectHandler;
-import com.liquidsys.coco.object.ObjectHandlerException;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.util.BlobMetaData;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.convert.AttachmentInfo;
+import com.zimbra.cs.convert.ConversionException;
+import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.localconfig.DebugConfig;
+import com.zimbra.cs.object.MatchedObject;
+import com.zimbra.cs.object.ObjectHandler;
+import com.zimbra.cs.object.ObjectHandlerException;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.BlobMetaData;
 
 /**
  * @author schemers
@@ -126,7 +126,7 @@ public abstract class MimeHandler {
             String clazz = mt.getHandlerClass();
             assert(clazz != null);
             if (clazz.indexOf('.') == -1)
-                clazz = "com.liquidsys.coco.mime.handler." + clazz;
+                clazz = "com.zimbra.cs.mime.handler." + clazz;
             try {
                 handlerInfo = new HandlerInfo();
                 handlerInfo.mClass = Class.forName(clazz);

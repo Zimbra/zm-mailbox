@@ -15,7 +15,7 @@ import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.service.Element;
+import com.zimbra.cs.service.Element;
 import com.zimbra.soap.SoapProtocol;
 
 /**

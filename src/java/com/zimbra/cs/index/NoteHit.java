@@ -1,14 +1,14 @@
 /*
  * Created on Nov 9, 2004
  */
-package com.liquidsys.coco.index;
+package com.zimbra.cs.index;
 
 import org.apache.lucene.document.Document;
 
-import com.liquidsys.coco.mailbox.Note;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.MailItem;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.mailbox.Note;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author tim
@@ -25,7 +25,7 @@ public final class NoteHit extends LiquidHit {
     private Note mNote = null;
     
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.index.LiquidHit#getDate()
+     * @see com.zimbra.cs.index.LiquidHit#getDate()
      */
     public long getDate() throws ServiceException {
         if (mCachedDate == -1) {
@@ -51,7 +51,7 @@ public final class NoteHit extends LiquidHit {
     
     
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.index.LiquidHit#inTrashOrSpam()
+     * @see com.zimbra.cs.index.LiquidHit#inTrashOrSpam()
      */
     boolean inMailbox() throws ServiceException {
         return getNote().inMailbox();
@@ -80,7 +80,7 @@ public final class NoteHit extends LiquidHit {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.index.LiquidHit#getConversationId()
+     * @see com.zimbra.cs.index.LiquidHit#getConversationId()
      */
     public int getConversationId() throws ServiceException {
         // TODO Auto-generated method stub
@@ -88,7 +88,7 @@ public final class NoteHit extends LiquidHit {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.index.LiquidHit#getMessageId()
+     * @see com.zimbra.cs.index.LiquidHit#getMessageId()
      */
     public int getItemId() throws ServiceException {
         String mbid = mDocument.get(LuceneFields.L_MAILBOX_BLOB_ID);
@@ -125,7 +125,7 @@ public final class NoteHit extends LiquidHit {
 
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.index.LiquidHit#getHitType()
+     * @see com.zimbra.cs.index.LiquidHit#getHitType()
      */
     public int getHitType() {
         // TODO Auto-generated method stub

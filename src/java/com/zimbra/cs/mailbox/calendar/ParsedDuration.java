@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.liquidsys.coco.mailbox.calendar;
+package com.zimbra.cs.mailbox.calendar;
 
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -11,9 +11,9 @@ import java.util.regex.Pattern;
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.property.Duration;
 
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.service.mail.MailService;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.mail.MailService;
 
 public final class ParsedDuration
 {

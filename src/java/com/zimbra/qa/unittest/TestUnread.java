@@ -5,22 +5,22 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.db.DbMailItem;
-import com.liquidsys.coco.db.DbPool;
-import com.liquidsys.coco.db.DbResults;
-import com.liquidsys.coco.db.DbUtil;
-import com.liquidsys.coco.db.DbPool.Connection;
-import com.liquidsys.coco.index.LiquidQueryResults;
-import com.liquidsys.coco.index.MailboxIndex;
-import com.liquidsys.coco.mailbox.Conversation;
-import com.liquidsys.coco.mailbox.Flag;
-import com.liquidsys.coco.mailbox.Folder;
-import com.liquidsys.coco.mailbox.MailItem;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.Message;
-import com.liquidsys.coco.mailbox.Tag;
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbResults;
+import com.zimbra.cs.db.DbUtil;
+import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.index.LiquidQueryResults;
+import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.mailbox.Conversation;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.util.LiquidLog;
 
 /**
  * @author bburtin

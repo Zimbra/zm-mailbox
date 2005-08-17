@@ -1,4 +1,4 @@
-package com.liquidsys.coco.client.soap;
+package com.zimbra.cs.client.soap;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -6,8 +6,8 @@ import java.util.Iterator;
 import org.dom4j.Element;
 import org.dom4j.DocumentHelper;
 
-import com.liquidsys.coco.service.mail.MailService;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.service.ServiceException;
 
 public class LmcGetTagRequest extends LmcSoapRequest {
 

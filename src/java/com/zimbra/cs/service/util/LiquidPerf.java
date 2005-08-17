@@ -1,4 +1,4 @@
-package com.liquidsys.coco.service.util;
+package com.zimbra.cs.service.util;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -13,11 +13,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.liquidsys.coco.db.DbPool;
-import com.liquidsys.coco.db.DbUtil;
-import com.liquidsys.coco.localconfig.LC;
-import com.liquidsys.coco.util.Constants;
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbUtil;
+import com.zimbra.cs.localconfig.LC;
+import com.zimbra.cs.util.Constants;
+import com.zimbra.cs.util.LiquidLog;
 
 /**
  * A collection of methods for keeping track of server performance statistics.

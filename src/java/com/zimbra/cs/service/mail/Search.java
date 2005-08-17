@@ -1,7 +1,7 @@
 /*
  * Created on May 26, 2004
  */
-package com.liquidsys.coco.service.mail;
+package com.zimbra.cs.service.mail;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -12,29 +12,29 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.index.ContactHit;
-import com.liquidsys.coco.index.ConversationHit;
-import com.liquidsys.coco.index.LiquidHit;
-import com.liquidsys.coco.index.LiquidQueryResults;
-import com.liquidsys.coco.index.MailboxIndex;
-import com.liquidsys.coco.index.MessageHit;
-import com.liquidsys.coco.index.MessagePartHit;
-import com.liquidsys.coco.index.NoteHit;
-import com.liquidsys.coco.index.ProxiedHit;
-import com.liquidsys.coco.index.SearchParams;
-import com.liquidsys.coco.index.queryparser.ParseException;
-import com.liquidsys.coco.mailbox.Conversation;
-import com.liquidsys.coco.mailbox.Flag;
-import com.liquidsys.coco.mailbox.MailServiceException;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.Message;
-import com.liquidsys.coco.mailbox.Mailbox.OperationContext;
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.session.SoapSession;
-import com.liquidsys.coco.stats.StopWatch;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.index.ContactHit;
+import com.zimbra.cs.index.ConversationHit;
+import com.zimbra.cs.index.LiquidHit;
+import com.zimbra.cs.index.LiquidQueryResults;
+import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.index.MessageHit;
+import com.zimbra.cs.index.MessagePartHit;
+import com.zimbra.cs.index.NoteHit;
+import com.zimbra.cs.index.ProxiedHit;
+import com.zimbra.cs.index.SearchParams;
+import com.zimbra.cs.index.queryparser.ParseException;
+import com.zimbra.cs.mailbox.Conversation;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.session.SoapSession;
+import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.LiquidContext;
 

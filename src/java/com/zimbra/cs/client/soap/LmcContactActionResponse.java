@@ -1,6 +1,6 @@
-package com.liquidsys.coco.client.soap;
+package com.zimbra.cs.client.soap;
 
-import com.liquidsys.coco.client.soap.LmcSoapResponse;
+import com.zimbra.cs.client.soap.LmcSoapResponse;
 
 public class LmcContactActionResponse extends LmcSoapResponse {
 

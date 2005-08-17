@@ -1,7 +1,7 @@
 /**
  * @author apalaniswamy
  */
-package com.liquidsys.coco.db;
+package com.zimbra.cs.db;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -11,10 +11,10 @@ import java.sql.Timestamp;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.db.DbPool.Connection;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.util.Constants;
+import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.Constants;
 
 // TODO mailbox migration between servers
 // TODO backup/restore

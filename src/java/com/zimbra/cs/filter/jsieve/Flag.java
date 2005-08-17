@@ -2,7 +2,7 @@
  * Created on Nov 8, 2004
  *
  */
-package com.liquidsys.coco.filter.jsieve;
+package com.zimbra.cs.filter.jsieve;
 
 import java.util.HashMap;
 import java.util.List;
@@ -26,10 +26,10 @@ public class Flag extends AbstractActionCommand {
 
     private static Map FLAGS = new HashMap(7);
     static {
-        FLAGS.put("read", new ActionFlag(com.liquidsys.coco.mailbox.Flag.ID_FLAG_UNREAD, false, "read"));
-        FLAGS.put("unread", new ActionFlag(com.liquidsys.coco.mailbox.Flag.ID_FLAG_UNREAD, true, "unread"));
-        FLAGS.put("flagged", new ActionFlag(com.liquidsys.coco.mailbox.Flag.ID_FLAG_FLAGGED, true, "flagged"));
-        FLAGS.put("unflagged", new ActionFlag(com.liquidsys.coco.mailbox.Flag.ID_FLAG_FLAGGED, false, "unflagged"));
+        FLAGS.put("read", new ActionFlag(com.zimbra.cs.mailbox.Flag.ID_FLAG_UNREAD, false, "read"));
+        FLAGS.put("unread", new ActionFlag(com.zimbra.cs.mailbox.Flag.ID_FLAG_UNREAD, true, "unread"));
+        FLAGS.put("flagged", new ActionFlag(com.zimbra.cs.mailbox.Flag.ID_FLAG_FLAGGED, true, "flagged"));
+        FLAGS.put("unflagged", new ActionFlag(com.zimbra.cs.mailbox.Flag.ID_FLAG_FLAGGED, false, "unflagged"));
     }
     /* (non-Javadoc)
      * @see org.apache.jsieve.commands.AbstractCommand#executeBasic(org.apache.jsieve.mail.MailAdapter, org.apache.jsieve.Arguments, org.apache.jsieve.Block)

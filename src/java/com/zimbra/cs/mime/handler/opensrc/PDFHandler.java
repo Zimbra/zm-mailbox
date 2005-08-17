@@ -4,7 +4,7 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
-package com.liquidsys.coco.mime.handler.opensrc;
+package com.zimbra.cs.mime.handler.opensrc;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -22,11 +22,11 @@ import org.pdfbox.pdmodel.PDDocument;
 import org.pdfbox.pdmodel.PDDocumentInformation;
 import org.pdfbox.util.PDFTextStripper;
 
-import com.liquidsys.coco.convert.AttachmentInfo;
-import com.liquidsys.coco.convert.ConversionException;
-import com.liquidsys.coco.mime.Mime;
-import com.liquidsys.coco.mime.MimeHandler;
-import com.liquidsys.coco.mime.MimeHandlerException;
+import com.zimbra.cs.convert.AttachmentInfo;
+import com.zimbra.cs.convert.ConversionException;
+import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.mime.MimeHandler;
+import com.zimbra.cs.mime.MimeHandlerException;
 
 /**
  * @author schemers
@@ -52,7 +52,7 @@ public class PDFHandler extends MimeHandler {
     }
     
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.mime.MimeHandler#init(javax.activation.DataSource)
+     * @see com.zimbra.cs.mime.MimeHandler#init(javax.activation.DataSource)
      */
     public void init(DataSource source) throws MimeHandlerException {
         super.init(source);
@@ -107,21 +107,21 @@ public class PDFHandler extends MimeHandler {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.mime.MimeHandler#getContent()
+     * @see com.zimbra.cs.mime.MimeHandler#getContent()
      */
     protected String getContentImpl() throws MimeHandlerException {
         return mContent;
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.mime.MimeHandler#convert(com.liquidsys.coco.convert.AttachmentInfo, java.lang.String)
+     * @see com.zimbra.cs.mime.MimeHandler#convert(com.zimbra.cs.convert.AttachmentInfo, java.lang.String)
      */
     public String convert(AttachmentInfo doc, String baseURL) throws IOException, ConversionException {
         throw new UnsupportedOperationException();
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.mime.MimeHandler#doConversion()
+     * @see com.zimbra.cs.mime.MimeHandler#doConversion()
      */
     public boolean doConversion() {
         return false;

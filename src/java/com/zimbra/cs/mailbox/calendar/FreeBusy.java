@@ -1,15 +1,15 @@
-package com.liquidsys.coco.mailbox.calendar;
+package com.zimbra.cs.mailbox.calendar;
 
 import java.util.*;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.mailbox.Appointment;
-import com.liquidsys.coco.mailbox.Invite;
-import com.liquidsys.coco.mailbox.MailServiceException;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.service.*;
+import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.Invite;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.service.*;
 
 /**
  * @author tim

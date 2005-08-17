@@ -1,4 +1,4 @@
-package com.liquidsys.coco.util;
+package com.zimbra.cs.util;
 
 import java.io.UnsupportedEncodingException;
 
@@ -7,10 +7,10 @@ import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.account.Domain;
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.service.ServiceException;
 
 public class AccountUtil {
 

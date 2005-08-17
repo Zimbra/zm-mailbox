@@ -1,4 +1,4 @@
-package com.liquidsys.coco.filter;
+package com.zimbra.cs.filter;
 
 import java.io.IOException;
 import java.util.*;
@@ -18,13 +18,13 @@ import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.mail.MailUtils;
 import org.apache.jsieve.mail.SieveMailException;
 
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.filter.jsieve.ActionFlag;
-import com.liquidsys.coco.filter.jsieve.ActionTag;
-import com.liquidsys.coco.mailbox.*;
-import com.liquidsys.coco.mime.ParsedMessage;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.filter.jsieve.ActionFlag;
+import com.zimbra.cs.filter.jsieve.ActionTag;
+import com.zimbra.cs.mailbox.*;
+import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.LiquidLog;
 
 /**
  * <p>Class LiquidMailAdapter implements a mock MailAdapter for testing purposes.</p>

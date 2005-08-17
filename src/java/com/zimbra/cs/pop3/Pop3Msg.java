@@ -4,9 +4,9 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package com.liquidsys.coco.pop3;
+package com.zimbra.cs.pop3;
 
-import com.liquidsys.coco.mailbox.Message;
+import com.zimbra.cs.mailbox.Message;
 
 
 /**

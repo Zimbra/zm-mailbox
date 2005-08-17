@@ -1,8 +1,8 @@
-package com.liquidsys.coco.client.soap;
+package com.zimbra.cs.client.soap;
 
 import java.util.*;
 
-import com.liquidsys.coco.client.*;
+import com.zimbra.cs.client.*;
 
 public class LmcGetTagResponse extends LmcSoapResponse {
 

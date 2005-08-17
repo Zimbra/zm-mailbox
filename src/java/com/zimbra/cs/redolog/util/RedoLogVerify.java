@@ -4,7 +4,7 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
-package com.liquidsys.coco.redolog.util;
+package com.zimbra.cs.redolog.util;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,12 +16,12 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import com.liquidsys.coco.redolog.logger.FileHeader;
-import com.liquidsys.coco.redolog.logger.FileLogReader;
-import com.liquidsys.coco.redolog.op.CreateMessage;
-import com.liquidsys.coco.redolog.op.RedoableOp;
-import com.liquidsys.coco.util.ByteUtil;
-import com.liquidsys.coco.util.Liquid;
+import com.zimbra.cs.redolog.logger.FileHeader;
+import com.zimbra.cs.redolog.logger.FileLogReader;
+import com.zimbra.cs.redolog.op.CreateMessage;
+import com.zimbra.cs.redolog.op.RedoableOp;
+import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.cs.util.Liquid;
 
 /**
  * @author jhahm

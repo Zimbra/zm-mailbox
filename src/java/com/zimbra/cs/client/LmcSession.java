@@ -1,4 +1,4 @@
-package com.liquidsys.coco.client;
+package com.zimbra.cs.client;
 
 /**
  * Encapsulate the notion of a session, including auth token, session ID, and

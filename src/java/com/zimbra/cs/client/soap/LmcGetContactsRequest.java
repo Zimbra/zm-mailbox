@@ -1,10 +1,10 @@
-package com.liquidsys.coco.client.soap;
+package com.zimbra.cs.client.soap;
 
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.service.mail.MailService;
-import com.liquidsys.coco.client.*;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.client.*;
 import com.zimbra.soap.DomUtil;
 
 public class LmcGetContactsRequest extends LmcSoapRequest {

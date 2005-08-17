@@ -1,4 +1,4 @@
-package com.liquidsys.coco.util;
+package com.zimbra.cs.util;
 
 /**
  * A place to keep commonly-used constants.

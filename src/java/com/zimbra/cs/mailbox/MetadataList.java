@@ -1,15 +1,15 @@
 /*
  * Created on Jul 8, 2005
  */
-package com.liquidsys.coco.mailbox;
+package com.zimbra.cs.mailbox;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.util.BEncoding;
-import com.liquidsys.coco.util.BEncoding.BEncodingException;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.BEncoding;
+import com.zimbra.cs.util.BEncoding.BEncodingException;
 
 /**
  * @author dkarp

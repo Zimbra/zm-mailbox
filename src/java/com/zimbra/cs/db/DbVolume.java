@@ -2,7 +2,7 @@
  * Created on 2005. 6. 9.
  *
  */
-package com.liquidsys.coco.db;
+package com.zimbra.cs.db;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -10,9 +10,9 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.liquidsys.coco.db.DbPool.Connection;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.store.Volume;
+import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.store.Volume;
 
 /**
  * @author jhahm

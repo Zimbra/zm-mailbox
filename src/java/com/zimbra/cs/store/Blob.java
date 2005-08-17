@@ -1,7 +1,7 @@
 /*
  * Created on 2005. 6. 7.
  */
-package com.liquidsys.coco.store;
+package com.zimbra.cs.store;
 
 import java.io.File;
 

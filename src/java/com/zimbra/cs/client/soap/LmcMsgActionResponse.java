@@ -1,4 +1,4 @@
-package com.liquidsys.coco.client.soap;
+package com.zimbra.cs.client.soap;
 
 public class LmcMsgActionResponse extends LmcSoapResponse {
 

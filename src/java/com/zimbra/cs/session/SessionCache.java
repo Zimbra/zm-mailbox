@@ -1,15 +1,15 @@
 /*
  * Created on Sep 15, 2004
  */
-package com.liquidsys.coco.session;
+package com.zimbra.cs.session;
 
 import java.util.*;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.imap.ImapSession;
-import com.liquidsys.coco.util.Liquid;
+import com.zimbra.cs.imap.ImapSession;
+import com.zimbra.cs.util.Liquid;
 
 
 

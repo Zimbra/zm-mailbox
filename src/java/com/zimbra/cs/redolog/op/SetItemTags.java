@@ -1,16 +1,16 @@
 /*
  * Created on 2004. 9. 13.
  */
-package com.liquidsys.coco.redolog.op;
+package com.zimbra.cs.redolog.op;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import com.liquidsys.coco.mailbox.MailItem;
-import com.liquidsys.coco.mailbox.MailItem.TargetConstraint;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author jhahm

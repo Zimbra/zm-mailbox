@@ -5,8 +5,8 @@
 package com.zimbra.qa.unittest;
 
 import junit.framework.TestCase;
-import com.liquidsys.coco.service.util.ParsedItemID;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.service.util.ParsedItemID;
+import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author tim

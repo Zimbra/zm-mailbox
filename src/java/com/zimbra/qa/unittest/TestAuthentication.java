@@ -5,10 +5,10 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.client.LmcSession;
-import com.liquidsys.coco.client.soap.LmcSearchRequest;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.client.LmcSession;
+import com.zimbra.cs.client.soap.LmcSearchRequest;
 import com.zimbra.soap.SoapFaultException;
 
 

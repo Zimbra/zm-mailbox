@@ -4,7 +4,7 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
-package com.liquidsys.coco.redolog;
+package com.zimbra.cs.redolog;
 
 import java.io.DataInput;
 import java.io.DataOutput;

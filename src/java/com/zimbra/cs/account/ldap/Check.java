@@ -1,4 +1,4 @@
-package com.liquidsys.coco.account.ldap;
+package com.zimbra.cs.account.ldap;
 
 import java.net.ConnectException;
 import java.net.InetAddress;
@@ -16,9 +16,9 @@ import javax.naming.NamingException;
 import javax.naming.directory.InvalidSearchFilterException;
 import javax.net.ssl.SSLHandshakeException;
 
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.util.ExceptionToString;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.ExceptionToString;
 
 public class Check {
 

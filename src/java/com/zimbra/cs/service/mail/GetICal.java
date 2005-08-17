@@ -1,4 +1,4 @@
-package com.liquidsys.coco.service.mail;
+package com.zimbra.cs.service.mail;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -8,14 +8,14 @@ import net.fortuna.ical4j.data.CalendarOutputter;
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.ValidationException;
 
-import com.liquidsys.coco.mailbox.Invite;
-import com.liquidsys.coco.mailbox.Message;
-import com.liquidsys.coco.mailbox.MailServiceException;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.Mailbox.OperationContext;
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.stats.StopWatch;
+import com.zimbra.cs.mailbox.Invite;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.soap.LiquidContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
 

@@ -4,7 +4,7 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package com.liquidsys.coco.redolog.logger;
+package com.zimbra.cs.redolog.logger;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

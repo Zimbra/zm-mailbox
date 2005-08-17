@@ -7,19 +7,19 @@ import java.util.Set;
 
 import junit.framework.TestCase;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.db.DbPool;
-import com.liquidsys.coco.db.DbPool.Connection;
-import com.liquidsys.coco.index.LiquidHit;
-import com.liquidsys.coco.index.LiquidQueryResults;
-import com.liquidsys.coco.index.MailboxIndex;
-import com.liquidsys.coco.mailbox.Conversation;
-import com.liquidsys.coco.mailbox.MailItem;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.Message;
-import com.liquidsys.coco.mailbox.Tag;
-import com.liquidsys.coco.service.util.LiquidPerf;
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.index.LiquidHit;
+import com.zimbra.cs.index.LiquidQueryResults;
+import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.mailbox.Conversation;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.service.util.LiquidPerf;
+import com.zimbra.cs.util.LiquidLog;
 
 /**
  * @author bburtin

@@ -1,7 +1,7 @@
 /*
  * Created on Jul 24, 2005
  */
-package com.liquidsys.coco.redolog.op;
+package com.zimbra.cs.redolog.op;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import com.liquidsys.coco.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox;
 
 /**
  * @author dkarp
@@ -39,14 +39,14 @@ public class SetImapUid extends RedoableOp {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.redolog.Redoable#getOperationCode()
+     * @see com.zimbra.cs.redolog.Redoable#getOperationCode()
      */
     public int getOpCode() {
         return OP_SET_IMAP_UID;
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.redolog.Redoable#getRedoContent()
+     * @see com.zimbra.cs.redolog.Redoable#getRedoContent()
      */
     protected String getPrintableData() {
         StringBuffer sb = new StringBuffer();

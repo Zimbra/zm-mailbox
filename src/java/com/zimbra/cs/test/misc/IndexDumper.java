@@ -4,14 +4,14 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
-package com.liquidsys.coco.test.misc;
+package com.zimbra.cs.test.misc;
 
 import java.io.IOException;
 
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.TermEnum;
 
-import com.liquidsys.coco.index.LuceneFields;
+import com.zimbra.cs.index.LuceneFields;
 
 
 /**

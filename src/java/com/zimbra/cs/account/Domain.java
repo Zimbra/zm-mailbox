@@ -3,13 +3,13 @@
  *
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package com.liquidsys.coco.account;
+package com.zimbra.cs.account;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author schemers

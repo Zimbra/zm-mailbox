@@ -1,7 +1,7 @@
 /*
  * Created on Jun 11, 2005
  */
-package com.liquidsys.coco.service.mail;
+package com.zimbra.cs.service.mail;
 
 import java.io.IOException;
 import java.util.Date;
@@ -10,16 +10,16 @@ import java.util.Map;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.convert.ConversionException;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.Message;
-import com.liquidsys.coco.mailbox.Mailbox.OperationContext;
-import com.liquidsys.coco.mime.ParsedMessage;
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.FileUploadServlet;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.util.AccountUtil;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.convert.ConversionException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.FileUploadServlet;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.LiquidContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
 

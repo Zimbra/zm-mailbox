@@ -1,7 +1,7 @@
 /*
  * Created on Apr 18, 2004
  */
-package com.liquidsys.coco.mime;
+package com.zimbra.cs.mime;
 
 import java.util.List;
 

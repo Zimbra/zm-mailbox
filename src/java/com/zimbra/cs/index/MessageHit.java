@@ -1,19 +1,19 @@
 /*
  * Created on Oct 15, 2004
  */
-package com.liquidsys.coco.index;
+package com.zimbra.cs.index;
 
 import java.util.ArrayList;
 
 import org.apache.lucene.document.DateField;
 import org.apache.lucene.document.Document;
 
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.MailItem;
-import com.liquidsys.coco.mailbox.Message;
-import com.liquidsys.coco.mailbox.Tag;
-import com.liquidsys.coco.mime.ParsedAddress;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mime.ParsedAddress;
+import com.zimbra.cs.service.ServiceException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -24,7 +24,7 @@ import org.apache.commons.logging.LogFactory;
  * @author tim
  * 
  * Efficient Read-access to a Message returned from a query. APIs mirror the
- * APIs on com.liquidsys.coco.mailbox.Message, but are read-only. The real
+ * APIs on com.zimbra.cs.mailbox.Message, but are read-only. The real
  * archive.mailbox.Message can be retrieved, but this should only be done if
  * write-access is necessary.
  */
@@ -57,7 +57,7 @@ public class MessageHit extends LiquidHit {
     }
     
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.index.LiquidHit#inTrashOrSpam()
+     * @see com.zimbra.cs.index.LiquidHit#inTrashOrSpam()
      */
     boolean inMailbox() throws ServiceException {
         return getMessage().inMailbox();

@@ -1,4 +1,4 @@
-package com.liquidsys.coco.client.soap;
+package com.zimbra.cs.client.soap;
 
 import java.util.Iterator;
 
@@ -6,8 +6,8 @@ import org.dom4j.Element;
 import org.dom4j.DocumentHelper;
 
 import com.zimbra.soap.DomUtil;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.service.mail.MailService;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.mail.MailService;
 
 
 public class LmcCheckSpellingRequest extends LmcSoapRequest {

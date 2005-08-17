@@ -1,7 +1,7 @@
 /*
  * Created on Sep 29, 2004
  */
-package com.liquidsys.coco.service.mail;
+package com.zimbra.cs.service.mail;
 
 
 import java.io.IOException;
@@ -12,18 +12,18 @@ import javax.mail.internet.MimeMessage;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.mailbox.Flag;
-import com.liquidsys.coco.mailbox.Folder;
-import com.liquidsys.coco.mailbox.MailItem;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.Message;
-import com.liquidsys.coco.mailbox.MailServiceException.NoSuchItemException;
-import com.liquidsys.coco.mailbox.Mailbox.OperationContext;
-import com.liquidsys.coco.mime.ParsedMessage;
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.FileUploadServlet;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.stats.StopWatch;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.FileUploadServlet;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.soap.LiquidContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
 

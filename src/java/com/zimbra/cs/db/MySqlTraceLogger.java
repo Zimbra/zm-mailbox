@@ -1,12 +1,12 @@
-package com.liquidsys.coco.db;
+package com.zimbra.cs.db;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.liquidsys.coco.service.util.LiquidPerf;
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.service.util.LiquidPerf;
+import com.zimbra.cs.util.LiquidLog;
 import com.mysql.jdbc.log.Log;
 
 /**

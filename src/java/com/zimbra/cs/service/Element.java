@@ -1,7 +1,7 @@
 /*
  * Created on Mar 16, 2005
  */
-package com.liquidsys.coco.service;
+package com.zimbra.cs.service;
 
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -16,7 +16,7 @@ import java.util.Set;
 
 import org.dom4j.QName;
 
-import com.liquidsys.coco.util.StringUtil;
+import com.zimbra.cs.util.StringUtil;
 
 /**
  * @author dkarp
@@ -661,14 +661,14 @@ public abstract class Element {
         QName qm = new QName("m", bogusNS);
 
         Element env = new JavaScriptElement(qenv);
-        env.addUniqueElement(qbody).addUniqueElement(com.liquidsys.coco.service.mail.MailService.GET_MSG_RESPONSE)
+        env.addUniqueElement(qbody).addUniqueElement(com.zimbra.cs.service.mail.MailService.GET_MSG_RESPONSE)
            .addUniqueElement(qm).addAttribute("id", 1115).addAttribute("f", "aw").addAttribute("t", "64,67").addAttribute("score", 0.953)
            .addAttribute("s", "Subject of the message has a \"\\\" in it", DISP_CONTENT).addAttribute("mid", "<kashdfgiai67r3wtuwfg@goo.com>", DISP_CONTENT)
            .addElement("mp").addAttribute("part", "TEXT").addAttribute("ct", "multipart/mixed").addAttribute("s", 3718);
         System.out.println(env);
 
         env = new XMLElement(qenv);
-        env.addUniqueElement(qbody).addUniqueElement(com.liquidsys.coco.service.mail.MailService.GET_MSG_RESPONSE)
+        env.addUniqueElement(qbody).addUniqueElement(com.zimbra.cs.service.mail.MailService.GET_MSG_RESPONSE)
            .addUniqueElement(qm).addAttribute("id", 1115).addAttribute("f", "aw").addAttribute("t", "64,67").addAttribute("score", 0.953)
            .addAttribute("s", "Subject of the message has a \"\\\" in it", DISP_CONTENT).addAttribute("mid", "<kashdfgiai67r3wtuwfg@goo.com>", DISP_CONTENT)
            .addElement("mp").addAttribute("part", "TEXT").addAttribute("ct", "multipart/mixed").addAttribute("s", 3718);
@@ -677,7 +677,7 @@ public abstract class Element {
         System.out.println("   qualified name: " + env.getQualifiedName());
         System.out.println("            qname: " + env.getQName());
 
-        Element e = new JavaScriptElement(com.liquidsys.coco.service.mail.MailService.GET_CONTACTS_RESPONSE);
+        Element e = new JavaScriptElement(com.zimbra.cs.service.mail.MailService.GET_CONTACTS_RESPONSE);
         e.addElement("cn");
         e.addElement("cn").addAttribute("id", 256).addAttribute("md", 1111196674000L).addAttribute("l", 7).addAttribute("x", false)
          .addAttribute("workPhone", "(408) 973-0500 x112", DISP_ELEMENT).addAttribute("notes", "These are &\nrandom notes", DISP_ELEMENT)
@@ -687,7 +687,7 @@ public abstract class Element {
          .addAttribute("firstName", "Satish", DISP_ELEMENT).addAttribute("lastName", "Dharmaraj", DISP_ELEMENT);
         System.out.println(e);
 
-        e = new XMLElement(com.liquidsys.coco.service.mail.MailService.GET_CONTACTS_RESPONSE);
+        e = new XMLElement(com.zimbra.cs.service.mail.MailService.GET_CONTACTS_RESPONSE);
         e.addElement("cn");
         e.addElement("cn").addAttribute("id", 256).addAttribute("md", 1111196674000L).addAttribute("l", 7).addAttribute("x", false)
          .addAttribute("workPhone", "(408) 973-0500 x112", DISP_ELEMENT).addAttribute("notes", "These are & random notes", DISP_ELEMENT)

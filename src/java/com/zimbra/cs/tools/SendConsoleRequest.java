@@ -1,7 +1,7 @@
 /*
  * Created on Feb 18, 2005
  */
-package com.liquidsys.coco.tools;
+package com.zimbra.cs.tools;
 
 import java.io.IOException;
 
@@ -16,16 +16,16 @@ import java.net.URL;
 
 import org.apache.commons.cli.Option;
 
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.service.account.AccountService;
-import com.liquidsys.coco.util.Liquid;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.account.AccountService;
+import com.zimbra.cs.util.Liquid;
 import com.zimbra.soap.LiquidContext;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapHttpTransport;
 import com.zimbra.soap.SoapTransport;
-import com.liquidsys.coco.service.mail.*;
-import com.liquidsys.coco.servlet.LiquidServlet;
+import com.zimbra.cs.service.mail.*;
+import com.zimbra.cs.servlet.LiquidServlet;
 
 
 /**

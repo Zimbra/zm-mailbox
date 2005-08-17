@@ -1,4 +1,4 @@
-package com.liquidsys.coco.db;
+package com.zimbra.cs.db;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -6,8 +6,8 @@ import java.sql.SQLException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.liquidsys.coco.db.DbPool.Connection;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.service.ServiceException;
 
 /**
  * <code>DbUtil</code> contains some database utility methods and
@@ -17,7 +17,7 @@ import com.liquidsys.coco.service.ServiceException;
  * and allocate and deallocate database resources.<p>
  * 
  * Query results are read entirely into memory and returned in the form of a
- * {@link com.liquidsys.coco.db.DbResults} object.  This improves concurrency,
+ * {@link com.zimbra.cs.db.DbResults} object.  This improves concurrency,
  * but potentially increases memory consumption.  Code that deals with
  * large result sets should use the JDBC API's directly.
  * 

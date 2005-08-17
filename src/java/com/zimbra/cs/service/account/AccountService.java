@@ -1,7 +1,7 @@
 /*
  * Created on May 26, 2004
  */
-package com.liquidsys.coco.service.account;
+package com.zimbra.cs.service.account;
 
 import org.dom4j.Namespace;
 import org.dom4j.QName;

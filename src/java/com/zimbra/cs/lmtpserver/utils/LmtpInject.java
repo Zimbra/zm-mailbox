@@ -1,4 +1,4 @@
-package com.liquidsys.coco.lmtpserver.utils;
+package com.zimbra.cs.lmtpserver.utils;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,10 +18,10 @@ import org.apache.commons.pool.ObjectPool;
 import org.apache.commons.pool.PoolableObjectFactory;
 import org.apache.commons.pool.impl.GenericObjectPool;
 
-import com.liquidsys.coco.lmtpserver.LmtpProtocolException;
-import com.liquidsys.coco.util.ByteUtil;
-import com.liquidsys.coco.util.Liquid;
-import com.liquidsys.coco.util.ThreadPool;
+import com.zimbra.cs.lmtpserver.LmtpProtocolException;
+import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.cs.util.Liquid;
+import com.zimbra.cs.util.ThreadPool;
 
 public class LmtpInject {
 

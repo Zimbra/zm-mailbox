@@ -1,4 +1,4 @@
-package com.liquidsys.coco.localconfig;
+package com.zimbra.cs.localconfig;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -10,7 +10,7 @@ import org.apache.commons.cli.ParseException;
 
 import org.dom4j.DocumentException;
 
-import com.liquidsys.coco.util.RandomPassword;
+import com.zimbra.cs.util.RandomPassword;
 
 public class Main {
     

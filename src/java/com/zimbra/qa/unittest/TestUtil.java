@@ -5,20 +5,20 @@ import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.account.Config;
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.client.LmcSession;
-import com.liquidsys.coco.client.soap.LmcAuthRequest;
-import com.liquidsys.coco.client.soap.LmcAuthResponse;
-import com.liquidsys.coco.client.soap.LmcSoapClientException;
-import com.liquidsys.coco.mailbox.Flag;
-import com.liquidsys.coco.mailbox.MailItem;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.Message;
-import com.liquidsys.coco.mime.ParsedMessage;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.util.StringUtil;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.client.LmcSession;
+import com.zimbra.cs.client.soap.LmcAuthRequest;
+import com.zimbra.cs.client.soap.LmcAuthResponse;
+import com.zimbra.cs.client.soap.LmcSoapClientException;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.StringUtil;
 import com.zimbra.soap.SoapFaultException;
 
 /**

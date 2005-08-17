@@ -1,4 +1,4 @@
-package com.liquidsys.coco.httpclient;
+package com.zimbra.cs.httpclient;
 
 import java.io.IOException;
 import java.net.InetAddress;

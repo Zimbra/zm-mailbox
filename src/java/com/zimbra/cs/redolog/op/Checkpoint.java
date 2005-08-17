@@ -1,7 +1,7 @@
 /*
  * Created on 2004. 7. 23.
  */
-package com.liquidsys.coco.redolog.op;
+package com.zimbra.cs.redolog.op;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -10,7 +10,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import com.liquidsys.coco.redolog.TransactionId;
+import com.zimbra.cs.redolog.TransactionId;
 
 /**
  * @author jhahm
@@ -46,7 +46,7 @@ public class Checkpoint extends ControlOp {
 	}
 
 	/* (non-Javadoc)
-	 * @see com.liquidsys.coco.redolog.op.RedoableOp#getOperationCode()
+	 * @see com.zimbra.cs.redolog.op.RedoableOp#getOperationCode()
 	 */
 	public int getOpCode() {
 		return OP_CHECKPOINT;

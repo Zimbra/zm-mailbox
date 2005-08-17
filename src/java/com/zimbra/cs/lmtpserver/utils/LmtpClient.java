@@ -1,4 +1,4 @@
-package com.liquidsys.coco.lmtpserver.utils;
+package com.zimbra.cs.lmtpserver.utils;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -10,9 +10,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import com.liquidsys.coco.lmtpserver.LmtpInputStream;
-import com.liquidsys.coco.lmtpserver.LmtpProtocolException;
-import com.liquidsys.coco.localconfig.LC;
+import com.zimbra.cs.lmtpserver.LmtpInputStream;
+import com.zimbra.cs.lmtpserver.LmtpProtocolException;
+import com.zimbra.cs.localconfig.LC;
 
 public class LmtpClient {
 

@@ -1,10 +1,10 @@
 /*
  * Created on 2004. 10. 12.
  */
-package com.liquidsys.coco.mailbox;
+package com.zimbra.cs.mailbox;
 
-import com.liquidsys.coco.mime.Mime;
-import com.liquidsys.coco.store.Blob;
+import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.store.Blob;
 
 /**
  * @author jhahm

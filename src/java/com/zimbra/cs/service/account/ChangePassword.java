@@ -1,15 +1,15 @@
 /*
  * Created on Sep 3, 2004
  */
-package com.liquidsys.coco.service.account;
+package com.zimbra.cs.service.account;
 
 import java.util.Map;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.account.AccountServiceException;
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.LiquidContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
 

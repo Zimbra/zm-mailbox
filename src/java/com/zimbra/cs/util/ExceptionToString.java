@@ -4,7 +4,7 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package com.liquidsys.coco.util;
+package com.zimbra.cs.util;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;

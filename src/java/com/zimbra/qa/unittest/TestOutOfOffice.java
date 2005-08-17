@@ -6,17 +6,17 @@ import java.util.Random;
 
 import junit.framework.TestCase;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.account.ldap.LdapUtil;
-import com.liquidsys.coco.client.LmcSession;
-import com.liquidsys.coco.client.soap.LmcGetPrefsRequest;
-import com.liquidsys.coco.client.soap.LmcGetPrefsResponse;
-import com.liquidsys.coco.client.soap.LmcModifyPrefsRequest;
-import com.liquidsys.coco.db.DbOutOfOffice;
-import com.liquidsys.coco.db.DbPool;
-import com.liquidsys.coco.db.DbPool.Connection;
-import com.liquidsys.coco.mailbox.Mailbox;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.client.LmcSession;
+import com.zimbra.cs.client.soap.LmcGetPrefsRequest;
+import com.zimbra.cs.client.soap.LmcGetPrefsResponse;
+import com.zimbra.cs.client.soap.LmcModifyPrefsRequest;
+import com.zimbra.cs.db.DbOutOfOffice;
+import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.mailbox.Mailbox;
 
 /**
  * @author bburtin

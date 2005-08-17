@@ -1,7 +1,7 @@
 /*
  * Created on Aug 13, 2004
  */
-package com.liquidsys.coco.db;
+package com.zimbra.cs.db;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -21,14 +21,14 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.db.DbPool.Connection;
-import com.liquidsys.coco.mailbox.*;
-import com.liquidsys.coco.mailbox.MailItem.PendingDelete;
-import com.liquidsys.coco.mailbox.MailItem.UnderlyingData;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.store.StoreManager;
-import com.liquidsys.coco.util.Constants;
-import com.liquidsys.coco.util.TimeoutMap;
+import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.mailbox.*;
+import com.zimbra.cs.mailbox.MailItem.PendingDelete;
+import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.util.Constants;
+import com.zimbra.cs.util.TimeoutMap;
 
 
 /**

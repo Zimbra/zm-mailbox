@@ -1,13 +1,13 @@
 /*
  * Created on Oct 15, 2004
  */
-package com.liquidsys.coco.index;
+package com.zimbra.cs.index;
 
 import org.apache.lucene.document.Document;
 
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.MailItem;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.service.ServiceException;
 
 
 /**
@@ -45,7 +45,7 @@ public final class MessagePartHit extends LiquidHit {
     }
     
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.index.LiquidHit#inTrashOrSpam()
+     * @see com.zimbra.cs.index.LiquidHit#inTrashOrSpam()
      */
     boolean inMailbox() throws ServiceException {
         return getMessageResult().inMailbox();

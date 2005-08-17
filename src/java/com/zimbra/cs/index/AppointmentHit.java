@@ -4,11 +4,11 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package com.liquidsys.coco.index;
+package com.zimbra.cs.index;
 
 import org.apache.lucene.document.Document;
 
-import com.liquidsys.coco.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox;
 
 /**
  * @author tim

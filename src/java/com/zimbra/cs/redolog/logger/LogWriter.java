@@ -4,13 +4,13 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
-package com.liquidsys.coco.redolog.logger;
+package com.zimbra.cs.redolog.logger;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 
-import com.liquidsys.coco.redolog.op.RedoableOp;
+import com.zimbra.cs.redolog.op.RedoableOp;
 
 /**
  * @author jhahm

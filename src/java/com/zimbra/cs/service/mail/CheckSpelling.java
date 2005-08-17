@@ -1,15 +1,15 @@
-package com.liquidsys.coco.service.mail;
+package com.zimbra.cs.service.mail;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Map;
 
-import com.liquidsys.coco.localconfig.LC;
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.util.RemoteServerRequest;
-import com.liquidsys.coco.util.LiquidLog;
-import com.liquidsys.coco.util.StringUtil;
+import com.zimbra.cs.localconfig.LC;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.util.RemoteServerRequest;
+import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.StringUtil;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.LiquidContext;
 

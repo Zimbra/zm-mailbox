@@ -5,14 +5,14 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.account.Server;
-import com.liquidsys.coco.client.LmcSession;
-import com.liquidsys.coco.client.soap.LmcMaintainTablesRequest;
-import com.liquidsys.coco.client.soap.LmcMaintainTablesResponse;
-import com.liquidsys.coco.db.DbTableMaintenance;
-import com.liquidsys.coco.db.DbUtil;
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.client.LmcSession;
+import com.zimbra.cs.client.soap.LmcMaintainTablesRequest;
+import com.zimbra.cs.client.soap.LmcMaintainTablesResponse;
+import com.zimbra.cs.db.DbTableMaintenance;
+import com.zimbra.cs.db.DbUtil;
+import com.zimbra.cs.util.LiquidLog;
 
 /**
  * @author bburtin

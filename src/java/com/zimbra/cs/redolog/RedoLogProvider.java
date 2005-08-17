@@ -1,13 +1,13 @@
 /*
  * Created on 2005. 6. 29.
  */
-package com.liquidsys.coco.redolog;
+package com.zimbra.cs.redolog;
 
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.account.Server;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.util.Liquid;
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.Liquid;
+import com.zimbra.cs.util.LiquidLog;
 
 /**
  * @author jhahm

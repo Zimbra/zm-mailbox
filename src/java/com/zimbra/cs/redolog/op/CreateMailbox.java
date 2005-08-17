@@ -1,17 +1,17 @@
 /*
  * Created on 2004. 11. 2.
  */
-package com.liquidsys.coco.redolog.op;
+package com.zimbra.cs.redolog.op;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.mailbox.MailServiceException;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.redolog.RedoException;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.redolog.RedoException;
 
 /**
  * @author jhahm
@@ -28,14 +28,14 @@ public class CreateMailbox extends RedoableOp {
 	}
 
 	/* (non-Javadoc)
-	 * @see com.liquidsys.coco.redolog.op.RedoableOp#getOperationCode()
+	 * @see com.zimbra.cs.redolog.op.RedoableOp#getOperationCode()
 	 */
 	public int getOpCode() {
 		return OP_CREATE_MAILBOX;
 	}
 
 	/* (non-Javadoc)
-	 * @see com.liquidsys.coco.redolog.op.RedoableOp#getPrintableData()
+	 * @see com.zimbra.cs.redolog.op.RedoableOp#getPrintableData()
 	 */
 	protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("account=").append(mAccountId != null ? mAccountId : "");
@@ -43,21 +43,21 @@ public class CreateMailbox extends RedoableOp {
 	}
 
 	/* (non-Javadoc)
-	 * @see com.liquidsys.coco.redolog.op.RedoableOp#serializeData(java.io.DataOutput)
+	 * @see com.zimbra.cs.redolog.op.RedoableOp#serializeData(java.io.DataOutput)
 	 */
 	protected void serializeData(DataOutput out) throws IOException {
 		writeUTF8(out, mAccountId);
 	}
 
 	/* (non-Javadoc)
-	 * @see com.liquidsys.coco.redolog.op.RedoableOp#deserializeData(java.io.DataInput)
+	 * @see com.zimbra.cs.redolog.op.RedoableOp#deserializeData(java.io.DataInput)
 	 */
 	protected void deserializeData(DataInput in) throws IOException {
 		mAccountId = readUTF8(in);
 	}
 
 	/* (non-Javadoc)
-	 * @see com.liquidsys.coco.redolog.op.RedoableOp#redo()
+	 * @see com.zimbra.cs.redolog.op.RedoableOp#redo()
 	 */
 	public void redo() throws Exception {
 		int opMboxId = getMailboxId();

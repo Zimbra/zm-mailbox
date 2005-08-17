@@ -4,10 +4,10 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package com.liquidsys.coco.account.ldap;
+package com.zimbra.cs.account.ldap;
 
 import org.apache.commons.collections.map.LRUMap;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author schemers

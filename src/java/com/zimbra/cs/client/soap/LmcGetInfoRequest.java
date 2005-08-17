@@ -1,4 +1,4 @@
-package com.liquidsys.coco.client.soap;
+package com.zimbra.cs.client.soap;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -6,8 +6,8 @@ import java.util.Iterator;
 import org.dom4j.Element;
 import org.dom4j.DocumentHelper;
 
-import com.liquidsys.coco.service.account.AccountService;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.service.account.AccountService;
+import com.zimbra.cs.service.ServiceException;
 
 
 public class LmcGetInfoRequest extends LmcSoapRequest {

@@ -1,7 +1,7 @@
 /*
  * Created on 2004. 7. 16.
  */
-package com.liquidsys.coco.redolog;
+package com.zimbra.cs.redolog;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,16 +18,16 @@ import org.apache.commons.logging.LogFactory;
 import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
 import EDU.oswego.cs.dl.util.concurrent.Sync;
 
-import com.liquidsys.coco.redolog.logger.FileLogReader;
-import com.liquidsys.coco.redolog.logger.FileLogWriter;
-import com.liquidsys.coco.redolog.logger.LogWriter;
-import com.liquidsys.coco.redolog.op.AbortTxn;
-import com.liquidsys.coco.redolog.op.Checkpoint;
-import com.liquidsys.coco.redolog.op.CommitTxn;
-import com.liquidsys.coco.redolog.op.RedoableOp;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.util.Liquid;
-//import com.liquidsys.coco.redolog.op.Rollover;
+import com.zimbra.cs.redolog.logger.FileLogReader;
+import com.zimbra.cs.redolog.logger.FileLogWriter;
+import com.zimbra.cs.redolog.logger.LogWriter;
+import com.zimbra.cs.redolog.op.AbortTxn;
+import com.zimbra.cs.redolog.op.Checkpoint;
+import com.zimbra.cs.redolog.op.CommitTxn;
+import com.zimbra.cs.redolog.op.RedoableOp;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.Liquid;
+//import com.zimbra.cs.redolog.op.Rollover;
 
 /**
  * @author jhahm

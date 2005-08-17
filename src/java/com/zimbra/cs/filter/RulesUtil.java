@@ -2,7 +2,7 @@
  * Created on Jan 7, 2005
  *
  */
-package com.liquidsys.coco.filter;
+package com.zimbra.cs.filter;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,13 +11,13 @@ import java.net.URL;
 
 import org.dom4j.DocumentException;
 
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.account.AccountService;
-import com.liquidsys.coco.service.admin.AdminService;
-import com.liquidsys.coco.service.mail.MailService;
-import com.liquidsys.coco.servlet.LiquidServlet;
-import com.liquidsys.coco.util.ByteUtil;
-import com.liquidsys.coco.util.Liquid;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.account.AccountService;
+import com.zimbra.cs.service.admin.AdminService;
+import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.servlet.LiquidServlet;
+import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.cs.util.Liquid;
 import com.zimbra.soap.LiquidContext;
 import com.zimbra.soap.SoapHttpTransport;
 import com.zimbra.soap.SoapTransport;

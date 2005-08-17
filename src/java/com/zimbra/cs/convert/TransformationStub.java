@@ -2,12 +2,12 @@
  * Created on Feb 10, 2005
  *
  */
-package com.liquidsys.coco.convert;
+package com.zimbra.cs.convert;
 
 import java.io.IOException;
 import java.util.Map;
 
-import com.liquidsys.coco.localconfig.LC;
+import com.zimbra.cs.localconfig.LC;
 
 /**
  * @author kchen
@@ -25,7 +25,7 @@ public class TransformationStub {
             if ("".equals(className)) {
                 mInstance = new TransformationStub();
             } else {
-                className = "com.liquidsys.coco.convert." + className;
+                className = "com.zimbra.cs.convert." + className;
                 try {
                     mInstance = (TransformationStub) Class.forName(className).newInstance();
                 } catch (InstantiationException e) {

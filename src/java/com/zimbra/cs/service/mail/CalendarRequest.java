@@ -1,12 +1,12 @@
-package com.liquidsys.coco.service.mail;
+package com.zimbra.cs.service.mail;
 
 import javax.mail.internet.MimeMessage;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.Mailbox.OperationContext;
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.ServiceException;
 
 public abstract class CalendarRequest extends SendMsg {
 

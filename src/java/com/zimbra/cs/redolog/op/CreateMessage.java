@@ -1,7 +1,7 @@
 /*
  * Created on 2004. 7. 21.
  */
-package com.liquidsys.coco.redolog.op;
+package com.zimbra.cs.redolog.op;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -11,14 +11,14 @@ import java.io.InputStream;
 
 import javax.mail.internet.MimeMessage;
 
-import com.liquidsys.coco.mailbox.MailServiceException;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.SharedDeliveryContext;
-import com.liquidsys.coco.mime.ParsedMessage;
-import com.liquidsys.coco.redolog.RedoException;
-import com.liquidsys.coco.store.Blob;
-import com.liquidsys.coco.store.StoreManager;
-import com.liquidsys.coco.util.JMSession;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.SharedDeliveryContext;
+import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.redolog.RedoException;
+import com.zimbra.cs.store.Blob;
+import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.util.JMSession;
 
 
 /**

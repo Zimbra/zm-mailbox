@@ -1,11 +1,11 @@
 /*
  * Created on Oct 15, 2004
  */
-package com.liquidsys.coco.index;
+package com.zimbra.cs.index;
 
-import com.liquidsys.coco.mailbox.MailItem;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.service.ServiceException;
 
 
 import java.util.*;

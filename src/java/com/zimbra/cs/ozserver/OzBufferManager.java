@@ -1,12 +1,12 @@
-package com.liquidsys.coco.ozserver;
+package com.zimbra.cs.ozserver;
 
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.TimerTask;
 
-import com.liquidsys.coco.util.Liquid;
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.util.Liquid;
+import com.zimbra.cs.util.LiquidLog;
 
 class OzBufferManager {
     private static List mFreeBuffers = new LinkedList();

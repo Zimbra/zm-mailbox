@@ -1,7 +1,7 @@
 /*
  * Created on Sep 17, 2004
  */
-package com.liquidsys.coco.service.mail;
+package com.zimbra.cs.service.mail;
 
 import java.io.IOException;
 import java.util.*;
@@ -16,26 +16,26 @@ import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.convert.ConversionException;
-import com.liquidsys.coco.mailbox.Flag;
-import com.liquidsys.coco.mailbox.MailItem;
-import com.liquidsys.coco.mailbox.MailServiceException;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.MailServiceException.NoSuchItemException;
-import com.liquidsys.coco.mailbox.Mailbox.OperationContext;
-import com.liquidsys.coco.mailbox.Message;
-import com.liquidsys.coco.mime.ParsedAddress;
-import com.liquidsys.coco.mime.ParsedMessage;
-import com.liquidsys.coco.util.AccountUtil;
-import com.liquidsys.coco.util.ExceptionToString;
-import com.liquidsys.coco.util.JMSession;
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.FileUploadServlet;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.service.mail.ParseMimeMessage.MimeMessageData;
-import com.liquidsys.coco.stats.StopWatch;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.convert.ConversionException;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mime.ParsedAddress;
+import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.ExceptionToString;
+import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.FileUploadServlet;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.mail.ParseMimeMessage.MimeMessageData;
+import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.soap.LiquidContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
 

@@ -1,17 +1,17 @@
 /*
  * Created on May 29, 2005
  */
-package com.liquidsys.coco.service.mail;
+package com.zimbra.cs.service.mail;
 
 import java.util.Map;
 
-import com.liquidsys.coco.mailbox.Flag;
-import com.liquidsys.coco.mailbox.MailItem;
-import com.liquidsys.coco.mailbox.MailItem.TargetConstraint;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.Mailbox.OperationContext;
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.LiquidContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
 

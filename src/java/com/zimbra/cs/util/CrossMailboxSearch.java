@@ -4,7 +4,7 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package com.liquidsys.coco.util;
+package com.zimbra.cs.util;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -34,24 +34,24 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.account.Server;
-import com.liquidsys.coco.httpclient.URLUtil;
-import com.liquidsys.coco.index.HitIdGrouper;
-import com.liquidsys.coco.index.LiquidHit;
-import com.liquidsys.coco.index.LiquidQueryResults;
-import com.liquidsys.coco.index.MailboxIndex;
-import com.liquidsys.coco.index.MultiQueryResults;
-import com.liquidsys.coco.index.ProxiedHit;
-import com.liquidsys.coco.index.ProxiedQueryResults;
-import com.liquidsys.coco.index.SearchParams;
-import com.liquidsys.coco.index.queryparser.ParseException;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.service.admin.AdminService;
-import com.liquidsys.coco.service.util.ParseMailboxID;
-import com.liquidsys.coco.servlet.LiquidServlet;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.index.HitIdGrouper;
+import com.zimbra.cs.index.LiquidHit;
+import com.zimbra.cs.index.LiquidQueryResults;
+import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.index.MultiQueryResults;
+import com.zimbra.cs.index.ProxiedHit;
+import com.zimbra.cs.index.ProxiedQueryResults;
+import com.zimbra.cs.index.SearchParams;
+import com.zimbra.cs.index.queryparser.ParseException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.admin.AdminService;
+import com.zimbra.cs.service.util.ParseMailboxID;
+import com.zimbra.cs.servlet.LiquidServlet;
 import com.zimbra.soap.LiquidContext;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapHttpTransport;

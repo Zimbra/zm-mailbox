@@ -1,4 +1,4 @@
-package com.liquidsys.coco.lmtpserver;
+package com.zimbra.cs.lmtpserver;
 
 import java.io.OutputStream;
 import java.io.PrintWriter;

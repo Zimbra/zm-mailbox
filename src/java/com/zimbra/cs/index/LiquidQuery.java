@@ -1,7 +1,7 @@
 /*
  * Created on Jul 6, 2004
  */
-package com.liquidsys.coco.index;
+package com.zimbra.cs.index;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -22,14 +22,14 @@ import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 
-import com.liquidsys.coco.index.queryparser.LiquidQueryParser;
-import com.liquidsys.coco.index.queryparser.ParseException;
-import com.liquidsys.coco.mailbox.Folder;
-import com.liquidsys.coco.mailbox.MailItem;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.Tag;
-import com.liquidsys.coco.mailbox.MailServiceException.NoSuchItemException;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.index.queryparser.LiquidQueryParser;
+import com.zimbra.cs.index.queryparser.ParseException;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
+import com.zimbra.cs.service.ServiceException;
 
 
 
@@ -284,7 +284,7 @@ public final class LiquidQuery {
         protected static final Pattern sAbsYLastPattern = Pattern.compile(ABSDATE_YLAST_PATTERN);
         protected static final Pattern sRelDatePattern = Pattern.compile(RELDATE_PATTERN);
         
-        public void parseDate(int modifier, String s) throws com.liquidsys.coco.index.queryparser.ParseException
+        public void parseDate(int modifier, String s) throws com.zimbra.cs.index.queryparser.ParseException
         {
             //          * DATE:  absolute-date = mm/dd/yyyy | yyyy/dd/mm  OR
             //          *        relative-date = [+/-]nnnn{minute,hour,day,week,month,year}

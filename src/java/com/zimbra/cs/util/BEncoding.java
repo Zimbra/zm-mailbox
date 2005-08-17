@@ -1,7 +1,7 @@
 /*
  * Created on Jul 7, 2005
  */
-package com.liquidsys.coco.util;
+package com.zimbra.cs.util;
 
 import java.util.*;
 

@@ -3,7 +3,7 @@
  *
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package com.liquidsys.coco.account.ldap;
+package com.zimbra.cs.account.ldap;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,10 +19,10 @@ import javax.naming.directory.DirContext;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 
-import com.liquidsys.coco.account.Config;
-import com.liquidsys.coco.account.Domain;
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author schemers
@@ -53,7 +53,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
     //public abstract int numberOfAccounts();
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Domain#getAllAccounts()
+     * @see com.zimbra.cs.account.Domain#getAllAccounts()
      */
     public List getAllAccounts() throws ServiceException {
         return searchAccounts("(objectclass=liquidAccount)", null, null, true);
@@ -68,7 +68,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
     /*
 	 * (non-Javadoc)
 	 * 
-	 * @see com.liquidsys.coco.account.Provisioning#searchGal(java.lang.String)
+	 * @see com.zimbra.cs.account.Provisioning#searchGal(java.lang.String)
 	 */
     public List searchGal(String n) throws ServiceException {
         // escape user-supplied string
@@ -131,7 +131,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Provisioning#searchGal(java.lang.String)
+     * @see com.zimbra.cs.account.Provisioning#searchGal(java.lang.String)
      */
     private List searchLiquidGal(String n, int maxResults) throws ServiceException {
         String queryExpr = getFilterDef(LIQUID_DEF);

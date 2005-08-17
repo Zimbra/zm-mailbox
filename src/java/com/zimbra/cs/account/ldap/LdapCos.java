@@ -3,13 +3,13 @@
  *
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package com.liquidsys.coco.account.ldap;
+package com.zimbra.cs.account.ldap;
 
 import javax.naming.directory.Attributes;
 
-import com.liquidsys.coco.account.Cos;
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.account.Cos;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author schemers

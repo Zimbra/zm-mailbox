@@ -1,4 +1,4 @@
-package com.liquidsys.coco.client.soap;
+package com.zimbra.cs.client.soap;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -7,7 +7,7 @@ import java.util.Set;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
-import com.liquidsys.coco.service.account.AccountService;
+import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.soap.DomUtil;
 
 

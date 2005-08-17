@@ -1,13 +1,13 @@
 /*
  * Created on Nov 28, 2004
  */
-package com.liquidsys.coco.session;
+package com.zimbra.cs.session;
 
 import java.util.HashMap;
 
-import com.liquidsys.coco.mailbox.MailItem;
-import com.liquidsys.coco.mailbox.Mailbox;
-//import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
+//import com.zimbra.cs.util.LiquidLog;
 
 
 public final class PendingModifications {

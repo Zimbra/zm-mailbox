@@ -3,14 +3,14 @@
  *
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package com.liquidsys.coco.account.ldap;
+package com.zimbra.cs.account.ldap;
 
 import java.util.Set;
 
 import javax.naming.directory.Attributes;
 
-import com.liquidsys.coco.account.Config;
-import com.liquidsys.coco.account.Provisioning;
+import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.Provisioning;
 
 /**
  * @author schemers
@@ -31,21 +31,21 @@ public class LdapConfig extends LdapEntry implements Config {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Config#isInheritedAccountAttr(java.lang.String)
+     * @see com.zimbra.cs.account.Config#isInheritedAccountAttr(java.lang.String)
      */
     public boolean isInheritedAccountAttr(String name) {
         return mInheritableAccountAttrs.contains(name);
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Config#isInheritedDomainAttr(java.lang.String)
+     * @see com.zimbra.cs.account.Config#isInheritedDomainAttr(java.lang.String)
      */
     public boolean isInheritedDomainAttr(String name) {
         return mInheritableDomainAttrs.contains(name);        
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Config#isInheritedServerAttr(java.lang.String)
+     * @see com.zimbra.cs.account.Config#isInheritedServerAttr(java.lang.String)
      */
     public boolean isInheritedServerAttr(String name) {
         return mInheritableServerAttrs.contains(name);

@@ -1,6 +1,6 @@
 /*
  */
-package com.liquidsys.coco.util;
+package com.zimbra.cs.util;
 
 import java.io.File;
 import java.util.Iterator;
@@ -12,10 +12,10 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.NDC;
 import org.apache.log4j.PropertyConfigurator;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author schemers

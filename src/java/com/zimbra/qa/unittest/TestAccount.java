@@ -3,16 +3,16 @@ package com.zimbra.qa.unittest;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.client.LmcSession;
-import com.liquidsys.coco.client.soap.LmcDeleteAccountRequest;
-import com.liquidsys.coco.db.DbMailbox;
-import com.liquidsys.coco.db.DbResults;
-import com.liquidsys.coco.db.DbUtil;
-import com.liquidsys.coco.localconfig.LC;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.client.LmcSession;
+import com.zimbra.cs.client.soap.LmcDeleteAccountRequest;
+import com.zimbra.cs.db.DbMailbox;
+import com.zimbra.cs.db.DbResults;
+import com.zimbra.cs.db.DbUtil;
+import com.zimbra.cs.localconfig.LC;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.util.LiquidLog;
 
 import junit.framework.TestCase;
 

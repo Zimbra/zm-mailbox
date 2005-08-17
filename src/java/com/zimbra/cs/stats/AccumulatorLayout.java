@@ -1,4 +1,4 @@
-package com.liquidsys.coco.stats;
+package com.zimbra.cs.stats;
 
 import org.apache.log4j.Layout;
 import org.apache.log4j.spi.LoggingEvent;

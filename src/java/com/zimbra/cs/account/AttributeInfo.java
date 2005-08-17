@@ -1,4 +1,4 @@
-package com.liquidsys.coco.account;
+package com.zimbra.cs.account;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -7,8 +7,8 @@ import java.util.regex.Pattern;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.LiquidLog;
 
 public class AttributeInfo {
     

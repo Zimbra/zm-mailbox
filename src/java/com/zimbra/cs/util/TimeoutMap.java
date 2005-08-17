@@ -1,4 +1,4 @@
-package com.liquidsys.coco.util;
+package com.zimbra.cs.util;
 
 import java.util.Collection;
 import java.util.HashMap;

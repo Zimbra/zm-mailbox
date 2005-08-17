@@ -4,7 +4,7 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
-package com.liquidsys.coco.redolog.logger;
+package com.zimbra.cs.redolog.logger;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -18,13 +18,13 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.redolog.RedoLogManager;
-import com.liquidsys.coco.redolog.RolloverManager;
-import com.liquidsys.coco.redolog.TransactionId;
-import com.liquidsys.coco.redolog.op.RedoableOp;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.util.Liquid;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.redolog.RedoLogManager;
+import com.zimbra.cs.redolog.RolloverManager;
+import com.zimbra.cs.redolog.TransactionId;
+import com.zimbra.cs.redolog.op.RedoableOp;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.Liquid;
 
 /**
  * @author jhahm
@@ -100,7 +100,7 @@ public class FileLogWriter implements LogWriter {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.redolog.LogWriter#getSize()
+     * @see com.zimbra.cs.redolog.LogWriter#getSize()
      */
     public long getSize() {
         synchronized (mLock) {
@@ -109,7 +109,7 @@ public class FileLogWriter implements LogWriter {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.redolog.logger.LogWriter#getLastLogTime()
+     * @see com.zimbra.cs.redolog.logger.LogWriter#getLastLogTime()
      */
     public long getLastLogTime() {
         synchronized (mLock) {
@@ -118,42 +118,42 @@ public class FileLogWriter implements LogWriter {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.redolog.logger.LogWriter#isEmpty()
+     * @see com.zimbra.cs.redolog.logger.LogWriter#isEmpty()
      */
     public boolean isEmpty() throws IOException {
         return getSize() <= FileHeader.HEADER_LEN;
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.redolog.logger.LogWriter#exists()
+     * @see com.zimbra.cs.redolog.logger.LogWriter#exists()
      */
     public boolean exists() {
         return mFile.exists();
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.redolog.LogWriter#getAbsolutePath()
+     * @see com.zimbra.cs.redolog.LogWriter#getAbsolutePath()
      */
     public String getAbsolutePath() {
         return mFile.getAbsolutePath();
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.redolog.LogWriter#renameTo()
+     * @see com.zimbra.cs.redolog.LogWriter#renameTo()
      */
     public boolean renameTo(File dest) {
         return mFile.renameTo(dest);
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.redolog.logger.LogWriter#delete()
+     * @see com.zimbra.cs.redolog.logger.LogWriter#delete()
      */
     public boolean delete() {
         return mFile.delete();
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.redolog.LogWriter#open()
+     * @see com.zimbra.cs.redolog.LogWriter#open()
      */
     public synchronized void open() throws IOException {
         synchronized (mLock) {
@@ -184,7 +184,7 @@ public class FileLogWriter implements LogWriter {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.redolog.LogWriter#close()
+     * @see com.zimbra.cs.redolog.LogWriter#close()
      */
     public synchronized void close() throws IOException {
         stopFsyncThread();

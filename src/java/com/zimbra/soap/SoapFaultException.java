@@ -1,7 +1,7 @@
 package com.zimbra.soap;
 
 
-import com.liquidsys.coco.service.Element;
+import com.zimbra.cs.service.Element;
 
 public class SoapFaultException extends Exception {
 

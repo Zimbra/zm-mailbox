@@ -1,4 +1,4 @@
-package com.liquidsys.coco.stats;
+package com.zimbra.cs.stats;
 
 public class 
 Counter extends Accumulator 

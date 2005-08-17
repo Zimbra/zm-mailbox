@@ -1,12 +1,12 @@
-package com.liquidsys.coco.client.soap;
+package com.zimbra.cs.client.soap;
 
 import org.dom4j.Element;
 import org.dom4j.DocumentHelper;
 
 import com.zimbra.soap.DomUtil;
-import com.liquidsys.coco.service.account.AccountService;
-import com.liquidsys.coco.service.admin.AdminService;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.service.account.AccountService;
+import com.zimbra.cs.service.admin.AdminService;
+import com.zimbra.cs.service.ServiceException;
 
 public class LmcChangePasswordRequest extends LmcSoapRequest {
 

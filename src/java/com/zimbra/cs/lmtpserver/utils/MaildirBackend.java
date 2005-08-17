@@ -1,4 +1,4 @@
-package com.liquidsys.coco.lmtpserver.utils;
+package com.zimbra.cs.lmtpserver.utils;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,10 +12,10 @@ import java.util.Random;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.lmtpserver.LmtpStatus;
-import com.liquidsys.coco.lmtpserver.LmtpAddress;
-import com.liquidsys.coco.lmtpserver.LmtpBackend;
-import com.liquidsys.coco.lmtpserver.LmtpEnvelope;
+import com.zimbra.cs.lmtpserver.LmtpStatus;
+import com.zimbra.cs.lmtpserver.LmtpAddress;
+import com.zimbra.cs.lmtpserver.LmtpBackend;
+import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 
 public class MaildirBackend implements LmtpBackend {
 

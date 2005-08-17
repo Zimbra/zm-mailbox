@@ -1,6 +1,6 @@
 /*
  */
-package com.liquidsys.coco.service.util;
+package com.zimbra.cs.service.util;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -17,7 +17,7 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.methods.MultipartPostMethod;
 
-import com.liquidsys.coco.util.StringUtil;
+import com.zimbra.cs.util.StringUtil;
 
 /**
  * Sends a request over HTTP to a remote server and parses the multipart

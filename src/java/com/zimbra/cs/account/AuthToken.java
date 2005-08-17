@@ -1,7 +1,7 @@
 /*
  * Created on May 30, 2004
  */
-package com.liquidsys.coco.account;
+package com.zimbra.cs.account;
 
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -16,9 +16,9 @@ import org.apache.commons.collections.map.LRUMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.util.BlobMetaData;
-import com.liquidsys.coco.util.BlobMetaDataEncodingException;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.BlobMetaData;
+import com.zimbra.cs.util.BlobMetaDataEncodingException;
 
 /**
  * @author schemers

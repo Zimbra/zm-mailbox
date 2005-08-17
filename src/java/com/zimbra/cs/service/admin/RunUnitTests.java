@@ -1,12 +1,12 @@
-package com.liquidsys.coco.service.admin;
+package com.zimbra.cs.service.admin;
 
 import java.io.ByteArrayOutputStream;
 import java.util.Map;
 
 import junit.framework.TestResult;
 
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.util.LiquidLog;
 import com.zimbra.qa.unittest.LiquidSuite;
 import com.zimbra.soap.LiquidContext;
 import com.zimbra.soap.WriteOpDocumentHandler;

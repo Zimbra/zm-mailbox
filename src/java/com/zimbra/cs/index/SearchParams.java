@@ -5,9 +5,9 @@
  * Not used everywhere, need to convert all code to use this....
  * 
  */
-package com.liquidsys.coco.index;
+package com.zimbra.cs.index;
 
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.service.ServiceException;
 
 
 /**

@@ -2,7 +2,7 @@
  * Created on Jan 11, 2005
  *
  */
-package com.liquidsys.coco.filter;
+package com.zimbra.cs.filter;
 
 import org.apache.jsieve.SieveException;
 

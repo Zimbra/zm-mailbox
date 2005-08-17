@@ -4,7 +4,7 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
-package com.liquidsys.coco.mime.handler;
+package com.zimbra.cs.mime.handler;
 
 import java.io.IOException;
 
@@ -13,11 +13,11 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.lucene.document.Document;
 
-import com.liquidsys.coco.convert.AttachmentInfo;
-import com.liquidsys.coco.convert.ConversionException;
-import com.liquidsys.coco.mime.MimeHandler;
-import com.liquidsys.coco.mime.MimeHandlerException;
-import com.liquidsys.coco.util.JMSession;
+import com.zimbra.cs.convert.AttachmentInfo;
+import com.zimbra.cs.convert.ConversionException;
+import com.zimbra.cs.mime.MimeHandler;
+import com.zimbra.cs.mime.MimeHandlerException;
+import com.zimbra.cs.util.JMSession;
 
 
 /**
@@ -39,13 +39,13 @@ public class MessageRFC822Handler extends MimeHandler {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.mime.MimeHandler#populate(org.apache.lucene.document.Document)
+     * @see com.zimbra.cs.mime.MimeHandler#populate(org.apache.lucene.document.Document)
      */
     public void addFields(Document doc) throws MimeHandlerException {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.mime.MimeHandler#getContent()
+     * @see com.zimbra.cs.mime.MimeHandler#getContent()
      */
     protected String getContentImpl() throws MimeHandlerException {
         try {
@@ -63,7 +63,7 @@ public class MessageRFC822Handler extends MimeHandler {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.mime.MimeHandler#convert(com.liquidsys.coco.convert.AttachmentInfo, java.lang.String)
+     * @see com.zimbra.cs.mime.MimeHandler#convert(com.zimbra.cs.convert.AttachmentInfo, java.lang.String)
      */
     public String convert(AttachmentInfo doc, String baseURL) throws IOException, ConversionException {
         throw new IllegalStateException("no need to convert message/rfc822 content");

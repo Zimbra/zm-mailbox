@@ -1,18 +1,18 @@
 /*
  * Created on Aug 12, 2004
  */
-package com.liquidsys.coco.mailbox;
+package com.zimbra.cs.mailbox;
 
 import java.io.IOException;
 import java.util.*;
 
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.db.DbMailItem;
-import com.liquidsys.coco.redolog.op.IndexItem;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.session.PendingModifications.Change;
-import com.liquidsys.coco.store.StoreManager;
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.redolog.op.IndexItem;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.util.LiquidLog;
 
 /**
  * @author dkarp

@@ -1,7 +1,7 @@
 /*
  * Created on Oct 28, 2004
  */
-package com.liquidsys.coco.db;
+package com.zimbra.cs.db;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -15,14 +15,14 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import com.liquidsys.coco.db.DbPool.Connection;
-import com.liquidsys.coco.mailbox.MailServiceException;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.Metadata;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.util.Config;
-import com.liquidsys.coco.util.LiquidLog;
-import com.liquidsys.coco.util.StringUtil;
+import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.Config;
+import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.StringUtil;
 
 /**
  * @author kchen

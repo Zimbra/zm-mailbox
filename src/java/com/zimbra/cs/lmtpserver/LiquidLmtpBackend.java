@@ -1,4 +1,4 @@
-package com.liquidsys.coco.lmtpserver;
+package com.zimbra.cs.lmtpserver;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -11,22 +11,22 @@ import javax.mail.MessagingException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.filter.RuleManager;
-import com.liquidsys.coco.localconfig.DebugConfig;
-import com.liquidsys.coco.mailbox.Flag;
-import com.liquidsys.coco.mailbox.MailItem;
-import com.liquidsys.coco.mailbox.MailServiceException;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.Message;
-import com.liquidsys.coco.mailbox.Notification;
-import com.liquidsys.coco.mailbox.SharedDeliveryContext;
-import com.liquidsys.coco.mime.ParsedMessage;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.store.Blob;
-import com.liquidsys.coco.store.StoreManager;
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.filter.RuleManager;
+import com.zimbra.cs.localconfig.DebugConfig;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Notification;
+import com.zimbra.cs.mailbox.SharedDeliveryContext;
+import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.store.Blob;
+import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.util.LiquidLog;
 
 public class LiquidLmtpBackend implements LmtpBackend {
 	private static Log mLog = LogFactory.getLog(LiquidLmtpBackend.class);

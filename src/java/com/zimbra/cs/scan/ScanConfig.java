@@ -1,9 +1,9 @@
-package com.liquidsys.coco.scan;
+package com.zimbra.cs.scan;
 
-import com.liquidsys.coco.account.Config;
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.account.Server;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.service.ServiceException;
 
 public class ScanConfig {
 

@@ -3,7 +3,7 @@
  *
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package com.liquidsys.coco.account.ldap;
+package com.zimbra.cs.account.ldap;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,12 +41,12 @@ import javax.naming.directory.SearchResult;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.account.*;
-import com.liquidsys.coco.localconfig.LC;
-import com.liquidsys.coco.mime.MimeTypeInfo;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.util.Liquid;
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.account.*;
+import com.zimbra.cs.localconfig.LC;
+import com.zimbra.cs.mime.MimeTypeInfo;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.Liquid;
+import com.zimbra.cs.util.LiquidLog;
 
 /**
  * @author schemers
@@ -189,7 +189,7 @@ public class LdapProvisioning extends Provisioning {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Provisioning#getMimeType(java.lang.String)
+     * @see com.zimbra.cs.account.Provisioning#getMimeType(java.lang.String)
      */
     public synchronized MimeTypeInfo getMimeType(String name) throws ServiceException {
         DirContext ctxt = null;
@@ -233,7 +233,7 @@ public class LdapProvisioning extends Provisioning {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Provisioning#getObjectType(java.lang.String)
+     * @see com.zimbra.cs.account.Provisioning#getObjectType(java.lang.String)
      */
     public synchronized List getObjectTypes() throws ServiceException {
         DirContext ctxt = null;
@@ -315,7 +315,7 @@ public class LdapProvisioning extends Provisioning {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Provisioning#getDomainByName(java.lang.String)
+     * @see com.zimbra.cs.account.Provisioning#getDomainByName(java.lang.String)
      */
     public synchronized Account getAccountByName(String emailAddress) throws ServiceException {
         
@@ -367,7 +367,7 @@ public class LdapProvisioning extends Provisioning {
     }
     
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Provisioning#createAccount(java.lang.String, java.lang.String, java.lang.String, java.util.Map)
+     * @see com.zimbra.cs.account.Provisioning#createAccount(java.lang.String, java.lang.String, java.lang.String, java.util.Map)
      */
     public Account createAccount(String emailAddress, String password, Map acctAttrs) throws ServiceException {
 
@@ -633,14 +633,14 @@ public class LdapProvisioning extends Provisioning {
     }
     
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Provisioning#getAllDomains()
+     * @see com.zimbra.cs.account.Provisioning#getAllDomains()
      */
     public List getAllAdminAccounts() throws ServiceException {
         return searchAccounts("(liquidIsAdminAccount=TRUE)", null, null, true);
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Provisioning#searchAccounts(java.lang.String)
+     * @see com.zimbra.cs.account.Provisioning#searchAccounts(java.lang.String)
      */
     public ArrayList searchAccounts(String query, String returnAttrs[], final String sortAttr, final boolean sortAscending)  
         throws ServiceException
@@ -649,7 +649,7 @@ public class LdapProvisioning extends Provisioning {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Provisioning#searchAccounts(java.lang.String)
+     * @see com.zimbra.cs.account.Provisioning#searchAccounts(java.lang.String)
      */
     ArrayList searchAccounts(String query, String returnAttrs[], final String sortAttr, final boolean sortAscending, String base)  
         throws ServiceException
@@ -756,7 +756,7 @@ public class LdapProvisioning extends Provisioning {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Account#modifyAccountStatus(java.lang.String)
+     * @see com.zimbra.cs.account.Account#modifyAccountStatus(java.lang.String)
      */
     public void modifyAccountStatus(Account acct, String newStatus) throws ServiceException {
         HashMap attrs = new HashMap();
@@ -781,7 +781,7 @@ public class LdapProvisioning extends Provisioning {
 
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Account#createAlias(java.lang.String)
+     * @see com.zimbra.cs.account.Account#createAlias(java.lang.String)
      */
     public void addAlias(Account acct, String alias) throws ServiceException {
         alias = alias.toLowerCase().trim();
@@ -822,7 +822,7 @@ public class LdapProvisioning extends Provisioning {
     }
     
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Account#createAlias(java.lang.String)
+     * @see com.zimbra.cs.account.Account#createAlias(java.lang.String)
      */
     public void removeAlias(Account acct, String alias) throws ServiceException {
         
@@ -887,7 +887,7 @@ public class LdapProvisioning extends Provisioning {
     /*
      * (non-Javadoc)
      * 
-     * @see com.liquidsys.coco.account.Provisioning#createDomain(java.lang.String,
+     * @see com.zimbra.cs.account.Provisioning#createDomain(java.lang.String,
      *      java.util.Map)
      */
     public Domain createDomain(String name, Map domainAttrs) throws ServiceException {
@@ -1002,14 +1002,14 @@ public class LdapProvisioning extends Provisioning {
     }
     
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Provisioning#getDomainById(java.lang.String)
+     * @see com.zimbra.cs.account.Provisioning#getDomainById(java.lang.String)
      */
     public synchronized Domain getDomainById(String liquidId) throws ServiceException {
         return getDomainById(liquidId, null);
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Provisioning#getDomainByName(java.lang.String)
+     * @see com.zimbra.cs.account.Provisioning#getDomainByName(java.lang.String)
      */
     public synchronized Domain getDomainByName(String name) throws ServiceException {
         LdapDomain domain = (LdapDomain) sDomainCache.get(name);
@@ -1022,7 +1022,7 @@ public class LdapProvisioning extends Provisioning {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Provisioning#getAllDomains()
+     * @see com.zimbra.cs.account.Provisioning#getAllDomains()
      */
     public List getAllDomains() throws ServiceException {
         ArrayList result = new ArrayList();
@@ -1072,7 +1072,7 @@ public class LdapProvisioning extends Provisioning {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Provisioning#createCos(java.lang.String, java.util.Map)
+     * @see com.zimbra.cs.account.Provisioning#createCos(java.lang.String, java.util.Map)
      */
     public Cos createCos(String name, Map cosAttrs) throws ServiceException {
         name = name.toLowerCase().trim();
@@ -1109,7 +1109,7 @@ public class LdapProvisioning extends Provisioning {
     }
     
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Provisioning#deleteAccountById(java.lang.String)
+     * @see com.zimbra.cs.account.Provisioning#deleteAccountById(java.lang.String)
      */
     public void renameCos(String liquidId, String newName) throws ServiceException {
         LdapCos cos = (LdapCos) getCosById(liquidId);
@@ -1167,7 +1167,7 @@ public class LdapProvisioning extends Provisioning {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Provisioning#getCOSById(java.lang.String)
+     * @see com.zimbra.cs.account.Provisioning#getCOSById(java.lang.String)
      */
     private synchronized Cos getCosById(String liquidId, DirContext ctxt ) throws ServiceException {
         if (liquidId == null)
@@ -1183,14 +1183,14 @@ public class LdapProvisioning extends Provisioning {
     }
     
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Provisioning#getCOSById(java.lang.String)
+     * @see com.zimbra.cs.account.Provisioning#getCOSById(java.lang.String)
      */
     public synchronized Cos getCosById(String liquidId) throws ServiceException {
         return getCosById(liquidId, null);
     }    
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Provisioning#getCOSByName(java.lang.String)
+     * @see com.zimbra.cs.account.Provisioning#getCOSByName(java.lang.String)
      */
     public synchronized Cos getCosByName(String name) throws ServiceException {
         LdapCos cos = (LdapCos) sCosCache.get(name);
@@ -1217,7 +1217,7 @@ public class LdapProvisioning extends Provisioning {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Provisioning#getAllCOS()
+     * @see com.zimbra.cs.account.Provisioning#getAllCOS()
      */
     public List getAllCos() throws ServiceException {
         ArrayList result = new ArrayList();
@@ -1242,7 +1242,7 @@ public class LdapProvisioning extends Provisioning {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Provisioning#deleteAccountById(java.lang.String)
+     * @see com.zimbra.cs.account.Provisioning#deleteAccountById(java.lang.String)
      */
     public void deleteAccount(String liquidId) throws ServiceException {
         LdapAccount acc = (LdapAccount) getAccountById(liquidId);
@@ -1267,7 +1267,7 @@ public class LdapProvisioning extends Provisioning {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Provisioning#deleteAccountById(java.lang.String)
+     * @see com.zimbra.cs.account.Provisioning#deleteAccountById(java.lang.String)
      */
     public void renameAccount(String liquidId, String newName) throws ServiceException {
 
@@ -1373,7 +1373,7 @@ public class LdapProvisioning extends Provisioning {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Provisioning#createServer(java.lang.String, java.util.Map)
+     * @see com.zimbra.cs.account.Provisioning#createServer(java.lang.String, java.util.Map)
      */
     public Server createServer(String name, Map serverAttrs) throws ServiceException {
         name = name.toLowerCase().trim();
@@ -1471,7 +1471,7 @@ public class LdapProvisioning extends Provisioning {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Provisioning#getCOSByName(java.lang.String)
+     * @see com.zimbra.cs.account.Provisioning#getCOSByName(java.lang.String)
      */
     public synchronized Server getServerByName(String name) throws ServiceException {
         return getServerByName(name, false);
@@ -1531,7 +1531,7 @@ public class LdapProvisioning extends Provisioning {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Provisioning#purgeServer(java.lang.String)
+     * @see com.zimbra.cs.account.Provisioning#purgeServer(java.lang.String)
      */
     public void deleteServer(String liquidId) throws ServiceException {
         LdapServer s = (LdapServer) getServerById(liquidId);
@@ -1744,7 +1744,7 @@ public class LdapProvisioning extends Provisioning {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Provisioning#getLocalServer()
+     * @see com.zimbra.cs.account.Provisioning#getLocalServer()
      */
     public synchronized Server getLocalServer() throws ServiceException {
         String hostname = LC.liquid_server_hostname.value();
@@ -1778,14 +1778,14 @@ public class LdapProvisioning extends Provisioning {
     }
     
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Account#authAccount(java.lang.String)
+     * @see com.zimbra.cs.account.Account#authAccount(java.lang.String)
      */
     public void authAccount(Account acct, String password) throws ServiceException {
         authAccount(acct, password, true);
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Account#authAccount(java.lang.String)
+     * @see com.zimbra.cs.account.Account#authAccount(java.lang.String)
      */
     private void authAccount(Account acct, String password, boolean checkPasswordPolicy) throws ServiceException {
         acct.reload();
@@ -1832,7 +1832,7 @@ public class LdapProvisioning extends Provisioning {
             Config config = Provisioning.getInstance().getConfig();
             long freq = config.getTimeInterval(
                     Provisioning.A_liquidLastLogonTimestampFrequency,
-                    com.liquidsys.coco.util.Config.D_LIQUID_LAST_LOGON_TIMESTAMP_FREQUENCY);
+                    com.zimbra.cs.util.Config.D_LIQUID_LAST_LOGON_TIMESTAMP_FREQUENCY);
             long current = System.currentTimeMillis();
             if (current - freq >= lastLogon.getTime()) {
                 HashMap attrs = new HashMap();
@@ -1942,7 +1942,7 @@ public class LdapProvisioning extends Provisioning {
      }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Account#changePassword(java.lang.String, java.lang.String)
+     * @see com.zimbra.cs.account.Account#changePassword(java.lang.String, java.lang.String)
      */
     public void changePassword(Account acct, String currentPassword, String newPassword) throws ServiceException {
         authAccount(acct, currentPassword, false);
@@ -2022,14 +2022,14 @@ public class LdapProvisioning extends Provisioning {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Account#setPassword(java.lang.String)
+     * @see com.zimbra.cs.account.Account#setPassword(java.lang.String)
      */
     public void setPassword(Account acct, String newPassword) throws ServiceException {
         setPassword(acct, newPassword, true, true);
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Account#setPassword(java.lang.String)
+     * @see com.zimbra.cs.account.Account#setPassword(java.lang.String)
      */
     void setPassword(Account acct, String newPassword, boolean enforcePolicy, boolean checkMustChange) throws ServiceException {
 

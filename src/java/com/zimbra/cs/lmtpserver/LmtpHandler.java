@@ -1,4 +1,4 @@
-package com.liquidsys.coco.lmtpserver;
+package com.zimbra.cs.lmtpserver;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,8 +11,8 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.tcpserver.ProtocolHandler;
-import com.liquidsys.coco.util.Config;
+import com.zimbra.cs.tcpserver.ProtocolHandler;
+import com.zimbra.cs.util.Config;
 
 public class LmtpHandler extends ProtocolHandler {
 

@@ -1,7 +1,7 @@
 /*
  * Created on May 26, 2004
  */
-package com.liquidsys.coco.service.mail;
+package com.zimbra.cs.service.mail;
 
 
 import org.dom4j.Namespace;

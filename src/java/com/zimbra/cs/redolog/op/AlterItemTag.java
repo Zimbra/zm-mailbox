@@ -1,16 +1,16 @@
 /*
  * Created on 2004. 7. 21.
  */
-package com.liquidsys.coco.redolog.op;
+package com.zimbra.cs.redolog.op;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import com.liquidsys.coco.mailbox.MailItem;
-import com.liquidsys.coco.mailbox.MailItem.TargetConstraint;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.service.ServiceException;
 
 
 /**
@@ -42,14 +42,14 @@ public class AlterItemTag extends RedoableOp {
 	}
 
 	/* (non-Javadoc)
-	 * @see com.liquidsys.coco.redolog.Redoable#getOperationCode()
+	 * @see com.zimbra.cs.redolog.Redoable#getOperationCode()
 	 */
 	public int getOpCode() {
 		return OP_ALTER_ITEM_TAG;
 	}
 
 	/* (non-Javadoc)
-	 * @see com.liquidsys.coco.redolog.Redoable#getRedoContent()
+	 * @see com.zimbra.cs.redolog.Redoable#getRedoContent()
 	 */
 	protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("id=");

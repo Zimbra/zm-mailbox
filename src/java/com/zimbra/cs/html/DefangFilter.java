@@ -1,4 +1,4 @@
-package com.liquidsys.coco.html;
+package com.zimbra.cs.html;
 
 /* 
  * (C) Copyright 2002-2004, Andy Clark.  All rights reserved.

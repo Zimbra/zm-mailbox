@@ -1,4 +1,4 @@
-package com.liquidsys.coco.scan;
+package com.zimbra.cs.scan;
 
 import java.io.BufferedOutputStream;
 import java.io.FileInputStream;
@@ -14,9 +14,9 @@ import java.util.regex.Pattern;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.tcpserver.TcpServerInputStream;
-import com.liquidsys.coco.util.ByteUtil;
-import com.liquidsys.coco.util.Liquid;
+import com.zimbra.cs.tcpserver.TcpServerInputStream;
+import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.cs.util.Liquid;
 
 public class ClamScanner extends Scanner {
     

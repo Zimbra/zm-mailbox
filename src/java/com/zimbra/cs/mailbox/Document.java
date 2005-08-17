@@ -1,17 +1,17 @@
 /*
  * Created on Aug 23, 2004
  */
-package com.liquidsys.coco.mailbox;
+package com.zimbra.cs.mailbox;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 
-import com.liquidsys.coco.db.DbMailItem;
-import com.liquidsys.coco.mime.Mime;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.store.StoreManager;
+import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.store.StoreManager;
 
 
 /**

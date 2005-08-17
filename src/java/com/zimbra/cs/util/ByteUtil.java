@@ -1,7 +1,7 @@
 /*
  * Created on Apr 18, 2004
  */
-package com.liquidsys.coco.util;
+package com.zimbra.cs.util;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

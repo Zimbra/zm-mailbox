@@ -1,4 +1,4 @@
-package com.liquidsys.coco.tcpserver;
+package com.zimbra.cs.tcpserver;
 
 import EDU.oswego.cs.dl.util.concurrent.ThreadFactory;
 

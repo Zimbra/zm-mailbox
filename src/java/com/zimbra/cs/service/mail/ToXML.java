@@ -1,7 +1,7 @@
 /*
  * Created on 2004. 9. 15.
  */
-package com.liquidsys.coco.service.mail;
+package com.zimbra.cs.service.mail;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,21 +29,21 @@ import net.fortuna.ical4j.model.Parameter;
 import net.fortuna.ical4j.model.property.Organizer;
 import net.fortuna.ical4j.model.property.Attendee;
 
-import com.liquidsys.coco.html.HtmlDefang;
-import com.liquidsys.coco.mailbox.*;
-import com.liquidsys.coco.mailbox.calendar.IcalXmlStrMap;
-import com.liquidsys.coco.mailbox.calendar.ParsedDateTime;
-import com.liquidsys.coco.mailbox.calendar.ParsedDuration;
-import com.liquidsys.coco.mailbox.calendar.Recurrence;
-import com.liquidsys.coco.mime.MPartInfo;
-import com.liquidsys.coco.mime.Mime;
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.service.mail.EmailElementCache.CacheNode;
-import com.liquidsys.coco.service.util.ParsedItemID;
-import com.liquidsys.coco.session.PendingModifications.Change;
-import com.liquidsys.coco.util.ByteUtil;
-import com.liquidsys.coco.util.StringUtil;
+import com.zimbra.cs.html.HtmlDefang;
+import com.zimbra.cs.mailbox.*;
+import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
+import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
+import com.zimbra.cs.mailbox.calendar.ParsedDuration;
+import com.zimbra.cs.mailbox.calendar.Recurrence;
+import com.zimbra.cs.mime.MPartInfo;
+import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.mail.EmailElementCache.CacheNode;
+import com.zimbra.cs.service.util.ParsedItemID;
+import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.cs.util.StringUtil;
 
 
 /**

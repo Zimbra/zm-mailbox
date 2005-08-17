@@ -1,7 +1,7 @@
 /*
  * Created on Nov 8, 2004
  */
-package com.liquidsys.coco.filter.jsieve;
+package com.zimbra.cs.filter.jsieve;
 
 import org.apache.jsieve.mail.Action;
 

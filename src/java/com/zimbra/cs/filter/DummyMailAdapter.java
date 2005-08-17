@@ -2,7 +2,7 @@
  * Created on Apr 11, 2005
  *
  */
-package com.liquidsys.coco.filter;
+package com.zimbra.cs.filter;
 
 import java.util.ArrayList;
 import java.util.Collections;

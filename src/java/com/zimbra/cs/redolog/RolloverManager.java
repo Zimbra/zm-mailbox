@@ -4,7 +4,7 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
-package com.liquidsys.coco.redolog;
+package com.zimbra.cs.redolog;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -20,11 +20,11 @@ import java.util.TimeZone;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.db.DbPool;
-import com.liquidsys.coco.db.DbRedologSequence;
-import com.liquidsys.coco.db.DbPool.Connection;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.util.FileUtil;
+import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbRedologSequence;
+import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.FileUtil;
 
 /**
  * @author jhahm

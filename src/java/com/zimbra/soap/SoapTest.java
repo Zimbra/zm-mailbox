@@ -16,9 +16,9 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.dom4j.DocumentException;
 
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.util.ByteUtil;
-import com.liquidsys.coco.util.Liquid;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.cs.util.Liquid;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapHttpTransport;
 

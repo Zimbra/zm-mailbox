@@ -1,4 +1,4 @@
-package com.liquidsys.coco.client.soap;
+package com.zimbra.cs.client.soap;
 
 import java.io.IOException;
 
@@ -8,10 +8,10 @@ import org.apache.commons.logging.LogFactory;
 import EDU.oswego.cs.dl.util.concurrent.BoundedLinkedQueue;
 import EDU.oswego.cs.dl.util.concurrent.PooledExecutor;
 
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.client.*;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.client.*;
 import com.zimbra.soap.SoapFaultException;
-import com.liquidsys.coco.util.Liquid;
+import com.zimbra.cs.util.Liquid;
 
 public class TestAuth implements Runnable {
 

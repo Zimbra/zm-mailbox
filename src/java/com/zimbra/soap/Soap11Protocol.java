@@ -7,8 +7,8 @@ package com.zimbra.soap;
 import org.dom4j.Namespace;
 import org.dom4j.QName;
 
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.ServiceException;
 
 /**
  * Interface to Soap 1.1 Protocol
@@ -64,7 +64,7 @@ class Soap11Protocol extends SoapProtocol {
     }
 
     /* (non-Javadoc)
-     * @see com.zimbra.soap.SoapProtocol#soapFault(com.liquidsys.coco.service.ServiceException)
+     * @see com.zimbra.soap.SoapProtocol#soapFault(com.zimbra.cs.service.ServiceException)
      */
     public Element soapFault(ServiceException e) {
         String reason = e.getMessage();

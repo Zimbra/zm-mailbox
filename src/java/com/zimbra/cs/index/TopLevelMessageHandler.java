@@ -1,7 +1,7 @@
 /*
  * Created on 2004. 5. 27.
  */
-package com.liquidsys.coco.index;
+package com.zimbra.cs.index;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Iterator;
@@ -18,12 +18,12 @@ import org.apache.lucene.document.DateField;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
-import com.liquidsys.coco.mime.Mime;
-import com.liquidsys.coco.mime.MimeHandler;
-import com.liquidsys.coco.mime.ParsedMessage;
-import com.liquidsys.coco.mime.TnefExtractor;
-import com.liquidsys.coco.object.ObjectHandlerException;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.mime.MimeHandler;
+import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.mime.TnefExtractor;
+import com.zimbra.cs.object.ObjectHandlerException;
+import com.zimbra.cs.service.ServiceException;
 
 
 

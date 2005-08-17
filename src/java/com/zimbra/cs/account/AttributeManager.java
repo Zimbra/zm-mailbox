@@ -1,4 +1,4 @@
-package com.liquidsys.coco.account;
+package com.zimbra.cs.account;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -11,8 +11,8 @@ import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.LiquidLog;
 
 public class AttributeManager {
 
@@ -132,7 +132,7 @@ public class AttributeManager {
         if (clazz == null)
             return null;
         if (clazz.indexOf('.') == -1)
-            clazz = "com.liquidsys.coco.account.callback." + clazz;
+            clazz = "com.zimbra.cs.account.callback." + clazz;
         try {
             cb = (AttributeCallback) Class.forName(clazz).newInstance();
         } catch (Exception e) {

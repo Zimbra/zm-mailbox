@@ -3,7 +3,7 @@
  *
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package com.liquidsys.coco.account;
+package com.zimbra.cs.account;
 
 /**
  * @author schemers

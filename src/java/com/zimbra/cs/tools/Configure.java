@@ -1,17 +1,17 @@
 /*
  * Created on 2004. 7. 12.
  */
-package com.liquidsys.coco.tools;
+package com.zimbra.cs.tools;
 
 import java.util.Iterator;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import com.liquidsys.coco.db.DbConfig;
-import com.liquidsys.coco.db.DbPool;
-import com.liquidsys.coco.db.DbPool.Connection;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.db.DbConfig;
+import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author jhahm

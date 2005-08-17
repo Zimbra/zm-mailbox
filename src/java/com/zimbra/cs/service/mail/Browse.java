@@ -1,19 +1,19 @@
 /*
  * Created on May 26, 2004
  */
-package com.liquidsys.coco.service.mail;
+package com.zimbra.cs.service.mail;
 
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.liquidsys.coco.mailbox.BrowseResult;
-import com.liquidsys.coco.mailbox.BrowseResult.DomainItem;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.stats.StopWatch;
+import com.zimbra.cs.mailbox.BrowseResult;
+import com.zimbra.cs.mailbox.BrowseResult.DomainItem;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.LiquidContext;
 

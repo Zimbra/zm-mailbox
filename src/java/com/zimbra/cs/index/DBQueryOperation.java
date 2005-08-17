@@ -1,7 +1,7 @@
 /*
  * Created on Oct 29, 2004
  */
-package com.liquidsys.coco.index;
+package com.zimbra.cs.index;
 
 import java.io.IOException;
 import java.util.AbstractList;
@@ -16,16 +16,16 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.db.DbMailItem;
-import com.liquidsys.coco.db.DbPool;
-import com.liquidsys.coco.db.DbMailItem.SearchConstraints;
-import com.liquidsys.coco.db.DbMailItem.SearchResult;
-import com.liquidsys.coco.db.DbPool.Connection;
-import com.liquidsys.coco.mailbox.Folder;
-import com.liquidsys.coco.mailbox.MailItem;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.Tag;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbMailItem.SearchConstraints;
+import com.zimbra.cs.db.DbMailItem.SearchResult;
+import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.service.ServiceException;
 
 
 /************************************************************************
@@ -145,7 +145,7 @@ class DBQueryOperation extends QueryOperation
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.index.QueryOperation#ensureSpamTrashSetting(com.liquidsys.coco.mailbox.Mailbox)
+     * @see com.zimbra.cs.index.QueryOperation#ensureSpamTrashSetting(com.zimbra.cs.mailbox.Mailbox)
      */
     QueryOperation ensureSpamTrashSetting(Mailbox mbox, boolean includeTrash, boolean includeSpam) throws ServiceException
     {
@@ -168,7 +168,7 @@ class DBQueryOperation extends QueryOperation
     }
     
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.index.QueryOperation#doneWithSearchResults()
+     * @see com.zimbra.cs.index.QueryOperation#doneWithSearchResults()
      */
     public void doneWithSearchResults() throws ServiceException {
         if (mLuceneOp != null) {
@@ -371,7 +371,7 @@ class DBQueryOperation extends QueryOperation
     }
     
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.index.QueryOperation#peekNext()
+     * @see com.zimbra.cs.index.QueryOperation#peekNext()
      */
     public LiquidHit peekNext() throws ServiceException
     {
@@ -415,7 +415,7 @@ class DBQueryOperation extends QueryOperation
     
     
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.index.QueryOperation#getNext()
+     * @see com.zimbra.cs.index.QueryOperation#getNext()
      */
     public LiquidHit getNext() throws ServiceException {
         atStart = false;
@@ -724,7 +724,7 @@ class DBQueryOperation extends QueryOperation
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.index.QueryOperation#prepare(com.liquidsys.coco.mailbox.Mailbox, com.liquidsys.coco.index.LiquidQueryResultsImpl, com.liquidsys.coco.index.MailboxIndex)
+     * @see com.zimbra.cs.index.QueryOperation#prepare(com.zimbra.cs.mailbox.Mailbox, com.zimbra.cs.index.LiquidQueryResultsImpl, com.zimbra.cs.index.MailboxIndex)
      */
     protected void prepare(Mailbox mbx, LiquidQueryResultsImpl res, MailboxIndex mbidx) throws ServiceException, IOException
     {
@@ -737,7 +737,7 @@ class DBQueryOperation extends QueryOperation
     }
     
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.index.QueryOperation#optimize(com.liquidsys.coco.mailbox.Mailbox)
+     * @see com.zimbra.cs.index.QueryOperation#optimize(com.zimbra.cs.mailbox.Mailbox)
      */
     QueryOperation optimize(Mailbox mbox) throws ServiceException {
         return this;
@@ -836,7 +836,7 @@ class DBQueryOperation extends QueryOperation
     }
     
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.index.QueryOperation#combineOps(com.liquidsys.coco.index.QueryOperation, boolean)
+     * @see com.zimbra.cs.index.QueryOperation#combineOps(com.zimbra.cs.index.QueryOperation, boolean)
      */
     protected QueryOperation combineOps(QueryOperation other, boolean union) 
     {
@@ -1038,7 +1038,7 @@ class DBQueryOperation extends QueryOperation
     }
     
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.index.QueryOperation#inheritedGetExecutionCost()
+     * @see com.zimbra.cs.index.QueryOperation#inheritedGetExecutionCost()
      */
     protected int inheritedGetExecutionCost()
     {

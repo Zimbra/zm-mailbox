@@ -1,7 +1,7 @@
 /*
  * Created on Jun 13, 2004
  */
-package com.liquidsys.coco.mailbox;
+package com.zimbra.cs.mailbox;
 
 import java.io.IOException;
 import java.lang.ref.SoftReference;
@@ -18,36 +18,36 @@ import net.fortuna.ical4j.model.property.Version;
 
 import org.apache.commons.collections.map.LRUMap;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.account.AccountServiceException;
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.db.DbMailItem;
-import com.liquidsys.coco.db.DbMailbox;
-import com.liquidsys.coco.db.DbPool;
-import com.liquidsys.coco.db.DbMailItem.SearchResult;
-import com.liquidsys.coco.db.DbPool.Connection;
-import com.liquidsys.coco.index.LiquidQuery;
-import com.liquidsys.coco.index.LiquidQueryResults;
-import com.liquidsys.coco.index.LuceneFields;
-import com.liquidsys.coco.index.MailboxIndex;
-import com.liquidsys.coco.index.queryparser.ParseException;
-import com.liquidsys.coco.localconfig.DebugConfig;
-import com.liquidsys.coco.mailbox.BrowseResult.DomainItem;
-import com.liquidsys.coco.mailbox.MailItem.TargetConstraint;
-import com.liquidsys.coco.mailbox.Note.Rectangle;
-import com.liquidsys.coco.mailbox.calendar.FreeBusy;
-import com.liquidsys.coco.mailbox.calendar.ICalTimeZone;
-import com.liquidsys.coco.mime.ParsedMessage;
-import com.liquidsys.coco.redolog.op.*;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.session.PendingModifications;
-import com.liquidsys.coco.session.SessionCache;
-import com.liquidsys.coco.session.PendingModifications.Change;
-import com.liquidsys.coco.stats.StopWatch;
-import com.liquidsys.coco.store.Blob;
-import com.liquidsys.coco.store.StoreManager;
-import com.liquidsys.coco.store.Volume;
-import com.liquidsys.coco.util.*;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.db.DbMailbox;
+import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbMailItem.SearchResult;
+import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.index.LiquidQuery;
+import com.zimbra.cs.index.LiquidQueryResults;
+import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.index.queryparser.ParseException;
+import com.zimbra.cs.localconfig.DebugConfig;
+import com.zimbra.cs.mailbox.BrowseResult.DomainItem;
+import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
+import com.zimbra.cs.mailbox.Note.Rectangle;
+import com.zimbra.cs.mailbox.calendar.FreeBusy;
+import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
+import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.redolog.op.*;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.session.PendingModifications;
+import com.zimbra.cs.session.SessionCache;
+import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.stats.StopWatch;
+import com.zimbra.cs.store.Blob;
+import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.store.Volume;
+import com.zimbra.cs.util.*;
 
 
 /**
@@ -3366,7 +3366,7 @@ public class Mailbox {
     }
 
     /**
-     * @see com.liquidsys.coco.mailbox.Mailbox#beginSharedDelivery()
+     * @see com.zimbra.cs.mailbox.Mailbox#beginSharedDelivery()
      */
     public void endSharedDelivery() {
         synchronized (mBackupSharedDelivCoord) {

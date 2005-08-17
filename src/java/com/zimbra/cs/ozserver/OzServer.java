@@ -1,4 +1,4 @@
-package com.liquidsys.coco.ozserver;
+package com.zimbra.cs.ozserver;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.util.LiquidLog;
 
 import EDU.oswego.cs.dl.util.concurrent.PooledExecutor;
 import EDU.oswego.cs.dl.util.concurrent.ThreadFactory;

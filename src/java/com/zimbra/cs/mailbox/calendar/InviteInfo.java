@@ -1,13 +1,13 @@
 /**
  * 
  */
-package com.liquidsys.coco.mailbox.calendar;
+package com.zimbra.cs.mailbox.calendar;
 
 import net.fortuna.ical4j.model.property.Method;
 
-import com.liquidsys.coco.mailbox.Invite;
-import com.liquidsys.coco.mailbox.Metadata;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.mailbox.Invite;
+import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.service.ServiceException;
 
 public class InviteInfo implements Comparable {
     private int mMsgId; // ID of the MESSAGE which this invite was originally encoded in 

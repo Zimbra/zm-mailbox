@@ -1,7 +1,7 @@
 /*
  * Created on 2004. 6. 30.
  */
-package com.liquidsys.coco.mime;
+package com.zimbra.cs.mime;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -29,15 +29,15 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
-import com.liquidsys.coco.convert.ConversionException;
-import com.liquidsys.coco.index.TopLevelMessageHandler;
-import com.liquidsys.coco.index.LuceneFields;
-import com.liquidsys.coco.localconfig.DebugConfig;
-import com.liquidsys.coco.object.ObjectHandlerException;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.util.ByteUtil;
-import com.liquidsys.coco.util.JMSession;
-import com.liquidsys.coco.util.StringUtil;
+import com.zimbra.cs.convert.ConversionException;
+import com.zimbra.cs.index.TopLevelMessageHandler;
+import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.localconfig.DebugConfig;
+import com.zimbra.cs.object.ObjectHandlerException;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.StringUtil;
 
 /**
  * @author jhahm

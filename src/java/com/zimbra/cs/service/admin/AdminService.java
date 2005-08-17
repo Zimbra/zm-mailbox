@@ -1,7 +1,7 @@
 /*
  * Created on May 26, 2004
  */
-package com.liquidsys.coco.service.admin;
+package com.zimbra.cs.service.admin;
 
 
 import java.util.HashMap;
@@ -11,9 +11,9 @@ import java.util.Map;
 import org.dom4j.Namespace;
 import org.dom4j.QName;
 
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.util.StringUtil;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.StringUtil;
 import com.zimbra.soap.DocumentDispatcher;
 import com.zimbra.soap.DocumentService;
 

@@ -1,6 +1,6 @@
-package com.liquidsys.coco.client.soap;
+package com.zimbra.cs.client.soap;
 
-import com.liquidsys.coco.client.*;
+import com.zimbra.cs.client.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -15,10 +15,10 @@ import com.zimbra.soap.DomUtil;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapHttpTransport;
 import com.zimbra.soap.SoapParseException;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.service.mail.MailService;
-import com.liquidsys.coco.service.admin.AdminService;
-import com.liquidsys.coco.util.StringUtil;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.service.admin.AdminService;
+import com.zimbra.cs.util.StringUtil;
 
 public abstract class LmcSoapRequest {
 
@@ -95,7 +95,7 @@ public abstract class LmcSoapRequest {
             if (sDumpXML) {
             	sLog.info("Request:" + DomUtil.toString(requestXML, true));
             }
-            com.liquidsys.coco.service.Element requestElt = com.liquidsys.coco.service.Element.XMLElement.convertDOM(requestXML);
+            com.zimbra.cs.service.Element requestElt = com.zimbra.cs.service.Element.XMLElement.convertDOM(requestXML);
 			//System.out.println("Sending over request " + DomUtil.toString(requestXML, true));
 			Element responseXML = trans.invoke(requestElt).toXML();
             if (sDumpXML) {

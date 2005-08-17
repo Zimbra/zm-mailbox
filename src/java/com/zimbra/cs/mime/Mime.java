@@ -1,7 +1,7 @@
 /*
  * Created on Apr 17, 2004
  */
-package com.liquidsys.coco.mime;
+package com.zimbra.cs.mime;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;

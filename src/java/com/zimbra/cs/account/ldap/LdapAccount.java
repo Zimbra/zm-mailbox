@@ -2,7 +2,7 @@
  * Created on Sep 23, 2004
  *
  */
-package com.liquidsys.coco.account.ldap;
+package com.zimbra.cs.account.ldap;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -10,13 +10,13 @@ import java.util.Map;
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.account.Cos;
-import com.liquidsys.coco.account.Domain;
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.account.WellKnownTimeZone;
-import com.liquidsys.coco.mailbox.calendar.ICalTimeZone;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Cos;
+import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.WellKnownTimeZone;
+import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
+import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author schemers
@@ -118,7 +118,7 @@ public class LdapAccount extends LdapNamedEntry implements Account {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Account#getCOS()
+     * @see com.zimbra.cs.account.Account#getCOS()
      */
     public Cos getCOS() throws ServiceException {
         // TODO: caching? assume getCOSById does caching?
@@ -130,7 +130,7 @@ public class LdapAccount extends LdapNamedEntry implements Account {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Account#getPrefs()
+     * @see com.zimbra.cs.account.Account#getPrefs()
      */
     public Map getPrefs() throws ServiceException {
         HashMap prefs = new HashMap();
@@ -151,7 +151,7 @@ public class LdapAccount extends LdapNamedEntry implements Account {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Account#getPrefs()
+     * @see com.zimbra.cs.account.Account#getPrefs()
      */
     public Map getAttrs(boolean prefsOnly, boolean applyCos) throws ServiceException {
         HashMap attrs = new HashMap();
@@ -180,7 +180,7 @@ public class LdapAccount extends LdapNamedEntry implements Account {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.Account#isCorrectHost()
+     * @see com.zimbra.cs.account.Account#isCorrectHost()
      */
     public boolean isCorrectHost() throws ServiceException{
         String target    = getAttr(Provisioning.A_liquidMailHost);

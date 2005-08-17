@@ -1,4 +1,4 @@
-package com.liquidsys.coco.mime;
+package com.zimbra.cs.mime;
 
 import java.io.IOException;
 
@@ -13,7 +13,7 @@ import net.freeutils.tnef.TNEFInputStream;
 import net.freeutils.tnef.TNEFUtils;
 import net.freeutils.tnef.mime.TNEFMime;
 
-import com.liquidsys.coco.util.JMSession;
+import com.zimbra.cs.util.JMSession;
 
 
 /**

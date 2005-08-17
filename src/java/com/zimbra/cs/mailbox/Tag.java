@@ -1,15 +1,15 @@
 /*
  * Created on Jul 12, 2004
  */
-package com.liquidsys.coco.mailbox;
+package com.zimbra.cs.mailbox;
 
 import java.util.Iterator;
 import java.util.List;
 
-import com.liquidsys.coco.db.DbMailItem;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.session.PendingModifications.Change;
-import com.liquidsys.coco.util.StringUtil;
+import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.util.StringUtil;
 
 /**
  * @author dkarp

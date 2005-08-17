@@ -1,24 +1,24 @@
 /*
  * Created on Oct 15, 2004
  */
-package com.liquidsys.coco.index;
+package com.zimbra.cs.index;
 
 import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 
-import com.liquidsys.coco.mailbox.Conversation;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.MailItem;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.mailbox.Conversation;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.service.ServiceException;
 
 
 /**
      * @author tim
      * 
      * Indirect Conversation result. Efficient Read-access to a
-     * com.liquidsys.coco.mailbox.Conversation object returned from a query.
+     * com.zimbra.cs.mailbox.Conversation object returned from a query.
      * 
      * This class may have a real Conversation under it, or it might just have a
      * Lucene Document, or something else -- the accessor APIs in this class
@@ -41,7 +41,7 @@ import com.liquidsys.coco.service.ServiceException;
         }
         
         /* (non-Javadoc)
-         * @see com.liquidsys.coco.index.LiquidHit#inTrashOrSpam()
+         * @see com.zimbra.cs.index.LiquidHit#inTrashOrSpam()
          */
         boolean inMailbox() throws ServiceException {
             // if we have a ConvHit, then we must have at least one matching message hit
@@ -163,7 +163,7 @@ import com.liquidsys.coco.service.ServiceException;
         // ..... etc ......
 
         /**
-         * Returns the real com.liquidsys.coco.mailbox.Conversation object. Only use this if you
+         * Returns the real com.zimbra.cs.mailbox.Conversation object. Only use this if you
          * need write access to the Conversation.
          * 
          * Depending on the type of query that was executed, this may or may not

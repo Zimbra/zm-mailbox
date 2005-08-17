@@ -2,7 +2,7 @@
  * Created on Apr 8, 2004
  *
  */
-package com.liquidsys.coco.util;
+package com.zimbra.cs.util;
 
 import java.text.ParseException;
 import java.util.HashMap;

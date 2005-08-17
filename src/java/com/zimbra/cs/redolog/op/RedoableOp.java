@@ -1,7 +1,7 @@
 /*
  * Created on 2004. 7. 21.
  */
-package com.liquidsys.coco.redolog.op;
+package com.zimbra.cs.redolog.op;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
@@ -13,16 +13,16 @@ import java.io.IOException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.db.DbPool;
-import com.liquidsys.coco.db.DbPool.Connection;
-import com.liquidsys.coco.mailbox.Mailbox.OperationContext;
-import com.liquidsys.coco.redolog.RedoLogManager;
-import com.liquidsys.coco.redolog.RedoLogProvider;
-import com.liquidsys.coco.redolog.TransactionId;
-import com.liquidsys.coco.redolog.Version;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.util.ByteUtil;
-import com.liquidsys.coco.util.Liquid;
+import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.redolog.RedoLogManager;
+import com.zimbra.cs.redolog.RedoLogProvider;
+import com.zimbra.cs.redolog.TransactionId;
+import com.zimbra.cs.redolog.Version;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.cs.util.Liquid;
 
 /**
  * @author jhahm

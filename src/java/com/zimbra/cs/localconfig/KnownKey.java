@@ -1,4 +1,4 @@
-package com.liquidsys.coco.localconfig;
+package com.zimbra.cs.localconfig;
 
 import java.util.HashMap;
 import java.util.Map;

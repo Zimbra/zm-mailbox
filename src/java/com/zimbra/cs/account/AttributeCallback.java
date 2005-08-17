@@ -1,8 +1,8 @@
-package com.liquidsys.coco.account;
+package com.zimbra.cs.account;
 
 import java.util.Map;
 
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author schemers

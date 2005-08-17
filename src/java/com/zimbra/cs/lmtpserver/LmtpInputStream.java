@@ -1,10 +1,10 @@
-package com.liquidsys.coco.lmtpserver;
+package com.zimbra.cs.lmtpserver;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import com.liquidsys.coco.tcpserver.TcpServerInputStream;
+import com.zimbra.cs.tcpserver.TcpServerInputStream;
 
 public class LmtpInputStream extends TcpServerInputStream {
 	public LmtpInputStream(InputStream is) {

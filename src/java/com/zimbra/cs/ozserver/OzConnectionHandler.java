@@ -1,4 +1,4 @@
-package com.liquidsys.coco.ozserver;
+package com.zimbra.cs.ozserver;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -7,7 +7,7 @@ import java.nio.channels.SocketChannel;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.util.LiquidLog;
 
 import EDU.oswego.cs.dl.util.concurrent.SynchronizedInt;
 

@@ -1,19 +1,19 @@
 /*
  * Created on Apr 30, 2005
  */
-package com.liquidsys.coco.imap;
+package com.zimbra.cs.imap;
 
 import java.io.IOException;
 import java.text.DateFormat;
 import java.util.*;
 
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.mailbox.*;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.session.PendingModifications;
-import com.liquidsys.coco.session.Session;
-import com.liquidsys.coco.session.PendingModifications.Change;
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.*;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.session.PendingModifications;
+import com.zimbra.cs.session.Session;
+import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.util.LiquidLog;
 
 /**
  * @author dkarp

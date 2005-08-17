@@ -1,7 +1,7 @@
 /*
  * Created on 2004. 10. 12.
  */
-package com.liquidsys.coco.store;
+package com.zimbra.cs.store;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,10 +9,10 @@ import java.io.InputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.mailbox.MailboxBlob;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.util.Liquid;
+import com.zimbra.cs.mailbox.MailboxBlob;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.Liquid;
 
 /**
  * @author jhahm

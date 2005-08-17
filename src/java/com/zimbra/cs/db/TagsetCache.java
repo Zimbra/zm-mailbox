@@ -1,4 +1,4 @@
-package com.liquidsys.coco.db;
+package com.zimbra.cs.db;
 
 import java.util.Collection;
 import java.util.HashSet;

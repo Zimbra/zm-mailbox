@@ -1,15 +1,15 @@
 /*
  * Created on Sep 7, 2004
  */
-package com.liquidsys.coco.mailbox;
+package com.zimbra.cs.mailbox;
 
-import com.liquidsys.coco.db.DbMailItem;
-import com.liquidsys.coco.index.Indexer;
-import com.liquidsys.coco.localconfig.DebugConfig;
-import com.liquidsys.coco.redolog.op.IndexItem;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.session.PendingModifications.Change;
-import com.liquidsys.coco.util.StringUtil;
+import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.index.Indexer;
+import com.zimbra.cs.localconfig.DebugConfig;
+import com.zimbra.cs.redolog.op.IndexItem;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.util.StringUtil;
 
 
 /**

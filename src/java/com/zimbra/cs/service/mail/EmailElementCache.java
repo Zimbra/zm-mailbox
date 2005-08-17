@@ -1,16 +1,16 @@
 /*
  * Created on Jun 14, 2004
  */
-package com.liquidsys.coco.service.mail;
+package com.zimbra.cs.service.mail;
 
 import java.util.HashMap;
 import java.util.Set;
 
 import javax.mail.internet.InternetAddress;
 
-import com.liquidsys.coco.mime.ParsedAddress;
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.util.StringUtil;
+import com.zimbra.cs.mime.ParsedAddress;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.util.StringUtil;
 
 /**
  * @author schemers

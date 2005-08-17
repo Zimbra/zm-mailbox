@@ -1,4 +1,4 @@
-package com.liquidsys.coco.client.soap;
+package com.zimbra.cs.client.soap;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,9 +12,9 @@ import org.dom4j.Element;
 import org.dom4j.DocumentHelper;
 
 import com.zimbra.soap.DomUtil;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.client.*;
-import com.liquidsys.coco.service.mail.MailService;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.client.*;
+import com.zimbra.cs.service.mail.MailService;
 
 public class LmcSendMsgRequest extends LmcSoapRequest {
 

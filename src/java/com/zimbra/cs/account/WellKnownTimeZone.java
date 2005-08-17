@@ -1,9 +1,9 @@
 /*
  * Created on 2005. 7. 11.
  */
-package com.liquidsys.coco.account;
+package com.zimbra.cs.account;
 
-import com.liquidsys.coco.mailbox.calendar.ICalTimeZone;
+import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 
 /**
  * @author jhahm

@@ -4,12 +4,12 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package com.liquidsys.coco.util;
+package com.zimbra.cs.util;
 
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.account.Server;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.util.Config;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.Config;
 
 /**
  * @author schemers

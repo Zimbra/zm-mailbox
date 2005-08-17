@@ -1,4 +1,4 @@
-package com.liquidsys.coco.lmtpserver;
+package com.zimbra.cs.lmtpserver;
 
 /**
  * Java fluff for an enum for the 2 things in:

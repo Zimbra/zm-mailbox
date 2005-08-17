@@ -1,5 +1,5 @@
 
-package com.liquidsys.coco.client;
+package com.zimbra.cs.client;
 
 
 public class LmcBrowseData {

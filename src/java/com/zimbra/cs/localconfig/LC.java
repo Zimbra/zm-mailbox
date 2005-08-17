@@ -1,4 +1,4 @@
-package com.liquidsys.coco.localconfig;
+package com.zimbra.cs.localconfig;
 
 import java.io.File;
 import java.net.InetAddress;

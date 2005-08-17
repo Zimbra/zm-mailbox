@@ -1,7 +1,7 @@
 /*
  * Created on Jul 7, 2004
  */
-package com.liquidsys.coco.db;
+package com.zimbra.cs.db;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -18,7 +18,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.util.Config;
+import com.zimbra.cs.util.Config;
 
 
 

@@ -2,14 +2,14 @@
  * Created on Nov 11, 2004
  *
  */
-package com.liquidsys.coco.filter.jsieve;
+package com.zimbra.cs.filter.jsieve;
 
 import org.apache.jsieve.Arguments;
 import org.apache.jsieve.SieveException;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.AbstractTest;
 
-import com.liquidsys.coco.filter.LiquidMailAdapter;
+import com.zimbra.cs.filter.LiquidMailAdapter;
 
 /**
  * @author kchen

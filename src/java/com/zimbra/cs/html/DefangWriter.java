@@ -1,5 +1,5 @@
 
-package com.liquidsys.coco.html;
+package com.zimbra.cs.html;
 import org.cyberneko.html.filters.Writer;
 
 /**

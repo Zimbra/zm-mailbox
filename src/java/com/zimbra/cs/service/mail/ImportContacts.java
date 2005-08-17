@@ -1,4 +1,4 @@
-package com.liquidsys.coco.service.mail;
+package com.zimbra.cs.service.mail;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -10,15 +10,15 @@ import java.util.Map;
 
 import org.apache.commons.fileupload.FileItem;
 
-import com.liquidsys.coco.mailbox.Contact;
-import com.liquidsys.coco.mailbox.ContactCSV;
-import com.liquidsys.coco.mailbox.MailServiceException;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.ContactCSV.ParseException;
-import com.liquidsys.coco.mailbox.Mailbox.OperationContext;
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.FileUploadServlet;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.ContactCSV;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.ContactCSV.ParseException;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.FileUploadServlet;
+import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.LiquidContext;
 

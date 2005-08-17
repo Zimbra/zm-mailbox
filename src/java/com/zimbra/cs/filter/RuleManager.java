@@ -1,7 +1,7 @@
 /*
  * Created on Oct 28, 2004
  */
-package com.liquidsys.coco.filter;
+package com.zimbra.cs.filter;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -17,17 +17,17 @@ import org.apache.jsieve.SieveFactory;
 import org.apache.jsieve.parser.generated.Node;
 import org.apache.jsieve.parser.generated.ParseException;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.mailbox.Flag;
-import com.liquidsys.coco.mailbox.MailItem;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.Message;
-import com.liquidsys.coco.mailbox.SharedDeliveryContext;
-import com.liquidsys.coco.mime.ParsedMessage;
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.SharedDeliveryContext;
+import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.LiquidLog;
 
 /**
  * @author kchen

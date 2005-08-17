@@ -2,13 +2,13 @@ package com.zimbra.qa.unittest;
 
 import junit.framework.TestCase;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.db.DbMailItem;
-import com.liquidsys.coco.db.DbResults;
-import com.liquidsys.coco.db.DbUtil;
-import com.liquidsys.coco.mailbox.Folder;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.db.DbResults;
+import com.zimbra.cs.db.DbUtil;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.util.LiquidLog;
 
 public class TestMailItem extends TestCase {
     

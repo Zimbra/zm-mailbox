@@ -2,7 +2,7 @@
  * Created on Nov 10, 2004
  *
  */
-package com.liquidsys.coco.filter;
+package com.zimbra.cs.filter;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -19,13 +19,13 @@ import org.apache.jsieve.parser.generated.ASTstring_list;
 import org.apache.jsieve.parser.generated.ASTtest;
 import org.apache.jsieve.parser.generated.Node;
 
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.MailServiceException;
-import com.liquidsys.coco.mailbox.Tag;
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.service.mail.MailService;
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.util.LiquidLog;
 
 /**
  * @author kchen

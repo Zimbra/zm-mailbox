@@ -1,7 +1,7 @@
 package com.zimbra.qa.unittest;
 
-import com.liquidsys.coco.util.LiquidLog;
-import com.liquidsys.coco.util.TimeoutMap;
+import com.zimbra.cs.util.LiquidLog;
+import com.zimbra.cs.util.TimeoutMap;
 
 import junit.framework.TestCase;
 

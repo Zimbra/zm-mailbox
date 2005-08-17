@@ -1,7 +1,7 @@
 /*
  * Created on Nov 25, 2004
  */
-package com.liquidsys.coco.pop3;
+package com.zimbra.cs.pop3;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -15,16 +15,16 @@ import javax.mail.MessagingException;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.account.AccountServiceException;
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.Message;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.tcpserver.ProtocolHandler;
-import com.liquidsys.coco.tcpserver.TcpServerInputStream;
-import com.liquidsys.coco.util.Config;
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.tcpserver.ProtocolHandler;
+import com.zimbra.cs.tcpserver.TcpServerInputStream;
+import com.zimbra.cs.util.Config;
+import com.zimbra.cs.util.LiquidLog;
 
 /**
  * @author schemers
@@ -70,7 +70,7 @@ public class Pop3Handler extends ProtocolHandler {
         mServer = server;
     }
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.tcpserver.ProtocolHandler#setupConnection(java.net.Socket)
+     * @see com.zimbra.cs.tcpserver.ProtocolHandler#setupConnection(java.net.Socket)
      */
     protected boolean setupConnection(Socket connection) throws IOException {
         // TODO Auto-generated method stub
@@ -95,7 +95,7 @@ public class Pop3Handler extends ProtocolHandler {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.tcpserver.ProtocolHandler#authenticate()
+     * @see com.zimbra.cs.tcpserver.ProtocolHandler#authenticate()
      */
     protected boolean authenticate() throws IOException {
         // we auth with the USER/PASS commands
@@ -103,7 +103,7 @@ public class Pop3Handler extends ProtocolHandler {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.tcpserver.ProtocolHandler#processCommand()
+     * @see com.zimbra.cs.tcpserver.ProtocolHandler#processCommand()
      */
     protected boolean processCommand() throws IOException {
         // TODO: catch IOException too?
@@ -271,7 +271,7 @@ public class Pop3Handler extends ProtocolHandler {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.tcpserver.ProtocolHandler#dropConnection()
+     * @see com.zimbra.cs.tcpserver.ProtocolHandler#dropConnection()
      */
     protected void dropConnection() {
         try {
@@ -289,7 +289,7 @@ public class Pop3Handler extends ProtocolHandler {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.tcpserver.ProtocolHandler#notifyIdleConnection()
+     * @see com.zimbra.cs.tcpserver.ProtocolHandler#notifyIdleConnection()
      */
     protected void notifyIdleConnection() {
         // according to RFC 1939 we aren't supposed to snd a response on idle timeout

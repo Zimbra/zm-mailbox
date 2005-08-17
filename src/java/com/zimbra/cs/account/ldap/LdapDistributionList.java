@@ -1,12 +1,12 @@
-package com.liquidsys.coco.account.ldap;
+package com.zimbra.cs.account.ldap;
 
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.DirContext;
 
-import com.liquidsys.coco.account.DistributionList;
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.service.ServiceException;
 
 public class LdapDistributionList extends LdapNamedEntry implements DistributionList {
     private String mName;

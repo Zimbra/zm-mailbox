@@ -1,17 +1,17 @@
 /*
  * Created on Apr 9, 2005
  */
-package com.liquidsys.coco.imap;
+package com.zimbra.cs.imap;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.account.Server;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.tcpserver.ProtocolHandler;
-import com.liquidsys.coco.tcpserver.TcpServer;
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.tcpserver.ProtocolHandler;
+import com.zimbra.cs.tcpserver.TcpServer;
+import com.zimbra.cs.util.LiquidLog;
 
 /**
  * @author dkarp

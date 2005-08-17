@@ -2,7 +2,7 @@
  * Created on Nov 11, 2004
  *
  */
-package com.liquidsys.coco.filter.jsieve;
+package com.zimbra.cs.filter.jsieve;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -21,7 +21,7 @@ import org.apache.jsieve.TagArgument;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.AbstractTest;
 
-import com.liquidsys.coco.filter.LiquidMailAdapter;
+import com.zimbra.cs.filter.LiquidMailAdapter;
 
 /**
  * @author kchen

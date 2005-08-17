@@ -4,7 +4,7 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
-package com.liquidsys.coco.index;
+package com.zimbra.cs.index;
 
 import java.io.Reader;
 import java.io.StringReader;
@@ -524,7 +524,7 @@ class LiquidAnalyzer extends StandardAnalyzer
     	}
     	
 			/* (non-Javadoc)
-		 * @see com.liquidsys.coco.index.LiquidAnalyzer.MultiTokenFilter#getNextSplit(java.lang.String)
+		 * @see com.zimbra.cs.index.LiquidAnalyzer.MultiTokenFilter#getNextSplit(java.lang.String)
 		 */
 		protected int getNextSplit(String s) {
 			return s.indexOf("/");

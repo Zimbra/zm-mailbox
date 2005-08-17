@@ -1,7 +1,7 @@
 /*
  * Created on Apr 30, 2005
  */
-package com.liquidsys.coco.imap;
+package com.zimbra.cs.imap;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -11,13 +11,13 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.account.Server;
-import com.liquidsys.coco.imap.ImapHandler.*;
-import com.liquidsys.coco.imap.ImapSession.ImapFlag;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.tcpserver.TcpServerInputStream;
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.imap.ImapHandler.*;
+import com.zimbra.cs.imap.ImapSession.ImapFlag;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.tcpserver.TcpServerInputStream;
+import com.zimbra.cs.util.LiquidLog;
 
 
 class ImapRequest {

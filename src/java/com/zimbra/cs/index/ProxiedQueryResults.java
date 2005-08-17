@@ -1,17 +1,17 @@
 /*
  * Created on Mar 28, 2005
  */
-package com.liquidsys.coco.index;
+package com.zimbra.cs.index;
 
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.account.Server;
-import com.liquidsys.coco.httpclient.URLUtil;
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.service.admin.AdminService;
-import com.liquidsys.coco.service.mail.MailService;
-import com.liquidsys.coco.service.util.ParseMailboxID;
-import com.liquidsys.coco.servlet.LiquidServlet;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.admin.AdminService;
+import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.service.util.ParseMailboxID;
+import com.zimbra.cs.servlet.LiquidServlet;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapHttpTransport;
 import com.zimbra.soap.SoapTransport;

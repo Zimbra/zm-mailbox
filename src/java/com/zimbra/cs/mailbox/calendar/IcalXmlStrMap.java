@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.liquidsys.coco.mailbox.calendar;
+package com.zimbra.cs.mailbox.calendar;
 
 import java.util.HashMap;
 
@@ -11,8 +11,8 @@ import net.fortuna.ical4j.model.parameter.Role;
 import net.fortuna.ical4j.model.property.Status;
 import net.fortuna.ical4j.model.property.Transp;
 
-import com.liquidsys.coco.mailbox.MailServiceException;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.service.ServiceException;
 
 public class IcalXmlStrMap
 {

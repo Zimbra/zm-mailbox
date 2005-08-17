@@ -4,7 +4,7 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
-package com.liquidsys.coco.mime;
+package com.zimbra.cs.mime;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,8 +12,8 @@ import java.io.OutputStream;
 
 import javax.activation.DataSource;
 
-import com.liquidsys.coco.mailbox.MailboxBlob;
-import com.liquidsys.coco.store.StoreManager;
+import com.zimbra.cs.mailbox.MailboxBlob;
+import com.zimbra.cs.store.StoreManager;
 
 
 /**

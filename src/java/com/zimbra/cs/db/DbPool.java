@@ -1,7 +1,7 @@
 /*
  * Created on Apr 7, 2004
  */
-package com.liquidsys.coco.db;
+package com.zimbra.cs.db;
 
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -19,10 +19,10 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.pool.ObjectPool;
 import org.apache.commons.pool.impl.GenericObjectPool;
 
-import com.liquidsys.coco.localconfig.LC;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.service.util.LiquidPerf;
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.localconfig.LC;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.LiquidPerf;
+import com.zimbra.cs.util.LiquidLog;
 
 /**
  * @author schemers

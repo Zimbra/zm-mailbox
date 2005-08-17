@@ -1,7 +1,7 @@
 /*
  * Created on Jun 13, 2004
  */
-package com.liquidsys.coco.mailbox;
+package com.zimbra.cs.mailbox;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,19 +14,19 @@ import javax.mail.internet.MimeMessage;
 
 import net.fortuna.ical4j.model.Calendar;
 
-import com.liquidsys.coco.db.DbMailItem;
-import com.liquidsys.coco.index.Indexer;
-import com.liquidsys.coco.localconfig.DebugConfig;
-import com.liquidsys.coco.mime.Mime;
-import com.liquidsys.coco.mime.ParsedMessage;
-import com.liquidsys.coco.mime.TnefConverter;
-import com.liquidsys.coco.redolog.op.IndexItem;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.session.PendingModifications.Change;
-import com.liquidsys.coco.store.StoreManager;
-import com.liquidsys.coco.util.AccountUtil;
-import com.liquidsys.coco.util.JMSession;
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.index.Indexer;
+import com.zimbra.cs.localconfig.DebugConfig;
+import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.mime.TnefConverter;
+import com.zimbra.cs.redolog.op.IndexItem;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.LiquidLog;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -38,9 +38,9 @@ import net.fortuna.ical4j.model.property.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.mailbox.calendar.*;
-import com.liquidsys.coco.redolog.op.CreateMessage;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.mailbox.calendar.*;
+import com.zimbra.cs.redolog.op.CreateMessage;
 
 
 /**

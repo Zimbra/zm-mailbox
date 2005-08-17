@@ -1,4 +1,4 @@
-package com.liquidsys.coco.mailbox;
+package com.zimbra.cs.mailbox;
 
 import java.net.URI;
 import java.text.ParseException;
@@ -34,18 +34,18 @@ import net.fortuna.ical4j.model.property.RRule;
 import net.fortuna.ical4j.model.property.RecurrenceId;
 import net.fortuna.ical4j.model.property.Sequence;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.mailbox.calendar.ICalTimeZone;
-import com.liquidsys.coco.mailbox.calendar.IcalXmlStrMap;
-import com.liquidsys.coco.mailbox.calendar.InviteInfo;
-import com.liquidsys.coco.mailbox.calendar.ParsedDateTime;
-import com.liquidsys.coco.mailbox.calendar.ParsedDuration;
-import com.liquidsys.coco.mailbox.calendar.RecurId;
-import com.liquidsys.coco.mailbox.calendar.Recurrence;
-import com.liquidsys.coco.mailbox.calendar.TimeZoneMap;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.session.PendingModifications.Change;
-import com.liquidsys.coco.util.AccountUtil;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
+import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
+import com.zimbra.cs.mailbox.calendar.InviteInfo;
+import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
+import com.zimbra.cs.mailbox.calendar.ParsedDuration;
+import com.zimbra.cs.mailbox.calendar.RecurId;
+import com.zimbra.cs.mailbox.calendar.Recurrence;
+import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.util.AccountUtil;
 
 /**
  * Invite 

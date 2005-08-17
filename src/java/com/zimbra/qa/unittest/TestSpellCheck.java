@@ -6,10 +6,10 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
-import com.liquidsys.coco.client.LmcSession;
-import com.liquidsys.coco.client.soap.LmcCheckSpellingRequest;
-import com.liquidsys.coco.client.soap.LmcCheckSpellingResponse;
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.client.LmcSession;
+import com.zimbra.cs.client.soap.LmcCheckSpellingRequest;
+import com.zimbra.cs.client.soap.LmcCheckSpellingResponse;
+import com.zimbra.cs.util.LiquidLog;
 
 /**
  * @author bburtin

@@ -2,7 +2,7 @@
  * Created on Apr 1, 2004
  *
  */
-package com.liquidsys.coco.mime.handler.opensrc;
+package com.zimbra.cs.mime.handler.opensrc;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -15,11 +15,11 @@ import org.apache.lucene.demo.html.HTMLParser;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
-import com.liquidsys.coco.convert.AttachmentInfo;
-import com.liquidsys.coco.convert.ConversionException;
-import com.liquidsys.coco.mime.Mime;
-import com.liquidsys.coco.mime.MimeHandler;
-import com.liquidsys.coco.mime.MimeHandlerException;
+import com.zimbra.cs.convert.AttachmentInfo;
+import com.zimbra.cs.convert.ConversionException;
+import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.mime.MimeHandler;
+import com.zimbra.cs.mime.MimeHandlerException;
 
 /**
  * @author schemers
@@ -57,7 +57,7 @@ public class TextHtmlHandler extends MimeHandler {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.mime.MimeHandler#populate(org.apache.lucene.document.Document)
+     * @see com.zimbra.cs.mime.MimeHandler#populate(org.apache.lucene.document.Document)
      */
     public void addFields(Document doc) throws MimeHandlerException {
         try {
@@ -75,7 +75,7 @@ public class TextHtmlHandler extends MimeHandler {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.mime.MimeHandler#getContent()
+     * @see com.zimbra.cs.mime.MimeHandler#getContent()
      */
     protected String getContentImpl() throws MimeHandlerException {
         if (mContent == null) {
@@ -98,7 +98,7 @@ public class TextHtmlHandler extends MimeHandler {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.mime.MimeHandler#convert(com.liquidsys.coco.convert.AttachmentInfo, java.lang.String)
+     * @see com.zimbra.cs.mime.MimeHandler#convert(com.zimbra.cs.convert.AttachmentInfo, java.lang.String)
      */
     public String convert(AttachmentInfo doc, String baseURL) throws IOException, ConversionException {
         throw new UnsupportedOperationException();

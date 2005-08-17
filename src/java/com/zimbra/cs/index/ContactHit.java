@@ -1,14 +1,14 @@
 /*
  * Created on Nov 8, 2004
  */
-package com.liquidsys.coco.index;
+package com.zimbra.cs.index;
 
 import org.apache.lucene.document.Document;
 
-import com.liquidsys.coco.mailbox.Contact;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.MailItem;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author tim
@@ -25,7 +25,7 @@ public final class ContactHit extends LiquidHit {
     private int mItemId;
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.index.LiquidHit#getDate()
+     * @see com.zimbra.cs.index.LiquidHit#getDate()
      */
     public long getDate() throws ServiceException {
         if (mCachedDate == -1) {
@@ -42,7 +42,7 @@ public final class ContactHit extends LiquidHit {
     }
     
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.index.LiquidHit#inTrashOrSpam()
+     * @see com.zimbra.cs.index.LiquidHit#inTrashOrSpam()
      */
     boolean inMailbox() throws ServiceException {
         return getContact().inMailbox();
@@ -61,7 +61,7 @@ public final class ContactHit extends LiquidHit {
     }
     
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.index.LiquidHit#getConversationId()
+     * @see com.zimbra.cs.index.LiquidHit#getConversationId()
      */
     public int getConversationId() throws ServiceException {
         // TODO Auto-generated method stub
@@ -69,7 +69,7 @@ public final class ContactHit extends LiquidHit {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.index.LiquidHit#getMessageId()
+     * @see com.zimbra.cs.index.LiquidHit#getMessageId()
      */
     public int getItemId() throws ServiceException {
         return mItemId;

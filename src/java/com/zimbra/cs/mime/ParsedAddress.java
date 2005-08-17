@@ -1,7 +1,7 @@
 /*
  * Created on Jan 31, 2005
  */
-package com.liquidsys.coco.mime;
+package com.zimbra.cs.mime;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
-import com.liquidsys.coco.mailbox.Contact;
+import com.zimbra.cs.mailbox.Contact;
 
 
 public class ParsedAddress {

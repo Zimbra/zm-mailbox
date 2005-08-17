@@ -1,7 +1,7 @@
 /*
  * Created on 2004. 10. 13.
  */
-package com.liquidsys.coco.store;
+package com.zimbra.cs.store;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -14,12 +14,12 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.MailboxBlob;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.util.ByteUtil;
-import com.liquidsys.coco.util.Config;
-import com.liquidsys.coco.util.FileUtil;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxBlob;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.cs.util.Config;
+import com.zimbra.cs.util.FileUtil;
 import com.liquidsys.os.IO;
 
 /**
@@ -252,7 +252,7 @@ public class FileBlobStore extends StoreManager {
     }
 
     /* (non-Javadoc)
-	 * @see com.liquidsys.coco.store.StoreManager#deleteStore(com.liquidsys.coco.mailbox.Mailbox, int)
+	 * @see com.zimbra.cs.store.StoreManager#deleteStore(com.zimbra.cs.mailbox.Mailbox, int)
 	 */
 	public boolean deleteStore(Mailbox mbox, int volume)
     throws IOException, ServiceException {

@@ -1,7 +1,7 @@
 /*
  * Created on 2004. 7. 21.
  */
-package com.liquidsys.coco.redolog;
+package com.zimbra.cs.redolog;
 
 import java.io.DataInput;
 import java.io.DataOutput;

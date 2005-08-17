@@ -1,4 +1,4 @@
-package com.liquidsys.coco.service.mail;
+package com.zimbra.cs.service.mail;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -20,9 +20,9 @@ import javax.mail.internet.MimeMultipart;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.util.JMSession;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.JMSession;
 
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Component;
@@ -66,19 +66,19 @@ import net.fortuna.ical4j.model.property.Version;
 import net.fortuna.ical4j.model.property.XProperty;
 import net.fortuna.ical4j.util.DateTimeFormat;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.account.WellKnownTimeZone;
-import com.liquidsys.coco.mailbox.Appointment;
-import com.liquidsys.coco.mailbox.Invite;
-import com.liquidsys.coco.mailbox.MailServiceException;
-import com.liquidsys.coco.mailbox.calendar.ICalTimeZone;
-import com.liquidsys.coco.mailbox.calendar.IcalXmlStrMap;
-import com.liquidsys.coco.mailbox.calendar.ParsedDateTime;
-import com.liquidsys.coco.mailbox.calendar.ParsedDuration;
-import com.liquidsys.coco.mailbox.calendar.RecurId;
-import com.liquidsys.coco.mailbox.calendar.TimeZoneMap;
-import com.liquidsys.coco.account.ldap.LdapUtil;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.WellKnownTimeZone;
+import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.Invite;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
+import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
+import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
+import com.zimbra.cs.mailbox.calendar.ParsedDuration;
+import com.zimbra.cs.mailbox.calendar.RecurId;
+import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
+import com.zimbra.cs.account.ldap.LdapUtil;
 
 
 public class CalendarUtils {

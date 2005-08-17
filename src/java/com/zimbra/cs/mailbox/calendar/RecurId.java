@@ -1,13 +1,13 @@
-package com.liquidsys.coco.mailbox.calendar;
+package com.zimbra.cs.mailbox.calendar;
 
 import java.text.ParseException;
 import java.util.Date;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.mailbox.Metadata;
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.service.mail.MailService;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.mail.MailService;
 
 import net.fortuna.ical4j.model.property.RecurrenceId;
 import net.fortuna.ical4j.model.Parameter;

@@ -1,7 +1,7 @@
 /*
  * Created on Oct 4, 2004
  */
-package com.liquidsys.coco.util;
+package com.zimbra.cs.util;
 
 import java.io.BufferedReader;
 import java.io.IOException;

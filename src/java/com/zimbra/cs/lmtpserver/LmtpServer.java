@@ -1,4 +1,4 @@
-package com.liquidsys.coco.lmtpserver;
+package com.zimbra.cs.lmtpserver;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -6,11 +6,11 @@ import java.net.UnknownHostException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.localconfig.LC;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.stats.Counter;
-import com.liquidsys.coco.tcpserver.ProtocolHandler;
-import com.liquidsys.coco.tcpserver.TcpServer;
+import com.zimbra.cs.localconfig.LC;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.stats.Counter;
+import com.zimbra.cs.tcpserver.ProtocolHandler;
+import com.zimbra.cs.tcpserver.TcpServer;
 
 public class LmtpServer extends TcpServer {
 

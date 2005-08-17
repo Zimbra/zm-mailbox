@@ -2,7 +2,7 @@
  * Created on Oct 29, 2004
  *
  */
-package com.liquidsys.coco.index;
+package com.zimbra.cs.index;
 
 import java.io.IOException;
 
@@ -10,8 +10,8 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.index.*;
 import org.apache.lucene.search.*;
 
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.mailbox.Mailbox;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
 
 
 /************************************************************************

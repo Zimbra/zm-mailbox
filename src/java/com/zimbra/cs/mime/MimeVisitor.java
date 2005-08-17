@@ -1,4 +1,4 @@
-package com.liquidsys.coco.mime;
+package com.zimbra.cs.mime;
 
 import java.io.IOException;
 

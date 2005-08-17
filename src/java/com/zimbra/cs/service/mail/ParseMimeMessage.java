@@ -1,25 +1,25 @@
 /*
  * Created on Sep 29, 2004
  */
-package com.liquidsys.coco.service.mail;
+package com.zimbra.cs.service.mail;
 
 import net.fortuna.ical4j.model.*;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.mailbox.MailboxBlob;
-import com.liquidsys.coco.mailbox.MailServiceException;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.Mailbox.OperationContext;
-import com.liquidsys.coco.mime.BlobDataSource;
-import com.liquidsys.coco.mime.Mime;
-import com.liquidsys.coco.scan.Scanner;
-import com.liquidsys.coco.service.ContentServlet;
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.FileItemDataSource;
-import com.liquidsys.coco.service.FileUploadServlet;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.util.JMSession;
-import com.liquidsys.coco.util.ExceptionToString;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.mailbox.MailboxBlob;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mime.BlobDataSource;
+import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.scan.Scanner;
+import com.zimbra.cs.service.ContentServlet;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.FileItemDataSource;
+import com.zimbra.cs.service.FileUploadServlet;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.ExceptionToString;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -430,7 +430,7 @@ public class ParseMimeMessage {
 //        mmp.addBodyPart(mbp);
 //    }
 
-    private static void attachMessage(Multipart mmp, com.liquidsys.coco.mailbox.Message message)
+    private static void attachMessage(Multipart mmp, com.zimbra.cs.mailbox.Message message)
     throws IOException, MessagingException, ServiceException {
         MailboxBlob blob = message.getBlob();
 
@@ -441,7 +441,7 @@ public class ParseMimeMessage {
         mmp.addBodyPart(mbp);
     }
 
-    private static void attachPart(Multipart mmp, com.liquidsys.coco.mailbox.Message message, String part)
+    private static void attachPart(Multipart mmp, com.zimbra.cs.mailbox.Message message, String part)
     throws IOException, MessagingException, ServiceException {
         MimePart mp = ContentServlet.getMimePart(message, part);
         if (mp == null)

@@ -2,7 +2,7 @@
  * Created on Apr 1, 2004
  *
  */
-package com.liquidsys.coco.mime.handler;
+package com.zimbra.cs.mime.handler;
 
 import java.io.IOException;
 
@@ -12,11 +12,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.document.Document;
 
-import com.liquidsys.coco.convert.AttachmentInfo;
-import com.liquidsys.coco.convert.ConversionException;
-import com.liquidsys.coco.mime.Mime;
-import com.liquidsys.coco.mime.MimeHandler;
-import com.liquidsys.coco.mime.MimeHandlerException;
+import com.zimbra.cs.convert.AttachmentInfo;
+import com.zimbra.cs.convert.ConversionException;
+import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.mime.MimeHandler;
+import com.zimbra.cs.mime.MimeHandlerException;
 
 /**
  * @author schemers
@@ -54,7 +54,7 @@ public class TextPlainHandler extends MimeHandler {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.mime.MimeHandler#convert(com.liquidsys.coco.convert.AttachmentInfo, java.lang.String)
+     * @see com.zimbra.cs.mime.MimeHandler#convert(com.zimbra.cs.convert.AttachmentInfo, java.lang.String)
      */
     public String convert(AttachmentInfo doc, String baseURL) throws IOException, ConversionException {
         throw new IllegalStateException("No need to convert plain text");

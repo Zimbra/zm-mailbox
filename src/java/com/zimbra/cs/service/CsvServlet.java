@@ -1,4 +1,4 @@
-package com.liquidsys.coco.service;
+package com.zimbra.cs.service;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -11,12 +11,12 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.account.AuthToken;
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.mailbox.ContactCSV;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.servlet.LiquidServlet;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.ContactCSV;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.servlet.LiquidServlet;
 
 /**
  * simple iCal servlet on a mailbox. URL is:

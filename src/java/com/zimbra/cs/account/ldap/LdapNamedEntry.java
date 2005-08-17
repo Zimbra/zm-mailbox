@@ -2,7 +2,7 @@
  * Created on Sep 23, 2004
  *
  */
-package com.liquidsys.coco.account.ldap;
+package com.zimbra.cs.account.ldap;
 
 import javax.naming.directory.Attributes;
 

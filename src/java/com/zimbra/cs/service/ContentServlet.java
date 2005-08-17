@@ -1,4 +1,4 @@
-package com.liquidsys.coco.service;
+package com.zimbra.cs.service;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -18,19 +18,19 @@ import javax.servlet.ServletException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.account.AuthToken;
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.html.HtmlDefang;
-import com.liquidsys.coco.mailbox.Appointment;
-import com.liquidsys.coco.mailbox.MailItem;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.Message;
-import com.liquidsys.coco.mime.Mime;
-import com.liquidsys.coco.util.ByteUtil;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.html.HtmlDefang;
+import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.util.ByteUtil;
 
-import com.liquidsys.coco.service.util.*;
-import com.liquidsys.coco.servlet.LiquidServlet;
+import com.zimbra.cs.service.util.*;
+import com.zimbra.cs.servlet.LiquidServlet;
 
 /**
  * The content servlet returns an attachment document in its original format.

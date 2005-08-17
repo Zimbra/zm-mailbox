@@ -1,9 +1,9 @@
-package com.liquidsys.coco.index;
+package com.zimbra.cs.index;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author tim

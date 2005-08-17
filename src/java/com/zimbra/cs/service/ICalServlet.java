@@ -1,4 +1,4 @@
-package com.liquidsys.coco.service;
+package com.zimbra.cs.service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -13,8 +13,8 @@ import net.fortuna.ical4j.model.ValidationException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.mailbox.Mailbox;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.mailbox.Mailbox;
 
 /**
  * simple iCal servlet on a mailbox. URL is:

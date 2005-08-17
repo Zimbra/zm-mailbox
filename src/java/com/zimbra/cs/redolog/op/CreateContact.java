@@ -1,7 +1,7 @@
 /*
  * Created on 2004. 12. 13.
  */
-package com.liquidsys.coco.redolog.op;
+package com.zimbra.cs.redolog.op;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -10,8 +10,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import com.liquidsys.coco.mailbox.MailServiceException;
-import com.liquidsys.coco.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
 
 /**
  * @author jhahm
@@ -45,14 +45,14 @@ public class CreateContact extends RedoableOp {
     }
 
     /* (non-Javadoc)
-	 * @see com.liquidsys.coco.redolog.op.RedoableOp#getOperationCode()
+	 * @see com.zimbra.cs.redolog.op.RedoableOp#getOperationCode()
 	 */
 	public int getOpCode() {
 		return OP_CREATE_CONTACT;
 	}
 
 	/* (non-Javadoc)
-	 * @see com.liquidsys.coco.redolog.op.RedoableOp#getPrintableData()
+	 * @see com.zimbra.cs.redolog.op.RedoableOp#getPrintableData()
 	 */
 	protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("folder=").append(mFolderId);
@@ -71,7 +71,7 @@ public class CreateContact extends RedoableOp {
 	}
 
 	/* (non-Javadoc)
-	 * @see com.liquidsys.coco.redolog.op.RedoableOp#serializeData(java.io.DataOutput)
+	 * @see com.zimbra.cs.redolog.op.RedoableOp#serializeData(java.io.DataOutput)
 	 */
 	protected void serializeData(DataOutput out) throws IOException {
         out.writeInt(mId);
@@ -88,7 +88,7 @@ public class CreateContact extends RedoableOp {
 	}
 
 	/* (non-Javadoc)
-	 * @see com.liquidsys.coco.redolog.op.RedoableOp#deserializeData(java.io.DataInput)
+	 * @see com.zimbra.cs.redolog.op.RedoableOp#deserializeData(java.io.DataInput)
 	 */
 	protected void deserializeData(DataInput in) throws IOException {
         mId = in.readInt();

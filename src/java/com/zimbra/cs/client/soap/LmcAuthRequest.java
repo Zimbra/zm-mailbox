@@ -1,15 +1,15 @@
-package com.liquidsys.coco.client.soap;
+package com.zimbra.cs.client.soap;
 
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
 import com.zimbra.soap.DomUtil;
-import com.liquidsys.coco.service.account.AccountService;
-import com.liquidsys.coco.service.admin.AdminService;
-import com.liquidsys.coco.service.admin.GetAccount;
+import com.zimbra.cs.service.account.AccountService;
+import com.zimbra.cs.service.admin.AdminService;
+import com.zimbra.cs.service.admin.GetAccount;
 import com.zimbra.soap.LiquidContext;
-import com.liquidsys.coco.client.*;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.client.*;
+import com.zimbra.cs.service.ServiceException;
 
 public class LmcAuthRequest extends LmcSoapRequest {
 

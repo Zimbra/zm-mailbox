@@ -2,7 +2,7 @@
  * Created on Apr 14, 2005
  *
  */
-package com.liquidsys.coco.mime;
+package com.zimbra.cs.mime;
 
 /**
  * @author kchen

@@ -1,7 +1,7 @@
 /*
  * Created on Aug 18, 2004
  */
-package com.liquidsys.coco.mailbox;
+package com.zimbra.cs.mailbox;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,10 +10,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.liquidsys.coco.db.DbMailItem;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.session.PendingModifications.Change;
-import com.liquidsys.coco.util.StringUtil;
+import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.util.StringUtil;
 
 
 /**

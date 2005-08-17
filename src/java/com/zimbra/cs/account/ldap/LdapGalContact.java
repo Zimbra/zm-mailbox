@@ -1,7 +1,7 @@
 /*
  * Created on Nov 17, 2004
  */
-package com.liquidsys.coco.account.ldap;
+package com.zimbra.cs.account.ldap;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -9,8 +9,8 @@ import java.util.Map;
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
-import com.liquidsys.coco.account.GalContact;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.account.GalContact;
+import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author schemers
@@ -41,14 +41,14 @@ public class LdapGalContact implements GalContact {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.GalContact#getId()
+     * @see com.zimbra.cs.account.GalContact#getId()
      */
     public String getId() {
         return mId;
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.account.GalContact#getAttrs()
+     * @see com.zimbra.cs.account.GalContact#getAttrs()
      */
     public Map getAttrs() throws ServiceException {
         return mAttrs;

@@ -1,13 +1,13 @@
 /*
  * Created on Aug 23, 2004
  */
-package com.liquidsys.coco.mailbox;
+package com.zimbra.cs.mailbox;
 
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.db.DbMailItem;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.session.PendingModifications.Change;
-import com.liquidsys.coco.util.StringUtil;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.util.StringUtil;
 
 /**
  * @author dkarp

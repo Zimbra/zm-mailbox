@@ -1,16 +1,16 @@
 /*
  * Created on 2005. 7. 11.
  */
-package com.liquidsys.coco.account.ldap;
+package com.zimbra.cs.account.ldap;
 
 import javax.naming.directory.Attributes;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.account.WellKnownTimeZone;
-import com.liquidsys.coco.mailbox.calendar.ICalTimeZone;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.WellKnownTimeZone;
+import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 
 /**
  * @author jhahm

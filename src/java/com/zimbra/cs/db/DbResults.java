@@ -1,4 +1,4 @@
-package com.liquidsys.coco.db;
+package com.zimbra.cs.db;
 
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -27,7 +27,7 @@ import java.util.Map;
  * All API's that reference row and column indexes are 1-based, to match the behavior
  * of the JDBC <code>ResultSet</code> class.
  * 
- * @see com.liquidsys.coco.db.DbUtil
+ * @see com.zimbra.cs.db.DbUtil
  *  
  * @author bburtin
  */

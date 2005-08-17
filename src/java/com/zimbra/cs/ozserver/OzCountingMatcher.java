@@ -1,8 +1,8 @@
-package com.liquidsys.coco.ozserver;
+package com.zimbra.cs.ozserver;
 
 import java.nio.ByteBuffer;
 
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.util.LiquidLog;
 
 public class OzCountingMatcher implements OzMatcher {
 

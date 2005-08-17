@@ -4,12 +4,12 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package com.liquidsys.coco.index;
+package com.zimbra.cs.index;
 
 import java.io.IOException;
 
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author tim
@@ -50,20 +50,20 @@ class NullQueryOperation extends QueryOperation {
     
     
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.index.QueryOperation#resetIterator()
+     * @see com.zimbra.cs.index.QueryOperation#resetIterator()
      */
     public void resetIterator() throws ServiceException {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.index.QueryOperation#getNext()
+     * @see com.zimbra.cs.index.QueryOperation#getNext()
      */
     public LiquidHit getNext() throws ServiceException {
         return null;
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.index.QueryOperation#hasNext()
+     * @see com.zimbra.cs.index.QueryOperation#hasNext()
      */
 //    boolean hasNext() throws ServiceException {
 //        return false;
@@ -76,7 +76,7 @@ class NullQueryOperation extends QueryOperation {
     
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.index.QueryOperation#prepare(com.liquidsys.coco.mailbox.Mailbox, com.liquidsys.coco.index.LiquidQueryResultsImpl, com.liquidsys.coco.index.MailboxIndex, int, int)
+     * @see com.zimbra.cs.index.QueryOperation#prepare(com.zimbra.cs.mailbox.Mailbox, com.zimbra.cs.index.LiquidQueryResultsImpl, com.zimbra.cs.index.MailboxIndex, int, int)
      */
     protected void prepare(Mailbox mbx, LiquidQueryResultsImpl res, MailboxIndex mbidx)
             throws IOException, ServiceException {
@@ -84,28 +84,28 @@ class NullQueryOperation extends QueryOperation {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.index.QueryOperation#doneWithSearchResults()
+     * @see com.zimbra.cs.index.QueryOperation#doneWithSearchResults()
      */
     public void doneWithSearchResults() throws ServiceException {
         //empty 
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.index.QueryOperation#optimize()
+     * @see com.zimbra.cs.index.QueryOperation#optimize()
      */
     public QueryOperation optimize(Mailbox mbox) throws ServiceException {
         return this;
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.index.QueryOperation#combineOps(com.liquidsys.coco.index.QueryOperation, boolean)
+     * @see com.zimbra.cs.index.QueryOperation#combineOps(com.zimbra.cs.index.QueryOperation, boolean)
      */
     protected QueryOperation combineOps(QueryOperation other, boolean union) {
         return null;
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.index.QueryOperation#inheritedGetExecutionCost()
+     * @see com.zimbra.cs.index.QueryOperation#inheritedGetExecutionCost()
      */
     protected int inheritedGetExecutionCost() {
         return 0;

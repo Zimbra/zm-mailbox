@@ -1,10 +1,10 @@
-package com.liquidsys.coco.redolog.op;
+package com.zimbra.cs.redolog.op;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import com.liquidsys.coco.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox;
 
 
 public class ModifyInviteFlag extends RedoableOp {

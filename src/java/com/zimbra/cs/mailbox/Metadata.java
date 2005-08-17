@@ -1,4 +1,4 @@
-package com.liquidsys.coco.mailbox;
+package com.zimbra.cs.mailbox;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -6,12 +6,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.util.BEncoding;
-import com.liquidsys.coco.util.BlobMetaData;
-import com.liquidsys.coco.util.BlobMetaDataEncodingException;
-import com.liquidsys.coco.util.BEncoding.BEncodingException;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.BEncoding;
+import com.zimbra.cs.util.BlobMetaData;
+import com.zimbra.cs.util.BlobMetaDataEncodingException;
+import com.zimbra.cs.util.BEncoding.BEncodingException;
 
 public class Metadata {
 

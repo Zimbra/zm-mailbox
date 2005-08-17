@@ -1,7 +1,7 @@
 /*
  * Created on Apr 7, 2004
  */
-package com.liquidsys.coco.db;
+package com.zimbra.cs.db;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -14,19 +14,19 @@ import java.util.StringTokenizer;
 
 import javax.mail.MessagingException;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.db.DbPool.Connection;
-import com.liquidsys.coco.index.ConversationHit;
-import com.liquidsys.coco.index.LiquidHit;
-import com.liquidsys.coco.index.LiquidQueryResults;
-import com.liquidsys.coco.index.MailboxIndex;
-import com.liquidsys.coco.index.MessageHit;
-import com.liquidsys.coco.index.queryparser.ParseException;
-import com.liquidsys.coco.mailbox.*;
-import com.liquidsys.coco.mailbox.Note.Rectangle;
-import com.liquidsys.coco.mime.ParsedAddress;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.index.ConversationHit;
+import com.zimbra.cs.index.LiquidHit;
+import com.zimbra.cs.index.LiquidQueryResults;
+import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.index.MessageHit;
+import com.zimbra.cs.index.queryparser.ParseException;
+import com.zimbra.cs.mailbox.*;
+import com.zimbra.cs.mailbox.Note.Rectangle;
+import com.zimbra.cs.mime.ParsedAddress;
+import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author schemers

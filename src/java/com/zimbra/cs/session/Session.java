@@ -1,7 +1,7 @@
 /*
  * Created on Nov 29, 2004
  */
-package com.liquidsys.coco.session;
+package com.zimbra.cs.session;
 
 public abstract class Session {
     protected String mAccountId;

@@ -1,17 +1,17 @@
-package com.liquidsys.coco.account.callback;
+package com.zimbra.cs.account.callback;
 
 import java.util.Map;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.account.AttributeCallback;
-import com.liquidsys.coco.account.Entry;
-import com.liquidsys.coco.db.DbOutOfOffice;
-import com.liquidsys.coco.db.DbPool;
-import com.liquidsys.coco.db.DbPool.Connection;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.Notification;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AttributeCallback;
+import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.db.DbOutOfOffice;
+import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Notification;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.LiquidLog;
 
 public class OutOfOfficeCallback implements AttributeCallback {
 

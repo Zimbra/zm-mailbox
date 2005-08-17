@@ -4,28 +4,28 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
-package com.liquidsys.coco.util;
+package com.zimbra.cs.util;
 
 import java.util.Timer;
 
 import javax.naming.directory.DirContext;
 
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.account.Server;
-import com.liquidsys.coco.account.ldap.LdapUtil;
-import com.liquidsys.coco.convert.TransformationStub;
-import com.liquidsys.coco.db.Versions;
-import com.liquidsys.coco.httpclient.EasySSLProtocolSocketFactory;
-import com.liquidsys.coco.imap.ImapServer;
-import com.liquidsys.coco.index.Indexer;
-import com.liquidsys.coco.index.IndexEditor;
-import com.liquidsys.coco.pop3.Pop3Server;
-import com.liquidsys.coco.redolog.RedoLogProvider;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.session.SessionCache;
-import com.liquidsys.coco.store.StoreManager;
-import com.liquidsys.coco.lmtpserver.LmtpServer;
-import com.liquidsys.coco.localconfig.LC;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.convert.TransformationStub;
+import com.zimbra.cs.db.Versions;
+import com.zimbra.cs.httpclient.EasySSLProtocolSocketFactory;
+import com.zimbra.cs.imap.ImapServer;
+import com.zimbra.cs.index.Indexer;
+import com.zimbra.cs.index.IndexEditor;
+import com.zimbra.cs.pop3.Pop3Server;
+import com.zimbra.cs.redolog.RedoLogProvider;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.session.SessionCache;
+import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.lmtpserver.LmtpServer;
+import com.zimbra.cs.localconfig.LC;
 
 /**
  * @author jhahm

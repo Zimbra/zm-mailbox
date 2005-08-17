@@ -1,15 +1,15 @@
-package com.liquidsys.coco.client.soap;
+package com.zimbra.cs.client.soap;
 
 import java.io.IOException;
 import java.io.File;
 import java.util.*;
 
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.client.*;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.client.*;
 import com.zimbra.soap.SoapFaultException;
-import com.liquidsys.coco.index.MailboxIndex;
-import com.liquidsys.coco.service.mail.ItemAction;
-import com.liquidsys.coco.util.Liquid;
+import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.service.mail.ItemAction;
+import com.zimbra.cs.util.Liquid;
 
 public class Tester {
 

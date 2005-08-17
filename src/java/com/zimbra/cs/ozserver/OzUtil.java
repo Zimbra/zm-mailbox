@@ -1,9 +1,9 @@
-package com.liquidsys.coco.ozserver;
+package com.zimbra.cs.ozserver;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.util.LiquidLog;
 
 class OzUtil {
 

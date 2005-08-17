@@ -1,10 +1,10 @@
 /*
  * Created on Jun 14, 2005
  */
-package com.liquidsys.coco.mailbox;
+package com.zimbra.cs.mailbox;
 
-import com.liquidsys.coco.db.DbMailItem;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author dkarp

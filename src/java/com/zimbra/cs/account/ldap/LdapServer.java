@@ -3,7 +3,7 @@
  *
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package com.liquidsys.coco.account.ldap;
+package com.zimbra.cs.account.ldap;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -11,10 +11,10 @@ import java.util.Map;
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
-import com.liquidsys.coco.account.Config;
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.account.Server;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author schemers

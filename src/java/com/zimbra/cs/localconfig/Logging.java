@@ -1,6 +1,6 @@
-package com.liquidsys.coco.localconfig;
+package com.zimbra.cs.localconfig;
 
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.util.LiquidLog;
 
 /*
  * Log4j is expensive for command line invocation

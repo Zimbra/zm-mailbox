@@ -1,4 +1,4 @@
-package com.liquidsys.coco.mailbox.calendar;
+package com.zimbra.cs.mailbox.calendar;
 
 //import java.text.DecimalFormat;
 //import java.text.ParseException;

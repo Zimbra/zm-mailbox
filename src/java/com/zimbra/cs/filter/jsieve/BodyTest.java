@@ -2,7 +2,7 @@
  * Created on Nov 11, 2004
  *
  */
-package com.liquidsys.coco.filter.jsieve;
+package com.zimbra.cs.filter.jsieve;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -19,9 +19,9 @@ import org.apache.jsieve.TagArgument;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.AbstractTest;
 
-import com.liquidsys.coco.filter.LiquidMailAdapter;
-import com.liquidsys.coco.mime.MPartInfo;
-import com.liquidsys.coco.mime.ParsedMessage;
+import com.zimbra.cs.filter.LiquidMailAdapter;
+import com.zimbra.cs.mime.MPartInfo;
+import com.zimbra.cs.mime.ParsedMessage;
 
 /**
  * @author kchen

@@ -2,7 +2,7 @@
  * Created on Dec 20, 2004
  * @author greg
  * */
-package com.liquidsys.coco.service;
+package com.zimbra.cs.service;
 
 import java.io.*;
 
@@ -13,11 +13,11 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.liquidsys.coco.account.AuthToken;
-import com.liquidsys.coco.account.AuthTokenException;
-import com.liquidsys.coco.servlet.LiquidServlet;
-import com.liquidsys.coco.util.ByteUtil;
-import com.liquidsys.coco.localconfig.LC;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.servlet.LiquidServlet;
+import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.cs.localconfig.LC;
 
 import java.net.*;
 

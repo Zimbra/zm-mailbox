@@ -5,12 +5,12 @@ package com.zimbra.soap;
 
 import java.io.IOException;
 
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.service.mail.MailService;
-import com.liquidsys.coco.service.account.AccountService;
-import com.liquidsys.coco.servlet.LiquidServlet;
-import com.liquidsys.coco.util.Liquid;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.service.account.AccountService;
+import com.zimbra.cs.servlet.LiquidServlet;
+import com.zimbra.cs.util.Liquid;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapHttpTransport;
 

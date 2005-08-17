@@ -1,7 +1,7 @@
 /*
  * Created on Apr 10, 2004
  */
-package com.liquidsys.coco.index;
+package com.zimbra.cs.index;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,20 +24,20 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
-import com.liquidsys.coco.mailbox.MailboxBlob;
-import com.liquidsys.coco.mailbox.Contact;
-import com.liquidsys.coco.mailbox.MailItem;
-import com.liquidsys.coco.mailbox.MailServiceException;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.Message;
-import com.liquidsys.coco.mailbox.Note;
-import com.liquidsys.coco.mime.ParsedMessage;
-import com.liquidsys.coco.redolog.op.IndexItem;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.store.StoreManager;
-import com.liquidsys.coco.util.Config;
-import com.liquidsys.coco.util.JMSession;
-import com.liquidsys.coco.util.Liquid;
+import com.zimbra.cs.mailbox.MailboxBlob;
+import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Note;
+import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.redolog.op.IndexItem;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.util.Config;
+import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.Liquid;
 
 
 /**

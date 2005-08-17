@@ -1,4 +1,4 @@
-package com.liquidsys.coco.httpclient;
+package com.zimbra.cs.httpclient;
 
 import java.security.KeyStore;
 import java.security.KeyStoreException;

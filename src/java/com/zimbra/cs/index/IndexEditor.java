@@ -1,7 +1,7 @@
 /*
  * Created on Jul 20, 2004
  */
-package com.liquidsys.coco.index;
+package com.zimbra.cs.index;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -39,20 +39,20 @@ import org.apache.lucene.search.spans.SpanQuery;
 import org.apache.lucene.search.spans.SpanTermQuery;
 import org.apache.lucene.search.spans.Spans;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.account.Provisioning;
-import com.liquidsys.coco.index.queryparser.ParseException;
-import com.liquidsys.coco.mailbox.MailItem;
-import com.liquidsys.coco.mailbox.MailServiceException;
-import com.liquidsys.coco.mailbox.Mailbox;
-import com.liquidsys.coco.mailbox.Message;
-import com.liquidsys.coco.mime.ParsedMessage;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.tcpserver.ProtocolHandler;
-import com.liquidsys.coco.tcpserver.TcpServer;
-import com.liquidsys.coco.tcpserver.TcpServerInputStream;
-import com.liquidsys.coco.util.ExceptionToString;
-import com.liquidsys.coco.util.Liquid;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.index.queryparser.ParseException;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.tcpserver.ProtocolHandler;
+import com.zimbra.cs.tcpserver.TcpServer;
+import com.zimbra.cs.tcpserver.TcpServerInputStream;
+import com.zimbra.cs.util.ExceptionToString;
+import com.zimbra.cs.util.Liquid;
 
 
 /**

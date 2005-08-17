@@ -1,4 +1,4 @@
-package com.liquidsys.coco.client;
+package com.zimbra.cs.client;
 
 import java.util.ArrayList;
 import java.util.List;

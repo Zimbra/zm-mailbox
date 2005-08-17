@@ -4,7 +4,7 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
-package com.liquidsys.coco.test.misc;
+package com.zimbra.cs.test.misc;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -18,10 +18,10 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import com.liquidsys.coco.mime.ParsedMessage;
-import com.liquidsys.coco.util.ByteUtil;
-import com.liquidsys.coco.util.JMSession;
-import com.liquidsys.coco.util.Liquid;
+import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.Liquid;
 
 /**
  * @author jhahm

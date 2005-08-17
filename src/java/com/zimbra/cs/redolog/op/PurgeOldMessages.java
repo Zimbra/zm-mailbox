@@ -1,12 +1,12 @@
 /*
  * Created on 2005. 4. 4.
  */
-package com.liquidsys.coco.redolog.op;
+package com.zimbra.cs.redolog.op;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 
-import com.liquidsys.coco.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox;
 
 /**
  * @author jhahm
@@ -25,14 +25,14 @@ public class PurgeOldMessages extends RedoableOp {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.redolog.op.RedoableOp#getOpCode()
+     * @see com.zimbra.cs.redolog.op.RedoableOp#getOpCode()
      */
     public int getOpCode() {
         return OP_PURGE_OLD_MESSAGES;
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.redolog.op.RedoableOp#redo()
+     * @see com.zimbra.cs.redolog.op.RedoableOp#redo()
      */
     public void redo() throws Exception {
         Mailbox mbox = Mailbox.getMailboxById(getMailboxId());
@@ -40,7 +40,7 @@ public class PurgeOldMessages extends RedoableOp {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.redolog.op.RedoableOp#getPrintableData()
+     * @see com.zimbra.cs.redolog.op.RedoableOp#getPrintableData()
      */
     protected String getPrintableData() {
         // no members to print
@@ -48,14 +48,14 @@ public class PurgeOldMessages extends RedoableOp {
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.redolog.op.RedoableOp#serializeData(java.io.DataOutput)
+     * @see com.zimbra.cs.redolog.op.RedoableOp#serializeData(java.io.DataOutput)
      */
     protected void serializeData(DataOutput out) {
         // no members to serialize
     }
 
     /* (non-Javadoc)
-     * @see com.liquidsys.coco.redolog.op.RedoableOp#deserializeData(java.io.DataInput)
+     * @see com.zimbra.cs.redolog.op.RedoableOp#deserializeData(java.io.DataInput)
      */
     protected void deserializeData(DataInput in) {
         // no members to deserialize

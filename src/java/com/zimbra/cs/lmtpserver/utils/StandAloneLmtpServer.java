@@ -1,4 +1,4 @@
-package com.liquidsys.coco.lmtpserver.utils;
+package com.zimbra.cs.lmtpserver.utils;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
@@ -14,9 +14,9 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import com.liquidsys.coco.lmtpserver.LmtpBackend;
-import com.liquidsys.coco.lmtpserver.LmtpServer;
-import com.liquidsys.coco.util.Liquid;
+import com.zimbra.cs.lmtpserver.LmtpBackend;
+import com.zimbra.cs.lmtpserver.LmtpServer;
+import com.zimbra.cs.util.Liquid;
 
 public class StandAloneLmtpServer {
 

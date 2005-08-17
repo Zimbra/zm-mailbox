@@ -1,16 +1,16 @@
 /*
  * Created on May 26, 2004
  */
-package com.liquidsys.coco.service.account;
+package com.zimbra.cs.service.account;
 
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.liquidsys.coco.account.Account;
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.ServiceException;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.LiquidContext;
 

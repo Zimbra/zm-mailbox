@@ -2,22 +2,22 @@
  * Created on Mar 28, 2005
  *
  */
-package com.liquidsys.coco.service.admin;
+package com.zimbra.cs.service.admin;
 
 import java.util.Iterator;
 import java.util.Map;
 
-import com.liquidsys.coco.account.AuthTokenException;
-import com.liquidsys.coco.index.LiquidQueryResults;
-import com.liquidsys.coco.index.SearchParams;
-import com.liquidsys.coco.mailbox.Mailbox.OperationContext;
-import com.liquidsys.coco.service.Element;
-import com.liquidsys.coco.service.ServiceException;
-import com.liquidsys.coco.service.mail.MailService;
-import com.liquidsys.coco.service.mail.Search;
-import com.liquidsys.coco.service.util.ParseMailboxID;
-import com.liquidsys.coco.util.CrossMailboxSearch;
-import com.liquidsys.coco.util.LiquidLog;
+import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.index.LiquidQueryResults;
+import com.zimbra.cs.index.SearchParams;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.service.mail.Search;
+import com.zimbra.cs.service.util.ParseMailboxID;
+import com.zimbra.cs.util.CrossMailboxSearch;
+import com.zimbra.cs.util.LiquidLog;
 import com.zimbra.soap.LiquidContext;
 
 
