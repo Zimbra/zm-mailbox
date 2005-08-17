@@ -1,4 +1,4 @@
-package com.zimbra.native;
+package com.zimbra.znative;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;

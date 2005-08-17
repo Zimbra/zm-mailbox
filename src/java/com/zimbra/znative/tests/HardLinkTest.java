@@ -1,9 +1,9 @@
-package com.zimbra.native.tests;
+package com.zimbra.znative.tests;
 
 import java.io.File;
 import java.io.IOException;
 
-import com.zimbra.native.IO;
+import com.zimbra.znative.IO;
 
 public class HardLinkTest {
 
