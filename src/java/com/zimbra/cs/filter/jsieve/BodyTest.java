@@ -19,7 +19,7 @@ import org.apache.jsieve.TagArgument;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.AbstractTest;
 
-import com.zimbra.cs.filter.LiquidMailAdapter;
+import com.zimbra.cs.filter.ZimbraMailAdapter;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.ParsedMessage;
 
@@ -75,7 +75,7 @@ public class BodyTest extends AbstractTest {
         // There MUST NOT be any further arguments
         if (argumentsIter.hasNext())
             throw new SyntaxException("Found unexpected argument(s)");               
-        if (!(mail instanceof LiquidMailAdapter))
+        if (!(mail instanceof ZimbraMailAdapter))
             return false;
         return test(mail, comparator, key);
 
@@ -87,7 +87,7 @@ public class BodyTest extends AbstractTest {
     }
 
     private boolean test(MailAdapter mail, String comparator, String key) throws SieveException {
-        LiquidMailAdapter liquidMail = (LiquidMailAdapter) mail;
+        ZimbraMailAdapter liquidMail = (ZimbraMailAdapter) mail;
         ParsedMessage pm = liquidMail.getParsedMessage();
         List msgParts = pm.getMessageParts();
         try {

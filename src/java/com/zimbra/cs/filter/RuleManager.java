@@ -145,7 +145,7 @@ public class RuleManager {
                 }
             }
             
-            LiquidMailAdapter mailAdapter = new LiquidMailAdapter(
+            ZimbraMailAdapter mailAdapter = new ZimbraMailAdapter(
                     mailbox, pm, recipient, sharedDeliveryCtxt);
             if (node != null) {
                 SieveFactory.getInstance().evaluate(mailAdapter, node);

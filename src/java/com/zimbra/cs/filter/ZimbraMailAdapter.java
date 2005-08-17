@@ -27,14 +27,14 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.LiquidLog;
 
 /**
- * <p>Class LiquidMailAdapter implements a mock MailAdapter for testing purposes.</p>
+ * <p>Class ZimbraMailAdapter implements a mock MailAdapter for testing purposes.</p>
  * 
  * <p>Being a mock object, Actions are not performed against a mail server, but in 
  * most other respects it behaves as would expect a MailAdapter wrapping a JavaMail 
  * message should. To this extent, it is a useful demonstration of how to create an
  * implementation of a MailAdapter.
  */
-public class LiquidMailAdapter implements MailAdapter
+public class ZimbraMailAdapter implements MailAdapter
 {
     private Mailbox mMailbox;
     private String mRecipient;
@@ -79,20 +79,20 @@ public class LiquidMailAdapter implements MailAdapter
     
             
     /**
-     * Constructor for LiquidMailAdapter.
+     * Constructor for ZimbraMailAdapter.
      */
-    private LiquidMailAdapter()
+    private ZimbraMailAdapter()
     {
         super();
         mMessages = new ArrayList(5);
     }
     
     /**
-     * Constructor for LiquidMailAdapter.
+     * Constructor for ZimbraMailAdapter.
      * @param pm
      * @throws MessagingException 
      */
-    public LiquidMailAdapter(Mailbox mailbox, ParsedMessage pm,
+    public ZimbraMailAdapter(Mailbox mailbox, ParsedMessage pm,
                              String recipient, SharedDeliveryContext sharedDeliveryCtxt) throws MessagingException
     {
         this();

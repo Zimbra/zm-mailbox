@@ -9,7 +9,7 @@ import org.apache.jsieve.SieveException;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.AbstractTest;
 
-import com.zimbra.cs.filter.LiquidMailAdapter;
+import com.zimbra.cs.filter.ZimbraMailAdapter;
 
 /**
  * @author kchen
@@ -24,10 +24,10 @@ public class AttachmentTest extends AbstractTest {
      */
     protected boolean executeBasic(MailAdapter mail, Arguments arguments)
             throws SieveException {
-        if (!(mail instanceof LiquidMailAdapter))
+        if (!(mail instanceof ZimbraMailAdapter))
             return false;
         // arguments already validated by superclass's validateArguments
-        return ((LiquidMailAdapter) mail).getParsedMessage().hasAttachments();
+        return ((ZimbraMailAdapter) mail).getParsedMessage().hasAttachments();
     }
 
     protected void validateArguments(Arguments arguments) throws SieveException

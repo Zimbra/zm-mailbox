@@ -21,7 +21,7 @@ import org.apache.jsieve.TagArgument;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.AbstractTest;
 
-import com.zimbra.cs.filter.LiquidMailAdapter;
+import com.zimbra.cs.filter.ZimbraMailAdapter;
 
 /**
  * @author kchen
@@ -82,7 +82,7 @@ public class DateTest extends AbstractTest {
         if (argumentsIter.hasNext())
             throw new SyntaxException("Found unexpected argument(s)");               
         
-        if (!(mail instanceof LiquidMailAdapter))
+        if (!(mail instanceof ZimbraMailAdapter))
             return false;
         return test(mail, comparator, date);
     }
@@ -93,7 +93,7 @@ public class DateTest extends AbstractTest {
 
     private boolean test(MailAdapter mail, String comparator, Date date) throws SieveException {
         // get the date from the mail
-        MimeMessage mimeMsg = ((LiquidMailAdapter) mail).getParsedMessage().getMimeMessage();
+        MimeMessage mimeMsg = ((ZimbraMailAdapter) mail).getParsedMessage().getMimeMessage();
         try {
             Date msgDate = mimeMsg.getSentDate();
             if (msgDate == null) {

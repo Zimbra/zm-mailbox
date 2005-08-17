@@ -24,7 +24,7 @@ import org.apache.jsieve.TagArgument;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.AbstractTest;
 
-import com.zimbra.cs.filter.LiquidMailAdapter;
+import com.zimbra.cs.filter.ZimbraMailAdapter;
 import com.zimbra.cs.index.LiquidQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.queryparser.ParseException;
@@ -111,13 +111,13 @@ public class AddressBookTest extends AbstractTest {
         if (argumentsIter.hasNext())
             throw new SyntaxException("Found unexpected argument(s)");               
         
-        if (! (mail instanceof LiquidMailAdapter))
+        if (! (mail instanceof ZimbraMailAdapter))
             return false;
         return test(mail, comparator, headers, abooks);
     }
 
     private boolean test(MailAdapter mail, String comparator, String[] headers, Set abooks) throws SieveException {
-        LiquidMailAdapter liquidMail = (LiquidMailAdapter) mail;
+        ZimbraMailAdapter liquidMail = (ZimbraMailAdapter) mail;
         for (Iterator it = abooks.iterator(); it.hasNext(); ) {
             String abookName = (String) it.next();
             if (CONTACTS.equals(abookName)) {
