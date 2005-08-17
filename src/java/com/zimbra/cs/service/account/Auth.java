@@ -48,11 +48,11 @@ public class Auth extends DocumentHandler  {
             throw se;
         }
 
-        boolean isAdmin = "TRUE".equals(acct.getAttr(Provisioning.A_liquidIsAdminAccount));
+        boolean isAdmin = "TRUE".equals(acct.getAttr(Provisioning.A_zimbraIsAdminAccount));
 
         long lifetime = isAdmin ?
-                acct.getTimeInterval(Provisioning.A_liquidAdminAuthTokenLifetime, DEFAULT_AUTH_LIFETIME*1000) :                                    
-                acct.getTimeInterval(Provisioning.A_liquidAuthTokenLifetime, DEFAULT_AUTH_LIFETIME*1000);
+                acct.getTimeInterval(Provisioning.A_zimbraAdminAuthTokenLifetime, DEFAULT_AUTH_LIFETIME*1000) :                                    
+                acct.getTimeInterval(Provisioning.A_zimbraAuthTokenLifetime, DEFAULT_AUTH_LIFETIME*1000);
                     
         long expires = System.currentTimeMillis()+ lifetime;
 
@@ -73,7 +73,7 @@ public class Auth extends DocumentHandler  {
                 response.addAttribute(ZimbraContext.E_SESSION_ID, session.getSessionId().toString(), Element.DISP_CONTENT);
             }
         } else
-            response.addAttribute(AccountService.E_REFERRAL, acct.getAttr(Provisioning.A_liquidMailHost), Element.DISP_CONTENT);
+            response.addAttribute(AccountService.E_REFERRAL, acct.getAttr(Provisioning.A_zimbraMailHost), Element.DISP_CONTENT);
 
 		Element prefsRequest = request.getOptionalElement(AccountService.E_PREFS);
 		if (prefsRequest != null) {

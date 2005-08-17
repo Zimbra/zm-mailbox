@@ -359,7 +359,7 @@ public abstract class MailItem implements Comparable {
             if (sentFolder != -1) {
                 sentFolder = Mailbox.ID_FOLDER_SENT;
                 try {
-                    String sent = mailbox.getAccount().getAttr(Provisioning.A_liquidPrefSentMailFolder, null);
+                    String sent = mailbox.getAccount().getAttr(Provisioning.A_zimbraPrefSentMailFolder, null);
                     if (sent != null)
                         sentFolder = mailbox.getFolderByPath(sent).getId();
                 } catch (ServiceException e) { }

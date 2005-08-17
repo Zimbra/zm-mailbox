@@ -467,7 +467,7 @@ public class Pop3Handler extends ProtocolHandler {
             Account acct = prov.getAccountByName(mUser);
             if (acct == null)
                 throw new Pop3CmdException("invalid username/password");
-            if (!acct.getBooleanAttr(Provisioning.A_liquidPop3Enabled, false))
+            if (!acct.getBooleanAttr(Provisioning.A_zimbraPop3Enabled, false))
                 throw new Pop3CmdException("pop access not enabled for account");                
             prov.authAccount(acct, password);
             mAccountId = acct.getId();
@@ -475,7 +475,7 @@ public class Pop3Handler extends ProtocolHandler {
             Mailbox mailbox = Mailbox.getMailboxByAccountId(mAccountId);
             mMbx = new Pop3Mbx(mailbox, mQuery);
             mState = STATE_TRANSACTION;
-            mExpire = (int) (acct.getTimeInterval(Provisioning.A_liquidMailMessageLifetime, 0) / (1000*60*60*24));
+            mExpire = (int) (acct.getTimeInterval(Provisioning.A_zimbraMailMessageLifetime, 0) / (1000*60*60*24));
             if (mExpire < MIN_EXPIRE_DAYS) mExpire = MIN_EXPIRE_DAYS;
             sendOK("server ready");
         } catch (AccountServiceException e) {

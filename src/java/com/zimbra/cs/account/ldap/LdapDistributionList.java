@@ -18,7 +18,7 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
     }
 
     public String getId() {
-        return getAttr(Provisioning.A_liquidId);
+        return getAttr(Provisioning.A_zimbraId);
     }
 
     public String getName() {
@@ -35,7 +35,7 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
-            addAttr(ctxt, Provisioning.A_liquidMailForwardingAddress, member);
+            addAttr(ctxt, Provisioning.A_zimbraMailForwardingAddress, member);
         } catch (NamingException ne) {
             throw ServiceException.FAILURE("add failed for member: " + member, ne);
         } finally {
@@ -48,7 +48,7 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
-            removeAttr(ctxt, Provisioning.A_liquidMailForwardingAddress, member);
+            removeAttr(ctxt, Provisioning.A_zimbraMailForwardingAddress, member);
         } catch (NamingException ne) {
             throw ServiceException.FAILURE("remove failed for member: " + member, ne);
         } finally {
@@ -57,6 +57,6 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
     }
 
     public String[] getAllMembers() throws ServiceException {
-        return getMultiAttr(Provisioning.A_liquidMailForwardingAddress);
+        return getMultiAttr(Provisioning.A_zimbraMailForwardingAddress);
     }
 }

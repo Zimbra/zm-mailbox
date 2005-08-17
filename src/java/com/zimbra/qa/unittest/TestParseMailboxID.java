@@ -62,7 +62,7 @@ public class TestParseMailboxID extends TestCase {
             assertFalse(id.isAllServers());
         }
 
-        String localhost = Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_liquidServiceHostname);
+        String localhost = Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname);
         
         {
             ParseMailboxID id = ParseMailboxID.parse("/"+localhost+"/1");

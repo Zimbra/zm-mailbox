@@ -54,7 +54,7 @@ public class DelegateAuth extends AdminDocumentHandler {
                 new String[] {"cmd", "DelegateAuth","accountId", account.getId()})); 
 
         Element response = lc.createElement(AdminService.DELEGATE_AUTH_RESPONSE);
-        long maxLifetime = account.getTimeInterval(Provisioning.A_liquidAuthTokenLifetime, DEFAULT_AUTH_LIFETIME*1000); 
+        long maxLifetime = account.getTimeInterval(Provisioning.A_zimbraAuthTokenLifetime, DEFAULT_AUTH_LIFETIME*1000); 
 
         // take the min of requested lifetime vs maxLifetime
         long expires = System.currentTimeMillis()+ Math.min(lifetime, maxLifetime);

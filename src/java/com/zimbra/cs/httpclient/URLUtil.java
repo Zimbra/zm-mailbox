@@ -34,15 +34,15 @@ public class URLUtil {
      */
     public static String getMailURL(Server server, String path) {
         String scheme = SCHEME_HTTP;
-        String hostname = server.getAttr(Provisioning.A_liquidServiceHostname);
+        String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
         int port = 0;
 
-        int httpPort = server.getIntAttr(Provisioning.A_liquidMailPort, 0);
+        int httpPort = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
         if (httpPort > 0) {
         	port = httpPort;
             scheme = SCHEME_HTTP;
         } else {
-            int httpsPort = server.getIntAttr(Provisioning.A_liquidMailSSLPort, 0);
+            int httpsPort = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
             if (httpsPort > 0) {
             	port = httpsPort;
                 scheme = SCHEME_HTTPS;
@@ -66,8 +66,8 @@ public class URLUtil {
      * @return
      */
     public static String getAdminURL(Server server, String path) {
-        String hostname = server.getAttr(Provisioning.A_liquidServiceHostname);
-        int port = server.getIntAttr(Provisioning.A_liquidAdminPort, 0);
+        String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
+        int port = server.getIntAttr(Provisioning.A_zimbraAdminPort, 0);
         StringBuffer sb = new StringBuffer(128);
         sb.append(SCHEME_HTTPS).append(hostname).append(":").append(port).append(path);
         return sb.toString();

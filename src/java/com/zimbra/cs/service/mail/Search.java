@@ -78,7 +78,7 @@ public class Search extends DocumentHandler  {
     protected SearchParams parseCommonParameters(Element request, ZimbraContext lc) throws ServiceException {
         String query = request.getAttribute(MailService.E_QUERY, null);
         if (query == null)
-            query = getRequestedAccount(lc).getAttr(Provisioning.A_liquidPrefMailInitialSearch);
+            query = getRequestedAccount(lc).getAttr(Provisioning.A_zimbraPrefMailInitialSearch);
         if (query == null)
             throw ServiceException.INVALID_REQUEST("no query submitted and no default query found", null);
 

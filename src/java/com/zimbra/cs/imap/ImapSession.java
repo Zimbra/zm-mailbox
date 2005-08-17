@@ -42,7 +42,7 @@ public class ImapSession extends Session {
         mState = STATE_AUTHENTICATED;
         try {
             Provisioning prov = Provisioning.getInstance();
-            mCheckingSpam = prov.getConfig().getBooleanAttr(Provisioning.A_liquidSpamCheckEnabled, false);
+            mCheckingSpam = prov.getConfig().getBooleanAttr(Provisioning.A_zimbraSpamCheckEnabled, false);
 
             parseConfig(Mailbox.getMailboxByAccountId(accountId).getConfig("imap"));
         } catch (ServiceException e) { }

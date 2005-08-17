@@ -25,25 +25,25 @@ public class DbTableMaintenance {
     public static int getMinRows()
     throws ServiceException {
         Server server = Provisioning.getInstance().getLocalServer();
-        return server.getIntAttr(Provisioning.A_liquidTableMaintenanceMinRows, 0);
+        return server.getIntAttr(Provisioning.A_zimbraTableMaintenanceMinRows, 0);
     }
     
     public static int getMaxRows() 
     throws ServiceException {
         Server server = Provisioning.getInstance().getLocalServer();
-        return server.getIntAttr(Provisioning.A_liquidTableMaintenanceMaxRows, 0);
+        return server.getIntAttr(Provisioning.A_zimbraTableMaintenanceMaxRows, 0);
     }
     
     public static int getGrowthFactor()
     throws ServiceException {
         Server server = Provisioning.getInstance().getLocalServer();
-        return server.getIntAttr(Provisioning.A_liquidTableMaintenanceGrowthFactor, 0);
+        return server.getIntAttr(Provisioning.A_zimbraTableMaintenanceGrowthFactor, 0);
     }
     
     public static String getOperation()
     throws ServiceException {
         Server server = Provisioning.getInstance().getLocalServer();
-        String attr = Provisioning.A_liquidTableMaintenanceOperation; 
+        String attr = Provisioning.A_zimbraTableMaintenanceOperation; 
         String operation = server.getAttr(attr);
         
         if (operation == null || operation.length() == 0) {

@@ -67,7 +67,7 @@ public class GetInfo extends DocumentHandler  {
     }
 
     private static void doAttrs(Element response, Map attrsMap) throws ServiceException {
-        String[] attrList = Provisioning.getInstance().getConfig().getMultiAttr(Provisioning.A_liquidAccountClientAttr);
+        String[] attrList = Provisioning.getInstance().getConfig().getMultiAttr(Provisioning.A_zimbraAccountClientAttr);
         for (int attrIndex = 0; attrIndex < attrList.length; attrIndex++) {
             String key = attrList[attrIndex];
             Object value = attrsMap.get(key);

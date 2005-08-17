@@ -35,7 +35,7 @@ public class LdapServer extends LdapNamedEntry implements Server {
     }
 
     public String getId() {
-        return getAttr(Provisioning.A_liquidId);
+        return getAttr(Provisioning.A_zimbraId);
     }
     
     public String getAttr(String name) {
@@ -83,7 +83,7 @@ public class LdapServer extends LdapNamedEntry implements Server {
             
             // then enumerate through all inheritable attrs and add them if needed
             Config c = mProv.getConfig();
-            String[] inheritable = mProv.getConfig().getMultiAttr(Provisioning.A_liquidServerInheritedAttr);
+            String[] inheritable = mProv.getConfig().getMultiAttr(Provisioning.A_zimbraServerInheritedAttr);
             for (int i=0; i < inheritable.length; i++) {
                 Object value = attrs.get(inheritable[i]);
                 if (value == null)

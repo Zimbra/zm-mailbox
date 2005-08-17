@@ -121,14 +121,14 @@ public class Pop3Server extends TcpServer {
 			return;
         
         Server server = Provisioning.getInstance().getLocalServer();
-        boolean loginOK = server.getBooleanAttr(Provisioning.A_liquidPop3CleartextLoginEnabled, false);
-        InetAddress address = getBindAddress(server.getAttr(Provisioning.A_liquidPop3BindAddress, D_POP3_BIND_ADDRESS));
-        int port = server.getIntAttr(Provisioning.A_liquidPop3BindPort, D_POP3_BIND_PORT);
-        int numThreads = server.getIntAttr(Provisioning.A_liquidPop3NumThreads, D_POP3_THREADS);
+        boolean loginOK = server.getBooleanAttr(Provisioning.A_zimbraPop3CleartextLoginEnabled, false);
+        InetAddress address = getBindAddress(server.getAttr(Provisioning.A_zimbraPop3BindAddress, D_POP3_BIND_ADDRESS));
+        int port = server.getIntAttr(Provisioning.A_zimbraPop3BindPort, D_POP3_BIND_PORT);
+        int numThreads = server.getIntAttr(Provisioning.A_zimbraPop3NumThreads, D_POP3_THREADS);
 
         sPopServer = new Pop3Server(numThreads, port, address, loginOK, false);
 
-        String advName = server.getAttr(Provisioning.A_liquidPop3AdvertisedName, D_POP3_ANNOUNCE_NAME);
+        String advName = server.getAttr(Provisioning.A_zimbraPop3AdvertisedName, D_POP3_ANNOUNCE_NAME);
         if (advName == null) {
             sPopServer.setConfigNameFromHostname();
         } else {
@@ -145,15 +145,15 @@ public class Pop3Server extends TcpServer {
             return;
         
         Server server = Provisioning.getInstance().getLocalServer();
-        InetAddress address = getBindAddress(server.getAttr(Provisioning.A_liquidPop3SSLBindAddress, D_POP3_BIND_ADDRESS));
-        int port = server.getIntAttr(Provisioning.A_liquidPop3SSLBindPort, D_POP3_BIND_SSL_PORT);
-        int numThreads = server.getIntAttr(Provisioning.A_liquidPop3NumThreads, D_POP3_THREADS);
+        InetAddress address = getBindAddress(server.getAttr(Provisioning.A_zimbraPop3SSLBindAddress, D_POP3_BIND_ADDRESS));
+        int port = server.getIntAttr(Provisioning.A_zimbraPop3SSLBindPort, D_POP3_BIND_SSL_PORT);
+        int numThreads = server.getIntAttr(Provisioning.A_zimbraPop3NumThreads, D_POP3_THREADS);
 
         sPopSSLServer = new Pop3Server(numThreads, port, address, true, true);
 
         sPopSSLServer.setSSL(true);
         
-        String advName = server.getAttr(Provisioning.A_liquidPop3AdvertisedName, D_POP3_ANNOUNCE_NAME);
+        String advName = server.getAttr(Provisioning.A_zimbraPop3AdvertisedName, D_POP3_ANNOUNCE_NAME);
         if (advName == null) {
             sPopSSLServer.setConfigNameFromHostname();
         } else {

@@ -48,7 +48,7 @@ public class GetServer extends AdminDocumentHandler {
             for (Iterator it = servers.iterator(); it.hasNext(); ) {
                 Server s = (Server) it.next();
                 // when replication is enabled, should return server representing current master
-                if (value.equalsIgnoreCase(s.getAttr(Provisioning.A_liquidServiceHostname, ""))) {
+                if (value.equalsIgnoreCase(s.getAttr(Provisioning.A_zimbraServiceHostname, ""))) {
                     server = s;
                     break;
                 }

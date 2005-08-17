@@ -29,6 +29,6 @@ public class LdapCos extends LdapNamedEntry implements Cos {
     }
 
     public String getId() {
-        return getAttr(Provisioning.A_liquidId);
+        return getAttr(Provisioning.A_zimbraId);
     }
 }

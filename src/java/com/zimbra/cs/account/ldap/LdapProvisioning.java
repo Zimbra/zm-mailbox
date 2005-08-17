@@ -77,8 +77,8 @@ public class LdapProvisioning extends Provisioning {
     private static Pattern sValidCosName = Pattern.compile("^\\w+$");
 
     private static final String[] sInvalidAccountCreateModifyAttrs = {
-            Provisioning.A_liquidMailAlias,
-            Provisioning.A_liquidMailDeliveryAddress,
+            Provisioning.A_zimbraMailAlias,
+            Provisioning.A_zimbraMailDeliveryAddress,
             Provisioning.A_uid,
             Provisioning.A_userPassword
     };
@@ -210,7 +210,7 @@ public class LdapProvisioning extends Provisioning {
         try {
             ctxt = LdapUtil.getDirContext();
             ext = LdapUtil.escapeSearchFilterArg(ext);
-            NamingEnumeration ne = ctxt.search("cn=mime," + CONFIG_BASE, "(" + Provisioning.A_liquidMimeFileExtension + "=" + ext + ")", sSubtreeSC);
+            NamingEnumeration ne = ctxt.search("cn=mime," + CONFIG_BASE, "(" + Provisioning.A_zimbraMimeFileExtension + "=" + ext + ")", sSubtreeSC);
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 Context srctxt = (Context) sr.getObject();
@@ -322,7 +322,7 @@ public class LdapProvisioning extends Provisioning {
         int index = emailAddress.indexOf('@');
         String domain = null;
         if (index == -1) {
-             domain = getConfig().getAttr(Provisioning.A_liquidDefaultDomainName, null);
+             domain = getConfig().getAttr(Provisioning.A_zimbraDefaultDomainName, null);
             if (domain == null)
                 throw ServiceException.INVALID_REQUEST("must be valid email address: "+emailAddress, null);
             else
@@ -388,7 +388,7 @@ public class LdapProvisioning extends Provisioning {
             if (d == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(domain);
             
-            String domainType = d.getAttr(Provisioning.A_liquidDomainType, Provisioning.DOMAIN_TYPE_LOCAL);
+            String domainType = d.getAttr(Provisioning.A_zimbraDomainType, Provisioning.DOMAIN_TYPE_LOCAL);
             if (!domainType.equals(Provisioning.DOMAIN_TYPE_LOCAL))
                 throw ServiceException.INVALID_REQUEST("domain type must be local", null);
 
@@ -409,14 +409,14 @@ public class LdapProvisioning extends Provisioning {
             oc.add(C_amavisAccount);
             
             String liquidIdStr = LdapUtil.generateUUID();
-            attrs.put(A_liquidId, liquidIdStr);
+            attrs.put(A_zimbraId, liquidIdStr);
 
             // default account status is active
-            if (attrs.get(Provisioning.A_liquidAccountStatus) == null)
-                attrs.put(A_liquidAccountStatus, Provisioning.ACCOUNT_STATUS_ACTIVE);
+            if (attrs.get(Provisioning.A_zimbraAccountStatus) == null)
+                attrs.put(A_zimbraAccountStatus, Provisioning.ACCOUNT_STATUS_ACTIVE);
 
             Cos cos = null;
-            Attribute cosIdAttr = attrs.get(Provisioning.A_liquidCOSId);
+            Attribute cosIdAttr = attrs.get(Provisioning.A_zimbraCOSId);
             String cosId = null;
 
             if (cosIdAttr != null) {
@@ -425,36 +425,36 @@ public class LdapProvisioning extends Provisioning {
                 if (!cos.getId().equals(cosId)) {
                     cosId = cos.getId();
                 }
-                attrs.put(Provisioning.A_liquidCOSId, cosId);
+                attrs.put(Provisioning.A_zimbraCOSId, cosId);
             } else {
                 cos = getCosByName(Provisioning.DEFAULT_COS_NAME);
             }
 
             // if liquidMailHost is not specified, and we have a COS, see if there is a pool to
             // pick from.
-            if (cos != null && attrs.get(Provisioning.A_liquidMailHost) == null) {
-                String mailHostPool[] = cos.getMultiAttr(Provisioning.A_liquidMailHostPool);
+            if (cos != null && attrs.get(Provisioning.A_zimbraMailHost) == null) {
+                String mailHostPool[] = cos.getMultiAttr(Provisioning.A_zimbraMailHostPool);
                 String mailHost = pickMalHost(mailHostPool, cos.getName());
                 if (mailHost != null) {
-                    attrs.put(Provisioning.A_liquidMailHost, mailHost);
+                    attrs.put(Provisioning.A_zimbraMailHost, mailHost);
                 }
             }
 
             // if liquidMailHost not specified default to local server's liquidServiceHostname
             // this means every account will always have a mailbox
-            if (attrs.get(Provisioning.A_liquidMailHost) == null) {
-                attrs.put(Provisioning.A_liquidMailHost, getLocalServer().getAttr(Provisioning.A_liquidServiceHostname));
+            if (attrs.get(Provisioning.A_zimbraMailHost) == null) {
+                attrs.put(Provisioning.A_zimbraMailHost, getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname));
             }
 
             // set all the mail-related attrs if liquidMailHost was specified
-            if (attrs.get(Provisioning.A_liquidMailHost) != null) {
+            if (attrs.get(Provisioning.A_zimbraMailHost) != null) {
                 // default mail status is enabled
-                if (attrs.get(Provisioning.A_liquidMailStatus) == null)
-                    attrs.put(A_liquidMailStatus, MAIL_STATUS_ENABLED);
+                if (attrs.get(Provisioning.A_zimbraMailStatus) == null)
+                    attrs.put(A_zimbraMailStatus, MAIL_STATUS_ENABLED);
 
                 // default account mail delivery address is email address
-                if (attrs.get(Provisioning.A_liquidMailDeliveryAddress) == null) {
-                    attrs.put(A_liquidMailDeliveryAddress, emailAddress);
+                if (attrs.get(Provisioning.A_zimbraMailDeliveryAddress) == null) {
+                    attrs.put(A_zimbraMailDeliveryAddress, emailAddress);
                 }
                 attrs.put(A_mail, emailAddress);                
             }
@@ -512,7 +512,7 @@ public class LdapProvisioning extends Provisioning {
             String mailHostId = mailHostPool[i];
             Server s = (mailHostId == null) ? null : getServerById(mailHostId);
             if (s != null) {
-                String mailHost = s.getAttr(Provisioning.A_liquidServiceHostname);
+                String mailHost = s.getAttr(Provisioning.A_zimbraServiceHostname);
                 if (mailHost != null) {
                     return mailHost;
                 } else {
@@ -599,10 +599,10 @@ public class LdapProvisioning extends Provisioning {
             oc.add(C_liquidAccount);
             
             String liquidIdStr = LdapUtil.generateUUID();
-            attrs.put(A_liquidId, liquidIdStr);
+            attrs.put(A_zimbraId, liquidIdStr);
             
-            if (attrs.get(Provisioning.A_liquidAccountStatus) == null)
-                attrs.put(A_liquidAccountStatus, Provisioning.ACCOUNT_STATUS_ACTIVE);
+            if (attrs.get(Provisioning.A_zimbraAccountStatus) == null)
+                attrs.put(A_zimbraAccountStatus, Provisioning.ACCOUNT_STATUS_ACTIVE);
             
             attrs.put(A_uid, uid);
             
@@ -730,9 +730,9 @@ public class LdapProvisioning extends Provisioning {
         for (int i=0; i < returnAttrs.length; i++) {
             if (Provisioning.A_uid.equalsIgnoreCase(returnAttrs[i]))
                 needUID = false;
-            else if (Provisioning.A_liquidId.equalsIgnoreCase(returnAttrs[i]))
+            else if (Provisioning.A_zimbraId.equalsIgnoreCase(returnAttrs[i]))
                 needID = false;
-            else if (Provisioning.A_liquidCOSId.equalsIgnoreCase(returnAttrs[i]))
+            else if (Provisioning.A_zimbraCOSId.equalsIgnoreCase(returnAttrs[i]))
                 needCOSId = false;            
         }
         int num = (needUID ? 1 : 0) + (needID ? 1 : 0) + (needCOSId ? 1 : 0);
@@ -742,8 +742,8 @@ public class LdapProvisioning extends Provisioning {
         String[] result = new String[returnAttrs.length+num];
         int i = 0;
         if (needUID) result[i++] = Provisioning.A_uid;
-        if (needID) result[i++] = Provisioning.A_liquidId;
-        if (needCOSId) result[i++] = Provisioning.A_liquidCOSId;
+        if (needID) result[i++] = Provisioning.A_zimbraId;
+        if (needCOSId) result[i++] = Provisioning.A_zimbraCOSId;
         System.arraycopy(returnAttrs, 0, result, i, returnAttrs.length);
         return result;
     }
@@ -751,7 +751,7 @@ public class LdapProvisioning extends Provisioning {
     public void setCOS(Account acct, Cos cos) throws ServiceException
     {
         HashMap attrs = new HashMap();
-        attrs.put(Provisioning.A_liquidCOSId, cos.getId());
+        attrs.put(Provisioning.A_zimbraCOSId, cos.getId());
         acct.modifyAttrs(attrs);
     }
 
@@ -760,7 +760,7 @@ public class LdapProvisioning extends Provisioning {
      */
     public void modifyAccountStatus(Account acct, String newStatus) throws ServiceException {
         HashMap attrs = new HashMap();
-        attrs.put(Provisioning.A_liquidAccountStatus, newStatus);
+        attrs.put(Provisioning.A_zimbraAccountStatus, newStatus);
         acct.modifyAttrs(attrs);
     }
 
@@ -803,10 +803,10 @@ public class LdapProvisioning extends Provisioning {
             // the create and addAttr ideally would be in the same transaction
             LdapUtil.simpleCreate(ctxt, aliasDn, "liquidAlias",
                     new String[] { Provisioning.A_uid, aliasName, 
-                    Provisioning.A_liquidId, LdapUtil.generateUUID(),
-                    Provisioning.A_liquidAliasTargetId, acct.getId()} );
+                    Provisioning.A_zimbraId, LdapUtil.generateUUID(),
+                    Provisioning.A_zimbraAliasTargetId, acct.getId()} );
             HashMap attrs = new HashMap();
-            attrs.put(Provisioning.A_liquidMailAlias, addMultiValue(acct, Provisioning.A_liquidMailAlias, alias));
+            attrs.put(Provisioning.A_zimbraMailAlias, addMultiValue(acct, Provisioning.A_zimbraMailAlias, alias));
             attrs.put(Provisioning.A_mail, addMultiValue(acct, Provisioning.A_mail, alias));
             // UGH
             ((LdapAccount)acct).modifyAttrsInternal(ctxt, attrs);
@@ -857,7 +857,7 @@ public class LdapProvisioning extends Provisioning {
             try {
                 HashMap attrs = new HashMap();
                 attrs.put(Provisioning.A_mail, removeMultiValue(acct, Provisioning.A_mail, alias));
-                attrs.put(Provisioning.A_liquidMailAlias, removeMultiValue(acct, Provisioning.A_mail, alias));                
+                attrs.put(Provisioning.A_zimbraMailAlias, removeMultiValue(acct, Provisioning.A_mail, alias));                
                 ((LdapAccount)acct).modifyAttrsInternal(ctxt, attrs);
             } catch (ServiceException e) {
                 ZimbraLog.account.warn("unable to remove liquidMailAlias/mail attrs: "+alias);
@@ -867,7 +867,7 @@ public class LdapProvisioning extends Provisioning {
             try {
                 Attributes aliasAttrs = ctxt.getAttributes(aliasDn);
                 // make sure aliasedObjectName points to this account
-                Attribute a = aliasAttrs.get(Provisioning.A_liquidAliasTargetId);
+                Attribute a = aliasAttrs.get(Provisioning.A_zimbraAliasTargetId);
                 if ( a != null && ( (String)a.get()).equals(acct.getId())) {
                     ctxt.unbind(aliasDn);
                 } else {
@@ -897,17 +897,17 @@ public class LdapProvisioning extends Provisioning {
 	
 	// Attribute checking can not express "allow setting on
 	// creation, but do not allow modifies afterwards"
-	String domainType = (String)domainAttrs.get(A_liquidDomainType);
+	String domainType = (String)domainAttrs.get(A_zimbraDomainType);
 	if (domainType == null) {
 	    domainType = DOMAIN_TYPE_LOCAL;
 	} else {
-	    domainAttrs.remove(A_liquidDomainType); // add back later
+	    domainAttrs.remove(A_zimbraDomainType); // add back later
 	}
 
         AttributeManager.getInstance().preModify(domainAttrs, null, attrManagerContext, true, true);
 
 	// Add back attrs we circumvented from attribute checking
-	domainAttrs.put(A_liquidDomainType, domainType);
+	domainAttrs.put(A_zimbraDomainType, domainType);
 	
         DirContext ctxt = null;
         try {
@@ -924,11 +924,11 @@ public class LdapProvisioning extends Provisioning {
             oc.add("liquidDomain");
             
             String liquidIdStr = LdapUtil.generateUUID();
-            attrs.put(A_liquidId, liquidIdStr);
-            attrs.put(A_liquidDomainName, name);
-            attrs.put(A_liquidMailStatus, MAIL_STATUS_ENABLED);
+            attrs.put(A_zimbraId, liquidIdStr);
+            attrs.put(A_zimbraDomainName, name);
+            attrs.put(A_zimbraMailStatus, MAIL_STATUS_ENABLED);
 	    if (domainType.equalsIgnoreCase(DOMAIN_TYPE_ALIAS)) {
-		attrs.put(A_liquidMailCatchAllAddress, "@" + name);
+		attrs.put(A_zimbraMailCatchAllAddress, "@" + name);
 	    }
 
             attrs.put(A_o, name+" domain");
@@ -1092,7 +1092,7 @@ public class LdapProvisioning extends Provisioning {
             Attribute oc = LdapUtil.addAttr(attrs, A_objectClass, "liquidCOS");
             
             String liquidIdStr = LdapUtil.generateUUID();
-            attrs.put(A_liquidId, liquidIdStr);
+            attrs.put(A_zimbraId, liquidIdStr);
             attrs.put(A_cn, name);
             String dn = cosNametoDN(name);
             Context newCtxt = createSubcontext(ctxt, dn, attrs, "createCos");
@@ -1300,7 +1300,7 @@ public class LdapProvisioning extends Provisioning {
             sAccountCache.remove(acc);
             acc = (LdapAccount) getAccountById(liquidId,ctxt);
             HashMap amap = new HashMap();
-            amap.put(Provisioning.A_liquidMailDeliveryAddress, newEmail);
+            amap.put(Provisioning.A_zimbraMailDeliveryAddress, newEmail);
             String mail[] = acc.getMultiAttr(Provisioning.A_mail);
             if (mail.length == 0) {
                 mail = addMultiValue(mail, newName);
@@ -1390,16 +1390,16 @@ public class LdapProvisioning extends Provisioning {
             Attribute oc = LdapUtil.addAttr(attrs, A_objectClass, "liquidServer");
             
             String liquidIdStr = LdapUtil.generateUUID();
-            attrs.put(A_liquidId, liquidIdStr);
+            attrs.put(A_zimbraId, liquidIdStr);
             attrs.put(A_cn, name);
             String dn = serverNametoDN(name);
             
             String liquidServerHostname = null;
 
-            Attribute liquidServiceHostnameAttr = attrs.get(Provisioning.A_liquidServiceHostname);
+            Attribute liquidServiceHostnameAttr = attrs.get(Provisioning.A_zimbraServiceHostname);
             if (liquidServiceHostnameAttr == null) {
                 liquidServerHostname = name;
-                attrs.put(Provisioning.A_liquidServiceHostname, name);
+                attrs.put(Provisioning.A_zimbraServiceHostname, name);
             } else {
                 liquidServerHostname = (String) liquidServiceHostnameAttr.get();
             }
@@ -1633,12 +1633,12 @@ public class LdapProvisioning extends Provisioning {
             oc.add("liquidMailRecipient");
 
             String liquidIdStr = LdapUtil.generateUUID();
-            attrs.put(A_liquidId, liquidIdStr);
-            attrs.put(A_liquidMailAlias, listAddress);
+            attrs.put(A_zimbraId, liquidIdStr);
+            attrs.put(A_zimbraMailAlias, listAddress);
 
             // default a distribution list is always created enabled
-            if (attrs.get(Provisioning.A_liquidMailStatus) == null) {
-                attrs.put(A_liquidMailStatus, MAIL_STATUS_ENABLED);
+            if (attrs.get(Provisioning.A_zimbraMailStatus) == null) {
+                attrs.put(A_zimbraMailStatus, MAIL_STATUS_ENABLED);
             }
 
             String dn = emailToDN(list, domain);
@@ -1803,9 +1803,9 @@ public class LdapProvisioning extends Provisioning {
             return;
 
         // below this point, the only fault that may be thrown is CHANGE_PASSWORD
-        int maxAge = acct.getIntAttr(Provisioning.A_liquidPasswordMaxAge, 0);
+        int maxAge = acct.getIntAttr(Provisioning.A_zimbraPasswordMaxAge, 0);
         if (maxAge > 0) {
-            Date lastChange = acct.getGeneralizedTimeAttr(Provisioning.A_liquidPasswordModifiedTime, null);
+            Date lastChange = acct.getGeneralizedTimeAttr(Provisioning.A_zimbraPasswordModifiedTime, null);
             if (lastChange != null) {
                 long last = lastChange.getTime();
                 long curr = System.currentTimeMillis();
@@ -1814,15 +1814,15 @@ public class LdapProvisioning extends Provisioning {
             }
         }
 
-        boolean mustChange = acct.getBooleanAttr(Provisioning.A_liquidPasswordMustChange, false);
+        boolean mustChange = acct.getBooleanAttr(Provisioning.A_zimbraPasswordMustChange, false);
         if (mustChange)
             throw AccountServiceException.CHANGE_PASSWORD();
 
         // update/check last logon
-        Date lastLogon = acct.getGeneralizedTimeAttr(Provisioning.A_liquidLastLogonTimestamp, null);
+        Date lastLogon = acct.getGeneralizedTimeAttr(Provisioning.A_zimbraLastLogonTimestamp, null);
         if (lastLogon == null) {
             HashMap attrs = new HashMap();
-            attrs.put(Provisioning.A_liquidLastLogonTimestamp, LdapUtil.generalizedTime(new Date()));
+            attrs.put(Provisioning.A_zimbraLastLogonTimestamp, LdapUtil.generalizedTime(new Date()));
             try {
                 acct.modifyAttrs(attrs);
             } catch (ServiceException e) {
@@ -1831,12 +1831,12 @@ public class LdapProvisioning extends Provisioning {
         } else {
             Config config = Provisioning.getInstance().getConfig();
             long freq = config.getTimeInterval(
-                    Provisioning.A_liquidLastLogonTimestampFrequency,
+                    Provisioning.A_zimbraLastLogonTimestampFrequency,
                     com.zimbra.cs.util.Config.D_ZIMBRA_LAST_LOGON_TIMESTAMP_FREQUENCY);
             long current = System.currentTimeMillis();
             if (current - freq >= lastLogon.getTime()) {
                 HashMap attrs = new HashMap();
-                attrs.put(Provisioning.A_liquidLastLogonTimestamp, LdapUtil.generalizedTime(new Date()));
+                attrs.put(Provisioning.A_zimbraLastLogonTimestamp, LdapUtil.generalizedTime(new Date()));
                 try {
                     acct.modifyAttrs(attrs);
                 } catch (ServiceException e) {
@@ -1858,7 +1858,7 @@ public class LdapProvisioning extends Provisioning {
         Domain d = acct.getDomain();
         // see if it specifies an alternate auth
         if (d != null) {
-            String am = d.getAttr(Provisioning.A_liquidAuthMech);
+            String am = d.getAttr(Provisioning.A_zimbraAuthMech);
             if (am != null)
                 authMech = am;
         }
@@ -1868,8 +1868,8 @@ public class LdapProvisioning extends Provisioning {
             if (encodedPassword != null && LdapUtil.verifySSHA(encodedPassword, password))
                 return;
 
-            String url = d.getAttr(Provisioning.A_liquidAuthLdapURL);
-            String bindDn = d.getAttr(Provisioning.A_liquidAuthLdapBindDn);
+            String url = d.getAttr(Provisioning.A_zimbraAuthLdapURL);
+            String bindDn = d.getAttr(Provisioning.A_zimbraAuthLdapBindDn);
             if (url != null && bindDn != null) {
                 String dn = LdapUtil.computeAuthDn(acct.getName(), bindDn);
                 try {
@@ -1884,12 +1884,12 @@ public class LdapProvisioning extends Provisioning {
                 }
             }
             if (url == null)
-                ZimbraLog.account.warn("attr not set "+Provisioning.A_liquidAuthLdapURL+", falling back to default mech");
+                ZimbraLog.account.warn("attr not set "+Provisioning.A_zimbraAuthLdapURL+", falling back to default mech");
             if (bindDn == null)
-                ZimbraLog.account.warn("attr not set "+Provisioning.A_liquidAuthLdapBindDn+", falling back to default mech");            
+                ZimbraLog.account.warn("attr not set "+Provisioning.A_zimbraAuthLdapBindDn+", falling back to default mech");            
             // fallback to liquid
         } else if (!authMech.equals(Provisioning.AM_ZIMBRA)) {
-            ZimbraLog.account.warn("unknown value for "+Provisioning.A_liquidAuthMech+": "+
+            ZimbraLog.account.warn("unknown value for "+Provisioning.A_zimbraAuthMech+": "+
                     authMech+", falling back to default mech");
             // fallback to liquid
         }
@@ -1946,7 +1946,7 @@ public class LdapProvisioning extends Provisioning {
      */
     public void changePassword(Account acct, String currentPassword, String newPassword) throws ServiceException {
         authAccount(acct, currentPassword, false);
-        boolean locked = acct.getBooleanAttr(Provisioning.A_liquidPasswordLocked, false);
+        boolean locked = acct.getBooleanAttr(Provisioning.A_zimbraPasswordLocked, false);
         if (locked)
             throw AccountServiceException.PASSWORD_LOCKED();
         setPassword(acct, newPassword);        
@@ -2034,16 +2034,16 @@ public class LdapProvisioning extends Provisioning {
     void setPassword(Account acct, String newPassword, boolean enforcePolicy, boolean checkMustChange) throws ServiceException {
 
         if (enforcePolicy) {
-            int minLength = acct.getIntAttr(Provisioning.A_liquidPasswordMinLength, 0);
+            int minLength = acct.getIntAttr(Provisioning.A_zimbraPasswordMinLength, 0);
             if (minLength > 0 && newPassword.length() < minLength)
                 throw AccountServiceException.INVALID_PASSWORD("too short");
-            int maxLength = acct.getIntAttr(Provisioning.A_liquidPasswordMaxLength, 0);        
+            int maxLength = acct.getIntAttr(Provisioning.A_zimbraPasswordMaxLength, 0);        
             if (maxLength > 0 && newPassword.length() > maxLength)
                 throw AccountServiceException.INVALID_PASSWORD("too long");
 
-            int minAge = acct.getIntAttr(Provisioning.A_liquidPasswordMinAge, 0);
+            int minAge = acct.getIntAttr(Provisioning.A_zimbraPasswordMinAge, 0);
             if (minAge > 0) {
-                Date lastChange = acct.getGeneralizedTimeAttr(Provisioning.A_liquidPasswordModifiedTime, null);
+                Date lastChange = acct.getGeneralizedTimeAttr(Provisioning.A_zimbraPasswordModifiedTime, null);
                 if (lastChange != null) {
                     long last = lastChange.getTime();
                     long curr = System.currentTimeMillis();
@@ -2056,27 +2056,27 @@ public class LdapProvisioning extends Provisioning {
 
         HashMap attrs = new HashMap();
 
-        int enforceHistory = acct.getIntAttr(Provisioning.A_liquidPasswordEnforceHistory, 0);
+        int enforceHistory = acct.getIntAttr(Provisioning.A_zimbraPasswordEnforceHistory, 0);
         if (enforceHistory > 0) {
             String[] newHistory = updateHistory(
-                    acct.getMultiAttr(Provisioning.A_liquidPasswordHistory),
+                    acct.getMultiAttr(Provisioning.A_zimbraPasswordHistory),
                     acct.getAttr(Provisioning.A_userPassword),                    
                     enforceHistory);
-            attrs.put(Provisioning.A_liquidPasswordHistory, newHistory);
+            attrs.put(Provisioning.A_zimbraPasswordHistory, newHistory);
             checkHistory(newPassword, newHistory);
         }
 
         String encodedPassword = LdapUtil.generateSSHA(newPassword, null);
 
         if (checkMustChange) {
-            boolean mustChange = acct.getBooleanAttr(Provisioning.A_liquidPasswordMustChange, false);
+            boolean mustChange = acct.getBooleanAttr(Provisioning.A_zimbraPasswordMustChange, false);
             // unset it so it doesn't take up space...
             if (mustChange)
-                attrs.put(Provisioning.A_liquidPasswordMustChange, "");
+                attrs.put(Provisioning.A_zimbraPasswordMustChange, "");
         }
 
         attrs.put(Provisioning.A_userPassword, encodedPassword);
-        attrs.put(Provisioning.A_liquidPasswordModifiedTime, LdapUtil.generalizedTime(new Date()));
+        attrs.put(Provisioning.A_zimbraPasswordModifiedTime, LdapUtil.generalizedTime(new Date()));
         
         acct.modifyAttrs(attrs);
     }

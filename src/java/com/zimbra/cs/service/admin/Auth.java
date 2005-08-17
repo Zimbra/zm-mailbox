@@ -37,7 +37,7 @@ public class Auth extends AdminDocumentHandler {
             acct = prov.getAdminAccountByName(name);
         } else {
             acct = prov.getAccountByName(name);
-            if (acct != null && !acct.getBooleanAttr(Provisioning.A_liquidIsAdminAccount, false)) {
+            if (acct != null && !acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false)) {
                 throw ServiceException.PERM_DENIED("not an admin account");
             }
         }
@@ -57,7 +57,7 @@ public class Auth extends AdminDocumentHandler {
         }
 
         Element response = lc.createElement(AdminService.AUTH_RESPONSE);
-        long lifetime = acct.getTimeInterval(Provisioning.A_liquidAdminAuthTokenLifetime, DEFAULT_AUTH_LIFETIME*1000);
+        long lifetime = acct.getTimeInterval(Provisioning.A_zimbraAdminAuthTokenLifetime, DEFAULT_AUTH_LIFETIME*1000);
         long expires = System.currentTimeMillis()+ lifetime;
         String token;
         AuthToken at = new AuthToken(acct, expires, true, null);

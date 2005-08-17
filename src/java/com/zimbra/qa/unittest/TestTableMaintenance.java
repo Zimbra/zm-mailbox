@@ -95,10 +95,10 @@ public class TestTableMaintenance extends TestCase {
     throws Exception {
         Server server = Provisioning.getInstance().getLocalServer();
         Map map = new HashMap();
-        map.put(Provisioning.A_liquidTableMaintenanceMinRows, Integer.toString(minRows));
-        map.put(Provisioning.A_liquidTableMaintenanceMaxRows, Integer.toString(maxRows));
-        map.put(Provisioning.A_liquidTableMaintenanceOperation, operation);
-        map.put(Provisioning.A_liquidTableMaintenanceGrowthFactor,
+        map.put(Provisioning.A_zimbraTableMaintenanceMinRows, Integer.toString(minRows));
+        map.put(Provisioning.A_zimbraTableMaintenanceMaxRows, Integer.toString(maxRows));
+        map.put(Provisioning.A_zimbraTableMaintenanceOperation, operation);
+        map.put(Provisioning.A_zimbraTableMaintenanceGrowthFactor,
             Integer.toString(growthFactor));
         server.modifyAttrs(map);
     }

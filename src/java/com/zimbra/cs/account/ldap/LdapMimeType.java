@@ -29,21 +29,21 @@ public class LdapMimeType extends LdapEntry implements MimeTypeInfo {
      * @see com.zimbra.cs.mime.MimeTypeInfo#getMimeType()
      */
     public String getType() {
-        return super.getAttr(Provisioning.A_liquidMimeType);
+        return super.getAttr(Provisioning.A_zimbraMimeType);
     }
 
     /* (non-Javadoc)
      * @see com.zimbra.cs.mime.MimeTypeInfo#getHandlerClass()
      */
     public String getHandlerClass() {
-        return super.getAttr(Provisioning.A_liquidMimeHandlerClass, null);
+        return super.getAttr(Provisioning.A_zimbraMimeHandlerClass, null);
     }
 
     /* (non-Javadoc)
      * @see com.zimbra.cs.mime.MimeTypeInfo#isIndexingEnabled()
      */
     public boolean isIndexingEnabled() {
-        return super.getBooleanAttr(Provisioning.A_liquidMimeIndexingEnabled, true);
+        return super.getBooleanAttr(Provisioning.A_zimbraMimeIndexingEnabled, true);
     }
 
     /* (non-Javadoc)
@@ -57,7 +57,7 @@ public class LdapMimeType extends LdapEntry implements MimeTypeInfo {
      * @see com.zimbra.cs.mime.MimeTypeInfo#getFileExtensions()
      */
     public String[] getFileExtensions() {
-        return super.getMultiAttr(Provisioning.A_liquidMimeFileExtension);
+        return super.getMultiAttr(Provisioning.A_zimbraMimeFileExtension);
     }
 
 }

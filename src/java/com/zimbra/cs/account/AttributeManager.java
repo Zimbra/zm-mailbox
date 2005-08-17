@@ -182,11 +182,11 @@ public class AttributeManager {
         ZimbraLog.toolSetupLog4j("info");
         AttributeManager mgr = AttributeManager.getInstance();
         HashMap attrs = new HashMap();
-        attrs.put(Provisioning.A_liquidAccountStatus, Provisioning.ACCOUNT_STATUS_ACTIVE);
-        attrs.put(Provisioning.A_liquidImapBindPort, "143");
+        attrs.put(Provisioning.A_zimbraAccountStatus, Provisioning.ACCOUNT_STATUS_ACTIVE);
+        attrs.put(Provisioning.A_zimbraImapBindPort, "143");
         attrs.put("xxxliquidImapBindPort", "143");
-        attrs.put(Provisioning.A_liquidPrefOutOfOfficeReply, null);
-        attrs.put(Provisioning.A_liquidPrefOutOfOfficeReplyEnabled, "FALSE");
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeReply, null);
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeReplyEnabled, "FALSE");
         Map context = new HashMap();
         mgr.preModify(attrs, null, context, false, true);
         // modify

@@ -133,7 +133,7 @@ public class ParsedItemID {
                 throw new IllegalArgumentException("Invalid ItemID Specifier (double initial '/'?): "+itemID);
             }
             mServerId = substrs[1];
-            String localhost = Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_liquidServiceHostname);
+            String localhost = Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname);
             if (!mServerId.equals(localhost)) {
                 mIsLocal = false;
             }

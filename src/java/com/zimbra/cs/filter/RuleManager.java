@@ -68,7 +68,7 @@ public class RuleManager {
                 sieveFactory.evaluate(new DummyMailAdapter(), node);
                 // save 
                 Map attrs = new HashMap(3);
-                attrs.put(Provisioning.A_liquidMailSieveScript, script);
+                attrs.put(Provisioning.A_zimbraMailSieveScript, script);
                 account.modifyAttrs(attrs);
                 mScriptCache.put(accountId, node);
             }
@@ -81,7 +81,7 @@ public class RuleManager {
     }
      
     public String getRules(Account account) throws ServiceException {
-        String script = account.getAttr(Provisioning.A_liquidMailSieveScript);
+        String script = account.getAttr(Provisioning.A_zimbraMailSieveScript);
         return script;
     }
     

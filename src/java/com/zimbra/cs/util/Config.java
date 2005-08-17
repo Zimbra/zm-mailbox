@@ -62,7 +62,7 @@ public class Config {
 
         Server serverConfig = Provisioning.getInstance().getLocalServer();
         boolean userServicesEnabled =
-            serverConfig.getBooleanAttr(Provisioning.A_liquidUserServicesEnabled, true);
+            serverConfig.getBooleanAttr(Provisioning.A_zimbraUserServicesEnabled, true);
         synchronized (sUserServicesEnabledGuard) {
             sUserServicesEnabled = userServicesEnabled;
         }
@@ -137,7 +137,7 @@ public class Config {
      */
     public static void enableUserServices(boolean enabled) throws ServiceException {
         Server serverConfig = Provisioning.getInstance().getLocalServer();
-        serverConfig.setBooleanAttr(Provisioning.A_liquidUserServicesEnabled, enabled);
+        serverConfig.setBooleanAttr(Provisioning.A_zimbraUserServicesEnabled, enabled);
     	synchronized (sUserServicesEnabledGuard) {
     		sUserServicesEnabled = enabled;
         }

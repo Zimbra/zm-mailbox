@@ -59,7 +59,7 @@ public class AccountUtil {
      */
     public static String getCanonicalAddress(Account account) throws ServiceException {
         // If account has a canonical address, let's use that.
-        String ca = account.getAttr(Provisioning.A_liquidMailCanonicalAddress);
+        String ca = account.getAttr(Provisioning.A_zimbraMailCanonicalAddress);
         
         // But we still have to canonicalize domain names, so do that with account address
         if (ca == null) {
@@ -76,7 +76,7 @@ public class AccountUtil {
             return ca;
         }
 
-        String domainCatchAll = domain.getAttr(Provisioning.A_liquidMailCatchAllCanonicalAddress);
+        String domainCatchAll = domain.getAttr(Provisioning.A_zimbraMailCatchAllCanonicalAddress);
         if (domainCatchAll != null) {
             return parts[0] + domainCatchAll;
         }

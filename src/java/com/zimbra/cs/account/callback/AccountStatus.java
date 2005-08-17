@@ -16,14 +16,14 @@ public class AccountStatus implements AttributeCallback {
             Map attrsToModify, Entry entry, boolean isCreate) throws ServiceException {
         
         if (!(value instanceof String))
-            throw ServiceException.INVALID_REQUEST(Provisioning.A_liquidAccountStatus+" is a single-valued attribute", null);
+            throw ServiceException.INVALID_REQUEST(Provisioning.A_zimbraAccountStatus+" is a single-valued attribute", null);
         
         String status = (String) value;
 
         if (status.equals(Provisioning.ACCOUNT_STATUS_CLOSED)) {
-            attrsToModify.put(Provisioning.A_liquidMailStatus, Provisioning.MAIL_STATUS_DISABLED);
+            attrsToModify.put(Provisioning.A_zimbraMailStatus, Provisioning.MAIL_STATUS_DISABLED);
         } else {
-            attrsToModify.put(Provisioning.A_liquidMailStatus, Provisioning.MAIL_STATUS_ENABLED);
+            attrsToModify.put(Provisioning.A_zimbraMailStatus, Provisioning.MAIL_STATUS_ENABLED);
         }
     }
 

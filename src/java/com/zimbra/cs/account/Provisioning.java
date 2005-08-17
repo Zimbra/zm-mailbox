@@ -33,7 +33,7 @@ public abstract class Provisioning {
     /**
      * only use internal
      */
-    public static final String GM_ZIMBRA = "liquid";
+    public static final String GM_ZIMBRA = "zimbra";
     
     /**
      * only use exteranl gal
@@ -46,19 +46,19 @@ public abstract class Provisioning {
     public static final String GM_BOTH = "both";
 
     /**
-     * liquidAuthMech type of "liquid" means our own (use userPassword)
+     * zimbraAuthMech type of "zimbra" means our own (use userPassword)
      */
-    public static final String AM_ZIMBRA = "liquid";
+    public static final String AM_ZIMBRA = "zimbra";
     
     /**
-     * liquidAuthMech type of "ldap" means use configured LDAP attrs
-     * (liquidAuthLdapURL, liquidAuthLdapBindDn)
+     * zimbraAuthMech type of "ldap" means use configured LDAP attrs
+     * (zimbraAuthLdapURL, zimbraAuthLdapBindDn)
      */
     public static final String AM_LDAP = "ldap";
     
     /**
-     * liquidAuthMech type of "ad" means use configured LDAP attrs
-     * (liquidAuthLdapURL, liquidAuthLdapBindDn) for use with ActiveDirectory
+     * zimbraAuthMech type of "ad" means use configured LDAP attrs
+     * (zimbraAuthLdapURL, zimbraAuthLdapBindDn) for use with ActiveDirectory
      */
     public static final String AM_AD = "ad";    
     
@@ -224,17 +224,17 @@ public abstract class Provisioning {
      */
     public static final String A_telephoneNumber = "telephoneNumber";    
 
-    public static final String A_liquidAuthTokenKey = "liquidAuthTokenKey";
+    public static final String A_zimbraAuthTokenKey = "zimbraAuthTokenKey";
 
     /**
      * auth mech to use. should be AM_ZIMBRA or AM_LDAP. 
      */
-    public static final String A_liquidAuthMech = "liquidAuthMech";
+    public static final String A_zimbraAuthMech = "zimbraAuthMech";
     
     /**
      * LDAP URL (ldap://ldapserver[:port]/ or ldaps://ldapserver[:port]/)
      */
-    public static final String A_liquidAuthLdapURL = "liquidAuthLdapURL";
+    public static final String A_zimbraAuthLdapURL = "zimbraAuthLdapURL";
 
     /**
      *  expansions for bind dn string:
@@ -247,433 +247,433 @@ public abstract class Provisioning {
      * For active directory, where accounts in our system have a domain of test.liquidsys.com,
      * and accounts in active directory have liquidsys.com.
      * 
-     * liquidAuthMech      ldap
-     * liquidAuthLdapURL   ldap://exch1/
-     * liquidAuthLdapDn    %n@liquidsys.com
+     * zimbraAuthMech      ldap
+     * zimbraAuthLdapURL   ldap://exch1/
+     * zimbraAuthLdapDn    %n@liquidsys.com
      * 
      * configuring our own system to auth via an LDAP bind
      * 
-     * liquidAuthMech       ldap
-     * liquidAuthLdapURL    ldap://dogfood.liquidsys.com/
-     * liquidAuthLdapUserDn uid=%u,ou=people,%D
+     * zimbraAuthMech       ldap
+     * zimbraAuthLdapURL    ldap://dogfood.liquidsys.com/
+     * zimbraAuthLdapUserDn uid=%u,ou=people,%D
      *
      */    
-    public static final String A_liquidAuthLdapBindDn = "liquidAuthLdapBindDn";    
+    public static final String A_zimbraAuthLdapBindDn = "zimbraAuthLdapBindDn";    
     
     /**
      * UUID for the entry
      */
-    public static final String A_liquidId = "liquidId";
+    public static final String A_zimbraId = "zimbraId";
     
     /**
      * pointer to the aliased id
      */
-    public static final String A_liquidAliasTargetId = "liquidAliasTargetId";    
+    public static final String A_zimbraAliasTargetId = "zimbraAliasTargetId";    
     
     /**
      * the account's status (see ACCOUNT_STATUS_*). Must be "active" to allow logins.
      */
-    public static final String A_liquidAccountStatus = "liquidAccountStatus";
+    public static final String A_zimbraAccountStatus = "zimbraAccountStatus";
     
     /**
      * compat mode for calendar
      */
-    public static final String A_liquidCalendarCompatibilityMode = "liquidCalendarCompatibilityMode";
+    public static final String A_zimbraCalendarCompatibilityMode = "zimbraCalendarCompatibilityMode";
     
     /**
      * Default domain name to use in getAccountByNamde if no domain specified.
      */
-    public static final String A_liquidDefaultDomainName = "liquidDefaultDomainName";
+    public static final String A_zimbraDefaultDomainName = "zimbraDefaultDomainName";
 
     
     /**
-     * For a liquidDomain object, the domain's name (i.e., widgets.com) 
+     * For a zimbraDomain object, the domain's name (i.e., widgets.com) 
      */
-    public static final String A_liquidDomainName = "liquidDomainName";
+    public static final String A_zimbraDomainName = "zimbraDomainName";
 
     /**
      * Whether a domain is local or alias.
      */
-    public static final String A_liquidDomainType = "liquidDomainType";
+    public static final String A_zimbraDomainType = "zimbraDomainType";
 
     /**
      * multi-value attr. Each attr is the name of another attribute that is
      * allowed to be inherited from the cos attr to an account attr.
      */
-    public static final String A_liquidCOSInheritedAttr = "liquidCOSInheritedAttr";
+    public static final String A_zimbraCOSInheritedAttr = "zimbraCOSInheritedAttr";
     
-    public static final String A_liquidDomainInheritedAttr = "liquidDomainInheritedAttr";
+    public static final String A_zimbraDomainInheritedAttr = "zimbraDomainInheritedAttr";
     
-    public static final String A_liquidServerInheritedAttr = "liquidServerInheritedAttr";
+    public static final String A_zimbraServerInheritedAttr = "zimbraServerInheritedAttr";
     
-    public static final String A_liquidGalLdapURL = "liquidGalLdapURL";
+    public static final String A_zimbraGalLdapURL = "zimbraGalLdapURL";
     
-    public static final String A_liquidGalLdapSearchBase = "liquidGalLdapSearchBase";
+    public static final String A_zimbraGalLdapSearchBase = "zimbraGalLdapSearchBase";
     
-    public static final String A_liquidGalLdapBindDn = "liquidGalLdapBindDn";
+    public static final String A_zimbraGalLdapBindDn = "zimbraGalLdapBindDn";
 
-    public static final String A_liquidGalLdapBindPassword = "liquidGalLdapBindPassword";
+    public static final String A_zimbraGalLdapBindPassword = "zimbraGalLdapBindPassword";
 
-    public static final String A_liquidGalLdapFilter = "liquidGalLdapFilter";
+    public static final String A_zimbraGalLdapFilter = "zimbraGalLdapFilter";
     
-    public static final String A_liquidGalLdapAttrMap = "liquidGalLdapAttrMap";    
+    public static final String A_zimbraGalLdapAttrMap = "zimbraGalLdapAttrMap";    
 
     /**
      * global filters defs. Should be in the format: name:{filter-str}
      */
-    public static final String A_liquidGalLdapFilterDef = "liquidGalLdapFilterDef";
+    public static final String A_zimbraGalLdapFilterDef = "zimbraGalLdapFilterDef";
     
     /**
      * max results to return from a gal search
      */
-    public static final String A_liquidGalMaxResults = "liquidGalMaxResults";
+    public static final String A_zimbraGalMaxResults = "zimbraGalMaxResults";
     
     /**
      * GAL mode. should be internal, external, or both. 
      */
-    public static final String A_liquidGalMode = "liquidGalMode";
+    public static final String A_zimbraGalMode = "zimbraGalMode";
     
     /**
      * set to true if an account is an admin account
      */
-    public static final String A_liquidIsAdminAccount = "liquidIsAdminAccount";    
+    public static final String A_zimbraIsAdminAccount = "zimbraIsAdminAccount";    
 
     /**
      * Set for entries (accounts/lists) in the directory that have a local address
      */
-    public static final String A_liquidMailAddress = "liquidMailAddress";
+    public static final String A_zimbraMailAddress = "zimbraMailAddress";
     
     /**
      * Set for entries (accounts/lists) in the directory that have an alias
      */
-    public static final String A_liquidMailAlias = "liquidMailAlias";    
+    public static final String A_zimbraMailAlias = "zimbraMailAlias";    
     
     /**
      * Set to be the address that an entry's local address(es) ultimately resolve to.
      */
-    public static final String A_liquidMailDeliveryAddress = "liquidMailDeliveryAddress";
+    public static final String A_zimbraMailDeliveryAddress = "zimbraMailDeliveryAddress";
     
     /**
      * one or more forwarding addresses for an entry. Used to implement mailing lists, as well as providing forwarding
      * for accounts.
      */
-    public static final String A_liquidMailForwardingAddress = "liquidMailForwardingAddress";
+    public static final String A_zimbraMailForwardingAddress = "zimbraMailForwardingAddress";
     
     /**
      * Address to which this account's address must be rewritten.
      */
-    public static final String A_liquidMailCanonicalAddress = "liquidMailCanonicalAddress";
+    public static final String A_zimbraMailCanonicalAddress = "zimbraMailCanonicalAddress";
     
     /**
      * Designates a catch all source address, used in whole domain
      * forwards to mailboxes or other domains.
      */
-    public static final String A_liquidMailCatchAllAddress = "liquidMailCatchAllAddress";
+    public static final String A_zimbraMailCatchAllAddress = "zimbraMailCatchAllAddress";
 
     /**
      * Designates a catch all destination address, used in whole
      * domain forwards.
      */
-    public static final String A_liquidMailCatchAllForwardingAddress = "liquidMailCatchAllForwardingAddress";
+    public static final String A_zimbraMailCatchAllForwardingAddress = "zimbraMailCatchAllForwardingAddress";
     
     /**
      * Designates a catch all canonical address, used in whole domain
      * addresss rewrites.
      */
-    public static final String A_liquidMailCatchAllCanonicalAddress = "liquidMailCatchAllCanonicalAddress";
+    public static final String A_zimbraMailCatchAllCanonicalAddress = "zimbraMailCatchAllCanonicalAddress";
 
     /**
      * the host/ip address where a user's mailbox is located 
      */
-    public static final String A_liquidMailHost = "liquidMailHost";
+    public static final String A_zimbraMailHost = "zimbraMailHost";
 
     /**
      * multi-value COS attr which is list of servers to provision users on when creating accounts
      */
-    public static final String A_liquidMailHostPool = "liquidMailHostPool";
+    public static final String A_zimbraMailHostPool = "zimbraMailHostPool";
 
     /**
      * the mail status (MAIL_STATUS_*) for a given entry. Must be "enabled" to receive mail.
      */
-    public static final String A_liquidMailStatus = "liquidMailStatus";
+    public static final String A_zimbraMailStatus = "zimbraMailStatus";
     
     /**
      * the quota (in bytes) of a mailbox.
      */
-    public static final String A_liquidMailQuota = "liquidMailQuota";
+    public static final String A_zimbraMailQuota = "zimbraMailQuota";
     
     /**
      * the auto-generated sieve script
      */
-    public static final String A_liquidMailSieveScript = "liquidMailSieveScript";
+    public static final String A_zimbraMailSieveScript = "zimbraMailSieveScript";
     
-    public static final String A_liquidMtaAuthEnabled = "liquidMtaAuthEnabled";
-    public static final String A_liquidMtaBlockedExtension = "liquidMtaBlockedExtension";
-    public static final String A_liquidMtaCommonBlockedExtension = "liquidMtaCommonBlockedExtension";
-    public static final String A_liquidMtaDnsLookupsEnabled = "liquidMtaDnsLookupsEnabled";
-    public static final String A_liquidMtaMaxMessageSize = "liquidMtaMaxMessageSize";
-    public static final String A_liquidMtaRelayHost = "liquidMtaRelayHost";
-    public static final String A_liquidMtaTlsAuthOnly = "liquidMtaTlsAuthOnly";
+    public static final String A_zimbraMtaAuthEnabled = "zimbraMtaAuthEnabled";
+    public static final String A_zimbraMtaBlockedExtension = "zimbraMtaBlockedExtension";
+    public static final String A_zimbraMtaCommonBlockedExtension = "zimbraMtaCommonBlockedExtension";
+    public static final String A_zimbraMtaDnsLookupsEnabled = "zimbraMtaDnsLookupsEnabled";
+    public static final String A_zimbraMtaMaxMessageSize = "zimbraMtaMaxMessageSize";
+    public static final String A_zimbraMtaRelayHost = "zimbraMtaRelayHost";
+    public static final String A_zimbraMtaTlsAuthOnly = "zimbraMtaTlsAuthOnly";
 
-    public static final String A_liquidPrefTimeZoneId = "liquidPrefTimeZoneId";
-    public static final String A_liquidPrefUseTimeZoneListInCalendar = "liquidPrefUseTimeZoneListInCalendar";
+    public static final String A_zimbraPrefTimeZoneId = "zimbraPrefTimeZoneId";
+    public static final String A_zimbraPrefUseTimeZoneListInCalendar = "zimbraPrefUseTimeZoneListInCalendar";
 
     /**
      * whether or not the signature is automatically included on outgoing email
      */
-    public static final String A_liquidPrefMailSignatureEnabled = "liquidPrefMailSignatureEnabled";
+    public static final String A_zimbraPrefMailSignatureEnabled = "zimbraPrefMailSignatureEnabled";
 
-    public static final String A_liquidPrefMailInitialSearch = "liquidPrefMailInitialSearch";
+    public static final String A_zimbraPrefMailInitialSearch = "zimbraPrefMailInitialSearch";
 
-    public static final String A_liquidPrefGroupMailBy = "liquidPrefGroupMailBy";
+    public static final String A_zimbraPrefGroupMailBy = "zimbraPrefGroupMailBy";
 
-    public static final String A_liquidPrefImapSearchFoldersEnabled = "liquidPrefImapSearchFoldersEnabled";
+    public static final String A_zimbraPrefImapSearchFoldersEnabled = "zimbraPrefImapSearchFoldersEnabled";
 
-    public static final String A_liquidPrefIncludeSpamInSearch = "liquidPrefIncludeSpamInSearch";
+    public static final String A_zimbraPrefIncludeSpamInSearch = "zimbraPrefIncludeSpamInSearch";
 
-    public static final String A_liquidPrefIncludeTrashInSearch = "liquidPrefIncludeTrashInSearch";
+    public static final String A_zimbraPrefIncludeTrashInSearch = "zimbraPrefIncludeTrashInSearch";
 
-    public static final String A_liquidPrefMailItemsPerPage = "liquidPrefMailItemsPerPage";
+    public static final String A_zimbraPrefMailItemsPerPage = "zimbraPrefMailItemsPerPage";
 
-    public static final String A_liquidPrefOutOfOfficeReply = "liquidPrefOutOfOfficeReply";
+    public static final String A_zimbraPrefOutOfOfficeReply = "zimbraPrefOutOfOfficeReply";
 
-    public static final String A_liquidPrefOutOfOfficeReplyEnabled = "liquidPrefOutOfOfficeReplyEnabled";
+    public static final String A_zimbraPrefOutOfOfficeReplyEnabled = "zimbraPrefOutOfOfficeReplyEnabled";
 
-    public static final String A_liquidPrefReplyToAddress = "liquidPrefReplyToAddress";
+    public static final String A_zimbraPrefReplyToAddress = "zimbraPrefReplyToAddress";
 
-    public static final String A_liquidPrefUseKeyboardShortcuts = "liquidPrefUseKeyboardShortcuts";
+    public static final String A_zimbraPrefUseKeyboardShortcuts = "zimbraPrefUseKeyboardShortcuts";
 
-    public static final String A_liquidPrefNewMailNotificationEnabled = "liquidPrefNewMailNotificationEnabled";
+    public static final String A_zimbraPrefNewMailNotificationEnabled = "zimbraPrefNewMailNotificationEnabled";
     
-    public static final String A_liquidPrefNewMailNotificationAddress = "liquidPrefNewMailNotificationAddress";
+    public static final String A_zimbraPrefNewMailNotificationAddress = "zimbraPrefNewMailNotificationAddress";
     
-    public static final String A_liquidPrefDedupeMessagesSentToSelf = "liquidPrefDedupeMessagesSentToSelf";
+    public static final String A_zimbraPrefDedupeMessagesSentToSelf = "zimbraPrefDedupeMessagesSentToSelf";
 
     /**
      * administrative notes for an entry.
      */
-    public static final String A_liquidNotes = "liquidNotes";
+    public static final String A_zimbraNotes = "zimbraNotes";
 
     /**
      * number of old passwords to keep, or 0 for no history.
      */
-    public static final String A_liquidPasswordEnforceHistory = "liquidPasswordEnforceHistory";
+    public static final String A_zimbraPasswordEnforceHistory = "zimbraPasswordEnforceHistory";
     
     /**
      * old passwords, time:value
      */
-    public static final String A_liquidPasswordHistory = "liquidPasswordHistory";
+    public static final String A_zimbraPasswordHistory = "zimbraPasswordHistory";
     
     /**
      * password is locked and can't be changed by user
      */
-    public static final String A_liquidPasswordLocked = "liquidPasswordLocked";    
+    public static final String A_zimbraPasswordLocked = "zimbraPasswordLocked";    
     
     /**
      * minimum password length
      */
-    public static final String A_liquidPasswordMinLength = "liquidPasswordMinLength";
+    public static final String A_zimbraPasswordMinLength = "zimbraPasswordMinLength";
     
     /**
      * maximum password length. 0 means no limit.
      */
-    public static final String A_liquidPasswordMaxLength = "liquidPasswordMaxLength";
+    public static final String A_zimbraPasswordMaxLength = "zimbraPasswordMaxLength";
 
     /**
      * minimum password lifetime in days. 0 means no limit.
      */
-    public static final String A_liquidPasswordMinAge = "liquidPasswordMinAge";
+    public static final String A_zimbraPasswordMinAge = "zimbraPasswordMinAge";
     
     /**
      * maximum password lifetime in days. 0 means no limit.
      */
-    public static final String A_liquidPasswordMaxAge = "liquidPasswordMaxAge";
+    public static final String A_zimbraPasswordMaxAge = "zimbraPasswordMaxAge";
 
     /**
      * modified time
      */
-    public static final String A_liquidPasswordModifiedTime = "liquidPasswordModifiedTime";
+    public static final String A_zimbraPasswordModifiedTime = "zimbraPasswordModifiedTime";
 
     /**
      * must change on next auth
      */
-    public static final String A_liquidPasswordMustChange = "liquidPasswordMustChange";
+    public static final String A_zimbraPasswordMustChange = "zimbraPasswordMustChange";
     
     /**
      * the mail .signature value
      */
-    public static final String A_liquidPrefMailSignature = "liquidPrefMailSignature";
+    public static final String A_zimbraPrefMailSignature = "zimbraPrefMailSignature";
     
     /**
      * wether or not to save outgoing mail
      */
-    public static final String A_liquidPrefSaveToSent = "liquidPrefSaveToSent";
+    public static final String A_zimbraPrefSaveToSent = "zimbraPrefSaveToSent";
     
     /**
      * where to save it
      */
-    public static final String A_liquidPrefSentMailFolder = "liquidPrefSentMailFolder";
+    public static final String A_zimbraPrefSentMailFolder = "zimbraPrefSentMailFolder";
     
     /**
      * delete appointment invite (from our inbox) when we've replied to it?
      * TODO add to schema! 
      */
-    public static final String A_liquidPrefDeleteInviteOnReply = "liquidPrefDeleteInviteOnReply";
+    public static final String A_zimbraPrefDeleteInviteOnReply = "zimbraPrefDeleteInviteOnReply";
     
     /**
-     * for liquidGroup objects, the UUID (liquidId) of accounts that are a member of the group. 
+     * for zimbraGroup objects, the UUID (zimbraId) of accounts that are a member of the group. 
      */
-    public static final String A_liquidMember = "liquidMember";
+    public static final String A_zimbraMember = "zimbraMember";
     
     /**
      * An attribute present on accounts for each group the account is a member of. Its value
-     * is the liquiId of the liquidGroup the account is a member of. 
+     * is the liquiId of the zimbraGroup the account is a member of. 
      */
-    public static final String A_liquidMemberOf = "liquidMemberOf";
+    public static final String A_zimbraMemberOf = "zimbraMemberOf";
     
     /**
-     * for accounts, the liquidId of the COS that this account belongs to.
+     * for accounts, the zimbraId of the COS that this account belongs to.
      */
-    public static final String A_liquidCOSId = "liquidCOSId";
+    public static final String A_zimbraCOSId = "zimbraCOSId";
 
 
-    public static final String A_liquidMailPort = "liquidMailPort";
-    public static final String A_liquidMailSSLPort = "liquidMailSSLPort";
-    public static final String A_liquidAdminPort = "liquidAdminPort";
+    public static final String A_zimbraMailPort = "zimbraMailPort";
+    public static final String A_zimbraMailSSLPort = "zimbraMailSSLPort";
+    public static final String A_zimbraAdminPort = "zimbraAdminPort";
 
-    public static final String A_liquidSmtpHostname = "liquidSmtpHostname";
-    public static final String A_liquidSmtpPort = "liquidSmtpPort";
-    public static final String A_liquidSmtpTimeout = "liquidSmtpTimeout";
+    public static final String A_zimbraSmtpHostname = "zimbraSmtpHostname";
+    public static final String A_zimbraSmtpPort = "zimbraSmtpPort";
+    public static final String A_zimbraSmtpTimeout = "zimbraSmtpTimeout";
 
-    public static final String A_liquidLmtpAdvertisedName = "liquidLmtpAdvertisedName";
-    public static final String A_liquidLmtpBindPort = "liquidLmtpBindPort";
-    public static final String A_liquidLmtpBindAddress = "liquidLmtpBindAddress";
-    public static final String A_liquidLmtpNumThreads = "liquidLmtpNumThreads";
+    public static final String A_zimbraLmtpAdvertisedName = "zimbraLmtpAdvertisedName";
+    public static final String A_zimbraLmtpBindPort = "zimbraLmtpBindPort";
+    public static final String A_zimbraLmtpBindAddress = "zimbraLmtpBindAddress";
+    public static final String A_zimbraLmtpNumThreads = "zimbraLmtpNumThreads";
 
-    public static final String A_liquidImapAdvertisedName = "liquidImapAdvertisedName";
-    public static final String A_liquidImapBindPort = "liquidImapBindPort";
-    public static final String A_liquidImapBindAddress = "liquidImapBindAddress";
-    public static final String A_liquidImapNumThreads = "liquidImapNumThreads";        
-    public static final String A_liquidImapServerEnabled = "liquidImapServerEnabled";        
-    public static final String A_liquidImapSSLBindPort = "liquidImapSSLBindPort";
-    public static final String A_liquidImapSSLBindAddress = "liquidImapSSLBindAddress";
-    public static final String A_liquidImapSSLServerEnabled = "liquidImapSSLServerEnabled";            
-    public static final String A_liquidImapCleartextLoginEnabled = "liquidImapCleartextLoginEnabled";    
-    public static final String A_liquidImapEnabled = "liquidImapEnabled";
+    public static final String A_zimbraImapAdvertisedName = "zimbraImapAdvertisedName";
+    public static final String A_zimbraImapBindPort = "zimbraImapBindPort";
+    public static final String A_zimbraImapBindAddress = "zimbraImapBindAddress";
+    public static final String A_zimbraImapNumThreads = "zimbraImapNumThreads";        
+    public static final String A_zimbraImapServerEnabled = "zimbraImapServerEnabled";        
+    public static final String A_zimbraImapSSLBindPort = "zimbraImapSSLBindPort";
+    public static final String A_zimbraImapSSLBindAddress = "zimbraImapSSLBindAddress";
+    public static final String A_zimbraImapSSLServerEnabled = "zimbraImapSSLServerEnabled";            
+    public static final String A_zimbraImapCleartextLoginEnabled = "zimbraImapCleartextLoginEnabled";    
+    public static final String A_zimbraImapEnabled = "zimbraImapEnabled";
 
-    public static final String A_liquidPop3AdvertisedName = "liquidPop3AdvertisedName";
-    public static final String A_liquidPop3BindPort = "liquidPop3BindPort";
-    public static final String A_liquidPop3BindAddress = "liquidPop3BindAddress";
-    public static final String A_liquidPop3NumThreads = "liquidPop3NumThreads";
-    public static final String A_liquidPop3ServerEnabled = "liquidPop3ServerEnabled";        
-    public static final String A_liquidPop3SSLBindPort = "liquidPop3SSLBindPort";
-    public static final String A_liquidPop3SSLBindAddress = "liquidPop3SSLBindAddress";
-    public static final String A_liquidPop3SSLServerEnabled = "liquidPop3SSLServerEnabled";            
-    public static final String A_liquidPop3CleartextLoginEnabled = "liquidPop3CleartextLoginEnabled";    
-    public static final String A_liquidPop3Enabled = "liquidPop3Enabled";
+    public static final String A_zimbraPop3AdvertisedName = "zimbraPop3AdvertisedName";
+    public static final String A_zimbraPop3BindPort = "zimbraPop3BindPort";
+    public static final String A_zimbraPop3BindAddress = "zimbraPop3BindAddress";
+    public static final String A_zimbraPop3NumThreads = "zimbraPop3NumThreads";
+    public static final String A_zimbraPop3ServerEnabled = "zimbraPop3ServerEnabled";        
+    public static final String A_zimbraPop3SSLBindPort = "zimbraPop3SSLBindPort";
+    public static final String A_zimbraPop3SSLBindAddress = "zimbraPop3SSLBindAddress";
+    public static final String A_zimbraPop3SSLServerEnabled = "zimbraPop3SSLServerEnabled";            
+    public static final String A_zimbraPop3CleartextLoginEnabled = "zimbraPop3CleartextLoginEnabled";    
+    public static final String A_zimbraPop3Enabled = "zimbraPop3Enabled";
 
 
-    public static final String A_liquidMailTrashLifetime = "liquidMailTrashLifetime";
-    public static final String A_liquidMailSpamLifetime = "liquidMailSpamLifetime";
-    public static final String A_liquidMailMessageLifetime = "liquidMailMessageLifetime";
-    public static final String A_liquidContactMaxNumEntries = "liquidContactMaxNumEntries";
-    public static final String A_liquidAuthTokenLifetime = "liquidAuthTokenLifetime";
-    public static final String A_liquidAdminAuthTokenLifetime = "liquidAdminAuthTokenLifetime";
-    public static final String A_liquidMailMinPollingInterval =  "liquidMailMinPollingInterval";
-    public static final String A_liquidPrefMailPollingInterval = "liquidPrefMailPollingInterval";
-    public static final String A_liquidAccountClientAttr = "liquidAccountClientAttr";
-    public static final String A_liquidSpamHeader = "liquidSpamHeader";
-    public static final String A_liquidSpamHeaderValue = "liquidSpamHeaderValue";
+    public static final String A_zimbraMailTrashLifetime = "zimbraMailTrashLifetime";
+    public static final String A_zimbraMailSpamLifetime = "zimbraMailSpamLifetime";
+    public static final String A_zimbraMailMessageLifetime = "zimbraMailMessageLifetime";
+    public static final String A_zimbraContactMaxNumEntries = "zimbraContactMaxNumEntries";
+    public static final String A_zimbraAuthTokenLifetime = "zimbraAuthTokenLifetime";
+    public static final String A_zimbraAdminAuthTokenLifetime = "zimbraAdminAuthTokenLifetime";
+    public static final String A_zimbraMailMinPollingInterval =  "zimbraMailMinPollingInterval";
+    public static final String A_zimbraPrefMailPollingInterval = "zimbraPrefMailPollingInterval";
+    public static final String A_zimbraAccountClientAttr = "zimbraAccountClientAttr";
+    public static final String A_zimbraSpamHeader = "zimbraSpamHeader";
+    public static final String A_zimbraSpamHeaderValue = "zimbraSpamHeaderValue";
     
-    public static final String A_liquidLastLogonTimestamp = "liquidLastLogonTimestamp";
-    public static final String A_liquidLastLogonTimestampFrequency = "liquidLastLogonTimestampFrequency";
+    public static final String A_zimbraLastLogonTimestamp = "zimbraLastLogonTimestamp";
+    public static final String A_zimbraLastLogonTimestampFrequency = "zimbraLastLogonTimestampFrequency";
     
-    public static final String A_liquidAttachmentsBlocked = "liquidAttachmentsBlocked";
-    public static final String A_liquidAttachmentsViewInHtmlOnly = "liquidAttachmentsViewInHtmlOnly";
-    public static final String A_liquidAttachmentsIndexingEnabled = "liquidAttachmentsIndexingEnabled";    
+    public static final String A_zimbraAttachmentsBlocked = "zimbraAttachmentsBlocked";
+    public static final String A_zimbraAttachmentsViewInHtmlOnly = "zimbraAttachmentsViewInHtmlOnly";
+    public static final String A_zimbraAttachmentsIndexingEnabled = "zimbraAttachmentsIndexingEnabled";    
     
-    public static final String A_liquidAttachmentsScanEnabled = "liquidAttachmentsScanEnabled";
-    public static final String A_liquidAttachmentsScanClass = "liquidAttachmentsScanClass";
-    public static final String A_liquidAttachmentsScanURL = "liquidAttachmentsScanURL";
+    public static final String A_zimbraAttachmentsScanEnabled = "zimbraAttachmentsScanEnabled";
+    public static final String A_zimbraAttachmentsScanClass = "zimbraAttachmentsScanClass";
+    public static final String A_zimbraAttachmentsScanURL = "zimbraAttachmentsScanURL";
     
-    public static final String A_liquidServiceHostname = "liquidServiceHostname";
+    public static final String A_zimbraServiceHostname = "zimbraServiceHostname";
 
-    public static final String A_liquidRedoLogEnabled            = "liquidRedoLogEnabled";
-    public static final String A_liquidRedoLogLogPath            = "liquidRedoLogLogPath";
-    public static final String A_liquidRedoLogArchiveDir         = "liquidRedoLogArchiveDir";
-    public static final String A_liquidRedoLogRolloverFileSizeKB = "liquidRedoLogRolloverFileSizeKB";
-    public static final String A_liquidRedoLogFsyncIntervalMS    = "liquidRedoLogFsyncIntervalMS";
+    public static final String A_zimbraRedoLogEnabled            = "zimbraRedoLogEnabled";
+    public static final String A_zimbraRedoLogLogPath            = "zimbraRedoLogLogPath";
+    public static final String A_zimbraRedoLogArchiveDir         = "zimbraRedoLogArchiveDir";
+    public static final String A_zimbraRedoLogRolloverFileSizeKB = "zimbraRedoLogRolloverFileSizeKB";
+    public static final String A_zimbraRedoLogFsyncIntervalMS    = "zimbraRedoLogFsyncIntervalMS";
 
-    public static final String A_liquidRedoLogProvider = "liquidRedoLogProvider";
+    public static final String A_zimbraRedoLogProvider = "zimbraRedoLogProvider";
 
     /**
      * Email address of the sender of a new email notification message.
      * @see com.zimbra.cs.mailbox.MailboxManager#notifyIfNecessary
      */
-    public static final String A_liquidNewMailNotificationFrom               = "liquidNewMailNotificationFrom";
+    public static final String A_zimbraNewMailNotificationFrom               = "zimbraNewMailNotificationFrom";
 
     /**
      * Template used to generate the subject of a new email notification message.
      * @see com.zimbra.cs.mailbox.MailboxManager#notifyIfNecessary
      */
-    public static final String A_liquidNewMailNotificationSubject            = "liquidNewMailNotificationSubject";
+    public static final String A_zimbraNewMailNotificationSubject            = "zimbraNewMailNotificationSubject";
     
     /**
      * Template used to generate the body of a new email notification message.
      * @see com.zimbra.cs.mailbox.MailboxManager#notifyIfNecessary
      */
-    public static final String A_liquidNewMailNotificationBody               = "liquidNewMailNotificationBody";
+    public static final String A_zimbraNewMailNotificationBody               = "zimbraNewMailNotificationBody";
     
     /**
      * If set to false, Tomcat server will refuse end-user commands on SOAP
      * and LMTP interfaces, and allow only admin commands.
      */
-    public static final String A_liquidUserServicesEnabled = "liquidUserServicesEnabled";
+    public static final String A_zimbraUserServicesEnabled = "zimbraUserServicesEnabled";
 
     /**
      * Attributes for mime type handlers.
      */
-    public static final String A_liquidMimeType                 = "liquidMimeType";
-    public static final String A_liquidMimeIndexingEnabled      = "liquidMimeIndexingEnabled";
-    public static final String A_liquidMimeHandlerClass         = "liquidMimeHandlerClass";
-    public static final String A_liquidMimeFileExtension        = "liquidMimeFileExtension";
+    public static final String A_zimbraMimeType                 = "zimbraMimeType";
+    public static final String A_zimbraMimeIndexingEnabled      = "zimbraMimeIndexingEnabled";
+    public static final String A_zimbraMimeHandlerClass         = "zimbraMimeHandlerClass";
+    public static final String A_zimbraMimeFileExtension        = "zimbraMimeFileExtension";
     
     /**
      * Attributes for object type handlers.
      */
-    public static final String A_liquidObjectType               = "liquidObjectType";
-    public static final String A_liquidObjectIndexingEnabled    = "liquidObjectIndexingEnabled";
-    public static final String A_liquidObjectStoreMatched       = "liquidObjectStoreMatched"; 
-    public static final String A_liquidObjectHandlerClass       = "liquidObjectHandlerClass";
-    public static final String A_liquidObjectHandlerConfig      = "liquidObjectHandlerConfig";
+    public static final String A_zimbraObjectType               = "zimbraObjectType";
+    public static final String A_zimbraObjectIndexingEnabled    = "zimbraObjectIndexingEnabled";
+    public static final String A_zimbraObjectStoreMatched       = "zimbraObjectStoreMatched"; 
+    public static final String A_zimbraObjectHandlerClass       = "zimbraObjectHandlerClass";
+    public static final String A_zimbraObjectHandlerConfig      = "zimbraObjectHandlerConfig";
 
-    public static final String A_liquidTableMaintenanceMinRows      = "liquidTableMaintenanceMinRows";
-    public static final String A_liquidTableMaintenanceMaxRows      = "liquidTableMaintenanceMaxRows";
-    public static final String A_liquidTableMaintenanceOperation    = "liquidTableMaintenanceOperation";
-    public static final String A_liquidTableMaintenanceGrowthFactor = "liquidTableMaintenanceGrowthFactor";
+    public static final String A_zimbraTableMaintenanceMinRows      = "zimbraTableMaintenanceMinRows";
+    public static final String A_zimbraTableMaintenanceMaxRows      = "zimbraTableMaintenanceMaxRows";
+    public static final String A_zimbraTableMaintenanceOperation    = "zimbraTableMaintenanceOperation";
+    public static final String A_zimbraTableMaintenanceGrowthFactor = "zimbraTableMaintenanceGrowthFactor";
     
-    public static final String A_liquidSpamCheckEnabled = "liquidSpamCheckEnabled";
-    public static final String A_liquidSpamKillPercent = "liquidSpamKillPercent";
-    public static final String A_liquidSpamSubjectTag = "liquidSpamSubjectTag";
-    public static final String A_liquidSpamTagPercent = "liquidSpamTagPercent";
+    public static final String A_zimbraSpamCheckEnabled = "zimbraSpamCheckEnabled";
+    public static final String A_zimbraSpamKillPercent = "zimbraSpamKillPercent";
+    public static final String A_zimbraSpamSubjectTag = "zimbraSpamSubjectTag";
+    public static final String A_zimbraSpamTagPercent = "zimbraSpamTagPercent";
 
-    public static final String A_liquidVirusCheckEnabled = "liquidVirusCheckEnabled";
-    public static final String A_liquidVirusWarnRecipient = "liquidVirusWarnRecipient";
-    public static final String A_liquidVirusWarnAdmin = "liquidVirusWarnAdmin";
-    public static final String A_liquidVirusBlockEncryptedArchive = "liquidVirusBlockEncryptedArchive";
-    public static final String A_liquidVirusDefinitionsUpdateFrequency = "liquidVirusDefinitionsUpdateFrequency";
+    public static final String A_zimbraVirusCheckEnabled = "zimbraVirusCheckEnabled";
+    public static final String A_zimbraVirusWarnRecipient = "zimbraVirusWarnRecipient";
+    public static final String A_zimbraVirusWarnAdmin = "zimbraVirusWarnAdmin";
+    public static final String A_zimbraVirusBlockEncryptedArchive = "zimbraVirusBlockEncryptedArchive";
+    public static final String A_zimbraVirusDefinitionsUpdateFrequency = "zimbraVirusDefinitionsUpdateFrequency";
     
-    public static final String A_liquidFileUploadMaxSize = "liquidFileUploadMaxSize";
+    public static final String A_zimbraFileUploadMaxSize = "zimbraFileUploadMaxSize";
 
     /**
      * Attributes for time zone objects
      */
-    public static final String A_liquidTimeZoneStandardDtStart = "liquidTimeZoneStandardDtStart";
-    public static final String A_liquidTimeZoneStandardOffset = "liquidTimeZoneStandardOffset";
-    public static final String A_liquidTimeZoneStandardRRule = "liquidTimeZoneStandardRRule";
-    public static final String A_liquidTimeZoneDaylightDtStart = "liquidTimeZoneDaylightDtStart";
-    public static final String A_liquidTimeZoneDaylightOffset = "liquidTimeZoneDaylightOffset";
-    public static final String A_liquidTimeZoneDaylightRRule = "liquidTimeZoneDaylightRRule";
+    public static final String A_zimbraTimeZoneStandardDtStart = "zimbraTimeZoneStandardDtStart";
+    public static final String A_zimbraTimeZoneStandardOffset = "zimbraTimeZoneStandardOffset";
+    public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
+    public static final String A_zimbraTimeZoneDaylightDtStart = "zimbraTimeZoneDaylightDtStart";
+    public static final String A_zimbraTimeZoneDaylightOffset = "zimbraTimeZoneDaylightOffset";
+    public static final String A_zimbraTimeZoneDaylightRRule = "zimbraTimeZoneDaylightRRule";
 
     private static Provisioning mProvisioning;
 
@@ -697,7 +697,7 @@ public abstract class Provisioning {
     public abstract List /*<ObjectType>*/ getObjectTypes() throws ServiceException;
     
     /**
-     * Creates the specified account. The A_liquidId and A_uid attributes are automatically
+     * Creates the specified account. The A_zimbraId and A_uid attributes are automatically
      * created and should not be passed in.
      * 
      * For example:
@@ -705,9 +705,9 @@ public abstract class Provisioning {
      * HashMap attrs  = new HashMap();
      * attrs.put(Provisioning.A_sn, "Schemers");
      * attrs.put(Provisioning.A_cn, "Roland Schemers");
-     * attrs.put(Provisioning.A_liquidMailStatus, Provisioning.MAIL_STATUS_ENABLED);
-     * attrs.put(Provisioning.A_liquidMailHost, "server1");
-     * attrs.put(Provisioning.A_liquidMailDeliveryAddress, "roland@tiiq.net");        
+     * attrs.put(Provisioning.A_zimbraMailStatus, Provisioning.MAIL_STATUS_ENABLED);
+     * attrs.put(Provisioning.A_zimbraMailHost, "server1");
+     * attrs.put(Provisioning.A_zimbraMailDeliveryAddress, "roland@tiiq.net");        
      * prov.createAccount("roland@tiiq.net", "dsferulz", Provisioning.ACCOUNT_STATUS_ACTIVE, attrs);
      * </pre>
      * 
@@ -725,7 +725,7 @@ public abstract class Provisioning {
      * 
      * @param emailAddress
      * @param remoteURL remote ldap://host/ URL
-     * @param remoteBindDn remote bind dn to use (i.e., uid=liquid,cn=admins,cn=liquid)
+     * @param remoteBindDn remote bind dn to use (i.e., uid=zimbra,cn=admins,cn=zimbra)
      * @param remoteBindPassword password for bind dn
      * @return account as created on the local sysem.
      * @throws ServiceException
@@ -736,20 +736,20 @@ public abstract class Provisioning {
     /**
      * deletes the specified account, removing the account and all email aliases.
      * does not remove any mailbox associated with the account.
-     * @param liquidId
+     * @param zimbraId
      * @throws ServiceException
      */
-    public abstract void deleteAccount(String liquidId) throws ServiceException;
+    public abstract void deleteAccount(String zimbraId) throws ServiceException;
 
     /**
      * renames the specified account
-     * @param liquidId
+     * @param zimbraId
      * @param newName
      * @throws ServiceException
      */
-    public abstract void renameAccount(String liquidId, String newName) throws ServiceException;
+    public abstract void renameAccount(String zimbraId, String newName) throws ServiceException;
     
-    public abstract Account getAccountById(String liquidId) throws ServiceException;
+    public abstract Account getAccountById(String zimbraId) throws ServiceException;
 
     public abstract Account getAccountByName(String emailAddress) throws ServiceException;
 
@@ -790,12 +790,12 @@ public abstract class Provisioning {
     public abstract void removeAlias(Account acct, String alias) throws ServiceException;
  
     /**
-     *  Creates a liquidDomain object in the directory. Also creates parent domains as needed (as simple dcObject entries though,
-     *  not liquidDomain objects). The extra attrs that can be passed in are:<p />
+     *  Creates a zimbraDomain object in the directory. Also creates parent domains as needed (as simple dcObject entries though,
+     *  not zimbraDomain objects). The extra attrs that can be passed in are:<p />
      * <dl>
      * <dt>description</dt>
      * <dd>textual description of the domain</dd>
-     * <dt>liquidNotes</dt>
+     * <dt>zimbraNotes</dt>
      * <dd>additional notes about the domain</dd>
      * </dl>
      * <p />
@@ -805,33 +805,33 @@ public abstract class Provisioning {
      */
     public abstract Domain createDomain(String name, Map attrs) throws ServiceException;
 
-    public abstract Domain getDomainById(String liquidId) throws ServiceException;
+    public abstract Domain getDomainById(String zimbraId) throws ServiceException;
 
     public abstract Domain getDomainByName(String name) throws ServiceException;
 
     public abstract List getAllDomains()  throws ServiceException;
 
-    public abstract void deleteDomain(String liquidId) throws ServiceException;
+    public abstract void deleteDomain(String zimbraId) throws ServiceException;
     
     public abstract Cos createCos(String name, Map attrs) throws ServiceException;
 
-    public abstract void renameCos(String liquidId, String newName) throws ServiceException;
+    public abstract void renameCos(String zimbraId, String newName) throws ServiceException;
     
-    public abstract Cos getCosById(String liquidId) throws ServiceException;
+    public abstract Cos getCosById(String zimbraId) throws ServiceException;
 
     public abstract Cos getCosByName(String name) throws ServiceException;
 
     public abstract List getAllCos()  throws ServiceException;
     
-    public abstract void deleteCos(String liquidId) throws ServiceException;
+    public abstract void deleteCos(String zimbraId) throws ServiceException;
     
     public abstract Server getLocalServer() throws ServiceException;
     
     public abstract Server createServer(String name, Map attrs) throws ServiceException;
 
-    public abstract Server getServerById(String liquidId) throws ServiceException;
+    public abstract Server getServerById(String zimbraId) throws ServiceException;
 
-    public abstract Server getServerById(String liquidId, boolean reload) throws ServiceException;
+    public abstract Server getServerById(String zimbraId, boolean reload) throws ServiceException;
 
     public abstract Server getServerByName(String name) throws ServiceException;
 
@@ -839,7 +839,7 @@ public abstract class Provisioning {
 
     public abstract List getAllServers()  throws ServiceException;
     
-    public abstract void deleteServer(String liquidId) throws ServiceException;
+    public abstract void deleteServer(String zimbraId) throws ServiceException;
 
     public abstract List /*<WellKnownTimeZone>*/ getAllTimeZones() throws ServiceException;
 
@@ -847,12 +847,12 @@ public abstract class Provisioning {
 
     public abstract DistributionList createDistributionList(String listAddress, Map listAttrs) throws ServiceException;
 
-    public abstract DistributionList getDistributionListById(String liquidId) throws ServiceException;
+    public abstract DistributionList getDistributionListById(String zimbraId) throws ServiceException;
     
     public abstract DistributionList getDistributionListByName(String name) throws ServiceException;
     
     public abstract List getAllDistributionLists() throws ServiceException;
 
-    public abstract void deleteDistributionList(String liquidId) throws ServiceException;
+    public abstract void deleteDistributionList(String zimbraId) throws ServiceException;
 
 }

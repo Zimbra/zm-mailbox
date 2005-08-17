@@ -38,7 +38,7 @@ public class DeleteAccount extends AdminDocumentHandler {
             // Request must be sent to the host that the mailbox is on, so that
             // the mailbox can be deleted
             throw AccountServiceException.WRONG_HOST(
-                account.getAttr(Provisioning.A_liquidMailHost), null);
+                account.getAttr(Provisioning.A_zimbraMailHost), null);
         }
         Mailbox mbox = Mailbox.getMailboxByAccount(account);
         

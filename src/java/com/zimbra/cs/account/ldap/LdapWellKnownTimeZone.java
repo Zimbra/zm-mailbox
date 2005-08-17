@@ -64,11 +64,11 @@ public class LdapWellKnownTimeZone extends LdapNamedEntry implements WellKnownTi
     }
 
     public String getStandardDtStart() {
-        return getAttr(Provisioning.A_liquidTimeZoneStandardDtStart);
+        return getAttr(Provisioning.A_zimbraTimeZoneStandardDtStart);
     }
 
     public String getStandardOffset() {
-        return getAttr(Provisioning.A_liquidTimeZoneStandardOffset);
+        return getAttr(Provisioning.A_zimbraTimeZoneStandardOffset);
     }
 
     boolean mStandardOffsetMinsCached = false;
@@ -83,15 +83,15 @@ public class LdapWellKnownTimeZone extends LdapNamedEntry implements WellKnownTi
     }
 
     public String getStandardRecurrenceRule() {
-        return getAttr(Provisioning.A_liquidTimeZoneStandardRRule);
+        return getAttr(Provisioning.A_zimbraTimeZoneStandardRRule);
     }
 
     public String getDaylightDtStart() {
-        return getAttr(Provisioning.A_liquidTimeZoneDaylightDtStart);
+        return getAttr(Provisioning.A_zimbraTimeZoneDaylightDtStart);
     }
 
     public String getDaylightOffset() {
-        return getAttr(Provisioning.A_liquidTimeZoneDaylightOffset);
+        return getAttr(Provisioning.A_zimbraTimeZoneDaylightOffset);
     }
 
     boolean mDaylightOffsetMinsCached = false;
@@ -106,7 +106,7 @@ public class LdapWellKnownTimeZone extends LdapNamedEntry implements WellKnownTi
     }
 
     public String getDaylightRecurrenceRule() {
-        return getAttr(Provisioning.A_liquidTimeZoneDaylightRRule);
+        return getAttr(Provisioning.A_zimbraTimeZoneDaylightRRule);
     }
 
     /**

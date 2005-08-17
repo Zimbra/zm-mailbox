@@ -37,7 +37,7 @@ public class SearchFolder extends Folder {
 
     public boolean isImapVisible() {
         try {
-            return mMailbox.getAccount().getBooleanAttr(Provisioning.A_liquidPrefImapSearchFoldersEnabled, true);
+            return mMailbox.getAccount().getBooleanAttr(Provisioning.A_zimbraPrefImapSearchFoldersEnabled, true);
         } catch (ServiceException e) {
             return true;
         }

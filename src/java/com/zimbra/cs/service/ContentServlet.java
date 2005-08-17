@@ -155,7 +155,7 @@ public class ContentServlet extends ZimbraServlet {
                         if (contentType.toLowerCase().startsWith(Mime.CT_TEXT_HTML) && ("htmldf".equals(fmt) || "htmldfi".equals(fmt))) {
                             sendbackDefangedHtml(mp, contentType, resp, fmt);
                         } else {
-                            if (!isTrue(Provisioning.A_liquidAttachmentsViewInHtmlOnly, mbox.getAccountId())) {
+                            if (!isTrue(Provisioning.A_zimbraAttachmentsViewInHtmlOnly, mbox.getAccountId())) {
                                 sendbackOriginalDoc(mp, contentType, resp);
                             } else {
                                 req.setAttribute(ATTR_MIMEPART, mp);
@@ -281,7 +281,7 @@ public class ContentServlet extends ZimbraServlet {
         if (authToken == null) 
             return;
         
-        if (isTrue(Provisioning.A_liquidAttachmentsBlocked, authToken.getAccountId())) {
+        if (isTrue(Provisioning.A_zimbraAttachmentsBlocked, authToken.getAccountId())) {
             sendbackBlockMessage(req, resp);
             return;
         }

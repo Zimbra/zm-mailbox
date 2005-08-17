@@ -51,7 +51,7 @@ public class Notification {
     {
         String destination = null;
         
-        boolean replyEnabled = account.getBooleanAttr(Provisioning.A_liquidPrefOutOfOfficeReplyEnabled, false);
+        boolean replyEnabled = account.getBooleanAttr(Provisioning.A_zimbraPrefOutOfOfficeReplyEnabled, false);
         if (ZimbraLog.mailbox.isDebugEnabled()) {
             ZimbraLog.mailbox.debug("outofoffice reply enabled=" + replyEnabled + " rcpt='" + rcpt + "' mid=" + msg.getId());
         }
@@ -180,7 +180,7 @@ public class Notification {
             out.setFrom(AccountUtil.getOutgoingFromAddress(account));
             
             // Reply-To
-            String replyTo = account.getAttr(Provisioning.A_liquidPrefReplyToAddress);
+            String replyTo = account.getAttr(Provisioning.A_zimbraPrefReplyToAddress);
             if (replyTo != null && !replyTo.trim().equals("")) {
                 out.setHeader("Reply-To", replyTo);
             }
@@ -207,7 +207,7 @@ public class Notification {
             out.setHeader("Precedence", "bulk");
             
             // Body
-            String body = account.getAttr(Provisioning.A_liquidPrefOutOfOfficeReply, "");
+            String body = account.getAttr(Provisioning.A_zimbraPrefOutOfOfficeReply, "");
             out.setText(body);
             
             out.setEnvelopeFrom("<>");
@@ -242,13 +242,13 @@ public class Notification {
         throws MessagingException
     {
         // Does user have new mail notification turned on
-        boolean notify = account.getBooleanAttr(Provisioning.A_liquidPrefNewMailNotificationEnabled, false);
+        boolean notify = account.getBooleanAttr(Provisioning.A_zimbraPrefNewMailNotificationEnabled, false);
         if (!notify) {
             return;
         }
 
         // Validate notification address
-        String destination = account.getAttr(Provisioning.A_liquidPrefNewMailNotificationAddress);
+        String destination = account.getAttr(Provisioning.A_zimbraPrefNewMailNotificationAddress);
         if (destination == null) {
             nfailed("destination not set", null, rcpt, msg, null);
             return;
@@ -302,9 +302,9 @@ public class Notification {
         }
         
         // Assemble message components
-        String from = account.getAttr(Provisioning.A_liquidNewMailNotificationFrom);
-        String subject = account.getAttr(Provisioning.A_liquidNewMailNotificationSubject);
-        String body = account.getAttr(Provisioning.A_liquidNewMailNotificationBody);
+        String from = account.getAttr(Provisioning.A_zimbraNewMailNotificationFrom);
+        String subject = account.getAttr(Provisioning.A_zimbraNewMailNotificationSubject);
+        String body = account.getAttr(Provisioning.A_zimbraNewMailNotificationBody);
         if (from == null || subject == null || body == null) {
             nfailed("null from, subject or body", destination, rcpt, msg);
             return;

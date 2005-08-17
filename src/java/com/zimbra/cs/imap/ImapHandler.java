@@ -667,11 +667,11 @@ public class ImapHandler extends ProtocolHandler {
                 return CONTINUE_PROCESSING;
             }
             prov.authAccount(account, password);
-            if (!account.getBooleanAttr(Provisioning.A_liquidImapEnabled, false)) {
+            if (!account.getBooleanAttr(Provisioning.A_zimbraImapEnabled, false)) {
                 sendNO(tag, "account does not have IMAP access enabled");
                 return CONTINUE_PROCESSING;
             } else if (!account.isCorrectHost()) {
-                String correctHost = account.getAttr(Provisioning.A_liquidMailHost);
+                String correctHost = account.getAttr(Provisioning.A_zimbraMailHost);
                 ZimbraLog.imap.info("LOGIN failed; should be on host " + correctHost);
                 if (correctHost == null || correctHost.equals(""))
                     sendNO(tag, "LOGIN failed [wrong host]");
@@ -1317,7 +1317,7 @@ public class ImapHandler extends ProtocolHandler {
 
         String qroot = (String) args.remove(0);
         try {
-            long quota = mMailbox.getAccount().getIntAttr(Provisioning.A_liquidMailQuota, 0);
+            long quota = mMailbox.getAccount().getIntAttr(Provisioning.A_zimbraMailQuota, 0);
             if (qroot == null || !qroot.equals("") || quota <= 0) {
                 ZimbraLog.imap.info("GETQUOTA failed: unknown quota root: " + qroot, null);
                 sendNO(tag, "GETQUOTA failed: unknown quota root");
@@ -1352,7 +1352,7 @@ public class ImapHandler extends ProtocolHandler {
             }
 
             // see if there's any quota on the account
-            long quota = mMailbox.getAccount().getIntAttr(Provisioning.A_liquidMailQuota, 0);
+            long quota = mMailbox.getAccount().getIntAttr(Provisioning.A_zimbraMailQuota, 0);
             sendUntagged("QUOTAROOT " + encodeFolder(path) + (quota > 0 ? " \"\"" : ""));
             if (quota > 0)
                 sendUntagged("QUOTA \"\" (STORAGE " + (mMailbox.getSize() / 1024) + ' ' + (quota / 1024) + ')');

@@ -35,7 +35,7 @@ public class LdapAccount extends LdapNamedEntry implements Account {
     }
 
     public String getId() {
-        return super.getAttr(Provisioning.A_liquidId);
+        return super.getAttr(Provisioning.A_zimbraId);
     }
 
     public String getUid() {
@@ -73,7 +73,7 @@ public class LdapAccount extends LdapNamedEntry implements Account {
     }
 
     public String getAccountStatus() {
-        return super.getAttr(Provisioning.A_liquidAccountStatus);
+        return super.getAttr(Provisioning.A_zimbraAccountStatus);
     }
      
     public String getAttr(String name) {
@@ -114,7 +114,7 @@ public class LdapAccount extends LdapNamedEntry implements Account {
     
     public String[] getAliases() throws ServiceException
     {
-        return getMultiAttr(Provisioning.A_liquidMailAlias);
+        return getMultiAttr(Provisioning.A_zimbraMailAlias);
     }
 
     /* (non-Javadoc)
@@ -122,7 +122,7 @@ public class LdapAccount extends LdapNamedEntry implements Account {
      */
     public Cos getCOS() throws ServiceException {
         // TODO: caching? assume getCOSById does caching?
-        String id = super.getAttr(Provisioning.A_liquidCOSId);
+        String id = super.getAttr(Provisioning.A_zimbraCOSId);
         if (id == null)
             return mProv.getCosByName(Provisioning.DEFAULT_COS_NAME);
         else
@@ -163,7 +163,7 @@ public class LdapAccount extends LdapNamedEntry implements Account {
                 return attrs;
             
             // then enumerate through all inheritable attrs and add them if needed
-            String[] inheritable = mProv.getConfig().getMultiAttr(Provisioning.A_liquidCOSInheritedAttr);
+            String[] inheritable = mProv.getConfig().getMultiAttr(Provisioning.A_zimbraCOSInheritedAttr);
             for (int i = 0; i < inheritable.length; i++) {
                 if (!prefsOnly || inheritable[i].startsWith("liquidPref")) {
                     Object value = attrs.get(inheritable);
@@ -183,15 +183,15 @@ public class LdapAccount extends LdapNamedEntry implements Account {
      * @see com.zimbra.cs.account.Account#isCorrectHost()
      */
     public boolean isCorrectHost() throws ServiceException{
-        String target    = getAttr(Provisioning.A_liquidMailHost);
-        String localhost = mProv.getLocalServer().getAttr(Provisioning.A_liquidServiceHostname);
+        String target    = getAttr(Provisioning.A_zimbraMailHost);
+        String localhost = mProv.getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname);
         return (target != null && target.equalsIgnoreCase(localhost));
     }
 
     private ICalTimeZone mTimeZone;
 
     public synchronized ICalTimeZone getTimeZone() throws ServiceException {
-        String tzId = getAttr(Provisioning.A_liquidPrefTimeZoneId);
+        String tzId = getAttr(Provisioning.A_zimbraPrefTimeZoneId);
         if (tzId == null) {
         	if (mTimeZone != null)
                 return mTimeZone;

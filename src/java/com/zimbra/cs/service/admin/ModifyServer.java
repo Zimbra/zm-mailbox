@@ -39,10 +39,10 @@ public class ModifyServer extends AdminDocumentHandler {
 
         // If updating user service enable flag on local server, we have to 
         // tell Config class about it.
-        if (attrs.containsKey(Provisioning.A_liquidUserServicesEnabled)) {
+        if (attrs.containsKey(Provisioning.A_zimbraUserServicesEnabled)) {
             Server localServer = Provisioning.getInstance().getLocalServer();
             if (server.equals(localServer)) {
-                boolean b = server.getBooleanAttr(Provisioning.A_liquidUserServicesEnabled, true);
+                boolean b = server.getBooleanAttr(Provisioning.A_zimbraUserServicesEnabled, true);
                 Config.enableUserServices(b);
             }
         }

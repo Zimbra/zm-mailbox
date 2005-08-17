@@ -30,10 +30,10 @@ public class LmtpConfig {
     
     public void reload() throws ServiceException {
         Server config = Provisioning.getInstance().getLocalServer();
-        mNumThreads = config.getIntAttr(Provisioning.A_liquidLmtpNumThreads, Config.D_LMTP_THREADS);
-        mPort = config.getIntAttr(Provisioning.A_liquidLmtpBindPort, Config.D_LMTP_BIND_PORT);
-        mBindAddress = config.getAttr(Provisioning.A_liquidLmtpBindAddress, Config.D_LMTP_BIND_ADDRESS);
-        mAdvertisedName = config.getAttr(Provisioning.A_liquidLmtpAdvertisedName, Config.D_LMTP_ANNOUNCE_NAME);
+        mNumThreads = config.getIntAttr(Provisioning.A_zimbraLmtpNumThreads, Config.D_LMTP_THREADS);
+        mPort = config.getIntAttr(Provisioning.A_zimbraLmtpBindPort, Config.D_LMTP_BIND_PORT);
+        mBindAddress = config.getAttr(Provisioning.A_zimbraLmtpBindAddress, Config.D_LMTP_BIND_ADDRESS);
+        mAdvertisedName = config.getAttr(Provisioning.A_zimbraLmtpAdvertisedName, Config.D_LMTP_ANNOUNCE_NAME);
     }
     /**
      * @return Returns the advertisedName.

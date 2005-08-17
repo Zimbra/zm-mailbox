@@ -76,7 +76,7 @@ class ImapRequest {
         int maxSize = DEFAULT_MAX_REQUEST_LENGTH;
         try {
             Server server = Provisioning.getInstance().getLocalServer();
-            maxSize = server.getIntAttr(Provisioning.A_liquidFileUploadMaxSize, DEFAULT_MAX_REQUEST_LENGTH);
+            maxSize = server.getIntAttr(Provisioning.A_zimbraFileUploadMaxSize, DEFAULT_MAX_REQUEST_LENGTH);
             if (maxSize <= 0)
                 maxSize = DEFAULT_MAX_REQUEST_LENGTH;
         } catch (ServiceException e) { }

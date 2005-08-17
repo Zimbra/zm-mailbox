@@ -19,11 +19,11 @@ public class ScanConfig {
     
     public void reload() throws ServiceException {
         Config globalConfig = Provisioning.getInstance().getConfig();
-        mEnabled = globalConfig.getBooleanAttr(Provisioning.A_liquidAttachmentsScanEnabled, false);
-        mClass = globalConfig.getAttr(Provisioning.A_liquidAttachmentsScanClass);
+        mEnabled = globalConfig.getBooleanAttr(Provisioning.A_zimbraAttachmentsScanEnabled, false);
+        mClass = globalConfig.getAttr(Provisioning.A_zimbraAttachmentsScanClass);
         
         Server serverConfig = Provisioning.getInstance().getLocalServer();
-        mURL = serverConfig.getAttr(Provisioning.A_liquidAttachmentsScanURL);
+        mURL = serverConfig.getAttr(Provisioning.A_zimbraAttachmentsScanURL);
     }
 
     public boolean getEnabled() {

@@ -96,12 +96,12 @@ public class Check {
     }
 
     public static Result checkAuthConfig(Map attrs, String name, String password) throws ServiceException {
-        String mech = getRequiredAttr(attrs, Provisioning.A_liquidAuthMech);
+        String mech = getRequiredAttr(attrs, Provisioning.A_zimbraAuthMech);
         if (!(mech.equals(Provisioning.AM_LDAP) || mech.equals(Provisioning.AM_AD)))
             throw ServiceException.INVALID_REQUEST("auth mech must be: "+Provisioning.AM_LDAP+" or "+Provisioning.AM_AD, null);
 
-        String url = getRequiredAttr(attrs, Provisioning.A_liquidAuthLdapURL);
-        String bindDn = getRequiredAttr(attrs, Provisioning.A_liquidAuthLdapBindDn);
+        String url = getRequiredAttr(attrs, Provisioning.A_zimbraAuthLdapURL);
+        String bindDn = getRequiredAttr(attrs, Provisioning.A_zimbraAuthLdapBindDn);
         String dn = LdapUtil.computeAuthDn(name, bindDn);
 
         try {
@@ -114,18 +114,18 @@ public class Check {
 
     
     public static Result checkGalConfig(Map attrs, String query, int limit) throws ServiceException {
-        String mode = getRequiredAttr(attrs, Provisioning.A_liquidGalMode);
+        String mode = getRequiredAttr(attrs, Provisioning.A_zimbraGalMode);
         if (!mode.equals(Provisioning.GM_LDAP))
             throw ServiceException.INVALID_REQUEST("gal mode must be: "+Provisioning.GM_LDAP, null);
 
-        String url = getRequiredAttr(attrs, Provisioning.A_liquidGalLdapURL);
-        String bindDn = (String) attrs.get(Provisioning.A_liquidGalLdapBindDn);
-        String bindPassword = (String) attrs.get(Provisioning.A_liquidGalLdapBindPassword);
-        String searchBase = getRequiredAttr(attrs, Provisioning.A_liquidGalLdapSearchBase);
-        String filter = getRequiredAttr(attrs, Provisioning.A_liquidGalLdapFilter);
+        String url = getRequiredAttr(attrs, Provisioning.A_zimbraGalLdapURL);
+        String bindDn = (String) attrs.get(Provisioning.A_zimbraGalLdapBindDn);
+        String bindPassword = (String) attrs.get(Provisioning.A_zimbraGalLdapBindPassword);
+        String searchBase = getRequiredAttr(attrs, Provisioning.A_zimbraGalLdapSearchBase);
+        String filter = getRequiredAttr(attrs, Provisioning.A_zimbraGalLdapFilter);
 
 
-        String[] galAttrs = Provisioning.getInstance().getConfig().getMultiAttr(Provisioning.A_liquidGalLdapAttrMap);
+        String[] galAttrs = Provisioning.getInstance().getConfig().getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap);
         ArrayList list = new ArrayList(galAttrs.length);
         HashMap map = new HashMap();
         LdapUtil.initGalAttrs(galAttrs, list, map);
@@ -165,9 +165,9 @@ public class Check {
     
     private static void testCheckAuth() {
         HashMap attrs = new HashMap();
-        attrs.put(Provisioning.A_liquidAuthMech, Provisioning.AM_LDAP);
-        attrs.put(Provisioning.A_liquidAuthLdapURL, "ldap://exch1.liquidsys.com/");
-        attrs.put(Provisioning.A_liquidAuthLdapBindDn, "%u@liquidsys.com");
+        attrs.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_LDAP);
+        attrs.put(Provisioning.A_zimbraAuthLdapURL, "ldap://exch1.liquidsys.com/");
+        attrs.put(Provisioning.A_zimbraAuthLdapBindDn, "%u@liquidsys.com");
         try {
             Result r = checkAuthConfig(attrs, "schemers", "xxxxx");
             System.out.println(r);
@@ -183,12 +183,12 @@ public class Check {
 
    private static void testCheckGal() {
         HashMap attrs = new HashMap();
-        attrs.put(Provisioning.A_liquidGalMode, Provisioning.GM_LDAP);
-        attrs.put(Provisioning.A_liquidGalLdapURL, "ldap://exch1.liquidsys.com/");
-        attrs.put(Provisioning.A_liquidGalLdapBindDn, "zz_gal");
-        attrs.put(Provisioning.A_liquidGalLdapBindPassword, "zz_gal");
-        attrs.put(Provisioning.A_liquidGalLdapSearchBase, "dc=liquidsys,dc=com");        
-        attrs.put(Provisioning.A_liquidGalLdapFilter, "ad");
+        attrs.put(Provisioning.A_zimbraGalMode, Provisioning.GM_LDAP);
+        attrs.put(Provisioning.A_zimbraGalLdapURL, "ldap://exch1.liquidsys.com/");
+        attrs.put(Provisioning.A_zimbraGalLdapBindDn, "zz_gal");
+        attrs.put(Provisioning.A_zimbraGalLdapBindPassword, "zz_gal");
+        attrs.put(Provisioning.A_zimbraGalLdapSearchBase, "dc=liquidsys,dc=com");        
+        attrs.put(Provisioning.A_zimbraGalLdapFilter, "ad");
         try {
             Result r = checkGalConfig(attrs, "sam", 10);
             System.out.println(r);

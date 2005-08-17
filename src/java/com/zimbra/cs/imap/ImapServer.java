@@ -49,9 +49,9 @@ public class ImapServer extends TcpServer {
 	}
 
     private void setHostname(Server server) {
-        String name = server.getAttr(Provisioning.A_liquidImapAdvertisedName, null);
+        String name = server.getAttr(Provisioning.A_zimbraImapAdvertisedName, null);
         if (name == null || name.trim().equals(""))
-            name = server.getAttr(Provisioning.A_liquidServiceHostname, null);
+            name = server.getAttr(Provisioning.A_zimbraServiceHostname, null);
         if (name == null || name.trim().equals(""))
             name = "localhost";
 
@@ -78,10 +78,10 @@ public class ImapServer extends TcpServer {
             return;
         
         Server server = Provisioning.getInstance().getLocalServer();
-        int threads = server.getIntAttr(Provisioning.A_liquidImapNumThreads, 10);
-        boolean loginOK = server.getBooleanAttr(Provisioning.A_liquidImapCleartextLoginEnabled, false);
-        InetAddress address = getBindAddress(server.getAttr(Provisioning.A_liquidImapBindAddress, null));
-        int port = server.getIntAttr(Provisioning.A_liquidImapBindPort, 7143);
+        int threads = server.getIntAttr(Provisioning.A_zimbraImapNumThreads, 10);
+        boolean loginOK = server.getBooleanAttr(Provisioning.A_zimbraImapCleartextLoginEnabled, false);
+        InetAddress address = getBindAddress(server.getAttr(Provisioning.A_zimbraImapBindAddress, null));
+        int port = server.getIntAttr(Provisioning.A_zimbraImapBindPort, 7143);
 
         sImapServer = new ImapServer(threads, port, address, loginOK, false);
         sImapServer.setSSL(false);
@@ -97,9 +97,9 @@ public class ImapServer extends TcpServer {
             return;
 
         Server server = Provisioning.getInstance().getLocalServer();
-        int threads = server.getIntAttr(Provisioning.A_liquidImapNumThreads, 10);
-        InetAddress address = getBindAddress(server.getAttr(Provisioning.A_liquidImapSSLBindAddress, null));
-        int port = server.getIntAttr(Provisioning.A_liquidImapSSLBindPort, 7993);
+        int threads = server.getIntAttr(Provisioning.A_zimbraImapNumThreads, 10);
+        InetAddress address = getBindAddress(server.getAttr(Provisioning.A_zimbraImapSSLBindAddress, null));
+        int port = server.getIntAttr(Provisioning.A_zimbraImapSSLBindPort, 7993);
 
         sImapSSLServer = new ImapServer(threads, port, address, true, true);
         sImapSSLServer.setSSL(true);

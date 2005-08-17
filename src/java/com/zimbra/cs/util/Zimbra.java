@@ -108,13 +108,13 @@ public class Zimbra {
         if (!redoLog.isSlave()) {
             Server server = Provisioning.getInstance().getLocalServer();
             LmtpServer.startupLmtpServer();
-            if (server.getBooleanAttr(Provisioning.A_liquidPop3ServerEnabled, false))
+            if (server.getBooleanAttr(Provisioning.A_zimbraPop3ServerEnabled, false))
                 Pop3Server.startupPop3Server();
-            if (server.getBooleanAttr(Provisioning.A_liquidPop3SSLServerEnabled, false))
+            if (server.getBooleanAttr(Provisioning.A_zimbraPop3SSLServerEnabled, false))
                 Pop3Server.startupPop3SSLServer();
-            if (server.getBooleanAttr(Provisioning.A_liquidImapServerEnabled, false))
+            if (server.getBooleanAttr(Provisioning.A_zimbraImapServerEnabled, false))
                 ImapServer.startupImapServer();
-            if (server.getBooleanAttr(Provisioning.A_liquidImapSSLServerEnabled, false))
+            if (server.getBooleanAttr(Provisioning.A_zimbraImapSSLServerEnabled, false))
                 ImapServer.startupImapSSLServer();
         }
 

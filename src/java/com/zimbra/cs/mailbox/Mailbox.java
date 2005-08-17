@@ -409,7 +409,7 @@ public class Mailbox {
 
         if (delta < 0 || !checkQuota)
             return;
-        long quota = getAccount().getIntAttr(Provisioning.A_liquidMailQuota, 0);
+        long quota = getAccount().getIntAttr(Provisioning.A_zimbraMailQuota, 0);
         if (quota != 0 && mCurrentChange.size > quota)
             throw MailServiceException.QUOTA_EXCEEDED(quota);
     }
@@ -423,7 +423,7 @@ public class Mailbox {
 
         if (delta < 0)
             return;
-        int quota = getAccount().getIntAttr(Provisioning.A_liquidContactMaxNumEntries, 0);
+        int quota = getAccount().getIntAttr(Provisioning.A_zimbraContactMaxNumEntries, 0);
         if (quota != 0 && mCurrentChange.contacts > quota)
             throw MailServiceException.TOO_MANY_CONTACTS(quota);
     }
@@ -697,7 +697,7 @@ public class Mailbox {
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
         if (!account.isCorrectHost())
-            throw ServiceException.WRONG_HOST(account.getAttr(Provisioning.A_liquidMailHost), null);
+            throw ServiceException.WRONG_HOST(account.getAttr(Provisioning.A_zimbraMailHost), null);
         synchronized (sMailboxCache) {
             mailboxKey = (Integer) sMailboxCache.get(accountId.toLowerCase());
             if (mailboxKey != null)
@@ -858,7 +858,7 @@ public class Mailbox {
         if (account == null)
             throw new IllegalArgumentException("createMailbox: must specify an account");
         if (!account.isCorrectHost())
-            throw ServiceException.WRONG_HOST(account.getAttr(Provisioning.A_liquidMailHost), null);
+            throw ServiceException.WRONG_HOST(account.getAttr(Provisioning.A_zimbraMailHost), null);
 
         Mailbox mailbox = null;
 
@@ -1862,9 +1862,9 @@ public class Mailbox {
     throws IOException, ParseException, ServiceException {
         Account acct = getAccount();
         boolean includeTrash = 
-            acct.getBooleanAttr(Provisioning.A_liquidPrefIncludeTrashInSearch, false);
+            acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeTrashInSearch, false);
         boolean includeSpam = 
-            acct.getBooleanAttr(Provisioning.A_liquidPrefIncludeSpamInSearch, false);
+            acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeSpamInSearch, false);
         
         return search(queryString, types, sortBy, includeTrash, includeSpam);
     }
@@ -1972,7 +1972,7 @@ public class Mailbox {
 
     private boolean dedupe(MimeMessage mm, Integer sentMsgId) throws ServiceException {
         Account acct = getAccount();
-        String pref = acct.getAttr(Provisioning.A_liquidPrefDedupeMessagesSentToSelf, null);
+        String pref = acct.getAttr(Provisioning.A_zimbraPrefDedupeMessagesSentToSelf, null);
         if (pref == null)                               // default to no deduping
             return false;
         else if (pref.equalsIgnoreCase(DEDUPE_ALL))     // remove all duplicates
@@ -2945,9 +2945,9 @@ public class Mailbox {
 
     public synchronized void purgeMessages(OperationContext octxt) throws ServiceException {
         Account acct = getAccount();
-        int globalTimeout = (int) (acct.getTimeInterval(Provisioning.A_liquidMailMessageLifetime, 0) / 1000);
-        int trashTimeout = (int) (acct.getTimeInterval(Provisioning.A_liquidMailTrashLifetime, 0) / 1000);
-        int spamTimeout  = (int) (acct.getTimeInterval(Provisioning.A_liquidMailSpamLifetime, 0) / 1000);
+        int globalTimeout = (int) (acct.getTimeInterval(Provisioning.A_zimbraMailMessageLifetime, 0) / 1000);
+        int trashTimeout = (int) (acct.getTimeInterval(Provisioning.A_zimbraMailTrashLifetime, 0) / 1000);
+        int spamTimeout  = (int) (acct.getTimeInterval(Provisioning.A_zimbraMailSpamLifetime, 0) / 1000);
         if (globalTimeout <= 0 && trashTimeout <= 0 && spamTimeout <= 0)
             return;
 
@@ -3279,7 +3279,7 @@ public class Mailbox {
     }
 
     public boolean attachmentsIndexingEnabled() throws ServiceException {
-        return getAccount().getBooleanAttr(Provisioning.A_liquidAttachmentsIndexingEnabled, true);
+        return getAccount().getBooleanAttr(Provisioning.A_zimbraAttachmentsIndexingEnabled, true);
     }
 
     private void logCacheActivity(Integer key, MailItem item) {

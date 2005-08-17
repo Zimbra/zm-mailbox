@@ -31,7 +31,7 @@ public class ProxyTarget {
 
         // Same URL as the incoming request, except hostname is that of target server.
         StringBuffer url = new StringBuffer(req.getScheme());
-        url.append("://").append(mServer.getAttr(Provisioning.A_liquidServiceHostname));
+        url.append("://").append(mServer.getAttr(Provisioning.A_zimbraServiceHostname));
         url.append(':').append(req.getServerPort());
         url.append(req.getRequestURI());
         String qs = req.getQueryString();

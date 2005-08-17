@@ -18,19 +18,19 @@ public class MailHost implements AttributeCallback {
     public void preModify(Map context, String attrName, Object value,
             Map attrsToModify, Entry entry, boolean isCreate) throws ServiceException {
         if (!(value instanceof String))
-            throw ServiceException.INVALID_REQUEST(Provisioning.A_liquidMailHost+" is a single-valued attribute", null);
+            throw ServiceException.INVALID_REQUEST(Provisioning.A_zimbraMailHost+" is a single-valued attribute", null);
         
         String mailHost = (String) value;
 
         List servers = Provisioning.getInstance().getAllServers();
         for (Iterator it=servers.iterator(); it.hasNext(); ) {
             Server s = (Server) it.next();
-            String serviceName = s.getAttr(Provisioning.A_liquidServiceHostname, null);
+            String serviceName = s.getAttr(Provisioning.A_zimbraServiceHostname, null);
             if (mailHost.equalsIgnoreCase(serviceName)) 
                 return;
         }
         
-        throw ServiceException.INVALID_REQUEST("specified "+Provisioning.A_liquidMailHost+" does not correspond to a valid server service hostname: "+mailHost, null);
+        throw ServiceException.INVALID_REQUEST("specified "+Provisioning.A_zimbraMailHost+" does not correspond to a valid server service hostname: "+mailHost, null);
     }
 
     /**

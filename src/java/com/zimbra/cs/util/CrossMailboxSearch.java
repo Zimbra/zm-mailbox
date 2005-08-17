@@ -135,7 +135,7 @@ public class CrossMailboxSearch
         CrossMailboxSearch.ServerSearchTask server;
         
         // hackhackhack
-        String hostname = Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_liquidServiceHostname);
+        String hostname = Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname);
         if (!id.isLocal()) {
             hostname = id.getServer();
         }
@@ -225,7 +225,7 @@ public class CrossMailboxSearch
     private static class LocalServerSearchTask extends ServerSearchTask {
         public ZimbraQueryResults getSearchResults(String serverID, String encodedAuthToken, SearchParams params) throws ServiceException
         {
-            assert(serverID.equals(Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_liquidServiceHostname)));
+            assert(serverID.equals(Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname)));
             ZimbraQueryResults[] toRet = null;
             boolean OK = false;
             try {

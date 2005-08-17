@@ -25,9 +25,9 @@ public class LdapConfig extends LdapEntry implements Config {
     
     LdapConfig(String dn, Attributes attrs) {
         super(dn, attrs);
-        mInheritableAccountAttrs = getMultiAttrSet(Provisioning.A_liquidCOSInheritedAttr);
-        mInheritableDomainAttrs = getMultiAttrSet(Provisioning.A_liquidDomainInheritedAttr);
-        mInheritableServerAttrs = getMultiAttrSet(Provisioning.A_liquidServerInheritedAttr);
+        mInheritableAccountAttrs = getMultiAttrSet(Provisioning.A_zimbraCOSInheritedAttr);
+        mInheritableDomainAttrs = getMultiAttrSet(Provisioning.A_zimbraDomainInheritedAttr);
+        mInheritableServerAttrs = getMultiAttrSet(Provisioning.A_zimbraServerInheritedAttr);
     }
 
     /* (non-Javadoc)

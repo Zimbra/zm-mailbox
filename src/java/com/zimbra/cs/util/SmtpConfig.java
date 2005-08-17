@@ -29,11 +29,11 @@ public class SmtpConfig {
     
     public void reload() throws ServiceException {
         Server config = Provisioning.getInstance().getLocalServer();
-        mTimeout = config.getIntAttr(Provisioning.A_liquidSmtpTimeout, Config.D_SMTP_TIMEOUT);
-        mPort = config.getIntAttr(Provisioning.A_liquidSmtpPort, Config.D_SMTP_PORT);
-        mHostname = config.getAttr(Provisioning.A_liquidSmtpHostname, null);
+        mTimeout = config.getIntAttr(Provisioning.A_zimbraSmtpTimeout, Config.D_SMTP_TIMEOUT);
+        mPort = config.getIntAttr(Provisioning.A_zimbraSmtpPort, Config.D_SMTP_PORT);
+        mHostname = config.getAttr(Provisioning.A_zimbraSmtpHostname, null);
         if (mHostname == null) {
-            throw ServiceException.FAILURE("no value for "+Provisioning.A_liquidSmtpHostname, null);
+            throw ServiceException.FAILURE("no value for "+Provisioning.A_zimbraSmtpHostname, null);
         }
     }
     /**

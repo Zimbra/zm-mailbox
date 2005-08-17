@@ -67,8 +67,8 @@ public class ZimbraMailAdapter implements MailAdapter
     static {
         try {
             Provisioning prov = Provisioning.getInstance();
-            sSpamHeader = prov.getConfig().getAttr(Provisioning.A_liquidSpamHeader, null);
-            String spamRegex = prov.getConfig().getAttr(Provisioning.A_liquidSpamHeaderValue, null);
+            sSpamHeader = prov.getConfig().getAttr(Provisioning.A_zimbraSpamHeader, null);
+            String spamRegex = prov.getConfig().getAttr(Provisioning.A_zimbraSpamHeaderValue, null);
             if (spamRegex != null)
                 sSpamHeaderValue = Pattern.compile(spamRegex);
         } catch (Exception e) {

@@ -92,13 +92,13 @@ public class SendMsg extends WriteOpDocumentHandler {
     }
 
     protected static boolean shouldSaveToSent(Account acct) {
-        return acct.getBooleanAttr(Provisioning.A_liquidPrefSaveToSent, false);        
+        return acct.getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, false);        
     }
     
     protected static int getSentFolder(Account acct, Mailbox mbox) throws ServiceException{
         int folderId = Mailbox.ID_FOLDER_SENT;
 
-        String sentFolder = acct.getAttr(Provisioning.A_liquidPrefSentMailFolder, null);
+        String sentFolder = acct.getAttr(Provisioning.A_zimbraPrefSentMailFolder, null);
         if (sentFolder != null)
             try {
                 folderId = mbox.getFolderByPath(sentFolder).getId();
@@ -198,7 +198,7 @@ public class SendMsg extends WriteOpDocumentHandler {
             if (origId > 0)
                 convId = mbox.getConversationIdFromReferent(mm, origId);
 
-            String replyTo = acct.getAttr(Provisioning.A_liquidPrefReplyToAddress);
+            String replyTo = acct.getAttr(Provisioning.A_zimbraPrefReplyToAddress);
         	mm.setFrom(AccountUtil.getOutgoingFromAddress(acct));
 			mm.setSentDate(new Date());
             if (replyTo != null && !replyTo.trim().equals(""))

@@ -44,11 +44,11 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
     }
 
     public String getName() {
-        return getAttr(Provisioning.A_liquidDomainName);
+        return getAttr(Provisioning.A_zimbraDomainName);
     }
 
     public String getId() {
-        return getAttr(Provisioning.A_liquidId);
+        return getAttr(Provisioning.A_zimbraId);
     }
     //public abstract int numberOfAccounts();
 
@@ -74,8 +74,8 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
         // escape user-supplied string
         n = LdapUtil.escapeSearchFilterArg(n);
 
-        String mode = getAttr(Provisioning.A_liquidGalMode);
-        int maxResults = getIntAttr(Provisioning.A_liquidGalMaxResults, DEFAULT_GAL_MAX_RESULTS);
+        String mode = getAttr(Provisioning.A_zimbraGalMode);
+        int maxResults = getIntAttr(Provisioning.A_zimbraGalMaxResults, DEFAULT_GAL_MAX_RESULTS);
                 
         if (mode == null || mode.equals(Provisioning.GM_ZIMBRA))
             return searchZimbraGal(n, maxResults);
@@ -95,7 +95,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
     private static final String ZIMBRA_DEF = "liquid";
 
     public static String getFilterDef(String name) throws ServiceException {
-        String queryExprs[] = Provisioning.getInstance().getConfig().getMultiAttr(Provisioning.A_liquidGalLdapFilterDef);
+        String queryExprs[] = Provisioning.getInstance().getConfig().getMultiAttr(Provisioning.A_zimbraGalLdapFilterDef);
         String fname = name+":";
         String queryExpr = null;
         for (int i=0; i < queryExprs.length; i++) {
@@ -107,7 +107,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
     }
 
     private synchronized void initGalAttrs() {
-        String[] attrs = getMultiAttr(Provisioning.A_liquidGalLdapAttrMap);
+        String[] attrs = getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap);
         ArrayList list = new ArrayList(attrs.length);
         HashMap map = new HashMap();
         LdapUtil.initGalAttrs(attrs, list, map);
@@ -180,11 +180,11 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
     }
 
     private List searchLdapGal(String n, int maxResults) throws ServiceException {
-        String url = getAttr(Provisioning.A_liquidGalLdapURL);
-        String bindDn = getAttr(Provisioning.A_liquidGalLdapBindDn);
-        String bindPassword = getAttr(Provisioning.A_liquidGalLdapBindPassword);
-        String searchBase = getAttr(Provisioning.A_liquidGalLdapSearchBase, "");
-        String filter = getAttr(Provisioning.A_liquidGalLdapFilter);
+        String url = getAttr(Provisioning.A_zimbraGalLdapURL);
+        String bindDn = getAttr(Provisioning.A_zimbraGalLdapBindDn);
+        String bindPassword = getAttr(Provisioning.A_zimbraGalLdapBindPassword);
+        String searchBase = getAttr(Provisioning.A_zimbraGalLdapSearchBase, "");
+        String filter = getAttr(Provisioning.A_zimbraGalLdapFilter);
         Map galAttrMap = getGalAttrMap();
         String[] galAttrList = getGalAttrList();
         try {
@@ -238,7 +238,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
                 return attrs;
             // then enumerate through all inheritable attrs and add them if needed
             Config c = mProv.getConfig();
-            String[] inheritable = mProv.getConfig().getMultiAttr(Provisioning.A_liquidDomainInheritedAttr);
+            String[] inheritable = mProv.getConfig().getMultiAttr(Provisioning.A_zimbraDomainInheritedAttr);
             for (int i=0; i < inheritable.length; i++) {
                 Object value = attrs.get(inheritable[i]);
                 if (value == null)

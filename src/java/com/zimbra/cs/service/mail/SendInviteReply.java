@@ -123,7 +123,7 @@ public class SendInviteReply extends SendMsg {
                      * copy (we REALLY want the "live" copy to be the one in Calendar folder)
                      **/
 
-                if (acct.getBooleanAttr(Provisioning.A_liquidPrefDeleteInviteOnReply, true)) {
+                if (acct.getBooleanAttr(Provisioning.A_zimbraPrefDeleteInviteOnReply, true)) {
                     mbox.move(octxt, inviteMsgId, MailItem.TYPE_MESSAGE, Mailbox.ID_FOLDER_TRASH);
                 }
             }

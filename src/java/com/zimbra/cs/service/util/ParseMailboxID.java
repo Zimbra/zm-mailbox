@@ -149,7 +149,7 @@ public class ParseMailboxID
                 mailbox = Mailbox.getMailboxByAccountId(acct.getId());
                 mailboxId = mailbox.getId();
             } else {
-                hostName = acct.getAttr(Provisioning.A_liquidMailHost);
+                hostName = acct.getAttr(Provisioning.A_zimbraMailHost);
             }
             
         } else if (idStr.indexOf('-') >= 0) {
@@ -161,7 +161,7 @@ public class ParseMailboxID
                 mailbox = Mailbox.getMailboxByAccountId(acct.getId());
                 mailboxId = mailbox.getId();
             } else {
-                hostName = acct.getAttr(Provisioning.A_liquidMailHost);
+                hostName = acct.getAttr(Provisioning.A_zimbraMailHost);
             }
             
         } else if (idStr.indexOf('/') >= 0) {
@@ -192,7 +192,7 @@ public class ParseMailboxID
             }
                 
             
-            String localhost = Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_liquidServiceHostname);
+            String localhost = Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname);
             if (hostName.equals(localhost)) {
                 isLocal = true;
                 hostName = null;

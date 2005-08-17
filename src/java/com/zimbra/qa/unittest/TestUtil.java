@@ -38,7 +38,7 @@ public class TestUtil {
     public static String getDomain()
     throws ServiceException {
         Config config = Provisioning.getInstance().getConfig();
-        String domain = config.getAttr(Provisioning.A_liquidDefaultDomainName, null);
+        String domain = config.getAttr(Provisioning.A_zimbraDefaultDomainName, null);
         assert(domain != null && domain.length() > 0);
         return domain;
     }

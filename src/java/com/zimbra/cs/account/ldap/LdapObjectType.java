@@ -29,7 +29,7 @@ public class LdapObjectType extends LdapEntry implements ObjectType {
      * @see com.zimbra.cs.object.ObjectType#getType()
      */
     public String getType() {
-        return super.getAttr(Provisioning.A_liquidObjectType);
+        return super.getAttr(Provisioning.A_zimbraObjectType);
     }
 
     /* (non-Javadoc)
@@ -43,28 +43,28 @@ public class LdapObjectType extends LdapEntry implements ObjectType {
      * @see com.zimbra.cs.object.ObjectType#isIndexingEnabled()
      */
     public boolean isIndexingEnabled() {
-        return super.getBooleanAttr(Provisioning.A_liquidObjectIndexingEnabled, true);
+        return super.getBooleanAttr(Provisioning.A_zimbraObjectIndexingEnabled, true);
     }
 
     /* (non-Javadoc)
      * @see com.zimbra.cs.object.ObjectType#isStoreMatched()
      */
     public boolean isStoreMatched() {
-        return super.getBooleanAttr(Provisioning.A_liquidObjectStoreMatched, false);
+        return super.getBooleanAttr(Provisioning.A_zimbraObjectStoreMatched, false);
     }
 
     /* (non-Javadoc)
      * @see com.zimbra.cs.object.ObjectType#getHandlerClass()
      */
     public String getHandlerClass() {
-        return super.getAttr(Provisioning.A_liquidObjectHandlerClass, null);
+        return super.getAttr(Provisioning.A_zimbraObjectHandlerClass, null);
     }
 
     /* (non-Javadoc)
      * @see com.zimbra.cs.object.ObjectType#getHandlerConfig()
      */
     public String getHandlerConfig() {
-        return super.getAttr(Provisioning.A_liquidObjectHandlerConfig, null);
+        return super.getAttr(Provisioning.A_zimbraObjectHandlerConfig, null);
     }
 
 }

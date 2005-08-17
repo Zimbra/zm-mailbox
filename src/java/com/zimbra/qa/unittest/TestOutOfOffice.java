@@ -83,8 +83,8 @@ public class TestOutOfOffice extends TestCase
 
     public void testGetOutOfOffice() throws Exception
     {
-        String keyEnabled = Provisioning.A_liquidPrefOutOfOfficeReplyEnabled;
-        String keyReply = Provisioning.A_liquidPrefOutOfOfficeReply;
+        String keyEnabled = Provisioning.A_zimbraPrefOutOfOfficeReplyEnabled;
+        String keyReply = Provisioning.A_zimbraPrefOutOfOfficeReply;
 
         LmcSession session = TestUtil.getSoapSession(USER_NAME);
         LmcGetPrefsRequest req = new LmcGetPrefsRequest();
@@ -128,8 +128,8 @@ public class TestOutOfOffice extends TestCase
     
     public void testModifyOutOfOffice() throws Exception
     {
-        final String keyEnabled = Provisioning.A_liquidPrefOutOfOfficeReplyEnabled;
-        final String keyReply = Provisioning.A_liquidPrefOutOfOfficeReply;
+        final String keyEnabled = Provisioning.A_zimbraPrefOutOfOfficeReplyEnabled;
+        final String keyReply = Provisioning.A_zimbraPrefOutOfOfficeReply;
         
         // Get current settings
         Account account = TestUtil.getAccount(USER_NAME);

@@ -33,7 +33,7 @@ public abstract class RedoLogProvider {
         RedoLogProvider provider = null;
         Class providerClass = null;
         Server config = Provisioning.getInstance().getLocalServer();
-        String className = config.getAttr(Provisioning.A_liquidRedoLogProvider);
+        String className = config.getAttr(Provisioning.A_zimbraRedoLogProvider);
         try {
             if (className != null) {
                 providerClass = Class.forName(className);

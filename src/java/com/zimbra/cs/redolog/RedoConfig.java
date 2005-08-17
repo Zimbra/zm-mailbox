@@ -41,21 +41,21 @@ public class RedoConfig {
     private void reloadInstance() throws ServiceException {
         Server config = Provisioning.getInstance().getLocalServer();
 
-        mServiceHostname = config.getAttr(Provisioning.A_liquidServiceHostname);
-        mRedoLogEnabled = config.getBooleanAttr(Provisioning.A_liquidRedoLogEnabled, D_REDOLOG_ENABLED);
+        mServiceHostname = config.getAttr(Provisioning.A_zimbraServiceHostname);
+        mRedoLogEnabled = config.getBooleanAttr(Provisioning.A_zimbraRedoLogEnabled, D_REDOLOG_ENABLED);
         mRedoLogPath =
             Config.getPathRelativeToZimbraHome(
-                    config.getAttr(Provisioning.A_liquidRedoLogLogPath,
+                    config.getAttr(Provisioning.A_zimbraRedoLogLogPath,
                                    D_REDOLOG_PATH)).getAbsolutePath();
         mRedoLogArchiveDir =
             Config.getPathRelativeToZimbraHome(
-                    config.getAttr(Provisioning.A_liquidRedoLogArchiveDir,
+                    config.getAttr(Provisioning.A_zimbraRedoLogArchiveDir,
                                    D_REDOLOG_ARCHIVEDIR)).getAbsolutePath();
         mRedoLogRolloverFileSizeKB =
-            config.getLongAttr(Provisioning.A_liquidRedoLogRolloverFileSizeKB,
+            config.getLongAttr(Provisioning.A_zimbraRedoLogRolloverFileSizeKB,
                                D_REDOLOG_ROLLOVER_FILESIZE_KB);
         mRedoLogFsyncIntervalMS =
-            config.getLongAttr(Provisioning.A_liquidRedoLogFsyncIntervalMS,
+            config.getLongAttr(Provisioning.A_zimbraRedoLogFsyncIntervalMS,
                                D_REDOLOG_FSYNC_INTERVAL_MS);
     }
 

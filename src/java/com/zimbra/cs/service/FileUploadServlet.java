@@ -151,7 +151,7 @@ public class FileUploadServlet extends ZimbraServlet {
             }
             
             // Look up the maximum file size for uploads
-            String attrName = Provisioning.A_liquidFileUploadMaxSize;
+            String attrName = Provisioning.A_zimbraFileUploadMaxSize;
             int maxSize = DEFAULT_MAX_SIZE;
             try {
                 Server config = Provisioning.getInstance().getLocalServer();

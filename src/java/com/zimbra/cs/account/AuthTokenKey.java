@@ -127,20 +127,20 @@ public class AuthTokenKey {
         if (reload)
             config.reload();
         
-        String[] keys = config.getMultiAttr(Provisioning.A_liquidAuthTokenKey);
+        String[] keys = config.getMultiAttr(Provisioning.A_zimbraAuthTokenKey);
 
         if (keys.length == 0) {
             config.reload();
-            keys = config.getMultiAttr(Provisioning.A_liquidAuthTokenKey);
+            keys = config.getMultiAttr(Provisioning.A_zimbraAuthTokenKey);
         }
 
         // bootstrap. automatically create new random key
         if (keys.length == 0) {
             AuthTokenKey key = new AuthTokenKey(0, null);
             HashMap attrs = new HashMap();
-            attrs.put(Provisioning.A_liquidAuthTokenKey, key.getEncoded());
+            attrs.put(Provisioning.A_zimbraAuthTokenKey, key.getEncoded());
             config.modifyAttrs(attrs);
-            keys = config.getMultiAttr(Provisioning.A_liquidAuthTokenKey);
+            keys = config.getMultiAttr(Provisioning.A_zimbraAuthTokenKey);
         }
 
         for (int i=0; i < keys.length; i++) {
