@@ -22,7 +22,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
     private static HashMap sFolderStrMap;
 
     private static abstract class GetQueryCallback {
-        public abstract LiquidQuery.BaseQuery execute(Mailbox mailbox, Analyzer analyzer, int modifier) throws ServiceException;
+        public abstract ZimbraQuery.BaseQuery execute(Mailbox mailbox, Analyzer analyzer, int modifier) throws ServiceException;
     }
 
     private static HashMap sIsStrMap;
@@ -43,112 +43,112 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
 
         // expressing this in java is soooo ugly.... <sigh>
         sIsStrMap.put("read",
-                      new GetQueryCallback() { public LiquidQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
-                          return new LiquidQuery.ReadQuery(mbx, analyze, modifier, true);
+                      new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                          return new ZimbraQuery.ReadQuery(mbx, analyze, modifier, true);
                       } } );
 
         sIsStrMap.put("unread",
-                      new GetQueryCallback() { public LiquidQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
-                          return new LiquidQuery.ReadQuery(mbx, analyze, modifier, false);
+                      new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                          return new ZimbraQuery.ReadQuery(mbx, analyze, modifier, false);
                       } } );
 
         sIsStrMap.put("flagged",
-                      new GetQueryCallback() { public LiquidQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
-                          return new LiquidQuery.FlaggedQuery(mbx, analyze, modifier, true);
+                      new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                          return new ZimbraQuery.FlaggedQuery(mbx, analyze, modifier, true);
                       } } );
 
         sIsStrMap.put("unflagged",
-                      new GetQueryCallback() { public LiquidQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
-                              return new LiquidQuery.FlaggedQuery(mbx, analyze, modifier, false);
+                      new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                              return new ZimbraQuery.FlaggedQuery(mbx, analyze, modifier, false);
                       } } );
 
         sIsStrMap.put("draft",
-                      new GetQueryCallback() { public LiquidQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
-                              return new LiquidQuery.DraftQuery(mbx, analyze, modifier, true);
+                      new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                              return new ZimbraQuery.DraftQuery(mbx, analyze, modifier, true);
                       } } );
 
         sIsStrMap.put("sent",  /* sent by me */
-                      new GetQueryCallback() { public LiquidQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
-                          return new LiquidQuery.SentQuery(mbx, analyze, modifier, true);
+                      new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                          return new ZimbraQuery.SentQuery(mbx, analyze, modifier, true);
                       } } );
 
         sIsStrMap.put("fromme", /* sent by me */
-                      new GetQueryCallback() { public LiquidQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
-                          return new LiquidQuery.SentQuery(mbx, analyze, modifier, true);
+                      new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                          return new ZimbraQuery.SentQuery(mbx, analyze, modifier, true);
                       } } );
 
         sIsStrMap.put("received",
-                      new GetQueryCallback() { public LiquidQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
-                          return new LiquidQuery.SentQuery(mbx, analyze, modifier, false);
+                      new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                          return new ZimbraQuery.SentQuery(mbx, analyze, modifier, false);
                       } } );
 
         sIsStrMap.put("replied",
-                      new GetQueryCallback() { public LiquidQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
-                          return new LiquidQuery.RepliedQuery(mbx, analyze, modifier, true);
+                      new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                          return new ZimbraQuery.RepliedQuery(mbx, analyze, modifier, true);
                       } } );
 
         sIsStrMap.put("unreplied",
-                      new GetQueryCallback() { public LiquidQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
-                          return new LiquidQuery.RepliedQuery(mbx, analyze, modifier, false);
+                      new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                          return new ZimbraQuery.RepliedQuery(mbx, analyze, modifier, false);
                       } } );
 
         sIsStrMap.put("forwarded",
-                      new GetQueryCallback() { public LiquidQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
-                          return new LiquidQuery.ForwardedQuery(mbx, analyze, modifier, true);
+                      new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                          return new ZimbraQuery.ForwardedQuery(mbx, analyze, modifier, true);
                       } } );
 
         sIsStrMap.put("unforwarded",
-                      new GetQueryCallback() { public LiquidQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
-                          return new LiquidQuery.ForwardedQuery(mbx, analyze, modifier, false);
+                      new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                          return new ZimbraQuery.ForwardedQuery(mbx, analyze, modifier, false);
                       } } );
 
         sIsStrMap.put("anywhere",
-                      new GetQueryCallback() { public LiquidQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
-                          return LiquidQuery.InQuery.Create(mbx, analyze, modifier, LiquidQuery.InQuery.IN_ANY_FOLDER);
+                      new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                          return ZimbraQuery.InQuery.Create(mbx, analyze, modifier, ZimbraQuery.InQuery.IN_ANY_FOLDER);
                       } } );
 
         sIsStrMap.put("invite",
-                      new GetQueryCallback() { public LiquidQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
-                          return LiquidQuery.DBTypeQuery.IS_INVITE(mbx, analyze, modifier);
+                      new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                          return ZimbraQuery.DBTypeQuery.IS_INVITE(mbx, analyze, modifier);
                       } } );
 
 
     }
 
-    public LiquidQuery.BaseQuery ItemQuery(int modifier, int target, String tok) throws ParseException, ServiceException, MailServiceException
+    public ZimbraQuery.BaseQuery ItemQuery(int modifier, int target, String tok) throws ParseException, ServiceException, MailServiceException
     {
         assert(target == ITEM);
 
-        return LiquidQuery.ItemQuery.Create(mMailbox, mAnalyzer, modifier, tok);
+        return ZimbraQuery.ItemQuery.Create(mMailbox, mAnalyzer, modifier, tok);
     }
 
-    public LiquidQuery.BaseQuery GetQuery(int modifier, int target, String tok) throws ParseException, ServiceException, MailServiceException
+    public ZimbraQuery.BaseQuery GetQuery(int modifier, int target, String tok) throws ParseException, ServiceException, MailServiceException
     {
         switch(target) {
           case HAS:
                 if (!tok.equalsIgnoreCase("attachment")) {
-                    return new LiquidQuery.HasQuery(mAnalyzer, modifier, tok);
+                    return new ZimbraQuery.HasQuery(mAnalyzer, modifier, tok);
             }
             tok = "any";
             // otherwise FALL THROUGH to AttachmentQuery below!
           case ATTACHMENT:
-            return new LiquidQuery.AttachmentQuery(mAnalyzer, modifier,tok);
+            return new ZimbraQuery.AttachmentQuery(mAnalyzer, modifier,tok);
           case TYPE:
-            return new LiquidQuery.TypeQuery(mAnalyzer, modifier,tok);
+            return new ZimbraQuery.TypeQuery(mAnalyzer, modifier,tok);
           case IN:
             Integer folderId = (Integer) sFolderStrMap.get(tok.toLowerCase());
-            LiquidQuery.InQuery inq;
+            ZimbraQuery.InQuery inq;
             if (folderId != null) {
-                inq = LiquidQuery.InQuery.Create(mMailbox, mAnalyzer, modifier, folderId);
+                inq = ZimbraQuery.InQuery.Create(mMailbox, mAnalyzer, modifier, folderId);
             } else {
-                inq = LiquidQuery.InQuery.Create(mMailbox, mAnalyzer, modifier, tok);
+                inq = ZimbraQuery.InQuery.Create(mMailbox, mAnalyzer, modifier, tok);
             }
             if (inq == null) {
                 throw MailServiceException.NO_SUCH_FOLDER(tok);
             }
             return inq;
           case TAG:
-            return new LiquidQuery.TagQuery(mAnalyzer, modifier, mMailbox.getTagByName(tok), true);
+            return new ZimbraQuery.TagQuery(mAnalyzer, modifier, mMailbox.getTagByName(tok), true);
           case IS:
             GetQueryCallback cback = (GetQueryCallback)sIsStrMap.get(tok.toLowerCase());
             if (cback != null) {
@@ -158,10 +158,10 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
             }
           case CONV:
             if (tok.charAt(0) != '-') {
-                return new LiquidQuery.ConvQuery(mAnalyzer, modifier, tok);
+                return new ZimbraQuery.ConvQuery(mAnalyzer, modifier, tok);
             } else {
                 // virtual-conversation: search for the item-id with id = -1*X
-                return LiquidQuery.ItemQuery.Create(mMailbox, mAnalyzer, modifier, tok.substring(1));
+                return ZimbraQuery.ItemQuery.Create(mMailbox, mAnalyzer, modifier, tok.substring(1));
             }
           case DATE:
           case DAY:
@@ -173,7 +173,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
           case CONV_START:
           case CONV_END:
           {
-              LiquidQuery.DateQuery q = new LiquidQuery.DateQuery(mAnalyzer, target);
+              ZimbraQuery.DateQuery q = new ZimbraQuery.DateQuery(mAnalyzer, target);
               q.parseDate(modifier, tok);
               return q;
           }
@@ -184,15 +184,15 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
                 throw new ParseException("Missing required text after a TO/FROM/CC");
             }
             if (tok.charAt(0) == '@') {
-                return new LiquidQuery.DomainQuery(mAnalyzer, modifier, target, tok);
+                return new ZimbraQuery.DomainQuery(mAnalyzer, modifier, target, tok);
             }
-            return new LiquidQuery.TextQuery(mAnalyzer, modifier,target,tok);
+            return new ZimbraQuery.TextQuery(mAnalyzer, modifier,target,tok);
           case SIZE:
           case BIGGER:
           case SMALLER:
-            return new LiquidQuery.SizeQuery(mAnalyzer, modifier,target,tok);
+            return new ZimbraQuery.SizeQuery(mAnalyzer, modifier,target,tok);
           default:
-            return new LiquidQuery.TextQuery(mAnalyzer, modifier,target,tok);
+            return new ZimbraQuery.TextQuery(mAnalyzer, modifier,target,tok);
         }
     }
 
@@ -211,11 +211,11 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
         }
     }
 
-    public static final void AddClause(ArrayList clauses, LiquidQuery.BaseQuery q)
+    public static final void AddClause(ArrayList clauses, ZimbraQuery.BaseQuery q)
     {
         if (null != q) {
             if (clauses.size() > 0) {
-                LiquidQuery.BaseQuery prev = (LiquidQuery.BaseQuery)clauses.get(clauses.size()-1);
+                ZimbraQuery.BaseQuery prev = (ZimbraQuery.BaseQuery)clauses.get(clauses.size()-1);
                 assert(prev.getNext() == null);
                 prev.setNext(q);
             }
@@ -227,19 +227,19 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
 ///
 /// Parser States
 ///
-  final public LiquidQuery.BaseQuery Conjunction() throws ParseException {
+  final public ZimbraQuery.BaseQuery Conjunction() throws ParseException {
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case AND_TOKEN:
       jj_consume_token(AND_TOKEN);
-                  {if (true) return new LiquidQuery.ConjQuery(mAnalyzer, AND_TOKEN);}
+                  {if (true) return new ZimbraQuery.ConjQuery(mAnalyzer, AND_TOKEN);}
       break;
     case OR_TOKEN:
       jj_consume_token(OR_TOKEN);
-                  {if (true) return new LiquidQuery.ConjQuery(mAnalyzer, OR_TOKEN);}
+                  {if (true) return new ZimbraQuery.ConjQuery(mAnalyzer, OR_TOKEN);}
       break;
     default:
       jj_la1[0] = jj_gen;
-      {if (true) return new LiquidQuery.ConjQuery(mAnalyzer, AND_TOKEN);}
+      {if (true) return new ZimbraQuery.ConjQuery(mAnalyzer, AND_TOKEN);}
     }
     throw new Error("Missing return statement in function");
   }
@@ -287,11 +287,11 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
  * Text target but after we have a target (thing to the left of the :...)
  *
  **/
-  final public LiquidQuery.BaseQuery Rhs_Text(int target) throws ParseException, ServiceException {
+  final public ZimbraQuery.BaseQuery Rhs_Text(int target) throws ParseException, ServiceException {
     ArrayList clauses = new ArrayList();
     Token t;
     int modifier = 0;
-    LiquidQuery.BaseQuery clause = null;
+    ZimbraQuery.BaseQuery clause = null;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case LPAREN:
       jj_consume_token(LPAREN);
@@ -322,7 +322,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
                                                           clause.setModifier(modifier); AddClause(clauses,clause);
       }
       jj_consume_token(RPAREN);
-                       {if (true) return new LiquidQuery.SubQuery(mAnalyzer, 0,clauses);}
+                       {if (true) return new ZimbraQuery.SubQuery(mAnalyzer, 0,clauses);}
       break;
     case TEXT_TOK:
     case QUOTED_TOK:
@@ -353,11 +353,11 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
  * item:  target
  *
  **/
-  final public LiquidQuery.BaseQuery Rhs_Item(int target) throws ParseException, ServiceException {
+  final public ZimbraQuery.BaseQuery Rhs_Item(int target) throws ParseException, ServiceException {
     ArrayList clauses = new ArrayList();
     Token t;
     int modifier = 0;
-    LiquidQuery.BaseQuery clause = null;
+    ZimbraQuery.BaseQuery clause = null;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case LPAREN:
       jj_consume_token(LPAREN);
@@ -389,7 +389,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
                                                           clause.setModifier(modifier); AddClause(clauses,clause);
       }
       jj_consume_token(RPAREN);
-                       {if (true) return new LiquidQuery.SubQuery(mAnalyzer, 0,clauses);}
+                       {if (true) return new ZimbraQuery.SubQuery(mAnalyzer, 0,clauses);}
       break;
     case TEXT_TOK:
     case BRACES_TOK:
@@ -425,11 +425,11 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
  * we do in other cases
  *
  **/
-  final public LiquidQuery.BaseQuery Rhs_Date(int target) throws ParseException, ServiceException {
+  final public ZimbraQuery.BaseQuery Rhs_Date(int target) throws ParseException, ServiceException {
     ArrayList clauses = new ArrayList();
     Token t,u;
     int modifier = 0;
-    LiquidQuery.BaseQuery clause = null;
+    ZimbraQuery.BaseQuery clause = null;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case LPAREN:
       jj_consume_token(LPAREN);
@@ -460,7 +460,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
                                                               if (modifier == NOT_TOKEN) { clause.setModifier(MINUS); } AddClause(clauses,clause);
       }
       jj_consume_token(RPAREN);
-                       {if (true) return new LiquidQuery.SubQuery(mAnalyzer, 0,clauses);}
+                       {if (true) return new ZimbraQuery.SubQuery(mAnalyzer, 0,clauses);}
       break;
     case PLUS:
     case MINUS:
@@ -518,10 +518,10 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
 //
 // Main grammar
 //
-  final public LiquidQuery.BaseQuery Clause() throws ParseException, ServiceException {
+  final public ZimbraQuery.BaseQuery Clause() throws ParseException, ServiceException {
     Token t = null;
 
-    LiquidQuery.BaseQuery q = null;
+    ZimbraQuery.BaseQuery q = null;
     ArrayList subExp = null;
     int target;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -529,7 +529,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
       jj_consume_token(LPAREN);
       subExp = Query();
       jj_consume_token(RPAREN);
-                                       {if (true) return new LiquidQuery.SubQuery(mAnalyzer, 0, subExp);}
+                                       {if (true) return new ZimbraQuery.SubQuery(mAnalyzer, 0, subExp);}
       break;
     case CONTENT:
     case SUBJECT:
@@ -786,7 +786,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
   }
 
   final public ArrayList Query() throws ParseException, ServiceException {
-    LiquidQuery.BaseQuery clause = null;
+    ZimbraQuery.BaseQuery clause = null;
     ArrayList clauses = new ArrayList();
     int modifier;
     modifier = Modifier();
