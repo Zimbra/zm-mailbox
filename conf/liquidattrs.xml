@@ -46,7 +46,7 @@
   max:  max value for integers, max length for strings/email. defaults to Integer.MAX_VALUE
 
   callback: class name of AttributeCallback object to invoke on changes to attribute. If package is not specified, defaults
-            to "com.liquidsys.coco.account.callback".
+            to "com.zimbra.cs.account.callback".
     
 -->
 

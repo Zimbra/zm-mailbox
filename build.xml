@@ -205,7 +205,7 @@
 		</condition>
 		<mkdir dir="${build.dir}/buildinfo" />
 		<echo file="${build.dir}/buildinfo/BuildInfoGenerated.java">
-			package com.liquidsys.coco.util;
+			package com.zimbra.cs.util;
 			class BuildInfoGenerated {
 				public static final String VERSION = "${liquid.buildinfo.version}";
 				public static final String RELEASE = "${liquid.buildinfo.release}";
@@ -226,7 +226,7 @@
 
 		<antcall target="generate-buildinfo"/>
 
-		<java classname="com.liquidsys.coco.db.Versions" fork="true" classpathref="class.path" failonerror="true">
+		<java classname="com.zimbra.cs.db.Versions" fork="true" classpathref="class.path" failonerror="true">
 			<arg value="-o" />
 			<arg value="${build.dir}" />
 		</java>
@@ -368,7 +368,7 @@
 			<socket server="${lmtp.host}" port="${lmtp.port}" />
 		</waitfor>
 		<echo>LmtpInject messages</echo>
-		<java classname="com.liquidsys.coco.lmtpserver.utils.LmtpInject" fork="true" classpathref="class.path" failonerror="true">
+		<java classname="com.zimbra.cs.lmtpserver.utils.LmtpInject" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="-t ${lmtpinject.numthreads} -a ${lmtp.host} -p ${lmtp.port} -r user1@${liquid.server.hostname} -s ho@liquidsys.com -d" />
 			<arg path="data/TestMailRaw" />
 		</java>
@@ -376,7 +376,7 @@
 
 	<target name="configure-exch1-gal" description="point gal at local and exch1 gal">
 		<echo>Configuring domain for gal: ${liquid.server.hostname}</echo>
-		<java classname="com.liquidsys.coco.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="md ${liquid.server.hostname}  liquidGalMode both liquidGalLdapBindDn zz_gal liquidGalLdapBindPassword zz_gal liquidGalLdapFilter ad liquidGalLdapSearchBase dc=liquidsys,dc=com liquidGalLdapURL ldap://exch1.liquidsys.com/" />
 		</java>
 	</target>
@@ -474,40 +474,40 @@
 			<arg file="conf/ldap/liquid.ldif" />
 		</exec>
 		<echo>Editing localconfig liquid_server_hostname to be ${liquid.server.hostname}</echo>
-		<java classname="com.liquidsys.coco.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
+		<java classname="com.zimbra.cs.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="-e liquid_server_hostname=${liquid.server.hostname}"/>
 		</java>
 		<echo>Provisioning server entry for ${liquid.server.hostname}</echo>
-		<java classname="com.liquidsys.coco.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="CreateServer ${liquid.server.hostname} liquidSmtpHostname exch1.liquidsys.com liquidMailPort 7070" />
 		</java>
 		<echo>Creating domain: ${liquid.server.hostname}</echo>
-		<java classname="com.liquidsys.coco.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="cd ${liquid.server.hostname}" />
 		</java>
 		<echo>Setting default domain: ${liquid.server.hostname}</echo>
-		<java classname="com.liquidsys.coco.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="mcf liquidDefaultDomainName ${liquid.server.hostname}" />
 		</java>
 		<echo>Creating account: admin@${liquid.server.hostname}</echo>
 		<!-- This account is used during QA tests. -->
-		<java classname="com.liquidsys.coco.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="ca admin@${liquid.server.hostname} test123 liquidMailHost ${liquid.server.hostname} cn 'Administrator' displayName 'Administrator' liquidIsAdminAccount TRUE liquidPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana'" />
 		</java>
 		<echo>Creating account: user1@${liquid.server.hostname}</echo>
-		<java classname="com.liquidsys.coco.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="ca user1@${liquid.server.hostname} test123 liquidMailHost ${liquid.server.hostname} cn 'Demo User One' displayName 'Demo User One' liquidMailQuota 62914560 liquidPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana'" />
 		</java>
 		<echo>Creating account: user2@${liquid.server.hostname}</echo>
-		<java classname="com.liquidsys.coco.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="ca user2@${liquid.server.hostname} test123 liquidMailHost ${liquid.server.hostname} cn 'Demo User Two' displayName 'Demo User Two' liquidPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana'" />
 		</java>
 		<echo>Creating account: user3@${liquid.server.hostname}</echo>
-		<java classname="com.liquidsys.coco.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="ca user3@${liquid.server.hostname} test123 liquidMailHost ${liquid.server.hostname} cn 'Demo User Three' displayName 'Demo User Three' liquidAttachmentsIndexingEnabled FALSE liquidPrefTimeZoneId '(GMT-05.00) Eastern Time (US &amp; Canada)'" />
 		</java>
 		<echo>Creating account: user4@${liquid.server.hostname}</echo>
-		<java classname="com.liquidsys.coco.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="ca user4@${liquid.server.hostname} test123 liquidMailHost ${liquid.server.hostname} cn 'Demo User Four' displayName 'Demo User Four' liquidAttachmentsIndexingEnabled FALSE liquidPrefTimeZoneId '(GMT-05.00) Indiana (East)'" />
 		</java>
 	</target>
