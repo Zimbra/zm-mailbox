@@ -109,7 +109,7 @@ public class LmtpServer extends TcpServer {
 	}
 	
 	private void setDefaultConfigBackend() {
-		mConfigBackend = new LiquidLmtpBackend();
+		mConfigBackend = new ZimbraLmtpBackend();
 	}
 	
 	/*
@@ -156,7 +156,7 @@ public class LmtpServer extends TcpServer {
         } else {
             theInstance.setConfigName(config.getAdvertisedName());
         }
-        theInstance.setConfigBackend(new LiquidLmtpBackend());
+        theInstance.setConfigBackend(new ZimbraLmtpBackend());
         Thread lmtpThread = new Thread(theInstance);
         lmtpThread.setName("LmtpServer");
         lmtpThread.start();

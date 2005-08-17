@@ -28,8 +28,8 @@ import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.ZimbraLog;
 
-public class LiquidLmtpBackend implements LmtpBackend {
-	private static Log mLog = LogFactory.getLog(LiquidLmtpBackend.class);
+public class ZimbraLmtpBackend implements LmtpBackend {
+	private static Log mLog = LogFactory.getLog(ZimbraLmtpBackend.class);
 	
 	public LmtpStatus getAddressStatus(LmtpAddress address) {
         
