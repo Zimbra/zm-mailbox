@@ -1,12 +1,12 @@
-Return-Path: <davidson@liquidsys.com>
-Received: from kenny.liquidsys.com ([unix socket]) by kenny.liquidsys.com
+Return-Path: <davidson@example.zimbra.com>
+Received: from kenny.example.zimbra.com ([unix socket]) by kenny.example.zimbra.com
 	(Cyrus v2.1.16) with LMTP; Sat, 27 Mar 2004 14:42:19 -0800
 X-Sieve: CMU Sieve 2.2
-Received: from churchill (unknown [10.10.130.116]) by kenny.liquidsys.com
-	(Postfix) with ESMTP id B586640040E for <smith@liquidsys.com>; Sat, 27
+Received: from churchill (unknown [10.10.130.116]) by kenny.example.zimbra.com
+	(Postfix) with ESMTP id B586640040E for <smith@example.zimbra.com>; Sat, 27
 	Mar 2004 14:42:18 -0800 (PST)
-From: "Ross Davidson, Ph.D." <davidson@liquidsys.com>
-To: <smith@liquidsys.com>
+From: "Ross Davidson, Ph.D." <davidson@example.zimbra.com>
+To: <smith@example.zimbra.com>
 Subject: Linux Desktop Info
 Date: Sat, 27 Mar 2004 14:46:48 -0800
 X-Zimbra-Received: Sat, 27 Mar 2004 14:46:48 -0800
@@ -16,7 +16,7 @@ Content-Type: multipart/mixed; boundary="----=_NextPart_000_0009_01C4140A.552DA6
 X-Mailer: Microsoft Office Outlook, Build 11.0.5510
 Thread-Index: AcQUTWKWR13/y1jhS3K+NxyUk8vuwA==
 X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2800.1165
-Message-Id: <20040327224218.B586640040E@kenny.liquidsys.com>
+Message-Id: <20040327224218.B586640040E@kenny.example.zimbra.com>
 X-Evolution-Source: imap://smith@10.10.130.30/
 X-Evolution: 0000000e-0130
 

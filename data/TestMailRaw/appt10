@@ -1,13 +1,13 @@
 Received: from localhost (localhost.localdomain [127.0.0.1])
-	by dogfood.liquidsys.com (Postfix) with ESMTP id 84479459D66
-	for <user1@dogfood.liquidsys.com>; Sat, 21 May 2005 19:17:13 -0700 (PDT)
-Received: from dogfood.liquidsys.com ([127.0.0.1])
- by localhost (dogfood.liquidsys.com [127.0.0.1]) (amavisd-new, port 10024)
- with ESMTP id 08889-05 for <user1@dogfood.liquidsys.com>;
+	by dogfood.example.zimbra.com (Postfix) with ESMTP id 84479459D66
+	for <user1@dogfood.example.zimbra.com>; Sat, 21 May 2005 19:17:13 -0700 (PDT)
+Received: from dogfood.example.zimbra.com ([127.0.0.1])
+ by localhost (dogfood.example.zimbra.com [127.0.0.1]) (amavisd-new, port 10024)
+ with ESMTP id 08889-05 for <user1@dogfood.example.zimbra.com>;
  Sat, 21 May 2005 19:17:13 -0700 (PDT)
-Received: from liquidsys.com (exch1.liquidsys.com [10.10.130.37])
-	by dogfood.liquidsys.com (Postfix) with ESMTP id 50A72459D65
-	for <user1@dogfood.liquidsys.com>; Sat, 21 May 2005 19:17:13 -0700 (PDT)
+Received: from example.zimbra.com (exch1.example.zimbra.com [10.10.130.37])
+	by dogfood.example.zimbra.com (Postfix) with ESMTP id 50A72459D65
+	for <user1@dogfood.example.zimbra.com>; Sat, 21 May 2005 19:17:13 -0700 (PDT)
 X-MimeOLE: Produced By Microsoft Exchange V6.5.7226.0
 Content-class: urn:content-classes:calendarmessage
 MIME-Version: 1.0
@@ -15,14 +15,14 @@ Content-Type: multipart/alternative;
 	boundary="----_=_NextPart_001_01C55E74.9D56496C"
 Subject: Admin Meeting
 Date: Sat, 21 May 2005 19:17:59 -0700
-Message-ID: <062EF322A9DDF14B887BCAE6C5F7E0753DB6DA@exch1.liquidsys.com>
+Message-ID: <062EF322A9DDF14B887BCAE6C5F7E0753DB6DA@exch1.example.zimbra.com>
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
 Thread-Topic: Admin Meeting
 Thread-Index: AcVedHkO1x18e25fRneIOeNyoBX6owAAAABQ
-From: "User One" <user1@liquidsys.com>
-To: "User One" <user1@liquidsys.com>
-X-Virus-Scanned: amavisd-new at liquidsys.com
+From: "User One" <user1@example.zimbra.com>
+To: "User One" <user1@example.zimbra.com>
+X-Virus-Scanned: amavisd-new at example.zimbra.com
 
 This is a multi-part message in MIME format.
 
@@ -100,8 +100,8 @@ SUMMARY:Admin Meeting
 UID:040000008200E00074C5B7101A82E0080000000070D7AFCC395EC501000000000000000
  010000000B8A372941DC22C4D9B37C6E29FA81EF0
 ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE;CN="Roland Sc
- hemers":MAILTO:user1@liquidsys.com
-ORGANIZER;CN="User One":MAILTO:user1@liquidsys.com
+ hemers":MAILTO:user1@example.zimbra.com
+ORGANIZER;CN="User One":MAILTO:user1@example.zimbra.com
 LOCATION:
 DTEND;TZID="(GMT-08.00) Pacific Time (US & Canada)/Tijuana":20050606T170000
 DESCRIPTION:\N

@@ -1,9 +1,9 @@
-Received:  from jhamm.liquidsys.com ([10.10.130.108]) by scooby.toons.liquidsys.com with Microsoft SMTPSVC(6.0.3790.0); Fri, 25 Jun 2004 11:53:27 -0700
+Received:  from jhamm.example.zimbra.com ([10.10.130.108]) by scooby.toons.example.zimbra.com with Microsoft SMTPSVC(6.0.3790.0); Fri, 25 Jun 2004 11:53:27 -0700
 Content-class: urn:content-classes:message
 Subject: Test with unspecified MAIL FROM
 Date: Fri, 25 Jun 2004 11:54:30 -0700
 X-Zimbra-Received: Fri, 25 Jun 2004 11:54:30 -0700
-Message-ID: <SCOOBYqsMyPASKGu93h00000005@scooby.toons.liquidsys.com>
+Message-ID: <SCOOBYqsMyPASKGu93h00000005@scooby.toons.example.zimbra.com>
 MIME-Version: 1.0
 Content-Type: multipart/alternative;
 	boundary="----_=_NextPart_003_01C45AE5.B2FAAD80"

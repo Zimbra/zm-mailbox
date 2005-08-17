@@ -1,13 +1,13 @@
-Return-Path: <smith@liquidsys.com>
-Received: from kenny.liquidsys.com ([unix socket]) by kenny.liquidsys.com
+Return-Path: <smith@example.zimbra.com>
+Received: from kenny.example.zimbra.com ([unix socket]) by kenny.example.zimbra.com
 	(Cyrus v2.1.16) with LMTP; Fri, 26 Mar 2004 16:43:58 -0800
 X-Sieve: CMU Sieve 2.2
 Received: from [10.10.130.109] (unknown [10.10.130.109]) by
-	kenny.liquidsys.com (Postfix) with ESMTP id 392C940040E for
-	<smith@liquidsys.com>; Fri, 26 Mar 2004 16:43:58 -0800 (PST)
+	kenny.example.zimbra.com (Postfix) with ESMTP id 392C940040E for
+	<smith@example.zimbra.com>; Fri, 26 Mar 2004 16:43:58 -0800 (PST)
 Subject: outlook...
-From: "Smith, Roland Q. (VP)" <smith@liquidsys.com>
-To: smith@liquidsys.com
+From: "Smith, Roland Q. (VP)" <smith@example.zimbra.com>
+To: smith@example.zimbra.com
 Content-Type: multipart/mixed; boundary="=-mTT+IyyX+d829XGe+k1/"
 Message-Id: <1080348223.24248.6.camel@localhost.localdomain>
 Mime-Version: 1.0

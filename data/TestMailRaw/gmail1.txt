@@ -4,11 +4,11 @@ Received: by 10.54.43.62 with SMTP id q62cs6539wrq;
         Wed, 2 Feb 2005 10:53:06 -0800 (PST)
 Received: by 10.54.24.77 with SMTP id 77mr113137wrx;
         Wed, 02 Feb 2005 10:52:34 -0800 (PST)
-Return-Path: <kchen@liquidsys.com>
-Received: from liquidsys.com (exch1.liquidsys.com [66.92.182.100])
+Return-Path: <kchen@example.zimbra.com>
+Received: from example.zimbra.com (exch1.example.zimbra.com [66.92.182.100])
         by mx.gmail.com with ESMTP id 45si82548wri.2005.02.02.10.52.32;
         Wed, 02 Feb 2005 10:52:34 -0800 (PST)
-Received-SPF: pass (gmail.com: best guess record for domain of kchen@liquidsys.com designates 66.92.182.100 as permitted sender)
+Received-SPF: pass (gmail.com: best guess record for domain of kchen@example.zimbra.com designates 66.92.182.100 as permitted sender)
 X-MIMEOLE: Produced By Microsoft Exchange V6.5.7226.0
 Content-class: urn:content-classes:message
 MIME-Version: 1.0
@@ -17,12 +17,12 @@ Content-Type: multipart/mixed;
 Subject: Zipped document
 Date: Wed, 2 Feb 2005 10:52:27 -0800
 X-Zimbra-Received: Wed, 2 Feb 2005 10:52:27 -0800
-Message-ID: <062EF322A9DDF14B887BCAE6C5F7E07517FFAB@exch1.liquidsys.com>
+Message-ID: <062EF322A9DDF14B887BCAE6C5F7E07517FFAB@exch1.example.zimbra.com>
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
 Thread-Topic: Zipped document
 thread-index: AcUJWFcmRzNlGUTESH6VV266kL2YMQ==
-From: "Kevin Chen" <kchen@liquidsys.com>
+From: "Kevin Chen" <kchen@example.zimbra.com>
 To: "Kevin Chen" <kevinxchen@gmail.com>
 
 This is a multi-part message in MIME format.

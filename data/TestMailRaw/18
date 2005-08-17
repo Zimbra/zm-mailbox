@@ -1,14 +1,14 @@
 Return-Path: <davidson@yahoo.com>
-Received: from kenny.liquidsys.com ([unix socket]) by kenny.liquidsys.com
+Received: from kenny.example.zimbra.com ([unix socket]) by kenny.example.zimbra.com
 	(Cyrus v2.1.16) with LMTP; Wed, 31 Mar 2004 14:03:17 -0800
 X-Sieve: CMU Sieve 2.2
 Received: from smtp011.mail.yahoo.com (smtp011.mail.yahoo.com
-	[216.136.173.31]) by kenny.liquidsys.com (Postfix) with SMTP id 90C3840041B
-	for <roland@liquidsys.com>; Wed, 31 Mar 2004 14:03:16 -0800 (PST)
+	[216.136.173.31]) by kenny.example.zimbra.com (Postfix) with SMTP id 90C3840041B
+	for <roland@example.zimbra.com>; Wed, 31 Mar 2004 14:03:16 -0800 (PST)
 Received: from unknown (HELO churchill) (davidson@208.15.232.133 with
 	login) by smtp011.mail.yahoo.com with SMTP; 31 Mar 2004 22:07:59 -0000
 From: "Ross Davidson" <davidson@yahoo.com>
-To: <roland@liquidsys.com>
+To: <roland@example.zimbra.com>
 Subject: 
 Date: Wed, 31 Mar 2004 14:08:00 -0800
 X-Zimbra-Received: Wed, 31 Mar 2004 14:08:00 -0800
@@ -17,7 +17,7 @@ Content-Type: multipart/alternative; boundary="----=_NextPart_000_002E_01C41729.
 X-Mailer: Microsoft Office Outlook, Build 11.0.5510
 Thread-Index: AcQXbKENIVRvdkvBToOh5ncr43089A==
 X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2800.1165
-Message-Id: <20040331220316.90C3840041B@kenny.liquidsys.com>
+Message-Id: <20040331220316.90C3840041B@kenny.example.zimbra.com>
 X-Evolution-Source: imap://smith@10.10.130.30/
 X-Evolution: 00000012-0118
 

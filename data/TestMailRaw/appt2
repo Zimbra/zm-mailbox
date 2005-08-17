@@ -1,5 +1,5 @@
-Received: from liquidsys.com (exch1.liquidsys.com [10.10.130.37])
-	by dogfood.liquidsys.com (Postfix) with ESMTP id 49161459D40;
+Received: from example.zimbra.com (exch1.example.zimbra.com [10.10.130.37])
+	by dogfood.example.zimbra.com (Postfix) with ESMTP id 49161459D40;
 	Tue, 10 May 2005 14:52:57 -0700 (PDT)
 X-MimeOLE: Produced By Microsoft Exchange V6.5.7226.0
 Content-class: urn:content-classes:calendarmessage
@@ -8,13 +8,13 @@ Content-Type: multipart/alternative;
 	boundary="----_=_NextPart_001_01C555AA.CCCA04A8"
 Subject: Inbox - San Jose
 Date: Tue, 10 May 2005 14:54:19 -0700
-Message-ID: <062EF322A9DDF14B887BCAE6C5F7E0752576E3@exch1.liquidsys.com>
+Message-ID: <062EF322A9DDF14B887BCAE6C5F7E0752576E3@exch1.example.zimbra.com>
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
 Thread-Topic: Inbox - San Jose
 Thread-Index: AcVVqtEWh4/DjGe+SSeuIdVy9qI1WAAAAABw
-From: <events@dev.liquidsys.com>
-To: user1@liquidsys.com
+From: <events@dev.example.zimbra.com>
+To: user1@example.zimbra.com
 
 This is a multi-part message in MIME format.
 
@@ -92,8 +92,8 @@ SUMMARY:Inbox - San Jose
 UID:040000008200E00074C5B7101A82E00800000000903BBA247055C501000000000000000
  010000000D4405206A9F5AF4EB318331708B99FFD
 ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE;CN="Satish St
- aff":MAILTO:satish-staff@liquidsys.com
-ORGANIZER;CN="john robb":MAILTO:john.robb@liquidsys.com
+ aff":MAILTO:satish-staff@example.zimbra.com
+ORGANIZER;CN="john robb":MAILTO:john.robb@example.zimbra.com
 LOCATION:
 DTEND;TZID="(GMT-08.00) Pacific Time (US & Canada)/Tijuana":20050603T000000
 DESCRIPTION:\N

@@ -5,18 +5,18 @@ Received: by 10.54.6.73 with SMTP id 73cs22655wrf;
 Received: by 10.54.59.37 with SMTP id h37mr1948741wra;
         Tue, 14 Dec 2004 00:50:11 -0800 (PST)
 Return-Path: <News@insideapple.apple.com>
-Received: from liquidsys.com (exch1.liquidsys.com [66.92.182.100])
+Received: from example.zimbra.com (exch1.example.zimbra.com [66.92.182.100])
         by mx.gmail.com with ESMTP id 67si571543wra;
         Tue, 14 Dec 2004 00:50:10 -0800 (PST)
 Received-SPF: neutral (gmail.com: 66.92.182.100 is neither permitted nor denied by domain of News@insideapple.apple.com)
-Received: from chatbox-smtp-out2.apple.com ([17.254.6.7]) by liquidsys.com with Microsoft SMTPSVC(6.0.3790.0);
+Received: from chatbox-smtp-out2.apple.com ([17.254.6.7]) by example.zimbra.com with Microsoft SMTPSVC(6.0.3790.0);
 	 Tue, 14 Dec 2004 00:51:26 -0800
 Received: from verona.apple.com (localhost [127.0.0.1])
 	by chatbox-smtp-out2.apple.com (8.12.11/8.12.2) with SMTP id iBE8tRVX000803
-	for <roland@liquidsys.com>; Tue, 14 Dec 2004 08:59:45 GMT
+	for <roland@example.zimbra.com>; Tue, 14 Dec 2004 08:59:45 GMT
 Message-Id: <200412140859.iBE8tRVX000803@chatbox-smtp-out2.apple.com>
 From: Apple <News@InsideApple.Apple.com>
-To: roland@liquidsys.com
+To: roland@example.zimbra.com
 Date: Tue, 14 Dec 2004 08:59:45 UT
 X-Zimbra-Received: Tue, 14 Dec 2004 08:59:45 UT
 Subject: Get the Tiger Early Start Kit for Developers.
@@ -25,7 +25,7 @@ Content-Transfer-Encoding: 7bit
 MIME-Version: 1.0
 X-Mailer: MIME::Lite 3.01 (F2.72; A1.62; B3.01; Q3.01)
 X-Broadcast-Id: 3267
-X-Sent-To: roland@liquidsys.com, b50f22df222d192938e7f208d6e4f7d3
+X-Sent-To: roland@example.zimbra.com, b50f22df222d192938e7f208d6e4f7d3
 Return-Path: News@InsideApple.Apple.com
 X-OriginalArrivalTime: 14 Dec 2004 08:51:26.0718 (UTC) FILETIME=[18AA09E0:01C4E1BA]
 

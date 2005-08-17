@@ -1,20 +1,20 @@
 X-MimeOLE: Produced By Microsoft Exchange V6.5.7226.0
-Received: by exch1.liquidsys.com  id
-	<01C4742B.92AC6E6A@exch1.liquidsys.com>; Tue, 27 Jul 2004 15:46:36 -0700
+Received: by exch1.example.zimbra.com  id
+	<01C4742B.92AC6E6A@exch1.example.zimbra.com>; Tue, 27 Jul 2004 15:46:36 -0700
 Content-class: urn:content-classes:message
 MIME-Version: 1.0
 Content-Type: multipart/mixed; boundary="----_=_NextPart_001_01C4742B.92AC6E6A"
 Subject: Here are my ski pictures!
 Date: Tue, 27 Jul 2004 15:42:21 -0700
 X-Zimbra-Received: Tue, 27 Jul 2004 15:42:21 -0700
-Message-ID: <062EF322A9DDF14B887BCAE6C5F7E075047D3C@exch1.liquidsys.com>
+Message-ID: <062EF322A9DDF14B887BCAE6C5F7E075047D3C@exch1.example.zimbra.com>
 X-MS-Has-Attach: yes
 X-MS-TNEF-Correlator: 
 Thread-Topic: Here are my ski pictures!
 Thread-Index: AcR0Kvovu/UKEe//ST2fD6GQBX9grg==
-From: "Ross Davidson" <davidson@liquidsys.com>
-To: <roland@liquidsys.com>
-X-Evolution-Source: imap://smith@exch1.liquidsys.com/
+From: "Ross Davidson" <davidson@example.zimbra.com>
+To: <roland@example.zimbra.com>
+X-Evolution-Source: imap://smith@exch1.example.zimbra.com/
 X-Evolution: 00000008-0130
 
 This is a multi-part message in MIME format.

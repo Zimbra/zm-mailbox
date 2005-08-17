@@ -1,14 +1,14 @@
-Received: by mail.liquidsys.com 
-	id <01C4ACB3.5AA7B8E2@mail.liquidsys.com>; Thu, 7 Oct 2004 14:19:39 -0700
+Received: by mail.example.zimbra.com 
+	id <01C4ACB3.5AA7B8E2@mail.example.zimbra.com>; Thu, 7 Oct 2004 14:19:39 -0700
 MIME-Version: 1.0
 Content-Type: multipart/mixed;
 	boundary="----_=_NextPart_001_01C4ACB3.5AA7B8E2"
 Subject: 13 second Voice Mail
 Date: Thu, 7 Oct 2004 14:19:39 -0700
 X-Zimbra-Received: Thu, 7 Oct 2004 14:19:39 -0700
-Message-ID: <062EF322A9DDF14B887BCAE6C5F7E0750C5689@mail.liquidsys.com>
-From: "Satish Dharma (650 321 4275)" <satish@liquidsys.com>
-To: "Andy Flomm" <flomm@liquidsys.com>
+Message-ID: <062EF322A9DDF14B887BCAE6C5F7E0750C5689@mail.example.zimbra.com>
+From: "Satish Dharma (650 321 4275)" <satish@example.zimbra.com>
+To: "Andy Flomm" <flomm@example.zimbra.com>
 
 This is a multi-part message in MIME format.
 

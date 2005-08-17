@@ -1,6 +1,6 @@
-Received: from liquidsys.com (exch1.liquidsys.com [10.10.130.37])
-	by dogfood.liquidsys.com (Postfix) with ESMTP id EFBA688991
-	for <smith@dogfood.liquidsys.com>; Thu, 10 Mar 2005 17:39:00 -0800 (PST)
+Received: from example.zimbra.com (exch1.example.zimbra.com [10.10.130.37])
+	by dogfood.example.zimbra.com (Postfix) with ESMTP id EFBA688991
+	for <smith@dogfood.example.zimbra.com>; Thu, 10 Mar 2005 17:39:00 -0800 (PST)
 Content-class: urn:content-classes:calendarmessage
 MIME-Version: 1.0
 Content-Type: multipart/alternative;
@@ -9,13 +9,13 @@ X-MimeOLE: Produced By Microsoft Exchange V6.5.7226.0
 Subject: Doc Meeting
 Date: Thu, 10 Mar 2005 17:33:17 -0800
 X-Zimbra-Received: Thu, 10 Mar 2005 17:33:17 -0800
-Message-ID: <062EF322A9DDF14B887BCAE6C5F7E075B560@exch1.liquidsys.com>
+Message-ID: <062EF322A9DDF14B887BCAE6C5F7E075B560@exch1.example.zimbra.com>
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
 Thread-Topic: another test
 Thread-Index: AcUlxZxYxM2ru4K9QsmhFsfS4y0T6QAABW5bAAAAu4UAAAAE8wAFJeJZAAAABxU=
-From: "Roland Smith" <smith@liquidsys.com>
-To: "Roland Smith" <smith@liquidsys.com>
+From: "Roland Smith" <smith@example.zimbra.com>
+To: "Roland Smith" <smith@example.zimbra.com>
 
 This is a multi-part message in MIME format.
 
@@ -82,8 +82,8 @@ DTSTART;TZID="(GMT-08.00) Pacific Time (US & Canada)/Tijuana":20050311T1030
 SUMMARY:Doc Meeting
 UID:{CFEE0F33-6DA8-45E9-8F86-F86D63BBCAAA}
 ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE;CN="Roland Sc
- hemers":MAILTO:smith@liquidsys.com
-ORGANIZER;CN="Roland Smith":MAILTO:smith@liquidsys.com
+ hemers":MAILTO:smith@example.zimbra.com
+ORGANIZER;CN="Roland Smith":MAILTO:smith@example.zimbra.com
 LOCATION:Front Conference Room
 DTEND;TZID="(GMT-08.00) Pacific Time (US & Canada)/Tijuana":20050311T113000
 DESCRIPTION:\N

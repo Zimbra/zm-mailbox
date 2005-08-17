@@ -1,6 +1,6 @@
-Received: from liquidsys.com (exch1.liquidsys.com [10.10.130.37])
-	by dogfood.liquidsys.com (Postfix) with ESMTP id EFBA688991
-	for <smith@dogfood.liquidsys.com>; Thu, 10 Mar 2005 17:39:00 -0800 (PST)
+Received: from example.zimbra.com (exch1.example.zimbra.com [10.10.130.37])
+	by dogfood.example.zimbra.com (Postfix) with ESMTP id EFBA688991
+	for <smith@dogfood.example.zimbra.com>; Thu, 10 Mar 2005 17:39:00 -0800 (PST)
 Content-class: urn:content-classes:calendarmessage
 MIME-Version: 1.0
 Content-Type: multipart/alternative;
@@ -8,11 +8,11 @@ Content-Type: multipart/alternative;
 X-MimeOLE: Produced By Microsoft Exchange V6.5.7226.0
 Subject: Recurring Meeting Test
 Date: Thu, 10 Mar 2005 17:33:17 -0800
-Message-ID: <062EF322A9DDF14B887BCAE6C5F7E075B560@exch1.liquidsys.com>
+Message-ID: <062EF322A9DDF14B887BCAE6C5F7E075B560@exch1.example.zimbra.com>
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
-From: "Roland Smith" <smith@liquidsys.com>
-To: "Roland Smith" <smith@liquidsys.com>
+From: "Roland Smith" <smith@example.zimbra.com>
+To: "Roland Smith" <smith@example.zimbra.com>
 
 This is a multi-part message in MIME format.
 
@@ -79,7 +79,7 @@ UID:040000008200E00074C5B7101A82E00800000000F0BC424F5761C501000000000000000
  0100000002C10E79C9140CF41B7E18816DF121033
 ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE;CN="tim@curpl
  e.com":MAILTO:tim@curple.com
-ORGANIZER;CN="Tom":MAILTO:tom@liquidsys.com
+ORGANIZER;CN="Tom":MAILTO:tom@example.zimbra.com
 LOCATION:Loc
 DTEND;TZID="GMT -0800 (Standard) / GMT -0700 (Daylight)":20050523T050000
 RRULE:FREQ=WEEKLY;INTERVAL=1;BYDAY=MO;WKST=SU

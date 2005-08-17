@@ -1,21 +1,21 @@
-Received: from gateway.liquidsys.com ([10.10.130.30]) by liquidsys.com with
+Received: from gateway.example.zimbra.com ([10.10.130.30]) by example.zimbra.com with
 	Microsoft SMTPSVC(6.0.3790.0); Mon, 21 Jun 2004 10:31:11 -0700
-Received: from [10.10.130.25] (slapshot.liquidsys.com [10.10.130.25]) by
-	gateway.liquidsys.com (Postfix) with ESMTP id D0AEE2408A for
-	<smith@liquidsys.com>; Mon, 21 Jun 2004 10:29:10 -0700 (PDT)
+Received: from [10.10.130.25] (slapshot.example.zimbra.com [10.10.130.25]) by
+	gateway.example.zimbra.com (Postfix) with ESMTP id D0AEE2408A for
+	<smith@example.zimbra.com>; Mon, 21 Jun 2004 10:29:10 -0700 (PDT)
 Subject: Subject: 2004-05 Benefits Plan
-From: Frank Baldwin <fbaldwin@liquidsys.com>
-To: Andy Flomm <aflomm@liquidsys.com>
+From: Frank Baldwin <fbaldwin@example.zimbra.com>
+To: Andy Flomm <aflomm@example.zimbra.com>
 Content-Type: multipart/mixed; boundary="=-FKgPtgsPfbUxukkEOnIb"
-Message-Id: <1087838950.26256.1.camel@slapshot.liquidsys.com>
+Message-Id: <1087838950.26256.1.camel@slapshot.example.zimbra.com>
 Mime-Version: 1.0
 X-Mailer: Ximian Evolution 1.4.6 (1.4.6-2) 
 Date: Mon, 21 Jun 2004 10:29:10 -0700
 X-Zimbra-Received: Mon, 21 Jun 2004 10:29:10 -0700
-Return-Path: smith@liquidsys.com
+Return-Path: smith@example.zimbra.com
 X-OriginalArrivalTime: 21 Jun 2004 17:31:11.0171 (UTC)
 	FILETIME=[8B57F130:01C457B5]
-X-Evolution-Source: imap://smith@exch1.liquidsys.com
+X-Evolution-Source: imap://smith@exch1.example.zimbra.com
 X-Evolution: 00000007-0130
 
 --=-FKgPtgsPfbUxukkEOnIb

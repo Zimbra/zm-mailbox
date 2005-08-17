@@ -1,15 +1,15 @@
 Return-Path: <davidson@yahoo.com>
-Received: from kenny.liquidsys.com ([unix socket]) by kenny.liquidsys.com
+Received: from kenny.example.zimbra.com ([unix socket]) by kenny.example.zimbra.com
 	(Cyrus v2.1.16) with LMTP; Tue, 30 Mar 2004 15:52:56 -0800
 X-Sieve: CMU Sieve 2.2
 Received: from smtp101.mail.sc5.yahoo.com (smtp101.mail.sc5.yahoo.com
-	[216.136.174.139]) by kenny.liquidsys.com (Postfix) with SMTP id
-	3477840041B for <smith@liquidsys.com>; Tue, 30 Mar 2004 15:52:56 -0800
+	[216.136.174.139]) by kenny.example.zimbra.com (Postfix) with SMTP id
+	3477840041B for <smith@example.zimbra.com>; Tue, 30 Mar 2004 15:52:56 -0800
 	(PST)
 Received: from unknown (HELO churchill) (davidson@208.15.232.133 with
 	login) by smtp101.mail.sc5.yahoo.com with SMTP; 30 Mar 2004 23:57:34 -0000
 From: "Ross Davidson" <davidson@yahoo.com>
-To: <smith@liquidsys.com>
+To: <smith@example.zimbra.com>
 Subject: Task Request: Roland
 Date: Tue, 30 Mar 2004 15:57:33 -0800
 X-Zimbra-Received: Tue, 30 Mar 2004 15:57:33 -0800
@@ -19,7 +19,7 @@ X-Mailer: Microsoft Office Outlook, Build 11.0.5510
 Thread-Index: AcQWssS1a35byYitSV2Ye5bum7SFQA==
 X-MS-TNEF-Correlator: 000000006CF9E635399B814288DA24ABB7658BA6C4932000
 X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2800.1165
-Message-Id: <20040330235256.3477840041B@kenny.liquidsys.com>
+Message-Id: <20040330235256.3477840041B@kenny.example.zimbra.com>
 X-Evolution-Source: imap://smith@10.10.130.30/
 X-Evolution: 00000005-0138
 
@@ -38,7 +38,7 @@ Percent Complete:	0%
 Total Work:	0 hours
 Actual Work:	0 hours
 
-Owner:	smith@liquidsys.com
+Owner:	smith@example.zimbra.com
 
 Contacts:	JOHN BOZO
 

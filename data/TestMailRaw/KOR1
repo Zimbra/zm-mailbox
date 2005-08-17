@@ -1,10 +1,10 @@
-Received:  from gateway.liquidsys.com ([10.10.130.30]) by scooby.toons.liquidsys.com with Microsoft SMTPSVC(6.0.3790.0); Thu, 24 Jun 2004 11:30:33 -0700
-Received:  from liquidsys.com (unknown [10.10.130.37]) by gateway.liquidsys.com (Postfix) with ESMTP id 426932408A for <jhamm@toons.liquidsys.com>; Thu, 24 Jun 2004 11:30:58 -0700 (PDT)
+Received:  from gateway.example.zimbra.com ([10.10.130.30]) by scooby.toons.example.zimbra.com with Microsoft SMTPSVC(6.0.3790.0); Thu, 24 Jun 2004 11:30:33 -0700
+Received:  from example.zimbra.com (unknown [10.10.130.37]) by gateway.example.zimbra.com (Postfix) with ESMTP id 426932408A for <jhamm@toons.example.zimbra.com>; Thu, 24 Jun 2004 11:30:58 -0700 (PDT)
 Content-class: urn:content-classes:message
 Subject: =?ks_c_5601-1987?B?x9Gx2yDF1726xq4gKEtvcmVhbiB0ZXN0KQ==?=
 Date: Sun, 24 Jun 1950 04:00:00 +0800
 X-Zimbra-Received: Sun, 24 Jun 1950 04:00:00 +0800
-Message-ID: <062EF322A9DDF14B887BCAE6C5F7E0755EB1@exch1.liquidsys.com>
+Message-ID: <062EF322A9DDF14B887BCAE6C5F7E0755EB1@exch1.example.zimbra.com>
 MIME-Version: 1.0
 Content-Type: multipart/alternative;
 	boundary="----_=_NextPart_003_01C45A19.55992A80"
@@ -12,10 +12,10 @@ X-MS-Has-Attach:
 X-MS-TNEF-Correlator: 
 Thread-Topic: =?ks_c_5601-1987?B?x9Gx2yDF1726xq4gKEtvcmVhbiB0ZXN0KQ==?=
 Thread-Index: AcRaGV5wQQ/gGNTmQr62Klxg6mn9yQ==
-From: "Jiho Hamm" <jhamm@liquidsys.com>
+From: "Jiho Hamm" <jhamm@example.zimbra.com>
 X-MimeOLE: Produced By Microsoft Exchange V6.5.7226.0
-To: "Jiho Hamm" <jhamm@toons.liquidsys.com>,
-	"Jiho Hamm" <jhamm@liquidsys.com>
+To: "Jiho Hamm" <jhamm@toons.example.zimbra.com>,
+	"Jiho Hamm" <jhamm@example.zimbra.com>
 
 This is a multi-part message in MIME format.
 
