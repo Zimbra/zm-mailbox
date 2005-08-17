@@ -94,7 +94,7 @@ public class LC {
     public static final KnownKey ssl_allow_untrusted_certs;
 
     static {
-        final String LQMYCNF_CAVEAT = "This value is stored here for use by lqmycnf program.  Changing this setting does not immediately reflect in MySQL server.  You will have to, with abundant precaution, re-generate my.cnf and restart MySQL server for the change to take effect.";
+        final String ZM_MYCNF_CAVEAT = "This value is stored here for use by lqmycnf program.  Changing this setting does not immediately reflect in MySQL server.  You will have to, with abundant precaution, re-generate my.cnf and restart MySQL server for the change to take effect.";
         final String FS = File.separator;
         String hostname = "lookup.failed";
         try {
@@ -242,7 +242,7 @@ public class LC {
         mysql_max_connections.setDefault("200");
         mysql_max_connections.setDoc
             ("Maximum number of client connections that mysql server" +
-             " should allow. " + LQMYCNF_CAVEAT);
+             " should allow. " + ZM_MYCNF_CAVEAT);
 
         mysql_memory_percent = new KnownKey("mysql_memory_percent");
         mysql_memory_percent.setDefault("40");
@@ -250,19 +250,19 @@ public class LC {
             ("Percentage of system memory that mysql should use. TODO:" +
              " change docs, and make sure lqmycnf handles " +
              " innodb_log_buffer_size delicately as change in that " +
-             " influencnes changes to the log file sizes. " + LQMYCNF_CAVEAT);
+             " influencnes changes to the log file sizes. " + ZM_MYCNF_CAVEAT);
 
         mysql_innodb_log_buffer_size = new KnownKey("mysql_innodb_log_buffer_size");
         mysql_innodb_log_buffer_size.setDefault("8M");
         mysql_innodb_log_buffer_size.setDoc
             ("Consult MySQL documentation for innodb_log_buffer_size. " +
-             LQMYCNF_CAVEAT);
+             ZM_MYCNF_CAVEAT);
 
         mysql_innodb_thread_concurrency = new KnownKey("mysql_innodb_thread_concurrency");
         mysql_innodb_thread_concurrency.setDefault("200");
         mysql_innodb_thread_concurrency.setDoc
             ("Consult MySQL documentation for innodb_thread_concurrency. " +
-             LQMYCNF_CAVEAT);
+             ZM_MYCNF_CAVEAT);
 
         mysql_root_password = new KnownKey("mysql_root_password");
         mysql_root_password.setDefault("zimbra");
@@ -279,7 +279,7 @@ public class LC {
         mysql_table_cache = new KnownKey("mysql_table_cache");
         mysql_table_cache.setDefault("500");
         mysql_table_cache.setDoc
-            ("Consult MySQL documentation for table_cache. " + LQMYCNF_CAVEAT);
+            ("Consult MySQL documentation for table_cache. " + ZM_MYCNF_CAVEAT);
 
         tomcat_directory = new KnownKey("tomcat_directory");
         tomcat_directory.setDefault("${zimbra_home}" + FS + "tomcat");
