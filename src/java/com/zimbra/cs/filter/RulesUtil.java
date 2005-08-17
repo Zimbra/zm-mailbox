@@ -17,7 +17,7 @@ import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.ByteUtil;
-import com.zimbra.cs.util.Liquid;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.ZimbraContext;
 import com.zimbra.soap.SoapHttpTransport;
 import com.zimbra.soap.SoapTransport;
@@ -60,7 +60,7 @@ public class RulesUtil {
     }
     
     public static void main(String[] args) throws Exception {
-        Liquid.toolSetup();
+        Zimbra.toolSetup();
         RulesUtil util = new RulesUtil();
         RuleManager mgr = RuleManager.getInstance();
         if (args.length !=5) {

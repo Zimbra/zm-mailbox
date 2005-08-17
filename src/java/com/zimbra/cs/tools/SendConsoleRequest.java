@@ -19,7 +19,7 @@ import org.apache.commons.cli.Option;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
-import com.zimbra.cs.util.Liquid;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.ZimbraContext;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapHttpTransport;
@@ -114,7 +114,7 @@ public class SendConsoleRequest {
     
     public static void main(String args[]) 
     {
-        Liquid.toolSetup();
+        Zimbra.toolSetup();
         
         // command line argument parsing
         Options options = new Options();

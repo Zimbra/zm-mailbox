@@ -10,11 +10,11 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.util.LiquidPerf;
+import com.zimbra.cs.service.util.ZimbraPerf;
 import com.zimbra.cs.service.util.ThreadLocalData;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.stats.StopWatch;
-import com.zimbra.cs.util.Liquid;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraLog;
 
 /**
@@ -49,7 +49,7 @@ public class SoapServlet extends ZimbraServlet {
             throw new ServletException("Must specify at least one handler "+PARAM_ENGINE_HANDLER+i);
 
         try {
-            Liquid.startup();
+            Zimbra.startup();
         } catch (Throwable t) {
             ZimbraLog.soap.fatal("Unable to start servlet", t);
         	throw new UnavailableException(t.getMessage());
@@ -60,7 +60,7 @@ public class SoapServlet extends ZimbraServlet {
         String name = getServletName();
         ZimbraLog.soap.info("Servlet " + name + " shutting down");
         try {
-            Liquid.shutdown();
+            Zimbra.shutdown();
         } catch (ServiceException e) {
             // Log as error and ignore.
         	ZimbraLog.soap.error("Exception while shutting down servlet " + name, e);
@@ -145,7 +145,7 @@ public class SoapServlet extends ZimbraServlet {
                 envelope = mEngine.dispatch(req.getRequestURI(), buffer, context);
             } catch (Throwable e) {
                 if (e instanceof OutOfMemoryError) {
-                    Liquid.halt("handler exception", e);
+                    Zimbra.halt("handler exception", e);
                 }
                 ZimbraLog.soap.warn("handler exception", e);
                 Element fault = SoapProtocol.Soap12.soapFault(ServiceException.FAILURE(e.toString(), e));
@@ -173,7 +173,7 @@ public class SoapServlet extends ZimbraServlet {
             if (ZimbraLog.perf.isDebugEnabled()) {
                 long responseTime = System.currentTimeMillis() - startTime;
                 String responseName = soapProto.getBodyElement(envelope).getName();
-                LiquidPerf.writeResponseStats(responseName, responseTime,
+                ZimbraPerf.writeResponseStats(responseName, responseTime,
                     ThreadLocalData.getDbTime(), ThreadLocalData.getStatementCount());
             }
         }

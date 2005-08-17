@@ -13,7 +13,7 @@ import java.net.SocketException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.zimbra.cs.util.Liquid;
+import com.zimbra.cs.util.Zimbra;
 
 import EDU.oswego.cs.dl.util.concurrent.ClockDaemon;
 
@@ -176,7 +176,7 @@ public abstract class ProtocolHandler implements Runnable {
                 mLog.info("Connection refused for client " + remoteAddress);
             }
         } catch (Error e) {
-            Liquid.halt("Fatal error occurred while handling connection", e);
+            Zimbra.halt("Fatal error occurred while handling connection", e);
 		} catch (Throwable e) {
 			mLog.info("Exception occurred while handling connection", e);
 		} finally {

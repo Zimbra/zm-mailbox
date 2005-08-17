@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.zimbra.cs.service.util.LiquidPerf;
+import com.zimbra.cs.service.util.ZimbraPerf;
 import com.zimbra.cs.util.ZimbraLog;
 import com.mysql.jdbc.log.Log;
 
@@ -63,7 +63,7 @@ public class MySqlTraceLogger implements Log {
                     matcher = PAT_SLOW.matcher(message);
                     if (matcher.matches()) {
                         int slowDuration = Integer.parseInt(matcher.group(1));
-                        LiquidPerf.writeSlowQuery(matcher.group(2), slowDuration);
+                        ZimbraPerf.writeSlowQuery(matcher.group(2), slowDuration);
                         ZimbraLog.perf.debug(arg);
                         return;
                     }
@@ -76,7 +76,7 @@ public class MySqlTraceLogger implements Log {
         // need to check if the logger is enabled before logging anything.
         if (sql != null) {
             if (ZimbraLog.perf.isDebugEnabled()) {
-                LiquidPerf.updateDbStats(sql, duration);
+                ZimbraPerf.updateDbStats(sql, duration);
             }
             
             // Skip uninteresting messages

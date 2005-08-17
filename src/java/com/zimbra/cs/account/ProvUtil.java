@@ -16,7 +16,7 @@ import java.util.TreeMap;
 import java.util.Map.Entry;
 
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.Liquid;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.StringUtil;
 
 /**
@@ -1330,7 +1330,7 @@ public class ProvUtil {
     }
 
     public static void main(String args[]) throws IOException {
-        Liquid.toolSetup();
+        Zimbra.toolSetup();
         
         ProvUtil pu = new ProvUtil();
         if (args.length < 1) {

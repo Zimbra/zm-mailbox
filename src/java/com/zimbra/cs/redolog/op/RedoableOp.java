@@ -22,7 +22,7 @@ import com.zimbra.cs.redolog.TransactionId;
 import com.zimbra.cs.redolog.Version;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ByteUtil;
-import com.zimbra.cs.util.Liquid;
+import com.zimbra.cs.util.Zimbra;
 
 /**
  * @author jhahm
@@ -522,7 +522,7 @@ public abstract class RedoableOp {
     static {
     	boolean allSubclassesGood = checkSubclasses();
         if (!allSubclassesGood) {
-        	Liquid.halt("Some RedoableOp subclasses are incomplete");
+        	Zimbra.halt("Some RedoableOp subclasses are incomplete");
         }
     }
 

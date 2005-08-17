@@ -10,7 +10,7 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbVolume;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.Liquid;
+import com.zimbra.cs.util.Zimbra;
 
 /**
  * @author jhahm
@@ -35,7 +35,7 @@ public class Volume {
         try {
             reloadVolumes();
         } catch (ServiceException e) {
-            Liquid.halt("Unable to load volumes info", e);
+            Zimbra.halt("Unable to load volumes info", e);
         }
     }
 

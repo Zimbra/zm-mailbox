@@ -16,7 +16,7 @@ import org.apache.commons.cli.ParseException;
 
 import com.zimbra.cs.lmtpserver.LmtpBackend;
 import com.zimbra.cs.lmtpserver.LmtpServer;
-import com.zimbra.cs.util.Liquid;
+import com.zimbra.cs.util.Zimbra;
 
 public class StandAloneLmtpServer {
 
@@ -55,7 +55,7 @@ public class StandAloneLmtpServer {
 
 	
 	public static void main(String[] args) {
-        Liquid.toolSetup();
+        Zimbra.toolSetup();
 		
         CommandLine cl = parseArgs(args);
 

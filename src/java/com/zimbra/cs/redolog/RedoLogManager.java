@@ -26,7 +26,7 @@ import com.zimbra.cs.redolog.op.Checkpoint;
 import com.zimbra.cs.redolog.op.CommitTxn;
 import com.zimbra.cs.redolog.op.RedoableOp;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.Liquid;
+import com.zimbra.cs.util.Zimbra;
 //import com.zimbra.cs.redolog.op.Rollover;
 
 /**
@@ -611,7 +611,7 @@ public class RedoLogManager {
         mShuttingDown = true;
         // TODO: Do we need a more graceful shutdown?  Or is it better to die
         // before any further damage is done?
-        Liquid.halt("Aborting process", e);
+        Zimbra.halt("Aborting process", e);
 	}
 
     /**

@@ -12,7 +12,7 @@ import org.apache.commons.logging.LogFactory;
 import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.Liquid;
+import com.zimbra.cs.util.Zimbra;
 
 /**
  * @author jhahm
@@ -26,7 +26,7 @@ public abstract class StoreManager {
         try {
             sInstance = new FileBlobStore();
         } catch (Throwable t) {
-        	Liquid.halt("Unable to initialize blob store", t);
+        	Zimbra.halt("Unable to initialize blob store", t);
         }
 	}
 

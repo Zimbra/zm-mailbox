@@ -21,7 +21,7 @@ import org.apache.commons.cli.ParseException;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.cs.util.Liquid;
+import com.zimbra.cs.util.Zimbra;
 
 /**
  * @author jhahm
@@ -62,7 +62,7 @@ public class ParsePerf {
     }
 
     public static void main(String[] args) throws Exception {
-        Liquid.toolSetup();
+        Zimbra.toolSetup();
 
         CommandLine cl = parseArgs(args);
 

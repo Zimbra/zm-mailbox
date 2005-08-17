@@ -18,7 +18,7 @@ import org.dom4j.DocumentException;
 
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.util.ByteUtil;
-import com.zimbra.cs.util.Liquid;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapHttpTransport;
 
@@ -37,7 +37,7 @@ public class SoapTest {
        throws SoapFaultException, IOException, UnsupportedEncodingException, 
 	   DocumentException {
 
-        Liquid.toolSetup();
+        Zimbra.toolSetup();
 
         CommandLineParser parser = new GnuParser();
         Options options = new Options();

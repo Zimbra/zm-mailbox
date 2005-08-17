@@ -73,7 +73,7 @@ public class Config {
             try {
                 init(null);
             } catch (Exception e) {
-                Liquid.halt("Config initialization failed", e);
+                Zimbra.halt("Config initialization failed", e);
             }
         }
     }

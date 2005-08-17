@@ -20,7 +20,7 @@ import org.apache.commons.pool.impl.GenericObjectPool;
 
 import com.zimbra.cs.lmtpserver.LmtpProtocolException;
 import com.zimbra.cs.util.ByteUtil;
-import com.zimbra.cs.util.Liquid;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ThreadPool;
 
 public class LmtpInject {
@@ -82,7 +82,7 @@ public class LmtpInject {
 	 * Pick up exchange envelope journaled message and LMTP deliver them.
 	 */
 	public static void main(String[] args) {
-        Liquid.toolSetup();
+        Zimbra.toolSetup();
         CommandLine cl = parseArgs(args);
 
 		int threads = 1;

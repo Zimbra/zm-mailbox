@@ -12,7 +12,7 @@ import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServer;
-import com.zimbra.cs.util.Liquid;
+import com.zimbra.cs.util.Zimbra;
 
 public class Pop3Server extends TcpServer {
 
@@ -176,7 +176,7 @@ public class Pop3Server extends TcpServer {
 	}
     
     public static void main(String args[]) throws ServiceException {
-        Liquid.toolSetup();
+        Zimbra.toolSetup();
         startupPop3Server();
     }
 }

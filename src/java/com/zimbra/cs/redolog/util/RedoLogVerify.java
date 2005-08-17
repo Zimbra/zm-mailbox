@@ -21,7 +21,7 @@ import com.zimbra.cs.redolog.logger.FileLogReader;
 import com.zimbra.cs.redolog.op.CreateMessage;
 import com.zimbra.cs.redolog.op.RedoableOp;
 import com.zimbra.cs.util.ByteUtil;
-import com.zimbra.cs.util.Liquid;
+import com.zimbra.cs.util.Zimbra;
 
 /**
  * @author jhahm
@@ -124,7 +124,7 @@ public class RedoLogVerify {
 	}
 
 	public static void main(String[] cmdlineargs) throws Exception {
-        Liquid.toolSetup();
+        Zimbra.toolSetup();
         CommandLine cl = parseArgs(cmdlineargs);
         String[] args = cl.getArgs();
 

@@ -52,7 +52,7 @@ import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServer;
 import com.zimbra.cs.tcpserver.TcpServerInputStream;
 import com.zimbra.cs.util.ExceptionToString;
-import com.zimbra.cs.util.Liquid;
+import com.zimbra.cs.util.Zimbra;
 
 
 /**
@@ -1428,7 +1428,7 @@ public class IndexEditor {
     
 	public static void main(String[] args) 
 	{
-        Liquid.toolSetup("DEBUG");
+        Zimbra.toolSetup("DEBUG");
 
         IndexEditor editor = new IndexEditor();
         editor.run();

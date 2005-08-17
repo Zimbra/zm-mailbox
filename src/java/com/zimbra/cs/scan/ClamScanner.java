@@ -16,7 +16,7 @@ import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.tcpserver.TcpServerInputStream;
 import com.zimbra.cs.util.ByteUtil;
-import com.zimbra.cs.util.Liquid;
+import com.zimbra.cs.util.Zimbra;
 
 public class ClamScanner extends Scanner {
     
@@ -155,7 +155,7 @@ public class ClamScanner extends Scanner {
     }
     
     public static void main(String[] args) throws IOException {
-        Liquid.toolSetup();
+        Zimbra.toolSetup();
         StringBuffer info = new StringBuffer();
 
         ClamScanner scanner = new ClamScanner();

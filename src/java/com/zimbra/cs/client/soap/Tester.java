@@ -9,7 +9,7 @@ import com.zimbra.cs.client.*;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.service.mail.ItemAction;
-import com.zimbra.cs.util.Liquid;
+import com.zimbra.cs.util.Zimbra;
 
 public class Tester {
 
@@ -467,7 +467,7 @@ public class Tester {
     }
     
     public static void main(String argv[]) {
-        Liquid.toolSetup();
+        Zimbra.toolSetup();
 
         if (argv.length != 3) {
         	System.out.println("Usage: Tester <serverURL> <username> <password>");

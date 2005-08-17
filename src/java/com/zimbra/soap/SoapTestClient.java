@@ -10,7 +10,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.cs.util.Liquid;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapHttpTransport;
 
@@ -21,7 +21,7 @@ public class SoapTestClient {
 
     public static void main(String args[]) 
     {
-        Liquid.toolSetup();
+        Zimbra.toolSetup();
     	
         SoapHttpTransport trans = null;
         try {

@@ -22,7 +22,7 @@ import com.zimbra.cs.util.ZimbraLog;
 /**
  * A collection of methods for keeping track of server performance statistics.
  */
-public class LiquidPerf {
+public class ZimbraPerf {
 
     private static Map /* <String, StatementStats */ sSqlToStats = new HashMap();
     

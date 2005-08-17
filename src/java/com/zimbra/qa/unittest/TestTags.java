@@ -18,7 +18,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Tag;
-import com.zimbra.cs.service.util.LiquidPerf;
+import com.zimbra.cs.service.util.ZimbraPerf;
 import com.zimbra.cs.util.ZimbraLog;
 
 /**
@@ -67,7 +67,7 @@ public class TestTags extends TestCase
     throws Exception {
         ZimbraLog.test.debug("testManyTags()");
         
-        int numPrepares = LiquidPerf.getPrepareCount();
+        int numPrepares = ZimbraPerf.getPrepareCount();
         
         // Create the maximum number of tags, based on the number that already exist
         // in the mailbox
@@ -87,7 +87,7 @@ public class TestTags extends TestCase
             refresh();
         }
         
-        numPrepares = LiquidPerf.getPrepareCount() - numPrepares;
+        numPrepares = ZimbraPerf.getPrepareCount() - numPrepares;
         ZimbraLog.test.debug("testManyTags generated " + numPrepares + " SQL statements.");
     }
     

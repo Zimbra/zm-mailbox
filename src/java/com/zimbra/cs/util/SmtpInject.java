@@ -84,7 +84,7 @@ public class SmtpInject {
      * Pick up exchange envelope journaled message and LMTP deliver them.
      */
     public static void main(String[] args) {
-        Liquid.toolSetup();
+        Zimbra.toolSetup();
         CommandLine cl = parseArgs(args);
 
         if (cl.hasOption("h")) {

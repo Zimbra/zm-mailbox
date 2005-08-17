@@ -9,7 +9,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.admin.AdminDocumentHandler;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.util.Config;
-import com.zimbra.cs.util.Liquid;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.SoapProtocol;
 
@@ -164,7 +164,7 @@ public class SoapEngine {
                 } catch (Throwable e) {
                     responseBody = responseProto.soapFault(ServiceException.FAILURE(e.toString(), e));
                     if (e instanceof OutOfMemoryError) {
-                        Liquid.halt("proxy handler exception", e);
+                        Zimbra.halt("proxy handler exception", e);
                     }
                     mLog.warn("proxy handler exception ", e);
                 }
@@ -260,7 +260,7 @@ public class SoapEngine {
             // TODO: better exception stack traces during develope?
             response = soapProto.soapFault(ServiceException.FAILURE(e.toString(),e));
             if (e instanceof OutOfMemoryError) {
-                Liquid.halt("handler exception", e);
+                Zimbra.halt("handler exception", e);
             }
             if (mLog.isWarnEnabled())
                 mLog.warn("handler exception ", e);

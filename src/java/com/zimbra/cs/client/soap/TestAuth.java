@@ -11,7 +11,7 @@ import EDU.oswego.cs.dl.util.concurrent.PooledExecutor;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.client.*;
 import com.zimbra.soap.SoapFaultException;
-import com.zimbra.cs.util.Liquid;
+import com.zimbra.cs.util.Zimbra;
 
 public class TestAuth implements Runnable {
 
@@ -23,7 +23,7 @@ public class TestAuth implements Runnable {
     }
 
     public static void main(String argv[]) {
-        Liquid.toolSetup();
+        Zimbra.toolSetup();
         
         if (argv.length != 6) {
             usage();

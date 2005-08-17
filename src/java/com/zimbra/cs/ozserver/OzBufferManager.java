@@ -5,7 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.TimerTask;
 
-import com.zimbra.cs.util.Liquid;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraLog;
 
 class OzBufferManager {

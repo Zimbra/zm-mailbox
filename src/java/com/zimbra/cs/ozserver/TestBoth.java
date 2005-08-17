@@ -4,7 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import com.zimbra.cs.util.Liquid;
+import com.zimbra.cs.util.Zimbra;
 
 class TestBoth {
 
@@ -29,7 +29,7 @@ class TestBoth {
     }
     
     public static void main(String[] args) throws IOException {
-        Liquid.toolSetup("DEBUG");
+        Zimbra.toolSetup("DEBUG");
         TestServer.main(null);
         for (int i = 0; i < CLIENT_THREADS; i++) {
             new TestClientThread(i).start();

@@ -13,7 +13,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Config;
-import com.zimbra.cs.util.Liquid;
+import com.zimbra.cs.util.Zimbra;
 
 /**
  * @author jhahm
@@ -30,7 +30,7 @@ public class RedoConfig {
         try {
             theInstance = new RedoConfig();
         } catch (ServiceException e) {
-            Liquid.halt("Unable to read redolog configuration", e);
+            Zimbra.halt("Unable to read redolog configuration", e);
         }
     }
 

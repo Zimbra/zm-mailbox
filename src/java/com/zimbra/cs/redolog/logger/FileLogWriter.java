@@ -24,7 +24,7 @@ import com.zimbra.cs.redolog.RolloverManager;
 import com.zimbra.cs.redolog.TransactionId;
 import com.zimbra.cs.redolog.op.RedoableOp;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.Liquid;
+import com.zimbra.cs.util.Zimbra;
 
 /**
  * @author jhahm
@@ -457,7 +457,7 @@ public class FileLogWriter implements LogWriter {
                     fsync();    // do the sync
                 } catch (IOException e) {
                     String message = "Error while fsyncing " + mFile.getAbsolutePath() + "; Aborting.";
-                    Liquid.halt(message, e);
+                    Zimbra.halt(message, e);
                 }
 
                 synchronized (mFsyncLock) {

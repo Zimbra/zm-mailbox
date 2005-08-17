@@ -37,7 +37,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.cs.util.Liquid;
+import com.zimbra.cs.util.Zimbra;
 
 
 /**
@@ -403,7 +403,7 @@ public class Indexer
                     boolean deleted = lock.delete();
                     if (!deleted) {
                         String message = "Unable to delete index lock file " + lock.getAbsolutePath() + "; Aborting.";
-                        Liquid.halt(message);
+                        Zimbra.halt(message);
                     }
                 }
             }
@@ -547,7 +547,7 @@ public class Indexer
     }
 
     public static void main(String args[]) {
-        Liquid.toolSetup();
+        Zimbra.toolSetup();
 
         // command line argument parsing
         Options options = new Options();

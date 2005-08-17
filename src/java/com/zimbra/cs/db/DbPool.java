@@ -21,7 +21,7 @@ import org.apache.commons.pool.impl.GenericObjectPool;
 
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.util.LiquidPerf;
+import com.zimbra.cs.service.util.ZimbraPerf;
 import com.zimbra.cs.util.ZimbraLog;
 
 /**
@@ -63,7 +63,7 @@ public class DbPool {
         }
 
 		public PreparedStatement prepareStatement(String sql) throws ServiceException {
-            LiquidPerf.incrementPrepareCount();
+            ZimbraPerf.incrementPrepareCount();
             try {
             	return mConnection.prepareStatement(sql);
             } catch (SQLException e) {

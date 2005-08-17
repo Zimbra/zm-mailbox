@@ -165,7 +165,7 @@ public class CrossMailboxSearch
     }
     
     public static void main(String[] args) {
-        Liquid.toolSetup("WARN");
+        Zimbra.toolSetup("WARN");
 
         CrossMailboxSearch.CLI cli = new CrossMailboxSearch.CLI(args);
         cli.run();

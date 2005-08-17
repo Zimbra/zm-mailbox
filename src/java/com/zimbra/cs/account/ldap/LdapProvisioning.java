@@ -45,7 +45,7 @@ import com.zimbra.cs.account.*;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.Liquid;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraLog;
 
 /**
@@ -1749,11 +1749,11 @@ public class LdapProvisioning extends Provisioning {
     public synchronized Server getLocalServer() throws ServiceException {
         String hostname = LC.liquid_server_hostname.value();
         if (hostname == null) {
-            Liquid.halt("liquid_server_hostname not specified in localconfig.xml");
+            Zimbra.halt("liquid_server_hostname not specified in localconfig.xml");
         }
         Server local = getServerByName(hostname);
         if (local == null) {
-            Liquid.halt("Could not find an LDAP entry for server '" + hostname + "'");
+            Zimbra.halt("Could not find an LDAP entry for server '" + hostname + "'");
         }
         return local;
     }

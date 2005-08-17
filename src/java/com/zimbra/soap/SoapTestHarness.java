@@ -24,7 +24,7 @@ import org.dom4j.Namespace;
 import org.dom4j.QName;
 
 import com.zimbra.cs.util.ByteUtil;
-import com.zimbra.cs.util.Liquid;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.SoapFaultException;
@@ -182,7 +182,7 @@ public class SoapTestHarness {
 	public void runTests(String args[]) 
 	throws HarnessException, SoapFaultException, IOException, DocumentException {
 
-        Liquid.toolSetup();
+        Zimbra.toolSetup();
 		
         CommandLineParser parser = new GnuParser();
         Options options = new Options();

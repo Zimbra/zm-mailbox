@@ -24,7 +24,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.Liquid;
+import com.zimbra.cs.util.Zimbra;
 
 /**
  * @author tim
@@ -39,7 +39,7 @@ public class UnitTests extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
         
-        Liquid.toolSetup();
+        Zimbra.toolSetup();
         
     }
     
@@ -552,7 +552,7 @@ public class UnitTests extends TestCase {
 
     public static void main(String[] args)
     {
-        Liquid.toolSetup();
+        Zimbra.toolSetup();
 
         try {
             BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
