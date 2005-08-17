@@ -247,12 +247,12 @@
        cannot undeploy because Tomcat is unable to complete delete the
        service directory. 
    	
-   	   zimbraos.jar opens a shared library so it should not be in a war
+   	   zimbra-native.jar opens a shared library so it should not be in a war
    	   file which can be redeployed. 
    	   
-   	   Please copy {mail,activation,zimbraos}.jar to $TOMCAT\common\lib
+   	   Please copy {mail,activation,zimbra-native}.jar to $TOMCAT\common\lib
    -->
-	<property name="war.exclude" value="servlet-api.jar,mail.jar,activation.jar,zimbraos.jar,KeyView.jar" />
+	<property name="war.exclude" value="servlet-api.jar,mail.jar,activation.jar,zimbra-native.jar,KeyView.jar" />
 
 	<target name="war" depends="jar">
 		<echo>war.exclude=${war.exclude}</echo>
@@ -314,7 +314,7 @@
 		</copy>
 		<fixcrlf srcdir="${dist.conf.dir}" eol="unix" includes="**" />
 		<copy todir="${dist.tomcat.commonlib.dir}">
-			<fileset dir="${jars.dir}" includes="mail.jar,activation.jar,zimbraos.jar" />
+			<fileset dir="${jars.dir}" includes="mail.jar,activation.jar,zimbra-native.jar" />
 		</copy>
 		<copy file="${config.dir}/localconfig.xml" todir="${dist.conf.dir}"/>
 		<!--
@@ -521,7 +521,7 @@
     <target name="tomcat-init" depends="localhost-ssl-cert,tomcat-init-unix">
 		<copy todir="${tomcat.home.dir}/common/lib" file="${jars.dir}/activation.jar" />
 		<copy todir="${tomcat.home.dir}/common/lib" file="${jars.dir}/mail.jar" />
-		<copy todir="${tomcat.home.dir}/common/lib" file="${jars.dir}/zimbraos.jar" />
+		<copy todir="${tomcat.home.dir}/common/lib" file="${jars.dir}/zimbra-native.jar" />
 		<copy todir="${tomcat.home.dir}/common/endorsed" file="${jars.dir}/zimbracharset.jar" />
 		<copy todir="${zimbra.home.dir}/conf" file="${config.dir}/log4j.properties" />
 		<copy todir="${zimbra.home.dir}/lib" file="${dist.lib.dir}/zimbrastore.jar" />
