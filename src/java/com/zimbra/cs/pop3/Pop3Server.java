@@ -77,7 +77,7 @@ public class Pop3Server extends TcpServer {
 	private String mConfigName;
 
 	public void setConfigNameFromHostname() {
-		setConfigName(LC.liquid_server_hostname.value());
+		setConfigName(LC.zimbra_server_hostname.value());
 	}
 	
 	public void setConfigName(String name) {

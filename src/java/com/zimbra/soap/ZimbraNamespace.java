@@ -16,7 +16,7 @@ import org.dom4j.QName;
  */
 public class ZimbraNamespace {
 	
-	public static final String ZIMBRA_STR = "urn:liquid";
+	public static final String ZIMBRA_STR = "urn:zimbra";
 	public static final Namespace ZIMBRA = Namespace.get(ZIMBRA_STR);
 
     public static final QName E_BATCH_REQUEST = QName.get("BatchRequest", ZIMBRA);
@@ -27,7 +27,7 @@ public class ZimbraNamespace {
     public static final String A_ONERROR = "onerror";
     public static final String DEF_ONERROR = "continue";
     
-	public static final String ZIMBRA_ACCOUNT_STR = "urn:liquidAccount";
+	public static final String ZIMBRA_ACCOUNT_STR = "urn:zimbraAccount";
 	public static final Namespace ZIMBRA_ACCOUNT = Namespace.get(ZIMBRA_ACCOUNT_STR);
 
 }

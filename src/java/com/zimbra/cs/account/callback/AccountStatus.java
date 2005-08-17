@@ -10,7 +10,7 @@ import com.zimbra.cs.service.ServiceException;
 public class AccountStatus implements AttributeCallback {
 
     /**
-     * check to make sure liquidMailHost points to a valid server liquidServiceHostname
+     * check to make sure zimbraMailHost points to a valid server liquidServiceHostname
      */
     public void preModify(Map context, String attrName, Object value,
             Map attrsToModify, Entry entry, boolean isCreate) throws ServiceException {

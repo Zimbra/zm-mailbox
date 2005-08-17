@@ -196,8 +196,8 @@ public class DbPool {
         }
         
         // These properties cannot be set with "liquid_mysql_connector." keys.
-        props.put("user", LC.liquid_mysql_user.value());
-        props.put("password", LC.liquid_mysql_password.value());
+        props.put("user", LC.zimbra_mysql_user.value());
+        props.put("password", LC.zimbra_mysql_password.value());
 
         return props;
     }

@@ -35,7 +35,7 @@ import com.zimbra.soap.SoapHttpTransport;
  */
 public class SoapTestHarness {
 
-	public static final String NAMESPACE_STR = "urn:liquidTestHarness";
+	public static final String NAMESPACE_STR = "urn:zimbraTestHarness";
 	public static final Namespace NAMESPACE = Namespace.get("test", NAMESPACE_STR);
 	public static final QName E_TESTS = QName.get("tests", NAMESPACE);
 	public static final QName E_TEST = QName.get("test", NAMESPACE);
@@ -447,10 +447,10 @@ public class SoapTestHarness {
     private static Map getURIs() {
         if (mURIs == null) {
             mURIs = new HashMap();
-            mURIs.put("liquid", "urn:liquid");
-            mURIs.put("acct", "urn:liquidAccount");
-            mURIs.put("mail", "urn:liquidMail");
-            mURIs.put("admin", "urn:liquidAdmin");
+            mURIs.put("liquid", "urn:zimbra");
+            mURIs.put("acct", "urn:zimbraAccount");
+            mURIs.put("mail", "urn:zimbraMail");
+            mURIs.put("admin", "urn:zimbraAdmin");
             mURIs.put("soap", "http://www.w3.org/2003/05/soap-envelope");
             mURIs.put("soap12", "http://www.w3.org/2003/05/soap-envelope");            
             mURIs.put("soap11", "http://schemas.xmlsoap.org/soap/envelope/");
@@ -461,7 +461,7 @@ public class SoapTestHarness {
 	/*
     XPath xpath = response.createXPath(path);
     Map uris = new HashMap();
-    uris.put("acct", "urn:liquidAccount");
+    uris.put("acct", "urn:zimbraAccount");
     xpath.setNamespaceURIs(uris);
     xpath.selectSingleNode(response);
     System.out.println(xpath.selectSingleNode(response));

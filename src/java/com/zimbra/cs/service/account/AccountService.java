@@ -14,7 +14,7 @@ import com.zimbra.soap.DocumentService;
  */
 public class AccountService implements DocumentService {
 
-    public static final String NAMESPACE_STR = "urn:liquidAccount";
+    public static final String NAMESPACE_STR = "urn:zimbraAccount";
     public static final Namespace NAMESPACE = Namespace.get(NAMESPACE_STR);
 
     // auth

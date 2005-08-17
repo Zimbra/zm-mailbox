@@ -107,7 +107,7 @@ public class StatsImageServlet extends ZimbraServlet {
             reqHostname = reqHostname.substring(0, indexColon);
 
         InetAddress localhost = InetAddress.getLocalHost();
-        if (reqHostname.equalsIgnoreCase(LC.liquid_server_hostname.value()) ||
+        if (reqHostname.equalsIgnoreCase(LC.zimbra_server_hostname.value()) ||
             reqHostname.equalsIgnoreCase(localhost.getCanonicalHostName()) ||
             reqHostname.equalsIgnoreCase(localhost.getHostName()) ||
         	reqHostname.equalsIgnoreCase("localhost") ||

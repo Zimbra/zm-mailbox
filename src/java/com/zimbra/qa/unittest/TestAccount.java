@@ -31,7 +31,7 @@ public class TestAccount extends TestCase {
         cleanUp();
         
         Map attrs = new HashMap();
-        attrs.put("liquidMailHost", LC.liquid_server_hostname.value());
+        attrs.put("zimbraMailHost", LC.zimbra_server_hostname.value());
         attrs.put("cn", "TestAccount");
         attrs.put("displayName", "TestAccount unit test user");
         Provisioning.getInstance().createAccount(TestUtil.getAddress(USER_NAME), PASSWORD, attrs);

@@ -29,7 +29,7 @@ public class LmtpClient {
 	public LmtpClient(String host, int port) throws IOException {
 		mHost = host;
 		mPort = port;
-		mGreetname = LC.liquid_server_hostname.value();
+		mGreetname = LC.zimbra_server_hostname.value();
 
 		mConnection = new Socket(host, port);
 		mOut = new BufferedOutputStream(mConnection.getOutputStream());

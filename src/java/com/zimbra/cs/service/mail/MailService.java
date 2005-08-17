@@ -15,7 +15,7 @@ import com.zimbra.soap.DocumentService;
  */
 public class MailService implements DocumentService {
 
-	public static final String NAMESPACE_STR = "urn:liquidMail";
+	public static final String NAMESPACE_STR = "urn:zimbraMail";
 	public static final Namespace NAMESPACE = Namespace.get(NAMESPACE_STR);
 	
     // noop

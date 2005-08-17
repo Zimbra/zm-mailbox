@@ -313,10 +313,10 @@ public class ParsedMessage {
         if (mZimbraDate != -1)
             return mZimbraDate;
 
-        String liquidHeader = null;
+        String zimbraHeader = null;
         try {
-            liquidHeader = mMimeMessage.getHeader("X-Zimbra-Received", null);
-            if (liquidHeader == null || liquidHeader.trim().equals(""))
+            zimbraHeader = mMimeMessage.getHeader("X-Zimbra-Received", null);
+            if (zimbraHeader == null || zimbraHeader.trim().equals(""))
                 return -1;
         } catch (MessagingException mex) {
             return -1;
@@ -325,7 +325,7 @@ public class ParsedMessage {
         Date liquidDate = null;
         synchronized (sFormat) {
             try {
-                liquidDate = sFormat.parse(liquidHeader);
+                liquidDate = sFormat.parse(zimbraHeader);
             } catch (ParseException e) {
                 return -1;
             }

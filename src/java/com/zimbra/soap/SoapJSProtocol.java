@@ -14,7 +14,7 @@ import com.zimbra.cs.service.ServiceException;
  */
 public class SoapJSProtocol extends SoapProtocol {
 
-    private static final String NS_STR = "urn:liquidSoap";
+    private static final String NS_STR = "urn:zimbraSoap";
     private static final Namespace NS = Namespace.get(NS_PREFIX, NS_STR);
     private static final QName CODE = QName.get("Code", NS);
     private static final QName REASON = QName.get("Reason", NS);

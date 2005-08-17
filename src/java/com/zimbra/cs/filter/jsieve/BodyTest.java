@@ -87,8 +87,8 @@ public class BodyTest extends AbstractTest {
     }
 
     private boolean test(MailAdapter mail, String comparator, String key) throws SieveException {
-        ZimbraMailAdapter liquidMail = (ZimbraMailAdapter) mail;
-        ParsedMessage pm = liquidMail.getParsedMessage();
+        ZimbraMailAdapter zimbraMail = (ZimbraMailAdapter) mail;
+        ParsedMessage pm = zimbraMail.getParsedMessage();
         List msgParts = pm.getMessageParts();
         try {
             /*

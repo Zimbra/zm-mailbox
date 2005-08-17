@@ -139,7 +139,7 @@ public class ZimbraPerf {
      * <code>sqlperf.csv</code>, in descending order by count.
      */
     private static void writeDbStats() {
-        String filename = LC.liquid_log_directory.value() + "/sqlperf.csv";
+        String filename = LC.zimbra_log_directory.value() + "/sqlperf.csv";
         FileWriter writer = null;
         try {
             synchronized (sSqlToStats) {
@@ -177,7 +177,7 @@ public class ZimbraPerf {
         new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
 
     public static void writeSlowQuery(String sql, int durationMillis) {
-        String filename = LC.liquid_log_directory.value() + "/slowQueries.csv";
+        String filename = LC.zimbra_log_directory.value() + "/slowQueries.csv";
         FileWriter writer = null;
         try {
             File file = new File(filename);
@@ -199,7 +199,7 @@ public class ZimbraPerf {
     
     public static void writeResponseStats(String responseName, long requestMillis,
         long dbMillis, int statementCount) {
-        String filename = LC.liquid_log_directory.value() + "/responses.csv";
+        String filename = LC.zimbra_log_directory.value() + "/responses.csv";
         FileWriter writer = null;
         try {
             File file = new File(filename);

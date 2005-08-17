@@ -22,7 +22,7 @@ import com.zimbra.soap.DocumentService;
  */
 public class AdminService implements DocumentService {
 
-	public static final String NAMESPACE_STR = "urn:liquidAdmin";
+	public static final String NAMESPACE_STR = "urn:zimbraAdmin";
 	public static final Namespace NAMESPACE = Namespace.get(NAMESPACE_STR);
 	
 	public static final QName PING_REQUEST = QName.get("PingRequest", NAMESPACE);

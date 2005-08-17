@@ -93,8 +93,8 @@ public class LdapUtil {
             sEnv.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
             sEnv.put(Context.PROVIDER_URL, sLdapURL);
             sEnv.put(Context.SECURITY_AUTHENTICATION, "simple");
-            sEnv.put(Context.SECURITY_PRINCIPAL, LC.liquid_ldap_userdn.value());
-            sEnv.put(Context.SECURITY_CREDENTIALS, LC.liquid_ldap_password.value());
+            sEnv.put(Context.SECURITY_PRINCIPAL, LC.zimbra_ldap_userdn.value());
+            sEnv.put(Context.SECURITY_CREDENTIALS, LC.zimbra_ldap_password.value());
             // enable connection pooling
             sEnv.put("com.sun.jndi.ldap.connect.pool", "true");
             // what should this be set to?

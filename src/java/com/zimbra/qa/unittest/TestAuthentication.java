@@ -31,7 +31,7 @@ extends TestCase {
         // Create temporary account
         String address = TestUtil.getAddress(USER_NAME);
         Map attrs = new HashMap();
-        attrs.put("liquidMailHost", TestUtil.getDomain());
+        attrs.put("zimbraMailHost", TestUtil.getDomain());
         attrs.put("cn", "Unit test temporary user");
         attrs.put("displayName", "Unit test temporary user");
         mAccount = mProv.createAccount(address, PASSWORD, attrs);

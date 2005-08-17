@@ -117,11 +117,11 @@ public class AddressBookTest extends AbstractTest {
     }
 
     private boolean test(MailAdapter mail, String comparator, String[] headers, Set abooks) throws SieveException {
-        ZimbraMailAdapter liquidMail = (ZimbraMailAdapter) mail;
+        ZimbraMailAdapter zimbraMail = (ZimbraMailAdapter) mail;
         for (Iterator it = abooks.iterator(); it.hasNext(); ) {
             String abookName = (String) it.next();
             if (CONTACTS.equals(abookName)) {
-                Mailbox mbox = liquidMail.getMailbox();
+                Mailbox mbox = zimbraMail.getMailbox();
                 // searching contacts
                 for (int i=0; i<headers.length; i++) {
                     // get values for header that should contains address, like From, To, etc.
