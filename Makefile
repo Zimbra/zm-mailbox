@@ -30,7 +30,7 @@ $(SRC)/native/IO.c: $(BUILD)/IO.h
 $(BUILD)/IO.h: $(CLASSES)/com/liquidsys/os/IO.class
 	mkdir -p $(@D)
 	$(RM) $@
-	javah -o $@ -classpath $(CLASSES) com.liquidsys.os.IO
+	javah -o $@ -classpath $(CLASSES) com.zimbra.native.IO
 
 $(OUTDIR):
 	mkdir -p $(OUTDIR)

@@ -1,4 +1,4 @@
-package com.liquidsys.os;
+package com.zimbra.native;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;

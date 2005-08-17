@@ -1,8 +1,8 @@
-package com.liquidsys.os.tests;
+package com.zimbra.native.tests;
 
 import java.io.IOException;
 
-import com.liquidsys.os.IO;
+import com.zimbra.native.IO;
 
 public class LinkCountTest {
 
