@@ -16,7 +16,7 @@
 
   <servlet>
     <servlet-name>SoapServlet</servlet-name>
-    <servlet-class>com.liquidsys.soap.SoapServlet</servlet-class>
+    <servlet-class>com.zimbra.soap.SoapServlet</servlet-class>
     <load-on-startup>1</load-on-startup>
     <init-param>
       <param-name>allowed.ports</param-name>
@@ -35,7 +35,7 @@
 
   <servlet>
     <servlet-name>AdminServlet</servlet-name>
-    <servlet-class>com.liquidsys.soap.SoapServlet</servlet-class>
+    <servlet-class>com.zimbra.soap.SoapServlet</servlet-class>
     <load-on-startup>2</load-on-startup>
     <init-param>
       <param-name>allowed.ports</param-name>
