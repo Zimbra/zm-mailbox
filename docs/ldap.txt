@@ -1,10 +1,10 @@
 ZimbraServer/build.xml now does most steps instructed here.
 
 On windows make sure (a) you have installed OpenLDAP to
-\opt\liquid\openldap and (b) installed it as a service 
-   C:\opt\liquid\openldap> slapd.exe install
+\opt\zimbra\openldap and (b) installed it as a service 
+   C:\opt\zimbra\openldap> slapd.exe install
 
-On unix make sure you have /opt/liquid/bin/ldap {start|stop} script
+On unix make sure you have /opt/zimbra/bin/ldap {start|stop} script
 handy.
 
 Use the rest of this document as a reference for how to manually
@@ -26,12 +26,12 @@ Manual Instructions for Windows
 
         \\KENNY\public\software\windows\openldap-2_2_15-1-win32.exe
 
-   Make sure to set your install directory to C:\opt\liquid\openldap
+   Make sure to set your install directory to C:\opt\zimbra\openldap
 
-2. Copy ZimbraServer\conf\ldap\slapd.win.conf to C:\opt\liquid\openldap\slapd.conf   [<== NOTE: RENAMING FILE]
-   Copy ZimbraServer\conf\ldap\liquid.schema  to C:\opt\liquid\openldap\etc\schema\liquid.schema
+2. Copy ZimbraServer\conf\ldap\slapd.win.conf to C:\opt\zimbra\openldap\slapd.conf   [<== NOTE: RENAMING FILE]
+   Copy ZimbraServer\conf\ldap\zimbra.schema  to C:\opt\zimbra\openldap\etc\schema\zimbra.schema
 
-3. Start the slapd server from C:\opt\liquid\openldap\slapd (use 
+3. Start the slapd server from C:\opt\zimbra\openldap\slapd (use 
    "-d 10" to see debug output if you have problems).
 
    (If all goes well, nothing will seem to happen.  Empty window, no
@@ -44,11 +44,11 @@ Manual Instructions for Windows
    version because Windows dislikes quotes):
 
         cd <path-to-your-workspace>  (e.g. "cd C:\Workspace")
-        C:\opt\liquid\openldap\ldapmodify -a -c -w liquid -D uid=liquid,cn=accounts,cn=liquid -x -f ZimbraServer/conf/ldap/liquid.ldif
+        C:\opt\zimbra\openldap\ldapmodify -a -c -w zimbra -D uid=zimbra,cn=accounts,cn=zimbra -x -f ZimbraServer/conf/ldap/zimbra.ldif
 
 5. If you'd like, stop slapd and install it as a Windows service
    instead.
-        C:\opt\liquid\openldap\slapd install
+        C:\opt\zimbra\openldap\slapd install
         NET START "OpenLDAP Directory Service"
         
    Open the "Services" Control Panel (in the "Administrative Tools"
@@ -76,7 +76,7 @@ Manual Instructions for Windows
    File -> Connect brings up the "Open LDAP/DSML Connection" dialog.
    Fill in the following values:
                 Level: User + Password
-                User DN: uid=liquid,cn=accounts,cn=liquid
-                Password: liquid
+                User DN: uid=zimbra,cn=accounts,cn=zimbra
+                Password: zimbra
    Press the "Save" button.
    Press the "OK" button.
