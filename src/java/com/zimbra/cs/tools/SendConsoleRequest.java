@@ -25,7 +25,7 @@ import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapHttpTransport;
 import com.zimbra.soap.SoapTransport;
 import com.zimbra.cs.service.mail.*;
-import com.zimbra.cs.servlet.LiquidServlet;
+import com.zimbra.cs.servlet.ZimbraServlet;
 
 
 /**
@@ -78,7 +78,7 @@ public class SendConsoleRequest {
     
     private void auth(String name, String pwd, String host, int port)
     throws SoapFaultException, IOException, ServiceException {
-        URL src = new URL("http", host, port, LiquidServlet.USER_SERVICE_URI);
+        URL src = new URL("http", host, port, ZimbraServlet.USER_SERVICE_URI);
         mTrans = new SoapHttpTransport(src.toExternalForm());
 
         // gonna go with XML here; may want to switch to a binary protocol at some point

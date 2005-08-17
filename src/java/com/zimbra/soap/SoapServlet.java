@@ -12,7 +12,7 @@ import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.LiquidPerf;
 import com.zimbra.cs.service.util.ThreadLocalData;
-import com.zimbra.cs.servlet.LiquidServlet;
+import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.cs.util.Liquid;
 import com.zimbra.cs.util.ZimbraLog;
@@ -21,7 +21,7 @@ import com.zimbra.cs.util.ZimbraLog;
  * The soap service servlet
  */
 
-public class SoapServlet extends LiquidServlet {
+public class SoapServlet extends ZimbraServlet {
 
     private static final String PARAM_ENGINE_HANDLER = "engine.handler.";
 

@@ -12,7 +12,7 @@ import org.apache.commons.logging.LogFactory;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.servlet.LiquidServlet;
+import com.zimbra.cs.servlet.ZimbraServlet;
 
 /**
  * simple iCal servlet on a mailbox. URL is:
@@ -23,7 +23,7 @@ import com.zimbra.cs.servlet.LiquidServlet;
  *
  */
 
-public abstract class LiquidBasicAuthServlet extends LiquidServlet {
+public abstract class LiquidBasicAuthServlet extends ZimbraServlet {
 
     private static final String  WWW_AUTHENTICATE_HEADER = "WWW-Authenticate";
     private static final String  WWW_AUTHENTICATE_VALUE = "BASIC realm=\"LiquidSystems\"";

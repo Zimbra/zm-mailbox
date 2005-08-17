@@ -51,7 +51,7 @@ import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.cs.service.util.ParseMailboxID;
-import com.zimbra.cs.servlet.LiquidServlet;
+import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.soap.ZimbraContext;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapHttpTransport;
@@ -309,7 +309,7 @@ public class CrossMailboxSearch
         }
         
         private void auth(String admin, String pwd, int port, String host) throws SoapFaultException, IOException, ServiceException {
-            URL src = new URL("https", host, port, LiquidServlet.ADMIN_SERVICE_URI);
+            URL src = new URL("https", host, port, ZimbraServlet.ADMIN_SERVICE_URI);
             SoapTransport transport = new SoapHttpTransport(src.toExternalForm()); 
             
             // using XML for now
@@ -488,7 +488,7 @@ public class CrossMailboxSearch
             // forward auth token as a cookie
             Cookie cookie = new Cookie(
                     server,
-                    LiquidServlet.COOKIE_LS_AUTH_TOKEN, 
+                    ZimbraServlet.COOKIE_LS_AUTH_TOKEN, 
                     mAuthToken, 
                     "/", -1, false);
             

@@ -30,7 +30,7 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.util.ByteUtil;
 
 import com.zimbra.cs.service.util.*;
-import com.zimbra.cs.servlet.LiquidServlet;
+import com.zimbra.cs.servlet.ZimbraServlet;
 
 /**
  * The content servlet returns an attachment document in its original format.
@@ -38,7 +38,7 @@ import com.zimbra.cs.servlet.LiquidServlet;
  * to ConversionServlet.
  */
 
-public class ContentServlet extends LiquidServlet {
+public class ContentServlet extends ZimbraServlet {
 
     protected static final String CONVERSION_SERVLET = "ConversionServlet";
     

@@ -9,7 +9,7 @@ import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.account.AccountService;
-import com.zimbra.cs.servlet.LiquidServlet;
+import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.Liquid;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapHttpTransport;
@@ -25,7 +25,7 @@ public class SoapTestClient {
     	
         SoapHttpTransport trans = null;
         try {
-            trans = new SoapHttpTransport("http://localhost:7070" + LiquidServlet.USER_SERVICE_URI);
+            trans = new SoapHttpTransport("http://localhost:7070" + ZimbraServlet.USER_SERVICE_URI);
             Element request = Element.XMLElement.mFactory.createElement(AccountService.AUTH_REQUEST);
             request.addAttribute(AccountService.E_ACCOUNT, "user1@liquidsys.com", Element.DISP_CONTENT);
             request.addAttribute(AccountService.E_PASSWORD, "test123", Element.DISP_CONTENT);

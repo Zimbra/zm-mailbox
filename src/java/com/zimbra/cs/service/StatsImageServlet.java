@@ -15,13 +15,13 @@ import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
-import com.zimbra.cs.servlet.LiquidServlet;
+import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.localconfig.LC;
 
 import java.net.*;
 
-public class StatsImageServlet extends LiquidServlet {
+public class StatsImageServlet extends ZimbraServlet {
 
     private static Log mLog = LogFactory.getLog(StatsImageServlet.class);
 

@@ -16,7 +16,7 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.ContactCSV;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.servlet.LiquidServlet;
+import com.zimbra.cs.servlet.ZimbraServlet;
 
 /**
  * simple iCal servlet on a mailbox. URL is:
@@ -27,7 +27,7 @@ import com.zimbra.cs.servlet.LiquidServlet;
  *
  */
 
-public class CsvServlet extends LiquidServlet {
+public class CsvServlet extends ZimbraServlet {
 
     public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
         try {

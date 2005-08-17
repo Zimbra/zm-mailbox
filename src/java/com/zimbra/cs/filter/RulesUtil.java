@@ -15,7 +15,7 @@ import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.cs.service.mail.MailService;
-import com.zimbra.cs.servlet.LiquidServlet;
+import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.Liquid;
 import com.zimbra.soap.ZimbraContext;
@@ -73,7 +73,7 @@ public class RulesUtil {
     
     private void saveRules(String acctEmail, String pwd, String path, String mailHost, int port) throws Exception {
         // construct URL to source host
-        URL src = new URL("https", mailHost, port, LiquidServlet.ADMIN_SERVICE_URI);
+        URL src = new URL("https", mailHost, port, ZimbraServlet.ADMIN_SERVICE_URI);
         SoapTransport trans = new SoapHttpTransport(src.toExternalForm()); 
         
         // authenticate 
