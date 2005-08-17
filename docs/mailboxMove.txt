@@ -10,12 +10,12 @@ in the LDAP directory
 
 Examples:
 
-zmmailboxmove -s ashcroft -t kchenlaptop -a kchen@ashcroft.liquidsys.com
+zmmailboxmove -s ashcroft -t kchenlaptop -a kchen@ashcroft.example.zimbra.com
 
-copies the mailbox of account "kchen@ashcroft.liquidsys.com" from host ashcroft to kchenlaptop.
+copies the mailbox of account "kchen@ashcroft.example.zimbra.com" from host ashcroft to kchenlaptop.
 
 
-zmmailboxmove -sw -s ashcroft -t kchenlaptop -a kchen@ashcroft.liquidsys.com
+zmmailboxmove -sw -s ashcroft -t kchenlaptop -a kchen@ashcroft.example.zimbra.com
 
 does the same thing. Additionally by specifying -s (switch over), the LDAP directory is updated 
 so that further email messages will be delivered to the target host.
@@ -27,14 +27,14 @@ You can move your real emails from dogfood to your own laptop:
 
 (1) add your laptop hostname to LDAP (run zmprov and use 'cs' and 'gas' commands on dogfood)
 (2) modify your conf/localconfig.xml, and point ldap_host to the LDAP server used by
-    the source host (in this case, dogfood). Add liquid_server_hostname to point to your
+    the source host (in this case, dogfood). Add zimbra_server_hostname to point to your
     laptop.
-(3) update ldap_root_password and liquid_ldap_password to those set on the source host
-    (usually 'liquid'/'liquid' on dogfood)
+(3) update ldap_root_password and zimbra_ldap_password to those set on the source host
+    (usually 'zimbra'/'zimbra' on dogfood)
 (4) restart tomcat on your laptop
 (5) for windows, do:
       java com.zimbra.cs.mailbox.MailboxMoveUtil 
-        -a <you>@dogfood.liquidsys.com -s dogfood  -t <yourlaptop>
+        -a <you>@dogfood.example.zimbra.com -s dogfood  -t <yourlaptop>
     for linux, use zmmailboxmove script
 (5) sometimes the laptop hostname doesn't work. Use your laptop's IP address.
 (6) if you need to move the mailbox again, you need to specify -ow option to 
