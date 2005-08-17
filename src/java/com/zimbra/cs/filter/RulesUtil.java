@@ -40,7 +40,7 @@ public class RulesUtil {
      * <rules>
      *   <r name="rule1">
      *     <g op="anyof">
-     *       <c name="header" op=":contains" k0="From" k1="foo@liquidsys.com"/>
+     *       <c name="header" op=":contains" k0="From" k1="foo@example.zimbra.com"/>
      *       <c ... />
      *     </g>
      *     <action name="fileinto">

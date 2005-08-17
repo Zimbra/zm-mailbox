@@ -86,8 +86,8 @@ public class DelegateAuth extends AdminDocumentHandler {
     
     /*
     public static void main(String args[]) throws ServiceException, AuthTokenException {
-        Account acct = Provisioning.getInstance().getAccountByName("user2@slapshot.liquidsys.com");
-        Account admin = Provisioning.getInstance().getAccountByName("admin@slapshot.liquidsys.com");        
+        Account acct = Provisioning.getInstance().getAccountByName("user2@slapshot.example.zimbra.com");
+        Account admin = Provisioning.getInstance().getAccountByName("admin@slapshot.example.zimbra.com");        
         AuthToken at = new AuthToken(acct, System.currentTimeMillis()+DEFAULT_AUTH_LIFETIME*1000, false, admin);
         String token = at.getEncoded();
         System.out.println(token);

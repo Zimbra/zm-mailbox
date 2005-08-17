@@ -28,8 +28,8 @@ public class TestOutOfOffice extends TestCase
     
     private static String SOAP_URL = TestUtil.getSoapUrl();
     private static String USER_NAME = "user1";
-    private static String RECIPIENT1_ADDRESS = "TestOutOfOffice1@liquidsys.com";
-    private static String RECIPIENT2_ADDRESS = "TestOutOfOffice2@liquidsys.com";
+    private static String RECIPIENT1_ADDRESS = "TestOutOfOffice1@example.zimbra.com";
+    private static String RECIPIENT2_ADDRESS = "TestOutOfOffice2@example.zimbra.com";
 
     protected void setUp() throws Exception
     {

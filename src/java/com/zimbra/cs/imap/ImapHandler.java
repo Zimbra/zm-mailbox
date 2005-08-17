@@ -2084,8 +2084,8 @@ public class ImapHandler extends ProtocolHandler {
         System.out.println("> A001 CAPABILITY");
         handler.doCAPABILITY("A001");
 
-        System.out.println("> A002 LOGIN \"user1@liquidsys.com\" \"test123\"");
-        fargs.clear();  fargs.add("user1@liquidsys.com");  fargs.add("test123");
+        System.out.println("> A002 LOGIN \"user1@example.zimbra.com\" \"test123\"");
+        fargs.clear();  fargs.add("user1@example.zimbra.com");  fargs.add("test123");
         handler.doLOGIN("A002", fargs);
 
         System.out.println("> B002 ID NIL");
@@ -2159,7 +2159,7 @@ public class ImapHandler extends ProtocolHandler {
         fargs.clear();  fargs.add("1");  fargs.add(flags);  fargs.add(STORE_ADD);  fargs.add(Boolean.FALSE);  fargs.add(Boolean.FALSE);
         handler.doSTORE("A011", fargs);
 
-        ImapRequest req = new ImapRequest("X001 LOGIN user1@liquidsys.com \"\\\\\\\"test123\\\"\\\\\"");
+        ImapRequest req = new ImapRequest("X001 LOGIN user1@example.zimbra.com \"\\\\\\\"test123\\\"\\\\\"");
         parts.clear();  parts.add(req.readTag());  req.skipSpace();  parts.add(req.readAtom());  req.skipSpace();  parts.add(req.readAstring());  req.skipSpace();  parts.add(req.readAstring());  assert(req.eof());
         System.out.println(parts);
 

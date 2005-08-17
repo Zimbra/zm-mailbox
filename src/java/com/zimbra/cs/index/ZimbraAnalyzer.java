@@ -54,7 +54,7 @@ class ZimbraAnalyzer extends StandardAnalyzer
         
     	MultiTokenFilter.sPrintNewTokens = true;
     	ZimbraAnalyzer la = new ZimbraAnalyzer();
-    	String str = "tim (tim@foo.com),image/jpeg, bugzilla-daemon@eric.liquidsys.com, zug zug [zug@gug.com], Foo.gub, \"My Mom\" <mmm@nnnn.com>,asd foo bar aaa/bbb ccc/ddd/eee fff@ggg.com hhh@iiii";
+    	String str = "tim (tim@foo.com),image/jpeg, bugzilla-daemon@eric.example.zimbra.com, zug zug [zug@gug.com], Foo.gub, \"My Mom\" <mmm@nnnn.com>,asd foo bar aaa/bbb ccc/ddd/eee fff@ggg.com hhh@iiii";
     	{
     		System.out.print("AddressTokenFilter:\n-------------------------");
     		StringReader reader = new StringReader(str);

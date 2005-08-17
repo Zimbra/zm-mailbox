@@ -31,15 +31,15 @@ public class TestStringUtil extends TestCase
         	"${NEWLINE}Sender: ${SENDER_ADDRESS}${NEWLINE}Subject: ${SUBJECT}";
         
         HashMap vars = new HashMap();
-        vars.put("SENDER_ADDRESS", "sender@liquidsys.com");
-        vars.put("RECIPIENT_ADDRESS", "recipient@liquidsys.com");
-        vars.put("RECIPIENT_DOMAIN", "liquidsys.com");
-        vars.put("NOTIFICATION_ADDRESS", "notify@liquidsys.com");
+        vars.put("SENDER_ADDRESS", "sender@example.zimbra.com");
+        vars.put("RECIPIENT_ADDRESS", "recipient@example.zimbra.com");
+        vars.put("RECIPIENT_DOMAIN", "example.zimbra.com");
+        vars.put("NOTIFICATION_ADDRESS", "notify@example.zimbra.com");
         vars.put("SUBJECT", "Cool stuff");
         vars.put("NEWLINE", "\n");
         
-        String expected = "New message received at recipient@liquidsys.com." +
-    	"\nSender: sender@liquidsys.com\nSubject: Cool stuff\n";
+        String expected = "New message received at recipient@example.zimbra.com." +
+    	"\nSender: sender@example.zimbra.com\nSubject: Cool stuff\n";
         String actual = StringUtil.fillTemplate(new StringReader(template), vars);
         assertEquals("expected: '" + expected + "', actual: '" + actual + "'",
                 expected, actual);

@@ -51,7 +51,7 @@ public class URLHandler extends ObjectHandler {
         URLHandler h = new URLHandler();
         test(h,"(http://itproductguidebeta.infoworld.com/article/04/09/23/HNsdchiupdate_1.html?BACKUP%20AND%20RECOVERY) is interesting");
         test(h," http://www.hula-project.org/index.php/Screenshots for screenshots");
-        test(h,"http://rsvp.conferencemgr.com/RSVP.asp?Q=3KRV7&E=matt@liquidsys.com");
+        test(h,"http://rsvp.conferencemgr.com/RSVP.asp?Q=3KRV7&E=matt@example.zimbra.com");
         test(h," http://www.google.com/news");
         test(h," www.google.com/news");
         test(h," here is a url: www.google.com.");

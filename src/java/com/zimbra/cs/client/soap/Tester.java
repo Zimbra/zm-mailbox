@@ -426,7 +426,7 @@ public class Tester {
         Date d = new Date();
         lMsg.setSubject("AddMsg: " + d);
         lMsg.setFolder(inboxFolderID);
-        lMsg.setContent("From: kluge@liquidsys.com\r\nTo: kluge@dogfood.liquidsys.com\r\nSubject: AddMsg " + d + "\r\n\r\nThis is some text.");
+        lMsg.setContent("From: kluge@example.zimbra.com\r\nTo: kluge@dogfood.example.zimbra.com\r\nSubject: AddMsg " + d + "\r\n\r\nThis is some text.");
     	LmcAddMsgRequest amr = new LmcAddMsgRequest();
     	amr.setMsg(lMsg);
     	amr.setSession(session);
@@ -595,8 +595,8 @@ public class Tester {
             smr.setSession(session);
 
             // add an attachment.  XXX hardcoded stuff...
-            String aid = smr.postAttachment("http://dogfood.liquidsys.com:7070/service/upload", 
-                                            session, new File("c:/temp/ops.txt"), ".liquidsys.com", 5000);
+            String aid = smr.postAttachment("http://dogfood.example.zimbra.com:7070/service/upload", 
+                                            session, new File("c:/temp/ops.txt"), ".example.zimbra.com", 5000);
             System.out.println("got back attachment id " + aid);
             lMsg.setAttachmentIDs(new String[] { aid});
             LmcSendMsgResponse smrResp = (LmcSendMsgResponse) smr.invoke(serverURL);

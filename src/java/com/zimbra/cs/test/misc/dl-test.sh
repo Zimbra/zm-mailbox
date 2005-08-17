@@ -15,31 +15,31 @@ run cdl hfdsfsdf
 run cdl dkfjsdfss@sdfldksfs.com
 run ddl dsdkjfsd
 run ddl ffsdfsdf@fsdfsdf.com
-run ddl blah@liquidsys.com
+run ddl blah@example.zimbra.com
 run gdl haha
-run gdl haha@liquidsys.com
+run gdl haha@example.zimbra.com
  
-run cdl haha@liquidsys.com
-run cdl hehe@liquidsys.com
+run cdl haha@example.zimbra.com
+run cdl hehe@example.zimbra.com
 
-run adlm haha@liquidsys.com
-run adlm haha@liquidsys.com anandp
+run adlm haha@example.zimbra.com
+run adlm haha@example.zimbra.com anandp
  
-run adlm haha@liquidsys.com anandp@quickmonkey.com
-run adlm haha@liquidsys.com anand_palaniswamy@yahoo.com
-run adlm haha@liquidsys.com anandp@gmail.com
-run adlm haha@liquidsys.com user1@liquidsys.com
+run adlm haha@example.zimbra.com anandp@quickmonkey.com
+run adlm haha@example.zimbra.com anand_palaniswamy@yahoo.com
+run adlm haha@example.zimbra.com anandp@gmail.com
+run adlm haha@example.zimbra.com user1@example.zimbra.com
  
-run adlm hehe@liquidsys.com anandp@quickmonkey.com.invalid
-run adlm hehe@liquidsys.com anand_palaniswamy@yahoo.com.invalid
-run adlm hehe@liquidsys.com anandp@gmail.com.invalid
-run adlm hehe@liquidsys.com user2@liquidsys.com.invalid
+run adlm hehe@example.zimbra.com anandp@quickmonkey.com.invalid
+run adlm hehe@example.zimbra.com anand_palaniswamy@yahoo.com.invalid
+run adlm hehe@example.zimbra.com anandp@gmail.com.invalid
+run adlm hehe@example.zimbra.com user2@example.zimbra.com.invalid
  
 run gadl 
 run gadl -v
  
-run gdl haha@liquidsys.com
+run gdl haha@example.zimbra.com
  
-run ddl hehe@liquidsys.com
+run ddl hehe@example.zimbra.com
 
 run gadl

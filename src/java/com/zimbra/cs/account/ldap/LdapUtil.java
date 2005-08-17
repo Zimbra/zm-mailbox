@@ -585,12 +585,12 @@ public class LdapUtil {
       * 
       * liquidAuthMech      ldap
       * liquidAuthLdapURL   ldap://exch1/
-      * liquidAuthLdapDn    %n@liquidsys.com
+      * liquidAuthLdapDn    %n@example.zimbra.com
       * 
       * our own LDAP example:
       * 
       * liquidAuthMech       ldap
-      * liquidAuthLdapURL    ldap://dogfood.liquidsys.com/
+      * liquidAuthLdapURL    ldap://dogfood.example.zimbra.com/
       * liquidAuthLdapUserDn uid=%u,ou=people,%D
       */
       public static String computeAuthDn(String name, String bindDnRule) {

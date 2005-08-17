@@ -27,7 +27,7 @@ public class SoapTestClient {
         try {
             trans = new SoapHttpTransport("http://localhost:7070" + ZimbraServlet.USER_SERVICE_URI);
             Element request = Element.XMLElement.mFactory.createElement(AccountService.AUTH_REQUEST);
-            request.addAttribute(AccountService.E_ACCOUNT, "user1@liquidsys.com", Element.DISP_CONTENT);
+            request.addAttribute(AccountService.E_ACCOUNT, "user1@example.zimbra.com", Element.DISP_CONTENT);
             request.addAttribute(AccountService.E_PASSWORD, "test123", Element.DISP_CONTENT);
             Element response = trans.invoke(request);
 

@@ -166,8 +166,8 @@ public class Check {
     private static void testCheckAuth() {
         HashMap attrs = new HashMap();
         attrs.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_LDAP);
-        attrs.put(Provisioning.A_zimbraAuthLdapURL, "ldap://exch1.liquidsys.com/");
-        attrs.put(Provisioning.A_zimbraAuthLdapBindDn, "%u@liquidsys.com");
+        attrs.put(Provisioning.A_zimbraAuthLdapURL, "ldap://exch1.example.zimbra.com/");
+        attrs.put(Provisioning.A_zimbraAuthLdapBindDn, "%u@example.zimbra.com");
         try {
             Result r = checkAuthConfig(attrs, "schemers", "xxxxx");
             System.out.println(r);
@@ -184,7 +184,7 @@ public class Check {
    private static void testCheckGal() {
         HashMap attrs = new HashMap();
         attrs.put(Provisioning.A_zimbraGalMode, Provisioning.GM_LDAP);
-        attrs.put(Provisioning.A_zimbraGalLdapURL, "ldap://exch1.liquidsys.com/");
+        attrs.put(Provisioning.A_zimbraGalLdapURL, "ldap://exch1.example.zimbra.com/");
         attrs.put(Provisioning.A_zimbraGalLdapBindDn, "zz_gal");
         attrs.put(Provisioning.A_zimbraGalLdapBindPassword, "zz_gal");
         attrs.put(Provisioning.A_zimbraGalLdapSearchBase, "dc=liquidsys,dc=com");        

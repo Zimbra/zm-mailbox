@@ -41,7 +41,7 @@ public class TestParseMailboxID extends TestCase {
         }
         
         {
-            ParseMailboxID id = ParseMailboxID.parse("user1@liquidsys.com");
+            ParseMailboxID id = ParseMailboxID.parse("user1@example.zimbra.com");
             
             assertTrue(id.isLocal());
             assertEquals(id.getServer(), null);

@@ -244,17 +244,17 @@ public abstract class Provisioning {
      * %d = domain as foo.com
      * %D = domain as dc=foo,dc=com
      * 
-     * For active directory, where accounts in our system have a domain of test.liquidsys.com,
-     * and accounts in active directory have liquidsys.com.
+     * For active directory, where accounts in our system have a domain of test.example.zimbra.com,
+     * and accounts in active directory have example.zimbra.com.
      * 
      * zimbraAuthMech      ldap
      * zimbraAuthLdapURL   ldap://exch1/
-     * zimbraAuthLdapDn    %n@liquidsys.com
+     * zimbraAuthLdapDn    %n@example.zimbra.com
      * 
      * configuring our own system to auth via an LDAP bind
      * 
      * zimbraAuthMech       ldap
-     * zimbraAuthLdapURL    ldap://dogfood.liquidsys.com/
+     * zimbraAuthLdapURL    ldap://dogfood.example.zimbra.com/
      * zimbraAuthLdapUserDn uid=%u,ou=people,%D
      *
      */    

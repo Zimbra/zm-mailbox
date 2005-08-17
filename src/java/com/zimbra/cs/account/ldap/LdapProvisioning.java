@@ -2102,14 +2102,14 @@ public class LdapProvisioning extends Provisioning {
     }
 
     public static void main(String args[]) {
-        System.out.println(LdapUtil.computeAuthDn("schemers@liquidsys.com", null));
-        System.out.println(LdapUtil.computeAuthDn("schemers@liquidsys.com", ""));
-        System.out.println(LdapUtil.computeAuthDn("schemers@liquidsys.com", "WTF"));
-        System.out.println(LdapUtil.computeAuthDn("schemers@liquidsys.com", "%n"));
-        System.out.println(LdapUtil.computeAuthDn("schemers@liquidsys.com", "%u"));        
-        System.out.println(LdapUtil.computeAuthDn("schemers@liquidsys.com", "%d"));
-        System.out.println(LdapUtil.computeAuthDn("schemers@liquidsys.com", "%D"));                
-        System.out.println(LdapUtil.computeAuthDn("schemers@liquidsys.com", "uid=%u,ou=people,%D"));
-        System.out.println(LdapUtil.computeAuthDn("schemers@liquidsys.com", "n(%n)u(%u)d(%d)D(%D)(%%)"));
+        System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", null));
+        System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", ""));
+        System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", "WTF"));
+        System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", "%n"));
+        System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", "%u"));        
+        System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", "%d"));
+        System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", "%D"));                
+        System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", "uid=%u,ou=people,%D"));
+        System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", "n(%n)u(%u)d(%d)D(%D)(%%)"));
     }  
 }

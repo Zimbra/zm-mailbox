@@ -63,7 +63,7 @@ public class LmcSendMsgRequest extends LmcSoapRequest {
     public String postAttachment(String uploadURL,
                                  LmcSession session,
                                  File f,
-                                 String domain,  // cookie domain e.g. ".liquidsys.com"
+                                 String domain,  // cookie domain e.g. ".example.zimbra.com"
                                  int msTimeout)
         throws LmcSoapClientException
     {

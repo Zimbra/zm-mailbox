@@ -44,7 +44,7 @@ public class LmtpInject {
 		mOptions.addOption("w", "warmUpThreshold", true, "warm-up server with first N messages, then start measuring (default no warm-up)");
         mOptions.addOption("S", "stopAfter", true,  "stop after sending this many messages after warm-up");
         mOptions.addOption("u", "username",  true,  "username prefix (default \"user\")");
-        mOptions.addOption("D", "domain",    true,  "default per-connection recipient domain (default liquidsys.com)");
+        mOptions.addOption("D", "domain",    true,  "default per-connection recipient domain (default example.zimbra.com)");
         mOptions.addOption("z", "repeat",    true,  "repeatedly inject these messages NUM times");
 	}
 
@@ -111,7 +111,7 @@ public class LmtpInject {
         }
         LmtpClientFactory.setUsernamePrefix(defaultUsernamePrefix);
 
-        String defaultRecipientDomain = "liquidsys.com";
+        String defaultRecipientDomain = "example.zimbra.com";
 		if (cl.hasOption("D")) {
 			defaultRecipientDomain = cl.getOptionValue("D");
 		}

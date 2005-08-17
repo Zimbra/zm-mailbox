@@ -22,7 +22,7 @@ import org.apache.xerces.xni.XNIException;
 import org.cyberneko.html.filters.DefaultFilter;
 
 /**
- * @author schemers@liquidsys.com
+ * @author schemers@example.zimbra.com
  * 
  * very Mutated version of ElementRemover.java filter from cyberneko html.
  * change accepted/removed elements to static hashmaps for one-time 
