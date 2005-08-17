@@ -356,11 +356,11 @@
 	
 	<target name="inject" depends="compile" description="Insert messages into the system">
 		<echo>Inserting default contacts: user1@${liquid.server.hostname}</echo>
-		<java classname="com.liquidsys.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
+		<java classname="com.zimbra.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="-f data/soap/samplecontacts.xml" />
 		</java>
 		<echo>Creating default search folders: user1@${liquid.server.hostname}</echo>
-		<java classname="com.liquidsys.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
+		<java classname="com.zimbra.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="-f data/soap/samplesearchfolders.xml" />
 		</java>
 		<echo message="Wait for lmtp host=${lmtp.host} port=${lmtp.port}" />
