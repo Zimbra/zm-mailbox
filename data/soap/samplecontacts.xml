@@ -1,4 +1,4 @@
-<t:tests xmlns:t="urn:liquidTestHarness">
+<t:tests xmlns:t="urn:zimbraTestHarness">
 
   <t:property name="uri" value="http://localhost:7070/service/soap/"/>
 
@@ -7,7 +7,7 @@
 
   <t:test id="auth" required="true">
     <t:request>
-      <AuthRequest xmlns="urn:liquidAccount">
+      <AuthRequest xmlns="urn:zimbraAccount">
         <account by="name">${user}</account>
         <password>${password}</password>
         <!--<prefs/>-->
@@ -22,7 +22,7 @@
 
   <t:test>
     <t:request>
-      <CreateContactRequest xmlns="urn:liquidMail">
+      <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
           <a n="firstName">Ross</a>
           <a n="lastName">Dargahi</a>
@@ -49,7 +49,7 @@
 
   <t:test>
     <t:request>
-      <CreateContactRequest xmlns="urn:liquidMail">
+      <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
           <a n="firstName">Satish</a>
           <a n="lastName">Dharmaraj</a>
@@ -68,7 +68,7 @@
 
   <t:test>
     <t:request>
-      <CreateContactRequest xmlns="urn:liquidMail">
+      <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
           <a n="firstName">Roland</a>
           <a n="lastName">Schemers</a>
@@ -93,7 +93,7 @@
 
   <t:test>
     <t:request>
-      <CreateContactRequest xmlns="urn:liquidMail">
+      <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
           <a n="firstName">Dave</a>
           <a n="lastName">Edwards</a>
@@ -111,7 +111,7 @@
 
   <t:test>
     <t:request>
-      <CreateContactRequest xmlns="urn:liquidMail">
+      <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
           <a n="firstName">James</a>
           <a n="lastName">Bond</a>
@@ -127,7 +127,7 @@
 
   <t:test>
     <t:request>
-      <CreateContactRequest xmlns="urn:liquidMail">
+      <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
           <a n="firstName">Cindy</a>
           <a n="lastName">Shannon</a>
@@ -146,7 +146,7 @@
 
   <t:test>
     <t:request>
-      <CreateContactRequest xmlns="urn:liquidMail">
+      <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
           <a n="firstName">Mike</a>
           <a n="lastName">Conners</a>
@@ -163,7 +163,7 @@
 
   <t:test>
     <t:request>
-      <CreateContactRequest xmlns="urn:liquidMail">
+      <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
           <a n="firstName">John</a>
           <a n="lastName">Doe</a>
@@ -180,7 +180,7 @@
 
   <t:test>
     <t:request>
-      <CreateContactRequest xmlns="urn:liquidMail">
+      <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
           <a n="firstName">Joaquin</a>
           <a n="lastName">Ruiz</a>
@@ -196,7 +196,7 @@
 
   <t:test>
     <t:request>
-      <CreateContactRequest xmlns="urn:liquidMail">
+      <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
           <a n="firstName">Bill</a>
           <a n="lastName">Gates</a>
@@ -213,7 +213,7 @@
 
   <t:test>
     <t:request>
-      <CreateContactRequest xmlns="urn:liquidMail">
+      <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
           <a n="firstName">Bob</a>
           <a n="lastName">Smith</a>
@@ -228,7 +228,7 @@
 
   <t:test>
     <t:request>
-      <CreateContactRequest xmlns="urn:liquidMail">
+      <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
           <a n="firstName">Dan</a>
           <a n="lastName">Karp</a>
@@ -249,7 +249,7 @@
 
   <t:test>
     <t:request>
-      <CreateContactRequest xmlns="urn:liquidMail">
+      <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
           <a n="firstName">Kevin</a>
           <a n="lastName">Kluge</a>
@@ -264,7 +264,7 @@
 
   <t:test>
     <t:request>
-      <CreateContactRequest xmlns="urn:liquidMail">
+      <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
           <a n="firstName">DaveVeryLongNameWithNoSpacesBreaksColumns</a>
           <a n="lastName">Householder</a>
@@ -279,7 +279,7 @@
 
   <t:test>
     <t:request>
-      <CreateContactRequest xmlns="urn:liquidMail">
+      <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
           <a n="firstName">Edward</a>
           <a n="lastName">Van Halen</a>
@@ -294,7 +294,7 @@
 
   <t:test>
     <t:request>
-      <CreateContactRequest xmlns="urn:liquidMail">
+      <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
           <a n="firstName">Martha</a>
           <a n="lastName">Ballard</a>
@@ -309,7 +309,7 @@
 
   <t:test>
     <t:request>
-      <CreateContactRequest xmlns="urn:liquidMail">
+      <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
           <a n="firstName">Zachary</a>
           <a n="lastName">Thomas</a>
@@ -324,7 +324,7 @@
 
   <t:test>
     <t:request>
-      <CreateContactRequest xmlns="urn:liquidMail">
+      <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
           <a n="firstName">Jane</a>
           <a n="lastName">Doe</a>
@@ -339,7 +339,7 @@
 
   <t:test>
     <t:request>
-      <CreateContactRequest xmlns="urn:liquidMail">
+      <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
           <a n="firstName">Tim</a>
           <a n="lastName">Davis</a>
@@ -355,7 +355,7 @@
 
   <t:test>
     <t:request>
-      <CreateContactRequest xmlns="urn:liquidMail">
+      <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
           <a n="firstName">Parag</a>
           <a n="lastName">Shah</a>
@@ -377,7 +377,7 @@
 
   <t:test>
     <t:request>
-      <CreateContactRequest xmlns="urn:liquidMail">
+      <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
           <a n="firstName">Conrad</a>
           <a n="lastName">Damon</a>
@@ -399,7 +399,7 @@
 
   <t:test>
     <t:request>
-      <CreateContactRequest xmlns="urn:liquidMail">
+      <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
           <a n="firstName">Enrique</a>
           <a n="lastName">delCampo</a>
@@ -421,7 +421,7 @@
 
   <t:test>
     <t:request>
-      <CreateContactRequest xmlns="urn:liquidMail">
+      <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
           <a n="firstName">Greg</a>
           <a n="lastName">Solovyev</a>
@@ -443,7 +443,7 @@
 
   <t:test>
     <t:request>
-      <CreateContactRequest xmlns="urn:liquidMail">
+      <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
           <a n="firstName">Jiho</a>
           <a n="lastName">Hahm</a>
@@ -466,7 +466,7 @@
 
   <t:test>
     <t:request>
-      <CreateContactRequest xmlns="urn:liquidMail">
+      <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
           <a n="firstName">Kirk</a>
           <a n="lastName">Chen</a>
@@ -489,7 +489,7 @@
 
   <t:test>
     <t:request>
-      <CreateContactRequest xmlns="urn:liquidMail">
+      <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
           <a n="firstName">Marc</a>
           <a n="lastName">Macintyre</a>

@@ -1,4 +1,4 @@
-<t:tests xmlns:t="urn:liquidTestHarness">
+<t:tests xmlns:t="urn:zimbraTestHarness">
 
   <t:property name="uri" value="http://localhost:7070/service/soap/"/>
 
@@ -7,7 +7,7 @@
 
   <t:test id="auth" required="true">
     <t:request>
-      <AuthRequest xmlns="urn:liquidAccount">
+      <AuthRequest xmlns="urn:zimbraAccount">
         <account by="name">${user}</account>
         <password>${password}</password>
         <!--<prefs/>-->
@@ -22,7 +22,7 @@
 
   <t:test>
     <t:request>
-		<CreateSearchFolderRequest xmlns="urn:liquidMail">
+		<CreateSearchFolderRequest xmlns="urn:zimbraMail">
 			<search name="Unread Messages" query="is:unread" types="conversation" sortBy="dateDesc" l="1"/>
 		</CreateSearchFolderRequest>
     </t:request>
@@ -33,7 +33,7 @@
   
   <t:test>
     <t:request>
-		<CreateSearchFolderRequest xmlns="urn:liquidMail">
+		<CreateSearchFolderRequest xmlns="urn:zimbraMail">
 			<search name="Flagged" query="is:flagged" types="conversation" sortBy="dateDesc" l="1"/>
 		</CreateSearchFolderRequest>
     </t:request>
@@ -44,7 +44,7 @@
   
   <t:test>
     <t:request>
-		<CreateSearchFolderRequest xmlns="urn:liquidMail">
+		<CreateSearchFolderRequest xmlns="urn:zimbraMail">
 			<search name="Has Attachment" query="has:attachment" types="conversation" sortBy="dateDesc" l="1"/>
 		</CreateSearchFolderRequest>
     </t:request>
@@ -55,7 +55,7 @@
   
   <t:test>
     <t:request>
-		<CreateSearchFolderRequest xmlns="urn:liquidMail">
+		<CreateSearchFolderRequest xmlns="urn:zimbraMail">
 			<search name="Large" query="larger:100kb" types="conversation" sortBy="dateDesc" l="1"/>
 		</CreateSearchFolderRequest>
     </t:request>
@@ -66,7 +66,7 @@
   
   <t:test>
     <t:request>
-		<CreateSearchFolderRequest xmlns="urn:liquidMail">
+		<CreateSearchFolderRequest xmlns="urn:zimbraMail">
 			<search name="Recent" query="after:-7d" types="conversation" sortBy="dateDesc" l="1"/>
 		</CreateSearchFolderRequest>
     </t:request>
