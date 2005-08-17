@@ -1,0 +1,16 @@
+#
+# Invoke the tester with "SIZE" "BODY" as arguments
+#
++:<a> BODY=10
++:<a> BODY=10 SIZE=100
++:<a> body=10
++:<a> BODY=10
++:<a> BODY=10   SIZE=100
++:<a>   body=10
++:<a> body=8bit size=100
++:<a> body= size=100
++:<a> body= size=
++:<a> body=sfd size=
+-:<a> bfsdfjksdf
+-:<a> =dfkljdsf
+

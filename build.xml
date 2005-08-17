@@ -1,0 +1,597 @@
+<project name="Archiver" default="jar">
+
+	<property environment="env"/>
+
+	<!--
+	     This machine's hostname.  Use LIQUID_HOSTNAME environment variable
+	     if set.  If not, use "hostname" command output.
+	-->
+	<exec executable="hostname" outputproperty="exec.hostname"/>
+	<condition property="liquid.server.hostname" value="${env.LIQUID_HOSTNAME}">
+		<isset property="env.LIQUID_HOSTNAME"/>
+	</condition>
+	<condition property="liquid.server.hostname" value="${exec.hostname}">
+		<not>
+			<isset property="liquid.server.hostname"/>
+		</not>
+	</condition>
+
+	<property name="build.dir" location="build" />
+	<property name="build.classes.dir" location="${build.dir}/classes" />
+	<property name="build.metainf.dir" location="${build.dir}/classes/META-INF/services" />
+	<property name="dist.dir" location="build/dist" />
+	<property name="dist.bin.dir" location="${dist.dir}/bin" />
+	<property name="dist.conf.dir" location="${dist.dir}/conf" />
+	<property name="dist.db.dir" location="${dist.dir}/db" />
+	<property name="dist.lib.dir" location="${dist.dir}/lib" />
+	<property name="dist.libexec.dir" location="${dist.dir}/libexec" />
+	<property name="dist.tomcat.dir" location="${dist.dir}/jakarta-tomcat-5.0.28" />
+	<property name="dist.tomcat.webapps.dir" location="${dist.tomcat.dir}/webapps" />
+	<property name="dist.tomcat.conf.dir" location="${dist.tomcat.dir}/conf" />
+	<property name="dist.tomcat.commonlib.dir" location="${dist.tomcat.dir}/common/lib" />
+	<property name="dist.openldap.dir" location="${dist.dir}/openldap-2.2.17" />
+	<property name="dist.openldap.etc.dir" location="${dist.openldap.dir}/etc/openldap" />
+	<property name="dist.openldap.schema.dir" location="${dist.openldap.etc.dir}/schema" />
+	<property name="dist.tarfile" value="dev-service.tar" />
+
+	<property name="config.dir" location="conf" />
+
+	<property name="warfile" location="${dist.tomcat.webapps.dir}/service.war" />
+
+	<property name="generated.dir" location="${build.dir}/generated" />
+	<property name="generated.java.dir" location="${generated.dir}/src/java" />
+	<property name="jars.dir" location="jars" />
+	<property name="lib.dir" location="lib" />
+	<property name="libexec.dir" location="libexec" />
+	<property name="src.dir" location="src" />
+	<property name="src.java.dir" location="${src.dir}/java" />
+	<property name="src.bin.dir" location="${src.dir}/bin" />
+	<property name="src.db.dir" location="${src.dir}/db" />
+	<property name="src.libexec.dir" location="${src.dir}/libexec" />
+
+	<property name="deploy.war" value="${warfile}" />
+	<property name="deploy.host" value="localhost" />
+	<property name="deploy.port" value="7070" />
+	<property name="deploy.url" value="http://${deploy.host}:${deploy.port}/manager/" />
+	<property name="deploy.user" value="liquid" />
+	<property name="deploy.password" value="liquid" />
+	<property name="deploy.path" value="/service" />
+
+	<property name="lmtp.host" value="localhost" />
+	<property name="lmtp.port" value="7025" />
+	<property name="lmtpinject.numthreads" value="1" />	
+
+	<property name="javacc.main.class" value="org.javacc.parser.Main" />
+
+	<property name="liquid.home.dir" location="/opt/liquid" />
+	<property name="tomcat.home.dir" location="${liquid.home.dir}/tomcat" />
+
+	<condition property="is-windows">
+		<os family="windows" />
+	</condition>
+	<condition property="is-unix">
+		<not>
+			<os family="windows" />
+		</not>
+	</condition>
+
+	<condition property="ldapmodify" value="${liquid.home.dir}/openldap/ldapmodify">
+		<isset property="is-windows" />
+	</condition>
+	<condition property="ldapmodify" value="${liquid.home.dir}/openldap/bin/ldapmodify">
+		<isset property="is-unix" />
+	</condition>
+
+	<condition property="ldapdelete" value="${liquid.home.dir}/openldap/ldapdelete">
+		<isset property="is-windows" />
+	</condition>
+	<condition property="ldapdelete" value="${liquid.home.dir}/openldap/bin/ldapdelete">
+		<isset property="is-unix" />
+	</condition>
+
+	<condition property="slapd.conf" value="conf/ldap/slapd.win.conf">
+		<isset property="is-windows" />
+	</condition>
+	<condition property="slapd.conf" value="conf/ldap/slapd.conf">
+		<isset property="is-unix" />
+	</condition>
+	<property name="slapd.conf.in" location="${slapd.conf}" />
+
+	<condition property="slapd.conf.out" value="${liquid.home.dir}/openldap/slapd.conf">
+		<isset property="is-windows" />
+	</condition>
+	<condition property="slapd.conf.out" value="${liquid.home.dir}/openldap/etc/openldap/slapd.conf">
+		<isset property="is-unix" />
+	</condition>
+
+	<condition property="liquid.schema.dir" value="${liquid.home.dir}/openldap/etc/schema/">
+		<isset property="is-windows" />
+	</condition>
+	<condition property="liquid.schema.dir" value="${liquid.home.dir}/openldap/etc/openldap/schema">
+		<isset property="is-unix" />
+	</condition>
+	
+	<path id="class.path">
+		<pathelement location="${build.classes.dir}" />
+		<fileset dir="${jars.dir}">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
+
+	<taskdef name="deploy" classname="org.apache.catalina.ant.DeployTask" classpathref="class.path" />
+
+	<path id="all.java.path">
+		<pathelement location="${src.java.dir}" />
+		<pathelement location="${generated.java.dir}" />
+	</path>
+
+	<fileset dir="${src.java.dir}" id="src.java.files">
+		<include name="**/*.java" />
+	</fileset>
+
+	<fileset dir="${generated.java.dir}" id="generated.java.files">
+		<include name="**/*.java" />
+	</fileset>
+
+
+	<target name="build-init">
+		<mkdir dir="${build.classes.dir}" />
+		<mkdir dir="${dist.dir}" />
+		<mkdir dir="${dist.bin.dir}" />
+		<mkdir dir="${dist.conf.dir}" />
+		<mkdir dir="${dist.lib.dir}" />
+		<mkdir dir="${dist.tomcat.webapps.dir}" />
+		<mkdir dir="${dist.tomcat.conf.dir}" />
+		<mkdir dir="${dist.tomcat.commonlib.dir}" />
+		<mkdir dir="${dist.openldap.dir}" />
+		<mkdir dir="${dist.openldap.etc.dir}" />
+		<mkdir dir="${dist.openldap.schema.dir}" />
+		<mkdir dir="${generated.java.dir}" />
+	</target>
+
+	<target name="javacc-internal">
+		<mkdir dir="${output.dir}" />
+		<java classname="${javacc.main.class}" fork="true" classpathref="class.path" failonerror="true">
+			<sysproperty key="install.root" file="${javacc.home}" />
+			<arg value="-OUTPUT_DIRECTORY=${output.dir}" />
+			<arg value="${target}" />
+		</java>
+	</target>
+
+	<!-- invoke the "javacc" task with (target.classdir=com/foo/bar and target="gub.jj")  -->
+	<target name="javacc">
+		<antcall target="javacc-internal">
+			<!-- <param name="output.dir" location="${generated.java.dir}/${target.classdir}"/> -->
+			<param name="output.dir" location="${src.java.dir}/${target.classdir}" />
+			<param name="target" location="${src.java.dir}/${target.classdir}/${target}" />
+		</antcall>
+	</target>
+
+	<target name="javacc-LiquidQueryParser">
+		<antcall target="javacc">
+			<param name="target.classdir" value="com/liquidsys/coco/index/queryparser" />
+			<param name="target" value="LiquidQueryParser.jj" />
+		</antcall>
+	</target>
+
+	<target name="javacc-ImapParser">
+		<antcall target="javacc">
+			<param name="target.classdir" value="com/liquidsys/coco/imap/parser" />
+			<param name="target" value="ImapParser.jj" />
+		</antcall>
+	</target>
+
+	<target name="generate-buildinfo">
+		<tstamp />
+		<condition property="liquid.buildinfo.version" value="2.0">
+			<not>
+				<isset property="${liquid.buildinfo.version}" />
+			</not>
+		</condition>
+		<condition property="liquid.buildinfo.release" value="${user.name}">
+			<not>
+				<isset property="${liquid.buildinfo.release}" />
+			</not>
+		</condition>
+		<condition property="liquid.buildinfo.date" value="${DSTAMP}-${TSTAMP}">
+			<not>
+				<isset property="${liquid.buildinfo.date}" />
+			</not>
+		</condition>
+		<condition property="liquid.buildinfo.host" value="${liquid.server.hostname}">
+			<not>
+				<isset property="${liquid.buildinfo.host}" />
+			</not>
+		</condition>
+		<mkdir dir="${build.dir}/buildinfo" />
+		<echo file="${build.dir}/buildinfo/BuildInfoGenerated.java">
+			package com.liquidsys.coco.util;
+			class BuildInfoGenerated {
+				public static final String VERSION = "${liquid.buildinfo.version}";
+				public static final String RELEASE = "${liquid.buildinfo.release}";
+				public static final String DATE = "${DSTAMP}-${TSTAMP}";
+				public static final String HOST = "${liquid.buildinfo.host}";
+			}
+		</echo>
+		<javac destdir="${build.classes.dir}" debug="true" source="1.4" target="1.4" srcdir="${build.dir}/buildinfo">
+		</javac>
+	</target>
+
+	<target name="compile" depends="build-init" description="Compiles the source code">
+		<javac destdir="${build.classes.dir}" debug="true" source="1.4" target="1.4" classpathref="class.path">
+			<src refid="all.java.path" />
+		</javac>
+
+		<echo>Hostname: ${liquid.server.hostname}</echo>
+
+		<antcall target="generate-buildinfo"/>
+
+		<java classname="com.liquidsys.coco.db.Versions" fork="true" classpathref="class.path" failonerror="true">
+			<arg value="-o" />
+			<arg value="${build.dir}" />
+		</java>
+	</target>
+
+	<target name="jar" depends="compile" description="Creates the jar file">
+		<copy todir="${build.classes.dir}/com/liquidsys/coco/account/">
+			<fileset dir="${config.dir}" includes="liquidattrs.xml" />
+		</copy>
+		<jar destfile="${dist.lib.dir}/liquidstore.jar" basedir="${build.classes.dir}" />
+	</target>
+
+	<target name="clean" description="Removes any temporary files">
+		<delete dir="${build.dir}" />
+	</target>
+
+	<!-- activation.jar keeps mail.jar open.  As a result, on Windows you
+       cannot undeploy because Tomcat is unable to complete delete the
+       service directory. 
+   	
+   	   liquidos.jar opens a shared library so it should not be in a war
+   	   file which can be redeployed. 
+   	   
+   	   Please copy {mail,activation,liquidos}.jar to $TOMCAT\common\lib
+   -->
+	<property name="war.exclude" value="servlet-api.jar,mail.jar,activation.jar,liquidos.jar,KeyView.jar" />
+
+	<target name="war" depends="jar">
+		<echo>war.exclude=${war.exclude}</echo>
+		<war warfile="${warfile}" webxml="${config.dir}/web.xml">
+			<fileset dir="WebRoot"/>
+			<lib dir="${dist.lib.dir}" includes="liquidstore.jar" />
+			<lib dir="${jars.dir}" includes="*.jar" excludes="${war.exclude}" />
+			<classes dir="${config.dir}" includes="log4j.properties" />
+			<classes dir="${config.dir}" includes="sieveConfig.xml" />
+		</war>
+	</target>
+
+	<target name="deploy" depends="service-deploy" description="Deploy service.war to tomcat"/>
+	
+	<target name="service-deploy" depends="war">
+		<echo message="Wait for tomcat to start at http://${deploy.host}:${deploy.port}/" />
+		<waitfor checkevery="1" checkeveryunit="second" maxwait="60" maxwaitunit="second">
+			<http url="http://${deploy.host}:${deploy.port}/" />
+		</waitfor>
+		<deploy url="${deploy.url}" username="${deploy.user}" password="${deploy.password}" path="${deploy.path}" war="${deploy.war}" update="true" />
+	</target>
+
+	<target name="dev-dist" depends="jar,war,dev-dist-core,dev-dist-files,dev-dist-tar"
+		description="Build tar file of basic dev build to unpack over RPM install"/>
+	
+	<target name="dev-dist-files">
+		<copy todir="${dist.openldap.etc.dir}" file="${config.dir}/ldap/liquid_opensrc_mimehandlers.ldif" />
+	</target>
+	
+	<target name="dev-dist-core">
+		<delete>
+			<fileset dir="${dist.dir}" includes="${dist.tarfile}" />
+		</delete>
+		<copy todir="${dist.bin.dir}">
+			<fileset dir="${src.bin.dir}" includes="*" excludes="*.bat" />
+		</copy>
+		<fixcrlf srcdir="${dist.bin.dir}" eol="unix" includes="**" />
+		<copy todir="${dist.dir}" file="${src.bin.dir}/dev_update.sh" />
+		<copy todir="${dist.conf.dir}" file="${config.dir}/log4j.properties" />
+		<copy todir="${dist.openldap.etc.dir}" file="${config.dir}/ldap/liquid.ldif" />
+		<copy todir="${dist.openldap.schema.dir}" file="${config.dir}/ldap/liquid.schema" />
+		<copy todir="${dist.openldap.schema.dir}" file="${config.dir}/ldap/amavisd.schema" />
+		<copy todir="${dist.db.dir}" file="${src.db.dir}/db.sql" />
+		<copy todir="${dist.db.dir}" file="${build.dir}/versions-init.sql" />
+		<copy todir="${dist.lib.dir}">
+			<fileset dir="${lib.dir}" includes="lib*.so" />
+		</copy>
+		<copy todir="${dist.lib.dir}">
+			<fileset dir="${jars.dir}" includes="*.jar" excludes="servlet-api.jar" />
+		</copy>
+		<copy todir="${dist.libexec.dir}">
+			<fileset dir="${src.libexec.dir}" includes="**" excludes="*~" />
+		</copy>
+		<copy todir="${dist.libexec.dir}">
+			<fileset dir="${libexec.dir}" includes="**" />
+		</copy>
+		<fixcrlf srcdir="${dist.libexec.dir}" eol="unix" includes="*.pl,*.sh" />
+		<copy todir="${dist.tomcat.conf.dir}">
+			<fileset dir="${config.dir}" includes="server.xml,tomcat-users.xml" />
+		</copy>
+		<fixcrlf srcdir="${dist.conf.dir}" eol="unix" includes="**" />
+		<copy todir="${dist.tomcat.commonlib.dir}">
+			<fileset dir="${jars.dir}" includes="mail.jar,activation.jar,liquidos.jar" />
+		</copy>
+		<copy file="${config.dir}/localconfig.xml" todir="${dist.conf.dir}"/>
+		<!--
+  	<tar destfile="${dist.dir}/test-msgs.tar">
+  	  <tarfileset dir="data/TestMailRaw"
+  	  			  prefix="TestMailRaw"
+  	  			  includes="**"
+				  excludes="CVS/*"
+  	  			  mode="640" username="liquid" group="liquid"/>
+  	</tar>
+  	-->
+	</target>
+
+	<target name="dev-dist-tar">
+		<tar destfile="${dist.dir}/${dist.tarfile}">
+			<tarfileset dir="${dist.dir}" includes="**" excludes="bin/*,libexec/*,*.sh" mode="640" username="liquid" group="liquid" />
+			<tarfileset dir="${dist.bin.dir}" prefix="bin" includes="**" mode="750" username="liquid" group="liquid" />
+			<tarfileset dir="${dist.libexec.dir}" prefix="libexec" includes="**" mode="750" username="liquid" group="liquid" />
+		</tar>
+	</target>
+		
+	<!-- There are two ways to reset the world:
+  		(a) If your tomcat is a service, use "reset-the-world".
+ 		(b) If your tomcat is inside eclipse then do this:
+ 				1. stop tomcat
+ 				2. run the target "reset-the-world-stage1"
+ 				3. start tomcat
+ 				4. run the target "reset-the-world-stage2" -->
+
+	<target name="reset-the-world" depends="reset-the-world-stage1,reset-the-world-stage2" 
+		description="Reset the world"/>
+
+	<target name="reset-the-world-stage1" depends="compile,jar,init" description="Run when tomcat is stopped." />
+
+	<target name="reset-the-world-stage2" depends="service-deploy,inject" description="Run when tomcat is running." />
+
+	<target name="init" depends="stop-servers,quick-init,ldap-init,tomcat-init,start-ldap,ldap-load,start-tomcat" />
+	
+	<target name="inject" depends="compile" description="Insert messages into the system">
+		<echo>Inserting default contacts: user1@${liquid.server.hostname}</echo>
+		<java classname="com.liquidsys.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="-f data/soap/samplecontacts.xml" />
+		</java>
+		<echo>Creating default search folders: user1@${liquid.server.hostname}</echo>
+		<java classname="com.liquidsys.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="-f data/soap/samplesearchfolders.xml" />
+		</java>
+		<echo message="Wait for lmtp host=${lmtp.host} port=${lmtp.port}" />
+		<waitfor checkevery="1" checkeveryunit="second" maxwait="60" maxwaitunit="second">
+			<socket server="${lmtp.host}" port="${lmtp.port}" />
+		</waitfor>
+		<echo>LmtpInject messages</echo>
+		<java classname="com.liquidsys.coco.lmtpserver.utils.LmtpInject" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="-t ${lmtpinject.numthreads} -a ${lmtp.host} -p ${lmtp.port} -r user1@${liquid.server.hostname} -s ho@liquidsys.com -d" />
+			<arg path="data/TestMailRaw" />
+		</java>
+	</target>
+
+	<target name="configure-exch1-gal" description="point gal at local and exch1 gal">
+		<echo>Configuring domain for gal: ${liquid.server.hostname}</echo>
+		<java classname="com.liquidsys.coco.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="md ${liquid.server.hostname}  liquidGalMode both liquidGalLdapBindDn zz_gal liquidGalLdapBindPassword zz_gal liquidGalLdapFilter ad liquidGalLdapSearchBase dc=liquidsys,dc=com liquidGalLdapURL ldap://exch1.liquidsys.com/" />
+		</java>
+	</target>
+
+	<target name="localhost-ssl-cert" description="make a cert for ssl access">
+		<delete failonerror="no">
+			<fileset dir="${tomcat.home.dir}/conf" includes="keystore" />
+		</delete>
+		<genkey alias="tomcat" storepass="liquid" keyalg="rsa" verbose="false" keystore="${tomcat.home.dir}/conf/keystore" validity="365">
+			<dname>
+				<param name="CN" value="localhost" />
+				<param name="OU" value="Engineering" />
+				<param name="O" value="Liquid Systems" />
+				<param name="C" value="US" />
+			</dname>
+		</genkey>
+		<genkey alias="tomcat-dsa" storepass="liquid" keyalg="dsa" verbose="false" keystore="${tomcat.home.dir}/conf/keystore" validity="365">
+			<dname>
+				<param name="CN" value="localhost" />
+				<param name="OU" value="Engineering" />
+				<param name="O" value="Liquid Systems" />
+				<param name="C" value="US" />
+			</dname>
+		</genkey>
+	</target>
+
+	<target name="dir-init">
+		<echo message="If the following deletes fail, wait for your tomcat" />
+		<echo message="to stop (or stop your tomcat as the case may be)" />
+		<echo message="and try again later." />
+		<delete dir="${liquid.home.dir}/store" />
+		<delete dir="${liquid.home.dir}/index" />
+		<delete dir="${liquid.home.dir}/redolog" />
+		<delete dir="${liquid.home.dir}/repl" />
+		<delete dir="${liquid.home.dir}/backup" />
+		<delete dir="${liquid.home.dir}/conf" excludes="my.cnf" failonerror='false' />
+		<delete failonerror="no">
+			<fileset dir="${liquid.home.dir}/log" includes="*.log" />
+		</delete>
+		<delete failonerror="no">
+			<fileset dir="${tomcat.home.dir}/logs" includes="*" />
+		</delete>
+
+		<mkdir dir="${liquid.home.dir}" />
+		<mkdir dir="${liquid.home.dir}/bin" />
+		<mkdir dir="${liquid.home.dir}/lib" />
+		<mkdir dir="${liquid.home.dir}/log" />
+		<mkdir dir="${liquid.home.dir}/store" />
+		<mkdir dir="${liquid.home.dir}/index" />
+		<mkdir dir="${liquid.home.dir}/redolog" />
+		<mkdir dir="${liquid.home.dir}/redolog/archive" />
+		<mkdir dir="${liquid.home.dir}/repl" />
+		<mkdir dir="${liquid.home.dir}/backup" />
+		<mkdir dir="${liquid.home.dir}/conf" />
+		<copy tofile="${liquid.home.dir}/conf/localconfig.xml" file="${config.dir}/localconfig-dev.xml" />
+		<copy todir="${liquid.home.dir}/conf" file="${config.dir}/log4j.properties" />
+		<mkdir dir="${tomcat.home.dir}" />
+		<mkdir dir="${tomcat.home.dir}/conf" />
+		<mkdir dir="${tomcat.home.dir}/common" />
+		<mkdir dir="${tomcat.home.dir}/common/lib" />
+		<mkdir dir="${liquid.home.dir}/db" />
+		<copy todir="${liquid.home.dir}/db">
+			<fileset dir="${src.db.dir}" />
+		</copy>
+	</target>
+
+	<target name="db-init" description="Recreate the database tables">
+		<sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://127.0.0.1/" userid="root" password="liquid" 
+			 classpathref="class.path" onerror="continue" keepformat="true" src="src/db/dropdb.sql" />
+
+		<sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://127.0.0.1/" userid="root" password="liquid"
+			 classpathref="class.path" onerror="abort" keepformat="true" src="src/db/db.sql" />
+
+		<sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://127.0.0.1/" userid="root" password="liquid"
+			 classpathref="class.path" onerror="abort" keepformat="false" src="${build.dir}/versions-init.sql" />
+	</target>
+
+	<!-- for quickly wiping out database and files between tests; server start/stop is up to user -->
+	<target name="quick-init" depends="db-init,dir-init" />
+
+	<target name="ldap-init">
+		<!-- We have to force overwrite or a freshly installed openldap's configs won't overwritten. -->
+		<copy failonerror="true" overwrite="true" file="${slapd.conf.in}" tofile="${slapd.conf.out}" />
+		<copy failonerror="true" overwrite="true" file="conf/ldap/liquid.schema" todir="${liquid.schema.dir}" />
+		<copy failonerror="true" overwrite="true" file="conf/ldap/amavisd.schema" todir="${liquid.schema.dir}" />
+		<delete dir="${liquid.home.dir}/openldap/var/openldap-data" />
+		<mkdir dir="${liquid.home.dir}/openldap/var/openldap-data" />
+	</target>
+
+	<target name="ldap-load" depends="ldap-load-step1,ldap-load-opensrc-mime-handlers" />
+
+	<target name="ldap-load-step1" description="rub it">
+		<exec executable="${ldapmodify}">
+			<arg line="-a -c -w liquid -D uid=liquid,cn=admins,cn=liquid -x -f" />
+			<arg file="conf/ldap/liquid.ldif" />
+		</exec>
+		<echo>Editing localconfig liquid_server_hostname to be ${liquid.server.hostname}</echo>
+		<java classname="com.liquidsys.coco.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="-e liquid_server_hostname=${liquid.server.hostname}"/>
+		</java>
+		<echo>Provisioning server entry for ${liquid.server.hostname}</echo>
+		<java classname="com.liquidsys.coco.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="CreateServer ${liquid.server.hostname} liquidSmtpHostname exch1.liquidsys.com liquidMailPort 7070" />
+		</java>
+		<echo>Creating domain: ${liquid.server.hostname}</echo>
+		<java classname="com.liquidsys.coco.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="cd ${liquid.server.hostname}" />
+		</java>
+		<echo>Setting default domain: ${liquid.server.hostname}</echo>
+		<java classname="com.liquidsys.coco.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="mcf liquidDefaultDomainName ${liquid.server.hostname}" />
+		</java>
+		<echo>Creating account: admin@${liquid.server.hostname}</echo>
+		<!-- This account is used during QA tests. -->
+		<java classname="com.liquidsys.coco.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="ca admin@${liquid.server.hostname} test123 liquidMailHost ${liquid.server.hostname} cn 'Administrator' displayName 'Administrator' liquidIsAdminAccount TRUE liquidPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana'" />
+		</java>
+		<echo>Creating account: user1@${liquid.server.hostname}</echo>
+		<java classname="com.liquidsys.coco.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="ca user1@${liquid.server.hostname} test123 liquidMailHost ${liquid.server.hostname} cn 'Demo User One' displayName 'Demo User One' liquidMailQuota 62914560 liquidPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana'" />
+		</java>
+		<echo>Creating account: user2@${liquid.server.hostname}</echo>
+		<java classname="com.liquidsys.coco.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="ca user2@${liquid.server.hostname} test123 liquidMailHost ${liquid.server.hostname} cn 'Demo User Two' displayName 'Demo User Two' liquidPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana'" />
+		</java>
+		<echo>Creating account: user3@${liquid.server.hostname}</echo>
+		<java classname="com.liquidsys.coco.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="ca user3@${liquid.server.hostname} test123 liquidMailHost ${liquid.server.hostname} cn 'Demo User Three' displayName 'Demo User Three' liquidAttachmentsIndexingEnabled FALSE liquidPrefTimeZoneId '(GMT-05.00) Eastern Time (US &amp; Canada)'" />
+		</java>
+		<echo>Creating account: user4@${liquid.server.hostname}</echo>
+		<java classname="com.liquidsys.coco.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="ca user4@${liquid.server.hostname} test123 liquidMailHost ${liquid.server.hostname} cn 'Demo User Four' displayName 'Demo User Four' liquidAttachmentsIndexingEnabled FALSE liquidPrefTimeZoneId '(GMT-05.00) Indiana (East)'" />
+		</java>
+	</target>
+
+	<target name="ldap-load-opensrc-mime-handlers">
+		<exec executable="${ldapmodify}">
+			<arg line="-a -c -w liquid -D uid=liquid,cn=admins,cn=liquid -x -f" />
+			<arg file="conf/ldap/liquid_opensrc_mimehandlers.ldif" />
+		</exec>
+	</target>
+
+    <target name="tomcat-init" depends="localhost-ssl-cert,tomcat-init-unix">
+		<copy todir="${tomcat.home.dir}/common/lib" file="${jars.dir}/activation.jar" />
+		<copy todir="${tomcat.home.dir}/common/lib" file="${jars.dir}/mail.jar" />
+		<copy todir="${tomcat.home.dir}/common/lib" file="${jars.dir}/liquidos.jar" />
+		<copy todir="${tomcat.home.dir}/common/endorsed" file="${jars.dir}/liquidcharset.jar" />
+		<copy todir="${liquid.home.dir}/conf" file="${config.dir}/log4j.properties" />
+		<copy todir="${liquid.home.dir}/lib" file="${dist.lib.dir}/liquidstore.jar" />
+		<copy todir="${liquid.home.dir}/lib">
+			<fileset dir="${jars.dir}" includes="*.jar" excludes="servlet-api.jar" />
+		</copy>
+	</target>
+
+	<target name="tomcat-init-unix" if="is-unix">
+		<copy todir="${liquid.home.dir}/lib">
+			<fileset dir="${lib.dir}" includes="lib*.so" />
+		</copy>
+	</target>
+
+	<target name="stop-servers" depends="stop-servers-windows,stop-servers-unix" />
+
+	<target name="stop-servers-windows" if="is-windows">
+		<exec executable="net">
+			<arg value="stop" />
+			<arg value="openldap directory service" />
+		</exec>
+		<exec executable="net">
+			<arg value="stop" />
+			<arg value="apache tomcat" />
+		</exec>
+		<!-- Wait for Tomcat to really go away. -->
+		<echo>Waiting 5 seconds for tomcat to stop</echo>
+		<sleep seconds="5" />
+	</target>
+
+	<target name="stop-servers-unix" if="is-unix">
+		<exec executable="${liquid.home.dir}/bin/ldap">
+			<arg value="stop" />
+		</exec>
+		<exec executable="${liquid.home.dir}/bin/tomcat">
+			<arg value="stop" />
+		</exec>
+	</target>
+
+	<target name="start-ldap" depends="start-ldap-windows,start-ldap-unix" />
+
+	<target name="start-ldap-windows" if="is-windows">
+		<exec executable="net">
+			<arg value="start" />
+			<arg value="openldap directory service" />
+		</exec>
+	</target>
+
+	<target name="start-ldap-unix" if="is-unix">
+		<exec executable="${liquid.home.dir}/bin/ldap">
+			<arg value="start" />
+		</exec>
+	</target>
+
+	<target name="start-tomcat" depends="start-tomcat-windows,start-tomcat-unix" />
+
+	<target name="start-tomcat-windows" if="is-windows">
+		<exec executable="net">
+			<arg value="start" />
+			<arg value="apache tomcat" />
+		</exec>
+	</target>
+
+	<target name="start-tomcat-unix" if="is-unix">
+		<exec executable="${liquid.home.dir}/bin/tomcat">
+			<arg value="start" />
+		</exec>
+	</target>
+
+	<target name="empty" description="Dummy Target used by project_builder to force eclipse to refresh" />
+
+</project>

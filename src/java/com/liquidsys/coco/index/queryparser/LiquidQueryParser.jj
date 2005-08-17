@@ -1,0 +1,516 @@
+options {
+    STATIC = false;
+//    DEBUG_PARSER = true ;
+//    DEBUG_LOOKAHEAD = false;
+//    DEBUG_TOKEN_MANAGER = true ;
+    ERROR_REPORTING = true;
+    JAVA_UNICODE_ESCAPE=true;
+    OPTIMIZE_TOKEN_MANAGER=true;
+    IGNORE_CASE=true;
+}
+ 
+
+PARSER_BEGIN(LiquidQueryParser)
+
+package com.liquidsys.coco.index.queryparser;
+
+import com.liquidsys.coco.index.*;
+import com.liquidsys.coco.mailbox.Mailbox;
+import com.liquidsys.coco.service.ServiceException;
+import com.liquidsys.coco.mailbox.MailServiceException;
+
+import org.apache.lucene.analysis.Analyzer;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+ 
+public final class LiquidQueryParser {
+
+    private static Log mLog = LogFactory.getLog(LiquidQueryParser.class);
+
+    private static HashMap sFolderStrMap;
+    
+    private static abstract class GetQueryCallback {
+        public abstract LiquidQuery.BaseQuery execute(Mailbox mailbox, Analyzer analyzer, int modifier) throws ServiceException;
+    } 
+    
+    private static HashMap sIsStrMap;
+
+    static {
+        /* Well-known folder name string map */
+        sFolderStrMap = new HashMap();
+        
+        sFolderStrMap.put("inbox",    new Integer(Mailbox.ID_FOLDER_INBOX));
+        sFolderStrMap.put("trash",    new Integer(Mailbox.ID_FOLDER_TRASH));
+        sFolderStrMap.put("junk",     new Integer(Mailbox.ID_FOLDER_SPAM));
+        sFolderStrMap.put("sent",     new Integer(Mailbox.ID_FOLDER_SENT));
+        sFolderStrMap.put("drafts",   new Integer(Mailbox.ID_FOLDER_DRAFTS));
+        sFolderStrMap.put("contacts", new Integer(Mailbox.ID_FOLDER_CONTACTS));
+
+        /* is: string map */
+        sIsStrMap = new HashMap();
+
+        // expressing this in java is soooo ugly.... <sigh>
+        sIsStrMap.put("read",
+                      new GetQueryCallback() { public LiquidQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                          return new LiquidQuery.ReadQuery(mbx, analyze, modifier, true);
+                      } } );
+
+        sIsStrMap.put("unread",
+                      new GetQueryCallback() { public LiquidQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                          return new LiquidQuery.ReadQuery(mbx, analyze, modifier, false);
+                      } } );
+
+        sIsStrMap.put("flagged",
+                      new GetQueryCallback() { public LiquidQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                          return new LiquidQuery.FlaggedQuery(mbx, analyze, modifier, true);
+                      } } );
+
+        sIsStrMap.put("unflagged",
+                      new GetQueryCallback() { public LiquidQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                              return new LiquidQuery.FlaggedQuery(mbx, analyze, modifier, false);
+                      } } );
+
+        sIsStrMap.put("draft",
+                      new GetQueryCallback() { public LiquidQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                              return new LiquidQuery.DraftQuery(mbx, analyze, modifier, true);
+                      } } );
+
+        sIsStrMap.put("sent",  /* sent by me */ 
+                      new GetQueryCallback() { public LiquidQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                          return new LiquidQuery.SentQuery(mbx, analyze, modifier, true);
+                      } } );
+
+        sIsStrMap.put("fromme", /* sent by me */ 
+                      new GetQueryCallback() { public LiquidQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                          return new LiquidQuery.SentQuery(mbx, analyze, modifier, true);
+                      } } );
+        
+        sIsStrMap.put("received",
+                      new GetQueryCallback() { public LiquidQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                          return new LiquidQuery.SentQuery(mbx, analyze, modifier, false);
+                      } } );
+                      
+        sIsStrMap.put("replied",
+                      new GetQueryCallback() { public LiquidQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                          return new LiquidQuery.RepliedQuery(mbx, analyze, modifier, true);
+                      } } );
+
+        sIsStrMap.put("unreplied",
+                      new GetQueryCallback() { public LiquidQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                          return new LiquidQuery.RepliedQuery(mbx, analyze, modifier, false);
+                      } } );
+                      
+        sIsStrMap.put("forwarded",
+                      new GetQueryCallback() { public LiquidQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                          return new LiquidQuery.ForwardedQuery(mbx, analyze, modifier, true);
+                      } } );
+
+        sIsStrMap.put("unforwarded",
+                      new GetQueryCallback() { public LiquidQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                          return new LiquidQuery.ForwardedQuery(mbx, analyze, modifier, false);
+                      } } );
+
+        sIsStrMap.put("anywhere",
+                      new GetQueryCallback() { public LiquidQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                          return LiquidQuery.InQuery.Create(mbx, analyze, modifier, LiquidQuery.InQuery.IN_ANY_FOLDER);
+                      } } );
+
+        sIsStrMap.put("invite",
+                      new GetQueryCallback() { public LiquidQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                          return LiquidQuery.DBTypeQuery.IS_INVITE(mbx, analyze, modifier);
+                      } } );
+        
+        
+    }
+
+    public LiquidQuery.BaseQuery ItemQuery(int modifier, int target, String tok) throws ParseException, ServiceException, MailServiceException
+    {
+        assert(target == ITEM);
+
+        return LiquidQuery.ItemQuery.Create(mMailbox, mAnalyzer, modifier, tok);
+    }
+
+    public LiquidQuery.BaseQuery GetQuery(int modifier, int target, String tok) throws ParseException, ServiceException, MailServiceException
+    {
+        switch(target) {
+          case HAS:
+          	if (!tok.equalsIgnoreCase("attachment")) {
+	            return new LiquidQuery.HasQuery(mAnalyzer, modifier, tok);
+            }
+            tok = "any";
+            // otherwise FALL THROUGH to AttachmentQuery below!
+          case ATTACHMENT:
+            return new LiquidQuery.AttachmentQuery(mAnalyzer, modifier,tok);
+          case TYPE:
+            return new LiquidQuery.TypeQuery(mAnalyzer, modifier,tok);
+          case IN:
+            Integer folderId = (Integer) sFolderStrMap.get(tok.toLowerCase());
+            LiquidQuery.InQuery inq;
+            if (folderId != null) {
+                inq = LiquidQuery.InQuery.Create(mMailbox, mAnalyzer, modifier, folderId);
+            } else {
+                inq = LiquidQuery.InQuery.Create(mMailbox, mAnalyzer, modifier, tok);
+            }
+            if (inq == null) {
+                throw MailServiceException.NO_SUCH_FOLDER(tok);
+            }
+            return inq;
+          case TAG:
+            return new LiquidQuery.TagQuery(mAnalyzer, modifier, mMailbox.getTagByName(tok), true);
+          case IS:
+            GetQueryCallback cback = (GetQueryCallback)sIsStrMap.get(tok.toLowerCase());
+            if (cback != null) {
+                return cback.execute(mMailbox, mAnalyzer, modifier);
+            } else {
+                throw new ParseException("Unknown text after is: in query string");
+            }
+          case CONV:
+            if (tok.charAt(0) != '-') {
+                return new LiquidQuery.ConvQuery(mAnalyzer, modifier, tok);
+            } else {
+                // virtual-conversation: search for the item-id with id = -1*X
+                return LiquidQuery.ItemQuery.Create(mMailbox, mAnalyzer, modifier, tok.substring(1));
+            }
+          case DATE:
+          case DAY:
+          case WEEK:
+          case MONTH:
+          case YEAR:
+          case AFTER:
+          case BEFORE:
+          case CONV_START:
+          case CONV_END:
+          {
+              LiquidQuery.DateQuery q = new LiquidQuery.DateQuery(mAnalyzer, target);
+              q.parseDate(modifier, tok);
+              return q;
+          }
+          case TO:
+          case FROM:
+          case CC:
+            if (tok == null || tok.length() < 1) {
+                throw new ParseException("Missing required text after a TO/FROM/CC");
+            }
+            if (tok.charAt(0) == '@') {
+                return new LiquidQuery.DomainQuery(mAnalyzer, modifier, target, tok);
+            }
+            return new LiquidQuery.TextQuery(mAnalyzer, modifier,target,tok);
+          case SIZE:
+          case BIGGER:
+          case SMALLER:
+            return new LiquidQuery.SizeQuery(mAnalyzer, modifier,target,tok);
+          default:
+            return new LiquidQuery.TextQuery(mAnalyzer, modifier,target,tok);
+        }
+    }
+    
+    private Analyzer mAnalyzer = null;
+    private Mailbox mMailbox = null;
+    public void init(Analyzer analyzer, Mailbox mbx) {
+       mAnalyzer = analyzer;
+	   mMailbox = mbx;
+    }
+    
+    public ArrayList Parse() throws ServiceException, ParseException {
+        try {
+            return DoParse();
+        } catch(TokenMgrError e) {
+            throw new ParseException(e.getMessage());
+        }
+    }
+
+    public static final void AddClause(ArrayList clauses, LiquidQuery.BaseQuery q)
+    {
+        if (null != q) {
+            if (clauses.size() > 0) {
+                LiquidQuery.BaseQuery prev = (LiquidQuery.BaseQuery)clauses.get(clauses.size()-1);
+                assert(prev.getNext() == null);
+                prev.setNext(q);
+            }
+            clauses.add(q);
+        }
+    }
+}
+
+PARSER_END(LiquidQueryParser)
+
+//////////////////////////////////////////////////////////////////////
+///
+/// Lexical States
+///
+
+
+<DEFAULT>SKIP :
+{ 
+    " " | "\t" 
+}
+
+<DEFAULT>SKIP:
+{
+    "{" { SwitchTo(BRACES_STATE); }
+    | "\"" { SwitchTo(QUOTED_STATE); }
+}
+
+<DEFAULT>TOKEN :
+{
+    <AND_TOKEN: ("and" | "&&") >
+ |  <OR_TOKEN: ("or" | "||") >
+ |  <NOT_TOKEN: ("not" | "!") >
+}
+
+<DEFAULT>TOKEN:
+{
+    <LPAREN: "("> 
+ |  <RPAREN: ")">
+}
+
+<DEFAULT>TOKEN :
+{
+   <CONTENT:   "content:"> 
+|  <SUBJECT:    "subject:">
+|  <FROM:       "from:">
+|  <TO:         "to:">         
+|  <CC:         "cc:">         
+|  <IN:         "in:">  
+|  <HAS:        "has:">
+|  <FILENAME:   "filename:">
+|  <TYPE:       "type:">
+|  <ATTACHMENT: "attachment:">
+|  <IS:         "is:">
+|  <DATE:       "date:"> 
+|  <DAY:        "day:"> 
+|  <WEEK:       "week:"> 
+|  <MONTH:      "month:"> 
+|  <YEAR:       "year:"> 
+|  <AFTER:      "after:">     
+|  <BEFORE:     "before:">   
+|  <SIZE:       "size:">       
+|  <BIGGER: <BIGGER_STR>|<LARGER>>
+|  <#BIGGER_STR:"bigger:">
+|  <#LARGER:    "larger:">
+|  <SMALLER:    "smaller:">    
+|  <TAG:        "tag:">
+|  <MESSAGE:    "message:">
+|  <MY:         "my:">
+|  <CONV:       "conv:">
+|  <CONV_COUNT: "conv-count:">  
+|  <CONV_MINM:  "conv-minm:">
+|  <CONV_MAXM:  "conv-maxm:">
+|  <CONV_START: "conv-start:"> 
+|  <CONV_END:   "conv-end:">   
+|  <AUTHOR:     "author:">
+|  <TITLE:      "title:">
+|  <KEYWORDS:   "keywords:">
+|  <COMPANY:    "company:">
+|  <METADATA:   "metadata:">
+|  <ITEM:       "item:">
+}
+
+<DEFAULT>TOKEN :
+{
+    <PLUS: "+">
+ |  <MINUS: "-">
+ |  <TEXT_TOK:  <INITIAL_TERM_CHAR> (<SUBSEQUENT_TERM_CHAR>)*>
+ |  <#INITIAL_TERM_CHAR: ~["{", "}", " ", "\t", "\n", "\r", ":", "+", "-", "\"", "(", ")"]>
+ |  <#SUBSEQUENT_TERM_CHAR:  <INITIAL_TERM_CHAR> | "-" | "+" | "@" >
+}
+
+<BRACES_STATE>SKIP:
+{
+    "}"  { SwitchTo(DEFAULT); } 
+}
+
+<BRACES_STATE>TOKEN :
+{
+    <ERROR_BRACES_WITH_NEWLINE: (["\n", "\r"])>  { SwitchTo(DEFAULT); }
+    |    <BRACES_TOK: (~["}","\n","\r"])+>
+}
+
+
+<QUOTED_STATE>SKIP:
+{
+    "\""  { SwitchTo(DEFAULT); } 
+}
+
+<QUOTED_STATE>TOKEN :
+{
+    <ERROR_QUOTE_WITH_NEWLINE: (["\n", "\r"])>  { SwitchTo(DEFAULT); }
+    |    <QUOTED_TOK: (~["\"","\n","\r"])+>
+}
+
+//////////////////////////////////////////////////////////////////////
+///
+/// Parser States
+///
+
+LiquidQuery.BaseQuery Conjunction() :
+{
+}
+{
+    <AND_TOKEN> { return new LiquidQuery.ConjQuery(mAnalyzer, AND_TOKEN); }
+ |  <OR_TOKEN>  { return new LiquidQuery.ConjQuery(mAnalyzer, OR_TOKEN); }
+ |  { return new LiquidQuery.ConjQuery(mAnalyzer, AND_TOKEN); }
+}
+
+int Modifier() :
+{
+    Token mod = null;
+}
+{
+    <PLUS> { return PLUS; }
+    |  <MINUS> { return MINUS; }
+    |  <NOT_TOKEN> { return MINUS; }
+    |  {} 
+    {
+        return 0;
+    }
+}
+
+int DateModifier() :
+{
+    Token mod = null;
+}
+{
+    <NOT_TOKEN> { return NOT_TOKEN; }
+    |  {} 
+    {
+        return 0;
+    }
+}
+
+/***
+ *
+ * Text target but after we have a target (thing to the left of the :...)
+ *
+ **/
+LiquidQuery.BaseQuery Rhs_Text(int target) throws ServiceException :
+{
+    ArrayList clauses = new ArrayList();
+    Token t;
+    int modifier = 0;
+    LiquidQuery.BaseQuery clause = null;
+}
+{
+    (
+        <LPAREN> modifier=Modifier() clause=Rhs_Text(target) { clause.setModifier(modifier);  AddClause(clauses,clause); }
+        (
+            clause=Conjunction() { AddClause(clauses,clause); }
+            modifier=Modifier() clause=Rhs_Text(target) { clause.setModifier(modifier); AddClause(clauses,clause); }
+            )*
+            <RPAREN> { return new LiquidQuery.SubQuery(mAnalyzer, 0,clauses); }
+        )   
+        |  (t=<TEXT_TOK>|t=<QUOTED_TOK>) { return GetQuery(modifier, target, t.image); }
+}
+
+/***
+ *
+ * item:  target
+ *
+ **/
+LiquidQuery.BaseQuery Rhs_Item(int target) throws ServiceException :
+{
+    ArrayList clauses = new ArrayList();
+    Token t;
+    int modifier = 0;
+    LiquidQuery.BaseQuery clause = null;
+}
+{
+    (
+        <LPAREN> modifier=Modifier() clause=Rhs_Text(target) { clause.setModifier(modifier);  AddClause(clauses,clause); }
+        (
+            clause=Conjunction() { AddClause(clauses,clause); }
+            modifier=Modifier() clause=Rhs_Item(target) { clause.setModifier(modifier); AddClause(clauses,clause); }
+            )*
+            <RPAREN> { return new LiquidQuery.SubQuery(mAnalyzer, 0,clauses); }
+        )   
+        |  (t=<TEXT_TOK>|t=<QUOTED_TOK>|t=<BRACES_TOK>) { return ItemQuery(modifier, target, t.image); }
+}
+
+
+/***
+ *
+ * special date target (because dates allow starting - (minus) signs, and we don't want to interpret those as a not, like
+ * we do in other cases
+ *
+ **/
+LiquidQuery.BaseQuery Rhs_Date(int target) throws ServiceException :
+{
+    ArrayList clauses = new ArrayList();
+    Token t,u;
+    int modifier = 0;
+    LiquidQuery.BaseQuery clause = null;
+}
+{
+    (
+        <LPAREN> modifier=DateModifier() clause=Rhs_Date(target) { if (modifier == NOT_TOKEN) { clause.setModifier(MINUS); } AddClause(clauses,clause); }
+        (
+            clause=Conjunction() { AddClause(clauses,clause); }
+            modifier=DateModifier() clause=Rhs_Date(target) { if (modifier == NOT_TOKEN) { clause.setModifier(MINUS); } AddClause(clauses,clause); }
+            )*
+            <RPAREN> { return new LiquidQuery.SubQuery(mAnalyzer, 0,clauses); }
+        )   
+        |  (u=<MINUS>|u=<PLUS>)(t=<TEXT_TOK>|t=<QUOTED_TOK>) { return GetQuery(0, target, u.image+t.image); }
+        |  (t=<TEXT_TOK>|t=<QUOTED_TOK>) { return GetQuery(0, target, t.image); }
+}
+
+
+//////////////////////////////
+//
+// Main grammar
+//
+
+LiquidQuery.BaseQuery Clause() throws ServiceException :
+{
+    Token t = null;
+
+    LiquidQuery.BaseQuery q = null;
+    ArrayList subExp = null;
+    int target;
+}
+{
+    <LPAREN> subExp=Query() <RPAREN> { return new LiquidQuery.SubQuery(mAnalyzer, 0, subExp); }
+    | (
+        (t=<FROM>|t=<TO>|t=<CC>) q=Rhs_Text(t.kind) 
+        | (t=<ITEM>) q=Rhs_Item(t.kind)
+      | (t=<CONTENT>|t=<MESSAGE>|t=<SUBJECT>|t=<IN>|t=<TYPE>|t=<ATTACHMENT>|t=<HAS>|t=<FILENAME>|t=<AUTHOR>|t=<TITLE>|t=<KEYWORDS>|t=<COMPANY>|t=<METADATA>) q=Rhs_Text(t.kind) 
+      | (t=<MY>|t=<IS>|t=<TAG>|t=<CONV>|t=<CONV_COUNT>|t=<CONV_MINM>|t=<CONV_MAXM>) q=Rhs_Text(t.kind) 
+        | (t=<DATE>|t=<DAY>|t=<MONTH>|t=<WEEK>|t=<YEAR>|t=<AFTER>|t=<BEFORE>|t=<CONV_START>|t=<CONV_END>) q=Rhs_Date(t.kind)
+      | (t=<SIZE>|t=<BIGGER>|t=<SMALLER>) q=Rhs_Text(t.kind)
+        |     (t=<TEXT_TOK>|t=<QUOTED_TOK>) { return GetQuery(0,CONTENT,t.image); }
+      )
+      { return q; }
+
+}
+
+ArrayList Query() throws ServiceException :
+{
+    LiquidQuery.BaseQuery clause = null;
+    ArrayList clauses = new ArrayList();
+    int modifier;
+}
+{
+    modifier=Modifier() clause=Clause() { if (clause != null) { clause.setModifier(modifier); AddClause(clauses,clause); } }
+    (
+        clause=Conjunction() { AddClause(clauses,clause); }
+        modifier=Modifier() clause=Clause() { if (clause != null) { clause.setModifier(modifier); AddClause(clauses,clause); } }
+        )* {}
+    {
+        return clauses;
+    }
+}
+
+ArrayList DoParse() throws ServiceException :
+{
+    ArrayList clauses;
+}
+{
+    clauses=Query() ("\r"|<EOF>)? {
+        return clauses;
+    }
+}
+

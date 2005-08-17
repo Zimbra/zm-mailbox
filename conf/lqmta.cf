@@ -1,0 +1,50 @@
+SECTION antivirus DEPENDS antispam
+REWRITE conf/amavisd.conf.in conf/amavisd.conf
+REWRITE conf/clamd.conf.in conf/clamd.conf
+REWRITE conf/freshclam.conf.in conf/freshclam.conf
+
+	if SERVICE antivirus
+		POSTCONF content_filter smtp-amavis:[127.0.0.1]:10024
+	else
+		if SERVICE !antispam
+			POSTCONF content_filter 
+		fi
+	fi
+
+	VAR liquidVirusWarnRecipient
+	VAR liquidVirusWarnAdmin
+	VAR liquidVirusDefinitionsUpdateFrequency
+	VAR liquidVirusBlockEncryptedArchive
+	LOCAL av_notify_domain
+	LOCAL av_notify_user
+
+RESTART antivirus mta
+SECTION antispam
+
+REWRITE conf/amavisd.conf.in conf/amavisd.conf
+	if SERVICE antispam
+		POSTCONF content_filter smtp-amavis:[127.0.0.1]:10024
+	else
+		if SERVICE !antivirus
+			POSTCONF content_filter 
+		fi
+	fi
+
+	VAR liquidSpamKillPercent
+	VAR liquidSpamTagPercent
+	VAR liquidSpamSubjectTag
+RESTART antispam mta
+SECTION mta
+	VAR liquidMtaRestriction
+	VAR liquidMtaBlockedExtension
+	REWRITE conf/postfix_header_checks.in conf/postfix_header_checks
+	POSTCONF smtpd_sasl_auth_enable VAR liquidMtaAuthEnabled
+	POSTCONF smtpd_tls_auth_only	VAR liquidMtaTlsAuthOnly
+	POSTCONF disable_dns_lookups	VAR !liquidMtaDnsLookupsEnabled	
+	POSTCONF message_size_limit		VAR liquidMtaMaxMessageSize
+	POSTCONF relayhost				VAR liquidMtaRelayHost
+	POSTCONF smtpd_recipient_restrictions FILE postfix_recipient_restrictions.cf
+RESTART mta
+SECTION sasl
+REWRITE cyrus-sasl-2.1.21.LIQUID/etc/saslauthd.conf.in cyrus-sasl-2.1.21.LIQUID/etc/saslauthd.conf
+RESTART mta sasl

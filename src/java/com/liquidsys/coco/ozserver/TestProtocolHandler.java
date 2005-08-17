@@ -1,0 +1,140 @@
+package com.liquidsys.coco.ozserver;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+class TestProtocolHandler implements OzProtocolHandler {
+
+    private static Log mLog = LogFactory.getLog(TestProtocolHandler.class);
+    
+    private OzByteArrayMatcher mCommandMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLF);
+    
+    private OzByteArrayMatcher mSumDataMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLFDOTCRLF);
+    
+    private OzCountingMatcher mNsumDataMatcher = new OzCountingMatcher();
+    
+    private int mReadState;
+    
+    long mSum;
+    
+    private static final int READING_COMMAND = 1;
+    private static final int READING_SUM_DATA = 2;
+    private static final int READING_NSUM_DATA = 3;
+    
+    private void gotoReadingCommandState(OzConnectionHandler connection) {
+        mReadState = READING_COMMAND;
+        mCommandMatcher.clear();
+        connection.setMatcher(mCommandMatcher);
+        mLog.info("[server] entered command read state");
+    }
+    
+    private void gotoReadingSumDataState(OzConnectionHandler connection) {
+        mReadState = READING_SUM_DATA;
+        mSumDataMatcher.clear();
+        connection.setMatcher(mSumDataMatcher);
+        mLog.info("[server] entered sum read state");
+    }
+    
+    private void gotoReadingNsumDataState(OzConnectionHandler connection, int target) {
+        mReadState = READING_NSUM_DATA;
+        mNsumDataMatcher.target(target);
+        mNsumDataMatcher.clear();
+        connection.setMatcher(mNsumDataMatcher);
+        mLog.info("[server] entered nsum read state");
+    }
+    
+    public void handleConnect(OzConnectionHandler connection) throws IOException {
+        // Write greeting
+        connection.writeAscii("200 Hello, welcome to test server/" + TestServer.PORT, true);
+        gotoReadingCommandState(connection);
+    }   
+    
+    private void readCommand(OzConnectionHandler connection, ByteBuffer content, boolean matched) throws IOException 
+    {
+        assert(mReadState == READING_COMMAND);
+        
+        if (!matched) {
+            // A command has to fit in the standard buffer size
+            connection.writeAscii("500 command too long!", true); // TODO test this
+            connection.close();
+            return;
+        }
+        String cmd = OzUtil.asciiByteArrayToString(content);
+        mLog.info("[server] got: " + cmd);
+        if (cmd.equals("helo")) {
+            connection.writeAscii("200 pleased to meet you", true);
+            gotoReadingCommandState(connection);
+        } else if (cmd.equals("quit")) {
+            connection.writeAscii("200 buh bye", true);
+            connection.close();
+        } else if (cmd.equals("sum")) {
+            gotoReadingSumDataState(connection);
+        } else if (cmd.startsWith("nsum")) {
+            int bytesToRead = 0;
+            int spIdx = cmd.indexOf(' '); 
+            if (spIdx == -1) {
+                connection.writeAscii("500 bad nsum command", true);
+                gotoReadingCommandState(connection);
+                return;
+            }
+            String number = cmd.substring(spIdx + 1, cmd.length());
+            try {
+                bytesToRead = Integer.valueOf(number).intValue();
+            } catch (Exception nfe) {
+                connection.writeAscii("500 number format exception", true);
+                gotoReadingCommandState(connection);
+            }
+            mLog.info("nsum target is " + bytesToRead);
+            gotoReadingNsumDataState(connection, bytesToRead); 
+        } else {
+            connection.writeAscii("500 command " + cmd + " not understood", true);
+            gotoReadingCommandState(connection);
+        }
+    }
+    
+    private void readSumData(OzConnectionHandler connection, ByteBuffer content, boolean matched) throws IOException
+    {
+        int n = content.limit();
+        for (int i = content.position(); i < n; i++) {
+            mSum += content.get();
+        }
+        if (matched) {
+            connection.writeAscii(new Long(mSum).toString(), true);
+            mSum = 0;
+            gotoReadingCommandState(connection);
+        }
+    }
+    private void readNsumData(OzConnectionHandler connection, ByteBuffer content, boolean matched) throws IOException
+    {
+        int n = content.limit();
+        for (int i = content.position(); i < n; i++) {
+            mSum += content.get();
+        }
+        if (matched) {
+            connection.writeAscii(new Long(mSum).toString(), true);
+            mSum = 0;
+            gotoReadingCommandState(connection);
+        }
+    }
+    
+    public void handleInput(OzConnectionHandler connection, ByteBuffer content, boolean matched) throws IOException
+    {
+        if (mReadState == READING_COMMAND) {
+            readCommand(connection, content, matched);
+        } else if (mReadState == READING_SUM_DATA) {
+            readSumData(connection, content, matched);
+        } else if (mReadState == READING_NSUM_DATA) {
+            readNsumData(connection, content, matched);
+        } else {
+            connection.writeAscii("500 internal server error - wrong read state" + mReadState, true);
+            connection.close();
+        }
+    }
+    
+    public void handleEOF(OzConnectionHandler connection) {
+        mLog.info("Test connection closed");
+    }
+}
