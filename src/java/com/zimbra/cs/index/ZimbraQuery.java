@@ -1444,7 +1444,7 @@ public final class LiquidQuery {
 	 * @throws IOException
 	 * @throws ServiceException
 	 */
-	public LiquidQueryResults execute(int mailboxId, MailboxIndex mbidx, byte[] types, int searchOrder,
+	public ZimbraQueryResults execute(int mailboxId, MailboxIndex mbidx, byte[] types, int searchOrder,
 	        boolean includeTrash, boolean includeSpam) throws IOException, ServiceException 
 	        {
 	    BaseQuery head = getHead();
@@ -1481,7 +1481,7 @@ public final class LiquidQuery {
 	            mLog.debug("OPERATION:"+op.toString());
 	        }
 	        
-	        LiquidQueryResults res = op.run(mbox, mbidx, types, searchOrder);
+	        ZimbraQueryResults res = op.run(mbox, mbidx, types, searchOrder);
 	        
 	        return res;
 	    }

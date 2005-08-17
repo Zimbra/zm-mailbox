@@ -33,7 +33,7 @@ import com.zimbra.cs.service.ServiceException;
 
         private int mConversationId = 0;
         
-        protected ConversationHit(LiquidQueryResultsImpl results, Mailbox mbx, Integer conversationId, float score) {
+        protected ConversationHit(ZimbraQueryResultsImpl results, Mailbox mbx, Integer conversationId, float score) {
             super(results, mbx, score);
             int cid = conversationId.intValue();
             assert (cid != 0);

@@ -15,7 +15,7 @@ import com.zimbra.cs.service.ServiceException;
  */
 public final class ContactHit extends LiquidHit {
     
-    public ContactHit(LiquidQueryResultsImpl results, Mailbox mbx, int itemId, Document d, float score) {
+    public ContactHit(ZimbraQueryResultsImpl results, Mailbox mbx, int itemId, Document d, float score) {
         super(results, mbx, score);
         
         mItemId = itemId;

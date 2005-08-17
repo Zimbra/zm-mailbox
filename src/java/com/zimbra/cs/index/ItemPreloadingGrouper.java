@@ -18,7 +18,7 @@ public class ItemPreloadingGrouper extends BufferingResultsGrouper
 {
     private int mChunkSize;
 
-    public ItemPreloadingGrouper(LiquidQueryResults results, int chunkSize) {
+    public ItemPreloadingGrouper(ZimbraQueryResults results, int chunkSize) {
         super(results);
         mChunkSize = chunkSize;
         assert(mChunkSize > 0);

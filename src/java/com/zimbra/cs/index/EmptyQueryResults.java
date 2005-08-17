@@ -12,7 +12,7 @@ package com.zimbra.cs.index;
  * TODO To change the template for this generated type comment go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-class EmptyQueryResults extends LiquidQueryResultsImpl {
+class EmptyQueryResults extends ZimbraQueryResultsImpl {
 
     
     EmptyQueryResults(byte[] types, int searchOrder) {

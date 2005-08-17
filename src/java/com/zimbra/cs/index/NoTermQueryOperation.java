@@ -32,7 +32,7 @@ public class NoTermQueryOperation extends QueryOperation {
         return OP_TYPE_NO_TERM;
     }
 
-    protected void prepare(Mailbox mbx, LiquidQueryResultsImpl res,
+    protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res,
             MailboxIndex mbidx) throws IOException, ServiceException {
     }
 

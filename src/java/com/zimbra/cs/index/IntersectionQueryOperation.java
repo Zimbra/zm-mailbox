@@ -624,7 +624,7 @@ class IntersectionQueryOperation extends QueryOperation {
 
     private HitGrouper mMessageGrouper[] = null;
 
-    protected void prepare(Mailbox mbx, LiquidQueryResultsImpl res,
+    protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res,
             MailboxIndex mbidx) throws ServiceException, IOException 
     {
         

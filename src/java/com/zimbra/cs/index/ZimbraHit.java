@@ -14,14 +14,14 @@ public abstract class LiquidHit
 {
     
     Mailbox mMailbox;
-    LiquidQueryResultsImpl mResults;
+    ZimbraQueryResultsImpl mResults;
     
     final public Mailbox getMailbox() { return mMailbox; }
-    final LiquidQueryResultsImpl getResults() { return mResults; }
+    final ZimbraQueryResultsImpl getResults() { return mResults; }
     
     public String getMailboxIdStr() throws ServiceException { return Integer.toString(mMailbox.getId()); } 
     
-    public LiquidHit(LiquidQueryResultsImpl results, Mailbox mbx,  float score) {
+    public LiquidHit(ZimbraQueryResultsImpl results, Mailbox mbx,  float score) {
         mMailbox = mbx;
         mResults = results;
         mScore = score;

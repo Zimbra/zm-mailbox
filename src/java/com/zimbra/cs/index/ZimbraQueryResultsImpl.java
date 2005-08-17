@@ -20,15 +20,15 @@ import org.apache.lucene.document.*;
 /**
  * @author tim
  * 
- * Really, this class should be renamed to LiquidQueryResultsImpl, and the 
- * SuperInterface should be LiquidQueryResultsImpl -- will fix this as soon as I 
+ * Really, this class should be renamed to ZimbraQueryResultsImpl, and the 
+ * SuperInterface should be ZimbraQueryResultsImpl -- will fix this as soon as I 
  * get some free time.
  */
-abstract class LiquidQueryResultsImpl implements LiquidQueryResults
+abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
 {
     /////////////////////////
     //
-    // These come from the LiquidQueryResults interface:
+    // These come from the ZimbraQueryResults interface:
     //
     // void resetIterator() throws ServiceException;
     // LiquidHit getNext() throws ServiceException;
@@ -48,7 +48,7 @@ abstract class LiquidQueryResultsImpl implements LiquidQueryResults
     private HashMap mContactHits;
     private HashMap mNoteHits;
   
-  LiquidQueryResultsImpl(byte[] types, int searchOrder) { 
+  ZimbraQueryResultsImpl(byte[] types, int searchOrder) { 
       mTypes = types;
       for (int i = 0; i < types.length; i++) {
           switch(types[i]) {

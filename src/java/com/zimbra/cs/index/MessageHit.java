@@ -44,13 +44,13 @@ public class MessageHit extends LiquidHit {
 
     private ConversationHit mConversationHit = null;
 
-    protected MessageHit(LiquidQueryResultsImpl results, Mailbox mbx, Document d, float score) {
+    protected MessageHit(ZimbraQueryResultsImpl results, Mailbox mbx, Document d, float score) {
         super(results, mbx, score);
         mDoc = d;
         assert (d != null);
     }
 
-    protected MessageHit(LiquidQueryResultsImpl results, Mailbox mbx, int id, float score) {
+    protected MessageHit(ZimbraQueryResultsImpl results, Mailbox mbx, int id, float score) {
         super(results, mbx, score);
         mMessageId = id;
         assert (id != 0);

@@ -11,7 +11,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.index.LiquidHit;
-import com.zimbra.cs.index.LiquidQueryResults;
+import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.MailItem;
@@ -159,7 +159,7 @@ public class TestTags extends TestCase
         types[0] = type;
 
         Set ids = new HashSet();
-        LiquidQueryResults r = mMbox.search(query, types, MailboxIndex.SEARCH_ORDER_DATE_DESC);
+        ZimbraQueryResults r = mMbox.search(query, types, MailboxIndex.SEARCH_ORDER_DATE_DESC);
         while (r.hasNext()) {
             LiquidHit hit = r.getNext();
             ids.add(new Integer(hit.getItemId()));

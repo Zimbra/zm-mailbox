@@ -24,7 +24,7 @@ public class AppointmentHit extends MessageHit {
      * @param d
      * @param score
      */
-    public AppointmentHit(LiquidQueryResultsImpl results, Mailbox mbx, Document d,
+    public AppointmentHit(ZimbraQueryResultsImpl results, Mailbox mbx, Document d,
             float score) {
         super(results, mbx, d, score);
     }
@@ -35,7 +35,7 @@ public class AppointmentHit extends MessageHit {
      * @param id
      * @param score
      */
-    public AppointmentHit(LiquidQueryResultsImpl results, Mailbox mbx, int id,
+    public AppointmentHit(ZimbraQueryResultsImpl results, Mailbox mbx, int id,
             float score) {
         super(results, mbx, id, score);
     }

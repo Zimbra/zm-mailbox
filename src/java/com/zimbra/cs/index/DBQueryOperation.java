@@ -724,9 +724,9 @@ class DBQueryOperation extends QueryOperation
     }
 
     /* (non-Javadoc)
-     * @see com.zimbra.cs.index.QueryOperation#prepare(com.zimbra.cs.mailbox.Mailbox, com.zimbra.cs.index.LiquidQueryResultsImpl, com.zimbra.cs.index.MailboxIndex)
+     * @see com.zimbra.cs.index.QueryOperation#prepare(com.zimbra.cs.mailbox.Mailbox, com.zimbra.cs.index.ZimbraQueryResultsImpl, com.zimbra.cs.index.MailboxIndex)
      */
-    protected void prepare(Mailbox mbx, LiquidQueryResultsImpl res, MailboxIndex mbidx) throws ServiceException, IOException
+    protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res, MailboxIndex mbidx) throws ServiceException, IOException
     {
         setupResults(mbx, res);
         

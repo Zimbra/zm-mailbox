@@ -8,12 +8,12 @@ import com.zimbra.cs.service.ServiceException;
  *
  * A set of UngroupedQueryResults which groups by Message
  */
-class MsgQueryResults extends LiquidQueryResultsImpl 
+class MsgQueryResults extends ZimbraQueryResultsImpl 
 {
 //    QueryOperation mResults;
-    LiquidQueryResults mResults;
+    ZimbraQueryResults mResults;
 
-    public MsgQueryResults(LiquidQueryResults topLevelQueryOperation, byte[] types, int searchOrder) {
+    public MsgQueryResults(ZimbraQueryResults topLevelQueryOperation, byte[] types, int searchOrder) {
         super(types, searchOrder);
         mResults = topLevelQueryOperation;
     }

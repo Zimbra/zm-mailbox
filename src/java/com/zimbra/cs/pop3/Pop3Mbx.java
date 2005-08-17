@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.zimbra.cs.index.LiquidHit;
-import com.zimbra.cs.index.LiquidQueryResults;
+import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.MessageHit;
 import com.zimbra.cs.index.queryparser.ParseException;
@@ -45,7 +45,7 @@ class Pop3Mbx {
         if (query == null || query.equals("")) {
             items = mailbox.getItemList(MailItem.TYPE_MESSAGE, Mailbox.ID_FOLDER_INBOX);
         } else {
-            LiquidQueryResults results;
+            ZimbraQueryResults results;
             try {
                 results = mailbox.search(query, new byte[] { MailItem.TYPE_MESSAGE }, MailboxIndex.SEARCH_ORDER_DATE_DESC);
                 items = new ArrayList();

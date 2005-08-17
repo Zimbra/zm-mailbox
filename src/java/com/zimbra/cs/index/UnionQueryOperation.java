@@ -259,7 +259,7 @@ class UnionQueryOperation extends QueryOperation
     }
 
 
-    protected void prepare(Mailbox mbx, LiquidQueryResultsImpl res, MailboxIndex mbidx) throws ServiceException, IOException
+    protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res, MailboxIndex mbidx) throws ServiceException, IOException
     {
         this.setupResults(mbx, res);
         

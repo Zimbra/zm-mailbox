@@ -9,7 +9,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.index.LiquidHit;
-import com.zimbra.cs.index.LiquidQueryResults;
+import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.MessageHit;
 import com.zimbra.cs.index.SearchParams;
@@ -65,7 +65,7 @@ public class SearchConv extends Search {
             // 
             params.setTypesStr(MailboxIndex.GROUP_BY_MESSAGE);
             
-            LiquidQueryResults results = this.getResults(mbox, session, params);
+            ZimbraQueryResults results = this.getResults(mbox, session, params);
             
             Element response = lc.createElement(MailService.SEARCH_CONV_RESPONSE);
             response.addAttribute(MailService.A_QUERY_OFFSET, Integer.toString(params.getOffset()));
@@ -93,7 +93,7 @@ public class SearchConv extends Search {
      * @return
      * @throws ServiceException
      */
-    Element putHits(OperationContext octxt, Element response, Message[] msgs, LiquidQueryResults results, SearchParams params)
+    Element putHits(OperationContext octxt, Element response, Message[] msgs, ZimbraQueryResults results, SearchParams params)
     throws ServiceException {
         int offset = params.getOffset();
         int limit  = params.getLimit();

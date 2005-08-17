@@ -19,7 +19,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.index.ConversationHit;
 import com.zimbra.cs.index.LiquidHit;
-import com.zimbra.cs.index.LiquidQueryResults;
+import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.MessageHit;
 import com.zimbra.cs.index.queryparser.ParseException;
@@ -375,7 +375,7 @@ public class DbTest {
 			}
 		}
         returnTypes[0] = type;
-		LiquidQueryResults results = mailbox.search("in:" + target, returnTypes, MailboxIndex.SEARCH_ORDER_DATE_DESC);
+		ZimbraQueryResults results = mailbox.search("in:" + target, returnTypes, MailboxIndex.SEARCH_ORDER_DATE_DESC);
 		try {
 		    for (LiquidHit hit = results.getFirstHit(); hit != null; hit = results.getNext())
 		    	if (type == MailItem.TYPE_CONVERSATION)
@@ -478,7 +478,7 @@ public class DbTest {
 		Tag tag = mailbox.getTagById(tagId);
 		if (tag == null)
 			return;
-		LiquidQueryResults results = mailbox.search("tag:" + tag.getName(), new byte[] {MailItem.TYPE_CONVERSATION}, MailboxIndex.SEARCH_ORDER_DATE_DESC);
+		ZimbraQueryResults results = mailbox.search("tag:" + tag.getName(), new byte[] {MailItem.TYPE_CONVERSATION}, MailboxIndex.SEARCH_ORDER_DATE_DESC);
 		try {
 		    for (LiquidHit hit = results.getFirstHit(); hit != null; hit = results.getNext())
 		        displayConversationSummary(((ConversationHit) hit).getConversation());
@@ -652,7 +652,7 @@ public class DbTest {
 					sb.append(' ');
 				sb.append(tok.nextToken());
 			}
-			LiquidQueryResults results = mailbox.search(sb.toString(), new byte[] {MailItem.TYPE_CONVERSATION}, MailboxIndex.SEARCH_ORDER_DATE_DESC);
+			ZimbraQueryResults results = mailbox.search(sb.toString(), new byte[] {MailItem.TYPE_CONVERSATION}, MailboxIndex.SEARCH_ORDER_DATE_DESC);
 			try {
 			    for (LiquidHit hit = results.getFirstHit(); hit != null; hit = results.getNext())
 			        displayConversationSummary(((ConversationHit) hit).getConversation());

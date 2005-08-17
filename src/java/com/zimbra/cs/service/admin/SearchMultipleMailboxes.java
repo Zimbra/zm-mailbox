@@ -8,7 +8,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import com.zimbra.cs.account.AuthTokenException;
-import com.zimbra.cs.index.LiquidQueryResults;
+import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.Element;
@@ -42,7 +42,7 @@ public class SearchMultipleMailboxes extends Search {
             SearchParams params = parseCommonParameters(request, lc);
             
             CrossMailboxSearch xmbsearch = getXMBSearch(request);
-            LiquidQueryResults results = xmbsearch.getSearchResults(encodedAuthToken, params);
+            ZimbraQueryResults results = xmbsearch.getSearchResults(encodedAuthToken, params);
             
             // TODO: log all the requested mailboxes? Is logging the query string too sensitive?
             LiquidLog.security.info(LiquidLog.encodeAttrs(

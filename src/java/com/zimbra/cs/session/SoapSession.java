@@ -6,7 +6,7 @@ package com.zimbra.cs.session;
 import java.util.Iterator;
 import java.util.List;
 
-import com.zimbra.cs.index.LiquidQueryResults;
+import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
@@ -37,7 +37,7 @@ public class SoapSession extends Session {
     private String  mGroupBy  = "";
     private String  mSortBy   = "";
     private boolean mNotify   = true;
-    private LiquidQueryResults   mQueryResults = null;
+    private ZimbraQueryResults   mQueryResults = null;
 
     private PendingModifications mChanges = new PendingModifications();
 
@@ -215,7 +215,7 @@ public class SoapSession extends Session {
         }
     }
     
-    public void putQueryResults(String queryStr, String groupBy, String sortBy, LiquidQueryResults res) throws ServiceException
+    public void putQueryResults(String queryStr, String groupBy, String sortBy, ZimbraQueryResults res) throws ServiceException
     {
         synchronized (this) {
             clearCachedQueryResults();
@@ -226,7 +226,7 @@ public class SoapSession extends Session {
         }
     }
     
-    public LiquidQueryResults getQueryResults(String queryStr, String groupBy, String sortBy) {
+    public ZimbraQueryResults getQueryResults(String queryStr, String groupBy, String sortBy) {
         synchronized (this) {
             if (mQueryStr.equals(queryStr) && mGroupBy.equals(groupBy) && mSortBy.equals(sortBy))
                 return mQueryResults;

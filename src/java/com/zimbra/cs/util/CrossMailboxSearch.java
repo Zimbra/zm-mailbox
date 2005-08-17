@@ -39,7 +39,7 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.index.HitIdGrouper;
 import com.zimbra.cs.index.LiquidHit;
-import com.zimbra.cs.index.LiquidQueryResults;
+import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.MultiQueryResults;
 import com.zimbra.cs.index.ProxiedHit;
@@ -75,13 +75,13 @@ public class CrossMailboxSearch
         mAllowLocalTask = allowLocal;
     }
     
-    public LiquidQueryResults getSearchResults(String encodedAuthToken, SearchParams params) throws ServiceException {
-        LiquidQueryResults results = null;
+    public ZimbraQueryResults getSearchResults(String encodedAuthToken, SearchParams params) throws ServiceException {
+        ZimbraQueryResults results = null;
         
         Set tasks = getTaskSet();
         
         // results from every server we're searching:
-        LiquidQueryResults[] res = new LiquidQueryResults[tasks.size()];
+        ZimbraQueryResults[] res = new ZimbraQueryResults[tasks.size()];
         int curResult = 0;
         
         try {
@@ -219,25 +219,25 @@ public class CrossMailboxSearch
             }
         }
         
-        public abstract LiquidQueryResults getSearchResults(String serverID, String encodedAuthToken, SearchParams params) throws ServiceException;
+        public abstract ZimbraQueryResults getSearchResults(String serverID, String encodedAuthToken, SearchParams params) throws ServiceException;
     }
     
     private static class LocalServerSearchTask extends ServerSearchTask {
-        public LiquidQueryResults getSearchResults(String serverID, String encodedAuthToken, SearchParams params) throws ServiceException
+        public ZimbraQueryResults getSearchResults(String serverID, String encodedAuthToken, SearchParams params) throws ServiceException
         {
             assert(serverID.equals(Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_liquidServiceHostname)));
-            LiquidQueryResults[] toRet = null;
+            ZimbraQueryResults[] toRet = null;
             boolean OK = false;
             try {
                 if (isAllMailboxes()) {
                     int ids[] = Mailbox.getMailboxIds();
-                    toRet = new LiquidQueryResults[ids.length];
+                    toRet = new ZimbraQueryResults[ids.length];
                     for (int i = 0; i < ids.length; i++) {
                         Mailbox mbx = Mailbox.getMailboxById(ids[i]);
                         toRet[i] = mbx.search(params.getQueryStr(), params.getTypes(), params.getSortBy());
                     }
                 } else {
-                    toRet = new LiquidQueryResults[mboxes.size()];
+                    toRet = new ZimbraQueryResults[mboxes.size()];
                     int i = 0;
                     for (Iterator iter = mboxes.iterator(); iter.hasNext();) {
                         ParseMailboxID id = (ParseMailboxID)iter.next();
@@ -246,8 +246,8 @@ public class CrossMailboxSearch
                     }
                 }
                 
-//                LiquidQueryResults multi = new HitIdGrouper(new MultiQueryResults(toRet, params.sortBy), params.sortBy);
-                LiquidQueryResults multi = new MultiQueryResults(toRet, params.getSortBy());
+//                ZimbraQueryResults multi = new HitIdGrouper(new MultiQueryResults(toRet, params.sortBy), params.sortBy);
+                ZimbraQueryResults multi = new MultiQueryResults(toRet, params.getSortBy());
 
                 OK = true; // for finally block
                 
@@ -282,7 +282,7 @@ public class CrossMailboxSearch
     }
     
     private static class RemoteServerSearchTask extends ServerSearchTask {
-        public LiquidQueryResults getSearchResults(String serverID, String encodedAuthToken, SearchParams params) throws ServiceException
+        public ZimbraQueryResults getSearchResults(String serverID, String encodedAuthToken, SearchParams params) throws ServiceException
         {
             if (isAllMailboxes()) {
                 return new ProxiedQueryResults(encodedAuthToken, serverID, params, ProxiedQueryResults.SEARCH_ALL_MAILBOXES);
@@ -401,7 +401,7 @@ public class CrossMailboxSearch
                     xmbs.addMailboxToSearchList(ParseMailboxID.parse(mailboxes[i]));
                 }
 
-                LiquidQueryResults res = xmbs.getSearchResults(mAuthToken, params);
+                ZimbraQueryResults res = xmbs.getSearchResults(mAuthToken, params);
                 
                 File outputDirFile = null;
                 if (outputDir != null) {
@@ -549,7 +549,7 @@ public class CrossMailboxSearch
         
         private String mAuthToken = null;
         
-        private void outputResults(LiquidQueryResults res, int offset, int limit, File outputDirectory) throws ServiceException 
+        private void outputResults(ZimbraQueryResults res, int offset, int limit, File outputDirectory) throws ServiceException 
         {
             for (LiquidHit cur = res.skipToHit(offset); ((cur != null) && (offset<limit)); cur = res.getNext()) {
                 //System.out.println(offset+": "+cur.toString());

@@ -32,7 +32,7 @@ public final class MessagePartHit extends LiquidHit {
 
     int mMailboxBlobId = -1;
     
-    protected MessagePartHit(LiquidQueryResultsImpl res, Mailbox mbx, Document d, float score) {
+    protected MessagePartHit(ZimbraQueryResultsImpl res, Mailbox mbx, Document d, float score) {
         super(res, mbx, score);
         mDoc = d;
     }

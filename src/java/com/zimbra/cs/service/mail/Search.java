@@ -17,7 +17,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.ContactHit;
 import com.zimbra.cs.index.ConversationHit;
 import com.zimbra.cs.index.LiquidHit;
-import com.zimbra.cs.index.LiquidQueryResults;
+import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.MessageHit;
 import com.zimbra.cs.index.MessagePartHit;
@@ -59,7 +59,7 @@ public class Search extends DocumentHandler  {
             OperationContext octxt = lc.getOperationContext();
 
             SearchParams params = parseCommonParameters(request, lc);
-            LiquidQueryResults results = this.getResults(mbox, session, params);
+            ZimbraQueryResults results = this.getResults(mbox, session, params);
 
             Element response = lc.createElement(MailService.SEARCH_RESPONSE);
             response.addAttribute(MailService.A_QUERY_OFFSET, params.getOffset());
@@ -131,9 +131,9 @@ public class Search extends DocumentHandler  {
         return (int) request.getAttributeLong(MailService.A_QUERY_OFFSET, 0);
     }
     
-    protected LiquidQueryResults getResults(Mailbox mbox, SoapSession session, SearchParams params) throws ServiceException
+    protected ZimbraQueryResults getResults(Mailbox mbox, SoapSession session, SearchParams params) throws ServiceException
     {
-        LiquidQueryResults results = null;
+        ZimbraQueryResults results = null;
         if (!DONT_CACHE_RESULTS)
             session.getQueryResults(params.getQueryStr(), params.getTypesStr(), params.getSortByStr());
 
@@ -177,7 +177,7 @@ public class Search extends DocumentHandler  {
     protected final boolean INCLUDE_MAILBOX_INFO = true;
     protected final boolean DONT_INCLUDE_MAILBOX_INFO = false;
     
-    protected Element putHits(OperationContext octxt, Element response, LiquidQueryResults results, boolean includeMailbox, SearchParams params)
+    protected Element putHits(OperationContext octxt, Element response, ZimbraQueryResults results, boolean includeMailbox, SearchParams params)
     throws ServiceException {
         int offset = params.getOffset();
         int limit  = params.getLimit();

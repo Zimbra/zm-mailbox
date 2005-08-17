@@ -25,7 +25,7 @@ import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.AbstractTest;
 
 import com.zimbra.cs.filter.ZimbraMailAdapter;
-import com.zimbra.cs.index.LiquidQueryResults;
+import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.MailItem;
@@ -129,7 +129,7 @@ public class AddressBookTest extends AbstractTest {
                     for (int k=0; k<headerVals.size(); k++) {
                         // each header may contain multiple vaules; e.g., To: may contain many recipients
                         String headerVal = ((String) headerVals.get(k)).toLowerCase();
-                        LiquidQueryResults results = null;
+                        ZimbraQueryResults results = null;
                         try {
                             String iaddrStr = headerVal;
                             try {

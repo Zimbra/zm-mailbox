@@ -9,9 +9,9 @@ import com.zimbra.cs.service.ServiceException;
  * Groups hit results for various reasons.  Subclass must override BufferHits below
  *
  */
-public abstract class BufferingResultsGrouper implements LiquidQueryResults {
+public abstract class BufferingResultsGrouper implements ZimbraQueryResults {
 
-    protected LiquidQueryResults mHits;
+    protected ZimbraQueryResults mHits;
     protected List /* LiquidHit */mBufferedHit = new LinkedList();
     protected boolean atStart = true;
     
@@ -27,7 +27,7 @@ public abstract class BufferingResultsGrouper implements LiquidQueryResults {
     protected abstract boolean bufferHits() throws ServiceException;
     
     
-    public BufferingResultsGrouper(LiquidQueryResults hits) {
+    public BufferingResultsGrouper(ZimbraQueryResults hits) {
         mHits = hits;
     }
     

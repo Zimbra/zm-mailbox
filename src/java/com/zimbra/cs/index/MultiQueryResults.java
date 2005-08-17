@@ -16,13 +16,13 @@ import com.zimbra.cs.service.ServiceException;
  * iterate them in order....kind of like a MergeSort
  * 
  */
-public class MultiQueryResults implements LiquidQueryResults
+public class MultiQueryResults implements ZimbraQueryResults
 {
     int mSortOrder;
     HitIdGrouper[] mGroupedHits;
     private LiquidHit mCachedNextHit = null;
     
-    public MultiQueryResults(LiquidQueryResults[] res, int sortOrder)
+    public MultiQueryResults(ZimbraQueryResults[] res, int sortOrder)
     {
         mSortOrder = sortOrder;
         
@@ -47,7 +47,7 @@ public class MultiQueryResults implements LiquidQueryResults
             int currentBestHitOffset = -1;
             LiquidHit currentBestHit = null;
             for (i = 0; i < mGroupedHits.length; i++) {
-                LiquidQueryResults op = mGroupedHits[i]; 
+                ZimbraQueryResults op = mGroupedHits[i]; 
                 if (op.hasNext()) {
                     if (currentBestHitOffset == -1) {
                         currentBestHitOffset = i;

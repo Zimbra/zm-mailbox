@@ -11,7 +11,7 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbResults;
 import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.db.DbPool.Connection;
-import com.zimbra.cs.index.LiquidQueryResults;
+import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Flag;
@@ -352,7 +352,7 @@ public class TestUnread extends TestCase
         verifySetUp();
         
         byte[] types = { MailItem.TYPE_MESSAGE };
-        LiquidQueryResults results = mMbox.search("is:unread", types, MailboxIndex.SEARCH_ORDER_DATE_DESC);
+        ZimbraQueryResults results = mMbox.search("is:unread", types, MailboxIndex.SEARCH_ORDER_DATE_DESC);
         assertTrue("No search results found", results.hasNext());
         results.doneWithSearchResults();
     }

@@ -35,7 +35,7 @@ import java.util.List;
  * unfortunately right now the intersection and other operations assume you can get to the
  * actual hit objects (for doing Intersections and the like)....  Long-term-fixme...
  */
-public class ProxiedQueryResults extends LiquidQueryResultsImpl 
+public class ProxiedQueryResults extends ZimbraQueryResultsImpl 
 {
     // magic # for parameter checking
     public static final int SEARCH_ALL_MAILBOXES = 1234;

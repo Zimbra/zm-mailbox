@@ -13,11 +13,11 @@ import com.zimbra.cs.service.ServiceException;
  *
  * UngroupedQueryResults which do NOT group (ie return parts or messages in whatever mix)
  */
-class UngroupedQueryResults extends LiquidQueryResultsImpl 
+class UngroupedQueryResults extends ZimbraQueryResultsImpl 
 {
-    LiquidQueryResults mResults;
+    ZimbraQueryResults mResults;
     
-    public UngroupedQueryResults(LiquidQueryResults results, byte[] types, int searchOrder) {
+    public UngroupedQueryResults(ZimbraQueryResults results, byte[] types, int searchOrder) {
         super(types, searchOrder);
         mResults = results;
     }

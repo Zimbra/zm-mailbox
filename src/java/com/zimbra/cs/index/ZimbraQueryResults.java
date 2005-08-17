@@ -13,7 +13,7 @@ import com.zimbra.cs.service.ServiceException;
  * that is returned when you do a Search.
  * 
  */
-public interface LiquidQueryResults {
+public interface ZimbraQueryResults {
     
     void resetIterator() throws ServiceException;
     

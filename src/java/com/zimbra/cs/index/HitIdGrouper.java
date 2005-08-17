@@ -23,7 +23,7 @@ public class HitIdGrouper extends BufferingResultsGrouper {
     private int mSortOrder;
     private static Log mLog = LogFactory.getLog(HitIdGrouper.class);
     
-    public HitIdGrouper(LiquidQueryResults hits, int sortOrder) {
+    public HitIdGrouper(ZimbraQueryResults hits, int sortOrder) {
         super(hits);
         mSortOrder = sortOrder;
     }

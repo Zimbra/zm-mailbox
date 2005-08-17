@@ -10,10 +10,10 @@ import com.zimbra.cs.service.ServiceException;
  *
  * A set of UngroupedQueryResults which groups by Conversation
  */
-class ConvQueryResults extends LiquidQueryResultsImpl {
-    LiquidQueryResults mResults;
+class ConvQueryResults extends ZimbraQueryResultsImpl {
+    ZimbraQueryResults mResults;
 
-    public ConvQueryResults(LiquidQueryResults results, byte[] types,
+    public ConvQueryResults(ZimbraQueryResults results, byte[] types,
             int searchOrder) {
         super(types, searchOrder);
         mResults = results;

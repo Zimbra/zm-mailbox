@@ -16,15 +16,15 @@ import com.zimbra.cs.service.ServiceException;
  * QueryOperation
  *
  * A QueryOperation is a part of a Search request -- there are potentially mutliple query operations
- * in a search.  QueryOperations return LiquidQueryResultsImpl sets -- which can be iterated
+ * in a search.  QueryOperations return ZimbraQueryResultsImpl sets -- which can be iterated
  * over to get LiquidHit objects.  
  * 
- * The difference between a QueryOperation and a simple LiquidQueryResultsImpl set is that 
+ * The difference between a QueryOperation and a simple ZimbraQueryResultsImpl set is that 
  * a QueryOperation knows how to Optimize and Execute itself -- whereas a QueryResults set is 
  * just a set of results and can only be iterated.  
  * 
  ***********************************************************************/
-abstract class QueryOperation implements LiquidQueryResults
+abstract class QueryOperation implements ZimbraQueryResults
 {
     /**
      * Bitfield of QueryOperation types.  ORDER DOES MATTER, queries
@@ -61,7 +61,7 @@ abstract class QueryOperation implements LiquidQueryResults
     
     ////////////////////
     // Top-Level Execution  
-    final LiquidQueryResults run(Mailbox mbox, MailboxIndex mbidx, byte[] types, int searchOrder) throws IOException, ServiceException
+    final ZimbraQueryResults run(Mailbox mbox, MailboxIndex mbidx, byte[] types, int searchOrder) throws IOException, ServiceException
     {
         int retType = MailboxIndex.SEARCH_RETURN_DOCUMENTS;
         for (int i = 0; i < types.length; i++) {
@@ -139,7 +139,7 @@ abstract class QueryOperation implements LiquidQueryResults
      * @throws IOException
      * @throws ServiceException
      */
-    protected abstract void prepare(Mailbox mbx, LiquidQueryResultsImpl res, MailboxIndex mbidx) throws IOException, ServiceException;
+    protected abstract void prepare(Mailbox mbx, ZimbraQueryResultsImpl res, MailboxIndex mbidx) throws IOException, ServiceException;
 
 	public LiquidHit getFirstHit() throws ServiceException {
 		resetIterator();
@@ -163,11 +163,11 @@ abstract class QueryOperation implements LiquidQueryResults
      *
      *******************/
     
-    private LiquidQueryResultsImpl mResults;
+    private ZimbraQueryResultsImpl mResults;
     private Mailbox mMailbox;
     final protected Mailbox getMailbox() { return mMailbox; }
-    final protected LiquidQueryResultsImpl getResultsSet() { return mResults; }
-    final protected void setupResults(Mailbox mbx, LiquidQueryResultsImpl res) {
+    final protected ZimbraQueryResultsImpl getResultsSet() { return mResults; }
+    final protected void setupResults(Mailbox mbx, ZimbraQueryResultsImpl res) {
         mMailbox = mbx;
         mResults = res;
     }

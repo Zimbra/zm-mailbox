@@ -27,7 +27,7 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbMailItem.SearchResult;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.index.LiquidQuery;
-import com.zimbra.cs.index.LiquidQueryResults;
+import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.queryparser.ParseException;
@@ -1851,14 +1851,14 @@ public class Mailbox {
         }
     }
 
-    public LiquidQueryResults search(String queryString, String groupBy, String sortBy) throws IOException, ParseException, ServiceException {
+    public ZimbraQueryResults search(String queryString, String groupBy, String sortBy) throws IOException, ParseException, ServiceException {
 //        int group = MailboxIndex.parseGroupByString(groupBy);
         byte[] types = MailboxIndex.parseGroupByString(groupBy);
         int sort = MailboxIndex.parseSortByString(sortBy);
         return search(queryString, types, sort);
     }
 
-    public synchronized LiquidQueryResults search(String queryString, byte[] types, int sortBy) 
+    public synchronized ZimbraQueryResults search(String queryString, byte[] types, int sortBy) 
     throws IOException, ParseException, ServiceException {
         Account acct = getAccount();
         boolean includeTrash = 
@@ -1869,7 +1869,7 @@ public class Mailbox {
         return search(queryString, types, sortBy, includeTrash, includeSpam);
     }
 
-    public synchronized LiquidQueryResults search(String queryString, byte[] types, int sortBy,
+    public synchronized ZimbraQueryResults search(String queryString, byte[] types, int sortBy,
                                                   boolean includeTrash, boolean includeSpam)
     throws IOException, ParseException, ServiceException {
         boolean success = false;
@@ -1877,7 +1877,7 @@ public class Mailbox {
             beginTransaction("search", null);
 
             LiquidQuery lq = new LiquidQuery(queryString, this); 
-            LiquidQueryResults results = getMailboxIndex().search(lq, types, sortBy, includeTrash, includeSpam);
+            ZimbraQueryResults results = getMailboxIndex().search(lq, types, sortBy, includeTrash, includeSpam);
             success = true;
             return results;
         } finally {

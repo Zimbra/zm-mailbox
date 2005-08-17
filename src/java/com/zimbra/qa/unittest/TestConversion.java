@@ -9,7 +9,7 @@ import junit.framework.TestCase;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.index.LiquidHit;
-import com.zimbra.cs.index.LiquidQueryResults;
+import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -55,7 +55,7 @@ public class TestConversion extends TestCase {
         Account account = TestUtil.getAccount("user1");
         Mailbox mbox = Mailbox.getMailboxByAccount(account);
         String query = "subject:Rich text (TNEF) test";
-        LiquidQueryResults results = mbox.search(query,
+        ZimbraQueryResults results = mbox.search(query,
             new byte[] { MailItem.TYPE_MESSAGE}, MailboxIndex.SEARCH_ORDER_SUBJ_ASC);
         assertTrue("No results found for '" + query + "'", results.hasNext());
         

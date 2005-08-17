@@ -280,8 +280,8 @@ public final class MailboxIndex
         }
     }
     
-    // you **MUST** call LiquidQueryResults.doneWithSearchResults() when you are done with them!
-    public synchronized LiquidQueryResults search(LiquidQuery query, byte[] types, int searchOrder,
+    // you **MUST** call ZimbraQueryResults.doneWithSearchResults() when you are done with them!
+    public synchronized ZimbraQueryResults search(LiquidQuery query, byte[] types, int searchOrder,
             boolean includeTrash, boolean includeSpam) throws IOException
     {
         if (searchOrder < MailboxIndex.FIRST_SEARCH_ORDER_NUM || searchOrder > MailboxIndex.LAST_SEARCH_ORDER_NUM) {
@@ -301,7 +301,7 @@ public final class MailboxIndex
                 mLog.debug(str);
             }
             
-            LiquidQueryResults toret = query.execute(mMailboxId, this, types, searchOrder, includeTrash, includeSpam);
+            ZimbraQueryResults toret = query.execute(mMailboxId, this, types, searchOrder, includeTrash, includeSpam);
             
             return new HitIdGrouper(toret, searchOrder);
             

@@ -15,7 +15,7 @@ import com.zimbra.cs.service.ServiceException;
  */
 public final class NoteHit extends LiquidHit {
     
-    public NoteHit(LiquidQueryResultsImpl results, Mailbox mbx, Document d, float score) {
+    public NoteHit(ZimbraQueryResultsImpl results, Mailbox mbx, Document d, float score) {
         super(results, mbx, score);
         
         mDocument = d;

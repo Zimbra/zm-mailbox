@@ -157,7 +157,7 @@ public class IndexEditor {
 	
 	public interface QueryRunner
 	{
-	    public LiquidQueryResults runQuery(String qstr, byte[] types, int sortBy) throws IOException, ParseException, MailServiceException, ServiceException;
+	    public ZimbraQueryResults runQuery(String qstr, byte[] types, int sortBy) throws IOException, ParseException, MailServiceException, ServiceException;
 	}
 	
 	public class SingleQueryRunner implements QueryRunner
@@ -170,7 +170,7 @@ public class IndexEditor {
             mMailbox = Mailbox.getMailboxById(mailboxId).getMailboxIndex();
 	    }
 	    
-	    public LiquidQueryResults runQuery(String qstr, byte[] types, int sortBy) throws IOException, MailServiceException, ParseException, ServiceException
+	    public ZimbraQueryResults runQuery(String qstr, byte[] types, int sortBy) throws IOException, MailServiceException, ParseException, ServiceException
 	    {
 	        LiquidQuery lq = new LiquidQuery(qstr, Mailbox.getMailboxById(mMailboxId));
             
@@ -205,9 +205,9 @@ public class IndexEditor {
 	    }
 	    
 	    
-	    public LiquidQueryResults runQuery(String qstr, byte[] types, int sortBy) throws IOException, MailServiceException, ParseException, ServiceException
+	    public ZimbraQueryResults runQuery(String qstr, byte[] types, int sortBy) throws IOException, MailServiceException, ParseException, ServiceException
 	    {
-	        LiquidQueryResults[] res = new LiquidQueryResults[mMailbox.length];
+	        ZimbraQueryResults[] res = new ZimbraQueryResults[mMailbox.length];
 	        for (int i = 0; i < mMailbox.length; i++) {
 		        LiquidQuery lq = new LiquidQuery(qstr, Mailbox.getMailboxById(mMailboxId[i]));
 	            res[i] = mMailbox[i].search(lq, types, sortBy, false, false);
@@ -249,7 +249,7 @@ public class IndexEditor {
                 types[0]=0;
                 break;
             }
-            LiquidQueryResults res = runner.runQuery(qstr, types, sortOrder);
+            ZimbraQueryResults res = runner.runQuery(qstr, types, sortOrder);
 	        try {
 	            
 	            long endTime = System.currentTimeMillis();

@@ -13,7 +13,7 @@ import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.index.LiquidHit;
-import com.zimbra.cs.index.LiquidQueryResults;
+import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.MessageHit;
 import com.zimbra.cs.index.queryparser.ParseException;
@@ -56,7 +56,7 @@ public class RssServlet extends LiquidBasicAuthServlet {
             
         channel.addElement("generator").setText("Liquid Systems RSS Feed Servlet");
             
-        LiquidQueryResults results;
+        ZimbraQueryResults results;
         try {
             String query = req.getParameter(PARAM_QUERY);
             if (query == null) query = "is:unread in:inbox";
