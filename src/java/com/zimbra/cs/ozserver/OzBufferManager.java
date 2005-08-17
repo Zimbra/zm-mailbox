@@ -47,6 +47,6 @@ class OzBufferManager {
                 ZimbraLog.ozserver.info("Buffer manager inUse=" + mInUse + " allocated=" + mAllocated);
             }
         };
-        Liquid.sTimer.scheduleAtFixedRate(task, 300000, 300000);
+        Zimbra.sTimer.scheduleAtFixedRate(task, 300000, 300000);
     }
 }

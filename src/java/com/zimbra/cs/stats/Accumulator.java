@@ -104,7 +104,7 @@ abstract class Accumulator {
     
     static {
         if (mLog.isInfoEnabled()) {
-            Liquid.sTimer.scheduleAtFixedRate(new Dumper(mLog), DUMP_FREQUENCY, DUMP_FREQUENCY);
+            Zimbra.sTimer.scheduleAtFixedRate(new Dumper(mLog), DUMP_FREQUENCY, DUMP_FREQUENCY);
         }
     }
     

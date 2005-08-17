@@ -60,7 +60,7 @@ public class ParsedMessage {
 	private String mFragment = "";
 	private long mDateHeader = -1;
     private long mReceivedDate = -1;
-    private long mLiquidDate = -1;
+    private long mZimbraDate = -1;
     private String mSubject;
     private String mNormalizedSubject;
 	private boolean mSubjectPrefixed;
@@ -310,12 +310,12 @@ public class ParsedMessage {
     }
 
     public long getZimbraDateHeader() {
-        if (mLiquidDate != -1)
-            return mLiquidDate;
+        if (mZimbraDate != -1)
+            return mZimbraDate;
 
         String liquidHeader = null;
         try {
-            liquidHeader = mMimeMessage.getHeader("X-Liquid-Received", null);
+            liquidHeader = mMimeMessage.getHeader("X-Zimbra-Received", null);
             if (liquidHeader == null || liquidHeader.trim().equals(""))
                 return -1;
         } catch (MessagingException mex) {

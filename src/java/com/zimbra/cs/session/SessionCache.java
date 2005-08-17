@@ -136,7 +136,7 @@ public final class SessionCache
      */
     private SessionCache() {
         super();
-        Liquid.sTimer.schedule(new SweepMapTimerTask(), 30000, SESSION_SWEEP_INTERVAL_MSEC);
+        Zimbra.sTimer.schedule(new SweepMapTimerTask(), 30000, SESSION_SWEEP_INTERVAL_MSEC);
     }
     
     private boolean mShutdown = false;

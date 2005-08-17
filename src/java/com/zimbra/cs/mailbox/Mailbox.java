@@ -2099,7 +2099,7 @@ public class Mailbox {
             } else
                 beginTransaction("addMessage", octxt, pm, redoRecorder);
 
-            // the caller can specify the received date via redo recorder, ParsedMessge constructor, or X-Liquid-Received header
+            // the caller can specify the received date via redo recorder, ParsedMessge constructor, or X-Zimbra-Received header
             long timestamp = getOperationTimestampMillis();
 
             // "having attachments" is currently tracked via flags

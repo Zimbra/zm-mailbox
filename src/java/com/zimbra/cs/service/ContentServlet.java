@@ -113,10 +113,10 @@ public class ContentServlet extends ZimbraServlet {
                         if ("1".equals(req.getParameter(PARAM_SYNC))) {
                             // for sync, return metadata as headers to avoid extra SOAP round-trips
                             StringBuffer sb = new StringBuffer();
-                            sb.append("X-Liquid-Tags: ").append(msg.getTagString()).append("\n");
-                            sb.append("X-Liquid-Flags: ").append(msg.getFlagString()).append("\n");
-                            sb.append("X-Liquid-Conv: ").append(msg.getConversationId()).append("\n");
-                            sb.append("X-Liquid-Received: ").append(msg.getDate()).append("\n");
+                            sb.append("X-Zimbra-Tags: ").append(msg.getTagString()).append("\n");
+                            sb.append("X-Zimbra-Flags: ").append(msg.getFlagString()).append("\n");
+                            sb.append("X-Zimbra-Conv: ").append(msg.getConversationId()).append("\n");
+                            sb.append("X-Zimbra-Received: ").append(msg.getDate()).append("\n");
                             resp.getOutputStream().write(sb.toString().getBytes());
                         }
                         InputStream is = msg.getRawMessage();

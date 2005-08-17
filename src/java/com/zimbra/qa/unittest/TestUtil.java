@@ -82,7 +82,7 @@ public class TestUtil {
         "To: Test User 1 <user1@${DOMAIN}>",
         "Subject: ${SUBJECT}",
         "Date: Mon, 28 Mar 2005 10:21:10 -0700",
-        "X-Liquid-Received: Mon, 28 Mar 2005 10:21:1${MESSAGE_NUM} -0700",
+        "X-Zimbra-Received: Mon, 28 Mar 2005 10:21:1${MESSAGE_NUM} -0700",
         "Content-Type: text/plain",
         "",
         "Dude,",

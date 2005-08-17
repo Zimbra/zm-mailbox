@@ -259,7 +259,7 @@ public class FileUploadServlet extends ZimbraServlet {
         }
         cleanupLeftoverTempFiles();
 
-        Liquid.sTimer.schedule(new MapReaperTask(), REAPER_INTERVAL_MSEC, REAPER_INTERVAL_MSEC);
+        Zimbra.sTimer.schedule(new MapReaperTask(), REAPER_INTERVAL_MSEC, REAPER_INTERVAL_MSEC);
     }
 
     public void destroy() {
