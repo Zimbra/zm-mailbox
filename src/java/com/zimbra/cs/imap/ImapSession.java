@@ -198,7 +198,7 @@ public class ImapSession extends Session {
     void clearTagCache()  { mTags.clear(); }
 
     DateFormat getDateFormat()        { return mHandler.mDateFormat; }
-    DateFormat getLiquidDateFormat()  { return mHandler.mLiquidFormat; }
+    DateFormat getZimbraDateFormat()  { return mHandler.mZimbraFormat; }
 
     void subscribe(String folderName)       { mSubscriptions.add(folderName); }
     boolean unsubscribe(String folderName)  { return mSubscriptions.remove(folderName); }

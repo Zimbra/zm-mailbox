@@ -33,7 +33,7 @@ import com.zimbra.soap.SoapProtocol;
 /**
  * @author jhahm
  *
- * Superclass for all Liquid servlets.  Supports port filtering and
+ * Superclass for all Zimbra servlets.  Supports port filtering and
  * provides some utility methods to subclasses.
  */
 public class ZimbraServlet extends HttpServlet {

@@ -28,7 +28,7 @@ import java.util.List;
  *
  * Represents the results of a query made on a remote server.  This class takes the ServerID
  * and the query parameters and makes does smart chunking (buffering) of the results - making
- * SOAP requests to the remote Liquid server as necessary.
+ * SOAP requests to the remote Zimbra server as necessary.
  * 
  *  
  * TODO wish this could be a QueryOperation subclass instead of just a results subclass:

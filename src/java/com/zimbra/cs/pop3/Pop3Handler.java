@@ -634,7 +634,7 @@ public class Pop3Handler extends ProtocolHandler {
             sendLine("EXPIRE "+mExpire, false);
         }
         // TODO: VERSION INFO
-        sendLine("IMPLEMENTATION LiquidSystems", false);
+        sendLine("IMPLEMENTATION ZimbraInc", false);
         sendLine(TERMINATOR);
     }
 }

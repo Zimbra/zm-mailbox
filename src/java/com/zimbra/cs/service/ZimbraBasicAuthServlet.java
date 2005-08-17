@@ -26,7 +26,7 @@ import com.zimbra.cs.servlet.ZimbraServlet;
 public abstract class ZimbraBasicAuthServlet extends ZimbraServlet {
 
     private static final String  WWW_AUTHENTICATE_HEADER = "WWW-Authenticate";
-    private static final String  WWW_AUTHENTICATE_VALUE = "BASIC realm=\"LiquidSystems\"";
+    private static final String  WWW_AUTHENTICATE_VALUE = "BASIC realm=\"Zimbra\"";
     
     private static Log mLog = LogFactory.getLog(ZimbraBasicAuthServlet.class);
 

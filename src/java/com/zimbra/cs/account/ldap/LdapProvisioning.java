@@ -1064,7 +1064,7 @@ public class LdapProvisioning extends Provisioning {
             if (!domainDnExists(ctxt, dns[i])) {
                 String dn = dns[i];
                 String domain = parts[i];
-                // don't create LiquidDomain objects, since we don't want them to show up in list domains
+                // don't create ZimbraDomain objects, since we don't want them to show up in list domains
                 LdapUtil.simpleCreate(ctxt, dn, new String[] {"dcObject", "organization"}, 
                         new String[] { A_o, domain+" domain", A_dc, domain });
             }

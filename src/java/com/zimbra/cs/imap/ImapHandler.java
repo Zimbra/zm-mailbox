@@ -47,7 +47,7 @@ public class ImapHandler extends ProtocolHandler {
 
     DateFormat mTimeFormat   = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss Z", Locale.US);
     DateFormat mDateFormat   = new SimpleDateFormat("dd-MMM-yyyy", Locale.US);
-    DateFormat mLiquidFormat = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
+    DateFormat mZimbraFormat = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
 
     private String      mRemoteAddress;
     private ImapServer  mServer;
@@ -593,7 +593,7 @@ public class ImapHandler extends ProtocolHandler {
         if (attrs != null)
             ZimbraLog.imap.info("IMAP client identified as: " + attrs);
 
-        sendUntagged("ID (\"NAME\" \"Liquid\" \"VERSION\" \"" + BuildInfo.VERSION + "\" \"RELEASE\" \"" + BuildInfo.RELEASE + "\")");
+        sendUntagged("ID (\"NAME\" \"Zimbra\" \"VERSION\" \"" + BuildInfo.VERSION + "\" \"RELEASE\" \"" + BuildInfo.RELEASE + "\")");
         sendOK(tag, "ID completed");
         return CONTINUE_PROCESSING;
     }

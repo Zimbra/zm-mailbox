@@ -267,7 +267,7 @@ public class CalendarUtils {
     private static Calendar makeCalendar(Method method) {
         Calendar iCal = new Calendar();
         // PRODID, VERSION always required
-        iCal.getProperties().add(new ProdId("Liquid-Calendar-Provider"));
+        iCal.getProperties().add(new ProdId("Zimbra-Calendar-Provider"));
         iCal.getProperties().add(method);
         iCal.getProperties().add(Version.VERSION_2_0);
 

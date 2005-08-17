@@ -21,7 +21,7 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
  * 
  * @author tim
  * 
- * Global analyzer wrapper for Liquid Indexer.  You DO NOT need to instantiate multiple 
+ * Global analyzer wrapper for Zimbra Indexer.  You DO NOT need to instantiate multiple 
  * copies of this class -- just call ZimbraAnalyzer.getInstance() whenever you need an 
  * instance of this class. 
  *

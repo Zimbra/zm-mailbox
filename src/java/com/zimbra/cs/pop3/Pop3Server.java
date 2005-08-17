@@ -82,7 +82,7 @@ public class Pop3Server extends TcpServer {
 	
 	public void setConfigName(String name) {
 		mConfigName = name;
-		mBanner = new String(name + " Liquid POP3 server ready");
+		mBanner = new String(name + " Zimbra POP3 server ready");
 		mGoodbye = new String(name + " closing connection");
 	}
 

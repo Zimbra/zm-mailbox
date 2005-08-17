@@ -1779,7 +1779,7 @@ public class Mailbox {
             Calendar cal = new Calendar();
 
             // PRODID, VERSION always required
-            cal.getProperties().add(new ProdId("Liquid-Calendar-Provider"));
+            cal.getProperties().add(new ProdId("Zimbra-Calendar-Provider"));
             cal.getProperties().add(Version.VERSION_2_0);
             
             // REPLY

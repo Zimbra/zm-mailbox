@@ -32,7 +32,7 @@ import com.zimbra.cs.mailbox.Message;
 public class RssServlet extends ZimbraBasicAuthServlet {
 
     private static final String  WWW_AUTHENTICATE_HEADER = "WWW-Authenticate";
-    private static final String  WWW_AUTHENTICATE_VALUE = "BASIC realm=\"LiquidSystems New Mail Feed\"";
+    private static final String  WWW_AUTHENTICATE_VALUE = "BASIC realm=\"Zimbra New Mail Feed\"";
     
     private static final String PARAM_QUERY = "query";
 
@@ -52,9 +52,9 @@ public class RssServlet extends ZimbraBasicAuthServlet {
         rss.addAttribute("version", "2.0");
 
         Element channel = rss.addElement("channel");
-        channel.addElement("title").setText("Liquid Mail: "+acct.getName());
+        channel.addElement("title").setText("Zimbra Mail: "+acct.getName());
             
-        channel.addElement("generator").setText("Liquid Systems RSS Feed Servlet");
+        channel.addElement("generator").setText("Zimbra RSS Feed Servlet");
             
         ZimbraQueryResults results;
         try {

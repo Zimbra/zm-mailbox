@@ -518,7 +518,7 @@ class ImapRequest {
     private String readAndReformatDate() throws ImapParseException {
         DateFormat format = (mSession == null ? new SimpleDateFormat("dd-MMM-yyyy", Locale.US) : mSession.getDateFormat());
         Date date = readDate(format);
-        return mSession.getLiquidDateFormat().format(date);
+        return mSession.getZimbraDateFormat().format(date);
     }
 
     private ImapFlag getFlag(String name) {

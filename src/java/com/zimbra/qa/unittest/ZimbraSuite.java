@@ -9,7 +9,7 @@ import junit.framework.TestSuite;
 import junit.textui.TestRunner;
 
 /**
- * Complete unit test suite for the Liquid Systems code base.
+ * Complete unit test suite for the Zimbra code base.
  * 
  * @author bburtin
  *

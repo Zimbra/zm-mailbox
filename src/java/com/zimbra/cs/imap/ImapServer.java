@@ -55,8 +55,8 @@ public class ImapServer extends TcpServer {
         if (name == null || name.trim().equals(""))
             name = "localhost";
 
-        mBanner  = "OK " + name + " Liquid IMAP4rev1 service ready";
-        mGoodbye = "BYE Liquid IMAP4rev1 server terminating connection";
+        mBanner  = "OK " + name + " Zimbra IMAP4rev1 service ready";
+        mGoodbye = "BYE Zimbra IMAP4rev1 server terminating connection";
     }
 
     public String getBanner()  { return mBanner; }

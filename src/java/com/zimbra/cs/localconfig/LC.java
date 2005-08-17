@@ -111,7 +111,7 @@ public class LC {
         liquid_home.setDefault(FS + "opt" + FS + "liquid");
         liquid_home.setForceToEdit(true);
         liquid_home.setDoc
-            ("Liquid installation root and home directory of `liquid'" + 
+            ("Zimbra installation root and home directory of `liquid'" + 
              " UNIX user. You can not relocate install root - do" +
              " not change this setting.");
         

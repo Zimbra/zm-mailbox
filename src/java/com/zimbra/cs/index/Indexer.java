@@ -71,9 +71,9 @@ public class Indexer
     // External API (called by IndexTask, IndexerDaemon
     /////////////////////////////////////////////////////////////
     
-//    public LiquidSearcher getSearcher(int mailboxId) throws IOException
+//    public ZimbraSearcher getSearcher(int mailboxId) throws IOException
 //    {
-//    	return new LiquidSearcher(getMailboxIndex(mailboxId));
+//    	return new ZimbraSearcher(getMailboxIndex(mailboxId));
 //    }
     
     public MailboxIndex.AdminInterface getAdminInterface(int mailboxId) throws ServiceException

@@ -323,7 +323,7 @@ public class IndexEditor {
 	
 //	public static void newQuery(int mailboxId) throws IOException, ParseException
 //	{
-//        LiquidSearcher searcher = Indexer.GetInstance().getSearcher(mailboxId);
+//        ZimbraSearcher searcher = Indexer.GetInstance().getSearcher(mailboxId);
 //        try {
 //        	while(true) {
 //        		outputStream.print("Query> ");
