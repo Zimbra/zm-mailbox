@@ -20,7 +20,7 @@ curl -u user1:test123 http://localhost:7070/service/ical/cal.ics
 Should look something like:
 
 BEGIN:VCALENDAR
-PRODID:Liquid-Calendar-Provider
+PRODID:Zimbra-Calendar-Provider
 VERSION:2.0
 METHOD:PUBLISH
 BEGIN:VEVENT
@@ -32,7 +32,7 @@ UID:040000008200E00074C5B7101A82E00800000000F0BC424F5761C5010000000000000
  000100000002C10E79C9140CF41B7E18816DF121033
 ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE;CN="tim@cur
  ple.com":MAILTO:tim@curple.com
-ORGANIZER;CN="Tom":MAILTO:tom@liquidsys.com
+ORGANIZER;CN="Tom":MAILTO:tom@example.zimbra.com
 LOCATION:Loc
 DTEND;TZID="GMT -0800 (Standard) / GMT -0700 (Daylight)":20050523T050000
  
@@ -74,19 +74,19 @@ curl -u user1:test123 http://localhost:7070/service/rss/index.rss
 <?xml version="1.0"?>
 <rss version="2.0">
   <channel>
-    <title>Liquid Mail: user1@slapshot.liquidsys.com</title>
-    <generator>Liquid Systems RSS Feed Servlet</generator>
+    <title>Zimbra Mail: user1@slapshot.example.zimbra.com</title>
+    <generator>Zimbra Systems RSS Feed Servlet</generator>
     <description>is:unread in:inbox</description>
     <item>
       <title>Decline: New Appointment</title>
       <description>No, I won't attend.</description>
-      <author>Demo User One &lt;user1@slapshot.liquidsys.com></author>
+      <author>Demo User One &lt;user1@slapshot.example.zimbra.com></author>
       <pubDate>Thu, 4 Aug 2005 11:48:31 -0700</pubDate>
     </item>
     <item>
       <title>Accept: New Appointment</title>
       <description>Yes, I will attend.</description>
-      <author>Demo User One &lt;user1@slapshot.liquidsys.com></author>
+      <author>Demo User One &lt;user1@slapshot.example.zimbra.com></author>
       <pubDate>Thu, 4 Aug 2005 11:47:37 -0700</pubDate>
     </item>
   </channel>
