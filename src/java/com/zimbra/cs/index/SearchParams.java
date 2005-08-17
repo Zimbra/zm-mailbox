@@ -8,6 +8,7 @@
 package com.zimbra.cs.index;
 
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.mail.ToXML.OutputParticipants;
 
 
 /**
@@ -33,8 +34,8 @@ public final class SearchParams
     public boolean getFetchFirst() { return mFetchFirst; }
     public boolean getMarkRead() { return mMarkRead; }
     public boolean getWantHtml() { return mWantHtml; }
-    public boolean getWantRecipients() { return mRecipients; }
-    
+    public OutputParticipants getWantRecipients() { return mRecipients ? OutputParticipants.PUT_RECIPIENTS : OutputParticipants.PUT_SENDERS; }
+
     public void setQueryStr(String queryStr) { mQueryStr = queryStr; }
     public void setOffset(int offset) { mOffset = offset; }
     public void setLimit(int limit) { mLimit = limit; }

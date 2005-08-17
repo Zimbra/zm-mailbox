@@ -14,13 +14,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.AddressException;
-import javax.mail.internet.ContentDisposition;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimePart;
-import javax.mail.internet.MimeUtility;
+import javax.mail.internet.*;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -73,11 +67,10 @@ public class ToXML {
             return encodeNote(parent, (Note) item, fields);
         else if (item instanceof Contact)
             return encodeContact(parent, (Contact) item, null, false, null, fields);
-//        else if (item instanceof InviteMessage)
-//            return encodeInviteSummary(parent, (InviteMessage) item, false, fields);
-        else if (item instanceof Message)
-            return encodeMessageSummary(parent, (Message) item, false, fields);
-        else if (item instanceof Conversation) {
+        else if (item instanceof Message) {
+            OutputParticipants output = (fields == Change.ALL_FIELDS ? OutputParticipants.PUT_BOTH : OutputParticipants.PUT_SENDERS);
+            return encodeMessageSummary(parent, (Message) item, output, fields);
+        } else if (item instanceof Conversation) {
             Conversation conv = (Conversation) item;
             return encodeConversationSummary(parent, conv, conv.getDate(), null, null, fields);
         }
@@ -559,33 +552,31 @@ public class ToXML {
         return m;
 	}
 
-//    public static Element encodeInviteSummary(Element parent, Message msg, boolean putRecipients) {
-//        return encodeMessageSummary(parent, msg, putRecipients, Change.ALL_FIELDS);
-//    }
-//    public static Element encodeInviteSummary(Element parent, Message msg, boolean putRecipients, int fields) {
-//        Element e = encodeMessageSummary(parent, msg, putRecipients, fields);
-//        
-//        encodeInvite(e, msg, fields);
-//
-//        return e;
-//    }
-//    
-    public static Element encodeMessageSummary(Element parent, Message msg, boolean putRecipients) {
-        return encodeMessageSummary(parent, msg, putRecipients, Change.ALL_FIELDS);
+    public static final class OutputParticipants {
+        public static final OutputParticipants PUT_SENDERS    = new OutputParticipants();
+        public static final OutputParticipants PUT_RECIPIENTS = new OutputParticipants();
+        public static final OutputParticipants PUT_BOTH       = new OutputParticipants();
+        private OutputParticipants() { }
     }
-    public static Element encodeMessageSummary(Element parent, Message msg, boolean putRecipients, int fields) {
+
+    public static Element encodeMessageSummary(Element parent, Message msg, OutputParticipants output) {
+        return encodeMessageSummary(parent, msg, output, Change.ALL_FIELDS);
+    }
+    public static Element encodeMessageSummary(Element parent, Message msg, OutputParticipants output, int fields) {
         Element e = encodeMessageCommon(parent, msg, fields);
         e.addAttribute(MailService.A_ID, msg.getId());
-        
+
         if (!needToOutput(fields, Change.MODIFIED_CONTENT))
             return e;
 
         EmailElementCache eecache = new EmailElementCache();
-        if (putRecipients && msg.isFromMe())
+        boolean addRecips  = msg.isFromMe() && (output == OutputParticipants.PUT_RECIPIENTS || output == OutputParticipants.PUT_BOTH);
+        boolean addSenders = output == OutputParticipants.PUT_BOTH || !addRecips;
+        if (addRecips)
 			try {
 				addEmails(e, eecache, InternetAddress.parseHeader(msg.getRecipients(), false), EmailElementCache.EMAIL_TYPE_TO);
 			} catch (AddressException e1) { }
-		else
+		if (addSenders)
             eecache.makeEmail(e, msg.getSender(), EmailElementCache.EMAIL_TYPE_FROM, null);
 
         e.addAttribute(MailService.E_SUBJECT, StringUtil.stripControlCharacters(msg.getSubject()), Element.DISP_CONTENT);
