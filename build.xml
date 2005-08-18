@@ -536,6 +536,12 @@
 		<copy todir="${zimbra.home.dir}/lib">
 			<fileset dir="${lib.dir}" includes="lib*.so" />
 		</copy>
+		<copy todir="${zimbra.home.dir}/bin">
+			<fileset dir="${src.bin.dir}" includes="*" />
+		</copy>
+		<chmod perm="a+rx">
+			<fileset dir="${zimbra.home.dir}/bin" includes="*" />
+		</chmod>
 	</target>
 
 	<target name="stop-servers" depends="stop-servers-windows,stop-servers-unix" />
