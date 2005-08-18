@@ -25,11 +25,11 @@
 	<property name="dist.db.dir" location="${dist.dir}/db" />
 	<property name="dist.lib.dir" location="${dist.dir}/lib" />
 	<property name="dist.libexec.dir" location="${dist.dir}/libexec" />
-	<property name="dist.tomcat.dir" location="${dist.dir}/jakarta-tomcat-5.0.28" />
+	<property name="dist.tomcat.dir" location="${dist.dir}/tomcat" />
 	<property name="dist.tomcat.webapps.dir" location="${dist.tomcat.dir}/webapps" />
 	<property name="dist.tomcat.conf.dir" location="${dist.tomcat.dir}/conf" />
 	<property name="dist.tomcat.commonlib.dir" location="${dist.tomcat.dir}/common/lib" />
-	<property name="dist.openldap.dir" location="${dist.dir}/openldap-2.2.17" />
+	<property name="dist.openldap.dir" location="${dist.dir}/openldap" />
 	<property name="dist.openldap.etc.dir" location="${dist.openldap.dir}/etc/openldap" />
 	<property name="dist.openldap.schema.dir" location="${dist.openldap.etc.dir}/schema" />
 	<property name="dist.tarfile" value="dev-service.tar" />
