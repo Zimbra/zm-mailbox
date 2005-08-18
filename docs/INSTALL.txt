@@ -9,7 +9,7 @@ installers to your local machine before installing.
 
 1. Checkout the following from Perforce:
 
-  ZimbraServer - the archive system, including the back-end servlets
+  ZimbraServer - the backend system
 
   ZimbraWebClient - the dhtml interface
 
@@ -60,7 +60,7 @@ installers to your local machine before installing.
   tomcat-users.xml file to deploy
   
   IMPORTANT: Copy the files mail.jar, activation.jar and zimbraos.jar
-  from <workspace>\zimbraarchive\jars to your <tomcat>\common\lib.
+  from <workspace>\ZimbraServer\jars to your <tomcat>\common\lib.
   
   Copy \opt\zimbra\tomcat\conf\keystore to the conf directory of your
   Tomcat installation directory if it is not in \opt\zimbra\tomcat.
@@ -118,7 +118,7 @@ installers to your local machine before installing.
   	Add: ZimbraServer/build.xml
   		Run the "reset-the-world" target.
   	This will wipe out parts of /opt/zimbra, reload the database, 
-  	and run the archiver/indexer on the sample mail.
+  	and inject the sample messages.
   	
   	Add: ZimbraWebClient/build.xml
     	Run "deploy" and "admin-deploy"

@@ -12,8 +12,8 @@ saved_search
 # They are the high-level application logics that cause state
 # change in MySQL, Blob Store, and Lucene.
 #
-# The methods are public and are used by either Archiver or
-# the com.zimbra.cs.service[.*] packages.
+# The methods are public and are used by the
+# com.zimbra.cs.service[.*] packages.
 
 
 # Provisioning

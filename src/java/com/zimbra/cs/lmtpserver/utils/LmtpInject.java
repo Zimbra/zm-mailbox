@@ -55,8 +55,7 @@ public class LmtpInject {
         HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp("LmtpInject [options] [files]",
         		"where [options] are one of:", mOptions,
-				"and [files] contain rfc822 messages.  If exchange journal envelope option is not specified, " +
-				"then an envelope recipient/sender pair must be specified.  If directory is specified, then " +
+				"and [files] contain rfc822 messages.  If directory is specified, then " +
 				"[files] are ignored.");
 		System.exit((errmsg == null) ? 0 : 1);
 	}
@@ -78,9 +77,6 @@ public class LmtpInject {
         return cl;
     }
 
-	/**
-	 * Pick up exchange envelope journaled message and LMTP deliver them.
-	 */
 	public static void main(String[] args) {
         Zimbra.toolSetup();
         CommandLine cl = parseArgs(args);

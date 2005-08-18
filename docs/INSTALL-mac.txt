@@ -115,7 +115,7 @@ Installing tomcat:
 
 5. Copy ZimbraServer/conf/tomcat-users.xml {tomcat-install/conf/
 
-6. Copy <zimbra archive>/src/bin/* to /opt/zimbra/bin, and chmod +x on them
+6. Copy ZimbraServer/src/bin/* to /opt/zimbra/bin, and chmod +x on them
 	sh> cd /opt/zimbra/bin
 	sh> chmod +x *
 	sh> mkdir /opt/zimbra/conf
@@ -148,7 +148,7 @@ If service.war deploy step keeps failing, manually deploy for the first time via
 	Then reset the world again
 	
 	
-The war should have been built and it is located at <zimbra archive>/build/dist/jakarta-tomcat-*/webapps
+The war should have been built and it is located at ZimbraServer/build/dist/jakarta-tomcat-*/webapps
 subsequent deploy should then work
 
 6. Build ZimbraWebClient by running "deploy" target
@@ -159,8 +159,8 @@ subsequent deploy should then work
   From inside of eclipse, double click on ZimbraServer/build.xml,
   then right click on "reset-the-world" from Outline panel, then 
   select "Run/Ant Build". This will wipe out parts of /opt/zimbra, 
-  reload the database, and run the archiver/indexer on the sample 
-  mail. If you install ant standalone, you can also run "ant 
+  reload the database, and inject the sample messages.
+  If you install ant standalone, you can also run "ant 
   reset-the-world" from within the ZimbraServer root directory.
    
 10. Deploy application

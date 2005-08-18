@@ -198,10 +198,10 @@ metadata-related fields
   of the same name in the document.
   The field metadata aggregates all the metadata fields including the above four.
   E.g.,
-	author:microsoft		finds all attachments whose author is microsoft
-	metadata:microsfot      finds all attachments where microsoft appears in any metadata
-							fields, including author.
-							
+	author:acme     finds all attachments whose author is acme
+	metadata:acme   finds all attachments where acme appears in any metadata
+	                fields, including author.
+
 misc fields
 
 *  minm:nnnn                     # constrain to conversations with at least nnnn messages

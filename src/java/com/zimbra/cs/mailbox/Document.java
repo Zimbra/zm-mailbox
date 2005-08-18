@@ -57,7 +57,7 @@ public class Document extends MailItem {
         if (folder == null || !folder.canContain(TYPE_DOCUMENT))
             throw MailServiceException.CANNOT_CONTAIN();
         if (content == null || content.equals(""))
-            throw ServiceException.INVALID_REQUEST("notes may not be empty", null);
+            throw ServiceException.INVALID_REQUEST("document may not be empty", null);
 
         Mailbox mbox = folder.getMailbox();
         UnderlyingData data = new UnderlyingData();

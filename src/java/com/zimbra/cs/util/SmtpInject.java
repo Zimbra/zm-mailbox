@@ -80,9 +80,6 @@ public class SmtpInject {
         return cl;
     }
 
-    /**
-     * Pick up exchange envelope journaled message and LMTP deliver them.
-     */
     public static void main(String[] args) {
         Zimbra.toolSetup();
         CommandLine cl = parseArgs(args);

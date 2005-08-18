@@ -26,7 +26,6 @@ import org.dom4j.QName;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.service.Element;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapHttpTransport;
 

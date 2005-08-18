@@ -581,7 +581,7 @@ public class LdapUtil {
       * %d = domain as foo.com
       * %D = domain as dc=foo,dc=com
       * 
-      * exchange example, where the exchange domian is different then the zimbra one
+      * exchange example, where the exchange domian is different than the zimbra one
       * 
       * zimbraAuthMech      ldap
       * zimbraAuthLdapURL   ldap://exch1/
@@ -590,7 +590,7 @@ public class LdapUtil {
       * our own LDAP example:
       * 
       * zimbraAuthMech       ldap
-      * zimbraAuthLdapURL    ldap://dogfood.example.zimbra.com/
+      * zimbraAuthLdapURL    ldap://server.example.zimbra.com/
       * zimbraAuthLdapUserDn uid=%u,ou=people,%D
       */
       public static String computeAuthDn(String name, String bindDnRule) {

@@ -20,7 +20,7 @@
 	<cn ids="274,273,272,271,270,269,268,267,266,265,264,263,262,261,260,259,258,257,256"/>
       </folder>
       <folder id="5" name="Sent" l="1"/>
-      <search id="636" name="Satish" query="from:satish" sortBy="" types="" l="1"/>
+      <search id="636" name="Samuel" query="from:samuel" sortBy="" types="" l="1"/>
       <folder id="663" name="old name" l="1"/>
       <folder id="903" name="empty folder" l="1"/>
     </folder>

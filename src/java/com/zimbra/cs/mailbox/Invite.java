@@ -778,8 +778,9 @@ public class Invite {
             return false;
         }
     }
-    
-    // microsoft does the whole all day event "their own way" ie by setting this X- property...
+
+    // Microsoft's proprietary all-day-event implementation uses
+    // an X- property.
     static final String MICROSOFT_ALL_DAY_EVENT = "X-MICROSOFT-CDO-ALLDAYEVENT";
     
     // how MS Outlook sets free-busy type of a meeting
