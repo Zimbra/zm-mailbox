@@ -7,7 +7,6 @@ import java.io.InputStream;
 import javax.mail.MessagingException;
 import javax.mail.Part;
 import javax.mail.internet.ContentDisposition;
-import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 import javax.servlet.http.HttpServletRequest;

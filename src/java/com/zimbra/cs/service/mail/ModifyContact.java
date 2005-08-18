@@ -8,7 +8,6 @@ import java.util.Iterator;
 import java.util.Map;
 
 import com.zimbra.cs.mailbox.Contact;
-import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.Element;

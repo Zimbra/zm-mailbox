@@ -5,7 +5,6 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.DataInput;
 import java.io.DataOutput;
-import java.io.IOException;
 
 import com.zimbra.cs.mailbox.Mailbox;
 

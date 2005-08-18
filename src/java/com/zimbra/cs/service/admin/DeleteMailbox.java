@@ -5,7 +5,6 @@ package com.zimbra.cs.service.admin;
 
 import java.util.Map;
 
-import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;

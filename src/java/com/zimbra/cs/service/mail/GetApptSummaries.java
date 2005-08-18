@@ -10,7 +10,6 @@ import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Invite;
-import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;

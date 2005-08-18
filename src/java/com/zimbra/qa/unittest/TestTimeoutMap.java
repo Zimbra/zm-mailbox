@@ -1,9 +1,7 @@
 package com.zimbra.qa.unittest;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.cs.util.TimeoutMap;

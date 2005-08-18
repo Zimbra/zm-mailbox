@@ -13,7 +13,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.mail.SendInviteReply.ParsedVerb;
 import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.soap.ZimbraContext;
 

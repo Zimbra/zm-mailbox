@@ -26,7 +26,6 @@ import net.fortuna.ical4j.model.PropertyList;
 import net.fortuna.ical4j.model.UtcOffset;
 import net.fortuna.ical4j.model.component.Daylight;
 import net.fortuna.ical4j.model.component.Standard;
-import net.fortuna.ical4j.model.component.SeasonalTime;
 import net.fortuna.ical4j.model.component.VTimeZone;
 import net.fortuna.ical4j.model.property.DtStart;
 import net.fortuna.ical4j.model.property.RRule;
