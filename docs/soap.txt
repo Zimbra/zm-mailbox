@@ -725,7 +725,7 @@ if fie="1" is set, the server will fetch the folder if it already exists rather 
 
 <ItemActionRequest>
   <!-- action can be preceeded by a "!" to negate it" -->
-  <action id="{list}" op="delete|read|flag|tag|move|update" [tag="..."] [l="{folder}"]/>
+  <action id="{list}" op="delete|read|flag|tag|move|update" [tag="..."] [l="{folder}"] [tcon="{constraint}"]/>
 </ItemActionRequest>
 
 <ItemActionResponse>
@@ -734,6 +734,11 @@ if fie="1" is set, the server will fetch the folder if it already exists rather 
 
   {list} = on input, list of items to act on, on output, list of
            items that were acted on
+  {constraint} = list of characters; constrains the set of affected items in a conversation
+		t - exclude items in the Trash
+		$ - exclude items in Spam/Junk
+		s - exclude items in the user's Sent folder
+		o - exclude items in any other folder
 
   for op="update", caller can specify any or all of: l="{folder}", t="{tag-list}", f="{flags}"
 
@@ -758,9 +763,7 @@ if fie="1" is set, the server will fetch the folder if it already exists rather 
 
 <ConvActionRequest>
   <!-- action can be preceeded by a "!" to negate it" -->
-  <action id="{list}" op="delete|read|flag|tag|move|spam" [tag="..."] [l="{folder}"]>
-    <content>...</content>
-  </action>
+  <action id="{list}" op="delete|read|flag|tag|move|spam" [tag="..."] [l="{folder}"] [tcon="{constraint}"] [tcon="{constraint}"]/>
 </ConvActionRequest>
 
 <ConvActionResponse>
@@ -770,6 +773,11 @@ if fie="1" is set, the server will fetch the folder if it already exists rather 
   {list} = on input, list of conversations to act on, on output, list of
            conversations that were acted on
            list may only have 1 element for action "spam"
+  {constraint} = list of characters; constrains the set of affected items in a conversation
+		t - exclude items in the Trash
+		$ - exclude items in Spam/Junk
+		s - exclude items in the user's Sent folder
+		o - exclude items in any other folder
 
   for op="!spam", can optionally specify a destination folder
 ---------

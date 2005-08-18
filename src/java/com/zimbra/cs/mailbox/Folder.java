@@ -337,7 +337,7 @@ public class Folder extends MailItem {
     }
 
     /** Deletes this folder and all its subfolders. */
-    void delete(TargetConstraint tcon) throws ServiceException {
+    void delete() throws ServiceException {
         List subfolders = getSubfolderHierarchy();
         for (int i = subfolders.size() - 1; i >= 0; i--) {
             Folder subfolder = (Folder) subfolders.get(i);

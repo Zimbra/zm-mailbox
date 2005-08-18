@@ -196,13 +196,14 @@ public class Conversation extends MailItem {
         close(Mailbox.getHash(getSubject()));
     }
 
-    void alterUnread(boolean unread, TargetConstraint tcon) throws ServiceException {
+    void alterUnread(boolean unread) throws ServiceException {
         markItemModified(Change.MODIFIED_UNREAD);
 
         // Decrement the in-memory unread count of each message.  Each message will
         // then implicitly decrement the unread count for its conversation, folder
         // and tags.
         Message[] msgs = getMessages(DbMailItem.DEFAULT_SORT_ORDER);
+        TargetConstraint tcon = mMailbox.getOperationTargetConstraint();
         Array targets = new Array();
         for (int i = 0; i < msgs.length; i++)
             if (msgs[i].isUnread() != unread && msgs[i].checkChangeID())
@@ -216,7 +217,7 @@ public class Conversation extends MailItem {
     }
 
     // conversations are a special case for tagging -- need to affect every child of the conversation
-    void alterTag(Tag tag, boolean add, TargetConstraint tcon) throws ServiceException {
+    void alterTag(Tag tag, boolean add) throws ServiceException {
         if (tag == null)
             throw MailServiceException.CANNOT_TAG();
         if ((add ? mData.size : 0) == mInheritedTagSet.count(tag))
@@ -227,6 +228,7 @@ public class Conversation extends MailItem {
         markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
 
         Message[] msgs = getMessages(SORT_ID_ASCENDING);
+        TargetConstraint tcon = mMailbox.getOperationTargetConstraint();
         Array targets = new Array();
         // since we're adding/removing a tag, the tag's unread count is going to change
         for (int i = 0; i < msgs.length; i++)
@@ -242,12 +244,13 @@ public class Conversation extends MailItem {
         DbMailItem.alterTag(tag, targets, add);
     }
 
-    void move(Folder target, TargetConstraint tcon) throws ServiceException {
+    void move(Folder target) throws ServiceException {
         if (!target.canContain(TYPE_MESSAGE))
             throw MailServiceException.CANNOT_CONTAIN();
         markItemModified(Change.UNMODIFIED);
 
         Message[] msgs = getMessages(SORT_ID_ASCENDING);
+        TargetConstraint tcon = mMailbox.getOperationTargetConstraint();
         boolean toTrash = target.inTrash();
         int oldUnread = 0;
         for (int i = 0; i < msgs.length; i++)
@@ -374,7 +377,7 @@ public class Conversation extends MailItem {
         other.delete();
     }
 
-    PendingDelete getDeletionInfo(TargetConstraint tcon) throws ServiceException {
+    PendingDelete getDeletionInfo() throws ServiceException {
         PendingDelete info = new PendingDelete();
         info.rootId = mId;
         info.itemIds.add(new Integer(mId));
@@ -382,6 +385,7 @@ public class Conversation extends MailItem {
         if (mChildren == null || mChildren.length == 0)
             return info;
         Message[] msgs = getMessages(SORT_ID_ASCENDING);
+        TargetConstraint tcon = mMailbox.getOperationTargetConstraint();
 
         for (int i = 0; i < msgs.length; i++) {
             Message child = msgs[i];

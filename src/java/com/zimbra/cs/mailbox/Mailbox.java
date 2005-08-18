@@ -124,6 +124,7 @@ public class Mailbox {
         MailItem   indexItem = null;
         Object     indexData = null;
         OperationContext octxt = null;
+        TargetConstraint tcon  = null;
 
         Boolean  sync     = null;
         long     size     = NO_CHANGE;
@@ -184,7 +185,7 @@ public class Mailbox {
             if (conn != null)
                 DbPool.quietClose(conn);
             active = false;
-            conn = null;  octxt = null;
+            conn = null;  octxt = null;  tcon = null;
             depth = 0;
             size = changeId = itemId = contacts = NO_CHANGE;
             sync = null;  config = null;
@@ -390,6 +391,15 @@ public class Mailbox {
         }
         return nextId;
     }
+
+    TargetConstraint getOperationTargetConstraint() {
+        return mCurrentChange.tcon;
+    }
+
+    void setOperationTargetConstraint(TargetConstraint tcon) {
+        mCurrentChange.tcon = tcon;
+    }
+
 
     /** @return the total (uncompressed) size of the mailbox */
     public long getSize() {
@@ -2458,6 +2468,7 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("alterTag", octxt, redoRecorder);
+            setOperationTargetConstraint(tcon);
 
             MailItem item = getItemById(itemId, type);
             if (!(item instanceof Conversation))
@@ -2465,13 +2476,13 @@ public class Mailbox {
                     throw MailServiceException.MODIFY_CONFLICT();
 
             if (tagId == Flag.ID_FLAG_UNREAD)
-                item.alterUnread(addTag, tcon);
+                item.alterUnread(addTag);
             else {
                 Tag tag = (tagId < 0 ? getFlagById(tagId) : getTagById(tagId));
                 // don't let the user tag things as "has attachments" or "draft"
                 if (tag instanceof Flag && (tag.getBitmask() & Flag.FLAG_SYSTEM) != 0)
                     throw MailServiceException.CANNOT_TAG();
-                item.alterTag(tag, addTag, tcon);
+                item.alterTag(tag, addTag);
             }
             success = true;
         } finally {
@@ -2498,6 +2509,7 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("setTags", octxt, redoRecorder);
+            setOperationTargetConstraint(tcon);
 
             MailItem item = getItemById(itemId, type);
             checkItemChangeID(item);
@@ -2513,8 +2525,8 @@ public class Mailbox {
             // but treated as a separate argument inside the mailbox.
             boolean unread = (flags & Flag.FLAG_UNREAD) > 0;
             flags &= ~Flag.FLAG_UNREAD;
-            item.setTags(flags, tags, tcon);
-            item.alterUnread(unread, tcon);
+            item.setTags(flags, tags);
+            item.alterUnread(unread);
 
             success = true;
         } finally {
@@ -2554,11 +2566,12 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("move", octxt, redoRecorder);
+            setOperationTargetConstraint(tcon);
 
             MailItem item = getItemById(itemId, type);
             checkItemChangeID(item);
 
-            item.move(getFolderById(targetId), tcon);
+            item.move(getFolderById(targetId));
             success = true;
         } finally {
             endTransaction(success);
@@ -2574,12 +2587,13 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("delete", octxt, redoRecorder);
+            setOperationTargetConstraint(tcon);
 
             MailItem item = getItemById(itemId, type);
             if (!checkItemChangeID(item) && item instanceof Tag)
                 throw MailServiceException.MODIFY_CONFLICT();
 
-            item.delete(tcon);
+            item.delete();
             success = true;
         } finally {
             endTransaction(success);

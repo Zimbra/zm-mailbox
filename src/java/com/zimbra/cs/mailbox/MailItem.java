@@ -356,7 +356,7 @@ public abstract class MailItem implements Comparable {
             return true;
         }
         private int getSentFolder() {
-            if (sentFolder != -1) {
+            if (sentFolder == -1) {
                 sentFolder = Mailbox.ID_FOLDER_SENT;
                 try {
                     String sent = mailbox.getAccount().getAttr(Provisioning.A_zimbraPrefSentMailFolder, null);
@@ -723,9 +723,6 @@ public abstract class MailItem implements Comparable {
 	    updateUnread(unread ? 1 : -1);
 	    DbMailItem.alterUnread(this, unread);
 	}
-    void alterUnread(boolean unread, TargetConstraint tcon) throws ServiceException {
-        alterUnread(unread);
-    }
 
 	void alterTag(Tag tag, boolean add) throws ServiceException {
 	    if (tag == null)
@@ -755,9 +752,6 @@ public abstract class MailItem implements Comparable {
 	    // alter our tags in the DB
 	    DbMailItem.alterTag(this, tag, add);
 	}
-    void alterTag(Tag tag, boolean add, TargetConstraint tcon) throws ServiceException {
-        alterTag(tag, add);
-    }
 	
 	protected void tagChanged(Tag tag, boolean add) throws ServiceException {
 	    markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
@@ -869,9 +863,6 @@ public abstract class MailItem implements Comparable {
             }
         }
 	}
-    void setTags(int flags, long tags, TargetConstraint tcon) throws ServiceException {
-        setTags(flags, tags);
-    }
 
     MailItem copy(Folder folder, int id) throws IOException, ServiceException {
         if (!isCopyable())
@@ -941,9 +932,6 @@ public abstract class MailItem implements Comparable {
 		DbMailItem.setFolder(this, folder);
 		folderChanged(folder);
 	}
-    void move(Folder folder, TargetConstraint tcon) throws ServiceException {
-        move(folder);
-    }
 
 	protected void folderChanged(Folder newFolder) throws ServiceException {
         if (mData.folderId == newFolder.getId())
@@ -1053,20 +1041,14 @@ public abstract class MailItem implements Comparable {
     static final boolean DELETE_ITEM = false, DELETE_CONTENTS = true;
 
     void delete() throws ServiceException {
-        delete(DELETE_ITEM, null);
+        delete(DELETE_ITEM);
     }
     void delete(boolean childrenOnly) throws ServiceException {
-        delete(childrenOnly, null);
-    }
-    void delete(TargetConstraint tcon) throws ServiceException {
-        delete(DELETE_ITEM, tcon);
-    }
-    void delete(boolean childrenOnly, TargetConstraint tcon) throws ServiceException {
         if (!childrenOnly && !isMutable())
             throw MailServiceException.IMMUTABLE_OBJECT(mId);
 
         // get the full list of things that are being removed
-        PendingDelete info = getDeletionInfo(tcon);
+        PendingDelete info = getDeletionInfo();
         if (childrenOnly || info.incomplete) {
             // make sure to take the container's ID out of the list of deleted items
             info.itemIds.remove(new Integer(mId));
@@ -1144,9 +1126,6 @@ public abstract class MailItem implements Comparable {
         info.messages.put(new Integer(getFolderId()), new DbMailItem.LocationCount(isMessage, getSize()));
 		return info;
 	}
-    PendingDelete getDeletionInfo(TargetConstraint tcon) throws ServiceException {
-        return getDeletionInfo();
-    }
 
 	void propagateDeletion(PendingDelete info) throws ServiceException {
         for (Iterator it = info.messages.entrySet().iterator(); it.hasNext(); ) {
