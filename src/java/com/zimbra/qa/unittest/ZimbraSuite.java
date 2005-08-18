@@ -42,6 +42,7 @@ public class ZimbraSuite extends TestSuite
         suite.addTest(new TestSuite(TestConversion.class));
         suite.addTest(new TestSuite(TestMailItem.class));
         suite.addTest(new TestSuite(TestTimeoutMap.class));
+
         return suite;
     }
     

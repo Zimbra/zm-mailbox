@@ -19,6 +19,7 @@ public class TimeoutMap implements Map {
     private long mTimeoutMillis;
     private Map mMap = new HashMap();
     private Map /* <Long, Object> */ mTimestamps = new TreeMap();
+    private long mLastTimestamp = 0;
 
     public TimeoutMap(long timeoutMillis) {
         if (timeoutMillis < 0) {
@@ -54,7 +55,7 @@ public class TimeoutMap implements Map {
 
     public Object put(Object key, Object value) {
         prune();
-        mTimestamps.put(new Long(System.currentTimeMillis()), key);
+        mTimestamps.put(getTimestamp(), key);
         return mMap.put(key, value);
     }
 
@@ -65,10 +66,9 @@ public class TimeoutMap implements Map {
 
     public void putAll(Map t) {
         prune();
-        Long now = new Long(System.currentTimeMillis());
         Iterator i = t.keySet().iterator();
         while (i.hasNext()) {
-            mTimestamps.put(now, i.next());
+            mTimestamps.put(getTimestamp(), i.next());
         }
         mMap.putAll(t);
     }
@@ -111,5 +111,18 @@ public class TimeoutMap implements Map {
                 return;
             }
         }
+    }
+    
+    /**
+     * Returns the current system timestamp, possibly adjusted by a few milliseconds.
+     * Used to ensure that the timestamp TreeMap contains unique values.
+     */
+    private Long getTimestamp() {
+        long now = System.currentTimeMillis();
+        if (now <= mLastTimestamp) {
+            now = mLastTimestamp + 1;
+        }
+        mLastTimestamp = now;
+        return new Long(mLastTimestamp);
     }
 }

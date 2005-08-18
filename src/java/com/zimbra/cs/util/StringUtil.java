@@ -7,6 +7,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -251,8 +252,7 @@ public class StringUtil {
     /**
      * Joins an array of objects, separated by a delimiter.
      */
-    public static String join (String delimiter, Object[] array)
-    {
+    public static String join(String delimiter, Object[] array) {
         if (array == null) {
             return null;
         }
@@ -266,6 +266,12 @@ public class StringUtil {
             }
         }
         return buf.toString();
+    }
+    
+    public static String join(String delimiter, Collection col) {
+        Object[] array = new Object[col.size()];
+        col.toArray(array);
+        return join(delimiter, array);
     }
     
     /**

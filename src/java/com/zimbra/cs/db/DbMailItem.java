@@ -46,6 +46,13 @@ public class DbMailItem {
     private static final Map /* <Long, TagsetCache */ sTagsetCache =
         new TimeoutMap(15 * Constants.MILLIS_PER_MINUTE);
     
+    /**
+     * Maps the mailbox id to the set of all flag combinations stored for all
+     * items in the mailbox.  Enables fast database lookup by flag.
+     */
+    private static final Map /* <Long, TagsetCache> */ sFlagsetCache =
+        new TimeoutMap(15 * Constants.MILLIS_PER_MINUTE);
+    
     public static void create(Mailbox mbox, UnderlyingData data) throws ServiceException {
         if (data == null || data.id <= 0 || data.folderId <= 0 || data.parentId == 0 || data.indexId == 0)
             throw ServiceException.FAILURE("invalid data for DB item create", null);
@@ -92,9 +99,12 @@ public class DbMailItem {
             int num = stmt.executeUpdate();
             if (num != 1)
                 throw ServiceException.FAILURE("failed to create object", null);
-            
+
+            // Track the tags and flags for fast lookup later
             TagsetCache tagsets = getTagsetCache(conn, mbox.getId());
             tagsets.addTagset(data.tags);
+            TagsetCache flagsets = getFlagsetCache(conn, mbox.getId());
+            flagsets.addTagset(data.flags);
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
             if (e.getErrorCode() == Db.Error.DUPLICATE_ROW)
@@ -332,6 +342,11 @@ public class DbMailItem {
             stmt.setInt(11, item.getSavedSequence());
             stmt.setInt(12, item.getId());
             stmt.executeUpdate();
+            
+            // Update the flagset cache.  Assume that the item's in-memory
+            // data has already been updated.
+            TagsetCache flagsets = getFlagsetCache(conn, mbox.getId());
+            flagsets.addTagset(flags);
         } catch (SQLException e) {
             throw ServiceException.FAILURE("rewriting row data for mailbox " + item.getMailboxId() + ", item " + item.getId(), e);
         } finally {
@@ -447,9 +462,16 @@ public class DbMailItem {
             else
                 stmt.setInt(3, item.getId());
             stmt.executeUpdate();
-            
-            TagsetCache tagsets = getTagsetCache(conn, mbox.getId());
-            tagsets.addTagset(item.getTagBitmask());
+
+            // Update the flagset or tagset cache.  Assume that the item's in-memory
+            // data has already been updated.
+            if (tag instanceof Flag) {
+                TagsetCache flagsets = getFlagsetCache(conn, mbox.getId());
+                flagsets.addTagset(item.getInternalFlagBitmask());
+            } else {
+                TagsetCache tagsets = getTagsetCache(conn, mbox.getId());
+                tagsets.addTagset(item.getTagBitmask());
+            }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("updating tag data for item " + item.getId(), e);
         } finally {
@@ -475,9 +497,16 @@ public class DbMailItem {
             for (int i = 0; i < itemIDs.length; i++)
                 stmt.setInt(i + 3, itemIDs.array[i]);
             stmt.executeUpdate();
-            
-            TagsetCache tagsets = getTagsetCache(conn, mbox.getId());
-            tagsets.applyMask(tag.getBitmask(), add);
+
+            // Update the flagset or tagset cache.  Assume that the item's in-memory
+            // data has already been updated.
+            if (tag instanceof Flag) {
+                TagsetCache flagsets = getFlagsetCache(conn, mbox.getId());
+                flagsets.applyMask(tag.getBitmask(), add);
+            } else {
+                TagsetCache tagsets = getTagsetCache(conn, mbox.getId());
+                tagsets.applyMask(tag.getBitmask(), add);
+            }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("updating tag data for items [" + itemIDs + "]", e);
         } finally {
@@ -1574,43 +1603,66 @@ public class DbMailItem {
              *    ORDER BY date|subject|sender (DESC)? LIMIT ?, ?
              */
             
-            int setFlagMask = 0;
             Boolean unread = null;
             Set searchTagsets = new HashSet();
+            Set searchFlagsets = new HashSet();
+            TagsetCache flagsets = getFlagsetCache(conn, c.mailboxId);
             TagsetCache tagsets = getTagsetCache(conn, c.mailboxId);
+            boolean includeFlags = false;
+            boolean excludeFlags = false;
+            boolean includeTags = false;
+            boolean excludeTags = false;
             
+            // Add any included tags and flags
             for (int i = 0; c.tags != null && i < c.tags.length; i++)
                 if (c.tags[i].getId() == Flag.ID_FLAG_UNREAD) {
                     unread = Boolean.TRUE; 
                 } else if (c.tags[i] instanceof Flag) {
-                    setFlagMask |= c.tags[i].getBitmask();
+                    Set s = flagsets.getTagsets(c.tags[i].getBitmask());
+                    searchFlagsets.addAll(s);
+                    includeFlags = true;
                 } else {
                     // Add all tagsets that have the given bit set 
                     Set s = tagsets.getTagsets(c.tags[i].getBitmask());
                     searchTagsets.addAll(s);
+                    includeTags = true;
                 }
-            
-            int flagMask = setFlagMask;
 
-            // If we're excluding and not including, start with all possible
-            // tagsets, including 0.
-            if ((c.tags == null || c.tags.length == 0) &&
-                c.excludeTags != null && c.excludeTags.length > 0) {
-                searchTagsets = tagsets.getAllTagsets();
-                searchTagsets.add(new Long(0));
+            // Determine if we're excluding tags or flags
+            for (int i = 0; c.excludeTags != null && i < c.excludeTags.length; i++) {
+                if (c.excludeTags[i].getId() == Flag.ID_FLAG_UNREAD) {
+                    continue;
+                }
+                if (c.excludeTags[i] instanceof Flag) {
+                    excludeFlags = true;
+                } else {
+                    excludeTags = true;
+                }
             }
             
+            // If we're excluding and not including, start with all possible
+            // bitsets.
+            if (!includeTags && excludeTags) {
+                searchTagsets = tagsets.getAllTagsets();
+            }
+            if (!includeFlags && excludeFlags) {
+                searchFlagsets = flagsets.getAllTagsets();
+            }
+            
+            // Remove excluded tags and flags from the search sets
             for (int i = 0; c.excludeTags != null && i < c.excludeTags.length; i++)
                 if (c.excludeTags[i].getId() == Flag.ID_FLAG_UNREAD) {
                     unread = Boolean.FALSE;
                 } else if (c.excludeTags[i] instanceof Flag) {
-                    flagMask |= c.excludeTags[i].getBitmask();
+                    Set s = flagsets.getTagsets(c.excludeTags[i].getBitmask());
+                    searchFlagsets.removeAll(s);
                 } else {
                     // Remove tagsets that are being excluded
                     Set s = tagsets.getTagsets(c.excludeTags[i].getBitmask());
                     searchTagsets.removeAll(s);
                 }
-            
+
+            // Assemble the search query
             StringBuffer statement = new StringBuffer("SELECT id, index_id, type, " + sortField(c.sort));
             if (fullRows)
                 statement.append(", " + DB_FIELDS);
@@ -1629,8 +1681,9 @@ public class DbMailItem {
             if (searchTagsets.size() > 0) {
                 statement.append(" AND tags IN").append(suitableNumberOfVariables(searchTagsets));
             }
-            if (flagMask != 0)
-                statement.append(" AND flags & ? = ?");
+            if (searchFlagsets.size() > 0) {
+                statement.append(" AND flags IN").append(suitableNumberOfVariables(searchFlagsets));
+            }
             if (unread != null)
                 statement.append(" AND unread = ?");
 
@@ -1729,9 +1782,12 @@ public class DbMailItem {
                     stmt.setLong(param++, tags.longValue());
                 }
             }
-            if (flagMask > 0) {
-                stmt.setLong(param++, flagMask);
-                stmt.setLong(param++, setFlagMask);
+            if (searchFlagsets.size() > 0) {
+                Iterator i = searchFlagsets.iterator();
+                while (i.hasNext()) {
+                    Long flags = (Long) i.next();
+                    stmt.setLong(param++, flags.longValue());
+                }
             }
             if (unread != null)
                 stmt.setBoolean(param++, unread.booleanValue());
@@ -2081,7 +2137,7 @@ public class DbMailItem {
         // the tagset cache for a single mailbox outside the
         // synchronized block.
         if (tagsets == null) {
-            tagsets = new TagsetCache();
+            tagsets = new TagsetCache("Mailbox " + mailboxId + " tags");
             tagsets.addTagsets(DbMailbox.getDistinctTagsets(conn, mailboxId));
         }
         
@@ -2090,6 +2146,30 @@ public class DbMailItem {
         }
         
         return tagsets;
+    }
+
+    private static TagsetCache getFlagsetCache(Connection conn, int mailboxId)
+    throws ServiceException {
+        Integer id = new Integer(mailboxId);
+        TagsetCache flagsets = null;
+
+        synchronized (sFlagsetCache) {
+            flagsets = (TagsetCache) sFlagsetCache.get(id);
+        }
+
+        // All access to a mailbox is synchronized, so we can initialize
+        // the flagset cache for a single mailbox outside the
+        // synchronized block.
+        if (flagsets == null) {
+            flagsets = new TagsetCache("Mailbox " + mailboxId + " flags");
+            flagsets.addTagsets(DbMailbox.getDistinctFlagsets(conn, mailboxId));
+        }
+        
+        synchronized (sFlagsetCache) {
+            sFlagsetCache.put(id, flagsets);
+        }
+        
+        return flagsets;
     }
 }
 

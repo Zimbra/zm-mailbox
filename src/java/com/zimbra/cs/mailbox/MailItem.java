@@ -461,6 +461,13 @@ public abstract class MailItem implements Comparable {
             flags = flags | Flag.FLAG_UNREAD;
         return flags;
     }
+    
+    /**
+     * @return the "internal" flag bitmask, which does not include {@link Flag#FLAG_UNREAD}.
+     */
+    public int getInternalFlagBitmask() {
+        return mData.flags;
+    }
 
     /** @return the external string representation of this item's flags,
      *  which includes the state of {@link Flag#FLAG_UNREAD}. */

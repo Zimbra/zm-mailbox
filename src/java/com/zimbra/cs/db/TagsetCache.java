@@ -5,8 +5,15 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import com.zimbra.cs.util.StringUtil;
+
 class TagsetCache {
     private Set mTagsets = new HashSet();
+    private String mName;
+    
+    TagsetCache(String name) {
+        mName = name;
+    }
 
     void addTagset(long tagset) {
         addTagset(new Long(tagset));
@@ -20,7 +27,12 @@ class TagsetCache {
     }
     
     void addTagsets(Collection /* Long */ tagsets) {
-        mTagsets.addAll(tagsets);
+        // Iterate the collection instead of just calling addAll(), to
+        // make sure all the values passed in are Longs.
+        Iterator i = tagsets.iterator();
+        while (i.hasNext()) {
+            addTagset((Long) i.next());
+        }
     }
     
     Set getTagsets(long mask) {
@@ -59,5 +71,9 @@ class TagsetCache {
             newTagsets.add(new Long(newTags));
         }
         addTagsets(newTagsets);
+    }
+    
+    public String toString() {
+        return "[TagsetCache " + mName + " (" + StringUtil.join(",", mTagsets) + ")]";
     }
 }

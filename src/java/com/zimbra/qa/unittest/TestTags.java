@@ -14,6 +14,7 @@ import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Conversation;
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
@@ -31,6 +32,7 @@ public class TestTags extends TestCase
     private Account mAccount;
     
     private static String TAG_PREFIX = "TestTags";
+    private static String MSG_SUBJECT = "Test tags";
     
     private Message mMessage1;
     private Message mMessage2;
@@ -54,10 +56,10 @@ public class TestTags extends TestCase
         // Clean up, in case the last test didn't exit cleanly
         cleanUp();
         
-        mMessage1 = TestUtil.insertMessage(mMbox, 1, "Test tags");
-        mMessage2 = TestUtil.insertMessage(mMbox, 2, "Test tags");
-        mMessage3 = TestUtil.insertMessage(mMbox, 3, "Test tags");
-        mMessage4 = TestUtil.insertMessage(mMbox, 4, "Test tags");
+        mMessage1 = TestUtil.insertMessage(mMbox, 1, MSG_SUBJECT);
+        mMessage2 = TestUtil.insertMessage(mMbox, 2, MSG_SUBJECT);
+        mMessage3 = TestUtil.insertMessage(mMbox, 3, MSG_SUBJECT);
+        mMessage4 = TestUtil.insertMessage(mMbox, 4, MSG_SUBJECT);
         
         mConv = mMbox.getConversationById(mMessage1.getConversationId());
         refresh();
@@ -152,6 +154,68 @@ public class TestTags extends TestCase
         assertFalse("5: contains message 4", ids.contains(new Integer(mMessage4.getId())));
     }
     
+    public void testFlagSearch()
+    throws Exception {
+        ZimbraLog.test.debug("testFlagSearch()");
+
+        // Look up flags
+        Flag replied = mMbox.getFlagById(Flag.ID_FLAG_REPLIED);
+        Flag flagged = mMbox.getFlagById(Flag.ID_FLAG_FLAGGED);
+        Flag forwarded = mMbox.getFlagById(Flag.ID_FLAG_FORWARDED);
+
+        // First assign T1 to the entire conversation, then remove it from M2-M4
+        mMbox.alterTag(null, mConv.getId(), mConv.getType(), replied.getId(), true);
+        mMbox.alterTag(null, mMessage2.getId(), mMessage2.getType(), replied.getId(), false);
+        mMbox.alterTag(null, mMessage3.getId(), mMessage3.getType(), replied.getId(), false);
+        mMbox.alterTag(null, mMessage4.getId(), mMessage4.getType(), replied.getId(), false);
+        
+        // Assign tags:
+        //   M1: replied
+        //   M2: flagged
+        //   M3: flagged, forwarded
+        //   M4: no flags
+        mMbox.alterTag(null, mMessage2.getId(), mMessage2.getType(), flagged.getId(), true);
+        mMbox.alterTag(null, mMessage3.getId(), mMessage3.getType(), flagged.getId(), true);
+        mMbox.alterTag(null, mMessage3.getId(), mMessage3.getType(), forwarded.getId(), true);
+        refresh();
+        
+        // is:replied -> (M1,...)
+        Set ids = search("is:replied", MailItem.TYPE_MESSAGE);
+        assertTrue("1: no message 1", ids.contains(new Integer(mMessage1.getId())));
+        assertFalse("1: message 2 found", ids.contains(new Integer(mMessage2.getId())));
+        assertFalse("1: message 3 found", ids.contains(new Integer(mMessage3.getId())));
+        assertFalse("1: message 4 found", ids.contains(new Integer(mMessage4.getId())));
+        
+        // is:replied is:flagged -> (M1,M2,...)
+        ids = search("is:replied is:flagged", MailItem.TYPE_MESSAGE);
+        assertTrue("2: no message 1", ids.contains(new Integer(mMessage1.getId())));
+        assertTrue("2: no message 2", ids.contains(new Integer(mMessage2.getId())));
+        assertTrue("2: no message 3", ids.contains(new Integer(mMessage3.getId())));
+        assertFalse("2: message 4 found", ids.contains(new Integer(mMessage4.getId())));
+        
+        
+        // not is:replied -> (M2,M3,M4,...)
+        ids = search("not is:replied", MailItem.TYPE_MESSAGE);
+        assertFalse("3: message 1 found", ids.contains(new Integer(mMessage1.getId())));
+        assertTrue("3: no message 2", ids.contains(new Integer(mMessage2.getId())));
+        assertTrue("3: no message 3", ids.contains(new Integer(mMessage3.getId())));
+        assertTrue("3: no message 4", ids.contains(new Integer(mMessage4.getId())));
+        
+        // not is:flagged not is:forwarded -> (M1,M4,...)
+        ids = search("not is:flagged not is:forwarded", MailItem.TYPE_MESSAGE);
+        assertTrue("4: no message 1", ids.contains(new Integer(mMessage1.getId())));
+        assertFalse("4: contains message 2", ids.contains(new Integer(mMessage2.getId())));
+        assertFalse("4: contains message 3", ids.contains(new Integer(mMessage3.getId())));
+        assertTrue("4: no message 4", ids.contains(new Integer(mMessage4.getId())));
+        
+        // is:flagged not is:forwarded -> (M2)
+        ids = search("is:flagged not is:forwarded", MailItem.TYPE_MESSAGE);
+        assertFalse("5: message 1 found", ids.contains(new Integer(mMessage1.getId())));
+        assertTrue("5: no message 2", ids.contains(new Integer(mMessage2.getId())));
+        assertFalse("5: contains message 3", ids.contains(new Integer(mMessage3.getId())));
+        assertFalse("5: contains message 4", ids.contains(new Integer(mMessage4.getId())));
+    }
+    
     private Set search(String query, byte type)
     throws Exception {
         ZimbraLog.test.debug("Running search: '" + query + "', type=" + type);
@@ -200,24 +264,19 @@ public class TestTags extends TestCase
 
     private void cleanUp()
     throws Exception {
-        if (mMessage1 != null) {
-            mMbox.delete(null, mMessage1.getId(), MailItem.TYPE_MESSAGE);
-        }
-        if (mMessage2 != null) {
-            mMbox.delete(null, mMessage2.getId(), MailItem.TYPE_MESSAGE);
-        }
-        if (mMessage3 != null) {
-            mMbox.delete(null, mMessage3.getId(), MailItem.TYPE_MESSAGE);
-        }
-        if (mMessage4 != null) {
-            mMbox.delete(null, mMessage4.getId(), MailItem.TYPE_MESSAGE);
+        Set messageIds = search("subject:\"Test tags\"", MailItem.TYPE_MESSAGE);
+        Iterator i = messageIds.iterator();
+        while (i.hasNext()) {
+            int id = ((Integer) i.next()).intValue();
+            mMbox.delete(null, id, MailItem.TYPE_MESSAGE);
         }
 
         List tagList = mMbox.getTagList();
         if (tagList == null) {
             return;
         }
-        Iterator i = tagList.iterator();
+        
+        i = tagList.iterator();
         while (i.hasNext()) {
             Tag tag = (Tag)i.next();
             if (tag.getName().startsWith(TAG_PREFIX)) {

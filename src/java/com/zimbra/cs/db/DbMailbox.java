@@ -371,4 +371,28 @@ public class DbMailbox {
 
         return tagsets;
     }
+
+    static Set /* <Long> */ getDistinctFlagsets(Connection conn, int mailboxId)
+    throws ServiceException {
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        Set flagsets = new HashSet();
+        
+        try {
+            stmt = conn.prepareStatement("SELECT DISTINCT flags " +
+                "FROM " + DbMailItem.getMailItemTableName(mailboxId));
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                long flags = rs.getLong(1);
+                flagsets.add(new Long(flags));
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("getting distinct flagsets", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+
+        return flagsets;
+    }
 }
