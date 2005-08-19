@@ -264,6 +264,8 @@ public class Mailbox {
     public Flag mNotifiedFlag;
     /** flag: unread messages */
     public Flag mUnreadFlag;
+    /** flag: IMAP-subscribed folders */
+    public Flag mSubscribeFlag;
     /** the full set of message flags, in order */
     final Flag[] mFlags = new Flag[31];
 
@@ -969,16 +971,17 @@ public class Mailbox {
 
     private void initFlags() throws ServiceException {
         // flags will be added to mFlags array via call to cache() in MailItem constructor
-        mSentFlag     = Flag.instantiate(this, "\\Sent",      Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_FROM_ME);
-        mAttachFlag   = Flag.instantiate(this, "\\Attached",  Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_ATTACHED);
-        mReplyFlag    = Flag.instantiate(this, "\\Answered",  Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_REPLIED);
-        mForwardFlag  = Flag.instantiate(this, "\\Forwarded", Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_FORWARDED);
-        mCopiedFlag   = Flag.instantiate(this, "\\Copied",    Flag.FLAG_GENERIC,         Flag.ID_FLAG_COPIED);
-        mFlaggedFlag  = Flag.instantiate(this, "\\Flagged",   Flag.FLAG_GENERIC,         Flag.ID_FLAG_FLAGGED);
-        mDraftFlag    = Flag.instantiate(this, "\\Draft",     Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_DRAFT);
-        mDeletedFlag  = Flag.instantiate(this, "\\Deleted",   Flag.FLAG_GENERIC,         Flag.ID_FLAG_DELETED);
-        mNotifiedFlag = Flag.instantiate(this, "\\Notified",  Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_NOTIFIED);
-        mUnreadFlag   = Flag.instantiate(this, "\\Unseen",    Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_UNREAD);
+        mSentFlag      = Flag.instantiate(this, "\\Sent",       Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_FROM_ME);
+        mAttachFlag    = Flag.instantiate(this, "\\Attached",   Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_ATTACHED);
+        mReplyFlag     = Flag.instantiate(this, "\\Answered",   Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_REPLIED);
+        mForwardFlag   = Flag.instantiate(this, "\\Forwarded",  Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_FORWARDED);
+        mCopiedFlag    = Flag.instantiate(this, "\\Copied",     Flag.FLAG_GENERIC,         Flag.ID_FLAG_COPIED);
+        mFlaggedFlag   = Flag.instantiate(this, "\\Flagged",    Flag.FLAG_GENERIC,         Flag.ID_FLAG_FLAGGED);
+        mDraftFlag     = Flag.instantiate(this, "\\Draft",      Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_DRAFT);
+        mDeletedFlag   = Flag.instantiate(this, "\\Deleted",    Flag.FLAG_GENERIC,         Flag.ID_FLAG_DELETED);
+        mNotifiedFlag  = Flag.instantiate(this, "\\Notified",   Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_NOTIFIED);
+        mUnreadFlag    = Flag.instantiate(this, "\\Unseen",     Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_UNREAD);
+        mSubscribeFlag = Flag.instantiate(this, "\\Subscribed", Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_SUBSCRIBED);
     }
 
     private void loadFoldersAndTags() throws ServiceException {
@@ -2120,7 +2123,7 @@ public class Mailbox {
 
             Folder folder  = getFolderById(folderId);
             String subject = pm.getNormalizedSubject();
-            long   tags    = MailItem.tagsToBitmask(tagStr);
+            long   tags    = Tag.tagsToBitmask(tagStr);
 
             // step 1: get an ID assigned for the new message
             int messageId  = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getMessageId());
@@ -2496,7 +2499,7 @@ public class Mailbox {
     public synchronized void setTags(OperationContext octxt, int itemId, byte type, String flagStr, String tagIDs, TargetConstraint tcon)
     throws ServiceException {
         int flags = (flagStr == null ? MailItem.FLAG_UNCHANGED : Flag.flagsToBitmask(flagStr));
-        long tags = (tagIDs == null ? MailItem.TAG_UNCHANGED : MailItem.tagsToBitmask(tagIDs));
+        long tags = (tagIDs == null ? MailItem.TAG_UNCHANGED : Tag.tagsToBitmask(tagIDs));
         setTags(octxt, itemId, type, flags, tags, tcon);
     }
     public synchronized void setTags(OperationContext octxt, int itemId, byte type, int flags, long tags, TargetConstraint tcon)

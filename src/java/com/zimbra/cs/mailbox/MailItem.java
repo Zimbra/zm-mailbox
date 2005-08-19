@@ -155,87 +155,6 @@ public abstract class MailItem implements Comparable {
 		}
 	}
 
-	protected final class TagSet {
-		private Array mTags;
-
-		TagSet()           { mTags = new Array(); }
-		TagSet(Tag tag)    { mTags = new Array(tag.getId()); }
-		TagSet(String csv) {
-		    mTags = new Array();
-		    if (csv == null || csv.equals(""))
-		        return;
-		    String[] tags = csv.split(",");
-		    for (int i = 0; i < tags.length; i++) {
-		        long value = 0;
-		        try {
-		            value = Long.parseLong(tags[i]);
-		        } catch (NumberFormatException e) {
-		            ZimbraLog.mailbox.error("Unable to parse tags: '" + csv + "'", e);
-		            throw e;
-		        }
-		        if (value == 0)      continue;
-		        else if (value < 0)  updateFlags((int) (-value), true);
-		        else                 updateTags(value, true);
-		    }
-		}
-
-		boolean contains(Tag tag)   { return contains(tag.getId()); }
-		boolean contains(int tagId) { return mTags.contains(tagId); }
-
-        int count(Tag tag)   { return count(tag.getId()); }
-        int count(int tagId) { return mTags.count(tagId); }
-
-		boolean update(Tag tag, boolean add)                    { return update(tag.getId(), add, false); }
-		boolean update(Tag tag, boolean add, boolean affectAll) { return update(tag.getId(), add, affectAll); }
-		boolean update(int tagId, boolean add)                  { return update(tagId, add, false); }
-		boolean update(int tagId, boolean add, boolean affectAll) {
-			if (add)
-				mTags.add(tagId);
-			else
-				mTags.remove(tagId, affectAll);
-			recalculate();
-			return true;
-		}
-
-		void updateFlags(int flags, boolean add) {
-    		for (int j = 0; flags != 0 && j < MAX_FLAG_COUNT; j++) {
-    			int mask = 1 << j; 
-    			if ((flags & mask) != 0) {
-    				if (add)  mTags.add(-j - 1);
-    				else      mTags.remove(-j - 1, false);
-    				flags &= ~mask;
-    			}
-    		}
-    		recalculate();
-		}
-		void updateTags(long tags, boolean add) {
-    		for (int j = 0; tags != 0 && j < MAX_TAG_COUNT; j++) {
-    			long mask = 1L << j; 
-    			if ((tags & mask) != 0) {
-    				// should really check to make sure the tag is reasonable
-    				if (add)  mTags.add(j + TAG_ID_OFFSET);
-    				else      mTags.remove(j + TAG_ID_OFFSET, false);
-    				tags &= ~mask;
-    			}
-    		}
-    		recalculate();
-		}
-
-		void recalculate() {
-			mData.flags = 0;
-			mData.tags  = 0;
-			for (int i = 0; i < mTags.length; i++) {
-				int value = mTags.array[i];
-				if (value < 0)
-					mData.flags |= 1 << (-value - 1);
-				else
-					mData.tags |= 1L << (value - TAG_ID_OFFSET);
-			}
-		}
-
-		public String toString() { return mTags.toString(); }
-	}
-
     public static final class UnderlyingData {
         public int    id;
         public byte   type;
@@ -341,7 +260,10 @@ public abstract class MailItem implements Comparable {
             return sb.toString();
         }
 
-        boolean checkItem(MailItem item) throws ServiceException {
+        static boolean checkItem(TargetConstraint tcon, MailItem item) throws ServiceException {
+            return (tcon == null ? true : tcon.checkItem(item));
+        }
+        private boolean checkItem(MailItem item) throws ServiceException {
             // FIXME: doesn't support EXCLUDE_QUERY
             if ((exclusions & (EXCLUDE_TRASH | EXCLUDE_SPAM | EXCLUDE_SENT | EXCLUDE_OTHERS)) == 0)
                 return true;
@@ -371,20 +293,16 @@ public abstract class MailItem implements Comparable {
 	protected int            mId;
 	protected UnderlyingData mData;
 	protected Mailbox        mMailbox;
-	protected TagSet         mInheritedTagSet;
 	protected Array          mChildren;
     protected MailboxBlob    mBlob;
 
 	MailItem(Mailbox mbox, UnderlyingData data) throws ServiceException {
 		if (data == null)
 			throw new IllegalArgumentException();
-        validateFlags(data.flags);
+        Flag.validateFlags(data.flags);
 		mId      = data.id;
 		mData    = data;
 		mMailbox = mbox;
-		if (mData.inheritedTags != null && !mData.inheritedTags.equals("") && trackTags())
-	    	mInheritedTagSet = new TagSet(mData.inheritedTags);
-		mData.inheritedTags = null;
 		if (mData.children != null && !mData.children.equals("") && canHaveChildren())
 			mChildren = new Array(mData.children);
 		mData.children = null;
@@ -462,9 +380,7 @@ public abstract class MailItem implements Comparable {
         return flags;
     }
     
-    /**
-     * @return the "internal" flag bitmask, which does not include {@link Flag#FLAG_UNREAD}.
-     */
+    /** @return the "internal" flag bitmask, which does not include {@link Flag#FLAG_UNREAD}. */
     public int getInternalFlagBitmask() {
         return mData.flags;
     }
@@ -483,43 +399,10 @@ public abstract class MailItem implements Comparable {
     }
 
     public String getTagString() {
-        if (mData.tags == 0)
-            return "";
-        StringBuffer sb = new StringBuffer();
-        long tags = mData.tags;
-        for (int i = 0; tags != 0 && i < MAX_TAG_COUNT - 1; i++)
-            if ((tags & (1L << i)) != 0) {
-                if (sb.length() > 0)
-                    sb.append(',');
-                sb.append(i + TAG_ID_OFFSET);
-                tags &= ~(1L << i);
-            }
-        return sb.toString();
+        return Tag.bitmaskToTags(mData.tags);
     }
 
-    public static long tagsToBitmask(String csv) {
-        long bitmask = 0;
-        if (csv != null && !csv.equals("")) {
-            String[] tags = csv.split(",");
-            for (int i = 0; i < tags.length; i++) {
-                long value = 0;
-                try {
-                    value = Long.parseLong(tags[i]);
-                } catch (NumberFormatException e) {
-                    ZimbraLog.mailbox.error("Unable to parse tags: '" + csv + "'", e);
-                    throw e;
-                }
-                
-                if (value < TAG_ID_OFFSET || value >= TAG_ID_OFFSET + MAX_TAG_COUNT)
-                    continue;
-                // FIXME: should really check this against the existing tags in the mailbox
-                bitmask |= 1L << (value - TAG_ID_OFFSET);
-            }
-        }
-        return bitmask;
-    }
-    
-	public boolean isTagged(Tag tag) {
+    public boolean isTagged(Tag tag) {
 		long bitmask = (tag == null ? 0 : (tag instanceof Flag ? mData.flags : mData.tags));
 		return ((bitmask & tag.getBitmask()) != 0);
 	}
@@ -561,7 +444,7 @@ public abstract class MailItem implements Comparable {
     }
 
 
-    public synchronized MailboxBlob getBlob() throws IOException, ServiceException {
+    public synchronized MailboxBlob getBlob() throws ServiceException {
         if (mBlob == null && mData.blobDigest != null) {
             mBlob = StoreManager.getInstance().getMailboxBlob(mMailbox, mId, mData.modContent, mData.volumeId);
             if (mBlob == null)
@@ -734,7 +617,7 @@ public abstract class MailItem implements Comparable {
 	void alterTag(Tag tag, boolean add) throws ServiceException {
 	    if (tag == null)
 	        throw ServiceException.INVALID_REQUEST("no tag supplied when trying to tag item " + mId, null);
-	    if (!isTaggable() || (add && !tag.canTag(this)))
+	    if (isTaggable() && add && !tag.canTag(this))
 	        throw MailServiceException.CANNOT_TAG();
 	    if (tag.getId() == Flag.ID_FLAG_UNREAD)
 	        throw ServiceException.FAILURE("unread state must be set with alterUnread()", null);
@@ -742,28 +625,27 @@ public abstract class MailItem implements Comparable {
 	    if (add == isTagged(tag))
 	        return;
 	    markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
-	    
-	    // change our and our children's cached tags
+
+	    // change our cached tags
 	    tagChanged(tag, add);
-	    
+
 	    // tell our parent about the tag change (note: must precede DbMailItem.alterTags)
 	    MailItem parent = getCachedParent();
 	    if (parent != null)
 	        parent.inheritedTagChanged(tag, add, true);
-	    
-	    // Since we're adding/removing a tag, the tag's unread count
-	    // is affected by this item's unread count
+
+	    // since we're adding/removing a tag, the tag's unread count may change
 	    if (tag.trackUnread() && mData.unreadCount > 0)
 	        tag.updateUnread((add ? 1 : -1) * mData.unreadCount);
-	    
+
 	    // alter our tags in the DB
 	    DbMailItem.alterTag(this, tag, add);
 	}
-	
+
 	protected void tagChanged(Tag tag, boolean add) throws ServiceException {
 	    markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
 	    mData.modMetadata = mMailbox.getOperationChangeID();
-	    
+
 	    if (tag instanceof Flag) {
 	        if (add)  mData.flags |= tag.getBitmask();
 	        else      mData.flags &= ~tag.getBitmask();
@@ -771,25 +653,9 @@ public abstract class MailItem implements Comparable {
 	        if (add)  mData.tags |= tag.getBitmask();
 	        else      mData.tags &= ~tag.getBitmask();
 	    }
-	    
-	    if (canHaveChildren() && mChildren != null)
-	        for (int i = 0; i < mChildren.length; i++) {
-	            MailItem child = mMailbox.getCachedItem(new Integer(mChildren.array[i]));
-	            if (child != null)
-	                child.inheritedTagChanged(tag, add, false);
-	        }
 	}
-	
-	protected void inheritedTagChanged(Tag tag, boolean add, boolean onChild) {
-		if (!trackTags() || tag == null)
-			return;
-        markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
 
-		if (mInheritedTagSet != null)
-			mInheritedTagSet.update(tag, add);
-		else if (add)
-			mInheritedTagSet = new TagSet(tag);
-	}
+    protected void inheritedTagChanged(Tag tag, boolean add, boolean onChild) { }
 
 	protected void updateUnread(int delta) throws ServiceException {
 		if (delta == 0 || !trackUnread())
@@ -967,24 +833,6 @@ public abstract class MailItem implements Comparable {
 		else if (!mChildren.contains(child.getId()))
 			mChildren.add(child.getId());
 
-		// update inherited tags, if applicable
-		if (trackTags() && (child.mData.tags != 0 || child.mData.flags != 0)) {
-            int oldFlags = mData.flags;
-            long oldTags = mData.tags;
-
-			if (mInheritedTagSet == null)
-				mInheritedTagSet = new TagSet();
-			if (child.mData.tags != 0)
-				mInheritedTagSet.updateTags(child.mData.tags, true);
-			if (child.mData.flags != 0)
-				mInheritedTagSet.updateFlags(child.mData.flags, true);
-
-            if (mData.flags != oldFlags)
-                markItemModified(Change.MODIFIED_FLAGS);
-            if (mData.tags != oldTags)
-                markItemModified(Change.MODIFIED_TAGS);
-        }
-
 		// update unread counts
 		updateUnread(child.mData.unreadCount);
 	}
@@ -997,24 +845,8 @@ public abstract class MailItem implements Comparable {
 			throw MailServiceException.IS_NOT_CHILD();
 		mChildren.remove(child.getId());
         
-        // Remove parent reference from the child 
+        // remove parent reference from the child 
         child.mData.parentId = -1;
-
-		// update inherited tags, if applicable
-		if (mInheritedTagSet != null && (child.mData.tags != 0 || child.mData.flags != 0)) {
-            int oldFlags = mData.flags;
-            long oldTags = mData.tags;
-
-			if (child.mData.tags != 0)
-				mInheritedTagSet.updateTags(child.mData.tags, false);
-			if (child.mData.flags != 0)
-				mInheritedTagSet.updateFlags(child.mData.flags, false);
-
-            if (mData.flags != oldFlags)
-                markItemModified(Change.MODIFIED_FLAGS);
-            if (mData.tags != oldTags)
-                markItemModified(Change.MODIFIED_TAGS);
-		}
 
 		// update unread counts
 		updateUnread(-child.mData.unreadCount);
@@ -1195,7 +1027,6 @@ public abstract class MailItem implements Comparable {
     private static final String CN_FLAGS          = "flags";
     private static final String CN_TAGS           = "tags";
     private static final String CN_SUBJECT        = "subject";
-    private static final String CN_INHERITED_TAGS = "inherited";
     private static final String CN_CHILDREN       = "children";
 
     protected StringBuffer appendCommonMembers(StringBuffer sb) {
@@ -1212,8 +1043,6 @@ public abstract class MailItem implements Comparable {
         	sb.append(CN_FLAGS).append(": ").append(getFlagString()).append(", ");
         if (mData.tags != 0)
         	sb.append(CN_TAGS).append(": [").append(getTagString()).append("], ");
-        if (mInheritedTagSet != null)
-        	sb.append(CN_INHERITED_TAGS).append(": [").append(mInheritedTagSet.toString()).append("], ");
         if (mData.subject != null)
             sb.append(CN_SUBJECT).append(": ").append(mData.subject).append(", ");
         if (mChildren != null)
@@ -1221,11 +1050,5 @@ public abstract class MailItem implements Comparable {
         if (mData.blobDigest != null)
             sb.append(CN_BLOB_DIGEST).append(": ").append(mData.blobDigest);
         return sb;
-    }
-
-    private void validateFlags(int flags)
-    throws ServiceException {
-        if ((flags & ~Flag.FLAGS_ALL) > 0)
-            throw ServiceException.FAILURE("Invalid value for flags: " + flags, null);
     }
 }

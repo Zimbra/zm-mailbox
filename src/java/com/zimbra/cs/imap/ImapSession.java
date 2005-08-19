@@ -34,7 +34,6 @@ public class ImapSession extends Session {
     private ImapFolder  mSelectedFolder;
     private Map         mFlags = new LinkedHashMap();
     private Map         mTags = new HashMap();
-    private HashSet     mSubscriptions = new HashSet();
     private boolean     mCheckingSpam;
 
     public ImapSession(String accountId, Object contextId) {
@@ -58,23 +57,7 @@ public class ImapSession extends Session {
 
     boolean isSpamCheckEnabled()  { return mCheckingSpam; }
 
-    private void parseConfig(Metadata config) {
-        mSubscriptions.clear();
-        if (config != null)
-            try {
-                MetadataList mlist = config.getList("lsub", true);
-                for (int i = 0; i < mlist.size(); i++)
-                    mSubscriptions.add(mlist.get(i).toString());
-            } catch (ServiceException e) { }
-    }
-    Metadata getConfig() {
-        if (mSubscriptions.isEmpty())
-            return null;
-        MetadataList mlist = new MetadataList();
-        for (Iterator it = mSubscriptions.iterator(); it.hasNext(); )
-            mlist.add(it.next().toString());
-        return new Metadata().put("lsub", mlist);
-    }
+    private void parseConfig(Metadata config)  { }
 
     boolean isSelected()  { return mState == STATE_SELECTED; }
     void selectFolder(ImapFolder folder) {
@@ -200,9 +183,55 @@ public class ImapSession extends Session {
     DateFormat getDateFormat()        { return mHandler.mDateFormat; }
     DateFormat getZimbraDateFormat()  { return mHandler.mZimbraFormat; }
 
-    void subscribe(String folderName)       { mSubscriptions.add(folderName); }
-    boolean unsubscribe(String folderName)  { return mSubscriptions.remove(folderName); }
-    Iterator getSubscriptionIterator()      { return mSubscriptions.iterator(); }
+    void subscribe(Folder folder) throws ServiceException {
+        Mailbox mbox = folder.getMailbox();
+        if (!folder.isTagged(mbox.mSubscribeFlag))
+            mbox.alterTag(null, folder.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_SUBSCRIBED, true);
+    }
+    void unsubscribe(Folder folder) throws ServiceException {
+        Mailbox mbox = folder.getMailbox();
+        if (folder.isTagged(mbox.mSubscribeFlag))
+            mbox.alterTag(null, folder.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_SUBSCRIBED, false);
+    }
+    Map getMatchingSubscriptions(Mailbox mbox, String pattern) throws ServiceException {
+        String childPattern = pattern + "/.*";
+        HashMap hits = new HashMap();
+        ArrayList children = new ArrayList();
+
+        // 6.3.9: "A special situation occurs when using LSUB with the % wildcard. Consider 
+        //         what happens if "foo/bar" (with a hierarchy delimiter of "/") is subscribed
+        //         but "foo" is not.  A "%" wildcard to LSUB must return foo, not foo/bar, in
+        //         the LSUB response, and it MUST be flagged with the \Noselect attribute."
+
+        // figure out the set of subscribed mailboxes that match the pattern
+        Folder root = mbox.getFolderById(Mailbox.ID_FOLDER_USER_ROOT);
+        List hierarchy = root.getSubfolderHierarchy();
+        for (Iterator it = hierarchy.iterator(); it.hasNext(); ) {
+            Folder folder = (Folder) it.next();
+            if (!folder.isTagged(mbox.mSubscribeFlag))
+                continue;
+            String path = folder.getPath().substring(1);
+            if (path.toUpperCase().matches(pattern))
+                hits.put(path, path);
+            else if (path.toUpperCase().matches(childPattern))
+                children.add(path);
+        }
+        if (children.isEmpty())
+            return hits;
+
+        // figure out the set of unsubscribed mailboxes that match the pattern and are parents of subscribed mailboxes
+        for (int i = 0; i < children.size(); i++) {
+            String partName = (String) children.get(i);
+            int delimiter = partName.lastIndexOf('/');
+            while (delimiter > 0) {
+                partName = partName.substring(0, delimiter);
+                if (!hits.containsKey(partName) && partName.toUpperCase().matches(pattern))
+                    hits.put(partName, null);
+                delimiter = partName.lastIndexOf('/');
+            }
+        }
+        return hits;
+    }
 
 
     protected void notifyPendingChanges(PendingModifications pns) {

@@ -901,8 +901,7 @@ public class ImapHandler extends ProtocolHandler {
                     sendNO(tag, "SUBSCRIBE failed");
                     return CONTINUE_PROCESSING;
                 }
-                mSession.subscribe(folderName);
-                mMailbox.setConfig(getContext(), "imap", mSession.getConfig());
+                mSession.subscribe(folder);
             }
         } catch (ServiceException e) {
             if (e.getCode() == MailServiceException.NO_SUCH_FOLDER)
@@ -928,9 +927,10 @@ public class ImapHandler extends ProtocolHandler {
 
         try {
             synchronized (mMailbox) {
-                if (mSession.unsubscribe(folderName))
-                    mMailbox.setConfig(getContext(), "imap", mSession.getConfig());
+                mSession.unsubscribe(mMailbox.getFolderByPath(folderName));
             }
+        } catch (MailServiceException.NoSuchItemException nsie) {
+            ZimbraLog.imap.info("UNSUBSCRIBE failure skipped: no such folder: " + folderName);
         } catch (ServiceException e) {
             ZimbraLog.imap.warn("UNSUBSCRIBE failed", e);
             sendNO(tag, "UNSUBSCRIBE failed");
@@ -993,6 +993,11 @@ public class ImapHandler extends ProtocolHandler {
     }
 
     private String encodeFolder(String folderName) {
+        // make sure that the Inbox is called "INBOX", regarless of how we capitalize it
+        if (folderName.length() == 5 && folderName.equalsIgnoreCase("INBOX"))
+            folderName = "INBOX";
+        else if (folderName.length() > 5 && folderName.substring(0, 6).equalsIgnoreCase("INBOX/"))
+            folderName = "INBOX" + folderName.substring(5);
         try {
             return '"' + new String(folderName.getBytes("imap-utf-7"), "US-ASCII") + '"';
         } catch (UnsupportedEncodingException e) {
@@ -1027,10 +1032,11 @@ public class ImapHandler extends ProtocolHandler {
         }
         if (pattern.startsWith("/"))
             pattern = pattern.substring(1);
-        Map subs = getMatchingSubscriptions(pattern);
 
         try {
+            Map subs;
             synchronized (mMailbox) {
+                subs = mSession.getMatchingSubscriptions(mMailbox, pattern);
                 for (Iterator it = subs.entrySet().iterator(); it.hasNext(); ) {
                     Map.Entry hit = (Map.Entry) it.next();
                     Folder folder = null;
@@ -1043,52 +1049,18 @@ public class ImapHandler extends ProtocolHandler {
                     hit.setValue("LSUB (" + attributes + ") \"/\" " + encodeFolder((String) hit.getKey()));
                 }
             }
+
+            for (Iterator it = subs.values().iterator(); it.hasNext(); )
+                sendUntagged((String) it.next());
         } catch (ServiceException e) {
             ZimbraLog.imap.warn("LSUB failed", e);
             sendNO(tag, "LSUB failed");
             return canContinue(e);
         }
 
-        for (Iterator it = subs.values().iterator(); it.hasNext(); )
-            sendUntagged((String) it.next());
         sendNotifications(true, false);
         sendOK(tag, "LSUB completed");
         return CONTINUE_PROCESSING;
-    }
-    
-    private Map getMatchingSubscriptions(String pattern) {
-        String childPattern = pattern + "/.*";
-        HashMap hits = new HashMap();
-        ArrayList children = new ArrayList();
-
-        // 6.3.9: "A special situation occurs when using LSUB with the % wildcard. Consider 
-        //         what happens if "foo/bar" (with a hierarchy delimiter of "/") is subscribed
-        //         but "foo" is not.  A "%" wildcard to LSUB must return foo, not foo/bar, in
-        //         the LSUB response, and it MUST be flagged with the \Noselect attribute."
-
-        // figure out the set of subscribed mailboxes that match the pattern
-        for (Iterator it = mSession.getSubscriptionIterator(); it.hasNext(); ) {
-            String sub = (String) it.next();
-            if (sub.toUpperCase().matches(pattern))
-                hits.put(sub, sub);
-            else if (sub.toUpperCase().matches(childPattern))
-                children.add(sub);
-        }
-        if (children.isEmpty())
-            return hits;
-
-        // figure out the set of unsubscribed mailboxes that match the pattern and are parents of subscribed mailboxes
-        for (int i = 0; i < children.size(); i++) {
-            String partName = (String) children.get(i);
-            int delimiter = partName.lastIndexOf('/');
-            while (delimiter > 0) {
-                partName = partName.substring(0, delimiter);
-                if (!hits.containsKey(partName) && partName.toUpperCase().matches(pattern))
-                    hits.put(partName, null);
-                delimiter = partName.lastIndexOf('/');
-            }
-        }
-        return hits;
     }
 
     private static final int STATUS_MESSAGES    = 0x01;

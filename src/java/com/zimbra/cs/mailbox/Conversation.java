@@ -14,6 +14,7 @@ import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailItem.LocationCount;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * @author schemers
@@ -22,13 +23,98 @@ public class Conversation extends MailItem {
 
     private static Log sLog = LogFactory.getLog(Conversation.class);
 
+    protected final class TagSet {
+        private Array mTags;
+
+        TagSet()           { mTags = new Array(); }
+        TagSet(Tag tag)    { mTags = new Array(tag.getId()); }
+        TagSet(String csv) {
+            mTags = new Array();
+            if (csv == null || csv.equals(""))
+                return;
+            String[] tags = csv.split(",");
+            for (int i = 0; i < tags.length; i++) {
+                long value = 0;
+                try {
+                    value = Long.parseLong(tags[i]);
+                } catch (NumberFormatException e) {
+                    ZimbraLog.mailbox.error("Unable to parse tags: '" + csv + "'", e);
+                    throw e;
+                }
+                if (value == 0)      continue;
+                else if (value < 0)  updateFlags((int) (-value), true);
+                else                 updateTags(value, true);
+            }
+        }
+
+        boolean contains(Tag tag)   { return contains(tag.getId()); }
+        boolean contains(int tagId) { return mTags.contains(tagId); }
+
+        int count(Tag tag)   { return count(tag.getId()); }
+        int count(int tagId) { return mTags.count(tagId); }
+
+        boolean update(Tag tag, boolean add)                    { return update(tag.getId(), add, false); }
+        boolean update(Tag tag, boolean add, boolean affectAll) { return update(tag.getId(), add, affectAll); }
+        boolean update(int tagId, boolean add)                  { return update(tagId, add, false); }
+        boolean update(int tagId, boolean add, boolean affectAll) {
+            if (add)
+                mTags.add(tagId);
+            else
+                mTags.remove(tagId, affectAll);
+            recalculate();
+            return true;
+        }
+
+        void updateFlags(int flags, boolean add) {
+            for (int j = 0; flags != 0 && j < MAX_FLAG_COUNT; j++) {
+                int mask = 1 << j; 
+                if ((flags & mask) != 0) {
+                    if (add)  mTags.add(-j - 1);
+                    else      mTags.remove(-j - 1, false);
+                    flags &= ~mask;
+                }
+            }
+            recalculate();
+        }
+        void updateTags(long tags, boolean add) {
+            for (int j = 0; tags != 0 && j < MAX_TAG_COUNT; j++) {
+                long mask = 1L << j; 
+                if ((tags & mask) != 0) {
+                    // should really check to make sure the tag is reasonable
+                    if (add)  mTags.add(j + TAG_ID_OFFSET);
+                    else      mTags.remove(j + TAG_ID_OFFSET, false);
+                    tags &= ~mask;
+                }
+            }
+            recalculate();
+        }
+
+        void recalculate() {
+            mData.flags = 0;
+            mData.tags  = 0;
+            for (int i = 0; i < mTags.length; i++) {
+                int value = mTags.array[i];
+                if (value < 0)
+                    mData.flags |= 1 << (-value - 1);
+                else
+                    mData.tags |= 1L << (value - TAG_ID_OFFSET);
+            }
+        }
+
+        public String toString() { return mTags.toString(); }
+    }
+
     private   String     mEncodedSenders;
     protected SenderList mSenderList;
+    protected TagSet     mInheritedTagSet;
 
     Conversation(Mailbox mbox, UnderlyingData data) throws ServiceException {
         super(mbox, data);
         if (mData.type != TYPE_CONVERSATION && mData.type != TYPE_VIRTUAL_CONVERSATION)
             throw new IllegalArgumentException();
+        if (mData.inheritedTags != null && !mData.inheritedTags.equals("") && trackTags())
+            mInheritedTagSet = new TagSet(mData.inheritedTags);
+        mData.inheritedTags = null;
     }
 
 
@@ -205,12 +291,13 @@ public class Conversation extends MailItem {
         Message[] msgs = getMessages(DbMailItem.DEFAULT_SORT_ORDER);
         TargetConstraint tcon = mMailbox.getOperationTargetConstraint();
         Array targets = new Array();
-        for (int i = 0; i < msgs.length; i++)
-            if (msgs[i].isUnread() != unread && msgs[i].checkChangeID())
-                if (tcon == null || tcon.checkItem(msgs[i])) {
-                    msgs[i].updateUnread(unread ? 1 : -1);
-                    targets.add(msgs[i].getId());
-                }
+        for (int i = 0; i < msgs.length; i++) {
+            Message msg = msgs[i];
+            if (msg.isUnread() != unread && msg.checkChangeID() && TargetConstraint.checkItem(tcon, msg)) {
+                msg.updateUnread(unread ? 1 : -1);
+                targets.add(msg.getId());
+            }
+        }
 
         // mark the selected messages in this conversation as read in the database
         DbMailItem.alterUnread(mMailbox, targets, unread);
@@ -230,18 +317,31 @@ public class Conversation extends MailItem {
         Message[] msgs = getMessages(SORT_ID_ASCENDING);
         TargetConstraint tcon = mMailbox.getOperationTargetConstraint();
         Array targets = new Array();
-        // since we're adding/removing a tag, the tag's unread count is going to change
-        for (int i = 0; i < msgs.length; i++)
-            if (msgs[i].isTagged(tag) != add && msgs[i].checkChangeID())
-                if (tcon == null || tcon.checkItem(msgs[i])) {
-                	if (tag.trackUnread() && msgs[i].isUnread())
-                        tag.updateUnread(add ? 1 : -1);
-                    targets.add(msgs[i].getId());
-                    msgs[i].tagChanged(tag, add);
-                    mInheritedTagSet.update(tag, add);
-                }
+        for (int i = 0; i < msgs.length; i++) {
+            Message msg = msgs[i];
+            if (msg.isTagged(tag) != add && msg.checkChangeID() && TargetConstraint.checkItem(tcon, msg)) {
+                // since we're adding/removing a tag, the tag's unread count may change
+            	if (tag.trackUnread() && msg.isUnread())
+                    tag.updateUnread(add ? 1 : -1);
+
+                targets.add(msg.getId());
+                msg.tagChanged(tag, add);
+                mInheritedTagSet.update(tag, add);
+            }
+        }
 
         DbMailItem.alterTag(tag, targets, add);
+    }
+
+    protected void inheritedTagChanged(Tag tag, boolean add, boolean onChild) {
+        if (!trackTags() || tag == null)
+            return;
+        markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
+
+        if (mInheritedTagSet != null)
+            mInheritedTagSet.update(tag, add);
+        else if (add)
+            mInheritedTagSet = new TagSet(tag);
     }
 
     void move(Folder target) throws ServiceException {
@@ -265,7 +365,7 @@ public class Conversation extends MailItem {
             Folder source = msg.getFolder();
 
             // skip messages that the client doesn't know about or has explicitly excluded
-            if (!msg.checkChangeID() || (tcon != null && !tcon.checkItem(msgs[i])))
+            if (!msg.checkChangeID() || !TargetConstraint.checkItem(tcon, msg))
                 continue;
 
             if (msg.isUnread()) {
@@ -305,6 +405,23 @@ public class Conversation extends MailItem {
     /** please call this *after* adding the child row to the DB */
     protected void addChild(MailItem child) throws ServiceException {
         super.addChild(child);
+
+        // update inherited tags, if applicable
+        if (child.mData.tags != 0 || child.mData.flags != 0) {
+            int oldFlags = mData.flags;
+            long oldTags = mData.tags;
+
+            if (mInheritedTagSet == null)
+                mInheritedTagSet = new TagSet();
+            if (child.mData.tags != 0)
+                mInheritedTagSet.updateTags(child.mData.tags, true);
+            if (child.mData.flags != 0)
+                mInheritedTagSet.updateFlags(child.mData.flags, true);
+
+            if (mData.flags != oldFlags)  markItemModified(Change.MODIFIED_FLAGS);
+            if (mData.tags != oldTags)    markItemModified(Change.MODIFIED_TAGS);
+        }
+
         markItemModified(Change.MODIFIED_SIZE | Change.MODIFIED_SENDERS);
 
         mMailbox.updateSize(1);
@@ -329,6 +446,21 @@ public class Conversation extends MailItem {
             delete();
             return;
         }
+
+        // update inherited tags, if applicable
+        if (mInheritedTagSet != null && (child.mData.tags != 0 || child.mData.flags != 0)) {
+            int oldFlags = mData.flags;
+            long oldTags = mData.tags;
+
+            if (child.mData.tags != 0)
+                mInheritedTagSet.updateTags(child.mData.tags, false);
+            if (child.mData.flags != 0)
+                mInheritedTagSet.updateFlags(child.mData.flags, false);
+
+            if (mData.flags != oldFlags)  markItemModified(Change.MODIFIED_FLAGS);
+            if (mData.tags != oldTags)    markItemModified(Change.MODIFIED_TAGS);
+        }
+
         markItemModified(Change.MODIFIED_SIZE | Change.MODIFIED_SENDERS);
 
         Message msg = (Message) child;
@@ -372,7 +504,7 @@ public class Conversation extends MailItem {
                 }
             }
         }
-        
+
         // delete the old conversation (must do this after moving the messages because of cascading delete)
         other.delete();
     }
@@ -389,7 +521,7 @@ public class Conversation extends MailItem {
 
         for (int i = 0; i < msgs.length; i++) {
             Message child = msgs[i];
-            if (!child.checkChangeID() || (tcon != null && !tcon.checkItem(child))) {
+            if (!child.checkChangeID() || !TargetConstraint.checkItem(tcon, child)) {
                 info.incomplete = MailItem.DELETE_CONTENTS;
                 continue;
             }
@@ -461,10 +593,14 @@ public class Conversation extends MailItem {
     }
 
 
+    private static final String CN_INHERITED_TAGS = "inherited";
+
     public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("conversation: {");
         appendCommonMembers(sb);
+        if (mInheritedTagSet != null)
+            sb.append(CN_INHERITED_TAGS).append(": [").append(mInheritedTagSet.toString()).append("], ");
         sb.append("}");
         return sb.toString();
     }

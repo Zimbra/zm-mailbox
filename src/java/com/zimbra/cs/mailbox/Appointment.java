@@ -147,7 +147,7 @@ public class Appointment extends MailItem {
         data.folderId = folder.getId();
         data.indexId = id;
         data.date = mbox.getOperationTimestamp();
-        data.tags = tagsToBitmask(tags);
+        data.tags = Tag.tagsToBitmask(tags);
         data.sender = uid;
         data.metadata = encodeMetadata(uid, startTime, endTime, recur,invites, firstInvite.getTimeZoneMap());
         data.modMetadata = mbox.getOperationChangeID();

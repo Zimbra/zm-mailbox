@@ -240,7 +240,20 @@ public class Folder extends MailItem {
         else
             DbMailItem.alterUnread(mMailbox, targets, unread);
     }
-    
+
+    void alterTag(Tag tag, boolean add) throws ServiceException {
+        if (tag != mMailbox.mSubscribeFlag) {
+            super.alterTag(tag, add);
+            return;
+        } else if (add == isTagged(tag))
+            return;
+
+        // change the tag on the Folder itself, not on its contents
+        markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
+        tagChanged(tag, add);
+        DbMailItem.alterTag(tag, new Array(mId), add);
+    }
+
     private void recursiveUpdateUnread(boolean unread) throws ServiceException {
         alterUnread(unread);
         if (mSubfolders != null)

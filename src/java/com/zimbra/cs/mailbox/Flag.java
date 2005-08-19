@@ -18,15 +18,15 @@ public class Flag extends Tag {
 
     public static final int ID_FLAG_FROM_ME = -1;
     public static final int FLAG_FROM_ME    = 1 << (-1 - ID_FLAG_FROM_ME);
-        static { FLAG_REP[-1 - ID_FLAG_FROM_ME]   = 's'; }
+        static { FLAG_REP[-1 - ID_FLAG_FROM_ME] = 's'; }
 
     public static final int ID_FLAG_ATTACHED = -2;
     public static final int FLAG_ATTACHED    = 1 << (-1 - ID_FLAG_ATTACHED);
-        static { FLAG_REP[-1 - ID_FLAG_ATTACHED]  = 'a'; }
+        static { FLAG_REP[-1 - ID_FLAG_ATTACHED] = 'a'; }
 
     public static final int ID_FLAG_REPLIED = -3;
     public static final int FLAG_REPLIED    = 1 << (-1 - ID_FLAG_REPLIED);
-        static { FLAG_REP[-1 - ID_FLAG_REPLIED]   = 'r'; }
+        static { FLAG_REP[-1 - ID_FLAG_REPLIED] = 'r'; }
 
     public static final int ID_FLAG_FORWARDED = -4;
     public static final int FLAG_FORWARDED    = 1 << (-1 - ID_FLAG_FORWARDED);
@@ -34,23 +34,23 @@ public class Flag extends Tag {
 
     public static final int ID_FLAG_COPIED = -5;
     public static final int FLAG_COPIED    = 1 << (-1 - ID_FLAG_COPIED);
-        static { FLAG_REP[-1 - ID_FLAG_COPIED]    = '2'; }
+        static { FLAG_REP[-1 - ID_FLAG_COPIED] = '2'; }
 
     public static final int ID_FLAG_FLAGGED = -6;
     public static final int FLAG_FLAGGED    = 1 << (-1 - ID_FLAG_FLAGGED);
-        static { FLAG_REP[-1 - ID_FLAG_FLAGGED]   = 'f'; }
+        static { FLAG_REP[-1 - ID_FLAG_FLAGGED] = 'f'; }
 
     public static final int ID_FLAG_DRAFT = -7;
     public static final int FLAG_DRAFT    = 1 << (-1 - ID_FLAG_DRAFT);
-        static { FLAG_REP[-1 - ID_FLAG_DRAFT]     = 'd'; }
+        static { FLAG_REP[-1 - ID_FLAG_DRAFT] = 'd'; }
 
     public static final int ID_FLAG_DELETED = -8;
     public static final int FLAG_DELETED    = 1 << (-1 - ID_FLAG_DELETED);
-        static { FLAG_REP[-1 - ID_FLAG_DELETED]   = 'x'; }
+        static { FLAG_REP[-1 - ID_FLAG_DELETED] = 'x'; }
 
     public static final int ID_FLAG_NOTIFIED = -9;
     public static final int FLAG_NOTIFIED    = 1 << (-1 - ID_FLAG_NOTIFIED);
-        static { FLAG_REP[-1 - ID_FLAG_NOTIFIED]  = 'n'; }
+        static { FLAG_REP[-1 - ID_FLAG_NOTIFIED] = 'n'; }
 
     /**
      * The outside world (callers of {@link Mailbox} methods treat
@@ -61,17 +61,23 @@ public class Flag extends Tag {
      */
     public static final int ID_FLAG_UNREAD = -10;
     public static final int FLAG_UNREAD    = 1 << (-1 - ID_FLAG_UNREAD);
-        static { FLAG_REP[-1 - ID_FLAG_UNREAD]    = 'u'; }
+        static { FLAG_REP[-1 - ID_FLAG_UNREAD] = 'u'; }
+
+    public static final int ID_FLAG_SUBSCRIBED = -20;
+    public static final int FLAG_SUBSCRIBED    = 1 << (-1 - ID_FLAG_SUBSCRIBED);
+        static { FLAG_REP[-1 - ID_FLAG_SUBSCRIBED] = '*'; }
 
     static final String UNREAD_FLAG_ONLY = getAbbreviation(ID_FLAG_UNREAD) + "";
 
     public static final int FLAG_SYSTEM = FLAG_FROM_ME | FLAG_ATTACHED | FLAG_COPIED | FLAG_DRAFT;
-    public static final int FLAGS_ALL = FLAG_FROM_ME   | FLAG_ATTACHED | FLAG_REPLIED |
-                                        FLAG_FORWARDED | FLAG_COPIED   | FLAG_FLAGGED |
-                                        FLAG_DRAFT     | FLAG_DELETED  | FLAG_NOTIFIED;
+    public static final int FLAGS_ALL = FLAG_FROM_ME   | FLAG_ATTACHED | FLAG_REPLIED  |
+                                        FLAG_FORWARDED | FLAG_COPIED   | FLAG_FLAGGED  |
+                                        FLAG_DRAFT     | FLAG_DELETED  | FLAG_NOTIFIED |
+                                        FLAG_SUBSCRIBED;
 
     public static final byte FLAG_GENERIC         = 0x00;
     public static final byte FLAG_IS_MESSAGE_ONLY = 0x01;
+    public static final byte FLAG_IS_FOLDER_ONLY  = 0x02;
    
     private byte mAttributes;
 
@@ -87,10 +93,12 @@ public class Flag extends Tag {
 
 
     boolean canTag(MailItem item) {
+        if ((mAttributes & FLAG_IS_FOLDER_ONLY) != 0 && item instanceof Folder)
+            return true;
 		if (!item.isTaggable())
 			return false;
-		if ((mAttributes & FLAG_IS_MESSAGE_ONLY) != 0 && !(item instanceof Message))
-			return false;
+        if ((mAttributes & FLAG_IS_MESSAGE_ONLY) != 0 && !(item instanceof Message))
+            return false;
 		return true;
 	}
 
@@ -99,6 +107,12 @@ public class Flag extends Tag {
     }
     public static char getAbbreviation(int flagId) {
         return FLAG_REP[-flagId - 1];
+    }
+
+
+    static void validateFlags(int flags) throws ServiceException {
+        if ((flags & ~Flag.FLAGS_ALL) > 0)
+            throw ServiceException.FAILURE("invalid value for flags: " + flags, null);
     }
 
     /** @return the "external" flag bitmask for the given flag string, which includes {@link Flag#FLAG_UNREAD}. */
