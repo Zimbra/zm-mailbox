@@ -201,32 +201,33 @@ public abstract class MailItem implements Comparable {
     }
 
     public static final class TargetConstraint {
-        public static final short EXCLUDE_TRASH  = 0x01;
-        public static final short EXCLUDE_SPAM   = 0x02;
-        public static final short EXCLUDE_SENT   = 0x04;
-        public static final short EXCLUDE_OTHERS = 0x08;
+        public static final short INCLUDE_TRASH  = 0x01;
+        public static final short INCLUDE_SPAM   = 0x02;
+        public static final short INCLUDE_SENT   = 0x04;
+        public static final short INCLUDE_OTHERS = 0x08;
         public static final short INCLUDE_QUERY  = 0x10;
+        private static final short ALL_LOCATIONS = INCLUDE_TRASH | INCLUDE_SPAM | INCLUDE_SENT | INCLUDE_OTHERS;
 
-        private static final char ENC_NO_TRASH = 't';
-        private static final char ENC_NO_SPAM  = '$';
-        private static final char ENC_NO_SENT  = 's';
-        private static final char ENC_NO_OTHER = 'o';
-        private static final char ENC_QUERY    = 'q';
+        private static final char ENC_TRASH = 't';
+        private static final char ENC_SPAM  = '$';
+        private static final char ENC_SENT  = 's';
+        private static final char ENC_OTHER = 'o';
+        private static final char ENC_QUERY = 'q';
 
-        private short  exclusions;
+        private short  inclusions;
         private String query;
 
         private Mailbox mailbox;
         private int     sentFolder = -1;
 
-        public TargetConstraint(Mailbox mbox, short exclude)       { this(mbox, exclude, null); }
+        public TargetConstraint(Mailbox mbox, short include)       { this(mbox, include, null); }
         public TargetConstraint(Mailbox mbox, String includeQuery) { this(mbox, INCLUDE_QUERY, includeQuery); }
-        public TargetConstraint(Mailbox mbox, short exclude, String includeQuery) {
+        public TargetConstraint(Mailbox mbox, short include, String includeQuery) {
             mailbox = mbox;
             if (includeQuery == null || includeQuery.trim().length() == 0)
-                exclusions = (short) (exclude & ~INCLUDE_QUERY);
+                inclusions = (short) (include & ~INCLUDE_QUERY);
             else {
-                exclusions = (short) (exclude | INCLUDE_QUERY);
+                inclusions = (short) (include | INCLUDE_QUERY);
                 query = includeQuery;
             }
         }
@@ -234,29 +235,34 @@ public abstract class MailItem implements Comparable {
         public static TargetConstraint parseConstraint(Mailbox mbox, String encoded) throws ServiceException {
             if (encoded == null)
                 return null;
-            short exclusions = 0;
+            boolean invert = false;
+            short inclusions = 0;
             String query = null;
             loop: for (int i = 0; i < encoded.length(); i++)
                 switch (encoded.charAt(i)) {
-                    case ENC_NO_TRASH:  exclusions |= EXCLUDE_TRASH;       break;
-                    case ENC_NO_SPAM:   exclusions |= EXCLUDE_SPAM;        break;
-                    case ENC_NO_SENT:   exclusions |= EXCLUDE_SENT;        break;
-                    case ENC_NO_OTHER:  exclusions |= EXCLUDE_OTHERS;      break;
-                    case ENC_QUERY:     exclusions |= INCLUDE_QUERY;
-                                        query = encoded.substring(i + 1);  break loop;
+                    case ENC_TRASH:  inclusions |= INCLUDE_TRASH;       break;
+                    case ENC_SPAM:   inclusions |= INCLUDE_SPAM;        break;
+                    case ENC_SENT:   inclusions |= INCLUDE_SENT;        break;
+                    case ENC_OTHER:  inclusions |= INCLUDE_OTHERS;      break;
+                    case ENC_QUERY:  inclusions |= INCLUDE_QUERY;
+                                     query = encoded.substring(i + 1);  break loop;
+                    case '-':  if (i == 0 && encoded.length() > 1)  { invert = true;  break; }
+                        // fall through...
                     default:  throw ServiceException.INVALID_REQUEST("invalid encoded constraint: " + encoded, null);
                 }
-            return new TargetConstraint(mbox, exclusions, query);
+            if (invert)
+                inclusions ^= ALL_LOCATIONS;
+            return new TargetConstraint(mbox, inclusions, query);
         }
         public String toString() {
-            if (exclusions == 0)
+            if (inclusions == 0)
                 return null;
             StringBuffer sb = new StringBuffer();
-            if ((exclusions & EXCLUDE_TRASH) != 0)   sb.append(ENC_NO_TRASH);
-            if ((exclusions & EXCLUDE_SPAM) != 0)    sb.append(ENC_NO_SPAM);
-            if ((exclusions & EXCLUDE_SENT) != 0)    sb.append(ENC_NO_SENT);
-            if ((exclusions & EXCLUDE_OTHERS) != 0)  sb.append(ENC_NO_OTHER);
-            if ((exclusions & INCLUDE_QUERY) != 0)   sb.append(ENC_QUERY).append(query);
+            if ((inclusions & INCLUDE_TRASH) != 0)   sb.append(ENC_TRASH);
+            if ((inclusions & INCLUDE_SPAM) != 0)    sb.append(ENC_SPAM);
+            if ((inclusions & INCLUDE_SENT) != 0)    sb.append(ENC_SENT);
+            if ((inclusions & INCLUDE_OTHERS) != 0)  sb.append(ENC_OTHER);
+            if ((inclusions & INCLUDE_QUERY) != 0)   sb.append(ENC_QUERY).append(query);
             return sb.toString();
         }
 
@@ -265,17 +271,17 @@ public abstract class MailItem implements Comparable {
         }
         private boolean checkItem(MailItem item) throws ServiceException {
             // FIXME: doesn't support EXCLUDE_QUERY
-            if ((exclusions & (EXCLUDE_TRASH | EXCLUDE_SPAM | EXCLUDE_SENT | EXCLUDE_OTHERS)) == 0)
+            if ((inclusions & ALL_LOCATIONS) == 0)
+                return false;
+            if ((inclusions & INCLUDE_TRASH) != 0 && item.inTrash())
                 return true;
-            if ((exclusions & EXCLUDE_TRASH) != 0 && item.inTrash())
-                return false;
-            if ((exclusions & EXCLUDE_SPAM) != 0 && item.inSpam())
-                return false;
-            if ((exclusions & EXCLUDE_SENT) != 0 && item.getFolderId() == getSentFolder())
-                return false;
-            if ((exclusions & EXCLUDE_OTHERS) != 0 && !item.inTrash() && !item.inSpam() && item.getFolderId() != getSentFolder())
-                return false;
-            return true;
+            if ((inclusions & INCLUDE_SPAM) != 0 && item.inSpam())
+                return true;
+            if ((inclusions & INCLUDE_SENT) != 0 && item.getFolderId() == getSentFolder())
+                return true;
+            if ((inclusions & INCLUDE_OTHERS) != 0 && !item.inTrash() && !item.inSpam() && item.getFolderId() != getSentFolder())
+                return true;
+            return false;
         }
         private int getSentFolder() {
             if (sentFolder == -1) {
