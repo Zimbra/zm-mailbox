@@ -41,6 +41,7 @@ public class CreateMessage extends RedoableOp {
 	private int mFlags;				// flags applied to the new message
 	private String mTags;			// tags applied to the new message
     private int mAppointmentId;     // new appointment created if this is meeting invite message
+    private boolean mNoICal;        // true if we should NOT process the iCalendar part
 
     private byte mMsgBodyType;
     private byte[] mData;           // used if mMsgBodyType == MSGBODY_INLINE
@@ -55,6 +56,7 @@ public class CreateMessage extends RedoableOp {
 		mConvId = UNKNOWN_ID;
 		mFlags = 0;
         mMsgBodyType = MSGBODY_INLINE;
+        mNoICal = false;
 	}
 
 	public CreateMessage(int mailboxId,
@@ -63,6 +65,7 @@ public class CreateMessage extends RedoableOp {
 						 String digest,
 						 int msgSize,
 						 int folderId,
+                         boolean noICal,
 						 int flags,
 						 String tags) {
 		setMailboxId(mailboxId);
@@ -76,6 +79,7 @@ public class CreateMessage extends RedoableOp {
 		mFlags = flags;
 		mTags = tags != null ? tags : "";
         mMsgBodyType = MSGBODY_INLINE;
+        mNoICal = noICal;
 	}
 
     public synchronized void commit() {
@@ -174,6 +178,7 @@ public class CreateMessage extends RedoableOp {
         sb.append(", conv=").append(mConvId).append(", folder=").append(mFolderId);
         if (mAppointmentId != UNKNOWN_ID)
             sb.append(", appointment=").append(mAppointmentId);
+        sb.append(", noICal=").append(mNoICal);
         sb.append(", flags=").append(mFlags).append(", tags=\"").append(mTags).append("\"");
         sb.append(", bodyType=").append(mMsgBodyType);
         sb.append(", vol=").append(mVolumeId);
@@ -209,7 +214,8 @@ public class CreateMessage extends RedoableOp {
 		out.writeInt(mFolderId);
 		out.writeInt(mConvId);
         out.writeInt(mAppointmentId);
-		out.writeInt(mFlags);
+        out.writeInt(mFlags);
+        out.writeBoolean(mNoICal);
 		writeUTF8(out, mTags);
         writeUTF8(out, mPath);
         out.writeShort(mVolumeId);
@@ -236,6 +242,7 @@ public class CreateMessage extends RedoableOp {
 		mConvId = in.readInt();
         mAppointmentId = in.readInt();
 		mFlags = in.readInt();
+        mNoICal = in.readBoolean();
 		mTags = readUTF8(in);
         mPath = readUTF8(in);
         mVolumeId = in.readShort();
@@ -278,7 +285,7 @@ public class CreateMessage extends RedoableOp {
         }
 
         try {
-            mbox.addMessage(getOperationContext(), pm, mFolderId, mFlags, mTags, mConvId, mRcptEmail, sharedDeliveryCtxt);
+            mbox.addMessage(getOperationContext(), pm, mFolderId, mNoICal, mFlags, mTags, mConvId, mRcptEmail, sharedDeliveryCtxt);
         } catch (MailServiceException e) {
             if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
                 mLog.info("Message " + mMsgId + " is already in mailbox " + mboxId);

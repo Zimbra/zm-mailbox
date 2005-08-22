@@ -20,7 +20,6 @@ public class SetAppointment extends CalendarRequest {
     private static Log sLog = LogFactory.getLog(SetAppointment.class);
     private static StopWatch sWatch = StopWatch.getInstance("SetAppointment");
     
-    // very simple: generate a new UID and send a REQUEST
     protected static class SetAppointmentInviteParser implements ParseMimeMessage.InviteParser { 
         private String mUid;
         SetAppointmentInviteParser(String uid) { mUid = uid; };

@@ -310,7 +310,7 @@ public class ZimbraMailAdapter implements MailAdapter
         String tags = null;
         if (tagsBuf != null)
             tags = tagsBuf.toString();
-        Message msg = mMailbox.addMessage(null, mParsedMessage, folderId, flagBits, tags, mRecipient, mSharedDeliveryCtxt);
+        Message msg = mMailbox.addMessage(null, mParsedMessage, folderId, false, flagBits, tags, mRecipient, mSharedDeliveryCtxt);
         if (msg != null) {
             mMessages.add(msg);
             if (ZimbraLog.filter.isDebugEnabled())

@@ -199,6 +199,7 @@ public class MailService implements DocumentService {
     public static final String A_TAG = "tag";
     public static final String A_TAGS = "t";
     public static final String A_FOLDER = "l";
+    public static final String A_NO_ICAL = "noICal";
     public static final String A_WANT_HTML = "html";
     public static final String A_RAW = "raw";
     public static final String A_MARK_READ = "read";

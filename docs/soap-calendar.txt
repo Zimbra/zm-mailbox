@@ -174,11 +174,26 @@ RECURRENCE SPECIFIERS!
 // for mailbox Migration (ie migrating a mailbox onto this server) and
 // is not used by normal mail clients.
 //
+//   need to specifiy folder for appointment
+//
+//   need way to add message WITHOUT processing it for calendar parts.
+//   need to generate and patch-in the iCalendar for the <inv> but w/o
+//   actually processing the <inv> as a new request
+//
+//
+//   TODO: need way to link message to appointment after the fact
+//
+//   TODO: need to support <content>...</content><inv>...</inv>
+//   format, just like <AddMsg>
+//
+//   TODO: need to take a parent folder ID
+//
+//
 <SetAppointmentRequest uid="iCalendar_UID">
   <default needsReply="0|1" ptst="AC|TE|DE|DG|CO|IN">
      <m> ...see CreateAppointmentRequest... </m>
   </default>
-  <except needsReply="0|1" ptst="AC|TE|DE|DG|CO|IN">
+  [<except needsReply="0|1" ptst="AC|TE|DE|DG|CO|IN">
      <m> See CreateAppointmentExceptionRequest
         ...
         <inv>
@@ -187,8 +202,10 @@ RECURRENCE SPECIFIERS!
            ...
         </inv>
      </m>
-  </exception>
-</AddAppointmentRequest>
+  </exception>]*
+</SetAppointmentRequest>
+
+<SetAppointmentResponse apptId="appointment_id"/>
 
 
 

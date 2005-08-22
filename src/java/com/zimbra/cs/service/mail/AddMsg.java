@@ -40,7 +40,7 @@ public class AddMsg extends WriteOpDocumentHandler {
      */
     public Element handle(Element request, Map context) throws ServiceException
     {
-        long startTime = sWatch.start();
+        long startTime = sWatch.start(); 
         
         try {
             ZimbraContext lc = getZimbraContext(context);
@@ -52,6 +52,7 @@ public class AddMsg extends WriteOpDocumentHandler {
             String flagsStr = msgElem.getAttribute(MailService.A_FLAGS, null);
 	        String tagsStr = msgElem.getAttribute(MailService.A_TAGS, null);
 	        String folderStr = msgElem.getAttribute(MailService.A_FOLDER, null);
+            boolean noICal = msgElem.getAttributeBool(MailService.A_NO_ICAL, false);
             long date = msgElem.getAttributeLong(MailService.A_DATE, System.currentTimeMillis());
 
 	        if (mLog.isDebugEnabled()) {
@@ -100,12 +101,12 @@ public class AddMsg extends WriteOpDocumentHandler {
             if (attachment != null)
                 mm = SendMsg.parseUploadedMessage(mbox, attachment, mimeData);
             else
-                mm = ParseMimeMessage.importMsgSoap(msgElem);
+                mm = ParseMimeMessage.importMsgSoap(octxt, mbox.getAccount(), msgElem);
 
 	        int messageId = -1;
 	        try {
                 ParsedMessage pm = new ParsedMessage(mm, date, mbox.attachmentsIndexingEnabled());
-	            Message msg = mbox.addMessage(octxt, pm, folder.getId(), Flag.flagsToBitmask(flagsStr), tagsStr);
+	            Message msg = mbox.addMessage(octxt, pm, folder.getId(), noICal, Flag.flagsToBitmask(flagsStr), tagsStr);
 	            if (msg != null)
                     messageId = msg.getId();
 	        } catch(IOException ioe) {

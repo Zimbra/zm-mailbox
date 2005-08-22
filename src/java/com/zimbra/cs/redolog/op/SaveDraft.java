@@ -21,7 +21,7 @@ public class SaveDraft extends CreateMessage {
     }
 
     public SaveDraft(int mailboxId, int draftId, String digest, int msgSize) {
-        super(mailboxId, ":API:", false, digest, msgSize, -1, 0, null);
+        super(mailboxId, ":API:", false, digest, msgSize, -1, true, 0, null);
         setMessageId(draftId);
     }
 

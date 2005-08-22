@@ -2016,39 +2016,39 @@ public class Mailbox {
         return ID_AUTO_INCREMENT;
     }
 
-    public synchronized Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, int flags, String tags, int conversationId)
+    public synchronized Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags, String tags, int conversationId)
     throws IOException, ServiceException {
         SharedDeliveryContext sharedDeliveryCtxt = new SharedDeliveryContext(false);
-        return addMessage(octxt, pm, folderId, flags, tags, conversationId, ":API:", sharedDeliveryCtxt);
-    }
+        return addMessage(octxt, pm, folderId, noICal, flags, tags, conversationId, ":API:", sharedDeliveryCtxt);
+    } 
 
-    public synchronized Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, int flags, String tags)
+    public synchronized Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags, String tags)
     throws IOException, ServiceException {
         SharedDeliveryContext sharedDeliveryCtxt = new SharedDeliveryContext(false);
-        return addMessage(octxt, pm, folderId, flags, tags, Mailbox.ID_AUTO_INCREMENT, ":API:", sharedDeliveryCtxt);
+        return addMessage(octxt, pm, folderId, noICal, flags, tags, Mailbox.ID_AUTO_INCREMENT, ":API:", sharedDeliveryCtxt);
     }
 
-    public synchronized Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, int flags, String tags,
+    public synchronized Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags, String tags,
                                            String rcptEmail, SharedDeliveryContext sharedDeliveryCtxt)
     throws IOException, ServiceException {
-        return addMessage(octxt, pm, folderId, flags, tags, Mailbox.ID_AUTO_INCREMENT, rcptEmail, sharedDeliveryCtxt);
+        return addMessage(octxt, pm, folderId, noICal, flags, tags, Mailbox.ID_AUTO_INCREMENT, rcptEmail, sharedDeliveryCtxt);
     }
 
     private static final StopWatch sWatch = StopWatch.getInstance("MailboxAddMessage");
     
     public synchronized Message addMessage(OperationContext octxt, ParsedMessage pm,
-                                           int folderId, int flags, String tagStr, int conversationId,
+                                           int folderId, boolean noICal, int flags, String tagStr, int conversationId,
                                            String rcptEmail, SharedDeliveryContext sharedDeliveryCtxt)
     throws IOException, ServiceException {
         long start = sWatch.start();
-        Message msg = addMessageInternal(octxt, pm, folderId, flags, tagStr, conversationId,
+        Message msg = addMessageInternal(octxt, pm, folderId, noICal, flags, tagStr, conversationId,
                                          rcptEmail, null, sharedDeliveryCtxt);
         sWatch.stop(start);
         return msg;
     }
 
     private synchronized Message addMessageInternal(OperationContext octxt, ParsedMessage pm, int folderId,
-                                                    int flags, String tagStr, int conversationId,
+                                                    boolean noICal, int flags, String tagStr, int conversationId, 
                                                     String rcptEmail, Message.DraftInfo dinfo,
                                                     SharedDeliveryContext sharedDeliveryCtxt)
     throws IOException, ServiceException {
@@ -2090,7 +2090,7 @@ public class Mailbox {
             }
         }
 
-        CreateMessage redoRecorder = new CreateMessage(mId, rcptEmail, sharedDeliveryCtxt.getShared(), digest, msgSize, folderId, flags, tagStr);
+        CreateMessage redoRecorder = new CreateMessage(mId, rcptEmail, sharedDeliveryCtxt.getShared(), digest, msgSize, folderId, noICal, flags, tagStr);
         StoreIncomingBlob storeRedoRecorder = null;
 
         // Strip out unread flag for internal storage.
@@ -2161,7 +2161,7 @@ public class Mailbox {
             
             Calendar iCal = pm.getiCalendar();
             msg = Message.create(redoRecorder, redoPlayer, folder, convTarget, pm, msgSize, digest,
-                    unread, flags, tags, dinfo, messageId, iCal);
+                    unread, noICal, flags, tags, dinfo, messageId, iCal);
             
             redoRecorder.setMessageId(msg.getId());
 
@@ -2334,7 +2334,7 @@ public class Mailbox {
             Message.DraftInfo dinfo = null;
             if (replyType != null && origId > 0)
                 dinfo = new Message.DraftInfo(replyType, origId);
-            return addMessageInternal(octxt, pm, ID_FOLDER_DRAFTS, Flag.FLAG_DRAFT | Flag.FLAG_FROM_ME, null,
+            return addMessageInternal(octxt, pm, ID_FOLDER_DRAFTS, true, Flag.FLAG_DRAFT | Flag.FLAG_FROM_ME, null,
                                       ID_AUTO_INCREMENT, ":API:", dinfo, new SharedDeliveryContext(false));
         }
 

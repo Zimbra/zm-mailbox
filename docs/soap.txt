@@ -963,7 +963,13 @@ u attribute is present iff count > 0
 ---------------------------- 
 
   <AddMsgRequest>
-    <m t="{tags}" l="{folder}" [d="{received-date}"] [aid="{uploaded-MIME-body-ID}"]>
+    <m t="{tags}" l="{folder}" [d="{received-date}"] [aid="{uploaded-MIME-body-ID}"] [noICal="0|1"]>
+       <content>
+          ...
+       </content>
+       [
+         <inv uid="UID">...</inv> # MUST have UID
+       ] 
       ...
     </m>
   </AddMsgRequest>
@@ -972,6 +978,10 @@ u attribute is present iff count > 0
   {folder} = folder pathname (starts with '/') or folder ID
   {received-date} = (optional) time the message was originally received, in MILLISECONDS since the epoch 
   {uploaded-MIME-body-ID} = ID of message uploaded via FileUploadServlet
+
+  [noICal] = if TRUE, then don't process iCal attachments.  Default is FALSE.
+     TODO: even if noICal is true, calendar should still link message to existing appointment
+           (by UID) if the appointment already exists.
 
   Note that the <m> element should include the <content> element with the 
   entire message's content.  (Omit <content> if you specify an "aid" attribute.)

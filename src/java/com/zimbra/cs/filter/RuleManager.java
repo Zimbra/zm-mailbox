@@ -171,14 +171,14 @@ public class RuleManager {
                 // filtering system generates errors; 
                 // ignore filtering and file the message into INBOX
                 msg = mailbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX,
-                        Flag.FLAG_UNREAD, null, recipient, sharedDeliveryCtxt);
+                        false, Flag.FLAG_UNREAD, null, recipient, sharedDeliveryCtxt);
             }
         } catch (ParseException e) {
             ZimbraLog.filter.warn("Sieve script parsing error:", e);
             // filtering system generates errors; 
             // ignore filtering and file the message into INBOX
             msg = mailbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX,
-                    Flag.FLAG_UNREAD, null, recipient, sharedDeliveryCtxt);
+                    false, Flag.FLAG_UNREAD, null, recipient, sharedDeliveryCtxt);
         }
         return msg;
     }

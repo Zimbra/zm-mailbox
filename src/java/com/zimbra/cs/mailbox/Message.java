@@ -245,7 +245,7 @@ public class Message extends MailItem {
             CreateMessage redoRecorder,
             CreateMessage redoPlayer,            
             Folder folder, MailItem parent, ParsedMessage pm, int msgSize, String digest,
-                          boolean unread, int flags, long tags, DraftInfo dinfo, int id, Calendar cal)  
+                          boolean unread, boolean noICal, int flags, long tags, DraftInfo dinfo, int id, Calendar cal)  
     throws ServiceException {
         if (folder == null || !folder.canContain(TYPE_MESSAGE))
             throw MailServiceException.CANNOT_CONTAIN();
@@ -256,7 +256,7 @@ public class Message extends MailItem {
         
         List /* Invite */ components = null;
         String methodStr = null;
-        if (cal != null) {
+        if ((cal != null) && (!noICal)) {
             Account acct = mbox.getAccount();
             
             boolean sentByMe = false;

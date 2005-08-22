@@ -104,7 +104,7 @@ public class TestUtil {
         String message = StringUtil.fillTemplate(new StringReader(MESSAGE_TEMPLATE), vars);
         ParsedMessage pm = new ParsedMessage(message.getBytes(), System.currentTimeMillis(), false);
         pm.analyze();
-        return mbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX, Flag.FLAG_UNREAD, null);
+        return mbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX, false, Flag.FLAG_UNREAD, null);
     }
     
 }

@@ -45,17 +45,74 @@ public class ParseMimeMessage {
     private static Log mLog = LogFactory.getLog(ParseMimeMessage.class);
 //    private static CalendarBuilder mCalBuilder = new CalendarBuilder();
     
+    protected static class GenericInviteParser implements ParseMimeMessage.InviteParser { 
+        private String mUid;
+        GenericInviteParser(String uid) { mUid = uid; };
 
-    public static MimeMessage importMsgSoap(Element msgElem) throws ServiceException {
+        public ParseMimeMessage.InviteParserResult parseInviteElement(OperationContext octxt, Account account, Element inviteElem) throws ServiceException 
+        {
+            return CalendarUtils.parseInviteForCreate(account, inviteElem, null, mUid, false);
+        }
+    };
+
+    public static MimeMessage importMsgSoap(OperationContext octxt, Account account, Element msgElem) throws ServiceException {
         /* msgElem == "<m>" E_MSG */
         assert(msgElem.getName().equals(MailService.E_MSG));
 
         Element contentElement = msgElem.getElement(MailService.E_CONTENT);
+        
+        Element inviteElem = msgElem.getOptionalElement(MailService.E_INVITE);
+
+        // Grab the <inv> part now so we can stick it in a multipart/alternative if necessary
+        MimeBodyPart invitePart = null;
+        
+        if (inviteElem != null) {
+            // goes into the "content" subpart
+            String uid = inviteElem.getAttribute(MailService.A_UID);
+
+            InviteParser inviteParser = new GenericInviteParser(uid);
+            
+            InviteParserResult result = inviteParser.parseInviteElement(octxt, account, inviteElem);
+            invitePart = CalendarUtils.makeICalIntoMimePart(result.mUid, result.mCal);
+        }
 
         String content = contentElement.getText();
         ByteArrayInputStream messageStream = new ByteArrayInputStream(content.getBytes());
     	try {
-			return new MimeMessage(JMSession.getSession(), messageStream);
+    	    MimeMessage toRet = new MimeMessage(JMSession.getSession(), messageStream);
+            
+            if (invitePart != null) {
+                // fixme, probably have to do something better here!
+                MimeMultipart mmp = new MimeMultipart("alternative");
+                Object o = toRet.getContent();
+                MimeBodyPart mbp = null;
+                if (!(o instanceof MimePart)){
+                    mbp = new MimeBodyPart();
+                    mbp.setContent(o, "text/plain");
+//                    mbp.setText(o.toString());
+                } else {
+                    System.out.println("dsaasdsda");
+                    MimePart mp = (MimePart)o;
+                    if (mp instanceof MimeMultipart) {
+                        mbp = new MimeBodyPart();
+                        mbp.setContent((MimeMultipart)mp);
+                    } else {
+                        mbp = new MimeBodyPart();
+                        mbp.setContent(mp.getContent(), mp.getContentType());
+                    }
+                }
+                    
+                toRet.setDataHandler(null);
+                mmp.addBodyPart(mbp);
+                mmp.addBodyPart(invitePart);
+                toRet.setContent(mmp);
+                toRet.saveChanges();
+            }
+            
+            return toRet;
+        } catch (IOException e) {
+            mLog.warn(ExceptionToString.ToString(e));
+            throw ServiceException.FAILURE("IOExecption", e);
 		} catch (MessagingException me) {
             mLog.warn(ExceptionToString.ToString(me));
             throw ServiceException.FAILURE("MessagingExecption", me);

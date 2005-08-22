@@ -151,7 +151,7 @@ public class SendMsg extends WriteOpDocumentHandler {
                 if (ConversionException.isTemporaryCauseOf(e))
                     throw e;
             }
-            return mbox.addMessage(octxt, pm, folderId, flags, null, convId);
+            return mbox.addMessage(octxt, pm, folderId, false, flags, null, convId);
         } catch (IOException ioe) {
             String excepStr = ExceptionToString.ToString(ioe);
             mLog.warn(excepStr);
@@ -216,7 +216,7 @@ public class SendMsg extends WriteOpDocumentHandler {
                 pm.analyze();
                 
                 // save it to the 1st requested folder
-                msg[0] = mbox.addMessage(octxt, pm, saveToFolders[0], flags, null, convId);
+                msg[0] = mbox.addMessage(octxt, pm, saveToFolders[0], false, flags, null, convId);
 
                 // copy it to other requested folders
                 for (int i = 1; i < saveToFolders.length; i++) 

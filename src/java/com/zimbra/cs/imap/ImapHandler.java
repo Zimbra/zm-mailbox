@@ -1161,7 +1161,7 @@ public class ImapHandler extends ProtocolHandler {
                 boolean idxAttach = mMailbox.attachmentsIndexingEnabled();
                 ParsedMessage pm = date != null ? new ParsedMessage(content, date.getTime(), idxAttach) :
                                                   new ParsedMessage(content, idxAttach);
-                Message msg = mMailbox.addMessage(getContext(), pm, folder.getId(), flagMask, tagStr.toString());
+                Message msg = mMailbox.addMessage(getContext(), pm, folder.getId(), false, flagMask, tagStr.toString());
                 if (msg != null) {
                     appendHint.append("[APPENDUID ").append(ImapFolder.getUIDValidity(folder))
                               .append(' ').append(msg.getImapUID()).append("] ");

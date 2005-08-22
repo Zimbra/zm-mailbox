@@ -189,7 +189,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                                     msg = RuleManager.getInstance().applyRules(account, mbox, pm, pm.getRawData().length,
                                                                                rcptEmail, sharedDeliveryCtxt);
                                 } else {
-                                    msg = mbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX, Flag.FLAG_UNREAD, null,
+                                    msg = mbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX, false, Flag.FLAG_UNREAD, null,
                                                           rcptEmail, sharedDeliveryCtxt);
                                 }
                                 if (msg != null) {
