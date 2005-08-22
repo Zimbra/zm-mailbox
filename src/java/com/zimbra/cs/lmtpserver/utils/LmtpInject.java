@@ -20,8 +20,8 @@ import org.apache.commons.pool.impl.GenericObjectPool;
 
 import com.zimbra.cs.lmtpserver.LmtpProtocolException;
 import com.zimbra.cs.util.ByteUtil;
-import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ThreadPool;
+import com.zimbra.cs.util.Zimbra;
 
 public class LmtpInject {
 
@@ -30,24 +30,26 @@ public class LmtpInject {
 	private static Options mOptions = new Options();
 	
 	static {
-		mOptions.addOption("d", "directory", true,  "message file directory");
-		mOptions.addOption("a", "address",   true,  "lmtp server (default localhost)");
-		mOptions.addOption("p", "port",      true,  "lmtp server port (default 7025)");
-		mOptions.addOption("s", "sender",    true,  "envelope sender (mail from)");
-        Option ropt = new Option("r", "recipient", true, "envelope recipients (rcpt to)");
-        ropt.setArgs(Option.UNLIMITED_VALUES);
-		mOptions.addOption(ropt);
-		mOptions.addOption("t", "threads",   true,  "number of worker threads (default 1)");
-		mOptions.addOption("q", "quiet",     false, "don't print per-message status");
-		mOptions.addOption("T", "trace",     false, "trace server/client traffic");
-		mOptions.addOption("N", "every",     true,  "report progress after every N messages (default 100)");
-		mOptions.addOption("w", "warmUpThreshold", true, "warm-up server with first N messages, then start measuring (default no warm-up)");
-        mOptions.addOption("S", "stopAfter", true,  "stop after sending this many messages after warm-up");
-        mOptions.addOption("u", "username",  true,  "username prefix (default \"user\")");
-        mOptions.addOption("D", "domain",    true,  "default per-connection recipient domain (default example.zimbra.com)");
-        mOptions.addOption("z", "repeat",    true,  "repeatedly inject these messages NUM times");
+	    mOptions.addOption("d", "directory", true,  "message file directory");
+	    mOptions.addOption("a", "address",   true,  "lmtp server (default localhost)");
+	    mOptions.addOption("p", "port",      true,  "lmtp server port (default 7025)");
+	    mOptions.addOption("s", "sender",    true,  "envelope sender (mail from)");
+	    Option ropt = new Option("r", "recipient", true,
+	        "envelope recipients (rcpt to).  This option accepts multiple arguments, so it can't be last " +
+	        "if a list of input files is used.");
+	    ropt.setArgs(Option.UNLIMITED_VALUES);
+	    mOptions.addOption(ropt);
+	    mOptions.addOption("t", "threads",   true,  "number of worker threads (default 1)");
+	    mOptions.addOption("q", "quiet",     false, "don't print per-message status");
+	    mOptions.addOption("T", "trace",     false, "trace server/client traffic");
+	    mOptions.addOption("N", "every",     true,  "report progress after every N messages (default 100)");
+	    mOptions.addOption("w", "warmUpThreshold", true, "warm-up server with first N messages, then start measuring (default no warm-up)");
+	    mOptions.addOption("S", "stopAfter", true,  "stop after sending this many messages after warm-up");
+	    mOptions.addOption("u", "username",  true,  "username prefix (default \"user\")");
+	    mOptions.addOption("D", "domain",    true,  "default per-connection recipient domain (default example.zimbra.com)");
+	    mOptions.addOption("z", "repeat",    true,  "repeatedly inject these messages NUM times");
 	}
-
+	
 	private static void usage(String errmsg) {
 		if (errmsg != null) { 
 			mLog.error(errmsg);
