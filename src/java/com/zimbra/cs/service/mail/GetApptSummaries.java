@@ -33,6 +33,7 @@ import java.util.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Invite;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -65,6 +66,7 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
         try {
             ZimbraContext lc = getZimbraContext(context);
             Mailbox mbx = getRequestedMailbox(lc);
+            Account acct = getRequestedAccount(lc);
 
             long rangeStart = request.getAttributeLong(MailService.A_APPT_START_TIME);
             long rangeEnd = request.getAttributeLong(MailService.A_APPT_END_TIME);
@@ -95,6 +97,8 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
                     }
                     
                     long defDurationMsecs = defDuration.getDurationAsMsecs(defaultInvite.getStartTime().getDate());
+                    
+                    boolean defIsOrg = defaultInvite.thisAcctIsOrganizer(acct);
                     
                     // add all the instances:
                     boolean someInRange = false;
@@ -139,6 +143,11 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
                                     if (!frag.equals("")) {
                                         instElt.addAttribute(MailService.E_FRAG, frag, Element.DISP_CONTENT);
                                     }
+                                }
+                                
+                                boolean thisInvIsOrg = inv.thisAcctIsOrganizer(acct);
+                                if (thisInvIsOrg!= defIsOrg) {
+                                    instElt.addAttribute(MailService.A_APPT_ISORG, thisInvIsOrg);
                                 }
                                 
                                 
@@ -200,6 +209,7 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
                         apptElt.addAttribute(MailService.A_APPT_FREEBUSY, defaultInvite.getFreeBusy());
                         apptElt.addAttribute(MailService.A_APPT_FREEBUSY_ACTUAL, defaultInvite.getFreeBusyActual());
                         apptElt.addAttribute(MailService.A_APPT_TRANSPARENCY, defaultInvite.getTransparency());
+                        apptElt.addAttribute(MailService.A_APPT_ISORG, defIsOrg);
                         
                         apptElt.addAttribute(MailService.A_APPT_DURATION, defDurationMsecs);
                         apptElt.addAttribute(MailService.A_NAME, defaultInvite.getName());

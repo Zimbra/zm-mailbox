@@ -224,6 +224,7 @@ RECURRENCE SPECIFIERS!
       [allDay="1"] [otherAtt="1"] [alarm="1"] [recur="1"]
       [name="NAME"] [loc="LOCATION"] 
       invId="default_invite_mail_item_id" compNum="default_invite_component_number"
+      isOrg="default_am_i_organizer_flag"
    >
    <dur DURATION/> // default duration
    <fr>FRAGMENT</fr>
@@ -231,6 +232,7 @@ RECURRENCE SPECIFIERS!
       ( <inst s="START_SECS_GMT" [ex="1"] [ANY CHANGED PARAMETERS]>
           [<f>FRAGMENT IF DIFFERENT FROM DEFAULT</f>]
           [<dur DURATION>] // duration this instance if not same as default
+          [<isOrg>] // isOrg flag if not same as default
         </inst>
       )+
         
