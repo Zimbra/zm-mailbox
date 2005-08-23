@@ -139,34 +139,35 @@ public class SendMsg extends WriteOpDocumentHandler {
         
         try {
             Address[] addrs = mm.getAllRecipients();
-            
-            AllAddresses: for (int i = addrs.length-1; i >=0; i--) {
-                InternetAddress ia = (InternetAddress) addrs[i];
-                
-                String addr = ia.getAddress();
-                
-                if (prov.getAccountByName(addr) == null) {
+            if (addrs != null) {
+                AllAddresses: for (int i = addrs.length-1; i >=0; i--) {
+                    InternetAddress ia = (InternetAddress) addrs[i];
                     
-                    // couldn't find it -- is it a local domain?
-                    String parts[] = addr.split("@");
-                    if (parts.length > 1) {
-                        IsLocalDomain: for (Iterator domainIter = myDomains.iterator(); domainIter.hasNext();) {
-                            Domain domain = (Domain)domainIter.next(); 
-                            String domainStr = domain.getName(); 
-                            if (parts[1].equals(domainStr)) {
-                                // it IS a local address.  Why couldn't we find it?
-                                
-                                // is it a distribution list?
-                                if (prov.getDistributionListByName(addr) == null) {
-                                    unknownRecipients.add(addr);
-                                } 
-                                
-                                break IsLocalDomain; // go onto the next address 
-                            }
-                        }
-                    }
-                }
-            }
+                    String addr = ia.getAddress();
+                    
+                    if (prov.getAccountByName(addr) == null) {
+                        
+                        // couldn't find it -- is it a local domain?
+                        String parts[] = addr.split("@");
+                        if (parts.length > 1) {
+                            IsLocalDomain: for (Iterator domainIter = myDomains.iterator(); domainIter.hasNext();) {
+                                Domain domain = (Domain)domainIter.next(); 
+                                String domainStr = domain.getName(); 
+                                if (parts[1].equals(domainStr)) {
+                                    // it IS a local address.  Why couldn't we find it?
+                                    
+                                    // is it a distribution list?
+                                    if (prov.getDistributionListByName(addr) == null) {
+                                        unknownRecipients.add(addr);
+                                    } 
+                                    
+                                    break IsLocalDomain; // go onto the next address 
+                                }
+                            } // IsLocalDomain loop
+                        } // if (parts.len
+                    } // if (prov.getAccountByName
+                } // AllAddresses loop
+            } // if (addrs!=null
             
         } catch (MessagingException e) {
             throw ServiceException.FAILURE("Caught MessagingException trying to getAllRecipients "+e, e);
