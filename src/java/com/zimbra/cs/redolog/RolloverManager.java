@@ -241,20 +241,6 @@ public class RolloverManager {
     	return mSequence;
     }
 
-    // KC: 1711: to be removed
-    public synchronized void initSequence(long seq) {
-        mSequence = seq;
-    }
-    
-    // KC: 1711: to be removed 
-    public synchronized long incrementSequence() {
-        if (mSequence < Long.MAX_VALUE)
-            ++mSequence;
-        else
-            mSequence = 0;
-        return mSequence;
-    }
-
     public synchronized void initSequence() throws ServiceException {
         Connection conn = null;
         try {
@@ -267,18 +253,14 @@ public class RolloverManager {
         
     }
 
-//    public synchronized long incrementSequence() throws ServiceException {
-//        Connection conn = null;
-//        try {
-//            conn = DbPool.getConnection();
-//            mSequence = DbRedologSequence.incrementSequence(conn);
-//            return mSequence;
-//        } finally {
-//            if (conn != null)
-//                DbPool.quietClose(conn);
-//        }
-//    }
+    public synchronized void incrementSequence() {
+        mSequence ++;
+    }
 
+    public synchronized void commitSequence() throws ServiceException {
+        resetSequence(mSequence);
+    }
+    
     public void resetSequence(long seq) throws ServiceException {
         Connection conn = null;
         try {

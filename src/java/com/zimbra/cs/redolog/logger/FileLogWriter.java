@@ -337,9 +337,8 @@ public class FileLogWriter implements LogWriter {
         noStat(true);
         close();
 
-        // KC: 1711: to be removed
         romgr.incrementSequence();
-
+        
         String currentPath = mFile.getAbsolutePath();
 
         // Open a temporary logger.
@@ -376,14 +375,13 @@ public class FileLogWriter implements LogWriter {
         // increment the sequence in db
         // had any of the above fails, db's sequence would lag behind
         // which will prevent server startup and require an offline restore to the right sequence.
-        // KC: 1711 fix
-//        try {
-//            romgr.incrementSequence();
-//        } catch (ServiceException e) {
-//            IOException ioe = new IOException("Unable to increment the redo log file sequence");
-//            ioe.initCause(e);
-//            throw ioe;
-//        }
+        try {
+            romgr.commitSequence();
+        } catch (ServiceException e) {
+            IOException ioe = new IOException("Unable to increment the redo log file sequence");
+            ioe.initCause(e);
+            throw ioe;
+        }
 
         // Reopen current log.
         open();

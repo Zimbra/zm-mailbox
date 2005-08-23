@@ -198,8 +198,7 @@ public class RedoLogManager {
         long fsyncInterval = RedoConfig.redoLogFsyncIntervalMS();
         mLogWriter = createLogWriter(this, mLogFile, fsyncInterval);
 
-        // KC: 1711 fix
-        //initRedologSequence();
+        initRedologSequence();
         
         ArrayList postStartupRecoveryOps = new ArrayList(100);
         int numRecoveredOps = 0;
@@ -209,7 +208,6 @@ public class RedoLogManager {
 			// Run crash recovery.
 			try {
 				mLogWriter.open();
-                mRolloverMgr.initSequence(mLogWriter.getSequence());
 				RedoPlayer redoPlayer = new RedoPlayer();
 				numRecoveredOps = redoPlayer.runCrashRecovery(this, postStartupRecoveryOps);
                 redoPlayer.shutdown();
@@ -225,7 +223,6 @@ public class RedoLogManager {
 		// Reopen log after crash recovery.
 		try {
 			mLogWriter.open();
-            mRolloverMgr.initSequence(mLogWriter.getSequence());
 			mInitialLogSize = mLogWriter.getSize();
 		} catch (IOException e) {
 			mLog.fatal("Unable to open redo log");
