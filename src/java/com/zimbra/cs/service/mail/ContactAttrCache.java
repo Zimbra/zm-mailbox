@@ -14,9 +14,9 @@
  * 
  * The Original Code is: Zimbra Collaboration Suite.
  * 
- * The Initial Developer of the Original Code is Zimbra, Inc.  Portions
- * created by Zimbra are Copyright (C) 2005 Zimbra, Inc.  All Rights
- * Reserved.
+ * The Initial Developer of the Original Code is Zimbra, Inc.
+ * Portions created by Zimbra are Copyright (C) 2005 Zimbra, Inc.
+ * All Rights Reserved.
  * 
  * Contributor(s): 
  * 
