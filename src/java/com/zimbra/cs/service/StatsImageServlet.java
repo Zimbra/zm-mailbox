@@ -50,10 +50,10 @@ public class StatsImageServlet extends ZimbraServlet {
 
     private static Log mLog = LogFactory.getLog(StatsImageServlet.class);
 
-    private static final String IMG_NOT_AVAIL = "imagenotavailable.gif";
+    private static final String IMG_NOT_AVAIL = "data_not_available.gif";
 
     private static final String IMG_FNF = "data_not_available.gif";
-    private static final String IMG_CONN_FAILED = "connfailed.gif";
+    private static final String IMG_CONN_FAILED = "data_not_available.gif";
     private static final String IMG_RCVD_DATA_12M = "LmtpRcvdData.12m.gif";
     private static final String IMG_RCVD_DATA_3M = "LmtpRcvdData.3m.gif";    
     private static final String IMG_RCVD_DATA_D = "LmtpRcvdData.d.gif";
