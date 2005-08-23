@@ -52,7 +52,7 @@ public class StatsImageServlet extends ZimbraServlet {
 
     private static final String IMG_NOT_AVAIL = "imagenotavailable.gif";
 
-    private static final String IMG_FNF = "filenotfound.gif";
+    private static final String IMG_FNF = "data_not_available.gif";
     private static final String IMG_CONN_FAILED = "connfailed.gif";
     private static final String IMG_RCVD_DATA_12M = "LmtpRcvdData.12m.gif";
     private static final String IMG_RCVD_DATA_3M = "LmtpRcvdData.3m.gif";    
