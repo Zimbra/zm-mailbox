@@ -56,6 +56,7 @@ public final class PendingModifications {
         public static final int MODIFIED_CONTENT   = 0x010000;
         public static final int MODIFIED_INVITE    = 0x020000;
         public static final int MODIFIED_IMAP_UID  = 0x040000;
+        public static final int MODIFIED_CONFLICT  = 0x080000;
         public static final int INTERNAL_ONLY      = 0x800000;
         public static final int ALL_FIELDS         = ~0;
 	

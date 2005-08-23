@@ -139,8 +139,7 @@ public class Tag extends MailItem {
         data.date        = mbox.getOperationTimestamp();
         data.subject     = name;
         data.metadata    = encodeMetadata(color);
-        data.modMetadata = mbox.getOperationChangeID();
-        data.modContent  = mbox.getOperationChangeID();
+        data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
 
         Tag tag = new Tag(mbox, data);

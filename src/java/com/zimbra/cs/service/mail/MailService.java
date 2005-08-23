@@ -270,6 +270,7 @@ public class MailService implements DocumentService {
     // sync
     public static final String A_TOKEN = "token";
     public static final String A_FETCH_IF_EXISTS = "fie";
+    public static final String A_CHANGE_DATE = "md";
 
     // filter rules
     public static final String A_LHS = "k0";

@@ -59,6 +59,7 @@ public class Sync extends DocumentHandler {
         long begin = request.getAttributeLong(MailService.A_TOKEN, 0);
 
         Element response = lc.createElement(MailService.SYNC_RESPONSE);
+        response.addAttribute(MailService.A_CHANGE_DATE, System.currentTimeMillis() / 1000);
         synchronized (mbox) {
             mbox.beginTrackingSync();
 
@@ -124,7 +125,8 @@ public class Sync extends DocumentHandler {
     private static final int MUTABLE_FIELDS = Change.MODIFIED_FLAGS  | Change.MODIFIED_TAGS |
                                               Change.MODIFIED_FOLDER | Change.MODIFIED_PARENT |
                                               Change.MODIFIED_NAME   | Change.MODIFIED_QUERY |
-                                              Change.MODIFIED_COLOR  | Change.MODIFIED_POSITION;
+                                              Change.MODIFIED_COLOR  | Change.MODIFIED_POSITION |
+                                              Change.MODIFIED_CONFLICT;
 
     private void deltaSync(Element response, Mailbox mbox, long begin) throws ServiceException {
         // first, handle deleted items

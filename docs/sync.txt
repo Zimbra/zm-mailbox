@@ -1,8 +1,8 @@
 <-- initial sync request -->
 
-<SyncRequest/>   <-- no date = initial sync -->
+<SyncRequest/>   <-- no token = initial sync -->
 
-<SyncResponse token="1077924283000">
+<SyncResponse token="403" md="1077924283">
   <folder id="11">
     <folder id="9" name="Conversations" l="11"/>
     <folder id="8" name="Tags" l="11">
@@ -30,9 +30,9 @@
 
 <-- subsequent sync request -->
 
-<SyncRequest token="1077924283000"/>
+<SyncRequest token="403"/>
 
-<SyncResponse token="1078054283000">
+<SyncResponse token="500" md="1078054283">
   <-- handle deletes first -->
   <deleted>
     <folder ids="..."/>
@@ -43,10 +43,10 @@
   <-- modified/created folders (none here) -->
   <-- modified/created tags (none here) -->
   <-- other modified/created things (id-only means new or content changed) */
-  <m id="275" l="2" cid="276" f="" t="" mod="1078024283000"/>
-  <m id="321" l="3" cid="312" f="u" t="" mod="1078025663000"/>
-  <tag id="68" name="bob" color="6" mod="1078025983000"/>
-  <cn id="664" l="7" f="" t="" mod="1078026283000"/>
+  <m id="275" l="2" cid="276" f="" t="" md="1078024283"/>
+  <m id="321" l="3" cid="312" f="u" t="" md="1078025663"/>
+  <tag id="68" name="bob" color="6" md="1078025983"/>
+  <cn id="664" l="7" f="" t="" md="1078026283"/>
   <cn id="662"/>
 </SyncResponse>
 
@@ -75,18 +75,18 @@
 <--   * any changes they just made -->
 <--   * any externally-caused changes since the last sync -->
 
-<SyncRequest token="1078054283000"/>
+<SyncRequest token="500"/>
 
-<SyncResponse token="1078054298000">
+<SyncResponse token="521" md="1078054298">
   <-- handle deletes first -->
   <deleted>
     <folder ids="903"/>
   </deleted>
   <-- modified/created folders -->
-  <folder id="663" name="new name" l="1" mod="1078054291000"/>
+  <folder id="663" name="new name" l="1" md="1078054291"/>
   <-- modified/created tags (none here) -->
   <-- other modified/created things (id-only means new or content changed) */
   <m id="5526"/>
-  <m id="5522" l="2" cid="5521" f="" t="" mod="1078054297000"/>
+  <m id="5522" l="2" cid="5521" f="" t="" md="1078054297"/>
   <cn id="5531"/>
 </SyncResponse>

@@ -186,6 +186,7 @@ public abstract class MailItem implements Comparable {
         public int    parentId = -1;
         public int    folderId = -1;
         public int    indexId  = -1;
+        public short  volumeId = -1;
         public String blobDigest;
         public int    date;
         public long   size;
@@ -195,8 +196,9 @@ public abstract class MailItem implements Comparable {
         public String subject;
         public String metadata;
         public int    modMetadata;
+        public int    dateChanged;
         public int    modContent;
-        public short  volumeId = -1;
+
         public String inheritedTags;
         public String children;
         public int    unreadCount;
@@ -213,15 +215,24 @@ public abstract class MailItem implements Comparable {
             data.folderId    = newFolder;
             data.parentId    = parentId;
             data.indexId     = indexId;
+            data.volumeId    = volumeId;
             data.blobDigest  = blobDigest;
             data.date        = date;
             data.size        = size;
             data.flags       = flags;
             data.tags        = tags;
             data.subject     = subject;
-            data.volumeId    = volumeId;
             data.unreadCount = unreadCount;
             return data;
+        }
+
+        void metadataChanged(Mailbox mbox) throws ServiceException {
+            modMetadata = mbox.getOperationChangeID();
+            dateChanged = mbox.getOperationTimestamp();
+        }
+        void contentChanged(Mailbox mbox) throws ServiceException {
+            metadataChanged(mbox);
+            modContent = modMetadata;
         }
     }
 
@@ -385,6 +396,10 @@ public abstract class MailItem implements Comparable {
 
     public int getModifiedSequence() {
         return mData.modMetadata;
+    }
+
+    public long getChangeDate() {
+        return mData.dateChanged * 1000L;
     }
 
     public int getSavedSequence() {
@@ -675,7 +690,7 @@ public abstract class MailItem implements Comparable {
 
 	protected void tagChanged(Tag tag, boolean add) throws ServiceException {
 	    markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
-	    mData.modMetadata = mMailbox.getOperationChangeID();
+	    mData.metadataChanged(mMailbox);
 
 	    if (tag instanceof Flag) {
 	        if (add)  mData.flags |= tag.getBitmask();
@@ -787,9 +802,8 @@ public abstract class MailItem implements Comparable {
         UnderlyingData data = mData.duplicate(id, folder.getId());
         if (detach)
             data.parentId = -1;
-        data.metadata    = encodeMetadata();
-        data.modMetadata = mMailbox.getOperationChangeID();
-        data.modContent  = mMailbox.getOperationChangeID();
+        data.metadata = encodeMetadata();
+        data.contentChanged(mMailbox);
         DbMailItem.copy(this, id, folder.getId(), data.parentId, data.metadata);
 
         MailItem item = constructItem(mMailbox, data);
@@ -841,7 +855,7 @@ public abstract class MailItem implements Comparable {
         if (mData.folderId == newFolder.getId())
             return;
 		markItemModified(Change.MODIFIED_FOLDER);
-        mData.modMetadata = mMailbox.getOperationChangeID();
+        mData.metadataChanged(mMailbox);
 		mData.folderId = newFolder.getId();
 		if (mChildren != null)
 			for (int i = 0; i < mChildren.length; i++) {
@@ -1028,12 +1042,12 @@ public abstract class MailItem implements Comparable {
         saveMetadata(encodeMetadata());
     }
     protected void saveMetadata(String metadata) throws ServiceException {
-        mData.modMetadata = mMailbox.getOperationChangeID();
+        mData.metadataChanged(mMailbox);
         DbMailItem.saveMetadata(this, mData.size, metadata);
     }
 
     protected void saveSubject() throws ServiceException {
-        mData.modMetadata = mMailbox.getOperationChangeID();
+        mData.metadataChanged(mMailbox);
         DbMailItem.saveSubject(this, mData.size);
     }
 
@@ -1041,7 +1055,7 @@ public abstract class MailItem implements Comparable {
         saveData(sender, encodeMetadata());
     }
     protected void saveData(String sender, String metadata) throws ServiceException {
-        mData.modMetadata = mMailbox.getOperationChangeID();
+        mData.metadataChanged(mMailbox);
         DbMailItem.saveData(this, mData.size, mData.flags, sender, metadata);
     }
 

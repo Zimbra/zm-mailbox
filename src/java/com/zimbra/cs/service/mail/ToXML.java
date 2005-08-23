@@ -152,6 +152,8 @@ public class ToXML {
             if (msgs > 0 || fields != Change.ALL_FIELDS)
                 elem.addAttribute(MailService.A_NUM, msgs);
         }
+        if (needToOutput(fields, Change.MODIFIED_CONFLICT))
+            elem.addAttribute(MailService.A_CHANGE_DATE, folder.getChangeDate() / 1000);
         return elem;
 	}
 
@@ -175,6 +177,8 @@ public class ToXML {
             if (unread > 0 || fields != Change.ALL_FIELDS)
                 elem.addAttribute(MailService.A_UNREAD, unread);
         }
+        if (needToOutput(fields, Change.MODIFIED_CONFLICT))
+            elem.addAttribute(MailService.A_CHANGE_DATE, search.getChangeDate() / 1000);
 		return elem;
 	}
 
@@ -201,10 +205,11 @@ public class ToXML {
         elem.addAttribute(MailService.A_ID, contact.getId());
         if (needToOutput(fields, Change.MODIFIED_CONTENT) && contact.getSavedSequence() != 0)
             elem.addAttribute(MailService.A_REVISION, contact.getSavedSequence());
-        // DomUtil.addAttr(elem, MailService.A_CREATED_DATE, con.getCreatedDate());
         if (needToOutput(fields, Change.MODIFIED_FOLDER))
             elem.addAttribute(MailService.A_FOLDER, contact.getFolderId());
         recordItemTags(elem, contact, fields);
+        if (needToOutput(fields, Change.MODIFIED_CONFLICT))
+            elem.addAttribute(MailService.A_CHANGE_DATE, contact.getChangeDate() / 1000);
 
         if (summary || !needToOutput(fields, Change.MODIFIED_CONTENT))
             return elem;
@@ -214,7 +219,7 @@ public class ToXML {
             for (Iterator it = attrFilter.iterator(); it.hasNext(); ) {
             	// HERE: How to distinguish between a non-existent attribute and
             	// an existing attribute with null or empty string value?
-                String name = (String)it.next();
+                String name = (String) it.next();
                 String value = (String) attrs.get(name);
 				if (value == null || value.equals(""))
 				    continue;
@@ -258,6 +263,8 @@ public class ToXML {
             elem.addAttribute(MailService.A_COLOR, note.getColor());
         if (needToOutput(fields, Change.MODIFIED_CONTENT))
             elem.addAttribute(MailService.E_CONTENT, note.getContent(), Element.DISP_CONTENT);
+        if (needToOutput(fields, Change.MODIFIED_CONFLICT))
+            elem.addAttribute(MailService.A_CHANGE_DATE, note.getChangeDate() / 1000);
         return elem;
 	}
 
@@ -276,6 +283,8 @@ public class ToXML {
     		if (unreadCount > 0 || fields != Change.ALL_FIELDS)
                 elem.addAttribute(MailService.A_UNREAD, unreadCount);
         }
+        if (needToOutput(fields, Change.MODIFIED_CONFLICT))
+            elem.addAttribute(MailService.A_CHANGE_DATE, tag.getChangeDate() / 1000);
 		return elem;
 	}
 
@@ -342,9 +351,11 @@ public class ToXML {
                     eecache.makeEmail(c, la[i], EmailElementCache.EMAIL_TYPE_NONE, null);
             }
         }
+        if (needToOutput(fields, Change.MODIFIED_CONFLICT))
+            c.addAttribute(MailService.A_CHANGE_DATE, conv.getChangeDate() / 1000);
         return c;
     }
-    
+
     private static Element encodeConversationCommon(Element parent, Conversation conv, int fields) {
         Element c = parent.addElement(MailService.E_CONV);
         c.addAttribute(MailService.A_ID, conv.getId());
@@ -639,6 +650,8 @@ public class ToXML {
                 elem.addAttribute(MailService.A_CONV_ID, msg.getConversationId());
         }
         recordItemTags(elem, mi, fields);
+        if (needToOutput(fields, Change.MODIFIED_CONFLICT))
+            elem.addAttribute(MailService.A_CHANGE_DATE, mi.getChangeDate() / 1000);
         return elem;
     }
     

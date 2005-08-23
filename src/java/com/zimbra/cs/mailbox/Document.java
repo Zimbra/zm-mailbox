@@ -96,8 +96,7 @@ public class Document extends MailItem {
         data.size        = (int) content.length();
         data.subject     = filename;
         data.metadata    = encodeMetadata(type, null);
-        data.modMetadata = mbox.getOperationChangeID();
-        data.modContent  = mbox.getOperationChangeID();
+        data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
 
         Document doc = new Document(mbox, data);

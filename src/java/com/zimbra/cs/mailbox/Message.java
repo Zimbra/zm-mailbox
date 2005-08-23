@@ -80,12 +80,7 @@ public class Message extends MailItem {
     private int    mImapUID;
 	private String mFragment;
     private String mNormalizedSubject;
-    
-    /**
-     * @author tim
-     *
-     * The Invite is located by the triplet: (appointmentId, invMsgId, componentNo)
-     */
+
     public static class ApptInfo {
         private int mAppointmentId;
         private int mComponentNo;
@@ -291,8 +286,7 @@ public class Message extends MailItem {
                 try {
                     sender = new InternetAddress(senderFull).getAddress();
                 } catch (AddressException e) {
-                    throw MailServiceException.INVALID_REQUEST(
-                            "Unable to parse invite sender: " + senderFull, e);
+                    throw ServiceException.INVALID_REQUEST("Unable to parse invite sender: " + senderFull, e);
                 }
                 sentByMe = AccountUtil.addressMatchesAccount(acct, sender);
             }
@@ -352,9 +346,8 @@ public class Message extends MailItem {
         data.sender      = pm.getParsedSender().getSortString();
         data.subject     = pm.getNormalizedSubject();
         data.metadata    = meta.toString();
-        data.modMetadata = mbox.getOperationChangeID();
-        data.modContent  = mbox.getOperationChangeID();
         data.unreadCount = unread ? 1 : 0; 
+        data.contentChanged(mbox);
         return data;
     }
 
@@ -484,19 +477,6 @@ public class Message extends MailItem {
         if (subjectChanged)
             mData.parentId = -mId;
 
-        // figure out the *correct* item type
-        Calendar cal = pm.getiCalendar();
-//        List invites = null;
-//        boolean isInvite = (cal != null);
-        if (isInvite()) {
-            assert(false); // FIXME!
-//            InviteMessage.TimeZoneMap tzmap = new InviteMessage.TimeZoneMap();
-//            invites = InviteMessage.parseComponentsForNewInvite(mMailbox, cal, mId, tzmap);
-//            ((InviteMessage)this).processIncomingInvites(invites);
-        }
-//            mData.type = (isInvite ? TYPE_INVITE : TYPE_MESSAGE);
-        mData.type = (TYPE_MESSAGE);
-
 		// update the METADATA and SIZE
         if (mData.size != size) {
             mMailbox.updateSize(size - mData.size, false);
@@ -504,10 +484,6 @@ public class Message extends MailItem {
             mData.size = size;
         }
         String metadata = encodeMetadata(pm, mData.flags, mDraftInfo, mApptInfos);
-//        if (isInvite) {
-//            assert(false); // FIXME!
-////            metadata = InviteMessage.encodeMetadata(metadata, invites);
-//        }
 
         // rewrite the DB row to reflect our new view
         saveData(pm.getParsedSender().getSortString(), metadata);
@@ -532,7 +508,7 @@ public class Message extends MailItem {
                          Change.MODIFIED_IMAP_UID | Change.MODIFIED_SIZE);
         mData.blobDigest = digest;
         mData.date       = mMailbox.getOperationTimestamp();
-        mData.modContent = mMailbox.getOperationChangeID();
+        mData.contentChanged(mMailbox);
         mImapUID = imapId;
         mBlob = null;
         reanalyze(pm, size);

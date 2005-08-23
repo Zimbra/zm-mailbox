@@ -199,8 +199,7 @@ public class Folder extends MailItem {
         data.date        = mbox.getOperationTimestamp();
         data.subject     = name;
 		data.metadata    = encodeMetadata(attributes);
-		data.modMetadata = mbox.getOperationChangeID();
-		data.modContent  = mbox.getOperationChangeID();
+        data.contentChanged(mbox);
 		DbMailItem.create(mbox, data);
 
 		Folder folder = new Folder(mbox, data);
@@ -318,7 +317,7 @@ public class Folder extends MailItem {
         DbMailItem.setFolder(this, folder);
         mData.folderId = folder.getId();
         mData.parentId = folder.getId();
-        mData.modMetadata = mMailbox.getOperationChangeID();
+        mData.metadataChanged(mMailbox);
     }
 
 	protected void addChild(MailItem child) throws ServiceException {
@@ -486,7 +485,7 @@ public class Folder extends MailItem {
     }
 
     protected void saveSubject() throws ServiceException {
-        mData.modMetadata = mMailbox.getOperationChangeID();
+        mData.metadataChanged(mMailbox);
         DbMailItem.saveSubject(this, 0);
     }
 

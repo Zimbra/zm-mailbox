@@ -64,20 +64,17 @@ public class DbMailItem {
     private static Log sLog = LogFactory.getLog(DbMailItem.class);
     private static final int IN_CLAUSE_BATCH_SIZE = 100;
 
-    /**
-     * Maps the mailbox id to the set of all tag combinations stored for all
-     * items in the mailbox.  Enables fast database lookup by tag.
-     */
+    /** Maps the mailbox id to the set of all tag combinations stored for all
+     *  items in the mailbox.  Enables fast database lookup by tag. */
     private static final Map /* <Long, TagsetCache */ sTagsetCache =
         new TimeoutMap(15 * Constants.MILLIS_PER_MINUTE);
-    
-    /**
-     * Maps the mailbox id to the set of all flag combinations stored for all
-     * items in the mailbox.  Enables fast database lookup by flag.
-     */
+
+    /** Maps the mailbox id to the set of all flag combinations stored for all
+     *  items in the mailbox.  Enables fast database lookup by flag. */
     private static final Map /* <Long, TagsetCache> */ sFlagsetCache =
         new TimeoutMap(15 * Constants.MILLIS_PER_MINUTE);
-    
+
+
     public static void create(Mailbox mbox, UnderlyingData data) throws ServiceException {
         if (data == null || data.id <= 0 || data.folderId <= 0 || data.parentId == 0 || data.indexId == 0)
             throw ServiceException.FAILURE("invalid data for DB item create", null);
@@ -90,9 +87,9 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("INSERT INTO " + getMailItemTableName(mbox) +
-                    "(id, type, parent_id, folder_id, index_id, date, size, volume_id, blob_digest," +
-                    " unread, flags, tags, sender, subject, metadata, mod_metadata, mod_content) " +
-                    "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    "(id, type, parent_id, folder_id, index_id, date, size, volume_id, blob_digest, unread," +
+                    " flags, tags, sender, subject, metadata, mod_metadata, change_date, mod_content) " +
+                    "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             int pos = 1;
             stmt.setInt(pos++, data.id);
             stmt.setByte(pos++, data.type);
@@ -120,6 +117,7 @@ public class DbMailItem {
             stmt.setString(pos++, data.subject);
             stmt.setString(pos++, data.metadata);
             stmt.setInt(pos++, data.modMetadata);
+            stmt.setInt(pos++, data.dateChanged);
             stmt.setInt(pos++, data.modContent);
             int num = stmt.executeUpdate();
             if (num != 1)
@@ -152,7 +150,7 @@ public class DbMailItem {
             String table = getMailItemTableName(mbox);
             stmt = conn.prepareStatement("INSERT INTO " + table +
                     "(id, type, parent_id, folder_id, index_id, date, size, volume_id, blob_digest," +
-                    " unread, flags, tags, sender, subject, metadata, mod_metadata, mod_content) " +
+                    " unread, flags, tags, sender, subject, metadata, mod_metadata, change_date, mod_content) " +
                     "(SELECT ?, type, ?, ?, index_id, date, size, volume_id, blob_digest, unread," +
                     " flags, tags, sender, subject, ?, ?, ? FROM " + table + " WHERE id = ?)");
             int pos = 1;
@@ -164,6 +162,7 @@ public class DbMailItem {
             stmt.setInt(pos++, folderId);
             stmt.setString(pos++, metadata);
             stmt.setInt(pos++, mbox.getOperationChangeID());
+            stmt.setInt(pos++, mbox.getOperationTimestamp());
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, item.getId());
             int num = stmt.executeUpdate();
@@ -207,16 +206,17 @@ public class DbMailItem {
             int attr = 1;
             if (item instanceof Folder) {
                 stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
-                        " SET parent_id = ?, folder_id = ?, mod_metadata = ? WHERE id = ?");
+                        " SET parent_id = ?, folder_id = ?, mod_metadata = ?, change_date = ? WHERE id = ?");
                 stmt.setInt(attr++, folder.getId());
             } else if (item instanceof Conversation && !(item instanceof VirtualConversation))
                 stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
-                        " SET folder_id = ?, mod_metadata = ? WHERE parent_id = ?");
+                        " SET folder_id = ?, mod_metadata = ?, change_date = ? WHERE parent_id = ?");
             else
                 stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
-                        " SET folder_id = ?, mod_metadata = ? WHERE id = ?");
+                        " SET folder_id = ?, mod_metadata = ?, change_date = ? WHERE id = ?");
             stmt.setInt(attr++, folder.getId());
             stmt.setInt(attr++, mbox.getOperationChangeID());
+            stmt.setInt(attr++, mbox.getOperationTimestamp());
             stmt.setInt(attr++, item instanceof VirtualConversation ? ((VirtualConversation) item).getMessageId() : item.getId());
             stmt.executeUpdate();
 //            return (num > 0);
@@ -234,11 +234,12 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(folder) +
-                    " SET folder_id = ?, mod_metadata = ? WHERE id IN " + suitableNumberOfVariables(itemIDs));
+                    " SET folder_id = ?, mod_metadata = ?, change_date = ? WHERE id IN " + suitableNumberOfVariables(itemIDs));
             stmt.setInt(1, folder.getId());
             stmt.setInt(2, mbox.getOperationChangeID());
+            stmt.setInt(3, mbox.getOperationTimestamp());
             for (int i = 0; i < itemIDs.length; i++)
-                stmt.setInt(i + 3, itemIDs.array[i]);
+                stmt.setInt(i + 4, itemIDs.array[i]);
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("writing new folder data for item [" + itemIDs + ']', e);
@@ -256,12 +257,15 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(parent) +
-                    " SET parent_id = ? WHERE id IN " + suitableNumberOfVariables(children));
+                    " SET parent_id = ?, mod_metadata = ?, change_date = ?" +
+                    " WHERE id IN " + suitableNumberOfVariables(children));
             int arg = 1;
             if (parent == null || parent instanceof VirtualConversation)
                 stmt.setNull(arg++, Types.INTEGER);
             else
                 stmt.setInt(arg++, parent.getId());
+            stmt.setInt(arg++, mbox.getOperationChangeID());
+            stmt.setInt(arg++, mbox.getOperationTimestamp());
             for (int i = 0; i < children.length; i++)
                 stmt.setInt(arg++, children[i].getId());
             stmt.executeUpdate();
@@ -285,13 +289,14 @@ public class DbMailItem {
             String relation = (oldParent instanceof VirtualConversation ? "id = ?" : "parent_id = ?");
 
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(oldParent) +
-                    " SET parent_id = ?, mod_metadata = ? WHERE " + relation);
+                    " SET parent_id = ?, mod_metadata = ?, change_date = ? WHERE " + relation);
             if (newParent instanceof VirtualConversation)
                 stmt.setNull(1, Types.INTEGER);
             else
                 stmt.setInt(1, newParent.getId());
             stmt.setInt(2, mbox.getOperationChangeID());
-            stmt.setInt(3, oldParent instanceof VirtualConversation ? ((VirtualConversation) oldParent).getMessageId() : oldParent.getId());
+            stmt.setInt(3, mbox.getOperationTimestamp());
+            stmt.setInt(4, oldParent instanceof VirtualConversation ? ((VirtualConversation) oldParent).getMessageId() : oldParent.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
         	throw ServiceException.FAILURE("writing new parent for children of item " + oldParent.getId(), e);
@@ -306,13 +311,15 @@ public class DbMailItem {
 		PreparedStatement stmt = null;
 		try {
 			stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
-			        " SET date = ?, size = ?, metadata = ?, mod_metadata = ?, mod_content = ? WHERE id = ?");
+			        " SET date = ?, size = ?, metadata = ?, mod_metadata = ?, change_date = ?, mod_content = ?" +
+                    " WHERE id = ?");
 			stmt.setInt(1, (int) (item.getDate() / 1000));
 			stmt.setInt(2, (int) size);
             stmt.setString(3, metadata);
             stmt.setInt(4, mbox.getOperationChangeID());
-            stmt.setInt(5, item.getSavedSequence());
-            stmt.setInt(6, item.getId());
+            stmt.setInt(5, mbox.getOperationTimestamp());
+            stmt.setInt(6, item.getSavedSequence());
+            stmt.setInt(7, item.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
         	throw ServiceException.FAILURE("writing metadata for mailbox " + item.getMailboxId() + ", item " + item.getId(), e);
@@ -327,12 +334,14 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
-                    " SET date = ?, size = ?, subject = ?, mod_metadata = ? WHERE id = ?");
+                    " SET date = ?, size = ?, subject = ?, mod_metadata = ?, change_date = ?" +
+                    " WHERE id = ?");
             stmt.setInt(1, (int) (item.getDate() / 1000));
             stmt.setInt(2, (int) size);
             stmt.setString(3, item.getSubject());
             stmt.setInt(4, mbox.getOperationChangeID());
-            stmt.setInt(5, item.getId());
+            stmt.setInt(5, mbox.getOperationTimestamp());
+            stmt.setInt(6, item.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("writing subject for mailbox " + item.getMailboxId() + ", item " + item.getId(), e);
@@ -349,7 +358,7 @@ public class DbMailItem {
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
                     " SET type = ?, parent_id = ?, date = ?, size = ?, blob_digest = ?, flags = ?," +
-                    "     sender = ?, subject = ?, metadata = ?, mod_metadata = ?, mod_content = ?" +
+                    "     sender = ?, subject = ?, metadata = ?, mod_metadata = ?, change_date = ?, mod_content = ?" +
                     " WHERE id = ?");
             stmt.setByte(1, item.getType());
             if (item.getParentId() <= 0)
@@ -364,8 +373,9 @@ public class DbMailItem {
             stmt.setString(8, item.getSubject());
             stmt.setString(9, metadata);
             stmt.setInt(10, mbox.getOperationChangeID());
-            stmt.setInt(11, item.getSavedSequence());
-            stmt.setInt(12, item.getId());
+            stmt.setInt(11, mbox.getOperationTimestamp());
+            stmt.setInt(12, item.getSavedSequence());
+            stmt.setInt(13, item.getId());
             stmt.executeUpdate();
             
             // Update the flagset cache.  Assume that the item's in-memory
@@ -476,16 +486,17 @@ public class DbMailItem {
             else                                      relation = "id = ?";
 
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
-                    " SET " + column + " = " + column + (add ? " | ?" : " & ?") + ", mod_metadata = ?" +
+                    " SET " + column + " = " + column + (add ? " | ?" : " & ?") + ", mod_metadata = ?, change_date = ?" +
                     " WHERE " + relation);
             stmt.setLong(1, add ? tag.getBitmask() : ~tag.getBitmask());
             stmt.setInt(2, mbox.getOperationChangeID());
+            stmt.setInt(3, mbox.getOperationTimestamp());
             if (item instanceof Tag)
-                stmt.setLong(3, ((Tag) item).getBitmask());
+                stmt.setLong(4, ((Tag) item).getBitmask());
             else if (item instanceof VirtualConversation)
-                stmt.setInt(3, ((VirtualConversation) item).getMessageId());
+                stmt.setInt(4, ((VirtualConversation) item).getMessageId());
             else
-                stmt.setInt(3, item.getId());
+                stmt.setInt(4, item.getId());
             stmt.executeUpdate();
 
             // Update the flagset or tagset cache.  Assume that the item's in-memory
@@ -515,12 +526,13 @@ public class DbMailItem {
         try {
             String column = (tag instanceof Flag ? "flags" : "tags");
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(tag) +
-                    " SET " + column + " = " + column + (add ? " | ?" : " & ?") + ", mod_metadata = ?" +
+                    " SET " + column + " = " + column + (add ? " | ?" : " & ?") + ", mod_metadata = ?, change_date = ?" +
                     " WHERE id IN " + suitableNumberOfVariables(itemIDs));
             stmt.setLong(1, add ? tag.getBitmask() : ~tag.getBitmask());
             stmt.setInt(2, mbox.getOperationChangeID());
+            stmt.setInt(3, mbox.getOperationTimestamp());
             for (int i = 0; i < itemIDs.length; i++)
-                stmt.setInt(i + 3, itemIDs.array[i]);
+                stmt.setInt(i + 4, itemIDs.array[i]);
             stmt.executeUpdate();
 
             // Update the flagset or tagset cache.  Assume that the item's in-memory
@@ -572,16 +584,17 @@ public class DbMailItem {
             else                                      relation = "id = ?";
 
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
-                    " SET unread = ?, mod_metadata = ?" +
+                    " SET unread = ?, mod_metadata = ?, change_date = ?" +
                     " WHERE " + relation + " AND type = " + MailItem.TYPE_MESSAGE);
             stmt.setBoolean(1, unread);
             stmt.setInt(2, mbox.getOperationChangeID());
+            stmt.setInt(3, mbox.getOperationTimestamp());
             if (item instanceof Tag)
-                stmt.setLong(3, ((Tag) item).getBitmask());
+                stmt.setLong(4, ((Tag) item).getBitmask());
             else if (item instanceof VirtualConversation)
-                stmt.setInt(3, ((VirtualConversation) item).getMessageId());
+                stmt.setInt(4, ((VirtualConversation) item).getMessageId());
             else
-                stmt.setInt(3, item.getId());
+                stmt.setInt(4, item.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("updating unread state for item " + item.getId(), e);
@@ -599,12 +612,13 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox) +
-                    " SET unread = ?, mod_metadata = ?" +
+                    " SET unread = ?, mod_metadata = ?, change_date = ?" +
                     " WHERE id IN" + suitableNumberOfVariables(itemIDs));
             stmt.setBoolean(1, unread);
             stmt.setInt(2, mbox.getOperationChangeID());
+            stmt.setInt(3, mbox.getOperationTimestamp());
             for (int i = 0; i < itemIDs.length; i++)
-                stmt.setInt(i + 3, itemIDs.array[i]);
+                stmt.setInt(i + 4, itemIDs.array[i]);
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("updating tag data for items [" + itemIDs + "]", e);
@@ -619,13 +633,14 @@ public class DbMailItem {
     	PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(tag) +
-                    " SET tags = tags & ?, mod_metadata = ?" +
+                    " SET tags = tags & ?, mod_metadata = ?, change_date = ?" +
                     " WHERE tags & ?");
             stmt.setLong(1, ~tag.getBitmask());
             stmt.setInt(2, mbox.getOperationChangeID());
-            stmt.setLong(3, tag.getBitmask());
+            stmt.setInt(3, mbox.getOperationTimestamp());
+            stmt.setLong(4, tag.getBitmask());
         	stmt.executeUpdate();
-            
+
             TagsetCache tagsets = getTagsetCache(conn, mbox.getId());
             tagsets.applyMask(tag.getTagBitmask(), false);
         } catch (SQLException e) {
@@ -645,10 +660,11 @@ public class DbMailItem {
             stmt = conn.prepareStatement("UPDATE " + table + ", " +
                     "(SELECT parent_id pid, COUNT(*) count, GROUP_CONCAT(id SEPARATOR ':') deleted FROM " +
                     getMailItemTableName(folder) + " WHERE folder_id = ? AND parent_id IS NOT NULL GROUP BY parent_id) x" +
-                    " SET size = size - count, metadata = CONCAT(deleted, ':', metadata), mod_metadata = ?" +
+                    " SET size = size - count, metadata = CONCAT(deleted, ':', metadata), mod_metadata = ?, change_date = ?" +
                     " WHERE id = pid AND type = " + MailItem.TYPE_CONVERSATION);
             stmt.setInt(1, folder.getId());
             stmt.setInt(2, mbox.getOperationChangeID());
+            stmt.setInt(3, mbox.getOperationTimestamp());
             stmt.executeUpdate();
             stmt.close();
 
@@ -672,12 +688,13 @@ public class DbMailItem {
                 stmt = conn.prepareStatement("UPDATE " + table + ", " +
                         "(SELECT parent_id pid, COUNT(*) count, GROUP_CONCAT(id SEPARATOR ':') deleted FROM " + getMailItemTableName(mbox) +
                         " WHERE id IN" + suitableNumberOfVariables(count) + "AND parent_id IS NOT NULL GROUP BY parent_id) x" +
-                        " SET size = size - count, metadata = CONCAT(deleted, ':', metadata), mod_metadata = ?" +
+                        " SET size = size - count, metadata = CONCAT(deleted, ':', metadata), mod_metadata = ?, change_date = ?" +
                         " WHERE id = pid AND type = " + MailItem.TYPE_CONVERSATION);
                 int attr = 1;
                 for (int index = i; index < i + count; index++)
                 	stmt.setInt(attr++, ((Integer) ids.get(index)).intValue());
-                stmt.setLong(attr++, mbox.getOperationTimestamp());
+                stmt.setInt(attr++, mbox.getOperationChangeID());
+                stmt.setInt(attr++, mbox.getOperationTimestamp());
                 stmt.executeUpdate();
                 stmt.close();
             } catch (SQLException e) {
@@ -1930,19 +1947,21 @@ public class DbMailItem {
     private static final int CI_INDEX_ID    = 5;
     private static final int CI_DATE        = 6;
     private static final int CI_SIZE        = 7;
-    private static final int CI_BLOB_DIGEST = 8;
-    private static final int CI_UNREAD      = 9;
-    private static final int CI_FLAGS       = 10;
-    private static final int CI_TAGS        = 11;
-//    private static final int CI_SENDER      = 12;
-    private static final int CI_SUBJECT     = 12;
-    private static final int CI_METADATA    = 13;
-    private static final int CI_MODIFIED    = 14;
-    private static final int CI_SAVED       = 15;
-    private static final int CI_VOLUME_ID   = 16;
+    private static final int CI_VOLUME_ID   = 8;
+    private static final int CI_BLOB_DIGEST = 9;
+    private static final int CI_UNREAD      = 10;
+    private static final int CI_FLAGS       = 11;
+    private static final int CI_TAGS        = 12;
+//    private static final int CI_SENDER      = 13;
+    private static final int CI_SUBJECT     = 13;
+    private static final int CI_METADATA    = 14;
+    private static final int CI_MODIFIED    = 15;
+    private static final int CI_MODIFY_DATE = 16;
+    private static final int CI_SAVED       = 17;
 
-    private static final String DB_FIELDS = "mi.id, mi.type, mi.parent_id, mi.folder_id, mi.index_id, mi.date, mi.size, mi.blob_digest, " +
-                                            "mi.unread, mi.flags, mi.tags, mi.subject, mi.metadata, mi.mod_metadata, mi.mod_content, mi.volume_id";
+    private static final String DB_FIELDS = "mi.id, mi.type, mi.parent_id, mi.folder_id, mi.index_id, mi.date, " +
+                                            "mi.size, mi.volume_id, mi.blob_digest, mi.unread, mi.flags, mi.tags, " +
+                                            "mi.subject, mi.metadata, mi.mod_metadata, mi.change_date, mi.mod_content";
 
     private static UnderlyingData constructItem(ResultSet rs) throws SQLException {
         return constructItem(rs, 0);
@@ -1956,6 +1975,7 @@ public class DbMailItem {
         data.indexId     = rs.getInt(CI_INDEX_ID + offset);
         data.date        = rs.getInt(CI_DATE + offset);
         data.size        = rs.getInt(CI_SIZE + offset);
+        data.volumeId    = rs.getShort(CI_VOLUME_ID + offset);
         data.blobDigest  = rs.getString(CI_BLOB_DIGEST + offset);
         data.unreadCount = rs.getInt(CI_UNREAD + offset);
         data.flags       = rs.getInt(CI_FLAGS + offset);
@@ -1964,12 +1984,11 @@ public class DbMailItem {
         data.metadata    = rs.getString(CI_METADATA + offset);
         data.modMetadata = rs.getInt(CI_MODIFIED + offset);
         data.modContent  = rs.getInt(CI_SAVED + offset);
-        data.volumeId    = rs.getShort(CI_VOLUME_ID + offset);
+        data.dateChanged = rs.getInt(CI_MODIFY_DATE + offset);
         // make sure to handle NULL column values
-        if (data.parentId == 0)
-            data.parentId = -1;
-        if (data.indexId == 0)
-            data.indexId = -1;
+        if (data.parentId == 0)     data.parentId = -1;
+        if (data.indexId == 0)      data.indexId = -1;
+        if (data.dateChanged == 0)  data.dateChanged = -1;
         return data;
     }
 

@@ -267,7 +267,6 @@ public class Conversation extends MailItem {
                 .append(',').append(msgs[i].mData.tags);
             sl.add(msgs[i]);
         }
-        int changeID = mbox.getOperationChangeID();
 
         UnderlyingData data = new UnderlyingData();
         data.id          = id;
@@ -277,11 +276,10 @@ public class Conversation extends MailItem {
         data.date        = date;
         data.size        = msgs.length;
         data.metadata    = encodeMetadata(sl);
-        data.modMetadata = changeID;
-        data.modContent  = changeID;
         data.unreadCount = unread;
         data.children    = children.toString();
         data.inheritedTags = tags.toString();
+        data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
 
         Conversation conv = new Conversation(mbox, data);
@@ -290,8 +288,8 @@ public class Conversation extends MailItem {
         DbMailItem.setParent(conv, msgs);
         for (int i = 0; i < msgs.length; i++) {
             mbox.markItemModified(msgs[i], Change.MODIFIED_PARENT);
-            msgs[i].mData.parentId    = id;
-            msgs[i].mData.modMetadata = changeID;
+            msgs[i].mData.parentId = id;
+            msgs[i].mData.metadataChanged(mbox);
         }
         return conv;
     }
@@ -453,8 +451,8 @@ public class Conversation extends MailItem {
 
         // FIXME: this ordering is to work around the fact that when getSenderList has to
         //   recalc the metadata, it uses the already-updated DB message state to do it...
-        mData.date       = mMailbox.getOperationTimestamp();
-        mData.modContent = mMailbox.getOperationChangeID();
+        mData.date = mMailbox.getOperationTimestamp();
+        mData.contentChanged(mMailbox);
         boolean recalculated = getSenderList(false);
 
         if (!recalculated) {
@@ -524,8 +522,8 @@ public class Conversation extends MailItem {
                 Message msg = mMailbox.getCachedMessage(new Integer(childId));
                 if (msg != null) {
                     msg.markItemModified(Change.MODIFIED_PARENT);
-                    msg.mData.parentId  = mId;
-                    msg.mData.modMetadata = mMailbox.getOperationChangeID();
+                    msg.mData.parentId = mId;
+                    msg.mData.metadataChanged(mMailbox);
                 }
             }
         }

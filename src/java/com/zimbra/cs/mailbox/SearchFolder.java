@@ -95,8 +95,7 @@ public class SearchFolder extends Folder {
         data.date        = mbox.getOperationTimestamp();
         data.subject     = name;
         data.metadata    = encodeMetadata(query, types, sort);
-        data.modMetadata = mbox.getOperationChangeID();
-        data.modContent  = mbox.getOperationChangeID();
+        data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
         
         SearchFolder search = new SearchFolder(mbox, data);

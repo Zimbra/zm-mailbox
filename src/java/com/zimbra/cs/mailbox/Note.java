@@ -117,8 +117,7 @@ public class Note extends MailItem {
         data.date        = mbox.getOperationTimestamp();
         data.subject     = content;
         data.metadata    = encodeMetadata(location, color);
-        data.modMetadata = mbox.getOperationChangeID();
-        data.modContent  = mbox.getOperationChangeID();
+        data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
         
         Note note = new Note(mbox, data);

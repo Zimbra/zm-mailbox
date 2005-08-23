@@ -264,8 +264,7 @@ public class Contact extends MailItem {
         data.tags        = Tag.tagsToBitmask(tags);
         data.sender      = getFileAsString(attrs);
         data.metadata    = encodeMetadata(attrs);
-        data.modMetadata = mbox.getOperationChangeID();
-        data.modContent  = mbox.getOperationChangeID();
+        data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
 
         Contact con = new Contact(mbox, data);
@@ -306,8 +305,8 @@ public class Contact extends MailItem {
             throw ServiceException.INVALID_REQUEST("contact must have attributes", null);
 
     	// XXX: should update mData.size and Mailbox.size and folder.size
-        mData.date       = mMailbox.getOperationTimestamp();
-        mData.modContent = mMailbox.getOperationChangeID();
+        mData.date = mMailbox.getOperationTimestamp();
+        mData.contentChanged(mMailbox);
         saveData(getFileAsString());
 	}
 

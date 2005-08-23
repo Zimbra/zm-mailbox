@@ -175,8 +175,7 @@ public class Appointment extends MailItem {
         data.tags = Tag.tagsToBitmask(tags);
         data.sender = uid;
         data.metadata = encodeMetadata(uid, startTime, endTime, recur,invites, firstInvite.getTimeZoneMap());
-        data.modMetadata = mbox.getOperationChangeID();
-        data.modContent = mbox.getOperationChangeID();
+        data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
 
         Appointment appt = new Appointment(mbox, data);
