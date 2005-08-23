@@ -130,9 +130,7 @@ public class SetAppointment extends CalendarRequest {
     
     protected static int sendDeleteCalendarMessage(OperationContext octxt, Account acct, Mailbox mbox, CalSendData dat) throws ServiceException
     {
-        int[] folderId = { Mailbox.ID_FOLDER_CALENDAR };
-        
-        int msgId = sendMimeMessage(octxt, mbox, acct, folderId, dat, dat.mMm, dat.mOrigId, dat.mReplyType);
+        int msgId = sendMimeMessage(octxt, mbox, acct, Mailbox.ID_FOLDER_CALENDAR, dat, dat.mMm, dat.mOrigId, dat.mReplyType);
         
         mbox.delete(octxt, msgId, MailItem.TYPE_MESSAGE);
         

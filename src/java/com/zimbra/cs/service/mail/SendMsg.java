@@ -45,7 +45,6 @@ import org.apache.commons.logging.LogFactory;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapDomain;
 import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
@@ -255,9 +254,10 @@ public class SendMsg extends WriteOpDocumentHandler {
     static int sendMimeMessage(OperationContext octxt, Mailbox mbox, Account acct, boolean saveToSent,
                                MimeMessageData mimeData, MimeMessage mm, int origId, String replyType) 
     throws ServiceException {
-        int folderId[] = null; 
-        if (saveToSent)
-            folderId = new int[] { getSentFolder(acct, mbox) };
+        int folderId = 0;
+        if (saveToSent) {
+            folderId = getSentFolder(acct, mbox);
+        }
 
         return sendMimeMessage(octxt, mbox, acct, folderId, mimeData, mm, origId, replyType);
     }
@@ -278,7 +278,7 @@ public class SendMsg extends WriteOpDocumentHandler {
      * @return
      * @throws ServiceException
      */
-    static int sendMimeMessage(OperationContext octxt, Mailbox mbox, Account acct, int saveToFolders[],
+    static int sendMimeMessage(OperationContext octxt, Mailbox mbox, Account acct, int saveToFolder,
                                MimeMessageData mimeData, MimeMessage mm, int origId, String replyType)
     throws ServiceException {
         try {
@@ -295,21 +295,16 @@ public class SendMsg extends WriteOpDocumentHandler {
             mm.saveChanges();
 
             // save a copy of the message to the Sent Mail folder
-            Message[] msg = null;
-            if (saveToFolders != null) {
-                msg = new Message[saveToFolders.length];
+            Message  msg = null;
+            if (saveToFolder != 0) {
                 int flags = Flag.FLAG_FROM_ME;
                 ParsedMessage pm = new ParsedMessage(mm, mm.getSentDate().getTime(),
                         mbox.attachmentsIndexingEnabled());
                 
                 pm.analyze();
                 
-                // save it to the 1st requested folder
-                msg[0] = mbox.addMessage(octxt, pm, saveToFolders[0], false, flags, null, convId);
-
-                // copy it to other requested folders
-                for (int i = 1; i < saveToFolders.length; i++) 
-                     msg[i] = (Message) mbox.copy(octxt, msg[0].getId(), msg[0].getType(), saveToFolders[i]);
+                // save it to the requested folder
+                msg = mbox.addMessage(octxt, pm, saveToFolder, false, flags, null, convId);
             }
             
             // send the message via SMTP
@@ -317,12 +312,10 @@ public class SendMsg extends WriteOpDocumentHandler {
                 if (mm.getAllRecipients() != null)
                     Transport.send(mm);
             } catch (MessagingException e) {
-                for (int i = msg.length-1; i >= 0; i--)
-                    rollbackMessage(octxt, mbox, msg[i]);
+                rollbackMessage(octxt, mbox, msg);
                 throw e;
             } catch (RuntimeException e) {
-                for (int i = msg.length-1; i >= 0; i--)
-                    rollbackMessage(octxt, mbox, msg[i]);
+                rollbackMessage(octxt, mbox, msg);
                 throw e;
             }
 
@@ -355,7 +348,7 @@ public class SendMsg extends WriteOpDocumentHandler {
                 }
             }
 
-	        return (msg != null ? msg[0].getId() : 0);
+	        return (msg != null ? msg.getId() : 0);
 
 	    } catch (SendFailedException failure) {
 	        String excepStr = ExceptionToString.ToString(failure);

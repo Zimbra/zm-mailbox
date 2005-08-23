@@ -28,8 +28,11 @@ package com.zimbra.cs.service.mail;
 import javax.mail.internet.MimeMessage;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.Message.ApptInfo;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 
@@ -66,16 +69,26 @@ public abstract class CalendarRequest extends SendMsg {
     protected static Element sendCalendarMessage(OperationContext octxt, Account acct, Mailbox mbox, CalSendData dat, Element response)
     throws ServiceException { 
         synchronized (mbox) {
-            int[] folderId;
-            if (dat.mSaveToSent)
-                folderId = new int[] { Mailbox.ID_FOLDER_CALENDAR, getSentFolder(acct, mbox) };
-            else
-                folderId = new int[] { Mailbox.ID_FOLDER_CALENDAR };
+            int  folderId = 0;
+            if (dat.mSaveToSent) {
+                folderId = getSentFolder(acct, mbox);
+            } else {
+                // FIXME hack!  if !save-to-sent, then must save to calendar folder to trigger appt creation.  
+                folderId = Mailbox.ID_FOLDER_CALENDAR;
+            }
 
             int msgId = sendMimeMessage(octxt, mbox, acct, folderId, dat, dat.mMm, dat.mOrigId, dat.mReplyType);
 
-            if (response != null && msgId != 0)
-                response.addUniqueElement(MailService.E_MSG).addAttribute(MailService.A_ID, msgId);
+            if (response != null && msgId != 0) {
+                if (dat.mSaveToSent) {
+                    response.addUniqueElement(MailService.E_MSG).addAttribute(MailService.A_ID, msgId);
+                } else {
+                    Message msg = mbox.getMessageById(msgId);
+                    ApptInfo inf = msg.getApptInfo(0); // OK for now b/c client never creates >0 components, but FIXME
+                    String inviteId = inf.getAppointmentId()+"-"+msgId;
+                    response.addUniqueElement(MailService.E_MSG).addAttribute(MailService.A_ID, inviteId);
+                }
+            }
         }
         
         return response;
