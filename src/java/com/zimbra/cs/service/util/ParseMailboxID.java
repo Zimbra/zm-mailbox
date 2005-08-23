@@ -109,26 +109,26 @@ public class ParseMailboxID
      * @return the specified mailbox identifier - useful if after checking isLocal() you decide
      * you need to pass this request on to another server.
      */
-    public String getString() { return initialString; };
+    public String getString() { return mInitialString; };
     public String toString()  { return getString(); };
     
     /**
      * @return TRUE if the mailbox is owned by this server
      */
-    public boolean isLocal() { return isLocal; }
+    public boolean isLocal() { return mIsLocal; }
     
     
     /**
      * @return the server ID.  This ALWAYS returns NULL if isLocal is true! 
      */
-    public String getServer() { return hostName; } 
+    public String getServer() { return mHostName; } 
     
     
     /**
      * @return the integer ID part of the mailbox, if we have one.  Note that if the
      * mailbox is nonlocal, then we may not have this value...
      */
-    public int getMailboxId() { return mailboxId; }
+    public int getMailboxId() { return mMailboxId; }
     
     
     /**
@@ -136,30 +136,30 @@ public class ParseMailboxID
      * 
      * @return mailbox
      */
-    public Mailbox getMailbox() { return mailbox; }
+    public Mailbox getMailbox() { return mMailbox; }
     
     /**
      * @return true if The specifier was a "*"ed wildcard which means ALL mailbox ID's. 
      */
-    public boolean isAllMailboxIds() { return allMailboxIds; }
+    public boolean isAllMailboxIds() { return mAllMailboxIds; }
     
     
     /**
      * @return true if the specifier was a "*"ed wildcard which means ALL servers.
      */
-    public boolean isAllServers() { return allServers; };
+    public boolean isAllServers() { return mAllServers; };
     
     
-    protected String hostName = null; // if not localhost
-    protected Mailbox mailbox = null;
-    protected int mailboxId = 0;
-    protected boolean isLocal = false;
-    protected boolean allMailboxIds = false;
-    protected boolean allServers = false;
-    protected String initialString;
+    protected String mHostName = null; // if not localhost
+    protected Mailbox mMailbox = null;
+    protected int mMailboxId = 0;
+    protected boolean mIsLocal = false;
+    protected boolean mAllMailboxIds = false;
+    protected boolean mAllServers = false;
+    protected String mInitialString;
     
     protected ParseMailboxID(String idStr) throws ServiceException, IllegalArgumentException {
-        initialString = idStr;
+        mInitialString = idStr;
         
         Account acct = null;  
         if (idStr.indexOf('@') >= 0) {
@@ -170,11 +170,11 @@ public class ParseMailboxID
             }
             
             if (acct.isCorrectHost()) {
-                isLocal = true;
-                mailbox = Mailbox.getMailboxByAccountId(acct.getId());
-                mailboxId = mailbox.getId();
+                mIsLocal = true;
+                mMailbox = Mailbox.getMailboxByAccountId(acct.getId());
+                mMailboxId = mMailbox.getId();
             } else {
-                hostName = acct.getAttr(Provisioning.A_zimbraMailHost);
+                mHostName = acct.getAttr(Provisioning.A_zimbraMailHost);
             }
             
         } else if (idStr.indexOf('-') >= 0) {
@@ -182,11 +182,11 @@ public class ParseMailboxID
             acct = Provisioning.getInstance().getAccountById(idStr);
             
             if (acct.isCorrectHost()) {
-                isLocal = true;
-                mailbox = Mailbox.getMailboxByAccountId(acct.getId());
-                mailboxId = mailbox.getId();
+                mIsLocal = true;
+                mMailbox = Mailbox.getMailboxByAccountId(acct.getId());
+                mMailboxId = mMailbox.getId();
             } else {
-                hostName = acct.getAttr(Provisioning.A_zimbraMailHost);
+                mHostName = acct.getAttr(Provisioning.A_zimbraMailHost);
             }
             
         } else if (idStr.indexOf('/') >= 0) {
@@ -202,38 +202,38 @@ public class ParseMailboxID
                 }
             }
             
-            hostName = substrs[1];
-            if (hostName.equals("*")) {
-                allServers = true;
+            mHostName = substrs[1];
+            if (mHostName.equals("*")) {
+                mAllServers = true;
             }
             
             if (substrs[2].startsWith("*")) {
-                allMailboxIds = true;
+                mAllMailboxIds = true;
             } else {
-                if (allServers==true) {
+                if (mAllServers==true) {
                     throw new IllegalArgumentException("Invalid mailboxID (\"*/number is not allowed): "+ idStr);
                 }
-                mailboxId = Integer.parseInt(substrs[2]);
+                mMailboxId = Integer.parseInt(substrs[2]);
             }
                 
             
             String localhost = Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname);
-            if (hostName.equals(localhost)) {
-                isLocal = true;
-                hostName = null;
-                if (!allMailboxIds) {
-                    mailbox = Mailbox.getMailboxById(mailboxId);
+            if (mHostName.equals(localhost)) {
+                mIsLocal = true;
+                mHostName = null;
+                if (!mAllMailboxIds) {
+                    mMailbox = Mailbox.getMailboxById(mMailboxId);
                 }
             }
         } else {
             if (idStr.equals("*")) {
-                hostName = "*";
-                allMailboxIds = true;
-                allServers = true;
+                mHostName = "*";
+                mAllMailboxIds = true;
+                mAllServers = true;
             } else {
-                mailboxId = Integer.parseInt(idStr);
-                isLocal = true;
-                mailbox = Mailbox.getMailboxById(mailboxId);
+                mMailboxId = Integer.parseInt(idStr);
+                mIsLocal = true;
+                mMailbox = Mailbox.getMailboxById(mMailboxId);
             }
         }
     }
