@@ -152,7 +152,7 @@ public class DbMailItem {
                     "(id, type, parent_id, folder_id, index_id, date, size, volume_id, blob_digest," +
                     " unread, flags, tags, sender, subject, metadata, mod_metadata, change_date, mod_content) " +
                     "(SELECT ?, type, ?, ?, index_id, date, size, volume_id, blob_digest, unread," +
-                    " flags, tags, sender, subject, ?, ?, ? FROM " + table + " WHERE id = ?)");
+                    " flags, tags, sender, subject, ?, ?, ?, ? FROM " + table + " WHERE id = ?)");
             int pos = 1;
             stmt.setInt(pos++, id);
             if (parentId <= 0)
