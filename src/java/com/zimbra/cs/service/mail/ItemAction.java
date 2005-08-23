@@ -12,6 +12,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.SpamHandler;
 import com.zimbra.soap.ZimbraContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
 
@@ -82,7 +83,7 @@ public class ItemAction extends WriteOpDocumentHandler {
                 int defaultFolder = flagValue ? Mailbox.ID_FOLDER_SPAM : Mailbox.ID_FOLDER_INBOX;
                 int folderId = (int) action.getAttributeLong(MailService.A_FOLDER, defaultFolder);
                 mbox.move(octxt, id, type, folderId, tcon);
-                // XXX: send items to spamfilter for training purposes
+                SpamHandler.getInstance().handle(mbox, id, type, flagValue);
             } else if (op.equals(OP_UPDATE)) {
                 int folderId = (int) action.getAttributeLong(MailService.A_FOLDER, -1);
                 String flags = action.getAttribute(MailService.A_FLAGS, null);

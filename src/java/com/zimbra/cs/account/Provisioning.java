@@ -656,6 +656,8 @@ public abstract class Provisioning {
     public static final String A_zimbraSpamKillPercent = "zimbraSpamKillPercent";
     public static final String A_zimbraSpamSubjectTag = "zimbraSpamSubjectTag";
     public static final String A_zimbraSpamTagPercent = "zimbraSpamTagPercent";
+    public static final String A_zimbraSpamIsSpamAccount = "zimbraSpamIsSpamAccount";
+    public static final String A_zimbraSpamIsNotSpamAccount = "zimbraSpamIsNotSpamAccount";
 
     public static final String A_zimbraVirusCheckEnabled = "zimbraVirusCheckEnabled";
     public static final String A_zimbraVirusWarnRecipient = "zimbraVirusWarnRecipient";
