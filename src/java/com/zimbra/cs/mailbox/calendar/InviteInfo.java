@@ -70,8 +70,9 @@ public class InviteInfo implements Comparable {
         if (toRet == 0) {
             toRet = mComponentId - other.mComponentId;
             if (toRet == 0) {
-                assert (mRecurrenceId == other.mRecurrenceId);
-                }
+                assert ((mRecurrenceId == null && other.mRecurrenceId == null) ||
+                        (mRecurrenceId!=null && mRecurrenceId.equals(other.mRecurrenceId)));
+            }
         }
         return toRet;
     }
