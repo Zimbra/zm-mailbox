@@ -103,10 +103,13 @@ public class SendMsg extends WriteOpDocumentHandler {
             // holds return data about the MimeMessage
             MimeMessageData mimeData = new MimeMessageData();
             MimeMessage mm;
-            if (attachment != null)
+            if (attachment != null) {
                 mm = parseUploadedMessage(mbox, attachment, mimeData);
-            else
+            } else {
                 mm = ParseMimeMessage.parseMimeMsgSoap(octxt, mbox, msgElem, null, mimeData);
+            }
+            
+            validateAddresses(mm);
             int msgId = sendMimeMessage(octxt, mbox, acct, saveToSent, mimeData, mm, msgElem);
 
             Element response = lc.createElement(MailService.SEND_MSG_RESPONSE);
