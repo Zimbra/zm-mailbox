@@ -1631,8 +1631,8 @@ public class DbMailItem {
             Boolean unread = null;
             Set searchTagsets = new HashSet();
             Set searchFlagsets = new HashSet();
-            TagsetCache flagsets = getFlagsetCache(conn, c.mailboxId);
-            TagsetCache tagsets = getTagsetCache(conn, c.mailboxId);
+            TagsetCache allFlagsets = getFlagsetCache(conn, c.mailboxId);
+            TagsetCache allTagsets = getTagsetCache(conn, c.mailboxId);
             boolean includeFlags = false;
             boolean excludeFlags = false;
             boolean includeTags = false;
@@ -1643,12 +1643,12 @@ public class DbMailItem {
                 if (c.tags[i].getId() == Flag.ID_FLAG_UNREAD) {
                     unread = Boolean.TRUE; 
                 } else if (c.tags[i] instanceof Flag) {
-                    Set s = flagsets.getTagsets(c.tags[i].getBitmask());
+                    Set s = allFlagsets.getTagsets(c.tags[i].getBitmask());
                     searchFlagsets.addAll(s);
                     includeFlags = true;
                 } else {
                     // Add all tagsets that have the given bit set 
-                    Set s = tagsets.getTagsets(c.tags[i].getBitmask());
+                    Set s = allTagsets.getTagsets(c.tags[i].getBitmask());
                     searchTagsets.addAll(s);
                     includeTags = true;
                 }
@@ -1668,10 +1668,10 @@ public class DbMailItem {
             // If we're excluding and not including, start with all possible
             // bitsets.
             if (!includeTags && excludeTags) {
-                searchTagsets = tagsets.getAllTagsets();
+                searchTagsets = allTagsets.getAllTagsets();
             }
             if (!includeFlags && excludeFlags) {
-                searchFlagsets = flagsets.getAllTagsets();
+                searchFlagsets = allFlagsets.getAllTagsets();
             }
             
             // Remove excluded tags and flags from the search sets
@@ -1679,13 +1679,29 @@ public class DbMailItem {
                 if (c.excludeTags[i].getId() == Flag.ID_FLAG_UNREAD) {
                     unread = Boolean.FALSE;
                 } else if (c.excludeTags[i] instanceof Flag) {
-                    Set s = flagsets.getTagsets(c.excludeTags[i].getBitmask());
+                    Set s = allFlagsets.getTagsets(c.excludeTags[i].getBitmask());
                     searchFlagsets.removeAll(s);
                 } else {
                     // Remove tagsets that are being excluded
-                    Set s = tagsets.getTagsets(c.excludeTags[i].getBitmask());
+                    Set s = allTagsets.getTagsets(c.excludeTags[i].getBitmask());
                     searchTagsets.removeAll(s);
                 }
+
+            // Handle the case where the specified tags or flags don't match anything
+            if ((includeTags || excludeTags) && searchTagsets.size() == 0) {
+                return result;
+            }
+            if ((includeFlags || excludeFlags) && searchFlagsets.size() == 0) {
+                return result;
+            }
+            
+            // If we're searching for all tags or flags, don't filter
+            if (searchTagsets.size() == allTagsets.size()) {
+                searchTagsets.clear();
+            }
+            if (searchFlagsets.size() == allFlagsets.size()) {
+                searchFlagsets.clear();
+            }
 
             // Assemble the search query
             StringBuffer statement = new StringBuffer("SELECT id, index_id, type, " + sortField(c.sort));

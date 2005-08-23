@@ -61,7 +61,7 @@ public class Versions {
 	 * UPDATE THESE TO REQUIRE RESET-WORLD TO BE RUN
 	 *  
 	 */
-	public static final String DB_VERSION = "14";
+	public static final String DB_VERSION = "15";
 
 	/**
 	 * The INDEX_VERSION is stored into the config table of the DB when the DB is created.  

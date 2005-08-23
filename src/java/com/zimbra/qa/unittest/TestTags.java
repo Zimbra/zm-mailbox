@@ -41,10 +41,13 @@ import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ZimbraPerf;
+import com.zimbra.cs.util.StringUtil;
 import com.zimbra.cs.util.ZimbraLog;
 
 /**
@@ -123,7 +126,7 @@ public class TestTags extends TestCase
         ZimbraLog.test.debug("testTagSearch()");
 
         // Create tags
-        mTags = new Tag[3];
+        mTags = new Tag[4];
         for (int i = 0; i < mTags.length; i++) {
             mTags[i] = mMbox.createTag(null, TAG_PREFIX + (i + 1), (byte)0);
         }
@@ -177,6 +180,10 @@ public class TestTags extends TestCase
         assertTrue("5: no message 2", ids.contains(new Integer(mMessage2.getId())));
         assertFalse("5: contains message 3", ids.contains(new Integer(mMessage3.getId())));
         assertFalse("5: contains message 4", ids.contains(new Integer(mMessage4.getId())));
+        
+        // tag:TestTags4 -> ()
+        ids = search("tag:" + mTags[3].getName(), MailItem.TYPE_MESSAGE);
+        assertEquals("6: search should have returned no results", 0, ids.size());
     }
     
     public void testFlagSearch()
@@ -239,6 +246,32 @@ public class TestTags extends TestCase
         assertTrue("5: no message 2", ids.contains(new Integer(mMessage2.getId())));
         assertFalse("5: contains message 3", ids.contains(new Integer(mMessage3.getId())));
         assertFalse("5: contains message 4", ids.contains(new Integer(mMessage4.getId())));
+        
+        // tag:\Deleted -> ()
+        ids = search("tag:\\Deleted", MailItem.TYPE_MESSAGE);
+        assertEquals("6: search should have returned no results", 0, ids.size());
+    }
+
+    public void testSearchUnreadAsTag()
+    throws Exception {
+        ZimbraLog.test.debug("testSearchUnreadAsTag()");
+
+        boolean unseenSearchSucceeded = false;
+        try {
+            search("tag:\\Unseen", MailItem.TYPE_MESSAGE);
+            unseenSearchSucceeded = true;
+        } catch (ServiceException e) {
+            assertEquals("Unexpected exception type", MailServiceException.NO_SUCH_TAG, e.getCode());
+        }
+        assertFalse("tag:\\Unseen search should not have succeeded", unseenSearchSucceeded);
+        
+        Set isUnreadIds = search("is:unread", MailItem.TYPE_MESSAGE);
+        Set tagUnreadIds = search("tag:\\Unread", MailItem.TYPE_MESSAGE);
+        if (!(isUnreadIds.containsAll(tagUnreadIds))) {
+            fail("Mismatch in search results.  is:unread returned (" +
+                StringUtil.join(",", isUnreadIds) + "), tag:\\Unread returned (" +
+                StringUtil.join(",", tagUnreadIds) + ")");
+        }
     }
     
     private Set search(String query, byte type)

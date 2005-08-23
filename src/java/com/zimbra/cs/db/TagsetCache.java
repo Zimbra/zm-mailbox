@@ -39,6 +39,10 @@ class TagsetCache {
     TagsetCache(String name) {
         mName = name;
     }
+    
+    int size() {
+        return mTagsets.size();
+    }
 
     void addTagset(long tagset) {
         addTagset(new Long(tagset));

@@ -127,7 +127,11 @@ flags
   is:sent
   is:received
   is:invite
-    
+
+  The flag name can also be used in a search:
+    tag:\{FlagName} where {FlagName} is one of the following values:
+      Attached, Answered, Copied, Deleted, Draft, Flagged, Forwarded, Notified, Subscribed, Unread
+  
 date-related fields
 
   after:{date}
