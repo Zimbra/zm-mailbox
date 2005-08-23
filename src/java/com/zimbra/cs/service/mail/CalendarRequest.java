@@ -55,6 +55,8 @@ public abstract class CalendarRequest extends SendMsg {
 
         // parse the data
         toRet.mMm = ParseMimeMessage.parseMimeMsgSoap(octxt, mbox, msgElem, null, inviteParser, toRet);
+        
+        validateAddresses(toRet.mMm);
 
         toRet.mSaveToSent = shouldSaveToSent(acct);
 

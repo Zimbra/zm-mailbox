@@ -31,6 +31,7 @@ package com.zimbra.cs.service.mail;
 import java.io.IOException;
 import java.util.*;
 
+import javax.mail.Address;
 import javax.mail.Transport;
 import javax.mail.SendFailedException;
 import javax.mail.MessagingException;
@@ -42,7 +43,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapDomain;
 import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
@@ -113,6 +116,63 @@ public class SendMsg extends WriteOpDocumentHandler {
             return response;
         } finally {
             sWatch.stop(startTime);
+        }
+    }
+    
+    /**
+     * Check to see if all the addresses are "Valid" -- right now this means that they are either to a remote
+     * domain, or they are a local domain and we can find them in LDAP. 
+     * 
+     * @param mm
+     * @throws ServiceException if couldn't read addresses from mm
+     * @throws MailServiceException.UNKNOWN_LOCAL_RECIPIENTS if one of the addresses was invalid
+     */
+    protected static void validateAddresses(MimeMessage mm) throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        
+        List myDomains = prov.getAllDomains();
+        
+        ArrayList unknownRecipients = new ArrayList();
+        
+        try {
+            Address[] addrs = mm.getAllRecipients();
+            
+            AllAddresses: for (int i = addrs.length-1; i >=0; i--) {
+                InternetAddress ia = (InternetAddress) addrs[i];
+                
+                String addr = ia.getAddress();
+                
+                if (prov.getAccountByName(addr) == null) {
+                    
+                    // couldn't find it -- is it a local domain?
+                    String parts[] = addr.split("@");
+                    if (parts.length > 1) {
+                        IsLocalDomain: for (Iterator domainIter = myDomains.iterator(); domainIter.hasNext();) {
+                            Domain domain = (Domain)domainIter.next(); 
+                            String domainStr = domain.getName(); 
+                            if (parts[1].equals(domainStr)) {
+                                // it IS a local address.  Why couldn't we find it?
+                                
+                                // is it a distribution list?
+                                if (prov.getDistributionListByName(addr) == null) {
+                                    unknownRecipients.add(addr);
+                                } 
+                                
+                                break IsLocalDomain; // go onto the next address 
+                            }
+                        }
+                    }
+                }
+            }
+            
+        } catch (MessagingException e) {
+            throw ServiceException.FAILURE("Caught MessagingException trying to getAllRecipients "+e, e);
+        }
+        
+        if (unknownRecipients.size() > 0) {
+            String unknown[] = new String[unknownRecipients.size()];
+            unknownRecipients.toArray(unknown);
+            throw MailServiceException.UNKNOWN_LOCAL_RECIPIENTS(unknown);
         }
     }
 
