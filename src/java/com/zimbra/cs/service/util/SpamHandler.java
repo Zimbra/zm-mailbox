@@ -15,7 +15,6 @@ import org.apache.commons.logging.LogFactory;
 import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailboxBlob;
