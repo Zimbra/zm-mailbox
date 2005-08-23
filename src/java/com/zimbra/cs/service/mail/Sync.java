@@ -143,7 +143,7 @@ public class Sync extends DocumentHandler {
             for (Iterator it = changed.iterator(); it.hasNext(); ) {
                 MailItem item = (MailItem) it.next();
                 if (item.getSavedSequence() > begin && type != MailItem.TYPE_FOLDER && type != MailItem.TYPE_TAG)
-                    ToXML.encodeItem(response, item, Change.MODIFIED_FOLDER | Change.MODIFIED_DATE | Change.MODIFIED_SIZE);
+                    ToXML.encodeItem(response, item, Change.MODIFIED_FOLDER | Change.MODIFIED_CONFLICT);
                 else
                     ToXML.encodeItem(response, item, MUTABLE_FIELDS);
             }

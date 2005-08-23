@@ -10,14 +10,14 @@
     </folder>
     <folder id="1" name="USER_ROOT" l="11">
       <folder id="2" name="INBOX" l="1" u="199">
-	<m ids="399,461,420,386,289,592,474,582,410,571,584,454,576,342,360,369,534,574,320,488,507,338,531,487,498,398,287,537,580,606,604,578,586,428,424,599,598,596,408,412,422,414,418"/>
+        <m ids="399,461,420,386,289,592,474,582,410,571,584,454,576,342,360,369,534,574,320,488,507,338,531,487,498,398,287,537,580,606,604,578,586,428,424,599,598,596,408,412,422,414,418"/>
       </folder>
       <folder id="4" name="Junk" l="1"/>
       <folder id="6" name="Drafts" l="1"/>
       <folder id="3" name="Trash" l="1"/>
       <folder id="10" name="Calendar" l="1"/>
       <folder id="7" name="Contacts" l="1">
-	<cn ids="274,273,272,271,270,269,268,267,266,265,264,263,262,261,260,259,258,257,256"/>
+        <cn ids="274,273,272,271,270,269,268,267,266,265,264,263,262,261,260,259,258,257,256"/>
       </folder>
       <folder id="5" name="Sent" l="1"/>
       <search id="636" name="Samuel" query="from:samuel" sortBy="" types="" l="1"/>
@@ -42,12 +42,12 @@
   </deleted>
   <-- modified/created folders (none here) -->
   <-- modified/created tags (none here) -->
-  <-- other modified/created things (id-only means new or content changed) */
+  <-- other modified/created things (only id/folder/date means new or content changed) */
   <m id="275" l="2" cid="276" f="" t="" md="1078024283"/>
   <m id="321" l="3" cid="312" f="u" t="" md="1078025663"/>
   <tag id="68" name="bob" color="6" md="1078025983"/>
   <cn id="664" l="7" f="" t="" md="1078026283"/>
-  <cn id="662"/>
+  <cn id="662" l="7" md="1078026270"/>
 </SyncResponse>
 
 
@@ -85,8 +85,8 @@
   <-- modified/created folders -->
   <folder id="663" name="new name" l="1" md="1078054291"/>
   <-- modified/created tags (none here) -->
-  <-- other modified/created things (id-only means new or content changed) */
-  <m id="5526"/>
+  <-- other modified/created things (only id/folder/date means new or content changed) */
+  <m id="5526" l="2" md="1078054265"/>
   <m id="5522" l="2" cid="5521" f="" t="" md="1078054297"/>
-  <cn id="5531"/>
+  <cn id="5531" l="7" md="1078054296"/>
 </SyncResponse>
