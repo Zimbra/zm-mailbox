@@ -66,7 +66,7 @@ public class MySqlTraceLogger implements Log {
         int duration = -1;
 
         Matcher matcher = PAT_PREPARE.matcher(message);
-        if (matcher.matches()) {
+        if (matcher.find()) {
             String connectionId = matcher.group(1);
             String statementId = matcher.group(2);
             sql = matcher.group(3);
@@ -81,7 +81,7 @@ public class MySqlTraceLogger implements Log {
                 sql = removeSql(connectionId, statementId);
             } else {
                 matcher = PAT_QUERY.matcher(message);
-                if (matcher.matches()) {
+                if (matcher.find()) {
                     duration = Integer.parseInt(matcher.group(1));
                     sql = matcher.group(2);
                 } else {
