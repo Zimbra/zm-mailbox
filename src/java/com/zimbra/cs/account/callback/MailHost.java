@@ -34,6 +34,7 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.Config;
 
 public class MailHost implements AttributeCallback {
 
@@ -49,10 +50,15 @@ public class MailHost implements AttributeCallback {
 
         List servers = Provisioning.getInstance().getAllServers();
         for (Iterator it=servers.iterator(); it.hasNext(); ) {
-            Server s = (Server) it.next();
-            String serviceName = s.getAttr(Provisioning.A_zimbraServiceHostname, null);
-            if (mailHost.equalsIgnoreCase(serviceName)) 
+            Server server = (Server) it.next();
+            String serviceName = server.getAttr(Provisioning.A_zimbraServiceHostname, null);
+            if (mailHost.equalsIgnoreCase(serviceName)) {
+            	// Set zimbraMailTransport attr whenever zimbraMailHost is modified.
+            	int lmtpPort = server.getIntAttr(Provisioning.A_zimbraLmtpBindPort, Config.D_LMTP_BIND_PORT);
+            	String transport = "lmtp:" + mailHost + ":" + lmtpPort;
+            	attrsToModify.put(Provisioning.A_zimbraMailTransport, transport);
                 return;
+            }
         }
         
         throw ServiceException.INVALID_REQUEST("specified "+Provisioning.A_zimbraMailHost+" does not correspond to a valid server service hostname: "+mailHost, null);

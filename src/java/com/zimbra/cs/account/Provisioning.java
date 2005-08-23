@@ -413,6 +413,11 @@ public abstract class Provisioning {
     public static final String A_zimbraMailHost = "zimbraMailHost";
 
     /**
+     * the postfix transport for the mailbox (derived from zimbraMailHost)
+     */
+    public static final String A_zimbraMailTransport = "zimbraMailTransport";
+    
+    /**
      * multi-value COS attr which is list of servers to provision users on when creating accounts
      */
     public static final String A_zimbraMailHostPool = "zimbraMailHostPool";

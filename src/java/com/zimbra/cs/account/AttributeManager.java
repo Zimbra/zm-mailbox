@@ -168,10 +168,10 @@ public class AttributeManager {
 
     public void preModify(Map attrs, Entry entry, Map context, boolean isCreate, boolean checkImmutable) throws ServiceException
     {
-       for (Iterator mit=attrs.entrySet().iterator(); mit.hasNext(); ) {
-            Map.Entry me = (Map.Entry) mit.next();
-            Object value = me.getValue();
-            String name = (String) me.getKey();
+    	String[] keys = (String[]) attrs.keySet().toArray(new String[0]);
+		for (int i = 0; i < keys.length; i++) {
+			String name = keys[i];
+            Object value = attrs.get(name);
             AttributeInfo info = (AttributeInfo) mAttrs.get(name.toLowerCase());
             if (info != null) {
                 info.checkValue(value, checkImmutable);
@@ -180,15 +180,15 @@ public class AttributeManager {
             } else {
                 ZimbraLog.misc.warn("checkValue: no attribute info for: "+name);
             }
-       }
+		}
     }
 
     public void postModify(Map attrs, Entry entry, Map context, boolean isCreate)
     {
-       for (Iterator mit=attrs.entrySet().iterator(); mit.hasNext(); ) {
-            Map.Entry me = (Map.Entry) mit.next();
-            Object v = me.getValue();
-            String name = (String) me.getKey();
+    	String[] keys = (String[]) attrs.keySet().toArray(new String[0]);
+		for (int i = 0; i < keys.length; i++) {
+			String name = keys[i];
+            Object value = attrs.get(name);
             AttributeInfo info = (AttributeInfo) mAttrs.get(name.toLowerCase());
             if (info != null) {
                 if (info.getCallback() != null) {
