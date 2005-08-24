@@ -574,6 +574,7 @@ public abstract class Provisioning {
     public static final String A_zimbraSmtpHostname = "zimbraSmtpHostname";
     public static final String A_zimbraSmtpPort = "zimbraSmtpPort";
     public static final String A_zimbraSmtpTimeout = "zimbraSmtpTimeout";
+    public static final String A_zimbraSmtpSendPartial = "zimbraSmtpSendPartial";
 
     public static final String A_zimbraLmtpAdvertisedName = "zimbraLmtpAdvertisedName";
     public static final String A_zimbraLmtpBindPort = "zimbraLmtpBindPort";

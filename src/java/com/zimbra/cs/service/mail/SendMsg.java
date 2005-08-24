@@ -43,7 +43,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.mailbox.Flag;
@@ -108,7 +107,6 @@ public class SendMsg extends WriteOpDocumentHandler {
                 mm = ParseMimeMessage.parseMimeMsgSoap(octxt, mbox, msgElem, null, mimeData);
             }
             
-            validateAddresses(mm);
             int msgId = sendMimeMessage(octxt, mbox, acct, saveToSent, mimeData, mm, msgElem);
 
             Element response = lc.createElement(MailService.SEND_MSG_RESPONSE);
@@ -118,64 +116,6 @@ public class SendMsg extends WriteOpDocumentHandler {
             return response;
         } finally {
             sWatch.stop(startTime);
-        }
-    }
-    
-    /**
-     * Check to see if all the addresses are "Valid" -- right now this means that they are either to a remote
-     * domain, or they are a local domain and we can find them in LDAP. 
-     * 
-     * @param mm
-     * @throws ServiceException if couldn't read addresses from mm
-     * @throws MailServiceException.UNKNOWN_LOCAL_RECIPIENTS if one of the addresses was invalid
-     */
-    protected static void validateAddresses(MimeMessage mm) throws ServiceException {
-        Provisioning prov = Provisioning.getInstance();
-        
-        List myDomains = prov.getAllDomains();
-        
-        ArrayList unknownRecipients = new ArrayList();
-        
-        try {
-            Address[] addrs = mm.getAllRecipients();
-            if (addrs != null) {
-                AllAddresses: for (int i = addrs.length-1; i >=0; i--) {
-                    InternetAddress ia = (InternetAddress) addrs[i];
-                    
-                    String addr = ia.getAddress();
-                    
-                    if (prov.getAccountByName(addr) == null) {
-                        
-                        // couldn't find it -- is it a local domain?
-                        String parts[] = addr.split("@");
-                        if (parts.length > 1) {
-                            IsLocalDomain: for (Iterator domainIter = myDomains.iterator(); domainIter.hasNext();) {
-                                Domain domain = (Domain)domainIter.next(); 
-                                String domainStr = domain.getName(); 
-                                if (parts[1].equals(domainStr)) {
-                                    // it IS a local address.  Why couldn't we find it?
-                                    
-                                    // is it a distribution list?
-                                    if (prov.getDistributionListByName(addr) == null) {
-                                        unknownRecipients.add(addr);
-                                    } 
-                                    
-                                    break IsLocalDomain; // go onto the next address 
-                                }
-                            } // IsLocalDomain loop
-                        } // if (parts.len
-                    } // if (prov.getAccountByName
-                } // AllAddresses loop
-            } // if (addrs!=null
-            
-        } catch (MessagingException e) {
-            throw ServiceException.FAILURE("Caught MessagingException trying to getAllRecipients "+e, e);
-        }
-        
-        if (unknownRecipients.size() > 0) {
-            String unknown[] = new String[unknownRecipients.size()];
-            unknownRecipients.toArray(unknown);
-            throw MailServiceException.UNKNOWN_LOCAL_RECIPIENTS(unknown);
         }
     }
 
@@ -309,8 +249,9 @@ public class SendMsg extends WriteOpDocumentHandler {
             
             // send the message via SMTP
             try {
-                if (mm.getAllRecipients() != null)
+                if (mm.getAllRecipients() != null) {
                     Transport.send(mm);
+                }
             } catch (MessagingException e) {
                 rollbackMessage(octxt, mbox, msg);
                 throw e;
@@ -350,17 +291,30 @@ public class SendMsg extends WriteOpDocumentHandler {
 
 	        return (msg != null ? msg.getId() : 0);
 
-	    } catch (SendFailedException failure) {
-	        String excepStr = ExceptionToString.ToString(failure);
-	        mLog.warn(excepStr);
-	        throw ServiceException.INVALID_REQUEST("SendFailure", failure);
+	    } catch (SendFailedException sfe) {
+	        mLog.warn("exception ocurred during SendMsg", sfe);
+	        
+	        StringBuffer msg = new StringBuffer();
+	        if (JMSession.getSmtpConfig().getSendPartial()) {
+	        	msg.append("Send failed for some addresses: ");
+	        } else {
+	        	msg.append("Message not sent to any recipients because these addresses failed: ");
+	        }
+	        Address[] addrs = sfe.getInvalidAddresses();
+	        if (addrs != null && addrs.length > 0) {
+	        	for (int i = 0; i < addrs.length; i++) {
+	        		if (i > 0) {
+	        			msg.append(",");
+	        		}
+	        		msg.append(addrs[i]);
+	        	}
+	        }
+        	throw ServiceException.INVALID_REQUEST(msg.toString(), sfe);
 	    } catch (IOException ioe) {
-	        String excepStr = ExceptionToString.ToString(ioe);
-	        mLog.warn(excepStr);
+	        mLog.warn("exception occured during send msg", ioe);
 	        throw ServiceException.FAILURE("IOException", ioe);
 	    } catch (MessagingException me) {
-	        String excepStr = ExceptionToString.ToString(me);
-	        mLog.warn(excepStr);
+	        mLog.warn("exception occurred during SendMsg", me);
 	        throw ServiceException.FAILURE("MessagingException", me);
 	    }
 	}

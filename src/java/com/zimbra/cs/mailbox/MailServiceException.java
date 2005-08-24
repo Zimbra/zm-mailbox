@@ -74,7 +74,6 @@ public class MailServiceException extends ServiceException {
     public static final String MUST_BE_ORGANIZER = "mail.MUST_BE_ORGANIZER";
     public static final String CANNOT_CANCEL_INSTANCE_OF_EXCEPTION = "mail.CANNOT_CANCEL_INSTANCE_OF_EXCEPTION";
     public static final String INVITE_OUT_OF_DATE = "mail.INVITE_OUT_OF_DATE";
-    public static final String UNKNOWN_LOCAL_RECIPIENTS = "mail.UNKNOWN_LOCAL_RECIPIENTS";
         
 
     /**
@@ -269,16 +268,4 @@ public class MailServiceException extends ServiceException {
     public static MailServiceException INVITE_OUT_OF_DATE(String request) {
         return new MailServiceException("The specified Invite is out of date (has been updated): "+request, MUST_BE_ORGANIZER, SENDERS_FAULT, null);
     }
-    
-    public static MailServiceException UNKNOWN_LOCAL_RECIPIENTS(String[] addresses) {
-        StringBuffer buf = new StringBuffer();
-        for (int i = 0; i < addresses.length; i++) {
-            if (i>0) {
-                buf.append(",");
-            }
-            buf.append(addresses[i]);
-        }
-        return new MailServiceException("The following local recipients are unknown: "+buf, UNKNOWN_LOCAL_RECIPIENTS, SENDERS_FAULT);
-    }
-    
 }

@@ -39,27 +39,34 @@ import com.zimbra.cs.service.ServiceException;
  * @author schemers
  */
 public class JMSession {
-    private static javax.mail.Session mSession;
+    private static Session mSession;
     
     private static Log mLog = LogFactory.getLog(JMSession.class);
     
+    private static SmtpConfig sSmtpConfig;
+    
     static {
         try {
-            SmtpConfig config = new SmtpConfig();
-            String timeout = config.getTimeoutMS()+"";
+            sSmtpConfig = new SmtpConfig();
+            String timeout = sSmtpConfig.getTimeoutMS()+"";
             Properties props = new Properties();
             props.setProperty("mail.mime.address.strict", "false");
-            props.setProperty("mail.smtp.host", config.getHostname());
-            props.setProperty("mail.smtp.port", config.getPort()+"");
+            props.setProperty("mail.smtp.host", sSmtpConfig.getHostname());
+            props.setProperty("mail.smtp.port", sSmtpConfig.getPort()+"");
             props.setProperty("mail.smtp.connectiontimeout", timeout);
             props.setProperty("mail.smtp.timeout", timeout);
+            props.setProperty("mail.smtp.sendpartial", Boolean.toString(sSmtpConfig.getSendPartial()));
             mSession = Session.getInstance(props);
-            mLog.info("SMTP Server: "+config.getHostname());
+            mLog.info("SMTP Server: "+sSmtpConfig.getHostname());
         } catch (ServiceException e) {
             mLog.fatal("unable to initialize Java Mail session", e);
             // TODO: System.exit? For now mSession will be null and something else will croak
         }
 
+    }
+    
+    public static SmtpConfig getSmtpConfig() {
+    	return sSmtpConfig;
     }
     
     public static Session getSession() {

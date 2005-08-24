@@ -28,7 +28,6 @@ package com.zimbra.cs.service.mail;
 import javax.mail.internet.MimeMessage;
 
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -59,8 +58,6 @@ public abstract class CalendarRequest extends SendMsg {
         // parse the data
         toRet.mMm = ParseMimeMessage.parseMimeMsgSoap(octxt, mbox, msgElem, null, inviteParser, toRet);
         
-        validateAddresses(toRet.mMm);
-
         toRet.mSaveToSent = shouldSaveToSent(acct);
 
         return toRet;
