@@ -58,6 +58,8 @@ public final class SessionCache
             try {
                 Session session = (Session) iter.next();
                 session.notifyPendingChanges(pns);
+            } catch (ConcurrentModificationException cme) {
+                break;
             } catch (Exception e) {
                 mLog.warn("ignoring exception during notification", e);
             }
