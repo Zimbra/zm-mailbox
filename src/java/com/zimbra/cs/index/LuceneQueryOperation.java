@@ -30,6 +30,10 @@
 package com.zimbra.cs.index;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.*;
@@ -100,18 +104,51 @@ class LuceneQueryOperation extends QueryOperation
         mCurHitNo = 0;
     }
     
-    protected int[] getNextIndexedIdChunk(int maxChunkSize) throws ServiceException {
+    protected static class LuceneIndexIdChunk {
+        int[] getIndexIds() { 
+            int[] toRet = new int[mHits.keySet().size()];
+            int i = 0;
+            for (Iterator iter = mHits.keySet().iterator(); iter.hasNext();) {
+                Integer curInt = (Integer)iter.next();
+                toRet[i++] = curInt.intValue(); 
+            }
+            return toRet;
+        }
+
+        private void addHit(int indexId, Document doc) {
+            addHit(new Integer(indexId), doc);
+        }
+        
+        private void addHit(Integer indexId, Document doc) {
+            List docs = (List)mHits.get(indexId);
+            if (docs == null) {
+                docs = new ArrayList();
+                mHits.put(indexId, docs);
+            }
+            docs.add(doc);
+        }
+        
+        List /* Document */ getDocuments(Integer indexId) { 
+            return (List)mHits.get(indexId); 
+        }
+        
+        private HashMap /* indexId, List(partName) */ mHits = new HashMap();
+        
+    }
+    
+    protected LuceneIndexIdChunk getNextIndexedIdChunk(int maxChunkSize) throws ServiceException {
         try {
             int numLeft = mLuceneHits.length() - mCurHitNo;
             int numToReturn = Math.min(numLeft, maxChunkSize);
-            int[] toRet = new int[numToReturn];
+            LuceneIndexIdChunk toRet = new LuceneIndexIdChunk();
             for (int i = 0; i < numToReturn; i++) {
                 Document d = mLuceneHits.doc(mCurHitNo++);
                 
                 String mbid = d.get(LuceneFields.L_MAILBOX_BLOB_ID);
                 try {
                     if (mbid != null) {
-                        toRet[i] = Integer.parseInt(mbid);
+//                        toRet[i] = Integer.parseInt(mbid);
+                        toRet.addHit(Integer.parseInt(mbid), d);
                     }
                 } catch (NumberFormatException e) {
                     e.printStackTrace();

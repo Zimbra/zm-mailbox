@@ -206,23 +206,22 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
       return hit;
   }
 
-  protected MessagePartHit getMessagePartHit(Mailbox mbx, Document d, float score) 
+//  protected MessagePartHit getMessagePartHit(Mailbox mbx, Document d, float score) 
+//  {
+//      String partKey = d.get(LuceneFields.L_MAILBOX_BLOB_ID) + "-" + d.get(LuceneFields.L_PARTNAME);
+//      MessagePartHit hit = (MessagePartHit) mPartHits.get(partKey);
+//      if (hit == null) {
+//          hit = new MessagePartHit(this, mbx, d, score);
+//          mPartHits.put(partKey, hit);
+//      } else {
+//          hit.updateScore(score);
+//      }
+//      return hit;
+//  }    
+  
+  protected MessagePartHit getMessagePartHit(Mailbox mbx, Integer mailboxBlobId, Document d, float score) 
   {
       String partKey = d.get(LuceneFields.L_MAILBOX_BLOB_ID) + "-" + d.get(LuceneFields.L_PARTNAME);
-      MessagePartHit hit = (MessagePartHit) mPartHits.get(partKey);
-      if (hit == null) {
-          hit = new MessagePartHit(this, mbx, d, score);
-          mPartHits.put(partKey, hit);
-      } else {
-          hit.updateScore(score);
-      }
-      return hit;
-  }    
-  
-  protected MessagePartHit getMessagePartHit(Mailbox mbx, Integer mailboxBlobId, 
-          String partName, Document d, float score) 
-  {
-      String partKey = mailboxBlobId.toString()+"-"+partName;
       MessagePartHit hit = (MessagePartHit) mPartHits.get(partKey);
       if (hit == null) {
           hit = new MessagePartHit(this, mbx, d, score);

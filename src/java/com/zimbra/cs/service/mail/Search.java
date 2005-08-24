@@ -301,9 +301,13 @@ public class Search extends DocumentHandler  {
         ArrayList parts = mh.getMatchedMimePartNames();
         if (parts != null) {
             for (Iterator mpit = parts.iterator(); mpit.hasNext(); ) {
-                Element mp = m.addElement(MailService.E_MIMEPART);
                 MessagePartHit mph = (MessagePartHit) mpit.next();
-                mp.addAttribute(MailService.A_PART, mph.getPartName());
+                String partNameStr = mph.getPartName();
+                
+                if (partNameStr.length() > 0) {
+                    Element mp = m.addElement(MailService.E_HIT_MIMEPART);
+                    mp.addAttribute(MailService.A_PART, partNameStr);
+                }
             }
         }
 

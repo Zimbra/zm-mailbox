@@ -1201,7 +1201,7 @@ public final class ZimbraQuery {
         private static final int STATE_AND    = 1; 
         private static final int STATE_OR     = 2;
         
-        private static final boolean SPEW = false;
+        private static final boolean SPEW = true;
         
         public static abstract class Node {
             boolean mTruthFlag = true;
