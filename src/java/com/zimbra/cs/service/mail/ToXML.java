@@ -679,8 +679,7 @@ public class ToXML {
                 
                 Appointment appt = invite.getAppointment();
                 if (appt != null) {
-                    // TODO for debugging only -- removeme before release 
-                    e.addAttribute("x_apptId", appt.getId());
+                    e.addAttribute(MailService.A_APPT_ID, appt.getId());
                 }
                 
                 if (invite.thisAcctIsOrganizer(appt.getMailbox().getAccount())) {

@@ -319,7 +319,7 @@ RECURRENCE SPECIFIERS!
             [allDay="1|0"] [name="NAME"]
             [loc="LOCATION"]
             [rsvp="1|0"] // rsvp - 1 if response requested, 0 if no response requested
-            [x-appt="apptId] // FOR DEBUGGING WILL BE REMOVED: id of appointment
+            [apptId="mail-item-id-of-appointment"] 
             [updatedMsgId="id" updatedCompNum="compNum"] // if these are set, then this invite has been
                                                       // invalidated because a new update was received that
                                                       // takes precedence over it
