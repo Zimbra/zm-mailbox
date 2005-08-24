@@ -883,7 +883,7 @@ public class LdapProvisioning extends Provisioning {
             try {
                 HashMap attrs = new HashMap();
                 attrs.put(Provisioning.A_mail, removeMultiValue(acct, Provisioning.A_mail, alias));
-                attrs.put(Provisioning.A_zimbraMailAlias, removeMultiValue(acct, Provisioning.A_mail, alias));                
+                attrs.put(Provisioning.A_zimbraMailAlias, removeMultiValue(acct, Provisioning.A_zimbraMailAlias, alias));                
                 ((LdapAccount)acct).modifyAttrsInternal(ctxt, attrs);
             } catch (ServiceException e) {
                 ZimbraLog.account.warn("unable to remove zimbraMailAlias/mail attrs: "+alias);
