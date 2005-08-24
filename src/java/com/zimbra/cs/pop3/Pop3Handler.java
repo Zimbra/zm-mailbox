@@ -501,7 +501,7 @@ public class Pop3Handler extends ProtocolHandler {
             mMbx = new Pop3Mbx(mailbox, mQuery);
             mState = STATE_TRANSACTION;
             mExpire = (int) (acct.getTimeInterval(Provisioning.A_zimbraMailMessageLifetime, 0) / (1000*60*60*24));
-            if (mExpire < MIN_EXPIRE_DAYS) mExpire = MIN_EXPIRE_DAYS;
+            if (mExpire > 0 && mExpire < MIN_EXPIRE_DAYS) mExpire = MIN_EXPIRE_DAYS;
             sendOK("server ready");
         } catch (AccountServiceException e) {
             // need to catch and mask these two
@@ -656,7 +656,10 @@ public class Pop3Handler extends ProtocolHandler {
         if (mState != STATE_TRANSACTION) {
             sendLine("EXPIRE "+MIN_EXPIRE_DAYS+" USER", false);
         } else {
-            sendLine("EXPIRE "+mExpire, false);
+            if (mExpire == 0)
+                sendLine("EXPIRE NEVER", false);                
+            else
+                sendLine("EXPIRE "+mExpire, false);
         }
         // TODO: VERSION INFO
         sendLine("IMPLEMENTATION ZimbraInc", false);
