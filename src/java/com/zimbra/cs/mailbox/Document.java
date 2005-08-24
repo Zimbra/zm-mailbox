@@ -77,7 +77,7 @@ public class Document extends MailItem {
 	boolean canHaveChildren() { return false; }
 
 
-    static Document create(int id, Folder folder, String filename, String type, File content, MailItem parent) throws ServiceException {
+    static Document create(int id, Folder folder, short volumeId, String filename, String type, File content, MailItem parent) throws ServiceException {
     	assert(id != Mailbox.ID_AUTO_INCREMENT);
         if (folder == null || !folder.canContain(TYPE_DOCUMENT))
             throw MailServiceException.CANNOT_CONTAIN();
@@ -92,6 +92,7 @@ public class Document extends MailItem {
             data.parentId = parent.getId();
         data.folderId    = folder.getId();
         data.indexId     = id;
+        data.volumeId    = volumeId;
         data.date        = mbox.getOperationTimestamp();
         data.size        = (int) content.length();
         data.subject     = filename;

@@ -208,14 +208,14 @@ public abstract class MailItem implements Comparable {
             return (unreadCount > 0);
         }
         
-        public UnderlyingData duplicate(int newId, int newFolder) {
+        public UnderlyingData duplicate(int newId, int newFolder, short newVolume) {
             UnderlyingData data = new UnderlyingData();
             data.id          = newId;
             data.type        = type;
             data.folderId    = newFolder;
             data.parentId    = parentId;
             data.indexId     = indexId;
-            data.volumeId    = volumeId;
+            data.volumeId    = newVolume;
             data.blobDigest  = blobDigest;
             data.date        = date;
             data.size        = size;
@@ -783,7 +783,7 @@ public abstract class MailItem implements Comparable {
         }
 	}
 
-    MailItem copy(Folder folder, int id) throws IOException, ServiceException {
+    MailItem copy(Folder folder, int id, short destVolumeId) throws IOException, ServiceException {
         if (!isCopyable())
             throw MailServiceException.CANNOT_COPY(mId);
         if (!folder.canContain(this))
@@ -799,12 +799,12 @@ public abstract class MailItem implements Comparable {
         MailItem parent = getParent();
         boolean detach = parent == null || parent.getId() <= 0 || isTagged(mMailbox.mDraftFlag) || inSpam() != folder.inSpam();
 
-        UnderlyingData data = mData.duplicate(id, folder.getId());
+        UnderlyingData data = mData.duplicate(id, folder.getId(), destVolumeId);
         if (detach)
             data.parentId = -1;
         data.metadata = encodeMetadata();
         data.contentChanged(mMailbox);
-        DbMailItem.copy(this, id, folder.getId(), data.parentId, data.metadata);
+        DbMailItem.copy(this, id, folder.getId(), data.parentId, data.volumeId, data.metadata);
 
         MailItem item = constructItem(mMailbox, data);
         item.finishCreation(detach ? null : parent);

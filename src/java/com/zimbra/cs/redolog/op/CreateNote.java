@@ -46,6 +46,7 @@ public class CreateNote extends RedoableOp {
     private String mContent;
     private byte mColor;
     private Note.Rectangle mBounds;
+    private short mVolumeId = -1;
 
     public CreateNote() {
         mId = UNKNOWN_ID;
@@ -70,6 +71,14 @@ public class CreateNote extends RedoableOp {
         mId = id;
     }
 
+    public void setVolumeId(short volId) {
+        mVolumeId = volId;
+    }
+
+    public short getVolumeId() {
+        return mVolumeId;
+    }
+
     public int getOpCode() {
         return OP_CREATE_NOTE;
     }
@@ -77,6 +86,7 @@ public class CreateNote extends RedoableOp {
     protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("id=").append(mId);
         sb.append(", folder=").append(mFolderId);
+        sb.append(", vol=").append(mVolumeId);
         sb.append(", content=").append(mContent);
         sb.append(", color=").append(mColor);
         if (mBounds != null)
@@ -87,6 +97,7 @@ public class CreateNote extends RedoableOp {
     protected void serializeData(DataOutput out) throws IOException {
         out.writeInt(mId);
         out.writeInt(mFolderId);
+        out.writeShort(mVolumeId);
         writeUTF8(out, mContent);
         out.writeByte(mColor);
         out.writeInt(mBounds.x);
@@ -98,6 +109,7 @@ public class CreateNote extends RedoableOp {
     protected void deserializeData(DataInput in) throws IOException {
         mId = in.readInt();
         mFolderId = in.readInt();
+        mVolumeId = in.readShort();
         mContent = readUTF8(in);
         mColor = in.readByte();
         int x = in.readInt();

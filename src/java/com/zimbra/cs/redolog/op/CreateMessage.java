@@ -73,6 +73,8 @@ public class CreateMessage extends RedoableOp {
     private String mPath;           // if mMsgBodyType == MSGBODY_LINK, source file to link to
                                     // if mMsgBodyType == MSGBODY_INLINE, path of saved blob file 
     private short mVolumeId = -1;   // volume on which this message file is saved
+    private short mLinkSrcVolumeId = -1;  // volume on which the link source file is saved;
+                                          // used only when mMsgBodyType == MSGBODY_LINK
 
 	public CreateMessage() {
         mShared = false;
@@ -169,11 +171,11 @@ public class CreateMessage extends RedoableOp {
     	return mData;
     }
 
-    public String getBlobPath() {
+    public String getPath() {
     	return mPath;
     }
 
-    public short getBlobVolumeId() {
+    public short getVolumeId() {
     	return mVolumeId;
     }
 
@@ -184,11 +186,12 @@ public class CreateMessage extends RedoableOp {
         mVolumeId = volumeId;
     }
 
-    public void setMessageLinkInfo(String linkSrcPath, short volumeId) {
+    public void setMessageLinkInfo(String linkSrcPath, short linkSrcVolumeId, short destVolumeId) {
         mMsgBodyType = MSGBODY_LINK;
         assert(linkSrcPath != null);
         mPath = linkSrcPath;
-        mVolumeId = volumeId;
+        mLinkSrcVolumeId = linkSrcVolumeId;
+        mVolumeId = destVolumeId;
     }
 
     public String getRcptEmail() {
@@ -207,9 +210,10 @@ public class CreateMessage extends RedoableOp {
         sb.append(", flags=").append(mFlags).append(", tags=\"").append(mTags).append("\"");
         sb.append(", bodyType=").append(mMsgBodyType);
         sb.append(", vol=").append(mVolumeId);
-        if (mMsgBodyType == MSGBODY_LINK)
+        if (mMsgBodyType == MSGBODY_LINK) {
             sb.append(", linkSourcePath=").append(mPath);
-        else
+            sb.append(", linkSrcVol=").append(mLinkSrcVolumeId);
+        } else
             sb.append(", path=").append(mPath);
         return sb.toString();
 	}
@@ -254,6 +258,8 @@ public class CreateMessage extends RedoableOp {
             // Consequently, in the serialized stream message data comes last.
             // deserializeData() should take this into account.
             //out.write(mData);  // Don't do this here!
+        } else {
+        	out.writeShort(mLinkSrcVolumeId);
         }
     }
 
@@ -282,7 +288,8 @@ public class CreateMessage extends RedoableOp {
             in.readFully(mData, 0, dataLen);
             // mData must be the last thing deserialized.  See comments in
             // serializeData().
-            return;
+        } else {
+        	mLinkSrcVolumeId = in.readShort();
         }
     }
 
@@ -298,7 +305,7 @@ public class CreateMessage extends RedoableOp {
                 throw new RedoException("Missing link source blob " + mPath +
                                         " (digest=" + mDigest + ")",
                                         this);
-            Blob src = new Blob(file, mVolumeId);
+            Blob src = new Blob(file, mLinkSrcVolumeId);
             sharedDeliveryCtxt.setBlob(src);
 
             InputStream is = StoreManager.getInstance().getContent(src);

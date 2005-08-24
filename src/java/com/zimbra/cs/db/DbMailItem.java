@@ -79,10 +79,6 @@ public class DbMailItem {
         if (data == null || data.id <= 0 || data.folderId <= 0 || data.parentId == 0 || data.indexId == 0)
             throw ServiceException.FAILURE("invalid data for DB item create", null);
 
-        // TODO: This should be the system-wide current volume, not mailbox's volume.
-        short volumeId = mbox.getMessageVolumeId();
-        data.volumeId = volumeId;
-
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
@@ -104,7 +100,10 @@ public class DbMailItem {
                 stmt.setInt(pos++, data.indexId);
             stmt.setInt(pos++, data.date);
             stmt.setInt(pos++, (int) data.size);
-            stmt.setShort(pos++, data.volumeId);
+            if (data.volumeId >= 0)
+                stmt.setShort(pos++, data.volumeId);
+            else
+                stmt.setNull(pos++, Types.TINYINT);
             stmt.setString(pos++, data.blobDigest);
 //            if (data.type == MailItem.TYPE_MESSAGE || data.type == MailItem.TYPE_INVITE)
             if (data.type == MailItem.TYPE_MESSAGE)
@@ -139,7 +138,7 @@ public class DbMailItem {
         }
     }
 
-    public static void copy(MailItem item, int id, int folderId, int parentId, String metadata) throws ServiceException {
+    public static void copy(MailItem item, int id, int folderId, int parentId, short volumeId, String metadata) throws ServiceException {
         Mailbox mbox = item.getMailbox();
         if (id <= 0 || folderId <= 0 || parentId == 0)
             throw ServiceException.FAILURE("invalid data for DB item copy", null);
@@ -151,7 +150,7 @@ public class DbMailItem {
             stmt = conn.prepareStatement("INSERT INTO " + table +
                     "(id, type, parent_id, folder_id, index_id, date, size, volume_id, blob_digest," +
                     " unread, flags, tags, sender, subject, metadata, mod_metadata, change_date, mod_content) " +
-                    "(SELECT ?, type, ?, ?, index_id, date, size, volume_id, blob_digest, unread," +
+                    "(SELECT ?, type, ?, ?, index_id, date, size, ?, blob_digest, unread," +
                     " flags, tags, sender, subject, ?, ?, ?, ? FROM " + table + " WHERE id = ?)");
             int pos = 1;
             stmt.setInt(pos++, id);
@@ -160,6 +159,10 @@ public class DbMailItem {
             else
                 stmt.setInt(pos++, parentId);
             stmt.setInt(pos++, folderId);
+            if (volumeId >= 0)
+                stmt.setShort(pos++, volumeId);
+            else
+                stmt.setNull(pos++, Types.TINYINT);
             stmt.setString(pos++, metadata);
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
@@ -1976,6 +1979,8 @@ public class DbMailItem {
         data.date        = rs.getInt(CI_DATE + offset);
         data.size        = rs.getInt(CI_SIZE + offset);
         data.volumeId    = rs.getShort(CI_VOLUME_ID + offset);
+        if (rs.wasNull())
+            data.volumeId = -1;
         data.blobDigest  = rs.getString(CI_BLOB_DIGEST + offset);
         data.unreadCount = rs.getInt(CI_UNREAD + offset);
         data.flags       = rs.getInt(CI_FLAGS + offset);

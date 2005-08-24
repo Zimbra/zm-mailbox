@@ -47,6 +47,7 @@ public class CreateContact extends RedoableOp {
     private int mFolderId;
     private Map mAttrs;
     private String mTags;
+    private short mVolumeId = -1;
 
     public CreateContact() {
         mId = UNKNOWN_ID;
@@ -69,6 +70,14 @@ public class CreateContact extends RedoableOp {
     	return mId;
     }
 
+    public void setVolumeId(short volId) {
+    	mVolumeId = volId;
+    }
+
+    public short getVolumeId() {
+    	return mVolumeId;
+    }
+
     /* (non-Javadoc)
 	 * @see com.zimbra.cs.redolog.op.RedoableOp#getOperationCode()
 	 */
@@ -81,6 +90,7 @@ public class CreateContact extends RedoableOp {
 	 */
 	protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("folder=").append(mFolderId);
+        sb.append(", vol=").append(mVolumeId);
         sb.append(", tags=\"").append(mTags).append("\"");
         if (mAttrs != null && mAttrs.size() > 0) {
             sb.append(", attrs={");
@@ -101,6 +111,7 @@ public class CreateContact extends RedoableOp {
 	protected void serializeData(DataOutput out) throws IOException {
         out.writeInt(mId);
         out.writeInt(mFolderId);
+        out.writeShort(mVolumeId);
         writeUTF8(out, mTags);
         int numAttrs = mAttrs != null ? mAttrs.size() : 0;
         out.writeShort((short) numAttrs);
@@ -118,6 +129,7 @@ public class CreateContact extends RedoableOp {
 	protected void deserializeData(DataInput in) throws IOException {
         mId = in.readInt();
         mFolderId = in.readInt();
+        mVolumeId = in.readShort();
         mTags = readUTF8(in);
         int numAttrs = in.readShort();
         if (numAttrs > 0) {

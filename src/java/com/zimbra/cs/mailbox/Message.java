@@ -264,8 +264,8 @@ public class Message extends MailItem {
     static Message create(
             CreateMessage redoRecorder,
             CreateMessage redoPlayer,            
-            Folder folder, MailItem parent, ParsedMessage pm, int msgSize, String digest,
-                          boolean unread, boolean noICal, int flags, long tags, DraftInfo dinfo, int id, Calendar cal)  
+            Folder folder, MailItem parent, ParsedMessage pm, int msgSize, String digest, short volumeId,
+            boolean unread, boolean noICal, int flags, long tags, DraftInfo dinfo, int id, Calendar cal)  
     throws ServiceException {
         if (folder == null || !folder.canContain(TYPE_MESSAGE))
             throw MailServiceException.CANNOT_CONTAIN();
@@ -302,7 +302,7 @@ public class Message extends MailItem {
         Metadata meta = new Metadata();
         
         UnderlyingData data = createItemData(folder, parent, pm, msgSize, digest, unread,
-                                             flags, tags, dinfo, id, TYPE_MESSAGE, 
+                                             flags, tags, dinfo, id, TYPE_MESSAGE, volumeId,
                                              meta);
         
         DbMailItem.create(mbox, data);
@@ -310,7 +310,7 @@ public class Message extends MailItem {
 
         // process the components in this invite (must do this last so blob is created, etc)
         if (components != null) {
-            msg.processInvitesAfterCreate(methodStr, redoRecorder, redoPlayer, pm, components);
+            msg.processInvitesAfterCreate(methodStr, redoRecorder, redoPlayer, volumeId, pm, components);
         }
         
         msg.finishCreation(parent);
@@ -320,7 +320,7 @@ public class Message extends MailItem {
    static UnderlyingData createItemData(Folder folder, MailItem parent, ParsedMessage pm,
                                          int msgSize, String msgDigest, boolean unread,
                                          int flags, long tags, DraftInfo dinfo, int id,
-                                         byte type,
+                                         byte type, short volumeId,
                                          Metadata meta) 
     throws ServiceException {
         if (folder == null)
@@ -338,6 +338,7 @@ public class Message extends MailItem {
             data.parentId = parent.getId();
         data.folderId    = folder.getId();
         data.indexId     = id;
+        data.volumeId    = volumeId;
         data.date        = (int) (pm.getReceivedDate() / 1000);
         data.size        = msgSize;
         data.blobDigest  = msgDigest;
@@ -357,7 +358,8 @@ public class Message extends MailItem {
     * @param invites
     */
    private void processInvitesAfterCreate(String method, CreateMessage redoRecorder, CreateMessage redoPlayer,
-                               ParsedMessage pm, List /* Invite */ invites) 
+   		                                  short volumeId,
+                                          ParsedMessage pm, List /* Invite */ invites) 
    throws ServiceException {
        assert(redoRecorder != null);
        // redoPlayer may be null
@@ -377,7 +379,7 @@ public class Message extends MailItem {
            if (appt == null) { 
                // ONLY create an appointment if this is a REQUEST method...otherwise don't.
                if (method.equals(Method.REQUEST.getValue())) {
-                   appt = mbox.createAppointment(Mailbox.ID_FOLDER_CALENDAR, "", cur.getUid(), pm, cur, newApptId);
+                   appt = mbox.createAppointment(Mailbox.ID_FOLDER_CALENDAR, volumeId, "", cur.getUid(), pm, cur, newApptId);
                    redoRecorder.setAppointmentId(appt.getId());
                } else {
                    sLog.info("Mailbox " + getMailboxId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c no Appointment could be found");
@@ -386,7 +388,7 @@ public class Message extends MailItem {
            } else {
                // tim: this shouldn't be necessary with the schema update
 //               try {
-                   appt.processNewInvite(pm, cur);
+                   appt.processNewInvite(pm, cur, volumeId);
 //               } catch(MailServiceException.NoSuchItemException e) {
 //                   // FIXME temp fix for bug 2019: for now, if any of the invites are missing for an 
 //                   // appointment we'll just delete the entire appointment and re-create it. 
@@ -431,8 +433,9 @@ public class Message extends MailItem {
         saveMetadata();
     }
 
-    MailItem copy(Folder folder, int id) throws IOException, ServiceException {
-        Message copy = (Message) super.copy(folder, id);
+    MailItem copy(Folder folder, int id, short destVolumeId)
+    throws IOException, ServiceException {
+        Message copy = (Message) super.copy(folder, id, destVolumeId);
 
         Conversation parent = (Conversation) getParent();
         if (parent instanceof VirtualConversation && !isDraft() && inSpam() == folder.inSpam()) {

@@ -246,7 +246,7 @@ public class Contact extends MailItem {
      * @return
      * @throws ServiceException
      */
-    static Contact create(int id, Folder folder, Map attrs, String tags) throws ServiceException {
+    static Contact create(int id, Folder folder, short volumeId, Map attrs, String tags) throws ServiceException {
         if (folder == null || !folder.canContain(TYPE_CONTACT))
             throw MailServiceException.CANNOT_CONTAIN();
         if (attrs == null || attrs.isEmpty())
@@ -260,6 +260,7 @@ public class Contact extends MailItem {
         data.type        = TYPE_CONTACT;
         data.folderId    = folder.getId();
         data.indexId     = id;
+        data.volumeId    = volumeId;
         data.date        = mbox.getOperationTimestamp();
         data.tags        = Tag.tagsToBitmask(tags);
         data.sender      = getFileAsString(attrs);

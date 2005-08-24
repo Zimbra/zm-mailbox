@@ -46,6 +46,7 @@ public class CopyItem extends RedoableOp {
     private int mDestId;
     private byte mType;
     private int mDestFolderId;
+    private short mDestVolumeId = -1;
 
     public CopyItem() {
         mSrcId = UNKNOWN_ID;
@@ -73,6 +74,18 @@ public class CopyItem extends RedoableOp {
     	return mDestId;
     }
 
+    /**
+     * Sets the volume ID for the copied blob.
+     * @param volId
+     */
+    public void setDestVolumeId(short volId) {
+    	mDestVolumeId = volId;
+    }
+
+    public short getDestVolumeId() {
+    	return mDestVolumeId;
+    }
+
     public int getOpCode() {
         return OP_COPY_ITEM;
     }
@@ -83,6 +96,7 @@ public class CopyItem extends RedoableOp {
         sb.append(", destId=").append(mDestId);
         sb.append(", type=").append(mType);
         sb.append(", destFolder=").append(mDestFolderId);
+        sb.append(", destVolumeId=").append(mDestVolumeId);
         return sb.toString();
     }
 
@@ -91,6 +105,7 @@ public class CopyItem extends RedoableOp {
         out.writeInt(mDestId);
         out.writeByte(mType);
         out.writeInt(mDestFolderId);
+        out.writeShort(mDestVolumeId);
     }
 
     protected void deserializeData(DataInput in) throws IOException {
@@ -98,6 +113,7 @@ public class CopyItem extends RedoableOp {
         mDestId = in.readInt();
         mType = in.readByte();
         mDestFolderId = in.readInt();
+        mDestVolumeId = in.readShort();
     }
 
     public void redo() throws Exception {

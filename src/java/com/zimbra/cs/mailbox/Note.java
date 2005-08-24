@@ -99,7 +99,7 @@ public class Note extends MailItem {
     boolean canHaveChildren() { return false; }
 
 
-    static Note create(int id, Folder folder, String content, Rectangle location, byte color) throws ServiceException {
+    static Note create(int id, Folder folder, short volumeId, String content, Rectangle location, byte color) throws ServiceException {
         if (folder == null || !folder.canContain(TYPE_NOTE))
             throw MailServiceException.CANNOT_CONTAIN();
         content = StringUtil.stripControlCharacters(content);
@@ -114,6 +114,7 @@ public class Note extends MailItem {
         data.type        = TYPE_NOTE;
         data.folderId    = folder.getId();
         data.indexId     = id;
+        data.volumeId    = volumeId;
         data.date        = mbox.getOperationTimestamp();
         data.subject     = content;
         data.metadata    = encodeMetadata(location, color);

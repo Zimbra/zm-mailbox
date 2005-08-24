@@ -140,7 +140,7 @@ public class Appointment extends MailItem {
     
 //    public TimeZoneMap getTimeZoneMap() { return mTzMap; }
 
-    static Appointment create(int id, Folder folder, String tags, String uid,
+    static Appointment create(int id, Folder folder, short volumeId, String tags, String uid,
             ParsedMessage pm, Invite firstInvite) throws ServiceException {
 
         Mailbox mbox = folder.getMailbox();
@@ -171,6 +171,7 @@ public class Appointment extends MailItem {
         data.type = TYPE_APPOINTMENT;
         data.folderId = folder.getId();
         data.indexId = id;
+        data.volumeId = volumeId;
         data.date = mbox.getOperationTimestamp();
         data.tags = Tag.tagsToBitmask(tags);
         data.sender = uid;
@@ -179,7 +180,7 @@ public class Appointment extends MailItem {
         DbMailItem.create(mbox, data);
 
         Appointment appt = new Appointment(mbox, data);
-        appt.createBlob(pm, firstInvite);
+        appt.createBlob(pm, firstInvite, volumeId);
         appt.finishCreation(null);
 
         DbMailItem.addToAppointmentTable(appt);
@@ -495,16 +496,17 @@ public class Appointment extends MailItem {
      * 
      * @param invite
      */
-    void processNewInvite(ParsedMessage pm, Invite invite) throws ServiceException {
+    void processNewInvite(ParsedMessage pm, Invite invite, short volumeId)
+    throws ServiceException {
         String method = invite.getMethod();
         if (method.equals("REQUEST") || method.equals("CANCEL")) {
-            processNewInviteRequestOrCancel(pm, invite);
+            processNewInviteRequestOrCancel(pm, invite, volumeId);
         } else if (method.equals("REPLY")) {
             processNewInviteReply(pm, invite);
         }
     }
 
-    void processNewInviteRequestOrCancel(ParsedMessage pm, Invite newInvite)
+    void processNewInviteRequestOrCancel(ParsedMessage pm, Invite newInvite, short volumeId)
             throws ServiceException {
         String method = newInvite.getMethod();
 
@@ -587,10 +589,10 @@ public class Appointment extends MailItem {
             // defs....should be very unlikely
             mTzMap.add(newInvite.getTimeZoneMap());
             
-            modifyBlob(toRemove, pm, newInvite);
+            modifyBlob(toRemove, pm, newInvite, volumeId);
             modifiedAppt = true;
         } else {
-            modifyBlob(toRemove, null, null);
+            modifyBlob(toRemove, null, null, volumeId);
         }
         
         // now remove the inviteid's from our list  
@@ -681,7 +683,8 @@ public class Appointment extends MailItem {
 
     }
     
-    private void storeUpdatedBlob(MimeMessage mm) throws ServiceException, MessagingException, IOException
+    private void storeUpdatedBlob(MimeMessage mm, short volumeId)
+    throws ServiceException, MessagingException, IOException
     {
         ParsedMessage pm = new ParsedMessage(mm, true);
         
@@ -696,14 +699,14 @@ public class Appointment extends MailItem {
         
         setContent(pm, digest, size);
 
-        short volumeId = getVolumeId();
         StoreManager sm = StoreManager.getInstance();
         Blob blob = sm.storeIncoming(data, digest, null, volumeId);
         MailboxBlob mb = sm.renameTo(blob, getMailbox(), getId(), getSavedSequence(), volumeId);
     }
     
     
-    private void createBlob(ParsedMessage invPm, Invite firstInvite) throws ServiceException 
+    private void createBlob(ParsedMessage invPm, Invite firstInvite, short volumeId)
+    throws ServiceException 
     {
         try { 
             // create the toplevel multipart/digest...
@@ -720,7 +723,7 @@ public class Appointment extends MailItem {
             
             mm.saveChanges();
             
-            storeUpdatedBlob(mm);
+            storeUpdatedBlob(mm, volumeId);
             
         } catch (MessagingException e) {
             throw ServiceException.FAILURE("MessagingException "+e, e);
@@ -729,7 +732,9 @@ public class Appointment extends MailItem {
         }
     }
     
-    private void modifyBlob(ArrayList /* Invite */ toRemove, ParsedMessage invPm, Invite invite) throws ServiceException
+    private void modifyBlob(ArrayList /* Invite */ toRemove, ParsedMessage invPm, Invite invite,
+                            short volumeId)
+    throws ServiceException
     {
         // TODO - should check to see if the invite's MM is already in here!
         try { 
@@ -742,7 +747,7 @@ public class Appointment extends MailItem {
                 // oops, blob isn't there!  old data!  create one
                 
                 if (invPm != null) {
-                    createBlob(invPm, invite);
+                    createBlob(invPm, invite, volumeId);
                 }
                 return;
             }
@@ -798,7 +803,7 @@ public class Appointment extends MailItem {
 
             mm.saveChanges();
             
-            storeUpdatedBlob(mm);
+            storeUpdatedBlob(mm, volumeId);
         } catch (MessagingException e) {
             throw ServiceException.FAILURE("MessagingException", e);
         } catch (IOException e) {

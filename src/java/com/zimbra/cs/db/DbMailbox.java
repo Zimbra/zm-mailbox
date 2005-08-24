@@ -63,9 +63,9 @@ public class DbMailbox {
             boolean explicitId = (mailboxId != Mailbox.ID_AUTO_INCREMENT);
             String idSource = (explicitId ? "?" : "next_mailbox_id");
             stmt = conn.prepareStatement(
-                    "INSERT INTO mailbox(account_id, id, message_volume_id, index_volume_id, item_id_checkpoint, comment)" +
-                    " SELECT ?, " + idSource + ", message_volume_id, index_volume_id, " + (Mailbox.FIRST_USER_ID - 1) + ", ?" +
-                    " FROM current_volumes ORDER BY message_volume_id, index_volume_id LIMIT 1");
+                    "INSERT INTO mailbox(account_id, id, index_volume_id, item_id_checkpoint, comment)" +
+                    " SELECT ?, " + idSource + ", index_volume_id, " + (Mailbox.FIRST_USER_ID - 1) + ", ?" +
+                    " FROM current_volumes ORDER BY index_volume_id LIMIT 1");
             int attr = 1;
             stmt.setString(attr++, accountId);
             if (explicitId)
@@ -276,7 +276,7 @@ public class DbMailbox {
         try {
             stmt = conn.prepareStatement(
                     "SELECT account_id, item_id_checkpoint, size_checkpoint, change_checkpoint, tracking_sync, " +
-                    "message_volume_id, index_volume_id, config " +
+                    "index_volume_id, config " +
                     "FROM mailbox mb " +
                     "WHERE mb.id = ?");
             stmt.setInt(1, mailboxId);
@@ -292,10 +292,9 @@ public class DbMailbox {
             mbd.lastItemId   = rs.getInt(2) + ITEM_CHECKPOINT_INCREMENT - 1;
             mbd.lastChangeId = rs.getInt(4) + CHANGE_CHECKPOINT_INCREMENT - 1;
             mbd.trackSync    = rs.getBoolean(5);
-            mbd.messageVolumeId   = rs.getShort(6);
-            mbd.indexVolumeId     = rs.getShort(7);
+            mbd.indexVolumeId     = rs.getShort(6);
             try {
-                mbd.config = new Metadata(rs.getString(8)); 
+                mbd.config = new Metadata(rs.getString(7)); 
             } catch (ServiceException e) {
                 ZimbraLog.misc.warn("unparseable config metadata in mailbox " + mailboxId);
                 mbd.config = new Metadata();
@@ -329,14 +328,12 @@ public class DbMailbox {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement(
-                    "SELECT message_volume_id, index_volume_id " +
-                    "FROM mailbox WHERE id = ?");
+                    "SELECT index_volume_id FROM mailbox WHERE id = ?");
             stmt.setInt(1, data.id);
             rs = stmt.executeQuery();
             if (!rs.next())
                 throw MailServiceException.NO_SUCH_MBOX(data.id);
-            data.messageVolumeId   = rs.getShort(1);
-            data.indexVolumeId     = rs.getShort(2);
+            data.indexVolumeId     = rs.getShort(1);
         } catch (SQLException e) {
             throw ServiceException.FAILURE("getting mailbox volume info", e);
         } finally {

@@ -133,7 +133,6 @@ public class Mailbox {
         public long    lastChangeDate;
         public boolean trackSync;
         public Metadata config;
-        public short   messageVolumeId;
         public short   indexVolumeId;
     }
 
@@ -329,10 +328,6 @@ public class Mailbox {
     /** @return the Account object for the specified account ID */
     public static Account getAccount(String accountId) throws ServiceException {
         return Provisioning.getInstance().getAccountById(accountId);
-    }
-
-    public short getMessageVolumeId() {
-        return mData.messageVolumeId;
     }
 
     /** @return whether the server keeps track of message deletes (etc.) for sync clients */
@@ -1117,7 +1112,12 @@ public class Mailbox {
                     getMailboxIndex().deleteIndex();
                 } catch (IOException iox) { }
                 try {
-                    StoreManager.getInstance().deleteStore(this, mData.messageVolumeId);
+                    StoreManager sm = StoreManager.getInstance();
+                    List volumes = Volume.getAll();
+                    for (Iterator iter = volumes.iterator(); iter.hasNext(); ) {
+                    	Volume vol = (Volume) iter.next();
+                        sm.deleteStore(this, vol.getId());
+                    }
                 } catch (IOException iox) { }
     
                 // twiddle the mailbox lock [must be the last command of this function!]
@@ -1134,8 +1134,6 @@ public class Mailbox {
     }
 
     private void initDirs() throws ServiceException {
-        Volume msgVol = Volume.getById(mData.messageVolumeId);
-        mMessageRootDir = msgVol.getMailboxDir(mId, Volume.TYPE_MESSAGE);
         Volume indexVol = Volume.getById(mData.indexVolumeId);
         mIndexRootDir = indexVol.getMailboxDir(mId, Volume.TYPE_INDEX);
     }
@@ -2183,9 +2181,12 @@ public class Mailbox {
             Conversation convTarget = (conv instanceof VirtualConversation ? null : conv);
             if (convTarget != null && debug)
                 ZimbraLog.mailbox.debug("  placing message in existing conversation " + convTarget.getId());
-            
+
+            short volumeId =
+                redoPlayer == null ? Volume.getCurrentMessageVolume().getId()
+                                   : redoPlayer.getVolumeId();
             Calendar iCal = pm.getiCalendar();
-            msg = Message.create(redoRecorder, redoPlayer, folder, convTarget, pm, msgSize, digest,
+            msg = Message.create(redoRecorder, redoPlayer, folder, convTarget, pm, msgSize, digest, volumeId,
                     unread, noICal, flags, tags, dinfo, messageId, iCal);
             
             redoRecorder.setMessageId(msg.getId());
@@ -2221,15 +2222,13 @@ public class Mailbox {
             if (blob == null) {
                 // This mailbox is the only recipient, or it is the first
                 // of multiple recipients.  Save message to incoming directory.
-//                String path;
-//                short volumeId;
                 if (redoPlayer == null)
                     blob = sm.storeIncoming(data, digest,
                                             null, msg.getVolumeId());
                 else
                     blob = sm.storeIncoming(data, digest,
-                                            redoPlayer.getBlobPath(),
-                                            redoPlayer.getBlobVolumeId());
+                                            redoPlayer.getPath(),
+                                            redoPlayer.getVolumeId());
                 String blobPath = blob.getPath();
                 short blobVolumeId = blob.getVolumeId();
 
@@ -2245,7 +2244,7 @@ public class Mailbox {
 
                     // Create a link in mailbox directory and leave the incoming
                     // copy alone, so other recipients can link to it later.
-                    redoRecorder.setMessageLinkInfo(blobPath, blobVolumeId);
+                    redoRecorder.setMessageLinkInfo(blobPath, blobVolumeId, msg.getVolumeId());
                     mboxBlob = sm.link(blob, this, messageId, msg.getSavedSequence(), msg.getVolumeId());
                 } else {
                     // If the only recipient, move the incoming copy into
@@ -2282,7 +2281,7 @@ public class Mailbox {
                     srcPath = blob.getPath();
                     srcBlob = blob;
                 }
-                redoRecorder.setMessageLinkInfo(srcPath, srcBlob.getVolumeId());
+                redoRecorder.setMessageLinkInfo(srcPath, srcBlob.getVolumeId(), msg.getVolumeId());
                 mboxBlob = sm.link(srcBlob, this, messageId, msg.getSavedSequence(), msg.getVolumeId());
             }
             markOtherItemDirty(mboxBlob);
@@ -2393,7 +2392,9 @@ public class Mailbox {
             msg.setContent(pm, digest, size, imapID);
 
             // write the content to the store
-            short volumeId = msg.getVolumeId();
+            short volumeId =
+                redoPlayer == null ? Volume.getCurrentMessageVolume().getId()
+                                   : redoPlayer.getVolumeId();
             StoreManager sm = StoreManager.getInstance();
             blob = sm.storeIncoming(data, digest, null, volumeId);
             MailboxBlob mb = sm.renameTo(blob, this, id, msg.getSavedSequence(), volumeId);
@@ -2573,9 +2574,21 @@ public class Mailbox {
             MailItem item = getItemById(itemId, type);
             checkItemChangeID(item);
 
-            int newId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getDestId());
-            MailItem copy = item.copy(getFolderById(targetId), newId);
+            int newId;
+            short destVolumeId;
+            if (redoPlayer == null) {
+            	newId = getNextItemId(ID_AUTO_INCREMENT);
+                if (item.getVolumeId() != -1)
+                    destVolumeId = Volume.getCurrentMessageVolume().getId();
+                else
+                    destVolumeId = -1;
+            } else {
+            	newId = getNextItemId(redoPlayer.getDestId());
+                destVolumeId = redoPlayer.getDestVolumeId();
+            }
+            MailItem copy = item.copy(getFolderById(targetId), newId, destVolumeId);
             redoRecorder.setDestId(copy.getId());
+            redoRecorder.setDestVolumeId(copy.getVolumeId());
 
             success = true;
             return copy;
@@ -2720,10 +2733,19 @@ public class Mailbox {
             beginTransaction("createNote", octxt, redoRecorder);
             CreateNote redoPlayer = (CreateNote) mCurrentChange.getRedoPlayer();
 
-            int noteId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getNoteId());
-            Note note = Note.create(noteId, getFolderById(folderId), content, location, color);
+            int noteId;
+            short volumeId;
+            if (redoPlayer == null) {
+                noteId = getNextItemId(ID_AUTO_INCREMENT);
+                volumeId = Volume.getCurrentMessageVolume().getId();
+            } else {
+                noteId = getNextItemId(redoPlayer.getNoteId());
+                volumeId = redoPlayer.getVolumeId();
+            }
+            Note note = Note.create(noteId, getFolderById(folderId), volumeId, content, location, color);
 
             redoRecorder.setNoteId(note.getId());
+            redoRecorder.setVolumeId(note.getVolumeId());
             mCurrentChange.setIndexedItem(note, null);
             success = true;
             return note;
@@ -2792,10 +2814,10 @@ public class Mailbox {
         }
     }
     
-    Appointment createAppointment(int folderId, String tags, String uid, ParsedMessage pm, Invite invite, int apptId)
+    Appointment createAppointment(int folderId, short volumeId, String tags, String uid, ParsedMessage pm, Invite invite, int apptId)
     throws ServiceException {
         int createId = getNextItemId(apptId);
-        return Appointment.create(createId, getFolderById(folderId), tags, uid, pm, invite);
+        return Appointment.create(createId, getFolderById(folderId), volumeId, tags, uid, pm, invite);
     }
 
     public synchronized Contact createContact(OperationContext octxt, Map attrs, int folderId, String tags)
@@ -2807,10 +2829,19 @@ public class Mailbox {
             beginTransaction("createContact", octxt, redoRecorder);
             CreateContact redoPlayer = (CreateContact) mCurrentChange.getRedoPlayer();
 
-            int contactId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getContactId());
-            Contact con = Contact.create(contactId, getFolderById(folderId), attrs, tags);
+            int contactId;
+            short volumeId;
+            if (redoPlayer == null) {
+            	contactId = getNextItemId(ID_AUTO_INCREMENT);
+                volumeId = Volume.getCurrentMessageVolume().getId();
+            } else {
+            	contactId = getNextItemId(redoPlayer.getContactId());
+                volumeId = redoPlayer.getVolumeId();
+            }
+            Contact con = Contact.create(contactId, getFolderById(folderId), volumeId, attrs, tags);
 
             redoRecorder.setContactId(con.getId());
+            redoRecorder.setVolumeId(con.getVolumeId());
             mCurrentChange.setIndexedItem(con, null);
             success = true;
             return con;
