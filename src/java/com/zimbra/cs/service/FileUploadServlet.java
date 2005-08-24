@@ -83,6 +83,12 @@ public class FileUploadServlet extends ZimbraServlet {
                 for (Iterator it = files.iterator(); it.hasNext(); )
                     ((FileItem) it.next()).delete();
         }
+        
+        public String toString() {
+            String fileString = this.files == null ? "files is null" : this.files.size() + " files";
+            return "Upload: {accountId: " + accountId + ", time: " + time + ", uploadId: "
+                + uuid + ", " + fileString + "}";
+        }
     }
 
     private static HashMap mPending = new HashMap(100);
@@ -95,12 +101,22 @@ public class FileUploadServlet extends ZimbraServlet {
     private static final int DEFAULT_MAX_SIZE = 5 * 1024 * 1024;
 
     public static List fetchUploads(String accountId, String uploadId) {
-        if (accountId == null || uploadId == null)
-            return null;
+        String context = "accountId=" + accountId + ", uploadId=" + uploadId;
+        if (accountId == null || uploadId == null) {
+            throw new IllegalArgumentException(
+                "null is not allowed: " + context);
+        }
         synchronized (mPending) {
             Upload up = (Upload) mPending.get(uploadId);
-            if (up == null || !accountId.equals(up.accountId))
+            if (up == null) {
+                mLog.warn("fetchUploads(): Uploads not found: " + context);
                 return null;
+            }
+            if (!accountId.equals(up.accountId)) {
+                mLog.warn("fetchUploads(): Mismatched accountId for upload: " +
+                    up + ".  Expected: " + context);
+                return null;
+            }
             up.time = System.currentTimeMillis();
             return up.files;
         }
@@ -113,6 +129,8 @@ public class FileUploadServlet extends ZimbraServlet {
         synchronized (mPending) {
             up = (Upload) mPending.remove(uploadId);
             if (!accountId.equals(up.accountId)) {
+                mLog.warn("deleteUploads(" + accountId + ", " + uploadId +
+                    ").  Found mismatched accountId: " + up);
                 mPending.put(uploadId, up);
                 up = null;
             }
@@ -227,6 +245,7 @@ public class FileUploadServlet extends ZimbraServlet {
 
             Upload up = new Upload(authToken, items);
             synchronized (mPending) {
+                mLog.debug("doPost(): added " + up);
             	mPending.put(up.uuid, up);
             }
             attachmentId = up.uuid;
@@ -304,7 +323,7 @@ public class FileUploadServlet extends ZimbraServlet {
                 for (Iterator it = mPending.values().iterator(); it.hasNext(); ) {
                     Upload up = (Upload) it.next();
                     if (!up.accessedAfter(cutoffTime)) {
-                        mLog.debug("Purging cached upload: " + up.uuid);
+                        mLog.debug("Purging cached upload: " + up);
                         it.remove();
                         reaped.add(up);
                         assert(mPending.get(up.uuid) == null);
@@ -314,7 +333,6 @@ public class FileUploadServlet extends ZimbraServlet {
             }
             if (mLog.isInfoEnabled()) {
                 int removed = sizeBefore - sizeAfter;
-                String msg;
                 if (removed > 0)
                     mLog.info("Removed " + removed + " expired file uploads; " +
                               sizeAfter + " pending file uploads");
