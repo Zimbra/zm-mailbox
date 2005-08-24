@@ -84,9 +84,16 @@ public class SoapSession extends Session {
         }
     }
 
-    /*
-     * Notification callback
-     */
+    /** Handles the set of changes from a single Mailbox transaction.
+     *  <p>
+     *  Takes a set of new mailbox changes and caches it locally.  This is
+     *  currently initiated from inside the Mailbox transaction commit, but we
+     *  still shouldn't assume that execution of this method is synchronized
+     *  on the Mailbox.
+     *  <p>
+     *  *All* changes are currently cached, regardless of the client's state/views.
+     * 
+     * @param pms   A set of new change notifications from our Mailbox  */
     protected void notifyPendingChanges(PendingModifications pms) {
         if (!pms.hasNotifications())
             return;
@@ -124,7 +131,7 @@ public class SoapSession extends Session {
     }
 
     private static final String E_NOTIFY   = "notify";
-    private static final String E_REFRESH  = "refresh";
+    private static final String E_REFRESH  = "Rerefresh";
     private static final String E_TAGS     = "tags";
     private static final String E_CREATED  = "created";
     private static final String E_DELETED  = "deleted";
@@ -132,14 +139,17 @@ public class SoapSession extends Session {
 
     private static final String A_ID = "id";
 
-    /**
-     * Refreshed in the browser
+    /** Serializes basic folder/tag structure to a SOAP response header.
+     *  <p>
+     *  Adds a &lt;refresh> block to the existing &lt;context> element.
+     *  This &lt;refresh> block contains the basic folder, tag, and mailbox
+     *  size information needed to display and update the web UI's overview
+     *  pane.  The &lt;refresh> block is sent when a new session is created.
      * 
-     * @param ctxt
-     */
+     * @param ctxt An existing SOAP header <context> element */
     public void putRefresh(Element ctxt) throws ServiceException {
         synchronized (this) {
-            if (!mNotify)
+            if (!mNotify || ctxt == null)
                 return;
             mChanges.clear();
         }
@@ -171,56 +181,96 @@ public class SoapSession extends Session {
         }
     }
 
+    /** Serializes cached notifications to a SOAP response header.
+     *  <p>
+     *  Adds a &lt;notify> block to an existing &lt;context> element, creating an
+     *  enclosing <context> element if none is passed in.  This &lt;notify> block
+     *  contains information about all items deleted, created, or modified in
+     *  the {@link Mailbox} since the last client interaction, without regard to the
+     *  client's state/views.
+     *  <p>
+     *  For deleted items, only the item IDs are returned.  For created items, the
+     *  entire item is serialized.  For modified items, only the modified attributes
+     *  are included in the response.
+     *  <p>
+     *  Example:
+     *  <pre>
+     *     &lt;notify>
+     *       &lt;deleted id="665,66,452,883"/>
+     *       &lt;created>
+     *         &lt;tag id="66" name="phlox" u="8"/>
+     *         &lt;folder id="4353" name="a&p" u="2" l="1"/>
+     *       &lt;/created>
+     *       &lt;modified>
+     *         &lt;tag id="65" u="0"/>
+     *         &lt;m id="553" f="ua"/>
+     *         &lt;note id="774" color="4">
+     *           This is the new content.
+     *         &lt;/note>
+     *       &lt;/modified>
+     *     &lt;/notify>
+     *  </pre>
+     *  Also adds a "last server change" changestamp to the <context> block.
+     *  <p>
+     * @param lc    The SOAP request context from the client's request
+     * @param ctxt  An existing SOAP header &lt;context> element
+     * @return the <context> element (automatically created if ctxt was null) */
     public Element putNotifications(ZimbraContext lc, Element ctxt) {
-        synchronized (this) {
-            if (ctxt == null)
-                ctxt = lc.createElement(ZimbraContext.CONTEXT);
+        if (ctxt == null)
+            ctxt = lc.createElement(ZimbraContext.CONTEXT);
 
-            try {
-                Mailbox mbox = Mailbox.getMailboxByAccountId(lc.getRequestedAccountId());
+        Mailbox mbox;
+        try {
+            mbox = Mailbox.getMailboxByAccountId(lc.getRequestedAccountId());
+        } catch (ServiceException e) {
+            mLog.warn("error fetching mailbox for account " + lc.getRequestedAccountId(), e);
+            return ctxt;
+        }
+
+        // must lock the Mailbox before locking the Session to avoid deadlock
+        //   because ToXML functions can now call back into the Mailbox
+        synchronized (mbox) {
+            synchronized (this) {
                 ctxt.addUniqueElement(ZimbraContext.E_CHANGE).addAttribute(ZimbraContext.A_CHANGE_ID, mbox.getLastChangeID());
-            } catch (ServiceException e) {
-                mLog.warn("error putting change checkpoint to SOAP header response", e);
-            }
+                if (!mNotify || !mChanges.hasNotifications())
+                    return ctxt;
 
-            if (!mNotify || !mChanges.hasNotifications())
-                return ctxt;
+                Element eNotify = ctxt.addUniqueElement(E_NOTIFY);
 
-            Element eNotify = ctxt.addUniqueElement(E_NOTIFY);
-
-            if (mChanges.deleted != null && mChanges.deleted.size() > 0) {
-                StringBuffer ids = new StringBuffer();
-                for (Iterator it = mChanges.deleted.values().iterator(); it.hasNext(); ) {
-                    if (ids.length() != 0)
-                        ids.append(',');
-                    Object obj = it.next();
-                    if (obj instanceof MailItem)
-                        ids.append(((MailItem) obj).getId());
-                    else if (obj instanceof Integer)
-                        ids.append(obj);
+                if (mChanges.deleted != null && mChanges.deleted.size() > 0) {
+                    StringBuffer ids = new StringBuffer();
+                    for (Iterator it = mChanges.deleted.values().iterator(); it.hasNext(); ) {
+                        if (ids.length() != 0)
+                            ids.append(',');
+                        Object obj = it.next();
+                        if (obj instanceof MailItem)
+                            ids.append(((MailItem) obj).getId());
+                        else if (obj instanceof Integer)
+                            ids.append(obj);
+                    }
+                    Element eDeleted = eNotify.addUniqueElement(E_DELETED);
+                    eDeleted.addAttribute(A_ID, ids.toString());
                 }
-                Element eDeleted = eNotify.addUniqueElement(E_DELETED);
-                eDeleted.addAttribute(A_ID, ids.toString());
-            }
-    
-            if (mChanges.created != null && mChanges.created.size() > 0) {
-                Element eCreated = eNotify.addUniqueElement(E_CREATED);
-                for (Iterator it = mChanges.created.values().iterator(); it.hasNext(); )
-                    ToXML.encodeItem(eCreated, (MailItem) it.next(), Change.ALL_FIELDS);
-            }
 
-            if (mChanges.modified != null && mChanges.modified.size() > 0) {
-                Element eModified = eNotify.addUniqueElement(E_MODIFIED);
-                for (Iterator it = mChanges.modified.values().iterator(); it.hasNext(); ) {
-                    Change chg = (Change) it.next();
-                    if (chg.why != 0 && chg.what instanceof MailItem)
-                        ToXML.encodeItem(eModified, (MailItem) chg.what, chg.why);
-                    else if (chg.why != 0 && chg.what instanceof Mailbox)
-                        ToXML.encodeMailbox(eModified, (Mailbox) chg.what, chg.why);
+                if (mChanges.created != null && mChanges.created.size() > 0) {
+                    Element eCreated = eNotify.addUniqueElement(E_CREATED);
+                    for (Iterator it = mChanges.created.values().iterator(); it.hasNext(); )
+                        ToXML.encodeItem(eCreated, (MailItem) it.next(), Change.ALL_FIELDS);
                 }
-            }
 
-            mChanges.clear();
+                if (mChanges.modified != null && mChanges.modified.size() > 0) {
+                    Element eModified = eNotify.addUniqueElement(E_MODIFIED);
+                    for (Iterator it = mChanges.modified.values().iterator(); it.hasNext(); ) {
+                        Change chg = (Change) it.next();
+                        if (chg.why != 0 && chg.what instanceof MailItem)
+                            ToXML.encodeItem(eModified, (MailItem) chg.what, chg.why);
+                        else if (chg.why != 0 && chg.what instanceof Mailbox)
+                            ToXML.encodeMailbox(eModified, (Mailbox) chg.what, chg.why);
+                    }
+                }
+
+                mChanges.clear();
+            }
         }
         return ctxt;
     }
@@ -240,8 +290,8 @@ public class SoapSession extends Session {
         }
     }
     
-    public void putQueryResults(String queryStr, String groupBy, String sortBy, ZimbraQueryResults res) throws ServiceException
-    {
+    public void putQueryResults(String queryStr, String groupBy, String sortBy, ZimbraQueryResults res)
+    throws ServiceException {
         synchronized (this) {
             clearCachedQueryResults();
             mQueryStr = queryStr;
