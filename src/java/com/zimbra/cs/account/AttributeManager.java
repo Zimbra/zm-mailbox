@@ -101,8 +101,8 @@ public class AttributeManager {
                 AttributeCallback callback = null;
                 int type = AttributeInfo.TYPE_UNKNOWN;
                 String value = null;
-                int min = Integer.MIN_VALUE;
-                int max = Integer.MAX_VALUE;
+                long min = Long.MIN_VALUE;
+                long max = Long.MAX_VALUE;
                 boolean immutable = false;
                 boolean ignore = false;
                 
@@ -116,9 +116,9 @@ public class AttributeManager {
                     } else if (aname.equals(A_IMMUTABLE)) {
                         immutable = "1".equals(attr.getValue());
                     } else if (aname.equals(A_MAX)) {
-                        max = AttributeInfo.parseInt(attr.getValue(), Integer.MAX_VALUE);
+                        max = AttributeInfo.parseLong(attr.getValue(), Integer.MAX_VALUE);
                     } else if (aname.equals(A_MIN)) {
-                        min = AttributeInfo.parseInt(attr.getValue(), Integer.MIN_VALUE);
+                        min = AttributeInfo.parseLong(attr.getValue(), Integer.MIN_VALUE);
                     } else if (aname.equals(A_TYPE)) {
                          type = AttributeInfo.getType(attr.getValue());
                          if (type == AttributeInfo.TYPE_UNKNOWN) {

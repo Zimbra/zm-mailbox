@@ -446,7 +446,7 @@ public class Mailbox {
 
         if (delta < 0 || !checkQuota)
             return;
-        long quota = getAccount().getIntAttr(Provisioning.A_zimbraMailQuota, 0);
+        long quota = getAccount().getLongAttr(Provisioning.A_zimbraMailQuota, 0);
         if (quota != 0 && mCurrentChange.size > quota)
             throw MailServiceException.QUOTA_EXCEEDED(quota);
     }

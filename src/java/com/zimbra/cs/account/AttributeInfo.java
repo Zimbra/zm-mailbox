@@ -48,7 +48,8 @@ public class AttributeInfo {
     public static final int TYPE_STRING = 9;  
     public static final int TYPE_REGEX = 10;
     public static final int TYPE_EMAILP = 11;
-
+    public static final int TYPE_LONG = 12;
+    
     public static final String S_TYPE_BOOLEAN = "boolean";
     public static final String S_TYPE_DURATION = "duration";
     public static final String S_TYPE_GENTIME = "gentime";    
@@ -60,6 +61,7 @@ public class AttributeInfo {
     public static final String S_TYPE_PORT = "port";
     public static final String S_TYPE_STRING = "string";
     public static final String S_TYPE_REGEX = "regex";
+    public static final String S_TYPE_LONG = "long";    
 
     public static int TYPE_UNKNOWN = -1;        
     
@@ -95,33 +97,18 @@ public class AttributeInfo {
 
     private boolean mImmutable;
 
-    private int mMin = Integer.MIN_VALUE, mMax = Integer.MAX_VALUE;
+    private long mMin = Long.MIN_VALUE, mMax = Long.MAX_VALUE;
 
-    static int parseInt(String value, int def) {
+    static int parseLong(String value, int def) {
         try {
             return Integer.parseInt(value);
         } catch (NumberFormatException e) {
             return def;
         }
     }
-    
-    private void OldparseConstraints(String constraints) {
-        if (constraints == null || constraints.equals(""))
-            return;
-        String cons[] = constraints.split(",");
-        for (int i=0; i < cons.length; i++) {
-            if (cons[i].startsWith("max=")) {
-                mMax = parseInt(cons[i].substring(4), Integer.MAX_VALUE);
-            } else if (cons[i].startsWith("min=")) {
-                mMin = parseInt(cons[i].substring(4), Integer.MIN_VALUE);                
-            } else {
-                ZimbraLog.misc.warn("attr("+mName+") unknown constraint: "+cons[i]);
-            }
-        }
-    }
 
     public AttributeInfo (String attrName, AttributeCallback callback, int type, String value, boolean immutable, 
-            int min, int max)
+            long min, long max)
     {
         mName = attrName;
         mImmutable = immutable;
@@ -131,6 +118,10 @@ public class AttributeInfo {
         mMin = min;
         mMax = max;
         switch (mType) {
+        case TYPE_INTEGER:
+            if (mMin < Integer.MIN_VALUE) mMin = Integer.MIN_VALUE;
+            if (mMax > Integer.MAX_VALUE) mMax = Integer.MAX_VALUE;            
+            break;
         case TYPE_ENUM:
             String enums[] = value.split(",");
             mEnumSet = new HashSet(enums.length);
@@ -227,6 +218,17 @@ public class AttributeInfo {
        case TYPE_INTEGER:
            try {
                int v = Integer.parseInt(value);
+               if (v < mMin)
+                   throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value("+v+") smaller then minimum allowed: "+mMin, null);
+               if (v > mMax)
+                   throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value("+v+") larger then max allowed: "+mMax, null);
+               return;
+           } catch (NumberFormatException e) {
+               throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must be a valid integer: "+value, e);
+           }
+       case TYPE_LONG:
+           try {
+               long v = Long.parseLong(value);
                if (v < mMin)
                    throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value("+v+") smaller then minimum allowed: "+mMin, null);
                if (v > mMax)
