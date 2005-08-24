@@ -131,7 +131,7 @@ public class SoapSession extends Session {
     }
 
     private static final String E_NOTIFY   = "notify";
-    private static final String E_REFRESH  = "Rerefresh";
+    private static final String E_REFRESH  = "refresh";
     private static final String E_TAGS     = "tags";
     private static final String E_CREATED  = "created";
     private static final String E_DELETED  = "deleted";
@@ -149,7 +149,7 @@ public class SoapSession extends Session {
      * @param ctxt An existing SOAP header <context> element */
     public void putRefresh(Element ctxt) throws ServiceException {
         synchronized (this) {
-            if (!mNotify || ctxt == null)
+            if (!mNotify)
                 return;
             mChanges.clear();
         }
