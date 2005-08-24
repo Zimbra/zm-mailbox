@@ -154,6 +154,7 @@ public class AttributeInfo {
        initType(S_TYPE_GENTIME, TYPE_GENTIME);       
        initType(S_TYPE_ID, TYPE_ID);
        initType(S_TYPE_INTEGER, TYPE_INTEGER);
+       initType(S_TYPE_LONG, TYPE_LONG);
        initType(S_TYPE_PORT, TYPE_PORT);
        initType(S_TYPE_STRING, TYPE_STRING);
        initType(S_TYPE_REGEX, TYPE_REGEX);
@@ -235,7 +236,7 @@ public class AttributeInfo {
                    throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value("+v+") larger then max allowed: "+mMax, null);
                return;
            } catch (NumberFormatException e) {
-               throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must be a valid integer: "+value, e);
+               throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must be a valid long: "+value, e);
            }
        case TYPE_PORT:
            try {
