@@ -74,6 +74,7 @@ public class MailServiceException extends ServiceException {
     public static final String MUST_BE_ORGANIZER = "mail.MUST_BE_ORGANIZER";
     public static final String CANNOT_CANCEL_INSTANCE_OF_EXCEPTION = "mail.CANNOT_CANCEL_INSTANCE_OF_EXCEPTION";
     public static final String INVITE_OUT_OF_DATE = "mail.INVITE_OUT_OF_DATE";
+    public static final String SEND_FAILURE = "mail.SEND_FAILURE";
         
 
     /**
@@ -268,4 +269,16 @@ public class MailServiceException extends ServiceException {
     public static MailServiceException INVITE_OUT_OF_DATE(String request) {
         return new MailServiceException("The specified Invite is out of date (has been updated): "+request, MUST_BE_ORGANIZER, SENDERS_FAULT, null);
     }
+    
+    public static MailServiceException SEND_FAILURE(boolean sentSome, String addrs, Exception ex) {
+        String exStr;
+        if (sentSome) {
+            exStr = "Send failed for some addresses: ";
+        } else {
+            exStr = "Message not sent to any recipients because of these failed addresses: ";
+        }
+        exStr+=addrs;
+        return new MailServiceException(exStr, SEND_FAILURE, SENDERS_FAULT, ex);
+    }
+    
 }

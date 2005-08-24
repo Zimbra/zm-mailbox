@@ -294,13 +294,12 @@ public class SendMsg extends WriteOpDocumentHandler {
 	    } catch (SendFailedException sfe) {
 	        mLog.warn("exception ocurred during SendMsg", sfe);
 	        
-	        StringBuffer msg = new StringBuffer();
+            boolean sentSome = false;
 	        if (JMSession.getSmtpConfig().getSendPartial()) {
-	        	msg.append("Send failed for some addresses: ");
-	        } else {
-	        	msg.append("Message not sent to any recipients because these addresses failed: ");
-	        }
+	            sentSome = true;
+	        } 
 	        Address[] addrs = sfe.getInvalidAddresses();
+            StringBuffer msg = new StringBuffer();
 	        if (addrs != null && addrs.length > 0) {
 	        	for (int i = 0; i < addrs.length; i++) {
 	        		if (i > 0) {
@@ -309,7 +308,7 @@ public class SendMsg extends WriteOpDocumentHandler {
 	        		msg.append(addrs[i]);
 	        	}
 	        }
-        	throw ServiceException.INVALID_REQUEST(msg.toString(), sfe);
+        	throw MailServiceException.SEND_FAILURE(sentSome, msg.toString(), sfe);
 	    } catch (IOException ioe) {
 	        mLog.warn("exception occured during send msg", ioe);
 	        throw ServiceException.FAILURE("IOException", ioe);
