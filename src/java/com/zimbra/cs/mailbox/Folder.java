@@ -208,9 +208,11 @@ public class Folder extends MailItem {
 	}
 
 	void rename(String name, Folder parent) throws ServiceException {
+		name = validateFolderName(name);
+        if (name.equals(mData.subject) && parent == mParent)
+            return;
 		if (!isMutable())
 			throw MailServiceException.IMMUTABLE_OBJECT(mId);
-		name = validateFolderName(name);
 
         if (!name.equals(mData.subject)) {
             markItemModified(Change.MODIFIED_NAME);

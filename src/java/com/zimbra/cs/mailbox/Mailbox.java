@@ -2910,14 +2910,15 @@ public class Mailbox {
 
                 parent = getFolderById(ID_FOLDER_USER_ROOT);
                 for (int i = 0; i < parts.length - 1; i++) {
+                    String pathSegment = Folder.validateFolderName(parts[i]);
                     int subfolderId = playerParentIds == null ? ID_AUTO_INCREMENT : playerParentIds[i];
-                    Folder subfolder = parent.findSubfolder(parts[i]);
+                    Folder subfolder = parent.findSubfolder(pathSegment);
                     if (subfolder == null)
-                        subfolder = Folder.create(this, getNextItemId(subfolderId), parent, parts[i]);
+                        subfolder = Folder.create(this, getNextItemId(subfolderId), parent, pathSegment);
                     else if (subfolderId != ID_AUTO_INCREMENT && subfolderId != subfolder.getId())
                         throw ServiceException.FAILURE("parent folder id changed since operation was recorded", null);
-                    else if (!subfolder.getName().equals(Folder.validateFolderName(parts[i])))
-                        subfolder.rename(parts[i], parent);
+                    else if (!subfolder.getName().equals(pathSegment) && subfolder.isMutable())
+                    	subfolder.rename(pathSegment, parent);
                     recorderParentIds[i] = subfolder.getId();
                     parent = subfolder;
                 }
