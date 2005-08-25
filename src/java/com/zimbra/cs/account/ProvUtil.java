@@ -1248,6 +1248,7 @@ public class ProvUtil {
             d = mProvisioning.getDomainById(key);
             break;
         case BY_NAME:
+        default:
             d = mProvisioning.getDomainByName(key);
             break;
         }
