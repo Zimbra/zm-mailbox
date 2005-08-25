@@ -114,6 +114,8 @@ class LuceneQueryOperation extends QueryOperation
             }
             return toRet;
         }
+        
+        private int size() { return mHits.size(); }
 
         private void addHit(int indexId, Document doc) {
             addHit(new Integer(indexId), doc);
@@ -138,16 +140,15 @@ class LuceneQueryOperation extends QueryOperation
     
     protected LuceneIndexIdChunk getNextIndexedIdChunk(int maxChunkSize) throws ServiceException {
         try {
-            int numLeft = mLuceneHits.length() - mCurHitNo;
-            int numToReturn = Math.min(numLeft, maxChunkSize);
             LuceneIndexIdChunk toRet = new LuceneIndexIdChunk();
-            for (int i = 0; i < numToReturn; i++) {
+            int luceneLen = mLuceneHits.length();
+            
+            while ((toRet.size() < maxChunkSize) && (mCurHitNo < luceneLen)) {
                 Document d = mLuceneHits.doc(mCurHitNo++);
                 
                 String mbid = d.get(LuceneFields.L_MAILBOX_BLOB_ID);
                 try {
                     if (mbid != null) {
-//                        toRet[i] = Integer.parseInt(mbid);
                         toRet.addHit(Integer.parseInt(mbid), d);
                     }
                 } catch (NumberFormatException e) {
