@@ -25,16 +25,13 @@
       <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
           <a n="firstName">Ross</a>
-          <a n="lastName">Dargahi</a>
+          <a n="lastName">Davidson</a>
           <a n="email">rossd@example.zimbra.com</a>
-          <a n="email2">rdargahi@yahoo.com</a>
+          <a n="email2">rdavidson@yahoo.com</a>
           <a n="jobTitle">VP of Engineering</a>
           <a n="company">Zimbra</a>
-          <a n="workPhone">(408) 973-0500 x112</a>
-          <a n="workStreet">1054 S. De Anza Blvd\nSuite 200</a>
-          <a n="workCity">San Jose</a>
+          <a n="workPhone">(408) 123-4567 x112</a>
           <a n="workState">CA</a>
-          <a n="workPostalCode">95129</a>
           <a n="workCountry">US</a>
           <a n="workURL">http://www.example.zimbra.com</a>
           <a n="notes">These are random notes</a>
@@ -56,7 +53,7 @@
           <a n="email">samuel@example.zimbra.com</a>
           <a n="jobTitle">CEO</a>
           <a n="company">Zimbra</a>
-          <a n="workPhone">(408) 973-0500 x111</a>
+          <a n="workPhone">(408) 123-4567 x111</a>
           <a n="fileAs">2</a>
         </cn>
       </CreateContactRequest>
@@ -71,15 +68,12 @@
       <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
           <a n="firstName">Roland</a>
-          <a n="lastName">Schemers</a>
-          <a n="email">schemers@example.zimbra.com</a>
+          <a n="lastName">Smith</a>
+          <a n="email">rsmith@example.zimbra.com</a>
           <a n="jobTitle">VP of Technology</a>
           <a n="company">Zimbra</a>
-          <a n="workPhone">(408) 973-0500 x113</a>
-          <a n="workStreet">1054 S. De Anza Blvd\nSuite 200</a>
-          <a n="workCity">San Jose</a>
+          <a n="workPhone">(408) 123-4567 x113</a>
           <a n="workState">CA</a>
-          <a n="workPostalCode">95129</a>
           <a n="workCountry">US</a>
           <a n="workURL">http://www.example.zimbra.com</a>
           <a n="fileAs">3</a>
@@ -99,7 +93,7 @@
           <a n="lastName">Edwards</a>
           <a n="email">dave@example.zimbra.com</a>
           <a n="company">Zimbra</a>
-          <a n="workPhone">(408) 973-0500 x199</a>
+          <a n="workPhone">(408) 123-4567 x199</a>
           <a n="fileAs">4</a>
         </cn>
       </CreateContactRequest>
@@ -114,9 +108,9 @@
       <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
           <a n="firstName">James</a>
-          <a n="lastName">Bond</a>
-          <a n="fileAs">8:Special Agent Jimmy Bond</a>
-          <a n="email">bond@gov.uk</a>
+          <a n="lastName">Pond</a>
+          <a n="fileAs">8:Special Agent Jimmy Pond</a>
+          <a n="email">pond@gov.uk</a>
         </cn>
       </CreateContactRequest>
     </t:request>
@@ -182,10 +176,10 @@
     <t:request>
       <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
-          <a n="firstName">Joaquin</a>
+          <a n="firstName">Johnnie</a>
           <a n="lastName">Ruiz</a>
           <a n="company">Zimbra</a>
-          <a n="workPhone">(408) 973-0500 x123</a>
+          <a n="workPhone">(408) 123-4567 x123</a>
         </cn>
       </CreateContactRequest>
     </t:request>
@@ -231,12 +225,9 @@
       <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
           <a n="firstName">Dan</a>
-          <a n="lastName">Karp</a>
+          <a n="lastName">Brady</a>
           <a n="email">dan@example.zimbra.com</a>
-          <a n="workStreet">1054 S. De Anza Blvd\nSuite 200</a>
-          <a n="workCity">San Jose</a>
           <a n="workState">CA</a>
-          <a n="workPostalCode">95129</a>
           <a n="workCountry">US</a>
           <a n="workURL">http://www.example.zimbra.com</a>
         </cn>
@@ -252,8 +243,8 @@
       <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
           <a n="firstName">Kevin</a>
-          <a n="lastName">Kluge</a>
-          <a n="email">kevin_kluge@yahoo.com</a>
+          <a n="lastName">Young</a>
+          <a n="email">kevin_young@yahoo.com</a>
         </cn>
       </CreateContactRequest>
     </t:request>
@@ -344,7 +335,7 @@
           <a n="firstName">Tim</a>
           <a n="lastName">Davis</a>
           <a n="company">HP</a>
-          <a n="workPhone">(408) 234-9812</a>
+          <a n="workPhone">(408) 234-5678</a>
         </cn>
       </CreateContactRequest>
     </t:request>
@@ -357,14 +348,11 @@
     <t:request>
       <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
-          <a n="firstName">Parag</a>
+          <a n="firstName">Paul</a>
           <a n="lastName">Shah</a>
           <a n="email">pshah@example.zimbra.com</a>
-          <a n="workPhone">(408) 973-0500</a>
-          <a n="workStreet">1054 S. De Anza Blvd\nSuite 200</a>
-          <a n="workCity">San Jose</a>
+          <a n="workPhone">(408) 123-4567</a>
           <a n="workState">CA</a>
-          <a n="workPostalCode">95129</a>
           <a n="workCountry">US</a>
           <a n="workURL">http://www.example.zimbra.com</a>
         </cn>
@@ -380,13 +368,10 @@
       <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
           <a n="firstName">Conrad</a>
-          <a n="lastName">Damon</a>
-          <a n="email">cdamon@example.zimbra.com</a>
-          <a n="workPhone">(408) 973-0500</a>
-          <a n="workStreet">1054 S. De Anza Blvd\nSuite 200</a>
-          <a n="workCity">San Jose</a>
+          <a n="lastName">James</a>
+          <a n="email">cjames@example.zimbra.com</a>
+          <a n="workPhone">(408) 123-4567</a>
           <a n="workState">CA</a>
-          <a n="workPostalCode">95129</a>
           <a n="workCountry">US</a>
           <a n="workURL">http://www.example.zimbra.com</a>
         </cn>
@@ -402,13 +387,10 @@
       <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
           <a n="firstName">Enrique</a>
-          <a n="lastName">delCampo</a>
+          <a n="lastName">Johnson</a>
           <a n="email">enrique@example.zimbra.com</a>
-          <a n="workPhone">(408) 973-0500</a>
-          <a n="workStreet">1054 S. De Anza Blvd\nSuite 200</a>
-          <a n="workCity">San Jose</a>
+          <a n="workPhone">(408) 123-4567</a>
           <a n="workState">CA</a>
-          <a n="workPostalCode">95129</a>
           <a n="workCountry">US</a>
           <a n="workURL">http://www.example.zimbra.com</a>
         </cn>
@@ -424,13 +406,10 @@
       <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
           <a n="firstName">Greg</a>
-          <a n="lastName">Solovyev</a>
+          <a n="lastName">Solo</a>
           <a n="email">greg@example.zimbra.com</a>
-          <a n="workPhone">(408) 973-0500</a>
-          <a n="workStreet">1054 S. De Anza Blvd\nSuite 200</a>
-          <a n="workCity">San Jose</a>
+          <a n="workPhone">(408) 123-4567</a>
           <a n="workState">CA</a>
-          <a n="workPostalCode">95129</a>
           <a n="workCountry">US</a>
           <a n="workURL">http://www.example.zimbra.com</a>
         </cn>
@@ -461,15 +440,12 @@
     <t:request>
       <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
-          <a n="firstName">Kirk</a>
-          <a n="lastName">Chen</a>
-          <a n="email">kchen@example.zimbra.com</a>
+          <a n="firstName">Curt</a>
+          <a n="lastName">Chin</a>
+          <a n="email">cchin@example.zimbra.com</a>
           <a n="company">Zimbra</a>
-          <a n="workPhone">(408) 973-0500</a>
-          <a n="workStreet">1054 S. De Anza Blvd\nSuite 200</a>
-          <a n="workCity">San Jose</a>
+          <a n="workPhone">(408) 123-4567</a>
           <a n="workState">CA</a>
-          <a n="workPostalCode">95129</a>
           <a n="workCountry">US</a>
           <a n="workURL">http://www.example.zimbra.com</a>
         </cn>
@@ -484,15 +460,12 @@
     <t:request>
       <CreateContactRequest xmlns="urn:zimbraMail">
         <cn>
-          <a n="firstName">Marc</a>
-          <a n="lastName">Macintyre</a>
-          <a n="email">marcmac@example.zimbra.com</a>
+          <a n="firstName">Mark</a>
+          <a n="lastName">Mack</a>
+          <a n="email">markmack@example.zimbra.com</a>
           <a n="company">Zimbra</a>
-          <a n="workPhone">(408) 973-0500</a>
-          <a n="workStreet">1054 S. De Anza Blvd\nSuite 200</a>
-          <a n="workCity">San Jose</a>
+          <a n="workPhone">(408) 123-4567</a>
           <a n="workState">CA</a>
-          <a n="workPostalCode">95129</a>
           <a n="workCountry">US</a>
           <a n="workURL">http://www.example.zimbra.com</a>
         </cn>
