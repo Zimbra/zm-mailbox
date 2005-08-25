@@ -245,7 +245,7 @@ public abstract class MailItem implements Comparable {
         private static final short ALL_LOCATIONS = INCLUDE_TRASH | INCLUDE_SPAM | INCLUDE_SENT | INCLUDE_OTHERS;
 
         private static final char ENC_TRASH = 't';
-        private static final char ENC_SPAM  = '$';
+        private static final char ENC_SPAM  = 'j';
         private static final char ENC_SENT  = 's';
         private static final char ENC_OTHER = 'o';
         private static final char ENC_QUERY = 'q';

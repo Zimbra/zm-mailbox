@@ -430,7 +430,7 @@ Messages:
   {conv-id}  = converstation id. only present if <m> is not enclosed within a <c> element
   {size}     = size in bytes
   {flags}    = (u)nread, (f)lagged, has (a)ttachment, (r)eplied, (s)ent by me, for(w)arded,
-               (d)raft, deleted (x), (n)otification sent, ($)pam
+               (d)raft, deleted (x), (n)otification sent
   {date}     = secs since epoch, from date header in message
   {original-id} = message id of message being replied to/forwarded (outbound messages only)
   {url}      = content servlet relative url for retrieving message content
@@ -739,7 +739,7 @@ if fie="1" is set, the server will fetch the folder if it already exists rather 
            items that were acted on
   [-]{constraint} = list of characters; constrains the set of affected items in a conversation
         t - include items in the Trash
-        $ - include items in Spam/Junk
+        j - include items in Spam/Junk
         s - include items in the user's Sent folder (not necessarily "Sent")
         o - include items in any other folder
     a leading '-' means to negate the constraint (e.g. "-t" means all messages not in Trash)
@@ -779,7 +779,7 @@ if fie="1" is set, the server will fetch the folder if it already exists rather 
            list may only have 1 element for action "spam"
   [-]{constraint} = list of characters; constrains the set of affected items in a conversation
         t - include items in the Trash
-        $ - include items in Spam/Junk
+        j - include items in Spam/Junk
         s - include items in the user's Sent folder (not necessarily "Sent")
         o - include items in any other folder
     a leading '-' means to negate the constraint (e.g. "-t" means all messages not in Trash)
