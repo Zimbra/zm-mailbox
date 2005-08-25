@@ -37,7 +37,6 @@
 	<property name="dist.conf.dir" location="${dist.dir}/conf" />
 	<property name="dist.db.dir" location="${dist.dir}/db" />
 	<property name="dist.lib.dir" location="${dist.dir}/lib" />
-	<property name="dist.libexec.dir" location="${dist.dir}/libexec" />
 	<property name="dist.tomcat.dir" location="${dist.dir}/tomcat" />
 	<property name="dist.tomcat.webapps.dir" location="${dist.tomcat.dir}/webapps" />
 	<property name="dist.tomcat.conf.dir" location="${dist.tomcat.dir}/conf" />
@@ -55,12 +54,10 @@
 	<property name="generated.java.dir" location="${generated.dir}/src/java" />
 	<property name="jars.dir" location="jars" />
 	<property name="lib.dir" location="lib" />
-	<property name="libexec.dir" location="libexec" />
 	<property name="src.dir" location="src" />
 	<property name="src.java.dir" location="${src.dir}/java" />
 	<property name="src.bin.dir" location="${src.dir}/bin" />
 	<property name="src.db.dir" location="${src.dir}/db" />
-	<property name="src.libexec.dir" location="${src.dir}/libexec" />
 
 	<property name="deploy.war" value="${warfile}" />
 	<property name="deploy.host" value="localhost" />
@@ -315,13 +312,6 @@
 		<copy todir="${dist.lib.dir}">
 			<fileset dir="${jars.dir}" includes="*.jar" excludes="servlet-api.jar" />
 		</copy>
-		<copy todir="${dist.libexec.dir}">
-			<fileset dir="${src.libexec.dir}" includes="**" excludes="*~" />
-		</copy>
-		<copy todir="${dist.libexec.dir}">
-			<fileset dir="${libexec.dir}" includes="**" />
-		</copy>
-		<fixcrlf srcdir="${dist.libexec.dir}" eol="unix" includes="*.pl,*.sh" />
 		<copy todir="${dist.tomcat.conf.dir}">
 			<fileset dir="${config.dir}" includes="server.xml,tomcat-users.xml" />
 		</copy>
@@ -343,9 +333,8 @@
 
 	<target name="dev-dist-tar">
 		<tar destfile="${dist.dir}/${dist.tarfile}">
-			<tarfileset dir="${dist.dir}" includes="**" excludes="bin/*,libexec/*,*.sh" mode="640" username="zimbra" group="zimbra" />
+			<tarfileset dir="${dist.dir}" includes="**" excludes="bin/*,*.sh" mode="640" username="zimbra" group="zimbra" />
 			<tarfileset dir="${dist.bin.dir}" prefix="bin" includes="**" mode="750" username="zimbra" group="zimbra" />
-			<tarfileset dir="${dist.libexec.dir}" prefix="libexec" includes="**" mode="750" username="zimbra" group="zimbra" />
 		</tar>
 	</target>
 		
