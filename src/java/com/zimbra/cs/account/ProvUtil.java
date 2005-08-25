@@ -1266,6 +1266,7 @@ public class ProvUtil {
             c = mProvisioning.getCosById(key);
             break;
         case BY_NAME:
+        default:            
             c = mProvisioning.getCosByName(key);
             break;
         }
@@ -1283,6 +1284,7 @@ public class ProvUtil {
             s = mProvisioning.getServerById(key);
             break;
         case BY_NAME:
+        default:            
             s = mProvisioning.getServerByName(key);
             break;
         }
@@ -1300,6 +1302,7 @@ public class ProvUtil {
             dl = mProvisioning.getDistributionListById(key);
             break;
         case BY_EMAIL:
+        default:            
             dl = mProvisioning.getDistributionListByName(key);
             break;
         }
