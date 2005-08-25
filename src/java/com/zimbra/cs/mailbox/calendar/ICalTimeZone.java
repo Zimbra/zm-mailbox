@@ -387,6 +387,12 @@ public class ICalTimeZone extends SimpleTimeZone
             }
     
             tzComponents.add(new Standard(standardTzProps));
+
+            if (mDaylightOffset == mStdOffset) {
+            	// This TZ doesn't use daylight savings time.  Skip the DST
+                // section below.  (ical4j complains if we don't.)
+                return new VTimeZone(tzProps, tzComponents);
+            }
         }
 
         if (mStdToDayDtStart != null) {
