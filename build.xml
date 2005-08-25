@@ -16,6 +16,19 @@
 		</not>
 	</condition>
 
+	<!--
+	     SMTP server for outgoing email.  Use ZIMBRA_SMTP_HOST environment
+	     variable if set.  Otherwise default to "localhost".
+	-->
+	<condition property="zimbra.smtp.host" value="${env.ZIMBRA_SMTP_HOST}">
+		<isset property="env.ZIMBRA_SMTP_HOST"/>
+	</condition>
+	<condition property="zimbra.smtp.host" value="localhost">
+		<not>
+			<isset property="zimbra.smtp.host"/>
+		</not>
+	</condition>
+
 	<property name="build.dir" location="build" />
 	<property name="build.classes.dir" location="${build.dir}/classes" />
 	<property name="build.metainf.dir" location="${build.dir}/classes/META-INF/services" />
@@ -24,7 +37,6 @@
 	<property name="dist.conf.dir" location="${dist.dir}/conf" />
 	<property name="dist.db.dir" location="${dist.dir}/db" />
 	<property name="dist.lib.dir" location="${dist.dir}/lib" />
-	<property name="dist.libexec.dir" location="${dist.dir}/libexec" />
 	<property name="dist.tomcat.dir" location="${dist.dir}/tomcat" />
 	<property name="dist.tomcat.webapps.dir" location="${dist.tomcat.dir}/webapps" />
 	<property name="dist.tomcat.conf.dir" location="${dist.tomcat.dir}/conf" />
@@ -42,12 +54,10 @@
 	<property name="generated.java.dir" location="${generated.dir}/src/java" />
 	<property name="jars.dir" location="jars" />
 	<property name="lib.dir" location="lib" />
-	<property name="libexec.dir" location="libexec" />
 	<property name="src.dir" location="src" />
 	<property name="src.java.dir" location="${src.dir}/java" />
 	<property name="src.bin.dir" location="${src.dir}/bin" />
 	<property name="src.db.dir" location="${src.dir}/db" />
-	<property name="src.libexec.dir" location="${src.dir}/libexec" />
 
 	<property name="deploy.war" value="${warfile}" />
 	<property name="deploy.host" value="localhost" />
@@ -302,13 +312,6 @@
 		<copy todir="${dist.lib.dir}">
 			<fileset dir="${jars.dir}" includes="*.jar" excludes="servlet-api.jar" />
 		</copy>
-		<copy todir="${dist.libexec.dir}">
-			<fileset dir="${src.libexec.dir}" includes="**" excludes="*~" />
-		</copy>
-		<copy todir="${dist.libexec.dir}">
-			<fileset dir="${libexec.dir}" includes="**" />
-		</copy>
-		<fixcrlf srcdir="${dist.libexec.dir}" eol="unix" includes="*.pl,*.sh" />
 		<copy todir="${dist.tomcat.conf.dir}">
 			<fileset dir="${config.dir}" includes="server.xml,tomcat-users.xml" />
 		</copy>
@@ -330,9 +333,8 @@
 
 	<target name="dev-dist-tar">
 		<tar destfile="${dist.dir}/${dist.tarfile}">
-			<tarfileset dir="${dist.dir}" includes="**" excludes="bin/*,libexec/*,*.sh" mode="640" username="zimbra" group="zimbra" />
+			<tarfileset dir="${dist.dir}" includes="**" excludes="bin/*,*.sh" mode="640" username="zimbra" group="zimbra" />
 			<tarfileset dir="${dist.bin.dir}" prefix="bin" includes="**" mode="750" username="zimbra" group="zimbra" />
-			<tarfileset dir="${dist.libexec.dir}" prefix="libexec" includes="**" mode="750" username="zimbra" group="zimbra" />
 		</tar>
 	</target>
 		
@@ -370,13 +372,6 @@
 		<java classname="com.zimbra.cs.lmtpserver.utils.LmtpInject" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="-t ${lmtpinject.numthreads} -a ${lmtp.host} -p ${lmtp.port} -r user1@${zimbra.server.hostname} -s ho@example.zimbra.com -d" />
 			<arg path="data/TestMailRaw" />
-		</java>
-	</target>
-
-	<target name="configure-exch1-gal" description="point gal at local and exch1 gal">
-		<echo>Configuring domain for gal: ${zimbra.server.hostname}</echo>
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="md ${zimbra.server.hostname}  zimbraGalMode both zimbraGalLdapBindDn zz_gal zimbraGalLdapBindPassword zz_gal zimbraGalLdapFilter ad zimbraGalLdapSearchBase dc=liquidsys,dc=com zimbraGalLdapURL ldap://exch1.liquidsys.com/" />
 		</java>
 	</target>
 
@@ -480,7 +475,7 @@
 		</java>
 		<echo>Provisioning server entry for ${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="CreateServer ${zimbra.server.hostname} zimbraSmtpHostname exch1.liquidsys.com zimbraMailPort 7070" />
+			<arg line="CreateServer ${zimbra.server.hostname} zimbraSmtpHostname ${zimbra.smtp.host} zimbraMailPort 7070" />
 		</java>
 		<echo>Creating domain: ${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
