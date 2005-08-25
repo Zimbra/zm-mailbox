@@ -720,23 +720,23 @@ class DBQueryOperation extends QueryOperation
                     mDBHits = DbMailItem.search(conn, c);
                     
                 } else {
-                    // DON'T set an sql LIMIT if we're asking for lucene hits!!!  If we did, then we wouldn't be
-                    // sure that we'd "consumed" all the Lucene-ID's, and therefore we could miss hits!
-                    mLuceneChunk = mLuceneOp.getNextIndexedIdChunk(HITS_PER_CHUNK);
-                    c.indexIds = mLuceneChunk.getIndexIds();
                     
-                    if (c.indexIds.length < HITS_PER_CHUNK) {
-                        // we know we got all the index-id's from lucene.  since we don't have a
-                        // LIMIT clause, we can be assured that this query will get all the remaining results.
-                        mEndOfHits = true;
-                    }
-                    
-                    if (c.indexIds.length == 0) {
-                        mDBHits = new ArrayList(); 
-                    } else {
-                        mDBHits = DbMailItem.search(conn, c);
-                    }
-                    
+                    do {
+                        // DON'T set an sql LIMIT if we're asking for lucene hits!!!  If we did, then we wouldn't be
+                        // sure that we'd "consumed" all the Lucene-ID's, and therefore we could miss hits!
+                        mLuceneChunk = mLuceneOp.getNextIndexedIdChunk(HITS_PER_CHUNK);
+                        c.indexIds = mLuceneChunk.getIndexIds();
+                        
+                        if (c.indexIds.length == 0) {
+                            // we know we got all the index-id's from lucene.  since we don't have a
+                            // LIMIT clause, we can be assured that this query will get all the remaining results.
+                            mEndOfHits = true;
+                            
+                            mDBHits = new ArrayList(); 
+                        } else {
+                            mDBHits = DbMailItem.search(conn, c);
+                        }
+                    } while (mDBHits.size() == 0 && !mEndOfHits);
                 }
                 
             } catch (ServiceException e) {
