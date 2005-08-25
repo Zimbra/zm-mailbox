@@ -128,7 +128,7 @@ public class FileUploadServlet extends ZimbraServlet {
         Upload up = null;
         synchronized (mPending) {
             up = (Upload) mPending.remove(uploadId);
-            if (!accountId.equals(up.accountId)) {
+            if (up != null && !accountId.equals(up.accountId)) {
                 mLog.warn("deleteUploads(" + accountId + ", " + uploadId +
                     ").  Found mismatched accountId: " + up);
                 mPending.put(uploadId, up);
