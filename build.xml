@@ -289,7 +289,7 @@
 		description="Build tar file of basic dev build to unpack over RPM install"/>
 	
 	<target name="dev-dist-files">
-		<copy todir="${dist.openldap.etc.dir}" file="${config.dir}/ldap/zimbra_opensrc_mimehandlers.ldif" />
+		<copy todir="${dist.openldap.etc.dir}" file="${config.dir}/ldap/zimbra_mimehandlers.ldif" />
 	</target>
 	
 	<target name="dev-dist-core">
@@ -462,7 +462,7 @@
 		<mkdir dir="${zimbra.home.dir}/openldap/var/openldap-data" />
 	</target>
 
-	<target name="ldap-load" depends="ldap-load-step1,ldap-load-opensrc-mime-handlers" />
+	<target name="ldap-load" depends="ldap-load-step1,ldap-load-mime-handlers" />
 
 	<target name="ldap-load-step1" description="rub it">
 		<exec executable="${ldapmodify}">
@@ -508,10 +508,10 @@
 		</java>
 	</target>
 
-	<target name="ldap-load-opensrc-mime-handlers">
+	<target name="ldap-load-mime-handlers">
 		<exec executable="${ldapmodify}">
 			<arg line="-a -c -w zimbra -D uid=zimbra,cn=admins,cn=zimbra -x -f" />
-			<arg file="conf/ldap/zimbra_opensrc_mimehandlers.ldif" />
+			<arg file="conf/ldap/zimbra_mimehandlers.ldif" />
 		</exec>
 	</target>
 
