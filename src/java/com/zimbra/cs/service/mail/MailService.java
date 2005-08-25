@@ -174,7 +174,8 @@ public class MailService implements DocumentService {
     public static final String E_CONTACT = "cn";
 	public static final String E_FOLDER = "folder";
     public static final String E_SEARCH = "search";
-	public static final String E_MIMEPART = "mp";
+    public static final String E_MIMEPART = "mp";
+    public static final String E_HIT_MIMEPART = "hp";
     
 	public static final String E_EMAIL = "e";
 	public static final String E_SUBJECT = "su";

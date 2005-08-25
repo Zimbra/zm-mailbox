@@ -40,6 +40,7 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.document.Document;
 
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
@@ -92,6 +93,8 @@ class DBQueryOperation extends QueryOperation
     private boolean mHasSpamTrashSetting = false;
     
     private LuceneQueryOperation mLuceneOp = null;
+    private LuceneQueryOperation.LuceneIndexIdChunk mLuceneChunk = null;
+    
     
     /**
      * In an INTERSECTION, we can gain some efficiencies by using the output of the Lucene op
@@ -382,7 +385,7 @@ class DBQueryOperation extends QueryOperation
         if (mLuceneOp != null) {
             mLuceneOp.resetDocNum();
         }
-        mNextHit = null;
+        mNextHits.clear();
         if (!atStart) {
             mDBHitsIter = null;
             mCurHitsOffset = 0;
@@ -400,8 +403,8 @@ class DBQueryOperation extends QueryOperation
      */
     public ZimbraHit peekNext() throws ServiceException
     {
-        if (mNextHit != null) {
-            return mNextHit;
+        if (mNextHits.size() > 0) {
+            return (ZimbraHit)mNextHits.get(0);
         }
         
         if (mDBHitsIter == null || !mDBHitsIter.hasNext()) {
@@ -409,34 +412,51 @@ class DBQueryOperation extends QueryOperation
         }
         if (mDBHitsIter != null && mDBHitsIter.hasNext()) {
             SearchResult sr = (SearchResult) mDBHitsIter.next();
-            ZimbraHit toRet = null;
+            
+            Integer srIdInt = new Integer(sr.id);
+            List /*Document*/ docs = null;
+            if (mLuceneChunk != null) {
+                docs = mLuceneChunk.getDocuments(srIdInt);
+            }
+            
+            ZimbraHit toAdd;
+            
             switch(sr.type) {
             case MailItem.TYPE_MESSAGE:
-//            case MailItem.TYPE_INVITE:
-                toRet = this.getResultsSet().getMessageHit(this.getMailbox(), new Integer(sr.id), null, 1.0f);
+                if (docs != null) {
+                    for (Iterator iter = docs.iterator(); iter.hasNext();) {
+                        Document doc = (Document)iter.next();
+                        toAdd = this.getResultsSet().getMessagePartHit(this.getMailbox(), new Integer(sr.id), doc, 1.0f);
+                        toAdd.cacheSortField(this.getResultsSet().getSearchOrder(), sr.sortkey);
+                        mNextHits.add(toAdd);
+                    }
+                } else {
+                    toAdd = this.getResultsSet().getMessageHit(this.getMailbox(), new Integer(sr.id), null, 1.0f);
+                    toAdd.cacheSortField(this.getResultsSet().getSearchOrder(), sr.sortkey);
+                    mNextHits.add(toAdd);
+                }
                 break;
             case MailItem.TYPE_CONTACT:
-                toRet = this.getResultsSet().getContactHit(this.getMailbox(), new Integer(sr.id), null, 1.0f);
+                toAdd = this.getResultsSet().getContactHit(this.getMailbox(), new Integer(sr.id), null, 1.0f);
+                mNextHits.add(toAdd);
                 break;
             case MailItem.TYPE_NOTE:
-                toRet = this.getResultsSet().getNoteHit(this.getMailbox(), new Integer(sr.id), null, 1.0f);
+                toAdd = this.getResultsSet().getNoteHit(this.getMailbox(), new Integer(sr.id), null, 1.0f);
+                mNextHits.add(toAdd);
                 break;
-            // Unsupported right now:
-            //            case MailItem.TYPE_DOCUMENT:
+                // Unsupported right now:
+                //            case MailItem.TYPE_DOCUMENT:
             default:
                 assert(false);
-                mNextHit = getNext();
-                return mNextHit;
+                return null;
             }
-            toRet.cacheSortField(this.getResultsSet().getSearchOrder(), sr.sortkey);
-            mNextHit = toRet;
-            return mNextHit;
+            return (ZimbraHit)mNextHits.get(0);
         } else {
             return null;
         }
     }
     
-    private ZimbraHit mNextHit = null;
+    private List /*ZimbraHit*/ mNextHits = new ArrayList();
     
     
     /* (non-Javadoc)
@@ -444,11 +464,13 @@ class DBQueryOperation extends QueryOperation
      */
     public ZimbraHit getNext() throws ServiceException {
         atStart = false;
-        if (mNextHit == null) {
+        if (mNextHits.size() == 0) {
             peekNext();
         }
-        ZimbraHit toRet = mNextHit;
-        mNextHit = null;
+        if (mNextHits.size() == 0) {
+            return null;
+        }
+        ZimbraHit toRet = (ZimbraHit)mNextHits.remove(0);
         return toRet;
     }
     
@@ -700,7 +722,8 @@ class DBQueryOperation extends QueryOperation
                 } else {
                     // DON'T set an sql LIMIT if we're asking for lucene hits!!!  If we did, then we wouldn't be
                     // sure that we'd "consumed" all the Lucene-ID's, and therefore we could miss hits!
-                    c.indexIds = mLuceneOp.getNextIndexedIdChunk(HITS_PER_CHUNK);
+                    mLuceneChunk = mLuceneOp.getNextIndexedIdChunk(HITS_PER_CHUNK);
+                    c.indexIds = mLuceneChunk.getIndexIds();
                     
                     if (c.indexIds.length < HITS_PER_CHUNK) {
                         // we know we got all the index-id's from lucene.  since we don't have a

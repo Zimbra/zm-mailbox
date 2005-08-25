@@ -517,7 +517,8 @@ if recip="1" is specified, returned sent messages will contain the set of "To:" 
   {sort-by}  = dateDesc|dateAsc|subjDesc|subjAsc|nameDesc|nameAsc(default is "dateDesc")
   {more-flag} = 1 if there are more search results remaining. 
   {content-matched} = 1 if the content of the message matched
-  <mp> elements will be present if any attachments matched
+  <mp> elements will be set for the first response if fetch=1
+  <hp> elements may be present if any attachments matched
 
 	
 conversation result:
@@ -538,7 +539,8 @@ message result:
      <e .../>  <!- sender only -->
      <su>{subject}</su>
      <fr>{fragment}</fr>
-     <mp part="{mime-part-name}"/>
+     [<mp>...</mp>] // if fetch=1, the <mp>'s of the hit (first hit only) 
+     <hp part="{mime-part-name}"/> // Hit Part -- indicator that the named part matched the search string
    </m>
 </SearchResponse>
 
@@ -582,7 +584,8 @@ message-part result:
      <e .../>  <!- sender only -->
      <su>{subject}</su>
      <fr>{fragment}</fr>
-     <mp part="{mime-part-name}"/>
+     [<mp>...</mp>] // if fetch=1, the <mp>'s of the hit (first hit only) 
+     <hp part="{mime-part-name}"/> // Hit Part -- indicator that the named part matched the search string
    </m>*
 </SearchConvResponse>
 

@@ -93,7 +93,7 @@ public class UnitTests extends TestCase {
         assertTrue(runTestQuery(1, "date:-1d date:(01/01/2001 02/02/2002)", false, NO_EXPECTED_CHECK));
         
         
-        assertTrue(runTestQuery(1, "in:(trash -spam)", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(1, "in:(trash -junk)", false, NO_EXPECTED_CHECK));
         assertTrue(runTestQuery(1, "date:(-1d or -2d)", false, NO_EXPECTED_CHECK));
         assertTrue(runTestQuery(1, "date:\"-4d\"", false, NO_EXPECTED_CHECK));
         assertTrue(runTestQuery(1, "date:-4d", false, NO_EXPECTED_CHECK));
@@ -137,9 +137,9 @@ public class UnitTests extends TestCase {
         // broken:
         //assertTrue(runTestQuery(1, "after:-1d after:(01/01/2001 2001/01/02 +1d -1d +10d -100d +1w -10w -100h 1y -10y)", false, NO_EXPECTED_CHECK));
         
-        assertTrue(runTestQuery(1, "size:(1 20 300 1k <1k 10k >10k 100kb 34mb 6gb 78gb)", false, NO_EXPECTED_CHECK));
-        assertTrue(runTestQuery(1, "larger:(1 20 300 100kb 34mb 6gb 78gb)", false, NO_EXPECTED_CHECK));
-        assertTrue(runTestQuery(1, "smaller:(1 20 300 100kb 34mb 6gb 78gb)", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(1, "size:(1 20 300 1k <1k 10k >10k 100kb 34mb)", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(1, "larger:(1 20 300 100kb 34mb)", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(1, "smaller:(1 20 300 100kb 34mb)", false, NO_EXPECTED_CHECK));
         
         assertTrue(runTestQuery(1, "author:foo author:(\"foo\" \"foo bar\" gub)", false, NO_EXPECTED_CHECK));
         assertTrue(runTestQuery(1, "title:foo title:(\"foo\" \"foo bar\" gub)", false, NO_EXPECTED_CHECK));
@@ -199,7 +199,7 @@ public class UnitTests extends TestCase {
                 ,new QueryResult("code to contribute: JAM")
                 ,new QueryResult("Getting the distribution onto a download site somewhere ...")
                 ,new QueryResult("Getting an XMLBeans distribution onto a download site somewhere")
-                ,new QueryResult("[xmlbeans-dev] RE: Future XMLBeans feature work?")
+                ,new QueryResult("[xmlbeans-dev] Future XMLBeans feature work?")
                 ,new QueryResult("About me")
                 ,new QueryResult("XmlBeans source code has been checked in ...")
                 ,new QueryResult("XmlBeans source code has been checked in ...")
