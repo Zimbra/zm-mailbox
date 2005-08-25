@@ -36,6 +36,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import javax.mail.MessagingException;
+import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
@@ -1173,6 +1174,14 @@ public class ImapHandler extends ProtocolHandler {
                 boolean idxAttach = mMailbox.attachmentsIndexingEnabled();
                 ParsedMessage pm = date != null ? new ParsedMessage(content, date.getTime(), idxAttach) :
                                                   new ParsedMessage(content, idxAttach);
+                try {
+                    if (!pm.getSender().equals("")) {
+                        InternetAddress ia = new InternetAddress(pm.getSender());
+                        if (AccountUtil.addressMatchesAccount(mMailbox.getAccount(), ia.getAddress()))
+                            flagMask |= Flag.FLAG_FROM_ME;
+                    }
+                } catch (Exception e) { }
+
                 Message msg = mMailbox.addMessage(getContext(), pm, folder.getId(), false, flagMask, tagStr.toString());
                 if (msg != null) {
                     appendHint.append("[APPENDUID ").append(ImapFolder.getUIDValidity(folder))
