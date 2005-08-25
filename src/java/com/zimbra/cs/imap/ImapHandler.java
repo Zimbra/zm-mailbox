@@ -1001,7 +1001,7 @@ public class ImapHandler extends ProtocolHandler {
                     String path = folder.getPath().substring(1);
                     // FIXME: need to determine "name attributes" for mailbox (\Marked, \Unmarked, \Noinferiors, \Noselect)
                     if (path.toUpperCase().matches(pattern))
-                        matches.add("LIST (" + getFolderAttributes(folder) + ") \"/\" " + encodeFolder(path));
+                        matches.add("LIST (" + getFolderAttributes(folder) + ") \"/\" " + ImapFolder.encodeFolder(path));
                 }
             }
         } catch (ServiceException e) {
@@ -1015,19 +1015,6 @@ public class ImapHandler extends ProtocolHandler {
         sendNotifications(true, false);
         sendOK(tag, "LIST completed");
         return CONTINUE_PROCESSING;
-    }
-
-    private String encodeFolder(String folderName) {
-        // make sure that the Inbox is called "INBOX", regarless of how we capitalize it
-        if (folderName.length() == 5 && folderName.equalsIgnoreCase("INBOX"))
-            folderName = "INBOX";
-        else if (folderName.length() > 5 && folderName.substring(0, 6).equalsIgnoreCase("INBOX/"))
-            folderName = "INBOX" + folderName.substring(5);
-        try {
-            return '"' + new String(folderName.getBytes("imap-utf-7"), "US-ASCII") + '"';
-        } catch (UnsupportedEncodingException e) {
-            return '"' + folderName + '"';
-        }
     }
 
     private static final String[] FOLDER_ATTRIBUTES = {
@@ -1071,7 +1058,7 @@ public class ImapHandler extends ProtocolHandler {
                     // FIXME: need to determine "name attributes" for mailbox (\Marked, \Unmarked, \Noinferiors, \Noselect)
                     boolean visible = hit.getValue() != null && ImapFolder.isFolderVisible(folder);
                     String attributes = visible ? getFolderAttributes(folder) : "\\Noselect";
-                    hit.setValue("LSUB (" + attributes + ") \"/\" " + encodeFolder((String) hit.getKey()));
+                    hit.setValue("LSUB (" + attributes + ") \"/\" " + ImapFolder.encodeFolder((String) hit.getKey()));
                 }
             }
 
@@ -1128,7 +1115,7 @@ public class ImapHandler extends ProtocolHandler {
             return canContinue(e);
         }
 
-        sendUntagged("STATUS " + encodeFolder(folderName) + " (" + data + ')');
+        sendUntagged("STATUS " + ImapFolder.encodeFolder(folderName) + " (" + data + ')');
         sendNotifications(true, false);
         sendOK(tag, "STATUS completed");
         return CONTINUE_PROCESSING;
@@ -1350,7 +1337,7 @@ public class ImapHandler extends ProtocolHandler {
 
             // see if there's any quota on the account
             long quota = mMailbox.getAccount().getIntAttr(Provisioning.A_zimbraMailQuota, 0);
-            sendUntagged("QUOTAROOT " + encodeFolder(path) + (quota > 0 ? " \"\"" : ""));
+            sendUntagged("QUOTAROOT " + ImapFolder.encodeFolder(path) + (quota > 0 ? " \"\"" : ""));
             if (quota > 0)
                 sendUntagged("QUOTA \"\" (STORAGE " + (mMailbox.getSize() / 1024) + ' ' + (quota / 1024) + ')');
         } catch (ServiceException e) {

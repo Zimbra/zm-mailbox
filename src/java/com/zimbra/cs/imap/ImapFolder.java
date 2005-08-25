@@ -28,6 +28,7 @@
  */
 package com.zimbra.cs.imap;
 
+import java.io.UnsupportedEncodingException;
 import java.util.*;
 
 import com.zimbra.cs.index.ZimbraHit;
@@ -148,6 +149,20 @@ class ImapFolder {
         return path != null &&
                !path.toLowerCase().matches("/\\s*contacts\\s*(/.*)?") &&
                !path.toLowerCase().matches("/\\s*calendar\\s*(/.*)?");
+    }
+
+    static String encodeFolder(String folderName) {
+        // make sure that the Inbox is called "INBOX", regarless of how we capitalize it
+        if (folderName.length() == 5 && folderName.equalsIgnoreCase("INBOX"))
+            folderName = "INBOX";
+        else if (folderName.length() > 5 && folderName.substring(0, 6).equalsIgnoreCase("INBOX/"))
+            folderName = "INBOX" + folderName.substring(5);
+        try {
+            folderName = '"' + new String(folderName.getBytes("imap-utf-7"), "US-ASCII") + '"';
+        } catch (UnsupportedEncodingException e) {
+            folderName = '"' + folderName + '"';
+        }
+        return folderName.replaceAll("\\\\", "\\\\\\\\");
     }
 
     String getPath()                { return mPath; }

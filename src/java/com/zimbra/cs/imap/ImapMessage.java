@@ -171,7 +171,7 @@ class ImapMessage {
                 if (nonulls == null)  nonulls = new StringBuffer();
                 nonulls.append(value.substring(lastNull + 1, i));
                 lastNull = i;
-            } else if (c == '"' || c > 0x7f)
+            } else if (c == '"' || c == '\\' || c > 0x7f)
                 literal = true;
         }
         String content = (nonulls == null ? value : nonulls.toString());
