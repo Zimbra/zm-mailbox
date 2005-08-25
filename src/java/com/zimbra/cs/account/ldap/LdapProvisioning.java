@@ -747,8 +747,9 @@ public class LdapProvisioning extends Provisioning {
      * @return
      */
     private String[] fixReturnAttrs(String[] returnAttrs) {
-        if (returnAttrs == null) 
-            returnAttrs = new String[0];
+        if (returnAttrs == null || returnAttrs.length == 0)
+            return null;
+        
         boolean needUID = true;
         boolean needID = true;
         boolean needCOSId = true;
