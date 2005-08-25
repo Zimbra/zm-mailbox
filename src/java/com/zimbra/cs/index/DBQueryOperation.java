@@ -944,16 +944,6 @@ class DBQueryOperation extends QueryOperation
             return toRet;
         }
 
-//        // date queries are a bit wonky right now, so don't join if both sides have dates...
-//        if (mDates.size() > 0 && dbOther.mDates.size() > 0) {
-//            return null;
-//        } else {
-//            if (mDates.size() > 0) {
-//                toRet.mDates = mDates; 
-//             } else {
-//                 toRet.mDates = dbOther.mDates; 
-//             }
-//        }
         { // dates
             toRet.mDates = (HashSet)mDates.clone();
             for (Iterator iter = dbOther.mDates.iterator(); iter.hasNext();) {
