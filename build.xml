@@ -110,7 +110,7 @@
 	<condition property="slapd.conf.out" value="${zimbra.home.dir}/openldap/slapd.conf">
 		<isset property="is-windows" />
 	</condition>
-	<condition property="slapd.conf.out" value="${zimbra.home.dir}/openldap/etc/openldap/slapd.conf">
+	<condition property="slapd.conf.out" value="${zimbra.home.dir}/conf/slapd.conf">
 		<isset property="is-unix" />
 	</condition>
 
@@ -406,9 +406,6 @@
 		<delete dir="${zimbra.home.dir}/redolog" />
 		<delete dir="${zimbra.home.dir}/repl" />
 		<delete dir="${zimbra.home.dir}/backup" />
-		<delete failonerror="no">
-			<fileset dir="${zimbra.home.dir}/conf" excludes="my.cnf"/>
-		</delete>
 		<delete failonerror="no">
 			<fileset dir="${zimbra.home.dir}/log" includes="*.log" />
 		</delete>
