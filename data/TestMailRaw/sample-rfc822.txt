@@ -9,10 +9,10 @@ This is a sample message in the source code.  You can drop
 other sample messages in this directory - during a build
 these messages are inserted into the 'user1' mailbox.
 
-The files here are nothing both straight RFC822 formatted
+The files here are nothing more than simple RFC822 formatted
 text.  In most mail clients, you can do a 'Show Original'
 or equivalent function to see your message in its RFC822
 form.
 
 If you have any questions about the build, do not hesitate
-to search for answers on our forums, or to ask us!
+to search for answers on our forums, or to ask us there!
