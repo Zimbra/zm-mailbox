@@ -44,7 +44,7 @@ public class ZimbraSuite extends TestSuite
     public static TestSuite suite() {
         TestSuite suite = new TestSuite();
 
-        suite.addTest(new TestSuite(TestStringUtil.class));
+        suite.addTest(new TestSuite(TestUtilCode.class));
         suite.addTest(new TestSuite(TestEmailUtil.class));
         suite.addTest(new TestSuite(TestParsedItemID.class));
         

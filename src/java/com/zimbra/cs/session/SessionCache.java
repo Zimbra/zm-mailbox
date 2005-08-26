@@ -34,6 +34,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.imap.ImapSession;
+import com.zimbra.cs.util.Constants;
+import com.zimbra.cs.util.StringUtil;
+import com.zimbra.cs.util.ValueCounter;
 import com.zimbra.cs.util.Zimbra;
 
 
@@ -86,6 +89,9 @@ public final class SessionCache
             case SESSION_SOAP:  session = new SoapSession(accountId, sessionId);  break;
             case SESSION_IMAP:  session = new ImapSession(accountId, sessionId);  break;
         }
+        if (mLog.isDebugEnabled()) {
+            mLog.debug("Created " + session);
+        }
         updateInCache(sessionId, session);
         return session;
     }
@@ -105,8 +111,12 @@ public final class SessionCache
                     updateInCache(sessionId, session);
                     return session;
                 } else {
-                    mLog.info("Account ID Mismatch in session cache.  Requested " + accountId + ":" + sessionId +
+                    mLog.warn("Account ID Mismatch in session cache.  Requested " + accountId + ":" + sessionId +
                               ", found " + session.getAccountId());
+                }
+            } else {
+                if (mLog.isDebugEnabled()) {
+                    mLog.debug("No session with id " + sessionId + " found.  accountId: " + accountId);
                 }
             }
             return null;
@@ -120,6 +130,9 @@ public final class SessionCache
      * @param accountId
      */
     public void clearSession(Object sessionId, String accountId) {
+        if (mLog.isDebugEnabled()) {
+            mLog.debug("Clearing session " + sessionId);
+        }
         if (!mShutdown) {
             synchronized(mLRUMap) {
                 Session session = (Session) mLRUMap.remove(sessionId);
@@ -153,8 +166,8 @@ public final class SessionCache
     //////////////////////////////////////////////////////////////////////////////
 
     // TODO make me configurable!
-    private static final long SESSION_CACHE_TIMEOUT_MSEC = 10 * 60 * 1000;
-    private static final long SESSION_SWEEP_INTERVAL_MSEC = 60 * 1000;  // every minute
+    private static final long SESSION_CACHE_TIMEOUT_MSEC = 10 * Constants.MILLIS_PER_MINUTE;
+    private static final long SESSION_SWEEP_INTERVAL_MSEC = 1 * Constants.MILLIS_PER_MINUTE;
     
     static Log mLog = LogFactory.getLog(SessionCache.class);
 
@@ -183,16 +196,23 @@ public final class SessionCache
     
     private final class SweepMapTimerTask extends TimerTask {
         public void run() {
-            int active, removed;
-            long start = System.currentTimeMillis();
+            if (mLog.isDebugEnabled()) {
+                logActiveSessions();
+            }
+            
+            // Keep track of the count of each session type that's removed
+            ValueCounter removedSessionTypes = new ValueCounter();
+            int numActive = 0;
+            
             synchronized(SessionCache.this.mLRUMap) {
-                int sizeBefore = SessionCache.this.mLRUMap.size();
                 long cutoffTime = new Date().getTime() - SESSION_CACHE_TIMEOUT_MSEC;
                 Iterator iter = SessionCache.this.mLRUMap.values().iterator();
                 while (iter.hasNext()) {
                     Session imp = (Session) iter.next();
                     if (!imp.accessedAfter(cutoffTime)) {
                         mLog.debug("Removing cached session: " + imp.toString());
+                        String className = StringUtil.getSimpleClassName(imp);
+                        removedSessionTypes.increment(className);
                         iter.remove();
                         imp.doCleanup();
                         assert(SessionCache.this.mLRUMap.get(imp.getSessionId()) == null);
@@ -203,17 +223,65 @@ public final class SessionCache
                         break;
                     }
                 }
-                active = SessionCache.this.mLRUMap.size();
-                removed = sizeBefore - active;
+                numActive = SessionCache.this.mLRUMap.size();
             }
-            if (removed > 0 || active > 0) {
-                long elapsed = System.currentTimeMillis() - start;
-                mLog.info("idle session sweep: removed=" + removed + ", active=" + active + " (" + elapsed + "ms)");
+
+            if (removedSessionTypes.size() > 0) {
+                mLog.info("Removed " + removedSessionTypes.getTotal() + " idle sessions (" +
+                    removedSessionTypes + ").  " + numActive + " active sessions remain.");
+            }
+        }
+        
+        private void logActiveSessions() {
+            // Count distinct accountId's
+            ValueCounter accountCounter = new ValueCounter();
+            ValueCounter sessionTypeCounter = new ValueCounter();
+            synchronized (SessionCache.this.mLRUMap) {
+                Iterator i = SessionCache.this.mLRUMap.values().iterator();
+                while (i.hasNext()) {
+                    Session session = (Session) i.next();
+                    accountCounter.increment(session.getAccountId());
+                    String className = StringUtil.getSimpleClassName(session);
+                    sessionTypeCounter.increment(className);
+                }
+            }
+            
+            // Format account list
+            StringBuffer accountList = new StringBuffer();
+            StringBuffer manySessionsList = new StringBuffer();
+            
+            Iterator i = accountCounter.iterator();
+            while (i.hasNext()) {
+                if (accountList.length() > 0) {
+                    accountList.append(", ");
+                }
+                String accountId = (String) i.next();
+                int count = accountCounter.getCount(accountId);
+                accountList.append(accountId);
+                if (count > 1) {
+                    accountList.append("(" + count + ")");
+                }
+                if (count >= 10) {
+                    if (manySessionsList.length() > 0) {
+                        manySessionsList.append(", ");
+                    }
+                    manySessionsList.append(accountId + "(" + count + ")");
+                }
+            }
+            
+            mLog.debug("Detected " + accountCounter.getTotal() + " active sessions.  " +
+                sessionTypeCounter + ".  Accounts: " + accountList);
+            if (manySessionsList.length() > 0) {
+                mLog.info("Found accounts that have a large number of sessions: " +
+                    manySessionsList);
             }
         }
     }
 
     private void updateInCache(Object sessionId, Session session) {
+        if (mLog.isDebugEnabled()) {
+            mLog.debug("Updating session " + sessionId);
+        }
         synchronized(mLRUMap) {
             mLRUMap.remove(sessionId);
             session.updateAccessTime();

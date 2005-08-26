@@ -32,11 +32,12 @@ import java.util.Map;
 import junit.framework.TestCase;
 
 import com.zimbra.cs.util.StringUtil;
+import com.zimbra.cs.util.ValueCounter;
 
 /**
  * @author bburtin
  */
-public class TestStringUtil extends TestCase
+public class TestUtilCode extends TestCase
 {
     public void testFillTemplate()
     {
@@ -80,5 +81,29 @@ public class TestStringUtil extends TestCase
     {
         assertEquals("MyClass", StringUtil.getSimpleClassName("my.package.MyClass"));
         assertEquals("Integer", StringUtil.getSimpleClassName(new Integer(0)));
+    }
+
+    public void testValueCounter()
+    throws Exception {
+        ValueCounter vc = new ValueCounter();
+        vc.increment("one");
+        vc.increment("two");
+        vc.increment("two");
+        vc.increment("two");
+        vc.decrement("two");
+        vc.increment("three", 3);
+        
+        assertEquals("one", 1, vc.getCount("one"));
+        assertEquals("two", 2, vc.getCount("two"));
+        assertEquals("three", 3, vc.getCount("three"));
+        assertEquals("total", 6, vc.getTotal());
+        assertEquals("size", 3, vc.size());
+        
+        vc.clear();
+        
+        assertEquals("one", 0, vc.getCount("one"));
+        assertEquals("two", 0, vc.getCount("two"));
+        assertEquals("total", 0, vc.getTotal());
+        assertEquals("size", 0, vc.size());
     }
 }

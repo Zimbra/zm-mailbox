@@ -28,6 +28,11 @@
  */
 package com.zimbra.cs.session;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import com.zimbra.cs.util.StringUtil;
+
 public abstract class Session {
     protected String mAccountId;
     private   Object mContextId;
@@ -82,5 +87,14 @@ public abstract class Session {
 
     public String getAccountId() {
     	return mAccountId;
+    }
+    
+    private SimpleDateFormat sDateFormat =
+        new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS");
+    
+    public String toString() {
+        String dateString = sDateFormat.format(new Date(mLastAccessed));
+        return StringUtil.getSimpleClassName(this) + ": {accountId: " + mAccountId +
+            ", contextId: " + mContextId + ", lastAccessed: " + dateString + "}";
     }
 }

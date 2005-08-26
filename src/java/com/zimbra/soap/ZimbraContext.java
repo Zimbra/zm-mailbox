@@ -229,6 +229,9 @@ public class ZimbraContext {
 	 */
 	public boolean hasNewSessionId() { return mHasNewSessionId; };
 
+    /**
+     * @return true if <code>&lt;nosession/&gt;</code> was specified in the request context
+     */
     public boolean sessionSuppressed() { return mSessionSuppressed; };
 
     public String getSessionIdStr() { return mSession != null ? mSession.getSessionId().toString() : null; } 
