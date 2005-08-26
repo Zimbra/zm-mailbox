@@ -31,6 +31,7 @@ package com.zimbra.cs.service.mail;
 import java.util.Map;
 
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.Element;
@@ -42,6 +43,8 @@ import com.zimbra.soap.ZimbraContext;
  */
 public class FolderAction extends ItemAction {
 
+    public static final String OP_UNFLAG = '!' + OP_FLAG;
+    public static final String OP_UNTAG  = '!' + OP_TAG;
     public static final String OP_RENAME = "rename";
     public static final String OP_EMPTY  = "empty";
 
@@ -53,7 +56,9 @@ public class FolderAction extends ItemAction {
         Element action = request.getElement(MailService.E_ACTION);
         String operation = action.getAttribute(MailService.A_OPERATION).toLowerCase();
 
-        if (operation.endsWith(OP_UPDATE) || operation.endsWith(OP_TAG) || operation.endsWith(OP_FLAG) || operation.endsWith(OP_SPAM))
+        if (operation.equals(OP_TAG) || operation.equals(OP_FLAG) || operation.equals(OP_UNTAG) || operation.equals(OP_UNFLAG))
+            throw MailServiceException.CANNOT_TAG();
+        if (operation.endsWith(OP_UPDATE) || operation.endsWith(OP_SPAM))
             throw ServiceException.INVALID_REQUEST("invalid operation on folder: " + operation, null);
         String successes;
         if (operation.equals(OP_RENAME) || operation.equals(OP_EMPTY))

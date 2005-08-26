@@ -663,7 +663,7 @@ public abstract class MailItem implements Comparable {
 	void alterTag(Tag tag, boolean add) throws ServiceException {
 	    if (tag == null)
 	        throw ServiceException.INVALID_REQUEST("no tag supplied when trying to tag item " + mId, null);
-	    if (isTaggable() && add && !tag.canTag(this))
+	    if (!isTaggable() || (add && !tag.canTag(this)))
 	        throw MailServiceException.CANNOT_TAG();
 	    if (tag.getId() == Flag.ID_FLAG_UNREAD)
 	        throw ServiceException.FAILURE("unread state must be set with alterUnread()", null);
