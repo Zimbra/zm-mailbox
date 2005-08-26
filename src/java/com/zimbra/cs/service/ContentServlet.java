@@ -94,7 +94,7 @@ public class ContentServlet extends ZimbraServlet {
         ParsedItemID id = null;
         
         try {
-            id = ParsedItemID.Parse(idStr);
+            id = ParsedItemID.parse(idStr);
         } catch (ServiceException e) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "invalid id requested");
             return;

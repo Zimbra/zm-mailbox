@@ -56,19 +56,19 @@ import com.zimbra.cs.service.ServiceException;
  */
 public class ParsedItemID { 
     
-    static public ParsedItemID Parse(String itemID) throws IllegalArgumentException, ServiceException
+    static public ParsedItemID parse(String itemID) throws IllegalArgumentException, ServiceException
     {
         return new ParsedItemID(itemID);
     }
     
-    static public ParsedItemID Create(int mailItemId, int subId) throws IllegalArgumentException, ServiceException {
+    static public ParsedItemID create(int mailItemId, int subId) throws IllegalArgumentException, ServiceException {
         // FIXME eliminate conversion through string here
-        return Parse(mailItemId+"-"+subId);
+        return parse(mailItemId+"-"+subId);
     }
     
-    static public ParsedItemID Create(int mailItemId) throws IllegalArgumentException, ServiceException {
+    static public ParsedItemID create(int mailItemId) throws IllegalArgumentException, ServiceException {
         // FIXME eliminate conversion through string here
-        return Parse(Integer.toString(mailItemId));
+        return parse(Integer.toString(mailItemId));
     }
     
     public String getString() { return mInitialString; };
@@ -82,36 +82,40 @@ public class ParsedItemID {
     public String getMailboxIDString() { return mMailboxId; }
     public String getItemIDString() { return mItemId; }
     public boolean isLocal() { return mIsLocal; }
-    
-    public int getMailboxIDInt() {
-        if (mMailboxIdInt == -1) {
-            if (mMailboxId != null) {
-                mMailboxIdInt = Integer.parseInt(mMailboxId);
+
+    public int getMailboxIDInt() throws ServiceException {
+        if (mMailboxIdInt == -1 && mMailboxId != null)
+            try {
+                mMailboxIdInt = Integer.parseInt(mMailboxId.trim());
+            } catch (NumberFormatException nfe) {
+                throw ServiceException.INVALID_REQUEST("invalid mailbox id: " + mMailboxId, null);
             }
-        }
         return mMailboxIdInt;
     }
-    public int getItemIDInt() {
-        if (mItemIdInt == -1) {
-            if (mItemId != null) {
-                mItemIdInt = Integer.parseInt(mItemId);
+
+    public int getItemIDInt() throws ServiceException {
+        if (mItemIdInt == -1 && mItemId != null)
+            try {
+                mItemIdInt = Integer.parseInt(mItemId.trim());
+            } catch (NumberFormatException nfe) {
+                throw ServiceException.INVALID_REQUEST("invalid item id: " + mItemId, null);
             }
-        }
         return mItemIdInt;
     }
     
-    public int getSubIdInt() {
-        if (mSubIdInt == -1) {
-            if (mSubId != null) {
-                mSubIdInt = Integer.parseInt(mSubId);
+    public int getSubIdInt() throws ServiceException {
+        if (mSubIdInt == -1 && mSubId != null)
+            try {
+                mSubIdInt = Integer.parseInt(mSubId.trim());
+            } catch (NumberFormatException nfe) {
+                throw ServiceException.INVALID_REQUEST("invalid subpart id: " + mSubId, null);
             }
-        }
         return mSubIdInt;
     }
-    
-    
+
+
     private String mInitialString = null;
-    
+
     private String mServerId = null;
     private String mMailboxId = null;
     private String mItemId = null;

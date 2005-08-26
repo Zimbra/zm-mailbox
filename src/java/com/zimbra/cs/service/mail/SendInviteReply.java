@@ -68,7 +68,7 @@ public class SendInviteReply extends SendMsg {
             OperationContext octxt = lc.getOperationContext();
 
 //            int invId = (int)request.getAttributeLong("id");
-            ParsedItemID pid = ParsedItemID.Parse(request.getAttribute("id"));
+            ParsedItemID pid = ParsedItemID.parse(request.getAttribute("id"));
             int compNum = (int)request.getAttributeLong("compNum");
             
             String verbStr = request.getAttribute(MailService.A_VERB);

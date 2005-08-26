@@ -64,7 +64,7 @@ public class GetMsg extends WriteOpDocumentHandler {
 
             Element eMsg = request.getElement(MailService.E_MSG);
 //            int id = (int) eMsg.getAttributeLong(MailService.A_ID);
-            ParsedItemID pid = ParsedItemID.Parse(eMsg.getAttribute(MailService.A_ID));
+            ParsedItemID pid = ParsedItemID.parse(eMsg.getAttribute(MailService.A_ID));
             boolean raw = eMsg.getAttributeBool(MailService.A_RAW, false);
             String part = eMsg.getAttribute(MailService.A_PART, null);
 //            int subId = (int) eMsg.getAttributeLong("subId", 0);

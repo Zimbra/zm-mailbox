@@ -41,7 +41,7 @@ public class TestParsedItemID extends TestCase {
     
     public void test() throws ServiceException {
         {
-            ParsedItemID id = ParsedItemID.Parse("/SERVER/123/456");
+            ParsedItemID id = ParsedItemID.parse("/SERVER/123/456");
             assertTrue(id.getServerIDString().equals("SERVER"));
             assertTrue(id.getMailboxIDString().equals("123"));
             assertTrue(id.getMailboxIDInt() == 123);
@@ -50,7 +50,7 @@ public class TestParsedItemID extends TestCase {
         }
         
         {
-            ParsedItemID id = ParsedItemID.Parse("/SERVER//456");
+            ParsedItemID id = ParsedItemID.parse("/SERVER//456");
             assertTrue(id.getServerIDString().equals("SERVER"));
             assertTrue(id.getMailboxIDString() == null);
             assertTrue(id.getMailboxIDInt() == -1);
@@ -59,7 +59,7 @@ public class TestParsedItemID extends TestCase {
         }
         
         {
-            ParsedItemID id = ParsedItemID.Parse("123/456");
+            ParsedItemID id = ParsedItemID.parse("123/456");
             assertTrue(id.getServerIDString() == null);
             assertTrue(id.getMailboxIDString().equals("123"));
             assertTrue(id.getMailboxIDInt() == 123);
@@ -68,7 +68,7 @@ public class TestParsedItemID extends TestCase {
         }
         
         {
-            ParsedItemID id = ParsedItemID.Parse("456");
+            ParsedItemID id = ParsedItemID.parse("456");
             assertTrue(id.getServerIDString() == null);
             assertTrue(id.getMailboxIDString() == null);
             assertTrue(id.getMailboxIDInt() == -1);
@@ -80,7 +80,7 @@ public class TestParsedItemID extends TestCase {
     {
         boolean OK = false; 
         try {
-            ParsedItemID id = ParsedItemID.Parse("/SERVER/456");
+            ParsedItemID id = ParsedItemID.parse("/SERVER/456");
             System.out.println("ERROR - parsed /SERVER/456 w/o error!");
         } catch(IllegalArgumentException e) {
             OK = true;
@@ -93,7 +93,7 @@ public class TestParsedItemID extends TestCase {
     {
         boolean OK = false; 
         try {
-            ParsedItemID id = ParsedItemID.Parse("//SERVER/456");
+            ParsedItemID id = ParsedItemID.parse("//SERVER/456");
             System.out.println("ERROR - parsed //SERVER/456 w/o error!");
         } catch(IllegalArgumentException e) {
             OK = true;
@@ -106,7 +106,7 @@ public class TestParsedItemID extends TestCase {
     {
         boolean OK = false; 
         try {
-            ParsedItemID id = ParsedItemID.Parse("SERVER/852/456");
+            ParsedItemID id = ParsedItemID.parse("SERVER/852/456");
             System.out.println("ERROR - parsed SERVER/852/456 w/o error!");
         } catch(IllegalArgumentException e) {
             OK = true;

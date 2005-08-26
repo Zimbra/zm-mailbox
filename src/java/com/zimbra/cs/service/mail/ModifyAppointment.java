@@ -87,7 +87,7 @@ public class ModifyAppointment extends CalendarRequest
             Mailbox mbox = getRequestedMailbox(lc);
             OperationContext octxt = lc.getOperationContext();
 
-            ParsedItemID pid = ParsedItemID.Parse(request.getAttribute("id"));
+            ParsedItemID pid = ParsedItemID.parse(request.getAttribute("id"));
             int compNum = (int)request.getAttributeLong("comp", 0);
             sLog.info("<ModifyAppointment id="+pid+" comp="+compNum+">");
             

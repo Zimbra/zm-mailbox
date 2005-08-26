@@ -55,7 +55,7 @@ public class ModifyAppointmentException extends ModifyAppointment {
             Mailbox mbx = getRequestedMailbox(lc);
             OperationContext octxt = lc.getOperationContext();
             
-            ParsedItemID pid = ParsedItemID.Parse(request.getAttribute("id"));
+            ParsedItemID pid = ParsedItemID.parse(request.getAttribute("id"));
             int compNum = (int)request.getAttributeLong("comp", 0);
             
             sLog.info("<ModifyAppointmentException id="+pid+" comp="+compNum+">");

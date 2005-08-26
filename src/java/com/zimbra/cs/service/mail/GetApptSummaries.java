@@ -133,7 +133,7 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
                                 if ((defaultInvite.getMailItemId() != invId.getMsgId()) ||
                                         (defaultInvite.getComponentNum() != invId.getComponentId())) 
                                 {
-                                    ParsedItemID pid = ParsedItemID.Create(appointment.getId(), inst.getMailItemId());
+                                    ParsedItemID pid = ParsedItemID.create(appointment.getId(), inst.getMailItemId());
                                     instElt.addAttribute(MailService.A_APPT_INV_ID, pid.toString());
                                     
                                     instElt.addAttribute(MailService.A_APPT_COMPONENT_NUM, inst.getComponentNum());
@@ -217,7 +217,7 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
                         
                         apptElt.addAttribute(MailService.A_ID, appointment.getId());
                         
-                        ParsedItemID pid = ParsedItemID.Create(appointment.getId(), defaultInvite.getMailItemId());
+                        ParsedItemID pid = ParsedItemID.create(appointment.getId(), defaultInvite.getMailItemId());
                         apptElt.addAttribute(MailService.A_APPT_INV_ID, pid.toString());
                         
                         apptElt.addAttribute(MailService.A_APPT_COMPONENT_NUM, defaultInvite.getComponentNum());

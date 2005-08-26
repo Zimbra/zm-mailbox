@@ -78,7 +78,7 @@ public class CreateAppointmentException extends CreateAppointment
             Account acct = getRequestedAccount(lc);
             Mailbox mbox = getRequestedMailbox(lc);
             
-            ParsedItemID pid = ParsedItemID.Parse(request.getAttribute("id"));
+            ParsedItemID pid = ParsedItemID.parse(request.getAttribute("id"));
             int compNum = (int)request.getAttributeLong("comp");
             
             sLog.info("<CreateAppointmentException id="+pid+" comp="+compNum+">");

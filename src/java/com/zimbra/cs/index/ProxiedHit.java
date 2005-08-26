@@ -59,7 +59,7 @@ public class ProxiedHit extends ZimbraHit
     
     private ParsedItemID getParsedItemID() throws ServiceException {
         if (itemID == null)
-            itemID = ParsedItemID.Parse(mElement.getAttribute(MailService.A_ID));
+            itemID = ParsedItemID.parse(mElement.getAttribute(MailService.A_ID));
         return itemID;
     }
     

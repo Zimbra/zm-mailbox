@@ -62,7 +62,7 @@ public class CancelAppointment extends CalendarRequest {
             Mailbox mbox = getRequestedMailbox(lc);
             OperationContext octxt = lc.getOperationContext();
             
-            ParsedItemID pid = ParsedItemID.Parse(request.getAttribute("id"));
+            ParsedItemID pid = ParsedItemID.parse(request.getAttribute("id"));
             int compNum = (int)request.getAttributeLong("comp");
             
             sLog.info("<CancelAppointment id="+pid+" comp="+compNum+">");

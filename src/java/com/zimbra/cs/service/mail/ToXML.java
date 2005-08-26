@@ -466,11 +466,11 @@ public class ToXML {
         Element m;
         if (wholeMessage) {
             m = encodeMessageCommon(parent, appt, Change.ALL_FIELDS);
-            ParsedItemID pid = ParsedItemID.Create(appt.getId(), invId);
+            ParsedItemID pid = ParsedItemID.create(appt.getId(), invId);
             m.addAttribute(MailService.A_ID, pid.toString());
         } else {
             m = parent.addElement(MailService.E_MSG);
-            ParsedItemID pid = ParsedItemID.Create(appt.getId(), invId);
+            ParsedItemID pid = ParsedItemID.create(appt.getId(), invId);
             m.addAttribute(MailService.A_ID, pid.toString());
             m.addAttribute(MailService.A_PART, part);
         }
