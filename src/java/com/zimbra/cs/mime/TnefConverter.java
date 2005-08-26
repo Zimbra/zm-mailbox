@@ -34,10 +34,6 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
-import net.freeutils.tnef.TNEFInputStream;
-import net.freeutils.tnef.TNEFUtils;
-import net.freeutils.tnef.mime.TNEFMime;
-
 import com.zimbra.cs.util.JMSession;
 
 
@@ -85,38 +81,7 @@ public class TnefConverter implements MimeVisitor {
             return;
         }
         
-        if (msg.isMimeType(Mime.CT_MULTIPART_WILD)) {
-            Multipart mp = (Multipart) msg.getContent();
-            int count = mp.getCount();
-            for (int i = 0; i < count; i++) {
-                BodyPart bp = mp.getBodyPart(i);
-                if (TNEFUtils.isTNEFMimeType(bp.getContentType())) {
-                    // Convert TNEF to a Message and remove it from the parent
-                    TNEFInputStream in = new TNEFInputStream(bp.getInputStream());
-                    MimeMessage converted = TNEFMime.convert(JMSession.getSession(), in);
-                    mp.removeBodyPart(i);
-                    
-                    // Create a MimeBodyPart for the converted data.  Currently we're throwing
-                    // away the top-level message because its content shows up as blank after
-                    // the conversion.
-                    MimeMultipart convertedMulti = (MimeMultipart) converted.getContent();
-                    MimeBodyPart convertedPart = new MimeBodyPart();
-                    convertedPart.setContent(convertedMulti);
-                    
-                    // Create a multipart/alternative for the TNEF and its MIME version
-                    MimeMultipart altMulti = new MimeMultipart("alternative");
-                    altMulti.addBodyPart(bp);
-                    altMulti.addBodyPart(convertedPart);
-                    MimeBodyPart altBodyPart = new MimeBodyPart();
-                    altBodyPart.setContent(altMulti);
-                    
-                    // Put the new multipart/alternative message where the TNEF used to be
-                    mp.addBodyPart(altBodyPart, i);
-                    msg.setContent(mp);
-                    msg.saveChanges();
-                }
-            }
-        }
+        // xxx Perform TNEF conversion of all TNEF body parts here
     }
 
     public void visitMultipart(MimeMultipart multipart, int visitKind) {

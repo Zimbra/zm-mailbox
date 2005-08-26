@@ -34,10 +34,6 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
-import net.freeutils.tnef.TNEFInputStream;
-import net.freeutils.tnef.TNEFUtils;
-import net.freeutils.tnef.mime.TNEFMime;
-
 import com.zimbra.cs.util.JMSession;
 
 /**
@@ -65,24 +61,14 @@ public class TnefExtractor implements MimeVisitor {
     
     private void initialize()
     throws IOException, MessagingException {
-        // Use a temporary list, in case any of the conversions fail
-        List /*MimeMessage */ converted = new ArrayList();
-        for (int i = 0; i < mTnefBodyParts.size(); i++) {
-            MimeBodyPart bp = (MimeBodyPart) mTnefBodyParts.get(i);
-            TNEFInputStream in = new TNEFInputStream(bp.getInputStream());
-            MimeMessage msg = TNEFMime.convert(JMSession.getSession(), in);
-            converted.add(msg);
-        }
-        mTnefMessages = new MimeMessage[converted.size()];
-        converted.toArray(mTnefMessages);
+        // xxx Perform conversion here
+        mTnefMessages = new MimeMessage[0];
     }
     
     ////////// MimeVisitor implementation //////////
     
     public void visitBodyPart(MimeBodyPart bp) throws MessagingException {
-        if (TNEFUtils.isTNEFMimeType(bp.getContentType())) {
-            mTnefBodyParts.add(bp);
-        }
+        // xxx If the content type of this body part is TNEF, add it to mTnefBodyParts 
     }
 
     public void visitMessage(MimeMessage msg, int visitKind) {
