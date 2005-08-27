@@ -166,6 +166,21 @@ public class AdminService implements DocumentService {
     public static final QName CHECK_GAL_CONFIG_REQUEST = QName.get("CheckGalConfigRequest", NAMESPACE);
     public static final QName CHECK_GAL_CONFIG_RESPONSE = QName.get("CheckGalConfigResponse", NAMESPACE);        
 
+    public static final QName CREATE_VOLUME_REQUEST = QName.get("CreateVolumeRequest", NAMESPACE);
+    public static final QName CREATE_VOLUME_RESPONSE = QName.get("CreateVolumeResponse", NAMESPACE);
+    public static final QName GET_VOLUME_REQUEST = QName.get("GetVolumeRequest", NAMESPACE);
+    public static final QName GET_VOLUME_RESPONSE = QName.get("GetVolumeResponse", NAMESPACE);
+    public static final QName MODIFY_VOLUME_REQUEST = QName.get("ModifyVolumeRequest", NAMESPACE);
+    public static final QName MODIFY_VOLUME_RESPONSE = QName.get("ModifyVolumeResponse", NAMESPACE);
+    public static final QName DELETE_VOLUME_REQUEST = QName.get("DeleteVolumeRequest", NAMESPACE);
+    public static final QName DELETE_VOLUME_RESPONSE = QName.get("DeleteVolumeResponse", NAMESPACE);
+    public static final QName GET_ALL_VOLUMES_REQUEST = QName.get("GetAllVolumesRequest", NAMESPACE);
+    public static final QName GET_ALL_VOLUMES_RESPONSE = QName.get("GetAllVolumesResponse", NAMESPACE);
+    public static final QName GET_CURRENT_VOLUMES_REQUEST = QName.get("GetCurrentVolumesRequest", NAMESPACE);
+    public static final QName GET_CURRENT_VOLUMES_RESPONSE = QName.get("GetCurrentVolumesResponse", NAMESPACE);
+    public static final QName SET_CURRENT_VOLUME_REQUEST = QName.get("SetCurrentVolumeRequest", NAMESPACE);
+    public static final QName SET_CURRENT_VOLUME_RESPONSE = QName.get("SetCurrentVolumeResponse", NAMESPACE);
+
     public static final String E_ACCOUNT = "account";
     public static final String E_AUTH_TOKEN = "authToken";
     public static final String E_NAME = "name";
@@ -199,6 +214,8 @@ public class AdminService implements DocumentService {
 	public static final String E_MAX_SEARCH_RESULTS = "maxsearchresults";
 	public static final String E_MAILBOX = "mbox";
 	public static final String E_NUM_OF_PAGES = "numpages";
+    public static final String E_VOLUME = "volume";
+    public static final String E_CURRENT_VOLUME = "currvol";
 	
     public static final String A_APPLY_CONFIG = "applyConfig";
     public static final String A_APPLY_COS = "applyCos";
@@ -232,6 +249,8 @@ public class AdminService implements DocumentService {
     public static final String A_NUM_FAILED = "numFailed";
     public static final String A_OUTPUT = "output";
     public static final String A_DURATION = "duration";
+
+    public static final String A_VOLUME_TYPE = "type";
 
 	public static final String ADMIN_URI = "https://localhost:7071/";
 	
@@ -292,6 +311,14 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(CHECK_AUTH_CONFIG_REQUEST, new CheckAuthConfig());
         dispatcher.registerHandler(CHECK_GAL_CONFIG_REQUEST, new CheckGalConfig());
         dispatcher.registerHandler(CHECK_HOSTNAME_RESOLVE_REQUEST, new CheckHostnameResolve());
+
+        dispatcher.registerHandler(CREATE_VOLUME_REQUEST, new CreateVolume());
+        dispatcher.registerHandler(GET_VOLUME_REQUEST, new GetVolume());
+        dispatcher.registerHandler(GET_ALL_VOLUMES_REQUEST, new GetAllVolumes());
+        dispatcher.registerHandler(MODIFY_VOLUME_REQUEST, new ModifyVolume());
+        dispatcher.registerHandler(DELETE_VOLUME_REQUEST, new DeleteVolume());
+        dispatcher.registerHandler(GET_CURRENT_VOLUMES_REQUEST, new GetCurrentVolumes());
+        dispatcher.registerHandler(SET_CURRENT_VOLUME_REQUEST, new SetCurrentVolume());
     }
 
     /**

@@ -53,7 +53,70 @@ public class DbVolume {
     private static final String CN_FILE_GROUP_BITS = "file_group_bits";
     private static final String CN_MAILBOX_BITS = "mailbox_bits";
     private static final String CN_MAILBOX_GROUP_BITS = "mailbox_group_bits";
-    
+
+    public static synchronized Volume create(Connection conn, short id,
+                                             String name, String path,
+                                             short mboxGroupBits, short mboxBits,
+                                             short fileGroupBits, short fileBits)
+    throws ServiceException {
+        short nextId = id;
+        if (nextId == Volume.ID_AUTO_INCREMENT)
+            nextId = getNextVolumeID(conn);
+        PreparedStatement stmt = null;
+        try {
+            stmt = conn.prepareStatement(
+                    "INSERT INTO volume " +
+                    "(id, name, path, " +
+                    "mailbox_group_bits, mailbox_bits, " +
+                    "file_group_bits, file_bits) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?)");
+            int pos = 1;
+            stmt.setShort(pos++, nextId);
+            stmt.setString(pos++, name);
+            stmt.setString(pos++, path);
+            stmt.setShort(pos++, mboxGroupBits);
+            stmt.setShort(pos++, mboxBits);
+            stmt.setShort(pos++, fileGroupBits);
+            stmt.setShort(pos++, fileBits);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("inserting new volume " + nextId, e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+        return get(conn, nextId);
+    }
+
+    public static Volume update(Connection conn, short id,
+                                String name, String path,
+                                short mboxGroupBits, short mboxBits,
+                                short fileGroupBits, short fileBits)
+    throws ServiceException {
+        PreparedStatement stmt = null;
+        try {
+            stmt = conn.prepareStatement(
+                    "UPDATE volume SET " +
+                    "name=?, path=?, " +
+                    "mailbox_group_bits=?, mailbox_bits=?, " +
+                    "file_group_bits=?, file_bits=? " +
+                    "WHERE id=?");
+            int pos = 1;
+            stmt.setString(pos++, name);
+            stmt.setString(pos++, path);
+            stmt.setShort(pos++, mboxGroupBits);
+            stmt.setShort(pos++, mboxBits);
+            stmt.setShort(pos++, fileGroupBits);
+            stmt.setShort(pos++, fileBits);
+            stmt.setShort(pos++, id);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("updating volume " + id, e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+        return get(conn, id);
+    }
+
     /**
      * delete the specified volume entry.
      * @param conn
@@ -73,6 +136,26 @@ public class DbVolume {
         } finally {
             DbPool.closeStatement(stmt);
         }        
+    }
+
+    private static short getNextVolumeID(Connection conn) throws ServiceException {
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        Volume result = null;
+        try {
+            stmt = conn.prepareStatement("SELECT MAX(id) FROM volume");
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                short id = rs.getShort(1);
+                return ++id;
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("getting max volume ID", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+        return 1;
     }
 
     /**
@@ -158,6 +241,26 @@ public class DbVolume {
             return null;
     }
 
+    public static void updateCurrentVolume(Connection conn, int volType, short volumeId)
+    throws ServiceException {
+        String colName;
+        if (volType == Volume.TYPE_MESSAGE)
+            colName = "message_volume_id";
+        else
+            colName = "index_volume_id";
+        PreparedStatement stmt = null;
+        try {
+            String sql = "UPDATE current_volumes SET " + colName + " = ?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setShort(1, volumeId);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("updating current volume", e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
+
     /**
      * @param rs
      * @return
@@ -166,10 +269,10 @@ public class DbVolume {
         short id = rs.getShort(CN_ID);
         String name = rs.getString(CN_NAME);
         String path = rs.getString(CN_PATH);
-        int mboxGroupBits = rs.getInt(CN_MAILBOX_GROUP_BITS);
-        int mboxBits = rs.getInt(CN_MAILBOX_BITS);
-        int fileGroupBits = rs.getInt(CN_FILE_GROUP_BITS);
-        int fileBits = rs.getInt(CN_FILE_BITS);
+        short mboxGroupBits = rs.getShort(CN_MAILBOX_GROUP_BITS);
+        short mboxBits = rs.getShort(CN_MAILBOX_BITS);
+        short fileGroupBits = rs.getShort(CN_FILE_GROUP_BITS);
+        short fileBits = rs.getShort(CN_FILE_BITS);
         Volume v = new Volume(id, name, path, mboxGroupBits, mboxBits, fileGroupBits, fileBits);
         return v;
     }

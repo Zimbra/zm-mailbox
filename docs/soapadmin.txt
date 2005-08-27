@@ -716,3 +716,95 @@ notes:
   - zimbraAuthMech must be set to ldap/ad. There is no reason to check zimbra.
 
 -----------------------------------
+
+<CreateVolumeRequest>
+  <volume>
+    <a n="name">...</a>
+    <a n="rootPath">...</a>
+    <a n="mgbits">...</a>
+    <a n="mbits">...</a>
+    <a n="fgbits">...</a>
+    <a n="fbits">...</a>
+  </volume>
+</CreateVolumeRequest>
+
+<CreateVolumeResponse>
+  <volume id="{id}"/>
+</CreateVolumeResponse>
+
+Notes:
+
+  id: ID of volume
+  name: name or description of volume
+  rootPath: absolute path to root of volume, e.g. /opt/zimbra/store
+  mgbits: mailbox group bits; default 8
+  mbits: mailbox bits; default 12
+  fgbits: file group bits; default 8
+  fbits: file bits; default 12
+
+-----------------------------
+
+<GetVolumeRequest>
+  <volume id="{id}"/>
+</GetVolumeRequest>
+
+<GetVolumeResponse>
+  <volume id="{id}">
+    <a n="name">...</a>
+    <a n="rootpath">...</a>
+    <a n="mgbits">...</a>
+    <a n="mbits">...</a>
+    <a n="fgbits">...</a>
+    <a n="fbits">...</a>
+  </volume>
+</GetVolumeResponse>
+
+-----------------------------
+
+<GetAllVolumesRequest/>
+
+<GetAllVolumesResponse>
+  <volume .../>+  <!-- each volume element is same as in GetVolumeResponse -->
+</GetAllVolumeResponse>
+
+-----------------------------
+
+<ModifyVolumeRequest>
+  <volume id="{id}">
+  	<a n="...">...</a>+
+  </volume>
+</ModifyVolumeRequest>
+
+<ModifyVolumeResponse/>
+
+-----------------------------
+
+<DeleteVolumeRequest>
+  <volume id="{id}"/>
+</DeleteVolumeRequest>
+
+<DeleteVolumeResponse/>
+
+-----------------------------
+
+<GetCurrentVolumesRequest/>
+
+<GetCurrentVolumesResponse>
+  <currvol type="msg" id="{id}"/>
+  <currvol type="index" id="{id}"/>
+</GetCurrentVolumesResponse>
+
+-----------------------------
+
+<SetCurrentVolumeRequest>
+  <currvol type="{type}" id="{id}"/>
+</SetCurrentVolumeRequest/>
+
+<SetCurrentVolumeResponse/>
+
+Notes:
+
+  type: "msg" or "index"
+  Each SetCurrentVolumeRequest can set only one current volume type.
+
+-----------------------------
