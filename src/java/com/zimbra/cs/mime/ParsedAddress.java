@@ -88,6 +88,8 @@ public class ParsedAddress {
         personalPart = personal;
         if ("".equals(emailPart))
             emailPart = null;
+        if (personalPart != null)
+            personalPart = personalPart.trim().replaceAll("\\s+", " ");
     }
 
     public String getSortString() {
