@@ -110,7 +110,7 @@
 	<condition property="slapd.conf.out" value="${zimbra.home.dir}/openldap/slapd.conf">
 		<isset property="is-windows" />
 	</condition>
-	<condition property="slapd.conf.out" value="${zimbra.home.dir}/openldap/etc/openldap/slapd.conf">
+	<condition property="slapd.conf.out" value="${zimbra.home.dir}/conf/slapd.conf">
 		<isset property="is-unix" />
 	</condition>
 
@@ -407,9 +407,6 @@
 		<delete dir="${zimbra.home.dir}/repl" />
 		<delete dir="${zimbra.home.dir}/backup" />
 		<delete failonerror="no">
-			<fileset dir="${zimbra.home.dir}/conf" excludes="my.cnf"/>
-		</delete>
-		<delete failonerror="no">
 			<fileset dir="${zimbra.home.dir}/log" includes="*.log" />
 		</delete>
 		<delete failonerror="no">
@@ -440,7 +437,7 @@
 	</target>
 
 	<target name="db-init" description="Recreate the database tables">
-		<sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://127.0.0.1/" userid="root" password="zimbra" 
+		<sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost/" userid="root" password="zimbra" 
 			 classpathref="class.path" onerror="continue" keepformat="true" src="src/db/dropdb.sql" />
 
 		<sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://127.0.0.1/" userid="root" password="zimbra"
