@@ -28,7 +28,9 @@ package com.zimbra.qa.unittest;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
@@ -37,12 +39,18 @@ import com.zimbra.cs.client.LmcSession;
 import com.zimbra.cs.client.soap.LmcAuthRequest;
 import com.zimbra.cs.client.soap.LmcAuthResponse;
 import com.zimbra.cs.client.soap.LmcSoapClientException;
+import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.index.ZimbraHit;
+import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.StringUtil;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.SoapFaultException;
 
 /**
@@ -131,5 +139,33 @@ public class TestUtil {
         pm.analyze();
         return mbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX, false, Flag.FLAG_UNREAD, null);
     }
+ 
+    public static Set search(Mailbox mbox, String query, byte type)
+    throws Exception {
+        ZimbraLog.test.debug("Running search: '" + query + "', type=" + type);
+        byte[] types = new byte[1];
+        types[0] = type;
+
+        Set ids = new HashSet();
+        ZimbraQueryResults r = mbox.search(query, types, MailboxIndex.SEARCH_ORDER_DATE_DESC);
+        while (r.hasNext()) {
+            ZimbraHit hit = r.getNext();
+            ids.add(new Integer(hit.getItemId()));
+        }
+        return ids;
+        
+    }
     
+    public static Folder getFolderByPath(Mailbox mbox, String path)
+    throws Exception {
+        Folder folder = null;
+        try {
+            folder = mbox.getFolderByPath(path);
+        } catch (MailServiceException e) {
+            if (e.getCode() != MailServiceException.NO_SUCH_FOLDER) {
+                throw e;
+            }
+        }
+        return folder;
+    }
 }

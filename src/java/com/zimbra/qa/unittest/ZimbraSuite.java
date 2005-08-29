@@ -26,12 +26,14 @@
 package com.zimbra.qa.unittest;
 
 import java.io.OutputStream;
-import java.io.PrintStream;
+import java.text.DecimalFormat;
+import java.util.Enumeration;
 
 import junit.framework.Test;
 import junit.framework.TestResult;
 import junit.framework.TestSuite;
-import junit.textui.TestRunner;
+
+import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * Complete unit test suite for the Zimbra code base.
@@ -68,23 +70,52 @@ public class ZimbraSuite extends TestSuite
         // suite.addTest(new TestSuite(TestConversion.class));
         suite.addTest(new TestSuite(TestMailItem.class));
         suite.addTest(new TestSuite(TestTimeoutMap.class));
+        suite.addTest(new TestSuite(TestConcurrency.class));
 
         return suite;
     }
+    
+    private static DecimalFormat sTestTimeFormat = new DecimalFormat("0.00");
     
     /**
      * Runs the entire test suite and writes the output to the specified
      * <code>OutputStream</code>.
      */
     public static TestResult runTestSuite(OutputStream outputStream) {
-        TestRunner runner;
-        if (outputStream == null) {
-            runner = new TestRunner();
-        } else {
-            runner = new TestRunner(new PrintStream(outputStream));
+        ZimbraLog.test.debug("Starting unit test suite");
+        
+        long suiteStart = System.currentTimeMillis();
+        TestResult result = new TestResult();
+        TestSuite suite = ZimbraSuite.suite();
+        StringBuffer summary = new StringBuffer();
+        
+        Enumeration tests = suite.tests();
+        while (tests.hasMoreElements()) {
+            Test test = (Test) tests.nextElement();
+            long testStart = System.currentTimeMillis();
+            int errorCount = result.errorCount();
+            int failureCount = result.failureCount();
+            
+            test.run(result);
+            
+            double seconds = (double) (System.currentTimeMillis() - testStart) / 1000;
+            errorCount = result.errorCount() - errorCount;
+            failureCount = result.failureCount() - failureCount;
+            
+            summary.append(test + " ran in " + sTestTimeFormat.format(seconds) + " seconds\n");
+            if (errorCount > 0 || failureCount > 0) {
+                String msg = test + " FAILED: " + errorCount + " errors, " +
+                    failureCount + " failures";
+                summary.append(msg + "\n");
+                ZimbraLog.test.error(msg);
+            }
         }
+        
+        double seconds = (double) (suiteStart - System.currentTimeMillis()) / 1000;
+        summary.append("Unit test suite ran in " + sTestTimeFormat.format(seconds) +
+            " seconds.  " + result.errorCount() + " errors, " + result.failureCount() + " failures");
+        ZimbraLog.test.debug(summary);
 
-        Test suite = runner.getTest(ZimbraSuite.class.getName());
-        return runner.doRun(suite);
+        return result;
     }
 }
