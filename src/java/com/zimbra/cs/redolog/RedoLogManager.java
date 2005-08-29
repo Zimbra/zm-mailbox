@@ -260,13 +260,20 @@ public class RedoLogManager {
         try {
             // init the sequence number from db
             mRolloverMgr.initSequence();
-            long seq = mRolloverMgr.getCurrentSequence();
+            long dbSeq = mRolloverMgr.getCurrentSequence();
             // check against the current sequence number in redo.log
+            // NOTE that if redo.log doesn't exist, then its sequence will be automatically
+            // sync'ed to that from the db by the following open() call.
             mLogWriter.open();
-            long currSeq = mLogWriter.getSequence();
-            if (currSeq != seq)
-                throw ServiceException.FAILURE("System redo log file sequence (" + seq + 
-                        ") does not match that (" + currSeq + ") in the current redo log file", null);
+            long redologSeq = mLogWriter.getSequence();
+            if (dbSeq + 1 == redologSeq) {
+                // sequence in db lags behind that of redo.log by 1
+                // this should be caused by a failure that left behind a partial rollover
+                // complete the rollover by making the db sequence catch up
+                mRolloverMgr.resetSequence(redologSeq);
+            } else if (redologSeq != dbSeq)
+                throw ServiceException.FAILURE("System redo log file sequence (" + dbSeq + 
+                        ") does not match that (" + redologSeq + ") in the current redo log file", null);
         } catch (ServiceException e) {
             signalFatalError(e);
         } catch (IOException e) {
@@ -545,14 +552,14 @@ public class RedoLogManager {
 
 		try {
 			if (isRolloverNeeded(force)) {
-				mLog.debug("Redo log rollover started");
+				mLog.info("Redo log rollover started");
                 if (!skipCheckpoint)
     				checkpoint();
 				synchronized (mActiveOps) {
                     rolledOverFile = mLogWriter.rollover(mActiveOps);
 					mInitialLogSize = mLogWriter.getSize();
 				}
-				mLog.debug("Redo log rollover finished");
+				mLog.info("Redo log rollover finished");
 			}
 		} catch (IOException e) {
 			mLog.error("IOException during redo log rollover");
