@@ -1789,14 +1789,13 @@ public class Mailbox {
         return (Conversation) getMessage(data).getParent();
     }
 
-    SenderList recalculateSenderList(int convId, boolean forceWrite) throws ServiceException {
+    public synchronized SenderList getConversationSenderList(int convId) throws ServiceException {
         boolean success = false;
         try {
-            beginTransaction("recalculateSenderList", null);
+            beginTransaction("getSenderList", null);
 
             Conversation conv = getConversationById(convId);
-            Message msgs[] = conv.getMessages(DbMailItem.DEFAULT_SORT_ORDER);
-            SenderList sl = conv.recalculateMetadata(msgs, forceWrite);
+            SenderList sl = conv.getSenderList();
 
             success = true;
             return sl;

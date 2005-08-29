@@ -425,7 +425,7 @@ public abstract class MailItem implements Comparable {
             flags = flags | Flag.FLAG_UNREAD;
         return flags;
     }
-    
+
     /** @return the "internal" flag bitmask, which does not include {@link Flag#FLAG_UNREAD}. */
     public int getInternalFlagBitmask() {
         return mData.flags;
@@ -1056,7 +1056,7 @@ public abstract class MailItem implements Comparable {
     }
     protected void saveData(String sender, String metadata) throws ServiceException {
         mData.metadataChanged(mMailbox);
-        DbMailItem.saveData(this, mData.size, mData.flags, sender, metadata);
+        DbMailItem.saveData(this, mData.size, sender, metadata);
     }
 
 

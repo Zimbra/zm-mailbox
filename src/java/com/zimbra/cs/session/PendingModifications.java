@@ -44,6 +44,7 @@ public final class PendingModifications {
         public static final int MODIFIED_CONFIG    = 0x000008;
         public static final int MODIFIED_SIZE      = 0x000010;
         public static final int MODIFIED_DATE      = 0x000020;
+        public static final int MODIFIED_SUBJECT   = 0x000040;
         public static final int MODIFIED_MSG_COUNT = 0x000080;
 	    public static final int MODIFIED_FOLDER    = 0x000100;
 	    public static final int MODIFIED_PARENT    = 0x000200;

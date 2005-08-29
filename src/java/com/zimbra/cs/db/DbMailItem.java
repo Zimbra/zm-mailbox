@@ -335,13 +335,19 @@ public class DbMailItem {
         Mailbox mbox = item.getMailbox();
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
+
+        String subject = item.getSubject();
+        if (item instanceof Conversation)
+            subject = ((Conversation) item).getNormalizedSubject();
+        else if (item instanceof Message)
+            subject = ((Message) item).getNormalizedSubject();
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
                     " SET date = ?, size = ?, subject = ?, mod_metadata = ?, change_date = ?" +
                     " WHERE id = ?");
             stmt.setInt(1, (int) (item.getDate() / 1000));
             stmt.setInt(2, (int) size);
-            stmt.setString(3, item.getSubject());
+            stmt.setString(3, subject);
             stmt.setInt(4, mbox.getOperationChangeID());
             stmt.setInt(5, mbox.getOperationTimestamp());
             stmt.setInt(6, item.getId());
@@ -353,11 +359,17 @@ public class DbMailItem {
         }
     }
 
-    public static void saveData(MailItem item, long size, int flags, String sender, String metadata)
+    public static void saveData(MailItem item, long size, String sender, String metadata)
     throws ServiceException {
         Mailbox mbox = item.getMailbox();
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
+
+        String subject = item.getSubject();
+        if (item instanceof Conversation)
+            subject = ((Conversation) item).getNormalizedSubject();
+        else if (item instanceof Message)
+            subject = ((Message) item).getNormalizedSubject();
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
                     " SET type = ?, parent_id = ?, date = ?, size = ?, blob_digest = ?, flags = ?," +
@@ -371,9 +383,9 @@ public class DbMailItem {
             stmt.setInt(3, (int) (item.getDate() / 1000));
             stmt.setInt(4, (int) size);
             stmt.setString(5, item.getDigest());
-            stmt.setInt(6, flags);
+            stmt.setInt(6, item.getInternalFlagBitmask());
             stmt.setString(7, sender);
-            stmt.setString(8, item.getSubject());
+            stmt.setString(8, subject);
             stmt.setString(9, metadata);
             stmt.setInt(10, mbox.getOperationChangeID());
             stmt.setInt(11, mbox.getOperationTimestamp());
@@ -384,7 +396,7 @@ public class DbMailItem {
             // Update the flagset cache.  Assume that the item's in-memory
             // data has already been updated.
             TagsetCache flagsets = getFlagsetCache(conn, mbox.getId());
-            flagsets.addTagset(flags);
+            flagsets.addTagset(item.getInternalFlagBitmask());
         } catch (SQLException e) {
             throw ServiceException.FAILURE("rewriting row data for mailbox " + item.getMailboxId() + ", item " + item.getId(), e);
         } finally {

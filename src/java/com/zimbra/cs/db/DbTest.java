@@ -118,7 +118,7 @@ public class DbTest {
 		System.out.print(conv.isUnread()      ? 'U' : ' ');
 		System.out.print(conv.hasAttachment() ? '@' : ' ');
 		System.out.print(' ');
-			SenderList senders = conv.getSenderList();
+			SenderList senders = mailbox.getConversationSenderList(conv.getId());
 			StringBuffer sbSenders = new StringBuffer();
 			ParsedAddress others[] = senders.getLastAddresses();
 			boolean realShort = (others.length != 0);

@@ -327,6 +327,8 @@ public class ToXML {
         Element c = encodeConversationCommon(parent, conv, fields);
         if (needToOutput(fields, Change.MODIFIED_DATE))
             c.addAttribute(MailService.A_DATE, date);
+        if (needToOutput(fields, Change.MODIFIED_SUBJECT))
+            c.addAttribute(MailService.E_SUBJECT, conv.getSubject());
         if (fragment != null && fields == Change.ALL_FIELDS)
         	c.addAttribute(MailService.E_FRAG, fragment, Element.DISP_CONTENT);
         if (needToOutput(fields, Change.MODIFIED_SENDERS)) {
@@ -334,7 +336,7 @@ public class ToXML {
                 eecache = new EmailElementCache();
             SenderList sl;
 			try {
-				sl = conv.getSenderList();
+				sl = conv.getMailbox().getConversationSenderList(conv.getId());
 			} catch (ServiceException e) {
 				return c;
 			}

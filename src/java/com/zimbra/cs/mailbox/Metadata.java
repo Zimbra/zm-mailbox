@@ -93,6 +93,7 @@ public class Metadata {
     static final String FN_SENDER          = "s";
     static final String FN_SORT            = "s";
     static final String FN_SEQ_NO          = "seq";
+    static final String FN_SENDER_LIST     = "sl";
     static final String FN_START           = "st";
     static final String FN_STATUS          = "status";  // calendar: event/todo/journal status
     static final String FN_RECIPIENTS      = "t";

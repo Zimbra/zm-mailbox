@@ -46,10 +46,10 @@ public class SenderList {
 
     private static class SenderCache extends EmailElementCache {
         private int mTouched = 0;
-        
+
         private static final class SenderNode extends CacheNode {
-            private SenderNode(String email, String personal, String display, int id) {
-                super(email, personal, id);
+            private SenderNode(String email, String personal, String display, int xid) {
+                super(email, personal, xid);
                 firstName = display;
             }
         }
@@ -184,13 +184,13 @@ public class SenderList {
 
         HashSet removed = null;
         while (senders.length() > 0 && Character.isDigit(senders.charAt(0))) {
-            int delimeter = senders.indexOf(':');
-            if (delimeter == -1)
+            int delimiter = senders.indexOf(':');
+            if (delimiter == -1)
                 break;
             if (removed == null)
                 removed = new HashSet();
-            removed.add(Integer.decode(senders.substring(0, delimeter)));
-            senders = senders.substring(delimeter + 1);
+            removed.add(Integer.decode(senders.substring(0, delimiter)));
+            senders = senders.substring(delimiter + 1);
         }
 
         try {
@@ -201,12 +201,9 @@ public class SenderList {
             mFirst = readEntry(meta.getMap(Metadata.FN_FIRST, true), nodes);
             if (mFirst != null) {
                 mElided = (int) meta.getLong(Metadata.FN_ELIDED);
-                if (removed != null && removed.contains(new Integer(mFirst.messageId))) {
-                    if (mElided > 0)
-                        throw new RefreshException("first message deleted");
-                    else
-                        mFirst = null;
-                } else if (mElided == 0) {
+                if (removed != null && removed.contains(new Integer(mFirst.messageId)))
+                    throw new RefreshException("first message deleted");
+                else if (mElided == 0) {
                     mEntries.add(mFirst);
                     mFirst = null;
                 } else if (nodes.size() < MINIMUM_CACHED)
@@ -216,6 +213,8 @@ public class SenderList {
             for (int i = 0; i < entries.size() && (le = readEntry(entries.getMap(i), nodes)) != null; i++)
                 if (removed == null || !removed.remove(new Integer(le.messageId)))
                     mEntries.add(le);
+                else if (i == 0 && mFirst == null)
+                    throw new RefreshException("first message deleted");
             if (removed != null)
                 mElided -= removed.size();
 
@@ -424,7 +423,7 @@ public class SenderList {
         return set;
     }
 
-    private ListEntry getEarliest() {
+    public ListEntry getEarliest() {
         if (mFirst != null)
             return mFirst;
         return (mEntries.size() == 0 ? null : (ListEntry) mEntries.getFirst());
