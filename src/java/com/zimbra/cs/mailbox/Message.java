@@ -79,7 +79,7 @@ public class Message extends MailItem {
     private String mRecipients;
     private int    mImapUID;
 	private String mFragment;
-    private String mNormalizedSubject;
+    private String mRawSubject;
 
     public static class ApptInfo {
         private int mAppointmentId;
@@ -163,7 +163,11 @@ public class Message extends MailItem {
     }
 
     public String getNormalizedSubject() {
-        return (mNormalizedSubject == null ? "" : mNormalizedSubject);
+        return super.getSubject();
+    }
+
+    public String getSubject() {
+        return (mRawSubject == null ? "" : mRawSubject);
     }
 
     public boolean isFromMe() {
@@ -497,8 +501,8 @@ public class Message extends MailItem {
         // if the message is part of a real conversation, need to break it out
         if (subjectChanged)
             parent.removeChild(this);
-        else if (parent != null)
-        	mMailbox.recalculateSenderList(parent.getId(), true);
+//        else if (parent != null)
+//        	mMailbox.recalculateSenderList(parent.getId(), true);
     }
 
     void setContent(ParsedMessage pm, String digest, int size, int imapId) throws ServiceException {
@@ -563,14 +567,14 @@ public class Message extends MailItem {
         if (draftMeta != null)
             mDraftInfo = new DraftInfo(draftMeta);
 
-        mNormalizedSubject = mData.subject;
+        mRawSubject = mData.subject;
         String prefix = meta.get(Metadata.FN_PREFIX, null);
         if (prefix != null)
-            mData.subject = (mData.subject == null ? prefix : prefix + mData.subject);
+            mRawSubject = (mData.subject == null ? prefix : prefix + mData.subject);
         String rawSubject = meta.get(Metadata.FN_RAW_SUBJ, null);
         if (rawSubject != null)
-            mData.subject = rawSubject;
-        
+            mRawSubject = rawSubject;
+
         return meta;
 	}
 
@@ -585,7 +589,7 @@ public class Message extends MailItem {
     }
 
     Metadata assembleMetadata() {
-        return assembleMetadata(mSender, mRecipients, mFragment, mNormalizedSubject, mData.subject, mImapUID, mDraftInfo, mApptInfos);
+        return assembleMetadata(mSender, mRecipients, mFragment, mData.subject, mRawSubject, mImapUID, mDraftInfo, mApptInfos);
     }
     static Metadata assembleMetadata(ParsedMessage pm, int flags, DraftInfo dinfo, ArrayList /*ApptInfo*/ apptInfos) {
         // cache the "To" header only for messages sent by the user
