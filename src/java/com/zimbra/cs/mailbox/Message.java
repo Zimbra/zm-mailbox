@@ -30,18 +30,21 @@ package com.zimbra.cs.mailbox;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-import net.fortuna.ical4j.model.Calendar;
-
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.Indexer;
 import com.zimbra.cs.localconfig.DebugConfig;
+import com.zimbra.cs.mailbox.calendar.*;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.TnefConverter;
@@ -53,19 +56,12 @@ import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.ZimbraLog;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
+import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.*;
 import net.fortuna.ical4j.model.property.*;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.mailbox.calendar.*;
-import com.zimbra.cs.redolog.op.CreateMessage;
 
 
 /**
@@ -73,13 +69,17 @@ import com.zimbra.cs.redolog.op.CreateMessage;
  */
 public class Message extends MailItem {
 
-    static Log sLog = LogFactory.getLog(Message.class);
-    
-	private String mSender;
-    private String mRecipients;
-    private int    mImapUID;
-	private String mFragment;
-    private String mRawSubject;
+    static class DraftInfo {
+        String replyType;
+        int    origId = -1;
+
+        public DraftInfo()  { }
+        public DraftInfo(String rt, int id)  { replyType = rt;  origId = id; }
+        public DraftInfo(Metadata meta) throws ServiceException {
+            replyType = meta.get(Metadata.FN_REPLY_TYPE);
+            origId = (int) meta.getLong(Metadata.FN_REPLY_ORIG, -1);
+        }
+    }
 
     public static class ApptInfo {
         private int mAppointmentId;
@@ -109,22 +109,18 @@ public class Message extends MailItem {
             return new ApptInfo(apptId, componentNo);
         }
     }
-    
-    ArrayList /* ApptInfo */ mApptInfos;
-    
-    public Iterator /* ApptInfo */ getApptInfoIterator() {
-        return mApptInfos.iterator();
-    }
-    
-    public ApptInfo getApptInfo(int componentId) {
-        if (componentId < mApptInfos.size()) {
-            return (ApptInfo)(mApptInfos.get(componentId));
-        } else {
-            return null;
-        }
-    }
-    
+
+    /** Class logger for Message class */
+    static Log sLog = LogFactory.getLog(Message.class);
+
+	private String mSender;
+    private String mRecipients;
+    private int    mImapUID;
+	private String mFragment;
+    private String mRawSubject;
+
     private DraftInfo mDraftInfo;
+    private ArrayList /* ApptInfo */ mApptInfos;
 
 
     /**
@@ -142,54 +138,111 @@ public class Message extends MailItem {
             mData.parentId = -mId;
 	}
 
+    /** @return Whether the Message was created as a draft.  Note that this
+     *          can only be set when the Message is created; it cannot be
+     *          altered thereafter. */
     public boolean isDraft() {
         return isTagged(mMailbox.mDraftFlag);
     }
 
+    /** @return The {@code From:} header from the message or, if none exists,
+     *          the {@code Sender:} header. */
     public String getSender() {
         return (mSender == null ? "" : mSender);
     }
 
+    /** @return The {@code To:} header of the message, if the message was sent
+     *          by the user, or "" if the message was not sent by the user. */
     public String getRecipients() {
         return (mRecipients == null ? "" : mRecipients);
     }
-    
+
+    /** @return The IMAP UID for the message.  This will usually be the same as
+     *          the Message's ID; it will differ only if the message has ever been 
+     *          {@link Message#move moved} to a folder that was currently SELECTed
+     *          in an active IMAP session. */
     public int getImapUID() {
         return (mImapUID > 0 ? mImapUID : mId);
     }
 
+    /** @return The first 100 characters of the message's content.  The system
+     *          does its best to remove quoted text, etc. before calculating the
+     *          fragment.
+     *  @see com.zimbra.cs.index.Fragment for more details on the logic used to
+     *       determine what's content and what's fluff. */
     public String getFragment() {
         return (mFragment == null ? "" : mFragment);
     }
 
+    /** @return The normalized subject of the message.  This is done by taking the 
+     *          {@code Subject:} header and removing prefixes (e.g. {@code "Re:"})
+     *          and suffixes (e.g. {@code "(fwd)"}) and the like.
+     *  @see ParsedMessage#normalizeSubject ParsedMessage.normalizeSubject for more
+     *       details on how subjects are normalized. */
     public String getNormalizedSubject() {
         return super.getSubject();
     }
 
+    /** @return The subject of the message, taken directly from the {@code Subject:}
+     *          header with no processing. */
     public String getSubject() {
         return (mRawSubject == null ? "" : mRawSubject);
     }
 
+    /** @return Whether the Message was sent by the owner of this mailbox.  Note
+     *          that this can only be set when the Message is created; it cannot
+     *          be altered thereafter.*/
     public boolean isFromMe() {
         return (mData.flags & Flag.FLAG_FROM_ME) != 0;
     }
 
+    /** @return The ID of the {@link Conversation} the Message belongs to.  If the ID
+     *          is negative, it refers to a single-message {@link VrtualConversation}.*/
     public int getConversationId() {
         return mData.parentId;
     }
 
+    /** @return The ID of the Message that this draft message is in reply to, or -1
+     *          for Messages that are not drafts or not replies/forwards.
+     *  @see #getDraftReplyType */
     public int getDraftOrigId() {
         return (mDraftInfo == null ? -1 : mDraftInfo.origId);
     }
 
+    /** @return {@code "f"} if this draft message is a forward, {@code "r"} if this
+     *          draft message is a reply, or {@code ""} for Messages that are not
+     *          drafts or not replies/forwards.
+     *  @see #getDraftOrigId
+     *  @see com.zimbra.cs.service.mail.SendMsg#TYPE_FORWARD
+     *  @see com.zimbra.cs.service.mail.SendMsg#TYPE_REPLY */
     public String getDraftReplyType() {
         return (mDraftInfo == null || mDraftInfo.replyType == null ? "" : mDraftInfo.replyType);
     }
 
+    /** @return Whether the Message has a vCal attachment. */
     public boolean isInvite() {
         return mApptInfos != null;
     }
-    
+
+    public Iterator /* ApptInfo */ getApptInfoIterator() {
+        return mApptInfos.iterator();
+    }
+
+    public ApptInfo getApptInfo(int componentId) {
+        if (componentId < mApptInfos.size())
+            return (ApptInfo)(mApptInfos.get(componentId));
+        else
+            return null;
+    }
+
+    /** @return An {@link InputStream} of the raw, uncompressed content of the
+     *          message.  This is the message body as received via SMTP; no
+     *          postprocessing has been performed to make opaque attachments
+     *          (e.g. TNEF) visible.
+     *  @throws IOException when errors occur opening, reading, or uncompressing
+     *                      the file.
+     *  @throws ServiceException when the message file does not exist.
+     *  @see #getMimeMessage */
     public InputStream getRawMessage() throws IOException, ServiceException {
         MailboxBlob msgBlob = getBlob();
         if (msgBlob == null)
@@ -197,6 +250,14 @@ public class Message extends MailItem {
         return StoreManager.getInstance().getContent(msgBlob);
     }
 
+    /** @return A JavaMail {@link MimeMessage} encapsulating the message content.
+     *          If possible, TNEF attachments are expanded and their components
+     *          are presented as standard MIME attachments.
+     *  @throws ServiceException when errors occur opening, reading, uncompressing,
+     *                           or parsing the message file, or when the file does
+     *                           not exist.
+     *  @see #getRawMessage
+     *  @see TnefConverter */
     public MimeMessage getMimeMessage() throws ServiceException {
         InputStream is = null;
         MimeMessage mm = null;
@@ -265,11 +326,9 @@ public class Message extends MailItem {
     boolean canParent(MailItem item)  { return false; }
 
 
-    static Message create(
-            CreateMessage redoRecorder,
-            CreateMessage redoPlayer,            
-            Folder folder, MailItem parent, ParsedMessage pm, int msgSize, String digest, short volumeId,
-            boolean unread, boolean noICal, int flags, long tags, DraftInfo dinfo, int id, Calendar cal)  
+    static Message create(int id, Folder folder, MailItem parent, ParsedMessage pm,
+                          int msgSize, String digest, short volumeId, boolean unread,
+                          int flags, long tags, DraftInfo dinfo, boolean noICal, Calendar cal)  
     throws ServiceException {
         if (folder == null || !folder.canContain(TYPE_MESSAGE))
             throw MailServiceException.CANNOT_CONTAIN();
@@ -280,64 +339,50 @@ public class Message extends MailItem {
         
         List /* Invite */ components = null;
         String methodStr = null;
-        if ((cal != null) && (!noICal)) {
+        if (cal != null && !noICal) {
             Account acct = mbox.getAccount();
-            
+
+            // XXX: shouldn't we just be checking flags for Flag.FLAG_FROM_ME?
+            //   boolean sentByMe = (flags & Flag.FLAG_FROM_ME) != 0;
             boolean sentByMe = false;
-            {
-                String senderFull = pm.getSender();
-                String sender = null;
-                try {
-                    sender = new InternetAddress(senderFull).getAddress();
-                } catch (AddressException e) {
-                    throw ServiceException.INVALID_REQUEST("Unable to parse invite sender: " + senderFull, e);
-                }
+            try {
+                String sender = new InternetAddress(pm.getSender()).getAddress();
                 sentByMe = AccountUtil.addressMatchesAccount(acct, sender);
+            } catch (AddressException e) {
+                throw ServiceException.INVALID_REQUEST("unable to parse invite sender: " + pm.getSender(), e);
             }
-            
-            ICalTimeZone accountTZ = mbox.getAccount().getTimeZone();
-            tzmap = new TimeZoneMap(accountTZ);
-            
+
+            tzmap = new TimeZoneMap(acct.getTimeZone());
             components = Invite.parseCalendarComponentsForNewMessage(sentByMe, mbox, cal, id, pm.getFragment(), tzmap);
             Method method = (Method) cal.getProperties().getProperty(Property.METHOD);
             methodStr = method != null ? method.getValue() : "PUBLISH";
         }
 
-        Metadata meta = new Metadata();
-        
-        UnderlyingData data = createItemData(folder, parent, pm, msgSize, digest, unread,
-                                             flags, tags, dinfo, id, TYPE_MESSAGE, volumeId,
-                                             meta);
-        
+        UnderlyingData data = createItemData(id, folder, parent, pm, msgSize, digest,
+                                             volumeId, unread, flags, tags, dinfo);
         DbMailItem.create(mbox, data);
         Message msg = new Message(mbox, data);
 
         // process the components in this invite (must do this last so blob is created, etc)
-        if (components != null) {
-            msg.processInvitesAfterCreate(methodStr, redoRecorder, redoPlayer, volumeId, pm, components);
-        }
+        if (components != null)
+            msg.processInvitesAfterCreate(methodStr, volumeId, pm, components);
         
         msg.finishCreation(parent);
         return msg;
     }
 
-   static UnderlyingData createItemData(Folder folder, MailItem parent, ParsedMessage pm,
-                                         int msgSize, String msgDigest, boolean unread,
-                                         int flags, long tags, DraftInfo dinfo, int id,
-                                         byte type, short volumeId,
-                                         Metadata meta) 
+   static UnderlyingData createItemData(int id, Folder folder, MailItem parent,
+                                        ParsedMessage pm, int msgSize, String msgDigest,
+                                        short volumeId, boolean unread, int flags, long tags,
+                                        DraftInfo dinfo) 
     throws ServiceException {
         if (folder == null)
             throw MailServiceException.CANNOT_CONTAIN();
 
-        if (meta == null)
-            meta = new Metadata();
-        meta.copy(assembleMetadata(pm, flags, dinfo, null));
-
         Mailbox mbox = folder.getMailbox();
         UnderlyingData data = new UnderlyingData();
         data.id          = id;
-        data.type        = type;
+        data.type        = TYPE_MESSAGE;
         if (parent != null)
             data.parentId = parent.getId();
         data.folderId    = folder.getId();
@@ -350,7 +395,7 @@ public class Message extends MailItem {
         data.tags        = tags;
         data.sender      = pm.getParsedSender().getSortString();
         data.subject     = pm.getNormalizedSubject();
-        data.metadata    = meta.toString();
+        data.metadata    = encodeMetadata(pm, flags, dinfo, null);
         data.unreadCount = unread ? 1 : 0; 
         data.contentChanged(mbox);
         return data;
@@ -361,16 +406,11 @@ public class Message extends MailItem {
     * constraints on the Appointments table
     * @param invites
     */
-   private void processInvitesAfterCreate(String method, CreateMessage redoRecorder, CreateMessage redoPlayer,
-   		                                  short volumeId,
+   private void processInvitesAfterCreate(String method, short volumeId,
                                           ParsedMessage pm, List /* Invite */ invites) 
    throws ServiceException {
-       assert(redoRecorder != null);
-       // redoPlayer may be null
-
        // since this is the first time we've seen this Invite Message, we need to process it
        // and see if it updates an existing Appointment in the Appointments table, or whatever...
-       
        boolean updatedMetadata = false;
        
        Iterator /*<Invite>*/ iter = invites.iterator();
@@ -379,12 +419,10 @@ public class Message extends MailItem {
 
            Mailbox mbox = getMailbox();
            Appointment appt = mbox.getAppointmentByUid(cur.getUid());
-           int newApptId = redoPlayer == null ? Mailbox.ID_AUTO_INCREMENT : redoPlayer.getAppointmentId();
            if (appt == null) { 
                // ONLY create an appointment if this is a REQUEST method...otherwise don't.
                if (method.equals(Method.REQUEST.getValue())) {
-                   appt = mbox.createAppointment(Mailbox.ID_FOLDER_CALENDAR, volumeId, "", cur.getUid(), pm, cur, newApptId);
-                   redoRecorder.setAppointmentId(appt.getId());
+                   appt = mbox.createAppointment(Mailbox.ID_FOLDER_CALENDAR, volumeId, "", cur.getUid(), pm, cur);
                } else {
                    sLog.info("Mailbox " + getMailboxId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c no Appointment could be found");
                    return; // for now, just ignore this Invitation
@@ -412,23 +450,10 @@ public class Message extends MailItem {
            updatedMetadata = true;
        }
        
-       if (updatedMetadata) {
+       if (updatedMetadata)
            saveMetadata();
-       }
    }
 
-   static class DraftInfo {
-       String replyType;
-       int    origId = -1;
-       
-       public DraftInfo()  { }
-       public DraftInfo(String rt, int id)  { replyType = rt;  origId = id; }
-       public DraftInfo(Metadata meta) throws ServiceException {
-           replyType = meta.get(Metadata.FN_REPLY_TYPE);
-           origId = (int) meta.getLong(Metadata.FN_REPLY_ORIG, -1);
-       }
-   }
-   
     void setImapUid(int imapId) throws ServiceException {
         if (mImapUID == imapId)
             return;
@@ -579,25 +604,15 @@ public class Message extends MailItem {
 	}
 
     String encodeMetadata() {
-        return assembleMetadata().toString();
+        return encodeMetadata(mSender, mRecipients, mFragment, mData.subject, mRawSubject, mImapUID, mDraftInfo, mApptInfos);
     }
     static String encodeMetadata(ParsedMessage pm, int flags, DraftInfo dinfo, ArrayList /*ApptInfo*/ apptInfos) {
-        return assembleMetadata(pm, flags, dinfo, apptInfos).toString();
-    }
-    static String encodeMetadata(String sender, String recipients, String fragment, String subject, String rawSubject, int imapID, DraftInfo dinfo, ArrayList /*ApptInfo*/ apptInfos) {
-        return assembleMetadata(sender, recipients, fragment, subject, rawSubject, imapID, dinfo, apptInfos).toString();
-    }
-
-    Metadata assembleMetadata() {
-        return assembleMetadata(mSender, mRecipients, mFragment, mData.subject, mRawSubject, mImapUID, mDraftInfo, mApptInfos);
-    }
-    static Metadata assembleMetadata(ParsedMessage pm, int flags, DraftInfo dinfo, ArrayList /*ApptInfo*/ apptInfos) {
         // cache the "To" header only for messages sent by the user
         String recipients = ((flags & Flag.FLAG_FROM_ME) == 0 ? null : pm.getRecipients());
-        return assembleMetadata(pm.getSender(), recipients, pm.getFragment(), pm.getNormalizedSubject(), pm.getSubject(), 0, dinfo, apptInfos);
+        return encodeMetadata(pm.getSender(), recipients, pm.getFragment(), pm.getNormalizedSubject(), pm.getSubject(), 0, dinfo, apptInfos);
     }
-    static Metadata assembleMetadata(String sender, String recipients, String fragment, String subject, 
-            String rawSubject, int imapID, DraftInfo dinfo, ArrayList /*ApptInfo*/ apptInfos) {
+    static String encodeMetadata(String sender, String recipients, String fragment, String subject, String rawSubject, int imapID, DraftInfo dinfo, ArrayList /*ApptInfo*/ apptInfos) {
+        // try to figure out a simple way to make the raw subject from the normalized one
         String prefix = null;
         if (rawSubject == null || rawSubject.equals(subject))
             rawSubject = null;
@@ -631,7 +646,7 @@ public class Message extends MailItem {
             meta.put(Metadata.FN_DRAFT, dmeta);
         }
 
-        return meta;
+        return meta.toString();
     }
 
 

@@ -199,9 +199,8 @@ public class Mailbox {
             return conn;
         }
 
-        RedoableOp getRedoPlayer() {
-            return (octxt == null ? null : octxt.player);
-        }
+        RedoableOp getRedoPlayer()   { return (octxt == null ? null : octxt.player); }
+        RedoableOp getRedoRecorder() { return recorder; }
 
         void setIndexedItem(MailItem item, Object data)  { indexItem = item;  indexData = data; }
 
@@ -2181,12 +2180,11 @@ public class Mailbox {
             if (convTarget != null && debug)
                 ZimbraLog.mailbox.debug("  placing message in existing conversation " + convTarget.getId());
 
-            short volumeId =
-                redoPlayer == null ? Volume.getCurrentMessageVolume().getId()
-                                   : redoPlayer.getVolumeId();
+            short volumeId = redoPlayer == null ? Volume.getCurrentMessageVolume().getId()
+                                                : redoPlayer.getVolumeId();
             Calendar iCal = pm.getiCalendar();
-            msg = Message.create(redoRecorder, redoPlayer, folder, convTarget, pm, msgSize, digest, volumeId,
-                    unread, noICal, flags, tags, dinfo, messageId, iCal);
+            msg = Message.create(messageId, folder, convTarget, pm, msgSize, digest,
+                                 volumeId, unread, flags, tags, dinfo, noICal, iCal);
             
             redoRecorder.setMessageId(msg.getId());
 
@@ -2812,11 +2810,21 @@ public class Mailbox {
             endTransaction(success);
         }
     }
-    
-    Appointment createAppointment(int folderId, short volumeId, String tags, String uid, ParsedMessage pm, Invite invite, int apptId)
+
+    Appointment createAppointment(int folderId, short volumeId, String tags, String uid, ParsedMessage pm, Invite invite)
     throws ServiceException {
-        int createId = getNextItemId(apptId);
-        return Appointment.create(createId, getFolderById(folderId), volumeId, tags, uid, pm, invite);
+        // FIXME: assuming that we're in the middle of a CreateMessage op
+        CreateMessage redoPlayer   = (CreateMessage) mCurrentChange.getRedoPlayer();
+        CreateMessage redoRecorder = (CreateMessage) mCurrentChange.getRedoRecorder();
+
+        int newApptId = redoPlayer == null ? Mailbox.ID_AUTO_INCREMENT : redoPlayer.getAppointmentId();
+        int createId = getNextItemId(newApptId);
+
+        Appointment appt = Appointment.create(createId, getFolderById(folderId), volumeId, tags, uid, pm, invite);
+
+        if (redoRecorder != null)
+        	redoRecorder.setAppointmentId(appt.getId());
+        return appt;
     }
 
     public synchronized Contact createContact(OperationContext octxt, Map attrs, int folderId, String tags)
