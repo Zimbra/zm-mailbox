@@ -261,7 +261,6 @@ public class Mailbox {
     private LRUMap        mConvHashes     = new LRUMap(MAX_MSGID_CACHE);
     private LRUMap        mSentMessageIDs = new LRUMap(MAX_MSGID_CACHE);
 
-    private String mMessageRootDir;
     private String mIndexRootDir;
     
     private MailboxLock  mMaintenance = null;
@@ -1135,10 +1134,6 @@ public class Mailbox {
     private void initDirs() throws ServiceException {
         Volume indexVol = Volume.getById(mData.indexVolumeId);
         mIndexRootDir = indexVol.getMailboxDir(mId, Volume.TYPE_INDEX);
-    }
-
-    public String getMessageRootDir() {
-        return mMessageRootDir;
     }
 
     public String getIndexRootDir() {
