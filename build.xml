@@ -186,13 +186,6 @@
 		</antcall>
 	</target>
 
-	<target name="javacc-ImapParser">
-		<antcall target="javacc">
-			<param name="target.classdir" value="com/zimbra/cs/imap/parser" />
-			<param name="target" value="ImapParser.jj" />
-		</antcall>
-	</target>
-
 	<target name="generate-buildinfo">
 		<tstamp />
 		<condition property="zimbra.buildinfo.version" value="2.0">
