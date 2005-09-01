@@ -80,6 +80,7 @@ public class LC {
     public static final KnownKey zimbra_index_directory;
     public static final KnownKey zimbra_store_directory;
     public static final KnownKey zimbra_db_directory;
+    public static final KnownKey zimbra_extensions_directory;
     public static final KnownKey zimbra_mysql_user;
     public static final KnownKey zimbra_mysql_password;
     public static final KnownKey zimbra_ldap_userdn;
@@ -165,6 +166,11 @@ public class LC {
         zimbra_db_directory.setDoc
             ("Directory for database files.");
 
+        zimbra_extensions_directory = new KnownKey("zimbra_extension_directory");
+        zimbra_extensions_directory.setDefault("${zimbra_home}" + FS + "lib" + FS + "ext");
+        zimbra_extensions_directory.setDoc
+        	("Directory whose subdirs contain extensions");
+        
         zimbra_mysql_user = new KnownKey("zimbra_mysql_user");
         zimbra_mysql_user.setDefault("zimbra");
         zimbra_mysql_user.setDoc

@@ -106,7 +106,7 @@ public class KnownKey {
         return Integer.parseInt(s);
     }
 
-    String key() {
+    public String key() {
     	return mKey;   
     }
     
