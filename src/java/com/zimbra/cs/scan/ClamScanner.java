@@ -39,22 +39,20 @@ import java.util.regex.Pattern;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.zimbra.cs.extension.ZimbraExtension;
+import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.tcpserver.TcpServerInputStream;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.Zimbra;
 
-public class ClamScanner extends Scanner {
+public class ClamScanner extends UploadScanner implements ZimbraExtension {
+    
+    private static final String DEFAULT_URL = "clam://localhost:3310/";
     
     private static Log mLog = LogFactory.getLog(ClamScanner.class);
 
     private boolean mInitialized;
 
-    public ClamScanner() {
-        mInitialized = false;
-    }
-
-    private static final String DEFAULT_URL = "clam://localhost:3310/";
-    
     private String mClamdHost;
     
     private int mClamdPort;
@@ -62,7 +60,35 @@ public class ClamScanner extends Scanner {
     private static final String CLAM_URL_REGEX = "[Cc][Ll][Aa][Mm]://([A-Za-z0-9]+):([0-9]+).*"; 
     
     private static final Pattern CLAM_URL_PATTERN = Pattern.compile(CLAM_URL_REGEX);
-    
+
+    public ClamScanner() {
+    }
+
+    public synchronized void init() {
+        if (mInitialized) {
+        	return;
+        }
+
+        try {
+        	mConfig = new ClamScannerConfig();
+        	if (!mConfig.getEnabled()) {
+        		mLog.info("attachment scan is disabled");
+        		mInitialized = true;
+        	}
+        	setURL(mConfig.getURL());
+        	mInitialized = true;
+        	mLog.info("attachment scan enabled url=" + mConfig.getURL());
+        } catch (ServiceException e) {
+        	mLog.error("error creating scanner", e);
+        } catch (MalformedURLException e) {
+        	mLog.error("error creating scanner", e);
+        }
+    }            
+
+	public void destroy() {
+		mInitialized = false;
+	}
+
     public void setURL(String urlArg) throws MalformedURLException {
         if (urlArg == null) {
             urlArg = DEFAULT_URL;
@@ -82,6 +108,8 @@ public class ClamScanner extends Scanner {
         mInitialized = true;
     }
     
+    private ClamScannerConfig mConfig;
+
     protected Result accept(byte[] array, StringBuffer info) {
         if (!mInitialized) {
             return ERROR;
@@ -179,6 +207,10 @@ public class ClamScanner extends Scanner {
         }
     }
     
+	public boolean isEnabled() {
+		return mInitialized && mConfig.getEnabled();
+	}
+
     public static void main(String[] args) throws IOException {
         Zimbra.toolSetup();
         StringBuffer info = new StringBuffer();

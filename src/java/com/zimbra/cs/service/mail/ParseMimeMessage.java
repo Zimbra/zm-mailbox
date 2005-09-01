@@ -37,7 +37,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.BlobDataSource;
 import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.scan.Scanner;
+import com.zimbra.cs.scan.UploadScanner;
 import com.zimbra.cs.service.ContentServlet;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.FileItemDataSource;
@@ -470,16 +470,14 @@ public class ParseMimeMessage {
         for (Iterator it = uploads.iterator(); it.hasNext(); ) {
             FileItem fi = (FileItem) it.next();
 
-            if (Scanner.isEnabled()) {
-                // Scan upload for viruses
-                StringBuffer info = new StringBuffer();
-                Scanner.Result result = Scanner.accept(fi, info); 
-                if (result == Scanner.REJECT) {
-                    throw MailServiceException.UPLOAD_REJECTED(fi.getName(), info.toString());
-                }
-                if (result == Scanner.ERROR) {
-                    throw MailServiceException.SCAN_ERROR(fi.getName());
-                }
+            // Scan upload for viruses
+            StringBuffer info = new StringBuffer();
+            UploadScanner.Result result = UploadScanner.accept(fi, info); 
+            if (result == UploadScanner.REJECT) {
+            	throw MailServiceException.UPLOAD_REJECTED(fi.getName(), info.toString());
+            }
+            if (result == UploadScanner.ERROR) {
+            	throw MailServiceException.SCAN_ERROR(fi.getName());
             }
 
             MimeBodyPart mbp = new MimeBodyPart();
