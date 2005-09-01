@@ -34,6 +34,7 @@ import com.zimbra.soap.ZimbraContext;
 
 public class GetVolume extends AdminDocumentHandler {
 
+    public static final String A_VOLUME_TYPE = "type";
     public static final String A_VOLUME_NAME = "name";
     public static final String A_VOLUME_ROOTPATH = "rootpath";
     public static final String A_VOLUME_MGBITS = "mgbits";
@@ -56,6 +57,10 @@ public class GetVolume extends AdminDocumentHandler {
     throws ServiceException {
         Element eVol = parent.addElement(AdminService.E_VOLUME);
         eVol.addAttribute(AdminService.A_ID, vol.getId());
+
+        Element type = eVol.addElement(AdminService.E_A);
+        type.addAttribute(AdminService.A_N, A_VOLUME_TYPE);
+        type.setText(Short.toString(vol.getType()));
 
         Element name = eVol.addElement(AdminService.E_A);
         name.addAttribute(AdminService.A_N, A_VOLUME_NAME);

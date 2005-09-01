@@ -735,6 +735,10 @@ notes:
 Notes:
 
   id: ID of volume
+  type: type of volume;
+        1 = primary message volume
+        2 = secondary message volume
+        10 = index volume
   name: name or description of volume
   rootPath: absolute path to root of volume, e.g. /opt/zimbra/store
   mgbits: mailbox group bits; default 8
@@ -750,6 +754,7 @@ Notes:
 
 <GetVolumeResponse>
   <volume id="{id}">
+    <a n="type">...</a>
     <a n="name">...</a>
     <a n="rootpath">...</a>
     <a n="mgbits">...</a>
@@ -790,8 +795,9 @@ Notes:
 <GetCurrentVolumesRequest/>
 
 <GetCurrentVolumesResponse>
-  <currvol type="msg" id="{id}"/>
-  <currvol type="index" id="{id}"/>
+  <currvol type="1" id="{id}"/>
+  [<currvol type="2" id="{id}"/>]  <!-- optional -->
+  <currvol type="10" id="{id}"/>
 </GetCurrentVolumesResponse>
 
 -----------------------------
@@ -804,7 +810,7 @@ Notes:
 
 Notes:
 
-  type: "msg" or "index"
+  type: 1 (primary message), 2 (secondary message) or 10 (index)
   Each SetCurrentVolumeRequest can set only one current volume type.
 
 -----------------------------

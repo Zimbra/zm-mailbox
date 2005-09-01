@@ -32,6 +32,7 @@ package com.zimbra.cs.db;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -49,6 +50,7 @@ import com.zimbra.cs.store.Volume;
 public class DbVolume {
 
     private static final String CN_ID = "id";
+    private static final String CN_TYPE = "type";
     private static final String CN_NAME = "name";
     private static final String CN_PATH = "path";
     private static final String CN_FILE_BITS = "file_bits";
@@ -57,7 +59,7 @@ public class DbVolume {
     private static final String CN_MAILBOX_GROUP_BITS = "mailbox_group_bits";
 
     public static synchronized Volume create(Connection conn, short id,
-                                             String name, String path,
+                                             short type, String name, String path,
                                              short mboxGroupBits, short mboxBits,
                                              short fileGroupBits, short fileBits)
     throws ServiceException {
@@ -68,12 +70,13 @@ public class DbVolume {
         try {
             stmt = conn.prepareStatement(
                     "INSERT INTO volume " +
-                    "(id, name, path, " +
+                    "(id, type, name, path, " +
                     "mailbox_group_bits, mailbox_bits, " +
                     "file_group_bits, file_bits) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?)");
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
             int pos = 1;
             stmt.setShort(pos++, nextId);
+            stmt.setShort(pos++, type);
             stmt.setString(pos++, name);
             stmt.setString(pos++, path);
             stmt.setShort(pos++, mboxGroupBits);
@@ -90,7 +93,7 @@ public class DbVolume {
     }
 
     public static Volume update(Connection conn, short id,
-                                String name, String path,
+                                short type, String name, String path,
                                 short mboxGroupBits, short mboxBits,
                                 short fileGroupBits, short fileBits)
     throws ServiceException {
@@ -98,11 +101,12 @@ public class DbVolume {
         try {
             stmt = conn.prepareStatement(
                     "UPDATE volume SET " +
-                    "name=?, path=?, " +
+                    "type=?, name=?, path=?, " +
                     "mailbox_group_bits=?, mailbox_bits=?, " +
                     "file_group_bits=?, file_bits=? " +
                     "WHERE id=?");
             int pos = 1;
+            stmt.setShort(pos++, type);
             stmt.setString(pos++, name);
             stmt.setString(pos++, path);
             stmt.setShort(pos++, mboxGroupBits);
@@ -242,22 +246,26 @@ public class DbVolume {
     }
     
     public static class CurrentVolumes {
-    	public short msgVolId = -1;
-        public short indexVolId = -1;
+    	public short msgVolId = Volume.ID_NONE;
+        public short secondaryMsgVolId = Volume.ID_NONE;
+        public short indexVolId = Volume.ID_NONE;
     }
 
     public static CurrentVolumes getCurrentVolumes(Connection conn) throws ServiceException {
         CurrentVolumes currVols = new CurrentVolumes();
-        short msgVolume = -1;
-        short indexVolume = -1;
+        short msgVolume = Volume.ID_NONE;
+        short indexVolume = Volume.ID_NONE;
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement("SELECT message_volume_id, index_volume_id FROM current_volumes");
+            stmt = conn.prepareStatement("SELECT message_volume_id, secondary_message_volume_id, index_volume_id FROM current_volumes");
             rs = stmt.executeQuery();
             if (rs.next()) {
                 currVols.msgVolId = rs.getShort(1);
-                currVols.indexVolId = rs.getShort(2);
+                short s = rs.getShort(2);
+                if (!rs.wasNull())
+                    currVols.secondaryMsgVolId = s;
+                currVols.indexVolId = rs.getShort(3);
             }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("getting current volumes", e);
@@ -265,24 +273,29 @@ public class DbVolume {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
         }
-        if (currVols.msgVolId != -1 && currVols.indexVolId != -1)
+        if (currVols.msgVolId != Volume.ID_NONE && currVols.indexVolId != Volume.ID_NONE)
             return currVols;
         else
             return null;
     }
 
-    public static void updateCurrentVolume(Connection conn, int volType, short volumeId)
+    public static void updateCurrentVolume(Connection conn, short volType, short volumeId)
     throws ServiceException {
         String colName;
         if (volType == Volume.TYPE_MESSAGE)
             colName = "message_volume_id";
+        else if (volType == Volume.TYPE_MESSAGE_SECONDARY)
+            colName = "secondary_message_volume_id";
         else
             colName = "index_volume_id";
         PreparedStatement stmt = null;
         try {
             String sql = "UPDATE current_volumes SET " + colName + " = ?";
             stmt = conn.prepareStatement(sql);
-            stmt.setShort(1, volumeId);
+            if (volumeId >= 0)
+                stmt.setShort(1, volumeId);
+            else
+                stmt.setNull(1, Types.TINYINT);
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("updating current volume", e);
@@ -297,13 +310,14 @@ public class DbVolume {
      */
     private static Volume constructVolume(ResultSet rs) throws SQLException {
         short id = rs.getShort(CN_ID);
+        short type = rs.getShort(CN_TYPE);
         String name = rs.getString(CN_NAME);
         String path = rs.getString(CN_PATH);
         short mboxGroupBits = rs.getShort(CN_MAILBOX_GROUP_BITS);
         short mboxBits = rs.getShort(CN_MAILBOX_BITS);
         short fileGroupBits = rs.getShort(CN_FILE_GROUP_BITS);
         short fileBits = rs.getShort(CN_FILE_BITS);
-        Volume v = new Volume(id, name, path, mboxGroupBits, mboxBits, fileGroupBits, fileBits);
+        Volume v = new Volume(id, type, name, path, mboxGroupBits, mboxBits, fileGroupBits, fileBits);
         return v;
     }
 }

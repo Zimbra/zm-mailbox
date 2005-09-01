@@ -63,23 +63,23 @@ public class Volume {
     }
 
     public static final short ID_AUTO_INCREMENT = -1;
+    public static final short ID_NONE           = -2;
 
-    public static final int TYPE_MESSAGE = 1;
-    public static final int TYPE_INDEX = 2;
-
-    public static final String TYPE_MESSAGE_STR = "msg";
-    public static final String TYPE_INDEX_STR = "index";
+    public static final short TYPE_MESSAGE           =  1;
+    public static final short TYPE_MESSAGE_SECONDARY =  2;
+    public static final short TYPE_INDEX             = 10;
 
     private static final String SUBDIR_MESSAGE = "msg";
     private static final String SUBDIR_INDEX = "index";
 
     private static final String INCOMING_DIR = "incoming";
 
-    // sVolumeMap, sCurrMsgVolume, and sCurrIndexVolume are all
-    // synchronized on sVolumeGuard.
+    // sVolumeMap, sCurrMsgVolume, sCurrSecondaryMsgVolume, and
+    // sCurrIndexVolume are all synchronized on sVolumeGuard.
     private static final Object sVolumeGuard = new Object();
     private static Map sVolumeMap = new HashMap();
     private static Volume sCurrMsgVolume;
+    private static Volume sCurrSecondaryMsgVolume;
     private static Volume sCurrIndexVolume;
 
     static {
@@ -88,17 +88,6 @@ public class Volume {
         } catch (ServiceException e) {
             Zimbra.halt("Unable to load volumes info", e);
         }
-    }
-
-    public static int parseTypeStr(String typeStr)
-    throws ServiceException {
-        if (TYPE_MESSAGE_STR.equals(typeStr))
-            return TYPE_MESSAGE;
-        else if (TYPE_INDEX_STR.equals(typeStr))
-            return TYPE_INDEX;
-
-        throw ServiceException.INVALID_REQUEST("Invalid volume type \"" +
-                                               typeStr + "\"", null);
     }
 
     public static void reloadVolumes() throws ServiceException {
@@ -113,6 +102,12 @@ public class Volume {
             Volume currMsgVol = (Volume) volumes.get(new Short(currVols.msgVolId));
             if (currMsgVol == null)
                 throw ServiceException.FAILURE("Unknown current message volume " + currVols.msgVolId, null);
+            Volume currSecondaryMsgVol = null;
+            if (currVols.secondaryMsgVolId != ID_NONE) {
+                currSecondaryMsgVol = (Volume) volumes.get(new Short(currVols.secondaryMsgVolId));
+                if (currSecondaryMsgVol == null)
+                    throw ServiceException.FAILURE("Unknown current secondary message volume " + currVols.secondaryMsgVolId, null);
+            }
             Volume currIndexVol = (Volume) volumes.get(new Short(currVols.indexVolId));
             if (currIndexVol == null)
                 throw ServiceException.FAILURE("Unknown current index volume " + currVols.indexVolId, null);
@@ -122,6 +117,7 @@ public class Volume {
             	sVolumeMap.clear();
                 sVolumeMap.putAll(volumes);
                 sCurrMsgVolume = currMsgVol;
+                sCurrSecondaryMsgVolume = currSecondaryMsgVol;
                 sCurrIndexVolume = currIndexVol;
             }
         } finally {
@@ -130,7 +126,7 @@ public class Volume {
         }
     }
 
-    public static Volume create(short id,
+    public static Volume create(short id, short type,
                                 String name, String path,
                                 short mboxGroupBits, short mboxBits,
                                 short fileGroupBits, short fileBits)
@@ -149,7 +145,7 @@ public class Volume {
         boolean success = false;
         try {
             conn = DbPool.getConnection();
-            Volume v = DbVolume.create(conn, id, name, path,
+            Volume v = DbVolume.create(conn, id, type, name, path,
                                        mboxGroupBits, mboxBits,
                                        fileGroupBits, fileBits);
             success = true;
@@ -169,7 +165,7 @@ public class Volume {
         }
     }
 
-    public static Volume update(short id,
+    public static Volume update(short id, short type,
                                 String name, String path,
                                 short mboxGroupBits, short mboxBits,
                                 short fileGroupBits, short fileBits)
@@ -180,7 +176,7 @@ public class Volume {
             Volume v = null;
             Short key = new Short(id);
             conn = DbPool.getConnection();
-            v = DbVolume.update(conn, id, name, path,
+            v = DbVolume.update(conn, type, id, name, path,
                                 mboxGroupBits, mboxBits,
                                 fileGroupBits, fileBits);
             success = true;
@@ -214,6 +210,11 @@ public class Volume {
                 throw ServiceException.FAILURE(
                         "Volume " + id + " cannot be deleted " +
                         "because it is the current message volume", null);
+            if (sCurrSecondaryMsgVolume != null &&
+                id == sCurrSecondaryMsgVolume.getId())
+                throw ServiceException.FAILURE(
+                        "Volume " + id + " cannot be deleted " +
+                        "because it is the current secondary message volume", null);
             if (id == sCurrIndexVolume.getId())
                 throw ServiceException.FAILURE(
                         "Volume " + id + " cannot be deleted " +
@@ -299,14 +300,30 @@ public class Volume {
      * by admin will create a different Volume object for the same volume ID.
      * @return
      */
+    public static Volume getCurrentSecondaryMessageVolume() {
+        synchronized (sVolumeGuard) {
+            return sCurrSecondaryMsgVolume;
+        }
+    }
+
+    /**
+     * Don't cache the returned Volume object.  Updates to volume information
+     * by admin will create a different Volume object for the same volume ID.
+     * @return
+     */
     public static Volume getCurrentIndexVolume() {
         synchronized (sVolumeGuard) {
             return sCurrIndexVolume;
         }
     }
 
-    // TODO: database update
-    public static void setCurrentVolume(short id, int volType)
+    /**
+     * Set the current volume of given type.  Pass ID_NONE for id to unset.
+     * @param volType
+     * @param id
+     * @throws ServiceException
+     */
+    public static void setCurrentVolume(short volType, short id)
     throws ServiceException {
         Connection conn = null;
         boolean success = false;
@@ -316,14 +333,18 @@ public class Volume {
 
             Short key = new Short(id);
             synchronized (sVolumeGuard) {
-                Volume v = (Volume) sVolumeMap.get(key);
-                if (v != null) {
-                    if (volType == TYPE_MESSAGE)
-                        sCurrMsgVolume = v;
-                    else
-                        sCurrIndexVolume = v;
-                } else
-                    throw ServiceException.FAILURE("Unknown volume ID " + id, null);
+                Volume v = null;
+                if (id != Volume.ID_NONE) {
+                    v = (Volume) sVolumeMap.get(key);
+                    if (v == null)
+                        throw ServiceException.FAILURE("Unknown volume ID " + id, null);
+                }
+                if (volType == TYPE_MESSAGE)
+                    sCurrMsgVolume = v;
+                else if (volType == TYPE_MESSAGE_SECONDARY)
+                    sCurrSecondaryMsgVolume = v;
+                else
+                    sCurrIndexVolume = v;
             }
 
             success = true;
@@ -341,6 +362,7 @@ public class Volume {
 
 
     private short mId;
+    private short mType;
     private String mName;
     private String mRootPath;  // root of the volume
     private String mIncomingMsgDir;
@@ -353,10 +375,11 @@ public class Volume {
     private int mMboxGroupBitMask;
     private int mFileGroupBitMask;
 
-    public Volume(short id, String name, String rootPath,
+    public Volume(short id, short type, String name, String rootPath,
                   short mboxGroupBits, short mboxBits,
                   short fileGroupBits, short fileBits) {
         mId = id;
+        mType = type;
         mName = name;
         mRootPath = rootPath;
         mIncomingMsgDir = mRootPath + File.separator + INCOMING_DIR;
@@ -374,6 +397,7 @@ public class Volume {
     }
 
     public short getId() { return mId; }
+    public short getType() { return mType; }
     public String getName() { return mName; }
     public String getRootPath() { return mRootPath; }
     public String getIncomingMsgDir() { return mIncomingMsgDir; }

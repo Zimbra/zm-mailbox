@@ -48,6 +48,7 @@ public class CreateVolume extends AdminDocumentHandler {
 
     private static Volume createFromAttrs( Map attrs)
     throws ServiceException {
+        short type = -1;
         String name = null;
         String path = null;
         short mgbits = -1;
@@ -68,6 +69,8 @@ public class CreateVolume extends AdminDocumentHandler {
                     value = vals[0];
             }
 
+            if (key.equals(GetVolume.A_VOLUME_TYPE))
+                type = Short.parseShort(value);
             if (key.equals(GetVolume.A_VOLUME_NAME))
                 name = value;
             else if (key.equals(GetVolume.A_VOLUME_ROOTPATH))
@@ -82,6 +85,8 @@ public class CreateVolume extends AdminDocumentHandler {
                 fbits = Short.parseShort(value);
         }
 
+        if (type == -1)
+            throw ServiceException.INVALID_REQUEST("Missing attribute " + GetVolume.A_VOLUME_TYPE, null);
         if (name == null)
             throw ServiceException.INVALID_REQUEST("Missing attribute " + GetVolume.A_VOLUME_NAME, null);
         if (path == null || path.length() < 1)
@@ -95,7 +100,7 @@ public class CreateVolume extends AdminDocumentHandler {
         if (fbits == -1)
             throw ServiceException.INVALID_REQUEST("Missing attribute " + GetVolume.A_VOLUME_FBITS, null);
 
-        Volume vol = Volume.create(Volume.ID_AUTO_INCREMENT,
+        Volume vol = Volume.create(Volume.ID_AUTO_INCREMENT, type,
                                    name, path, mgbits, mbits, fgbits, fbits);
         return vol;
     }

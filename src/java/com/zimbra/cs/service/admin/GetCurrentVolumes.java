@@ -42,12 +42,19 @@ public class GetCurrentVolumes extends AdminDocumentHandler {
 
         Volume msgVol = Volume.getCurrentMessageVolume();
         Element eMsgVol = response.addElement(AdminService.E_CURRENT_VOLUME);
-        eMsgVol.addAttribute(AdminService.A_VOLUME_TYPE, Volume.TYPE_MESSAGE_STR);
+        eMsgVol.addAttribute(AdminService.A_VOLUME_TYPE, Volume.TYPE_MESSAGE);
         eMsgVol.addAttribute(AdminService.A_ID, msgVol.getId());
+
+        Volume secondaryMsgVol = Volume.getCurrentSecondaryMessageVolume();
+        if (secondaryMsgVol != null) {
+            Element eSecondaryMsgVol = response.addElement(AdminService.E_CURRENT_VOLUME);
+            eSecondaryMsgVol.addAttribute(AdminService.A_VOLUME_TYPE, Volume.TYPE_MESSAGE_SECONDARY);
+            eSecondaryMsgVol.addAttribute(AdminService.A_ID, secondaryMsgVol.getId());
+        }
 
         Volume indexVol = Volume.getCurrentIndexVolume();
         Element eIndexVol = response.addElement(AdminService.E_CURRENT_VOLUME);
-        eIndexVol.addAttribute(AdminService.A_VOLUME_TYPE, Volume.TYPE_INDEX_STR);
+        eIndexVol.addAttribute(AdminService.A_VOLUME_TYPE, Volume.TYPE_INDEX);
         eIndexVol.addAttribute(AdminService.A_ID, indexVol.getId());
 
         return response;

@@ -49,6 +49,7 @@ public class ModifyVolume extends AdminDocumentHandler {
 
     private static void applyAttrsToVolume(Volume vol, Map attrs)
     throws ServiceException {
+        short type = vol.getType();
         String name = vol.getName();
         String path = vol.getRootPath();
         short mgbits = vol.getMboxGroupBits();
@@ -69,7 +70,9 @@ public class ModifyVolume extends AdminDocumentHandler {
                     value = vals[0];
             }
 
-            if (key.equals(GetVolume.A_VOLUME_NAME))
+            if (key.equals(GetVolume.A_VOLUME_TYPE))
+                type = Short.parseShort(value);
+            else if (key.equals(GetVolume.A_VOLUME_NAME))
                 name = value;
             else if (key.equals(GetVolume.A_VOLUME_ROOTPATH))
                 path = value;
@@ -83,6 +86,6 @@ public class ModifyVolume extends AdminDocumentHandler {
                 fbits = Short.parseShort(value);
         }
 
-        Volume.update(vol.getId(), name, path, mgbits, mbits, fgbits, fbits);
+        Volume.update(vol.getId(), type, name, path, mgbits, mbits, fgbits, fbits);
     }
 }
