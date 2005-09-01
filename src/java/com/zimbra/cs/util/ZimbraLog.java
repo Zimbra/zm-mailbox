@@ -176,6 +176,11 @@ public class ZimbraLog {
      */
     public static final org.apache.commons.logging.Log system = LogFactory.getLog("zimbra.system");
     
+    /**
+     * the "zimbra.extension" logger. For logging extension loading related info. 
+     */
+    public static final org.apache.commons.logging.Log extension = LogFactory.getLog("zimbra.extension");
+    
     public static String getContext() {
         return NDC.peek();
     }
