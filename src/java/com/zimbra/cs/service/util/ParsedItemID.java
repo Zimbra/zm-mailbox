@@ -25,7 +25,6 @@
 
 /*
  * Created on Mar 28, 2005
- *
  */
 package com.zimbra.cs.service.util;
 
@@ -56,32 +55,31 @@ import com.zimbra.cs.service.ServiceException;
  */
 public class ParsedItemID { 
     
-    static public ParsedItemID parse(String itemID) throws IllegalArgumentException, ServiceException
-    {
+    static public ParsedItemID parse(String itemID) throws IllegalArgumentException, ServiceException {
         return new ParsedItemID(itemID);
     }
     
-    static public ParsedItemID create(int mailItemId, int subId) throws IllegalArgumentException, ServiceException {
+    static public ParsedItemID create(int mailItemId, int subId) throws ServiceException {
         // FIXME eliminate conversion through string here
         return parse(mailItemId+"-"+subId);
     }
     
-    static public ParsedItemID create(int mailItemId) throws IllegalArgumentException, ServiceException {
+    static public ParsedItemID create(int mailItemId) throws ServiceException {
         // FIXME eliminate conversion through string here
         return parse(Integer.toString(mailItemId));
     }
     
     public String getString() { return mInitialString; };
-    public String toString() { return getString(); };
+    public String toString()  { return getString(); };
     
-    public boolean hasServerID() { return mServerId != null; }
+    public boolean hasServerID()  { return mServerId != null; }
     public boolean hasMailboxID() { return mMailboxId != null; }
-    public boolean hasSubId() { return mSubId != null; }
+    public boolean hasSubId()     { return mSubId != null; }
     
-    public String getServerIDString() { return mServerId; }
+    public String getServerIDString()  { return mServerId; }
     public String getMailboxIDString() { return mMailboxId; }
-    public String getItemIDString() { return mItemId; }
-    public boolean isLocal() { return mIsLocal; }
+    public String getItemIDString()    { return mItemId; }
+    public boolean isLocal()           { return mIsLocal; }
 
     public int getMailboxIDInt() throws ServiceException {
         if (mMailboxIdInt == -1 && mMailboxId != null)
@@ -126,10 +124,6 @@ public class ParsedItemID {
     private int mSubIdInt = -1;
     private boolean mIsLocal = true;
     
-
-    /**
-     * 
-     */
     
     /**
      * MAILITEMID or MAILITEMID-SUBID.  Sets mItemID and mSubID
@@ -137,7 +131,7 @@ public class ParsedItemID {
      * @param itemIdPart
      * @throws ServiceException
      */
-    private void parseItemIdPart(String itemIdPart) throws ServiceException {
+    private void parseItemIdPart(String itemIdPart) {
         int poundIdx = itemIdPart.indexOf('-');
         if (poundIdx > -1) {
             mItemId = itemIdPart.substring(0, poundIdx);
@@ -155,44 +149,35 @@ public class ParsedItemID {
         case 4:
             /* /server/mailboxid/mailitemid */
             /* /server//mailitemid */
-            if (substrs[0].length() > 0) {
-                throw new IllegalArgumentException("Invalid ItemID Specifier: "+itemID);
-            }
-            if (substrs[1].length() == 0) {
-                throw new IllegalArgumentException("Invalid ItemID Specifier (double initial '/'?): "+itemID);
-            }
+            if (substrs[0].length() > 0)
+                throw ServiceException.INVALID_REQUEST("invalid ItemID Specifier: " + itemID, null);
+            if (substrs[1].length() == 0)
+                throw ServiceException.INVALID_REQUEST("invalid ItemID Specifier (double initial '/'?): " + itemID, null);
+            
             mServerId = substrs[1];
             String localhost = Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname);
-            if (!mServerId.equals(localhost)) {
-                mIsLocal = false;
-            }
-            
-            if (substrs[2].length() > 0) {
+            mIsLocal = mServerId.equals(localhost);
+            if (substrs[2].length() > 0)
                 mMailboxId = substrs[2];
-            }
-//            mItemId = substrs[3];
             parseItemIdPart(substrs[3]);
-            
+
             break;
         case 3:
             /* ERROR: /server/mailitemid  (no double-/ in middle) */
-            throw new IllegalArgumentException("Invalid ItemID Specifier (missing double-'/' before mailitemid?): "+ itemID);
+            throw ServiceException.INVALID_REQUEST("invalid ItemID Specifier (missing double-'/' before mailitemid?): " + itemID, null);
         case 2:
             /* MAILBOXID/MAILITEMID */
             mMailboxId = substrs[0];
-
-//            mItemId = substrs[1];
             parseItemIdPart(substrs[1]);
-                        
+
             break;
         case 1:
             /* MAILITEMID */
-//            mItemId = substrs[0];
             parseItemIdPart(substrs[0]);
-            
+
             break;
         default:
-            throw new IllegalArgumentException("Invalid ItemID Specifier: "+itemID);
+            throw ServiceException.INVALID_REQUEST("invalid ItemID Specifier: " + itemID, null);
         }
     }
     
