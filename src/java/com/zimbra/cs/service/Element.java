@@ -262,6 +262,8 @@ public abstract class Element {
         public Element addUniqueElement(QName qname) throws ContainerException  { return addUniqueElement(new JavaScriptElement(qname)); }
 
         public Element addUniqueElement(Element elt) throws ContainerException {
+            if (elt == null)
+                return null;
             String name = elt.getName();
             Object obj = mAttributes.get(name);
             if (obj instanceof List)
@@ -282,7 +284,9 @@ public abstract class Element {
         public Element setText(String content) throws ContainerException  { return addAttribute(A_CONTENT, content); }
 
         public Element addAttribute(String key, String value, byte disposition) throws ContainerException {
-            if (disposition == DISP_ELEMENT)
+            if (value == null)
+                return this;
+            else if (disposition == DISP_ELEMENT)
                 addUniqueElement(E_ATTRS).addAttribute(key, value);
             else {
                 checkNamingConflict(key);
@@ -501,7 +505,9 @@ public abstract class Element {
         }
 
         public Element addAttribute(String key, String value, byte disposition) throws ContainerException {
-            if (disposition == DISP_ELEMENT)
+            if (value == null)
+                return this;
+            else if (disposition == DISP_ELEMENT)
                 addElement(E_ATTRIBUTE).addAttribute(A_ATTR_NAME, key).setText(value);
             else if (disposition == DISP_CONTENT)
                 addElement(key).setText(value);
