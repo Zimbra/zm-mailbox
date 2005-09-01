@@ -23,7 +23,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.scan;
+package com.zimbra.cs.service.mail;
 
 import java.io.IOException;
 import java.io.InputStream;

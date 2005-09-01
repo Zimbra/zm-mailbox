@@ -37,7 +37,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.BlobDataSource;
 import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.scan.UploadScanner;
 import com.zimbra.cs.service.ContentServlet;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.FileItemDataSource;
