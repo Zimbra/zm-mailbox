@@ -38,6 +38,7 @@
 	<property name="dist.conf.dir" location="${dist.dir}/conf" />
 	<property name="dist.db.dir" location="${dist.dir}/db" />
 	<property name="dist.lib.dir" location="${dist.dir}/lib" />
+	<property name="dist.ext.dir" location="${dist.dir}/lib/ext" />
 	<property name="dist.tomcat.dir" location="${dist.dir}/tomcat" />
 	<property name="dist.tomcat.webapps.dir" location="${dist.tomcat.dir}/webapps" />
 	<property name="dist.tomcat.conf.dir" location="${dist.tomcat.dir}/conf" />
@@ -55,6 +56,7 @@
 	<property name="generated.java.dir" location="${generated.dir}/src/java" />
 	<property name="jars.dir" location="jars" />
 	<property name="lib.dir" location="lib" />
+	<property name="ext.dir" location="lib/ext" />
 	<property name="src.dir" location="src" />
 	<property name="src.java.dir" location="${src.dir}/java" />
 	<property name="src.bin.dir" location="${src.dir}/bin" />
@@ -152,6 +154,7 @@
 		<mkdir dir="${dist.libexec.dir}" />
 		<mkdir dir="${dist.conf.dir}" />
 		<mkdir dir="${dist.lib.dir}" />
+		<mkdir dir="${dist.ext.dir}" />
 		<mkdir dir="${dist.tomcat.webapps.dir}" />
 		<mkdir dir="${dist.tomcat.conf.dir}" />
 		<mkdir dir="${dist.tomcat.commonlib.dir}" />
@@ -311,6 +314,9 @@
 		<copy todir="${dist.db.dir}" file="${build.dir}/versions-init.sql" />
 		<copy todir="${dist.lib.dir}">
 			<fileset dir="${lib.dir}" includes="lib*.so" />
+		</copy>
+		<copy todir="${dist.ext.dir}" >
+			<fileset dir="${ext.dir}" includes="*/*.jar" />
 		</copy>
 		<copy todir="${dist.lib.dir}">
 			<fileset dir="${jars.dir}" includes="*.jar" excludes="servlet-api.jar" />
@@ -522,6 +528,9 @@
 		<copy todir="${tomcat.home.dir}/common/endorsed" file="${jars.dir}/zimbra-charset.jar" />
 		<copy todir="${zimbra.home.dir}/conf" file="${config.dir}/log4j.properties" />
 		<copy todir="${zimbra.home.dir}/lib" file="${dist.lib.dir}/zimbrastore.jar" />
+		<copy todir="${zimbra.home.dir}/lib/ext">
+    		<fileset dir="${ext.dir}" includes="*/*.jar"/>
+    	</copy>
 		<copy todir="${zimbra.home.dir}/lib">
 			<fileset dir="${jars.dir}" includes="*.jar" excludes="servlet-api.jar" />
 		</copy>
