@@ -41,6 +41,7 @@ import java.util.Map;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.store.Volume;
+import com.zimbra.cs.store.VolumeServiceException;
 
 /**
  * @author jhahm
@@ -85,7 +86,10 @@ public class DbVolume {
             stmt.setShort(pos++, fileBits);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("inserting new volume " + nextId, e);
+            if (e.getErrorCode() == Db.Error.DUPLICATE_ROW)
+                throw VolumeServiceException.ALREADY_EXISTS(nextId, e);
+            else
+                throw ServiceException.FAILURE("inserting new volume " + nextId, e);
         } finally {
             DbPool.closeStatement(stmt);
         }

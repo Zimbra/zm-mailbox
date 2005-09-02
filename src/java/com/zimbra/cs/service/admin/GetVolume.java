@@ -45,8 +45,7 @@ public class GetVolume extends AdminDocumentHandler {
     public Element handle(Element request, Map context)
             throws ServiceException {
         ZimbraContext lc = getZimbraContext(context);
-        Element eVol = request.getElement(AdminService.E_VOLUME);
-        short id = (short) eVol.getAttributeLong(AdminService.A_ID);
+        short id = (short) request.getAttributeLong(AdminService.A_ID);
         Volume vol = Volume.getById(id);
         Element response = lc.createElement(AdminService.GET_VOLUME_RESPONSE);
         addVolumeElement(response, vol);

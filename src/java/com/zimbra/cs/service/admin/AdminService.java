@@ -251,6 +251,7 @@ public class AdminService implements DocumentService {
     public static final String A_DURATION = "duration";
 
     public static final String A_VOLUME_TYPE = "type";
+    public static final String A_VOLUME_DELETE_FILES = "deleteFiles";
 
 	public static final String ADMIN_URI = "https://localhost:7071/";
 	

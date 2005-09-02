@@ -124,7 +124,12 @@ public abstract class RedoableOp {
     public static final int OP_MODIFY_INVITE_FLAG       = 36;
     public static final int OP_MODIFY_INVITE_PARTSTAT   = 37;
 
-	public static final int OP_LAST						= 38;
+    public static final int OP_CREATE_VOLUME            = 38;
+    public static final int OP_MODIFY_VOLUME            = 39;
+    public static final int OP_DELETE_VOLUME            = 40;
+    public static final int OP_SET_CURRENT_VOLUME       = 41;
+
+	public static final int OP_LAST						= 42;
 
 
 	// Element index is same as Redoable.OP_* constants.
@@ -167,7 +172,11 @@ public abstract class RedoableOp {
         "RepositionNote",
         "ColorNote",
         "ModifyInviteFlag",
-        "ModifyInvitePartStat"
+        "ModifyInvitePartStat",
+        "CreateVolume",
+        "ModifyVolume",
+        "DeleteVolume",                 // 40
+        "SetCurrentVolume"
 	};
 
 	public static String getOpClassName(int opcode) {
@@ -380,7 +389,8 @@ public abstract class RedoableOp {
 		StringBuffer sb = new StringBuffer("txn ");
 		sb.append(mTxnId).append(" [").append(getOpClassName(getOpCode()));
         sb.append("] tstamp=").append(mTimestamp);
-        sb.append(", change=").append(mChangeId);
+        if (mChangeId != -1)
+            sb.append(", change=").append(mChangeId);
         if (mChangeConstraint != 0)
             sb.append(", constraint=").append(mChangeConstraint);
 		String data = getPrintableData();

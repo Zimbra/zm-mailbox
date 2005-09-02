@@ -37,10 +37,10 @@ public class DeleteVolume extends AdminDocumentHandler {
     public Element handle(Element request, Map context)
             throws ServiceException {
         ZimbraContext lc = getZimbraContext(context);
-        Element eVol = request.getElement(AdminService.E_VOLUME);
-        short id = (short) eVol.getAttributeLong(AdminService.A_ID);
+        short id = (short) request.getAttributeLong(AdminService.A_ID);
+        boolean deleteFiles = request.getAttributeBool(AdminService.A_VOLUME_DELETE_FILES, false);
         Volume vol = Volume.getById(id);
-        Volume.delete(id);
+        Volume.delete(id, deleteFiles);
         Element response = lc.createElement(AdminService.DELETE_VOLUME_RESPONSE);
         return response;
     }
