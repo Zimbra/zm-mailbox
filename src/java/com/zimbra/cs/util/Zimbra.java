@@ -40,6 +40,7 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.convert.TransformationStub;
 import com.zimbra.cs.db.Versions;
+import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.httpclient.EasySSLProtocolSocketFactory;
 import com.zimbra.cs.imap.ImapServer;
 import com.zimbra.cs.index.Indexer;
@@ -119,6 +120,9 @@ public class Zimbra {
     	if (!Versions.checkVersions())
         	throw new RuntimeException("Data version mismatch.  Reinitialize or upgrade the backend data store.");
 
+    	ExtensionUtil.loadAll();
+    	ExtensionUtil.initAll();
+    	
         TransformationStub.getInstance().init();
         
         Indexer.GetInstance().startup();
@@ -167,6 +171,8 @@ public class Zimbra {
 		StoreManager.getInstance().shutdown();
 
         TransformationStub.getInstance().destroy();
+        
+        ExtensionUtil.destroyAll();
         
 		sTimer.cancel();
 	}
