@@ -1,0 +1,83 @@
+Zimbra supports server side extensions, in order to solve two
+problems:
+
+       - have a generic mechanism to add things to the server that
+         doesn't require modifying web.xml and other tomcat config
+         files.
+
+       - be able to add classes than can subclass from the server
+         classes without doing incestuous things to an installed
+         webapp.
+
+The latter requires that the Zimbra server code create a classloader
+to load the classes, and set the parent of this classloader to be the
+the server's own classloader (since we use tomcat, the parent is a
+WebappClassLoader object).  The classloader parenting relationship is:
+
+    (Zimbra) ZimbraExtensionClassLoader ->
+    (Tomcat) WebappClassLoader (and others tomcat classloaders) -> 
+    (JRE) Application ClassLoader ->
+    (JRE) Extension ClassLoader ->
+    (JVM) Bootstrap ClassLoader 
+    
+If the classloader at the top of this list is asked to load a class,
+it defers to the classloader lower in the list, and failing to find
+the class therein, tries to load it itself.  eg. UploadScanner is
+loaded through WebappClassloader (because it is in service.war and
+therefore is found by WebappClassloader), but it's subclass
+ClamScanner is loaded through ZimbraExtensionClassLoader (from
+lib/ext).
+
+To write an extension:
+
+   - Create a jar file (myext.jar) whose manifest should include the
+     attribute:
+
+        Zimbra-Extension-Class: my.extension.EntryPoint
+
+   - The EntryPoint class should implement the ZimbraExtension
+     interface, which is simple - just init() and destroy()
+
+   - Drop myext.jar into:
+
+        /opt/zimbra/lib/ext/myext/myext.jar
+
+We have multiple ZimbraExtensionClassLoader objects - as many as there
+are extension directories.  Suppose you had two extensions:
+
+     (a) /opt/zimbra/lib/ext/eone/eone.jar
+         /opt/zimbra/lib/ext/eone/libfooForEOne.jar
+      
+     (b) /opt/zimbra/lib/ext/etwo/etwo.jar
+
+In (a), both jars are loaded by the same classloader instance, but (b)
+is loaded by a different instance of ZimbraExtensionClassLoader.  This
+means that extensions can not refer to each other.  The motivation for
+this is to be conservative and see if we can get extensions to talk to
+each other through the server code.  (This can be easily fixed in the
+implementation if we change our minds - and want to make all
+extensions get loaded into the same type space).
+
+However, in (a), both jars files inside the same extension directory,
+can specify a Zimbra-Extension-Class - and both will be treated as
+distinct extensions, albeit loaded in the same classloader instance.
+This is a workaround if you really want two extensions to refer to
+each other.
+
+For now there are no conventions for the following two items.
+
+ - What server code is an extension allowed to link against?
+
+      No restrictions for now.  We reserve the right to enforce
+      something in the future.  eg, a com.zimbra.cs.serverapi (or
+      similar) package which defines well known entry points into the
+      server.
+
+ - Preferred way for the extension to register for events in the
+   server.
+
+      ClamScanner extension, on init(), registers itself to a static
+      data list in UploadScanner.  A generic event mechanism, would be
+      nice, but seems like a overkill - but for simple extensions
+      programming we probably should have a generic event mechanism,
+      listener registration etc.
