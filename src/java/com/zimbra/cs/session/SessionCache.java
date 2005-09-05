@@ -53,14 +53,13 @@ import com.zimbra.cs.util.Zimbra;
  * multiple active sessions simultaneously.
  * 
  */
-public final class SessionCache 
-{ 
+public final class SessionCache {
+
     public static void notifyPendingChanges(String accountId, PendingModifications pns) {
         Iterator iter = getInstance().getSessionIteratorForAccount(accountId);
         while (iter != null && iter.hasNext())
             try {
-                Session session = (Session) iter.next();
-                session.notifyPendingChanges(pns);
+                ((Session) iter.next()).notifyPendingChanges(pns);
             } catch (ConcurrentModificationException cme) {
                 break;
             } catch (Exception e) {
@@ -72,8 +71,9 @@ public final class SessionCache
     // Usable APIs here...
     ///////////////////////////////////////////////////////////////////////////
 
-    public static final int SESSION_SOAP = 1;
-    public static final int SESSION_IMAP = 2;
+    public static final int SESSION_SOAP  = 1;
+    public static final int SESSION_IMAP  = 2;
+    public static final int SESSION_ADMIN = 3;
 
     /**
      * @param sessionType the type of session (SOAP, IMAP, etc.) we need
@@ -82,16 +82,16 @@ public final class SessionCache
     public Session getNewSession(String accountId, int sessionType) {
         if (mShutdown)
             return null;
-        Long sessionId = getNextSessionId();
+        String sessionId = getNextSessionId();
         Session session = null;
         switch (sessionType) {
             default:
-            case SESSION_SOAP:  session = new SoapSession(accountId, sessionId);  break;
-            case SESSION_IMAP:  session = new ImapSession(accountId, sessionId);  break;
+            case SESSION_SOAP:   session = new SoapSession(accountId, sessionId);   break;
+            case SESSION_IMAP:   session = new ImapSession(accountId, sessionId);   break;
+            case SESSION_ADMIN:  session = new AdminSession(accountId, sessionId);  break;
         }
-        if (mLog.isDebugEnabled()) {
+        if (mLog.isDebugEnabled())
             mLog.debug("Created " + session);
-        }
         updateInCache(sessionId, session);
         return session;
     }
@@ -102,11 +102,11 @@ public final class SessionCache
      * @param sessionId
      * @return
      */
-    public Session lookup(Object sessionId, String accountId) {
+    public Session lookup(String sessionId, String accountId) {
         if (mShutdown) { return null; }
         synchronized(mLRUMap) {
-            Session session = (Session)mLRUMap.get(sessionId);
-            if (null != session) {
+            Session session = (Session) mLRUMap.get(sessionId);
+            if (session != null) {
                 if (session.validateAccountId(accountId)) {
                     updateInCache(sessionId, session);
                     return session;
@@ -129,7 +129,7 @@ public final class SessionCache
      * @param sessionId
      * @param accountId
      */
-    public void clearSession(Object sessionId, String accountId) {
+    public void clearSession(String sessionId, String accountId) {
         if (mLog.isDebugEnabled()) {
             mLog.debug("Clearing session " + sessionId);
         }
@@ -166,8 +166,8 @@ public final class SessionCache
     //////////////////////////////////////////////////////////////////////////////
 
     // TODO make me configurable!
-    private static final long SESSION_CACHE_TIMEOUT_MSEC = 10 * Constants.MILLIS_PER_MINUTE;
-    private static final long SESSION_SWEEP_INTERVAL_MSEC = 1 * Constants.MILLIS_PER_MINUTE;
+    static final long SESSION_CACHE_TIMEOUT_MSEC = 10 * Constants.MILLIS_PER_MINUTE;
+    static final long SESSION_SWEEP_INTERVAL_MSEC = 1 * Constants.MILLIS_PER_MINUTE;
     
     static Log mLog = LogFactory.getLog(SessionCache.class);
 
@@ -181,8 +181,8 @@ public final class SessionCache
     
     private boolean mShutdown = false;
     
-    synchronized private Long getNextSessionId() {
-        return new Long(sContextSeqNo++);
+    synchronized private String getNextSessionId() {
+        return Long.toString(sContextSeqNo++);
     }
     
     static private long sContextSeqNo = 1;
@@ -190,7 +190,7 @@ public final class SessionCache
     private static SessionCache sInstance = new SessionCache();
     
     
-    LinkedHashMap /* Object SessionId -> Session */ mLRUMap = new LinkedHashMap(500);
+    LinkedHashMap /* String SessionId -> Session */ mLRUMap = new LinkedHashMap(500);
     
     HashMap /* String AccountId -> ArrayList of Sessions */ mAcctToSessionMap = new HashMap(500);
     
@@ -278,7 +278,7 @@ public final class SessionCache
         }
     }
 
-    private void updateInCache(Object sessionId, Session session) {
+    private void updateInCache(String sessionId, Session session) {
         if (mLog.isDebugEnabled()) {
             mLog.debug("Updating session " + sessionId);
         }

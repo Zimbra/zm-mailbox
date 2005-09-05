@@ -43,8 +43,8 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
-import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.soap.ZimbraContext;
 
 /**
@@ -52,8 +52,6 @@ import com.zimbra.soap.ZimbraContext;
  */
 public class SearchConv extends Search {
     private static Log sLog = LogFactory.getLog(Search.class);
-
-    private static StopWatch sWatch = StopWatch.getInstance("SearchConv"); 
 
     public Element handle(Element request, Map context) throws ServiceException {
         long startTime = sWatch.start();
@@ -66,7 +64,7 @@ public class SearchConv extends Search {
             Mailbox mbox = getRequestedMailbox(lc);
             OperationContext octxt = lc.getOperationContext();
 
-            SoapSession session = lc.getSession();
+            SoapSession session = (SoapSession) lc.getSession(SessionCache.SESSION_SOAP);
             SearchParams params = parseCommonParameters(request, lc);
 
             String cidStr = request.getAttribute(MailService.A_CONV_ID);

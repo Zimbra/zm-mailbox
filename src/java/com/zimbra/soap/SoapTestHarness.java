@@ -395,19 +395,19 @@ public class SoapTestHarness {
 		return doc;
 	}
 
-	private static String lpad(String s, int width) {
+	static String lpad(String s, int width) {
 		return pad(s, width, false, true);
 	}
 	
-	private static String rpad(String s, int width) {
+	static String rpad(String s, int width) {
 		return pad(s, width, false, false);
 	}
 	
-	private static String lpadz(String s, int width) {
+	static String lpadz(String s, int width) {
 		return pad(s, width, true, true);
 	}
 	
-	private static String rpadz(String s, int width) {
+	static String rpadz(String s, int width) {
 		return pad(s, width, true, false);
 	}
 	
@@ -444,7 +444,7 @@ public class SoapTestHarness {
 		if (mAuthToken == null)
 			mCurrent.mSoapRequest = mSoapProto.soapEnvelope(mCurrent.mDocRequest);
 		else {
-			mCurrent.mSoapRequest = mSoapProto.soapEnvelope(mCurrent.mDocRequest, ZimbraContext.toCtxt(mSoapProto, mAuthToken, false, mSessionId, false));
+			mCurrent.mSoapRequest = mSoapProto.soapEnvelope(mCurrent.mDocRequest, ZimbraContext.toCtxt(mSoapProto, mAuthToken, mSessionId));
 //            if (Math.random() < 0.1) {
 //                Element context = mCurrent.mSoapRequest.getOptionalElement(mSoapProto.getHeaderQName()).getOptionalElement(ZimbraContext.CONTEXT);
 //                if (context != null)
@@ -525,7 +525,6 @@ public class SoapTestHarness {
         }
 
 		if (match != null) {
-			Pattern p = Pattern.compile(match);
 			boolean ok = Pattern.matches(match, value);
 			mCurrent.check(ok, "match "+ (ok ? "ok" : "failed") + " (" + match + ")" + " (" + value + ")");
 		}

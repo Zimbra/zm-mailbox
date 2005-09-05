@@ -30,11 +30,7 @@ package com.zimbra.cs.service.account;
 
 import java.util.Map;
 
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.AuthTokenException;
-import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.*;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
@@ -42,7 +38,6 @@ import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraContext;
-import com.zimbra.soap.SoapEngine;
 
 /**
  * @author schemers
@@ -51,10 +46,21 @@ public class Auth extends DocumentHandler  {
 
 	// FIXME: config, sane value, default to 12 hours for now...
 	private static final long DEFAULT_AUTH_LIFETIME = 60*60*12;
-	
+
+    /** Returns (or creates) the in-memory {@link Session} object appropriate
+     *  for this request.<p>
+     * 
+     *  Auth commands do not create a session by default, as issues with the 
+     *  ordering of operations might cause the new session to be for the old
+     *  credentials rather than for the new ones.
+     * 
+     * @return <code>null</code> in all cases */
+    public Session getSession(Map context) {
+        return null;
+    }
+
 	public Element handle(Element request, Map context) throws ServiceException {
         ZimbraContext lc = getZimbraContext(context);
-        context.put(SoapEngine.IS_AUTH_COMMAND, "1");
 
 		String name = request.getAttribute(AccountService.E_ACCOUNT);
 		String password = request.getAttribute(AccountService.E_PASSWORD);
@@ -93,10 +99,9 @@ public class Auth extends DocumentHandler  {
         response.addAttribute(AccountService.E_AUTH_TOKEN, token, Element.DISP_CONTENT);
         response.addAttribute(AccountService.E_LIFETIME, lifetime, Element.DISP_CONTENT);
         if (acct.isCorrectHost()) {
-            if (context.get(SoapEngine.DONT_CREATE_SESSION) == null) {
-                Session session = SessionCache.getInstance().getNewSession(acct.getId() + "", SessionCache.SESSION_SOAP);
-                response.addAttribute(ZimbraContext.E_SESSION_ID, session.getSessionId().toString(), Element.DISP_CONTENT);
-            }
+            Session session = lc.getNewSession(acct.getId(), SessionCache.SESSION_SOAP);
+            if (session != null)
+                response.addAttribute(ZimbraContext.E_SESSION_ID, session.getSessionId(), Element.DISP_CONTENT);
         } else
             response.addAttribute(AccountService.E_REFERRAL, acct.getAttr(Provisioning.A_zimbraMailHost), Element.DISP_CONTENT);
 

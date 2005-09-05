@@ -36,14 +36,17 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.session.Session;
+import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * @author schemers
  */
 public abstract class DocumentHandler {
-	public abstract Element handle(Element document, Map context) throws ServiceException;
-	
+
+    public abstract Element handle(Element request, Map context) throws ServiceException;
+
 	public ZimbraContext getZimbraContext(Map context) {
 		return (ZimbraContext) context.get(SoapEngine.ZIMBRA_CONTEXT);
 	}
@@ -65,39 +68,50 @@ public abstract class DocumentHandler {
 	    return mbx; 
     }
 
-	/**
-	 * by default, document handlers require a valid auth token
-	 * @return
-	 */
+	/** by default, document handlers require a valid auth token */
 	public boolean needsAuth(Map context) {
 		return true;
 	}
 
-	/**
-	 * Should return true if this is an administrative command
-	 * @return
-	 */
+	/** @return <code>true</code> if this is an administrative command */
 	public boolean needsAdminAuth(Map context) {
 		return false;
 	}
 
-    /**
-     * Whether operation is read-only (true) or causes backend
-     * state change (false).
-     */
+    /** @return <code>true</code> if the operation is read-only, or
+     *          <code>false</code> if the operation causes backend state change. */
     public boolean isReadOnly() {
     	return true;
     }
 
-    /**
-     * Determines if client making the SOAP request is localhost.
-     * @param context
-     * @return
-     */
+    /** @return Whether the client making the SOAP request is localhost. */
     protected boolean clientIsLocal(Map context) {
         HttpServletRequest req = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
         if (req == null) return true;
         String peerIP = req.getRemoteAddr();
         return "127.0.0.1".equals(peerIP);
+    }
+
+    /** Fetches the in-memory {@link Session} object appropriate for this request.
+     *  If none already exists, one is created.
+     * 
+     * @param context  The Map containing context information for this SOAP request.
+     * @return A {@link com.zimbra.cs.session.SoapSession}. */
+    public Session getSession(Map context) {
+        return getSession(context, SessionCache.SESSION_SOAP);
+    }
+
+    /** Fetches or creates a {@link Session} object to persist and manage state
+     *  between SOAP requests.
+     * 
+     * @param context      The Map containing context information for this SOAP request.
+     * @param sessionType  The type of session needed.
+     * @return An in-memory {@link Session} object of the specified type, fetched
+     *         from the request's {@link ZimbraContext} object.  If no matching
+     *         session already exists, a new one is created.
+     * @see SessionCache SessionCache for valid values for <code>sessionType</code>. */
+    protected Session getSession(Map context, int sessionType) {
+        ZimbraContext lc = getZimbraContext(context);
+        return (lc == null ? null : lc.getSession(sessionType));
     }
 }

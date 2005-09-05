@@ -37,6 +37,7 @@ import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.Session;
+import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.ZimbraLog;
 
@@ -61,8 +62,8 @@ public class ImapSession extends Session {
     private Map         mTags = new HashMap();
     private boolean     mCheckingSpam;
 
-    public ImapSession(String accountId, Object contextId) {
-        super(accountId, contextId);
+    public ImapSession(String accountId, String contextId) {
+        super(accountId, contextId, SessionCache.SESSION_IMAP);
         mState = STATE_AUTHENTICATED;
         try {
             Provisioning prov = Provisioning.getInstance();

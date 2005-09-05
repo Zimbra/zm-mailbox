@@ -28,6 +28,9 @@
  */
 package com.zimbra.soap;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -54,7 +57,27 @@ import com.zimbra.cs.session.SessionCache;
  */
 public class ZimbraContext {
 
-	private static Log mLog = LogFactory.getLog(ZimbraContext.class);
+    private final class SessionInfo {
+        Session session;
+        boolean created;
+
+        SessionInfo(Session s) {
+            this(s, false);
+        }
+        SessionInfo(Session s, boolean newSession) {
+            session = s;
+            created = newSession;
+        }
+
+        void clearSession() {
+            SessionCache.getInstance().clearSession(session.getSessionId(), getAuthtokenAccountId());
+            session = null;
+        }
+
+        public String toString()  { return session.getSessionId(); }
+    }
+
+	private static Log sLog = LogFactory.getLog(ZimbraContext.class);
 
 	public static final QName CONTEXT = QName.get("context", ZimbraNamespace.ZIMBRA);
     public static final String E_NO_NOTIFY  = "nonotify";
@@ -65,6 +88,9 @@ public class ZimbraContext {
     public static final String E_ACCOUNT    = "account";   
     public static final String E_NO_SESSION = "nosession";
     public static final String E_SESSION_ID = "sessionId";
+    public static final String A_ACCOUNT_ID = "acct";
+    public static final String A_ID         = "id";
+    public static final String A_NOTIFY     = "notify";
     public static final String E_CHANGE     = "change";
     public static final String A_CHANGE_ID  = "token";
     public static final String E_TARGET_SERVER = "targetServer";
@@ -75,27 +101,24 @@ public class ZimbraContext {
     public static final String TYPE_JAVASCRIPT = "js";
     public static final String CHANGE_MODIFIED = "mod";
     public static final String CHANGE_CREATED  = "new";
-
-	public static final long UNSPECIFIED_MAILBOX_ID = 0;
-
-    public static final byte MARKUP_XML        = 0;
-    public static final byte MARKUP_JAVASCRIPT = 1;
+    public static final String SESSION_MAIL  = "mail";
+    public static final String SESSION_ADMIN = "admin";
 
 	private AuthToken mAuthToken;
 	private String    mAuthTokenAccountId;
 	private String    mRequestedAccountId;
-    private boolean   mChangeConstraintType = OperationContext.CHECK_MODIFIED;
-    private int       mMaximumChangeId = -1;
-	private SoapSession mSession = null;
-	private boolean   mHasNewSessionId;
-    private boolean   mSessionSuppressed;
-    private ProxyTarget mProxyTarget;
-    private boolean   mIsProxyRequest;
-    private SoapProtocol mResponseProtocol;
 
-	public String toString() {
-	    return "LC(mbox=" + mAuthTokenAccountId + ", session=" + getSessionIdStr() + ")";
-	}
+    private boolean mChangeConstraintType = OperationContext.CHECK_MODIFIED;
+    private int     mMaximumChangeId = -1;
+
+    private List    mSessionInfo = new ArrayList();
+    private boolean mSessionSuppressed;
+    private boolean mHaltNotifications;
+
+    private ProxyTarget mProxyTarget;
+    private boolean     mIsProxyRequest;
+
+    private SoapProtocol mResponseProtocol;
 
 	/**
 	 * @param ctxt can be null if not present in request
@@ -122,7 +145,7 @@ public class ZimbraContext {
 		if (eAccount != null) {
 		    String key = eAccount.getAttribute(A_BY);
 		    String value = eAccount.getText();
-		    
+
 	        if (key.equals(BY_NAME)) {
 	            Account account = Provisioning.getInstance().getAccountByName(value);
 	            if (account == null)
@@ -156,8 +179,8 @@ public class ZimbraContext {
 			} catch (AuthTokenException e) {
 				// ignore and leave null
 				mAuthToken = null;
-				if (mLog.isDebugEnabled())
-					mLog.debug("ZimbraContext AuthToken error: " + e.getMessage(), e);
+				if (sLog.isDebugEnabled())
+					sLog.debug("ZimbraContext AuthToken error: " + e.getMessage(), e);
 			}
 		}
 
@@ -179,177 +202,263 @@ public class ZimbraContext {
             	mProxyTarget = new ProxyTarget(targetServerId, atoken, req);
                 mIsProxyRequest = mProxyTarget != null && !mProxyTarget.isTargetLocal();
             } else
-                mLog.warn("Missing SERVLET_REQUEST key in request context");
+                sLog.warn("Missing SERVLET_REQUEST key in request context");
         }
 
-        mSessionSuppressed = ctxt == null ? false : ctxt.getOptionalElement(E_NO_SESSION) != null;
-        if (mAuthTokenAccountId != null && !mSessionSuppressed) {
-			String sessionStr = ctxt == null ? null : ctxt.getAttribute(E_SESSION_ID, null);
-			if (sessionStr != null) {
-			    Long sid = new Long(sessionStr);
-                Session s = SessionCache.getInstance().lookup(sid, mAuthTokenAccountId);
-                if (s instanceof SoapSession)
-                	mSession = (SoapSession) s;
-			}
-			if (mSession == null) {
-			    mSession = (SoapSession) SessionCache.getInstance().getNewSession(mAuthTokenAccountId, SessionCache.SESSION_SOAP);
-			    mHasNewSessionId = true;
-			}
-            if (mSession != null && ctxt != null && ctxt.getOptionalElement(E_NO_NOTIFY) != null)
-                mSession.haltNotifications();
-		}
+        // record session-related info and validate any specified sessions
+        //   (don't create new sessions yet)
+        if (ctxt != null) {
+            mHaltNotifications = ctxt.getOptionalElement(E_NO_NOTIFY) != null;
+            for (Iterator it = ctxt.elementIterator(E_SESSION_ID); it.hasNext(); ) {
+                // they specified it, so create a SessionInfo and thereby ping the session as a keepalive
+                parseSessionElement((Element) it.next());
+            }
+            mSessionSuppressed = ctxt.getOptionalElement(E_NO_SESSION) != null;
+        }
     }
 
+    /** Parses a <code>&lt;sessionId></code> {@link Element} from the SOAP Header.<p>
+     * 
+     *  If the XML specifies a valid {@link Session} owned by the authenticted user,
+     *  a {@link SessionInfo} object wrapping the appropriate Session is added to the
+     *  {@link #mSessionInfo} list.
+     * 
+     * @param elt  The <code>&lt;sessionId></code> Element. */
+    private void parseSessionElement(Element elt) {
+        if (elt == null)
+            return;
+
+        String sessionId = null;
+        if ("".equals(sessionId = elt.getTextTrim()))
+            sessionId = elt.getAttribute(A_ID, null);
+        if (sessionId == null)
+            return;
+
+        // actually fetch the session from the cache
+        Session session = SessionCache.getInstance().lookup(sessionId, getAuthtokenAccountId());
+        if (session == null) {
+            sLog.info("requested session no longer exists: " + sessionId);
+            return;
+        }
+        try {
+            // turn off notifications if so directed
+            if (session.getSessionType() == SessionCache.SESSION_SOAP)
+                if (mHaltNotifications || !elt.getAttributeBool(A_NOTIFY, true))
+                    ((SoapSession) session).haltNotifications();
+        } catch (ServiceException e) { }
+
+        mSessionInfo.add(new SessionInfo(session));
+    }
+
+    public String toString() {
+        String sessionPart = "";
+        if (!mSessionSuppressed)
+            sessionPart = ", sessions=" + mSessionInfo;
+        return "LC(mbox=" + mAuthTokenAccountId + sessionPart + ")";
+    }
+
+    /** Generates a new {@link com.zimbra.cs.mailbox.Mailbox.OperationContext}
+     *  object reflecting the constraints serialized in the <code>&lt;context></code>
+     *  element in the SOAP header.<p>
+     * 
+     *  These optional constraints include:<ul>
+     *  <li>the account ID from the auth token</li>
+     *  <li>the highest change number the client knows about</li>
+     *  <li>how stringently to check accessed items against the known change
+     *      highwater mark</li></ul>
+     * 
+     * @return A new OperationContext object */
     public OperationContext getOperationContext() throws ServiceException {
         OperationContext octxt = new OperationContext(mAuthTokenAccountId);
         octxt.setChangeConstraint(mChangeConstraintType, mMaximumChangeId);
         return octxt;
     }
 
-	/**
-	 * @return the account id the request is supposed to operate on. If accountId is not present in the context, use
-	 * the account id in the auth token.
-	 */
+	/** @return the account id the request is supposed to operate on.
+     *  If accountId is not present in the context, use the account id in the auth token. */
 	public String getRequestedAccountId() {
-	    if (mRequestedAccountId != null)
-	        return mRequestedAccountId;
-	    else
-	        return mAuthTokenAccountId;
+	    return (mRequestedAccountId != null ? mRequestedAccountId : mAuthTokenAccountId);
 	} 
 
-    /**
-     * @return always returns the account in the auth token. Should normally use getRequestAccountId.
-     */
+    /** @return always returns the account in the auth token.  (should normally use getRequestAccountId) */
     public String getAuthtokenAccountId() {
         return mAuthTokenAccountId;
     } 
 
-	/**
-	 * @return true if the session ID is changed, and therefore has to be sent to the client
-	 */
-	public boolean hasNewSessionId() { return mHasNewSessionId; };
+    /** Gets an existing valid {@link SessionInfo} item of the specified type.<p>
+     * 
+     *  SessionInfo objects correspond to either:<ul>
+     *  <li>existing, unexpired sessions specified in a <code>&lt;sessionId></code>
+     *      element in the <code>&lt;context></code> SOAP header block, or</li>
+     *  <li>new sessions created during the course of the SOAP call</li></ul>
+     * 
+     * @param type  One of the types defined in the {@link SessionCache} class.
+     * @return A matching SessionInfo object or <code>null</code>. */
+    private SessionInfo findSessionInfo(int type) {
+        for (Iterator it = mSessionInfo.iterator(); it.hasNext(); ) {
+            SessionInfo sinfo = (SessionInfo) it.next();
+            if (sinfo.session.getSessionType() == type)
+                return sinfo;
+        }
+        return null;
+    }
 
-    /**
-     * @return true if <code>&lt;nosession/&gt;</code> was specified in the request context
-     */
-    public boolean sessionSuppressed() { return mSessionSuppressed; };
+    /** Creates a new {@link Session} object associated with the given account.<p>
+     * 
+     *  As a side effect, the specfied account is considered to be authenticated.
+     *  If that causes the "authenticated id" to change, we forget about all other
+     *  sessions.  Those sessions are not deleted from the cache, though perhaps
+     *  that's the right thing to do...
+     * 
+     * @param accountId  The account ID to create the new session for.
+     * @param type       One of the types defined in the {@link SessionCache} class.
+     * @return A new Session object of the appropriate type. */
+    public Session getNewSession(String accountId, int type) {
+        if (accountId != null && !accountId.equals(mAuthTokenAccountId))
+            mSessionInfo.clear();
+        mAuthTokenAccountId = accountId;
+        return getSession(type);
+    }
 
-    public String getSessionIdStr() { return mSession != null ? mSession.getSessionId().toString() : null; } 
-	
-	public SoapSession getSession() { return mSession; }
-	
-	private ZimbraContext() {
-	}
+    /** Gets a {@link Session} object of the specified type.<p>
+     * 
+     *  If such a Session was mentioned in a <code>sessionId</code> element
+     *  of the <code>context</code> SOAP header, the first matching one is
+     *  returned.  Otherwise, we create a new Session and return it.  However,
+     *  if <code>&lt;nosession></code> was specified in the <code>&lt;context></code>
+     *  SOAP header, new Sessions are not created.
+     * 
+     * @param type  One of the types defined in the {@link SessionCache} class.
+     * @return A new or existing Session object, or <code>null</code> if
+     *         <code>&lt;nosession></code> was specified. */
+	public Session getSession(int type) {
+        Session s = null;
+        SessionInfo sinfo = findSessionInfo(type);
+        if (sinfo != null)
+            s = sinfo.session;
+        if (s == null && !mSessionSuppressed) {
+            SessionCache scache = SessionCache.getInstance();
+            s = scache.getNewSession(mAuthTokenAccountId, type);
+            mSessionInfo.add(sinfo = new SessionInfo(s, true));
+        }
+        if (s instanceof SoapSession && mHaltNotifications)
+            ((SoapSession) s).haltNotifications();
+        return s;
+    }
 
-	public Element newSessionResponse(boolean includeRefreshBlock) {
-        assert(mAuthToken != null && mSession != null);
-	    Element ctxt = toResponseCtxt(mResponseProtocol, null, mSession.getSessionId().toString());
+    /** Creates a <code>&lt;context></code> element for the SOAP Header containing
+     *  session information and change notifications.<p>
+     * 
+     *  Sessions -- those passed in the SOAP request <code>&lt;context></code>
+     *  block and those created during the course of processing the request -- are
+     *  listed:<p>
+     *     <code>&lt;sessionId [type="admin"] id="12">12&lt;/sessionId></code>
+     * 
+     * @return A new <code>&lt;context></code> {@link Element}, or <code>null</code>
+     *         if there is no relevant information to encapsulate. */
+    Element generateResponseHeader() {
+        Element ctxt = null;
         try {
-            if (includeRefreshBlock)
-                mSession.putRefresh(ctxt);
+            for (Iterator it = mSessionInfo.iterator(); it.hasNext(); ) {
+                SessionInfo sinfo = (SessionInfo) it.next();
+                Session session = sinfo.session;
+                if (ctxt == null)
+                    ctxt = createElement(CONTEXT);
+
+                // session ID is valid, so ping it back to the client:
+                //   <sessionId [type="admin"] id="12">12</sessionId>
+                String sessionType = null;
+                if (session.getSessionType() == SessionCache.SESSION_ADMIN)
+                    sessionType = SESSION_ADMIN;
+                ctxt.addElement(E_SESSION_ID).addAttribute(A_TYPE, sessionType)
+                    .addAttribute(A_ID, session.getSessionId()).setText(session.getSessionId());
+                // put <refresh> blocks back for any newly-created SoapSession objects
+                if (sinfo.created && session instanceof SoapSession)
+                    ((SoapSession) session).putRefresh(ctxt);
+                // put <notify> blocks back for any SoapSession objects
+                if (session instanceof SoapSession)
+                    ((SoapSession) session).putNotifications(this, ctxt);
+            }
+//            if (ctxt != null && mAuthToken != null)
+//                ctxt.addAttribute(E_AUTH_TOKEN, mAuthToken.toString(), Element.DISP_CONTENT);
             return ctxt;
         } catch (ServiceException e) {
-            mLog.info("ServiceException while putting soap session refresh data", e);
+            sLog.info("ServiceException while putting soap session refresh data", e);
             return null;
         }
 	}
 
-    /**
-     * Creates a SOAP request context.  All requests except Auth and a few
-     * others must specify an auth token.
+    /** Creates a SOAP request <code>&lt;context></code> {@link Element}.<p>
      * 
-     * By default server will create a session for the client unless a valid
-     * sessionId is specified referring to an existing session.  If noSession
-     * is true, server will not create a session, and any sessionId specified
-     * will be ignored.  sessionId is also ignored when no auth token is
-     * present.
+     *  All requests except Auth and a few others must specify an auth token.
+     *  If noSession is true, the server will not create a session and any
+     *  sessionId specified will be ignored.
      * 
-     * By default a session has change notification enabled.  Passing true for
-     * noNotify disables notification for the specified session.  noNotify is
-     * meaningless when no session is specified.
-     * 
-     * @param authToken
-     * @param noSession if true, don't create/use session
-     * @param sessionId used iff noSession == false
-     * @param noNotify if true, don't do notification for this session
-     *                 used iff noSession == false
-     * @return
-     */
-	static Element toCtxt(SoapProtocol protocol,
-                          String authToken,
-                          boolean noSession,
-                          String sessionId,
-                          boolean noNotify)  {
+     * @param protocol   The markup to use when creating the <code>context</code>.
+     * @param authToken  The serialized authorization token for the user.
+     * @param noSession  Whether to suppress the default new session creation.
+     * @return A new <code>context</code> Element in the appropriate markup. */
+	static Element toCtxt(SoapProtocol protocol, String authToken, boolean noSession) {
 		Element ctxt = protocol.getFactory().createElement(CONTEXT);
 		if (authToken != null)
 			ctxt.addAttribute(E_AUTH_TOKEN, authToken, com.zimbra.cs.service.Element.DISP_CONTENT);
-
         if (noSession)
             ctxt.addUniqueElement(E_NO_SESSION);
-        else {
-            if (sessionId != null && authToken != null)
-                ctxt.addAttribute(E_SESSION_ID, sessionId, Element.DISP_CONTENT);
-            if (noNotify)
-                ctxt.addUniqueElement(E_NO_NOTIFY);
-        }
-
-		//if (mMailboxId != UNSPECIFIED_MAILBOX_ID)
-		//	DomUtil.add(ctxt, E_ACCOUNT, mMailboxId);
 		return ctxt;
 	}
+
+    /** Adds session information to a <code>&lt;context></code> {@link Element}
+     *  created by a call to {@link #toCtxt}.  By default, the server creates
+     *  a session for the client unless a valid sessionId is specified referring
+     *  to an existing session.<p>
+     * 
+     *  By default, all sessions have change notification enabled.  Passing true
+     *  for noNotify disables notification for the specified session.<p>
+     * 
+     *  No changes to the context occur if no auth token is present.
+     * @param ctxt       A <code>&lt;context></code> Element as created by toCtxt.
+     * @param sessionId  The ID of the session to add to the <code>&lt;context></code>
+     * @param noNotify   Whether to suppress notification on the session from here out.
+     * 
+     * @return The passed-in <code>&lt;context></code> Element.
+     * @see #toCtxt */
+    static Element addSessionToCtxt(Element ctxt, String sessionId, boolean noNotify) {
+        if (ctxt == null || sessionId == null || sessionId.trim().equals(""))
+            return ctxt;
+        if (ctxt.getAttribute(E_AUTH_TOKEN, null) == null)
+            return ctxt;
+
+        Element eSession = ctxt.addElement(E_SESSION_ID).addAttribute(A_ID, sessionId)
+                               .setText(sessionId);
+        if (noNotify)
+            eSession.addAttribute(A_NOTIFY, false);
+        return ctxt;
+    }
+
+    /** Creates a SOAP request <code>&lt;context></code> {@link Element} with
+     *  an associated session.  (All requests except Auth and a few others must
+     *  specify an auth token.)
+     * 
+     * @param protocol   The markup to use when creating the <code>context</code>.
+     * @param authToken  The serialized authorization token for the user.
+     * @param sessionId  The ID of the session to add to the <code>context</code>.
+     * @return A new <code>context</code> Element in the appropriate markup.
+     * @see #toCtxt(SoapProtocol, String, boolean) */
+    public static Element toCtxt(SoapProtocol protocol, String authToken, String sessionId) {
+    	Element ctxt = toCtxt(protocol, authToken, false);
+        return addSessionToCtxt(ctxt, sessionId, false);
+    }
 
     public Element createElement(String name)  { return mResponseProtocol.getFactory().createElement(name); }
     public Element createElement(QName qname)  { return mResponseProtocol.getFactory().createElement(qname); }
     public SoapProtocol getResponseProtocol()  { return mResponseProtocol; }
 
-    /**
-     * Creates a SOAP request context that uses an existing session.
-     * Notification is enabled for the session.
-     * @param authToken
-     * @param sessionId
-     * @return
-     */
-    public static Element toCtxt(SoapProtocol protocol, String authToken, String sessionId) {
-    	return toCtxt(protocol, authToken, false, sessionId, false);
-    }
-
-    /**
-     * Creates a SOAP request context that asks the server not to create a
-     * session.  This is appropriate for one-shot requests.
-     * @param authToken
-     * @return
-     */
-    public static Element toCtxtWithoutSession(SoapProtocol protocol, String authToken) {
-    	return toCtxt(protocol, authToken, true, null, false);
-    }
-
-    /**
-     * Creates a SOAP request context that uses an existing session.
-     * Disable notification for the session.
-     * @param authToken
-     * @param sessionId
-     * @return
-     */
-    public static Element toCtxtWithoutNotify(SoapProtocol protocol, String authToken, String sessionId) {
-    	return toCtxt(protocol, authToken, false, sessionId, true);
-    }
-
-    /**
-     * Creates a &lt;context&gt; element to be used in SOAP response header.
-     * @param authToken
-     * @param sessionId
-     * @return
-     */
-    private static Element toResponseCtxt(SoapProtocol protocol, String authToken, String sessionId) {
-    	Element ctxt = protocol.getFactory().createElement(CONTEXT);
-        if (authToken != null)
-            ctxt.addAttribute(E_AUTH_TOKEN, authToken, Element.DISP_CONTENT);
-        if (sessionId != null)
-            ctxt.addAttribute(E_SESSION_ID, sessionId, Element.DISP_CONTENT);
-        return ctxt;
-    }
-	
-	public AuthToken getAuthToken() {
+    /** Returns the {@link AuthToken} for this SOAP request.
+     * 
+     * @return The parsed AuthToken object for the auth token, either from a cookie
+     *         in the SOAP request or from an <code>&lt;authToken></code> element
+     *         in the SOAP header. */
+    public AuthToken getAuthToken() {
 		return mAuthToken;
 	}
 

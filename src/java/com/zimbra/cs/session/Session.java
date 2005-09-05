@@ -35,21 +35,27 @@ import com.zimbra.cs.util.StringUtil;
 
 public abstract class Session {
     protected String mAccountId;
-    private   Object mContextId;
+    private   String mSessionId;
+    private   int    mSessionType;
     private   long   mLastAccessed;
 
     /**
      * Implementation of the Session interface
      */
-    public Session(String accountId, Object contextId) {
+    public Session(String accountId, String sessionId, int type) {
         mAccountId = accountId;
-        mContextId = contextId;
+        mSessionId = sessionId;
+        mSessionType = type;
         updateAccessTime();
         SessionCache.getInstance().mapAccountToSession(accountId, this);
     }
 
-    public Object getSessionId() { 
-        return mContextId;
+    public String getSessionId() { 
+        return mSessionId;
+    }
+
+    public int getSessionType() {
+        return mSessionType;
     }
 
     public boolean validateAccountId(String accountId) {
@@ -95,6 +101,6 @@ public abstract class Session {
     public String toString() {
         String dateString = sDateFormat.format(new Date(mLastAccessed));
         return StringUtil.getSimpleClassName(this) + ": {accountId: " + mAccountId +
-            ", contextId: " + mContextId + ", lastAccessed: " + dateString + "}";
+            ", contextId: " + mSessionId + ", lastAccessed: " + dateString + "}";
     }
 }

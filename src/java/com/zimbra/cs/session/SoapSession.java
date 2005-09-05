@@ -67,8 +67,8 @@ public class SoapSession extends Session {
     private PendingModifications mChanges = new PendingModifications();
 
 
-    SoapSession(String accountId, Object contextId) {
-        super(accountId, contextId);
+    SoapSession(String accountId, String contextId) {
+        super(accountId, contextId, SessionCache.SESSION_SOAP);
     }
 
     public void haltNotifications() {
@@ -183,11 +183,11 @@ public class SoapSession extends Session {
 
     /** Serializes cached notifications to a SOAP response header.
      *  <p>
-     *  Adds a &lt;notify> block to an existing &lt;context> element, creating an
-     *  enclosing <context> element if none is passed in.  This &lt;notify> block
-     *  contains information about all items deleted, created, or modified in
-     *  the {@link Mailbox} since the last client interaction, without regard to the
-     *  client's state/views.
+     *  Adds a <code>&lt;notify></code> block to an existing <code>&lt;context></code>
+     *  element, creating an enclosing <code>&lt;context></code> element if none
+     *  is passed in.  This <code>&lt;notify></code> block contains information
+     *  about all items deleted, created, or modified in the {@link Mailbox} since
+     *  the last client interaction, without regard to the client's state/views.
      *  <p>
      *  For deleted items, only the item IDs are returned.  For created items, the
      *  entire item is serialized.  For modified items, only the modified attributes
@@ -214,28 +214,34 @@ public class SoapSession extends Session {
      *  <p>
      * @param lc    The SOAP request context from the client's request
      * @param ctxt  An existing SOAP header &lt;context> element
-     * @return the <context> element (automatically created if ctxt was null) */
+     * @return The passed-in <code>&lt;context></code> element */
     public Element putNotifications(ZimbraContext lc, Element ctxt) {
         if (ctxt == null)
-            ctxt = lc.createElement(ZimbraContext.CONTEXT);
+            return null;
 
         Mailbox mbox;
         try {
-            mbox = Mailbox.getMailboxByAccountId(lc.getRequestedAccountId());
+            mbox = Mailbox.getMailboxByAccountId(getAccountId());
         } catch (ServiceException e) {
-            mLog.warn("error fetching mailbox for account " + lc.getRequestedAccountId(), e);
+            mLog.warn("error fetching mailbox for account " + getAccountId(), e);
             return ctxt;
         }
+        String explicitAcct = getAccountId().equals(lc.getAuthtokenAccountId()) ? null : getAccountId();
 
         // must lock the Mailbox before locking the Session to avoid deadlock
         //   because ToXML functions can now call back into the Mailbox
         synchronized (mbox) {
             synchronized (this) {
-                ctxt.addUniqueElement(ZimbraContext.E_CHANGE).addAttribute(ZimbraContext.A_CHANGE_ID, mbox.getLastChangeID());
+                // <change token="555" [acct="4f778920-1a84-11da-b804-6b188d2a20c4"]/>
+                ctxt.addUniqueElement(ZimbraContext.E_CHANGE)
+                    .addAttribute(ZimbraContext.A_CHANGE_ID, mbox.getLastChangeID())
+                    .addAttribute(ZimbraContext.A_ACCOUNT_ID, explicitAcct);
                 if (!mNotify || !mChanges.hasNotifications())
                     return ctxt;
 
-                Element eNotify = ctxt.addUniqueElement(E_NOTIFY);
+                // <notify [acct="4f778920-1a84-11da-b804-6b188d2a20c4"]/>
+                Element eNotify = ctxt.addUniqueElement(E_NOTIFY)
+                                      .addAttribute(ZimbraContext.A_ACCOUNT_ID, explicitAcct);
 
                 if (mChanges.deleted != null && mChanges.deleted.size() > 0) {
                     StringBuffer ids = new StringBuffer();

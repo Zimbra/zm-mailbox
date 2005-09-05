@@ -25,23 +25,17 @@
 
 /*
  * Created on Oct 4, 2004
- *
- * TODO To change the template for this generated file go to
- * Window - Preferences - Java - Code Style - Code Templates
  */
 package com.zimbra.cs.service.admin;
 
 import java.util.Map;
 
+import com.zimbra.cs.session.Session;
+import com.zimbra.cs.session.SessionCache;
 import com.zimbra.soap.DocumentHandler;
 
 
-/**
- * @author schemers
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Style - Code Templates
- */
+/** @author schemers */
 public abstract class AdminDocumentHandler extends DocumentHandler {
 
     public boolean needsAuth(Map context) {
@@ -52,4 +46,10 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
         return true;
     }
 
+    /** Fetches the in-memory {@link Session} object appropriate for this request.
+     *  If none already exists, one is created.
+     * @return An {@link com.zimbra.cs.session.AdminSession}. */
+    public Session getSession(Map context) {
+        return getSession(context, SessionCache.SESSION_ADMIN);
+    }
 }

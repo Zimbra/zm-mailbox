@@ -103,7 +103,9 @@ public abstract class SoapTransport {
     	if (raw)
     		return SoapProtocol.toString(document, mPrettyPrint);
 
-        Element context = ZimbraContext.toCtxt(mSoapProto, mAuthToken, noSession, mSessionId, noNotify);
+        Element context = ZimbraContext.toCtxt(mSoapProto, mAuthToken, noSession);
+        ZimbraContext.addSessionToCtxt(context, mSessionId, noNotify);
+
         Element envelope = mSoapProto.soapEnvelope(document, context);
         String soapMessage = SoapProtocol.toString(envelope, getPrettyPrint());
     	return soapMessage;

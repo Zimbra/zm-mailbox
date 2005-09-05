@@ -58,6 +58,7 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.soap.DocumentHandler;
@@ -79,7 +80,7 @@ public class Search extends DocumentHandler  {
         
         try {
             ZimbraContext lc = getZimbraContext(context);
-            SoapSession session = lc.getSession();
+            SoapSession session = (SoapSession) lc.getSession(SessionCache.SESSION_SOAP);
             Mailbox mbox = getRequestedMailbox(lc);
             OperationContext octxt = lc.getOperationContext();
 

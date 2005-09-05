@@ -32,7 +32,6 @@ import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.admin.AdminDocumentHandler;
-import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraLog;
@@ -44,6 +43,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Iterator;
 import java.util.Map;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.dom4j.DocumentException;
@@ -55,9 +55,6 @@ import org.dom4j.DocumentException;
 public class SoapEngine {
 
     public static final String ZIMBRA_CONTEXT = "zimbra.context";
-    public static final String DONT_CREATE_SESSION = "zimbra.noSession";
-    public static final String IS_AUTH_COMMAND = "zimbra.isAuthCommand";
-    private static final String IS_ADMIN_COMMAND = "zimbra.isAdminCommand";
 
     /** context name of request IP */
     public static final String REQUEST_IP = "request.ip";
@@ -93,19 +90,17 @@ public class SoapEngine {
      * @return an XmlObject which is a SoapEnvelope containing the response
      *         
      */
-    private Element dispatch(String path, Element envelope, Map context)
-    {
-    	//if (mLog.isDebugEnabled()) mLog.debug("dispatch(path, envelope, context: "+envelope.getQualifiedName());
+    private Element dispatch(String path, Element envelope, Map context) {
+    	// if (mLog.isDebugEnabled()) mLog.debug("dispatch(path, envelope, context: " + envelope.getQualifiedName());
     	
         SoapProtocol soapProto = SoapProtocol.determineProtocol(envelope);
-
         if (soapProto == null) {
             // FIXME: have to pick 1.1 or 1.2 since we can't parse any
             soapProto = SoapProtocol.Soap12;
             return soapProto.soapEnvelope(soapProto.soapFault(ServiceException.INVALID_REQUEST("unable to determine SOAP version", null)));
         }
 
-        //if (mLog.isDebugEnabled()) mLog.debug("dispatch: soapProto = "+soapProto.getVersion());
+        // if (mLog.isDebugEnabled()) mLog.debug("dispatch: soapProto = " + soapProto.getVersion());
 
         ZimbraContext zimbraContext = null;
         Element ectxt = soapProto.getHeader(envelope, ZimbraContext.CONTEXT);
@@ -115,9 +110,6 @@ public class SoapEngine {
             return soapProto.soapEnvelope(soapProto.soapFault(e));
         }
         SoapProtocol responseProto = zimbraContext.getResponseProtocol();
-
-        if (zimbraContext.sessionSuppressed())
-        	context.put(DONT_CREATE_SESSION, "1");
 
         ZimbraLog.clearContext();
         try {
@@ -142,11 +134,11 @@ public class SoapEngine {
 
             if (mLog.isDebugEnabled())
                 mLog.debug("dispatch: doc " + doc.getQualifiedName());
-        
+
             Element responseBody = null;
             if (!zimbraContext.isProxyRequest()) {
                 if (doc.getQName().equals(ZimbraNamespace.E_BATCH_REQUEST)) {
-                    
+
                     boolean contOnError = doc.getAttribute(ZimbraNamespace.A_ONERROR,
                                 ZimbraNamespace.DEF_ONERROR).equals("continue");
             	        responseBody = zimbraContext.createElement(ZimbraNamespace.E_BATCH_RESPONSE);
@@ -195,19 +187,9 @@ public class SoapEngine {
                 }
             }
 
-            // handle refresh block and notifications
-            Element responseHeader = null;
-            if (context.get(IS_AUTH_COMMAND) == null) {
-                // Add refresh block in first response of a new session.
-                if (zimbraContext.hasNewSessionId()) {
-                    boolean includeRefresh = context.get(IS_ADMIN_COMMAND) == null;
-                    responseHeader = zimbraContext.newSessionResponse(includeRefresh);
-                }
-                // Add any pending notifications.
-                SoapSession s = zimbraContext.getSession();
-                if (s != null)
-                    responseHeader = s.putNotifications(zimbraContext, responseHeader);
-            }
+            // put notifications (new sessions and incremental change notifications)
+            Element responseHeader = zimbraContext.generateResponseHeader();
+
             return responseProto.soapEnvelope(responseBody, responseHeader);
         } finally {
             ZimbraLog.clearContext();
@@ -237,14 +219,9 @@ public class SoapEngine {
         if (RedoLogProvider.getInstance().isSlave() && !handler.isReadOnly())
             return soapProto.soapFault(ServiceException.NON_READONLY_OPERATION_DENIED());
 
-        if (handler instanceof AdminDocumentHandler) {
-            // cheesy way to tell caller we're dealing with an admin command
-            context.put(IS_ADMIN_COMMAND, "1");
-        } else {
-            if (!Config.userServicesEnabled())
-                return soapProto.soapFault(ServiceException.TEMPORARILY_UNAVAILABLE());
-        }
-        
+        if (!Config.userServicesEnabled() && !(handler instanceof AdminDocumentHandler))
+            return soapProto.soapFault(ServiceException.TEMPORARILY_UNAVAILABLE());
+
         boolean needsAuth = handler.needsAuth(context);
         boolean needsAdminAuth = handler.needsAdminAuth(context);
         if (needsAuth || needsAdminAuth) {
@@ -269,6 +246,8 @@ public class SoapEngine {
         Element response;
         try {
             response = handler.handle(doc, context);
+            // fault in a session for this handler after executing the command
+            handler.getSession(context);
         } catch (ServiceException e) {
             response = soapProto.soapFault(e);
             if (mLog.isDebugEnabled()) {
