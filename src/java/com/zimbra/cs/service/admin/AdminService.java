@@ -215,7 +215,6 @@ public class AdminService implements DocumentService {
 	public static final String E_MAILBOX = "mbox";
 	public static final String E_NUM_OF_PAGES = "numpages";
     public static final String E_VOLUME = "volume";
-    public static final String E_CURRENT_VOLUME = "currvol";
 	
     public static final String A_APPLY_CONFIG = "applyConfig";
     public static final String A_APPLY_COS = "applyCos";
@@ -251,6 +250,12 @@ public class AdminService implements DocumentService {
     public static final String A_DURATION = "duration";
 
     public static final String A_VOLUME_TYPE = "type";
+    public static final String A_VOLUME_NAME = "name";
+    public static final String A_VOLUME_ROOTPATH = "rootpath";
+    public static final String A_VOLUME_MGBITS = "mgbits";
+    public static final String A_VOLUME_MBITS = "mbits";
+    public static final String A_VOLUME_FGBITS = "fgbits";
+    public static final String A_VOLUME_FBITS = "fbits";
     public static final String A_VOLUME_DELETE_FILES = "deleteFiles";
 
 	public static final String ADMIN_URI = "https://localhost:7071/";

@@ -718,14 +718,7 @@ notes:
 -----------------------------------
 
 <CreateVolumeRequest>
-  <volume>
-    <a n="name">...</a>
-    <a n="rootPath">...</a>
-    <a n="mgbits">...</a>
-    <a n="mbits">...</a>
-    <a n="fgbits">...</a>
-    <a n="fbits">...</a>
-  </volume>
+  <volume type="..." name="..." rootPath="..." mgbits="..." mbits="..." fgbits="..." fbits="..."/>
 </CreateVolumeRequest>
 
 <CreateVolumeResponse>
@@ -751,15 +744,7 @@ Notes:
 <GetVolumeRequest id="{id}"/>
 
 <GetVolumeResponse>
-  <volume id="{id}">
-    <a n="type">...</a>
-    <a n="name">...</a>
-    <a n="rootpath">...</a>
-    <a n="mgbits">...</a>
-    <a n="mbits">...</a>
-    <a n="fgbits">...</a>
-    <a n="fbits">...</a>
-  </volume>
+  <volume id="{id}" type="..." name="..." rootPath="..." mgbits="..." mbits="..." fgbits="..." fbits="..."/>
 </GetVolumeResponse>
 
 -----------------------------
@@ -773,9 +758,7 @@ Notes:
 -----------------------------
 
 <ModifyVolumeRequest id="{id}">
-  <volume>
-  	<a n="...">...</a>+
-  </volume>
+  <volume [type="..."] [name="..."] [rootPath="..."] [mgbits="..."] [mbits="..."] [fgbits="..."] [fbits="..."]/>
 </ModifyVolumeRequest>
 
 <ModifyVolumeResponse/>
@@ -796,9 +779,9 @@ Notes:
 <GetCurrentVolumesRequest/>
 
 <GetCurrentVolumesResponse>
-  <currvol type="1" id="{id}"/>
-  [<currvol type="2" id="{id}"/>]  <!-- optional -->
-  <currvol type="10" id="{id}"/>
+  <volume type="1" id="{id}"/>
+  [<volume type="2" id="{id}"/>]  <!-- optional -->
+  <volume type="10" id="{id}"/>
 </GetCurrentVolumesResponse>
 
 -----------------------------

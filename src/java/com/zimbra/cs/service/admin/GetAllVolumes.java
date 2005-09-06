@@ -36,9 +36,9 @@ import com.zimbra.soap.ZimbraContext;
 
 public class GetAllVolumes extends AdminDocumentHandler {
 
-    public Element handle(Element request, Map context)
-            throws ServiceException {
+    public Element handle(Element request, Map context) throws ServiceException {
         ZimbraContext lc = getZimbraContext(context);
+
         List vols = Volume.getAll();
         Element response = lc.createElement(AdminService.GET_ALL_VOLUMES_RESPONSE);
         for (Iterator it = vols.iterator(); it.hasNext(); )

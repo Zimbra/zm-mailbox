@@ -34,13 +34,15 @@ import com.zimbra.soap.ZimbraContext;
 
 public class DeleteVolume extends AdminDocumentHandler {
 
-    public Element handle(Element request, Map context)
-            throws ServiceException {
+    public Element handle(Element request, Map context) throws ServiceException {
         ZimbraContext lc = getZimbraContext(context);
+
         short id = (short) request.getAttributeLong(AdminService.A_ID);
         boolean deleteFiles = request.getAttributeBool(AdminService.A_VOLUME_DELETE_FILES, false);
-        Volume vol = Volume.getById(id);
+        // make sure the volume exists vefore doing anything heavyweight...
+        Volume.getById(id);
         Volume.delete(id, deleteFiles);
+
         Element response = lc.createElement(AdminService.DELETE_VOLUME_RESPONSE);
         return response;
     }

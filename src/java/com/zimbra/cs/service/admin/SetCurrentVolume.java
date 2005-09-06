@@ -34,15 +34,13 @@ import com.zimbra.soap.ZimbraContext;
 
 public class SetCurrentVolume extends AdminDocumentHandler {
 
-    public Element handle(Element request, Map context)
-            throws ServiceException {
+    public Element handle(Element request, Map context) throws ServiceException {
         ZimbraContext lc = getZimbraContext(context);
+
         short volType = (short) request.getAttributeLong(AdminService.A_VOLUME_TYPE);
-        short id = Volume.ID_NONE;
-        String idAttr = request.getAttribute(AdminService.A_ID, null);
-        if (idAttr != null && idAttr.length() > 0)
-            id = (short) request.getAttributeLong(AdminService.A_ID);
+        short id = (short) request.getAttributeLong(AdminService.A_ID, Volume.ID_NONE);
         Volume.setCurrentVolume(volType, id);
+
         Element response = lc.createElement(AdminService.SET_CURRENT_VOLUME_RESPONSE);
         return response;
     }

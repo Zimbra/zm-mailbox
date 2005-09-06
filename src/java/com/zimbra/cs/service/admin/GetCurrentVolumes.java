@@ -28,34 +28,31 @@ package com.zimbra.cs.service.admin;
 import java.util.Map;
 
 import com.zimbra.cs.service.Element;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.store.Volume;
 import com.zimbra.soap.ZimbraContext;
 
 public class GetCurrentVolumes extends AdminDocumentHandler {
 
-    public Element handle(Element request, Map context)
-            throws ServiceException {
+    public Element handle(Element request, Map context) {
         ZimbraContext lc = getZimbraContext(context);
 
         Element response = lc.createElement(AdminService.GET_CURRENT_VOLUMES_RESPONSE);
 
         Volume msgVol = Volume.getCurrentMessageVolume();
-        Element eMsgVol = response.addElement(AdminService.E_CURRENT_VOLUME);
-        eMsgVol.addAttribute(AdminService.A_VOLUME_TYPE, Volume.TYPE_MESSAGE);
-        eMsgVol.addAttribute(AdminService.A_ID, msgVol.getId());
+        response.addElement(AdminService.E_VOLUME)
+                .addAttribute(AdminService.A_VOLUME_TYPE, Volume.TYPE_MESSAGE)
+                .addAttribute(AdminService.A_ID, msgVol.getId());
 
         Volume secondaryMsgVol = Volume.getCurrentSecondaryMessageVolume();
-        if (secondaryMsgVol != null) {
-            Element eSecondaryMsgVol = response.addElement(AdminService.E_CURRENT_VOLUME);
-            eSecondaryMsgVol.addAttribute(AdminService.A_VOLUME_TYPE, Volume.TYPE_MESSAGE_SECONDARY);
-            eSecondaryMsgVol.addAttribute(AdminService.A_ID, secondaryMsgVol.getId());
-        }
+        if (secondaryMsgVol != null) 
+            response.addElement(AdminService.E_VOLUME)
+                    .addAttribute(AdminService.A_VOLUME_TYPE, Volume.TYPE_MESSAGE_SECONDARY)
+                    .addAttribute(AdminService.A_ID, secondaryMsgVol.getId());
 
         Volume indexVol = Volume.getCurrentIndexVolume();
-        Element eIndexVol = response.addElement(AdminService.E_CURRENT_VOLUME);
-        eIndexVol.addAttribute(AdminService.A_VOLUME_TYPE, Volume.TYPE_INDEX);
-        eIndexVol.addAttribute(AdminService.A_ID, indexVol.getId());
+        response.addElement(AdminService.E_VOLUME)
+                .addAttribute(AdminService.A_VOLUME_TYPE, Volume.TYPE_INDEX)
+                .addAttribute(AdminService.A_ID, indexVol.getId());
 
         return response;
     }

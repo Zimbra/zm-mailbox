@@ -34,55 +34,25 @@ import com.zimbra.soap.ZimbraContext;
 
 public class GetVolume extends AdminDocumentHandler {
 
-    public static final String A_VOLUME_TYPE = "type";
-    public static final String A_VOLUME_NAME = "name";
-    public static final String A_VOLUME_ROOTPATH = "rootpath";
-    public static final String A_VOLUME_MGBITS = "mgbits";
-    public static final String A_VOLUME_MBITS = "mbits";
-    public static final String A_VOLUME_FGBITS = "fgbits";
-    public static final String A_VOLUME_FBITS = "fbits";
-
-    public Element handle(Element request, Map context)
-            throws ServiceException {
+    public Element handle(Element request, Map context) throws ServiceException {
         ZimbraContext lc = getZimbraContext(context);
         short id = (short) request.getAttributeLong(AdminService.A_ID);
         Volume vol = Volume.getById(id);
+
         Element response = lc.createElement(AdminService.GET_VOLUME_RESPONSE);
         addVolumeElement(response, vol);
         return response;
     }
 
-    public static void addVolumeElement(Element parent, Volume vol)
-    throws ServiceException {
+    static void addVolumeElement(Element parent, Volume vol) {
         Element eVol = parent.addElement(AdminService.E_VOLUME);
         eVol.addAttribute(AdminService.A_ID, vol.getId());
-
-        Element type = eVol.addElement(AdminService.E_A);
-        type.addAttribute(AdminService.A_N, A_VOLUME_TYPE);
-        type.setText(Short.toString(vol.getType()));
-
-        Element name = eVol.addElement(AdminService.E_A);
-        name.addAttribute(AdminService.A_N, A_VOLUME_NAME);
-        name.setText(vol.getName());
-
-        Element path = eVol.addElement(AdminService.E_A);
-        path.addAttribute(AdminService.A_N, A_VOLUME_ROOTPATH);
-        path.setText(vol.getRootPath());
-
-        Element mgbits = eVol.addElement(AdminService.E_A);
-        mgbits.addAttribute(AdminService.A_N, A_VOLUME_MGBITS);
-        mgbits.setText(Short.toString(vol.getMboxGroupBits()));
-
-        Element mbits = eVol.addElement(AdminService.E_A);
-        mbits.addAttribute(AdminService.A_N, A_VOLUME_MBITS);
-        mbits.setText(Short.toString(vol.getMboxBits()));
-
-        Element fgbits = eVol.addElement(AdminService.E_A);
-        fgbits.addAttribute(AdminService.A_N, A_VOLUME_FGBITS);
-        fgbits.setText(Short.toString(vol.getFileGroupBits()));
-
-        Element fbits = eVol.addElement(AdminService.E_A);
-        fbits.addAttribute(AdminService.A_N, A_VOLUME_FBITS);
-        fbits.setText(Short.toString(vol.getFileBits()));
+        eVol.addAttribute(AdminService.A_VOLUME_TYPE, vol.getType());
+        eVol.addAttribute(AdminService.A_VOLUME_NAME, vol.getName());
+        eVol.addAttribute(AdminService.A_VOLUME_ROOTPATH, vol.getRootPath());
+        eVol.addAttribute(AdminService.A_VOLUME_MGBITS, vol.getMboxGroupBits());
+        eVol.addAttribute(AdminService.A_VOLUME_MBITS,  vol.getMboxBits());
+        eVol.addAttribute(AdminService.A_VOLUME_FGBITS, vol.getFileGroupBits());
+        eVol.addAttribute(AdminService.A_VOLUME_FBITS,  vol.getFileBits());
     }
 }

@@ -25,7 +25,6 @@
 
 package com.zimbra.cs.service.admin;
 
-import java.util.Iterator;
 import java.util.Map;
 
 import com.zimbra.cs.service.Element;
@@ -35,73 +34,22 @@ import com.zimbra.soap.ZimbraContext;
 
 public class CreateVolume extends AdminDocumentHandler {
 
-    public Element handle(Element request, Map context)
-            throws ServiceException {
+    public Element handle(Element request, Map context) throws ServiceException {
         ZimbraContext lc = getZimbraContext(context);
+
         Element eVol = request.getElement(AdminService.E_VOLUME);
-        Map attrs = AdminService.getAttrs(eVol, true);
-        Volume vol = createFromAttrs(attrs);
+        String name  = eVol.getAttribute(AdminService.A_VOLUME_NAME);
+        String path  = eVol.getAttribute(AdminService.A_VOLUME_ROOTPATH);
+        short type   = (short) eVol.getAttributeLong(AdminService.A_VOLUME_TYPE);
+        short mgbits = (short) eVol.getAttributeLong(AdminService.A_VOLUME_MGBITS);
+        short mbits  = (short) eVol.getAttributeLong(AdminService.A_VOLUME_MBITS);
+        short fgbits = (short) eVol.getAttributeLong(AdminService.A_VOLUME_FGBITS);
+        short fbits  = (short) eVol.getAttributeLong(AdminService.A_VOLUME_FBITS);
+        Volume vol = Volume.create(Volume.ID_AUTO_INCREMENT, type, name,
+                                   path, mgbits, mbits, fgbits, fbits);
+
         Element response = lc.createElement(AdminService.CREATE_VOLUME_RESPONSE);
         GetVolume.addVolumeElement(response, vol);
         return response;
-    }
-
-    private static Volume createFromAttrs( Map attrs)
-    throws ServiceException {
-        short type = -1;
-        String name = null;
-        String path = null;
-        short mgbits = -1;
-        short mbits = -1;
-        short fgbits = -1;
-        short fbits = -1;
-
-        for (Iterator iter = attrs.entrySet().iterator(); iter.hasNext(); ) {
-            Map.Entry entry = (Map.Entry) iter.next();
-            String key = (String) entry.getKey();
-            String value = null;
-            Object val = entry.getValue();
-            if (val instanceof String)
-                value = (String) val;
-            else if (val instanceof String[]) {
-                String[] vals = (String[]) val;
-                if (vals.length >= 1)
-                    value = vals[0];
-            }
-
-            if (key.equals(GetVolume.A_VOLUME_TYPE))
-                type = Short.parseShort(value);
-            if (key.equals(GetVolume.A_VOLUME_NAME))
-                name = value;
-            else if (key.equals(GetVolume.A_VOLUME_ROOTPATH))
-                path = value;
-            else if (key.equals(GetVolume.A_VOLUME_MGBITS))
-                mgbits = Short.parseShort(value);
-            else if (key.equals(GetVolume.A_VOLUME_MBITS))
-                mbits = Short.parseShort(value);
-            else if (key.equals(GetVolume.A_VOLUME_FGBITS))
-                fgbits = Short.parseShort(value);
-            else if (key.equals(GetVolume.A_VOLUME_FBITS))
-                fbits = Short.parseShort(value);
-        }
-
-        if (type == -1)
-            throw ServiceException.INVALID_REQUEST("Missing attribute " + GetVolume.A_VOLUME_TYPE, null);
-        if (name == null)
-            throw ServiceException.INVALID_REQUEST("Missing attribute " + GetVolume.A_VOLUME_NAME, null);
-        if (path == null || path.length() < 1)
-            throw ServiceException.INVALID_REQUEST("Missing attribute " + GetVolume.A_VOLUME_ROOTPATH, null);
-        if (mgbits == -1)
-            throw ServiceException.INVALID_REQUEST("Missing attribute " + GetVolume.A_VOLUME_MGBITS, null);
-        if (mbits == -1)
-            throw ServiceException.INVALID_REQUEST("Missing attribute " + GetVolume.A_VOLUME_MBITS, null);
-        if (fgbits == -1)
-            throw ServiceException.INVALID_REQUEST("Missing attribute " + GetVolume.A_VOLUME_FGBITS, null);
-        if (fbits == -1)
-            throw ServiceException.INVALID_REQUEST("Missing attribute " + GetVolume.A_VOLUME_FBITS, null);
-
-        Volume vol = Volume.create(Volume.ID_AUTO_INCREMENT, type,
-                                   name, path, mgbits, mbits, fgbits, fbits);
-        return vol;
     }
 }

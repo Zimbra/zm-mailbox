@@ -25,7 +25,6 @@
 
 package com.zimbra.cs.service.admin;
 
-import java.util.Iterator;
 import java.util.Map;
 
 import com.zimbra.cs.service.Element;
@@ -35,57 +34,23 @@ import com.zimbra.soap.ZimbraContext;
 
 public class ModifyVolume extends AdminDocumentHandler {
 
-    public Element handle(Element request, Map context)
-            throws ServiceException {
+    public Element handle(Element request, Map context) throws ServiceException {
         ZimbraContext lc = getZimbraContext(context);
+
         short id = (short) request.getAttributeLong(AdminService.A_ID);
         Volume vol = Volume.getById(id);
+
         Element eVol = request.getElement(AdminService.E_VOLUME);
-        Map attrs = AdminService.getAttrs(eVol, true);
-        applyAttrsToVolume(vol, attrs);
+        String name  = eVol.getAttribute(AdminService.A_VOLUME_NAME, vol.getName());
+        String path  = eVol.getAttribute(AdminService.A_VOLUME_ROOTPATH, vol.getRootPath());
+        short type   = (short) eVol.getAttributeLong(AdminService.A_VOLUME_TYPE, vol.getType());
+        short mgbits = (short) eVol.getAttributeLong(AdminService.A_VOLUME_MGBITS, vol.getMboxGroupBits());
+        short mbits  = (short) eVol.getAttributeLong(AdminService.A_VOLUME_MBITS,  vol.getMboxBits());
+        short fgbits = (short) eVol.getAttributeLong(AdminService.A_VOLUME_FGBITS, vol.getFileGroupBits());
+        short fbits  = (short) eVol.getAttributeLong(AdminService.A_VOLUME_FBITS,  vol.getFileBits());
+        Volume.update(vol.getId(), type, name, path, mgbits, mbits, fgbits, fbits);
+
         Element response = lc.createElement(AdminService.MODIFY_VOLUME_RESPONSE);
         return response;
-    }
-
-    private static void applyAttrsToVolume(Volume vol, Map attrs)
-    throws ServiceException {
-        short type = vol.getType();
-        String name = vol.getName();
-        String path = vol.getRootPath();
-        short mgbits = vol.getMboxGroupBits();
-        short mbits = vol.getMboxBits();
-        short fgbits = vol.getFileGroupBits();
-        short fbits = vol.getFileBits();
-
-        for (Iterator iter = attrs.entrySet().iterator(); iter.hasNext(); ) {
-            Map.Entry entry = (Map.Entry) iter.next();
-            String key = (String) entry.getKey();
-            String value = null;
-            Object val = entry.getValue();
-            if (val instanceof String)
-                value = (String) val;
-            else if (val instanceof String[]) {
-                String[] vals = (String[]) val;
-                if (vals.length >= 1)
-                    value = vals[0];
-            }
-
-            if (key.equals(GetVolume.A_VOLUME_TYPE))
-                type = Short.parseShort(value);
-            else if (key.equals(GetVolume.A_VOLUME_NAME))
-                name = value;
-            else if (key.equals(GetVolume.A_VOLUME_ROOTPATH))
-                path = value;
-            else if (key.equals(GetVolume.A_VOLUME_MGBITS))
-                mgbits = Short.parseShort(value);
-            else if (key.equals(GetVolume.A_VOLUME_MBITS))
-                mbits = Short.parseShort(value);
-            else if (key.equals(GetVolume.A_VOLUME_FGBITS))
-                fgbits = Short.parseShort(value);
-            else if (key.equals(GetVolume.A_VOLUME_FBITS))
-                fbits = Short.parseShort(value);
-        }
-
-        Volume.update(vol.getId(), type, name, path, mgbits, mbits, fgbits, fbits);
     }
 }
