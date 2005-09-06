@@ -699,14 +699,18 @@ public class ImapHandler extends ProtocolHandler {
             } else if (!account.isCorrectHost()) {
                 String correctHost = account.getAttr(Provisioning.A_zimbraMailHost);
                 ZimbraLog.imap.info("LOGIN failed; should be on host " + correctHost);
-                if (correctHost == null || correctHost.equals(""))
+                if (correctHost == null || correctHost.trim().equals(""))
                     sendNO(tag, "LOGIN failed [wrong host]");
                 else
                     sendNO(tag, "[REFERRAL imap://" + URLEncoder.encode(account.getName(), "utf-8") + '@' + correctHost + "/] LOGIN failed");
                 return CONTINUE_PROCESSING;
             }
-            mailbox = Mailbox.getMailboxByAccount(account);
             session = (ImapSession) SessionCache.getInstance().getNewSession(account.getId(), SessionCache.SESSION_IMAP);
+            if (session == null) {
+                sendNO(tag, "LOGIN failed");
+                return CONTINUE_PROCESSING;
+            }
+            mailbox = session.getMailbox();
             synchronized (mailbox) {
                 session.setUsername(account.getName());
                 session.cacheFlags(mailbox);
@@ -726,6 +730,7 @@ public class ImapHandler extends ProtocolHandler {
             return canContinue(e);
         }
 
+        // XXX: could use mSession.getMailbox() instead of saving a copy...
         mMailbox = mailbox;
         mSession = session;
         mSession.setHandler(this);

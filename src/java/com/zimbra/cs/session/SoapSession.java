@@ -38,6 +38,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.GetFolder;
 import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.util.Constants;
 import com.zimbra.soap.ZimbraContext;
 
 import org.apache.commons.logging.Log;
@@ -47,9 +48,6 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * @author tim
- *
- * DO NOT INSTANTIATE THIS DIRECTLY -- instead call SessionCache.getNewSession() 
- * to create objects of this type.
  * 
  * Add your own get/set methods here for session data.
  */
@@ -66,11 +64,19 @@ public class SoapSession extends Session {
 
     private PendingModifications mChanges = new PendingModifications();
 
+    private static final long SOAP_SESSION_TIMEOUT_MSEC = 10 * Constants.MILLIS_PER_MINUTE;
 
-    SoapSession(String accountId, String contextId) {
+
+    SoapSession(String accountId, String contextId) throws ServiceException {
         super(accountId, contextId, SessionCache.SESSION_SOAP);
     }
 
+    protected long getSessionIdleLifetime() {
+        return SOAP_SESSION_TIMEOUT_MSEC;
+    }
+
+    /** Clears all cached notifications and stops recording future notifications
+     *  for this session. */
     public void haltNotifications() {
         synchronized (this) {
             mChanges.clear();
@@ -78,6 +84,7 @@ public class SoapSession extends Session {
         }
     }
 
+    /** Resumes caching notifications for this session. */
     public void resumeNotifications() {
         synchronized (this) {
             mNotify = true;
@@ -94,7 +101,7 @@ public class SoapSession extends Session {
      *  *All* changes are currently cached, regardless of the client's state/views.
      * 
      * @param pms   A set of new change notifications from our Mailbox  */
-    protected void notifyPendingChanges(PendingModifications pms) {
+    public void notifyPendingChanges(PendingModifications pms) {
         if (!pms.hasNotifications())
             return;
 

@@ -339,7 +339,8 @@ public class ZimbraContext {
         if (s == null && !mSessionSuppressed) {
             SessionCache scache = SessionCache.getInstance();
             s = scache.getNewSession(mAuthTokenAccountId, type);
-            mSessionInfo.add(sinfo = new SessionInfo(s, true));
+            if (s != null)
+                mSessionInfo.add(sinfo = new SessionInfo(s, true));
         }
         if (s instanceof SoapSession && mHaltNotifications)
             ((SoapSession) s).haltNotifications();
@@ -366,12 +367,7 @@ public class ZimbraContext {
                     ctxt = createElement(CONTEXT);
 
                 // session ID is valid, so ping it back to the client:
-                //   <sessionId [type="admin"] id="12">12</sessionId>
-                String sessionType = null;
-                if (session.getSessionType() == SessionCache.SESSION_ADMIN)
-                    sessionType = SESSION_ADMIN;
-                ctxt.addElement(E_SESSION_ID).addAttribute(A_TYPE, sessionType)
-                    .addAttribute(A_ID, session.getSessionId()).setText(session.getSessionId());
+                encodeSession(ctxt, session, false);
                 // put <refresh> blocks back for any newly-created SoapSession objects
                 if (sinfo.created && session instanceof SoapSession)
                     ((SoapSession) session).putRefresh(ctxt);
@@ -387,6 +383,26 @@ public class ZimbraContext {
             return null;
         }
 	}
+
+    /** Serializes a {@link Session} object to return it to a client.  The serialized
+     *  XML representation of a Session is:<p>
+     *      <code>&lt;sessionId [type="admin"] id="12">12&lt;/sessionId></code>
+     * 
+     * @param parent   The {@link Element} to add the serialized Session to.
+     * @param session  The Session object to be serialized.
+     * @param unique   Whether there can be more than one Session serialized to the
+     *                 <code>parent</code> Element.
+     * @return The created <code>&lt;sessionId></code> Element. */
+    public static Element encodeSession(Element parent, Session session, boolean unique) {
+        String sessionType = null;
+        if (session.getSessionType() == SessionCache.SESSION_ADMIN)
+            sessionType = SESSION_ADMIN;
+
+        Element eSession = unique ? parent.addUniqueElement(E_SESSION_ID) : parent.addElement(E_SESSION_ID);
+        eSession.addAttribute(A_TYPE, sessionType).addAttribute(A_ID, session.getSessionId())
+                .setText(session.getSessionId());
+        return eSession;
+    }
 
     /** Creates a SOAP request <code>&lt;context></code> {@link Element}.<p>
      * 

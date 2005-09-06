@@ -39,6 +39,7 @@ import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.util.Constants;
 import com.zimbra.cs.util.ZimbraLog;
 
 /**
@@ -52,6 +53,8 @@ public class ImapSession extends Session {
     static final byte STATE_LOGOUT            = 3;
     static final byte STATE_WRITABLE          = 4;
 
+    private static final long IMAP_IDLE_TIMEOUT_MSEC = 30 * Constants.MILLIS_PER_MINUTE;
+
 
     private String      mUsername;
     private byte        mState;
@@ -62,17 +65,20 @@ public class ImapSession extends Session {
     private Map         mTags = new HashMap();
     private boolean     mCheckingSpam;
 
-    public ImapSession(String accountId, String contextId) {
+    public ImapSession(String accountId, String contextId) throws ServiceException {
         super(accountId, contextId, SessionCache.SESSION_IMAP);
         mState = STATE_AUTHENTICATED;
         try {
             Provisioning prov = Provisioning.getInstance();
             mCheckingSpam = prov.getConfig().getBooleanAttr(Provisioning.A_zimbraSpamCheckEnabled, false);
 
-            parseConfig(Mailbox.getMailboxByAccountId(accountId).getConfig("imap"));
+            parseConfig(getMailbox().getConfig("imap"));
         } catch (ServiceException e) { }
     }
 
+    protected long getSessionIdleLifetime() {
+        return IMAP_IDLE_TIMEOUT_MSEC;
+    }
 
     static byte getState(ImapSession s)  { return s == null ? STATE_NOT_AUTHENTICATED : s.mState; }
 
@@ -260,7 +266,7 @@ public class ImapSession extends Session {
     }
 
 
-    protected void notifyPendingChanges(PendingModifications pns) {
+    public void notifyPendingChanges(PendingModifications pns) {
         if (!pns.hasNotifications())
             return;
 
@@ -301,11 +307,10 @@ public class ImapSession extends Session {
                     msgIds[i] = ((Message) newMessages.get(i)).getId();
                     if (debug)  added.append(' ').append(msgIds[i]);
                 }
-                Mailbox mbox = ((Message) newMessages.get(0)).getMailbox();
                 try {
                     if (debug)  ZimbraLog.imap.debug("  ** moved; changing imap uid (ntfn):" + added);
                     // notification will take care of adding to mailbox
-                    mbox.resetImapUid(null, msgIds);
+                    getMailbox().resetImapUid(null, msgIds);
                 } catch (ServiceException e) {
                     if (debug)  ZimbraLog.imap.debug("  ** moved; imap uid change failed; msg hidden (ntfn): " + msgIds);
                 }

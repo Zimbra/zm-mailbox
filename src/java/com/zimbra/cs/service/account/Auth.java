@@ -101,7 +101,7 @@ public class Auth extends DocumentHandler  {
         if (acct.isCorrectHost()) {
             Session session = lc.getNewSession(acct.getId(), SessionCache.SESSION_SOAP);
             if (session != null)
-                response.addAttribute(ZimbraContext.E_SESSION_ID, session.getSessionId(), Element.DISP_CONTENT);
+                ZimbraContext.encodeSession(response, session, true);
         } else
             response.addAttribute(AccountService.E_REFERRAL, acct.getAttr(Provisioning.A_zimbraMailHost), Element.DISP_CONTENT);
 

@@ -101,7 +101,7 @@ public class Auth extends AdminDocumentHandler {
         response.addAttribute(AdminService.E_LIFETIME, lifetime, Element.DISP_CONTENT);
         Session session = lc.getNewSession(acct.getId(), SessionCache.SESSION_ADMIN);
         if (session != null)
-            response.addAttribute(ZimbraContext.E_SESSION_ID, session.getSessionId(), Element.DISP_CONTENT);
+            ZimbraContext.encodeSession(response, session, true);
 		return response;
 	}
 

@@ -68,6 +68,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.session.Session;
 import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
@@ -248,7 +249,8 @@ public class Mailbox {
     }
 
     // TODO: figure out correct caching strategy
-    private static final int MAX_ITEM_CACHE  = 500;
+    private static final int MAX_ITEM_CACHE_WITH_LISTENERS    = 500;
+    private static final int MAX_ITEM_CACHE_WITHOUT_LISTENERS = 30;
     private static final int MAX_MSGID_CACHE = 10;
 
     private int           mId;
@@ -260,6 +262,7 @@ public class Mailbox {
     private SoftReference mItemCache      = new SoftReference(null);
     private LRUMap        mConvHashes     = new LRUMap(MAX_MSGID_CACHE);
     private LRUMap        mSentMessageIDs = new LRUMap(MAX_MSGID_CACHE);
+    private Set           mListeners      = new HashSet();
 
     private String mIndexRootDir;
     
@@ -327,6 +330,35 @@ public class Mailbox {
     public static Account getAccount(String accountId) throws ServiceException {
         return Provisioning.getInstance().getAccountById(accountId);
     }
+
+
+    public synchronized void addListener(Session session) throws ServiceException {
+        if (session == null)
+            return;
+        if (mMaintenance != null)
+            throw MailServiceException.MAINTENANCE(mId);
+        mListeners.add(session);
+        if (ZimbraLog.mailbox.isDebugEnabled())
+            ZimbraLog.mailbox.debug("adding listener: " + session);
+    }
+
+    public synchronized void removeListener(Session session) {
+        mListeners.remove(session);
+        if (ZimbraLog.mailbox.isDebugEnabled())
+            ZimbraLog.mailbox.debug("clearing listener: " + session);
+    }
+
+    private void purgeListeners() {
+        if (ZimbraLog.mailbox.isDebugEnabled())
+            ZimbraLog.mailbox.debug("purging listeners");
+        SessionCache scache = SessionCache.getInstance();
+        for (Iterator it = mListeners.iterator(); it.hasNext(); )
+            scache.clearSession((Session) it.next());
+        // this may be redundant, as Session.doCleanup should dequeue
+        //   the listener, but empty the list here just to be sure
+        mListeners.clear();
+    }
+
 
     /** @return whether the server keeps track of message deletes (etc.) for sync clients */
     boolean isTrackingSync() {
@@ -533,11 +565,19 @@ public class Mailbox {
         mCurrentChange.conn = conn;
     }
 
+    /** Puts the Mailbox into maintenance mode.  As a side effect, disconnects any
+     *  {@link Session}s listening on this Mailbox.
+     * 
+     * @return A new MailboxLock token for use in a subsequent call to
+     *         {@link #endMaintenance}.
+     * @throws ServiceException MailServiceException.MAINTENANCE if the Mailbox is
+     *                          already in maintenance mode. */
     private synchronized MailboxLock beginMaintenance() throws ServiceException {
         if (mMaintenance != null)
             throw MailServiceException.MAINTENANCE(mId);
         mMaintenance = new MailboxLock(mData.accountId, mId);
         mMaintenance.mailbox = this;
+        purgeListeners();
         return mMaintenance;
     }
 
@@ -580,7 +620,7 @@ public class Mailbox {
         // keep a hard reference to the item cache to avoid having it GCed during the op 
         Object cache = mItemCache.get();
         if (cache == null) {
-            cache = new LinkedHashMap(MAX_ITEM_CACHE, (float) 0.75, true);
+            cache = new LinkedHashMap(MAX_ITEM_CACHE_WITH_LISTENERS, (float) 0.75, true);
             mItemCache = new SoftReference(cache);
             ZimbraLog.cache.debug("created a new MailItem cache for mailbox " + getId());
         }
@@ -3201,7 +3241,8 @@ public class Mailbox {
     private void commitCache(MailboxChange change) {
         try {
             // committing changes, so notify any listeners
-            SessionCache.notifyPendingChanges(mData.accountId, change.mDirty);
+            for (Iterator it = mListeners.iterator(); it.hasNext(); )
+                ((Session) it.next()).notifyPendingChanges(change.mDirty);
 
             // don't care about committed changes to external items
             MailItem.PendingDelete deleted = null;
@@ -3324,10 +3365,11 @@ public class Mailbox {
 
     private void trimItemCache() {
         try {
+            int sizeTarget = mListeners.isEmpty() ? MAX_ITEM_CACHE_WITHOUT_LISTENERS : MAX_ITEM_CACHE_WITH_LISTENERS;
             Map cache = mCurrentChange.itemCache;
             if (cache == null)
                 return;
-            int excess = cache.size() - MAX_ITEM_CACHE;
+            int excess = cache.size() - sizeTarget;
             if (excess < 0)
                 return;
             // cache the overflow to avoid the Iterator's ConcurrentModificationException
@@ -3342,7 +3384,7 @@ public class Mailbox {
             }
             // trim the excess; note that "uncache" can cascade and take out child items
             while (--i >= 0) {
-                if (cache.size() <= MAX_ITEM_CACHE)
+                if (cache.size() <= sizeTarget)
                     return;
                 if (overflow[i] instanceof MailItem)
                     try {

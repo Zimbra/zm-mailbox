@@ -25,7 +25,7 @@ urn:zimbra  -- top-level namespace for global attributes/elements
     <context xmlns="urn:zimbra">
        <authToken>...</authToken>
        [<nosession/>]
-       [<sessionId>{returned-from-server-in-last-response}</sessionId>]
+       [<sessionId id="{returned-from-server-in-last-response}"/>]
        [<account by="name|id">{account-name-or-id}</account>]
        [<change token="{change-id}" [type="mod|new"]/>]
        [<nonotify/>]
@@ -92,7 +92,7 @@ element involving the session.)  If there is a session, there will be a
 <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
   [<soap:Header>
      <context xmlns="urn:zimbra">
-       <sessionId>{session-id}</sessionId>
+       <sessionId id="{session-id}" [type="admin"]/>
        <change token="{change-id}"/>
        [<refresh>
           <tags>
@@ -139,7 +139,7 @@ batch requests:
   <soap:Header>
     <context xmlns="urn:zimbra">
        <authToken>...</authToken>
-       [<sessionId>{returned-from-server-in-last-response}</sessionId>]
+       [<sessionId id="{returned-from-server-in-last-response}"/>]
        [<account by="name|id">{account-name-or-id}</account>]
        [<change token="{change-id}" [type="mod|new"]/>]
     </context>
@@ -159,7 +159,7 @@ response:
 <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
   [<soap:Header>
      <context xmlns="urn:zimbra">
-       <sessionId>{session-id}</sessionId>
+       <sessionId id="{session-id}" [type="admin"]>
        [<refresh>
           <tags>
             <-- all tags listed -->
@@ -269,7 +269,7 @@ global soap/system errors used with zimbra:Error/Code:
  <AuthResponse>
    <authToken>...</authToken>
    <lifetime>...</lifetime>
-   <sessionId>...</sessionId>
+   <sessionId .../>
    [<prefs><pref name="{name}" modified="{modified-time}">{value}</pref>...</prefs>]
  </AuthResponse>
  
