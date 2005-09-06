@@ -56,7 +56,7 @@ public abstract class Session {
         mSessionType = type;
 
         Account acct = Provisioning.getInstance().getAccountById(accountId);
-        if (acct.isCorrectHost()) {
+        if (acct != null && acct.isCorrectHost()) {
             // add this Session to the Mailbox or die trying
             mMailbox = Mailbox.getMailboxByAccountId(accountId);
             mMailbox.addListener(this);
