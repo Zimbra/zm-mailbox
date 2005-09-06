@@ -215,7 +215,7 @@ public class StatsImageServlet extends ZimbraServlet {
                 	// this will not happen because we already have
                     // a valid auth token object
                 }
-        		uc.setRequestProperty("Cookie", COOKIE_LS_ADMIN_AUTH_TOKEN.concat("=").concat(authTokenStr));
+        		uc.setRequestProperty("Cookie", COOKIE_ZM_ADMIN_AUTH_TOKEN.concat("=").concat(authTokenStr));
         		is = uc.getInputStream();
         	} catch (IOException ex) {
             	imgName = LC.stats_img_folder.value() + File.separator+ IMG_CONN_FAILED;

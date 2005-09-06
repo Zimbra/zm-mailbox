@@ -127,7 +127,7 @@ public class LmcMessage {
         // set the cookie.
         if (session == null)
             System.err.println(System.currentTimeMillis() + " " + Thread.currentThread() + " LmcMessage.downloadAttachment session=null");
-        Cookie cookie = new Cookie(cookieDomain, "LS_AUTH_TOKEN", session.getAuthToken(), "/", -1, false);
+        Cookie cookie = new Cookie(cookieDomain, "ZM_AUTH_TOKEN", session.getAuthToken(), "/", -1, false);
         HttpState initialState = new HttpState();
         initialState.addCookie(cookie);
         initialState.setCookiePolicy(CookiePolicy.COMPATIBILITY);

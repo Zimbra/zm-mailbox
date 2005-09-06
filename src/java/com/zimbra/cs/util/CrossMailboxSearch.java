@@ -513,7 +513,7 @@ public class CrossMailboxSearch
             // forward auth token as a cookie
             Cookie cookie = new Cookie(
                     server,
-                    ZimbraServlet.COOKIE_LS_AUTH_TOKEN, 
+                    ZimbraServlet.COOKIE_ZM_AUTH_TOKEN, 
                     mAuthToken, 
                     "/", -1, false);
             

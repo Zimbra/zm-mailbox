@@ -97,7 +97,7 @@ public class LmcSendMsgRequest extends LmcSoapRequest {
         // set the cookie.
         if (session == null)
             System.err.println(System.currentTimeMillis() + " " + Thread.currentThread() + " LmcSendMsgRequest.postAttachment session=null");
-        Cookie cookie = new Cookie(domain, "LS_AUTH_TOKEN", session.getAuthToken(), "/", -1, false);
+        Cookie cookie = new Cookie(domain, "ZM_AUTH_TOKEN", session.getAuthToken(), "/", -1, false);
         HttpState initialState = new HttpState();
         initialState.addCookie(cookie);
         initialState.setCookiePolicy(CookiePolicy.COMPATIBILITY);
