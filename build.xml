@@ -275,6 +275,8 @@
 	<target name="deploy" depends="service-deploy" description="Deploy service.war to tomcat"/>
 	
 	<target name="service-deploy" depends="war">
+		<echo message="Updating ${zimbra.home.dir}/conf/log4j.properties; if it fails on windows, try again." />
+		<copy todir="${zimbra.home.dir}/conf" file="${config.dir}/log4j.properties" />
 		<echo message="Wait for tomcat to start at http://${deploy.host}:${deploy.port}/" />
 		<waitfor checkevery="1" checkeveryunit="second" maxwait="60" maxwaitunit="second">
 			<http url="http://${deploy.host}:${deploy.port}/" />
