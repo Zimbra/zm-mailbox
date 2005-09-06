@@ -114,7 +114,32 @@ public class FileBlobStore extends StoreManager {
         return blob;
     }
 
-	public MailboxBlob link(Blob src, Mailbox destMbox,
+    public MailboxBlob copy(Blob src, Mailbox destMbox,
+                            int destMsgId, int destRevision,
+                            short destVolumeId)
+    throws IOException, ServiceException {
+        String srcPath = src.getPath();
+        File dest = getBlobFile(destMbox, destMsgId, destRevision,
+                                destVolumeId, false);
+        String destPath = dest.getAbsolutePath();
+        ensureParentDirExists(dest);
+
+        FileUtil.copy(src.getFile(), dest);
+
+        if (mLog.isInfoEnabled()) {
+            mLog.info("Copied id=" + destMsgId +
+                      " mbox=" + destMbox.getId() +
+                      " oldpath=" + srcPath + 
+                      " newpath=" + destPath);
+        }
+
+        MailboxBlob destMboxBlob =
+            new MailboxBlob(destMbox, destMsgId, destRevision,
+                            new Blob(dest, destVolumeId));
+        return destMboxBlob;
+    }
+
+    public MailboxBlob link(Blob src, Mailbox destMbox,
                             int destMsgId, int destRevision,
                             short destVolumeId)
     throws IOException, ServiceException {
@@ -157,7 +182,7 @@ public class FileBlobStore extends StoreManager {
         } else {
         	// src and dest are on different volumes and can't be hard linked.
             // Do a copy instead.
-            copy(src.getFile(), dest);
+            FileUtil.copy(src.getFile(), dest);
         }
 
         if (mLog.isInfoEnabled()) {
@@ -190,7 +215,7 @@ public class FileBlobStore extends StoreManager {
             	throw new IOException("Unable to rename " + srcPath + " to " + destPath);
         } else {
             // Can't rename across volumes.  Copy then delete instead.
-        	copy(srcFile, destFile);
+            FileUtil.copy(srcFile, destFile);
             srcFile.delete();
         }
 
@@ -205,16 +230,6 @@ public class FileBlobStore extends StoreManager {
             new MailboxBlob(destMbox, destMsgId, destRevision,
                             new Blob(destFile, destVolumeId));
         return destMboxBlob;
-    }
-
-    private static void copy(File src, File dest) throws IOException {
-        try {
-        	FileUtil.copy(src, dest);
-        } catch (IOException e) {
-            if (dest.exists())
-                dest.delete();
-            throw e;
-        }
     }
 
     public boolean delete(MailboxBlob mboxBlob) throws IOException {

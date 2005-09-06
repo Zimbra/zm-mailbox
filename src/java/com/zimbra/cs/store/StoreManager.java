@@ -78,6 +78,23 @@ public abstract class StoreManager {
     throws IOException, ServiceException;
 
     /**
+     * Create a copy in destMbox mailbox with message ID of destMsgId that
+     * points to srcBlob.
+     * @param src
+     * @param destMbox
+     * @param destMsgId mail_item.id value for message in destMbox
+     * @param destRevision mail_item.mod_content value for message in destMbox
+     * @param destVolumeId volume for destination blob
+     * @return MailboxBlob object representing the copied blob
+     * @throws IOException
+     * @throws ServiceException
+     */
+    public abstract MailboxBlob copy(Blob src, Mailbox destMbox,
+                                     int destMsgId, int destRevision,
+                                     short destVolumeId)
+    throws IOException, ServiceException;
+
+    /**
 	 * Create a link in destMbox mailbox with message ID of destMsgId that
 	 * points to srcBlob.
 	 * @param src
