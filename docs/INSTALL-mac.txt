@@ -111,9 +111,9 @@ Installing tomcat:
 3. Make a symbolic link called "tomcat":
 	sh> ln -s jakarta-tomcat-5.0.28 tomcat
 	
-4. Copy ZimbraServer/conf/server.xml to {tomcat-install}/conf/
+4. Copy ZimbraServer/conf/tomcat-5.0/server.xml to {tomcat-install}/conf/
 
-5. Copy ZimbraServer/conf/tomcat-users.xml {tomcat-install/conf/
+5. Copy ZimbraServer/conf/tomcat-5.0/tomcat-users.xml {tomcat-install/conf/
 
 6. Copy ZimbraServer/src/bin/* to /opt/zimbra/bin, and chmod +x on them
 	sh> cd /opt/zimbra/bin
