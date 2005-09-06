@@ -104,6 +104,8 @@ public class Zimbra {
 		if (sInited)
 			return;
 
+        ZimbraLog.configure();
+
         ZimbraLog.misc.info(
                 "version=" + BuildInfo.VERSION +
                 " release=" + BuildInfo.RELEASE +
@@ -130,7 +132,7 @@ public class Zimbra {
         RedoLogProvider redoLog = RedoLogProvider.getInstance();
         redoLog.startup();
 
-        System.setProperty("javax.net.ssl.keyStore", "/opt/zimbra/tomcat/conf/keystore");
+        System.setProperty("javax.net.ssl.keyStore", LC.tomcat_keystore.value());
         System.setProperty("javax.net.ssl.keyStorePassword", "zimbra");
 
         if (!redoLog.isSlave()) {

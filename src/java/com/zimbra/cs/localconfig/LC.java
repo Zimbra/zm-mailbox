@@ -86,6 +86,7 @@ public class LC {
     public static final KnownKey zimbra_ldap_userdn;
     public static final KnownKey zimbra_ldap_password;
     public static final KnownKey zimbra_server_hostname;
+    public static final KnownKey zimbra_log4j_properties;
     
     public static final KnownKey stats_img_folder;
     
@@ -112,6 +113,7 @@ public class LC {
     public static final KnownKey tomcat_java_options;
     public static final KnownKey tomcat_java_home;
     public static final KnownKey tomcat_pidfile;
+    public static final KnownKey tomcat_keystore;
 
     public static final KnownKey spell_hostname;
     public static final KnownKey spell_port;
@@ -150,7 +152,7 @@ public class LC {
         zimbra_log_directory.setDefault("${zimbra_home}" + FS + "log");
         zimbra_log_directory.setDoc
             ("Directory where log files are written.");
-
+        
         zimbra_index_directory = new KnownKey("zimbra_index_directory");
         zimbra_index_directory.setDefault("${zimbra_home}" + FS + "index");
         zimbra_index_directory.setDoc
@@ -210,6 +212,11 @@ public class LC {
              " a corresponding `server' entry in LDAP - consult" +
              " documentation for CreateServer command of the zmprov program.");
 
+        zimbra_log4j_properties = new KnownKey("zimbra_log4j_properties");
+        zimbra_log4j_properties.setDefault("${zimbra_home}" + FS + "conf" + FS + "log4j.properties");
+        zimbra_log4j_properties.setDoc
+        	("Path to log4j configuration properties file.");
+        
         stats_img_folder = new KnownKey("stats_img_folder");
         stats_img_folder.setDefault("${zimbra_home}" + FS + "zimbramon" + FS + "rrdtool" + FS + "work");
         stats_img_folder.setDoc
@@ -337,6 +344,11 @@ public class LC {
         tomcat_pidfile.setDoc
             ("File in which process id of Tomcat JVM is stored.");
 
+        tomcat_keystore = new KnownKey("tomcat_keystore");
+        tomcat_keystore.setDefault("${tomcat_directory}" + FS + "conf" + FS + "keystore");
+        tomcat_keystore.setDoc
+        	("Location of keystore data file.");
+        
         ssl_allow_untrusted_certs = new KnownKey("ssl_allow_untrusted_certs");
         ssl_allow_untrusted_certs.setDefault("false");
         ssl_allow_untrusted_certs.setDoc

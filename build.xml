@@ -268,7 +268,6 @@
 			<fileset dir="WebRoot"/>
 			<lib dir="${dist.lib.dir}" includes="zimbrastore.jar" />
 			<lib dir="${jars.dir}" includes="*.jar" excludes="${war.exclude}" />
-			<classes dir="${config.dir}" includes="log4j.properties" />
 			<classes dir="${config.dir}" includes="sieveConfig.xml" />
 		</war>
 	</target>
