@@ -70,7 +70,7 @@ public class ZimbraContext {
         }
 
         void clearSession() {
-            SessionCache.getInstance().clearSession(session.getSessionId(), getAuthtokenAccountId());
+            SessionCache.clearSession(session.getSessionId(), getAuthtokenAccountId());
             session = null;
         }
 
@@ -235,7 +235,7 @@ public class ZimbraContext {
             return;
 
         // actually fetch the session from the cache
-        Session session = SessionCache.getInstance().lookup(sessionId, getAuthtokenAccountId());
+        Session session = SessionCache.lookup(sessionId, getAuthtokenAccountId());
         if (session == null) {
             sLog.info("requested session no longer exists: " + sessionId);
             return;
@@ -337,8 +337,7 @@ public class ZimbraContext {
         if (sinfo != null)
             s = sinfo.session;
         if (s == null && !mSessionSuppressed) {
-            SessionCache scache = SessionCache.getInstance();
-            s = scache.getNewSession(mAuthTokenAccountId, type);
+            s = SessionCache.getNewSession(mAuthTokenAccountId, type);
             if (s != null)
                 mSessionInfo.add(sinfo = new SessionInfo(s, true));
         }

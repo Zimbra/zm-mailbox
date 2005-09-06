@@ -351,9 +351,8 @@ public class Mailbox {
     private void purgeListeners() {
         if (ZimbraLog.mailbox.isDebugEnabled())
             ZimbraLog.mailbox.debug("purging listeners");
-        SessionCache scache = SessionCache.getInstance();
         for (Iterator it = mListeners.iterator(); it.hasNext(); )
-            scache.clearSession((Session) it.next());
+            SessionCache.clearSession((Session) it.next());
         // this may be redundant, as Session.doCleanup should dequeue
         //   the listener, but empty the list here just to be sure
         mListeners.clear();

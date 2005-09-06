@@ -705,7 +705,7 @@ public class ImapHandler extends ProtocolHandler {
                     sendNO(tag, "[REFERRAL imap://" + URLEncoder.encode(account.getName(), "utf-8") + '@' + correctHost + "/] LOGIN failed");
                 return CONTINUE_PROCESSING;
             }
-            session = (ImapSession) SessionCache.getInstance().getNewSession(account.getId(), SessionCache.SESSION_IMAP);
+            session = (ImapSession) SessionCache.getNewSession(account.getId(), SessionCache.SESSION_IMAP);
             if (session == null) {
                 sendNO(tag, "LOGIN failed");
                 return CONTINUE_PROCESSING;
@@ -1919,7 +1919,7 @@ public class ImapHandler extends ProtocolHandler {
     protected void dropConnection() {
         if (mSession != null) {
             mSession.setHandler(null);
-            SessionCache.getInstance().clearSession(mSession.getSessionId(), mSession.getAccountId());
+            SessionCache.clearSession(mSession.getSessionId(), mSession.getAccountId());
             mSession = null;
         }
 

@@ -164,7 +164,7 @@ public class Zimbra {
             ImapServer.shutdownImapServers();
         }
 
-		SessionCache.getInstance().shutdown();
+		SessionCache.shutdown();
 
         Indexer.GetInstance().shutdown();
 
