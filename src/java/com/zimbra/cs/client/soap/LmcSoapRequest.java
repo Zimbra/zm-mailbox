@@ -133,7 +133,7 @@ public abstract class LmcSoapRequest {
              * returns null.
              */
             String newSessionID = trans.getSessionId();
-            if (newSessionID != null) {
+            if (newSessionID != null && mSession != null) {
                 if (curSessionID == null)
                     mSession.setSessionID(newSessionID);
                 else if (!curSessionID.equals(newSessionID))
