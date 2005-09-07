@@ -80,12 +80,10 @@ public class TestParsedItemID extends TestCase {
     {
         boolean OK = false; 
         try {
-            ParsedItemID id = ParsedItemID.parse("/SERVER/456");
+            ParsedItemID.parse("/SERVER/456");
             System.out.println("ERROR - parsed /SERVER/456 w/o error!");
-        } catch(IllegalArgumentException e) {
-            OK = true;
         } catch(ServiceException e) {
-            fail("ServiceException "+e);
+            OK = true;
         }
         assertTrue(OK);
     }
@@ -93,12 +91,10 @@ public class TestParsedItemID extends TestCase {
     {
         boolean OK = false; 
         try {
-            ParsedItemID id = ParsedItemID.parse("//SERVER/456");
+            ParsedItemID.parse("//SERVER/456");
             System.out.println("ERROR - parsed //SERVER/456 w/o error!");
-        } catch(IllegalArgumentException e) {
-            OK = true;
         } catch(ServiceException e) {
-            fail("ServiceException "+e);
+            OK = true;
         }
         assertTrue(OK);
     }
@@ -106,12 +102,10 @@ public class TestParsedItemID extends TestCase {
     {
         boolean OK = false; 
         try {
-            ParsedItemID id = ParsedItemID.parse("SERVER/852/456");
+            ParsedItemID.parse("SERVER/852/456");
             System.out.println("ERROR - parsed SERVER/852/456 w/o error!");
-        } catch(IllegalArgumentException e) {
-            OK = true;
         } catch(ServiceException e) {
-            fail("ServiceException "+e);
+            OK = true;
         }
         assertTrue(OK);
     }
