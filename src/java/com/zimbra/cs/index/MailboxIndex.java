@@ -74,6 +74,7 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.store.Volume;
 import com.zimbra.cs.util.Config;
 
 
@@ -372,13 +373,14 @@ public final class MailboxIndex
     
     public MailboxIndex(Mailbox mailbox, String root) throws ServiceException {
         int mailboxId = mailbox.getId();
-        if (mLog.isDebugEnabled()) {
+        if (mLog.isDebugEnabled())
             mLog.debug("Opening Index for mailbox " + mailboxId);
-        }
 
         mIndexWriter = null;
         mMailboxId = mailboxId;
-        mIdxPath = mailbox.getIndexRootDir() + File.separatorChar + '0';
+
+        Volume indexVol = Volume.getById(mailbox.getIndexVolume());
+        mIdxPath = indexVol.getMailboxDir(mailboxId, Volume.TYPE_INDEX) + File.separatorChar + '0';
         mLuceneSortDateDesc = new Sort(new SortField(LuceneFields.L_DATE, SortField.STRING, true));
         mLuceneSortDateAsc = new Sort(new SortField(LuceneFields.L_DATE, SortField.STRING, false));
         mLuceneSortSubjectDesc = new Sort(new SortField(LuceneFields.L_SORT_SUBJECT, SortField.STRING, true));

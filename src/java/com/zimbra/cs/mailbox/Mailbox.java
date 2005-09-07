@@ -263,8 +263,6 @@ public class Mailbox {
     private LRUMap        mConvHashes     = new LRUMap(MAX_MSGID_CACHE);
     private LRUMap        mSentMessageIDs = new LRUMap(MAX_MSGID_CACHE);
     private Set           mListeners      = new HashSet();
-
-    private String mIndexRootDir;
     
     private MailboxLock  mMaintenance = null;
     private MailboxIndex mMailboxIndex = null;
@@ -300,7 +298,6 @@ public class Mailbox {
         mData = data;
         mData.lastChangeDate = System.currentTimeMillis();
         initFlags();
-        initDirs();
     }
 
     /** @return the server-local numeric ID for this mailbox */
@@ -1170,13 +1167,8 @@ public class Mailbox {
         }
     }
 
-    private void initDirs() throws ServiceException {
-        Volume indexVol = Volume.getById(mData.indexVolumeId);
-        mIndexRootDir = indexVol.getMailboxDir(mId, Volume.TYPE_INDEX);
-    }
-
-    public String getIndexRootDir() {
-        return mIndexRootDir;
+    public short getIndexVolume() {
+        return mData.indexVolumeId;
     }
     
     // This is a potentially long-running operation.  Don't synchronize on the
