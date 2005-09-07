@@ -329,6 +329,11 @@ public class Mailbox {
     }
 
 
+    /** Adds a {@link Session} to the set of listeners notified on Mailbox
+     *  changes.
+     * 
+     * @param session  The Session registering for notifications.
+     * @throws ServiceException  If the mailbox is in maintenance mode. */
     public synchronized void addListener(Session session) throws ServiceException {
         if (session == null)
             return;
@@ -339,16 +344,25 @@ public class Mailbox {
             ZimbraLog.mailbox.debug("adding listener: " + session);
     }
 
+    /** Removes a {@link Session} from the set of listeners notified on
+     *  Mailbox changes.
+     * 
+     * @param session  The listener to deregister for notifications. */
     public synchronized void removeListener(Session session) {
         mListeners.remove(session);
         if (ZimbraLog.mailbox.isDebugEnabled())
             ZimbraLog.mailbox.debug("clearing listener: " + session);
     }
 
+    /** Cleans up and disconnects all {@link Session}s listening for
+     *  notifications on this Mailbox.
+     * 
+     * @see SessionCache#clearSession(Session) */
     private void purgeListeners() {
         if (ZimbraLog.mailbox.isDebugEnabled())
             ZimbraLog.mailbox.debug("purging listeners");
-        for (Iterator it = mListeners.iterator(); it.hasNext(); )
+        Set purged = new HashSet(mListeners);
+        for (Iterator it = purged.iterator(); it.hasNext(); )
             SessionCache.clearSession((Session) it.next());
         // this may be redundant, as Session.doCleanup should dequeue
         //   the listener, but empty the list here just to be sure
@@ -356,27 +370,43 @@ public class Mailbox {
     }
 
 
-    /** @return whether the server keeps track of message deletes (etc.) for sync clients */
+    /** Returns whether the server is keeping track of message deletes
+     *  (etc.) for sync clients.  By default, sync tracking is off.
+     * 
+     * @see #beginTrackingSync */
     boolean isTrackingSync() {
         return (mCurrentChange.sync == null ? mData.trackSync : mCurrentChange.sync.booleanValue());
     }
 
-    /** @return the operation timestamp as a UNIX int with 1-second resolution */
+    /** Returns the operation timestamp as a UNIX int with 1-second
+     *  resolution.  This time is set at the start of the Mailbox
+     *  transaction and should match the <code>long</code> returned
+     *  by {@link #getOperationTimestampMillis}. */
     public int getOperationTimestamp() {
         return (int) (mCurrentChange.timestamp / 1000);
     }
 
-    /** @return the operation timestamp as a Java long with full millisecond resolution */
+    /** Returns the operation timestamp as a Java long with full
+     *  millisecond resolution.  This time is set at the start of
+     *  the Mailbox transaction and should match the <code>int</code>
+     *  returned by {@link #getOperationTimestamp}. */
     public long getOperationTimestampMillis() {
         return mCurrentChange.timestamp;
     }
 
-    /** @return the timestamp of the last committed mailbox change (note -- not persisted across server restart) */
+    /** Returns the timestamp of the last committed mailbox change.
+     *  Note that this time is not persisted across server restart. */
     public long getLastChangeDate() {
         return mData.lastChangeDate;
     }
 
-    /** @return the sequence number of the pending change (if any), or, barring that, the last committed change */
+    /** Returns the change sequence number for the most recent
+     *  transaction.  This will be either the change number for the 
+     *  current transaction or, if no database changes have yet been
+     *  made in this transaction, the sequence number for the last
+     *  committed change.
+     * 
+     * @see #getOperationChangeID */
     public int getLastChangeID() {
         return (mCurrentChange.changeId == MailboxChange.NO_CHANGE ? mData.lastChangeId : mCurrentChange.changeId);
     }
@@ -397,7 +427,17 @@ public class Mailbox {
             DbMailbox.updateHighestChange(this);
     }
 
-    /** @return the change ID for the current transaction */
+    /** Returns the change sequence number for the current transaction.
+     *  If a change number has not yet been assigned to the transaction,
+     *  assigns one.<p>
+     * 
+     *  Every write to the database is assigned a monotonically-increasing
+     *  (though not necessarily gap-free) change number.  All writes in
+     *  a single transaction receive the same change number.  This change
+     *  number is persisted as <code>mail_item.mod_metadata</code> in all
+     *  non-delete cases, as <code>mail_item.mod_content</code> for any 
+     *  items that were created or had their "content" modified, and as
+     *  <code>tombstone.sequence</code> for hard deletes. */
     public int getOperationChangeID() throws ServiceException {
         if (mCurrentChange.changeId == MailboxChange.NO_CHANGE)
             setOperationChangeID(ID_AUTO_INCREMENT);
