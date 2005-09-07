@@ -151,7 +151,9 @@ public abstract class StoreManager {
      * @param msgId mail_item.id value for message
      * @param revision mail_item.mod_content value for message
      * @param volumeId the volume the blob is on
-     * @return
+     * @return the <code>MailboxBlob</code>, or <code>null</code> if the file
+     * does not exist
+     * 
      * @throws ServiceException
      */
     public abstract MailboxBlob getMailboxBlob(Mailbox mbox,
