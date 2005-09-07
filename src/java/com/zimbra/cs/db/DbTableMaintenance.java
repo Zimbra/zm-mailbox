@@ -98,31 +98,44 @@ public class DbTableMaintenance {
         
         for (int i = 0; i < mailboxIds.length; i++) {
             int id = mailboxIds[i];
+            Mailbox mbox = Mailbox.getMailboxById(id);
+            MailboxLock lock = null;
             String dbName = DbMailbox.getDatabaseName(id);
             DbResults results = DbUtil.executeQuery("SHOW TABLE STATUS FROM `" + dbName + "`");
             
-            for (int row = 1; row <= results.size(); row++) {
-                String tableName = results.getString(row, "Name");
-                int numRows = results.getInt(row, "Rows");
-                if (numRows < getMinRows() || numRows > getMaxRows()) {
-                    // Skip tables that are too small or too big
-                    ZimbraLog.mailbox.debug(
-                        "Skipping table " + tableName + ", which has " + numRows + " rows.");
-                    continue;
-                }
-                
-                int lastNumRows = getLastNumRows(dbName, tableName);
-                String summary = ".  lastNumRows=" + lastNumRows + ", numRows=" + numRows;
-                
-                // Check for 0 rows is necessary, since (0 >= 0 * GrowthFactor) evaluates to true
-                if (numRows > 0 && numRows >= lastNumRows * getGrowthFactor()) {
-                    ZimbraLog.mailbox.info("Maintaining table " + tableName + summary);
-                    Mailbox mbox = Mailbox.getMailboxById(id);
-                    if (maintainTable(mbox, tableName, numRows)) {
-                        tableCount++;
+            try {
+                for (int row = 1; row <= results.size(); row++) {
+                    String tableName = results.getString(row, "Name");
+                    int numRows = results.getInt(row, "Rows");
+                    if (numRows < getMinRows() || numRows > getMaxRows()) {
+                        // Skip tables that are too small or too big
+                        ZimbraLog.mailbox.debug(
+                            "Skipping table " + tableName + ", which has " + numRows + " rows.");
+                        continue;
                     }
-                } else {
-                    ZimbraLog.mailbox.debug("Skipping table " + tableName + summary);
+                    
+                    int lastNumRows = getLastNumRows(dbName, tableName);
+                    String summary = ".  lastNumRows=" + lastNumRows + ", numRows=" + numRows;
+                    
+                    // Check for 0 rows is required.  If minRows is set to 0, we'll
+                    // unnecessarily run table maintenance on an empty table.
+                    if (numRows > 0 && numRows >= lastNumRows * getGrowthFactor()) {
+                        if (lock == null) {
+                            lock = Mailbox.beginMaintenance(mbox.getAccountId(), mbox.getId());
+                        }
+                        ZimbraLog.mailbox.info("Maintaining table " + tableName + summary);
+                        if (maintainTable(mbox, tableName, numRows)) {
+                            tableCount++;
+                        }
+                    } else {
+                        ZimbraLog.mailbox.debug("Skipping table " + tableName + summary);
+                    }
+                }
+            } finally {
+                if (lock != null) {
+                    // Always end maintenance successfully, since table maintenance
+                    // doesn't modify the data
+                    Mailbox.endMaintenance(lock, true, false);
                 }
             }
         }
@@ -179,17 +192,13 @@ public class DbTableMaintenance {
         PreparedStatement stmt = null;
         String sql = getOperation() + " TABLE `" + dbName + "`.`" + tableName + "`";
         ZimbraLog.mailbox.info("Running '" + sql + "'");
-        MailboxLock lock = null;
-        boolean success = false;
         
         try {
-            lock = Mailbox.beginMaintenance(mbox.getAccountId(), mbox.getId());
             conn = DbPool.getConnection();
             stmt = conn.prepareStatement(sql);
             stmt.executeUpdate();
             conn.commit();
             updateLastNumRows(dbName, tableName, numRows);
-            success = true;
         } catch (SQLException e) {
             String error = 
                 DbTableMaintenance.class.getName() + ".maintainTable(" +
@@ -197,8 +206,6 @@ public class DbTableMaintenance {
             ZimbraLog.mailbox.error(error);
             return false;
         } finally {
-            if (lock != null)
-                Mailbox.endMaintenance(lock, success, false);
             DbPool.closeStatement(stmt);
             DbPool.quietClose(conn);
         }
