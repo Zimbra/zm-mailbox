@@ -63,6 +63,7 @@ public class TestItemCache extends TestCase
         List messages = mMbox.getItemList(MailItem.TYPE_MESSAGE);
         assertTrue("No messages found", messages.size() > 0);
         Message msg = (Message) messages.get(0);
+        mMbox.getItemById(msg.getId(), msg.getType());
         
         int prepareCount = ZimbraPerf.getPrepareCount();
         for (int i = 1; i <= 10; i++) {
@@ -70,7 +71,7 @@ public class TestItemCache extends TestCase
         }
         
         prepareCount = ZimbraPerf.getPrepareCount() - prepareCount;
-        assertEquals("testRefresh() generated " + prepareCount + " SQL statements.",
+        assertEquals("Detected unexpected SQL statements.",
             0, prepareCount);
     }
 }
