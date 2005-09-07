@@ -33,9 +33,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import com.zimbra.cs.db.DbPool.Connection;
@@ -221,34 +219,6 @@ public class DbVolume {
         return result;
     }
 
-    /**
-     * Return volumes on which a mailbox has blobs.
-     * @param conn
-     * @param mailboxId
-     * @return
-     * @throws ServiceException
-     */
-    public static List /*<Volume>*/ getVolumesForMailbox(Connection conn, int mailboxId) throws ServiceException {
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-        List result = new ArrayList();
-        try {
-            stmt = conn.prepareStatement("SELECT * FROM volume WHERE id in " +
-                    "(SELECT DISTINCT volume_id FROM " + DbMailItem.getMailItemTableName(mailboxId) + ")");
-            rs = stmt.executeQuery();
-            while (rs.next()) {
-                Volume v = constructVolume(rs);
-                result.add(v);
-            }
-        } catch (SQLException e) {
-            throw ServiceException.FAILURE("getting volume entries for mailbox " + mailboxId, e);
-        } finally {
-            DbPool.closeResults(rs);
-            DbPool.closeStatement(stmt);
-        }
-        return result;
-    }
-    
     public static class CurrentVolumes {
     	public short msgVolId = Volume.ID_NONE;
         public short secondaryMsgVolId = Volume.ID_NONE;
