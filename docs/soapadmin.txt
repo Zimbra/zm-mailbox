@@ -796,3 +796,111 @@ Notes:
   Each SetCurrentVolumeRequest can set only one current volume type.
 
 -----------------------------
+
+<CreateDistributionListRequest>
+  <name>...</name>
+  <a n="...">...</a>+
+</CreateDistributionListRequest>
+
+<CreateDistributionListResponse>
+  <distributionlist name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </distributionlist>  
+</CreateDistributionListResponse>
+
+Notes:
+
+  extra attrs:
+
+  description
+  zimbraNotes
+
+-----------------------------
+
+<GetDistributionListRequest [limit="{limit}"] [offset="{offset}"]
+         [sortBy="{sort-by}"] [sortAscending="{sort-ascending}"]>
+</GetDistributionListRequest>
+
+<GetDistributionListResponse more="{more-flag}" [total="{total}"]>
+  <distributionlist name="{name}" id="{id}">
+    <member name="{name}"/>+
+    <a n="...">...</a>+
+  </distributionlist>
+</GetDistributionListResponse>
+
+Notes:
+
+    limit - the number of accounts to return (0 is default and means
+            all)
+    offset - the starting offset (0, 25, etc)
+    sort-by - name of attribute to sort on. default is the account
+              name.
+    sort-ascending - whether to sort in ascending order (0/1), 1 is
+                     default
+
+    more-flag = true if more accounts left to return
+    total = total number of distribution lists (not affected by limit/offset)
+
+-----------------------------
+
+<GetAllDistributionListsRequest [limit="{limit}"] [offset="{offset}"]
+         [domain="{domain-name}"] [attrs="a1,a2,a3"]
+         [sortBy="{sort-by}"] [sortAscending="{sort-ascending}"]>
+</GetAllDistributionListsRequest>
+
+<GetAllDistributionListsResponse more="{more-flag}" [total="{total}"]>
+  <distributionlist name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </distributionlist>
+</GetAllDistributionListsResponse>
+
+Notes:
+
+    limit - the number of accounts to return (0 is default and means
+            all)
+    offset - the starting offset (0, 25, etc)
+    domain-name - the domain name to limit the search to
+    attrs - comma-seperated list of attrs to return ("description",
+            "zimbraNotes")
+    sort-by - name of attribute to sort on. default is the account
+              name.
+    sort-ascending - whether to sort in ascending order (0/1), 1 is
+                     default
+
+    more-flag = true if more accounts left to return
+    total = total number distribution lists (not affected by
+            limit/offset)
+
+-----------------------------
+
+<ModifyDistributionListRequest>
+  <id>{value-of-zimbraId}</id>
+  <add> 
+     <member name="{name}"/>+
+  </add>?
+  <remove>
+     <member name="{name}"/>+
+  </remove>?
+  <a n="...">...</a>+
+</ModifyDistributionListRequest>
+  
+
+<ModifyDistributionListResponse>
+  <distributionlist name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </distributionlist>
+</ModifyDistributionListResponse>
+
+Notes:
+
+  an empty attribute value removes the specified attr
+
+-----------------------------
+
+<DeleteDistributionListRequest>
+  <id>{value-of-zimbraId}</id>
+</DeleteDistributionListRequest>
+
+<DeleteDistributionListResponse/>
+
+-----------------------------
