@@ -818,7 +818,8 @@ Notes:
 -----------------------------
 
 <GetDistributionListRequest [limit="{limit}"] [offset="{offset}"]
-         [sortBy="{sort-by}"] [sortAscending="{sort-ascending}"]>
+                            [sortAscending="{sort-ascending}"]>
+  <distributionlist by="id|name">...</distributionlist>
 </GetDistributionListRequest>
 
 <GetDistributionListResponse more="{more-flag}" [total="{total}"]>
@@ -833,8 +834,6 @@ Notes:
     limit - the number of accounts to return (0 is default and means
             all)
     offset - the starting offset (0, 25, etc)
-    sort-by - name of attribute to sort on. default is the account
-              name.
     sort-ascending - whether to sort in ascending order (0/1), 1 is
                      default
 
@@ -844,8 +843,8 @@ Notes:
 -----------------------------
 
 <GetAllDistributionListsRequest [limit="{limit}"] [offset="{offset}"]
-         [domain="{domain-name}"] [attrs="a1,a2,a3"]
-         [sortBy="{sort-by}"] [sortAscending="{sort-ascending}"]>
+                                [domain="{domain-name}"] [attrs="a1,a2,a3"]
+                                [sortAscending="{sort-ascending}"]>
 </GetAllDistributionListsRequest>
 
 <GetAllDistributionListsResponse more="{more-flag}" [total="{total}"]>
@@ -862,8 +861,8 @@ Notes:
     domain-name - the domain name to limit the search to
     attrs - comma-seperated list of attrs to return ("description",
             "zimbraNotes")
-    sort-by - name of attribute to sort on. default is the account
-              name.
+    sort-by - name of attribute to sort on. default is distribution
+              list name.
     sort-ascending - whether to sort in ascending order (0/1), 1 is
                      default
 
