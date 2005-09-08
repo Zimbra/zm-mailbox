@@ -40,12 +40,12 @@ LogTime
 
 # Use system logger (can work together with LogFile).
 # Default: disabled
-#LogSyslog
+LogSyslog
 
 # Specify the type of syslog messages - please refer to 'man syslog'
 # for facility names.
 # Default: LOG_LOCAL6
-#LogFacility LOG_MAIL
+LogFacility LOG_LOCAL0
 
 # Enable verbose logging.
 # Default: disabled
