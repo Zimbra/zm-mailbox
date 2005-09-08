@@ -181,6 +181,17 @@ public class AdminService implements DocumentService {
     public static final QName SET_CURRENT_VOLUME_REQUEST = QName.get("SetCurrentVolumeRequest", NAMESPACE);
     public static final QName SET_CURRENT_VOLUME_RESPONSE = QName.get("SetCurrentVolumeResponse", NAMESPACE);
 
+    public static final QName CREATE_DISTRIBUTION_LIST_REQUEST = QName.get("CreateDistributionListRequest", NAMESPACE);
+    public static final QName CREATE_DISTRIBUTION_LIST_RESPONSE = QName.get("CreateDistributionListResponse", NAMESPACE);
+    public static final QName GET_DISTRIBUTION_LIST_REQUEST = QName.get("GetDistributionListRequest", NAMESPACE);
+    public static final QName GET_DISTRIBUTION_LIST_RESPONSE = QName.get("GetDistributionListResponse", NAMESPACE);
+    public static final QName GET_ALL_DISTRIBUTION_LISTS_REQUEST = QName.get("GetAllDistributionListsRequest", NAMESPACE);
+    public static final QName GET_ALL_DISTRIBUTION_LISTS_RESPONSE = QName.get("GetAllDistributionListsResponse", NAMESPACE);
+    public static final QName MODIFY_DISTRIBUTION_LIST_REQUEST = QName.get("ModifyDistributionListRequest", NAMESPACE);
+    public static final QName MODIFY_DISTRIBUTION_LIST_RESPONSE = QName.get("ModifyDistributionListResponse", NAMESPACE);
+    public static final QName DELETE_DISTRIBUTION_LIST_REQUEST = QName.get("DeleteDistributionListRequest", NAMESPACE);
+    public static final QName DELETE_DISTRIBUTION_LIST_RESPONSE = QName.get("DeleteDistributionListResponse", NAMESPACE);
+    
     public static final String E_ACCOUNT = "account";
     public static final String E_AUTH_TOKEN = "authToken";
     public static final String E_NAME = "name";
@@ -190,6 +201,7 @@ public class AdminService implements DocumentService {
     public static final String E_COS = "cos";
     public static final String E_CN = "cn";    
     public static final String E_DOMAIN = "domain";
+    public static final String E_DISTRIBUTIONLIST = "distributionlist";
     public static final String E_HOSTNAME = "hostname";    
     public static final String E_LIFETIME = "lifetime";
     public static final String E_MESSAGE = "message";

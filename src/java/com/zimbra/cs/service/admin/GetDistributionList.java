@@ -1,0 +1,103 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: ZPL 1.1
+ * 
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.1 ("License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.zimbra.com/license
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+ * the License for the specific language governing rights and limitations
+ * under the License.
+ * 
+ * The Original Code is: Zimbra Collaboration Suite.
+ * 
+ * The Initial Developer of the Original Code is Zimbra, Inc.
+ * Portions created by Zimbra are Copyright (C) 2005 Zimbra, Inc.
+ * All Rights Reserved.
+ * 
+ * Contributor(s): 
+ * 
+ * ***** END LICENSE BLOCK *****
+ */
+
+package com.zimbra.cs.service.admin;
+
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.soap.ZimbraContext;
+
+public class GetDistributionList extends AdminDocumentHandler {
+
+    public static final String BY_NAME = "name";
+    public static final String BY_ID = "id";
+    
+    public Element handle(Element request, Map context) throws ServiceException {
+	    
+        ZimbraContext lc = getZimbraContext(context);
+        Provisioning prov = Provisioning.getInstance();
+	    
+        int limit = (int) request.getAttributeLong(AdminService.A_LIMIT, 0);
+        if (limit < 0) {
+        	throw ServiceException.INVALID_REQUEST("limit" + limit + " is negative", null);
+        }
+        int offset = (int) request.getAttributeLong(AdminService.A_OFFSET, 0);
+        boolean sortAscending = request.getAttributeBool(AdminService.A_SORT_ASCENDING, true);        
+
+        Element d = request.getElement(AdminService.E_DISTRIBUTIONLIST);
+        String key = d.getAttribute(AdminService.A_BY);
+        String value = d.getText();
+	    
+        DistributionList distributionList = null;
+        
+        if (key.equals(BY_NAME)) {
+            distributionList = prov.getDistributionListByName(value);
+        } else if (key.equals(BY_ID)) {
+            distributionList = prov.getDistributionListById(value);
+        } else {
+            throw ServiceException.INVALID_REQUEST("unknown value for by: "+key, null);
+        }
+	    
+        if (distributionList == null)
+            throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(value);
+
+        Element response = lc.createElement(AdminService.GET_DISTRIBUTION_LIST_RESPONSE);
+        Element dlElement = doDistributionList(response, distributionList);
+        
+        String[] members = distributionList.getAllMembers();
+        if ((offset + limit) >= members.length) {
+        	throw ServiceException.INVALID_REQUEST("offset (" + offset + ") and limit (" + limit + ") greater than size (" + members.length + ")", null);
+        }
+        Arrays.sort(members);
+        return response;
+    }
+
+    public static Element doDistributionList(Element e, DistributionList d) throws ServiceException {
+        Element distributionList = e.addElement(AdminService.E_DISTRIBUTIONLIST);
+        distributionList.addAttribute(AdminService.A_NAME, d.getName());
+        distributionList.addAttribute(AdminService.A_ID,d.getId());
+        Map attrs = d.getAttrs();
+        for (Iterator mit = attrs.entrySet().iterator(); mit.hasNext(); ) {
+            Map.Entry entry = (Entry) mit.next();
+            String name = (String) entry.getKey();
+            Object value = entry.getValue();
+            if (value instanceof String[]) {
+                String sv[] = (String[]) value;
+                for (int i = 0; i < sv.length; i++)
+                    distributionList.addAttribute(name, sv[i], Element.DISP_ELEMENT);
+            } else if (value instanceof String)
+                distributionList.addAttribute(name, (String) value, Element.DISP_ELEMENT);
+        }
+        return distributionList;
+    }
+}
