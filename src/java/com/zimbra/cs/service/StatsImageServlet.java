@@ -38,6 +38,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.servlet.ZimbraServlet;
@@ -53,7 +54,7 @@ public class StatsImageServlet extends ZimbraServlet {
     private static final String IMG_NOT_AVAIL = "data_not_available.gif";
 
     private static final String IMG_FNF = "data_not_available.gif";
-    private static final String IMG_CONN_FAILED = "data_not_available.gif";
+    private static final String IMG_CONN_FAILED = "connection_failed.gif";
     private static final String IMG_RCVD_DATA_12M = "LmtpRcvdData.12m.gif";
     private static final String IMG_RCVD_DATA_3M = "LmtpRcvdData.3m.gif";    
     private static final String IMG_RCVD_DATA_D = "LmtpRcvdData.d.gif";
@@ -131,12 +132,20 @@ public class StatsImageServlet extends ZimbraServlet {
         if (indexColon != -1)
             reqHostname = reqHostname.substring(0, indexColon);
 
+        String serviceHostname = "";
+        try {
+			serviceHostname = Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname);
+		} catch (ServiceException e1) {
+        	resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to get zimbraServiceHostname");
+        	return;
+		}
+        
         InetAddress localhost = InetAddress.getLocalHost();
         if (reqHostname.equalsIgnoreCase(LC.zimbra_server_hostname.value()) ||
             reqHostname.equalsIgnoreCase(localhost.getCanonicalHostName()) ||
             reqHostname.equalsIgnoreCase(localhost.getHostName()) ||
         	reqHostname.equalsIgnoreCase("localhost") ||
-            reqHostname.equals("127.0.0.1")) {
+            reqHostname.equals("127.0.0.1") || reqHostname.equals(serviceHostname)) {
         	localServer = true;
         } else if (reqHostname.equalsIgnoreCase("$y$temw1de")){
         	localServer = true;
@@ -186,11 +195,15 @@ public class StatsImageServlet extends ZimbraServlet {
         	try { 
             	is = new FileInputStream(imgName);
             } catch (FileNotFoundException ex) {
+            	if(is != null)
+            		is.close();            	
             	imgName = LC.stats_img_folder.value() + File.separator + IMG_FNF;
             }
             try { 
             	is = new FileInputStream(imgName);
             } catch (FileNotFoundException ex) {//unlikely case - only if the server's files are broken
+            	if(is != null)
+            		is.close();
             	resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "FNF image File not found");
             	return;
             }
@@ -222,7 +235,9 @@ public class StatsImageServlet extends ZimbraServlet {
             	try {	
             		is = new FileInputStream(imgName);
             	} catch (FileNotFoundException fnfex) { //unlikely case - only if the server's files are broken
-                	resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "FNF image File not found");
+                	if(is != null)
+                		is.close();
+            		resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "FNF image File not found");
                 	return;
             	}
         	}
@@ -233,6 +248,7 @@ public class StatsImageServlet extends ZimbraServlet {
         }
     	resp.setContentType("image/gif");    	
     	ByteUtil.copy(is, resp.getOutputStream());
+    	is.close();
     }
 
 }
