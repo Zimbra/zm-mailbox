@@ -231,6 +231,8 @@ public class DbMailItem {
     }
 
     public static void setFolder(MailItem.Array itemIDs, Folder folder) throws ServiceException {
+        if (itemIDs == null || itemIDs.length == 0)
+            return;
         Mailbox mbox = folder.getMailbox();
         Connection conn = mbox.getOperationConnection();
 
