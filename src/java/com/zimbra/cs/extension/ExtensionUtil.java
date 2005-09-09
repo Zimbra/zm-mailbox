@@ -14,12 +14,12 @@ public class ExtensionUtil {
 	private static List sClassLoaders = new ArrayList();
 	
 	public static synchronized void loadAll() {
-		ZimbraLog.extensions.info("Loading extensions");
-		File extDir = new File(LC.zimbra_extensions_directory.value());
+        File extDir = new File(LC.zimbra_extensions_directory.value());
 		if (extDir == null) {
 			ZimbraLog.extensions.info(LC.zimbra_extensions_directory.key() + " is null, no extensions loaded");
 			return;
 		}
+        ZimbraLog.extensions.info("Loading extensions from " + extDir.getPath());
 
 		File[] extDirs = extDir.listFiles();
 		if (extDirs == null) {
