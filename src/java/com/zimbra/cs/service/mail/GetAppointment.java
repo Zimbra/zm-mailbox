@@ -31,9 +31,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.mailbox.Appointment;
-import com.zimbra.cs.mailbox.Invite;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.calendar.Recurrence;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -56,39 +54,18 @@ public class GetAppointment extends DocumentHandler
         
         ZimbraContext lc = getZimbraContext(context);
         Mailbox mbx = getRequestedMailbox(lc);
-        sLog.info("<GetAppointment> " + lc.toString());
         
         int apptId = (int)request.getAttributeLong("id");
+        sLog.info("<GetAppointment id="+apptId+"> " + lc.toString());
         
-        Appointment appointment = mbx.getAppointmentById(apptId);
-
         Element response = lc.createElement(MailService.GET_APPOINTMENT_RESPONSE);
-        
-        Element apptElt = response.addElement(MailService.E_APPOINTMENT);
-        apptElt.addAttribute("uid", appointment.getUid());
         
         synchronized(mbx) {
         
-            for (int i = 0; i < appointment.numInvites(); i++) {
-                Invite inv = appointment.getInvite(i);
-                
-                Element ie = apptElt.addElement(MailService.E_INVITE);
-                ie.addAttribute("id", inv.getMailItemId());
-                ie.addAttribute("compNum", inv.getComponentNum());
-                if (inv.hasRecurId()) {
-                    ie.addAttribute("recur_id", inv.getRecurId().toString());
-                }
-                
-                ToXML.encodeInvite(ie, inv, Change.ALL_FIELDS);
-            }
+            Appointment appointment = mbx.getAppointmentById(apptId);
+            
+            ToXML.encodeApptSummary(response, appointment, Change.ALL_FIELDS);
         }
-        
-        Recurrence.IRecurrence recur = appointment.getRecurrence();
-        if (recur != null) {
-            Element recurElt = apptElt.addElement("recur");
-            recur.toXml(recurElt);
-        }
-        
         
         return response;
     }

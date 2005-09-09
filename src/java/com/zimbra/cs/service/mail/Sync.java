@@ -86,6 +86,7 @@ public class Sync extends DocumentHandler {
                 initialItemSync(f, MailService.E_MSG, mbox.listItemIds(MailItem.TYPE_MESSAGE, folder.getId()));
                 initialItemSync(f, MailService.E_CONTACT, mbox.listItemIds(MailItem.TYPE_CONTACT, folder.getId()));
                 initialItemSync(f, MailService.E_NOTE, mbox.listItemIds(MailItem.TYPE_NOTE, folder.getId()));
+                initialItemSync(f, MailService.E_APPOINTMENT, mbox.listItemIds(MailItem.TYPE_APPOINTMENT, folder.getId()));
             }
         } else {
             // anything else to be done for searchfolders?
@@ -120,8 +121,15 @@ public class Sync extends DocumentHandler {
         e.addAttribute(MailService.A_IDS, sb.toString());
     }
 
-    private static final byte[] SYNC_ORDER = new byte[] { MailItem.TYPE_FOLDER, MailItem.TYPE_TAG, MailItem.TYPE_MESSAGE,
-                                                          MailItem.TYPE_CONTACT, MailItem.TYPE_NOTE };
+    private static final byte[] SYNC_ORDER = new byte[] { 
+        MailItem.TYPE_FOLDER, 
+        MailItem.TYPE_TAG, 
+        MailItem.TYPE_MESSAGE,
+        MailItem.TYPE_CONTACT, 
+        MailItem.TYPE_NOTE,
+        MailItem.TYPE_APPOINTMENT,
+    };
+    
     private static final int MUTABLE_FIELDS = Change.MODIFIED_FLAGS  | Change.MODIFIED_TAGS |
                                               Change.MODIFIED_FOLDER | Change.MODIFIED_PARENT |
                                               Change.MODIFIED_NAME   | Change.MODIFIED_QUERY |
@@ -142,6 +150,15 @@ public class Sync extends DocumentHandler {
             List changed = mbox.getModifiedItems(type, begin);
             for (Iterator it = changed.iterator(); it.hasNext(); ) {
                 MailItem item = (MailItem) it.next();
+                
+                //
+                // For items in the system, if the content has changed since the user last sync'ed 
+                // (because it was edited or created), just send back the folder ID and saved date --
+                // the client will request the whole object out of band -- potentially using the 
+                // content servlet's "include metadata in headers" hack.
+                //
+                //  If it's just the metadata that changed, send back the set of mutable attributes.
+                //
                 if (item.getSavedSequence() > begin && type != MailItem.TYPE_FOLDER && type != MailItem.TYPE_TAG)
                     ToXML.encodeItem(response, item, Change.MODIFIED_FOLDER | Change.MODIFIED_CONFLICT);
                 else

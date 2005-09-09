@@ -439,7 +439,7 @@ RECURRENCE SPECIFIERS!
 // I don't think it is useful since it would be slower on the backend (would have
 // to expand out the default recurrence rule) and you always have the id/component
 // of the exception anyway since it is returned in the <inst> data for
-//  GetAppointmentSummaries
+//  GetApptSummaries
 //
 <ModifyAppointmentExceptionRequest id="INVITE_ID_OF_EXCEPTION_INVITE" comp="COMPONENT_NUMBER">
    SAME AS CreateAppointmentRequest above
@@ -541,9 +541,35 @@ RECURRENCE SPECIFIERS!
 //
 // GetAppointment
 //
-// FOR TESTING ONLY
+// Returns the metadata info for each Invite that makes up this appointment.
 //
-<GetAppointmentRequest id="mail_item_id" compNum="comp_num">
+// The content (original email) for each invite is stored within the Appointment itself in
+// a big multipart/digest containing each invite in the appointment as a sub-mimepart --
+// it can be retreived from the content servlet:
+//
+//       http://servername/service/content/get?id=<apptId>
+//
+//
+// The content for a single Invite can be requested from the content servlet (or from <GetMsg>)
+// Individual  The client can ALSO request just the content for each individual invite using a
+// compound item-id request:
+//       http://servername/service/content/get?id="apptId-invite_mail_item_id"
+//       <GetMsgRequest><m id="apptId-invite_mail_item_id"
+//
+//      
+// IMPORTANT NOTE: DO NOT use the raw invite-mail-item-id to fetch the content: it might work
+// sometimes, however the invite is a standard mail-message it can be deleted by the user at
+// any time!
+//
+<GetAppointmentRequest id="appointment_id"/>
+
+<GetAppointmentResponse>
+  <appt uid="UID" id="appointment_id">
+    [<inv id="invite-original-mail-item-id" compNum="component-number">
+      ---See <inv> part of GetMsgResponse---
+    </inv>]+
+  </appt>
+</GetAppointmentResponse>
 
    
 

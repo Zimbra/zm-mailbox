@@ -92,6 +92,8 @@ public class ToXML {
             return encodeNote(parent, (Note) item, fields);
         else if (item instanceof Contact)
             return encodeContact(parent, (Contact) item, null, false, null, fields);
+        else if (item instanceof Appointment) 
+            return encodeApptSummary(parent, (Appointment)item, fields);
         else if (item instanceof Message) {
             OutputParticipants output = (fields == Change.ALL_FIELDS ? OutputParticipants.PUT_BOTH : OutputParticipants.PUT_SENDERS);
             return encodeMessageSummary(parent, (Message) item, output, fields);
@@ -451,6 +453,54 @@ public class ToXML {
         }
         return m;
 	}
+    
+    /**
+     * Encode the metadata for the appointment.
+     * 
+     * The content for the appointment is a big multipart/digest containing each
+     * invite in the appointment as a sub-mimepart -- it can be retreived from the content 
+     * servlet: 
+     *    http://servername/service/content/get?id=<apptId>
+     * 
+     * The client can ALSO request just the content for each individual invite using a
+     * compound item-id request:
+     *    http://servername/service/content/get?id=<apptId>-<invite-mail-item-id>
+     *    
+     * DO NOT use the raw invite-mail-item-id to fetch the content: since the invite is a 
+     * standard mail-message it can be deleted by the user at any time!
+     * 
+     *    
+     * @param parent
+     * @param appt
+     * @param fields
+     * @return
+     */
+    public static Element encodeApptSummary(Element parent, Appointment appt, int fields)  
+    {
+        Element m = parent.addElement(MailService.E_APPOINTMENT);
+        
+        m.addAttribute(MailService.A_UID, appt.getUid());
+        m.addAttribute(MailService.A_ID, appt.getId());
+        
+        for (int i = 0; i < appt.numInvites(); i++) {
+            try {
+                Invite inv = appt.getInvite(i);
+                
+                Element ie = m.addElement(MailService.E_INVITE);
+                ie.addAttribute(MailService.A_ID, inv.getMailItemId());
+                ie.addAttribute(MailService.A_APPT_COMPONENT_NUM, inv.getComponentNum());
+                if (inv.hasRecurId()) {
+                    ie.addAttribute(MailService.A_APPT_RECURRENCE_ID, inv.getRecurId().toString());
+                }
+                
+                ToXML.encodeInvite(ie, inv, Change.ALL_FIELDS);
+            } catch (ServiceException e) {
+                e.printStackTrace();
+            }
+        }
+        
+        return m;
+    }
     
     
     /**
