@@ -107,7 +107,15 @@ public class LC {
     public static final KnownKey mysql_innodb_thread_concurrency;
     public static final KnownKey mysql_root_password;
     public static final KnownKey mysql_table_cache;
-    
+
+    public static final KnownKey logger_mysql_directory;
+    public static final KnownKey logger_mysql_data_directory;
+    public static final KnownKey logger_mysql_socket;
+    public static final KnownKey logger_mysql_pidfile;
+    public static final KnownKey logger_mysql_mycnf;
+    public static final KnownKey logger_mysql_bind_address;
+    public static final KnownKey logger_mysql_port;
+
     public static final KnownKey tomcat_directory;
     public static final KnownKey tomcat_java_heap_memory_percent;
     public static final KnownKey tomcat_java_options;
@@ -318,6 +326,41 @@ public class LC {
         mysql_table_cache.setDefault("500");
         mysql_table_cache.setDoc
             ("Consult MySQL documentation for table_cache. " + ZM_MYCNF_CAVEAT);
+
+        logger_mysql_directory = new KnownKey("logger_mysql_directory");
+        logger_mysql_directory.setDefault("${zimbra_home}" + FS + "logger" + FS + "mysql");
+        logger_mysql_directory.setDoc
+            ("Location of logger MySQL installation.");
+
+        logger_mysql_data_directory = new KnownKey("logger_mysql_data_directory");
+        logger_mysql_data_directory.setDefault("${zimbra_home}" + FS + "logger" + FS + "db" + FS + "data");
+        logger_mysql_data_directory.setDoc
+            ("Directory in which logger MySQL data should reside.");
+
+        logger_mysql_socket = new KnownKey("logger_mysql_socket");
+        logger_mysql_socket.setDefault("${zimbra_home}" + FS + "logger" + FS + "db" + FS + "mysql.sock");
+        logger_mysql_socket.setDoc
+            ("Path to logger MySQL socket for use by logger MySQL command line tools.");
+
+        logger_mysql_pidfile = new KnownKey("logger_mysql_pidfile");
+        logger_mysql_pidfile.setDefault("${zimbra_home}" + FS + "logger" + FS + "db" + FS + "mysql.pid");
+        logger_mysql_pidfile.setDoc
+            ("File in which logger MySQL process id is stored.");
+
+        logger_mysql_mycnf = new KnownKey("logger_mysql_mycnf");
+        logger_mysql_mycnf.setDefault("${zimbra_home}" + FS + "conf" + FS + "my.logger.cnf");
+        logger_mysql_mycnf.setDoc
+            ("Path to my.logger.cnf, the logger MySQL config file.");
+
+        logger_mysql_bind_address = new KnownKey("logger_mysql_bind_address");
+        logger_mysql_bind_address.setDefault("localhost");
+        logger_mysql_bind_address.setDoc
+            ("Interface on this host to which logger MySQL will bind.");
+
+        logger_mysql_port = new KnownKey("logger_mysql_port");
+        logger_mysql_port.setDefault("3307");
+        logger_mysql_port.setDoc
+            ("Port number on which logger MySQL server should listen.");
 
         tomcat_directory = new KnownKey("tomcat_directory");
         tomcat_directory.setDefault("${zimbra_home}" + FS + "tomcat");
