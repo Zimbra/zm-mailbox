@@ -101,11 +101,12 @@ public class LC {
     public static final KnownKey mysql_mycnf;
     public static final KnownKey mysql_bind_address;
     public static final KnownKey mysql_port;
-    public static final KnownKey mysql_max_connections;
+    public static final KnownKey mysql_root_password;
     public static final KnownKey mysql_memory_percent;
     public static final KnownKey mysql_innodb_log_buffer_size;
-    public static final KnownKey mysql_innodb_thread_concurrency;
-    public static final KnownKey mysql_root_password;
+    public static final KnownKey mysql_innodb_log_file_size;
+    public static final KnownKey mysql_sort_buffer_size;
+    public static final KnownKey mysql_read_buffer_size;
     public static final KnownKey mysql_table_cache;
 
     public static final KnownKey logger_mysql_directory;
@@ -284,32 +285,6 @@ public class LC {
         mysql_port.setDoc
             ("Port number on which MySQL server should listen.");
 
-        mysql_max_connections = new KnownKey("mysql_max_connections");
-        mysql_max_connections.setDefault("200");
-        mysql_max_connections.setDoc
-            ("Maximum number of client connections that mysql server" +
-             " should allow. " + ZM_MYCNF_CAVEAT);
-
-        mysql_memory_percent = new KnownKey("mysql_memory_percent");
-        mysql_memory_percent.setDefault("40");
-        mysql_memory_percent.setDoc
-            ("Percentage of system memory that mysql should use. TODO:" +
-             " change docs, and make sure zmmycnf handles " +
-             " innodb_log_buffer_size delicately as change in that " +
-             " influencnes changes to the log file sizes. " + ZM_MYCNF_CAVEAT);
-
-        mysql_innodb_log_buffer_size = new KnownKey("mysql_innodb_log_buffer_size");
-        mysql_innodb_log_buffer_size.setDefault("8M");
-        mysql_innodb_log_buffer_size.setDoc
-            ("Consult MySQL documentation for innodb_log_buffer_size. " +
-             ZM_MYCNF_CAVEAT);
-
-        mysql_innodb_thread_concurrency = new KnownKey("mysql_innodb_thread_concurrency");
-        mysql_innodb_thread_concurrency.setDefault("200");
-        mysql_innodb_thread_concurrency.setDoc
-            ("Consult MySQL documentation for innodb_thread_concurrency. " +
-             ZM_MYCNF_CAVEAT);
-
         mysql_root_password = new KnownKey("mysql_root_password");
         mysql_root_password.setDefault("zimbra");
         mysql_root_password.setForceToEdit(true);
@@ -322,6 +297,36 @@ public class LC {
              " program which will change the password in both MySQL" +
              " and in local config.");
 
+        mysql_memory_percent = new KnownKey("mysql_memory_percent");
+        mysql_memory_percent.setDefault("40");
+        mysql_memory_percent.setDoc
+            ("Percentage of system memory that mysql should use."
+             + ZM_MYCNF_CAVEAT);
+
+        mysql_innodb_log_buffer_size = new KnownKey("mysql_innodb_log_buffer_size");
+        mysql_innodb_log_buffer_size.setDefault("8");
+        mysql_innodb_log_buffer_size.setDoc
+            ("Consult MySQL documentation for innodb_log_buffer_size. " +
+             ZM_MYCNF_CAVEAT);
+
+        mysql_innodb_log_file_size = new KnownKey("mysql_innodb_log_file_size");
+        mysql_innodb_log_file_size.setDefault("100");
+        mysql_innodb_log_file_size.setDoc
+            ("Consult MySQL documentation for innodb_log_file_size. " +
+             ZM_MYCNF_CAVEAT);
+
+        mysql_sort_buffer_size = new KnownKey("mysql_sort_buffer_size");
+        mysql_sort_buffer_size.setDefault("1");
+        mysql_sort_buffer_size.setDoc
+            ("Consult MySQL documentation for sort_buffer_size. " +
+             ZM_MYCNF_CAVEAT);
+        
+        mysql_read_buffer_size = new KnownKey("mysql_read_buffer_size");
+        mysql_read_buffer_size.setDefault("1");
+        mysql_read_buffer_size.setDoc
+            ("Consult MySQL documentation for read_buffer_size. " +
+             ZM_MYCNF_CAVEAT);
+        
         mysql_table_cache = new KnownKey("mysql_table_cache");
         mysql_table_cache.setDefault("500");
         mysql_table_cache.setDoc
