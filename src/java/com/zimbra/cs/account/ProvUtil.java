@@ -40,6 +40,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.Map.Entry;
 
+import com.zimbra.cs.account.Domain.SearchGalResult;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.StringUtil;
@@ -69,7 +70,7 @@ public class ProvUtil {
         System.out.println("  RemoveAccountAlias(raa) {name@domain|id} {alias@domain}");
         System.out.println("  SetAccountCos(sac) {name@domain|id} {cos-name|cos-id}");        
         System.out.println("  SearchAccounts(sa) [-v] {ldap-query} [limit {limit}] [offset {offset}] [sortBy {attr}] [attrs {a1,a2...}] [sortAscending 0|1*] [applyCos [0|1*] [domain {domain}]");
-        System.out.println("  SearchGal(sg) {domain} {name}");        
+        System.out.println("  SearchGal(sg) {domain} {name}");
         System.out.println("  RenameAccount(ra) {name@domain|id} {newName@domain}");        
         System.out.println();
 
@@ -169,6 +170,8 @@ public class ProvUtil {
     
     private static final int COPY_ACCOUNT = 42;
     private static final int CREATE_BULK_ACCOUNTS = 43;
+    private static final int SYNC_GAL = 44;
+
     private static final int BY_ID = 1;
     private static final int BY_EMAIL = 2;
     private static final int BY_NAME = 3;
@@ -219,6 +222,7 @@ public class ProvUtil {
         addCommand("searchAccounts", "sa", SEARCH_ACCOUNTS);                
         addCommand("renameAccount", "ra", RENAME_ACCOUNT);                        
         addCommand("searchGal", "sg", SEARCH_GAL);                                
+        addCommand("syncGal", "syg", SYNC_GAL);
     
         addCommand("createDomain", "cd", CREATE_DOMAIN);
         addCommand("getDomain", "gd", GET_DOMAIN);
@@ -376,7 +380,10 @@ public class ProvUtil {
             break;                                    
         case SEARCH_GAL:
             doSearchGal(args); 
-            break;                                                
+            break;
+        case SYNC_GAL:
+            doSyncGal(args);
+            break;
         case SET_PASSWORD:
             doSetPassword(args); 
             break;
@@ -918,7 +925,51 @@ public class ProvUtil {
         
         Domain d = lookupDomain(domain);
 
-        List contacts = d.searchGal(query);
+        SearchGalResult result = d.searchGal(query, null);
+        List contacts = result.matches;
+        for (Iterator it=contacts.iterator(); it.hasNext(); ) {
+            GalContact contact = (GalContact) it.next();
+            dumpContact(contact);
+        }
+    }    
+
+
+    /**
+     * @param args
+     * @throws ServiceException
+     */
+    private void doSyncGal(String[] args) throws ServiceException {
+        boolean verbose = false;
+        int i = 1;
+        
+        if (args.length < i+1) {
+            usage();
+            return;
+        }
+
+        if (args[i].equals("-v")) {
+            verbose = true;
+            i++;
+            if (args.length < i-1) {
+                usage();
+                return;
+            }
+        }
+        
+        if (args.length < i+2) {
+            usage();
+            return;
+        }
+
+        String domain = args[i];
+        String token = args[i+1];
+        
+        Domain d = lookupDomain(domain);
+
+        SearchGalResult result = d.searchGal("", token);
+        List contacts = result.matches;
+        if (result.token != null)
+            System.out.println("# token = "+result.token);
         for (Iterator it=contacts.iterator(); it.hasNext(); ) {
             GalContact contact = (GalContact) it.next();
             dumpContact(contact);

@@ -42,6 +42,7 @@ import javax.naming.directory.InvalidSearchFilterException;
 import javax.net.ssl.SSLHandshakeException;
 
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Domain.SearchGalResult;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ExceptionToString;
 
@@ -157,7 +158,8 @@ public class Check {
         String[] attr_list = (String[]) list.toArray(new String[list.size()]);
         
         try {
-            List contacts = LdapUtil.searchLdapGal(url, bindDn, bindPassword, searchBase, filter, query, limit, attr_list, map);
+            SearchGalResult result = LdapUtil.searchLdapGal(url, bindDn, bindPassword, searchBase, filter, query, limit, attr_list, map, null); 
+            List contacts = result.matches;
             return new Result(STATUS_OK, "", contacts);
         } catch (NamingException e) {
             return toResult(e, null);

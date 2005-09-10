@@ -335,8 +335,15 @@ global soap/system errors used with zimbra:Error/Code:
    <cn>...</cn>*
  </SearchGalResponse>
 
+----------------------------
+
+ <SyncGalRequest token="[{previous-token}]"/>
  
----------
+ <SyncGalResponse token="{new-token}">
+   <cn>...</cn>*
+ </SyncGalResponse>
+
+----------------------------
   
  <ModifyPrefsRequest>
    [<pref name="{name}">{value}</pref>...]+

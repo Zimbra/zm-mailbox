@@ -31,7 +31,6 @@ package com.zimbra.cs.service.account;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.GalContact;
@@ -45,36 +44,27 @@ import com.zimbra.soap.ZimbraContext;
 /**
  * @author schemers
  */
-public class SearchGal extends DocumentHandler {
+public class SyncGal extends DocumentHandler {
 
     public Element handle(Element request, Map context) throws ServiceException {
-        String n = request.getAttribute(AccountService.E_NAME);
-
         ZimbraContext lc = getZimbraContext(context);
-        Element response = lc.createElement(AccountService.SEARCH_GAL_RESPONSE);
+        Element response = lc.createElement(AccountService.SYNC_GAL_RESPONSE);
+        String tokenAttr = request.getAttribute(MailService.A_TOKEN, "");        
         Account acct = getRequestedAccount(getZimbraContext(context));
+        
 
-        SearchGalResult result = acct.getDomain().searchGal(n, null);
+        SearchGalResult result = acct.getDomain().searchGal("", tokenAttr);
+        if (result.token != null)
+            response.addAttribute(MailService.A_TOKEN, result.token);
         List contacts = result.matches;
         for (Iterator it = contacts.iterator(); it.hasNext();) {
             GalContact contact = (GalContact) it.next();
-            addContact(response, contact);
+            SearchGal.addContact(response, contact);
         }
         return response;
     }
 
     public boolean needsAuth(Map context) {
         return true;
-    }
-
-    public static void addContact(Element response, GalContact contact) throws ServiceException {
-        Element cn = response.addElement(MailService.E_CONTACT);
-        cn.addAttribute(MailService.A_ID, contact.getId());
-        Map attrs = contact.getAttrs();
-        for (Iterator it = attrs.entrySet().iterator(); it.hasNext();) {
-            Map.Entry entry = (Entry) it.next();
-            cn.addAttribute((String) entry.getKey(), (String) entry.getValue(),
-                    Element.DISP_ELEMENT);
-        }
     }
 }

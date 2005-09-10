@@ -61,7 +61,12 @@ public interface Domain extends NamedEntry {
      * @return List of GalContact objects
      * @throws ServiceException
      */
-    public abstract List searchGal(String query)  throws ServiceException;
+    public SearchGalResult searchGal(String query, String token)  throws ServiceException;
     
     public Map getAttrs(boolean applyConfig) throws ServiceException;
+    
+    public static class SearchGalResult {
+        public String token;
+        public List matches;
+    }
 }

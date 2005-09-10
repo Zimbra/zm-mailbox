@@ -58,6 +58,9 @@ public class AccountService implements DocumentService {
     
     public static final QName SEARCH_GAL_REQUEST = QName.get("SearchGalRequest", NAMESPACE);
     public static final QName SEARCH_GAL_RESPONSE = QName.get("SearchGalResponse", NAMESPACE);	
+    
+    public static final QName SYNC_GAL_REQUEST = QName.get("SyncGalRequest", NAMESPACE);
+    public static final QName SYNC_GAL_RESPONSE = QName.get("SyncGalResponse", NAMESPACE);  
 
     public static final String E_ACTION = "action";
     public static final String E_AUTH_TOKEN = "authToken";
@@ -88,7 +91,9 @@ public class AccountService implements DocumentService {
 		
         dispatcher.registerHandler(GET_INFO_REQUEST, new GetInfo());
         
-		dispatcher.registerHandler(SEARCH_GAL_REQUEST, new SearchGal());
+        dispatcher.registerHandler(SEARCH_GAL_REQUEST, new SearchGal());
+        
+        dispatcher.registerHandler(SYNC_GAL_REQUEST, new SyncGal());        
 	}
 
 }

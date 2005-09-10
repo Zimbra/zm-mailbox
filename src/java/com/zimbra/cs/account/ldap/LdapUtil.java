@@ -58,6 +58,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.doomdark.uuid.UUIDGenerator;
 
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Domain.SearchGalResult;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ZimbraLog;
@@ -642,7 +643,7 @@ public class LdapUtil {
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#searchGal(java.lang.String)
      */
-    public static List searchLdapGal(
+    public static SearchGalResult searchLdapGal(
             String url,
             String bindDn,
             String bindPassword,
@@ -651,9 +652,10 @@ public class LdapUtil {
             String n,
             int maxResults,
             String[] galAttrList,
-            Map galAttrMap) throws NamingException, ServiceException {
+            Map galAttrMap, String token) throws NamingException, ServiceException {
     
-        ArrayList result = new ArrayList();
+        SearchGalResult result = new SearchGalResult();
+        result.matches = new ArrayList();
     
         if (url == null || base == null || filter == null) {
             if (url == null)
@@ -671,12 +673,19 @@ public class LdapUtil {
                 filter = queryExpr;
         }
                 
+
         Map vars = new HashMap();
         vars.put("s", n);
         String query = LdapProvisioning.expandStr(filter, vars);
-        
+        if (token != null) {
+            if (token.equals(""))
+                query = query.replaceAll("\\*\\*", "*");
+            else 
+                query = "(&(whenChanged>="+LdapUtil.escapeSearchFilterArg(token)+")"+query.replaceAll("\\*\\*", "*")+")";
+        }
+        ZimbraLog.misc.info("searchLdapGal query:"+query);
         SearchControls sc = new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, galAttrList, true, false);
-        
+        result.token = null;        
         DirContext ctxt = null;
         try {
             ctxt = getDirContext(url, bindDn, bindPassword);
@@ -685,7 +694,10 @@ public class LdapUtil {
                 SearchResult sr = (SearchResult) ne.next();
                 Context srctxt = (Context) sr.getObject();
                 String dn = srctxt.getNameInNamespace();
-                result.add(new LdapGalContact(dn, sr.getAttributes(), galAttrList, galAttrMap));
+                LdapGalContact lgc = new LdapGalContact(dn, sr.getAttributes(), galAttrList, galAttrMap); 
+                String mts = (String) lgc.getAttrs().get("modifyTimeStamp");
+                if (result.token == null || (mts !=null && (mts.compareTo(result.token) > 0))) result.token = mts;
+                result.matches.add(lgc);
                 srctxt.close();
             }
             ne.close();
