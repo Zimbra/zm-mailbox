@@ -44,6 +44,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.redolog.RedoConfig;
 import com.zimbra.cs.redolog.RedoLogManager;
 import com.zimbra.cs.redolog.RolloverManager;
 import com.zimbra.cs.redolog.TransactionId;
@@ -360,11 +361,18 @@ public class FileLogWriter implements LogWriter {
 
         // Rename the current log to rolled-over name.
         File rolloverFile = romgr.getRolloverFile();
-        File destDir = rolloverFile.getParentFile();
-        if (destDir != null && !destDir.exists())
-            destDir.mkdirs();
-        if (!mFile.renameTo(rolloverFile))
-            throw new IOException("Unable to rename current redo log to " + rolloverFile.getAbsolutePath());
+        if (RedoConfig.redoLogDeleteOnRollover()) {
+            // Delete the current log.  We don't need to hold on to the
+            // indexing-only log files after rollover.
+            if (!mFile.delete())
+                throw new IOException("Unable to delete current redo log " + mFile.getAbsolutePath());
+        } else {
+            File destDir = rolloverFile.getParentFile();
+            if (destDir != null && !destDir.exists())
+                destDir.mkdirs();
+            if (!mFile.renameTo(rolloverFile))
+                throw new IOException("Unable to rename current redo log to " + rolloverFile.getAbsolutePath());
+        }
 
         // Rename the temporary logger to current logfile name.
         String tempPath = tempLogfile.getAbsolutePath();

@@ -79,6 +79,9 @@ public class RedoConfig {
         mRedoLogRolloverFileSizeKB =
             config.getLongAttr(Provisioning.A_zimbraRedoLogRolloverFileSizeKB,
                                D_REDOLOG_ROLLOVER_FILESIZE_KB);
+        mRedoLogDeleteOnRollover =
+            config.getBooleanAttr(Provisioning.A_zimbraRedoLogDeleteOnRollover,
+                                  D_REDOLOG_DELETE_ON_ROLLOVER);
         mRedoLogFsyncIntervalMS =
             config.getLongAttr(Provisioning.A_zimbraRedoLogFsyncIntervalMS,
                                D_REDOLOG_FSYNC_INTERVAL_MS);
@@ -141,6 +144,17 @@ public class RedoConfig {
      */
     public static synchronized long redoLogRolloverFileSizeKB() {
         return theInstance.mRedoLogRolloverFileSizeKB;
+    }
+
+    private boolean mRedoLogDeleteOnRollover;
+    private static final boolean D_REDOLOG_DELETE_ON_ROLLOVER = true;
+    /**
+     * If true, redo log file is deleted and discarded upon rollover.
+     * If false, redo log being rolled over is archived.
+     * @return
+     */
+    public static synchronized boolean redoLogDeleteOnRollover() {
+        return theInstance.mRedoLogDeleteOnRollover;
     }
 
     private long mRedoLogFsyncIntervalMS;

@@ -633,6 +633,7 @@ public abstract class Provisioning {
     public static final String A_zimbraRedoLogLogPath            = "zimbraRedoLogLogPath";
     public static final String A_zimbraRedoLogArchiveDir         = "zimbraRedoLogArchiveDir";
     public static final String A_zimbraRedoLogRolloverFileSizeKB = "zimbraRedoLogRolloverFileSizeKB";
+    public static final String A_zimbraRedoLogDeleteOnRollover   = "zimbraRedoLogDeleteOnRollover";
     public static final String A_zimbraRedoLogFsyncIntervalMS    = "zimbraRedoLogFsyncIntervalMS";
 
     public static final String A_zimbraRedoLogProvider = "zimbraRedoLogProvider";
