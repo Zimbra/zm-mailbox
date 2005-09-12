@@ -28,10 +28,13 @@ package com.zimbra.cs.db;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailItem.Array;
 import com.zimbra.cs.service.ServiceException;
 
 /**
@@ -277,5 +280,54 @@ public class DbUtil {
     public static int executeUpdate(String sql)
     throws ServiceException {
         return executeUpdate(sql, null);
+    }
+
+    public static final int IN_CLAUSE_BATCH_SIZE = 100;
+
+    /**
+     * Returns a string with the form <code>(?, ?, ?, ...)</code>, which
+     * contains as many question marks as the number of elements in the
+     * given array.  Used for generating SQL IN clauses.
+     */
+    public static String suitableNumberOfVariables(byte[] array)        { return DbUtil.suitableNumberOfVariables(array.length); }
+
+    /**
+     * Returns a string with the form <code>(?, ?, ?, ...)</code>, which
+     * contains as many question marks as the number of elements in the
+     * given array.  Used for generating SQL IN clauses.
+     */
+    public static String suitableNumberOfVariables(int[] array)         { return DbUtil.suitableNumberOfVariables(array.length); }
+
+    /**
+     * Returns a string with the form <code>(?, ?, ?, ...)</code>, which
+     * contains as many question marks as the number of elements in the
+     * given array.  Used for generating SQL IN clauses.
+     */
+    public static String suitableNumberOfVariables(Object[] array)      { return DbUtil.suitableNumberOfVariables(array.length); }
+
+    /**
+     * Returns a string with the form <code>(?, ?, ?, ...)</code>, which
+     * contains as many question marks as the number of elements in the
+     * given array.  Used for generating SQL IN clauses.
+     */
+    public static String suitableNumberOfVariables(Collection c)        { return DbUtil.suitableNumberOfVariables(c.size()); }
+
+    /**
+     * Returns a string with the form <code>(?, ?, ?, ...)</code>, which
+     * contains as many question marks as the number of elements in the
+     * given <code>Collection</code>.  Used for generating SQL IN clauses.
+     */
+    public static String suitableNumberOfVariables(MailItem.Array arr)  { return DbUtil.suitableNumberOfVariables(arr.length); }
+
+    /**
+     * Returns a string with the form <code>(?, ?, ?, ...)</code>.
+     * Used for generating SQL IN clauses.
+     * @param size the number of question marks
+     */
+    public static String suitableNumberOfVariables(int size) {
+        StringBuffer sb = new StringBuffer(" (");
+        for (int i = 0; i < size; i++)
+            sb.append(i == 0 ? "?" : ", ?");
+        return sb.append(") ").toString();
     }
 }

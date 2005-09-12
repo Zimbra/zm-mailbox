@@ -62,7 +62,6 @@ import com.zimbra.cs.util.TimeoutMap;
 public class DbMailItem {
 
     private static Log sLog = LogFactory.getLog(DbMailItem.class);
-    private static final int IN_CLAUSE_BATCH_SIZE = 100;
 
     /** Maps the mailbox id to the set of all tag combinations stored for all
      *  items in the mailbox.  Enables fast database lookup by tag. */
@@ -239,7 +238,7 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(folder) +
-                    " SET folder_id = ?, mod_metadata = ?, change_date = ? WHERE id IN " + suitableNumberOfVariables(itemIDs));
+                    " SET folder_id = ?, mod_metadata = ?, change_date = ? WHERE id IN " + DbUtil.suitableNumberOfVariables(itemIDs));
             stmt.setInt(1, folder.getId());
             stmt.setInt(2, mbox.getOperationChangeID());
             stmt.setInt(3, mbox.getOperationTimestamp());
@@ -263,7 +262,7 @@ public class DbMailItem {
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(parent) +
                     " SET parent_id = ?, mod_metadata = ?, change_date = ?" +
-                    " WHERE id IN " + suitableNumberOfVariables(children));
+                    " WHERE id IN " + DbUtil.suitableNumberOfVariables(children));
             int arg = 1;
             if (parent == null || parent instanceof VirtualConversation)
                 stmt.setNull(arg++, Types.INTEGER);
@@ -544,7 +543,7 @@ public class DbMailItem {
             String column = (tag instanceof Flag ? "flags" : "tags");
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(tag) +
                     " SET " + column + " = " + column + (add ? " | ?" : " & ?") + ", mod_metadata = ?, change_date = ?" +
-                    " WHERE id IN " + suitableNumberOfVariables(itemIDs));
+                    " WHERE id IN " + DbUtil.suitableNumberOfVariables(itemIDs));
             stmt.setLong(1, add ? tag.getBitmask() : ~tag.getBitmask());
             stmt.setInt(2, mbox.getOperationChangeID());
             stmt.setInt(3, mbox.getOperationTimestamp());
@@ -568,18 +567,6 @@ public class DbMailItem {
         }
     }
 	
-    private static String suitableNumberOfVariables(byte[] array)        { return suitableNumberOfVariables(array.length); }
-    private static String suitableNumberOfVariables(int[] array)         { return suitableNumberOfVariables(array.length); }
-    private static String suitableNumberOfVariables(Object[] array)      { return suitableNumberOfVariables(array.length); }
-    private static String suitableNumberOfVariables(Collection c)        { return suitableNumberOfVariables(c.size()); }
-    private static String suitableNumberOfVariables(MailItem.Array arr)  { return suitableNumberOfVariables(arr.length); }
-    private static String suitableNumberOfVariables(int size) {
-        StringBuffer sb = new StringBuffer(" (");
-        for (int i = 0; i < size; i++)
-            sb.append(i == 0 ? "?" : ", ?");
-        return sb.append(") ").toString();
-    }
-
     /**
      * Sets the <code>unread</code> column for the specified <code>MailItem</code>.
      * If the <code>MailItem</code> is a <code>Conversation</code>, <code>Tag</code>
@@ -630,7 +617,7 @@ public class DbMailItem {
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox) +
                     " SET unread = ?, mod_metadata = ?, change_date = ?" +
-                    " WHERE id IN" + suitableNumberOfVariables(itemIDs));
+                    " WHERE id IN" + DbUtil.suitableNumberOfVariables(itemIDs));
             stmt.setBoolean(1, unread);
             stmt.setInt(2, mbox.getOperationChangeID());
             stmt.setInt(3, mbox.getOperationTimestamp());
@@ -699,12 +686,12 @@ public class DbMailItem {
         String table = getMailItemTableName(mbox);
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        for (int i = 0; i < ids.size(); i += IN_CLAUSE_BATCH_SIZE)
+        for (int i = 0; i < ids.size(); i += DbUtil.IN_CLAUSE_BATCH_SIZE)
             try {
-                int count = Math.min(IN_CLAUSE_BATCH_SIZE, ids.size() - i);
+                int count = Math.min(DbUtil.IN_CLAUSE_BATCH_SIZE, ids.size() - i);
                 stmt = conn.prepareStatement("UPDATE " + table + ", " +
                         "(SELECT parent_id pid, COUNT(*) count, GROUP_CONCAT(id SEPARATOR ':') deleted FROM " + getMailItemTableName(mbox) +
-                        " WHERE id IN" + suitableNumberOfVariables(count) + "AND parent_id IS NOT NULL GROUP BY parent_id) x" +
+                        " WHERE id IN" + DbUtil.suitableNumberOfVariables(count) + "AND parent_id IS NOT NULL GROUP BY parent_id) x" +
                         " SET size = size - count, metadata = CONCAT(deleted, ':', metadata), mod_metadata = ?, change_date = ?" +
                         " WHERE id = pid AND type = " + MailItem.TYPE_CONVERSATION);
                 int attr = 1;
@@ -778,11 +765,11 @@ public class DbMailItem {
 
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
-        for (int i = 0; i < targets.size(); i += IN_CLAUSE_BATCH_SIZE)
+        for (int i = 0; i < targets.size(); i += DbUtil.IN_CLAUSE_BATCH_SIZE)
             try {
-                int count = Math.min(IN_CLAUSE_BATCH_SIZE, targets.size() - i);
+                int count = Math.min(DbUtil.IN_CLAUSE_BATCH_SIZE, targets.size() - i);
                 stmt = conn.prepareStatement("DELETE FROM " + getMailItemTableName(mbox) +
-                        " WHERE id IN" + suitableNumberOfVariables(count));
+                        " WHERE id IN" + DbUtil.suitableNumberOfVariables(count));
                 for (int index = i, attr = 1; index < i + count; index++)
                 	stmt.setInt(attr++, ((Integer) targets.get(index)).intValue());
                 stmt.executeUpdate();
@@ -1158,12 +1145,12 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         Iterator it = ids.iterator();
-        for (int i = 0; i < ids.size(); i += IN_CLAUSE_BATCH_SIZE)
+        for (int i = 0; i < ids.size(); i += DbUtil.IN_CLAUSE_BATCH_SIZE)
             try {
-                int count = Math.min(IN_CLAUSE_BATCH_SIZE, ids.size() - i);
+                int count = Math.min(DbUtil.IN_CLAUSE_BATCH_SIZE, ids.size() - i);
                 stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                         " FROM " + getMailItemTableName(mbox.getId(), "mi") +
-                        " WHERE id IN " + suitableNumberOfVariables(count));
+                        " WHERE id IN " + DbUtil.suitableNumberOfVariables(count));
                 for (int index = i, attr = 1; index < i + count; index++)
                     stmt.setInt(attr++, ((Integer) it.next()).intValue());
 
@@ -1258,13 +1245,13 @@ public class DbMailItem {
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        for (int i = 0; i < convData.size(); i += IN_CLAUSE_BATCH_SIZE)
+        for (int i = 0; i < convData.size(); i += DbUtil.IN_CLAUSE_BATCH_SIZE)
             try {
-                int count = Math.min(IN_CLAUSE_BATCH_SIZE, convData.size() - i);
+                int count = Math.min(DbUtil.IN_CLAUSE_BATCH_SIZE, convData.size() - i);
                 String sql = "SELECT parent_id, GROUP_CONCAT(id), SUM(unread)," +
                              " CONCAT(GROUP_CONCAT(-flags), ',', GROUP_CONCAT(tags)), COUNT(id) " +
                              "FROM " + getMailItemTableName(mbox.getId()) +
-                             " WHERE parent_id IN " + suitableNumberOfVariables(count) +
+                             " WHERE parent_id IN " + DbUtil.suitableNumberOfVariables(count) +
                              " GROUP BY parent_id";
                 stmt = conn.prepareStatement(sql);
                 for (int index = i, attr = 1; index < i + count; index++) {
@@ -1349,7 +1336,7 @@ public class DbMailItem {
                 constraint = "date < ? AND type = " + MailItem.TYPE_MESSAGE;
             else
                 constraint = "date < ? AND type >= " + MailItem.FIRST_SEARCHABLE_TYPE +
-                             " AND folder_id IN" + suitableNumberOfVariables(folders);
+                             " AND folder_id IN" + DbUtil.suitableNumberOfVariables(folders);
 
             stmt = conn.prepareStatement("SELECT " + LEAF_NODE_FIELDS +
                     " FROM " + getMailItemTableName(mbox) +
@@ -1454,7 +1441,7 @@ public class DbMailItem {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement("SELECT index_id FROM " + getMailItemTableName(mbox) +
-                    " WHERE index_id IN " + suitableNumberOfVariables(info.sharedIndex));
+                    " WHERE index_id IN " + DbUtil.suitableNumberOfVariables(info.sharedIndex));
             int attr = 1;
             for (Iterator it = info.sharedIndex.iterator(); it.hasNext(); )
             	stmt.setInt(attr++, ((Integer) it.next()).intValue());
@@ -1746,38 +1733,38 @@ public class DbMailItem {
             if (c.types == null)
                 statement.append("type >= " + MailItem.FIRST_SEARCHABLE_TYPE);
             else
-                statement.append("type IN").append(suitableNumberOfVariables(c.types));
+                statement.append("type IN").append(DbUtil.suitableNumberOfVariables(c.types));
 
             if (c.excludeTypes != null)
-                statement.append(" AND type NOT IN").append(suitableNumberOfVariables(c.excludeTypes));
+                statement.append(" AND type NOT IN").append(DbUtil.suitableNumberOfVariables(c.excludeTypes));
 
             if (c.hasTags != null)
                 statement.append(" AND tags ").append(c.hasTags.booleanValue() ? "!= 0" : "= 0");
             if (searchTagsets.size() > 0) {
-                statement.append(" AND tags IN").append(suitableNumberOfVariables(searchTagsets));
+                statement.append(" AND tags IN").append(DbUtil.suitableNumberOfVariables(searchTagsets));
             }
             if (searchFlagsets.size() > 0) {
-                statement.append(" AND flags IN").append(suitableNumberOfVariables(searchFlagsets));
+                statement.append(" AND flags IN").append(DbUtil.suitableNumberOfVariables(searchFlagsets));
             }
             if (unread != null)
                 statement.append(" AND unread = ?");
 
             Folder[] targetFolders = (c.folders != null && c.folders.length > 0) ? c.folders : c.excludeFolders;
             if (targetFolders != null && targetFolders.length > 0)
-                statement.append(" AND folder_id").append(targetFolders == c.folders ? "" : " NOT").append(" IN").append(suitableNumberOfVariables(targetFolders));
+                statement.append(" AND folder_id").append(targetFolders == c.folders ? "" : " NOT").append(" IN").append(DbUtil.suitableNumberOfVariables(targetFolders));
 
             if (c.convId > 0)
                 statement.append(" AND parent_id = ?");
             else if (c.prohibitedConvIds != null)
-                statement.append(" AND parent_id NOT IN").append(suitableNumberOfVariables(c.prohibitedConvIds));
+                statement.append(" AND parent_id NOT IN").append(DbUtil.suitableNumberOfVariables(c.prohibitedConvIds));
 
             if (c.itemIds != null)
-                statement.append(" AND id IN").append(suitableNumberOfVariables(c.itemIds));
+                statement.append(" AND id IN").append(DbUtil.suitableNumberOfVariables(c.itemIds));
             if (c.prohibitedItemIds != null)
-                statement.append(" AND id NOT IN").append(suitableNumberOfVariables(c.prohibitedItemIds));
+                statement.append(" AND id NOT IN").append(DbUtil.suitableNumberOfVariables(c.prohibitedItemIds));
 
             if (c.indexIds != null)
-                statement.append(" AND index_id IN").append(suitableNumberOfVariables(c.indexIds));
+                statement.append(" AND index_id IN").append(DbUtil.suitableNumberOfVariables(c.indexIds));
 
             if (c.dates != null) {
                 for (int i = 0; i < c.dates.length; i++) {

@@ -28,7 +28,10 @@ package com.zimbra.qa.unittest;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.List;
 
 import junit.framework.Test;
 import junit.framework.TestResult;
@@ -45,6 +48,7 @@ import com.zimbra.cs.util.ZimbraLog;
 public class ZimbraSuite extends TestSuite
 {
     static final DecimalFormat TEST_TIME_FORMAT = new DecimalFormat("0.00");
+    private static List /* <TestSuite> */ sAdditionalSuites = new ArrayList();
 
     public static TestSuite suite() {
         TestSuite suite = new TestSuite();
@@ -75,11 +79,21 @@ public class ZimbraSuite extends TestSuite
         suite.addTest(new TestSuite(TestTimeoutMap.class));
         suite.addTest(new TestSuite(TestConcurrency.class));
         
-        // xxx bburtin: Commenting out flaky test until I figure
-        // out what's going on.
-        // suite.addTest(new TestSuite(TestBlobMover.class));
-
+        synchronized (sAdditionalSuites) {
+           Iterator i = sAdditionalSuites.iterator();
+           while (i.hasNext()) {
+               TestSuite additional = (TestSuite) i.next();
+               suite.addTest(additional);
+           }
+        }
+        
         return suite;
+    }
+    
+    public static void addSuite(TestSuite suite) {
+        synchronized (sAdditionalSuites) {
+            sAdditionalSuites.add(suite);
+        }
     }
     
     
