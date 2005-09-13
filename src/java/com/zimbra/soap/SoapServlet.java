@@ -26,19 +26,30 @@
 package com.zimbra.soap;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.UnavailableException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.collections.Factory;
+import org.apache.commons.collections.map.LazyMap;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ZimbraPerf;
 import com.zimbra.cs.service.util.ThreadLocalData;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.stats.StopWatch;
+import com.zimbra.cs.util.StringUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraLog;
 
@@ -54,7 +65,21 @@ public class SoapServlet extends ZimbraServlet {
     public static final String ZIMBRA_AUTH_TOKEN = "zimbra.authToken";    
     /** context name of servlet HTTP request */
     public static final String SERVLET_REQUEST = "servlet.request";
+
+    // Used by sExtraServices
+    private static Factory sListFactory = new Factory() {
+        public Object create() {
+            return new ArrayList();
+        }
+    };
     
+    /**
+     * Keeps track of extra services added by extensions.
+     */
+    private static Map /* <String, DocumentService> */ sExtraServices =
+        LazyMap.decorate(new HashMap(), sListFactory);
+    
+    private static Log sLog = LogFactory.getLog(SoapServlet.class);
     private SoapEngine mEngine;
 
     public void init() throws ServletException {
@@ -70,6 +95,18 @@ public class SoapServlet extends ZimbraServlet {
             loadHandler(cname);
             i++;
         }
+        
+        // See if any extra services were perviously added by extensions 
+        synchronized (sExtraServices) {
+            List services = (List) sExtraServices.get(getServletName());
+            Iterator iter = services.iterator();
+            while (iter.hasNext()) {
+                DocumentService service = (DocumentService) iter.next();
+                addService(service);
+                i++;
+            }
+        }
+        
         if (i==0)
             throw new ServletException("Must specify at least one handler "+PARAM_ENGINE_HANDLER+i);
 
@@ -126,7 +163,32 @@ public class SoapServlet extends ZimbraServlet {
         }
 
         DocumentService hi = (DocumentService)dispatcher;
-        hi.registerHandlers(mEngine.getDocumentDispatcher());
+        addService(hi);
+    }
+    
+    /**
+     * Adds a service to the instance of <code>SoapServlet</code> with the given
+     * name.  If the servlet has not been loaded, stores the service for later
+     * initialization.
+     */
+    public static void addService(String servletName, DocumentService service) {
+        synchronized (sExtraServices) {
+            ZimbraServlet servlet = ZimbraServlet.getServlet(servletName);
+            if (servlet != null) {
+                ((SoapServlet) servlet).addService(service);
+            } else {
+                sLog.debug("addService(" + servletName + ", " +
+                    StringUtil.getSimpleClassName(service) + "): servlet has not been initialized");
+                List services = (List) sExtraServices.get(servletName);
+                services.add(service);
+            }
+        }
+    }
+    
+    private void addService(DocumentService service) {
+        ZimbraLog.soap.info("Adding service " + StringUtil.getSimpleClassName(service) +
+            " to " + getServletName());
+        service.registerHandlers(mEngine.getDocumentDispatcher());
     }
     
     private static StopWatch sSoapStopWatch = StopWatch.getInstance("Soap");

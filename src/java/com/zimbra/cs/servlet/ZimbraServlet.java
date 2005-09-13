@@ -35,6 +35,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
@@ -52,6 +54,7 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.SoapProtocol;
 
@@ -73,6 +76,8 @@ public class ZimbraServlet extends HttpServlet {
     public static final String COOKIE_ZM_ADMIN_AUTH_TOKEN = "ZM_ADMIN_AUTH_TOKEN"; 
 
     private static final String PARAM_ALLOWED_PORTS  = "allowed.ports";
+    
+    private static Map /* <String, ZimbraServlet> */ sServlets = new HashMap();
 
     private int[] mAllowedPorts;
 
@@ -97,6 +102,22 @@ public class ZimbraServlet extends HttpServlet {
                     throw new ServletException("Invalid port number " + mAllowedPorts[i] + " in " +
                                                PARAM_ALLOWED_PORTS + " parameter; port number must be greater than zero");
             }
+        }
+        
+        // Store reference to this servlet for accessor 
+        synchronized (sServlets) {
+            String name = getServletName();
+            if (sServlets.containsKey(name)) {
+                Zimbra.halt("Attempted to instantiate a second instance of " + name);
+            }
+            sServlets.put(getServletName(), this);
+            mLog.debug("Added " + getServletName() + " to the servlet list");
+        }
+    }
+    
+    public static ZimbraServlet getServlet(String name) {
+        synchronized (sServlets) {
+            return (ZimbraServlet) sServlets.get(name);
         }
     }
 
