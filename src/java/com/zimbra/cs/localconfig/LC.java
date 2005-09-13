@@ -304,25 +304,25 @@ public class LC {
              + ZM_MYCNF_CAVEAT);
 
         mysql_innodb_log_buffer_size = new KnownKey("mysql_innodb_log_buffer_size");
-        mysql_innodb_log_buffer_size.setDefault("8");
+        mysql_innodb_log_buffer_size.setDefault("8388608");
         mysql_innodb_log_buffer_size.setDoc
             ("Consult MySQL documentation for innodb_log_buffer_size. " +
              ZM_MYCNF_CAVEAT);
 
         mysql_innodb_log_file_size = new KnownKey("mysql_innodb_log_file_size");
-        mysql_innodb_log_file_size.setDefault("100");
+        mysql_innodb_log_file_size.setDefault("104857600");
         mysql_innodb_log_file_size.setDoc
             ("Consult MySQL documentation for innodb_log_file_size. " +
              ZM_MYCNF_CAVEAT);
 
         mysql_sort_buffer_size = new KnownKey("mysql_sort_buffer_size");
-        mysql_sort_buffer_size.setDefault("1");
+        mysql_sort_buffer_size.setDefault("1048576");
         mysql_sort_buffer_size.setDoc
             ("Consult MySQL documentation for sort_buffer_size. " +
              ZM_MYCNF_CAVEAT);
         
         mysql_read_buffer_size = new KnownKey("mysql_read_buffer_size");
-        mysql_read_buffer_size.setDefault("1");
+        mysql_read_buffer_size.setDefault("1048576");
         mysql_read_buffer_size.setDoc
             ("Consult MySQL documentation for read_buffer_size. " +
              ZM_MYCNF_CAVEAT);
