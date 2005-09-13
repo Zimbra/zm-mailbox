@@ -25,6 +25,8 @@
 
 package com.zimbra.cs.service.mail;
 
+import java.io.IOException;
+import java.io.StringReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
@@ -49,6 +51,8 @@ import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.JMSession;
 
+import net.fortuna.ical4j.data.CalendarBuilder;
+import net.fortuna.ical4j.data.ParserException;
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.DateList;
@@ -204,6 +208,43 @@ public class CalendarUtils {
         return parseInviteForCreate(account, inviteElem, null, null, false);
     }
     
+    
+    /**
+     * Useful for sync and import, parse an <inv> that is specified using raw iCalendar data in the
+     * format:
+     *     <inv>
+     *       <content uid="UID" summary="summary">
+     *         RAW VCALENDAR 
+     *       </content>
+     *     </inv>
+     *     
+     * @param account
+     * @param inviteElem 
+     * @return
+     * @throws ServiceException
+     */
+    static ParseMimeMessage.InviteParserResult parseInviteRaw(Account account, Element inviteElem) throws ServiceException
+    {
+        ParseMimeMessage.InviteParserResult toRet = new ParseMimeMessage.InviteParserResult();
+        
+        Element content = inviteElem.getElement("content");
+        toRet.mUid = content.getAttribute("uid");
+        toRet.mSummary = content.getAttribute("summary");
+        
+        String calStr = content.getText();
+        CalendarBuilder calBuilder = new CalendarBuilder();
+        StringReader reader = new StringReader(calStr);
+        try {
+            toRet.mCal = calBuilder.build(reader);
+        } catch (ParserException pe) {
+            throw ServiceException.FAILURE("Parse Exception parsing raw iCalendar data -- "+pe, pe);
+        } catch (IOException ioe) {
+            throw ServiceException.FAILURE("IOException parsing raw iCalendar data -- "+ioe, ioe);
+        }
+        
+        return toRet;
+    }
+            
     
     /**
      * Parse an <inv> element 

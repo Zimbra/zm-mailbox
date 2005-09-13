@@ -705,6 +705,15 @@ public class Appointment extends MailItem {
     }
     
     
+    /**
+     * The Blob for the appointment is currently single Mime multipart/digest which has
+     * each invite's MimeMessage stored as a part.  
+     * 
+     * @param invPm
+     * @param firstInvite
+     * @param volumeId
+     * @throws ServiceException
+     */
     private void createBlob(ParsedMessage invPm, Invite firstInvite, short volumeId)
     throws ServiceException 
     {
@@ -732,11 +741,22 @@ public class Appointment extends MailItem {
         }
     }
     
-    private void modifyBlob(ArrayList /* Invite */ toRemove, ParsedMessage invPm, Invite invite,
+    /**
+     * Upate the Blob for this Appointment object: possibly remove one or more entries from it, 
+     * possibly add an entry to it.
+     * 
+     * @param toRemove
+     * @param invPm
+     * @param newInv
+     * @param volumeId
+     * @throws ServiceException
+     */
+    private void modifyBlob(ArrayList /* Invite */ toRemove, ParsedMessage invPm, Invite newInv,
                             short volumeId)
     throws ServiceException
     {
-        // TODO - should check to see if the invite's MM is already in here!
+        // TODO - as an optimization, should check to see if the invite's MM is already in here! (ie
+        //         if a single incoming Message has multiple invites in it, all for this Appointment)
         try { 
             // now, make sure the message is in our blob already...
             MimeMessage mm;
@@ -744,10 +764,9 @@ public class Appointment extends MailItem {
             try {
                 mm = new MimeMessage(getMimeMessage());
             } catch (ServiceException e) {
-                // oops, blob isn't there!  old data!  create one
-                
+                // oops, blob isn't there!  old data!  create ones
                 if (invPm != null) {
-                    createBlob(invPm, invite, volumeId);
+                    createBlob(invPm, newInv, volumeId);
                 }
                 return;
             }
@@ -785,12 +804,12 @@ public class Appointment extends MailItem {
                 } while(matchedIdx > -1);
             }
 
+            // (optionally) add a new message to the blob 
             if (invPm != null) {
-                // add new message
                 MimeBodyPart mbp = new MimeBodyPart();
                 mbp.setDataHandler(new DataHandler(new PMDataSource(invPm)));
                 mmp.addBodyPart(mbp);
-                mbp.addHeader("invId", Integer.toString(invite.getMailItemId()));
+                mbp.addHeader("invId", Integer.toString(newInv.getMailItemId()));
                 updated = true;
             }
             

@@ -428,18 +428,7 @@ public class Message extends MailItem {
                    return; // for now, just ignore this Invitation
                }
            } else {
-               // tim: this shouldn't be necessary with the schema update
-//               try {
-                   appt.processNewInvite(pm, cur, volumeId);
-//               } catch(MailServiceException.NoSuchItemException e) {
-//                   // FIXME temp fix for bug 2019: for now, if any of the invites are missing for an 
-//                   // appointment we'll just delete the entire appointment and re-create it. 
-//                   appt.delete();
-//                   
-//                   // try it one more time
-//                   appt = mbox.createAppointment(Mailbox.ID_FOLDER_CALENDAR, "", cur.getUid(), pm, cur, newApptId);
-//                   redoRecorder.setAppointmentId(appt.getId());
-//               }
+               appt.processNewInvite(pm, cur, volumeId);
            }
            
            ApptInfo info = new ApptInfo(appt.getId(), cur.getComponentNum());

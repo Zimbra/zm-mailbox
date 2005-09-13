@@ -2,19 +2,18 @@ CALENDAR Server-Side TODO list
  
 Important bugs relating to basic "group scheduling"
 ------------------------------------------------------------------------
-API -- Soap API cleanup
-API -- default duration (GetApptSummaries) should be DURATION....??
 API -- GetApptSummaries should use DateTime, not GMT time, allow for timezone shifts
 
 -- testing.  this is kind of blocked on the API unfortunately, but need to come up with a more or less comprehensive set of tests.  There are a LOT of cases: self-created meeting, externally-created-meeting, accept, deny, add invitess, remove invitees, reply to meeting request forwarded from someone else, etc etc......maybe that's a good thing for me to be doing: I'll sit down and try to come up with a comprehensive list of test scenareos.
 
--- TENTATIVE status for invite...(right now events show up as "Busy" in the appt-summaries UI even if you haven't accepted the invite)
+-- REPLY fixes:
+   -- need to properly track REPLYs from invitees
+   -- need to allow replies to be for a specific instance, not just a specific INVITE
 
--- getMsg should __not__ have to re-parse the VCalendar from the blob store.  Or, if it does, then at least pass the ParsedMimeMessage down so it doesn't have to re-load it from the store.
+-- Alarm System / Alerts
 
--- fix all-day appointments
 
--- DATE entries not parsing in DateTime slots
+
 
  
 Interoperability tasks:
@@ -27,7 +26,6 @@ Interoperability tasks:
  
 Stuff to make us more-or-less compliant with RFC's (2445, 2446, 2447):
 ----------------------------------------------------------------------
-
 -- Method:COUNTER/DECLINECOUNTER (RFC2446: 4.2.4) -- for Propse New Time
 
 -- Method:ADD
@@ -39,6 +37,12 @@ Stuff to make us more-or-less compliant with RFC's (2445, 2446, 2447):
 -- iCalendar-based DELEGATION (RFC2446: 4.2.5)
  
 -- support for VTODOs and VJOURNAL
+
+
+Other stuff that's on the radar:
+---------------------------------
+
+-- Two-Way sync of .ICS files (eg from Evolution)
 
 
 --------------------------------------------------------------------------------

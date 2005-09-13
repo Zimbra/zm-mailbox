@@ -196,18 +196,27 @@ RECURRENCE SPECIFIERS!
   [<except needsReply="0|1" ptst="AC|TE|DE|DG|CO|IN">
      <m> See CreateAppointmentExceptionRequest
         ...
+**************
+ONE OF:        
+   1) XML <inv> format from CreateAppointment 
         <inv>
            ...
            <exceptId DATETIME> // EXCEPTION_ID -- this is the DateTime of some instance in the default appointment
            ...
         </inv>
+OR
+   2) Raw iCalendar import:
+      <inv>
+        <content uid="UID" summary="summary">
+           RAW XML-ENCODED ICALENDAR DATA
+        </content>
+      </inv>
+*************
      </m>
   </exception>]*
 </SetAppointmentRequest>
 
 <SetAppointmentResponse apptId="appointment_id"/>
-
-
 
    
 //////////////////////////////////////////////////////////////////////

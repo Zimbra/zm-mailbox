@@ -51,7 +51,16 @@ public class SetAppointment extends CalendarRequest {
 
         public ParseMimeMessage.InviteParserResult parseInviteElement(OperationContext octxt, Account account, Element inviteElem) throws ServiceException 
         {
-            return CalendarUtils.parseInviteForCreate(account, inviteElem, null, mUid, false);
+            Element content = inviteElem.getOptionalElement("content");
+            if (content != null) {
+                ParseMimeMessage.InviteParserResult toRet = CalendarUtils.parseInviteRaw(account, inviteElem);
+                if (!toRet.mUid.equals(mUid)) {
+                    throw ServiceException.FAILURE("Request UID doesn't match UID embedded in raw iCalendar data", null);
+                }
+                return toRet;
+            } else {
+                return CalendarUtils.parseInviteForCreate(account, inviteElem, null, mUid, false);
+            }
         }
     };
     
@@ -83,7 +92,7 @@ public class SetAppointment extends CalendarRequest {
                     Element msgElem = e.getElement(MailService.E_MSG);
                     CalSendData dat = handleMsgElement(octxt, msgElem, acct, mbox, new SetAppointmentInviteParser(uid));
                     
-                    int invMsgId = sendDeleteCalendarMessage(octxt, acct, mbox, dat);
+                    int invMsgId = sendThenDeleteCalendarMessage(octxt, acct, mbox, dat);
                     appt = mbox.getAppointmentByUid(octxt, uid);
                     
                     mbox.modifyInvitePartStat(octxt, appt.getId(), invMsgId, 0, needsReply, partStatStr);
@@ -113,7 +122,7 @@ public class SetAppointment extends CalendarRequest {
                     CalSendData dat = handleMsgElement(octxt, msgElem, acct, mbox, 
                             new CreateAppointmentException.CreateApptExceptionInviteParser(appt.getUid(), inv.getTimeZoneMap()));
                     
-                    int invMsgId = sendDeleteCalendarMessage(octxt, acct, mbox, dat);
+                    int invMsgId = sendThenDeleteCalendarMessage(octxt, acct, mbox, dat);
                     
                     mbox.modifyInvitePartStat(octxt, appt.getId(), invMsgId, 0, needsReply, partStatStr);
                     
@@ -128,11 +137,11 @@ public class SetAppointment extends CalendarRequest {
         }
     }
     
-    protected static int sendDeleteCalendarMessage(OperationContext octxt, Account acct, Mailbox mbox, CalSendData dat) throws ServiceException
+    protected static int sendThenDeleteCalendarMessage(OperationContext octxt, Account acct, Mailbox mbox, CalSendData dat) throws ServiceException
     {
         int msgId = sendMimeMessage(octxt, mbox, acct, Mailbox.ID_FOLDER_CALENDAR, dat, dat.mMm, dat.mOrigId, dat.mReplyType);
         
-        mbox.delete(octxt, msgId, MailItem.TYPE_MESSAGE);
+//        mbox.delete(octxt, msgId, MailItem.TYPE_MESSAGE);
         
         return msgId;
     }
