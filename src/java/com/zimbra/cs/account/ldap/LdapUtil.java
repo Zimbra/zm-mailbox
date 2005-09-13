@@ -680,10 +680,12 @@ public class LdapUtil {
         if (token != null) {
             if (token.equals(""))
                 query = query.replaceAll("\\*\\*", "*");
-            else 
-                query = "(&(whenChanged>="+LdapUtil.escapeSearchFilterArg(token)+")"+query.replaceAll("\\*\\*", "*")+")";
+            else  {
+                String arg = LdapUtil.escapeSearchFilterArg(token);                
+                query = "(&(|(modifyTimeStamp>="+arg+")(createTimeStamp>="+arg+")(whenModified>="+arg+")(whenCreated>="+arg+"))"+query.replaceAll("\\*\\*", "*")+")";                
+            }                
         }
-        ZimbraLog.misc.info("searchLdapGal query:"+query);
+        ZimbraLog.misc.debug("searchLdapGal query:"+query);
         SearchControls sc = new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, galAttrList, true, false);
         result.token = null;        
         DirContext ctxt = null;

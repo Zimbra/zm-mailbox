@@ -187,8 +187,11 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
         if (token != null) {
             if (token.equals(""))
                 query = query.replaceAll("\\*\\*", "*");
-            else 
-                query = "(&(modifyTimeStamp>="+LdapUtil.escapeSearchFilterArg(token)+")"+query.replaceAll("\\*\\*", "*")+")";
+            else {
+                String arg = LdapUtil.escapeSearchFilterArg(token);
+                //query = "(&(modifyTimeStamp>="+arg+")"+query.replaceAll("\\*\\*", "*")+")";
+                query = "(&(|(modifyTimeStamp>="+arg+")(createTimeStamp>="+arg+"))"+query.replaceAll("\\*\\*", "*")+")";
+            }
         }
         Map galAttrMap = getGalAttrMap();
         String[] galAttrList = getGalAttrList();
@@ -209,7 +212,9 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
                     String dn = srctxt.getNameInNamespace();
                     LdapGalContact lgc = new LdapGalContact(dn, sr.getAttributes(), galAttrList, galAttrMap);
                     String mts = (String) lgc.getAttrs().get("modifyTimeStamp");
-                    if (result.token == null || (mts !=null && (mts.compareTo(result.token) > 0))) result.token = mts;
+                    if (result.token == null || (mts !=null && (mts.compareTo(result.token) > 0))) result.token = mts;                    
+                    String cts = (String) lgc.getAttrs().get("createTimeStamp");                    
+                    if (result.token == null || (cts !=null && (cts.compareTo(result.token) > 0))) result.token = cts;                    
                     result.matches.add(lgc);
                 } finally {
                     if (srctxt != null)
