@@ -34,12 +34,11 @@ import com.zimbra.cs.db.DbTableMaintenance;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.ZimbraContext;
-import com.zimbra.soap.WriteOpDocumentHandler;
 
 /**
  * @author bburtin
  */
-public class MaintainTables extends WriteOpDocumentHandler {
+public class MaintainTables extends AdminDocumentHandler {
     
 	public Element handle(Element request, Map context) throws ServiceException {
         int numTables = DbTableMaintenance.runMaintenance();
