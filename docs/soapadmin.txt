@@ -158,7 +158,7 @@ Notes:
 -----------------------------
 
 <SearchAccountsRequest [limit="..."] [offset="..."] [domain="{domain-name}"] [applyCos="{apply-cos}"]
-         [attrs="a1,a2,a3"] [sortBy="{sort-by}"] [sortAscending="{sort-ascending}"]>
+         [attrs="a1,a2,a3"] [sortBy="{sort-by}"] [sortAscending="{sort-ascending}"] [types="{type}"]>
   <query>...</query>
 </SearchAccountsRequest>
 
@@ -166,6 +166,12 @@ Notes:
   <account name="{name}" id="{id}">
     <a n="...">...</a>+
   </account>
+  <alias name="{name}" id="{id}">
+    <a n="...">...</a>+  
+  </alias>
+  <distributionlist name="{name}" id="{id}">
+    <a n="...">...</a>+  
+  </distributionlist>
 </SearchAccountsResponse>
 
 Notes:
@@ -181,6 +187,9 @@ SearchAccountsRequest
 	sortAscending - whether to sort in ascending order (0/1), 1 is default
     more-flag = true if more accounts left to return
     search-total = total number of accounts that matched search (not affected by limit/offset)
+    types = comma-separated list of types to return. legal values are: 
+            accounts|distributionlists|aliases 
+            (default is accounts)
 
 -----------------------------
 

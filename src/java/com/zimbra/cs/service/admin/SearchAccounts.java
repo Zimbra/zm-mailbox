@@ -29,10 +29,14 @@
 package com.zimbra.cs.service.admin;
 
 import java.util.*;
+import java.util.Map.Entry;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.Alias;
+import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
@@ -61,8 +65,15 @@ public class SearchAccounts extends AdminDocumentHandler {
         boolean applyCos = request.getAttributeBool(AdminService.A_APPLY_COS, true);
         String attrsStr = request.getAttribute(AdminService.A_ATTRS, null);
         String sortBy = request.getAttribute(AdminService.A_SORT_BY, null);        
+        String types = request.getAttribute(AdminService.A_TYPES, "accounts");
         boolean sortAscending = request.getAttributeBool(AdminService.A_SORT_ASCENDING, true);        
 
+        int flags = 0;
+        
+        if (types.indexOf("accounts") != -1) flags |= Provisioning.SA_ACCOUNT_FLAG;
+        if (types.indexOf("aliases") != -1) flags |= Provisioning.SA_ALIAS_FLAG;
+        if (types.indexOf("distributionlists") != -1) flags |= Provisioning.SA_DISTRIBUTION_LIST_FLAG;
+        
         String[] attrs = attrsStr == null ? null : attrsStr.split(",");
 
         ArrayList accounts;
@@ -77,20 +88,56 @@ public class SearchAccounts extends AdminDocumentHandler {
         // TODO: this is the point we should check in the session to see if we already have this query cached
         // from the previous search
         if (d != null) {
-            accounts = d.searchAccounts(query, attrs, sortBy, sortAscending);
+            accounts = d.searchAccounts(query, attrs, sortBy, sortAscending, flags);
         } else {
-            accounts = prov.searchAccounts(query, attrs, sortBy, sortAscending);
+            accounts = prov.searchAccounts(query, attrs, sortBy, sortAscending, flags);
         }
 
         Element response = lc.createElement(AdminService.SEARCH_ACCOUNTS_RESPONSE);
         int i, limitMax = offset+limit;
         for (i=offset; i < limitMax && i < accounts.size(); i++) {
-            Account account = (Account) accounts.get(i);        
-            GetAccount.doAccount(response, account, applyCos);
+            NamedEntry entry = (NamedEntry) accounts.get(i);
+            if (entry instanceof Account) {
+                GetAccount.doAccount(response, (Account) entry, applyCos);
+            } else if (entry instanceof DistributionList) {
+                doDistributionList(response, (DistributionList) entry);
+            } else if (entry instanceof Alias) {
+                doAlias(response, (Alias) entry);                                    
+            }
         }          
 
         response.addAttribute(AdminService.A_MORE, i < accounts.size());
         response.addAttribute(AdminService.A_SEARCH_TOTAL, accounts.size());        
         return response;
     }
+
+    static void doDistributionList(Element e, DistributionList list) throws ServiceException {
+        Element elist = e.addElement(AdminService.E_DISTRIBUTIONLIST);
+        elist.addAttribute(AdminService.A_NAME, list.getName());
+        elist.addAttribute(AdminService.A_ID, list.getId());        
+        Map attrs = list.getAttrs();
+        doAttrs(elist, attrs);
+    }
+
+    static void doAlias(Element e, Alias a) throws ServiceException {
+        Element ealias = e.addElement(AdminService.E_ALIAS);
+        ealias.addAttribute(AdminService.A_NAME, a.getName());
+        ealias.addAttribute(AdminService.A_ID, a.getId());        
+        Map attrs = a.getAttrs();
+        doAttrs(ealias, attrs);
+    }
+
+    static void doAttrs(Element e, Map attrs) throws ServiceException {
+        for (Iterator mit = attrs.entrySet().iterator(); mit.hasNext(); ) {
+            Map.Entry entry = (Entry) mit.next();
+            String name = (String) entry.getKey();
+            Object value = entry.getValue();
+            if (value instanceof String[]) {
+                String sv[] = (String[]) value;
+                for (int i = 0; i < sv.length; i++)
+                    e.addAttribute(name, sv[i], Element.DISP_ELEMENT);
+            } else if (value instanceof String)
+                e.addAttribute(name, (String) value, Element.DISP_ELEMENT);
+        }       
+}   
 }

@@ -878,18 +878,25 @@ public class ProvUtil {
         ArrayList accounts;
         if (domainStr != null) {
             Domain d = lookupDomain(domainStr);
-            accounts = d.searchAccounts(query, attrsToGet, sortBy, isSortAscending);    
+            accounts = d.searchAccounts(query, attrsToGet, sortBy, isSortAscending, Provisioning.SA_ACCOUNT_FLAG);    
         } else {
-            accounts = mProvisioning.searchAccounts(query, attrsToGet, sortBy, isSortAscending);    
+            //accounts = mProvisioning.searchAccounts(query, attrsToGet, sortBy, isSortAscending, Provisioning.SA_ACCOUNT_FLAG);
+            accounts = mProvisioning.searchAccounts(query, attrsToGet, sortBy, isSortAscending, Provisioning.SA_ACCOUNT_FLAG|Provisioning.SA_ALIAS_FLAG|Provisioning.SA_DISTRIBUTION_LIST_FLAG);                
         }
 
         //ArrayList accounts = (ArrayList) mProvisioning.searchAccounts(query);
         for (int j=offset; j < offset+limit && j < accounts.size(); j++) {
-            Account account = (Account) accounts.get(j);
-            if (verbose)
-                dumpAccount(account, applyCos);
-            else
+            NamedEntry account = (NamedEntry) accounts.get(j);
+            if (verbose) {
+                if (account instanceof Account)
+                    dumpAccount((Account)account, applyCos);
+                else if (account instanceof Alias)
+                    dumpAlias((Alias)account);
+                else if (account instanceof DistributionList)
+                    dumpDistributionList((DistributionList)account);
+            } else {
                 System.out.println(account.getName());
+            }
         }
     }    
 
@@ -1054,7 +1061,13 @@ public class ProvUtil {
         Map attrs = dl.getAttrs();
         dumpAttrs(attrs);        
     }
-    
+
+    private void dumpAlias(Alias alias) throws ServiceException {
+        System.out.println("# alias " + alias.getName());
+        Map attrs = alias.getAttrs();
+        dumpAttrs(attrs);        
+    }
+
     /**
      * @param args
      * @throws ServiceException

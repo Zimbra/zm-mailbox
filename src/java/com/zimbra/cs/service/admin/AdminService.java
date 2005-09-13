@@ -254,6 +254,7 @@ public class AdminService implements DocumentService {
     public static final String A_SERVER = "server";
     public static final String A_STATUS = "status";        
     public static final String A_TIME = "time";
+    public static final String A_TYPES = "types";
     public static final String A_NUM_TABLES = "numTables";
     
     public static final String A_NUM_EXECUTED = "numExecuted";

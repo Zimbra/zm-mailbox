@@ -53,7 +53,7 @@ public interface Domain extends NamedEntry {
      * @return an ArrayList of all the accounts that matched.
      * @throws ServiceException
      */
-    public abstract ArrayList searchAccounts(String query, String returnAttrs[], String sortAttr, boolean sortAscending) throws ServiceException;  
+    public abstract ArrayList searchAccounts(String query, String returnAttrs[], String sortAttr, boolean sortAscending, int flags) throws ServiceException;  
 
     /**
      * 

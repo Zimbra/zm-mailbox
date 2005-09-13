@@ -662,42 +662,68 @@ public class LdapProvisioning extends Provisioning {
      * @see com.zimbra.cs.account.Provisioning#getAllDomains()
      */
     public List getAllAdminAccounts() throws ServiceException {
-        return searchAccounts("(zimbraIsAdminAccount=TRUE)", null, null, true);
+        return searchAccounts("(zimbraIsAdminAccount=TRUE)", null, null, true, Provisioning.SA_ACCOUNT_FLAG);
     }
 
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#searchAccounts(java.lang.String)
      */
-    public ArrayList searchAccounts(String query, String returnAttrs[], final String sortAttr, final boolean sortAscending)  
+    public ArrayList searchAccounts(String query, String returnAttrs[], final String sortAttr, final boolean sortAscending, int flags)  
         throws ServiceException
     {
-        return searchAccounts(query, returnAttrs, sortAttr, sortAscending, "");          
+        return searchAccounts(query, returnAttrs, sortAttr, sortAscending, "", flags);          
     }
 
+    private static String getObjectClassQuery(int flags) {
+        boolean accounts = (flags & Provisioning.SA_ACCOUNT_FLAG) != 0; 
+        boolean aliases = (flags & Provisioning.SA_ALIAS_FLAG) != 0;
+        boolean lists = (flags & Provisioning.SA_DISTRIBUTION_LIST_FLAG) != 0;
+        int num = (accounts ? 1 : 0) + (aliases ? 1 : 0) + (lists ? 1 : 0);
+
+        if (num == 0) {
+            accounts = true;
+            num = 1;
+        }
+
+        StringBuffer oc = new StringBuffer();
+        
+        if (num > 1) oc.append("(|");
+        if (accounts) oc.append("(objectclass=zimbraAccount)");
+        if (aliases) oc.append("(objectclass=zimbraAlias)");
+        if (lists) oc.append("(objectclass=zimbraDistributionList)");        
+        if (num > 1) oc.append(")");
+        return oc.toString();
+    }
+    
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#searchAccounts(java.lang.String)
      */
-    ArrayList searchAccounts(String query, String returnAttrs[], final String sortAttr, final boolean sortAscending, String base)  
+    ArrayList searchAccounts(String query, String returnAttrs[], final String sortAttr, final boolean sortAscending, String base, int flags)  
         throws ServiceException
     {
         ArrayList result = new ArrayList();
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
+            
+            String objectClass = getObjectClassQuery(flags);
+            
             if (query == null || query.equals("")) {
-                query = "(objectclass=zimbraAccount)";
+                query = objectClass;
             } else {
                 if (query.startsWith("(") && query.endsWith(")")) {
-                    query = "(&"+query+"(objectclass=zimbraAccount))";                    
+                    query = "(&"+query+objectClass+")";                    
                 } else {
-                    query = "(&("+query+")(objectclass=zimbraAccount))";
+                    query = "(&("+query+")"+objectClass+")";
                 }
             }
             
-            returnAttrs = fixReturnAttrs(returnAttrs);
+            returnAttrs = fixReturnAttrs(returnAttrs, flags);
 
             SearchControls searchControls = 
                 new SearchControls(SearchControls.SUBTREE_SCOPE, 0, 0, returnAttrs, true, false);
+
+            // we don't want to ever cache any of these, since they might not have all their attributes
 
             NamingEnumeration ne = ctxt.search(base, query, searchControls);
             while (ne.hasMore()) {
@@ -706,9 +732,12 @@ public class LdapProvisioning extends Provisioning {
                 String dn = srctxt.getNameInNamespace();
                 srctxt.close();
                 // skip admin accounts
-                // don't cache these, since they don't have a full set of attributes
-                if (!dn.endsWith("cn=zimbra"))
-                    result.add(new LdapAccount(dn, sr.getAttributes(), this));
+                if (dn.endsWith("cn=zimbra")) continue;
+                Attributes attrs = sr.getAttributes();
+                Attribute objectclass = attrs.get("objectclass");
+                if (objectclass == null || objectclass.contains("zimbraAccount")) result.add(new LdapAccount(dn, attrs, this));
+                else if (objectclass.contains("zimbraAlias")) result.add(new LdapAlias(dn, sr.getAttributes()));
+                else if (objectclass.contains("zimbraDistributionList")) result.add(new LdapDistributionList(dn, sr.getAttributes()));                
             }
             ne.close();
         } catch (NameNotFoundException e) {
@@ -726,8 +755,8 @@ public class LdapProvisioning extends Provisioning {
         if (sortAttr != null) {
             Comparator comparator = new Comparator() {
                 public int compare(Object oa, Object ob) {
-                    LdapAccount a = (LdapAccount) oa;
-                    LdapAccount b = (LdapAccount) ob;
+                    LdapNamedEntry a = (LdapNamedEntry) oa;
+                    LdapNamedEntry b = (LdapNamedEntry) ob;
                     String sa = a.getAttr(sortAttr);
                     String sb = b.getAttr(sortAttr);
                     int result = (sa == null || sb == null) ? -1 : sa.compareTo(sb);
@@ -746,13 +775,15 @@ public class LdapProvisioning extends Provisioning {
      * @param returnAttrs
      * @return
      */
-    private String[] fixReturnAttrs(String[] returnAttrs) {
+    private String[] fixReturnAttrs(String[] returnAttrs, int flags) {
         if (returnAttrs == null || returnAttrs.length == 0)
             return null;
         
         boolean needUID = true;
         boolean needID = true;
         boolean needCOSId = true;
+        boolean needObjectClass = true;        
+        boolean needAliasTargetId = (flags & Provisioning.SA_ALIAS_FLAG) != 0;
         
         for (int i=0; i < returnAttrs.length; i++) {
             if (Provisioning.A_uid.equalsIgnoreCase(returnAttrs[i]))
@@ -760,9 +791,14 @@ public class LdapProvisioning extends Provisioning {
             else if (Provisioning.A_zimbraId.equalsIgnoreCase(returnAttrs[i]))
                 needID = false;
             else if (Provisioning.A_zimbraCOSId.equalsIgnoreCase(returnAttrs[i]))
-                needCOSId = false;            
+                needCOSId = false;
+            else if (Provisioning.A_zimbraAliasTargetId.equalsIgnoreCase(returnAttrs[i]))
+                needAliasTargetId = false;
+            else if (Provisioning.A_objectClass.equalsIgnoreCase(returnAttrs[i]))
+                needObjectClass = false;            
         }
-        int num = (needUID ? 1 : 0) + (needID ? 1 : 0) + (needCOSId ? 1 : 0);
+        
+        int num = (needUID ? 1 : 0) + (needID ? 1 : 0) + (needCOSId ? 1 : 0) + (needAliasTargetId ? 1 : 0) + (needObjectClass ? 1 :0);
         
         if (num == 0) return returnAttrs;
        
@@ -771,6 +807,8 @@ public class LdapProvisioning extends Provisioning {
         if (needUID) result[i++] = Provisioning.A_uid;
         if (needID) result[i++] = Provisioning.A_zimbraId;
         if (needCOSId) result[i++] = Provisioning.A_zimbraCOSId;
+        if (needAliasTargetId) result[i++] = Provisioning.A_zimbraAliasTargetId;
+        if (needObjectClass) result[i++] = Provisioning.A_objectClass;
         System.arraycopy(returnAttrs, 0, result, i, returnAttrs.length);
         return result;
     }

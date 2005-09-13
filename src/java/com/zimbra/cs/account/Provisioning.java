@@ -787,15 +787,25 @@ public abstract class Provisioning {
 
     public abstract Account getAccountByName(String emailAddress) throws ServiceException;
 
+    /** return accounts from search accounts */
+    public static final int SA_ACCOUNT_FLAG = 0x1;
+    
+    /** return aliases from search accounts */
+    public static final int SA_ALIAS_FLAG = 0x2;
+    
+    /** return distribution lists from search accounts */
+    public static final int SA_DISTRIBUTION_LIST_FLAG = 0x4;
+
     /**
      * @param query LDAP search query
      * @param returnAttrs list of attributes to return. uid is always included. null will return all attrs.
      * @param sortAttr attr to sort on. if null, sorting will be by account name.
      * @param sortAscending sort ascending (true) or descending (false).
+     * @param flags - whether to addtionally return distribution lists and/or aliases
      * @return an ArrayList of all the accounts that matched.
      * @throws ServiceException
      */
-    public abstract ArrayList searchAccounts(String query, String returnAttrs[], String sortAttr, boolean sortAscending) throws ServiceException;  
+    public abstract ArrayList searchAccounts(String query, String returnAttrs[], String sortAttr, boolean sortAscending, int flags) throws ServiceException;  
 
     public abstract Account createAdminAccount(String name, String password, Map attrs) throws ServiceException;
     

@@ -91,7 +91,7 @@ public class GetAccount extends AdminDocumentHandler {
         doAttrs(account, attrs);
     }
     
-    private static void doAttrs(Element e, Map attrs) throws ServiceException {
+    static void doAttrs(Element e, Map attrs) throws ServiceException {
          for (Iterator mit = attrs.entrySet().iterator(); mit.hasNext(); ) {
             Map.Entry entry = (Entry) mit.next();
             String name = (String) entry.getKey();
