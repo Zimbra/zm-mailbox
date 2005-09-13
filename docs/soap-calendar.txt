@@ -524,7 +524,7 @@ RECURRENCE SPECIFIERS!
 
   id             : unique ID of the invite (and component therein) you are replying to
   comp           : component number of the invite
-  verb           : ACCEPT, COMPLETED, DECLINED, DELEGATED, TENTATIVE
+  verb           : ACCEPT, COMPLETED, DECLINE, DELEGATED, TENTATIVE  (Completed/Delegated are NOT supported as of 9/12/2005)
   m              : embedded message, if the user wants to send a custom update message.
                    The client is responsible for setting the message recipient list in
                    this case (which should include Organizer, if the client wants to tell
