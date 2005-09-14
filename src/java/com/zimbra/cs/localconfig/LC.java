@@ -116,6 +116,7 @@ public class LC {
     public static final KnownKey logger_mysql_mycnf;
     public static final KnownKey logger_mysql_bind_address;
     public static final KnownKey logger_mysql_port;
+    public static final KnownKey zimbra_logger_mysql_password;
 
     public static final KnownKey tomcat_directory;
     public static final KnownKey tomcat_java_heap_memory_percent;
@@ -331,6 +332,17 @@ public class LC {
         mysql_table_cache.setDefault("500");
         mysql_table_cache.setDoc
             ("Consult MySQL documentation for table_cache. " + ZM_MYCNF_CAVEAT);
+
+
+        zimbra_logger_mysql_password = new KnownKey("zimbra_logger_mysql_password");
+        zimbra_logger_mysql_password.setDefault("zimbra");
+        zimbra_logger_mysql_password.setForceToEdit(true);
+        zimbra_logger_mysql_password.setDoc
+            ("Password for " + zimbra_mysql_user.key() + ". Stored in" +
+             " local config for use by the store application to" +
+             " authenticate.  If you want to change this password," +
+             " please use the zmmylogpasswd program which will change the" +
+             " password in both MySQL and in local config.");
 
         logger_mysql_directory = new KnownKey("logger_mysql_directory");
         logger_mysql_directory.setDefault("${zimbra_home}" + FS + "logger" + FS + "mysql");
