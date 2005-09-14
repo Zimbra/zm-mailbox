@@ -559,13 +559,21 @@
 		</chmod>
 	</target>
 
-	<target name="stop-servers" depends="stop-servers-windows,stop-servers-unix" />
+	<target name="stop-servers" depends="stop-ldap,stop-tomcat" />
+	
+	<!-- LDAP service control -->
+	
+	<target name="start-ldap">
+		<ant antfile="../ZimbraBuild/ldap.xml" target="start-ldap" inheritAll="false"/>
+	</target>
+	<target name="stop-ldap">
+		<ant antfile="../ZimbraBuild/ldap.xml" target="stop-ldap" inheritAll="false"/>
+	</target>
 
-	<target name="stop-servers-windows" if="is-windows">
-		<exec executable="net">
-			<arg value="stop" />
-			<arg value="openldap directory service" />
-		</exec>
+	<!-- Tomcat service control -->
+	<target name="stop-tomcat" depends="stop-tomcat-windows,stop-tomcat-unix"/>
+
+	<target name="stop-tomcat-windows" if="is-windows">
 		<exec executable="net">
 			<arg value="stop" />
 			<arg value="apache tomcat" />
@@ -575,27 +583,9 @@
 		<sleep seconds="5" />
 	</target>
 
-	<target name="stop-servers-unix" if="is-unix">
-		<exec executable="${zimbra.home.dir}/bin/ldap">
-			<arg value="stop" />
-		</exec>
+	<target name="stop-tomcat-unix" if="is-unix">
 		<exec executable="${zimbra.home.dir}/bin/tomcat">
 			<arg value="stop" />
-		</exec>
-	</target>
-
-	<target name="start-ldap" depends="start-ldap-windows,start-ldap-unix" />
-
-	<target name="start-ldap-windows" if="is-windows">
-		<exec executable="net">
-			<arg value="start" />
-			<arg value="openldap directory service" />
-		</exec>
-	</target>
-
-	<target name="start-ldap-unix" if="is-unix">
-		<exec executable="${zimbra.home.dir}/bin/ldap">
-			<arg value="start" />
 		</exec>
 	</target>
 
