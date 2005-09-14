@@ -129,7 +129,9 @@ public abstract class RedoableOp {
     public static final int OP_DELETE_VOLUME            = 40;
     public static final int OP_SET_CURRENT_VOLUME       = 41;
 
-	public static final int OP_LAST						= 42;
+    public static final int OP_MOVE_BLOBS               = 42;
+
+	public static final int OP_LAST						= 43;
 
 
 	// Element index is same as Redoable.OP_* constants.
@@ -176,7 +178,8 @@ public abstract class RedoableOp {
         "CreateVolume",
         "ModifyVolume",
         "DeleteVolume",                 // 40
-        "SetCurrentVolume"
+        "SetCurrentVolume",
+        "MoveBlobs"
 	};
 
 	public static String getOpClassName(int opcode) {
@@ -574,8 +577,9 @@ public abstract class RedoableOp {
                     cl = Class.forName(sPackageName + "." + className);
                     RedoableOp op = (RedoableOp) cl.newInstance();
                 } catch (ClassNotFoundException e) {
-                    mLog.error("ClassNotFoundException for redo operation " + className, e);
-                    allGood = false;
+                    // Some classes may not be found depending on which
+                    // optional packages are installed.
+                    mLog.debug("ClassNotFoundException for redo operation " + className, e);
                 } catch (InstantiationException e) {
                     String msg = "Unable to instantiate " + className +
                                  "; Check default constructor is defined.";
