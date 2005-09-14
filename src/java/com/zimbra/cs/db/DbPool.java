@@ -143,6 +143,16 @@ public class DbPool {
         Properties props = getZimbraDbProps();
         // TODO: need to tune these
         int poolSize = 100;
+        String maxActive = (String)props.get("maxActive");
+        if (maxActive != null) {
+            try {
+                poolSize = Integer.parseInt(maxActive);
+            } catch (NumberFormatException nfe) {
+                mLog.warn("exception parsing maxActive", nfe);
+            }
+        }
+        ZimbraLog.misc.info("Setting mysql connection pool size to " + poolSize);
+
         ObjectPool cpool = new GenericObjectPool(null, poolSize, GenericObjectPool.WHEN_EXHAUSTED_BLOCK, -1, poolSize);
         ConnectionFactory cfac = new DriverManagerConnectionFactory(url, props);
         
