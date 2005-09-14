@@ -190,9 +190,9 @@ public class DbPool {
         //props.put("maxReconnects", "3""); // max number of reconnects to attempt
 
         // Set/override MySQL Connector/J connection properties from
-        // localconfig.  Localconfig keys with "zimbra_mysql_connector."
+        // localconfig.  Localconfig keys with "zimbra_mysql_connector_"
         // prefix are used.
-        String prefix = "zimbra_mysql_connector.";
+        String prefix = "zimbra_mysql_connector_";
         int prefixLen = prefix.length();
         String[] keys = LC.getAllKeys();
         for (int i = 0; i < keys.length; i++) {
@@ -220,7 +220,7 @@ public class DbPool {
             // props.put("explainSlowQueries", "true");
         }
         
-        // These properties cannot be set with "zimbra_mysql_connector." keys.
+        // These properties cannot be set with "zimbra_mysql_connector_" keys.
         props.put("user", LC.zimbra_mysql_user.value());
         props.put("password", LC.zimbra_mysql_password.value());
 
