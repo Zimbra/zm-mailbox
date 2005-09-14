@@ -55,6 +55,9 @@ public class AccountService implements DocumentService {
     
     public static final QName GET_INFO_REQUEST = QName.get("GetInfoRequest", NAMESPACE);
     public static final QName GET_INFO_RESPONSE = QName.get("GetInfoResponse", NAMESPACE);
+
+    public static final QName GET_ACCOUNT_INFO_REQUEST = QName.get("GetAccountInfoRequest", NAMESPACE);
+    public static final QName GET_ACCOUNT_INFO_RESPONSE = QName.get("GetAccountInfoResponse", NAMESPACE);
     
     public static final QName SEARCH_GAL_REQUEST = QName.get("SearchGalRequest", NAMESPACE);
     public static final QName SEARCH_GAL_RESPONSE = QName.get("SearchGalResponse", NAMESPACE);	
@@ -78,6 +81,7 @@ public class AccountService implements DocumentService {
     public static final String E_QUOTA_USED = "used";
 
     public static final String A_NAME = "name";
+    public static final String A_BY = "by";    
 
 	public void registerHandlers(DocumentDispatcher dispatcher) {
 
@@ -90,6 +94,7 @@ public class AccountService implements DocumentService {
 		dispatcher.registerHandler(MODIFY_PREFS_REQUEST, new ModifyPrefs());
 		
         dispatcher.registerHandler(GET_INFO_REQUEST, new GetInfo());
+        dispatcher.registerHandler(GET_ACCOUNT_INFO_REQUEST, new GetAccountInfo());        
         
         dispatcher.registerHandler(SEARCH_GAL_REQUEST, new SearchGal());
         

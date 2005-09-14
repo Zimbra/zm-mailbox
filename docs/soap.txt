@@ -327,6 +327,24 @@ global soap/system errors used with zimbra:Error/Code:
     
 ----------------------------
 
+<GetAccountInfoRequest>
+  <account by="id|name">...</account>
+</GetAccountInfoRequest>
+ 
+<GetAccountInfoResponse>
+   <name>{account-name}</name>
+   <attr name="{name}">{value}</a>+
+</GetInfoResponse>
+ 
+  {account-name} = email address (user@domain)
+
+  {attrs} = account attrs. Currently only two attrs are returned:
+  
+      zimbraId       - the unique UUID of the zimbra account
+      zimbraMailHost - the server on which this user's mail resides
+    
+----------------------------
+
  <SearchGalRequest>
    <name>...</name>
  </SearchGalRequest>
