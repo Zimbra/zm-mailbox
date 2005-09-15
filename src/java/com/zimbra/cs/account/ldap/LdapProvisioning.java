@@ -1911,6 +1911,58 @@ public class LdapProvisioning extends Provisioning {
         }
     }
 
+    private boolean externalLdapAuth(Domain d, Account acct, String password) throws ServiceException {
+        String url = d.getAttr(Provisioning.A_zimbraAuthLdapURL);
+        
+        if (url == null) {
+            ZimbraLog.account.warn("attr not set "+Provisioning.A_zimbraAuthLdapURL+", falling back to default mech");
+            return false;
+        }
+
+        try {
+            // try explicit externalDn first
+            String externalDn = acct.getAttr(Provisioning.A_zimbraAuthLdapExternalDn);
+
+            if (externalDn != null) {
+                if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with explicit dn of "+externalDn);
+                LdapUtil.ldapAuthenticate(url, externalDn, password);
+                return true;
+            }
+
+            String searchFilter = d.getAttr(Provisioning.A_zimbraAuthLdapSearchFilter);
+            if (searchFilter != null) {
+                String searchPassword = d.getAttr(Provisioning.A_zimbraAuthLdapSearchBindPassword);
+                String searchDn = d.getAttr(Provisioning.A_zimbraAuthLdapSearchBindDn);
+                String searchBase = d.getAttr(Provisioning.A_zimbraAuthLdapSearchBase);
+                if (searchBase == null) searchBase = "";
+                searchFilter = LdapUtil.computeAuthDn(acct.getName(), searchFilter);
+                if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with search filter of "+searchFilter);
+                LdapUtil.ldapAuthenticate(url, password, searchBase, searchFilter, searchDn, searchPassword);
+                return true;
+            }
+            
+            String bindDn = d.getAttr(Provisioning.A_zimbraAuthLdapBindDn);
+            if (bindDn != null) {
+                String dn = LdapUtil.computeAuthDn(acct.getName(), bindDn);
+                if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with bind dn template of "+dn);
+                LdapUtil.ldapAuthenticate(url, dn, password);
+                return true;
+            }
+
+        } catch (AuthenticationException e) {
+            throw AccountServiceException.AUTH_FAILED(acct.getName(), e);
+        } catch (AuthenticationNotSupportedException e) {
+            throw AccountServiceException.AUTH_FAILED(acct.getName(), e);
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE(e.getMessage(), e);
+        }
+        
+        ZimbraLog.account.warn("one of the following attrs must be set "+
+                Provisioning.A_zimbraAuthLdapBindDn+", "+Provisioning.A_zimbraAuthLdapSearchFilter+"; falling back to default mech");
+
+        return false;
+    }
+
     /*
      * authAccount does all the status/mustChange checks, this just takes the
      * password and auths the user
@@ -1930,35 +1982,21 @@ public class LdapProvisioning extends Provisioning {
         
         if (authMech.equals(Provisioning.AM_LDAP) || authMech.equals(Provisioning.AM_AD)) {
             // try local password, if there is one...
-            if (encodedPassword != null && LdapUtil.verifySSHA(encodedPassword, password))
-                return;
-
-            String url = d.getAttr(Provisioning.A_zimbraAuthLdapURL);
-            String bindDn = d.getAttr(Provisioning.A_zimbraAuthLdapBindDn);
-            if (url != null && bindDn != null) {
-                String dn = LdapUtil.computeAuthDn(acct.getName(), bindDn);
-                try {
-                    LdapUtil.ldapAuthenticate(url, dn, password);
+            if (encodedPassword != null && LdapUtil.verifySSHA(encodedPassword, password)) {
                     return;
-                } catch (AuthenticationException e) {
-                    throw AccountServiceException.AUTH_FAILED(acct.getName(), e);
-                } catch (AuthenticationNotSupportedException e) {
-                    throw AccountServiceException.AUTH_FAILED(acct.getName(), e);
-                } catch (NamingException e) {
-                    throw ServiceException.FAILURE(e.getMessage(), e);
-                }
             }
-            if (url == null)
-                ZimbraLog.account.warn("attr not set "+Provisioning.A_zimbraAuthLdapURL+", falling back to default mech");
-            if (bindDn == null)
-                ZimbraLog.account.warn("attr not set "+Provisioning.A_zimbraAuthLdapBindDn+", falling back to default mech");            
-            // fallback to zimbra
+
+            if (externalLdapAuth(d, acct, password)) {
+                return;
+            }
+            // fallback to zimbra            
+            
         } else if (!authMech.equals(Provisioning.AM_ZIMBRA)) {
             ZimbraLog.account.warn("unknown value for "+Provisioning.A_zimbraAuthMech+": "+
                     authMech+", falling back to default mech");
             // fallback to zimbra
         }
-        
+
         // fall back to zimbra
         if (encodedPassword == null)
             throw AccountServiceException.AUTH_FAILED(acct.getName());

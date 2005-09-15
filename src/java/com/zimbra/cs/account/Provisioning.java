@@ -261,6 +261,16 @@ public abstract class Provisioning {
      */
     public static final String A_zimbraAuthLdapURL = "zimbraAuthLdapURL";
 
+    public static final String A_zimbraAuthLdapSearchBase = "zimbraAuthLdapSearchBase";
+
+    public static final String A_zimbraAuthLdapSearchBindDn = "zimbraAuthLdapSearchBindDn";
+
+    public static final String A_zimbraAuthLdapSearchBindPassword = "zimbraAuthLdapSearchBindPassword";
+
+    public static final String A_zimbraAuthLdapSearchFilter = "zimbraAuthLdapSearchFilter";
+
+    public static final String A_zimbraAuthLdapExternalDn = "zimbraAuthLdapExternalDn";
+
     /**
      *  expansions for bind dn string:
      * 
