@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.naming.AuthenticationException;
 import javax.naming.Context;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
@@ -78,6 +79,8 @@ public class LdapUtil {
     
     private static Hashtable sEnv;
     private static String[] sEmptyMulti = new String[0];
+
+    static final SearchControls sSubtreeSC = new SearchControls(SearchControls.SUBTREE_SCOPE, 0, 0, null, true, false);
     
     static {
         String ldapHost = LC.ldap_host.value();
@@ -189,6 +192,39 @@ public class LdapUtil {
         }
     }
     
+    public static void ldapAuthenticate(String url, String password, String searchBase, String searchFilter, String searchDn, String searchPassword) throws NamingException {
+        DirContext ctxt = null;
+        String resultDn = null;;
+        boolean tooMany = false;        
+        try {
+            ctxt = getDirContext(url, searchDn, searchPassword);
+            NamingEnumeration ne = ctxt.search(searchBase, searchFilter, sSubtreeSC);
+
+            while (ne.hasMore()) {
+                SearchResult sr = (SearchResult) ne.next();
+                Context srctxt = (Context) sr.getObject();
+                if (resultDn == null) {
+                    resultDn = srctxt.getNameInNamespace();
+                    srctxt.close();
+                } else {
+                    tooMany = true;
+                    break;
+                }
+            }
+            ne.close();
+        } finally {
+            closeContext(ctxt);
+        }
+        
+        if (tooMany) {
+            ZimbraLog.account.warn("ldapAuthenticate searchFilter returned more then one result: "+searchFilter);
+            throw new AuthenticationException("too many results from search filter!");
+        } else if (resultDn == null) {
+            throw new AuthenticationException("empty search");
+        }
+        ldapAuthenticate(url, resultDn, password); 
+    }
+
     public static boolean verifySSHA(String encodedPassword, String password) {
         if (!encodedPassword.startsWith(ENCODING))
             return false;
