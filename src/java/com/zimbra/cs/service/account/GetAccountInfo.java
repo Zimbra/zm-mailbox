@@ -28,9 +28,7 @@
  */
 package com.zimbra.cs.service.account;
 
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
