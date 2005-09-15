@@ -338,6 +338,12 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(DELETE_VOLUME_REQUEST, new DeleteVolume());
         dispatcher.registerHandler(GET_CURRENT_VOLUMES_REQUEST, new GetCurrentVolumes());
         dispatcher.registerHandler(SET_CURRENT_VOLUME_REQUEST, new SetCurrentVolume());
+    
+        dispatcher.registerHandler(CREATE_DISTRIBUTION_LIST_REQUEST, new CreateDistributionList());
+        dispatcher.registerHandler(GET_DISTRIBUTION_LIST_REQUEST, new GetDistributionList());
+        dispatcher.registerHandler(GET_ALL_DISTRIBUTION_LISTS_REQUEST, new GetAllDistributionLists());
+        dispatcher.registerHandler(MODIFY_DISTRIBUTION_LIST_REQUEST, new ModifyDistributionList());
+        dispatcher.registerHandler(DELETE_DISTRIBUTION_LIST_REQUEST, new DeleteDistributionList());
     }
 
     /**

@@ -52,6 +52,9 @@ public class GetDistributionList extends AdminDocumentHandler {
         	throw ServiceException.INVALID_REQUEST("limit" + limit + " is negative", null);
         }
         int offset = (int) request.getAttributeLong(AdminService.A_OFFSET, 0);
+        if (offset < 0) {
+        	throw ServiceException.INVALID_REQUEST("offset" + offset + " is negative", null);
+        }
         boolean sortAscending = request.getAttributeBool(AdminService.A_SORT_ASCENDING, true);        
 
         Element d = request.getElement(AdminService.E_DISTRIBUTIONLIST);
@@ -75,10 +78,20 @@ public class GetDistributionList extends AdminDocumentHandler {
         Element dlElement = doDistributionList(response, distributionList);
         
         String[] members = distributionList.getAllMembers();
-        if ((offset + limit) >= members.length) {
-        	throw ServiceException.INVALID_REQUEST("offset (" + offset + ") and limit (" + limit + ") greater than size (" + members.length + ")", null);
+        if (offset >= members.length) {
+        	throw ServiceException.INVALID_REQUEST("offset " + offset + " greater than size " + members.length, null);
+        }
+        int stop = offset + limit;
+        if (limit == 0) {
+        	stop = members.length;
+        }
+        if (stop > members.length) {
+        	stop = members.length;
         }
         Arrays.sort(members);
+        for (int i = offset; i < stop; i++) {
+        	dlElement.addAttribute("member", members[i], Element.DISP_ATTRIBUTE);
+        }
         return response;
     }
 
@@ -95,8 +108,9 @@ public class GetDistributionList extends AdminDocumentHandler {
                 String sv[] = (String[]) value;
                 for (int i = 0; i < sv.length; i++)
                     distributionList.addAttribute(name, sv[i], Element.DISP_ELEMENT);
-            } else if (value instanceof String)
+            } else if (value instanceof String) {
                 distributionList.addAttribute(name, (String) value, Element.DISP_ELEMENT);
+            }
         }
         return distributionList;
     }
