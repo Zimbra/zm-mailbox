@@ -45,6 +45,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Domain.SearchGalResult;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ExceptionToString;
+import com.zimbra.cs.util.ZimbraLog;
 
 public class Check {
 
@@ -127,14 +128,31 @@ public class Check {
             throw ServiceException.INVALID_REQUEST("auth mech must be: "+Provisioning.AM_LDAP+" or "+Provisioning.AM_AD, null);
 
         String url = getRequiredAttr(attrs, Provisioning.A_zimbraAuthLdapURL);
-        String bindDn = getRequiredAttr(attrs, Provisioning.A_zimbraAuthLdapBindDn);
-        String dn = LdapUtil.computeAuthDn(name, bindDn);
-
+        
         try {
-            LdapUtil.ldapAuthenticate(url, dn,  password);
-            return new Result(STATUS_OK, "", dn);
+            String searchFilter = (String) attrs.get(Provisioning.A_zimbraAuthLdapSearchFilter);
+            if (searchFilter != null) {
+                String searchPassword = (String) attrs.get(Provisioning.A_zimbraAuthLdapSearchBindPassword);
+                String searchDn = (String) attrs.get(Provisioning.A_zimbraAuthLdapSearchBindDn);
+                String searchBase = (String) attrs.get(Provisioning.A_zimbraAuthLdapSearchBase);
+                if (searchBase == null) searchBase = "";
+                searchFilter = LdapUtil.computeAuthDn(name, searchFilter);
+                if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with search filter of "+searchFilter);
+                LdapUtil.ldapAuthenticate(url, password, searchBase, searchFilter, searchDn, searchPassword);
+                return new Result(STATUS_OK, "", searchFilter);                
+            }
+        
+            String bindDn = (String) attrs.get(Provisioning.A_zimbraAuthLdapBindDn);
+            if (bindDn != null) {
+                String dn = LdapUtil.computeAuthDn(name, bindDn);
+                if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with bind dn template of "+dn);
+                LdapUtil.ldapAuthenticate(url, dn, password);
+                return new Result(STATUS_OK, "", dn);
+            }
+            
+            throw ServiceException.INVALID_REQUEST("must specify "+Provisioning.A_zimbraAuthLdapSearchFilter+" or "+Provisioning.A_zimbraAuthLdapBindDn, null);
         } catch (NamingException e) {
-            return toResult(e, dn);
+            return toResult(e, "");
         }
     }
 
