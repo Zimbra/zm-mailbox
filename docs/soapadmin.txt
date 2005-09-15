@@ -470,24 +470,6 @@ Notes:
 
 -----------------------------
 
-<ExportMailboxRequest>
-	<account id="{account email address}" dest="{uri to another server}"
-	    switchover="1|0" overwrite="1|0"/>
-</ExportMailboxRequest>
-
-Notes: when switchover is 1, ldap is updated to use the target server as the 
-mailhost for the account; the original host is not longer in use. 
-When switchover is 0, no ldap setting is updated after the move.
-
-if overwrite = 1, the target mailbox will be replaced if it exists
-
-dest attribute expects an URI to the target host's mailbox import servlet. It 
-looks like:
-
-https://<target host>:<target admin port>/service/admin/mboximport
-
------------------------------
-
 <GetServerAggregateStatsRequest>
  <statName>...</statName>
  <startTime>{date-time}</startTime>
@@ -509,87 +491,6 @@ https://<target host>:<target admin port>/service/admin/mboximport
 </GetServiceStatusResponse>
 
 {date-time} format is number of seconds in 1970, utc time.
-
------------------------------
-
-<BackupRequest>
-    <backup method="full|incremental|abort" 
-    [target="{path to backup target}"] [sync="1|0"] [label="{full backup label to abort}"]>
-    	<a name="{account email addr}|all"/>+
-    <backup/>
-</BackupRequest>
-
-when sync is 1, the full backup is run synchronously; otherwise full backup is started
-and run in a separate thread and the soap call can return with the backup label.
-
-label is only meaningful and required in the request when method is abort.
-
-<BackupResponse>
-    [<backup label="{full backup set label}"/>]
-</BackupResponse>
-
-
------------------------------
-
-<BackupQueryRequest>
-    <query [target={path to backup target}"] [label="{full backup set label}"]  [list="{from date}"] [verbose="1|0"]/>
-</BackupQueryRequest>
-
-<BackupQueryResponse>
-    <query live="1|0" label="{full backup set label}" 
-        start="{start time in millis}" [end="{end time in millis}"]
-        [completionCount="{completion count}"] [total="{total count}"]
-        [completedAccounts="{comma-separated account email addrs}"]
-        [accounts="{comma-separated account email addres}"]>
-        [<errors>
-        	<account id="{account-id}" msg="{error message}">[{stack trace}]</account>*
-        </errors>]    
-    </query>*
-</BackupQueryResponse>
-
-if neither label nor list is specified, info about all backup sets is returned.
------------------------------
-
-<BackupAccountQueryRequest>
-    <query [target={path to backup target}"]>
-    	<a name="{account email addr}|all"/>+
-    </query>
-</BackupQueryRequest>
-
-<BackupAccountQueryResponse>
-    <account id={account id} server="{mail server at the latest backup}">
-    	<backup label="{label}" [server="{mail server if different}"] 
-    	    start="{start time in millis}" [end="{end time in millis}"]/>*
-    </account>*
-</BackupQueryResponse>
-
-For each account <backup> is listed from the most recent to earlier ones.
-The server attribute in <backup> is useful when the account is moved to another mail host. In that
-case backup sets will have been created from different hosts.
------------------------------
-
-<RestoreRequest>
-    <restore method="mb|ra|ca" [includeIncrementals="1|0"]
-        [label="{label to full backup set}"] [target="{path to backup target}"]
-        [prefix="{prefix}"]>
-        <a name="{account email addr}|all"/>+
-    </restore>
-</RestoreRequest>
-
-when includeIncrementals is 1, any incremental backups from the last full backup
-are also restored. Default to 1.
-
-if label is not specified, restore from the latest full backup.
-
-method:
-mb: just mailbox is restored
-ra: ldap account info is restored
-ca: new account is created and restore to
-
-prefix is used to produce new account names if the name is reused or a new account is to be created
-
-<RestoreResponse>
-</RestoreResponse>
 
 -----------------------------
 
