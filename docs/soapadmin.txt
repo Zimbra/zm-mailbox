@@ -534,15 +534,6 @@ significantly since the last table maintenance.
 
 -----------------------------
 
-Runs the HSM process, which moves older messages to the current
-secondary storage volume.
-
-<HsmRequest/>
-
-<HsmResponse/>
-
------------------------------
-
 Runs the server-side unit test suite.
 
 <UnitTestRequest/>
