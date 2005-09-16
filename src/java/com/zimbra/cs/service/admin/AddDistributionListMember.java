@@ -25,33 +25,35 @@
 
 package com.zimbra.cs.service.admin;
 
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.ZimbraContext;
 
-public class GetAllDistributionLists extends AdminDocumentHandler {
+public class AddDistributionListMember extends AdminDocumentHandler {
 
-    public static final String BY_NAME = "name";
-    public static final String BY_ID = "id";
-    
     public Element handle(Element request, Map context) throws ServiceException {
-	    
+        
         ZimbraContext lc = getZimbraContext(context);
         Provisioning prov = Provisioning.getInstance();
-
-        List distributionLists = prov.getAllDistributionLists();
         
-        Element response = lc.createElement(AdminService.GET_ALL_DISTRIBUTION_LISTS_RESPONSE);        
-        for (Iterator it = distributionLists.iterator(); it.hasNext(); ) {
-            GetDistributionList.doDistributionList(response, (DistributionList) it.next());
-        }
+        String id = request.getAttribute(AdminService.E_ID);
+        String member = request.getAttribute(AdminService.E_DLM);
 
+        DistributionList dl = prov.getDistributionListById(id);
+        if (dl == null)
+            throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(id);
+        
+        dl.addMember(member);
+        ZimbraLog.security.info(ZimbraLog.encodeAttrs(
+                                                      new String[] {"cmd", "AddDistributionListMember","name", dl.getName(), "member", member})); 
+        
+        Element response = lc.createElement(AdminService.ADD_DISTRIBUTION_LIST_MEMBER_RESPONSE);
         return response;
     }
 }

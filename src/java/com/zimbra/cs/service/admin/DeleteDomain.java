@@ -49,7 +49,6 @@ public class DeleteDomain extends AdminDocumentHandler {
 	    Provisioning prov = Provisioning.getInstance();
 
 	    String id = request.getAttribute(AdminService.E_ID);
-	    Map attrs = AdminService.getAttrs(request);
 
 	    Domain domain = prov.getDomainById(id);
         if (domain == null)

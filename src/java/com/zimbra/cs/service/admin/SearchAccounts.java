@@ -112,7 +112,7 @@ public class SearchAccounts extends AdminDocumentHandler {
     }
 
     static void doDistributionList(Element e, DistributionList list) throws ServiceException {
-        Element elist = e.addElement(AdminService.E_DISTRIBUTIONLIST);
+        Element elist = e.addElement(AdminService.E_DL);
         elist.addAttribute(AdminService.A_NAME, list.getName());
         elist.addAttribute(AdminService.A_ID, list.getId());        
         Map attrs = list.getAttrs();

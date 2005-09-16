@@ -187,11 +187,15 @@ public class AdminService implements DocumentService {
     public static final QName GET_DISTRIBUTION_LIST_RESPONSE = QName.get("GetDistributionListResponse", NAMESPACE);
     public static final QName GET_ALL_DISTRIBUTION_LISTS_REQUEST = QName.get("GetAllDistributionListsRequest", NAMESPACE);
     public static final QName GET_ALL_DISTRIBUTION_LISTS_RESPONSE = QName.get("GetAllDistributionListsResponse", NAMESPACE);
+    public static final QName ADD_DISTRIBUTION_LIST_MEMBER_REQUEST = QName.get("AddDistributionListMemberRequest", NAMESPACE);
+    public static final QName ADD_DISTRIBUTION_LIST_MEMBER_RESPONSE = QName.get("AddDistributionListMemberResponse", NAMESPACE);
+    public static final QName REMOVE_DISTRIBUTION_LIST_MEMBER_REQUEST = QName.get("RemoveDistributionListMemberRequest", NAMESPACE);
+    public static final QName REMOVE_DISTRIBUTION_LIST_MEMBER_RESPONSE = QName.get("RemoveDistributionListMemberResponse", NAMESPACE);
     public static final QName MODIFY_DISTRIBUTION_LIST_REQUEST = QName.get("ModifyDistributionListRequest", NAMESPACE);
     public static final QName MODIFY_DISTRIBUTION_LIST_RESPONSE = QName.get("ModifyDistributionListResponse", NAMESPACE);
     public static final QName DELETE_DISTRIBUTION_LIST_REQUEST = QName.get("DeleteDistributionListRequest", NAMESPACE);
     public static final QName DELETE_DISTRIBUTION_LIST_RESPONSE = QName.get("DeleteDistributionListResponse", NAMESPACE);
-    
+
     public static final String E_ACCOUNT = "account";
     public static final String E_AUTH_TOKEN = "authToken";
     public static final String E_NAME = "name";
@@ -201,7 +205,8 @@ public class AdminService implements DocumentService {
     public static final String E_COS = "cos";
     public static final String E_CN = "cn";    
     public static final String E_DOMAIN = "domain";
-    public static final String E_DISTRIBUTIONLIST = "distributionlist";
+    public static final String E_DL = "dl";
+    public static final String E_DLM = "dlm";
     public static final String E_HOSTNAME = "hostname";    
     public static final String E_LIFETIME = "lifetime";
     public static final String E_MESSAGE = "message";
@@ -247,6 +252,7 @@ public class AdminService implements DocumentService {
 	public static final String A_HOSTNAME = "hn";
     public static final String A_ACCOUNTID = "id";
     public static final String A_MAILBOXID = "mbxid";
+    public static final String A_TOTAL = "total";
     
     public static final String A_HEALTHY = "healthy";
     public static final String A_SIZE = "s";
@@ -342,6 +348,8 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(CREATE_DISTRIBUTION_LIST_REQUEST, new CreateDistributionList());
         dispatcher.registerHandler(GET_DISTRIBUTION_LIST_REQUEST, new GetDistributionList());
         dispatcher.registerHandler(GET_ALL_DISTRIBUTION_LISTS_REQUEST, new GetAllDistributionLists());
+        dispatcher.registerHandler(ADD_DISTRIBUTION_LIST_MEMBER_REQUEST, new AddDistributionListMember());
+        dispatcher.registerHandler(REMOVE_DISTRIBUTION_LIST_MEMBER_REQUEST, new RemoveDistributionListMember());
         dispatcher.registerHandler(MODIFY_DISTRIBUTION_LIST_REQUEST, new ModifyDistributionList());
         dispatcher.registerHandler(DELETE_DISTRIBUTION_LIST_REQUEST, new DeleteDistributionList());
     }

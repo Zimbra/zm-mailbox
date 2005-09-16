@@ -52,6 +52,7 @@ public class ModifyDistributionList extends AdminDocumentHandler {
         // pass in true to checkImmutable
         distributionList.modifyAttrs(attrs, true);
 
+        
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                                                       new String[] {"cmd", "ModifyDistributionList","name", distributionList.getName()}, attrs));	    
 

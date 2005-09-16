@@ -169,9 +169,9 @@ Notes:
   <alias name="{name}" id="{id}">
     <a n="...">...</a>+  
   </alias>
-  <distributionlist name="{name}" id="{id}">
+  <dl name="{name}" id="{id}">
     <a n="...">...</a>+  
-  </distributionlist>
+  </dl>
 </SearchAccountsResponse>
 
 Notes:
@@ -713,9 +713,9 @@ Notes:
 </CreateDistributionListRequest>
 
 <CreateDistributionListResponse>
-  <distributionlist name="{name}" id="{id}">
+  <dl name="{name}" id="{id}">
     <a n="...">...</a>+
-  </distributionlist>  
+  </dl>  
 </CreateDistributionListResponse>
 
 Notes:
@@ -729,14 +729,14 @@ Notes:
 
 <GetDistributionListRequest [limit="{limit}"] [offset="{offset}"]
                             [sortAscending="{sort-ascending}"]>
-  <distributionlist by="id|name">...</distributionlist>
+  <dl by="id|name">...</dl>
 </GetDistributionListRequest>
 
 <GetDistributionListResponse more="{more-flag}" [total="{total}"]>
-  <distributionlist name="{name}" id="{id}">
-    <member name="{name}"/>+
+  <dl name="{name}" id="{id}">
+    <dlm>{member}</dlm>+
     <a n="...">...</a>+
-  </distributionlist>
+  </dl>
 </GetDistributionListResponse>
 
 Notes:
@@ -752,52 +752,47 @@ Notes:
 
 -----------------------------
 
-<GetAllDistributionListsRequest [limit="{limit}"] [offset="{offset}"]
-                                [domain="{domain-name}"] [attrs="a1,a2,a3"]
-                                [sortAscending="{sort-ascending}"]>
+<GetAllDistributionListsRequest>
 </GetAllDistributionListsRequest>
 
-<GetAllDistributionListsResponse more="{more-flag}" [total="{total}"]>
-  <distributionlist name="{name}" id="{id}">
+<GetAllDistributionListsResponse>
+  <dl name="{name}" id="{id}">
     <a n="...">...</a>+
-  </distributionlist>
+  </dl>
 </GetAllDistributionListsResponse>
 
-Notes:
+-----------------------------
 
-    limit - the number of accounts to return (0 is default and means
-            all)
-    offset - the starting offset (0, 25, etc)
-    domain-name - the domain name to limit the search to
-    attrs - comma-seperated list of attrs to return ("description",
-            "zimbraNotes")
-    sort-by - name of attribute to sort on. default is distribution
-              list name.
-    sort-ascending - whether to sort in ascending order (0/1), 1 is
-                     default
+<AddDistributionListMemberRequest>
+  <id>{value-of-zimbraId}</id>
+  <dlm>{member}</dlm>
+</AddDistributionListMemeberRequest>
 
-    more-flag = true if more accounts left to return
-    total = total number distribution lists (not affected by
-            limit/offset)
+<AddDistributionListMemberResponse>
+</AddDistributionListMemeberResponse>
+
+-----------------------------
+
+<RemoveDistributionListMemberRequest>
+  <id>{value-of-zimbraId}</id>
+  <dlm>{member}</dlm>
+</RemoveDistributionListMemberRequest>
+
+<RemoveDistributionListMemberResponse>
+</RemoveDistributionListMemberResponse>
 
 -----------------------------
 
 <ModifyDistributionListRequest>
   <id>{value-of-zimbraId}</id>
-  <add> 
-     <member name="{name}"/>+
-  </add>?
-  <remove>
-     <member name="{name}"/>+
-  </remove>?
   <a n="...">...</a>+
 </ModifyDistributionListRequest>
   
 
 <ModifyDistributionListResponse>
-  <distributionlist name="{name}" id="{id}">
+  <dl name="{name}" id="{id}">
     <a n="...">...</a>+
-  </distributionlist>
+  </dl>
 </ModifyDistributionListResponse>
 
 Notes:

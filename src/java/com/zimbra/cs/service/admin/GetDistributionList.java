@@ -26,6 +26,7 @@
 package com.zimbra.cs.service.admin;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -57,7 +58,7 @@ public class GetDistributionList extends AdminDocumentHandler {
         }
         boolean sortAscending = request.getAttributeBool(AdminService.A_SORT_ASCENDING, true);        
 
-        Element d = request.getElement(AdminService.E_DISTRIBUTIONLIST);
+        Element d = request.getElement(AdminService.E_DL);
         String key = d.getAttribute(AdminService.A_BY);
         String value = d.getText();
 	    
@@ -78,7 +79,7 @@ public class GetDistributionList extends AdminDocumentHandler {
         Element dlElement = doDistributionList(response, distributionList);
         
         String[] members = distributionList.getAllMembers();
-        if (offset >= members.length) {
+        if (offset > 0 && offset >= members.length) {
         	throw ServiceException.INVALID_REQUEST("offset " + offset + " greater than size " + members.length, null);
         }
         int stop = offset + limit;
@@ -88,15 +89,23 @@ public class GetDistributionList extends AdminDocumentHandler {
         if (stop > members.length) {
         	stop = members.length;
         }
-        Arrays.sort(members);
-        for (int i = offset; i < stop; i++) {
-        	dlElement.addAttribute("member", members[i], Element.DISP_ATTRIBUTE);
+        
+        if (sortAscending) {
+        	Arrays.sort(members);
+        } else {
+        	Arrays.sort(members, Collections.reverseOrder());
         }
+        for (int i = offset; i < stop; i++) {
+        	dlElement.addAttribute(AdminService.E_DLM, members[i], Element.DISP_ATTRIBUTE);
+        }
+        
+        response.addAttribute(AdminService.A_MORE, stop < members.length);
+        response.addAttribute(AdminService.A_TOTAL, members.length);        
         return response;
     }
 
     public static Element doDistributionList(Element e, DistributionList d) throws ServiceException {
-        Element distributionList = e.addElement(AdminService.E_DISTRIBUTIONLIST);
+        Element distributionList = e.addElement(AdminService.E_DL);
         distributionList.addAttribute(AdminService.A_NAME, d.getName());
         distributionList.addAttribute(AdminService.A_ID,d.getId());
         Map attrs = d.getAttrs();
