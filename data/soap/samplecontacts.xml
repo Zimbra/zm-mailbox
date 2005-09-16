@@ -26,16 +26,46 @@
         <cn>
           <a n="firstName">Ross</a>
           <a n="lastName">Davidson</a>
+          <a n="middleName">Davidson</a>
           <a n="email">rossd@example.zimbra.com</a>
-          <a n="email2">rdavidson@yahoo.com</a>
+          <a n="email2">rdavidson@example.yahoo.com</a>
+          <a n="email3">rdavidson@example.google.com</a>
           <a n="jobTitle">VP of Engineering</a>
           <a n="company">Zimbra</a>
-          <a n="workPhone">(408) 123-4567 x112</a>
+          <a n="workStreet">1500 Fashion Island Blvd.</a>
+          <a n="workCity">San Mateo</a>
+          <a n="workPostalCode">94404</a>
           <a n="workState">CA</a>
-          <a n="workCountry">US</a>
+          <a n="workCountry">USA</a>
           <a n="workURL">http://www.example.zimbra.com</a>
+          <a n="homeStreet">1010 Folsom</a>
+          <a n="homeCity">San Francisco</a>
+          <a n="homeState">CA</a>
+          <a n="homePostalCode">94110</a>
+          <a n="homeCountry">USA</a>
+          <a n="homeURL">http://www.google.com</a>
+          <a n="otherStreet">1221 Melrose Place</a>
+          <a n="otherCity">Beverly Hills</a>
+          <a n="otherState">CA</a>
+          <a n="otherPostalCode">90210</a>
+          <a n="otherCountry">USA</a>
+          <a n="otherURL">http://www.yahoo.com</a>
           <a n="notes">These are random notes</a>
           <a n="fileAs">1</a>
+          <a n="assistantPhone">111-111-1111</a>
+          <a n="callbackPhone">222-222-2222</a>
+          <a n="carPhone">333-333-3333</a>
+          <a n="companyPhone">444-444-4444</a>
+          <a n="homeFax">555-555-5555</a>
+          <a n="homePhone">666-666-6666</a>
+          <a n="homePhone2">777-777-7777</a>
+          <a n="mobilePhone">888-888-8888</a>
+          <a n="otherFax">999-999-9999</a>
+          <a n="otherPhone">000-000-0000</a>
+          <a n="pager">111-222-2222</a>
+          <a n="workFax">111-333-3333</a>
+          <a n="workPhone">(408) 123-4567 x112</a>
+          <a n="workPhone2">650-123-4567</a>
         </cn>
       </CreateContactRequest>
     </t:request>
