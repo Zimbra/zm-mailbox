@@ -113,6 +113,17 @@ public class Check {
         return value;
     }
 
+    private static String[] getRequiredMultiAttr(Map attrs, String name) throws ServiceException {
+        Object v = attrs.get(name);
+        if (v instanceof String) return new String[] {(String)v};
+        else if (v instanceof String[]) {
+            String value[] = (String[]) v;
+            if (value != null && value.length > 0)
+                return value;
+        }
+        throw ServiceException.INVALID_REQUEST("must specifiy: "+name, null);
+    }
+
     public static Result checkHostnameResolve(String hostname) {
         try {
             InetAddress.getByName(hostname);
@@ -127,7 +138,7 @@ public class Check {
         if (!(mech.equals(Provisioning.AM_LDAP) || mech.equals(Provisioning.AM_AD)))
             throw ServiceException.INVALID_REQUEST("auth mech must be: "+Provisioning.AM_LDAP+" or "+Provisioning.AM_AD, null);
 
-        String url = getRequiredAttr(attrs, Provisioning.A_zimbraAuthLdapURL);
+        String url[] = getRequiredMultiAttr(attrs, Provisioning.A_zimbraAuthLdapURL);
         
         try {
             String searchFilter = (String) attrs.get(Provisioning.A_zimbraAuthLdapSearchFilter);
@@ -162,7 +173,7 @@ public class Check {
         if (!mode.equals(Provisioning.GM_LDAP))
             throw ServiceException.INVALID_REQUEST("gal mode must be: "+Provisioning.GM_LDAP, null);
 
-        String url = getRequiredAttr(attrs, Provisioning.A_zimbraGalLdapURL);
+        String url[] = getRequiredMultiAttr(attrs, Provisioning.A_zimbraGalLdapURL);
         String bindDn = (String) attrs.get(Provisioning.A_zimbraGalLdapBindDn);
         String bindPassword = (String) attrs.get(Provisioning.A_zimbraGalLdapBindPassword);
         String searchBase = getRequiredAttr(attrs, Provisioning.A_zimbraGalLdapSearchBase);

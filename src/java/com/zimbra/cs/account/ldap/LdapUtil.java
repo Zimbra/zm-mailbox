@@ -153,15 +153,25 @@ public class LdapUtil {
         }
     }
     
+    private static String joinURLS(String urls[]) {
+        if (urls.length == 1) return urls[0];
+        StringBuffer url = new StringBuffer();
+        for (int i=0; i < urls.length; i++) {
+            if (i > 0) url.append(' ');
+            url.append(urls[i]);
+        }
+        return url.toString();
+    }
+    
     /**
      * 
      * @return
      * @throws NamingException
      */
-    public static DirContext getDirContext(String url, String bindDn, String bindPassword)  throws NamingException {
+    public static DirContext getDirContext(String urls[], String bindDn, String bindPassword)  throws NamingException {
         Hashtable env = new Hashtable();
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
-        env.put(Context.PROVIDER_URL, url);
+        env.put(Context.PROVIDER_URL, joinURLS(urls));
         if (bindDn == null || bindPassword == null) {
             env.put(Context.SECURITY_AUTHENTICATION, "none");
         } else {
@@ -175,10 +185,10 @@ public class LdapUtil {
         return new InitialDirContext(env);
     }
 
-    public static void ldapAuthenticate(String url, String principal, String password) throws NamingException {
+    public static void ldapAuthenticate(String urls[], String principal, String password) throws NamingException {
         Hashtable env = new Hashtable();
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
-        env.put(Context.PROVIDER_URL, url);
+        env.put(Context.PROVIDER_URL, joinURLS(urls));
         env.put(Context.SECURITY_AUTHENTICATION, "simple");
         env.put(Context.SECURITY_PRINCIPAL, principal);
         env.put(Context.SECURITY_CREDENTIALS, password);
@@ -191,8 +201,8 @@ public class LdapUtil {
             closeContext(context);
         }
     }
-    
-    public static void ldapAuthenticate(String url, String password, String searchBase, String searchFilter, String searchDn, String searchPassword) throws NamingException {
+
+    public static void ldapAuthenticate(String url[], String password, String searchBase, String searchFilter, String searchDn, String searchPassword) throws NamingException {
         DirContext ctxt = null;
         String resultDn = null;;
         boolean tooMany = false;        
@@ -222,6 +232,7 @@ public class LdapUtil {
         } else if (resultDn == null) {
             throw new AuthenticationException("empty search");
         }
+        if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("search filter matched: "+resultDn);
         ldapAuthenticate(url, resultDn, password); 
     }
 
@@ -680,7 +691,7 @@ public class LdapUtil {
      * @see com.zimbra.cs.account.Provisioning#searchGal(java.lang.String)
      */
     public static SearchGalResult searchLdapGal(
-            String url,
+            String url[],
             String bindDn,
             String bindPassword,
             String base,
@@ -693,8 +704,8 @@ public class LdapUtil {
         SearchGalResult result = new SearchGalResult();
         result.matches = new ArrayList();
     
-        if (url == null || base == null || filter == null) {
-            if (url == null)
+        if (url == null || url.length == 0 || base == null || filter == null) {
+            if (url == null || url.length == 0)
                 ZimbraLog.misc.warn("searchLdapGal url is null");
             if (base == null)
                 ZimbraLog.misc.warn("searchLdapGal base is null");

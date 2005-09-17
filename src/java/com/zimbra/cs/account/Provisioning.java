@@ -255,7 +255,9 @@ public abstract class Provisioning {
      * auth mech to use. should be AM_ZIMBRA or AM_LDAP. 
      */
     public static final String A_zimbraAuthMech = "zimbraAuthMech";
-    
+
+    public static final String A_zimbraAuthFallbackToLocal = "zimbraAuthFallbackToLocal";
+
     /**
      * LDAP URL (ldap://ldapserver[:port]/ or ldaps://ldapserver[:port]/)
      */

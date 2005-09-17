@@ -583,7 +583,7 @@ public class LdapProvisioning extends Provisioning {
             if (d == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(domain);
 
-            rctxt = LdapUtil.getDirContext(remoteURL, remoteBindDn, remoteBindPassword);
+            rctxt = LdapUtil.getDirContext(new String[] {remoteURL}, remoteBindDn, remoteBindPassword);
             
             String dn = domainToAccountBaseDN(domain);
             LdapAccount remoteAccount =
@@ -1911,12 +1911,13 @@ public class LdapProvisioning extends Provisioning {
         }
     }
 
-    private boolean externalLdapAuth(Domain d, Account acct, String password) throws ServiceException {
-        String url = d.getAttr(Provisioning.A_zimbraAuthLdapURL);
+    private void externalLdapAuth(Domain d, Account acct, String password) throws ServiceException {
+        String url[] = d.getMultiAttr(Provisioning.A_zimbraAuthLdapURL);
         
-        if (url == null) {
-            ZimbraLog.account.warn("attr not set "+Provisioning.A_zimbraAuthLdapURL+", falling back to default mech");
-            return false;
+        if (url == null || url.length == 0) {
+            String msg = "attr not set "+Provisioning.A_zimbraAuthLdapURL;
+            ZimbraLog.account.fatal(msg);
+            throw ServiceException.FAILURE(msg, null);
         }
 
         try {
@@ -1926,7 +1927,7 @@ public class LdapProvisioning extends Provisioning {
             if (externalDn != null) {
                 if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with explicit dn of "+externalDn);
                 LdapUtil.ldapAuthenticate(url, externalDn, password);
-                return true;
+                return;
             }
 
             String searchFilter = d.getAttr(Provisioning.A_zimbraAuthLdapSearchFilter);
@@ -1938,7 +1939,7 @@ public class LdapProvisioning extends Provisioning {
                 searchFilter = LdapUtil.computeAuthDn(acct.getName(), searchFilter);
                 if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with search filter of "+searchFilter);
                 LdapUtil.ldapAuthenticate(url, password, searchBase, searchFilter, searchDn, searchPassword);
-                return true;
+                return;
             }
             
             String bindDn = d.getAttr(Provisioning.A_zimbraAuthLdapBindDn);
@@ -1946,7 +1947,7 @@ public class LdapProvisioning extends Provisioning {
                 String dn = LdapUtil.computeAuthDn(acct.getName(), bindDn);
                 if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with bind dn template of "+dn);
                 LdapUtil.ldapAuthenticate(url, dn, password);
-                return true;
+                return;
             }
 
         } catch (AuthenticationException e) {
@@ -1957,10 +1958,10 @@ public class LdapProvisioning extends Provisioning {
             throw ServiceException.FAILURE(e.getMessage(), e);
         }
         
-        ZimbraLog.account.warn("one of the following attrs must be set "+
-                Provisioning.A_zimbraAuthLdapBindDn+", "+Provisioning.A_zimbraAuthLdapSearchFilter+"; falling back to default mech");
-
-        return false;
+        String msg = "one of the following attrs must be set "+
+                Provisioning.A_zimbraAuthLdapBindDn+", "+Provisioning.A_zimbraAuthLdapSearchFilter;
+        ZimbraLog.account.fatal(msg);
+        throw ServiceException.FAILURE(msg, null);
     }
 
     /*
@@ -1981,16 +1982,13 @@ public class LdapProvisioning extends Provisioning {
         }
         
         if (authMech.equals(Provisioning.AM_LDAP) || authMech.equals(Provisioning.AM_AD)) {
-            // try local password, if there is one...
-            if (encodedPassword != null && LdapUtil.verifySSHA(encodedPassword, password)) {
-                    return;
-            }
-
-            if (externalLdapAuth(d, acct, password)) {
+            boolean allowFallback = d.getBooleanAttr(Provisioning.A_zimbraAuthFallbackToLocal, false);
+            try {
+                externalLdapAuth(d, acct, password);
                 return;
+            } catch (ServiceException e) {
+                if (!allowFallback) throw e;
             }
-            // fallback to zimbra            
-            
         } else if (!authMech.equals(Provisioning.AM_ZIMBRA)) {
             ZimbraLog.account.warn("unknown value for "+Provisioning.A_zimbraAuthMech+": "+
                     authMech+", falling back to default mech");

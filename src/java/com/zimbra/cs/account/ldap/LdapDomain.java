@@ -236,7 +236,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
     }
 
     private SearchGalResult searchLdapGal(String n, int maxResults, String token) throws ServiceException {
-        String url = getAttr(Provisioning.A_zimbraGalLdapURL);
+        String url[] = getMultiAttr(Provisioning.A_zimbraGalLdapURL);
         String bindDn = getAttr(Provisioning.A_zimbraGalLdapBindDn);
         String bindPassword = getAttr(Provisioning.A_zimbraGalLdapBindPassword);
         String searchBase = getAttr(Provisioning.A_zimbraGalLdapSearchBase, "");
