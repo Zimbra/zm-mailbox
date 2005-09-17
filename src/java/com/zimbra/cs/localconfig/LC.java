@@ -87,6 +87,10 @@ public class LC {
     public static final KnownKey zimbra_ldap_password;
     public static final KnownKey zimbra_server_hostname;
     public static final KnownKey zimbra_log4j_properties;
+
+    public static final KnownKey zimbra_index_max_uncommited_operations;
+    public static final KnownKey zimbra_index_lru_size;
+    public static final KnownKey zimbra_index_idle_flush_time;
     
     public static final KnownKey stats_img_folder;
     
@@ -225,8 +229,25 @@ public class LC {
         zimbra_log4j_properties = new KnownKey("zimbra_log4j_properties");
         zimbra_log4j_properties.setDefault("${zimbra_home}" + FS + "conf" + FS + "log4j.properties");
         zimbra_log4j_properties.setDoc
-        	("Path to log4j configuration properties file.");
+            ("Path to log4j configuration properties file.");
+
+        zimbra_index_max_uncommited_operations = new KnownKey("zimbra_index_max_uncommited_operations");
+        zimbra_index_max_uncommited_operations.setDefault("200");
+        zimbra_index_max_uncommited_operations.setDoc
+            ("Maximum number of uncommitted indexing operations" +
+             " that may accumulate per mailbox before forcing a commit.");
         
+        zimbra_index_lru_size = new KnownKey("zimbra_index_lru_size");
+        zimbra_index_lru_size.setDefault("100");
+        zimbra_index_lru_size.setDoc
+            ("Maximum number of open mailbox index writers in the LRU map.");
+        
+        zimbra_index_idle_flush_time = new KnownKey("zimbra_index_idle_flush_time");
+        zimbra_index_idle_flush_time.setDefault("600");
+        zimbra_index_idle_flush_time.setDoc
+            ("If idle for longer than this value (in seconds), flush" +
+             " uncommitted indexing ops in mailbox.");
+
         stats_img_folder = new KnownKey("stats_img_folder");
         stats_img_folder.setDefault("${zimbra_home}" + FS + "zimbramon" + FS + "rrdtool" + FS + "work");
         stats_img_folder.setDoc

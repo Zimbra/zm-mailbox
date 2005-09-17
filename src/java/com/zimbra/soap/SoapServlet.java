@@ -42,7 +42,6 @@ import org.apache.commons.collections.map.LazyMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ZimbraPerf;

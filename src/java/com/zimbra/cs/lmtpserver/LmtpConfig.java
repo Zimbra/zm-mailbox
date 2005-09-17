@@ -57,8 +57,8 @@ public class LmtpConfig {
         Server config = Provisioning.getInstance().getLocalServer();
         mNumThreads = config.getIntAttr(Provisioning.A_zimbraLmtpNumThreads, Config.D_LMTP_THREADS);
         mPort = config.getIntAttr(Provisioning.A_zimbraLmtpBindPort, Config.D_LMTP_BIND_PORT);
-        mBindAddress = config.getAttr(Provisioning.A_zimbraLmtpBindAddress, Config.D_LMTP_BIND_ADDRESS);
-        mAdvertisedName = config.getAttr(Provisioning.A_zimbraLmtpAdvertisedName, Config.D_LMTP_ANNOUNCE_NAME);
+        mBindAddress = config.getAttr(Provisioning.A_zimbraLmtpBindAddress, null);
+        mAdvertisedName = config.getAttr(Provisioning.A_zimbraLmtpAdvertisedName, null);
     }
     /**
      * @return Returns the advertisedName.

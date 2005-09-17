@@ -34,7 +34,6 @@ import java.util.regex.Pattern;
 
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.MailItem.Array;
 import com.zimbra.cs.service.ServiceException;
 
 /**

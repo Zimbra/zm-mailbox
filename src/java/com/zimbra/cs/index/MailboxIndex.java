@@ -68,6 +68,7 @@ import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbMailItem.SearchResult;
 import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
@@ -549,10 +550,10 @@ public final class MailboxIndex
             shutdown();
         }
 
-        sMaxUncommittedOps = (int) Config.getLong("indexing.mailboxIndexWriter.maxUncommittedOps", 100);
-        sLRUSize = (int) Config.getLong("indexing.mailboxIndexWriter.LRUSize", 75);
+        sMaxUncommittedOps = LC.zimbra_index_max_uncommited_operations.intValue();
+        sLRUSize = LC.zimbra_index_lru_size.intValue();
         if (sLRUSize < 10) sLRUSize = 10;
-        sIdleWriterFlushTimeMS = 1000 * Config.getLong("indexing.mailboxIndexWriter.idleFlushTimeSec", 240);
+        sIdleWriterFlushTimeMS = 1000 * LC.zimbra_index_idle_flush_time.intValue();
         sIndexWritersSweeper =
             new IndexWritersSweeperThread(sSweepIntervalMS, sIdleWriterFlushTimeMS, sLRUSize);
         sIndexWritersSweeper.start();

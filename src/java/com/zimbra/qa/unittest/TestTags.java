@@ -25,7 +25,6 @@
 
 package com.zimbra.qa.unittest;
 
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -35,9 +34,6 @@ import junit.framework.TestCase;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
-import com.zimbra.cs.index.ZimbraHit;
-import com.zimbra.cs.index.ZimbraQueryResults;
-import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;

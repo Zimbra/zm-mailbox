@@ -38,6 +38,7 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.db.DbConfig;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 
 
@@ -46,16 +47,11 @@ import com.zimbra.cs.service.ServiceException;
  */
 public class Config {
 
-	public static final String C_COMMON_ZIMBRA_HOME = "common.zimbraHome";
-	public static final String D_COMMON_ZIMBRA_HOME = "/opt/zimbra";
-
     public static final String C_STORE_COMPRESS_BLOBS = "store.compressBlobs";
     public static final boolean D_STORE_COMPRESS_BLOBS = false;
 
     public static final int D_LMTP_THREADS = 10;
     public static final int D_LMTP_BIND_PORT = 7025;
-    public static final String D_LMTP_BIND_ADDRESS = null;
-    public static final String D_LMTP_ANNOUNCE_NAME = null;
 
     public static final int D_SMTP_TIMEOUT = 60;
     public static final int D_SMTP_PORT = 25;
@@ -127,16 +123,6 @@ public class Config {
     }
     
     /**
-     * @param name
-     * @return specified config item as a long, -1 if it doesn't exist.
-     */
-    public static synchronized long getLong(String name, long defaultValue) {
-        initConfig();
-        String value = getString(name, null);
-        return value == null ? defaultValue : Long.parseLong(value);
-    }
-
-    /**
      * Returns a File object representing the path relative to the
      * Zimbra home directory.
      * @param path
@@ -147,12 +133,13 @@ public class Config {
         if (first == File.separatorChar || first == '/')
             return new File(path);
 
-    	String home = Config.getString(C_COMMON_ZIMBRA_HOME, D_COMMON_ZIMBRA_HOME);
+    	String home = LC.zimbra_home.value();
     	return new File(home, path);
     }
 
 
     private static boolean sUserServicesEnabled;
+
     private static final Object sUserServicesEnabledGuard = new Object();
 
     /**
