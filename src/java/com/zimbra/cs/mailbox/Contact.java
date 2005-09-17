@@ -278,7 +278,7 @@ public class Contact extends MailItem {
     public void reindex(IndexItem redo, Object indexData) throws ServiceException {
         // FIXME: need to note this as dirty so we can reindex if things fail
         if (!DebugConfig.disableIndexing)
-            Indexer.GetInstance().indexContact(redo, getMailboxId(), mId, this);
+            Indexer.GetInstance().indexContact(redo, mMailbox.getMailboxIndex(), mId, this);
     }
 
     void modify(Map attrs, boolean replace) throws ServiceException {

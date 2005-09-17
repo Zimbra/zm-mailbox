@@ -106,7 +106,7 @@ public class IndexEditor {
                     new ParsedMessage(msg.getMimeMessage(),
                                       msg.getDate(),
                                       mbox.attachmentsIndexingEnabled());
-                Indexer.GetInstance().indexMessage(null, msg.getMailboxId(), msg.getId(), pm);
+                Indexer.GetInstance().indexMessage(null, mbox.getMailboxIndex(), msg.getId(), pm);
 			} catch(Exception e) {
 				outputStream.println("Caught Exception "+ExceptionToString.ToString(e));
 			}
@@ -320,8 +320,7 @@ public class IndexEditor {
 	    }      
 	}
 	
-	public void displayHit(ZimbraHit hit, int groupBy) throws IOException, ParseException, ServiceException 
-	{
+	public void displayHit(ZimbraHit hit, int groupBy) {
         outputStream.print("HIT: ");
 	    if (groupBy == MailboxIndex.SEARCH_RETURN_CONVERSATIONS) {
             ConversationHit ch = (ConversationHit) hit;

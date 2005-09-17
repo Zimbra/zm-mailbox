@@ -109,6 +109,7 @@ public class Indexer
     public void indexItem(Mailbox mbox, int itemId, byte itemType, long timestamp)
     throws IOException, ServiceException {
         int mboxId = mbox.getId();
+        MailboxIndex idx = mbox.getMailboxIndex();
         MailItem item;
         try {
         	item = mbox.getItemById(itemId, itemType);
@@ -139,7 +140,7 @@ public class Indexer
     			try {
     				mm = new MimeMessage(JMSession.getSession(), is);
                     ParsedMessage pm = new ParsedMessage(mm, timestamp, mbox.attachmentsIndexingEnabled());
-                    indexMessage(redo, mboxId, itemId, pm);
+                    indexMessage(redo, idx, itemId, pm);
     			} catch (Throwable e) {
                     mLog.warn("Skipping indexing; Unable to parse message " + itemId + ": " + e.toString(), e);
                     // Eat up all errors during message analysis.  Throwing
@@ -156,10 +157,10 @@ public class Indexer
                 }
                 break;
             case MailItem.TYPE_CONTACT:
-                indexContact(redo, mboxId, itemId, (Contact) item);
+                indexContact(redo, idx, itemId, (Contact) item);
                 break;
             case MailItem.TYPE_NOTE:
-                indexNote(redo, mboxId, itemId, (Note) item);
+                indexNote(redo, idx, itemId, (Note) item);
                 break;
             default:
                 redo.abort();
@@ -174,14 +175,14 @@ public class Indexer
      * @param pm
      * @throws ServiceException
      */
-    public void indexMessage(IndexItem redo, int mailboxId, int messageId, ParsedMessage pm)
+    public void indexMessage(IndexItem redo, MailboxIndex idx, int messageId, ParsedMessage pm)
     throws ServiceException {
         try {
 	        int numDocsAdded = 0;
         	for (Iterator it = pm.getLuceneDocuments().iterator(); it.hasNext(); ) {
         		Document doc = (Document) it.next();
         		if (doc != null) {
-        			addDocument(redo, doc, mailboxId, messageId, pm.getReceivedDate());
+        			addDocument(redo, doc, idx, messageId, pm.getReceivedDate());
         			numDocsAdded++;
         		}
         	}
@@ -199,9 +200,9 @@ public class Indexer
      * @param contact
      * @throws ServiceException
      */
-    public void indexContact(IndexItem redo, int mailboxId, int mailItemId, Contact contact)
+    public void indexContact(IndexItem redo, MailboxIndex idx, int mailItemId, Contact contact)
     throws ServiceException {
-		mLog.info("indexContact("+mailboxId+","+mailItemId+","+contact.toString()+")");
+		mLog.info("indexContact("+contact+")");
         try {
             StringBuffer contentText = new StringBuffer();
             Map m = contact.getAttrs();
@@ -212,8 +213,6 @@ public class Indexer
                 contentText.append(cur);
                 contentText.append(' ');
             }
-            
-            MailboxIndex idx = Mailbox.getMailboxById(mailboxId).getMailboxIndex();
             
             
             // FIXME: this is very slow, and unnecessary in many instances (e.g. a contact is new).  Create some kind of a flag
@@ -250,7 +249,7 @@ public class Indexer
             doc.add(new Field(LuceneFields.L_SORT_SUBJECT, subj.toUpperCase(), true/*store*/, true/*index*/, false /*token*/));
             doc.add(new Field(LuceneFields.L_SORT_NAME, name.toUpperCase(), false/*store*/, true/*index*/, false /*token*/));
             
-            addDocument(redo, doc, mailboxId, mailItemId, contact.getDate());
+            addDocument(redo, doc, idx, mailItemId, contact.getDate());
             
         	incrementNumIndexedBy(1);
         } catch (IOException e) {
@@ -265,17 +264,15 @@ public class Indexer
      * @param note
      * @throws ServiceException
      */
-    public void indexNote(IndexItem redo, int mailboxId, int mailItemId, Note note)
+    public void indexNote(IndexItem redo, MailboxIndex idx, int mailItemId, Note note)
     throws ServiceException {
-		mLog.info("indexNote("+mailboxId+","+mailItemId+","+note.toString()+")");
+		mLog.info("indexNote("+note+")");
         try {
             String toIndex = note.getContent();
             
             if (mLog.isDebugEnabled()) {
                 mLog.debug("Note value=\""+toIndex+"\"");
             }
-            
-            MailboxIndex idx = Mailbox.getMailboxById(mailboxId).getMailboxIndex();
             
         	try {
         	    idx.deleteDocuments(new int[] { mailItemId });
@@ -301,7 +298,7 @@ public class Indexer
 //            mLog.debug("Note date is: "+dateString);
 //            doc.add(Field.Text(LuceneFields.L_DATE, dateString));
             
-            addDocument(redo,doc,mailboxId, mailItemId, note.getDate());
+            addDocument(redo, doc, idx, mailItemId, note.getDate());
             
         	incrementNumIndexedBy(1);
         } catch (IOException e) {
@@ -310,8 +307,7 @@ public class Indexer
     }
     
     
-    boolean checkForExistance(int mailboxId, int mailItemId) throws ServiceException {
-        MailboxIndex idx = Mailbox.getMailboxById(mailboxId).getMailboxIndex();
+    boolean checkForExistence(MailboxIndex idx, int mailItemId) {
     	return idx.checkMailItemExists(mailItemId);
     }
 
@@ -322,10 +318,10 @@ public class Indexer
      * @throws IOException
      * @throws ServiceException
      */
-    public void addDocument(IndexItem redoOp, Document doc, int mailboxId, 
-            int mailboxBlobId, long receivedDate) throws IOException, ServiceException 
+    public void addDocument(IndexItem redoOp, Document doc, MailboxIndex idx, 
+            int mailboxBlobId, long receivedDate) throws IOException
 	{
-    	addDocument(redoOp, doc, mailboxId, mailboxBlobId, receivedDate, false);
+    	addDocument(redoOp, doc, idx, mailboxBlobId, receivedDate, false);
 	}
 
     /**
@@ -334,23 +330,23 @@ public class Indexer
      * Note that this API can get called from any of the thread pool threads, and so must be thread safe.
      * If checkExisting is true, it will be first checked to see if the mailboxId/mailboxBlobId
      * combination is already indexed.  This is useful for retry/redo attempts.
+     * @param idx TODO
      * @throws ServiceException
      */
-    public void addDocument(IndexItem redoOp, Document doc, int mailboxId, int mailboxBlobId, 
-            long receivedDate, boolean checkExisting) throws IOException, ServiceException 
+    public void addDocument(IndexItem redoOp, Document doc, MailboxIndex idx, int mailboxBlobId, 
+            long receivedDate, boolean checkExisting) throws IOException
 	{
     	long start = System.currentTimeMillis();
     	String mailboxBlobIdStr = Integer.toString(mailboxBlobId);
-        MailboxIndex idx = Mailbox.getMailboxById(mailboxId).getMailboxIndex();
 
     	boolean doit = true;
     	if (checkExisting) {
-    		boolean exists = checkForExistance(mailboxId, mailboxBlobId);
+    		boolean exists = checkForExistence(idx, mailboxBlobId);
 
     		if (exists) {
     			doit = false;
                 if (mLog.isDebugEnabled()) {
-                    mLog.debug("Already indexed: mailbox=" + mailboxId + ", mailboxBlob=" + mailboxBlobId);
+                    mLog.debug("Already indexed: mailbox=" + idx + ", mailboxBlob=" + mailboxBlobId);
                 }
     		}
     	}

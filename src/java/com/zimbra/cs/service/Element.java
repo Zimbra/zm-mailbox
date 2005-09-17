@@ -41,8 +41,6 @@ import java.util.Set;
 
 import org.dom4j.QName;
 
-import com.zimbra.cs.util.StringUtil;
-
 /**
  * @author dkarp
  */
@@ -615,9 +613,30 @@ public abstract class Element {
         private String xmlEncode(String str, boolean escapeQuotes) {
             if (str == null)
                 return "";
-            str = StringUtil.stripControlCharacters(str).replaceAll("&", "&amp;")
-                            .replaceAll("<", "&lt;").replaceAll("]]>", "]]&gt;");
-            return (escapeQuotes ? str.replaceAll("\"", "&quot;") : str);
+            StringBuffer sb = null;
+            String replacement;
+            int i, last;
+            for (i = 0, last = -1; i < str.length(); i++) {
+                char c = str.charAt(i);
+                switch (c) {
+                    case '&':  replacement = "&amp;";   break;
+                    case '<':  replacement = "&lt;";    break;
+                    case '>':  if (i < 2 || str.charAt(i-1) != ']' || str.charAt(i-2) != ']')  continue;
+                               replacement = "&gt;";    break;
+                    case '"':  if (!escapeQuotes)       continue;
+                               replacement = "&quot;";  break;
+                    case 0x09:  case 0x0A:  case 0x0D:  continue;
+                    default:   if (c >= 0x20 && c != 0xFFFE && c != 0xFFFF && (c <= 0xD7FF || c >= 0xE000))  continue;
+                               replacement = "?";       break;
+                }
+                if (sb == null)
+                    sb = new StringBuffer(str.substring(0, i));
+                else
+                    sb.append(str.substring(last, i));
+                sb.append(replacement);
+                last = i + 1;
+            }
+            return (sb == null ? str : sb.append(str.substring(last, i)).toString());
         }
 
         private boolean namespaceDeclarationNeeded(String prefix, String uri) {
@@ -712,7 +731,7 @@ public abstract class Element {
         e.addElement("cn");
         e.addElement("cn").addAttribute("id", 256).addAttribute("md", 1111196674000L).addAttribute("l", 7).addAttribute("x", false)
          .addAttribute("workPhone", "(408) 973-0500 x112", DISP_ELEMENT).addAttribute("notes", "These are &\nrandom notes", DISP_ELEMENT)
-         .addAttribute("firstName", "Ross\"Dork\"", DISP_ELEMENT).addAttribute("lastName", "Dargahi", DISP_ELEMENT);
+         .addAttribute("firstName", "Ross \"Killa\"", DISP_ELEMENT).addAttribute("lastName", "Dargahi", DISP_ELEMENT);
         e.addElement("cn").addAttribute("id", 257).addAttribute("md", 1111196674000L).addAttribute("l", 7)
          .addAttribute("workPhone", "(408) 973-0500 x111", DISP_ELEMENT).addAttribute("jobTitle", "CEO", DISP_ELEMENT)
          .addAttribute("firstName", "Satish", DISP_ELEMENT).addAttribute("lastName", "Dharmaraj", DISP_ELEMENT);
@@ -721,8 +740,8 @@ public abstract class Element {
         e = new XMLElement(com.zimbra.cs.service.mail.MailService.GET_CONTACTS_RESPONSE);
         e.addElement("cn");
         e.addElement("cn").addAttribute("id", 256).addAttribute("md", 1111196674000L).addAttribute("l", 7).addAttribute("x", false)
-         .addAttribute("workPhone", "(408) 973-0500 x112", DISP_ELEMENT).addAttribute("notes", "These are & random notes", DISP_ELEMENT)
-         .addAttribute("firstName", "Ross", DISP_ELEMENT).addAttribute("lastName", "Dargahi", DISP_ELEMENT);
+         .addAttribute("workPhone", "(408) 973-0500 x112", DISP_ELEMENT).addAttribute("notes", "These are &\nrandom notes", DISP_ELEMENT)
+         .addAttribute("firstName", "Ross \"Killa\"", DISP_ELEMENT).addAttribute("lastName", "Dargahi", DISP_ELEMENT);
         e.addElement("cn").addAttribute("id", 257).addAttribute("md", 1111196674000L).addAttribute("l", 7)
          .addAttribute("workPhone", "(408) 973-0500 x111", DISP_ELEMENT).addAttribute("jobTitle", "CEO", DISP_ELEMENT)
          .addAttribute("firstName", "Satish", DISP_ELEMENT).addAttribute("lastName", "Dharmaraj", DISP_ELEMENT);

@@ -472,7 +472,7 @@ public class Message extends MailItem {
 
         // FIXME: need to note this as dirty so we can reindex if things fail
         if (!DebugConfig.disableIndexing)
-            Indexer.GetInstance().indexMessage(redo, getMailboxId(), mId, pm);
+            Indexer.GetInstance().indexMessage(redo, mMailbox.getMailboxIndex(), mId, pm);
     }
 
     public void reanalyze() throws ServiceException, IOException {
