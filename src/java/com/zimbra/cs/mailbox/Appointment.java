@@ -32,6 +32,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -286,12 +287,12 @@ public class Appointment extends MailItem {
             long numComp = meta.getLong(Metadata.FN_NUM_COMPONENTS);
             for (int i = 0; i < numComp; i++) {
                 Metadata md = meta.getMap(Metadata.FN_INV + i);
-                mInvites.add(Invite.decodeMetadata(md, this, accountTZ));
+                mInvites.add(Invite.decodeMetadata(getMailboxId(), md, this, accountTZ));
             }
 
             Metadata metaRecur = meta.getMap(FN_APPT_RECURRENCE, true);
             if (metaRecur != null)
-                mRecurrence = Recurrence.decodeRule(getMailbox(), metaRecur, mTzMap);
+                mRecurrence = Recurrence.decodeRule(metaRecur, mTzMap);
         }
         return meta;
     }
@@ -429,7 +430,7 @@ public class Appointment extends MailItem {
         public InviteInfo getInviteInfo() { return mInvId; } 
     }
 
-    public void setUid(String uid) {
+    void setUid(String uid) {
         mUid = uid;
     }
 
@@ -663,8 +664,12 @@ public class Appointment extends MailItem {
          * @throws IOException
          */
         public InputStream getInputStream() throws IOException {
-            try { 
-                return new ByteArrayInputStream(mPm.getRawData());
+            try {
+                if (mPm == null) {
+                    return new ByteArrayInputStream(new byte[0]);
+                } else {
+                    return new ByteArrayInputStream(mPm.getRawData());
+                }
             } catch (MessagingException e) {
                 IOException ioe = new IOException("getInputStream");
                 ioe.initCause(e);
@@ -680,7 +685,6 @@ public class Appointment extends MailItem {
         public OutputStream getOutputStream() throws IOException {
             throw new UnsupportedOperationException();
         }
-
     }
     
     private void storeUpdatedBlob(MimeMessage mm, short volumeId)
@@ -745,6 +749,9 @@ public class Appointment extends MailItem {
      * Upate the Blob for this Appointment object: possibly remove one or more entries from it, 
      * possibly add an entry to it.
      * 
+     * It IS okay to have newInv != null and invPm==null....this would mean an invite-add where the
+     * new invite had no ParsedMessage: IE because it didn't actually come in via an RFC822 msg
+     * 
      * @param toRemove
      * @param invPm
      * @param newInv
@@ -764,8 +771,9 @@ public class Appointment extends MailItem {
             try {
                 mm = new MimeMessage(getMimeMessage());
             } catch (ServiceException e) {
-                // oops, blob isn't there!  old data!  create ones
-                if (invPm != null) {
+                if (newInv != null) {
+                    // if the blob isn't already there, and we're going to add one, then
+                    // just go into create
                     createBlob(invPm, newInv, volumeId);
                 }
                 return;
@@ -804,8 +812,7 @@ public class Appointment extends MailItem {
                 } while(matchedIdx > -1);
             }
 
-            // (optionally) add a new message to the blob 
-            if (invPm != null) {
+            if (newInv != null) {
                 MimeBodyPart mbp = new MimeBodyPart();
                 mbp.setDataHandler(new DataHandler(new PMDataSource(invPm)));
                 mmp.addBodyPart(mbp);
@@ -868,7 +875,7 @@ public class Appointment extends MailItem {
         return StoreManager.getInstance().getContent(msgBlob);
     }
     
-    public void appendRawCalendarData(Calendar cal) throws ServiceException {
+    void appendRawCalendarData(Calendar cal) throws ServiceException {
         for (Iterator invIter = mInvites.iterator(); invIter.hasNext();) {
             Invite inv = (Invite)invIter.next();
             
@@ -936,6 +943,11 @@ public class Appointment extends MailItem {
         }
     }
     
+    /**
+     * @param subId
+     * @return
+     * @throws ServiceException
+     */
     public MimeMessage getMimeMessage(int subId) throws ServiceException {
         InputStream is = null;
         MimeMessage mm = null;
@@ -968,8 +980,8 @@ public class Appointment extends MailItem {
                 String[] hdrs = mbp.getHeader("invId");
                 
                 if (hdrs != null && hdrs.length > 0 && (Integer.parseInt(hdrs[0])==subId)) {
-                    
-                    return (MimeMessage)mbp.getContent();
+                    Object mbpContent = mbp.getContent();
+                    return (MimeMessage)mbpContent;
                 }
             }
             return null;

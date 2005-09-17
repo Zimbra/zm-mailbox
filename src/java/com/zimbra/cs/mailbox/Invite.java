@@ -73,9 +73,12 @@ import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.AccountUtil;
 
 /**
- * Invite 
+ * Invite
  * 
- * Represents a single component entry of this Invite -- ie a VEvent or a VTodo or whatever
+ * Invite isn't really the right name for this class, it should be called CalendarComponent 
+ * or something...
+ * 
+ * An Invite represents a single component entry of an Appointment -- ie a single VEvent or a VTodo or whatever
  * This is our smallest "chunk" of raw iCal data -- it has a single UUID, etc etc
  */
 public class Invite {
@@ -89,7 +92,7 @@ public class Invite {
      * @param start
      */
     Invite(
-            Method method,
+            String methodStr,
             TimeZoneMap tzmap,
             Appointment appt,
             String uid,
@@ -115,7 +118,7 @@ public class Invite {
             boolean sentByMe,
             String fragment)
             {
-        mMethod = method;
+        mMethod = lookupMethod(methodStr);
         mTzMap = tzmap;
         mAppt = appt;
         mUid = uid;
@@ -149,6 +152,98 @@ public class Invite {
     private String mFragment;
     public String getFragment() { return mFragment; }
     
+    /**
+     * Create an Invite object which will then be added to a mailbox Mailbox.addInvite()     
+     *  
+     * @param method usually "REQUEST" or else CANCEL/REPLY/PUBLISH
+     * @param tzMap TimeZoneMap which contains every timezone referenced in DtStart, DtEnd, Duration or Recurrence
+     * @param uid UID of this appointment
+     * @param status IcalXmlStrMap.STATUS_* RFC2445 status: eg TENTATIVE/CONFIRMED/CANCELLED
+     * @param freeBusy IcalXmlStrMap.FB* (F/B/T/U -- show time as Free/Busy/Tentative/Unavailable)
+     * @param transparency IcalXmlStrMap.TRANSP_* RFC2445 Transparency
+     * @param allDayEvent TRUE if this is an all-day-event, FALSE otherwise.  This will override the Time part of DtStart and DtEnd, and will throw an ServiceException.FAILURE if the Duration is not Days or Weeks
+     * @param dtStart Start time 
+     * @param dtEndOrNull End time OR NULL (duration must be specified if this is null)
+     * @param durationOrNull Duration (may not be specified if dtEnd is specified)
+     * @param recurID If this invite is an EXCEPTION, the ID of the instance being excepted
+     * @param recurrenceOrNull IRecurrence rule tree 
+     * @param organizer RFC2445 Organizer: see Invite.createOrganizer
+     * @param attendees list of RFC2445 Attendees: see Invite.createAttendee
+     * @param name Name of this appointment
+     * @param location Location of this appointment
+     * @param fragment Description of this appointment
+     * @param dtStampOrZero RFC2445 sequencing. If 0, then will use current timestamp
+     * @param sequenceNoOrZero RFC2445 sequencying.  If 0, then will use current highest sequence no, or 1
+     * @param needsReply TRUE if this mailbox is expected to reply to this invite
+     * @param partStat IcalXMLStrMap.PARTSTAT_* RFC2445 Participant Status of this mailbox
+     * @param sentByMe TRUE if this mailbox sent this invite 
+     */
+    public static Invite createInvite(
+            int mailboxId,
+            String method,
+            TimeZoneMap tzMap, 
+            String uidOrNull,       
+            String status,
+            String freeBusy,
+            String transparency,
+            boolean allDayEvent,
+            ParsedDateTime dtStart,
+            ParsedDateTime dtEndOrNull,
+            ParsedDuration durationOrNull,
+            RecurId recurId,
+            Recurrence.IRecurrence recurrenceOrNull,
+            Organizer organizer,
+            List /* Attendee */ attendees,
+            String name,
+            String location,
+            String fragment,
+            int dtStampOrZero,
+            int sequenceNoOrZero,
+            boolean needsReply,
+            String partStat,
+            boolean sentByMe) throws ServiceException
+    {
+        return new Invite(
+                method,
+                tzMap,
+                null, // no appointment yet
+                uidOrNull,
+                status,
+                freeBusy,
+                transparency,
+                dtStart,
+                dtEndOrNull,
+                durationOrNull,
+                recurrenceOrNull,
+                organizer,
+                attendees,
+                name,
+                location,
+                Invite.APPT_FLAG_EVENT | (needsReply ? Invite.APPT_FLAG_NEEDS_REPLY : 0) | (allDayEvent ? Invite.APPT_FLAG_ALLDAY : 0),
+                partStat,
+                recurId,
+                dtStampOrZero,
+                sequenceNoOrZero,
+                mailboxId,
+                0, // mailItemId MUST BE SET
+                0, // component num
+                sentByMe,
+                fragment
+        );
+        
+    }
+    
+    /**
+     * Called by Mailbox.addInvite once it has an ID for this invite
+     * 
+     * @param invId
+     */
+    void setInviteId(int invId) {
+        this.mMailItemId = invId;
+        if (mRecurrence != null) {
+            mRecurrence.setInviteId(new InviteInfo(this));
+        }
+    }
     
 //    
 //    public Recurrence.IRecurrence getRecurrence() throws ServiceException
@@ -163,7 +258,14 @@ public class Invite {
     private static final String FN_SENTBYME = "byme";
     private static final String FN_FRAGMENT = "frag";
     
-    static Metadata encodeMetadata(Invite inv) {
+    /**
+     * This is only really public to support serializing RedoOps -- you
+     * really don't want to call this API from anywhere else 
+     * 
+     * @param inv
+     * @return
+     */
+    public static Metadata encodeMetadata(Invite inv) {
         Metadata meta = new Metadata();
         
         meta.put(Metadata.FN_UID, inv.getUid());
@@ -227,7 +329,18 @@ public class Invite {
     private static final String FN_RECURRENCE = "recurrence";
     private static final String FN_COMPNUM = "comp"; 
     
-    static Invite decodeMetadata(Metadata meta, Appointment appt, ICalTimeZone accountTZ) 
+    /**
+     * This API is public for RedoLogging to call into it -- you probably don't want to call it from
+     * anywhere else! 
+     * 
+     * @param mailboxId
+     * @param meta
+     * @param appt
+     * @param accountTZ
+     * @return
+     * @throws ServiceException
+     */
+    public static Invite decodeMetadata(int mailboxId, Metadata meta, Appointment appt, ICalTimeZone accountTZ) 
     throws ServiceException {
         String uid = meta.get(Metadata.FN_UID, null);
         int mailItemId = (int)meta.getLong(FN_INVMSGID);
@@ -249,10 +362,10 @@ public class Invite {
         Metadata metaRecur = meta.getMap(FN_RECURRENCE, true);
         Recurrence.IRecurrence recurrence = null; 
         if (metaRecur != null) {
-            recurrence = Recurrence.decodeRule(appt.getMailbox(), metaRecur, tzMap);
+            recurrence = Recurrence.decodeRule(metaRecur, tzMap);
         }
         
-        Method method = lookupMethod(meta.get(Metadata.FN_METHOD, Method.PUBLISH.getValue()));
+        String methodStr = meta.get(Metadata.FN_METHOD, Method.PUBLISH.getValue());
         
         try {
             // DtStart
@@ -269,7 +382,7 @@ public class Invite {
             }
             
         } catch (ParseException e) {
-            throw ServiceException.FAILURE("Error parsing metadata for invite " + mailItemId+"-"+ componentNum + " in appt " + appt.getId(), e);
+            throw ServiceException.FAILURE("Error parsing metadata for invite " + mailItemId+"-"+ componentNum + " in appt " + appt!=null ? Integer.toString(appt.getId()) : "(null)", e);
         }
         
         String name = meta.get(Metadata.FN_NAME);
@@ -285,7 +398,9 @@ public class Invite {
         try {
             org = parseOrgFromMetadata(meta.getMap(Metadata.FN_ORGANIZER, true));
         } catch (ServiceException e) {
-            sLog.warn("Problem decoding organizer for appt " + appt.getId() + " invite "+mailItemId+"-" + componentNum);
+            sLog.warn("Problem decoding organizer for appt " 
+                    + appt!=null ? Integer.toString(appt.getId()) : "(null)"
+                    + " invite "+mailItemId+"-" + componentNum);
         }
         
         ArrayList attendees = new ArrayList();
@@ -295,15 +410,17 @@ public class Invite {
                 Attendee at = parseAtFromMetadata(meta.getMap(Metadata.FN_ATTENDEE + i, true));
                 attendees.add(at);
             } catch (ServiceException e) {
-                sLog.warn("Problem decoding attendee " + i + " for appointment " + appt.getId() + " invite "+mailItemId+"-" + componentNum);
+                sLog.warn("Problem decoding attendee " + i + " for appointment " 
+                        + appt!=null ? Integer.toString(appt.getId()) : "(null)"
+                        + " invite "+mailItemId+"-" + componentNum);
             }
         }
             
-        return new Invite(method, tzMap, appt, uid, status, freebusy, transp,
+        return new Invite(methodStr, tzMap, appt, uid, status, freebusy, transp,
                 dtStart, dtEnd, duration, recurrence, org, attendees,
                 name, loc, flags, partStat,
                 recurrenceId, dtstamp, seqno,
-                appt.getMailboxId(), mailItemId, componentNum, sentByMe, fragment);
+                mailboxId, mailItemId, componentNum, sentByMe, fragment);
     }
     
     public boolean needsReply() {
@@ -336,7 +453,7 @@ public class Invite {
      * @param flag -- flag to up
      * @param add TRUE means set bit (OR with value) FALSE means unset bit
      */
-    public void modifyFlag(Mailbox mbx, int flag, boolean add) throws ServiceException {
+    void modifyFlag(Mailbox mbx, int flag, boolean add) throws ServiceException {
         boolean changed = false;
         if (add) {
             if ((mFlags & flag) == 0) {
@@ -368,7 +485,7 @@ public class Invite {
      *                 "IN" (in-process)
      * @throws ServiceException
      */
-    public void modifyPartStat(Mailbox mbx, boolean needsReply, String partStat)
+    void modifyPartStat(Mailbox mbx, boolean needsReply, String partStat)
     throws ServiceException {
         int oldFlags = mFlags;
         boolean oldNeedsReply = needsReply();
@@ -611,7 +728,7 @@ public class Invite {
     private ArrayList /* VAlarm */ mAlarms = new ArrayList();
     private Method mMethod;
 
-    Invite(Calendar cal, Method method, String fragment) {
+    Invite(Method method, String fragment) {
         mMethod = method;
         mFragment = fragment;
     }
@@ -620,23 +737,12 @@ public class Invite {
         return mMethod.getValue();
     }
     
-    private static Organizer parseOrgFromMetadata(Metadata meta) {
-        if (meta == null)
-            return null;
-        String addressStr = meta.get("a", null);
+    public static Organizer createOrganizer(String addressStr) {
         return new Organizer(URI.create(addressStr));
     }
     
-    private static Attendee parseAtFromMetadata(Metadata meta) throws ServiceException {
-        if (meta == null)
-            return null;
-        String addressStr = meta.get("a", null);
-        String roleStr = meta.get("r", null);
-        String partStatStr = meta.get(Metadata.FN_PARTSTAT, null);
-        Boolean rsvpBool = Boolean.FALSE;
-        if (meta.getBool("v", false))
-            rsvpBool = Boolean.TRUE;
-        
+    public static Attendee createAttendee(String addressStr, String roleStr, String partStatStr, Boolean rsvpBool) throws ServiceException
+    {
         ParameterList p = new ParameterList();
         
         if (roleStr != null && !roleStr.equals("")) {
@@ -653,6 +759,28 @@ public class Invite {
         p.add(rsvp);
         
         return new Attendee(p, URI.create(addressStr));
+        
+    }
+    
+    private static Organizer parseOrgFromMetadata(Metadata meta) {
+        if (meta == null)
+            return null;
+        String addressStr = meta.get("a", null);
+        return createOrganizer(addressStr);
+    }
+    
+    private static Attendee parseAtFromMetadata(Metadata meta) throws ServiceException {
+        if (meta == null)
+            return null;
+        String addressStr = meta.get("a", null);
+        String roleStr = meta.get("r", null);
+        String partStatStr = meta.get(Metadata.FN_PARTSTAT, null);
+        Boolean rsvpBool = Boolean.FALSE;
+        if (meta.getBool("v", false)) {
+            rsvpBool = Boolean.TRUE;
+        }
+        
+        return createAttendee(addressStr, roleStr, partStatStr, rsvpBool);
     }
     
     private static Metadata encodeAsMetadata(Organizer org) {
@@ -1064,7 +1192,7 @@ public class Invite {
                     tzmap.add((VTimeZone) comp);
             } else if (comp.getName().equals(Component.VEVENT)) {
                 Invite invComp = null;
-                invComp = new Invite(cal, method, fragment);
+                invComp = new Invite(method, fragment);
                 toRet.add(invComp);
                 
                 invComp.setComponentNum(compNum);
@@ -1072,7 +1200,7 @@ public class Invite {
                 invComp.setMailItemId(mailItemId);
                 invComp.setSentByMe(sentByMe);
 
-                // must do this AFTER component-num, mailbox-id and mailitem-id are set!
+                // must do this AFTER component-num, mailbox-id and mailitem-id are set! (because the IRecurrence object needs them)
                 invComp.parseVEvent((VEvent) comp, tzmap, method, mbx.getAccount(), false);
                 compNum++;
             }

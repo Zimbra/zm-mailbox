@@ -2049,7 +2049,43 @@ public class Mailbox {
     public synchronized List getAppointmentList(int folderId) throws ServiceException {
         return getItemList(MailItem.TYPE_APPOINTMENT, folderId);
     }
-
+    
+    public synchronized void addInvite(OperationContext octxt, Invite inv) throws ServiceException
+    {
+        CreateInvite redoRecorder = new CreateInvite();
+        CreateInvite redoPlayer = (octxt == null ? null : (CreateInvite) octxt.player);
+        
+        boolean success = false;
+        try {
+            beginTransaction("addInvite", null, redoRecorder);
+            
+            if (redoPlayer == null) {
+                assert(inv.getMailItemId() == 0); 
+                int mailItemId = getNextItemId(Mailbox.ID_AUTO_INCREMENT);
+                inv.setInviteId(mailItemId);
+            }
+            redoRecorder.setInvite(inv);
+            
+            Appointment appt = getAppointmentByUid(inv.getUid());
+            if (appt == null) { 
+                // ONLY create an appointment if this is a REQUEST method...otherwise don't.
+                if (inv.getMethod().equals("REQUEST")) {
+                    appt = createAppointment(Mailbox.ID_FOLDER_CALENDAR, Volume.getCurrentMessageVolume().getId(), "", inv.getUid(), null, inv);
+                } else {
+//                  mLog.info("Mailbox " + getId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c not a REQUEST and no Appointment could be found");
+//                  return; // for now, just ignore this Invitation
+                }
+            } else {
+                appt.processNewInvite(null, inv, Volume.getCurrentMessageVolume().getId());
+            }
+            
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+        
+    }
+    
     synchronized Appointment getAppointmentByUid(String uid) throws ServiceException {
         return getAppointmentByUid(null, uid);
     }
@@ -2880,8 +2916,8 @@ public class Mailbox {
     Appointment createAppointment(int folderId, short volumeId, String tags, String uid, ParsedMessage pm, Invite invite)
     throws ServiceException {
         // FIXME: assuming that we're in the middle of a CreateMessage op
-        CreateMessage redoPlayer   = (CreateMessage) mCurrentChange.getRedoPlayer();
-        CreateMessage redoRecorder = (CreateMessage) mCurrentChange.getRedoRecorder();
+        CreateAppointmentPlayer redoPlayer   = (CreateAppointmentPlayer) mCurrentChange.getRedoPlayer();
+        CreateAppointmentRecorder redoRecorder = (CreateAppointmentRecorder) mCurrentChange.getRedoRecorder();
 
         int newApptId = redoPlayer == null ? Mailbox.ID_AUTO_INCREMENT : redoPlayer.getAppointmentId();
         int createId = getNextItemId(newApptId);

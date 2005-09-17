@@ -128,11 +128,10 @@ public abstract class RedoableOp {
     public static final int OP_MODIFY_VOLUME            = 39;
     public static final int OP_DELETE_VOLUME            = 40;
     public static final int OP_SET_CURRENT_VOLUME       = 41;
-
     public static final int OP_MOVE_BLOBS               = 42;
+    public static final int OP_CREATE_INVITE            = 43;
 
-	public static final int OP_LAST						= 43;
-
+	public static final int OP_LAST				       = 44;
 
 	// Element index is same as Redoable.OP_* constants.
 	// The strings must match the class names.
@@ -179,7 +178,8 @@ public abstract class RedoableOp {
         "ModifyVolume",
         "DeleteVolume",                 // 40
         "SetCurrentVolume",
-        "MoveBlobs"
+        "MoveBlobs",
+        "CreateInvite"
 	};
 
 	public static String getOpClassName(int opcode) {

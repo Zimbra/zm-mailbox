@@ -49,7 +49,8 @@ import com.zimbra.cs.util.JMSession;
 /**
  * @author jhahm
  */
-public class CreateMessage extends RedoableOp {
+public class CreateMessage extends RedoableOp implements CreateAppointmentPlayer,CreateAppointmentRecorder 
+{
 
     private static final byte MSGBODY_INLINE = 1;   // message body buffer is included in this op
     private static final byte MSGBODY_LINK   = 2;   // message link information is included in this op

@@ -1,26 +1,28 @@
 CALENDAR Server-Side TODO list
- 
-Important bugs relating to basic "group scheduling"
-------------------------------------------------------------------------
-API -- GetApptSummaries should use DateTime, not GMT time, allow for timezone shifts
+-----------------------------------------
 
--- testing.  this is kind of blocked on the API unfortunately, but need to come up with a more or less comprehensive set of tests.  There are a LOT of cases: self-created meeting, externally-created-meeting, accept, deny, add invitess, remove invitees, reply to meeting request forwarded from someone else, etc etc......maybe that's a good thing for me to be doing: I'll sit down and try to come up with a comprehensive list of test scenareos.
-
--- REPLY fixes:
+-- REPLY handling fixes:
    -- need to properly track REPLYs from invitees
-   -- need to allow replies to be for a specific instance, not just a specific INVITE
+   -- need to allow replies to be for a specific instance, not just an entire INVITE
 
 -- Alarm System / Alerts
 
+-- need to update to new iCal4j APIs (stop using deprecated functions)
 
+-- need to support client-defined timezones for advanced clients
 
+-- GetApptSummaries API should return DateTime, not GMT time, allow for timezone shifts
 
- 
-Interoperability tasks:
------------------------
+-- integrate with Indexing/Search
+
+-- testing.  We need to come up with a more or less comprehensive set of tests.  There are a LOT of cases: self-created meeting, externally-created-meeting, accept, deny, add invitess, remove invitees, reply to meeting request forwarded from someone else, etc etc......maybe that's a good thing for me to be doing: I'll sit down and try to come up with a comprehensive list of test scenareos.
+
 -- outlook integration testing (basic outlook func works, but not tested at all)
  
 -- test with at least one other calendar program (apple iCal maybe?)
+
+-- don't share same TzMap between all Invites in appointment: although it should mostly work, this is not strictly correct and could cause problems
+
  
  
  
@@ -39,10 +41,12 @@ Stuff to make us more-or-less compliant with RFC's (2445, 2446, 2447):
 -- support for VTODOs and VJOURNAL
 
 
-Other stuff that's on the radar:
----------------------------------
-
+Longer-term stuff:
+------------------
 -- Two-Way sync of .ICS files (eg from Evolution)
+
+
+
 
 
 --------------------------------------------------------------------------------
