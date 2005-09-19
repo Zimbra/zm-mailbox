@@ -96,7 +96,7 @@ public class GetDistributionList extends AdminDocumentHandler {
         	Arrays.sort(members, Collections.reverseOrder());
         }
         for (int i = offset; i < stop; i++) {
-        	dlElement.addAttribute(AdminService.E_DLM, members[i], Element.DISP_ATTRIBUTE);
+        	dlElement.addElement(AdminService.E_DLM).setText(members[i]);
         }
         
         response.addAttribute(AdminService.A_MORE, stop < members.length);
@@ -108,19 +108,35 @@ public class GetDistributionList extends AdminDocumentHandler {
         Element distributionList = e.addElement(AdminService.E_DL);
         distributionList.addAttribute(AdminService.A_NAME, d.getName());
         distributionList.addAttribute(AdminService.A_ID,d.getId());
-        Map attrs = d.getAttrs();
-        for (Iterator mit = attrs.entrySet().iterator(); mit.hasNext(); ) {
-            Map.Entry entry = (Entry) mit.next();
-            String name = (String) entry.getKey();
-            Object value = entry.getValue();
-            if (value instanceof String[]) {
-                String sv[] = (String[]) value;
-                for (int i = 0; i < sv.length; i++)
-                    distributionList.addAttribute(name, sv[i], Element.DISP_ELEMENT);
-            } else if (value instanceof String) {
-                distributionList.addAttribute(name, (String) value, Element.DISP_ELEMENT);
-            }
-        }
+        doAttrs(distributionList, d.getAttrs());
         return distributionList;
     }
+
+    static void doAttrs(Element e, Map attrs) throws ServiceException {
+        for (Iterator mit = attrs.entrySet().iterator(); mit.hasNext(); ) {
+           Map.Entry entry = (Entry) mit.next();
+           String name = (String) entry.getKey();
+           Object value = entry.getValue();
+           
+           // Hide the postfix lookup table attr - should we though?
+           if (name.equals(Provisioning.A_zimbraMailAlias)) {
+               continue;
+           }
+           
+           // Hide the postfix lookup table attr - should we though?
+           if (name.equals(Provisioning.A_zimbraMailForwardingAddress)) {
+        	   continue;
+           }
+
+           if (value instanceof String[]) {
+               String sv[] = (String[]) value;
+               for (int i = 0; i < sv.length; i++)
+                   e.addAttribute(name, sv[i], Element.DISP_ELEMENT);
+           } else if (value instanceof String) {
+               e.addAttribute(name, (String) value, Element.DISP_ELEMENT);
+           }
+       }       
+   }
+
+    
 }
