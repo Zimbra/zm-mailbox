@@ -8,8 +8,9 @@
 Installing p4: 
 -----------------
 
-Double click to mount the dmg file and copy the binary directly to a directory of your choosing.
-Create client spec and check out ZimbraServer, ZimbraWebClient, Ajax, and ThirdParty
+- Double click to mount the dmg file and copy the binary directly to a directory of your choosing. 
+- You will also need the P4 CLI for Eclipse (put it all in the same folder).
+- Create client spec and check out ZimbraServer, ZimbraWebClient, Ajax, and ThirdParty
 
 --------------------
 Installing Eclipse: 
@@ -19,7 +20,14 @@ Installing Eclipse:
 * Set default project settings to use Java 1.4:
 	Window -> Preferences -> Java -> Compiler -> Compliance and Class Files
 		Set:  Change all settings to 1.4
-		
+
+* Make sure to install the P4 plugin from w/in Eclipse (Help > Software Updates > Find and Install > Search for new features to install > New Remote Site
+	- Enter "P4" for the name
+	- Enter "http://www.perforce.com/downloads/http/p4-wsad/install/" for the URL
+	- Follow directions (may have to restart P4)
+
+* Eclipse may complain it cannot find P4 when you try to add the server. You will need to add a symlink in your /bin to the P4 CLI binary (which you also should've chmod a+x'd)
+
 * Create Java projects for:
 	ZimbraServer
 	ZimbraWebClient
@@ -29,6 +37,9 @@ Installing Eclipse:
 		ProjectName:  ZimbraServer, etc
 		Uncheck "use default"
 		Browse to the appropriate subdirectory in P4 install
+	
+*OR*
+	If you installed the P4 plugin, add assuming you were able to add the P4 server successfully, you can right click on each of the "projects" w/in the appropriate branch of the depot and choose "Import As Project".
 
 
 -----------------
