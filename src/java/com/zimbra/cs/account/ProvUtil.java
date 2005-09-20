@@ -104,6 +104,7 @@ public class ProvUtil {
         System.out.println("  CreateDistributionList(cdl) {list@domain}");
         System.out.println("  GetAllDistributionLists(gadl) [-v]");
         System.out.println("  GetDistributionList(gdl) {list@domain|id}");
+        System.out.println("  ModifyDistributionList(mdl) {list@domain|id} attr1 value1 [attr2 value2...]");
         System.out.println("  DeleteDistributionList(ddl) {list@domain|id}");
         System.out.println("  AddDistributionListMember(adlm) {list@domain|id} {member@domain}");
         System.out.println("  RemoveDistributionListMember(rdlm) {list@domain|id} {member@domain}");
@@ -163,14 +164,16 @@ public class ProvUtil {
     private static final int CREATE_DISTRIBUTION_LIST = 35;
     private static final int GET_ALL_DISTRIBUTION_LISTS = 36;
     private static final int GET_DISTRIBUTION_LIST = 37;
-    private static final int DELETE_DISTRIBUTION_LIST = 38;
-    private static final int ADD_DISTRIBUTION_LIST_MEMBER = 39;
-    private static final int REMOVE_DISTRIBUTION_LIST_MEMBER = 40;
-    private static final int RENAME_COS = 41;    
-    
-    private static final int COPY_ACCOUNT = 42;
-    private static final int CREATE_BULK_ACCOUNTS = 43;
-    private static final int SYNC_GAL = 44;
+    private static final int MODIFY_DISTRIBUTION_LIST = 38;
+    private static final int DELETE_DISTRIBUTION_LIST = 39;
+    private static final int ADD_DISTRIBUTION_LIST_MEMBER = 40;
+    private static final int REMOVE_DISTRIBUTION_LIST_MEMBER = 41;
+
+    private static final int RENAME_COS = 42;    
+
+    private static final int COPY_ACCOUNT = 43;
+    private static final int CREATE_BULK_ACCOUNTS = 44;
+    private static final int SYNC_GAL = 45;
 
     private static final int BY_ID = 1;
     private static final int BY_EMAIL = 2;
@@ -250,6 +253,7 @@ public class ProvUtil {
         addCommand("createDistributionList", "cdl", CREATE_DISTRIBUTION_LIST);
         addCommand("getAllDistributionLists", "gadl", GET_ALL_DISTRIBUTION_LISTS);
         addCommand("getDistributionList", "gdl", GET_DISTRIBUTION_LIST);
+        addCommand("modifyDistributionList", "mdl", MODIFY_DISTRIBUTION_LIST);
         addCommand("deleteDistributionList", "ddl", DELETE_DISTRIBUTION_LIST);
         addCommand("addDistributionListMember", "adlm", ADD_DISTRIBUTION_LIST_MEMBER);
         addCommand("removeDistributionListMember", "rdlm", REMOVE_DISTRIBUTION_LIST_MEMBER);
@@ -395,6 +399,9 @@ public class ProvUtil {
             break;
         case GET_DISTRIBUTION_LIST:
             doGetDistributionList(args);
+            break;
+        case MODIFY_DISTRIBUTION_LIST:
+            doModifyDistributionList(args);
             break;
         case DELETE_DISTRIBUTION_LIST:
             doDeleteDistributionList(args);
@@ -1239,6 +1246,21 @@ public class ProvUtil {
             String key = args[1];
             DistributionList dl = lookupDistributionList(key);
             dumpDistributionList(dl);
+        }
+    }
+
+    /**
+     * @param args
+     * @throws ServiceException
+     */
+    private void doModifyDistributionList(String[] args) throws ServiceException, ArgException {
+        if (args.length < 4) {
+            usage();
+        } else {
+            String key = args[1];
+            Map attrs = getMap(args, 2);
+            DistributionList dl = lookupDistributionList(key);
+            dl.modifyAttrs(attrs, true);
         }
     }
 

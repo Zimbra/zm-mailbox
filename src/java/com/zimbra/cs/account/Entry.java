@@ -84,7 +84,8 @@ public interface Entry {
      * 
      */
     public void modifyAttrs(Map attrs, boolean checkImmutable) throws ServiceException;
-/**
+
+    /**
      * 
      * @param name name of the attribute to retreive. 
      * @param defaultValue value to use if attr is not present
