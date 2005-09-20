@@ -123,12 +123,12 @@ public class Volume {
                                 String name, String path,
                                 short mboxGroupBits, short mboxBits,
                                 short fileGroupBits, short fileBits,
-                                boolean compressBlobs)
+                                boolean compressBlobs, long compressionThreshold)
     throws ServiceException {
         CreateVolume redoRecorder = new CreateVolume(type, name, path,
                                                      mboxGroupBits, mboxBits,
                                                      fileGroupBits, fileBits,
-                                                     compressBlobs);
+                                                     compressBlobs, compressionThreshold);
         redoRecorder.start(System.currentTimeMillis());
 
         Short key = null;
@@ -140,7 +140,7 @@ public class Volume {
             vol = DbVolume.create(conn, id, type, name, path,
                                   mboxGroupBits, mboxBits,
                                   fileGroupBits, fileBits,
-                                  compressBlobs);
+                                  compressBlobs, compressionThreshold);
             success = true;
             redoRecorder.setId(vol.getId());
             redoRecorder.log();
@@ -160,12 +160,12 @@ public class Volume {
                                 String name, String path,
                                 short mboxGroupBits, short mboxBits,
                                 short fileGroupBits, short fileBits,
-                                boolean compressBlobs)
+                                boolean compressBlobs, long compressionThreshold)
     throws ServiceException {
         ModifyVolume redoRecorder = new ModifyVolume(id, type, name, path,
                                                      mboxGroupBits, mboxBits,
                                                      fileGroupBits, fileBits,
-                                                     compressBlobs);
+                                                     compressBlobs, compressionThreshold);
         redoRecorder.start(System.currentTimeMillis());
 
         Short key = new Short(id);
@@ -177,7 +177,7 @@ public class Volume {
             vol = DbVolume.update(conn, id, type, name, path,
                                   mboxGroupBits, mboxBits,
                                   fileGroupBits, fileBits,
-                                  compressBlobs);
+                                  compressBlobs, compressionThreshold);
             success = true;
             redoRecorder.log();
             return vol;
@@ -397,11 +397,12 @@ public class Volume {
     private int mMboxGroupBitMask;
     private int mFileGroupBitMask;
     private boolean mCompressBlobs;
+    private long mCompressionThreshold;
 
     public Volume(short id, short type, String name, String rootPath,
                   short mboxGroupBits, short mboxBits,
                   short fileGroupBits, short fileBits,
-                  boolean compressBlobs) {
+                  boolean compressBlobs, long compressionThreshold) {
         mId = id;
         mType = type;
         mName = name;
@@ -420,6 +421,7 @@ public class Volume {
         mFileGroupBitMask = (int) mask;
         
         mCompressBlobs = compressBlobs;
+        mCompressionThreshold = compressionThreshold;
     }
 
     public short getId() { return mId; }
@@ -432,6 +434,7 @@ public class Volume {
     public short getFileGroupBits() { return mFileGroupBits; }
     public short getFileBits() { return mFileBits; }
     public boolean getCompressBlobs() { return mCompressBlobs; }
+    public long getCompressionThreshold() { return mCompressionThreshold; }
 
     private StringBuffer getMailboxDirStringBuffer(int mboxId, int type,
                                                    int extraCapacity) {
@@ -474,7 +477,8 @@ public class Volume {
         sb.append(", mbits=").append(mMboxBits);
         sb.append(", fgbits=").append(mFileGroupBits);
         sb.append(", fbits=").append(mFileBits);
-        sb.append(", compressblobs=").append(mCompressBlobs);
+        sb.append(", compressBlobs=").append(mCompressBlobs);
+        sb.append(", compressionThreshold=").append(mCompressionThreshold);
         return sb.toString();
     }
 }

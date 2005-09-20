@@ -54,9 +54,6 @@ public class FileBlobStore extends StoreManager {
 
     private static Log mLog = LogFactory.getLog(FileBlobStore.class);
 
-	// TODO: This value is per-volume, and should come from config/ldap.
-	private static final int FS_BLOCK_SIZE = 4096;
-
     private UniqueFileNameGenerator mUniqueFilenameGenerator;
 
 	FileBlobStore() throws Exception {
@@ -73,7 +70,7 @@ public class FileBlobStore extends StoreManager {
         byte[] writeData;
 
         Volume volume = Volume.getById(volumeId);
-        if (volume.getCompressBlobs() && data.length > FS_BLOCK_SIZE) {
+        if (volume.getCompressBlobs() && data.length > volume.getCompressionThreshold()) {
             writeData = ByteUtil.compress(data);
         } else {
             writeData = data;

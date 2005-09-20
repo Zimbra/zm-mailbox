@@ -45,6 +45,7 @@ public class ModifyVolume extends RedoableOp {
     private short mFileBits;
     
     private boolean mCompressBlobs;
+    private long mCompressionThreshold;
 
     public ModifyVolume() {
     }
@@ -52,7 +53,7 @@ public class ModifyVolume extends RedoableOp {
     public ModifyVolume(short id, short type, String name, String rootPath,
                         short mboxGroupBits, short mboxBits,
                         short fileGroupBits, short fileBits,
-                        boolean compressBlobs) {
+                        boolean compressBlobs, long compressionThreshold) {
         mId = id;
         mType = type;
         mName = name;
@@ -64,6 +65,7 @@ public class ModifyVolume extends RedoableOp {
         mFileBits = fileBits;
         
         mCompressBlobs = compressBlobs;
+        mCompressionThreshold = compressionThreshold;
     }
 
     public int getOpCode() {
@@ -74,7 +76,7 @@ public class ModifyVolume extends RedoableOp {
         Volume v = new Volume(mId, mType, mName, mRootPath,
                               mMboxGroupBits, mMboxBits,
                               mFileGroupBits, mFileBits,
-                              mCompressBlobs);
+                              mCompressBlobs, mCompressionThreshold);
         return v.toString();
     }
 
@@ -105,6 +107,6 @@ public class ModifyVolume extends RedoableOp {
         Volume.update(mId, mType, mName, mRootPath,
                       mMboxGroupBits, mMboxBits,
                       mFileGroupBits, mFileBits,
-                      mCompressBlobs);
+                      mCompressBlobs, mCompressionThreshold);
     }
 }

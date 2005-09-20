@@ -57,12 +57,13 @@ public class DbVolume {
     private static final String CN_MAILBOX_BITS = "mailbox_bits";
     private static final String CN_MAILBOX_GROUP_BITS = "mailbox_group_bits";
     private static final String CN_COMPRESS_BLOBS = "compress_blobs";
+    private static final String CN_COMPRESSION_THRESHOLD = "compression_threshold";
 
     public static synchronized Volume create(Connection conn, short id,
                                              short type, String name, String path,
                                              short mboxGroupBits, short mboxBits,
                                              short fileGroupBits, short fileBits,
-                                             boolean compressBlobs)
+                                             boolean compressBlobs, long compressionThreshold)
     throws ServiceException {
         short nextId = id;
         if (nextId == Volume.ID_AUTO_INCREMENT)
@@ -74,8 +75,8 @@ public class DbVolume {
                     "(id, type, name, path, " +
                     "mailbox_group_bits, mailbox_bits, " +
                     "file_group_bits, file_bits, " +
-                    "compress_blobs) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    "compress_blobs, compression_threshold) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             int pos = 1;
             stmt.setShort(pos++, nextId);
             stmt.setShort(pos++, type);
@@ -86,6 +87,7 @@ public class DbVolume {
             stmt.setShort(pos++, fileGroupBits);
             stmt.setShort(pos++, fileBits);
             stmt.setBoolean(pos++, compressBlobs);
+            stmt.setLong(pos++, compressionThreshold);
             stmt.executeUpdate();
         } catch (SQLException e) {
             if (e.getErrorCode() == Db.Error.DUPLICATE_ROW)
@@ -102,7 +104,7 @@ public class DbVolume {
                                 short type, String name, String path,
                                 short mboxGroupBits, short mboxBits,
                                 short fileGroupBits, short fileBits,
-                                boolean compressBlobs)
+                                boolean compressBlobs, long compressionThreshold)
     throws ServiceException {
         PreparedStatement stmt = null;
         try {
@@ -111,7 +113,7 @@ public class DbVolume {
                     "type=?, name=?, path=?, " +
                     "mailbox_group_bits=?, mailbox_bits=?, " +
                     "file_group_bits=?, file_bits=?, " +
-                    "compress_blobs=? " +
+                    "compress_blobs=?, compression_threshold=? " +
                     "WHERE id=?");
             int pos = 1;
             stmt.setShort(pos++, type);
@@ -122,6 +124,7 @@ public class DbVolume {
             stmt.setShort(pos++, fileGroupBits);
             stmt.setShort(pos++, fileBits);
             stmt.setBoolean(pos++, compressBlobs);
+            stmt.setLong(pos++, compressionThreshold);
             stmt.setShort(pos++, id);
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -296,7 +299,9 @@ public class DbVolume {
         short fileGroupBits = rs.getShort(CN_FILE_GROUP_BITS);
         short fileBits = rs.getShort(CN_FILE_BITS);
         boolean compressBlobs = rs.getBoolean(CN_COMPRESS_BLOBS);
-        Volume v = new Volume(id, type, name, path, mboxGroupBits, mboxBits, fileGroupBits, fileBits, compressBlobs);
+        long compressionThreshold = rs.getLong(CN_COMPRESSION_THRESHOLD);
+        Volume v = new Volume(id, type, name, path, mboxGroupBits, mboxBits,
+            fileGroupBits, fileBits, compressBlobs, compressionThreshold);
         return v;
     }
 }

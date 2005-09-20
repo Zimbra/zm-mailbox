@@ -46,6 +46,7 @@ public class CreateVolume extends RedoableOp {
     private short mFileBits;
     
     private boolean mCompressBlobs;
+    private long mCompressionThreshold;
 
     public CreateVolume() {
     }
@@ -53,7 +54,7 @@ public class CreateVolume extends RedoableOp {
     public CreateVolume(short type, String name, String rootPath,
                         short mboxGroupBits, short mboxBits,
                         short fileGroupBits, short fileBits,
-                        boolean compressBlobs) {
+                        boolean compressBlobs, long compressionThreshold) {
         mType = type;
         mName = name;
         mRootPath = rootPath;
@@ -63,6 +64,7 @@ public class CreateVolume extends RedoableOp {
         mFileGroupBits = fileGroupBits;
         mFileBits = fileBits;
         mCompressBlobs = compressBlobs;
+        mCompressionThreshold = compressionThreshold;
     }
 
     public void setId(short id) {
@@ -77,7 +79,7 @@ public class CreateVolume extends RedoableOp {
         Volume v = new Volume(mId, mType, mName, mRootPath,
                               mMboxGroupBits, mMboxBits,
                               mFileGroupBits, mFileBits,
-                              mCompressBlobs);
+                              mCompressBlobs, mCompressionThreshold);
         return v.toString();
     }
 
@@ -115,7 +117,7 @@ public class CreateVolume extends RedoableOp {
             Volume.create(mId, mType, mName, mRootPath,
                           mMboxGroupBits, mMboxBits,
                           mFileGroupBits, mFileBits,
-                          mCompressBlobs);
+                          mCompressBlobs, mCompressionThreshold);
         } catch (VolumeServiceException e) {
             if (e.getCode() == VolumeServiceException.ALREADY_EXISTS)
                 mLog.info("Volume " + mId + " already exists");

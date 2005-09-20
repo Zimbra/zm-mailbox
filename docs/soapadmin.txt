@@ -629,7 +629,7 @@ notes:
 
 <CreateVolumeRequest>
   <volume type="..." name="..." rootPath="..." mgbits="..." mbits="..."
-    fgbits="..." fbits="..." compressBlobs="..."/>
+    fgbits="..." fbits="..." compressBlobs="..." compressionThreshold="..."/>
 </CreateVolumeRequest>
 
 <CreateVolumeResponse>
@@ -651,6 +651,8 @@ Notes:
   fbits: file bits; default 12
   compressBlobs: boolean value that specifies whether blobs in this
     volume are compressed
+  compressionThreshold: long value that specifies the minimum uncompressed
+    file size of blobs that will be compressed
 
 -----------------------------
 
@@ -658,7 +660,7 @@ Notes:
 
 <GetVolumeResponse>
   <volume id="{id}" type="..." name="..." rootPath="..." mgbits="..."
-    mbits="..." fgbits="..." fbits="..." compressBlobs="..."/>
+    mbits="..." fgbits="..." fbits="..." compressBlobs="..." compressionThreshold="..."/>
 </GetVolumeResponse>
 
 -----------------------------
@@ -673,7 +675,7 @@ Notes:
 
 <ModifyVolumeRequest id="{id}">
   <volume [type="..."] [name="..."] [rootPath="..."] [mgbits="..."]
-    [mbits="..."] [fgbits="..."] [fbits="..."] [compressBlobs="..."]/>
+    [mbits="..."] [fgbits="..."] [fbits="..."] [compressBlobs="..."] [compressionThreshold="..."]/>
 </ModifyVolumeRequest>
 
 <ModifyVolumeResponse/>

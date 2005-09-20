@@ -47,9 +47,6 @@ import com.zimbra.cs.service.ServiceException;
  */
 public class Config {
 
-    public static final String C_STORE_COMPRESS_BLOBS = "store.compressBlobs";
-    public static final boolean D_STORE_COMPRESS_BLOBS = false;
-
     public static final int D_LMTP_THREADS = 10;
     public static final int D_LMTP_BIND_PORT = 7025;
 
