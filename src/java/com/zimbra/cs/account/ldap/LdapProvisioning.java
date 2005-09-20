@@ -1846,6 +1846,8 @@ public class LdapProvisioning extends Provisioning {
      * @see com.zimbra.cs.account.Account#authAccount(java.lang.String)
      */
     public void authAccount(Account acct, String password) throws ServiceException {
+        if (password == null || password.equals(""))
+            throw AccountServiceException.AUTH_FAILED("empty password");
         authAccount(acct, password, true);
     }
 

@@ -186,6 +186,9 @@ public class LdapUtil {
     }
 
     public static void ldapAuthenticate(String urls[], String principal, String password) throws NamingException {
+        if (password == null || password.equals("")) 
+            throw new AuthenticationException("empty password");
+
         Hashtable env = new Hashtable();
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
         env.put(Context.PROVIDER_URL, joinURLS(urls));
@@ -203,6 +206,9 @@ public class LdapUtil {
     }
 
     public static void ldapAuthenticate(String url[], String password, String searchBase, String searchFilter, String searchDn, String searchPassword) throws NamingException {
+        if (password == null || password.equals("")) 
+            throw new AuthenticationException("empty password");
+
         DirContext ctxt = null;
         String resultDn = null;;
         boolean tooMany = false;        
@@ -620,13 +626,16 @@ public class LdapUtil {
         return (fmt.format(gmtDate));        
     }
     
-    public static void main(String args[]) {
+    public static void main(String args[]) throws NamingException {
+        ldapAuthenticate(new String[] { "ldap://exch1/"}, "schemers@liquidsys.com", "");
+/*
         Date now = new Date();
         String gts = generalizedTime(now);
         System.out.println(now);
         System.out.println(gts);
         Date pnow = generalizedTime(gts);
         System.out.println(pnow);        
+        */
     }
 
     static String[] removeMultiValue(String values[], String value) {
@@ -784,4 +793,6 @@ public class LdapUtil {
             }
         }
     }
+    
+
 }
