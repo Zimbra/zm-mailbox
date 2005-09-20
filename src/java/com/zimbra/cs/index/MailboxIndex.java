@@ -76,7 +76,6 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.store.Volume;
-import com.zimbra.cs.util.Config;
 
 
 /**

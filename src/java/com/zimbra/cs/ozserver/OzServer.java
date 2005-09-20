@@ -100,7 +100,7 @@ public class OzServer {
         public void run() {
 
             while (true) {
-
+            	
                 if (mShutdownRequested) {
                     break;
                 }
@@ -151,7 +151,7 @@ public class OzServer {
                         } catch (Exception e) {
                             ZimbraLog.ozserver.warn("ignoring exception that occurred while handling acceptable key", e);
                             if (connection != null) {
-                                connection.close();
+                                connection.closeNow();
                             }
                         }
                     }
@@ -163,7 +163,7 @@ public class OzServer {
                             connection.handleRead();
                         } catch (Exception e) {
                             ZimbraLog.ozserver.warn("ignoring exception that occurred while handling readable key", e);
-                            connection.close();
+                            connection.closeNow();
                         }
                     }
                     
@@ -174,11 +174,11 @@ public class OzServer {
                             connection.handleWrite();
                         } catch (Exception e) {
                             ZimbraLog.ozserver.warn("ignoring exception that occurred while handling writable key", e);
-                            connection.close();
+                            connection.closeNow();
                         }
                     }
                     
-                } /* end of ready keys iteration loop */
+                } /* end of ready keys loop */
 
                 if (ZimbraLog.ozserver.isDebugEnabled()) ZimbraLog.ozserver.debug("processed " + readyCount + " ready keys");
 

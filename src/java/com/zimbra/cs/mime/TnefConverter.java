@@ -27,14 +27,14 @@ package com.zimbra.cs.mime;
 
 import java.io.IOException;
 
-import javax.mail.BodyPart;
+//import javax.mail.BodyPart;
 import javax.mail.MessagingException;
-import javax.mail.Multipart;
+//import javax.mail.Multipart;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
-import com.zimbra.cs.util.JMSession;
+//import com.zimbra.cs.util.JMSession;
 
 
 /**

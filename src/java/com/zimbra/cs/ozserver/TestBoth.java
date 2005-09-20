@@ -33,7 +33,7 @@ import com.zimbra.cs.util.Zimbra;
 
 class TestBoth {
 
-    private static final int CLIENT_THREADS = 2;
+    private static final int CLIENT_THREADS = 4;
     
     static class TestClientThread extends Thread {
         public TestClientThread(int num) {
@@ -54,7 +54,7 @@ class TestBoth {
     }
     
     public static void main(String[] args) throws IOException {
-        Zimbra.toolSetup("DEBUG");
+        Zimbra.toolSetup("INFO", true);
         TestServer.main(null);
         for (int i = 0; i < CLIENT_THREADS; i++) {
             new TestClientThread(i).start();

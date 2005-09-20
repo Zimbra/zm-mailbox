@@ -34,7 +34,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
-import com.zimbra.cs.util.JMSession;
+//import com.zimbra.cs.util.JMSession;
 
 /**
  * Provides access to all TNEF attachments in the MIME structure that

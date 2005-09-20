@@ -36,7 +36,7 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServer;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.cs.util.Zimbra;
 
 /**
  * @author dkarp
@@ -146,7 +146,7 @@ public class ImapServer extends TcpServer {
     }
     
     public static void main(String args[]) throws ServiceException {
-        ZimbraLog.toolSetupLog4j("INFO");
+        Zimbra.toolSetup("INFO");
         startupImapServer();
     }
 }

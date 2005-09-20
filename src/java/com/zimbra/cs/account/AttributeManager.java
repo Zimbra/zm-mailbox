@@ -37,6 +37,7 @@ import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraLog;
 
 public class AttributeManager {
@@ -204,7 +205,7 @@ public class AttributeManager {
     }
 
     public static void main(String args[]) throws ServiceException {
-        ZimbraLog.toolSetupLog4j("info");
+        Zimbra.toolSetup("INFO");
         AttributeManager mgr = AttributeManager.getInstance();
         HashMap attrs = new HashMap();
         attrs.put(Provisioning.A_zimbraAccountStatus, Provisioning.ACCOUNT_STATUS_ACTIVE);

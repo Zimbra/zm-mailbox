@@ -95,7 +95,11 @@ public class Zimbra {
     }
 
     public static void toolSetup(String defaultLogLevel) {
-        ZimbraLog.toolSetupLog4j(defaultLogLevel);
+    	toolSetup(defaultLogLevel, false);
+    }
+    
+    public static void toolSetup(String defaultLogLevel, boolean showThreads) {
+        ZimbraLog.toolSetupLog4j(defaultLogLevel, showThreads);
         if (LC.ssl_allow_untrusted_certs.booleanValue())
             EasySSLProtocolSocketFactory.init();
     }

@@ -33,5 +33,5 @@ public interface OzProtocolHandler {
 
     void handleInput(OzConnectionHandler connection, ByteBuffer buffer, boolean matched) throws IOException;
 
-    void handleEOF(OzConnectionHandler connection);
+    void handleDisconnect(OzConnectionHandler connection, boolean byClient);
 }
