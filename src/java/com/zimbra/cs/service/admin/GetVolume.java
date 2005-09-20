@@ -54,5 +54,6 @@ public class GetVolume extends AdminDocumentHandler {
         eVol.addAttribute(AdminService.A_VOLUME_MBITS,  vol.getMboxBits());
         eVol.addAttribute(AdminService.A_VOLUME_FGBITS, vol.getFileGroupBits());
         eVol.addAttribute(AdminService.A_VOLUME_FBITS,  vol.getFileBits());
+        eVol.addAttribute(AdminService.A_VOLUME_COMPRESS_BLOBS, vol.getCompressBlobs());
     }
 }

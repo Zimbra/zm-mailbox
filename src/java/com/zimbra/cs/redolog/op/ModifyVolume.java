@@ -43,13 +43,16 @@ public class ModifyVolume extends RedoableOp {
     private short mMboxBits;
     private short mFileGroupBits;
     private short mFileBits;
+    
+    private boolean mCompressBlobs;
 
     public ModifyVolume() {
     }
 
     public ModifyVolume(short id, short type, String name, String rootPath,
                         short mboxGroupBits, short mboxBits,
-                        short fileGroupBits, short fileBits) {
+                        short fileGroupBits, short fileBits,
+                        boolean compressBlobs) {
         mId = id;
         mType = type;
         mName = name;
@@ -59,6 +62,8 @@ public class ModifyVolume extends RedoableOp {
         mMboxBits = mboxBits;
         mFileGroupBits = fileGroupBits;
         mFileBits = fileBits;
+        
+        mCompressBlobs = compressBlobs;
     }
 
     public int getOpCode() {
@@ -68,7 +73,8 @@ public class ModifyVolume extends RedoableOp {
     protected String getPrintableData() {
         Volume v = new Volume(mId, mType, mName, mRootPath,
                               mMboxGroupBits, mMboxBits,
-                              mFileGroupBits, mFileBits);
+                              mFileGroupBits, mFileBits,
+                              mCompressBlobs);
         return v.toString();
     }
 
@@ -98,6 +104,7 @@ public class ModifyVolume extends RedoableOp {
         Volume vol = Volume.getById(mId);
         Volume.update(mId, mType, mName, mRootPath,
                       mMboxGroupBits, mMboxBits,
-                      mFileGroupBits, mFileBits);
+                      mFileGroupBits, mFileBits,
+                      mCompressBlobs);
     }
 }

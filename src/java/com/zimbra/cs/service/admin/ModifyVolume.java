@@ -48,7 +48,8 @@ public class ModifyVolume extends AdminDocumentHandler {
         short mbits  = (short) eVol.getAttributeLong(AdminService.A_VOLUME_MBITS,  vol.getMboxBits());
         short fgbits = (short) eVol.getAttributeLong(AdminService.A_VOLUME_FGBITS, vol.getFileGroupBits());
         short fbits  = (short) eVol.getAttributeLong(AdminService.A_VOLUME_FBITS,  vol.getFileBits());
-        Volume.update(vol.getId(), type, name, path, mgbits, mbits, fgbits, fbits);
+        boolean compressBlobs = eVol.getAttributeBool(AdminService.A_VOLUME_COMPRESS_BLOBS, vol.getCompressBlobs());
+        Volume.update(vol.getId(), type, name, path, mgbits, mbits, fgbits, fbits, compressBlobs);
 
         Element response = lc.createElement(AdminService.MODIFY_VOLUME_RESPONSE);
         return response;

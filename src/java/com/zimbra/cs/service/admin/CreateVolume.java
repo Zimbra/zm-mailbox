@@ -45,8 +45,9 @@ public class CreateVolume extends AdminDocumentHandler {
         short mbits  = (short) eVol.getAttributeLong(AdminService.A_VOLUME_MBITS);
         short fgbits = (short) eVol.getAttributeLong(AdminService.A_VOLUME_FGBITS);
         short fbits  = (short) eVol.getAttributeLong(AdminService.A_VOLUME_FBITS);
+        boolean compressBlobs = eVol.getAttributeBool(AdminService.A_VOLUME_COMPRESS_BLOBS);
         Volume vol = Volume.create(Volume.ID_AUTO_INCREMENT, type, name,
-                                   path, mgbits, mbits, fgbits, fbits);
+                                   path, mgbits, mbits, fgbits, fbits, compressBlobs);
 
         Element response = lc.createElement(AdminService.CREATE_VOLUME_RESPONSE);
         GetVolume.addVolumeElement(response, vol);

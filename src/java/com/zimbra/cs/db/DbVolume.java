@@ -56,11 +56,13 @@ public class DbVolume {
     private static final String CN_FILE_GROUP_BITS = "file_group_bits";
     private static final String CN_MAILBOX_BITS = "mailbox_bits";
     private static final String CN_MAILBOX_GROUP_BITS = "mailbox_group_bits";
+    private static final String CN_COMPRESS_BLOBS = "compress_blobs";
 
     public static synchronized Volume create(Connection conn, short id,
                                              short type, String name, String path,
                                              short mboxGroupBits, short mboxBits,
-                                             short fileGroupBits, short fileBits)
+                                             short fileGroupBits, short fileBits,
+                                             boolean compressBlobs)
     throws ServiceException {
         short nextId = id;
         if (nextId == Volume.ID_AUTO_INCREMENT)
@@ -71,8 +73,9 @@ public class DbVolume {
                     "INSERT INTO volume " +
                     "(id, type, name, path, " +
                     "mailbox_group_bits, mailbox_bits, " +
-                    "file_group_bits, file_bits) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                    "file_group_bits, file_bits, " +
+                    "compress_blobs) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
             int pos = 1;
             stmt.setShort(pos++, nextId);
             stmt.setShort(pos++, type);
@@ -82,6 +85,7 @@ public class DbVolume {
             stmt.setShort(pos++, mboxBits);
             stmt.setShort(pos++, fileGroupBits);
             stmt.setShort(pos++, fileBits);
+            stmt.setBoolean(pos++, compressBlobs);
             stmt.executeUpdate();
         } catch (SQLException e) {
             if (e.getErrorCode() == Db.Error.DUPLICATE_ROW)
@@ -97,7 +101,8 @@ public class DbVolume {
     public static Volume update(Connection conn, short id,
                                 short type, String name, String path,
                                 short mboxGroupBits, short mboxBits,
-                                short fileGroupBits, short fileBits)
+                                short fileGroupBits, short fileBits,
+                                boolean compressBlobs)
     throws ServiceException {
         PreparedStatement stmt = null;
         try {
@@ -105,7 +110,8 @@ public class DbVolume {
                     "UPDATE volume SET " +
                     "type=?, name=?, path=?, " +
                     "mailbox_group_bits=?, mailbox_bits=?, " +
-                    "file_group_bits=?, file_bits=? " +
+                    "file_group_bits=?, file_bits=?, " +
+                    "compress_blobs=? " +
                     "WHERE id=?");
             int pos = 1;
             stmt.setShort(pos++, type);
@@ -115,6 +121,7 @@ public class DbVolume {
             stmt.setShort(pos++, mboxBits);
             stmt.setShort(pos++, fileGroupBits);
             stmt.setShort(pos++, fileBits);
+            stmt.setBoolean(pos++, compressBlobs);
             stmt.setShort(pos++, id);
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -149,7 +156,6 @@ public class DbVolume {
     private static short getNextVolumeID(Connection conn) throws ServiceException {
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        Volume result = null;
         try {
             stmt = conn.prepareStatement("SELECT MAX(id) FROM volume");
             rs = stmt.executeQuery();
@@ -227,8 +233,6 @@ public class DbVolume {
 
     public static CurrentVolumes getCurrentVolumes(Connection conn) throws ServiceException {
         CurrentVolumes currVols = new CurrentVolumes();
-        short msgVolume = Volume.ID_NONE;
-        short indexVolume = Volume.ID_NONE;
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -291,7 +295,8 @@ public class DbVolume {
         short mboxBits = rs.getShort(CN_MAILBOX_BITS);
         short fileGroupBits = rs.getShort(CN_FILE_GROUP_BITS);
         short fileBits = rs.getShort(CN_FILE_BITS);
-        Volume v = new Volume(id, type, name, path, mboxGroupBits, mboxBits, fileGroupBits, fileBits);
+        boolean compressBlobs = rs.getBoolean(CN_COMPRESS_BLOBS);
+        Volume v = new Volume(id, type, name, path, mboxGroupBits, mboxBits, fileGroupBits, fileBits, compressBlobs);
         return v;
     }
 }

@@ -628,7 +628,8 @@ notes:
 -----------------------------------
 
 <CreateVolumeRequest>
-  <volume type="..." name="..." rootPath="..." mgbits="..." mbits="..." fgbits="..." fbits="..."/>
+  <volume type="..." name="..." rootPath="..." mgbits="..." mbits="..."
+    fgbits="..." fbits="..." compressBlobs="..."/>
 </CreateVolumeRequest>
 
 <CreateVolumeResponse>
@@ -648,13 +649,16 @@ Notes:
   mbits: mailbox bits; default 12
   fgbits: file group bits; default 8
   fbits: file bits; default 12
+  compressBlobs: boolean value that specifies whether blobs in this
+    volume are compressed
 
 -----------------------------
 
 <GetVolumeRequest id="{id}"/>
 
 <GetVolumeResponse>
-  <volume id="{id}" type="..." name="..." rootPath="..." mgbits="..." mbits="..." fgbits="..." fbits="..."/>
+  <volume id="{id}" type="..." name="..." rootPath="..." mgbits="..."
+    mbits="..." fgbits="..." fbits="..." compressBlobs="..."/>
 </GetVolumeResponse>
 
 -----------------------------
@@ -668,7 +672,8 @@ Notes:
 -----------------------------
 
 <ModifyVolumeRequest id="{id}">
-  <volume [type="..."] [name="..."] [rootPath="..."] [mgbits="..."] [mbits="..."] [fgbits="..."] [fbits="..."]/>
+  <volume [type="..."] [name="..."] [rootPath="..."] [mgbits="..."]
+    [mbits="..."] [fgbits="..."] [fbits="..."] [compressBlobs="..."]/>
 </ModifyVolumeRequest>
 
 <ModifyVolumeResponse/>

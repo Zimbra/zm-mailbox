@@ -44,13 +44,16 @@ public class CreateVolume extends RedoableOp {
     private short mMboxBits;
     private short mFileGroupBits;
     private short mFileBits;
+    
+    private boolean mCompressBlobs;
 
     public CreateVolume() {
     }
 
     public CreateVolume(short type, String name, String rootPath,
                         short mboxGroupBits, short mboxBits,
-                        short fileGroupBits, short fileBits) {
+                        short fileGroupBits, short fileBits,
+                        boolean compressBlobs) {
         mType = type;
         mName = name;
         mRootPath = rootPath;
@@ -59,6 +62,7 @@ public class CreateVolume extends RedoableOp {
         mMboxBits = mboxBits;
         mFileGroupBits = fileGroupBits;
         mFileBits = fileBits;
+        mCompressBlobs = compressBlobs;
     }
 
     public void setId(short id) {
@@ -72,7 +76,8 @@ public class CreateVolume extends RedoableOp {
     protected String getPrintableData() {
         Volume v = new Volume(mId, mType, mName, mRootPath,
                               mMboxGroupBits, mMboxBits,
-                              mFileGroupBits, mFileBits);
+                              mFileGroupBits, mFileBits,
+                              mCompressBlobs);
         return v.toString();
     }
 
@@ -85,6 +90,7 @@ public class CreateVolume extends RedoableOp {
         out.writeShort(mMboxBits);
         out.writeShort(mFileGroupBits);
         out.writeShort(mFileBits);
+        out.writeBoolean(mCompressBlobs);
     }
 
     protected void deserializeData(DataInput in) throws IOException {
@@ -96,6 +102,7 @@ public class CreateVolume extends RedoableOp {
         mMboxBits = in.readShort();
         mFileGroupBits = in.readShort();
         mFileBits = in.readShort();
+        mCompressBlobs = in.readBoolean();
     }
 
     public void redo() throws Exception {
@@ -107,7 +114,8 @@ public class CreateVolume extends RedoableOp {
         try {
             Volume.create(mId, mType, mName, mRootPath,
                           mMboxGroupBits, mMboxBits,
-                          mFileGroupBits, mFileBits);
+                          mFileGroupBits, mFileBits,
+                          mCompressBlobs);
         } catch (VolumeServiceException e) {
             if (e.getCode() == VolumeServiceException.ALREADY_EXISTS)
                 mLog.info("Volume " + mId + " already exists");

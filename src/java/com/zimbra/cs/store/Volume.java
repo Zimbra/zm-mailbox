@@ -55,20 +55,6 @@ public class Volume {
 
     private static Log sLog = LogFactory.getLog(Volume.class);
 
-    private static void dumpCache(String title) {
-        StringBuffer sb = new StringBuffer();
-        synchronized (sVolumeGuard) {
-            for (Iterator iter = sVolumeMap.entrySet().iterator(); iter.hasNext(); ) {
-                Map.Entry entry = (Map.Entry) iter.next();
-                Object k = entry.getKey();
-                Object v = entry.getValue();
-                sb.append("key: ").append(k.toString()).append("\r\n");
-                sb.append("val: ").append(v.toString()).append("\r\n");
-            }
-        }
-        sLog.debug("VOLUME MAP DUMP - " + title + "\r\n" + sb.toString());
-    }
-
     public static final short ID_AUTO_INCREMENT = -1;
     public static final short ID_NONE           = -2;
 
@@ -136,11 +122,13 @@ public class Volume {
     public static Volume create(short id, short type,
                                 String name, String path,
                                 short mboxGroupBits, short mboxBits,
-                                short fileGroupBits, short fileBits)
+                                short fileGroupBits, short fileBits,
+                                boolean compressBlobs)
     throws ServiceException {
         CreateVolume redoRecorder = new CreateVolume(type, name, path,
                                                      mboxGroupBits, mboxBits,
-                                                     fileGroupBits, fileBits);
+                                                     fileGroupBits, fileBits,
+                                                     compressBlobs);
         redoRecorder.start(System.currentTimeMillis());
 
         Short key = null;
@@ -151,7 +139,8 @@ public class Volume {
             conn = DbPool.getConnection();
             vol = DbVolume.create(conn, id, type, name, path,
                                   mboxGroupBits, mboxBits,
-                                  fileGroupBits, fileBits);
+                                  fileGroupBits, fileBits,
+                                  compressBlobs);
             success = true;
             redoRecorder.setId(vol.getId());
             redoRecorder.log();
@@ -170,11 +159,13 @@ public class Volume {
     public static Volume update(short id, short type,
                                 String name, String path,
                                 short mboxGroupBits, short mboxBits,
-                                short fileGroupBits, short fileBits)
+                                short fileGroupBits, short fileBits,
+                                boolean compressBlobs)
     throws ServiceException {
         ModifyVolume redoRecorder = new ModifyVolume(id, type, name, path,
                                                      mboxGroupBits, mboxBits,
-                                                     fileGroupBits, fileBits);
+                                                     fileGroupBits, fileBits,
+                                                     compressBlobs);
         redoRecorder.start(System.currentTimeMillis());
 
         Short key = new Short(id);
@@ -185,7 +176,8 @@ public class Volume {
             conn = DbPool.getConnection();
             vol = DbVolume.update(conn, id, type, name, path,
                                   mboxGroupBits, mboxBits,
-                                  fileGroupBits, fileBits);
+                                  fileGroupBits, fileBits,
+                                  compressBlobs);
             success = true;
             redoRecorder.log();
             return vol;
@@ -287,7 +279,7 @@ public class Volume {
         }
     }
 
-    public static List /*<Volume>*/ getAll() throws ServiceException {
+    public static List /*<Volume>*/ getAll() {
         List volumes;
         synchronized (sVolumeGuard) {
         	volumes = new ArrayList(sVolumeMap.values());
@@ -404,10 +396,12 @@ public class Volume {
 
     private int mMboxGroupBitMask;
     private int mFileGroupBitMask;
+    private boolean mCompressBlobs;
 
     public Volume(short id, short type, String name, String rootPath,
                   short mboxGroupBits, short mboxBits,
-                  short fileGroupBits, short fileBits) {
+                  short fileGroupBits, short fileBits,
+                  boolean compressBlobs) {
         mId = id;
         mType = type;
         mName = name;
@@ -424,6 +418,8 @@ public class Volume {
         mMboxGroupBitMask = (int) mask;
         mask = (long) Math.pow(2, mFileGroupBits) - 1;
         mFileGroupBitMask = (int) mask;
+        
+        mCompressBlobs = compressBlobs;
     }
 
     public short getId() { return mId; }
@@ -435,6 +431,7 @@ public class Volume {
     public short getMboxBits() { return mMboxBits; }
     public short getFileGroupBits() { return mFileGroupBits; }
     public short getFileBits() { return mFileBits; }
+    public boolean getCompressBlobs() { return mCompressBlobs; }
 
     private StringBuffer getMailboxDirStringBuffer(int mboxId, int type,
                                                    int extraCapacity) {
@@ -477,6 +474,7 @@ public class Volume {
         sb.append(", mbits=").append(mMboxBits);
         sb.append(", fgbits=").append(mFileGroupBits);
         sb.append(", fbits=").append(mFileBits);
+        sb.append(", compressblobs=").append(mCompressBlobs);
         return sb.toString();
     }
 }

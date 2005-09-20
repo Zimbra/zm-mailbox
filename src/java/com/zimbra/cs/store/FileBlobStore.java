@@ -54,13 +54,6 @@ public class FileBlobStore extends StoreManager {
 
     private static Log mLog = LogFactory.getLog(FileBlobStore.class);
 
-    private static boolean sCompressionEnabled;
-
-    static {
-        sCompressionEnabled = Config.getBoolean(Config.C_STORE_COMPRESS_BLOBS,
-                                                Config.D_STORE_COMPRESS_BLOBS);
-    }
-
 	// TODO: This value is per-volume, and should come from config/ldap.
 	private static final int FS_BLOCK_SIZE = 4096;
 
@@ -79,14 +72,14 @@ public class FileBlobStore extends StoreManager {
     throws IOException, ServiceException {
         byte[] writeData;
 
-        if (sCompressionEnabled && data.length > FS_BLOCK_SIZE) {
+        Volume volume = Volume.getById(volumeId);
+        if (volume.getCompressBlobs() && data.length > FS_BLOCK_SIZE) {
             writeData = ByteUtil.compress(data);
         } else {
             writeData = data;
         }
 
         if (path == null) {
-            Volume volume = Volume.getById(volumeId);
             String incomingDir = volume.getIncomingMsgDir();
             String fname = mUniqueFilenameGenerator.getFilename();
             StringBuffer sb = new StringBuffer(incomingDir.length() + 1 + fname.length());
