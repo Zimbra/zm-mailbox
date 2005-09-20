@@ -91,7 +91,12 @@ public class TestTags extends TestCase
 
     public void testManyTags()
     throws Exception {
-        ZimbraLog.test.debug("testManyTags()");
+        // xxx bburtin: Don't run this test as part of the regular test suite,
+        // since it takes almost 20 seconds to run.
+        boolean runTest = false;
+        if (!runTest) {
+            return;
+        }
         
         int numPrepares = ZimbraPerf.getPrepareCount();
         
@@ -119,8 +124,6 @@ public class TestTags extends TestCase
     
     public void testTagSearch()
     throws Exception {
-        ZimbraLog.test.debug("testTagSearch()");
-
         // Create tags
         mTags = new Tag[4];
         for (int i = 0; i < mTags.length; i++) {
@@ -149,12 +152,17 @@ public class TestTags extends TestCase
         assertEquals("1: result size", 1, ids.size());
         assertTrue("1: no message 1", ids.contains(new Integer(mMessage1.getId())));
         
-        // tag:TestTags1 tag:TestTags2 -> (M1,M2,M3)
-        ids = search("tag:" + mTags[0].getName() + " tag:" + mTags[1].getName(), MailItem.TYPE_MESSAGE);
-        assertEquals("2: result size", 3, ids.size());
-        assertTrue("2: no message 1", ids.contains(new Integer(mMessage1.getId())));
-        assertTrue("2: no message 2", ids.contains(new Integer(mMessage2.getId())));
-        assertTrue("2: no message 3", ids.contains(new Integer(mMessage3.getId())));
+        // tag:TestTags1 or tag:TestTags2 -> (M1,M2,M3)
+        ids = search("tag:" + mTags[0].getName() + " or tag:" + mTags[1].getName(), MailItem.TYPE_MESSAGE);
+        assertEquals("2a: result size", 3, ids.size());
+        assertTrue("2a: no message 1", ids.contains(new Integer(mMessage1.getId())));
+        assertTrue("2a: no message 2", ids.contains(new Integer(mMessage2.getId())));
+        assertTrue("2a: no message 3", ids.contains(new Integer(mMessage3.getId())));
+        
+        // tag:TestTags2 tag:TestTags3 -> (M3)
+        ids = search("tag:" + mTags[1].getName() + " tag:" + mTags[2].getName(), MailItem.TYPE_MESSAGE);
+        assertEquals("2b: result size", 1, ids.size());
+        assertTrue("2b: no message 3", ids.contains(new Integer(mMessage3.getId())));
         
         // not tag:TestTags1 -> (M2,M3,M4,...)
         ids = search("not tag:" + mTags[0].getName(), MailItem.TYPE_MESSAGE);
@@ -184,8 +192,6 @@ public class TestTags extends TestCase
     
     public void testFlagSearch()
     throws Exception {
-        ZimbraLog.test.debug("testFlagSearch()");
-
         // Look up flags
         Flag replied = mMbox.getFlagById(Flag.ID_FLAG_REPLIED);
         Flag flagged = mMbox.getFlagById(Flag.ID_FLAG_FLAGGED);
@@ -214,17 +220,24 @@ public class TestTags extends TestCase
         assertFalse("1: message 3 found", ids.contains(new Integer(mMessage3.getId())));
         assertFalse("1: message 4 found", ids.contains(new Integer(mMessage4.getId())));
         
-        // is:replied is:flagged -> (M1,M2,...)
-        ids = search("is:replied is:flagged", MailItem.TYPE_MESSAGE);
-        assertTrue("2: no message 1", ids.contains(new Integer(mMessage1.getId())));
-        assertTrue("2: no message 2", ids.contains(new Integer(mMessage2.getId())));
-        assertTrue("2: no message 3", ids.contains(new Integer(mMessage3.getId())));
-        assertFalse("2: message 4 found", ids.contains(new Integer(mMessage4.getId())));
+        // is:flagged is:forwarded -> (M3,...)
+        ids = search("is:flagged is:forwarded", MailItem.TYPE_MESSAGE);
+        assertFalse("2a: message 1 found", ids.contains(new Integer(mMessage1.getId())));
+        assertFalse("2a: message 2 found", ids.contains(new Integer(mMessage2.getId())));
+        assertTrue("2a: no message 3", ids.contains(new Integer(mMessage3.getId())));
+        assertFalse("2a: message 4 found", ids.contains(new Integer(mMessage4.getId())));
+        
+        // is:replied or is:flagged -> (M2,M3,...)
+        ids = search("is:replied or is:flagged", MailItem.TYPE_MESSAGE);
+        assertTrue("2b: no message 1", ids.contains(new Integer(mMessage1.getId())));
+        assertTrue("2b: no message 2", ids.contains(new Integer(mMessage2.getId())));
+        assertTrue("2b: no message 3", ids.contains(new Integer(mMessage3.getId())));
+        assertFalse("2b: message 4 found", ids.contains(new Integer(mMessage4.getId())));
         
         
         // not is:replied -> (M2,M3,M4,...)
         ids = search("not is:replied", MailItem.TYPE_MESSAGE);
-        assertFalse("3: message 1 found", ids.contains(new Integer(mMessage1.getId())));
+        assertFalse("3: contains message 1", ids.contains(new Integer(mMessage1.getId())));
         assertTrue("3: no message 2", ids.contains(new Integer(mMessage2.getId())));
         assertTrue("3: no message 3", ids.contains(new Integer(mMessage3.getId())));
         assertTrue("3: no message 4", ids.contains(new Integer(mMessage4.getId())));
@@ -238,20 +251,21 @@ public class TestTags extends TestCase
         
         // is:flagged not is:forwarded -> (M2)
         ids = search("is:flagged not is:forwarded", MailItem.TYPE_MESSAGE);
-        assertFalse("5: message 1 found", ids.contains(new Integer(mMessage1.getId())));
+        assertFalse("5: contains message 1", ids.contains(new Integer(mMessage1.getId())));
         assertTrue("5: no message 2", ids.contains(new Integer(mMessage2.getId())));
         assertFalse("5: contains message 3", ids.contains(new Integer(mMessage3.getId())));
         assertFalse("5: contains message 4", ids.contains(new Integer(mMessage4.getId())));
         
         // tag:\Deleted -> ()
         ids = search("tag:\\Deleted", MailItem.TYPE_MESSAGE);
-        assertEquals("6: search should have returned no results", 0, ids.size());
+        assertFalse("6: contains message 1", ids.contains(new Integer(mMessage1.getId())));
+        assertFalse("6: contains message 2", ids.contains(new Integer(mMessage2.getId())));
+        assertFalse("6: contains message 3", ids.contains(new Integer(mMessage3.getId())));
+        assertFalse("6: contains message 4", ids.contains(new Integer(mMessage4.getId())));
     }
 
     public void testSearchUnreadAsTag()
     throws Exception {
-        ZimbraLog.test.debug("testSearchUnreadAsTag()");
-
         boolean unseenSearchSucceeded = false;
         try {
             search("tag:\\Unseen", MailItem.TYPE_MESSAGE);

@@ -1648,82 +1648,63 @@ public class DbMailItem {
              *    (AND folder_id [NOT] IN (?,?,?)) (AND date > ?) (AND date < ?) (AND mod_metadata > ?) (AND mod_metadata < ?)
              *    ORDER BY date|subject|sender (DESC)? LIMIT ?, ?
              */
-            
-            Boolean unread = null;
+
+            // Determine the set of matching tags
             Set searchTagsets = new HashSet();
             Set searchFlagsets = new HashSet();
-            TagsetCache allFlagsets = getFlagsetCache(conn, c.mailboxId);
-            TagsetCache allTagsets = getTagsetCache(conn, c.mailboxId);
-            boolean includeFlags = false;
-            boolean excludeFlags = false;
-            boolean includeTags = false;
-            boolean excludeTags = false;
-            
-            // Add any included tags and flags
+            int setFlagMask = 0;
+            long setTagMask = 0;
+            Boolean unread = null;
             for (int i = 0; c.tags != null && i < c.tags.length; i++)
                 if (c.tags[i].getId() == Flag.ID_FLAG_UNREAD) {
                     unread = Boolean.TRUE; 
                 } else if (c.tags[i] instanceof Flag) {
-                    Set s = allFlagsets.getTagsets(c.tags[i].getBitmask());
-                    searchFlagsets.addAll(s);
-                    includeFlags = true;
+                    setFlagMask |= c.tags[i].getBitmask();
                 } else {
-                    // Add all tagsets that have the given bit set 
-                    Set s = allTagsets.getTagsets(c.tags[i].getBitmask());
-                    searchTagsets.addAll(s);
-                    includeTags = true;
+                    setTagMask |= c.tags[i].getBitmask();
                 }
+            int flagMask = setFlagMask;
+            long tagMask = setTagMask;
 
-            // Determine if we're excluding tags or flags
-            for (int i = 0; c.excludeTags != null && i < c.excludeTags.length; i++) {
-                if (c.excludeTags[i].getId() == Flag.ID_FLAG_UNREAD) {
-                    continue;
-                }
-                if (c.excludeTags[i] instanceof Flag) {
-                    excludeFlags = true;
-                } else {
-                    excludeTags = true;
-                }
-            }
-            
-            // If we're excluding and not including, start with all possible
-            // bitsets.
-            if (!includeTags && excludeTags) {
-                searchTagsets = allTagsets.getAllTagsets();
-            }
-            if (!includeFlags && excludeFlags) {
-                searchFlagsets = allFlagsets.getAllTagsets();
-            }
-            
-            // Remove excluded tags and flags from the search sets
             for (int i = 0; c.excludeTags != null && i < c.excludeTags.length; i++)
                 if (c.excludeTags[i].getId() == Flag.ID_FLAG_UNREAD) {
                     unread = Boolean.FALSE;
                 } else if (c.excludeTags[i] instanceof Flag) {
-                    Set s = allFlagsets.getTagsets(c.excludeTags[i].getBitmask());
-                    searchFlagsets.removeAll(s);
-                } else {
-                    // Remove tagsets that are being excluded
-                    Set s = allTagsets.getTagsets(c.excludeTags[i].getBitmask());
-                    searchTagsets.removeAll(s);
-                }
+                    flagMask |= c.excludeTags[i].getBitmask();
+                } else
+                    tagMask |= c.excludeTags[i].getBitmask();
 
-            // Handle the case where the specified tags or flags don't match anything
-            if ((includeTags || excludeTags) && searchTagsets.size() == 0) {
-                return result;
-            }
-            if ((includeFlags || excludeFlags) && searchFlagsets.size() == 0) {
-                return result;
+            TagsetCache allFlagsets = getFlagsetCache(conn, c.mailboxId);
+            TagsetCache allTagsets = getTagsetCache(conn, c.mailboxId);
+
+            if (setTagMask != 0 || tagMask != 0) {
+                Iterator iter = allTagsets.getAllTagsets().iterator();
+                while (iter.hasNext()) {
+                    Long tagset = (Long) iter.next();
+                    if ((tagset.longValue() & tagMask) == setTagMask) {
+                        searchTagsets.add(tagset);
+                    }
+                }
+                if (searchTagsets.size() == 0) {
+                    // No items match the specified tags
+                    return result;
+                }
             }
             
-            // If we're searching for all tags or flags, don't filter
-            if (searchTagsets.size() == allTagsets.size()) {
-                searchTagsets.clear();
+            if (setFlagMask != 0 || flagMask != 0) {
+                Iterator iter = allFlagsets.getAllTagsets().iterator();
+                while (iter.hasNext()) {
+                    Long flagset = (Long) iter.next();
+                    if ((flagset.longValue() & flagMask) == setFlagMask) {
+                        searchFlagsets.add(flagset);
+                    }
+                }
+                if (searchFlagsets.size() == 0) {
+                    // No items match the specified flags
+                    return result;
+                }
             }
-            if (searchFlagsets.size() == allFlagsets.size()) {
-                searchFlagsets.clear();
-            }
-
+            
             // Assemble the search query
             StringBuffer statement = new StringBuffer("SELECT id, index_id, type, " + sortField(c.sort));
             if (fullRows)
