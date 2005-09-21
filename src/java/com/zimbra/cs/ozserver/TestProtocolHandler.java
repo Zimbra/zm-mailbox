@@ -73,7 +73,7 @@ class TestProtocolHandler implements OzProtocolHandler {
     
     public void handleConnect(OzConnectionHandler connection) throws IOException {
         // Write greeting
-        connection.writeAscii("200 Hello, welcome to test server/" + TestServer.PORT, true);
+        connection.writeAscii("200 Hello, welcome to test server", true);
         gotoReadingCommandState(connection);
     }   
     

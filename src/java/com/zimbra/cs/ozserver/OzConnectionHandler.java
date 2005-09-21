@@ -27,6 +27,7 @@ package com.zimbra.cs.ozserver;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.CancelledKeyException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.LinkedList;
@@ -100,8 +101,6 @@ public class OzConnectionHandler {
         }
     }
     
-    private boolean mClosed;
-    
     public void closeNow() {
         Runnable closeTask = new Runnable() {
             public void run() {
@@ -115,13 +114,6 @@ public class OzConnectionHandler {
                 mSelectionKey.cancel();
             }
         };
-        synchronized (this) {
-        	if (mClosed) {
-        		ZimbraLog.ozserver.warn("duplicate close cid=" + mId);
-        		return;
-        	}
-        	mClosed = true;
-        }
         mServer.runTaskInIoThread(closeTask);
     }
     
@@ -144,40 +136,39 @@ public class OzConnectionHandler {
     
     private class HandleReadTask implements Runnable {
     	public void run() {
+    		Exception e = null;
     		try {
     			read();
     		} catch (IOException ioe) {
-    			synchronized (OzConnectionHandler.this) {
-    				if (mClosed) {
-    					if (ZimbraLog.ozserver.isDebugEnabled()) {
-    						ZimbraLog.ozserver.debug("ignorable " + ioe + " when reading, connection already closed cid=" + mId, ioe); 
-    					} else {
-    						ZimbraLog.ozserver.info("ignorable " + ioe + " when reading, connection closed cid=" + mId);
-    					}
-    					return;
+    			e = ioe;
+    		} catch (CancelledKeyException cke) {
+    			e = cke;
+    		}
+    		if (e != null) {
+    			if (mChannel.isOpen()) {
+    				ZimbraLog.ozserver.warn("exception during read cid=" + mId, e);
+    				closeNow();
+    			} else {
+    				// someone else may have closed the channel - a shutdown or client went away, etc.
+    				if (ZimbraLog.ozserver.isDebugEnabled()) {
+    					ZimbraLog.ozserver.debug("ignorable " + e + " when reading, connection already closed cid=" + mId, e); 
     				}
     			}
-    			ZimbraLog.ozserver.warn("exception during read cid=" + mId, ioe);
-    			closeNow();
     		}
     	}
     }
 
     private void read() throws IOException {
-    	boolean isDebugEnabled = ZimbraLog.ozserver.isDebugEnabled(); 
+    	boolean trace = ZimbraLog.ozserver.isTraceEnabled(); 
         // This method runs in the IOThread.  Note that we disable read interest here, and
         // not in the worker thread, so that we don't get another ready notification
         // before the worker has had a chance to disable the read interest.
         
-        if (isDebugEnabled) { 
-            ZimbraLog.ozserver.debug(OzUtil.byteBufferToString("cid=" + mId + " read buffer at start", mReadBuffer, true));
-        }
+        if (trace) ZimbraLog.ozserver.trace(OzUtil.byteBufferToString("cid=" + mId + " read buffer at start", mReadBuffer, true));
         
         int bytesRead = mChannel.read(mReadBuffer);
         
-        if (isDebugEnabled) { 
-            ZimbraLog.ozserver.debug(OzUtil.byteBufferToString("cid=" + mId + " read buffer after read", mReadBuffer, true));
-        }
+        if (trace) ZimbraLog.ozserver.trace(OzUtil.byteBufferToString("cid=" + mId + " read buffer after read", mReadBuffer, true));
         
         assert(bytesRead == mReadBuffer.position());
         
@@ -206,13 +197,15 @@ public class OzConnectionHandler {
         while (matchBuffer.position() < matchBuffer.limit()) {
             int matchStart = matchBuffer.position();
             
-            if (ZimbraLog.ozserver.isDebugEnabled()) {
-                ZimbraLog.ozserver.debug(OzUtil.byteBufferToString("cid=" + mId + " matching", matchBuffer, false));
+            if (trace) {
+                ZimbraLog.ozserver.trace(OzUtil.byteBufferToString("cid=" + mId + " matching", matchBuffer, false));
             }
             
             int matchEnd = mMatcher.match(matchBuffer);
             
-            if (isDebugEnabled) ZimbraLog.ozserver.debug("cid=" + mId + " match returned " + matchEnd);
+            if (ZimbraLog.ozserver.isDebugEnabled()) {
+            	ZimbraLog.ozserver.debug("cid=" + mId + " match returned " + matchEnd);
+            }
             
             if (matchEnd == -1) {
                 break;
@@ -230,11 +223,11 @@ public class OzConnectionHandler {
         }
         
         if (handledBytes == 0) {
-            if (isDebugEnabled) ZimbraLog.ozserver.debug("no bytes handled and no match");
+            if (ZimbraLog.ozserver.isDebugEnabled()) ZimbraLog.ozserver.debug("no bytes handled and no match");
             if (mReadBuffer.hasRemaining()) {
-                if (isDebugEnabled) ZimbraLog.ozserver.debug("no bytes handled, no match, but there is room in buffer");
+                if (ZimbraLog.ozserver.isDebugEnabled()) ZimbraLog.ozserver.debug("no bytes handled, no match, but there is room in buffer");
             } else {
-                if (isDebugEnabled) ZimbraLog.ozserver.debug("no bytes handled, no match, and buffer is full, overflowing");
+                if (ZimbraLog.ozserver.isDebugEnabled()) ZimbraLog.ozserver.debug("no bytes handled, no match, and buffer is full, overflowing");
                 assert(mReadBuffer.limit() == mReadBuffer.position());
                 assert(mReadBuffer.limit() == mReadBuffer.capacity());
                 mReadBuffer.flip();
@@ -246,10 +239,10 @@ public class OzConnectionHandler {
             }
         } else {
             if (mReadBuffer.position() == handledBytes) {
-                if (isDebugEnabled) ZimbraLog.ozserver.debug("handled all bytes in input, clearing buffer (no compacting)");
+                if (ZimbraLog.ozserver.isDebugEnabled()) ZimbraLog.ozserver.debug("handled all bytes in input, clearing buffer (no compacting)");
                 mReadBuffer.clear();
             } else {
-                if (isDebugEnabled) ZimbraLog.ozserver.debug("not all handled, compacting "  + (mReadBuffer.position() - handledBytes) + " bytes");
+                if (ZimbraLog.ozserver.isDebugEnabled()) ZimbraLog.ozserver.debug("not all handled, compacting "  + (mReadBuffer.position() - handledBytes) + " bytes");
                 mReadBuffer.position(handledBytes);
                 mReadBuffer.compact();
             }
@@ -260,7 +253,7 @@ public class OzConnectionHandler {
         return;
     }
 
-    void handleRead() throws IOException {
+    void doRead() throws IOException {
         disableReadInterest();
         mServer.execute(mHandleReadTask);
     }
@@ -297,7 +290,7 @@ public class OzConnectionHandler {
      * TODO two possible DoS problems - too many write buffers
      * and underlying tcp buffer being too big
      */
-    void handleWrite() throws IOException {
+    void doWrite() throws IOException {
         // It is possible that more than one buffer can be written
         // so we call channel write until we fail to write fully
         while (true) {

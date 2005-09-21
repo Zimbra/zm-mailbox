@@ -50,40 +50,40 @@ public class OzByteArrayMatcher implements OzMatcher {
     
     public int match(ByteBuffer buf) {
         assert(mMatched < mMatchSequenceLength);
-        boolean dump = ZimbraLog.ozserver.isDebugEnabled(); 
-        StringBuffer lsb = null;
-        if (dump) lsb = new StringBuffer();
+        boolean trace = ZimbraLog.ozserver.isTraceEnabled(); 
+        StringBuffer tsb = null;
+        if (trace) tsb = new StringBuffer();
         
         int n = buf.remaining();
         
-        if (dump) lsb.append("remaining=" + n + " matchedAtStart=" + mMatched + " ");
+        if (trace) tsb.append("remaining=" + n + " matchedAtStart=" + mMatched + " ");
         
         for (int i = 0; i < n; i++) {
             byte b = buf.get();
             
-            if (dump && b >= 32 && b <=126) lsb.append("'" + (char)b + "'/");
-            if (dump) lsb.append((int)b + " ");
+            if (trace && b >= 32 && b <=126) tsb.append("'" + (char)b + "'/");
+            if (trace) tsb.append((int)b + " ");
 
             if (mMatchSequence[mMatched] == b) {
                 mMatched++;
-                if (dump) lsb.append("+" + mMatched + " ");
+                if (trace) tsb.append("+" + mMatched + " ");
                 if (mMatched == mMatchSequenceLength) {
-                    if (dump) ZimbraLog.ozserver.debug(lsb.toString());
+                    if (trace) ZimbraLog.ozserver.trace(tsb.toString());
                     return buf.position();
                 }
             } else {
                 mMatched = 0; // break the match
                 if (mMatchSequence[mMatched] == b) { // but now does it match start of sequence?
                     mMatched++;
-                    if (dump) lsb.append("+" + mMatched + " ");
+                    if (trace) tsb.append("+" + mMatched + " ");
                     if (mMatched == mMatchSequenceLength) {
-                        if (dump) ZimbraLog.ozserver.debug(lsb.toString());
+                        if (trace) ZimbraLog.ozserver.trace(tsb.toString());
                         return buf.position();
                     }
                 }
             }
         }
-        if (dump) ZimbraLog.ozserver.debug(lsb.toString());
+        if (trace) ZimbraLog.ozserver.trace(tsb.toString());
         return -1;
     }
 

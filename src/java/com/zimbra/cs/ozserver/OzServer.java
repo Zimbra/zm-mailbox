@@ -160,7 +160,7 @@ public class OzServer {
                         OzConnectionHandler connection = null;
                         try {
                             connection = (OzConnectionHandler)readyKey.attachment();
-                            connection.handleRead();
+                            connection.doRead();
                         } catch (Exception e) {
                             ZimbraLog.ozserver.warn("ignoring exception that occurred while handling readable key", e);
                             connection.closeNow();
@@ -171,7 +171,7 @@ public class OzServer {
                         OzConnectionHandler connection = null;
                         try {
                             connection = (OzConnectionHandler)readyKey.attachment();
-                            connection.handleWrite();
+                            connection.doWrite();
                         } catch (Exception e) {
                             ZimbraLog.ozserver.warn("ignoring exception that occurred while handling writable key", e);
                             connection.closeNow();

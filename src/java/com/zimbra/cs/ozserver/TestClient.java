@@ -122,8 +122,8 @@ class TestClient {
     private static final int MAX_DIGEST_BYTES = 20;
 
     
-    public static void test() throws IOException {
-        TestClient client = new TestClient("localhost", TestServer.PORT);
+    public static void test(int port) throws IOException {
+        TestClient client = new TestClient("localhost", port);
         mLog.info("greet: " + client.getLastResponse());
 
         mLog.info("client: helo");
@@ -161,6 +161,6 @@ class TestClient {
     }
     
     public static void main(String[] args) throws IOException {
-        test();
+        test(Integer.parseInt(args[0]));
     }
 }

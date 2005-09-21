@@ -29,22 +29,74 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import com.zimbra.cs.util.Zimbra;
 
 class TestBoth {
 
-    private static final int CLIENT_THREADS = 4;
-    
+    private static Log mLog = LogFactory.getLog(TestProtocolHandler.class);
+
+	private static Options mOptions = new Options();
+	
+	static {
+	    mOptions.addOption("t", "threads",   true,  "number of client threads (default 4)");
+	    mOptions.addOption("s", "shutdown",  false, "stress server shutdown");
+	    mOptions.addOption("p", "port",      true,  "port (default 10043)");
+	    mOptions.addOption("T", "trace",     false, "trace server/client traffic");
+	    mOptions.addOption("D", "debug",     false, "print debug info");
+	    mOptions.addOption("h", "help",      false, "show this help");
+	}
+	
+	private static void usage(String errmsg) {
+		if (errmsg != null) { 
+			mLog.error(errmsg);
+		}
+        HelpFormatter formatter = new HelpFormatter();
+        formatter.printHelp("TestBoth [options]", mOptions);
+		System.exit((errmsg == null) ? 0 : 1);
+	}
+
+	private static CommandLine parseArgs(String args[]) {
+		StringBuffer gotCL = new StringBuffer("cmdline: ");
+		for (int i = 0; i < args.length; i++) {
+			gotCL.append("'").append(args[i]).append("' ");
+		}
+		//mLog.info(gotCL);
+		
+        CommandLineParser parser = new GnuParser();
+        CommandLine cl = null;
+        try {
+            cl = parser.parse(mOptions, args);
+        } catch (ParseException pe) {
+            usage(pe.getMessage());
+        }
+        
+        if (cl.hasOption('h')) {
+        	usage(null);
+        }
+        return cl;
+    }
+
     static class TestClientThread extends Thread {
-        public TestClientThread(int num) {
+    	int mPort;
+        public TestClientThread(int port, int num) {
             super("TestClientThread-" + num);
             setDaemon(true);
+            mPort = port;
         }
 
         public void run() {
             while (true) {
                 try {
-                    TestClient.test();
+                    TestClient.test(mPort);
                 } catch (IOException ioe) {
                     ioe.printStackTrace();
                 }
@@ -54,13 +106,49 @@ class TestBoth {
     }
     
     public static void main(String[] args) throws IOException {
-        Zimbra.toolSetup("INFO", true);
-        TestServer.main(null);
-        for (int i = 0; i < CLIENT_THREADS; i++) {
-            new TestClientThread(i).start();
+    	Zimbra.toolSetup("INFO", true);
+
+    	CommandLine cl = parseArgs(args);
+
+    	if (cl.hasOption('D')) {
+    		Zimbra.toolSetup("DEBUG", true);
+    	}
+    	if (cl.hasOption('T')) {
+    		Zimbra.toolSetup("TRACE", true);
+    	}
+        
+    	boolean shutdownTest = false;
+    	if (cl.hasOption('s')) {
+    		shutdownTest = true;
+    	}
+    	
+    	int numThreads = 4;
+    	if (cl.hasOption('t')) {
+    		try {
+    			numThreads = Integer.parseInt(cl.getOptionValue('t'));
+    		} catch (NumberFormatException nfe) {
+    			mLog.error("exception occurred", nfe);
+    			usage("bad value for number of threads");
+    		}
+    	}
+    	
+    	int port = 10043;
+    	if (cl.hasOption('p')) {
+    		try {
+    			port = Integer.parseInt(cl.getOptionValue('p'));
+    		} catch (NumberFormatException nfe) {
+    			mLog.error("exception occurred", nfe);
+    			usage("bad value for port");
+    		}
+    	}
+
+        TestServer server = new TestServer(port);
+        mLog.info("creating " + numThreads + " client threads");
+        for (int i = 0; i < numThreads; i++) {
+            new TestClientThread(port, i).start();
         }
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         br.readLine();
-        TestServer.shutdown();
+        server.shutdown();
     }
 }
