@@ -76,7 +76,7 @@ public class AddMsg extends WriteOpDocumentHandler {
 
             String flagsStr = msgElem.getAttribute(MailService.A_FLAGS, null);
 	        String tagsStr = msgElem.getAttribute(MailService.A_TAGS, null);
-	        String folderStr = msgElem.getAttribute(MailService.A_FOLDER, null);
+	        String folderStr = msgElem.getAttribute(MailService.A_FOLDER);
             boolean noICal = msgElem.getAttributeBool(MailService.A_NO_ICAL, false);
             long date = msgElem.getAttributeLong(MailService.A_DATE, System.currentTimeMillis());
 
