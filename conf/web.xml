@@ -122,12 +122,12 @@
 
   <servlet-mapping>
     <servlet-name>SoapServlet</servlet-name>
-    <url-pattern>/soap/</url-pattern>
+    <url-pattern>/soap/*</url-pattern>
   </servlet-mapping>
 
   <servlet-mapping>
     <servlet-name>AdminServlet</servlet-name>
-    <url-pattern>/admin/soap/</url-pattern>
+    <url-pattern>/admin/soap/*</url-pattern>
   </servlet-mapping>
 
   <servlet-mapping>
