@@ -1073,7 +1073,7 @@ public abstract class MailItem implements Comparable {
         decodeMetadata(new Metadata(metadata, this));
     }
     void decodeMetadata(Metadata meta) throws ServiceException {
-        if (meta != null)
+        if (meta == null)
             return;
         mColor = (byte) meta.getLong(Metadata.FN_COLOR, DEFAULT_COLOR);
     }
