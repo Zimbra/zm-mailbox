@@ -28,14 +28,12 @@
  */
 package com.zimbra.cs.index;
 
-import com.zimbra.cs.util.StringUtil;
-
 /**
  * @author dkarp
  */
 public class Fragment {
 
-    private static final int MAX_FRAGMENT_LENGTH = 100;
+    private static final int MAX_FRAGMENT_LENGTH = 150;
 
     private static final String CALENDAR_SEPARATOR = "*~*~*~*~*~*~*~*~*~*";
 
@@ -124,6 +122,31 @@ public class Fragment {
         return fragment;
     }
 
+    // StringUtil.stripControlCharacters(line).replaceAll("\\s+", " ").replaceAll("---+", "--").replaceAll("===+", "==");
+    private static String compressLine(String line) {
+        StringBuffer sb = new StringBuffer();
+        char last = ' ', lastButOne = 0;
+        for (int i = 0; i < line.length() && sb.length() <= MAX_FRAGMENT_LENGTH + 5; i++) {
+            char c = line.charAt(i);
+            // normalize whitespace
+            if (Character.isWhitespace(c))
+                c = ' ';
+            // compress repeated whitespace
+            if (c == ' ' && last == c)
+                continue;
+            // more than 2 "line characters" get reduced to 2
+            if ((c == '=' || c == '-') && last == c && lastButOne == c)
+                continue;
+            // skip non-XML-safe characters
+            if (c < 0x20 || c == 0xFFFE || c == 0xFFFF || (c > 0xD7FF && c < 0xE000))
+                continue;
+            // if we've made it here, add the character!
+            lastButOne = last;
+            sb.append(last = c);
+        }
+        return sb.toString().trim();
+    }
+
     public static String getFragment(String content, boolean hasCalendar) {
         String remainder = content.trim();
         String backup    = remainder;
@@ -162,8 +185,8 @@ public class Fragment {
                     continue;
                 }
             }
-            // sanitize for XML and collapse whitespace and some chars that people make lines ot of
-            line = StringUtil.stripControlCharacters(line).replaceAll("\\s+", " ").replaceAll("---+", "--").replaceAll("===+", "==");
+            // sanitize for XML and collapse whitespace and some chars that people make lines out of
+            line = compressLine(line);
             // check for stopwords that mean that what follows is a quoted message
             if (line.equalsIgnoreCase(STOPWORD_REPLY_1) || line.equalsIgnoreCase(STOPWORD_REPLY_2) ||
                     line.equalsIgnoreCase(STOPWORD_REPLY_3) || line.equalsIgnoreCase(STOPWORD_FORWARD_1) ||
@@ -190,7 +213,7 @@ public class Fragment {
         // almost done!  just make sure we haven't accidentally trimmed off everything (in which case we'll just use the original content)
         String result = fragment.toString();
         if (result.equals(""))
-            result = StringUtil.stripControlCharacters(backup).trim().replaceAll("\\s+", " ").replaceAll("---+", "--").replaceAll("===+", "==");
+            result = compressLine(backup);
         boolean isTruncated = (result.length() > Fragment.MAX_FRAGMENT_LENGTH);
         result = result.substring(0, isTruncated ? Fragment.MAX_FRAGMENT_LENGTH : result.length());
         
