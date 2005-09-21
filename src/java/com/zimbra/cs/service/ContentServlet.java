@@ -48,8 +48,10 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.util.ByteUtil;
 
@@ -195,6 +197,8 @@ public class ContentServlet extends ZimbraServlet {
             } catch (MessagingException e) {
                 resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
             } 
+        } catch (NoSuchItemException e) {
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND, "no such item");
         } catch (ServiceException e) {
             throw new ServletException(e);
 		}
@@ -310,14 +314,14 @@ public class ContentServlet extends ZimbraServlet {
             return;
         }
         String pathInfo = req.getPathInfo();
-        if (pathInfo.equals(PREFIX_GET)) {
+        if (pathInfo != null && pathInfo.equals(PREFIX_GET)) {
             getCommand(req, resp, authToken);
-        } else if (pathInfo.startsWith(PREFIX_CNV)) {
+        } else if (pathInfo != null && pathInfo.startsWith(PREFIX_CNV)) {
             RequestDispatcher dispatcher = this.getServletContext().getNamedDispatcher(CONVERSION_SERVLET);
             dispatcher.forward(req, resp);
+        } else {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "invalid request");
         }
-        
-
     }
     
     public void init() throws ServletException {
