@@ -52,7 +52,6 @@ import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.property.Method;
 
 import com.zimbra.cs.db.DbMailItem;
-
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
@@ -111,6 +110,14 @@ public class Appointment extends MailItem {
         return (mRecurrence != null);
     }
 
+    public long getStartTime() {
+        return mStartTime;
+    }
+
+    public long getEndTime() {
+        return mEndTime;
+    }
+
     
     boolean isTaggable() {
         return true;
@@ -141,14 +148,11 @@ public class Appointment extends MailItem {
 //    public TimeZoneMap getTimeZoneMap() { return mTzMap; }
 
     static Appointment create(int id, Folder folder, short volumeId, String tags, String uid,
-            ParsedMessage pm, Invite firstInvite) throws ServiceException {
-
+                              ParsedMessage pm, Invite firstInvite) throws ServiceException {
         Mailbox mbox = folder.getMailbox();
 
         List invites = new ArrayList();
         invites.add(firstInvite);
-
-        UnderlyingData data = new UnderlyingData();
 
         Recurrence.IRecurrence recur = firstInvite.getRecurrence();
         long startTime, endTime;
@@ -167,15 +171,16 @@ public class Appointment extends MailItem {
             }
         }
 
-        data.id = id;
-        data.type = TYPE_APPOINTMENT;
+        UnderlyingData data = new UnderlyingData();
+        data.id       = id;
+        data.type     = TYPE_APPOINTMENT;
         data.folderId = folder.getId();
-        data.indexId = id;
+        data.indexId  = id;
         data.volumeId = volumeId;
-        data.date = mbox.getOperationTimestamp();
-        data.tags = Tag.tagsToBitmask(tags);
-        data.sender = uid;
-        data.metadata = encodeMetadata(uid, startTime, endTime, recur,invites, firstInvite.getTimeZoneMap());
+        data.date     = mbox.getOperationTimestamp();
+        data.tags     = Tag.tagsToBitmask(tags);
+        data.sender   = uid;
+        data.metadata = encodeMetadata(DEFAULT_COLOR, uid, startTime, endTime, recur, invites, firstInvite.getTimeZoneMap());
         data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
 
@@ -262,11 +267,10 @@ public class Appointment extends MailItem {
 
     public static final String FN_APPT_RECURRENCE = "apptRecur";
 
-    Metadata decodeMetadata(String metadata) throws ServiceException {
-        Metadata meta = new Metadata(metadata, this);
+    void decodeMetadata(Metadata meta) throws ServiceException {
+        super.decodeMetadata(meta);
 
         int mdVersion = meta.getVersion();
-        
 
         mUid = meta.get(Metadata.FN_UID, null);
         mInvites = new ArrayList();
@@ -293,17 +297,17 @@ public class Appointment extends MailItem {
             if (metaRecur != null)
                 mRecurrence = Recurrence.decodeRule(metaRecur, mTzMap);
         }
-        return meta;
     }
 
-    String encodeMetadata() {
-        return encodeMetadata(mUid, mStartTime, mEndTime, mRecurrence, mInvites, mTzMap);
+    Metadata encodeMetadata(Metadata meta) {
+        return encodeMetadata(meta, mColor, mUid, mStartTime, mEndTime, mRecurrence, mInvites, mTzMap);
     }
-    
-    static String encodeMetadata(String uid, long startTime, long endTime, Recurrence.IRecurrence recurrence, 
-                                 List /*Invite */ invs, TimeZoneMap tzmap) {
-        Metadata meta = new Metadata();
-
+    private static String encodeMetadata(byte color, String uid, long startTime, long endTime,
+                                         Recurrence.IRecurrence recur, List /*Invite */ invs, TimeZoneMap tzmap) {
+        return encodeMetadata(new Metadata(), color, uid, startTime, endTime, recur, invs, tzmap).toString();
+    }
+    static Metadata encodeMetadata(Metadata meta, byte color, String uid, long startTime, long endTime,
+                                   Recurrence.IRecurrence recur, List /*Invite */ invs, TimeZoneMap tzmap) {
         meta.put(Metadata.FN_TZMAP, tzmap.encodeAsMetadata());
         meta.put(Metadata.FN_UID, uid);
         meta.put(Metadata.FN_APPT_START, startTime);
@@ -317,19 +321,10 @@ public class Appointment extends MailItem {
             meta.put(compName, Invite.encodeMetadata(comp));
         }
 
-        if (recurrence != null) {
-            meta.put(FN_APPT_RECURRENCE, recurrence.encodeMetadata());
-        }
+        if (recur != null)
+            meta.put(FN_APPT_RECURRENCE, recur.encodeMetadata());
 
-        return meta.toString();
-    }
-
-    public long getStartTime() {
-        return mStartTime;
-    }
-
-    public long getEndTime() {
-        return mEndTime;
+        return MailItem.encodeMetadata(meta, color);
     }
 
     // /**

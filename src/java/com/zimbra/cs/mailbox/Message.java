@@ -395,7 +395,7 @@ public class Message extends MailItem {
         data.tags        = tags;
         data.sender      = pm.getParsedSender().getSortString();
         data.subject     = pm.getNormalizedSubject();
-        data.metadata    = encodeMetadata(pm, flags, dinfo, null);
+        data.metadata    = encodeMetadata(DEFAULT_COLOR, pm, flags, dinfo, null);
         data.unreadCount = unread ? 1 : 0; 
         data.contentChanged(mbox);
         return data;
@@ -504,7 +504,7 @@ public class Message extends MailItem {
             getFolder().updateSize(size - mData.size);
             mData.size = size;
         }
-        String metadata = encodeMetadata(pm, mData.flags, mDraftInfo, mApptInfos);
+        String metadata = encodeMetadata(mColor, pm, mData.flags, mDraftInfo, mApptInfos);
 
         // rewrite the DB row to reflect our new view
         saveData(pm.getParsedSender().getSortString(), metadata);
@@ -560,8 +560,9 @@ public class Message extends MailItem {
 			super.delete();
 	}
 
-    Metadata decodeMetadata(String metadata) throws ServiceException {
-        Metadata meta = new Metadata(metadata, this);
+
+    void decodeMetadata(Metadata meta) throws ServiceException {
+        super.decodeMetadata(meta);
 
         mSender = meta.get(Metadata.FN_SENDER, null);
         mRecipients = meta.get(Metadata.FN_RECIPIENTS, null);
@@ -588,19 +589,17 @@ public class Message extends MailItem {
         String rawSubject = meta.get(Metadata.FN_RAW_SUBJ, null);
         if (rawSubject != null)
             mRawSubject = rawSubject;
-
-        return meta;
 	}
 
-    String encodeMetadata() {
-        return encodeMetadata(mSender, mRecipients, mFragment, mData.subject, mRawSubject, mImapUID, mDraftInfo, mApptInfos);
+    Metadata encodeMetadata(Metadata meta) {
+        return encodeMetadata(meta, mColor, mSender, mRecipients, mFragment, mData.subject, mRawSubject, mImapUID, mDraftInfo, mApptInfos);
     }
-    static String encodeMetadata(ParsedMessage pm, int flags, DraftInfo dinfo, ArrayList /*ApptInfo*/ apptInfos) {
+    private static String encodeMetadata(byte color, ParsedMessage pm, int flags, DraftInfo dinfo, ArrayList /*ApptInfo*/ apptInfos) {
         // cache the "To" header only for messages sent by the user
         String recipients = ((flags & Flag.FLAG_FROM_ME) == 0 ? null : pm.getRecipients());
-        return encodeMetadata(pm.getSender(), recipients, pm.getFragment(), pm.getNormalizedSubject(), pm.getSubject(), 0, dinfo, apptInfos);
+        return encodeMetadata(new Metadata(), color, pm.getSender(), recipients, pm.getFragment(), pm.getNormalizedSubject(), pm.getSubject(), 0, dinfo, apptInfos).toString();
     }
-    static String encodeMetadata(String sender, String recipients, String fragment, String subject, String rawSubject, int imapID, DraftInfo dinfo, ArrayList /*ApptInfo*/ apptInfos) {
+    static Metadata encodeMetadata(Metadata meta, byte color, String sender, String recipients, String fragment, String subject, String rawSubject, int imapID, DraftInfo dinfo, ArrayList /*ApptInfo*/ apptInfos) {
         // try to figure out a simple way to make the raw subject from the normalized one
         String prefix = null;
         if (rawSubject == null || rawSubject.equals(subject))
@@ -610,7 +609,6 @@ public class Message extends MailItem {
             rawSubject = null;
         }
 
-        Metadata meta = new Metadata();
         meta.put(Metadata.FN_SENDER,     sender);
         meta.put(Metadata.FN_RECIPIENTS, recipients);
         meta.put(Metadata.FN_FRAGMENT,   fragment);
@@ -635,7 +633,7 @@ public class Message extends MailItem {
             meta.put(Metadata.FN_DRAFT, dmeta);
         }
 
-        return meta.toString();
+        return MailItem.encodeMetadata(meta, color);
     }
 
 

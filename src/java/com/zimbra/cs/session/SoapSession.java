@@ -268,7 +268,7 @@ public class SoapSession extends Session {
                 if (mChanges.created != null && mChanges.created.size() > 0) {
                     Element eCreated = eNotify.addUniqueElement(E_CREATED);
                     for (Iterator it = mChanges.created.values().iterator(); it.hasNext(); )
-                        ToXML.encodeItem(eCreated, (MailItem) it.next(), Change.ALL_FIELDS);
+                        ToXML.encodeItem(eCreated, (MailItem) it.next(), ToXML.NOTIFY_FIELDS);
                 }
 
                 if (mChanges.modified != null && mChanges.modified.size() > 0) {

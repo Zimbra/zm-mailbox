@@ -181,6 +181,6 @@ public class Flag extends Tag {
 		return flag;
 	}
 
-	Metadata decodeMetadata(String metadata) { return null; }
-	String encodeMetadata()                  { return ""; }
+	void decodeMetadata(Metadata meta)     { }
+	Metadata encodeMetadata(Metadata meta) { return meta; }
 }

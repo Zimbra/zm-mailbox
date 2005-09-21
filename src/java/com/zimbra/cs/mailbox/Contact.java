@@ -264,7 +264,7 @@ public class Contact extends MailItem {
         data.date        = mbox.getOperationTimestamp();
         data.tags        = Tag.tagsToBitmask(tags);
         data.sender      = getFileAsString(attrs);
-        data.metadata    = encodeMetadata(attrs);
+        data.metadata    = encodeMetadata(DEFAULT_COLOR, attrs);
         data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
 
@@ -318,21 +318,33 @@ public class Contact extends MailItem {
     }
 
 
-    Metadata decodeMetadata(String metadata) throws ServiceException {
-        Metadata meta = new Metadata(metadata, this);
+    void decodeMetadata(Metadata meta) throws ServiceException {
+        Metadata metaAttrs;
+        if (meta.getVersion() <= 8) {
+            // old version: metadata is just the fields
+            metaAttrs = meta;
+        } else {
+            // new version: fields are in their own subhash
+            super.decodeMetadata(meta);
+            metaAttrs = meta.getMap(Metadata.FN_FIELDS);
+        }
+
         mAttributes = new HashMap();
-        for (Iterator it = meta.asMap().entrySet().iterator(); it.hasNext(); ) {
+        for (Iterator it = metaAttrs.asMap().entrySet().iterator(); it.hasNext(); ) {
             Map.Entry entry = (Map.Entry) it.next();
             mAttributes.put(entry.getKey().toString(), entry.getValue().toString());
         }
-        return meta;
     }
 
-    String encodeMetadata() {
-        return encodeMetadata(mAttributes);
+    Metadata encodeMetadata(Metadata meta) {
+        return encodeMetadata(meta, mColor, mAttributes);
     }
-    static String encodeMetadata(Map attributes) {
-        return new Metadata(attributes).toString();
+    private static String encodeMetadata(byte color, Map attributes) {
+        return encodeMetadata(new Metadata(), color, attributes).toString();
+    }
+    static Metadata encodeMetadata(Metadata meta, byte color, Map attributes) {
+        meta.put(Metadata.FN_FIELDS, new Metadata(attributes));
+        return MailItem.encodeMetadata(meta, color);
     }
 
 

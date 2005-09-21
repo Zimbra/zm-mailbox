@@ -73,13 +73,16 @@ import com.zimbra.cs.util.StringUtil;
  */
 public class ToXML {
 
-    private static Log mLog = LogFactory.getLog(ToXML.class); 
+    // we usually don't want to return last modified date...
+    public static final int NOTIFY_FIELDS = Change.ALL_FIELDS & ~Change.MODIFIED_CONFLICT;
+
+    private static Log mLog = LogFactory.getLog(ToXML.class);
 
 	// no construction
 	private ToXML()  {}
 
     public static Element encodeItem(Element parent, MailItem item) {
-        return encodeItem(parent, item, Change.ALL_FIELDS);
+        return encodeItem(parent, item, NOTIFY_FIELDS);
     }
     public static Element encodeItem(Element parent, MailItem item, int fields) {
         if (item instanceof SearchFolder)
@@ -95,7 +98,7 @@ public class ToXML {
         else if (item instanceof Appointment) 
             return encodeApptSummary(parent, (Appointment)item, fields);
         else if (item instanceof Message) {
-            OutputParticipants output = (fields == Change.ALL_FIELDS ? OutputParticipants.PUT_BOTH : OutputParticipants.PUT_SENDERS);
+            OutputParticipants output = (fields == NOTIFY_FIELDS ? OutputParticipants.PUT_BOTH : OutputParticipants.PUT_SENDERS);
             return encodeMessageSummary(parent, (Message) item, output, fields);
         } else if (item instanceof Conversation) {
             Conversation conv = (Conversation) item;
@@ -109,7 +112,7 @@ public class ToXML {
     }
 
     public static Element encodeMailbox(Element parent, Mailbox mbox) {
-        return encodeMailbox(parent, mbox, Change.ALL_FIELDS);
+        return encodeMailbox(parent, mbox, NOTIFY_FIELDS);
     }
     public static Element encodeMailbox(Element parent, Mailbox mbox, int fields) {
         Element elem = parent.addUniqueElement(MailService.E_MAILBOX);
@@ -120,86 +123,87 @@ public class ToXML {
 
     public static Element encodeFolder(Element parent, Folder folder) {
         if (folder instanceof SearchFolder)
-            return encodeSearchFolder(parent, (SearchFolder) folder, Change.ALL_FIELDS);
+            return encodeSearchFolder(parent, (SearchFolder) folder, NOTIFY_FIELDS);
         else
-            return encodeFolder(parent, folder, Change.ALL_FIELDS);
+            return encodeFolder(parent, folder, NOTIFY_FIELDS);
     }
     public static Element encodeFolder(Element parent, Folder folder, int fields) {
         if (folder instanceof SearchFolder)
             return encodeSearchFolder(parent, (SearchFolder) folder, fields);
         Element elem = parent.addElement(MailService.E_FOLDER);
-        int folderId = folder.getId();
-        elem.addAttribute(MailService.A_ID, folderId);
-        if (folderId != Mailbox.ID_FOLDER_ROOT) {
-            if (needToOutput(fields, Change.MODIFIED_NAME)) {
-            	String name = folder.getName();
-    	        if (name != null && name.length() > 0)
-    		        elem.addAttribute(MailService.A_NAME, name);
-            }
-            if (needToOutput(fields, Change.MODIFIED_FOLDER))
-                elem.addAttribute(MailService.A_FOLDER, folder.getFolderId());
-        }
-        if (needToOutput(fields, Change.MODIFIED_UNREAD)) {
-            int unread = folder.getUnreadCount();
-            if (unread > 0 || fields != Change.ALL_FIELDS)
-                elem.addAttribute(MailService.A_UNREAD, unread);
-        }
+        encodeFolderCommon(elem, folder, fields);
         if (needToOutput(fields, Change.MODIFIED_SIZE)) {
             long size = folder.getSize();
-            if (size > 0 || fields != Change.ALL_FIELDS)
+            if (size > 0 || fields != NOTIFY_FIELDS)
                 elem.addAttribute(MailService.A_SIZE, size);
         }
         if (needToOutput(fields, Change.MODIFIED_MSG_COUNT)) {
             int msgs = folder.getMessageCount();
-            if (msgs > 0 || fields != Change.ALL_FIELDS)
+            if (msgs > 0 || fields != NOTIFY_FIELDS)
                 elem.addAttribute(MailService.A_NUM, msgs);
+        }
+        if (fields == NOTIFY_FIELDS && folder.getDefaultView() != MailItem.TYPE_UNKNOWN)
+            elem.addAttribute(MailService.A_DEFAULT_VIEW, MailItem.getNameForType(folder.getDefaultView()));
+        return elem;
+	}
+
+    private static Element encodeFolderCommon(Element elem, Folder folder, int fields) {
+        int folderId = folder.getId();
+        elem.addAttribute(MailService.A_ID, folderId);
+        if (folderId != Mailbox.ID_FOLDER_ROOT) {
+            if (needToOutput(fields, Change.MODIFIED_NAME)) {
+                String name = folder.getName();
+                if (name != null && name.length() > 0)
+                    elem.addAttribute(MailService.A_NAME, name);
+            }
+            if (needToOutput(fields, Change.MODIFIED_FOLDER))
+                elem.addAttribute(MailService.A_FOLDER, folder.getFolderId());
+        }
+        if (needToOutput(fields, Change.MODIFIED_COLOR)) {
+            byte color = folder.getColor();
+            if (color != MailItem.DEFAULT_COLOR || fields != NOTIFY_FIELDS)
+                elem.addAttribute(MailService.A_COLOR, color);
+        }
+        if (needToOutput(fields, Change.MODIFIED_UNREAD)) {
+            int unread = folder.getUnreadCount();
+            if (unread > 0 || fields != NOTIFY_FIELDS)
+                elem.addAttribute(MailService.A_UNREAD, unread);
         }
         if (needToOutput(fields, Change.MODIFIED_CONFLICT))
             elem.addAttribute(MailService.A_CHANGE_DATE, folder.getChangeDate() / 1000);
         return elem;
-	}
+    }
 
 	public static Element encodeSearchFolder(Element parent, SearchFolder search) {
-        return encodeSearchFolder(parent, search, Change.ALL_FIELDS);
+        return encodeSearchFolder(parent, search, NOTIFY_FIELDS);
     }
     public static Element encodeSearchFolder(Element parent, SearchFolder search, int fields) {
         Element elem = parent.addElement(MailService.E_SEARCH);
-        elem.addAttribute(MailService.A_ID, search.getId());
-        if (needToOutput(fields, Change.MODIFIED_NAME))
-            elem.addAttribute(MailService.A_NAME, search.getName());
+        encodeFolderCommon(elem, search, fields);
         if (needToOutput(fields, Change.MODIFIED_QUERY)) {
             elem.addAttribute(MailService.A_QUERY, search.getQuery());
             elem.addAttribute(MailService.A_SORTBY, search.getSortField());
             elem.addAttribute(MailService.A_SEARCH_TYPES, search.getReturnTypes());
         }
-        if (needToOutput(fields, Change.MODIFIED_FOLDER))
-            elem.addAttribute(MailService.A_FOLDER, search.getFolderId());
-        if (needToOutput(fields, Change.MODIFIED_UNREAD)) {
-            int unread = search.getUnreadCount();
-            if (unread > 0 || fields != Change.ALL_FIELDS)
-                elem.addAttribute(MailService.A_UNREAD, unread);
-        }
-        if (needToOutput(fields, Change.MODIFIED_CONFLICT))
-            elem.addAttribute(MailService.A_CHANGE_DATE, search.getChangeDate() / 1000);
 		return elem;
 	}
 
     public static void recordItemTags(Element elem, MailItem item, int fields) {
         if (needToOutput(fields, Change.MODIFIED_FLAGS | Change.MODIFIED_UNREAD)) {
         	String flags = item.getFlagString();
-        	if (fields != Change.ALL_FIELDS || !flags.equals(""))
+        	if (fields != NOTIFY_FIELDS || !flags.equals(""))
                 elem.addAttribute(MailService.A_FLAGS, flags);
         }
         if (needToOutput(fields, Change.MODIFIED_TAGS)) {
             String tags = item.getTagString();
-            if (!tags.equals("") || fields != Change.ALL_FIELDS)
+            if (!tags.equals("") || fields != NOTIFY_FIELDS)
                 elem.addAttribute(MailService.A_TAGS, tags);
         }
     }
 
     public static Element encodeContact(Element parent, Contact contact, ContactAttrCache cacache,
 										boolean summary, List attrFilter) {
-        return encodeContact(parent, contact, cacache, summary, attrFilter, Change.ALL_FIELDS);
+        return encodeContact(parent, contact, cacache, summary, attrFilter, NOTIFY_FIELDS);
     }
     public static Element encodeContact(Element parent, Contact contact, ContactAttrCache cacache,
             boolean summary, List attrFilter, int fields) {
@@ -247,7 +251,7 @@ public class ToXML {
     }
 
 	public static Element encodeNote(Element parent, Note note) {
-        return encodeNote(parent, note, Change.ALL_FIELDS);
+        return encodeNote(parent, note, NOTIFY_FIELDS);
     }
     public static Element encodeNote(Element parent, Note note, int fields) {
         Element elem = parent.addElement(MailService.E_NOTE);
@@ -271,7 +275,7 @@ public class ToXML {
 	}
 
 	public static Element encodeTag(Element parent, Tag tag) {
-        return encodeTag(parent, tag, Change.ALL_FIELDS);
+        return encodeTag(parent, tag, NOTIFY_FIELDS);
     }
     public static Element encodeTag(Element parent, Tag tag, int fields) {
 		Element elem = parent.addElement(MailService.E_TAG);
@@ -282,7 +286,7 @@ public class ToXML {
             elem.addAttribute(MailService.A_COLOR, tag.getColor());
         if (needToOutput(fields, Change.MODIFIED_UNREAD)) {
     		int unreadCount = tag.getUnreadCount();
-    		if (unreadCount > 0 || fields != Change.ALL_FIELDS)
+    		if (unreadCount > 0 || fields != NOTIFY_FIELDS)
                 elem.addAttribute(MailService.A_UNREAD, unreadCount);
         }
         if (needToOutput(fields, Change.MODIFIED_CONFLICT))
@@ -292,7 +296,7 @@ public class ToXML {
 
 
     public static Element encodeConversation(Element parent, Conversation conv) throws ServiceException {
-        int fields = Change.ALL_FIELDS;
+        int fields = NOTIFY_FIELDS;
         Element c = encodeConversationCommon(parent, conv, fields);
         EmailElementCache eecache = new EmailElementCache();
         Message[] messages = conv.getMailbox().getMessagesByConversation(conv.getId());
@@ -322,7 +326,7 @@ public class ToXML {
      */
     public static Element encodeConversationSummary(Element parent, Conversation conv, long date,
             String fragment, EmailElementCache eecache) {
-        return encodeConversationSummary(parent, conv, date, fragment, eecache, Change.ALL_FIELDS);
+        return encodeConversationSummary(parent, conv, date, fragment, eecache, NOTIFY_FIELDS);
     }
     public static Element encodeConversationSummary(Element parent, Conversation conv, long date,
             String fragment, EmailElementCache eecache, int fields) {
@@ -331,7 +335,7 @@ public class ToXML {
             c.addAttribute(MailService.A_DATE, date);
         if (needToOutput(fields, Change.MODIFIED_SUBJECT))
             c.addAttribute(MailService.E_SUBJECT, conv.getSubject());
-        if (fragment != null && fields == Change.ALL_FIELDS)
+        if (fragment != null && fields == NOTIFY_FIELDS)
         	c.addAttribute(MailService.E_FRAG, fragment, Element.DISP_CONTENT);
         if (needToOutput(fields, Change.MODIFIED_SENDERS)) {
             if (eecache == null)
@@ -366,7 +370,7 @@ public class ToXML {
         if (needToOutput(fields, Change.MODIFIED_CHILDREN))
             c.addAttribute(MailService.A_NUM, conv.getMessageCount());
         recordItemTags(c, conv, fields);
-        if (fields == Change.ALL_FIELDS)
+        if (fields == NOTIFY_FIELDS)
             c.addAttribute(MailService.E_SUBJECT, conv.getSubject(), Element.DISP_CONTENT);
         return c;
     }
@@ -385,7 +389,7 @@ public class ToXML {
         
         Element m;
         if (wholeMessage) {
-            m = encodeMessageCommon(parent, msg, Change.ALL_FIELDS);
+            m = encodeMessageCommon(parent, msg, NOTIFY_FIELDS);
             m.addAttribute(MailService.A_ID, msg.getId());
         } else {
             m = parent.addElement(MailService.E_MSG);
@@ -439,7 +443,7 @@ public class ToXML {
                 m.addAttribute(MailService.A_SENT_DATE, sent.getTime());
             
             if (msg.isInvite())
-                encodeInvitesForMessage(m, msg, Change.ALL_FIELDS);
+                encodeInvitesForMessage(m, msg, NOTIFY_FIELDS);
             
             List parts = Mime.getParts(mm);
             if (parts != null && !parts.isEmpty()) {
@@ -493,7 +497,7 @@ public class ToXML {
                     ie.addAttribute(MailService.A_APPT_RECURRENCE_ID, inv.getRecurId().toString());
                 }
                 
-                ToXML.encodeInvite(ie, inv, Change.ALL_FIELDS);
+                ToXML.encodeInvite(ie, inv, NOTIFY_FIELDS);
             } catch (ServiceException e) {
                 e.printStackTrace();
             }
@@ -517,7 +521,7 @@ public class ToXML {
         
         Element m;
         if (wholeMessage) {
-            m = encodeMessageCommon(parent, appt, Change.ALL_FIELDS);
+            m = encodeMessageCommon(parent, appt, NOTIFY_FIELDS);
             ParsedItemID pid = ParsedItemID.create(appt.getId(), invId);
             m.addAttribute(MailService.A_ID, pid.toString());
         } else {
@@ -575,11 +579,11 @@ public class ToXML {
             Element invElt = m.addElement(MailService.E_INVITE); 
             Invite[] invs = appt.getInvites(invId);
             for (int i = 0; i < invs.length; i++) {
-                encodeInvite(invElt, invs[i], Change.ALL_FIELDS);
+                encodeInvite(invElt, invs[i], NOTIFY_FIELDS);
             }
             
 //            if (msg.isInvite())
-//                encodeInvitesForMessage(m, msg, Change.ALL_FIELDS);
+//                encodeInvitesForMessage(m, msg, NOTIFY_FIELDS);
             
             List parts = Mime.getParts(mm);
             if (parts != null && !parts.isEmpty()) {
@@ -612,7 +616,7 @@ public class ToXML {
 
         Element m;
         if (wholeMessage) {
-            m = encodeMessageCommon(parent, msg, Change.ALL_FIELDS);
+            m = encodeMessageCommon(parent, msg, NOTIFY_FIELDS);
             m.addAttribute(MailService.A_ID, msg.getId());
         } else {
             m = parent.addElement(MailService.E_MSG);
@@ -648,7 +652,7 @@ public class ToXML {
     }
 
     public static Element encodeMessageSummary(Element parent, Message msg, OutputParticipants output) {
-        return encodeMessageSummary(parent, msg, output, Change.ALL_FIELDS);
+        return encodeMessageSummary(parent, msg, output, NOTIFY_FIELDS);
     }
     public static Element encodeMessageSummary(Element parent, Message msg, OutputParticipants output, int fields) {
         Element e = encodeMessageCommon(parent, msg, fields);
@@ -698,7 +702,7 @@ public class ToXML {
             elem.addAttribute(MailService.A_FOLDER, mi.getFolderId());
         if (mi instanceof Message) {
             Message msg = (Message)mi;
-            if (needToOutput(fields, Change.MODIFIED_PARENT) && (fields != Change.ALL_FIELDS || msg.getConversationId() != -1))
+            if (needToOutput(fields, Change.MODIFIED_PARENT) && (fields != NOTIFY_FIELDS || msg.getConversationId() != -1))
                 elem.addAttribute(MailService.A_CONV_ID, msg.getConversationId());
         }
         recordItemTags(elem, mi, fields);
@@ -711,7 +715,7 @@ public class ToXML {
     {
         boolean allFields = true;
         
-        if (fields != Change.ALL_FIELDS) {
+        if (fields != NOTIFY_FIELDS) {
             allFields = false;
             if (!needToOutput(fields, Change.MODIFIED_INVITE)) {
                 return parent;
@@ -821,18 +825,11 @@ public class ToXML {
         return e;
     }
     
-
-//  public static Element encodeInviteMsg(Element parent, Message invite) {
-//  return encodeInviteMsg(parent, invite, Change.ALL_FIELDS);
-//  }
-    
-    private static Element encodeInvitesForMessage(Element parent, Message msg, int fields) throws ServiceException 
-    {
-        if (fields != Change.ALL_FIELDS) {
-            if (!needToOutput(fields, Change.MODIFIED_INVITE)) {
+    private static Element encodeInvitesForMessage(Element parent, Message msg, int fields)
+    throws ServiceException {
+        if (fields != NOTIFY_FIELDS)
+            if (!needToOutput(fields, Change.MODIFIED_INVITE))
                 return parent;
-            }
-        }
         
         Element ie = parent.addElement(MailService.E_INVITE);
         

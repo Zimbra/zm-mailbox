@@ -46,7 +46,6 @@ public class NoteAction extends ItemAction {
 
 	public static final String OP_EDIT       = "edit";
 	public static final String OP_REPOSITION = "pos";
-	public static final String OP_COLOR      = "color";
 
 	public Element handle(Element request, Map context) throws ServiceException {
         ZimbraContext lc = getZimbraContext(context);
@@ -59,7 +58,7 @@ public class NoteAction extends ItemAction {
         if (operation.endsWith(OP_READ) || operation.endsWith(OP_SPAM))
             throw ServiceException.INVALID_REQUEST("invalid operation on note: " + operation, null);
         String successes;
-        if (operation.equals(OP_EDIT) || operation.equals(OP_REPOSITION) || operation.equals(OP_COLOR))
+        if (operation.equals(OP_EDIT) || operation.equals(OP_REPOSITION))
             successes = handleNote(octxt, operation, action, mbox);
         else
             successes = handleCommon(octxt, operation, action, mbox, MailItem.TYPE_NOTE);
@@ -81,9 +80,6 @@ public class NoteAction extends ItemAction {
         } else if (operation.equals(OP_REPOSITION)) {
             String strBounds = action.getAttribute(MailService.A_BOUNDS, null);
             mbox.repositionNote(octxt, id, new Rectangle(strBounds));
-        } else if (operation.equals(OP_COLOR)) {
-            byte color = (byte) action.getAttributeLong(MailService.A_COLOR, Note.DEFAULT_COLOR);
-            mbox.colorNote(octxt, id, color);
         } else
             throw ServiceException.INVALID_REQUEST("unknown operation: " + operation, null);
 

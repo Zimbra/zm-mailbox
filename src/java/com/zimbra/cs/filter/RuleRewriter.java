@@ -44,6 +44,7 @@ import org.apache.jsieve.parser.generated.ASTstring_list;
 import org.apache.jsieve.parser.generated.ASTtest;
 import org.apache.jsieve.parser.generated.Node;
 
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Tag;
@@ -351,7 +352,7 @@ class RuleRewriter {
                 } catch (MailServiceException.NoSuchItemException e) {
                     try {
                         // create folder
-                        mMailbox.createFolder(null, argVal, (byte) 0);
+                        mMailbox.createFolder(null, argVal, (byte) 0, MailItem.TYPE_UNKNOWN);
                         ZimbraLog.filter.info("Created folder " + argVal + " referenced in rule \"" + ruleName + "\"");
                     } catch (MailServiceException e1) {
                         throw ServiceException.FAILURE("unable to create inexistent folder (" + argVal + ") in rule \"" + ruleName + "\"", e1);

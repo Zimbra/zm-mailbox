@@ -83,6 +83,13 @@ public abstract class MailItem implements Comparable {
     public static String getNameForType(byte type) {
         return (type == TYPE_UNKNOWN ? "unknown" : TYPE_NAMES[type]);
     }
+    public static byte getTypeForName(String name) {
+        if (name != null && !name.trim().equals(""))
+            for (byte i = 1; i < TYPE_NAMES.length; i++)
+                if (name.equals(TYPE_NAMES[i]))
+                    return i;
+        return TYPE_UNKNOWN;
+    }
 
     public static final int FLAG_UNCHANGED = 0x80000000;
     public static final long TAG_UNCHANGED = (1L << 31);
@@ -90,6 +97,8 @@ public abstract class MailItem implements Comparable {
     public static final int TAG_ID_OFFSET  = 64;
     public static final int MAX_FLAG_COUNT = 31;
     public static final int MAX_TAG_COUNT  = 63;
+
+    public static final byte DEFAULT_COLOR = 0;
 
 	public static final class Array {
 		private static final int INITIAL_ARRAY_SIZE = 3;
@@ -333,6 +342,7 @@ public abstract class MailItem implements Comparable {
     }
 
 	protected int            mId;
+    protected byte           mColor = DEFAULT_COLOR;
 	protected UnderlyingData mData;
 	protected Mailbox        mMailbox;
 	protected Array          mChildren;
@@ -368,6 +378,10 @@ public abstract class MailItem implements Comparable {
 
     public int getMailboxId() {
         return mMailbox.getId();
+    }
+
+    public byte getColor() {
+        return mColor;
     }
 
     public int getParentId() {
@@ -645,6 +659,16 @@ public abstract class MailItem implements Comparable {
 	    if (this instanceof Message)
 	        folder.updateMessageCount(1);
 	}
+
+    void setColor(byte color) throws ServiceException {
+        if (!isMutable())
+            throw MailServiceException.IMMUTABLE_OBJECT(mId);
+        if (color == mColor)
+            return;
+        markItemModified(Change.MODIFIED_COLOR);
+        mColor = color;
+        saveMetadata();
+    }
 
     void detach() throws ServiceException  { }
 
@@ -1035,8 +1059,25 @@ public abstract class MailItem implements Comparable {
 	}
 
 
-    abstract String encodeMetadata();
-    abstract Metadata   decodeMetadata(String metadata) throws ServiceException;
+    String encodeMetadata() {
+        return encodeMetadata(new Metadata()).toString();
+    }
+    abstract Metadata encodeMetadata(Metadata meta);
+    static Metadata encodeMetadata(Metadata meta, byte color) {
+        if (color != DEFAULT_COLOR)
+            meta.put(Metadata.FN_COLOR, color);
+        return meta;
+    }
+
+    void decodeMetadata(String metadata) throws ServiceException {
+        decodeMetadata(new Metadata(metadata, this));
+    }
+    void decodeMetadata(Metadata meta) throws ServiceException {
+        if (meta != null)
+            return;
+        mColor = (byte) meta.getLong(Metadata.FN_COLOR, DEFAULT_COLOR);
+    }
+
 
     protected void saveMetadata() throws ServiceException {
         saveMetadata(encodeMetadata());
@@ -1073,6 +1114,7 @@ public abstract class MailItem implements Comparable {
     private static final String CN_TAGS           = "tags";
     private static final String CN_SUBJECT        = "subject";
     private static final String CN_CHILDREN       = "children";
+    private static final String CN_COLOR          = "color";
 
     protected StringBuffer appendCommonMembers(StringBuffer sb) {
         sb.append(CN_ID).append(": ").append(mId).append(", ");
@@ -1084,6 +1126,7 @@ public abstract class MailItem implements Comparable {
         sb.append(CN_SIZE).append(": ").append(mData.size).append(", ");
         sb.append(CN_REVISION).append(": ").append(mData.modContent).append(", ");
         sb.append(CN_UNREAD_COUNT).append(": ").append(mData.unreadCount).append(", ");
+        sb.append(CN_COLOR).append(": ").append(mColor).append(", ");
         if (mData.flags != 0)
         	sb.append(CN_FLAGS).append(": ").append(getFlagString()).append(", ");
         if (mData.tags != 0)

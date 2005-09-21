@@ -94,7 +94,7 @@ public class SearchFolder extends Folder {
         data.parentId    = parent.getId();
         data.date        = mbox.getOperationTimestamp();
         data.subject     = name;
-        data.metadata    = encodeMetadata(query, types, sort);
+        data.metadata    = encodeMetadata(DEFAULT_COLOR, query, types, sort);
         data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
         
@@ -126,23 +126,24 @@ public class SearchFolder extends Folder {
     }
 
 
-    Metadata decodeMetadata(String metadata) throws ServiceException {
-        Metadata meta = new Metadata(metadata, this);
+    void decodeMetadata(Metadata meta) throws ServiceException {
+        super.decodeMetadata(meta);
         mQuery = meta.get(Metadata.FN_QUERY);
         mTypes = meta.get(Metadata.FN_TYPES, null);
         mSort = meta.get(Metadata.FN_SORT, null);
-        return meta;
     }
 
-    String encodeMetadata() {
-        return encodeMetadata(mQuery, mTypes, mSort);
+    Metadata encodeMetadata(Metadata meta) {
+        return encodeMetadata(meta, mColor, mQuery, mTypes, mSort);
     }
-    static String encodeMetadata(String query, String types, String sort) {
-        Metadata meta = new Metadata();
+    private static String encodeMetadata(byte color, String query, String types, String sort) {
+        return encodeMetadata(new Metadata(), color, query, types, sort).toString();
+    }
+    static Metadata encodeMetadata(Metadata meta, byte color, String query, String types, String sort) {
         meta.put(Metadata.FN_QUERY, query);
         meta.put(Metadata.FN_TYPES, types);
         meta.put(Metadata.FN_SORT,  sort);
-        return meta.toString();
+        return MailItem.encodeMetadata(meta, color);
     }
 
 

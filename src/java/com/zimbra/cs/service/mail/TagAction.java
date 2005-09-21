@@ -46,7 +46,6 @@ public class TagAction extends ItemAction  {
     public static final String OP_UNFLAG = '!' + OP_FLAG;
     public static final String OP_UNTAG  = '!' + OP_TAG;
 	public static final String OP_RENAME = "rename";
-	public static final String OP_COLOR  = "color";
 	
 	public Element handle(Element request, Map context) throws ServiceException {
 		ZimbraContext lc = getZimbraContext(context);
@@ -61,7 +60,7 @@ public class TagAction extends ItemAction  {
         if (operation.endsWith(OP_MOVE) || operation.endsWith(OP_UPDATE) || operation.endsWith(OP_SPAM))
             throw ServiceException.INVALID_REQUEST("invalid operation on tag: " + operation, null);
         String successes;
-        if (operation.equals(OP_RENAME) || operation.equals(OP_COLOR))
+        if (operation.equals(OP_RENAME))
             successes = handleTag(octxt, operation, action, mbox);
         else
             successes = handleCommon(octxt, operation, action, mbox, MailItem.TYPE_TAG);
@@ -80,9 +79,6 @@ public class TagAction extends ItemAction  {
         if (operation.equals(OP_RENAME)) {
             String name = action.getAttribute(MailService.A_NAME);
             mbox.renameTag(octxt, id, name);
-        } else if (operation.equals(OP_COLOR)) {
-            byte color = (byte) action.getAttributeLong(MailService.A_COLOR);
-            mbox.colorTag(octxt, id, color);
         } else
             throw ServiceException.INVALID_REQUEST("unknown operation: " + operation, null);
 

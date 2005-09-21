@@ -811,7 +811,7 @@ public class ImapHandler extends ProtocolHandler {
         }
 
         try {
-            mMailbox.createFolder(getContext(), folderName, (byte) 0);
+            mMailbox.createFolder(getContext(), folderName, (byte) 0, MailItem.TYPE_MESSAGE);
         } catch (ServiceException e) {
             String cause = "CREATE failed";
             if (e.getCode() == MailServiceException.CANNOT_CONTAIN)

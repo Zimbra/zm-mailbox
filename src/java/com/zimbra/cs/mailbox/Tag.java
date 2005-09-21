@@ -41,9 +41,6 @@ import com.zimbra.cs.util.ZimbraLog;
  * @author dkarp
  */
 public class Tag extends MailItem {
-    public static final byte DEFAULT_COLOR = 0;
-
-    private byte mColor;
 
     Tag(Mailbox mbox, UnderlyingData ud) throws ServiceException {
         super(mbox, ud);
@@ -62,10 +59,6 @@ public class Tag extends MailItem {
 
     public long getBitmask() {
         return 1L << getIndex();
-    }
-
-    public byte getColor() {
-        return mColor;
     }
 
     boolean canTag(MailItem item) {
@@ -178,17 +171,6 @@ public class Tag extends MailItem {
         return name;
     }
 
-    void setColor(byte color) throws ServiceException {
-        if (!isMutable())
-            throw MailServiceException.IMMUTABLE_OBJECT(mId);
-
-        if (color == mColor)
-            return;
-        markItemModified(Change.MODIFIED_COLOR);
-        mColor = color;
-        saveMetadata();
-    }
-
     void alterUnread(boolean unread) throws ServiceException {
         if (unread)
             throw ServiceException.INVALID_REQUEST("tags can only be marked read", null);
@@ -218,30 +200,25 @@ public class Tag extends MailItem {
     }
 
 
-    Metadata decodeMetadata(String metadata) throws ServiceException {
-        Metadata meta = new Metadata(metadata, this);
-        mColor = (byte) meta.getLong(Metadata.FN_COLOR, DEFAULT_COLOR);
-        return meta;
+    void decodeMetadata(Metadata meta) throws ServiceException {
+        super.decodeMetadata(meta);
     }
 
-    String encodeMetadata() {
-        return encodeMetadata(mColor);
+    Metadata encodeMetadata(Metadata meta) {
+        return encodeMetadata(meta, mColor);
     }
     private static String encodeMetadata(byte color) {
-        Metadata meta = new Metadata();
-        if (color != DEFAULT_COLOR)
-            meta.put(Metadata.FN_COLOR, color);
-        return meta.toString();
+        return encodeMetadata(new Metadata(), color).toString();
+    }
+    static Metadata encodeMetadata(Metadata meta, byte color) {
+        return MailItem.encodeMetadata(meta, color);
     }
 
-
-    private static final String CN_COLOR = "color";
     
     public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("tag: {");
-        appendCommonMembers(sb).append(", ");
-        sb.append(CN_COLOR).append(": ").append(mColor);
+        appendCommonMembers(sb);
         sb.append("}");
         return sb.toString();
     }

@@ -98,8 +98,8 @@ public abstract class RedoableOp {
     public static final int OP_MODIFY_SAVED_SEARCH      = 13;
     public static final int OP_CREATE_TAG               = 14;
     public static final int OP_RENAME_TAG               = 15;
-    public static final int OP_COLOR_TAG                = 16;
 
+    public static final int OP_COLOR_ITEM               = 16;
     public static final int OP_INDEX_ITEM               = 17;
     public static final int OP_ALTER_ITEM_TAG           = 18;
     public static final int OP_SET_ITEM_TAGS            = 19;
@@ -119,7 +119,7 @@ public abstract class RedoableOp {
     public static final int OP_CREATE_NOTE              = 32;
     public static final int OP_EDIT_NOTE                = 33;
     public static final int OP_REPOSITION_NOTE          = 34;
-    public static final int OP_COLOR_NOTE               = 35;
+//    public static final int OP_COLOR_NOTE               = 35;
     
     public static final int OP_MODIFY_INVITE_FLAG       = 36;
     public static final int OP_MODIFY_INVITE_PARTSTAT   = 37;
@@ -131,7 +131,7 @@ public abstract class RedoableOp {
     public static final int OP_MOVE_BLOBS               = 42;
     public static final int OP_CREATE_INVITE            = 43;
 
-	public static final int OP_LAST				       = 44;
+    public static final int OP_LAST				        = 44;
 
 	// Element index is same as Redoable.OP_* constants.
 	// The strings must match the class names.
@@ -152,7 +152,7 @@ public abstract class RedoableOp {
         "ModifySavedSearch",
         "CreateTag",
         "RenameTag",
-        "ColorTag",
+        "ColorItem",
         "IndexItem",
         "AlterItemTag",
         "SetItemTags",
@@ -171,7 +171,7 @@ public abstract class RedoableOp {
         "CreateNote",
         "EditNote",
         "RepositionNote",
-        "ColorNote",
+        "UNKNOWN",
         "ModifyInviteFlag",
         "ModifyInvitePartStat",
         "CreateVolume",

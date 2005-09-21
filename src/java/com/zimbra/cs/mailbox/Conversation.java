@@ -314,7 +314,7 @@ public class Conversation extends MailItem {
         data.subject     = msgs.length > 0 ? msgs[0].getNormalizedSubject() : "";
         data.date        = date;
         data.size        = msgs.length;
-        data.metadata    = encodeMetadata(sl, data.subject, msgs.length > 0 ? msgs[0].getSubject() : "");
+        data.metadata    = encodeMetadata(DEFAULT_COLOR, sl, data.subject, msgs.length > 0 ? msgs[0].getSubject() : "");
         data.unreadCount = unread;
         data.children    = children.toString();
         data.inheritedTags = tags.toString();
@@ -663,7 +663,7 @@ public class Conversation extends MailItem {
     }
 
 
-    Metadata decodeMetadata(String metadata) throws ServiceException {
+    void decodeMetadata(String metadata) throws ServiceException {
         String content = metadata;
         while (content.length() > 0 && Character.isDigit(content.charAt(0))) {
             int delimiter = content.indexOf(':');
@@ -679,14 +679,24 @@ public class Conversation extends MailItem {
             Message[] msgs = getMessages(SORT_ID_ASCENDING);
             recalculateMetadata(msgs, true);
             recalculateSubject(msgs[0]);
-            return null;
+            return;
         }
 
-        mEncodedSenders = meta.get(Metadata.FN_SENDER_LIST, null);
         // if emptying trash told us that we're short a few messages, pass that info to the SenderList
-        if (mEncodedSenders != null && content != metadata)
-            mEncodedSenders = metadata.substring(0, metadata.length() - content.length()) + mEncodedSenders;
+        String encoded = meta.get(Metadata.FN_SENDER_LIST, null);
+        if (encoded != null && content != metadata)
+            meta.put(Metadata.FN_SENDER_LIST, metadata.substring(0, metadata.length() - content.length()) + encoded);
 
+        decodeMetadata(meta);
+
+        // if the subject changed due to trash emptying, better find out now...
+        if (mEncodedSenders == null || content != metadata)
+            getSenderList();
+    }
+    void decodeMetadata(Metadata meta) throws ServiceException {
+        super.decodeMetadata(meta);
+
+        mEncodedSenders = meta.get(Metadata.FN_SENDER_LIST, null);
         mRawSubject = mData.subject;
         String prefix = meta.get(Metadata.FN_PREFIX, null);
         if (prefix != null)
@@ -694,27 +704,24 @@ public class Conversation extends MailItem {
         String rawSubject = meta.get(Metadata.FN_RAW_SUBJ, null);
         if (rawSubject != null)
             mRawSubject = rawSubject;
-
-        // if the subject changed due to trash emptying, better find out now...
-        if (mEncodedSenders == null || content != metadata)
-            getSenderList();
-
-        return meta;
     }
 
-    String encodeMetadata() {
-        if (mEncodedSenders != null)
-            return encodeMetadata(mEncodedSenders, mData.subject, mRawSubject);
+    Metadata encodeMetadata(Metadata meta) {
         try {
-        	return encodeMetadata(mSenderList == null ? getSenderList() : mSenderList, mData.subject, mRawSubject);
+            String encoded = mEncodedSenders;
+            if (encoded == null) {
+                SenderList senders = mSenderList == null ? getSenderList() : mSenderList;
+                encoded = senders == null ? null : senders.toString();
+            }
+        	return encodeMetadata(meta, mColor, encoded, mData.subject, mRawSubject);
         } catch (ServiceException e) {
-            return encodeMetadata((String) null, mData.subject, mRawSubject);
+            return encodeMetadata(meta, mColor, null, mData.subject, mRawSubject);
         }
     }
-    static String encodeMetadata(SenderList senders, String subject, String rawSubject) {
-        return encodeMetadata(senders == null ? null : senders.toString(), subject, rawSubject);
+    static String encodeMetadata(byte color, SenderList senders, String subject, String rawSubject) {
+        return encodeMetadata(new Metadata(), color, senders.toString(), subject, rawSubject).toString();
     }
-    private static String encodeMetadata(String encodedSenders, String subject, String rawSubject) {
+    static Metadata encodeMetadata(Metadata meta, byte color, String encodedSenders, String subject, String rawSubject) {
         String prefix = null;
         if (rawSubject == null || rawSubject.equals(subject))
             rawSubject = null;
@@ -723,11 +730,11 @@ public class Conversation extends MailItem {
             rawSubject = null;
         }
 
-        Metadata meta = new Metadata();
         meta.put(Metadata.FN_PREFIX,      prefix);
         meta.put(Metadata.FN_RAW_SUBJ,    rawSubject);
         meta.put(Metadata.FN_SENDER_LIST, encodedSenders);
-        return meta.toString();
+
+        return MailItem.encodeMetadata(meta, color);
     }
 
 

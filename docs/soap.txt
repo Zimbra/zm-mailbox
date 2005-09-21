@@ -491,13 +491,15 @@ Conversations:
                  
 Folders:
 
-  <folder id="{folder-id}" name="{folder-name}" l="{parent-id}" u="{unread}" n="<msg-count}"/>
+  <folder id="{folder-id}" name="{folder-name}" l="{parent-id}" [color="{color}"] u="{unread}" n="{msg-count}" [view="{default-type}"]/>
   
-  {folder-name} = name of folder; max length 128; whitespace is trimmed by server;
-                  cannot contain ':', '"', '/', or any character below 0x20
-  {parent-id}   = id of parent folder (absent for root folder)
-  {unread}      = number of unread messages in folder
-  {msg-count}   = number of messages/invites in folder
+  {folder-name}  = name of folder; max length 128; whitespace is trimmed by server;
+                   cannot contain ':', '"', '/', or any character below 0x20
+  {parent-id}    = id of parent folder (absent for root folder)
+  {color}        = numeric; range 0-127; defaults to 0 if not present; client can display only 0-7
+  {unread}       = number of unread messages in folder
+  {msg-count}    = number of messages/invites in folder
+  {default-type} = default type for the folder; used by web client to decide which view to use
 
 Tags:
 
@@ -724,7 +726,7 @@ subId="nn" to return a message which is stored as a subpart of some other mail-i
 ---------
 
 <CreateFolderRequest>
-  <folder name="..." l="{parent-folder}" [fie="1"]/>
+  <folder name="..." l="{parent-folder}" [fie="1"] [view="{default-type}"]/>
 </CreateFolderRequest>
 
 <CreateFolderResponse>
@@ -813,11 +815,11 @@ if fie="1" is set, the server will fetch the folder if it already exists rather 
 ---------
 
 <FolderActionRequest>
-  <action id="{list}" op="read|delete|rename|move|empty" name="..."  l="{target-folder}"/>
+  <action id="{list}" op="read|delete|rename|move|empty|color" name="..." [l="{target-folder}"] [color="..."]/>
 </FolderActionRequest>
 
 <FolderActionResponse>
-  <action id="{list}" op="read|delete|rename|move|empty"/>
+  <action id="{list}" op="read|delete|rename|move|empty|color"/>
 </FolderActionResponse>
 
   {list} = on input, list of folders to act on, on output, list of

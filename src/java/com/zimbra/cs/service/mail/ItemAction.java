@@ -49,6 +49,7 @@ public class ItemAction extends WriteOpDocumentHandler {
     public static final String OP_TAG         = "tag";
     public static final String OP_FLAG        = "flag";
     public static final String OP_READ        = "read";
+    public static final String OP_COLOR       = "color";
     public static final String OP_HARD_DELETE = "delete";
     public static final String OP_MOVE        = "move";
     public static final String OP_SPAM        = "spam";
@@ -99,6 +100,9 @@ public class ItemAction extends WriteOpDocumentHandler {
             else if (op.equals(OP_TAG)) {
                 int tagId = (int) action.getAttributeLong(MailService.A_TAG);
                 mbox.alterTag(octxt, id, type, tagId, flagValue, tcon);
+            } else if (op.equals(OP_COLOR)) {
+                byte color = (byte) action.getAttributeLong(MailService.A_COLOR);
+                mbox.setColor(octxt, id, type, color);
             } else if (op.equals(OP_HARD_DELETE))
                 mbox.delete(octxt, id, type, tcon);
             else if (op.equals(OP_MOVE)) {

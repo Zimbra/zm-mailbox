@@ -42,14 +42,16 @@ public class CreateFolder extends RedoableOp {
 
     private String mName;
     private byte mAttrs;
+    private byte mHint;
     private int mFolderIds[];
 
     public CreateFolder() { }
 
-    public CreateFolder(int mailboxId, String name, byte attrs) {
+    public CreateFolder(int mailboxId, String name, byte attrs, byte hint) {
         setMailboxId(mailboxId);
         mName = name != null ? name : "";
         mAttrs = attrs;
+        mHint = hint;
     }
 
     public int[] getFolderIds() {
@@ -67,6 +69,7 @@ public class CreateFolder extends RedoableOp {
     protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("name=").append(mName);
         sb.append(", attrs=").append(mAttrs);
+        sb.append(", view-hint=").append(mHint);
         if (mFolderIds != null) {
             sb.append(", folderIds=[");
             for (int i = 0; i < mFolderIds.length; i++) {
@@ -82,6 +85,7 @@ public class CreateFolder extends RedoableOp {
     protected void serializeData(DataOutput out) throws IOException {
         writeUTF8(out, mName);
         out.writeByte(mAttrs);
+        out.writeByte(mHint);
         if (mFolderIds != null) {
             out.writeInt(mFolderIds.length);
             for (int i = 0; i < mFolderIds.length; i++)
@@ -93,6 +97,7 @@ public class CreateFolder extends RedoableOp {
     protected void deserializeData(DataInput in) throws IOException {
         mName = readUTF8(in);
         mAttrs = in.readByte();
+        mHint = in.readByte();
         int numParentIds = in.readInt();
         if (numParentIds > 0) {
             mFolderIds = new int[numParentIds];
@@ -105,7 +110,7 @@ public class CreateFolder extends RedoableOp {
         int mboxId = getMailboxId();
         Mailbox mailbox = Mailbox.getMailboxById(mboxId);
         try {
-            mailbox.createFolder(getOperationContext(), mName, mAttrs);
+            mailbox.createFolder(getOperationContext(), mName, mAttrs, mHint);
         } catch (MailServiceException e) {
             String code = e.getCode();
             if (code.equals(MailServiceException.ALREADY_EXISTS)) {

@@ -31,6 +31,7 @@ package com.zimbra.cs.service.mail;
 import java.util.Map;
 
 import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.service.Element;
@@ -50,10 +51,11 @@ public class CreateFolder extends WriteOpDocumentHandler {
         Element t = request.getElement(MailService.E_FOLDER);
         String name = t.getAttribute(MailService.A_NAME);
         int parentId = (int) t.getAttributeLong(MailService.A_FOLDER);
-        
+        String view = t.getAttribute(MailService.A_DEFAULT_VIEW, null);
+
         Folder folder;
         try {
-            folder = mbox.createFolder(null, name, parentId);
+            folder = mbox.createFolder(null, name, parentId, MailItem.getTypeForName(view));
         } catch (ServiceException se) {
             if (se.getCode() == MailServiceException.ALREADY_EXISTS && t.getAttributeBool(MailService.A_FETCH_IF_EXISTS, false))
                 folder = mbox.getFolderByName(parentId, name);

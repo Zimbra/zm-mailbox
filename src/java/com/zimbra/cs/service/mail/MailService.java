@@ -241,6 +241,7 @@ public class MailService implements DocumentService {
     public static final String A_CONTENT_NAME = "name";
     public static final String A_CONTENT_FILENAME = "filename";
     public static final String A_OPERATION = "op";
+    public static final String A_DEFAULT_VIEW = "view";
 	public static final String A_QUERY = "query";
 	public static final String A_UNREAD = "u";
 	public static final String A_COLOR = "color";

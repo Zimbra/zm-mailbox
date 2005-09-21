@@ -96,7 +96,7 @@ public class Document extends MailItem {
         data.date        = mbox.getOperationTimestamp();
         data.size        = (int) content.length();
         data.subject     = filename;
-        data.metadata    = encodeMetadata(type, null);
+        data.metadata    = encodeMetadata(DEFAULT_COLOR, type, null);
         data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
 
@@ -107,21 +107,22 @@ public class Document extends MailItem {
     }
 
 
-    Metadata decodeMetadata(String metadata) throws ServiceException {
-        Metadata meta = new Metadata(metadata, this);
+    void decodeMetadata(Metadata meta) throws ServiceException {
+        super.decodeMetadata(meta);
         mFragment    = meta.get(Metadata.FN_FRAGMENT, null);
         mContentType = meta.get(Metadata.FN_MIME_TYPE, Mime.CT_DEFAULT);
-        return meta;
     }
 
-    String encodeMetadata() {
-        return encodeMetadata(mContentType, mFragment);
+    Metadata encodeMetadata(Metadata meta) {
+        return encodeMetadata(meta, mColor, mContentType, mFragment);
     }
-    private static String encodeMetadata(String contentType, String fragment) {
-        Metadata meta = new Metadata();
+    private static String encodeMetadata(byte color, String contentType, String fragment) {
+        return encodeMetadata(new Metadata(), color, contentType, fragment).toString();
+    }
+    static Metadata encodeMetadata(Metadata meta, byte color, String contentType, String fragment) {
         meta.put(Metadata.FN_FRAGMENT,  fragment);
         meta.put(Metadata.FN_MIME_TYPE, contentType);
-        return meta.toString();
+        return MailItem.encodeMetadata(meta, color);
     }
 
 

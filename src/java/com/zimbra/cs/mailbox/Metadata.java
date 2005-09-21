@@ -45,7 +45,7 @@ public class Metadata {
      * to check the version number, so make sure to look at the code if you depend 
      * on this.
      */
-    static final int CURRENT_METADATA_VERSION = 8;
+    static final int CURRENT_METADATA_VERSION = 9;
     
     // MetaData attributes used in toplevel metadata for MailItems.
     
@@ -74,6 +74,7 @@ public class Metadata {
     static final String FN_FRAGMENT        = "f";
     static final String FN_FIRST           = "f";
     static final String FN_APPT_FREEBUSY   = "fb";
+    static final String FN_FIELDS          = "fld";
     static final String FN_IMAP_ID         = "i4";
     static final String FN_INV             = "inv";
     static final String FN_LOCATION        = "l";
@@ -102,6 +103,7 @@ public class Metadata {
     static final String FN_TZMAP           = "tzm"; // calendaring: timezone map
     static final String FN_UID             = "u";
     static final String FN_MD_VERSION      = "v"; // metadata version
+    static final String FN_VIEW            = "vt";
     static final String FN_ELIDED          = "X";
 
 

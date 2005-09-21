@@ -74,7 +74,7 @@ public class TestFolders extends TestCase
         Folder top = null;
         
         for (int i = 1; i <= NUM_LEVELS; i++) {
-            Folder folder = mMbox.createFolder(null, FOLDER_PREFIX + i, parentId);
+            Folder folder = mMbox.createFolder(null, FOLDER_PREFIX + i, parentId, MailItem.TYPE_UNKNOWN);
             if (i == 1) {
                 top = folder;
             }

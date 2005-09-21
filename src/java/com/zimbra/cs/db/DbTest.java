@@ -284,7 +284,7 @@ public class DbTest {
 			if (name.indexOf('/') != -1)
 				System.out.println(name + ": invalid folder name");
 			else {
-				Folder folder = mailbox.createFolder(null, name, location);
+				Folder folder = mailbox.createFolder(null, name, location, MailItem.TYPE_UNKNOWN);
 				if (folder == null)
 					System.out.println("error: failure during request");
 			}
@@ -552,7 +552,7 @@ public class DbTest {
 			System.out.println(usage);
 			return;
 		}
-		mailbox.colorTag(null, tagId, Byte.parseByte(tok.nextToken()));
+		mailbox.setColor(null, tagId, MailItem.TYPE_TAG, Byte.parseByte(tok.nextToken()));
 		displayTagSummary(mailbox.getTagById(tagId));
 	}
 	

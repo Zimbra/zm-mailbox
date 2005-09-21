@@ -39,16 +39,19 @@ import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.StringUtil;
+import com.zimbra.cs.util.ZimbraLog;
 
 
 /**
  * @author dkarp
  */
 public class Folder extends MailItem {
-	public static final byte FOLDER_IS_IMMUTABLE    = 0x01;
+
+    public static final byte FOLDER_IS_IMMUTABLE    = 0x01;
     public static final byte FOLDER_NO_UNREAD_COUNT = 0x02;
 
 	private byte      mAttributes;
+    private byte      mDefaultView;
 	private ArrayList mSubfolders;
     private Folder    mParent;
 
@@ -64,8 +67,8 @@ public class Folder extends MailItem {
     }
 
     public String getName() {
-		return (mData.subject == null ? "" : mData.subject);
-	}
+        return (mData.subject == null ? "" : mData.subject);
+    }
 
     public String getPath() {
         if (mId == Mailbox.ID_FOLDER_ROOT || mId == Mailbox.ID_FOLDER_USER_ROOT)
@@ -74,9 +77,18 @@ public class Folder extends MailItem {
         return parentPath + (parentPath.equals("/") ? "" : "/") + getName();
     }
 
+    /** Returns the "hint" as to which view to use to display the folder's
+     *  contents.  For instance, if the default view for the folder is
+     *  {@link MailItem#TYPE_APPOINTMENT}, the client would render the
+     *  contents using the calendar app.<p>
+     *  Defaults to {@link MailItem#TYPE_UNKNOWN}.*/
+    public byte getDefaultView() {
+        return mDefaultView;
+    }
+
     public byte getAttributes() {
-	    return mAttributes;
-	}
+        return mAttributes;
+    }
 
     public boolean inTrash() throws ServiceException {
         if (mId <= Mailbox.HIGHEST_SYSTEM_ID)
@@ -84,9 +96,9 @@ public class Folder extends MailItem {
         return mParent.inTrash();
     }
 
-	public boolean inSpam() {
-		return (mId == Mailbox.ID_FOLDER_SPAM);
-	}
+    public boolean inSpam() {
+        return (mId == Mailbox.ID_FOLDER_SPAM);
+    }
     
     public boolean isHidden() throws ServiceException {
         switch (mId) {
@@ -180,9 +192,9 @@ public class Folder extends MailItem {
 
 
 	static Folder create(Mailbox mbox, int id, Folder parent, String name) throws ServiceException {
-		return create(mbox, id, parent, name, (byte) 0);
+		return create(mbox, id, parent, name, (byte) 0, TYPE_UNKNOWN);
 	}
-	static Folder create(Mailbox mbox, int id, Folder parent, String name, byte attributes) throws ServiceException {
+	static Folder create(Mailbox mbox, int id, Folder parent, String name, byte attributes, byte view) throws ServiceException {
         if (id != Mailbox.ID_FOLDER_ROOT) {
     		if (parent == null || !parent.canContain(TYPE_FOLDER))
     			throw MailServiceException.CANNOT_CONTAIN();
@@ -198,12 +210,13 @@ public class Folder extends MailItem {
 		data.parentId    = data.folderId;
         data.date        = mbox.getOperationTimestamp();
         data.subject     = name;
-		data.metadata    = encodeMetadata(attributes);
+		data.metadata    = encodeMetadata(DEFAULT_COLOR, attributes, view);
         data.contentChanged(mbox);
 		DbMailItem.create(mbox, data);
 
 		Folder folder = new Folder(mbox, data);
 		folder.finishCreation(parent);
+        ZimbraLog.mailbox.info("created folder " + name + " (" + folder.getDefaultView() + ')');
 		return folder;
 	}
 
@@ -486,26 +499,34 @@ public class Folder extends MailItem {
         // don't actually delete the blobs or index entries here; wait until after the commit
     }
 
+    protected void saveMetadata(String metadata) throws ServiceException {
+        mData.metadataChanged(mMailbox);
+        DbMailItem.saveMetadata(this, 0, metadata);
+    }
     protected void saveSubject() throws ServiceException {
         mData.metadataChanged(mMailbox);
         DbMailItem.saveSubject(this, 0);
     }
 
 
-	Metadata decodeMetadata(String metadata) throws ServiceException {
-		Metadata meta = new Metadata(metadata, this);
-		mAttributes = (byte) meta.getLong(Metadata.FN_ATTRS, 0);
-        return meta;
+	void decodeMetadata(Metadata meta) throws ServiceException {
+        super.decodeMetadata(meta);
+        mAttributes  = (byte) meta.getLong(Metadata.FN_ATTRS, 0);
+        mDefaultView = (byte) meta.getLong(Metadata.FN_VIEW, TYPE_UNKNOWN);
 	}
 	
-	String encodeMetadata() {
-		return encodeMetadata(mAttributes);
+	Metadata encodeMetadata(Metadata meta) {
+		return encodeMetadata(meta, mColor, mAttributes, mDefaultView);
 	}
-	static String encodeMetadata(byte attributes) {
-		Metadata meta = new Metadata();
-		if (attributes != 0)
-			meta.put(Metadata.FN_ATTRS, attributes);
-		return meta.toString();
+    private static String encodeMetadata(byte color, byte attributes, byte hint) {
+        return encodeMetadata(new Metadata(), color, attributes, hint).toString();
+    }
+	static Metadata encodeMetadata(Metadata meta, byte color, byte attributes, byte hint) {
+        if (attributes != 0)
+            meta.put(Metadata.FN_ATTRS, attributes);
+        if (hint != TYPE_UNKNOWN)
+            meta.put(Metadata.FN_VIEW, hint);
+		return MailItem.encodeMetadata(meta, color);
 	}
 
 

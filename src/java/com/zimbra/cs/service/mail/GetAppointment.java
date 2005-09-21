@@ -34,7 +34,6 @@ import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraContext;
 
@@ -51,20 +50,18 @@ public class GetAppointment extends DocumentHandler
 
     public Element handle(Element request, Map context)
             throws ServiceException {
-        
+
         ZimbraContext lc = getZimbraContext(context);
-        Mailbox mbx = getRequestedMailbox(lc);
+        Mailbox mbox = getRequestedMailbox(lc);
         
-        int apptId = (int)request.getAttributeLong("id");
+        int apptId = (int) request.getAttributeLong("id");
         sLog.info("<GetAppointment id="+apptId+"> " + lc.toString());
         
         Element response = lc.createElement(MailService.GET_APPOINTMENT_RESPONSE);
         
-        synchronized(mbx) {
-        
-            Appointment appointment = mbx.getAppointmentById(apptId);
-            
-            ToXML.encodeApptSummary(response, appointment, Change.ALL_FIELDS);
+        synchronized(mbox) {
+            Appointment appointment = mbox.getAppointmentById(apptId);
+            ToXML.encodeApptSummary(response, appointment, ToXML.NOTIFY_FIELDS);
         }
         
         return response;

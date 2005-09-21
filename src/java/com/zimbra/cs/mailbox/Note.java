@@ -66,11 +66,8 @@ public class Note extends MailItem {
 
         public String toString()  { return x + "," + y + "," + width + "," + height; }
     }
-
-    public static final byte DEFAULT_COLOR = 0;
     
     private Rectangle mBounds;
-    private byte      mColor;
 
     public Note(Mailbox mbox, UnderlyingData data) throws ServiceException {
         super(mbox, data);
@@ -84,10 +81,6 @@ public class Note extends MailItem {
 
     public Rectangle getBounds() {
         return new Rectangle(mBounds);
-    }
-    
-    public byte getColor() {
-        return mColor;
     }
 
 
@@ -117,7 +110,7 @@ public class Note extends MailItem {
         data.volumeId    = volumeId;
         data.date        = mbox.getOperationTimestamp();
         data.subject     = content;
-        data.metadata    = encodeMetadata(location, color);
+        data.metadata    = encodeMetadata(color, location);
         data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
         
@@ -160,43 +153,29 @@ public class Note extends MailItem {
         saveMetadata();
     }
 
-    void setColor(byte color) throws ServiceException {
-        if (!isMutable())
-            throw MailServiceException.IMMUTABLE_OBJECT(mId);
-        if (color == mColor)
-            return;
-        markItemModified(Change.MODIFIED_COLOR);
-        mColor = color;
-        saveMetadata();
-    }
-
-
-    Metadata decodeMetadata(String metadata) throws ServiceException {
-        Metadata meta  = new Metadata(metadata, this);
-        mColor = (byte) meta.getLong(Metadata.FN_COLOR, DEFAULT_COLOR);
+    void decodeMetadata(Metadata meta) throws ServiceException {
+        super.decodeMetadata(meta);
         mBounds = new Rectangle(meta.get(Metadata.FN_BOUNDS, null));
-        return meta;
     }
 
-    String encodeMetadata() {
-        return encodeMetadata(mBounds, mColor);
+    Metadata encodeMetadata(Metadata meta) {
+        return encodeMetadata(meta, mColor, mBounds);
     }
-    private static String encodeMetadata(Rectangle bounds, byte color) {
-        Metadata meta = new Metadata();
-        meta.put(Metadata.FN_COLOR,  color);
+    private static String encodeMetadata(byte color, Rectangle bounds) {
+        return encodeMetadata(new Metadata(), color, bounds).toString();
+    }
+    static Metadata encodeMetadata(Metadata meta, byte color, Rectangle bounds) {
         meta.put(Metadata.FN_BOUNDS, bounds);
-        return meta.toString();
+        return MailItem.encodeMetadata(meta, color);
     }
 
 
-    private static final String CN_COLOR   = "color";
     private static final String CN_BOUNDS  = "bounds";
 
     public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("note: {");
         appendCommonMembers(sb).append(", ");
-        sb.append(CN_COLOR).append(": ").append(mColor).append(", ");
         sb.append(CN_BOUNDS).append(": ").append(mBounds);
         sb.append("}");
         return sb.toString();
