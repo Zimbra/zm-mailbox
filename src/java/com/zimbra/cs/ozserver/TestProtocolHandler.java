@@ -84,7 +84,7 @@ class TestProtocolHandler implements OzProtocolHandler {
         if (!matched) {
             // A command has to fit in the standard buffer size
             connection.writeAscii("500 command too long!", true); // TODO test this
-            connection.closeNow();
+            connection.close();
             return;
         }
         String cmd = OzUtil.asciiByteArrayToString(content);
@@ -94,7 +94,7 @@ class TestProtocolHandler implements OzProtocolHandler {
             gotoReadingCommandState(connection);
         } else if (cmd.equals("quit")) {
             connection.writeAscii("200 buh bye", true);
-            connection.closeNow();
+            connection.close();
         } else if (cmd.equals("sum")) {
             gotoReadingSumDataState(connection);
         } else if (cmd.startsWith("nsum")) {
