@@ -428,7 +428,7 @@ public class Message extends MailItem {
                    return; // for now, just ignore this Invitation
                }
            } else {
-               appt.processNewInvite(pm, cur, volumeId);
+               appt.processNewInvite(pm, cur, false, volumeId);
            }
            
            ApptInfo info = new ApptInfo(appt.getId(), cur.getComponentNum());

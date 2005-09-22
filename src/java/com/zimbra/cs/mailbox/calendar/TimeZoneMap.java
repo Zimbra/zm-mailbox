@@ -96,6 +96,10 @@ public class TimeZoneMap {
     	return mLocalTZ;
     }
     
+    public Iterator tzIterator() {
+        return mTzMap.values().iterator();
+    }
+    
     public Metadata encodeAsMetadata() {
         // don't put TZs in there muliple times
         Metadata meta = new Metadata();

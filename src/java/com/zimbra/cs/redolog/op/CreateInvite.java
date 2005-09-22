@@ -40,10 +40,12 @@ public class CreateInvite extends RedoableOp implements CreateAppointmentRecorde
 {
     private int mApptId;
     private Invite mInvite;
+    private boolean mForce;
     
     protected void serializeData(DataOutput out) throws IOException 
     {
         out.writeInt(mApptId);
+        out.writeBoolean(mForce);
         
         ICalTimeZone localTz = mInvite.getTimeZoneMap().getLocalTimeZone();
         out.writeUTF(localTz.encodeAsMetadata().toString());
@@ -53,6 +55,7 @@ public class CreateInvite extends RedoableOp implements CreateAppointmentRecorde
 
     protected void deserializeData(DataInput in) throws IOException {
         mApptId = in.readInt();
+        mForce = in.readBoolean();
         
         try {
             ICalTimeZone localTz = ICalTimeZone.decodeFromMetadata(new Metadata(in.readUTF()));
@@ -79,6 +82,9 @@ public class CreateInvite extends RedoableOp implements CreateAppointmentRecorde
         return mInvite;
     }
     
+    public void setForce(boolean force) { mForce = force; }
+    public boolean getForce() { return mForce; }
+    
     public int getAppointmentId() {
         return mApptId;
     }
@@ -95,7 +101,7 @@ public class CreateInvite extends RedoableOp implements CreateAppointmentRecorde
         int mboxId = getMailboxId();
         Mailbox mailbox = Mailbox.getMailboxById(mboxId);
         
-        mailbox.addInvite(getOperationContext(), mInvite);
+        mailbox.addInvite(getOperationContext(), mInvite, mForce, null);
     }
 
     protected String getPrintableData() {

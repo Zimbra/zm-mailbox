@@ -38,6 +38,7 @@ import java.util.regex.Pattern;
 
 import com.zimbra.cs.service.ServiceException;
 
+import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Parameter;
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.parameter.TzId;
@@ -179,11 +180,15 @@ public final class ParsedDateTime {
     
     public net.fortuna.ical4j.model.Date iCal4jDate() throws ServiceException {
         try {
+            net.fortuna.ical4j.model.Date toRet;         
             if (mHasTime) {
-                return new net.fortuna.ical4j.model.DateTime(getDateTimePartString());
+                DateTime dtToRet = new net.fortuna.ical4j.model.DateTime(getDateTimePartString());
+//                dtToRet.setTimeZone(getTimeZone());
+                toRet = dtToRet;
             } else {
-                return new net.fortuna.ical4j.model.Date(this.getDateTimePartString());
+                toRet = new net.fortuna.ical4j.model.Date(this.getDateTimePartString());
             }
+            return toRet;
         } catch (ParseException e) {
             throw ServiceException.FAILURE("Caught ParseException: "+e, e);
         }
@@ -347,6 +352,9 @@ public final class ParsedDateTime {
         }
     }
     
+    /**
+     * @return The name of the TimeZone
+     */
     public String getTZName() {
         if (mHasTime && mTzName!=null && !mTzName.equals("Z")) {
             return mTzName; 
@@ -354,7 +362,10 @@ public final class ParsedDateTime {
         return null;
     }
 
-    public String getTZParamString() {
+    /**
+     * @return The full RFC2445 parameter string (ie "TZID=blah;") 
+     */
+    private String getTZParamString() {
         if (mHasTime && mTzName!=null && !mTzName.equals("Z")) {
             return "TZID="+mTzName+":";
         }

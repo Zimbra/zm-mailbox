@@ -2050,7 +2050,19 @@ public class Mailbox {
         return getItemList(MailItem.TYPE_APPOINTMENT, folderId);
     }
     
-    public synchronized void addInvite(OperationContext octxt, Invite inv) throws ServiceException
+    /**
+     * Directly add an Invite into the system...this process also gets triggered when we add a Message
+     * that has a text/calendar Mime part: but this API is useful when you don't want to add a corresponding
+     * message.
+     * 
+     * @param octxt
+     * @param inv
+     * @param pm
+     * @param force if true, then force override the existing appointment, false use normal RFC2446 sequencing rules
+     * @return int[2] = { appointment-id, invite-mail-item-id }  Note that even though the invite has a mail-item-id, that mail-item does not really exist, it can ONLY be referenced through the appointment "apptId-invMailItemId"
+     * @throws ServiceException
+     */
+    public synchronized int[] addInvite(OperationContext octxt, Invite inv, boolean force, ParsedMessage pm) throws ServiceException
     {
         CreateInvite redoRecorder = new CreateInvite();
         CreateInvite redoPlayer = (octxt == null ? null : (CreateInvite) octxt.player);
@@ -2059,27 +2071,37 @@ public class Mailbox {
         try {
             beginTransaction("addInvite", null, redoRecorder);
             
-            if (redoPlayer == null) {
+            if (redoPlayer == null || redoPlayer.getAppointmentId() == 0) {
                 assert(inv.getMailItemId() == 0); 
                 int mailItemId = getNextItemId(Mailbox.ID_AUTO_INCREMENT);
                 inv.setInviteId(mailItemId);
+            } else {
+                // id already set before we stored the invite in the redoRecorder!!!
             }
+            
             redoRecorder.setInvite(inv);
+            redoRecorder.setForce(force);
             
             Appointment appt = getAppointmentByUid(inv.getUid());
             if (appt == null) { 
                 // ONLY create an appointment if this is a REQUEST method...otherwise don't.
                 if (inv.getMethod().equals("REQUEST")) {
-                    appt = createAppointment(Mailbox.ID_FOLDER_CALENDAR, Volume.getCurrentMessageVolume().getId(), "", inv.getUid(), null, inv);
+                    appt = createAppointment(Mailbox.ID_FOLDER_CALENDAR, Volume.getCurrentMessageVolume().getId(), "", inv.getUid(), pm, inv);
                 } else {
 //                  mLog.info("Mailbox " + getId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c not a REQUEST and no Appointment could be found");
 //                  return; // for now, just ignore this Invitation
                 }
             } else {
-                appt.processNewInvite(null, inv, Volume.getCurrentMessageVolume().getId());
+                appt.processNewInvite(pm, inv, force, Volume.getCurrentMessageVolume().getId());
             }
             
             success = true;
+            
+            int[] toRet = new int[2];
+            
+            toRet[0] = appt.getId();
+            toRet[1] = inv.getMailItemId();
+            return toRet;
         } finally {
             endTransaction(success);
         }

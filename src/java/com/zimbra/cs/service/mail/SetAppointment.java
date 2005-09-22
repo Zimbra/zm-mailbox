@@ -27,18 +27,22 @@ package com.zimbra.cs.service.mail;
 
 import java.util.*;
 
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Invite;
-//import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.stats.StopWatch;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.ZimbraContext;
 
 public class SetAppointment extends CalendarRequest {
@@ -90,12 +94,30 @@ public class SetAppointment extends CalendarRequest {
                                             
                     // <M>
                     Element msgElem = e.getElement(MailService.E_MSG);
+                    
                     CalSendData dat = handleMsgElement(octxt, msgElem, acct, mbox, new SetAppointmentInviteParser(uid));
                     
-                    int invMsgId = sendThenDeleteCalendarMessage(octxt, acct, mbox, dat);
-                    appt = mbox.getAppointmentByUid(octxt, uid);
+                    ParsedMessage pm = new ParsedMessage(dat.mMm, mbox.attachmentsIndexingEnabled());
+                    pm.analyze();
+                    net.fortuna.ical4j.model.Calendar cal = pm.getiCalendar();
                     
-                    mbox.modifyInvitePartStat(octxt, appt.getId(), invMsgId, 0, needsReply, partStatStr);
+                    boolean sentByMe = true;
+//                    try {
+//                        String sender = new InternetAddress(pm.getSender()).getAddress();
+//                        sentByMe = AccountUtil.addressMatchesAccount(acct, sender);
+//                    } catch (AddressException ex) {
+//                        throw ServiceException.INVALID_REQUEST("unable to parse invite sender: " + pm.getSender(), ex);
+//                    }
+                    
+                    Invite inv = Invite.createFromICalendar(acct, pm.getFragment(), cal, sentByMe);
+                    
+//                    int invMsgId = sendThenDeleteCalendarMessage(octxt, acct, mbox, dat);
+                    
+                    int[] ids = mbox.addInvite(null, inv, false, pm);
+                    
+                    mbox.modifyInvitePartStat(octxt, ids[0], ids[1], 0, needsReply, partStatStr);
+                    
+                    appt = mbox.getAppointmentById(ids[0]);
                 }
                 
                 // for each <exception>
@@ -122,10 +144,32 @@ public class SetAppointment extends CalendarRequest {
                     CalSendData dat = handleMsgElement(octxt, msgElem, acct, mbox, 
                             new CreateAppointmentException.CreateApptExceptionInviteParser(appt.getUid(), inv.getTimeZoneMap()));
                     
-                    int invMsgId = sendThenDeleteCalendarMessage(octxt, acct, mbox, dat);
+//                    int invMsgId = sendThenDeleteCalendarMessage(octxt, acct, mbox, dat);
                     
-                    mbox.modifyInvitePartStat(octxt, appt.getId(), invMsgId, 0, needsReply, partStatStr);
+//                    mbox.modifyInvitePartStat(octxt, appt.getId(), invMsgId, 0, needsReply, partStatStr);
                     
+                    
+                    ParsedMessage pm = new ParsedMessage(dat.mMm, mbox.attachmentsIndexingEnabled());
+                    pm.analyze();
+                    net.fortuna.ical4j.model.Calendar cal = pm.getiCalendar();
+                    
+                    boolean sentByMe = true;
+//                    try {
+//                        String sender = new InternetAddress(pm.getSender()).getAddress();
+//                        sentByMe = AccountUtil.addressMatchesAccount(acct, sender);
+//                    } catch (AddressException ex) {
+//                        throw ServiceException.INVALID_REQUEST("unable to parse invite sender: " + pm.getSender(), ex);
+//                    }
+                    
+                    Invite except = Invite.createFromICalendar(acct, pm.getFragment(), cal, sentByMe);
+                    
+//                    int invMsgId = sendThenDeleteCalendarMessage(octxt, acct, mbox, dat);
+                    
+                    int[] ids = mbox.addInvite(null, except, false, pm);
+                    
+                    mbox.modifyInvitePartStat(octxt, ids[0], ids[1], 0, needsReply, partStatStr);
+                    
+                    assert(ids[0] == appt.getId());
                 }
                 
                 Element response = lc.createElement(MailService.SET_APPOINTMENT_RESPONSE);

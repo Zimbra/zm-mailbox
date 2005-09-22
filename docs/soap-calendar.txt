@@ -191,11 +191,7 @@ RECURRENCE SPECIFIERS!
 //
 <SetAppointmentRequest uid="iCalendar_UID">
   <default needsReply="0|1" ptst="AC|TE|DE|DG|CO|IN">
-     <m> ...see CreateAppointmentRequest... </m>
-  </default>
-  [<except needsReply="0|1" ptst="AC|TE|DE|DG|CO|IN">
-     <m> See CreateAppointmentExceptionRequest
-        ...
+     <m> ...see CreateAppointmentRequest...
 **************
 ONE OF:        
    1) XML <inv> format from CreateAppointment 
@@ -212,6 +208,12 @@ OR
         </content>
       </inv>
 *************
+     </m>
+  </default>
+  [<except needsReply="0|1" ptst="AC|TE|DE|DG|CO|IN">
+     <m> See CreateAppointmentExceptionRequest
+        ...
+        **XML <inv> or Raw iCalendar see above** 
      </m>
   </exception>]*
 </SetAppointmentRequest>
@@ -527,7 +529,10 @@ OR
 // SendInviteReply
 //
 //
-<SendInviteReplyRequest id="mail_item_id" compNum="comp_num" verb="VERB" [updateOrganizer="1|0"]>
+<SendInviteReplyRequest id="mail_item_id" compNum="comp_num"
+  [recurId="INSTANCE_START_SECS_GMT" [rangeType="RANGETYPE"]] // reply to just one instance of the specified Invite
+  verb="VERB" [updateOrganizer="1|0"]
+>
   [<m>...</m>]
 </SendInviteReplyRequest>  
 

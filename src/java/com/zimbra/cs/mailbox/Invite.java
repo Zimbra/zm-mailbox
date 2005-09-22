@@ -39,25 +39,41 @@ import org.apache.commons.logging.LogFactory;
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.ComponentList;
+import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Parameter;
 import net.fortuna.ical4j.model.ParameterList;
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.PropertyList;
 import net.fortuna.ical4j.model.Recur;
+import net.fortuna.ical4j.model.ValidationException;
 import net.fortuna.ical4j.model.component.VAlarm;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.component.VTimeZone;
+import net.fortuna.ical4j.model.parameter.Cn;
 import net.fortuna.ical4j.model.parameter.PartStat;
 import net.fortuna.ical4j.model.parameter.Role;
 import net.fortuna.ical4j.model.parameter.Rsvp;
+import net.fortuna.ical4j.model.parameter.TzId;
 import net.fortuna.ical4j.model.property.Attendee;
+import net.fortuna.ical4j.model.property.Description;
+import net.fortuna.ical4j.model.property.DtEnd;
 import net.fortuna.ical4j.model.property.DtStamp;
+import net.fortuna.ical4j.model.property.DtStart;
+import net.fortuna.ical4j.model.property.Duration;
 import net.fortuna.ical4j.model.property.ExRule;
+import net.fortuna.ical4j.model.property.Location;
 import net.fortuna.ical4j.model.property.Method;
 import net.fortuna.ical4j.model.property.Organizer;
+import net.fortuna.ical4j.model.property.ProdId;
 import net.fortuna.ical4j.model.property.RRule;
 import net.fortuna.ical4j.model.property.RecurrenceId;
 import net.fortuna.ical4j.model.property.Sequence;
+import net.fortuna.ical4j.model.property.Status;
+import net.fortuna.ical4j.model.property.Summary;
+import net.fortuna.ical4j.model.property.Transp;
+import net.fortuna.ical4j.model.property.Uid;
+import net.fortuna.ical4j.model.property.Version;
+import net.fortuna.ical4j.model.property.XProperty;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
@@ -106,6 +122,7 @@ public class Invite {
             Organizer org,
             List attendees,
             String name, 
+            String description, 
             String loc,
             int flags,
             String partStat,
@@ -129,9 +146,10 @@ public class Invite {
         mEnd = end;
         mDuration = duration;
         mRecurrence = recurrence;
-        mAttendees = attendees;
         mOrganizer = org;
+        mAttendees = attendees;
         mName = name;
+        mDescription = description;
         mLocation = loc;
         mFlags = flags;
         mPartStat = partStat;
@@ -195,6 +213,7 @@ public class Invite {
             Organizer organizer,
             List /* Attendee */ attendees,
             String name,
+            String description,
             String location,
             String fragment,
             int dtStampOrZero,
@@ -218,6 +237,7 @@ public class Invite {
                 organizer,
                 attendees,
                 name,
+                description,
                 location,
                 Invite.APPT_FLAG_EVENT | (needsReply ? Invite.APPT_FLAG_NEEDS_REPLY : 0) | (allDayEvent ? Invite.APPT_FLAG_ALLDAY : 0),
                 partStat,
@@ -245,15 +265,6 @@ public class Invite {
         }
     }
     
-//    
-//    public Recurrence.IRecurrence getRecurrence() throws ServiceException
-//    {
-//        if (!hasDetailsLoaded) {
-//            loadDetailedInfo(this.mInvMsg, null);
-//        }
-//        return mRecurrence;
-//    }
-    
     private static final String FN_INVMSGID = "mid";
     private static final String FN_SENTBYME = "byme";
     private static final String FN_FRAGMENT = "frag";
@@ -280,6 +291,7 @@ public class Invite {
         meta.put(Metadata.FN_DURATION, inv.mDuration);
         meta.put(Metadata.FN_METHOD, inv.mMethod.getValue());
         meta.put(FN_FRAGMENT, inv.mFragment);
+        meta.put(FN_ICAL_DESCRIPTION, inv.mDescription);
         
         if (inv.mRecurrence != null) {
             meta.put(FN_RECURRENCE, inv.mRecurrence.encodeMetadata());
@@ -327,7 +339,8 @@ public class Invite {
     }
     
     private static final String FN_RECURRENCE = "recurrence";
-    private static final String FN_COMPNUM = "comp"; 
+    private static final String FN_COMPNUM = "comp";
+    private static final String FN_ICAL_DESCRIPTION = "icDsc";
     
     /**
      * This API is public for RedoLogging to call into it -- you probably don't want to call it from
@@ -350,6 +363,7 @@ public class Invite {
         String transp = meta.get(Metadata.FN_TRANSP, IcalXmlStrMap.TRANSP_OPAQUE);
         boolean sentByMe = meta.getBool(FN_SENTBYME);
         String fragment = meta.get(FN_FRAGMENT, "");
+        String description = meta.get(FN_ICAL_DESCRIPTION, "");
         
         ParsedDateTime dtStart = null;
         ParsedDateTime dtEnd = null;
@@ -385,7 +399,7 @@ public class Invite {
             throw ServiceException.FAILURE("Error parsing metadata for invite " + mailItemId+"-"+ componentNum + " in appt " + appt!=null ? Integer.toString(appt.getId()) : "(null)", e);
         }
         
-        String name = meta.get(Metadata.FN_NAME);
+        String name = meta.get(Metadata.FN_NAME, "");
         String loc = meta.get(Metadata.FN_LOCATION, null);
         
         int flags = (int) meta.getLong(Metadata.FN_APPT_FLAGS, 0);
@@ -418,7 +432,7 @@ public class Invite {
             
         return new Invite(methodStr, tzMap, appt, uid, status, freebusy, transp,
                 dtStart, dtEnd, duration, recurrence, org, attendees,
-                name, loc, flags, partStat,
+                name, description, loc, flags, partStat,
                 recurrenceId, dtstamp, seqno,
                 mailboxId, mailItemId, componentNum, sentByMe, fragment);
     }
@@ -530,6 +544,7 @@ public class Invite {
     public int getMailboxId() { return mMailboxId; }
     public int getMailItemId() { return mMailItemId; }
     public String getName() { return mName; };
+    public String getDescription() { return mDescription; };
     public String getStatus() { return mStatus; }
     void setStatus(String status) { mStatus = status; }
     public String getFreeBusy() { return mFreeBusy; }
@@ -672,6 +687,7 @@ public class Invite {
         sb.append(", end: ").append(this.mEnd);
         sb.append(", duration: ").append(this.mDuration);
         sb.append(", name: ").append(this.mName);
+        sb.append(", description: ").append(this.mDescription);
         sb.append(", location: ").append(this.mLocation);
         sb.append(", allDay: ").append(isAllDayEvent());
         sb.append(", otherAts: ").append(hasOtherAttendees());
@@ -706,6 +722,7 @@ public class Invite {
     protected ParsedDuration mDuration = null;
     
     protected String mName; /* name of the invite, aka "subject" */
+    protected String mDescription; /* name of the invite, aka "subject" */
     protected String mLocation;
     protected int mFlags = APPT_FLAG_EVENT;
     protected RecurId mRecurrenceId = null; // RECURRENCE_ID
@@ -741,9 +758,14 @@ public class Invite {
         return new Organizer(URI.create(addressStr));
     }
     
-    public static Attendee createAttendee(String addressStr, String roleStr, String partStatStr, Boolean rsvpBool) throws ServiceException
+    public static Attendee createAttendee(String cnStr, String addressStr, String roleStr, String partStatStr, Boolean rsvpBool) throws ServiceException
     {
         ParameterList p = new ParameterList();
+        
+        if (cnStr != null && !cnStr.equals("")) {
+            Cn cn = new Cn(cnStr);
+            p.add(cn);
+        }
         
         if (roleStr != null && !roleStr.equals("")) {
             Role role = new Role(IcalXmlStrMap.sRoleMap.toIcal(roleStr));
@@ -772,6 +794,7 @@ public class Invite {
     private static Attendee parseAtFromMetadata(Metadata meta) throws ServiceException {
         if (meta == null)
             return null;
+        String cnStr = meta.get("cn", null);
         String addressStr = meta.get("a", null);
         String roleStr = meta.get("r", null);
         String partStatStr = meta.get(Metadata.FN_PARTSTAT, null);
@@ -780,7 +803,7 @@ public class Invite {
             rsvpBool = Boolean.TRUE;
         }
         
-        return createAttendee(addressStr, roleStr, partStatStr, rsvpBool);
+        return createAttendee(cnStr, addressStr, roleStr, partStatStr, rsvpBool);
     }
     
     private static Metadata encodeAsMetadata(Organizer org) {
@@ -795,6 +818,12 @@ public class Invite {
         
         // address
         meta.put("a", at.getCalAddress());
+        
+        // CN
+        Cn cn = (Cn)params.getParameter(Parameter.CN);
+        if (cn != null) {
+            meta.put("cn", cn.getValue());
+        }
         
         // role
         Role role = (Role) params.getParameter(Parameter.ROLE);
@@ -971,6 +1000,7 @@ public class Invite {
             setStatus(IcalXmlStrMap.STATUS_CONFIRMED);
             setTransparency(IcalXmlStrMap.TRANSP_OPAQUE);
             mName = "";
+            mDescription = "";
             mLocation = "";
             
             ArrayList /* Recur */ addRecurs = new ArrayList();
@@ -1020,6 +1050,8 @@ public class Invite {
                     mLocation = prop.getValue();
                 } else if (propName.equals(Property.SUMMARY)) {
                     mName = prop.getValue();
+                } else if (propName.equals(Property.DESCRIPTION)) {
+                    mDescription= prop.getValue();
                 } else if (propName.equals(Property.UID)) {
                     mUid = prop.getValue();
                 } else if (propName.equals(Property.RRULE)) {
@@ -1208,6 +1240,198 @@ public class Invite {
         return toRet;
     }
     
+    static public Invite createFromICalendar(Account acct, String fragment, Calendar cal, boolean sentByMe) throws ServiceException
+    {
+//        Method method = lookupMethod(methodStr);
+        //
+        // vevent, vtodo: ALARM, props
+        // vjournal: props
+        // vfreebusy: props
+        
+        Method method = Method.PUBLISH;
+        
+        PropertyList props = cal.getProperties();
+        for (Iterator iter = props.iterator(); iter.hasNext();) {
+            Property prop = (Property)iter.next();
+            String name = prop.getName();
+            if (name.equals(Property.METHOD)) {
+                method = (Method)prop;
+                if (method.getValue().equals("REQUEST")) {
+                    method = Method.REQUEST;
+                } else if (method.getValue().equals("COUNTER")) {
+                    method = Method.COUNTER;
+                }
+            }
+        }
+        
+        Invite inv = new Invite(method, fragment);
+        TimeZoneMap tzmap = new TimeZoneMap(acct.getTimeZone());
+        
+        ComponentList comps = cal.getComponents();
+        
+        for (Iterator iter = comps.iterator(); iter.hasNext();) {
+            Component comp = (Component)iter.next();
+            
+            if (comp.getName().equals(Component.VTIMEZONE)) {
+                tzmap.add((VTimeZone) comp);
+            } else if (comp.getName().equals(Component.VEVENT)) {
+                inv.setSentByMe(sentByMe);
+
+                // must do this AFTER component-num, mailbox-id and mailitem-id are set! (because the IRecurrence object needs them)
+                inv.parseVEvent((VEvent) comp, tzmap, method, acct, false);
+                return inv;
+            }
+        }
+        return inv;
+    }
+
+    private static Calendar makeCalendar(Method method) {
+        Calendar iCal = new Calendar();
+        // PRODID, VERSION always required
+        iCal.getProperties().add(new ProdId("Zimbra-Calendar-Provider"));
+        iCal.getProperties().add(method);
+        iCal.getProperties().add(Version.VERSION_2_0);
+
+        return iCal;
+    }
     
+    
+    public Calendar toICalendar() throws ServiceException {
+        Calendar toRet = makeCalendar(mMethod);
+        
+        // timezones
+        for (Iterator iter = mTzMap.tzIterator(); iter.hasNext();) {
+            ICalTimeZone cur = (ICalTimeZone) iter.next();
+            VTimeZone vtz = cur.toVTimeZone();
+            toRet.getComponents().add(vtz);
+        }
+        
+        VEvent event = new VEvent();
+        
+        // UID
+        event.getProperties().add(new Uid(getUid()));
+        
+        // RECUR
+        if (mRecurrence != null) {
+            // FIXME!
+            assert(false);
+        }
+        
+        // ORGANIZER
+        if (mOrganizer != null) {
+            event.getProperties().add(mOrganizer);
+        }
+        
+        // allDay
+        if (this.isAllDayEvent()) {
+            XProperty msAllDay = new XProperty("X-MICROSOFT-CDO-ALLDAYEVENT", "TRUE");
+            event.getProperties().add(msAllDay);
+        }
+        
+        // SUMMARY (aka Name or Subject)
+        if (mName != null && !mName.equals("")) {
+            event.getProperties().add(new Summary(mName));
+        }
+        
+        // DESCRIPTION
+        if (mDescription != null && !mDescription.equals("")) {
+            event.getProperties().add(new Description(mDescription));
+        }
+        
+        // DTSTART
+        {
+            try {
+                DtStart dtstart = new DtStart(mStart.getDateTimePartString());
+                if (mStart.isUTC()) {
+                    dtstart.setUtc(true);
+                } else if (mStart.getTZName() != null) {
+                    dtstart.getParameters().add(new TzId(mStart.getTZName()));
+                }
+                event.getProperties().add(dtstart);
+            } catch (ParseException e) {
+                throw ServiceException.FAILURE("Failure writing DtStart to iCal: "+mStart.toString(), e);
+            }
+        }
+        
+        // DTEND
+        if (mEnd != null) {
+            DtEnd dtend = new DtEnd();
+            try {
+                dtend.setValue(mEnd.getDateTimePartString());
+                if (mEnd.isUTC()) {
+                    dtend.setUtc(true);
+                } else if (mEnd.getTZName() != null) {
+                    dtend.getParameters().add(new TzId(mEnd.getTZName()));
+                }
+            } catch (ParseException e) {
+                throw ServiceException.FAILURE("Failure writing DtEnd to iCal: "+mEnd.toString(), e);
+            }
+            event.getProperties().add(dtend);
+        }
+        
+        // DURATION
+        if (mDuration != null) {
+            Duration dur = new Duration();
+            dur.setValue(mDuration.toString());
+            
+            event.getProperties().add(dur);
+        }
+            
+        
+        // LOCATION
+        if (mLocation != null && !mLocation.equals("")) {
+            event.getProperties().add(new Location(mLocation));
+        }
+        
+        // STATUS
+        event.getProperties().add(new Status(IcalXmlStrMap.sStatusMap.toIcal(mStatus)));
+        
+        // Microsoft Outlook compatibility for free-busy status
+        {
+            String outlookFreeBusy = IcalXmlStrMap.sOutlookFreeBusyMap.toIcal(mFreeBusy);
+            event.getProperties().add(new XProperty(Invite.MICROSOFT_BUSYSTATUS,
+                                                    outlookFreeBusy));
+            event.getProperties().add(new XProperty(Invite.MICROSOFT_INTENDEDSTATUS,
+                                                    outlookFreeBusy));
+        }
+        
+        // TRANSPARENCY
+        event.getProperties().add(new Transp(IcalXmlStrMap.sTranspMap.toIcal(mTransparency)));
+        
+        // ATTENDEEs
+        for (Iterator iter = mAttendees.iterator(); iter.hasNext(); ) {
+            Attendee at = (Attendee)iter.next();
+            event.getProperties().add(at);
+        }
+        
+        // RECURRENCE-ID
+        if (mRecurrenceId != null) {
+            RecurrenceId recurId = new RecurrenceId();
+            try {
+                recurId.setValue(mRecurrenceId.toString());
+            } catch (ParseException e) {
+                throw ServiceException.FAILURE("Failure writing RecurrenceId to iCal: "+mRecurrenceId.toString(), e);
+            }
+        }
+        
+        // DTSTAMP
+        event.getProperties().add(new DtStamp(new DateTime(mDTStamp)));
+        
+        // SEQUENCE
+        event.getProperties().add(new Sequence(mSeqNo));
+        
+        
+        toRet.getComponents().add(event);
+        try {
+            toRet.validate(true);
+        } catch (ValidationException e) { 
+            sLog.info("iCal Validation Exception in CreateAppointmentInviteParser", e);
+            if (e.getCause() != null) {
+                sLog.info("\tcaused by "+e.getCause(), e.getCause());
+            }
+        }
+        
+        return toRet;
+    }
     
 }

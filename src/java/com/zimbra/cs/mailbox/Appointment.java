@@ -490,18 +490,19 @@ public class Appointment extends MailItem {
      * pony screaming "yippie! yippie!"
      * 
      * @param invite
+     * @param force if true, then force update to this appointment, otherwise use RFC2446 sequencing rules
      */
-    void processNewInvite(ParsedMessage pm, Invite invite, short volumeId)
+    void processNewInvite(ParsedMessage pm, Invite invite, boolean force, short volumeId)
     throws ServiceException {
         String method = invite.getMethod();
         if (method.equals("REQUEST") || method.equals("CANCEL")) {
-            processNewInviteRequestOrCancel(pm, invite, volumeId);
+            processNewInviteRequestOrCancel(pm, invite, force, volumeId);
         } else if (method.equals("REPLY")) {
-            processNewInviteReply(pm, invite);
+            processNewInviteReply(pm, invite, force);
         }
     }
 
-    void processNewInviteRequestOrCancel(ParsedMessage pm, Invite newInvite, short volumeId)
+    private void processNewInviteRequestOrCancel(ParsedMessage pm, Invite newInvite, boolean force, short volumeId)
             throws ServiceException {
         String method = newInvite.getMethod();
 
@@ -530,14 +531,14 @@ public class Appointment extends MailItem {
             //
             if ((cur.getRecurId() != null && cur.getRecurId().equals(newInvite.getRecurId())) ||
                     (cur.getRecurId() == null && newInvite.getRecurId() == null)) {
-                if ((cur.getSeqNo() < newInvite.getSeqNo())
-                        // in the CANCEL case, accept one with the exact same
-                        // send cancel's with the same DTSTAMP as the request
-                        // being cancelled
+                if (force ||
+                        ((cur.getSeqNo() < newInvite.getSeqNo())
+                        // in the CANCEL case, accept one with the exact same DTSTAMP as the request
+                        // being cancelled ( >= instead of strictly > for DTSTAMP)
                         || (
-                                (!isCancel && (cur.getSeqNo() == newInvite.getSeqNo() && cur .getDTStamp() < newInvite.getDTStamp())) 
+                                (!isCancel && (cur.getSeqNo() == newInvite.getSeqNo() && cur.getDTStamp() < newInvite.getDTStamp())) 
                                 || 
-                                (isCancel && (cur.getSeqNo() == newInvite.getSeqNo() && cur.getDTStamp() <= newInvite.getDTStamp())))) 
+                                (isCancel && (cur.getSeqNo() == newInvite.getSeqNo() && cur.getDTStamp() <= newInvite.getDTStamp()))))) 
                 {
                     Invite inf = (Invite)mInvites.get(i);
                     toRemove.add(inf);
@@ -832,7 +833,7 @@ public class Appointment extends MailItem {
         
     }
     
-    private void processNewInviteReply(ParsedMessage pm, Invite reply)
+    private void processNewInviteReply(ParsedMessage pm, Invite reply, boolean force)
             throws ServiceException {
         // unique ID: UID+RECURRENCE_ID
 

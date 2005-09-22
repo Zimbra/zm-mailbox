@@ -176,6 +176,13 @@ public class Recurrence
         public MultiRuleSorter(ArrayList /* IRecur */ rules) {
             mRules = rules;
         }
+        
+        public void setInviteId(InviteInfo invId) {
+            for (Iterator iter = mRules.iterator(); iter.hasNext();) {
+                IRecurrence cur = (IRecurrence)iter.next();
+                cur.setInviteId(invId);
+            }
+        }
 
         public Element toXml(Element parent) {
             for (Iterator iter = mRules.iterator(); iter.hasNext();) {
@@ -649,6 +656,11 @@ public class Recurrence
         
         public void setInviteId(InviteInfo invId) {
             mInvId = invId;
+            
+            mAddRules.setInviteId(invId);
+            if (mSubtractRules != null) {
+                mSubtractRules.setInviteId(invId);
+            }
         }
         
         protected CompoundRuleBase(ParsedDateTime dtstart, ParsedDuration duration, 
@@ -1058,6 +1070,12 @@ public class Recurrence
             super(dtstart, duration, invId);
             mExceptions = new ArrayList();
         }
+        
+        public void setInviteId(InviteInfo invId) {
+            super.setInviteId(invId);
+            assert(mExceptions.size() == 0); // must not call this on an appointment-owned Invite
+        }
+        
 
         public RecurrenceRule(Metadata meta, TimeZoneMap tzmap) 
         throws ServiceException, ParseException {

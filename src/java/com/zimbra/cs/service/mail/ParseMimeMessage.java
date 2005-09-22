@@ -322,6 +322,9 @@ public class ParseMimeMessage {
 			if (!hasContent && !isMultipart)
 				mm.setText("", Mime.P_CHARSET_DEFAULT);
 
+            // JavaMail tip: don't forget to call this, it is REALLY confusing.  
+            mm.saveChanges();
+
             dumpMessage(mm);
             
 			return mm;
