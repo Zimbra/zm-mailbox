@@ -69,7 +69,7 @@ class TestClient {
         mSocketIn = new BufferedReader(new InputStreamReader(mSocket.getInputStream()));
         mSocketOut = new BufferedOutputStream(mSocket.getOutputStream());
         mResponse = mSocketIn.readLine();
-        mLog.debug("client: got line: " + mResponse);
+        mLog.info("client: got line: " + mResponse);
     }
     
     public String getLastResponse() {
@@ -80,14 +80,14 @@ class TestClient {
         mSocketOut.write("helo\r\n".getBytes());
         mSocketOut.flush();
         mResponse = mSocketIn.readLine();
-        mLog.debug("client: got line: " + mResponse);
+        mLog.info("client: got line: " + mResponse);
     }
     
     public void quit() throws IOException {
         mSocketOut.write("quit\r\n".getBytes());
         mSocketOut.flush();
         mResponse = mSocketIn.readLine();
-        mLog.debug("client: got line: " + mResponse);
+        mLog.info("client: got line: " + mResponse);
     }
     
     public void sum(byte[] bytes) throws IOException {
@@ -98,7 +98,7 @@ class TestClient {
         mSocketOut.write(OzByteArrayMatcher.CRLFDOTCRLF);
         mSocketOut.flush();
         mResponse = mSocketIn.readLine();
-        mLog.debug("client: got line: " + mResponse);
+        mLog.info("client: got line: " + mResponse);
     }
     
     public void nsum(byte[] bytes) throws IOException {
@@ -106,7 +106,7 @@ class TestClient {
         mSocketOut.write(bytes);
         mSocketOut.flush();
         mResponse = mSocketIn.readLine();
-        mLog.debug("client: got line: " + mResponse);
+        mLog.info("client: got line: " + mResponse);
     }
     
     public void close() {
