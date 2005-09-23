@@ -54,8 +54,7 @@ public class GetMsg extends WriteOpDocumentHandler {
     public GetMsg() {
     }
     
-    public Element handle(Element request, Map context)
-    throws ServiceException {
+    public Element handle(Element request, Map context) throws ServiceException {
         long startTime = sWatch.start();
         try {
             ZimbraContext lc = getZimbraContext(context);
@@ -63,21 +62,19 @@ public class GetMsg extends WriteOpDocumentHandler {
             OperationContext octxt = lc.getOperationContext();
 
             Element eMsg = request.getElement(MailService.E_MSG);
-//            int id = (int) eMsg.getAttributeLong(MailService.A_ID);
             ParsedItemID pid = ParsedItemID.parse(eMsg.getAttribute(MailService.A_ID));
             boolean raw = eMsg.getAttributeBool(MailService.A_RAW, false);
+            boolean read = eMsg.getAttributeBool(MailService.A_MARK_READ, false);
             String part = eMsg.getAttribute(MailService.A_PART, null);
-//            int subId = (int) eMsg.getAttributeLong("subId", 0);
+
             Message msg = null;
             Appointment appt = null;
 
             if (!pid.hasSubId()) {
                 msg = mbox.getMessageById(pid.getItemIDInt());
                 
-                if (msg.isUnread() && !RedoLogProvider.getInstance().isSlave())
-                    if (eMsg.getAttributeBool(MailService.A_MARK_READ, false))
-                        mbox.alterTag(octxt, pid.getItemIDInt(), MailItem.TYPE_MESSAGE, Flag.ID_FLAG_UNREAD, false);
-                
+                if (read && msg.isUnread() && !RedoLogProvider.getInstance().isSlave())
+                    mbox.alterTag(octxt, pid.getItemIDInt(), MailItem.TYPE_MESSAGE, Flag.ID_FLAG_UNREAD, false);
             } else {
                 appt = mbox.getAppointmentById(pid.getItemIDInt());
             }
