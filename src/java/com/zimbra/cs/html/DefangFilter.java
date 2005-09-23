@@ -137,7 +137,6 @@ public class DefangFilter extends DefaultFilter {
     protected int mStyleDepth;
 
     //private static String[] STD_CORE = { "id", "class", "title", "style" };
-    // don't allow style
     private static String CORE = "id,class,title,style,";
     private static String LANG = "dir,lang,xml:lang,";
     private static String CORE_LANG = CORE+LANG;
@@ -410,6 +409,7 @@ public class DefangFilter extends DefaultFilter {
         if (mElementDepth <= mRemovalElementDepth) {
             if (mStyleDepth > 0) {
                 String result = text.toString().replaceAll("[uU][Rr][Ll]\\s*\\(.*\\)","url()");
+                result = result.replaceAll("expression\\s*\\(.*\\)","");
                 super.characters(new XMLString(result.toCharArray(), 0, result.length()), augs);    
             } else {
                 super.characters(text, augs);
@@ -586,6 +586,7 @@ public class DefangFilter extends DefaultFilter {
         }
         if (aName.equalsIgnoreCase("style")) {
             result = value.replaceAll("[uU][Rr][Ll]\\s*\\(.*\\)","url()");
+            result = result.replaceAll("expression\\s*\\(.*\\)","");
         }
         if (!result.equals(value)) {
             //System.out.println("**** "+eName+" "+aName+" ("+result+")");
