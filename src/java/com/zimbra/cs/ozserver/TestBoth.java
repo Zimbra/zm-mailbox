@@ -52,6 +52,7 @@ class TestBoth {
 	    mOptions.addOption("p", "port",      true,  "port (default 10043)");
 	    mOptions.addOption("T", "trace",     false, "trace server/client traffic");
 	    mOptions.addOption("D", "debug",     false, "print debug info");
+	    mOptions.addOption("i", "interactive", false, "whether to wait for input to shutdown the test"); 
 	    mOptions.addOption("h", "help",      false, "show this help");
 	}
 	
@@ -144,11 +145,24 @@ class TestBoth {
 
         TestServer server = new TestServer(port);
         mLog.info("creating " + numThreads + " client threads");
+        Thread[] threads = new Thread[numThreads];
         for (int i = 0; i < numThreads; i++) {
-            new TestClientThread(port, i).start();
+            threads[i] = new TestClientThread(port, i);
+            threads[i].start();
         }
-        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        br.readLine();
+        
+        if (cl.hasOption('i')) {
+        	BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+            br.readLine();
+        } else {
+        	for (int i = 0; i < numThreads; i++) {
+        		try {
+        			threads[i].join();
+        		} catch (InterruptedException ie) {
+        			ie.printStackTrace();
+        		}
+        	}
+        }
         server.shutdown();
     }
 }

@@ -95,10 +95,7 @@ public class OzConnectionHandler {
         mSelectionKey = channel.register(server.getSelector(), 0, this); 
         mProtocolHandler = server.newProtocolHandler();
         mProtocolHandler.handleConnect(this);
-        
-        if (mChannel.isOpen()) {
-            enableReadInterest();
-        }
+        enableReadInterest();
     }
     
     public void closeNow() {
