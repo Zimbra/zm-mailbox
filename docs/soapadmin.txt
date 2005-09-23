@@ -612,6 +612,10 @@ notes:
   <a n='zimbraAuthMech'>ldap</a>
   <a n='zimbraAuthLdapURL'>...</a>
   <a n='zimbraAuthLdapBindDn'>...</a>
+  <a n='zimbraAuthLdapSearchFilter'>...</a>
+  <a n='zimbraAuthLdapSearchBase'>...</a>
+  <a n='zimbraAuthLdapSearchBindDn'>...</a>
+  <a n='zimbraAuthLdapSearchBindPassword'>...</a>
   <name>...</name>
   <password>...</password>
 </CheckAuthConfigRequest>
@@ -624,7 +628,13 @@ notes:
 
 notes:
   - zimbraAuthMech must be set to ldap/ad. There is no reason to check zimbra.
-
+  - zimbraAuthLdapURL must be set
+  - either zimbraAuthLdapBindDn or zimbraAuthLdapSearchFilter must be set
+  
+  The following are optional, and only looked at if zimbraAuthLdapSearchFilter is set:
+     - zimbraAuthLdapSearchBase is optional and defaults to ""
+     - zimbraAuthLdapSearchBind{Dn,Password} are both optional
+ 
 -----------------------------------
 
 <CreateVolumeRequest>
