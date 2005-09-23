@@ -60,11 +60,13 @@ import net.fortuna.ical4j.model.property.DtEnd;
 import net.fortuna.ical4j.model.property.DtStamp;
 import net.fortuna.ical4j.model.property.DtStart;
 import net.fortuna.ical4j.model.property.Duration;
+import net.fortuna.ical4j.model.property.ExDate;
 import net.fortuna.ical4j.model.property.ExRule;
 import net.fortuna.ical4j.model.property.Location;
 import net.fortuna.ical4j.model.property.Method;
 import net.fortuna.ical4j.model.property.Organizer;
 import net.fortuna.ical4j.model.property.ProdId;
+import net.fortuna.ical4j.model.property.RDate;
 import net.fortuna.ical4j.model.property.RRule;
 import net.fortuna.ical4j.model.property.RecurrenceId;
 import net.fortuna.ical4j.model.property.Sequence;
@@ -1059,11 +1061,13 @@ public class Invite {
                     addRecurs.add(((RRule)prop).getRecur());
                 } else if (propName.equals(Property.RDATE)) {
                     setIsRecurrence(true);
+                    addRecurs.add(prop);
                 } else if (propName.equals(Property.EXRULE)) {
                     setIsRecurrence(true);
                     subRecurs.add(((ExRule)prop).getRecur());
                 } else if (propName.equals(Property.EXDATE)) {
                     setIsRecurrence(true);
+                    subRecurs.add(prop);
                 } else if (propName.equals(Property.STATUS)) {
                     String status = IcalXmlStrMap.sStatusMap.toXml(prop.getValue());
                     if (status != null)
@@ -1094,15 +1098,27 @@ public class Invite {
             ArrayList addRules = new ArrayList();
             if (addRecurs.size() > 0) {
                 for (Iterator iter = addRecurs.iterator(); iter.hasNext();) {
-                    Recur cur = (Recur)iter.next();
-                    addRules.add(new Recurrence.SimpleRepeatingRule(mStart, duration, cur, new InviteInfo(this)));
+                    Object next = iter.next();
+                    if (next instanceof Recur) {
+                        Recur cur = (Recur)next;
+                        addRules.add(new Recurrence.SimpleRepeatingRule(mStart, duration, cur, new InviteInfo(this)));
+                    } else {
+                        RDate cur = (RDate)next;
+                        // TODO add the dates here!
+                    }
                 }
             }
             ArrayList subRules = new ArrayList();
             if (subRules.size() > 0) {
                 for (Iterator iter = subRules.iterator(); iter.hasNext();) {
-                    Recur cur = (Recur)iter.next();
-                    addRules.add(new Recurrence.SimpleRepeatingRule(mStart, duration, cur, new InviteInfo(this)));
+                    Object next = iter.next();
+                    if (next instanceof Recur) {
+                        Recur cur = (Recur)iter.next();
+                        addRules.add(new Recurrence.SimpleRepeatingRule(mStart, duration, cur, new InviteInfo(this)));
+                    } else {
+                        ExDate cur = (ExDate)next;
+                        // TODO add the dates here!
+                    }
                 }
             }
             

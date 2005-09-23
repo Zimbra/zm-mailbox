@@ -64,6 +64,44 @@ import net.fortuna.ical4j.util.DateTimeFormat;
  */
 public class Recurrence 
 {
+    /**
+     * RecurrenceRule -- from the default invite.  
+     * 
+     * Can have add/subtract sub-parts as well as Exception parts  
+     */
+    public static final int TYPE_RECURRENCE = 1;
+    
+    /**
+     * ExceptionRule -- an Exception (RecurrenceID != 0) invite
+     * 
+     * Has a RecurId and can also have add/subtract sub-parts
+     */
+    public static final int TYPE_EXCEPTION = 2;
+    
+    /**
+     * Cancellation -- An exception with RFC2446 method=CANCEL
+     * 
+     * Has a RecurId.  
+     */
+    public static final int TYPE_CANCELLATION = 3; 
+
+    
+    /**
+     * Always stored as part of a Recurrence, Exception, or Cancellation -- a list of one or 
+     * more dates (ie not a rule)
+     * 
+     * Use the datesIterator() api to access all of the stored dates
+     * 
+     */
+    public static final int TYPE_SINGLE_INSTANCE = 4;
+    
+    /**
+     * Always stored as part of a Recurrence, Exception, or Cancellation -- a rule for generating dates
+     * 
+     * Use the getZRecur() API to access the rule itself 
+     */
+    public static final int TYPE_REPEATING = 5; 
+    
     
     /**
      * @author tim
@@ -91,6 +129,21 @@ public class Recurrence
         public ParsedDateTime getEndTime();
 
         public Object clone();
+        
+        /**
+         * @return TYPE_RECURRENCE, TYPE_EXCEPTION, TYPE_CANCELLATION, TYPE_SINGLE_INSTANCE, or TYPE_REPEATING
+         */
+        public int getType();
+        
+        /**
+         * @return an Iterator over all child rules that add instances to this current node, or NULL if none
+         */
+        public Iterator addRulesIterator();
+
+        /**
+         * @return an Iterator over all child rules that add instances to this current node, or NULL if none
+         */
+        public Iterator subRulesIterator();
         
         
         /**
@@ -141,7 +194,9 @@ public class Recurrence
     /**
      * @author tim
      * 
-     * Helper class -- basically just an ArrayList of subrules
+     * Internal Node -- basically just wraps an ArrayList of subrules and does
+     * some convienence stuff (e.g. getStartTime calculates the earliest starting time 
+     * for all the rules we're sorting, etc)
      *
      */
     public static class MultiRuleSorter
@@ -164,6 +219,10 @@ public class Recurrence
                 newRules.add(rule.clone());
             }
             return new MultiRuleSorter(newRules);
+        }
+        
+        public Iterator /* IRecurrence */ iterator() {
+            return mRules.iterator();
         }
         
         public MultiRuleSorter(Metadata meta, TimeZoneMap tzmap) throws ServiceException {
@@ -251,6 +310,8 @@ public class Recurrence
         private static final String FN_DTEND = "dte";
         private static final String FN_INVID = "inv";
         
+        public int getType() { return TYPE_SINGLE_INSTANCE; }
+        
         private ParsedDateTime getEnd()
         {
             if (mDtEnd == null) {
@@ -258,6 +319,9 @@ public class Recurrence
             }
             return mDtEnd;
         }
+        
+        public Iterator addRulesIterator() { return null; }
+        public Iterator subRulesIterator() { return null; }
         
         public void setInviteId(InviteInfo invId) {
             mInvId = invId;
@@ -297,7 +361,7 @@ public class Recurrence
             return meta;
         }
         
-        public SingleInstanceRule(Metadata meta, TimeZoneMap tzmap) 
+        SingleInstanceRule(Metadata meta, TimeZoneMap tzmap) 
         throws ServiceException, ParseException {
             mDtStart = ParsedDateTime.parse(meta.get(FN_DTSTART), tzmap);
             mDuration = ParsedDuration.parse(meta.get(FN_DURATION, null));
@@ -319,7 +383,7 @@ public class Recurrence
             assert(mDtStart != null);
         }
         
-        public SingleInstanceRule(ParsedDateTime start, ParsedDateTime end, ParsedDuration duration, InviteInfo invId) {
+        SingleInstanceRule(ParsedDateTime start, ParsedDateTime end, ParsedDuration duration, InviteInfo invId) {
             mDtStart = start;
             mDtEnd = end;
             mDuration = duration;
@@ -346,6 +410,16 @@ public class Recurrence
             return new SingleInstanceRule(mDtStart, mDtEnd, mDuration, mInvId);
         }
         
+        /**
+         * @return an Iterator over the start-times of each instance
+         */
+        public Iterator /* ParsedDateTime */ datesIterator() {
+            // HACK: until this class is fixed, create a temp array
+            ArrayList /* ParsedDateTime */ toRet = new ArrayList();
+            toRet.add(mDtStart);
+            return toRet.iterator();
+        }
+        
         private ParsedDateTime mDtStart;
         private ParsedDateTime mDtEnd;
         private ParsedDuration mDuration;
@@ -369,42 +443,14 @@ public class Recurrence
             mDuration = duration;
         }
         
+        public int getType() { return TYPE_REPEATING; }
+        public Iterator addRulesIterator() { return null; }
+        public Iterator subRulesIterator() { return null; }
+        
         public void setInviteId(InviteInfo invId) {
             mInvId = invId;
         }
         
-        public List /* Instance */ expandInstances(Appointment appt, long start, long end) {
-            // net.fortuna.ical4j.model.DateTime(toString());
-            net.fortuna.ical4j.model.DateTime dateStart = new net.fortuna.ical4j.model.DateTime(start);
-            net.fortuna.ical4j.model.DateTime endDate = new net.fortuna.ical4j.model.DateTime(end);
-
-            ArrayList toRet = null;
-
-            try {
-                List dateList = mRecur.getDates(mDtStart.iCal4jDate(), dateStart, endDate, Value.DATE_TIME);
-                toRet = new ArrayList(dateList.size());
-                
-                int num = 0;
-                for (Iterator iter = dateList.iterator(); iter.hasNext();) {
-                    Date cur = (Date)iter.next();
-                    long instStart = cur.getTime();
-                    long instEnd = mDuration.addToDate(cur).getTime();
-                    if (instStart < end && instEnd > start) {
-                        toRet.add(num++, new Appointment.Instance(appt, mInvId, instStart, instEnd, false));
-                    }
-                }
-            } catch (ServiceException se) {
-                // Bugs 3172 and 3240.  Ignore recurrence rules with bad data.
-                ZimbraLog.calendar.warn("ServiceException expanding recurrence rule: " + mRecur.toString(), se);
-                toRet = new ArrayList();
-            } catch (IllegalArgumentException iae) {
-                // Bugs 3172 and 3240.  Ignore recurrence rules with bad data.
-            	ZimbraLog.calendar.warn("Invalid recurrence rule: " + mRecur.toString(), iae);
-                toRet = new ArrayList();
-            }
-            return toRet;
-        }
-
         public Element toXml(Element parent) {
             Element rule = parent.addElement(MailService.E_APPT_RULE);
 
@@ -436,7 +482,7 @@ public class Recurrence
             // BYSECOND
             NumberList bySecond = mRecur.getSecondList();
             if (!bySecond.isEmpty()) {
-            	rule.addElement(MailService.E_APPT_RULE_BYSECOND).
+                rule.addElement(MailService.E_APPT_RULE_BYSECOND).
                     addAttribute(MailService.A_APPT_RULE_BYSECOND_SECLIST, bySecond.toString());
             }
 
@@ -459,7 +505,7 @@ public class Recurrence
             if (!byDay.isEmpty()) {
                 Element bydayElt = rule.addElement(MailService.E_APPT_RULE_BYDAY);
                 for (int i = 0; i < byDay.size(); i++) {
-                	WeekDay wkday = (WeekDay) byDay.get(i);
+                    WeekDay wkday = (WeekDay) byDay.get(i);
                     Element wkdayElt = bydayElt.addElement(MailService.E_APPT_RULE_BYDAY_WKDAY);
                     int offset = wkday.getOffset();
                     if (offset != 0)
@@ -506,7 +552,7 @@ public class Recurrence
             // WKST
             String wkst = mRecur.getWeekStartDay();
             if (wkst != null) {
-            	rule.addElement(MailService.E_APPT_RULE_WKST).
+                rule.addElement(MailService.E_APPT_RULE_WKST).
                     addAttribute(MailService.A_APPT_RULE_DAY, wkst);
             }
 
@@ -514,7 +560,7 @@ public class Recurrence
             Map xNames = mRecur.getExperimentalValues();
             for (Iterator iter = mRecur.getExperimentalValues().entrySet().iterator();
                  iter.hasNext(); ) {
-            	Map.Entry entry = (Map.Entry) iter.next();
+                Map.Entry entry = (Map.Entry) iter.next();
                 Element xElt = rule.addElement(MailService.E_APPT_RULE_XNAME);
                 xElt.addAttribute(MailService.A_APPT_RULE_XNAME_NAME, (String) entry.getKey());
                 xElt.addAttribute(MailService.A_APPT_RULE_XNAME_VALUE, (String) entry.getValue());
@@ -522,6 +568,41 @@ public class Recurrence
 
             return rule;
         }
+        
+        public List /* Instance */ expandInstances(Appointment appt, long start, long end) 
+        {
+            ArrayList toRet = null;
+        
+            try {
+                net.fortuna.ical4j.model.DateTime dateStart = new net.fortuna.ical4j.model.DateTime(start);
+                net.fortuna.ical4j.model.DateTime endDate = new net.fortuna.ical4j.model.DateTime(end);
+                
+                List dateList = mRecur.getDates(mDtStart.iCal4jDate(), dateStart, endDate, Value.DATE_TIME);  
+                
+                toRet = new ArrayList(dateList.size());
+                
+                int num = 0;
+                for (Iterator iter = dateList.iterator(); iter.hasNext();) {
+                    Date cur = (Date)iter.next();
+                    long instStart = cur.getTime();
+                    long instEnd = mDuration.addToDate(cur).getTime();
+                    if (instStart < end && instEnd > start) {
+                        toRet.add(num++, new Appointment.Instance(appt, mInvId, instStart, instEnd, false));
+                    }
+                }
+            } catch (ServiceException se) {
+                // Bugs 3172 and 3240.  Ignore recurrence rules with bad data.
+                ZimbraLog.calendar.warn("ServiceException expanding recurrence rule: " + mRecur.toString(), se);
+                toRet = new ArrayList();
+            } catch (IllegalArgumentException iae) {
+                // Bugs 3172 and 3240.  Ignore recurrence rules with bad data.
+            	ZimbraLog.calendar.warn("Invalid recurrence rule: " + mRecur.toString(), iae);
+                toRet = new ArrayList();
+            }
+            return toRet;
+        }
+        
+        public Recur getRecur() { return mRecur; }
 
 
         public ParsedDateTime getStartTime() {
@@ -673,6 +754,15 @@ public class Recurrence
             mSubtractRules = null;
         }
         
+        public Iterator addRulesIterator() { return mAddRules.iterator(); }
+        public Iterator subRulesIterator() { 
+            if (mSubtractRules != null) {
+                return mSubtractRules.iterator();
+            }
+            return null;
+        }
+        
+        
         public List /* Instance */ expandInstances(Appointment appt, long start, long end) 
         {
             if (mAddRules == null) {
@@ -822,11 +912,26 @@ public class Recurrence
         protected InviteInfo mInvId;
     }
     
+    /**
+     * @author tim
+     *
+     * Superset of IRecurrence for exception rules: they have a RecurId
+     * 
+     * Real implementations are ExceptionRule and CancellationRule
+     */
     public static interface IException extends IRecurrence
     {
         boolean matches(long date);
+        
+        RecurId getRecurId();
     }
     
+    
+//
+// This is commented-out for compatability (not supported by many CUAs) --but leave the code here hopefully 
+// we can figure out a way to enable it eventually...
+//    
+//
 //    /**
 //     * @author tim
 //     * 
@@ -906,8 +1011,11 @@ public class Recurrence
             mRecurRange = recurId;
         }
         
-        public void setInviteId(InviteInfo invId) {
-        }
+        public int getType() { return TYPE_CANCELLATION; }
+        public Iterator addRulesIterator() { return null; }
+        public Iterator subRulesIterator() { return null; }
+        
+        public void setInviteId(InviteInfo invId) {}
         
         CancellationRule(Metadata meta, TimeZoneMap tzmap) 
         throws ServiceException, ParseException
@@ -948,6 +1056,10 @@ public class Recurrence
         public boolean matches(long date) {
             return mRecurRange.withinRange(date);
         }
+        
+        public RecurId getRecurId() {
+            return mRecurRange;
+        }
     }
     
     
@@ -981,6 +1093,8 @@ public class Recurrence
             super(meta, tzmap);
             mRecurRange = RecurId.decodeMetadata(meta.getMap(FN_RECURRENCE_ID), tzmap);
         }
+        
+        public int getType() { return TYPE_EXCEPTION; }
 
         public List /* Instance */ expandInstances(Appointment appt, long start, long end) 
         {
@@ -1016,6 +1130,10 @@ public class Recurrence
 
         public boolean matches(long date) {
             return mRecurRange.withinRange(date);
+        }
+
+        public RecurId getRecurId() {
+            return mRecurRange;
         }
         
         public String toString() {
@@ -1071,11 +1189,16 @@ public class Recurrence
             mExceptions = new ArrayList();
         }
         
+        public int getType() { return TYPE_RECURRENCE; }
+        
         public void setInviteId(InviteInfo invId) {
             super.setInviteId(invId);
             assert(mExceptions.size() == 0); // must not call this on an appointment-owned Invite
         }
         
+        Iterator /* IException */ exceptionsIter() {
+            return mExceptions.iterator();
+        }
 
         public RecurrenceRule(Metadata meta, TimeZoneMap tzmap) 
         throws ServiceException, ParseException {
