@@ -79,6 +79,14 @@ public class Search extends DocumentHandler  {
         long startTime =  sWatch.start();
         
         try {
+        	/*
+        	try {
+				Thread.currentThread().sleep(20000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			*/
             ZimbraContext lc = getZimbraContext(context);
             SoapSession session = (SoapSession) lc.getSession(SessionCache.SESSION_SOAP);
             Mailbox mbox = getRequestedMailbox(lc);
