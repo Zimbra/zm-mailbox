@@ -189,7 +189,7 @@ RECURRENCE SPECIFIERS!
 //   TODO: need to take a parent folder ID
 //
 //
-<SetAppointmentRequest uid="iCalendar_UID">
+<SetAppointmentRequest>
   <default needsReply="0|1" ptst="AC|TE|DE|DG|CO|IN">
      <m [aid="{uploaded-MIME-body-ID}"] > ...see CreateAppointmentRequest...
 **************
