@@ -126,7 +126,7 @@ public class AddMsg extends WriteOpDocumentHandler {
             if (attachment != null)
                 mm = SendMsg.parseUploadedMessage(mbox, attachment, mimeData);
             else
-                mm = ParseMimeMessage.importMsgSoap(octxt, mbox.getAccount(), msgElem);
+                mm = ParseMimeMessage.importMsgSoap(msgElem);
 
 	        int messageId = -1;
 	        try {

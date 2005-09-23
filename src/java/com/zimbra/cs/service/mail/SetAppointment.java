@@ -29,6 +29,7 @@ import java.util.*;
 
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -50,20 +51,16 @@ public class SetAppointment extends CalendarRequest {
     private static StopWatch sWatch = StopWatch.getInstance("SetAppointment");
     
     protected static class SetAppointmentInviteParser implements ParseMimeMessage.InviteParser { 
-        private String mUid;
-        SetAppointmentInviteParser(String uid) { mUid = uid; };
+        SetAppointmentInviteParser() { };
 
         public ParseMimeMessage.InviteParserResult parseInviteElement(OperationContext octxt, Account account, Element inviteElem) throws ServiceException 
         {
             Element content = inviteElem.getOptionalElement("content");
             if (content != null) {
                 ParseMimeMessage.InviteParserResult toRet = CalendarUtils.parseInviteRaw(account, inviteElem);
-                if (!toRet.mUid.equals(mUid)) {
-                    throw ServiceException.FAILURE("Request UID doesn't match UID embedded in raw iCalendar data", null);
-                }
                 return toRet;
             } else {
-                return CalendarUtils.parseInviteForCreate(account, inviteElem, null, mUid, false);
+                return CalendarUtils.parseInviteForCreate(account, inviteElem, null, null, false);
             }
         }
     };
@@ -77,9 +74,7 @@ public class SetAppointment extends CalendarRequest {
             Mailbox mbox = getRequestedMailbox(lc);
             OperationContext octxt = lc.getOperationContext();
             
-            String uid = request.getAttribute(MailService.A_UID);
-            
-            sLog.info("<SetAppointment uid="+uid+"> " + lc.toString());
+            sLog.info("<SetAppointment> " + lc.toString());
             
             synchronized (mbox) {
                 
@@ -89,86 +84,28 @@ public class SetAppointment extends CalendarRequest {
                 {
                     Element e = request.getElement(MailService.A_DEFAULT);
                     
-                    boolean needsReply = e.getAttributeBool(MailService.A_APPT_NEEDS_REPLY, true);
-                    String partStatStr = e.getAttribute(MailService.A_APPT_PARTSTAT, "TE");
-                                            
-                    // <M>
-                    Element msgElem = e.getElement(MailService.E_MSG);
-                    
-                    CalSendData dat = handleMsgElement(octxt, msgElem, acct, mbox, new SetAppointmentInviteParser(uid));
-                    
-                    ParsedMessage pm = new ParsedMessage(dat.mMm, mbox.attachmentsIndexingEnabled());
-                    pm.analyze();
-                    net.fortuna.ical4j.model.Calendar cal = pm.getiCalendar();
-                    
-                    boolean sentByMe = true;
-//                    try {
-//                        String sender = new InternetAddress(pm.getSender()).getAddress();
-//                        sentByMe = AccountUtil.addressMatchesAccount(acct, sender);
-//                    } catch (AddressException ex) {
-//                        throw ServiceException.INVALID_REQUEST("unable to parse invite sender: " + pm.getSender(), ex);
-//                    }
-                    
-                    Invite inv = Invite.createFromICalendar(acct, pm.getFragment(), cal, sentByMe);
-                    
-//                    int invMsgId = sendThenDeleteCalendarMessage(octxt, acct, mbox, dat);
-                    
-                    int[] ids = mbox.addInvite(null, inv, false, pm);
-                    
-                    mbox.modifyInvitePartStat(octxt, ids[0], ids[1], 0, needsReply, partStatStr);
+                    int[] ids = getParsedMessage(octxt, acct, mbox, e, new SetAppointmentInviteParser());
                     
                     appt = mbox.getAppointmentById(ids[0]);
                 }
                 
+                Invite inv = appt.getDefaultInvite();
+                
+                if (inv.hasRecurId()) {
+                    throw ServiceException.FAILURE("Invite id="+appt.getId()+"-"+inv.getMailItemId()+" comp="+inv.getComponentNum()+" is not the a default invite", null);
+                }
+                if (appt == null) {
+                    throw ServiceException.FAILURE("Could not find Appointment for id="+appt.getId()+"-"+inv.getMailItemId()+" comp="+inv.getComponentNum()+">", null);
+                }
                 // for each <exception>
                 for (Iterator iter = request.elementIterator(MailService.A_EXCEPT); iter.hasNext();) {
-                    Element e = (Element)iter.next();
-                    
-                    Invite inv = appt.getDefaultInvite();
-                    
-                    boolean needsReply = e.getAttributeBool(MailService.A_APPT_NEEDS_REPLY, true);
-                    String partStatStr = e.getAttribute(MailService.A_APPT_PARTSTAT, "TE");
-                    
-                    if (inv.hasRecurId()) {
-                        throw ServiceException.FAILURE("Invite id="+appt.getId()+"-"+inv.getMailItemId()+" comp="+inv.getComponentNum()+" is not the a default invite", null);
-                    }
-                    
-                    if (appt == null) {
-                        throw ServiceException.FAILURE("Could not find Appointment for id="+appt.getId()+"-"+inv.getMailItemId()+" comp="+inv.getComponentNum()+">", null);
-                    } else if (!appt.isRecurring()) {
+                    if (!appt.isRecurring()) {
                         throw ServiceException.FAILURE("Appointment "+appt.getId()+" is not a recurring appointment", null);
                     }
-
-                    // <M>
-                    Element msgElem = e.getElement(MailService.E_MSG);
-                    CalSendData dat = handleMsgElement(octxt, msgElem, acct, mbox, 
-                            new CreateAppointmentException.CreateApptExceptionInviteParser(appt.getUid(), inv.getTimeZoneMap()));
                     
-//                    int invMsgId = sendThenDeleteCalendarMessage(octxt, acct, mbox, dat);
+                    Element e = (Element)iter.next();
                     
-//                    mbox.modifyInvitePartStat(octxt, appt.getId(), invMsgId, 0, needsReply, partStatStr);
-                    
-                    
-                    ParsedMessage pm = new ParsedMessage(dat.mMm, mbox.attachmentsIndexingEnabled());
-                    pm.analyze();
-                    net.fortuna.ical4j.model.Calendar cal = pm.getiCalendar();
-                    
-                    boolean sentByMe = true;
-//                    try {
-//                        String sender = new InternetAddress(pm.getSender()).getAddress();
-//                        sentByMe = AccountUtil.addressMatchesAccount(acct, sender);
-//                    } catch (AddressException ex) {
-//                        throw ServiceException.INVALID_REQUEST("unable to parse invite sender: " + pm.getSender(), ex);
-//                    }
-                    
-                    Invite except = Invite.createFromICalendar(acct, pm.getFragment(), cal, sentByMe);
-                    
-//                    int invMsgId = sendThenDeleteCalendarMessage(octxt, acct, mbox, dat);
-                    
-                    int[] ids = mbox.addInvite(null, except, false, pm);
-                    
-                    mbox.modifyInvitePartStat(octxt, ids[0], ids[1], 0, needsReply, partStatStr);
-                    
+                    int ids[] = getParsedMessage(octxt, acct, mbox, e, new CreateAppointmentException.CreateApptExceptionInviteParser(appt.getUid(), inv.getTimeZoneMap()));
                     assert(ids[0] == appt.getId());
                 }
                 
@@ -179,6 +116,52 @@ public class SetAppointment extends CalendarRequest {
         } finally {
             sWatch.stop(startTime);
         }
+    }
+    
+    static private int[] getParsedMessage(OperationContext octxt, Account acct, Mailbox mbox, 
+            Element e, ParseMimeMessage.InviteParser parser) throws ServiceException {
+        
+        boolean needsReply = e.getAttributeBool(MailService.A_APPT_NEEDS_REPLY, true);
+        String partStatStr = e.getAttribute(MailService.A_APPT_PARTSTAT, "TE");
+                                
+        // <M>
+        Element msgElem = e.getElement(MailService.E_MSG);
+
+        
+        // check to see whether the entire message has been uploaded under separate cover
+        String attachmentId = msgElem.getAttribute(MailService.A_ATTACHMENT_ID, null);
+        
+        Element contentElement = msgElem.getOptionalElement(MailService.E_CONTENT);
+        
+        MimeMessage mm = null;
+        
+        if (attachmentId != null) {
+            ParseMimeMessage.MimeMessageData mimeData = new ParseMimeMessage.MimeMessageData();
+            mm = SendMsg.parseUploadedMessage(mbox, attachmentId, mimeData);
+        } else if (contentElement != null) {
+            mm = ParseMimeMessage.importMsgSoap(msgElem);
+        } else {
+            CalSendData dat = handleMsgElement(octxt, msgElem, acct, mbox, parser);
+            mm = dat.mMm;
+        }
+        
+        ParsedMessage pm = new ParsedMessage(mm, mbox.attachmentsIndexingEnabled());
+        
+        pm.analyze();
+        net.fortuna.ical4j.model.Calendar cal = pm.getiCalendar();
+        if (cal == null) {
+            throw ServiceException.FAILURE("SetAppointment could not find an iCalendar part for <default>", null);
+        }
+        
+        boolean sentByMe = false; // not applicable in the SetAppointment case
+        
+        Invite except = Invite.createFromICalendar(acct, pm.getFragment(), cal, sentByMe);
+        
+        int[] ids = mbox.addInvite(null, except, true, pm);
+        
+        mbox.modifyInvitePartStat(octxt, ids[0], ids[1], 0, needsReply, partStatStr);
+        
+        return ids;
     }
     
     protected static int sendThenDeleteCalendarMessage(OperationContext octxt, Account acct, Mailbox mbox, CalSendData dat) throws ServiceException

@@ -258,7 +258,7 @@ public class CalendarUtils {
     static ParseMimeMessage.InviteParserResult parseInviteForCreate(
             Account account, Element inviteElem,
             TimeZoneMap tzMap,
-            String uid, boolean recurrenceIdAllowed) throws ServiceException 
+                String uid, boolean recurrenceIdAllowed) throws ServiceException 
     {
         List /*<ICalTimeZone>*/ tzsReferenced = new ArrayList();
 
@@ -266,7 +266,10 @@ public class CalendarUtils {
         VEvent event = (VEvent)invDat;
         
         if (uid == null || uid.equals("")) {
-            uid = LdapUtil.generateUUID();
+            uid = inviteElem.getAttribute(MailService.A_UID, null);
+            if (uid == null) {
+                uid = LdapUtil.generateUUID();
+            }
         }
         event.getProperties().add(new Uid(uid));
         

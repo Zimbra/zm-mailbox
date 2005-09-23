@@ -2571,7 +2571,7 @@ public class Mailbox {
      * @param partStat
      * @throws ServiceException
      */
-    public synchronized void modifyInvitePartStat(OperationContext octxt, int apptId, int inviteId,
+    public synchronized boolean modifyInvitePartStat(OperationContext octxt, int apptId, int inviteId,
                                                   int componentNum, boolean needsReply, String partStat)
     throws ServiceException {
         ModifyInvitePartStat redoRecorder = new ModifyInvitePartStat(mId, apptId, inviteId, componentNum, needsReply, partStat);
@@ -2581,8 +2581,10 @@ public class Mailbox {
             beginTransaction("updateInvitePartStat", octxt, redoRecorder);
             Appointment appt = getAppointmentById(apptId);
             Invite inv = appt.getInvite(inviteId,componentNum);
-            inv.modifyPartStat(this, needsReply, partStat);
+            if (inv != null)
+                inv.modifyPartStat(this, needsReply, partStat);
             success = true;
+            return (inv != null);
         } finally {
             endTransaction(success);
         }

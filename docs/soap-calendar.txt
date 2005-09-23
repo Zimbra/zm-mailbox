@@ -49,7 +49,7 @@
      [<e .../>*]  // users to send request to
      <su>{subject}</su>
 
-     <inv> 
+     <inv [uid="uid-for-create"]>  // optional: client can request the UID to use 
        [
        <comp type="event|todo"
             [status="TENT|CONF|CANC"]  // TENTative, CONFirmed (default), CANCelled -- TIM: remove this!
@@ -191,7 +191,7 @@ RECURRENCE SPECIFIERS!
 //
 <SetAppointmentRequest uid="iCalendar_UID">
   <default needsReply="0|1" ptst="AC|TE|DE|DG|CO|IN">
-     <m> ...see CreateAppointmentRequest...
+     <m [aid="{uploaded-MIME-body-ID}"] > ...see CreateAppointmentRequest...
 **************
 ONE OF:        
    1) XML <inv> format from CreateAppointment 
@@ -201,19 +201,19 @@ ONE OF:
            ...
         </inv>
 OR
-   2) Raw iCalendar import:
-      <inv>
-        <content uid="UID" summary="summary">
-           RAW XML-ENCODED ICALENDAR DATA
-        </content>
-      </inv>
+   2) Raw MimeMessage import:
+       <content>
+         RAW RFC822 MESSAGE (XML-encoded)  ***MUST CONTAIN A text/calendar PART***  
+       </content>
+OR
+   3) Raw MimeMessage uploaded as attachment ID (see AddMsgRequest in soap.txt)
 *************
      </m>
   </default>
   [<except needsReply="0|1" ptst="AC|TE|DE|DG|CO|IN">
-     <m> See CreateAppointmentExceptionRequest
+     <m> Same as under <default> above  
         ...
-        **XML <inv> or Raw iCalendar see above** 
+        **1 of the 3 forms above**
      </m>
   </exception>]*
 </SetAppointmentRequest>
