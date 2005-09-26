@@ -133,22 +133,34 @@ public class ContentServlet extends ZimbraServlet {
 
             try {
                 if (part == null) {
+                    // they want the entire message...
+                    
+                    StringBuffer hdr = new StringBuffer();
+                    if ("1".equals(req.getParameter(PARAM_SYNC))) {
+                        // for sync, return metadata as headers to avoid extra SOAP round-trips
+                        hdr.append("X-Zimbra-Tags: ").append(mi.getTagString()).append("\n");
+                        hdr.append("X-Zimbra-Flags: ").append(mi.getFlagString()).append("\n");
+                        hdr.append("X-Zimbra-Received: ").append(mi.getDate()).append("\n");
+                    }
+                    
                     if (mi instanceof Message) {
                         Message msg = (Message)mi;
                         resp.setContentType(Mime.CT_TEXT_PLAIN);
                         if ("1".equals(req.getParameter(PARAM_SYNC))) {
-                            // for sync, return metadata as headers to avoid extra SOAP round-trips
-                            StringBuffer sb = new StringBuffer();
-                            sb.append("X-Zimbra-Tags: ").append(msg.getTagString()).append("\n");
-                            sb.append("X-Zimbra-Flags: ").append(msg.getFlagString()).append("\n");
-                            sb.append("X-Zimbra-Conv: ").append(msg.getConversationId()).append("\n");
-                            sb.append("X-Zimbra-Received: ").append(msg.getDate()).append("\n");
-                            resp.getOutputStream().write(sb.toString().getBytes());
+                            hdr.append("X-Zimbra-Conv: ").append(msg.getConversationId()).append("\n");
+                            resp.getOutputStream().write(hdr.toString().getBytes());
                         }
                         InputStream is = msg.getRawMessage();
                         ByteUtil.copy(is, resp.getOutputStream());
                         is.close();
                     } else if (mi instanceof Appointment) {
+                        Appointment appt = (Appointment)mi;
+                        
+                        if ("1".equals(req.getParameter(PARAM_SYNC))) {
+                            hdr.append("X-Zimbra-DefaultInvId: ").append(appt.getDefaultInvite().getMailItemId()).append("\n");
+                            resp.getOutputStream().write(hdr.toString().getBytes());
+                        }
+                        
                         resp.setContentType(Mime.CT_TEXT_PLAIN);
                         if (id.hasSubId()) {
                             MimeMessage mm = ((Appointment)mi).getMimeMessage(id.getSubIdInt());
@@ -166,18 +178,19 @@ public class ContentServlet extends ZimbraServlet {
                     if (mi instanceof Message) {
                         mp = getMimePart((Message)mi, part); 
                     } else {
+                        Appointment appt = (Appointment)mi;
                         if (id.hasSubId()) {
-                            MimeMessage mbp = ((Appointment)mi).getMimeMessage(id.getSubIdInt());
+                            MimeMessage mbp = appt.getMimeMessage(id.getSubIdInt());
                             mp = Mime.getMimePart(mbp, part);
                         } else {
-                            mp = getMimePart((Appointment)mi, part);
+                            mp = getMimePart(appt, part);
                         }
                     }
                     if (mp != null) {
                         String contentType = mp.getContentType();
-                        if (contentType == null)
+                        if (contentType == null) {
                             contentType = Mime.CT_APPLICATION_OCTET_STREAM;
-                        //mLog.info(contentType+" "+fmt);
+                        }
                         if (contentType.toLowerCase().startsWith(Mime.CT_TEXT_HTML) && ("htmldf".equals(fmt) || "htmldfi".equals(fmt))) {
                             sendbackDefangedHtml(mp, contentType, resp, fmt);
                         } else {
