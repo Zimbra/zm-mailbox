@@ -444,7 +444,7 @@
 		<mkdir dir="${zimbra.home.dir}/repl" />
 		<mkdir dir="${zimbra.home.dir}/backup" />
 		<mkdir dir="${zimbra.home.dir}/conf" />
-		<copy tofile="${zimbra.home.dir}/conf/localconfig.xml" file="${config.dir}/localconfig-dev.xml" />
+		<copy tofile="${zimbra.home.dir}/conf/localconfig.xml" file="${config.dir}/localconfig-dev.xml" overwrite="true"/>
 		<copy todir="${zimbra.home.dir}/conf" file="${config.dir}/log4j.properties" />
 		<mkdir dir="${tomcat.home.dir}" />
 		<mkdir dir="${tomcat.home.dir}/conf" />
