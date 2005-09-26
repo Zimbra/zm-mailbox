@@ -957,33 +957,36 @@ public class LdapProvisioning extends Provisioning {
      */
     public Domain createDomain(String name, Map domainAttrs) throws ServiceException {
         name = name.toLowerCase().trim();
-
+        
+        LdapDomain d = (LdapDomain) getDomainByName(name);
+        if (d != null) throw AccountServiceException.DOMAIN_EXISTS(name);
+        
         HashMap attrManagerContext = new HashMap();
-	
-	// Attribute checking can not express "allow setting on
-	// creation, but do not allow modifies afterwards"
-	String domainType = (String)domainAttrs.get(A_zimbraDomainType);
-	if (domainType == null) {
-	    domainType = DOMAIN_TYPE_LOCAL;
-	} else {
-	    domainAttrs.remove(A_zimbraDomainType); // add back later
-	}
-
+        
+        // Attribute checking can not express "allow setting on
+        // creation, but do not allow modifies afterwards"
+        String domainType = (String)domainAttrs.get(A_zimbraDomainType);
+        if (domainType == null) {
+            domainType = DOMAIN_TYPE_LOCAL;
+        } else {
+            domainAttrs.remove(A_zimbraDomainType); // add back later
+        }
+        
         AttributeManager.getInstance().preModify(domainAttrs, null, attrManagerContext, true, true);
-
-	// Add back attrs we circumvented from attribute checking
-	domainAttrs.put(A_zimbraDomainType, domainType);
-	
+        
+        // Add back attrs we circumvented from attribute checking
+        domainAttrs.put(A_zimbraDomainType, domainType);
+        
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
             String parts[] = name.split("\\.");        
             String dns[] = LdapUtil.domainToDNs(parts);
             createParentDomains(ctxt, parts, dns);
-
+            
             Attributes attrs = new BasicAttributes(true);
             LdapUtil.mapToAttrs(domainAttrs, attrs);
-
+            
             Attribute oc = LdapUtil.addAttr(attrs, A_objectClass, "dcObject");
             oc.add("organization");
             oc.add("zimbraDomain");
@@ -992,31 +995,36 @@ public class LdapProvisioning extends Provisioning {
             attrs.put(A_zimbraId, zimbraIdStr);
             attrs.put(A_zimbraDomainName, name);
             attrs.put(A_zimbraMailStatus, MAIL_STATUS_ENABLED);
-	    if (domainType.equalsIgnoreCase(DOMAIN_TYPE_ALIAS)) {
-		attrs.put(A_zimbraMailCatchAllAddress, "@" + name);
-	    }
-
+            
+            if (domainType.equalsIgnoreCase(DOMAIN_TYPE_ALIAS)) {
+                attrs.put(A_zimbraMailCatchAllAddress, "@" + name);
+            }
+            
             attrs.put(A_o, name+" domain");
             attrs.put(A_dc, parts[0]);
-
+            
             String dn = dns[0];
             //NOTE: all four of these should be in a transaction...
-            Context newCtxt = createSubcontext(ctxt, dn, attrs, "createDomain");
-            LdapUtil.closeContext(newCtxt);
-
+            try {
+                Context newCtxt = createSubcontext(ctxt, dn, attrs, "createDomain");
+                LdapUtil.closeContext(newCtxt);
+            } catch (NameAlreadyBoundException e) {
+                ctxt.modifyAttributes(dn, DirContext.REPLACE_ATTRIBUTE, attrs);
+            }
+            
             LdapUtil.simpleCreate(ctxt, "ou=people,"+dn, "organizationalRole",
                     new String[] { A_ou, "people", A_cn, "people"});
-
+            
             /*
              * LdapUtil.simpleCreate(ctxt, "ou=groups,"+dn, "organizationalRole",
              * new String[] { A_ou, "groups", A_cn, "groups"});
              */
-
+            
             Domain domain = getDomainById(zimbraIdStr, ctxt);
             
             AttributeManager.getInstance().postModify(domainAttrs, domain, attrManagerContext, true);
             return domain;
-
+            
         } catch (NameAlreadyBoundException nabe) {
             throw AccountServiceException.DOMAIN_EXISTS(name);
         } catch (NamingException e) {
