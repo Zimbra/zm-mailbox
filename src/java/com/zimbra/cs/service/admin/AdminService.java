@@ -135,14 +135,6 @@ public class AdminService implements DocumentService {
     public static final QName GET_SERVICE_STATUS_REQUEST = QName.get("GetServiceStatusRequest", NAMESPACE);
     public static final QName GET_SERVICE_STATUS_RESPONSE = QName.get("GetServiceStatusResponse", NAMESPACE);
     
-    public static final QName BACKUP_REQUEST = QName.get("BackupRequest", NAMESPACE);
-    public static final QName BACKUP_RESPONSE = QName.get("BackupResponse", NAMESPACE);
-    public static final QName BACKUP_QUERY_REQUEST = QName.get("BackupQueryRequest", NAMESPACE);
-    public static final QName BACKUP_QUERY_RESPONSE = QName.get("BackupQueryResponse", NAMESPACE);
-    public static final QName BACKUP_ACCOUNT_QUERY_REQUEST = QName.get("BackupAccountQueryRequest", NAMESPACE);
-    public static final QName BACKUP_ACCOUNT_QUERY_RESPONSE = QName.get("BackupAccountQueryResponse", NAMESPACE);
-    public static final QName RESTORE_REQUEST = QName.get("RestoreRequest", NAMESPACE);
-    public static final QName RESTORE_RESPONSE = QName.get("RestoreResponse", NAMESPACE);
     public static final QName PURGE_MESSAGES_REQUEST = QName.get("PurgeMessagesRequest", NAMESPACE);
     public static final QName PURGE_MESSAGES_RESPONSE= QName.get("PurgeMessagesResponse", NAMESPACE);
     public static final QName DELETE_MAILBOX_REQUEST = QName.get("DeleteMailboxRequest", NAMESPACE);
