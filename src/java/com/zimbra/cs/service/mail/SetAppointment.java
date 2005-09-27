@@ -123,6 +123,16 @@ public class SetAppointment extends CalendarRequest {
                 int apptId = mbox.setAppointment(null, Mailbox.ID_FOLDER_CALENDAR, defaultData, exceptArray);
                 
                 Element response = lc.createElement(MailService.SET_APPOINTMENT_RESPONSE);
+                
+                Element def = response.addElement(MailService.A_DEFAULT);
+                def.addAttribute(MailService.A_ID, defaultData.mInv.getMailItemId());
+                
+                for (Iterator iter = exceptions.iterator(); iter.hasNext();) {
+                    Mailbox.SetAppointmentData cur = (Mailbox.SetAppointmentData)iter.next();
+                    Element e = response.addElement(MailService.A_EXCEPT);
+                    e.addAttribute(MailService.A_APPT_RECURRENCE_ID, cur.mInv.getRecurId().toString());
+                    e.addAttribute(MailService.A_ID, cur.mInv.getMailItemId());
+                }
                 response.addAttribute(MailService.A_APPT_ID, apptId);
                 
                 return response;

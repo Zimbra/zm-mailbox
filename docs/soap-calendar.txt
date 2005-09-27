@@ -218,7 +218,11 @@ OR
   </exception>]*
 </SetAppointmentRequest>
 
-<SetAppointmentResponse apptId="appointment_id"/>
+<SetAppointmentResponse apptId="appointment_id">
+  <default id="invId_of_default_invite/>
+  [<except recurId="recurrence_id_of_exception"
+  id="invId_of_exception/>]*
+</SetAppointmentResponse>  
 
    
 //////////////////////////////////////////////////////////////////////
