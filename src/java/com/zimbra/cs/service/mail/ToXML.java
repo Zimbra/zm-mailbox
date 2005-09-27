@@ -479,12 +479,12 @@ public class ToXML {
      * @param fields
      * @return
      */
-    public static Element encodeApptSummary(Element parent, Appointment appt, int fields)  
-    {
+    public static Element encodeApptSummary(Element parent, Appointment appt, int fields) {
         Element m = parent.addElement(MailService.E_APPOINTMENT);
         
         m.addAttribute(MailService.A_UID, appt.getUid());
         m.addAttribute(MailService.A_ID, appt.getId());
+        m.addAttribute(MailService.A_FOLDER, appt.getFolderId());
         
         for (int i = 0; i < appt.numInvites(); i++) {
             try {

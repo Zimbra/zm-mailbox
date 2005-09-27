@@ -59,9 +59,7 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
     /* (non-Javadoc)
      * @see com.zimbra.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
      */
-    public Element handle(Element request, Map context)
-            throws ServiceException {
-
+    public Element handle(Element request, Map context) throws ServiceException {
         long startTime = sWatch.start();
         try {
             ZimbraContext lc = getZimbraContext(context);
@@ -70,21 +68,18 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
 
             long rangeStart = request.getAttributeLong(MailService.A_APPT_START_TIME);
             long rangeEnd = request.getAttributeLong(MailService.A_APPT_END_TIME);
+            int folderId = (int) request.getAttributeLong(MailService.A_FOLDER, Mailbox.ID_AUTO_INCREMENT);
 
-            Collection appointments = mbx.getAppointmentsForRange(rangeStart, rangeEnd);
+            Collection appointments = mbx.getAppointmentsForRange(lc.getOperationContext(), rangeStart, rangeEnd, folderId);
 
             Element response = lc.createElement(MailService.GET_APPT_SUMMARIES_RESPONSE);
-            for (Iterator aptIter = appointments.iterator(); aptIter.hasNext();) {
-                
+            for (Iterator aptIter = appointments.iterator(); aptIter.hasNext(); ) {
                 Appointment appointment = (Appointment) aptIter.next();
                 try {
-                    
-                    Element apptElt = response.getFactory().createElement(MailService.E_APPOINTMENT);
-                    
+                    Element apptElt = lc.createElement(MailService.E_APPOINTMENT);
                     apptElt.addAttribute("x_uid", appointment.getUid());
                     
                     Invite defaultInvite = appointment.getDefaultInvite();
-                    
                     if (defaultInvite == null) {
                         mLog.info("Could not load defaultinfo for appointment with id="+appointment.getId()+" SKIPPING");
                         continue; // 
@@ -216,6 +211,7 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
                         apptElt.addAttribute(MailService.A_APPT_LOCATION, defaultInvite.getLocation());
                         
                         apptElt.addAttribute(MailService.A_ID, appointment.getId());
+                        apptElt.addAttribute(MailService.A_FOLDER, appointment.getFolderId());
                         
                         ParsedItemID pid = ParsedItemID.create(appointment.getId(), defaultInvite.getMailItemId());
                         apptElt.addAttribute(MailService.A_APPT_INV_ID, pid.toString());

@@ -79,7 +79,7 @@ public class GetFreeBusy extends WriteOpDocumentHandler {
                 try {
                     ParseMailboxID id = ParseMailboxID.parse(idStrs[i]);
                     if (id != null) {
-                        getForOneMailbox(response, id, rangeStart, rangeEnd);
+                        getForOneMailbox(response, id, rangeStart, rangeEnd, lc);
                     }
                 } catch (ServiceException e) {
                     mLog.debug("Could not get FreeBusy data for id "+idStrs[i], e);
@@ -98,15 +98,15 @@ public class GetFreeBusy extends WriteOpDocumentHandler {
         }
     }
     
-    private void getForOneMailbox(Element response, ParseMailboxID id, long start, long end) throws ServiceException
-    {
+    private void getForOneMailbox(Element response, ParseMailboxID id, long start, long end, ZimbraContext lc)
+    throws ServiceException {
         if (id.isLocal()) {
             Element mbxResp = response.addElement(MailService.E_FREEBUSY_USER);
             mbxResp.addAttribute(MailService.A_ID,id.getString());
             
-            Mailbox mbx = id.getMailbox();
+            Mailbox mbox = id.getMailbox();
 
-            FreeBusy fb = mbx.getFreeBusy(start, end);
+            FreeBusy fb = mbox.getFreeBusy(lc.getOperationContext(), start, end);
             
             for (Iterator iter = fb.iterator(); iter.hasNext(); ) {
 //            for (FreeBusy.Interval cur = fb.getHead(); cur!=null; cur = cur.getNext()) {

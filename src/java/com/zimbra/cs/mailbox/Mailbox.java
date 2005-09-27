@@ -1869,13 +1869,24 @@ public class Mailbox {
         }
     }
 
+
+    public synchronized Appointment getAppointmentById(int id) throws ServiceException {
+        return (Appointment) getItemById(id, MailItem.TYPE_APPOINTMENT);
+    }
+    Appointment getAppointment(MailItem.UnderlyingData data) throws ServiceException { 
+        return (Appointment) getItem(data);
+    }
+    public synchronized List getAppointmentList(int folderId) throws ServiceException {
+        return getItemList(MailItem.TYPE_APPOINTMENT, folderId);
+    }
+
     public synchronized Calendar getCalendarForRange(OperationContext octxt, long start, long end)
     throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("getCalendarForRange", octxt);
 
-            Collection /* Appointment */ appts = getAppointmentsForRange(octxt, start, end);
+            Collection /* Appointment */ appts = getAppointmentsForRange(octxt, start, end, ID_AUTO_INCREMENT);
             Calendar cal = new Calendar();
 
             // PRODID, VERSION always required
@@ -1903,27 +1914,38 @@ public class Mailbox {
         }
     }
 
-    /**
-     * @param start
-     * @param end
-     * @return The list of Appointments which occur during the specified time period
-     * @throws ServiceException
-     */
-    public synchronized Collection /*<Appointment>*/ getAppointmentsForRange(long start, long end) 
-    throws ServiceException {
-        return getAppointmentsForRange(null, start, end);
-    }
-    public synchronized Collection /*<Appointment>*/ getAppointmentsForRange(OperationContext octxt, long start, long end) 
+    /** Returns a <code>Collection</code> of all {@link Appointment}s which
+     *  overlap the specified time period.  There is no guarantee that the
+     *  returned appointments actually contain a recurrence within the range;
+     *  all that is required is that there is some intersection between the
+     *  (<code>start</code>, <code>end</code>) range and the period from the
+     *  start time of the appointment's first recurrence to the end time of
+     *  its last recurrence.<p>
+     * 
+     *  If a <code>folderId</code> is specified, only <code>Appointment</code>s
+     *  in that folder are returned.  If {@link #ID_AUTO_INCREMENT} is passed
+     *  in as the <code>folderId</code>, all <code>Appointment</code>s not in
+     *  <code>Spam</code> or <code>Trash</code> are returned.
+     * 
+     * @param octxt     The {@link Mailbox.OperationContext}.
+     * @param start     The start time of the range, in milliseconds.
+     * @param end       The end time of the range, in milliseconds.
+     * @param folderId  The folder to search for matching appointments, or
+     *                  {@link #ID_AUTO_INCREMENT} to search all non-Spam and
+     *                  Trash folders in the mailbox.
+     * @throws ServiceException */
+    public synchronized Collection /*<Appointment>*/ getAppointmentsForRange(OperationContext octxt, long start, long end, int folderId)
     throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("getAppointmentsForRange", octxt);
 
             List appointments = new ArrayList();
-            List /* UnderlyingData */ invData = DbMailItem.getAppointments(this, start, end);
+            List /* UnderlyingData */ invData = DbMailItem.getAppointments(this, start, end, folderId);
             for (Iterator iter = invData.iterator(); iter.hasNext(); ) {
-                MailItem item = getItem((MailItem.UnderlyingData) iter.next());
-                appointments.add(item);
+                Appointment appt = getAppointment((MailItem.UnderlyingData) iter.next());
+                if (folderId == appt.getFolderId() || (folderId == ID_AUTO_INCREMENT && appt.inMailbox()))
+                    appointments.add(appt);
             }
             success = true;
             return appointments;
@@ -1986,8 +2008,8 @@ public class Mailbox {
     }
 
 
-    public synchronized FreeBusy getFreeBusy(long start, long end) throws ServiceException {
-        return FreeBusy.getFreeBusyList(this, start, end);
+    public synchronized FreeBusy getFreeBusy(OperationContext octxt, long start, long end) throws ServiceException {
+        return FreeBusy.getFreeBusyList(octxt, this, start, end);
     }
 
     private void addDomains(HashMap domainItems, HashSet newDomains, int flag) {
@@ -2042,13 +2064,6 @@ public class Mailbox {
             mMailboxIndex = new MailboxIndex(this, null);
         return mMailboxIndex;
     }
-
-    public synchronized Appointment getAppointmentById(int id) throws ServiceException {
-        return (Appointment) getItemById(id, MailItem.TYPE_APPOINTMENT);
-    }
-    public synchronized List getAppointmentList(int folderId) throws ServiceException {
-        return getItemList(MailItem.TYPE_APPOINTMENT, folderId);
-    }
     
     /**
      * Directly add an Invite into the system...this process also gets triggered when we add a Message
@@ -2062,8 +2077,8 @@ public class Mailbox {
      * @return int[2] = { appointment-id, invite-mail-item-id }  Note that even though the invite has a mail-item-id, that mail-item does not really exist, it can ONLY be referenced through the appointment "apptId-invMailItemId"
      * @throws ServiceException
      */
-    public synchronized int[] addInvite(OperationContext octxt, Invite inv, boolean force, ParsedMessage pm) throws ServiceException
-    {
+    public synchronized int[] addInvite(OperationContext octxt, Invite inv, boolean force, ParsedMessage pm)
+    throws ServiceException {
         CreateInvite redoRecorder = new CreateInvite();
         CreateInvite redoPlayer = (octxt == null ? null : (CreateInvite) octxt.player);
         

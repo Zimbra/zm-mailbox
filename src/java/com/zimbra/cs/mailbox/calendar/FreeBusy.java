@@ -34,6 +34,7 @@ import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Invite;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.*;
 
 /**
@@ -87,7 +88,7 @@ public class FreeBusy {
             mHead = new Interval(start, end, IcalXmlStrMap.FBTYPE_FREE);
         }
 
-        void AddInterval(Interval toAdd) 
+        void addInterval(Interval toAdd) 
         {
             assert(toAdd.mStart <= toAdd.mEnd);
             // we only care about intervals within our window!  
@@ -256,13 +257,13 @@ public class FreeBusy {
         public Interval getNext() { return mNext; }
     }
 
-    
-    public static FreeBusy getFreeBusyList(Mailbox mbx, long start, long end) throws ServiceException {
-        Collection appts = mbx.getAppointmentsForRange(start, end);
-        
+
+    public static FreeBusy getFreeBusyList(OperationContext octxt, Mailbox mbox, long start, long end) throws ServiceException {
+        Collection appts = mbox.getAppointmentsForRange(octxt, start, end, Mailbox.ID_AUTO_INCREMENT);
+
         IntervalList intervals = new IntervalList(start, end);
         
-        for (Iterator iter = appts.iterator(); iter.hasNext();) {
+        for (Iterator iter = appts.iterator(); iter.hasNext(); ) {
             Appointment cur = (Appointment)iter.next();
             
             Collection instances = cur.expandInstances(start, end); 
@@ -271,15 +272,15 @@ public class FreeBusy {
                 assert(inst.getStart() < end && inst.getEnd() > start);
                 InviteInfo invId = inst.getInviteInfo();
                 try {
-                    Appointment appt = mbx.getAppointmentById(inst.getAppointmentId());
+                    Appointment appt = mbox.getAppointmentById(inst.getAppointmentId());
                     Invite inv = appt.getInvite(invId);
                     if (!inv.isTransparent()) {
                         String freeBusy = inv.getFreeBusyActual();
                         Interval ival = new Interval(inst.getStart(), inst.getEnd(), freeBusy);
-                        intervals.AddInterval(ival);
+                        intervals.addInterval(ival);
                     }
                 } catch (MailServiceException.NoSuchItemException e) {
-                    sLog.debug("Could not load invite "+invId.toString() + " for appt "+mbx.getId());
+                    sLog.debug("Could not load invite "+invId.toString() + " for appt "+mbox.getId());
                 }
             }
         }
@@ -333,21 +334,21 @@ public class FreeBusy {
         System.out.println("List: "+ l.toString());
         
         toAdd = new Interval(50, 60, IcalXmlStrMap.FBTYPE_BUSY);
-        l.AddInterval(toAdd);
+        l.addInterval(toAdd);
         System.out.println("Added: "+toAdd+l.toString());
         toAdd = new Interval(10, 20, IcalXmlStrMap.FBTYPE_BUSY_TENTATIVE);
-        l.AddInterval(toAdd);
+        l.addInterval(toAdd);
         System.out.println("Added: "+toAdd+l.toString());
         toAdd = new Interval(20, 30, IcalXmlStrMap.FBTYPE_BUSY_UNAVAILABLE);
-        l.AddInterval(toAdd);
+        l.addInterval(toAdd);
         System.out.println("Added: "+toAdd+l.toString());
         toAdd = new Interval(15, 35, IcalXmlStrMap.FBTYPE_BUSY);
-        l.AddInterval(toAdd);
+        l.addInterval(toAdd);
         System.out.println("Added: "+toAdd+l.toString());
 
         try {
-            Mailbox mbx = Mailbox.getMailboxById(1);
-            FreeBusy fb = getFreeBusyList(mbx, 0, Long.MAX_VALUE);
+            Mailbox mbox = Mailbox.getMailboxById(1);
+            FreeBusy fb = getFreeBusyList(null, mbox, 0, Long.MAX_VALUE);
             System.out.println(fb.toString());
         } catch (ServiceException e){
             System.out.println("EXCEPTION: "+e);

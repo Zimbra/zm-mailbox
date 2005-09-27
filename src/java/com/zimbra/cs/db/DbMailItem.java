@@ -2017,27 +2017,29 @@ public class DbMailItem {
      * invites between 7:00 and 9:00 will return you everything from 7:00 to 8:59:59.99
      * @param start
      * @param end
-     * 
+     * @param folderId TODO
      * @return list of invites
      */
-    public static List /* Appointment */ getAppointments(Mailbox mbox, long start, long end) 
+    public static List /* Appointment */ getAppointments(Mailbox mbox, long start, long end, int folderId) 
         throws ServiceException
     {
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            String sql = "SELECT " + DB_FIELDS +
-                    " FROM " + getMailItemTableName(mbox.getId(), "mi") + ", " + 
-                               getAppointmentTableName(mbox.getId(), " appt") +
-                    " WHERE mi.type = " + MailItem.TYPE_APPOINTMENT +
-                    " AND mi.id = appt.item_id" +
-                    " AND appt.start_time < ? AND appt.end_time > ?" +
-                    " GROUP BY mi.id";
-            //System.out.println(sql);
-            stmt = conn.prepareStatement(sql);
+            boolean folderSpecified = folderId != Mailbox.ID_AUTO_INCREMENT;
+            stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
+                     " FROM " + getMailItemTableName(mbox.getId(), "mi") + ", " + 
+                         getAppointmentTableName(mbox.getId(), " appt") +
+                     " WHERE mi.type = " + MailItem.TYPE_APPOINTMENT +
+                     " AND mi.id = appt.item_id" +
+                     " AND appt.start_time < ? AND appt.end_time > ?" +
+                     (folderSpecified ? " AND folder_id = ?" : "") +
+                     " GROUP BY mi.id");
             stmt.setTimestamp(1, new Timestamp(end));
             stmt.setTimestamp(2, new Timestamp(start));
+            if (folderSpecified)
+                stmt.setInt(3, folderId);
             rs = stmt.executeQuery();
 
             List /* UnderlyingData */ result = new ArrayList();

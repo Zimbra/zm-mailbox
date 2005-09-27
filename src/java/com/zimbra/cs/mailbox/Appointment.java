@@ -82,21 +82,21 @@ import org.apache.commons.logging.LogFactory;
  * talk about lefties instead. CANCELED for the 28th
  */
 public class Appointment extends MailItem {
+
+    private static Log sLog = LogFactory.getLog(Appointment.class);
+
     private String mUid;
 
-    List /* Invite */ mInvites;
-    
-    // the time IN MSEC UTC that this appointment "starts"
+    /** the time IN MSEC UTC that this appointment "starts" */
     private long mStartTime;
-
-    // the time IN MSEC UTC that this appointment "ends"
+    /** the time IN MSEC UTC that this appointment "ends" */
     private long mEndTime;
 
     private Recurrence.IRecurrence mRecurrence;
-    
-    public Recurrence.IRecurrence getRecurrence() { return mRecurrence; }
+    private TimeZoneMap mTzMap;
 
-    private static Log sLog = LogFactory.getLog(Appointment.class);
+    private List /* Invite */ mInvites;
+
 
     public Appointment(Mailbox mbox, UnderlyingData data)
             throws ServiceException {
@@ -104,6 +104,10 @@ public class Appointment extends MailItem {
         if (mData.type != TYPE_APPOINTMENT) {
             throw new IllegalArgumentException();
         }
+    }
+
+    public Recurrence.IRecurrence getRecurrence() {
+        return mRecurrence;
     }
 
     public boolean isRecurring() {
@@ -119,33 +123,13 @@ public class Appointment extends MailItem {
     }
 
     
-    boolean isTaggable() {
-        return true;
-    }
-
-    boolean isCopyable() {
-        return false;
-    }
-
-    boolean isMovable() {
-        return false;
-    }
-
-    boolean isMutable() {
-        return true;
-    }
-
-    boolean isIndexed() {
-        return true;
-    }
-
-    boolean canHaveChildren() {
-        return false;
-    }
-
-    private TimeZoneMap mTzMap;
+    boolean isTaggable()       { return true; }
+    boolean isCopyable()       { return false; }
+    boolean isMovable()        { return true; }
+    public boolean isMutable() { return true; }
+    boolean isIndexed()        { return true; }
+    boolean canHaveChildren()  { return false; }
     
-//    public TimeZoneMap getTimeZoneMap() { return mTzMap; }
 
     static Appointment create(int id, Folder folder, short volumeId, String tags, String uid,
                               ParsedMessage pm, Invite firstInvite) throws ServiceException {

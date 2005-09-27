@@ -226,7 +226,9 @@ OR
 // GetApptSummaries
 //
 // 
-<GetApptSummariesRequest s="RANGE_START_MSECS_GMT" e="RANGE_END_MSECS_GMT/>
+<GetApptSummariesRequest s="RANGE_START_MSECS_GMT" e="RANGE_END_MSECS_GMT" [l="{folder-id}"]/>
+
+  -- folder-id: optional folder to constrain requests to; otherwise, searches all folders but trash and spam
 
 <GetApptSummariesResponse>
  ( <appt id="appointment_mail_item_id" type="event|todo" fba="F|B|T|U" transp="O|T"
