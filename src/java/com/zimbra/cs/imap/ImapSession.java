@@ -34,6 +34,7 @@ import java.util.*;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.*;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.Session;
@@ -72,7 +73,7 @@ public class ImapSession extends Session {
             Provisioning prov = Provisioning.getInstance();
             mCheckingSpam = prov.getConfig().getBooleanAttr(Provisioning.A_zimbraSpamCheckEnabled, false);
 
-            parseConfig(getMailbox().getConfig("imap"));
+            parseConfig(getMailbox().getConfig(getContext(), "imap"));
         } catch (ServiceException e) { }
     }
 
@@ -86,6 +87,10 @@ public class ImapSession extends Session {
 
     String getUsername()          { return mUsername; }
     void setUsername(String name) { mUsername = name; }
+
+    OperationContext getContext() throws ServiceException {
+        return new OperationContext(getAccountId());
+    }
 
     boolean isSpamCheckEnabled()  { return mCheckingSpam; }
 
@@ -142,7 +147,7 @@ public class ImapSession extends Session {
                 imapName = '\\' + imapName;
             if (!name.equals(""))
                 return imapName;
-            return ":FLAG" + (id - MailItem.TAG_ID_OFFSET);
+            return ":FLAG" + Tag.getIndex(id);
         }
 
         public String toString()  { return mImapName; }
@@ -178,11 +183,11 @@ public class ImapSession extends Session {
     ImapFlag cacheTag(Tag ltag) {
         return (ltag instanceof Flag ? null : cache(new ImapFlag(ltag.getName(), ltag, true)));
     }
-    private void uncacheTag(int id) {
-        id -= MailItem.TAG_ID_OFFSET;
-        if (id < 0 || id >= MailItem.MAX_TAG_COUNT)
+    private void uncacheTag(int tagId) {
+        if (!Tag.validateId(tagId))
             return;
-        ImapFlag i4flag = (ImapFlag) mTags.remove(new Long(1L << id));
+        int index = Tag.getIndex(tagId);
+        ImapFlag i4flag = (ImapFlag) mTags.remove(new Long(1L << index));
         if (i4flag != null)
             mTags.remove(i4flag.mImapName);
     }
@@ -330,7 +335,7 @@ public class ImapSession extends Session {
         for (Iterator it = deleted.values().iterator(); it.hasNext(); ) {
             Object obj = it.next();
             int id = (obj instanceof MailItem ? ((MailItem) obj).getId() : ((Integer) obj).intValue());
-            if (id >= MailItem.TAG_ID_OFFSET && id < MailItem.TAG_ID_OFFSET + MailItem.MAX_TAG_COUNT) {
+            if (Tag.validateId(id)) {
                 uncacheTag(id);
                 if (selected)
                     mSelectedFolder.dirtyTag(id, true);
@@ -388,7 +393,9 @@ public class ImapSession extends Session {
                 if (selected)
                     mSelectedFolder.dirtyTag(ltag.getId());
             } else if (chg.what instanceof Mailbox && (chg.why & Change.MODIFIED_CONFIG) != 0)
-                parseConfig(((Mailbox) chg.what).getConfig("imap"));
+                try {
+                    parseConfig(((Mailbox) chg.what).getConfig(getContext(), "imap"));
+                } catch (ServiceException e) { }
             else if (!selected)
                 continue;
             else if (chg.what instanceof Folder && ((Folder) chg.what).getId() == mSelectedFolder.getId()) {

@@ -204,7 +204,7 @@ public class Indexer
 		mLog.info("indexContact("+contact+")");
         try {
             StringBuffer contentText = new StringBuffer();
-            Map m = contact.getAttrs();
+            Map m = contact.getFields();
             for (Iterator it = m.values().iterator(); it.hasNext(); )
             {
                 String cur = (String)it.next();

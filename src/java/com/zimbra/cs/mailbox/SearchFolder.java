@@ -38,8 +38,12 @@ import com.zimbra.cs.util.StringUtil;
  * @author dkarp
  */
 public class SearchFolder extends Folder {
+
+    /** The search folder's query. */
     private String mQuery;
+    /** The comma-separated list of types the search should return. */
     private String mTypes;
+    /** The field to sort the search's results on. */
     private String mSort;
 
     public SearchFolder(Mailbox mbox, UnderlyingData data) throws ServiceException {
@@ -48,18 +52,26 @@ public class SearchFolder extends Folder {
             throw new IllegalArgumentException();
     }
 
+    /** Returns the query associated with this search folder. */
     public String getQuery() {
         return (mQuery == null ? "" : mQuery);
     }
 
+    /** Returns the set of item types returned by this search, or
+     *  <code>""</code> if none were specified. */
     public String getReturnTypes() {
         return (mTypes == null ? "" : mTypes);
     }
 
+    /** Returns the field this search is sorted on, or <code>""</code>
+     *  if none was specified. */
     public String getSortField() {
         return (mSort == null ? "" : mSort);
     }
 
+    /** Returns whether this search folder is visible through the IMAP
+     *  interface.  At present, this is completely controlled by the COS
+     *  attribute <code>zimbraPrefImapSearchFoldersEnabled</code>. */
     public boolean isImapVisible() {
         try {
             return mMailbox.getAccount().getBooleanAttr(Provisioning.A_zimbraPrefImapSearchFoldersEnabled, true);
@@ -69,14 +81,45 @@ public class SearchFolder extends Folder {
     }
 
 
+    /** Returns whether the folder can contain objects of the given type.
+     *  Search folders may only contain other search folders. */
     boolean canContain(byte type) {
         return (type == TYPE_SEARCHFOLDER);
     }
 
 
-    static SearchFolder create(int id, Folder parent, String name, String query, String types, String sort) throws ServiceException {
+    /** Creates a new SearchFolder and persists it to the database.  A
+     *  real nonnegative item ID must be supplied from a previous call to
+     *  {@link Mailbox#getNextItemId(int)}.
+     * 
+     * @param id      The id for the new search folder.
+     * @param parent  The parent folder to place the new folder in.
+     * @param name    The new folder's name.
+     * @param query   The query associated with the search folder.
+     * @param types   The (optional) set of item types the search returns.
+     * @param sort    The (optional) order the results are returned in.
+     * @perms {@link ACL#RIGHT_INSERT} on the parent folder
+     * @throws ServiceException   The following error codes are possible:<ul>
+     *    <li><code>mail.CANNOT_CONTAIN</code> - if the target folder
+     *        can't contain search folders
+     *    <li><code>mail.ALREADY_EXISTS</code> - if a folder by that name
+     *        already exists in the parent folder
+     *    <li><code>mail.INVALID_NAME</code> - if the new folder's name is
+     *        invalid
+     *    <li><code>mail.INVALID_REQUEST</code> - if the supplied query
+     *        string is blank or missing
+     *    <li><code>service.FAILURE</code> - if there's a database failure
+     *    <li><code>service.PERM_DENIED</code> - if you don't have
+     *        sufficient permissions</ul>
+     * @see #validateFolderName(String)
+     * @see #validateQuery(String)
+     * @see #canContain(byte) */
+    static SearchFolder create(int id, Folder parent, String name, String query, String types, String sort)
+    throws ServiceException {
         if (parent == null || !parent.canContain(TYPE_SEARCHFOLDER))
             throw MailServiceException.CANNOT_CONTAIN();
+        if (!parent.canAccess(ACL.RIGHT_INSERT))
+            throw ServiceException.PERM_DENIED("you do not have sufficient permissions on the parent folder");
         name = validateFolderName(name);
         query = validateQuery(query);
         if (parent.findSubfolder(name) != null)
@@ -103,9 +146,28 @@ public class SearchFolder extends Folder {
         return search;
     }
 
+    /** Replaces the search folder's query and attributes with a new set.
+     *  Persists the updated version to the cache and to the database.
+     *  Omitting the query is not permitted; omitting attributes causes the
+     *  search to use the default <code>types</code> and <code>sort</code>.
+     * 
+     * @param query   The new query associated with the search folder.
+     * @param types   The new (optional) set of item types the search returns.
+     * @param sort    The new (optional) order the results are returned in.
+     * @perms {@link ACL#RIGHT_WRITE} on the search folder
+     * @throws ServiceException   The following error codes are possible:<ul>
+     *    <li><code>mail.IMMUTABLE_OBJECT</code> - if the search folder
+     *        cannot be modified
+     *    <li><code>mail.INVALID_REQUEST</code> - if the supplied query
+     *        string is blank or missing
+     *    <li><code>service.FAILURE</code> - if there's a database failure
+     *    <li><code>service.PERM_DENIED</code> - if you don't have
+     *        sufficient permissions</ul> */
     void changeQuery(String query, String types, String sort) throws ServiceException {
         if (!isMutable())
             throw MailServiceException.IMMUTABLE_OBJECT(mId);
+        if (!canAccess(ACL.RIGHT_WRITE))
+            throw ServiceException.PERM_DENIED("you do not have sufficient permissions on the search folder");
         query = validateQuery(query);
 
         if (query.equals(mQuery) && getReturnTypes().equals(types) && getSortField().equals(sort))
@@ -117,6 +179,16 @@ public class SearchFolder extends Folder {
         saveMetadata();
     }
 
+    /** Cleans up the provided query string and verifies that it's not blank.
+     *  Removes all non-XML-safe control characters and trims leading and
+     *  trailing whitespace.
+     * 
+     * @param query  The query string.
+     * @return The cleaned-up query string.
+     * @throws ServiceException   The following error codes are possible:<ul>
+     *    <li><code>mail.INVALID_REQUEST</code> - if the cleaned-up query
+     *        string is blank or missing</ul>
+     * @see StringUtil#stripControlCharacters(String) */
     protected static String validateQuery(String query) throws ServiceException {
         if (query != null)
             query = StringUtil.stripControlCharacters(query).trim();

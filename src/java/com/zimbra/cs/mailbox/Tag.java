@@ -54,7 +54,20 @@ public class Tag extends MailItem {
     }
 
     public byte getIndex() {
-        return (byte) (mId - TAG_ID_OFFSET);
+        return getIndex(mId);
+    }
+    public static byte getIndex(int id) {
+        return (byte) (id - TAG_ID_OFFSET);
+    }
+
+    /** Returns whether this id falls in the acceptable tag ID range (64..127).
+     *  Does <u>not</u> verify that such a tag exists.
+     * 
+     * @param id  Item id to check.
+     * @see MailItem#TAG_ID_OFFSET
+     * @see MailItem#MAX_TAG_COUNT */
+    public static boolean validateId(int id) {
+        return (id >= MailItem.TAG_ID_OFFSET && id < MailItem.TAG_ID_OFFSET + MailItem.MAX_TAG_COUNT);
     }
 
     public long getBitmask() {
@@ -71,18 +84,18 @@ public class Tag extends MailItem {
         if (csv != null && !csv.equals("")) {
             String[] tags = csv.split(",");
             for (int i = 0; i < tags.length; i++) {
-                long value = 0;
+                int value = 0;
                 try {
-                    value = Long.parseLong(tags[i]);
+                    value = Integer.parseInt(tags[i]);
                 } catch (NumberFormatException e) {
                     ZimbraLog.mailbox.error("unable to parse tags: '" + csv + "'", e);
                     throw e;
                 }
                 
-                if (value < MailItem.TAG_ID_OFFSET || value >= MailItem.TAG_ID_OFFSET + MailItem.MAX_TAG_COUNT)
+                if (!validateId(value))
                     continue;
                 // FIXME: should really check this against the existing tags in the mailbox
-                bitmask |= 1L << (value - MailItem.TAG_ID_OFFSET);
+                bitmask |= 1L << Tag.getIndex(value);
             }
         }
         return bitmask;
@@ -113,11 +126,11 @@ public class Tag extends MailItem {
 
     static Tag create(Mailbox mbox, int id, String name, byte color)
     throws ServiceException {
-        if (id < TAG_ID_OFFSET || id >= TAG_ID_OFFSET + MAX_TAG_COUNT)
+        if (!validateId(id))
             throw MailServiceException.INVALID_ID(id);
         Folder tagFolder = mbox.getFolderById(Mailbox.ID_FOLDER_TAGS);
-        if (tagFolder == null)
-            throw MailServiceException.NO_SUCH_FOLDER(Mailbox.ID_FOLDER_TAGS);
+        if (!tagFolder.canAccess(ACL.RIGHT_INSERT))
+            throw ServiceException.PERM_DENIED("you do not have the necessary permissions");
         name = validateTagName(name);
         try {
             // if we can successfully get a tag with that name, we've got a naming conflict
@@ -143,6 +156,8 @@ public class Tag extends MailItem {
     void rename(String name) throws ServiceException {
         if (!isMutable())
             throw MailServiceException.IMMUTABLE_OBJECT(mId);
+        if (!canAccess(ACL.RIGHT_WRITE))
+            throw ServiceException.PERM_DENIED("you do not have the necessary permissions on the tag");
         name = validateTagName(name);
         if (name.equals(mData.subject))
             return;
@@ -171,23 +186,41 @@ public class Tag extends MailItem {
         return name;
     }
 
+    /** Updates the unread state of all items with the tag.  Persists the
+     *  change to the database and cache, and also updates the unread counts
+     *  for the tag and the affected items' parents and {@link Folder}s
+     *  appropriately.  <i>Note: Tags may only be marked read, not unread.</i>
+     * 
+     * @perms {@link ACL#RIGHT_READ} on the folder,
+     *        {@link ACL#RIGHT_WRITE} on all affected messages. */
     void alterUnread(boolean unread) throws ServiceException {
         if (unread)
             throw ServiceException.INVALID_REQUEST("tags can only be marked read", null);
+        if (!canAccess(ACL.RIGHT_READ))
+            throw ServiceException.PERM_DENIED("you do not have the necessary permissions on the tag");
         if (!isUnread())
             return;
 
-        // Decrement the in-memory unread count of each message.  Each message will
+        // decrement the in-memory unread count of each message.  each message will
         // then implicitly decrement the unread count for its conversation, folder
         // and tags.
         List unreadData = DbMailItem.getUnreadMessages(this);
+        Array targets = new Array();
+        boolean missed = false;
         for (Iterator it = unreadData.iterator(); it.hasNext(); ) {
             Message msg = mMailbox.getMessage((UnderlyingData) it.next());
-            msg.updateUnread(unread ? 1 : -1);
+            if (msg.checkChangeID() || !msg.canAccess(ACL.RIGHT_WRITE)) {
+                msg.updateUnread(unread ? 1 : -1);
+                targets.add(msg.getId());
+            } else
+                missed = true;
         }
 
-        // Mark all messages in this folder as read in the database
-        DbMailItem.alterUnread(this, unread);
+        // Mark all messages with this tag as read in the database
+        if (!missed)
+            DbMailItem.alterUnread(this, unread);
+        else
+            DbMailItem.alterUnread(mMailbox, targets, unread);
     }
 
     void purgeCache(PendingDelete info, boolean purgeItem) throws ServiceException {

@@ -283,16 +283,16 @@ public class DbMailbox {
             rs = stmt.executeQuery();
 
             if (!rs.next())
-                throw MailServiceException.NO_SUCH_MBOX(mailboxId);
+                return null;
             Mailbox.MailboxData mbd = new Mailbox.MailboxData();
-            mbd.id           = mailboxId;
-            mbd.accountId    = rs.getString(1);
-            mbd.size         = rs.getLong(3);
-            mbd.contacts     = 0;
-            mbd.lastItemId   = rs.getInt(2) + ITEM_CHECKPOINT_INCREMENT - 1;
-            mbd.lastChangeId = rs.getInt(4) + CHANGE_CHECKPOINT_INCREMENT - 1;
-            mbd.trackSync    = rs.getBoolean(5);
-            mbd.indexVolumeId     = rs.getShort(6);
+            mbd.id            = mailboxId;
+            mbd.accountId     = rs.getString(1);
+            mbd.size          = rs.getLong(3);
+            mbd.contacts      = 0;
+            mbd.lastItemId    = rs.getInt(2) + ITEM_CHECKPOINT_INCREMENT - 1;
+            mbd.lastChangeId  = rs.getInt(4) + CHANGE_CHECKPOINT_INCREMENT - 1;
+            mbd.trackSync     = rs.getBoolean(5);
+            mbd.indexVolumeId = rs.getShort(6);
             try {
                 mbd.config = new Metadata(rs.getString(7)); 
             } catch (ServiceException e) {

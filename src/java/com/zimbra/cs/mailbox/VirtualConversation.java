@@ -96,11 +96,11 @@ public class VirtualConversation extends Conversation {
         getMessage().alterTag(tag, add);
     }
 
-    protected void addChild(MailItem child) throws ServiceException {
+    void addChild(MailItem child) throws ServiceException {
         throw MailServiceException.CANNOT_PARENT();
     }
 
-    protected void removeChild(MailItem child) throws ServiceException {
+    void removeChild(MailItem child) throws ServiceException {
         if (child.getId() != getMessageId())
             throw MailServiceException.IS_NOT_CHILD();
         markItemDeleted();

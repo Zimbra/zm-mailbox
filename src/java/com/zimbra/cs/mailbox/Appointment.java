@@ -98,12 +98,10 @@ public class Appointment extends MailItem {
     private List /* Invite */ mInvites;
 
 
-    public Appointment(Mailbox mbox, UnderlyingData data)
-            throws ServiceException {
+    public Appointment(Mailbox mbox, UnderlyingData data) throws ServiceException {
         super(mbox, data);
-        if (mData.type != TYPE_APPOINTMENT) {
+        if (mData.type != TYPE_APPOINTMENT)
             throw new IllegalArgumentException();
-        }
     }
 
     public Recurrence.IRecurrence getRecurrence() {
@@ -122,17 +120,20 @@ public class Appointment extends MailItem {
         return mEndTime;
     }
 
-    
+
     boolean isTaggable()       { return true; }
     boolean isCopyable()       { return false; }
     boolean isMovable()        { return true; }
     public boolean isMutable() { return true; }
     boolean isIndexed()        { return true; }
     boolean canHaveChildren()  { return false; }
-    
 
-    static Appointment create(int id, Folder folder, short volumeId, String tags, String uid,
-                              ParsedMessage pm, Invite firstInvite) throws ServiceException {
+
+    static Appointment create(int id, Folder folder, short volumeId, String tags,
+                              String uid, ParsedMessage pm, Invite firstInvite)
+    throws ServiceException {
+        if (!folder.canAccess(ACL.RIGHT_INSERT))
+            throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
         Mailbox mbox = folder.getMailbox();
 
         List invites = new ArrayList();
@@ -145,14 +146,12 @@ public class Appointment extends MailItem {
             endTime = recur.getEndTime().getUtcTime();
         } else {
             startTime = firstInvite.getStartTime().getUtcTime();
-            endTime = startTime;
-            if (firstInvite.getEndTime() != null) {
+            if (firstInvite.getEndTime() != null)
                 endTime = firstInvite.getEndTime().getUtcTime();
-            } else {
-                if (firstInvite.getDuration() != null) {
-                    endTime = firstInvite.getDuration().addToTime(startTime);
-                }
-            }
+            else if (firstInvite.getDuration() != null)
+                endTime = firstInvite.getDuration().addToTime(startTime);
+            else
+                endTime = startTime;
         }
 
         UnderlyingData data = new UnderlyingData();
@@ -173,7 +172,6 @@ public class Appointment extends MailItem {
         appt.finishCreation(null);
 
         DbMailItem.addToAppointmentTable(appt);
-
         return appt;
     }
 
@@ -186,7 +184,7 @@ public class Appointment extends MailItem {
             return false;
         }
         if (firstInv.getRecurrence() != null) {
-            mRecurrence = (Recurrence.RecurrenceRule)(firstInv.getRecurrence().clone());
+            mRecurrence = (Recurrence.RecurrenceRule) firstInv.getRecurrence().clone();
             
             // now, go through the list of invites and find all the exceptions
             for (Iterator iter = mInvites.iterator(); iter.hasNext();) {
@@ -195,7 +193,6 @@ public class Appointment extends MailItem {
                 if (cur != firstInv) {
                     
                     if (cur.getMethod().equals(Method.REQUEST.getValue())) {
-                        
                         assert (cur.hasRecurId());
                         
                         if (cur.hasRecurId()) {
@@ -487,7 +484,7 @@ public class Appointment extends MailItem {
     }
 
     private void processNewInviteRequestOrCancel(ParsedMessage pm, Invite newInvite, boolean force, short volumeId)
-            throws ServiceException {
+    throws ServiceException {
         String method = newInvite.getMethod();
 
         // Remove everyone that is made obselete by this request
@@ -604,7 +601,7 @@ public class Appointment extends MailItem {
             }
         }
     }
-    
+
     void setContent(ParsedMessage pm, String digest, int size) throws ServiceException {
         // mark the old blob as ready for deletion
         PendingDelete info = getDeletionInfo();
@@ -629,6 +626,11 @@ public class Appointment extends MailItem {
         
         public PMDataSource(ParsedMessage pm) {
             mPm = pm;
+        }
+
+        public String getName() {
+            // TODO should we just return null?
+            return mPm.getMessageID();
         }
 
         public String getContentType() {
@@ -656,19 +658,13 @@ public class Appointment extends MailItem {
             }
         }
 
-        public String getName() {
-            // TODO should we just return null?
-            return mPm.getMessageID();
-        }
-
         public OutputStream getOutputStream() throws IOException {
             throw new UnsupportedOperationException();
         }
     }
     
     private void storeUpdatedBlob(MimeMessage mm, short volumeId)
-    throws ServiceException, MessagingException, IOException
-    {
+    throws ServiceException, IOException {
         ParsedMessage pm = new ParsedMessage(mm, true);
         
         byte[] data;
@@ -684,7 +680,7 @@ public class Appointment extends MailItem {
 
         StoreManager sm = StoreManager.getInstance();
         Blob blob = sm.storeIncoming(data, digest, null, volumeId);
-        MailboxBlob mb = sm.renameTo(blob, getMailbox(), getId(), getSavedSequence(), volumeId);
+        sm.renameTo(blob, getMailbox(), getId(), getSavedSequence(), volumeId);
     }
     
     
@@ -698,8 +694,7 @@ public class Appointment extends MailItem {
      * @throws ServiceException
      */
     private void createBlob(ParsedMessage invPm, Invite firstInvite, short volumeId)
-    throws ServiceException 
-    {
+    throws ServiceException {
         try { 
             // create the toplevel multipart/digest...
             MimeMessage mm = new MimeMessage(JMSession.getSession());            
@@ -867,8 +862,7 @@ public class Appointment extends MailItem {
         }
     }
     
-    Calendar getCalendar(int invId) throws ServiceException 
-    {
+    Calendar getCalendar(int invId) throws ServiceException {
         try {
             MimeMessage mm = getMimeMessage(invId);
             
@@ -970,6 +964,5 @@ public class Appointment extends MailItem {
             throw ServiceException.FAILURE("MessagingException while getting MimeMessage for item " + mId, e);
         }
     }
-    
 
-};
+}

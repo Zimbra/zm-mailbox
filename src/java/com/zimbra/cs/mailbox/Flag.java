@@ -36,46 +36,49 @@ import com.zimbra.cs.service.ServiceException;
  */
 public class Flag extends Tag {
 
+    /** Array mapping each <code>Flag</code> to a character that represents
+     *  it in a string encoding.  The <code>Flag</code>'s position in this
+     *  array is the same as its "index": <code>-1 - FLAG_ID</code>. */
     static char[] FLAG_REP = new char[31];
         static {
             for (int i = 0; i < 31; i++)  FLAG_REP[i] = 'X';
         }
 
     public static final int ID_FLAG_FROM_ME = -1;
-    public static final int FLAG_FROM_ME    = 1 << (-1 - ID_FLAG_FROM_ME);
-        static { FLAG_REP[-1 - ID_FLAG_FROM_ME] = 's'; }
+    public static final int FLAG_FROM_ME    = 1 << getIndex(ID_FLAG_FROM_ME);
+        static { FLAG_REP[getIndex(ID_FLAG_FROM_ME)] = 's'; }
 
     public static final int ID_FLAG_ATTACHED = -2;
-    public static final int FLAG_ATTACHED    = 1 << (-1 - ID_FLAG_ATTACHED);
-        static { FLAG_REP[-1 - ID_FLAG_ATTACHED] = 'a'; }
+    public static final int FLAG_ATTACHED    = 1 << getIndex(ID_FLAG_ATTACHED);
+        static { FLAG_REP[getIndex(ID_FLAG_ATTACHED)] = 'a'; }
 
     public static final int ID_FLAG_REPLIED = -3;
-    public static final int FLAG_REPLIED    = 1 << (-1 - ID_FLAG_REPLIED);
-        static { FLAG_REP[-1 - ID_FLAG_REPLIED] = 'r'; }
+    public static final int FLAG_REPLIED    = 1 << getIndex(ID_FLAG_REPLIED);
+        static { FLAG_REP[getIndex(ID_FLAG_REPLIED)] = 'r'; }
 
     public static final int ID_FLAG_FORWARDED = -4;
-    public static final int FLAG_FORWARDED    = 1 << (-1 - ID_FLAG_FORWARDED);
-        static { FLAG_REP[-1 - ID_FLAG_FORWARDED] = 'w'; }
+    public static final int FLAG_FORWARDED    = 1 << getIndex(ID_FLAG_FORWARDED);
+        static { FLAG_REP[getIndex(ID_FLAG_FORWARDED)] = 'w'; }
 
     public static final int ID_FLAG_COPIED = -5;
-    public static final int FLAG_COPIED    = 1 << (-1 - ID_FLAG_COPIED);
-        static { FLAG_REP[-1 - ID_FLAG_COPIED] = '2'; }
+    public static final int FLAG_COPIED    = 1 << getIndex(ID_FLAG_COPIED);
+        static { FLAG_REP[getIndex(ID_FLAG_COPIED)] = '2'; }
 
     public static final int ID_FLAG_FLAGGED = -6;
-    public static final int FLAG_FLAGGED    = 1 << (-1 - ID_FLAG_FLAGGED);
-        static { FLAG_REP[-1 - ID_FLAG_FLAGGED] = 'f'; }
+    public static final int FLAG_FLAGGED    = 1 << getIndex(ID_FLAG_FLAGGED);
+        static { FLAG_REP[getIndex(ID_FLAG_FLAGGED)] = 'f'; }
 
     public static final int ID_FLAG_DRAFT = -7;
-    public static final int FLAG_DRAFT    = 1 << (-1 - ID_FLAG_DRAFT);
-        static { FLAG_REP[-1 - ID_FLAG_DRAFT] = 'd'; }
+    public static final int FLAG_DRAFT    = 1 << getIndex(ID_FLAG_DRAFT);
+        static { FLAG_REP[getIndex(ID_FLAG_DRAFT)] = 'd'; }
 
     public static final int ID_FLAG_DELETED = -8;
-    public static final int FLAG_DELETED    = 1 << (-1 - ID_FLAG_DELETED);
-        static { FLAG_REP[-1 - ID_FLAG_DELETED] = 'x'; }
+    public static final int FLAG_DELETED    = 1 << getIndex(ID_FLAG_DELETED);
+        static { FLAG_REP[getIndex(ID_FLAG_DELETED)] = 'x'; }
 
     public static final int ID_FLAG_NOTIFIED = -9;
-    public static final int FLAG_NOTIFIED    = 1 << (-1 - ID_FLAG_NOTIFIED);
-        static { FLAG_REP[-1 - ID_FLAG_NOTIFIED] = 'n'; }
+    public static final int FLAG_NOTIFIED    = 1 << getIndex(ID_FLAG_NOTIFIED);
+        static { FLAG_REP[getIndex(ID_FLAG_NOTIFIED)] = 'n'; }
 
     /**
      * The outside world (callers of {@link Mailbox} methods treat
@@ -85,12 +88,12 @@ public class Flag extends Tag {
      * lookups of unread <code>MailItem</code>s.
      */
     public static final int ID_FLAG_UNREAD = -10;
-    public static final int FLAG_UNREAD    = 1 << (-1 - ID_FLAG_UNREAD);
-        static { FLAG_REP[-1 - ID_FLAG_UNREAD] = 'u'; }
+    public static final int FLAG_UNREAD    = 1 << getIndex(ID_FLAG_UNREAD);
+        static { FLAG_REP[getIndex(ID_FLAG_UNREAD)] = 'u'; }
 
     public static final int ID_FLAG_SUBSCRIBED = -20;
-    public static final int FLAG_SUBSCRIBED    = 1 << (-1 - ID_FLAG_SUBSCRIBED);
-        static { FLAG_REP[-1 - ID_FLAG_SUBSCRIBED] = '*'; }
+    public static final int FLAG_SUBSCRIBED    = 1 << getIndex(ID_FLAG_SUBSCRIBED);
+        static { FLAG_REP[getIndex(ID_FLAG_SUBSCRIBED)] = '*'; }
 
     static final String UNREAD_FLAG_ONLY = getAbbreviation(ID_FLAG_UNREAD) + "";
 
@@ -113,7 +116,10 @@ public class Flag extends Tag {
 	}
 
     public byte getIndex() {
-        return (byte) (-mId - 1);
+        return getIndex(mId);
+    }
+    public static byte getIndex(int flagId) {
+        return (byte) (-flagId - 1);
     }
 
 

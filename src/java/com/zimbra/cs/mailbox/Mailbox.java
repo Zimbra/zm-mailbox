@@ -105,6 +105,18 @@ public class Mailbox {
     static final int  ONE_MONTH_SECS   = 60 * 60 * 24 * 31;
     static final long ONE_MONTH_MILLIS = ONE_MONTH_SECS * 1000L;
 
+    /** Static cache for mailboxes.  Contains two separate mappings:<ul>
+     *    <li>Maps account IDs (<code>String</code>s) to mailbox IDs
+     *        (<code>Integer</code>s).  <i>Every</i> mailbox in existence
+     *        on the server appears in this mapping.
+     *    <li>Maps mailbox IDs (<code>Integer</code>s) to loaded
+     *        <code>Mailbox</code>es.  Mailboxes are faulted into memory
+     *        as needed, but are then cached for the life of the server
+     *        or until explicitly unloaded.  Only one <code>Mailbox</code>
+     *        per user is cached, and only that <code>Mailbox</code> can
+     *        process user requests.</ul>
+     *  When new mailboxes are created, they are added to both mappings.
+     *  When mailboxes are deleted, they are removed from both mappings. */
     private static Map sMailboxCache;
         static {
             try {
@@ -300,21 +312,23 @@ public class Mailbox {
         initFlags();
     }
 
-    /** @return the server-local numeric ID for this mailbox */
+    /** Returns the server-local numeric ID for this mailbox.  To get a
+     *  system-wide, persistent unique identifier for the mailbox, use
+     *  {@link #getAccountId()}. */
     public int getId() {
         return mId;
     }
 
-    Account getAuthenticatedAccount() {
-        return (mCurrentChange.active && mCurrentChange.octxt != null ? mCurrentChange.octxt.authuser : null);
-    }
-
-    /** @return the ID of the account for this mailbox */
+    /** Returns the ID of this mailbox's Account.  This is a 36-character
+     *  GUID, e.g. <code>"1b4e28ba-2fa1-11d2-883f-b9a761bde3fb"</code>.
+     * 
+     * @see #getAccount() */
     public String getAccountId() {
         return mData.accountId;
     }
 
-    /** @return the Account object for this mailbox */
+    /** Returns the {@link Account} object for this mailbox's owner.  At
+     *  present, each account can have at most one <code>Mailbox</code>. */
     public synchronized Account getAccount() throws ServiceException {
         Account acct = getAccount(getAccountId());
         if (acct != null)
@@ -323,7 +337,11 @@ public class Mailbox {
                                " (was expecting " + getAccountId() + ')');
         throw AccountServiceException.NO_SUCH_ACCOUNT(mData.accountId);
     }
-    /** @return the Account object for the specified account ID */
+
+    /** Returns the {@link Account} object for the specified account ID.  This
+     *  is just shorthand for {@link Provisioning#getAccountById(String)}.
+     * 
+     * @param accountId  The <code>zimbraId</code> to look up. */
     public static Account getAccount(String accountId) throws ServiceException {
         return Provisioning.getInstance().getAccountById(accountId);
     }
@@ -401,7 +419,7 @@ public class Mailbox {
     }
 
     /** Returns the change sequence number for the most recent
-     *  transaction.  This will be either the change number for the 
+     *  transaction.  This will be either the change number for the
      *  current transaction or, if no database changes have yet been
      *  made in this transaction, the sequence number for the last
      *  committed change.
@@ -434,8 +452,8 @@ public class Mailbox {
      *  Every write to the database is assigned a monotonically-increasing
      *  (though not necessarily gap-free) change number.  All writes in
      *  a single transaction receive the same change number.  This change
-     *  number is persisted as <code>mail_item.mod_metadata</code> in all
-     *  non-delete cases, as <code>mail_item.mod_content</code> for any 
+     *  number is persisted as <code>MAIL_ITEM.MOD_METADATA</code> in all
+     *  non-delete cases, as <code>MAIL_ITEM.MOD_CONTENT</code> for any 
      *  items that were created or had their "content" modified, and as
      *  <code>tombstone.sequence</code> for hard deletes. */
     public int getOperationChangeID() throws ServiceException {
@@ -461,7 +479,12 @@ public class Mailbox {
         return true;
     }
 
-    /** @return the last id assigned to an item successfully created in the mailbox */
+    /** Returns the last id assigned to an item successfully created in the
+     *  mailbox.  On startup, this value will be rounded up to the nearest
+     *  100, so there may be gaps in the set of IDs actually assigned.
+     * 
+     * @see MailItem#getId()
+     * @see DbMailbox#ITEM_CHECKPOINT_INCREMENT */
     public int getLastItemId() {
         return (mCurrentChange.itemId == MailboxChange.NO_CHANGE ? mData.lastItemId : mCurrentChange.itemId);
     }
@@ -489,7 +512,32 @@ public class Mailbox {
     }
 
 
-    /** @return the total (uncompressed) size of the mailbox */
+    /** Returns the {@link Account} for the authenticated user for the
+     *  transaction.  Returns <code>null</code> if none was supplied in the
+     *  transaction's {@link Mailbox.OperationContext} or if the authenticated
+     *  user is the same as the <code>Mailbox</code>'s owner.*/
+    Account getAuthenticatedAccount() {
+        Account authuser = null;
+        if (mCurrentChange.active && mCurrentChange.octxt != null)
+            authuser = mCurrentChange.octxt.authuser;
+        if (authuser != null && authuser.getId().equals(getAccountId()))
+            authuser = null;
+        return authuser;
+    }
+
+    /** Returns whether the authenticated user has full access to this
+     *  <code>Mailbox</code>.   The following users have full access:<ul>
+     *    <li>the mailbox's owner
+     *    <li>all admin accounts</ul>
+     * 
+     * @see #getAuthenticatedAccount() */
+    boolean hasFullAccess() {
+        Account authuser = getAuthenticatedAccount();
+        return authuser == null || authuser.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);
+    }
+
+
+    /** Returns the total (uncompressed) size of the mailbox's contents. */
     public long getSize() {
         return (mCurrentChange.size == MailboxChange.NO_CHANGE ? mData.size : mCurrentChange.size);
     }
@@ -512,7 +560,15 @@ public class Mailbox {
             throw MailServiceException.QUOTA_EXCEEDED(quota);
     }
 
-    /** change the count of contacts currently in the mailbox */
+    /** Updates the count of contacts currently in the mailbox.  The
+     *  administrator can place a limit on a user's contact count by setting
+     *  the <code>zimbraContactMaxNumEntries</code> COS attribute.  Contacts
+     *  in the Trash still count against this quota.
+     * 
+     * @param delta  The change in contact count, negative to decrease.
+     * @throws ServiceException  The following error codes are possible:<ul>
+     *    <li><code>mail.TOO_MANY_CONTACTS</code> - if the user's contact
+     *        quota would be exceeded</ul> */
     void updateContactCount(int delta) throws ServiceException {
         if (delta == 0)
             return;
@@ -527,60 +583,49 @@ public class Mailbox {
     }
 
 
-    /** @return the set of configuration info for the given section, or null if none is found */
-    public synchronized Metadata getConfig(String section) {
-        Metadata meta = mCurrentChange.config == null ? mData.config : mCurrentChange.config;
-        if (meta == null || section == null || section.equals(""))
-            return null;
-        String config = meta.get(section, null);
-        if (config == null)
-            return null;
-        try {
-            return new Metadata(config);
-        } catch (ServiceException e) {
-            ZimbraLog.mailbox.warn("could not decode config metadata for section:" + section);
-            return null;
-        }
-    }
-
-    public synchronized void setConfig(OperationContext octxt, String section, Metadata config) throws ServiceException {
-        if (section == null)
-            throw new IllegalArgumentException();
-        // FIXME: needs redolog support
-
-        boolean success = false;
-        try {
-            beginTransaction("setConfig", octxt, null);
-
-            mCurrentChange.mDirty.recordModified(this, Change.MODIFIED_CONFIG);
-            mCurrentChange.config = new Metadata().copy(mData.config);
-            if (config != null)
-                mCurrentChange.config.put(section, config.toString());
-            else
-                mCurrentChange.config.remove(section);
-
-            DbMailbox.updateConfig(this, mCurrentChange.config);
-            success = true;
-        } finally {
-            endTransaction(success);
-        }
-    }
-
-
+    /** Adds the item to the current change's list of items created during
+     *  the transaction.
+     * @param item  The created item. */
     void markItemCreated(MailItem item) {
         mCurrentChange.mDirty.recordCreated(item);
     }
+
+    /** Adds the item to the current change's list of items deleted during
+     *  the transaction.
+     * @param item  The deleted item. */
     void markItemDeleted(MailItem item) {
         mCurrentChange.mDirty.recordDeleted(item);
     }
+
+    /** Adds the item ids to the current change's list of items deleted during
+     *  the transaction.
+     * @param itemIds  The list of deleted items' ids. */
     void markItemDeleted(List itemIds) {
         for (int i = 0; i < itemIds.size(); i++)
             mCurrentChange.mDirty.recordDeleted(((Integer) itemIds.get(i)).intValue());
     }
+
+    /** Adds the item to the current change's list of items modified during
+     *  the transaction.
+     * @param item    The modified item.
+     * @param reason  The bitmask describing the modified item properties.
+     * @see com.zimbra.cs.session.PendingModifications.Change */
     void markItemModified(MailItem item, int reason) {
         mCurrentChange.mDirty.recordModified(item, reason);
     }
 
+    /** Adds the object to the current change's list of non-{@link MailItem}
+     *  objects affected during the transaction.  Among these "dirty" items
+     *  can be:<ul>
+     *    <li>The {@link Blob} or {@link MailboxBlob} for a newly-created file.
+     *    <li>The {@link MailItem.PendingDelete} holding blobs and index
+     *        entries to be cleaned up after a {@link MailItem#delete}.
+     *    <li>The SHA1 hash of a conversation's subject stored in
+     *        {@link #mConvHashes}.
+     * 
+     * @param obj  The relevant object.
+     * @see #commitCache(Mailbox.MailboxChange)
+     * @see #rollbackCache(Mailbox.MailboxChange) */
     void markOtherItemDirty(Object obj) {
         mCurrentChange.mOtherDirtyStuff.add(obj);
     }
@@ -601,13 +646,13 @@ public class Mailbox {
         mCurrentChange.conn = conn;
     }
 
-    /** Puts the Mailbox into maintenance mode.  As a side effect, disconnects any
-     *  {@link Session}s listening on this Mailbox.
+    /** Puts the Mailbox into maintenance mode.  As a side effect, disconnects
+     *  any {@link Session}s listening on this Mailbox.
      * 
      * @return A new MailboxLock token for use in a subsequent call to
-     *         {@link #endMaintenance}.
-     * @throws ServiceException MailServiceException.MAINTENANCE if the Mailbox is
-     *                          already in maintenance mode. */
+     *         {@link #endMaintenance(Mailbox.MailboxLock, boolean, boolean)}.
+     * @throws ServiceException MailServiceException.MAINTENANCE if the
+     *         <code>Mailbox</code> is already in maintenance mode. */
     private synchronized MailboxLock beginMaintenance() throws ServiceException {
         if (mMaintenance != null)
             throw MailServiceException.MAINTENANCE(mId);
@@ -669,6 +714,92 @@ public class Mailbox {
         // we can only start a redoable operation as the transaction's base change
         if (recorder != null && mCurrentChange.depth > 1)
             throw ServiceException.FAILURE("cannot start a logged transaction from within another transaction", null);
+
+        // we'll need folders and tags loaded in order to handle ACLs
+        loadFoldersAndTags();
+    }
+
+
+    /** Returns the set of configuration info for the given section.
+     *  We segment the mailbox-level configuration data into "sections" to
+     *  allow server applications to store their config separate from all
+     *  other apps.  (So the IMAP server could store and retrieve the
+     *  <code>"imap"</code> config section, etc.)
+     * 
+     * @param octxt    The context for this request (e.g. auth user id).
+     * @param section  The config section to fetch.
+     * @perms full access to the mailbox (see {@link #hasFullAccess()})
+     * @return The {@link Metadata} representing the appropriate section's
+     *         configuration information, or <code>null</code> if none is
+     *         found or if the caller does not have sufficient priviliges
+     *         to read the mailbox's config. */
+    public synchronized Metadata getConfig(OperationContext octxt, String section) throws ServiceException {
+        if (section == null || section.equals(""))
+            return null;
+
+        boolean success = false;
+        try {
+            beginTransaction("getConfig", octxt, null);
+
+            // make sure they have sufficient rights to view the config
+            if (!hasFullAccess())
+                return null;
+
+            Metadata meta = mCurrentChange.config == null ? mData.config : mCurrentChange.config;
+            if (meta == null)
+                return null;
+            String config = meta.get(section, null);
+            if (config == null)
+                return null;
+            try {
+                return new Metadata(config);
+            } catch (ServiceException e) {
+                ZimbraLog.mailbox.warn("could not decode config metadata for section:" + section);
+                return null;
+            }
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    /** Sets the configuration info for the given section.  We segment the
+     *  mailbox-level configuration data into "sections" to allow server
+     *  applications to store their config separate from all other apps.
+     * 
+     * @param octxt    The context for this request (e.g. auth user id).
+     * @param section  The config section to store.
+     * @param config   The new config data for the section.
+     * @perms full access to the mailbox (see {@link #hasFullAccess()})
+     * @throws ServiceException  The following error codes are possible:<ul>
+     *    <li><code>service.FAILURE</code> - if there's a database failure
+     *    <li><code>service.PERM_DENIED</code> - if you don't have
+     *        sufficient permissions</ul>
+     * @see #getConfig(OperationContext, String) */
+    public synchronized void setConfig(OperationContext octxt, String section, Metadata config) throws ServiceException {
+        if (section == null)
+            throw new IllegalArgumentException();
+        // FIXME: needs redolog support
+
+        boolean success = false;
+        try {
+            beginTransaction("setConfig", octxt, null);
+
+            // make sure they have sufficient rights to view the config
+            if (!hasFullAccess())
+                throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
+
+            mCurrentChange.mDirty.recordModified(this, Change.MODIFIED_CONFIG);
+            mCurrentChange.config = new Metadata().copy(mData.config);
+            if (config != null)
+                mCurrentChange.config.put(section, config.toString());
+            else
+                mCurrentChange.config.remove(section);
+
+            DbMailbox.updateConfig(this, mCurrentChange.config);
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
     }
 
 
@@ -697,7 +828,7 @@ public class Mailbox {
         if (ZimbraLog.cache.isDebugEnabled())
             ZimbraLog.cache.debug("cached " + MailItem.getNameForType(item) + " " + item.getId() + " in mailbox " + getId());
     }
-    
+
     void uncache(MailItem item) throws ServiceException {
         if (item == null)
             return;
@@ -718,7 +849,14 @@ public class Mailbox {
         
         item.uncacheChildren();
     }
-    
+
+    /** Removes an item from the <code>Mailbox</code>'s item cache.  If the
+     *  item has any children, they are also uncached.  <i>Note: This function
+     *  cannot be used to uncache {@link Tag}s and {@link Folder}s.  You must
+     *  call {@link #uncache(MailItem)} to remove those items from their
+     *  respective caches.</i>
+     * 
+     * @param itemId  The id of the item to uncache */
     void uncacheItem(Integer itemId) throws ServiceException {
         Object obj = getItemCache().remove(itemId);
         if (ZimbraLog.cache.isDebugEnabled())
@@ -727,6 +865,11 @@ public class Mailbox {
             ((MailItem) obj).uncacheChildren();
     }
     
+    /** Removes all items of a specified type from the <code>Mailbox</code>'s
+     *  caches.  There may be some collateral damage: purging non-tag,
+     *  non-folder types will drop the entire item cache.
+     * 
+     * @param type  The type of item to completely uncache. */
     void purge(byte type) {
         switch (type) {
             case MailItem.TYPE_FOLDER:
@@ -753,38 +896,52 @@ public class Mailbox {
         }
     }
 
-    /**
-     * Returns the mailbox for the given account.  Creates a new mailbox if one doesn't
-     * already exist.
+    /** Returns the mailbox for the given account.  Creates a new mailbox
+     *  if one doesn't already exist.
      *
-     * @throws ServiceException if an error occurred while creating the mailbox or the
-     * mailbox is not on this host
-     */
+     * @param account  The account whose mailbox we want.
+     * @return The requested <code>Mailbox</code> object.
+     * @throws ServiceException  The following error codes are possible:<ul>
+     *    <li><code>mail.MAINTENANCE</code> - if the mailbox is in maintenance
+     *        mode and the calling thread doesn't hold the lock
+     *    <li><code>service.FAILURE</code> - if there's a database failure
+     *    <li><code>service.WRONG_HOST</code> - if the Account's mailbox
+     *        lives on a different host</ul> */
     public static Mailbox getMailboxByAccount(Account account) throws ServiceException {
         if (account == null)
             throw new IllegalArgumentException();
         return getMailboxByAccountId(account.getId());
     }
 
-    /**
-     * Returns the mailbox for the given account id.  Creates a new mailbox if one doesn't
-     * already exist.
+    /** Returns the mailbox for the given account id.  Creates a new
+     *  mailbox if one doesn't already exist.
      *
-     * @throws ServiceException if an error occurred while creating the mailbox or the
-     * mailbox is not on this host
-     */
+     * @param accountId  The id of the account whose mailbox we want.
+     * @return The requested <code>Mailbox</code> object.
+     * @throws ServiceException  The following error codes are possible:<ul>
+     *    <li><code>mail.MAINTENANCE</code> - if the mailbox is in maintenance
+     *        mode and the calling thread doesn't hold the lock
+     *    <li><code>service.FAILURE</code> - if there's a database failure
+     *    <li><code>service.WRONG_HOST</code> - if the Account's mailbox
+     *        lives on a different host</ul> */
     public static Mailbox getMailboxByAccountId(String accountId) throws ServiceException {
         return getMailboxByAccountId(accountId, true);
     }
-    
-    /**
-     * Returns the mailbox for the given account id.  If <code>autocreate</code> is <code>true</code>,
-     * implicitly creates the mailbox if it doesn't exist.  If <code>autocreate</code> is
-     * <code>false</code> and the mailbox doesn't exist, returns <code>null</code>.
+
+    /** Returns the mailbox for the given account id.  Creates a new
+     *  mailbox if one doesn't already exist and <code>autocreate</code>
+     *  is <code>true</code>.
      *
-     * @throws ServiceException if an error occurred while creating the mailbox or the
-     * mailbox is not on this host
-     */
+     * @param accountId   The id of the account whose mailbox we want.
+     * @param autocreate  <code>true</code> to create the mailbox if needed,
+     *                    <code>false</code> to just return <code>null</code>
+     * @return The requested <code>Mailbox</code> object, or <code>null</code>.
+     * @throws ServiceException  The following error codes are possible:<ul>
+     *    <li><code>mail.MAINTENANCE</code> - if the mailbox is in maintenance
+     *        mode and the calling thread doesn't hold the lock
+     *    <li><code>service.FAILURE</code> - if there's a database failure
+     *    <li><code>service.WRONG_HOST</code> - if the Account's mailbox
+     *        lives on a different host</ul> */
     public static Mailbox getMailboxByAccountId(String accountId, boolean autocreate) throws ServiceException {
         if (accountId == null)
             throw new IllegalArgumentException();
@@ -813,6 +970,21 @@ public class Mailbox {
         }
     }
 
+    /** Returns the <code>Mailbox</code> with the given id.  Throws an
+     *  exception if no such <code>Mailbox</code> exists.  If the
+     *  <code>Mailbox</code> is undergoing maintenance, still returns the
+     *  <code>Mailbox</code> if the calling thread is the holder of the lock.
+     *
+     * @param mailboxId  The id of the mailbox we want.
+     * @return The requested <code>Mailbox</code> object.
+     * @throws ServiceException  The following error codes are possible:<ul>
+     *    <li><code>mail.NO_SUCH_MBOX</code> - if no such mailbox exists (yet)
+     *        on this server
+     *    <li><code>mail.MAINTENANCE</code> - if the mailbox is in maintenance
+     *        mode and the calling thread doesn't hold the lock
+     *    <li><code>service.FAILURE</code> - if there's a database failure
+     *    <li><code>service.WRONG_HOST</code> - if the Account's mailbox
+     *        lives on a different host</ul> */
     public static Mailbox getMailboxById(int mailboxId) throws ServiceException {
         if (mailboxId <= 0)
             throw MailServiceException.NO_SUCH_MBOX(mailboxId);
@@ -835,7 +1007,11 @@ public class Mailbox {
             boolean success = false;
             try {
                 conn = DbPool.getConnection();
-                mailbox = new Mailbox(DbMailbox.getMailboxStats(conn, mailboxId));
+                MailboxData mdata = DbMailbox.getMailboxStats(conn, mailboxId);
+                if (mdata == null)
+                    throw MailServiceException.NO_SUCH_MBOX(mailboxId);
+                mailbox = new Mailbox(mdata);
+
                 mailbox.beginTransaction("getMailboxById", null, null, conn);
                 if (obj instanceof MailboxLock)
                     ((MailboxLock) obj).mailbox = mailbox;
@@ -908,7 +1084,10 @@ public class Mailbox {
         }
     }
 
-    /** @return an array of all the mailbox IDs on this host */
+    /** Returns an array of all the mailbox IDs on this host.  Note that
+     *  <code>Mailbox</code>es are lazily created, so this is not the same
+     *  as the set of mailboxes for accounts whose <code>zimbraMailHost</code>
+     *  LDAP attribute points to this server. */
     public static int[] getMailboxIds() {
         int i = 0, mailboxIds[] = null;
         synchronized (sMailboxCache) {
@@ -927,21 +1106,19 @@ public class Mailbox {
         return result;
     }
     
-    /**
-     * 
-     * Get all mailbox IDs.
-     * @return an array of mailbox IDs.
-     * @throws ServiceException
-     */
+    /** Returns an array of the account IDs of all the mailboxes on this host.
+     *  Note that <code>Mailbox</code>es are lazily created, so this is not
+     *  the same as the set of accounts whose <code>zimbraMailHost</code> LDAP
+     *  attribute points to this server.*/
     public static String[] getAccountIds() {
         int i = 0;
         String accountIds[] = null;
         synchronized (sMailboxCache) {
-            Set col = sMailboxCache.keySet();
-            accountIds = new String[col.size()];
+            Set set = sMailboxCache.keySet();
+            accountIds = new String[set.size()];
             // mMailboxCache contains accountId -> mailboxId mappings as well as
             //   mailboxId -> Mailbox mappings.  we just want to iterate over the first of these...
-            for (Iterator it = col.iterator(); it.hasNext(); ) {
+            for (Iterator it = set.iterator(); it.hasNext(); ) {
                 Object o = it.next();
                 if (o instanceof String)
                     accountIds[i++] = (String) o;
@@ -953,13 +1130,21 @@ public class Mailbox {
     }
     
 
-    /**
-     * Creates a mailbox. 
-     * 
-     * @param account the account
-     * @return the mailbox created
-     * @throws ServiceException
-     */
+    /** Creates a <code>Mailbox</code> for the given {@link Account}, caches
+     *  it for the lifetime of the server, inserts the default set of system
+     *  folders, and returns it.  If the account's mailbox already exists on
+     *  this sevrer, returns that and does not update the database.
+     *
+     * @param octxt    The context for this request (e.g. redo player).
+     * @param account  The account to create a mailbox for.
+     * @return A new or existing <code>Mailbox</code> object for the account.
+     * @throws ServiceException  The following error codes are possible:<ul>
+     *    <li><code>mail.MAINTENANCE</code> - if the mailbox is in maintenance
+     *        mode and the calling thread doesn't hold the lock
+     *    <li><code>service.FAILURE</code> - if there's a database failure
+     *    <li><code>service.WRONG_HOST</code> - if the Account's mailbox
+     *        lives on a different host</ul>
+     * @see #initialize() */
     public static Mailbox createMailbox(OperationContext octxt, Account account) throws ServiceException {
         if (account == null)
             throw new IllegalArgumentException("createMailbox: must specify an account");
@@ -1029,34 +1214,41 @@ public class Mailbox {
         return mailbox;
     }
 
-//    MAILBOX_ROOT
-//     +--Tags
-//     +--Conversations
-//     +--<other hidden system folders>
-//     +--USER_ROOT
-//         +--INBOX
-//         +--Trash
-//         +--Sent
-//         +--<other immutable folders>
-//         +--<user-created folders>
+    /** Creates the default set of immutable system folders in a new mailbox.
+     *  These system folders have fixed ids (e.g. {@link #ID_FOLDER_INBOX})
+     *  and are hardcoded in the server:<pre>
+     *     MAILBOX_ROOT
+     *       +--Tags
+     *       +--Conversations
+     *       +--&lt;other hidden system folders>
+     *       +--USER_ROOT
+     *            +--INBOX
+     *            +--Trash
+     *            +--Sent
+     *            +--&lt;other immutable folders>
+     *            +--&lt;user-created folders></pre>
+     *  This function does <u>not</u> have hooks for inserting arbitrary
+     *  folders, tags, or messages into a new mailbox.
+     * 
+     * @see Folder#create(int, Mailbox, Folder, String, byte) */
     private void initialize() throws ServiceException {
-        // first, create the caches and load the default set of tags for the new mailbox
-        loadFoldersAndTags();
+        // the new mailbox's caches are created and the default set of tags are
+        // loaded by the earlier call to loadFoldersAndTags in beginTransaction
 
         byte hidden = Folder.FOLDER_IS_IMMUTABLE | Folder.FOLDER_NO_UNREAD_COUNT;
-        Folder root = Folder.create(this, ID_FOLDER_ROOT, null, "ROOT", hidden, MailItem.TYPE_UNKNOWN);
-        Folder.create(this, ID_FOLDER_TAGS,          root, "Tags",          hidden, MailItem.TYPE_TAG);
-        Folder.create(this, ID_FOLDER_CONVERSATIONS, root, "Conversations", hidden, MailItem.TYPE_CONVERSATION);
+        Folder root = Folder.create(ID_FOLDER_ROOT, this, null, "ROOT", hidden, MailItem.TYPE_UNKNOWN);
+        Folder.create(ID_FOLDER_TAGS,          this, root, "Tags",          hidden, MailItem.TYPE_TAG);
+        Folder.create(ID_FOLDER_CONVERSATIONS, this, root, "Conversations", hidden, MailItem.TYPE_CONVERSATION);
 
         byte system = Folder.FOLDER_IS_IMMUTABLE;
-        Folder userRoot = Folder.create(this, ID_FOLDER_USER_ROOT, root, "USER_ROOT", system, MailItem.TYPE_UNKNOWN);
-        Folder.create(this, ID_FOLDER_INBOX,    userRoot, "Inbox",    system, MailItem.TYPE_MESSAGE);
-        Folder.create(this, ID_FOLDER_TRASH,    userRoot, "Trash",    system, MailItem.TYPE_UNKNOWN);
-        Folder.create(this, ID_FOLDER_SPAM,     userRoot, "Junk",     system, MailItem.TYPE_MESSAGE);
-        Folder.create(this, ID_FOLDER_SENT,     userRoot, "Sent",     system, MailItem.TYPE_MESSAGE);
-        Folder.create(this, ID_FOLDER_DRAFTS,   userRoot, "Drafts",   system, MailItem.TYPE_MESSAGE);
-        Folder.create(this, ID_FOLDER_CONTACTS, userRoot, "Contacts", system, MailItem.TYPE_CONTACT);
-        Folder.create(this, ID_FOLDER_CALENDAR, userRoot, "Calendar", system, MailItem.TYPE_APPOINTMENT);
+        Folder userRoot = Folder.create(ID_FOLDER_USER_ROOT, this, root, "USER_ROOT", system, MailItem.TYPE_UNKNOWN);
+        Folder.create(ID_FOLDER_INBOX,    this, userRoot, "Inbox",    system, MailItem.TYPE_MESSAGE);
+        Folder.create(ID_FOLDER_TRASH,    this, userRoot, "Trash",    system, MailItem.TYPE_UNKNOWN);
+        Folder.create(ID_FOLDER_SPAM,     this, userRoot, "Junk",     system, MailItem.TYPE_MESSAGE);
+        Folder.create(ID_FOLDER_SENT,     this, userRoot, "Sent",     system, MailItem.TYPE_MESSAGE);
+        Folder.create(ID_FOLDER_DRAFTS,   this, userRoot, "Drafts",   system, MailItem.TYPE_MESSAGE);
+        Folder.create(ID_FOLDER_CONTACTS, this, userRoot, "Contacts", system, MailItem.TYPE_CONTACT);
+        Folder.create(ID_FOLDER_CALENDAR, this, userRoot, "Calendar", system, MailItem.TYPE_APPOINTMENT);
         mCurrentChange.itemId = FIRST_USER_ID;
 
         // and write a checkpoint to the tombstones table to help establish a change/date relationship
@@ -1081,7 +1273,6 @@ public class Mailbox {
     private void loadFoldersAndTags() throws ServiceException {
         if (mFolderCache != null && mTagCache != null)
             return;
-        
         ZimbraLog.cache.debug("Initializing folder and tag caches for mailbox " + getId());
 
         try {
@@ -1349,32 +1540,44 @@ public class Mailbox {
             }
         }
     }
-    
+
+
+    /** Returns whether this type of {@link MailItem} is definitely preloaded
+     *  in one of the <code>Mailbox</code>'s caches.
+     * 
+     * @param type  The type of <code>MailItem</code>.
+     * @return <code>true</code> if the item is a {@link Folder} or {@link Tag}
+     *         or one of their subclasses.
+     * @see #mTagCache
+     * @see #mFolderCache */
     public static boolean isCachedType(byte type) {
         return type == MailItem.TYPE_FOLDER || type == MailItem.TYPE_SEARCHFOLDER ||
-               type == MailItem.TYPE_TAG    || type == MailItem.TYPE_FLAG;
+               type == MailItem.TYPE_TAG    || type == MailItem.TYPE_FLAG ||
+               type == MailItem.TYPE_MOUNTPOINT;
+    }
+
+    private MailItem checkAccess(MailItem item) throws ServiceException {
+        if (item == null || item.canAccess(ACL.RIGHT_READ))
+            return item;
+        throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
     }
 
     /** mechanism for getting an item */
     public synchronized MailItem getItemById(int id, byte type) throws ServiceException {
         boolean success = false;
         try {
+            // tag/folder caches are populated in beginTransaction...
             beginTransaction("getItemById", null);
-
-            // populate caches if necessary
-            boolean cached = isCachedType(type);
-            if (cached || type == MailItem.TYPE_UNKNOWN)
-                loadFoldersAndTags();
 
             // try the cache first
             MailItem item = getCachedItem(new Integer(id), type);
             if (item != null) {
                 success = true;
-                return item;
+                return checkAccess(item);
             }
 
             // the tag and folder caches contain ALL tags and folders, so cache miss == doesn't exist
-            if (cached)
+            if (isCachedType(type))
                 throw MailItem.noSuchItem(id, type);
 
             if (id <= -FIRST_USER_ID) {
@@ -1385,7 +1588,7 @@ public class Mailbox {
                 if (msg == null)
                     msg = getMessageById(-id);
                 if (msg.getConversationId() != id)
-                    return msg.getParent();
+                    return checkAccess(msg.getParent());
                 else
                     item = new VirtualConversation(this, msg);
             } else {
@@ -1393,7 +1596,7 @@ public class Mailbox {
                 item = MailItem.getById(this, id, type);
             }
             success = true;
-            return item;
+            return checkAccess(item);
         } finally {
             endTransaction(success);
         }
@@ -1408,12 +1611,8 @@ public class Mailbox {
         Set uncached = new HashSet();
         boolean success = false;
         try {
+            // tag/folder caches are populated in beginTransaction...
             beginTransaction("getItemById[]", null);
-
-            // populate caches if necessary
-            boolean cached = isCachedType(type);
-            if (cached || type == MailItem.TYPE_UNKNOWN)
-                loadFoldersAndTags();
 
             // try the cache first
             Integer miss = null;
@@ -1427,7 +1626,7 @@ public class Mailbox {
                     MailItem item = getCachedItem(key, type);
                     // special-case virtual conversations
                     if (item == null && ids[i] <= -FIRST_USER_ID) {
-                        if (!isAcceptableType(type, MailItem.TYPE_CONVERSATION))
+                        if (!MailItem.isAcceptableType(type, MailItem.TYPE_CONVERSATION))
                             throw MailItem.noSuchItem(ids[i], type);
                         Message msg = getCachedMessage(key = new Integer(-ids[i]));
                         if (msg != null) {
@@ -1436,7 +1635,7 @@ public class Mailbox {
                         } else
                             relaxType = true;
                     }
-                    items[i] = item;
+                    items[i] = checkAccess(item);
                     if (item == null)
                         uncached.add(miss = key);
                 }
@@ -1447,7 +1646,7 @@ public class Mailbox {
             }
 
             // the tag and folder caches contain ALL tags and folders, so cache miss == doesn't exist
-            if (cached)
+            if (isCachedType(type))
                 throw MailItem.noSuchItem(miss.intValue(), type);
 
             // cache miss, so fetch from the database
@@ -1471,6 +1670,7 @@ public class Mailbox {
                     } else
                         if ((items[i] = getCachedItem(new Integer(ids[i]))) == null)
                             throw MailItem.noSuchItem(ids[i], type);
+                    items[i] = checkAccess(items[i]);
                 }
 
             // special case asking for VirtualConversation but having it be a real Conversation
@@ -1481,7 +1681,7 @@ public class Mailbox {
                         MailItem item = getCachedItem(new Integer(-ids[i]));
                         if (!(item instanceof Message) || item.getParentId() == ids[i])
                             throw ServiceException.FAILURE("item should be cached but is not: " + -ids[i], null);
-                        items[i] = getCachedItem(new Integer(item.getParentId()));
+                        items[i] = checkAccess(getCachedItem(new Integer(item.getParentId())));
                         if (items[i] == null)
                             throw MailItem.noSuchItem(ids[i], type);
                     }
@@ -1492,22 +1692,6 @@ public class Mailbox {
         } finally {
             endTransaction(success);
         }
-    }
-
-    public static boolean isAcceptableType(byte desired, byte actual) {
-        // standard case: exactly what we're asking for
-        if (desired == actual || desired == MailItem.TYPE_UNKNOWN)
-            return true;
-        // exceptions: ask for Tag and get Flag, ask for Folder and get SearchFolder, ask for Conversation and get VirtualConversation
-        else if (desired == MailItem.TYPE_FOLDER && actual == MailItem.TYPE_SEARCHFOLDER)
-            return true;
-        else if (desired == MailItem.TYPE_TAG && actual == MailItem.TYPE_FLAG)
-            return true;
-        else if (desired == MailItem.TYPE_CONVERSATION && actual == MailItem.TYPE_VIRTUAL_CONVERSATION)
-            return true;
-        // failure: found something, but it's not the type you were looking for
-        else
-            return false;
     }
 
     /** retrieve an item from the Mailbox's caches; return null if no item found */
@@ -1521,7 +1705,7 @@ public class Mailbox {
             item = (MailItem) getItemCache().get(key);
         
         logCacheActivity(key, item);
-        return item;
+        return checkAccess(item);
     }
     MailItem getCachedItem(Integer key, byte type) throws ServiceException {
         MailItem item = null;
@@ -1543,7 +1727,7 @@ public class Mailbox {
             break;
         }
 
-        MailItem retVal = (item == null || isAcceptableType(type, item.mData.type) ? item : null);
+        MailItem retVal = checkAccess(item == null || MailItem.isAcceptableType(type, item.mData.type) ? item : null);
         logCacheActivity(key, retVal);
         return retVal;
     }
@@ -1556,7 +1740,7 @@ public class Mailbox {
         // XXX: should we sanity-check the cached version to make sure all the data matches?
         if (item != null)
             return item;
-        return MailItem.constructItem(this, data);
+        return checkAccess(MailItem.constructItem(this, data));
     }
 
     /** @return all the MailItems of a given type, optionally in a specified folder */
@@ -1564,6 +1748,8 @@ public class Mailbox {
         return getItemList(type, -1);
     }
     public synchronized List /*<MailItem>*/ getItemList(byte type, int folderId) throws ServiceException {
+        if (!hasFullAccess())
+            throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
         if (type == MailItem.TYPE_UNKNOWN)
             return null;
         Folder folder = null;
@@ -1571,13 +1757,13 @@ public class Mailbox {
 
         boolean success = false;
         try {
+            // tag/folder caches are populated in beginTransaction...
             beginTransaction("getItemList", null);
 
             if (folderId != -1)
                 folder = getFolderById(folderId);
 
             if (type == MailItem.TYPE_TAG) {
-                loadFoldersAndTags();
                 if (folderId != -1 && folderId != ID_FOLDER_TAGS)
                     return null;
                 for (Iterator it = mTagCache.entrySet().iterator(); it.hasNext(); ) {
@@ -1588,7 +1774,6 @@ public class Mailbox {
                 success = true;
                 return result;
             } else if (type == MailItem.TYPE_FOLDER || type == MailItem.TYPE_SEARCHFOLDER) {
-                loadFoldersAndTags();
                 for (Iterator it = mFolderCache.values().iterator(); it.hasNext(); ) {
                     Folder subfolder = (Folder) it.next();
                     if (folder == null || subfolder.getParentId() == folderId)
@@ -1620,6 +1805,8 @@ public class Mailbox {
 
     /** returns the list of IDs of items of the given type in the given folder */
     public synchronized int[] listItemIds(byte type, int folderId) throws ServiceException {
+        if (!hasFullAccess())
+            throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
         boolean success = false;
         try {
             beginTransaction("listItemIds", null);
@@ -1643,6 +1830,8 @@ public class Mailbox {
     public void beginTrackingSync() throws ServiceException {
         if (isTrackingSync())
             return;
+        if (!hasFullAccess())
+            throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
 
         boolean success = false;
         try {
@@ -1659,6 +1848,8 @@ public class Mailbox {
     public synchronized String getTombstones(long lastSync) throws ServiceException {
         if (!isTrackingSync())
             throw ServiceException.FAILURE("not tracking sync", null);
+        if (!hasFullAccess())
+            throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
 
         boolean success = false;
         try {
@@ -1676,6 +1867,8 @@ public class Mailbox {
     public synchronized List /*<MailItem>*/ getModifiedItems(byte type, long lastSync) throws ServiceException {
         if (type == MailItem.TYPE_UNKNOWN)
             return null;
+        else if (!hasFullAccess())
+            throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
         else if (lastSync >= getLastChangeID())
             return Collections.EMPTY_LIST;
 
@@ -1685,7 +1878,6 @@ public class Mailbox {
             beginTransaction("getModifiedItems", null);
 
             if (type == MailItem.TYPE_TAG) {
-                loadFoldersAndTags();
                 for (Iterator it = mTagCache.entrySet().iterator(); it.hasNext(); ) {
                     Map.Entry entry = (Map.Entry) it.next();
                     if (entry.getKey() instanceof String) {
@@ -1695,7 +1887,6 @@ public class Mailbox {
                     }
                 }
             } else if (type == MailItem.TYPE_FOLDER || type == MailItem.TYPE_SEARCHFOLDER) {
-                loadFoldersAndTags();
                 for (Iterator it = mFolderCache.values().iterator(); it.hasNext(); ) {
                     Folder subfolder = (Folder) it.next();
                     if (type != MailItem.TYPE_SEARCHFOLDER || subfolder instanceof SearchFolder)
@@ -1744,7 +1935,6 @@ public class Mailbox {
 
             if (name == null || name.equals(""))
                 throw ServiceException.INVALID_REQUEST("tag name may not be null", null);
-            loadFoldersAndTags();
             Tag tag = (Tag) mTagCache.get(name.toLowerCase());
             if (tag == null)
                 throw MailServiceException.NO_SUCH_TAG(name);
@@ -2699,11 +2889,9 @@ public class Mailbox {
             MailItem item = getItemById(itemId, type);
             checkItemChangeID(item);
 
-            if (flags == MailItem.FLAG_UNCHANGED)
+            if ((flags & MailItem.FLAG_UNCHANGED) != 0)
                 flags = item.getFlagBitmask();
-            else
-                flags = (flags & ~Flag.FLAG_SYSTEM) | (item.getFlagBitmask() & Flag.FLAG_SYSTEM);
-            if (tags == MailItem.TAG_UNCHANGED)
+            if ((tags & MailItem.TAG_UNCHANGED) != 0)
                 tags = item.getTagBitmask();
 
             // Special-case the unread flag.  It's passed in as a flag from the outside,
@@ -2811,10 +2999,9 @@ public class Mailbox {
 
             int tagId = (redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getTagId());
             if (tagId != ID_AUTO_INCREMENT)
-                if (tagId < MailItem.TAG_ID_OFFSET || tagId >= MailItem.TAG_ID_OFFSET + MailItem.MAX_TAG_COUNT)
+                if (!Tag.validateId(tagId))
                     throw ServiceException.INVALID_REQUEST("invalid tag id " + tagId, null);
 
-            loadFoldersAndTags();
             if (tagId == ID_AUTO_INCREMENT) {
                 for (tagId = MailItem.TAG_ID_OFFSET; tagId < MailItem.TAG_ID_OFFSET + MailItem.MAX_TAG_COUNT; tagId++)
                     if (mTagCache.get(new Integer(tagId)) == null)
@@ -3020,7 +3207,6 @@ public class Mailbox {
             beginTransaction("createFolder", octxt, redoRecorder);
             CreateFolder redoPlayer = (CreateFolder) mCurrentChange.getRedoPlayer();
 
-            loadFoldersAndTags();
             String[] parts = path.substring(1).split("/");
             if (parts.length == 0)
                 throw MailServiceException.ALREADY_EXISTS(path);
@@ -3035,7 +3221,7 @@ public class Mailbox {
                 int folderId = playerFolderIds == null ? ID_AUTO_INCREMENT : playerFolderIds[i];
                 Folder subfolder = folder.findSubfolder(parts[i]);
                 if (subfolder == null)
-                    subfolder = Folder.create(this, getNextItemId(folderId), folder, parts[i], (byte) 0, last ? defaultView : MailItem.TYPE_UNKNOWN);
+                    subfolder = Folder.create(getNextItemId(folderId), this, folder, parts[i], (byte) 0, last ? defaultView : MailItem.TYPE_UNKNOWN);
                 else if (folderId != ID_AUTO_INCREMENT && folderId != subfolder.getId())
                     throw ServiceException.FAILURE("parent folder id changed since operation was recorded", null);
                 else if (last)
@@ -3046,6 +3232,36 @@ public class Mailbox {
             redoRecorder.setFolderIds(recorderFolderIds);
             success = true;
             return folder;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public synchronized void grantAccess(OperationContext octxt, int folderId, String grantee, byte granteeType, short rights, boolean inherit) throws ServiceException {
+        // FIXME: add redoplayer
+
+        boolean success = false;
+        try {
+            beginTransaction("grantAccess", octxt, null);
+
+            Folder folder = getFolderById(folderId);
+            folder.grantAccess(grantee, granteeType, rights, inherit);
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public synchronized void revokeAccess(OperationContext octxt, int folderId, String grantee) throws ServiceException {
+        // FIXME: add redoplayer
+
+        boolean success = false;
+        try {
+            beginTransaction("revokeAccess", octxt, null);
+
+            Folder folder = getFolderById(folderId);
+            folder.revokeAccess(grantee);
+            success = true;
         } finally {
             endTransaction(success);
         }
@@ -3077,7 +3293,7 @@ public class Mailbox {
                     int subfolderId = playerParentIds == null ? ID_AUTO_INCREMENT : playerParentIds[i];
                     Folder subfolder = parent.findSubfolder(pathSegment);
                     if (subfolder == null)
-                        subfolder = Folder.create(this, getNextItemId(subfolderId), parent, pathSegment);
+                        subfolder = Folder.create(getNextItemId(subfolderId), this, parent, pathSegment);
                     else if (subfolderId != ID_AUTO_INCREMENT && subfolderId != subfolder.getId())
                         throw ServiceException.FAILURE("parent folder id changed since operation was recorded", null);
                     else if (!subfolder.getName().equals(pathSegment) && subfolder.isMutable())
@@ -3149,6 +3365,25 @@ public class Mailbox {
         }
     }
 
+    public synchronized Mountpoint createMountpoint(OperationContext octxt, int folderId, String name, String ownerId, int remoteId, byte view)
+    throws ServiceException {
+        CreateMountpoint redoRecorder = new CreateMountpoint(mId, folderId, name, ownerId, remoteId, view);
+
+        boolean success = false;
+        try {
+            beginTransaction("createMountpoint", octxt, redoRecorder);
+            CreateMountpoint redoPlayer = (CreateMountpoint) mCurrentChange.getRedoPlayer();
+
+            int mptId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getId());
+            Mountpoint mpt = Mountpoint.create(mptId, getFolderById(folderId), name, ownerId, remoteId, view);
+            redoRecorder.setId(mpt.getId());
+            success = true;
+            return mpt;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
     public synchronized void purgeMessages(OperationContext octxt) throws ServiceException {
         Account acct = getAccount();
         int globalTimeout = (int) (acct.getTimeInterval(Provisioning.A_zimbraMailMessageLifetime, 0) / 1000);
@@ -3171,7 +3406,6 @@ public class Mailbox {
             beginTransaction("purgeMessages", octxt, redoRecorder);
 
             // get the folders we're going to be purging
-            loadFoldersAndTags();
             Folder trash = getFolderById(ID_FOLDER_TRASH);
             Folder spam  = getFolderById(ID_FOLDER_SPAM);
 

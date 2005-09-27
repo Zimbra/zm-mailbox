@@ -38,6 +38,7 @@ import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailItem.LocationCount;
+import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.ZimbraLog;
@@ -121,9 +122,9 @@ public class Conversation extends MailItem {
             for (int i = 0; i < mTags.length; i++) {
                 int value = mTags.array[i];
                 if (value < 0)
-                    mData.flags |= 1 << (-value - 1);
+                    mData.flags |= 1 << Flag.getIndex(value);
                 else
-                    mData.tags |= 1L << (value - TAG_ID_OFFSET);
+                    mData.tags |= 1L << Tag.getIndex(value);
             }
         }
 
@@ -145,10 +146,19 @@ public class Conversation extends MailItem {
     }
 
 
+    /** Returns the normalized subject of the conversation.  This is done by
+     *  taking the <code>Subject:</code> header of the first message and
+     *  removing prefixes (e.g. <code>"Re:"</code>) and suffixes (e.g. 
+     *  <code>"(fwd)"</code>) and the like.
+     * 
+     * @see ParsedMessage#normalizeSubject */
     public String getNormalizedSubject() {
         return super.getSubject();
     }
 
+    /** Returns the raw subject of the conversation.  This is taken directly
+     *  from the <code>Subject:</code> header of the first message, with no
+     *  processing. */
     public String getSubject() {
         return (mRawSubject == null ? "" : mRawSubject);
     }
@@ -157,7 +167,6 @@ public class Conversation extends MailItem {
         return (mChildren == null ? 0 : mChildren.length);
     }
 
-    /** @return the "internal" flag bitmask, which does not include {@link Flag#FLAG_UNREAD}. */
     public int getInternalFlagBitmask() {
         return 0;
     }
@@ -238,15 +247,20 @@ public class Conversation extends MailItem {
             mData.subject = msg.getNormalizedSubject();
             mRawSubject   = msg.getSubject();
         }
-        sLog.info("new subject is '" + getSubject() + '\'');
-        sLog.info("new normalized is '" + getNormalizedSubject() + '\'');
+        if (sLog.isDebugEnabled()) {
+            sLog.debug("conv " + mId + ": new subject is '" + getSubject() + '\'');
+            sLog.debug("conv " + mId + ": new normalized is '" + getNormalizedSubject() + '\'');
+        }
     }
 
     static final byte SORT_ID_ASCENDING = DbMailItem.SORT_BY_ID | DbMailItem.SORT_ASCENDING;
 
-    /** @return all the messages for this conversation.
-     *  @param sort the sort order for the messages, specified by one of the
-     *              <code>SORT_XXX</code> constants from {@link DbMailItem} */
+    /** Returns all the {@link Message}s in this conversation.  The messages
+     *  are fetched from the {@link Mailbox}'s cache, if possible; if not,
+     *  they're fetched from the database.
+     * 
+     * @param sort  The sort order for the messages, specified by one of the
+     *              <code>SORT_XXX</code> constants from {@link DbMailItem}. */
     Message[] getMessages(byte sort) throws ServiceException {
         if ((sort & DbMailItem.SORT_FIELD_MASK) == DbMailItem.SORT_BY_ID) {
             // try to get all our info from the cache to avoid a database trip
@@ -269,6 +283,9 @@ public class Conversation extends MailItem {
             msgs[i] = mMailbox.getMessage((UnderlyingData) it.next());
         return msgs;
     }
+    /** Returns all the unread {@link Message}s in this conversation.
+     *  The messages are fetched from the database; they are not returned
+     *  in any particular order. */
     Message[] getUnreadMessages() throws ServiceException {
         List unreadData = DbMailItem.getUnreadMessages(this);
         if (unreadData == null)
@@ -299,11 +316,16 @@ public class Conversation extends MailItem {
         StringBuffer children = new StringBuffer(), tags = new StringBuffer();
         SenderList sl = new SenderList();
         for (int i = 0; i < msgs.length; i++) {
-            date = Math.max(date, msgs[i].mData.date);
+            Message msg = msgs[i];
+            if (msg == null)
+                throw ServiceException.FAILURE("null Message in list", null);
+            if (!msg.canAccess(ACL.RIGHT_READ))
+                throw ServiceException.PERM_DENIED("you do not have sufficient rights on one of the messages");
+            date = Math.max(date, msg.mData.date);
             unread += msgs[i].mData.unreadCount;
-            children.append(i == 0 ? "" : ",").append(msgs[i].mId);
-            tags.append(i == 0 ? "-" : ",-").append(msgs[i].mData.flags)
-                .append(',').append(msgs[i].mData.tags);
+            children.append(i == 0 ? "" : ",").append(msg.mId);
+            tags.append(i == 0 ? "-" : ",-").append(msg.mData.flags)
+                .append(',').append(msg.mData.tags);
             sl.add(msgs[i]);
         }
 
@@ -344,6 +366,24 @@ public class Conversation extends MailItem {
         close(Mailbox.getHash(getSubject()));
     }
 
+    /** Updates the unread state of all messages in the conversation.
+     *  Persists the change to the database and cache, and also updates
+     *  the unread counts for the affected items' {@link Folder}s and
+     *  {@link Tag}s appropriately.<p>
+     * 
+     *  Messages in the conversation are omitted from this operation if
+     *  one or more of the following applies:<ul>
+     *     <li>The caller lacks {@link ACL#RIGHT_WRITE} permission on
+     *         the <code>Message</code>.
+     *     <li>The caller has specified a {@link MailItem.TargetConstraint}
+     *         that explicitly excludes the <code>Message</code>.
+     *     <li>The caller has specified the maximum change number they
+     *         know about, and the (modification/content) change number on
+     *         the <code>Message</code> is greater.</ul>
+     *  As a result of all these constraints, no messages may actually be
+     *  marked read/unread.
+     * 
+     * @perms {@link ACL#RIGHT_WRITE} on all the messages */
     void alterUnread(boolean unread) throws ServiceException {
         markItemModified(Change.MODIFIED_UNREAD);
 
@@ -355,7 +395,9 @@ public class Conversation extends MailItem {
         Array targets = new Array();
         for (int i = 0; i < msgs.length; i++) {
             Message msg = msgs[i];
-            if (msg.isUnread() != unread && msg.checkChangeID() && TargetConstraint.checkItem(tcon, msg)) {
+            if (msg.isUnread() != unread && msg.checkChangeID() &&
+                    TargetConstraint.checkItem(tcon, msg) &&
+                    msg.canAccess(ACL.RIGHT_WRITE)) {
                 msg.updateUnread(unread ? 1 : -1);
                 targets.add(msg.getId());
             }
@@ -365,14 +407,31 @@ public class Conversation extends MailItem {
         DbMailItem.alterUnread(mMailbox, targets, unread);
     }
 
-    // conversations are a special case for tagging -- need to affect every child of the conversation
+    /** Tags or untags all messages in the conversation.  Persists the change
+     *  to the database and cache.  If the conversation includes at least one
+     *  unread {@link Message} whose tagged state is changing, updates the 
+     *  {@link Tag}'s unread count appropriately.<p>
+     * 
+     *  Messages in the conversation are omitted from this operation if
+     *  one or more of the following applies:<ul>
+     *     <li>The caller lacks {@link ACL#RIGHT_WRITE} permission on
+     *         the <code>Message</code>.
+     *     <li>The caller has specified a {@link MailItem.TargetConstraint}
+     *         that explicitly excludes the <code>Message</code>.
+     *     <li>The caller has specified the maximum change number they
+     *         know about, and the (modification/content) change number on
+     *         the <code>Message</code> is greater.</ul>
+     *  As a result of all these constraints, no messages may actually be
+     *  tagged/untagged.
+     * 
+     * @perms {@link ACL#RIGHT_WRITE} on all the messages */
     void alterTag(Tag tag, boolean add) throws ServiceException {
         if (tag == null)
             throw MailServiceException.CANNOT_TAG();
         if ((add ? mData.size : 0) == mInheritedTagSet.count(tag))
             return;
         if (tag.getId() == Flag.ID_FLAG_UNREAD)
-            throw ServiceException.FAILURE("unread state must be set with alterUnread()", null);
+            throw ServiceException.FAILURE("unread state must be set with alterUnread", null);
         
         markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
 
@@ -381,7 +440,9 @@ public class Conversation extends MailItem {
         Array targets = new Array();
         for (int i = 0; i < msgs.length; i++) {
             Message msg = msgs[i];
-            if (msg.isTagged(tag) != add && msg.checkChangeID() && TargetConstraint.checkItem(tcon, msg)) {
+            if (msg.isTagged(tag) != add && msg.checkChangeID() &&
+                    TargetConstraint.checkItem(tcon, msg) &&
+                    msg.canAccess(ACL.RIGHT_WRITE)) {
                 // since we're adding/removing a tag, the tag's unread count may change
             	if (tag.trackUnread() && msg.isUnread())
                     tag.updateUnread(add ? 1 : -1);
@@ -406,6 +467,28 @@ public class Conversation extends MailItem {
             mInheritedTagSet = new TagSet(tag);
     }
 
+    /** Moves all the conversation's {@link Message}s to a different
+     *  {@link Folder}.  Persists the change to the database and the in-memory
+     *  cache.  Updates all relevant unread counts, folder sizes, etc.<p>
+     * 
+     *  Messages moved to the Trash folder are automatically marked read.
+     *  Conversations moved to the Junk folder will not receive newly-delivered
+     *  messages.<p>
+     * 
+     *  Messages in the conversation are omitted from this operation if
+     *  one or more of the following applies:<ul>
+     *     <li>The caller lacks {@link ACL#RIGHT_WRITE} permission on
+     *         the <code>Message</code>.
+     *     <li>The caller has specified a {@link MailItem.TargetConstraint}
+     *         that explicitly excludes the <code>Message</code>.
+     *     <li>The caller has specified the maximum change number they
+     *         know about, and the (modification/content) change number on
+     *         the <code>Message</code> is greater.</ul>
+     *  As a result of all these constraints, no messages may actually be
+     *  moved.
+     * 
+     * @perms {@link ACL#RIGHT_INSERT} on the target folder,
+     *        {@link ACL#RIGHT_DELETE} on the messages' source folders */
     void move(Folder target) throws ServiceException {
         if (!target.canContain(TYPE_MESSAGE))
             throw MailServiceException.CANNOT_CONTAIN();
@@ -426,8 +509,10 @@ public class Conversation extends MailItem {
             Message msg = msgs[i];
             Folder source = msg.getFolder();
 
-            // skip messages that the client doesn't know about or has explicitly excluded
+            // skip messages that the client doesn't know about, can't modify, or has explicitly excluded
             if (!msg.checkChangeID() || !TargetConstraint.checkItem(tcon, msg))
+                continue;
+            if (!source.canAccess(ACL.RIGHT_DELETE) || !target.canAccess(ACL.RIGHT_INSERT))
                 continue;
 
             if (msg.isUnread()) {
@@ -465,7 +550,7 @@ public class Conversation extends MailItem {
     }
 
     /** please call this *after* adding the child row to the DB */
-    protected void addChild(MailItem child) throws ServiceException {
+    void addChild(MailItem child) throws ServiceException {
         super.addChild(child);
 
         // update inherited tags, if applicable
@@ -506,7 +591,7 @@ public class Conversation extends MailItem {
         }
     }
 
-    protected void removeChild(MailItem child) throws ServiceException {
+    void removeChild(MailItem child) throws ServiceException {
         super.removeChild(child);
         // remove the last message and the conversation goes away
         if (mChildren.length == 0) {
@@ -601,7 +686,28 @@ public class Conversation extends MailItem {
         other.delete();
     }
 
-    PendingDelete getDeletionInfo() throws ServiceException {
+    /** Determines the set of {@link Message}s to be deleted from this
+     *  <code>Conversation</code>.  Assembles a new {@link PendingDelete}
+     *  object encapsulating the data on the items to be deleted.<p>
+     * 
+     *  A message will be deleted unless:<ul>
+     *     <li>The caller lacks {@link ACL#RIGHT_DELETE} permission on
+     *         the <code>Message</code>.
+     *     <li>The caller has specified a {@link MailItem.TargetConstraint}
+     *         that explicitly excludes the <code>Message</code>.
+     *     <li>The caller has specified the maximum change number they
+     *         know about, and the (modification/content) change number on
+     *         the <code>Message</code> is greater.</ul>
+     *  As a result of all these constraints, no messages may actually be
+     *  deleted.
+     * 
+     * @throws ServiceException The following error codes are possible:<ul>
+     *    <li><code>mail.MODIFY_CONFLICT</code> - if the caller specified a
+     *        max change number and a modification check, and the modified
+     *        change number of the <code>Message</code> is greater
+     *    <li><code>service.FAILURE</code> - if there's a database
+     *        failure fetching the message list</ul> */
+    MailItem.PendingDelete getDeletionInfo() throws ServiceException {
         PendingDelete info = new PendingDelete();
         info.rootId = mId;
         info.itemIds.add(new Integer(mId));
@@ -613,7 +719,8 @@ public class Conversation extends MailItem {
 
         for (int i = 0; i < msgs.length; i++) {
             Message child = msgs[i];
-            if (!child.checkChangeID() || !TargetConstraint.checkItem(tcon, child)) {
+            if (!child.checkChangeID() || !TargetConstraint.checkItem(tcon, child) ||
+                    !child.canAccess(ACL.RIGHT_DELETE)) {
                 info.incomplete = MailItem.DELETE_CONTENTS;
                 continue;
             }

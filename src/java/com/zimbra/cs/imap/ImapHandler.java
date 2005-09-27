@@ -571,9 +571,9 @@ public class ImapHandler extends ProtocolHandler {
     }
 
     private OperationContext getContext() throws ServiceException {
-        if (mMailbox == null)
+        if (mSession == null)
             throw ServiceException.AUTH_REQUIRED();
-        return new OperationContext(mMailbox.getAccount());
+        return mSession.getContext();
     }
 
 
@@ -1167,7 +1167,7 @@ public class ImapHandler extends ProtocolHandler {
                         ImapFlag i4flag = (ImapFlag) i4flags.get(i);
                         if (!i4flag.mPermanent)
                             sflags |= i4flag.mBitmask;
-                        else if (i4flag.mId >= MailItem.TAG_ID_OFFSET)
+                        else if (Tag.validateId(i4flag.mId))
                             tagStr.append(tagStr.length() == 0 ? "" : ",").append(i4flag.mId);
                         else if (i4flag.mPositive)
                             flagMask |= i4flag.mBitmask;
@@ -1732,7 +1732,7 @@ public class ImapHandler extends ProtocolHandler {
                         long tags   = (operation != STORE_REPLACE ? i4msg.tags : 0);
                         for (int i = 0; i < i4flags.size(); i++) {
                             ImapFlag i4flag = (ImapFlag) i4flags.get(i);
-                            if (i4flag.mId >= MailItem.TAG_ID_OFFSET && i4flag.mId < MailItem.TAG_ID_OFFSET + MailItem.MAX_TAG_COUNT)
+                            if (Tag.validateId(i4flag.mId))
                                 tags = (operation == STORE_REMOVE ^ !i4flag.mPositive ? tags & ~i4flag.mBitmask : tags | i4flag.mBitmask);
                             else if (!i4flag.mPermanent)
                                 sflags = (byte) (operation == STORE_REMOVE ^ !i4flag.mPositive ? sflags & ~i4flag.mBitmask : sflags | i4flag.mBitmask);

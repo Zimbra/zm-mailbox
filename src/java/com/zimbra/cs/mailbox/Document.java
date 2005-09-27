@@ -77,12 +77,15 @@ public class Document extends MailItem {
 	boolean canHaveChildren() { return false; }
 
 
-    static Document create(int id, Folder folder, short volumeId, String filename, String type, File content, MailItem parent) throws ServiceException {
+    static Document create(int id, Folder folder, short volumeId, String filename, String type, File content, MailItem parent)
+    throws ServiceException {
     	assert(id != Mailbox.ID_AUTO_INCREMENT);
         if (folder == null || !folder.canContain(TYPE_DOCUMENT))
             throw MailServiceException.CANNOT_CONTAIN();
-        if (content == null || content.equals(""))
-            throw ServiceException.INVALID_REQUEST("document may not be empty", null);
+        if (!folder.canAccess(ACL.RIGHT_INSERT))
+            throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
+        if (content == null)
+            throw ServiceException.INVALID_REQUEST("content may not be empty", null);
 
         Mailbox mbox = folder.getMailbox();
         UnderlyingData data = new UnderlyingData();

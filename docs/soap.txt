@@ -491,15 +491,27 @@ Conversations:
                  
 Folders:
 
-  <folder id="{folder-id}" name="{folder-name}" l="{parent-id}" [color="{color}"] u="{unread}" n="{msg-count}" [view="{default-type}"]/>
-  
+  <folder id="{folder-id}" name="{folder-name}" l="{parent-id}" [color="{color}"] u="{unread}" n="{msg-count}" [view="{default-type}"]>
+    [<acl> <grant perm="{rights}" gt="{grantee-type}" d="{grantee-name}" [inh="0|1"]/>* </acl>]
+  </folder>
+
   {folder-name}  = name of folder; max length 128; whitespace is trimmed by server;
                    cannot contain ':', '"', '/', or any character below 0x20
   {parent-id}    = id of parent folder (absent for root folder)
   {color}        = numeric; range 0-127; defaults to 0 if not present; client can display only 0-7
   {unread}       = number of unread messages in folder
   {msg-count}    = number of messages/invites in folder
-  {default-type} = default type for the folder; used by web client to decide which view to use
+  {default-type} = (optional) default type for the folder; used by web client to decide which view to use;
+                   possible values are the same as <SearchRequest>'s {types}: conversation|message|contact|appointment|note
+  
+  folders can have an optional ACL set on them for sharing.  if they do, an <acl> element
+    will be returned containing 1 or more <grant> elements, with the following attributes:
+    
+    {rights}       = some combination of (r)ead, (w)rite, (i)nsert, (d)elete, (a)dminister, workflow action (x)
+    {grantee-type} = the type of grantee: "usr", "grp", "dom" (domain), "cos", "all"
+    {grantee-name} = the display name (*not* the zimbra id) of the principal being granted rights;
+                     optional if {grantee-type} is "all"
+    {inherit}      = boolean; whether rights granted on this folder are also granted on all subfolders
 
 Tags:
 
@@ -815,18 +827,23 @@ if fie="1" is set, the server will fetch the folder if it already exists rather 
 ---------
 
 <FolderActionRequest>
-  <action id="{list}" op="read|delete|rename|move|empty|color" name="..." [l="{target-folder}"] [color="..."]/>
+  <action id="{list}" op="read|delete|rename|move|empty|color|grant" name="..." [l="{target-folder}"] [color="..."] [zid="{grantee-zimbra-id}"]>
+    [<grant perm="..." gt="..." d="..." [inh="0|1"]/>]
+  </action>
 </FolderActionRequest>
 
 <FolderActionResponse>
-  <action id="{list}" op="read|delete|rename|move|empty|color"/>
+  <action id="{list}" op="read|delete|rename|move|empty|color|grant"/>
 </FolderActionResponse>
 
   {list} = on input, list of folders to act on, on output, list of
            folders that were acted on;
            list may only have 1 element for action "rename" or "empty"
-           
-note that these actions can be used on search folders as well as standard folders
+  {grantee-zimbra-id} = zimbra id of principal to revoke access from (for op="!grant" only);
+                        you can use "00000000-0000-0000-0000-000000000000" to revoke acces granted to "all"
+  <grant> is only specified when op="grant"
+
+note that these actions (except for "grant") can be used on search folders as well as standard folders
 
 ---------
 
@@ -880,13 +897,13 @@ u attribute is present iff count > 0
 </GetSearchFolderRequest>
 
 <GetSearchFolderResponse>
-  <search id="..." name="..." query="..." [types="...] [sortBy="..."] l="{folder}"/>+
+  <search id="..." name="..." query="..." [types="..."] [sortBy="..."] l="{folder}"/>+
 </GetSearchFolderResponse>
 
 ---------
 
 <CreateSearchFolderRequest>
-  <search name="..." query="..." [types="...] [sortBy="..."] l="{folder}"/>
+  <search name="..." query="..." [types="..."] [sortBy="..."] l="{folder}"/>
 </CreateSearchFolderRequest>
 
 <CreateSearchFolderResponse>
@@ -896,12 +913,22 @@ u attribute is present iff count > 0
 ---------
 
 <ModifySearchFolderRequest>
-  <search id="..." query="..." [types="...] [sortBy="..."]/>
+  <search id="..." query="..." [types="..."] [sortBy="..."]/>
 </ModifySearchFolderRequest>
 
 <ModifySearchFolderResponse>
   <search id="..." name="..." query="..." [types="...] [sortBy="..."] l="{folder}"/>  <!-- iff it was modified -->
 </ModifySearchFolderResponse>
+
+---------
+
+<CreateMountpointRequest>
+  <link l="{folder}" name="..." zid="{owner's-zimbra-id}" rid="{id-of-shared-item}" [view="..."]/>
+</CreateMountpointRequest>
+
+<CreateMountpointResponse>
+  <link id="{created-link-item-id}" l="{folder}" name="..." [view="..."]/>
+</CreateMountpointResponse>
 
 ---------
 

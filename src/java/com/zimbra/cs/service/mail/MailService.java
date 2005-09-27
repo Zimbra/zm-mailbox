@@ -98,6 +98,9 @@ public class MailService implements DocumentService {
 	public static final QName GET_SEARCH_FOLDER_RESPONSE = QName.get("GetSearchFolderResponse", NAMESPACE);
 	public static final QName MODIFY_SEARCH_FOLDER_REQUEST = QName.get("ModifySearchFolderRequest", NAMESPACE);
 	public static final QName MODIFY_SEARCH_FOLDER_RESPONSE = QName.get("ModifySearchFolderResponse", NAMESPACE);
+    // mountpoints
+    public static final QName CREATE_MOUNTPOINT_REQUEST = QName.get("CreateMountpointRequest", NAMESPACE);
+    public static final QName CREATE_MOUNTPOINT_RESPONSE = QName.get("CreateMountpointResponse", NAMESPACE);
 	// contacts
 	public static final QName CREATE_CONTACT_REQUEST = QName.get("CreateContactRequest", NAMESPACE);
 	public static final QName CREATE_CONTACT_RESPONSE = QName.get("CreateContactResponse", NAMESPACE);
@@ -174,8 +177,11 @@ public class MailService implements DocumentService {
     public static final String E_CONTACT = "cn";
 	public static final String E_FOLDER = "folder";
     public static final String E_SEARCH = "search";
+    public static final String E_MOUNT = "link";
     public static final String E_MIMEPART = "mp";
     public static final String E_HIT_MIMEPART = "hp";
+    public static final String E_ACL = "acl";
+    public static final String E_GRANT = "grant";
     
 	public static final String E_EMAIL = "e";
 	public static final String E_SUBJECT = "su";
@@ -202,6 +208,11 @@ public class MailService implements DocumentService {
     public static final String E_CONDITION = "c";
     public static final String E_FILTER_ARG = "arg";
 
+    public static final String A_ZIMBRA_ID = "zid";
+    public static final String A_RIGHTS = "perm";
+    public static final String A_INHERIT = "inh";
+    public static final String A_GRANT_TYPE = "gt";
+    public static final String A_REMOTE_ID = "rid";
     public static final String A_REVISION = "rev";
     public static final String A_NAME = "name";
     public static final String A_DATE = "d";
@@ -433,6 +444,9 @@ public class MailService implements DocumentService {
         dispatcher.registerHandler(GET_SEARCH_FOLDER_REQUEST, new GetSearchFolder());
         dispatcher.registerHandler(CREATE_SEARCH_FOLDER_REQUEST, new CreateSearchFolder());
         dispatcher.registerHandler(MODIFY_SEARCH_FOLDER_REQUEST, new ModifySearchFolder());
+
+        // saved searches
+        dispatcher.registerHandler(CREATE_MOUNTPOINT_REQUEST, new CreateMountpoint());
 
         // contacts
         dispatcher.registerHandler(GET_CONTACTS_REQUEST, new GetContacts());

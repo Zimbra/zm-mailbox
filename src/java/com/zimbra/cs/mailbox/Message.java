@@ -138,88 +138,96 @@ public class Message extends MailItem {
             mData.parentId = -mId;
 	}
 
-    /** @return Whether the Message was created as a draft.  Note that this
-     *          can only be set when the Message is created; it cannot be
-     *          altered thereafter. */
+    /** Returns whether the Message was created as a draft.  Note that this
+     *  can only be set when the Message is created; it cannot be altered
+     *  thereafter. */
     public boolean isDraft() {
         return isTagged(mMailbox.mDraftFlag);
     }
 
-    /** @return The {@code From:} header from the message or, if none exists,
-     *          the {@code Sender:} header. */
+    /** Returns the message's originator.  This is the <code>From:</code>
+     *  header from the message or, if none exists, the <code>Sender:</code>
+     *  header. */
     public String getSender() {
         return (mSender == null ? "" : mSender);
     }
 
-    /** @return The {@code To:} header of the message, if the message was sent
-     *          by the user, or "" if the message was not sent by the user. */
+    /** Returns the <code>To:</code> header of the message, if the message
+     *  was sent by the user.  Retuns <code>""</code> otherwise. */
     public String getRecipients() {
         return (mRecipients == null ? "" : mRecipients);
     }
 
-    /** @return The IMAP UID for the message.  This will usually be the same as
-     *          the Message's ID; it will differ only if the message has ever been 
-     *          {@link Message#move moved} to a folder that was currently SELECTed
-     *          in an active IMAP session. */
+    /** Returns the IMAP UID for the message.  This will usually be the same
+     *  as the Message's ID; it will differ only if the message has ever been
+     *  {@link #move moved} to a folder that was currently SELECTed in an
+     *  active IMAP session. */
     public int getImapUID() {
         return (mImapUID > 0 ? mImapUID : mId);
     }
 
-    /** @return The first 100 characters of the message's content.  The system
-     *          does its best to remove quoted text, etc. before calculating the
-     *          fragment.
-     *  @see com.zimbra.cs.index.Fragment for more details on the logic used to
-     *       determine what's content and what's fluff. */
+    /** Returns the first 100 characters of the message's content.  The system
+     *  does its best to remove quoted text, etc. before calculating the
+     *  fragment.
+     *
+     * @see com.zimbra.cs.index.Fragment */
     public String getFragment() {
         return (mFragment == null ? "" : mFragment);
     }
 
-    /** @return The normalized subject of the message.  This is done by taking the 
-     *          {@code Subject:} header and removing prefixes (e.g. {@code "Re:"})
-     *          and suffixes (e.g. {@code "(fwd)"}) and the like.
-     *  @see ParsedMessage#normalizeSubject ParsedMessage.normalizeSubject for more
-     *       details on how subjects are normalized. */
+    /** Returns the normalized subject of the message.  This is done by
+     *  taking the <code>Subject:</code> header and removing prefixes (e.g.
+     *  <code>"Re:"</code>) and suffixes (e.g. <code>"(fwd)"</code>) and
+     *  the like.
+     * 
+     * @see ParsedMessage#normalizeSubject */
     public String getNormalizedSubject() {
         return super.getSubject();
     }
 
-    /** @return The subject of the message, taken directly from the {@code Subject:}
-     *          header with no processing. */
+    /** Returns the raw subject of the message.  This is taken directly from
+     *  the <code>Subject:</code> header with no processing. */
     public String getSubject() {
         return (mRawSubject == null ? "" : mRawSubject);
     }
 
-    /** @return Whether the Message was sent by the owner of this mailbox.  Note
-     *          that this can only be set when the Message is created; it cannot
-     *          be altered thereafter.*/
+    /** Returns whether the Message was sent by the owner of this mailbox.
+     *  Note that this can only be set when the Message is created; it cannot
+     *  be altered thereafter.*/
     public boolean isFromMe() {
         return (mData.flags & Flag.FLAG_FROM_ME) != 0;
     }
 
-    /** @return The ID of the {@link Conversation} the Message belongs to.  If the ID
-     *          is negative, it refers to a single-message {@link VrtualConversation}.*/
+    /** Returns the ID of the {@link Conversation} the Message belongs to.
+     *  If the ID is negative, it refers to a single-message
+     *  {@link VirtualConversation}.*/
     public int getConversationId() {
         return mData.parentId;
     }
 
-    /** @return The ID of the Message that this draft message is in reply to, or -1
-     *          for Messages that are not drafts or not replies/forwards.
-     *  @see #getDraftReplyType */
+    /** Returns the ID of the Message that this draft message is in reply to.
+     * 
+     * @return The ID of the Message that this draft message is in reply to,
+     *         or -1 for Messages that are not drafts or not replies/forwards.
+     * @see #getDraftReplyType */
     public int getDraftOrigId() {
         return (mDraftInfo == null ? -1 : mDraftInfo.origId);
     }
 
-    /** @return {@code "f"} if this draft message is a forward, {@code "r"} if this
-     *          draft message is a reply, or {@code ""} for Messages that are not
-     *          drafts or not replies/forwards.
-     *  @see #getDraftOrigId
-     *  @see com.zimbra.cs.service.mail.SendMsg#TYPE_FORWARD
-     *  @see com.zimbra.cs.service.mail.SendMsg#TYPE_REPLY */
+    /** Returns the "reply type" for a draft message.
+     * 
+     * @return <code>"f"</code> if this draft message is a forward,
+     *         <code>"r"</code> if this draft message is a reply, or
+     *         <code>""</code> for Messages that are not drafts or not
+     *         replies/forwards.
+     * @see #getDraftOrigId
+     * @see com.zimbra.cs.service.mail.SendMsg#TYPE_FORWARD
+     * @see com.zimbra.cs.service.mail.SendMsg#TYPE_REPLY */
     public String getDraftReplyType() {
         return (mDraftInfo == null || mDraftInfo.replyType == null ? "" : mDraftInfo.replyType);
     }
 
-    /** @return Whether the Message has a vCal attachment. */
+    /** Returns whether the Message has a vCal attachment. */
     public boolean isInvite() {
         return mApptInfos != null;
     }
@@ -235,14 +243,16 @@ public class Message extends MailItem {
             return null;
     }
 
-    /** @return An {@link InputStream} of the raw, uncompressed content of the
-     *          message.  This is the message body as received via SMTP; no
-     *          postprocessing has been performed to make opaque attachments
-     *          (e.g. TNEF) visible.
-     *  @throws IOException when errors occur opening, reading, or uncompressing
-     *                      the file.
-     *  @throws ServiceException when the message file does not exist.
-     *  @see #getMimeMessage */
+    /** Returns an {@link InputStream} of the raw, uncompressed content of
+     *  the message.  This is the message body as received via SMTP; no
+     *  postprocessing has been performed to make opaque attachments (e.g.
+     *  TNEF) visible.
+     * 
+     * @return The InputStream returned by the {@link StoreManager}.
+     * @throws IOException when errors occur opening, reading, or
+     *                     uncompressing the file.
+     * @throws ServiceException when the message file does not exist.
+     * @see #getMimeMessage */
     public InputStream getRawMessage() throws IOException, ServiceException {
         MailboxBlob msgBlob = getBlob();
         if (msgBlob == null)
@@ -250,14 +260,18 @@ public class Message extends MailItem {
         return StoreManager.getInstance().getContent(msgBlob);
     }
 
-    /** @return A JavaMail {@link MimeMessage} encapsulating the message content.
-     *          If possible, TNEF attachments are expanded and their components
-     *          are presented as standard MIME attachments.
-     *  @throws ServiceException when errors occur opening, reading, uncompressing,
-     *                           or parsing the message file, or when the file does
-     *                           not exist.
-     *  @see #getRawMessage
-     *  @see TnefConverter */
+    /** Returns a JavaMail {@link javax.mail.internet.MimeMessage}
+     *  encapsulating the message content.  If possible, TNEF attachments
+     *  are expanded and their components are presented as standard MIME
+     *  attachments.  If TNEF decoding fails, the MimeMessage wraps the raw
+     *  message content.
+     * 
+     * @return A MimeMessage wrapping the RFC822 content of the Message.
+     * @throws ServiceException when errors occur opening, reading,
+     *                          uncompressing, or parsing the message file,
+     *                          or when the file does not exist.
+     * @see #getRawMessage
+     * @see TnefConverter */
     public MimeMessage getMimeMessage() throws ServiceException {
         InputStream is = null;
         MimeMessage mm = null;
@@ -332,6 +346,8 @@ public class Message extends MailItem {
     throws ServiceException {
         if (folder == null || !folder.canContain(TYPE_MESSAGE))
             throw MailServiceException.CANNOT_CONTAIN();
+        if (!folder.canAccess(ACL.RIGHT_INSERT))
+            throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
         
         Mailbox mbox = folder.getMailbox();
         
@@ -462,6 +478,14 @@ public class Message extends MailItem {
             parent.removeChild(this);
         }
         return copy;
+    }
+
+    void move(Folder folder) throws ServiceException {
+        Folder oldFolder = getFolder();
+        super.move(folder);
+
+        oldFolder.updateMessageCount(-1);
+        folder.updateMessageCount(1);
     }
 
     public void reindex(IndexItem redo, Object indexData) throws ServiceException {

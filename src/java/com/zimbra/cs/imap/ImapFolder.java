@@ -93,6 +93,14 @@ class ImapFolder {
             mLastSize = mSequence.size();
         }
     }
+    /** Fetches the messages contained within a search folder.  When a search
+     *  folder is IMAP-visible, it appears in folder listings, is SELECTable
+     *  READ-ONLY, and appears to have all matching messages as its contents.
+     *  If it is not visible, it will be completely hidden from all IMAP
+     *  commands.
+     * 
+     * @param search   The search folder being exposed.
+     * @param mailbox  The {@link Mailbox} belonging to the user. */
     private List loadVirtualFolder(SearchFolder search, Mailbox mailbox) throws ServiceException {
         List msgs = new ArrayList();
         try {
@@ -217,7 +225,7 @@ class ImapFolder {
         dirtyTag(id, false);
     }
     void dirtyTag(int id, boolean removeTag) {
-        long mask = 1L << (id - MailItem.TAG_ID_OFFSET);
+        long mask = 1L << Tag.getIndex(id);
         for (int i = 0; i < mSequence.size(); i++) {
             ImapMessage i4msg = (ImapMessage) mSequence.get(i);
             if (i4msg != null && (i4msg.tags & mask) != 0) {

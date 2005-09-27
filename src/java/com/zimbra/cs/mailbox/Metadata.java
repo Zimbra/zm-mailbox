@@ -40,23 +40,23 @@ import com.zimbra.cs.util.BEncoding.BEncodingException;
 
 public class Metadata {
 
-    /**
-     * Current Metadata version number.  Note that all MailItems have NOT been updated
-     * to check the version number, so make sure to look at the code if you depend 
-     * on this.
-     */
+    /** Current Metadata version number.  Note that all MailItems have NOT
+     *  been updated to check the version number, so make sure to look at
+     *  the code if you depend on this. */
     static final int CURRENT_METADATA_VERSION = 9;
     
     // MetaData attributes used in toplevel metadata for MailItems.
     
     // ****PLEASE KEEP THESE IN SORTED ORDER TO MAKE IT EASIER TO AVOID DUPS****
 
-    // FIXME: "FN_FRAGMENT" and "FN_FIRST" conflict.
+    // FIXME: FRAGMENT and FIRST conflict.
     // FIXME: LOCATION and BOUNDS conflict
     // FIXME: SENDER and SORT conflict
     // FIXME: RECIPIENTS and TYPES conflict
     static final String FN_ATTRS           = "a";
+    static final String FN_RIGHTS          = "acl";
     static final String FN_APPT_FLAGS      = "af";
+    static final String FN_ACCOUNT_ID      = "aid";
     static final String FN_APPT_IDS        = "ais";
     static final String FN_APPT_END        = "ape";
     static final String FN_APPT_START      = "aps";
@@ -76,6 +76,7 @@ public class Metadata {
     static final String FN_APPT_FREEBUSY   = "fb";
     static final String FN_FIELDS          = "fld";
     static final String FN_IMAP_ID         = "i4";
+    static final String FN_REMOTE_ID       = "id";
     static final String FN_INV             = "inv";
     static final String FN_LOCATION        = "l";
     static final String FN_BOUNDS          = "l";

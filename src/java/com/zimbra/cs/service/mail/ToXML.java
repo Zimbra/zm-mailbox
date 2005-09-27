@@ -122,14 +122,14 @@ public class ToXML {
     }
 
     public static Element encodeFolder(Element parent, Folder folder) {
-        if (folder instanceof SearchFolder)
-            return encodeSearchFolder(parent, (SearchFolder) folder, NOTIFY_FIELDS);
-        else
-            return encodeFolder(parent, folder, NOTIFY_FIELDS);
+        return encodeFolder(parent, folder, NOTIFY_FIELDS);
     }
     public static Element encodeFolder(Element parent, Folder folder, int fields) {
         if (folder instanceof SearchFolder)
             return encodeSearchFolder(parent, (SearchFolder) folder, fields);
+        else if (folder instanceof Mountpoint)
+            return encodeMountpoint(parent, (Mountpoint) folder, fields);
+
         Element elem = parent.addElement(MailService.E_FOLDER);
         encodeFolderCommon(elem, folder, fields);
         if (needToOutput(fields, Change.MODIFIED_SIZE)) {
@@ -141,6 +141,22 @@ public class ToXML {
             int msgs = folder.getMessageCount();
             if (msgs > 0 || fields != NOTIFY_FIELDS)
                 elem.addAttribute(MailService.A_NUM, msgs);
+        }
+        if (needToOutput(fields, Change.MODIFIED_ACL)) {
+            ACL acl = folder.getPermissions();
+            if (acl != null || fields != NOTIFY_FIELDS) {
+                Element eACL = elem.addUniqueElement(MailService.E_ACL);
+                if (acl != null)
+                    for (Iterator it = acl.grantIterator(); it.hasNext(); ) {
+                        ACL.Grant grant = (ACL.Grant) it.next();
+                        eACL.addElement(MailService.E_GRANT)
+                            .addAttribute(MailService.A_ZIMBRA_ID, grant.getGranteeId())
+                            .addAttribute(MailService.A_GRANT_TYPE, FolderAction.typeToString(grant.getGranteeType()))
+                            .addAttribute(MailService.A_INHERIT, grant.isGrantInherited())
+                            .addAttribute(MailService.A_RIGHTS, ACL.rightsToString(grant.getGrantedRights()))
+                            .addAttribute(MailService.A_DISPLAY, FolderAction.lookupName(grant.getGranteeId(), grant.getGranteeType()));
+                    }
+            }
         }
         if (fields == NOTIFY_FIELDS && folder.getDefaultView() != MailItem.TYPE_UNKNOWN)
             elem.addAttribute(MailService.A_DEFAULT_VIEW, MailItem.getNameForType(folder.getDefaultView()));
@@ -174,7 +190,7 @@ public class ToXML {
         return elem;
     }
 
-	public static Element encodeSearchFolder(Element parent, SearchFolder search) {
+    public static Element encodeSearchFolder(Element parent, SearchFolder search) {
         return encodeSearchFolder(parent, search, NOTIFY_FIELDS);
     }
     public static Element encodeSearchFolder(Element parent, SearchFolder search, int fields) {
@@ -185,8 +201,19 @@ public class ToXML {
             elem.addAttribute(MailService.A_SORTBY, search.getSortField());
             elem.addAttribute(MailService.A_SEARCH_TYPES, search.getReturnTypes());
         }
-		return elem;
-	}
+        return elem;
+    }
+
+    public static Element encodeMountpoint(Element parent, Mountpoint mpt) {
+        return encodeMountpoint(parent, mpt, NOTIFY_FIELDS);
+    }
+    public static Element encodeMountpoint(Element parent, Mountpoint mpt, int fields) {
+        Element elem = parent.addElement(MailService.E_MOUNT);
+        encodeFolderCommon(elem, mpt, fields);
+        if (fields == NOTIFY_FIELDS && mpt.getDefaultView() != MailItem.TYPE_UNKNOWN)
+            elem.addAttribute(MailService.A_DEFAULT_VIEW, MailItem.getNameForType(mpt.getDefaultView()));
+        return elem;
+    }
 
     public static void recordItemTags(Element elem, MailItem item, int fields) {
         if (needToOutput(fields, Change.MODIFIED_FLAGS | Change.MODIFIED_UNREAD)) {
@@ -220,7 +247,7 @@ public class ToXML {
         if (summary || !needToOutput(fields, Change.MODIFIED_CONTENT))
             return elem;
 
-        Map attrs = contact.getAttrs();
+        Map attrs = contact.getFields();
         if (attrFilter != null) {
             for (Iterator it = attrFilter.iterator(); it.hasNext(); ) {
             	// HERE: How to distinguish between a non-existent attribute and

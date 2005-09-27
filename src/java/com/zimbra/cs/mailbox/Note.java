@@ -66,8 +66,9 @@ public class Note extends MailItem {
 
         public String toString()  { return x + "," + y + "," + width + "," + height; }
     }
-    
+
     private Rectangle mBounds;
+
 
     public Note(Mailbox mbox, UnderlyingData data) throws ServiceException {
         super(mbox, data);
@@ -75,10 +76,14 @@ public class Note extends MailItem {
             throw new IllegalArgumentException();
     }
 
+    /** Returns the <code>Note</code>'s content. */
     public String getContent() {
         return getSubject();
     }
 
+    /** Returns the <code>Note</code>'s bounding box.  When dimensions were
+     *  not specified, the returned {@link Note.Rectangle} will have
+     *  <code>0</code> for each omitted dimension. */
     public Rectangle getBounds() {
         return new Rectangle(mBounds);
     }
@@ -92,9 +97,30 @@ public class Note extends MailItem {
     boolean canHaveChildren() { return false; }
 
 
+    /** Creates a new Note and persists it to the database.  A real
+     *  nonnegative item ID must be supplied from a previous call to
+     *  {@link Mailbox#getNextItemId(int)}.
+     * 
+     * @param id        The id for the new note.
+     * @param folder    The {@link Folder} to create the note in.
+     * @param volumeId  The volume to persist the note's blob in.
+     * @param content   The note's body.
+     * @param location  The note's onscreen bounding box.
+     * @param color     The note's color.
+     * @perms {@link ACL#RIGHT_INSERT} on the folder
+     * @throws ServiceException   The following error codes are possible:<ul>
+     *    <li><code>mail.CANNOT_CONTAIN</code> - if the target folder
+     *        can't hold notes
+     *    <li><code>mail.INVALID_REQUEST</code> - if the note has no content
+     *    <li><code>service.FAILURE</code> - if there's a database failure
+     *    <li><code>service.PERM_DENIED</code> - if you don't have
+     *        sufficient permissions</ul>
+     * @see Folder#canContain(byte) */
     static Note create(int id, Folder folder, short volumeId, String content, Rectangle location, byte color) throws ServiceException {
         if (folder == null || !folder.canContain(TYPE_NOTE))
             throw MailServiceException.CANNOT_CONTAIN();
+        if (!folder.canAccess(ACL.RIGHT_INSERT))
+            throw ServiceException.PERM_DENIED("you do not have sufficient permissions on the folder");
         content = StringUtil.stripControlCharacters(content);
         if (content == null || content.equals(""))
             throw ServiceException.INVALID_REQUEST("notes may not be empty", null);
@@ -128,6 +154,8 @@ public class Note extends MailItem {
     void setContent(String content) throws ServiceException {
         if (!isMutable())
             throw MailServiceException.IMMUTABLE_OBJECT(mId);
+        if (!canAccess(ACL.RIGHT_WRITE))
+            throw ServiceException.PERM_DENIED("you do not have sufficient permissions on the note");
         content = StringUtil.stripControlCharacters(content);
         if (content == null || content.equals(""))
             throw ServiceException.INVALID_REQUEST("notes may not be empty", null);
@@ -143,6 +171,8 @@ public class Note extends MailItem {
     void reposition(Rectangle bounds) throws ServiceException {
         if (!isMutable())
             throw MailServiceException.IMMUTABLE_OBJECT(mId);
+        if (!canAccess(ACL.RIGHT_WRITE))
+            throw ServiceException.PERM_DENIED("you do not have sufficient permissions on the note");
         if (bounds == null)
             throw ServiceException.INVALID_REQUEST("must specify bounds", null);
 

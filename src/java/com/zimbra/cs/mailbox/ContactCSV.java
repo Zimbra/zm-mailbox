@@ -525,7 +525,7 @@ public class ContactCSV {
             Object c = it.next();
             if (c instanceof Contact) {
                 Contact contact = (Contact) c;
-                toCSVContact(contact.getAttrs(), sb);
+                toCSVContact(contact.getFields(), sb);
             } else if (c instanceof Map) {
                 Map map = (Map) c;
                 toCSVContact(map, sb);

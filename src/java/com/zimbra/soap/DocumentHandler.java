@@ -47,9 +47,9 @@ public abstract class DocumentHandler {
 
     public abstract Element handle(Element request, Map context) throws ServiceException;
 
-	public ZimbraContext getZimbraContext(Map context) {
-		return (ZimbraContext) context.get(SoapEngine.ZIMBRA_CONTEXT);
-	}
+    public ZimbraContext getZimbraContext(Map context) {
+        return (ZimbraContext) context.get(SoapEngine.ZIMBRA_CONTEXT);
+    }
 
     public Account getRequestedAccount(ZimbraContext lc) throws ServiceException {
         String id = lc.getRequestedAccountId();
@@ -62,29 +62,30 @@ public abstract class DocumentHandler {
 
     public Mailbox getRequestedMailbox(ZimbraContext lc) throws ServiceException {
         String id = lc.getRequestedAccountId();
-        Mailbox mbx = Mailbox.getMailboxByAccountId(id);
-        if (mbx != null)
-            ZimbraLog.addToContext(mbx);
-	    return mbx; 
+        Mailbox mbox = Mailbox.getMailboxByAccountId(id);
+        if (mbox != null)
+            ZimbraLog.addToContext(mbox);
+        return mbox; 
     }
 
-	/** by default, document handlers require a valid auth token */
-	public boolean needsAuth(Map context) {
-		return true;
-	}
+    /** Returns whether the command's caller must be authenticated. */
+    public boolean needsAuth(Map context) {
+        return true;
+    }
 
-	/** @return <code>true</code> if this is an administrative command */
-	public boolean needsAdminAuth(Map context) {
-		return false;
-	}
+    /** Returns whether this is an administrative command (and thus requires
+     *  a valid admin auth token). */
+    public boolean needsAdminAuth(Map context) {
+        return false;
+    }
 
-    /** @return <code>true</code> if the operation is read-only, or
-     *          <code>false</code> if the operation causes backend state change. */
+    /** Returns <code>true</code> if the operation is read-only, or
+     *  <code>false</code> if the operation causes backend state change. */
     public boolean isReadOnly() {
-    	return true;
+        return true;
     }
 
-    /** @return Whether the client making the SOAP request is localhost. */
+    /** Returns whether the client making the SOAP request is localhost. */
     protected boolean clientIsLocal(Map context) {
         HttpServletRequest req = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
         if (req == null) return true;

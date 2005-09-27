@@ -119,7 +119,7 @@ public abstract class RedoableOp {
     public static final int OP_CREATE_NOTE              = 32;
     public static final int OP_EDIT_NOTE                = 33;
     public static final int OP_REPOSITION_NOTE          = 34;
-//    public static final int OP_COLOR_NOTE               = 35;
+    public static final int OP_CREATE_LINK              = 35;
     
     public static final int OP_MODIFY_INVITE_FLAG       = 36;
     public static final int OP_MODIFY_INVITE_PARTSTAT   = 37;
@@ -171,7 +171,7 @@ public abstract class RedoableOp {
         "CreateNote",
         "EditNote",
         "RepositionNote",
-        "UNKNOWN",
+        "CreateLink",
         "ModifyInviteFlag",
         "ModifyInvitePartStat",
         "CreateVolume",

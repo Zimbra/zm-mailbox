@@ -1119,7 +1119,7 @@ public class DbMailItem {
             if (!rs.next())
                 throw MailItem.noSuchItem(id, type);
             UnderlyingData data = constructItem(rs);
-            if (!Mailbox.isAcceptableType(type, data.type))
+            if (!MailItem.isAcceptableType(type, data.type))
                 throw MailItem.noSuchItem(id, type);
             if (data.type == MailItem.TYPE_CONVERSATION)
                 completeConversation(mbox, data);
@@ -1157,7 +1157,7 @@ public class DbMailItem {
                 rs = stmt.executeQuery();
                 while (rs.next()) {
                     UnderlyingData data = constructItem(rs);
-                    if (!Mailbox.isAcceptableType(type, data.type))
+                    if (!MailItem.isAcceptableType(type, data.type))
                         throw MailItem.noSuchItem(data.id, type);
                     else if (Mailbox.isCachedType(data.type))
                         throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);

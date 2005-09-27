@@ -29,7 +29,6 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -49,15 +48,24 @@ import com.zimbra.cs.util.StringUtil;
  */
 public class Contact extends MailItem {
 
-    private static final int FA_LAST_C_FIRST = 1;         /* last, first */
-    private static final int FA_FIRST_LAST = 2;           /* first last */
-    private static final int FA_COMPANY = 3;              /* company */ 
-    private static final int FA_LAST_C_FIRST_COMPANY = 4; /* last, first (company)*/
-    private static final int FA_FIRST_LAST_COMPANY = 5;   /* first last (company) */
-    private static final int FA_COMPANY_LAST_C_FIRST = 6; /* company (last, first) */
-    private static final int FA_COMPANY_FIRST_LAST = 7;   /* company (first last) */
-    private static final int FA_EXPLICIT = 8;             /* explicitly specified */
+    /** "File as" setting: &nbsp;<code>Last, First</code> */
+    private static final int FA_LAST_C_FIRST = 1;
+    /** "File as" setting: &nbsp;<code>First Last</code> */
+    private static final int FA_FIRST_LAST = 2;
+    /** "File as" setting: &nbsp;<code>Company</code> */
+    private static final int FA_COMPANY = 3;
+    /** "File as" setting: &nbsp;<code>Last, First (Company)</code> */
+    private static final int FA_LAST_C_FIRST_COMPANY = 4;
+    /** "File as" setting: &nbsp;<code>First Last (Company)</code> */
+    private static final int FA_FIRST_LAST_COMPANY = 5;
+    /** "File as" setting: &nbsp;<code>Company (Last, First)</code> */
+    private static final int FA_COMPANY_LAST_C_FIRST = 6;
+    /** "File as" setting: &nbsp;<code>Company (First Last)</code> */
+    private static final int FA_COMPANY_FIRST_LAST = 7;
+    /** "File as" setting: <i>[explicitly specified "file as" string]</i> */
+    private static final int FA_EXPLICIT = 8;
 
+    /** The default "file as" setting: {@link #FA_LAST_C_FIRST}. */
     private static final int FA_DEFAULT = FA_LAST_C_FIRST;
     private static final int FA_MAXIMUM = FA_EXPLICIT;
 
@@ -109,26 +117,28 @@ public class Contact extends MailItem {
 	public static final String A_workStreet = "workStreet";
 	public static final String A_workURL = "workURL";
 
-    private Map mAttributes;
-	private Map mUnmodifiableAttributes;
-	
+    /** Relates contact fields (<code>"firstName"</code>) to this contact's
+     *  values (<code>"John"</code>). */
+    private Map mFields;
+
+
     public Contact(Mailbox mbox, UnderlyingData data) throws ServiceException {
         super(mbox, data);
         if (mData.type != TYPE_CONTACT)
             throw new IllegalArgumentException();
     }
 
-    public Map getAttrs() {
-        if (mUnmodifiableAttributes == null)
-            mUnmodifiableAttributes = Collections.unmodifiableMap(mAttributes);
-        return mUnmodifiableAttributes;
+    /** Returns a new <code>Map</code> containing all the contact's
+     *  field/value pairs. */
+    public Map getFields() {
+        return new HashMap(mFields);
     }
 
     public String getFileAsString() throws ServiceException {
-        return getFileAsString(mAttributes);
+        return getFileAsString(mFields);
     }
-    public static String getFileAsString(Map attrs) throws ServiceException {
-        String fileAs = (String) attrs.get(A_fileAs);
+    public static String getFileAsString(Map fields) throws ServiceException {
+        String fileAs = (String) fields.get(A_fileAs);
         String[] fileParts = (fileAs == null ? null : fileAs.split(":", 2));
         int fileAsInt = FA_DEFAULT;
         if (fileParts != null)
@@ -140,13 +150,13 @@ public class Contact extends MailItem {
                 throw ServiceException.INVALID_REQUEST("invalid fileAs value: " + fileAs, null);
             }
         
-        String company = (String) attrs.get(A_company);
+        String company = (String) fields.get(A_company);
         if (company == null)
             company = "";
-        String first = (String) attrs.get(A_firstName);
+        String first = (String) fields.get(A_firstName);
         if (first == null)
             first = "";
-        String last = (String) attrs.get(A_lastName);
+        String last = (String) fields.get(A_lastName);
         if (last == null)
             last = "";
         
@@ -212,15 +222,16 @@ public class Contact extends MailItem {
         return result.toString().trim();
     }
 
+    /** The list of all "email" fields in the contact's map. */
     private static final String[] EMAIL_FIELDS = new String[] { A_email, A_email2, A_email3 };
-    /**
-     * @return A list of all email addresses for this contact.  Used by the indexer, so it can populate
-     * the "To" field with the contact's email addresses 
-     */
+
+    /** Returns a list of all email addresses for this contact.  This is used
+     *  by {@link com.zimbra.cs.index.Indexer#indexContact} to populate the
+     *  "To" field with the contact's email addresses. */
     public List /*<String>*/ getEmailAddresses() {
         ArrayList result = new ArrayList();
         for (int i = 0; i < EMAIL_FIELDS.length; i++) {
-            String value = (String) mAttributes.get(EMAIL_FIELDS[i]);
+            String value = (String) mFields.get(EMAIL_FIELDS[i]);
             if (value != null)
                 result.add(value);
         }
@@ -234,23 +245,33 @@ public class Contact extends MailItem {
     boolean isIndexed()       { return true; }
     boolean canHaveChildren() { return false; }
 
-    boolean canParent(MailItem child) { return (child instanceof Document); }
 
-
-    /**
-     * Create a new contact.
-     * @param id Use this value to set mail_item.id in database.
-     * @param folder
-     * @param attrs
-     * @param tags
-     * @return
-     * @throws ServiceException
-     */
-    static Contact create(int id, Folder folder, short volumeId, Map attrs, String tags) throws ServiceException {
+    /** Creates a new <code>Contact</code> and persists it to the database.
+     *  A real nonnegative item ID must be supplied from a previous call to
+     *  {@link Mailbox#getNextItemId(int)}.
+     * 
+     * @param id        The id for the new contact.
+     * @param folder    The {@link Folder} to create the contact in.
+     * @param volumeId  The volume to persist any attachments to.
+     * @param fields    The complete set of contact fields and values.
+     * @param tags      A serialized version of all {@link Tag}s to apply.
+     * @perms {@link ACL#RIGHT_INSERT} on the folder
+     * @throws ServiceException   The following error codes are possible:<ul>
+     *    <li><code>mail.CANNOT_CONTAIN</code> - if the target folder
+     *        can't contain contacts
+     *    <li><code>service.INVALID_REQUEST</code> - if no fields are
+     *        specified for the contact
+     *    <li><code>service.FAILURE</code> - if there's a database failure
+     *    <li><code>service.PERM_DENIED</code> - if you don't have
+     *        sufficient permissions</ul>
+     * @see #canContain(byte) */
+    static Contact create(int id, Folder folder, short volumeId, Map fields, String tags) throws ServiceException {
         if (folder == null || !folder.canContain(TYPE_CONTACT))
             throw MailServiceException.CANNOT_CONTAIN();
-        if (attrs == null || attrs.isEmpty())
-            throw ServiceException.INVALID_REQUEST("contact must have attributes", null);
+        if (fields == null || fields.isEmpty())
+            throw ServiceException.INVALID_REQUEST("contact must have fields", null);
+        if (!folder.canAccess(ACL.RIGHT_INSERT))
+            throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
 
         Mailbox mbox = folder.getMailbox();
         mbox.updateContactCount(1);
@@ -263,15 +284,15 @@ public class Contact extends MailItem {
         data.volumeId    = volumeId;
         data.date        = mbox.getOperationTimestamp();
         data.tags        = Tag.tagsToBitmask(tags);
-        data.sender      = getFileAsString(attrs);
-        data.metadata    = encodeMetadata(DEFAULT_COLOR, attrs);
+        data.sender      = getFileAsString(fields);
+        data.metadata    = encodeMetadata(DEFAULT_COLOR, fields);
         data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
 
         Contact con = new Contact(mbox, data);
         con.finishCreation(null);
-        if (con.mAttributes.isEmpty())
-            throw ServiceException.INVALID_REQUEST("contact must have attributes", null);
+        if (con.mFields.isEmpty())
+            throw ServiceException.INVALID_REQUEST("contact must have fields", null);
         return con;
     }
 
@@ -281,29 +302,48 @@ public class Contact extends MailItem {
             Indexer.GetInstance().indexContact(redo, mMailbox.getMailboxIndex(), mId, this);
     }
 
-    void modify(Map attrs, boolean replace) throws ServiceException {
-        if (attrs == null || attrs.isEmpty()) {
+    /** Alters an existing contact's fields.  Depending on the value of the
+     *  <code>replace</code> parameter, will either modify the existing fields
+     *  or completely replace the old ones with the supplied <code>Map</code>.
+     *  Blank field values cause the field to be deleted from a contact.
+     *  The resulting contact must have at least one non-blank field value.
+     * 
+     * @param fields   The set of contact fields.
+     * @param replace  <code>true</code> to discard the old field values,
+     *                 <code>false</code> to merge the new fields in.
+     * @perms {@link ACL#RIGHT_WRITE} on the contact
+     * @throws ServiceException   The following error codes are possible:<ul>
+     *    <li><code>service.INVALID_REQUEST</code> - if the resulting set of
+     *        contact fields is empty
+     *    <li><code>service.FAILURE</code> - if there's a database failure
+     *    <li><code>service.PERM_DENIED</code> - if you don't have
+     *        sufficient permissions</ul> */
+    void modify(Map fields, boolean replace) throws ServiceException {
+        if (fields == null || fields.isEmpty()) {
             if (replace)
-                throw ServiceException.INVALID_REQUEST("contact must have attributes", null);
+                throw ServiceException.INVALID_REQUEST("contact must have fields", null);
             return;
         }
+        if (!canAccess(ACL.RIGHT_WRITE))
+            throw ServiceException.PERM_DENIED("you do not have the required rights on the contact");
+
         markItemModified(Change.MODIFIED_CONTENT | Change.MODIFIED_DATE);
 
         if (replace)
-            mAttributes.clear();
-        for (Iterator it = attrs.entrySet().iterator(); it.hasNext(); ) {
+            mFields.clear();
+        for (Iterator it = fields.entrySet().iterator(); it.hasNext(); ) {
             Map.Entry entry = (Map.Entry) it.next();
             String key   = StringUtil.stripControlCharacters((String) entry.getKey());
             String value = StringUtil.stripControlCharacters((String) entry.getValue());
             if (key != null && !key.equals("")) {
                 if (value != null && !value.equals(""))
-                    mAttributes.put(key, value);
+                    mFields.put(key, value);
                 else
-                    mAttributes.remove(key);
+                    mFields.remove(key);
             }
         }
-        if (mAttributes.isEmpty())
-            throw ServiceException.INVALID_REQUEST("contact must have attributes", null);
+        if (mFields.isEmpty())
+            throw ServiceException.INVALID_REQUEST("contact must have fields", null);
 
     	// XXX: should update mData.size and Mailbox.size and folder.size
         mData.date = mMailbox.getOperationTimestamp();
@@ -311,6 +351,7 @@ public class Contact extends MailItem {
         saveData(getFileAsString());
 	}
 
+    /** @perms {@link ACL#RIGHT_DELETE} on the item */
     PendingDelete getDeletionInfo() throws ServiceException {
         PendingDelete info = super.getDeletionInfo();
         info.contacts = 1;
@@ -329,21 +370,21 @@ public class Contact extends MailItem {
             metaAttrs = meta.getMap(Metadata.FN_FIELDS);
         }
 
-        mAttributes = new HashMap();
+        mFields = new HashMap();
         for (Iterator it = metaAttrs.asMap().entrySet().iterator(); it.hasNext(); ) {
             Map.Entry entry = (Map.Entry) it.next();
-            mAttributes.put(entry.getKey().toString(), entry.getValue().toString());
+            mFields.put(entry.getKey().toString(), entry.getValue().toString());
         }
     }
 
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mColor, mAttributes);
+        return encodeMetadata(meta, mColor, mFields);
     }
-    private static String encodeMetadata(byte color, Map attributes) {
-        return encodeMetadata(new Metadata(), color, attributes).toString();
+    private static String encodeMetadata(byte color, Map fields) {
+        return encodeMetadata(new Metadata(), color, fields).toString();
     }
-    static Metadata encodeMetadata(Metadata meta, byte color, Map attributes) {
-        meta.put(Metadata.FN_FIELDS, new Metadata(attributes));
+    static Metadata encodeMetadata(Metadata meta, byte color, Map fields) {
+        meta.put(Metadata.FN_FIELDS, new Metadata(fields));
         return MailItem.encodeMetadata(meta, color);
     }
 
@@ -352,7 +393,7 @@ public class Contact extends MailItem {
         StringBuffer sb = new StringBuffer();
         sb.append("contact: {");
         appendCommonMembers(sb);
-        for (Iterator it = mAttributes.entrySet().iterator(); it.hasNext(); ) {
+        for (Iterator it = mFields.entrySet().iterator(); it.hasNext(); ) {
             Map.Entry entry = (Map.Entry) it.next();
             sb.append(", ").append(entry.getKey()).append(": ").append(entry.getValue());
         }
