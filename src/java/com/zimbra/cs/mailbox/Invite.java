@@ -492,6 +492,21 @@ public class Invite {
     }
     
     /**
+     * This API modifies the user's attendee participation status, but only for the
+     * in-memory version of the Invite.  No changes are written to the metadata.
+     */
+    public void modifyPartStatInMemory(boolean needsReply, String partStat)
+    throws ServiceException {
+        int oldFlags = mFlags;
+        boolean oldNeedsReply = needsReply();
+        setNeedsReply(needsReply);
+        if (needsReply() != oldNeedsReply || mFlags != oldFlags || !mPartStat.equals(partStat)) {
+            mPartStat = partStat;
+        }
+    }
+    
+    
+    /**
      * Update this user's attendee participation status.  The
      * APPT_FLAG_NEEDS_REPLY flag is cleared.  Metadata is updated
      * in DB.

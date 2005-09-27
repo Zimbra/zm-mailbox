@@ -2255,6 +2255,88 @@ public class Mailbox {
         return mMailboxIndex;
     }
     
+    public static class SetAppointmentData {
+        public Invite mInv;
+        public boolean mForce;
+        public ParsedMessage mPm;
+        
+        public String toString() {
+            StringBuffer toRet = new StringBuffer();
+            toRet.append("inv:").append(mInv.toString()).append("\n");
+            toRet.append("force:").append(mForce ? "true\n" : "false\n");
+            toRet.append("pm:").append(mPm.getFragment()).append("\n");
+            return toRet.toString();
+        }
+    }
+    
+    /**
+     * @param octxt
+     * @param defaultInvite
+     * @param exceptions can be NULL
+     * @return appointment ID 
+     * @throws ServiceException
+     */
+    public synchronized int setAppointment(OperationContext octxt, int folderId, SetAppointmentData defaultInv, SetAppointmentData exceptions[]) throws ServiceException
+    {
+        SetAppointment redoRecorder = new SetAppointment();
+        SetAppointment redoPlayer = (octxt == null ? null : (SetAppointment) octxt.player);
+        
+        boolean success = false;
+        
+        try {
+            beginTransaction("setAppointment", null, redoRecorder);
+            
+            // allocate IDs for all of the passed-in invites (and the appointment!) if necessary
+            if (redoPlayer == null || redoPlayer.getAppointmentId() == 0) {
+                assert(defaultInv.mInv.getMailItemId() == 0);
+                
+                int mailItemId = getNextItemId(Mailbox.ID_AUTO_INCREMENT);
+                defaultInv.mInv.setInviteId(mailItemId);
+                
+                if (exceptions != null) {
+                    for (int i = 0; i < exceptions.length; i++) {
+                        mailItemId = getNextItemId(Mailbox.ID_AUTO_INCREMENT);
+                        exceptions[i].mInv.setMailItemId(mailItemId);
+                    }
+                }
+            } else {
+                // id already set before we stored the invite in the redoRecorder!!!
+            }
+            
+            redoRecorder.setData(defaultInv, exceptions);
+
+            // handle the DEFAULT appointment
+            Appointment appt = getAppointmentByUid(defaultInv.mInv.getUid());
+            if (appt == null) { 
+                // ONLY create an appointment if this is a REQUEST method...otherwise don't.
+                if (defaultInv.mInv.getMethod().equals("REQUEST")) {
+                    appt = createAppointment(Mailbox.ID_FOLDER_CALENDAR, Volume.getCurrentMessageVolume().getId(), "",
+                            defaultInv.mInv.getUid(), defaultInv.mPm, defaultInv.mInv);
+                } else {
+//                  mLog.info("Mailbox " + getId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c not a REQUEST and no Appointment could be found");
+                    return 0; // for now, just ignore this Invitation
+                }
+            } else {
+                appt.removeAllInvites(); 
+                appt.processNewInvite(defaultInv.mPm, defaultInv.mInv, defaultInv.mForce, Volume.getCurrentMessageVolume().getId());
+            }
+             
+            // handle the exceptions!
+            if (exceptions != null) {
+                for (int i = 0; i < exceptions.length; i++) {
+                    appt.processNewInvite(exceptions[i].mPm, exceptions[i].mInv, exceptions[i].mForce, Volume.getCurrentMessageVolume().getId());
+                }
+            }
+            
+            success = true;
+            
+            return appt.getId();
+            
+        } finally {
+            endTransaction(success);
+        }
+    }
+    
     /**
      * Directly add an Invite into the system...this process also gets triggered when we add a Message
      * that has a text/calendar Mime part: but this API is useful when you don't want to add a corresponding

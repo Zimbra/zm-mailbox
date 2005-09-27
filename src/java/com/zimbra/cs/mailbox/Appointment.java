@@ -65,6 +65,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.store.Volume;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.ZimbraLog;
 
@@ -482,6 +483,18 @@ public class Appointment extends MailItem {
             processNewInviteReply(pm, invite, force);
         }
     }
+    
+    void removeAllInvites() throws ServiceException
+    {
+        mInvites.clear();
+        try {
+            StoreManager sm = StoreManager.getInstance();
+            sm.delete(getBlob());
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("IOException", e);
+        }
+        saveMetadata();
+    }
 
     private void processNewInviteRequestOrCancel(ParsedMessage pm, Invite newInvite, boolean force, short volumeId)
     throws ServiceException {
@@ -798,12 +811,17 @@ public class Appointment extends MailItem {
                 return;
             }
             
-            // must call this explicitly or else new part won't be added...
-            mm.setContent(mmp);
-
-            mm.saveChanges();
-            
-            storeUpdatedBlob(mm, volumeId);
+            if (mmp.getCount() == 0) {
+                StoreManager sm = StoreManager.getInstance();
+                sm.delete(getBlob());
+            } else {
+                // must call this explicitly or else new part won't be added...
+                mm.setContent(mmp);
+                
+                mm.saveChanges();
+                
+                storeUpdatedBlob(mm, volumeId);
+            }
         } catch (MessagingException e) {
             throw ServiceException.FAILURE("MessagingException", e);
         } catch (IOException e) {

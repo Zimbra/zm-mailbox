@@ -76,41 +76,55 @@ public class SetAppointment extends CalendarRequest {
             
             sLog.info("<SetAppointment> " + lc.toString());
             
+            Mailbox.SetAppointmentData defaultData;
+            ArrayList /* Mailbox.SetAppointmentData */ exceptions = new ArrayList();
+            
             synchronized (mbox) {
                 
-                Appointment appt;
+//                Appointment appt;
                 
                 // First, the <default>
                 {
                     Element e = request.getElement(MailService.A_DEFAULT);
                     
-                    int[] ids = getParsedMessage(octxt, acct, mbox, e, new SetAppointmentInviteParser());
+                    defaultData = getSetAppointmentData(octxt, acct, mbox, e, new SetAppointmentInviteParser());
                     
-                    appt = mbox.getAppointmentById(ids[0]);
+//                    appt = mbox.getAppointmentById(ids[0]);
                 }
                 
-                Invite inv = appt.getDefaultInvite();
+//                Invite inv = appt.getDefaultInvite();
                 
-                if (inv.hasRecurId()) {
-                    throw ServiceException.FAILURE("Invite id="+appt.getId()+"-"+inv.getMailItemId()+" comp="+inv.getComponentNum()+" is not the a default invite", null);
-                }
-                if (appt == null) {
-                    throw ServiceException.FAILURE("Could not find Appointment for id="+appt.getId()+"-"+inv.getMailItemId()+" comp="+inv.getComponentNum()+">", null);
-                }
+//                if (inv.hasRecurId()) {
+//                    throw ServiceException.FAILURE("Invite id="+inv.getMailItemId()+" comp="+inv.getComponentNum()+" is not the a default invite", null);
+//                }
+//                if (appt == null) {
+//                    throw ServiceException.FAILURE("Could not find Appointment for id="+appt.getId()+"-"+inv.getMailItemId()+" comp="+inv.getComponentNum()+">", null);
+//                }
                 // for each <exception>
                 for (Iterator iter = request.elementIterator(MailService.A_EXCEPT); iter.hasNext();) {
-                    if (!appt.isRecurring()) {
-                        throw ServiceException.FAILURE("Appointment "+appt.getId()+" is not a recurring appointment", null);
-                    }
+//                    if (!appt.isRecurring()) {
+//                        throw ServiceException.FAILURE("Appointment "+appt.getId()+" is not a recurring appointment", null);
+//                    }
                     
                     Element e = (Element)iter.next();
                     
-                    int ids[] = getParsedMessage(octxt, acct, mbox, e, new CreateAppointmentException.CreateApptExceptionInviteParser(appt.getUid(), inv.getTimeZoneMap()));
-                    assert(ids[0] == appt.getId());
+                    Mailbox.SetAppointmentData exDat = getSetAppointmentData(octxt, acct, mbox, e, new SetAppointmentInviteParser());
+//                    assert(ids[0] == appt.getId());
+                    exceptions.add(exDat);
                 }
                 
+                
+                Mailbox.SetAppointmentData[] exceptArray = null;
+                if (exceptions.size() > 0) {
+                    exceptArray = new Mailbox.SetAppointmentData[exceptions.size()];
+                    exceptions.toArray(exceptArray);
+                }
+                
+                int apptId = mbox.setAppointment(null, Mailbox.ID_FOLDER_CALENDAR, defaultData, exceptArray);
+                
                 Element response = lc.createElement(MailService.SET_APPOINTMENT_RESPONSE);
-                response.addAttribute(MailService.A_APPT_ID, appt.getId());
+                response.addAttribute(MailService.A_APPT_ID, apptId);
+                
                 return response;
             } // synchronized(mbox)
         } finally {
@@ -118,7 +132,7 @@ public class SetAppointment extends CalendarRequest {
         }
     }
     
-    static private int[] getParsedMessage(OperationContext octxt, Account acct, Mailbox mbox, 
+    static private Mailbox.SetAppointmentData getSetAppointmentData(OperationContext octxt, Account acct, Mailbox mbox, 
             Element e, ParseMimeMessage.InviteParser parser) throws ServiceException {
         
         boolean needsReply = e.getAttributeBool(MailService.A_APPT_NEEDS_REPLY, true);
@@ -155,13 +169,21 @@ public class SetAppointment extends CalendarRequest {
         
         boolean sentByMe = false; // not applicable in the SetAppointment case
         
-        Invite except = Invite.createFromICalendar(acct, pm.getFragment(), cal, sentByMe);
+        Invite inv = Invite.createFromICalendar(acct, pm.getFragment(), cal, sentByMe);
         
-        int[] ids = mbox.addInvite(null, except, true, pm);
+        inv.modifyPartStatInMemory(needsReply, partStatStr);
         
-        mbox.modifyInvitePartStat(octxt, ids[0], ids[1], 0, needsReply, partStatStr);
+        Mailbox.SetAppointmentData toRet = new Mailbox.SetAppointmentData();
+        toRet.mInv = inv;
+        toRet.mPm = pm;
+        toRet.mForce = true;
         
-        return ids;
+//        int[] ids = mbox.addInvite(null, except, true, pm);
+        
+//        mbox.modifyInvitePartStat(octxt, ids[0], ids[1], 0, needsReply, partStatStr);
+        
+//        return ids;
+        return toRet;
     }
     
     protected static int sendThenDeleteCalendarMessage(OperationContext octxt, Account acct, Mailbox mbox, CalSendData dat) throws ServiceException
