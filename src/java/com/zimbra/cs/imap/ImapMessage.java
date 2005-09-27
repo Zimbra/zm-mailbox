@@ -291,7 +291,7 @@ class ImapMessage {
                 //         size of the body in text lines.  Note that this size is the size in its
                 //         content transfer encoding and not the resulting size after any decoding."
                 // FIXME: JavaMail's implementation of this always returns -1
-                ps.write(' ');  ps.print(mp.getLineCount());
+                ps.write(' ');  ps.print(Math.max(mp.getLineCount(), 0));
             }
             if (extensions && !rfc822)
                 ;   // FIXME: not implementing BODYSTRUCTURE extensions yet
