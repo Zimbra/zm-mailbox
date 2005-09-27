@@ -138,6 +138,7 @@ public class Zimbra {
 
         System.setProperty("javax.net.ssl.keyStore", LC.tomcat_keystore.value());
         System.setProperty("javax.net.ssl.keyStorePassword", "zimbra");
+        System.setProperty("ical4j.unfolding.relaxed", "true");
 
         if (!redoLog.isSlave()) {
             Server server = Provisioning.getInstance().getLocalServer();

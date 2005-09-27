@@ -518,7 +518,7 @@ public class ParsedMessage {
             }
         }
     }
-
+    
     /**
      * @param mimePart
      * @param contentTypeString
@@ -530,19 +530,17 @@ public class ParsedMessage {
                 CalendarBuilder calBuilder = new CalendarBuilder();
                 
 //                {
-//                    InputStream is = mimePart.getInputStream();
+//                    Reader is = new UnfoldingReader(new InputStreamReader(mimePart.getInputStream()));
 //                    for (int i = is.read(); i != -1; i = is.read()) {
 //                        char ch = (char)i;
 //                        System.out.print(ch);
 //                    }
 //                    System.out.println();
 //                }
-
+                
                 InputStream is = mimePart.getInputStream();
                 
                 miCalendar = calBuilder.build(is);
-                // XXX: should more drastic measure be taken when iCal data cannot be retrieved?
-                // e.g., bounce the mail back to the sender
             } catch (IOException e) {
                 sLog.warn("error reading text/calendar mime part", e);
             } catch (ParserException e) {
