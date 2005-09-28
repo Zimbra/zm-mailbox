@@ -369,7 +369,7 @@
 	<target name="reset-the-world" depends="reset-the-world-stage1,reset-the-world-stage2" 
 		description="Reset the world"/>
 
-	<target name="reset-the-world-stage1" depends="compile,jar,init" description="Run when tomcat is stopped." />
+	<target name="reset-the-world-stage1" depends="clean,compile,jar,init" description="Run when tomcat is stopped." />
 
 	<target name="reset-the-world-stage2" depends="service-deploy,inject" description="Run when tomcat is running." />
 
