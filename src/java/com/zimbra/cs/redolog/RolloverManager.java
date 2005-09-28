@@ -45,10 +45,6 @@ import java.util.TimeZone;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.DbRedologSequence;
-import com.zimbra.cs.db.DbPool.Connection;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.FileUtil;
 
 /**
@@ -241,34 +237,16 @@ public class RolloverManager {
     	return mSequence;
     }
 
-    public synchronized void initSequence() throws ServiceException {
-        Connection conn = null;
-        try {
-            conn = DbPool.getConnection();
-            mSequence = DbRedologSequence.getSequence(conn);
-        } finally {
-            if (conn != null)
-                DbPool.quietClose(conn);
-        }
-        
-    }
-
-    public synchronized void incrementSequence() {
-        mSequence ++;
-    }
-
-    public synchronized void commitSequence() throws ServiceException {
-        resetSequence(mSequence);
+    public synchronized void initSequence(long seq) {
+        mSequence = seq;
     }
     
-    public void resetSequence(long seq) throws ServiceException {
-        Connection conn = null;
-        try {
-            conn = DbPool.getConnection();
-            mSequence = DbRedologSequence.setSequence(conn, seq);
-        } finally {
-            if (conn != null)
-                DbPool.quietClose(conn);
-        }
+    public synchronized long incrementSequence() {
+        if (mSequence < Long.MAX_VALUE)
+            ++mSequence;
+        else
+            mSequence = 0;
+        return mSequence;
     }
+
 }

@@ -380,17 +380,6 @@ public class FileLogWriter implements LogWriter {
         if (!tempLogfile.renameTo(mFile))
             throw new IOException("Unable to rename " + tempPath + " to " + currentPath);
 
-        // increment the sequence in db
-        // had any of the above fails, db's sequence would lag behind
-        // which will prevent server startup and require an offline restore to the right sequence.
-        try {
-            romgr.commitSequence();
-        } catch (ServiceException e) {
-            IOException ioe = new IOException("Unable to increment the redo log file sequence");
-            ioe.initCause(e);
-            throw ioe;
-        }
-
         // Reopen current log.
         open();
         noStat(false);
