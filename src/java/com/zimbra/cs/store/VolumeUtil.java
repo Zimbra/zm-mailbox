@@ -32,7 +32,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.collections.bidimap.DualHashBidiMap;
 
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
@@ -49,6 +48,7 @@ public class VolumeUtil extends SoapCLI {
     protected static final String O_E = "e";
     protected static final String O_DC = "dc";
     protected static final String O_SC = "sc";
+    protected static final String O_TS = "ts";
     protected static final String O_ID = "id";
     protected static final String O_T = "t";
     protected static final String O_N = "n";
@@ -59,13 +59,6 @@ public class VolumeUtil extends SoapCLI {
     protected static final String O_MGB = "mgb";
     protected static final String O_C = "c";
     protected static final String O_CT = "ct";
-    
-    protected static DualHashBidiMap sTypes = new DualHashBidiMap();
-    static {
-        sTypes.put(new Short(Volume.TYPE_MESSAGE).toString(), "primary");
-        sTypes.put(new Short(Volume.TYPE_MESSAGE_SECONDARY).toString(), "secondary");
-        sTypes.put(new Short(Volume.TYPE_INDEX).toString(), "index");
-    }
     
     protected VolumeUtil() throws ServiceException {
         super();
@@ -113,9 +106,19 @@ public class VolumeUtil extends SoapCLI {
             } else if (cl.hasOption(O_SC)) {
                 if (id == null)
                     throw new ParseException("volume id is missing");
-                util.setCurrentVolume(id, type);
+                if (type == null)
+                    throw new ParseException("type is missing");
+                short t = VolumeUtil.getTypeId(type);
+                if (t < 0)
+                    throw new IllegalArgumentException("invalid volume type: " + type);
+                short shortId = Short.parseShort(id);
+                if (shortId < 0)
+                    throw new IllegalArgumentException("id cannot be less than 0");
+                util.setCurrentVolume(shortId, t);
+            } else if (cl.hasOption(O_TS)) {
+                util.setCurrentVolume(Volume.ID_NONE, Volume.TYPE_MESSAGE_SECONDARY);
             } else {
-                throw new ParseException("No action (-a,-d,-l,-e,-dc,-sc) is specified");
+                throw new ParseException("No action (-a,-d,-l,-e,-dc,-sc,-ts) is specified");
             }
             System.exit(0);
         } catch (ParseException e) {
@@ -126,15 +129,19 @@ public class VolumeUtil extends SoapCLI {
         System.exit(1);
     }
 
-    private void setCurrentVolume(String id, String type) throws SoapFaultException, IOException, ServiceException {
+    private void setCurrentVolume(short id, short type) throws SoapFaultException, IOException, ServiceException {
         Element req = new Element.XMLElement(AdminService.SET_CURRENT_VOLUME_REQUEST);
-        req.addAttribute(AdminService.A_ID, id);
-        String t = (String) sTypes.getKey(type);
-        if (t == null)
-            throw new IllegalArgumentException("invalid volume type: " + type);
-        req.addAttribute(AdminService.A_VOLUME_TYPE, t);
+        if (id >= 0) {
+            req.addAttribute(AdminService.A_ID, id);
+        }
+        req.addAttribute(AdminService.A_VOLUME_TYPE, type);
         auth();
         getTransport().invokeWithoutSession(req);
+        if (id >= 0) {
+            System.out.println("Volume " + id + " is now the current " + VolumeUtil.getTypeName(type) + " volume.");
+        } else {
+            System.out.println("Turned off the current secondary message volume.");
+        }
     }
 
     private void displayCurrentVolumes() throws SoapFaultException, IOException, ServiceException {
@@ -162,8 +169,8 @@ public class VolumeUtil extends SoapCLI {
             Element volElem = (Element) it.next();
             String vid = volElem.getAttribute(AdminService.A_ID);
             String name = volElem.getAttribute(AdminService.A_VOLUME_NAME);
-            String t = volElem.getAttribute(AdminService.A_VOLUME_TYPE);
-            String type = (String) sTypes.get(t);
+            short t = (short) volElem.getAttributeLong(AdminService.A_VOLUME_TYPE);
+            String type = VolumeUtil.getTypeName(t);
             String path = volElem.getAttribute(AdminService.A_VOLUME_ROOTPATH);
             String fbits = volElem.getAttribute(AdminService.A_VOLUME_FBITS);
             String fgbits = volElem.getAttribute(AdminService.A_VOLUME_FGBITS);
@@ -187,6 +194,7 @@ public class VolumeUtil extends SoapCLI {
         req.addAttribute(AdminService.A_ID, id);
         auth();
         Element resp = getTransport().invokeWithoutSession(req);
+        System.out.println("Deleted volume " + id);
     }
 
     private void editVolume(String id, String name, String type, String path,
@@ -201,6 +209,7 @@ public class VolumeUtil extends SoapCLI {
                 mailboxBits, mailboxGroupBits, compress, compressThreshold);
         auth();
         Element resp = getTransport().invokeWithoutSession(req);
+        System.out.println("Edited volume " + id);
     }
 
     private void addVolume(String name, String type, String path,
@@ -268,22 +277,19 @@ public class VolumeUtil extends SoapCLI {
             throw new IllegalArgumentException("at least one value of the bits parameters is not a valid number");
         }
 
-        // validate type
-        String t = null;
-        if (type != null) {
-            t = (String) sTypes.getKey(type);
-            if (t == null)
-                throw new IllegalArgumentException("invalid volume type: "
-                        + type);
-        }
         // validate compress parameter
         if (compress != null) {
             if (!"true".equals(compress) && !"false".equals(compress))
                 throw new IllegalArgumentException("expecting true or false for compress option");
         }
+        
         // the parameters may be null in the case of modifications
-        if (t != null)
+        if (type != null) {
+            short t = VolumeUtil.getTypeId(type);
+            if (t < 0)
+                throw new IllegalArgumentException("invalid volume type: " + type);
             vol.addAttribute(AdminService.A_VOLUME_TYPE, t);
+        }
         if (name != null)
             vol.addAttribute(AdminService.A_VOLUME_NAME, name);
         if (path != null)
@@ -317,9 +323,11 @@ public class VolumeUtil extends SoapCLI {
         og.addOption(new Option(O_E, "edit", false, "Edits a volume."));
         og.addOption(new Option(O_DC, "displayCurrent", false, "Displays the current volumes."));
         og.addOption(new Option(O_SC, "setCurrent", false, "Sets the current volume."));
+        og.addOption(new Option(O_TS, "turnOffSecondary", false, "Turns off the current secondary message volume"));
         options.addOptionGroup(og);
         options.addOption(O_ID, "id", true, "Volume ID");
-        options.addOption(O_T, "type", true, "Volume type (primary, secondary, or index; default is primary)");
+        options.addOption(O_T, "type", true,
+            "Volume type (primaryMessage, secondaryMessage, or index; default is primaryMessage)");
         options.addOption(O_N, "name", true, "volume name");
         options.addOption(O_P, "path", true, "Root path");
         options.addOption(O_FB, "fileBits", true, "File bits; default is 12");
@@ -357,6 +365,7 @@ public class VolumeUtil extends SoapCLI {
         System.out.println("  -id is optional.");
         printOpt(O_DC, 0);
         printOpt(O_SC, 0);
+        printOpt(O_TS, 0);
         printOpt(O_ID, 2);
         printOpt(O_T, 2);
     }
@@ -375,4 +384,32 @@ public class VolumeUtil extends SoapCLI {
         System.out.println(buf.toString());
     }
 
+    /**
+     * Returns the type id for the given name.  If the name is not recognized,
+     * returns <code>-1</code>.
+     */
+    public static short getTypeId(String name) {
+        if (name.equalsIgnoreCase("primaryMessage")) {
+            return Volume.TYPE_MESSAGE;
+        }
+        if (name.equalsIgnoreCase("secondaryMessage")) {
+            return Volume.TYPE_MESSAGE_SECONDARY;
+        }
+        if (name.equalsIgnoreCase("index")) {
+            return Volume.TYPE_INDEX;
+        }
+        return -1;
+    }
+
+    /**
+     * Returns the human-readable name for the given volume type.
+     */
+    public static String getTypeName(short type) {
+        switch (type) {
+            case Volume.TYPE_MESSAGE: return "primaryMessage";
+            case Volume.TYPE_MESSAGE_SECONDARY: return "secondaryMessage";
+            case Volume.TYPE_INDEX: return "index";
+        }
+        return "Unrecognized type " + type;
+    }
 }

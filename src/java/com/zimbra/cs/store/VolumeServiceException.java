@@ -60,6 +60,7 @@ public class VolumeServiceException extends ServiceException {
     }
 
     public static VolumeServiceException WRONG_TYPE_CURRVOL(int id, short currVolType) {
-        return new VolumeServiceException("volume " + id + " cannot be used as current volume of type: " + currVolType, WRONG_TYPE_CURRVOL, SENDERS_FAULT, null);
+        return new VolumeServiceException("volume " + id + " cannot be used as current volume of type " +
+            currVolType + " (" + VolumeUtil.getTypeName(currVolType) + ")", WRONG_TYPE_CURRVOL, SENDERS_FAULT, null);
     }
 }
