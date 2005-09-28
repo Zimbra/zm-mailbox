@@ -72,6 +72,8 @@ installers to your local machine before installing.
 
   On Windows, install MySQL to c:\opt\zimbra\mysql
 
+  Install it to run on port 7306
+
   We expect for now an admin account of "root" with password "zimbra".
   This is different then the OS root account (if on Linux). The
   ZimbraServer/build.xml file relies on the root account to create
