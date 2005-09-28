@@ -463,13 +463,13 @@
 	</target>
 
 	<target name="db-init" description="Recreate the database tables">
-		<sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost/" userid="root" password="zimbra" 
+		<sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra" 
 			 classpathref="class.path" onerror="continue" keepformat="true" src="src/db/dropdb.sql" />
 
-		<sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://127.0.0.1/" userid="root" password="zimbra"
+		<sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
 			 classpathref="class.path" onerror="abort" keepformat="true" src="src/db/db.sql" />
 
-		<sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://127.0.0.1/" userid="root" password="zimbra"
+		<sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
 			 classpathref="class.path" onerror="abort" keepformat="false" src="${build.dir}/versions-init.sql" />
 	</target>
 
