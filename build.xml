@@ -164,9 +164,10 @@
 		<mkdir dir="${generated.java.dir}" />
 	</target>
 
-    <target name="javadoc">
+    <target name="javadoc" depends="set-buildinfo-vars">
         <javadoc sourcepath="src/java" destdir="docs/api" classpathref="class.path"
-                 packagenames="com.zimbra.*" source="1.4" breakiterator="yes">
+                 access="private" packagenames="com.zimbra.*" additionalparam='-tag perms:m:"Permissions Required:"'
+                 source="1.4" breakiterator="yes" windowtitle="ZimbraServer v${zimbra.buildinfo.version}">
         	<link href="http://java.sun.com/j2se/1.4.2/docs/api/"/>
         	<link href="http://java.sun.com/products/javamail/javadocs/"/>
         	<link href="http://jakarta.apache.org/commons/logging/api/"/>
@@ -199,7 +200,7 @@
 		</antcall>
 	</target>
 
-	<target name="generate-buildinfo">
+	<target name="set-buildinfo-vars">
 		<tstamp />
 		<condition property="zimbra.buildinfo.version" value="2.0">
 			<not>
@@ -221,6 +222,11 @@
 				<isset property="${zimbra.buildinfo.host}" />
 			</not>
 		</condition>
+
+		<echo>Version: ${zimbra.buildinfo.version}</echo>
+	</target>
+	
+	<target name="generate-buildinfo" depends="set-buildinfo-vars">
 		<mkdir dir="${build.dir}/buildinfo" />
 		<echo file="${build.dir}/buildinfo/BuildInfoGenerated.java">
 			package com.zimbra.cs.util;
@@ -492,7 +498,7 @@
 		</java>
 		<echo>Provisioning server entry for ${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="CreateServer ${zimbra.server.hostname} zimbraSmtpHostname ${zimbra.smtp.host} zimbraMailPort 7070" />
+			<arg line="CreateServer ${zimbra.server.hostname} zimbraSmtpHostname ${zimbra.smtp.host} zimbraMailPort 7070 zimbraImapCleartextLoginEnabled TRUE zimbraImapBindPort 143" />
 		</java>
 		<echo>Creating domain: ${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
