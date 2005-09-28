@@ -38,6 +38,7 @@ import org.apache.commons.cli.ParseException;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.client.LmcSession;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
@@ -89,6 +90,7 @@ public abstract class SoapCLI {
     private Options mOptions;
     
     private SoapTransport mTrans = null;
+    private String mServerUrl;
     
     protected SoapCLI() throws ServiceException {
         // get admin username from local config
@@ -113,7 +115,8 @@ public abstract class SoapCLI {
      */
     protected CommandLine getCommandLine(String[] args) throws ParseException {
         CommandLineParser clParser = new GnuParser();
-        CommandLine cl = clParser.parse(mOptions, args); 
+        CommandLine cl = null;
+        cl = clParser.parse(mOptions, args);
         if (cl.hasOption(O_H)) {
             usage();
             return null;
@@ -129,9 +132,10 @@ public abstract class SoapCLI {
      * @throws SoapFaultException
      * @throws ServiceException
      */
-    protected void auth() throws SoapFaultException, IOException, ServiceException {
-        URL src = new URL("https", mHost, mPort, ZimbraServlet.ADMIN_SERVICE_URI);
-        SoapHttpTransport trans = new SoapHttpTransport(src.toExternalForm());
+    protected LmcSession auth() throws SoapFaultException, IOException, ServiceException {
+        URL url = new URL("https", mHost, mPort, ZimbraServlet.ADMIN_SERVICE_URI);
+        mServerUrl = url.toExternalForm();
+        SoapHttpTransport trans = new SoapHttpTransport(mServerUrl);
         trans.setRetryCount(1);
         trans.setTimeout(0);
         mTrans = trans;
@@ -149,6 +153,7 @@ public abstract class SoapCLI {
                 mTrans.setSessionId(sessionId);
             }
             mAuth = true;
+            return new LmcSession(authToken, sessionId);
         } catch (UnknownHostException e) {
             // UnknownHostException's error message is not clear; rethrow with a more descriptive message
             throw new IOException("Unknown host: " + mHost);
@@ -184,7 +189,7 @@ public abstract class SoapCLI {
 
         HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp(getCommandUsage(),
-                "where <options> are one of:", mOptions,
+                null, mOptions,
                 getTrailer());
         
     }
@@ -242,6 +247,10 @@ public abstract class SoapCLI {
      */
     protected SoapTransport getTransport() {
         return mTrans;
+    }
+    
+    protected String getServerUrl() {
+        return mServerUrl;
     }
     
     /**
