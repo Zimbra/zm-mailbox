@@ -30,18 +30,15 @@ package com.zimbra.cs.service.admin;
 
 import java.util.Map;
 
-import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.ZimbraContext;
 
-/**
- * @author schemers
- */
-public class RenameAccount extends AdminDocumentHandler {
+public class RenameDistributionList extends AdminDocumentHandler {
 
 	public Element handle(Element request, Map context) throws ServiceException {
 
@@ -51,25 +48,25 @@ public class RenameAccount extends AdminDocumentHandler {
 	    String id = request.getAttribute(AdminService.E_ID);
         String newName = request.getAttribute(AdminService.E_NEW_NAME);
 
-	    Account account = prov.getAccountById(id);
-        if (account == null)
+	    DistributionList dl = prov.getDistributionListById(id);
+        if (dl == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
 
-        String oldName = account.getName();
+        String oldName = dl.getName();
 
-        prov.renameAccount(id, newName);
+        prov.renameDistributionList(id, newName);
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                new String[] {"cmd", "RenameAccount","name", oldName, "newName", newName})); 
+                new String[] {"cmd", "RenameDistributionList", "name", oldName, "newName", newName})); 
         
         // get again with new name...
 
-        account = prov.getAccountById(id);
-        if (account == null)
-            throw ServiceException.FAILURE("unable to get account after rename: " + id, null);
-	    Element response = lc.createElement(AdminService.RENAME_ACCOUNT_RESPONSE);
-	    GetAccount.doAccount(response, account);
+        dl = prov.getDistributionListById(id);
+        if (dl == null)
+            throw ServiceException.FAILURE("unable to get distribution list after rename: " + id, null);
+	    Element response = lc.createElement(AdminService.RENAME_DISTRIBUTION_LIST_RESPONSE);
+	    GetDistributionList.doDistributionList(response, dl);
 	    return response;
-	}
 
+    }
 }

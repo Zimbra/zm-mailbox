@@ -23,9 +23,6 @@
  * ***** END LICENSE BLOCK *****
  */
 
-/*
- * Created on Sep 23, 2004
- */
 package com.zimbra.cs.account;
 
 import java.io.BufferedReader;
@@ -47,7 +44,6 @@ import com.zimbra.cs.util.StringUtil;
 
 /**
  * @author schemers
- *
  */
 public class ProvUtil {
  
@@ -108,6 +104,9 @@ public class ProvUtil {
         System.out.println("  DeleteDistributionList(ddl) {list@domain|id}");
         System.out.println("  AddDistributionListMember(adlm) {list@domain|id} {member@domain}");
         System.out.println("  RemoveDistributionListMember(rdlm) {list@domain|id} {member@domain}");
+        System.out.println("  AddDistributionListAlias(adla) {list@domain|id} {alias@domain}");
+        System.out.println("  RemoveDistributionListAlias(rdla) {list@domain|id} {alias@domain}");
+        System.out.println("  RenameDistributionList(rdl) {list@domain|id} {newName@domain}");
         System.out.println();
         
         System.out.println("  exit (quit)");
@@ -120,60 +119,60 @@ public class ProvUtil {
 
     private static final int UNKNOWN_COMMAND = -1;
     
-    private static final int CREATE_ACCOUNT = 1;
-    private static final int GET_ACCOUNT =  3;
-    private static final int GET_ALL_ACCOUNTS = 4;
-    private static final int GET_ALL_ADMIN_ACCOUNTS = 5;
-    private static final int MODIFY_ACCOUNT =  6;
-    private static final int DELETE_ACCOUNT = 7;
-    private static final int SET_PASSWORD =  8;
-    private static final int ADD_ACCOUNT_ALIAS = 9;
-    private static final int REMOVE_ACCOUNT_ALIAS = 10;
-        
-    private static final int CREATE_DOMAIN = 11;
-    private static final int GET_DOMAIN =  12;
-    private static final int GET_ALL_DOMAINS = 13;
-    private static final int MODIFY_DOMAIN = 14;
-    private static final int DELETE_DOMAIN = 15;
+    private static final int CREATE_ACCOUNT = 101;
+    private static final int GET_ACCOUNT =  102;
+    private static final int GET_ALL_ACCOUNTS = 103;
+    private static final int GET_ALL_ADMIN_ACCOUNTS = 104;
+    private static final int MODIFY_ACCOUNT = 105;
+    private static final int DELETE_ACCOUNT = 106;
+    private static final int SET_PASSWORD = 107;
+    private static final int ADD_ACCOUNT_ALIAS = 108;
+    private static final int REMOVE_ACCOUNT_ALIAS = 109;
+    private static final int RENAME_ACCOUNT = 110;
+    private static final int COPY_ACCOUNT = 111;
+    private static final int CREATE_BULK_ACCOUNTS = 112;
 
-    private static final int CREATE_COS = 16;
-    private static final int GET_COS = 17;
-    private static final int GET_ALL_COS = 18;
-    private static final int MODIFY_COS = 19;
-    private static final int DELETE_COS = 20;
-    
-    private static final int CREATE_SERVER = 21;
-    private static final int GET_SERVER = 22;
-    private static final int GET_ALL_SERVERS = 23;
-    private static final int MODIFY_SERVER = 24;
-    private static final int DELETE_SERVER = 25;
-    
-    private static final int EXIT = 26;
-    private static final int HELP = 27;
-    
-    private static final int GET_ALL_CONFIG = 28;
-    private static final int GET_CONFIG = 29;
-    private static final int MODIFY_CONFIG = 30;
-    
-    private static final int SET_ACCOUNT_COS = 31;
-    
-    private static final int SEARCH_ACCOUNTS = 32;
-    private static final int RENAME_ACCOUNT = 33;
-    private static final int SEARCH_GAL = 34;    
+    private static final int CREATE_DOMAIN = 201;
+    private static final int GET_DOMAIN =  202;
+    private static final int GET_ALL_DOMAINS = 203;
+    private static final int MODIFY_DOMAIN = 204;
+    private static final int DELETE_DOMAIN = 205;
 
-    private static final int CREATE_DISTRIBUTION_LIST = 35;
-    private static final int GET_ALL_DISTRIBUTION_LISTS = 36;
-    private static final int GET_DISTRIBUTION_LIST = 37;
-    private static final int MODIFY_DISTRIBUTION_LIST = 38;
-    private static final int DELETE_DISTRIBUTION_LIST = 39;
-    private static final int ADD_DISTRIBUTION_LIST_MEMBER = 40;
-    private static final int REMOVE_DISTRIBUTION_LIST_MEMBER = 41;
+    private static final int CREATE_COS = 301;
+    private static final int GET_COS = 302;
+    private static final int GET_ALL_COS = 303;
+    private static final int MODIFY_COS = 304;
+    private static final int DELETE_COS = 305;
+    private static final int SET_ACCOUNT_COS = 306;
+    private static final int RENAME_COS = 307;    
 
-    private static final int RENAME_COS = 42;    
+    private static final int CREATE_SERVER = 401;
+    private static final int GET_SERVER = 402;
+    private static final int GET_ALL_SERVERS = 403;
+    private static final int MODIFY_SERVER = 404;
+    private static final int DELETE_SERVER = 405;
 
-    private static final int COPY_ACCOUNT = 43;
-    private static final int CREATE_BULK_ACCOUNTS = 44;
-    private static final int SYNC_GAL = 45;
+    private static final int EXIT = 501;
+    private static final int HELP = 502;
+
+    private static final int GET_ALL_CONFIG = 601;
+    private static final int GET_CONFIG = 602;
+    private static final int MODIFY_CONFIG = 603;
+
+    private static final int CREATE_DISTRIBUTION_LIST = 701;
+    private static final int GET_ALL_DISTRIBUTION_LISTS = 702;
+    private static final int GET_DISTRIBUTION_LIST = 703;
+    private static final int MODIFY_DISTRIBUTION_LIST = 704;
+    private static final int DELETE_DISTRIBUTION_LIST = 705;
+    private static final int ADD_DISTRIBUTION_LIST_MEMBER = 706;
+    private static final int REMOVE_DISTRIBUTION_LIST_MEMBER = 707;
+    private static final int ADD_DISTRIBUTION_LIST_ALIAS = 708;
+    private static final int REMOVE_DISTRIBUTION_LIST_ALIAS = 709;
+    private static final int RENAME_DISTRIBUTION_LIST = 710;
+
+    private static final int SEARCH_ACCOUNTS = 801;
+    private static final int SEARCH_GAL = 802;
+    private static final int SYNC_GAL = 803;
 
     private static final int BY_ID = 1;
     private static final int BY_EMAIL = 2;
@@ -257,6 +256,9 @@ public class ProvUtil {
         addCommand("deleteDistributionList", "ddl", DELETE_DISTRIBUTION_LIST);
         addCommand("addDistributionListMember", "adlm", ADD_DISTRIBUTION_LIST_MEMBER);
         addCommand("removeDistributionListMember", "rdlm", REMOVE_DISTRIBUTION_LIST_MEMBER);
+        addCommand("addDistributionListAlias", "adla", ADD_DISTRIBUTION_LIST_ALIAS);
+        addCommand("removeDistributionListAlias", "rdla", REMOVE_DISTRIBUTION_LIST_ALIAS);
+        addCommand("renameDistributionList", "rdl", RENAME_DISTRIBUTION_LIST);
 
         addCommand("exit", "quit", EXIT);
         addCommand("help", "?", HELP);        
@@ -413,7 +415,16 @@ public class ProvUtil {
             doRemoveDistributionListMember(args);
             break;
         case CREATE_BULK_ACCOUNTS:
-           	doCreateAccountsBulk(args);
+            doCreateAccountsBulk(args);
+            break;
+        case ADD_DISTRIBUTION_LIST_ALIAS:
+            doAddDistributionListAlias(args);
+            break;
+        case REMOVE_DISTRIBUTION_LIST_ALIAS:
+            doRemoveDistributionListAlias(args);
+            break;
+        case RENAME_DISTRIBUTION_LIST:
+            doRenameDistributionList(args);
             break;
         default:
             return false;
@@ -424,11 +435,7 @@ public class ProvUtil {
     private void doHelp(String[] args) throws ServiceException {
         usage();
     }
-    
-    /**
-     * @param args
-     * @throws ServiceException
-     */
+
     private void doSetPassword(String[] args) throws ServiceException {
         if (args.length < 3) {
             usage();
@@ -440,10 +447,6 @@ public class ProvUtil {
         }
     }
 
-    /**
-     * @param args
-     * @throws ServiceException
-     */
     private void doSetAccountCos(String[] args) throws ServiceException {
         if (args.length < 3) {
             usage();
@@ -456,10 +459,6 @@ public class ProvUtil {
         }
     }
 
-    /**
-     * @param args
-     * @throws ServiceException
-     */
     private void doAddAccountAlias(String[] args) throws ServiceException {
         if (args.length < 3) {
             usage();
@@ -471,10 +470,6 @@ public class ProvUtil {
         }
     }
 
-    /**
-     * @param args
-     * @throws ServiceException
-     */
     private void doRemoveAccountAlias(String[] args) throws ServiceException {
         if (args.length < 3) {
             usage();
@@ -486,10 +481,6 @@ public class ProvUtil {
         }
     }
 
-    /**
-     * @param args
-     * @throws ServiceException
-     */
     private void doRenameAccount(String[] args) throws ServiceException {
         if (args.length < 3) {
             usage();
@@ -501,10 +492,6 @@ public class ProvUtil {
         }
     }
 
-    /**
-     * @param args
-     * @throws ServiceException
-     */
     private void doRenameCos(String[] args) throws ServiceException {
         if (args.length < 3) {
             usage();
@@ -516,11 +503,6 @@ public class ProvUtil {
         }
     }
 
-    /**
-     * @param args
-     * @throws ServiceException
-     * @throws ArgException
-     */
     private void doCreateAccount(String[] args) throws ServiceException, ArgException {
         if (args.length < 3) {
             usage();
@@ -553,10 +535,7 @@ public class ProvUtil {
            }
         }
     }
-    /**
-     * @param args
-     * @throws ServiceException
-     */
+
     private void doCopyAccount(String[] args) throws ServiceException {
         if (args.length < 5) {
             usage();
@@ -570,11 +549,6 @@ public class ProvUtil {
         }
     }
 
-    /**
-     * @param args
-     * @throws ServiceException
-     * @throws ArgException
-     */
     private void doModifyAccount(String[] args) throws ServiceException, ArgException {
         if (args.length < 4) {
             usage();
@@ -586,11 +560,6 @@ public class ProvUtil {
         }
     }
 
-    /**
-     * @param args
-     * @throws ServiceException
-     * @throws ArgException
-     */
     private void doModifyCos(String[] args) throws ServiceException, ArgException {
         if (args.length < 4) {
             usage();
@@ -602,11 +571,6 @@ public class ProvUtil {
         }
     }
 
-    /**
-     * @param args
-     * @throws ServiceException
-     * @throws ArgException
-     */
     private void doModifyConfig(String[] args) throws ServiceException, ArgException {
         if (args.length < 3) {
             usage();
@@ -616,11 +580,6 @@ public class ProvUtil {
         }
     }
 
-    /**
-     * @param args
-     * @throws ServiceException
-     * @throws ArgException
-     */
     private void doModifyDomain(String[] args) throws ServiceException, ArgException {
         if (args.length < 4) {
             usage();
@@ -632,11 +591,6 @@ public class ProvUtil {
         }
     }    
 
-    /**
-     * @param args
-     * @throws ServiceException
-     * @throws ArgException
-     */
     private void doModifyServer(String[] args) throws ServiceException, ArgException {
         if (args.length < 4) {
             usage();
@@ -648,10 +602,6 @@ public class ProvUtil {
         }
     }
 
-    /**
-     * @param args
-     * @throws ServiceException
-     */
     private void doDeleteAccount(String[] args) throws ServiceException {
         if (args.length != 2) {
             usage();
@@ -662,10 +612,6 @@ public class ProvUtil {
         }
     }
 
-    /**
-     * @param args
-     * @throws ServiceException
-     */
     private void doDeleteCos(String[] args) throws ServiceException {
         if (args.length != 2) {
             usage();
@@ -676,10 +622,6 @@ public class ProvUtil {
         }
     }
     
-    /**
-     * @param args
-     * @throws ServiceException
-     */
     private void doDeleteDomain(String[] args) throws ServiceException {
         if (args.length != 2) {
             usage();
@@ -690,10 +632,6 @@ public class ProvUtil {
         }
     }    
 
-    /**
-     * @param args
-     * @throws ServiceException
-     */
     private void doDeleteServer(String[] args) throws ServiceException {
         if (args.length != 2) {
             usage();
@@ -704,10 +642,6 @@ public class ProvUtil {
         }
     }
 
-    /**
-     * @param args
-     * @throws ServiceException
-     */
     private void doGetAccount(String[] args) throws ServiceException {
         if (args.length != 2) {
             usage();
@@ -718,10 +652,6 @@ public class ProvUtil {
         }
     }
 
-    /**
-     * @param args
-     * @throws ServiceException
-     */
     private void doGetCos(String[] args) throws ServiceException {
         if (args.length != 2) {
             usage();
@@ -732,11 +662,6 @@ public class ProvUtil {
         }
     }
 
-
-    /**
-     * @param args
-     * @throws ServiceException
-     */
     private void doGetConfig(String[] args) throws ServiceException {
         if (args.length < 2) {
             usage();
@@ -751,10 +676,6 @@ public class ProvUtil {
         }
     }
 
-    /**
-     * @param args
-     * @throws ServiceException
-     */
     private void doGetDomain(String[] args) throws ServiceException {
         if (args.length != 2) {
             usage();
@@ -765,10 +686,6 @@ public class ProvUtil {
         }
     }    
     
-    /**
-     * @param args
-     * @throws ServiceException
-     */
     private void doGetServer(String[] args) throws ServiceException {
         if (args.length != 2) {
             usage();
@@ -779,10 +696,6 @@ public class ProvUtil {
         }
     }    
 
-    /**
-     * @param args
-     * @throws ServiceException
-     */
     private void doGetAllAccounts(String[] args) throws ServiceException {
         boolean verbose = false;
         String d = null;
@@ -830,11 +743,6 @@ public class ProvUtil {
         }
     }    
 
-    /**
-     * @param args
-     * @throws ServiceException
-     * @throws ArgException
-     */
     private void doSearchAccounts(String[] args) throws ServiceException, ArgException {
         boolean verbose = false;
         int i = 1;
@@ -907,10 +815,6 @@ public class ProvUtil {
         }
     }    
 
-    /**
-     * @param args
-     * @throws ServiceException
-     */
     private void doSearchGal(String[] args) throws ServiceException {
         boolean verbose = false;
         int i = 1;
@@ -947,11 +851,6 @@ public class ProvUtil {
         }
     }    
 
-
-    /**
-     * @param args
-     * @throws ServiceException
-     */
     private void doSyncGal(String[] args) throws ServiceException {
         boolean verbose = false;
         int i = 1;
@@ -990,10 +889,6 @@ public class ProvUtil {
         }
     }    
 
-    /**
-     * @param args
-     * @throws ServiceException
-     */
     private void doGetAllAdminAccounts(String[] args) throws ServiceException {
         boolean verbose = args.length > 1 && args[1].equals("-v");
         List accounts = mProvisioning.getAllAdminAccounts();
@@ -1006,10 +901,6 @@ public class ProvUtil {
         }
     }    
     
-    /**
-     * @param args
-     * @throws ServiceException
-     */
     private void doGetAllCos(String[] args) throws ServiceException {
         boolean verbose = args.length > 1 && args[1].equals("-v");
         List allcos = mProvisioning.getAllCos();
@@ -1029,18 +920,10 @@ public class ProvUtil {
         System.out.println();
     }
 
-    /**
-     * @param args
-     * @throws ServiceException
-     */
     private void doGetAllConfig(String[] args) throws ServiceException {
         dumpAttrs(mProvisioning.getConfig().getAttrs());
     }        
 
-    /**
-     * @param args
-     * @throws ServiceException
-     */
     private void doGetAllDomains(String[] args) throws ServiceException {
         boolean verbose = args.length > 1 && args[1].equals("-v");
                 
@@ -1075,10 +958,6 @@ public class ProvUtil {
         dumpAttrs(attrs);        
     }
 
-    /**
-     * @param args
-     * @throws ServiceException
-     */
     private void doGetAllServers(String[] args) throws ServiceException {
         boolean verbose = args.length > 1 && args[1].equals("-v");
         List servers = mProvisioning.getAllServers();
@@ -1116,9 +995,6 @@ public class ProvUtil {
         System.out.println();
     }
     
-    /**
-     * @param attrs
-     */
     private void dumpAttrs(Map attrsIn) {
         TreeMap attrs = new TreeMap(attrsIn);
         
@@ -1137,11 +1013,6 @@ public class ProvUtil {
         }
     }
 
-    /**
-     * @param args
-     * @throws ServiceException
-     * @throws ArgException
-     */
     private void doCreateCos(String[] args) throws ServiceException, ArgException {
         if (args.length < 2) {
             usage();
@@ -1153,11 +1024,6 @@ public class ProvUtil {
         }
     }
     
-    /**
-     * @param args
-     * @throws ServiceException
-     * @throws ArgException
-     */
     private void doCreateDomain(String[] args) throws ServiceException, ArgException {
         if (args.length < 2) {
             usage();
@@ -1169,11 +1035,6 @@ public class ProvUtil {
         }
     }
     
-    /**
-     * @param args
-     * @throws ServiceException
-     * @throws ArgException
-     */
     private void doCreateServer(String[] args) throws ServiceException, ArgException {
         if (args.length < 2) {
             usage();
@@ -1185,11 +1046,6 @@ public class ProvUtil {
         }
     }    
 
-    /**
-     * @param args
-     * @throws ServiceException
-     * @throws ArgException
-     */
     private void doCreateAdminAccount(String[] args) throws ServiceException, ArgException {
         if (args.length < 3) {
             usage();
@@ -1202,11 +1058,6 @@ public class ProvUtil {
         }
     }
 
-    /**
-     * @param args
-     * @throws ServiceException
-     * @throws ArgException
-     */
     private void doCreateDistributionList(String[] args) throws ServiceException, ArgException {
         if (args.length < 2) {
             usage();
@@ -1218,10 +1069,6 @@ public class ProvUtil {
         }
     }
     
-    /**
-     * @param args
-     * @throws ServiceException
-     */
     private void doGetAllDistributionLists(String[] args) throws ServiceException {
         boolean verbose = args.length > 1 && args[1].equals("-v");
                 
@@ -1235,10 +1082,6 @@ public class ProvUtil {
         }
     }
 
-    /**
-     * @param args
-     * @throws ServiceException
-     */
     private void doGetDistributionList(String[] args) throws ServiceException {
         if (args.length < 2) {
             usage();
@@ -1249,10 +1092,6 @@ public class ProvUtil {
         }
     }
 
-    /**
-     * @param args
-     * @throws ServiceException
-     */
     private void doModifyDistributionList(String[] args) throws ServiceException, ArgException {
         if (args.length < 4) {
             usage();
@@ -1264,10 +1103,6 @@ public class ProvUtil {
         }
     }
 
-    /**
-     * @param args
-     * @throws ServiceException
-     */
     private void doDeleteDistributionList(String[] args) throws ServiceException {
         if (args.length < 2) {
             usage();
@@ -1278,10 +1113,6 @@ public class ProvUtil {
         }
     }
     
-    /**
-     * @param args
-     * @throws ServiceException
-     */
     private void doAddDistributionListMember(String[] args) throws ServiceException {
         if (args.length < 3) {
             usage();
@@ -1293,10 +1124,6 @@ public class ProvUtil {
         }        
     }
 
-    /**
-     * @param args
-     * @throws ServiceException
-     */
     private void doRemoveDistributionListMember(String[] args) throws ServiceException {
         if (args.length < 3) {
             usage();
@@ -1305,6 +1132,39 @@ public class ProvUtil {
             String member = args[2];
             DistributionList dl = lookupDistributionList(key);
             dl.removeMember(member);
+        }
+    }
+
+    private void doAddDistributionListAlias(String[] args) throws ServiceException {
+        if (args.length < 3) {
+            usage();
+        } else {
+            String key = args[1];
+            String alias = args[2];
+            DistributionList dl = lookupDistributionList(key);
+            mProvisioning.addAlias(dl, alias);
+        }
+    }
+
+    private void doRemoveDistributionListAlias(String[] args) throws ServiceException {
+        if (args.length < 3) {
+            usage();
+        } else {
+            String key = args[1];
+            String alias = args[2];
+            DistributionList dl = lookupDistributionList(key);
+            mProvisioning.removeAlias(dl, alias);
+        }
+    }
+
+    private void doRenameDistributionList(String[] args) throws ServiceException {
+        if (args.length < 3) {
+            usage();
+        } else {
+            String key = args[1];
+            String newName = args[2];
+            DistributionList dl = lookupDistributionList(key);
+            mProvisioning.renameDistributionList(dl.getId(), newName);
         }
     }
 
@@ -1399,12 +1259,6 @@ public class ProvUtil {
             return dl;
     }
 
-    /**
-     * @param args
-     * @param i
-     * @return
-     * @throws ArgException
-     */
     private Map getMap(String[] args, int offset) throws ArgException {
         HashMap attrs = new HashMap();
         for (int i = offset; i < args.length; i+=2) {

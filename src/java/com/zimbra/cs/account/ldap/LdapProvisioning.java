@@ -70,6 +70,7 @@ import com.zimbra.cs.account.*;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.EmailUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraLog;
 
@@ -391,18 +392,18 @@ public class LdapProvisioning extends Provisioning {
             return c;
     }
     
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.account.Provisioning#createAccount(java.lang.String, java.lang.String, java.lang.String, java.util.Map)
-     */
     public Account createAccount(String emailAddress, String password, Map acctAttrs) throws ServiceException {
 
         emailAddress = emailAddress.toLowerCase().trim();
-        //validEmailAddress(emailAddress);
+
+        HashMap attrManagerContext = new HashMap();
+        AttributeManager.getInstance().preModify(acctAttrs, null, attrManagerContext, true, true);
+
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
+
             String parts[] = emailAddress.split("@");
-            
             if (parts.length != 2)
                 throw ServiceException.INVALID_REQUEST("must be valid email address: "+emailAddress, null);
             
@@ -412,14 +413,10 @@ public class LdapProvisioning extends Provisioning {
             Domain d = getDomainByName(domain);
             if (d == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(domain);
-            
             String domainType = d.getAttr(Provisioning.A_zimbraDomainType, Provisioning.DOMAIN_TYPE_LOCAL);
             if (!domainType.equals(Provisioning.DOMAIN_TYPE_LOCAL))
                 throw ServiceException.INVALID_REQUEST("domain type must be local", null);
 
-            HashMap attrManagerContext = new HashMap();
-            AttributeManager.getInstance().preModify(acctAttrs, null, attrManagerContext, true, true);
-            
             Attributes attrs = new BasicAttributes(true);
             LdapUtil.mapToAttrs(acctAttrs, attrs);
 
@@ -498,8 +495,7 @@ public class LdapProvisioning extends Provisioning {
             attrs.put(A_uid, uid);
 
             String dn = emailToDN(uid, domain);
-            Context newCtxt = createSubcontext(ctxt, dn, attrs, "createAccount");
-            LdapUtil.closeContext(newCtxt);
+            createSubcontext(ctxt, dn, attrs, "createAccount");
             LdapAccount acct = (LdapAccount) getAccountById(zimbraIdStr, ctxt);
             // set password using the real account object, so we correctly maintain zimbraPassword* attrs
             // don't reset passwordMustChange attr if we want it changed on first login...
@@ -591,8 +587,7 @@ public class LdapProvisioning extends Provisioning {
             Attributes attrs = remoteAccount.getRawAttrs();
             
             String accountDn = emailToDN(uid, domain);
-            Context newCtxt = createSubcontext(ctxt, accountDn, attrs, "copyAccount");
-            LdapUtil.closeContext(newCtxt);
+            createSubcontext(ctxt, accountDn, attrs, "copyAccount");
             LdapAccount acct = (LdapAccount) getAccountById(remoteAccount.getId(), ctxt);
             return acct;
         } catch (NameAlreadyBoundException nabe) {
@@ -644,8 +639,7 @@ public class LdapProvisioning extends Provisioning {
                 attrs.put(A_userPassword, LdapUtil.generateSSHA(password, null));
 
             String dn = adminNameToDN(uid);
-            Context newCtxt = createSubcontext(ctxt, dn, attrs, "createAdminAccount");
-            LdapUtil.closeContext(newCtxt);
+            createSubcontext(ctxt, dn, attrs, "createAdminAccount");
             Account acct = getAccountById(zimbraIdStr, ctxt); 
             
             AttributeManager.getInstance().postModify(acctAttrs, acct, attrManagerContext, true);
@@ -736,8 +730,8 @@ public class LdapProvisioning extends Provisioning {
                 Attributes attrs = sr.getAttributes();
                 Attribute objectclass = attrs.get("objectclass");
                 if (objectclass == null || objectclass.contains("zimbraAccount")) result.add(new LdapAccount(dn, attrs, this));
-                else if (objectclass.contains("zimbraAlias")) result.add(new LdapAlias(dn, sr.getAttributes()));
-                else if (objectclass.contains("zimbraDistributionList")) result.add(new LdapDistributionList(dn, sr.getAttributes()));                
+                else if (objectclass.contains("zimbraAlias")) result.add(new LdapAlias(dn, attrs));
+                else if (objectclass.contains("zimbraDistributionList")) result.add(new LdapDistributionList(dn, attrs));                
             }
             ne.close();
         } catch (NameNotFoundException e) {
@@ -836,19 +830,32 @@ public class LdapProvisioning extends Provisioning {
         return (String[]) list.toArray(new String[list.size()]);
     }
     
-    String[] addMultiValue(Account acct, String attr, String value) {
+    String[] addMultiValue(NamedEntry acct, String attr, String value) {
         return addMultiValue(acct.getMultiAttr(attr), value);
     }
 
-    String[] removeMultiValue(Account acct, String attr, String value) {
+    String[] removeMultiValue(NamedEntry acct, String attr, String value) {
         return LdapUtil.removeMultiValue(acct.getMultiAttr(attr), value);
     }
 
-
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.account.Account#createAlias(java.lang.String)
-     */
     public void addAlias(Account acct, String alias) throws ServiceException {
+        addAliasInternal(acct, alias);
+    }
+	
+    public void removeAlias(Account acct, String alias) throws ServiceException {
+        removeAliasInternal(acct, alias, acct.getAliases());
+    }
+    
+    public void addAlias(DistributionList dl, String alias) throws ServiceException {
+        addAliasInternal(dl, alias);
+    }
+
+    public void removeAlias(DistributionList dl, String alias) throws ServiceException {
+        removeAliasInternal(dl, alias, dl.getAliases());
+    }
+
+    private void addAliasInternal(NamedEntry entry, String alias) throws ServiceException {
+    	assert(entry instanceof Account || entry instanceof DistributionList);
         alias = alias.toLowerCase().trim();
         int loc = alias.indexOf("@"); 
         if (loc == -1)
@@ -869,12 +876,12 @@ public class LdapProvisioning extends Provisioning {
             LdapUtil.simpleCreate(ctxt, aliasDn, "zimbraAlias",
                     new String[] { Provisioning.A_uid, aliasName, 
                     Provisioning.A_zimbraId, LdapUtil.generateUUID(),
-                    Provisioning.A_zimbraAliasTargetId, acct.getId()} );
+                    Provisioning.A_zimbraAliasTargetId, entry.getId()} );
             HashMap attrs = new HashMap();
-            attrs.put(Provisioning.A_zimbraMailAlias, addMultiValue(acct, Provisioning.A_zimbraMailAlias, alias));
-            attrs.put(Provisioning.A_mail, addMultiValue(acct, Provisioning.A_mail, alias));
+            attrs.put(Provisioning.A_zimbraMailAlias, addMultiValue(entry, Provisioning.A_zimbraMailAlias, alias));
+            attrs.put(Provisioning.A_mail, addMultiValue(entry, Provisioning.A_mail, alias));
             // UGH
-            ((LdapAccount)acct).modifyAttrsInternal(ctxt, attrs);
+            ((LdapNamedEntry)entry).modifyAttrsInternal(ctxt, attrs);
         } catch (NameAlreadyBoundException nabe) {
             throw AccountServiceException.ACCOUNT_EXISTS(alias);
         } catch (InvalidNameException e) {
@@ -886,10 +893,7 @@ public class LdapProvisioning extends Provisioning {
         }                
     }
     
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.account.Account#createAlias(java.lang.String)
-     */
-    public void removeAlias(Account acct, String alias) throws ServiceException {
+    private void removeAliasInternal(NamedEntry entry, String alias, String[] aliases) throws ServiceException {
         
         int loc = alias.indexOf("@"); 
         if (loc == -1)
@@ -897,7 +901,6 @@ public class LdapProvisioning extends Provisioning {
 
         alias = alias.toLowerCase();
 
-        String aliases[] = acct.getAliases();
         boolean found = false;
         for (int i=0; !found && i < aliases.length; i++) {
             found = aliases[i].equalsIgnoreCase(alias);
@@ -921,9 +924,9 @@ public class LdapProvisioning extends Provisioning {
             // remove zimbraMailAlias attr first, then alias
             try {
                 HashMap attrs = new HashMap();
-                attrs.put(Provisioning.A_mail, removeMultiValue(acct, Provisioning.A_mail, alias));
-                attrs.put(Provisioning.A_zimbraMailAlias, removeMultiValue(acct, Provisioning.A_zimbraMailAlias, alias));                
-                ((LdapAccount)acct).modifyAttrsInternal(ctxt, attrs);
+                attrs.put(Provisioning.A_mail, removeMultiValue(entry, Provisioning.A_mail, alias));
+                attrs.put(Provisioning.A_zimbraMailAlias, removeMultiValue(entry, Provisioning.A_zimbraMailAlias, alias));                
+                ((LdapNamedEntry)entry).modifyAttrsInternal(ctxt, attrs);
             } catch (ServiceException e) {
                 ZimbraLog.account.warn("unable to remove zimbraMailAlias/mail attrs: "+alias);
                 // try to remove alias
@@ -933,7 +936,7 @@ public class LdapProvisioning extends Provisioning {
                 Attributes aliasAttrs = ctxt.getAttributes(aliasDn);
                 // make sure aliasedObjectName points to this account
                 Attribute a = aliasAttrs.get(Provisioning.A_zimbraAliasTargetId);
-                if ( a != null && ( (String)a.get()).equals(acct.getId())) {
+                if ( a != null && ( (String)a.get()).equals(entry.getId())) {
                     ctxt.unbind(aliasDn);
                 } else {
                     ZimbraLog.account.warn("unable to remove alias object: "+alias);
@@ -1006,8 +1009,7 @@ public class LdapProvisioning extends Provisioning {
             String dn = dns[0];
             //NOTE: all four of these should be in a transaction...
             try {
-                Context newCtxt = createSubcontext(ctxt, dn, attrs, "createDomain");
-                LdapUtil.closeContext(newCtxt);
+                createSubcontext(ctxt, dn, attrs, "createDomain");
             } catch (NameAlreadyBoundException e) {
                 ctxt.modifyAttributes(dn, DirContext.REPLACE_ATTRIBUTE, attrs);
             }
@@ -1168,8 +1170,7 @@ public class LdapProvisioning extends Provisioning {
             attrs.put(A_zimbraId, zimbraIdStr);
             attrs.put(A_cn, name);
             String dn = cosNametoDN(name);
-            Context newCtxt = createSubcontext(ctxt, dn, attrs, "createCos");
-            LdapUtil.closeContext(newCtxt);
+            createSubcontext(ctxt, dn, attrs, "createCos");
 
             Cos cos = getCosById(zimbraIdStr, ctxt);
             AttributeManager.getInstance().postModify(cosAttrs, cos, attrManagerContext, true);
@@ -1348,18 +1349,15 @@ public class LdapProvisioning extends Provisioning {
         if (acc == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(zimbraId);
 
-        int loc = newName.indexOf("@"); 
-        if (loc == -1)
-            throw ServiceException.INVALID_REQUEST("name must include the domain", null);
-                
-        newName = newName.toLowerCase().trim();
-
         String oldEmail = acc.getName();
-        String newEmail = newName;
         
-        String newDomain = newName.substring(loc+1);
-        newName = newName.substring(0, loc);
-
+        newName = newName.toLowerCase().trim();
+        String[] parts = EmailUtil.getLocalPartAndDomain(newName);
+        if (parts == null)
+            throw ServiceException.INVALID_REQUEST("bad value for newName", null);
+        String newLocal = parts[0];
+        String newDomain = parts[1];
+        
         Domain domain = getDomainByName(newDomain);
         if (domain == null)
             throw AccountServiceException.NO_SUCH_DOMAIN(newDomain);
@@ -1367,21 +1365,20 @@ public class LdapProvisioning extends Provisioning {
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
-            String newDn = emailToDN(newName,domain.getName());
+            String newDn = emailToDN(newLocal,domain.getName());
             ctxt.rename(acc.mDn, newDn);
             // remove old account from cache
             sAccountCache.remove(acc);
             acc = (LdapAccount) getAccountById(zimbraId,ctxt);
             HashMap amap = new HashMap();
-            amap.put(Provisioning.A_zimbraMailDeliveryAddress, newEmail);
+            amap.put(Provisioning.A_zimbraMailDeliveryAddress, newName);
             String mail[] = acc.getMultiAttr(Provisioning.A_mail);
             if (mail.length == 0) {
-                mail = addMultiValue(mail, newName);
-                amap.put(Provisioning.A_mail, newEmail);
+                amap.put(Provisioning.A_mail, newName);
             } else {
                 // not the most efficient, but renames dont' happen often
                 mail = LdapUtil.removeMultiValue(mail, oldEmail);
-                mail = addMultiValue(mail, newEmail);
+                mail = addMultiValue(mail, newName);
                 amap.put(Provisioning.A_mail, mail);
             }
             // this is non-atomic. i.e., rename could succeed and updating zimbraMailDeliveryAddress
@@ -1477,8 +1474,7 @@ public class LdapProvisioning extends Provisioning {
                 zimbraServerHostname = (String) zimbraServiceHostnameAttr.get();
             }
             
-            Context newCtxt = createSubcontext(ctxt, dn, attrs, "createServer");
-            LdapUtil.closeContext(newCtxt);
+            createSubcontext(ctxt, dn, attrs, "createServer");
 
             Server server = getServerById(zimbraIdStr, ctxt, true);
             AttributeManager.getInstance().postModify(serverAttrs, server, attrManagerContext, true);
@@ -1685,7 +1681,6 @@ public class LdapProvisioning extends Provisioning {
         AttributeManager.getInstance().preModify(listAttrs, null, attrManagerContext, true, true);
 
         DirContext ctxt = null;
-        Context newCtxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
 
@@ -1699,6 +1694,9 @@ public class LdapProvisioning extends Provisioning {
             Domain d = getDomainByName(domain);
             if (d == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(domain);
+            String domainType = d.getAttr(Provisioning.A_zimbraDomainType, Provisioning.DOMAIN_TYPE_LOCAL);
+            if (!domainType.equals(Provisioning.DOMAIN_TYPE_LOCAL))
+                throw ServiceException.INVALID_REQUEST("domain type must be local", null);
 
             Attributes attrs = new BasicAttributes(true);
             LdapUtil.mapToAttrs(listAttrs, attrs);
@@ -1708,14 +1706,15 @@ public class LdapProvisioning extends Provisioning {
             String zimbraIdStr = LdapUtil.generateUUID();
             attrs.put(A_zimbraId, zimbraIdStr);
             attrs.put(A_zimbraMailAlias, listAddress);
+            attrs.put(A_mail, listAddress);
 
-            // default a distribution list is always created enabled
+            // by default a distribution list is always created enabled
             if (attrs.get(Provisioning.A_zimbraMailStatus) == null) {
                 attrs.put(A_zimbraMailStatus, MAIL_STATUS_ENABLED);
             }
 
             String dn = emailToDN(list, domain);
-            newCtxt = createSubcontext(ctxt, dn, attrs, "createDistributionList");
+            createSubcontext(ctxt, dn, attrs, "createDistributionList");
 
             DistributionList dlist = getDistributionListById(zimbraIdStr, ctxt);
             AttributeManager.getInstance().postModify(listAttrs, dlist, attrManagerContext, true);
@@ -1725,7 +1724,6 @@ public class LdapProvisioning extends Provisioning {
             throw AccountServiceException.DISTRIBUTION_LIST_EXISTS(listAddress);
         } finally {
             LdapUtil.closeContext(ctxt);
-            LdapUtil.closeContext(newCtxt);            
         }
     }
 
@@ -1755,6 +1753,69 @@ public class LdapProvisioning extends Provisioning {
                 LdapUtil.closeContext(ctxt);
         }
         return null;
+    }
+
+    public void renameDistributionList(String zimbraId, String newEmail) throws ServiceException {
+        LdapDistributionList dl = (LdapDistributionList) getDistributionListById(zimbraId);
+        if (dl == null)
+            throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(zimbraId);
+
+        String oldEmail = dl.getName();
+
+        newEmail = newEmail.toLowerCase().trim();
+        String[] parts = EmailUtil.getLocalPartAndDomain(newEmail);
+        if (parts == null)
+            throw ServiceException.INVALID_REQUEST("bad value for newName", null);
+        String newLocal = parts[0];
+        String newDomain = parts[1];
+
+        Domain domain = getDomainByName(newDomain);
+        if (domain == null)
+            throw AccountServiceException.NO_SUCH_DOMAIN(newDomain);
+        
+        DirContext ctxt = null;
+        try {
+            ctxt = LdapUtil.getDirContext();
+            String newDn = emailToDN(newLocal, domain.getName());
+            ctxt.rename(dl.mDn, newDn);
+            dl = (LdapDistributionList) getDistributionListById(zimbraId,ctxt);
+            HashMap attrs = new HashMap();
+            String mail[] = dl.getMultiAttr(Provisioning.A_mail);
+            if (mail.length == 0) {
+                attrs.put(Provisioning.A_mail, newEmail);
+            } else {
+                // not the most efficient, but renames don't happen often
+                mail = LdapUtil.removeMultiValue(mail, oldEmail);
+                mail = addMultiValue(mail, newEmail);
+                attrs.put(Provisioning.A_mail, mail);
+            }
+
+            String aliases[] = dl.getMultiAttr(Provisioning.A_zimbraMailAlias);
+            if (aliases.length == 0) {
+                attrs.put(Provisioning.A_zimbraMailAlias, newEmail);
+            } else {
+                // not the most efficient, but renames don't happen often
+                aliases = LdapUtil.removeMultiValue(aliases, oldEmail);
+                aliases = addMultiValue(aliases, newEmail);
+                attrs.put(Provisioning.A_zimbraMailAlias, aliases);
+            }
+            
+            // this is non-atomic. i.e., rename could succeed and updating A_mail
+            // could fail. So catch service exception here and log error            
+            try {
+                dl.modifyAttrsInternal(ctxt, attrs);
+            } catch (ServiceException e) {
+                ZimbraLog.account.error("distribution list renamed to " + newLocal +
+                        " but failed to move old name's LDAP attributes", e);
+                throw ServiceException.FAILURE("unable to rename distribution list: "+zimbraId, e);
+            }
+        } catch (NameAlreadyBoundException nabe) {
+            throw AccountServiceException.DISTRIBUTION_LIST_EXISTS(newLocal);            
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to rename distribution list: " + zimbraId, e);
+        } finally {
+            LdapUtil.closeContext(ctxt);
+        }
     }
 
     private DistributionList getDistributionListById(String zimbraId, DirContext ctxt) throws ServiceException {
@@ -1816,9 +1877,6 @@ public class LdapProvisioning extends Provisioning {
         return getDistributionListByQuery(dn, "(&(uid="+uid+")(objectclass=zimbraDistributionList))", null);
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.account.Provisioning#getLocalServer()
-     */
     public synchronized Server getLocalServer() throws ServiceException {
         String hostname = LC.zimbra_server_hostname.value();
         if (hostname == null) {
@@ -2192,11 +2250,12 @@ public class LdapProvisioning extends Provisioning {
         acct.modifyAttrs(attrs);
     }
     
-    private Context createSubcontext(DirContext ctxt, String dn, Attributes attrs, String method)
+    private void createSubcontext(DirContext ctxt, String dn, Attributes attrs, String method)
         throws NameAlreadyBoundException, ServiceException
     {
+        Context newCtxt = null;
         try {
-            return ctxt.createSubcontext(dn, attrs);
+            newCtxt = ctxt.createSubcontext(dn, attrs);
         } catch (NameAlreadyBoundException e) {            
             throw e;
        } catch (InvalidAttributeIdentifierException e) {
@@ -2209,6 +2268,8 @@ public class LdapProvisioning extends Provisioning {
             throw ServiceException.INVALID_REQUEST(method+" invalid name", e);
         } catch (NamingException e) {
             throw ServiceException.FAILURE(method, e);
+        } finally {
+            LdapUtil.closeContext(newCtxt);
         }
     }
 
@@ -2223,4 +2284,5 @@ public class LdapProvisioning extends Provisioning {
         System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", "uid=%u,ou=people,%D"));
         System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", "n(%n)u(%u)d(%d)D(%D)(%%)"));
     }  
+ 
 }

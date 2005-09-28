@@ -84,4 +84,10 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
     public String[] getAllMembers() throws ServiceException {
         return getMultiAttr(Provisioning.A_zimbraMailForwardingAddress);
     }
+    
+    public String[] getAliases() throws ServiceException
+    {
+        return getMultiAttr(Provisioning.A_zimbraMailAlias);
+    }
+
 }

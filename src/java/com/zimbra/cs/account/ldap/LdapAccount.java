@@ -23,10 +23,6 @@
  * ***** END LICENSE BLOCK *****
  */
 
-/*
- * Created on Sep 23, 2004
- *
- */
 package com.zimbra.cs.account.ldap;
 
 import java.util.HashMap;
@@ -45,7 +41,6 @@ import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author schemers
- *
  */
 public class LdapAccount extends LdapNamedEntry implements Account {
 
@@ -135,16 +130,12 @@ public class LdapAccount extends LdapNamedEntry implements Account {
             return null;
         }
     }
-
     
     public String[] getAliases() throws ServiceException
     {
         return getMultiAttr(Provisioning.A_zimbraMailAlias);
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.account.Account#getCOS()
-     */
     public Cos getCOS() throws ServiceException {
         // TODO: caching? assume getCOSById does caching?
         String id = super.getAttr(Provisioning.A_zimbraCOSId);
@@ -154,9 +145,6 @@ public class LdapAccount extends LdapNamedEntry implements Account {
             return mProv.getCosById(id); 
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.account.Account#getPrefs()
-     */
     public Map getPrefs() throws ServiceException {
         HashMap prefs = new HashMap();
         try {
@@ -175,9 +163,6 @@ public class LdapAccount extends LdapNamedEntry implements Account {
         return getAttrs(false, true);
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.account.Account#getPrefs()
-     */
     public Map getAttrs(boolean prefsOnly, boolean applyCos) throws ServiceException {
         HashMap attrs = new HashMap();
         try {
@@ -204,9 +189,6 @@ public class LdapAccount extends LdapNamedEntry implements Account {
         return attrs;
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.account.Account#isCorrectHost()
-     */
     public boolean isCorrectHost() throws ServiceException{
         String target    = getAttr(Provisioning.A_zimbraMailHost);
         String localhost = mProv.getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname);

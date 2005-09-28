@@ -835,16 +835,10 @@ public abstract class Provisioning {
     
     public abstract void setPassword(Account acct, String newPassword) throws ServiceException;
     
-    /**
-     * create the specified alias for the given account. The alias must be the uid part only
-     * 
-     * @param alias
-     * @throws ServiceException
-     */
     public abstract void addAlias(Account acct, String alias) throws ServiceException;
     
     public abstract void removeAlias(Account acct, String alias) throws ServiceException;
- 
+
     /**
      *  Creates a zimbraDomain object in the directory. Also creates parent domains as needed (as simple dcObject entries though,
      *  not zimbraDomain objects). The extra attrs that can be passed in are:<p />
@@ -911,4 +905,9 @@ public abstract class Provisioning {
 
     public abstract void deleteDistributionList(String zimbraId) throws ServiceException;
 
+    public abstract void addAlias(DistributionList dl, String alias) throws ServiceException;
+    
+    public abstract void removeAlias(DistributionList dl, String alias) throws ServiceException;
+
+    public abstract void renameDistributionList(String zimbraId, String newName) throws ServiceException;
 }

@@ -46,4 +46,6 @@ public class LdapAlias extends LdapNamedEntry implements Alias {
     public String getName() {
         return mName;
     }
+    
+    
 }
