@@ -303,7 +303,7 @@ public class LC {
             ("Interface on this host to which MySQL will bind.");
 
         mysql_port = new KnownKey("mysql_port");
-        mysql_port.setDefault("3306");
+        mysql_port.setDefault("7306");
         mysql_port.setDoc
             ("Port number on which MySQL server should listen.");
 
@@ -396,7 +396,7 @@ public class LC {
             ("Interface on this host to which logger MySQL will bind.");
 
         logger_mysql_port = new KnownKey("logger_mysql_port");
-        logger_mysql_port.setDefault("3307");
+        logger_mysql_port.setDefault("7307");
         logger_mysql_port.setDoc
             ("Port number on which logger MySQL server should listen.");
 
