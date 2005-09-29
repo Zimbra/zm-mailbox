@@ -438,14 +438,6 @@ public abstract class Element {
 
         public String prettyPrint()  { return toString(); }
         
-        private StringBuffer escapePropertyName(String key, StringBuffer sb) {
-            boolean reserved = RESERVED_KEYWORDS.contains(key);
-            if (reserved) sb.append('"');
-            sb.append(key);
-            if (reserved) sb.append('"');
-            return sb;
-        }
-        
         public String toString() {
             StringBuffer sb = new StringBuffer("{");
             int index = 0;
@@ -453,11 +445,16 @@ public abstract class Element {
                 Map.Entry attr = (Map.Entry) it.next();
                 if (index > 0)
                     sb.append(",");
-                if (attr.getValue() instanceof String)
-                    escapePropertyName(attr.getKey().toString(),sb).append(":").append(jsEncode((String) attr.getValue()));                    
+                String pname = (String) attr.getKey();
+                if (RESERVED_KEYWORDS.contains(pname))
+                    sb.append('"').append(pname).append("\":");
                 else
+                    sb.append(pname).append(":");
+                if (attr.getValue() instanceof String) 
+                    sb.append(jsEncode((String) attr.getValue()));
+                else 
                     // take advantage of the fact that javascript array format == List.toString() format
-                    escapePropertyName(attr.getKey().toString(), sb).append(":").append(attr.getValue());
+                    sb.append(attr.getValue());                
             }
             return sb.append('}').toString();
         }
