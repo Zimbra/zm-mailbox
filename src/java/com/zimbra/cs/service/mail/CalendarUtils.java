@@ -71,7 +71,6 @@ import net.fortuna.ical4j.model.parameter.Rsvp;
 import net.fortuna.ical4j.model.parameter.TzId;
 import net.fortuna.ical4j.model.parameter.Value;
 import net.fortuna.ical4j.model.property.Attendee;
-import net.fortuna.ical4j.model.property.Comment;
 import net.fortuna.ical4j.model.property.Description;
 import net.fortuna.ical4j.model.property.DtEnd;
 import net.fortuna.ical4j.model.property.DtStamp;
@@ -195,19 +194,6 @@ public class CalendarUtils {
             throw ServiceException.FAILURE("Messaging Exception while building InviteReply", e);
         }
     }
-    
-    /**
-     * Parse an <inv> element in a CREATE context: new UID
-     * 
-     * @param inviteElem
-     * @return
-     * @throws ServiceException
-     */
-    static ParseMimeMessage.InviteParserResult parseInviteForCreate(Account account, Element inviteElem) throws ServiceException 
-    {
-        return parseInviteForCreate(account, inviteElem, null, null, false);
-    }
-    
     
     /**
      * Useful for sync and import, parse an <inv> that is specified using raw iCalendar data in the
@@ -372,7 +358,7 @@ public class CalendarUtils {
         event.getProperties().add(new Sequence(inv.getSeqNo()+1));
         
         if (inv.hasRecurId()) {
-            event.getProperties().add(inv.getRecurId().getRecurrenceId(account));
+            event.getProperties().add(inv.getRecurId().getRecurrenceId(account.getTimeZone()));
         }
         
         // compare the new attendee list with the existing one...if attendees have been removed, then
@@ -420,17 +406,6 @@ public class CalendarUtils {
         toRet.mSummary = summaryStr;
         
         return toRet;
-    }
-    
-    // TRUE if the list contains the atendee, comparing by URI
-    private static boolean listContains(List /* attendee */ list, Attendee at) {
-        for (Iterator iter = list.iterator(); iter.hasNext();) {
-            Attendee cur = (Attendee)iter.next();
-            if (cur.getCalAddress().equals(at.getCalAddress())) {
-                return true;
-            }
-        }
-        return false;
     }
     
     // TRUE if the list contains the atendee, comparing by URI
@@ -526,60 +501,6 @@ public class CalendarUtils {
         return zone;
     }
 
-    private static void testParse(String d, String tz, List tzsInUse, ICalTimeZone localTZ) 
-    {        
-        String elt = "<test";
-        if (d != null) {
-            elt += "d=\""+d+"\"";
-        }
-        if (tz != null) {
-            elt += "tz=\""+tz+"\"";
-        }
-
-        elt+="/>";
-
-        TimeZoneMap tzMap = new TimeZoneMap(localTZ);
-        try {
-            System.out.println("parseDate "+elt+" returns \""+parseDateTime("test", d, tz, tzMap, tzsInUse, localTZ)+"\"");
-        } catch(ServiceException e) {
-            System.out.println("Caught exception: "+e);
-            e.printStackTrace();
-        }
-    }
-    
-    public static void main(String[] args) throws Exception
-    {
-        List tzs = new ArrayList();
-        WellKnownTimeZone USPacific =
-            Provisioning.getInstance()
-            .getTimeZoneById("(GMT-08.00) Pacific Time (US & Canada) / Tijuana");
-        ICalTimeZone pacificTZ = USPacific.toTimeZone(); 
-
-        testParse("20050305T02000", null, tzs, pacificTZ);
-        testParse("20050305T03000", "(GMT-08.00) Pacific Time (US & Canada) / Tijuana", tzs, pacificTZ);
-        testParse("20050305", null, tzs, pacificTZ);
-        testParse("20050305T190030", "(GMT-07.00) Mountain Time (US & Canada)", tzs, pacificTZ);
-
-        System.out.println();
-        for (Iterator iter = tzs.iterator(); iter.hasNext();) {
-            ICalTimeZone tz = (ICalTimeZone) iter.next();
-            System.out.println("TimeZone in use: " + tz.getID());
-            VTimeZone vtz = tz.toVTimeZone();
-            System.out.println(vtz.toString());
-            System.out.println();
-        }
-
-        try {
-            ParsedDuration.parse("P15DT5H20S");
-            ParsedDuration.parse("-P1W");
-            ParsedDuration.parse("PT12H27S");
-            ParsedDuration.parse("-P12DT3S");
-        } catch (ServiceException e) {
-            System.out.println("Error: "+e);
-            e.printStackTrace();
-        }
-    }
-    
     private static void parseRecur(Element recurElt,
                                    Component comp,
                                    TimeZoneMap invTzMap,
@@ -1032,7 +953,7 @@ public class CalendarUtils {
             try {
                 Invite inv = appt.getInvite(i);
                 try {
-                    VEvent event = cancelInvite(acct, inv, comment);
+                    VEvent event = cancelInvite(acct, inv, comment, null, null).toVEvent();
                     toRet.add(event);
                 } catch (ServiceException e) {
                     sLog.debug("Error creating cancellation for invite "+i+" for appt "+appt.getId());
@@ -1050,15 +971,17 @@ public class CalendarUtils {
     static Calendar buildReplyCalendar(Account acct, Invite inv, SendInviteReply.ParsedVerb verb, 
             String replySubject, List /*ICalTimeZone*/ tzsReferenced, ParsedDateTime exceptDt) throws ServiceException 
     {
-        VEvent event = CalendarUtils.replyToInvite(acct, inv, verb, replySubject, exceptDt);
+//        VEvent event = CalendarUtils.replyToInvite(acct, inv, verb, replySubject, exceptDt);
+//        
+//        Calendar iCal = makeCalendar(Method.REPLY);
+//        
+//        for (Iterator iter = tzsReferenced.iterator(); iter.hasNext();) {
+//            ICalTimeZone tz = (ICalTimeZone)iter.next();
+//            iCal.getComponents().add(tz.toVTimeZone());
+//        }
+//        iCal.getComponents().add(event);
         
-        Calendar iCal = makeCalendar(Method.REPLY);
-        
-        for (Iterator iter = tzsReferenced.iterator(); iter.hasNext();) {
-            ICalTimeZone tz = (ICalTimeZone)iter.next();
-            iCal.getComponents().add(tz.toVTimeZone());
-        }
-        iCal.getComponents().add(event);
+        Calendar iCal = CalendarUtils.replyToInvite(acct, inv, verb, replySubject, exceptDt).toICalendar();
         
         try {
             iCal.validate(true);
@@ -1094,57 +1017,47 @@ public class CalendarUtils {
      * @return
      * @throws ServiceException
      */
-    static VEvent replyToInvite(Account acct, Invite inv, SendInviteReply.ParsedVerb verb, String replySubject, ParsedDateTime exceptDt)
+    static Invite replyToInvite(Account acct, Invite inv, SendInviteReply.ParsedVerb verb, String replySubject, ParsedDateTime exceptDt)
     throws ServiceException
     {
-        VEvent event = new VEvent();
-        
+        Invite reply = new Invite(Method.REPLY, new TimeZoneMap(acct.getTimeZone()));
+            
         // ATTENDEE -- send back this attendee with the proper status
         Attendee meReply = null;
         Attendee me = inv.getMatchingAttendee(acct);
         if (me != null) {
             meReply = new Attendee(me.getCalAddress());
             meReply.getParameters().add(new PartStat(verb.getICalPartStat()));
-            event.getProperties().add(meReply);
+                reply.addAttendee(meReply);
         } else {
             String name = acct.getName();
             try {
                 meReply = new Attendee(name);
                 meReply.getParameters().add(new PartStat(verb.getICalPartStat()));
-                event.getProperties().add(meReply);
+                    reply.addAttendee(meReply);
             } catch(URISyntaxException e) {
                 throw ServiceException.FAILURE("URISyntaxException "+name, e);
             }
         }
         
         // DTSTART (outlook seems to require this, even though it shouldn't)
-        DtStart dtstart = new DtStart(new net.fortuna.ical4j.model.DateTime(inv.getStartTime().getUtcTime()));
-        dtstart.setUtc(true);
-        event.getProperties().add(dtstart);
+        reply.setDtStart(inv.getStartTime());
         
         // ORGANIZER
-        event.getProperties().add(inv.getOrganizer());
+            reply.setOrganizer(inv.getOrganizer());
         
         // UID
-        event.getProperties().add(new Uid(inv.getUid()));
-
+            reply.setUid(inv.getUid());
+        
         // RECURRENCE-ID (if necessary)
         if (exceptDt != null) {
-            // TODO could check to see if exceptDt conflicts with inv.recurid...
-            RecurrenceId recurId = new RecurrenceId(exceptDt.iCal4jDate());
-            TimeZone tz = exceptDt.getTimeZone();
-            if (tz == ICalTimeZone.getUTC()) {
-                recurId.setUtc(true);
-            } else {
-                recurId.getParameters().add(new TzId(tz.getID()));
-            }
-            event.getProperties().add(recurId);
+            reply.setRecurId(new RecurId(exceptDt, RecurId.RANGE_NONE));
         } else if (inv.hasRecurId()) {
-            event.getProperties().add(inv.getRecurId().getRecurrenceId(acct));
+            reply.setRecurId(inv.getRecurId());
         }
         
         // SEQUENCE        
-        event.getProperties().add(new Sequence(inv.getSeqNo()));
+        reply.setSeqNo(inv.getSeqNo());
         
         // DTSTAMP
         // we should pick "now" -- but the dtstamp MUST be >= the one sent by the organizer,
@@ -1154,39 +1067,39 @@ public class CalendarUtils {
         if (now.after(dtStampDate)) {
             dtStampDate = now;
         }
-        event.getProperties().add(new DtStamp(new net.fortuna.ical4j.model.DateTime(dtStampDate)));
+        reply.setDtStamp(dtStampDate.getTime());
+        
         
         // SUMMARY
-        event.getProperties().add(new Summary(replySubject));
+        reply.setName(replySubject);
         
-        return event;
+        System.out.println("REPLY: "+reply.toVEvent().toString());
+        
+        return reply;
     }
     
     
     static Calendar buildCancelInviteCalendar(Account acct, Invite inv, String comment, Attendee forAttendee) throws ServiceException
     {
-        Calendar iCal = makeCalendar(Method.CANCEL);
-        iCal.getComponents().add(cancelInvite(acct, inv, comment, forAttendee, null));
-        return iCal;
+        return cancelInvite(acct, inv, comment, forAttendee, null).toICalendar();
     }
     
     static Calendar buildCancelInviteCalendar(Account acct, Invite inv, String comment) throws ServiceException
     {
-        Calendar iCal = makeCalendar(Method.CANCEL);
-        iCal.getComponents().add(cancelInvite(acct, inv, comment, null, null));
-        return iCal;
+        return cancelInvite(acct, inv, comment, null, null).toICalendar();
     }
     
     static Calendar buildCancelInstanceCalendar(Account acct, Invite inv, String comment, RecurId recurId) throws ServiceException
     {
-        Calendar iCal = makeCalendar(Method.CANCEL);
-        
-        iCal.getComponents().add(cancelInvite(acct, inv, comment, null, recurId));
-        return iCal;
+        return cancelInvite(acct, inv, comment, null, recurId).toICalendar();
     }
     
     
     /**
+     * See 4.2.10
+     * 
+     * Cancel an Invite for an Attendee (or for ALL attendees if NULL is passed)
+     * 
      * See RFC2446 4.2.9
      * 
      *    BEGIN:VCALENDAR
@@ -1207,20 +1120,6 @@ public class CalendarUtils {
      *    END:VEVENT
      *    END:VCALENDAR
      *
-     * @param inv Invite to create CANCEL for
-     * @param comment Text to be included in iCalendar message COMMENT field
-     * @throws ServiceException
-     */
-    static VEvent cancelInvite(Account acct, Invite inv, String comment) throws ServiceException
-    {
-        return cancelInvite(acct, inv, comment, null, null);
-    }
-    
-    
-    /**
-     * See 4.2.10
-     * 
-     * Cancel an Invite for an Attendee (or for ALL attendees if NULL is passed) 
      * 
      * @param inv Invite being replied to
      * @param comment Comment message to be included in the response
@@ -1229,61 +1128,59 @@ public class CalendarUtils {
      * @return
      * @throws ServiceException
      */
-    static VEvent cancelInvite(Account acct, Invite inv, String comment, Attendee forAttendee, RecurId recurId) throws ServiceException 
+    static Invite cancelInvite(Account acct, Invite inv, String comment, Attendee forAttendee, RecurId recurId) throws ServiceException 
     {
-        // VEVENT!
-        VEvent event = new VEvent();
+        TimeZoneMap tzMap = new TimeZoneMap(acct.getTimeZone());
+        Invite cancel = new Invite(Method.CANCEL, comment, tzMap);
         
         // ORGANIZER (FIXME: should check to make sure it is us!) 
-        event.getProperties().add(inv.getOrganizer());
+        cancel.setOrganizer(inv.getOrganizer());
         
         // ATTENDEEs
         if (forAttendee == null) {
             for (Iterator iter = inv.getAttendees().iterator(); iter.hasNext();)
             {
                 Attendee at = (Attendee)iter.next();
-                event.getProperties().add(at);
+                cancel.addAttendee(at);
             }
         } else {
-            event.getProperties().add(forAttendee);
+            cancel.addAttendee(forAttendee);
         }
         
         // COMMENT
         if (comment != null && !comment.equals("")) {
-            event.getProperties().add(new Comment(comment));
+            cancel.setDescription(comment);
         }
         
         // UID
-        event.getProperties().add(new Uid(inv.getUid()));
+        cancel.setUid(inv.getUid());
 
         // RECURRENCE-ID
         if (inv.hasRecurId()) {
             assert(recurId == null); // can't cancel an instance of the non-default invite FIXME throw exception
-            event.getProperties().add(inv.getRecurId().getRecurrenceId(acct));
+            cancel.setRecurId(inv.getRecurId());
         } else {
             if (recurId != null) {
-                event.getProperties().add(recurId.getRecurrenceId(acct));
+                cancel.setRecurId(recurId);
             }
         }
 
         // DTSTART (outlook seems to require this, even though it shouldn't)
-        DtStart dtstart = new DtStart(new net.fortuna.ical4j.model.DateTime(inv.getStartTime().getUtcTime()));
-        dtstart.setUtc(true);
-        event.getProperties().add(dtstart);
+        cancel.setDtStart(inv.getStartTime());
         
         // SEQUENCE
-        event.getProperties().add(new Sequence(inv.getSeqNo()+1));
+        cancel.setSeqNo(inv.getSeqNo()+1);
         
         // STATUS
-        event.getProperties().add(Status.VEVENT_CANCELLED);
+        cancel.setStatus(IcalXmlStrMap.STATUS_CANCELLED);
         
         // DTSTAMP
-        event.getProperties().add(new DtStamp(new net.fortuna.ical4j.model.DateTime()));
+        cancel.setDtStamp(new Date().getTime());
         
         // SUMMARY
-        event.getProperties().add(new Summary("CANCELLED: "+inv.getName()));
+        cancel.setName("CANCELLED: "+inv.getName());
         
-        return event;
+        return cancel;
     }
 
     

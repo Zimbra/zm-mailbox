@@ -795,7 +795,9 @@ public class ToXML {
                         Appointment.FreeBusyActualData fbaDat = (Appointment.FreeBusyActualData)iter.next();
                         
                         Element curElt = fbaElt.addElement(MailService.E_INSTANCE);
-                        fbaDat.mRecurId.toXml(curElt);
+                        if (fbaDat.mRecurId != null) {
+                            fbaDat.mRecurId.toXml(curElt);
+                        }
                         curElt.addAttribute(MailService.A_APPT_FREEBUSY_ACTUAL, fbaDat.mFba);
                     }
                 } catch (ServiceException ex) {

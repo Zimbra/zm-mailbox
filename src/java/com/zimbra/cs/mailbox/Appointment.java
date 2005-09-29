@@ -981,7 +981,8 @@ public class Appointment extends MailItem {
             for (Iterator iter = mReplies.iterator(); iter.hasNext();) {
                 ReplyInfo cur = (ReplyInfo)iter.next();
                 
-                if (cur.mRecurId.withinRange(recurId)) {
+                if ( (cur.mRecurId == null && recurId == null) ||
+                        (cur.mRecurId.withinRange(recurId))) {                    
                     if (
                             (acctOrNull != null && (AccountUtil.addressMatchesAccount(acctOrNull, cur.mAttendee.getCalAddress().getSchemeSpecificPart()))) ||
                             (acctOrNull == null && cur.mAttendee.getCalAddress().getSchemeSpecificPart().equalsIgnoreCase(addressStr))

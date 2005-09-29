@@ -1,6 +1,14 @@
 CALENDAR Server-Side TODO list
 -----------------------------------------
 
+-- Finish cleanup / code reorg for ActiveSync work
+
+-- Use PUBLISH for 0-Attendee events
+
+-- Support for "move to trash" instead of just deleting events
+
+-- VFREEBUSY for outlook
+
 -- REPLY handling fixes:
    -- need to properly track REPLYs from invitees
    -- need to allow replies to be for a specific instance, not just an entire INVITE

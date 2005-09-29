@@ -55,6 +55,7 @@ import net.fortuna.ical4j.model.parameter.Role;
 import net.fortuna.ical4j.model.parameter.Rsvp;
 import net.fortuna.ical4j.model.parameter.TzId;
 import net.fortuna.ical4j.model.property.Attendee;
+import net.fortuna.ical4j.model.property.Comment;
 import net.fortuna.ical4j.model.property.Description;
 import net.fortuna.ical4j.model.property.DtEnd;
 import net.fortuna.ical4j.model.property.DtStamp;
@@ -171,6 +172,7 @@ public class Invite {
     private boolean mSentByMe;
     private String mFragment;
     public String getFragment() { return mFragment; }
+    public void setFragment(String fragment) { mFragment = fragment; }
     
     /**
      * Create an Invite object which will then be added to a mailbox Mailbox.addInvite()     
@@ -331,6 +333,7 @@ public class Invite {
         METHOD_MAP.put(Method.REQUEST.getValue(), Method.REQUEST);
         METHOD_MAP.put(Method.CANCEL.getValue(), Method.CANCEL);
         METHOD_MAP.put(Method.REPLY.getValue(), Method.REPLY);
+        METHOD_MAP.put(Method.PUBLISH.getValue(), Method.PUBLISH);
     }
     public static Method lookupMethod(String methodName) {
         Method toRet = (Method)(METHOD_MAP.get(methodName));
@@ -567,22 +570,29 @@ public class Invite {
     public String getPartStat() { return mPartStat; }
     void setPartStat(String partStat) { mPartStat = partStat; }
     public String getUid() { return mUid; };
+    public void setUid(String uid) { mUid = uid; }
     public int getMailboxId() { return mMailboxId; }
     public int getMailItemId() { return mMailItemId; }
     public String getName() { return mName; };
+    public void setName(String name) { mName = name; }
     public String getDescription() { return mDescription; };
+    public void setDescription(String desc) { mDescription = desc; };
     public String getStatus() { return mStatus; }
-    void setStatus(String status) { mStatus = status; }
+    public void setStatus(String status) { mStatus = status; }
     public String getFreeBusy() { return mFreeBusy; }
     void setFreeBusy(String fb) { mFreeBusy = fb; }
     public String getTransparency() { return mTransparency; }
     public boolean isTransparent() { return IcalXmlStrMap.TRANSP_TRANSPARENT.equals(mTransparency); }
     void setTransparency(String transparency) { mTransparency = transparency; }
     public RecurId getRecurId() { return mRecurrenceId; }
+    public void setRecurId(RecurId rid) { mRecurrenceId = rid; }
     public boolean hasRecurId() { return mRecurrenceId != null; }
     public long getDTStamp() { return mDTStamp; }
+    public void setDtStamp(long stamp) { mDTStamp = stamp; }
     public int getSeqNo() { return mSeqNo; }
+    public void setSeqNo(int seqNo) { mSeqNo = seqNo; } 
     public ParsedDateTime getStartTime() { return mStart; }
+    public void setDtStart(ParsedDateTime dtStart) { mStart = dtStart; }
     public ParsedDateTime getEndTime() { return mEnd; }
     public ParsedDuration getDuration() { return mDuration; }
     
@@ -775,11 +785,18 @@ public class Invite {
     private Organizer mOrganizer;
     private ArrayList /* VAlarm */ mAlarms = new ArrayList();
     private Method mMethod;
-
-    Invite(Method method, String fragment) {
+    
+    public Invite(Method method, String fragment, TimeZoneMap tzMap) {
         mMethod = method;
         mFragment = fragment;
+        mTzMap = tzMap;
     }
+    
+    public Invite(Method method, TimeZoneMap tzMap) {
+        mMethod = method;
+        mTzMap = tzMap;
+    }
+    
     
     public String getMethod() {
         return mMethod.getValue();
@@ -1000,14 +1017,9 @@ public class Invite {
     public static final String MICROSOFT_BUSYSTATUS = "X-MICROSOFT-CDO-BUSYSTATUS";
     public static final String MICROSOFT_INTENDEDSTATUS = "X-MICROSOFT-CDO-INTENDEDSTATUS";
     
-    void parseVEvent(VEvent vevent, TimeZoneMap tzmap,
-            Method method,
-            Account acct,
-            boolean reParsing)
-    throws ServiceException 
+    void parseVEvent(VEvent vevent, Method method, Account acct) throws ServiceException 
     {
-        mTzMap = tzmap;
-        
+        assert(mTzMap != null);
         try {
             boolean iAmTheOrganizer = false;
             
@@ -1043,21 +1055,17 @@ public class Invite {
                 Property prop = (Property) it.next();
                 String propName = prop.getName();
                 if (propName.equals(Property.ORGANIZER)) {
-                    if (!reParsing) {
-                        net.fortuna.ical4j.model.property.Organizer org = (net.fortuna.ical4j.model.property.Organizer) prop;
-                        mOrganizer = org;
-                        iAmTheOrganizer = thisAcctIsOrganizer(acct);
-                    }
+                    net.fortuna.ical4j.model.property.Organizer org = (net.fortuna.ical4j.model.property.Organizer) prop;
+                    mOrganizer = org;
+                    iAmTheOrganizer = thisAcctIsOrganizer(acct);
                 } else if (propName.equals(Property.ATTENDEE)) {
-                    if (!reParsing) {
-                        net.fortuna.ical4j.model.property.Attendee attendee = (net.fortuna.ical4j.model.property.Attendee)prop; 
-                        mAttendees.add(attendee);
-                    }
+                    net.fortuna.ical4j.model.property.Attendee attendee = (net.fortuna.ical4j.model.property.Attendee)prop; 
+                    mAttendees.add(attendee);
                 } else if (propName.equals(Property.DTSTAMP)) {
                     mDTStamp = ((DtStamp) prop).getDateTime().getTime();
                 } else if (propName.equals(Property.RECURRENCE_ID)) {
 //                  mRecurrenceId = ((RecurrenceId) prop).getTime().getTime();
-                    mRecurrenceId = RecurId.parse((RecurrenceId)prop, tzmap);
+                    mRecurrenceId = RecurId.parse((RecurrenceId)prop, mTzMap);
                 } else if (propName.equals(Property.SEQUENCE)) {
                     mSeqNo = ((Sequence) prop).getSequenceNo();
                 } else if (propName.equals(Property.DTSTART)) {
@@ -1067,13 +1075,13 @@ public class Invite {
 //                  setIsAllDayEvent(true);
 //                  }
 //                  mStart = ((DtStart) prop).getTime().getTime();
-                    mStart = ParsedDateTime.parse(prop, tzmap);
+                    mStart = ParsedDateTime.parse(prop, mTzMap);
                     if (!mStart.hasTime()) {
                         setIsAllDayEvent(true);
                     }
                 } else if (propName.equals(Property.DTEND)) {
 //                  mEnd = ((DtEnd) prop).getTime().getTime();
-                    mEnd = ParsedDateTime.parse(prop, tzmap);
+                    mEnd = ParsedDateTime.parse(prop, mTzMap);
                 } else if (propName.equals(Property.DURATION)) {
 //                  mDuration = ((Duration) prop).getDuration();
                     mDuration = ParsedDuration.parse(prop);
@@ -1081,7 +1089,7 @@ public class Invite {
                     mLocation = prop.getValue();
                 } else if (propName.equals(Property.SUMMARY)) {
                     mName = prop.getValue();
-                } else if (propName.equals(Property.DESCRIPTION)) {
+                } else if (propName.equals(Property.COMMENT)) {
                     mDescription= prop.getValue();
                 } else if (propName.equals(Property.UID)) {
                     mUid = prop.getValue();
@@ -1162,29 +1170,25 @@ public class Invite {
                 }
             }
             
-            if (!reParsing && mAttendees.size() > 1) {
+            if (mAttendees.size() > 1) {
                 setHasOtherAttendees(true);
             }
             
             if (iAmTheOrganizer) {
-                if (!reParsing) {
-                    setPartStat(IcalXmlStrMap.PARTSTAT_ACCEPTED);
-                    setNeedsReply(false);
-                }
+                setPartStat(IcalXmlStrMap.PARTSTAT_ACCEPTED);
+                setNeedsReply(false);
             } else {
-                if (!reParsing) {
-                    Attendee at = getMatchingAttendee(acct);
-                    if (at != null) {
-                        PartStat stat = (PartStat)(at.getParameters().getParameter(Parameter.PARTSTAT));
-                        if ((stat == null || stat.equals(PartStat.NEEDS_ACTION)) &&
-                                (method == Method.REQUEST || method == Method.COUNTER)) {
-                            setNeedsReply(true);
-                        }
-                    } else {
-                        // if this is the first time we're parsing this, and we can't find ourself on the
-                        // attendee list, then allow a reply...
+                Attendee at = getMatchingAttendee(acct);
+                if (at != null) {
+                    PartStat stat = (PartStat)(at.getParameters().getParameter(Parameter.PARTSTAT));
+                    if ((stat == null || stat.equals(PartStat.NEEDS_ACTION)) &&
+                            (method == Method.REQUEST || method == Method.COUNTER)) {
                         setNeedsReply(true);
                     }
+                } else {
+                    // if this is the first time we're parsing this, and we can't find ourself on the
+                    // attendee list, then allow a reply...
+                    setNeedsReply(true);
                 }
             }
         } catch(ParseException e) {
@@ -1194,6 +1198,14 @@ public class Invite {
     
     public List /* Attendee */ getAttendees() {
         return mAttendees;
+    }
+    
+    public void addAttendee(Attendee at) {
+        mAttendees.add(at);
+    }
+    
+    public void setOrganizer(Organizer org) {
+        mOrganizer = org;
     }
     
     public Organizer getOrganizer() {
@@ -1249,14 +1261,7 @@ public class Invite {
         for (Iterator iter = props.iterator(); iter.hasNext();) {
             Property prop = (Property)iter.next();
             String name = prop.getName();
-            if (name.equals(Property.METHOD)) {
-                method = (Method)prop;
-                if (method.getValue().equals("REQUEST")) {
-                    method = Method.REQUEST;
-                } else if (method.getValue().equals("COUNTER")) {
-                    method = Method.COUNTER;
-                }
-            }
+            method = lookupMethod(name);
         }
         
         ComponentList comps = cal.getComponents();
@@ -1269,7 +1274,7 @@ public class Invite {
                     tzmap.add((VTimeZone) comp);
             } else if (comp.getName().equals(Component.VEVENT)) {
                 Invite invComp = null;
-                invComp = new Invite(method, fragment);
+                invComp = new Invite(method, fragment, tzmap);
                 toRet.add(invComp);
                 
                 invComp.setComponentNum(compNum);
@@ -1278,7 +1283,7 @@ public class Invite {
                 invComp.setSentByMe(sentByMe);
 
                 // must do this AFTER component-num, mailbox-id and mailitem-id are set! (because the IRecurrence object needs them)
-                invComp.parseVEvent((VEvent) comp, tzmap, method, mbx.getAccount(), false);
+                invComp.parseVEvent((VEvent) comp, method, mbx.getAccount());
                 compNum++;
             }
         }
@@ -1299,18 +1304,11 @@ public class Invite {
         for (Iterator iter = props.iterator(); iter.hasNext();) {
             Property prop = (Property)iter.next();
             String name = prop.getName();
-            if (name.equals(Property.METHOD)) {
-                method = (Method)prop;
-                if (method.getValue().equals("REQUEST")) {
-                    method = Method.REQUEST;
-                } else if (method.getValue().equals("COUNTER")) {
-                    method = Method.COUNTER;
-                }
-            }
+            method = lookupMethod(name);
         }
         
-        Invite inv = new Invite(method, fragment);
         TimeZoneMap tzmap = new TimeZoneMap(acct.getTimeZone());
+        Invite inv = new Invite(method, fragment, tzmap);
         
         ComponentList comps = cal.getComponents();
         
@@ -1323,7 +1321,7 @@ public class Invite {
                 inv.setSentByMe(sentByMe);
 
                 // must do this AFTER component-num, mailbox-id and mailitem-id are set! (because the IRecurrence object needs them)
-                inv.parseVEvent((VEvent) comp, tzmap, method, acct, false);
+                inv.parseVEvent((VEvent) comp, method, acct);
                 return inv;
             }
         }
@@ -1340,17 +1338,7 @@ public class Invite {
         return iCal;
     }
     
-    
-    public Calendar toICalendar() throws ServiceException {
-        Calendar toRet = makeCalendar(mMethod);
-        
-        // timezones
-        for (Iterator iter = mTzMap.tzIterator(); iter.hasNext();) {
-            ICalTimeZone cur = (ICalTimeZone) iter.next();
-            VTimeZone vtz = cur.toVTimeZone();
-            toRet.getComponents().add(vtz);
-        }
-        
+    public VEvent toVEvent() throws ServiceException {
         VEvent event = new VEvent();
         
         // UID
@@ -1380,7 +1368,7 @@ public class Invite {
         
         // DESCRIPTION
         if (mDescription != null && !mDescription.equals("")) {
-            event.getProperties().add(new Description(mDescription));
+            event.getProperties().add(new Comment(mDescription));
         }
         
         // DTSTART
@@ -1451,12 +1439,8 @@ public class Invite {
         
         // RECURRENCE-ID
         if (mRecurrenceId != null) {
-            RecurrenceId recurId = new RecurrenceId();
-            try {
-                recurId.setValue(mRecurrenceId.toString());
-            } catch (ParseException e) {
-                throw ServiceException.FAILURE("Failure writing RecurrenceId to iCal: "+mRecurrenceId.toString(), e);
-            }
+            RecurrenceId recurId = mRecurrenceId.getRecurrenceId(mTzMap.getLocalTimeZone());
+            event.getProperties().add(recurId);
         }
         
         // DTSTAMP
@@ -1465,8 +1449,21 @@ public class Invite {
         // SEQUENCE
         event.getProperties().add(new Sequence(mSeqNo));
         
+        return event;
+    }
+    
+    
+    public Calendar toICalendar() throws ServiceException {
+        Calendar toRet = makeCalendar(mMethod);
         
-        toRet.getComponents().add(event);
+        // timezones
+        for (Iterator iter = mTzMap.tzIterator(); iter.hasNext();) {
+            ICalTimeZone cur = (ICalTimeZone) iter.next();
+            VTimeZone vtz = cur.toVTimeZone();
+            toRet.getComponents().add(vtz);
+        }
+        
+        toRet.getComponents().add(toVEvent());
         try {
             toRet.validate(true);
         } catch (ValidationException e) { 

@@ -85,7 +85,9 @@ public class ModifyInvitePartStat extends RedoableOp
 
     protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("apptId=").append(mApptId);
-        sb.append(", recurId=").append(mRecurId.toString());
+        if (mRecurId != null) {
+            sb.append(", recurId=").append(mRecurId.toString());
+        }
         sb.append(", cn=").append(mCnStr);
         sb.append(", address=").append(mAddressStr);
         sb.append(", role=").append(mRoleStr);
@@ -99,8 +101,11 @@ public class ModifyInvitePartStat extends RedoableOp
     protected void serializeData(DataOutput out) throws IOException {
         out.writeInt(mApptId);
         
-        out.writeInt(mRecurId.getRange());
-        out.writeUTF(mRecurId.getDt().toString());
+        out.writeBoolean(mRecurId!=null);
+        if (mRecurId != null) {
+            out.writeInt(mRecurId.getRange());
+            out.writeUTF(mRecurId.getDt().toString());
+        }
         
         out.writeUTF(mCnStr);
         out.writeUTF(mAddressStr);
@@ -119,10 +124,13 @@ public class ModifyInvitePartStat extends RedoableOp
             
             int range = in.readInt();
             String dtStr = in.readUTF();
-            try {
-                mRecurId = new RecurId(ParsedDateTime.parse(dtStr, appt.getTimeZoneMap()), range);
-            } catch (ParseException pe) {
-                throw new IOException("Parsing date-time: "+dtStr+" "+pe);
+            
+            if (in.readBoolean()) {
+                try {
+                    mRecurId = new RecurId(ParsedDateTime.parse(dtStr, appt.getTimeZoneMap()), range);
+                } catch (ParseException pe) {
+                    throw new IOException("Parsing date-time: "+dtStr+" "+pe);
+                }
             }
             
             mCnStr = in.readUTF();

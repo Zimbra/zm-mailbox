@@ -53,7 +53,7 @@ public class CreateAppointment extends CalendarRequest {
     protected static ParseMimeMessage.InviteParser CREATE_APPOINTMENT_INVITE_PARSER = new ParseMimeMessage.InviteParser() { 
         public ParseMimeMessage.InviteParserResult parseInviteElement(OperationContext octxt, Account account, Element inviteElem) throws ServiceException 
         {
-            return CalendarUtils.parseInviteForCreate(account, inviteElem);
+            return CalendarUtils.parseInviteForCreate(account, inviteElem, null, null, false);
         }
     };
     

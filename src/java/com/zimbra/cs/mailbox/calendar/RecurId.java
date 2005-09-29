@@ -27,6 +27,7 @@ package com.zimbra.cs.mailbox.calendar;
 
 import java.text.ParseException;
 import java.util.Date;
+import java.util.TimeZone;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Appointment;
@@ -49,7 +50,7 @@ public class RecurId
     private int mRange;
     private ParsedDateTime mDateTime;
     
-    public RecurrenceId getRecurrenceId(Account acct) throws ServiceException {
+    public RecurrenceId getRecurrenceId(TimeZone localTz) throws ServiceException {
         RecurrenceId toRet = new RecurrenceId();
         try {
             toRet.setValue(mDateTime.getDateTimePartString());
@@ -58,7 +59,7 @@ public class RecurId
             } else {
                 String tzName = mDateTime.getTZName();
                 if (tzName == null) {
-                    toRet.getParameters().add(new TzId(acct.getTimeZone().getID()));
+                    toRet.getParameters().add(new TzId(localTz.getID()));
                 } else {
                     toRet.getParameters().add(new TzId(tzName));
                 }
