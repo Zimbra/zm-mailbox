@@ -31,6 +31,7 @@ package com.zimbra.cs.service;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -219,6 +220,15 @@ public abstract class Element {
         
         private static final String E_ATTRS   = "_attrs";
         private static final String A_CONTENT = "_content";
+
+        private static final HashSet RESERVED_KEYWORDS = new HashSet(Arrays.asList(new String[] {
+                "abstract", "boolean", "break", "byte", "case", "catch", "char", "class", "continue",
+                "const", "debugger", "default", "delete", "do", "double", "else", "extends", "enum", "export", 
+                "false", "final", "finally", "float", "for", "function", "goto", "if", "implements", "import", "in",
+                "instanceOf", "int", "interface", "label", "long", "native", "new", "null", "package", "private",
+                "protected", "public", "return", "short", "static", "super", "switch", "synchronized", "this",
+                "throw", "throws", "transient", "true", "try", "typeof", "var", "void", "volatile", "while", "with"
+        }));
 
         public JavaScriptElement(String name)  { mName = name; mAttributes = new HashMap(); }
         public JavaScriptElement(QName qname)  { this(qname.getName()); }
@@ -427,6 +437,15 @@ public abstract class Element {
         }
 
         public String prettyPrint()  { return toString(); }
+        
+        private StringBuffer escapePropertyName(String key, StringBuffer sb) {
+            boolean reserved = RESERVED_KEYWORDS.contains(key);
+            if (reserved) sb.append('"');
+            sb.append(key);
+            if (reserved) sb.append('"');
+            return sb;
+        }
+        
         public String toString() {
             StringBuffer sb = new StringBuffer("{");
             int index = 0;
@@ -435,10 +454,10 @@ public abstract class Element {
                 if (index > 0)
                     sb.append(",");
                 if (attr.getValue() instanceof String)
-                    sb.append(attr.getKey()).append(":").append(jsEncode((String) attr.getValue()));
+                    escapePropertyName(attr.getKey().toString(),sb).append(":").append(jsEncode((String) attr.getValue()));                    
                 else
                     // take advantage of the fact that javascript array format == List.toString() format
-                    sb.append(attr.getKey()).append(":").append(attr.getValue());
+                    escapePropertyName(attr.getKey().toString(), sb).append(":").append(attr.getValue());
             }
             return sb.append('}').toString();
         }
