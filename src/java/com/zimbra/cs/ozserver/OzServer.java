@@ -236,7 +236,11 @@ public class OzServer {
     void runTaskInIoThread(Runnable task) {
         if (Thread.currentThread() == mIoThread) {
             if (ZimbraLog.ozserver.isDebugEnabled()) ZimbraLog.ozserver.debug("already in IO thread, just running");
-            task.run();
+	    try {
+		task.run();
+	    } catch (Exception e) {
+		ZimbraLog.ozserver.warn("ignoring exception that occurred while running IO thread task from IO thread", e);
+	    }
         } else {
             if (ZimbraLog.ozserver.isDebugEnabled()) ZimbraLog.ozserver.debug("scheduling for IO Thread later");
             synchronized (mIoThreadTasks) {
