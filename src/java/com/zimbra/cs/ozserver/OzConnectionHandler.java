@@ -58,29 +58,45 @@ public class OzConnectionHandler {
     }
     
     private void enableReadInterest() {
-        int iops = mSelectionKey.interestOps();
-        mSelectionKey.interestOps(iops | SelectionKey.OP_READ);
-        if (ZimbraLog.ozserver.isDebugEnabled()) { logSelectionKey("enabled read interest"); }
-        mSelectionKey.selector().wakeup();
+	synchronized (mSelectionKey) {
+	    int iops = mSelectionKey.interestOps();
+	    mSelectionKey.interestOps(iops | SelectionKey.OP_READ);
+	}
+	if (ZimbraLog.ozserver.isDebugEnabled()) {
+	    logSelectionKey("enabled read interest");
+	}
+	mSelectionKey.selector().wakeup();
     }
     
     private void disableReadInterest() {
-        int iops = mSelectionKey.interestOps();
-        mSelectionKey.interestOps(iops & (~SelectionKey.OP_READ));
-        if (ZimbraLog.ozserver.isDebugEnabled()) { logSelectionKey("disabled read interest"); }
+	synchronized (mSelectionKey) {
+	    int iops = mSelectionKey.interestOps();
+	    mSelectionKey.interestOps(iops & (~SelectionKey.OP_READ));
+	}
+	if (ZimbraLog.ozserver.isDebugEnabled()) {
+	    logSelectionKey("disabled read interest");
+	}
     }
     
     private void enableWriteInterest() {
-        int iops = mSelectionKey.interestOps();
-        mSelectionKey.interestOps(iops | SelectionKey.OP_WRITE);
-        if (ZimbraLog.ozserver.isDebugEnabled()) { logSelectionKey("enabled write interest"); }
-        mSelectionKey.selector().wakeup();
+	synchronized (mSelectionKey) {
+	    int iops = mSelectionKey.interestOps();
+	    mSelectionKey.interestOps(iops | SelectionKey.OP_WRITE);
+	}
+	if (ZimbraLog.ozserver.isDebugEnabled()) { 
+	    logSelectionKey("enabled write interest"); 
+	}
+	mSelectionKey.selector().wakeup();
     }
     
     private void disableWriteInterest() {
-        int iops = mSelectionKey.interestOps();
-        if (ZimbraLog.ozserver.isDebugEnabled()) { logSelectionKey("disabled write interest"); }
-        mSelectionKey.interestOps(iops & (~SelectionKey.OP_WRITE));
+	synchronized (mSelectionKey) {
+	    int iops = mSelectionKey.interestOps();
+	    mSelectionKey.interestOps(iops & (~SelectionKey.OP_WRITE));
+	}
+	if (ZimbraLog.ozserver.isDebugEnabled()) { 
+	    logSelectionKey("disabled write interest"); 
+	}
     }
     
     private static SynchronizedInt mIdCounter = new SynchronizedInt(0);
@@ -95,23 +111,29 @@ public class OzConnectionHandler {
         mSelectionKey = channel.register(server.getSelector(), 0, this); 
         mProtocolHandler = server.newProtocolHandler();
         mProtocolHandler.handleConnect(this);
+	ZimbraLog.ozserver.info("connected cid=" + mId + " buf=" + mReadBuffer.hashCode() + " " + mChannel);
         enableReadInterest();
     }
     
     public void closeNow() {
         Runnable closeTask = new Runnable() {
-            public void run() {
-            	ZimbraLog.ozserver.info("closing cid=" + mId);
-                OzBufferManager.returnBuffer(mReadBuffer);
-                try {
-                    mChannel.close();
-                } catch (IOException ioe) {
-                    ZimbraLog.ozserver.warn("error closing cid=" + mId, ioe);
-                }
-                mSelectionKey.cancel();
-            }
-        };
-        mServer.runTaskInIoThread(closeTask);
+		public void run() {
+		    ZimbraLog.ozserver.info("closing cid=" + mId);
+		    try {
+			mChannel.close();
+		    } catch (IOException ioe) {
+			ZimbraLog.ozserver.warn("error closing cid=" + mId, ioe);
+		    }
+		    mSelectionKey.cancel();
+		    synchronized (OzConnectionHandler.this) {
+			if (mReadBuffer != null) {
+			    OzBufferManager.returnBuffer(mReadBuffer);
+			}
+			mReadBuffer = null;
+		    }
+		}
+	    };
+	mServer.runTaskInIoThread(closeTask);
     }
     
     public void setMatcher(OzMatcher matcher) {
@@ -135,7 +157,9 @@ public class OzConnectionHandler {
     	public void run() {
     		Exception e = null;
     		try {
-    			read();
+		    synchronized (mReadBuffer) {
+    			processReadBufferLocked();
+		    }
     		} catch (IOException ioe) {
     			e = ioe;
     		} catch (CancelledKeyException cke) {
@@ -155,11 +179,8 @@ public class OzConnectionHandler {
     	}
     }
 
-    private void read() throws IOException {
+    private void processReadBufferLocked() throws IOException {
     	boolean trace = ZimbraLog.ozserver.isTraceEnabled(); 
-        // This method runs in the IOThread.  Note that we disable read interest here, and
-        // not in the worker thread, so that we don't get another ready notification
-        // before the worker has had a chance to disable the read interest.
         
         if (trace) ZimbraLog.ozserver.trace(OzUtil.byteBufferToString("cid=" + mId + " read buffer at start", mReadBuffer, true));
         
@@ -186,7 +207,8 @@ public class OzConnectionHandler {
 
         int handledBytes = 0;
         
-        // Create a copy which we can trash... (this does not copy underlying buffer)
+        // Create a copy which we can trash.  (duplicate() does not
+        // copy underlying buffer)
         ByteBuffer matchBuffer = mReadBuffer.duplicate();
         matchBuffer.flip();
         
@@ -251,6 +273,10 @@ public class OzConnectionHandler {
     }
 
     void doRead() throws IOException {
+        // This method runs in the IOThread.  Note that we disable
+        // read interest here, and not in the worker thread, so that
+        // we don't get another ready notification before the worker
+        // will get a chance to run and disable read interest.
         disableReadInterest();
         mServer.execute(mHandleReadTask);
     }
