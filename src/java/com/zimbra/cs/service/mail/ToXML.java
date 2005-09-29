@@ -790,7 +790,6 @@ public class ToXML {
                 try {
                     List /*Appointment.FreeBusyActualData*/ fbas = apptOrNull.getFreeBusyActual(apptOrNull.getMailbox().getAccount(), invite);
                     Element fbaElt = e.addElement(MailService.A_APPT_MY_REPLIES);
-                    fbaElt.addAttribute(MailService.A_DEFAULT, invite.getFreeBusyActual());
                     
                     for (Iterator iter = fbas.iterator(); iter.hasNext();) {
                         Appointment.FreeBusyActualData fbaDat = (Appointment.FreeBusyActualData)iter.next();
