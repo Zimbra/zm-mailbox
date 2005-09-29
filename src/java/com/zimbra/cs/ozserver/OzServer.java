@@ -59,7 +59,9 @@ public class OzServer {
     
     private OzSnooper mSnooper = new OzSnooper(null);
     
-    public OzServer(String name, InetAddress bindAddress, int port,
+    private OzBufferPool mBufferPool;
+    
+    public OzServer(String name, int readBufferSize, InetAddress bindAddress, int port,
                     OzProtocolHandlerFactory protocolHandlerFactory) 
         throws IOException
     {
@@ -71,6 +73,7 @@ public class OzServer {
         mServerSocket.bind(address);
         
         mServerName = name + "-" + port;
+        mBufferPool = new OzBufferPool(mServerName, readBufferSize);
         
         mProtocolHandlerFactory = protocolHandlerFactory;
         
@@ -307,5 +310,9 @@ public class OzServer {
     
     Selector getSelector() {
         return mSelector;
+    }
+
+    OzBufferPool getBufferPool() {
+        return mBufferPool;
     }
 }
