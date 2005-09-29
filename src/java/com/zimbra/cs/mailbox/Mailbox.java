@@ -62,6 +62,7 @@ import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.Note.Rectangle;
 import com.zimbra.cs.mailbox.calendar.FreeBusy;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
+import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.op.*;
 import com.zimbra.cs.service.ServiceException;
@@ -2278,7 +2279,7 @@ public class Mailbox {
      */
     public synchronized int setAppointment(OperationContext octxt, int folderId, SetAppointmentData defaultInv, SetAppointmentData exceptions[]) throws ServiceException
     {
-        SetAppointment redoRecorder = new SetAppointment();
+        SetAppointment redoRecorder = new SetAppointment(this.getId());
         SetAppointment redoPlayer = (octxt == null ? null : (SetAppointment) octxt.player);
         
         boolean success = false;
@@ -2846,32 +2847,72 @@ public class Mailbox {
 //            endTransaction(success);
 //        }
 //    }
-
+//
+//    /**
+//     * Modify the Participant-Status of your LOCAL data part of an appointment -- this is used when you Reply to
+//     * an Invite so that you can track the fact that you've replied to it.
+//     * 
+//     * @param octxt
+//     * @param apptId
+//     * @param inviteId
+//     * @param componentNum
+//     * @param partStat
+//     * @throws ServiceException
+//     */
+//    public synchronized boolean modifyInvitePartStat(OperationContext octxt, int apptId, int inviteId,
+//                                                  int componentNum, boolean needsReply, String partStat)
+//    throws ServiceException {
+//        ModifyInvitePartStat redoRecorder = new ModifyInvitePartStat(mId, apptId, inviteId, componentNum, needsReply, partStat);
+//
+//        boolean success = false;
+//        try {
+//            beginTransaction("updateInvitePartStat", octxt, redoRecorder);
+//            Appointment appt = getAppointmentById(apptId);
+//            Invite inv = appt.getInvite(inviteId,componentNum);
+//            if (inv != null)
+//                inv.modifyPartStat(this, needsReply, partStat);
+//            success = true;
+//            return (inv != null);
+//        } finally {
+//            endTransaction(success);
+//        }
+//    }
+//    
+    
     /**
      * Modify the Participant-Status of your LOCAL data part of an appointment -- this is used when you Reply to
      * an Invite so that you can track the fact that you've replied to it.
      * 
      * @param octxt
      * @param apptId
-     * @param inviteId
-     * @param componentNum
-     * @param partStat
+     * @param recurId
+     * @param cnStr
+     * @param addressStr
+     * @param roleStr
+     * @param partStatStr
+     * @param needsReply
+     * @param seqNo
+     * @param dtStamp
      * @throws ServiceException
      */
-    public synchronized boolean modifyInvitePartStat(OperationContext octxt, int apptId, int inviteId,
-                                                  int componentNum, boolean needsReply, String partStat)
+    public synchronized void modifyPartStat(OperationContext octxt, int apptId, RecurId recurId,
+            String cnStr, String addressStr, String roleStr, String partStatStr, Boolean needsReply, int seqNo, long dtStamp) 
     throws ServiceException {
-        ModifyInvitePartStat redoRecorder = new ModifyInvitePartStat(mId, apptId, inviteId, componentNum, needsReply, partStat);
+        
+        Appointment appt = getAppointmentById(apptId);
+        
+        ModifyInvitePartStat redoRecorder = new ModifyInvitePartStat(mId, apptId, recurId, cnStr, addressStr, roleStr, partStatStr, needsReply, seqNo, dtStamp);
 
         boolean success = false;
         try {
             beginTransaction("updateInvitePartStat", octxt, redoRecorder);
-            Appointment appt = getAppointmentById(apptId);
-            Invite inv = appt.getInvite(inviteId,componentNum);
-            if (inv != null)
-                inv.modifyPartStat(this, needsReply, partStat);
+            
+            Account acct = getAccount();
+        
+            appt.modifyPartStat(acct, recurId, cnStr, addressStr, roleStr, partStatStr, needsReply, seqNo, dtStamp);
+            markItemModified(appt, Change.MODIFIED_INVITE);
+            
             success = true;
-            return (inv != null);
         } finally {
             endTransaction(success);
         }

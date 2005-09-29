@@ -357,6 +357,7 @@ public class MailService implements DocumentService {
     public static final String A_APPT_PARTSTAT = "ptst";
     public static final String A_APPT_FREEBUSY = "fb";
     public static final String A_APPT_FREEBUSY_ACTUAL = "fba";
+    public static final String A_APPT_MY_REPLIES = "myReplies";
     public static final String A_APPT_TRANSPARENCY = "transp";
     public static final String A_APPT_ALLDAY = "allDay";
     public static final String A_APPT_LOCATION = "loc";

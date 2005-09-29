@@ -55,11 +55,17 @@
             [status="TENT|CONF|CANC"]  // TENTative, CONFirmed (default), CANCelled -- TIM: remove this!
             [fb="F|B|T|U"]  // free-busy status:
                                Free, Busy (default), busy-Tentative, busy-Unavailable (a.k.a. OutOfOffice)
+            fba="F|B|T|U" // the "actual" free-busy status of this invite (ie what the client should display) -- this is synthesized taking into account our Attendee's PartStat, the Opacity of the appointment, its Status, etc...
             [transp="O|T"]  // transparency: Opaque (default) or Transparent
             [allDay="1|0"]
             [name="NAME"]
             [loc="LOCATION"]
         >
+
+           [<myReplies>
+              [<inst recurId="YYMMDD[THHMMSS[Z]]" tz="timezonename" rangeType="1" fba="F|B|T|U">]*
+           </myReplies>] // one or more replies which we have sent out and the effective status (fba) of those particular instances 
+           
            <s DATETIME> // Start date-time (required)
 
            (
@@ -536,9 +542,8 @@ OR
 //
 //
 <SendInviteReplyRequest id="mail_item_id" compNum="comp_num"
-  [recurId="INSTANCE_START_SECS_GMT" [rangeType="RANGETYPE"]] // reply to just one instance of the specified Invite
-  verb="VERB" [updateOrganizer="1|0"]
->
+  verb="VERB" [updateOrganizer="1|0"]>
+  [<exceptId DATETIME>]? // reply to just one instance of the specified Invite (default is all instances)
   [<m>...</m>]
 </SendInviteReplyRequest>  
 

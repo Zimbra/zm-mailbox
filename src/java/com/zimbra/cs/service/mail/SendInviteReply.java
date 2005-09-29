@@ -37,7 +37,10 @@ import org.apache.commons.logging.LogFactory;
 import com.zimbra.cs.account.*;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
+import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
+import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ParsedItemID;
@@ -45,7 +48,11 @@ import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.soap.ZimbraContext;
 
 import net.fortuna.ical4j.model.Calendar;
+import net.fortuna.ical4j.model.Parameter;
 import net.fortuna.ical4j.model.parameter.PartStat;
+import net.fortuna.ical4j.model.parameter.TzId;
+import net.fortuna.ical4j.model.property.Attendee;
+import net.fortuna.ical4j.model.property.RecurrenceId;
 
 /**
  * @author tim
@@ -107,12 +114,21 @@ public class SendInviteReply extends SendMsg {
                     Appointment appt = mbox.getAppointmentById(apptId);
                     inv = appt.getInvite(inviteMsgId, compNum);  
                 }
-
+                
+                List /*<ICalTimeZone>*/ tzsReferenced = new ArrayList();
+                
+                // see if there is a specific Exception being referenced by this reply...
+                Element exc = request.getOptionalElement("exceptId");
+                ParsedDateTime exceptDt = null;
+                if (exc != null) {
+                    exceptDt = CalendarUtils.parseDateTime(exc, null, tzsReferenced, acct.getTimeZone());
+                }
+                
                 if (updateOrg) {
                     String replySubject = this.getReplySubject(verb, inv);
                     
-                    Calendar iCal = CalendarUtils.buildReplyCalendar(acct, inv, verb, replySubject);
-                    System.out.println("GENERATED ICAL:\n"+iCal.toString());
+                    Calendar iCal = CalendarUtils.buildReplyCalendar(acct, inv, verb, replySubject, tzsReferenced, exceptDt);
+//                  System.out.println("GENERATED ICAL:\n"+iCal.toString());
                     
                     MimeMessage toSend = null;
                     
@@ -134,20 +150,37 @@ public class SendInviteReply extends SendMsg {
                         toSend = createDefaultReply(acct, inv, replySubject, verb, iCal); 
                     }
                     
+                    try {
+                        System.out.println(iCal.toString());
+                    } catch(Exception e) {}
+                    
                     replyId = sendMimeMessage(octxt, mbox, acct, shouldSaveToSent(acct), parsedMessageData, 
                             toSend, inv.getMailItemId(), TYPE_REPLY);
                     
                 }
-
-                mbox.modifyInvitePartStat(octxt, apptId, inviteMsgId, compNum, false, verb.getXmlPartStat());
-                    
-                    /**
-                     * MOVE the replied-to message into the calendar folder: then, depending on user
-                     * prefs, copy it back into its original location....we do it this way so that we 
-                     * don't have to walk all the Appointment DS's and modify them to point to the new
-                     * copy (we REALLY want the "live" copy to be the one in Calendar folder)
-                     **/
-
+                
+                RecurId recurId = null;
+                if (exceptDt != null) {
+                    recurId = new RecurId(exceptDt, RecurId.RANGE_NONE);
+                }
+                Attendee me = inv.getMatchingAttendee(acct);
+                String cnStr = null;
+                String addressStr = acct.getName();
+                String role = IcalXmlStrMap.ROLE_OPT_PARTICIPANT;
+                int seqNo = inv.getSeqNo();
+                long dtStamp = inv.getDTStamp();
+                if (me != null) {
+                    cnStr = null;
+                    if (me.getParameters().getParameter(Parameter.CN) != null) {
+                        cnStr = me.getParameters().getParameter(Parameter.CN).getValue();
+                    }
+                    addressStr = me.getCalAddress().getSchemeSpecificPart();
+                    role = IcalXmlStrMap.sRoleMap.toXml(me.getParameters().getParameter(Parameter.ROLE).getValue());
+                }
+                
+//              mbox.modifyInvitePartStat(octxt, apptId, inviteMsgId, compNum, false, verb.getXmlPartStat());
+                mbox.modifyPartStat(octxt, apptId, recurId, cnStr, addressStr, role, verb.getXmlPartStat(), Boolean.FALSE, seqNo, dtStamp);
+                        
                 if (acct.getBooleanAttr(Provisioning.A_zimbraPrefDeleteInviteOnReply, true)) {
                     mbox.move(octxt, inviteMsgId, MailItem.TYPE_MESSAGE, Mailbox.ID_FOLDER_TRASH);
                 }

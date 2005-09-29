@@ -65,6 +65,10 @@ public final class ParsedDateTime {
     static Pattern sDateTimePattern = Pattern
             .compile("(\\d{4})(\\d{2})(\\d{2})(?:T(\\d{2})(\\d{2})(\\d{2})(Z)?)?");
 
+    public static ParsedDateTime fromUTCTime(long utc) {
+        return new ParsedDateTime(new java.util.Date(utc));
+    }
+    
     public static ParsedDateTime parse(Property prop, TimeZoneMap tzmap)
             throws ParseException {
         assert (prop instanceof DtStart || prop instanceof DtEnd || prop instanceof RecurrenceId);
@@ -201,25 +205,20 @@ public final class ParsedDateTime {
     // can't rely on cal.isSet, even though we want to -- because cal.toString()
     // sets the flag!!!
     private boolean mHasTime = false;
-
-    /*
-     * Date-time values of this type are said to be "floating" and are not bound
-     * to any time zone in particular. They are used to represent the same hour,
-     * minute, and second value regardless of which time zone is currently being
-     * observed.
-     */
-//    private boolean mHasTimeZone = false; // if false and hasTime, then
-
-//    private boolean mUTCTime = false;
+    
     private String mTzName;
 
     private ParsedDateTime(GregorianCalendar cal, String tzName, boolean hasTime) {
         mCal = cal;
         mHasTime = hasTime;
         mTzName = tzName;
-//        mHasTimeZone = hasTimeZone;
-//        mUTCTime = utcTime;
-//        System.out.println("Initializing ParsedDateTime to " + cal);
+    }
+    
+    private ParsedDateTime(java.util.Date utc) {
+        mCal = new GregorianCalendar(ICalTimeZone.getUTC());
+        mCal.setTime(utc);
+        mHasTime = true;
+        mTzName = ICalTimeZone.getUTC().getID();
     }
 
     public ParsedDateTime add(ParsedDuration dur) {

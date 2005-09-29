@@ -53,6 +53,7 @@ public class SetAppointment extends RedoableOp implements CreateAppointmentRecor
     private Mailbox.SetAppointmentData mDefaultInvite;
     private Mailbox.SetAppointmentData mExceptions[];
     
+    public SetAppointment() {}
     
     static void serializeSetAppointmentData(DataOutput out, Mailbox.SetAppointmentData data) throws IOException, MessagingException {
         out.writeBoolean(data.mForce);
@@ -99,6 +100,7 @@ public class SetAppointment extends RedoableOp implements CreateAppointmentRecor
     
     protected void serializeData(DataOutput out) throws IOException 
     {
+        assert(getMailboxId() != 0);
         out.writeInt(mFolderId);
         out.writeInt(mApptId);
         
@@ -123,6 +125,7 @@ public class SetAppointment extends RedoableOp implements CreateAppointmentRecor
     }
 
     protected void deserializeData(DataInput in) throws IOException {
+        assert(getMailboxId() != 0);
         mFolderId = in.readInt();
         mApptId = in.readInt();
         
@@ -148,9 +151,10 @@ public class SetAppointment extends RedoableOp implements CreateAppointmentRecor
         }
     }
 
-    public SetAppointment() 
+    public SetAppointment(int mailboxId) 
     {
         super(); 
+        setMailboxId(mailboxId);
     }
     
     public void setData(Mailbox.SetAppointmentData defaultInvite, Mailbox.SetAppointmentData exceptions[]) {

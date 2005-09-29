@@ -49,12 +49,18 @@ import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.data.ParserException;
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Component;
+import net.fortuna.ical4j.model.Parameter;
+import net.fortuna.ical4j.model.parameter.PartStat;
+import net.fortuna.ical4j.model.property.Attendee;
 import net.fortuna.ical4j.model.property.Method;
 
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
+import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
+import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.Recurrence;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mime.MPartInfo;
@@ -66,6 +72,7 @@ import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.Volume;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.ZimbraLog;
 
@@ -97,7 +104,10 @@ public class Appointment extends MailItem {
     private TimeZoneMap mTzMap;
 
     private List /* Invite */ mInvites;
+    
+    private ReplyList mReplyList;
 
+    public TimeZoneMap getTimeZoneMap() { return mTzMap; }
 
     public Appointment(Mailbox mbox, UnderlyingData data) throws ServiceException {
         super(mbox, data);
@@ -164,7 +174,7 @@ public class Appointment extends MailItem {
         data.date     = mbox.getOperationTimestamp();
         data.tags     = Tag.tagsToBitmask(tags);
         data.sender   = uid;
-        data.metadata = encodeMetadata(DEFAULT_COLOR, uid, startTime, endTime, recur, invites, firstInvite.getTimeZoneMap());
+        data.metadata = encodeMetadata(DEFAULT_COLOR, uid, startTime, endTime, recur, invites, firstInvite.getTimeZoneMap(), new ReplyList());
         data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
 
@@ -276,26 +286,35 @@ public class Appointment extends MailItem {
             }
 
             Metadata metaRecur = meta.getMap(FN_APPT_RECURRENCE, true);
-            if (metaRecur != null)
+            if (metaRecur != null) {
                 mRecurrence = Recurrence.decodeRule(metaRecur, mTzMap);
+            }
+            
+            if (meta.containsKey(Metadata.FN_REPLY_LIST)) {
+                mReplyList = ReplyList.decodeFromMetadata(meta.getMap(Metadata.FN_REPLY_LIST), mTzMap);
+            } else {
+                mReplyList = new ReplyList();
+            }
         }
     }
 
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mColor, mUid, mStartTime, mEndTime, mRecurrence, mInvites, mTzMap);
+        return encodeMetadata(meta, mColor, mUid, mStartTime, mEndTime, mRecurrence, mInvites, mTzMap, mReplyList);
     }
     private static String encodeMetadata(byte color, String uid, long startTime, long endTime,
-                                         Recurrence.IRecurrence recur, List /*Invite */ invs, TimeZoneMap tzmap) {
-        return encodeMetadata(new Metadata(), color, uid, startTime, endTime, recur, invs, tzmap).toString();
+                                         Recurrence.IRecurrence recur, List /*Invite */ invs, TimeZoneMap tzmap, ReplyList replyList) {
+        return encodeMetadata(new Metadata(), color, uid, startTime, endTime, recur, invs, tzmap, replyList).toString();
     }
     static Metadata encodeMetadata(Metadata meta, byte color, String uid, long startTime, long endTime,
-                                   Recurrence.IRecurrence recur, List /*Invite */ invs, TimeZoneMap tzmap) {
+                                   Recurrence.IRecurrence recur, List /*Invite */ invs, TimeZoneMap tzmap, ReplyList replyList) {
         meta.put(Metadata.FN_TZMAP, tzmap.encodeAsMetadata());
         meta.put(Metadata.FN_UID, uid);
         meta.put(Metadata.FN_APPT_START, startTime);
         meta.put(Metadata.FN_APPT_END, endTime);
         meta.put(Metadata.FN_NUM_COMPONENTS, invs.size());
-
+        
+        meta.put(Metadata.FN_REPLY_LIST, replyList.encodeAsMetadata());
+        
         int num = 0;
         for (Iterator iter = invs.iterator(); iter.hasNext();) {
             Invite comp = (Invite) iter.next();
@@ -540,6 +559,9 @@ public class Appointment extends MailItem {
                     // add to FRONT of list, so when we iterate for the removals we go from HIGHER TO LOWER
                     // that way the numbers all match up as the list contracts!
                     idxsToRemove.add(0, new Integer(i));
+                    
+                    // clean up any old REPLYs that have been made obscelete by this new invite
+                    mReplyList.removeObsceleteEntries(newInvite.getRecurId(), newInvite.getSeqNo(), newInvite.getDTStamp());
                     
                     prev = cur;
                     modifiedAppt = true;
@@ -830,8 +852,302 @@ public class Appointment extends MailItem {
         
     }
     
+    public static class ReplyInfo {
+        public RecurId mRecurId;
+        public int mSeqNo;
+        public long mDtStamp;
+        public Attendee mAttendee; // attendee record w/ PartStat
+        
+        private static final String FN_RECURID = "r";
+        private static final String FN_SEQNO = "s";
+        private static final String FN_DTSTAMP = "d";
+        private static final String FN_ATTENDEE = "at";
+        
+        Metadata encodeAsMetadata() {
+            Metadata meta = new Metadata();
+            
+            meta.put(FN_RECURID, mRecurId.encodeMetadata());
+            meta.put(FN_SEQNO, mSeqNo);
+            meta.put(FN_DTSTAMP, mDtStamp);
+            meta.put(FN_ATTENDEE, Invite.encodeAsMetadata(mAttendee));
+
+            return meta;
+        }
+        
+        static ReplyInfo decodeFromMetadata(Metadata md, TimeZoneMap tzMap) throws ServiceException {
+            ReplyInfo toRet = new ReplyInfo();
+            
+            toRet.mRecurId = RecurId.decodeMetadata(md.getMap(FN_RECURID), tzMap);
+            toRet.mSeqNo = (int)md.getLong(FN_SEQNO);
+            toRet.mDtStamp = md.getLong(FN_DTSTAMP);
+            toRet.mAttendee = Invite.parseAtFromMetadata(md.getMap(FN_ATTENDEE));
+            
+            return toRet;
+        }
+    }
+
+    /**
+     * @author tim
+     * 
+     * Internal class for storing replies 
+     *
+     */
+    private static class ReplyList {
+        List /* ReplyInfo */ mReplies;
+        
+        public ReplyList() {
+            mReplies = new ArrayList();
+        }
+        
+        private static final String FN_NUM_REPLY_INFO = "n";
+        private static final String FN_REPLY_INFO = "i";
+        
+        Metadata encodeAsMetadata() {
+            Metadata meta = new Metadata();
+            
+            meta.put(FN_NUM_REPLY_INFO, mReplies.size());
+            for (int i = 0; i < mReplies.size(); i++) {
+                String fn = FN_REPLY_INFO + i;
+                
+                meta.put(fn, ((ReplyInfo)(mReplies.get(i))).encodeAsMetadata());
+            }
+            return meta;
+        }
+        
+        static ReplyList decodeFromMetadata(Metadata md, TimeZoneMap tzMap) throws ServiceException {
+            ReplyList toRet = new ReplyList();
+            int numReplies = (int)md.getLong(FN_NUM_REPLY_INFO);
+            toRet.mReplies = new ArrayList(numReplies);
+            for (int i = 0; i < numReplies; i++) {
+                ReplyInfo inf = ReplyInfo.decodeFromMetadata(md.getMap(FN_REPLY_INFO+i), tzMap);
+                toRet.mReplies.add(i, inf);
+            }
+            return toRet;
+        }
+        
+    
+        void removeObsceleteEntries(RecurId recurId, int seqNo, long dtStamp) {
+            for (Iterator iter = mReplies.iterator(); iter.hasNext();) {
+                ReplyInfo cur = (ReplyInfo)iter.next();
+                
+                if (cur.mRecurId.equals(recurId)) {
+                    if (cur.mSeqNo <= seqNo && cur.mDtStamp <= dtStamp) {
+                        iter.remove();
+                    }
+                }
+            }
+        }
+        
+        boolean maybeStoreNewReply(Invite inv, Attendee at) {
+            for (Iterator iter = mReplies.iterator(); iter.hasNext();) {
+                ReplyInfo cur = (ReplyInfo)iter.next();
+                
+                if (attendeeMatches(at, cur.mAttendee)) {
+                    if (recurMatches(inv.getRecurId(), cur.mRecurId)) {
+                        if (inv.getSeqNo() >= cur.mSeqNo) {
+                            if (inv.getDTStamp() >= cur.mDtStamp) {
+                                iter.remove();
+                                
+                                ReplyInfo toAdd = new ReplyInfo();
+                                toAdd.mRecurId = inv.getRecurId();
+                                toAdd.mSeqNo = inv.getSeqNo();
+                                toAdd.mDtStamp = inv.getDTStamp();
+                                toAdd.mAttendee = at;
+                                
+                                mReplies.add(toAdd);
+
+                                return true;
+                            }
+                        }
+                        return false;
+                    }
+                } // attendee check
+            }
+            
+            // if we get here, we didn't find one at all.  add a new one...
+            ReplyInfo toAdd = new ReplyInfo();
+            toAdd.mRecurId = inv.getRecurId();
+            toAdd.mSeqNo = inv.getSeqNo();
+            toAdd.mDtStamp = inv.getDTStamp();
+            toAdd.mAttendee = at;
+            
+            mReplies.add(toAdd);
+            
+            return true;
+        }
+        
+        void modifyPartStat(Account acctOrNull, RecurId recurId, String cnStr, String addressStr, String roleStr, 
+                String partStatStr, Boolean needsReply, int seqNo, long dtStamp)  throws ServiceException {
+            for (Iterator iter = mReplies.iterator(); iter.hasNext();) {
+                ReplyInfo cur = (ReplyInfo)iter.next();
+                
+                if (cur.mRecurId.withinRange(recurId)) {
+                    if (
+                            (acctOrNull != null && (AccountUtil.addressMatchesAccount(acctOrNull, cur.mAttendee.getCalAddress().getSchemeSpecificPart()))) ||
+                            (acctOrNull == null && cur.mAttendee.getCalAddress().getSchemeSpecificPart().equalsIgnoreCase(addressStr))
+                            ) 
+                    {
+                        if (cur.mAttendee.getParameters().getParameter(Parameter.CN) != null) {
+                            cnStr = cur.mAttendee.getParameters().getParameter(Parameter.CN).getValue();
+                        }
+                        
+                        if (cur.mAttendee.getParameters().getParameter(Parameter.ROLE) != null) {
+                            roleStr = IcalXmlStrMap.sRoleMap.toXml(cur.mAttendee.getParameters().getParameter(Parameter.ROLE).getValue());
+                        }
+                        
+                        Attendee newAt = Invite.createAttendee(
+                                cnStr,
+                                cur.mAttendee.getCalAddress().getSchemeSpecificPart(),
+                                roleStr,
+                                partStatStr,
+                                needsReply
+                                );
+                        
+                        cur.mAttendee = newAt;
+                        cur.mSeqNo = seqNo;
+                        cur.mDtStamp = dtStamp;
+                        return;
+                    }
+                }
+            }
+            
+            // no existing partstat for this instance...add a new one 
+            ReplyInfo inf = new ReplyInfo();
+            inf.mAttendee = Invite.createAttendee(cnStr, addressStr, roleStr, partStatStr, needsReply);
+            inf.mRecurId = recurId;
+            inf.mDtStamp = dtStamp;
+            inf.mSeqNo = seqNo;
+            mReplies.add(inf);
+        }
+        
+        boolean attendeeMatches(Attendee lhs, Attendee rhs) {
+            return (lhs.getCalAddress().getSchemeSpecificPart().equals(rhs.getCalAddress().getSchemeSpecificPart()));
+        }
+        
+        boolean recurMatches(RecurId lhs, RecurId rhs) {
+            if (lhs == null) {
+                return (rhs==null);
+            }
+            return lhs.equals(rhs);
+        }
+        
+        Attendee getEffectiveAttendee(Account acct, Invite inv, Instance inst) throws ServiceException {
+            for (Iterator iter = mReplies.iterator(); iter.hasNext();) {
+                ReplyInfo cur = (ReplyInfo)iter.next();
+                
+                if (AccountUtil.addressMatchesAccount(acct, cur.mAttendee.getCalAddress().getSchemeSpecificPart())) {
+                    if ((cur.mRecurId == null && inv.getRecurId() == null) ||
+                            (inst!=null && cur.mRecurId.withinRange(inst.getStart()))) {
+                        if (inv.getSeqNo() <= cur.mSeqNo) {
+                            if (inv.getDTStamp() <= cur.mDtStamp) {
+                                return cur.mAttendee;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            return inv.getMatchingAttendee(acct);
+        }
+        
+        List /* FreeBusyActualData*/ getFreeBusyActual(Account acct, Invite inv) throws ServiceException {
+            ArrayList toRet = new ArrayList();
+            
+            for (Iterator iter = mReplies.iterator(); iter.hasNext();) {
+                ReplyInfo cur = (ReplyInfo)iter.next();
+                
+                if (AccountUtil.addressMatchesAccount(acct, cur.mAttendee.getCalAddress().getSchemeSpecificPart())) {
+                    if ((inv.getSeqNo() <= cur.mSeqNo) && (inv.getDTStamp() <= cur.mDtStamp)) {
+                        FreeBusyActualData dat = new FreeBusyActualData();
+                        dat.mRecurId = cur.mRecurId;
+                        PartStat ps = (PartStat)(cur.mAttendee.getParameters().getParameter(Parameter.PARTSTAT));
+                        dat.mFba = inv.partStatToFreeBusyActual(IcalXmlStrMap.sPartStatMap.toXml(ps.getValue()));
+                        toRet.add(dat);
+                    } else {
+                        sLog.info("ReplyList "+this.toString()+" has outdated entries in its Replies list");
+                    }
+                }
+            }
+            return toRet;
+        }
+        
+
+        Attendee getEffectiveAttendee(Account acct, Invite inv, RecurId recurId) throws ServiceException {
+            for (Iterator iter = mReplies.iterator(); iter.hasNext();) {
+                ReplyInfo cur = (ReplyInfo)iter.next();
+                
+                if (AccountUtil.addressMatchesAccount(acct, cur.mAttendee.getCalAddress().getSchemeSpecificPart())) {
+                    if ((cur.mRecurId == null && inv.getRecurId() == null) ||
+                            (recurId!=null && cur.mRecurId.withinRange(recurId))) {
+                        if (inv.getSeqNo() <= cur.mSeqNo) {
+                            if (inv.getDTStamp() <= cur.mDtStamp) {
+                                return cur.mAttendee;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            return inv.getMatchingAttendee(acct);
+        }
+        
+        
+        Attendee getEffectiveAttendee(Attendee at, Instance inst, Invite inv) {
+            // return either the passed-in attendee, or the attendee from the reply list 
+            // if there's one that overrides the Invite's
+            
+            for (Iterator iter = mReplies.iterator(); iter.hasNext();) {
+                ReplyInfo cur = (ReplyInfo)iter.next();
+                
+                if (attendeeMatches(at, cur.mAttendee)) {
+                    if (cur.mRecurId.withinRange(inst.getStart())) {
+                        if (inv.getSeqNo() <= cur.mSeqNo) {
+                            if (inv.getDTStamp() <= cur.mDtStamp) {
+                                return cur.mAttendee;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            return at;
+        }
+    }
+            
+    public static class FreeBusyActualData {
+        public RecurId mRecurId;
+        public String mFba;
+    }
+    
+    public List /*ReplyInfo*/ getFreeBusyActual(Account acct, Invite inv) throws ServiceException 
+    {
+        return mReplyList.getFreeBusyActual(acct, inv);
+    }
+    
+    
+    public String getFreeBusyActual(Account acct, Invite inv, Instance inst) throws ServiceException 
+    {
+        Attendee at = mReplyList.getEffectiveAttendee(acct, inv, inst);
+        if (at == null) {
+            return inv.getFreeBusyActual();
+        }
+
+        PartStat ps = (PartStat)(at.getParameters().getParameter(Parameter.PARTSTAT));
+        return inv.partStatToFreeBusyActual(IcalXmlStrMap.sPartStatMap.toXml(ps.getValue()));
+    }
+    
+//    public Attendee getEffectiveAttendee(Account acct, Invite inv, Instance inst) throws ServiceException {
+//        return mReplyList.getEffectiveAttendee(acct, inst, inv);
+//    }
+    
+    void modifyPartStat(Account acctOrNull, RecurId recurId, String cnStr, String addressStr, String roleStr,
+            String partStatStr, Boolean needsReply, int seqNo, long dtStamp) throws ServiceException {
+        mReplyList.modifyPartStat(acctOrNull, recurId, cnStr, addressStr, roleStr, partStatStr, needsReply, seqNo, dtStamp);
+    }
+    
     private void processNewInviteReply(ParsedMessage pm, Invite reply, boolean force)
             throws ServiceException {
+        boolean dirty = false;
         // unique ID: UID+RECURRENCE_ID
 
         for (int i = 0; i < numInvites(); i++) {
@@ -843,17 +1159,48 @@ public class Appointment extends MailItem {
             //
             // See RFC2446: 2.1.5 Message Sequencing
             //
-            if (cur.getRecurId() == reply.getRecurId()
-                    && cur.getSeqNo() == reply.getSeqNo()
-                    && cur.getDTStamp() <= reply.getDTStamp()) {
-                // this is the one they're replying to!
 
+            
+            // If any of the existing Invites have recurIDs which exactly match the reply,
+            // then we should do a sequence-check against them before deciding to accept
+            // this reply
+            // FIXME should check for cur.recurID WITHIN_RANGE (THISANDFUTURE-type support)
+            if ((cur.getRecurId() != null && cur.getRecurId().equals(reply.getRecurId())) ||
+                    (cur.getRecurId() == null && reply.getRecurId() == null)) {
+                
+                // they're replying to this invite!
+                
+                if (cur.getSeqNo() >= reply.getSeqNo()
+                        && cur.getDTStamp() > reply.getDTStamp()) 
+                {
+                    
+                    sLog.info("Invite-Reply "+reply.toString()+" is outdated, ignoring!");
+                    // this reply is OLD, ignore it
+                    return;
+                }
+                
                 // update the ATTENDEE record in the invite
                 cur.updateMatchingAttendees(reply);
-
-                saveMetadata();
-                return; // there can only be one match...
+                dirty = true;
+                
+                break; // found a match, fall through to below and process it!
             }
+        }
+            
+        // if we got here then we have validated the sequencing against all of our Invites, 
+        // OR alternatively we looked and couldn't find one with a matching RecurID (therefore 
+        // they must be replying to a arbitrary instance)
+        List attendees = reply.getAttendees();
+        for (Iterator iter = attendees.iterator(); iter.hasNext();) {
+            Attendee at = (Attendee)iter.next();
+            if (mReplyList.maybeStoreNewReply(reply, at)) {
+                dirty = true;
+            }
+        }
+        
+        if (dirty) {
+            saveMetadata();
+            getMailbox().markItemModified(this, Change.MODIFIED_INVITE);
         }
     }
     

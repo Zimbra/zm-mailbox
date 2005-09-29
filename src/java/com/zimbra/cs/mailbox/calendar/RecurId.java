@@ -29,6 +29,7 @@ import java.text.ParseException;
 import java.util.Date;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
@@ -41,9 +42,9 @@ import net.fortuna.ical4j.model.parameter.TzId;
 
 public class RecurId 
 {
-    static final int RANGE_NONE          = 1;
-    private static final int RANGE_THISANDFUTURE = 2;
-    private static final int RANGE_THISANDPRIOR  = 3;
+    static public int RANGE_NONE                 = 1;
+    public static final int RANGE_THISANDFUTURE = 2;
+    public static final int RANGE_THISANDPRIOR  = 3;
     
     private int mRange;
     private ParsedDateTime mDateTime;
@@ -95,6 +96,10 @@ public class RecurId
         return new RecurId(dt, rangeVal);
     }
     
+    public static RecurId createFromInstance(Appointment.Instance inst) {
+        return new RecurId(ParsedDateTime.fromUTCTime(inst.getStart()), RANGE_NONE);
+    }
+    
     public RecurId(ParsedDateTime dt, String rangeStr) {
         if (rangeStr.equals("THISANDFUTURE")) {
             mRange = RANGE_THISANDFUTURE;
@@ -107,7 +112,7 @@ public class RecurId
     }
     
     
-    private RecurId(ParsedDateTime dt, int range) {
+    public RecurId(ParsedDateTime dt, int range) {
         mRange = range;
         mDateTime = dt;
     }
@@ -134,6 +139,17 @@ public class RecurId
         }
         
         return false;
+    }
+    
+    public int getRange() { return mRange; }
+    public ParsedDateTime getDt() { return mDateTime; }
+    
+    public boolean withinRange(RecurId other) {
+        if (other.withinRange(mDateTime.getDate())) {
+            return true;
+        }
+
+        return withinRange(other.mDateTime.getDate());
     }
     
     public boolean withinRange(Date d) {
@@ -170,7 +186,8 @@ public class RecurId
     }
     
     public Element toXml(Element parent) {
-        parent.addAttribute(MailService.A_APPT_RECURRENCE_ID, mDateTime.toString());
+        parent.addAttribute(MailService.A_APPT_RECURRENCE_ID, mDateTime.getDateTimePartString());
+        parent.addAttribute(MailService.A_APPT_TIMEZONE, mDateTime.getTZName());
         parent.addAttribute(MailService.A_APPT_RECURRENCE_RANGE_TYPE, mRange);
         return parent;
     }

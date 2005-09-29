@@ -91,6 +91,7 @@ public class Metadata {
     static final String FN_QUERY           = "q";
     static final String FN_RAW_SUBJ        = "r";
     static final String FN_RECUR_ID        = "rid";
+    static final String FN_REPLY_LIST      = "rl";
     static final String FN_REPLY_TO        = "rt";
     static final String FN_SENDER          = "s";
     static final String FN_SORT            = "s";

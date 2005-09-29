@@ -524,7 +524,7 @@ public class ToXML {
                     ie.addAttribute(MailService.A_APPT_RECURRENCE_ID, inv.getRecurId().toString());
                 }
                 
-                ToXML.encodeInvite(ie, inv, NOTIFY_FIELDS);
+                ToXML.encodeInvite(ie, appt, inv, NOTIFY_FIELDS);
             } catch (ServiceException e) {
                 e.printStackTrace();
             }
@@ -606,7 +606,7 @@ public class ToXML {
             Element invElt = m.addElement(MailService.E_INVITE); 
             Invite[] invs = appt.getInvites(invId);
             for (int i = 0; i < invs.length; i++) {
-                encodeInvite(invElt, invs[i], NOTIFY_FIELDS);
+                encodeInvite(invElt, appt, invs[i], NOTIFY_FIELDS);
             }
             
 //            if (msg.isInvite())
@@ -738,7 +738,7 @@ public class ToXML {
         return elem;
     }
     
-    public static Element encodeInvite(Element parent, Invite invite, int fields) 
+    public static Element encodeInvite(Element parent, Appointment apptOrNull, Invite invite, int fields) 
     {
         boolean allFields = true;
         
@@ -785,6 +785,24 @@ public class ToXML {
             e.addAttribute(MailService.A_APPT_FREEBUSY, invite.getFreeBusy());
 
             e.addAttribute(MailService.A_APPT_FREEBUSY_ACTUAL, invite.getFreeBusyActual());
+            
+            if (apptOrNull != null) {
+                try {
+                    List /*Appointment.FreeBusyActualData*/ fbas = apptOrNull.getFreeBusyActual(apptOrNull.getMailbox().getAccount(), invite);
+                    Element fbaElt = e.addElement(MailService.A_APPT_MY_REPLIES);
+                    fbaElt.addAttribute(MailService.A_DEFAULT, invite.getFreeBusyActual());
+                    
+                    for (Iterator iter = fbas.iterator(); iter.hasNext();) {
+                        Appointment.FreeBusyActualData fbaDat = (Appointment.FreeBusyActualData)iter.next();
+                        
+                        Element curElt = fbaElt.addElement(MailService.E_INSTANCE);
+                        fbaDat.mRecurId.toXml(curElt);
+                        curElt.addAttribute(MailService.A_APPT_FREEBUSY_ACTUAL, fbaDat.mFba);
+                    }
+                } catch (ServiceException ex) {
+                    // XXX fixme, need to fix error handling for all the ToXML stuff!
+                }
+            }
 
             e.addAttribute(MailService.A_APPT_TRANSPARENCY, invite.getTransparency());
             
@@ -852,8 +870,7 @@ public class ToXML {
         return e;
     }
     
-    private static Element encodeInvitesForMessage(Element parent, Message msg, int fields)
-    throws ServiceException {
+    private static Element encodeInvitesForMessage(Element parent, Message msg, int fields) throws ServiceException {
         if (fields != NOTIFY_FIELDS)
             if (!needToOutput(fields, Change.MODIFIED_INVITE))
                 return parent;
@@ -878,7 +895,7 @@ public class ToXML {
 //                        ie.addAttribute("method", inv.getMethod());
                         addedMethod = true;
                     }
-                    encodeInvite(ie, inv, fields);
+                    encodeInvite(ie, null, inv, fields); // NULL b/c we don't want to encode all of the reply-status here!
                 } else {
                     // invite not in this appointment anymore
                 }

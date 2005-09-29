@@ -31,30 +31,47 @@ package com.zimbra.cs.redolog.op;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.text.ParseException;
 
+import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
+import com.zimbra.cs.mailbox.calendar.RecurId;
+import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
+import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author jhahm
  */
-public class ModifyInvitePartStat extends RedoableOp {
-
+public class ModifyInvitePartStat extends RedoableOp 
+{
     private int mApptId = UNKNOWN_ID; // appointment which contains invite
-    private int mInvId = UNKNOWN_ID;  // invite ID
-    int mCompNum;                  // component number
-    private String mPartStat;      // "AC" (accepted), "TE" (tentative), etc.
-    private boolean mNeedsReply;
+    private RecurId mRecurId = null;
+    private String mCnStr = null;
+    private String mAddressStr = null;
+    private String mRoleStr = null;
+    private String mPartStatStr = null; // "AC" (accepted), "TE" (tentative), etc.
+    private Boolean mNeedsReply;
+    private int mSeqNo;
+    private long mDtStamp;
 
     public ModifyInvitePartStat() {
     }
 
-    public ModifyInvitePartStat(int mailboxId, int apptId, int inviteId, int compNum, boolean needsReply, String partStat) {
+    public ModifyInvitePartStat(int mailboxId, int apptId, RecurId recurId, 
+            String cnStr, String addressStr, String roleStr, String partStatStr, Boolean needsReply, 
+            int seqNo, long dtStamp)
+    {
         setMailboxId(mailboxId);
         mApptId = apptId;
-        mInvId= inviteId;
-        mCompNum = compNum;
-        mPartStat = partStat;
+        mRecurId = recurId;
+        mCnStr = cnStr != null ? cnStr : "";
+        mAddressStr = addressStr != null ? addressStr : "";
+        mRoleStr = roleStr != null ? roleStr : "";
+        mPartStatStr = partStatStr != null ? partStatStr : "";
         mNeedsReply = needsReply;
+        mSeqNo = seqNo;
+        mDtStamp = dtStamp;
     }
 
     public int getOpCode() {
@@ -63,35 +80,60 @@ public class ModifyInvitePartStat extends RedoableOp {
 
     public void redo() throws Exception {
         Mailbox mbox = Mailbox.getMailboxById(getMailboxId());
-        mbox.modifyInvitePartStat(getOperationContext(), mApptId, mInvId, mCompNum, mNeedsReply, mPartStat);
+        mbox.modifyPartStat(getOperationContext(), mApptId, mRecurId, mCnStr, mAddressStr, mRoleStr, mPartStatStr, mNeedsReply, mSeqNo, mDtStamp); 
     }
 
     protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("apptId=").append(mApptId);
-        sb.append(", invId=").append(mInvId);
-        sb.append(", comp=").append(mCompNum);
-        sb.append(", needsReply=").append(mNeedsReply);
-        sb.append(", partStat=").append(mPartStat);
+        sb.append(", recurId=").append(mRecurId.toString());
+        sb.append(", cn=").append(mCnStr);
+        sb.append(", address=").append(mAddressStr);
+        sb.append(", role=").append(mRoleStr);
+        sb.append(", part=").append(mPartStatStr);
+        sb.append(", need-reply=").append(mNeedsReply);
+        sb.append(", seqNo=").append(mSeqNo);
+        sb.append(", dtStamp=").append(mDtStamp);
         return sb.toString();
     }
 
     protected void serializeData(DataOutput out) throws IOException {
         out.writeInt(mApptId);
-        out.writeInt(mInvId);
-        out.writeInt(mCompNum);
-        if (mNeedsReply) {
-            out.writeBoolean(true);
-        } else {
-            out.writeBoolean(false);
-        }
-        writeUTF8(out, mPartStat);
+        
+        out.writeInt(mRecurId.getRange());
+        out.writeUTF(mRecurId.getDt().toString());
+        
+        out.writeUTF(mCnStr);
+        out.writeUTF(mAddressStr);
+        out.writeUTF(mRoleStr);
+        out.writeUTF(mPartStatStr);
+        out.writeBoolean(mNeedsReply.booleanValue());
+        out.writeInt(mSeqNo);
+        out.writeLong(mDtStamp);
     }
 
     protected void deserializeData(DataInput in) throws IOException {
         mApptId = in.readInt();
-        mInvId = in.readInt();
-        mCompNum = in.readInt();
-        mNeedsReply = in.readBoolean();
-        mPartStat = readUTF8(in);
+        
+        try {
+            Appointment appt = Mailbox.getMailboxById(getMailboxId()).getAppointmentById(mApptId);
+            
+            int range = in.readInt();
+            String dtStr = in.readUTF();
+            try {
+                mRecurId = new RecurId(ParsedDateTime.parse(dtStr, appt.getTimeZoneMap()), range);
+            } catch (ParseException pe) {
+                throw new IOException("Parsing date-time: "+dtStr+" "+pe);
+            }
+            
+            mCnStr = in.readUTF();
+            mAddressStr = in.readUTF();
+            mRoleStr = in.readUTF();
+            mPartStatStr = in.readUTF();
+            mNeedsReply = new Boolean(in.readBoolean());
+            mSeqNo = in.readInt();
+            mDtStamp = in.readLong();
+        } catch (ServiceException se) {
+            throw new IOException("ServiceException: "+se);
+        }
     }
 }

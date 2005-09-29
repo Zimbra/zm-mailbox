@@ -27,15 +27,12 @@ package com.zimbra.cs.service.mail;
 
 import java.util.*;
 
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Invite;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -43,7 +40,6 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.stats.StopWatch;
-import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.ZimbraContext;
 
 public class SetAppointment extends CalendarRequest {
@@ -81,35 +77,18 @@ public class SetAppointment extends CalendarRequest {
             
             synchronized (mbox) {
                 
-//                Appointment appt;
-                
                 // First, the <default>
                 {
                     Element e = request.getElement(MailService.A_DEFAULT);
                     
                     defaultData = getSetAppointmentData(octxt, acct, mbox, e, new SetAppointmentInviteParser());
-                    
-//                    appt = mbox.getAppointmentById(ids[0]);
                 }
                 
-//                Invite inv = appt.getDefaultInvite();
-                
-//                if (inv.hasRecurId()) {
-//                    throw ServiceException.FAILURE("Invite id="+inv.getMailItemId()+" comp="+inv.getComponentNum()+" is not the a default invite", null);
-//                }
-//                if (appt == null) {
-//                    throw ServiceException.FAILURE("Could not find Appointment for id="+appt.getId()+"-"+inv.getMailItemId()+" comp="+inv.getComponentNum()+">", null);
-//                }
                 // for each <exception>
                 for (Iterator iter = request.elementIterator(MailService.A_EXCEPT); iter.hasNext();) {
-//                    if (!appt.isRecurring()) {
-//                        throw ServiceException.FAILURE("Appointment "+appt.getId()+" is not a recurring appointment", null);
-//                    }
-                    
                     Element e = (Element)iter.next();
                     
                     Mailbox.SetAppointmentData exDat = getSetAppointmentData(octxt, acct, mbox, e, new SetAppointmentInviteParser());
-//                    assert(ids[0] == appt.getId());
                     exceptions.add(exDat);
                 }
                 
@@ -188,21 +167,6 @@ public class SetAppointment extends CalendarRequest {
         toRet.mPm = pm;
         toRet.mForce = true;
         
-//        int[] ids = mbox.addInvite(null, except, true, pm);
-        
-//        mbox.modifyInvitePartStat(octxt, ids[0], ids[1], 0, needsReply, partStatStr);
-        
-//        return ids;
         return toRet;
     }
-    
-    protected static int sendThenDeleteCalendarMessage(OperationContext octxt, Account acct, Mailbox mbox, CalSendData dat) throws ServiceException
-    {
-        int msgId = sendMimeMessage(octxt, mbox, acct, Mailbox.ID_FOLDER_CALENDAR, dat, dat.mMm, dat.mOrigId, dat.mReplyType);
-        
-//        mbox.delete(octxt, msgId, MailItem.TYPE_MESSAGE);
-        
-        return msgId;
-    }
-    
 }

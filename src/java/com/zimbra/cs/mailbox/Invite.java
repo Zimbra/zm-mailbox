@@ -494,6 +494,15 @@ public class Invite {
     /**
      * This API modifies the user's attendee participation status, but only for the
      * in-memory version of the Invite.  No changes are written to the metadata.
+     * 
+     * Update this user's attendee participation status.  The
+     * APPT_FLAG_NEEDS_REPLY flag is cleared.  Metadata is updated
+     * in DB.
+     * @param mbx
+     * @param partStat "AC" (acceptec), "TE" (tentative), "DE" (declined),
+     *                 "DG" (delegated), "CO" (completed),
+     *                 "IN" (in-process)
+     * @throws ServiceException
      */
     public void modifyPartStatInMemory(boolean needsReply, String partStat)
     throws ServiceException {
@@ -506,29 +515,29 @@ public class Invite {
     }
     
     
-    /**
-     * Update this user's attendee participation status.  The
-     * APPT_FLAG_NEEDS_REPLY flag is cleared.  Metadata is updated
-     * in DB.
-     * @param mbx
-     * @param partStat "AC" (acceptec), "TE" (tentative), "DE" (declined),
-     *                 "DG" (delegated), "CO" (completed),
-     *                 "IN" (in-process)
-     * @throws ServiceException
-     */
-    void modifyPartStat(Mailbox mbx, boolean needsReply, String partStat)
-    throws ServiceException {
-        int oldFlags = mFlags;
-        boolean oldNeedsReply = needsReply();
-        setNeedsReply(needsReply);
-        if (needsReply() != oldNeedsReply || mFlags != oldFlags || !mPartStat.equals(partStat)) {
-            mPartStat = partStat;
-            mAppt.saveMetadata();
-            if (mbx != null) {
-                mbx.markItemModified(mAppt, Change.MODIFIED_INVITE);
-            }
-        }
-    }
+//    /**
+//     * Update this user's attendee participation status.  The
+//     * APPT_FLAG_NEEDS_REPLY flag is cleared.  Metadata is updated
+//     * in DB.
+//     * @param mbx
+//     * @param partStat "AC" (acceptec), "TE" (tentative), "DE" (declined),
+//     *                 "DG" (delegated), "CO" (completed),
+//     *                 "IN" (in-process)
+//     * @throws ServiceException
+//     */
+//    void modifyPartStat(Mailbox mbx, boolean needsReply, String partStat)
+//    throws ServiceException {
+//        int oldFlags = mFlags;
+//        boolean oldNeedsReply = needsReply();
+//        setNeedsReply(needsReply);
+//        if (needsReply() != oldNeedsReply || mFlags != oldFlags || !mPartStat.equals(partStat)) {
+//            mPartStat = partStat;
+//            mAppt.saveMetadata();
+//            if (mbx != null) {
+//                mbx.markItemModified(mAppt, Change.MODIFIED_INVITE);
+//            }
+//        }
+//    }
     
     /**
      * @return the Appointment object, or null if one could not be found
@@ -577,25 +586,30 @@ public class Invite {
     public ParsedDateTime getEndTime() { return mEnd; }
     public ParsedDuration getDuration() { return mDuration; }
     
+    public String getFreeBusyActual() {
+        assert(mFreeBusy != null);
+        
+        return partStatToFreeBusyActual(mPartStat);
+    }
+    
     /**
-     * Returns actual free-busy status based on free-busy setting of the
-     * event, user's participation status, and the scheduling status of
-     * the event.
+     * Returns actual free-busy status taking into account the free-busy 
+     * setting of the event, the user's participation status, and the 
+     * scheduling status of the event.
      * 
      * The getFreeBusy() method simply returns the event's free-busy
      * setting.
      * @return
      */
-    public String getFreeBusyActual() {
-        assert(mFreeBusy != null);
-        
+    public String partStatToFreeBusyActual(String partStat) 
+    {
         // If event itself is FBTYPE_FREE, it doesn't matter whether
         // invite was accepted or declined.  It shows up as free time.
         if (IcalXmlStrMap.FBTYPE_FREE.equals(mFreeBusy))
             return IcalXmlStrMap.FBTYPE_FREE;
         
         // If invite was accepted, use event's free-busy status.
-        if (IcalXmlStrMap.PARTSTAT_ACCEPTED.equals(mPartStat))
+        if (IcalXmlStrMap.PARTSTAT_ACCEPTED.equals(partStat))
             return mFreeBusy;
         
         // If invite was received but user hasn't acted on it yet
@@ -604,15 +618,15 @@ public class Invite {
         // than confirmed, then he/she is tentatively busy regardless
         // of the free-busy status of the event.  (Unless event specified
         // FBTYPE_FREE, but that case was already taken care of above.
-        if (IcalXmlStrMap.PARTSTAT_NEEDS_ACTION.equals(mPartStat) ||
-                IcalXmlStrMap.PARTSTAT_TENTATIVE.equals(mPartStat) ||
+        if (IcalXmlStrMap.PARTSTAT_NEEDS_ACTION.equals(partStat) ||
+                IcalXmlStrMap.PARTSTAT_TENTATIVE.equals(partStat) ||
                 IcalXmlStrMap.STATUS_TENTATIVE.equals(mStatus))
             return IcalXmlStrMap.FBTYPE_BUSY_TENTATIVE;
         
         // If invite was declined or delegated to someone else, or if
         // this is a cancelled event, the user is free.
-        if (IcalXmlStrMap.PARTSTAT_DECLINED.equals(mPartStat) ||
-                IcalXmlStrMap.PARTSTAT_DELEGATED.equals(mPartStat) ||
+        if (IcalXmlStrMap.PARTSTAT_DECLINED.equals(partStat) ||
+                IcalXmlStrMap.PARTSTAT_DELEGATED.equals(partStat) ||
                 IcalXmlStrMap.STATUS_CANCELLED.equals(mStatus))
             return IcalXmlStrMap.FBTYPE_FREE;
         
@@ -808,7 +822,13 @@ public class Invite {
         return createOrganizer(addressStr);
     }
     
-    private static Attendee parseAtFromMetadata(Metadata meta) throws ServiceException {
+    private static Metadata encodeAsMetadata(Organizer org) {
+        Metadata meta = new Metadata();
+        meta.put("a", org.getCalAddress());
+        return meta;
+    }
+
+    static Attendee parseAtFromMetadata(Metadata meta) throws ServiceException {
         if (meta == null)
             return null;
         String cnStr = meta.get("cn", null);
@@ -823,13 +843,7 @@ public class Invite {
         return createAttendee(cnStr, addressStr, roleStr, partStatStr, rsvpBool);
     }
     
-    private static Metadata encodeAsMetadata(Organizer org) {
-        Metadata meta = new Metadata();
-        meta.put("a", org.getCalAddress());
-        return meta;
-    }
-    
-    private static Metadata encodeAsMetadata(Attendee at) {
+    static Metadata encodeAsMetadata(Attendee at) {
         Metadata meta = new Metadata();
         ParameterList params = at.getParameters();
         

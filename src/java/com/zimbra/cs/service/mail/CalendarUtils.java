@@ -464,7 +464,7 @@ public class CalendarUtils {
      * @return obj[0] is a Date, obj[1] is a TimeZone
      * @throws ServiceException
      */
-    private static ParsedDateTime parseDateTime(Element e,
+    static ParsedDateTime parseDateTime(Element e,
                                                 TimeZoneMap invTzMap,
                                                 List /*<ICalTimeZone>*/ referencedTimeZones,
                                                 ICalTimeZone localTZ)
@@ -1047,11 +1047,17 @@ public class CalendarUtils {
         return toRet;
     }
     
-    static Calendar buildReplyCalendar(Account acct, Invite inv, SendInviteReply.ParsedVerb verb, String replySubject) throws ServiceException 
+    static Calendar buildReplyCalendar(Account acct, Invite inv, SendInviteReply.ParsedVerb verb, 
+            String replySubject, List /*ICalTimeZone*/ tzsReferenced, ParsedDateTime exceptDt) throws ServiceException 
     {
-        VEvent event = CalendarUtils.replyToInvite(acct, inv, verb, replySubject);
+        VEvent event = CalendarUtils.replyToInvite(acct, inv, verb, replySubject, exceptDt);
         
         Calendar iCal = makeCalendar(Method.REPLY);
+        
+        for (Iterator iter = tzsReferenced.iterator(); iter.hasNext();) {
+            ICalTimeZone tz = (ICalTimeZone)iter.next();
+            iCal.getComponents().add(tz.toVTimeZone());
+        }
         iCal.getComponents().add(event);
         
         try {
@@ -1088,7 +1094,7 @@ public class CalendarUtils {
      * @return
      * @throws ServiceException
      */
-    static VEvent replyToInvite(Account acct, Invite inv, SendInviteReply.ParsedVerb verb, String replySubject)
+    static VEvent replyToInvite(Account acct, Invite inv, SendInviteReply.ParsedVerb verb, String replySubject, ParsedDateTime exceptDt)
     throws ServiceException
     {
         VEvent event = new VEvent();
@@ -1123,7 +1129,17 @@ public class CalendarUtils {
         event.getProperties().add(new Uid(inv.getUid()));
 
         // RECURRENCE-ID (if necessary)
-        if (inv.hasRecurId()) {
+        if (exceptDt != null) {
+            // TODO could check to see if exceptDt conflicts with inv.recurid...
+            RecurrenceId recurId = new RecurrenceId(exceptDt.iCal4jDate());
+            TimeZone tz = exceptDt.getTimeZone();
+            if (tz == ICalTimeZone.getUTC()) {
+                recurId.setUtc(true);
+            } else {
+                recurId.getParameters().add(new TzId(tz.getID()));
+            }
+            event.getProperties().add(recurId);
+        } else if (inv.hasRecurId()) {
             event.getProperties().add(inv.getRecurId().getRecurrenceId(acct));
         }
         

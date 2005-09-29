@@ -95,6 +95,8 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
                     
                     boolean defIsOrg = defaultInvite.thisAcctIsOrganizer(acct);
                     
+                    String defaultFba = appointment.getFreeBusyActual(acct, defaultInvite, null);
+                    
                     // add all the instances:
                     boolean someInRange = false;
                     Collection instances = appointment.expandInstances(rangeStart, rangeEnd); 
@@ -118,6 +120,11 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
                             Element instElt = apptElt.addElement(MailService.E_INSTANCE);
                             
                             instElt.addAttribute(MailService.A_APPT_START_TIME, instStart);
+                            
+                            String instFba = appointment.getFreeBusyActual(acct, inv, inst); 
+                            if (!defaultFba.equals(instFba)) {
+                                instElt.addAttribute(MailService.A_APPT_FREEBUSY_ACTUAL, instFba); 
+                            }
                             
                             if (inst.isException()) {
                                 instElt.addAttribute(MailService.A_APPT_IS_EXCEPTION, true);
@@ -162,10 +169,6 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
                                     instElt.addAttribute(MailService.A_APPT_FREEBUSY, inv.getFreeBusy());
                                 }
                                 
-                                if (!defaultInvite.getFreeBusyActual().equals(inv.getFreeBusyActual())) {
-                                    instElt.addAttribute(MailService.A_APPT_FREEBUSY_ACTUAL, inv.getFreeBusyActual());
-                                }
-                                
                                 if (!defaultInvite.getTransparency().equals(inv.getTransparency())) {
                                     instElt.addAttribute(MailService.A_APPT_TRANSPARENCY, inv.getTransparency());
                                 }
@@ -202,7 +205,7 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
                         apptElt.addAttribute(MailService.A_APPT_STATUS, defaultInvite.getStatus());
                         apptElt.addAttribute(MailService.A_APPT_PARTSTAT, defaultInvite.getPartStat());
                         apptElt.addAttribute(MailService.A_APPT_FREEBUSY, defaultInvite.getFreeBusy());
-                        apptElt.addAttribute(MailService.A_APPT_FREEBUSY_ACTUAL, defaultInvite.getFreeBusyActual());
+                        apptElt.addAttribute(MailService.A_APPT_FREEBUSY_ACTUAL, defaultFba);
                         apptElt.addAttribute(MailService.A_APPT_TRANSPARENCY, defaultInvite.getTransparency());
                         apptElt.addAttribute(MailService.A_APPT_ISORG, defIsOrg);
                         
