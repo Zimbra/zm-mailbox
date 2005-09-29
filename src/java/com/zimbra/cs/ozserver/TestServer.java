@@ -37,7 +37,7 @@ class TestServer {
                 return new TestProtocolHandler();
             }
         };
-    	mServer = new OzServer("Test", null, port, testHandlerFactory);
+    	mServer = new OzServer("Test", 64, null, port, testHandlerFactory);
         mServer.setSnooper(new OzSnooper(System.out, OzSnooper.ALL));
         mServer.start();
     }
