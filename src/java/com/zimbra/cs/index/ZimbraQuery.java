@@ -658,7 +658,7 @@ public final class ZimbraQuery {
                 if (folderId == IN_ANY_FOLDER) {
                     return new InQuery(mailbox, analyzer, modifier);
                 } else { 
-                    Folder folder = mailbox.getFolderById(folderId.intValue());
+                    Folder folder = mailbox.getFolderById(null, folderId.intValue());
                     return new InQuery(mailbox, analyzer, modifier, folder);
                 }
             } catch (NoSuchItemException nsie) {
@@ -668,7 +668,7 @@ public final class ZimbraQuery {
         
         public static InQuery Create(Mailbox mailbox, Analyzer analyzer, int modifier, String folderName) throws ServiceException {
             try {
-                Folder folder = mailbox.getFolderByPath(folderName);
+                Folder folder = mailbox.getFolderByPath(null, folderName);
                 return new InQuery(mailbox, analyzer, modifier, folder);
             } catch (NoSuchItemException nsie) {
                 return null;

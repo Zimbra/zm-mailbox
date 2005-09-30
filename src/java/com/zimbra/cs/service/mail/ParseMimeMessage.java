@@ -228,10 +228,10 @@ public class ParseMimeMessage {
                         if (eName.equals(MailService.E_MIMEPART)) {
                             int messageId = (int) elem.getAttributeLong(MailService.A_MESSAGE_ID);
                             String part = elem.getAttribute(MailService.A_PART);
-                            attachPart(mmp, mbox.getMessageById(messageId), part);
+                            attachPart(mmp, mbox.getMessageById(octxt, messageId), part);
                         } else if (eName.equals(MailService.E_MSG)) {
                             int messageId = (int) elem.getAttributeLong(MailService.A_ID);
-                            attachMessage(mmp, mbox.getMessageById(messageId));
+                            attachMessage(mmp, mbox.getMessageById(octxt, messageId));
                         }
                     }
                 }

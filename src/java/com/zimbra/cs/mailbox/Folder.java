@@ -144,9 +144,12 @@ public class Folder extends MailItem {
      * 
      * @see ACL */
     boolean canAccess(short rightsNeeded) throws ServiceException {
+        return canAccess(rightsNeeded, mMailbox.getAuthenticatedAccount());
+    }
+
+    boolean canAccess(short rightsNeeded, Account authuser) throws ServiceException {
         if (rightsNeeded == 0)
             return true;
-        Account authuser = mMailbox.getAuthenticatedAccount();
         // the mailbox owner can do anything they want
         if (authuser == null || authuser.getId().equals(mMailbox.getAccountId()))
             return true;
@@ -156,6 +159,7 @@ public class Folder extends MailItem {
         // check the ACLs to see if access has been explicitly granted
         if (mRights != null)
             return mRights.checkRights(authuser, rightsNeeded);
+        // FIXME: need to check parent folder for inherited rights
         return false;
     }
 
@@ -192,7 +196,7 @@ public class Folder extends MailItem {
         if (!canAccess(ACL.RIGHT_ADMIN))
             throw ServiceException.PERM_DENIED("you do not have admin rights to folder " + getPath());
         markItemModified(Change.MODIFIED_ACL);
-        if (!mRights.revokeAccess(zimbraId))
+        if (mRights == null || !mRights.revokeAccess(zimbraId))
             return;
         if (mRights.isEmpty())
             mRights = null;
@@ -240,12 +244,21 @@ public class Folder extends MailItem {
      *  name.  The sort is case-insensitive.
      * 
      * @return The sorted List of subfolders, or <code>null</code>
-     *         if the folder has no subfolders. */
-    public List getSubfolders() {
+     *         if the folder has no subfolders. 
+     * @throws ServiceException */
+    public List getSubfolders(Mailbox.OperationContext octxt) throws ServiceException {
         if (mSubfolders == null)
             return null;
         Collections.sort(mSubfolders, new SortByName());
-        return Collections.unmodifiableList(mSubfolders);
+        if (octxt == null || octxt.authuser == null)
+            return Collections.unmodifiableList(mSubfolders);
+        ArrayList visible = new ArrayList();
+        for (int i = 0; i < mSubfolders.size(); i++) {
+            Folder subfolder = (Folder) mSubfolders.get(i);
+            if (subfolder.canAccess(ACL.RIGHT_READ, octxt.authuser))
+                visible.add(subfolder);
+        }
+        return visible.isEmpty() ? null : visible;
     }
 
     /** Returns a <code>List</code> that includes this folder and all its

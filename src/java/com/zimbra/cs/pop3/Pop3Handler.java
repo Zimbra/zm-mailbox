@@ -498,7 +498,7 @@ public class Pop3Handler extends ProtocolHandler {
             mAccountId = acct.getId();
             mAccountName = acct.getName();
             Mailbox mailbox = Mailbox.getMailboxByAccountId(mAccountId);
-            mMbx = new Pop3Mbx(mailbox, mQuery);
+            mMbx = new Pop3Mbx(mailbox, acct, mQuery);
             mState = STATE_TRANSACTION;
             mExpire = (int) (acct.getTimeInterval(Provisioning.A_zimbraMailMessageLifetime, 0) / (1000*60*60*24));
             if (mExpire > 0 && mExpire < MIN_EXPIRE_DAYS) mExpire = MIN_EXPIRE_DAYS;

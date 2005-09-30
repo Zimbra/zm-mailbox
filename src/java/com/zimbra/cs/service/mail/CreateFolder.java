@@ -58,14 +58,14 @@ public class CreateFolder extends WriteOpDocumentHandler {
             folder = mbox.createFolder(null, name, parentId, MailItem.getTypeForName(view));
         } catch (ServiceException se) {
             if (se.getCode() == MailServiceException.ALREADY_EXISTS && t.getAttributeBool(MailService.A_FETCH_IF_EXISTS, false))
-                folder = mbox.getFolderByName(parentId, name);
+                folder = mbox.getFolderByName(lc.getOperationContext(), parentId, name);
             else
                 throw se;
         }
 
         Element response = lc.createElement(MailService.CREATE_FOLDER_RESPONSE);
         if (folder != null)
-        	ToXML.encodeFolder(response, folder);
+        	ToXML.encodeFolder(response, lc, folder);
         return response;
 	}
 }

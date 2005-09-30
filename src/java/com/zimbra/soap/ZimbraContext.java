@@ -44,9 +44,12 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.session.SessionCache;
@@ -79,6 +82,8 @@ public class ZimbraContext {
 
 	private static Log sLog = LogFactory.getLog(ZimbraContext.class);
 
+    private static final int MAX_HOP_COUNT = 5;
+
 	public static final QName CONTEXT = QName.get("context", ZimbraNamespace.ZIMBRA);
     public static final String E_NO_NOTIFY  = "nonotify";
     public static final String E_FORMAT     = "format";
@@ -108,6 +113,8 @@ public class ZimbraContext {
 	private String    mAuthTokenAccountId;
 	private String    mRequestedAccountId;
 
+    private SoapProtocol mResponseProtocol;
+
     private boolean mChangeConstraintType = OperationContext.CHECK_MODIFIED;
     private int     mMaximumChangeId = -1;
 
@@ -117,8 +124,22 @@ public class ZimbraContext {
 
     private ProxyTarget mProxyTarget;
     private boolean     mIsProxyRequest;
+    private int         mHopCount;
 
-    private SoapProtocol mResponseProtocol;
+
+    public ZimbraContext(ZimbraContext lc, String targetAccountId) throws ServiceException {
+        mAuthToken = lc.mAuthToken;
+        mAuthTokenAccountId = lc.mAuthTokenAccountId;
+        mRequestedAccountId = targetAccountId;
+
+        mResponseProtocol = lc.mResponseProtocol;
+
+        mSessionSuppressed = true;
+
+        mHopCount = lc.mHopCount + 1;
+        if (mHopCount > MAX_HOP_COUNT)
+            throw ServiceException.TOO_MANY_HOPS();
+    }
 
 	/**
 	 * @param ctxt can be null if not present in request
@@ -369,7 +390,7 @@ public class ZimbraContext {
                 encodeSession(ctxt, session, false);
                 // put <refresh> blocks back for any newly-created SoapSession objects
                 if (sinfo.created && session instanceof SoapSession)
-                    ((SoapSession) session).putRefresh(ctxt);
+                    ((SoapSession) session).putRefresh(ctxt, this);
                 // put <notify> blocks back for any SoapSession objects
                 if (session instanceof SoapSession)
                     ((SoapSession) session).putNotifications(this, ctxt);
@@ -483,5 +504,31 @@ public class ZimbraContext {
 
     public boolean isProxyRequest() {
         return mIsProxyRequest;
+    }
+
+    /** Formats the {@link MailItem}'s ID into a <code>String</code> that's
+     *  addressable by the request's originator.  In other words, if the owner
+     *  of the item matches the auth token's principal, you just get a bare
+     *  ID.  But if the owners don't match, you get a formatted ID that refers
+     *  to the correct <code>Mailbox</code> as well as the item in question.
+     * 
+     * @param item  The item whose ID we want to encode.
+     * @see ItemId */
+    public String formatItemId(MailItem item) {
+        return new ItemId(item).toString(this);
+    }
+
+    /** Formats the ({@link Mailbox}, ID) pair into a <code>String</code>
+     *  that's addressable by the request's originator.  In other words, if
+     *  the owner of the <code>Mailbox</code> matches the auth token's
+     *  principal, you just get a bare ID.  But if the owners don't match,
+     *  you get a formatted ID that refers to the <code>Mailbox</code> as
+     *  well as the item in question.
+     * 
+     * @param mbox    The item's containing Mailbox.
+     * @param itemId  The item's (local) ID.
+     * @see ItemId */
+    public String formatItemId(Mailbox mbox, int itemId) {
+        return new ItemId(mbox, itemId).toString(this);
     }
 }

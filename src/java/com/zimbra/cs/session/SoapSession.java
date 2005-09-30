@@ -152,9 +152,9 @@ public class SoapSession extends Session {
      *  This &lt;refresh> block contains the basic folder, tag, and mailbox
      *  size information needed to display and update the web UI's overview
      *  pane.  The &lt;refresh> block is sent when a new session is created.
-     * 
-     * @param ctxt An existing SOAP header <context> element */
-    public void putRefresh(Element ctxt) throws ServiceException {
+     * @param ctxt  An existing SOAP header <context> element 
+     * @param lc    The SOAP request's encapsulated context */
+    public void putRefresh(Element ctxt, ZimbraContext lc) throws ServiceException {
         synchronized (this) {
             if (!mNotify)
                 return;
@@ -164,6 +164,7 @@ public class SoapSession extends Session {
         Element eRefresh = ctxt.addUniqueElement(E_REFRESH);
 
         Mailbox mbox = Mailbox.getMailboxByAccountId(mAccountId);
+        Mailbox.OperationContext octxt = lc.getOperationContext();
         // Lock the mailbox but not the "this" object, to avoid deadlock
         // with another thread that calls a Session method from within a
         // synchronized Mailbox method.
@@ -172,19 +173,24 @@ public class SoapSession extends Session {
             ToXML.encodeMailbox(eRefresh, mbox);
 
             // dump all tags under a single <tags> parent
-            List tags = mbox.getTagList();
+            List tags = mbox.getTagList(octxt);
             if (tags != null && tags.size() > 0) {
                 Element eTags = eRefresh.addUniqueElement(E_TAGS);
                 for (Iterator it = tags.iterator(); it.hasNext(); ) {
                     Tag tag = (Tag) it.next();
                     if (tag != null && !(tag instanceof Flag))
-                        ToXML.encodeTag(eTags, tag);
+                        ToXML.encodeTag(eTags, lc, tag);
                 }
             }
 
             // dump recursive folder hierarchy starting at USER_ROOT (i.e. folders visible to the user)
-            Folder root = mbox.getFolderById(Mailbox.ID_FOLDER_USER_ROOT);
-            GetFolder.handleFolder(mbox, root, eRefresh);
+            try {
+                Folder root = mbox.getFolderById(octxt, Mailbox.ID_FOLDER_USER_ROOT);
+                GetFolder.handleFolder(mbox, root, eRefresh, lc, octxt);
+            } catch (ServiceException e) {
+                if (e.getCode() != ServiceException.PERM_DENIED)
+                    throw e;
+            }
         }
     }
 
@@ -268,7 +274,7 @@ public class SoapSession extends Session {
                 if (mChanges.created != null && mChanges.created.size() > 0) {
                     Element eCreated = eNotify.addUniqueElement(E_CREATED);
                     for (Iterator it = mChanges.created.values().iterator(); it.hasNext(); )
-                        ToXML.encodeItem(eCreated, (MailItem) it.next(), ToXML.NOTIFY_FIELDS);
+                        ToXML.encodeItem(eCreated, lc, (MailItem) it.next(), ToXML.NOTIFY_FIELDS);
                 }
 
                 if (mChanges.modified != null && mChanges.modified.size() > 0) {
@@ -276,7 +282,7 @@ public class SoapSession extends Session {
                     for (Iterator it = mChanges.modified.values().iterator(); it.hasNext(); ) {
                         Change chg = (Change) it.next();
                         if (chg.why != 0 && chg.what instanceof MailItem)
-                            ToXML.encodeItem(eModified, (MailItem) chg.what, chg.why);
+                            ToXML.encodeItem(eModified, lc, (MailItem) chg.what, chg.why);
                         else if (chg.why != 0 && chg.what instanceof Mailbox)
                             ToXML.encodeMailbox(eModified, (Mailbox) chg.what, chg.why);
                     }

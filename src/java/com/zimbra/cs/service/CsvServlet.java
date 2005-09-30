@@ -54,7 +54,7 @@ import com.zimbra.cs.servlet.ZimbraServlet;
 
 public class CsvServlet extends ZimbraServlet {
 
-    public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
+    public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try {
             AuthToken authToken = getAuthTokenFromCookie(req, resp);
             if (authToken == null) 
@@ -72,7 +72,7 @@ public class CsvServlet extends ZimbraServlet {
             }
         
             Mailbox mbox = Mailbox.getMailboxByAccount(account);
-            List contacts = mbox.getContactList(-1);
+            List contacts = mbox.getContactList(new Mailbox.OperationContext(account), -1);
             StringBuffer sb = new StringBuffer();
             if (contacts == null)
                 contacts = new ArrayList();

@@ -33,16 +33,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
+import java.util.*;
 import java.util.zip.CRC32;
 
 import org.apache.commons.logging.Log;
@@ -54,12 +45,7 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
-import org.apache.lucene.search.Hits;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Searcher;
-import org.apache.lucene.search.Sort;
-import org.apache.lucene.search.SortField;
-import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.*;
 import org.apache.lucene.search.spans.SpanQuery;
 import org.apache.lucene.search.spans.Spans;
 import org.apache.lucene.store.FSDirectory;
@@ -1289,7 +1275,7 @@ public final class MailboxIndex
                     long split;
                     
                     sr = (SearchResult) iter.next();
-                    item = mbx.getItemById(sr.id, sr.type);
+                    item = mbx.getItemById(null, sr.id, sr.type);
                     ParsedMessage pm = null;
                     if (item instanceof Message) {
                         Message msg = (Message)item;
@@ -1698,7 +1684,7 @@ public final class MailboxIndex
         
         MailItem item = null;
         try {
-            item = mbx.getItemById(msgId, type);
+            item = mbx.getItemById(null, msgId, type);
             ParsedMessage pm = null;
             if (item instanceof Message) {
                 Message msg = (Message)item;

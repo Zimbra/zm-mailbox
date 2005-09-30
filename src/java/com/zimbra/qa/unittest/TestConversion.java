@@ -80,13 +80,13 @@ public class TestConversion extends TestCase {
         Account account = TestUtil.getAccount("user1");
         Mailbox mbox = Mailbox.getMailboxByAccount(account);
         String query = "subject:Rich text (TNEF) test";
-        ZimbraQueryResults results = mbox.search(query,
+        ZimbraQueryResults results = mbox.search(null, query,
             new byte[] { MailItem.TYPE_MESSAGE}, MailboxIndex.SEARCH_ORDER_SUBJ_ASC);
         assertTrue("No results found for '" + query + "'", results.hasNext());
         
         // Make sure that attachments have been extracted out of winmail.dat
         ZimbraHit hit = results.getNext();
-        return mbox.getMessageById(hit.getItemId());
+        return mbox.getMessageById(null, hit.getItemId());
     }
     
     private class AttachmentFinder implements MimeVisitor {

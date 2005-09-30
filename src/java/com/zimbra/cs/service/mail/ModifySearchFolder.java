@@ -56,9 +56,9 @@ public class ModifySearchFolder extends WriteOpDocumentHandler  {
 
         mbox.modifySearchFolder(octxt, id, query, types, sort);
 
-    	SearchFolder sf = mbox.getSearchFolderById(id);
+    	SearchFolder sf = mbox.getSearchFolderById(octxt, id);
         Element response = lc.createElement(MailService.MODIFY_SEARCH_FOLDER_RESPONSE);
-    	ToXML.encodeSearchFolder(response, sf);
+    	ToXML.encodeSearchFolder(response, lc, sf);
         return response;
 	}
 }

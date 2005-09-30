@@ -58,7 +58,7 @@ public class CreateNote extends WriteOpDocumentHandler {
 
         Element response = lc.createElement(MailService.CREATE_NOTE_RESPONSE);
         if (note != null)
-        	ToXML.encodeNote(response, note);
+        	ToXML.encodeNote(response, lc, note);
         return response;
 	}
 }

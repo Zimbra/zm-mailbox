@@ -35,7 +35,6 @@ import java.util.Map;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.SearchParams;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
@@ -62,7 +61,6 @@ public class SearchMultipleMailboxes extends Search {
         try {
             ZimbraContext lc = getZimbraContext(context);
             String encodedAuthToken = getEncodedAuthToken(lc);
-            OperationContext octxt = lc.getOperationContext();
 
             SearchParams params = parseCommonParameters(request, lc);
             
@@ -79,7 +77,7 @@ public class SearchMultipleMailboxes extends Search {
                 Element response = lc.createElement(AdminService.SEARCH_MULTIPLE_MAILBOXES_RESPONSE);
                 response.addAttribute(MailService.A_QUERY_OFFSET, Integer.toString(params.getOffset()));
                 
-                retVal = putHits(octxt, response, results, INCLUDE_MAILBOX_INFO, params);
+                retVal = putHits(lc, response, results, INCLUDE_MAILBOX_INFO, params);
             
             } finally {
                 if (DONT_CACHE_RESULTS) {

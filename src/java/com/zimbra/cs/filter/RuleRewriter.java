@@ -348,7 +348,7 @@ class RuleRewriter {
             String argVal = subnode.getText();
             if ("fileinto".equals(actionName)) {
                 try {
-                    mMailbox.getFolderByPath(argVal);
+                    mMailbox.getFolderByPath(null, argVal);
                 } catch (MailServiceException.NoSuchItemException e) {
                     try {
                         // create folder

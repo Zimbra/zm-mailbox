@@ -272,7 +272,7 @@ public class FreeBusy {
                 assert(inst.getStart() < end && inst.getEnd() > start);
                 InviteInfo invId = inst.getInviteInfo();
                 try {
-                    Appointment appt = mbox.getAppointmentById(inst.getAppointmentId());
+                    Appointment appt = mbox.getAppointmentById(octxt, inst.getAppointmentId());
                     Invite inv = appt.getInvite(invId);
                     if (!inv.isTransparent()) {
                         String freeBusy = inv.getFreeBusyActual();

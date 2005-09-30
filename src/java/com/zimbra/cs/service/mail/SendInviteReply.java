@@ -72,7 +72,7 @@ public class SendInviteReply extends SendMsg {
         try {
             ZimbraContext lc = getZimbraContext(context);
             Mailbox mbox = getRequestedMailbox(lc);
-            Account acct = this.getRequestedAccount(lc);
+            Account acct = getRequestedAccount(lc);
             OperationContext octxt = lc.getOperationContext();
 
 //            int invId = (int)request.getAttributeLong("id");
@@ -104,15 +104,15 @@ public class SendInviteReply extends SendMsg {
                     // directly accepting the appointment
                     apptId = pid.getItemIDInt();
                     inviteMsgId = pid.getSubIdInt();
-                    Appointment appt = mbox.getAppointmentById(apptId); 
+                    Appointment appt = mbox.getAppointmentById(octxt, apptId); 
                     oldInv = appt.getInvite(inviteMsgId, compNum);
                 } else {
                     // accepting the message: go find the appointment and then the invite
                     inviteMsgId = pid.getItemIDInt();
-                    Message msg = mbox.getMessageById(inviteMsgId);
+                    Message msg = mbox.getMessageById(octxt, inviteMsgId);
                     Message.ApptInfo info = msg.getApptInfo(compNum);
                     apptId = info.getAppointmentId();
-                    Appointment appt = mbox.getAppointmentById(apptId);
+                    Appointment appt = mbox.getAppointmentById(octxt, apptId);
                     oldInv = appt.getInvite(inviteMsgId, compNum);  
                 }
                 

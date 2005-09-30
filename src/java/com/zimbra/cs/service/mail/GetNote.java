@@ -46,16 +46,17 @@ public class GetNote extends DocumentHandler {
 	public Element handle(Element request, Map context) throws ServiceException {
 		ZimbraContext lc = getZimbraContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
+        Mailbox.OperationContext octxt = lc.getOperationContext();
 
         Element enote = request.getElement(MailService.E_NOTE);
         int noteId = (int) enote.getAttributeLong(MailService.A_ID);
 
-        Note note = mbox.getNoteById(noteId);
+        Note note = mbox.getNoteById(octxt, noteId);
         if (note == null)
         	throw MailServiceException.NO_SUCH_NOTE(noteId);
 
         Element response = lc.createElement(MailService.GET_NOTE_RESPONSE);
-        ToXML.encodeNote(response, note);
+        ToXML.encodeNote(response, lc, note);
         return response;
 	}
 }

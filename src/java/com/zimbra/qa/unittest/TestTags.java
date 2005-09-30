@@ -85,7 +85,7 @@ public class TestTags extends TestCase
         mMessage3 = TestUtil.insertMessage(mMbox, 3, MSG_SUBJECT);
         mMessage4 = TestUtil.insertMessage(mMbox, 4, MSG_SUBJECT);
         
-        mConv = mMbox.getConversationById(mMessage1.getConversationId());
+        mConv = mMbox.getConversationById(null, mMessage1.getConversationId());
         refresh();
     }
 
@@ -102,7 +102,7 @@ public class TestTags extends TestCase
         
         // Create the maximum number of tags, based on the number that already exist
         // in the mailbox
-        int numTags = MailItem.MAX_TAG_COUNT - mMbox.getTagList().size();
+        int numTags = MailItem.MAX_TAG_COUNT - mMbox.getTagList(null).size();
         assertTrue("Can't create any new tags", numTags != 0);
         
         // Create tags
@@ -292,22 +292,22 @@ public class TestTags extends TestCase
     private void refresh()
     throws Exception {
         if (mMessage1 != null) {
-            mMessage1 = mMbox.getMessageById(mMessage1.getId());
+            mMessage1 = mMbox.getMessageById(null, mMessage1.getId());
         }
         if (mMessage2 != null) {
-            mMessage2 = mMbox.getMessageById(mMessage2.getId());
+            mMessage2 = mMbox.getMessageById(null, mMessage2.getId());
         }
         if (mMessage3 != null) {
-            mMessage3 = mMbox.getMessageById(mMessage3.getId());
+            mMessage3 = mMbox.getMessageById(null, mMessage3.getId());
         }
         if (mMessage4 != null) {
-            mMessage4 = mMbox.getMessageById(mMessage4.getId());
+            mMessage4 = mMbox.getMessageById(null, mMessage4.getId());
         }
         if (mConv != null) {
-            mConv = mMbox.getConversationById(mConv.getId());
+            mConv = mMbox.getConversationById(null, mConv.getId());
         }
         for (int i = 0; i < mTags.length; i++) {
-            mTags[i] = mMbox.getTagById(mTags[i].getId());
+            mTags[i] = mMbox.getTagById(null, mTags[i].getId());
         }
     }
     
@@ -329,7 +329,7 @@ public class TestTags extends TestCase
             mMbox.delete(null, id, MailItem.TYPE_MESSAGE);
         }
 
-        List tagList = mMbox.getTagList();
+        List tagList = mMbox.getTagList(null);
         if (tagList == null) {
             return;
         }

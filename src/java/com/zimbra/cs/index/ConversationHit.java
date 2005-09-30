@@ -199,7 +199,7 @@ import com.zimbra.cs.service.ServiceException;
          */
         public Conversation getConversation() throws ServiceException {
             if (mConversation == null) {
-                mConversation = getMailbox().getConversationById(mConversationId);
+                mConversation = getMailbox().getConversationById(null, mConversationId);
             }
             return mConversation;
         }

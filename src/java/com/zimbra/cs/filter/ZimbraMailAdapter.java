@@ -235,7 +235,7 @@ public class ZimbraMailAdapter implements MailAdapter
                     String folderName = fileinto.getDestination();
                     int folderId = Mailbox.ID_FOLDER_INBOX;
                     try {
-                        folderId = mMailbox.getFolderByPath(folderName).getId();
+                        folderId = mMailbox.getFolderByPath(null, folderName).getId();
                     } catch (MailServiceException.NoSuchItemException nsie) {
                         ZimbraLog.filter.warn("Folder " + folderName + " not found; message saved to INBOX for " + mRecipient);
                     }

@@ -46,14 +46,15 @@ public class GetConv extends DocumentHandler  {
     public Element handle(Element request, Map context) throws ServiceException {
         ZimbraContext lc = getZimbraContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
+        Mailbox.OperationContext octxt = lc.getOperationContext();
 
         Element econv = request.getElement(MailService.E_CONV);
         int id = (int) econv.getAttributeLong(MailService.A_ID);
-        Conversation conv = mbox.getConversationById(id);
+        Conversation conv = mbox.getConversationById(octxt, id);
 
         Element response = lc.createElement(MailService.GET_CONV_RESPONSE);
         if (conv != null)
-        	ToXML.encodeConversation(response, conv);
+        	ToXML.encodeConversation(response, lc, conv);
         else
             throw MailServiceException.NO_SUCH_CONV(id);
         return response;

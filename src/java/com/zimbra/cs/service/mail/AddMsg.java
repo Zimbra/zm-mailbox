@@ -97,7 +97,7 @@ public class AddMsg extends WriteOpDocumentHandler {
 	                for (int i = 0; i < splitTags.length; i++) {
 	                    try {
 	                        int tagId = Integer.parseInt(splitTags[i]);
-	                        if (mbox.getTagById(tagId) == null)
+	                        if (mbox.getTagById(octxt, tagId) == null)
 	                        	throw ServiceException.INVALID_REQUEST("Unknown tag: \"" + tagId + "\"", null);
 	                    } catch (NumberFormatException e) {};
 	                }
@@ -107,12 +107,12 @@ public class AddMsg extends WriteOpDocumentHandler {
 	        if (folderStr != null) {
                 try {
                     int folderId = Integer.parseInt(folderStr);
-                    folder = mbox.getFolderById(folderId);
+                    folder = mbox.getFolderById(octxt, folderId);
                 } catch (NoSuchItemException nsie) {
                 } catch (NumberFormatException e) {}
 
                 if (folder == null)
-                    folder = mbox.getFolderByPath(folderStr);
+                    folder = mbox.getFolderByPath(octxt, folderStr);
 
                 if (mLog.isDebugEnabled())
                     mLog.debug("folder = " + folder.toString());

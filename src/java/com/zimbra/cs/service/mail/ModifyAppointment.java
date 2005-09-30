@@ -89,10 +89,10 @@ public class ModifyAppointment extends CalendarRequest
 
             ParsedItemID pid = ParsedItemID.parse(request.getAttribute("id"));
             int compNum = (int)request.getAttributeLong("comp", 0);
-            sLog.info("<ModifyAppointment id="+pid+" comp="+compNum+">");
+            sLog.info("<ModifyAppointment id=" + pid + " comp=" + compNum + ">");
             
             synchronized(mbox) {
-                Appointment appt = mbox.getAppointmentById(pid.getItemIDInt()); 
+                Appointment appt = mbox.getAppointmentById(octxt, pid.getItemIDInt()); 
                 Invite inv = appt.getInvite(pid.getSubIdInt(), compNum);
                 
                 if (inv.hasRecurId()) {

@@ -33,7 +33,7 @@ public class CreateMountpoint extends WriteOpDocumentHandler {
         
         Element response = lc.createElement(MailService.CREATE_MOUNTPOINT_RESPONSE);
         if (mpt != null)
-            ToXML.encodeMountpoint(response, mpt);
+            ToXML.encodeMountpoint(response, lc, mpt);
         return response;
     }
 }

@@ -60,8 +60,8 @@ public final class NoteHit extends ZimbraHit {
     }
     
     public Note getNote() throws ServiceException {
-        if (mNote== null) {
-            mNote= getMailbox().getNoteById(getItemId());
+        if (mNote == null) {
+            mNote = getMailbox().getNoteById(null, getItemId());
         }
         return mNote;
     }

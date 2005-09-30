@@ -35,8 +35,10 @@ import java.util.Map;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraContext;
 
@@ -45,37 +47,43 @@ import com.zimbra.soap.ZimbraContext;
  */
 public class GetFolder extends DocumentHandler {
 
-    private static final int DEFAULT_FOLDER_ID = Mailbox.ID_FOLDER_USER_ROOT;
+    private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.E_FOLDER, MailService.A_FOLDER };
+    protected String[] getProxiedIdPath()     { return TARGET_FOLDER_PATH; }
+    protected boolean checkMountpointProxy()  { return true; }
+
+    private static final String DEFAULT_FOLDER_ID = "" + Mailbox.ID_FOLDER_USER_ROOT;
 
 	public Element handle(Element request, Map context) throws ServiceException {
 		ZimbraContext lc = getZimbraContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
+        Mailbox.OperationContext octxt = lc.getOperationContext();
 
-        int parentId = DEFAULT_FOLDER_ID;
+        String parentId = DEFAULT_FOLDER_ID;
         Element eFolder = request.getOptionalElement(MailService.E_FOLDER);
         if (eFolder != null)
-        	parentId = (int) request.getAttributeLong(MailService.A_FOLDER, DEFAULT_FOLDER_ID);
+        	parentId = eFolder.getAttribute(MailService.A_FOLDER, DEFAULT_FOLDER_ID);
+        ItemId iid = new ItemId(parentId);
 
-        Folder folder = mbox.getFolderById(parentId);
+        Folder folder = mbox.getFolderById(octxt, iid.getId());
         if (folder == null)
-        	throw MailServiceException.NO_SUCH_FOLDER(parentId);
+        	throw MailServiceException.NO_SUCH_FOLDER(iid.getId());
 
         Element response = lc.createElement(MailService.GET_FOLDER_RESPONSE);
         synchronized (mbox) {
-        	handleFolder(mbox, folder, response);
+        	handleFolder(mbox, folder, response, lc, octxt);
         }
         return response;
 	}
 
-	public static void handleFolder(Mailbox mbox, Folder folder, Element response) {
-		Element respFolder = ToXML.encodeFolder(response, folder);
+	public static void handleFolder(Mailbox mbox, Folder folder, Element response, ZimbraContext lc, OperationContext octxt) throws ServiceException {
+		Element respFolder = ToXML.encodeFolder(response, lc, folder);
 
-        List subfolders = folder.getSubfolders();
+        List subfolders = folder.getSubfolders(octxt);
         if (subfolders != null)
 	        for (Iterator it = subfolders.iterator(); it.hasNext(); ) {
 	        	Folder subfolder = (Folder) it.next();
 	        	if (subfolder != null)
-	        		handleFolder(mbox, subfolder, respFolder);
+	        		handleFolder(mbox, subfolder, respFolder, lc, octxt);
         }
 	}
 }

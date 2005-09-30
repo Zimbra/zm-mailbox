@@ -106,7 +106,7 @@ public class SaveDraft extends WriteOpDocumentHandler {
 
             Element response = lc.createElement(MailService.SAVE_DRAFT_RESPONSE);
             // FIXME: inefficient -- this recalculates the MimeMessage (but SaveDraft is called rarely)
-            ToXML.encodeMessageAsMP(response, msg, false, null);
+            ToXML.encodeMessageAsMP(response, lc, msg, false, null);
             return response;
 		} catch (IOException ioe) {
 			throw ServiceException.FAILURE("IOException while saving draft", ioe);

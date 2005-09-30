@@ -60,14 +60,14 @@ public class TestItemCache extends TestCase
     throws Exception {
         ZimbraLog.test.debug("testCacheHit");
 
-        List messages = mMbox.getItemList(MailItem.TYPE_MESSAGE);
+        List messages = mMbox.getItemList(null, MailItem.TYPE_MESSAGE);
         assertTrue("No messages found", messages.size() > 0);
         Message msg = (Message) messages.get(0);
-        mMbox.getItemById(msg.getId(), msg.getType());
+        mMbox.getItemById(null, msg.getId(), msg.getType());
         
         int prepareCount = ZimbraPerf.getPrepareCount();
         for (int i = 1; i <= 10; i++) {
-            mMbox.getItemById(msg.getId(), msg.getType());
+            mMbox.getItemById(null, msg.getId(), msg.getType());
         }
         
         prepareCount = ZimbraPerf.getPrepareCount() - prepareCount;

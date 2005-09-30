@@ -120,7 +120,7 @@ public class ModifyInvitePartStat extends RedoableOp
         mApptId = in.readInt();
         
         try {
-            Appointment appt = Mailbox.getMailboxById(getMailboxId()).getAppointmentById(mApptId);
+            Appointment appt = Mailbox.getMailboxById(getMailboxId()).getAppointmentById(null, mApptId);
             
             int range = in.readInt();
             String dtStr = in.readUTF();

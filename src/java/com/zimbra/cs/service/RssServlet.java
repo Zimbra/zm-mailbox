@@ -44,6 +44,7 @@ import com.zimbra.cs.index.MessageHit;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Message;
 
 /**
@@ -87,8 +88,9 @@ public class RssServlet extends ZimbraBasicAuthServlet {
             if (query == null) query = "is:unread in:inbox";
 
             channel.addElement("description").setText(query);
-                
-            results = mailbox.search(query, new byte[] { MailItem.TYPE_MESSAGE }, MailboxIndex.SEARCH_ORDER_DATE_DESC);
+
+            OperationContext octxt = new OperationContext(acct);
+            results = mailbox.search(octxt, query, new byte[] { MailItem.TYPE_MESSAGE }, MailboxIndex.SEARCH_ORDER_DATE_DESC);
             SimpleDateFormat sdf = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
             MailDateFormat mdf = new MailDateFormat();                
             while (results.hasNext()) {

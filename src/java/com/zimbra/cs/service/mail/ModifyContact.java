@@ -65,10 +65,10 @@ public class ModifyContact extends WriteOpDocumentHandler  {
 
         mbox.modifyContact(octxt, id, attrs, replace);
 
-        Contact con = mbox.getContactById(id);
+        Contact con = mbox.getContactById(octxt, id);
         Element response = lc.createElement(MailService.MODIFY_CONTACT_RESPONSE);
         if (con != null)
-        	ToXML.encodeContact(response, con, null, true, null);
+        	ToXML.encodeContact(response, lc, con, null, true, null);
         return response;
     }
 }

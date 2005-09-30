@@ -50,7 +50,7 @@ public class GetTag extends DocumentHandler  {
 		// FIXME: need to check that mailbox exists
         Mailbox mbox = getRequestedMailbox(lc);
 		
-        List tags = mbox.getTagList();
+        List tags = mbox.getTagList(lc.getOperationContext());
 
         Element response = lc.createElement(MailService.GET_TAG_RESPONSE);
 	    if (tags != null) {
@@ -58,7 +58,7 @@ public class GetTag extends DocumentHandler  {
 	    		Tag tag = (Tag) it.next();
 	    		if (tag == null || tag instanceof Flag)
 	    			continue;
-	    		ToXML.encodeTag(response, tag);
+	    		ToXML.encodeTag(response, lc, tag);
 	    	}
 	    }
         return response;

@@ -61,7 +61,7 @@ public final class ContactHit extends ZimbraHit {
     
     public Contact getContact() throws ServiceException {
         if (mContact == null) {
-            mContact = getMailbox().getContactById(getItemId());
+            mContact = getMailbox().getContactById(null, getItemId());
         }
         return mContact;
     }

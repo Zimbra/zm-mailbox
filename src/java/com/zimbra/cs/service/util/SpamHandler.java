@@ -148,11 +148,10 @@ public class SpamHandler {
         }
 
         Message[] msgs = null;
-        if      (type == MailItem.TYPE_MESSAGE) {
-            msgs = new Message[1];
-            msgs[0] = mbox.getMessageById(id);
+        if (type == MailItem.TYPE_MESSAGE) {
+            msgs = new Message[] { mbox.getMessageById(null, id) };
         } else if (type == MailItem.TYPE_CONVERSATION) {
-            msgs = mbox.getMessagesByConversation(id);
+            msgs = mbox.getMessagesByConversation(null, id);
         } else {
             if (type != MailItem.TYPE_MESSAGE && type != MailItem.TYPE_CONVERSATION) {
                 ZimbraLog.misc.warn("SpamHandler called on unhandleable item of type" + MailItem.getNameForType(type));

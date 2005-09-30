@@ -48,6 +48,7 @@ public class GetContacts extends DocumentHandler  {
     public Element handle(Element request, Map context) throws ServiceException {
         ZimbraContext lc = getZimbraContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
+        Mailbox.OperationContext octxt = lc.getOperationContext();
 
         ArrayList attrs = null;
         ArrayList ids = null;        
@@ -71,16 +72,16 @@ public class GetContacts extends DocumentHandler  {
 
         if (ids != null) {
             for (Iterator it = ids.iterator(); it.hasNext(); ) {
-            	Contact con = mbox.getContactById(((Integer) it.next()).intValue());
+            	Contact con = mbox.getContactById(octxt, ((Integer) it.next()).intValue());
                 if (con != null)
-                    ToXML.encodeContact(response, con, cacache, false, attrs);
+                    ToXML.encodeContact(response, lc, con, cacache, false, attrs);
             }
         } else {
-        	List contacts = mbox.getContactList(-1);
+        	List contacts = mbox.getContactList(octxt, -1);
             for (Iterator it = contacts.iterator(); it.hasNext(); ) {
                 Contact con = (Contact) it.next();
                 if (con != null)
-                    ToXML.encodeContact(response, con, cacache, false, attrs);
+                    ToXML.encodeContact(response, lc, con, cacache, false, attrs);
             }
         }
         return response;

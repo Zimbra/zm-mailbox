@@ -35,6 +35,7 @@ import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.*;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ZimbraLog;
 
@@ -53,12 +54,12 @@ class ImapFolder {
     private HashSet   mDirtyMessages = new HashSet();
     private boolean   mNotificationsSuspended;
 
-    ImapFolder(String name, boolean select, Mailbox mailbox) throws ServiceException {
+    ImapFolder(String name, boolean select, Mailbox mailbox, OperationContext octxt) throws ServiceException {
         boolean debug = ZimbraLog.imap.isDebugEnabled();
         if (debug)  ZimbraLog.imap.debug("  ** loading folder: " + name);
 
         synchronized (mailbox) {
-            Folder folder = mailbox.getFolderByPath(name);
+            Folder folder = mailbox.getFolderByPath(octxt, name);
             if (!isFolderSelectable(folder))
                 throw ServiceException.PERM_DENIED("cannot select folder: /" + name);
             mPath = name;
@@ -75,9 +76,9 @@ class ImapFolder {
 
             List msgs;
             if (!isVirtual())
-                msgs = mailbox.getItemList(MailItem.TYPE_MESSAGE, folder.getId());
+                msgs = mailbox.getItemList(octxt, MailItem.TYPE_MESSAGE, folder.getId());
             else
-                msgs = loadVirtualFolder((SearchFolder) folder, mailbox);
+                msgs = loadVirtualFolder((SearchFolder) folder, mailbox, octxt);
             // FIXME: need to check messages for flag "IMAP dirty" and assign new IMAP IDs if necessary
             Collections.sort(msgs, new Message.SortImapUID());
             StringBuffer added = debug ? new StringBuffer("  ** added: ") : null;
@@ -101,16 +102,16 @@ class ImapFolder {
      * 
      * @param search   The search folder being exposed.
      * @param mailbox  The {@link Mailbox} belonging to the user. */
-    private List loadVirtualFolder(SearchFolder search, Mailbox mailbox) throws ServiceException {
+    private List loadVirtualFolder(SearchFolder search, Mailbox mailbox, OperationContext octxt) throws ServiceException {
         List msgs = new ArrayList();
         try {
-            ZimbraQueryResults zqr = mailbox.search(mQuery, ImapHandler.MESSAGE_TYPES, MailboxIndex.SEARCH_ORDER_DATE_ASC);
+            ZimbraQueryResults zqr = mailbox.search(octxt, mQuery, ImapHandler.MESSAGE_TYPES, MailboxIndex.SEARCH_ORDER_DATE_ASC);
             int i = 0, hitIds[] = new int[100];
             Arrays.fill(hitIds, Mailbox.ID_AUTO_INCREMENT);
             try {
                 for (ZimbraHit hit = zqr.getFirstHit(); hit != null || i > 0; ) {
                     if (hit == null || i == 100) {
-                        msgs.addAll(Arrays.asList(mailbox.getItemById(hitIds, MailItem.TYPE_MESSAGE)).subList(0, i));
+                        msgs.addAll(Arrays.asList(mailbox.getItemById(octxt, hitIds, MailItem.TYPE_MESSAGE)).subList(0, i));
                         Arrays.fill(hitIds, Mailbox.ID_AUTO_INCREMENT);
                         i = 0;
                     }

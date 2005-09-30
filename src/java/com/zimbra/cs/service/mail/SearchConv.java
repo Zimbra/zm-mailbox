@@ -40,7 +40,6 @@ import com.zimbra.cs.index.MessageHit;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.SessionCache;
@@ -62,7 +61,7 @@ public class SearchConv extends Search {
 
             ZimbraContext lc = getZimbraContext(context);
             Mailbox mbox = getRequestedMailbox(lc);
-            OperationContext octxt = lc.getOperationContext();
+            Mailbox.OperationContext octxt = lc.getOperationContext();
 
             SoapSession session = (SoapSession) lc.getSession(SessionCache.SESSION_SOAP);
             SearchParams params = parseCommonParameters(request, lc);
@@ -88,14 +87,14 @@ public class SearchConv extends Search {
             // 
             params.setTypesStr(MailboxIndex.GROUP_BY_MESSAGE);
             
-            ZimbraQueryResults results = this.getResults(mbox, session, params);
+            ZimbraQueryResults results = this.getResults(mbox, params, lc, session);
             
             Element response = lc.createElement(MailService.SEARCH_CONV_RESPONSE);
             response.addAttribute(MailService.A_QUERY_OFFSET, Integer.toString(params.getOffset()));
 
-            Message[] msgs = mbox.getMessagesByConversation(cid, MailboxIndex.getDbMailItemSortByte(params.getSortBy()));
+            Message[] msgs = mbox.getMessagesByConversation(octxt, cid, MailboxIndex.getDbMailItemSortByte(params.getSortBy()));
             
-            Element retVal = putHits(octxt, response, msgs, results, params);
+            Element retVal = putHits(lc, response, msgs, results, params);
             if (sLog.isDebugEnabled())
                 sLog.debug("************ElementHandler Finished " + (System.currentTimeMillis() - startTime));
 
@@ -116,7 +115,7 @@ public class SearchConv extends Search {
      * @return
      * @throws ServiceException
      */
-    Element putHits(OperationContext octxt, Element response, Message[] msgs, ZimbraQueryResults results, SearchParams params)
+    Element putHits(ZimbraContext lc, Element response, Message[] msgs, ZimbraQueryResults results, SearchParams params)
     throws ServiceException {
         int offset = params.getOffset();
         int limit  = params.getLimit();
@@ -171,10 +170,10 @@ public class SearchConv extends Search {
             boolean inline = params.getFetchFirst();
             for (int i = offset; i < offset+iterLen; i++) {
                 if (matched[i-offset] != null) {
-                    addMessageHit(octxt, response, (MessageHit) matched[i-offset], eecache, inline, params);
+                    addMessageHit(lc, response, (MessageHit) matched[i-offset], eecache, inline, params);
                     inline = false;
                 } else {
-                    addMessageHit(response, msgs[i], eecache, params);
+                    addMessageHit(lc, response, msgs[i], eecache, params);
                 }
             }
         }

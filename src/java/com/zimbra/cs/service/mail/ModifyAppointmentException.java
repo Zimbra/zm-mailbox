@@ -52,17 +52,17 @@ public class ModifyAppointmentException extends ModifyAppointment {
         try {
             ZimbraContext lc = getZimbraContext(context);
             Account acct = getRequestedAccount(lc);
-            Mailbox mbx = getRequestedMailbox(lc);
+            Mailbox mbox = getRequestedMailbox(lc);
             OperationContext octxt = lc.getOperationContext();
             
             ParsedItemID pid = ParsedItemID.parse(request.getAttribute("id"));
-            int compNum = (int)request.getAttributeLong("comp", 0);
+            int compNum = (int) request.getAttributeLong("comp", 0);
             
             sLog.info("<ModifyAppointmentException id="+pid+" comp="+compNum+">");
             
-            synchronized(mbx) {
+            synchronized(mbox) {
                 // have to cancel the appointment
-                Appointment appt = mbx.getAppointmentById(pid.getItemIDInt()); 
+                Appointment appt = mbox.getAppointmentById(octxt, pid.getItemIDInt()); 
                 Invite inv = appt.getInvite(pid.getSubIdInt(), compNum);
                 
                 if (!inv.hasRecurId()) {
@@ -72,7 +72,7 @@ public class ModifyAppointmentException extends ModifyAppointment {
                 
                 // response
                 Element response = lc.createElement(MailService.MODIFY_APPOINTMENT_EXCEPTION_RESPONSE);
-                return modifyAppointment(octxt, request, acct, mbx, inv, response);
+                return modifyAppointment(octxt, request, acct, mbox, inv, response);
             } // synchronized on mailbox                
         } finally {
             sWatch.stop(startTime);

@@ -137,7 +137,7 @@ public class TestConcurrency extends TestCase {
     private void cleanUp()
     throws Exception {
         // Delete tags
-        List tagList = mMbox.getTagList();
+        List tagList = mMbox.getTagList(null);
         if (tagList != null) {
             Iterator i = tagList.iterator();
             while (i.hasNext()) {
@@ -151,7 +151,7 @@ public class TestConcurrency extends TestCase {
         // Move items from temp folder back to inbox
         Folder folder = TestUtil.getFolderByPath(mMbox, FOLDER_NAME);
         if (folder != null) {
-            List ids = mMbox.getItemList(MailItem.TYPE_MESSAGE, folder.getId());
+            List ids = mMbox.getItemList(null, MailItem.TYPE_MESSAGE, folder.getId());
             Iterator i = ids.iterator();
             while (i.hasNext()) {
                 Message message = (Message) i.next();

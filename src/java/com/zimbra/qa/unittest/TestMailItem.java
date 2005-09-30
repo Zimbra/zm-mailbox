@@ -58,10 +58,10 @@ public class TestMailItem extends TestCase {
             int count = results.getInt("item_count");
             ZimbraLog.test.debug(
                 "Confirming that folder " + folderId + " has " + count + " items of type " + type);
-            Folder folder = mbox.getFolderById(folderId);
+            Folder folder = mbox.getFolderById(null, folderId);
             assertNotNull("Folder not found", folder);
 
-            int ids[] = mbox.listItemIds(type, folderId);
+            int ids[] = mbox.listItemIds(null, type, folderId);
             assertEquals("Item count does not match", count, ids.length);
         }
     }

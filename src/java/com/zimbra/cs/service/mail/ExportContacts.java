@@ -49,7 +49,7 @@ public class ExportContacts extends DocumentHandler  {
         if (!ct.equals("csv"))
             throw ServiceException.INVALID_REQUEST("unsupported content type: "+ct, null);
 
-        List contacts = mbox.getContactList(-1);
+        List contacts = mbox.getContactList(lc.getOperationContext(), -1);
         StringBuffer sb = new StringBuffer();
         if (contacts == null)
             contacts = new ArrayList();

@@ -39,6 +39,7 @@ import com.zimbra.cs.mailbox.Invite;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ParsedItemID;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
@@ -55,22 +56,25 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
 
     private static Log mLog = LogFactory.getLog(GetApptSummaries.class);
     private static StopWatch sWatch = StopWatch.getInstance("GetApptSummaries");
-    
-    /* (non-Javadoc)
-     * @see com.zimbra.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
-     */
+
+    private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.A_FOLDER };
+    protected String[] getProxiedIdPath()     { return TARGET_FOLDER_PATH; }
+    protected boolean checkMountpointProxy()  { return true; }
+
+    private static final String DEFAULT_FOLDER = "" + Mailbox.ID_AUTO_INCREMENT;
+
     public Element handle(Element request, Map context) throws ServiceException {
         long startTime = sWatch.start();
         try {
             ZimbraContext lc = getZimbraContext(context);
-            Mailbox mbx = getRequestedMailbox(lc);
+            Mailbox mbox = getRequestedMailbox(lc);
             Account acct = getRequestedAccount(lc);
 
             long rangeStart = request.getAttributeLong(MailService.A_APPT_START_TIME);
             long rangeEnd = request.getAttributeLong(MailService.A_APPT_END_TIME);
-            int folderId = (int) request.getAttributeLong(MailService.A_FOLDER, Mailbox.ID_AUTO_INCREMENT);
+            ItemId iidFolder = new ItemId(request.getAttribute(MailService.A_FOLDER, DEFAULT_FOLDER));
 
-            Collection appointments = mbx.getAppointmentsForRange(lc.getOperationContext(), rangeStart, rangeEnd, folderId);
+            Collection appointments = mbox.getAppointmentsForRange(lc.getOperationContext(), rangeStart, rangeEnd, iidFolder.getId());
 
             Element response = lc.createElement(MailService.GET_APPT_SUMMARIES_RESPONSE);
             for (Iterator aptIter = appointments.iterator(); aptIter.hasNext(); ) {
@@ -100,8 +104,8 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
                     // add all the instances:
                     boolean someInRange = false;
                     Collection instances = appointment.expandInstances(rangeStart, rangeEnd); 
-                    for (Iterator instIter = instances.iterator(); instIter.hasNext();) {
-                        Appointment.Instance inst = (Appointment.Instance)(instIter.next());
+                    for (Iterator instIter = instances.iterator(); instIter.hasNext(); ) {
+                        Appointment.Instance inst = (Appointment.Instance) instIter.next();
                         try {
                             InviteInfo invId = inst.getInviteInfo();
                             Invite inv = appointment.getInvite(invId.getMsgId(), invId.getComponentId());
@@ -213,11 +217,11 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
                         apptElt.addAttribute(MailService.A_NAME, defaultInvite.getName());
                         apptElt.addAttribute(MailService.A_APPT_LOCATION, defaultInvite.getLocation());
                         
-                        apptElt.addAttribute(MailService.A_ID, appointment.getId());
-                        apptElt.addAttribute(MailService.A_FOLDER, appointment.getFolderId());
+                        apptElt.addAttribute(MailService.A_ID, lc.formatItemId(appointment));
+                        apptElt.addAttribute(MailService.A_FOLDER, lc.formatItemId(mbox, appointment.getFolderId()));
                         
-                        ParsedItemID pid = ParsedItemID.create(appointment.getId(), defaultInvite.getMailItemId());
-                        apptElt.addAttribute(MailService.A_APPT_INV_ID, pid.toString());
+                        ItemId iid = new ItemId(appointment, defaultInvite.getMailItemId());
+                        apptElt.addAttribute(MailService.A_APPT_INV_ID, iid.toString(lc));
                         
                         apptElt.addAttribute(MailService.A_APPT_COMPONENT_NUM, defaultInvite.getComponentNum());
                         

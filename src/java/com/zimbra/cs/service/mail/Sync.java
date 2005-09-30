@@ -55,6 +55,7 @@ public class Sync extends DocumentHandler {
     public Element handle(Element request, Map context) throws ServiceException {
         ZimbraContext lc = getZimbraContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
+        Mailbox.OperationContext octxt = lc.getOperationContext();
 
         long begin = request.getAttributeLong(MailService.A_TOKEN, 0);
 
@@ -66,48 +67,49 @@ public class Sync extends DocumentHandler {
             long token = mbox.getLastChangeID();
             response.addAttribute(MailService.A_TOKEN, token);
             if (begin <= 0) {
-                Folder folder = mbox.getFolderById(DEFAULT_FOLDER_ID);
+                Folder folder = mbox.getFolderById(octxt, DEFAULT_FOLDER_ID);
                 if (folder == null)
                     throw MailServiceException.NO_SUCH_FOLDER(DEFAULT_FOLDER_ID);
-                initialFolderSync(response, mbox, folder);
+                initialFolderSync(lc, response, mbox, folder);
             } else
-                deltaSync(response, mbox, begin);
+                deltaSync(lc, response, mbox, begin);
         }
         return response;
     }
 
-    private void initialFolderSync(Element response, Mailbox mbox, Folder folder) throws ServiceException {
+    private void initialFolderSync(ZimbraContext lc, Element response, Mailbox mbox, Folder folder) throws ServiceException {
         boolean isSearch = folder instanceof SearchFolder;
-        Element f = ToXML.encodeFolder(response, folder);
+        Mailbox.OperationContext octxt = lc.getOperationContext();
+        Element f = ToXML.encodeFolder(response, lc, folder);
         if (!isSearch) {
             if (folder.getId() == Mailbox.ID_FOLDER_TAGS)
-                initialTagSync(mbox, f);
+                initialTagSync(lc, f, mbox);
             else {
-                initialItemSync(f, MailService.E_MSG, mbox.listItemIds(MailItem.TYPE_MESSAGE, folder.getId()));
-                initialItemSync(f, MailService.E_CONTACT, mbox.listItemIds(MailItem.TYPE_CONTACT, folder.getId()));
-                initialItemSync(f, MailService.E_NOTE, mbox.listItemIds(MailItem.TYPE_NOTE, folder.getId()));
-                initialItemSync(f, MailService.E_APPOINTMENT, mbox.listItemIds(MailItem.TYPE_APPOINTMENT, folder.getId()));
+                initialItemSync(f, MailService.E_MSG, mbox.listItemIds(octxt, MailItem.TYPE_MESSAGE, folder.getId()));
+                initialItemSync(f, MailService.E_CONTACT, mbox.listItemIds(octxt, MailItem.TYPE_CONTACT, folder.getId()));
+                initialItemSync(f, MailService.E_NOTE, mbox.listItemIds(octxt, MailItem.TYPE_NOTE, folder.getId()));
+                initialItemSync(f, MailService.E_APPOINTMENT, mbox.listItemIds(octxt, MailItem.TYPE_APPOINTMENT, folder.getId()));
             }
         } else {
             // anything else to be done for searchfolders?
         }
 
-        List subfolders = folder.getSubfolders();
+        List subfolders = folder.getSubfolders(octxt);
         if (subfolders != null)
             for (Iterator it = subfolders.iterator(); it.hasNext(); ) {
                 Folder subfolder = (Folder) it.next();
                 if (subfolder != null)
-                    initialFolderSync(f, mbox, subfolder);
+                    initialFolderSync(lc, f, mbox, subfolder);
         }
     }
 
-    private void initialTagSync(Mailbox mbox, Element response) throws ServiceException {
-        List tags = mbox.getTagList();
+    private void initialTagSync(ZimbraContext lc, Element response, Mailbox mbox) throws ServiceException {
+        List tags = mbox.getTagList(lc.getOperationContext());
         if (tags != null)
             for (Iterator it = tags.iterator(); it.hasNext(); ) {
                 Tag tag = (Tag) it.next();
                 if (tag != null && !(tag instanceof Flag))
-                    ToXML.encodeTag(response, tag);
+                    ToXML.encodeTag(response, lc, tag);
             }
     }
 
@@ -136,7 +138,7 @@ public class Sync extends DocumentHandler {
                                               Change.MODIFIED_COLOR  | Change.MODIFIED_POSITION |
                                               Change.MODIFIED_CONFLICT;
 
-    private void deltaSync(Element response, Mailbox mbox, long begin) throws ServiceException {
+    private void deltaSync(ZimbraContext lc, Element response, Mailbox mbox, long begin) throws ServiceException {
         // first, handle deleted items
         String deleted = mbox.getTombstones(begin);
         if (deleted != null && !deleted.equals(""))
@@ -160,9 +162,9 @@ public class Sync extends DocumentHandler {
                 //  If it's just the metadata that changed, send back the set of mutable attributes.
                 //
                 if (item.getSavedSequence() > begin && type != MailItem.TYPE_FOLDER && type != MailItem.TYPE_TAG)
-                    ToXML.encodeItem(response, item, Change.MODIFIED_FOLDER | Change.MODIFIED_CONFLICT);
+                    ToXML.encodeItem(response, lc, item, Change.MODIFIED_FOLDER | Change.MODIFIED_CONFLICT);
                 else
-                    ToXML.encodeItem(response, item, MUTABLE_FIELDS);
+                    ToXML.encodeItem(response, lc, item, MUTABLE_FIELDS);
             }
         }
     }

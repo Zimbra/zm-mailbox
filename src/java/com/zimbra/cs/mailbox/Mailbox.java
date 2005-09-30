@@ -512,6 +512,10 @@ public class Mailbox {
         mCurrentChange.tcon = tcon;
     }
 
+    public OperationContext getOperationContext() {
+        return (mCurrentChange.active ? mCurrentChange.octxt : null);
+    }
+
 
     /** Returns the {@link Account} for the authenticated user for the
      *  transaction.  Returns <code>null</code> if none was supplied in the
@@ -1564,135 +1568,143 @@ public class Mailbox {
     }
 
     /** mechanism for getting an item */
-    public synchronized MailItem getItemById(int id, byte type) throws ServiceException {
+    public synchronized MailItem getItemById(OperationContext octxt, int id, byte type) throws ServiceException {
         boolean success = false;
         try {
             // tag/folder caches are populated in beginTransaction...
-            beginTransaction("getItemById", null);
-
-            // try the cache first
-            MailItem item = getCachedItem(new Integer(id), type);
-            if (item != null) {
-                success = true;
-                return checkAccess(item);
-            }
-
-            // the tag and folder caches contain ALL tags and folders, so cache miss == doesn't exist
-            if (isCachedType(type))
-                throw MailItem.noSuchItem(id, type);
-
-            if (id <= -FIRST_USER_ID) {
-                // special-case virtual conversations
-                if (type != MailItem.TYPE_CONVERSATION && type != MailItem.TYPE_UNKNOWN)
-                    throw MailItem.noSuchItem(id, type);
-                Message msg = getCachedMessage(new Integer(-id));
-                if (msg == null)
-                    msg = getMessageById(-id);
-                if (msg.getConversationId() != id)
-                    return checkAccess(msg.getParent());
-                else
-                    item = new VirtualConversation(this, msg);
-            } else {
-                // cache miss, so fetch from the database
-                item = MailItem.getById(this, id, type);
-            }
+            beginTransaction("getItemById", octxt);
+            MailItem item = checkAccess(getItemById(id, type));
             success = true;
-            return checkAccess(item);
+            return item;
         } finally {
             endTransaction(success);
         }
     }
 
-    /** mechanism for getting an item */
-    public synchronized MailItem[] getItemById(int[] ids, byte type) throws ServiceException {
-        if (ids == null)
-            return null;
+    MailItem getItemById(int id, byte type) throws ServiceException {
+        // try the cache first
+        MailItem item = getCachedItem(new Integer(id), type);
+        if (item != null)
+            return item;
 
-        MailItem items[] = new MailItem[ids.length];
-        Set uncached = new HashSet();
+        // the tag and folder caches contain ALL tags and folders, so cache miss == doesn't exist
+        if (isCachedType(type))
+            throw MailItem.noSuchItem(id, type);
+
+        if (id <= -FIRST_USER_ID) {
+            // special-case virtual conversations
+            if (type != MailItem.TYPE_CONVERSATION && type != MailItem.TYPE_UNKNOWN)
+                throw MailItem.noSuchItem(id, type);
+            Message msg = getCachedMessage(new Integer(-id));
+            if (msg == null)
+                msg = getMessageById(-id);
+            if (msg.getConversationId() != id)
+                return msg.getParent();
+            else
+                item = new VirtualConversation(this, msg);
+        } else {
+            // cache miss, so fetch from the database
+            item = MailItem.getById(this, id, type);
+        }
+        return item;
+    }
+
+    /** mechanism for getting an item */
+    public synchronized MailItem[] getItemById(OperationContext octxt, int[] ids, byte type) throws ServiceException {
         boolean success = false;
         try {
             // tag/folder caches are populated in beginTransaction...
-            beginTransaction("getItemById[]", null);
-
-            // try the cache first
-            Integer miss = null;
-            boolean relaxType = false;
-            for (int i = 0; i < ids.length; i++) {
-                // special-case -1 as a signal to return null...
-                if (ids[i] == ID_AUTO_INCREMENT)
-                    items[i] = null;
-                else {
-                    Integer key = new Integer(ids[i]);
-                    MailItem item = getCachedItem(key, type);
-                    // special-case virtual conversations
-                    if (item == null && ids[i] <= -FIRST_USER_ID) {
-                        if (!MailItem.isAcceptableType(type, MailItem.TYPE_CONVERSATION))
-                            throw MailItem.noSuchItem(ids[i], type);
-                        Message msg = getCachedMessage(key = new Integer(-ids[i]));
-                        if (msg != null) {
-                            if (msg.getConversationId() == ids[i])
-                                item = new VirtualConversation(this, msg);
-                        } else
-                            relaxType = true;
-                    }
-                    items[i] = checkAccess(item);
-                    if (item == null)
-                        uncached.add(miss = key);
-                }
-            }
-            if (uncached.isEmpty()) {
-                success = true;
-                return items;
-            }
-
-            // the tag and folder caches contain ALL tags and folders, so cache miss == doesn't exist
-            if (isCachedType(type))
-                throw MailItem.noSuchItem(miss.intValue(), type);
-
-            // cache miss, so fetch from the database
-            MailItem.getById(this, uncached, relaxType ? MailItem.TYPE_UNKNOWN : type);
-
-            uncached.clear();
-            for (int i = 0; i < ids.length; i++)
-                if (ids[i] != ID_AUTO_INCREMENT && items[i] == null) {
-                    if (ids[i] <= -FIRST_USER_ID) {
-                        // special-case virtual conversations
-                        MailItem item = getCachedItem(new Integer(-ids[i]));
-                        if (!(item instanceof Message))
-                            throw MailItem.noSuchItem(ids[i], type);
-                        else if (item.getParentId() == ids[i])
-                            items[i] = new VirtualConversation(this, (Message) item);
-                        else {
-                            items[i] = getCachedItem(new Integer(item.getParentId()));
-                            if (items[i] == null)
-                                uncached.add(new Integer(item.getParentId()));
-                        }
-                    } else
-                        if ((items[i] = getCachedItem(new Integer(ids[i]))) == null)
-                            throw MailItem.noSuchItem(ids[i], type);
-                    items[i] = checkAccess(items[i]);
-                }
-
-            // special case asking for VirtualConversation but having it be a real Conversation
-            if (!uncached.isEmpty()) {
-                MailItem.getById(this, uncached, MailItem.TYPE_CONVERSATION);
-                for (int i = 0; i < ids.length; i++)
-                    if (ids[i] <= -FIRST_USER_ID && items[i] == null) {
-                        MailItem item = getCachedItem(new Integer(-ids[i]));
-                        if (!(item instanceof Message) || item.getParentId() == ids[i])
-                            throw ServiceException.FAILURE("item should be cached but is not: " + -ids[i], null);
-                        items[i] = checkAccess(getCachedItem(new Integer(item.getParentId())));
-                        if (items[i] == null)
-                            throw MailItem.noSuchItem(ids[i], type);
-                    }
-            }
-
+            beginTransaction("getItemById[]", octxt);
+            MailItem[] items = getItemById(ids, type);
+            // make sure all those items are visible...
+            for (int i = 0; i < items.length; i++)
+                checkAccess(items[i]);
             success = true;
             return items;
         } finally {
             endTransaction(success);
         }
+    }
+
+    MailItem[] getItemById(int[] ids, byte type) throws ServiceException {
+        if (ids == null)
+            return null;
+
+        MailItem items[] = new MailItem[ids.length];
+        Set uncached = new HashSet();
+
+        // try the cache first
+        Integer miss = null;
+        boolean relaxType = false;
+        for (int i = 0; i < ids.length; i++) {
+            // special-case -1 as a signal to return null...
+            if (ids[i] == ID_AUTO_INCREMENT)
+                items[i] = null;
+            else {
+                Integer key = new Integer(ids[i]);
+                MailItem item = getCachedItem(key, type);
+                // special-case virtual conversations
+                if (item == null && ids[i] <= -FIRST_USER_ID) {
+                    if (!MailItem.isAcceptableType(type, MailItem.TYPE_CONVERSATION))
+                        throw MailItem.noSuchItem(ids[i], type);
+                    Message msg = getCachedMessage(key = new Integer(-ids[i]));
+                    if (msg != null) {
+                        if (msg.getConversationId() == ids[i])
+                            item = new VirtualConversation(this, msg);
+                    } else
+                        relaxType = true;
+                }
+                items[i] = item;
+                if (item == null)
+                    uncached.add(miss = key);
+            }
+        }
+        if (uncached.isEmpty())
+            return items;
+
+        // the tag and folder caches contain ALL tags and folders, so cache miss == doesn't exist
+        if (isCachedType(type))
+            throw MailItem.noSuchItem(miss.intValue(), type);
+
+        // cache miss, so fetch from the database
+        MailItem.getById(this, uncached, relaxType ? MailItem.TYPE_UNKNOWN : type);
+
+        uncached.clear();
+        for (int i = 0; i < ids.length; i++)
+            if (ids[i] != ID_AUTO_INCREMENT && items[i] == null) {
+                if (ids[i] <= -FIRST_USER_ID) {
+                    // special-case virtual conversations
+                    MailItem item = getCachedItem(new Integer(-ids[i]));
+                    if (!(item instanceof Message))
+                        throw MailItem.noSuchItem(ids[i], type);
+                    else if (item.getParentId() == ids[i])
+                        items[i] = new VirtualConversation(this, (Message) item);
+                    else {
+                        items[i] = getCachedItem(new Integer(item.getParentId()));
+                        if (items[i] == null)
+                            uncached.add(new Integer(item.getParentId()));
+                    }
+                } else
+                    if ((items[i] = getCachedItem(new Integer(ids[i]))) == null)
+                        throw MailItem.noSuchItem(ids[i], type);
+                items[i] = items[i];
+            }
+
+        // special case asking for VirtualConversation but having it be a real Conversation
+        if (!uncached.isEmpty()) {
+            MailItem.getById(this, uncached, MailItem.TYPE_CONVERSATION);
+            for (int i = 0; i < ids.length; i++)
+                if (ids[i] <= -FIRST_USER_ID && items[i] == null) {
+                    MailItem item = getCachedItem(new Integer(-ids[i]));
+                    if (!(item instanceof Message) || item.getParentId() == ids[i])
+                        throw ServiceException.FAILURE("item should be cached but is not: " + -ids[i], null);
+                    items[i] = getCachedItem(new Integer(item.getParentId()));
+                    if (items[i] == null)
+                        throw MailItem.noSuchItem(ids[i], type);
+                }
+        }
+
+        return items;
     }
 
     /** retrieve an item from the Mailbox's caches; return null if no item found */
@@ -1706,7 +1718,7 @@ public class Mailbox {
             item = (MailItem) getItemCache().get(key);
         
         logCacheActivity(key, item);
-        return checkAccess(item);
+        return item;
     }
     MailItem getCachedItem(Integer key, byte type) throws ServiceException {
         MailItem item = null;
@@ -1728,7 +1740,7 @@ public class Mailbox {
             break;
         }
 
-        MailItem retVal = checkAccess(item == null || MailItem.isAcceptableType(type, item.mData.type) ? item : null);
+        MailItem retVal = (item == null || MailItem.isAcceptableType(type, item.mData.type) ? item : null);
         logCacheActivity(key, retVal);
         return retVal;
     }
@@ -1741,16 +1753,14 @@ public class Mailbox {
         // XXX: should we sanity-check the cached version to make sure all the data matches?
         if (item != null)
             return item;
-        return checkAccess(MailItem.constructItem(this, data));
+        return MailItem.constructItem(this, data);
     }
 
-    /** @return all the MailItems of a given type, optionally in a specified folder */
-    public synchronized List /*<MailItem>*/ getItemList(byte type) throws ServiceException {
-        return getItemList(type, -1);
+    /** Returns all the MailItems of a given type, optionally in a specified folder */
+    public synchronized List /*<MailItem>*/ getItemList(OperationContext octxt, byte type) throws ServiceException {
+        return getItemList(octxt, type, -1);
     }
-    public synchronized List /*<MailItem>*/ getItemList(byte type, int folderId) throws ServiceException {
-        if (!hasFullAccess())
-            throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
+    public synchronized List /*<MailItem>*/ getItemList(OperationContext octxt, byte type, int folderId) throws ServiceException {
         if (type == MailItem.TYPE_UNKNOWN)
             return null;
         Folder folder = null;
@@ -1760,6 +1770,8 @@ public class Mailbox {
         try {
             // tag/folder caches are populated in beginTransaction...
             beginTransaction("getItemList", null);
+            if (!hasFullAccess())
+                throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
 
             if (folderId != -1)
                 folder = getFolderById(folderId);
@@ -1804,13 +1816,14 @@ public class Mailbox {
         return result;
     }
 
-    /** returns the list of IDs of items of the given type in the given folder */
-    public synchronized int[] listItemIds(byte type, int folderId) throws ServiceException {
-        if (!hasFullAccess())
-            throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
+    /** returns the list of IDs of items of the given type in the given folder 
+     * @param octxt TODO*/
+    public synchronized int[] listItemIds(OperationContext octxt, byte type, int folderId) throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("listItemIds", null);
+            if (!hasFullAccess())
+                throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
 
             Folder folder = getFolderById(folderId);
             List idList = DbMailItem.listByFolder(folder, type, true);
@@ -1831,12 +1844,12 @@ public class Mailbox {
     public void beginTrackingSync() throws ServiceException {
         if (isTrackingSync())
             return;
-        if (!hasFullAccess())
-            throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
 
         boolean success = false;
         try {
             beginTransaction("beginTrackingSync", null);
+            if (!hasFullAccess())
+                throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
 
             mCurrentChange.sync = Boolean.TRUE;
             DbMailbox.startTrackingSync(this);
@@ -1849,12 +1862,12 @@ public class Mailbox {
     public synchronized String getTombstones(long lastSync) throws ServiceException {
         if (!isTrackingSync())
             throw ServiceException.FAILURE("not tracking sync", null);
-        if (!hasFullAccess())
-            throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
 
         boolean success = false;
         try {
             beginTransaction("getTombstones", null);
+            if (!hasFullAccess())
+                throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
 
             String tombstones = DbMailItem.readTombstones(this, lastSync);
             success = true;
@@ -1868,8 +1881,6 @@ public class Mailbox {
     public synchronized List /*<MailItem>*/ getModifiedItems(byte type, long lastSync) throws ServiceException {
         if (type == MailItem.TYPE_UNKNOWN)
             return null;
-        else if (!hasFullAccess())
-            throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
         else if (lastSync >= getLastChangeID())
             return Collections.EMPTY_LIST;
 
@@ -1877,6 +1888,8 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("getModifiedItems", null);
+            if (!hasFullAccess())
+                throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
 
             if (type == MailItem.TYPE_TAG) {
                 for (Iterator it = mTagCache.entrySet().iterator(); it.hasNext(); ) {
@@ -1920,14 +1933,18 @@ public class Mailbox {
             flag = mFlags[-id - 1];
         if (flag == null)
             throw MailServiceException.NO_SUCH_TAG(id);
+        checkAccess(flag);
         return flag;
     }
 
-    public synchronized Tag getTagById(int id) throws ServiceException {
+    public synchronized Tag getTagById(OperationContext octxt, int id) throws ServiceException {
+        return (Tag) getItemById(octxt, id, MailItem.TYPE_TAG);
+    }
+    Tag getTagById(int id) throws ServiceException {
         return (Tag) getItemById(id, MailItem.TYPE_TAG);
     }
-    public synchronized List getTagList() throws ServiceException {
-        return getItemList(MailItem.TYPE_TAG);
+    public synchronized List getTagList(OperationContext octxt) throws ServiceException {
+        return getItemList(octxt, MailItem.TYPE_TAG);
     }
     public synchronized Tag getTagByName(String name) throws ServiceException {
         boolean success = false;
@@ -1939,6 +1956,7 @@ public class Mailbox {
             Tag tag = (Tag) mTagCache.get(name.toLowerCase());
             if (tag == null)
                 throw MailServiceException.NO_SUCH_TAG(name);
+            checkAccess(tag);
             success = true;
             return tag;
         } finally {
@@ -1947,54 +1965,87 @@ public class Mailbox {
     }
 
 
-    public synchronized Folder getFolderById(int id) throws ServiceException {
+    public synchronized Folder getFolderById(OperationContext octxt, int id) throws ServiceException {
+        return (Folder) getItemById(octxt, id, MailItem.TYPE_FOLDER);
+    }
+    Folder getFolderById(int id) throws ServiceException {
         return (Folder) getItemById(id, MailItem.TYPE_FOLDER);
     }
-    public synchronized Folder getFolderByName(int parentId, String name) throws ServiceException {
-        Folder folder = getFolderById(parentId).findSubfolder(name);
-        if (folder == null)
-            throw MailServiceException.NO_SUCH_FOLDER(name);
-        return folder;
-    }
-    public synchronized Folder getFolderByPath(String name) throws ServiceException {
-        if (name == null)
-            throw MailServiceException.NO_SUCH_FOLDER(name);
-        if (name.startsWith("/"))
-            name = name.substring(1);                         // strip off the optional leading "/"
-        Folder folder = getFolderById(ID_FOLDER_USER_ROOT);
-        if (name.equals(""))
+    public synchronized Folder getFolderByName(OperationContext octxt, int parentId, String name) throws ServiceException {
+        boolean success = true;
+        try {
+            beginTransaction("getFolderByName", octxt);
+            Folder folder = getFolderById(parentId).findSubfolder(name);
+            if (folder == null)
+                throw MailServiceException.NO_SUCH_FOLDER(name);
+            if (!folder.canAccess(ACL.RIGHT_READ))
+                throw ServiceException.PERM_DENIED("you do not have sufficient permissions on folder " + name);
+            success = true;
             return folder;
-        StringTokenizer tok = new StringTokenizer(name, "/");
-        while (folder != null && tok.hasMoreTokens())
-            folder = folder.findSubfolder(tok.nextToken());
-        if (folder == null)
-            throw MailServiceException.NO_SUCH_FOLDER("/" + name);
-        return folder;
+        } finally {
+            endTransaction(success);
+        }
+    }
+    public synchronized Folder getFolderByPath(OperationContext octxt, String name) throws ServiceException {
+        boolean success = true;
+        try {
+            beginTransaction("getFolderByPath", octxt);
+            if (name == null)
+                throw MailServiceException.NO_SUCH_FOLDER(name);
+            if (name.startsWith("/"))
+                name = name.substring(1);                         // strip off the optional leading "/"
+            Folder folder = getFolderById(ID_FOLDER_USER_ROOT);
+            if (!name.equals("")) {
+                StringTokenizer tok = new StringTokenizer(name, "/");
+                while (folder != null && tok.hasMoreTokens())
+                    folder = folder.findSubfolder(tok.nextToken());
+            }
+            if (folder == null)
+                throw MailServiceException.NO_SUCH_FOLDER("/" + name);
+            if (!folder.canAccess(ACL.RIGHT_READ))
+                throw ServiceException.PERM_DENIED("you do not have sufficient permissions on folder /" + name);
+            success = true;
+            return folder;
+        } finally {
+            endTransaction(success);
+        }
     }
 
 
-    public synchronized SearchFolder getSearchFolderById(int searchId) throws ServiceException {
+    public synchronized SearchFolder getSearchFolderById(OperationContext octxt, int searchId) throws ServiceException {
+        return (SearchFolder) getItemById(octxt, searchId, MailItem.TYPE_SEARCHFOLDER);
+    }
+    SearchFolder getSearchFolderById(int searchId) throws ServiceException {
         return (SearchFolder) getItemById(searchId, MailItem.TYPE_SEARCHFOLDER);
     }
 
     
-    public synchronized Note getNoteById(int noteId) throws ServiceException {
+    public synchronized Note getNoteById(OperationContext octxt, int noteId) throws ServiceException {
+        return (Note) getItemById(octxt, noteId, MailItem.TYPE_NOTE);
+    }
+    Note getNoteById(int noteId) throws ServiceException {
         return (Note) getItemById(noteId, MailItem.TYPE_NOTE);
     }
-    public synchronized List getNoteList(int folderId) throws ServiceException {
-        return getItemList(MailItem.TYPE_NOTE, folderId);
+    public synchronized List getNoteList(OperationContext octxt, int folderId) throws ServiceException {
+        return getItemList(octxt, MailItem.TYPE_NOTE, folderId);
     }
 
 
-    public synchronized Contact getContactById(int id) throws ServiceException {
+    public synchronized Contact getContactById(OperationContext octxt, int id) throws ServiceException {
+        return (Contact) getItemById(octxt, id, MailItem.TYPE_CONTACT);
+    }
+    Contact getContactById(int id) throws ServiceException {
         return (Contact) getItemById(id, MailItem.TYPE_CONTACT);
     }
-    public synchronized List getContactList(int folderId) throws ServiceException {
-        return getItemList(MailItem.TYPE_CONTACT, folderId);
+    public synchronized List getContactList(OperationContext octxt, int folderId) throws ServiceException {
+        return getItemList(octxt, MailItem.TYPE_CONTACT, folderId);
     }
 
 
-    public synchronized Message getMessageById(int id) throws ServiceException {
+    public synchronized Message getMessageById(OperationContext octxt, int id) throws ServiceException {
+        return (Message) getItemById(octxt, id, MailItem.TYPE_MESSAGE);
+    }
+    Message getMessageById(int id) throws ServiceException {
         return (Message) getItemById(id, MailItem.TYPE_MESSAGE);
     }
     Message getMessage(MailItem.UnderlyingData data) throws ServiceException { 
@@ -2004,13 +2055,13 @@ public class Mailbox {
         return (Message) getCachedItem(id, MailItem.TYPE_MESSAGE);
     }
 
-    public synchronized Message[] getMessagesByConversation(int convId) throws ServiceException {
-        return getMessagesByConversation(convId, Conversation.SORT_ID_ASCENDING);
+    public synchronized Message[] getMessagesByConversation(OperationContext octxt, int convId) throws ServiceException {
+        return getMessagesByConversation(octxt, convId, Conversation.SORT_ID_ASCENDING);
     }
-    public synchronized Message[] getMessagesByConversation(int convId, byte sort) throws ServiceException {
+    public synchronized Message[] getMessagesByConversation(OperationContext octxt, int convId, byte sort) throws ServiceException {
         boolean success = false;
         try {
-            beginTransaction("getMessagesByConversation", null);
+            beginTransaction("getMessagesByConversation", octxt);
             Message[] msgs = getConversationById(convId).getMessages(sort);
             success = true;
             return msgs;
@@ -2019,7 +2070,10 @@ public class Mailbox {
         }
     }
 
-    public synchronized Conversation getConversationById(int id) throws ServiceException {
+    public synchronized Conversation getConversationById(OperationContext octxt, int id) throws ServiceException {
+        return (Conversation) getItemById(octxt, id, MailItem.TYPE_CONVERSATION);
+    }
+    Conversation getConversationById(int id) throws ServiceException {
         return (Conversation) getItemById(id, MailItem.TYPE_CONVERSATION);
     }
     Conversation getConversation(MailItem.UnderlyingData data) throws ServiceException {
@@ -2061,14 +2115,17 @@ public class Mailbox {
     }
 
 
-    public synchronized Appointment getAppointmentById(int id) throws ServiceException {
+    public synchronized Appointment getAppointmentById(OperationContext octxt, int id) throws ServiceException {
+        return (Appointment) getItemById(octxt, id, MailItem.TYPE_APPOINTMENT);
+    }
+    Appointment getAppointmentById(int id) throws ServiceException {
         return (Appointment) getItemById(id, MailItem.TYPE_APPOINTMENT);
     }
     Appointment getAppointment(MailItem.UnderlyingData data) throws ServiceException { 
         return (Appointment) getItem(data);
     }
-    public synchronized List getAppointmentList(int folderId) throws ServiceException {
-        return getItemList(MailItem.TYPE_APPOINTMENT, folderId);
+    public synchronized List getAppointmentList(OperationContext octxt, int folderId) throws ServiceException {
+        return getItemList(octxt, MailItem.TYPE_APPOINTMENT, folderId);
     }
 
     public synchronized Calendar getCalendarForRange(OperationContext octxt, long start, long end)
@@ -2124,6 +2181,7 @@ public class Mailbox {
      * @param folderId  The folder to search for matching appointments, or
      *                  {@link #ID_AUTO_INCREMENT} to search all non-Spam and
      *                  Trash folders in the mailbox.
+     * @perms {@link ACL#RIGHT_READ} on all returned appointments.
      * @throws ServiceException */
     public synchronized Collection /*<Appointment>*/ getAppointmentsForRange(OperationContext octxt, long start, long end, int folderId)
     throws ServiceException {
@@ -2131,12 +2189,18 @@ public class Mailbox {
         try {
             beginTransaction("getAppointmentsForRange", octxt);
 
+            // if they specified a folder, make sure it actually exists
+            if (folderId != ID_AUTO_INCREMENT)
+                getFolderById(folderId);
+
+            // get the list of all visible appointments in the specified folder
             List appointments = new ArrayList();
             List /* UnderlyingData */ invData = DbMailItem.getAppointments(this, start, end, folderId);
             for (Iterator iter = invData.iterator(); iter.hasNext(); ) {
                 Appointment appt = getAppointment((MailItem.UnderlyingData) iter.next());
                 if (folderId == appt.getFolderId() || (folderId == ID_AUTO_INCREMENT && appt.inMailbox()))
-                    appointments.add(appt);
+                    if (appt.canAccess(ACL.RIGHT_READ))
+                        appointments.add(appt);
             }
             success = true;
             return appointments;
@@ -2146,32 +2210,14 @@ public class Mailbox {
     }
     
 
-    public interface MessageEnumCallback {
-        // return FALSE if you want to stop enumerating messages
-        public boolean onMessage(Message msg);
-    }
-
-    public synchronized void enumerateMessages(MessageEnumCallback cbk) throws ServiceException {
-        List conversations = getItemList(MailItem.TYPE_CONVERSATION);
-        
-        Iterator iterator = conversations.iterator();
-        while (iterator.hasNext()) {
-            Conversation c = (Conversation) iterator.next();
-            Message[] msgs = c.getMessages(Conversation.SORT_ID_ASCENDING);
-            for (int i = 0; i < msgs.length; i++)
-                if (cbk.onMessage(msgs[i]))
-                    break;
-        }
-    }
-
-    public ZimbraQueryResults search(String queryString, String groupBy, String sortBy) throws IOException, ParseException, ServiceException {
+    public ZimbraQueryResults search(OperationContext octxt, String queryString, String groupBy, String sortBy) throws IOException, ParseException, ServiceException {
 //        int group = MailboxIndex.parseGroupByString(groupBy);
         byte[] types = MailboxIndex.parseGroupByString(groupBy);
         int sort = MailboxIndex.parseSortByString(sortBy);
-        return search(queryString, types, sort);
+        return search(octxt, queryString, types, sort);
     }
 
-    public synchronized ZimbraQueryResults search(String queryString, byte[] types, int sortBy) 
+    public ZimbraQueryResults search(OperationContext octxt, String queryString, byte[] types, int sortBy) 
     throws IOException, ParseException, ServiceException {
         Account acct = getAccount();
         boolean includeTrash = 
@@ -2179,15 +2225,15 @@ public class Mailbox {
         boolean includeSpam = 
             acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeSpamInSearch, false);
         
-        return search(queryString, types, sortBy, includeTrash, includeSpam);
+        return search(octxt, queryString, types, sortBy, includeTrash, includeSpam);
     }
 
-    public synchronized ZimbraQueryResults search(String queryString, byte[] types, int sortBy,
-                                                  boolean includeTrash, boolean includeSpam)
+    public synchronized ZimbraQueryResults search(OperationContext octxt, String queryString, byte[] types,
+                                                  int sortBy, boolean includeTrash, boolean includeSpam)
     throws IOException, ParseException, ServiceException {
         boolean success = false;
         try {
-            beginTransaction("search", null);
+            beginTransaction("search", octxt);
 
             ZimbraQuery zq = new ZimbraQuery(queryString, this); 
             ZimbraQueryResults results = getMailboxIndex().search(zq, types, sortBy, includeTrash, includeSpam);
@@ -2215,39 +2261,47 @@ public class Mailbox {
         }
     }
 
-    public synchronized BrowseResult browse(String browseBy) throws IOException, ServiceException {
-        if (browseBy != null)
-            browseBy = browseBy.intern();
-
-        BrowseResult browseResult = new BrowseResult();
-
-        MailboxIndex idx = getMailboxIndex();
-        
-        if (browseBy == BROWSE_BY_ATTACHMENTS) {
-            idx.getAttachments(browseResult.getResult());
-        } else if (browseBy == BROWSE_BY_DOMAINS) {
-            HashMap domainItems = new HashMap();
-            HashSet set = new HashSet();
+    public synchronized BrowseResult browse(OperationContext octxt, String browseBy) throws IOException, ServiceException {
+        boolean success = true;
+        try {
+            if (!hasFullAccess())
+                throw ServiceException.PERM_DENIED("you do not have sufficient permissions on this mailbox");
+            if (browseBy != null)
+                browseBy = browseBy.intern();
+    
+            BrowseResult browseResult = new BrowseResult();
+    
+            MailboxIndex idx = getMailboxIndex();
             
-            idx.getDomainsForField(LuceneFields.L_H_CC, set);
-            addDomains(domainItems, set, DomainItem.F_CC);
-            
-            set.clear();
-            idx.getDomainsForField(LuceneFields.L_H_FROM, set);
-            addDomains(domainItems, set, DomainItem.F_FROM);
-            
-            set.clear();             
-            idx.getDomainsForField(LuceneFields.L_H_TO, set);
-            addDomains(domainItems, set, DomainItem.F_TO);
-            
-            browseResult.getResult().addAll(domainItems.values());
-            
-        } else if (browseBy == BROWSE_BY_OBJECTS) {
-            idx.getObjects(browseResult.getResult());
-        } else { 
-            // throw exception?
+            if (browseBy == BROWSE_BY_ATTACHMENTS) {
+                idx.getAttachments(browseResult.getResult());
+            } else if (browseBy == BROWSE_BY_DOMAINS) {
+                HashMap domainItems = new HashMap();
+                HashSet set = new HashSet();
+                
+                idx.getDomainsForField(LuceneFields.L_H_CC, set);
+                addDomains(domainItems, set, DomainItem.F_CC);
+                
+                set.clear();
+                idx.getDomainsForField(LuceneFields.L_H_FROM, set);
+                addDomains(domainItems, set, DomainItem.F_FROM);
+                
+                set.clear();             
+                idx.getDomainsForField(LuceneFields.L_H_TO, set);
+                addDomains(domainItems, set, DomainItem.F_TO);
+                
+                browseResult.getResult().addAll(domainItems.values());
+                
+            } else if (browseBy == BROWSE_BY_OBJECTS) {
+                idx.getObjects(browseResult.getResult());
+            } else { 
+                // throw exception?
+            }
+            success = true;
+            return browseResult;
+        } finally {
+            endTransaction(success);
         }
-        return browseResult;
     }
 
     public synchronized MailboxIndex getMailboxIndex() throws ServiceException {

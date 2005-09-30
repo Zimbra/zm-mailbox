@@ -48,15 +48,13 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.util.ByteUtil;
-
 import com.zimbra.cs.service.util.*;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.util.ByteUtil;
 
 /**
  * The content servlet returns an attachment document in its original format.
@@ -85,18 +83,16 @@ public class ContentServlet extends ZimbraServlet {
     private static Log mLog = LogFactory.getLog(ContentServlet.class);
 
     private void getCommand(HttpServletRequest req, HttpServletResponse resp, AuthToken authToken)
-    throws ServletException, IOException
-    {
+    throws ServletException, IOException {
         String idStr = req.getParameter(PARAM_MSGID);
         if (idStr == null) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "missing id parameter");
             return;
         }
         
-        ParsedItemID id = null;
-        
+        ItemId iid = null;
         try {
-            id = ParsedItemID.parse(idStr);
+            iid = new ItemId(idStr);
         } catch (ServiceException e) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "invalid id requested");
             return;
@@ -107,26 +103,20 @@ public class ContentServlet extends ZimbraServlet {
         
         try {
             Mailbox mbox;
-            if (!id.isLocal()) {
+            if (!iid.isLocal()) {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "wrong server");
                 return;
             }
-            if (!id.hasMailboxID()) {
-                mbox = Mailbox.getMailboxByAccountId(authToken.getAccountId());
-            } else {
-                if (!authToken.isAdmin()) {
-                    resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "admin auth token required");
-                    return;
-                }
-                mbox = Mailbox.getMailboxById(id.getMailboxIDInt());
-            }
+            String authId = authToken.getAccountId();
+            String accountId = iid.getAccountId() != null ? iid.getAccountId() : authId;
+            mbox = Mailbox.getMailboxByAccountId(accountId);
             if (mbox == null) {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "mailbox not found");
                 return;				
             }
             
-            MailItem mi = mbox.getItemById(id.getItemIDInt(), MailItem.TYPE_UNKNOWN);
-            if (mi== null) {
+            MailItem mi = mbox.getItemById(new Mailbox.OperationContext(authId), iid.getId(), MailItem.TYPE_UNKNOWN);
+            if (mi == null) {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "message not found");
                 return;				
             }
@@ -134,7 +124,6 @@ public class ContentServlet extends ZimbraServlet {
             try {
                 if (part == null) {
                     // they want the entire message...
-                    
                     StringBuffer hdr = new StringBuffer();
                     if ("1".equals(req.getParameter(PARAM_SYNC))) {
                         // for sync, return metadata as headers to avoid extra SOAP round-trips
@@ -154,7 +143,7 @@ public class ContentServlet extends ZimbraServlet {
                         ByteUtil.copy(is, resp.getOutputStream());
                         is.close();
                     } else if (mi instanceof Appointment) {
-                        Appointment appt = (Appointment)mi;
+                        Appointment appt = (Appointment) mi;
                         
                         if ("1".equals(req.getParameter(PARAM_SYNC))) {
                             hdr.append("X-Zimbra-DefaultInvId: ").append(appt.getDefaultInvite().getMailItemId()).append("\n");
@@ -162,8 +151,8 @@ public class ContentServlet extends ZimbraServlet {
                         }
                         
                         resp.setContentType(Mime.CT_TEXT_PLAIN);
-                        if (id.hasSubId()) {
-                            MimeMessage mm = ((Appointment)mi).getMimeMessage(id.getSubIdInt());
+                        if (iid.hasSubpart()) {
+                            MimeMessage mm = ((Appointment) mi).getMimeMessage(iid.getSubpartId());
                             mm.writeTo(resp.getOutputStream());
                         } else { 
                             InputStream is;
@@ -179,8 +168,8 @@ public class ContentServlet extends ZimbraServlet {
                         mp = getMimePart((Message)mi, part); 
                     } else {
                         Appointment appt = (Appointment)mi;
-                        if (id.hasSubId()) {
-                            MimeMessage mbp = appt.getMimeMessage(id.getSubIdInt());
+                        if (iid.hasSubpart()) {
+                            MimeMessage mbp = appt.getMimeMessage(iid.getSubpartId());
                             mp = Mime.getMimePart(mbp, part);
                         } else {
                             mp = getMimePart(appt, part);

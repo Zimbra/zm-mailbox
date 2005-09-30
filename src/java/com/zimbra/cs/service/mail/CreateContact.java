@@ -62,7 +62,7 @@ public class CreateContact extends WriteOpDocumentHandler  {
         Contact con = mbox.createContact(null, attrs, folderId, tagsStr);
         Element response = lc.createElement(MailService.CREATE_CONTACT_RESPONSE);
         if (con != null)
-            ToXML.encodeContact(response, con, null, true, null);
+            ToXML.encodeContact(response, lc, con, null, true, null);
         return response;
     }
 }

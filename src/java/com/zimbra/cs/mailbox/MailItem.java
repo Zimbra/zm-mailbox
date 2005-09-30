@@ -353,7 +353,7 @@ public abstract class MailItem implements Comparable {
                 try {
                     String sent = mailbox.getAccount().getAttr(Provisioning.A_zimbraPrefSentMailFolder, null);
                     if (sent != null)
-                        sentFolder = mailbox.getFolderByPath(sent).getId();
+                        sentFolder = mailbox.getFolderByPath(null, sent).getId();
                 } catch (ServiceException e) { }
             }
             return sentFolder;
@@ -543,7 +543,7 @@ public abstract class MailItem implements Comparable {
             return (mData.folderId == Mailbox.ID_FOLDER_TRASH);
         Folder folder = null;
         synchronized (mMailbox) {
-            folder = mMailbox.getFolderById(getFolderId());
+            folder = mMailbox.getFolderById(null, getFolderId());
         }
         return folder.inTrash();
     }

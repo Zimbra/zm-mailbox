@@ -46,6 +46,7 @@ public class ServiceException extends Exception {
     public static final String WRONG_HOST = "service.WRONG_HOST";
     public static final String NON_READONLY_OPERATION_DENIED = "service.NON_READONLY_OPERATION_DENIED";
     public static final String PROXY_ERROR = "service.PROXY_ERROR";
+    public static final String TOO_MANY_HOPS = "service.TOO_MANY_HOPS";
     
     private String mCode;
     
@@ -140,7 +141,11 @@ public class ServiceException extends Exception {
     }
 
     public static ServiceException PROXY_ERROR(Throwable cause) {
-        return new ServiceException("Error while proxying request to target server: " + (cause != null ? cause.getMessage() : "unknown reason"), 
+        return new ServiceException("error while proxying request to target server: " + (cause != null ? cause.getMessage() : "unknown reason"), 
                 PROXY_ERROR, RECEIVERS_FAULT, cause);
+    }
+
+    public static ServiceException TOO_MANY_HOPS() {
+        return new ServiceException("mountpoint loop detected", TOO_MANY_HOPS, SENDERS_FAULT, null);
     }
 }

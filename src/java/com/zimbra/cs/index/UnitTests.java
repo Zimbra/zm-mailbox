@@ -253,7 +253,7 @@ public class UnitTests extends TestCase {
         {
             Mailbox mbx = Mailbox.getMailboxById(1);
             String folderName = new String("/inbox");
-            final Folder compFolder = mbx.getFolderByPath(folderName);
+            final Folder compFolder = mbx.getFolderByPath(null, folderName);
             //System.out.println("compTag is "+compTag);
             
             ResultValidator val = new ResultValidator() 

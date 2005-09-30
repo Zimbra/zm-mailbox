@@ -68,7 +68,7 @@ public class GetICal extends WriteOpDocumentHandler {
             try {
                 Calendar cal = null;
                 if (msgId > 0) {
-                    Message msg = mbx.getMessageById(msgId);
+                    Message msg = mbx.getMessageById(octxt, msgId);
 //                    Invite inv = msg.getInvite(0);
 //                    cal = inv.getCalendar();
                 } else {

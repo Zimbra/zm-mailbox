@@ -69,7 +69,7 @@ public class CancelAppointment extends CalendarRequest {
             sLog.info("<CancelAppointment id="+pid+" comp="+compNum+">");
             
             synchronized (mbox) {
-                Appointment appt = mbox.getAppointmentById(pid.getItemIDInt()); 
+                Appointment appt = mbox.getAppointmentById(octxt, pid.getItemIDInt()); 
                 Invite inv = appt.getInvite(pid.getSubIdInt(), compNum);
 
                 if (appt == null) {

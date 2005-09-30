@@ -102,33 +102,31 @@ public class SoapEngine {
 
         // if (mLog.isDebugEnabled()) mLog.debug("dispatch: soapProto = " + soapProto.getVersion());
 
-        ZimbraContext zimbraContext = null;
+        ZimbraContext lc = null;
         Element ectxt = soapProto.getHeader(envelope, ZimbraContext.CONTEXT);
         try {
-            zimbraContext = new ZimbraContext(ectxt, context, soapProto);
+            lc = new ZimbraContext(ectxt, context, soapProto);
         } catch (ServiceException e) {
             return soapProto.soapEnvelope(soapProto.soapFault(e));
         }
-        SoapProtocol responseProto = zimbraContext.getResponseProtocol();
+        SoapProtocol responseProto = lc.getResponseProtocol();
 
         ZimbraLog.clearContext();
         try {
-            if (context != null) {
-                String id = zimbraContext.getRequestedAccountId();
-                if (id != null) {
-                    ZimbraLog.addAccountToContext(id, ZimbraLog.C_NAME, ZimbraLog.C_ID);
-                    String aid = zimbraContext.getAuthtokenAccountId();
-                    if (!id.equals(aid)) {
-                        ZimbraLog.addAccountToContext(aid, ZimbraLog.C_ANAME, ZimbraLog.C_AID);
-                    } else if (zimbraContext.getAuthToken().getAdminAccountId() != null) {
-                        ZimbraLog.addAccountToContext(zimbraContext.getAuthToken().getAdminAccountId(), ZimbraLog.C_ANAME, ZimbraLog.C_AID);                        
-                    }
-                }
+            String rid = lc.getRequestedAccountId();
+            if (rid != null) {
+                ZimbraLog.addAccountToContext(rid, ZimbraLog.C_NAME, ZimbraLog.C_ID);
+                String aid = lc.getAuthtokenAccountId();
+                if (!rid.equals(aid))
+                    ZimbraLog.addAccountToContext(aid, ZimbraLog.C_ANAME, ZimbraLog.C_AID);
+                else if (lc.getAuthToken().getAdminAccountId() != null)
+                    ZimbraLog.addAccountToContext(lc.getAuthToken().getAdminAccountId(), ZimbraLog.C_ANAME, ZimbraLog.C_AID);                        
             }
             String ip = (String) context.get(REQUEST_IP);
-            if (ip != null) ZimbraLog.addToContext(ZimbraLog.C_IP, ip);
+            if (ip != null)
+                ZimbraLog.addToContext(ZimbraLog.C_IP, ip);
 
-            context.put(ZIMBRA_CONTEXT, zimbraContext);
+            context.put(ZIMBRA_CONTEXT, lc);
 
             Element doc = soapProto.getBodyElement(envelope);
 
@@ -136,29 +134,28 @@ public class SoapEngine {
                 mLog.debug("dispatch: doc " + doc.getQualifiedName());
 
             Element responseBody = null;
-            if (!zimbraContext.isProxyRequest()) {
+            if (!lc.isProxyRequest()) {
                 if (doc.getQName().equals(ZimbraNamespace.E_BATCH_REQUEST)) {
 
                     boolean contOnError = doc.getAttribute(ZimbraNamespace.A_ONERROR,
                                 ZimbraNamespace.DEF_ONERROR).equals("continue");
-            	        responseBody = zimbraContext.createElement(ZimbraNamespace.E_BATCH_RESPONSE);
+            	        responseBody = lc.createElement(ZimbraNamespace.E_BATCH_RESPONSE);
             	        for (Iterator it = doc.elementIterator(); it.hasNext(); ) {
             	            Element req = (Element) it.next();
             	            if (mLog.isDebugEnabled())
             	                mLog.debug("dispatch: multi " + req.getQualifiedName());
     
             	            String id = req.getAttribute("id", null);
-            	            Element br = dispatchRequest(responseProto, path, req, context, zimbraContext);
+            	            Element br = dispatchRequest(req, context, lc);
             	            if (id != null)
             	                br.addAttribute("id", id);
             	            responseBody.addElement(br);
-            	            if (!contOnError && responseProto.isFault(br)) {
+            	            if (!contOnError && responseProto.isFault(br))
             	                break;
-            	            }
             	        }
                 } else {
                     String id = doc.getAttribute("id", null);
-                    responseBody = dispatchRequest(responseProto, path, doc, context, zimbraContext);
+                    responseBody = dispatchRequest(doc, context, lc);
                     if (id != null)
                         responseBody.addAttribute("id", id);
                 }
@@ -173,22 +170,21 @@ public class SoapEngine {
                     // proxy dispatcher.  IllegalAddException will be thrown
                     // if we don't detach it first.
                     doc.detach();
-                	responseBody = zimbraContext.getProxyTarget().dispatch(doc);
+                	responseBody = lc.getProxyTarget().dispatch(doc);
                     responseBody.detach();
                 } catch (ServiceException e) {
                     responseBody = responseProto.soapFault(e);
                     mLog.warn("proxy handler exception ", e);
                 } catch (Throwable e) {
                     responseBody = responseProto.soapFault(ServiceException.FAILURE(e.toString(), e));
-                    if (e instanceof OutOfMemoryError) {
+                    if (e instanceof OutOfMemoryError)
                         Zimbra.halt("proxy handler exception", e);
-                    }
                     mLog.warn("proxy handler exception ", e);
                 }
             }
 
             // put notifications (new sessions and incremental change notifications)
-            Element responseHeader = zimbraContext.generateResponseHeader();
+            Element responseHeader = lc.generateResponseHeader();
 
             return responseProto.soapEnvelope(responseBody, responseHeader);
         } finally {
@@ -197,24 +193,21 @@ public class SoapEngine {
     }
 
     /**
-     * Handles batched requests
-     * 
-     * @param soapProto
-     * @param path
-     * @param doc
+     * Handles individual requests, either direct or from a batch
+     * @param request
      * @param context
-     * @param zimbraContext
+     * @param lc
      * @return
      */
-    private Element dispatchRequest(SoapProtocol soapProto, String path,
-                                    Element doc, Map context, ZimbraContext zimbraContext) 
-    {
-        if (doc == null)
+    Element dispatchRequest(Element request, Map context, ZimbraContext lc) {
+        SoapProtocol soapProto = lc.getResponseProtocol();
+
+        if (request == null)
             return soapProto.soapFault(ServiceException.INVALID_REQUEST("no document specified", null));
         
-        DocumentHandler handler = mDispatcher.getHandler(doc);
+        DocumentHandler handler = mDispatcher.getHandler(request);
         if (handler == null) 
-            return soapProto.soapFault(ServiceException.UNKNOWN_DOCUMENT(doc.getQualifiedName(), null));
+            return soapProto.soapFault(ServiceException.UNKNOWN_DOCUMENT(request.getQualifiedName(), null));
         
         if (RedoLogProvider.getInstance().isSlave() && !handler.isReadOnly())
             return soapProto.soapFault(ServiceException.NON_READONLY_OPERATION_DENIED());
@@ -225,7 +218,7 @@ public class SoapEngine {
         boolean needsAuth = handler.needsAuth(context);
         boolean needsAdminAuth = handler.needsAdminAuth(context);
         if (needsAuth || needsAdminAuth) {
-            AuthToken at = zimbraContext != null ? zimbraContext.getAuthToken() : null;
+            AuthToken at = lc != null ? lc.getAuthToken() : null;
             if (at == null)
                 return soapProto.soapFault(ServiceException.AUTH_REQUIRED());
             if (needsAdminAuth && !at.isAdmin()) 
@@ -234,10 +227,9 @@ public class SoapEngine {
             // Make sure that the account is active and has not been deleted
             // since the last request
             try {
-                Account account = handler.getRequestedAccount(zimbraContext);
-                if (!account.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE)) {
+                Account account = DocumentHandler.getRequestedAccount(lc);
+                if (!account.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
                     return soapProto.soapFault(ServiceException.AUTH_EXPIRED());
-                }
             } catch (ServiceException ex) {
                 return soapProto.soapFault(ex);
             }
@@ -245,7 +237,11 @@ public class SoapEngine {
         
         Element response;
         try {
-            response = handler.handle(doc, context);
+            // first, try to proxy the request if necessary
+            response = handler.proxyIfNecessary(this, request, context);
+            // if no proxy, execute the request locally
+            if (response == null)
+                response = handler.handle(request, context);
             // fault in a session for this handler after executing the command
             handler.getSession(context);
         } catch (ServiceException e) {
@@ -255,17 +251,16 @@ public class SoapEngine {
                 PrintWriter pw = new PrintWriter(sw);
                 e.printStackTrace(pw);
                 pw.close();
-                mLog.debug("handler exception "+sw.toString());
+                mLog.debug("handler exception " + sw.toString());
             }
         } catch (Throwable e) {
             // FIXME: temp hack by tim b/c dogfood not generating stack traces
             e.printStackTrace();
             
             // TODO: better exception stack traces during develope?
-            response = soapProto.soapFault(ServiceException.FAILURE(e.toString(),e));
-            if (e instanceof OutOfMemoryError) {
+            response = soapProto.soapFault(ServiceException.FAILURE(e.toString(), e));
+            if (e instanceof OutOfMemoryError)
                 Zimbra.halt("handler exception", e);
-            }
             if (mLog.isWarnEnabled())
                 mLog.warn("handler exception ", e);
         }

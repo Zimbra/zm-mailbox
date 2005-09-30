@@ -91,29 +91,6 @@ public class IndexEditor {
     
     private static Log mLog = LogFactory.getLog(IndexEditor.class);
     
-	public class MessageEnumerator implements Mailbox.MessageEnumCallback 
-	{
-		private int mCount;
-		public MessageEnumerator() {
-			mCount = 0;
-		}
-		public boolean onMessage(Message msg) {
-			outputStream.println("Got message("+mCount+") "+msg.toString());
-			mCount++;
-			try {
-                Mailbox mbox = Mailbox.getMailboxById(msg.getMailboxId());
-				ParsedMessage pm =
-                    new ParsedMessage(msg.getMimeMessage(),
-                                      msg.getDate(),
-                                      mbox.attachmentsIndexingEnabled());
-                Indexer.GetInstance().indexMessage(null, mbox.getMailboxIndex(), msg.getId(), pm);
-			} catch(Exception e) {
-				outputStream.println("Caught Exception "+ExceptionToString.ToString(e));
-			}
-			return true;
-		}
-	}
-
 	public void deleteIndex(int mailboxId) throws IOException, ServiceException {
 		MailboxIndex.AdminInterface admin = null;
 		try {

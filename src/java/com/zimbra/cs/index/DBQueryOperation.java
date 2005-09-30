@@ -29,13 +29,11 @@
 package com.zimbra.cs.index;
 
 import java.io.IOException;
-import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -136,40 +134,8 @@ class DBQueryOperation extends QueryOperation
      * @return List of Folders which are in Trash, including Trash itself
      * @throws ServiceException
      */
-    private AbstractList /* Folder */ getTrashFolders(Mailbox mbox) throws ServiceException {
-        LinkedList retVal = new LinkedList();
-        Folder trash = mbox.getFolderById(Mailbox.ID_FOLDER_TRASH); 
-        retVal.add(trash);
-
-        // 
-        // breadth-first traversal
-        //
-        LinkedList /* List */ toCheck = new LinkedList();
-        
-        // start in "trash"
-        List subFolders = trash.getSubfolders();
-        if (subFolders != null) {
-            toCheck.add(subFolders);
-        }
-        
-        while(toCheck.size() > 0) 
-        {
-            // for every list of subfolders we see
-            List cur = (List)(toCheck.removeFirst());
-            for (Iterator iter = cur.iterator(); iter.hasNext();) 
-            {
-                // add the folder to our list of "in trash" folders
-                Folder curFolder = (Folder)(iter.next());
-                retVal.add(curFolder);
-                
-                // add the list of subfolders to our "toCheck" list
-                subFolders = curFolder.getSubfolders();
-                if (subFolders!=null && subFolders.size() > 0) {
-                    toCheck.add(subFolders);
-                }
-            }
-        }
-        return retVal;
+    private List /* Folder */ getTrashFolders(Mailbox mbox) throws ServiceException {
+        return mbox.getFolderById(null, Mailbox.ID_FOLDER_TRASH).getSubfolderHierarchy(); 
     }
 
     /* (non-Javadoc)
@@ -179,7 +145,7 @@ class DBQueryOperation extends QueryOperation
     {
         if (!mHasSpamTrashSetting) {
             if (!includeSpam) {
-                Folder spam = mbox.getFolderById(Mailbox.ID_FOLDER_SPAM);            
+                Folder spam = mbox.getFolderById(null, Mailbox.ID_FOLDER_SPAM);            
                 addInClause(spam, false);
             }
             

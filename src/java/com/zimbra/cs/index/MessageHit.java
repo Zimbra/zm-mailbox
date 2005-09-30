@@ -202,7 +202,7 @@ public class MessageHit extends ZimbraHit {
             Mailbox mbox = Mailbox.getMailboxById(getMailbox().getId());
             int messageId = getItemId();
             try {
-                mMessage = mbox.getMessageById(messageId);
+                mMessage = mbox.getMessageById(null, messageId);
             } catch (ServiceException e) {
                 mLog.error("Error getting message id="+messageId+" from mailbox "+mbox.getId(),e);
                 e.printStackTrace();

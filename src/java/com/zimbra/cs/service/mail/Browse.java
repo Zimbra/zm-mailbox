@@ -62,7 +62,7 @@ public class Browse extends DocumentHandler  {
 
             BrowseResult browse;
             try {
-                browse = mbox.browse(browseBy);
+                browse = mbox.browse(lc.getOperationContext(), browseBy);
             } catch (IOException e) {
                 throw ServiceException.FAILURE("IO error", e);
             }

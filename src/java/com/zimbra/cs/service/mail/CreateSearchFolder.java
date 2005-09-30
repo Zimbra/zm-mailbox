@@ -57,7 +57,7 @@ public class CreateSearchFolder extends WriteOpDocumentHandler  {
         
         Element response = lc.createElement(MailService.CREATE_SEARCH_FOLDER_RESPONSE);
         if (search != null)
-        	ToXML.encodeSearchFolder(response, search);
+        	ToXML.encodeSearchFolder(response, lc, search);
         return response;
 	}
 }

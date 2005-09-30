@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
@@ -47,32 +48,34 @@ import com.zimbra.cs.service.ServiceException;
 
 
 class Pop3Mbx {
-    int mId; // id of the mailbox
-    int mNumDeleted; // number of messages deleted
-    long mTotalSize; // raw size from blob store
-    long mDeletedSize; // raw size from blob store    
-    Pop3Msg mMessages[]; // array of pop messages
+    private int mId; // id of the mailbox
+    private int mNumDeleted; // number of messages deleted
+    private long mTotalSize; // raw size from blob store
+    private long mDeletedSize; // raw size from blob store    
+    private Pop3Msg mMessages[]; // array of pop messages
+    private Mailbox.OperationContext mOpContext;
     
     /**
      * initialize the Pop3Mbx, without keeping a reference to either the Mailbox object or
      * any of the Message objects in the inbox.
-     * 
      * @param mailbox
+     * @param acct TODO
+     * 
      * @throws ServiceException
      */
-    Pop3Mbx(Mailbox mailbox, String query) throws ServiceException 
-    {
+    Pop3Mbx(Mailbox mailbox, Account acct, String query) throws ServiceException {
         mId = mailbox.getId();
         mNumDeleted = 0;
         mDeletedSize = 0;
         List items = null;
-        
+        mOpContext = new Mailbox.OperationContext(acct);
+
         if (query == null || query.equals("")) {
-            items = mailbox.getItemList(MailItem.TYPE_MESSAGE, Mailbox.ID_FOLDER_INBOX);
+            items = mailbox.getItemList(mOpContext, MailItem.TYPE_MESSAGE, Mailbox.ID_FOLDER_INBOX);
         } else {
             ZimbraQueryResults results;
             try {
-                results = mailbox.search(query, new byte[] { MailItem.TYPE_MESSAGE }, MailboxIndex.SEARCH_ORDER_DATE_DESC);
+                results = mailbox.search(mOpContext, query, new byte[] { MailItem.TYPE_MESSAGE }, MailboxIndex.SEARCH_ORDER_DATE_DESC);
                 items = new ArrayList();
                 while (results.hasNext()) {
                     ZimbraHit hit = results.getNext();
@@ -88,7 +91,7 @@ class Pop3Mbx {
             }
         }
         mMessages = new Pop3Msg[items.size()];
-        for (int n=0; n < items.size(); n++) {
+        for (int n = 0; n < items.size(); n++) {
             Message m = (Message) items.get(n);
             mMessages[n] = new Pop3Msg(m);
             mTotalSize += mMessages[n].getSize();
@@ -162,7 +165,7 @@ class Pop3Mbx {
      * @throws Pop3CmdException
      * @throws ServiceException
      */
-    Pop3Msg getPop3Msg(String msg) throws Pop3CmdException, ServiceException {
+    Pop3Msg getPop3Msg(String msg) throws Pop3CmdException {
         int index = parseInt(msg, "unable to parse msg");
         Pop3Msg pm = getMsg(index-1);
         if (pm.isDeleted())
@@ -180,7 +183,7 @@ class Pop3Mbx {
     Message getMessage(String msg) throws Pop3CmdException, ServiceException {
         Pop3Msg pm = getPop3Msg(msg);
         Mailbox mbox = Mailbox.getMailboxById(mId);
-        return mbox.getMessageById(pm.getId());
+        return mbox.getMessageById(mOpContext, pm.getId());
     }
     
     /**
@@ -227,9 +230,9 @@ class Pop3Mbx {
             if (pm.isDeleted()) {
                 try {
                     if (hard) {
-                        mbox.delete(null, pm.getId(), MailItem.TYPE_MESSAGE);                        
+                        mbox.delete(mOpContext, pm.getId(), MailItem.TYPE_MESSAGE);                        
                     } else {
-                        mbox.move(null, pm.getId(), MailItem.TYPE_MESSAGE, Mailbox.ID_FOLDER_TRASH);
+                        mbox.move(mOpContext, pm.getId(), MailItem.TYPE_MESSAGE, Mailbox.ID_FOLDER_TRASH);
                     }
                     count++;                    
                 } catch (ServiceException e) {

@@ -32,6 +32,7 @@ import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.DocumentHandler;
@@ -44,27 +45,23 @@ import com.zimbra.soap.ZimbraContext;
  * without notice.
  *
  */
-public class GetAppointment extends DocumentHandler 
-{
+public class GetAppointment extends DocumentHandler {
     private static Log sLog = LogFactory.getLog(GetAppointment.class);
 
-    public Element handle(Element request, Map context)
-            throws ServiceException {
-
+    public Element handle(Element request, Map context) throws ServiceException {
         ZimbraContext lc = getZimbraContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
-        
+        OperationContext octxt = lc.getOperationContext();
+
         int apptId = (int) request.getAttributeLong("id");
-        sLog.info("<GetAppointment id="+apptId+"> " + lc.toString());
-        
+        sLog.info("<GetAppointment id=" + apptId + "> " + lc);
+
         Element response = lc.createElement(MailService.GET_APPOINTMENT_RESPONSE);
-        
         synchronized(mbox) {
-            Appointment appointment = mbox.getAppointmentById(apptId);
-            ToXML.encodeApptSummary(response, appointment, ToXML.NOTIFY_FIELDS);
+            Appointment appointment = mbox.getAppointmentById(octxt, apptId);
+            ToXML.encodeApptSummary(response, lc, appointment, ToXML.NOTIFY_FIELDS);
         }
-        
+
         return response;
     }
-
 }

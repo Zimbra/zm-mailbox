@@ -68,7 +68,7 @@ public abstract class CalendarRequest extends SendMsg {
         synchronized (mbox) {
             int  folderId = 0;
             if (dat.mSaveToSent) {
-                folderId = getSentFolder(acct, mbox);
+                folderId = getSentFolder(acct, mbox, octxt);
             } else {
                 // FIXME hack!  if !save-to-sent, then must save to calendar folder to trigger appt creation.  
                 folderId = Mailbox.ID_FOLDER_CALENDAR;
@@ -80,9 +80,9 @@ public abstract class CalendarRequest extends SendMsg {
                 if (dat.mSaveToSent) {
                     response.addUniqueElement(MailService.E_MSG).addAttribute(MailService.A_ID, msgId);
                 } else {
-                    Message msg = mbox.getMessageById(msgId);
+                    Message msg = mbox.getMessageById(octxt, msgId);
                     ApptInfo inf = msg.getApptInfo(0); // OK for now b/c client never creates >0 components, but FIXME
-                    String inviteId = inf.getAppointmentId()+"-"+msgId;
+                    String inviteId = inf.getAppointmentId() + "-" + msgId;
                     response.addUniqueElement(MailService.E_MSG).addAttribute(MailService.A_ID, inviteId);
                 }
             }

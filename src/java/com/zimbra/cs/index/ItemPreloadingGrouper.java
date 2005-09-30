@@ -27,6 +27,7 @@ package com.zimbra.cs.index;
 
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailItem;
 import java.util.*;
 
@@ -39,14 +40,16 @@ import java.util.*;
  * This is done so that we can lower the number of SELECT calls to the DB
  * by batch-fetching the Message objects from the store 
  */
-public class ItemPreloadingGrouper extends BufferingResultsGrouper 
-{
-    private int mChunkSize;
+public class ItemPreloadingGrouper extends BufferingResultsGrouper {
 
-    public ItemPreloadingGrouper(ZimbraQueryResults results, int chunkSize) {
+    private int mChunkSize;
+    private OperationContext mOpContext;
+
+    public ItemPreloadingGrouper(ZimbraQueryResults results, int chunkSize, Mailbox mbox) {
         super(results);
-        mChunkSize = chunkSize;
         assert(mChunkSize > 0);
+        mChunkSize = chunkSize;
+        mOpContext = mbox.getOperationContext();
     }
     
     protected boolean bufferHits() throws ServiceException
@@ -100,7 +103,7 @@ public class ItemPreloadingGrouper extends BufferingResultsGrouper
         }
 
         if (numToLoad > 0) {
-            MailItem[] items = mbox.getItemById(unloadedIds, MailItem.TYPE_UNKNOWN);
+            MailItem[] items = mbox.getItemById(mOpContext, unloadedIds, MailItem.TYPE_UNKNOWN);
             for (int i = 0; i < hits.size(); i++)
                 if (items[i] != null)
                     ((ZimbraHit) hits.get(i)).setItem(items[i]);

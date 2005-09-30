@@ -147,7 +147,7 @@ public class TestUtil {
         types[0] = type;
 
         Set ids = new HashSet();
-        ZimbraQueryResults r = mbox.search(query, types, MailboxIndex.SEARCH_ORDER_DATE_DESC);
+        ZimbraQueryResults r = mbox.search(null, query, types, MailboxIndex.SEARCH_ORDER_DATE_DESC);
         while (r.hasNext()) {
             ZimbraHit hit = r.getNext();
             ids.add(new Integer(hit.getItemId()));
@@ -160,7 +160,7 @@ public class TestUtil {
     throws Exception {
         Folder folder = null;
         try {
-            folder = mbox.getFolderByPath(path);
+            folder = mbox.getFolderByPath(null, path);
         } catch (MailServiceException e) {
             if (e.getCode() != MailServiceException.NO_SUCH_FOLDER) {
                 throw e;

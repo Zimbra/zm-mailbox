@@ -241,7 +241,7 @@ public class ImapSession extends Session {
         //         the LSUB response, and it MUST be flagged with the \Noselect attribute."
 
         // figure out the set of subscribed mailboxes that match the pattern
-        Folder root = mbox.getFolderById(Mailbox.ID_FOLDER_USER_ROOT);
+        Folder root = mbox.getFolderById(getContext(), Mailbox.ID_FOLDER_USER_ROOT);
         List hierarchy = root.getSubfolderHierarchy();
         for (Iterator it = hierarchy.iterator(); it.hasNext(); ) {
             Folder folder = (Folder) it.next();

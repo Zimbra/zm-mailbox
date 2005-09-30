@@ -714,7 +714,7 @@ public class ImapHandler extends ProtocolHandler {
             synchronized (mailbox) {
                 session.setUsername(account.getName());
                 session.cacheFlags(mailbox);
-                for (Iterator it = mailbox.getTagList().iterator(); it.hasNext(); )
+                for (Iterator it = mailbox.getTagList(getContext()).iterator(); it.hasNext(); )
                     session.cacheTag((Tag) it.next());
             }
         } catch (ServiceException e) {
@@ -764,7 +764,7 @@ public class ImapHandler extends ProtocolHandler {
         ImapFolder i4folder = null;
         try {
             synchronized (mMailbox) {
-                i4folder = new ImapFolder(folderName, writable, mMailbox);
+                i4folder = new ImapFolder(folderName, writable, mMailbox, getContext());
                 writable = i4folder.isWritable();
             }
         } catch (ServiceException e) {
@@ -839,7 +839,7 @@ public class ImapHandler extends ProtocolHandler {
         int folderId = 0;
         try {
             synchronized (mMailbox) {
-                Folder folder = mMailbox.getFolderByPath(folderName);
+                Folder folder = mMailbox.getFolderByPath(getContext(), folderName);
                 if (!ImapFolder.isFolderVisible(folder)) {
                     ZimbraLog.imap.info("cannot delete IMAP-invisible folder: " + folder.getPath());
                     sendNO(tag, "DELETE failed");
@@ -890,7 +890,7 @@ public class ImapHandler extends ProtocolHandler {
 
         try {
             synchronized (mMailbox) {
-                int folderId = mMailbox.getFolderByPath(oldName).getId();
+                int folderId = mMailbox.getFolderByPath(getContext(), oldName).getId();
                 if (folderId != Mailbox.ID_FOLDER_INBOX)
                     mMailbox.renameFolder(getContext(), folderId, newName);
                 else {
@@ -926,7 +926,7 @@ public class ImapHandler extends ProtocolHandler {
 
         try {
             synchronized (mMailbox) {
-                Folder folder = mMailbox.getFolderByPath(folderName);
+                Folder folder = mMailbox.getFolderByPath(getContext(), folderName);
                 if (!ImapFolder.isFolderVisible(folder)) {
                     ZimbraLog.imap.info("SUBSCRIBE failed: folder not visible: " + folderName);
                     sendNO(tag, "SUBSCRIBE failed");
@@ -958,7 +958,7 @@ public class ImapHandler extends ProtocolHandler {
 
         try {
             synchronized (mMailbox) {
-                mSession.unsubscribe(mMailbox.getFolderByPath(folderName));
+                mSession.unsubscribe(mMailbox.getFolderByPath(getContext(), folderName));
             }
         } catch (MailServiceException.NoSuchItemException nsie) {
             ZimbraLog.imap.info("UNSUBSCRIBE failure skipped: no such folder: " + folderName);
@@ -998,7 +998,7 @@ public class ImapHandler extends ProtocolHandler {
         ArrayList matches = new ArrayList();
         try {
             synchronized (mMailbox) {
-                Folder root = mMailbox.getFolderById(Mailbox.ID_FOLDER_USER_ROOT);
+                Folder root = mMailbox.getFolderById(getContext(), Mailbox.ID_FOLDER_USER_ROOT);
                 List folders = root.getSubfolderHierarchy();
                 for (Iterator it = folders.iterator(); it.hasNext(); ) {
                     Folder folder = (Folder) it.next();
@@ -1059,7 +1059,7 @@ public class ImapHandler extends ProtocolHandler {
                     Map.Entry hit = (Map.Entry) it.next();
                     Folder folder = null;
                     try {
-                        folder = mMailbox.getFolderByPath((String) hit.getKey());
+                        folder = mMailbox.getFolderByPath(getContext(), (String) hit.getKey());
                     } catch (MailServiceException.NoSuchItemException nsie) { }
                     // FIXME: need to determine "name attributes" for mailbox (\Marked, \Unmarked, \Noinferiors, \Noselect)
                     boolean visible = hit.getValue() != null && ImapFolder.isFolderVisible(folder);
@@ -1096,7 +1096,7 @@ public class ImapHandler extends ProtocolHandler {
 
         StringBuffer data = new StringBuffer();
         try {
-            Folder folder = mMailbox.getFolderByPath(folderName);
+            Folder folder = mMailbox.getFolderByPath(getContext(), folderName);
             if (!ImapFolder.isFolderVisible(folder)) {
                 ZimbraLog.imap.info("STATUS failed: folder not visible: " + folderName);
                 sendNO(tag, "STATUS failed");
@@ -1147,7 +1147,7 @@ public class ImapHandler extends ProtocolHandler {
         StringBuffer appendHint = new StringBuffer();
         try {
             synchronized (mMailbox) {
-                Folder folder = mMailbox.getFolderByPath(folderName);
+                Folder folder = mMailbox.getFolderByPath(getContext(), folderName);
                 if (!ImapFolder.isFolderVisible(folder)) {
                     ZimbraLog.imap.info("APPEND failed: cannot APPEND to folder: " + folderName);
                     sendNO(tag, "APPEND failed");
@@ -1342,7 +1342,7 @@ public class ImapHandler extends ProtocolHandler {
 
         try {
             // make sure the folder exists and is visible
-            Folder folder = mMailbox.getFolderByPath(path);
+            Folder folder = mMailbox.getFolderByPath(getContext(), path);
             if (!ImapFolder.isFolderVisible(folder)) {
                 ZimbraLog.imap.info("GETQUOTAROOT failed: folder not visible: " + path);
                 sendNO(tag, "GETQUOTAROOT failed");
@@ -1497,7 +1497,7 @@ public class ImapHandler extends ProtocolHandler {
                     search = '(' + i4folder.getQuery() + ") (" + search + ')';
                 ZimbraLog.imap.info("[ search is: " + search + " ]");
 
-                ZimbraQueryResults zqr = mMailbox.search(search, MESSAGE_TYPES, MailboxIndex.SEARCH_ORDER_DATE_ASC);
+                ZimbraQueryResults zqr = mMailbox.search(getContext(), search, MESSAGE_TYPES, MailboxIndex.SEARCH_ORDER_DATE_ASC);
                 try {
                     for (ZimbraHit hit = zqr.getFirstHit(); hit != null; hit = zqr.getNext()) {
                         ImapMessage i4msg = mSession.getFolder().getById(hit.getItemId());
@@ -1629,7 +1629,7 @@ public class ImapHandler extends ProtocolHandler {
                     }
 			        if (!parts.isEmpty() || (attributes & ~FETCH_FROM_CACHE) != 0) {
                         // don't use msg.getMimeMessage() because it implicitly expands TNEF attachments
-                        InputStream is = raw != null ? new ByteArrayInputStream(raw) : mMailbox.getMessageById(i4msg.id).getRawMessage();
+                        InputStream is = raw != null ? new ByteArrayInputStream(raw) : mMailbox.getMessageById(getContext(), i4msg.id).getRawMessage();
                         MimeMessage mm = new MimeMessage(JMSession.getSession(), is);
                         is.close();
                         if ((attributes & FETCH_BODY) != 0) {
@@ -1798,7 +1798,7 @@ public class ImapHandler extends ProtocolHandler {
         List newMessages = new ArrayList();
         try {
             synchronized (mMailbox) {
-                Folder folder = mMailbox.getFolderByPath(folderName);
+                Folder folder = mMailbox.getFolderByPath(getContext(), folderName);
                 if (!ImapFolder.isFolderVisible(folder)) {
                     ZimbraLog.imap.info(command + " failed: folder is hidden: " + folderName);
                     sendNO(tag, command + " failed");

@@ -59,10 +59,11 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.EmailElementCache.CacheNode;
-import com.zimbra.cs.service.util.ParsedItemID;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.StringUtil;
+import com.zimbra.soap.ZimbraContext;
 
 
 /**
@@ -81,28 +82,28 @@ public class ToXML {
 	// no construction
 	private ToXML()  {}
 
-    public static Element encodeItem(Element parent, MailItem item) {
-        return encodeItem(parent, item, NOTIFY_FIELDS);
+    public static Element encodeItem(Element parent, ZimbraContext lc, MailItem item) {
+        return encodeItem(parent, lc, item, NOTIFY_FIELDS);
     }
-    public static Element encodeItem(Element parent, MailItem item, int fields) {
+    public static Element encodeItem(Element parent, ZimbraContext lc, MailItem item, int fields) {
         if (item instanceof SearchFolder)
-            return encodeSearchFolder(parent, (SearchFolder) item, fields);
+            return encodeSearchFolder(parent, lc, (SearchFolder) item, fields);
         else if (item instanceof Folder)
-            return encodeFolder(parent, (Folder) item, fields);
+            return encodeFolder(parent, lc, (Folder) item, fields);
         else if (item instanceof Tag)
-            return encodeTag(parent, (Tag) item, fields);
+            return encodeTag(parent, lc, (Tag) item, fields);
         else if (item instanceof Note)
-            return encodeNote(parent, (Note) item, fields);
+            return encodeNote(parent, lc, (Note) item, fields);
         else if (item instanceof Contact)
-            return encodeContact(parent, (Contact) item, null, false, null, fields);
+            return encodeContact(parent, lc, (Contact) item, null, false, null, fields);
         else if (item instanceof Appointment) 
-            return encodeApptSummary(parent, (Appointment)item, fields);
+            return encodeApptSummary(parent, lc, (Appointment) item, fields);
         else if (item instanceof Message) {
             OutputParticipants output = (fields == NOTIFY_FIELDS ? OutputParticipants.PUT_BOTH : OutputParticipants.PUT_SENDERS);
-            return encodeMessageSummary(parent, (Message) item, output, fields);
+            return encodeMessageSummary(parent, lc, (Message) item, output, fields);
         } else if (item instanceof Conversation) {
             Conversation conv = (Conversation) item;
-            return encodeConversationSummary(parent, conv, conv.getDate(), null, null, fields);
+            return encodeConversationSummary(parent, lc, conv, conv.getDate(), null, null, fields);
         }
         return null;
     }
@@ -121,17 +122,17 @@ public class ToXML {
         return elem;
     }
 
-    public static Element encodeFolder(Element parent, Folder folder) {
-        return encodeFolder(parent, folder, NOTIFY_FIELDS);
+    public static Element encodeFolder(Element parent, ZimbraContext lc, Folder folder) {
+        return encodeFolder(parent, lc, folder, NOTIFY_FIELDS);
     }
-    public static Element encodeFolder(Element parent, Folder folder, int fields) {
+    public static Element encodeFolder(Element parent, ZimbraContext lc, Folder folder, int fields) {
         if (folder instanceof SearchFolder)
-            return encodeSearchFolder(parent, (SearchFolder) folder, fields);
+            return encodeSearchFolder(parent, lc, (SearchFolder) folder, fields);
         else if (folder instanceof Mountpoint)
-            return encodeMountpoint(parent, (Mountpoint) folder, fields);
+            return encodeMountpoint(parent, lc, (Mountpoint) folder, fields);
 
         Element elem = parent.addElement(MailService.E_FOLDER);
-        encodeFolderCommon(elem, folder, fields);
+        encodeFolderCommon(elem, lc, folder, fields);
         if (needToOutput(fields, Change.MODIFIED_SIZE)) {
             long size = folder.getSize();
             if (size > 0 || fields != NOTIFY_FIELDS)
@@ -163,9 +164,9 @@ public class ToXML {
         return elem;
 	}
 
-    private static Element encodeFolderCommon(Element elem, Folder folder, int fields) {
+    private static Element encodeFolderCommon(Element elem, ZimbraContext lc, Folder folder, int fields) {
         int folderId = folder.getId();
-        elem.addAttribute(MailService.A_ID, folderId);
+        elem.addAttribute(MailService.A_ID, lc.formatItemId(folder));
         if (folderId != Mailbox.ID_FOLDER_ROOT) {
             if (needToOutput(fields, Change.MODIFIED_NAME)) {
                 String name = folder.getName();
@@ -173,7 +174,7 @@ public class ToXML {
                     elem.addAttribute(MailService.A_NAME, name);
             }
             if (needToOutput(fields, Change.MODIFIED_FOLDER))
-                elem.addAttribute(MailService.A_FOLDER, folder.getFolderId());
+                elem.addAttribute(MailService.A_FOLDER, lc.formatItemId(folder.getMailbox(), folder.getFolderId()));
         }
         if (needToOutput(fields, Change.MODIFIED_COLOR)) {
             byte color = folder.getColor();
@@ -190,12 +191,12 @@ public class ToXML {
         return elem;
     }
 
-    public static Element encodeSearchFolder(Element parent, SearchFolder search) {
-        return encodeSearchFolder(parent, search, NOTIFY_FIELDS);
+    public static Element encodeSearchFolder(Element parent, ZimbraContext lc, SearchFolder search) {
+        return encodeSearchFolder(parent, lc, search, NOTIFY_FIELDS);
     }
-    public static Element encodeSearchFolder(Element parent, SearchFolder search, int fields) {
+    public static Element encodeSearchFolder(Element parent, ZimbraContext lc, SearchFolder search, int fields) {
         Element elem = parent.addElement(MailService.E_SEARCH);
-        encodeFolderCommon(elem, search, fields);
+        encodeFolderCommon(elem, lc, search, fields);
         if (needToOutput(fields, Change.MODIFIED_QUERY)) {
             elem.addAttribute(MailService.A_QUERY, search.getQuery());
             elem.addAttribute(MailService.A_SORTBY, search.getSortField());
@@ -204,12 +205,12 @@ public class ToXML {
         return elem;
     }
 
-    public static Element encodeMountpoint(Element parent, Mountpoint mpt) {
-        return encodeMountpoint(parent, mpt, NOTIFY_FIELDS);
+    public static Element encodeMountpoint(Element parent, ZimbraContext lc, Mountpoint mpt) {
+        return encodeMountpoint(parent, lc, mpt, NOTIFY_FIELDS);
     }
-    public static Element encodeMountpoint(Element parent, Mountpoint mpt, int fields) {
+    public static Element encodeMountpoint(Element parent, ZimbraContext lc, Mountpoint mpt, int fields) {
         Element elem = parent.addElement(MailService.E_MOUNT);
-        encodeFolderCommon(elem, mpt, fields);
+        encodeFolderCommon(elem, lc, mpt, fields);
         if (fields == NOTIFY_FIELDS && mpt.getDefaultView() != MailItem.TYPE_UNKNOWN)
             elem.addAttribute(MailService.A_DEFAULT_VIEW, MailItem.getNameForType(mpt.getDefaultView()));
         return elem;
@@ -228,18 +229,18 @@ public class ToXML {
         }
     }
 
-    public static Element encodeContact(Element parent, Contact contact, ContactAttrCache cacache,
-										boolean summary, List attrFilter) {
-        return encodeContact(parent, contact, cacache, summary, attrFilter, NOTIFY_FIELDS);
+    public static Element encodeContact(Element parent, ZimbraContext lc, Contact contact,
+										ContactAttrCache cacache, boolean summary, List attrFilter) {
+        return encodeContact(parent, lc, contact, cacache, summary, attrFilter, NOTIFY_FIELDS);
     }
-    public static Element encodeContact(Element parent, Contact contact, ContactAttrCache cacache,
-            boolean summary, List attrFilter, int fields) {
+    public static Element encodeContact(Element parent, ZimbraContext lc, Contact contact,
+            ContactAttrCache cacache, boolean summary, List attrFilter, int fields) {
         Element elem = parent.addElement(MailService.E_CONTACT);
-        elem.addAttribute(MailService.A_ID, contact.getId());
+        elem.addAttribute(MailService.A_ID, lc.formatItemId(contact));
         if (needToOutput(fields, Change.MODIFIED_CONTENT) && contact.getSavedSequence() != 0)
             elem.addAttribute(MailService.A_REVISION, contact.getSavedSequence());
         if (needToOutput(fields, Change.MODIFIED_FOLDER))
-            elem.addAttribute(MailService.A_FOLDER, contact.getFolderId());
+            elem.addAttribute(MailService.A_FOLDER, lc.formatItemId(contact.getMailbox(), contact.getFolderId()));
         recordItemTags(elem, contact, fields);
         if (needToOutput(fields, Change.MODIFIED_CONFLICT))
             elem.addAttribute(MailService.A_CHANGE_DATE, contact.getChangeDate() / 1000);
@@ -277,16 +278,16 @@ public class ToXML {
         return elem;
     }
 
-	public static Element encodeNote(Element parent, Note note) {
-        return encodeNote(parent, note, NOTIFY_FIELDS);
+	public static Element encodeNote(Element parent, ZimbraContext lc, Note note) {
+        return encodeNote(parent, lc, note, NOTIFY_FIELDS);
     }
-    public static Element encodeNote(Element parent, Note note, int fields) {
+    public static Element encodeNote(Element parent, ZimbraContext lc, Note note, int fields) {
         Element elem = parent.addElement(MailService.E_NOTE);
-        elem.addAttribute(MailService.A_ID, note.getId());
+        elem.addAttribute(MailService.A_ID, lc.formatItemId(note));
         if (needToOutput(fields, Change.MODIFIED_CONTENT) && note.getSavedSequence() != 0)
             elem.addAttribute(MailService.A_REVISION, note.getSavedSequence());
         if (needToOutput(fields, Change.MODIFIED_FOLDER))
-            elem.addAttribute(MailService.A_FOLDER, note.getFolderId());
+            elem.addAttribute(MailService.A_FOLDER, lc.formatItemId(note.getMailbox(), note.getFolderId()));
         if (needToOutput(fields, Change.MODIFIED_DATE))
             elem.addAttribute(MailService.A_DATE, note.getDate());
         recordItemTags(elem, note, fields);
@@ -301,12 +302,12 @@ public class ToXML {
         return elem;
 	}
 
-	public static Element encodeTag(Element parent, Tag tag) {
-        return encodeTag(parent, tag, NOTIFY_FIELDS);
+	public static Element encodeTag(Element parent, ZimbraContext lc, Tag tag) {
+        return encodeTag(parent, lc, tag, NOTIFY_FIELDS);
     }
-    public static Element encodeTag(Element parent, Tag tag, int fields) {
+    public static Element encodeTag(Element parent, ZimbraContext lc, Tag tag, int fields) {
 		Element elem = parent.addElement(MailService.E_TAG);
-		elem.addAttribute(MailService.A_ID, tag.getId());
+		elem.addAttribute(MailService.A_ID, lc.formatItemId(tag));
 		if (needToOutput(fields, Change.MODIFIED_NAME))
             elem.addAttribute(MailService.A_NAME, tag.getName());
 		if (needToOutput(fields, Change.MODIFIED_COLOR))
@@ -322,18 +323,18 @@ public class ToXML {
 	}
 
 
-    public static Element encodeConversation(Element parent, Conversation conv) throws ServiceException {
+    public static Element encodeConversation(Element parent, ZimbraContext lc, Conversation conv) throws ServiceException {
         int fields = NOTIFY_FIELDS;
-        Element c = encodeConversationCommon(parent, conv, fields);
+        Element c = encodeConversationCommon(parent, lc, conv, fields);
         EmailElementCache eecache = new EmailElementCache();
-        Message[] messages = conv.getMailbox().getMessagesByConversation(conv.getId());
+        Message[] messages = conv.getMailbox().getMessagesByConversation(lc.getOperationContext(), conv.getId());
         for (int i = 0; i < messages.length; i++) {
             Message msg = messages[i];
             Element m = c.addElement(MailService.E_MSG);
-            m.addAttribute(MailService.A_ID, msg.getId());
+            m.addAttribute(MailService.A_ID, lc.formatItemId(msg));
             m.addAttribute(MailService.A_DATE, msg.getDate());
             m.addAttribute(MailService.A_SIZE, msg.getSize());
-            m.addAttribute(MailService.A_FOLDER, msg.getFolderId());
+            m.addAttribute(MailService.A_FOLDER, lc.formatItemId(msg.getMailbox(), msg.getFolderId()));
             recordItemTags(m, msg, fields);
             m.addAttribute(MailService.E_FRAG, msg.getFragment(), Element.DISP_CONTENT);
             eecache.makeEmail(m, msg.getSender(), EmailElementCache.EMAIL_TYPE_FROM, null);
@@ -345,19 +346,19 @@ public class ToXML {
      * 
      * This version lets you specify the Date and Fragment -- we use this when sending Query Results back to the client, 
      * the conversation date returned and fragment correspond to those of the matched message.
-     * 
+     * @param lc TODO
      * @param conv
      * @param date - Use this date
      * @param fragment - Use this fragment
      * @param eecache
      */
-    public static Element encodeConversationSummary(Element parent, Conversation conv, long date,
-            String fragment, EmailElementCache eecache) {
-        return encodeConversationSummary(parent, conv, date, fragment, eecache, NOTIFY_FIELDS);
+    public static Element encodeConversationSummary(Element parent, ZimbraContext lc, Conversation conv,
+            long date, String fragment, EmailElementCache eecache) {
+        return encodeConversationSummary(parent, lc, conv, date, fragment, eecache, NOTIFY_FIELDS);
     }
-    public static Element encodeConversationSummary(Element parent, Conversation conv, long date,
-            String fragment, EmailElementCache eecache, int fields) {
-        Element c = encodeConversationCommon(parent, conv, fields);
+    public static Element encodeConversationSummary(Element parent, ZimbraContext lc, Conversation conv,
+            long date, String fragment, EmailElementCache eecache, int fields) {
+        Element c = encodeConversationCommon(parent, lc, conv, fields);
         if (needToOutput(fields, Change.MODIFIED_DATE))
             c.addAttribute(MailService.A_DATE, date);
         if (needToOutput(fields, Change.MODIFIED_SUBJECT))
@@ -391,9 +392,9 @@ public class ToXML {
         return c;
     }
 
-    private static Element encodeConversationCommon(Element parent, Conversation conv, int fields) {
+    private static Element encodeConversationCommon(Element parent, ZimbraContext lc, Conversation conv, int fields) {
         Element c = parent.addElement(MailService.E_CONV);
-        c.addAttribute(MailService.A_ID, conv.getId());
+        c.addAttribute(MailService.A_ID, lc.formatItemId(conv));
         if (needToOutput(fields, Change.MODIFIED_CHILDREN))
             c.addAttribute(MailService.A_NUM, conv.getMessageCount());
         recordItemTags(c, conv, fields);
@@ -405,22 +406,23 @@ public class ToXML {
 	/**
 	 * Encodes a Message object into <m> element with <mp> elements
 	 * for message body.
+	 * @param lc TODO
 	 * @param msg
 	 * @param metaDataOnly
 	 * @return
 	 * @throws ServiceException
 	 */
-	public static Element encodeMessageAsMP(Element parent, Message msg, boolean wantHTML, String part)
+	public static Element encodeMessageAsMP(Element parent, ZimbraContext lc, Message msg, boolean wantHTML, String part)
 	throws ServiceException {
         boolean wholeMessage = (part == null || part.trim().equals(""));
         
         Element m;
         if (wholeMessage) {
-            m = encodeMessageCommon(parent, msg, NOTIFY_FIELDS);
-            m.addAttribute(MailService.A_ID, msg.getId());
+            m = encodeMessageCommon(parent, lc, msg, NOTIFY_FIELDS);
+            m.addAttribute(MailService.A_ID, lc.formatItemId(msg));
         } else {
             m = parent.addElement(MailService.E_MSG);
-            m.addAttribute(MailService.A_ID, msg.getId());
+            m.addAttribute(MailService.A_ID, lc.formatItemId(msg));
             m.addAttribute(MailService.A_PART, part);
         }
 
@@ -454,7 +456,7 @@ public class ToXML {
 
             if (wholeMessage && msg.isDraft()) {
                 if (msg.getDraftOrigId() > 0)
-                    m.addAttribute(MailService.A_ORIG_ID, msg.getDraftOrigId());
+                    m.addAttribute(MailService.A_ORIG_ID, lc.formatItemId(msg.getMailbox(), msg.getDraftOrigId()));
                 if (!msg.getDraftReplyType().equals(""))
                     m.addAttribute(MailService.A_REPLY_TYPE, msg.getDraftReplyType());
                 String inReplyTo = mm.getHeader("In-Reply-To", null);
@@ -470,7 +472,7 @@ public class ToXML {
                 m.addAttribute(MailService.A_SENT_DATE, sent.getTime());
             
             if (msg.isInvite())
-                encodeInvitesForMessage(m, msg, NOTIFY_FIELDS);
+                encodeInvitesForMessage(m, lc, msg, NOTIFY_FIELDS);
             
             List parts = Mime.getParts(mm);
             if (parts != null && !parts.isEmpty()) {
@@ -499,32 +501,32 @@ public class ToXML {
      *    
      * DO NOT use the raw invite-mail-item-id to fetch the content: since the invite is a 
      * standard mail-message it can be deleted by the user at any time!
-     * 
-     *    
      * @param parent
+     * @param lc TODO
      * @param appt
      * @param fields
+     * 
+     *    
      * @return
      */
-    public static Element encodeApptSummary(Element parent, Appointment appt, int fields) {
+    public static Element encodeApptSummary(Element parent, ZimbraContext lc, Appointment appt, int fields) {
         Element m = parent.addElement(MailService.E_APPOINTMENT);
         
         m.addAttribute(MailService.A_UID, appt.getUid());
-        m.addAttribute(MailService.A_ID, appt.getId());
-        m.addAttribute(MailService.A_FOLDER, appt.getFolderId());
+        m.addAttribute(MailService.A_ID, lc.formatItemId(appt));
+        m.addAttribute(MailService.A_FOLDER, lc.formatItemId(appt.getMailbox(), appt.getFolderId()));
         
         for (int i = 0; i < appt.numInvites(); i++) {
             try {
                 Invite inv = appt.getInvite(i);
-                
+
                 Element ie = m.addElement(MailService.E_INVITE);
-                ie.addAttribute(MailService.A_ID, inv.getMailItemId());
+                ie.addAttribute(MailService.A_ID, lc.formatItemId(appt.getMailbox(), inv.getMailItemId()));
                 ie.addAttribute(MailService.A_APPT_COMPONENT_NUM, inv.getComponentNum());
-                if (inv.hasRecurId()) {
+                if (inv.hasRecurId())
                     ie.addAttribute(MailService.A_APPT_RECURRENCE_ID, inv.getRecurId().toString());
-                }
-                
-                ToXML.encodeInvite(ie, appt, inv, NOTIFY_FIELDS);
+
+                ToXML.encodeInvite(ie, lc, appt, inv, NOTIFY_FIELDS);
             } catch (ServiceException e) {
                 e.printStackTrace();
             }
@@ -537,24 +539,23 @@ public class ToXML {
     /**
      * Encodes a Message object into <m> element with <mp> elements
      * for message body.
+     * @param lc TODO
      * @param msg
      * @param metaDataOnly
      * @return
      * @throws ServiceException
      */
-    public static Element encodeApptAsMP(Element parent, Appointment appt, int invId, boolean wantHTML, String part)
+    public static Element encodeApptAsMP(Element parent, ZimbraContext lc, Appointment appt, int invId, boolean wantHTML, String part)
     throws ServiceException {
         boolean wholeMessage = (part == null || part.trim().equals(""));
         
         Element m;
         if (wholeMessage) {
-            m = encodeMessageCommon(parent, appt, NOTIFY_FIELDS);
-            ParsedItemID pid = ParsedItemID.create(appt.getId(), invId);
-            m.addAttribute(MailService.A_ID, pid.toString());
+            m = encodeMessageCommon(parent, lc, appt, NOTIFY_FIELDS);
+            m.addAttribute(MailService.A_ID, new ItemId(appt, invId).toString(lc));
         } else {
             m = parent.addElement(MailService.E_MSG);
-            ParsedItemID pid = ParsedItemID.create(appt.getId(), invId);
-            m.addAttribute(MailService.A_ID, pid.toString());
+            m.addAttribute(MailService.A_ID, new ItemId(appt, invId).toString(lc));
             m.addAttribute(MailService.A_PART, part);
         }
 
@@ -606,7 +607,7 @@ public class ToXML {
             Element invElt = m.addElement(MailService.E_INVITE); 
             Invite[] invs = appt.getInvites(invId);
             for (int i = 0; i < invs.length; i++) {
-                encodeInvite(invElt, appt, invs[i], NOTIFY_FIELDS);
+                encodeInvite(invElt, lc, appt, invs[i], NOTIFY_FIELDS);
             }
             
 //            if (msg.isInvite())
@@ -632,36 +633,37 @@ public class ToXML {
 
 	/**
 	 * Encodes a Message object into <m> element with standard MIME content.
+	 * @param lc TODO
 	 * @param msg
 	 * @param part TODO
 	 * @return
 	 * @throws ServiceException
 	 */
-	public static Element encodeMessageAsMIME(Element parent, Message msg, String part)
+	public static Element encodeMessageAsMIME(Element parent, ZimbraContext lc, Message msg, String part)
 	throws ServiceException {
         boolean wholeMessage = (part == null || part.trim().equals(""));
 
         Element m;
         if (wholeMessage) {
-            m = encodeMessageCommon(parent, msg, NOTIFY_FIELDS);
-            m.addAttribute(MailService.A_ID, msg.getId());
+            m = encodeMessageCommon(parent, lc, msg, NOTIFY_FIELDS);
+            m.addAttribute(MailService.A_ID, lc.formatItemId(msg));
         } else {
             m = parent.addElement(MailService.E_MSG);
-            m.addAttribute(MailService.A_ID, msg.getId());
+            m.addAttribute(MailService.A_ID, lc.formatItemId(msg));
             m.addAttribute(MailService.A_PART, part);
         }
 
         Element content = m.addUniqueElement(MailService.E_CONTENT);
         int size = (int) msg.getSize() + 2048;
         if (!wholeMessage)
-            content.addAttribute(MailService.A_URL, CONTENT_SERVLET_URI + msg.getId() + PART_PARAM_STRING + part);
+            content.addAttribute(MailService.A_URL, CONTENT_SERVLET_URI + lc.formatItemId(msg) + PART_PARAM_STRING + part);
         else if (size > MAX_INLINE_MSG_SIZE)
-            content.addAttribute(MailService.A_URL, CONTENT_SERVLET_URI + msg.getId());
+            content.addAttribute(MailService.A_URL, CONTENT_SERVLET_URI + lc.formatItemId(msg));
         else
 			try {
 				byte[] raw = ByteUtil.getContent(msg.getRawMessage(), size);
     			if (!ByteUtil.isASCII(raw))
-                    content.addAttribute(MailService.A_URL, CONTENT_SERVLET_URI + msg.getId());
+                    content.addAttribute(MailService.A_URL, CONTENT_SERVLET_URI + lc.formatItemId(msg));
                 else
                     content.setText(new String(raw, "US-ASCII"));
             } catch (IOException ex) {
@@ -678,12 +680,12 @@ public class ToXML {
         private OutputParticipants() { }
     }
 
-    public static Element encodeMessageSummary(Element parent, Message msg, OutputParticipants output) {
-        return encodeMessageSummary(parent, msg, output, NOTIFY_FIELDS);
+    public static Element encodeMessageSummary(Element parent, ZimbraContext lc, Message msg, OutputParticipants output) {
+        return encodeMessageSummary(parent, lc, msg, output, NOTIFY_FIELDS);
     }
-    public static Element encodeMessageSummary(Element parent, Message msg, OutputParticipants output, int fields) {
-        Element e = encodeMessageCommon(parent, msg, fields);
-        e.addAttribute(MailService.A_ID, msg.getId());
+    public static Element encodeMessageSummary(Element parent, ZimbraContext lc, Message msg, OutputParticipants output, int fields) {
+        Element e = encodeMessageCommon(parent, lc, msg, fields);
+        e.addAttribute(MailService.A_ID, lc.formatItemId(msg));
 
         if (!needToOutput(fields, Change.MODIFIED_CONTENT))
             return e;
@@ -708,15 +710,15 @@ public class ToXML {
         
         if (msg.isInvite()) 
             try {
-                encodeInvitesForMessage(e, msg, fields);
+                encodeInvitesForMessage(e, lc, msg, fields);
             } catch (ServiceException ex) {
-                mLog.debug("Caught exception while encoding Invites for msg "+msg.getId(),ex);
+                mLog.debug("Caught exception while encoding Invites for msg " + msg.getId(), ex);
             }
         
         return e;
     }
     
-    private static Element encodeMessageCommon(Element parent, MailItem mi, int fields) {
+    private static Element encodeMessageCommon(Element parent, ZimbraContext lc, MailItem mi, int fields) {
         Element elem = parent.addElement(MailService.E_MSG);
         // DO NOT encode the item-id here, as some Invite-Messages-In-Appointments have special item-id's
         if (needToOutput(fields, Change.MODIFIED_CONTENT) && mi.getSavedSequence() != 0)
@@ -726,11 +728,11 @@ public class ToXML {
         if (needToOutput(fields, Change.MODIFIED_DATE))
             elem.addAttribute(MailService.A_DATE, mi.getDate());
         if (needToOutput(fields, Change.MODIFIED_FOLDER))
-            elem.addAttribute(MailService.A_FOLDER, mi.getFolderId());
+            elem.addAttribute(MailService.A_FOLDER, lc.formatItemId(mi.getMailbox(), mi.getFolderId()));
         if (mi instanceof Message) {
             Message msg = (Message)mi;
             if (needToOutput(fields, Change.MODIFIED_PARENT) && (fields != NOTIFY_FIELDS || msg.getConversationId() != -1))
-                elem.addAttribute(MailService.A_CONV_ID, msg.getConversationId());
+                elem.addAttribute(MailService.A_CONV_ID, lc.formatItemId(msg.getMailbox(), msg.getConversationId()));
         }
         recordItemTags(elem, mi, fields);
         if (needToOutput(fields, Change.MODIFIED_CONFLICT))
@@ -738,8 +740,7 @@ public class ToXML {
         return elem;
     }
     
-    public static Element encodeInvite(Element parent, Appointment apptOrNull, Invite invite, int fields) 
-    {
+    public static Element encodeInvite(Element parent, ZimbraContext lc, Appointment apptOrNull, Invite invite, int fields) {
         boolean allFields = true;
         
         if (fields != NOTIFY_FIELDS) {
@@ -761,9 +762,8 @@ public class ToXML {
                 e.addAttribute("x_uid", invite.getUid());
                 
                 Appointment appt = invite.getAppointment();
-                if (appt != null) {
-                    e.addAttribute(MailService.A_APPT_ID, appt.getId());
-                }
+                if (appt != null)
+                    e.addAttribute(MailService.A_APPT_ID, lc.formatItemId(appt));
                 
                 if (invite.thisAcctIsOrganizer(appt.getMailbox().getAccount())) {
                     e.addAttribute(MailService.A_APPT_ISORG, true);
@@ -871,7 +871,8 @@ public class ToXML {
         return e;
     }
     
-    private static Element encodeInvitesForMessage(Element parent, Message msg, int fields) throws ServiceException {
+    private static Element encodeInvitesForMessage(Element parent, ZimbraContext lc, Message msg, int fields)
+    throws ServiceException {
         if (fields != NOTIFY_FIELDS)
             if (!needToOutput(fields, Change.MODIFIED_INVITE))
                 return parent;
@@ -881,12 +882,12 @@ public class ToXML {
         boolean addedMethod = false;
         Mailbox mbox = msg.getMailbox();
         
-        for (Iterator iter = msg.getApptInfoIterator(); iter.hasNext();) {
-            Message.ApptInfo info = (Message.ApptInfo)iter.next();
+        for (Iterator iter = msg.getApptInfoIterator(); iter.hasNext(); ) {
+            Message.ApptInfo info = (Message.ApptInfo) iter.next();
             
             Appointment appt = null;
             try {
-                appt = mbox.getAppointmentById(info.getAppointmentId());
+                appt = mbox.getAppointmentById(lc.getOperationContext(), info.getAppointmentId());
             } catch (MailServiceException.NoSuchItemException e) {}
             if (appt != null) {
                 Invite inv = appt.getInvite(msg.getId(), info.getComponentNo());
@@ -896,7 +897,7 @@ public class ToXML {
 //                        ie.addAttribute("method", inv.getMethod());
                         addedMethod = true;
                     }
-                    encodeInvite(ie, null, inv, fields); // NULL b/c we don't want to encode all of the reply-status here!
+                    encodeInvite(ie, lc, null, inv, fields); // NULL b/c we don't want to encode all of the reply-status here!
                 } else {
                     // invite not in this appointment anymore
                 }

@@ -186,7 +186,7 @@ public class DbTest {
 	private int fetchLocation(String path, boolean setDefault) throws ServiceException {
 		String fullPath = getFullPath(path);
         try {
-    		int folderId = mailbox.getFolderByPath(fullPath).getId();
+    		int folderId = mailbox.getFolderByPath(null, fullPath).getId();
 			if (setDefault) {
 				folderName = fullPath;
 				location   = folderId;
@@ -353,7 +353,7 @@ public class DbTest {
 			String content = "";
 			while (tok.hasMoreTokens())
 				content = content + " " + tok.nextToken();
-			mailbox.createNote(null, content, new Rectangle(10, 10, 100, 200), Note.DEFAULT_COLOR, location);
+			mailbox.createNote(null, content, new Rectangle(10, 10, 100, 200), MailItem.DEFAULT_COLOR, location);
 		}
 	}
 
@@ -400,7 +400,7 @@ public class DbTest {
 			}
 		}
         returnTypes[0] = type;
-		ZimbraQueryResults results = mailbox.search("in:" + target, returnTypes, MailboxIndex.SEARCH_ORDER_DATE_DESC);
+		ZimbraQueryResults results = mailbox.search(null, "in:" + target, returnTypes, MailboxIndex.SEARCH_ORDER_DATE_DESC);
 		try {
 		    for (ZimbraHit hit = results.getFirstHit(); hit != null; hit = results.getNext())
 		    	if (type == MailItem.TYPE_CONVERSATION)
@@ -411,9 +411,9 @@ public class DbTest {
 		    results.doneWithSearchResults();
 		}
         try {
-    		Folder folder = mailbox.getFolderByPath(target);
+    		Folder folder = mailbox.getFolderByPath(null, target);
 			System.out.println("./  [" + folder.getUnreadCount() + "]");
-			List subfolders = folder.getSubfolders();
+			List subfolders = folder.getSubfolders(null);
 			if (subfolders != null) {
 				for (Iterator it = subfolders.iterator(); it.hasNext(); ) {
 					Folder subfolder = (Folder) it.next();
@@ -435,7 +435,7 @@ public class DbTest {
 		if (conversationId == -1)
 			return;
 		mailbox.alterTag(null, conversationId, MailItem.TYPE_CONVERSATION, Flag.ID_FLAG_FLAGGED, true);
-		displayConversationSummary(mailbox.getConversationById(conversationId));
+		displayConversationSummary(mailbox.getConversationById(null, conversationId));
 	}
 
 	private void unflagMessage(StringTokenizer tok) throws ServiceException {
@@ -443,7 +443,7 @@ public class DbTest {
 		if (messageId == -1)
 			return;
 		mailbox.alterTag(null, messageId, MailItem.TYPE_MESSAGE, Flag.ID_FLAG_FLAGGED, false);
-		displayMessageSummary(mailbox.getMessageById(messageId));
+		displayMessageSummary(mailbox.getMessageById(null, messageId));
 	}
 	
 	private void unflagConversation(StringTokenizer tok) throws ServiceException {
@@ -451,21 +451,21 @@ public class DbTest {
 		if (conversationId == -1)
 			return;
 		mailbox.alterTag(null, conversationId, MailItem.TYPE_CONVERSATION, Flag.ID_FLAG_FLAGGED, false);
-		displayConversationSummary(mailbox.getConversationById(conversationId));
+		displayConversationSummary(mailbox.getConversationById(null, conversationId));
 	}
 	
 	private void showConversation(StringTokenizer tok) throws ServiceException {
 		int conversationId = fetchItemId(tok, "usage: show <conversation_id>");
 		if (conversationId == -1)
 			return;
-		Message[] messages = mailbox.getMessagesByConversation(conversationId);
+		Message[] messages = mailbox.getMessagesByConversation(null, conversationId);
 		if (messages != null)
 			for (int i = 0; i < messages.length; i++)
 				displayMessageSummary(messages[i]);
 	}
 	
 	private void listTags() throws ServiceException {
-		List tagList = mailbox.getTagList();
+		List tagList = mailbox.getTagList(null);
 		if (tagList != null)
 			for (Iterator it = tagList.iterator(); it.hasNext(); )
 				displayTagSummary((Tag) it.next());
@@ -480,7 +480,7 @@ public class DbTest {
 		if (messageId == -1)
 			return;
 		mailbox.alterTag(null, messageId, MailItem.TYPE_MESSAGE, tagId, true);
-		displayMessageSummary(mailbox.getMessageById(messageId));
+		displayMessageSummary(mailbox.getMessageById(null, messageId));
 	}
 
 	private void untagMessage(StringTokenizer tok) throws ServiceException {
@@ -492,7 +492,7 @@ public class DbTest {
 		if (messageId == -1)
 			return;
 		mailbox.alterTag(null, messageId, MailItem.TYPE_MESSAGE, tagId, false);
-		displayMessageSummary(mailbox.getMessageById(messageId));
+		displayMessageSummary(mailbox.getMessageById(null, messageId));
 	}
 
 	private void taggedConversations(StringTokenizer tok) throws ServiceException, MailServiceException, IOException, ParseException {
@@ -500,10 +500,10 @@ public class DbTest {
 		int tagId = fetchTagId(tok, usage);
 		if (tagId == 0)
 			return;
-		Tag tag = mailbox.getTagById(tagId);
+		Tag tag = mailbox.getTagById(null, tagId);
 		if (tag == null)
 			return;
-		ZimbraQueryResults results = mailbox.search("tag:" + tag.getName(), new byte[] {MailItem.TYPE_CONVERSATION}, MailboxIndex.SEARCH_ORDER_DATE_DESC);
+		ZimbraQueryResults results = mailbox.search(null, "tag:" + tag.getName(), new byte[] {MailItem.TYPE_CONVERSATION}, MailboxIndex.SEARCH_ORDER_DATE_DESC);
 		try {
 		    for (ZimbraHit hit = results.getFirstHit(); hit != null; hit = results.getNext())
 		        displayConversationSummary(((ConversationHit) hit).getConversation());
@@ -515,7 +515,7 @@ public class DbTest {
 	private void createTag(StringTokenizer tok) throws ServiceException {
 		if (tok.hasMoreTokens()) {
 			String tagName = tok.nextToken();
-			byte tagColor = (tok.hasMoreTokens() ? Byte.parseByte(tok.nextToken()) : Tag.DEFAULT_COLOR);
+			byte tagColor = (tok.hasMoreTokens() ? Byte.parseByte(tok.nextToken()) : MailItem.DEFAULT_COLOR);
 			Tag tag = mailbox.createTag(null, tagName, tagColor);
 			if (tag != null)
 				displayTagSummary(tag);
@@ -540,7 +540,7 @@ public class DbTest {
 			return;
 		}
 		mailbox.renameTag(null, tagId, tok.nextToken());
-		displayTagSummary(mailbox.getTagById(tagId));
+		displayTagSummary(mailbox.getTagById(null, tagId));
 	}
 	
 	private void colorTag(StringTokenizer tok) throws ServiceException {
@@ -553,7 +553,7 @@ public class DbTest {
 			return;
 		}
 		mailbox.setColor(null, tagId, MailItem.TYPE_TAG, Byte.parseByte(tok.nextToken()));
-		displayTagSummary(mailbox.getTagById(tagId));
+		displayTagSummary(mailbox.getTagById(null, tagId));
 	}
 	
 	private void tag(StringTokenizer tok) throws MailServiceException, ServiceException, IOException, ParseException {
@@ -587,7 +587,7 @@ public class DbTest {
 		if (messageId == -1)
 			return;
 		mailbox.alterTag(null, messageId, MailItem.TYPE_MESSAGE, Flag.ID_FLAG_UNREAD, false);
-		displayMessageSummary(mailbox.getMessageById(messageId));
+		displayMessageSummary(mailbox.getMessageById(null, messageId));
 	}
 
     private void readConversation(StringTokenizer tok) throws ServiceException {
@@ -596,7 +596,7 @@ public class DbTest {
         if (conversationId == -1)
             return;
         mailbox.alterTag(null, conversationId, MailItem.TYPE_CONVERSATION, Flag.ID_FLAG_UNREAD, false);
-        displayConversationSummary(mailbox.getConversationById(conversationId));
+        displayConversationSummary(mailbox.getConversationById(null, conversationId));
     }
 
     private void readFolder(StringTokenizer tok) throws IOException, ParseException, ServiceException {
@@ -618,7 +618,7 @@ public class DbTest {
 		if (messageId == -1)
 			return;
 		mailbox.alterTag(null, messageId, MailItem.TYPE_MESSAGE, Flag.ID_FLAG_UNREAD, true);
-		displayMessageSummary(mailbox.getMessageById(messageId));
+		displayMessageSummary(mailbox.getMessageById(null, messageId));
 	}
 
 	private void unreadConversation(StringTokenizer tok) throws ServiceException {
@@ -627,7 +627,7 @@ public class DbTest {
 		if (conversationId == -1)
 			return;
 		mailbox.alterTag(null, conversationId, MailItem.TYPE_CONVERSATION, Flag.ID_FLAG_UNREAD, true);
-		displayConversationSummary(mailbox.getConversationById(conversationId));
+		displayConversationSummary(mailbox.getConversationById(null, conversationId));
 	}
 
 	private void moveConversation(StringTokenizer tok) throws ServiceException {
@@ -677,7 +677,7 @@ public class DbTest {
 					sb.append(' ');
 				sb.append(tok.nextToken());
 			}
-			ZimbraQueryResults results = mailbox.search(sb.toString(), new byte[] {MailItem.TYPE_CONVERSATION}, MailboxIndex.SEARCH_ORDER_DATE_DESC);
+			ZimbraQueryResults results = mailbox.search(null, sb.toString(), new byte[] {MailItem.TYPE_CONVERSATION}, MailboxIndex.SEARCH_ORDER_DATE_DESC);
 			try {
 			    for (ZimbraHit hit = results.getFirstHit(); hit != null; hit = results.getNext())
 			        displayConversationSummary(((ConversationHit) hit).getConversation());
@@ -791,7 +791,7 @@ public class DbTest {
 	        DbMailItem.search(conn, mbox.getId(), new Tag[] {mbox.mAttachFlag}, null, 
 	                null, null, MailItem.TYPE_MESSAGE, (byte) (DbMailItem.SORT_BY_DATE | DbMailItem.SORT_DESCENDING));
 //	        DbMailItem.listByFolder(mbox.getFolderById(Mailbox.ID_FOLDER_TRASH), MailItem.TYPE_MESSAGE);
-            Collection result = DbMailItem.search(conn, mbox.getId(), new Tag[] {mbox.mUnreadFlag}, null, new Folder[] {mbox.getFolderById(Mailbox.ID_FOLDER_INBOX)},
+            Collection result = DbMailItem.search(conn, mbox.getId(), new Tag[] {mbox.mUnreadFlag}, null, new Folder[] {mbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX)},
 	                null, MailItem.TYPE_MESSAGE, (byte) (DbMailItem.SORT_BY_SUBJECT | DbMailItem.SORT_DESCENDING));
             for (Iterator it = result.iterator(); it.hasNext(); )
                 System.out.println(it.next());

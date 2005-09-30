@@ -110,7 +110,7 @@ public class TestUnread extends TestCase
         ZimbraLog.test.debug("Created message 2, id=" + mMessage2.getId());
         mMessage3 = TestUtil.insertMessage(mMbox, 3, "RE: TestUnread");
         ZimbraLog.test.debug("Created message 3, id=" + mMessage3.getId());
-        mConv = mMbox.getConversationById(mMessage1.getConversationId());
+        mConv = mMbox.getConversationById(null, mMessage1.getConversationId());
         ZimbraLog.test.debug("Created conversation, id=" + mConv.getId());
         
         mFolder1 = mMbox.createFolder(null, FOLDER1_NAME, Mailbox.ID_FOLDER_INBOX, MailItem.TYPE_UNKNOWN);
@@ -344,7 +344,7 @@ public class TestUnread extends TestCase
         ZimbraLog.test.debug("testMoveToTrash");
         verifySetUp();
         
-        Folder inbox = mMbox.getFolderById(Mailbox.ID_FOLDER_INBOX);
+        Folder inbox = mMbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX);
         int unreadCount = inbox.getUnreadCount();
         
         // Move conversation to Inbox
@@ -377,7 +377,7 @@ public class TestUnread extends TestCase
         verifySetUp();
         
         byte[] types = { MailItem.TYPE_MESSAGE };
-        ZimbraQueryResults results = mMbox.search("is:unread", types, MailboxIndex.SEARCH_ORDER_DATE_DESC);
+        ZimbraQueryResults results = mMbox.search(null, "is:unread", types, MailboxIndex.SEARCH_ORDER_DATE_DESC);
         assertTrue("No search results found", results.hasNext());
         results.doneWithSearchResults();
     }
@@ -512,7 +512,7 @@ public class TestUnread extends TestCase
     throws Exception {
         mMbox.alterTag(null, item.getId(), item.getType(), Flag.ID_FLAG_UNREAD, unread);
         refresh();
-        item = mMbox.getItemById(item.getId(), item.getType());
+        item = mMbox.getItemById(null, item.getId(), item.getType());
         verifyUnreadFlag(item);
     }
     
@@ -540,29 +540,29 @@ public class TestUnread extends TestCase
     private void refresh()
     throws Exception {
         if (mMessage1 != null) {
-            mMessage1 = mMbox.getMessageById(mMessage1.getId());
-            mConv = mMbox.getConversationById(mMessage1.getConversationId());
+            mMessage1 = mMbox.getMessageById(null, mMessage1.getId());
+            mConv = mMbox.getConversationById(null, mMessage1.getConversationId());
         }
         if (mMessage2 != null) {
-            mMessage2 = mMbox.getMessageById(mMessage2.getId());
+            mMessage2 = mMbox.getMessageById(null, mMessage2.getId());
         }
         if (mMessage3 != null) {
-            mMessage3 = mMbox.getMessageById(mMessage3.getId());
+            mMessage3 = mMbox.getMessageById(null, mMessage3.getId());
         }
         if (mFolder1 != null) {
-            mFolder1 = mMbox.getFolderById(mFolder1.getId());
+            mFolder1 = mMbox.getFolderById(null, mFolder1.getId());
         }
         if (mFolder2 != null) {
-            mFolder2 = mMbox.getFolderById(mFolder2.getId());
+            mFolder2 = mMbox.getFolderById(null, mFolder2.getId());
         }
         if (mTag1 != null) {
-            mTag1 = mMbox.getTagById(mTag1.getId());
+            mTag1 = mMbox.getTagById(null, mTag1.getId());
         }
         if (mTag2 != null) {
-            mTag2 = mMbox.getTagById(mTag2.getId());
+            mTag2 = mMbox.getTagById(null, mTag2.getId());
         }
         if (mTag3 != null) {
-            mTag3 = mMbox.getTagById(mTag3.getId());
+            mTag3 = mMbox.getTagById(null, mTag3.getId());
         }
     }
     
@@ -584,7 +584,7 @@ public class TestUnread extends TestCase
         
         // Delete folder 1.  This will automatically delete folder 2 and the messages
         // in the folders.
-        List l = mMbox.getItemList(MailItem.TYPE_FOLDER);
+        List l = mMbox.getItemList(null, MailItem.TYPE_FOLDER);
         Iterator i = l.iterator();
         while (i.hasNext()) {
             Folder folder = (Folder) i.next();
@@ -595,7 +595,7 @@ public class TestUnread extends TestCase
         }
 
         // Delete tags
-        l = mMbox.getItemList(MailItem.TYPE_TAG);
+        l = mMbox.getItemList(null, MailItem.TYPE_TAG);
         i = l.iterator();
         while (i.hasNext()) {
             Tag tag = (Tag) i.next();

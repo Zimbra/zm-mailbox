@@ -90,11 +90,11 @@ abstract class QueryOperation implements ZimbraQueryResults
     {
         int retType = MailboxIndex.SEARCH_RETURN_DOCUMENTS;
         for (int i = 0; i < types.length; i++) {
-            if (types[i]==MailItem.TYPE_CONVERSATION) {
+            if (types[i] == MailItem.TYPE_CONVERSATION) {
                 retType = MailboxIndex.SEARCH_RETURN_CONVERSATIONS;
                 break;
             }
-            if (types[i]==MailItem.TYPE_MESSAGE) {
+            if (types[i] == MailItem.TYPE_MESSAGE) {
                 retType = MailboxIndex.SEARCH_RETURN_MESSAGES;
                 break;
             }
@@ -107,7 +107,7 @@ abstract class QueryOperation implements ZimbraQueryResults
         switch (retType) {
         case MailboxIndex.SEARCH_RETURN_CONVERSATIONS:
             if (USE_PRELOADING_GROUPER) {
-                setupResults(mbox, new ConvQueryResults(new ItemPreloadingGrouper(this, 100), types, searchOrder));
+                setupResults(mbox, new ConvQueryResults(new ItemPreloadingGrouper(this, 100, mbox), types, searchOrder));
             } else {
                 setupResults(mbox, new ConvQueryResults(this, types, searchOrder));
             }
@@ -115,14 +115,14 @@ abstract class QueryOperation implements ZimbraQueryResults
             break;
         case MailboxIndex.SEARCH_RETURN_MESSAGES:
             if (USE_PRELOADING_GROUPER) {
-                setupResults(mbox, new MsgQueryResults(new ItemPreloadingGrouper(this, 30), types, searchOrder));
+                setupResults(mbox, new MsgQueryResults(new ItemPreloadingGrouper(this, 30, mbox), types, searchOrder));
             } else {
                 setupResults(mbox, new MsgQueryResults(this, types, searchOrder));
             }
             break;
         case MailboxIndex.SEARCH_RETURN_DOCUMENTS:
             if (USE_PRELOADING_GROUPER) {
-                setupResults(mbox, new UngroupedQueryResults(new ItemPreloadingGrouper(this, 30), types, searchOrder));
+                setupResults(mbox, new UngroupedQueryResults(new ItemPreloadingGrouper(this, 30, mbox), types, searchOrder));
             } else {
                 setupResults(mbox, new UngroupedQueryResults(this, types, searchOrder));
             }
@@ -132,7 +132,7 @@ abstract class QueryOperation implements ZimbraQueryResults
         prepare(mMailbox, mResults, mbidx);
         
         if (USE_PRELOADING_GROUPER && preloadOuterResults) {
-            return new ItemPreloadingGrouper(mResults, 30);
+            return new ItemPreloadingGrouper(mResults, 30, mbox);
         } else {
             return mResults;
         }

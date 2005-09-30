@@ -55,7 +55,7 @@ public class CreateTag extends WriteOpDocumentHandler  {
         
         Element response = lc.createElement(MailService.CREATE_TAG_RESPONSE);
         if (tag != null)
-        	ToXML.encodeTag(response, tag);
+        	ToXML.encodeTag(response, lc, tag);
         return response;
 	}
 }

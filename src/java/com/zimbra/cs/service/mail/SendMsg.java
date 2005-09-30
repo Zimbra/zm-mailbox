@@ -123,13 +123,13 @@ public class SendMsg extends WriteOpDocumentHandler {
         return acct.getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, false);        
     }
     
-    protected static int getSentFolder(Account acct, Mailbox mbox) throws ServiceException{
+    protected static int getSentFolder(Account acct, Mailbox mbox, OperationContext octxt) throws ServiceException{
         int folderId = Mailbox.ID_FOLDER_SENT;
 
         String sentFolder = acct.getAttr(Provisioning.A_zimbraPrefSentMailFolder, null);
         if (sentFolder != null)
             try {
-                folderId = mbox.getFolderByPath(sentFolder).getId();
+                folderId = mbox.getFolderByPath(octxt, sentFolder).getId();
             } catch (NoSuchItemException nsie) { }
         return folderId;
     }
@@ -168,7 +168,7 @@ public class SendMsg extends WriteOpDocumentHandler {
     protected static Message saveToSent(OperationContext octxt, Mailbox mbox, Account acct, MimeMessage mm, int convId) 
     throws ServiceException {
         try {
-            int folderId = getSentFolder(acct, mbox);
+            int folderId = getSentFolder(acct, mbox, octxt);
 
             int flags = Flag.FLAG_FROM_ME;
             ParsedMessage pm = new ParsedMessage(mm, mm.getSentDate().getTime(),
@@ -196,7 +196,7 @@ public class SendMsg extends WriteOpDocumentHandler {
     throws ServiceException {
         int folderId = 0;
         if (saveToSent) {
-            folderId = getSentFolder(acct, mbox);
+            folderId = getSentFolder(acct, mbox, octxt);
         }
 
         return sendMimeMessage(octxt, mbox, acct, folderId, mimeData, mm, origId, replyType);
