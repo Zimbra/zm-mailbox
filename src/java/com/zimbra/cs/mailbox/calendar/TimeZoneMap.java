@@ -72,6 +72,11 @@ public class TimeZoneMap {
     	mTzMap = new HashMap();
         mLocalTZ = localTZ;
     }
+    
+    
+    public boolean contains(ICalTimeZone tz) {
+        return mTzMap.containsKey(tz.getID());
+    }
 
     /**
      * 

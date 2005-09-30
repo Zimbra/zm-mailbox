@@ -41,6 +41,7 @@ import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.RecurId;
+import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ParsedItemID;
@@ -92,7 +93,7 @@ public class SendInviteReply extends SendMsg {
             int replyId = 0;
             
             synchronized (mbox) {
-                Invite inv = null;
+                Invite oldInv = null;
                 
                 int apptId; 
                 int inviteMsgId;
@@ -104,7 +105,7 @@ public class SendInviteReply extends SendMsg {
                     apptId = pid.getItemIDInt();
                     inviteMsgId = pid.getSubIdInt();
                     Appointment appt = mbox.getAppointmentById(apptId); 
-                    inv = appt.getInvite(inviteMsgId, compNum);
+                    oldInv = appt.getInvite(inviteMsgId, compNum);
                 } else {
                     // accepting the message: go find the appointment and then the invite
                     inviteMsgId = pid.getItemIDInt();
@@ -112,7 +113,7 @@ public class SendInviteReply extends SendMsg {
                     Message.ApptInfo info = msg.getApptInfo(compNum);
                     apptId = info.getAppointmentId();
                     Appointment appt = mbox.getAppointmentById(apptId);
-                    inv = appt.getInvite(inviteMsgId, compNum);  
+                    oldInv = appt.getInvite(inviteMsgId, compNum);  
                 }
                 
                 List /*<ICalTimeZone>*/ tzsReferenced = new ArrayList();
@@ -121,13 +122,14 @@ public class SendInviteReply extends SendMsg {
                 Element exc = request.getOptionalElement("exceptId");
                 ParsedDateTime exceptDt = null;
                 if (exc != null) {
-                    exceptDt = CalendarUtils.parseDateTime(exc, null, tzsReferenced, acct.getTimeZone());
+                    Invite tmp = new Invite(new TimeZoneMap(acct.getTimeZone())); 
+                    exceptDt = CalendarUtils.parseDateTime(exc, null, tmp);
                 }
                 
                 if (updateOrg) {
-                    String replySubject = this.getReplySubject(verb, inv);
+                    String replySubject = this.getReplySubject(verb, oldInv);
                     
-                    Calendar iCal = CalendarUtils.buildReplyCalendar(acct, inv, verb, replySubject, tzsReferenced, exceptDt);
+                    Calendar iCal = CalendarUtils.buildReplyCalendar(acct, oldInv, verb, replySubject, tzsReferenced, exceptDt);
 //                  System.out.println("GENERATED ICAL:\n"+iCal.toString());
                     
                     MimeMessage toSend = null;
@@ -138,7 +140,7 @@ public class SendInviteReply extends SendMsg {
                     Element msgElem = request.getOptionalElement(MailService.E_MSG);
                     if (msgElem != null) {
                         MimeBodyPart[] mbps = new MimeBodyPart[1];
-                        mbps[0] = CalendarUtils.makeICalIntoMimePart(inv.getUid(), iCal);
+                        mbps[0] = CalendarUtils.makeICalIntoMimePart(oldInv.getUid(), iCal);
                         
                         // the <inv> element is *NOT* allowed -- we always build it manually
                         // based on the params to the <SendInviteReply> and stick it in the 
@@ -147,7 +149,7 @@ public class SendInviteReply extends SendMsg {
                                 ParseMimeMessage.NO_INV_ALLOWED_PARSER, parsedMessageData);
                     } else {
                         // build a default "Accepted" response
-                        toSend = createDefaultReply(acct, inv, replySubject, verb, iCal); 
+                        toSend = createDefaultReply(acct, oldInv, replySubject, verb, iCal); 
                     }
                     
                     try {
@@ -155,7 +157,7 @@ public class SendInviteReply extends SendMsg {
                     } catch(Exception e) {}
                     
                     replyId = sendMimeMessage(octxt, mbox, acct, shouldSaveToSent(acct), parsedMessageData, 
-                            toSend, inv.getMailItemId(), TYPE_REPLY);
+                            toSend, oldInv.getMailItemId(), TYPE_REPLY);
                     
                 }
                 
@@ -163,12 +165,12 @@ public class SendInviteReply extends SendMsg {
                 if (exceptDt != null) {
                     recurId = new RecurId(exceptDt, RecurId.RANGE_NONE);
                 }
-                Attendee me = inv.getMatchingAttendee(acct);
+                Attendee me = oldInv.getMatchingAttendee(acct);
                 String cnStr = null;
                 String addressStr = acct.getName();
                 String role = IcalXmlStrMap.ROLE_OPT_PARTICIPANT;
-                int seqNo = inv.getSeqNo();
-                long dtStamp = inv.getDTStamp();
+                int seqNo = oldInv.getSeqNo();
+                long dtStamp = oldInv.getDTStamp();
                 if (me != null) {
                     cnStr = null;
                     if (me.getParameters().getParameter(Parameter.CN) != null) {

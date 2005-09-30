@@ -138,12 +138,12 @@ public class Recurrence
         /**
          * @return an Iterator over all child rules that add instances to this current node, or NULL if none
          */
-        public Iterator addRulesIterator();
+        public Iterator /* IRecurrence */ addRulesIterator();
 
         /**
          * @return an Iterator over all child rules that add instances to this current node, or NULL if none
          */
-        public Iterator subRulesIterator();
+        public Iterator /* IRecurrence */ subRulesIterator();
         
         
         /**

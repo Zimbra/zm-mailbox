@@ -34,7 +34,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.TimeZone;
 
 import javax.activation.DataHandler;
 import javax.mail.Address;
@@ -59,7 +58,6 @@ import net.fortuna.ical4j.model.DateList;
 import net.fortuna.ical4j.model.Parameter;
 import net.fortuna.ical4j.model.ParameterList;
 import net.fortuna.ical4j.model.Property;
-import net.fortuna.ical4j.model.PropertyList;
 import net.fortuna.ical4j.model.Recur;
 import net.fortuna.ical4j.model.ValidationException;
 import net.fortuna.ical4j.model.component.VEvent;
@@ -71,27 +69,14 @@ import net.fortuna.ical4j.model.parameter.Rsvp;
 import net.fortuna.ical4j.model.parameter.TzId;
 import net.fortuna.ical4j.model.parameter.Value;
 import net.fortuna.ical4j.model.property.Attendee;
-import net.fortuna.ical4j.model.property.Description;
-import net.fortuna.ical4j.model.property.DtEnd;
-import net.fortuna.ical4j.model.property.DtStamp;
-import net.fortuna.ical4j.model.property.DtStart;
-import net.fortuna.ical4j.model.property.Duration;
 import net.fortuna.ical4j.model.property.ExDate;
 import net.fortuna.ical4j.model.property.ExRule;
-import net.fortuna.ical4j.model.property.Location;
 import net.fortuna.ical4j.model.property.Method;
 import net.fortuna.ical4j.model.property.Organizer;
 import net.fortuna.ical4j.model.property.ProdId;
 import net.fortuna.ical4j.model.property.RDate;
 import net.fortuna.ical4j.model.property.RRule;
-import net.fortuna.ical4j.model.property.RecurrenceId;
-import net.fortuna.ical4j.model.property.Sequence;
-import net.fortuna.ical4j.model.property.Status;
-import net.fortuna.ical4j.model.property.Summary;
-import net.fortuna.ical4j.model.property.Transp;
-import net.fortuna.ical4j.model.property.Uid;
 import net.fortuna.ical4j.model.property.Version;
-import net.fortuna.ical4j.model.property.XProperty;
 import net.fortuna.ical4j.util.DateTimeFormat;
 
 import com.zimbra.cs.account.Account;
@@ -105,15 +90,13 @@ import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.ParsedDuration;
 import com.zimbra.cs.mailbox.calendar.RecurId;
+import com.zimbra.cs.mailbox.calendar.Recurrence;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.account.ldap.LdapUtil;
 
 
 public class CalendarUtils {
     private static Log sLog = LogFactory.getLog(CalendarUtils.class);
-    
-    // HACKAHACKAHACKA -- for compatability with "outlook", use midnight-midnight for "all day" appointments
-    private final static boolean USE_BROKEN_OUTLOOK_MODE = true;
     
     static MimeBodyPart makeICalIntoMimePart(String uid, Calendar iCal) 
     throws ServiceException
@@ -235,21 +218,20 @@ public class CalendarUtils {
     /**
      * Parse an <inv> element 
      * 
+     * @param account 
      * @param inviteElem
-     * @param uid -- optional UID to use
-     * @param recurrenceId -- optional RECURRENCE_ID to add to VEvent
+     * @param tzMap TimeZoneMap of invite we might want to refer to (eg we are an Exception to it)
+     * @param uid
+     * @param recurrenceIdAllowed
      * @return
      * @throws ServiceException
      */
-    static ParseMimeMessage.InviteParserResult parseInviteForCreate(
-            Account account, Element inviteElem,
-            TimeZoneMap tzMap,
-                String uid, boolean recurrenceIdAllowed) throws ServiceException 
+    static ParseMimeMessage.InviteParserResult parseInviteForCreate(Account account, Element inviteElem, TimeZoneMap tzMap,
+            String uid, boolean recurrenceIdAllowed) throws ServiceException 
     {
-        List /*<ICalTimeZone>*/ tzsReferenced = new ArrayList();
+        Invite create = new Invite(Method.REQUEST, new TimeZoneMap(account.getTimeZone()));
 
-        Component invDat = CalendarUtils.parseInviteElementCommon(account, inviteElem, tzMap, tzsReferenced);
-        VEvent event = (VEvent)invDat;
+        CalendarUtils.parseInviteElementCommon(account, inviteElem, create, tzMap);
         
         if (uid == null || uid.equals("")) {
             uid = inviteElem.getAttribute(MailService.A_UID, null);
@@ -257,19 +239,12 @@ public class CalendarUtils {
                 uid = LdapUtil.generateUUID();
             }
         }
-        event.getProperties().add(new Uid(uid));
+        create.setUid(uid);
         
         if (recurrenceIdAllowed) {
             Element e = inviteElem.getElement("exceptId");
-            ParsedDateTime dt = parseDateTime(e, tzMap, tzsReferenced, account.getTimeZone());
-            RecurrenceId recurId = new RecurrenceId(dt.iCal4jDate());
-            TimeZone tz = dt.getTimeZone();
-            if (tz == ICalTimeZone.getUTC()) {
-                recurId.setUtc(true);
-            } else {
-                recurId.getParameters().add(new TzId(tz.getID()));
-            }
-            event.getProperties().add(recurId);
+            ParsedDateTime dt = parseDateTime(e, tzMap, create);
+            RecurId recurId = new RecurId(dt, RecurId.RANGE_NONE);
         } else {
             if (inviteElem.getOptionalElement("exceptId") != null) {
                 throw MailServiceException.INVALID_REQUEST("May not specify an <exceptId> in this request", null);
@@ -277,24 +252,12 @@ public class CalendarUtils {
         }
         
         // DTSTAMP
-        event.getProperties().add(new DtStamp(new net.fortuna.ical4j.model.DateTime()));
+        create.setDtStamp(new Date().getTime());
       
       // SEQUENCE
-        event.getProperties().add(new Sequence(0));
+        create.setSeqNo(0);
 
-        // build the full calendar wrapper now...
-        Calendar iCal = makeCalendar(Method.REQUEST);
-
-        for (Iterator iter = tzsReferenced.iterator(); iter.hasNext();) {
-            ICalTimeZone cur = (ICalTimeZone) iter.next();
-            VTimeZone vtz = cur.toVTimeZone();
-            iCal.getComponents().add(vtz);
-        }
-        
-        String str = event.toString();
-        System.out.println(str);
-        
-        iCal.getComponents().add(event);
+        Calendar iCal = create.toICalendar();
         
         try {
             iCal.validate(true);
@@ -306,9 +269,11 @@ public class CalendarUtils {
         }
         
         String summaryStr = "";
-        Property propSum = event.getProperties().getProperty(Property.SUMMARY);
-        if (propSum != null) {
-            summaryStr = ((Summary)propSum).getValue();
+//        Property propSum = event.getProperties().getProperty(Property.SUMMARY);
+//        if (propSum != null) {
+        if (create.getName() != null) {
+//            summaryStr = ((Summary)propSum).getValue();
+            summaryStr = create.getName();
         }
         
         ParseMimeMessage.InviteParserResult toRet = new ParseMimeMessage.InviteParserResult();
@@ -335,36 +300,37 @@ public class CalendarUtils {
      * Parse an <inv> element in a Modify context -- existing UID, etc
      * 
      * @param inviteElem
-     * @param inv is the Default Invite of the appointment we are modifying 
+     * @param oldInv is the Default Invite of the appointment we are modifying 
      * @return
      * @throws ServiceException
      */
     static ParseMimeMessage.InviteParserResult parseInviteForModify(Account account, Element inviteElem, 
-            Invite inv, List /* Attendee */ attendeesToCancel) throws ServiceException 
+            Invite oldInv, List /* Attendee */ attendeesToCancel) throws ServiceException 
     {
         List /*<ICalTimeZone>*/ tzsReferenced = new ArrayList();
+        
+        Invite mod = new Invite(Method.REQUEST, oldInv.getTimeZoneMap());
 
-        Component invDat = CalendarUtils.parseInviteElementCommon(account, inviteElem, inv.getTimeZoneMap(), tzsReferenced);
-        VEvent event = (VEvent)invDat;
-
+        CalendarUtils.parseInviteElementCommon(account, inviteElem, mod, oldInv.getTimeZoneMap());
+        
         // use UID from old inv
-        String uid = inv.getUid();
-        event.getProperties().add(new Uid(uid));
+        String uid = oldInv.getUid();
+        mod.setUid(oldInv.getUid());
         
         // DTSTAMP
-        event.getProperties().add(new DtStamp(new net.fortuna.ical4j.model.DateTime()));
+        mod.setDtStamp(new Date().getTime());
       
         // SEQUENCE
-        event.getProperties().add(new Sequence(inv.getSeqNo()+1));
+        mod.setSeqNo(oldInv.getSeqNo()+1);
         
-        if (inv.hasRecurId()) {
-            event.getProperties().add(inv.getRecurId().getRecurrenceId(account.getTimeZone()));
+        if (oldInv.hasRecurId()) {
+            mod.setRecurId(oldInv.getRecurId());
         }
         
         // compare the new attendee list with the existing one...if attendees have been removed, then
         // we need to send them individual cancelation messages
-        PropertyList newAts = event.getProperties().getProperties(Property.ATTENDEE);
-        List /* Attendee */ oldAts = inv.getAttendees();
+        List /* Attendee */ newAts = mod.getAttendees();
+        List /* Attendee */ oldAts = oldInv.getAttendees();
         for (Iterator iter = oldAts.iterator(); iter.hasNext();) {
             Attendee cur = (Attendee)iter.next();
             if (!listContains(newAts, cur)) {
@@ -382,7 +348,7 @@ public class CalendarUtils {
             iCal.getComponents().add(vtz);
         }
         
-        iCal.getComponents().add(event);
+        iCal.getComponents().add(mod.toVEvent());
         
         try {
             iCal.validate(true);
@@ -394,9 +360,8 @@ public class CalendarUtils {
         }
         
         String summaryStr = "";
-        Property propSum = event.getProperties().getProperty(Property.SUMMARY);
-        if (propSum != null) {
-            summaryStr = ((Summary)propSum).getValue();
+        if (mod.getName() != null) {
+            summaryStr = mod.getName();
         }
         
         
@@ -409,7 +374,7 @@ public class CalendarUtils {
     }
     
     // TRUE if the list contains the atendee, comparing by URI
-    private static boolean listContains(PropertyList list, Attendee at) {
+    private static boolean listContains(List list, Attendee at) {
         for (Iterator iter = list.iterator(); iter.hasNext();) {
             Attendee cur = (Attendee)iter.next();
             if (cur.getCalAddress().equals(at.getCalAddress())) {
@@ -421,13 +386,12 @@ public class CalendarUtils {
 
     static RecurId parseRecurId(Element e,
                                 TimeZoneMap invTzMap,
-                                List /*<ICalTimeZone>*/ referencedTimeZones,
-                                ICalTimeZone localTZ) 
+                                Invite inv)
     throws ServiceException
     {
         String range = e.getAttribute("range", "");
         
-        ParsedDateTime dt = parseDateTime(e, invTzMap, referencedTimeZones, localTZ);
+        ParsedDateTime dt = parseDateTime(e, invTzMap, inv);
         return new RecurId(dt, range);
     }
 
@@ -441,32 +405,27 @@ public class CalendarUtils {
      */
     static ParsedDateTime parseDateTime(Element e,
                                                 TimeZoneMap invTzMap,
-                                                List /*<ICalTimeZone>*/ referencedTimeZones,
-                                                ICalTimeZone localTZ)
+                                                Invite inv)
     throws ServiceException
     {
         String d = e.getAttribute(MailService.A_APPT_DATETIME, null);
         String tz = e.getAttribute(MailService.A_APPT_TIMEZONE, null);
-        return parseDateTime(e.getName(), d, tz, invTzMap, referencedTimeZones, localTZ);
+        return parseDateTime(e.getName(), d, tz, invTzMap, inv);
     }
     
     private static ParsedDateTime parseDateTime(String eltName,
                                                 String d,
                                                 String tz,
                                                 TimeZoneMap invTzMap,
-                                                List /*<ICalTimeZone>*/ tzsReferenced,
-                                                ICalTimeZone localTZ)
+                                                Invite inv)
     throws ServiceException
     {
         try {
             ICalTimeZone zone = null;
-            if (tz != null)
-                zone = lookupAndAddToTzList(tz, invTzMap, tzsReferenced);
-            else if (d.indexOf('Z') == -1) {
-                if (!tzsReferenced.contains(localTZ))
-                    tzsReferenced.add(localTZ);
+            if (tz != null) {
+                zone = lookupAndAddToTzList(tz, invTzMap, inv);
             }
-            return ParsedDateTime.parse(d, tz, zone, localTZ);
+            return ParsedDateTime.parse(d, tz, zone, inv.getTimeZoneMap().getLocalTimeZone());
         } catch (ParseException ex) {
             throw MailServiceException.INVALID_REQUEST("could not parse time "+d+" in element "+eltName, ex);
         }
@@ -474,7 +433,7 @@ public class CalendarUtils {
 
     private static ICalTimeZone lookupAndAddToTzList(String tzId,
     		                                         TimeZoneMap invTzMap,
-													 List /*<ICalTimeZone>*/ tzsReferenced)
+													 Invite inv)
     throws ServiceException {
         // Workaround for bug in Outlook, which double-quotes TZID parameter
         // value in properties like DTSTART, DTEND, etc.  Use unquoted tzId.
@@ -494,19 +453,22 @@ public class CalendarUtils {
             if (zone == null)
                 throw MailServiceException.INVALID_REQUEST("invalid time zone \"" + tzId + "\"", null);
         }
-        if (!tzsReferenced.contains(zone))
-            tzsReferenced.add(zone);
-        if (invTzMap != null)
-            invTzMap.add(zone);
+        if (!inv.getTimeZoneMap().contains(zone))
+            inv.getTimeZoneMap().add(zone);
         return zone;
     }
 
-    private static void parseRecur(Element recurElt,
-                                   Component comp,
-                                   TimeZoneMap invTzMap,
-                                   List /*<ICalTimeZone>*/ tzsReferenced,
-                                   ICalTimeZone localTZ)
+    private static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap invTzMap, Invite inv) 
     throws ServiceException {
+        
+        ParsedDuration dur = inv.getDuration();
+        if (dur == null) {
+            dur = inv.getEndTime().difference(inv.getStartTime());
+        }
+        
+        ArrayList addRules = new ArrayList();
+        ArrayList subRules = new ArrayList();
+        
         for (Iterator iter= recurElt.elementIterator(); iter.hasNext();) {
             Element e = (Element)iter.next();
             
@@ -527,7 +489,7 @@ public class CalendarUtils {
                 if (intElt.getName().equals(MailService.E_APPT_DATE)) {
                     // handle RDATE or EXDATE
                     
-                    ParsedDateTime dt = parseDateTime(intElt, invTzMap, tzsReferenced, localTZ);
+                    ParsedDateTime dt = parseDateTime(intElt, invTzMap, inv);
                     
                     try {
                         String dstr = intElt.getAttribute(MailService.A_APPT_DATETIME);
@@ -557,7 +519,14 @@ public class CalendarUtils {
                             }
                         }
                         
-                        comp.getProperties().add(prop);
+//                        comp.getProperties().add(prop);
+                        if (exclude) {
+//                            subRecurs.add(prop);
+//                            addRules.add(new Recurrence.SingleInstanceRule())
+                        } else {
+//                            addRecurs.add(prop);
+                        }
+                        
                     } catch (Exception ex) {
                         throw MailServiceException.INVALID_REQUEST("Exception parsing <recur><date> d="+
                                 intElt.getAttribute(MailService.A_APPT_DATETIME), ex);
@@ -587,7 +556,7 @@ public class CalendarUtils {
                                 // If UNTIL has time part it must be specified
                                 // as UTC time, i.e. ending in "Z".
                                 // (RFC2445 Section 4.3.10 Recurrence Rule)
-                                ParsedDateTime untilCal = parseDateTime(ruleEltName, d, tz, invTzMap, tzsReferenced, localTZ);
+                                ParsedDateTime untilCal = parseDateTime(ruleEltName, d, tz, invTzMap, inv);
                                 DateTimeFormat dtf = DateTimeFormat.getInstance();
                                 String dtUTC = dtf.format(untilCal.getDate(), true);
                                 recurBuf.append(dtUTC);
@@ -662,13 +631,16 @@ public class CalendarUtils {
 
                     try {
                         Recur recur = new Recur(recurBuf.toString());
-                        Property prop;
+//                        Property prop;
                         if (exclude) {
-                            prop = new ExRule(recur);
+//                            prop = new ExRule(recur);
+//                            subRecurs.add(recur);
+                            subRules.add(new Recurrence.SimpleRepeatingRule(inv.getStartTime(), dur, recur, null));
                         } else {
-                            prop = new RRule(recur);
+//                            prop = new RRule(recur);
+                            addRules.add(new Recurrence.SimpleRepeatingRule(inv.getStartTime(), dur, recur, null));
                         }
-                        comp.getProperties().add(prop);
+//                        comp.getProperties().add(prop);
                     } catch (ParseException ex) {
                         throw MailServiceException.INVALID_REQUEST("Exception parsing <recur> <rule>", ex);
                     }
@@ -679,52 +651,52 @@ public class CalendarUtils {
                 }
             }    // iterate inside <add> or <exclude>
         } // iter inside <recur>
+        
+        if (inv.getRecurId() != null) {
+            return new Recurrence.ExceptionRule(inv.getRecurId(), inv.getStartTime(), dur, null, addRules, subRules);
+        } else {
+            return new Recurrence.RecurrenceRule(inv.getStartTime(), dur, null, addRules, subRules);
+        }
     }
     
+    static ParsedDateTime parseDtElement(Element e, TimeZoneMap tzMap, Invite inv) throws ServiceException {
+        String d = e.getAttribute(MailService.A_APPT_DATETIME);
+        String tzId = e.getAttribute(MailService.A_APPT_TIMEZONE, null);
+        ICalTimeZone timezone = null;         
+        if (tzId != null) {
+            timezone = lookupAndAddToTzList(tzId, tzMap, inv);
+        }
+        
+        try {
+            return ParsedDateTime.parse(d, tzId, timezone, inv.getTimeZoneMap().getLocalTimeZone());
+        } catch (ParseException pe) {
+            throw ServiceException.FAILURE("Caught ParseException: "+pe, pe);
+        }
+    }
     
     /**
      * UID, DTSTAMP, and SEQUENCE **MUST** be set by caller
      * 
      * @param account user receiving invite
      * @param element invite XML element
-     * @param invTzMap time zone map from invite;
+     * @param newInv Invite we are currently building up
+     * @param oldTzMap time zone map from A DIFFERENT invite;
      *                 if this method is called during modify operation,
      *                 this map contains time zones before the modification;
      *                 null if called during create operation
-     * @param tzsReferenced list of time zones used in this invite; if this
-     *                      method is called during modify operation, this
-     *                      list contains time zones after the modification
      * @return
      * @throws ServiceException
      */
-    private static Component parseInviteElementCommon(Account account,
-                                                      Element element,
-                                                      TimeZoneMap invTzMap,
-                                                      List /*<ICalTimeZone>*/ tzsReferenced) 
+    private static void parseInviteElementCommon(Account account, 
+                                                      Element element, Invite newInv,
+                                                      TimeZoneMap oldTzMap)
     throws ServiceException {
-        ICalTimeZone localTZ = account.getTimeZone();
-
-        String type = element.getAttribute(MailService.A_APPT_TYPE);
         boolean allDay = element.getAttributeBool(MailService.A_APPT_ALLDAY, false);
         
         String name = element.getAttribute(MailService.A_NAME);
         String location = element.getAttribute(MailService.A_APPT_LOCATION,"");
         String descriptionStr = null;
 
-        //
-        // construct the iCal using the iCal4j stuff
-        //
-//        int flags = 0;
-//        if (allDay) { flags |= InviteMessage.Invite.APPT_FLAG_ALLDAY; }
-        
-        VEvent event = new VEvent();
-
-//        // RECUR
-        Element recur = element.getOptionalElement(MailService.A_APPT_RECUR);
-        if (recur != null) {
-            parseRecur(recur, event, invTzMap, tzsReferenced, localTZ);
-        }
-        
         // ORGANIZER
         Element orgElt = element.getOptionalElement(MailService.E_APPT_ORGANIZER);
         if (orgElt == null) {
@@ -740,70 +712,35 @@ public class CalendarUtils {
             }
             
             Organizer org = new Organizer(uri);
-            event.getProperties().add(org);
+            newInv.setOrganizer(org);
             ParameterList params = org.getParameters();
             if (cn != null) {
                 params.add(new Cn(cn));
             }
         }
         
-        if (allDay) {
-            XProperty msAllDay = new XProperty("X-MICROSOFT-CDO-ALLDAYEVENT", "TRUE");
-            event.getProperties().add(msAllDay);
-        }
-        
         // SUMMARY (aka Name or Subject)
-        event.getProperties().add(new Summary(name));
+        newInv.setName(name);
         
         // DESCRIPTION
         if (descriptionStr != null) {
-            event.getProperties().add(new Description(descriptionStr));
+            newInv.setDescription(descriptionStr);
         }
         
         // DTSTART
-
         {
             Element s = element.getElement(MailService.E_APPT_START_TIME);
-            DtStart dtstart = new DtStart();
-            String d = s.getAttribute(MailService.A_APPT_DATETIME);
-            boolean isDateTime = true;
-            if (d.indexOf('T') == -1) {
-                if (!allDay) {
-                    throw MailServiceException.INVALID_REQUEST("Request must have allDay=\"1\" if using a DATE start time instead of DATETIME", null);
-                } else {
-                    if (USE_BROKEN_OUTLOOK_MODE) {
-                        d = d + "T000000";
-                        String tz = localTZ.getID();
-                        dtstart.getParameters().add(new TzId(tz));
-                        lookupAndAddToTzList(tz, invTzMap, tzsReferenced);
-                    } else {
-                        dtstart.getParameters().add(Value.DATE);
-                        isDateTime = false;
-                    }
-                }
-            } else {
+            ParsedDateTime dt = parseDtElement(s, oldTzMap, newInv);
+            if (dt.hasTime()) { 
                 if (allDay) {
                     throw MailServiceException.INVALID_REQUEST("AllDay event must have DATE, not DATETIME for start time", null);
                 }
-            }
-
-            try {
-                dtstart.setValue(d);
-            } catch (ParseException ex) {
-                throw MailServiceException.INVALID_REQUEST("Exception parsing DTSTART: " + d, ex);
-            }
-            if (isDateTime) {
-                if (d.indexOf('Z') != -1) {
-                    dtstart.setUtc(true);
-                } else {
-                    String tz = s.getAttribute(MailService.A_APPT_TIMEZONE, null);
-                    if (tz != null) {
-                        dtstart.getParameters().add(new TzId(tz));
-                        lookupAndAddToTzList(tz, invTzMap, tzsReferenced);
-                    }
+            } else {
+                if (!allDay) {
+                    throw MailServiceException.INVALID_REQUEST("Request must have allDay=\"1\" if using a DATE start time instead of DATETIME", null);
                 }
             }
-            event.getProperties().add(dtstart);
+            newInv.setDtStart(dt);
         }
 
         // DTEND
@@ -813,53 +750,17 @@ public class CalendarUtils {
                 if (element.getOptionalElement(MailService.E_APPT_DURATION) != null) {
                     throw MailServiceException.INVALID_REQUEST("<inv> may have <e> end or <d> duration but not both", null);
                 }
-
-                DtEnd dtend = new DtEnd();
-                String d = e.getAttribute(MailService.A_APPT_DATETIME);
-                boolean isDateTime = true;
-                if (d.indexOf('T') == -1) {
-                    if (USE_BROKEN_OUTLOOK_MODE) {
-                        d += "T000000";
-                        try {
-                            ParsedDateTime parsed = ParsedDateTime.parse(d, null, null, localTZ);
-                            ParsedDuration oneDay = ParsedDuration.parse("P1D");
-                            
-                            parsed = parsed.add(oneDay);
-                            
-                            dtend.getParameters().add(new TzId(parsed.getTZName()));
-                            lookupAndAddToTzList(parsed.getTZName(), invTzMap, tzsReferenced);
-                            d = parsed.getDateTimePartString();
-                        } catch (ParseException ex) {
-                            throw ServiceException.FAILURE("Error parsing end time for outlook compatibility", ex);
-                        }                        
-                    } else {
-                        // If DTSTART has DATE value type rather than DATE-TIME,
-                        // DTEND must also be a DATE.  (RFC2445 Section 4.6.1)
-                        dtend.getParameters().add(Value.DATE);
-                        isDateTime = false;
+                ParsedDateTime dt = parseDtElement(e, oldTzMap, newInv);
+                if (dt.hasTime()) { 
+                    if (allDay) {
+                        throw MailServiceException.INVALID_REQUEST("AllDay event must have DATE, not DATETIME for start time", null);
                     }
                 } else {
-                    if (allDay) {
-                        throw MailServiceException.INVALID_REQUEST("AllDay event must have DATE for end time, not DATETIME", null);
+                    if (!allDay) {
+                        throw MailServiceException.INVALID_REQUEST("Request must have allDay=\"1\" if using a DATE start time instead of DATETIME", null);
                     }
                 }
-                try {
-                    dtend.setValue(d);
-                } catch (ParseException ex) {
-                    throw MailServiceException.INVALID_REQUEST("Exception parsing DTEND: " + d, ex);
-                }
-                if (isDateTime) {
-                    if (d.indexOf('Z') != -1) {
-                        dtend.setUtc(true);
-                    } else {
-                        String tz = e.getAttribute(MailService.A_APPT_TIMEZONE, null);
-                        if (tz != null) {
-                            dtend.getParameters().add(new TzId(tz));
-                            lookupAndAddToTzList(tz, invTzMap, tzsReferenced);
-                        }
-                    }
-                }
-                event.getProperties().add(dtend);
+                newInv.setDtEnd(dt); 
             }
         }
         
@@ -868,33 +769,20 @@ public class CalendarUtils {
             Element d = element.getOptionalElement(MailService.E_APPT_DURATION);
             if (d!= null) {
                 ParsedDuration pd = ParsedDuration.parse(d);
-                Duration dur = new Duration();
-                dur.setValue(pd.toString());
-                
-                event.getProperties().add(dur);
+                newInv.setDuration(pd);
             }
         }
         
         // LOCATION
-        event.getProperties().add(new Location(location));
+        newInv.setLocation(location);
 
         // STATUS
         String status = element.getAttribute(MailService.A_APPT_STATUS, IcalXmlStrMap.STATUS_CONFIRMED);
-        event.getProperties().add(new Status(IcalXmlStrMap.sStatusMap.toIcal(status)));
+        newInv.setStatus(status);
 
-        // Microsoft Outlook compatibility for free-busy status
-        String freeBusy = element.getAttribute(MailService.A_APPT_FREEBUSY, null);
-        if (freeBusy != null) {
-            String outlookFreeBusy = IcalXmlStrMap.sOutlookFreeBusyMap.toIcal(freeBusy);
-            event.getProperties().add(new XProperty(Invite.MICROSOFT_BUSYSTATUS,
-                                                    outlookFreeBusy));
-            event.getProperties().add(new XProperty(Invite.MICROSOFT_INTENDEDSTATUS,
-                                                    outlookFreeBusy));
-        }
-        
         // TRANSPARENCY
         String transp = element.getAttribute(MailService.A_APPT_TRANSPARENCY, IcalXmlStrMap.TRANSP_OPAQUE);
-        event.getProperties().add(new Transp(IcalXmlStrMap.sTranspMap.toIcal(transp)));
+        newInv.setTransparency(transp);
 
         // ATTENDEEs
         for (Iterator iter = element.elementIterator(MailService.E_APPT_ATTENDEE); iter.hasNext(); ) {
@@ -938,9 +826,18 @@ public class CalendarUtils {
                 params.add(new Cn(cn));
             }
             
-            event.getProperties().add(at);
+//            event.getProperties().add(at);
+            newInv.addAttendee(at);
         }
-        return event;
+        
+//      // RECUR
+        Element recur = element.getOptionalElement(MailService.A_APPT_RECUR);
+        if (recur != null) {
+            Recurrence.IRecurrence recurrence = parseRecur(recur, oldTzMap, newInv);
+            newInv.setRecurrence(recurrence);
+        }
+        
+//        return event;
     }
     
     static List /*VEvent*/ cancelAppointment(Account acct, Appointment appt, String comment) throws ServiceException 
@@ -971,16 +868,6 @@ public class CalendarUtils {
     static Calendar buildReplyCalendar(Account acct, Invite inv, SendInviteReply.ParsedVerb verb, 
             String replySubject, List /*ICalTimeZone*/ tzsReferenced, ParsedDateTime exceptDt) throws ServiceException 
     {
-//        VEvent event = CalendarUtils.replyToInvite(acct, inv, verb, replySubject, exceptDt);
-//        
-//        Calendar iCal = makeCalendar(Method.REPLY);
-//        
-//        for (Iterator iter = tzsReferenced.iterator(); iter.hasNext();) {
-//            ICalTimeZone tz = (ICalTimeZone)iter.next();
-//            iCal.getComponents().add(tz.toVTimeZone());
-//        }
-//        iCal.getComponents().add(event);
-        
         Calendar iCal = CalendarUtils.replyToInvite(acct, inv, verb, replySubject, exceptDt).toICalendar();
         
         try {
@@ -1011,20 +898,20 @@ public class CalendarUtils {
      *   END:VCALENDAR
      * 
      * @param acct
-     * @param inv
+     * @param oldInv
      * @param verb
      * @param replySubject
      * @return
      * @throws ServiceException
      */
-    static Invite replyToInvite(Account acct, Invite inv, SendInviteReply.ParsedVerb verb, String replySubject, ParsedDateTime exceptDt)
+    static Invite replyToInvite(Account acct, Invite oldInv, SendInviteReply.ParsedVerb verb, String replySubject, ParsedDateTime exceptDt)
     throws ServiceException
     {
         Invite reply = new Invite(Method.REPLY, new TimeZoneMap(acct.getTimeZone()));
             
         // ATTENDEE -- send back this attendee with the proper status
         Attendee meReply = null;
-        Attendee me = inv.getMatchingAttendee(acct);
+        Attendee me = oldInv.getMatchingAttendee(acct);
         if (me != null) {
             meReply = new Attendee(me.getCalAddress());
             meReply.getParameters().add(new PartStat(verb.getICalPartStat()));
@@ -1041,29 +928,29 @@ public class CalendarUtils {
         }
         
         // DTSTART (outlook seems to require this, even though it shouldn't)
-        reply.setDtStart(inv.getStartTime());
+        reply.setDtStart(oldInv.getStartTime());
         
         // ORGANIZER
-            reply.setOrganizer(inv.getOrganizer());
+            reply.setOrganizer(oldInv.getOrganizer());
         
         // UID
-            reply.setUid(inv.getUid());
+            reply.setUid(oldInv.getUid());
         
         // RECURRENCE-ID (if necessary)
         if (exceptDt != null) {
             reply.setRecurId(new RecurId(exceptDt, RecurId.RANGE_NONE));
-        } else if (inv.hasRecurId()) {
-            reply.setRecurId(inv.getRecurId());
+        } else if (oldInv.hasRecurId()) {
+            reply.setRecurId(oldInv.getRecurId());
         }
         
         // SEQUENCE        
-        reply.setSeqNo(inv.getSeqNo());
+        reply.setSeqNo(oldInv.getSeqNo());
         
         // DTSTAMP
         // we should pick "now" -- but the dtstamp MUST be >= the one sent by the organizer,
         // so we'll use theirs if it is after "now"...
         Date now = new Date();
-        Date dtStampDate = new Date(inv.getDTStamp());
+        Date dtStampDate = new Date(oldInv.getDTStamp());
         if (now.after(dtStampDate)) {
             dtStampDate = now;
         }
@@ -1191,14 +1078,14 @@ public class CalendarUtils {
 
 
     // ical4j helper
-        public static String paramVal(Property prop, String paramName, String defaultValue) {
-          ParameterList params = prop.getParameters();
-          Parameter param = params.getParameter(paramName);
-          if (param == null) {
-              return defaultValue;
-          }
-          return param.getValue();
+    public static String paramVal(Property prop, String paramName, String defaultValue) {
+        ParameterList params = prop.getParameters();
+        Parameter param = params.getParameter(paramName);
+        if (param == null) {
+            return defaultValue;
         }
+        return param.getValue();
+    }
     //    
     //    static boolean getValueAsBoolean(String value) {
     //        if (value.equalsIgnoreCase("true")) {

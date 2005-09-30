@@ -36,7 +36,9 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.mail.MailService;
 
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Parameter;
@@ -89,6 +91,14 @@ public final class ParsedDateTime {
 
         return parse(dateStr, tzid, tz, tzmap.getLocalTimeZone());
     }
+    
+//    public static ParsedDateTime parse(Element e, ICalTimeZone localTZ) throws ServiceException {
+//        String d = e.getAttribute(MailService.A_APPT_DATETIME);
+//        String tzId = e.getAttribute(MailService.A_APPT_TIMEZONE, null);
+//        
+//        return parse(d, tzId, )
+//        
+//    }
 
     public static ParsedDateTime parse(String str, String tzName, ICalTimeZone tz, ICalTimeZone localTZ)
             throws ParseException {

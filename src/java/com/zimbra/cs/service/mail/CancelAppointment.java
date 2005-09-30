@@ -43,6 +43,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.RecurId;
+import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ParsedItemID;
@@ -130,8 +131,7 @@ public class CancelAppointment extends CalendarRequest {
     
     void cancelInstance(OperationContext octxt, Element request, Account acct, Mailbox mbox, Invite defaultInv, Element recurElt) 
     throws ServiceException {
-        List /* ICalTimeZone */ referencedTimeZones = new ArrayList();
-        RecurId recurId = CalendarUtils.parseRecurId(recurElt, defaultInv.getTimeZoneMap(), referencedTimeZones, acct.getTimeZone());
+        RecurId recurId = CalendarUtils.parseRecurId(recurElt, defaultInv.getTimeZoneMap(), defaultInv);
 
         cancelInstance(octxt, request, acct, mbox, defaultInv, recurId);
     }

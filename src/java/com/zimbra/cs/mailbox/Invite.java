@@ -86,6 +86,7 @@ import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.ParsedDuration;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.Recurrence;
+import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -169,6 +170,7 @@ public class Invite {
     
     private Recurrence.IRecurrence mRecurrence;
     public Recurrence.IRecurrence getRecurrence() { return mRecurrence; }
+    public void setRecurrence(Recurrence.IRecurrence recur) { mRecurrence = recur; }
     private boolean mSentByMe;
     private String mFragment;
     public String getFragment() { return mFragment; }
@@ -583,7 +585,7 @@ public class Invite {
     void setFreeBusy(String fb) { mFreeBusy = fb; }
     public String getTransparency() { return mTransparency; }
     public boolean isTransparent() { return IcalXmlStrMap.TRANSP_TRANSPARENT.equals(mTransparency); }
-    void setTransparency(String transparency) { mTransparency = transparency; }
+    public void setTransparency(String transparency) { mTransparency = transparency; }
     public RecurId getRecurId() { return mRecurrenceId; }
     public void setRecurId(RecurId rid) { mRecurrenceId = rid; }
     public boolean hasRecurId() { return mRecurrenceId != null; }
@@ -594,7 +596,9 @@ public class Invite {
     public ParsedDateTime getStartTime() { return mStart; }
     public void setDtStart(ParsedDateTime dtStart) { mStart = dtStart; }
     public ParsedDateTime getEndTime() { return mEnd; }
+    public void setDtEnd(ParsedDateTime dtend) { mEnd = dtend; }
     public ParsedDuration getDuration() { return mDuration; }
+    public void setDuration(ParsedDuration dur) { mDuration = dur; }
     
     public String getFreeBusyActual() {
         assert(mFreeBusy != null);
@@ -687,6 +691,7 @@ public class Invite {
     }
     
     public String getLocation() { return mLocation; }
+    public void setLocation(String location) { mLocation = location; }
     public boolean isAllDayEvent() { return ((mFlags & APPT_FLAG_ALLDAY)!=0); }
     void setHasOtherAttendees(boolean hasOtherAttendees) {
         if (hasOtherAttendees) {
@@ -794,6 +799,11 @@ public class Invite {
     
     public Invite(Method method, TimeZoneMap tzMap) {
         mMethod = method;
+        mTzMap = tzMap;
+    }
+
+    public Invite(TimeZoneMap tzMap) {
+        mMethod = Method.PUBLISH;
         mTzMap = tzMap;
     }
     
@@ -1151,7 +1161,7 @@ public class Invite {
                     Object next = iter.next();
                     if (next instanceof Recur) {
                         Recur cur = (Recur)iter.next();
-                        addRules.add(new Recurrence.SimpleRepeatingRule(mStart, duration, cur, new InviteInfo(this)));
+                        subRules.add(new Recurrence.SimpleRepeatingRule(mStart, duration, cur, new InviteInfo(this)));
                     } else {
                         ExDate cur = (ExDate)next;
                         // TODO add the dates here!
@@ -1260,8 +1270,9 @@ public class Invite {
         PropertyList props = cal.getProperties();
         for (Iterator iter = props.iterator(); iter.hasNext();) {
             Property prop = (Property)iter.next();
-            String name = prop.getName();
-            method = lookupMethod(name);
+            if (prop.getName().equals(Property.METHOD)) {
+                method = lookupMethod(prop.getValue());
+            }
         }
         
         ComponentList comps = cal.getComponents();
@@ -1303,8 +1314,9 @@ public class Invite {
         PropertyList props = cal.getProperties();
         for (Iterator iter = props.iterator(); iter.hasNext();) {
             Property prop = (Property)iter.next();
-            String name = prop.getName();
-            method = lookupMethod(name);
+            if (prop.getName().equals(Property.METHOD)) {
+                method = lookupMethod(prop.getValue());
+            }
         }
         
         TimeZoneMap tzmap = new TimeZoneMap(acct.getTimeZone());
@@ -1346,8 +1358,35 @@ public class Invite {
         
         // RECUR
         if (mRecurrence != null) {
-            // FIXME!
-            assert(false);
+            for (Iterator iter = mRecurrence.addRulesIterator(); iter!=null && iter.hasNext();) {
+                IRecurrence cur = (IRecurrence)iter.next();
+
+                switch (cur.getType()) { 
+                case Recurrence.TYPE_SINGLE_INSTANCE:
+                    Recurrence.SingleInstanceRule sir = (Recurrence.SingleInstanceRule)cur;
+                    // FIXME
+                    break;
+                case Recurrence.TYPE_REPEATING:
+                    Recurrence.SimpleRepeatingRule srr = (Recurrence.SimpleRepeatingRule)cur;
+                    event.getProperties().add(new RRule(srr.getRecur()));
+                    break;
+                }
+                
+            }
+            for (Iterator iter = mRecurrence.subRulesIterator(); iter!=null && iter.hasNext();) {
+                IRecurrence cur = (IRecurrence)iter.next();
+
+                switch (cur.getType()) { 
+                case Recurrence.TYPE_SINGLE_INSTANCE:
+                    Recurrence.SingleInstanceRule sir = (Recurrence.SingleInstanceRule)cur;
+                    // FIXME
+                    break;
+                case Recurrence.TYPE_REPEATING:
+                    Recurrence.SimpleRepeatingRule srr = (Recurrence.SimpleRepeatingRule)cur;
+                    event.getProperties().add(new ExRule(srr.getRecur()));
+                    break;
+                }
+            }
         }
         
         // ORGANIZER
@@ -1448,6 +1487,8 @@ public class Invite {
         
         // SEQUENCE
         event.getProperties().add(new Sequence(mSeqNo));
+        
+        System.out.println("EVENT="+event.toString());
         
         return event;
     }
