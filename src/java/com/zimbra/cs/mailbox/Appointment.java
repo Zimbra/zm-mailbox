@@ -866,7 +866,10 @@ public class Appointment extends MailItem {
         Metadata encodeAsMetadata() {
             Metadata meta = new Metadata();
             
-            meta.put(FN_RECURID, mRecurId.encodeMetadata());
+            if (mRecurId != null) {
+                meta.put(FN_RECURID, mRecurId.encodeMetadata());
+            }
+            
             meta.put(FN_SEQNO, mSeqNo);
             meta.put(FN_DTSTAMP, mDtStamp);
             meta.put(FN_ATTENDEE, Invite.encodeAsMetadata(mAttendee));
@@ -877,7 +880,11 @@ public class Appointment extends MailItem {
         static ReplyInfo decodeFromMetadata(Metadata md, TimeZoneMap tzMap) throws ServiceException {
             ReplyInfo toRet = new ReplyInfo();
             
-            toRet.mRecurId = RecurId.decodeMetadata(md.getMap(FN_RECURID), tzMap);
+            if (md.containsKey(FN_RECURID)) {
+                toRet.mRecurId = RecurId.decodeMetadata(md.getMap(FN_RECURID), tzMap);
+            } else {
+                toRet.mRecurId = null;
+            }
             toRet.mSeqNo = (int)md.getLong(FN_SEQNO);
             toRet.mDtStamp = md.getLong(FN_DTSTAMP);
             toRet.mAttendee = Invite.parseAtFromMetadata(md.getMap(FN_ATTENDEE));
