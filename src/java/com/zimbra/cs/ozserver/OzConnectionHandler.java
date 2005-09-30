@@ -125,7 +125,7 @@ public class OzConnectionHandler {
                 }
             }
         };
-        mServer.runTaskInIoThread(closeTask);
+        mServer.runTaskInServerThread(closeTask);
     }
     
     public void setMatcher(OzMatcher matcher) {
@@ -266,7 +266,7 @@ public class OzConnectionHandler {
     }
 
     void doRead() throws IOException {
-        // This method runs in the IOThread.  Note that we disable
+        // This method runs in the server thread.  Note that we disable
         // read interest here, and not in the worker thread, so that
         // we don't get another ready notification before the worker
         // will get a chance to run and disable read interest.
@@ -313,7 +313,7 @@ public class OzConnectionHandler {
     }
 
     /**
-     * This method runs in the IO Thread.
+     * This method runs in the server thread.
      * 
      * TODO two possible problems - too many write buffers
      * and underlying tcp buffer being too big
