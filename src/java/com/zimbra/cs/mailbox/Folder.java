@@ -135,32 +135,59 @@ public class Folder extends MailItem {
     }
 
 
-    /** Returns whether the caller has the requested access rights on this
-     *  folder.  The owner of the {@link Mailbox} has all rights on all
-     *  items in the Mailbox, as do all admin accounts.  All other users
-     *  must be explicitly granted access.  The authenticated user is
-     *  fetched from the transaction's {@link Mailbox.OperationContext}
-     *  via a call to {@link Mailbox#getAuthenticatedAccount}.
-     * 
-     * @see ACL */
-    boolean canAccess(short rightsNeeded) throws ServiceException {
-        return canAccess(rightsNeeded, mMailbox.getAuthenticatedAccount());
+    boolean canAccess(short rightsNeeded, Account authuser) throws ServiceException {
+        return (checkRights(rightsNeeded, authuser) & rightsNeeded) == rightsNeeded;
     }
 
-    boolean canAccess(short rightsNeeded, Account authuser) throws ServiceException {
+    /** Returns ths subset of the requested access rights that the user has
+     *  been granted on this folder.  The owner of the {@link Mailbox} has
+     *  all rights on all items in the Mailbox, as do all admin accounts.
+     *  All other users must be explicitly granted access.<p>
+     * 
+     *  The set of rights that apply to a given folder is derived by starting
+     *  at that folder and going up the folder hierarchy, taking the first set
+     *  of rights that applies to the folder in question and then stopping.
+     *  In other words, take the *first* (and only the first) of the following
+     *  that exists:<ul>
+     *    <li>the set of rights granted on the folder directly
+     *    <li>the set of inherited rights granted on the folder's parent
+     *    <li>the set of inherited rights granted on the folder's grandparent
+     *    <li>...
+     *    <li>the set of inherited rights granted on the mailbox's root folder
+     *    <li>no rights at all</ul><p>
+     * 
+     *  So if the folder hierarchy looks like this:<pre>
+     *           root  <- inherited "read+write" granted to user A
+     *           /  \
+     *          W    X  <- "read" granted to users A and B
+     *              / \
+     *             Y   Z</pre>
+     *  then user A has "write" rights on folders W, Y, and Z but not X, and
+     *  user B has "read" rights on folder X but not W, Y, or Z.
+     * 
+     * @param rightsNeeded  A set of rights (e.g. {@link ACL#RIGHT_READ}
+     *                      and {@link ACL#RIGHT_DELETE}).
+     * @param authuser      The user whose rights we need to query.
+     * @see ACL */
+    short checkRights(short rightsNeeded, Account authuser) throws ServiceException {
+        return checkRights(rightsNeeded, authuser, false);
+    }
+
+    private short checkRights(short rightsNeeded, Account authuser, boolean inheritedOnly) throws ServiceException {
         if (rightsNeeded == 0)
-            return true;
+            return rightsNeeded;
         // the mailbox owner can do anything they want
         if (authuser == null || authuser.getId().equals(mMailbox.getAccountId()))
-            return true;
+            return rightsNeeded;
         // admin users can also do anything they want
         if (authuser.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false))
-            return true;
+            return rightsNeeded;
         // check the ACLs to see if access has been explicitly granted
-        if (mRights != null)
-            return mRights.checkRights(authuser, rightsNeeded);
-        // FIXME: need to check parent folder for inherited rights
-        return false;
+        Short granted = mRights != null ? mRights.getGrantedRights(authuser, inheritedOnly) : null;
+        if (granted != null)
+            return (short) (granted.shortValue() & rightsNeeded);
+        // no ACLs apply; check parent folder for inherited rights
+        return mId == Mailbox.ID_FOLDER_ROOT ? 0 : mParent.checkRights(rightsNeeded, authuser, true);
     }
 
     /** Grants the specified set of rights to the target and persists them

@@ -91,11 +91,11 @@ public class ACL {
         /** Returns whether subfolders inherit these same rights. */
         public boolean isGrantInherited() { return mInherit; }
 
-        /** Returns the subset of the requested rights granted to the
-         *  given {@link Account} by this <code>Grant</code>.  If the grant
-         *  does not apply to the Account, returns <code>0</code>. */
-        public short checkRights(Account acct, short request) throws ServiceException {
-            return (short) (matches(acct) ? request & mRights : 0);
+        /** Returns the rights granted to the given {@link Account} by this
+         *  <code>Grant</code>.  If the grant does not apply to the Account,
+         *  returns <code>0</code>. */
+        public short getGrantedRights(Account acct) throws ServiceException {
+            return matches(acct) ? mRights : 0;
         }
 
         /** Returns whether this grant applies to the given {@link Account}.
@@ -180,10 +180,25 @@ public class ACL {
             }
     }
 
-    boolean checkRights(Account authuser, short rightsNeeded) throws ServiceException {
-        for (int i = 0; rightsNeeded != 0 && i < mGrants.size(); i++)
-            rightsNeeded &= ~((Grant) mGrants.get(i)).checkRights(authuser, rightsNeeded);
-        return rightsNeeded == 0;
+    /** Returns the bitmask of rights granted to the user by the ACL, or
+     *  <code>null</code> if there are no rights granted to anyone.  (Note
+     *  that if rights are granted to <i>other</i> accounts but not to the
+     *  specified user, returns <code>0</code>.)
+     * 
+     * @param authuser       The user to gather rights for.
+     * @param inheritedOnly  Whether to consider only inherited rights.
+     * @return A <code>Short</code> containing the OR'ed-together rights
+     *         granted to the user, or <code>null</code>. */
+    Short getGrantedRights(Account authuser, boolean inheritedOnly) throws ServiceException {
+        short rightsGranted = 0, matches = 0;
+        for (int i = 0; i < mGrants.size(); i++) {
+            Grant grant = (Grant) mGrants.get(i);
+            if (!inheritedOnly || grant.isGrantInherited()) {
+                rightsGranted |= grant.getGrantedRights(authuser);
+                matches++;
+            }
+        }
+        return (matches > 0 ? new Short(rightsGranted) : null);
     }
 
     /** Returns whether there are any grants encapsulated by this ACL. */
