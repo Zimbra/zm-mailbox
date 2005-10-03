@@ -825,3 +825,20 @@ Notes:
 <DeleteDistributionListResponse/>
 
 -----------------------------
+<GetClusterStatusRequest/>
+
+<GetClusterStatusResponse>
+  <servers>
+    <server name="{server-name}" status="{1-or-0}"/>*
+  </servers>
+  <services>
+    <service name="{service-name}" status="{state-string-from-console}"  owner="{server-name}" lastOwner="{server-name}" restarts="{number}"/>*
+  </services>
+</GetClusterStatusResponse>
+-----------------------------
+<FailoverClusterServiceRequest>
+  <service currentServer="{server-name}" newServer="{server-name}"/>
+</FailOverClusterServiceRequest>
+
+<FailoverCluserServiceResponse/>
+-----------------------------
