@@ -29,6 +29,7 @@
 package com.zimbra.soap;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
@@ -40,6 +41,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
@@ -147,10 +149,24 @@ public abstract class DocumentHandler {
         request.addAttribute(xpath[depth], value);
     }
 
-    protected static ItemId getProxyTarget(ZimbraContext lc, String id, boolean checkMountpoint) throws ServiceException {
-        if (lc == null || id == null)
+    private void insertMountpointReferences(Element response, String[] xpath, ItemId iidMountpoint, ItemId iidLocal, ZimbraContext lc) {
+        int depth = 0;
+        while (depth < xpath.length && response != null)
+            response = response.getOptionalElement(xpath[depth++]);
+        if (response == null)
+            return;
+        String local = iidLocal.toString(lc);
+        for (Iterator it = response.elementIterator(); it.hasNext(); ) {
+            Element elt = (Element) it.next();
+            String folder = elt.getAttribute(MailService.A_FOLDER, null);
+            if (local.equalsIgnoreCase(folder))
+                elt.addAttribute(MailService.A_FOLDER, iidMountpoint.toString(lc));
+        }
+    }
+
+    protected static ItemId getProxyTarget(ZimbraContext lc, ItemId iid, boolean checkMountpoint) throws ServiceException {
+        if (lc == null || iid == null)
             return null;
-        ItemId iid = new ItemId(id);
         if (!iid.belongsTo(getRequestedAccount(lc)))
             return iid;
 
@@ -166,14 +182,19 @@ public abstract class DocumentHandler {
 
     protected String[] getProxiedIdPath()     { return null; }
     protected boolean checkMountpointProxy()  { return false; }
+    protected String[] getResponseItemPath()  { return null; }
 
     protected Element proxyIfNecessary(SoapEngine engine, Element request, Map context) throws ServiceException {
         String[] xpath = getProxiedIdPath();
         if (xpath == null)
             return null;
+        String id = getXPath(request, xpath);
+        if (id == null)
+            return null;
+        ItemId iid = new ItemId(id);
 
         ZimbraContext lc = getZimbraContext(context);
-        ItemId iidTarget = getProxyTarget(lc, getXPath(request, xpath), checkMountpointProxy());
+        ItemId iidTarget = getProxyTarget(lc, iid, checkMountpointProxy());
         if (iidTarget == null)
             return null;
 
@@ -183,15 +204,22 @@ public abstract class DocumentHandler {
         boolean isLocal = LOCAL_HOST.equalsIgnoreCase(acctTarget.getAttr(Provisioning.A_zimbraMailHost));
 
         request.detach();
-        setXPath(request, xpath, iidTarget.toString(acctTarget));
+        if (iid != iidTarget)
+            setXPath(request, xpath, iidTarget.toString(acctTarget));
+        Element response = null;
         if (isLocal) {
             // FIXME: would be nice to translate remote folder IDs back into local mountpoint IDs
             ZimbraContext lcTarget = new ZimbraContext(lc, iidTarget.getAccountId());
             Map contextTarget = new HashMap(context);
             contextTarget.put(SoapEngine.ZIMBRA_CONTEXT, lcTarget);
-            return engine.dispatchRequest(request, contextTarget, lcTarget);
+            response = engine.dispatchRequest(request, contextTarget, lcTarget);
         } else {
-            return null;
+            
         }
+
+        String[] xpathResponse = getResponseItemPath();
+        if (iid != iidTarget && xpathResponse != null) 
+            insertMountpointReferences(response, xpathResponse, iid, iidTarget, lc);
+        return response;
     }
 }
