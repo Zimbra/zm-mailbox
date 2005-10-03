@@ -49,6 +49,6 @@ log4j.appender.STATS.layout=com.zimbra.cs.stats.AccumulatorLayout
 log4j.additivity.com.zimbra.cs.stats=false
 log4j.logger.com.zimbra.cs.stats=DEBUG,STATS
 
-log4j.logger.zimbra=ERROR,SYSLOG
-log4j.logger.com.zimbra=OFF
+log4j.logger.zimbra=INFO,SYSLOG
+log4j.logger.com.zimbra=INFO,SYSLOG
 log4j.logger.com.zimbra.cs.util.StopWatch=INFO
