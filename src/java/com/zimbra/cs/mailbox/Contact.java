@@ -268,10 +268,18 @@ public class Contact extends MailItem {
     static Contact create(int id, Folder folder, short volumeId, Map fields, String tags) throws ServiceException {
         if (folder == null || !folder.canContain(TYPE_CONTACT))
             throw MailServiceException.CANNOT_CONTAIN();
-        if (fields == null || fields.isEmpty())
-            throw ServiceException.INVALID_REQUEST("contact must have fields", null);
         if (!folder.canAccess(ACL.RIGHT_INSERT))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
+
+        if (fields == null)
+            throw ServiceException.INVALID_REQUEST("contact must have fields", null);
+        for (Iterator it = fields.values().iterator(); it.hasNext(); ) {
+            String value = StringUtil.stripControlCharacters((String) it.next());
+            if (value == null || value.equals(""))
+                it.remove();
+        }
+        if (fields.isEmpty())
+            throw ServiceException.INVALID_REQUEST("contact must have fields", null);
 
         Mailbox mbox = folder.getMailbox();
         mbox.updateContactCount(1);
