@@ -571,9 +571,12 @@ public class ImapHandler extends ProtocolHandler {
     }
 
     private OperationContext getContext() throws ServiceException {
-        if (mSession == null)
+        return getContext(mSession);
+    }
+    private OperationContext getContext(ImapSession session) throws ServiceException {
+        if (session == null)
             throw ServiceException.AUTH_REQUIRED();
-        return mSession.getContext();
+        return session.getContext();
     }
 
 
@@ -714,7 +717,7 @@ public class ImapHandler extends ProtocolHandler {
             synchronized (mailbox) {
                 session.setUsername(account.getName());
                 session.cacheFlags(mailbox);
-                for (Iterator it = mailbox.getTagList(getContext()).iterator(); it.hasNext(); )
+                for (Iterator it = mailbox.getTagList(getContext(session)).iterator(); it.hasNext(); )
                     session.cacheTag((Tag) it.next());
             }
         } catch (ServiceException e) {
