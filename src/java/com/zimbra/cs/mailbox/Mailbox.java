@@ -3366,7 +3366,8 @@ public class Mailbox {
     }
 
     public synchronized Folder createFolder(OperationContext octxt, String name, int parentId, byte defaultView) throws ServiceException {
-        String path = getFolderById(parentId).getPath() + (parentId == ID_FOLDER_USER_ROOT ? "" : "/") + Folder.validateFolderName(name);
+        Folder.validateFolderName(name);
+        String path = getFolderById(parentId).getPath() + (parentId == ID_FOLDER_USER_ROOT ? "" : "/") + name;
         return createFolder(octxt, path, (byte) 0, defaultView);
     }
     public synchronized Folder createFolder(OperationContext octxt, String path, byte attrs, byte defaultView) throws ServiceException {
@@ -3466,15 +3467,15 @@ public class Mailbox {
 
                 parent = getFolderById(ID_FOLDER_USER_ROOT);
                 for (int i = 0; i < parts.length - 1; i++) {
-                    String pathSegment = Folder.validateFolderName(parts[i]);
+                    Folder.validateFolderName(parts[i]);
                     int subfolderId = playerParentIds == null ? ID_AUTO_INCREMENT : playerParentIds[i];
-                    Folder subfolder = parent.findSubfolder(pathSegment);
+                    Folder subfolder = parent.findSubfolder(parts[i]);
                     if (subfolder == null)
-                        subfolder = Folder.create(getNextItemId(subfolderId), this, parent, pathSegment);
+                        subfolder = Folder.create(getNextItemId(subfolderId), this, parent, parts[i]);
                     else if (subfolderId != ID_AUTO_INCREMENT && subfolderId != subfolder.getId())
                         throw ServiceException.FAILURE("parent folder id changed since operation was recorded", null);
-                    else if (!subfolder.getName().equals(pathSegment) && subfolder.isMutable())
-                    	subfolder.rename(pathSegment, parent);
+                    else if (!subfolder.getName().equals(parts[i]) && subfolder.isMutable())
+                    	subfolder.rename(parts[i], parent);
                     recorderParentIds[i] = subfolder.getId();
                     parent = subfolder;
                 }

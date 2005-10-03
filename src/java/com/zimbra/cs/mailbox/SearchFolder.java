@@ -120,7 +120,7 @@ public class SearchFolder extends Folder {
             throw MailServiceException.CANNOT_CONTAIN();
         if (!parent.canAccess(ACL.RIGHT_INSERT))
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions on the parent folder");
-        name = validateFolderName(name);
+        validateFolderName(name);
         query = validateQuery(query);
         if (parent.findSubfolder(name) != null)
             throw MailServiceException.ALREADY_EXISTS(name);

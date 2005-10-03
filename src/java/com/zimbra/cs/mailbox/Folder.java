@@ -414,7 +414,7 @@ public class Folder extends MailItem {
         if (id != Mailbox.ID_FOLDER_ROOT) {
             if (parent == null || !parent.canContain(TYPE_FOLDER))
                 throw MailServiceException.CANNOT_CONTAIN();
-            name = validateFolderName(name);
+            validateFolderName(name);
             if (parent.findSubfolder(name) != null)
                 throw MailServiceException.ALREADY_EXISTS(name);
             if (!parent.canAccess(ACL.RIGHT_INSERT))
@@ -438,9 +438,7 @@ public class Folder extends MailItem {
     }
 
     /** Renames the folder in place.  Altering a folder's case (e.g.
-     *  from <code>foo</code> to <code>FOO</code>) is allowed.  Leading
-     *  and trailing whitespace and certain control characters are
-     *  stripped from the new name.
+     *  from <code>foo</code> to <code>FOO</code>) is allowed.
      * 
      * @param name  The new name for this folder.
      * @perms {@link ACL#RIGHT_WRITE} on the folder
@@ -460,9 +458,6 @@ public class Folder extends MailItem {
     }
     /** Renames the folder and optionally moves it.  Altering a folder's
      *  case (e.g. from <code>foo</code> to <code>FOO</code>) is allowed.
-     *  Leading and trailing whitespace and certain control characters are
-     *  stripped from the new name.<p>
-     * 
      *  If you don't want the folder to be moved, you must pass 
      *  <code>folder.getParent()</code> as the second parameter.
      * 
@@ -484,7 +479,7 @@ public class Folder extends MailItem {
      * @see #validateFolderName(String)
      * @see #move(Folder) */
     void rename(String name, Folder target) throws ServiceException {
-        name = validateFolderName(name);
+        validateFolderName(name);
         if (name.equals(mData.subject) && target == mParent)
             return;
         if (!isMutable())
@@ -526,19 +521,15 @@ public class Folder extends MailItem {
      *  banned in XML.
      * 
      * @param name  The proposed folder name.
-     * @return The <code>name</code> parameter with all leading and trailing
-     *         whitespace removed.
      * @throws ServiceException  The following error codes are possible:<ul>
      *    <li><code>mail.INVALID_NAME</code> - if the name is not acceptable
      *    </ul>
      * @see StringUtil#stripControlCharacters */
-    protected static String validateFolderName(String name) throws ServiceException {
+    protected static void validateFolderName(String name) throws ServiceException {
         if (name == null || name != StringUtil.stripControlCharacters(name))
             throw MailServiceException.INVALID_NAME(name);
-        name = name.trim();
-        if (name.equals("") || name.length() > MAX_FOLDER_LENGTH || name.matches(INVALID_CHARACTERS))
+        if (name.trim().equals("") || name.length() > MAX_FOLDER_LENGTH || name.matches(INVALID_CHARACTERS))
             throw MailServiceException.INVALID_NAME(name);
-        return name;
     }
 
     private void recursiveAlterUnread(boolean unread) throws ServiceException {

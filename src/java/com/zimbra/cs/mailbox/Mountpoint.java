@@ -61,6 +61,7 @@ public class Mountpoint extends Folder {
     /** Creates a new Mountpoint pointing at a remote item and persists it
      *  to the database.  A real nonnegative item ID must be supplied from
      *  a previous call to {@link Mailbox#getNextItemId(int)}.
+     * 
      * @param id        The id for the new mountpoint.
      * @param parent    The folder to place the new mountpoint in.
      * @param name      The new mountpoint's name.
@@ -90,7 +91,7 @@ public class Mountpoint extends Folder {
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions on the parent folder");
         if (parent == null || !parent.canContain(TYPE_MOUNTPOINT))
             throw MailServiceException.CANNOT_CONTAIN();
-        name = validateFolderName(name);
+        validateFolderName(name);
         if (parent.findSubfolder(name) != null)
             throw MailServiceException.ALREADY_EXISTS(name);
         Mailbox mbox = parent.getMailbox();
