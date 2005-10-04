@@ -122,10 +122,10 @@ public class ModifyInvitePartStat extends RedoableOp
         try {
             Appointment appt = Mailbox.getMailboxById(getMailboxId()).getAppointmentById(null, mApptId);
             
-            int range = in.readInt();
-            String dtStr = in.readUTF();
-            
             if (in.readBoolean()) {
+                int range = in.readInt();
+                String dtStr = in.readUTF();
+                
                 try {
                     mRecurId = new RecurId(ParsedDateTime.parse(dtStr, appt.getTimeZoneMap()), range);
                 } catch (ParseException pe) {
