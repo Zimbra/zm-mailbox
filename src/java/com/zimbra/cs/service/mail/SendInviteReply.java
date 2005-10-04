@@ -37,7 +37,6 @@ import org.apache.commons.logging.LogFactory;
 import com.zimbra.cs.account.*;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.RecurId;
@@ -51,9 +50,7 @@ import com.zimbra.soap.ZimbraContext;
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Parameter;
 import net.fortuna.ical4j.model.parameter.PartStat;
-import net.fortuna.ical4j.model.parameter.TzId;
 import net.fortuna.ical4j.model.property.Attendee;
-import net.fortuna.ical4j.model.property.RecurrenceId;
 
 /**
  * @author tim

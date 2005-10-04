@@ -932,12 +932,13 @@ public class Appointment extends MailItem {
             return toRet;
         }
         
-    
         void removeObsceleteEntries(RecurId recurId, int seqNo, long dtStamp) {
             for (Iterator iter = mReplies.iterator(); iter.hasNext();) {
                 ReplyInfo cur = (ReplyInfo)iter.next();
                 
-                if (cur.mRecurId.equals(recurId)) {
+//                if ( (cur.mRecurId == null && recurId == null) ||
+//                        (cur.mRecurId.withinRange(recurId))) {
+                if (recurMatches(cur.mRecurId, recurId)) {
                     if (cur.mSeqNo <= seqNo && cur.mDtStamp <= dtStamp) {
                         iter.remove();
                     }
@@ -1100,26 +1101,26 @@ public class Appointment extends MailItem {
         }
         
         
-        Attendee getEffectiveAttendee(Attendee at, Instance inst, Invite inv) {
-            // return either the passed-in attendee, or the attendee from the reply list 
-            // if there's one that overrides the Invite's
-            
-            for (Iterator iter = mReplies.iterator(); iter.hasNext();) {
-                ReplyInfo cur = (ReplyInfo)iter.next();
-                
-                if (attendeeMatches(at, cur.mAttendee)) {
-                    if (cur.mRecurId.withinRange(inst.getStart())) {
-                        if (inv.getSeqNo() <= cur.mSeqNo) {
-                            if (inv.getDTStamp() <= cur.mDtStamp) {
-                                return cur.mAttendee;
-                            }
-                        }
-                    }
-                }
-            }
-            
-            return at;
-        }
+//        Attendee getEffectiveAttendee(Attendee at, Instance inst, Invite inv) {
+//            // return either the passed-in attendee, or the attendee from the reply list 
+//            // if there's one that overrides the Invite's
+//            
+//            for (Iterator iter = mReplies.iterator(); iter.hasNext();) {
+//                ReplyInfo cur = (ReplyInfo)iter.next();
+//                
+//                if (attendeeMatches(at, cur.mAttendee)) {
+//                    if (cur.mRecurId.withinRange(inst.getStart())) {
+//                        if (inv.getSeqNo() <= cur.mSeqNo) {
+//                            if (inv.getDTStamp() <= cur.mDtStamp) {
+//                                return cur.mAttendee;
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//            
+//            return at;
+//        }
     }
             
     public static class FreeBusyActualData {
