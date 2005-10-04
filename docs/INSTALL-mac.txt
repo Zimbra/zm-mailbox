@@ -48,6 +48,10 @@ Installing mysql:
 * Mount dmg and install both the server and the startup item (so mysql is started upon Mac startup).
 * You may need to restart to get mySql to install fully
 * Change the port to 7306
+  If you dont already have a my.cnf, create one under /opt/zimbra/mysql/data/my.cnf and add the following lines to it:
+	[mysqld]
+	bind-address = localhost
+	port         = 7306 
 * Set up the root account (see ZimbraServer/docs/INSTALL.txt for more details) :
 
 	sh> cd /usr/local/mysql/bin
