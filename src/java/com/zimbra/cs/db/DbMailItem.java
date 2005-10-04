@@ -793,7 +793,7 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("DELETE FROM " + getMailItemTableName(item) +
-                    " WHERE " + target + " AND type NOT IN " + FOLDER_OR_SEARCH);
+                    " WHERE " + target + " AND type NOT IN " + FOLDER_TYPES);
             stmt.setInt(1, item instanceof VirtualConversation ? ((VirtualConversation) item).getMessageId() : item.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -860,12 +860,12 @@ public class DbMailItem {
     }
 
 
-    private static final String FOLDER_OR_SEARCH = "(" + MailItem.TYPE_FOLDER + ',' + MailItem.TYPE_SEARCHFOLDER + ')';
-    private static final String FOLDER_OR_SEARCH_OR_TAG = "(" + MailItem.TYPE_FOLDER + ',' + MailItem.TYPE_SEARCHFOLDER + ',' + MailItem.TYPE_TAG + ')';
+    private static final String FOLDER_TYPES = "(" + MailItem.TYPE_FOLDER + ',' + MailItem.TYPE_SEARCHFOLDER + ',' + MailItem.TYPE_MOUNTPOINT + ')';
+    private static final String FOLDER_AND_TAG_TYPES = "(" + MailItem.TYPE_FOLDER + ',' + MailItem.TYPE_SEARCHFOLDER + ',' + MailItem.TYPE_MOUNTPOINT + ',' + MailItem.TYPE_TAG + ')';
     
     private static String typeConstraint(byte type) {
         if (type == MailItem.TYPE_FOLDER)
-            return FOLDER_OR_SEARCH;
+            return FOLDER_TYPES;
         else
             return "(" + type + ')';
     }
@@ -919,7 +919,7 @@ public class DbMailItem {
             String table = getMailItemTableName(mbox.getId(), "mi");
 
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
-                    " FROM " + table + " WHERE type IN " + FOLDER_OR_SEARCH_OR_TAG);
+                    " FROM " + table + " WHERE type IN " + FOLDER_AND_TAG_TYPES);
             rs = stmt.executeQuery();
             while (rs.next()) {
                 UnderlyingData data = constructItem(rs);
@@ -1305,7 +1305,7 @@ public class DbMailItem {
         try {
             stmt = conn.prepareStatement("SELECT " + LEAF_NODE_FIELDS +
                     " FROM " + getMailItemTableName(folder) +
-                    " WHERE folder_id = ? AND type NOT IN " + FOLDER_OR_SEARCH);
+                    " WHERE folder_id = ? AND type NOT IN " + FOLDER_TYPES);
             stmt.setInt(1, folderId);
             rs = stmt.executeQuery();
 
