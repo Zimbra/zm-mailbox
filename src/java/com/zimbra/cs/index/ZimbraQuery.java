@@ -1501,14 +1501,20 @@ public final class ZimbraQuery {
 	                op = op.optimize(mbox); // optimize again now that we have the trash/spam setting
 	            }
 	        }
+            
+            if (op != null) {
 	        
-	        if (mLog.isDebugEnabled()) {
-	            mLog.debug("OPERATION:"+op.toString());
-	        }
+                if (mLog.isDebugEnabled()) {
+                    mLog.debug("OPERATION:"+op.toString());
+                }
+                
+                ZimbraQueryResults res = op.run(mbox, mbidx, types, searchOrder);
+                return res;
+            } else {
+                mLog.debug("Operation optimized to nothing.  Returning no results");
+                return new EmptyQueryResults(types, searchOrder);
+            }
 	        
-	        ZimbraQueryResults res = op.run(mbox, mbidx, types, searchOrder);
-	        
-	        return res;
 	    }
 
 	    // return an empty SimpleQueryResults set...
