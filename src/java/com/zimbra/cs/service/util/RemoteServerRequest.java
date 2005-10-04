@@ -85,6 +85,7 @@ public class RemoteServerRequest {
 
     /**
      * Sends the request to the remote server at the specified URL.
+     * @throws IOException if the request was not successful
      */
     public void invoke(String url)
     throws IOException {

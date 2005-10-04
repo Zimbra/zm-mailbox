@@ -28,13 +28,19 @@ package com.zimbra.cs.service.mail;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
-import com.zimbra.cs.localconfig.LC;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.service.Element;
+import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.RemoteServerRequest;
-import com.zimbra.cs.util.ZimbraLog;
-import com.zimbra.cs.util.StringUtil;
+import com.zimbra.cs.util.ArrayUtil;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraContext;
 
@@ -43,63 +49,98 @@ import com.zimbra.soap.ZimbraContext;
  */
 public class CheckSpelling extends DocumentHandler  {
     
-    private long mFailTimestamp = 0;
-    private boolean mWasSuccessful = true;
-
+    private static Log sLog = LogFactory.getLog(CheckSpelling.class);
+    
     /**
-     * Returns the url of the spell server, or <code>null</code> if
-     * the spell server hostname is not specified in LocalConfig.
+     * Returns the urls to the spell server(s), or <code>null</code> if
+     * <code>zimbraSpellCheckHostname</code> or <code>zimbraSpellCheckPort</code>
+     * is not specified in LDAP.
      */
-    private String getSpellServerUrl() {
-        String hostname = LC.spell_hostname.value();
-        if (StringUtil.isNullOrEmpty(hostname)) {
+    private String[] getSpellServerUrls()
+    throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+
+        // Look up the spell check hostname
+        Server localServer = prov.getLocalServer();
+        String[] hostnames = localServer.getMultiAttr(Provisioning.A_zimbraSpellCheckHostname);
+        if (ArrayUtil.isEmpty(hostnames)) {
             return null;
         }
-        int port = LC.spell_port.intValue();
-        return "http://" + hostname + ":" + port + "/php/aspell.php";
+        
+        List urls = new ArrayList();
+        for (int i = 0; i < hostnames.length; i++) {
+            // Look up the spell check server
+            String hostname = hostnames[i];
+            Server spellServer = prov.getServerByName(hostname);
+            if (spellServer == null) {
+                sLog.warn("Unable to look up server LDAP entry for zimbraSpellCheckHostname '"
+                    + hostname + "'");
+                continue;
+            }
+            
+            // Look up the port
+            int port = spellServer.getIntAttr(Provisioning.A_zimbraSpellCheckPort, -1);
+            if (port == -1) {
+                sLog.warn("Unable to look up zimbraSpellCheckPort for server " + hostname);
+                continue;
+            }
+            
+            String url = "http://" + hostname + ":" + port + "/php/aspell.php";
+            sLog.debug("Spell check url='" + url + "'");
+            urls.add(url);
+        }
+        
+        String[] retVal = new String[urls.size()];
+        urls.toArray(retVal);
+        return retVal;
     }
 
-    public Element handle(Element request, Map context) {
+    public Element handle(Element request, Map context)
+    throws ServiceException {
         ZimbraContext lc = getZimbraContext(context);
         Element response = lc.createElement(MailService.CHECK_SPELLING_RESPONSE);
 
         // Make sure that the hostname is specified
-        String spellServerUrl = getSpellServerUrl();
-        ZimbraLog.mailbox.debug(
-            "CheckSpelling: spellServerUrl='" + spellServerUrl + "', mWasSuccessful=" +
-            mWasSuccessful + ", mFailTimestamp=" + mFailTimestamp);
-        if (spellServerUrl == null) {
-            response.addAttribute(MailService.A_AVAILABLE, false);
-            return response;
+        String[] spellServerUrls = getSpellServerUrls();
+        if (ArrayUtil.isEmpty(spellServerUrls)) {
+            sLog.debug("zimbraSpellCheckHostname is not defined");
+            return unavailable(response);
         }
         
-        // If the last spell check attempt failed, wait before retrying
-        if (!mWasSuccessful) {
-            long timePassed = System.currentTimeMillis() - mFailTimestamp;
-            if (timePassed < LC.spell_retry_interval_millis.intValue()) {
-                response.addAttribute(MailService.A_AVAILABLE, false);
-                return response;
-            }
-        }
-        
+        // Issue the request
         String text = request.getTextTrim();
-        RemoteServerRequest req = new RemoteServerRequest();
-        req.addParameter("text", text);
-        
-        try {
-            req.invoke(spellServerUrl);
-            Map params = req.getResponseParameters();
-            String misspelled = (String) params.get("misspelled");
-            if (misspelled == null) {
-                throw new IOException("misspelled data not found in spell server response");
+        Map params = null;
+        for (int i = 0; i < spellServerUrls.length; i++) {
+            RemoteServerRequest req = new RemoteServerRequest();
+            req.addParameter("text", text);
+            try {
+                String url = spellServerUrls[i];
+                sLog.debug("Attempting to check spelling at " + url);
+                req.invoke(url);
+                params = req.getResponseParameters();
+            } catch (IOException ex) {
+                sLog.warn("An error occurred while contacting the spelling server", ex);
             }
+        }
 
-            // Assemble SOAP response
-            BufferedReader reader =
-                new BufferedReader(new StringReader(misspelled));
-            String line = null;
-            int numLines = 0;
-            int numMisspelled = 0;
+        if (params == null) {
+            sLog.warn("Unable to check spelling");
+            return unavailable(response);
+        }
+        
+        String misspelled = (String) params.get("misspelled");
+        if (misspelled == null) {
+            sLog.warn("misspelled data not found in spell server response");
+            return unavailable(response);
+        }
+        
+        // Parse spell server response, assemble SOAP response
+        BufferedReader reader =
+            new BufferedReader(new StringReader(misspelled));
+        String line = null;
+        int numLines = 0;
+        int numMisspelled = 0;
+        try {
             while ((line = reader.readLine()) != null) {
                 // Each line in the response has the format "werd:word,ward,weird"
                 line = line.trim();
@@ -115,17 +156,20 @@ public class CheckSpelling extends DocumentHandler  {
                     numMisspelled++;
                 }
             }
-            response.addAttribute(MailService.A_AVAILABLE, true);
-            ZimbraLog.mailbox.debug(
-                "CheckSpelling: found " + numMisspelled + " misspelled words in " + numLines + " lines");
-        } catch (IOException ex) {
-            ZimbraLog.mailbox.error("An error occurred while contacting the spelling server", ex);
-            mWasSuccessful = false;
-            mFailTimestamp = System.currentTimeMillis();
-            response.addAttribute(MailService.A_AVAILABLE, false);
-            return response;
+        } catch (IOException e) {
+            sLog.warn(e);
+            return unavailable(response);
         }
         
+        response.addAttribute(MailService.A_AVAILABLE, true);
+        sLog.debug(
+            "CheckSpelling: found " + numMisspelled + " misspelled words in " + numLines + " lines");
+        
+        return response;
+    }
+    
+    private Element unavailable(Element response) {
+        response.addAttribute(MailService.A_AVAILABLE, false);
         return response;
     }
 }

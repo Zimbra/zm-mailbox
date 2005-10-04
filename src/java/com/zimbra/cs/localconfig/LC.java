@@ -129,10 +129,6 @@ public class LC {
     public static final KnownKey tomcat_pidfile;
     public static final KnownKey tomcat_keystore;
 
-    public static final KnownKey spell_hostname;
-    public static final KnownKey spell_port;
-    public static final KnownKey spell_retry_interval_millis;
-    
     public static final KnownKey ssl_allow_untrusted_certs;
 
     static {
@@ -434,20 +430,6 @@ public class LC {
         ssl_allow_untrusted_certs.setDefault("false");
         ssl_allow_untrusted_certs.setDoc
             ("If true, allow self-signed SSL certificates.");
-        
-        spell_hostname = new KnownKey("spell_hostname");
-        spell_hostname.setDefault("");
-        spell_hostname.setDoc("Spell server hostname");
-        
-        spell_port = new KnownKey("spell_port");
-        spell_port.setDefault("80");
-        spell_port.setDoc("Spell server port");
-        
-        spell_retry_interval_millis = new KnownKey("spell_retry_interval_millis");
-        spell_retry_interval_millis.setDefault("60000");
-        spell_retry_interval_millis.setDoc(
-            "Number of milliseconds to wait before reconnecting to the " +
-            "spell server after a connection fails");
     }
 
 }
