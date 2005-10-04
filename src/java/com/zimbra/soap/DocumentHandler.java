@@ -36,11 +36,13 @@ import javax.servlet.http.HttpServletRequest;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.admin.AdminDocumentHandler;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
@@ -201,22 +203,33 @@ public abstract class DocumentHandler {
         Account acctTarget = Provisioning.getInstance().getAccountById(iidTarget.getAccountId());
         if (acctTarget == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(iidTarget.getAccountId());
-        boolean isLocal = LOCAL_HOST.equalsIgnoreCase(acctTarget.getAttr(Provisioning.A_zimbraMailHost));
+        String hostTarget = acctTarget.getAttr(Provisioning.A_zimbraMailHost);
+        boolean isLocal = LOCAL_HOST.equalsIgnoreCase(hostTarget);
 
         request.detach();
         if (iid != iidTarget)
             setXPath(request, xpath, iidTarget.toString(acctTarget));
+        ZimbraContext lcTarget = new ZimbraContext(lc, iidTarget.getAccountId());
         Element response = null;
         if (isLocal) {
-            // FIXME: would be nice to translate remote folder IDs back into local mountpoint IDs
-            ZimbraContext lcTarget = new ZimbraContext(lc, iidTarget.getAccountId());
             Map contextTarget = new HashMap(context);
             contextTarget.put(SoapEngine.ZIMBRA_CONTEXT, lcTarget);
             response = engine.dispatchRequest(request, contextTarget, lcTarget);
         } else {
-            
+            Server serverTarget = Provisioning.getInstance().getServerByName(hostTarget);
+            if (serverTarget == null)
+                throw AccountServiceException.NO_SUCH_SERVER(hostTarget);
+            HttpServletRequest httpreq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+            ProxyTarget proxy = new ProxyTarget(serverTarget.getId(), lc.getRawAuthToken(), httpreq);
+            try {
+                response = proxy.dispatch(request, lcTarget);
+            } catch (SoapFaultException e) {
+                response = e.getFault();
+            }
+            response.detach();
         }
 
+        // translate remote folder IDs back into local mountpoint IDs
         String[] xpathResponse = getResponseItemPath();
         if (iid != iidTarget && xpathResponse != null) 
             insertMountpointReferences(response, xpathResponse, iid, iidTarget, lc);

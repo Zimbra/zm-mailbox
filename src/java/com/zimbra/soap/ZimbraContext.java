@@ -89,8 +89,9 @@ public class ZimbraContext {
     public static final String E_FORMAT     = "format";
     public static final String A_TYPE       = "type";
 	public static final String E_AUTH_TOKEN = "authToken";
-	public static final String A_BY         = "by";
     public static final String E_ACCOUNT    = "account";   
+    public static final String A_BY         = "by";
+    public static final String A_HOPCOUNT   = "hops";
     public static final String E_NO_SESSION = "nosession";
     public static final String E_SESSION_ID = "sessionId";
     public static final String A_ACCOUNT_ID = "acct";
@@ -109,10 +110,12 @@ public class ZimbraContext {
     public static final String SESSION_MAIL  = "mail";
     public static final String SESSION_ADMIN = "admin";
 
+    private String    mRawAuthToken;
 	private AuthToken mAuthToken;
 	private String    mAuthTokenAccountId;
 	private String    mRequestedAccountId;
 
+    private SoapProtocol mRequestProtocol;
     private SoapProtocol mResponseProtocol;
 
     private boolean mChangeConstraintType = OperationContext.CHECK_MODIFIED;
@@ -128,10 +131,12 @@ public class ZimbraContext {
 
 
     public ZimbraContext(ZimbraContext lc, String targetAccountId) throws ServiceException {
+        mRawAuthToken = lc.mRawAuthToken;
         mAuthToken = lc.mAuthToken;
         mAuthTokenAccountId = lc.mAuthTokenAccountId;
         mRequestedAccountId = targetAccountId;
 
+        mRequestProtocol = lc.mRequestProtocol;
         mResponseProtocol = lc.mResponseProtocol;
 
         mSessionSuppressed = true;
@@ -150,9 +155,9 @@ public class ZimbraContext {
 	public ZimbraContext(Element ctxt, Map context, SoapProtocol requestProtocol) throws ServiceException {
 	    if (ctxt != null && !ctxt.getQName().equals(CONTEXT)) 
 	        throw new IllegalArgumentException("expected ctxt, got: " + ctxt.getQualifiedName());
-        
+
         // figure out if we're explicitly asking for a return format
-        mResponseProtocol = requestProtocol;
+        mResponseProtocol = mRequestProtocol = requestProtocol;
         Element eFormat = ctxt == null ? null : ctxt.getOptionalElement(E_FORMAT);
         if (eFormat != null) {
             String format = eFormat.getAttribute(A_TYPE, TYPE_XML);
@@ -176,27 +181,31 @@ public class ZimbraContext {
 	            mRequestedAccountId = value;
 	        else
 	            throw ServiceException.INVALID_REQUEST("unknown value for by: " + key, null);
+
+            mHopCount = (int) Math.max(eAccount.getAttributeLong(A_HOPCOUNT, 0), 0);
+            if (mHopCount > MAX_HOP_COUNT)
+                throw ServiceException.TOO_MANY_HOPS();
 		} else {
 		    mRequestedAccountId = null;
 		}
 
         // check for atoken in engine context if not in header  
-		String atoken = (ctxt == null ? null : ctxt.getAttribute(E_AUTH_TOKEN, null));
-		if (atoken == null)
-		    atoken = (String) context.get(SoapServlet.ZIMBRA_AUTH_TOKEN);
+		mRawAuthToken = (ctxt == null ? null : ctxt.getAttribute(E_AUTH_TOKEN, null));
+		if (mRawAuthToken == null)
+		    mRawAuthToken = (String) context.get(SoapServlet.ZIMBRA_AUTH_TOKEN);
 
-		if (atoken != null && !atoken.equals("")) {
+		if (mRawAuthToken != null && !mRawAuthToken.equals("")) {
 			try {
-				mAuthToken = AuthToken.getAuthToken(atoken);
+				mAuthToken = AuthToken.getAuthToken(mRawAuthToken);
 				if (mAuthToken.isExpired())
 					throw ServiceException.AUTH_EXPIRED();
 				mAuthTokenAccountId = mAuthToken.getAccountId();
 				
-				if (mRequestedAccountId != null && 
-				        !mAuthTokenAccountId.equals(mRequestedAccountId) && 
-				        !mAuthToken.isAdmin()) { 
-			    	throw ServiceException.PERM_DENIED("requested id not the same as auth token id and not an admin");
-				}
+//				if (mRequestedAccountId != null && 
+//				        !mAuthTokenAccountId.equals(mRequestedAccountId) && 
+//				        !mAuthToken.isAdmin()) { 
+//			    	throw ServiceException.PERM_DENIED("requested id not the same as auth token id and not an admin");
+//				}
 			} catch (AuthTokenException e) {
 				// ignore and leave null
 				mAuthToken = null;
@@ -220,7 +229,7 @@ public class ZimbraContext {
         if (targetServerId != null) {
             HttpServletRequest req = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
             if (req != null) {
-            	mProxyTarget = new ProxyTarget(targetServerId, atoken, req);
+            	mProxyTarget = new ProxyTarget(targetServerId, mRawAuthToken, req);
                 mIsProxyRequest = mProxyTarget != null && !mProxyTarget.isTargetLocal();
             } else
                 sLog.warn("Missing SERVLET_REQUEST key in request context");
@@ -404,6 +413,22 @@ public class ZimbraContext {
         }
 	}
 
+    /** Serializes this object for use in a proxied SOAP request.  The
+     *  attributes encapsulated by the <code>ZimbraContext</code> -- the
+     *  response protocol, the auth token, etc. -- are carried forward.
+     *  Notification is expressly declined. */
+    Element toProxyCtxt() {
+        Element ctxt = mRequestProtocol.getFactory().createElement(CONTEXT);
+        if (mRawAuthToken != null)
+            ctxt.addAttribute(E_AUTH_TOKEN, mRawAuthToken, Element.DISP_CONTENT);
+        if (mResponseProtocol != mRequestProtocol)
+            ctxt.addElement(E_FORMAT).addAttribute(A_TYPE, mResponseProtocol == SoapProtocol.SoapJS ? TYPE_JAVASCRIPT : TYPE_XML);
+        if (mRequestedAccountId != null && !mRequestedAccountId.equalsIgnoreCase(mAuthTokenAccountId))
+            ctxt.addElement(E_ACCOUNT).addAttribute(A_BY, BY_ID).addAttribute(A_HOPCOUNT, mHopCount).setText(mRequestedAccountId);
+        ctxt.addUniqueElement(E_NO_SESSION);
+        return ctxt;
+    }
+
     /** Serializes a {@link Session} object to return it to a client.  The serialized
      *  XML representation of a Session is:<p>
      *      <code>&lt;sessionId [type="admin"] id="12">12&lt;/sessionId></code>
@@ -437,7 +462,7 @@ public class ZimbraContext {
 	static Element toCtxt(SoapProtocol protocol, String authToken, boolean noSession) {
 		Element ctxt = protocol.getFactory().createElement(CONTEXT);
 		if (authToken != null)
-			ctxt.addAttribute(E_AUTH_TOKEN, authToken, com.zimbra.cs.service.Element.DISP_CONTENT);
+			ctxt.addAttribute(E_AUTH_TOKEN, authToken, Element.DISP_CONTENT);
         if (noSession)
             ctxt.addUniqueElement(E_NO_SESSION);
 		return ctxt;
@@ -485,18 +510,24 @@ public class ZimbraContext {
         return addSessionToCtxt(ctxt, sessionId, false);
     }
 
+    public SoapProtocol getRequestProtocol()   { return mRequestProtocol; }
+    public SoapProtocol getResponseProtocol()  { return mResponseProtocol; }
     public Element createElement(String name)  { return mResponseProtocol.getFactory().createElement(name); }
     public Element createElement(QName qname)  { return mResponseProtocol.getFactory().createElement(qname); }
-    public SoapProtocol getResponseProtocol()  { return mResponseProtocol; }
 
-    /** Returns the {@link AuthToken} for this SOAP request.
-     * 
-     * @return The parsed AuthToken object for the auth token, either from a cookie
-     *         in the SOAP request or from an <code>&lt;authToken></code> element
-     *         in the SOAP header. */
+    /** Returns the parsed {@link AuthToken} for this SOAP request.  This can
+     *  come either from an HTTP cookie attached to the SOAP request or from
+     *  an <code>&lt;authToken></code> element in the SOAP Header. */
     public AuthToken getAuthToken() {
-		return mAuthToken;
-	}
+        return mAuthToken;
+    }
+
+    /** Returns the raw, encoded {@link AuthToken} for this SOAP request.
+     *  This can come either from an HTTP cookie attached to the SOAP request
+     *  or from an <code>&lt;authToken></code> element in the SOAP Header. */
+    public String getRawAuthToken() {
+        return mRawAuthToken;
+    }
 
     public ProxyTarget getProxyTarget() {
     	return mProxyTarget;

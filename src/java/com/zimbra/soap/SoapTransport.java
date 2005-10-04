@@ -111,7 +111,7 @@ public abstract class SoapTransport {
     	return soapMessage;
     }
 
-    public Element parseSoapResponse(String envelopeStr, boolean raw) throws SoapParseException, SoapFaultException {
+    Element parseSoapResponse(String envelopeStr, boolean raw) throws SoapParseException, SoapFaultException {
         Element env;
         try {
             if (envelopeStr.trim().startsWith("<"))
@@ -122,17 +122,18 @@ public abstract class SoapTransport {
             throw new SoapParseException("unable to parse response", envelopeStr);
         }
 
-        if (raw)
-            return env;
-
+        return raw ? env : extractBodyElement(env);
+    }
+    
+    Element extractBodyElement(Element env) throws SoapParseException, SoapFaultException {
         SoapProtocol p = SoapProtocol.determineProtocol(env);
 //        if (p == null || p != mSoapProto)
         if (p == null)
             throw new SoapParseException("unexpected soap protocol in reply, " +
-                                         "got " + p + " expecting " + mSoapProto, envelopeStr);
+                                         "got " + p + " expecting " + mSoapProto, env.toString());
 
         Element e = mSoapProto.getBodyElement(env);
-        
+
         if (mSoapProto.isFault(e))
             throw mSoapProto.soapFault(e);
 
@@ -142,10 +143,10 @@ public abstract class SoapTransport {
             if (sid != null)
                 mSessionId = sid;
         }
-        
+
         return e;
     }
-    
+
     /**
      * Sends the specified document as a Soap message
      * and parses the response as a Soap message. <p> 

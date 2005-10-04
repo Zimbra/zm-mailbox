@@ -66,7 +66,7 @@ public class ProxyTarget {
     }
 
     public boolean isTargetLocal() throws ServiceException {
-    	Server localServer = Provisioning.getInstance().getLocalServer();
+        Server localServer = Provisioning.getInstance().getLocalServer();
         return mServer.equals(localServer);
     }
 
@@ -74,9 +74,9 @@ public class ProxyTarget {
         Element response = null;
         SoapHttpTransport transport = null;
         try {
-        	transport = new SoapHttpTransport(mURL);
+            transport = new SoapHttpTransport(mURL);
             transport.setAuthToken(mAuthToken);
-        	response = transport.invokeWithoutSession(request);
+            response = transport.invokeWithoutSession(request);
         } catch (IOException e) {
             throw ServiceException.PROXY_ERROR(e);
         } catch (SoapFaultException e) {
@@ -85,6 +85,26 @@ public class ProxyTarget {
             if (transport != null)
                 transport.shutdown();
         }
-    	return response;
+        return response;
+    }
+
+    public Element dispatch(Element request, ZimbraContext lc) throws ServiceException, SoapFaultException {
+        if (lc == null)
+            return dispatch(request);
+
+        Element response = null;
+        SoapHttpTransport transport = null;
+        try {
+            transport = new SoapHttpTransport(mURL);
+            Element envelope = lc.getRequestProtocol().soapEnvelope(request, lc.toProxyCtxt());
+            response = transport.invokeRaw(envelope);
+            response = transport.extractBodyElement(response);
+        } catch (IOException e) {
+            throw ServiceException.PROXY_ERROR(e);
+        } finally {
+            if (transport != null)
+                transport.shutdown();
+        }
+        return response;
     }
 }
