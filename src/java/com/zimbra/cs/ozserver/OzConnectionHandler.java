@@ -95,6 +95,10 @@ public class OzConnectionHandler {
     
     private int mId;
 
+    private ByteBuffer mReadBuffer;
+
+    private final Object mReadBufferLock = new Object();
+
     OzConnectionHandler(OzServer server, SocketChannel channel) throws IOException {
         mId = mIdCounter.increment();
         mChannel = channel;
@@ -117,7 +121,7 @@ public class OzConnectionHandler {
                     ZimbraLog.ozserver.warn("error closing cid=" + mId, ioe);
                 }
                 mSelectionKey.cancel();
-                synchronized (OzConnectionHandler.this) {
+                synchronized (mReadBufferLock) {
                     if (mReadBuffer != null) {
                         mServer.getBufferPool().recycle(mReadBuffer);
                     }
@@ -141,19 +145,18 @@ public class OzConnectionHandler {
     	}
     }
     
-    private ByteBuffer mReadBuffer;
-
     private HandleReadTask mHandleReadTask = new HandleReadTask();
     
     private class HandleReadTask implements Runnable {
         public void run() {
             Exception e = null;
             try {
-                synchronized (OzConnectionHandler.this) {
+                synchronized (mReadBufferLock) {
                     if (mReadBuffer == null) {
                         ZimbraLog.ozserver.info("connection cid=" + mId + " ready to read, but already closed");
+                    } else {
+                        processReadBufferLocked();
                     }
-                    processReadBufferLocked();
                 }
             } catch (IOException ioe) {
                 e = ioe;
