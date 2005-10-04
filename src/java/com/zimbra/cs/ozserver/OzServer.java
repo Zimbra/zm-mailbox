@@ -231,7 +231,7 @@ public class OzServer {
     
     private boolean mShutdownRequested;
     
-    public void shutdown() throws IOException {
+    public void shutdown() {
         synchronized (this) {
             mShutdownRequested = true;
         }
@@ -244,11 +244,7 @@ public class OzServer {
                 try {
                     serverLoop();
                 } catch (Throwable t) {
-                    try {
-                        shutdown();
-                    } catch (IOException ioe) {
-                        // ignore
-                    }
+                    shutdown();
                 }
             }
         };        

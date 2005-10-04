@@ -47,13 +47,12 @@ class TestBoth {
 	private static Options mOptions = new Options();
 	
 	static {
-	    mOptions.addOption("t", "threads",   true,  "number of client threads (default 4)");
-	    mOptions.addOption("s", "shutdown",  false, "stress server shutdown");
-	    mOptions.addOption("p", "port",      true,  "port (default 10043)");
-	    mOptions.addOption("T", "trace",     false, "trace server/client traffic");
-	    mOptions.addOption("D", "debug",     false, "print debug info");
-	    mOptions.addOption("i", "interactive", false, "whether to wait for input to shutdown the test"); 
-	    mOptions.addOption("h", "help",      false, "show this help");
+	    mOptions.addOption("t", "threads",     true, "number of client threads (default 4)");
+	    mOptions.addOption("s", "shutdown",    true, "shutdown server every specified seconds");
+	    mOptions.addOption("p", "port",        true, "port (default 10043)");
+	    mOptions.addOption("T", "trace",       false, "trace server/client traffic");
+	    mOptions.addOption("D", "debug",       false, "print debug info");
+	    mOptions.addOption("h", "help",        false, "show this help");
 	}
 	
 	private static void usage(String errmsg) {
@@ -97,7 +96,7 @@ class TestBoth {
         public void run() {
             while (true) {
                 try {
-                    TestClient.test(mPort);
+                    TestClient.run(mPort);
                 } catch (IOException ioe) {
                     ioe.printStackTrace();
                 }
@@ -118,51 +117,82 @@ class TestBoth {
     		Zimbra.toolSetup("TRACE", true);
     	}
         
-    	boolean shutdownTest = false;
-    	if (cl.hasOption('s')) {
-    		shutdownTest = true;
-    	}
-    	
-    	int numThreads = 4;
+        int optThreads = 0;
     	if (cl.hasOption('t')) {
     		try {
-    			numThreads = Integer.parseInt(cl.getOptionValue('t'));
+    			optThreads = Integer.parseInt(cl.getOptionValue('t'));
     		} catch (NumberFormatException nfe) {
     			mLog.error("exception occurred", nfe);
     			usage("bad value for number of threads");
     		}
     	}
+        final int numThreads = optThreads;
     	
-    	int port = 10043;
+    	int optPort = 10043;
     	if (cl.hasOption('p')) {
-    		try {
-    			port = Integer.parseInt(cl.getOptionValue('p'));
-    		} catch (NumberFormatException nfe) {
-    			mLog.error("exception occurred", nfe);
-    			usage("bad value for port");
-    		}
+            try {
+                optPort = Integer.parseInt(cl.getOptionValue('p'));
+            } catch (NumberFormatException nfe) {
+                mLog.error("exception occurred", nfe);
+                usage("bad value for port");
+            }
     	}
-
-        TestServer server = new TestServer(port);
+    	final int port = optPort;
+        
+        if (cl.hasOption('s')) {
+            int optSeconds = 0;
+            try {
+                optSeconds = Integer.parseInt(cl.getOptionValue('s'));
+            } catch (NumberFormatException nfe) {
+                mLog.error("exception occurred", nfe);
+                usage("bad value for shutdown seconds");
+            }
+            final int seconds = optSeconds;
+            new Thread() {
+                public void run() {
+                    try {
+                        while (true) {
+                            startTest(port, numThreads);
+                            Thread.sleep(seconds * 1000);
+                            endTest();
+                        }
+                    } catch (InterruptedException ie) {
+                        
+                    } catch (IOException ioe) { 
+                        ioe.printStackTrace();
+                    }
+                }
+            }.start();
+        } else {
+            startTest(port, numThreads);
+            BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+            br.readLine();
+            endTest();
+        }
+    }
+        
+    private static TestServer server;
+    
+    private static Thread[] threads;
+    
+    private static void startTest(int port, int numThreads) throws IOException {
+        server = new TestServer(port);
         mLog.info("creating " + numThreads + " client threads");
-        Thread[] threads = new Thread[numThreads];
+        threads = new Thread[numThreads];
         for (int i = 0; i < numThreads; i++) {
             threads[i] = new TestClientThread(port, i);
             threads[i].start();
         }
-        
-        if (cl.hasOption('i')) {
-        	BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-            br.readLine();
-        } else {
-        	for (int i = 0; i < numThreads; i++) {
-        		try {
-        			threads[i].join();
-        		} catch (InterruptedException ie) {
-        			ie.printStackTrace();
-        		}
-        	}
-        }
+    }
+    
+    private static void endTest() {
         server.shutdown();
+        for (int i = 0; i < threads.length; i++) {
+            try {
+                threads[i].join();
+            } catch (InterruptedException ie) {
+                mLog.error("Interrupted while trying to join test clients", ie);
+            }
+        }
     }
 }

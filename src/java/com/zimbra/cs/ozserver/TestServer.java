@@ -46,7 +46,7 @@ class TestServer {
     	new TestServer(Integer.parseInt(args[0]));
     }
     
-    void shutdown() throws IOException {
+    void shutdown() {
         mServer.shutdown();
     }
 }
