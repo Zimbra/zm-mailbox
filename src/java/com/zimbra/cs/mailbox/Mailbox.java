@@ -2493,7 +2493,7 @@ public class Mailbox {
     public int getConversationIdFromReferent(MimeMessage newMsg, int parentID) {
         try {
             // file into same conversation as parent message as long as subject hasn't really changed
-            Message parentMsg = getMessageById(parentID);
+            Message parentMsg = getMessageById(null, parentID);
             if (parentMsg.getNormalizedSubject().equals(ParsedMessage.normalize(newMsg.getSubject())))
                 return parentMsg.getConversationId();
         } catch (Exception e) {
