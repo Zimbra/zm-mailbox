@@ -27,14 +27,19 @@ import com.zimbra.cs.util.Config;
  * Window - Preferences - Java - Code Style - Code Templates
  */
 public class ClusterUtil {
-
+    
+    // public constants
     public static final String SERVERS_KEY = "servers";
     public static final String SERVICES_KEY = "services";
 
+    // private constants
     private static Log mLog = LogFactory.getLog(ClusterUtil.class);
 
     private static final String CLUSTAT_SCRIPT = "/usr/sbin/clustat";
-    private static final String CMAN_TOOL_SCRIPT = "/sbin/cman_tool";
+    //private static final String CMAN_TOOL_SCRIPT =
+    //"/sbin/cman_tool";
+    private static final String CMAN_TOOL_SCRIPT = Config.getPathRelativeToZimbraHome("bin/zmcman_tool").getAbsolutePath();
+    private static final String CLUSVCADM_SCRIPT = Config.getPathRelativeToZimbraHome("bin/zmclusvcadm").getAbsolutePath();
 
     private static final Pattern clustatPattern = Pattern.compile("[^ ]*([^=]*)=\"([^\"]*)");
     
@@ -52,11 +57,11 @@ public class ClusterUtil {
      * This should only works on a RedHat platform. Windows dev boxes
      * will get a null return value.
      */
-    public static Map getClusterStatus ( ){
-         if (onWindows()){
-             mLog.info("Can't check cluster status on a Windows dev box");
-             return null;
-         }
+    public static Map getClusterStatus ( ) throws ServiceException {
+        if (onWindows()){
+            mLog.info("Can't check cluster status on a Windows dev box");
+            return null;
+        }
         
         // clustat doesn't show nodes that are dead or coming up ...
         // Thus, we have to run cman_tool as well, and figure out
@@ -66,7 +71,7 @@ public class ClusterUtil {
         mLog.info("  will execute \"" + clustatCmd.toString() + "\"");
 
         StringBuffer cmantoolCmd = new StringBuffer(CMAN_TOOL_SCRIPT);
-        cmantoolCmd.append(" -t 2 nodes| /usr/bin/cut -c18,20-1000");
+        //cmantoolCmd.append(" -t 2 nodes| /usr/bin/cut -c18,20-1000");
         mLog.info("  will execute \"" + cmantoolCmd.toString() + "\"");
         
         //ExecUtil.ProcessOutput clustatProc = ExecUtil.exec(cmd.toString(), 2000);
@@ -160,6 +165,7 @@ public class ClusterUtil {
 
     }
     
+
     private static String getDummyClustatOutput() {
         StringBuffer tmp = new StringBuffer();
         tmp.append("<clustat version=\"4.0\">\n");
@@ -186,6 +192,30 @@ public class ClusterUtil {
         tmp.append("M tweek.liquidsys.com\n");
         return tmp.toString();
     }
+
+
+    public static void failoverService (String serviceName, String newServerName) throws ServiceException{
+        if (onWindows()){
+            mLog.info("Cluster services are not available on a Windows dev box");
+            return;
+        }
+        
+        // clustat doesn't show nodes that are dead or coming up ...
+        // Thus, we have to run cman_tool as well, and figure out
+        // which nodes are dead, if any.
+        StringBuffer clusvcadmCmd = new StringBuffer(CLUSVCADM_SCRIPT);
+        clusvcadmCmd.append(" -r");
+        clusvcadmCmd.append(serviceName);
+        clusvcadmCmd.append(" -m");
+        clusvcadmCmd.append(newServerName);
+        
+        System.out.println("  will execute \"" + clusvcadmCmd.toString() + "\"");        
+
+        //ExecUtil.ProcessOutput clustatProc = ExecUtil.exec(clusvcadmCmd.toString());
+        //String clustatOutput = clustatProc.stdout;
+
+    }
+    
     
     
 }

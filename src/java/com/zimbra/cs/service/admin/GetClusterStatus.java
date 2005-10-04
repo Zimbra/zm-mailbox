@@ -37,9 +37,8 @@ public class GetClusterStatus extends AdminDocumentHandler {
 
     public Element handle(Element request, Map context) throws ServiceException {
         ZimbraContext lc = getZimbraContext(context);
-        Map status = null;
         StringBuffer resp = new StringBuffer();
-        status = ClusterUtil.getClusterStatus();
+        Map status = ClusterUtil.getClusterStatus();
         
         Element response = lc.createElement(AdminService.GET_CLUSTER_STATUS_RESPONSE);
         if (status != null) {

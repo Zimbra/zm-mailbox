@@ -193,8 +193,12 @@ public class AdminService implements DocumentService {
     public static final QName REMOVE_DISTRIBUTION_LIST_ALIAS_RESPONSE = QName.get("RemoveDistributionListAliasResponse", NAMESPACE);
     public static final QName RENAME_DISTRIBUTION_LIST_REQUEST = QName.get("RenameDistributionListRequest", NAMESPACE);
     public static final QName RENAME_DISTRIBUTION_LIST_RESPONSE = QName.get("RenameDistributionListResponse", NAMESPACE);
+
     public static final QName GET_CLUSTER_STATUS_REQUEST = QName.get("GetClusterStatusRequest", NAMESPACE);
     public static final QName GET_CLUSTER_STATUS_RESPONSE = QName.get("GetClusterStatusResponse", NAMESPACE);
+    public static final QName FAILOVER_CLUSTER_SERVICE_REQUEST = QName.get("FailoverClusterServiceRequest", NAMESPACE);
+    public static final QName FAILOVER_CLUSTER_SERVICE_RESPONSE = QName.get("FailoverClusterServiceResponse", NAMESPACE);
+
     
     public static final String E_ACCOUNT = "account";
     public static final String E_AUTH_TOKEN = "authToken";
@@ -291,6 +295,8 @@ public class AdminService implements DocumentService {
     public static final String A_CLUSTER_SERVICE_LAST_OWNER = "lastOwner";
     public static final String A_CLUSTER_SERVICE_RESTARTS = "restarts";
 
+    public static final String A_FAILOVER_NEW_SERVER = "newServer";
+
 
 	public static final String ADMIN_URI = "https://localhost:7071/";
 	
@@ -367,7 +373,9 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(REMOVE_DISTRIBUTION_LIST_MEMBER_REQUEST, new RemoveDistributionListMember());
         dispatcher.registerHandler(MODIFY_DISTRIBUTION_LIST_REQUEST, new ModifyDistributionList());
         dispatcher.registerHandler(DELETE_DISTRIBUTION_LIST_REQUEST, new DeleteDistributionList());
+
         dispatcher.registerHandler(GET_CLUSTER_STATUS_REQUEST, new GetClusterStatus());
+        dispatcher.registerHandler(FAILOVER_CLUSTER_SERVICE_REQUEST, new FailoverClusterService());
     }
 
     /**

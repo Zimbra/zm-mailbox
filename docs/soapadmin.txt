@@ -837,7 +837,7 @@ Notes:
 </GetClusterStatusResponse>
 -----------------------------
 <FailoverClusterServiceRequest>
-  <service currentServer="{server-name}" newServer="{server-name}"/>
+  <service name="{service-name}" newServer="{server-name}"/>
 </FailOverClusterServiceRequest>
 
 <FailoverCluserServiceResponse/>
