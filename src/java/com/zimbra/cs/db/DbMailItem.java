@@ -923,9 +923,9 @@ public class DbMailItem {
             rs = stmt.executeQuery();
             while (rs.next()) {
                 UnderlyingData data = constructItem(rs);
-                if (fetchFolders && (data.type == MailItem.TYPE_FOLDER || data.type == MailItem.TYPE_SEARCHFOLDER))
+                if (fetchFolders && MailItem.isAcceptableType(MailItem.TYPE_FOLDER, data.type))
                     folderData.put(new Integer(data.id), data);
-                else if (fetchTags && data.type == MailItem.TYPE_TAG)
+                else if (fetchTags && MailItem.isAcceptableType(MailItem.TYPE_TAG, data.type))
                     tagData.put(new Integer(data.id), data);
             }
             rs.close();
