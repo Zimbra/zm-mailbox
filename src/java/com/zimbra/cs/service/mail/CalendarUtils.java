@@ -53,7 +53,6 @@ import com.zimbra.cs.util.JMSession;
 import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.data.ParserException;
 import net.fortuna.ical4j.model.Calendar;
-import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.DateList;
 import net.fortuna.ical4j.model.Parameter;
 import net.fortuna.ical4j.model.ParameterList;
@@ -70,12 +69,10 @@ import net.fortuna.ical4j.model.parameter.TzId;
 import net.fortuna.ical4j.model.parameter.Value;
 import net.fortuna.ical4j.model.property.Attendee;
 import net.fortuna.ical4j.model.property.ExDate;
-import net.fortuna.ical4j.model.property.ExRule;
 import net.fortuna.ical4j.model.property.Method;
 import net.fortuna.ical4j.model.property.Organizer;
 import net.fortuna.ical4j.model.property.ProdId;
 import net.fortuna.ical4j.model.property.RDate;
-import net.fortuna.ical4j.model.property.RRule;
 import net.fortuna.ical4j.model.property.Version;
 import net.fortuna.ical4j.util.DateTimeFormat;
 
@@ -245,6 +242,7 @@ public class CalendarUtils {
             Element e = inviteElem.getElement("exceptId");
             ParsedDateTime dt = parseDateTime(e, tzMap, create);
             RecurId recurId = new RecurId(dt, RecurId.RANGE_NONE);
+            create.setRecurId(recurId);
         } else {
             if (inviteElem.getOptionalElement("exceptId") != null) {
                 throw MailServiceException.INVALID_REQUEST("May not specify an <exceptId> in this request", null);
