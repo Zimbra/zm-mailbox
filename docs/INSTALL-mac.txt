@@ -52,9 +52,10 @@ Installing mysql:
 	[mysqld]
 	bind-address = localhost
 	port         = 7306 
+  You also may want to install mysql under /opt/zimbra/ instead of /use/local
 * Set up the root account (see ZimbraServer/docs/INSTALL.txt for more details) :
 
-	sh> cd /usr/local/mysql/bin
+	sh> cd /opt/zimbra/mysql/bin
 	sh> ./mysql -u root
 	mysql> set password = password("zimbra");
     mysql> grant all on *.* to "root"@"localhost.localdomain" identified by 'zimbra' with grant option;
