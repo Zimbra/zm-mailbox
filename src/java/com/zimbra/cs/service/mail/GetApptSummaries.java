@@ -86,6 +86,7 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
                     apptElt.addAttribute("x_uid", appointment.getUid());
                     
                     Invite defaultInvite = appointment.getDefaultInvite();
+                    
                     if (defaultInvite == null) {
                         mLog.info("Could not load defaultinfo for appointment with id="+appointment.getId()+" SKIPPING");
                         continue; // 
@@ -102,6 +103,7 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
                     boolean defIsOrg = defaultInvite.thisAcctIsOrganizer(acct);
                     
                     String defaultFba = appointment.getFreeBusyActual(acct, defaultInvite, null);
+                    String defaultPtSt = appointment.getPartStat(acct, defaultInvite, null); 
                     
                     // add all the instances:
                     boolean someInRange = false;
@@ -127,7 +129,8 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
                             
                             instElt.addAttribute(MailService.A_APPT_START_TIME, instStart);
                             
-                            String instFba = appointment.getFreeBusyActual(acct, inv, inst); 
+                            String instFba = appointment.getFreeBusyActual(acct, inv, inst);
+                            String instPtSt = appointment.getPartStat(acct, inv, inst);
                             if (!defaultFba.equals(instFba)) {
                                 instElt.addAttribute(MailService.A_APPT_FREEBUSY_ACTUAL, instFba); 
                             }
@@ -167,8 +170,8 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
                                     instElt.addAttribute(MailService.A_APPT_STATUS, inv.getStatus());
                                 }
 
-                                if (!defaultInvite.getPartStat().equals(inv.getPartStat())) {
-                                    instElt.addAttribute(MailService.A_APPT_PARTSTAT, inv.getPartStat()); 
+                                if (!defaultPtSt.equals(instPtSt)) {
+                                    instElt.addAttribute(MailService.A_APPT_PARTSTAT, instPtSt); 
                                 }
 
                                 if (!defaultInvite.getFreeBusy().equals(inv.getFreeBusy())) {
@@ -209,7 +212,7 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
                     
                     if (someInRange) { // if we found any appointments at all, we have to encode the "Default" data here
                         apptElt.addAttribute(MailService.A_APPT_STATUS, defaultInvite.getStatus());
-                        apptElt.addAttribute(MailService.A_APPT_PARTSTAT, defaultInvite.getPartStat());
+                        apptElt.addAttribute(MailService.A_APPT_PARTSTAT, defaultPtSt);
                         apptElt.addAttribute(MailService.A_APPT_FREEBUSY, defaultInvite.getFreeBusy());
                         apptElt.addAttribute(MailService.A_APPT_FREEBUSY_ACTUAL, defaultFba);
                         apptElt.addAttribute(MailService.A_APPT_TRANSPARENCY, defaultInvite.getTransparency());

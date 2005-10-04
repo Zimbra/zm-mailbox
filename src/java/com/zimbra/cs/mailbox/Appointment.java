@@ -483,7 +483,7 @@ public class Appointment extends MailItem {
         }
         return null;
     }
-
+    
     /**
      * A new Invite has come in, take a look at it and see what needs to happen.
      * Maybe we need to send updates out. Maybe we need to modify the
@@ -1045,7 +1045,7 @@ public class Appointment extends MailItem {
                 
                 if (AccountUtil.addressMatchesAccount(acct, cur.mAttendee.getCalAddress().getSchemeSpecificPart())) {
                     if ((cur.mRecurId == null && inv.getRecurId() == null) ||
-                            (inst!=null && cur.mRecurId.withinRange(inst.getStart()))) {
+                            (inst!=null && cur.mRecurId != null && cur.mRecurId.withinRange(inst.getStart()))) {
                         if (inv.getSeqNo() <= cur.mSeqNo) {
                             if (inv.getDTStamp() <= cur.mDtStamp) {
                                 return cur.mAttendee;
@@ -1142,6 +1142,17 @@ public class Appointment extends MailItem {
 
         PartStat ps = (PartStat)(at.getParameters().getParameter(Parameter.PARTSTAT));
         return inv.partStatToFreeBusyActual(IcalXmlStrMap.sPartStatMap.toXml(ps.getValue()));
+    }
+    
+    public String getPartStat(Account acct, Invite inv, Instance inst) throws ServiceException
+    {
+        Attendee at = mReplyList.getEffectiveAttendee(acct, inv, inst);
+        if (at == null) {
+            return inv.getPartStat();
+        }
+
+        PartStat ps = (PartStat)(at.getParameters().getParameter(Parameter.PARTSTAT));
+        return IcalXmlStrMap.sPartStatMap.toXml(ps.getValue());
     }
     
 //    public Attendee getEffectiveAttendee(Account acct, Invite inv, Instance inst) throws ServiceException {

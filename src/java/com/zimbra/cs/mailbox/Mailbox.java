@@ -2953,13 +2953,13 @@ public class Mailbox {
             String cnStr, String addressStr, String roleStr, String partStatStr, Boolean needsReply, int seqNo, long dtStamp) 
     throws ServiceException {
         
-        Appointment appt = getAppointmentById(apptId);
-        
         ModifyInvitePartStat redoRecorder = new ModifyInvitePartStat(mId, apptId, recurId, cnStr, addressStr, roleStr, partStatStr, needsReply, seqNo, dtStamp);
-
+        
         boolean success = false;
         try {
             beginTransaction("updateInvitePartStat", octxt, redoRecorder);
+
+            Appointment appt = getAppointmentById(apptId);
             
             Account acct = getAccount();
         

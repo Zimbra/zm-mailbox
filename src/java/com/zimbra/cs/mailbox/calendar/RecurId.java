@@ -146,6 +146,10 @@ public class RecurId
     public ParsedDateTime getDt() { return mDateTime; }
     
     public boolean withinRange(RecurId other) {
+        if (other == null) {
+            return false;
+        }
+        
         if (other.withinRange(mDateTime.getDate())) {
             return true;
         }
