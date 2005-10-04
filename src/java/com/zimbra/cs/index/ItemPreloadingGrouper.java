@@ -47,9 +47,9 @@ public class ItemPreloadingGrouper extends BufferingResultsGrouper {
 
     public ItemPreloadingGrouper(ZimbraQueryResults results, int chunkSize, Mailbox mbox) {
         super(results);
-        assert(mChunkSize > 0);
         mChunkSize = chunkSize;
         mOpContext = mbox.getOperationContext();
+        assert(mChunkSize > 0);
     }
     
     protected boolean bufferHits() throws ServiceException
