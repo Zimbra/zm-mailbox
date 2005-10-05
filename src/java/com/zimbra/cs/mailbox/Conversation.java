@@ -242,7 +242,7 @@ public class Conversation extends MailItem {
     private void recalculateSubject(Message msg) {
         if (msg == null) {
             mData.subject = null;
-            mRawSubject   = null;
+            mRawSubject   = "";
         } else {
             mData.subject = msg.getNormalizedSubject();
             mRawSubject   = msg.getSubject();
@@ -804,7 +804,7 @@ public class Conversation extends MailItem {
         super.decodeMetadata(meta);
 
         mEncodedSenders = meta.get(Metadata.FN_SENDER_LIST, null);
-        mRawSubject = mData.subject;
+        mRawSubject = (mData.subject == null ? "" : mData.subject);
         String prefix = meta.get(Metadata.FN_PREFIX, null);
         if (prefix != null)
             mRawSubject = (mData.subject == null ? prefix : prefix + mData.subject);
@@ -830,7 +830,7 @@ public class Conversation extends MailItem {
     }
     static Metadata encodeMetadata(Metadata meta, byte color, String encodedSenders, String subject, String rawSubject) {
         String prefix = null;
-        if (rawSubject == null || rawSubject.equals(subject))
+        if (rawSubject == null || rawSubject.equals("") || rawSubject.equals(subject))
             rawSubject = null;
         else if (rawSubject.endsWith(subject)) {
             prefix = rawSubject.substring(0, rawSubject.length() - subject.length());
