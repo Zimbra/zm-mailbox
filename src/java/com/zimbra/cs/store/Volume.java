@@ -471,7 +471,7 @@ public class Volume {
         StringBuffer sb = new StringBuffer("id=").append(mId);
         sb.append(", type=").append(mType);
         sb.append(", name=\"").append(mName);
-        sb.append("\", rootpath=").append(mRootPath);
+        sb.append("\", rootPath=").append(mRootPath);
         sb.append(", mgbits=").append(mMboxGroupBits);
         sb.append(", mbits=").append(mMboxBits);
         sb.append(", fgbits=").append(mFileGroupBits);
