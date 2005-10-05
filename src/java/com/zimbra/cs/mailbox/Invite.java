@@ -317,7 +317,9 @@ public class Invite {
         meta.put(Metadata.FN_DTSTAMP, inv.getDTStamp());
         meta.put(Metadata.FN_SEQ_NO, inv.getSeqNo());
         
-        meta.put(Metadata.FN_ORGANIZER, encodeAsMetadata(inv.getOrganizer()));
+        if (inv.getOrganizer() != null) {
+            meta.put(Metadata.FN_ORGANIZER, encodeAsMetadata(inv.getOrganizer()));
+        }
         
         List ats = inv.getAttendees();
         meta.put(Metadata.FN_NUM_ATTENDEES, String.valueOf(ats.size()));
@@ -843,8 +845,9 @@ public class Invite {
     }
     
     private static Organizer parseOrgFromMetadata(Metadata meta) {
-        if (meta == null)
+        if (meta == null || !meta.containsKey("a")) {
             return null;
+        }
         String addressStr = meta.get("a", null);
         return createOrganizer(addressStr);
     }
@@ -856,8 +859,9 @@ public class Invite {
     }
 
     static Attendee parseAtFromMetadata(Metadata meta) throws ServiceException {
-        if (meta == null)
+        if (meta == null) {
             return null;
+        }
         String cnStr = meta.get("cn", null);
         String addressStr = meta.get("a", null);
         String roleStr = meta.get("r", null);

@@ -1126,7 +1126,11 @@ public class Appointment extends MailItem {
         }
 
         PartStat ps = (PartStat)(at.getParameters().getParameter(Parameter.PARTSTAT));
-        return inv.partStatToFreeBusyActual(IcalXmlStrMap.sPartStatMap.toXml(ps.getValue()));
+        if (ps != null) {
+            return inv.partStatToFreeBusyActual(IcalXmlStrMap.sPartStatMap.toXml(ps.getValue()));
+        } else {
+            return inv.getFreeBusyActual();
+        }
     }
     
     public String getPartStat(Account acct, Invite inv, Instance inst) throws ServiceException
