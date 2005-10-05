@@ -45,6 +45,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import net.fortuna.ical4j.model.Parameter;
+import net.fortuna.ical4j.model.parameter.PartStat;
 import net.fortuna.ical4j.model.property.Organizer;
 import net.fortuna.ical4j.model.property.Attendee;
 
@@ -510,34 +511,62 @@ public class ToXML {
      * @return
      */
     public static Element encodeApptSummary(Element parent, ZimbraContext lc, Appointment appt, int fields) {
-        Element m = parent.addElement(MailService.E_APPOINTMENT);
+        Element apptElt = parent.addElement(MailService.E_APPOINTMENT);
         
-        m.addAttribute(MailService.A_UID, appt.getUid());
-        m.addAttribute(MailService.A_ID, lc.formatItemId(appt));
-        m.addAttribute(MailService.A_FOLDER, lc.formatItemId(appt.getMailbox(), appt.getFolderId()));
+        apptElt.addAttribute(MailService.A_UID, appt.getUid());
+        apptElt.addAttribute(MailService.A_ID, lc.formatItemId(appt));
+        apptElt.addAttribute(MailService.A_FOLDER, lc.formatItemId(appt.getMailbox(), appt.getFolderId()));
+        
+        encodeReplies(apptElt, appt);
         
         for (int i = 0; i < appt.numInvites(); i++) {
             try {
                 Invite inv = appt.getInvite(i);
 
-                Element ie = m.addElement(MailService.E_INVITE);
+                Element ie = apptElt.addElement(MailService.E_INVITE);
                 ie.addAttribute(MailService.A_ID, lc.formatItemId(appt.getMailbox(), inv.getMailItemId()));
                 ie.addAttribute(MailService.A_APPT_COMPONENT_NUM, inv.getComponentNum());
                 if (inv.hasRecurId())
                     ie.addAttribute(MailService.A_APPT_RECURRENCE_ID, inv.getRecurId().toString());
 
-                ToXML.encodeInvite(ie, lc, appt, inv, NOTIFY_FIELDS);
+                ToXML.encodeInvite(ie, lc, appt, inv, NOTIFY_FIELDS, false);
             } catch (ServiceException e) {
                 e.printStackTrace();
             }
         }
         
-        return m;
+        return apptElt;
+    }
+    
+    private static void encodeReplies(Element parent, Appointment appt) {
+        Element repliesElt = parent.addElement(MailService.A_APPT_REPLIES);
+        
+        try {
+          List /*Appointment.ReplyInfo */ fbas = appt.getReplyInfo();
+          
+          for (Iterator iter = fbas.iterator(); iter.hasNext();) {
+              Appointment.ReplyInfo repInfo = (Appointment.ReplyInfo)iter.next();
+              
+              Element curElt = repliesElt.addElement(MailService.E_APPT_REPLY);
+              if (repInfo.mRecurId != null) {
+                  repInfo.mRecurId.toXml(curElt);
+              }
+
+              PartStat ps = (PartStat)(repInfo.mAttendee.getParameters().getParameter(Parameter.PARTSTAT));
+              String psStr = IcalXmlStrMap.sPartStatMap.toXml(ps.getValue());
+              
+              curElt.addAttribute(MailService.A_APPT_PARTSTAT, psStr);
+              curElt.addAttribute("stamp", repInfo.mDtStamp);
+              curElt.addAttribute("at", repInfo.mAttendee.getCalAddress().getSchemeSpecificPart());
+          }
+      } catch (ServiceException ex) {
+          // XXX fixme, need to fix error handling for all the ToXML stuff!
+      }
     }
     
     
     /**
-     * Encodes a Message object into <m> element with <mp> elements
+     * Encodes an Appointment object into <m> element with <mp> elements
      * for message body.
      * @param lc TODO
      * @param msg
@@ -548,6 +577,8 @@ public class ToXML {
     public static Element encodeApptAsMP(Element parent, ZimbraContext lc, Appointment appt, int invId, boolean wantHTML, String part)
     throws ServiceException {
         boolean wholeMessage = (part == null || part.trim().equals(""));
+
+        boolean repliesWithInvites = true;
         
         Element m;
         if (wholeMessage) {
@@ -558,7 +589,7 @@ public class ToXML {
             m.addAttribute(MailService.A_ID, new ItemId(appt, invId).toString(lc));
             m.addAttribute(MailService.A_PART, part);
         }
-
+        
         try {
             MimeMessage mm = appt.getMimeMessage(invId);
             if (!wholeMessage) {
@@ -607,7 +638,7 @@ public class ToXML {
             Element invElt = m.addElement(MailService.E_INVITE); 
             Invite[] invs = appt.getInvites(invId);
             for (int i = 0; i < invs.length; i++) {
-                encodeInvite(invElt, lc, appt, invs[i], NOTIFY_FIELDS);
+                encodeInvite(invElt, lc, appt, invs[i], NOTIFY_FIELDS, repliesWithInvites);
             }
             
 //            if (msg.isInvite())
@@ -740,7 +771,7 @@ public class ToXML {
         return elem;
     }
     
-    public static Element encodeInvite(Element parent, ZimbraContext lc, Appointment apptOrNull, Invite invite, int fields) {
+    public static Element encodeInvite(Element parent, ZimbraContext lc, Appointment apptOrNull, Invite invite, int fields, boolean includeReplies) {
         boolean allFields = true;
         
         if (fields != NOTIFY_FIELDS) {
@@ -786,19 +817,28 @@ public class ToXML {
 
             e.addAttribute(MailService.A_APPT_FREEBUSY_ACTUAL, invite.getFreeBusyActual());
             
-            if (apptOrNull != null) {
-                try {
-                    List /*Appointment.FreeBusyActualData*/ fbas = apptOrNull.getFreeBusyActual(apptOrNull.getMailbox().getAccount(), invite);
-                    Element fbaElt = e.addElement(MailService.A_APPT_MY_REPLIES);
+            if (includeReplies && apptOrNull != null) {
+               try {
+                   List /*Appointment.ReplyInfo */ fbas = apptOrNull.getReplyInfo(invite);
+                   
+                   Element repliesElt = e.addElement(MailService.A_APPT_REPLIES);
                     
                     for (Iterator iter = fbas.iterator(); iter.hasNext();) {
-                        Appointment.FreeBusyActualData fbaDat = (Appointment.FreeBusyActualData)iter.next();
+                        Appointment.ReplyInfo repInfo = (Appointment.ReplyInfo)iter.next();
                         
-                        Element curElt = fbaElt.addElement(MailService.E_INSTANCE);
-                        if (fbaDat.mRecurId != null) {
-                            fbaDat.mRecurId.toXml(curElt);
+                        Element curElt = repliesElt.addElement(MailService.E_APPT_REPLY);
+                        if (repInfo.mRecurId != null) {
+                            repInfo.mRecurId.toXml(curElt);
                         }
-                        curElt.addAttribute(MailService.A_APPT_FREEBUSY_ACTUAL, fbaDat.mFba);
+
+                        PartStat ps = (PartStat)(repInfo.mAttendee.getParameters().getParameter(Parameter.PARTSTAT));
+                        String psStr = IcalXmlStrMap.sPartStatMap.toXml(ps.getValue());
+                        String fbaStr = invite.partStatToFreeBusyActual(psStr);
+                        
+                        curElt.addAttribute(MailService.A_APPT_FREEBUSY_ACTUAL, fbaStr);
+                        curElt.addAttribute(MailService.A_APPT_PARTSTAT, psStr);
+                        curElt.addAttribute("stamp", repInfo.mDtStamp);
+                        curElt.addAttribute("at", repInfo.mAttendee.getCalAddress().getSchemeSpecificPart());
                     }
                 } catch (ServiceException ex) {
                     // XXX fixme, need to fix error handling for all the ToXML stuff!
@@ -897,7 +937,7 @@ public class ToXML {
 //                        ie.addAttribute("method", inv.getMethod());
                         addedMethod = true;
                     }
-                    encodeInvite(ie, lc, null, inv, fields); // NULL b/c we don't want to encode all of the reply-status here!
+                    encodeInvite(ie, lc, null, inv, fields, true); // NULL b/c we don't want to encode all of the reply-status here!
                 } else {
                     // invite not in this appointment anymore
                 }

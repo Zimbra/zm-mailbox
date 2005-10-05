@@ -320,6 +320,7 @@ public class MailService implements DocumentService {
     public static final String E_APPT_DURATION = "dur";
     public static final String E_APPT_START_TIME = "s";
     public static final String E_APPT_END_TIME = "e";
+    public static final String E_APPT_REPLY = "reply";
 
     public static final String E_APPT_RULE = "rule";
     public static final String E_APPT_RULE_UNTIL = "until";
@@ -357,7 +358,7 @@ public class MailService implements DocumentService {
     public static final String A_APPT_PARTSTAT = "ptst";
     public static final String A_APPT_FREEBUSY = "fb";
     public static final String A_APPT_FREEBUSY_ACTUAL = "fba";
-    public static final String A_APPT_MY_REPLIES = "myReplies";
+    public static final String A_APPT_REPLIES = "replies";
     public static final String A_APPT_TRANSPARENCY = "transp";
     public static final String A_APPT_ALLDAY = "allDay";
     public static final String A_APPT_LOCATION = "loc";

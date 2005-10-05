@@ -990,7 +990,7 @@ public class Appointment extends MailItem {
                 ReplyInfo cur = (ReplyInfo)iter.next();
                 
                 if ( (cur.mRecurId == null && recurId == null) ||
-                        (cur.mRecurId.withinRange(recurId))) {                    
+                        (cur.mRecurId != null && cur.mRecurId.withinRange(recurId))) {                    
                     if (
                             (acctOrNull != null && (AccountUtil.addressMatchesAccount(acctOrNull, cur.mAttendee.getCalAddress().getSchemeSpecificPart()))) ||
                             (acctOrNull == null && cur.mAttendee.getCalAddress().getSchemeSpecificPart().equalsIgnoreCase(addressStr))
@@ -1059,19 +1059,20 @@ public class Appointment extends MailItem {
             return inv.getMatchingAttendee(acct);
         }
         
-        List /* FreeBusyActualData*/ getFreeBusyActual(Account acct, Invite inv) throws ServiceException {
+        List /* ReplyInfo */ getFreeBusyActual(Account acct, Invite inv) throws ServiceException {
             ArrayList toRet = new ArrayList();
             
             for (Iterator iter = mReplies.iterator(); iter.hasNext();) {
                 ReplyInfo cur = (ReplyInfo)iter.next();
                 
-                if (AccountUtil.addressMatchesAccount(acct, cur.mAttendee.getCalAddress().getSchemeSpecificPart())) {
-                    if ((inv.getSeqNo() <= cur.mSeqNo) && (inv.getDTStamp() <= cur.mDtStamp)) {
-                        FreeBusyActualData dat = new FreeBusyActualData();
-                        dat.mRecurId = cur.mRecurId;
-                        PartStat ps = (PartStat)(cur.mAttendee.getParameters().getParameter(Parameter.PARTSTAT));
-                        dat.mFba = inv.partStatToFreeBusyActual(IcalXmlStrMap.sPartStatMap.toXml(ps.getValue()));
-                        toRet.add(dat);
+                if (acct==null || AccountUtil.addressMatchesAccount(acct, cur.mAttendee.getCalAddress().getSchemeSpecificPart())) {
+                    if (inv == null || ((inv.getSeqNo() <= cur.mSeqNo) && (inv.getDTStamp() <= cur.mDtStamp))) {
+//                        FreeBusyActualData dat = new FreeBusyActualData();
+//                        dat.mRecurId = cur.mRecurId;
+//                        PartStat ps = (PartStat)(cur.mAttendee.getParameters().getParameter(Parameter.PARTSTAT));
+//                        dat.mFba = inv.partStatToFreeBusyActual(IcalXmlStrMap.sPartStatMap.toXml(ps.getValue()));
+//                        toRet.add(dat);
+                        toRet.add(cur);
                     } else {
                         sLog.info("ReplyList "+this.toString()+" has outdated entries in its Replies list");
                     }
@@ -1100,39 +1101,22 @@ public class Appointment extends MailItem {
             return inv.getMatchingAttendee(acct);
         }
         
-        
-//        Attendee getEffectiveAttendee(Attendee at, Instance inst, Invite inv) {
-//            // return either the passed-in attendee, or the attendee from the reply list 
-//            // if there's one that overrides the Invite's
-//            
-//            for (Iterator iter = mReplies.iterator(); iter.hasNext();) {
-//                ReplyInfo cur = (ReplyInfo)iter.next();
-//                
-//                if (attendeeMatches(at, cur.mAttendee)) {
-//                    if (cur.mRecurId.withinRange(inst.getStart())) {
-//                        if (inv.getSeqNo() <= cur.mSeqNo) {
-//                            if (inv.getDTStamp() <= cur.mDtStamp) {
-//                                return cur.mAttendee;
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//            
-//            return at;
-//        }
     }
             
-    public static class FreeBusyActualData {
-        public RecurId mRecurId;
-        public String mFba;
-    }
+//    public List /*ReplyInfo*/ getReplyInfo(Account acct, Invite inv) throws ServiceException 
+//    {
+//        return mReplyList.getFreeBusyActual(acct, inv);
+//    }
     
-    public List /*ReplyInfo*/ getFreeBusyActual(Account acct, Invite inv) throws ServiceException 
+    public List /*ReplyInfo*/ getReplyInfo(Invite inv) throws ServiceException 
     {
-        return mReplyList.getFreeBusyActual(acct, inv);
+        return mReplyList.getFreeBusyActual(null, inv);
     }
     
+    public List /*ReplyInfo*/ getReplyInfo() throws ServiceException 
+    {
+        return mReplyList.getFreeBusyActual(null, null);
+    }
     
     public String getFreeBusyActual(Account acct, Invite inv, Instance inst) throws ServiceException 
     {
@@ -1155,10 +1139,6 @@ public class Appointment extends MailItem {
         PartStat ps = (PartStat)(at.getParameters().getParameter(Parameter.PARTSTAT));
         return IcalXmlStrMap.sPartStatMap.toXml(ps.getValue());
     }
-    
-//    public Attendee getEffectiveAttendee(Account acct, Invite inv, Instance inst) throws ServiceException {
-//        return mReplyList.getEffectiveAttendee(acct, inst, inv);
-//    }
     
     void modifyPartStat(Account acctOrNull, RecurId recurId, String cnStr, String addressStr, String roleStr,
             String partStatStr, Boolean needsReply, int seqNo, long dtStamp) throws ServiceException {

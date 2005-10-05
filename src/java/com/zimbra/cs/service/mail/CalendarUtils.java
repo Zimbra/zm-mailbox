@@ -305,7 +305,7 @@ public class CalendarUtils {
     static ParseMimeMessage.InviteParserResult parseInviteForModify(Account account, Element inviteElem, 
             Invite oldInv, List /* Attendee */ attendeesToCancel) throws ServiceException 
     {
-        List /*<ICalTimeZone>*/ tzsReferenced = new ArrayList();
+//        List /*<ICalTimeZone>*/ tzsReferenced = new ArrayList();
         
         Invite mod = new Invite(Method.REQUEST, oldInv.getTimeZoneMap());
 
@@ -337,16 +337,17 @@ public class CalendarUtils {
         }
         
         
-        // build the full calendar wrapper: 
-        Calendar iCal = makeCalendar(Method.REQUEST);
-        
-        for (Iterator iter = tzsReferenced.iterator(); iter.hasNext();) {
-            ICalTimeZone cur = (ICalTimeZone) iter.next();
-            VTimeZone vtz = cur.toVTimeZone();
-            iCal.getComponents().add(vtz);
-        }
-        
-        iCal.getComponents().add(mod.toVEvent());
+//        // build the full calendar wrapper: 
+//        Calendar iCal = makeCalendar(Method.REQUEST);
+//        
+//        for (Iterator iter = tzsReferenced.iterator(); iter.hasNext();) {
+//            ICalTimeZone cur = (ICalTimeZone) iter.next();
+//            VTimeZone vtz = cur.toVTimeZone();
+//            iCal.getComponents().add(vtz);
+//        }
+//        
+//        iCal.getComponents().add(mod.toVEvent());
+        Calendar iCal = mod.toICalendar();
         
         try {
             iCal.validate(true);
@@ -906,7 +907,9 @@ public class CalendarUtils {
     throws ServiceException
     {
         Invite reply = new Invite(Method.REPLY, new TimeZoneMap(acct.getTimeZone()));
-            
+        
+        reply.getTimeZoneMap().add(oldInv.getTimeZoneMap());
+        
         // ATTENDEE -- send back this attendee with the proper status
         Attendee meReply = null;
         Attendee me = oldInv.getMatchingAttendee(acct);
