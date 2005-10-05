@@ -274,7 +274,7 @@ public class AdminService implements DocumentService {
 
     public static final String A_VOLUME_TYPE = "type";
     public static final String A_VOLUME_NAME = "name";
-    public static final String A_VOLUME_ROOTPATH = "rootPath";
+    public static final String A_VOLUME_ROOTPATH = "rootpath";
     public static final String A_VOLUME_MGBITS = "mgbits";
     public static final String A_VOLUME_MBITS = "mbits";
     public static final String A_VOLUME_FGBITS = "fgbits";
