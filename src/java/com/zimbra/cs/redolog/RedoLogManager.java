@@ -162,7 +162,7 @@ public class RedoLogManager {
 		return mLogWriter;
 	}
 
-    protected LogWriter createLogWriter(RedoLogManager redoMgr,
+    public LogWriter createLogWriter(RedoLogManager redoMgr,
                                         File logfile,
                                         long fsyncIntervalMS) {
         return new FileLogWriter(redoMgr, logfile, fsyncIntervalMS);
