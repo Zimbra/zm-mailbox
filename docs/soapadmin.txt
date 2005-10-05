@@ -638,7 +638,7 @@ notes:
 -----------------------------------
 
 <CreateVolumeRequest>
-  <volume type="..." name="..." rootPath="..." mgbits="..." mbits="..."
+  <volume type="..." name="..." rootpath="..." mgbits="..." mbits="..."
     fgbits="..." fbits="..." compressBlobs="..." compressionThreshold="..."/>
 </CreateVolumeRequest>
 
@@ -669,7 +669,7 @@ Notes:
 <GetVolumeRequest id="{id}"/>
 
 <GetVolumeResponse>
-  <volume id="{id}" type="..." name="..." rootPath="..." mgbits="..."
+  <volume id="{id}" type="..." name="..." rootpath="..." mgbits="..."
     mbits="..." fgbits="..." fbits="..." compressBlobs="..." compressionThreshold="..."/>
 </GetVolumeResponse>
 
@@ -684,7 +684,7 @@ Notes:
 -----------------------------
 
 <ModifyVolumeRequest id="{id}">
-  <volume [type="..."] [name="..."] [rootPath="..."] [mgbits="..."]
+  <volume [type="..."] [name="..."] [rootpath="..."] [mgbits="..."]
     [mbits="..."] [fgbits="..."] [fbits="..."] [compressBlobs="..."] [compressionThreshold="..."]/>
 </ModifyVolumeRequest>
 
