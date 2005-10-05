@@ -42,7 +42,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.admin.AdminDocumentHandler;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
@@ -143,6 +142,8 @@ public abstract class DocumentHandler {
     }
 
     protected static void setXPath(Element request, String[] xpath, String value) throws ServiceException {
+        if (xpath == null || xpath.length == 0)
+            return;
         int depth = 0;
         while (depth < xpath.length - 1 && request != null)
             request = request.getOptionalElement(xpath[depth++]);
@@ -186,7 +187,7 @@ public abstract class DocumentHandler {
     protected boolean checkMountpointProxy()  { return false; }
     protected String[] getResponseItemPath()  { return null; }
 
-    protected Element proxyIfNecessary(SoapEngine engine, Element request, Map context) throws ServiceException {
+    protected Element proxyIfNecessary(Element request, Map context) throws ServiceException {
         String[] xpath = getProxiedIdPath();
         if (xpath == null)
             return null;
@@ -197,25 +198,35 @@ public abstract class DocumentHandler {
 
         ZimbraContext lc = getZimbraContext(context);
         ItemId iidTarget = getProxyTarget(lc, iid, checkMountpointProxy());
-        if (iidTarget == null)
-            return null;
+        return iidTarget == null ? null : proxyRequest(request, context, iid, iidTarget);
+    }
 
-        Account acctTarget = Provisioning.getInstance().getAccountById(iidTarget.getAccountId());
+    protected Element proxyRequest(Element request, Map context, ItemId iidRequested, ItemId iidResolved) throws ServiceException {
+        SoapEngine engine = (SoapEngine) context.get(SoapEngine.ZIMBRA_ENGINE);
+        ZimbraContext lc = getZimbraContext(context);
+        // new context for proxied request has a different "requested account"
+        ZimbraContext lcTarget = new ZimbraContext(lc, iidResolved.getAccountId());
+
+        // figure out whether we can just re-dispatch or if we need to proxy via HTTP
+        Account acctTarget = Provisioning.getInstance().getAccountById(iidResolved.getAccountId());
         if (acctTarget == null)
-            throw AccountServiceException.NO_SUCH_ACCOUNT(iidTarget.getAccountId());
+            throw AccountServiceException.NO_SUCH_ACCOUNT(iidResolved.getAccountId());
         String hostTarget = acctTarget.getAttr(Provisioning.A_zimbraMailHost);
-        boolean isLocal = LOCAL_HOST.equalsIgnoreCase(hostTarget);
+        boolean isLocal = LOCAL_HOST.equalsIgnoreCase(hostTarget) && engine != null;
 
+        // prepare the request for re-processing
         request.detach();
-        if (iid != iidTarget)
-            setXPath(request, xpath, iidTarget.toString(acctTarget));
-        ZimbraContext lcTarget = new ZimbraContext(lc, iidTarget.getAccountId());
+        if (iidRequested != iidResolved)
+            setXPath(request, getProxiedIdPath(), iidResolved.toString(acctTarget));
+
         Element response = null;
         if (isLocal) {
+            // executing on same server; just hand back to the SoapEngine
             Map contextTarget = new HashMap(context);
             contextTarget.put(SoapEngine.ZIMBRA_CONTEXT, lcTarget);
             response = engine.dispatchRequest(request, contextTarget, lcTarget);
         } else {
+            // executing remotely; find out target and proxy there
             Server serverTarget = Provisioning.getInstance().getServerByName(hostTarget);
             if (serverTarget == null)
                 throw AccountServiceException.NO_SUCH_SERVER(hostTarget);
@@ -231,8 +242,8 @@ public abstract class DocumentHandler {
 
         // translate remote folder IDs back into local mountpoint IDs
         String[] xpathResponse = getResponseItemPath();
-        if (iid != iidTarget && xpathResponse != null) 
-            insertMountpointReferences(response, xpathResponse, iid, iidTarget, lc);
+        if (iidRequested != iidResolved && xpathResponse != null) 
+            insertMountpointReferences(response, xpathResponse, iidRequested, iidResolved, lc);
         return response;
     }
 }

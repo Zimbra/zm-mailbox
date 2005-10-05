@@ -55,6 +55,7 @@ import org.dom4j.DocumentException;
 public class SoapEngine {
 
     public static final String ZIMBRA_CONTEXT = "zimbra.context";
+    public static final String ZIMBRA_ENGINE = "zimbra.engine";
 
     /** context name of request IP */
     public static final String REQUEST_IP = "request.ip";
@@ -127,6 +128,7 @@ public class SoapEngine {
                 ZimbraLog.addToContext(ZimbraLog.C_IP, ip);
 
             context.put(ZIMBRA_CONTEXT, lc);
+            context.put(ZIMBRA_ENGINE, this);
 
             Element doc = soapProto.getBodyElement(envelope);
 
@@ -238,7 +240,7 @@ public class SoapEngine {
         Element response;
         try {
             // first, try to proxy the request if necessary
-            response = handler.proxyIfNecessary(this, request, context);
+            response = handler.proxyIfNecessary(request, context);
             // if no proxy, execute the request locally
             if (response == null)
                 response = handler.handle(request, context);

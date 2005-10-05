@@ -35,6 +35,7 @@ import java.util.Map;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
@@ -48,8 +49,10 @@ import com.zimbra.soap.ZimbraContext;
 public class GetFolder extends DocumentHandler {
 
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.E_FOLDER, MailService.A_FOLDER };
+    private static final String[] RESPONSE_ITEM_PATH = new String[] { MailService.E_FOLDER };
     protected String[] getProxiedIdPath()     { return TARGET_FOLDER_PATH; }
-    protected boolean checkMountpointProxy()  { return true; }
+    protected boolean checkMountpointProxy()  { return false; }
+    protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
 
     private static final String DEFAULT_FOLDER_ID = "" + Mailbox.ID_FOLDER_USER_ROOT;
 
@@ -68,14 +71,32 @@ public class GetFolder extends DocumentHandler {
         if (folder == null)
         	throw MailServiceException.NO_SUCH_FOLDER(iid.getId());
 
-        Element response = lc.createElement(MailService.GET_FOLDER_RESPONSE);
+        Element response = lc.createElement(MailService.GET_FOLDER_RESPONSE), eRoot;
         synchronized (mbox) {
-        	handleFolder(mbox, folder, response, lc, octxt);
+            eRoot = handleFolder(mbox, folder, response, lc, octxt);
+        }
+
+        // if the requested root folder is a link, execute the request remotely
+        if (folder instanceof Mountpoint) {
+            Mountpoint mpt = (Mountpoint) folder;
+            ItemId iidRemote = new ItemId(mpt.getOwnerId(), mpt.getRemoteId());
+            Element proxied = proxyRequest(request, context, iid, iidRemote);
+            if (lc.getResponseProtocol().isFault(proxied))
+                return proxied;
+            // return the children of the remote folder as children of the mountpoint
+            proxied = proxied.getOptionalElement(MailService.E_FOLDER);
+            if (proxied != null)
+                for (Iterator it = proxied.elementIterator(); it.hasNext(); ) {
+                    Element eRemote = (Element) it.next();
+                    // skip the <acl> element, if any
+                    if (!eRemote.getName().equals(MailService.E_ACL))
+                        eRoot.addElement(eRemote.detach());
+                }
         }
         return response;
 	}
 
-	public static void handleFolder(Mailbox mbox, Folder folder, Element response, ZimbraContext lc, OperationContext octxt) throws ServiceException {
+	public static Element handleFolder(Mailbox mbox, Folder folder, Element response, ZimbraContext lc, OperationContext octxt) throws ServiceException {
 		Element respFolder = ToXML.encodeFolder(response, lc, folder);
 
         List subfolders = folder.getSubfolders(octxt);
@@ -85,5 +106,6 @@ public class GetFolder extends DocumentHandler {
 	        	if (subfolder != null)
 	        		handleFolder(mbox, subfolder, respFolder, lc, octxt);
         }
+        return respFolder;
 	}
 }
