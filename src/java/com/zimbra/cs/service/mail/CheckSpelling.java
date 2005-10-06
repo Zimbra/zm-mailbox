@@ -28,8 +28,6 @@ package com.zimbra.cs.service.mail;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -51,58 +49,16 @@ public class CheckSpelling extends DocumentHandler  {
     
     private static Log sLog = LogFactory.getLog(CheckSpelling.class);
     
-    /**
-     * Returns the urls to the spell server(s), or <code>null</code> if
-     * <code>zimbraSpellCheckHostname</code> or <code>zimbraSpellCheckPort</code>
-     * is not specified in LDAP.
-     */
-    private String[] getSpellServerUrls()
-    throws ServiceException {
-        Provisioning prov = Provisioning.getInstance();
-
-        // Look up the spell check hostname
-        Server localServer = prov.getLocalServer();
-        String[] hostnames = localServer.getMultiAttr(Provisioning.A_zimbraSpellCheckHostname);
-        if (ArrayUtil.isEmpty(hostnames)) {
-            return null;
-        }
-        
-        List urls = new ArrayList();
-        for (int i = 0; i < hostnames.length; i++) {
-            // Look up the spell check server
-            String hostname = hostnames[i];
-            Server spellServer = prov.getServerByName(hostname);
-            if (spellServer == null) {
-                sLog.warn("Unable to look up server LDAP entry for zimbraSpellCheckHostname '"
-                    + hostname + "'");
-                continue;
-            }
-            
-            // Look up the port
-            int port = spellServer.getIntAttr(Provisioning.A_zimbraSpellCheckPort, -1);
-            if (port == -1) {
-                sLog.warn("Unable to look up zimbraSpellCheckPort for server " + hostname);
-                continue;
-            }
-            
-            String url = "http://" + hostname + ":" + port + "/php/aspell.php";
-            sLog.debug("Spell check url='" + url + "'");
-            urls.add(url);
-        }
-        
-        String[] retVal = new String[urls.size()];
-        urls.toArray(retVal);
-        return retVal;
-    }
-
     public Element handle(Element request, Map context)
     throws ServiceException {
         ZimbraContext lc = getZimbraContext(context);
         Element response = lc.createElement(MailService.CHECK_SPELLING_RESPONSE);
 
         // Make sure that the hostname is specified
-        String[] spellServerUrls = getSpellServerUrls();
-        if (ArrayUtil.isEmpty(spellServerUrls)) {
+        Provisioning prov = Provisioning.getInstance();
+        Server localServer = prov.getLocalServer();
+        String[] urls = localServer.getMultiAttr(Provisioning.A_zimbraSpellCheckURL);
+        if (ArrayUtil.isEmpty(urls)) {
             sLog.debug("zimbraSpellCheckHostname is not defined");
             return unavailable(response);
         }
@@ -110,11 +66,11 @@ public class CheckSpelling extends DocumentHandler  {
         // Issue the request
         String text = request.getTextTrim();
         Map params = null;
-        for (int i = 0; i < spellServerUrls.length; i++) {
+        for (int i = 0; i < urls.length; i++) {
             RemoteServerRequest req = new RemoteServerRequest();
             req.addParameter("text", text);
             try {
-                String url = spellServerUrls[i];
+                String url = urls[i];
                 sLog.debug("Attempting to check spelling at " + url);
                 req.invoke(url);
                 params = req.getResponseParameters();

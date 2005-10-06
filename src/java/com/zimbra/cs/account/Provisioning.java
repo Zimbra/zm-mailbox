@@ -650,8 +650,7 @@ public abstract class Provisioning {
 
     public static final String A_zimbraRedoLogProvider = "zimbraRedoLogProvider";
 
-    public static final String A_zimbraSpellCheckHostname = "zimbraSpellCheckHostname";
-    public static final String A_zimbraSpellCheckPort = "zimbraSpellCheckPort";
+    public static final String A_zimbraSpellCheckURL = "zimbraSpellCheckURL";
     
     /**
      * Email address of the sender of a new email notification message.
