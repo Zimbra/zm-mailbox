@@ -245,20 +245,21 @@ public class StringUtil {
         Matcher matcher = templatePattern.matcher(line);
         
         while (line != null) {
-            // Substitute multiple variables per line
-            while (matcher.matches()) {
-                String key = matcher.group(2);
-                Object value = vars.get(key);
-                if (value == null) {
-                    ZimbraLog.misc.info("fillTemplate(): could not find key '" + key + "'");
-                    value = "";
+            if (!line.trim().startsWith("#")) {
+                // Substitute multiple variables per line
+                while (matcher.matches()) {
+                    String key = matcher.group(2);
+                    Object value = vars.get(key);
+                    if (value == null) {
+                        ZimbraLog.misc.info("fillTemplate(): could not find key '" + key + "'");
+                        value = "";
+                    }
+                    line = matcher.group(1) + value + matcher.group(3);
+                    matcher.reset(line);
                 }
-                line = matcher.group(1) + value + matcher.group(3);
-                matcher.reset(line);
+                buffer.append(line);
+                buffer.append('\n');
             }
-            buffer.append(line);
-            buffer.append('\n');
-            
             // Get the next line
             try {
                 line = br.readLine();
