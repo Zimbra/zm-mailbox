@@ -1,39 +1,70 @@
 SRC     = src
+
 BUILD   = build
+
 CLASSES = $(BUILD)/classes
 
-all: $(BUILD)/zimbra-native.jar  $(BUILD)/libzimbra-native.so
+JAVA_FILES = \
+	com/zimbra/znative/IO.java \
+	com/zimbra/znative/Process.java \
+	com/zimbra/znative/Util.java \
+	com/zimbra/znative/tests/HardLinkTest.java \
+	com/zimbra/znative/tests/LinkCountTest.java
 
-#
-# Build the jar file
-#
-$(BUILD)/zimbra-native.jar: $(CLASSES)/com/zimbra/znative/IO.class
+JAVA_SOURCES = $(patsubst %,$(SRC)/java/%,$(JAVA_FILES))
+
+JAVA_CLASSES = $(patsubst %,$(CLASSES)/%,$(JAVA_FILES:%.java=%.class))
+
+
+all: 
+	$(MAKE) $(BUILD)/zimbra-native.jar
+	$(MAKE) $(BUILD)/libzimbra-native.so
+
+$(BUILD)/zimbra-native.jar: remove_classes_list $(JAVA_CLASSES)
+	mkdir -p $(CLASSES)
+	@CLASSES_LIST="$(shell cat $(BUILD)/.classes.list)"; \
+	    if [ -n "$$CLASSES_LIST" ]; then \
+	        echo javac -source 1.4 -target 1.4 -d $(CLASSES) \
+	            -sourcepath $(SRC)/java -classpath $(CLASSES) \
+		    $(shell cat $(BUILD)/.classes.list); \
+	        javac -source 1.4 -target 1.4 -d $(CLASSES) \
+	            -sourcepath $(SRC)/java -classpath $(CLASSES) \
+		    $(shell cat $(BUILD)/.classes.list); \
+	    fi
 	$(RM) $@
 	jar c0vf $@ -C $(CLASSES) com
 
-JAVA_SOURCES =  $(SRC)/java/com/zimbra/znative/IO.java \
-		$(SRC)/java/com/zimbra/znative/tests/HardLinkTest.java \
-		$(SRC)/java/com/zimbra/znative/tests/LinkCountTest.java
+$(CLASSES)/%.class: $(SRC)/java/%.java
+	@echo $< >> $(BUILD)/.classes.list
 
-$(CLASSES)/com/zimbra/znative/IO.class: $(JAVA_SOURCES)
-	mkdir -p $(CLASSES)
-	javac -source 1.4 -target 1.4 -d $(CLASSES) $?
+remove_classes_list: FORCE
+	$(RM) $(BUILD)/.classes.list
+	mkdir -p $(BUILD)
+	touch $(BUILD)/.classes.list
 
-$(BUILD)/libzimbra-native.so: $(BUILD)/IO.o
-	gcc -shared -o $@ $<
+FORCE: ;
 
-$(BUILD)/IO.o: $(SRC)/native/IO.c
+$(BUILD)/libzimbra-native.so: $(BUILD)/IO.o $(BUILD)/Process.o $(BUILD)/zjniutil.o
+	gcc -shared -o $@ $^
+
+$(BUILD)/%.o: $(SRC)/native/%.c
 	gcc -I$(BUILD) -Wall -Wmissing-prototypes -c -o $@ $<
 
-$(SRC)/native/IO.c: $(BUILD)/IO.h
+$(BUILD)/Process.o: $(SRC)/native/Process.c $(BUILD)/Process.h $(SRC)/native/zjniutil.h
+
+$(BUILD)/zjniutil.o: $(SRC)/native/zjniutil.c $(SRC)/native/zjniutil.h
+
+$(BUILD)/IO.o: $(SRC)/native/IO.c $(BUILD)/IO.h $(SRC)/native/zjniutil.h
 
 $(BUILD)/IO.h: $(CLASSES)/com/zimbra/znative/IO.class
 	mkdir -p $(@D)
 	$(RM) $@
 	javah -o $@ -classpath $(CLASSES) com.zimbra.znative.IO
 
-$(OUTDIR):
-	mkdir -p $(OUTDIR)
+$(BUILD)/Process.h: $(CLASSES)/com/zimbra/znative/Process.class
+	mkdir -p $(@D)
+	$(RM) $@
+	javah -o $@ -classpath $(CLASSES) com.zimbra.znative.Process
 
 #
 # Hack to copy to destination
