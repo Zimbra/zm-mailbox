@@ -72,6 +72,7 @@ public class ContactCSV {
     public static final String CSV_E_mail_3_Display_Name = "E-mail 3 Display Name";
     public static final String CSV_E_mail_3_Type = "E-mail 3 Type";
     public static final String CSV_E_mail_Address = "E-mail Address";
+    public static final String CSV_E_mail = "E-mail";
     public static final String CSV_E_mail_Display_Name = "E-mail Display Name";
     public static final String CSV_E_mail_Type = "E-mail Type";
     public static final String CSV_First_Name = "First Name";
@@ -101,6 +102,7 @@ public class ContactCSV {
     public static final String CSV_Middle_Name = "Middle Name";
     public static final String CSV_Mileage = "Mileage";
     public static final String CSV_Mobile_Phone = "Mobile Phone";
+    public static final String CSV_Name = "Name";    
     public static final String CSV_Notes = "Notes";
     public static final String CSV_Office_Location = "Office Location";
     public static final String CSV_Organizational_ID_Number = "Organizational ID Number";
@@ -135,7 +137,8 @@ public class ContactCSV {
 
     private static final int OP_MAP = 1; 
     private static final int OP_EMAIL = 2;     
-    private static final int OP_STREETADDRESS = 3;         
+    private static final int OP_STREETADDRESS = 3;
+    private static final int OP_NAME = 4;
 
     private static List sMappings = new ArrayList();
     
@@ -143,32 +146,41 @@ public class ContactCSV {
         private Object mCsvName;
         private String mContactName;
         private int mOp;
+        boolean mIncludeInExport;
         
         Mapping(String csvName, String contactName, int op) {
             mCsvName = csvName;
             mContactName = contactName;
             mOp = op;
+            mIncludeInExport = true;
         }
 
         Mapping(String csvNames[], String contactName, int op) {
             mCsvName = csvNames;
             mContactName = contactName;
             mOp = op;
+            mIncludeInExport = true;            
         }
 
         public int getOp() { return mOp; }
         public boolean hasMultiple() { return mCsvName instanceof String[]; }
+        public boolean includeInExport() { return mIncludeInExport; }
+        public void setIncludeInExport(boolean value) { mIncludeInExport = value; }
         public String getCsvName() { return (String)mCsvName; }
         public String[] getCsvNames() { return (String[])mCsvName; }        
         public String getContactName() { return mContactName; }
     }
 
-    private static void addMapping(String csvName, String contactName, int op) {
-        sMappings.add(new Mapping(csvName, contactName, OP_MAP));
+    private static Mapping addMapping(String csvName, String contactName, int op) {
+        Mapping m = new Mapping(csvName, contactName, op);
+        sMappings.add(m);
+        return m;
     }
     
-    private static void addMapping(String[] csvName, String contactName, int op) {
-        sMappings.add(new Mapping(csvName, contactName, op));
+    private static Mapping addMapping(String[] csvName, String contactName, int op) {
+        Mapping m = new Mapping(csvName, contactName, op);
+        sMappings.add(m);
+        return m;
     }    
     
     static {
@@ -196,6 +208,9 @@ public class ContactCSV {
         addMapping(CSV_Department, Contact.A_department, OP_MAP);
         //CSV_Directory_Server
 
+        Mapping m = addMapping(CSV_E_mail, Contact.A_email, OP_MAP);
+        m.setIncludeInExport(false);
+        
         addMapping(new String[] {CSV_E_mail_Address, CSV_E_mail_Display_Name, CSV_E_mail_Type}, Contact.A_email, OP_EMAIL);
         addMapping(new String[] {CSV_E_mail_2_Address, CSV_E_mail_2_Display_Name, CSV_E_mail_2_Type}, Contact.A_email2, OP_EMAIL);
         addMapping(new String[] {CSV_E_mail_3_Address, CSV_E_mail_3_Display_Name, CSV_E_mail_3_Type}, Contact.A_email3, OP_EMAIL);
@@ -226,6 +241,10 @@ public class ContactCSV {
         addMapping(CSV_Middle_Name, Contact.A_middleName, OP_MAP);
         //CSV_Mileage
         addMapping(CSV_Mobile_Phone, Contact.A_mobilePhone, OP_MAP);
+
+        m = addMapping(CSV_Name, null, OP_NAME);
+        m.setIncludeInExport(false);
+        
         addMapping(CSV_Notes, Contact.A_notes, OP_MAP);
         //CSV_Office_Location
         //CSV_Organizational_ID_Number
@@ -367,7 +386,9 @@ public class ContactCSV {
 
     private void addField(String colName, List csv, String field, Map contact) {
         String value = getField(colName, csv);
-        if (value != null && value.length() > 0) contact.put(field, value);
+        if (value != null && value.length() > 0) {
+                contact.put(field, value);
+        }
     }
 
     private void addStreetField(String cols[], List csv, String field, Map contact) {
@@ -395,6 +416,37 @@ public class ContactCSV {
         }
     }
 
+    private void addNameField(String name, List csv, Map contact) {
+        String value = getField(name, csv);
+        if (value != null) {
+            if (value.indexOf(',') != -1) {
+                String[] values = value.split(",\\s*", 2);
+                if (values == null || values.length == 0)
+                    contact.put(Contact.A_lastName, value);
+                else {
+                    if (values.length == 1) {
+                        contact.put(Contact.A_lastName, values[0]);
+                    } else {
+                        contact.put(Contact.A_lastName, values[0]);
+                        contact.put(Contact.A_firstName, values[1]);                    
+                    }
+                }
+            } else {
+                String[] values = value.split("\\s+", 2);
+                if (values == null || values.length == 0)
+                    contact.put(Contact.A_firstName, value);
+                else {
+                    if (values.length == 1) {
+                        contact.put(Contact.A_lastName, values[0]);
+                    } else {
+                        contact.put(Contact.A_firstName, values[0]);
+                        contact.put(Contact.A_lastName, values[1]);                    
+                    }
+                }
+            }
+        }
+    }
+
     private Map toContact(List csv) {
         Map contact = new HashMap();
         
@@ -408,7 +460,10 @@ public class ContactCSV {
                     addStreetField(mp.getCsvNames(), csv, mp.getContactName(), contact);                    
                     break;
                 case OP_EMAIL:
-                    addEmailField(mp.getCsvNames(), csv, mp.getContactName(), contact);                                        
+                    addEmailField(mp.getCsvNames(), csv, mp.getContactName(), contact);
+                    break;
+                case OP_NAME: 
+                    addNameField(mp.getCsvName(), csv, contact);
                     break;
             }
         }
@@ -490,6 +545,7 @@ public class ContactCSV {
         boolean isFirst = true;
         for (Iterator it = sMappings.iterator(); it.hasNext(); ) {
             Mapping mp = (Mapping) it.next();
+            if (!mp.includeInExport()) continue;
             switch(mp.getOp()) {
                 case OP_MAP:
                     addFieldValue(contact, mp.getContactName(), sb, isFirst);
@@ -510,12 +566,14 @@ public class ContactCSV {
 
         for (Iterator it = sMappings.iterator(); it.hasNext(); ) {
             Mapping mp = (Mapping) it.next();
-            if (mp.hasMultiple()) {
-                String names[] = mp.getCsvNames();
-                for (int i=0; i < names.length; i++)
-                    addFieldDef(names[i], sb);
-            } else {
-                addFieldDef(mp.getCsvName(), sb);
+            if (mp.includeInExport()) {
+                if (mp.hasMultiple()) {
+                    String names[] = mp.getCsvNames();
+                    for (int i=0; i < names.length; i++)
+                        addFieldDef(names[i], sb);
+                } else {
+                    addFieldDef(mp.getCsvName(), sb);
+                }
             }
         }
 
