@@ -34,6 +34,7 @@ public class VolumeServiceException extends ServiceException {
     public static final String ALREADY_EXISTS        = "volume.ALREADY_EXISTS";
     public static final String WRONG_TYPE_CURRVOL    = "volume.WRONG_TYPE_CURRVOL";
     public static final String CANNOT_DELETE_CURRVOL = "volume.CANNOT_DELETE_CURRVOL";
+    public static final String INVALID_REQUEST       = "volume.INVALID_REQUEST";
 
     private VolumeServiceException(String message, String code, boolean isReceiversFault) {
         super(message, code, isReceiversFault);
@@ -62,5 +63,9 @@ public class VolumeServiceException extends ServiceException {
     public static VolumeServiceException WRONG_TYPE_CURRVOL(int id, short currVolType) {
         return new VolumeServiceException("volume " + id + " cannot be used as current volume of type " +
             currVolType + " (" + VolumeUtil.getTypeName(currVolType) + ")", WRONG_TYPE_CURRVOL, SENDERS_FAULT, null);
+    }
+
+    public static VolumeServiceException INVALID_REQUEST(String msg) {
+        return new VolumeServiceException("invalid request: " + msg, INVALID_REQUEST, SENDERS_FAULT, null);
     }
 }

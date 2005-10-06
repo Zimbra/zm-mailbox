@@ -41,14 +41,20 @@ public class CreateVolume extends AdminDocumentHandler {
         String name  = eVol.getAttribute(AdminService.A_VOLUME_NAME);
         String path  = eVol.getAttribute(AdminService.A_VOLUME_ROOTPATH);
         short type   = (short) eVol.getAttributeLong(AdminService.A_VOLUME_TYPE);
-        short mgbits = (short) eVol.getAttributeLong(AdminService.A_VOLUME_MGBITS);
-        short mbits  = (short) eVol.getAttributeLong(AdminService.A_VOLUME_MBITS);
-        short fgbits = (short) eVol.getAttributeLong(AdminService.A_VOLUME_FGBITS);
-        short fbits  = (short) eVol.getAttributeLong(AdminService.A_VOLUME_FBITS);
+
+        // TODO: These "bits" parameters are ignored inside Volume.create() for now.
+//        short mgbits = (short) eVol.getAttributeLong(AdminService.A_VOLUME_MGBITS);
+//        short mbits  = (short) eVol.getAttributeLong(AdminService.A_VOLUME_MBITS);
+//        short fgbits = (short) eVol.getAttributeLong(AdminService.A_VOLUME_FGBITS);
+//        short fbits  = (short) eVol.getAttributeLong(AdminService.A_VOLUME_FBITS);
+
         boolean compressBlobs = eVol.getAttributeBool(AdminService.A_VOLUME_COMPRESS_BLOBS);
         long compressionThreshold = eVol.getAttributeLong(AdminService.A_VOLUME_COMPRESSION_THRESHOLD);
+//        Volume vol = Volume.create(Volume.ID_AUTO_INCREMENT, type, name, path,
+//                                   mgbits, mbits, fgbits, fbits, compressBlobs, compressionThreshold);
         Volume vol = Volume.create(Volume.ID_AUTO_INCREMENT, type, name, path,
-                                   mgbits, mbits, fgbits, fbits, compressBlobs, compressionThreshold);
+                                   (short) 0, (short) 0, (short) 0, (short) 0,
+                                   compressBlobs, compressionThreshold);
 
         Element response = lc.createElement(AdminService.CREATE_VOLUME_RESPONSE);
         GetVolume.addVolumeElement(response, vol);

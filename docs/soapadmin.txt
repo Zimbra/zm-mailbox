@@ -638,8 +638,8 @@ notes:
 -----------------------------------
 
 <CreateVolumeRequest>
-  <volume type="..." name="..." rootpath="..." mgbits="..." mbits="..."
-    fgbits="..." fbits="..." compressBlobs="..." compressionThreshold="..."/>
+  <volume type="..." name="..." rootpath="..."
+          compressBlobs="..." compressionThreshold="..."/>
 </CreateVolumeRequest>
 
 <CreateVolumeResponse>
@@ -655,22 +655,19 @@ Notes:
         10 = index volume
   name: name or description of volume
   rootPath: absolute path to root of volume, e.g. /opt/zimbra/store
-  mgbits: mailbox group bits; default 8
-  mbits: mailbox bits; default 12
-  fgbits: file group bits; default 8
-  fbits: file bits; default 12
   compressBlobs: boolean value that specifies whether blobs in this
     volume are compressed
-  compressionThreshold: long value that specifies the minimum uncompressed
-    file size, in bytes, of blobs that will be compressed
+  compressionThreshold: long value that specifies the maximum uncompressed
+    file size, in bytes, of blobs that will not be compressed
+    (in other words blobs larger than this threshold are compressed)
 
 -----------------------------
 
 <GetVolumeRequest id="{id}"/>
 
 <GetVolumeResponse>
-  <volume id="{id}" type="..." name="..." rootpath="..." mgbits="..."
-    mbits="..." fgbits="..." fbits="..." compressBlobs="..." compressionThreshold="..."/>
+  <volume id="{id}" type="..." name="..." rootpath="..."
+          compressBlobs="..." compressionThreshold="..."/>
 </GetVolumeResponse>
 
 -----------------------------
@@ -684,8 +681,8 @@ Notes:
 -----------------------------
 
 <ModifyVolumeRequest id="{id}">
-  <volume [type="..."] [name="..."] [rootpath="..."] [mgbits="..."]
-    [mbits="..."] [fgbits="..."] [fbits="..."] [compressBlobs="..."] [compressionThreshold="..."]/>
+  <volume [type="..."] [name="..."] [rootpath="..."]
+          [compressBlobs="..."] [compressionThreshold="..."]/>
 </ModifyVolumeRequest>
 
 <ModifyVolumeResponse/>

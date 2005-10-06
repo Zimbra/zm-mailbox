@@ -53,10 +53,10 @@ public class VolumeUtil extends SoapCLI {
     protected static final String O_T = "t";
     protected static final String O_N = "n";
     protected static final String O_P = "p";
-    protected static final String O_FB = "fb";
-    protected static final String O_FGB = "fgb";
-    protected static final String O_MB = "mb";
-    protected static final String O_MGB = "mgb";
+//    protected static final String O_FB = "fb";
+//    protected static final String O_FGB = "fgb";
+//    protected static final String O_MB = "mb";
+//    protected static final String O_MGB = "mgb";
     protected static final String O_C = "c";
     protected static final String O_CT = "ct";
     
@@ -80,17 +80,18 @@ public class VolumeUtil extends SoapCLI {
             String type = cl.getOptionValue(O_T);
             String name = cl.getOptionValue(O_N);
             String path = cl.getOptionValue(O_P);
-            String fileBits = cl.getOptionValue(O_FB);
-            String fileGroupBits = cl.getOptionValue(O_FGB);
-            String mailboxBits = cl.getOptionValue(O_MB);
-            String mailboxGroupBits = cl.getOptionValue(O_MGB);
+//            String fileBits = cl.getOptionValue(O_FB);
+//            String fileGroupBits = cl.getOptionValue(O_FGB);
+//            String mailboxBits = cl.getOptionValue(O_MB);
+//            String mailboxGroupBits = cl.getOptionValue(O_MGB);
             String compress = cl.getOptionValue(O_C);
             String compressThreshold = cl.getOptionValue(O_CT);
             
             if (cl.hasOption(O_A)) {
                 if (id != null)
                     throw new IllegalArgumentException("id cannot be specified when adding a volume");
-                util.addVolume(name, type, path, fileBits, fileGroupBits, mailboxBits, mailboxGroupBits, compress, compressThreshold);
+//                util.addVolume(name, type, path, fileBits, fileGroupBits, mailboxBits, mailboxGroupBits, compress, compressThreshold);
+                util.addVolume(name, type, path, null, null, null, null, compress, compressThreshold);
             } else if (cl.hasOption(O_D)) {
                 if (id == null)
                     throw new ParseException("volume id is missing");
@@ -100,7 +101,8 @@ public class VolumeUtil extends SoapCLI {
             } else if (cl.hasOption(O_E)) {
                 if (id == null)
                     throw new ParseException("volume id is missing");
-                util.editVolume(id, name, type, path, fileBits, fileGroupBits, mailboxBits, mailboxGroupBits, compress, compressThreshold);
+//                util.editVolume(id, name, type, path, fileBits, fileGroupBits, mailboxBits, mailboxGroupBits, compress, compressThreshold);
+                util.editVolume(id, name, type, path, null, null, null, null, compress, compressThreshold);
             } else if (cl.hasOption(O_DC)) {
                 util.displayCurrentVolumes();
             } else if (cl.hasOption(O_SC)) {
@@ -172,10 +174,10 @@ public class VolumeUtil extends SoapCLI {
             short t = (short) volElem.getAttributeLong(AdminService.A_VOLUME_TYPE);
             String type = VolumeUtil.getTypeName(t);
             String path = volElem.getAttribute(AdminService.A_VOLUME_ROOTPATH);
-            String fbits = volElem.getAttribute(AdminService.A_VOLUME_FBITS);
-            String fgbits = volElem.getAttribute(AdminService.A_VOLUME_FGBITS);
-            String mbits = volElem.getAttribute(AdminService.A_VOLUME_MBITS);
-            String mgbits = volElem.getAttribute(AdminService.A_VOLUME_MGBITS);
+//            String fbits = volElem.getAttribute(AdminService.A_VOLUME_FBITS);
+//            String fgbits = volElem.getAttribute(AdminService.A_VOLUME_FGBITS);
+//            String mbits = volElem.getAttribute(AdminService.A_VOLUME_MBITS);
+//            String mgbits = volElem.getAttribute(AdminService.A_VOLUME_MGBITS);
             boolean compressed = volElem.getAttributeBool(AdminService.A_VOLUME_COMPRESS_BLOBS);
             String threshold = volElem.getAttribute(AdminService.A_VOLUME_COMPRESSION_THRESHOLD);
             System.out.println("   Volume id: " + vid);
@@ -183,8 +185,8 @@ public class VolumeUtil extends SoapCLI {
             System.out.println("        type: " + type);
             System.out.println("        path: " + path);
             System.out.println("  compressed: " + compressed + "\t         threshold: " + threshold);
-            System.out.println("   file bits: " + fbits +      "\t   file group bits: " + fgbits);
-            System.out.println("mailbox bits: " + mbits +      "\tmailbox group bits: " + mgbits);
+//            System.out.println("   file bits: " + fbits +      "\t   file group bits: " + fgbits);
+//            System.out.println("mailbox bits: " + mbits +      "\tmailbox group bits: " + mgbits);
             System.out.println();
         }
     }
@@ -221,14 +223,14 @@ public class VolumeUtil extends SoapCLI {
             throw new IllegalArgumentException("at least one of the required parameters (name, type, path) is missing");
         Element req = new Element.XMLElement(AdminService.CREATE_VOLUME_REQUEST);
         Element vol = req.addElement(AdminService.E_VOLUME);
-        if (fileBits == null)
-            fileBits = "12";
-        if (fileGroupBits == null)
-            fileGroupBits = "8";
-        if (mailboxBits == null)
-            mailboxBits = "12";
-        if (mailboxGroupBits == null)
-            mailboxGroupBits = "8";
+//        if (fileBits == null)
+//            fileBits = "12";
+//        if (fileGroupBits == null)
+//            fileGroupBits = "8";
+//        if (mailboxBits == null)
+//            mailboxBits = "12";
+//        if (mailboxGroupBits == null)
+//            mailboxGroupBits = "8";
         if (compress == null)
             compress = "false";
         if (compressThreshold == null)
@@ -247,35 +249,35 @@ public class VolumeUtil extends SoapCLI {
             String mailboxBits, String mailboxGroupBits, String compress,
             String compressThreshold) {
         
-        // validate numeric bits parameters if they are present
-        try {
-            int n;
-            if (fileBits != null) {
-                n = Integer.parseInt(fileBits);
-                if (n < 0)
-                    throw new IllegalArgumentException("bits parameter cannot be negative");
-            }
-            if (fileGroupBits != null) {
-                n = Integer.parseInt(fileGroupBits);
-                if (n < 0)
-                    throw new IllegalArgumentException(
-                            "bits parameter cannot be negative");
-            }
-            if (mailboxBits != null) {
-                n = Integer.parseInt(mailboxBits);
-                if (n < 0)
-                    throw new IllegalArgumentException(
-                            "bits parameter cannot be negative");
-            }
-            if (mailboxGroupBits != null) {
-                n = Integer.parseInt(mailboxGroupBits);
-                if (n < 0)
-                    throw new IllegalArgumentException(
-                            "bits parameter cannot be negative");
-            }
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("at least one value of the bits parameters is not a valid number");
-        }
+//        // validate numeric bits parameters if they are present
+//        try {
+//            int n;
+//            if (fileBits != null) {
+//                n = Integer.parseInt(fileBits);
+//                if (n < 0)
+//                    throw new IllegalArgumentException("bits parameter cannot be negative");
+//            }
+//            if (fileGroupBits != null) {
+//                n = Integer.parseInt(fileGroupBits);
+//                if (n < 0)
+//                    throw new IllegalArgumentException(
+//                            "bits parameter cannot be negative");
+//            }
+//            if (mailboxBits != null) {
+//                n = Integer.parseInt(mailboxBits);
+//                if (n < 0)
+//                    throw new IllegalArgumentException(
+//                            "bits parameter cannot be negative");
+//            }
+//            if (mailboxGroupBits != null) {
+//                n = Integer.parseInt(mailboxGroupBits);
+//                if (n < 0)
+//                    throw new IllegalArgumentException(
+//                            "bits parameter cannot be negative");
+//            }
+//        } catch (NumberFormatException e) {
+//            throw new IllegalArgumentException("at least one value of the bits parameters is not a valid number");
+//        }
 
         // validate compress parameter
         if (compress != null) {
@@ -294,14 +296,14 @@ public class VolumeUtil extends SoapCLI {
             vol.addAttribute(AdminService.A_VOLUME_NAME, name);
         if (path != null)
             vol.addAttribute(AdminService.A_VOLUME_ROOTPATH, path);
-        if (fileBits != null)
-            vol.addAttribute(AdminService.A_VOLUME_FBITS, fileBits);
-        if (fileGroupBits != null)
-            vol.addAttribute(AdminService.A_VOLUME_FGBITS, fileGroupBits);
-        if (mailboxBits != null)
-            vol.addAttribute(AdminService.A_VOLUME_MBITS, mailboxBits);
-        if (mailboxGroupBits != null)
-            vol.addAttribute(AdminService.A_VOLUME_MGBITS, mailboxGroupBits);
+//        if (fileBits != null)
+//            vol.addAttribute(AdminService.A_VOLUME_FBITS, fileBits);
+//        if (fileGroupBits != null)
+//            vol.addAttribute(AdminService.A_VOLUME_FGBITS, fileGroupBits);
+//        if (mailboxBits != null)
+//            vol.addAttribute(AdminService.A_VOLUME_MBITS, mailboxBits);
+//        if (mailboxGroupBits != null)
+//            vol.addAttribute(AdminService.A_VOLUME_MGBITS, mailboxGroupBits);
         if (compress != null)
             vol.addAttribute(AdminService.A_VOLUME_COMPRESS_BLOBS, "true".equals(compress));
         if (compressThreshold != null)
@@ -330,12 +332,12 @@ public class VolumeUtil extends SoapCLI {
             "Volume type (primaryMessage, secondaryMessage, or index; default is primaryMessage)");
         options.addOption(O_N, "name", true, "volume name");
         options.addOption(O_P, "path", true, "Root path");
-        options.addOption(O_FB, "fileBits", true, "File bits; default is 12");
-        options.addOption(O_FGB, "fileGroupBits", true, "File group bits; default is 8");
-        options.addOption(O_MB, "mailboxBits", true, "Mailbox bits; default is 12");
-        options.addOption(O_MGB, "mailboxGroupBits", true, "Mailbox group bits; default is 8");
+//        options.addOption(O_FB, "fileBits", true, "File bits; default is 12");
+//        options.addOption(O_FGB, "fileGroupBits", true, "File group bits; default is 8");
+//        options.addOption(O_MB, "mailboxBits", true, "Mailbox bits; default is 12");
+//        options.addOption(O_MGB, "mailboxGroupBits", true, "Mailbox group bits; default is 8");
         options.addOption(O_C, "compress", true, "Compress blobs; \"true\" or \"false\"");
-        options.addOption(O_CT, "compressionThreshold", true, "Compression threshold; default 4MB");
+        options.addOption(O_CT, "compressionThreshold", true, "Compression threshold; default 4KB");
     }
     
     protected void usage(ParseException e) {
@@ -348,10 +350,10 @@ public class VolumeUtil extends SoapCLI {
         printOpt(O_N, 2);
         printOpt(O_T, 2);
         printOpt(O_P, 2);
-        printOpt(O_FB, 2);
-        printOpt(O_FGB, 2);
-        printOpt(O_MB, 2);
-        printOpt(O_MGB, 2);
+//        printOpt(O_FB, 2);
+//        printOpt(O_FGB, 2);
+//        printOpt(O_MB, 2);
+//        printOpt(O_MGB, 2);
         printOpt(O_C, 2);
         printOpt(O_CT, 2);
         printOpt(O_E, 0);

@@ -66,6 +66,11 @@ public class Volume {
 
     private static final String INCOMING_DIR = "incoming";
 
+    private static final short DEFAULT_MBOX_GROUP_BITS = 8;
+    private static final short DEFAULT_MBOX_BITS = 12;
+    private static final short DEFAULT_FILE_GROUP_BITS = 8;
+    private static final short DEFAULT_FILE_BITS = 12;
+
     // sVolumeMap, sCurrMsgVolume, sCurrSecondaryMsgVolume, and
     // sCurrIndexVolume are all synchronized on sVolumeGuard.
     private static final Object sVolumeGuard = new Object();
@@ -124,6 +129,12 @@ public class Volume {
                                 short fileGroupBits, short fileBits,
                                 boolean compressBlobs, long compressionThreshold)
     throws ServiceException {
+        // TODO: For now we don't allow non-default values.
+        mboxGroupBits = DEFAULT_MBOX_GROUP_BITS;
+        mboxBits = DEFAULT_MBOX_BITS;
+        fileGroupBits = DEFAULT_FILE_GROUP_BITS;
+        fileBits = DEFAULT_FILE_BITS;
+
         CreateVolume redoRecorder = new CreateVolume(type, name, path,
                                                      mboxGroupBits, mboxBits,
                                                      fileGroupBits, fileBits,
@@ -135,6 +146,11 @@ public class Volume {
         Connection conn = null;
         boolean success = false;
         try {
+            if (name == null || name.length() < 1)
+                throw VolumeServiceException.INVALID_REQUEST("Missing volume name");
+            if (path == null || path.length() < 1)
+                throw VolumeServiceException.INVALID_REQUEST("Missing volume path");
+
             conn = DbPool.getConnection();
             vol = DbVolume.create(conn, id, type, name, path,
                                   mboxGroupBits, mboxBits,
@@ -161,6 +177,12 @@ public class Volume {
                                 short fileGroupBits, short fileBits,
                                 boolean compressBlobs, long compressionThreshold)
     throws ServiceException {
+        // TODO: For now we don't allow non-default values.
+        mboxGroupBits = DEFAULT_MBOX_GROUP_BITS;
+        mboxBits = DEFAULT_MBOX_BITS;
+        fileGroupBits = DEFAULT_FILE_GROUP_BITS;
+        fileBits = DEFAULT_FILE_BITS;
+
         ModifyVolume redoRecorder = new ModifyVolume(id, type, name, path,
                                                      mboxGroupBits, mboxBits,
                                                      fileGroupBits, fileBits,
@@ -172,6 +194,11 @@ public class Volume {
         Connection conn = null;
         boolean success = false;
         try {
+            if (name == null || name.length() < 1)
+                throw VolumeServiceException.INVALID_REQUEST("Missing volume name");
+            if (path == null || path.length() < 1)
+                throw VolumeServiceException.INVALID_REQUEST("Missing volume path");
+
             conn = DbPool.getConnection();
             vol = DbVolume.update(conn, id, type, name, path,
                                   mboxGroupBits, mboxBits,

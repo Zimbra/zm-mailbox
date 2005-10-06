@@ -44,14 +44,19 @@ public class ModifyVolume extends AdminDocumentHandler {
         String name  = eVol.getAttribute(AdminService.A_VOLUME_NAME, vol.getName());
         String path  = eVol.getAttribute(AdminService.A_VOLUME_ROOTPATH, vol.getRootPath());
         short type   = (short) eVol.getAttributeLong(AdminService.A_VOLUME_TYPE, vol.getType());
-        short mgbits = (short) eVol.getAttributeLong(AdminService.A_VOLUME_MGBITS, vol.getMboxGroupBits());
-        short mbits  = (short) eVol.getAttributeLong(AdminService.A_VOLUME_MBITS,  vol.getMboxBits());
-        short fgbits = (short) eVol.getAttributeLong(AdminService.A_VOLUME_FGBITS, vol.getFileGroupBits());
-        short fbits  = (short) eVol.getAttributeLong(AdminService.A_VOLUME_FBITS,  vol.getFileBits());
+
+        // TODO: These "bits" parameters are ignored inside Volume.update() for now.
+//        short mgbits = (short) eVol.getAttributeLong(AdminService.A_VOLUME_MGBITS, vol.getMboxGroupBits());
+//        short mbits  = (short) eVol.getAttributeLong(AdminService.A_VOLUME_MBITS,  vol.getMboxBits());
+//        short fgbits = (short) eVol.getAttributeLong(AdminService.A_VOLUME_FGBITS, vol.getFileGroupBits());
+//        short fbits  = (short) eVol.getAttributeLong(AdminService.A_VOLUME_FBITS,  vol.getFileBits());
+
         boolean compressBlobs = eVol.getAttributeBool(AdminService.A_VOLUME_COMPRESS_BLOBS, vol.getCompressBlobs());
         long compressionThreshold = eVol.getAttributeLong(AdminService.A_VOLUME_COMPRESSION_THRESHOLD,
                                                           vol.getCompressionThreshold());
-        Volume.update(vol.getId(), type, name, path, mgbits, mbits, fgbits, fbits,
+//        Volume.update(vol.getId(), type, name, path, mgbits, mbits, fgbits, fbits,
+//                      compressBlobs, compressionThreshold);
+        Volume.update(vol.getId(), type, name, path, (short) 0, (short) 0, (short) 0, (short) 0,
                       compressBlobs, compressionThreshold);
 
         Element response = lc.createElement(AdminService.MODIFY_VOLUME_RESPONSE);
