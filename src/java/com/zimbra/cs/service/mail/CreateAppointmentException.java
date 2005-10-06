@@ -103,7 +103,7 @@ public class CreateAppointmentException extends CreateAppointment
                 CalSendData dat = handleMsgElement(octxt, msgElem, acct, mbox, parser);
                 
                 Element response = lc.createElement(MailService.CREATE_APPOINTMENT_EXCEPTION_RESPONSE);            
-                return sendCalendarMessage(octxt, acct, mbox, dat, response);
+                return sendCalendarMessage(octxt, appt.getFolderId(), acct, mbox, dat, response);
             }
             
         } finally {

@@ -2404,7 +2404,7 @@ public class Mailbox {
      * @return int[2] = { appointment-id, invite-mail-item-id }  Note that even though the invite has a mail-item-id, that mail-item does not really exist, it can ONLY be referenced through the appointment "apptId-invMailItemId"
      * @throws ServiceException
      */
-    public synchronized int[] addInvite(OperationContext octxt, Invite inv, boolean force, ParsedMessage pm)
+    public synchronized int[] addInvite(OperationContext octxt, int folder, Invite inv, boolean force, ParsedMessage pm)
     throws ServiceException {
         CreateInvite redoRecorder = new CreateInvite();
         CreateInvite redoPlayer = (octxt == null ? null : (CreateInvite) octxt.player);
@@ -2423,12 +2423,13 @@ public class Mailbox {
             
             redoRecorder.setInvite(inv);
             redoRecorder.setForce(force);
+            redoRecorder.setFolderId(folder);
             
             Appointment appt = getAppointmentByUid(inv.getUid());
             if (appt == null) { 
                 // ONLY create an appointment if this is a REQUEST method...otherwise don't.
                 if (inv.getMethod().equals("REQUEST")) {
-                    appt = createAppointment(Mailbox.ID_FOLDER_CALENDAR, Volume.getCurrentMessageVolume().getId(), "", inv.getUid(), pm, inv);
+                    appt = createAppointment(folder, Volume.getCurrentMessageVolume().getId(), "", inv.getUid(), pm, inv);
                 } else {
 //                  mLog.info("Mailbox " + getId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c not a REQUEST and no Appointment could be found");
 //                  return; // for now, just ignore this Invitation

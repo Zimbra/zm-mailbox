@@ -75,14 +75,14 @@ public abstract class CalendarRequest extends SendMsg {
         return toRet;
     }
     
-    protected static Element sendCalendarMessage(OperationContext octxt, Account acct, Mailbox mbox, CalSendData dat, Element response)
+    protected static Element sendCalendarMessage(OperationContext octxt, int apptFolderId, Account acct, Mailbox mbox, CalSendData dat, Element response)
     throws ServiceException { 
         synchronized (mbox) {
             int  folderId = 0;
             
             ParsedMessage pm = new ParsedMessage(dat.mMm, mbox.attachmentsIndexingEnabled());
             
-            mbox.addInvite(octxt, dat.mInvite, false, pm); 
+            mbox.addInvite(octxt, apptFolderId, dat.mInvite, false, pm); 
             
             if (dat.mSaveToSent) {
                 folderId = getSentFolder(acct, mbox, octxt);

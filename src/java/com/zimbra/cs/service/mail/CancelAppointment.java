@@ -116,7 +116,7 @@ public class CancelAppointment extends CalendarRequest {
                     
                     for (int i = invites.length-1; i >= 0; i--) {
                         if (invites[i] != null && invites[i].getMethod().equals(Method.REQUEST.getValue())) {
-                            cancelInvite(octxt, request, acct, mbox, invites[i]);
+                            cancelInvite(octxt, request, acct, mbox, appt, invites[i]);
                         }
                     }
 //                }
@@ -129,15 +129,7 @@ public class CancelAppointment extends CalendarRequest {
         }        
     }
     
-    void cancelInstance(OperationContext octxt, Element request, Account acct, Mailbox mbox, Invite defaultInv, Element recurElt) 
-    throws ServiceException {
-        RecurId recurId = CalendarUtils.parseRecurId(recurElt, defaultInv.getTimeZoneMap(), defaultInv);
-
-        cancelInstance(octxt, request, acct, mbox, defaultInv, recurId);
-    }
-    
-    
-    protected void cancelInstance(OperationContext octxt, Element request, Account acct, Mailbox mbox, Invite defaultInv, RecurId recurId) 
+    void cancelInstance(OperationContext octxt, Element request, Account acct, Mailbox mbox, Appointment appt, Invite defaultInv, RecurId recurId) 
     throws ServiceException {
         String text = "The instance has been cancelled";
         String subject = "CANCELLED: "+defaultInv.getName();
@@ -185,11 +177,11 @@ public class CancelAppointment extends CalendarRequest {
             }
         }
         
-        sendCalendarMessage(octxt, acct, mbox, dat, null);
+        sendCalendarMessage(octxt, appt.getFolderId(), acct, mbox, dat, null);
     }
     
     
-    protected void cancelInvite(OperationContext octxt, Element request, Account acct, Mailbox mbox, Invite inv)
+    protected void cancelInvite(OperationContext octxt, Element request, Account acct, Mailbox mbox, Appointment appt, Invite inv)
     throws ServiceException {
         String text = "The event has been cancelled";
         String subject = "CANCELLED: "+inv.getName();
@@ -237,7 +229,7 @@ public class CancelAppointment extends CalendarRequest {
             }
         }
         
-        sendCalendarMessage(octxt, acct, mbox, dat, null);
+        sendCalendarMessage(octxt, appt.getFolderId(), acct, mbox, dat, null);
     }
      
 }

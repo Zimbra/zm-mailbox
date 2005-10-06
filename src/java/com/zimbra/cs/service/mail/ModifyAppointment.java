@@ -72,7 +72,7 @@ public class ModifyAppointment extends CalendarRequest
             ParseMimeMessage.InviteParserResult toRet = CalendarUtils.parseInviteForModify(account, inviteElem, mInv, atsToCancel);
 
             // send cancellations to any invitees who have been removed...
-            updateRemovedInvitees(octxt, account, mmbox, mInv, atsToCancel);
+            updateRemovedInvitees(octxt, account, mmbox, mInv.getAppointment(), mInv, atsToCancel);
             
             return toRet;
         }
@@ -109,7 +109,7 @@ public class ModifyAppointment extends CalendarRequest
                 // response
                 Element response = lc.createElement(MailService.MODIFY_APPOINTMENT_RESPONSE);
                 
-                return modifyAppointment(octxt, request, acct, mbox, inv, response);
+                return modifyAppointment(octxt, request, acct, mbox, appt, inv, response);
             } // synchronized on mailbox                
         } finally {
             sWatch.stop(startTime);
@@ -117,7 +117,7 @@ public class ModifyAppointment extends CalendarRequest
     }
     
     protected static Element modifyAppointment(OperationContext octxt, Element request, Account acct, Mailbox mbox,
-            Invite inv, Element response) throws ServiceException
+            Appointment appt, Invite inv, Element response) throws ServiceException
     {
         // <M>
         Element msgElem = request.getElement(MailService.E_MSG);
@@ -138,12 +138,12 @@ public class ModifyAppointment extends CalendarRequest
             }
         }
 
-        sendCalendarMessage(octxt, acct, mbox, dat, response);
+        sendCalendarMessage(octxt, appt.getFolderId(), acct, mbox, dat, response);
 
         return response;        
     }
     
-    protected static void updateRemovedInvitees(OperationContext octxt, Account acct, Mailbox mbox, Invite inv, List toCancel)
+    protected static void updateRemovedInvitees(OperationContext octxt, Account acct, Mailbox mbox, Appointment appt, Invite inv, List toCancel)
     throws ServiceException {
         if (!inv.thisAcctIsOrganizer(acct)) {
             // we ONLY should update the removed attendees if we are the organizer!
@@ -172,7 +172,7 @@ public class ModifyAppointment extends CalendarRequest
             dat.mMm = CalendarUtils.createDefaultCalendarMessage(acct, 
                     cancelAt.getCalAddress(), subject, text, inv.getUid(), cal);
             
-            sendCalendarMessage(octxt, acct, mbox, dat, null); 
+            sendCalendarMessage(octxt, appt.getFolderId(), acct, mbox, dat, null); 
         }
     }
 }

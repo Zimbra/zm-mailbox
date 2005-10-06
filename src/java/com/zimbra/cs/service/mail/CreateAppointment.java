@@ -72,11 +72,14 @@ public class CreateAppointment extends CalendarRequest {
             
             // <M>
             Element msgElem = request.getElement(MailService.E_MSG);
+            
+            int folder = (int)msgElem.getAttributeLong(MailService.A_FOLDER, Mailbox.ID_FOLDER_CALENDAR);
+            
             CreateAppointmentInviteParser parser = new CreateAppointmentInviteParser();
             CalSendData dat = handleMsgElement(octxt, msgElem, acct, mbx, parser);
 
             Element response = lc.createElement(MailService.CREATE_APPOINTMENT_RESPONSE);            
-            return sendCalendarMessage(octxt, acct, mbx, dat, response);
+            return sendCalendarMessage(octxt, folder, acct, mbx, dat, response);
         } finally {
             sWatch.stop(startTime);
         }

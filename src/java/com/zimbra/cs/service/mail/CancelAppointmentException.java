@@ -36,6 +36,7 @@ import com.zimbra.cs.mailbox.Invite;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ParsedItemID;
@@ -68,9 +69,12 @@ public class CancelAppointmentException extends CancelAppointment {
                     if (inv.hasRecurId()) {
                         throw MailServiceException.CANNOT_CANCEL_INSTANCE_OF_EXCEPTION(" for CancelAppointmentRequest("+pid+","+compNum+")");
                     }
-                    cancelInstance(octxt, request, acct, mbox, inv, recurElt);
+                    
+                    RecurId recurId = CalendarUtils.parseRecurId(recurElt, inv.getTimeZoneMap(), inv);
+                    cancelInstance(octxt, request, acct, mbox, appt, inv, recurId);
+
                 } else {
-                    cancelInvite(octxt, request, acct, mbox, inv);
+                    cancelInvite(octxt, request, acct, mbox, appt, inv);
                 }
             } // synchronized on mailbox                
         

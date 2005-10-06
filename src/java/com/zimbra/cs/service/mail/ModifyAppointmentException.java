@@ -72,7 +72,7 @@ public class ModifyAppointmentException extends ModifyAppointment {
                 
                 // response
                 Element response = lc.createElement(MailService.MODIFY_APPOINTMENT_EXCEPTION_RESPONSE);
-                return modifyAppointment(octxt, request, acct, mbox, inv, response);
+                return modifyAppointment(octxt, request, acct, mbox, appt, inv, response);
             } // synchronized on mailbox                
         } finally {
             sWatch.stop(startTime);
