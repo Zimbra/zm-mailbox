@@ -199,6 +199,9 @@ public class AdminService implements DocumentService {
     public static final QName FAILOVER_CLUSTER_SERVICE_REQUEST = QName.get("FailoverClusterServiceRequest", NAMESPACE);
     public static final QName FAILOVER_CLUSTER_SERVICE_RESPONSE = QName.get("FailoverClusterServiceResponse", NAMESPACE);
 
+    public static final QName GET_VERSION_INFO_REQUEST = QName.get("GetVersionInfoRequest", NAMESPACE);
+    public static final QName GET_VERSION_INFO_RESPONSE = QName.get("GetVersionInfoResponse", NAMESPACE);
+
     
     public static final String E_ACCOUNT = "account";
     public static final String E_AUTH_TOKEN = "authToken";
@@ -297,6 +300,12 @@ public class AdminService implements DocumentService {
 
     public static final String A_FAILOVER_NEW_SERVER = "newServer";
 
+    public static final String A_VERSION_INFO_INFO = "info";
+    public static final String A_VERSION_INFO_VERSION = "version";
+    public static final String A_VERSION_INFO_RELEASE = "release";
+    public static final String A_VERSION_INFO_DATE = "buildDate";
+    public static final String A_VERSION_INFO_HOST = "host";
+
 
 	public static final String ADMIN_URI = "https://localhost:7071/";
 	
@@ -376,6 +385,8 @@ public class AdminService implements DocumentService {
 
         dispatcher.registerHandler(GET_CLUSTER_STATUS_REQUEST, new GetClusterStatus());
         dispatcher.registerHandler(FAILOVER_CLUSTER_SERVICE_REQUEST, new FailoverClusterService());
+
+        dispatcher.registerHandler(GET_VERSION_INFO_REQUEST, new GetVersionInfo());
     }
 
     /**
