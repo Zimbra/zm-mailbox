@@ -46,7 +46,7 @@ public class SetAppointment extends CalendarRequest {
     private static Log sLog = LogFactory.getLog(SetAppointment.class);
     private static StopWatch sWatch = StopWatch.getInstance("SetAppointment");
     
-    protected static class SetAppointmentInviteParser implements ParseMimeMessage.InviteParser { 
+    protected static class SetAppointmentInviteParser extends ParseMimeMessage.InviteParser { 
         SetAppointmentInviteParser() { };
 
         public ParseMimeMessage.InviteParserResult parseInviteElement(OperationContext octxt, Account account, Element inviteElem) throws ServiceException 
@@ -78,10 +78,11 @@ public class SetAppointment extends CalendarRequest {
             synchronized (mbox) {
                 
                 // First, the <default>
+                SetAppointmentInviteParser defaultParser = new SetAppointmentInviteParser();
                 {
                     Element e = request.getElement(MailService.A_DEFAULT);
                     
-                    defaultData = getSetAppointmentData(octxt, acct, mbox, e, new SetAppointmentInviteParser());
+                    defaultData = getSetAppointmentData(octxt, acct, mbox, e, defaultParser);
                 }
                 
                 // for each <exception>

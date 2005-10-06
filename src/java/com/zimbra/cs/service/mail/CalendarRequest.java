@@ -28,10 +28,12 @@ package com.zimbra.cs.service.mail;
 import javax.mail.internet.MimeMessage;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.mailbox.Invite;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Message.ApptInfo;
+import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 
@@ -42,6 +44,7 @@ public abstract class CalendarRequest extends SendMsg {
         String mReplyType; 
         MimeMessage mMm;
         boolean mSaveToSent;
+        Invite mInvite;
     }
 
     protected static CalSendData handleMsgElement(OperationContext octxt, Element msgElem, Account acct,
@@ -49,7 +52,11 @@ public abstract class CalendarRequest extends SendMsg {
     throws ServiceException {
 
         CalSendData toRet = new CalSendData();
-
+        
+        if (inviteParser.getResult() != null) {
+            assert(inviteParser.getResult() == null);
+        }
+        
         // check to see if this message is a reply -- if so, then we'll want to note that so 
         // we can more-correctly match the conversations up
         toRet.mOrigId = (int) msgElem.getAttributeLong(MailService.A_ORIG_ID, 0);
@@ -58,6 +65,11 @@ public abstract class CalendarRequest extends SendMsg {
         // parse the data
         toRet.mMm = ParseMimeMessage.parseMimeMsgSoap(octxt, mbox, msgElem, null, inviteParser, toRet);
         
+        if (inviteParser.getResult() == null || inviteParser.getResult().mInvite == null) {
+            assert(inviteParser.getResult() != null);
+        }
+        toRet.mInvite = inviteParser.getResult().mInvite;
+
         toRet.mSaveToSent = shouldSaveToSent(acct);
 
         return toRet;
@@ -67,11 +79,16 @@ public abstract class CalendarRequest extends SendMsg {
     throws ServiceException { 
         synchronized (mbox) {
             int  folderId = 0;
+            
+            ParsedMessage pm = new ParsedMessage(dat.mMm, mbox.attachmentsIndexingEnabled());
+            
+            mbox.addInvite(octxt, dat.mInvite, false, pm); 
+            
             if (dat.mSaveToSent) {
                 folderId = getSentFolder(acct, mbox, octxt);
-            } else {
-                // FIXME hack!  if !save-to-sent, then must save to calendar folder to trigger appt creation.  
-                folderId = Mailbox.ID_FOLDER_CALENDAR;
+//            } else {
+//                // FIXME hack!  if !save-to-sent, then must save to calendar folder to trigger appt creation.  
+//                folderId = Mailbox.ID_FOLDER_CALENDAR;
             }
 
             int msgId = sendMimeMessage(octxt, mbox, acct, folderId, dat, dat.mMm, dat.mOrigId, dat.mReplyType);

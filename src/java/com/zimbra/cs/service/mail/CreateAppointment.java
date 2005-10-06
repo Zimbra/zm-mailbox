@@ -50,7 +50,7 @@ public class CreateAppointment extends CalendarRequest {
     private static StopWatch sWatch = StopWatch.getInstance("CreateAppointment");
 
     // very simple: generate a new UID and send a REQUEST
-    protected static ParseMimeMessage.InviteParser CREATE_APPOINTMENT_INVITE_PARSER = new ParseMimeMessage.InviteParser() { 
+    protected static class CreateAppointmentInviteParser extends ParseMimeMessage.InviteParser { 
         public ParseMimeMessage.InviteParserResult parseInviteElement(OperationContext octxt, Account account, Element inviteElem) throws ServiceException 
         {
             return CalendarUtils.parseInviteForCreate(account, inviteElem, null, null, false);
@@ -72,7 +72,8 @@ public class CreateAppointment extends CalendarRequest {
             
             // <M>
             Element msgElem = request.getElement(MailService.E_MSG);
-            CalSendData dat = handleMsgElement(octxt, msgElem, acct, mbx, CREATE_APPOINTMENT_INVITE_PARSER);
+            CreateAppointmentInviteParser parser = new CreateAppointmentInviteParser();
+            CalSendData dat = handleMsgElement(octxt, msgElem, acct, mbx, parser);
 
             Element response = lc.createElement(MailService.CREATE_APPOINTMENT_RESPONSE);            
             return sendCalendarMessage(octxt, acct, mbx, dat, response);

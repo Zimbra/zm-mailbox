@@ -202,6 +202,7 @@ public class CalendarUtils {
         StringReader reader = new StringReader(calStr);
         try {
             toRet.mCal = calBuilder.build(reader);
+            toRet.mInvite = Invite.createFromICalendar(account, toRet.mSummary, toRet.mCal, false);
         } catch (ParserException pe) {
             throw ServiceException.FAILURE("Parse Exception parsing raw iCalendar data -- "+pe, pe);
         } catch (IOException ioe) {
@@ -278,21 +279,10 @@ public class CalendarUtils {
         toRet.mCal = iCal;
         toRet.mUid = uid;
         toRet.mSummary = summaryStr;
+        toRet.mInvite = create;
         
         return toRet;
     }
-    
-    private static Calendar makeCalendar(Method method) {
-        Calendar iCal = new Calendar();
-        // PRODID, VERSION always required
-        iCal.getProperties().add(new ProdId("Zimbra-Calendar-Provider"));
-        iCal.getProperties().add(method);
-        iCal.getProperties().add(Version.VERSION_2_0);
-
-        return iCal;
-    }
-    
-
     
     /**
      * Parse an <inv> element in a Modify context -- existing UID, etc
@@ -368,6 +358,7 @@ public class CalendarUtils {
         toRet.mCal = iCal;
         toRet.mUid = uid;
         toRet.mSummary = summaryStr;
+        toRet.mInvite = mod;
         
         return toRet;
     }
@@ -967,19 +958,19 @@ public class CalendarUtils {
     }
     
     
-    static Calendar buildCancelInviteCalendar(Account acct, Invite inv, String comment, Attendee forAttendee) throws ServiceException
+    static Invite buildCancelInviteCalendar(Account acct, Invite inv, String comment, Attendee forAttendee) throws ServiceException
     {
-        return cancelInvite(acct, inv, comment, forAttendee, null).toICalendar();
+        return cancelInvite(acct, inv, comment, forAttendee, null);
     }
     
-    static Calendar buildCancelInviteCalendar(Account acct, Invite inv, String comment) throws ServiceException
+    static Invite buildCancelInviteCalendar(Account acct, Invite inv, String comment) throws ServiceException
     {
-        return cancelInvite(acct, inv, comment, null, null).toICalendar();
+        return cancelInvite(acct, inv, comment, null, null);
     }
     
-    static Calendar buildCancelInstanceCalendar(Account acct, Invite inv, String comment, RecurId recurId) throws ServiceException
+    static Invite buildCancelInstanceCalendar(Account acct, Invite inv, String comment, RecurId recurId) throws ServiceException
     {
-        return cancelInvite(acct, inv, comment, null, recurId).toICalendar();
+        return cancelInvite(acct, inv, comment, null, recurId);
     }
     
     

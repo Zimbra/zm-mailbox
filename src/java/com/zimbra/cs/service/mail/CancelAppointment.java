@@ -146,12 +146,13 @@ public class CancelAppointment extends CalendarRequest {
             sLog.debug("Sending cancellation message \""+subject+"\" for instance "+recurId.toString()+" of invite "+ defaultInv.toString());
         }
         
-        Calendar iCal= CalendarUtils.buildCancelInstanceCalendar(acct, defaultInv, text, recurId);
-        
         CalSendData dat = new CalSendData();
         dat.mOrigId = defaultInv.getMailItemId();
         dat.mReplyType = TYPE_REPLY;
         dat.mSaveToSent = shouldSaveToSent(acct);
+        dat.mInvite = CalendarUtils.buildCancelInstanceCalendar(acct, defaultInv, text, recurId);
+        
+        Calendar iCal = dat.mInvite.toICalendar();
         
         // did they specify a custom <m> message?  If so, then we don't have to build one...
         Element msgElem = request.getOptionalElement(MailService.E_MSG);
@@ -196,12 +197,14 @@ public class CancelAppointment extends CalendarRequest {
         if (sLog.isDebugEnabled())
             sLog.debug("Sending cancellation message \""+subject+"\" for "+ inv.toString());
         
-        Calendar iCal= CalendarUtils.buildCancelInviteCalendar(acct, inv, text);
-        
         CalSendData dat = new CalSendData();
         dat.mOrigId = inv.getMailItemId();
         dat.mReplyType = TYPE_REPLY;
         dat.mSaveToSent = shouldSaveToSent(acct);
+        dat.mInvite = CalendarUtils.buildCancelInviteCalendar(acct, inv, text);
+        
+        Calendar iCal = dat.mInvite.toICalendar();
+        
         
         // did they specify a custom <m> message?  If so, then we don't have to build one...
         Element msgElem = request.getOptionalElement(MailService.E_MSG);

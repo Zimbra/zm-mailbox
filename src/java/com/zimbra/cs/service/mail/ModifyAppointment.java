@@ -57,7 +57,7 @@ public class ModifyAppointment extends CalendarRequest
     private static StopWatch sWatch = StopWatch.getInstance("ModifyAppointment");
     
     // very simple: generate a new UID and send a REQUEST
-    protected static class ModifyAppointmentParser implements ParseMimeMessage.InviteParser {
+    protected static class ModifyAppointmentParser extends ParseMimeMessage.InviteParser {
         protected Mailbox mmbox;
         protected Invite mInv;
         
@@ -92,8 +92,14 @@ public class ModifyAppointment extends CalendarRequest
             sLog.info("<ModifyAppointment id=" + pid + " comp=" + compNum + ">");
             
             synchronized(mbox) {
-                Appointment appt = mbox.getAppointmentById(octxt, pid.getItemIDInt()); 
+                Appointment appt = mbox.getAppointmentById(octxt, pid.getItemIDInt());
+                if (appt == null) {
+                    throw MailServiceException.NO_SUCH_APPOINTMENT(pid.toString(), "Could not find appointment");
+                }
                 Invite inv = appt.getInvite(pid.getSubIdInt(), compNum);
+                if (inv == null) {
+                    throw MailServiceException.INVITE_OUT_OF_DATE(pid.toString());
+                }
                 
                 if (inv.hasRecurId()) {
                     throw ServiceException.INVALID_REQUEST("Called ModifyAppointmentException on invite "+inv.getMailItemId()+
@@ -160,7 +166,8 @@ public class ModifyAppointment extends CalendarRequest
                            cancelAt.getCalAddress().toString());
             }
             
-            Calendar cal = CalendarUtils.buildCancelInviteCalendar(acct, inv, text, cancelAt);
+            dat.mInvite = CalendarUtils.buildCancelInviteCalendar(acct, inv, text, cancelAt);
+            Calendar cal = dat.mInvite.toICalendar();
             
             dat.mMm = CalendarUtils.createDefaultCalendarMessage(acct, 
                     cancelAt.getCalAddress(), subject, text, inv.getUid(), cal);

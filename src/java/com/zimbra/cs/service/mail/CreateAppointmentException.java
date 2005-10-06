@@ -49,7 +49,7 @@ public class CreateAppointmentException extends CreateAppointment
     private static StopWatch sWatch = StopWatch.getInstance("CreateAppointmentException");
 
     
-    protected static class CreateApptExceptionInviteParser implements ParseMimeMessage.InviteParser
+    protected static class CreateApptExceptionInviteParser extends ParseMimeMessage.InviteParser
     {
         private String mUid;
         private TimeZoneMap mTzMap;
@@ -98,8 +98,9 @@ public class CreateAppointmentException extends CreateAppointment
 
                 // <M>
                 Element msgElem = request.getElement(MailService.E_MSG);
-                
-                CalSendData dat = handleMsgElement(octxt, msgElem, acct, mbox, new CreateApptExceptionInviteParser(appt.getUid(), inv.getTimeZoneMap()));
+
+                CreateApptExceptionInviteParser parser = new CreateApptExceptionInviteParser(appt.getUid(), inv.getTimeZoneMap());                
+                CalSendData dat = handleMsgElement(octxt, msgElem, acct, mbox, parser);
                 
                 Element response = lc.createElement(MailService.CREATE_APPOINTMENT_EXCEPTION_RESPONSE);            
                 return sendCalendarMessage(octxt, acct, mbox, dat, response);

@@ -31,6 +31,7 @@ package com.zimbra.cs.service.mail;
 import net.fortuna.ical4j.model.*;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.mailbox.Invite;
 import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -104,13 +105,22 @@ public class ParseMimeMessage {
      *  Replying to an invite is different than Creating or Modifying one, etc etc...
      *
      */
-    static interface InviteParser {
-        InviteParserResult parseInviteElement(OperationContext octxt, Account account, Element invElement) throws ServiceException;
+    static abstract class InviteParser {
+        abstract protected InviteParserResult parseInviteElement(OperationContext octxt, Account account, Element invElement) throws ServiceException;
+        
+        public final InviteParserResult parse(OperationContext octxt, Account account, Element invElement) throws ServiceException {
+            mResult = parseInviteElement(octxt, account, invElement);
+            return mResult;
+        }
+        
+        private InviteParserResult mResult;
+        public InviteParserResult getResult() { return mResult; }
     }
     static class InviteParserResult {
         public Calendar mCal;
         public String mUid;
         public String mSummary;
+        public Invite mInvite;
     }
     
     // by default, no invite allowed
@@ -196,7 +206,7 @@ public class ParseMimeMessage {
                 int curAltPart = 0;
                 
                 // goes into the "content" subpart
-                InviteParserResult result = inviteParser.parseInviteElement(octxt, mbox.getAccount(), inviteElem);
+                InviteParserResult result = inviteParser.parse(octxt, mbox.getAccount(), inviteElem);
                 MimeBodyPart mbp = CalendarUtils.makeICalIntoMimePart(result.mUid, result.mCal);
                 alternatives[curAltPart++] = mbp;
                 

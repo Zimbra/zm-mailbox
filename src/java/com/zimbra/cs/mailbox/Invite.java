@@ -152,9 +152,9 @@ public class Invite {
         mRecurrence = recurrence;
         mOrganizer = org;
         mAttendees = attendees;
-        mName = name;
-        mDescription = description;
-        mLocation = loc;
+        mName = name != null ? name : "";
+        mDescription = description != null ? description : "";
+        mLocation = loc != null ? loc : "";
         mFlags = flags;
         mPartStat = partStat;
         mRecurrenceId = recurrenceId;
@@ -165,12 +165,12 @@ public class Invite {
         mMailItemId = mailItemId;
         mComponentNum = componentNum;
         mSentByMe = sentByMe;
-        mFragment = fragment;
+        mFragment = fragment != null ? fragment : "";
             }
     
     private Recurrence.IRecurrence mRecurrence;
     public Recurrence.IRecurrence getRecurrence() { return mRecurrence; }
-    public void setRecurrence(Recurrence.IRecurrence recur) { mRecurrence = recur; }
+    public void setRecurrence(Recurrence.IRecurrence recur) { mRecurrence = recur; setIsRecurrence(mRecurrence != null); }
     private boolean mSentByMe;
     private String mFragment;
     public String getFragment() { return mFragment; }
@@ -795,18 +795,20 @@ public class Invite {
     
     public Invite(Method method, String fragment, TimeZoneMap tzMap) {
         mMethod = method;
-        mFragment = fragment;
+        mFragment = fragment != null ? fragment : "";
         mTzMap = tzMap;
     }
     
     public Invite(Method method, TimeZoneMap tzMap) {
         mMethod = method;
         mTzMap = tzMap;
+        mFragment = "";
     }
 
     public Invite(TimeZoneMap tzMap) {
         mMethod = Method.PUBLISH;
         mTzMap = tzMap;
+        mFragment = "";
     }
     
     
