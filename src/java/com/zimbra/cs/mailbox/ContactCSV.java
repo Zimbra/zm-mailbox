@@ -344,7 +344,7 @@ public class ContactCSV {
             } else if (ch == ',' && !doubleQuotes) {
                 //reader.reset();
                 return sb.toString();
-            } else if (ch == '\r' || ch == '\n') {
+            } else if (ch == '\r' || ch == '\n' && !doubleQuotes) {
                 reader.reset();
                 return sb.toString();
             } else {
