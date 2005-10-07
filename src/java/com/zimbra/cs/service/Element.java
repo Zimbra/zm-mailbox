@@ -30,17 +30,11 @@ package com.zimbra.cs.service;
 
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.dom4j.QName;
+
+import com.zimbra.soap.SoapParseException;
 
 /**
  * @author dkarp
@@ -98,14 +92,8 @@ public abstract class Element {
 
     public Element getParent()        { return mParent; }
 
-    
-    /**
-     * Fetch a REQUIRED sub-element.  If none is found, throw an exception.
-     * 
-     * @param name
-     * @return The first sub-element with a matching name
-     * @throws ServiceException
-     */
+    /** Fetch a REQUIRED sub-element.  If none is found, throw an exception.
+     * @return The first sub-element with a matching name */
     public Element getElement(String name) throws ServiceException  { return checkNull(name, getOptionalElement(name)); }
     public Element getElement(QName qname) throws ServiceException  { return checkNull(qname.getName(), getOptionalElement(qname)); }
 
@@ -404,9 +392,144 @@ public abstract class Element {
             return (obj == null ? defaultValue : obj.toString());
         }
 
-        // not yet implemented: convert from JS array to element hierarchy
-        public static Element parseText(InputStream is)  { return null; }
-        public static Element parseText(String js)       { return null; }
+        private static final class JSRequest {
+            String js;  private int offset, max;
+            JSRequest(String content)  { js = content;  max = js.length(); }
+
+            private char readEscaped() throws SoapParseException {
+                skipChar('\\');
+                char c, length;
+                switch (c = js.charAt(offset)) {
+                    case 'b':  return '\b';
+                    case 't':  return '\t';
+                    case 'n':  return '\n';
+                    case 'f':  return '\f';
+                    case 'r':  return '\r';
+                    case 'u':  length = 4;  break;
+                    case 'x':  length = 2;  break;
+                    default:   return c;
+                }
+                try {
+                    c = (char) Integer.parseInt(js.substring(offset + 1, offset + length + 1), 16);
+                    offset += length;
+                } catch (NumberFormatException nfe) {
+                    error("malformed escape sequence: " + js.substring(offset - 1, offset + length + 1));
+                }
+                return c;
+            }
+            private String readQuoted(char quote) throws SoapParseException {
+                StringBuffer sb = new StringBuffer();
+                for (char c = peekChar(); c != quote && offset < max; c = js.charAt(++offset))
+                    if (c == '\n' || c == '\t')
+                        error("unterminated string");
+                    else
+                        sb.append(c == '\\' ? readEscaped() : c);
+                if (offset >= max)
+                    error("unexpected end of JavaScript input");
+                skipChar();
+                return sb.toString();
+            }
+            private String readLiteral() throws SoapParseException {
+                StringBuffer sb = new StringBuffer();
+                for (char c = peekChar(); offset < max; c = js.charAt(++offset))
+                    if (c <= ' ' || ",:]}/\"[{;=#".indexOf(c) >= 0)
+                        break;
+                    else if (c != '\\' || max - offset < 6 || js.charAt(offset + 1) != 'u')
+                        sb.append(c);
+                    else
+                        sb.append(readEscaped());
+                if (sb.length() == 0)  error("zero-length identifier");
+                return sb.toString();
+            }
+            String readString() throws SoapParseException {
+                char c = peekChar();
+                return (c == '"' || c == '\'' ? readQuoted(readChar()) : readLiteral());
+            }
+            Object readValue() throws SoapParseException {
+                char c = peekChar();
+                if (c == '"' || c == '\'')
+                    return readQuoted(readChar());
+                String literal = readLiteral();
+                if (literal.equals("null"))   return null;
+                if (literal.equals("true"))   return Boolean.TRUE;
+                if (literal.equals("false"))  return Boolean.FALSE;
+                if ((c >= '0' && c <= '9') || c == '.' || c == '-' || c == '+') {
+                    try {
+                        return Long.decode(literal);
+                    } catch (NumberFormatException nfe) { }
+                    try {
+                        return new Double(literal);
+                    } catch (NumberFormatException nfe) { }
+                }
+                return literal;
+            }
+
+            char peekChar() throws SoapParseException  { skipWhitespace(); return js.charAt(offset); }
+            char readChar() throws SoapParseException  { skipWhitespace(); return js.charAt(offset++); }
+            void skipChar() throws SoapParseException  { readChar(); }
+            void skipChar(char c) throws SoapParseException  { if (readChar() != c) error("expected character: " + c); } 
+
+            private void skipWhitespace() throws SoapParseException {
+                if (offset >= max)
+                    error("unexpected end of JavaScript input");
+                for (char c = js.charAt(offset); offset < max; c = js.charAt(++offset))
+                    if (c != 0x09 && (c < 0x0A || c > 0x0D) && (c < 0x1C || c > 0x20))
+                        break;
+            }
+
+            private void error(String cause) throws SoapParseException  { throw new SoapParseException(cause, js); }
+        }
+
+        public static Element parseText(InputStream is) throws SoapParseException {
+            try {
+                return parseText(new String(com.zimbra.cs.util.ByteUtil.getContent(is, -1), "utf-8"));
+            } catch (Exception e) {
+                throw new SoapParseException("could not transcode request from utf-8", null);
+            }
+        }
+        public static Element parseText(String js) throws SoapParseException {
+            return parseElement(new JSRequest(js), com.zimbra.soap.SoapProtocol.SoapJS.getEnvelopeQName().getName());
+        }
+        private static Element parseElement(JSRequest jsr, String name) throws SoapParseException {
+            Element elt = new JavaScriptElement(name);
+            jsr.skipChar('{');
+            while (jsr.peekChar() != '}') {
+                String key = jsr.readString();
+                Object value;
+                switch (jsr.readChar()) {
+                    case ':':  break;
+                    case '=':  if (jsr.peekChar() == '>')  jsr.skipChar();  break;
+                    default:   throw new SoapParseException("missing expected ':'", jsr.js);
+                }
+                switch (jsr.peekChar()) {
+                    case '{':  elt.addUniqueElement(parseElement(jsr, key));      break;
+                    case '[':  jsr.skipChar();
+                               do {
+                                   elt.addElement(parseElement(jsr, key));
+                                   switch (jsr.peekChar()) {
+                                       case ']':  break;
+                                       case ',':
+                                       case ';':  jsr.skipChar();  break;
+                                       default:   throw new SoapParseException("missing expected ',' or ']'", jsr.js);
+                                   }
+                               } while (jsr.peekChar() != ']');  jsr.skipChar();  break;
+                    default:   if ((value = jsr.readValue()) == null)             break;
+                               if (value instanceof Boolean)      elt.addAttribute(key, ((Boolean) value).booleanValue());
+                               else if (value instanceof Long)    elt.addAttribute(key, ((Long) value).longValue());
+                               else if (value instanceof Double)  elt.addAttribute(key, ((Double) value).doubleValue());
+                               else                               elt.addAttribute(key, value.toString());
+                               break;
+                }
+                switch (jsr.peekChar()) {
+                    case '}':  break;
+                    case ',':
+                    case ';':  jsr.skipChar();  break;
+                    default:   throw new SoapParseException("missing expected ',' or '}'", jsr.js);
+                }
+            }
+            jsr.skipChar('}');
+            return elt;
+        }
 
         private static final String[] JS_CHAR_ENCODINGS = {
             "\\u0000", "\\u0001", "\\u0002", "\\u0003", "\\u0004", "\\u0005", "\\u0006", "\\u0007",
@@ -425,7 +548,7 @@ public abstract class Element {
             for (int i = 0; i < len; i += 1) {
                 char c = string.charAt(i);
                 switch (c) {
-                    case '\\': case '"': case '/':
+                    case '\\': case '"':
                         sb.append('\\').append(c);  break;
                     default:
                         if (c < ' ')  sb.append(JS_CHAR_ENCODINGS[c]);
@@ -437,7 +560,7 @@ public abstract class Element {
         }
 
         public String prettyPrint()  { return toString(); }
-        
+
         public String toString() {
             StringBuffer sb = new StringBuffer("{");
             int index = 0;
@@ -719,7 +842,7 @@ public abstract class Element {
     }
 
 
-    public static void main(String[] args) throws ContainerException {
+    public static void main(String[] args) throws ContainerException, SoapParseException {
         org.dom4j.Namespace soapNS = org.dom4j.Namespace.get("soap", "http://schemas.xmlsoap.org/soap/envelope/");
         QName qenv = new QName("Envelope", soapNS);
         QName qbody = new QName("Body", soapNS);
@@ -732,6 +855,7 @@ public abstract class Element {
            .addAttribute("s", "Subject of the message has a \"\\\" in it", DISP_CONTENT).addAttribute("mid", "<kashdfgiai67r3wtuwfg@goo.com>", DISP_CONTENT)
            .addElement("mp").addAttribute("part", "TEXT").addAttribute("ct", "multipart/mixed").addAttribute("s", 3718);
         System.out.println(env);
+        System.out.println(JavaScriptElement.parseText(env.toString()).toString());
 
         env = new XMLElement(qenv);
         env.addUniqueElement(qbody).addUniqueElement(com.zimbra.cs.service.mail.MailService.GET_MSG_RESPONSE)
@@ -752,6 +876,7 @@ public abstract class Element {
          .addAttribute("workPhone", "(408) 973-0500 x111", DISP_ELEMENT).addAttribute("jobTitle", "CEO", DISP_ELEMENT)
          .addAttribute("firstName", "Satish", DISP_ELEMENT).addAttribute("lastName", "Dharmaraj", DISP_ELEMENT);
         System.out.println(e);
+        System.out.println(JavaScriptElement.parseText(e.toString()).toString());
 
         e = new XMLElement(com.zimbra.cs.service.mail.MailService.GET_CONTACTS_RESPONSE);
         e.addElement("cn");
@@ -765,5 +890,6 @@ public abstract class Element {
 
 //        System.out.println(com.zimbra.soap.SoapProtocol.toString(e.toXML(), true));
         System.out.println(new XMLElement("test").setText("  this\t    is\nthe\rway ").getTextTrim() + "|");
+        System.out.println(JavaScriptElement.parseText("{part:\"TEXT\",t:null,h:true,i:\"false\",\"ct\":\"\\x25multipart\\u0025\\/mixed\",\\u0073:3718}").toString());
     }
 }
