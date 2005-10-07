@@ -30,9 +30,9 @@ $(BUILD)/zimbra-native.jar: remove_classes_list $(JAVA_CLASSES)
 	        javac -source 1.4 -target 1.4 -d $(CLASSES) \
 	            -sourcepath $(SRC)/java -classpath $(CLASSES) \
 		    $(shell cat $(BUILD)/.classes.list); \
+		$(RM) $@; \
+		jar c0vf $@ -C $(CLASSES) com; \
 	    fi
-	$(RM) $@
-	jar c0vf $@ -C $(CLASSES) com
 
 $(CLASSES)/%.class: $(SRC)/java/%.java
 	@echo $< >> $(BUILD)/.classes.list

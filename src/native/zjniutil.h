@@ -14,6 +14,9 @@ ZimbraThrowIAE(JNIEnv *env, const char *msg);
 void
 ZimbraThrowIOE(JNIEnv *env, const char *msg);
 
+void
+ZimbraThrowOFE(JNIEnv *env, const char *msg);
+
 #ifdef __cplusplus
 }
 #endif

@@ -27,8 +27,9 @@
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
-#include <alloca.h>
 #include <sys/types.h>
+#include <stdlib.h>
+#include <grp.h>
 
 #include "Process.h"
 #include "zjniutil.h"
@@ -58,50 +59,64 @@ Java_com_zimbra_znative_Process_getegid0(JNIEnv *env, jclass clz)
 }
 
 static void
-SetPrivileges(const char *user, const char *group)
+SetPrivileges(JNIEnv *env, const char *username, uid_t uid, gid_t gid)
 {
+    if (geteuid() != 0) {
+        /* Nothing to do - we are not running as root. */
+        return;
+    }
+
+    if (setgid(gid) == -1) {
+        char msg[256];
+        snprintf(msg, sizeof(msg), "setgid(%d): %s", gid, strerror(errno));
+        ZimbraThrowOFE(env, msg);
+        return;
+    }
+    
+    if (initgroups(username, gid) == -1) {
+        char msg[256];
+        snprintf(msg, sizeof(msg), "initgroups(%s, %d): %s", username, gid, 
+                 strerror(errno));
+        ZimbraThrowOFE(env, msg);
+        return;
+    }
+
+    if (setuid(uid) == -1) {
+        char msg[256];
+        snprintf(msg, sizeof(msg), "setuid(%d): %s", uid, strerror(errno));
+        ZimbraThrowOFE(env, msg);
+        return;
+    }
 }
 
 JNIEXPORT void JNICALL
 Java_com_zimbra_znative_Process_setPrivileges0(JNIEnv *env, jclass clz,
-                                               jbyteArray juser,
-                                               jbyteArray jgroup)
+                                               jbyteArray jusername,
+                                               jint uid,
+                                               jint gid)
 {
-    int userlen;
-    int grouplen;
-    char *user;
-    char *group;
+    int length;
+    char *username;
 
-    if (juser == NULL) {
-        ZimbraThrowNPE(env, "Process.setPrivileges0 user");
+    if (jusername == NULL) {
+        ZimbraThrowNPE(env, "Process.setPrivileges0 username");
         return;
     }
     
-    if (jgroup == NULL) {
-        ZimbraThrowNPE(env, "Process.setPrivileges0 group");
-        return;
-    }
-
-    userlen = (*env)->GetArrayLength(env, juser);
-    if (userlen <= 0) {
-        ZimbraThrowIAE(env, "Process.setPrivileges0 user length <= 0");
+    length = (*env)->GetArrayLength(env, jusername);
+    if (length <= 0) {
+        ZimbraThrowIAE(env, "Process.setPrivileges0 username length <= 0");
         return;
     }
     
-    grouplen = (*env)->GetArrayLength(env, jgroup);
-    if (grouplen <= 0) {
-        ZimbraThrowIAE(env, "Process.setPrivileges0 group length <= 0");
+    username = (char *)calloc(length + 1, 1);   /* +1 for \0 */
+    if (username == NULL) {
+        ZimbraThrowIAE(env, "Process.setPrivileges0 username malloc failed");
         return;
-    }
+    } 
+    (*env)->GetByteArrayRegion(env, jusername, 0, length, (jbyte *)username);
 
-    user = alloca(userlen + 1);   /* +1 for \0 */
-    memset(user, 0, userlen + 1); /* +1 for \0 */
-    (*env)->GetByteArrayRegion(env, juser, 0, userlen, (jbyte *)user);
+    SetPrivileges(env, username, uid, gid);
 
-    group = alloca(grouplen + 1);   /* +1 for \0 */
-    memset(group, 0, grouplen + 1); /* +1 for \0 */
-    (*env)->GetByteArrayRegion(env, jgroup, 0, grouplen, (jbyte *)group);
-
-    SetPrivileges(user, group);
+    free(username);
 }
-

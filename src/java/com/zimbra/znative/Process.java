@@ -65,14 +65,13 @@ public class Process {
         }
     }
 
-    private static native void setPrivileges0(byte[] user, byte[] group)
-        throws SecurityException;
-    
-    public static void setPrivileges(String user, String group)
+    private static native void setPrivileges0(byte[] username, int uid, int gid);
+
+    public static void setPrivileges(String username, int uid, int gid)
         throws SecurityException, IllegalArgumentException
     {
         if (Util.haveNativeCode()) {
-            setPrivileges0(user.getBytes(), group.getBytes());
+            setPrivileges0(username.getBytes(), uid, gid);
         }
     }
 }
