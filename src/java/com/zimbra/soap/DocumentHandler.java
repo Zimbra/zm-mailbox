@@ -63,7 +63,7 @@ public abstract class DocumentHandler {
         }
     }
 
-    public abstract Element handle(Element request, Map context) throws ServiceException;
+    public abstract Element handle(Element request, Map context) throws ServiceException, SoapFaultException;
 
     public static ZimbraContext getZimbraContext(Map context) {
         return (ZimbraContext) context.get(SoapEngine.ZIMBRA_CONTEXT);
@@ -187,7 +187,7 @@ public abstract class DocumentHandler {
     protected boolean checkMountpointProxy()  { return false; }
     protected String[] getResponseItemPath()  { return null; }
 
-    protected Element proxyIfNecessary(Element request, Map context) throws ServiceException {
+    protected Element proxyIfNecessary(Element request, Map context) throws ServiceException, SoapFaultException {
         String[] xpath = getProxiedIdPath();
         if (xpath == null)
             return null;
@@ -201,7 +201,7 @@ public abstract class DocumentHandler {
         return iidTarget == null ? null : proxyRequest(request, context, iid, iidTarget);
     }
 
-    protected Element proxyRequest(Element request, Map context, ItemId iidRequested, ItemId iidResolved) throws ServiceException {
+    protected Element proxyRequest(Element request, Map context, ItemId iidRequested, ItemId iidResolved) throws ServiceException, SoapFaultException {
         SoapEngine engine = (SoapEngine) context.get(SoapEngine.ZIMBRA_ENGINE);
         ZimbraContext lc = getZimbraContext(context);
         // new context for proxied request has a different "requested account"
@@ -232,11 +232,7 @@ public abstract class DocumentHandler {
                 throw AccountServiceException.NO_SUCH_SERVER(hostTarget);
             HttpServletRequest httpreq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
             ProxyTarget proxy = new ProxyTarget(serverTarget.getId(), lc.getRawAuthToken(), httpreq);
-            try {
-                response = proxy.dispatch(request, lcTarget);
-            } catch (SoapFaultException e) {
-                response = e.getFault();
-            }
+            response = proxy.dispatch(request, lcTarget);
             response.detach();
         }
 

@@ -56,7 +56,7 @@ public class DocumentDispatcher {
 		return handler;
 	}
 
-	public Element dispatch(Element doc, Map context) throws ServiceException {
+	public Element dispatch(Element doc, Map context) throws ServiceException, SoapFaultException {
 		DocumentHandler handler = (DocumentHandler) mHandlers.get(doc.getQName());
 		if (handler == null) 
 			throw ServiceException.UNKNOWN_DOCUMENT(doc.getQualifiedName(), null);

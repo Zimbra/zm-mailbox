@@ -41,6 +41,7 @@ import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.DocumentHandler;
+import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraContext;
 
 /**
@@ -56,7 +57,7 @@ public class GetFolder extends DocumentHandler {
 
     private static final String DEFAULT_FOLDER_ID = "" + Mailbox.ID_FOLDER_USER_ROOT;
 
-	public Element handle(Element request, Map context) throws ServiceException {
+	public Element handle(Element request, Map context) throws ServiceException, SoapFaultException {
 		ZimbraContext lc = getZimbraContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         Mailbox.OperationContext octxt = lc.getOperationContext();

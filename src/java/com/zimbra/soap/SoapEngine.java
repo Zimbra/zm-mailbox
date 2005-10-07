@@ -206,11 +206,11 @@ public class SoapEngine {
 
         if (request == null)
             return soapProto.soapFault(ServiceException.INVALID_REQUEST("no document specified", null));
-        
+
         DocumentHandler handler = mDispatcher.getHandler(request);
         if (handler == null) 
             return soapProto.soapFault(ServiceException.UNKNOWN_DOCUMENT(request.getQualifiedName(), null));
-        
+
         if (RedoLogProvider.getInstance().isSlave() && !handler.isReadOnly())
             return soapProto.soapFault(ServiceException.NON_READONLY_OPERATION_DENIED());
 
@@ -248,6 +248,15 @@ public class SoapEngine {
             handler.getSession(context);
         } catch (ServiceException e) {
             response = soapProto.soapFault(e);
+            if (mLog.isDebugEnabled()) {
+                StringWriter sw = new StringWriter();
+                PrintWriter pw = new PrintWriter(sw);
+                e.printStackTrace(pw);
+                pw.close();
+                mLog.debug("handler exception " + sw.toString());
+            }
+        } catch (SoapFaultException e) {
+            response = e.getFault();
             if (mLog.isDebugEnabled()) {
                 StringWriter sw = new StringWriter();
                 PrintWriter pw = new PrintWriter(sw);
