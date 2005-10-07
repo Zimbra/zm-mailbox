@@ -419,19 +419,17 @@ public abstract class Element {
             }
             private String readQuoted(char quote) throws SoapParseException {
                 StringBuffer sb = new StringBuffer();
-                for (char c = peekChar(); c != quote && offset < max; c = js.charAt(++offset))
-                    if (c == '\n' || c == '\t')
+                for (char c = peekChar(); c != quote; c = js.charAt(++offset))
+                    if (c == '\n' || c == '\t' || offset >= max - 1)
                         error("unterminated string");
                     else
                         sb.append(c == '\\' ? readEscaped() : c);
-                if (offset >= max)
-                    error("unexpected end of JavaScript input");
                 skipChar();
                 return sb.toString();
             }
             private String readLiteral() throws SoapParseException {
                 StringBuffer sb = new StringBuffer();
-                for (char c = peekChar(); offset < max; c = js.charAt(++offset))
+                for (char c = peekChar(); offset < max - 1; c = js.charAt(++offset))
                     if (c <= ' ' || ",:]}/\"[{;=#".indexOf(c) >= 0)
                         break;
                     else if (c != '\\' || max - offset < 6 || js.charAt(offset + 1) != 'u')
@@ -483,6 +481,8 @@ public abstract class Element {
         public static Element parseText(InputStream is) throws SoapParseException {
             try {
                 return parseText(new String(com.zimbra.cs.util.ByteUtil.getContent(is, -1), "utf-8"));
+            } catch (SoapParseException e) {
+                throw e;
             } catch (Exception e) {
                 throw new SoapParseException("could not transcode request from utf-8", null);
             }
