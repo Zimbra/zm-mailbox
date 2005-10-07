@@ -60,7 +60,6 @@ import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.Recur;
 import net.fortuna.ical4j.model.ValidationException;
 import net.fortuna.ical4j.model.component.VEvent;
-import net.fortuna.ical4j.model.component.VTimeZone;
 import net.fortuna.ical4j.model.parameter.Cn;
 import net.fortuna.ical4j.model.parameter.PartStat;
 import net.fortuna.ical4j.model.parameter.Role;
@@ -71,9 +70,7 @@ import net.fortuna.ical4j.model.property.Attendee;
 import net.fortuna.ical4j.model.property.ExDate;
 import net.fortuna.ical4j.model.property.Method;
 import net.fortuna.ical4j.model.property.Organizer;
-import net.fortuna.ical4j.model.property.ProdId;
 import net.fortuna.ical4j.model.property.RDate;
-import net.fortuna.ical4j.model.property.Version;
 import net.fortuna.ical4j.util.DateTimeFormat;
 
 import com.zimbra.cs.account.Account;
@@ -227,7 +224,7 @@ public class CalendarUtils {
     static ParseMimeMessage.InviteParserResult parseInviteForCreate(Account account, Element inviteElem, TimeZoneMap tzMap,
             String uid, boolean recurrenceIdAllowed) throws ServiceException 
     {
-        Invite create = new Invite(Method.REQUEST, new TimeZoneMap(account.getTimeZone()));
+        Invite create = new Invite(Method.PUBLISH, new TimeZoneMap(account.getTimeZone()));
 
         CalendarUtils.parseInviteElementCommon(account, inviteElem, create, tzMap);
         
@@ -297,7 +294,7 @@ public class CalendarUtils {
     {
 //        List /*<ICalTimeZone>*/ tzsReferenced = new ArrayList();
         
-        Invite mod = new Invite(Method.REQUEST, oldInv.getTimeZoneMap());
+        Invite mod = new Invite(Method.PUBLISH, oldInv.getTimeZoneMap());
 
         CalendarUtils.parseInviteElementCommon(account, inviteElem, mod, oldInv.getTimeZoneMap());
         
@@ -326,17 +323,6 @@ public class CalendarUtils {
             }
         }
         
-        
-//        // build the full calendar wrapper: 
-//        Calendar iCal = makeCalendar(Method.REQUEST);
-//        
-//        for (Iterator iter = tzsReferenced.iterator(); iter.hasNext();) {
-//            ICalTimeZone cur = (ICalTimeZone) iter.next();
-//            VTimeZone vtz = cur.toVTimeZone();
-//            iCal.getComponents().add(vtz);
-//        }
-//        
-//        iCal.getComponents().add(mod.toVEvent());
         Calendar iCal = mod.toICalendar();
         
         try {
@@ -792,17 +778,11 @@ public class CalendarUtils {
             
             String role = cur.getAttribute(MailService.A_APPT_ROLE);
             role = IcalXmlStrMap.sRoleMap.toIcal(role);
-//            if (role==null || role.equals("")) {
-//                throw MailServiceException.INVALID_REQUEST("Role "+cur.getAttribute(MailService.A_APPT_ROLE)+" is unrecognized", null);
-//            }
             params.add(new Role(role));
             
             
             String partStat = cur.getAttribute(MailService.A_APPT_PARTSTAT);
             partStat = IcalXmlStrMap.sPartStatMap.toIcal(partStat);
-//            if (status == null || status.equals("")) {
-//                throw MailServiceException.INVALID_REQUEST("Status "+cur.getAttribute(MailService.A_APPT_STATUS)+" is unrecognized", null);
-//            }
             params.add(new PartStat(partStat)); 
             
             boolean rsvp = false;
@@ -816,7 +796,9 @@ public class CalendarUtils {
                 params.add(new Cn(cn));
             }
             
-//            event.getProperties().add(at);
+            if (newInv.getMethod().equals(Method.PUBLISH.getValue())) {
+                newInv.setMethod(Method.REQUEST);
+            }
             newInv.addAttendee(at);
         }
         
@@ -1078,13 +1060,4 @@ public class CalendarUtils {
         }
         return param.getValue();
     }
-    //    
-    //    static boolean getValueAsBoolean(String value) {
-    //        if (value.equalsIgnoreCase("true")) {
-    //            return true;
-    //        } else {
-    //            return false;
-    //        }
-    //    }
-    
 }

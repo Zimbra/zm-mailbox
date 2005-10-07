@@ -203,7 +203,7 @@ public class Appointment extends MailItem {
                 
                 if (cur != firstInv) {
                     
-                    if (cur.getMethod().equals(Method.REQUEST.getValue())) {
+                    if (cur.getMethod().equals(Method.REQUEST.getValue()) || (cur.getMethod().equals(Method.PUBLISH.getValue()))) {
                         assert (cur.hasRecurId());
                         
                         if (cur.hasRecurId()) {
@@ -496,7 +496,7 @@ public class Appointment extends MailItem {
     void processNewInvite(ParsedMessage pm, Invite invite, boolean force, short volumeId)
     throws ServiceException {
         String method = invite.getMethod();
-        if (method.equals("REQUEST") || method.equals("CANCEL")) {
+        if (method.equals(Method.REQUEST.getValue()) || method.equals(Method.CANCEL.getValue()) || method.equals(Method.PUBLISH.getValue())) {
             processNewInviteRequestOrCancel(pm, invite, force, volumeId);
         } else if (method.equals("REPLY")) {
             processNewInviteReply(pm, invite, force);
@@ -616,7 +616,9 @@ public class Appointment extends MailItem {
         boolean hasRequests = false;
         for (Iterator iter = mInvites.iterator(); iter.hasNext();) {
             Invite cur = (Invite)iter.next();
-            if (cur.getMethod().equals(Method.REQUEST.getValue())) {
+            if (cur.getMethod().equals(Method.REQUEST.getValue()) ||
+                    cur.getMethod().equals(Method.PUBLISH.getValue())) 
+            {
                 hasRequests = true;
                 break;
             }

@@ -812,9 +812,9 @@ public class Invite {
     }
     
     
-    public String getMethod() {
-        return mMethod.getValue();
-    }
+    public String getMethod() { return mMethod.getValue(); }
+    
+    public void setMethod(Method method) { mMethod = method; }
     
     public static Organizer createOrganizer(String addressStr) {
         return new Organizer(URI.create(addressStr));
@@ -1494,8 +1494,6 @@ public class Invite {
         // SEQUENCE
         event.getProperties().add(new Sequence(mSeqNo));
         
-        System.out.println("EVENT="+event.toString());
-        
         return event;
     }
     
@@ -1519,6 +1517,8 @@ public class Invite {
                 sLog.info("\tcaused by "+e.getCause(), e.getCause());
             }
         }
+        
+        System.out.println("Invite.toICalendar=\n"+toRet.toString());
         
         return toRet;
     }

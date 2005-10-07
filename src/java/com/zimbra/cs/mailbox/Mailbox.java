@@ -2428,11 +2428,11 @@ public class Mailbox {
             Appointment appt = getAppointmentByUid(inv.getUid());
             if (appt == null) { 
                 // ONLY create an appointment if this is a REQUEST method...otherwise don't.
-                if (inv.getMethod().equals("REQUEST")) {
+                if (inv.getMethod().equals("REQUEST") || inv.getMethod().equals("PUBLISH")) {
                     appt = createAppointment(folder, Volume.getCurrentMessageVolume().getId(), "", inv.getUid(), pm, inv);
                 } else {
 //                  mLog.info("Mailbox " + getId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c not a REQUEST and no Appointment could be found");
-//                  return; // for now, just ignore this Invitation
+                  return null; // for now, just ignore this Invitation
                 }
             } else {
                 appt.processNewInvite(pm, inv, force, Volume.getCurrentMessageVolume().getId());
