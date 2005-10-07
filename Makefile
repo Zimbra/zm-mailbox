@@ -8,8 +8,10 @@ JAVA_FILES = \
 	com/zimbra/znative/IO.java \
 	com/zimbra/znative/Process.java \
 	com/zimbra/znative/Util.java \
+	com/zimbra/znative/OperationFailedException.java \
 	com/zimbra/znative/tests/HardLinkTest.java \
-	com/zimbra/znative/tests/LinkCountTest.java
+	com/zimbra/znative/tests/LinkCountTest.java \
+	com/zimbra/znative/tests/ProcessTest.java
 
 JAVA_SOURCES = $(patsubst %,$(SRC)/java/%,$(JAVA_FILES))
 
@@ -29,7 +31,7 @@ $(BUILD)/zimbra-native.jar: remove_classes_list $(JAVA_CLASSES)
 		    $(shell cat $(BUILD)/.classes.list); \
 	        javac -source 1.4 -target 1.4 -d $(CLASSES) \
 	            -sourcepath $(SRC)/java -classpath $(CLASSES) \
-		    $(shell cat $(BUILD)/.classes.list); \
+		    $(shell cat $(BUILD)/.classes.list) || exit 1; \
 		$(RM) $@; \
 		jar c0vf $@ -C $(CLASSES) com; \
 	    fi

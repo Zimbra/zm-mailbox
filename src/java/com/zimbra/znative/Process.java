@@ -68,7 +68,7 @@ public class Process {
     private static native void setPrivileges0(byte[] username, int uid, int gid);
 
     public static void setPrivileges(String username, int uid, int gid)
-        throws SecurityException, IllegalArgumentException
+        throws OperationFailedException
     {
         if (Util.haveNativeCode()) {
             setPrivileges0(username.getBytes(), uid, gid);
