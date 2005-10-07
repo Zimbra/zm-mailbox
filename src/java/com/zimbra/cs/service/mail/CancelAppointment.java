@@ -113,7 +113,10 @@ public class CancelAppointment extends CalendarRequest {
                     }
                     
                     for (int i = invites.length-1; i >= 0; i--) {
-                        if (invites[i] != null && invites[i].getMethod().equals(Method.REQUEST.getValue())) {
+                        if (invites[i] != null && 
+                                (invites[i].getMethod().equals(Method.REQUEST.getValue()) ||
+                                        invites[i].getMethod().equals(Method.PUBLISH.getValue()))
+                                        ) {
                             cancelInvite(octxt, request, acct, mbox, appt, invites[i]);
                         }
                     }
