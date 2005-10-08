@@ -217,7 +217,7 @@ public abstract class DocumentHandler {
         // prepare the request for re-processing
         request.detach();
         if (iidRequested != iidResolved)
-            setXPath(request, getProxiedIdPath(), iidResolved.toString(acctTarget));
+            setXPath(request, getProxiedIdPath(), iidResolved.toString());
 
         Element response = null;
         if (isLocal) {
@@ -225,6 +225,8 @@ public abstract class DocumentHandler {
             Map contextTarget = new HashMap(context);
             contextTarget.put(SoapEngine.ZIMBRA_CONTEXT, lcTarget);
             response = engine.dispatchRequest(request, contextTarget, lcTarget);
+            if (lcTarget.getResponseProtocol().isFault(response))
+                throw new SoapFaultException("error in proxied request", response);
         } else {
             // executing remotely; find out target and proxy there
             Server serverTarget = Provisioning.getInstance().getServerByName(hostTarget);
