@@ -34,6 +34,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.ZimbraContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
 
@@ -42,19 +43,25 @@ import com.zimbra.soap.WriteOpDocumentHandler;
  */
 public class CreateSearchFolder extends WriteOpDocumentHandler  {
 
+    private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.E_SEARCH, MailService.A_FOLDER };
+    private static final String[] RESPONSE_ITEM_PATH = new String[] { };
+    protected String[] getProxiedIdPath()     { return TARGET_FOLDER_PATH; }
+    protected boolean checkMountpointProxy()  { return true; }
+    protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
+
 	public Element handle(Element request, Map context) throws ServiceException {
 		ZimbraContext lc = getZimbraContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
 
         Element t = request.getElement(MailService.E_SEARCH);
-        String name = t.getAttribute(MailService.A_NAME);
-        String query = t.getAttribute(MailService.A_QUERY);
-        String types = t.getAttribute(MailService.A_SEARCH_TYPES, null);
-        String sort = t.getAttribute(MailService.A_SORTBY, null);
-        int folderId = (int) t.getAttributeLong(MailService.A_FOLDER);
-        
-        SearchFolder search = mbox.createSearchFolder(null, folderId, name, query, types, sort);
-        
+        String name      = t.getAttribute(MailService.A_NAME);
+        String query     = t.getAttribute(MailService.A_QUERY);
+        String types     = t.getAttribute(MailService.A_SEARCH_TYPES, null);
+        String sort      = t.getAttribute(MailService.A_SORTBY, null);
+        ItemId iidParent = new ItemId(t.getAttribute(MailService.A_FOLDER));
+
+        SearchFolder search = mbox.createSearchFolder(lc.getOperationContext(), iidParent.getId(), name, query, types, sort);
+
         Element response = lc.createElement(MailService.CREATE_SEARCH_FOLDER_RESPONSE);
         if (search != null)
         	ToXML.encodeSearchFolder(response, lc, search);

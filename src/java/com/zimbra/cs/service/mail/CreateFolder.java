@@ -36,6 +36,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.ZimbraContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
 
@@ -44,28 +45,34 @@ import com.zimbra.soap.WriteOpDocumentHandler;
  */
 public class CreateFolder extends WriteOpDocumentHandler {
 
-	public Element handle(Element request, Map context) throws ServiceException {
-		ZimbraContext lc = getZimbraContext(context);
+    private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.E_FOLDER, MailService.A_FOLDER };
+    private static final String[] RESPONSE_ITEM_PATH = new String[] { };
+    protected String[] getProxiedIdPath()     { return TARGET_FOLDER_PATH; }
+    protected boolean checkMountpointProxy()  { return true; }
+    protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
+
+    public Element handle(Element request, Map context) throws ServiceException {
+        ZimbraContext lc = getZimbraContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
 
         Element t = request.getElement(MailService.E_FOLDER);
-        String name = t.getAttribute(MailService.A_NAME);
-        int parentId = (int) t.getAttributeLong(MailService.A_FOLDER);
-        String view = t.getAttribute(MailService.A_DEFAULT_VIEW, null);
+        String name      = t.getAttribute(MailService.A_NAME);
+        String view      = t.getAttribute(MailService.A_DEFAULT_VIEW, null);
+        ItemId iidParent = new ItemId(t.getAttribute(MailService.A_FOLDER));
 
         Folder folder;
         try {
-            folder = mbox.createFolder(null, name, parentId, MailItem.getTypeForName(view));
+            folder = mbox.createFolder(lc.getOperationContext(), name, iidParent.getId(), MailItem.getTypeForName(view));
         } catch (ServiceException se) {
             if (se.getCode() == MailServiceException.ALREADY_EXISTS && t.getAttributeBool(MailService.A_FETCH_IF_EXISTS, false))
-                folder = mbox.getFolderByName(lc.getOperationContext(), parentId, name);
+                folder = mbox.getFolderByName(lc.getOperationContext(), iidParent.getId(), name);
             else
                 throw se;
         }
 
         Element response = lc.createElement(MailService.CREATE_FOLDER_RESPONSE);
         if (folder != null)
-        	ToXML.encodeFolder(response, lc, folder);
+            ToXML.encodeFolder(response, lc, folder);
         return response;
-	}
+    }
 }
