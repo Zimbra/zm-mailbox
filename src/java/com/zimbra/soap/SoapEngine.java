@@ -72,15 +72,21 @@ public class SoapEngine {
         InputStream in = new ByteArrayInputStream(soapMessage);
         Element document = null;
         try {
-            document = Element.XMLElement.parseText(in);
+            if (soapMessage[0] == '<')
+                document = Element.XMLElement.parseText(in);
+            else
+                document = Element.JavaScriptElement.parseText(in);
         } catch (DocumentException de) {
             // FIXME: have to pick 1.1 or 1.2 since we can't parse any
             SoapProtocol soapProto = SoapProtocol.Soap12;
             return soapProto.soapEnvelope(soapProto.soapFault(ServiceException.PARSE_ERROR(de.getMessage(), de)));
+        } catch (SoapParseException e) {
+            SoapProtocol soapProto = SoapProtocol.SoapJS;
+            return soapProto.soapEnvelope(soapProto.soapFault(ServiceException.PARSE_ERROR(e.getMessage(), e)));
         }
         return dispatch(path, document, context);
     }
-    
+
     /**
      * dispatch to the given serviceName the specified document,
      * which should be a soap envelope containing a document to 
