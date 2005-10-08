@@ -55,7 +55,7 @@ public class GetFolder extends DocumentHandler {
     protected boolean checkMountpointProxy()  { return false; }
     protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
 
-    private static final String DEFAULT_FOLDER_ID = "" + Mailbox.ID_FOLDER_USER_ROOT;
+    static final String DEFAULT_FOLDER_ID = "" + Mailbox.ID_FOLDER_USER_ROOT;
 
 	public Element handle(Element request, Map context) throws ServiceException, SoapFaultException {
 		ZimbraContext lc = getZimbraContext(context);

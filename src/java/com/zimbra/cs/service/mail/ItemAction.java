@@ -28,8 +28,12 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
@@ -37,7 +41,9 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.SpamHandler;
+import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
 
@@ -55,15 +61,13 @@ public class ItemAction extends WriteOpDocumentHandler {
     public static final String OP_SPAM        = "spam";
     public static final String OP_UPDATE      = "update";
 
-    public Element handle(Element request, Map context) throws ServiceException {
+    public Element handle(Element request, Map context) throws ServiceException, SoapFaultException {
         ZimbraContext lc = getZimbraContext(context);
-        Mailbox mbox = getRequestedMailbox(lc);
-        OperationContext octxt = lc.getOperationContext();
 
         Element action = request.getElement(MailService.E_ACTION);
         String operation = action.getAttribute(MailService.A_OPERATION).toLowerCase();
 
-        String successes = handleCommon(octxt, operation, action, mbox, MailItem.TYPE_UNKNOWN);
+        String successes = handleCommon(context, request, operation, MailItem.TYPE_UNKNOWN);
 
         Element response = lc.createElement(MailService.ITEM_ACTION_RESPONSE);
         Element act = response.addUniqueElement(MailService.E_ACTION);
@@ -72,7 +76,19 @@ public class ItemAction extends WriteOpDocumentHandler {
         return response;
     }
 
-    String handleCommon(OperationContext octxt, String opAttr, Element action, Mailbox mbox, byte type) throws ServiceException {
+    String handleCommon(Map context, Element request, String opAttr, byte type) throws ServiceException, SoapFaultException {
+        Element action = request.getElement(MailService.E_ACTION);
+
+        // figure out which items are local and which ones are remote, and proxy accordingly
+        HashMap remote = new HashMap();
+        ArrayList local = new ArrayList();
+        ZimbraContext lc = getZimbraContext(context);
+        partitionItems(lc, action.getAttribute(MailService.A_ID), local, remote);
+        StringBuffer successes = proxyRemoteItems(action, remote, request, context);
+        if (local.isEmpty())
+            return successes.toString();
+
+        // determine the requested operation
         String op;
         boolean flagValue = true;
         if (opAttr.length() > 1 && opAttr.startsWith("!")) {
@@ -80,19 +96,15 @@ public class ItemAction extends WriteOpDocumentHandler {
             op = opAttr.substring(1);
         } else
             op = opAttr;
-        String[] targets = action.getAttribute(MailService.A_ID).split(",");
-        StringBuffer successes = new StringBuffer();
 
+        Mailbox mbox = getRequestedMailbox(lc);
+        OperationContext octxt = lc.getOperationContext();
         String constraint = action.getAttribute(MailService.A_TARGET_CONSTRAINT, null);
         TargetConstraint tcon = TargetConstraint.parseConstraint(mbox, constraint);
 
-        int id;
-        for (int i = 0; i < targets.length; i++) {
-            try {
-                id = Integer.parseInt(targets[i].trim());
-            } catch (NumberFormatException nfe) {
-                throw ServiceException.INVALID_REQUEST("error in syntax of message ID list", null);
-            }
+        // iterate over the local items and perform the requested operation
+        for (int i = 0; i < local.size(); i++) {
+            int id = ((Integer) local.get(i)).intValue();
             if (op.equals(OP_FLAG))
                 mbox.alterTag(octxt, id, type, Flag.ID_FLAG_FLAGGED, flagValue, tcon);
             else if (op.equals(OP_READ))
@@ -106,29 +118,71 @@ public class ItemAction extends WriteOpDocumentHandler {
             } else if (op.equals(OP_HARD_DELETE))
                 mbox.delete(octxt, id, type, tcon);
             else if (op.equals(OP_MOVE)) {
-                int folderId = (int) action.getAttributeLong(MailService.A_FOLDER);
-                mbox.move(octxt, id, type, folderId, tcon);
+                ItemId iidFolder = new ItemId(action.getAttribute(MailService.A_FOLDER));
+                if (!iidFolder.belongsTo(mbox))
+                    throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
+                mbox.move(octxt, id, type, iidFolder.getId(), tcon);
             } else if (op.equals(OP_SPAM)) {
                 int defaultFolder = flagValue ? Mailbox.ID_FOLDER_SPAM : Mailbox.ID_FOLDER_INBOX;
                 int folderId = (int) action.getAttributeLong(MailService.A_FOLDER, defaultFolder);
                 mbox.move(octxt, id, type, folderId, tcon);
                 SpamHandler.getInstance().handle(mbox, id, type, flagValue);
             } else if (op.equals(OP_UPDATE)) {
-                int folderId = (int) action.getAttributeLong(MailService.A_FOLDER, -1);
+                ItemId iidFolder = new ItemId(action.getAttribute(MailService.A_FOLDER, GetFolder.DEFAULT_FOLDER_ID));
+                if (!iidFolder.belongsTo(mbox))
+                    throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
                 String flags = action.getAttribute(MailService.A_FLAGS, null);
                 String tags  = action.getAttribute(MailService.A_TAGS, null);
-                if (folderId > 0)
-                    mbox.move(octxt, id, type, folderId, tcon);
+                if (iidFolder.getId() > 0)
+                    mbox.move(octxt, id, type, iidFolder.getId(), tcon);
                 if (tags != null || flags != null)
                     mbox.setTags(octxt, id, type, flags, tags, tcon);
             } else
                 throw ServiceException.INVALID_REQUEST("unknown operation: " + op, null);
 
-            if (successes.length() > 0)
-                successes.append(',');
-            successes.append(id);
+            successes.append(successes.length() > 0 ? "," : "").append(id);
         }
 
         return successes.toString();
+    }
+
+    private void partitionItems(ZimbraContext lc, String ids, ArrayList local, HashMap remote) throws ServiceException {
+        Account acct = getRequestedAccount(lc);
+        String targets[] = ids.split(",");
+        for (int i = 0; i < targets.length; i++) {
+            ItemId iid = new ItemId(targets[i]);
+            if (iid.belongsTo(acct))
+                local.add(new Integer(iid.getId()));
+            else {
+                ArrayList list = (ArrayList) remote.get(iid.getAccountId());
+                if (list == null)
+                    remote.put(iid.getAccountId(), list = new ArrayList());
+                list.add(iid);
+            }
+        }
+    }
+
+    private StringBuffer proxyRemoteItems(Element action, Map remote, Element request, Map context)
+    throws ServiceException, SoapFaultException {
+        StringBuffer successes = new StringBuffer();
+        for (Iterator it = remote.values().iterator(); it.hasNext(); ) {
+            ItemId iid = null;
+            StringBuffer targets = new StringBuffer();
+            ArrayList iidList = (ArrayList) it.next();
+            for (int i = 0; i < iidList.size(); i++)
+                targets.append(i == 0 ? "" : ",").append(iid = (ItemId) iidList.get(i));
+            action.addAttribute(MailService.A_ID, targets.toString());
+            String completed = extractSuccesses(proxyRequest(request, context, iid, iid));
+            successes.append(completed.length() > 0 && successes.length() > 0 ? "" : ",").append(completed);
+        }
+        return successes;
+    }
+
+    String extractSuccesses(Element response) throws ServiceException {
+        try {
+            return response.getElement(MailService.E_ACTION).getAttribute(MailService.A_ID);
+        } catch (ServiceException e) {
+            throw ServiceException.PROXY_ERROR(e);
+        }
     }
 }

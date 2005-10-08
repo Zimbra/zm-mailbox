@@ -31,10 +31,9 @@ package com.zimbra.cs.service.mail;
 import java.util.Map;
 
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraContext;
 
 /**
@@ -42,15 +41,13 @@ import com.zimbra.soap.ZimbraContext;
  */
 public class MsgAction extends ItemAction {
 
-	public Element handle(Element request, Map context) throws ServiceException {
+	public Element handle(Element request, Map context) throws ServiceException, SoapFaultException {
         ZimbraContext lc = getZimbraContext(context);
-        Mailbox mbox = getRequestedMailbox(lc);
-        OperationContext octxt = lc.getOperationContext();
 
         Element action = request.getElement(MailService.E_ACTION);
         String operation = action.getAttribute(MailService.A_OPERATION).toLowerCase();
 
-        String successes = handleCommon(octxt, operation, action, mbox, MailItem.TYPE_MESSAGE);
+        String successes = handleCommon(context, request, operation, MailItem.TYPE_MESSAGE);
 
         Element response = lc.createElement(MailService.MSG_ACTION_RESPONSE);
         Element act = response.addUniqueElement(MailService.E_ACTION);

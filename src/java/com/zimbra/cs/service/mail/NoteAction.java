@@ -32,11 +32,12 @@ import java.util.Map;
 
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Note;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Note.Rectangle;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraContext;
 
 /**
@@ -47,10 +48,8 @@ public class NoteAction extends ItemAction {
 	public static final String OP_EDIT       = "edit";
 	public static final String OP_REPOSITION = "pos";
 
-	public Element handle(Element request, Map context) throws ServiceException {
+	public Element handle(Element request, Map context) throws ServiceException, SoapFaultException {
         ZimbraContext lc = getZimbraContext(context);
-        Mailbox mbox = getRequestedMailbox(lc);
-        OperationContext octxt = lc.getOperationContext();
 
         Element action = request.getElement(MailService.E_ACTION);
         String operation = action.getAttribute(MailService.A_OPERATION).toLowerCase();
@@ -59,9 +58,9 @@ public class NoteAction extends ItemAction {
             throw ServiceException.INVALID_REQUEST("invalid operation on note: " + operation, null);
         String successes;
         if (operation.equals(OP_EDIT) || operation.equals(OP_REPOSITION))
-            successes = handleNote(octxt, operation, action, mbox);
+            successes = handleNote(context, request, operation);
         else
-            successes = handleCommon(octxt, operation, action, mbox, MailItem.TYPE_NOTE);
+            successes = handleCommon(context, request, operation, MailItem.TYPE_NOTE);
 
         Element response = lc.createElement(MailService.NOTE_ACTION_RESPONSE);
         Element act = response.addUniqueElement(MailService.E_ACTION);
@@ -70,19 +69,26 @@ public class NoteAction extends ItemAction {
         return response;
 	}
 
-    private String handleNote(OperationContext octxt, String operation, Element action, Mailbox mbox)
-    throws ServiceException {
-        int id = (int) action.getAttributeLong(MailService.A_ID);
+    private String handleNote(Map context, Element request, String operation) throws ServiceException, SoapFaultException {
+        Element action = request.getElement(MailService.E_ACTION);
+        ItemId iid = new ItemId(action.getAttribute(MailService.A_ID));
+
+        ZimbraContext lc = getZimbraContext(context);
+        if (!iid.belongsTo(getRequestedAccount(lc)))
+            return extractSuccesses(proxyRequest(request, context, iid, iid));
+
+        Mailbox mbox = getRequestedMailbox(lc);
+        OperationContext octxt = lc.getOperationContext();
 
         if (operation.equals(OP_EDIT)) {
             String content = action.getAttribute(MailService.E_CONTENT);
-            mbox.editNote(octxt, id, content);
+            mbox.editNote(octxt, iid.getId(), content);
         } else if (operation.equals(OP_REPOSITION)) {
             String strBounds = action.getAttribute(MailService.A_BOUNDS, null);
-            mbox.repositionNote(octxt, id, new Rectangle(strBounds));
+            mbox.repositionNote(octxt, iid.getId(), new Rectangle(strBounds));
         } else
             throw ServiceException.INVALID_REQUEST("unknown operation: " + operation, null);
 
-        return Integer.toString(id);
+        return iid.toString(lc);
     }
 }

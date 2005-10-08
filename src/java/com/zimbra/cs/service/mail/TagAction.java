@@ -36,6 +36,8 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraContext;
 
 /**
@@ -47,10 +49,8 @@ public class TagAction extends ItemAction  {
     public static final String OP_UNTAG  = '!' + OP_TAG;
 	public static final String OP_RENAME = "rename";
 	
-	public Element handle(Element request, Map context) throws ServiceException {
+	public Element handle(Element request, Map context) throws ServiceException, SoapFaultException {
 		ZimbraContext lc = getZimbraContext(context);
-        Mailbox mbox = getRequestedMailbox(lc);
-        OperationContext octxt = lc.getOperationContext();
 
         Element action = request.getElement(MailService.E_ACTION);
         String operation = action.getAttribute(MailService.A_OPERATION).toLowerCase();
@@ -61,9 +61,9 @@ public class TagAction extends ItemAction  {
             throw ServiceException.INVALID_REQUEST("invalid operation on tag: " + operation, null);
         String successes;
         if (operation.equals(OP_RENAME))
-            successes = handleTag(octxt, operation, action, mbox);
+            successes = handleTag(context, request, operation);
         else
-            successes = handleCommon(octxt, operation, action, mbox, MailItem.TYPE_TAG);
+            successes = handleCommon(context, request, operation, MailItem.TYPE_TAG);
 
         Element response = lc.createElement(MailService.TAG_ACTION_RESPONSE);
     	Element result = response.addUniqueElement(MailService.E_ACTION);
@@ -72,16 +72,23 @@ public class TagAction extends ItemAction  {
         return response;
 	}
 
-    private String handleTag(OperationContext octxt, String operation, Element action, Mailbox mbox)
-    throws ServiceException {
-        int id = (int) action.getAttributeLong(MailService.A_ID);
+    private String handleTag(Map context, Element request, String operation) throws ServiceException, SoapFaultException {
+        Element action = request.getElement(MailService.E_ACTION);
+        ItemId iid = new ItemId(action.getAttribute(MailService.A_ID));
+
+        ZimbraContext lc = getZimbraContext(context);
+        if (!iid.belongsTo(getRequestedAccount(lc)))
+            return extractSuccesses(proxyRequest(request, context, iid, iid));
+
+        Mailbox mbox = getRequestedMailbox(lc);
+        OperationContext octxt = lc.getOperationContext();
 
         if (operation.equals(OP_RENAME)) {
             String name = action.getAttribute(MailService.A_NAME);
-            mbox.renameTag(octxt, id, name);
+            mbox.renameTag(octxt, iid.getId(), name);
         } else
             throw ServiceException.INVALID_REQUEST("unknown operation: " + operation, null);
 
-        return Integer.toString(id);
+        return iid.toString(lc);
     }
 }

@@ -40,6 +40,8 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraContext;
 
 /**
@@ -54,10 +56,8 @@ public class FolderAction extends ItemAction {
     public static final String OP_UNFLAG = '!' + OP_FLAG;
     public static final String OP_UNTAG  = '!' + OP_TAG;
 
-	public Element handle(Element request, Map context) throws ServiceException {
+	public Element handle(Element request, Map context) throws ServiceException, SoapFaultException {
         ZimbraContext lc = getZimbraContext(context);
-        Mailbox mbox = getRequestedMailbox(lc);
-        OperationContext octxt = lc.getOperationContext();
 
         Element action = request.getElement(MailService.E_ACTION);
         String operation = action.getAttribute(MailService.A_OPERATION).toLowerCase();
@@ -68,9 +68,9 @@ public class FolderAction extends ItemAction {
             throw ServiceException.INVALID_REQUEST("invalid operation on folder: " + operation, null);
         String successes;
         if (operation.equals(OP_RENAME) || operation.equals(OP_EMPTY) || operation.equals(OP_GRANT) || operation.equals(OP_REVOKE))
-            successes = handleFolder(octxt, operation, action, mbox);
+            successes = handleFolder(context, request, operation);
         else
-            successes = handleCommon(octxt, operation, action, mbox, MailItem.TYPE_FOLDER);
+            successes = handleCommon(context, request, operation, MailItem.TYPE_FOLDER);
 
         Element response = lc.createElement(MailService.FOLDER_ACTION_RESPONSE);
         Element act = response.addUniqueElement(MailService.E_ACTION);
@@ -79,18 +79,25 @@ public class FolderAction extends ItemAction {
         return response;
 	}
 
-    private String handleFolder(OperationContext octxt, String operation, Element action, Mailbox mbox)
-    throws ServiceException {
-        int id = (int) action.getAttributeLong(MailService.A_ID);
+    private String handleFolder(Map context, Element request, String operation) throws ServiceException, SoapFaultException {
+        Element action = request.getElement(MailService.E_ACTION);
+        ItemId iid = new ItemId(action.getAttribute(MailService.A_ID));
+
+        ZimbraContext lc = getZimbraContext(context);
+        if (!iid.belongsTo(getRequestedAccount(lc)))
+            return extractSuccesses(proxyRequest(request, context, iid, iid));
+
+        Mailbox mbox = getRequestedMailbox(lc);
+        OperationContext octxt = lc.getOperationContext();
 
         if (operation.equals(OP_EMPTY))
-            mbox.emptyFolder(octxt, id, true);
+            mbox.emptyFolder(octxt, iid.getId(), true);
         else if (operation.equals(OP_RENAME)) {
             String name = action.getAttribute(MailService.A_NAME);
-            mbox.renameFolder(octxt, id, name);
+            mbox.renameFolder(octxt, iid.getId(), name);
         } else if (operation.equals(OP_REVOKE)) {
             String zid = action.getAttribute(MailService.A_ZIMBRA_ID);
-            mbox.revokeAccess(octxt, id, zid);
+            mbox.revokeAccess(octxt, iid.getId(), zid);
         } else if (operation.equals(OP_GRANT)) {
             Element grant = action.getElement(MailService.E_GRANT);
             boolean inherit = grant.getAttributeBool(MailService.A_INHERIT, false);
@@ -98,11 +105,11 @@ public class FolderAction extends ItemAction {
             byte gtype   = stringToType(grant.getAttribute(MailService.A_GRANT_TYPE));
             String zid   = lookupZimbraId(grant.getAttribute(MailService.A_DISPLAY, null), gtype);
             
-            mbox.grantAccess(octxt, id, zid, gtype, rights, inherit);
+            mbox.grantAccess(octxt, iid.getId(), zid, gtype, rights, inherit);
         } else
             throw ServiceException.INVALID_REQUEST("unknown operation: " + operation, null);
 
-        return Integer.toString(id);
+        return iid.toString(lc);
     }
 
     static byte stringToType(String typeStr) throws ServiceException {
