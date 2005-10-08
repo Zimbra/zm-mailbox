@@ -923,7 +923,7 @@ u attribute is present iff count > 0
 ---------
 
 <CreateMountpointRequest>
-  <link l="{folder}" name="..." zid="{owner's-zimbra-id}" rid="{id-of-shared-item}" [view="..."]/>
+  <link l="{folder}" name="..." zid="{owner's-zimbra-id}" rid="{id-of-shared-item}" [view="..."] [fie="1"]/>
 </CreateMountpointRequest>
 
 <CreateMountpointResponse>
