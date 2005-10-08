@@ -133,6 +133,8 @@ public abstract class SoapTransport {
                                          "got " + p + " expecting " + mSoapProto, env.toString());
 
         Element e = mSoapProto.getBodyElement(env);
+        if (e == null)
+            throw new SoapParseException("malformed soap structure", env.toString());
 
         if (mSoapProto.isFault(e))
             throw mSoapProto.soapFault(e);
