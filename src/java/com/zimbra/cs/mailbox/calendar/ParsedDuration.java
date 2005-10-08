@@ -58,6 +58,17 @@ public final class ParsedDuration
     static Pattern sDurationWeekPattern = Pattern.compile("([+-]?P)(\\d+)W");
     static Pattern sDurationDayTimePattern = Pattern.compile("([+-]?P)(?:(\\d+)D)?(?:T(?:(\\d+)H)?(?:(\\d+)M)?(?:(\\d+)S)?)?");
     
+    public static final ParsedDuration ONE_DAY = new ParsedDuration(false, 0, 1, 0, 0, 0);
+    
+    private ParsedDuration(boolean negative, int weeks, int days, int hours, int mins, int secs) {
+        mNegative = negative;
+        mWeeks = weeks;
+        mDays = days;
+        mHours = hours;
+        mMins = mins;
+        mSecs = secs;
+    }
+    
     public Object clone() {
         ParsedDuration toRet = new ParsedDuration();
         toRet.mWeeks = mWeeks;

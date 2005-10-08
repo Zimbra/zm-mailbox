@@ -32,13 +32,10 @@ import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
 
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Parameter;
@@ -51,6 +48,7 @@ import net.fortuna.ical4j.model.property.RecurrenceId;
 
 public final class ParsedDateTime {
     
+    public static final boolean USE_BROKEN_OUTLOOK_MODE = true;
     
     public static void main(String[] args) {
         ICalTimeZone utc = ICalTimeZone.getUTC();
@@ -89,7 +87,7 @@ public final class ParsedDateTime {
 
         ICalTimeZone tz = tzmap.getTimeZone(tzid);
 
-        return parse(dateStr, tzid, tz, tzmap.getLocalTimeZone());
+        return parse(dateStr, tz.getID(), tz, tzmap.getLocalTimeZone());
     }
     
 //    public static ParsedDateTime parse(Element e, ICalTimeZone localTZ) throws ServiceException {
@@ -149,8 +147,13 @@ public final class ParsedDateTime {
                 cal.setTimeZone(ICalTimeZone.getUTC());
             } else if (tz != null) {
                 cal.setTimeZone(tz);
+                assert(tzName != null);
+            } else {
+                tz = localTZ;
+                cal.setTimeZone(localTZ);
+                tzName = localTZ.getID();
             }
-
+            
             cal.clear();
 
             boolean hasTime = false;
@@ -161,7 +164,7 @@ public final class ParsedDateTime {
             } else {
                 cal.set(year, month, date);
             }
-            return new ParsedDateTime(cal, tzName, hasTime);
+            return new ParsedDateTime(cal, tz, tzName, hasTime);
         } else {
             throw new ParseException("Invalid TimeString specified: " + str, 0);
         }
@@ -189,18 +192,24 @@ public final class ParsedDateTime {
     static {
         GregorianCalendar cal = new GregorianCalendar();
         cal.set(2099, 1, 1);
-        MAX_DATETIME = new ParsedDateTime(cal, null, false);
+        cal.setTimeZone(ICalTimeZone.getUTC());
+        MAX_DATETIME = new ParsedDateTime(cal, ICalTimeZone.getUTC(), null, false);
     }
     
     public net.fortuna.ical4j.model.Date iCal4jDate() throws ServiceException {
         try {
             net.fortuna.ical4j.model.Date toRet;         
             if (mHasTime) {
-                DateTime dtToRet = new net.fortuna.ical4j.model.DateTime(getDateTimePartString());
-//                dtToRet.setTimeZone(getTimeZone());
+                DateTime dtToRet = null;                
+                dtToRet = new net.fortuna.ical4j.model.DateTime(getDateTimePartString(), getTimeZone());
                 toRet = dtToRet;
             } else {
-                toRet = new net.fortuna.ical4j.model.Date(this.getDateTimePartString());
+                if (USE_BROKEN_OUTLOOK_MODE) {
+                    DateTime dtToRet = new net.fortuna.ical4j.model.DateTime(this.getDateTimePartString()+"T000000", getTimeZone());
+                    toRet = dtToRet;
+                } else {
+                    toRet = new net.fortuna.ical4j.model.Date(this.getDateTimePartString());
+                }
             }
             return toRet;
         } catch (ParseException e) {
@@ -210,23 +219,27 @@ public final class ParsedDateTime {
 
     private GregorianCalendar mCal;
     
-    public TimeZone getTimeZone() { return mCal.getTimeZone(); }
+    public ICalTimeZone getTimeZone() { return mICalTimeZone; }
+    
 
     // can't rely on cal.isSet, even though we want to -- because cal.toString()
     // sets the flag!!!
     private boolean mHasTime = false;
     
     private String mTzName;
+    private ICalTimeZone mICalTimeZone;
 
-    private ParsedDateTime(GregorianCalendar cal, String tzName, boolean hasTime) {
+    private ParsedDateTime(GregorianCalendar cal, ICalTimeZone iCalTimeZone, String tzName, boolean hasTime) {
         mCal = cal;
         mHasTime = hasTime;
         mTzName = tzName;
+        mICalTimeZone = iCalTimeZone;
     }
     
-    private ParsedDateTime(java.util.Date utc) {
+    ParsedDateTime(java.util.Date utc) {
         mCal = new GregorianCalendar(ICalTimeZone.getUTC());
         mCal.setTime(utc);
+        mICalTimeZone = ICalTimeZone.getUTC();
         mHasTime = true;
         mTzName = ICalTimeZone.getUTC().getID();
     }
@@ -240,7 +253,7 @@ public final class ParsedDateTime {
         cal.add(java.util.Calendar.MINUTE, dur.getMins());
         cal.add(java.util.Calendar.SECOND, dur.getSecs());
 
-        return new ParsedDateTime(cal, mTzName, mHasTime);
+        return new ParsedDateTime(cal, mICalTimeZone, mTzName, mHasTime);
     }
 
     public int compareTo(Date other) {
@@ -312,6 +325,9 @@ public final class ParsedDateTime {
         return mCal.getTime();
     }
 
+    /**
+     * @return The YYYYMMDD['T'HHMMSS[Z]] part  
+     */
     public String getDateTimePartString() {
         DecimalFormat fourDigitFormat = new DecimalFormat("0000");
         DecimalFormat twoDigitFormat = new DecimalFormat("00");
@@ -349,6 +365,11 @@ public final class ParsedDateTime {
                 toRet.append("Z");
             }
 
+//        } else if (USE_BROKEN_OUTLOOK_MODE) {
+//            toRet.append("T000000");
+//            if (mTzName != null && mTzName.equals("Z")) {
+//                toRet.append("Z");
+//            }
         }
         return toRet.toString();
     }
@@ -365,7 +386,7 @@ public final class ParsedDateTime {
      * @return The name of the TimeZone
      */
     public String getTZName() {
-        if (mHasTime && mTzName!=null && !mTzName.equals("Z")) {
+        if ((USE_BROKEN_OUTLOOK_MODE || mHasTime) && mTzName!=null && !mTzName.equals("Z")) {
             return mTzName; 
         }
         return null;

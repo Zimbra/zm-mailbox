@@ -558,7 +558,7 @@ public class Invite {
         mAppt = appt;
     }
     
-    void setIsAllDayEvent(boolean allDayEvent) {
+    public void setIsAllDayEvent(boolean allDayEvent) {
         if (allDayEvent) {
             mFlags |= APPT_FLAG_ALLDAY;
         } else {
@@ -1418,31 +1418,22 @@ public class Invite {
         
         // DTSTART
         {
-            try {
-                DtStart dtstart = new DtStart(mStart.getDateTimePartString());
-                if (mStart.isUTC()) {
-                    dtstart.setUtc(true);
-                } else if (mStart.getTZName() != null) {
-                    dtstart.getParameters().add(new TzId(mStart.getTZName()));
-                }
-                event.getProperties().add(dtstart);
-            } catch (ParseException e) {
-                throw ServiceException.FAILURE("Failure writing DtStart to iCal: "+mStart.toString(), e);
+            DtStart dtstart = new DtStart(mStart.iCal4jDate());
+            if (mStart.isUTC()) {
+                dtstart.setUtc(true);
+            } else if (mStart.getTZName() != null) {
+                dtstart.getParameters().add(new TzId(mStart.getTZName()));
             }
+            event.getProperties().add(dtstart);
         }
         
         // DTEND
         if (mEnd != null) {
-            DtEnd dtend = new DtEnd();
-            try {
-                dtend.setValue(mEnd.getDateTimePartString());
-                if (mEnd.isUTC()) {
-                    dtend.setUtc(true);
-                } else if (mEnd.getTZName() != null) {
-                    dtend.getParameters().add(new TzId(mEnd.getTZName()));
-                }
-            } catch (ParseException e) {
-                throw ServiceException.FAILURE("Failure writing DtEnd to iCal: "+mEnd.toString(), e);
+            DtEnd dtend = new DtEnd(mEnd.iCal4jDate());
+            if (mEnd.isUTC()) {
+                dtend.setUtc(true);
+            } else if (mEnd.getTZName() != null) {
+                dtend.getParameters().add(new TzId(mEnd.getTZName()));
             }
             event.getProperties().add(dtend);
         }

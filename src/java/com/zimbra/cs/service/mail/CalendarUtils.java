@@ -668,6 +668,7 @@ public class CalendarUtils {
                                                       TimeZoneMap oldTzMap)
     throws ServiceException {
         boolean allDay = element.getAttributeBool(MailService.A_APPT_ALLDAY, false);
+        newInv.setIsAllDayEvent(allDay);
         
         String name = element.getAttribute(MailService.A_NAME);
         String location = element.getAttribute(MailService.A_APPT_LOCATION,"");
@@ -727,6 +728,9 @@ public class CalendarUtils {
                     throw MailServiceException.INVALID_REQUEST("<inv> may have <e> end or <d> duration but not both", null);
                 }
                 ParsedDateTime dt = parseDtElement(e, oldTzMap, newInv);
+                if (allDay) {
+                    dt = dt.add(ParsedDuration.ONE_DAY);
+                }
                 if (dt.hasTime()) { 
                     if (allDay) {
                         throw MailServiceException.INVALID_REQUEST("AllDay event must have DATE, not DATETIME for start time", null);
