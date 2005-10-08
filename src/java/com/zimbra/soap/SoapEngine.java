@@ -262,7 +262,7 @@ public class SoapEngine {
                 mLog.debug("handler exception " + sw.toString());
             }
         } catch (SoapFaultException e) {
-            response = e.getFault();
+            response = e.getFault().detach();
             if (mLog.isDebugEnabled()) {
                 StringWriter sw = new StringWriter();
                 PrintWriter pw = new PrintWriter(sw);
