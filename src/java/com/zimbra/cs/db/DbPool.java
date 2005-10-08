@@ -131,6 +131,7 @@ public class DbPool {
 	private static PoolingDriver mPoolingDriver;
     private static Log mLog = LogFactory.getLog(DbPool.class);
 
+    private static String mDbUrl = null;
     static {
         String drivers = System.getProperty("jdbc.drivers");
         if (drivers == null)
@@ -138,7 +139,8 @@ public class DbPool {
         
         String myAddress = LC.mysql_bind_address.value();
         String myPort = LC.mysql_port.value();
-        String url = "jdbc:mysql://" + myAddress + ":" + myPort + "/zimbra";
+        mDbUrl = "jdbc:mysql://" + myAddress + ":" + myPort + "/";
+        String url = mDbUrl + "zimbra";
 
         Properties props = getZimbraDbProps();
         // TODO: need to tune these
@@ -261,6 +263,22 @@ public class DbPool {
         }
 
         return new Connection(conn);
+    }
+    
+    /**
+     * returns a database connection for maintenance such as restore. 
+     * @return
+     * @throws ServiceException
+     */
+    public static Connection getMaintenanceConnection() throws ServiceException {
+        try {
+            String user = LC.zimbra_mysql_user.value();
+            String pwd = LC.zimbra_mysql_password.value();
+            java.sql.Connection conn = DriverManager.getConnection(mDbUrl + "?user=" + user + "&password=" + pwd);
+            return new Connection(conn);
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("getting database maintenance connection", e);
+        }
     }
     
     /**

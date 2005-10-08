@@ -25,7 +25,6 @@
 
 package com.zimbra.qa.unittest;
 
-import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -46,7 +45,7 @@ public class TestUtilCode extends TestCase
         vars.put("COLOR", "brown");
         vars.put("ANIMAL", "fox");
         vars.put("ADJECTIVE", "lazy");
-        String result = StringUtil.fillTemplate(new StringReader(template), vars);
+        String result = StringUtil.fillTemplate(template, vars);
         String expected = "The quick brown fox\njumped over the lazy dogs.\n";
         assertEquals(expected, result);
     }
@@ -66,7 +65,7 @@ public class TestUtilCode extends TestCase
         
         String expected = "New message received at recipient@example.zimbra.com." +
     	"\nSender: sender@example.zimbra.com\nSubject: Cool stuff\n";
-        String actual = StringUtil.fillTemplate(new StringReader(template), vars);
+        String actual = StringUtil.fillTemplate(template, vars);
         assertEquals("expected: '" + expected + "', actual: '" + actual + "'",
                 expected, actual);
     }

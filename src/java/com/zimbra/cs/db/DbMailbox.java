@@ -29,8 +29,8 @@
 package com.zimbra.cs.db;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -47,7 +47,6 @@ import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.ZimbraLog;
-import com.zimbra.cs.util.StringUtil;
 
 /**
  * @author kchen
@@ -111,33 +110,19 @@ public class DbMailbox {
         Connection conn = DbPool.getConnection();
         PreparedStatement stmt = null;
 
+        File file = Config.getPathRelativeToZimbraHome("db/create_database.sql");
         try {
             // Create the new database
             String dbName = getDatabaseName(mailboxId);
             ZimbraLog.mailbox.info("Creating database " + dbName);
 
-            File file = Config.getPathRelativeToZimbraHome("db/create_database.sql");
             Map vars = new HashMap();
             vars.put("DATABASE_NAME", dbName);
 
-            String script;
-            try {
-                script = StringUtil.fillTemplate(new FileReader(file), vars);
-            } catch (FileNotFoundException ex) {
-                throw ServiceException.FAILURE("Unable to read " + file.getPath(), ex);
-            }
+            DbUtil.runSQLs(conn, new FileReader(file), vars);
 
-            String[] sql = script.split(";");
-            if (sql == null || sql.length == 0)
-                throw ServiceException.FAILURE("No SQL statements found in " + file.getPath(), null);
-
-            for (int i = 0; i < sql.length - 1; i++) {
-                stmt = conn.prepareStatement(sql[i]);
-                stmt.execute();
-                stmt.close();
-            }
-
-            conn.commit();
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("unable to read SQL statements from " + file.getPath(), e);
         } catch (SQLException e) {
             throw ServiceException.FAILURE("createMailboxDatabase(" + mailboxId + ")", e);
         } finally {

@@ -25,16 +25,21 @@
 
 package com.zimbra.cs.db;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.Reader;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.StringUtil;
 
 /**
  * <code>DbUtil</code> contains some database utility methods and
@@ -328,5 +333,57 @@ public class DbUtil {
         for (int i = 0; i < size; i++)
             sb.append(i == 0 ? "?" : ", ?");
         return sb.append(") ").toString();
+    }
+    
+    public static void runSQLs(DbPool.Connection conn, Reader in) throws ServiceException, IOException, SQLException {
+        runSQLs(conn, in, null);
+    }
+    
+    
+    /**
+     * Reads SQL script file and execute them. 
+     * @param in the source of the SQL script file. The reader is closed when this method returns.
+     * @return an array of SQL statements, which are separated by semicolons (;).
+     * The semicolon itself is not included.
+     * @throws IOException 
+     * @throws ServiceException
+     * @throws SQLException 
+     */
+    public static void runSQLs(DbPool.Connection conn, Reader in, Map vars) throws IOException, ServiceException, SQLException {
+        StringBuffer buf = new StringBuffer();
+        BufferedReader br = new BufferedReader(in);
+        String line;
+        while ((line = br.readLine()) != null) {
+            // remove comments
+            int hash = line.indexOf('#');
+            if (hash != -1) {
+                line = line.substring(0, hash);
+            }
+            line = line.trim();
+            if (line.length() == 0) {
+                // ignore comments or blank lines
+                continue;
+            }
+            buf.append(line).append('\n');
+        }
+        br.close();
+        String script = buf.toString();
+        if (vars != null) {
+            script = StringUtil.fillTemplate(script, vars);
+        }
+        String[] sqls = script.split(";\\n?");
+        PreparedStatement stmt = null;
+        try {
+            conn = DbPool.getConnection();
+            for (int i = 0; i < sqls.length; i++) {
+                stmt = conn.prepareStatement(sqls[i]);
+                stmt.execute();
+                stmt.close();
+            }
+            conn.commit();
+        } catch (SQLException e) {
+            DbPool.quietRollback(conn);
+            throw e;
+        } 
     }
 }

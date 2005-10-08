@@ -25,7 +25,6 @@
 
 package com.zimbra.cs.mailbox;
 
-import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.HashMap;
@@ -344,9 +343,9 @@ public class Notification {
         vars.put("SUBJECT", pm.getSubject());
         vars.put("NEWLINE", "\n");
         
-        from = StringUtil.fillTemplate(new StringReader(from), vars);
-        subject = StringUtil.fillTemplate(new StringReader(subject), vars);
-        body = StringUtil.fillTemplate(new StringReader(body), vars);
+        from = StringUtil.fillTemplate(from, vars);
+        subject = StringUtil.fillTemplate(subject, vars);
+        body = StringUtil.fillTemplate(body, vars);
         
         // Send the message
         try {

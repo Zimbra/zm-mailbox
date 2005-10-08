@@ -28,9 +28,6 @@
  */
 package com.zimbra.cs.util;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
@@ -226,53 +223,27 @@ public class StringUtil {
      * be <code>String</code>s. 
      * @return the template with substituted values
      */
-    public static String fillTemplate(Reader template, Map vars)
+    public static String fillTemplate(String template, Map vars)
     {
         if (template == null) {
             return null;
         }
         
-        BufferedReader br = new BufferedReader(template);
-        StringBuffer buffer = new StringBuffer();
-        String line = null;
-        
-        try {
-            line = br.readLine();
-        }
-        catch (IOException ex) {
-            ZimbraLog.misc.error("Unable to process template", ex);
-        }
+        String line = template;
         Matcher matcher = templatePattern.matcher(line);
         
-        while (line != null) {
-            if (!line.trim().startsWith("#")) {
-                // Substitute multiple variables per line
-                while (matcher.matches()) {
-                    String key = matcher.group(2);
-                    Object value = vars.get(key);
-                    if (value == null) {
-                        ZimbraLog.misc.info("fillTemplate(): could not find key '" + key + "'");
-                        value = "";
-                    }
-                    line = matcher.group(1) + value + matcher.group(3);
-                    matcher.reset(line);
-                }
-                buffer.append(line);
-                buffer.append('\n');
+        // Substitute multiple variables per line
+        while (matcher.matches()) {
+            String key = matcher.group(2);
+            Object value = vars.get(key);
+            if (value == null) {
+                ZimbraLog.misc.info("fillTemplate(): could not find key '" + key + "'");
+                value = "";
             }
-            // Get the next line
-            try {
-                line = br.readLine();
-            }
-            catch (IOException ex) {
-                ZimbraLog.misc.error("Unable to process template", ex);
-            }
-            if (line != null) {
-                matcher.reset(line);
-            }
+            line = matcher.group(1) + value + matcher.group(3);
+            matcher.reset(line);
         }
-        
-        return buffer.toString();
+        return line;
     }
     
     /**

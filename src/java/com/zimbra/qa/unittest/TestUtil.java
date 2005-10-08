@@ -26,7 +26,6 @@
 package com.zimbra.qa.unittest;
 
 import java.io.IOException;
-import java.io.StringReader;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -134,7 +133,7 @@ public class TestUtil {
         vars.put("MESSAGE_NUM", new Integer(messageNum));
         vars.put("SUBJECT", subject);
         vars.put("DOMAIN", getDomain());
-        String message = StringUtil.fillTemplate(new StringReader(MESSAGE_TEMPLATE), vars);
+        String message = StringUtil.fillTemplate(MESSAGE_TEMPLATE, vars);
         ParsedMessage pm = new ParsedMessage(message.getBytes(), System.currentTimeMillis(), false);
         pm.analyze();
         return mbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX, false, Flag.FLAG_UNREAD, null);
