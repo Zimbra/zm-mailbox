@@ -126,20 +126,18 @@ public abstract class SoapTransport {
     }
     
     Element extractBodyElement(Element env) throws SoapParseException, SoapFaultException {
-        SoapProtocol p = SoapProtocol.determineProtocol(env);
-//        if (p == null || p != mSoapProto)
-        if (p == null)
-            throw new SoapParseException("unexpected soap protocol in reply, " +
-                                         "got " + p + " expecting " + mSoapProto, env.toString());
+        SoapProtocol proto = SoapProtocol.determineProtocol(env);
+        if (proto == null)
+            throw new SoapParseException("cannot determine soap protocol in reply", env.toString());
 
-        Element e = mSoapProto.getBodyElement(env);
+        Element e = proto.getBodyElement(env);
         if (e == null)
-            throw new SoapParseException("malformed soap structure", env.toString());
+            throw new SoapParseException("malformed soap structure in reply", env.toString());
 
-        if (mSoapProto.isFault(e))
-            throw mSoapProto.soapFault(e);
+        if (proto.isFault(e))
+            throw proto.soapFault(e);
 
-        Element context = mSoapProto.getHeader(env, ZimbraContext.CONTEXT);
+        Element context = proto.getHeader(env, ZimbraContext.CONTEXT);
         if (context != null) {
             String sid = context.getAttribute(ZimbraContext.E_SESSION_ID, null);
             if (sid != null)
