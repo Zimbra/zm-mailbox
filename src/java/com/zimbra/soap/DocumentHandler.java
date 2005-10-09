@@ -202,24 +202,35 @@ public abstract class DocumentHandler {
     }
 
     protected Element proxyRequest(Element request, Map context, ItemId iidRequested, ItemId iidResolved) throws ServiceException, SoapFaultException {
-        SoapEngine engine = (SoapEngine) context.get(SoapEngine.ZIMBRA_ENGINE);
-        ZimbraContext lc = getZimbraContext(context);
-        // new context for proxied request has a different "requested account"
-        ZimbraContext lcTarget = new ZimbraContext(lc, iidResolved.getAccountId());
-
-        // figure out whether we can just re-dispatch or if we need to proxy via HTTP
-        Account acctTarget = Provisioning.getInstance().getAccountById(iidResolved.getAccountId());
-        if (acctTarget == null)
-            throw AccountServiceException.NO_SUCH_ACCOUNT(iidResolved.getAccountId());
-        String hostTarget = acctTarget.getAttr(Provisioning.A_zimbraMailHost);
-        boolean isLocal = LOCAL_HOST.equalsIgnoreCase(hostTarget) && engine != null;
-
         // prepare the request for re-processing
-        request.detach();
         if (iidRequested != iidResolved)
             setXPath(request, getProxiedIdPath(), iidResolved.toString());
 
+        Element response = proxyRequest(request, context, iidResolved.getAccountId());
+
+        // translate remote folder IDs back into local mountpoint IDs
+        ZimbraContext lc = getZimbraContext(context);
+        String[] xpathResponse = getResponseItemPath();
+        if (iidRequested != iidResolved && xpathResponse != null) 
+            insertMountpointReferences(response, xpathResponse, iidRequested, iidResolved, lc);
+        return response;
+    }
+
+    protected Element proxyRequest(Element request, Map context, String acctId) throws SoapFaultException, ServiceException {
+        SoapEngine engine = (SoapEngine) context.get(SoapEngine.ZIMBRA_ENGINE);
+        ZimbraContext lc = getZimbraContext(context);
+        // new context for proxied request has a different "requested account"
+        ZimbraContext lcTarget = new ZimbraContext(lc, acctId);
+
+        // figure out whether we can just re-dispatch or if we need to proxy via HTTP
+        Account acctTarget = Provisioning.getInstance().getAccountById(acctId);
+        if (acctTarget == null)
+            throw AccountServiceException.NO_SUCH_ACCOUNT(acctId);
+        String hostTarget = acctTarget.getAttr(Provisioning.A_zimbraMailHost);
+        boolean isLocal = LOCAL_HOST.equalsIgnoreCase(hostTarget) && engine != null;
+
         Element response = null;
+        request.detach();
         if (isLocal) {
             // executing on same server; just hand back to the SoapEngine
             Map contextTarget = new HashMap(context);
@@ -237,11 +248,6 @@ public abstract class DocumentHandler {
             response = proxy.dispatch(request, lcTarget);
             response.detach();
         }
-
-        // translate remote folder IDs back into local mountpoint IDs
-        String[] xpathResponse = getResponseItemPath();
-        if (iidRequested != iidResolved && xpathResponse != null) 
-            insertMountpointReferences(response, xpathResponse, iidRequested, iidResolved, lc);
         return response;
     }
 }

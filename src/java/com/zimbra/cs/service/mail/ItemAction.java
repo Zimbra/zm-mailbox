@@ -154,10 +154,11 @@ public class ItemAction extends WriteOpDocumentHandler {
             if (iid.belongsTo(acct))
                 local.add(new Integer(iid.getId()));
             else {
-                ArrayList list = (ArrayList) remote.get(iid.getAccountId());
-                if (list == null)
-                    remote.put(iid.getAccountId(), list = new ArrayList());
-                list.add(iid);
+                StringBuffer sb = (StringBuffer) remote.get(iid.getAccountId());
+                if (sb == null)
+                    remote.put(iid.getAccountId(), new StringBuffer(iid.toString()));
+                else
+                    sb.append(',').append(iid.toString());
             }
         }
     }
@@ -165,14 +166,11 @@ public class ItemAction extends WriteOpDocumentHandler {
     private StringBuffer proxyRemoteItems(Element action, Map remote, Element request, Map context)
     throws ServiceException, SoapFaultException {
         StringBuffer successes = new StringBuffer();
-        for (Iterator it = remote.values().iterator(); it.hasNext(); ) {
-            ItemId iid = null;
-            StringBuffer targets = new StringBuffer();
-            ArrayList iidList = (ArrayList) it.next();
-            for (int i = 0; i < iidList.size(); i++)
-                targets.append(i == 0 ? "" : ",").append(iid = (ItemId) iidList.get(i));
-            action.addAttribute(MailService.A_ID, targets.toString());
-            String completed = extractSuccesses(proxyRequest(request, context, iid, iid));
+        for (Iterator it = remote.entrySet().iterator(); it.hasNext(); ) {
+            Map.Entry entry = (Map.Entry) it.next();
+            action.addAttribute(MailService.A_ID, entry.getValue().toString());
+            Element response = proxyRequest(request, context, entry.getKey().toString());
+            String completed = extractSuccesses(response);
             successes.append(completed.length() > 0 && successes.length() > 0 ? "" : ",").append(completed);
         }
         return successes;

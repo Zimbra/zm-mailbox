@@ -78,7 +78,7 @@ public class TagAction extends ItemAction  {
 
         ZimbraContext lc = getZimbraContext(context);
         if (!iid.belongsTo(getRequestedAccount(lc)))
-            return extractSuccesses(proxyRequest(request, context, iid, iid));
+            return extractSuccesses(proxyRequest(request, context, iid.getAccountId()));
 
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
