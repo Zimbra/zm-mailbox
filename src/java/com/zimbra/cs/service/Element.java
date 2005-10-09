@@ -54,7 +54,7 @@ public abstract class Element {
 
     // writing to the element hierarchy
     public abstract Element addElement(String name) throws ContainerException;
-    public Element addElement(QName qname) throws ContainerException        { return addElement(qname.getName()); }
+    public abstract Element addElement(QName qname) throws ContainerException;
     public abstract Element addElement(Element elt) throws ContainerException;
 
     public Element addUniqueElement(String name) throws ContainerException  { return addElement(name); }
@@ -154,6 +154,13 @@ public abstract class Element {
         throw ServiceException.INVALID_REQUEST("invalid boolean value for attribute: " + key, null);
     }
 
+    protected boolean namespaceDeclarationNeeded(String prefix, String uri) {
+        if (mParent == null || getClass() != mParent.getClass())
+            return true;
+        String thatURI = mParent.getNamespaceURI(prefix);
+        return (thatURI == null || !thatURI.equals(uri));
+    }
+
     // dumping the element hierarchy
     public byte[] toUTF8() {
         try {
@@ -206,8 +213,9 @@ public abstract class Element {
     public static class JavaScriptElement extends Element {
         public static final ElementFactory mFactory = new JavaScriptFactory();
         
-        private static final String E_ATTRS   = "_attrs";
-        private static final String A_CONTENT = "_content";
+        private static final String E_ATTRS     = "_attrs";
+        private static final String A_CONTENT   = "_content";
+        private static final String A_NAMESPACE = "_jsns";
 
         private static final HashSet RESERVED_KEYWORDS = new HashSet(Arrays.asList(new String[] {
                 "abstract", "boolean", "break", "byte", "case", "catch", "char", "class", "continue",
@@ -219,7 +227,7 @@ public abstract class Element {
         }));
 
         public JavaScriptElement(String name)  { mName = name; mAttributes = new HashMap(); }
-        public JavaScriptElement(QName qname)  { this(qname.getName()); }
+        public JavaScriptElement(QName qname)  { this(qname.getName()); setNamespace(qname.getNamespaceURI()); }
 
         private static final class JavaScriptFactory implements ElementFactory {
             public Element createElement(String name)  { return new JavaScriptElement(name); }
@@ -228,7 +236,15 @@ public abstract class Element {
 
         public ElementFactory getFactory()  { return mFactory; }
 
+        private Element setNamespace(String uri) {
+            if (uri != null && !uri.equals(""))
+                (mNamespaces = new HashMap()).put("", uri);
+            return this;
+        }
+
         public Element addElement(String name) throws ContainerException  { return addElement(new JavaScriptElement(name)); }
+
+        public Element addElement(QName qname) throws ContainerException  { return addElement(new JavaScriptElement(qname)); }
 
         public Element addElement(Element elt) throws ContainerException {
             if (elt == null || elt.mParent == this)
@@ -244,10 +260,8 @@ public abstract class Element {
                 throw new ContainerException("already stored attribute with name: " + name);
 
             List content = (List) obj;
-            if (content == null) {
-                content = new ArrayList();
-                mAttributes.put(name, content);
-            }
+            if (content == null)
+                mAttributes.put(name, content = new ArrayList());
             content.add(elt);
             elt.mParent = this;
             return elt;
@@ -274,6 +288,7 @@ public abstract class Element {
             }
 
             mAttributes.put(name, elt);
+            elt.mParent = this;
             return elt;
         }
 
@@ -488,10 +503,13 @@ public abstract class Element {
             }
         }
         public static Element parseText(String js) throws SoapParseException {
-            return parseElement(new JSRequest(js), com.zimbra.soap.SoapProtocol.SoapJS.getEnvelopeQName().getName());
+            return parseElement(new JSRequest(js), com.zimbra.soap.SoapProtocol.SoapJS.getEnvelopeQName());
         }
-        private static Element parseElement(JSRequest jsr, String name) throws SoapParseException {
-            Element elt = new JavaScriptElement(name);
+        private static Element parseElement(JSRequest jsr, QName qname) throws SoapParseException {
+            return parseElement(jsr, qname.getName()).setNamespace(qname.getNamespaceURI());
+        }
+        private static JavaScriptElement parseElement(JSRequest jsr, String name) throws SoapParseException {
+            JavaScriptElement elt = new JavaScriptElement(name);
             jsr.skipChar('{');
             while (jsr.peekChar() != '}') {
                 String key = jsr.readString();
@@ -514,10 +532,11 @@ public abstract class Element {
                                    }
                                } while (jsr.peekChar() != ']');  jsr.skipChar();  break;
                     default:   if ((value = jsr.readValue()) == null)             break;
-                               if (value instanceof Boolean)      elt.addAttribute(key, ((Boolean) value).booleanValue());
-                               else if (value instanceof Long)    elt.addAttribute(key, ((Long) value).longValue());
-                               else if (value instanceof Double)  elt.addAttribute(key, ((Double) value).doubleValue());
-                               else                               elt.addAttribute(key, value.toString());
+                               if (key.equals(A_NAMESPACE))        elt.setNamespace(value.toString());
+                               else if (value instanceof Boolean)  elt.addAttribute(key, ((Boolean) value).booleanValue());
+                               else if (value instanceof Long)     elt.addAttribute(key, ((Long) value).longValue());
+                               else if (value instanceof Double)   elt.addAttribute(key, ((Double) value).doubleValue());
+                               else                                elt.addAttribute(key, value.toString());
                                break;
                 }
                 switch (jsr.peekChar()) {
@@ -575,9 +594,14 @@ public abstract class Element {
                     sb.append(pname).append(":");
                 if (attr.getValue() instanceof String) 
                     sb.append(jsEncode((String) attr.getValue()));
-                else 
+                else
                     // take advantage of the fact that javascript array format == List.toString() format
                     sb.append(attr.getValue());                
+            }
+            if (mNamespaces != null) {
+                String uri = mNamespaces.get("").toString();
+                if (namespaceDeclarationNeeded("", uri))
+                    sb.append(index > 0 ? "," : "").append(A_NAMESPACE).append(':').append(jsEncode(uri));
             }
             return sb.append('}').toString();
         }
@@ -778,13 +802,6 @@ public abstract class Element {
             return (sb == null ? str : sb.append(str.substring(last, i)).toString());
         }
 
-        private boolean namespaceDeclarationNeeded(String prefix, String uri) {
-            if (mParent == null || !(mParent instanceof XMLElement))
-                return true;
-            String thatURI = ((XMLElement) mParent).getNamespaceURI(prefix);
-            return (thatURI == null || !thatURI.equals(uri));
-        }
-
         private static final String FORTY_SPACES = "                                        ";
         private void indent(StringBuffer sb, int indent, boolean newline) {
             if (indent < 0)      return;
@@ -827,9 +844,9 @@ public abstract class Element {
                 if (mChildren != null) {
                     for (Iterator it = mChildren.iterator(); it.hasNext(); ) {
                         Element child = (Element) it.next();
-                        if (child instanceof XMLElement) {
+                        if (child instanceof XMLElement)
                             ((XMLElement) child).toString(sb, indent < 0 ? -1 : indent + INDENT_SIZE);
-                        } else
+                        else
                             sb.append(xmlEncode(child.toString(), false));
                     }
                     indent(sb, indent, true);
@@ -843,22 +860,21 @@ public abstract class Element {
 
 
     public static void main(String[] args) throws ContainerException, SoapParseException {
-        org.dom4j.Namespace soapNS = org.dom4j.Namespace.get("soap", "http://schemas.xmlsoap.org/soap/envelope/");
-        QName qenv = new QName("Envelope", soapNS);
-        QName qbody = new QName("Body", soapNS);
         org.dom4j.Namespace bogusNS = org.dom4j.Namespace.get("bogus", "");
         QName qm = new QName("m", bogusNS);
 
-        Element env = new JavaScriptElement(qenv);
-        env.addUniqueElement(qbody).addUniqueElement(com.zimbra.cs.service.mail.MailService.GET_MSG_RESPONSE)
+        com.zimbra.soap.SoapProtocol proto = com.zimbra.soap.SoapProtocol.SoapJS;
+        Element env = new JavaScriptElement(proto.getEnvelopeQName());
+        env.addUniqueElement(proto.getBodyQName()).addUniqueElement(com.zimbra.cs.service.mail.MailService.GET_MSG_RESPONSE)
            .addUniqueElement(qm).addAttribute("id", 1115).addAttribute("f", "aw").addAttribute("t", "64,67").addAttribute("score", 0.953)
            .addAttribute("s", "Subject of the message has a \"\\\" in it", DISP_CONTENT).addAttribute("mid", "<kashdfgiai67r3wtuwfg@goo.com>", DISP_CONTENT)
            .addElement("mp").addAttribute("part", "TEXT").addAttribute("ct", "multipart/mixed").addAttribute("s", 3718);
         System.out.println(env);
         System.out.println(JavaScriptElement.parseText(env.toString()).toString());
 
-        env = new XMLElement(qenv);
-        env.addUniqueElement(qbody).addUniqueElement(com.zimbra.cs.service.mail.MailService.GET_MSG_RESPONSE)
+        proto = com.zimbra.soap.SoapProtocol.Soap12;
+        env = new XMLElement(proto.getEnvelopeQName());
+        env.addUniqueElement(proto.getBodyQName()).addUniqueElement(com.zimbra.cs.service.mail.MailService.GET_MSG_RESPONSE)
            .addUniqueElement(qm).addAttribute("id", 1115).addAttribute("f", "aw").addAttribute("t", "64,67").addAttribute("score", 0.953)
            .addAttribute("s", "Subject of the message has a \"\\\" in it", DISP_CONTENT).addAttribute("mid", "<kashdfgiai67r3wtuwfg@goo.com>", DISP_CONTENT)
            .addElement("mp").addAttribute("part", "TEXT").addAttribute("ct", "multipart/mixed").addAttribute("s", 3718);

@@ -53,8 +53,7 @@ public class SoapJSProtocol extends SoapProtocol {
 
     public Element.ElementFactory getFactory()  { return Element.JavaScriptElement.mFactory; }
 
-//    public Namespace getNamespace()  { return NS; }
-    public Namespace getNamespace()  { return Namespace.NO_NAMESPACE; }
+    public Namespace getNamespace()  { return NS; }
 
     public SoapFaultException soapFault(Element fault) {
         if (!isFault(fault))
