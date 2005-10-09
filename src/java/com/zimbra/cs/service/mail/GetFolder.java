@@ -78,26 +78,14 @@ public class GetFolder extends DocumentHandler {
         }
 
         // if the requested root folder is a link, execute the request remotely
-        if (folder instanceof Mountpoint) {
-            Mountpoint mpt = (Mountpoint) folder;
-            ItemId iidRemote = new ItemId(mpt.getOwnerId(), mpt.getRemoteId());
-            Element proxied = proxyRequest(request, context, iid, iidRemote);
-            if (lc.getResponseProtocol().isFault(proxied))
-                return proxied;
-            // return the children of the remote folder as children of the mountpoint
-            proxied = proxied.getOptionalElement(MailService.E_FOLDER);
-            if (proxied != null)
-                for (Iterator it = proxied.elementIterator(); it.hasNext(); ) {
-                    Element eRemote = (Element) it.next();
-                    // skip the <acl> element, if any
-                    if (!eRemote.getName().equals(MailService.E_ACL))
-                        eRoot.addElement(eRemote.detach());
-                }
-        }
+        if (folder instanceof Mountpoint)
+            handleMountpoint(request, context, iid, (Mountpoint) folder, eRoot);
+
         return response;
 	}
 
-	public static Element handleFolder(Mailbox mbox, Folder folder, Element response, ZimbraContext lc, OperationContext octxt) throws ServiceException {
+	public static Element handleFolder(Mailbox mbox, Folder folder, Element response, ZimbraContext lc, OperationContext octxt)
+    throws ServiceException {
 		Element respFolder = ToXML.encodeFolder(response, lc, folder);
 
         List subfolders = folder.getSubfolders(octxt);
@@ -109,4 +97,19 @@ public class GetFolder extends DocumentHandler {
         }
         return respFolder;
 	}
+
+    private void handleMountpoint(Element request, Map context, ItemId iidLocal, Mountpoint mpt, Element eRoot)
+    throws ServiceException, SoapFaultException {
+        ItemId iidRemote = new ItemId(mpt.getOwnerId(), mpt.getRemoteId());
+        Element proxied = proxyRequest(request, context, iidLocal, iidRemote);
+        // return the children of the remote folder as children of the mountpoint
+        proxied = proxied.getOptionalElement(MailService.E_FOLDER);
+        if (proxied != null)
+            for (Iterator it = proxied.elementIterator(); it.hasNext(); ) {
+                Element eRemote = (Element) it.next();
+                // skip the <acl> element, if any
+                if (!eRemote.getName().equals(MailService.E_ACL))
+                    eRoot.addElement(eRemote.detach());
+            }
+    }
 }
