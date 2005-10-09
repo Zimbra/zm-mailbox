@@ -50,14 +50,14 @@ public class DeleteItem extends RedoableOp {
 	public DeleteItem() {
 		mId = UNKNOWN_ID;
         mType = MailItem.TYPE_UNKNOWN;
-        mConstraint = "";
+        mConstraint = null;
 	}
 
 	public DeleteItem(int mailboxId, int id, byte type, TargetConstraint tcon) {
 		setMailboxId(mailboxId);
 		mId = id;
         mType = type;
-        mConstraint = (tcon == null ? "" : tcon.toString());
+        mConstraint = (tcon == null ? null : tcon.toString());
 	}
 
 	/* (non-Javadoc)
@@ -73,7 +73,7 @@ public class DeleteItem extends RedoableOp {
 	protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("id=");
         sb.append(mId).append(", type=").append(mType);
-        if (mConstraint.length() > 0)
+        if (mConstraint != null)
             sb.append(", constraint=").append(mConstraint);
         return sb.toString();
 	}
@@ -81,13 +81,17 @@ public class DeleteItem extends RedoableOp {
 	protected void serializeData(DataOutput out) throws IOException {
 		out.writeInt(mId);
         out.writeByte(mType);
-        out.writeUTF(mConstraint);
+        boolean hasConstraint = mConstraint != null;
+        out.writeBoolean(hasConstraint);
+        if (hasConstraint)
+            out.writeUTF(mConstraint);
 	}
 
 	protected void deserializeData(DataInput in) throws IOException {
 		mId = in.readInt();
         mType = in.readByte();
-        mConstraint = in.readUTF();
+        if (in.readBoolean())
+            mConstraint = in.readUTF();
 	}
 
 	public void redo() throws Exception {
@@ -95,7 +99,7 @@ public class DeleteItem extends RedoableOp {
 		Mailbox mbox = Mailbox.getMailboxById(mboxId);
 
         TargetConstraint tcon = null;
-        if (mConstraint != null && mConstraint.length() > 0)
+        if (mConstraint != null)
             try {
                 tcon = TargetConstraint.parseConstraint(mbox, mConstraint);
             } catch (ServiceException e) {

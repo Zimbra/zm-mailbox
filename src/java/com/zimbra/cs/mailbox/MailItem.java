@@ -321,7 +321,7 @@ public abstract class MailItem implements Comparable {
         }
         public String toString() {
             if (inclusions == 0)
-                return null;
+                return "";
             StringBuffer sb = new StringBuffer();
             if ((inclusions & INCLUDE_TRASH) != 0)   sb.append(ENC_TRASH);
             if ((inclusions & INCLUDE_SPAM) != 0)    sb.append(ENC_SPAM);

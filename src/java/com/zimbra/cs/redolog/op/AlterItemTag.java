@@ -54,7 +54,7 @@ public class AlterItemTag extends RedoableOp {
         mType = MailItem.TYPE_UNKNOWN;
 		mTagId = UNKNOWN_ID;
 		mTagged = false;
-        mConstraint = "";
+        mConstraint = null;
 	}
 
 	public AlterItemTag(int mailboxId, int id, byte type, int tagId, boolean tagged, TargetConstraint tcon) {
@@ -63,7 +63,7 @@ public class AlterItemTag extends RedoableOp {
         mType = type;
 		mTagId = tagId;
 		mTagged = tagged;
-        mConstraint = (tcon == null ? "" : tcon.toString());
+        mConstraint = (tcon == null ? null : tcon.toString());
 	}
 
 	/* (non-Javadoc)
@@ -80,17 +80,20 @@ public class AlterItemTag extends RedoableOp {
         StringBuffer sb = new StringBuffer("id=");
         sb.append(mId).append(", type=").append(mType);
         sb.append(", tag=").append(mTagId).append(", tagged=").append(mTagged);
-        if (mConstraint.length() > 0)
+        if (mConstraint != null)
             sb.append(", constraint=").append(mConstraint);
 		return sb.toString();
 	}
 
 	protected void serializeData(DataOutput out) throws IOException {
+        boolean hasConstraint = mConstraint != null;
 		out.writeInt(mId);
         out.writeByte(mType);
 		out.writeInt(mTagId);
 		out.writeBoolean(mTagged);
-        out.writeUTF(mConstraint);
+        out.writeBoolean(hasConstraint);
+        if (hasConstraint)
+            out.writeUTF(mConstraint);
 	}
 
 	protected void deserializeData(DataInput in) throws IOException {
@@ -98,7 +101,8 @@ public class AlterItemTag extends RedoableOp {
         mType = in.readByte();
 		mTagId = in.readInt();
 		mTagged = in.readBoolean();
-        mConstraint = in.readUTF();
+        if (in.readBoolean())
+            mConstraint = in.readUTF();
 	}
 
 	public void redo() throws Exception {
@@ -106,7 +110,7 @@ public class AlterItemTag extends RedoableOp {
 		Mailbox mbox = Mailbox.getMailboxById(mboxId);
 
         TargetConstraint tcon = null;
-        if (mConstraint != null && mConstraint.length() > 0)
+        if (mConstraint != null)
             try {
                 tcon = TargetConstraint.parseConstraint(mbox, mConstraint);
             } catch (ServiceException e) {

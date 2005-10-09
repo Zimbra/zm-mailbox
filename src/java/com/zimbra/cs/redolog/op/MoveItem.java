@@ -52,7 +52,7 @@ public class MoveItem extends RedoableOp {
 		mId = UNKNOWN_ID;
         mType = MailItem.TYPE_UNKNOWN;
 		mDestId = 0;
-        mConstraint = "";
+        mConstraint = null;
 	}
 
 	public MoveItem(int mailboxId, int msgId, byte type, int destId, TargetConstraint tcon) {
@@ -60,7 +60,7 @@ public class MoveItem extends RedoableOp {
 		mId = msgId;
         mType = type;
 		mDestId = destId;
-        mConstraint = (tcon == null ? "" : tcon.toString());
+        mConstraint = (tcon == null ? null : tcon.toString());
 	}
 
 	public int getOpCode() {
@@ -71,7 +71,7 @@ public class MoveItem extends RedoableOp {
         StringBuffer sb = new StringBuffer("id=");
         sb.append(mId).append(", type=").append(mType);
         sb.append(", dest=").append(mDestId);
-        if (mConstraint.length() > 0)
+        if (mConstraint != null)
             sb.append(", constraint=").append(mConstraint);
         return sb.toString();
 	}
@@ -80,14 +80,18 @@ public class MoveItem extends RedoableOp {
 		out.writeInt(mId);
         out.writeByte(mType);
 		out.writeInt(mDestId);
-        out.writeUTF(mConstraint);
+        boolean hasConstraint = mConstraint != null;
+        out.writeBoolean(hasConstraint);
+        if (hasConstraint)
+            out.writeUTF(mConstraint);
 	}
 
 	protected void deserializeData(DataInput in) throws IOException {
 		mId = in.readInt();
         mType = in.readByte();
 		mDestId = in.readInt();
-        mConstraint = in.readUTF();
+        if (in.readBoolean())
+            mConstraint = in.readUTF();
 	}
 
 	public void redo() throws Exception {
@@ -95,7 +99,7 @@ public class MoveItem extends RedoableOp {
 		Mailbox mbox = Mailbox.getMailboxById(mboxId);
 
         TargetConstraint tcon = null;
-        if (mConstraint != null && mConstraint.length() > 0)
+        if (mConstraint != null)
             try {
                 tcon = TargetConstraint.parseConstraint(mbox, mConstraint);
             } catch (ServiceException e) {

@@ -404,7 +404,8 @@ public class Conversation extends MailItem {
         }
 
         // mark the selected messages in this conversation as read in the database
-        DbMailItem.alterUnread(mMailbox, targets, unread);
+        if (targets.length > 0)
+            DbMailItem.alterUnread(mMailbox, targets, unread);
     }
 
     /** Tags or untags all messages in the conversation.  Persists the change
@@ -453,7 +454,8 @@ public class Conversation extends MailItem {
             }
         }
 
-        DbMailItem.alterTag(tag, targets, add);
+        if (targets.length > 0)
+            DbMailItem.alterTag(tag, targets, add);
     }
 
     protected void inheritedTagChanged(Tag tag, boolean add, boolean onChild) {
@@ -546,7 +548,8 @@ public class Conversation extends MailItem {
         if (target.inSpam())
             detach();
 
-        DbMailItem.setFolder(moved, target);
+        if (moved.length > 0)
+            DbMailItem.setFolder(moved, target);
     }
 
     /** please call this *after* adding the child row to the DB */

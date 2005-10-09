@@ -51,7 +51,7 @@ public class SetItemTags extends RedoableOp {
 	public SetItemTags() {
 		mId = UNKNOWN_ID;
 		mType = MailItem.TYPE_UNKNOWN;
-        mConstraint = "";
+        mConstraint = null;
 	}
 
 	public SetItemTags(int mailboxId, int itemId, byte itemType, int flags, long tags, TargetConstraint tcon) {
@@ -60,7 +60,7 @@ public class SetItemTags extends RedoableOp {
 		mType = itemType;
 		mFlags = flags;
         mTags = tags;
-        mConstraint = (tcon == null ? "" : tcon.toString());
+        mConstraint = (tcon == null ? null : tcon.toString());
 	}
 
 	public int getOpCode() {
@@ -72,7 +72,7 @@ public class SetItemTags extends RedoableOp {
         sb.append(mId).append(", type=").append(mType);
         sb.append(", flags=[").append(mFlags);
         sb.append("], tags=[").append(mTags).append("]");
-        if (mConstraint.length() > 0)
+        if (mConstraint != null)
             sb.append(", constraint=").append(mConstraint);
         return sb.toString();
 	}
@@ -82,7 +82,10 @@ public class SetItemTags extends RedoableOp {
 		out.writeByte(mType);
         out.writeInt(mFlags);
         out.writeLong(mTags);
-        out.writeUTF(mConstraint);
+        boolean hasConstraint = mConstraint != null;
+        out.writeBoolean(hasConstraint);
+        if (hasConstraint)
+            out.writeUTF(mConstraint);
 	}
 
 	protected void deserializeData(DataInput in) throws IOException {
@@ -90,7 +93,8 @@ public class SetItemTags extends RedoableOp {
 		mType = in.readByte();
         mFlags = in.readInt();
         mTags = in.readLong();
-        mConstraint = in.readUTF();
+        if (in.readBoolean())
+            mConstraint = in.readUTF();
 	}
 
 	public void redo() throws Exception {
@@ -98,7 +102,7 @@ public class SetItemTags extends RedoableOp {
 		Mailbox mbox = Mailbox.getMailboxById(mboxId);
 
         TargetConstraint tcon = null;
-        if (mConstraint != null && mConstraint.length() > 0)
+        if (mConstraint != null)
             try {
                 tcon = TargetConstraint.parseConstraint(mbox, mConstraint);
             } catch (ServiceException e) {
