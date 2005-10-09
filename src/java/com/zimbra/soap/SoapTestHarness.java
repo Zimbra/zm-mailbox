@@ -85,9 +85,10 @@ public class SoapTestHarness {
 	private static Pattern mPropPattern = Pattern.compile("(\\$\\{([^}]+)\\})");
 	
 	private SoapProtocol mSoapProto;
+    private SoapProtocol mResponseProto;
 	private SoapHttpTransport mTransport;
 	private String mAuthToken;
-	private String mSessionId;
+    private String mSessionId;
 	
 	/** any props we have set */
 	private HashMap mProps; 
@@ -199,7 +200,8 @@ public class SoapTestHarness {
 
 	public SoapTestHarness() {
 		mProps = new HashMap();
-		mSoapProto = SoapProtocol.Soap12;
+        mSoapProto = SoapProtocol.Soap12;
+        mResponseProto = SoapProtocol.Soap12;
 		mTests = new ArrayList();
 	}
 	
@@ -256,9 +258,11 @@ public class SoapTestHarness {
 			if (value == null)
 				throw new HarnessException("need value for authToken");
 			mAuthToken = value;
-		} else if (name.equals("sessionId")) {
-			if (value != null)
-				mSessionId = value;
+        } else if (name.equals("sessionId")) {
+            if (value != null)
+                mSessionId = value;
+        } else if (name.equals("protocol")) {
+            mResponseProto = "js".equalsIgnoreCase(value) ? SoapProtocol.SoapJS : SoapProtocol.Soap12;
 		}
 	}
 	
@@ -297,7 +301,8 @@ public class SoapTestHarness {
             throw new HarnessException("<namespace> tag missing prefix");
         if (uri == null)
             throw new HarnessException("<namespace> tag missing uri");
-        getURIs().put(prefix, uri);
+        getURIs(SoapProtocol.Soap12).put(prefix, uri);
+        getURIs(SoapProtocol.SoapJS).put(prefix, uri);
     }
     
 	private void doTests(Element root) throws HarnessException, SoapFaultException, IOException
@@ -445,11 +450,11 @@ public class SoapTestHarness {
 			mCurrent.mSoapRequest = mSoapProto.soapEnvelope(mCurrent.mDocRequest);
 		else {
 			mCurrent.mSoapRequest = mSoapProto.soapEnvelope(mCurrent.mDocRequest, ZimbraContext.toCtxt(mSoapProto, mAuthToken, mSessionId));
-//            if (Math.random() < 0.1) {
-//                Element context = mCurrent.mSoapRequest.getOptionalElement(mSoapProto.getHeaderQName()).getOptionalElement(ZimbraContext.CONTEXT);
-//                if (context != null)
-//                    context.addElement(ZimbraContext.E_FORMAT).addAttribute(ZimbraContext.A_TYPE, ZimbraContext.TYPE_JAVASCRIPT);
-//            }
+            if (mResponseProto == SoapProtocol.SoapJS) {
+                Element context = mCurrent.mSoapRequest.getOptionalElement(mSoapProto.getHeaderQName()).getOptionalElement(ZimbraContext.CONTEXT);
+                if (context != null)
+                    context.addElement(ZimbraContext.E_FORMAT).addAttribute(ZimbraContext.A_TYPE, ZimbraContext.TYPE_JAVASCRIPT);
+            }
 //            try {
 //                Element ctxt = mCurrent.mSoapRequest.getElement(SoapProtocol.Soap12.mHeaderQName).getElement(ZimbraContext.CONTEXT);
 //                ctxt.addElement(ZimbraContext.E_CHANGE)
@@ -463,12 +468,13 @@ public class SoapTestHarness {
 		long finish = System.currentTimeMillis();
 
         mCurrent.mTime = finish - start;
-		mCurrent.mDocResponse = mSoapProto.getBodyElement(mCurrent.mSoapResponse);
+		mCurrent.mDocResponse = mResponseProto.getBodyElement(mCurrent.mSoapResponse);
 	}
 
     private static Map mURIs = null;
+    private static Map mJSURIs = null;
 
-    private static Map getURIs() {
+    private static Map getURIs(SoapProtocol proto) {
         if (mURIs == null) {
             mURIs = new HashMap();
             mURIs.put("zimbra", "urn:zimbra");
@@ -478,8 +484,16 @@ public class SoapTestHarness {
             mURIs.put("soap", "http://www.w3.org/2003/05/soap-envelope");
             mURIs.put("soap12", "http://www.w3.org/2003/05/soap-envelope");            
             mURIs.put("soap11", "http://schemas.xmlsoap.org/soap/envelope/");
+
+            mJSURIs = new HashMap();
+            mJSURIs.put("zimbra", "urn:zimbra");
+            mJSURIs.put("acct", "urn:zimbraAccount");
+            mJSURIs.put("mail", "urn:zimbraMail");
+            mJSURIs.put("admin", "urn:zimbraAdmin");
+            mJSURIs.put("soap", "urn:zimbraSoap");
+            mJSURIs.put("soapJS", "urn:zimbraSoap");            
         }
-        return mURIs;
+        return proto == SoapProtocol.SoapJS ? mJSURIs : mURIs;
     }
     
 	/*
@@ -503,7 +517,7 @@ public class SoapTestHarness {
             // FIXME: hacky!
             org.dom4j.Element d4context = context.toXML();
             org.dom4j.XPath xpath = d4context.createXPath(path);
-            xpath.setNamespaceURIs(getURIs());
+            xpath.setNamespaceURIs(getURIs(mResponseProto));
             org.dom4j.Node node = xpath.selectSingleNode(d4context);
             //System.out.println("path = " + path + " node = " + node);
             if (!(node instanceof org.dom4j.Element)) {
@@ -550,8 +564,7 @@ public class SoapTestHarness {
 		for (Iterator it = test.elementIterator(); it.hasNext(); ) {
 			Element e = (Element) it.next();
 			if (e.getQName().equals(E_SELECT)) {
-				Element context = mSoapProto.getBodyElement(mCurrent.mSoapResponse);
-				doSelect(context, e);
+				doSelect(mCurrent.mDocResponse, e);
 			} else {
 		    	checkGlobals(e);
 			}
