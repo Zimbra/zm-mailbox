@@ -1143,7 +1143,11 @@ public class Appointment extends MailItem {
         }
 
         PartStat ps = (PartStat)(at.getParameters().getParameter(Parameter.PARTSTAT));
-        return IcalXmlStrMap.sPartStatMap.toXml(ps.getValue());
+        if (ps != null) {
+            return IcalXmlStrMap.sPartStatMap.toXml(ps.getValue());
+        } else {
+            return IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
+        }
     }
     
     void modifyPartStat(Account acctOrNull, RecurId recurId, String cnStr, String addressStr, String roleStr,
