@@ -39,11 +39,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.dom4j.QName;
 
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.AuthTokenException;
-import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.*;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -156,6 +152,8 @@ public class ZimbraContext {
 	    if (ctxt != null && !ctxt.getQName().equals(CONTEXT)) 
 	        throw new IllegalArgumentException("expected ctxt, got: " + ctxt.getQualifiedName());
 
+        Provisioning prov = Provisioning.getInstance();
+
         // figure out if we're explicitly asking for a return format
         mResponseProtocol = mRequestProtocol = requestProtocol;
         Element eFormat = ctxt == null ? null : ctxt.getOptionalElement(E_FORMAT);
@@ -167,13 +165,15 @@ public class ZimbraContext {
                 mResponseProtocol = SoapProtocol.SoapJS;
         }
 
+        // find out if we're executing in another user's context
+        Account account = null;
         Element eAccount = ctxt == null ? null : ctxt.getOptionalElement(E_ACCOUNT);
 		if (eAccount != null) {
 		    String key = eAccount.getAttribute(A_BY);
 		    String value = eAccount.getText();
 
 	        if (key.equals(BY_NAME)) {
-	            Account account = Provisioning.getInstance().getAccountByName(value);
+	            account = prov.getAccountByName(value);
 	            if (account == null)
                     throw AccountServiceException.NO_SUCH_ACCOUNT(value);
 	            mRequestedAccountId = account.getId();
@@ -182,6 +182,7 @@ public class ZimbraContext {
 	        else
 	            throw ServiceException.INVALID_REQUEST("unknown value for by: " + key, null);
 
+            // while we're here, check the hop count to detect loops
             mHopCount = (int) Math.max(eAccount.getAttributeLong(A_HOPCOUNT, 0), 0);
             if (mHopCount > MAX_HOP_COUNT)
                 throw ServiceException.TOO_MANY_HOPS();
@@ -189,23 +190,18 @@ public class ZimbraContext {
 		    mRequestedAccountId = null;
 		}
 
-        // check for atoken in engine context if not in header  
+        // check for auth token in engine context if not in header  
 		mRawAuthToken = (ctxt == null ? null : ctxt.getAttribute(E_AUTH_TOKEN, null));
 		if (mRawAuthToken == null)
 		    mRawAuthToken = (String) context.get(SoapServlet.ZIMBRA_AUTH_TOKEN);
 
+        // parse auth token and check validity
 		if (mRawAuthToken != null && !mRawAuthToken.equals("")) {
 			try {
 				mAuthToken = AuthToken.getAuthToken(mRawAuthToken);
 				if (mAuthToken.isExpired())
 					throw ServiceException.AUTH_EXPIRED();
 				mAuthTokenAccountId = mAuthToken.getAccountId();
-				
-//				if (mRequestedAccountId != null && 
-//				        !mAuthTokenAccountId.equals(mRequestedAccountId) && 
-//				        !mAuthToken.isAdmin()) { 
-//			    	throw ServiceException.PERM_DENIED("requested id not the same as auth token id and not an admin");
-//				}
 			} catch (AuthTokenException e) {
 				// ignore and leave null
 				mAuthToken = null;
@@ -214,6 +210,7 @@ public class ZimbraContext {
 			}
 		}
 
+        // constrain operations if we know the max change number the client knows about
         Element change = (ctxt == null ? null : ctxt.getOptionalElement(E_CHANGE));
         if (change != null)
             try {
@@ -224,8 +221,19 @@ public class ZimbraContext {
                     mChangeConstraintType = OperationContext.CHECK_CREATED;
             } catch (ServiceException e) { }
 
+        // if the caller specifies an execution host or if we're on the wrong host, proxy
         mIsProxyRequest = false;
         String targetServerId = ctxt == null ? null : ctxt.getAttribute(E_TARGET_SERVER, null);
+        if (targetServerId != null) {
+            // server not explicitly specified, so figure out where the requested mailbox lives
+            if (account == null)
+                account = prov.getAccountById(getRequestedAccountId());
+            if (account != null) {
+                Server server = account.getServer();
+                if (server != null)
+                    targetServerId = server.getId();
+            }
+        }
         if (targetServerId != null) {
             HttpServletRequest req = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
             if (req != null) {
