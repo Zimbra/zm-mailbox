@@ -2365,7 +2365,7 @@ public class Mailbox {
             Appointment appt = getAppointmentByUid(defaultInv.mInv.getUid());
             if (appt == null) { 
                 // ONLY create an appointment if this is a REQUEST method...otherwise don't.
-                if (defaultInv.mInv.getMethod().equals("REQUEST")) {
+                if (defaultInv.mInv.getMethod().equals("REQUEST") || defaultInv.mInv.getMethod().equals("PUBLISH")) {
                     appt = createAppointment(Mailbox.ID_FOLDER_CALENDAR, Volume.getCurrentMessageVolume().getId(), "",
                             defaultInv.mInv.getUid(), defaultInv.mPm, defaultInv.mInv);
                 } else {

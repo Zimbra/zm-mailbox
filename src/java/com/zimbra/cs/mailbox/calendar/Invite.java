@@ -288,7 +288,6 @@ public class Invite {
     private static final String FN_ORGANIZER       = "org";
     private static final String FN_NUM_ATTENDEES   = "numAt";
     private static final String FN_ATTENDEE        = "at";
-    
         
     
     /**
@@ -537,30 +536,35 @@ public class Invite {
         }
     }
     
+    public void setPartStat(String partStat) { mPartStat = partStat; }
     
-//    /**
-//     * Update this user's attendee participation status.  The
-//     * APPT_FLAG_NEEDS_REPLY flag is cleared.  Metadata is updated
-//     * in DB.
-//     * @param mbx
-//     * @param partStat "AC" (acceptec), "TE" (tentative), "DE" (declined),
-//     *                 "DG" (delegated), "CO" (completed),
-//     *                 "IN" (in-process)
-//     * @throws ServiceException
-//     */
-//    void modifyPartStat(Mailbox mbx, boolean needsReply, String partStat)
-//    throws ServiceException {
-//        int oldFlags = mFlags;
-//        boolean oldNeedsReply = needsReply();
-//        setNeedsReply(needsReply);
-//        if (needsReply() != oldNeedsReply || mFlags != oldFlags || !mPartStat.equals(partStat)) {
-//            mPartStat = partStat;
-//            mAppt.saveMetadata();
-//            if (mbx != null) {
-//                mbx.markItemModified(mAppt, Change.MODIFIED_INVITE);
-//            }
-//        }
-//    }
+    /**
+     * The Invite datastructure caches "my" partstat so that I don't have to search through all
+     * of the Attendee records every time I want to know my status....this function updates the
+     * catched PartStat data when I receive a new Invite 
+     * 
+     * @param iAmOrganizer
+     */
+    public void updateMyPartStat(Account acct) throws ServiceException {
+        boolean iAmOrganizer = thisAcctIsOrganizer(acct);
+        if (iAmOrganizer) {
+            setPartStat(IcalXmlStrMap.PARTSTAT_ACCEPTED);
+            setNeedsReply(false);
+        } else {
+            Attendee at = getMatchingAttendee(acct);
+            if (at != null) {
+                PartStat stat = (PartStat)(at.getParameters().getParameter(Parameter.PARTSTAT));
+                if ((stat == null || stat.equals(PartStat.NEEDS_ACTION)) && 
+                        (mMethod == Method.REQUEST || mMethod == Method.COUNTER)) {
+                    setNeedsReply(true);
+                }
+            } else {
+                // if this is the first time we're parsing this, and we can't find ourself on the
+                // attendee list, then allow a reply...
+                setNeedsReply(true);
+            }
+        }
+    }
     
     /**
      * @return the Appointment object, or null if one could not be found
@@ -588,7 +592,6 @@ public class Invite {
 //    void setCalendar(Calendar cal) { miCal = cal; }
     public int getFlags() { return mFlags; }
     public String getPartStat() { return mPartStat; }
-    public void setPartStat(String partStat) { mPartStat = partStat; }
     public String getUid() { return mUid; };
     public void setUid(String uid) { mUid = uid; }
     public int getMailboxId() { return mMailboxId; }
@@ -1053,7 +1056,7 @@ public class Invite {
     {
         assert(mTzMap != null);
         try {
-            boolean iAmTheOrganizer = false;
+//            boolean iAmTheOrganizer = false;
             
             // Allowed Sub-Components: VALARM
             ComponentList comps = vevent.getAlarms();
@@ -1089,7 +1092,7 @@ public class Invite {
                 if (propName.equals(Property.ORGANIZER)) {
                     net.fortuna.ical4j.model.property.Organizer org = (net.fortuna.ical4j.model.property.Organizer) prop;
                     mOrganizer = org;
-                    iAmTheOrganizer = thisAcctIsOrganizer(acct);
+//                    iAmTheOrganizer = thisAcctIsOrganizer(acct);
                 } else if (propName.equals(Property.ATTENDEE)) {
                     net.fortuna.ical4j.model.property.Attendee attendee = (net.fortuna.ical4j.model.property.Attendee)prop; 
                     mAttendees.add(attendee);
@@ -1206,23 +1209,23 @@ public class Invite {
                 setHasOtherAttendees(true);
             }
             
-            if (iAmTheOrganizer) {
-                setPartStat(IcalXmlStrMap.PARTSTAT_ACCEPTED);
-                setNeedsReply(false);
-            } else {
-                Attendee at = getMatchingAttendee(acct);
-                if (at != null) {
-                    PartStat stat = (PartStat)(at.getParameters().getParameter(Parameter.PARTSTAT));
-                    if ((stat == null || stat.equals(PartStat.NEEDS_ACTION)) &&
-                            (method == Method.REQUEST || method == Method.COUNTER)) {
-                        setNeedsReply(true);
-                    }
-                } else {
-                    // if this is the first time we're parsing this, and we can't find ourself on the
-                    // attendee list, then allow a reply...
-                    setNeedsReply(true);
-                }
-            }
+//            if (iAmTheOrganizer) {
+//                setPartStat(IcalXmlStrMap.PARTSTAT_ACCEPTED);
+//                setNeedsReply(false);
+//            } else {
+//                Attendee at = getMatchingAttendee(acct);
+//                if (at != null) {
+//                    PartStat stat = (PartStat)(at.getParameters().getParameter(Parameter.PARTSTAT));
+//                    if ((stat == null || stat.equals(PartStat.NEEDS_ACTION)) &&
+//                            (method == Method.REQUEST || method == Method.COUNTER)) {
+//                        setNeedsReply(true);
+//                    }
+//                } else {
+//                    // if this is the first time we're parsing this, and we can't find ourself on the
+//                    // attendee list, then allow a reply...
+//                    setNeedsReply(true);
+//                }
+//            }
         } catch(ParseException e) {
             throw MailServiceException.ICALENDAR_PARSE_ERROR(vevent.toString(), e);
         }

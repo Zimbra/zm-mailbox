@@ -173,6 +173,8 @@ public class Appointment extends MailItem {
             else
                 endTime = startTime;
         }
+        
+        firstInvite.updateMyPartStat(mbox.getAccount());
 
         UnderlyingData data = new UnderlyingData();
         data.id       = id;
@@ -589,18 +591,18 @@ public class Appointment extends MailItem {
         if (addNewOne) {
             newInvite.setAppointment(this);
             
-            if (prev!=null && !newInvite.thisAcctIsOrganizer(getMailbox().getAccount())) {
-                if (newInvite.sentByMe()) {
-                    // A non-organizer attendee is modifying data on his/her
-                    // appointment.  Any information that is tracked in
+            if (prev!=null && !newInvite.thisAcctIsOrganizer(getMailbox().getAccount()) && newInvite.sentByMe()) {
+                // A non-organizer attendee is modifying data on his/her
+                // appointment.  Any information that is tracked in
                     // metadata rather than in the iCal MIME part must be
-                    // carried over from the last invite to the new one.
-                    newInvite.setPartStat(prev.getPartStat());
-                    newInvite.setNeedsReply(prev.needsReply());
-                    newInvite.getAppointment().saveMetadata();
-                    // No need to mark invite as modified item in mailbox as
-                    // it has already been marked as a created item.
-                }
+                // carried over from the last invite to the new one.
+                newInvite.setPartStat(prev.getPartStat());
+                newInvite.setNeedsReply(prev.needsReply());
+                newInvite.getAppointment().saveMetadata();
+                // No need to mark invite as modified item in mailbox as
+                // it has already been marked as a created item.
+            } else {
+                newInvite.updateMyPartStat(getMailbox().getAccount());
             }
 
             mInvites.add(newInvite);

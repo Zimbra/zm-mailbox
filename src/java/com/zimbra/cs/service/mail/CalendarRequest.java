@@ -86,9 +86,6 @@ public abstract class CalendarRequest extends SendMsg {
             
             if (dat.mSaveToSent) {
                 folderId = getSentFolder(acct, mbox, octxt);
-//            } else {
-//                // FIXME hack!  if !save-to-sent, then must save to calendar folder to trigger appt creation.  
-//                folderId = Mailbox.ID_FOLDER_CALENDAR;
             }
 
             int msgId = sendMimeMessage(octxt, mbox, acct, folderId, dat, dat.mMm, dat.mOrigId, dat.mReplyType);
