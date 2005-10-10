@@ -36,10 +36,10 @@ import java.io.InputStream;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import com.zimbra.cs.mailbox.Invite;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
+import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.ParsedMessage;
 
 import com.zimbra.cs.service.ServiceException;

@@ -23,7 +23,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.mailbox;
+package com.zimbra.cs.mailbox.calendar;
 
 import java.net.URI;
 import java.text.ParseException;
@@ -56,7 +56,6 @@ import net.fortuna.ical4j.model.parameter.Rsvp;
 import net.fortuna.ical4j.model.parameter.TzId;
 import net.fortuna.ical4j.model.property.Attendee;
 import net.fortuna.ical4j.model.property.Comment;
-import net.fortuna.ical4j.model.property.Description;
 import net.fortuna.ical4j.model.property.DtEnd;
 import net.fortuna.ical4j.model.property.DtStamp;
 import net.fortuna.ical4j.model.property.DtStart;
@@ -79,15 +78,11 @@ import net.fortuna.ical4j.model.property.Version;
 import net.fortuna.ical4j.model.property.XProperty;
 
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
-import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
-import com.zimbra.cs.mailbox.calendar.InviteInfo;
-import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
-import com.zimbra.cs.mailbox.calendar.ParsedDuration;
-import com.zimbra.cs.mailbox.calendar.RecurId;
-import com.zimbra.cs.mailbox.calendar.Recurrence;
+import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
-import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.AccountUtil;
@@ -264,7 +259,7 @@ public class Invite {
      * 
      * @param invId
      */
-    void setInviteId(int invId) {
+    public void setInviteId(int invId) {
         this.mMailItemId = invId;
         if (mRecurrence != null) {
             mRecurrence.setInviteId(new InviteInfo(this));
@@ -274,6 +269,27 @@ public class Invite {
     private static final String FN_INVMSGID = "mid";
     private static final String FN_SENTBYME = "byme";
     private static final String FN_FRAGMENT = "frag";
+    private static final String FN_UID             = "u";
+    private static final String FN_STATUS          = "status";  // calendar: event/todo/journal status
+    private static final String FN_APPT_FREEBUSY   = "fb";
+    private static final String FN_TRANSP          = "tr";
+    private static final String FN_START           = "st";
+    private static final String FN_END             = "et";
+    private static final String FN_DURATION        = "duration";
+    private static final String FN_METHOD          = "mthd";
+    private static final String FN_NAME            = "n";
+    private static final String FN_LOCATION        = "l";
+    private static final String FN_APPT_FLAGS      = "af";
+    private static final String FN_PARTSTAT        = "ptst";
+    private static final String FN_TZMAP           = "tzm"; // calendaring: timezone map
+    private static final String FN_RECUR_ID        = "rid";
+    private static final String FN_DTSTAMP         = "dts";
+    private static final String FN_SEQ_NO          = "seq";
+    private static final String FN_ORGANIZER       = "org";
+    private static final String FN_NUM_ATTENDEES   = "numAt";
+    private static final String FN_ATTENDEE        = "at";
+    
+        
     
     /**
      * This is only really public to support serializing RedoOps -- you
@@ -285,17 +301,17 @@ public class Invite {
     public static Metadata encodeMetadata(Invite inv) {
         Metadata meta = new Metadata();
         
-        meta.put(Metadata.FN_UID, inv.getUid());
+        meta.put(FN_UID, inv.getUid());
         meta.put(FN_INVMSGID, inv.getMailItemId());
         meta.put(FN_COMPNUM, inv.getComponentNum());
         meta.put(FN_SENTBYME, inv.mSentByMe);
-        meta.put(Metadata.FN_STATUS, inv.getStatus());
-        meta.put(Metadata.FN_APPT_FREEBUSY, inv.getFreeBusy());
-        meta.put(Metadata.FN_TRANSP, inv.getTransparency());
-        meta.put(Metadata.FN_START, inv.mStart);
-        meta.put(Metadata.FN_END, inv.mEnd);
-        meta.put(Metadata.FN_DURATION, inv.mDuration);
-        meta.put(Metadata.FN_METHOD, inv.mMethod.getValue());
+        meta.put(FN_STATUS, inv.getStatus());
+        meta.put(FN_APPT_FREEBUSY, inv.getFreeBusy());
+        meta.put(FN_TRANSP, inv.getTransparency());
+        meta.put(FN_START, inv.mStart);
+        meta.put(FN_END, inv.mEnd);
+        meta.put(FN_DURATION, inv.mDuration);
+        meta.put(FN_METHOD, inv.mMethod.getValue());
         meta.put(FN_FRAGMENT, inv.mFragment);
         meta.put(FN_ICAL_DESCRIPTION, inv.mDescription);
         
@@ -303,30 +319,30 @@ public class Invite {
             meta.put(FN_RECURRENCE, inv.mRecurrence.encodeMetadata());
         }
         
-        meta.put(Metadata.FN_NAME, inv.getName());
+        meta.put(FN_NAME, inv.getName());
         
-        meta.put(Metadata.FN_LOCATION, inv.mLocation);
-        meta.put(Metadata.FN_APPT_FLAGS, inv.getFlags());
-        meta.put(Metadata.FN_PARTSTAT, inv.getPartStat());
+        meta.put(FN_LOCATION, inv.mLocation);
+        meta.put(FN_APPT_FLAGS, inv.getFlags());
+        meta.put(FN_PARTSTAT, inv.getPartStat());
         
-        meta.put(Metadata.FN_TZMAP, inv.mTzMap.encodeAsMetadata());
+        meta.put(FN_TZMAP, inv.mTzMap.encodeAsMetadata());
         
         if (inv.hasRecurId()) {
-            meta.put(Metadata.FN_RECUR_ID, inv.getRecurId().encodeMetadata());
+            meta.put(FN_RECUR_ID, inv.getRecurId().encodeMetadata());
         }
-        meta.put(Metadata.FN_DTSTAMP, inv.getDTStamp());
-        meta.put(Metadata.FN_SEQ_NO, inv.getSeqNo());
+        meta.put(FN_DTSTAMP, inv.getDTStamp());
+        meta.put(FN_SEQ_NO, inv.getSeqNo());
         
         if (inv.getOrganizer() != null) {
-            meta.put(Metadata.FN_ORGANIZER, encodeAsMetadata(inv.getOrganizer()));
+            meta.put(FN_ORGANIZER, encodeAsMetadata(inv.getOrganizer()));
         }
         
         List ats = inv.getAttendees();
-        meta.put(Metadata.FN_NUM_ATTENDEES, String.valueOf(ats.size()));
+        meta.put(FN_NUM_ATTENDEES, String.valueOf(ats.size()));
         int i = 0;
         for (Iterator iter = ats.iterator(); iter.hasNext(); i++) {
             Attendee at = (Attendee)iter.next();
-            meta.put(Metadata.FN_ATTENDEE + i, encodeAsMetadata(at));
+            meta.put(FN_ATTENDEE + i, encodeAsMetadata(at));
         }
         
         return meta;
@@ -364,12 +380,12 @@ public class Invite {
      */
     public static Invite decodeMetadata(int mailboxId, Metadata meta, Appointment appt, ICalTimeZone accountTZ) 
     throws ServiceException {
-        String uid = meta.get(Metadata.FN_UID, null);
+        String uid = meta.get(FN_UID, null);
         int mailItemId = (int)meta.getLong(FN_INVMSGID);
         int componentNum = (int)meta.getLong(FN_COMPNUM);
-        String status = meta.get(Metadata.FN_STATUS, IcalXmlStrMap.STATUS_CONFIRMED);
-        String freebusy = meta.get(Metadata.FN_APPT_FREEBUSY, IcalXmlStrMap.FBTYPE_BUSY);
-        String transp = meta.get(Metadata.FN_TRANSP, IcalXmlStrMap.TRANSP_OPAQUE);
+        String status = meta.get(FN_STATUS, IcalXmlStrMap.STATUS_CONFIRMED);
+        String freebusy = meta.get(FN_APPT_FREEBUSY, IcalXmlStrMap.FBTYPE_BUSY);
+        String transp = meta.get(FN_TRANSP, IcalXmlStrMap.TRANSP_OPAQUE);
         boolean sentByMe = meta.getBool(FN_SENTBYME);
         String fragment = meta.get(FN_FRAGMENT, "");
         String description = meta.get(FN_ICAL_DESCRIPTION, "");
@@ -380,7 +396,7 @@ public class Invite {
         
         RecurId recurrenceId = null;
         
-        TimeZoneMap tzMap = TimeZoneMap.decodeFromMetadata(meta.getMap(Metadata.FN_TZMAP), accountTZ);
+        TimeZoneMap tzMap = TimeZoneMap.decodeFromMetadata(meta.getMap(FN_TZMAP), accountTZ);
         
         Metadata metaRecur = meta.getMap(FN_RECURRENCE, true);
         Recurrence.IRecurrence recurrence = null; 
@@ -388,18 +404,18 @@ public class Invite {
             recurrence = Recurrence.decodeRule(metaRecur, tzMap);
         }
         
-        String methodStr = meta.get(Metadata.FN_METHOD, Method.PUBLISH.getValue());
+        String methodStr = meta.get(FN_METHOD, Method.PUBLISH.getValue());
         
         try {
             // DtStart
-            dtStart = ParsedDateTime.parse(meta.get(Metadata.FN_START, null), tzMap);
+            dtStart = ParsedDateTime.parse(meta.get(FN_START, null), tzMap);
             // DtEnd
-            dtEnd = ParsedDateTime.parse(meta.get(Metadata.FN_END, null), tzMap);
+            dtEnd = ParsedDateTime.parse(meta.get(FN_END, null), tzMap);
             // Duration
-            duration = ParsedDuration.parse(meta.get(Metadata.FN_DURATION, null));
+            duration = ParsedDuration.parse(meta.get(FN_DURATION, null));
             
-            if (meta.containsKey(Metadata.FN_RECUR_ID)) {
-                Metadata rdata = meta.getMap(Metadata.FN_RECUR_ID);
+            if (meta.containsKey(FN_RECUR_ID)) {
+                Metadata rdata = meta.getMap(FN_RECUR_ID);
                 
                 recurrenceId = RecurId.decodeMetadata(rdata, tzMap);
             }
@@ -408,18 +424,18 @@ public class Invite {
             throw ServiceException.FAILURE("Error parsing metadata for invite " + mailItemId+"-"+ componentNum + " in appt " + appt!=null ? Integer.toString(appt.getId()) : "(null)", e);
         }
         
-        String name = meta.get(Metadata.FN_NAME, "");
-        String loc = meta.get(Metadata.FN_LOCATION, null);
+        String name = meta.get(FN_NAME, "");
+        String loc = meta.get(FN_LOCATION, null);
         
-        int flags = (int) meta.getLong(Metadata.FN_APPT_FLAGS, 0);
+        int flags = (int) meta.getLong(FN_APPT_FLAGS, 0);
         // For existing invites with no partstat, default to ACCEPTED status.
-        String partStat = meta.get(Metadata.FN_PARTSTAT, IcalXmlStrMap.PARTSTAT_ACCEPTED);
-        long dtstamp = meta.getLong(Metadata.FN_DTSTAMP, 0);
-        int seqno = (int) meta.getLong(Metadata.FN_SEQ_NO, 0);
+        String partStat = meta.get(FN_PARTSTAT, IcalXmlStrMap.PARTSTAT_ACCEPTED);
+        long dtstamp = meta.getLong(FN_DTSTAMP, 0);
+        int seqno = (int) meta.getLong(FN_SEQ_NO, 0);
         
         Organizer org = null;
         try {
-            org = parseOrgFromMetadata(meta.getMap(Metadata.FN_ORGANIZER, true));
+            org = parseOrgFromMetadata(meta.getMap(FN_ORGANIZER, true));
         } catch (ServiceException e) {
             sLog.warn("Problem decoding organizer for appt " 
                     + appt!=null ? Integer.toString(appt.getId()) : "(null)"
@@ -427,10 +443,10 @@ public class Invite {
         }
         
         ArrayList attendees = new ArrayList();
-        long numAts = meta.getLong(Metadata.FN_NUM_ATTENDEES, 0);
+        long numAts = meta.getLong(FN_NUM_ATTENDEES, 0);
         for (int i = 0; i < numAts; i++) {
             try {
-                Attendee at = parseAtFromMetadata(meta.getMap(Metadata.FN_ATTENDEE + i, true));
+                Attendee at = parseAtFromMetadata(meta.getMap(FN_ATTENDEE + i, true));
                 attendees.add(at);
             } catch (ServiceException e) {
                 sLog.warn("Problem decoding attendee " + i + " for appointment " 
@@ -452,12 +468,12 @@ public class Invite {
     
     
     /**
-     * WARNING - internal version does NOT save the metadata.  Make sure you know that it is being
+     * WARNING - does NOT save the metadata.  Make sure you know that it is being
      * saved if you call this func.
      * 
      * @param needsReply
      */
-    void setNeedsReply(boolean needsReply) {
+    public void setNeedsReply(boolean needsReply) {
         if (needsReply) {
             mFlags |= APPT_FLAG_NEEDS_REPLY;
         } else {
@@ -493,10 +509,10 @@ public class Invite {
         if (changed) {
             mAppt.saveMetadata();
             if (mbx != null) {
-                mbx.markItemModified(mAppt, Change.MODIFIED_INVITE);
+                mAppt.markItemModified(Change.MODIFIED_INVITE);
             }
         }
-    }
+    } 
     
     /**
      * This API modifies the user's attendee participation status, but only for the
@@ -554,7 +570,7 @@ public class Invite {
         return mAppt;
     }
     
-    void setAppointment(Appointment appt) {
+    public void setAppointment(Appointment appt) {
         mAppt = appt;
     }
     
@@ -568,11 +584,11 @@ public class Invite {
     public int getComponentNum() { return mComponentNum; }
     void setComponentNum(int num) { mComponentNum = num; }
     void setMailboxId(int id) { mMailboxId = id; }
-    void setMailItemId(int id) { mMailItemId = id; }
+    public void setMailItemId(int id) { mMailItemId = id; }
 //    void setCalendar(Calendar cal) { miCal = cal; }
     public int getFlags() { return mFlags; }
     public String getPartStat() { return mPartStat; }
-    void setPartStat(String partStat) { mPartStat = partStat; }
+    public void setPartStat(String partStat) { mPartStat = partStat; }
     public String getUid() { return mUid; };
     public void setUid(String uid) { mUid = uid; }
     public int getMailboxId() { return mMailboxId; }
@@ -860,14 +876,14 @@ public class Invite {
         return meta;
     }
 
-    static Attendee parseAtFromMetadata(Metadata meta) throws ServiceException {
+    public static Attendee parseAtFromMetadata(Metadata meta) throws ServiceException {
         if (meta == null) {
             return null;
         }
         String cnStr = meta.get("cn", null);
         String addressStr = meta.get("a", null);
         String roleStr = meta.get("r", null);
-        String partStatStr = meta.get(Metadata.FN_PARTSTAT, null);
+        String partStatStr = meta.get(FN_PARTSTAT, null);
         Boolean rsvpBool = Boolean.FALSE;
         if (meta.getBool("v", false)) {
             rsvpBool = Boolean.TRUE;
@@ -876,7 +892,7 @@ public class Invite {
         return createAttendee(cnStr, addressStr, roleStr, partStatStr, rsvpBool);
     }
     
-    static Metadata encodeAsMetadata(Attendee at) {
+    public static Metadata encodeAsMetadata(Attendee at) {
         Metadata meta = new Metadata();
         ParameterList params = at.getParameters();
         
@@ -897,7 +913,7 @@ public class Invite {
         // partstat
         PartStat partStat = (PartStat) params.getParameter(Parameter.PARTSTAT);
         if (partStat != null)
-            meta.put(Metadata.FN_PARTSTAT, IcalXmlStrMap.sPartStatMap.toXml(partStat.getValue()));
+            meta.put(FN_PARTSTAT, IcalXmlStrMap.sPartStatMap.toXml(partStat.getValue()));
         
         // rsvp?
         boolean rsvp = false;
@@ -958,7 +974,7 @@ public class Invite {
      * @return
      * @throws ServiceException
      */
-    boolean updateMatchingAttendees(Invite other) throws ServiceException {
+    public boolean updateMatchingAttendees(Invite other) throws ServiceException {
         // Find my ATTENDEE record in the Invite, it must be in our response
         List attendees = getAttendees();
         
@@ -1017,7 +1033,7 @@ public class Invite {
             mAppt.saveMetadata();
             Mailbox mbx = mAppt.getMailbox();
             if (mbx != null) {
-                mbx.markItemModified(mAppt, Change.MODIFIED_INVITE);
+                mAppt.markItemModified(Change.MODIFIED_INVITE);
             }
             return true;
         } else {
@@ -1261,7 +1277,7 @@ public class Invite {
      * 
      * @return list of Invites (ie the mComponents list of the to-be-created InviteMessage)
      */
-    static List /* Invite */ parseCalendarComponentsForNewMessage(boolean sentByMe, Mailbox mbx, Calendar cal, 
+    public static List /* Invite */ parseCalendarComponentsForNewMessage(boolean sentByMe, Mailbox mbx, Calendar cal, 
             int mailItemId, String fragment, TimeZoneMap tzmap) throws ServiceException {
         
         List /* Invite */ toRet = new ArrayList();

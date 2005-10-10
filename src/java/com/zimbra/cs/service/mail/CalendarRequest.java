@@ -28,11 +28,11 @@ package com.zimbra.cs.service.mail;
 import javax.mail.internet.MimeMessage;
 
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.mailbox.Invite;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Message.ApptInfo;
+import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;

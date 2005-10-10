@@ -30,7 +30,6 @@ package com.zimbra.cs.mailbox.calendar;
 
 import net.fortuna.ical4j.model.property.Method;
 
-import com.zimbra.cs.mailbox.Invite;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.service.ServiceException;
 

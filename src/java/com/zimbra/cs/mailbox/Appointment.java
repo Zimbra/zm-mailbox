@@ -58,6 +58,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
+import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.RecurId;
@@ -130,7 +131,15 @@ public class Appointment extends MailItem {
     public long getEndTime() {
         return mEndTime;
     }
-
+    
+    public void saveMetadata() throws ServiceException {
+        super.saveMetadata();
+    }
+    
+    public void markItemModified(int reason) {
+        mMailbox.markItemModified(this, reason);
+    }
+    
 
     boolean isTaggable()       { return true; }
     boolean isCopyable()       { return false; }

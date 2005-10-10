@@ -52,6 +52,7 @@ import net.fortuna.ical4j.model.property.Attendee;
 import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
+import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.ParsedDuration;
 import com.zimbra.cs.mailbox.calendar.Recurrence;

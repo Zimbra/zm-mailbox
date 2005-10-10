@@ -56,7 +56,6 @@ import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.ZimbraLog;
 
-import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.*;
 import net.fortuna.ical4j.model.property.*;
 
