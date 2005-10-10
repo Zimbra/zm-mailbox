@@ -47,6 +47,8 @@ public class LdapAccount extends LdapNamedEntry implements Account {
     private LdapProvisioning mProv;
     private String mName;
     private String mDomainName;    
+
+    private static final String DATA_COS = "COS";
     
     LdapAccount(String dn, Attributes attrs, LdapProvisioning prov) {
         super(dn, attrs);
@@ -137,12 +139,15 @@ public class LdapAccount extends LdapNamedEntry implements Account {
     }
 
     public Cos getCOS() throws ServiceException {
-        // TODO: caching? assume getCOSById does caching?
-        String id = super.getAttr(Provisioning.A_zimbraCOSId);
-        if (id == null)
-            return mProv.getCosByName(Provisioning.DEFAULT_COS_NAME);
-        else
-            return mProv.getCosById(id); 
+        // CACHE. If we get reloaded from LDAP, cached data is cleared
+        Cos cos = (Cos) getCachedData(DATA_COS);
+        if (cos == null) {
+            String id = super.getAttr(Provisioning.A_zimbraCOSId);
+            if (id != null) cos = mProv.getCosById(id); 
+            if (cos == null) cos = mProv.getCosByName(Provisioning.DEFAULT_COS_NAME);
+            if (cos != null) setCachedData(DATA_COS, cos);
+        }
+        return cos;
     }
 
     public Map getPrefs() throws ServiceException {
