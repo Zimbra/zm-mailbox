@@ -53,7 +53,7 @@ public class TestUtilCode extends TestCase
     public void testFillTemplateWithNewlineValue()
     {
         String template = "New message received at ${RECIPIENT_ADDRESS}." +
-        	"${NEWLINE}Sender: ${SENDER_ADDRESS}${NEWLINE}Subject: ${SUBJECT}";
+        	"${NEWLINE}Sender: ${SENDER_ADDRESS}${NEWLINE}Subject: ${SUBJECT}${NEWLINE}";
         
         HashMap vars = new HashMap();
         vars.put("SENDER_ADDRESS", "sender@example.zimbra.com");
