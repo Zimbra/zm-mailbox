@@ -618,7 +618,7 @@ public abstract class MailItem implements Comparable {
         if (this == o)
             return 0;
         MailItem that = (MailItem) o;
-        long myDate = getModifiedSequence(), theirDate = that.getModifiedSequence();
+        long myDate = getChangeDate(), theirDate = that.getChangeDate();
         return (myDate < theirDate ? -1 : (myDate == theirDate ? 0 : 1));
     }
 
