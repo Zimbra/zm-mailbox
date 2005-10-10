@@ -822,6 +822,38 @@ Notes:
 <DeleteDistributionListResponse/>
 
 -----------------------------
+
+<AddDistributionListAliasRequest>
+  <id>{value-of-zimbraId}</id>
+  <alias>...</alias>
+</AddAliasRequest>
+
+<AddDistributionListAliasResponse/>
+
+-----------------------------
+
+<RemoveDistributionListAliasRequest>
+  <id>{value-of-zimbraId}</id>
+  <alias>...</alias>
+</RemoveDistributionListAliasRequest>
+
+<RemoveDistributionListAliasResponse/>
+
+-----------------------------
+
+<RenameDistributionListRequest>
+  <id>{value-of-zimbraId}</id>
+  <newName>{new-account-name}</newName>
+</RenameDistributionListRequest>
+
+<RenameDistributionListResponse>
+  <dl name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </dl>  
+</RenameDistributionListResponse>
+
+-----------------------------
+
 <GetClusterStatusRequest/>
 
 <GetClusterStatusResponse>
@@ -832,16 +864,21 @@ Notes:
     <service name="{service-name}" status="{state-string-from-console}"  owner="{server-name}" lastOwner="{server-name}" restarts="{number}"/>*
   </services>
 </GetClusterStatusResponse>
+
 -----------------------------
+
 <FailoverClusterServiceRequest>
   <service name="{service-name}" newServer="{server-name}"/>
 </FailOverClusterServiceRequest>
 
 <FailoverCluserServiceResponse/>
+
 -----------------------------
+
 <GetVersionInfoRequest/>
 
 <GetVersionInfoResponse>
   <info version="{version-string}" release="{release-string}" buildDate="{YYYYMMDD-hhmm}" buildHost="{host-name}"/>
 </GetVersionInfoResponse>
+
 -----------------------------

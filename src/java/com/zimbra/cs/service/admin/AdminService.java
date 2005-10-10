@@ -382,6 +382,9 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(REMOVE_DISTRIBUTION_LIST_MEMBER_REQUEST, new RemoveDistributionListMember());
         dispatcher.registerHandler(MODIFY_DISTRIBUTION_LIST_REQUEST, new ModifyDistributionList());
         dispatcher.registerHandler(DELETE_DISTRIBUTION_LIST_REQUEST, new DeleteDistributionList());
+        dispatcher.registerHandler(ADD_DISTRIBUTION_LIST_ALIAS_REQUEST, new AddDistributionListAlias());
+        dispatcher.registerHandler(REMOVE_DISTRIBUTION_LIST_ALIAS_REQUEST, new RemoveDistributionListAlias());
+        dispatcher.registerHandler(RENAME_DISTRIBUTION_LIST_REQUEST, new RenameDistributionList());
 
         dispatcher.registerHandler(GET_CLUSTER_STATUS_REQUEST, new GetClusterStatus());
         dispatcher.registerHandler(FAILOVER_CLUSTER_SERVICE_REQUEST, new FailoverClusterService());
