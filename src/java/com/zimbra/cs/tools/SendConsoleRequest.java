@@ -41,10 +41,10 @@ import java.net.URL;
 
 import org.apache.commons.cli.Option;
 
-import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapHttpTransport;

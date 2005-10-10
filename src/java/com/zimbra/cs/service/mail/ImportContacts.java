@@ -41,10 +41,10 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.ContactCSV.ParseException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.DocumentHandler;
+import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
 /**

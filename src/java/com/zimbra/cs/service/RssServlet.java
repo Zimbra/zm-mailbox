@@ -46,6 +46,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.soap.Element;
 
 /**
  * simple RSS feed servlet of a mailbox. URL is:

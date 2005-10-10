@@ -120,7 +120,7 @@ public abstract class LmcSoapRequest {
             if (sDumpXML) {
             	sLog.info("Request:" + DomUtil.toString(requestXML, true));
             }
-            com.zimbra.cs.service.Element requestElt = com.zimbra.cs.service.Element.XMLElement.convertDOM(requestXML);
+            com.zimbra.soap.Element requestElt = com.zimbra.soap.Element.XMLElement.convertDOM(requestXML);
 			//System.out.println("Sending over request " + DomUtil.toString(requestXML, true));
 			Element responseXML = trans.invoke(requestElt).toXML();
             if (sDumpXML) {

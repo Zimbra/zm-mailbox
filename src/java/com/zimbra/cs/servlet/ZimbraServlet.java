@@ -52,10 +52,10 @@ import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
-import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapProtocol;
 
 /**

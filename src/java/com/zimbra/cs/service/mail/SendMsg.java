@@ -57,11 +57,11 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.ExceptionToString;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.ParseMimeMessage.MimeMessageData;
 import com.zimbra.cs.stats.StopWatch;
+import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
 

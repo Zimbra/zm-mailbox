@@ -30,8 +30,8 @@ import java.util.Map;
 
 import junit.framework.TestResult;
 
-import com.zimbra.cs.service.Element;
 import com.zimbra.qa.unittest.ZimbraSuite;
+import com.zimbra.soap.Element;
 import com.zimbra.soap.WriteOpDocumentHandler;
 import com.zimbra.soap.ZimbraContext;
 

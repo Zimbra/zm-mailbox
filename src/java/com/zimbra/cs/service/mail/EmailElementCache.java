@@ -34,8 +34,8 @@ import java.util.Set;
 import javax.mail.internet.InternetAddress;
 
 import com.zimbra.cs.mime.ParsedAddress;
-import com.zimbra.cs.service.Element;
 import com.zimbra.cs.util.StringUtil;
+import com.zimbra.soap.Element;
 
 /**
  * @author schemers

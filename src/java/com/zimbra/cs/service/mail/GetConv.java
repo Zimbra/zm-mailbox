@@ -33,9 +33,9 @@ import java.util.Map;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.DocumentHandler;
+import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
 /**

@@ -31,12 +31,12 @@ package com.zimbra.cs.service.account;
 import java.util.Map;
 
 import com.zimbra.cs.account.*;
-import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.DocumentHandler;
+import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
 /**

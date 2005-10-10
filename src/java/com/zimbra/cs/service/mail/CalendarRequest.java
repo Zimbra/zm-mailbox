@@ -34,8 +34,8 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Message.ApptInfo;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.soap.Element;
 
 public abstract class CalendarRequest extends SendMsg {
 

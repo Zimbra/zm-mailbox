@@ -36,9 +36,9 @@ import java.util.regex.Pattern;
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.property.Duration;
 
-import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.soap.Element;
 
 public final class ParsedDuration
 {

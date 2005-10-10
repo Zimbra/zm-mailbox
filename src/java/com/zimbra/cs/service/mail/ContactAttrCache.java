@@ -30,7 +30,7 @@ package com.zimbra.cs.service.mail;
 
 import java.util.HashMap;
 
-import com.zimbra.cs.service.Element;
+import com.zimbra.soap.Element;
 
 /**
  * @author schemers

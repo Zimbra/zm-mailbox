@@ -36,10 +36,10 @@ import java.util.Map.Entry;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Domain.SearchGalResult;
-import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.soap.DocumentHandler;
+import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
 /**

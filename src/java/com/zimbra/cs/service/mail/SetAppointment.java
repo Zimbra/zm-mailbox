@@ -37,9 +37,9 @@ import com.zimbra.cs.mailbox.Invite;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.stats.StopWatch;
+import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
 public class SetAppointment extends CalendarRequest {

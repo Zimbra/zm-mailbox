@@ -30,9 +30,9 @@ import java.util.Map;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
 public class AddDistributionListAlias extends AdminDocumentHandler {

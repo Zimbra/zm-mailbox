@@ -30,7 +30,6 @@ package com.zimbra.soap;
 
 import java.io.IOException;
 
-import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.account.AccountService;

@@ -33,12 +33,12 @@ import java.util.List;
 
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.*;
-import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.GetFolder;
 import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.Constants;
+import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
 import org.apache.commons.logging.Log;

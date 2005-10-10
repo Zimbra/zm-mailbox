@@ -39,12 +39,12 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.BlobDataSource;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.ContentServlet;
-import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.FileItemDataSource;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.ExceptionToString;
+import com.zimbra.soap.Element;
 
 import java.io.*;
 import java.util.ArrayList;

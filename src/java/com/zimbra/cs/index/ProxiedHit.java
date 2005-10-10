@@ -30,11 +30,11 @@ package com.zimbra.cs.index;
 
 import java.util.Iterator;
 
-import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.util.ParsedItemID;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.soap.Element;
 
 
 

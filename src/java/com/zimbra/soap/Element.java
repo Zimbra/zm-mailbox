@@ -26,7 +26,7 @@
 /*
  * Created on Mar 16, 2005
  */
-package com.zimbra.cs.service;
+package com.zimbra.soap;
 
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -34,7 +34,7 @@ import java.util.*;
 
 import org.dom4j.QName;
 
-import com.zimbra.soap.SoapParseException;
+import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author dkarp

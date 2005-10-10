@@ -37,10 +37,10 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.RecurId;
-import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ParsedItemID;
 import com.zimbra.cs.stats.StopWatch;
+import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
 public class CancelAppointmentException extends CancelAppointment {

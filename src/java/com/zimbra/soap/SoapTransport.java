@@ -29,7 +29,6 @@
 
 package com.zimbra.soap;
 
-import com.zimbra.cs.service.Element;
 import com.zimbra.soap.SoapProtocol;
 import com.zimbra.soap.SoapFaultException;
 

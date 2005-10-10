@@ -35,13 +35,13 @@ import java.util.Map;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.SearchParams;
-import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.mail.Search;
 import com.zimbra.cs.service.util.ParseMailboxID;
 import com.zimbra.cs.util.CrossMailboxSearch;
 import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
 

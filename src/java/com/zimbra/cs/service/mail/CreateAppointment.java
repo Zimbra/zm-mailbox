@@ -36,9 +36,9 @@ import org.apache.commons.logging.LogFactory;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.stats.StopWatch;
+import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
 /**
@@ -73,7 +73,7 @@ public class CreateAppointment extends CalendarRequest {
             // <M>
             Element msgElem = request.getElement(MailService.E_MSG);
             
-            int folder = (int)msgElem.getAttributeLong(MailService.A_FOLDER, Mailbox.ID_FOLDER_CALENDAR);
+            int folder = (int) msgElem.getAttributeLong(MailService.A_FOLDER, Mailbox.ID_FOLDER_CALENDAR);
             
             CreateAppointmentInviteParser parser = new CreateAppointmentInviteParser();
             CalSendData dat = handleMsgElement(octxt, msgElem, acct, mbx, parser);

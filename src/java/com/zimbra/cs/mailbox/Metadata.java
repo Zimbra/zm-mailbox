@@ -31,12 +31,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.BEncoding;
 import com.zimbra.cs.util.BlobMetaData;
 import com.zimbra.cs.util.BlobMetaDataEncodingException;
 import com.zimbra.cs.util.BEncoding.BEncodingException;
+import com.zimbra.soap.Element;
 
 public class Metadata {
 

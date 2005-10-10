@@ -55,12 +55,12 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.soap.DocumentHandler;
+import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
 

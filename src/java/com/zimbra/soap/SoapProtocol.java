@@ -34,7 +34,6 @@ import java.util.Iterator;
 import org.dom4j.Namespace;
 import org.dom4j.QName;
 
-import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 
 /**

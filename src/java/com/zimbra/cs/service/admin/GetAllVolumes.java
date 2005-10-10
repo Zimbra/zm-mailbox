@@ -29,9 +29,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.store.Volume;
+import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
 public class GetAllVolumes extends AdminDocumentHandler {

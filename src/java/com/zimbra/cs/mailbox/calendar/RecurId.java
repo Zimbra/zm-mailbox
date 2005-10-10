@@ -32,9 +32,9 @@ import java.util.TimeZone;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Metadata;
-import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.soap.Element;
 
 import net.fortuna.ical4j.model.property.RecurrenceId;
 import net.fortuna.ical4j.model.Parameter;

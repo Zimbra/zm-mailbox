@@ -35,8 +35,8 @@ import java.util.Map;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbServiceStatus;
 import com.zimbra.cs.db.DbPool.Connection;
-import com.zimbra.cs.service.Element;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
 /**
