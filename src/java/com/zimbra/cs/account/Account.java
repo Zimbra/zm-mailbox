@@ -79,6 +79,12 @@ public interface Account extends NamedEntry {
     public boolean isCorrectHost() throws ServiceException;
 
     /**
+     * @return the Server object where this account's mailbox is homed
+     * @throws ServiceException
+     */
+    public Server getServer() throws ServiceException;
+
+    /**
      * Returns account's time zone
      * @return
      * @throws ServiceException

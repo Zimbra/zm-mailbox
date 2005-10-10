@@ -35,6 +35,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.WellKnownTimeZone;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.service.ServiceException;
@@ -133,8 +134,7 @@ public class LdapAccount extends LdapNamedEntry implements Account {
         }
     }
     
-    public String[] getAliases() throws ServiceException
-    {
+    public String[] getAliases() {
         return getMultiAttr(Provisioning.A_zimbraMailAlias);
     }
 
@@ -198,6 +198,11 @@ public class LdapAccount extends LdapNamedEntry implements Account {
         String target    = getAttr(Provisioning.A_zimbraMailHost);
         String localhost = mProv.getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname);
         return (target != null && target.equalsIgnoreCase(localhost));
+    }
+
+    public Server getServer() throws ServiceException {
+        String serverId = getAttr(Provisioning.A_zimbraMailHost);
+        return (serverId == null ? null : mProv.getServerByName(serverId));
     }
 
     private ICalTimeZone mTimeZone;
