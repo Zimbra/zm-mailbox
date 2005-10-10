@@ -75,12 +75,15 @@ public class Mime {
 	public static final String CT_APPLICATION_MSWORD = "application/msword";
 	public static final String CT_APPLICATION_PDF = "application/pdf";
 	
+	public static final String CT_XML_ZIMBRA_SHARE = "xml/x-zimbra-share";
+	
 	public static final String CT_APPPLICATION_WILD = "application/*";
    	public static final String CT_IMAGE_WILD = "image/*";
    	public static final String CT_AUDIO_WILD = "audio/*";
    	public static final String CT_VIDEO_WILD = "video/*";
    	public static final String CT_MULTIPART_WILD = "multipart/*";
    	public static final String CT_TEXT_WILD = "text/*";
+   	public static final String CT_XML_WILD = "xml/*";
 	
 	public static final String CT_DEFAULT = CT_TEXT_PLAIN;
 	

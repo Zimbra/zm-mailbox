@@ -960,6 +960,16 @@ public class ToXML {
         elem.addAttribute(MailService.A_PART, part);
         
         String contentTypeString = StringUtil.stripControlCharacters(mpi.getContentTypeString());
+        if (Mime.CT_XML_ZIMBRA_SHARE.equals(contentTypeString)) {
+            Element shr = parent.getParent().addElement("shr");
+            try {
+                getContent(shr, mpi);
+            } catch (IOException e) {
+                if (mLog.isWarnEnabled())
+                    mLog.warn("error writing body part: ", e);
+            } catch (MessagingException e) {
+            }
+        }
         
         elem.addAttribute(MailService.A_CONTENT_TYPE, contentTypeString);
         
@@ -1035,7 +1045,8 @@ public class ToXML {
      */
     private static void getContent(Element mp, MPartInfo pi) throws IOException, MessagingException {
         // TODO: support other parts
-        if (pi.getContentType().match(Mime.CT_TEXT_WILD)) {
+        ContentType ct = pi.getContentType();
+        if (ct.match(Mime.CT_TEXT_WILD) || ct.match(Mime.CT_XML_WILD)) {
             MimePart part = pi.getMimePart();
 
             Object o = part.getContent();
