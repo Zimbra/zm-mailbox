@@ -256,6 +256,8 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
                     
                 } catch(MailServiceException.NoSuchItemException e) {
                     mLog.info("Error could not get default invite for Appt: "+ appointment.getId(), e);
+                } catch (RuntimeException e) {
+                    mLog.info("Caught Exception "+e+ " while getting summary info for Appt: "+appointment.getId(), e);
                 }
             }
             
