@@ -1843,28 +1843,6 @@ public class LdapProvisioning extends Provisioning {
         }
     }
 
-    public List getAllDistributionLists() throws ServiceException {
-        ArrayList result = new ArrayList();
-        DirContext ctxt = null;
-        try {
-            ctxt = LdapUtil.getDirContext();
-            NamingEnumeration ne = ctxt.search("", "(objectclass=zimbraDistributionList)", sSubtreeSC);
-            while (ne.hasMore()) {
-                SearchResult sr = (SearchResult) ne.next();
-                Context srctxt = (Context) sr.getObject();
-                result.add(new LdapDistributionList(srctxt.getNameInNamespace(), sr.getAttributes()));
-                srctxt.close();
-            }
-            ne.close();
-        } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to list all domains", e);
-        } finally {
-            LdapUtil.closeContext(ctxt);
-        }
-        Collections.sort(result);
-        return result;
-    }
-
     public DistributionList getDistributionListByName(String listAddress) throws ServiceException {
         String parts[] = listAddress.split("@");
         

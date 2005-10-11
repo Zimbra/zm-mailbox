@@ -77,14 +77,14 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
     }
     //public abstract int numberOfAccounts();
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.account.Domain#getAllAccounts()
-     */
     public List getAllAccounts() throws ServiceException {
         return searchAccounts("(objectclass=zimbraAccount)", null, null, true, Provisioning.SA_ACCOUNT_FLAG);
     }
     
-    
+    public List getAllDistributionLists() throws ServiceException {
+        return searchAccounts("(objectClass=zimbraDistributionList)", null, null, true, Provisioning.SA_DISTRIBUTION_LIST_FLAG);
+    }
+
     public ArrayList searchAccounts(String query, String returnAttrs[], String sortAttr, boolean sortAscending, int flags) throws ServiceException
     {
         return mProv.searchAccounts(query, returnAttrs, sortAttr, sortAscending, "ou=people,"+getDN(), flags);

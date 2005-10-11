@@ -45,6 +45,8 @@ public interface Domain extends NamedEntry {
 
     public List getAllAccounts() throws ServiceException;
 
+    public List getAllDistributionLists() throws ServiceException;
+
     /**
      * @param query LDAP search query
      * @param returnAttrs list of attributes to return. uid is always included.

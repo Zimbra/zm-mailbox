@@ -1070,15 +1070,49 @@ public class ProvUtil {
     }
     
     private void doGetAllDistributionLists(String[] args) throws ServiceException {
-        boolean verbose = args.length > 1 && args[1].equals("-v");
-                
-        List dls = mProvisioning.getAllDistributionLists();
-        for (Iterator it=dls.iterator(); it.hasNext(); ) {
-            DistributionList dl = (DistributionList) it.next();
-            if (verbose)
-                dumpDistributionList(dl);
-            else
-                System.out.println(dl.getName());
+        boolean verbose = false;
+        String d = null;
+        if (args.length == 2) {
+            if (args[1].equals("-v")) 
+                verbose = true;
+            else 
+                d = args[1];
+        } else if (args.length == 3) {
+            if (args[1].equals("-v")) 
+                verbose = true;
+            else  {
+                usage();
+                return;
+            }
+            d = args[2];            
+        } else if (args.length != 1) {
+            usage();
+            return;
+        }
+
+        if (d == null) {
+            List domains = mProvisioning.getAllDomains();
+            for (Iterator dit=domains.iterator(); dit.hasNext(); ) {
+                Domain domain = (Domain) dit.next();
+                Collection dls = domain.getAllDistributionLists();
+                for (Iterator it = dls.iterator(); it.hasNext();) {
+                    DistributionList dl = (DistributionList)it.next();
+                    if (verbose)
+                        dumpDistributionList(dl);
+                    else
+                        System.out.println(dl.getName());
+                }
+            }
+        } else {
+            Domain domain = lookupDomain(d);
+            Collection dls = domain.getAllDistributionLists();
+            for (Iterator it = dls.iterator(); it.hasNext();) {
+                DistributionList dl = (DistributionList) it.next();
+                if (verbose)
+                    dumpDistributionList(dl);
+                else
+                    System.out.println(dl.getName());
+            }
         }
     }
 
