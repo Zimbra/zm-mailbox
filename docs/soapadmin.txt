@@ -767,6 +767,7 @@ Notes:
 -----------------------------
 
 <GetAllDistributionListsRequest>
+  [<domain by="id|name">...</domain>]
 </GetAllDistributionListsRequest>
 
 <GetAllDistributionListsResponse>
