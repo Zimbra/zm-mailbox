@@ -542,8 +542,10 @@ if fetch="1" is specified, the first hit will be expanded inline (messages only 
     + if html="1" is also specified, the inlined first hit will return HTML parts if available
     + if read="1" is also specified, the inlined first hit will be marked as read
 
-if recip="1" is specified, returned sent messages will contain the set of "To:" recipients
-    instead of the sender (messages only at present)
+if recip="1" is specified
+    + returned sent messages will contain the set of "To:" recipients instead of the sender
+    + returned conversations whose first hit was sent by the user will contain
+      that hit's "To:" recipients instead of the conversation's sender list
 
    {group-by} = DEPRECATED.  Use TYPES instead.	
    {types} 	= comma-separated list.  Legal values are:
