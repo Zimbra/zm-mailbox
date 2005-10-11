@@ -374,7 +374,6 @@ public class DbUtil {
         String[] sqls = script.split(";\\n?");
         PreparedStatement stmt = null;
         try {
-            conn = DbPool.getConnection();
             for (int i = 0; i < sqls.length; i++) {
                 stmt = conn.prepareStatement(sqls[i]);
                 stmt.execute();
