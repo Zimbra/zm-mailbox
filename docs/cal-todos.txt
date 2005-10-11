@@ -1,21 +1,14 @@
 CALENDAR Server-Side TODO list
 -----------------------------------------
 
--- Finish cleanup / code reorg for ActiveSync work
-
--- Use PUBLISH for 0-Attendee events
-
--- Support for "move to trash" instead of just deleting events
+-- Support for "move to trash" instead of just deleting events for WEB client
 
 -- VFREEBUSY for outlook
-
--- REPLY handling fixes:
-   -- need to properly track REPLYs from invitees
-   -- need to allow replies to be for a specific instance, not just an entire INVITE
 
 -- Alarm System / Alerts
 
 -- need to update to new iCal4j APIs (stop using deprecated functions)
+   -- blocked on iCal4j multi-threading fixes from Ben Fortuna (iCal4j maintainer)
 
 -- need to support client-defined timezones for advanced clients
 
