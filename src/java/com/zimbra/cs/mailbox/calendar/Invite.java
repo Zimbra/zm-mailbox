@@ -212,7 +212,7 @@ public class Invite {
             RecurId recurId,
             Recurrence.IRecurrence recurrenceOrNull,
             Organizer organizer,
-            List /* Attendee */ attendees,
+            List /* ZAttendee */ attendees,
             String name,
             String description,
             String location,
@@ -266,28 +266,32 @@ public class Invite {
         }
     }
     
-    private static final String FN_INVMSGID = "mid";
-    private static final String FN_SENTBYME = "byme";
-    private static final String FN_FRAGMENT = "frag";
-    private static final String FN_UID             = "u";
-    private static final String FN_STATUS          = "status";  // calendar: event/todo/journal status
-    private static final String FN_APPT_FREEBUSY   = "fb";
-    private static final String FN_TRANSP          = "tr";
-    private static final String FN_START           = "st";
-    private static final String FN_END             = "et";
+    private static final String FN_ADDRESS         = "a";
+    private static final String FN_APPT_FLAGS      = "af";
+    private static final String FN_ATTENDEE        = "at";
+    private static final String FN_CN              = "cn";
+    private static final String FN_SENTBYME        = "byme";
+    private static final String FN_FRAGMENT        = "frag";
+    private static final String FN_DTSTAMP         = "dts";
     private static final String FN_DURATION        = "duration";
+    private static final String FN_END             = "et";
+    private static final String FN_APPT_FREEBUSY   = "fb";
+    private static final String FN_LOCATION        = "l";
+    private static final String FN_INVMSGID        = "mid";
     private static final String FN_METHOD          = "mthd";
     private static final String FN_NAME            = "n";
-    private static final String FN_LOCATION        = "l";
-    private static final String FN_APPT_FLAGS      = "af";
-    private static final String FN_PARTSTAT        = "ptst";
-    private static final String FN_TZMAP           = "tzm"; // calendaring: timezone map
-    private static final String FN_RECUR_ID        = "rid";
-    private static final String FN_DTSTAMP         = "dts";
-    private static final String FN_SEQ_NO          = "seq";
-    private static final String FN_ORGANIZER       = "org";
     private static final String FN_NUM_ATTENDEES   = "numAt";
-    private static final String FN_ATTENDEE        = "at";
+    private static final String FN_ORGANIZER       = "org";
+    private static final String FN_PARTSTAT        = "ptst";
+    private static final String FN_ROLE            = "r";
+    private static final String FN_RECUR_ID        = "rid";
+    private static final String FN_SEQ_NO          = "seq";
+    private static final String FN_STATUS          = "status";  // calendar: event/todo/journal status
+    private static final String FN_START           = "st";
+    private static final String FN_TRANSP          = "tr";
+    private static final String FN_TZMAP           = "tzm"; // calendaring: timezone map
+    private static final String FN_RSVP_BOOL       = "v";
+    private static final String FN_UID             = "u";
         
     
     /**
@@ -340,8 +344,8 @@ public class Invite {
         meta.put(FN_NUM_ATTENDEES, String.valueOf(ats.size()));
         int i = 0;
         for (Iterator iter = ats.iterator(); iter.hasNext(); i++) {
-            Attendee at = (Attendee)iter.next();
-            meta.put(FN_ATTENDEE + i, encodeAsMetadata(at));
+            ZAttendee at = (ZAttendee)iter.next();
+            meta.put(FN_ATTENDEE + i, at.encodeAsMetadata());
         }
         
         return meta;
@@ -445,7 +449,7 @@ public class Invite {
         long numAts = meta.getLong(FN_NUM_ATTENDEES, 0);
         for (int i = 0; i < numAts; i++) {
             try {
-                Attendee at = parseAtFromMetadata(meta.getMap(FN_ATTENDEE + i, true));
+                ZAttendee at = ZAttendee.parseAtFromMetadata(meta.getMap(FN_ATTENDEE + i, true));
                 attendees.add(at);
             } catch (ServiceException e) {
                 sLog.warn("Problem decoding attendee " + i + " for appointment " 
@@ -551,10 +555,9 @@ public class Invite {
             setPartStat(IcalXmlStrMap.PARTSTAT_ACCEPTED);
             setNeedsReply(false);
         } else {
-            Attendee at = getMatchingAttendee(acct);
+            ZAttendee at = getMatchingAttendee(acct);
             if (at != null) {
-                PartStat stat = (PartStat)(at.getParameters().getParameter(Parameter.PARTSTAT));
-                if ((stat == null || stat.equals(PartStat.NEEDS_ACTION)) && 
+                if (at.getPartStat().equals(IcalXmlStrMap.PARTSTAT_NEEDS_ACTION) &&
                         (mMethod == Method.REQUEST || mMethod == Method.COUNTER)) {
                     setNeedsReply(true);
                 }
@@ -701,9 +704,6 @@ public class Invite {
         } else {
             if (mEnd != null) {
                 ParsedDuration dur = mEnd.difference(mStart); 
-//              if (isAllDayEvent()) {
-//              return dur.add(ParsedDuration.DAYS, 1);
-//              } 
                 return dur;  
             } else {
                 return null;
@@ -807,7 +807,7 @@ public class Invite {
     protected int mMailItemId = 0;
     protected int mComponentNum = 0;
     
-    private List /* Attendee */ mAttendees = new ArrayList();
+    private List /* ZAttendee */ mAttendees = new ArrayList();
     private Organizer mOrganizer;
     private ArrayList /* VAlarm */ mAlarms = new ArrayList();
     private Method mMethod;
@@ -839,95 +839,99 @@ public class Invite {
         return new Organizer(URI.create(addressStr));
     }
     
-    public static Attendee createAttendee(String cnStr, String addressStr, String roleStr, String partStatStr, Boolean rsvpBool) throws ServiceException
-    {
-        ParameterList p = new ParameterList();
-        
-        if (cnStr != null && !cnStr.equals("")) {
-            Cn cn = new Cn(cnStr);
-            p.add(cn);
-        }
-        
-        if (roleStr != null && !roleStr.equals("")) {
-            Role role = new Role(IcalXmlStrMap.sRoleMap.toIcal(roleStr));
-            p.add(role);
-        }
-        
-        if (partStatStr != null && !partStatStr.equals("")) {
-            PartStat partStat = new PartStat(IcalXmlStrMap.sPartStatMap.toIcal(partStatStr));
-            p.add(partStat);
-        }
-        
-        Rsvp rsvp = new Rsvp(rsvpBool);
-        p.add(rsvp);
-        
-        return new Attendee(p, URI.create(addressStr));
-        
-    }
+//    public static Attendee createAttendee(String cnStr, String addressStr, String roleStr, String partStatStr, Boolean rsvpBool) throws ServiceException
+//    {
+//        ParameterList p = new ParameterList();
+//        
+//        if (cnStr != null && !cnStr.equals("")) {
+//            Cn cn = new Cn(cnStr);
+//            p.add(cn);
+//        }
+//        
+//        if (roleStr != null && !roleStr.equals("")) {
+//            Role role = new Role(IcalXmlStrMap.sRoleMap.toIcal(roleStr));
+//            p.add(role);
+//        }
+//        
+//        if (partStatStr != null && !partStatStr.equals("")) {
+//            PartStat partStat = new PartStat(IcalXmlStrMap.sPartStatMap.toIcal(partStatStr));
+//            p.add(partStat);
+//        }
+//        
+//        Rsvp rsvp = new Rsvp(rsvpBool);
+//        p.add(rsvp);
+//        
+//        return new Attendee(p, URI.create(addressStr));
+//        
+//    }
     
     private static Organizer parseOrgFromMetadata(Metadata meta) {
-        if (meta == null || !meta.containsKey("a")) {
+        if (meta == null || !meta.containsKey(FN_ADDRESS)) {
             return null;
         }
-        String addressStr = meta.get("a", null);
+        String addressStr = meta.get(FN_ADDRESS, null);
         return createOrganizer(addressStr);
     }
     
     private static Metadata encodeAsMetadata(Organizer org) {
         Metadata meta = new Metadata();
-        meta.put("a", org.getCalAddress());
+        meta.put(FN_ADDRESS, org.getCalAddress());
         return meta;
     }
 
-    public static Attendee parseAtFromMetadata(Metadata meta) throws ServiceException {
-        if (meta == null) {
-            return null;
-        }
-        String cnStr = meta.get("cn", null);
-        String addressStr = meta.get("a", null);
-        String roleStr = meta.get("r", null);
-        String partStatStr = meta.get(FN_PARTSTAT, null);
-        Boolean rsvpBool = Boolean.FALSE;
-        if (meta.getBool("v", false)) {
-            rsvpBool = Boolean.TRUE;
-        }
-        
-        return createAttendee(cnStr, addressStr, roleStr, partStatStr, rsvpBool);
-    }
+//    public static Attendee parseAtFromMetadata(Metadata meta) throws ServiceException {
+//        if (meta == null) {
+//            return null;
+//        }
+//        String cnStr = meta.get(FN_CN, null);
+//        String addressStr = meta.get(FN_ADDRESS, null);
+//        String roleStr = meta.get(FN_ROLE, null);
+//        String partStatStr = meta.get(FN_PARTSTAT, null);
+//        Boolean rsvpBool = Boolean.FALSE;
+//        if (meta.getBool(FN_RSVP_BOOL, false)) {
+//            rsvpBool = Boolean.TRUE;
+//        }
+//        
+//        return createAttendee(cnStr, addressStr, roleStr, partStatStr, rsvpBool);
+//    }
     
-    public static Metadata encodeAsMetadata(Attendee at) {
-        Metadata meta = new Metadata();
-        ParameterList params = at.getParameters();
-        
-        // address
-        meta.put("a", at.getCalAddress());
-        
-        // CN
-        Cn cn = (Cn)params.getParameter(Parameter.CN);
-        if (cn != null) {
-            meta.put("cn", cn.getValue());
-        }
-        
-        // role
-        Role role = (Role) params.getParameter(Parameter.ROLE);
-        if (role != null)
-            meta.put("r", IcalXmlStrMap.sRoleMap.toXml(role.getValue()));
-        
-        // partstat
-        PartStat partStat = (PartStat) params.getParameter(Parameter.PARTSTAT);
-        if (partStat != null)
-            meta.put(FN_PARTSTAT, IcalXmlStrMap.sPartStatMap.toXml(partStat.getValue()));
-        
-        // rsvp?
-        boolean rsvp = false;
-        Parameter rsvpParam = params.getParameter(Parameter.RSVP);
-        if (rsvpParam != null)
-            rsvp = ((Rsvp) rsvpParam).getRsvp().booleanValue();
-        if (rsvp)
-            meta.put("v", "1");
-        
-        return meta;
-    }
+//    public static Metadata encodeAsMetadata(Attendee at) {
+//        Metadata meta = new Metadata();
+//        ParameterList params = at.getParameters();
+//        
+//        // address
+//        meta.put(FN_ADDRESS, at.getCalAddress());
+//        
+//        // CN
+//        Cn cn = (Cn)params.getParameter(Parameter.CN);
+//        if (cn != null) {
+//            meta.put(FN_CN, cn.getValue());
+//        }
+//        
+//        // role
+//        Role role = (Role) params.getParameter(Parameter.ROLE);
+//        if (role != null) {
+//            meta.put(FN_ROLE, IcalXmlStrMap.sRoleMap.toXml(role.getValue()));
+//        }
+//        
+//        // partstat
+//        PartStat partStat = (PartStat) params.getParameter(Parameter.PARTSTAT);
+//        if (partStat != null) {
+//            meta.put(FN_PARTSTAT, IcalXmlStrMap.sPartStatMap.toXml(partStat.getValue()));
+//        }
+//        
+//        // rsvp?
+//        boolean rsvp = false;
+//        Parameter rsvpParam = params.getParameter(Parameter.RSVP);
+//        if (rsvpParam != null) {
+//            rsvp = ((Rsvp) rsvpParam).getRsvp().booleanValue();
+//        }
+//        if (rsvp) {
+//            meta.put(FN_RSVP_BOOL, "1");
+//        }
+//        
+//        return meta;
+//    }
     
     
     public boolean sentByMe() { return mSentByMe; }
@@ -952,14 +956,14 @@ public class Invite {
      * @return The first matching attendee
      * @throws ServiceException
      */
-    public Attendee getMatchingAttendee(Account acct) throws ServiceException {
+    public ZAttendee getMatchingAttendee(Account acct) throws ServiceException {
         // Find my ATTENDEE record in the Invite, it must be in our response
         List attendees = getAttendees();
         
         for (Iterator iter = attendees.iterator(); iter.hasNext();) {
-            Attendee at = (Attendee)(iter.next());
+            ZAttendee at = (ZAttendee)(iter.next());
             
-            String thisAtEmail = at.getCalAddress().getSchemeSpecificPart();
+            String thisAtEmail = at.getAddress();
             if (AccountUtil.addressMatchesAccount(acct, thisAtEmail)) {
                 return at;
             } 
@@ -981,54 +985,84 @@ public class Invite {
         // Find my ATTENDEE record in the Invite, it must be in our response
         List attendees = getAttendees();
         
+        ArrayList /*ZAttendee */ toAdd = new ArrayList();
+        
         boolean modified = false;
         
-        for (Iterator otherIter = other.getAttendees().iterator(); otherIter.hasNext();) {
-            Attendee otherAt = (Attendee)otherIter.next();
-            
-            for (Iterator iter = attendees.iterator(); iter.hasNext();) {
-                Attendee at = (Attendee)(iter.next());
+        OUTER: 
+            for (Iterator otherIter = other.getAttendees().iterator(); otherIter.hasNext();) {
+                ZAttendee otherAt = (ZAttendee)otherIter.next();
                 
-                URI lhs = otherAt.getCalAddress();
-                URI rhs = at.getCalAddress();
-                if (lhs.equals(rhs)) {
+                for (Iterator iter = attendees.iterator(); iter.hasNext();) {
+                    ZAttendee at = (ZAttendee)(iter.next());
                     
-                    ParameterList otherParams = otherAt.getParameters();
-                    
-                    ParameterList atParams = at.getParameters();
-                    Parameter p;
-                    
-                    /////////
-                    // update Role if it has changed
-                    if ((p=otherParams.getParameter(Parameter.ROLE)) != null) 
+//                  URI lhs = otherAt.getCalAddress();
+//                  URI rhs = at.getCalAddress();
+                    String lhs = otherAt.getAddress();
+                    String rhs = at.getAddress();
+                    if (lhs.equals(rhs)) 
                     {
-                        Parameter toRemove = atParams.getParameter(Parameter.ROLE);
-                        atParams.remove(toRemove);
+                        if (!otherAt.getRole().equals(at.getRole())) {
+                            at.setRole(otherAt.getRole());
+                            modified = true;
+                        }
                         
-                        atParams.add(p);
-                    }
-                    
-                    /////////
-                    // update RSVP to "no"
-                    p = atParams.getParameter(Parameter.RSVP);
-                    if (p!= null) {
-                        atParams.remove(p);
-                    }
-                    atParams.add(Rsvp.FALSE);
-                    
-                    
-                    /////////
-                    // update PartStat if it has changed
-                    p = otherParams.getParameter(Parameter.PARTSTAT);
-                    if (p!= null) {
-                        Parameter toRemove = atParams.getParameter(Parameter.PARTSTAT);
-                        atParams.remove(toRemove);
+                        if (!otherAt.getPartStat().equals(at.getPartStat())) {
+                            at.setPartStat(otherAt.getPartStat());
+                            modified = true;
+                        }
                         
-                        atParams.add(p);
+                        if (!otherAt.getRsvp().equals(at.getRsvp())) {
+                            at.setRsvp(otherAt.getRsvp());
+                            modified = true;
+                        }
+                        
+//                      ParameterList otherParams = otherAt.getParameters();
+//                      
+//                      ParameterList atParams = at.getParameters();
+//                      Parameter p;
+//                      
+//                      /////////
+//                      // update Role if it has changed
+//                      if ((p=otherParams.getParameter(Parameter.ROLE)) != null) 
+//                      {
+//                      Parameter toRemove = atParams.getParameter(Parameter.ROLE);
+//                      atParams.remove(toRemove);
+//                      
+//                      atParams.add(p);
+//                      }
+//                      
+//                      /////////
+//                      // update RSVP to "no"
+//                      p = atParams.getParameter(Parameter.RSVP);
+//                      if (p!= null) {
+//                      atParams.remove(p);
+//                      }
+//                      atParams.add(Rsvp.FALSE);
+//                      
+//                      
+//                      /////////
+//                      // update PartStat if it has changed
+//                      p = otherParams.getParameter(Parameter.PARTSTAT);
+//                      if (p!= null) {
+//                      Parameter toRemove = atParams.getParameter(Parameter.PARTSTAT);
+//                      atParams.remove(toRemove);
+//                      
+//                      atParams.add(p);
+//                      }
+                        
+                        continue OUTER;
                     }
-                    
-                    modified = true;
                 }
+                
+                toAdd.add(otherAt);
+            }
+        
+        if (toAdd.size() > 0) {
+            for (Iterator iter = toAdd.iterator(); iter.hasNext();) {
+                modified = true;
+                ZAttendee add = (ZAttendee)iter.next();
+                attendees.add(add);
             }
         }
         
@@ -1056,8 +1090,6 @@ public class Invite {
     {
         assert(mTzMap != null);
         try {
-//            boolean iAmTheOrganizer = false;
-            
             // Allowed Sub-Components: VALARM
             ComponentList comps = vevent.getAlarms();
             
@@ -1092,33 +1124,23 @@ public class Invite {
                 if (propName.equals(Property.ORGANIZER)) {
                     net.fortuna.ical4j.model.property.Organizer org = (net.fortuna.ical4j.model.property.Organizer) prop;
                     mOrganizer = org;
-//                    iAmTheOrganizer = thisAcctIsOrganizer(acct);
                 } else if (propName.equals(Property.ATTENDEE)) {
-                    net.fortuna.ical4j.model.property.Attendee attendee = (net.fortuna.ical4j.model.property.Attendee)prop; 
-                    mAttendees.add(attendee);
+                    net.fortuna.ical4j.model.property.Attendee attendee = (net.fortuna.ical4j.model.property.Attendee)prop;
+                    mAttendees.add(new ZAttendee(attendee));
                 } else if (propName.equals(Property.DTSTAMP)) {
                     mDTStamp = ((DtStamp) prop).getDateTime().getTime();
                 } else if (propName.equals(Property.RECURRENCE_ID)) {
-//                  mRecurrenceId = ((RecurrenceId) prop).getTime().getTime();
                     mRecurrenceId = RecurId.parse((RecurrenceId)prop, mTzMap);
                 } else if (propName.equals(Property.SEQUENCE)) {
                     mSeqNo = ((Sequence) prop).getSequenceNo();
                 } else if (propName.equals(Property.DTSTART)) {
-//                  DtStart start = (DtStart)prop;
-//                  Parameter param = start.getParameters().getParameter("VALUE");
-//                  if (param != null && param.getValue().equals("DATE")) {
-//                  setIsAllDayEvent(true);
-//                  }
-//                  mStart = ((DtStart) prop).getTime().getTime();
                     mStart = ParsedDateTime.parse(prop, mTzMap);
                     if (!mStart.hasTime()) {
                         setIsAllDayEvent(true);
                     }
                 } else if (propName.equals(Property.DTEND)) {
-//                  mEnd = ((DtEnd) prop).getTime().getTime();
                     mEnd = ParsedDateTime.parse(prop, mTzMap);
                 } else if (propName.equals(Property.DURATION)) {
-//                  mDuration = ((Duration) prop).getDuration();
                     mDuration = ParsedDuration.parse(prop);
                 } else if (propName.equals(Property.LOCATION)) {
                     mLocation = prop.getValue();
@@ -1208,34 +1230,16 @@ public class Invite {
             if (mAttendees.size() > 1) {
                 setHasOtherAttendees(true);
             }
-            
-//            if (iAmTheOrganizer) {
-//                setPartStat(IcalXmlStrMap.PARTSTAT_ACCEPTED);
-//                setNeedsReply(false);
-//            } else {
-//                Attendee at = getMatchingAttendee(acct);
-//                if (at != null) {
-//                    PartStat stat = (PartStat)(at.getParameters().getParameter(Parameter.PARTSTAT));
-//                    if ((stat == null || stat.equals(PartStat.NEEDS_ACTION)) &&
-//                            (method == Method.REQUEST || method == Method.COUNTER)) {
-//                        setNeedsReply(true);
-//                    }
-//                } else {
-//                    // if this is the first time we're parsing this, and we can't find ourself on the
-//                    // attendee list, then allow a reply...
-//                    setNeedsReply(true);
-//                }
-//            }
         } catch(ParseException e) {
             throw MailServiceException.ICALENDAR_PARSE_ERROR(vevent.toString(), e);
         }
     }
     
-    public List /* Attendee */ getAttendees() {
+    public List /* ZAttendee */ getAttendees() {
         return mAttendees;
     }
     
-    public void addAttendee(Attendee at) {
+    public void addAttendee(ZAttendee at) {
         mAttendees.add(at);
     }
     
@@ -1254,23 +1258,6 @@ public class Invite {
     TimeZoneMap mTzMap;
     
     public TimeZoneMap getTimeZoneMap() { return mTzMap; }
-    
-    String detailsToString() {
-        StringBuffer sb = new StringBuffer();
-        sb.append("details:\n");
-        if (mOrganizer != null) {
-            sb.append("org:");
-            sb.append(mOrganizer.toString());
-            sb.append("\n");
-        }
-        for (Iterator iter = mAttendees.iterator(); iter.hasNext();) {
-            Attendee at = (Attendee)iter.next();
-            sb.append("ATTENDEE;"+at.toString());
-            sb.append("\n");
-        }
-        return sb.toString();
-    }
-    
     
     /** This version parses the invites BEFORE the InviteMessage object itself is created -- this is
      *  necessary because of the way the MailItem creation path works.  
@@ -1488,8 +1475,8 @@ public class Invite {
         
         // ATTENDEEs
         for (Iterator iter = mAttendees.iterator(); iter.hasNext(); ) {
-            Attendee at = (Attendee)iter.next();
-            event.getProperties().add(at);
+            ZAttendee at = (ZAttendee)iter.next();
+            event.getProperties().add(at.iCal4jAttendee());
         }
         
         // RECURRENCE-ID

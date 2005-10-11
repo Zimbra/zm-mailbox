@@ -42,6 +42,7 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
+import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ParsedItemID;
 import com.zimbra.cs.stats.StopWatch;
@@ -49,9 +50,6 @@ import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
 import net.fortuna.ical4j.model.Calendar;
-import net.fortuna.ical4j.model.Parameter;
-import net.fortuna.ical4j.model.parameter.PartStat;
-import net.fortuna.ical4j.model.property.Attendee;
 
 /**
  * @author tim
@@ -163,7 +161,7 @@ public class SendInviteReply extends SendMsg {
                 if (exceptDt != null) {
                     recurId = new RecurId(exceptDt, RecurId.RANGE_NONE);
                 }
-                Attendee me = oldInv.getMatchingAttendee(acct);
+                ZAttendee me = oldInv.getMatchingAttendee(acct);
                 String cnStr = null;
                 String addressStr = acct.getName();
                 String role = IcalXmlStrMap.ROLE_OPT_PARTICIPANT;
@@ -171,11 +169,15 @@ public class SendInviteReply extends SendMsg {
                 long dtStamp = oldInv.getDTStamp();
                 if (me != null) {
                     cnStr = null;
-                    if (me.getParameters().getParameter(Parameter.CN) != null) {
-                        cnStr = me.getParameters().getParameter(Parameter.CN).getValue();
+                    if (me.hasCn()) {
+//                    if (me.getParameters().getParameter(Parameter.CN) != null) {
+//                        cnStr = me.getParameters().getParameter(Parameter.CN).getValue();
+                        cnStr = me.getCn();
                     }
-                    addressStr = me.getCalAddress().getSchemeSpecificPart();
-                    role = IcalXmlStrMap.sRoleMap.toXml(me.getParameters().getParameter(Parameter.ROLE).getValue());
+                    addressStr = me.getAddress();
+                    if (me.hasRole()) {
+                        role = me.getRole();
+                    }
                 }
                 
 //              mbox.modifyInvitePartStat(octxt, apptId, inviteMsgId, compNum, false, verb.getXmlPartStat());
@@ -216,36 +218,25 @@ public class SendInviteReply extends SendMsg {
         replyText.append(verb.toString());
         replyText.append(" your invitation");
         
-        return CalendarUtils.createDefaultCalendarMessage(acct, inv.getOrganizer().getCalAddress(), replySubject, 
+        return CalendarUtils.createDefaultCalendarMessage(acct, inv.getOrganizer().getCalAddress().getSchemeSpecificPart(), replySubject, 
                 replyText.toString(), inv.getUid(), iCal);
     }
     
     protected final static class ParsedVerb {
         String name;
         String xmlPartStat;      // XML participant status
-        String iCalPartStat;     // iCal participant status
-        public ParsedVerb(String name, String xmlPartStat, String iCalPartStat) {
+        public ParsedVerb(String name, String xmlPartStat) {
             this.name = name;
             this.xmlPartStat = xmlPartStat;
-            this.iCalPartStat = iCalPartStat;
         }
         public String toString() { return name; }
         String getXmlPartStat() { return xmlPartStat; }
-        String getICalPartStat() { return iCalPartStat; }
+//        String getICalPartStat() { return iCalPartStat; }
     }
     
-    protected final static ParsedVerb VERB_ACCEPT =
-        new ParsedVerb("ACCEPT",
-                       IcalXmlStrMap.PARTSTAT_ACCEPTED,
-                       PartStat.ACCEPTED.getValue());
-    protected final static ParsedVerb VERB_DECLINE =
-        new ParsedVerb("DECLINE",
-                       IcalXmlStrMap.PARTSTAT_DECLINED,
-                       PartStat.DECLINED.getValue());
-    protected final static ParsedVerb VERB_TENTATIVE =
-        new ParsedVerb("TENTATIVE",
-                       IcalXmlStrMap.PARTSTAT_TENTATIVE,
-                       PartStat.TENTATIVE.getValue());
+    protected final static ParsedVerb VERB_ACCEPT = new ParsedVerb("ACCEPT", IcalXmlStrMap.PARTSTAT_ACCEPTED);
+    protected final static ParsedVerb VERB_DECLINE = new ParsedVerb("DECLINE", IcalXmlStrMap.PARTSTAT_DECLINED);
+    protected final static ParsedVerb VERB_TENTATIVE = new ParsedVerb("TENTATIVE", IcalXmlStrMap.PARTSTAT_TENTATIVE);
     
     protected static HashMap /* string, parsedverb */ sVerbs;
     static {

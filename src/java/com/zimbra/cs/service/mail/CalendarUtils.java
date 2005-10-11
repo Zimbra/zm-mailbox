@@ -28,7 +28,6 @@ package com.zimbra.cs.service.mail;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -61,11 +60,8 @@ import net.fortuna.ical4j.model.ValidationException;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.parameter.Cn;
 import net.fortuna.ical4j.model.parameter.PartStat;
-import net.fortuna.ical4j.model.parameter.Role;
-import net.fortuna.ical4j.model.parameter.Rsvp;
 import net.fortuna.ical4j.model.parameter.TzId;
 import net.fortuna.ical4j.model.parameter.Value;
-import net.fortuna.ical4j.model.property.Attendee;
 import net.fortuna.ical4j.model.property.ExDate;
 import net.fortuna.ical4j.model.property.Method;
 import net.fortuna.ical4j.model.property.Organizer;
@@ -85,6 +81,7 @@ import com.zimbra.cs.mailbox.calendar.ParsedDuration;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.Recurrence;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
+import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.soap.Element;
 
@@ -113,25 +110,25 @@ public class CalendarUtils {
      * @param iter
      * @return
      */
-    static List /* URI */ toListFromAts(List /* Attendee */ list) {
-        List /* URI */ atURIs= new ArrayList();
+    static List /* String */ toListFromAts(List /* ZAttendee */ list) {
+        List /* String */ toList = new ArrayList();
         for (Iterator iter = list.iterator(); iter.hasNext();) {
-            Attendee curAt = (Attendee)iter.next();
-            atURIs.add(curAt.getCalAddress());
+            ZAttendee curAt = (ZAttendee)iter.next();
+            toList.add(curAt.getAddress());
         }
-        return atURIs;
+        return toList;
     }
     
 
-    static MimeMessage createDefaultCalendarMessage(Account acct, URI toURI,
+    static MimeMessage createDefaultCalendarMessage(Account acct, String addr,
             String subject, String text, String uid, Calendar cal) throws ServiceException {
         List list = new ArrayList();
-        list.add(toURI);
+        list.add(addr);
         return createDefaultCalendarMessage(acct, list, subject, text, uid, cal);
     }
     
     
-    static MimeMessage createDefaultCalendarMessage(Account acct, List /* URI */ toAts,
+    static MimeMessage createDefaultCalendarMessage(Account acct, List /* String */ toAts,
             String subject, String text, String uid, Calendar cal) throws ServiceException 
     {
         try {
@@ -157,7 +154,8 @@ public class CalendarUtils {
             Address[] addrs = new Address[toAts.size()];
             
             for (int i = toAts.size()-1; i>=0; i--) {
-                String toAddr = ((URI)toAts.get(i)).getSchemeSpecificPart();
+//                String toAddr = ((URI)toAts.get(i)).getSchemeSpecificPart();
+                String toAddr = (String)toAts.get(i);
                 InternetAddress addr = new InternetAddress(toAddr);
                 addrs[i] = addr;
             }
@@ -314,11 +312,11 @@ public class CalendarUtils {
         
         // compare the new attendee list with the existing one...if attendees have been removed, then
         // we need to send them individual cancelation messages
-        List /* Attendee */ newAts = mod.getAttendees();
-        List /* Attendee */ oldAts = oldInv.getAttendees();
+        List /* ZAttendee */ newAts = mod.getAttendees();
+        List /* ZAttendee */ oldAts = oldInv.getAttendees();
         for (Iterator iter = oldAts.iterator(); iter.hasNext();) {
-            Attendee cur = (Attendee)iter.next();
-            if (!listContains(newAts, cur)) {
+            ZAttendee cur = (ZAttendee)iter.next();
+            if (!attendeeListContains(newAts, cur)) {
                 attendeesToCancel.add(cur);
             }
         }
@@ -350,10 +348,11 @@ public class CalendarUtils {
     }
     
     // TRUE if the list contains the atendee, comparing by URI
-    private static boolean listContains(List list, Attendee at) {
+    private static boolean attendeeListContains(List /* ZAttendee */ list, ZAttendee at) {
         for (Iterator iter = list.iterator(); iter.hasNext();) {
-            Attendee cur = (Attendee)iter.next();
-            if (cur.getCalAddress().equals(at.getCalAddress())) {
+            ZAttendee cur = (ZAttendee)iter.next();
+//            if (cur.getCalAddress().equals(at.getCalAddress())) {
+            if (cur.addressesMatch(at)) {
                 return true;
             }
         }
@@ -770,35 +769,40 @@ public class CalendarUtils {
 
             String cn = cur.getAttribute(MailService.A_DISPLAY, null);
             String address = cur.getAttribute(MailService.A_ADDRESS);
-            URI uri = null;
-            try { 
-                uri = new URI("MAILTO:" + address);
-            } catch (java.net.URISyntaxException e) {
-                throw ServiceException.FAILURE("Building Attendee URI", e);
-            }
+//            URI uri = null;
+//            try { 
+//                uri = new URI("MAILTO:" + address);
+//            } catch (java.net.URISyntaxException e) {
+//                throw ServiceException.FAILURE("Building Attendee URI", e);
+//            }
 
-            Attendee at = new Attendee(uri);
-            ParameterList params = at.getParameters();
-            
             String role = cur.getAttribute(MailService.A_APPT_ROLE);
-            role = IcalXmlStrMap.sRoleMap.toIcal(role);
-            params.add(new Role(role));
-            
-            
             String partStat = cur.getAttribute(MailService.A_APPT_PARTSTAT);
-            partStat = IcalXmlStrMap.sPartStatMap.toIcal(partStat);
-            params.add(new PartStat(partStat)); 
+            boolean rsvp = cur.getAttributeBool(MailService.A_APPT_RSVP, false);
             
-            boolean rsvp = false;
             if (partStat.equals(PartStat.NEEDS_ACTION.getValue())) {
                 rsvp = true;
             }
-            params.add(rsvp ? Rsvp.TRUE : Rsvp.FALSE);
             
-            // ical4j doesn't deal with "" empty values correctly right now
-            if ((cn != null) && (!cn.equals(""))) {
-                params.add(new Cn(cn));
-            }
+            ZAttendee at = new ZAttendee(address, cn, role, partStat, rsvp ? Boolean.TRUE : Boolean.FALSE); 
+
+//            Attendee at = new Attendee(uri);
+//            ParameterList params = at.getParameters();
+//            
+//            role = IcalXmlStrMap.sRoleMap.toIcal(role);
+//            params.add(new Role(role));
+//            
+//            
+//
+//            partStat = IcalXmlStrMap.sPartStatMap.toIcal(partStat);
+//            params.add(new PartStat(partStat)); 
+//            
+//            params.add(rsvp ? Rsvp.TRUE : Rsvp.FALSE);
+//            
+//            // ical4j doesn't deal with "" empty values correctly right now
+//            if ((cn != null) && (!cn.equals(""))) {
+//                params.add(new Cn(cn));
+//            }
             
             if (newInv.getMethod().equals(Method.PUBLISH.getValue())) {
                 newInv.setMethod(Method.REQUEST);
@@ -888,21 +892,23 @@ public class CalendarUtils {
         reply.getTimeZoneMap().add(oldInv.getTimeZoneMap());
         
         // ATTENDEE -- send back this attendee with the proper status
-        Attendee meReply = null;
-        Attendee me = oldInv.getMatchingAttendee(acct);
+        ZAttendee meReply = null;
+        ZAttendee me = oldInv.getMatchingAttendee(acct);
         if (me != null) {
-            meReply = new Attendee(me.getCalAddress());
-            meReply.getParameters().add(new PartStat(verb.getICalPartStat()));
-                reply.addAttendee(meReply);
+            meReply = new ZAttendee(me.getAddress());
+//            meReply.getParameters().add(new PartStat(verb.getICalPartStat()));
+            meReply.setPartStat(verb.getXmlPartStat());
+            reply.addAttendee(meReply);
         } else {
             String name = acct.getName();
-            try {
-                meReply = new Attendee(name);
-                meReply.getParameters().add(new PartStat(verb.getICalPartStat()));
-                    reply.addAttendee(meReply);
-            } catch(URISyntaxException e) {
-                throw ServiceException.FAILURE("URISyntaxException "+name, e);
-            }
+//            try {
+                meReply = new ZAttendee(name);
+//                meReply.getParameters().add(new PartStat(verb.getICalPartStat()));
+                meReply.setPartStat(verb.getXmlPartStat());
+                reply.addAttendee(meReply);
+//            } catch(URISyntaxException e) {
+//                throw ServiceException.FAILURE("URISyntaxException "+name, e);
+//            }
         }
         
         // DTSTART (outlook seems to require this, even though it shouldn't)
@@ -944,7 +950,7 @@ public class CalendarUtils {
     }
     
     
-    static Invite buildCancelInviteCalendar(Account acct, Invite inv, String comment, Attendee forAttendee) throws ServiceException
+    static Invite buildCancelInviteCalendar(Account acct, Invite inv, String comment, ZAttendee forAttendee) throws ServiceException
     {
         return cancelInvite(acct, inv, comment, forAttendee, null);
     }
@@ -993,7 +999,7 @@ public class CalendarUtils {
      * @return
      * @throws ServiceException
      */
-    static Invite cancelInvite(Account acct, Invite inv, String comment, Attendee forAttendee, RecurId recurId) throws ServiceException 
+    static Invite cancelInvite(Account acct, Invite inv, String comment, ZAttendee forAttendee, RecurId recurId) throws ServiceException 
     {
         TimeZoneMap tzMap = new TimeZoneMap(acct.getTimeZone());
         Invite cancel = new Invite(Method.CANCEL, comment, tzMap);
@@ -1005,7 +1011,7 @@ public class CalendarUtils {
         if (forAttendee == null) {
             for (Iterator iter = inv.getAttendees().iterator(); iter.hasNext();)
             {
-                Attendee at = (Attendee)iter.next();
+                ZAttendee at = (ZAttendee)iter.next();
                 cancel.addAttendee(at);
             }
         } else {

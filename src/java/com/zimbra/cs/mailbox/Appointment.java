@@ -49,9 +49,6 @@ import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.data.ParserException;
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Component;
-import net.fortuna.ical4j.model.Parameter;
-import net.fortuna.ical4j.model.parameter.PartStat;
-import net.fortuna.ical4j.model.property.Attendee;
 import net.fortuna.ical4j.model.property.Method;
 
 import com.zimbra.cs.account.Account;
@@ -64,6 +61,7 @@ import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.Recurrence;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
+import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -72,7 +70,6 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.store.Volume;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.ZimbraLog;
@@ -869,7 +866,7 @@ public class Appointment extends MailItem {
         public RecurId mRecurId;
         public int mSeqNo;
         public long mDtStamp;
-        public Attendee mAttendee; // attendee record w/ PartStat
+        public ZAttendee mAttendee; // attendee record w/ PartStat
         
         private static final String FN_RECURID = "r";
         private static final String FN_SEQNO = "s";
@@ -885,7 +882,7 @@ public class Appointment extends MailItem {
             
             meta.put(FN_SEQNO, mSeqNo);
             meta.put(FN_DTSTAMP, mDtStamp);
-            meta.put(FN_ATTENDEE, Invite.encodeAsMetadata(mAttendee));
+            meta.put(FN_ATTENDEE, mAttendee.encodeAsMetadata());
 
             return meta;
         }
@@ -900,7 +897,7 @@ public class Appointment extends MailItem {
             }
             toRet.mSeqNo = (int)md.getLong(FN_SEQNO);
             toRet.mDtStamp = md.getLong(FN_DTSTAMP);
-            toRet.mAttendee = Invite.parseAtFromMetadata(md.getMap(FN_ATTENDEE));
+            toRet.mAttendee = ZAttendee.parseAtFromMetadata(md.getMap(FN_ATTENDEE));
             
             return toRet;
         }
@@ -959,11 +956,12 @@ public class Appointment extends MailItem {
             }
         }
         
-        boolean maybeStoreNewReply(Invite inv, Attendee at) {
+        boolean maybeStoreNewReply(Invite inv, ZAttendee at) {
             for (Iterator iter = mReplies.iterator(); iter.hasNext();) {
                 ReplyInfo cur = (ReplyInfo)iter.next();
                 
-                if (attendeeMatches(at, cur.mAttendee)) {
+//                if (attendeeMatches(at, cur.mAttendee)) {
+                if (at.addressesMatch(cur.mAttendee)) {
                     if (recurMatches(inv.getRecurId(), cur.mRecurId)) {
                         if (inv.getSeqNo() >= cur.mSeqNo) {
                             if (inv.getDTStamp() >= cur.mDtStamp) {
@@ -1005,21 +1003,21 @@ public class Appointment extends MailItem {
                 if ( (cur.mRecurId == null && recurId == null) ||
                         (cur.mRecurId != null && cur.mRecurId.withinRange(recurId))) {                    
                     if (
-                            (acctOrNull != null && (AccountUtil.addressMatchesAccount(acctOrNull, cur.mAttendee.getCalAddress().getSchemeSpecificPart()))) ||
-                            (acctOrNull == null && cur.mAttendee.getCalAddress().getSchemeSpecificPart().equalsIgnoreCase(addressStr))
+                            (acctOrNull != null && (AccountUtil.addressMatchesAccount(acctOrNull, cur.mAttendee.getAddress()))) ||
+                            (acctOrNull == null && cur.mAttendee.addressMatches(addressStr))
                             ) 
                     {
-                        if (cur.mAttendee.getParameters().getParameter(Parameter.CN) != null) {
-                            cnStr = cur.mAttendee.getParameters().getParameter(Parameter.CN).getValue();
+                        if (cur.mAttendee.hasCn()) {
+                            cnStr = cur.mAttendee.getCn();
                         }
                         
-                        if (cur.mAttendee.getParameters().getParameter(Parameter.ROLE) != null) {
-                            roleStr = IcalXmlStrMap.sRoleMap.toXml(cur.mAttendee.getParameters().getParameter(Parameter.ROLE).getValue());
+                        if (cur.mAttendee.hasRole()) {
+                            roleStr = cur.mAttendee.getRole();
                         }
                         
-                        Attendee newAt = Invite.createAttendee(
+                        ZAttendee newAt = new ZAttendee(
+                                cur.mAttendee.getAddress(),
                                 cnStr,
-                                cur.mAttendee.getCalAddress().getSchemeSpecificPart(),
                                 roleStr,
                                 partStatStr,
                                 needsReply
@@ -1035,15 +1033,11 @@ public class Appointment extends MailItem {
             
             // no existing partstat for this instance...add a new one 
             ReplyInfo inf = new ReplyInfo();
-            inf.mAttendee = Invite.createAttendee(cnStr, addressStr, roleStr, partStatStr, needsReply);
+            inf.mAttendee = new ZAttendee(addressStr, cnStr, roleStr, partStatStr, needsReply);
             inf.mRecurId = recurId;
             inf.mDtStamp = dtStamp;
             inf.mSeqNo = seqNo;
             mReplies.add(inf);
-        }
-        
-        boolean attendeeMatches(Attendee lhs, Attendee rhs) {
-            return (lhs.getCalAddress().getSchemeSpecificPart().equals(rhs.getCalAddress().getSchemeSpecificPart()));
         }
         
         boolean recurMatches(RecurId lhs, RecurId rhs) {
@@ -1053,11 +1047,11 @@ public class Appointment extends MailItem {
             return lhs.equals(rhs);
         }
         
-        Attendee getEffectiveAttendee(Account acct, Invite inv, Instance inst) throws ServiceException {
+        ZAttendee getEffectiveAttendee(Account acct, Invite inv, Instance inst) throws ServiceException {
             for (Iterator iter = mReplies.iterator(); iter.hasNext();) {
                 ReplyInfo cur = (ReplyInfo)iter.next();
                 
-                if (AccountUtil.addressMatchesAccount(acct, cur.mAttendee.getCalAddress().getSchemeSpecificPart())) {
+                if (AccountUtil.addressMatchesAccount(acct, cur.mAttendee.getAddress())) {
                     if ((cur.mRecurId == null && inv.getRecurId() == null) ||
                             (inst!=null && cur.mRecurId != null && cur.mRecurId.withinRange(inst.getStart()))) {
                         if (inv.getSeqNo() <= cur.mSeqNo) {
@@ -1078,7 +1072,7 @@ public class Appointment extends MailItem {
             for (Iterator iter = mReplies.iterator(); iter.hasNext();) {
                 ReplyInfo cur = (ReplyInfo)iter.next();
                 
-                if (acct==null || AccountUtil.addressMatchesAccount(acct, cur.mAttendee.getCalAddress().getSchemeSpecificPart())) {
+                if (acct==null || AccountUtil.addressMatchesAccount(acct, cur.mAttendee.getAddress())) {
                     if (inv == null || ((inv.getSeqNo() <= cur.mSeqNo) && (inv.getDTStamp() <= cur.mDtStamp))) {
 //                        FreeBusyActualData dat = new FreeBusyActualData();
 //                        dat.mRecurId = cur.mRecurId;
@@ -1095,11 +1089,11 @@ public class Appointment extends MailItem {
         }
         
 
-        Attendee getEffectiveAttendee(Account acct, Invite inv, RecurId recurId) throws ServiceException {
+        ZAttendee getEffectiveAttendee(Account acct, Invite inv, RecurId recurId) throws ServiceException {
             for (Iterator iter = mReplies.iterator(); iter.hasNext();) {
                 ReplyInfo cur = (ReplyInfo)iter.next();
                 
-                if (AccountUtil.addressMatchesAccount(acct, cur.mAttendee.getCalAddress().getSchemeSpecificPart())) {
+                if (AccountUtil.addressMatchesAccount(acct, cur.mAttendee.getAddress())) {
                     if ((cur.mRecurId == null && inv.getRecurId() == null) ||
                             (recurId!=null && cur.mRecurId.withinRange(recurId))) {
                         if (inv.getSeqNo() <= cur.mSeqNo) {
@@ -1133,14 +1127,13 @@ public class Appointment extends MailItem {
     
     public String getFreeBusyActual(Account acct, Invite inv, Instance inst) throws ServiceException 
     {
-        Attendee at = mReplyList.getEffectiveAttendee(acct, inv, inst);
+        ZAttendee at = mReplyList.getEffectiveAttendee(acct, inv, inst);
         if (at == null) {
             return inv.getFreeBusyActual();
         }
 
-        PartStat ps = (PartStat)(at.getParameters().getParameter(Parameter.PARTSTAT));
-        if (ps != null) {
-            return inv.partStatToFreeBusyActual(IcalXmlStrMap.sPartStatMap.toXml(ps.getValue()));
+        if (at.hasPartStat()) {
+            return inv.partStatToFreeBusyActual(at.getPartStat());
         } else {
             return inv.getFreeBusyActual();
         }
@@ -1148,14 +1141,13 @@ public class Appointment extends MailItem {
     
     public String getPartStat(Account acct, Invite inv, Instance inst) throws ServiceException
     {
-        Attendee at = mReplyList.getEffectiveAttendee(acct, inv, inst);
+        ZAttendee at = mReplyList.getEffectiveAttendee(acct, inv, inst);
         if (at == null) {
             return inv.getPartStat();
         }
 
-        PartStat ps = (PartStat)(at.getParameters().getParameter(Parameter.PARTSTAT));
-        if (ps != null) {
-            return IcalXmlStrMap.sPartStatMap.toXml(ps.getValue());
+        if (at.hasPartStat()) {
+            return at.getPartStat();
         } else {
             return IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
         }
@@ -1213,7 +1205,7 @@ public class Appointment extends MailItem {
         // they must be replying to a arbitrary instance)
         List attendees = reply.getAttendees();
         for (Iterator iter = attendees.iterator(); iter.hasNext();) {
-            Attendee at = (Attendee)iter.next();
+            ZAttendee at = (ZAttendee)iter.next();
             if (mReplyList.maybeStoreNewReply(reply, at)) {
                 dirty = true;
             }
@@ -1350,5 +1342,4 @@ public class Appointment extends MailItem {
             throw ServiceException.FAILURE("MessagingException while getting MimeMessage for item " + mId, e);
         }
     }
-
 }

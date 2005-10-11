@@ -45,10 +45,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import net.fortuna.ical4j.model.Parameter;
-import net.fortuna.ical4j.model.parameter.PartStat;
 import net.fortuna.ical4j.model.property.Organizer;
-import net.fortuna.ical4j.model.property.Attendee;
-
+//
 import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
@@ -56,6 +54,7 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.ParsedDuration;
 import com.zimbra.cs.mailbox.calendar.Recurrence;
+import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.ServiceException;
@@ -553,12 +552,11 @@ public class ToXML {
                   repInfo.mRecurId.toXml(curElt);
               }
 
-              PartStat ps = (PartStat)(repInfo.mAttendee.getParameters().getParameter(Parameter.PARTSTAT));
-              String psStr = IcalXmlStrMap.sPartStatMap.toXml(ps.getValue());
-              
-              curElt.addAttribute(MailService.A_APPT_PARTSTAT, psStr);
+              if (repInfo.mAttendee.hasPartStat()) {
+                  curElt.addAttribute(MailService.A_APPT_PARTSTAT, repInfo.mAttendee.getPartStat());
+              }
               curElt.addAttribute("stamp", repInfo.mDtStamp);
-              curElt.addAttribute("at", repInfo.mAttendee.getCalAddress().getSchemeSpecificPart());
+              curElt.addAttribute("at", repInfo.mAttendee.getAddress());
           }
       } catch (ServiceException ex) {
           // XXX fixme, need to fix error handling for all the ToXML stuff!
@@ -832,14 +830,16 @@ public class ToXML {
                             repInfo.mRecurId.toXml(curElt);
                         }
 
-                        PartStat ps = (PartStat)(repInfo.mAttendee.getParameters().getParameter(Parameter.PARTSTAT));
-                        String psStr = IcalXmlStrMap.sPartStatMap.toXml(ps.getValue());
-                        String fbaStr = invite.partStatToFreeBusyActual(psStr);
+//                        PartStat ps = (PartStat)(repInfo.mAttendee.getParameters().getParameter(Parameter.PARTSTAT));
+                        if (repInfo.mAttendee.hasPartStat()) {
+                            String psStr = repInfo.mAttendee.getPartStat();
+                            curElt.addAttribute(MailService.A_APPT_PARTSTAT, psStr);
+                            String fbaStr = invite.partStatToFreeBusyActual(psStr);
+                            curElt.addAttribute(MailService.A_APPT_FREEBUSY_ACTUAL, fbaStr);
+                        }
                         
-                        curElt.addAttribute(MailService.A_APPT_FREEBUSY_ACTUAL, fbaStr);
-                        curElt.addAttribute(MailService.A_APPT_PARTSTAT, psStr);
                         curElt.addAttribute("stamp", repInfo.mDtStamp);
-                        curElt.addAttribute("at", repInfo.mAttendee.getCalAddress().getSchemeSpecificPart());
+                        curElt.addAttribute("at", repInfo.mAttendee.getAddress());
                     }
                 } catch (ServiceException ex) {
                     // XXX fixme, need to fix error handling for all the ToXML stuff!
@@ -888,25 +888,29 @@ public class ToXML {
             }
             
             // Attendee(s)
-            Collection /*Invite.Attendee*/ ats = invite.getAttendees();
+            Collection /*Invite.ZAttendee*/ ats = invite.getAttendees();
             for (Iterator atsIter = ats.iterator();atsIter.hasNext();) {
                 Element atElt = e.addElement(MailService.E_APPT_ATTENDEE);
                 
-                Attendee at = (Attendee)atsIter.next();
+                ZAttendee at = (ZAttendee)atsIter.next();
                 
                 // display name 
-                atElt.addAttribute(MailService.A_DISPLAY, CalendarUtils.paramVal(at,Parameter.CN ));
+                if (at.hasCn()) {
+                    atElt.addAttribute(MailService.A_DISPLAY, at.getCn());
+                }
                 
                 // role
-                String role = CalendarUtils.paramVal(at, Parameter.ROLE);
-                atElt.addAttribute(MailService.A_APPT_ROLE, IcalXmlStrMap.sRoleMap.toXml(role));
+                if (at.hasRole()) {
+                    atElt.addAttribute(MailService.A_APPT_ROLE, at.getRole());
+                }
                 
                 // participation status
-                String partStat = CalendarUtils.paramVal(at, Parameter.PARTSTAT);
-                atElt.addAttribute(MailService.A_APPT_PARTSTAT, IcalXmlStrMap.sPartStatMap.toXml(partStat));
+                if (at.hasPartStat()) {
+                    atElt.addAttribute(MailService.A_APPT_PARTSTAT, at.getPartStat());
+                }
                 
                 // uri
-                atElt.addAttribute(MailService.A_URL, at.getCalAddress().toASCIIString());
+                atElt.addAttribute(MailService.A_URL, at.getAddress());
             }
         }
         return e;
