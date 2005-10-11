@@ -220,7 +220,7 @@ public class Search extends DocumentHandler  {
                 Element e = null;
                 if (hit instanceof ConversationHit) {
                     ConversationHit ch = (ConversationHit) hit;
-                    e = addConversationHit(lc, response, ch, eecache);
+                    e = addConversationHit(lc, response, ch, eecache, params);
                 } else if (hit instanceof MessageHit) {
                     MessageHit mh = (MessageHit) hit;
                     e = addMessageHit(lc, response, mh, eecache, inline, params);
@@ -257,15 +257,18 @@ public class Search extends DocumentHandler  {
     }
     
     
-    protected Element addConversationHit(ZimbraContext lc, Element response, ConversationHit ch, EmailElementCache eecache) throws ServiceException {
+    protected Element addConversationHit(ZimbraContext lc, Element response, ConversationHit ch, EmailElementCache eecache, SearchParams params)
+    throws ServiceException {
         Conversation conv = ch.getConversation();
-        Element c = ToXML.encodeConversationSummary(response, lc, conv, ch.getHitDate(), ch.getHitFragment(), eecache);
+        MessageHit mh = ch.getFirstMessageHit();
+        Element c = ToXML.encodeConversationSummary(response, lc, conv, mh == null ? null : mh.getMessage(), eecache, params.getWantRecipients());
         if (ch.getScore() != 0)
             c.addAttribute(MailService.A_SCORE, ch.getScore());
+
         Collection s = ch.getMessageHits();
         if (s != null) {
             for (Iterator mit = s.iterator(); mit.hasNext(); ) {
-                MessageHit mh = (MessageHit) mit.next();
+                mh = (MessageHit) mit.next();
                 Message msg = mh.getMessage();
                 Element e = c.addElement(MailService.E_MSG);
                 e.addAttribute(MailService.A_ID, msg.getId());

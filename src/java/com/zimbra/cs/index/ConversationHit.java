@@ -68,21 +68,20 @@ import com.zimbra.cs.service.ServiceException;
         /* (non-Javadoc)
          * @see com.zimbra.cs.index.ZimbraHit#inTrashOrSpam()
          */
-        boolean inMailbox() throws ServiceException {
+        boolean inMailbox() {
             // if we have a ConvHit, then we must have at least one matching message hit
             // to make it....
             return true;
         }
-        boolean inTrash() throws ServiceException {
+        boolean inTrash() {
             return true;
         }
-        boolean inSpam() throws ServiceException {
+        boolean inSpam() {
             return true;
         }
         
         
-        public int getConversationId() throws ServiceException
-        {
+        public int getConversationId() {
             return getId();
         }
 
@@ -109,10 +108,15 @@ import com.zimbra.cs.service.ServiceException;
             return (MessageHit) mMessageHits.get(mailboxBlobId);
         }
 
+        public MessageHit getFirstMessageHit() {
+            Iterator iter = getMessageHits().iterator();
+            return iter.hasNext() ? (MessageHit) iter.next() : null;
+        }
+
         public int getItemId() {
             return mConversationId;
         }
-        public byte getItemType() throws ServiceException {
+        public byte getItemType() {
             return MailItem.TYPE_CONVERSATION;
         }
         
@@ -123,7 +127,7 @@ import com.zimbra.cs.service.ServiceException;
         boolean itemIsLoaded() {
             return mConversation != null;
         }
-        
+
         
         public int getId() {
             return mConversationId;
@@ -139,30 +143,15 @@ import com.zimbra.cs.service.ServiceException;
             } 
             return mCachedSubj;
         }
-        public String getName() throws ServiceException 
-        {
+
+        public String getName() {
             // FIXME: not sure what to return here -- maybe Name from first message hit?
             return "CONV_HAS_NO_NAME";
         }
-        
-        public String getHitFragment() throws ServiceException {
-            Iterator iter = getMessageHits().iterator();
-            if (iter.hasNext()) {
-                MessageHit mh = (MessageHit) iter.next();
-                return mh.getMessage().getFragment();
-            }
-            // XXX: probably should log this
-            return null;
-        }
 
         public long getHitDate() throws ServiceException {
-            Iterator iter = getMessageHits().iterator();
-            if (iter.hasNext()) {
-                MessageHit mh = (MessageHit) iter.next();
-                return mh.getDate();
-            }
-            // XXX: probably should log this
-            return 0;
+            MessageHit mh = getFirstMessageHit();
+            return mh == null ? 0 : mh.getDate();
         }
         
         public int getSize() throws ServiceException {

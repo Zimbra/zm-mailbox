@@ -49,7 +49,6 @@ import net.fortuna.ical4j.model.property.Organizer;
 //
 import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.mailbox.*;
-import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.ParsedDuration;
@@ -99,12 +98,11 @@ public class ToXML {
             return encodeContact(parent, lc, (Contact) item, null, false, null, fields);
         else if (item instanceof Appointment) 
             return encodeApptSummary(parent, lc, (Appointment) item, fields);
+        else if (item instanceof Conversation)
+            return encodeConversationSummary(parent, lc, (Conversation) item, fields);
         else if (item instanceof Message) {
             OutputParticipants output = (fields == NOTIFY_FIELDS ? OutputParticipants.PUT_BOTH : OutputParticipants.PUT_SENDERS);
             return encodeMessageSummary(parent, lc, (Message) item, output, fields);
-        } else if (item instanceof Conversation) {
-            Conversation conv = (Conversation) item;
-            return encodeConversationSummary(parent, lc, conv, conv.getDate(), null, null, fields);
         }
         return null;
     }
@@ -349,24 +347,34 @@ public class ToXML {
      * the conversation date returned and fragment correspond to those of the matched message.
      * @param lc TODO
      * @param conv
-     * @param date - Use this date
-     * @param fragment - Use this fragment
+     * @param msgHit TODO
      * @param eecache
      */
-    public static Element encodeConversationSummary(Element parent, ZimbraContext lc, Conversation conv,
-            long date, String fragment, EmailElementCache eecache) {
-        return encodeConversationSummary(parent, lc, conv, date, fragment, eecache, NOTIFY_FIELDS);
+    public static Element encodeConversationSummary(Element parent, ZimbraContext lc, Conversation conv, int fields) {
+        return encodeConversationSummary(parent, lc, conv, null, null, OutputParticipants.PUT_SENDERS, fields);
     }
-    public static Element encodeConversationSummary(Element parent, ZimbraContext lc, Conversation conv,
-            long date, String fragment, EmailElementCache eecache, int fields) {
+    public static Element encodeConversationSummary(Element parent, ZimbraContext lc, Conversation conv, Message msgHit,
+                                                   EmailElementCache eecache, OutputParticipants output) {
+        return encodeConversationSummary(parent, lc, conv, msgHit, eecache, output, NOTIFY_FIELDS);
+    }
+    private static Element encodeConversationSummary(Element parent, ZimbraContext lc, Conversation conv, Message msgHit,
+                                                     EmailElementCache eecache, OutputParticipants output, int fields) {
         Element c = encodeConversationCommon(parent, lc, conv, fields);
         if (needToOutput(fields, Change.MODIFIED_DATE))
-            c.addAttribute(MailService.A_DATE, date);
+            c.addAttribute(MailService.A_DATE, msgHit != null ? msgHit.getDate() : conv.getDate());
         if (needToOutput(fields, Change.MODIFIED_SUBJECT))
             c.addAttribute(MailService.E_SUBJECT, conv.getSubject());
-        if (fragment != null && fields == NOTIFY_FIELDS)
-        	c.addAttribute(MailService.E_FRAG, fragment, Element.DISP_CONTENT);
-        if (needToOutput(fields, Change.MODIFIED_SENDERS)) {
+        if (fields == NOTIFY_FIELDS && msgHit != null)
+        	c.addAttribute(MailService.E_FRAG, msgHit.getFragment(), Element.DISP_CONTENT);
+
+        boolean addRecips  = msgHit != null && msgHit.isFromMe() && (output == OutputParticipants.PUT_RECIPIENTS || output == OutputParticipants.PUT_BOTH);
+        boolean addSenders = output == OutputParticipants.PUT_BOTH || !addRecips;
+        if (addRecips)
+            try {
+                InternetAddress[] addrs = InternetAddress.parseHeader(msgHit.getRecipients(), false);
+                addEmails(c, eecache, addrs, EmailElementCache.EMAIL_TYPE_TO);
+            } catch (AddressException e1) { }
+        if (addSenders && needToOutput(fields, Change.MODIFIED_SENDERS)) {
             if (eecache == null)
                 eecache = new EmailElementCache();
             SenderList sl;
@@ -377,7 +385,7 @@ public class ToXML {
 			}
 			CacheNode fa = sl.getFirstAddress();
             if (fa != null) {
-                eecache.makeEmail(c, fa, EmailElementCache.EMAIL_TYPE_NONE, null);
+                eecache.makeEmail(c, fa, EmailElementCache.EMAIL_TYPE_FROM, null);
                 // "<e/>" indicates that some senders may be omitted...
                 if (sl.isElided())
                     c.addElement(MailService.E_EMAIL);
@@ -385,9 +393,10 @@ public class ToXML {
             CacheNode[] la = sl.getLastAddresses();
             for (int i = 0; i < la.length; i++) {
                 if (la[i] != null)
-                    eecache.makeEmail(c, la[i], EmailElementCache.EMAIL_TYPE_NONE, null);
+                    eecache.makeEmail(c, la[i], EmailElementCache.EMAIL_TYPE_FROM, null);
             }
         }
+
         if (needToOutput(fields, Change.MODIFIED_CONFLICT))
             c.addAttribute(MailService.A_CHANGE_DATE, conv.getChangeDate() / 1000);
         return c;
