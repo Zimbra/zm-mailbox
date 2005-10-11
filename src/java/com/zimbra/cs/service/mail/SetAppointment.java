@@ -82,14 +82,14 @@ public class SetAppointment extends CalendarRequest {
                 {
                     Element e = request.getElement(MailService.A_DEFAULT);
                     
-                    defaultData = getSetAppointmentData(octxt, acct, mbox, e, defaultParser);
+                    defaultData = getSetAppointmentData(lc, acct, mbox, e, defaultParser);
                 }
                 
                 // for each <exception>
                 for (Iterator iter = request.elementIterator(MailService.A_EXCEPT); iter.hasNext();) {
                     Element e = (Element)iter.next();
                     
-                    Mailbox.SetAppointmentData exDat = getSetAppointmentData(octxt, acct, mbox, e, new SetAppointmentInviteParser());
+                    Mailbox.SetAppointmentData exDat = getSetAppointmentData(lc, acct, mbox, e, new SetAppointmentInviteParser());
                     exceptions.add(exDat);
                 }
                 
@@ -122,7 +122,7 @@ public class SetAppointment extends CalendarRequest {
         }
     }
     
-    static private Mailbox.SetAppointmentData getSetAppointmentData(OperationContext octxt, Account acct, Mailbox mbox, 
+    static private Mailbox.SetAppointmentData getSetAppointmentData(ZimbraContext lc, Account acct, Mailbox mbox, 
             Element e, ParseMimeMessage.InviteParser parser) throws ServiceException {
         
         boolean needsReply = e.getAttributeBool(MailService.A_APPT_NEEDS_REPLY, true);
@@ -141,11 +141,11 @@ public class SetAppointment extends CalendarRequest {
         
         if (attachmentId != null) {
             ParseMimeMessage.MimeMessageData mimeData = new ParseMimeMessage.MimeMessageData();
-            mm = SendMsg.parseUploadedMessage(mbox, attachmentId, mimeData);
+            mm = SendMsg.parseUploadedMessage(lc, attachmentId, mimeData);
         } else if (contentElement != null) {
             mm = ParseMimeMessage.importMsgSoap(msgElem);
         } else {
-            CalSendData dat = handleMsgElement(octxt, msgElem, acct, mbox, parser);
+            CalSendData dat = handleMsgElement(lc, msgElem, acct, mbox, parser);
             mm = dat.mMm;
         }
         

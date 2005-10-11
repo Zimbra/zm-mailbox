@@ -36,6 +36,7 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
+import com.zimbra.soap.ZimbraContext;
 
 public abstract class CalendarRequest extends SendMsg {
 
@@ -47,7 +48,7 @@ public abstract class CalendarRequest extends SendMsg {
         Invite mInvite;
     }
 
-    protected static CalSendData handleMsgElement(OperationContext octxt, Element msgElem, Account acct,
+    protected static CalSendData handleMsgElement(ZimbraContext lc, Element msgElem, Account acct,
                                                   Mailbox mbox, ParseMimeMessage.InviteParser inviteParser)
     throws ServiceException {
 
@@ -63,7 +64,7 @@ public abstract class CalendarRequest extends SendMsg {
         toRet.mReplyType = msgElem.getAttribute(MailService.A_REPLY_TYPE, TYPE_REPLY);
 
         // parse the data
-        toRet.mMm = ParseMimeMessage.parseMimeMsgSoap(octxt, mbox, msgElem, null, inviteParser, toRet);
+        toRet.mMm = ParseMimeMessage.parseMimeMsgSoap(lc, mbox, msgElem, null, inviteParser, toRet);
         
         // FIXME FIXME FIXME -- need to figure out a way to get the FRAGMENT data out of the initial
         // message here, so that we can copy it into the DESCRIPTION field in the iCalendar data that

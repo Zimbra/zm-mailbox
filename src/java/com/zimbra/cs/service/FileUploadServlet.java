@@ -25,25 +25,22 @@
 
 package com.zimbra.cs.service;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.TimerTask;
+import java.io.*;
+import java.net.URLEncoder;
+import java.util.*;
 
+import javax.mail.MessagingException;
+import javax.mail.internet.ContentDisposition;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.fileupload.DiskFileUpload;
 import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.fileupload.FileUpload;
 import org.apache.commons.fileupload.FileUploadBase;
 import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.httpclient.*;
+import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -51,86 +48,159 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.Constants;
 import com.zimbra.cs.util.Zimbra;
 
 public class FileUploadServlet extends ZimbraServlet {
 
+    /** The character separating upload IDs in a list */
+    public static final String UPLOAD_DELIMITER = ",";
+    /** The character separating server ID from upload ID */
+    private static final char UPLOAD_PART_DELIMITER = ':';
+    /** The length of a fully-qualified upload ID (2 UUIDs and a ':') */
+    private static final int UPLOAD_ID_LENGTH = 73;
+
     private static final class Upload {
         String accountId;
         long   time;
         String uuid;
-        List /* <FileItem */ files;
+        FileItem file;
 
         /**
          * 
          * @param auth
-         * @param attachments a <code>List</code> of
-         * <code>org.apache.commonsfileupload.FileItem</code> objects
+         * @param attachment a <code>List</code> of {@link FileItem} objects
+         * @throws ServiceException
          */
-        Upload(AuthToken auth, List attachments) {
+        Upload(AuthToken auth, FileItem attachment) throws ServiceException {
+            String localServer = Provisioning.getInstance().getLocalServer().getId();
             accountId = auth.getAccountId();
             time      = System.currentTimeMillis();
-            uuid      = LdapUtil.generateUUID();
-            files     = attachments;
+            uuid      = localServer + UPLOAD_PART_DELIMITER + LdapUtil.generateUUID();
+            file      = attachment;
         }
 
         boolean accessedAfter(long checkpoint)  { return time > checkpoint; }
 
-        void purge() {
-            if (files != null)
-                for (Iterator it = files.iterator(); it.hasNext(); )
-                    ((FileItem) it.next()).delete();
-        }
-        
+        void purge()  { if (file != null)  file.delete(); }
+
         public String toString() {
-            String fileString = this.files == null ? "files is null" : this.files.size() + " files";
-            return "Upload: {accountId: " + accountId + ", time: " + time + ", uploadId: "
-                + uuid + ", " + fileString + "}";
+            return "Upload: {accountId: " + accountId + ", time: " + time +
+                   ", uploadId: " + uuid + ", " + (file == null ? "no file" : file.getName()) + "}";
         }
     }
 
-    private static HashMap mPending = new HashMap(100);
-    private static Log mLog = LogFactory.getLog(FileUploadServlet.class);
+    static HashMap mPending = new HashMap(100);
+    static Log mLog = LogFactory.getLog(FileUploadServlet.class);
     
-    //when you refactor constants across services, make sure this is the same as
-    //ContentServlet.PARAM_FORMAT
-    private static final String PARAM_FORMAT = "fmt";
-    private static final String FORMAT_RAW   = "raw";
     private static final int DEFAULT_MAX_SIZE = 5 * 1024 * 1024;
 
-    public static List fetchUploads(String accountId, String uploadId) {
+    static boolean isLocalUpload(String uploadId) throws ServiceException {
+        if (uploadId == null || uploadId.length() != UPLOAD_ID_LENGTH || uploadId.charAt(UPLOAD_ID_LENGTH / 2) != UPLOAD_PART_DELIMITER)
+            throw ServiceException.INVALID_REQUEST("invalid upload ID: " + uploadId, null);
+
+        Provisioning prov = Provisioning.getInstance();
+        return uploadId.substring(0, UPLOAD_ID_LENGTH / 2).equals(prov.getLocalServer().getId());
+    }
+
+    public static FileItem fetchUpload(String accountId, String uploadId, String authtoken) throws ServiceException {
         String context = "accountId=" + accountId + ", uploadId=" + uploadId;
-        if (accountId == null || uploadId == null) {
-            throw new IllegalArgumentException(
-                "null is not allowed: " + context);
-        }
+        if (accountId == null || uploadId == null)
+            throw ServiceException.FAILURE("fetchUploads(): missing parameter: " + context, null);
+        if (uploadId.length() != UPLOAD_ID_LENGTH || uploadId.charAt(UPLOAD_ID_LENGTH / 2) != UPLOAD_PART_DELIMITER)
+            throw ServiceException.INVALID_REQUEST("invalid upload ID: " + uploadId, null);
+
+        // if the upload is remote, fetch it from the other server
+        if (!isLocalUpload(uploadId))
+            return fetchRemoteUpload(accountId, uploadId, authtoken);
+
+        // the upload is local, so get it from the cache
         synchronized (mPending) {
             Upload up = (Upload) mPending.get(uploadId);
             if (up == null) {
-                mLog.warn("fetchUploads(): Uploads not found: " + context);
-                return null;
+                mLog.warn("upload not found: " + context);
+                throw MailServiceException.NO_SUCH_UPLOAD(uploadId);
             }
             if (!accountId.equals(up.accountId)) {
-                mLog.warn("fetchUploads(): Mismatched accountId for upload: " +
-                    up + ".  Expected: " + context);
-                return null;
+                mLog.warn("mismatched accountId for upload: " + up + "; expected: " + context);
+                throw MailServiceException.NO_SUCH_UPLOAD(uploadId);
             }
             up.time = System.currentTimeMillis();
-            return up.files;
+            return up.file;
         }
     }
 
-    public static void deleteUploads(String accountId, String uploadId) {
-        if (accountId == null || uploadId == null)
+    private static FileItem fetchRemoteUpload(String accountId, String uploadId, String authtoken) throws ServiceException {
+        // the first half of the upload id is the server id where it lives
+        Server server = Provisioning.getInstance().getServerById(uploadId.substring(0, UPLOAD_ID_LENGTH / 2));
+        if (server == null)
+            return null;
+        // determine the URI for the remote ContentServlet
+        boolean useHTTPS = false;
+        String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
+        int port = server.getIntAttr(useHTTPS ? Provisioning.A_zimbraMailSSLPort : Provisioning.A_zimbraMailPort, 7070);
+        String url = (useHTTPS ? "https" : "http") + "://" + hostname + ':' + port +
+                     ContentServlet.SERVLET_PATH + ContentServlet.PREFIX_PROXY + '?' +
+                     ContentServlet.PARAM_UPLOAD_ID + '=' + URLEncoder.encode(uploadId);
+
+        // create an HTTP client with auth cookie to fetch the file from the remote ContentServlet
+        HttpState state = new HttpState();
+        state.addCookie(new Cookie(hostname, ZimbraServlet.COOKIE_ZM_AUTH_TOKEN, authtoken, "/", null, false));
+        HttpClient client = new HttpClient();
+        client.setState(state);
+        GetMethod method = new GetMethod(url);
+
+        InputStream is = null;
+        try {
+            // fetch the remote item
+            int statusCode = client.executeMethod(method);
+            if (statusCode != HttpStatus.SC_OK)
+                return null;
+
+            // metadata is encoded in the response's HTTP headers
+            Header ctHeader = method.getResponseHeader("Content-Type");
+            String contentType = ctHeader == null ? "text/plain" : ctHeader.getValue();
+            Header cdispHeader = method.getResponseHeader("Content-Disposition");
+            String filename = cdispHeader == null ? "unknown" : new ContentDisposition(cdispHeader.getValue()).getParameter("filename");
+
+            // store the fetched file as a normal upload
+            DiskFileUpload upload = getUploader();
+            FileItem fi = upload.getFileItemFactory().createItem("upload", contentType, false, filename);
+            ByteUtil.copy(is = method.getResponseBodyAsStream(), fi.getOutputStream());
+            return fi;
+        } catch (HttpException e) {
+            throw ServiceException.PROXY_ERROR(e);
+        } catch (MessagingException e) {
+            throw ServiceException.PROXY_ERROR(e);
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("can't fetch remote upload: " + uploadId, e);
+        } finally {
+            if (is != null)
+                try { is.close(); } catch (IOException e1) { }
+            method.releaseConnection();
+        }
+    }
+
+    public static void deleteUploads(String accountId, String uploadIds) {
+        if (accountId == null || uploadIds == null || uploadIds.equals(""))
+            return;
+        String[] uids = uploadIds.split(UPLOAD_DELIMITER);
+        for (int i = 0; i < uids.length; i++)
+            deleteUpload(accountId, uids[i]);
+    }
+
+    public static void deleteUpload(String accountId, String uploadId) {
+        if (accountId == null || uploadId == null || uploadId.equals(""))
             return;
         Upload up = null;
         synchronized (mPending) {
             up = (Upload) mPending.remove(uploadId);
             if (up != null && !accountId.equals(up.accountId)) {
                 mLog.warn("deleteUploads(" + accountId + ", " + uploadId +
-                    ").  Found mismatched accountId: " + up);
+                          ").  Found mismatched accountId: " + up);
                 mPending.put(uploadId, up);
                 up = null;
             }
@@ -146,19 +216,18 @@ public class FileUploadServlet extends ZimbraServlet {
     private static class TempFileFilter implements FileFilter {
         private long mNow = System.currentTimeMillis();
         
-        /**
-         * Returns <code>true</code> if the specified <code>File</code> follows the
-         * <code>org.apache.commons.fileupload.DefaultFileItem</code> naming convention
-         * (<code>upload_*.tmp</code>) and is older than {@link FileUploadServlet#UPLOAD_TIMEOUT_MSEC}.
-         */
+        /** Returns <code>true</code> if the specified <code>File</code>
+         *  follows the {@link DefaultFileItem} naming convention
+         *  (<code>upload_*.tmp</code>) and is older than
+         *  {@link FileUploadServlet#UPLOAD_TIMEOUT_MSEC}. */
     	public boolean accept(File pathname) {
             // upload_ XYZ .tmp
-            if (pathname == null) return false;
+            if (pathname == null)
+                return false;
             String name = pathname.getName();
             // file naming convention used by DefaultFileItem class
-            // in Jakarta Commons FileUpload.
             return name.startsWith("upload_") && name.endsWith(".tmp") &&
-                (mNow - pathname.lastModified() > UPLOAD_TIMEOUT_MSEC);
+                   (mNow - pathname.lastModified() > UPLOAD_TIMEOUT_MSEC);
         }
     }
 
@@ -166,21 +235,23 @@ public class FileUploadServlet extends ZimbraServlet {
         File files[] = new File(getTempDirectory()).listFiles(new TempFileFilter());
         if (files == null || files.length < 1) return;
 
-        mLog.info("Deleting " + files.length + " temporary upload files left over from last time");
+        mLog.info("deleting " + files.length + " temporary upload files left over from last time");
         for (int i = 0; i < files.length; i++) {
             String path = files[i].getAbsolutePath();
             if (files[i].delete())
-                mLog.info("Deleted left-over upload file " + path);
+                mLog.info("deleted leftover upload file " + path);
             else
-                mLog.error("Unable to delete left-over upload file " + path);
+                mLog.error("unable to delete leftover upload file " + path);
         }
     }
 
-	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		int status = HttpServletResponse.SC_OK;
+        List items = null;
         String attachmentId = null;
         String reqId = null;
         do {
+            // file upload requires authentication
     		AuthToken authToken = getAuthTokenFromCookie(req, resp, true);
             if (authToken == null) {
                 status = HttpServletResponse.SC_UNAUTHORIZED;
@@ -188,32 +259,18 @@ public class FileUploadServlet extends ZimbraServlet {
             }
 
             // file upload requires multipart enctype
-            if (!FileUpload.isMultipartContent(req)) {
+            if (!FileUploadBase.isMultipartContent(req)) {
             	status = HttpServletResponse.SC_BAD_REQUEST;
                 break;
             }
-            
-            // Look up the maximum file size for uploads
-            String attrName = Provisioning.A_zimbraFileUploadMaxSize;
-            int maxSize = DEFAULT_MAX_SIZE;
-            try {
-                Server config = Provisioning.getInstance().getLocalServer();
-                maxSize = config.getIntAttr(attrName, DEFAULT_MAX_SIZE);
-            } catch (ServiceException e) {
-                mLog.error("Unable to read " + attrName + " attribute", e);
-            }
-            
-            DiskFileUpload upload = new DiskFileUpload();
-            upload.setSizeThreshold(4096);     // in-memory limit
-            upload.setSizeMax(maxSize);
-            upload.setRepositoryPath(getTempDirectory());
-            List items = null;
+
+            DiskFileUpload upload = getUploader();
             try {
             	items = upload.parseRequest(req);
             } catch (FileUploadBase.SizeLimitExceededException e) {
                 // at least one file was over max allowed size
                 status = HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE;
-                mLog.info("Exceeded maximum upload size of " + maxSize + " bytes: " + e);
+                mLog.info("Exceeded maximum upload size of " + upload.getSizeMax() + " bytes: " + e);
                 break;
             } catch (FileUploadBase.InvalidContentTypeException e) {
                 // at least one file was of a type not allowed
@@ -231,61 +288,77 @@ public class FileUploadServlet extends ZimbraServlet {
             if (items != null)
                 for (Iterator it = items.iterator(); it.hasNext(); ) {
                     FileItem fi = (FileItem) it.next();
-                    if (fi != null && fi.getFieldName().equals("requestId")){
+                    if (fi != null && fi.getFieldName().equals("requestId"))
                         reqId = fi.getString();
-                    }
                     if (fi == null || fi.isFormField() || fi.getName() == null || fi.getName().trim().equals(""))
                         it.remove();
                 }
 
+            // empty upload is not a "success"
             if (items == null || items.isEmpty()) {
                 status = HttpServletResponse.SC_NO_CONTENT;
                 break;
             }
 
-            Upload up = new Upload(authToken, items);
-            synchronized (mPending) {
-                mLog.debug("doPost(): added " + up);
-            	mPending.put(up.uuid, up);
+            // cache the uploaded files in the hash and construct the list of upload IDs
+            try {
+                for (Iterator it = items.iterator(); it.hasNext(); ) {
+                    Upload up = new Upload(authToken, (FileItem) it.next());
+                    synchronized (mPending) {
+                        mLog.debug("doPost(): added " + up);
+                    	mPending.put(up.uuid, up);
+                    }
+                    attachmentId = (attachmentId == null ? up.uuid : attachmentId + UPLOAD_DELIMITER + up.uuid);
+                }
+            } catch (ServiceException e) {
+                status = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+                mLog.info("File upload failed", e);
             }
-            attachmentId = up.uuid;
         } while (false);
 
         StringBuffer results = new StringBuffer();
-    	results.append(status);
-        results.append(",'");
-        if(reqId != null){
-            results.append(reqId);
-        } else {
-            results.append("null");
-        }
-        results.append("'");
+    	results.append(status).append(",'").append(reqId != null ? reqId : "null").append('\'');
         if (status == HttpServletResponse.SC_OK)
-        	results.append(",'" + attachmentId + '\'');
-        	
-        
+        	results.append(",'").append(attachmentId).append('\'');
+
         resp.setContentType("text/html");
         PrintWriter out = resp.getWriter();
-        
-        String fmt = req.getParameter(PARAM_FORMAT);
-        if( FORMAT_RAW.equals( fmt ) ) {
-			out.println( results );
-        } else {			
+
+        String fmt = req.getParameter(ContentServlet.PARAM_FORMAT);
+        if (ContentServlet.FORMAT_RAW.equals(fmt))
+			out.println(results);
+        else {			
 			out.println("<html><head></head><body onload=\"window.parent._uploadManager.loaded(" + results + ");\">");
 			out.println("</body></html>");
 		}
-		
 		out.close();
+
+        // handle failure by cleaning up the failed upload
+        if (status != HttpServletResponse.SC_OK && items != null && items.size() > 0)
+            for (Iterator it = items.iterator(); it.hasNext(); )
+                ((FileItem) it.next()).delete();
 	}
 
+    private static DiskFileUpload getUploader() {
+        // look up the maximum file size for uploads
+        int maxSize = DEFAULT_MAX_SIZE;
+        try {
+            Server config = Provisioning.getInstance().getLocalServer();
+            maxSize = config.getIntAttr(Provisioning.A_zimbraFileUploadMaxSize, DEFAULT_MAX_SIZE);
+        } catch (ServiceException e) {
+            mLog.error("Unable to read " + Provisioning.A_zimbraFileUploadMaxSize + " attribute", e);
+        }
 
-    /**
-     * Uploads time out after 15 minutes.
-     */
-    private static final long UPLOAD_TIMEOUT_MSEC = 15 * Constants.MILLIS_PER_MINUTE;
-    /**
-     * Purge uploads once every minute.
-     */
+        DiskFileUpload upload = new DiskFileUpload();
+        upload.setSizeThreshold(4096);     // in-memory limit
+        upload.setSizeMax(maxSize);
+        upload.setRepositoryPath(getTempDirectory());
+        return upload;
+    }
+
+    /** Uploads time out after 15 minutes. */
+    static final long UPLOAD_TIMEOUT_MSEC = 15 * Constants.MILLIS_PER_MINUTE;
+    /** Purge uploads once every minute. */
     private static final long REAPER_INTERVAL_MSEC = 1 * Constants.MILLIS_PER_MINUTE;
 
     public void init() throws ServletException {

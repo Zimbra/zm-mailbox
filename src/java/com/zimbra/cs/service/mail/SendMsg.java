@@ -102,9 +102,9 @@ public class SendMsg extends WriteOpDocumentHandler {
             MimeMessageData mimeData = new MimeMessageData();
             MimeMessage mm;
             if (attachment != null) {
-                mm = parseUploadedMessage(mbox, attachment, mimeData);
+                mm = parseUploadedMessage(lc, attachment, mimeData);
             } else {
-                mm = ParseMimeMessage.parseMimeMsgSoap(octxt, mbox, msgElem, null, mimeData);
+                mm = ParseMimeMessage.parseMimeMsgSoap(lc, mbox, msgElem, null, mimeData);
             }
             
             int msgId = sendMimeMessage(octxt, mbox, acct, saveToSent, mimeData, mm, msgElem);
@@ -134,16 +134,12 @@ public class SendMsg extends WriteOpDocumentHandler {
         return folderId;
     }
 
-    static MimeMessage parseUploadedMessage(Mailbox mbox, String attachId, MimeMessageData mimeData) throws ServiceException {
-        mimeData.attachId = attachId;
+    static MimeMessage parseUploadedMessage(ZimbraContext lc, String attachId, MimeMessageData mimeData) throws ServiceException {
+        mimeData.attachIds = attachId;
 
-        List uploads = FileUploadServlet.fetchUploads(mbox.getAccountId(), attachId);
-        if (uploads == null || uploads.size() == 0)
+        FileItem fi = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), attachId, lc.getRawAuthToken());
+        if (fi == null)
             throw MailServiceException.NO_SUCH_UPLOAD(attachId);
-        else if (uploads.size() > 1)
-            throw MailServiceException.TOO_MANY_UPLOADS(attachId);
-
-        FileItem fi = (FileItem) uploads.get(0);
         try {
             return new MimeMessage(JMSession.getSession(), fi.getInputStream());
         } catch (MessagingException e) {
@@ -275,8 +271,8 @@ public class SendMsg extends WriteOpDocumentHandler {
 
             if (mimeData != null) {
                 // we can now purge the uploaded attachments
-                if (mimeData.attachId != null)
-                    FileUploadServlet.deleteUploads(mbox.getAccountId(), mimeData.attachId);
+                if (mimeData.attachIds != null)
+                    FileUploadServlet.deleteUploads(mbox.getAccountId(), mimeData.attachIds);
                 
                 // add any new contacts to the personal address book
                 for (Iterator it = mimeData.newContacts.iterator(); it.hasNext(); ) {

@@ -124,7 +124,7 @@ public class AddMsg extends WriteOpDocumentHandler {
             ParseMimeMessage.MimeMessageData mimeData = new ParseMimeMessage.MimeMessageData();
             MimeMessage mm;
             if (attachment != null)
-                mm = SendMsg.parseUploadedMessage(mbox, attachment, mimeData);
+                mm = SendMsg.parseUploadedMessage(lc, attachment, mimeData);
             else
                 mm = ParseMimeMessage.importMsgSoap(msgElem);
 
@@ -139,8 +139,8 @@ public class AddMsg extends WriteOpDocumentHandler {
 	        }
 
             // we can now purge the uploaded attachments
-            if (mimeData.attachId != null)
-                FileUploadServlet.deleteUploads(mbox.getAccountId(), mimeData.attachId);
+            if (mimeData.attachIds != null)
+                FileUploadServlet.deleteUploads(mbox.getAccountId(), mimeData.attachIds);
 
             Element response = lc.createElement(MailService.ADD_MSG_RESPONSE);
             if (messageId != -1)

@@ -104,14 +104,14 @@ public class ModifyAppointment extends CalendarRequest
                 // response
                 Element response = lc.createElement(MailService.MODIFY_APPOINTMENT_RESPONSE);
                 
-                return modifyAppointment(octxt, request, acct, mbox, appt, inv, response);
+                return modifyAppointment(lc, request, acct, mbox, appt, inv, response);
             } // synchronized on mailbox                
         } finally {
             sWatch.stop(startTime);
         }        
     }
     
-    protected static Element modifyAppointment(OperationContext octxt, Element request, Account acct, Mailbox mbox,
+    protected static Element modifyAppointment(ZimbraContext lc, Element request, Account acct, Mailbox mbox,
             Appointment appt, Invite inv, Element response) throws ServiceException
     {
         // <M>
@@ -119,7 +119,7 @@ public class ModifyAppointment extends CalendarRequest
         
         ModifyAppointmentParser parser = new ModifyAppointmentParser(mbox, inv);
         
-        CalSendData dat = handleMsgElement(octxt, msgElem, acct, mbox, parser);
+        CalSendData dat = handleMsgElement(lc, msgElem, acct, mbox, parser);
         
         // If we are sending this update to other people, then we MUST be the organizer!
         if (!inv.thisAcctIsOrganizer(acct)) {
@@ -133,7 +133,7 @@ public class ModifyAppointment extends CalendarRequest
             }
         }
 
-        sendCalendarMessage(octxt, appt.getFolderId(), acct, mbox, dat, response);
+        sendCalendarMessage(lc.getOperationContext(), appt.getFolderId(), acct, mbox, dat, response);
 
         return response;        
     }

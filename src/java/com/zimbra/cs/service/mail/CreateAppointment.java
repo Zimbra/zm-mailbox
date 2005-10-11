@@ -112,7 +112,7 @@ public class CreateAppointment extends CalendarRequest {
                 int folder = (int) msgElem.getAttributeLong(MailService.A_FOLDER, Mailbox.ID_FOLDER_CALENDAR);
                 
                 CreateAppointmentInviteParser parser = new CreateAppointmentInviteParser();
-                CalSendData dat = handleMsgElement(octxt, msgElem, acct, mbox, parser);
+                CalSendData dat = handleMsgElement(lc, msgElem, acct, mbox, parser);
 
                 return sendCalendarMessage(octxt, folder, acct, mbox, dat, response);
             } else {
@@ -136,7 +136,7 @@ public class CreateAppointment extends CalendarRequest {
                         throw ServiceException.FAILURE("Appointment "+appt.getId()+" is not a recurring appointment", null);
 
                     CreateApptExceptionInviteParser parser = new CreateApptExceptionInviteParser(appt.getUid(), inv.getTimeZoneMap());                
-                    CalSendData dat = handleMsgElement(octxt, msgElem, acct, mbox, parser);
+                    CalSendData dat = handleMsgElement(lc, msgElem, acct, mbox, parser);
                     
                     return sendCalendarMessage(octxt, appt.getFolderId(), acct, mbox, dat, response);
                 }

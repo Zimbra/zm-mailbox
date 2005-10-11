@@ -66,21 +66,26 @@ public class ImportContacts extends DocumentHandler  {
         BufferedReader reader = null;
         String attachment = content.getAttribute(MailService.A_ATTACHMENT_ID, null);
         try {
-            if (attachment == null) reader = new BufferedReader(new StringReader(content.getText()));
-            else reader = parseUploadedContent(mbox, attachment);
+            if (attachment == null)
+                reader = new BufferedReader(new StringReader(content.getText()));
+            else
+                reader = parseUploadedContent(lc, attachment);
             contacts = ContactCSV.getContacts(reader);
         } catch (ParseException e) {
             throw MailServiceException.UNABLE_TO_IMPORT_CONTACTS(e.getMessage(), e);
         } finally {
-            if (reader != null) try { reader.close(); } catch (IOException e) { }
-            if (attachment != null) FileUploadServlet.deleteUploads(mbox.getAccountId(), attachment);
+            if (reader != null)
+                try { reader.close(); } catch (IOException e) { }
+            if (attachment != null)
+                FileUploadServlet.deleteUpload(mbox.getAccountId(), attachment);
         }
 
         StringBuffer ids = new StringBuffer();
         for (Iterator it = contacts.iterator(); it.hasNext(); ) {
             Map cmap = (Map) it.next();
             Contact contact = mbox.createContact(octxt, cmap, Mailbox.ID_FOLDER_CONTACTS, null);
-            if (ids.length() > 0) ids.append(",");
+            if (ids.length() > 0)
+                ids.append(",");
             ids.append(contact.getId());
         }
 
@@ -91,14 +96,10 @@ public class ImportContacts extends DocumentHandler  {
         return response;
     }
     
-    private static BufferedReader parseUploadedContent(Mailbox mbox, String attachId) throws ServiceException {
-        List uploads = FileUploadServlet.fetchUploads(mbox.getAccountId(), attachId);
-        if (uploads == null || uploads.size() == 0)
+    private static BufferedReader parseUploadedContent(ZimbraContext lc, String attachId) throws ServiceException {
+        FileItem fi = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), attachId, lc.getRawAuthToken());
+        if (fi == null)
             throw MailServiceException.NO_SUCH_UPLOAD(attachId);
-        else if (uploads.size() > 1)
-            throw MailServiceException.TOO_MANY_UPLOADS(attachId);
-
-        FileItem fi = (FileItem) uploads.get(0);
         try {
             return new BufferedReader(new InputStreamReader(fi.getInputStream()));
         } catch (IOException e) {

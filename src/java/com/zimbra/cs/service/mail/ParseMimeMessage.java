@@ -45,6 +45,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.ExceptionToString;
 import com.zimbra.soap.Element;
+import com.zimbra.soap.ZimbraContext;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -125,9 +126,9 @@ public class ParseMimeMessage {
     
     // by default, no invite allowed
     static InviteParser NO_INV_ALLOWED_PARSER = new InviteParser() {
-        public InviteParserResult parseInviteElement(OperationContext octxt, Account account, Element inviteElem) throws ServiceException 
-        {
-            throw MailServiceException.INVALID_REQUEST("No <inv> element allowed for this request", null);
+        public InviteParserResult parseInviteElement(OperationContext octxt, Account account, Element inviteElem)
+        throws ServiceException {
+            throw ServiceException.INVALID_REQUEST("No <inv> element allowed for this request", null);
         }
     };
     
@@ -139,14 +140,14 @@ public class ParseMimeMessage {
      */
     public static class MimeMessageData {
         public List newContacts = new ArrayList();
-        public String attachId = null; // NULL unless there are attachments
-        public String iCalUUID = null; // NULL unless there is an iCal part
+        public String attachIds = null;  // NULL unless there are attachments
+        public String iCalUUID = null;   // NULL unless there is an iCal part
     }
     
-    public static MimeMessage parseMimeMsgSoap(OperationContext octxt, Mailbox mbox, Element msgElem, 
+    public static MimeMessage parseMimeMsgSoap(ZimbraContext lc, Mailbox mbox, Element msgElem, 
                                                MimeBodyPart[] additionalParts, MimeMessageData out) 
     throws ServiceException {
-        return parseMimeMsgSoap(octxt, mbox, msgElem, additionalParts, NO_INV_ALLOWED_PARSER, out);
+        return parseMimeMsgSoap(lc, mbox, msgElem, additionalParts, NO_INV_ALLOWED_PARSER, out);
     }
     
 
@@ -154,20 +155,22 @@ public class ParseMimeMessage {
      * Given an <m> element from SOAP, return us a parsed MimeMessage, 
      * and also fill in the MimeMessageData structure with information we parsed out of it (e.g. contained 
      * Invite, msgids, etc etc)
-     *  
+     * @param lc TODO
      * @param mbox
      * @param msgElem the <m> element
      * @param additionalParts - MimeBodyParts that we want to have added to the MimeMessage (ie things the server is adding onto the message)
      * @param inviteParser Callback which handles <inv> embedded invite components
      * @param out Holds info about things we parsed out of the message that the caller might want to know about
+     *  
      * @return
      * @throws ServiceException
      */
-    public static MimeMessage parseMimeMsgSoap(OperationContext octxt, Mailbox mbox, Element msgElem, MimeBodyPart[] additionalParts,
-            InviteParser inviteParser, MimeMessageData out) 
+    public static MimeMessage parseMimeMsgSoap(ZimbraContext lc, Mailbox mbox, Element msgElem, MimeBodyPart[] additionalParts,
+                                               InviteParser inviteParser, MimeMessageData out) 
     throws ServiceException {
         /* msgElem == "<m>" E_MSG */
         assert(msgElem.getName().equals(MailService.E_MSG));
+        OperationContext octxt = lc.getOperationContext();
 
 	    try {
             // anonymous subclass of MimeMessage to preserve Message-ID once it's been set
@@ -227,10 +230,10 @@ public class ParseMimeMessage {
             if (isMultipart) {
                 if (attachElem != null) {
                     // attachments go into the toplevel "mixed" part
-                    String attachId = attachElem.getAttribute(MailService.A_ATTACHMENT_ID, null);
-                    if (attachId != null) {
-                        attachUploads(mmp, mbox, attachId);
-                        out.attachId = attachId;
+                    String attachIds = attachElem.getAttribute(MailService.A_ATTACHMENT_ID, null);
+                    if (attachIds != null) {
+                        attachUploads(mmp, lc, attachIds);
+                        out.attachIds = attachIds;
                     }
                     for (Iterator it = attachElem.elementIterator(); it.hasNext(); ) {
                         Element elem = (Element) it.next();
@@ -426,23 +429,22 @@ public class ParseMimeMessage {
         }
     }
 
-    private static void attachUploads(Multipart mmp, Mailbox mbox, String attachId) throws MailServiceException, MessagingException {
-        List uploads = FileUploadServlet.fetchUploads(mbox.getAccountId(), attachId);
-        if (uploads == null)
-            throw MailServiceException.NO_SUCH_UPLOAD(attachId);
+    private static void attachUploads(Multipart mmp, ZimbraContext lc, String attachIds)
+    throws ServiceException, MessagingException {
+        String[] uploadIds = attachIds.split(FileUploadServlet.UPLOAD_DELIMITER);
 
-        for (Iterator it = uploads.iterator(); it.hasNext(); ) {
-            FileItem fi = (FileItem) it.next();
+        for (int i = 0; i < uploadIds.length; i++) {
+            FileItem fi = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), uploadIds[i], lc.getRawAuthToken());
+            if (fi == null)
+                throw MailServiceException.NO_SUCH_UPLOAD(uploadIds[i]);
 
-            // Scan upload for viruses
+            // scan upload for viruses
             StringBuffer info = new StringBuffer();
             UploadScanner.Result result = UploadScanner.accept(fi, info); 
-            if (result == UploadScanner.REJECT) {
+            if (result == UploadScanner.REJECT)
             	throw MailServiceException.UPLOAD_REJECTED(fi.getName(), info.toString());
-            }
-            if (result == UploadScanner.ERROR) {
+            if (result == UploadScanner.ERROR)
             	throw MailServiceException.SCAN_ERROR(fi.getName());
-            }
 
             MimeBodyPart mbp = new MimeBodyPart();
             mbp.setDataHandler(new DataHandler(new FileItemDataSource(fi)));
@@ -461,21 +463,9 @@ public class ParseMimeMessage {
             mmp.addBodyPart(mbp);
         }
     }
-    
-//    private static void attachMimeBodyPart(Multipart mmp, MimeBodyPart mbp)
-//    throws MessagingException {
-//        mmp.addBodyPart(mbp);
-//    }
-
-//    private static void attachCalendar(Multipart mmp, Calendar iCal, String uid) 
-//    throws MessagingException {
-//        MimeBodyPart mbp = new MimeBodyPart();
-//        mbp.setDataHandler(new DataHandler(new CalendarDataSource(iCal, uid))); 
-//        mmp.addBodyPart(mbp);
-//    }
 
     private static void attachMessage(Multipart mmp, com.zimbra.cs.mailbox.Message message)
-    throws IOException, MessagingException, ServiceException {
+    throws MessagingException, ServiceException {
         MailboxBlob blob = message.getBlob();
 
         MimeBodyPart mbp = new MimeBodyPart();

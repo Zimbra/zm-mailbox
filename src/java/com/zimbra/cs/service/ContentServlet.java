@@ -39,11 +39,13 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 
+import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.mailbox.Appointment;
@@ -65,14 +67,22 @@ import com.zimbra.cs.util.ByteUtil;
 public class ContentServlet extends ZimbraServlet {
 
     protected static final String CONVERSION_SERVLET = "ConversionServlet";
-    
+
+    protected static final String SERVLET_PATH = "/service/content";
+
     protected static final String PREFIX_CNV = "/cnv";
     protected static final String PREFIX_GET = "/get";
+    protected static final String PREFIX_PROXY = "/proxy";
 
     protected static final String PARAM_MSGID = "id";
+    protected static final String PARAM_UPLOAD_ID = "aid";
     protected static final String PARAM_PART = "part";
     protected static final String PARAM_FORMAT = "fmt";
     protected static final String PARAM_SYNC = "sync";
+
+    protected static final String FORMAT_RAW = "raw";
+    protected static final String FORMAT_DEFANGED_HTML = "htmldf";
+    protected static final String FORMAT_DEFANGED_HTML_NOT_IMAGES = "htmldfi";
 
     protected static final String ATTR_MIMEPART = "mimepart";
     protected static final String ATTR_MSGDIGEST = "msgdigest";
@@ -84,15 +94,9 @@ public class ContentServlet extends ZimbraServlet {
 
     private void getCommand(HttpServletRequest req, HttpServletResponse resp, AuthToken authToken)
     throws ServletException, IOException {
-        String idStr = req.getParameter(PARAM_MSGID);
-        if (idStr == null) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "missing id parameter");
-            return;
-        }
-        
         ItemId iid = null;
         try {
-            iid = new ItemId(idStr);
+            iid = new ItemId(req.getParameter(PARAM_MSGID));
         } catch (ServiceException e) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "invalid id requested");
             return;
@@ -100,21 +104,21 @@ public class ContentServlet extends ZimbraServlet {
 
         String part = req.getParameter(PARAM_PART);
         String fmt = req.getParameter(PARAM_FORMAT);
-        
+
         try {
-            Mailbox mbox;
             if (!iid.isLocal()) {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "wrong server");
                 return;
             }
             String authId = authToken.getAccountId();
             String accountId = iid.getAccountId() != null ? iid.getAccountId() : authId;
-            mbox = Mailbox.getMailboxByAccountId(accountId);
+            // need to proxy the fetch if the mailbox lives on another server
+            Mailbox mbox = Mailbox.getMailboxByAccountId(accountId);
             if (mbox == null) {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "mailbox not found");
                 return;				
             }
-            
+
             MailItem mi = mbox.getItemById(new Mailbox.OperationContext(authId), iid.getId(), MailItem.TYPE_UNKNOWN);
             if (mi == null) {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "message not found");
@@ -124,8 +128,9 @@ public class ContentServlet extends ZimbraServlet {
             try {
                 if (part == null) {
                     // they want the entire message...
+                    boolean sync = "1".equals(req.getParameter(PARAM_SYNC));
                     StringBuffer hdr = new StringBuffer();
-                    if ("1".equals(req.getParameter(PARAM_SYNC))) {
+                    if (sync) {
                         // for sync, return metadata as headers to avoid extra SOAP round-trips
                         hdr.append("X-Zimbra-Tags: ").append(mi.getTagString()).append("\n");
                         hdr.append("X-Zimbra-Flags: ").append(mi.getFlagString()).append("\n");
@@ -133,19 +138,19 @@ public class ContentServlet extends ZimbraServlet {
                     }
                     
                     if (mi instanceof Message) {
-                        Message msg = (Message)mi;
-                        resp.setContentType(Mime.CT_TEXT_PLAIN);
-                        if ("1".equals(req.getParameter(PARAM_SYNC))) {
+                        Message msg = (Message) mi;
+                        if (sync) {
                             hdr.append("X-Zimbra-Conv: ").append(msg.getConversationId()).append("\n");
                             resp.getOutputStream().write(hdr.toString().getBytes());
                         }
+
+                        resp.setContentType(Mime.CT_TEXT_PLAIN);
                         InputStream is = msg.getRawMessage();
                         ByteUtil.copy(is, resp.getOutputStream());
                         is.close();
                     } else if (mi instanceof Appointment) {
                         Appointment appt = (Appointment) mi;
-                        
-                        if ("1".equals(req.getParameter(PARAM_SYNC))) {
+                        if (sync) {
                             hdr.append("X-Zimbra-DefaultInvId: ").append(appt.getDefaultInvite().getMailItemId()).append("\n");
                             resp.getOutputStream().write(hdr.toString().getBytes());
                         }
@@ -155,8 +160,7 @@ public class ContentServlet extends ZimbraServlet {
                             MimeMessage mm = ((Appointment) mi).getMimeMessage(iid.getSubpartId());
                             mm.writeTo(resp.getOutputStream());
                         } else { 
-                            InputStream is;
-                            is = ((Appointment)mi).getRawMessage();
+                            InputStream is = ((Appointment) mi).getRawMessage();
                             ByteUtil.copy(is, resp.getOutputStream());
                             is.close();
                         }
@@ -180,7 +184,7 @@ public class ContentServlet extends ZimbraServlet {
                         if (contentType == null) {
                             contentType = Mime.CT_APPLICATION_OCTET_STREAM;
                         }
-                        if (contentType.toLowerCase().startsWith(Mime.CT_TEXT_HTML) && ("htmldf".equals(fmt) || "htmldfi".equals(fmt))) {
+                        if (contentType.toLowerCase().startsWith(Mime.CT_TEXT_HTML) && (FORMAT_DEFANGED_HTML.equals(fmt) || FORMAT_DEFANGED_HTML_NOT_IMAGES.equals(fmt))) {
                             sendbackDefangedHtml(mp, contentType, resp, fmt);
                         } else {
                             if (!isTrue(Provisioning.A_zimbraAttachmentsViewInHtmlOnly, mbox.getAccountId())) {
@@ -210,7 +214,44 @@ public class ContentServlet extends ZimbraServlet {
          out.println("pathtrans: "+req.getPathTranslated());
          */
     }
-    
+
+    private void retrieveUpload(HttpServletRequest req, HttpServletResponse resp, AuthToken authToken)
+    throws ServletException, IOException {
+        // if it's another server fetching an already-uploaded file, just do that
+        String uploadId = req.getParameter(PARAM_UPLOAD_ID);
+        if (uploadId == null) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "missing upload id");
+            return;
+        }
+
+        try {
+            if (!FileUploadServlet.isLocalUpload(uploadId)) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "wrong server");
+                return;
+            }
+
+            FileItem fi = FileUploadServlet.fetchUpload(authToken.getAccountId(), uploadId, authToken.getEncoded());
+            if (fi == null) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "no such upload");
+                return;
+            }
+
+            ContentDisposition cd = new ContentDisposition(Part.INLINE);
+            String filename = fi.getName();
+            cd.setParameter("filename", filename == null ? "unknown" : filename);
+            resp.addHeader("Content-Disposition", cd.toString());
+            sendbackOriginalDoc(fi.getInputStream(), fi.getContentType(), resp);
+
+            fi.delete();
+        } catch (ServiceException e) {
+            throw new ServletException(e);
+        } catch (MessagingException e) {
+            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+        } catch (AuthTokenException e) {
+            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
     /**
      * @param accountId
      * @return
@@ -236,8 +277,7 @@ public class ContentServlet extends ZimbraServlet {
     }
     
     protected void sendbackOriginalDoc(MimePart mp, String contentType, HttpServletResponse resp) 
-        throws IOException, MessagingException 
-    {
+    throws IOException, MessagingException {
         ContentDisposition cd = new ContentDisposition(Part.INLINE);
         String filename = mp.getFileName();
         if (filename == null)
@@ -267,7 +307,7 @@ public class ContentServlet extends ZimbraServlet {
         InputStream is = null;
         try {
             is = mp.getInputStream();
-            String html = HtmlDefang.defang(is, "htmldf".equals(fmt));
+            String html = HtmlDefang.defang(is, FORMAT_DEFANGED_HTML.equals(fmt));
             ByteArrayInputStream bais = new ByteArrayInputStream(html.getBytes());
             ByteUtil.copy(bais, resp.getOutputStream());
         } finally {
@@ -288,9 +328,7 @@ public class ContentServlet extends ZimbraServlet {
             dispatcher.forward(req, resp);
             return;
         }
-        resp.sendError(HttpServletResponse.SC_FORBIDDEN, 
-        "The attachment download has been disabled per security policy.");
-        
+        resp.sendError(HttpServletResponse.SC_FORBIDDEN, "The attachment download has been disabled per security policy.");
     }
     
     /**
@@ -318,6 +356,8 @@ public class ContentServlet extends ZimbraServlet {
         String pathInfo = req.getPathInfo();
         if (pathInfo != null && pathInfo.equals(PREFIX_GET)) {
             getCommand(req, resp, authToken);
+        } else if (pathInfo != null && pathInfo.equals(PREFIX_PROXY)) {
+            retrieveUpload(req, resp, authToken);
         } else if (pathInfo != null && pathInfo.startsWith(PREFIX_CNV)) {
             RequestDispatcher dispatcher = this.getServletContext().getNamedDispatcher(CONVERSION_SERVLET);
             dispatcher.forward(req, resp);

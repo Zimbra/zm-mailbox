@@ -71,9 +71,9 @@ public class SaveDraft extends WriteOpDocumentHandler {
         ParseMimeMessage.MimeMessageData mimeData = new ParseMimeMessage.MimeMessageData();
         MimeMessage mm;
         if (attachment != null)
-            mm = SendMsg.parseUploadedMessage(mbox, attachment, mimeData);
+            mm = SendMsg.parseUploadedMessage(lc, attachment, mimeData);
         else
-            mm = ParseMimeMessage.parseMimeMsgSoap(octxt, mbox, msgElem, null, mimeData);
+            mm = ParseMimeMessage.parseMimeMsgSoap(lc, mbox, msgElem, null, mimeData);
 
         long date = System.currentTimeMillis();
         try {
@@ -101,8 +101,8 @@ public class SaveDraft extends WriteOpDocumentHandler {
 			Message msg = mbox.saveDraft(octxt, pm, id, origId, replyType);
 
             // we can now purge the uploaded attachments
-            if (mimeData.attachId != null)
-                FileUploadServlet.deleteUploads(mbox.getAccountId(), mimeData.attachId);
+            if (mimeData.attachIds != null)
+                FileUploadServlet.deleteUploads(mbox.getAccountId(), mimeData.attachIds);
 
             Element response = lc.createElement(MailService.SAVE_DRAFT_RESPONSE);
             // FIXME: inefficient -- this recalculates the MimeMessage (but SaveDraft is called rarely)

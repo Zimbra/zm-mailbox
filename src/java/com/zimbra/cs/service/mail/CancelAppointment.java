@@ -78,7 +78,7 @@ public class CancelAppointment extends CalendarRequest {
                 Element recurElt = request.getOptionalElement("inst");
                 if (recurElt != null) {
                     RecurId recurId = CalendarUtils.parseRecurId(recurElt, inv.getTimeZoneMap(), inv);
-                    cancelInstance(octxt, request, acct, mbox, appt, inv, recurId);
+                    cancelInstance(lc, request, acct, mbox, appt, inv, recurId);
                 } else {
                 
                     // if recur is not set, then we're cancelling the entire appointment...
@@ -101,7 +101,7 @@ public class CancelAppointment extends CalendarRequest {
                                 (invites[i].getMethod().equals(Method.REQUEST.getValue()) ||
                                         invites[i].getMethod().equals(Method.PUBLISH.getValue()))
                                         ) {
-                            cancelInvite(octxt, request, acct, mbox, appt, invites[i]);
+                            cancelInvite(lc, request, acct, mbox, appt, invites[i]);
                         }
                     }
                 }
@@ -114,7 +114,7 @@ public class CancelAppointment extends CalendarRequest {
         }        
     }
     
-    void cancelInstance(OperationContext octxt, Element request, Account acct, Mailbox mbox, Appointment appt, Invite defaultInv, RecurId recurId) 
+    void cancelInstance(ZimbraContext lc, Element request, Account acct, Mailbox mbox, Appointment appt, Invite defaultInv, RecurId recurId) 
     throws ServiceException {
         String text = "The instance has been cancelled";
         String subject = "CANCELLED: "+defaultInv.getName();
@@ -141,7 +141,7 @@ public class CancelAppointment extends CalendarRequest {
             // the <inv> element is *NOT* allowed -- we always build it manually
             // based on the params to the <CancelAppointment> and stick it in the 
             // mbps (additionalParts) parameter...
-            dat.mMm = ParseMimeMessage.parseMimeMsgSoap(octxt, mbox, msgElem, mbps, 
+            dat.mMm = ParseMimeMessage.parseMimeMsgSoap(lc, mbox, msgElem, mbps, 
                     ParseMimeMessage.NO_INV_ALLOWED_PARSER, dat);
             
         } else {
@@ -162,11 +162,11 @@ public class CancelAppointment extends CalendarRequest {
             }
         }
         
-        sendCalendarMessage(octxt, appt.getFolderId(), acct, mbox, dat, null);
+        sendCalendarMessage(lc.getOperationContext(), appt.getFolderId(), acct, mbox, dat, null);
     }
     
     
-    protected void cancelInvite(OperationContext octxt, Element request, Account acct, Mailbox mbox, Appointment appt, Invite inv)
+    protected void cancelInvite(ZimbraContext lc, Element request, Account acct, Mailbox mbox, Appointment appt, Invite inv)
     throws ServiceException {
         String text = "The event has been cancelled";
         String subject = "CANCELLED: "+inv.getName();
@@ -193,7 +193,7 @@ public class CancelAppointment extends CalendarRequest {
             // the <inv> element is *NOT* allowed -- we always build it manually
             // based on the params to the <CancelAppointment> and stick it in the 
             // mbps (additionalParts) parameter...
-            dat.mMm = ParseMimeMessage.parseMimeMsgSoap(octxt, mbox, msgElem, mbps, 
+            dat.mMm = ParseMimeMessage.parseMimeMsgSoap(lc, mbox, msgElem, mbps, 
                     ParseMimeMessage.NO_INV_ALLOWED_PARSER, dat);
             
         } else {
@@ -214,7 +214,7 @@ public class CancelAppointment extends CalendarRequest {
             }
         }
         
-        sendCalendarMessage(octxt, appt.getFolderId(), acct, mbox, dat, null);
+        sendCalendarMessage(lc.getOperationContext(), appt.getFolderId(), acct, mbox, dat, null);
     }
      
 }

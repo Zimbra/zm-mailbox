@@ -139,7 +139,7 @@ public class SendInviteReply extends SendMsg {
                         // the <inv> element is *NOT* allowed -- we always build it manually
                         // based on the params to the <SendInviteReply> and stick it in the 
                         // mbps (additionalParts) parameter...
-                        toSend = ParseMimeMessage.parseMimeMsgSoap(octxt, mbox, msgElem, mbps, 
+                        toSend = ParseMimeMessage.parseMimeMsgSoap(lc, mbox, msgElem, mbps, 
                                 ParseMimeMessage.NO_INV_ALLOWED_PARSER, parsedMessageData);
                     } else {
                         // build a default "Accepted" response
