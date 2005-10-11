@@ -107,11 +107,13 @@ public class DbMailbox {
     throws ServiceException {
         ZimbraLog.mailbox.debug("createMailboxDatabase(" + mailboxId + ")");
 
-        Connection conn = DbPool.getConnection();
-        PreparedStatement stmt = null;
-
         File file = Config.getPathRelativeToZimbraHome("db/create_database.sql");
+
+        Connection conn = null;
+        PreparedStatement stmt = null;
         try {
+            conn = DbPool.getConnection();
+
             // Create the new database
             String dbName = getDatabaseName(mailboxId);
             ZimbraLog.mailbox.info("Creating database " + dbName);
@@ -140,15 +142,18 @@ public class DbMailbox {
     public static void dropMailboxDatabase(int mailboxId)
     throws ServiceException {
         ZimbraLog.mailbox.debug("dropMailboxDatabase(" + mailboxId + ")");
-        Connection conn = DbPool.getConnection();
-        PreparedStatement stmt = null;
+
         String dbName = getDatabaseName(mailboxId);
         if (!dbName.startsWith(DATABASE_PREFIX)) {
             // Additional safeguard to make sure we don't drop the wrong database
             throw ServiceException.FAILURE("Attempted to drop database " + dbName, null);
         }
         
+        Connection conn = null;
+        PreparedStatement stmt = null;
         try {
+            conn = DbPool.getConnection();
+
             // Create the new database
             ZimbraLog.mailbox.info("Dropping database " + dbName);
 
@@ -235,9 +240,9 @@ public class DbMailbox {
     }
 
     public static Map getMailboxes(Connection conn) throws ServiceException {
+        HashMap result = new HashMap();
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        HashMap result = new HashMap();
         try {
             stmt = conn.prepareStatement("SELECT id, account_id FROM mailbox");
             rs = stmt.executeQuery();
@@ -341,7 +346,6 @@ public class DbMailbox {
      */
     public static void deleteMailbox(Connection conn, Mailbox mbox) throws ServiceException {
         PreparedStatement stmt = null;
-
         try {
             // remove entry from mailbox table
             stmt = conn.prepareStatement("DELETE FROM mailbox WHERE id = ?");
@@ -357,10 +361,10 @@ public class DbMailbox {
 
     static Set /* <Long> */ getDistinctTagsets(Connection conn, int mailboxId)
     throws ServiceException {
+        Set tagsets = new HashSet();
+
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        Set tagsets = new HashSet();
-        
         try {
             stmt = conn.prepareStatement("SELECT DISTINCT tags " +
                 "FROM " + DbMailItem.getMailItemTableName(mailboxId));
@@ -381,10 +385,10 @@ public class DbMailbox {
 
     static Set /* <Long> */ getDistinctFlagsets(Connection conn, int mailboxId)
     throws ServiceException {
+        Set flagsets = new HashSet();
+
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        Set flagsets = new HashSet();
-        
         try {
             stmt = conn.prepareStatement("SELECT DISTINCT flags " +
                 "FROM " + DbMailItem.getMailItemTableName(mailboxId));
