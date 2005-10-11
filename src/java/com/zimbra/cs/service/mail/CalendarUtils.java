@@ -976,7 +976,7 @@ public class CalendarUtils {
 
         // RECURRENCE-ID
         if (inv.hasRecurId()) {
-            assert(recurId == null); // can't cancel an instance of the non-default invite FIXME throw exception
+            // FIXME: if RECURRENCE-ID can be a range (THISANDFUTURE) then we'll need to be smarter here
             cancel.setRecurId(inv.getRecurId());
         } else {
             if (recurId != null) {

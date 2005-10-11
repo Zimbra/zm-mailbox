@@ -101,11 +101,6 @@ public class ModifyAppointment extends CalendarRequest
                     throw MailServiceException.INVITE_OUT_OF_DATE(pid.toString());
                 }
                 
-                if (inv.hasRecurId()) {
-                    throw ServiceException.INVALID_REQUEST("Called ModifyAppointmentException on invite "+inv.getMailItemId()+
-                            "with RECURRENCE_ID != 0", null);
-                }
-
                 // response
                 Element response = lc.createElement(MailService.MODIFY_APPOINTMENT_RESPONSE);
                 

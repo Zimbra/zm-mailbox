@@ -144,12 +144,6 @@ public class MailService implements DocumentService {
     public static final QName GET_APPOINTMENT_REQUEST = QName.get("GetAppointmentRequest", NAMESPACE);
     public static final QName GET_APPOINTMENT_RESPONSE= QName.get("GetAppointmentResponse", NAMESPACE);
     
-    public static final QName CREATE_APPOINTMENT_EXCEPTION_REQUEST = QName.get("CreateAppointmentExceptionRequest", NAMESPACE);
-    public static final QName CREATE_APPOINTMENT_EXCEPTION_RESPONSE= QName.get("CreateAppointmentExceptionResponse", NAMESPACE);
-    public static final QName MODIFY_APPOINTMENT_EXCEPTION_REQUEST = QName.get("ModifyAppointmentExceptionRequest", NAMESPACE);
-    public static final QName MODIFY_APPOINTMENT_EXCEPTION_RESPONSE= QName.get("ModifyAppointmentExceptionResponse", NAMESPACE);
-    public static final QName CANCEL_APPOINTMENT_EXCEPTION_REQUEST = QName.get("CancelAppointmentExceptionRequest", NAMESPACE);
-    public static final QName CANCEL_APPOINTMENT_EXCEPTION_RESPONSE= QName.get("CancelAppointmentExceptionResponse", NAMESPACE);
     public static final QName SET_APPOINTMENT_REQUEST = QName.get("SetAppointmentRequest", NAMESPACE);
     public static final QName SET_APPOINTMENT_RESPONSE= QName.get("SetAppointmentResponse", NAMESPACE);
     
@@ -478,9 +472,6 @@ public class MailService implements DocumentService {
         dispatcher.registerHandler(CANCEL_APPOINTMENT_REQUEST, new CancelAppointment());
         dispatcher.registerHandler(GET_APPOINTMENT_REQUEST, new GetAppointment());
 
-        dispatcher.registerHandler(CREATE_APPOINTMENT_EXCEPTION_REQUEST, new CreateAppointmentException());
-        dispatcher.registerHandler(MODIFY_APPOINTMENT_EXCEPTION_REQUEST, new ModifyAppointmentException());
-        dispatcher.registerHandler(CANCEL_APPOINTMENT_EXCEPTION_REQUEST, new CancelAppointmentException());
         dispatcher.registerHandler(SET_APPOINTMENT_REQUEST, new SetAppointment());
         
         dispatcher.registerHandler(GET_FREE_BUSY_REQUEST, new GetFreeBusy());

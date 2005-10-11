@@ -75,29 +75,12 @@ public class CancelAppointment extends CalendarRequest {
                     throw MailServiceException.NO_SUCH_APPOINTMENT(inv.getUid(), " for CancelAppointmentRequest("+pid+","+compNum+")");
                 }
                 
-                Invite defaultInv = appt.getDefaultInvite();
-                if (defaultInv.getMailItemId() != pid.getSubIdInt()) {
-                    throw ServiceException.INVALID_REQUEST("Specified Invite ID "+pid+" is not the Default Invite for appt "+appt.getId(), null);
-                }
-
-/*******
- * TIM: remove the "cancel a single instance of a recurring appointment" from here, 
- * and put it in the "CancelAppointmentException" API.  The reason is that, from the 
- * client's perspective, cancelling a particular instance is the same thing as 
- * cancelling a particular exception --- or at least it is easier to think about it 
- * that way.  Leaving this commented-out code here for now until I've thought about 
- * it a little longer....
- *  
-
                 Element recurElt = request.getOptionalElement("inst");
                 if (recurElt != null) {
-                    if (inv.hasRecurId()) {
-                        throw MailServiceException.CANNOT_CANCEL_INSTANCE_OF_EXCEPTION(" for CancelAppointmentRequest("+pid+","+compNum+")");
-                    }
-                    cancelInstance(octxt, request, acct, mbox, inv, recurElt);
+                    RecurId recurId = CalendarUtils.parseRecurId(recurElt, inv.getTimeZoneMap(), inv);
+                    cancelInstance(octxt, request, acct, mbox, appt, inv, recurId);
                 } else {
                 
-*****/                
                     // if recur is not set, then we're cancelling the entire appointment...
                     
                     // first, pull a list of all the invites and THEN start cancelling them: since cancelling them
@@ -121,7 +104,7 @@ public class CancelAppointment extends CalendarRequest {
                             cancelInvite(octxt, request, acct, mbox, appt, invites[i]);
                         }
                     }
-//                }
+                }
             } // synchronized on mailbox
             
             Element response = lc.createElement(MailService.CANCEL_APPOINTMENT_RESPONSE);
