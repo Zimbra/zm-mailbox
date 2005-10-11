@@ -65,6 +65,10 @@ public abstract class CalendarRequest extends SendMsg {
         // parse the data
         toRet.mMm = ParseMimeMessage.parseMimeMsgSoap(octxt, mbox, msgElem, null, inviteParser, toRet);
         
+        // FIXME FIXME FIXME -- need to figure out a way to get the FRAGMENT data out of the initial
+        // message here, so that we can copy it into the DESCRIPTION field in the iCalendar data that
+        // goes out...will make for much better interop!
+        
         if (inviteParser.getResult() == null || inviteParser.getResult().mInvite == null) {
             assert(inviteParser.getResult() != null);
         }

@@ -40,8 +40,7 @@ import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.ComponentList;
 import net.fortuna.ical4j.model.DateTime;
-import net.fortuna.ical4j.model.Parameter;
-import net.fortuna.ical4j.model.ParameterList;
+
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.PropertyList;
 import net.fortuna.ical4j.model.Recur;
@@ -49,13 +48,10 @@ import net.fortuna.ical4j.model.ValidationException;
 import net.fortuna.ical4j.model.component.VAlarm;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.component.VTimeZone;
-import net.fortuna.ical4j.model.parameter.Cn;
-import net.fortuna.ical4j.model.parameter.PartStat;
-import net.fortuna.ical4j.model.parameter.Role;
-import net.fortuna.ical4j.model.parameter.Rsvp;
+
 import net.fortuna.ical4j.model.parameter.TzId;
-import net.fortuna.ical4j.model.property.Attendee;
 import net.fortuna.ical4j.model.property.Comment;
+import net.fortuna.ical4j.model.property.Description;
 import net.fortuna.ical4j.model.property.DtEnd;
 import net.fortuna.ical4j.model.property.DtStamp;
 import net.fortuna.ical4j.model.property.DtStart;
@@ -121,7 +117,7 @@ public class Invite {
             Organizer org,
             List attendees,
             String name, 
-            String description, 
+            String comment, 
             String loc,
             int flags,
             String partStat,
@@ -148,7 +144,7 @@ public class Invite {
         mOrganizer = org;
         mAttendees = attendees;
         mName = name != null ? name : "";
-        mDescription = description != null ? description : "";
+        mComment = comment != null ? comment : "";
         mLocation = loc != null ? loc : "";
         mFlags = flags;
         mPartStat = partStat;
@@ -214,7 +210,7 @@ public class Invite {
             Organizer organizer,
             List /* ZAttendee */ attendees,
             String name,
-            String description,
+            String comment, 
             String location,
             String fragment,
             int dtStampOrZero,
@@ -238,7 +234,7 @@ public class Invite {
                 organizer,
                 attendees,
                 name,
-                description,
+                comment,
                 location,
                 Invite.APPT_FLAG_EVENT | (needsReply ? Invite.APPT_FLAG_NEEDS_REPLY : 0) | (allDayEvent ? Invite.APPT_FLAG_ALLDAY : 0),
                 partStat,
@@ -266,31 +262,33 @@ public class Invite {
         }
     }
     
+
     private static final String FN_ADDRESS         = "a";
     private static final String FN_APPT_FLAGS      = "af";
     private static final String FN_ATTENDEE        = "at";
-    private static final String FN_CN              = "cn";
     private static final String FN_SENTBYME        = "byme";
+    private static final String FN_COMPNUM         = "comp";
+    private static final String FN_ICAL_COMMENT    = "cmt";
     private static final String FN_FRAGMENT        = "frag";
     private static final String FN_DTSTAMP         = "dts";
     private static final String FN_DURATION        = "duration";
     private static final String FN_END             = "et";
     private static final String FN_APPT_FREEBUSY   = "fb";
     private static final String FN_LOCATION        = "l";
+    private static final String FN_ICAL_DESCRIPTION = "icDsc";
     private static final String FN_INVMSGID        = "mid";
     private static final String FN_METHOD          = "mthd";
     private static final String FN_NAME            = "n";
     private static final String FN_NUM_ATTENDEES   = "numAt";
     private static final String FN_ORGANIZER       = "org";
     private static final String FN_PARTSTAT        = "ptst";
-    private static final String FN_ROLE            = "r";
+    private static final String FN_RECURRENCE = "recurrence";
     private static final String FN_RECUR_ID        = "rid";
     private static final String FN_SEQ_NO          = "seq";
     private static final String FN_STATUS          = "status";  // calendar: event/todo/journal status
     private static final String FN_START           = "st";
     private static final String FN_TRANSP          = "tr";
     private static final String FN_TZMAP           = "tzm"; // calendaring: timezone map
-    private static final String FN_RSVP_BOOL       = "v";
     private static final String FN_UID             = "u";
         
     
@@ -316,7 +314,7 @@ public class Invite {
         meta.put(FN_DURATION, inv.mDuration);
         meta.put(FN_METHOD, inv.mMethod.getValue());
         meta.put(FN_FRAGMENT, inv.mFragment);
-        meta.put(FN_ICAL_DESCRIPTION, inv.mDescription);
+        meta.put(FN_ICAL_COMMENT, inv.mComment);
         
         if (inv.mRecurrence != null) {
             meta.put(FN_RECURRENCE, inv.mRecurrence.encodeMetadata());
@@ -366,10 +364,6 @@ public class Invite {
         return toRet;
     }
     
-    private static final String FN_RECURRENCE = "recurrence";
-    private static final String FN_COMPNUM = "comp";
-    private static final String FN_ICAL_DESCRIPTION = "icDsc";
-    
     /**
      * This API is public for RedoLogging to call into it -- you probably don't want to call it from
      * anywhere else! 
@@ -391,7 +385,7 @@ public class Invite {
         String transp = meta.get(FN_TRANSP, IcalXmlStrMap.TRANSP_OPAQUE);
         boolean sentByMe = meta.getBool(FN_SENTBYME);
         String fragment = meta.get(FN_FRAGMENT, "");
-        String description = meta.get(FN_ICAL_DESCRIPTION, "");
+        String comment = meta.get(FN_ICAL_COMMENT, "");
         
         ParsedDateTime dtStart = null;
         ParsedDateTime dtEnd = null;
@@ -460,7 +454,7 @@ public class Invite {
             
         return new Invite(methodStr, tzMap, appt, uid, status, freebusy, transp,
                 dtStart, dtEnd, duration, recurrence, org, attendees,
-                name, description, loc, flags, partStat,
+                name, comment, loc, flags, partStat,
                 recurrenceId, dtstamp, seqno,
                 mailboxId, mailItemId, componentNum, sentByMe, fragment);
     }
@@ -483,12 +477,6 @@ public class Invite {
             mFlags &= ~APPT_FLAG_NEEDS_REPLY;
         }
     }
-    
-//    public Message getInviteMessage() { return mInvMsg; }
-    
-//    void setInviteMessage(Message msg) {
-//        mInvMsg = msg;
-//    }
     
     /**
      * The public version updates the metadata in the DB as well
@@ -601,8 +589,8 @@ public class Invite {
     public int getMailItemId() { return mMailItemId; }
     public String getName() { return mName; };
     public void setName(String name) { mName = name; }
-    public String getDescription() { return mDescription; };
-    public void setDescription(String desc) { mDescription = desc; };
+    public String getComment() { return mComment; }
+    public void setComment(String comment) { mComment = comment; }
     public String getStatus() { return mStatus; }
     public void setStatus(String status) { mStatus = status; }
     public String getFreeBusy() { return mFreeBusy; }
@@ -754,7 +742,7 @@ public class Invite {
         sb.append(", end: ").append(this.mEnd);
         sb.append(", duration: ").append(this.mDuration);
         sb.append(", name: ").append(this.mName);
-        sb.append(", description: ").append(this.mDescription);
+        sb.append(", comment: ").append(this.mComment);
         sb.append(", location: ").append(this.mLocation);
         sb.append(", allDay: ").append(isAllDayEvent());
         sb.append(", otherAts: ").append(hasOtherAttendees());
@@ -789,7 +777,7 @@ public class Invite {
     protected ParsedDuration mDuration = null;
     
     protected String mName; /* name of the invite, aka "subject" */
-    protected String mDescription; /* name of the invite, aka "subject" */
+    protected String mComment;  /* RFC2445 'comment' */ 
     protected String mLocation;
     protected int mFlags = APPT_FLAG_EVENT;
     protected RecurId mRecurrenceId = null; // RECURRENCE_ID
@@ -839,32 +827,6 @@ public class Invite {
         return new Organizer(URI.create(addressStr));
     }
     
-//    public static Attendee createAttendee(String cnStr, String addressStr, String roleStr, String partStatStr, Boolean rsvpBool) throws ServiceException
-//    {
-//        ParameterList p = new ParameterList();
-//        
-//        if (cnStr != null && !cnStr.equals("")) {
-//            Cn cn = new Cn(cnStr);
-//            p.add(cn);
-//        }
-//        
-//        if (roleStr != null && !roleStr.equals("")) {
-//            Role role = new Role(IcalXmlStrMap.sRoleMap.toIcal(roleStr));
-//            p.add(role);
-//        }
-//        
-//        if (partStatStr != null && !partStatStr.equals("")) {
-//            PartStat partStat = new PartStat(IcalXmlStrMap.sPartStatMap.toIcal(partStatStr));
-//            p.add(partStat);
-//        }
-//        
-//        Rsvp rsvp = new Rsvp(rsvpBool);
-//        p.add(rsvp);
-//        
-//        return new Attendee(p, URI.create(addressStr));
-//        
-//    }
-    
     private static Organizer parseOrgFromMetadata(Metadata meta) {
         if (meta == null || !meta.containsKey(FN_ADDRESS)) {
             return null;
@@ -878,61 +840,6 @@ public class Invite {
         meta.put(FN_ADDRESS, org.getCalAddress());
         return meta;
     }
-
-//    public static Attendee parseAtFromMetadata(Metadata meta) throws ServiceException {
-//        if (meta == null) {
-//            return null;
-//        }
-//        String cnStr = meta.get(FN_CN, null);
-//        String addressStr = meta.get(FN_ADDRESS, null);
-//        String roleStr = meta.get(FN_ROLE, null);
-//        String partStatStr = meta.get(FN_PARTSTAT, null);
-//        Boolean rsvpBool = Boolean.FALSE;
-//        if (meta.getBool(FN_RSVP_BOOL, false)) {
-//            rsvpBool = Boolean.TRUE;
-//        }
-//        
-//        return createAttendee(cnStr, addressStr, roleStr, partStatStr, rsvpBool);
-//    }
-    
-//    public static Metadata encodeAsMetadata(Attendee at) {
-//        Metadata meta = new Metadata();
-//        ParameterList params = at.getParameters();
-//        
-//        // address
-//        meta.put(FN_ADDRESS, at.getCalAddress());
-//        
-//        // CN
-//        Cn cn = (Cn)params.getParameter(Parameter.CN);
-//        if (cn != null) {
-//            meta.put(FN_CN, cn.getValue());
-//        }
-//        
-//        // role
-//        Role role = (Role) params.getParameter(Parameter.ROLE);
-//        if (role != null) {
-//            meta.put(FN_ROLE, IcalXmlStrMap.sRoleMap.toXml(role.getValue()));
-//        }
-//        
-//        // partstat
-//        PartStat partStat = (PartStat) params.getParameter(Parameter.PARTSTAT);
-//        if (partStat != null) {
-//            meta.put(FN_PARTSTAT, IcalXmlStrMap.sPartStatMap.toXml(partStat.getValue()));
-//        }
-//        
-//        // rsvp?
-//        boolean rsvp = false;
-//        Parameter rsvpParam = params.getParameter(Parameter.RSVP);
-//        if (rsvpParam != null) {
-//            rsvp = ((Rsvp) rsvpParam).getRsvp().booleanValue();
-//        }
-//        if (rsvp) {
-//            meta.put(FN_RSVP_BOOL, "1");
-//        }
-//        
-//        return meta;
-//    }
-    
     
     public boolean sentByMe() { return mSentByMe; }
     void setSentByMe(boolean sentByMe) { mSentByMe = sentByMe; }
@@ -996,12 +903,7 @@ public class Invite {
                 for (Iterator iter = attendees.iterator(); iter.hasNext();) {
                     ZAttendee at = (ZAttendee)(iter.next());
                     
-//                  URI lhs = otherAt.getCalAddress();
-//                  URI rhs = at.getCalAddress();
-                    String lhs = otherAt.getAddress();
-                    String rhs = at.getAddress();
-                    if (lhs.equals(rhs)) 
-                    {
+                    if (otherAt.addressesMatch(at)) {
                         if (!otherAt.getRole().equals(at.getRole())) {
                             at.setRole(otherAt.getRole());
                             modified = true;
@@ -1016,41 +918,6 @@ public class Invite {
                             at.setRsvp(otherAt.getRsvp());
                             modified = true;
                         }
-                        
-//                      ParameterList otherParams = otherAt.getParameters();
-//                      
-//                      ParameterList atParams = at.getParameters();
-//                      Parameter p;
-//                      
-//                      /////////
-//                      // update Role if it has changed
-//                      if ((p=otherParams.getParameter(Parameter.ROLE)) != null) 
-//                      {
-//                      Parameter toRemove = atParams.getParameter(Parameter.ROLE);
-//                      atParams.remove(toRemove);
-//                      
-//                      atParams.add(p);
-//                      }
-//                      
-//                      /////////
-//                      // update RSVP to "no"
-//                      p = atParams.getParameter(Parameter.RSVP);
-//                      if (p!= null) {
-//                      atParams.remove(p);
-//                      }
-//                      atParams.add(Rsvp.FALSE);
-//                      
-//                      
-//                      /////////
-//                      // update PartStat if it has changed
-//                      p = otherParams.getParameter(Parameter.PARTSTAT);
-//                      if (p!= null) {
-//                      Parameter toRemove = atParams.getParameter(Parameter.PARTSTAT);
-//                      atParams.remove(toRemove);
-//                      
-//                      atParams.add(p);
-//                      }
-                        
                         continue OUTER;
                     }
                 }
@@ -1110,7 +977,6 @@ public class Invite {
             setStatus(IcalXmlStrMap.STATUS_CONFIRMED);
             setTransparency(IcalXmlStrMap.TRANSP_OPAQUE);
             mName = "";
-            mDescription = "";
             mLocation = "";
             
             ArrayList /* Recur */ addRecurs = new ArrayList();
@@ -1146,8 +1012,10 @@ public class Invite {
                     mLocation = prop.getValue();
                 } else if (propName.equals(Property.SUMMARY)) {
                     mName = prop.getValue();
+                } else if (propName.equals(Property.DESCRIPTION)) {
+                    mFragment = prop.getValue();
                 } else if (propName.equals(Property.COMMENT)) {
-                    mDescription= prop.getValue();
+                    mComment = prop.getValue();
                 } else if (propName.equals(Property.UID)) {
                     mUid = prop.getValue();
                 } else if (propName.equals(Property.RRULE)) {
@@ -1315,8 +1183,6 @@ public class Invite {
     
     static public Invite createFromICalendar(Account acct, String fragment, Calendar cal, boolean sentByMe) throws ServiceException
     {
-//        Method method = lookupMethod(methodStr);
-        //
         // vevent, vtodo: ALARM, props
         // vjournal: props
         // vfreebusy: props
@@ -1418,8 +1284,13 @@ public class Invite {
         }
         
         // DESCRIPTION
-        if (mDescription != null && !mDescription.equals("")) {
-            event.getProperties().add(new Comment(mDescription));
+        if (mFragment != null && !mFragment.equals("")) {
+            event.getProperties().add(new Description(mFragment));
+        }
+        
+        // COMMENT
+        if (mComment != null && !mComment.equals("")) {
+            event.getProperties().add(new Comment(mComment));
         }
         
         // DTSTART

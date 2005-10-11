@@ -1066,23 +1066,16 @@ public class Appointment extends MailItem {
             return inv.getMatchingAttendee(acct);
         }
         
-        List /* ReplyInfo */ getFreeBusyActual(Account acct, Invite inv) throws ServiceException {
+        List /* ReplyInfo */ getReplyInfo(Invite inv) throws ServiceException {
             ArrayList toRet = new ArrayList();
             
             for (Iterator iter = mReplies.iterator(); iter.hasNext();) {
                 ReplyInfo cur = (ReplyInfo)iter.next();
                 
-                if (acct==null || AccountUtil.addressMatchesAccount(acct, cur.mAttendee.getAddress())) {
-                    if (inv == null || ((inv.getSeqNo() <= cur.mSeqNo) && (inv.getDTStamp() <= cur.mDtStamp))) {
-//                        FreeBusyActualData dat = new FreeBusyActualData();
-//                        dat.mRecurId = cur.mRecurId;
-//                        PartStat ps = (PartStat)(cur.mAttendee.getParameters().getParameter(Parameter.PARTSTAT));
-//                        dat.mFba = inv.partStatToFreeBusyActual(IcalXmlStrMap.sPartStatMap.toXml(ps.getValue()));
-//                        toRet.add(dat);
-                        toRet.add(cur);
-                    } else {
-                        sLog.info("ReplyList "+this.toString()+" has outdated entries in its Replies list");
-                    }
+                if (inv == null || ((inv.getSeqNo() <= cur.mSeqNo) && (inv.getDTStamp() <= cur.mDtStamp))) {
+                    toRet.add(cur);
+                } else {
+                    sLog.info("ReplyList "+this.toString()+" has outdated entries in its Replies list");
                 }
             }
             return toRet;
@@ -1110,22 +1103,37 @@ public class Appointment extends MailItem {
         
     }
             
-//    public List /*ReplyInfo*/ getReplyInfo(Account acct, Invite inv) throws ServiceException 
-//    {
-//        return mReplyList.getFreeBusyActual(acct, inv);
-//    }
-    
+    /**
+     * Get all of the Reply data corresponding to this invite
+     * 
+     * @param inv
+     * @return
+     * @throws ServiceException
+     */
     public List /*ReplyInfo*/ getReplyInfo(Invite inv) throws ServiceException 
     {
-        return mReplyList.getFreeBusyActual(null, inv);
+        return mReplyList.getReplyInfo(inv);
     }
     
-    public List /*ReplyInfo*/ getReplyInfo() throws ServiceException 
-    {
-        return mReplyList.getFreeBusyActual(null, null);
-    }
-    
-    public String getFreeBusyActual(Account acct, Invite inv, Instance inst) throws ServiceException 
+    /**
+     * Return this accounts "effective" FBA data -- ie the FBA that is the result of the most recent and 
+     * most specific (specific b/c some replies might be for just one instance, some might be for recurrence-id=0, 
+     * etc) given the requested Invite and Instance to check against.
+     * 
+     * For example, imagine an appt with no exceptions, but two replies:
+     *    RECUR=0, REPLY=accept (reply to the default invite, accept it)
+     *    RECUR=20051010 REPLY=decline (reply to DECLINE the instance on 10/10/2005
+     * 
+     * The FBA for the 10/10 instance will obviously be different than the one for any other instance.  If you
+     * add Exceptions into the mix, then there are even more permutations.
+     * 
+     * @param acct
+     * @param inv
+     * @param inst
+     * @return
+     * @throws ServiceException
+     */
+    public String getEffectiveFreeBusyActual(Account acct, Invite inv, Instance inst) throws ServiceException 
     {
         ZAttendee at = mReplyList.getEffectiveAttendee(acct, inv, inst);
         if (at == null) {
@@ -1139,7 +1147,17 @@ public class Appointment extends MailItem {
         }
     }
     
-    public String getPartStat(Account acct, Invite inv, Instance inst) throws ServiceException
+    /**
+     * Returns the effective PartStat given the Invite and Instance.  See the description of
+     * getEffectiveFreeBusyActual above for more info
+     * 
+     * @param acct
+     * @param inv
+     * @param inst
+     * @return
+     * @throws ServiceException
+     */
+    public String getEffectivePartStat(Account acct, Invite inv, Instance inst) throws ServiceException
     {
         ZAttendee at = mReplyList.getEffectiveAttendee(acct, inv, inst);
         if (at == null) {
@@ -1153,6 +1171,23 @@ public class Appointment extends MailItem {
         }
     }
     
+    /**
+     * 
+     * Used when we're sending out a reply -- we add a "reply" record to this appointment...this
+     * ends up affecting our "Effective PartStat" (ie if we ACCEPT a meeting, then our effective partstat
+     * changes)
+     * 
+     * @param acctOrNull
+     * @param recurId
+     * @param cnStr
+     * @param addressStr
+     * @param roleStr
+     * @param partStatStr
+     * @param needsReply
+     * @param seqNo
+     * @param dtStamp
+     * @throws ServiceException
+     */
     void modifyPartStat(Account acctOrNull, RecurId recurId, String cnStr, String addressStr, String roleStr,
             String partStatStr, Boolean needsReply, int seqNo, long dtStamp) throws ServiceException {
         mReplyList.modifyPartStat(acctOrNull, recurId, cnStr, addressStr, roleStr, partStatStr, needsReply, seqNo, dtStamp);

@@ -2875,66 +2875,6 @@ public class Mailbox {
         }
     }
     
-//
-//    public synchronized void updateInviteNeedsReplyFlag(OperationContext octxt, int inviteId, int componentNum, boolean value)
-//    throws ServiceException {
-//        modifyInviteFlag(octxt, inviteId, componentNum, Invite.APPT_FLAG_NEEDS_REPLY, value);
-//    }
-
-//    /**
-//     * @param inviteId
-//     * @param componentNum
-//     * @param flag flag value from InviteMessage.Invite 
-//     * @param add TRUE to set the bit (OR it in) FALSE to unset (AND it out)
-//     * @throws ServiceException
-//     */
-//    public synchronized void modifyInviteFlag(OperationContext octxt, int inviteId, int componentNum, int flag, boolean add)
-//    throws ServiceException {
-//        ModifyInviteFlag redoRecorder = new ModifyInviteFlag(mId, inviteId, componentNum, flag, add);
-//
-//        boolean success = false;
-//        try {
-//            beginTransaction("updateInviteNeedsReplyFlag", octxt, redoRecorder);
-//
-//            Invite inv = getMessageById(inviteId).getInvite(componentNum);
-//            inv.modifyFlag(this, flag, add);
-//            success = true;
-//        } finally {
-//            endTransaction(success);
-//        }
-//    }
-//
-//    /**
-//     * Modify the Participant-Status of your LOCAL data part of an appointment -- this is used when you Reply to
-//     * an Invite so that you can track the fact that you've replied to it.
-//     * 
-//     * @param octxt
-//     * @param apptId
-//     * @param inviteId
-//     * @param componentNum
-//     * @param partStat
-//     * @throws ServiceException
-//     */
-//    public synchronized boolean modifyInvitePartStat(OperationContext octxt, int apptId, int inviteId,
-//                                                  int componentNum, boolean needsReply, String partStat)
-//    throws ServiceException {
-//        ModifyInvitePartStat redoRecorder = new ModifyInvitePartStat(mId, apptId, inviteId, componentNum, needsReply, partStat);
-//
-//        boolean success = false;
-//        try {
-//            beginTransaction("updateInvitePartStat", octxt, redoRecorder);
-//            Appointment appt = getAppointmentById(apptId);
-//            Invite inv = appt.getInvite(inviteId,componentNum);
-//            if (inv != null)
-//                inv.modifyPartStat(this, needsReply, partStat);
-//            success = true;
-//            return (inv != null);
-//        } finally {
-//            endTransaction(success);
-//        }
-//    }
-//    
-    
     /**
      * Modify the Participant-Status of your LOCAL data part of an appointment -- this is used when you Reply to
      * an Invite so that you can track the fact that you've replied to it.

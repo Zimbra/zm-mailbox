@@ -51,7 +51,6 @@ import com.zimbra.cs.util.JMSession;
 import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.data.ParserException;
 import net.fortuna.ical4j.model.Calendar;
-import net.fortuna.ical4j.model.DateList;
 import net.fortuna.ical4j.model.Parameter;
 import net.fortuna.ical4j.model.ParameterList;
 import net.fortuna.ical4j.model.Property;
@@ -60,12 +59,8 @@ import net.fortuna.ical4j.model.ValidationException;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.parameter.Cn;
 import net.fortuna.ical4j.model.parameter.PartStat;
-import net.fortuna.ical4j.model.parameter.TzId;
-import net.fortuna.ical4j.model.parameter.Value;
-import net.fortuna.ical4j.model.property.ExDate;
 import net.fortuna.ical4j.model.property.Method;
 import net.fortuna.ical4j.model.property.Organizer;
-import net.fortuna.ical4j.model.property.RDate;
 import net.fortuna.ical4j.util.DateTimeFormat;
 
 import com.zimbra.cs.account.Account;
@@ -262,13 +257,7 @@ public class CalendarUtils {
             }
         }
         
-        String summaryStr = "";
-//        Property propSum = event.getProperties().getProperty(Property.SUMMARY);
-//        if (propSum != null) {
-        if (create.getName() != null) {
-//            summaryStr = ((Summary)propSum).getValue();
-            summaryStr = create.getName();
-        }
+        String summaryStr = create.getName() != null ? create.getName() : "";
         
         ParseMimeMessage.InviteParserResult toRet = new ParseMimeMessage.InviteParserResult();
         toRet.mCal = iCal;
@@ -290,8 +279,6 @@ public class CalendarUtils {
     static ParseMimeMessage.InviteParserResult parseInviteForModify(Account account, Element inviteElem, 
             Invite oldInv, List /* Attendee */ attendeesToCancel) throws ServiceException 
     {
-//        List /*<ICalTimeZone>*/ tzsReferenced = new ArrayList();
-        
         Invite mod = new Invite(Method.PUBLISH, oldInv.getTimeZoneMap());
 
         CalendarUtils.parseInviteElementCommon(account, inviteElem, mod, oldInv.getTimeZoneMap());
@@ -468,38 +455,42 @@ public class CalendarUtils {
                     
                     try {
                         String dstr = intElt.getAttribute(MailService.A_APPT_DATETIME);
-                        DateList dl;
-                        boolean isDateTime = true;
-                        try {
-                            dl = new DateList(dstr, Value.DATE_TIME);
-                        } catch (ParseException ex) {
-                            dl = new DateList(dstr, Value.DATE);
-                            isDateTime = false;
-                        }
-//                        
-//                        if (cal.getTimeZone() == ICalTimeZone.getUTC()) {
+                        
+                        // FIXME!!  Need an IRecurrence imp that takes a DateList, then instantiate it here and 
+                        // add it to addRules or subRules!!!
+                        
+//                        DateList dl;
+//                        boolean isDateTime = true;
+//                        try {
+//                            dl = new DateList(dstr, Value.DATE_TIME);
+//                        } catch (ParseException ex) {
+//                            dl = new DateList(dstr, Value.DATE);
+//                            isDateTime = false;
+//                        }
+//
+////                        if (cal.getTimeZone() == ICalTimeZone.getUTC()) {
 ////                            dl.setUtc(true);
+////                        }
+//                        
+//                        Property prop;
+//                        if (exclude) {
+//                            prop = new ExDate(dl);
+//                        } else {
+//                            prop = new RDate(dl);
+//                        }
+//                        
+//                        if (isDateTime) {
+//                            if (dt.getTimeZone() != ICalTimeZone.getUTC()) {
+//                                prop.getParameters().add(new TzId(dt.getTZName()));
+//                            }
 //                        }
                         
-                        Property prop;
                         if (exclude) {
-                            prop = new ExDate(dl);
+                            // FIXME fix EXDATE
+//                            subRules.add(new Recurrence.SingleInstanceRule())
                         } else {
-                            prop = new RDate(dl);
-                        }
-                        
-                        if (isDateTime) {
-                            if (dt.getTimeZone() != ICalTimeZone.getUTC()) {
-                                prop.getParameters().add(new TzId(dt.getTZName()));
-                            }
-                        }
-                        
-//                        comp.getProperties().add(prop);
-                        if (exclude) {
-//                            subRecurs.add(prop);
-//                            addRules.add(new Recurrence.SingleInstanceRule())
-                        } else {
-//                            addRecurs.add(prop);
+                            // FIXME fix RDATE
+//                            addRules.add(new Recurrence.SingleInstanceRule());
                         }
                         
                     } catch (Exception ex) {
@@ -606,16 +597,11 @@ public class CalendarUtils {
 
                     try {
                         Recur recur = new Recur(recurBuf.toString());
-//                        Property prop;
                         if (exclude) {
-//                            prop = new ExRule(recur);
-//                            subRecurs.add(recur);
                             subRules.add(new Recurrence.SimpleRepeatingRule(inv.getStartTime(), dur, recur, null));
                         } else {
-//                            prop = new RRule(recur);
                             addRules.add(new Recurrence.SimpleRepeatingRule(inv.getStartTime(), dur, recur, null));
                         }
-//                        comp.getProperties().add(prop);
                     } catch (ParseException ex) {
                         throw MailServiceException.INVALID_REQUEST("Exception parsing <recur> <rule>", ex);
                     }
@@ -671,7 +657,6 @@ public class CalendarUtils {
         
         String name = element.getAttribute(MailService.A_NAME);
         String location = element.getAttribute(MailService.A_APPT_LOCATION,"");
-        String descriptionStr = null;
 
         // ORGANIZER
         Element orgElt = element.getOptionalElement(MailService.E_APPT_ORGANIZER);
@@ -697,11 +682,6 @@ public class CalendarUtils {
         
         // SUMMARY (aka Name or Subject)
         newInv.setName(name);
-        
-        // DESCRIPTION
-        if (descriptionStr != null) {
-            newInv.setDescription(descriptionStr);
-        }
         
         // DTSTART
         {
@@ -769,12 +749,6 @@ public class CalendarUtils {
 
             String cn = cur.getAttribute(MailService.A_DISPLAY, null);
             String address = cur.getAttribute(MailService.A_ADDRESS);
-//            URI uri = null;
-//            try { 
-//                uri = new URI("MAILTO:" + address);
-//            } catch (java.net.URISyntaxException e) {
-//                throw ServiceException.FAILURE("Building Attendee URI", e);
-//            }
 
             String role = cur.getAttribute(MailService.A_APPT_ROLE);
             String partStat = cur.getAttribute(MailService.A_APPT_PARTSTAT);
@@ -786,38 +760,18 @@ public class CalendarUtils {
             
             ZAttendee at = new ZAttendee(address, cn, role, partStat, rsvp ? Boolean.TRUE : Boolean.FALSE); 
 
-//            Attendee at = new Attendee(uri);
-//            ParameterList params = at.getParameters();
-//            
-//            role = IcalXmlStrMap.sRoleMap.toIcal(role);
-//            params.add(new Role(role));
-//            
-//            
-//
-//            partStat = IcalXmlStrMap.sPartStatMap.toIcal(partStat);
-//            params.add(new PartStat(partStat)); 
-//            
-//            params.add(rsvp ? Rsvp.TRUE : Rsvp.FALSE);
-//            
-//            // ical4j doesn't deal with "" empty values correctly right now
-//            if ((cn != null) && (!cn.equals(""))) {
-//                params.add(new Cn(cn));
-//            }
-            
             if (newInv.getMethod().equals(Method.PUBLISH.getValue())) {
                 newInv.setMethod(Method.REQUEST);
             }
             newInv.addAttendee(at);
         }
         
-//      // RECUR
+        // RECUR
         Element recur = element.getOptionalElement(MailService.A_APPT_RECUR);
         if (recur != null) {
             Recurrence.IRecurrence recurrence = parseRecur(recur, oldTzMap, newInv);
             newInv.setRecurrence(recurrence);
         }
-        
-//        return event;
     }
     
     static List /*VEvent*/ cancelAppointment(Account acct, Appointment appt, String comment) throws ServiceException 
@@ -896,19 +850,13 @@ public class CalendarUtils {
         ZAttendee me = oldInv.getMatchingAttendee(acct);
         if (me != null) {
             meReply = new ZAttendee(me.getAddress());
-//            meReply.getParameters().add(new PartStat(verb.getICalPartStat()));
             meReply.setPartStat(verb.getXmlPartStat());
             reply.addAttendee(meReply);
         } else {
             String name = acct.getName();
-//            try {
                 meReply = new ZAttendee(name);
-//                meReply.getParameters().add(new PartStat(verb.getICalPartStat()));
                 meReply.setPartStat(verb.getXmlPartStat());
                 reply.addAttendee(meReply);
-//            } catch(URISyntaxException e) {
-//                throw ServiceException.FAILURE("URISyntaxException "+name, e);
-//            }
         }
         
         // DTSTART (outlook seems to require this, even though it shouldn't)
@@ -1020,7 +968,7 @@ public class CalendarUtils {
         
         // COMMENT
         if (comment != null && !comment.equals("")) {
-            cancel.setDescription(comment);
+            cancel.setComment(comment);
         }
         
         // UID

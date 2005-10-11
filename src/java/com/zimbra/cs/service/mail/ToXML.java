@@ -542,7 +542,7 @@ public class ToXML {
         Element repliesElt = parent.addElement(MailService.A_APPT_REPLIES);
         
         try {
-          List /*Appointment.ReplyInfo */ fbas = appt.getReplyInfo();
+          List /*Appointment.ReplyInfo */ fbas = appt.getReplyInfo(null);
           
           for (Iterator iter = fbas.iterator(); iter.hasNext();) {
               Appointment.ReplyInfo repInfo = (Appointment.ReplyInfo)iter.next();

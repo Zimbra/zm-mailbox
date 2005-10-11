@@ -71,7 +71,6 @@ public class SendInviteReply extends SendMsg {
             Account acct = getRequestedAccount(lc);
             OperationContext octxt = lc.getOperationContext();
 
-//            int invId = (int)request.getAttributeLong("id");
             ParsedItemID pid = ParsedItemID.parse(request.getAttribute("id"));
             int compNum = (int)request.getAttributeLong("compNum");
             
@@ -126,7 +125,6 @@ public class SendInviteReply extends SendMsg {
                     String replySubject = this.getReplySubject(verb, oldInv);
                     
                     Calendar iCal = CalendarUtils.buildReplyCalendar(acct, oldInv, verb, replySubject, tzsReferenced, exceptDt);
-//                  System.out.println("GENERATED ICAL:\n"+iCal.toString());
                     
                     MimeMessage toSend = null;
                     
@@ -167,11 +165,8 @@ public class SendInviteReply extends SendMsg {
                 String role = IcalXmlStrMap.ROLE_OPT_PARTICIPANT;
                 int seqNo = oldInv.getSeqNo();
                 long dtStamp = oldInv.getDTStamp();
-                if (me != null) {
-                    cnStr = null;
+                if (me != null) { 
                     if (me.hasCn()) {
-//                    if (me.getParameters().getParameter(Parameter.CN) != null) {
-//                        cnStr = me.getParameters().getParameter(Parameter.CN).getValue();
                         cnStr = me.getCn();
                     }
                     addressStr = me.getAddress();
@@ -180,7 +175,6 @@ public class SendInviteReply extends SendMsg {
                     }
                 }
                 
-//              mbox.modifyInvitePartStat(octxt, apptId, inviteMsgId, compNum, false, verb.getXmlPartStat());
                 mbox.modifyPartStat(octxt, apptId, recurId, cnStr, addressStr, role, verb.getXmlPartStat(), Boolean.FALSE, seqNo, dtStamp);
                         
                 if (acct.getBooleanAttr(Provisioning.A_zimbraPrefDeleteInviteOnReply, true)) {
@@ -231,7 +225,6 @@ public class SendInviteReply extends SendMsg {
         }
         public String toString() { return name; }
         String getXmlPartStat() { return xmlPartStat; }
-//        String getICalPartStat() { return iCalPartStat; }
     }
     
     protected final static ParsedVerb VERB_ACCEPT = new ParsedVerb("ACCEPT", IcalXmlStrMap.PARTSTAT_ACCEPTED);
