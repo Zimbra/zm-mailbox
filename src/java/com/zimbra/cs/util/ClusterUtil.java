@@ -74,16 +74,16 @@ public class ClusterUtil {
         //cmantoolCmd.append(" -t 2 nodes| /usr/bin/cut -c18,20-1000");
         mLog.info("  will execute \"" + cmantoolCmd.toString() + "\"");
         
-        //ExecUtil.ProcessOutput clustatProc = ExecUtil.exec(cmd.toString(), 2000);
-        //String clustatOutput = clustatProc.stdout;
+        ExecUtil.ProcessOutput clustatProc = ExecUtil.exec(clustatCmd.toString(), 2000);
+        String clustatOutput = clustatProc.stdout;
 
 
-        //ExecUtil.ProcessOutput cmanProc = ExecUtil.exec(cmd.toString(), 2000);
-        //String cmanToolOutput = cmanProc.stdout;
+        ExecUtil.ProcessOutput cmanProc = ExecUtil.exec(cmantoolCmd.toString(), 2000);
+        String cmanToolOutput = cmanProc.stdout;
         
-
-        String clustatOutput = getDummyClustatOutput();
-        String cmanToolOutput = getDummyCmanToolOutput();
+        
+//         String clustatOutput = getDummyClustatOutput();
+//         String cmanToolOutput = getDummyCmanToolOutput();
         
         String [] lines = cmanToolOutput.split("\\n");
         String [] vals;
@@ -176,8 +176,8 @@ public class ClusterUtil {
         tmp.append("<node name=\"jenna.liquidsys.com\" state=\"1\" nodeid=\"0x0000000000000001\"/>\n");
         tmp.append("</nodes>\n");
         tmp.append("<groups>\n");
-        tmp.append("<group name=\"mail1\" state=\"112\" state_str=\"started\"  owner=\"barbara.liquidsys.com\" last_owner=\"barbara.liquidsys.com\" restarts=\"1\"/>\n");        
-        tmp.append("<group name=\"mail2\" state=\"112\" state_str=\"started\"  owner=\"jenna.liquidsys.com\" last_owner=\"tweek.liquidsys.com\" restarts=\"0\"/>\n");
+        tmp.append("<group name=\"mail1.liquidsys.com\" state=\"112\" state_str=\"started\"  owner=\"barbara.liquidsys.com\" last_owner=\"barbara.liquidsys.com\" restarts=\"1\"/>\n");        
+        tmp.append("<group name=\"mail2.liquidsys.com\" state=\"112\" state_str=\"started\"  owner=\"jenna.liquidsys.com\" last_owner=\"tweek.liquidsys.com\" restarts=\"0\"/>\n");
         tmp.append("</groups>\n");
         tmp.append("</clustat>\n");
         return tmp.toString();
@@ -197,6 +197,12 @@ public class ClusterUtil {
     public static void failoverService (String serviceName, String newServerName) throws ServiceException{
         if (onWindows()){
             mLog.info("Cluster services are not available on a Windows dev box");
+//             try {
+//                 Thread.sleep(10000);
+//             } catch (Exception e) {
+//                 e.printStackTrace();
+//             }
+            
             return;
         }
         
@@ -211,9 +217,11 @@ public class ClusterUtil {
         
         System.out.println("  will execute \"" + clusvcadmCmd.toString() + "\"");        
 
-        //ExecUtil.ProcessOutput clustatProc = ExecUtil.exec(clusvcadmCmd.toString());
-        //String clustatOutput = clustatProc.stdout;
+        ExecUtil.ProcessOutput clusvcadmProc = ExecUtil.exec(clusvcadmCmd.toString());
+        String clusvcadmOutput = clusvcadmProc.stdout;
 
+        //System.out.println("  output = " + clusvcadmOutput);
+        
     }
     
     
