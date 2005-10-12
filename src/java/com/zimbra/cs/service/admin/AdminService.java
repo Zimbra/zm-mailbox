@@ -194,11 +194,6 @@ public class AdminService implements DocumentService {
     public static final QName RENAME_DISTRIBUTION_LIST_REQUEST = QName.get("RenameDistributionListRequest", NAMESPACE);
     public static final QName RENAME_DISTRIBUTION_LIST_RESPONSE = QName.get("RenameDistributionListResponse", NAMESPACE);
 
-    public static final QName GET_CLUSTER_STATUS_REQUEST = QName.get("GetClusterStatusRequest", NAMESPACE);
-    public static final QName GET_CLUSTER_STATUS_RESPONSE = QName.get("GetClusterStatusResponse", NAMESPACE);
-    public static final QName FAILOVER_CLUSTER_SERVICE_REQUEST = QName.get("FailoverClusterServiceRequest", NAMESPACE);
-    public static final QName FAILOVER_CLUSTER_SERVICE_RESPONSE = QName.get("FailoverClusterServiceResponse", NAMESPACE);
-
     public static final QName GET_VERSION_INFO_REQUEST = QName.get("GetVersionInfoRequest", NAMESPACE);
     public static final QName GET_VERSION_INFO_RESPONSE = QName.get("GetVersionInfoResponse", NAMESPACE);
 
@@ -286,20 +281,6 @@ public class AdminService implements DocumentService {
     public static final String A_VOLUME_COMPRESSION_THRESHOLD = "compressionThreshold";
     public static final String A_VOLUME_DELETE_FILES = "deleteFiles";
 
-    public static final String A_CLUSTER_SERVERS = "servers";
-    public static final String A_CLUSTER_SERVER = "server";
-    public static final String A_CLUSTER_SERVICES = "services";
-    public static final String A_CLUSTER_SERVICE = "service";
-    public static final String A_CLUSTER_SERVER_NAME = "name";
-    public static final String A_CLUSTER_SERVER_STATUS = "status";
-    public static final String A_CLUSTER_SERVICE_NAME = "name";
-    public static final String A_CLUSTER_SERVICE_STATUS = "status";
-    public static final String A_CLUSTER_SERVICE_OWNER = "owner";
-    public static final String A_CLUSTER_SERVICE_LAST_OWNER = "lastOwner";
-    public static final String A_CLUSTER_SERVICE_RESTARTS = "restarts";
-
-    public static final String A_FAILOVER_NEW_SERVER = "newServer";
-
     public static final String A_VERSION_INFO_INFO = "info";
     public static final String A_VERSION_INFO_VERSION = "version";
     public static final String A_VERSION_INFO_RELEASE = "release";
@@ -385,9 +366,6 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(ADD_DISTRIBUTION_LIST_ALIAS_REQUEST, new AddDistributionListAlias());
         dispatcher.registerHandler(REMOVE_DISTRIBUTION_LIST_ALIAS_REQUEST, new RemoveDistributionListAlias());
         dispatcher.registerHandler(RENAME_DISTRIBUTION_LIST_REQUEST, new RenameDistributionList());
-
-        dispatcher.registerHandler(GET_CLUSTER_STATUS_REQUEST, new GetClusterStatus());
-        dispatcher.registerHandler(FAILOVER_CLUSTER_SERVICE_REQUEST, new FailoverClusterService());
 
         dispatcher.registerHandler(GET_VERSION_INFO_REQUEST, new GetVersionInfo());
     }
