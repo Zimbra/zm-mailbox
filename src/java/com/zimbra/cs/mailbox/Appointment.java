@@ -89,7 +89,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class Appointment extends MailItem {
 
-    private static Log sLog = LogFactory.getLog(Appointment.class);
+    static Log sLog = LogFactory.getLog(Appointment.class);
 
     private String mUid;
 
@@ -343,8 +343,7 @@ public class Appointment extends MailItem {
     // * @param end
     // * @return list of Instances for the specified time period
     // */
-    public Collection /* Instance */expandInstances(long start, long end)
-            throws ServiceException {
+    public Collection /* Instance */expandInstances(long start, long end) {
         List /* Instance */instances = new ArrayList();
 
         if (mRecurrence != null) {
@@ -441,7 +440,7 @@ public class Appointment extends MailItem {
         return mUid;
     }
 
-    public Invite getInvite(InviteInfo id) throws ServiceException {
+    public Invite getInvite(InviteInfo id) {
         for (Iterator iter = mInvites.iterator(); iter.hasNext();) {
             Invite inv = (Invite)iter.next();
             InviteInfo inf = new InviteInfo(inv);
@@ -452,7 +451,7 @@ public class Appointment extends MailItem {
         return null;
     }
     
-    public Invite getInvite(int invId, int compNum) throws ServiceException {
+    public Invite getInvite(int invId, int compNum) {
         for (Iterator iter = mInvites.iterator(); iter.hasNext();) {
             Invite inv = (Invite)iter.next();
             if (inv.getMailItemId() == invId && inv.getComponentNum() == compNum) {
@@ -462,7 +461,7 @@ public class Appointment extends MailItem {
         return null;
     }
     
-    public Invite[] getInvites(int invId) throws ServiceException {
+    public Invite[] getInvites(int invId) {
         ArrayList toRet = new ArrayList();
         for (Iterator iter = mInvites.iterator(); iter.hasNext();) {
             Invite inv = (Invite)iter.next();
@@ -477,11 +476,11 @@ public class Appointment extends MailItem {
         return mInvites.size();
     }
 
-    public Invite getInvite(int num) throws ServiceException {
+    public Invite getInvite(int num) {
         return (Invite)(mInvites.get(num));
     }
     
-    public Invite getDefaultInvite() throws ServiceException {
+    public Invite getDefaultInvite() {
         for (Iterator iter = mInvites.iterator(); iter.hasNext();) {
             Invite cur = (Invite) iter.next();
             
@@ -505,8 +504,12 @@ public class Appointment extends MailItem {
     throws ServiceException {
         String method = invite.getMethod();
         if (method.equals(Method.REQUEST.getValue()) || method.equals(Method.CANCEL.getValue()) || method.equals(Method.PUBLISH.getValue())) {
+            if (!canAccess(ACL.RIGHT_WRITE))
+                throw ServiceException.PERM_DENIED("you do not have sufficient permissions to modify this appointment");
             processNewInviteRequestOrCancel(pm, invite, force, volumeId);
         } else if (method.equals("REPLY")) {
+            if (!canAccess(ACL.RIGHT_ACTION))
+                throw ServiceException.PERM_DENIED("you do not have sufficient permissions to change this appointment's state");
             processNewInviteReply(pm, invite, force);
         }
     }
@@ -703,7 +706,7 @@ public class Appointment extends MailItem {
             }
         }
 
-        public OutputStream getOutputStream() throws IOException {
+        public OutputStream getOutputStream() {
             throw new UnsupportedOperationException();
         }
     }
@@ -1066,7 +1069,7 @@ public class Appointment extends MailItem {
             return inv.getMatchingAttendee(acct);
         }
         
-        List /* ReplyInfo */ getReplyInfo(Invite inv) throws ServiceException {
+        List /* ReplyInfo */ getReplyInfo(Invite inv) {
             ArrayList toRet = new ArrayList();
             
             for (Iterator iter = mReplies.iterator(); iter.hasNext();) {
@@ -1110,8 +1113,7 @@ public class Appointment extends MailItem {
      * @return
      * @throws ServiceException
      */
-    public List /*ReplyInfo*/ getReplyInfo(Invite inv) throws ServiceException 
-    {
+    public List /*ReplyInfo*/ getReplyInfo(Invite inv) {
         return mReplyList.getReplyInfo(inv);
     }
     
