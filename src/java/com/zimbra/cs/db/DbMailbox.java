@@ -29,8 +29,8 @@
 package com.zimbra.cs.db;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.StringReader;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -45,7 +45,9 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.Config;
+import com.zimbra.cs.util.StringUtil;
 import com.zimbra.cs.util.ZimbraLog;
 
 /**
@@ -118,10 +120,11 @@ public class DbMailbox {
             String dbName = getDatabaseName(mailboxId);
             ZimbraLog.mailbox.info("Creating database " + dbName);
 
+            String template = new String(ByteUtil.getContent(file));
             Map vars = new HashMap();
             vars.put("DATABASE_NAME", dbName);
-
-            DbUtil.runSQLs(conn, new FileReader(file), vars);
+            String script = StringUtil.fillTemplate(template, vars);
+            DbUtil.executeScript(conn, new StringReader(script));
 
         } catch (IOException e) {
             throw ServiceException.FAILURE("unable to read SQL statements from " + file.getPath(), e);

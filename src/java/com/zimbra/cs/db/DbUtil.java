@@ -32,14 +32,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.StringUtil;
 
 /**
  * <code>DbUtil</code> contains some database utility methods and
@@ -335,23 +333,18 @@ public class DbUtil {
         return sb.append(") ").toString();
     }
     
-    public static void runSQLs(DbPool.Connection conn, Reader in) throws ServiceException, IOException, SQLException {
-        runSQLs(conn, in, null);
-    }
-    
-    
     /**
-     * Reads SQL script file and execute them. 
-     * @param in the source of the SQL script file. The reader is closed when this method returns.
-     * @return an array of SQL statements, which are separated by semicolons (;).
-     * The semicolon itself is not included.
-     * @throws IOException 
-     * @throws ServiceException
-     * @throws SQLException 
+     * Executes all SQL statements in the specified SQL script.  Statements are
+     * separated by semicolons.
+     * 
+     * @param conn the database connection to use for executing the SQL statements
+     * @param scriptReader the source of the SQL script file. The reader is closed
+     * when this method returns.
      */
-    public static void runSQLs(DbPool.Connection conn, Reader in, Map vars) throws IOException, ServiceException, SQLException {
+    public static void executeScript(DbPool.Connection conn, Reader scriptReader)
+    throws IOException, ServiceException, SQLException {
         StringBuffer buf = new StringBuffer();
-        BufferedReader br = new BufferedReader(in);
+        BufferedReader br = new BufferedReader(scriptReader);
         String line;
         while ((line = br.readLine()) != null) {
             // remove comments
@@ -368,10 +361,7 @@ public class DbUtil {
         }
         br.close();
         String script = buf.toString();
-        if (vars != null) {
-            script = StringUtil.fillTemplate(script, vars);
-        }
-        String[] sqls = script.split(";\\n?");
+        String[] sqls = script.split("\\s*;\\s*");
         PreparedStatement stmt = null;
         try {
             for (int i = 0; i < sqls.length; i++) {

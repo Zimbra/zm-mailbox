@@ -53,7 +53,7 @@ public class TestUtilCode extends TestCase
     public void testFillTemplateWithNewlineValue()
     {
         String template = "New message received at ${RECIPIENT_ADDRESS}." +
-        	"${NEWLINE}Sender: ${SENDER_ADDRESS}${NEWLINE}Subject: ${SUBJECT}${NEWLINE}";
+        	"${NEWLINE}Sender: ${SENDER_ADDRESS}${NEWLINE}Subject: ${SUBJECT}";
         
         HashMap vars = new HashMap();
         vars.put("SENDER_ADDRESS", "sender@example.zimbra.com");
@@ -64,7 +64,7 @@ public class TestUtilCode extends TestCase
         vars.put("NEWLINE", "\n");
         
         String expected = "New message received at recipient@example.zimbra.com." +
-    	"\nSender: sender@example.zimbra.com\nSubject: Cool stuff\n";
+    	"\nSender: sender@example.zimbra.com\nSubject: Cool stuff";
         String actual = StringUtil.fillTemplate(template, vars);
         assertEquals("expected: '" + expected + "', actual: '" + actual + "'",
                 expected, actual);
