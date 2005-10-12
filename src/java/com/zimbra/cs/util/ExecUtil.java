@@ -69,16 +69,9 @@ public class ExecUtil {
     }
 
     public static ProcessOutput exec(String cmdline) throws ServiceException {
-        return exec(cmdline, -1);
-    }
-
-    public static ProcessOutput exec(String cmdline, int timeoutMsec) throws ServiceException {
         ProcessOutput proc = new ProcessOutput();
         try {
             Process p = Runtime.getRuntime().exec(cmdline);
-            if (timeoutMsec > 0) {
-                new Thread(new ProcessTimer(p, timeoutMsec)).run();
-            }
             
             proc.stdout = inputStreamToString(p.getInputStream());
             proc.stderr = inputStreamToString(p.getErrorStream());
@@ -94,39 +87,5 @@ public class ExecUtil {
             throw ServiceException.FAILURE("Unable to exec: " + cmdline, e);
         }
         return proc;
-    }
-    
-    /**
-     * Simple class which will try and destroy a process if it 
-     * hasn't returned in a specified amount of time. Currently this
-     * is called from a simple new Thread(...), but maybe it should be
-     * called from a thread pool.
-     */
-    private static class ProcessTimer implements Runnable 
-    {
-        Process _p;
-        int _waitTimeMsec;
-        
-        public ProcessTimer (Process p, int waitTimeMsec) {
-            _p = p;
-            _waitTimeMsec = waitTimeMsec;
-        }
-        
-        public void run () {
-            if (_waitTimeMsec > 0 ){
-                try {
-                    Thread.sleep (_waitTimeMsec);
-                } catch(InterruptedException e){
-                    // do nothing
-                }
-            }
-            try {
-                _p.exitValue();
-            } catch (IllegalThreadStateException e){
-                _p.destroy();
-            }
-        }
-        
-    }
-    
+    }    
 }
