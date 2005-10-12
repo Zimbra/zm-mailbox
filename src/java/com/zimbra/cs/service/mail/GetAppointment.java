@@ -34,6 +34,7 @@ import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
@@ -48,17 +49,23 @@ import com.zimbra.soap.ZimbraContext;
 public class GetAppointment extends DocumentHandler {
     private static Log sLog = LogFactory.getLog(GetAppointment.class);
 
+    private static final String[] TARGET_ITEM_PATH = new String[] { MailService.A_ID };
+    private static final String[] RESPONSE_ITEM_PATH = new String[] { };
+    protected String[] getProxiedIdPath()     { return TARGET_ITEM_PATH; }
+    protected boolean checkMountpointProxy()  { return false; }
+    protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
+
     public Element handle(Element request, Map context) throws ServiceException {
         ZimbraContext lc = getZimbraContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
 
-        int apptId = (int) request.getAttributeLong("id");
-        sLog.info("<GetAppointment id=" + apptId + "> " + lc);
+        ItemId iid = new ItemId(request.getAttribute("id"));
+        sLog.info("<GetAppointment id=" + iid.getId() + "> " + lc);
 
         Element response = lc.createElement(MailService.GET_APPOINTMENT_RESPONSE);
         synchronized(mbox) {
-            Appointment appointment = mbox.getAppointmentById(octxt, apptId);
+            Appointment appointment = mbox.getAppointmentById(octxt, iid.getId());
             ToXML.encodeApptSummary(response, lc, appointment, ToXML.NOTIFY_FIELDS);
         }
 

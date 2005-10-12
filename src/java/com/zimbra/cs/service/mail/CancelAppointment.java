@@ -88,12 +88,8 @@ public class CancelAppointment extends CalendarRequest {
                     // iterate through the list...
                     
                     Invite invites[] = new Invite[appt.numInvites()];
-                    for (int i = appt.numInvites()-1; i>=0; i--) {
-                        try {
-                            invites[i] = appt.getInvite(i);
-                        } catch (MailServiceException.NoSuchItemException e) {
-                            sLog.info("Error couldn't load invite "+i+" for appointment "+appt.getId(), e);
-                        }
+                    for (int i = appt.numInvites()-1; i >= 0; i--) {
+                        invites[i] = appt.getInvite(i);
                     }
                     
                     for (int i = invites.length-1; i >= 0; i--) {
@@ -162,7 +158,7 @@ public class CancelAppointment extends CalendarRequest {
             }
         }
         
-        sendCalendarMessage(lc.getOperationContext(), appt.getFolderId(), acct, mbox, dat, null);
+        sendCalendarMessage(lc, appt.getFolderId(), acct, mbox, dat, null);
     }
     
     
@@ -214,7 +210,7 @@ public class CancelAppointment extends CalendarRequest {
             }
         }
         
-        sendCalendarMessage(lc.getOperationContext(), appt.getFolderId(), acct, mbox, dat, null);
+        sendCalendarMessage(lc, appt.getFolderId(), acct, mbox, dat, null);
     }
      
 }

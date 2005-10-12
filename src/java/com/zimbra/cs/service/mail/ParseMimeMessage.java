@@ -107,10 +107,10 @@ public class ParseMimeMessage {
      *
      */
     static abstract class InviteParser {
-        abstract protected InviteParserResult parseInviteElement(OperationContext octxt, Account account, Element invElement) throws ServiceException;
+        abstract protected InviteParserResult parseInviteElement(ZimbraContext lc, Account account, Element invElement) throws ServiceException;
         
-        public final InviteParserResult parse(OperationContext octxt, Account account, Element invElement) throws ServiceException {
-            mResult = parseInviteElement(octxt, account, invElement);
+        public final InviteParserResult parse(ZimbraContext lc, Account account, Element invElement) throws ServiceException {
+            mResult = parseInviteElement(lc, account, invElement);
             return mResult;
         }
         
@@ -126,7 +126,7 @@ public class ParseMimeMessage {
     
     // by default, no invite allowed
     static InviteParser NO_INV_ALLOWED_PARSER = new InviteParser() {
-        public InviteParserResult parseInviteElement(OperationContext octxt, Account account, Element inviteElem)
+        public InviteParserResult parseInviteElement(ZimbraContext lc, Account account, Element inviteElem)
         throws ServiceException {
             throw ServiceException.INVALID_REQUEST("No <inv> element allowed for this request", null);
         }
@@ -209,7 +209,7 @@ public class ParseMimeMessage {
                 int curAltPart = 0;
                 
                 // goes into the "content" subpart
-                InviteParserResult result = inviteParser.parse(octxt, mbox.getAccount(), inviteElem);
+                InviteParserResult result = inviteParser.parse(lc, mbox.getAccount(), inviteElem);
                 MimeBodyPart mbp = CalendarUtils.makeICalIntoMimePart(result.mUid, result.mCal);
                 alternatives[curAltPart++] = mbp;
                 

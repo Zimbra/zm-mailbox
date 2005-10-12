@@ -44,7 +44,7 @@ import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.util.ParsedItemID;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
@@ -59,9 +59,10 @@ public class SendInviteReply extends SendMsg {
     private static Log sLog = LogFactory.getLog(SendInviteReply.class);
     private static StopWatch sWatch = StopWatch.getInstance("SendInviteReply");
     
-    /* (non-Javadoc)
-     * @see com.zimbra.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
-     */
+    private static final String[] TARGET_APPT_PATH = new String[] { MailService.A_ID };
+    protected String[] getProxiedIdPath()     { return TARGET_APPT_PATH; }
+    protected boolean checkMountpointProxy()  { return false; }
+
     public Element handle(Element request, Map context) throws ServiceException {
         long startTime = sWatch.start();
 
@@ -71,18 +72,18 @@ public class SendInviteReply extends SendMsg {
             Account acct = getRequestedAccount(lc);
             OperationContext octxt = lc.getOperationContext();
 
-            ParsedItemID pid = ParsedItemID.parse(request.getAttribute("id"));
-            int compNum = (int)request.getAttributeLong("compNum");
-            
+            ItemId iid = new ItemId(request.getAttribute(MailService.A_ID));
+            int compNum = (int) request.getAttributeLong(MailService.A_APPT_COMPONENT_NUM);
+
             String verbStr = request.getAttribute(MailService.A_VERB);
             ParsedVerb verb = parseVerb(verbStr);
             
             boolean updateOrg = request.getAttributeBool(MailService.A_APPT_UPDATE_ORGANIZER, true);
             // FIXME -- HACK until client is fixed
             updateOrg = true;
-            
+
             if (sLog.isInfoEnabled()) {
-                sLog.info("<SendInviteReply id=" + pid.toString() + " verb=" + verb +" updateOrg="+updateOrg+"> " + lc.toString());
+                sLog.info("<SendInviteReply id=" + iid.toString(lc) + " verb=" + verb + " updateOrg=" + updateOrg + "> " + lc.toString());
             }
             
             int replyId = 0;
@@ -95,15 +96,15 @@ public class SendInviteReply extends SendMsg {
                 
                 // the user could be accepting EITHER the original-mail-item (id="nnn") OR the
                 // appointment (id="aaaa-nnnn") --- work in both cases
-                if (pid.hasSubId()) {
+                if (iid.hasSubpart()) {
                     // directly accepting the appointment
-                    apptId = pid.getItemIDInt();
-                    inviteMsgId = pid.getSubIdInt();
+                    apptId = iid.getId();
+                    inviteMsgId = iid.getSubpartId();
                     Appointment appt = mbox.getAppointmentById(octxt, apptId); 
                     oldInv = appt.getInvite(inviteMsgId, compNum);
                 } else {
                     // accepting the message: go find the appointment and then the invite
-                    inviteMsgId = pid.getItemIDInt();
+                    inviteMsgId = iid.getId();
                     Message msg = mbox.getMessageById(octxt, inviteMsgId);
                     Message.ApptInfo info = msg.getApptInfo(compNum);
                     apptId = info.getAppointmentId();
@@ -194,13 +195,8 @@ public class SendInviteReply extends SendMsg {
     }
     
     String getReplySubject(ParsedVerb verb, Invite inv) {
-        StringBuffer toRet = new StringBuffer(verb.toString());
-        toRet.append(": ");
-        toRet.append(inv.getName());
-        
-        return toRet.toString();
+        return verb + ": " + inv.getName();
     }
-    
 
     MimeMessage createDefaultReply(Account acct, Invite inv, 
             String replySubject, ParsedVerb verb, Calendar iCal) throws ServiceException 

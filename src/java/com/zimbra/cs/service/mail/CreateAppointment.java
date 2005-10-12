@@ -35,8 +35,8 @@ import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
@@ -49,39 +49,41 @@ public class CreateAppointment extends CalendarRequest {
     private static Log sLog = LogFactory.getLog(CreateAppointment.class);
     private static StopWatch sWatch = StopWatch.getInstance("CreateAppointment");
 
+    private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.E_MSG, MailService.A_FOLDER };
+    private static final String[] RESPONSE_ITEM_PATH = new String[] { };
+    protected String[] getProxiedIdPath()     { return TARGET_FOLDER_PATH; }
+    protected boolean checkMountpointProxy()  { return true; }
+    protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
+
+    private static final String DEFAULT_FOLDER = "" + Mailbox.ID_FOLDER_CALENDAR;
+
     // very simple: generate a new UID and send a REQUEST
     protected static class CreateAppointmentInviteParser extends ParseMimeMessage.InviteParser { 
-        public ParseMimeMessage.InviteParserResult parseInviteElement(OperationContext octxt, Account account, Element inviteElem) throws ServiceException 
+        public ParseMimeMessage.InviteParserResult parseInviteElement(ZimbraContext lc, Account account, Element inviteElem) throws ServiceException 
         {
             return CalendarUtils.parseInviteForCreate(account, inviteElem, null, null, false);
         }
     };
-    
-    /* (non-Javadoc)
-     * @see com.zimbra.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
-     */
+
     public Element handle(Element request, Map context) throws ServiceException {
         long startTime = sWatch.start();
         try {
             ZimbraContext lc = getZimbraContext(context);
             Account acct = getRequestedAccount(lc);
             Mailbox mbox = getRequestedMailbox(lc);
-            OperationContext octxt = lc.getOperationContext();
-            
-            Element response = lc.createElement(MailService.CREATE_APPOINTMENT_RESPONSE);
-            
+
             // <M>
             Element msgElem = request.getElement(MailService.E_MSG);
-            
-            int folder = (int) msgElem.getAttributeLong(MailService.A_FOLDER, Mailbox.ID_FOLDER_CALENDAR);
 
             // no existing Appt referenced -- this is a new create!
-            sLog.info("<CreateAppointment folder="+folder+"> " + lc.toString());
-            
+            ItemId iidFolder = new ItemId(msgElem.getAttribute(MailService.A_FOLDER, DEFAULT_FOLDER));
+            sLog.info("<CreateAppointment folder=" + iidFolder.getId() + "> " + lc.toString());
+
             CreateAppointmentInviteParser parser = new CreateAppointmentInviteParser();
             CalSendData dat = handleMsgElement(lc, msgElem, acct, mbox, parser);
-            
-            return sendCalendarMessage(octxt, folder, acct, mbox, dat, response);
+
+            Element response = lc.createElement(MailService.CREATE_APPOINTMENT_RESPONSE);
+            return sendCalendarMessage(lc, iidFolder.getId(), acct, mbox, dat, response);
         } finally {
             sWatch.stop(startTime);
         }

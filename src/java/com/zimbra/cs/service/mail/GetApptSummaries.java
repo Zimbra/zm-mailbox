@@ -38,7 +38,6 @@ import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.service.util.ParsedItemID;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
@@ -144,11 +143,11 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
                                 if ((defaultInvite.getMailItemId() != invId.getMsgId()) ||
                                         (defaultInvite.getComponentNum() != invId.getComponentId())) 
                                 {
-                                    ParsedItemID pid = ParsedItemID.create(appointment.getId(), inst.getMailItemId());
-                                    instElt.addAttribute(MailService.A_APPT_INV_ID, pid.toString());
-                                    
+                                    ItemId iid = new ItemId(appointment, inst.getMailItemId());
+                                    instElt.addAttribute(MailService.A_APPT_INV_ID, iid.toString(lc));
+
                                     instElt.addAttribute(MailService.A_APPT_COMPONENT_NUM, inst.getComponentNum());
-                                    
+
                                     // fragment has already been sanitized...
                                     String frag = inv.getFragment();
                                     if (!frag.equals("")) {

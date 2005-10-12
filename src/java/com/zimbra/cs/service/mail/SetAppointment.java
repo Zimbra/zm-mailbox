@@ -52,7 +52,7 @@ public class SetAppointment extends CalendarRequest {
         
         SetAppointmentInviteParser(boolean exceptOk) { mExceptOk = exceptOk; };
 
-        public ParseMimeMessage.InviteParserResult parseInviteElement(OperationContext octxt, Account account, Element inviteElem) throws ServiceException 
+        public ParseMimeMessage.InviteParserResult parseInviteElement(ZimbraContext lc, Account account, Element inviteElem) throws ServiceException 
         {
             Element content = inviteElem.getOptionalElement("content");
             if (content != null) {

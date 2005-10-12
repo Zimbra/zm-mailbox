@@ -529,19 +529,15 @@ public class ToXML {
         encodeReplies(apptElt, appt);
         
         for (int i = 0; i < appt.numInvites(); i++) {
-            try {
-                Invite inv = appt.getInvite(i);
+            Invite inv = appt.getInvite(i);
 
-                Element ie = apptElt.addElement(MailService.E_INVITE);
-                ie.addAttribute(MailService.A_ID, lc.formatItemId(appt.getMailbox(), inv.getMailItemId()));
-                ie.addAttribute(MailService.A_APPT_COMPONENT_NUM, inv.getComponentNum());
-                if (inv.hasRecurId())
-                    ie.addAttribute(MailService.A_APPT_RECURRENCE_ID, inv.getRecurId().toString());
+            Element ie = apptElt.addElement(MailService.E_INVITE);
+            ie.addAttribute(MailService.A_ID, lc.formatItemId(appt.getMailbox(), inv.getMailItemId()));
+            ie.addAttribute(MailService.A_APPT_COMPONENT_NUM, inv.getComponentNum());
+            if (inv.hasRecurId())
+                ie.addAttribute(MailService.A_APPT_RECURRENCE_ID, inv.getRecurId().toString());
 
-                ToXML.encodeInvite(ie, lc, appt, inv, NOTIFY_FIELDS, false);
-            } catch (ServiceException e) {
-                e.printStackTrace();
-            }
+            ToXML.encodeInvite(ie, lc, appt, inv, NOTIFY_FIELDS, false);
         }
         
         return apptElt;
@@ -549,27 +545,21 @@ public class ToXML {
     
     private static void encodeReplies(Element parent, Appointment appt) {
         Element repliesElt = parent.addElement(MailService.A_APPT_REPLIES);
-        
-        try {
-          List /*Appointment.ReplyInfo */ fbas = appt.getReplyInfo(null);
-          
-          for (Iterator iter = fbas.iterator(); iter.hasNext();) {
-              Appointment.ReplyInfo repInfo = (Appointment.ReplyInfo)iter.next();
-              
-              Element curElt = repliesElt.addElement(MailService.E_APPT_REPLY);
-              if (repInfo.mRecurId != null) {
-                  repInfo.mRecurId.toXml(curElt);
-              }
 
-              if (repInfo.mAttendee.hasPartStat()) {
-                  curElt.addAttribute(MailService.A_APPT_PARTSTAT, repInfo.mAttendee.getPartStat());
-              }
-              curElt.addAttribute("stamp", repInfo.mDtStamp);
-              curElt.addAttribute("at", repInfo.mAttendee.getAddress());
-          }
-      } catch (ServiceException ex) {
-          // XXX fixme, need to fix error handling for all the ToXML stuff!
-      }
+        List /*Appointment.ReplyInfo */ fbas = appt.getReplyInfo(null);
+        for (Iterator iter = fbas.iterator(); iter.hasNext(); ) {
+            Appointment.ReplyInfo repInfo = (Appointment.ReplyInfo) iter.next();
+
+            Element curElt = repliesElt.addElement(MailService.E_APPT_REPLY);
+            if (repInfo.mRecurId != null) {
+                repInfo.mRecurId.toXml(curElt);
+            }
+            if (repInfo.mAttendee.hasPartStat()) {
+                curElt.addAttribute(MailService.A_APPT_PARTSTAT, repInfo.mAttendee.getPartStat());
+            }
+            curElt.addAttribute("stamp", repInfo.mDtStamp);
+            curElt.addAttribute("at", repInfo.mAttendee.getAddress());
+        }
     }
     
     
@@ -826,32 +816,27 @@ public class ToXML {
             e.addAttribute(MailService.A_APPT_FREEBUSY_ACTUAL, invite.getFreeBusyActual());
             
             if (includeReplies && apptOrNull != null) {
-               try {
-                   List /*Appointment.ReplyInfo */ fbas = apptOrNull.getReplyInfo(invite);
-                   
-                   Element repliesElt = e.addElement(MailService.A_APPT_REPLIES);
-                    
-                    for (Iterator iter = fbas.iterator(); iter.hasNext();) {
-                        Appointment.ReplyInfo repInfo = (Appointment.ReplyInfo)iter.next();
-                        
-                        Element curElt = repliesElt.addElement(MailService.E_APPT_REPLY);
-                        if (repInfo.mRecurId != null) {
-                            repInfo.mRecurId.toXml(curElt);
-                        }
+                List /*Appointment.ReplyInfo */ fbas = apptOrNull.getReplyInfo(invite);
+
+                Element repliesElt = e.addElement(MailService.A_APPT_REPLIES);
+                for (Iterator iter = fbas.iterator(); iter.hasNext();) {
+                    Appointment.ReplyInfo repInfo = (Appointment.ReplyInfo)iter.next();
+
+                    Element curElt = repliesElt.addElement(MailService.E_APPT_REPLY);
+                    if (repInfo.mRecurId != null) {
+                        repInfo.mRecurId.toXml(curElt);
+                    }
 
 //                        PartStat ps = (PartStat)(repInfo.mAttendee.getParameters().getParameter(Parameter.PARTSTAT));
-                        if (repInfo.mAttendee.hasPartStat()) {
-                            String psStr = repInfo.mAttendee.getPartStat();
-                            curElt.addAttribute(MailService.A_APPT_PARTSTAT, psStr);
-                            String fbaStr = invite.partStatToFreeBusyActual(psStr);
-                            curElt.addAttribute(MailService.A_APPT_FREEBUSY_ACTUAL, fbaStr);
-                        }
-                        
-                        curElt.addAttribute("stamp", repInfo.mDtStamp);
-                        curElt.addAttribute("at", repInfo.mAttendee.getAddress());
+                    if (repInfo.mAttendee.hasPartStat()) {
+                        String psStr = repInfo.mAttendee.getPartStat();
+                        curElt.addAttribute(MailService.A_APPT_PARTSTAT, psStr);
+                        String fbaStr = invite.partStatToFreeBusyActual(psStr);
+                        curElt.addAttribute(MailService.A_APPT_FREEBUSY_ACTUAL, fbaStr);
                     }
-                } catch (ServiceException ex) {
-                    // XXX fixme, need to fix error handling for all the ToXML stuff!
+
+                    curElt.addAttribute("stamp", repInfo.mDtStamp);
+                    curElt.addAttribute("at", repInfo.mAttendee.getAddress());
                 }
             }
 

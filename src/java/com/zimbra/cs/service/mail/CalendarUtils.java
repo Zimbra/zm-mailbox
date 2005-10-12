@@ -788,26 +788,18 @@ public class CalendarUtils {
         
     }
     
-    static List /*VEvent*/ cancelAppointment(Account acct, Appointment appt, String comment) throws ServiceException 
-    {
+    static List /*VEvent*/ cancelAppointment(Account acct, Appointment appt, String comment) {
         List toRet = new ArrayList();
 
         // for each invite, get the recurrence and add an UNTIL
         for (int i = appt.numInvites()-1; i >= 0; i--) {
-
+            Invite inv = appt.getInvite(i);
             try {
-                Invite inv = appt.getInvite(i);
-                try {
-                    VEvent event = cancelInvite(acct, inv, comment, null, null).toVEvent();
-                    toRet.add(event);
-                } catch (ServiceException e) {
-                    sLog.debug("Error creating cancellation for invite "+i+" for appt "+appt.getId());
-                }
+                VEvent event = cancelInvite(acct, inv, comment, null, null).toVEvent();
+                toRet.add(event);
             } catch (ServiceException e) {
-                sLog.debug("Error could not get invite "+i+" for appt "+appt.getId());
+                sLog.debug("Error creating cancellation for invite "+i+" for appt "+appt.getId());
             }
-
-            
         }
         
         return toRet;

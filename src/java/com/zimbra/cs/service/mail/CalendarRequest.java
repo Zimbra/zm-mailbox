@@ -38,6 +38,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
+
 public abstract class CalendarRequest extends SendMsg {
 
     protected static class CalSendData extends ParseMimeMessage.MimeMessageData {
@@ -80,23 +81,24 @@ public abstract class CalendarRequest extends SendMsg {
         return toRet;
     }
     
-    protected static Element sendCalendarMessage(OperationContext octxt, int apptFolderId, Account acct, Mailbox mbox, CalSendData dat, Element response)
+    protected static Element sendCalendarMessage(ZimbraContext lc, int apptFolderId, Account acct, Mailbox mbox, CalSendData dat, Element response)
     throws ServiceException { 
         synchronized (mbox) {
-            int  folderId = 0;
-            
+            OperationContext octxt = lc.getOperationContext();
+
             ParsedMessage pm = new ParsedMessage(dat.mMm, mbox.attachmentsIndexingEnabled());
-            
             mbox.addInvite(octxt, apptFolderId, dat.mInvite, false, pm); 
-            
-            if (dat.mSaveToSent) {
+
+            boolean saveToSent = dat.mSaveToSent && !lc.isDelegatedRequest();
+            int folderId = 0;
+            if (saveToSent) {
                 folderId = getSentFolder(acct, mbox, octxt);
             }
 
             int msgId = sendMimeMessage(octxt, mbox, acct, folderId, dat, dat.mMm, dat.mOrigId, dat.mReplyType);
 
             if (response != null && msgId != 0) {
-                if (dat.mSaveToSent) {
+                if (saveToSent) {
                     response.addUniqueElement(MailService.E_MSG).addAttribute(MailService.A_ID, msgId);
                 } else {
                     Message msg = mbox.getMessageById(octxt, msgId);

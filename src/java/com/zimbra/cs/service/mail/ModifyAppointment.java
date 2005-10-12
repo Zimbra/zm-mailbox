@@ -44,18 +44,21 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.util.ParsedItemID;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
 
+public class ModifyAppointment extends CalendarRequest {
 
-public class ModifyAppointment extends CalendarRequest 
-{
     private static Log sLog = LogFactory.getLog(ModifyAppointment.class);
     private static StopWatch sWatch = StopWatch.getInstance("ModifyAppointment");
-    
+
+    private static final String[] TARGET_APPT_PATH = new String[] { MailService.A_ID };
+    protected String[] getProxiedIdPath()     { return TARGET_APPT_PATH; }
+    protected boolean checkMountpointProxy()  { return false; }
+
     // very simple: generate a new UID and send a REQUEST
     protected static class ModifyAppointmentParser extends ParseMimeMessage.InviteParser {
         protected Mailbox mmbox;
@@ -66,13 +69,13 @@ public class ModifyAppointment extends CalendarRequest
             mInv = inv;
         }
         
-        public ParseMimeMessage.InviteParserResult parseInviteElement(OperationContext octxt, Account account, Element inviteElem) throws ServiceException {
+        public ParseMimeMessage.InviteParserResult parseInviteElement(ZimbraContext lc, Account account, Element inviteElem) throws ServiceException {
             List atsToCancel = new ArrayList();
 
             ParseMimeMessage.InviteParserResult toRet = CalendarUtils.parseInviteForModify(account, inviteElem, mInv, atsToCancel);
 
             // send cancellations to any invitees who have been removed...
-            updateRemovedInvitees(octxt, account, mmbox, mInv.getAppointment(), mInv, atsToCancel);
+            updateRemovedInvitees(lc, account, mmbox, mInv.getAppointment(), mInv, atsToCancel);
             
             return toRet;
         }
@@ -87,18 +90,18 @@ public class ModifyAppointment extends CalendarRequest
             Mailbox mbox = getRequestedMailbox(lc);
             OperationContext octxt = lc.getOperationContext();
 
-            ParsedItemID pid = ParsedItemID.parse(request.getAttribute("id"));
-            int compNum = (int)request.getAttributeLong("comp", 0);
-            sLog.info("<ModifyAppointment id=" + pid + " comp=" + compNum + ">");
+            ItemId iid = new ItemId(request.getAttribute(MailService.A_ID));
+            int compNum = (int) request.getAttributeLong(MailService.E_INVITE_COMPONENT, 0);
+            sLog.info("<ModifyAppointment id=" + iid + " comp=" + compNum + ">");
             
             synchronized(mbox) {
-                Appointment appt = mbox.getAppointmentById(octxt, pid.getItemIDInt());
+                Appointment appt = mbox.getAppointmentById(octxt, iid.getId());
                 if (appt == null) {
-                    throw MailServiceException.NO_SUCH_APPOINTMENT(pid.toString(), "Could not find appointment");
+                    throw MailServiceException.NO_SUCH_APPOINTMENT(iid.toString(), "Could not find appointment");
                 }
-                Invite inv = appt.getInvite(pid.getSubIdInt(), compNum);
+                Invite inv = appt.getInvite(iid.getSubpartId(), compNum);
                 if (inv == null) {
-                    throw MailServiceException.INVITE_OUT_OF_DATE(pid.toString());
+                    throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());
                 }
                 
                 // response
@@ -133,12 +136,12 @@ public class ModifyAppointment extends CalendarRequest
             }
         }
 
-        sendCalendarMessage(lc.getOperationContext(), appt.getFolderId(), acct, mbox, dat, response);
+        sendCalendarMessage(lc, appt.getFolderId(), acct, mbox, dat, response);
 
         return response;        
     }
     
-    protected static void updateRemovedInvitees(OperationContext octxt, Account acct, Mailbox mbox, Appointment appt, Invite inv, List toCancel)
+    protected static void updateRemovedInvitees(ZimbraContext lc, Account acct, Mailbox mbox, Appointment appt, Invite inv, List toCancel)
     throws ServiceException {
         if (!inv.thisAcctIsOrganizer(acct)) {
             // we ONLY should update the removed attendees if we are the organizer!
@@ -167,7 +170,7 @@ public class ModifyAppointment extends CalendarRequest
             dat.mMm = CalendarUtils.createDefaultCalendarMessage(acct, 
                     cancelAt.getAddress(), subject, text, inv.getUid(), cal);
             
-            sendCalendarMessage(octxt, appt.getFolderId(), acct, mbox, dat, null); 
+            sendCalendarMessage(lc, appt.getFolderId(), acct, mbox, dat, null); 
         }
     }
 }
