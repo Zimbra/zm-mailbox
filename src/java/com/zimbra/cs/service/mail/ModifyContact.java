@@ -36,6 +36,7 @@ import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
@@ -44,6 +45,10 @@ import com.zimbra.soap.WriteOpDocumentHandler;
  * @author schemers
  */
 public class ModifyContact extends WriteOpDocumentHandler  {
+
+    private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.E_CONTACT, MailService.A_ID };
+    protected String[] getProxiedIdPath()     { return TARGET_FOLDER_PATH; }
+    protected boolean checkMountpointProxy()  { return false; }
     
     public Element handle(Element request, Map context) throws ServiceException {
         ZimbraContext lc = getZimbraContext(context);
@@ -54,7 +59,7 @@ public class ModifyContact extends WriteOpDocumentHandler  {
 
         Element cn = request.getElement(MailService.E_CONTACT);
 
-        int id = (int) cn.getAttributeLong(MailService.A_ID);
+        ItemId iid = new ItemId(cn.getAttribute(MailService.A_ID));
 
         HashMap attrs = new HashMap();
         for (Iterator it = cn.elementIterator(MailService.E_ATTRIBUTE); it.hasNext(); ) {
@@ -63,9 +68,9 @@ public class ModifyContact extends WriteOpDocumentHandler  {
             attrs.put(name, e.getText());
         }
 
-        mbox.modifyContact(octxt, id, attrs, replace);
+        mbox.modifyContact(octxt, iid.getId(), attrs, replace);
 
-        Contact con = mbox.getContactById(octxt, id);
+        Contact con = mbox.getContactById(octxt, iid.getId());
         Element response = lc.createElement(MailService.MODIFY_CONTACT_RESPONSE);
         if (con != null)
         	ToXML.encodeContact(response, lc, con, null, true, null);

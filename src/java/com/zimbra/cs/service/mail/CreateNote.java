@@ -30,10 +30,12 @@ package com.zimbra.cs.service.mail;
 
 import java.util.Map;
 
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Note;
 import com.zimbra.cs.mailbox.Note.Rectangle;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
@@ -43,18 +45,24 @@ import com.zimbra.soap.WriteOpDocumentHandler;
  */
 public class CreateNote extends WriteOpDocumentHandler {
 
+    private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.E_NOTE, MailService.A_FOLDER };
+    private static final String[] RESPONSE_ITEM_PATH = new String[] { };
+    protected String[] getProxiedIdPath()     { return TARGET_FOLDER_PATH; }
+    protected boolean checkMountpointProxy()  { return true; }
+    protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
+
 	public Element handle(Element request, Map context) throws ServiceException {
 		ZimbraContext lc = getZimbraContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
 
         Element t = request.getElement(MailService.E_NOTE);
-        int folderId = (int) t.getAttributeLong(MailService.A_FOLDER);
+        ItemId iidFolder = new ItemId(t.getAttribute(MailService.A_FOLDER));
         String content = t.getAttribute(MailService.E_CONTENT);
-        byte color = (byte) t.getAttributeLong(MailService.A_COLOR, Note.DEFAULT_COLOR);
+        byte color = (byte) t.getAttributeLong(MailService.A_COLOR, MailItem.DEFAULT_COLOR);
         String strBounds = t.getAttribute(MailService.A_BOUNDS, null);
         Rectangle bounds = new Rectangle(strBounds);
 
-        Note note = mbox.createNote(null, content, bounds, color, folderId);
+        Note note = mbox.createNote(null, content, bounds, color, iidFolder.getId());
 
         Element response = lc.createElement(MailService.CREATE_NOTE_RESPONSE);
         if (note != null)

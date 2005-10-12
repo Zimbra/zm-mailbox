@@ -35,6 +35,7 @@ import java.util.Map;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
@@ -44,12 +45,20 @@ import com.zimbra.soap.WriteOpDocumentHandler;
  */
 public class CreateContact extends WriteOpDocumentHandler  {
 
+    private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.E_CONTACT, MailService.A_FOLDER };
+    private static final String[] RESPONSE_ITEM_PATH = new String[] { };
+    protected String[] getProxiedIdPath()     { return TARGET_FOLDER_PATH; }
+    protected boolean checkMountpointProxy()  { return true; }
+    protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
+
+    private static final String DEFAULT_FOLDER = "" + Mailbox.ID_FOLDER_CONTACTS;
+
     public Element handle(Element request, Map context) throws ServiceException {
         ZimbraContext lc = getZimbraContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
 
         Element cn = request.getElement(MailService.E_CONTACT);
-        int folderId = (int) cn.getAttributeLong(MailService.A_FOLDER, Mailbox.ID_FOLDER_CONTACTS);
+        ItemId iidFolder = new ItemId(cn.getAttribute(MailService.A_FOLDER, DEFAULT_FOLDER));
         String tagsStr = cn.getAttribute(MailService.A_TAGS, null);
         HashMap attrs = new HashMap();
 
@@ -60,7 +69,7 @@ public class CreateContact extends WriteOpDocumentHandler  {
             if (value != null && !value.equals(""))
                 attrs.put(name, value);
         }
-        Contact con = mbox.createContact(null, attrs, folderId, tagsStr);
+        Contact con = mbox.createContact(null, attrs, iidFolder.getId(), tagsStr);
         Element response = lc.createElement(MailService.CREATE_CONTACT_RESPONSE);
         if (con != null)
             ToXML.encodeContact(response, lc, con, null, true, null);

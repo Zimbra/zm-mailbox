@@ -34,6 +34,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
@@ -43,20 +44,24 @@ import com.zimbra.soap.WriteOpDocumentHandler;
  */
 public class ModifySearchFolder extends WriteOpDocumentHandler  {
 
+    private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.E_SEARCH, MailService.A_ID };
+    protected String[] getProxiedIdPath()     { return TARGET_FOLDER_PATH; }
+    protected boolean checkMountpointProxy()  { return false; }
+
 	public Element handle(Element request, Map context) throws ServiceException {
 		ZimbraContext lc = getZimbraContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
 
         Element t = request.getElement(MailService.E_SEARCH);
-        int id = (int) t.getAttributeLong(MailService.A_ID);
+        ItemId iid = new ItemId(t.getAttribute(MailService.A_ID));
         String query = t.getAttribute(MailService.A_QUERY);
         String types = t.getAttribute(MailService.A_SEARCH_TYPES, null);
         String sort = t.getAttribute(MailService.A_SORTBY, null);
 
-        mbox.modifySearchFolder(octxt, id, query, types, sort);
+        mbox.modifySearchFolder(octxt, iid.getId(), query, types, sort);
 
-    	SearchFolder sf = mbox.getSearchFolderById(octxt, id);
+    	SearchFolder sf = mbox.getSearchFolderById(octxt, iid.getId());
         Element response = lc.createElement(MailService.MODIFY_SEARCH_FOLDER_RESPONSE);
     	ToXML.encodeSearchFolder(response, lc, sf);
         return response;

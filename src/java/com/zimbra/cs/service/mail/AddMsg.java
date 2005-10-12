@@ -28,7 +28,6 @@
  */
 package com.zimbra.cs.service.mail;
 
-
 import java.io.IOException;
 import java.util.Map;
 
@@ -46,6 +45,7 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
@@ -60,11 +60,14 @@ public class AddMsg extends WriteOpDocumentHandler {
     private static Log mLog = LogFactory.getLog(AddMsg.class);
     private static StopWatch sWatch = StopWatch.getInstance("AddMsg");
 
+    private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.E_MSG, MailService.A_FOLDER };
+    protected String[] getProxiedIdPath()     { return TARGET_FOLDER_PATH; }
+    protected boolean checkMountpointProxy()  { return true; }
+
     /* (non-Javadoc)
      * @see com.zimbra.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
      */
-    public Element handle(Element request, Map context) throws ServiceException
-    {
+    public Element handle(Element request, Map context) throws ServiceException {
         long startTime = sWatch.start(); 
         
         try {
@@ -106,8 +109,8 @@ public class AddMsg extends WriteOpDocumentHandler {
 	        Folder folder = null;
 	        if (folderStr != null) {
                 try {
-                    int folderId = Integer.parseInt(folderStr);
-                    folder = mbox.getFolderById(octxt, folderId);
+                    ItemId iidFolder = new ItemId(folderStr);
+                    folder = mbox.getFolderById(octxt, iidFolder.getId());
                 } catch (NoSuchItemException nsie) {
                 } catch (NumberFormatException e) {}
 
