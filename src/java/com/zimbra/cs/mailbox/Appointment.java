@@ -650,22 +650,31 @@ public class Appointment extends MailItem {
         }
     }
 
-    void setContent(ParsedMessage pm, String digest, int size) throws ServiceException {
-        // mark the old blob as ready for deletion
-        PendingDelete info = getDeletionInfo();
-        info.itemIds.clear();  info.unreadIds.clear();
-        mMailbox.markOtherItemDirty(info);
+    void setContent(ParsedMessage pm, String digest, int size, boolean addBlobToDeletedList) throws ServiceException {
+        //
+        // WARNING: this code is currently duplicated in Message.java -- until the two
+        // functions are unified in MailItem, make sure you keep both versions in sync!
+        //
+
+        if (addBlobToDeletedList) {
+            // mark the old blob as ready for deletion
+            PendingDelete info = getDeletionInfo();
+            info.itemIds.clear();  info.unreadIds.clear();
+            mMailbox.markOtherItemDirty(info);
+        }
 
         markItemModified(Change.MODIFIED_CONTENT  | Change.MODIFIED_DATE |
-                         Change.MODIFIED_SIZE);
-        
+                         Change.MODIFIED_IMAP_UID | Change.MODIFIED_SIZE);
         mData.blobDigest = digest;
         mData.date       = mMailbox.getOperationTimestamp();
-        mData.modContent = mMailbox.getOperationChangeID();
+        mData.contentChanged(mMailbox);
         mBlob = null;
         
         // rewrite the DB row to reflect our new view
         saveData(pm.getParsedSender().getSortString());
+
+        // and, finally, uncache this item since it may be dirty
+        mMailbox.uncache(this);
     }
     
     private static class PMDataSource implements DataSource {
@@ -724,11 +733,19 @@ public class Appointment extends MailItem {
             throw MailServiceException.MESSAGE_PARSE_ERROR(me);
         }
         
-        setContent(pm, digest, size);
+        boolean addBlobToDeleteList = true;
+        if (mData.modContent == getSavedSequence()) {
+            addBlobToDeleteList = false;
+        }
+        setContent(pm, digest, size, addBlobToDeleteList);
 
         StoreManager sm = StoreManager.getInstance();
         Blob blob = sm.storeIncoming(data, digest, null, volumeId);
         sm.renameTo(blob, getMailbox(), getId(), getSavedSequence(), volumeId);
+        //
+        // shouldn't need to markOtherItemDirty here because this write is transactioned
+        // in the Mailbox caller, not here
+        //
     }
     
     

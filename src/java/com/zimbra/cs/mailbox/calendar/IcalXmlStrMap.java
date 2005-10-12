@@ -64,6 +64,14 @@ public class IcalXmlStrMap
         return toRet;
     }
     
+    public boolean validXml(String str) {
+        return bakMap.containsKey(str);
+    }
+    
+    public boolean validICal(String str) {
+        return fwdMap.containsKey(str);
+    }
+    
     public static IcalXmlStrMap sFreqMap = new IcalXmlStrMap("Freq");
     public static IcalXmlStrMap sTranspMap = new IcalXmlStrMap("Transparency");
     public static IcalXmlStrMap sFreeBusyMap = new IcalXmlStrMap("FreeBusy");

@@ -62,7 +62,14 @@ public class FileBlobStore extends StoreManager {
     public void shutdown() {
         // nothing to do
     }
-
+    
+    private static boolean onWindows() {
+        String os = System.getProperty("os.name").toLowerCase();         
+        return os.startsWith("win");     
+    }     
+    
+    private static final boolean sOnWindows = onWindows();
+    
     public Blob storeIncoming(byte[] data, String digest,
                               String path, short volumeId)
     throws IOException, ServiceException {
@@ -200,8 +207,16 @@ public class FileBlobStore extends StoreManager {
 
         if (destVolumeId == src.getVolumeId()) {
             boolean renamed = srcFile.renameTo(destFile);
-            if (!renamed)
-            	throw new IOException("Unable to rename " + srcPath + " to " + destPath);
+            if (sOnWindows) {
+                // On Windows renameTo fails if the dest already exists.  So delete 
+                // the destination and try the rename again
+                if (!renamed && destFile.exists()) {
+                    destFile.delete();
+                    renamed = srcFile.renameTo(destFile);                    
+                }
+            }
+            if (!renamed) 
+                throw new IOException("Unable to rename " + srcPath + " to " + destPath);
         } else {
             // Can't rename across volumes.  Copy then delete instead.
             FileUtil.copy(srcFile, destFile);

@@ -240,16 +240,14 @@ RECURRENCE SPECIFIERS!
 //   need to generate and patch-in the iCalendar for the <inv> but w/o
 //   actually processing the <inv> as a new request
 //
+//   NOTE: The l="folder" parameter is ONLY used if the Appointment
+//   does not already exist.  You must use ItemAction.Move to move the
+//   appointment if it already exists in a different folder.
 //
 //   TODO: need way to link message to appointment after the fact
 //
-//   TODO: need to support <content>...</content><inv>...</inv>
-//   format, just like <AddMsg>
 //
-//   TODO: need to take a parent folder ID
-//
-//
-<SetAppointmentRequest>
+<SetAppointmentRequest [l="folder_to_create_in"]>
   <default needsReply="0|1" ptst="AC|TE|DE|DG|CO|IN">
      <m [aid="{uploaded-MIME-body-ID}"] > ...see CreateAppointmentRequest...
 **************

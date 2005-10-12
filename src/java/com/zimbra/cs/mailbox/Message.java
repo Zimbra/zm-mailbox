@@ -543,6 +543,11 @@ public class Message extends MailItem {
     }
 
     void setContent(ParsedMessage pm, String digest, int size, int imapId) throws ServiceException {
+        //
+        // WARNING: this code is currently duplicated in Appointment.java -- until the two
+        // functions are unified in MailItem, make sure you keep both versions in sync!
+        //
+        
         // mark the old blob as ready for deletion
         PendingDelete info = getDeletionInfo();
         info.itemIds.clear();  info.unreadIds.clear();

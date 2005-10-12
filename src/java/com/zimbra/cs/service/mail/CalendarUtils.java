@@ -737,10 +737,12 @@ public class CalendarUtils {
 
         // STATUS
         String status = element.getAttribute(MailService.A_APPT_STATUS, IcalXmlStrMap.STATUS_CONFIRMED);
+        validateAttr(IcalXmlStrMap.sStatusMap, MailService.A_APPT_STATUS, status);
         newInv.setStatus(status);
 
         // TRANSPARENCY
         String transp = element.getAttribute(MailService.A_APPT_TRANSPARENCY, IcalXmlStrMap.TRANSP_OPAQUE);
+        validateAttr(IcalXmlStrMap.sTranspMap, MailService.A_APPT_TRANSPARENCY, transp);
         newInv.setTransparency(transp);
 
         // ATTENDEEs
@@ -751,7 +753,11 @@ public class CalendarUtils {
             String address = cur.getAttribute(MailService.A_ADDRESS);
 
             String role = cur.getAttribute(MailService.A_APPT_ROLE);
+            validateAttr(IcalXmlStrMap.sRoleMap, MailService.A_APPT_ROLE, role);
+            
             String partStat = cur.getAttribute(MailService.A_APPT_PARTSTAT);
+            validateAttr(IcalXmlStrMap.sPartStatMap, MailService.A_APPT_PARTSTAT, partStat);
+            
             boolean rsvp = cur.getAttributeBool(MailService.A_APPT_RSVP, false);
             
             if (partStat.equals(PartStat.NEEDS_ACTION.getValue())) {
@@ -772,6 +778,14 @@ public class CalendarUtils {
             Recurrence.IRecurrence recurrence = parseRecur(recur, oldTzMap, newInv);
             newInv.setRecurrence(recurrence);
         }
+    }
+    
+    private static void validateAttr(IcalXmlStrMap map, String attrName, String value) throws ServiceException 
+    {
+        if (!map.validXml(value)) {
+            throw MailServiceException.INVALID_REQUEST("Invalid value '"+value+"' specified for attribute:"+attrName, null);
+        }
+        
     }
     
     static List /*VEvent*/ cancelAppointment(Account acct, Appointment appt, String comment) throws ServiceException 

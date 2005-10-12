@@ -46,8 +46,11 @@ public class SetAppointment extends CalendarRequest {
     private static Log sLog = LogFactory.getLog(SetAppointment.class);
     private static StopWatch sWatch = StopWatch.getInstance("SetAppointment");
     
-    protected static class SetAppointmentInviteParser extends ParseMimeMessage.InviteParser { 
-        SetAppointmentInviteParser() { };
+    protected static class SetAppointmentInviteParser extends ParseMimeMessage.InviteParser {
+        
+        private boolean mExceptOk = false;
+        
+        SetAppointmentInviteParser(boolean exceptOk) { mExceptOk = exceptOk; };
 
         public ParseMimeMessage.InviteParserResult parseInviteElement(OperationContext octxt, Account account, Element inviteElem) throws ServiceException 
         {
@@ -56,7 +59,7 @@ public class SetAppointment extends CalendarRequest {
                 ParseMimeMessage.InviteParserResult toRet = CalendarUtils.parseInviteRaw(account, inviteElem);
                 return toRet;
             } else {
-                return CalendarUtils.parseInviteForCreate(account, inviteElem, null, null, false);
+                return CalendarUtils.parseInviteForCreate(account, inviteElem, null, null, mExceptOk);
             }
         }
     };
@@ -70,6 +73,8 @@ public class SetAppointment extends CalendarRequest {
             Mailbox mbox = getRequestedMailbox(lc);
             OperationContext octxt = lc.getOperationContext();
             
+            int folder = (int)request.getAttributeLong(MailService.A_FOLDER, Mailbox.ID_FOLDER_CALENDAR);
+            
             sLog.info("<SetAppointment> " + lc.toString());
             
             Mailbox.SetAppointmentData defaultData;
@@ -78,18 +83,17 @@ public class SetAppointment extends CalendarRequest {
             synchronized (mbox) {
                 
                 // First, the <default>
-                SetAppointmentInviteParser defaultParser = new SetAppointmentInviteParser();
                 {
                     Element e = request.getElement(MailService.A_DEFAULT);
                     
-                    defaultData = getSetAppointmentData(lc, acct, mbox, e, defaultParser);
+                    defaultData = getSetAppointmentData(lc, acct, mbox, e, new SetAppointmentInviteParser(false));
                 }
                 
                 // for each <exception>
                 for (Iterator iter = request.elementIterator(MailService.A_EXCEPT); iter.hasNext();) {
                     Element e = (Element)iter.next();
                     
-                    Mailbox.SetAppointmentData exDat = getSetAppointmentData(lc, acct, mbox, e, new SetAppointmentInviteParser());
+                    Mailbox.SetAppointmentData exDat = getSetAppointmentData(lc, acct, mbox, e, new SetAppointmentInviteParser(true));
                     exceptions.add(exDat);
                 }
                 
@@ -100,7 +104,7 @@ public class SetAppointment extends CalendarRequest {
                     exceptions.toArray(exceptArray);
                 }
                 
-                int apptId = mbox.setAppointment(null, Mailbox.ID_FOLDER_CALENDAR, defaultData, exceptArray);
+                int apptId = mbox.setAppointment(octxt, folder, defaultData, exceptArray);
                 
                 Element response = lc.createElement(MailService.SET_APPOINTMENT_RESPONSE);
                 
