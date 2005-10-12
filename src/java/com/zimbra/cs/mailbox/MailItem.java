@@ -830,9 +830,16 @@ public abstract class MailItem implements Comparable {
 	        folder.updateMessageCount(1);
 	}
 
+    /** Changes the item's color.  The server does no value-to-color mapping;
+     *  the supplied color is treated as an opaque byte.  Note than even
+     *  "immutable" items can have their color changed.
+     * 
+     * @param color  The item's new color.
+     * @perms {@link ACL#RIGHT_WRITE} on the item
+     * @throws ServiceException  The following error codes are possible:<ul>
+     *    <li><code>service.PERM_DENIED</code> - if you don't have
+     *        sufficient permissions</ul> */
     void setColor(byte color) throws ServiceException {
-        if (!isMutable())
-            throw MailServiceException.IMMUTABLE_OBJECT(mId);
         if (!canAccess(ACL.RIGHT_WRITE))
             throw ServiceException.PERM_DENIED("you do not have the necessary permissions on the item");
         if (color == mColor)
@@ -971,6 +978,7 @@ public abstract class MailItem implements Comparable {
     /** Adds <code>delta</code> to the unread count of each {@link Tag}
      *  assigned to this <code>MailItem</code>.
      * 
+     * @param delta  The (signed) change in number unread.
      * @throws ServiceException  The following error codes are possible:<ul>
      *    <li><code>mail.NO_SUCH_FOLDER</code> - if there's an error
      *        fetching the item's {@link Folder}</ul> */
