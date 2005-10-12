@@ -2411,7 +2411,7 @@ public class Mailbox {
         
         boolean success = false;
         try {
-            beginTransaction("addInvite", null, redoRecorder);
+            beginTransaction("addInvite", octxt, redoRecorder);
             
             if (redoPlayer == null || redoPlayer.getAppointmentId() == 0) {
                 assert(inv.getMailItemId() == 0); 
@@ -2437,14 +2437,9 @@ public class Mailbox {
             } else {
                 appt.processNewInvite(pm, inv, force, Volume.getCurrentMessageVolume().getId());
             }
-            
+
             success = true;
-            
-            int[] toRet = new int[2];
-            
-            toRet[0] = appt.getId();
-            toRet[1] = inv.getMailItemId();
-            return toRet;
+            return new int[] { appt.getId(), inv.getMailItemId() };
         } finally {
             endTransaction(success);
         }
