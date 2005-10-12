@@ -29,12 +29,11 @@ import javax.mail.internet.MimeMessage;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.mailbox.Message.ApptInfo;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
@@ -53,19 +52,17 @@ public abstract class CalendarRequest extends SendMsg {
                                                   Mailbox mbox, ParseMimeMessage.InviteParser inviteParser)
     throws ServiceException {
 
-        CalSendData toRet = new CalSendData();
+        CalSendData csd = new CalSendData();
         
-        if (inviteParser.getResult() != null) {
-            assert(inviteParser.getResult() == null);
-        }
+        assert(inviteParser.getResult() != null);
         
         // check to see if this message is a reply -- if so, then we'll want to note that so 
         // we can more-correctly match the conversations up
-        toRet.mOrigId = (int) msgElem.getAttributeLong(MailService.A_ORIG_ID, 0);
-        toRet.mReplyType = msgElem.getAttribute(MailService.A_REPLY_TYPE, TYPE_REPLY);
+        csd.mOrigId = (int) msgElem.getAttributeLong(MailService.A_ORIG_ID, 0);
+        csd.mReplyType = msgElem.getAttribute(MailService.A_REPLY_TYPE, TYPE_REPLY);
 
         // parse the data
-        toRet.mMm = ParseMimeMessage.parseMimeMsgSoap(lc, mbox, msgElem, null, inviteParser, toRet);
+        csd.mMm = ParseMimeMessage.parseMimeMsgSoap(lc, mbox, msgElem, null, inviteParser, csd);
         
         // FIXME FIXME FIXME -- need to figure out a way to get the FRAGMENT data out of the initial
         // message here, so that we can copy it into the DESCRIPTION field in the iCalendar data that
@@ -74,11 +71,11 @@ public abstract class CalendarRequest extends SendMsg {
         if (inviteParser.getResult() == null || inviteParser.getResult().mInvite == null) {
             assert(inviteParser.getResult() != null);
         }
-        toRet.mInvite = inviteParser.getResult().mInvite;
+        csd.mInvite = inviteParser.getResult().mInvite;
 
-        toRet.mSaveToSent = shouldSaveToSent(acct);
+        csd.mSaveToSent = shouldSaveToSent(acct);
 
-        return toRet;
+        return csd;
     }
     
     protected static Element sendCalendarMessage(ZimbraContext lc, int apptFolderId, Account acct, Mailbox mbox, CalSendData dat, Element response)
@@ -97,11 +94,11 @@ public abstract class CalendarRequest extends SendMsg {
 
             int msgId = sendMimeMessage(octxt, mbox, acct, folderId, dat, dat.mMm, dat.mOrigId, dat.mReplyType);
 
-            if (response != null && ids!=null) {
-                response.addAttribute(MailService.A_APPT_ID, ids[0]);
-                response.addAttribute(MailService.A_APPT_INV_ID, ids[0]+"-"+ids[1]);
+            if (response != null && ids != null) {
+                response.addAttribute(MailService.A_APPT_ID, lc.formatItemId(mbox, ids[0]));
+                response.addAttribute(MailService.A_APPT_INV_ID, new ItemId(mbox.getAccountId(), ids[0], ids[1]).toString(lc));
                 if (saveToSent) {
-                    response.addUniqueElement(MailService.E_MSG).addAttribute(MailService.A_ID, msgId);
+                    response.addUniqueElement(MailService.E_MSG).addAttribute(MailService.A_ID, lc.formatItemId(mbox, msgId));
                 }
             }
         }
