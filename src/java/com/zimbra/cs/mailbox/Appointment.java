@@ -504,12 +504,8 @@ public class Appointment extends MailItem {
     throws ServiceException {
         String method = invite.getMethod();
         if (method.equals(Method.REQUEST.getValue()) || method.equals(Method.CANCEL.getValue()) || method.equals(Method.PUBLISH.getValue())) {
-            if (!canAccess(ACL.RIGHT_WRITE))
-                throw ServiceException.PERM_DENIED("you do not have sufficient permissions to modify this appointment");
             processNewInviteRequestOrCancel(pm, invite, force, volumeId);
         } else if (method.equals("REPLY")) {
-            if (!canAccess(ACL.RIGHT_ACTION))
-                throw ServiceException.PERM_DENIED("you do not have sufficient permissions to change this appointment's state");
             processNewInviteReply(pm, invite, force);
         }
     }
@@ -532,10 +528,10 @@ public class Appointment extends MailItem {
 
         // Remove everyone that is made obselete by this request
         boolean addNewOne = true;
-        boolean isCancel = false;
-        if (method.equals(Method.CANCEL.getValue())) {
-            isCancel = true;
-        }
+        boolean isCancel = method.equals(Method.CANCEL.getValue());
+
+        if (!canAccess(isCancel ? ACL.RIGHT_DELETE : ACL.RIGHT_WRITE))
+            throw ServiceException.PERM_DENIED("you do not have sufficient permissions on this appointment");
 
         boolean modifiedAppt = false;
         Invite prev = null; // (the first) invite which has been made obscelete by the new one coming in
@@ -1213,7 +1209,10 @@ public class Appointment extends MailItem {
     }
     
     private void processNewInviteReply(ParsedMessage pm, Invite reply, boolean force)
-            throws ServiceException {
+    throws ServiceException {
+        if (!canAccess(ACL.RIGHT_ACTION))
+            throw ServiceException.PERM_DENIED("you do not have sufficient permissions to change this appointment's state");
+
         boolean dirty = false;
         // unique ID: UID+RECURRENCE_ID
 
