@@ -33,6 +33,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Iterator;
 import java.util.Properties;
 
 import org.apache.commons.dbcp.ConnectionFactory;
@@ -41,12 +42,13 @@ import org.apache.commons.dbcp.PoolableConnectionFactory;
 import org.apache.commons.dbcp.PoolingDriver;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.commons.pool.ObjectPool;
 import org.apache.commons.pool.impl.GenericObjectPool;
 
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ZimbraPerf;
+import com.zimbra.cs.util.SystemUtil;
+import com.zimbra.cs.util.ValueCounter;
 import com.zimbra.cs.util.ZimbraLog;
 
 /**
@@ -54,8 +56,16 @@ import com.zimbra.cs.util.ZimbraLog;
  */
 public class DbPool {
 
+    private static int sConnectionPoolSize = 100;
+    private static Log sLog = LogFactory.getLog(DbPool.class);
+    private static PoolingDriver sPoolingDriver;
+    private static String sRootUrl = null;
+    private static GenericObjectPool sConnectionPool;
+    private static ValueCounter sConnectionStackCounter = new ValueCounter();
+    
 	public static class Connection {
 		private java.sql.Connection mConnection;
+        private Throwable mStackTrace;
 
 		private Connection(java.sql.Connection conn)  { mConnection = conn; }
 
@@ -108,6 +118,14 @@ public class DbPool {
                 mConnection.close();
             } catch (SQLException e) {
             	throw ServiceException.FAILURE("closing database connection", e);
+            } finally {
+                // Connection is being returned to the pool.  Decrement its stack
+                // trace counter.
+                if (ZimbraLog.sqltrace.isDebugEnabled()) {
+                    synchronized(sConnectionStackCounter) {
+                        sConnectionStackCounter.decrement(SystemUtil.getStackTrace(mStackTrace));
+                    }
+                }
             }
 		}
 
@@ -126,12 +144,18 @@ public class DbPool {
             	throw ServiceException.FAILURE("committing database transaction", e);
             }
 		}
+        
+        /**
+         * Sets the stack trace used for detecting connection leaks.
+         */
+        private void setStackTrace(Throwable t) {
+            mStackTrace = t;
+        }
 	}
 
-	private static PoolingDriver mPoolingDriver;
-    private static Log mLog = LogFactory.getLog(DbPool.class);
-
-    private static String mDbUrl = null;
+    /**
+     * Initializes the connection pool.
+     */
     static {
         String drivers = System.getProperty("jdbc.drivers");
         if (drivers == null)
@@ -139,23 +163,23 @@ public class DbPool {
         
         String myAddress = LC.mysql_bind_address.value();
         String myPort = LC.mysql_port.value();
-        mDbUrl = "jdbc:mysql://" + myAddress + ":" + myPort + "/";
-        String url = mDbUrl + "zimbra";
+        sRootUrl = "jdbc:mysql://" + myAddress + ":" + myPort + "/";
+        String url = sRootUrl + "zimbra";
 
         Properties props = getZimbraDbProps();
         // TODO: need to tune these
-        int poolSize = 100;
         String maxActive = (String)props.get("maxActive");
         if (maxActive != null) {
             try {
-                poolSize = Integer.parseInt(maxActive);
+                sConnectionPoolSize = Integer.parseInt(maxActive);
             } catch (NumberFormatException nfe) {
-                mLog.warn("exception parsing maxActive", nfe);
+                sLog.warn("exception parsing maxActive", nfe);
             }
         }
-        ZimbraLog.misc.info("Setting mysql connection pool size to " + poolSize);
+        ZimbraLog.misc.info("Setting mysql connection pool size to " + sConnectionPoolSize);
 
-        ObjectPool cpool = new GenericObjectPool(null, poolSize, GenericObjectPool.WHEN_EXHAUSTED_BLOCK, -1, poolSize);
+        sConnectionPool = new GenericObjectPool(
+            null, sConnectionPoolSize, GenericObjectPool.WHEN_EXHAUSTED_BLOCK, -1, sConnectionPoolSize);
         ConnectionFactory cfac = new DriverManagerConnectionFactory(url, props);
         
         boolean defAutoCommit = false;
@@ -163,19 +187,18 @@ public class DbPool {
         
         // I don't think we need PreparedStatement pooling as it appears
         // the lastest mysql driver does it internally. Need to investigate.
-        PoolableConnectionFactory poolCF = 
-            new PoolableConnectionFactory(cfac, cpool, null, null, defReadOnly, defAutoCommit);
+        new PoolableConnectionFactory(cfac, sConnectionPool, null, null, defReadOnly, defAutoCommit);
         
         try {
         	Class.forName("com.mysql.jdbc.Driver");
         	Class.forName("org.apache.commons.dbcp.PoolingDriver");
-            mPoolingDriver = (PoolingDriver) DriverManager.getDriver("jdbc:apache:commons:dbcp:");
-            mPoolingDriver.registerPool("zimbra", cpool);
+            sPoolingDriver = (PoolingDriver) DriverManager.getDriver("jdbc:apache:commons:dbcp:");
+            sPoolingDriver.registerPool("zimbra", sConnectionPool);
         } catch (ClassNotFoundException e) {
-            mLog.fatal("can't init Pool", e);
+            sLog.fatal("can't init Pool", e);
             System.exit(1);
         } catch (SQLException e) {
-            mLog.fatal("can't init Pool", e);
+            sLog.fatal("can't init Pool", e);
             System.exit(1);
         }
     };
@@ -213,7 +236,7 @@ public class DbPool {
             	String prop = key.substring(prefixLen);
                 if (prop.length() > 0 && !prop.equalsIgnoreCase("logger")) {
                 	String val = LC.get(key);
-                    mLog.info("Setting mysql connector property: " + prop + "=" + val);
+                    sLog.info("Setting mysql connector property: " + prop + "=" + val);
                     props.put(prop, val);
                 }
             }
@@ -262,19 +285,59 @@ public class DbPool {
         	throw ServiceException.FAILURE("getting database connection", e);
         }
 
-        return new Connection(conn);
+        // If the connection pool is overutilized, warn about potential leaks
+        int numActive = sConnectionPool.getNumActive();
+        int maxActive = sConnectionPool.getMaxActive();
+        if (numActive > maxActive * 0.75) {
+            String stackTraceMsg =
+                "Turn on debug logging for zimbra.sqltrace to see stack " +
+                "traces of connections not returned to the pool.";
+            if (ZimbraLog.sqltrace.isDebugEnabled()) {
+                StringBuffer buf = new StringBuffer();
+                synchronized (sConnectionStackCounter) {
+                    Iterator i = sConnectionStackCounter.iterator();
+                    while (i.hasNext()) {
+                        String stackTrace = (String) i.next();
+                        int count = sConnectionStackCounter.getCount(stackTrace);
+                        if (count == 0) {
+                            i.remove();
+                        } else {
+                            buf.append(count + " connections allocated at " + stackTrace + "\n");
+                        }
+                    }
+                }
+                stackTraceMsg = buf.toString();
+            }
+            ZimbraLog.sqltrace.warn("Connection pool is 75% utilized.  " + numActive +
+                "connections out of a maximum of " + maxActive + " in use.  "+ stackTraceMsg);
+        }
+        
+        Connection zimbraConn = new Connection(conn);
+        
+        // If we're debugging, update the counter with the current stack trace
+        if (ZimbraLog.sqltrace.isDebugEnabled()) {
+            Throwable t = new Throwable();
+            zimbraConn.setStackTrace(t);
+            
+            synchronized (sConnectionStackCounter) {
+                sConnectionStackCounter.increment(SystemUtil.getStackTrace(t));
+            }
+        }
+        
+        return zimbraConn;
     }
     
     /**
-     * returns a database connection for maintenance such as restore. 
-     * @return
-     * @throws ServiceException
+     * Returns a new database connection for maintenance operations, such as
+     * restore. Does not specify the name of the default database. This
+     * connection is created outside the context of the database connection
+     * pool.
      */
     public static Connection getMaintenanceConnection() throws ServiceException {
         try {
             String user = LC.zimbra_mysql_user.value();
             String pwd = LC.zimbra_mysql_password.value();
-            java.sql.Connection conn = DriverManager.getConnection(mDbUrl + "?user=" + user + "&password=" + pwd);
+            java.sql.Connection conn = DriverManager.getConnection(sRootUrl + "?user=" + user + "&password=" + pwd);
             return new Connection(conn);
         } catch (SQLException e) {
             throw ServiceException.FAILURE("getting database maintenance connection", e);
@@ -291,8 +354,8 @@ public class DbPool {
             try {
                 conn.close();
             } catch (ServiceException e) {
-                if (mLog.isWarnEnabled())
-                    mLog.warn("quietClose caught exception", e);
+                if (sLog.isWarnEnabled())
+                    sLog.warn("quietClose caught exception", e);
             }
         }
     }
@@ -307,8 +370,8 @@ public class DbPool {
             try {
                 conn.rollback();
             } catch (ServiceException e) {
-                if (mLog.isWarnEnabled())
-                    mLog.warn("quietRollback caught exception", e);
+                if (sLog.isWarnEnabled())
+                    sLog.warn("quietRollback caught exception", e);
             }
         }
     }
