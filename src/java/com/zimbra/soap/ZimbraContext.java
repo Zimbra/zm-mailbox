@@ -311,19 +311,27 @@ public class ZimbraContext {
         return octxt;
     }
 
-	/** @return the account id the request is supposed to operate on.
-     *  If accountId is not present in the context, use the account id in the auth token. */
+	/** Returns the account id the request is supposed to operate on.  This
+     *  can be explicitly specified in the supplied context; it defaults to
+     *  the account id in the auth token. */
 	public String getRequestedAccountId() {
 	    return (mRequestedAccountId != null ? mRequestedAccountId : mAuthTokenAccountId);
 	} 
 
-    /** @return always returns the account in the auth token.  (should normally use getRequestAccountId) */
+    /** Returns the id of the account in the auth token.  Operations should
+     *  normally use {@link #getRequestAccountId}, as that's the context
+     *  that the operations is executing in. */
     public String getAuthtokenAccountId() {
         return mAuthTokenAccountId;
-    } 
+    }
 
-    /** Gets an existing valid {@link SessionInfo} item of the specified type.<p>
-     * 
+    /** Returns whether the authenticated user is the same as the user whose
+     *  context the operation is set to execute in. */
+    public boolean isDelegatedRequest() {
+        return !mAuthTokenAccountId.equalsIgnoreCase(getRequestedAccountId());
+    }
+
+    /** Gets an existing valid {@link SessionInfo} item of the specified type.
      *  SessionInfo objects correspond to either:<ul>
      *  <li>existing, unexpired sessions specified in a <code>&lt;sessionId></code>
      *      element in the <code>&lt;context></code> SOAP header block, or</li>
