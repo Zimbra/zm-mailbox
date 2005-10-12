@@ -87,7 +87,7 @@ public abstract class CalendarRequest extends SendMsg {
             OperationContext octxt = lc.getOperationContext();
 
             ParsedMessage pm = new ParsedMessage(dat.mMm, mbox.attachmentsIndexingEnabled());
-            mbox.addInvite(octxt, apptFolderId, dat.mInvite, false, pm); 
+            int[] ids = mbox.addInvite(octxt, apptFolderId, dat.mInvite, false, pm); 
 
             boolean saveToSent = dat.mSaveToSent && !lc.isDelegatedRequest();
             int folderId = 0;
@@ -97,14 +97,11 @@ public abstract class CalendarRequest extends SendMsg {
 
             int msgId = sendMimeMessage(octxt, mbox, acct, folderId, dat, dat.mMm, dat.mOrigId, dat.mReplyType);
 
-            if (response != null && msgId != 0) {
+            if (response != null && ids!=null) {
+                response.addAttribute(MailService.A_APPT_ID, ids[0]);
+                response.addAttribute(MailService.A_APPT_INV_ID, ids[0]+"-"+ids[1]);
                 if (saveToSent) {
                     response.addUniqueElement(MailService.E_MSG).addAttribute(MailService.A_ID, msgId);
-                } else {
-                    Message msg = mbox.getMessageById(octxt, msgId);
-                    ApptInfo inf = msg.getApptInfo(0); // OK for now b/c client never creates >0 components, but FIXME
-                    String inviteId = inf.getAppointmentId() + "-" + msgId;
-                    response.addUniqueElement(MailService.E_MSG).addAttribute(MailService.A_ID, inviteId);
                 }
             }
         }
