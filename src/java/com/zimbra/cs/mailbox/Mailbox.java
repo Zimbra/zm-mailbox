@@ -2332,23 +2332,22 @@ public class Mailbox {
      * @return appointment ID 
      * @throws ServiceException
      */
-    public synchronized int setAppointment(OperationContext octxt, int folderId, SetAppointmentData defaultInv, SetAppointmentData exceptions[]) throws ServiceException
-    {
-        SetAppointment redoRecorder = new SetAppointment(this.getId());
+    public synchronized int setAppointment(OperationContext octxt, int folderId, SetAppointmentData defaultInv, SetAppointmentData exceptions[])
+    throws ServiceException {
+        SetAppointment redoRecorder = new SetAppointment(getId());
         SetAppointment redoPlayer = (octxt == null ? null : (SetAppointment) octxt.player);
         
         boolean success = false;
-        
         try {
-            beginTransaction("setAppointment", null, redoRecorder);
+            beginTransaction("setAppointment", octxt, redoRecorder);
             
             // allocate IDs for all of the passed-in invites (and the appointment!) if necessary
             if (redoPlayer == null || redoPlayer.getAppointmentId() == 0) {
                 assert(defaultInv.mInv.getMailItemId() == 0);
-                
+
                 int mailItemId = getNextItemId(Mailbox.ID_AUTO_INCREMENT);
                 defaultInv.mInv.setInviteId(mailItemId);
-                
+
                 if (exceptions != null) {
                     for (int i = 0; i < exceptions.length; i++) {
                         mailItemId = getNextItemId(Mailbox.ID_AUTO_INCREMENT);
@@ -2366,7 +2365,7 @@ public class Mailbox {
             if (appt == null) { 
                 // ONLY create an appointment if this is a REQUEST method...otherwise don't.
                 if (defaultInv.mInv.getMethod().equals("REQUEST") || defaultInv.mInv.getMethod().equals("PUBLISH")) {
-                    appt = createAppointment(Mailbox.ID_FOLDER_CALENDAR, Volume.getCurrentMessageVolume().getId(), "",
+                    appt = createAppointment(folderId, Volume.getCurrentMessageVolume().getId(), "",
                             defaultInv.mInv.getUid(), defaultInv.mPm, defaultInv.mInv);
                 } else {
 //                  mLog.info("Mailbox " + getId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c not a REQUEST and no Appointment could be found");
