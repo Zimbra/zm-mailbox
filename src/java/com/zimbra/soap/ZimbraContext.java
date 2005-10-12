@@ -41,7 +41,6 @@ import org.dom4j.QName;
 
 import com.zimbra.cs.account.*;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
@@ -564,17 +563,31 @@ public class ZimbraContext {
         return new ItemId(item).toString(this);
     }
 
-    /** Formats the ({@link Mailbox}, ID) pair into a <code>String</code>
-     *  that's addressable by the request's originator.  In other words, if
-     *  the owner of the <code>Mailbox</code> matches the auth token's
-     *  principal, you just get a bare ID.  But if the owners don't match,
-     *  you get a formatted ID that refers to the <code>Mailbox</code> as
-     *  well as the item in question.
+    /** Formats the item ID in the requested <code>Mailbox</code> into a
+     *  <code>String</code> that's addressable by the request's originator.
+     *  In other words, if the owner of the <code>Mailbox</code> matches the
+     *  auth token's principal, you just get a bare ID.  But if the owners
+     *  don't match, you get a formatted ID that refers to the correct
+     *  <code>Mailbox</code> as well as the item in question.
      * 
-     * @param mbox    The item's containing Mailbox.
      * @param itemId  The item's (local) ID.
      * @see ItemId */
-    public String formatItemId(Mailbox mbox, int itemId) {
-        return new ItemId(mbox, itemId).toString(this);
+    public String formatItemId(int itemId) {
+        return new ItemId(getRequestedAccountId(), itemId).toString(this);
+    }
+
+    /** Formats the (item ID, subpart ID) pair in the requested account's
+     *  <code>Mailbox</code> into a <code>String</code> that's addressable
+     *  by the request's originator.  In other words, if the owner of the
+     *  <code>Mailbox</code> matches the auth token's principal, you just
+     *  get a bare ID.  But if the owners don't match, you get a formatted
+     *  ID that refers to the correct <code>Mailbox</code> as well as the
+     *  item in question.
+     * 
+     * @param itemId  The item's (local) ID.
+     * @param subId   The subpart's ID.
+     * @see ItemId */
+    public String formatItemId(int itemId, int subId) {
+        return new ItemId(getRequestedAccountId(), itemId, subId).toString(this);
     }
 }

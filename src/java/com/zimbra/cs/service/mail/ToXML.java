@@ -173,7 +173,7 @@ public class ToXML {
                     elem.addAttribute(MailService.A_NAME, name);
             }
             if (needToOutput(fields, Change.MODIFIED_FOLDER))
-                elem.addAttribute(MailService.A_FOLDER, lc.formatItemId(folder.getMailbox(), folder.getFolderId()));
+                elem.addAttribute(MailService.A_FOLDER, lc.formatItemId(folder.getFolderId()));
         }
         if (needToOutput(fields, Change.MODIFIED_COLOR)) {
             byte color = folder.getColor();
@@ -239,7 +239,7 @@ public class ToXML {
         if (needToOutput(fields, Change.MODIFIED_CONTENT) && contact.getSavedSequence() != 0)
             elem.addAttribute(MailService.A_REVISION, contact.getSavedSequence());
         if (needToOutput(fields, Change.MODIFIED_FOLDER))
-            elem.addAttribute(MailService.A_FOLDER, lc.formatItemId(contact.getMailbox(), contact.getFolderId()));
+            elem.addAttribute(MailService.A_FOLDER, lc.formatItemId(contact.getFolderId()));
         recordItemTags(elem, contact, fields);
         if (needToOutput(fields, Change.MODIFIED_CONFLICT))
             elem.addAttribute(MailService.A_CHANGE_DATE, contact.getChangeDate() / 1000);
@@ -286,7 +286,7 @@ public class ToXML {
         if (needToOutput(fields, Change.MODIFIED_CONTENT) && note.getSavedSequence() != 0)
             elem.addAttribute(MailService.A_REVISION, note.getSavedSequence());
         if (needToOutput(fields, Change.MODIFIED_FOLDER))
-            elem.addAttribute(MailService.A_FOLDER, lc.formatItemId(note.getMailbox(), note.getFolderId()));
+            elem.addAttribute(MailService.A_FOLDER, lc.formatItemId(note.getFolderId()));
         if (needToOutput(fields, Change.MODIFIED_DATE))
             elem.addAttribute(MailService.A_DATE, note.getDate());
         recordItemTags(elem, note, fields);
@@ -333,7 +333,7 @@ public class ToXML {
             m.addAttribute(MailService.A_ID, lc.formatItemId(msg));
             m.addAttribute(MailService.A_DATE, msg.getDate());
             m.addAttribute(MailService.A_SIZE, msg.getSize());
-            m.addAttribute(MailService.A_FOLDER, lc.formatItemId(msg.getMailbox(), msg.getFolderId()));
+            m.addAttribute(MailService.A_FOLDER, lc.formatItemId(msg.getFolderId()));
             recordItemTags(m, msg, fields);
             m.addAttribute(MailService.E_FRAG, msg.getFragment(), Element.DISP_CONTENT);
             eecache.makeEmail(m, msg.getSender(), EmailElementCache.EMAIL_TYPE_FROM, null);
@@ -466,7 +466,7 @@ public class ToXML {
 
             if (wholeMessage && msg.isDraft()) {
                 if (msg.getDraftOrigId() > 0)
-                    m.addAttribute(MailService.A_ORIG_ID, lc.formatItemId(msg.getMailbox(), msg.getDraftOrigId()));
+                    m.addAttribute(MailService.A_ORIG_ID, lc.formatItemId(msg.getDraftOrigId()));
                 if (!msg.getDraftReplyType().equals(""))
                     m.addAttribute(MailService.A_REPLY_TYPE, msg.getDraftReplyType());
                 String inReplyTo = mm.getHeader("In-Reply-To", null);
@@ -524,7 +524,7 @@ public class ToXML {
         
         apptElt.addAttribute(MailService.A_UID, appt.getUid());
         apptElt.addAttribute(MailService.A_ID, lc.formatItemId(appt));
-        apptElt.addAttribute(MailService.A_FOLDER, lc.formatItemId(appt.getMailbox(), appt.getFolderId()));
+        apptElt.addAttribute(MailService.A_FOLDER, lc.formatItemId(appt.getFolderId()));
         
         encodeReplies(apptElt, appt);
         
@@ -532,7 +532,7 @@ public class ToXML {
             Invite inv = appt.getInvite(i);
 
             Element ie = apptElt.addElement(MailService.E_INVITE);
-            ie.addAttribute(MailService.A_ID, lc.formatItemId(appt.getMailbox(), inv.getMailItemId()));
+            ie.addAttribute(MailService.A_ID, lc.formatItemId(inv.getMailItemId()));
             ie.addAttribute(MailService.A_APPT_COMPONENT_NUM, inv.getComponentNum());
             if (inv.hasRecurId())
                 ie.addAttribute(MailService.A_APPT_RECURRENCE_ID, inv.getRecurId().toString());
@@ -757,11 +757,11 @@ public class ToXML {
         if (needToOutput(fields, Change.MODIFIED_DATE))
             elem.addAttribute(MailService.A_DATE, mi.getDate());
         if (needToOutput(fields, Change.MODIFIED_FOLDER))
-            elem.addAttribute(MailService.A_FOLDER, lc.formatItemId(mi.getMailbox(), mi.getFolderId()));
+            elem.addAttribute(MailService.A_FOLDER, lc.formatItemId(mi.getFolderId()));
         if (mi instanceof Message) {
             Message msg = (Message)mi;
             if (needToOutput(fields, Change.MODIFIED_PARENT) && (fields != NOTIFY_FIELDS || msg.getConversationId() != -1))
-                elem.addAttribute(MailService.A_CONV_ID, lc.formatItemId(msg.getMailbox(), msg.getConversationId()));
+                elem.addAttribute(MailService.A_CONV_ID, lc.formatItemId(msg.getConversationId()));
         }
         recordItemTags(elem, mi, fields);
         if (needToOutput(fields, Change.MODIFIED_CONFLICT))

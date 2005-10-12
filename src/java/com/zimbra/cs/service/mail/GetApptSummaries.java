@@ -222,7 +222,7 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
                         apptElt.addAttribute(MailService.A_APPT_LOCATION, defaultInvite.getLocation());
                         
                         apptElt.addAttribute(MailService.A_ID, lc.formatItemId(appointment));
-                        apptElt.addAttribute(MailService.A_FOLDER, lc.formatItemId(mbox, appointment.getFolderId()));
+                        apptElt.addAttribute(MailService.A_FOLDER, lc.formatItemId(appointment.getFolderId()));
                         
                         ItemId iid = new ItemId(appointment, defaultInvite.getMailItemId());
                         apptElt.addAttribute(MailService.A_APPT_INV_ID, iid.toString(lc));

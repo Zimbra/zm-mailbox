@@ -95,10 +95,10 @@ public abstract class CalendarRequest extends SendMsg {
             int msgId = sendMimeMessage(octxt, mbox, acct, folderId, dat, dat.mMm, dat.mOrigId, dat.mReplyType);
 
             if (response != null && ids != null) {
-                response.addAttribute(MailService.A_APPT_ID, lc.formatItemId(mbox, ids[0]));
-                response.addAttribute(MailService.A_APPT_INV_ID, new ItemId(mbox.getAccountId(), ids[0], ids[1]).toString(lc));
+                response.addAttribute(MailService.A_APPT_ID, lc.formatItemId(ids[0]));
+                response.addAttribute(MailService.A_APPT_INV_ID, lc.formatItemId(ids[0], ids[1]));
                 if (saveToSent) {
-                    response.addUniqueElement(MailService.E_MSG).addAttribute(MailService.A_ID, lc.formatItemId(mbox, msgId));
+                    response.addUniqueElement(MailService.E_MSG).addAttribute(MailService.A_ID, lc.formatItemId(msgId));
                 }
             }
         }
