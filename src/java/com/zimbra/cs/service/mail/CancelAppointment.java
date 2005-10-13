@@ -44,7 +44,7 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.util.ParsedItemID;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
@@ -62,20 +62,20 @@ public class CancelAppointment extends CalendarRequest {
             Mailbox mbox = getRequestedMailbox(lc);
             OperationContext octxt = lc.getOperationContext();
             
-            ParsedItemID pid = ParsedItemID.parse(request.getAttribute("id"));
-            int compNum = (int)request.getAttributeLong("comp");
+            ItemId iid = new ItemId(request.getAttribute(MailService.A_ID));
+            int compNum = (int) request.getAttributeLong(MailService.E_INVITE_COMPONENT);
             
-            sLog.info("<CancelAppointment id="+pid+" comp="+compNum+">");
+            sLog.info("<CancelAppointment id=" + iid + " comp=" + compNum + ">");
             
             synchronized (mbox) {
-                Appointment appt = mbox.getAppointmentById(octxt, pid.getItemIDInt()); 
-                Invite inv = appt.getInvite(pid.getSubIdInt(), compNum);
+                Appointment appt = mbox.getAppointmentById(octxt, iid.getId()); 
+                Invite inv = appt.getInvite(iid.getSubpartId(), compNum);
 
                 if (appt == null) {
-                    throw MailServiceException.NO_SUCH_APPOINTMENT(inv.getUid(), " for CancelAppointmentRequest("+pid+","+compNum+")");
+                    throw MailServiceException.NO_SUCH_APPOINTMENT(inv.getUid(), " for CancelAppointmentRequest(" + iid + "," + compNum + ")");
                 }
-                
-                Element recurElt = request.getOptionalElement("inst");
+
+                Element recurElt = request.getOptionalElement(MailService.E_INSTANCE);
                 if (recurElt != null) {
                     RecurId recurId = CalendarUtils.parseRecurId(recurElt, inv.getTimeZoneMap(), inv);
                     cancelInstance(lc, request, acct, mbox, appt, inv, recurId);
@@ -113,10 +113,10 @@ public class CancelAppointment extends CalendarRequest {
     void cancelInstance(ZimbraContext lc, Element request, Account acct, Mailbox mbox, Appointment appt, Invite defaultInv, RecurId recurId) 
     throws ServiceException {
         String text = "The instance has been cancelled";
-        String subject = "CANCELLED: "+defaultInv.getName();
+        String subject = "CANCELLED: " + defaultInv.getName();
         
         if (sLog.isDebugEnabled()) {
-            sLog.debug("Sending cancellation message \""+subject+"\" for instance "+recurId.toString()+" of invite "+ defaultInv.toString());
+            sLog.debug("Sending cancellation message \"" + subject + "\" for instance " + recurId + " of invite " + defaultInv);
         }
         
         CalSendData dat = new CalSendData();
@@ -124,7 +124,7 @@ public class CancelAppointment extends CalendarRequest {
         dat.mReplyType = TYPE_REPLY;
         dat.mSaveToSent = shouldSaveToSent(acct);
         dat.mInvite = CalendarUtils.buildCancelInstanceCalendar(acct, defaultInv, text, recurId);
-        
+
         Calendar iCal = dat.mInvite.toICalendar();
         
         // did they specify a custom <m> message?  If so, then we don't have to build one...
