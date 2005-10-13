@@ -63,11 +63,11 @@ public class FileUploadServlet extends ZimbraServlet {
     /** The length of a fully-qualified upload ID (2 UUIDs and a ':') */
     private static final int UPLOAD_ID_LENGTH = 73;
 
-    private static final class Upload {
-        String accountId;
-        long   time;
-        String uuid;
-        FileItem file;
+    public static final class Upload {
+        final String   accountId;
+        final String   uuid;
+        final FileItem file;
+        long time;
 
         /**
          * 
@@ -75,12 +75,18 @@ public class FileUploadServlet extends ZimbraServlet {
          * @param attachment a <code>List</code> of {@link FileItem} objects
          * @throws ServiceException
          */
-        Upload(AuthToken auth, FileItem attachment) throws ServiceException {
+        Upload(String acctId, FileItem attachment) throws ServiceException {
             String localServer = Provisioning.getInstance().getLocalServer().getId();
-            accountId = auth.getAccountId();
+            accountId = acctId;
             time      = System.currentTimeMillis();
             uuid      = localServer + UPLOAD_PART_DELIMITER + LdapUtil.generateUUID();
             file      = attachment;
+        }
+
+        public String getName()         { return file.getName(); }
+        public String getContentType()  { return file.getContentType(); }
+        public InputStream getInputStream() throws IOException {
+            return file.getInputStream();
         }
 
         boolean accessedAfter(long checkpoint)  { return time > checkpoint; }
@@ -106,7 +112,7 @@ public class FileUploadServlet extends ZimbraServlet {
         return uploadId.substring(0, UPLOAD_ID_LENGTH / 2).equals(prov.getLocalServer().getId());
     }
 
-    public static FileItem fetchUpload(String accountId, String uploadId, String authtoken) throws ServiceException {
+    public static Upload fetchUpload(String accountId, String uploadId, String authtoken) throws ServiceException {
         String context = "accountId=" + accountId + ", uploadId=" + uploadId;
         if (accountId == null || uploadId == null)
             throw ServiceException.FAILURE("fetchUploads(): missing parameter: " + context, null);
@@ -129,11 +135,11 @@ public class FileUploadServlet extends ZimbraServlet {
                 throw MailServiceException.NO_SUCH_UPLOAD(uploadId);
             }
             up.time = System.currentTimeMillis();
-            return up.file;
+            return up;
         }
     }
 
-    private static FileItem fetchRemoteUpload(String accountId, String uploadId, String authtoken) throws ServiceException {
+    private static Upload fetchRemoteUpload(String accountId, String uploadId, String authtoken) throws ServiceException {
         // the first half of the upload id is the server id where it lives
         Server server = Provisioning.getInstance().getServerById(uploadId.substring(0, UPLOAD_ID_LENGTH / 2));
         if (server == null)
@@ -170,7 +176,7 @@ public class FileUploadServlet extends ZimbraServlet {
             DiskFileUpload upload = getUploader();
             FileItem fi = upload.getFileItemFactory().createItem("upload", contentType, false, filename);
             ByteUtil.copy(is = method.getResponseBodyAsStream(), fi.getOutputStream());
-            return fi;
+            return new Upload(accountId, fi);
         } catch (HttpException e) {
             throw ServiceException.PROXY_ERROR(e);
         } catch (MessagingException e) {
@@ -184,28 +190,20 @@ public class FileUploadServlet extends ZimbraServlet {
         }
     }
 
-    public static void deleteUploads(String accountId, String uploadIds) {
-        if (accountId == null || uploadIds == null || uploadIds.equals(""))
-            return;
-        String[] uids = uploadIds.split(UPLOAD_DELIMITER);
-        for (int i = 0; i < uids.length; i++)
-            deleteUpload(accountId, uids[i]);
+    public static void deleteUploads(List uploads) {
+        if (uploads != null && !uploads.isEmpty())
+            for (Iterator it = uploads.iterator(); it.hasNext(); )
+                deleteUpload((Upload) it.next());
     }
 
-    public static void deleteUpload(String accountId, String uploadId) {
-        if (accountId == null || uploadId == null || uploadId.equals(""))
+    public static void deleteUpload(Upload upload) {
+        if (upload == null)
             return;
         Upload up = null;
         synchronized (mPending) {
-            up = (Upload) mPending.remove(uploadId);
-            if (up != null && !accountId.equals(up.accountId)) {
-                mLog.warn("deleteUploads(" + accountId + ", " + uploadId +
-                          ").  Found mismatched accountId: " + up);
-                mPending.put(uploadId, up);
-                up = null;
-            }
+            up = (Upload) mPending.remove(up.uuid);
         }
-        if (up != null)
+        if (up != upload)
             up.purge();
     }
 
@@ -303,7 +301,7 @@ public class FileUploadServlet extends ZimbraServlet {
             // cache the uploaded files in the hash and construct the list of upload IDs
             try {
                 for (Iterator it = items.iterator(); it.hasNext(); ) {
-                    Upload up = new Upload(authToken, (FileItem) it.next());
+                    Upload up = new Upload(authToken.getAccountId(), (FileItem) it.next());
                     synchronized (mPending) {
                         mLog.debug("doPost(): added " + up);
                     	mPending.put(up.uuid, up);

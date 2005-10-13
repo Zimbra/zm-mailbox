@@ -32,7 +32,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.commons.fileupload.FileItem;
+import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.util.ZimbraLog;
 
 public abstract class UploadScanner {
@@ -63,7 +63,7 @@ public abstract class UploadScanner {
     	sRegisteredScanners.remove(scanner);
     }
     
-    public static Result accept(FileItem fi, StringBuffer info) {
+    public static Result accept(Upload up, StringBuffer info) {
         
     	for (Iterator iter = sRegisteredScanners.iterator(); iter.hasNext();) {
     		UploadScanner scanner = (UploadScanner)iter.next();
@@ -72,28 +72,23 @@ public abstract class UploadScanner {
     		}
     		
     		Result result;
-    		if (fi.isInMemory()) {
-    			boolean allErrored = true;
-    			result = scanner.accept(fi.get(), info);
-        	} else {
-        		InputStream is = null;
-        		try {
-        			is = fi.getInputStream();
-        		} catch (IOException ioe) {
-        			ZimbraLog.misc.error("exception getting input stream for scanning", ioe);
-        			info.append(" ").append(ioe);
-        			return ERROR;
-        		}
-        		try {
-        			result = scanner.accept(is, info); 
-        		} finally {
-        			try {
-        				is.close();
-        			} catch (IOException ioe) {
-        				ZimbraLog.misc.warn("exception closing scanned input stream", ioe);
-        			}
-        		}
-        	}
+    		InputStream is = null;
+    		try {
+    			is = up.getInputStream();
+    		} catch (IOException ioe) {
+    			ZimbraLog.misc.error("exception getting input stream for scanning", ioe);
+    			info.append(" ").append(ioe);
+    			return ERROR;
+    		}
+    		try {
+    			result = scanner.accept(is, info); 
+    		} finally {
+    			try {
+    				is.close();
+    			} catch (IOException ioe) {
+    				ZimbraLog.misc.warn("exception closing scanned input stream", ioe);
+    			}
+    		}
 			if (result == REJECT || result == ERROR) {
 				// Fail on the first scanner that says it was bad,
 				// or first error we encounter. Is bailing on first error

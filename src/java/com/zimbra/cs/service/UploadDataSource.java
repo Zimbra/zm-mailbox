@@ -34,48 +34,48 @@ import java.io.OutputStream;
 
 import javax.activation.DataSource;
 
-import org.apache.commons.fileupload.FileItem;
+import com.zimbra.cs.service.FileUploadServlet.Upload;
 
 /**
  * @author dkarp
  */
-public class FileItemDataSource implements DataSource {
+public class UploadDataSource implements DataSource {
 
-    private FileItem mFileItem;
+    private Upload mUpload;
 
 	/**
 	 * 
 	 */
-	public FileItemDataSource(FileItem fi) {
-		mFileItem = fi;
+	public UploadDataSource(Upload up) {
+		mUpload = up;
 	}
 
 	/* (non-Javadoc)
 	 * @see javax.activation.DataSource#getContentType()
 	 */
 	public String getContentType() {
-        return mFileItem.getContentType();
+        return mUpload.getContentType();
 	}
 
 	/* (non-Javadoc)
 	 * @see javax.activation.DataSource#getInputStream()
 	 */
 	public InputStream getInputStream() throws IOException {
-		return mFileItem.getInputStream(); 
+		return mUpload.getInputStream(); 
 	}
 
 	/* (non-Javadoc)
 	 * @see javax.activation.DataSource#getName()
 	 */
 	public String getName() {
-		return mFileItem.getName();
+		return mUpload.getName();
 	}
 
 	/* (non-Javadoc)
 	 * @see javax.activation.DataSource#getOutputStream()
 	 */
-	public OutputStream getOutputStream() throws IOException {
-		return mFileItem.getOutputStream();
+	public OutputStream getOutputStream() {
+		return null;
 	}
 
 }

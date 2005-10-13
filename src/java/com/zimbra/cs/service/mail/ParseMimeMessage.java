@@ -39,9 +39,10 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.BlobDataSource;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.ContentServlet;
-import com.zimbra.cs.service.FileItemDataSource;
+import com.zimbra.cs.service.UploadDataSource;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.ExceptionToString;
 import com.zimbra.soap.Element;
@@ -58,7 +59,6 @@ import javax.activation.DataHandler;
 import javax.mail.*;
 import javax.mail.internet.*;
 
-import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -140,7 +140,7 @@ public class ParseMimeMessage {
      */
     public static class MimeMessageData {
         public List newContacts = new ArrayList();
-        public String attachIds = null;  // NULL unless there are attachments
+        public List uploads = null;      // NULL unless there are attachments
         public String iCalUUID = null;   // NULL unless there is an iCal part
     }
     
@@ -231,10 +231,8 @@ public class ParseMimeMessage {
                 if (attachElem != null) {
                     // attachments go into the toplevel "mixed" part
                     String attachIds = attachElem.getAttribute(MailService.A_ATTACHMENT_ID, null);
-                    if (attachIds != null) {
-                        attachUploads(mmp, lc, attachIds);
-                        out.attachIds = attachIds;
-                    }
+                    if (attachIds != null)
+                        out.uploads = attachUploads(mmp, lc, attachIds);
                     for (Iterator it = attachElem.elementIterator(); it.hasNext(); ) {
                         Element elem = (Element) it.next();
                         String eName = elem.getName();
@@ -429,32 +427,34 @@ public class ParseMimeMessage {
         }
     }
 
-    private static void attachUploads(Multipart mmp, ZimbraContext lc, String attachIds)
+    private static List attachUploads(Multipart mmp, ZimbraContext lc, String attachIds)
     throws ServiceException, MessagingException {
+        List uploads = new ArrayList();
         String[] uploadIds = attachIds.split(FileUploadServlet.UPLOAD_DELIMITER);
 
         for (int i = 0; i < uploadIds.length; i++) {
-            FileItem fi = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), uploadIds[i], lc.getRawAuthToken());
-            if (fi == null)
+            Upload up = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), uploadIds[i], lc.getRawAuthToken());
+            if (up == null)
                 throw MailServiceException.NO_SUCH_UPLOAD(uploadIds[i]);
+            uploads.add(up);
 
             // scan upload for viruses
             StringBuffer info = new StringBuffer();
-            UploadScanner.Result result = UploadScanner.accept(fi, info); 
+            UploadScanner.Result result = UploadScanner.accept(up, info); 
             if (result == UploadScanner.REJECT)
-            	throw MailServiceException.UPLOAD_REJECTED(fi.getName(), info.toString());
+            	throw MailServiceException.UPLOAD_REJECTED(up.getName(), info.toString());
             if (result == UploadScanner.ERROR)
-            	throw MailServiceException.SCAN_ERROR(fi.getName());
+            	throw MailServiceException.SCAN_ERROR(up.getName());
 
             MimeBodyPart mbp = new MimeBodyPart();
-            mbp.setDataHandler(new DataHandler(new FileItemDataSource(fi)));
+            mbp.setDataHandler(new DataHandler(new UploadDataSource(up)));
 
-            String type = fi.getContentType();
+            String type = up.getContentType();
             mbp.setHeader("Content-Type", type == null ? Mime.CT_APPLICATION_OCTET_STREAM : type);
 
             ContentDisposition cd = new ContentDisposition(Part.ATTACHMENT);
-            if (fi.getName() != null) {
-                String filename = trimFilename(fi.getName());
+            if (up.getName() != null) {
+                String filename = trimFilename(up.getName());
                 if (filename != null)
                 	cd.setParameter("filename", filename);
             }
@@ -462,6 +462,7 @@ public class ParseMimeMessage {
 
             mmp.addBodyPart(mbp);
         }
+        return uploads;
     }
 
     private static void attachMessage(Multipart mmp, com.zimbra.cs.mailbox.Message message)

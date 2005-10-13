@@ -101,8 +101,8 @@ public class SaveDraft extends WriteOpDocumentHandler {
 			Message msg = mbox.saveDraft(octxt, pm, id, origId, replyType);
 
             // we can now purge the uploaded attachments
-            if (mimeData.attachIds != null)
-                FileUploadServlet.deleteUploads(mbox.getAccountId(), mimeData.attachIds);
+            if (mimeData.uploads != null)
+                FileUploadServlet.deleteUploads(mimeData.uploads);
 
             Element response = lc.createElement(MailService.SAVE_DRAFT_RESPONSE);
             // FIXME: inefficient -- this recalculates the MimeMessage (but SaveDraft is called rarely)

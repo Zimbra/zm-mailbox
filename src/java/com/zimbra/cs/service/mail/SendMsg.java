@@ -38,7 +38,6 @@ import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -58,6 +57,7 @@ import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.ExceptionToString;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.service.FileUploadServlet;
+import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.ParseMimeMessage.MimeMessageData;
 import com.zimbra.cs.stats.StopWatch;
@@ -135,13 +135,12 @@ public class SendMsg extends WriteOpDocumentHandler {
     }
 
     static MimeMessage parseUploadedMessage(ZimbraContext lc, String attachId, MimeMessageData mimeData) throws ServiceException {
-        mimeData.attachIds = attachId;
-
-        FileItem fi = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), attachId, lc.getRawAuthToken());
-        if (fi == null)
+        Upload up = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), attachId, lc.getRawAuthToken());
+        if (up == null)
             throw MailServiceException.NO_SUCH_UPLOAD(attachId);
+        (mimeData.uploads = new ArrayList()).add(up);
         try {
-            return new MimeMessage(JMSession.getSession(), fi.getInputStream());
+            return new MimeMessage(JMSession.getSession(), up.getInputStream());
         } catch (MessagingException e) {
             throw MailServiceException.MESSAGE_PARSE_ERROR(e);
         } catch (IOException e) {
@@ -271,8 +270,8 @@ public class SendMsg extends WriteOpDocumentHandler {
 
             if (mimeData != null) {
                 // we can now purge the uploaded attachments
-                if (mimeData.attachIds != null)
-                    FileUploadServlet.deleteUploads(mbox.getAccountId(), mimeData.attachIds);
+                if (mimeData.uploads != null)
+                    FileUploadServlet.deleteUploads(mimeData.uploads);
                 
                 // add any new contacts to the personal address book
                 for (Iterator it = mimeData.newContacts.iterator(); it.hasNext(); ) {

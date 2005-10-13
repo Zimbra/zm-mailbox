@@ -39,7 +39,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 
-import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -54,6 +53,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.util.*;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.ByteUtil;
@@ -230,19 +230,19 @@ public class ContentServlet extends ZimbraServlet {
                 return;
             }
 
-            FileItem fi = FileUploadServlet.fetchUpload(authToken.getAccountId(), uploadId, authToken.getEncoded());
-            if (fi == null) {
+            Upload up = FileUploadServlet.fetchUpload(authToken.getAccountId(), uploadId, authToken.getEncoded());
+            if (up == null) {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "no such upload");
                 return;
             }
 
             ContentDisposition cd = new ContentDisposition(Part.INLINE);
-            String filename = fi.getName();
+            String filename = up.getName();
             cd.setParameter("filename", filename == null ? "unknown" : filename);
             resp.addHeader("Content-Disposition", cd.toString());
-            sendbackOriginalDoc(fi.getInputStream(), fi.getContentType(), resp);
+            sendbackOriginalDoc(up.getInputStream(), up.getContentType(), resp);
 
-            fi.delete();
+            FileUploadServlet.deleteUpload(up);
         } catch (ServiceException e) {
             throw new ServletException(e);
         } catch (MessagingException e) {
@@ -290,7 +290,8 @@ public class ContentServlet extends ZimbraServlet {
         sendbackOriginalDoc(mp.getInputStream(), contentType, resp);
     }
     
-    protected void sendbackOriginalDoc(InputStream is, String contentType, HttpServletResponse resp) throws IOException {
+    protected void sendbackOriginalDoc(InputStream is, String contentType, HttpServletResponse resp)
+    throws IOException {
         resp.setContentType(contentType);
         try {
             ByteUtil.copy(is, resp.getOutputStream());
@@ -301,8 +302,7 @@ public class ContentServlet extends ZimbraServlet {
     }
 
     static void sendbackDefangedHtml(MimePart mp, String contentType, HttpServletResponse resp, String fmt) 
-    throws IOException, MessagingException 
-	{
+    throws IOException, MessagingException {
         resp.setContentType(contentType);
         InputStream is = null;
         try {

@@ -29,11 +29,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.fileupload.FileItem;
 
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.ContactCSV;
@@ -42,6 +41,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.ContactCSV.ParseException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.FileUploadServlet;
+import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
@@ -62,14 +62,14 @@ public class ImportContacts extends DocumentHandler  {
             throw ServiceException.INVALID_REQUEST("unsupported content type: " + ct, null);
         
         Element content = request.getElement(MailService.E_CONTENT);
-        List contacts = null;
+        List contacts = null, uploads = null;
         BufferedReader reader = null;
         String attachment = content.getAttribute(MailService.A_ATTACHMENT_ID, null);
         try {
             if (attachment == null)
                 reader = new BufferedReader(new StringReader(content.getText()));
             else
-                reader = parseUploadedContent(lc, attachment);
+                reader = parseUploadedContent(lc, attachment, uploads = new ArrayList());
             contacts = ContactCSV.getContacts(reader);
         } catch (ParseException e) {
             throw MailServiceException.UNABLE_TO_IMPORT_CONTACTS(e.getMessage(), e);
@@ -77,7 +77,7 @@ public class ImportContacts extends DocumentHandler  {
             if (reader != null)
                 try { reader.close(); } catch (IOException e) { }
             if (attachment != null)
-                FileUploadServlet.deleteUpload(mbox.getAccountId(), attachment);
+                FileUploadServlet.deleteUploads(uploads);
         }
 
         StringBuffer ids = new StringBuffer();
@@ -96,15 +96,16 @@ public class ImportContacts extends DocumentHandler  {
         return response;
     }
     
-    private static BufferedReader parseUploadedContent(ZimbraContext lc, String attachId) throws ServiceException {
-        FileItem fi = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), attachId, lc.getRawAuthToken());
-        if (fi == null)
+    private static BufferedReader parseUploadedContent(ZimbraContext lc, String attachId, List uploads)
+    throws ServiceException {
+        Upload up = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), attachId, lc.getRawAuthToken());
+        if (up == null)
             throw MailServiceException.NO_SUCH_UPLOAD(attachId);
+        uploads.add(up);
         try {
-            return new BufferedReader(new InputStreamReader(fi.getInputStream()));
+            return new BufferedReader(new InputStreamReader(up.getInputStream()));
         } catch (IOException e) {
             throw ServiceException.FAILURE(e.getMessage(), e);
         }
     }
-
 }

@@ -142,8 +142,8 @@ public class AddMsg extends WriteOpDocumentHandler {
 	        }
 
             // we can now purge the uploaded attachments
-            if (mimeData.attachIds != null)
-                FileUploadServlet.deleteUploads(mbox.getAccountId(), mimeData.attachIds);
+            if (mimeData.uploads != null)
+                FileUploadServlet.deleteUploads(mimeData.uploads);
 
             Element response = lc.createElement(MailService.ADD_MSG_RESPONSE);
             if (messageId != -1)
