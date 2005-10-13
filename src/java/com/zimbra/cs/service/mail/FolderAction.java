@@ -30,6 +30,7 @@ package com.zimbra.cs.service.mail;
 
 import java.util.Map;
 
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
@@ -103,7 +104,7 @@ public class FolderAction extends ItemAction {
             boolean inherit = grant.getAttributeBool(MailService.A_INHERIT, false);
             short rights = ACL.stringToRights(grant.getAttribute(MailService.A_RIGHTS));
             byte gtype   = stringToType(grant.getAttribute(MailService.A_GRANT_TYPE));
-            String zid   = lookupZimbraId(grant.getAttribute(MailService.A_DISPLAY, null), gtype);
+            String zid   = lookupZimbraId(grant.getAttribute(MailService.A_DISPLAY, null), gtype, lc);
             
             mbox.grantAccess(octxt, iid.getId(), zid, gtype, rights, inherit);
         } else
@@ -130,16 +131,23 @@ public class FolderAction extends ItemAction {
         return null;
     }
 
-    static String lookupZimbraId(String name, byte type) throws ServiceException {
+    static String lookupZimbraId(String name, byte type, ZimbraContext lc) throws ServiceException {
         if (type == ACL.GRANTEE_ALL)
             return ACL.GUID_ALL;
 
+        Provisioning prov = Provisioning.getInstance();
         NamedEntry nentry = null;
         if (name != null)
             switch (type) {
-                case ACL.GRANTEE_USER:    nentry = Provisioning.getInstance().getAccountByName(name);  break;
-                case ACL.GRANTEE_COS:     nentry = Provisioning.getInstance().getCosByName(name);      break;
-                case ACL.GRANTEE_DOMAIN:  nentry = Provisioning.getInstance().getDomainByName(name);   break;
+                case ACL.GRANTEE_USER:    if (name.indexOf('@') == -1) {
+                                              Account authacct = prov.getAccountById(lc.getAuthtokenAccountId());
+                                              String authname = (authacct == null ? null : authacct.getName());
+                                              if (authacct != null)
+                                                  name += authname.substring(authname.indexOf('@'));
+                                          }
+                                          nentry = prov.getAccountByName(name);  break;
+                case ACL.GRANTEE_COS:     nentry = prov.getCosByName(name);      break;
+                case ACL.GRANTEE_DOMAIN:  nentry = prov.getDomainByName(name);   break;
                 case ACL.GRANTEE_GROUP:   nentry = null;                                               break;
             }
 
