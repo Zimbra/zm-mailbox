@@ -203,7 +203,7 @@ public class FileUploadServlet extends ZimbraServlet {
         synchronized (mPending) {
             up = (Upload) mPending.remove(upload.uuid);
         }
-        if (up != upload)
+        if (up != upload && up != null)
             up.purge();
     }
 
