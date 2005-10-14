@@ -75,11 +75,11 @@ public class NetUtil {
         ServerSocket serverSocket = NetUtil.newBoundServerSocket(address, port, ssl);
         System.err.println("put table=" + mBoundSockets.hashCode() + " key=" + key + " sock=" + serverSocket);
         mBoundSockets.put(makeKey(address, port, ssl), serverSocket);
-        dumpMap();
+        //dumpMap();
     }
 
     private static ServerSocket getAlreadyBoundServerSocket(String address, int port, boolean ssl) {
-        dumpMap();
+        //dumpMap();
         String key = makeKey(address, port, ssl);
         ServerSocket serverSocket = (ServerSocket)mBoundSockets.get(key);
         System.err.println("get table=" + mBoundSockets.hashCode() + " key=" + key + " sock=" + serverSocket);
