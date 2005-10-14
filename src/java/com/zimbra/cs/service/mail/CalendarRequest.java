@@ -65,7 +65,7 @@ public abstract class CalendarRequest extends SendMsg {
     throws ServiceException {
         CalSendData csd = new CalSendData();
 
-        assert(inviteParser.getResult() != null);
+        assert(inviteParser.getResult() == null);
 
         // check to see if this message is a reply -- if so, then we'll want to note that so 
         // we can more-correctly match the conversations up

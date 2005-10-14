@@ -399,13 +399,21 @@ public class CalendarUtils {
         // Workaround for bug in Outlook, which double-quotes TZID parameter
         // value in properties like DTSTART, DTEND, etc.  Use unquoted tzId.
         int len = tzId.length();
-        if (len >= 2 && tzId.charAt(0) == '"' && tzId.charAt(len - 1) == '"')
+        if (len >= 2 && tzId.charAt(0) == '"' && tzId.charAt(len - 1) == '"') {
             tzId = tzId.substring(1, len - 1);
+        }
 
-        WellKnownTimeZone knownTZ = Provisioning.getInstance().getTimeZoneById(tzId);
         ICalTimeZone zone = null;
-        if (knownTZ != null)
+        
+        if (tzId.equals("")) {
+            return null;
+        } 
+        
+        WellKnownTimeZone knownTZ = Provisioning.getInstance().getTimeZoneById(tzId);
+        if (knownTZ != null) {
             zone = knownTZ.toTimeZone();
+        }
+        
         if (zone == null) {
             // Could be a custom TZID during modify operation of invite from
             // external calendar system.  Look up the TZID from the invite.
