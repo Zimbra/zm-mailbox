@@ -60,6 +60,10 @@ public class GetFreeBusy extends WriteOpDocumentHandler {
     private static Log sLog = LogFactory.getLog(GetFreeBusy.class);
     private static StopWatch sWatch = StopWatch.getInstance("GetFreeBusy");
     
+    private static final long MSEC_PER_DAY = 1000*60*60*24;
+    
+    private static final long MAX_PERIOD_SIZE_IN_DAYS = 200;
+    
     
     public Element handle(Element request, Map context) throws ServiceException 
     {
@@ -69,6 +73,17 @@ public class GetFreeBusy extends WriteOpDocumentHandler {
 
             long rangeStart = request.getAttributeLong(MailService.A_APPT_START_TIME);
             long rangeEnd = request.getAttributeLong(MailService.A_APPT_END_TIME);
+            
+            if (rangeEnd < rangeStart) {
+                throw ServiceException.INVALID_REQUEST("End time must be after Start time", null);
+            }
+            
+            long days = (rangeEnd-rangeStart)/MSEC_PER_DAY;
+            if (days > MAX_PERIOD_SIZE_IN_DAYS) {
+                throw ServiceException.INVALID_REQUEST("Requested range is too large (Maximum "+MAX_PERIOD_SIZE_IN_DAYS+" days)", null);
+            }
+            
+            
             
             Element response = zc.createElement(MailService.GET_FREE_BUSY_RESPONSE);
             

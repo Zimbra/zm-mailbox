@@ -63,6 +63,9 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
     protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
 
     private static final String DEFAULT_FOLDER = "" + Mailbox.ID_AUTO_INCREMENT;
+    
+    private static final long MSEC_PER_DAY = 1000*60*60*24;
+    private static final long MAX_PERIOD_SIZE_IN_DAYS = 200; 
 
     public Element handle(Element request, Map context) throws ServiceException {
         long startTime = sWatch.start();
@@ -73,6 +76,17 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
 
             long rangeStart = request.getAttributeLong(MailService.A_APPT_START_TIME);
             long rangeEnd = request.getAttributeLong(MailService.A_APPT_END_TIME);
+            
+            if (rangeEnd < rangeStart) {
+                throw ServiceException.INVALID_REQUEST("End time must be after Start time", null);
+            }
+            
+            long days = (rangeEnd-rangeStart)/MSEC_PER_DAY;
+            if (days > MAX_PERIOD_SIZE_IN_DAYS) {
+                throw ServiceException.INVALID_REQUEST("Requested range is too large (Maximum "+MAX_PERIOD_SIZE_IN_DAYS+" days)", null);
+            }
+            
+            
             ItemId iidFolder = new ItemId(request.getAttribute(MailService.A_FOLDER, DEFAULT_FOLDER));
 
             Collection appointments = mbox.getAppointmentsForRange(lc.getOperationContext(), rangeStart, rangeEnd, iidFolder.getId());

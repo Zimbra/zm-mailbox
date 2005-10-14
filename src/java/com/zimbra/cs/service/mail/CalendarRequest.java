@@ -81,9 +81,8 @@ public abstract class CalendarRequest extends SendMsg {
         // message here, so that we can copy it into the DESCRIPTION field in the iCalendar data that
         // goes out...will make for much better interop!
 
-        if (inviteParser.getResult() == null || inviteParser.getResult().mInvite == null) {
-            assert(inviteParser.getResult() != null);
-        }
+        assert(inviteParser.getResult() != null);
+
         csd.mInvite = inviteParser.getResult().mInvite;
 
         csd.mSaveToSent = shouldSaveToSent(acct);
