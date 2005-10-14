@@ -263,7 +263,8 @@ public class SendMsg extends WriteOpDocumentHandler {
                     else if (TYPE_FORWARD.equals(replyType))
                         mbox.alterTag(octxt, origId, MailItem.TYPE_MESSAGE, Flag.ID_FLAG_FORWARDED, true);
                 } catch (ServiceException e) {
-                    mLog.warn("ignoring error while setting REPLIED/FORWARDED tag on message: " + origId, e);
+                    // this is not an error case: when accepting/declining an appointment, the original
+                    // message may be gone
                 }
             }
 
