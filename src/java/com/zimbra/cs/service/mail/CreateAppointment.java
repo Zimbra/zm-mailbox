@@ -55,7 +55,7 @@ public class CreateAppointment extends CalendarRequest {
     protected boolean checkMountpointProxy()  { return true; }
     protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
 
-    private static final String DEFAULT_FOLDER = "" + Mailbox.ID_FOLDER_CALENDAR;
+    static final String DEFAULT_FOLDER = "" + Mailbox.ID_FOLDER_CALENDAR;
 
     // very simple: generate a new UID and send a REQUEST
     protected static class CreateAppointmentInviteParser extends ParseMimeMessage.InviteParser { 

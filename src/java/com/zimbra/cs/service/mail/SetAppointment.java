@@ -35,17 +35,24 @@ import org.apache.commons.logging.LogFactory;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.Mailbox.SetAppointmentData;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
 public class SetAppointment extends CalendarRequest {
+
     private static Log sLog = LogFactory.getLog(SetAppointment.class);
     private static StopWatch sWatch = StopWatch.getInstance("SetAppointment");
-    
+
+    private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.A_FOLDER };
+    protected String[] getProxiedIdPath()     { return TARGET_FOLDER_PATH; }
+    protected boolean checkMountpointProxy()  { return true; }
+
     protected static class SetAppointmentInviteParser extends ParseMimeMessage.InviteParser {
         
         private boolean mExceptOk = false;
@@ -73,51 +80,48 @@ public class SetAppointment extends CalendarRequest {
             Mailbox mbox = getRequestedMailbox(lc);
             OperationContext octxt = lc.getOperationContext();
             
-            int folder = (int)request.getAttributeLong(MailService.A_FOLDER, Mailbox.ID_FOLDER_CALENDAR);
+            ItemId iidFolder = new ItemId(request.getAttribute(MailService.A_FOLDER, CreateAppointment.DEFAULT_FOLDER));
             
             sLog.info("<SetAppointment> " + lc.toString());
             
-            Mailbox.SetAppointmentData defaultData;
-            ArrayList /* Mailbox.SetAppointmentData */ exceptions = new ArrayList();
+            SetAppointmentData defaultData;
+            ArrayList /* SetAppointmentData */ exceptions = new ArrayList();
             
             synchronized (mbox) {
-                
                 // First, the <default>
                 {
                     Element e = request.getElement(MailService.A_DEFAULT);
-                    
                     defaultData = getSetAppointmentData(lc, acct, mbox, e, new SetAppointmentInviteParser(false));
                 }
                 
                 // for each <exception>
-                for (Iterator iter = request.elementIterator(MailService.A_EXCEPT); iter.hasNext();) {
-                    Element e = (Element)iter.next();
-                    
-                    Mailbox.SetAppointmentData exDat = getSetAppointmentData(lc, acct, mbox, e, new SetAppointmentInviteParser(true));
+                for (Iterator iter = request.elementIterator(MailService.A_EXCEPT); iter.hasNext(); ) {
+                    Element e = (Element) iter.next();
+                    SetAppointmentData exDat = getSetAppointmentData(lc, acct, mbox, e, new SetAppointmentInviteParser(true));
                     exceptions.add(exDat);
                 }
                 
                 
-                Mailbox.SetAppointmentData[] exceptArray = null;
+                SetAppointmentData[] exceptArray = null;
                 if (exceptions.size() > 0) {
-                    exceptArray = new Mailbox.SetAppointmentData[exceptions.size()];
+                    exceptArray = new SetAppointmentData[exceptions.size()];
                     exceptions.toArray(exceptArray);
                 }
                 
-                int apptId = mbox.setAppointment(octxt, folder, defaultData, exceptArray);
+                int apptId = mbox.setAppointment(octxt, iidFolder.getId(), defaultData, exceptArray);
                 
                 Element response = lc.createElement(MailService.SET_APPOINTMENT_RESPONSE);
-                
-                Element def = response.addElement(MailService.A_DEFAULT);
-                def.addAttribute(MailService.A_ID, defaultData.mInv.getMailItemId());
+
+                response.addElement(MailService.A_DEFAULT)
+                        .addAttribute(MailService.A_ID, lc.formatItemId(defaultData.mInv.getMailItemId()));
                 
                 for (Iterator iter = exceptions.iterator(); iter.hasNext();) {
-                    Mailbox.SetAppointmentData cur = (Mailbox.SetAppointmentData)iter.next();
+                    SetAppointmentData cur = (SetAppointmentData) iter.next();
                     Element e = response.addElement(MailService.A_EXCEPT);
                     e.addAttribute(MailService.A_APPT_RECURRENCE_ID, cur.mInv.getRecurId().toString());
-                    e.addAttribute(MailService.A_ID, cur.mInv.getMailItemId());
+                    e.addAttribute(MailService.A_ID, lc.formatItemId(cur.mInv.getMailItemId()));
                 }
-                response.addAttribute(MailService.A_APPT_ID, apptId);
+                response.addAttribute(MailService.A_APPT_ID, lc.formatItemId(apptId));
                 
                 return response;
             } // synchronized(mbox)
@@ -126,9 +130,9 @@ public class SetAppointment extends CalendarRequest {
         }
     }
     
-    static private Mailbox.SetAppointmentData getSetAppointmentData(ZimbraContext lc, Account acct, Mailbox mbox, 
-            Element e, ParseMimeMessage.InviteParser parser) throws ServiceException {
-        
+    static private SetAppointmentData getSetAppointmentData(ZimbraContext lc, Account acct, Mailbox mbox, 
+                                                            Element e, ParseMimeMessage.InviteParser parser)
+    throws ServiceException {
         boolean needsReply = e.getAttributeBool(MailService.A_APPT_NEEDS_REPLY, true);
         String partStatStr = e.getAttribute(MailService.A_APPT_PARTSTAT, "TE");
                                 
@@ -167,11 +171,10 @@ public class SetAppointment extends CalendarRequest {
         
         inv.modifyPartStatInMemory(needsReply, partStatStr);
         
-        Mailbox.SetAppointmentData toRet = new Mailbox.SetAppointmentData();
-        toRet.mInv = inv;
-        toRet.mPm = pm;
-        toRet.mForce = true;
-        
-        return toRet;
+        SetAppointmentData sadata = new SetAppointmentData();
+        sadata.mInv = inv;
+        sadata.mPm = pm;
+        sadata.mForce = true;
+        return sadata;
     }
 }
