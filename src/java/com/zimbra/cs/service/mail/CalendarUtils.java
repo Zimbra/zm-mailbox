@@ -61,7 +61,6 @@ import net.fortuna.ical4j.model.parameter.Cn;
 import net.fortuna.ical4j.model.parameter.PartStat;
 import net.fortuna.ical4j.model.property.Method;
 import net.fortuna.ical4j.model.property.Organizer;
-import net.fortuna.ical4j.util.Uris;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;

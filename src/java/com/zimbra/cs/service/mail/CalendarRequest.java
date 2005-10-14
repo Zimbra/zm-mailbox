@@ -33,7 +33,6 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
@@ -48,6 +47,18 @@ public abstract class CalendarRequest extends SendMsg {
         Invite mInvite;
     }
 
+    /**
+     * 
+     * parses an <m> element using the passed-in InviteParser
+     * 
+     * @param lc
+     * @param msgElem
+     * @param acct
+     * @param mbox
+     * @param inviteParser
+     * @return
+     * @throws ServiceException
+     */
     protected static CalSendData handleMsgElement(ZimbraContext lc, Element msgElem, Account acct,
                                                   Mailbox mbox, ParseMimeMessage.InviteParser inviteParser)
     throws ServiceException {

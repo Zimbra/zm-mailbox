@@ -60,6 +60,9 @@ class CalendarDataSource implements DataSource
         this.iCal = iCal;
         mUid = uid;
         mAttachName = attachmentName;
+        if (mAttachName == null || mAttachName.equals("")) {
+            mAttachName = "meeting.ics";
+        }
         
         Method method = (Method)(iCal.getProperties().getProperty(Property.METHOD));
         
@@ -73,7 +76,10 @@ class CalendarDataSource implements DataSource
         ct.setPrimaryType("text");
         ct.setSubType("calendar");
         ct.setParameter("method", mMethod);
-        ct.setParameter("name", "meeting.ics");
+        if (!mAttachName.toLowerCase().endsWith(".ics")) {
+            mAttachName = mAttachName+".ics";
+        }
+        ct.setParameter("name", mAttachName);
         
         return ct.toString();
     }
