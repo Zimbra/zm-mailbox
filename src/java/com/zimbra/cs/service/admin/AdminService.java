@@ -197,6 +197,9 @@ public class AdminService implements DocumentService {
     public static final QName GET_VERSION_INFO_REQUEST = QName.get("GetVersionInfoRequest", NAMESPACE);
     public static final QName GET_VERSION_INFO_RESPONSE = QName.get("GetVersionInfoResponse", NAMESPACE);
 
+    public static final QName GET_LICENSE_INFO_REQUEST = QName.get("GetLicenseInfoRequest", NAMESPACE);
+    public static final QName GET_LICENSE_INFO_RESPONSE = QName.get("GetLicenseInfoResponse", NAMESPACE);
+
     
     public static final String E_ACCOUNT = "account";
     public static final String E_AUTH_TOKEN = "authToken";
@@ -287,6 +290,10 @@ public class AdminService implements DocumentService {
     public static final String A_VERSION_INFO_DATE = "buildDate";
     public static final String A_VERSION_INFO_HOST = "host";
 
+    public static final String E_LICENSE_EXPIRATION = "expiration";
+    public static final String A_LICENSE_EXPIRATION_DATE = "date";
+    public static final String A_LICENSE_EXPIRATION_IS_EXPIRED = "isExpired";
+
 
 	public static final String ADMIN_URI = "https://localhost:7071/";
 	
@@ -368,6 +375,8 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(RENAME_DISTRIBUTION_LIST_REQUEST, new RenameDistributionList());
 
         dispatcher.registerHandler(GET_VERSION_INFO_REQUEST, new GetVersionInfo());
+        dispatcher.registerHandler(GET_LICENSE_INFO_REQUEST, new GetLicenseInfo());
+        
     }
 
     /**

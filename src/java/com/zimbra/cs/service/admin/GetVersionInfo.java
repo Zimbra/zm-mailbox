@@ -47,4 +47,13 @@ public class GetVersionInfo extends AdminDocumentHandler
         infoEl.addAttribute(AdminService.A_VERSION_INFO_HOST, BuildInfo.HOST);
         return response;
     }
+
+    public boolean needsAdminAuth(Map context) {
+        return false;
+    }
+
+    public boolean needsAuth(Map context) {
+        return false;
+    }
+
 }

@@ -883,3 +883,11 @@ Notes:
 </GetVersionInfoResponse>
 
 -----------------------------
+
+<GetLicenseInfoRequest/>
+
+<GetLicenseInfoResponse>
+  <expiration date={date-YYYYMMDD-format} isExpired={boolean}></expiration>
+</GetLicenseInfoResponse>
+
+-----------------------------
