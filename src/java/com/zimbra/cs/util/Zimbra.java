@@ -23,21 +23,12 @@
  * ***** END LICENSE BLOCK *****
  */
 
-/*
- * Created on 2004. 9. 9.
- *
- * TODO To change the template for this generated file go to
- * Window - Preferences - Java - Code Generation - Code and Comments
- */
 package com.zimbra.cs.util;
 
 import java.util.Timer;
 
-import javax.naming.directory.DirContext;
-
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.convert.TransformationStub;
 import com.zimbra.cs.db.Versions;
 import com.zimbra.cs.extension.ExtensionUtil;
@@ -60,7 +51,7 @@ import com.zimbra.cs.localconfig.LC;
  * logging and indexing.
  */
 public class Zimbra {
-	private static boolean sInited = false;
+    private static boolean sInited = false;
 
     private static void checkForClass(String clzName, String jarName) {
         try {
@@ -79,67 +70,38 @@ public class Zimbra {
         checkForClass("com.zimbra.znative.IO", "zimbra-native.jar");
     }
 
-    private static void checkLDAP() {
-        DirContext ctxt = null;
-        try {
-            ctxt = LdapUtil.getDirContext();
-        } catch (ServiceException e) {
-            throw new RuntimeException("Error communicating with LDAP", e);
-        } finally {
-            LdapUtil.closeContext(ctxt);
-        }
-    }
-    
-    public static void toolSetup() {
-        toolSetup("INFO");
-    }
-
-    public static void toolSetup(String defaultLogLevel) {
-    	toolSetup(defaultLogLevel, false);
-    }
-    
-    public static void toolSetup(String defaultLogLevel, boolean showThreads) {
-        ZimbraLog.toolSetupLog4j(defaultLogLevel, showThreads);
-        if (LC.ssl_allow_untrusted_certs.booleanValue())
-            EasySSLProtocolSocketFactory.init();
-    }
-
-	public static synchronized void startup() throws ServiceException {
-		if (sInited)
-			return;
-
-        ZimbraLog.configure();
-
+    public static synchronized void startup() throws ServiceException {
+        if (sInited)
+            return;
+        
         ZimbraLog.misc.info(
-                "version=" + BuildInfo.VERSION +
-                " release=" + BuildInfo.RELEASE +
-                " builddate=" + BuildInfo.DATE +
-                " buildhost=" + BuildInfo.HOST);
+                            "version=" + BuildInfo.VERSION +
+                            " release=" + BuildInfo.RELEASE +
+                            " builddate=" + BuildInfo.DATE +
+                            " buildhost=" + BuildInfo.HOST);
         
         if (LC.ssl_allow_untrusted_certs.booleanValue())
             EasySSLProtocolSocketFactory.init();
-
+        
         checkForClasses();
         
-        checkLDAP();
-        
     	if (!Versions.checkVersions())
-        	throw new RuntimeException("Data version mismatch.  Reinitialize or upgrade the backend data store.");
-
+            throw new RuntimeException("Data version mismatch.  Reinitialize or upgrade the backend data store.");
+        
     	ExtensionUtil.loadAll();
     	ExtensionUtil.initAll();
     	
         TransformationStub.getInstance().init();
         
         Indexer.GetInstance().startup();
-
+        
         RedoLogProvider redoLog = RedoLogProvider.getInstance();
         redoLog.startup();
-
+        
         System.setProperty("javax.net.ssl.keyStore", LC.tomcat_keystore.value());
         System.setProperty("javax.net.ssl.keyStorePassword", "zimbra");
         System.setProperty("ical4j.unfolding.relaxed", "true");
-
+        
         if (!redoLog.isSlave()) {
             Server server = Provisioning.getInstance().getLocalServer();
             LmtpServer.startupLmtpServer();
@@ -154,35 +116,35 @@ public class Zimbra {
         }
 
         sInited = true;
-	}
+    }
 
-	public static synchronized void shutdown() throws ServiceException {
-		if (!sInited)
-			return;
+    public static synchronized void shutdown() throws ServiceException {
+        if (!sInited)
+            return;
 
-		sInited = false;
+        sInited = false;
         
         RedoLogProvider redoLog = RedoLogProvider.getInstance();
-		if (!redoLog.isSlave()) {
-		    LmtpServer.shutdownLmtpServer();
+        if (!redoLog.isSlave()) {
+            LmtpServer.shutdownLmtpServer();
             Pop3Server.shutdownPop3Servers();
             ImapServer.shutdownImapServers();
         }
 
-		SessionCache.shutdown();
+        SessionCache.shutdown();
 
         Indexer.GetInstance().shutdown();
 
         redoLog.shutdown();
 
-		StoreManager.getInstance().shutdown();
+        StoreManager.getInstance().shutdown();
 
         TransformationStub.getInstance().destroy();
         
         ExtensionUtil.destroyAll();
         
-		sTimer.cancel();
-	}
+        sTimer.cancel();
+    }
 
     public static Timer sTimer = new Timer(true);
 
@@ -212,4 +174,20 @@ public class Zimbra {
             Runtime.getRuntime().halt(1);
         }
     }
+
+    public static void toolSetup() {
+        toolSetup("INFO");
+    }
+
+    public static void toolSetup(String defaultLogLevel) {
+    	toolSetup(defaultLogLevel, false);
+    }
+    
+    public static void toolSetup(String defaultLogLevel, boolean showThreads) {
+        ZimbraLog.toolSetupLog4j(defaultLogLevel, showThreads);
+        if (LC.ssl_allow_untrusted_certs.booleanValue())
+            EasySSLProtocolSocketFactory.init();
+    }
+
+
 }

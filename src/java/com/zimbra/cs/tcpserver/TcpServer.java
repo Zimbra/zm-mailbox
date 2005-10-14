@@ -33,16 +33,11 @@ package com.zimbra.cs.tcpserver;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-
-//import javax.net.ServerSocketFactory;
-//import javax.net.ssl.SSLServerSocket;
-import javax.net.ssl.SSLServerSocketFactory;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -74,15 +69,14 @@ public abstract class TcpServer implements Runnable {
 	private boolean mShutdownRequested;
     private boolean mSSL; 
 
-    public TcpServer(String name, int numThreads, int port, InetAddress bindAddress) {
-    	    this(name, numThreads, Thread.NORM_PRIORITY, port, bindAddress);
+    public TcpServer(String name, int numThreads, ServerSocket serverSocket) {
+    	    this(name, numThreads, Thread.NORM_PRIORITY, serverSocket);
     }
 
-    public TcpServer(String name, int numThreads, int threadPriority, int port, InetAddress bindAddress) {
+    public TcpServer(String name, int numThreads, int threadPriority, ServerSocket serverSocket) {
 		mName = name;
-		mListenPort = port;
-		mBindAddress = bindAddress;
-		mLog = LogFactory.getLog(TcpServer.class.getName() + "/" + port); 
+        mServerSocket = serverSocket;
+		mLog = LogFactory.getLog(TcpServer.class.getName() + "/" + serverSocket.getLocalPort()); 
 		mShutdownRequested = false;
 
 		if (numThreads <= 0) {
@@ -180,22 +174,6 @@ public abstract class TcpServer implements Runnable {
 
 	public void run() {
 		Thread.currentThread().setName(mName);
-
-		try {
-            if (!mSSL) {
-                mServerSocket = new ServerSocket();
-            } else {
-                SSLServerSocketFactory fact = (SSLServerSocketFactory)
-                    SSLServerSocketFactory.getDefault();
-                mServerSocket = fact.createServerSocket();//mListenPort);
-            }
-			mServerSocket.setReuseAddress(true);
-			InetSocketAddress isa = new InetSocketAddress(mBindAddress, mListenPort);
-			mServerSocket.bind(isa);
-		} catch (IOException ioe) {
-			mLog.fatal("initialization failed: port=" + mListenPort, ioe);
-			return;
-		}
 
 		mLog.info("starting accept loop");
 		try {

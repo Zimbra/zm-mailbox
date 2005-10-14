@@ -39,7 +39,6 @@ import org.apache.log4j.PropertyConfigurator;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 
@@ -351,10 +350,4 @@ public class ZimbraLog {
         return sb.toString();
     }
 
-	public static void configure() {
-		// TODO we should have a ReloadConfig soap command that
-		// will reload on demand, instead of modifying
-		// and waiting for some time.
-		PropertyConfigurator.configureAndWatch(LC.zimbra_log4j_properties.value());
-	}
 }

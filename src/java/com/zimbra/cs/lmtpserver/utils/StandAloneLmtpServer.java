@@ -28,8 +28,7 @@ package com.zimbra.cs.lmtpserver.utils;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.net.ServerSocket;
 import java.util.Properties;
 
 import org.apache.commons.cli.CommandLine;
@@ -41,6 +40,8 @@ import org.apache.commons.cli.ParseException;
 
 import com.zimbra.cs.lmtpserver.LmtpBackend;
 import com.zimbra.cs.lmtpserver.LmtpServer;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.NetUtil;
 import com.zimbra.cs.util.Zimbra;
 
 public class StandAloneLmtpServer {
@@ -79,13 +80,13 @@ public class StandAloneLmtpServer {
     }
 
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws ServiceException {
         Zimbra.toolSetup();
 		
         CommandLine cl = parseArgs(args);
 
 		int port;
-		InetAddress bindAddress;
+		String address;
 		int threads;
 		
 		if (cl.hasOption("p")) {
@@ -99,15 +100,9 @@ public class StandAloneLmtpServer {
 		}
 		
 		if (cl.hasOption("a")) {
-			String name = cl.getOptionValue("a");
-			try {
-				bindAddress = InetAddress.getByName(name);
-			} catch (UnknownHostException uhe) {
-				usage("address is unknown" + uhe.getMessage());
-				return;
-			}
+			address = cl.getOptionValue("a");
 		} else {
-			bindAddress = null;
+			address = null;
 		}
 		
 		if (cl.hasOption("t")) {
@@ -132,7 +127,8 @@ public class StandAloneLmtpServer {
 			usage("maildir map file not specified");
 		}
 
-		LmtpServer lmtpServer = new LmtpServer(threads, port, bindAddress);
+        ServerSocket serverSocket = NetUtil.getBoundServerSocket(address, port, false); 
+		LmtpServer lmtpServer = new LmtpServer(threads, serverSocket);
 		lmtpServer.setConfigNameFromHostname();
 		
 		LmtpBackend backend = new MaildirBackend(maildirMap);

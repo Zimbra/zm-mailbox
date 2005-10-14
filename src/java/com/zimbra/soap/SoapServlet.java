@@ -41,7 +41,9 @@ import org.apache.commons.collections.Factory;
 import org.apache.commons.collections.map.LazyMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.PropertyConfigurator;
 
+import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ZimbraPerf;
 import com.zimbra.cs.service.util.ThreadLocalData;
@@ -81,6 +83,10 @@ public class SoapServlet extends ZimbraServlet {
     private SoapEngine mEngine;
 
     public void init() throws ServletException {
+        // TODO we should have a ReloadConfig soap command that will reload
+        // on demand, instead of modifying and waiting for some time.
+        PropertyConfigurator.configureAndWatch(LC.zimbra_log4j_properties.value());
+
         String name = getServletName();
         ZimbraLog.soap.info("Servlet " + name + " starting up");
         super.init();

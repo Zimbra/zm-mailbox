@@ -1,3 +1,4 @@
+
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Version: ZPL 1.1
@@ -590,15 +591,18 @@ public abstract class Provisioning {
 
     public static final String A_zimbraLmtpAdvertisedName = "zimbraLmtpAdvertisedName";
     public static final String A_zimbraLmtpBindPort = "zimbraLmtpBindPort";
+    public static final String A_zimbraLmtpBindOnStartup = "zimbraLmtpBindOnStartup";
     public static final String A_zimbraLmtpBindAddress = "zimbraLmtpBindAddress";
     public static final String A_zimbraLmtpNumThreads = "zimbraLmtpNumThreads";
 
     public static final String A_zimbraImapAdvertisedName = "zimbraImapAdvertisedName";
     public static final String A_zimbraImapBindPort = "zimbraImapBindPort";
+    public static final String A_zimbraImapBindOnStartup = "zimbraImapBindOnStartup";
     public static final String A_zimbraImapBindAddress = "zimbraImapBindAddress";
     public static final String A_zimbraImapNumThreads = "zimbraImapNumThreads";        
     public static final String A_zimbraImapServerEnabled = "zimbraImapServerEnabled";        
     public static final String A_zimbraImapSSLBindPort = "zimbraImapSSLBindPort";
+    public static final String A_zimbraImapSSLBindOnStartup = "zimbraImapSSLBindOnStartup";
     public static final String A_zimbraImapSSLBindAddress = "zimbraImapSSLBindAddress";
     public static final String A_zimbraImapSSLServerEnabled = "zimbraImapSSLServerEnabled";            
     public static final String A_zimbraImapCleartextLoginEnabled = "zimbraImapCleartextLoginEnabled";    
@@ -606,10 +610,12 @@ public abstract class Provisioning {
 
     public static final String A_zimbraPop3AdvertisedName = "zimbraPop3AdvertisedName";
     public static final String A_zimbraPop3BindPort = "zimbraPop3BindPort";
+    public static final String A_zimbraPop3BindOnStartup = "zimbraPop3BindOnStartup";
     public static final String A_zimbraPop3BindAddress = "zimbraPop3BindAddress";
     public static final String A_zimbraPop3NumThreads = "zimbraPop3NumThreads";
     public static final String A_zimbraPop3ServerEnabled = "zimbraPop3ServerEnabled";        
     public static final String A_zimbraPop3SSLBindPort = "zimbraPop3SSLBindPort";
+    public static final String A_zimbraPop3SSLBindOnStartup = "zimbraPop3SSLBindOnStartup";
     public static final String A_zimbraPop3SSLBindAddress = "zimbraPop3SSLBindAddress";
     public static final String A_zimbraPop3SSLServerEnabled = "zimbraPop3SSLServerEnabled";            
     public static final String A_zimbraPop3CleartextLoginEnabled = "zimbraPop3CleartextLoginEnabled";    
@@ -727,11 +733,11 @@ public abstract class Provisioning {
 
     public static Provisioning getInstance() {
         // TODO: config/property to allow for MySQL, etc.
-        if (mProvisioning == null) synchronized(Provisioning.class) {
+        synchronized(Provisioning.class) {
             if (mProvisioning == null)
                 mProvisioning = new LdapProvisioning();
+            return mProvisioning;
         }
-        return mProvisioning;
     }
 
     public abstract boolean healthCheck();

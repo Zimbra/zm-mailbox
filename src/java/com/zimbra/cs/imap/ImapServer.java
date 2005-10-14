@@ -28,14 +28,15 @@
  */
 package com.zimbra.cs.imap;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.net.ServerSocket;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServer;
+import com.zimbra.cs.util.Config;
+import com.zimbra.cs.util.NetUtil;
 import com.zimbra.cs.util.Zimbra;
 
 /**
@@ -56,8 +57,8 @@ public class ImapServer extends TcpServer {
     private boolean mConnectionSSL;
 
 
-	public ImapServer(int numThreads, int port, InetAddress bindAddress, boolean loginOK, boolean ssl) {
-        super(ssl ? "ImapSSLServer" : "ImapServer", numThreads, port, bindAddress);
+	public ImapServer(int numThreads, ServerSocket serverSocket, boolean loginOK, boolean ssl) {
+        super(ssl ? "ImapSSLServer" : "ImapServer", numThreads, serverSocket);
         mAllowCleartextLogins = loginOK;
         mConnectionSSL = ssl;
     }
@@ -87,17 +88,6 @@ public class ImapServer extends TcpServer {
     public String getBanner()  { return mBanner; }
     public String getGoodbye() { return mGoodbye; }
 
-    private static InetAddress getBindAddress(String address) throws ServiceException {
-        InetAddress bindAddress = null;
-        if (address != null && address.length() > 0)
-            try {
-                bindAddress = InetAddress.getByName(address);
-            } catch (UnknownHostException uhe) {
-                throw ServiceException.FAILURE(uhe.getMessage(), uhe);
-            }
-        return bindAddress;
-    }
-
     public synchronized static void startupImapServer() throws ServiceException {
         if (sImapServer != null)
             return;
@@ -105,10 +95,12 @@ public class ImapServer extends TcpServer {
         Server server = Provisioning.getInstance().getLocalServer();
         int threads = server.getIntAttr(Provisioning.A_zimbraImapNumThreads, 10);
         boolean loginOK = server.getBooleanAttr(Provisioning.A_zimbraImapCleartextLoginEnabled, false);
-        InetAddress address = getBindAddress(server.getAttr(Provisioning.A_zimbraImapBindAddress, null));
-        int port = server.getIntAttr(Provisioning.A_zimbraImapBindPort, 7143);
+        String address = server.getAttr(Provisioning.A_zimbraImapBindAddress, null);
+        int port = server.getIntAttr(Provisioning.A_zimbraImapBindPort, Config.D_IMAP_BIND_PORT);
 
-        sImapServer = new ImapServer(threads, port, address, loginOK, false);
+        ServerSocket serverSocket = NetUtil.getBoundServerSocket(address, port, false);
+
+        sImapServer = new ImapServer(threads, serverSocket, loginOK, false);
         sImapServer.setSSL(false);
         sImapServer.setHostname(server);
         
@@ -123,10 +115,12 @@ public class ImapServer extends TcpServer {
 
         Server server = Provisioning.getInstance().getLocalServer();
         int threads = server.getIntAttr(Provisioning.A_zimbraImapNumThreads, 10);
-        InetAddress address = getBindAddress(server.getAttr(Provisioning.A_zimbraImapSSLBindAddress, null));
-        int port = server.getIntAttr(Provisioning.A_zimbraImapSSLBindPort, 7993);
-
-        sImapSSLServer = new ImapServer(threads, port, address, true, true);
+        String address = server.getAttr(Provisioning.A_zimbraImapSSLBindAddress, null);
+        int port = server.getIntAttr(Provisioning.A_zimbraImapSSLBindPort, Config.D_IMAP_SSL_BIND_PORT);
+        
+        ServerSocket serverSocket = NetUtil.getBoundServerSocket(address, port, true);
+        
+        sImapSSLServer = new ImapServer(threads, serverSocket, true, true);
         sImapSSLServer.setSSL(true);
         sImapSSLServer.setHostname(server);
 

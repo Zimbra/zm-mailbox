@@ -41,15 +41,19 @@ import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 
-
 /**
  * @author schemers
  */
 public class Config {
 
     public static final int D_LMTP_THREADS = 10;
+    
     public static final int D_LMTP_BIND_PORT = 7025;
-
+    public static final int D_IMAP_BIND_PORT = 143;
+    public static final int D_IMAP_SSL_BIND_PORT = 993;
+    public static final int D_POP3_BIND_PORT = 110;
+    public static final int D_POP3_SSL_BIND_PORT = 995;
+    
     public static final int D_SMTP_TIMEOUT = 60;
     public static final int D_SMTP_PORT = 25;
 

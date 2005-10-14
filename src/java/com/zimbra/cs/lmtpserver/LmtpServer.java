@@ -25,17 +25,20 @@
 
 package com.zimbra.cs.lmtpserver;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.net.ServerSocket;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.stats.Counter;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServer;
+import com.zimbra.cs.util.Config;
+import com.zimbra.cs.util.NetUtil;
 
 public class LmtpServer extends TcpServer {
 
@@ -47,9 +50,9 @@ public class LmtpServer extends TcpServer {
 
 	private Log mLog;
 
-	public LmtpServer(int numThreads, int port, InetAddress bindAddress) {
-		super("LmtpServer", numThreads, port, bindAddress);
-		mLog = LogFactory.getLog(LmtpServer.class.getName() + "/" + port); 
+	public LmtpServer(int numThreads, ServerSocket serverSocket) {
+		super("LmtpServer", numThreads, serverSocket);
+		mLog = LogFactory.getLog(LmtpServer.class.getName() + "/" + serverSocket.getLocalPort()); 
 	}
 
 	protected ProtocolHandler newProtocolHandler() {
@@ -163,23 +166,21 @@ public class LmtpServer extends TcpServer {
 	public static void startupLmtpServer() throws ServiceException {
 		if (theInstance != null)
 			return;
-	    LmtpConfig config = new LmtpConfig();
 
-        InetAddress bindAddress = null;
-        if (config.getBindAddress() != null && config.getBindAddress().length() > 0) {
-            try {
-                bindAddress = InetAddress.getByName(config.getBindAddress());
-            } catch (UnknownHostException uhe) {
-                throw ServiceException.FAILURE(uhe.getMessage(), uhe);
-            }
-        }
+        Server config = Provisioning.getInstance().getLocalServer();
+        int numThreads = config.getIntAttr(Provisioning.A_zimbraLmtpNumThreads, Config.D_LMTP_THREADS);
+        int port = config.getIntAttr(Provisioning.A_zimbraLmtpBindPort, Config.D_LMTP_BIND_PORT);
+        String address = config.getAttr(Provisioning.A_zimbraLmtpBindAddress, null);
+        String advertisedName = config.getAttr(Provisioning.A_zimbraLmtpAdvertisedName, null);
 
-        theInstance = new LmtpServer(config.getNumThreads(), config.getPort(), bindAddress);
+        ServerSocket serverSocket = NetUtil.getBoundServerSocket(address, port, false);
 
-        if (config.getAdvertisedName() == null || config.getAdvertisedName().length() == 0) {
+        theInstance = new LmtpServer(numThreads, serverSocket);
+
+        if (advertisedName == null || advertisedName.length() == 0) {
             theInstance.setConfigNameFromHostname();
         } else {
-            theInstance.setConfigName(config.getAdvertisedName());
+            theInstance.setConfigName(advertisedName);
         }
         theInstance.setConfigBackend(new ZimbraLmtpBackend());
         Thread lmtpThread = new Thread(theInstance);

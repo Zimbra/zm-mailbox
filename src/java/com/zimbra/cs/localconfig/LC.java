@@ -86,6 +86,9 @@ public class LC {
     public static final KnownKey zimbra_ldap_userdn;
     public static final KnownKey zimbra_ldap_password;
     public static final KnownKey zimbra_server_hostname;
+    public static final KnownKey zimbra_user;
+    public static final KnownKey zimbra_uid;
+    public static final KnownKey zimbra_gid;
     public static final KnownKey zimbra_log4j_properties;
 
     public static final KnownKey zimbra_index_max_uncommited_operations;
@@ -221,6 +224,24 @@ public class LC {
             ("The provisioned name of this server. There should exist" +
              " a corresponding `server' entry in LDAP - consult" +
              " documentation for CreateServer command of the zmprov program.");
+
+        zimbra_user = new KnownKey("zimbra_user");
+        zimbra_user.setDefault("zimbra");
+        zimbra_user.setDoc
+            ("The zimbra unix user to which the zimbra server process must" +
+             " switch privileges to, after binding privileged ports.");
+
+        zimbra_uid = new KnownKey("zimbra_uid");
+        zimbra_uid.setDefault("-1");
+        zimbra_uid.setDoc
+            ("The zimbra unix uid to which the zimbra server process must" +
+             " switch privileges to, after binding privileged ports.");
+
+        zimbra_gid = new KnownKey("zimbra_gid");
+        zimbra_gid.setDefault("-1");
+        zimbra_gid.setDoc
+            ("The zimbra unix gid to which the zimbra server process must" +
+             " switch privileges to, after binding privileged ports.");
 
         zimbra_log4j_properties = new KnownKey("zimbra_log4j_properties");
         zimbra_log4j_properties.setDefault("${zimbra_home}" + FS + "conf" + FS + "log4j.properties");

@@ -37,9 +37,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -70,13 +69,12 @@ import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServer;
 import com.zimbra.cs.tcpserver.TcpServerInputStream;
 import com.zimbra.cs.util.ExceptionToString;
+import com.zimbra.cs.util.NetUtil;
 import com.zimbra.cs.util.Zimbra;
 
 
@@ -1000,22 +998,15 @@ public class IndexEditor {
     static IndexEditorTcpServer sTcpServer = null;
     static IndexEditorProtocolhandler sIndexEditorProtocolHandler;
     static int sPortNo = 7035;
-    static InetAddress sBindAddress;
     static IndexEditorTcpThread tcpServerThread;
     static Thread sThread;
     
-    public static void StartTcpEditor() 
+    public static void StartTcpEditor() throws ServiceException
     {
-        try {
-            sBindAddress = InetAddress.getByName("0.0.0.0");
-        } catch(UnknownHostException e) {
-            mLog.error("Caught "+ExceptionToString.ToString(e));
-        }
-
-        sTcpServer = new IndexEditorTcpServer("IndexEditorTcpServer", 3, Thread.NORM_PRIORITY, sPortNo,  sBindAddress);
+        ServerSocket serverSocket = NetUtil.getBoundServerSocket(null, sPortNo, false);
+        sTcpServer = new IndexEditorTcpServer("IndexEditorTcpServer", 3, Thread.NORM_PRIORITY, serverSocket);
         sIndexEditorProtocolHandler = new IndexEditorProtocolhandler(sTcpServer);
         sTcpServer.addActiveHandler(sIndexEditorProtocolHandler);
-        
         sThread = new Thread(new IndexEditorTcpThread(), "IndexEditor-TcpServer"); 
         sThread.start();
     }
@@ -1055,8 +1046,8 @@ public class IndexEditor {
     
     private static class IndexEditorTcpServer extends TcpServer {
         
-        IndexEditorTcpServer(String name, int numThreads, int threadPriority, int port, InetAddress bindAddress) {
-            super(name, numThreads, threadPriority, port, bindAddress);
+        IndexEditorTcpServer(String name, int numThreads, int threadPriority, ServerSocket serverSocket) {
+            super(name, numThreads, threadPriority, serverSocket);
         }
         protected ProtocolHandler newProtocolHandler() {
             return new IndexEditorProtocolhandler(this);

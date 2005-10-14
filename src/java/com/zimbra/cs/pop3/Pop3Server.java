@@ -25,8 +25,7 @@
 
 package com.zimbra.cs.pop3;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.net.ServerSocket;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -37,13 +36,13 @@ import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServer;
+import com.zimbra.cs.util.Config;
+import com.zimbra.cs.util.NetUtil;
 import com.zimbra.cs.util.Zimbra;
 
 public class Pop3Server extends TcpServer {
 
     private static final int D_POP3_THREADS = 10;
-    private static final int D_POP3_BIND_PORT = 7110;
-    private static final int D_POP3_BIND_SSL_PORT = 7995;    
     private static final String D_POP3_BIND_ADDRESS = null;
     private static final String D_POP3_ANNOUNCE_NAME = null;
 
@@ -57,9 +56,9 @@ public class Pop3Server extends TcpServer {
     boolean allowCleartextLogins()  { return mAllowCleartextLogins; }
     boolean isConnectionSSL()       { return mConnectionSSL; }
     
-	public Pop3Server(int numThreads, int port, InetAddress bindAddress, boolean loginOK, boolean ssl) {
-		super("Pop3Server", numThreads, port, bindAddress);
-		mLog = LogFactory.getLog(Pop3Server.class.getName() + "/" + port);
+	public Pop3Server(int numThreads, ServerSocket serverSocket, boolean loginOK, boolean ssl) {
+		super("Pop3Server", numThreads, serverSocket);
+		mLog = LogFactory.getLog(Pop3Server.class.getName() + "/" + serverSocket.getLocalPort());
         mAllowCleartextLogins = loginOK;
         mConnectionSSL = ssl;
 	}
@@ -130,28 +129,19 @@ public class Pop3Server extends TcpServer {
 		return mGoodbye;
 	}
 
-    private static InetAddress getBindAddress(String address) throws ServiceException {
-        InetAddress bindAddress = null;
-        if (address != null && address.length() > 0)
-            try {
-                bindAddress = InetAddress.getByName(address);
-            } catch (UnknownHostException uhe) {
-                throw ServiceException.FAILURE(uhe.getMessage(), uhe);
-            }
-        return bindAddress;
-    }
-    
 	public synchronized static void startupPop3Server() throws ServiceException {
 		if (sPopServer != null)
 			return;
         
         Server server = Provisioning.getInstance().getLocalServer();
         boolean loginOK = server.getBooleanAttr(Provisioning.A_zimbraPop3CleartextLoginEnabled, false);
-        InetAddress address = getBindAddress(server.getAttr(Provisioning.A_zimbraPop3BindAddress, D_POP3_BIND_ADDRESS));
-        int port = server.getIntAttr(Provisioning.A_zimbraPop3BindPort, D_POP3_BIND_PORT);
+        String address = server.getAttr(Provisioning.A_zimbraPop3BindAddress, D_POP3_BIND_ADDRESS);
+        int port = server.getIntAttr(Provisioning.A_zimbraPop3BindPort, Config.D_POP3_BIND_PORT);
         int numThreads = server.getIntAttr(Provisioning.A_zimbraPop3NumThreads, D_POP3_THREADS);
 
-        sPopServer = new Pop3Server(numThreads, port, address, loginOK, false);
+        ServerSocket serverSocket = NetUtil.getBoundServerSocket(address, port, false); 
+
+        sPopServer = new Pop3Server(numThreads, serverSocket, loginOK, false);
 
         String advName = server.getAttr(Provisioning.A_zimbraPop3AdvertisedName, D_POP3_ANNOUNCE_NAME);
         if (advName == null) {
@@ -170,11 +160,13 @@ public class Pop3Server extends TcpServer {
             return;
         
         Server server = Provisioning.getInstance().getLocalServer();
-        InetAddress address = getBindAddress(server.getAttr(Provisioning.A_zimbraPop3SSLBindAddress, D_POP3_BIND_ADDRESS));
-        int port = server.getIntAttr(Provisioning.A_zimbraPop3SSLBindPort, D_POP3_BIND_SSL_PORT);
+        String address = server.getAttr(Provisioning.A_zimbraPop3SSLBindAddress, D_POP3_BIND_ADDRESS);
+        int port = server.getIntAttr(Provisioning.A_zimbraPop3SSLBindPort, Config.D_POP3_SSL_BIND_PORT);
         int numThreads = server.getIntAttr(Provisioning.A_zimbraPop3NumThreads, D_POP3_THREADS);
 
-        sPopSSLServer = new Pop3Server(numThreads, port, address, true, true);
+        ServerSocket serverSocket = NetUtil.getBoundServerSocket(address, port, true);
+
+        sPopSSLServer = new Pop3Server(numThreads, serverSocket, true, true);
 
         sPopSSLServer.setSSL(true);
         
