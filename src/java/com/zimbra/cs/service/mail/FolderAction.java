@@ -63,24 +63,26 @@ public class FolderAction extends ItemAction {
         Element action = request.getElement(MailService.E_ACTION);
         String operation = action.getAttribute(MailService.A_OPERATION).toLowerCase();
 
+        Element response = lc.createElement(MailService.FOLDER_ACTION_RESPONSE);
+        Element act = response.addUniqueElement(MailService.E_ACTION);
+
         if (operation.equals(OP_TAG) || operation.equals(OP_FLAG) || operation.equals(OP_UNTAG) || operation.equals(OP_UNFLAG))
             throw MailServiceException.CANNOT_TAG();
         if (operation.endsWith(OP_UPDATE) || operation.endsWith(OP_SPAM))
             throw ServiceException.INVALID_REQUEST("invalid operation on folder: " + operation, null);
         String successes;
         if (operation.equals(OP_RENAME) || operation.equals(OP_EMPTY) || operation.equals(OP_GRANT) || operation.equals(OP_REVOKE))
-            successes = handleFolder(context, request, operation);
+            successes = handleFolder(context, request, operation, act);
         else
             successes = handleCommon(context, request, operation, MailItem.TYPE_FOLDER);
 
-        Element response = lc.createElement(MailService.FOLDER_ACTION_RESPONSE);
-        Element act = response.addUniqueElement(MailService.E_ACTION);
         act.addAttribute(MailService.A_ID, successes);
         act.addAttribute(MailService.A_OPERATION, operation);
         return response;
 	}
 
-    private String handleFolder(Map context, Element request, String operation) throws ServiceException, SoapFaultException {
+    private String handleFolder(Map context, Element request, String operation, Element actionResponse)
+    throws ServiceException, SoapFaultException {
         Element action = request.getElement(MailService.E_ACTION);
         ItemId iid = new ItemId(action.getAttribute(MailService.A_ID));
 
@@ -107,6 +109,8 @@ public class FolderAction extends ItemAction {
             String zid   = lookupZimbraId(grant.getAttribute(MailService.A_DISPLAY, null), gtype, lc);
             
             mbox.grantAccess(octxt, iid.getId(), zid, gtype, rights, inherit);
+            // kinda hacky -- return the zimbra id of the grantee in the response
+            actionResponse.addAttribute(MailService.A_ZIMBRA_ID, zid);
         } else
             throw ServiceException.INVALID_REQUEST("unknown operation: " + operation, null);
 

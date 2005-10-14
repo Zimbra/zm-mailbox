@@ -835,7 +835,7 @@ if fie="1" is set, the server will fetch the folder if it already exists rather 
 </FolderActionRequest>
 
 <FolderActionResponse>
-  <action id="{list}" op="read|delete|rename|move|empty|color|grant"/>
+  <action id="{list}" op="read|delete|rename|move|empty|color|grant" [zid="{grantee-zimbra-id}"]/>
 </FolderActionResponse>
 
   {list} = on input, list of folders to act on, on output, list of
@@ -844,6 +844,8 @@ if fie="1" is set, the server will fetch the folder if it already exists rather 
   {grantee-zimbra-id} = zimbra id of principal to revoke access from (for op="!grant" only);
                         you can use "00000000-0000-0000-0000-000000000000" to revoke acces granted to "all"
   <grant> is only specified when op="grant"
+
+output of "grant" action includes the zikmbra id the rights were granted on
 
 note that these actions (except for "grant") can be used on search folders as well as standard folders
 
