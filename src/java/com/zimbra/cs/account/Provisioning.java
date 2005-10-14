@@ -461,6 +461,8 @@ public abstract class Provisioning {
     public static final String A_zimbraPrefTimeZoneId = "zimbraPrefTimeZoneId";
     public static final String A_zimbraPrefUseTimeZoneListInCalendar = "zimbraPrefUseTimeZoneListInCalendar";
 
+    public static final String A_zimbraPrefCalendarNotifyDelegatedChanges = "zimbraPrefCalendarNotifyDelegatedChanges";
+
     /**
      * whether or not the signature is automatically included on outgoing email
      */

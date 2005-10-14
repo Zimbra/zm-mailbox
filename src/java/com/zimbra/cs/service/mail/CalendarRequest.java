@@ -26,9 +26,11 @@
 package com.zimbra.cs.service.mail;
 
 import javax.mail.MessagingException;
+import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -94,6 +96,15 @@ public abstract class CalendarRequest extends SendMsg {
         synchronized (mbox) {
             OperationContext octxt = lc.getOperationContext();
 
+            boolean notifyOwner = lc.isDelegatedRequest() && acct.getBooleanAttr(Provisioning.A_zimbraPrefCalendarNotifyDelegatedChanges, false);
+            if (notifyOwner)
+                try {
+                    InternetAddress addr = new InternetAddress(acct.getName());
+                    csd.mMm.addRecipient(javax.mail.Message.RecipientType.TO, addr);
+                } catch (MessagingException e) {
+                    throw ServiceException.FAILURE("count not add calendar owner to recipient list", e);
+                }
+
             ParsedMessage pm = new ParsedMessage(csd.mMm, mbox.attachmentsIndexingEnabled());
             int[] ids = mbox.addInvite(octxt, apptFolderId, csd.mInvite, false, pm); 
 
@@ -101,8 +112,8 @@ public abstract class CalendarRequest extends SendMsg {
             try {
                 hasRecipients = csd.mMm.getAllRecipients() != null;
             } catch (MessagingException e) { }
-            boolean saveToSent = csd.mSaveToSent && hasRecipients && !lc.isDelegatedRequest();
 
+            boolean saveToSent = csd.mSaveToSent && hasRecipients && !lc.isDelegatedRequest();
             int saveFolderId = saveToSent ? getSentFolder(acct, mbox, octxt) : 0;
 
             int msgId = sendMimeMessage(octxt, mbox, acct, saveFolderId, csd, csd.mMm, csd.mOrigId, csd.mReplyType);
