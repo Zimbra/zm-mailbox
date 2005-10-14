@@ -78,7 +78,6 @@ public class ZAttendee {
     public Boolean getRsvp() { return mRsvp != null ? mRsvp : Boolean.FALSE; }
     
     public void setAddress(String address) {
-        assert(!address.toLowerCase().contains("mailto"));
         mAddress = address; 
     }
     public void setCn(String cn) { mCn = cn; }
@@ -121,7 +120,6 @@ public class ZAttendee {
     public Metadata encodeAsMetadata() {
         Metadata meta = new Metadata();
         
-        assert(!mAddress.toLowerCase().contains("mailto"));
         meta.put(FN_ADDRESS, mAddress);
         
         if (mCn != null) {
@@ -187,7 +185,6 @@ public class ZAttendee {
         }
         
         try {
-            assert(!mAddress.toLowerCase().contains("mailto"));
             return new Attendee(p, new URI("MAILTO", mAddress, null));
         } catch (java.net.URISyntaxException e) {
             throw ServiceException.FAILURE("Building Attendee URI for address "+mAddress, e);
