@@ -41,6 +41,7 @@ import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Parameter;
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.parameter.TzId;
+import net.fortuna.ical4j.model.property.DateProperty;
 import net.fortuna.ical4j.model.property.DtEnd;
 import net.fortuna.ical4j.model.property.DtStart;
 import net.fortuna.ical4j.model.property.RecurrenceId;
@@ -53,7 +54,7 @@ public final class ParsedDateTime {
     public static void main(String[] args) {
         ICalTimeZone utc = ICalTimeZone.getUTC();
         try {
-            ParsedDateTime t1 = ParsedDateTime.parse("20050910", null, null, utc);
+            ParsedDateTime t1 = ParsedDateTime.parse("20050910", null, utc);
             System.out.println(t1);
         } catch (ParseException e) {
             System.out.println("Caught "+e);
@@ -73,32 +74,29 @@ public final class ParsedDateTime {
             throws ParseException {
         assert (prop instanceof DtStart || prop instanceof DtEnd || prop instanceof RecurrenceId);
         
-        TzId paramTzId = (TzId)prop.getParameters().getParameter(Parameter.TZID);
-        String tzid = null;
-        if (paramTzId != null) {
-            tzid = paramTzId.getValue();
+        DateProperty dateProp = (DateProperty)prop;
+        if (dateProp.isUtc()) {
+            return parse(dateProp.getValue(), ICalTimeZone.getUTC(), tzmap.getLocalTimeZone());
+        } else {
+            TzId paramTzId = (TzId)prop.getParameters().getParameter(Parameter.TZID);
+            String tzid = null;
+            if (paramTzId != null) {
+                tzid = paramTzId.getValue();
+            }
+            
+            if (tzid != null && tzid.equals("null")) {
+                tzid = null;
+            }
+            
+            String dateStr = prop.getValue();
+            
+            ICalTimeZone tz = tzmap.getTimeZone(tzid);
+            
+            return parse(dateStr, tz, tzmap.getLocalTimeZone());
         }
-        
-        if (tzid != null && tzid.equals("null")) {
-            tzid = null;
-        }
-        
-        String dateStr = prop.getValue();
-
-        ICalTimeZone tz = tzmap.getTimeZone(tzid);
-
-        return parse(dateStr, tz.getID(), tz, tzmap.getLocalTimeZone());
     }
     
-//    public static ParsedDateTime parse(Element e, ICalTimeZone localTZ) throws ServiceException {
-//        String d = e.getAttribute(MailService.A_APPT_DATETIME);
-//        String tzId = e.getAttribute(MailService.A_APPT_TIMEZONE, null);
-//        
-//        return parse(d, tzId, )
-//        
-//    }
-
-    public static ParsedDateTime parse(String str, String tzName, ICalTimeZone tz, ICalTimeZone localTZ)
+    public static ParsedDateTime parse(String str, ICalTimeZone tz, ICalTimeZone localTZ)
             throws ParseException {
         Matcher m = sDateTimePattern.matcher(str);
         
@@ -108,7 +106,7 @@ public final class ParsedDateTime {
             int minute = -1;
             int second = -1;
             boolean zulu = false;
-
+            
             year = Integer.parseInt(m.group(1));
             month = Integer.parseInt(m.group(2)) - 1; // java months are
             // 0-indexed!
@@ -126,12 +124,11 @@ public final class ParsedDateTime {
                 if (zulu) {
                     // RFC2445 Section 4.3.5 Date-Time
                     // FORM #2: DATE WITH UTC TIME
-                    tzName = "Z";
+                    tz = ICalTimeZone.getUTC();
                 } else if (tz == null) {
                     // RFC2445 Section 4.3.5 Date-Time
                     // FORM #1: DATE WITH LOCAL TIME
                     tz = localTZ;
-                    tzName = localTZ.getID();
                 }
                 //else {
                 // RFC2445 Section 4.3.5 Date-Time
@@ -139,19 +136,17 @@ public final class ParsedDateTime {
                 //}
             } else {
                 tz = null;
-                tzName = null;
             }
             
             GregorianCalendar cal = new GregorianCalendar();
             if (zulu) {
                 cal.setTimeZone(ICalTimeZone.getUTC());
+                
             } else if (tz != null) {
                 cal.setTimeZone(tz);
-                assert(tzName != null);
             } else {
                 tz = localTZ;
                 cal.setTimeZone(localTZ);
-                tzName = localTZ.getID();
             }
             
             cal.clear();
@@ -164,7 +159,7 @@ public final class ParsedDateTime {
             } else {
                 cal.set(year, month, date);
             }
-            return new ParsedDateTime(cal, tz, tzName, hasTime);
+            return new ParsedDateTime(cal, tz, hasTime);
         } else {
             throw new ParseException("Invalid TimeString specified: " + str, 0);
         }
@@ -179,13 +174,17 @@ public final class ParsedDateTime {
         if (str.startsWith("TZID=")) {
             int colonIdx = str.indexOf(":");
             tzid = str.substring(5, colonIdx); // 5 for 'TZID='
-            tz = tzmap.getTimeZone(tzid);
-            str = str.substring(colonIdx + 1);
+            
+            if (tzid != null) {
+                str = str.substring(colonIdx + 1);
+                if (tzid.equals("GMT") || tzid.equals("UTC")) {
+                    str+="Z";
+                } else {
+                    tz = tzmap.getTimeZone(tzid);
+                }
+            }
         }
-        if (tzid != null && tzid.equals("null")) {
-            tzid = null;
-        }
-        return parse(str, tzid, tz, tzmap.getLocalTimeZone());
+        return parse(str, tz, tzmap.getLocalTimeZone());
     }
     
     public static ParsedDateTime MAX_DATETIME;
@@ -193,7 +192,7 @@ public final class ParsedDateTime {
         GregorianCalendar cal = new GregorianCalendar();
         cal.set(2099, 1, 1);
         cal.setTimeZone(ICalTimeZone.getUTC());
-        MAX_DATETIME = new ParsedDateTime(cal, ICalTimeZone.getUTC(), null, false);
+        MAX_DATETIME = new ParsedDateTime(cal, ICalTimeZone.getUTC(), false);
     }
     
     public net.fortuna.ical4j.model.Date iCal4jDate() throws ServiceException {
@@ -201,11 +200,11 @@ public final class ParsedDateTime {
             net.fortuna.ical4j.model.Date toRet;         
             if (mHasTime) {
                 DateTime dtToRet = null;                
-                dtToRet = new net.fortuna.ical4j.model.DateTime(getDateTimePartString(), getTimeZone());
+                dtToRet = new net.fortuna.ical4j.model.DateTime(getDateTimePartString(), new net.fortuna.ical4j.model.TimeZone(getTimeZone().toVTimeZone()));
                 toRet = dtToRet;
             } else {
                 if (USE_BROKEN_OUTLOOK_MODE) {
-                    DateTime dtToRet = new net.fortuna.ical4j.model.DateTime(this.getDateTimePartString()+"T000000", getTimeZone());
+                    DateTime dtToRet = new net.fortuna.ical4j.model.DateTime(this.getDateTimePartString()+"T000000", new net.fortuna.ical4j.model.TimeZone(getTimeZone().toVTimeZone()));
                     toRet = dtToRet;
                 } else {
                     toRet = new net.fortuna.ical4j.model.Date(this.getDateTimePartString());
@@ -226,13 +225,11 @@ public final class ParsedDateTime {
     // sets the flag!!!
     private boolean mHasTime = false;
     
-    private String mTzName;
     private ICalTimeZone mICalTimeZone;
 
-    private ParsedDateTime(GregorianCalendar cal, ICalTimeZone iCalTimeZone, String tzName, boolean hasTime) {
+    private ParsedDateTime(GregorianCalendar cal, ICalTimeZone iCalTimeZone, boolean hasTime) {
         mCal = cal;
         mHasTime = hasTime;
-        mTzName = tzName;
         mICalTimeZone = iCalTimeZone;
     }
     
@@ -241,7 +238,6 @@ public final class ParsedDateTime {
         mCal.setTime(utc);
         mICalTimeZone = ICalTimeZone.getUTC();
         mHasTime = true;
-        mTzName = ICalTimeZone.getUTC().getID();
     }
 
     public ParsedDateTime add(ParsedDuration dur) {
@@ -253,7 +249,7 @@ public final class ParsedDateTime {
         cal.add(java.util.Calendar.MINUTE, dur.getMins());
         cal.add(java.util.Calendar.SECOND, dur.getSecs());
 
-        return new ParsedDateTime(cal, mICalTimeZone, mTzName, mHasTime);
+        return new ParsedDateTime(cal, mICalTimeZone, mHasTime);
     }
 
     public int compareTo(Date other) {
@@ -361,21 +357,15 @@ public final class ParsedDateTime {
                 toRet.append("00");
             }
 
-            if (mTzName != null && mTzName.equals("Z")) {
+            if (isUTC()) {
                 toRet.append("Z");
             }
-
-//        } else if (USE_BROKEN_OUTLOOK_MODE) {
-//            toRet.append("T000000");
-//            if (mTzName != null && mTzName.equals("Z")) {
-//                toRet.append("Z");
-//            }
         }
         return toRet.toString();
     }
     
     public boolean isUTC() {
-        if (mTzName!=null && mTzName.equals("Z")) {
+        if (mICalTimeZone.getID()!=null && mICalTimeZone.getID().equals("Z")) {
             return true;
         } else {
             return false;
@@ -386,8 +376,8 @@ public final class ParsedDateTime {
      * @return The name of the TimeZone
      */
     public String getTZName() {
-        if ((USE_BROKEN_OUTLOOK_MODE || mHasTime) && mTzName!=null && !mTzName.equals("Z")) {
-            return mTzName; 
+        if ((USE_BROKEN_OUTLOOK_MODE || mHasTime) && !isUTC()) {
+                return mICalTimeZone.getID();
         }
         return null;
     }
@@ -396,10 +386,12 @@ public final class ParsedDateTime {
      * @return The full RFC2445 parameter string (ie "TZID=blah;") 
      */
     private String getTZParamString() {
-        if (mHasTime && mTzName!=null && !mTzName.equals("Z")) {
-            return "TZID="+mTzName+":";
+        String tzName = getTZName();
+        if (tzName != null) {
+            return "TZID="+tzName+":";
+        } else {
+            return "";
         }
-        return "";
     }
 
     public long getUtcTime() {

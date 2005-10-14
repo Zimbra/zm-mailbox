@@ -94,7 +94,9 @@ public class TimeZoneMap {
      */
     public ICalTimeZone getTimeZone(String tzid) {
         Object tz = mTzMap.get(tzid);
-        return tz != null ? (ICalTimeZone) tz : mLocalTZ;
+        ICalTimeZone toRet = (ICalTimeZone)tz;
+        assert(toRet==null || toRet.getID().equals(tzid));
+        return toRet;
     }
 
     public ICalTimeZone getLocalTimeZone() {
@@ -195,10 +197,10 @@ public class TimeZoneMap {
         String dayName = null;
         String stdName = null;
 
-        ComponentList c = vtz.getTypes();
+        ComponentList c = vtz.getObservances();
         Object o;
 
-        Daylight daylight = (Daylight)c.getComponent(net.fortuna.ical4j.model.component.SeasonalTime.DAYLIGHT);
+        Daylight daylight = (Daylight)c.getComponent(net.fortuna.ical4j.model.component.Observance.DAYLIGHT);
         if (daylight != null) {
             Property prop = daylight.getProperties().getProperty(Property.TZNAME);
             if (prop!= null) {
@@ -206,7 +208,7 @@ public class TimeZoneMap {
             }
         }
 
-        Standard std = (Standard)c.getComponent(net.fortuna.ical4j.model.component.SeasonalTime.STANDARD);
+        Standard std = (Standard)c.getComponent(net.fortuna.ical4j.model.component.Observance.STANDARD);
         if (std != null) {
             Property prop = std.getProperties().getProperty(Property.TZNAME);
             if (prop!= null) {

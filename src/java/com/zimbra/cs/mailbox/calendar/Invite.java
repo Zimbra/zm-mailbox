@@ -824,7 +824,8 @@ public class Invite {
     public void setMethod(Method method) { mMethod = method; }
     
     public static Organizer createOrganizer(String addressStr) {
-        return new Organizer(URI.create(addressStr));
+        Organizer toRet = new Organizer(URI.create(addressStr));
+        return toRet;
     }
     
     private static Organizer parseOrgFromMetadata(Metadata meta) {
@@ -853,7 +854,8 @@ public class Invite {
         if (getOrganizer() == null) {
             return true; // assume we are...is this right?
         }
-        return AccountUtil.addressMatchesAccount(acct, getOrganizer().getCalAddress().getSchemeSpecificPart());
+        String addr = getOrganizer().getCalAddress().getSchemeSpecificPart();
+        return AccountUtil.addressMatchesAccount(acct, addr);
     }
     
     /**

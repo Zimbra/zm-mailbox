@@ -22,7 +22,7 @@ public class ZAttendee {
     private Boolean mRsvp;
     
     public ZAttendee(String address, String cn, String role, String ptst, Boolean rsvp) {
-        mAddress = address;
+        setAddress(address);
         mCn = cn;
         mRole = role;
         mPartStat = ptst;
@@ -30,13 +30,13 @@ public class ZAttendee {
     }
     
     public ZAttendee(String address) {
-        mAddress = address;
+        setAddress(address);
     }
     
     public ZAttendee(Attendee at) {
         ParameterList params = at.getParameters();
         
-        mAddress = at.getCalAddress().toString();
+        setAddress(at.getCalAddress().getSchemeSpecificPart());
         
         // CN
         Cn cn = (Cn)params.getParameter(Parameter.CN);
@@ -69,13 +69,18 @@ public class ZAttendee {
     private static final String FN_ROLE            = "r";
     private static final String FN_RSVP_BOOL       = "v";
 
-    public String getAddress() { return mAddress != null ? mAddress : ""; }
+    public String getAddress() {
+        return mAddress != null ? mAddress : ""; 
+    }
     public String getCn() { return mCn != null ? mCn : ""; }
     public String getRole() { return mRole != null ? mRole : ""; }
     public String getPartStat() { return mPartStat != null ? mPartStat : ""; }
     public Boolean getRsvp() { return mRsvp != null ? mRsvp : Boolean.FALSE; }
     
-    public void setAddress(String address) { mAddress = address; }
+    public void setAddress(String address) {
+        assert(!address.toLowerCase().contains("mailto"));
+        mAddress = address; 
+    }
     public void setCn(String cn) { mCn = cn; }
     public void setRole(String role) { mRole = role; }
     public void setPartStat(String partStat) { mPartStat = partStat; }
@@ -116,6 +121,7 @@ public class ZAttendee {
     public Metadata encodeAsMetadata() {
         Metadata meta = new Metadata();
         
+        assert(!mAddress.toLowerCase().contains("mailto"));
         meta.put(FN_ADDRESS, mAddress);
         
         if (mCn != null) {
@@ -180,6 +186,12 @@ public class ZAttendee {
             p.add(rsvp);
         }
         
-        return new Attendee(p, URI.create(mAddress));
+        try {
+            assert(!mAddress.toLowerCase().contains("mailto"));
+            return new Attendee(p, new URI("MAILTO", mAddress, null));
+        } catch (java.net.URISyntaxException e) {
+            throw ServiceException.FAILURE("Building Attendee URI for address "+mAddress, e);
+        }
+            
     }
 }

@@ -28,35 +28,18 @@ package com.zimbra.cs.mailbox.calendar;
 import java.text.ParseException;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.SimpleTimeZone;
-import java.util.StringTokenizer;
+
+import net.fortuna.ical4j.model.component.VTimeZone;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.WellKnownTimeZone;
-import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.service.ServiceException;
-
-import net.fortuna.ical4j.model.ComponentList;
-import net.fortuna.ical4j.model.ParameterList;
-import net.fortuna.ical4j.model.Property;
-import net.fortuna.ical4j.model.PropertyList;
-import net.fortuna.ical4j.model.UtcOffset;
-import net.fortuna.ical4j.model.component.Daylight;
-import net.fortuna.ical4j.model.component.Standard;
-import net.fortuna.ical4j.model.component.VTimeZone;
-import net.fortuna.ical4j.model.property.DtStart;
-import net.fortuna.ical4j.model.property.RRule;
-import net.fortuna.ical4j.model.property.TzId;
-import net.fortuna.ical4j.model.property.TzOffsetFrom;
-import net.fortuna.ical4j.model.property.TzOffsetTo;
 
 /**
  * Time zone class that combines java.util.SimpleTimeZone and iCalendar
@@ -80,7 +63,7 @@ import net.fortuna.ical4j.model.property.TzOffsetTo;
  * RRULE, RDATE, or not specify the rule at all.  But this full capability
  * should not be necessary to support most time zones in actual use.
  */
-public class ICalTimeZone extends SimpleTimeZone
+public class ICalTimeZone extends net.fortuna.ical4j.model.TimeZone
 {
     private static Log sLog = LogFactory.getLog(ICalTimeZone.class);
 
@@ -93,9 +76,7 @@ public class ICalTimeZone extends SimpleTimeZone
     private static final String FN_DAYTOSTD_RULE    = "d2sr";
     private static final String FN_STDTODAY_RULE    = "s2dr";
 
-    private static final String DEFAULT_DTSTART = "16010101T020000";
-
-    private static ICalTimeZone sUTC = new ICalTimeZone("GMT",
+    private static ICalTimeZone sUTC = new ICalTimeZone("Z",
                                                         0,
                                                         "16010101T000000",
                                                         null,
@@ -104,16 +85,6 @@ public class ICalTimeZone extends SimpleTimeZone
                                                         null);
 
     private String mTzId = null;
-    private boolean mHasDaylight = false;
-
-    private int    mStdOffset = 0;
-    private String mDayToStdDtStart = DEFAULT_DTSTART;
-    private String mDayToStdRule = null;
-
-    private int    mDaylightOffset = 0; 
-    private String mStdToDayDtStart = DEFAULT_DTSTART;
-    private String mStdToDayRule = null;
-
 
     public static ICalTimeZone getUTC() { return sUTC; }
 
@@ -138,6 +109,14 @@ public class ICalTimeZone extends SimpleTimeZone
             tzId = "unknown time zone";
         return new ICalTimeZone(tzId, m);
     }
+    
+    public VTimeZone toVTimeZone() throws ServiceException {
+        try {
+            return super.calcVTimeZone();
+        } catch (ParseException e) {
+            throw ServiceException.FAILURE("Caught ParseException trying to get VTimeZone for tzid="+mTzId, e);
+        }
+    }
 
     private ICalTimeZone(String tzId, Metadata meta) throws ServiceException {
         super(0, tzId);
@@ -153,6 +132,11 @@ public class ICalTimeZone extends SimpleTimeZone
         mStdToDayRule = meta.get(FN_STDTODAY_RULE, null);
 
         commonInit();
+    }
+    
+    public ICalTimeZone(String tzId, VTimeZone vtz) {
+        super(tzId, vtz);
+        mTzId = tzId;
     }
 
     public ICalTimeZone(String tzId,
@@ -173,259 +157,6 @@ public class ICalTimeZone extends SimpleTimeZone
         mStdToDayRule = dayRRule;
         commonInit();
     }
-
-    public ICalTimeZone(String tzId, VTimeZone vtz) throws ServiceException {
-        super(0, tzId);
-        mTzId = tzId;
-
-        ComponentList c = vtz.getTypes();
-
-        Standard std = (Standard) c.getComponent(net.fortuna.ical4j.model.component.SeasonalTime.STANDARD);
-        if (std != null) {
-            PropertyList props = std.getProperties();
-            TzOffsetTo tzTo = (TzOffsetTo) props.getProperty(Property.TZOFFSETTO);
-            if (tzTo != null)
-                mStdOffset = (int) tzTo.getOffset().getOffset();
-            
-            Property d = props.getProperty(Property.DTSTART);
-            if (d != null)
-                mDayToStdDtStart = ((DtStart) d).getValue();
-    
-            Property r = props.getProperty(Property.RRULE);
-            if (r!= null) {
-                RRule rrule = (RRule) r;
-                mDayToStdRule = rrule.getRecur().toString();
-                if (sLog.isDebugEnabled()) {
-                    sLog.debug("DayToStdRule=\"" + mDayToStdRule + "\"");
-                }
-            } else {
-                // TODO - deal with timezones without rules for cutover
-                // TODO - deal with timezones with RDATE instead of RRULE
-            }
-        }
-
-        Daylight daylight = (Daylight) c.getComponent(net.fortuna.ical4j.model.component.SeasonalTime.DAYLIGHT);
-        if (daylight != null) {
-            mHasDaylight = true;
-            PropertyList props = daylight.getProperties();
-            TzOffsetTo tzTo = (TzOffsetTo) props.getProperty(Property.TZOFFSETTO);
-            if (tzTo != null)
-                mDaylightOffset = (int) tzTo.getOffset().getOffset();
-            
-            Property d = props.getProperty(Property.DTSTART);
-            if (d != null)
-                mStdToDayDtStart = ((DtStart) d).getValue();
-
-            Property r = props.getProperty(Property.RRULE);
-            if (r!= null) {
-                RRule rrule = (RRule) r;
-                mStdToDayRule = rrule.getRecur().toString();
-                if (sLog.isDebugEnabled()) {
-                    sLog.debug("StdToDayRule=\"" + mStdToDayRule + "\"");
-                }
-            } else {
-                // TODO - deal with timezones without rules for cutover
-                // TODO - deal with timezones with RDATE instead of RRULE
-                mHasDaylight = false;
-            }
-        } else {
-        	mDaylightOffset = mStdOffset;
-        }
-
-        if (std == null && daylight == null)
-            throw MailServiceException.INVALID_REQUEST("VTIMEZONE must have at least one STANDARD or DAYLIGHT (TZID=" + tzId + ")", null);
-
-        commonInit();
-    }
-
-    private void commonInit() {
-        setRawOffset(mStdOffset);
-        if (mHasDaylight) {
-            int stdDtStart = dtStartToTimeInt(mDayToStdDtStart);
-            OnsetRule stdOnset = toOnsetRule(mDayToStdRule);
-            int dayDtStart = dtStartToTimeInt(mStdToDayDtStart);
-            OnsetRule dayOnset = toOnsetRule(mStdToDayRule);
-
-            setStartRule(dayOnset.month, dayOnset.dayOfMonth, dayOnset.dayOfWeek, dayDtStart);
-            setEndRule(stdOnset.month, stdOnset.dayOfMonth, stdOnset.dayOfWeek, stdDtStart);
-            setDSTSavings(mDaylightOffset - mStdOffset);
-        }
-    }
-
-    /**
-     * Discard date and return time part of DTSTART as number of milliseconds.
-     * @param dtstart yyyymoddThhmmss
-     * @return (hh * 3600 + mm * 60 + ss) * 1000
-     */
-    private static int dtStartToTimeInt(String dtstart) {
-        try {
-            int indexOfT = dtstart.indexOf('T');
-            int hour = Integer.parseInt(dtstart.substring(indexOfT + 1, indexOfT + 3));
-            int min = Integer.parseInt(dtstart.substring(indexOfT + 3, indexOfT + 5));
-            int sec = Integer.parseInt(dtstart.substring(indexOfT + 5, indexOfT + 7));
-            return (hour * 3600 + min * 60 + sec) * 1000;
-        } catch (StringIndexOutOfBoundsException se) {
-            return 0;
-        } catch (NumberFormatException ne) {
-            return 0;
-        }
-    }
-
-    private static Map /*<String, Integer>*/ sDayOfWeekMap = new HashMap(7);
-    static {
-        sDayOfWeekMap.put("MO", new Integer(Calendar.MONDAY));
-        sDayOfWeekMap.put("TU", new Integer(Calendar.TUESDAY));
-        sDayOfWeekMap.put("WE", new Integer(Calendar.WEDNESDAY));
-        sDayOfWeekMap.put("TH", new Integer(Calendar.THURSDAY));
-        sDayOfWeekMap.put("FR", new Integer(Calendar.FRIDAY));
-        sDayOfWeekMap.put("SA", new Integer(Calendar.SATURDAY));
-        sDayOfWeekMap.put("SU", new Integer(Calendar.SUNDAY));
-    }
-
-    private static class OnsetRule {
-        private int month = 0;
-        private int dayOfMonth = 0;
-        private int dayOfWeek = 0;
-    }
-
-    /**
-     * Parse an iCalendar recurrence rule into info suitable for passing
-     * into SimpleTimeZone constructor.
-     * @param rrule
-     * @return
-     */
-    private OnsetRule toOnsetRule(String rrule) {
-        OnsetRule onset = new OnsetRule();
-        if (rrule == null)
-            return onset;
-        for (StringTokenizer t = new StringTokenizer(rrule.toUpperCase(), ";=");
-             t.hasMoreTokens();) {
-            String token = t.nextToken();
-            if ("BYMONTH".equals(token)) {
-                // iCalendar month is 1-based.  Java month is 0-based.
-                onset.month = Integer.parseInt(t.nextToken()) - 1;
-            } else if ("BYDAY".equals(token)) {
-                boolean negative = false;
-                int weekNum = 1;
-                String value = t.nextToken();
-
-                char sign = value.charAt(0);
-                if (sign == '-') {
-                    negative = true;
-                    value = value.substring(1);
-                } if (sign == '+') {
-                    value = value.substring(1);
-                }
-
-                char num = value.charAt(0);
-                if (Character.isDigit(num)) {
-                    weekNum = num - '0';
-                    value = value.substring(1);
-                }
-
-                Integer day = (Integer) sDayOfWeekMap.get(value);
-                if (day == null)
-                    throw new IllegalArgumentException("Invalid day of week value: " + value);
-
-                if (negative) {
-                    // For specifying day-of-week of last Nth week of month,
-                    // e.g. -2SA for Saturday of 2nd to last week of month,
-                    // java.util.SimpleTimeZone wants negative week number
-                    // in dayOfMonth.
-                    onset.dayOfMonth = -1 * weekNum;
-
-                    onset.dayOfWeek = day.intValue();
-                } else {
-                    // For positive weekNum, onset date is day of week on or
-                    // after day of month.  First week is day 1 through day 7,
-                    // second week is day 8 through day 14, etc.
-                	onset.dayOfMonth = (weekNum - 1) * 7 + 1;
-
-                    // Another peculiarity of java.util.SimpleTimeZone class.
-                    // For positive weekNum, day-of-week must be specified as
-                    // a negative value.
-                    onset.dayOfWeek = -day.intValue();
-                }
-            } else {
-                String s = t.nextToken();  // skip value of unused param
-            }
-        }
-        return onset;
-    }
-
-    public VTimeZone toVTimeZone() throws ServiceException {
-        TzId tzId = new TzId(getID());
-
-        PropertyList tzProps = new PropertyList();
-        tzProps.add(tzId);
-
-        ComponentList tzComponents = new ComponentList();
-
-        if (mDayToStdDtStart != null) {
-            DtStart standardTzStart = null;
-            try {
-                standardTzStart = new DtStart(new ParameterList(), mDayToStdDtStart);
-            } catch (ParseException e) {
-            	throw MailServiceException.INVALID_REQUEST("Parse error on VTIMEZONE STANDARD DTSTART: " + mDayToStdDtStart, e);
-            }
-            TzOffsetTo standardTzOffsetTo = new TzOffsetTo(new ParameterList(), new UtcOffset(mStdOffset));
-            TzOffsetFrom standardTzOffsetFrom = new TzOffsetFrom(new UtcOffset(mDaylightOffset));
-    
-            PropertyList standardTzProps = new PropertyList();
-            standardTzProps.add(standardTzStart);
-            standardTzProps.add(standardTzOffsetTo);
-            standardTzProps.add(standardTzOffsetFrom);
-    
-            if (mDayToStdRule != null) {
-            	RRule standardTzRRule = null;
-                try {
-                    standardTzRRule = new RRule(new ParameterList(), mDayToStdRule);
-                } catch (ParseException e) {
-                    throw MailServiceException.INVALID_REQUEST("Parse error on VTIMEZONE STANDARD RRULE: " + mDayToStdRule, e);
-                }
-                standardTzProps.add(standardTzRRule);
-            }
-    
-            tzComponents.add(new Standard(standardTzProps));
-
-            if (mDaylightOffset == mStdOffset) {
-            	// This TZ doesn't use daylight savings time.  Skip the DST
-                // section below.  (ical4j complains if we don't.)
-                return new VTimeZone(tzProps, tzComponents);
-            }
-        }
-
-        if (mStdToDayDtStart != null) {
-            DtStart daylightTzStart = null;
-            try {
-                daylightTzStart = new DtStart(new ParameterList(), mStdToDayDtStart);
-            } catch (ParseException e) {
-                throw MailServiceException.INVALID_REQUEST("Parse error on VTIMEZONE DAYLIGHT DTSTART: " + mStdToDayDtStart, e);
-            }
-            TzOffsetTo daylightTzOffsetTo = new TzOffsetTo(new ParameterList(), new UtcOffset(mDaylightOffset));
-            TzOffsetFrom daylightTzOffsetFrom = new TzOffsetFrom(new UtcOffset(mStdOffset));
-
-            PropertyList daylightTzProps = new PropertyList();
-            daylightTzProps.add(daylightTzStart);
-            daylightTzProps.add(daylightTzOffsetTo);
-            daylightTzProps.add(daylightTzOffsetFrom);
-
-            if (mStdToDayRule != null) {
-                RRule daylightTzRRule = null;
-                try {
-                    daylightTzRRule = new RRule(new ParameterList(), mStdToDayRule);
-                } catch (ParseException e) {
-                    throw MailServiceException.INVALID_REQUEST("Parse error on VTIMEZONE DAYLIGHT RRULE: " + mStdToDayRule, e);
-                }
-                daylightTzProps.add(daylightTzRRule);
-            }
-
-            tzComponents.add(new Daylight(daylightTzProps));
-        }
-
-        return new VTimeZone(tzProps, tzComponents);
-    }
-
 
     // test main
 

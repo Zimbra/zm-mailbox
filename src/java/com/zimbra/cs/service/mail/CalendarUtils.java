@@ -61,7 +61,7 @@ import net.fortuna.ical4j.model.parameter.Cn;
 import net.fortuna.ical4j.model.parameter.PartStat;
 import net.fortuna.ical4j.model.property.Method;
 import net.fortuna.ical4j.model.property.Organizer;
-import net.fortuna.ical4j.util.DateTimeFormat;
+import net.fortuna.ical4j.util.Uris;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -377,17 +377,17 @@ public class CalendarUtils {
     
     private static ParsedDateTime parseDateTime(String eltName,
                                                 String d,
-                                                String tz,
+                                                String tzName,
                                                 TimeZoneMap invTzMap,
                                                 Invite inv)
     throws ServiceException
     {
         try {
             ICalTimeZone zone = null;
-            if (tz != null) {
-                zone = lookupAndAddToTzList(tz, invTzMap, inv);
+            if (tzName != null) {
+                zone = lookupAndAddToTzList(tzName, invTzMap, inv);
             }
-            return ParsedDateTime.parse(d, tz, zone, inv.getTimeZoneMap().getLocalTimeZone());
+            return ParsedDateTime.parse(d, zone, inv.getTimeZoneMap().getLocalTimeZone());
         } catch (ParseException ex) {
             throw MailServiceException.INVALID_REQUEST("could not parse time "+d+" in element "+eltName, ex);
         }
@@ -410,10 +410,13 @@ public class CalendarUtils {
         if (zone == null) {
             // Could be a custom TZID during modify operation of invite from
             // external calendar system.  Look up the TZID from the invite.
-        	if (invTzMap != null)
+        	if (invTzMap != null) {
         		zone = invTzMap.getTimeZone(tzId);
-            if (zone == null)
+            }
+            
+        	if (zone == null) {
                 throw MailServiceException.INVALID_REQUEST("invalid time zone \"" + tzId + "\"", null);
+            }
         }
         if (!inv.getTimeZoneMap().contains(zone))
             inv.getTimeZoneMap().add(zone);
@@ -523,9 +526,9 @@ public class CalendarUtils {
                                 // as UTC time, i.e. ending in "Z".
                                 // (RFC2445 Section 4.3.10 Recurrence Rule)
                                 ParsedDateTime untilCal = parseDateTime(ruleEltName, d, tz, invTzMap, inv);
-                                DateTimeFormat dtf = DateTimeFormat.getInstance();
-                                String dtUTC = dtf.format(untilCal.getDate(), true);
-                                recurBuf.append(dtUTC);
+//                                DateTimeFormat dtf = DateTimeFormat.getInstance();
+//                                String dtUTC = dtf.format(untilCal.getDate(), true);
+                                recurBuf.append(untilCal.getDateTimePartString());
                             }
                         } else if (ruleEltName.equals(MailService.E_APPT_RULE_COUNT)) {
                             int num = (int) ruleElt.getAttributeLong(MailService.A_APPT_RULE_COUNT_NUM, -1);
@@ -629,7 +632,7 @@ public class CalendarUtils {
         }
         
         try {
-            return ParsedDateTime.parse(d, tzId, timezone, inv.getTimeZoneMap().getLocalTimeZone());
+            return ParsedDateTime.parse(d, timezone, inv.getTimeZoneMap().getLocalTimeZone());
         } catch (ParseException pe) {
             throw ServiceException.FAILURE("Caught ParseException: "+pe, pe);
         }
@@ -667,7 +670,7 @@ public class CalendarUtils {
             String address = orgElt.getAttribute(MailService.A_ADDRESS);
             URI uri = null;
             try { 
-                uri = new URI("MAILTO:" + address);
+                uri = new URI("MAILTO", address, null);
             } catch (java.net.URISyntaxException e) {
                 throw ServiceException.FAILURE("Building Organizer URI", e);
             }
@@ -955,8 +958,8 @@ public class CalendarUtils {
      */
     static Invite cancelInvite(Account acct, Invite inv, String comment, ZAttendee forAttendee, RecurId recurId) throws ServiceException 
     {
-        TimeZoneMap tzMap = new TimeZoneMap(acct.getTimeZone());
-        Invite cancel = new Invite(Method.CANCEL, comment, tzMap);
+//        TimeZoneMap tzMap = new TimeZoneMap(acct.getTimeZone());
+        Invite cancel = new Invite(Method.CANCEL, comment, inv.getTimeZoneMap());
         
         // ORGANIZER (FIXME: should check to make sure it is us!) 
         cancel.setOrganizer(inv.getOrganizer());

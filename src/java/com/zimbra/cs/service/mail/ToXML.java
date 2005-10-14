@@ -878,7 +878,8 @@ public class ToXML {
             if (org != null) {
                 Element orgElt = e.addUniqueElement(MailService.E_APPT_ORGANIZER);
                 orgElt.addAttribute(MailService.A_DISPLAY, CalendarUtils.paramVal(org, Parameter.CN));
-                orgElt.addAttribute(MailService.A_URL, org.getCalAddress().toASCIIString());
+                String str = org.getCalAddress().getSchemeSpecificPart();
+                orgElt.addAttribute(MailService.A_URL, str);
             }
             
             // Attendee(s)

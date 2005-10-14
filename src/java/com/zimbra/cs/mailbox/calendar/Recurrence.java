@@ -43,7 +43,6 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
 
 import net.fortuna.ical4j.model.parameter.Value;
-import net.fortuna.ical4j.util.DateTimeFormat;
 
 
 /**
@@ -462,7 +461,8 @@ public class Recurrence
             // UNTIL or COUNT
             Date untilDate = mRecur.getUntil();
             if (untilDate != null) {
-                String d = DateTimeFormat.getInstance().format(untilDate);
+//                String d = DateTimeFormat.getInstance().format(untilDate);
+                String d = untilDate.toString();
                 rule.addElement(MailService.E_APPT_RULE_UNTIL).
                     addAttribute(MailService.A_APPT_DATETIME, d);
             } else {
@@ -864,7 +864,8 @@ public class Recurrence
         
         protected CompoundRuleBase(Metadata meta, TimeZoneMap tzmap) 
         throws ServiceException, ParseException {
-            mDtStart = ParsedDateTime.parse(meta.get(FN_DTSTART), tzmap);
+            String str = meta.get(FN_DTSTART);
+            mDtStart = ParsedDateTime.parse(str, tzmap);
             mDuration = ParsedDuration.parse(meta.get(FN_DURATION));
 
             Metadata metaRules = meta.getMap(FN_ADDRULES, true);

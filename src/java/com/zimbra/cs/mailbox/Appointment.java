@@ -646,18 +646,11 @@ public class Appointment extends MailItem {
         }
     }
 
-    void setContent(ParsedMessage pm, String digest, int size, boolean addBlobToDeletedList) throws ServiceException {
+    void setContent(ParsedMessage pm, String digest, int size) throws ServiceException {
         //
         // WARNING: this code is currently duplicated in Message.java -- until the two
         // functions are unified in MailItem, make sure you keep both versions in sync!
         //
-
-        if (addBlobToDeletedList) {
-            // mark the old blob as ready for deletion
-            PendingDelete info = getDeletionInfo();
-            info.itemIds.clear();  info.unreadIds.clear();
-            mMailbox.markOtherItemDirty(info);
-        }
 
         markItemModified(Change.MODIFIED_CONTENT  | Change.MODIFIED_DATE |
                          Change.MODIFIED_IMAP_UID | Change.MODIFIED_SIZE);
@@ -728,12 +721,21 @@ public class Appointment extends MailItem {
         } catch (MessagingException me) {
             throw MailServiceException.MESSAGE_PARSE_ERROR(me);
         }
-        
-        boolean addBlobToDeleteList = true;
-        if (mData.modContent == getSavedSequence()) {
-            addBlobToDeleteList = false;
+
+        // tim: sooo, if it turns out we end up modifying the same appointment
+        // twice in one transaction (e.g. SetAppointment with exception) then
+        // our modContent will be the same as the current transaction (since we 
+        // just wrote the blob) --- in that case we do NOT want to mark out current
+        // blob for deletion here because it's ID is the same as the new one being 
+        // written!
+        if (getSavedSequence() != mMailbox.getOperationChangeID()) {
+            // mark the old blob as ready for deletion
+            PendingDelete info = getDeletionInfo();
+            info.itemIds.clear();  info.unreadIds.clear();
+            mMailbox.markOtherItemDirty(info);
         }
-        setContent(pm, digest, size, addBlobToDeleteList);
+        
+        setContent(pm, digest, size);
 
         StoreManager sm = StoreManager.getInstance();
         Blob blob = sm.storeIncoming(data, digest, null, volumeId);
