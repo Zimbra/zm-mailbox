@@ -25,6 +25,7 @@
 
 package com.zimbra.cs.service.mail;
 
+import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import com.zimbra.cs.account.Account;
@@ -62,11 +63,10 @@ public abstract class CalendarRequest extends SendMsg {
     protected static CalSendData handleMsgElement(ZimbraContext lc, Element msgElem, Account acct,
                                                   Mailbox mbox, ParseMimeMessage.InviteParser inviteParser)
     throws ServiceException {
-
         CalSendData csd = new CalSendData();
-        
+
         assert(inviteParser.getResult() != null);
-        
+
         // check to see if this message is a reply -- if so, then we'll want to note that so 
         // we can more-correctly match the conversations up
         csd.mOrigId = (int) msgElem.getAttributeLong(MailService.A_ORIG_ID, 0);
@@ -78,7 +78,7 @@ public abstract class CalendarRequest extends SendMsg {
         // FIXME FIXME FIXME -- need to figure out a way to get the FRAGMENT data out of the initial
         // message here, so that we can copy it into the DESCRIPTION field in the iCalendar data that
         // goes out...will make for much better interop!
-        
+
         if (inviteParser.getResult() == null || inviteParser.getResult().mInvite == null) {
             assert(inviteParser.getResult() != null);
         }
@@ -88,22 +88,24 @@ public abstract class CalendarRequest extends SendMsg {
 
         return csd;
     }
-    
-    protected static Element sendCalendarMessage(ZimbraContext lc, int apptFolderId, Account acct, Mailbox mbox, CalSendData dat, Element response)
+
+    protected static Element sendCalendarMessage(ZimbraContext lc, int apptFolderId, Account acct, Mailbox mbox, CalSendData csd, Element response)
     throws ServiceException { 
         synchronized (mbox) {
             OperationContext octxt = lc.getOperationContext();
 
-            ParsedMessage pm = new ParsedMessage(dat.mMm, mbox.attachmentsIndexingEnabled());
-            int[] ids = mbox.addInvite(octxt, apptFolderId, dat.mInvite, false, pm); 
+            ParsedMessage pm = new ParsedMessage(csd.mMm, mbox.attachmentsIndexingEnabled());
+            int[] ids = mbox.addInvite(octxt, apptFolderId, csd.mInvite, false, pm); 
 
-            boolean saveToSent = dat.mSaveToSent && !lc.isDelegatedRequest();
-            int folderId = 0;
-            if (saveToSent) {
-                folderId = getSentFolder(acct, mbox, octxt);
-            }
+            boolean hasRecipients = true;
+            try {
+                hasRecipients = csd.mMm.getAllRecipients() != null;
+            } catch (MessagingException e) { }
+            boolean saveToSent = csd.mSaveToSent && hasRecipients && !lc.isDelegatedRequest();
 
-            int msgId = sendMimeMessage(octxt, mbox, acct, folderId, dat, dat.mMm, dat.mOrigId, dat.mReplyType);
+            int saveFolderId = saveToSent ? getSentFolder(acct, mbox, octxt) : 0;
+
+            int msgId = sendMimeMessage(octxt, mbox, acct, saveFolderId, csd, csd.mMm, csd.mOrigId, csd.mReplyType);
 
             if (response != null && ids != null) {
                 response.addAttribute(MailService.A_APPT_ID, lc.formatItemId(ids[0]));
