@@ -84,7 +84,7 @@ public abstract class CalendarRequest extends SendMsg {
         assert(inviteParser.getResult() != null);
 
         csd.mInvite = inviteParser.getResult().mInvite;
-
+        
         csd.mSaveToSent = shouldSaveToSent(acct);
 
         return csd;
@@ -105,6 +105,11 @@ public abstract class CalendarRequest extends SendMsg {
                 }
 
             ParsedMessage pm = new ParsedMessage(csd.mMm, mbox.attachmentsIndexingEnabled());
+            
+            if (csd.mInvite.getFragment() == null || csd.mInvite.getFragment().equals("")) {
+                csd.mInvite.setFragment(pm.getFragment());
+            }
+
             int[] ids = mbox.addInvite(octxt, apptFolderId, csd.mInvite, false, pm); 
 
             boolean hasRecipients = true;
