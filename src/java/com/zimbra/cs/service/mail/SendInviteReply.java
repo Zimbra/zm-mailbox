@@ -35,6 +35,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.*;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
@@ -124,8 +125,6 @@ public class SendInviteReply extends CalendarRequest {
                 if (updateOrg) {
                     String replySubject = this.getReplySubject(verb, oldInv);
                     
-//                    Calendar iCal = CalendarUtils.buildReplyCalendar(acct, oldInv, verb, replySubject, tzsReferenced, exceptDt);
-
                     CalSendData dat = new CalSendData();
                     dat.mOrigId = oldInv.getMailItemId();
                     dat.mReplyType = TYPE_REPLY;
@@ -134,9 +133,9 @@ public class SendInviteReply extends CalendarRequest {
 
                     Calendar iCal = dat.mInvite.toICalendar();
                     
-                    assert(CalendarUtils.validateCalendar(iCal));
-                    
-//                    MimeMessage toSend = null;
+                    if (DebugConfig.validateOutgoingICalendar) {
+                        CalendarUtils.validateCalendar(iCal);
+                    }
                     
                     ParseMimeMessage.MimeMessageData parsedMessageData = new ParseMimeMessage.MimeMessageData();
                     
@@ -155,14 +154,6 @@ public class SendInviteReply extends CalendarRequest {
                         // build a default "Accepted" response
                         dat.mMm = createDefaultReply(acct, oldInv, replySubject, verb, iCal); 
                     }
-                    
-//                    try {
-//                        System.out.println(iCal.toString());
-//                    } catch(Exception e) {}
-                    
-                    
-//                    replyId = sendMimeMessage(octxt, mbox, acct, shouldSaveToSent(acct), parsedMessageData, 
-//                            toSend, oldInv.getMailItemId(), TYPE_REPLY);
                     
                     sendCalendarMessage(lc, appt.getFolderId(), acct, mbox, dat, response);  
                 }

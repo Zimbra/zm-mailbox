@@ -98,14 +98,12 @@ public class CalendarUtils {
         }
     }
     
-    static boolean validateCalendar(Calendar iCal) {
+    static void validateCalendar(Calendar iCal) throws ServiceException {
         try {
             iCal.validate();
         } catch (ValidationException e) {
             sLog.error("Error validating calendar: "+iCal+"\nerror="+e, e);
-            return false;
         }
-        return true;
     }
     
     /**

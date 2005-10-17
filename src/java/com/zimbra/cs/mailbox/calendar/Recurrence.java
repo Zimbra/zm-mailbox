@@ -91,7 +91,6 @@ public class Recurrence
      * more dates (ie not a rule)
      * 
      * Use the datesIterator() api to access all of the stored dates
-     * 
      */
     public static final int TYPE_SINGLE_INSTANCE = 4;
     
@@ -147,6 +146,12 @@ public class Recurrence
         
         
         /**
+         * @return Identifier for the Invite which created this particular rule
+         */
+        public InviteInfo getInviteInfo();
+        
+        
+        /**
          * WARNING WARNING: this is a special call only used when initializing an INVITE,
          * basically it walks the entire Recurrence chain and sets the InvId to the
          * passed-in value....while this is OK in the case of a single-Invite's recurrence,
@@ -158,6 +163,49 @@ public class Recurrence
         
         abstract public Element toXml(Element parent);
     }
+    
+    
+    /**
+     * @author tim
+     *
+     * Superset of IRecurrence for exception rules: they have a RecurId
+     * 
+     * Real implementations are ExceptionRule and CancellationRule
+     */
+    public static interface IException extends IRecurrence
+    {
+        public boolean matches(long date);
+        
+        public RecurId getRecurId();
+    }
+    
+    /**
+     * @author tim
+     * 
+     * A subnode which generates instances -- ie right now either a SingleInstanceRule 
+     * or SimpleRepeatingRule
+     *
+     */
+    public static interface IInstanceGeneratingRule extends IRecurrence 
+    {
+        public Recur getRecur();
+        
+        public ParsedDateTime getDtStart();
+        
+        public InviteInfo getInviteInfo();
+
+        /**
+         * @return DtEnd if set, or NULL if not set (Duration will be set in that case)
+         */
+        public ParsedDateTime getDtEndOrNull();
+        
+        
+        /**
+         * @return Duration if set, or NULL if not set (DtEnd will be set in that case)
+         */
+        public ParsedDuration getDurationOrNull();
+    }
+    
     
     //////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////
@@ -221,7 +269,7 @@ public class Recurrence
             return new MultiRuleSorter(newRules);
         }
         
-        public Iterator /* IRecurrence */ iterator() {
+        public Iterator /* IInstanceGeneratingRule */ iterator() {
             return mRules.iterator();
         }
         
@@ -232,7 +280,8 @@ public class Recurrence
                 mRules.add(Recurrence.decodeRule(meta.getMap(FN_RULE + i), tzmap));
         }
         
-        public MultiRuleSorter(ArrayList /* IRecur */ rules) {
+        public MultiRuleSorter(ArrayList /* IInstanceGeneratingRule */ rules) {
+            assert((rules == null) || (rules.size() == 0) || (rules.get(0) instanceof IInstanceGeneratingRule));
             mRules = rules;
         }
         
@@ -300,11 +349,11 @@ public class Recurrence
             return latestEnd;
         }
         
-        private ArrayList /* IRecur */ mRules;
+        private ArrayList /* IInstanceGeneratingRule */ mRules;
         
     }
     
-    public static class SingleInstanceRule implements IRecurrence {
+    public static class SingleInstanceRule implements IInstanceGeneratingRule {
         private static final String FN_DTSTART = "dts";
         private static final String FN_DURATION = "dur";
         private static final String FN_DTEND = "dte";
@@ -320,11 +369,21 @@ public class Recurrence
             return mDtEnd;
         }
         
+        public Recur getRecur() { return null; }
+        public ParsedDateTime getDtStart() { return mDtStart; }
+        
+        public ParsedDateTime getDtEndOrNull() { return mDtEnd; }
+        public ParsedDuration getDurationOrNull() { return mDuration; }
+        
         public Iterator addRulesIterator() { return null; }
         public Iterator subRulesIterator() { return null; }
         
         public void setInviteId(InviteInfo invId) {
             mInvId = invId;
+        }
+        
+        public InviteInfo getInviteInfo() {
+            return mInvId;
         }
 
         public String toString() {
@@ -433,7 +492,7 @@ public class Recurrence
      * The output of an RRULE or EXRULE rule -- corresponds to a RECUR value in an iCal specification
      *
      */
-    public static class SimpleRepeatingRule implements IRecurrence {
+    public static class SimpleRepeatingRule implements IInstanceGeneratingRule {
         public SimpleRepeatingRule(ParsedDateTime dtstart, ParsedDuration duration, 
                 Recur recur, InviteInfo invId)
         {
@@ -447,8 +506,20 @@ public class Recurrence
         public Iterator addRulesIterator() { return null; }
         public Iterator subRulesIterator() { return null; }
         
+        
+        public ParsedDateTime getDtStart() {
+            return mDtStart;
+        }
+        
+        public ParsedDateTime getDtEndOrNull() { return null; }
+        public ParsedDuration getDurationOrNull() { return mDuration; }
+        
         public void setInviteId(InviteInfo invId) {
             mInvId = invId;
+        }
+        
+        public InviteInfo getInviteInfo() {
+            return mInvId;
         }
         
         public Element toXml(Element parent) {
@@ -745,6 +816,10 @@ public class Recurrence
             }
         }
         
+        public InviteInfo getInviteInfo() {
+            return mInvId;
+        }
+        
         protected CompoundRuleBase(ParsedDateTime dtstart, ParsedDuration duration, 
                 InviteInfo invId)
         {
@@ -914,21 +989,6 @@ public class Recurrence
         protected InviteInfo mInvId;
     }
     
-    /**
-     * @author tim
-     *
-     * Superset of IRecurrence for exception rules: they have a RecurId
-     * 
-     * Real implementations are ExceptionRule and CancellationRule
-     */
-    public static interface IException extends IRecurrence
-    {
-        boolean matches(long date);
-        
-        RecurId getRecurId();
-    }
-    
-    
 //
 // This is commented-out for compatability (not supported by many CUAs) --but leave the code here hopefully 
 // we can figure out a way to enable it eventually...
@@ -1018,6 +1078,7 @@ public class Recurrence
         public Iterator subRulesIterator() { return null; }
         
         public void setInviteId(InviteInfo invId) {}
+        public InviteInfo getInviteInfo() { return null; } 
         
         CancellationRule(Metadata meta, TimeZoneMap tzmap) 
         throws ServiceException, ParseException
@@ -1198,7 +1259,7 @@ public class Recurrence
             assert(mExceptions.size() == 0); // must not call this on an appointment-owned Invite
         }
         
-        Iterator /* IException */ exceptionsIter() {
+        public Iterator /* IException */ exceptionsIter() {
             return mExceptions.iterator();
         }
 

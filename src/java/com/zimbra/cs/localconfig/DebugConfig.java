@@ -40,6 +40,9 @@ package com.zimbra.cs.localconfig;
  */
 public class DebugConfig {
 
+    // If true, then we do ICalendar Validation every time we generate ICalendar data
+    public static boolean validateOutgoingICalendar;
+    
     // If true, turns off conversation feature.
     public static boolean disableConversation;
 
@@ -79,6 +82,7 @@ public class DebugConfig {
     public static boolean disableObjects;
 
     static {
+        validateOutgoingICalendar = booleanValue("debug_validate_outgoing_icalendar", false);        
         disableConversation = booleanValue("debug_disable_conversation", false);
         disableFilter = booleanValue("debug_disable_filter", false);
         disableMessageAnalysis = booleanValue("debug_disable_message_analysis", false);

@@ -275,7 +275,6 @@ public class Invite {
     private static final String FN_END             = "et";
     private static final String FN_APPT_FREEBUSY   = "fb";
     private static final String FN_LOCATION        = "l";
-    private static final String FN_ICAL_DESCRIPTION = "icDsc";
     private static final String FN_INVMSGID        = "mid";
     private static final String FN_METHOD          = "mthd";
     private static final String FN_NAME            = "n";
@@ -1059,7 +1058,7 @@ public class Invite {
                 }
             }
             
-            ArrayList addRules = new ArrayList();
+            ArrayList /* IInstanceGeneratingRule */ addRules = new ArrayList();
             if (addRecurs.size() > 0) {
                 for (Iterator iter = addRecurs.iterator(); iter.hasNext();) {
                     Object next = iter.next();
@@ -1072,7 +1071,7 @@ public class Invite {
                     }
                 }
             }
-            ArrayList subRules = new ArrayList();
+            ArrayList /* IInstanceGeneratingRule */  subRules = new ArrayList();
             if (subRules.size() > 0) {
                 for (Iterator iter = subRules.iterator(); iter.hasNext();) {
                     Object next = iter.next();
