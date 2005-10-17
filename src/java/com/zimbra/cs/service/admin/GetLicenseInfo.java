@@ -39,30 +39,10 @@ import com.zimbra.cs.localconfig.LC;
 
 public class GetLicenseInfo extends AdminDocumentHandler {
 
-    static DateFormat _dateFormat = new SimpleDateFormat("yyyyMMdd");
-    static final String TRIAL_EXPIRATION_DATE_KEY = "trial_expiration_date";
-    
     public Element handle(Element request, Map context) throws ServiceException {
         ZimbraContext lc = getZimbraContext(context);
-
-        String expirationDate = LC.get(TRIAL_EXPIRATION_DATE_KEY);
+        // Do nothing -- there is no license info.
         Element response = lc.createElement(AdminService.GET_LICENSE_INFO_RESPONSE);
-        Element el = response.addElement(AdminService.E_LICENSE_EXPIRATION);
-        el.addAttribute(AdminService.A_LICENSE_EXPIRATION_DATE, expirationDate);
-        //if -- date object ( transformed from string ) is before the
-        //current time -- then set isExpired to true) - otherwise set
-        //it to false
-        Date now = new Date();
-        boolean isExpired = false;
-        try {
-            Date exp = parseDateString(expirationDate);
-            isExpired = (now.getTime() > exp.getTime());
-        } catch (ParseException pe){
-            // do nothing, just say it's not expired
-            isExpired = false;
-        }        
-        el.addAttribute(AdminService.A_LICENSE_EXPIRATION_IS_EXPIRED, isExpired);
-
         return response;
     }
 
@@ -75,7 +55,4 @@ public class GetLicenseInfo extends AdminDocumentHandler {
     }
 
 
-    private Date parseDateString (String dateTimeStr) throws ParseException{
-        return _dateFormat.parse(dateTimeStr);
-    }    
 }
