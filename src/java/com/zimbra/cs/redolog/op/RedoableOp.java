@@ -172,7 +172,7 @@ public abstract class RedoableOp {
         "CreateNote",
         "EditNote",
         "RepositionNote",
-        "CreateLink",
+        "CreateMountpoint",
         "ModifyInviteFlag",
         "ModifyInvitePartStat",
         "CreateVolume",
