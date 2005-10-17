@@ -53,7 +53,11 @@ public class CancelAppointment extends CalendarRequest {
 
     private static Log sLog = LogFactory.getLog(CancelAppointment.class);
     private static StopWatch sWatch = StopWatch.getInstance("CancelAppointment");
-    
+
+    private static final String[] TARGET_ITEM_PATH = new String[] { MailService.A_ID };
+    protected String[] getProxiedIdPath()     { return TARGET_ITEM_PATH; }
+    protected boolean checkMountpointProxy()  { return false; }
+
     public Element handle(Element request, Map context) throws ServiceException {
         long startTime = sWatch.start();
         try {
