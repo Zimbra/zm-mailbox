@@ -184,7 +184,11 @@ public class VolumeUtil extends SoapCLI {
             System.out.println("        name: " + name);
             System.out.println("        type: " + type);
             System.out.println("        path: " + path);
-            System.out.println("  compressed: " + compressed + "\t         threshold: " + threshold);
+            System.out.print("  compressed: " + compressed);
+            if (compressed)
+                System.out.println("\t         threshold: " + threshold + " bytes");
+            else
+                System.out.println();
 //            System.out.println("   file bits: " + fbits +      "\t   file group bits: " + fgbits);
 //            System.out.println("mailbox bits: " + mbits +      "\tmailbox group bits: " + mgbits);
             System.out.println();
@@ -367,9 +371,9 @@ public class VolumeUtil extends SoapCLI {
         System.out.println("  -id is optional.");
         printOpt(O_DC, 0);
         printOpt(O_SC, 0);
-        printOpt(O_TS, 0);
         printOpt(O_ID, 2);
         printOpt(O_T, 2);
+        printOpt(O_TS, 0);
     }
     
     private static final String PADDING = "                                                  ";
