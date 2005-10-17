@@ -158,8 +158,6 @@ public class ToXML {
                     }
             }
         }
-        if (fields == NOTIFY_FIELDS && folder.getDefaultView() != MailItem.TYPE_UNKNOWN)
-            elem.addAttribute(MailService.A_DEFAULT_VIEW, MailItem.getNameForType(folder.getDefaultView()));
         return elem;
 	}
 
@@ -184,6 +182,11 @@ public class ToXML {
             int unread = folder.getUnreadCount();
             if (unread > 0 || fields != NOTIFY_FIELDS)
                 elem.addAttribute(MailService.A_UNREAD, unread);
+        }
+        if (needToOutput(fields, Change.MODIFIED_VIEW)) {
+            byte view = folder.getDefaultView();
+            if (view != MailItem.TYPE_UNKNOWN)
+                elem.addAttribute(MailService.A_DEFAULT_VIEW, MailItem.getNameForType(view));
         }
         if (needToOutput(fields, Change.MODIFIED_CONFLICT))
             elem.addAttribute(MailService.A_CHANGE_DATE, folder.getChangeDate() / 1000);
