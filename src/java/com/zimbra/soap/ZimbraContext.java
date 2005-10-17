@@ -223,16 +223,6 @@ public class ZimbraContext {
         mIsProxyRequest = false;
         String targetServerId = ctxt == null ? null : ctxt.getAttribute(E_TARGET_SERVER, null);
         if (targetServerId != null) {
-            // server not explicitly specified, so figure out where the requested mailbox lives
-            if (account == null)
-                account = prov.getAccountById(getRequestedAccountId());
-            if (account != null) {
-                Server server = account.getServer();
-                if (server != null)
-                    targetServerId = server.getId();
-            }
-        }
-        if (targetServerId != null) {
             HttpServletRequest req = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
             if (req != null) {
             	mProxyTarget = new ProxyTarget(targetServerId, mRawAuthToken, req);

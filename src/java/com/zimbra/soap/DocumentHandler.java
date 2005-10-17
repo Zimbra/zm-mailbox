@@ -96,6 +96,11 @@ public abstract class DocumentHandler {
         return false;
     }
 
+    /** Returns whether the command is in the administration command set. */
+    public boolean isAdminCommand() {
+        return false;
+    }
+
     /** Returns <code>true</code> if the operation is read-only, or
      *  <code>false</code> if the operation causes backend state change. */
     public boolean isReadOnly() {
@@ -195,9 +200,19 @@ public abstract class DocumentHandler {
             return null;
         ItemId iid = new ItemId(id);
 
+        // if the "target item" is remote, proxy.
         ZimbraContext lc = getZimbraContext(context);
         ItemId iidTarget = getProxyTarget(lc, iid, checkMountpointProxy());
-        return iidTarget == null ? null : proxyRequest(request, context, iid, iidTarget);
+        if (iidTarget != null)
+            return proxyRequest(request, context, iid, iidTarget);
+
+        // if the "target account" is remote and the command is non-admin, proxy.
+        String acctId = lc.getRequestedAccountId();
+        if (acctId != null && lc.getProxyTarget() != null && !isAdminCommand())
+            if (!LOCAL_HOST.equalsIgnoreCase(getRequestedAccount(lc).getAttr(Provisioning.A_zimbraMailHost)))
+                return proxyRequest(request, context, acctId);
+
+        return null;
     }
 
     protected Element proxyRequest(Element request, Map context, ItemId iidRequested, ItemId iidResolved) throws ServiceException, SoapFaultException {

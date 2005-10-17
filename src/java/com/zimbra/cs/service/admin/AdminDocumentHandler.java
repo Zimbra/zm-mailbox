@@ -46,6 +46,10 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
         return true;
     }
 
+    public boolean isAdminCommand() {
+        return true;
+    }
+
     /** Fetches the in-memory {@link Session} object appropriate for this request.
      *  If none already exists, one is created.
      * @return An {@link com.zimbra.cs.session.AdminSession}. */
