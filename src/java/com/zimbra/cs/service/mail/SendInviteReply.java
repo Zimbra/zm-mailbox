@@ -54,7 +54,7 @@ import net.fortuna.ical4j.model.Calendar;
 /**
  * @author tim
  */
-public class SendInviteReply extends SendMsg {
+public class SendInviteReply extends CalendarRequest {
 
     private static Log sLog = LogFactory.getLog(SendInviteReply.class);
     private static StopWatch sWatch = StopWatch.getInstance("SendInviteReply");
@@ -86,13 +86,14 @@ public class SendInviteReply extends SendMsg {
                 sLog.info("<SendInviteReply id=" + iid.toString(lc) + " verb=" + verb + " updateOrg=" + updateOrg + "> " + lc.toString());
             }
             
-            int replyId = 0;
+            Element response = lc.createElement(MailService.SEND_INVITE_REPLY_RESPONSE);
             
             synchronized (mbox) {
                 Invite oldInv = null;
                 
                 int apptId; 
                 int inviteMsgId;
+                Appointment appt;
                 
                 // the user could be accepting EITHER the original-mail-item (id="nnn") OR the
                 // appointment (id="aaaa-nnnn") --- work in both cases
@@ -100,7 +101,7 @@ public class SendInviteReply extends SendMsg {
                     // directly accepting the appointment
                     apptId = iid.getId();
                     inviteMsgId = iid.getSubpartId();
-                    Appointment appt = mbox.getAppointmentById(octxt, apptId); 
+                    appt = mbox.getAppointmentById(octxt, apptId); 
                     oldInv = appt.getInvite(inviteMsgId, compNum);
                 } else {
                     // accepting the message: go find the appointment and then the invite
@@ -108,11 +109,9 @@ public class SendInviteReply extends SendMsg {
                     Message msg = mbox.getMessageById(octxt, inviteMsgId);
                     Message.ApptInfo info = msg.getApptInfo(compNum);
                     apptId = info.getAppointmentId();
-                    Appointment appt = mbox.getAppointmentById(octxt, apptId);
+                    appt = mbox.getAppointmentById(octxt, apptId);
                     oldInv = appt.getInvite(inviteMsgId, compNum);  
                 }
-                
-                List /*<ICalTimeZone>*/ tzsReferenced = new ArrayList();
                 
                 // see if there is a specific Exception being referenced by this reply...
                 Element exc = request.getOptionalElement("exceptId");
@@ -125,9 +124,19 @@ public class SendInviteReply extends SendMsg {
                 if (updateOrg) {
                     String replySubject = this.getReplySubject(verb, oldInv);
                     
-                    Calendar iCal = CalendarUtils.buildReplyCalendar(acct, oldInv, verb, replySubject, tzsReferenced, exceptDt);
+//                    Calendar iCal = CalendarUtils.buildReplyCalendar(acct, oldInv, verb, replySubject, tzsReferenced, exceptDt);
+
+                    CalSendData dat = new CalSendData();
+                    dat.mOrigId = oldInv.getMailItemId();
+                    dat.mReplyType = TYPE_REPLY;
+                    dat.mSaveToSent = shouldSaveToSent(acct);
+                    dat.mInvite = CalendarUtils.replyToInvite(acct, oldInv, verb, replySubject, exceptDt);
+
+                    Calendar iCal = dat.mInvite.toICalendar();
                     
-                    MimeMessage toSend = null;
+                    assert(CalendarUtils.validateCalendar(iCal));
+                    
+//                    MimeMessage toSend = null;
                     
                     ParseMimeMessage.MimeMessageData parsedMessageData = new ParseMimeMessage.MimeMessageData();
                     
@@ -140,19 +149,22 @@ public class SendInviteReply extends SendMsg {
                         // the <inv> element is *NOT* allowed -- we always build it manually
                         // based on the params to the <SendInviteReply> and stick it in the 
                         // mbps (additionalParts) parameter...
-                        toSend = ParseMimeMessage.parseMimeMsgSoap(lc, mbox, msgElem, mbps, 
+                        dat.mMm = ParseMimeMessage.parseMimeMsgSoap(lc, mbox, msgElem, mbps, 
                                 ParseMimeMessage.NO_INV_ALLOWED_PARSER, parsedMessageData);
                     } else {
                         // build a default "Accepted" response
-                        toSend = createDefaultReply(acct, oldInv, replySubject, verb, iCal); 
+                        dat.mMm = createDefaultReply(acct, oldInv, replySubject, verb, iCal); 
                     }
                     
-                    try {
-                        System.out.println(iCal.toString());
-                    } catch(Exception e) {}
+//                    try {
+//                        System.out.println(iCal.toString());
+//                    } catch(Exception e) {}
                     
-                    replyId = sendMimeMessage(octxt, mbox, acct, shouldSaveToSent(acct), parsedMessageData, 
-                            toSend, oldInv.getMailItemId(), TYPE_REPLY);
+                    
+//                    replyId = sendMimeMessage(octxt, mbox, acct, shouldSaveToSent(acct), parsedMessageData, 
+//                            toSend, oldInv.getMailItemId(), TYPE_REPLY);
+                    
+                    sendCalendarMessage(lc, appt.getFolderId(), acct, mbox, dat, response);  
                     
                 }
                 
@@ -183,11 +195,6 @@ public class SendInviteReply extends SendMsg {
                 }
             }
             
-            Element response = lc.createElement(MailService.SEND_INVITE_REPLY_RESPONSE);
-            if (replyId != 0) {
-                response.addAttribute(MailService.A_ID, replyId);
-            }
-
             return response;
         } finally {
             sWatch.stop(startTime);

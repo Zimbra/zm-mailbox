@@ -98,6 +98,16 @@ public class CalendarUtils {
         }
     }
     
+    static boolean validateCalendar(Calendar iCal) {
+        try {
+            iCal.validate();
+        } catch (ValidationException e) {
+            sLog.error("Error validating calendar: "+iCal+"\nerror="+e, e);
+            return false;
+        }
+        return true;
+    }
+    
     /**
      * Builds the TO: list for appointment updates by iterating over the list of ATTENDEEs
      * 
@@ -815,21 +825,6 @@ public class CalendarUtils {
         return toRet;
     }
     
-    static Calendar buildReplyCalendar(Account acct, Invite inv, SendInviteReply.ParsedVerb verb, 
-            String replySubject, List /*ICalTimeZone*/ tzsReferenced, ParsedDateTime exceptDt) throws ServiceException 
-    {
-        Calendar iCal = CalendarUtils.replyToInvite(acct, inv, verb, replySubject, exceptDt).toICalendar();
-        
-        try {
-            iCal.validate(true);
-        } catch (ValidationException e) { 
-            sLog.debug("iCal Validation Exception generating Reply", e);
-            throw ServiceException.FAILURE("Failure generating iCalendar reply", e);
-        }
-        
-        return iCal;
-    }
-    
     /**
      * RFC2446 4.2.2: 
      * 
@@ -908,7 +903,7 @@ public class CalendarUtils {
         // SUMMARY
         reply.setName(replySubject);
         
-        System.out.println("REPLY: "+reply.toVEvent().toString());
+//        System.out.println("REPLY: "+reply.toVEvent().toString());
         
         return reply;
     }
