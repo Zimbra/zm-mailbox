@@ -73,7 +73,7 @@ public class SendInviteReply extends CalendarRequest {
             Account acct = getRequestedAccount(lc);
             OperationContext octxt = lc.getOperationContext();
 
-            ItemId iid = new ItemId(request.getAttribute(MailService.A_ID));
+            ItemId iid = new ItemId(request.getAttribute(MailService.A_ID), lc);
             int compNum = (int) request.getAttributeLong(MailService.A_APPT_COMPONENT_NUM);
 
             String verbStr = request.getAttribute(MailService.A_VERB);

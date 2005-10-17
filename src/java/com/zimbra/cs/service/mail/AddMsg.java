@@ -109,7 +109,7 @@ public class AddMsg extends WriteOpDocumentHandler {
 	        Folder folder = null;
 	        if (folderStr != null) {
                 try {
-                    ItemId iidFolder = new ItemId(folderStr);
+                    ItemId iidFolder = new ItemId(folderStr, lc);
                     folder = mbox.getFolderById(octxt, iidFolder.getId());
                 } catch (NoSuchItemException nsie) {
                 } catch (NumberFormatException e) {}

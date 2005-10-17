@@ -36,7 +36,7 @@ public class CreateMountpoint extends WriteOpDocumentHandler {
         String ownerId   = t.getAttribute(MailService.A_ZIMBRA_ID);
         int    remoteId  = (int) t.getAttributeLong(MailService.A_REMOTE_ID);
         String view      = t.getAttribute(MailService.A_DEFAULT_VIEW, null);
-        ItemId iidParent = new ItemId(t.getAttribute(MailService.A_FOLDER));
+        ItemId iidParent = new ItemId(t.getAttribute(MailService.A_FOLDER), lc);
 
         Mountpoint mpt;
         try {

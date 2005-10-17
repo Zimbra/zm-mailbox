@@ -39,7 +39,7 @@ public class ItemId {
         mAccountId = acctId;  mId = id;  mSubpartId = subId;
     }
 
-    public ItemId(String encoded) throws ServiceException {
+    public ItemId(String encoded, ZimbraContext lc) throws ServiceException {
         if (encoded == null || encoded.equals(""))
             throw ServiceException.INVALID_REQUEST("empty/missing item ID", null);
 
@@ -49,6 +49,8 @@ public class ItemId {
             throw ServiceException.INVALID_REQUEST("malformed item ID: " + encoded, null);
         if (delimiter != -1)
             mAccountId = encoded.substring(0, delimiter);
+        else if (lc != null)
+            mAccountId = lc.getRequestedAccountId();
         encoded = encoded.substring(delimiter + 1);
 
         // break out the appointment sub-id, if present

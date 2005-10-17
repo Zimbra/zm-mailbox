@@ -71,9 +71,9 @@ public class NoteAction extends ItemAction {
 
     private String handleNote(Map context, Element request, String operation) throws ServiceException, SoapFaultException {
         Element action = request.getElement(MailService.E_ACTION);
-        ItemId iid = new ItemId(action.getAttribute(MailService.A_ID));
 
         ZimbraContext lc = getZimbraContext(context);
+        ItemId iid = new ItemId(action.getAttribute(MailService.A_ID), lc);
         if (!iid.belongsTo(getRequestedAccount(lc)))
             return extractSuccesses(proxyRequest(request, context, iid.getAccountId()));
 

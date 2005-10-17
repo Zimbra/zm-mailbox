@@ -66,7 +66,7 @@ public class CancelAppointment extends CalendarRequest {
             Mailbox mbox = getRequestedMailbox(lc);
             OperationContext octxt = lc.getOperationContext();
             
-            ItemId iid = new ItemId(request.getAttribute(MailService.A_ID));
+            ItemId iid = new ItemId(request.getAttribute(MailService.A_ID), lc);
             int compNum = (int) request.getAttributeLong(MailService.E_INVITE_COMPONENT);
             
             sLog.info("<CancelAppointment id=" + iid + " comp=" + compNum + ">");

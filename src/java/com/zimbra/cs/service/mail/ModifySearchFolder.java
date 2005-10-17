@@ -54,7 +54,7 @@ public class ModifySearchFolder extends WriteOpDocumentHandler  {
         OperationContext octxt = lc.getOperationContext();
 
         Element t = request.getElement(MailService.E_SEARCH);
-        ItemId iid = new ItemId(t.getAttribute(MailService.A_ID));
+        ItemId iid = new ItemId(t.getAttribute(MailService.A_ID), lc);
         String query = t.getAttribute(MailService.A_QUERY);
         String types = t.getAttribute(MailService.A_SEARCH_TYPES, null);
         String sort = t.getAttribute(MailService.A_SORTBY, null);

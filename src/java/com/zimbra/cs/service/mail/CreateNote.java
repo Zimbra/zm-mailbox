@@ -56,7 +56,7 @@ public class CreateNote extends WriteOpDocumentHandler {
         Mailbox mbox = getRequestedMailbox(lc);
 
         Element t = request.getElement(MailService.E_NOTE);
-        ItemId iidFolder = new ItemId(t.getAttribute(MailService.A_FOLDER));
+        ItemId iidFolder = new ItemId(t.getAttribute(MailService.A_FOLDER), lc);
         String content = t.getAttribute(MailService.E_CONTENT);
         byte color = (byte) t.getAttributeLong(MailService.A_COLOR, MailItem.DEFAULT_COLOR);
         String strBounds = t.getAttribute(MailService.A_BOUNDS, null);

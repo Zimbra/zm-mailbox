@@ -58,7 +58,7 @@ public class CreateFolder extends WriteOpDocumentHandler {
         Element t = request.getElement(MailService.E_FOLDER);
         String name      = t.getAttribute(MailService.A_NAME);
         String view      = t.getAttribute(MailService.A_DEFAULT_VIEW, null);
-        ItemId iidParent = new ItemId(t.getAttribute(MailService.A_FOLDER));
+        ItemId iidParent = new ItemId(t.getAttribute(MailService.A_FOLDER), lc);
 
         Folder folder;
         try {

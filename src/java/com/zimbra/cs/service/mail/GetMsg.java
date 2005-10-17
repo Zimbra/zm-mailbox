@@ -63,7 +63,7 @@ public class GetMsg extends WriteOpDocumentHandler {
             OperationContext octxt = lc.getOperationContext();
 
             Element eMsg = request.getElement(MailService.E_MSG);
-            ItemId iid = new ItemId(eMsg.getAttribute(MailService.A_ID));
+            ItemId iid = new ItemId(eMsg.getAttribute(MailService.A_ID), lc);
             boolean raw = eMsg.getAttributeBool(MailService.A_RAW, false);
             boolean read = eMsg.getAttributeBool(MailService.A_MARK_READ, false);
             String part = eMsg.getAttribute(MailService.A_PART, null);

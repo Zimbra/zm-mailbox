@@ -66,7 +66,7 @@ public class GetFolder extends DocumentHandler {
         Element eFolder = request.getOptionalElement(MailService.E_FOLDER);
         if (eFolder != null)
         	parentId = eFolder.getAttribute(MailService.A_FOLDER, DEFAULT_FOLDER_ID);
-        ItemId iid = new ItemId(parentId);
+        ItemId iid = new ItemId(parentId, lc);
 
         Folder folder = mbox.getFolderById(octxt, iid.getId());
         if (folder == null)

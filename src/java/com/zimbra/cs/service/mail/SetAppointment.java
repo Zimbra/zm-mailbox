@@ -80,7 +80,7 @@ public class SetAppointment extends CalendarRequest {
             Mailbox mbox = getRequestedMailbox(lc);
             OperationContext octxt = lc.getOperationContext();
             
-            ItemId iidFolder = new ItemId(request.getAttribute(MailService.A_FOLDER, CreateAppointment.DEFAULT_FOLDER));
+            ItemId iidFolder = new ItemId(request.getAttribute(MailService.A_FOLDER, CreateAppointment.DEFAULT_FOLDER), lc);
             
             sLog.info("<SetAppointment> " + lc.toString());
             

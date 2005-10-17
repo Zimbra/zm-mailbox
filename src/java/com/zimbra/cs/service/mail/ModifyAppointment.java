@@ -90,7 +90,7 @@ public class ModifyAppointment extends CalendarRequest {
             Mailbox mbox = getRequestedMailbox(lc);
             OperationContext octxt = lc.getOperationContext();
 
-            ItemId iid = new ItemId(request.getAttribute(MailService.A_ID));
+            ItemId iid = new ItemId(request.getAttribute(MailService.A_ID), lc);
             int compNum = (int) request.getAttributeLong(MailService.E_INVITE_COMPONENT, 0);
             sLog.info("<ModifyAppointment id=" + iid + " comp=" + compNum + ">");
             

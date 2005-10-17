@@ -76,7 +76,7 @@ public class CreateAppointment extends CalendarRequest {
             Element msgElem = request.getElement(MailService.E_MSG);
 
             // no existing Appt referenced -- this is a new create!
-            ItemId iidFolder = new ItemId(msgElem.getAttribute(MailService.A_FOLDER, DEFAULT_FOLDER));
+            ItemId iidFolder = new ItemId(msgElem.getAttribute(MailService.A_FOLDER, DEFAULT_FOLDER), lc);
             sLog.info("<CreateAppointment folder=" + iidFolder.getId() + "> " + lc.toString());
 
             CreateAppointmentInviteParser parser = new CreateAppointmentInviteParser();

@@ -60,7 +60,7 @@ public class GetAppointment extends DocumentHandler {
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
 
-        ItemId iid = new ItemId(request.getAttribute("id"));
+        ItemId iid = new ItemId(request.getAttribute("id"), lc);
         sLog.info("<GetAppointment id=" + iid.getId() + "> " + lc);
 
         Element response = lc.createElement(MailService.GET_APPOINTMENT_RESPONSE);

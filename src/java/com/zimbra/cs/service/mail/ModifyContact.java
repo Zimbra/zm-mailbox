@@ -59,7 +59,7 @@ public class ModifyContact extends WriteOpDocumentHandler  {
 
         Element cn = request.getElement(MailService.E_CONTACT);
 
-        ItemId iid = new ItemId(cn.getAttribute(MailService.A_ID));
+        ItemId iid = new ItemId(cn.getAttribute(MailService.A_ID), lc);
 
         HashMap attrs = new HashMap();
         for (Iterator it = cn.elementIterator(MailService.E_ATTRIBUTE); it.hasNext(); ) {

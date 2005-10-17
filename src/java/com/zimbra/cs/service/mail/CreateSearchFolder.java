@@ -58,7 +58,7 @@ public class CreateSearchFolder extends WriteOpDocumentHandler  {
         String query     = t.getAttribute(MailService.A_QUERY);
         String types     = t.getAttribute(MailService.A_SEARCH_TYPES, null);
         String sort      = t.getAttribute(MailService.A_SORTBY, null);
-        ItemId iidParent = new ItemId(t.getAttribute(MailService.A_FOLDER));
+        ItemId iidParent = new ItemId(t.getAttribute(MailService.A_FOLDER), lc);
 
         SearchFolder search = mbox.createSearchFolder(lc.getOperationContext(), iidParent.getId(), name, query, types, sort);
 

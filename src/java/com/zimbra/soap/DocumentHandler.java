@@ -198,10 +198,10 @@ public abstract class DocumentHandler {
         String id = getXPath(request, xpath);
         if (id == null)
             return null;
-        ItemId iid = new ItemId(id);
+        ZimbraContext lc = getZimbraContext(context);
+        ItemId iid = new ItemId(id, lc);
 
         // if the "target item" is remote, proxy.
-        ZimbraContext lc = getZimbraContext(context);
         ItemId iidTarget = getProxyTarget(lc, iid, checkMountpointProxy());
         if (iidTarget != null)
             return proxyRequest(request, context, iid, iidTarget);

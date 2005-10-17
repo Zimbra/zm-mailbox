@@ -58,7 +58,7 @@ public class CreateContact extends WriteOpDocumentHandler  {
         Mailbox mbox = getRequestedMailbox(lc);
 
         Element cn = request.getElement(MailService.E_CONTACT);
-        ItemId iidFolder = new ItemId(cn.getAttribute(MailService.A_FOLDER, DEFAULT_FOLDER));
+        ItemId iidFolder = new ItemId(cn.getAttribute(MailService.A_FOLDER, DEFAULT_FOLDER), lc);
         String tagsStr = cn.getAttribute(MailService.A_TAGS, null);
         HashMap attrs = new HashMap();
 

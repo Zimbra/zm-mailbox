@@ -118,7 +118,7 @@ public class ItemAction extends WriteOpDocumentHandler {
             } else if (op.equals(OP_HARD_DELETE))
                 mbox.delete(octxt, id, type, tcon);
             else if (op.equals(OP_MOVE)) {
-                ItemId iidFolder = new ItemId(action.getAttribute(MailService.A_FOLDER));
+                ItemId iidFolder = new ItemId(action.getAttribute(MailService.A_FOLDER), lc);
                 if (!iidFolder.belongsTo(mbox))
                     throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
                 mbox.move(octxt, id, type, iidFolder.getId(), tcon);
@@ -128,7 +128,7 @@ public class ItemAction extends WriteOpDocumentHandler {
                 mbox.move(octxt, id, type, folderId, tcon);
                 SpamHandler.getInstance().handle(mbox, id, type, flagValue);
             } else if (op.equals(OP_UPDATE)) {
-                ItemId iidFolder = new ItemId(action.getAttribute(MailService.A_FOLDER, GetFolder.DEFAULT_FOLDER_ID));
+                ItemId iidFolder = new ItemId(action.getAttribute(MailService.A_FOLDER, GetFolder.DEFAULT_FOLDER_ID), lc);
                 if (!iidFolder.belongsTo(mbox))
                     throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
                 String flags = action.getAttribute(MailService.A_FLAGS, null);
@@ -150,7 +150,7 @@ public class ItemAction extends WriteOpDocumentHandler {
         Account acct = getRequestedAccount(lc);
         String targets[] = ids.split(",");
         for (int i = 0; i < targets.length; i++) {
-            ItemId iid = new ItemId(targets[i]);
+            ItemId iid = new ItemId(targets[i], lc);
             if (iid.belongsTo(acct))
                 local.add(new Integer(iid.getId()));
             else {

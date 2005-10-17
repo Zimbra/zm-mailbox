@@ -84,9 +84,9 @@ public class FolderAction extends ItemAction {
     private String handleFolder(Map context, Element request, String operation, Element actionResponse)
     throws ServiceException, SoapFaultException {
         Element action = request.getElement(MailService.E_ACTION);
-        ItemId iid = new ItemId(action.getAttribute(MailService.A_ID));
 
         ZimbraContext lc = getZimbraContext(context);
+        ItemId iid = new ItemId(action.getAttribute(MailService.A_ID), lc);
         if (!iid.belongsTo(getRequestedAccount(lc)))
             return extractSuccesses(proxyRequest(request, context, iid.getAccountId()));
 
