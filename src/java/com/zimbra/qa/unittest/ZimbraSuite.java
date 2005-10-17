@@ -55,7 +55,6 @@ public class ZimbraSuite extends TestSuite
 
         suite.addTest(new TestSuite(TestUtilCode.class));
         suite.addTest(new TestSuite(TestEmailUtil.class));
-        suite.addTest(new TestSuite(TestParsedItemID.class));
         
         // FIXME: bburtin: commenting out failing tests for now.  Tim
         // suggested waiting until he's done with his parser rewrite

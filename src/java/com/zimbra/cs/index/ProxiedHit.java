@@ -32,7 +32,7 @@ import java.util.Iterator;
 
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
-import com.zimbra.cs.service.util.ParsedItemID;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.soap.Element;
 
@@ -52,47 +52,33 @@ public class ProxiedHit extends ZimbraHit
     protected byte mProxiedItemType = -1;
     protected String mProxiedSubject = null;
     protected String mProxiedName = null;
-    protected String mMailboxIdStr = null;
-    protected ParsedItemID itemID = null;
+    protected ItemId itemID = null;
     
     protected Element mElement;
     
-    private ParsedItemID getParsedItemID() throws ServiceException {
+    private ItemId getParsedItemID() throws ServiceException {
         if (itemID == null)
-            itemID = ParsedItemID.parse(mElement.getAttribute(MailService.A_ID));
+            itemID = new ItemId(mElement.getAttribute(MailService.A_ID), null);
         return itemID;
-    }
-    
-    public String getMailboxIdStr() throws ServiceException { 
-        ParsedItemID id = getParsedItemID();
-        
-        String server = id.getServerIDString();
-        if (server == null) {
-            server = getServer();
-        }
-        
-        return "/"+server+"/"+id.getMailboxIDString();
     }
 
     public ProxiedHit(ProxiedQueryResults results, Element elt) {
         super(results, null, 0.0f);
-        
-        mMailboxIdStr = null;
         mElement = elt;
     }
     
-    boolean inMailbox() throws ServiceException {
+    boolean inMailbox() {
         return true; // hmmm....???
     }
-    boolean inTrash() throws ServiceException {
+    boolean inTrash() {
         return true; // hmmm....???
     }
-    boolean inSpam() throws ServiceException {
+    boolean inSpam() {
         return true; // hmmm....???
     }
 
     public int getSize() throws ServiceException {
-        return (int)mElement.getAttributeLong(MailService.A_SIZE);
+        return (int) mElement.getAttributeLong(MailService.A_SIZE);
     }
     
     public long getDate() throws ServiceException {
@@ -111,15 +97,15 @@ public class ProxiedHit extends ZimbraHit
 
     public int getItemId() throws ServiceException {
         if (mProxiedMsgId <= 0) {
-            ParsedItemID id = getParsedItemID();
-            mProxiedMsgId = id.getItemIDInt();
+            ItemId id = getParsedItemID();
+            mProxiedMsgId = id.getId();
         }
         return mProxiedMsgId;
     }
     
     public byte getItemType() throws ServiceException {
         if (mProxiedItemType <= 0) {
-            mProxiedItemType = (byte)mElement.getAttributeLong(MailService.A_ITEM_TYPE);
+            mProxiedItemType = (byte) mElement.getAttributeLong(MailService.A_ITEM_TYPE);
         }
         return mProxiedItemType;
     }
