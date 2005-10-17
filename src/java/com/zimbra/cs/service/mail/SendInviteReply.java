@@ -165,7 +165,6 @@ public class SendInviteReply extends CalendarRequest {
 //                            toSend, oldInv.getMailItemId(), TYPE_REPLY);
                     
                     sendCalendarMessage(lc, appt.getFolderId(), acct, mbox, dat, response);  
-                    
                 }
                 
                 RecurId recurId = null;
@@ -191,7 +190,11 @@ public class SendInviteReply extends CalendarRequest {
                 mbox.modifyPartStat(octxt, apptId, recurId, cnStr, addressStr, role, verb.getXmlPartStat(), Boolean.FALSE, seqNo, dtStamp);
                         
                 if (acct.getBooleanAttr(Provisioning.A_zimbraPrefDeleteInviteOnReply, true)) {
-                    mbox.move(octxt, inviteMsgId, MailItem.TYPE_MESSAGE, Mailbox.ID_FOLDER_TRASH);
+                    try {
+                        mbox.move(octxt, inviteMsgId, MailItem.TYPE_MESSAGE, Mailbox.ID_FOLDER_TRASH);
+                    } catch (MailServiceException.NoSuchItemException nsie) {
+                        sLog.debug("can't move nonexistent invite to Trash: " + inviteMsgId);
+                    }
                 }
             }
             
@@ -205,9 +208,8 @@ public class SendInviteReply extends CalendarRequest {
         return verb + ": " + inv.getName();
     }
 
-    MimeMessage createDefaultReply(Account acct, Invite inv, 
-            String replySubject, ParsedVerb verb, Calendar iCal) throws ServiceException 
-    {
+    MimeMessage createDefaultReply(Account acct, Invite inv, String replySubject, ParsedVerb verb, Calendar iCal)
+    throws ServiceException {
         /////////
         // Build the default text part and add it to the mime multipart
         StringBuffer replyText = new StringBuffer(acct.getName());
