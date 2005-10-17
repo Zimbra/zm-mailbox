@@ -74,6 +74,7 @@ import net.fortuna.ical4j.model.property.Version;
 import net.fortuna.ical4j.model.property.XProperty;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -1378,14 +1379,18 @@ public class Invite {
         }
         
         toRet.getComponents().add(toVEvent());
-        try {
-            toRet.validate(true);
-        } catch (ValidationException e) { 
-            sLog.info("iCal Validation Exception in CreateAppointmentInviteParser", e);
-            if (e.getCause() != null) {
-                sLog.info("\tcaused by "+e.getCause(), e.getCause());
+        
+        if (DebugConfig.validateOutgoingICalendar) {
+            try {
+                toRet.validate(true);
+            } catch (ValidationException e) { 
+                sLog.info("iCal Validation Exception in CreateAppointmentInviteParser", e);
+                if (e.getCause() != null) {
+                    sLog.info("\tcaused by "+e.getCause(), e.getCause());
+                }
             }
         }
+        
         
         System.out.println("Invite.toICalendar=\n"+toRet.toString());
         

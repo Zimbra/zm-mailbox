@@ -55,7 +55,6 @@ import net.fortuna.ical4j.model.Parameter;
 import net.fortuna.ical4j.model.ParameterList;
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.Recur;
-import net.fortuna.ical4j.model.ValidationException;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.parameter.Cn;
 import net.fortuna.ical4j.model.parameter.PartStat;
@@ -95,14 +94,6 @@ public class CalendarUtils {
             return mbp;
         } catch (MessagingException e) {
             throw ServiceException.FAILURE("Failure creating MimeBodyPart for InviteReply", e);
-        }
-    }
-    
-    static void validateCalendar(Calendar iCal) throws ServiceException {
-        try {
-            iCal.validate();
-        } catch (ValidationException e) {
-            sLog.error("Error validating calendar: "+iCal+"\nerror="+e, e);
         }
     }
     
@@ -255,15 +246,6 @@ public class CalendarUtils {
 
         Calendar iCal = create.toICalendar();
         
-        try {
-            iCal.validate(true);
-        } catch (ValidationException e) { 
-            sLog.info("iCal Validation Exception in CreateAppointmentInviteParser", e);
-            if (e.getCause() != null) {
-                sLog.info("\tcaused by "+e.getCause(), e.getCause());
-            }
-        }
-        
         String summaryStr = create.getName() != null ? create.getName() : "";
         
         ParseMimeMessage.InviteParserResult toRet = new ParseMimeMessage.InviteParserResult();
@@ -316,15 +298,6 @@ public class CalendarUtils {
         }
         
         Calendar iCal = mod.toICalendar();
-        
-        try {
-            iCal.validate(true);
-        } catch (ValidationException e) { 
-            sLog.info("iCal Validation Exception in ModifyAppointmentInviteParser", e);
-            if (e.getCause() != null) {
-                sLog.info("\tcaused by "+e.getCause(), e.getCause());
-            }
-        }
         
         String summaryStr = "";
         if (mod.getName() != null) {

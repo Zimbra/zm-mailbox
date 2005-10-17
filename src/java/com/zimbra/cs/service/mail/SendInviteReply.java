@@ -133,10 +133,6 @@ public class SendInviteReply extends CalendarRequest {
 
                     Calendar iCal = dat.mInvite.toICalendar();
                     
-                    if (DebugConfig.validateOutgoingICalendar) {
-                        CalendarUtils.validateCalendar(iCal);
-                    }
-                    
                     ParseMimeMessage.MimeMessageData parsedMessageData = new ParseMimeMessage.MimeMessageData();
                     
                     // did they specify a custom <m> message?  If so, then we don't have to build one...
