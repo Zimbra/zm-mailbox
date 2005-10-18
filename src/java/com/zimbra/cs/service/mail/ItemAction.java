@@ -78,15 +78,8 @@ public class ItemAction extends WriteOpDocumentHandler {
 
     String handleCommon(Map context, Element request, String opAttr, byte type) throws ServiceException, SoapFaultException {
         Element action = request.getElement(MailService.E_ACTION);
-
-        // figure out which items are local and which ones are remote, and proxy accordingly
-        HashMap remote = new HashMap();
-        ArrayList local = new ArrayList();
         ZimbraContext lc = getZimbraContext(context);
-        partitionItems(lc, action.getAttribute(MailService.A_ID), local, remote);
-        StringBuffer successes = proxyRemoteItems(action, remote, request, context);
-        if (local.isEmpty())
-            return successes.toString();
+        Mailbox mbox = getRequestedMailbox(lc);
 
         // determine the requested operation
         String op;
@@ -97,7 +90,25 @@ public class ItemAction extends WriteOpDocumentHandler {
         } else
             op = opAttr;
 
-        Mailbox mbox = getRequestedMailbox(lc);
+        // move operation needs to be executed in the context of the target folder
+        if (op.equals(OP_MOVE)) {
+            ItemId iidFolder = new ItemId(action.getAttribute(MailService.A_FOLDER), lc);
+            action.addAttribute(MailService.A_FOLDER, iidFolder.toString());
+            if (!iidFolder.belongsTo(mbox))
+                return extractSuccesses(proxyRequest(request, context, iidFolder.getAccountId()));
+        }
+
+        // figure out which items are local and which ones are remote, and proxy accordingly
+        ArrayList local = new ArrayList();
+        HashMap remote = new HashMap();
+        partitionItems(lc, action.getAttribute(MailService.A_ID), local, remote);
+        // we don't yet support moving from a remote mailbox
+        if (op.equals(OP_MOVE) && !remote.isEmpty())
+            throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
+        StringBuffer successes = proxyRemoteItems(action, remote, request, context);
+        if (local.isEmpty())
+            return successes.toString();
+
         OperationContext octxt = lc.getOperationContext();
         String constraint = action.getAttribute(MailService.A_TARGET_CONSTRAINT, null);
         TargetConstraint tcon = TargetConstraint.parseConstraint(mbox, constraint);
@@ -119,8 +130,6 @@ public class ItemAction extends WriteOpDocumentHandler {
                 mbox.delete(octxt, id, type, tcon);
             else if (op.equals(OP_MOVE)) {
                 ItemId iidFolder = new ItemId(action.getAttribute(MailService.A_FOLDER), lc);
-                if (!iidFolder.belongsTo(mbox))
-                    throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
                 mbox.move(octxt, id, type, iidFolder.getId(), tcon);
             } else if (op.equals(OP_SPAM)) {
                 int defaultFolder = flagValue ? Mailbox.ID_FOLDER_SPAM : Mailbox.ID_FOLDER_INBOX;
