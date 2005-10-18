@@ -43,7 +43,10 @@ import com.zimbra.soap.ZimbraContext;
  * @author schemers
  */
 public class DeleteAccount extends AdminDocumentHandler {
-    
+
+    private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminService.E_ID };
+    protected String[] getProxiedAccountPath()  { return TARGET_ACCOUNT_PATH; }
+
     /**
      * Deletes an account and its mailbox.
      */
@@ -62,8 +65,7 @@ public class DeleteAccount extends AdminDocumentHandler {
         if (!account.isCorrectHost()) {
             // Request must be sent to the host that the mailbox is on, so that
             // the mailbox can be deleted
-            throw AccountServiceException.WRONG_HOST(
-                account.getAttr(Provisioning.A_zimbraMailHost), null);
+            throw ServiceException.WRONG_HOST(account.getAttr(Provisioning.A_zimbraMailHost), null);
         }
         Mailbox mbox = Mailbox.getMailboxByAccount(account);
         

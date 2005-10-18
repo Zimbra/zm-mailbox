@@ -44,6 +44,9 @@ public class DeleteMailbox extends AdminDocumentHandler {
 
     private StopWatch sWatch = StopWatch.getInstance("DeleteMailbox");
 
+    private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminService.E_MAILBOX, AdminService.A_ACCOUNTID };
+    protected String[] getProxiedAccountPath()  { return TARGET_ACCOUNT_PATH; }
+
     public Element handle(Element request, Map context) throws ServiceException {
         long startTime = sWatch.start();
         ZimbraContext lc = getZimbraContext(context);

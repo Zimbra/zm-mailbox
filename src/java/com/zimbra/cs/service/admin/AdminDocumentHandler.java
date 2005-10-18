@@ -30,9 +30,14 @@ package com.zimbra.cs.service.admin;
 
 import java.util.Map;
 
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.soap.DocumentHandler;
+import com.zimbra.soap.Element;
+import com.zimbra.soap.SoapFaultException;
 
 
 /** @author schemers */
@@ -48,6 +53,26 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
 
     public boolean isAdminCommand() {
         return true;
+    }
+
+    protected String[] getProxiedAccountPath()  { return null; }
+
+    protected Element proxyIfNecessary(Element request, Map context) throws ServiceException, SoapFaultException {
+        String[] xpath = getProxiedAccountPath();
+        if (xpath == null)
+            return super.proxyIfNecessary(request, context);
+        String acctId = getXPath(request, xpath);
+        if (acctId == null)
+            return super.proxyIfNecessary(request, context);
+
+        // if there's a remote target acount and we haven't explicitly been told to execute here, proxy.
+        if (getZimbraContext(context).getProxyTarget() != null) {
+            Account acct = Provisioning.getInstance().getAccountById(acctId);
+            if (acct != null && !LOCAL_HOST.equalsIgnoreCase(acct.getAttr(Provisioning.A_zimbraMailHost)))
+                return proxyRequest(request, context, acctId);
+        }
+
+        return super.proxyIfNecessary(request, context);
     }
 
     /** Fetches the in-memory {@link Session} object appropriate for this request.
