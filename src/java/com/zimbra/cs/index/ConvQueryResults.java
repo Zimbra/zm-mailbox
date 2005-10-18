@@ -126,31 +126,11 @@ class ConvQueryResults extends ZimbraQueryResultsImpl {
         mNextHit = null;
     }
     
-//    public ZimbraHit getFirstHit() throws ServiceException {
-//        mSeenConversations.clear();
-//        mResults.resetIterator();
-//        mNextHitNo = 0;
-//        mCachedResults.clear(); // must clear since we clear mSeenConversations...
-//        ZimbraHit retVal = null;
-//        retVal = internalGetNextHit();
-//        if (retVal != null) {
-//            mCachedResults.add(mNextHitNo, retVal);
-//        }
-//        if (retVal != null) {
-//            mNextHitNo++;
-//        }
-//        return retVal;
-//    }
-
     public ZimbraHit getNext() throws ServiceException {
         ZimbraHit retVal = null;
         if (mCachedResults.size() > mNextHitNo) {
             retVal = (ZimbraHit)mCachedResults.get(mNextHitNo);
         } else {
-//            retVal = internalGetNextHit();
-//            if (retVal != null) {
-//                mCachedResults.add(mNextHitNo, retVal);
-//            }
             if (bufferNextHit()) {
                 retVal = mNextHit;
                 mCachedResults.add(mNextHitNo, mNextHit);

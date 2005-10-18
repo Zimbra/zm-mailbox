@@ -126,16 +126,6 @@ class MsgQueryResults extends ZimbraQueryResultsImpl
         return mNextHit;
     }
     
-//    public ZimbraHit getFirstHit() throws ServiceException {
-//        mSeenMsgs.clear();
-//        mResults.resetIterator();
-//        return internalGetNextHit();
-//    }
-//
-//    public ZimbraHit getNextHit() throws ServiceException {
-//        return internalGetNextHit();
-//    }
-
     public void doneWithSearchResults() throws ServiceException {
         mResults.doneWithSearchResults();
     }

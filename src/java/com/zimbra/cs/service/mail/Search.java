@@ -183,7 +183,10 @@ public class Search extends DocumentHandler  {
         
         if (results == null) {
             try {
-                results = mbox.search(lc.getOperationContext(), params.getQueryStr(), params.getTypesStr(), params.getSortByStr());
+                byte[] types = MailboxIndex.parseGroupByString(params.getTypesStr());
+                int sort = MailboxIndex.parseSortByString(params.getSortByStr());
+                
+                results = mbox.search(lc.getOperationContext(), params.getQueryStr(), types, sort);
                 if (!DONT_CACHE_RESULTS) {
                     session.putQueryResults(params.getQueryStr(), params.getTypesStr(), params.getSortByStr(), results);
                 }
@@ -216,7 +219,7 @@ public class Search extends DocumentHandler  {
         } else {
             for (ZimbraHit hit = results.skipToHit(offset); hit != null; hit = results.getNext()) {
                 totalNumHits++;
-                boolean inline = totalNumHits == 1 && params.getFetchFirst();
+                boolean inline = (totalNumHits == 1 && params.getFetchFirst());
                 Element e = null;
                 if (hit instanceof ConversationHit) {
                     ConversationHit ch = (ConversationHit) hit;

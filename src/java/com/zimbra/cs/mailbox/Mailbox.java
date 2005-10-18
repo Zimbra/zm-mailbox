@@ -2210,14 +2210,6 @@ public class Mailbox {
         }
     }
     
-
-    public ZimbraQueryResults search(OperationContext octxt, String queryString, String groupBy, String sortBy) throws IOException, ParseException, ServiceException {
-//        int group = MailboxIndex.parseGroupByString(groupBy);
-        byte[] types = MailboxIndex.parseGroupByString(groupBy);
-        int sort = MailboxIndex.parseSortByString(sortBy);
-        return search(octxt, queryString, types, sort);
-    }
-
     public ZimbraQueryResults search(OperationContext octxt, String queryString, byte[] types, int sortBy) 
     throws IOException, ParseException, ServiceException {
         Account acct = getAccount();
