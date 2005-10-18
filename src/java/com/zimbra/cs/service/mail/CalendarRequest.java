@@ -96,15 +96,18 @@ public abstract class CalendarRequest extends SendMsg {
             OperationContext octxt = lc.getOperationContext();
 
             boolean notifyOwner = lc.isDelegatedRequest() && acct.getBooleanAttr(Provisioning.A_zimbraPrefCalendarNotifyDelegatedChanges, false);
-            if (notifyOwner)
+            if (notifyOwner) {
                 try {
                     InternetAddress addr = new InternetAddress(acct.getName());
                     csd.mMm.addRecipient(javax.mail.Message.RecipientType.TO, addr);
                 } catch (MessagingException e) {
                     throw ServiceException.FAILURE("count not add calendar owner to recipient list", e);
                 }
+            }
 
-            ParsedMessage pm = new ParsedMessage(csd.mMm, mbox.attachmentsIndexingEnabled());
+            // DON'T try to do a full text-extraction attachments: if the calendar message doesn't 
+            // have useful text in the body, then so be it
+            ParsedMessage pm = new ParsedMessage(csd.mMm, false);
             
             if (csd.mInvite.getFragment() == null || csd.mInvite.getFragment().equals("")) {
                 csd.mInvite.setFragment(pm.getFragment());
