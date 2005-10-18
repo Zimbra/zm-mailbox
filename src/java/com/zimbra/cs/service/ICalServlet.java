@@ -63,8 +63,7 @@ public class ICalServlet extends ZimbraBasicAuthServlet {
     throws ServiceException, IOException
     {
         resp.setContentType("text/calendar");
-        StringBuffer sb = new StringBuffer();
-
+        
         long MSECS_PER_DAY = 1000*60*60*24;
         long rangeStart = System.currentTimeMillis() - (30*MSECS_PER_DAY);
         long rangeEnd = rangeStart+(90*MSECS_PER_DAY);
@@ -77,7 +76,7 @@ public class ICalServlet extends ZimbraBasicAuthServlet {
             calOut.output(cal, buf);            
             resp.getOutputStream().write(buf.toByteArray());
         } catch (ValidationException e) {
-            throw ServiceException.FAILURE("unable to get calendar "+e, e);
+            throw ServiceException.FAILURE("For account:"+acct.getName()+" mbox:"+mailbox.getId()+" unable to get calendar "+e, e);
         }
     }
 }
