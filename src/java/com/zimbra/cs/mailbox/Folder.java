@@ -837,8 +837,20 @@ public class Folder extends MailItem {
 
 	void decodeMetadata(Metadata meta) throws ServiceException {
         super.decodeMetadata(meta);
+
+        // avoid a painful data migration...
+        byte view = TYPE_UNKNOWN;
+        switch (mId) {
+            case Mailbox.ID_FOLDER_INBOX:
+            case Mailbox.ID_FOLDER_SPAM:
+            case Mailbox.ID_FOLDER_SENT:
+            case Mailbox.ID_FOLDER_DRAFTS:    view = MailItem.TYPE_MESSAGE;      break;
+            case Mailbox.ID_FOLDER_CALENDAR:  view = MailItem.TYPE_APPOINTMENT;  break;
+            case Mailbox.ID_FOLDER_CONTACTS:  view = MailItem.TYPE_CONTACT;      break;
+        }
+        mDefaultView = (byte) meta.getLong(Metadata.FN_VIEW, view);
         mAttributes  = (byte) meta.getLong(Metadata.FN_ATTRS, 0);
-        mDefaultView = (byte) meta.getLong(Metadata.FN_VIEW, TYPE_UNKNOWN);
+
         MetadataList mlistACL = meta.getList(Metadata.FN_RIGHTS, true);
         if (mlistACL != null)
             if ((mRights = new ACL(mlistACL)).isEmpty())
