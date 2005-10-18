@@ -78,7 +78,7 @@ public class Main {
         mOptions.addOption("x", "expand",  false, "Expand values.");
         mOptions.addOption("s", "show",    false, "Force display of password strings.");
         mOptions.addOption("f", "force",   false, "Allow editing of keys whose change is known to be potentially dangerous.");
-        mOptions.addOption("m", "format",  true,  "Show values in one of these formats: plain (default), xml, shell, nokey.");
+        mOptions.addOption("m", "format",  true,  "Show values in one of these formats: plain (default), xml, shell, export, nokey.");
         mOptions.addOption("q", "quiet",   false, "Suppress logging.");
         mOptions.addOption("h", "help",    false, "Show this usage information.");
     }

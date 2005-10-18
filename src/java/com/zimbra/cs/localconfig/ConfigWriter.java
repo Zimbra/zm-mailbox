@@ -44,6 +44,7 @@ public abstract class ConfigWriter {
     
     public static final String FORMAT_PLAIN = "plain";
     public static final String FORMAT_SHELL = "shell";
+    public static final String FORMAT_EXPORT = "export";
     public static final String FORMAT_XML = "xml";
     public static final String FORMAT_NOKEY = "nokey";
  
@@ -63,6 +64,8 @@ public abstract class ConfigWriter {
             return new XmlConfigWriter(expandVariables, hidePasswords);
         if (format.equals(FORMAT_SHELL))
             return new ShellConfigWriter();
+        if (format.equals(FORMAT_EXPORT))
+            return new ExportConfigWriter();
         if (format.equals(FORMAT_NOKEY))
             return new NokeyConfigWriter(expandVariables, hidePasswords);
         throw new ConfigException("format " + format + " not known");
@@ -134,7 +137,7 @@ public abstract class ConfigWriter {
         }
         
     }
-    
+
     private static class ShellConfigWriter extends ConfigWriter {
 
         private ShellConfigWriter() {
@@ -159,6 +162,35 @@ public abstract class ConfigWriter {
                 }
                 sb.append('\'');
                 pw.println(p.mKey + "=" + sb + ";");
+            }
+            pw.flush();
+        }
+    }
+
+    private static class ExportConfigWriter extends ConfigWriter {
+
+        private ExportConfigWriter() {
+            // ExportWriter always expands variables and does not hide passwords!
+            super(true, false);
+        }
+        
+        public void write(Writer writer) {
+            PrintWriter pw = new PrintWriter(writer);
+            for (Iterator iter = mItems.iterator(); iter.hasNext();) {
+                Pair p = (Pair)iter.next();
+                int vlen = p.mValue.length();
+                StringBuffer sb = new StringBuffer(vlen + 2);
+                sb.append('\'');
+                for (int i = 0; i < vlen; i++) {
+                    char ch = p.mValue.charAt(i);
+                    if (ch == '\'') {
+                        sb.append("''");
+                    } else {
+                        sb.append(ch);
+                    }
+                }
+                sb.append('\'');
+                pw.println("export " + p.mKey + "=" + sb + ";");
             }
             pw.flush();
         }
