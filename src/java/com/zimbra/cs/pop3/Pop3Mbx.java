@@ -75,7 +75,7 @@ class Pop3Mbx {
         } else {
             ZimbraQueryResults results;
             try {
-                results = mailbox.search(mOpContext, query, new byte[] { MailItem.TYPE_MESSAGE }, MailboxIndex.SEARCH_ORDER_DATE_DESC);
+                results = mailbox.search(mOpContext, query, new byte[] { MailItem.TYPE_MESSAGE }, MailboxIndex.SEARCH_ORDER_DATE_DESC, 1000);
                 items = new ArrayList();
                 while (results.hasNext()) {
                     ZimbraHit hit = results.getNext();

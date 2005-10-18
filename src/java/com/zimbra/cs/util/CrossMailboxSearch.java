@@ -260,7 +260,7 @@ public class CrossMailboxSearch
                     for (int i = 0; i < ids.length; i++) {
                         Mailbox mbx = Mailbox.getMailboxById(ids[i]);
                         // FIXME: really shouldn't use null as the OperationContext here...
-                        toRet[i] = mbx.search(null, params.getQueryStr(), params.getTypes(), params.getSortBy());
+                        toRet[i] = mbx.search(null, params.getQueryStr(), params.getTypes(), params.getSortBy(), 100);
                     }
                 } else {
                     toRet = new ZimbraQueryResults[mboxes.size()];
@@ -269,7 +269,7 @@ public class CrossMailboxSearch
                         ParseMailboxID id = (ParseMailboxID)iter.next();
                         assert(id.isLocal());
                         // FIXME: really shouldn't use null as the OperationContext here...
-                        toRet[i++] = id.getMailbox().search(null, params.getQueryStr(), params.getTypes(), params.getSortBy());
+                        toRet[i++] = id.getMailbox().search(null, params.getQueryStr(), params.getTypes(), params.getSortBy(), 100);
                     }
                 }
                 

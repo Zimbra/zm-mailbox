@@ -58,7 +58,7 @@ public class NoTermQueryOperation extends QueryOperation {
     }
 
     protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res,
-            MailboxIndex mbidx) throws IOException, ServiceException {
+            MailboxIndex mbidx, int chunkSize) throws IOException, ServiceException {
     }
 
     QueryOperation ensureSpamTrashSetting(Mailbox mbox, boolean includeTrash,

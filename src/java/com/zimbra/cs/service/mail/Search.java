@@ -186,7 +186,7 @@ public class Search extends DocumentHandler  {
                 byte[] types = MailboxIndex.parseGroupByString(params.getTypesStr());
                 int sort = MailboxIndex.parseSortByString(params.getSortByStr());
                 
-                results = mbox.search(lc.getOperationContext(), params.getQueryStr(), types, sort);
+                results = mbox.search(lc.getOperationContext(), params.getQueryStr(), types, sort, params.getLimit() + params.getOffset());
                 if (!DONT_CACHE_RESULTS) {
                     session.putQueryResults(params.getQueryStr(), params.getTypesStr(), params.getSortByStr(), results);
                 }

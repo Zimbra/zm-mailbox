@@ -339,8 +339,10 @@ class DBQueryOperation extends QueryOperation
     private Collection /* Integer blobid */ mDBHits;
     private Iterator mDBHitsIter;
     private int mCurHitsOffset = 0; // -1 means "no more results"
-    private final int HITS_PER_CHUNK = 100;
+//    private final int HITS_PER_CHUNK = 100;
     private boolean atStart = true; // don't re-fill buffer twice if they call hasNext() then reset() w/o actually getting next
+    
+    private int mHitsPerChunk = 100;
     
     /******************
      * 
@@ -682,7 +684,7 @@ class DBQueryOperation extends QueryOperation
                 
                 if (mLuceneOp == null) {
                     c.offset = mCurHitsOffset;
-                    c.limit = HITS_PER_CHUNK;
+                    c.limit = mHitsPerChunk;
                     mDBHits = DbMailItem.search(conn, c);
                     
                 } else {
@@ -690,7 +692,7 @@ class DBQueryOperation extends QueryOperation
                     do {
                         // DON'T set an sql LIMIT if we're asking for lucene hits!!!  If we did, then we wouldn't be
                         // sure that we'd "consumed" all the Lucene-ID's, and therefore we could miss hits!
-                        mLuceneChunk = mLuceneOp.getNextIndexedIdChunk(HITS_PER_CHUNK);
+                        mLuceneChunk = mLuceneOp.getNextIndexedIdChunk(mHitsPerChunk);
                         c.indexIds = mLuceneChunk.getIndexIds();
                         
                         if (c.indexIds.length == 0) {
@@ -729,7 +731,7 @@ class DBQueryOperation extends QueryOperation
             mDBHitsIter = null;
             mDBHits = null;
         } else {
-            if (mLuceneOp == null && mDBHits.size() < HITS_PER_CHUNK) {
+            if (mLuceneOp == null && mDBHits.size() < mHitsPerChunk) {
                 mEndOfHits = true;
             }
             mCurHitsOffset += mDBHits.size();
@@ -740,13 +742,22 @@ class DBQueryOperation extends QueryOperation
     /* (non-Javadoc)
      * @see com.zimbra.cs.index.QueryOperation#prepare(com.zimbra.cs.mailbox.Mailbox, com.zimbra.cs.index.ZimbraQueryResultsImpl, com.zimbra.cs.index.MailboxIndex)
      */
-    protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res, MailboxIndex mbidx) throws ServiceException, IOException
+    protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res, MailboxIndex mbidx, int chunkSize) throws ServiceException, IOException
     {
+        if (chunkSize < 50) {
+            chunkSize = 50;
+        } else if (chunkSize > 500) {
+            chunkSize = 500;
+        }
+        
+        mHitsPerChunk = chunkSize;
+        
         setupResults(mbx, res);
         
         if (mLuceneOp != null) {
+            mHitsPerChunk *= 3; // 
             mLuceneOp.setDBOperation(this);
-            mLuceneOp.prepare(mbx, res, mbidx);
+            mLuceneOp.prepare(mbx, res, mbidx, 30);
         }
     }
     

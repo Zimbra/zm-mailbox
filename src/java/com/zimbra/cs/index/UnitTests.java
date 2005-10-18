@@ -490,7 +490,7 @@ public class UnitTests extends TestCase {
                 break;
             }
             
-            ZimbraQueryResults res = searcher.search(zq, types, MailboxIndex.SEARCH_ORDER_DATE_DESC, false, false);
+            ZimbraQueryResults res = searcher.search(zq, types, MailboxIndex.SEARCH_ORDER_DATE_DESC, false, false, 100);
             try {
                 
 //                long endTime = System.currentTimeMillis();

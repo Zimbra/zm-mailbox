@@ -91,7 +91,7 @@ public class RssServlet extends ZimbraBasicAuthServlet {
             channel.addElement("description").setText(query);
 
             OperationContext octxt = new OperationContext(acct);
-            results = mailbox.search(octxt, query, new byte[] { MailItem.TYPE_MESSAGE }, MailboxIndex.SEARCH_ORDER_DATE_DESC);
+            results = mailbox.search(octxt, query, new byte[] { MailItem.TYPE_MESSAGE }, MailboxIndex.SEARCH_ORDER_DATE_DESC, 500);
             SimpleDateFormat sdf = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
             MailDateFormat mdf = new MailDateFormat();                
             while (results.hasNext()) {

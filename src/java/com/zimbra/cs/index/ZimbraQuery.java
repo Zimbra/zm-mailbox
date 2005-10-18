@@ -1470,7 +1470,7 @@ public final class ZimbraQuery {
 	 * @throws ServiceException
 	 */
 	public ZimbraQueryResults execute(int mailboxId, MailboxIndex mbidx, byte[] types, int searchOrder,
-	        boolean includeTrash, boolean includeSpam) throws IOException, ServiceException 
+	        boolean includeTrash, boolean includeSpam, int chunkSize) throws IOException, ServiceException 
 	        {
 	    BaseQuery head = getHead();
 	    if (null != head) {
@@ -1508,7 +1508,7 @@ public final class ZimbraQuery {
                     mLog.debug("OPERATION:"+op.toString());
                 }
                 
-                ZimbraQueryResults res = op.run(mbox, mbidx, types, searchOrder);
+                ZimbraQueryResults res = op.run(mbox, mbidx, types, searchOrder, chunkSize);
                 return res;
             } else {
                 mLog.debug("Operation optimized to nothing.  Returning no results");

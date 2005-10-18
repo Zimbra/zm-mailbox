@@ -86,8 +86,14 @@ abstract class QueryOperation implements ZimbraQueryResults
     
     ////////////////////
     // Top-Level Execution  
-    final ZimbraQueryResults run(Mailbox mbox, MailboxIndex mbidx, byte[] types, int searchOrder) throws IOException, ServiceException
+    final ZimbraQueryResults run(Mailbox mbox, MailboxIndex mbidx, byte[] types, int searchOrder, int chunkSize) throws IOException, ServiceException
     {
+        if (chunkSize < 30) {
+            chunkSize = 30;
+        } else if (chunkSize > 1000) {
+            chunkSize = 1000;
+        }
+        
         int retType = MailboxIndex.SEARCH_RETURN_DOCUMENTS;
         for (int i = 0; i < types.length; i++) {
             if (types[i] == MailItem.TYPE_CONVERSATION) {
@@ -101,13 +107,16 @@ abstract class QueryOperation implements ZimbraQueryResults
         }
         
         // set me to TRUE if you're returning Conversations or something which could benefit from preloading        
-        boolean preloadOuterResults = false; 
+        boolean preloadOuterResults = false;
+        
+        int outerChunkSize = chunkSize;
 
         
         switch (retType) {
         case MailboxIndex.SEARCH_RETURN_CONVERSATIONS:
             if (USE_PRELOADING_GROUPER) {
-                setupResults(mbox, new ConvQueryResults(new ItemPreloadingGrouper(this, 100, mbox), types, searchOrder));
+                setupResults(mbox, new ConvQueryResults(new ItemPreloadingGrouper(this, chunkSize, mbox), types, searchOrder));
+                chunkSize*=3; // guess 2 msgs per conv
             } else {
                 setupResults(mbox, new ConvQueryResults(this, types, searchOrder));
             }
@@ -115,24 +124,24 @@ abstract class QueryOperation implements ZimbraQueryResults
             break;
         case MailboxIndex.SEARCH_RETURN_MESSAGES:
             if (USE_PRELOADING_GROUPER) {
-                setupResults(mbox, new MsgQueryResults(new ItemPreloadingGrouper(this, 30, mbox), types, searchOrder));
+                setupResults(mbox, new MsgQueryResults(new ItemPreloadingGrouper(this, chunkSize, mbox), types, searchOrder));
             } else {
                 setupResults(mbox, new MsgQueryResults(this, types, searchOrder));
             }
             break;
         case MailboxIndex.SEARCH_RETURN_DOCUMENTS:
             if (USE_PRELOADING_GROUPER) {
-                setupResults(mbox, new UngroupedQueryResults(new ItemPreloadingGrouper(this, 30, mbox), types, searchOrder));
+                setupResults(mbox, new UngroupedQueryResults(new ItemPreloadingGrouper(this, chunkSize, mbox), types, searchOrder));
             } else {
                 setupResults(mbox, new UngroupedQueryResults(this, types, searchOrder));
             }
             break;
         }
         
-        prepare(mMailbox, mResults, mbidx);
+        prepare(mMailbox, mResults, mbidx, chunkSize);
         
         if (USE_PRELOADING_GROUPER && preloadOuterResults) {
-            return new ItemPreloadingGrouper(mResults, 30, mbox);
+            return new ItemPreloadingGrouper(mResults, outerChunkSize, mbox);
         } else {
             return mResults;
         }
@@ -161,10 +170,12 @@ abstract class QueryOperation implements ZimbraQueryResults
      * @param mbx
      * @param res
      * @param mbidx
+     * @param chunkSize A hint to the query operation telling it what size to chunk data in.  Higher numbers
+     *                   can be more efficient if you are using a lot of results, but have more overhead 
      * @throws IOException
      * @throws ServiceException
      */
-    protected abstract void prepare(Mailbox mbx, ZimbraQueryResultsImpl res, MailboxIndex mbidx) throws IOException, ServiceException;
+    protected abstract void prepare(Mailbox mbx, ZimbraQueryResultsImpl res, MailboxIndex mbidx, int chunkSize) throws IOException, ServiceException;
 
 	public ZimbraHit getFirstHit() throws ServiceException {
 		resetIterator();

@@ -175,7 +175,7 @@ public class IndexEditor {
 	        ZimbraQuery zq = new ZimbraQuery(qstr, Mailbox.getMailboxById(mMailboxId));
             
 //	        return new SingleQueryResults(mMailbox.search(zq, types, sortBy), mMailbox);
-            return mMailbox.search(zq, types, sortBy, false, false); 
+            return mMailbox.search(zq, types, sortBy, false, false, 100); 
 	    }
 	}
 	
@@ -210,7 +210,7 @@ public class IndexEditor {
 	        ZimbraQueryResults[] res = new ZimbraQueryResults[mMailbox.length];
 	        for (int i = 0; i < mMailbox.length; i++) {
 		        ZimbraQuery zq = new ZimbraQuery(qstr, Mailbox.getMailboxById(mMailboxId[i]));
-	            res[i] = mMailbox[i].search(zq, types, sortBy, false, false);
+	            res[i] = mMailbox[i].search(zq, types, sortBy, false, false, 100);
 	        }
 	        return new HitIdGrouper(new MultiQueryResults(res, sortBy), sortBy);
 	    }

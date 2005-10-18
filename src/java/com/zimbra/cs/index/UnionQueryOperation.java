@@ -284,7 +284,7 @@ class UnionQueryOperation extends QueryOperation
     }
 
 
-    protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res, MailboxIndex mbidx) throws ServiceException, IOException
+    protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res, MailboxIndex mbidx, int chunkSize) throws ServiceException, IOException
     {
         this.setupResults(mbx, res);
         
@@ -293,7 +293,7 @@ class UnionQueryOperation extends QueryOperation
             if (mLog.isDebugEnabled()) {
                 mLog.debug("Executing: "+qop.toString());
             }
-            qop.prepare(mbx, res, mbidx);
+            qop.prepare(mbx, res, mbidx, chunkSize);
         }
         
         internalGetNext();

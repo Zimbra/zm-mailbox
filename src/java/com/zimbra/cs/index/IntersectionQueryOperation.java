@@ -650,15 +650,24 @@ class IntersectionQueryOperation extends QueryOperation {
     private HitGrouper mMessageGrouper[] = null;
 
     protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res,
-            MailboxIndex mbidx) throws ServiceException, IOException 
+            MailboxIndex mbidx, int chunkSize) throws ServiceException, IOException 
     {
+        if (chunkSize > 1000) {
+            chunkSize = 1000;
+        } else if (chunkSize < 50) {
+            chunkSize = 50;
+        }
+        
+        // scale up the chunk size since we are doing an intersection...
+        chunkSize = chunkSize * 3;
+        
         
         mMessageGrouper = new HitGrouper[mQueryOperations.size()];
         this.setupResults(mbx, res);
         
         for (int i = 0; i < mQueryOperations.size(); i++) {
             QueryOperation op = (QueryOperation) mQueryOperations.get(i);
-            op.prepare(mbx, res, mbidx);
+            op.prepare(mbx, res, mbidx, chunkSize);
             mMessageGrouper[i] = new HitGrouper(op, res.getSearchOrder());
 
             if (!op.hasNext()) {

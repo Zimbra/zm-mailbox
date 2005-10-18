@@ -2210,7 +2210,18 @@ public class Mailbox {
         }
     }
     
-    public ZimbraQueryResults search(OperationContext octxt, String queryString, byte[] types, int sortBy) 
+    /**
+     * @param octxt
+     * @param queryString
+     * @param types
+     * @param sortBy
+     * @param chunkSize A hint to the search engine telling it the size of the result set you are expecting
+     * @return
+     * @throws IOException
+     * @throws ParseException
+     * @throws ServiceException
+     */
+    public ZimbraQueryResults search(OperationContext octxt, String queryString, byte[] types, int sortBy, int chunkSize) 
     throws IOException, ParseException, ServiceException {
         Account acct = getAccount();
         boolean includeTrash = 
@@ -2218,18 +2229,31 @@ public class Mailbox {
         boolean includeSpam = 
             acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeSpamInSearch, false);
         
-        return search(octxt, queryString, types, sortBy, includeTrash, includeSpam);
+        return search(octxt, queryString, types, sortBy, includeTrash, includeSpam, chunkSize);
     }
 
+    /**
+     * @param octxt
+     * @param queryString
+     * @param types
+     * @param sortBy
+     * @param includeTrash
+     * @param includeSpam
+     * @param chunkSize A hint to the search engine telling it the size of the result set you are expecting
+     * @return
+     * @throws IOException
+     * @throws ParseException
+     * @throws ServiceException
+     */
     public synchronized ZimbraQueryResults search(OperationContext octxt, String queryString, byte[] types,
-                                                  int sortBy, boolean includeTrash, boolean includeSpam)
+                                                  int sortBy, boolean includeTrash, boolean includeSpam, int chunkSize)
     throws IOException, ParseException, ServiceException {
         boolean success = false;
         try {
             beginTransaction("search", octxt);
 
             ZimbraQuery zq = new ZimbraQuery(queryString, this); 
-            ZimbraQueryResults results = getMailboxIndex().search(zq, types, sortBy, includeTrash, includeSpam);
+            ZimbraQueryResults results = getMailboxIndex().search(zq, types, sortBy, includeTrash, includeSpam, chunkSize);
             success = true;
             return results;
         } finally {

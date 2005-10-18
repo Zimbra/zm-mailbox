@@ -40,6 +40,9 @@ import com.zimbra.cs.service.ServiceException;
  * Take a bunch of QueryResults (each sorted with the same sort-order) and 
  * iterate them in order....kind of like a MergeSort
  * 
+ * The primary use of this class is for cross-mailbox-search, when you need to
+ * aggregate search results together from many mailboxes 
+ * 
  */
 public class MultiQueryResults implements ZimbraQueryResults
 {

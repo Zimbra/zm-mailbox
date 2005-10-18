@@ -197,13 +197,13 @@ class LuceneQueryOperation extends QueryOperation
     {
     }
     
-    protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res, MailboxIndex mbidx) throws ServiceException, IOException
+    protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res, MailboxIndex mbidx, int chunkSize) throws ServiceException, IOException
     {
         if (mDBOp == null) {
             // wrap ourselves in a DBQueryOperation, since we're eventually going to need to go to the DB
             mDBOp = DBQueryOperation.Create();
             mDBOp.addLuceneOp(this);
-            mDBOp.prepare(mbx, res, mbidx); // will call back into this function again!
+            mDBOp.prepare(mbx, res, mbidx, chunkSize); // will call back into this function again!
         } else {
             this.setupResults(mbx, res);
             
