@@ -529,6 +529,19 @@ public class ToXML {
         apptElt.addAttribute(MailService.A_ID, lc.formatItemId(appt));
         apptElt.addAttribute(MailService.A_FOLDER, lc.formatItemId(appt.getFolderId()));
         
+        if (needToOutput(fields, Change.MODIFIED_CONTENT) && appt.getSavedSequence() != 0)
+            apptElt.addAttribute(MailService.A_REVISION, appt.getSavedSequence());
+        if (needToOutput(fields, Change.MODIFIED_SIZE))
+            apptElt.addAttribute(MailService.A_SIZE, appt.getSize());
+        if (needToOutput(fields, Change.MODIFIED_DATE))
+            apptElt.addAttribute(MailService.A_DATE, appt.getDate());
+        if (needToOutput(fields, Change.MODIFIED_FOLDER))
+            apptElt.addAttribute(MailService.A_FOLDER, lc.formatItemId(appt.getFolderId()));
+        recordItemTags(apptElt, appt, fields);
+        if (needToOutput(fields, Change.MODIFIED_CONFLICT))
+            apptElt.addAttribute(MailService.A_CHANGE_DATE, appt.getChangeDate() / 1000);
+        
+        
         encodeReplies(apptElt, appt);
         
         for (int i = 0; i < appt.numInvites(); i++) {
