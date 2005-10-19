@@ -56,7 +56,7 @@ public class ExtensionUtil {
 					ZimbraExtension ext = (ZimbraExtension)clz.newInstance();
 					try {
 						ext.init();
-						ZimbraLog.extensions.info("Destroyed extension: " + name + "@" + zcl);
+						ZimbraLog.extensions.info("Initialized extension: " + name + "@" + zcl);
 						sInitializedExtensions.add(ext);
 					} catch (Throwable t) { 
 						ZimbraLog.extensions.warn("exception in " + name + ".init()", t);
@@ -81,7 +81,7 @@ public class ExtensionUtil {
 			ZimbraExtension ext = (ZimbraExtension)iter.previous();
 			try {
 				ext.destroy();
-				ZimbraLog.extensions.info("Initialized extension: " + ext.getClass().getName() + "@" + ext.getClass().getClassLoader());
+				ZimbraLog.extensions.info("Destroyed extension: " + ext.getClass().getName() + "@" + ext.getClass().getClassLoader());
 				iter.remove();
 			} catch (Throwable t) {
 				ZimbraLog.extensions.warn("exception in " + ext.getClass().getName() + ".destroy()", t);
