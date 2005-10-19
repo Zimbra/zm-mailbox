@@ -449,7 +449,9 @@ public abstract class Provisioning {
      * the auto-generated sieve script
      */
     public static final String A_zimbraMailSieveScript = "zimbraMailSieveScript";
-    
+
+    public static final String A_zimbraLogHostname = "zimbraLogHostname";
+
     public static final String A_zimbraMtaAuthEnabled = "zimbraMtaAuthEnabled";
     public static final String A_zimbraMtaBlockedExtension = "zimbraMtaBlockedExtension";
     public static final String A_zimbraMtaCommonBlockedExtension = "zimbraMtaCommonBlockedExtension";

@@ -32,11 +32,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbServiceStatus;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
+import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraContext;
 
 /**
@@ -44,7 +46,14 @@ import com.zimbra.soap.ZimbraContext;
  */
 public class GetServiceStatus extends AdminDocumentHandler {
 
-	public Element handle(Element request, Map context) throws ServiceException {
+	public Element handle(Element request, Map context) throws SoapFaultException, ServiceException {
+        // this command can only execute on the monitor host, so proxy if necessary
+        Provisioning prov = Provisioning.getInstance();
+        String monitorHost = prov.getConfig().getAttr(Provisioning.A_zimbraLogHostname);
+        if (monitorHost == null || monitorHost.trim().equals(""))
+            throw ServiceException.FAILURE("zimbraLogHostname is not configured", null);
+        if (!monitorHost.equalsIgnoreCase(prov.getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname)))
+            return proxyRequest(request, context, monitorHost);
 
         ZimbraContext lc = getZimbraContext(context);
 
@@ -61,7 +70,7 @@ public class GetServiceStatus extends AdminDocumentHandler {
 	}
 
 	// <status server="..." service="..." t="...">{status}<status/>
-    public static void doServiceStatus(Element e, List stats) throws ServiceException {
+    public static void doServiceStatus(Element e, List stats) {
         for (Iterator it = stats.iterator(); it.hasNext(); ) {
             DbServiceStatus stat = (DbServiceStatus) it.next();
             Element s = e.addElement(AdminService.E_STATUS);
