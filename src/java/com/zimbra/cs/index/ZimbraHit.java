@@ -50,8 +50,6 @@ public abstract class ZimbraHit
         mMailbox = mbx;
         mResults = results;
         mScore = score;
-//        assert(mbx != null);
-        assert(mResults != null);
     }
     
     public String toString() {
@@ -203,7 +201,7 @@ public abstract class ZimbraHit
      * 
      * @param sortOrder
      * @param other
-     * @return <0 if "this" is BEFORE other, 0 if EQUAL, <0 if this AFTER other
+     * @return <0 if "this" is BEFORE other, 0 if EQUAL, >0 if this AFTER other
      * @throws ServiceException
      */
     final int compareBySortField(int sortOrder, ZimbraHit other) throws ServiceException {

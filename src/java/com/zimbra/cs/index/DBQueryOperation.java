@@ -343,6 +343,7 @@ class DBQueryOperation extends QueryOperation
     private boolean atStart = true; // don't re-fill buffer twice if they call hasNext() then reset() w/o actually getting next
     
     private int mHitsPerChunk = 100;
+    private static final int MAX_HITS_PER_CHUNK = 2000; 
     
     /******************
      * 
@@ -714,6 +715,12 @@ class DBQueryOperation extends QueryOperation
                 DbPool.quietClose(conn);
             }
             
+            // exponentially expand the chunk size
+            mHitsPerChunk*=2;
+            if (mHitsPerChunk > MAX_HITS_PER_CHUNK) {
+                mHitsPerChunk = MAX_HITS_PER_CHUNK;
+            }
+            
             if (mLog.isDebugEnabled()) {
                 mLog.debug(this.toString()+" Returned "+mDBHits.size()+" results ("+mCurHitsOffset+")");
             }
@@ -746,8 +753,8 @@ class DBQueryOperation extends QueryOperation
     {
         if (chunkSize < 50) {
             chunkSize = 50;
-        } else if (chunkSize > 500) {
-            chunkSize = 500;
+        } else if (chunkSize > MAX_HITS_PER_CHUNK) {
+            chunkSize = MAX_HITS_PER_CHUNK;
         }
         
         mHitsPerChunk = chunkSize;
