@@ -236,7 +236,7 @@ public class SoapTestHarness {
         String file = cl.getOptionValue("f");
 
         String docStr = new String(ByteUtil.getContent(new File(file)), "utf-8");
-        doTests(Element.XMLElement.parseText(docStr));
+        doTests(Element.parseXML(docStr));
         
         //Element request = doc.getRootElement();
         //Element response = trans.invoke(request, isRaw);
@@ -523,7 +523,7 @@ public class SoapTestHarness {
             	mCurrent.check(false, "select failed: " + path);
                 return;
             } else {
-                se = Element.XMLElement.convertDOM((org.dom4j.Element) node);
+                se = Element.convertDOM((org.dom4j.Element) node);
             	mCurrent.check(true, "select ok: " + path);
             }
         } else {

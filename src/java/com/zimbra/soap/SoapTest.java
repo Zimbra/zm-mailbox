@@ -125,7 +125,7 @@ public class SoapTest {
         System.out.println(docStr);
         System.out.println("----");
 
-		Element request = Element.XMLElement.parseText(docStr);
+		Element request = Element.parseXML(docStr);
         Element response;
         if (isRaw)
             response = trans.invokeRaw(request);

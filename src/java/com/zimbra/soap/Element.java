@@ -61,6 +61,14 @@ public abstract class Element {
     public Element addUniqueElement(QName qname) throws ContainerException  { return addElement(qname); }
     public Element addUniqueElement(Element elt) throws ContainerException  { return addElement(elt); }
 
+    protected Element setNamespace(String prefix, String uri) {
+        if (prefix != null && uri != null && !uri.equals("")) {
+            if (mNamespaces == null)  mNamespaces = new HashMap();
+            mNamespaces.put(prefix, uri);
+        }
+        return this;
+    }
+
     public abstract Element setText(String content) throws ContainerException;
     public Element addText(String content) throws ContainerException  { return setText(getText() + content); }
 
@@ -189,6 +197,46 @@ public abstract class Element {
         return d4elt;
     }
 
+    public static Element parseJSON(InputStream is) throws SoapParseException { return parseJSON(is, JavaScriptElement.mFactory); }
+    public static Element parseJSON(InputStream is, ElementFactory factory) throws SoapParseException {
+        try {
+            return parseJSON(new String(com.zimbra.cs.util.ByteUtil.getContent(is, -1), "utf-8"), factory);
+        } catch (SoapParseException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new SoapParseException("could not transcode request from utf-8", null);
+        }
+    }
+    public static Element parseJSON(String js) throws SoapParseException { return parseJSON(js, JavaScriptElement.mFactory); }
+    public static Element parseJSON(String js, ElementFactory factory) throws SoapParseException {
+        return JavaScriptElement.parseElement(new JavaScriptElement.JSRequest(js), com.zimbra.soap.SoapProtocol.SoapJS.getEnvelopeQName(), factory);
+    }
+
+    public static Element parseXML(InputStream is) throws org.dom4j.DocumentException { return parseXML(is, XMLElement.mFactory); }
+    public static Element parseXML(InputStream is, ElementFactory factory) throws org.dom4j.DocumentException {
+        return convertDOM(new org.dom4j.io.SAXReader().read(is).getRootElement(), factory);
+    }
+    public static Element parseXML(String xml) throws org.dom4j.DocumentException { return parseXML(xml, XMLElement.mFactory); }
+    public static Element parseXML(String xml, ElementFactory factory) throws org.dom4j.DocumentException {
+        return convertDOM(org.dom4j.DocumentHelper.parseText(xml).getRootElement(), factory);
+    }
+    public static Element convertDOM(org.dom4j.Element d4root) { return convertDOM(d4root, XMLElement.mFactory); }
+    public static Element convertDOM(org.dom4j.Element d4root, ElementFactory factory) {
+        Element elt = factory.createElement(d4root.getQName());
+        for (Iterator it = d4root.attributeIterator(); it.hasNext(); ) {
+            org.dom4j.Attribute d4attr = (org.dom4j.Attribute) it.next();
+            elt.addAttribute(d4attr.getQualifiedName(), d4attr.getValue());
+        }
+        for (Iterator it = d4root.elementIterator(); it.hasNext(); ) {
+            org.dom4j.Element d4elt = (org.dom4j.Element) it.next();
+            elt.addElement(convertDOM(d4elt, factory));
+        }
+        String content = d4root.getText();
+        if (content != null && !content.trim().equals(""))
+            elt.setText(content);
+        return elt;
+    }
+
 
     public static class ContainerException extends RuntimeException {
         public ContainerException(String message)  { super(message); }
@@ -218,7 +266,7 @@ public abstract class Element {
         private static final String A_NAMESPACE = "_jsns";
 
         public JavaScriptElement(String name)  { mName = name; mAttributes = new HashMap(); }
-        public JavaScriptElement(QName qname)  { this(qname.getName()); setNamespace(qname.getNamespaceURI()); }
+        public JavaScriptElement(QName qname)  { this(qname.getName()); setNamespace("", qname.getNamespaceURI()); }
 
         private static final class JavaScriptFactory implements ElementFactory {
             public Element createElement(String name)  { return new JavaScriptElement(name); }
@@ -226,12 +274,6 @@ public abstract class Element {
         }
 
         public ElementFactory getFactory()  { return mFactory; }
-
-        private Element setNamespace(String uri) {
-            if (uri != null && !uri.equals(""))
-                (mNamespaces = new HashMap()).put("", uri);
-            return this;
-        }
 
         public Element addElement(String name) throws ContainerException  { return addElement(new JavaScriptElement(name)); }
 
@@ -484,23 +526,11 @@ public abstract class Element {
             private void error(String cause) throws SoapParseException  { throw new SoapParseException(cause, js); }
         }
 
-        public static Element parseText(InputStream is) throws SoapParseException {
-            try {
-                return parseText(new String(com.zimbra.cs.util.ByteUtil.getContent(is, -1), "utf-8"));
-            } catch (SoapParseException e) {
-                throw e;
-            } catch (Exception e) {
-                throw new SoapParseException("could not transcode request from utf-8", null);
-            }
+        static Element parseElement(JSRequest jsr, QName qname, ElementFactory factory) throws SoapParseException {
+            return parseElement(jsr, qname.getName(), factory).setNamespace("", qname.getNamespaceURI());
         }
-        public static Element parseText(String js) throws SoapParseException {
-            return parseElement(new JSRequest(js), com.zimbra.soap.SoapProtocol.SoapJS.getEnvelopeQName());
-        }
-        private static Element parseElement(JSRequest jsr, QName qname) throws SoapParseException {
-            return parseElement(jsr, qname.getName()).setNamespace(qname.getNamespaceURI());
-        }
-        private static JavaScriptElement parseElement(JSRequest jsr, String name) throws SoapParseException {
-            JavaScriptElement elt = new JavaScriptElement(name);
+        private static Element parseElement(JSRequest jsr, String name, ElementFactory factory) throws SoapParseException {
+            Element elt = factory.createElement(name);
             jsr.skipChar('{');
             while (jsr.peekChar() != '}') {
                 String key = jsr.readString();
@@ -511,10 +541,10 @@ public abstract class Element {
                     default:   throw new SoapParseException("missing expected ':'", jsr.js);
                 }
                 switch (jsr.peekChar()) {
-                    case '{':  elt.addUniqueElement(parseElement(jsr, key));      break;
+                    case '{':  elt.addUniqueElement(parseElement(jsr, key, factory));  break;
                     case '[':  jsr.skipChar();
                                do {
-                                   elt.addElement(parseElement(jsr, key));
+                                   elt.addElement(parseElement(jsr, key, factory));
                                    switch (jsr.peekChar()) {
                                        case ']':  break;
                                        case ',':
@@ -523,7 +553,7 @@ public abstract class Element {
                                    }
                                } while (jsr.peekChar() != ']');  jsr.skipChar();  break;
                     default:   if ((value = jsr.readValue()) == null)             break;
-                               if (key.equals(A_NAMESPACE))        elt.setNamespace(value.toString());
+                               if (key.equals(A_NAMESPACE))        elt.setNamespace("", value.toString());
                                else if (value instanceof Boolean)  elt.addAttribute(key, ((Boolean) value).booleanValue());
                                else if (value instanceof Long)     elt.addAttribute(key, ((Long) value).longValue());
                                else if (value instanceof Double)   elt.addAttribute(key, ((Double) value).doubleValue());
@@ -624,9 +654,7 @@ public abstract class Element {
             if (uri == null || uri.equals(""))
                 return;
             mPrefix = qname.getNamespacePrefix();
-            if (mNamespaces == null)
-                mNamespaces = new HashMap();
-            mNamespaces.put(mPrefix, uri);
+            setNamespace(mPrefix, uri);
         }
 
         private static final class XMLFactory implements ElementFactory {
@@ -773,28 +801,6 @@ public abstract class Element {
             return defaultValue;
         }
 
-        public static Element parseText(InputStream is) throws org.dom4j.DocumentException {
-            return convertDOM(new org.dom4j.io.SAXReader().read(is).getRootElement());
-        }
-        public static Element parseText(String xml) throws org.dom4j.DocumentException {
-            return convertDOM(org.dom4j.DocumentHelper.parseText(xml).getRootElement());
-        }
-        public static Element convertDOM(org.dom4j.Element d4root) {
-            XMLElement elt = new XMLElement(d4root.getQName());
-            for (Iterator it = d4root.attributeIterator(); it.hasNext(); ) {
-                org.dom4j.Attribute d4attr = (org.dom4j.Attribute) it.next();
-                elt.addAttribute(d4attr.getQualifiedName(), d4attr.getValue());
-            }
-            for (Iterator it = d4root.elementIterator(); it.hasNext(); ) {
-                org.dom4j.Element d4elt = (org.dom4j.Element) it.next();
-                elt.addElement(convertDOM(d4elt));
-            }
-            String content = d4root.getText();
-            if (content != null && !content.trim().equals(""))
-                elt.setText(content);
-            return elt;
-        }
-
         private String xmlEncode(String str, boolean escapeQuotes) {
             if (str == null)
                 return "";
@@ -892,7 +898,7 @@ public abstract class Element {
            .addAttribute("s", "Subject of the message has a \"\\\" in it", DISP_CONTENT).addAttribute("mid", "<kashdfgiai67r3wtuwfg@goo.com>", DISP_CONTENT)
            .addElement("mp").addAttribute("part", "TEXT").addAttribute("ct", "multipart/mixed").addAttribute("s", 3718);
         System.out.println(env);
-        System.out.println(JavaScriptElement.parseText(env.toString()).toString());
+        System.out.println(Element.parseJSON(env.toString()).toString());
 
         proto = com.zimbra.soap.SoapProtocol.Soap12;
         env = new XMLElement(proto.getEnvelopeQName());
@@ -914,7 +920,7 @@ public abstract class Element {
          .addAttribute("workPhone", "(408) 973-0500 x111", DISP_ELEMENT).addAttribute("jobTitle", "CEO", DISP_ELEMENT)
          .addAttribute("firstName", "Satish", DISP_ELEMENT).addAttribute("lastName", "Dharmaraj", DISP_ELEMENT);
         System.out.println(e);
-        System.out.println(JavaScriptElement.parseText(e.toString()).toString());
+        System.out.println(Element.parseJSON(e.toString()).toString());
 
         e = new XMLElement(com.zimbra.cs.service.mail.MailService.GET_CONTACTS_RESPONSE);
         e.addElement("cn");
@@ -928,6 +934,6 @@ public abstract class Element {
 
 //        System.out.println(com.zimbra.soap.SoapProtocol.toString(e.toXML(), true));
         System.out.println(new XMLElement("test").setText("  this\t    is\nthe\rway ").getTextTrim() + "|");
-        System.out.println(JavaScriptElement.parseText("{part:\"TEXT\",t:null,h:true,i:\"false\",\"ct\":\"\\x25multipart\\u0025\\/mixed\",\\u0073:3718}").toString());
+        System.out.println(Element.parseJSON("{part:\"TEXT\",t:null,h:true,i:\"false\",\"ct\":\"\\x25multipart\\u0025\\/mixed\",\\u0073:3718}").toString());
     }
 }

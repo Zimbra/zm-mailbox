@@ -126,7 +126,7 @@ public class RulesUtil {
     private Element createSaveRulesRequest(String acctEmail, String path) throws DocumentException, UnsupportedEncodingException, IOException {
         String content = new String(ByteUtil.getContent(new File(path)), "utf-8");
         // gonna go with XML here; may want to switch to a binary protocol at some point
-        Element rules = Element.XMLElement.parseText(content);
+        Element rules = Element.parseXML(content);
         Element request = new Element.XMLElement(MailService.SAVE_RULES_REQUEST);
         request.addUniqueElement(rules);
         return request;

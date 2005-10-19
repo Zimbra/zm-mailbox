@@ -120,7 +120,7 @@ public abstract class LmcSoapRequest {
             if (sDumpXML) {
             	sLog.info("Request:" + DomUtil.toString(requestXML, true));
             }
-            com.zimbra.soap.Element requestElt = com.zimbra.soap.Element.XMLElement.convertDOM(requestXML);
+            com.zimbra.soap.Element requestElt = com.zimbra.soap.Element.convertDOM(requestXML);
 			//System.out.println("Sending over request " + DomUtil.toString(requestXML, true));
 			Element responseXML = trans.invoke(requestElt).toXML();
             if (sDumpXML) {
@@ -152,7 +152,7 @@ public abstract class LmcSoapRequest {
 	}
     
     protected LmcContact[] parseContactArray(Element parentElem) 
-        throws LmcSoapClientException, ServiceException
+        throws ServiceException
     {
         // iterate over all the <cn> elements in parentElem
         ArrayList contactArray = new ArrayList();
@@ -247,7 +247,7 @@ public abstract class LmcSoapRequest {
 	}
     
     protected LmcContactAttr parseContactAttr(Element cna)
-        throws ServiceException, LmcSoapClientException 
+        throws ServiceException
     {
         // get the attributes
         String attrName = DomUtil.getAttr(cna, MailService.A_ATTRIBUTE_NAME);
@@ -261,7 +261,7 @@ public abstract class LmcSoapRequest {
 
     
     protected LmcContact parseContact(Element cn)
-        throws ServiceException, LmcSoapClientException 
+        throws ServiceException
     {
         LmcContact result = new LmcContact();
     
@@ -397,17 +397,13 @@ public abstract class LmcSoapRequest {
 	 * @param mp
 	 * @param c
 	 */
-	protected void addContent(LmcMimePart mp, Element c)
-			throws ServiceException 
-    {
+	protected void addContent(LmcMimePart mp, Element c) {
 		// XXX need constant
 		mp.setContentEncoding(c.attributeValue("cte"));
 		mp.setContent(c.getText());
 	}
 
-	protected LmcEmailAddress parseEmailAddress(Element ea)
-			throws ServiceException 
-    {
+	protected LmcEmailAddress parseEmailAddress(Element ea) {
 		LmcEmailAddress result = new LmcEmailAddress();
 
 		// grab all the attributes

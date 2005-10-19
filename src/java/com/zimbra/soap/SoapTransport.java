@@ -114,9 +114,9 @@ public abstract class SoapTransport {
         Element env;
         try {
             if (envelopeStr.trim().startsWith("<"))
-                env = Element.XMLElement.parseText(envelopeStr);
+                env = Element.parseXML(envelopeStr);
             else
-                env = Element.JavaScriptElement.parseText(envelopeStr);
+                env = Element.parseJSON(envelopeStr);
         } catch (DocumentException de) {
             throw new SoapParseException("unable to parse response", envelopeStr);
         }

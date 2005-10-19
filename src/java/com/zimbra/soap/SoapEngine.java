@@ -72,9 +72,9 @@ public class SoapEngine {
         Element document = null;
         try {
             if (soapMessage[0] == '<')
-                document = Element.XMLElement.parseText(in);
+                document = Element.parseXML(in);
             else
-                document = Element.JavaScriptElement.parseText(in);
+                document = Element.parseJSON(in);
         } catch (DocumentException de) {
             // FIXME: have to pick 1.1 or 1.2 since we can't parse any
             SoapProtocol soapProto = SoapProtocol.Soap12;
