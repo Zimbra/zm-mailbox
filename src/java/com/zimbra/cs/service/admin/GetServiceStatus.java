@@ -60,7 +60,7 @@ public class GetServiceStatus extends AdminDocumentHandler {
         Element response = lc.createElement(AdminService.GET_SERVICE_STATUS_RESPONSE);
 	    Connection conn = null;
         try { 
-            conn = DbPool.getConnection();
+            conn = DbPool.getLoggerConnection();
             List stats = DbServiceStatus.getStatus(conn.getConnection());
             doServiceStatus(response, stats);            
         } finally {

@@ -72,7 +72,7 @@ public class DbServiceStatus {
         ResultSet rs = null;
         ArrayList result = new ArrayList();
         try {
-            stmt = conn.prepareStatement("SELECT * FROM service_status");
+            stmt = conn.prepareStatement("SELECT * FROM zimbra_logger.service_status");
             rs = stmt.executeQuery();
             while (rs.next()) {
                 DbServiceStatus dot = constructObjectType(rs);

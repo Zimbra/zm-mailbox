@@ -345,6 +345,22 @@ public class DbPool {
     }
     
     /**
+     * Returns a new database connection for logger use.
+     * Does not specify the name of the default database. This
+     * connection is created outside the context of the database connection
+     * pool.
+     */
+    public static Connection getLoggerConnection() throws ServiceException {
+        try {
+            String user = LC.zimbra_mysql_user.value();
+            String pwd = LC.zimbra_logger_mysql_password.value();
+            java.sql.Connection conn = DriverManager.getConnection(sRootUrl + "?user=" + user + "&password=" + pwd);
+            return new Connection(conn);
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("getting database logger connection", e);
+        }
+    }
+/**
      * closes the specified connection (if not null), and catches any
      * exceptions on close, and logs them.
      * @param conn
