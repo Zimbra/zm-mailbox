@@ -289,6 +289,8 @@ public class AdminService implements DocumentService {
     public static final String A_VERSION_INFO_DATE = "buildDate";
     public static final String A_VERSION_INFO_HOST = "host";
 
+    public static final String E_LICENSE_EXPIRATION = "expiration";
+    public static final String A_LICENSE_EXPIRATION_DATE = "date";
 
 	public static final String ADMIN_URI = "https://localhost:7071/";
 	

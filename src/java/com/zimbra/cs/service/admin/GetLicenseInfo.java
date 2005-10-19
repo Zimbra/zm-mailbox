@@ -39,10 +39,15 @@ import com.zimbra.cs.localconfig.LC;
 
 public class GetLicenseInfo extends AdminDocumentHandler {
 
+    static final String TRIAL_EXPIRATION_DATE_KEY = "trial_expiration_date";
+    
     public Element handle(Element request, Map context) throws ServiceException {
         ZimbraContext lc = getZimbraContext(context);
-        // Do nothing -- there is no license info.
+
+        String expirationDate = LC.get(TRIAL_EXPIRATION_DATE_KEY);
         Element response = lc.createElement(AdminService.GET_LICENSE_INFO_RESPONSE);
+        Element el = response.addElement(AdminService.E_LICENSE_EXPIRATION);
+        el.addAttribute(AdminService.A_LICENSE_EXPIRATION_DATE, expirationDate);
         return response;
     }
 

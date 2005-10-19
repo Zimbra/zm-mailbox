@@ -887,7 +887,7 @@ Notes:
 <GetLicenseInfoRequest/>
 
 <GetLicenseInfoResponse>
-  <expiration date={date-YYYYMMDD-format} isExpired={boolean}></expiration>
+  <expiration date={date-YYYYMMDD-format}></expiration>
 </GetLicenseInfoResponse>
 
 -----------------------------
