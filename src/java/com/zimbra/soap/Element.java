@@ -217,15 +217,6 @@ public abstract class Element {
         private static final String A_CONTENT   = "_content";
         private static final String A_NAMESPACE = "_jsns";
 
-        private static final HashSet RESERVED_KEYWORDS = new HashSet(Arrays.asList(new String[] {
-                "abstract", "boolean", "break", "byte", "case", "catch", "char", "class", "continue",
-                "const", "debugger", "default", "delete", "do", "double", "else", "extends", "enum", "export", 
-                "false", "final", "finally", "float", "for", "function", "goto", "if", "implements", "import", "in",
-                "instanceOf", "int", "interface", "label", "long", "native", "new", "null", "package", "private",
-                "protected", "public", "return", "short", "static", "super", "switch", "synchronized", "this",
-                "throw", "throws", "transient", "true", "try", "typeof", "var", "void", "volatile", "while", "with"
-        }));
-
         public JavaScriptElement(String name)  { mName = name; mAttributes = new HashMap(); }
         public JavaScriptElement(QName qname)  { this(qname.getName()); setNamespace(qname.getNamespaceURI()); }
 
@@ -550,6 +541,15 @@ public abstract class Element {
             return elt;
         }
 
+        private static final HashSet RESERVED_KEYWORDS = new HashSet(Arrays.asList(new String[] {
+                "abstract", "boolean", "break", "byte", "case", "catch", "char", "class", "continue",
+                "const", "debugger", "default", "delete", "do", "double", "else", "extends", "enum", "export", 
+                "false", "final", "finally", "float", "for", "function", "goto", "if", "implements", "import", "in",
+                "instanceOf", "int", "interface", "label", "long", "native", "new", "null", "package", "private",
+                "protected", "public", "return", "short", "static", "super", "switch", "synchronized", "this",
+                "throw", "throws", "transient", "true", "try", "typeof", "var", "void", "volatile", "while", "with"
+        }));
+
         private static final String[] JS_CHAR_ENCODINGS = {
             "\\u0000", "\\u0001", "\\u0002", "\\u0003", "\\u0004", "\\u0005", "\\u0006", "\\u0007",
             "\\b",     "\\t",     "\\n",     "\\u000B", "\\f",     "\\r",     "\\u000E", "\\u000F",
@@ -617,9 +617,9 @@ public abstract class Element {
         private static final String A_ATTR_NAME = "n";
         private static final String A_NAMESPACE = "xmlns";
 
-        public XMLElement(String name) { mName = name; }
-        public XMLElement(QName qname) {
-            mName = qname.getName();
+        public XMLElement(String name) throws ContainerException { mName = validateName(name); }
+        public XMLElement(QName qname) throws ContainerException {
+            mName = validateName(qname.getName());
             String uri = qname.getNamespaceURI();
             if (uri == null || uri.equals(""))
                 return;
@@ -666,6 +666,7 @@ public abstract class Element {
         }
 
         public Element addAttribute(String key, String value, byte disposition) throws ContainerException {
+            validateName(key);
             if (value == null)
                 return this;
             else if (disposition == DISP_ELEMENT)
@@ -678,6 +679,27 @@ public abstract class Element {
                 mAttributes.put(key, value);
             }
             return this;
+        }
+
+        private String validateName(String name) throws ContainerException  {
+            if (name == null || name.equals(""))
+                throw new ContainerException("blank/missing XML attribute name");
+            for (int i = 0; i < name.length(); i++) {
+                char c = name.charAt(i);
+                if (c == ':' || c == '_' || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
+                    continue;
+                if (i > 0 && (c == '-' || c == '.' || (c >= '0' && c <= '9') || c == 0xB7 || c == 0x203F || c == 0x2040))
+                    continue;
+                if (c >= 0xC0 && c <= 0x1FFF && c != 0xD7 && c != 0xF7 && c != 0x37E)
+                    if (i > 0 || c < 0x300 || c > 0x36F)
+                        continue;
+                if ((c >= 0x2070 && c <= 0x218F) || (c >= 0x2C00 && c <= 0x2FEF) || (c >= 0x3001 && c <= 0xD7FF))
+                    continue;
+                if ((c >= 0xF900 && c <= 0xFDCF) || (c >= 0xFDF0 && c <= 0xFFFD) || (c >= 0x10000 && c <= 0xEFFFF))
+                    continue;
+                throw new ContainerException("invalid XML attribute name: " + name);
+            }
+            return name;
         }
 
         protected void detach(Element elt) throws ContainerException {
