@@ -60,6 +60,7 @@ public class DbPool {
     private static Log sLog = LogFactory.getLog(DbPool.class);
     private static PoolingDriver sPoolingDriver;
     private static String sRootUrl = null;
+    private static String sLoggerRootUrl = null;    
     private static GenericObjectPool sConnectionPool;
     private static ValueCounter sConnectionStackCounter = new ValueCounter();
     
@@ -163,8 +164,9 @@ public class DbPool {
         
         String myAddress = LC.mysql_bind_address.value();
         String myPort = LC.mysql_port.value();
-        sRootUrl = "jdbc:mysql://" + myAddress + ":" + myPort + "/";
+        sRootUrl = "jdbc:mysql://" + myAddress + ":" + myPort + "/";     
         String url = sRootUrl + "zimbra";
+        sLoggerRootUrl = "jdbc:mysql://" + LC.logger_mysql_bind_address.value() + ":" + LC.logger_mysql_port.value() + "/";        
 
         Properties props = getZimbraDbProps();
         // TODO: need to tune these
@@ -354,7 +356,7 @@ public class DbPool {
         try {
             String user = LC.zimbra_mysql_user.value();
             String pwd = LC.zimbra_logger_mysql_password.value();
-            java.sql.Connection conn = DriverManager.getConnection(sRootUrl + "?user=" + user + "&password=" + pwd);
+            java.sql.Connection conn = DriverManager.getConnection(sLoggerRootUrl + "?user=" + user + "&password=" + pwd);
             return new Connection(conn);
         } catch (SQLException e) {
             throw ServiceException.FAILURE("getting database logger connection", e);
