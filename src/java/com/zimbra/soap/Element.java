@@ -180,6 +180,14 @@ public abstract class Element {
     }
     public abstract String prettyPrint();
 
+    private static final String FORTY_SPACES = "                                        ";
+    protected void indent(StringBuffer sb, int indent, boolean newline) {
+        if (indent < 0)      return;
+        if (newline)         sb.append('\n');
+        while (indent > 40)  { sb.append(FORTY_SPACES);  indent -= 40; }
+        if (indent > 0)      sb.append(FORTY_SPACES.substring(40 - indent));
+    }
+
     public org.dom4j.Element toXML() {
         org.dom4j.Document doc = new org.dom4j.tree.DefaultDocument();
         doc.setRootElement(toXML(null));
@@ -572,7 +580,7 @@ public abstract class Element {
         }
 
         private static final HashSet RESERVED_KEYWORDS = new HashSet(Arrays.asList(new String[] {
-                "abstract", "boolean", "break", "byte", "case", "catch", "char", "class", "continue",
+                A_NAMESPACE, "abstract", "boolean", "break", "byte", "case", "catch", "char", "class", "continue",
                 "const", "debugger", "default", "delete", "do", "double", "else", "extends", "enum", "export", 
                 "false", "final", "finally", "float", "for", "function", "goto", "if", "implements", "import", "in",
                 "instanceOf", "int", "interface", "label", "long", "native", "new", "null", "package", "private",
@@ -587,53 +595,107 @@ public abstract class Element {
             "\\u0018", "\\u0019", "\\u001A", "\\u001B", "\\u001C", "\\u001D", "\\u001E", "\\u001F"
         };
 
-        private static String jsEncode(String string) {
-            if (string == null || string.length() == 0)
-                return "\"\"";
-
-            int len = string.length();
-            StringBuffer sb = new StringBuffer(len + 4);
-            sb.append('"');
-            for (int i = 0; i < len; i += 1) {
-                char c = string.charAt(i);
+        private static String jsEncode(Object obj) {
+            if (obj == null)
+                return "";
+            String replacement, str = obj.toString();
+            StringBuffer sb = null;
+            int i, last, length = str.length();
+            for (i = 0, last = -1; i < length; i++) {
+                char c = str.charAt(i);
                 switch (c) {
-                    case '\\': case '"':
-                        sb.append('\\').append(c);  break;
-                    default:
-                        if (c < ' ')  sb.append(JS_CHAR_ENCODINGS[c]);
-                        else          sb.append(c);
+                    case '\\':  replacement = "\\\\";                break;
+                    case '"':   replacement = "\\\"";                break;
+                    default:    if (c >= ' ')                        continue;
+                                replacement = JS_CHAR_ENCODINGS[c];  break;
                 }
+                if (sb == null)
+                    sb = new StringBuffer(str.substring(0, i));
+                else
+                    sb.append(str.substring(last, i));
+                sb.append(replacement);
+                last = i + 1;
             }
-            sb.append('"');
-            return sb.toString();
+            return (sb == null ? str : sb.append(str.substring(last, i)).toString());
         }
 
-        public String prettyPrint()  { return toString(); }
+        private static String jsEncodeKey(String pname) {
+            if (RESERVED_KEYWORDS.contains(pname))
+                return '"' + pname + '"';
+            for (int i = 0; i < pname.length(); i++) {
+                char c = pname.charAt(i);
+                if (c == '$' || c == '_')
+                    continue;
+                switch (Character.getType(c)) {
+                    // note: not allowing unquoted escape sequences for now...
+                    case Character.UPPERCASE_LETTER:
+                    case Character.LOWERCASE_LETTER:
+                    case Character.TITLECASE_LETTER:
+                    case Character.MODIFIER_LETTER:
+                    case Character.OTHER_LETTER:
+                    case Character.LETTER_NUMBER:
+                        continue;
+                    case Character.NON_SPACING_MARK:
+                    case Character.COMBINING_SPACING_MARK:
+                    case Character.DECIMAL_DIGIT_NUMBER:
+                    case Character.CONNECTOR_PUNCTUATION:
+                        if (i > 0)  continue;
+                }
+                return '"' + pname + '"';
+            }
+            return pname;
+        }
 
         public String toString() {
-            StringBuffer sb = new StringBuffer("{");
-            int index = 0;
-            for (Iterator it = mAttributes.entrySet().iterator(); it.hasNext(); index++) {
-                Map.Entry attr = (Map.Entry) it.next();
-                if (index > 0)
-                    sb.append(",");
-                String pname = (String) attr.getKey();
-                if (RESERVED_KEYWORDS.contains(pname))
-                    sb.append('"').append(pname).append("\":");
-                else
-                    sb.append(pname).append(":");
-                if (attr.getValue() instanceof String) 
-                    sb.append(jsEncode((String) attr.getValue()));
-                else
-                    // take advantage of the fact that javascript array format == List.toString() format
-                    sb.append(attr.getValue());                
+            StringBuffer sb = new StringBuffer();  toString(sb, -1);  return sb.toString();
+        }
+        public String prettyPrint() {
+            StringBuffer sb = new StringBuffer();  toString(sb, 0);  return sb.toString();
+        }
+
+        private static final int INDENT_SIZE = 2;
+        private void toString(StringBuffer sb, int indent) {
+            indent = indent < 0 ? -1 : indent + INDENT_SIZE;
+            sb.append('{');
+            boolean needNamespace = mNamespaces == null ? false : namespaceDeclarationNeeded("", mNamespaces.get("").toString());
+            int size = mAttributes.size() + (needNamespace ? 1 : 0), lsize;
+            if (size != 0) {
+                int index = 0;
+                for (Iterator it = mAttributes.entrySet().iterator(); it.hasNext(); index++) {
+                    indent(sb, indent, true);
+                    Map.Entry attr = (Map.Entry) it.next();
+                    sb.append(jsEncodeKey((String) attr.getKey())).append(indent >= 0 ? ": " : ":");
+
+                    Object value = attr.getValue();
+                    if (value instanceof String)                  sb.append('"').append(jsEncode(value)).append('"');
+                    else if (value instanceof JavaScriptElement)  ((JavaScriptElement) value).toString(sb, indent);
+                    else if (value instanceof Element)            sb.append('"').append(jsEncode(value)).append('"');
+                    else if (!(value instanceof List))            sb.append(value);
+                    else {
+                        sb.append('[');
+                        if ((lsize = ((List) value).size()) > 0)
+                            for (ListIterator lit = ((List) value).listIterator(); lit.hasNext(); ) {
+                                int lindent = indent < 0 ? -1 : indent + INDENT_SIZE;
+                                if (lsize > 1)
+                                    indent(sb, lindent, true);
+                                Element child = (Element) lit.next();
+                                if (child instanceof JavaScriptElement)
+                                    ((JavaScriptElement) child).toString(sb, lindent);
+                                else
+                                    sb.append('"').append(jsEncode(child)).append('"');
+                                if (lit.nextIndex() != lsize)  sb.append(",");
+                            }
+                        sb.append(']');
+                    }
+                    if (index < size - 1)  sb.append(",");
+                }
+                if (needNamespace) {
+                    indent(sb, indent, true);
+                    sb.append(A_NAMESPACE).append(indent >= 0 ? ": \"" : ":\"").append(jsEncode(mNamespaces.get(""))).append('"');
+                }
+                indent(sb, indent - 2, true);
             }
-            if (mNamespaces != null) {
-                String uri = mNamespaces.get("").toString();
-                if (namespaceDeclarationNeeded("", uri))
-                    sb.append(index > 0 ? "," : "").append(A_NAMESPACE).append(':').append(jsEncode(uri));
-            }
-            return sb.append('}').toString();
+            sb.append('}');
         }
     }
     
@@ -830,14 +892,6 @@ public abstract class Element {
             return (sb == null ? str : sb.append(str.substring(last, i)).toString());
         }
 
-        private static final String FORTY_SPACES = "                                        ";
-        private void indent(StringBuffer sb, int indent, boolean newline) {
-            if (indent < 0)      return;
-            if (newline)         sb.append('\n');
-            while (indent > 40)  { sb.append(FORTY_SPACES);  indent -= 40; }
-            if (indent > 0)      sb.append(FORTY_SPACES.substring(40 - indent));
-        }
-
         public String toString() {
             StringBuffer sb = new StringBuffer();  toString(sb, -1);  return sb.toString();
         }
@@ -920,6 +974,7 @@ public abstract class Element {
          .addAttribute("workPhone", "(408) 973-0500 x111", DISP_ELEMENT).addAttribute("jobTitle", "CEO", DISP_ELEMENT)
          .addAttribute("firstName", "Satish", DISP_ELEMENT).addAttribute("lastName", "Dharmaraj", DISP_ELEMENT);
         System.out.println(e);
+        System.out.println(e.prettyPrint());
         System.out.println(Element.parseJSON(e.toString()).toString());
 
         e = new XMLElement(com.zimbra.cs.service.mail.MailService.GET_CONTACTS_RESPONSE);
