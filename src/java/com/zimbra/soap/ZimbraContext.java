@@ -167,10 +167,12 @@ public class ZimbraContext {
         Account account = null;
         Element eAccount = ctxt == null ? null : ctxt.getOptionalElement(E_ACCOUNT);
 		if (eAccount != null) {
-		    String key = eAccount.getAttribute(A_BY);
+		    String key = eAccount.getAttribute(A_BY, null);
 		    String value = eAccount.getText();
 
-	        if (key.equals(BY_NAME)) {
+            if (key == null)
+                mRequestedAccountId = null;
+	        else if (key.equals(BY_NAME)) {
 	            account = prov.getAccountByName(value);
 	            if (account == null)
                     throw AccountServiceException.NO_SUCH_ACCOUNT(value);
@@ -427,8 +429,9 @@ public class ZimbraContext {
             ctxt.addAttribute(E_AUTH_TOKEN, mRawAuthToken, Element.DISP_CONTENT);
         if (mResponseProtocol != mRequestProtocol)
             ctxt.addElement(E_FORMAT).addAttribute(A_TYPE, mResponseProtocol == SoapProtocol.SoapJS ? TYPE_JAVASCRIPT : TYPE_XML);
+        Element eAcct = ctxt.addElement(E_ACCOUNT).addAttribute(A_HOPCOUNT, mHopCount);
         if (mRequestedAccountId != null && !mRequestedAccountId.equalsIgnoreCase(mAuthTokenAccountId))
-            ctxt.addElement(E_ACCOUNT).addAttribute(A_BY, BY_ID).addAttribute(A_HOPCOUNT, mHopCount).setText(mRequestedAccountId);
+            eAcct.addAttribute(A_BY, BY_ID).setText(mRequestedAccountId);
         ctxt.addUniqueElement(E_NO_SESSION);
         return ctxt;
     }
