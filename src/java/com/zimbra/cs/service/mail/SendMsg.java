@@ -159,32 +159,6 @@ public class SendMsg extends WriteOpDocumentHandler {
 
         return sendMimeMessage(octxt, mbox, acct, saveToSent, mimeData, mm, origId, replyType);
     }
-    
-    protected static Message saveToSent(OperationContext octxt, Mailbox mbox, Account acct, MimeMessage mm, int convId) 
-    throws ServiceException {
-        try {
-            int folderId = getSentFolder(acct, mbox, octxt);
-
-            int flags = Flag.FLAG_FROM_ME;
-            ParsedMessage pm = new ParsedMessage(mm, mm.getSentDate().getTime(),
-                                                 mbox.attachmentsIndexingEnabled());
-            try {
-                pm.analyze();
-            } catch (ServiceException e) {
-                if (ConversionException.isTemporaryCauseOf(e))
-                    throw e;
-            }
-            return mbox.addMessage(octxt, pm, folderId, false, flags, null, convId);
-        } catch (IOException ioe) {
-            String excepStr = ExceptionToString.ToString(ioe);
-            mLog.warn(excepStr);
-            throw ServiceException.FAILURE("IOException", ioe);
-        } catch (MessagingException me) {
-            String excepStr = ExceptionToString.ToString(me);
-            mLog.warn(excepStr);
-            throw ServiceException.FAILURE("MessagingException", me);
-        }
-    }
 
     static int sendMimeMessage(OperationContext octxt, Mailbox mbox, Account acct, boolean saveToSent,
                                MimeMessageData mimeData, MimeMessage mm, int origId, String replyType) 
@@ -239,7 +213,7 @@ public class SendMsg extends WriteOpDocumentHandler {
                 pm.analyze();
                 
                 // save it to the requested folder
-                msg = mbox.addMessage(octxt, pm, saveToFolder, false, flags, null, convId);
+                msg = mbox.addMessage(octxt, pm, saveToFolder, true, flags, null, convId);
             }
             
             // send the message via SMTP

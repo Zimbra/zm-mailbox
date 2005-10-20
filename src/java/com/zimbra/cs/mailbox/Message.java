@@ -354,7 +354,7 @@ public class Message extends MailItem {
         
         List /* Invite */ components = null;
         String methodStr = null;
-        if (cal != null && !noICal) {
+        if (cal != null) {
             Account acct = mbox.getAccount();
 
             // XXX: shouldn't we just be checking flags for Flag.FLAG_FROM_ME?
@@ -380,7 +380,7 @@ public class Message extends MailItem {
 
         // process the components in this invite (must do this last so blob is created, etc)
         if (components != null)
-            msg.processInvitesAfterCreate(methodStr, volumeId, pm, components);
+            msg.processInvitesAfterCreate(methodStr, volumeId, !noICal, pm, components);
         
         msg.finishCreation(parent);
         return msg;
@@ -421,7 +421,7 @@ public class Message extends MailItem {
     * constraints on the Appointments table
     * @param invites
     */
-   private void processInvitesAfterCreate(String method, short volumeId,
+   private void processInvitesAfterCreate(String method, short volumeId, boolean createAppt,
                                           ParsedMessage pm, List /* Invite */ invites) 
    throws ServiceException {
        // since this is the first time we've seen this Invite Message, we need to process it
@@ -434,24 +434,28 @@ public class Message extends MailItem {
 
            Mailbox mbox = getMailbox();
            Appointment appt = mbox.getAppointmentByUid(cur.getUid());
-           if (appt == null) { 
-               // ONLY create an appointment if this is a REQUEST method...otherwise don't.
-               if (method.equals(Method.REQUEST.getValue())) {
-                   appt = mbox.createAppointment(Mailbox.ID_FOLDER_CALENDAR, volumeId, "", cur.getUid(), pm, cur);
+           if (createAppt) {
+               if (appt == null) { 
+                   // ONLY create an appointment if this is a REQUEST method...otherwise don't.
+                   if (method.equals(Method.REQUEST.getValue())) {
+                       appt = mbox.createAppointment(Mailbox.ID_FOLDER_CALENDAR, volumeId, "", cur.getUid(), pm, cur);
+                   } else {
+                       sLog.info("Mailbox " + getMailboxId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c no Appointment could be found");
+                       return; // for now, just ignore this Invitation
+                   }
                } else {
-                   sLog.info("Mailbox " + getMailboxId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c no Appointment could be found");
-                   return; // for now, just ignore this Invitation
+                   appt.processNewInvite(pm, cur, false, volumeId);
                }
-           } else {
-               appt.processNewInvite(pm, cur, false, volumeId);
            }
            
-           ApptInfo info = new ApptInfo(appt.getId(), cur.getComponentNum());
-           if (mApptInfos == null) {
-               mApptInfos = new ArrayList();
+           if (appt != null) {
+               ApptInfo info = new ApptInfo(appt.getId(), cur.getComponentNum());
+               if (mApptInfos == null) {
+                   mApptInfos = new ArrayList();
+               }
+               mApptInfos.add(info);
+               updatedMetadata = true;
            }
-           mApptInfos.add(info);
-           updatedMetadata = true;
        }
        
        if (updatedMetadata)
