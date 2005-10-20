@@ -264,30 +264,4 @@ public abstract class DocumentHandler {
         }
         return response;
     }
-    
-    protected static Element fwdRequestToRemoteHost(ZimbraContext zc, Element request, Map context, String hostTarget) throws SoapFaultException, ServiceException {
-        SoapEngine engine = (SoapEngine) context.get(SoapEngine.ZIMBRA_ENGINE);
-        
-        boolean isLocal = LOCAL_HOST.equalsIgnoreCase(hostTarget) && engine != null;
-        Element response = null;
-        
-        if (isLocal) {
-            // executing on same server; just hand back to the SoapEngine
-            Map contextTarget = new HashMap(context);
-            contextTarget.put(SoapEngine.ZIMBRA_CONTEXT, zc);
-            response = engine.dispatchRequest(request, contextTarget, zc);
-            if (zc.getResponseProtocol().isFault(response)) 
-                throw new SoapFaultException("error in proxied request", response);
-        } else {
-            // executing remotely; find out target and proxy there
-            Server serverTarget = Provisioning.getInstance().getServerByName(hostTarget);
-            if (serverTarget == null)
-                throw AccountServiceException.NO_SUCH_SERVER(hostTarget);
-            HttpServletRequest httpreq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
-            ProxyTarget proxy = new ProxyTarget(serverTarget.getId(), zc.getRawAuthToken(), httpreq);
-            response = proxy.dispatch(request, zc);
-            response.detach();
-        }
-        return response;
-    }    
 }

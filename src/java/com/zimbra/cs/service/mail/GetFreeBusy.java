@@ -28,6 +28,8 @@ package com.zimbra.cs.service.mail;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.calendar.FreeBusy;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
@@ -128,7 +130,12 @@ public class GetFreeBusy extends WriteOpDocumentHandler {
                 req.addAttribute(MailService.A_APPT_END_TIME, rangeEnd);
                 req.addAttribute(MailService.A_UID, paramStr);
                 
-                Element remoteResponse = fwdRequestToRemoteHost(zc, req, context, server);
+                String[] idStrs = paramStr.split(",");
+
+                // hack: use the ID of the first user 
+                Account acct = Provisioning.getInstance().getAccountByName(idStrs[0]);
+                
+                Element remoteResponse = proxyRequest(req, context, acct.getId());
                 
                 for (Iterator respIter = remoteResponse.elementIterator(); respIter.hasNext();)
                 {
@@ -162,6 +169,7 @@ public class GetFreeBusy extends WriteOpDocumentHandler {
                         local.add(id);
                     } else {
                         String serverId = id.getServer();
+                        
                         assert(serverId != null);
                             
                         StringBuffer remoteStr = (StringBuffer)remote.get(serverId);
