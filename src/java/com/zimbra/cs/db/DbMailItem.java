@@ -2169,7 +2169,7 @@ public class DbMailItem {
      * Returns the name of the table that stores data on deleted items for the purpose of sync.
      * The table name is qualified by the name of the database (e.g. <code>mailbox1.tombstone</code>).
      */
-    static String getTombstoneTableName(int mailboxId) {
+    public static String getTombstoneTableName(int mailboxId) {
         return DbMailbox.getDatabaseName(mailboxId) + ".tombstone";
     }
 

@@ -340,6 +340,7 @@ public class DbPool {
             String user = LC.zimbra_mysql_user.value();
             String pwd = LC.zimbra_mysql_password.value();
             java.sql.Connection conn = DriverManager.getConnection(sRootUrl + "?user=" + user + "&password=" + pwd);
+            conn.setAutoCommit(false);
             return new Connection(conn);
         } catch (SQLException e) {
             throw ServiceException.FAILURE("getting database maintenance connection", e);
