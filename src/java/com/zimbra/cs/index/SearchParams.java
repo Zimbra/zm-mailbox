@@ -76,7 +76,23 @@ public final class SearchParams
     public void setMarkRead(boolean read) { mMarkRead = read; }
     public void setWantHtml(boolean html) { mWantHtml = html; }
     public void setWantRecipients(boolean recips) { mRecipients = recips; }
-
+    
+    public boolean hasCursor() { return mHasCursor; }
+    public void setCursor(int prevMailItemId, String prevSort, int prevOffset) {
+        mHasCursor = true;
+        mPrevMailItemId = prevMailItemId;
+        mPrevSortValueStr = prevSort;
+        try {
+            mPrevSortValueLong = Long.parseLong(prevSort);
+        } catch (NumberFormatException e) {
+            mPrevSortValueLong = 0;
+        }
+        mPrevOffset = prevOffset;
+    }
+    public int getPrevMailItemId() { return mPrevMailItemId; }
+    public String getPrevSortValueStr() { return mPrevSortValueStr; }
+    public long getPrevSortValueLong() { return mPrevSortValueLong; }
+    public int getPrevOffset() { return mPrevOffset; }
 
     private String mQueryStr;
     private int mOffset;
@@ -85,6 +101,19 @@ public final class SearchParams
     private boolean mMarkRead;
     private boolean mWantHtml;
     private boolean mRecipients;
+    
+    
+    private boolean mHasCursor = false;
+    
+    /////////////////////
+    // "Cursor" Data -- the three pieces of info below are enough for us to find out place in
+    // the previous result set, even if entries have been added or removed from the result
+    // set:
+    private int mPrevMailItemId; // the mail item ID of the last item in the previous result set
+    private String mPrevSortValueStr; // the sort value of the last item in the previous result set
+    private long mPrevSortValueLong; // the sort value of the last item in the previous result set
+    private int mPrevOffset; // the offset of the last item in the previous result set 
+    
 
     // unparsed -- these need to go away!
     private String mGroupByStr;

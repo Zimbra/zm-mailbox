@@ -33,6 +33,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.index.ResultsPager;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.service.ServiceException;
@@ -77,8 +78,8 @@ public class SearchMultipleMailboxes extends Search {
                 Element response = lc.createElement(AdminService.SEARCH_MULTIPLE_MAILBOXES_RESPONSE);
                 response.addAttribute(MailService.A_QUERY_OFFSET, Integer.toString(params.getOffset()));
                 
-                retVal = putHits(lc, response, results, INCLUDE_MAILBOX_INFO, params);
-            
+                ResultsPager pager = ResultsPager.create(results, params);
+                retVal = putHits(lc, response, pager, INCLUDE_MAILBOX_INFO, params);
             } finally {
                 if (DONT_CACHE_RESULTS) {
                     results.doneWithSearchResults();

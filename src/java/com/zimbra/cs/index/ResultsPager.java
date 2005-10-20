@@ -19,24 +19,46 @@ public class ResultsPager
     private int mSortOrder;
     private int mPrevMailItemId;
     
-    private Object mPrevSortValue;
+    private String mPrevSortValueStr;
+    private long mPrevSortValueLong;
+    
     private int mPrevOffset;
     private int mNumResultsRequested;
-    
-    private boolean mFirstHit;
+
+    private boolean mFixedOffset;
     
     private List mHits;
     
-    public ResultsPager(ZimbraQueryResults results, int sortOrder, int prevItemId, Object prevSortValue, int prevOffset, 
+    static public ResultsPager create(ZimbraQueryResults results, SearchParams params) throws ServiceException
+    {
+        ResultsPager toRet;
+        
+        if (!params.hasCursor() || params.getOffset()==0) {
+            toRet = new ResultsPager(results, params.getLimit(), params.getOffset());
+        } else {
+            // are we paging FORWARD or BACKWARD?  If requested starting-offset is the same or bigger then the cursor's offset, 
+            // then we're going FORWARD, otherwise we're going BACKWARD
+            boolean forward = true;
+            if (params.getOffset() < params.getPrevOffset()) {
+                forward = false;
+            }
+            
+            toRet = new ResultsPager(results, params.getSortBy(), params.getPrevMailItemId(), params.getPrevSortValueStr(), params.getPrevSortValueLong(), params.getPrevOffset(), forward, params.getLimit());
+        }
+        return toRet;
+    }
+    
+    public ResultsPager(ZimbraQueryResults results, int sortOrder, int prevItemId, String prevSortValueStr, long prevSortValueLong, int prevOffset, 
             boolean forward, int numResultsRequested) throws ServiceException {
         mResults = results;
         mSortOrder = sortOrder;
         mPrevMailItemId = prevItemId;
-        mPrevSortValue = prevSortValue;
+        mPrevSortValueStr = prevSortValueStr;
+        mPrevSortValueLong = prevSortValueLong;
         mPrevOffset = prevOffset;
         mNumResultsRequested = numResultsRequested;
         
-        mFirstHit = false;
+        mFixedOffset = false;
         
         if (forward) {
             forward();
@@ -44,11 +66,25 @@ public class ResultsPager
             backward();
         }
     }
-    
-    public ResultsPager(ZimbraQueryResults results, int numResults) throws ServiceException {
-        mFirstHit = true;
+
+    /**
+     * Simple offset
+     * 
+     * @param results
+     * @param numResults
+     * @param offset
+     * @throws ServiceException
+     */
+    public ResultsPager(ZimbraQueryResults results, int numResults, int offset) throws ServiceException {
         mResults = results;
         mNumResultsRequested = numResults;
+        mFixedOffset = true;
+        
+        if (offset > 0) {
+            mResults.skipToHit(offset-1);
+        } else {
+            mResults.resetIterator();
+        }
         forward();
     }
     
@@ -58,11 +94,8 @@ public class ResultsPager
     private ZimbraHit getDummyHit() {
         long dateVal = 0;
         String strVal = "";
-        if (mPrevSortValue instanceof String) {
-            strVal = (String)mPrevSortValue;
-        } else {
-            dateVal = ((Long)mPrevSortValue).longValue();
-        }
+        strVal = mPrevSortValueStr;
+        dateVal = mPrevSortValueLong;
         
         return new DummyHit(strVal, strVal, dateVal, mPrevMailItemId);
     }
@@ -81,17 +114,14 @@ public class ResultsPager
                 return mResults.getNext();
             } 
             
-//            if (hit COMES AFTER prevSortValue) {
-//                return hit;
-//            }
+            // if (hit COMES AFTER prevSortValue) {
             if (hit.compareBySortField(mSortOrder, prevHit) > 0) {
                 return hit;
             }
-            
-            if (offset > mPrevOffset) {
-                throw new NewResultsAtHeadException();
-            }
-            
+
+//            if (offset > mPrevOffset) {
+//                throw new NewResultsAtHeadException();
+//            }
             
             hit = mResults.getNext();
         }
@@ -105,10 +135,10 @@ public class ResultsPager
         
         ZimbraHit hit;
 
-        if (!mFirstHit) {
+        if (!mFixedOffset) {
             hit = forwardFindFirst();
         } else {
-            hit = mResults.getFirstHit();
+            hit = mResults.getNext();
         }
 
         for (int i = 0; hit != null && i < mNumResultsRequested; i++) {
@@ -127,25 +157,22 @@ public class ResultsPager
         
         
         while(hit != null) {
-            // time to stop?
-            
+            offset++;
             
             if (hit.getItemId() == mPrevMailItemId) {
                 // found old one -- DON'T include it in list
-                return;
+                break;
             }
             
-//          if (hit COMES AFTER prevSortValue) {
-//          return;
-//      }
       
+            // if (hit COMES AFTER prevSortValue) {
             if (hit.compareBySortField(mSortOrder, prevHit) > 0) {
-                return;
+                break;
             }
             
-            if (offset > mPrevOffset) {
-                throw new NewResultsAtHeadException();
-            }
+//            if (offset > mPrevOffset) {
+//                throw new NewResultsAtHeadException();
+//            }
             
             // okay, so it isn't time to stop yet.
             // add this hit onto our growing list.... and also take
@@ -156,10 +183,15 @@ public class ResultsPager
             }
             ll.addLast(hit);
             
-            offset++;
+            hit = mResults.getNext();
         }
-        
-        
+
+        // possible that we backed up to the start of the results set....so
+        // we do have to check and see if we got enough results...
+        while (ll.size() < mNumResultsRequested && hit != null) {
+            ll.addLast(hit);
+            hit = mResults.getNext();
+        }
     }
     
     public static class NewResultsAtHeadException extends ServiceException

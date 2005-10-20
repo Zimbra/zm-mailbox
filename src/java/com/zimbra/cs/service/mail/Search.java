@@ -41,6 +41,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.ContactHit;
 import com.zimbra.cs.index.ConversationHit;
+import com.zimbra.cs.index.ResultsPager;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
@@ -86,9 +87,31 @@ public class Search extends DocumentHandler  {
             ZimbraQueryResults results = this.getResults(mbox, params, lc, session);
 
             Element response = lc.createElement(MailService.SEARCH_RESPONSE);
-            response.addAttribute(MailService.A_QUERY_OFFSET, params.getOffset());
 
-            Element retVal = putHits(lc, response, results, DONT_INCLUDE_MAILBOX_INFO, params);
+            //
+            // create a "pager" which generate one page's worth of data for the client (using
+            // the cursor data, etc)
+            //
+            // If the pager detects "new results at head" -- ie new data came into our search, then
+            // we'll skip back to the beginning of the search
+            //
+            ResultsPager pager;            
+            try {
+                pager = ResultsPager.create(results, params);
+                response.addAttribute(MailService.A_QUERY_OFFSET, params.getOffset());
+            } catch (ResultsPager.NewResultsAtHeadException e) {
+                // NOTE: this branch is unused right now, TODO remove this depending on usability
+                // decisions
+                
+                // FIXME!  workaround bug in resetIterator()
+                results = this.getResults(mbox, params, lc, session);
+                
+                pager = new ResultsPager(results, params.getLimit(), 0);
+                response.addAttribute(MailService.A_QUERY_OFFSET, 0);
+                response.addAttribute("newResults", true);
+            }
+            
+            Element retVal = putHits(lc, response, pager, DONT_INCLUDE_MAILBOX_INFO, params);
             if (DONT_CACHE_RESULTS)
                 results.doneWithSearchResults();
             if (mLog.isDebugEnabled())
@@ -121,7 +144,16 @@ public class Search extends DocumentHandler  {
             params.setMarkRead(request.getAttributeBool(MailService.A_MARK_READ, false));
         }
         params.setWantRecipients(request.getAttributeBool(MailService.A_RECIPIENTS, false));
-
+        
+        Element cursor = request.getOptionalElement("cursor");
+        if (cursor != null) {
+            int prevMailItemId = (int)cursor.getAttributeLong(MailService.A_ID);
+//            int prevOffset = (int)cursor.getAttributeLong(MailService.A_QUERY_OFFSET);
+            int prevOffset = 0;
+            String sortVal = cursor.getAttribute("sortVal");
+            params.setCursor(prevMailItemId, sortVal, prevOffset);
+        }
+        
         return params;
     }
     
@@ -204,7 +236,7 @@ public class Search extends DocumentHandler  {
     protected final boolean INCLUDE_MAILBOX_INFO = true;
     protected final boolean DONT_INCLUDE_MAILBOX_INFO = false;
     
-    protected Element putHits(ZimbraContext lc, Element response, ZimbraQueryResults results, boolean includeMailbox, SearchParams params)
+    protected Element putHits(ZimbraContext lc, Element response, ResultsPager pager, boolean includeMailbox, SearchParams params)
     throws ServiceException {
         int offset = params.getOffset();
         int limit  = params.getLimit();
@@ -212,49 +244,49 @@ public class Search extends DocumentHandler  {
             
         if (mLog.isDebugEnabled())
             mLog.debug("Search results beginning with offset "+offset);
-
+        
         int totalNumHits = 0;
-        if (null == results) {
-            mLog.info("Got NULL search results object.  This is a bug, report to Tim");
-        } else {
-            for (ZimbraHit hit = results.skipToHit(offset); hit != null; hit = results.getNext()) {
-                totalNumHits++;
-                boolean inline = (totalNumHits == 1 && params.getFetchFirst());
-                Element e = null;
-                if (hit instanceof ConversationHit) {
-                    ConversationHit ch = (ConversationHit) hit;
-                    e = addConversationHit(lc, response, ch, eecache, params);
-                } else if (hit instanceof MessageHit) {
-                    MessageHit mh = (MessageHit) hit;
-                    e = addMessageHit(lc, response, mh, eecache, inline, params);
-                } else if (hit instanceof MessagePartHit) {
-                    MessagePartHit mph = (MessagePartHit) hit;
-                    e = addMessagePartHit(response, mph, eecache);                
-                } else if (hit instanceof ContactHit) {
-                    ContactHit ch = (ContactHit) hit;
-                    ToXML.encodeContact(response, lc, ch.getContact(), null, true, null);
-                } else if (hit instanceof NoteHit) {
-                    NoteHit nh = (NoteHit) hit;
-                    e = ToXML.encodeNote(response,lc, nh.getNote());
-                } else if (hit instanceof ProxiedHit) {
-                    ProxiedHit ph = (ProxiedHit) hit;
-                    e = ph.getElement().detach();
-                    response.addElement(e);
+        
+        for (Iterator iter = pager.getHits().iterator(); iter.hasNext();) {
+            ZimbraHit hit = (ZimbraHit)iter.next();
+            
+//          for (ZimbraHit hit = results.skipToHit(offset); hit != null; hit = results.getNext()) {
+            totalNumHits++;
+            boolean inline = (totalNumHits == 1 && params.getFetchFirst());
+            Element e = null;
+            if (hit instanceof ConversationHit) {
+                ConversationHit ch = (ConversationHit) hit;
+                e = addConversationHit(lc, response, ch, eecache, params);
+            } else if (hit instanceof MessageHit) {
+                MessageHit mh = (MessageHit) hit;
+                e = addMessageHit(lc, response, mh, eecache, inline, params);
+            } else if (hit instanceof MessagePartHit) {
+                MessagePartHit mph = (MessagePartHit) hit;
+                e = addMessagePartHit(response, mph, eecache);                
+            } else if (hit instanceof ContactHit) {
+                ContactHit ch = (ContactHit) hit;
+                ToXML.encodeContact(response, lc, ch.getContact(), null, true, null);
+            } else if (hit instanceof NoteHit) {
+                NoteHit nh = (NoteHit) hit;
+                e = ToXML.encodeNote(response,lc, nh.getNote());
+            } else if (hit instanceof ProxiedHit) {
+                ProxiedHit ph = (ProxiedHit) hit;
+                e = ph.getElement().detach();
+                response.addElement(e);
+            }
+            if (includeMailbox) {
+                String idStr = hit.getMailboxIdStr() + "/" + hit.getItemId();
+                e.addAttribute(MailService.A_ID, idStr);
+            }
+            if (totalNumHits >= limit) {
+                if (mLog.isDebugEnabled()) {
+                    mLog.debug("Search results limited to " + limit + " hits.");
                 }
-                if (includeMailbox) {
-                    String idStr = hit.getMailboxIdStr() + "/" + hit.getItemId();
-                    e.addAttribute(MailService.A_ID, idStr);
-                }
-                if (totalNumHits >= limit) {
-                    if (mLog.isDebugEnabled()) {
-                        mLog.debug("Search results limited to " + limit + " hits.");
-                    }
-                    break;
-                }
+                break;
             }
         }
 
-        response.addAttribute(MailService.A_QUERY_MORE, results.hasNext());
+        response.addAttribute(MailService.A_QUERY_MORE, pager.hasNext());
         
         return response;
     }

@@ -526,6 +526,7 @@ Tags:
 ----------
 
 <SearchRequest [limit="..."] [offset="..."] [sortBy="{sort-by}"] [groupBy="{group-by}"] [types="{types}"] [fetch="1"] [html="1"] [read="1"] [recip="1"]>
+  [<cursor id="prevId" sortVal="prevSortValue" />]
   [<mbx id="1|foo@bar.com|{UID}|all/>]
   <query>{query-string}</query>
 </SearchRequest>
@@ -561,7 +562,17 @@ if recip="1" is specified
   <mp> elements will be set for the first response if fetch=1
   <hp> elements may be present if any attachments matched
 
-	
+  
+For the optional <cursor> element:
+ -- The parameters are (prevMailItemId, prevSortValue): these
+ correspond to the last hit on the previous page (assuming you're
+ going forward -- if you're backing up then they should be the first
+ hit on the previous page)....the server uses those parameters to find
+ the spot in the new results that corresponds to your old position:
+ even if some entries have been removed or added to the search results
+ (e.g. if you are searching is:unread and you read some)
+
+ 
 conversation result:
 --------------------
 

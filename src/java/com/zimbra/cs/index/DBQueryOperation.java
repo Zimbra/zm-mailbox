@@ -762,9 +762,9 @@ class DBQueryOperation extends QueryOperation
         setupResults(mbx, res);
         
         if (mLuceneOp != null) {
-            mHitsPerChunk *= 3; // 
+            mHitsPerChunk = mHitsPerChunk * 3; 
             mLuceneOp.setDBOperation(this);
-            mLuceneOp.prepare(mbx, res, mbidx, 30);
+            mLuceneOp.prepare(mbx, res, mbidx, mHitsPerChunk);
         }
     }
     
