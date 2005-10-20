@@ -145,10 +145,14 @@ public class FileUploadServlet extends ZimbraServlet {
         if (server == null)
             return null;
         // determine the URI for the remote ContentServlet
-        boolean useHTTPS = false;
+        int port = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
+        boolean useHTTP = port > 0;
+        if (!useHTTP)
+            port = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
+        if (port <= 0)
+            throw ServiceException.FAILURE("remote server " + server.getName() + " has neither http nor https port enabled", null);
         String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
-        int port = server.getIntAttr(useHTTPS ? Provisioning.A_zimbraMailSSLPort : Provisioning.A_zimbraMailPort, 7070);
-        String url = (useHTTPS ? "https" : "http") + "://" + hostname + ':' + port +
+        String url = (useHTTP ? "http" : "https") + "://" + hostname + ':' + port +
                      ContentServlet.SERVLET_PATH + ContentServlet.PREFIX_PROXY + '?' +
                      ContentServlet.PARAM_UPLOAD_ID + '=' + URLEncoder.encode(uploadId);
 

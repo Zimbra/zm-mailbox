@@ -53,10 +53,16 @@ public class ProxyTarget {
 
         mAuthToken = authToken;
 
-        // Same URL as the incoming request, except hostname is that of target server.
-        StringBuffer url = new StringBuffer(req.getScheme());
-        url.append("://").append(mServer.getAttr(Provisioning.A_zimbraServiceHostname));
-        url.append(':').append(req.getServerPort());
+        int port = mServer.getIntAttr(Provisioning.A_zimbraMailPort, 0);
+        boolean useHTTP = port > 0;
+        if (!useHTTP)
+            port = mServer.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
+        if (port <= 0)
+            throw ServiceException.FAILURE("remote server " + mServer.getName() + " has neither http nor https port enabled", null);
+        String hostname = mServer.getAttr(Provisioning.A_zimbraServiceHostname);
+
+        StringBuffer url = new StringBuffer(useHTTP ? "http" : "https");
+        url.append("://").append(hostname).append(':').append(port);
         url.append(req.getRequestURI());
         String qs = req.getQueryString();
         if (qs != null)
