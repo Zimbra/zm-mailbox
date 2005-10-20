@@ -1,12 +1,12 @@
 Return-Path: <xmlbeans-dev-return-136-smith=stanford.edu@xml.apache.org>
 Received: from leland8.Stanford.EDU (leland8.Stanford.EDU [171.67.16.82])
 	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id h8IJIgcA010270
-	for <smith@popserver1.stanford.edu>; Thu, 18 Sep 2003 12:18:42 -0700
+	for <smith@popserver1.stanford.edu>; Thu, 18 Sep 2005 12:18:42 -0700
 	(PDT)
 Received: from mail.apache.org (daedalus.apache.org [208.185.179.12]) by
 	leland8.Stanford.EDU (8.12.10/8.12.10) with SMTP id h8IJIUq4016087 for
-	<smith@stanford.edu>; Thu, 18 Sep 2003 12:18:35 -0700 (PDT)
-Received: (qmail 1878 invoked by uid 500); 18 Sep 2003 19:18:24 -0000
+	<smith@stanford.edu>; Thu, 18 Sep 2005 12:18:35 -0700 (PDT)
+Received: (qmail 1878 invoked by uid 500); 18 Sep 2005 19:18:24 -0000
 Mailing-List: contact xmlbeans-dev-help@xml.apache.org; run by ezmlm
 Precedence: bulk
 X-No-Archive: yes
@@ -16,13 +16,13 @@ List-Unsubscribe: <mailto:xmlbeans-dev-unsubscribe@xml.apache.org>
 List-Subscribe: <mailto:xmlbeans-dev-subscribe@xml.apache.org>
 Reply-To: xmlbeans-dev@xml.apache.org
 Delivered-To: mailing list xmlbeans-dev@xml.apache.org
-Received: (qmail 1864 invoked from network); 18 Sep 2003 19:18:24 -0000
+Received: (qmail 1864 invoked from network); 18 Sep 2005 19:18:24 -0000
 Message-ID: <012801c37e19$9ef367e0$d41e11ac@lightbox>
 From: "David Bau" <david.bau@bea.com>
 To: <xmlbeans-dev@xml.apache.org>
 Subject: Future XMLBeans feature work?
-Date: Thu, 18 Sep 2003 15:18:19 -0400
-X-Zimbra-Received: Thu, 18 Sep 2003 15:18:19 -0400
+Date: Thu, 18 Sep 2005 15:18:19 -0400
+X-Zimbra-Received: Thu, 18 Sep 2005 15:18:19 -0400
 MIME-Version: 1.0
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
