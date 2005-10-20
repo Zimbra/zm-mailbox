@@ -80,9 +80,6 @@ public class Zimbra {
                             " builddate=" + BuildInfo.DATE +
                             " buildhost=" + BuildInfo.HOST);
         
-        if (LC.ssl_allow_untrusted_certs.booleanValue())
-            EasySSLProtocolSocketFactory.init();
-        
         checkForClasses();
         
     	if (!Versions.checkVersions())
@@ -98,8 +95,6 @@ public class Zimbra {
         RedoLogProvider redoLog = RedoLogProvider.getInstance();
         redoLog.startup();
         
-        System.setProperty("javax.net.ssl.keyStore", LC.tomcat_keystore.value());
-        System.setProperty("javax.net.ssl.keyStorePassword", "zimbra");
         System.setProperty("ical4j.unfolding.relaxed", "true");
         
         if (!redoLog.isSlave()) {

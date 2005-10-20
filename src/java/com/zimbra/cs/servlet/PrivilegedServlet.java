@@ -35,6 +35,7 @@ import javax.servlet.http.HttpServlet;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.httpclient.EasySSLProtocolSocketFactory;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Config;
@@ -63,6 +64,12 @@ public class PrivilegedServlet extends HttpServlet {
         String address;
         try {
             checkLDAP();
+
+            if (LC.ssl_allow_untrusted_certs.booleanValue())
+                EasySSLProtocolSocketFactory.init();
+            
+            System.setProperty("javax.net.ssl.keyStore", LC.tomcat_keystore.value());
+            System.setProperty("javax.net.ssl.keyStorePassword", "zimbra");
 
             server = Provisioning.getInstance().getLocalServer();
 
