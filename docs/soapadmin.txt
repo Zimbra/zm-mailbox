@@ -503,7 +503,7 @@ purges aged messages out of trash, spam, and entire mailbox
 -----------------------------
 
 <ReIndexRequest action="begin|status|cancel">
-  <mbox id="mailbox-id"/>
+  <mbox id="{account-id}"/>
 </ReIndexRequest>  
 
 <ReIndexResponse status="started" | "running" | "cancelled">
