@@ -186,19 +186,6 @@ ShowNewEnv()
   }
 }
 
-
-#ifndef ZIMBRA_HOME 
-#define ZIMBRA_HOME "/opt/zimbra"
-#endif
-
-#ifndef TOMCAT_HOME
-#define TOMCAT_HOME "/opt/zimbra/tomcat"
-#endif
-
-#ifndef JAVA_BINARY
-#define JAVA_BINARY "/opt/zimbra/java/bin/java"
-#endif
-
 int
 main(int argc, char *argv[])
 {
@@ -210,6 +197,8 @@ main(int argc, char *argv[])
   }
 
   StripEnv();
+
+  /* TODO: warn if files are not owned by root */
 
   /* first argument must be name of binary */
   AddArg(JAVA_BINARY);
@@ -231,7 +220,7 @@ main(int argc, char *argv[])
   AddArg("-Dcatalina.base=%s", TOMCAT_HOME);
   AddArg("-Dcatalina.home=%s", TOMCAT_HOME);
   AddArg("-Djava.io.tmpdir=%s/temp", TOMCAT_HOME); 
-  AddArg("-Djava.library.path=%s/lib", ZIMBRA_HOME);
+  AddArg("-Djava.library.path=%s", ZIMBRA_LIB);
   AddArg("-Djava.endorsed.dirs=%s/common/endorsed", TOMCAT_HOME);
   AddArg("-classpath");
   AddArg("%s/bin/bootstrap.jar:%s/bin/commons-logging-api.jar", 
