@@ -18,9 +18,13 @@ JAVA_SOURCES = $(patsubst %,$(SRC)/java/%,$(JAVA_FILES))
 JAVA_CLASSES = $(patsubst %,$(CLASSES)/%,$(JAVA_FILES:%.java=%.class))
 
 
-all: 
+all: FORCE
 	$(MAKE) $(BUILD)/zimbra-native.jar
 	$(MAKE) $(BUILD)/libzimbra-native.so
+	$(MAKE) $(BUILD)/zmtomcatstart
+
+$(BUILD)/zmtomcatstart: $(SRC)/launcher/zmtomcatstart.c
+	gcc -Wall -Wmissing-prototypes -o $@ $<
 
 $(BUILD)/zimbra-native.jar: remove_classes_list $(JAVA_CLASSES)
 	mkdir -p $(CLASSES)
@@ -33,8 +37,8 @@ $(BUILD)/zimbra-native.jar: remove_classes_list $(JAVA_CLASSES)
 	            -sourcepath $(SRC)/java -classpath $(CLASSES) \
 		    $(shell cat $(BUILD)/.classes.list) || exit 1; \
 		$(RM) $@; \
-		jar c0vf $@ -C $(CLASSES) com; \
 	    fi
+	jar c0vf $@ -C $(CLASSES) com;
 
 $(CLASSES)/%.class: $(SRC)/java/%.java
 	@echo $< >> $(BUILD)/.classes.list
