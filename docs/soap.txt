@@ -1351,15 +1351,6 @@ list of ids of the mail items contained in each folder.
 
 ---------------------------
 
-<ReIndexRequest id="mailbox-id" action="begin|status|cancel"/>
-
-<ReIndexResponse status="started" | "running" | "cancelled">
-  [<progress numSucceeded="SUCCEEDED" numFailed="FAILED" numRemaining="REMAINING">]
-</ReIndexResponse>
-   -- Progress data is currently ONLY returned by the "status" and "cancelled" calls 
-
----------------------------
-
 <CheckSpellingRequest>
     [text to spell check]
 </CheckSpellingRequest>

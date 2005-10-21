@@ -502,6 +502,17 @@ purges aged messages out of trash, spam, and entire mailbox
   (if <mbox> element is omitted, purges all mailboxes on server)
 -----------------------------
 
+<ReIndexRequest action="begin|status|cancel">
+  <mbox id="mailbox-id"/>
+</ReIndexRequest>  
+
+<ReIndexResponse status="started" | "running" | "cancelled">
+  [<progress numSucceeded="SUCCEEDED" numFailed="FAILED" numRemaining="REMAINING">]
+</ReIndexResponse>
+   -- Progress data is currently ONLY returned by the "status" and "cancelled" calls 
+
+---------------------------
+
 <DeleteMailboxRequest>
   <mbox id="{account-id}"/>
 </DeleteMailboxRequest>
@@ -891,3 +902,4 @@ Notes:
 </GetLicenseInfoResponse>
 
 -----------------------------
+

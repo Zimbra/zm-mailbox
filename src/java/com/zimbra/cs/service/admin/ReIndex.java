@@ -20,29 +20,26 @@ public class ReIndex extends AdminDocumentHandler {
 
     private StopWatch sWatch = StopWatch.getInstance("ReIndex");
     
+    private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminService.E_MAILBOX, AdminService.A_ACCOUNTID };
+    protected String[] getProxiedAccountPath()  { return TARGET_ACCOUNT_PATH; }
+    
     public Element handle(Element request, Map context) throws ServiceException, SoapFaultException {
         long startTime = sWatch.start();
         ZimbraContext zc = getZimbraContext(context);
         
         try {
-            String idStr = request.getAttribute(MailService.A_ID);
             String action = request.getAttribute(MailService.E_ACTION);
             
-            ParseMailboxID mboxId = ParseMailboxID.parse(idStr);
+            Element mreq = request.getElement(AdminService.E_MAILBOX);
+            String accountId = mreq.getAttribute(AdminService.A_ACCOUNTID);
             
-            if (!mboxId.isLocal()) {
-                throw MailServiceException.WRONG_HOST(idStr, null);
-            }
-            
-            int id = mboxId.getMailboxId();
-            
-            Mailbox mbox = Mailbox.getMailboxById(id);
-            
+            Mailbox mbox = Mailbox.getMailboxByAccountId(accountId, false);
+
             Element response = zc.createElement(AdminService.REINDEX_RESPONSE);
             
             if (action.equalsIgnoreCase(ACTION_START)) {
                 if (mbox.isReIndexInProgress()) {
-                    throw ServiceException.ALREADY_IN_PROGRESS(idStr, "ReIndex");
+                    throw ServiceException.ALREADY_IN_PROGRESS(accountId, "ReIndex");
                 }
                 
                 ReIndexThread thread = new ReIndexThread(mbox);
@@ -52,7 +49,7 @@ public class ReIndex extends AdminDocumentHandler {
             } else if (action.equalsIgnoreCase(ACTION_STATUS)) {
                 synchronized (mbox) {
                     if (!mbox.isReIndexInProgress()) {
-                        throw ServiceException.NOT_IN_PROGRESS(idStr, "ReIndex");
+                        throw ServiceException.NOT_IN_PROGRESS(accountId, "ReIndex");
                     }
                     
                     Mailbox.ReIndexStatus status = mbox.getReIndexStatus();
@@ -62,7 +59,7 @@ public class ReIndex extends AdminDocumentHandler {
             } else if (action.equalsIgnoreCase(ACTION_CANCEL)) {
                 synchronized (mbox) {
                     if (!mbox.isReIndexInProgress()) {
-                        throw ServiceException.NOT_IN_PROGRESS(idStr, "ReIndex");
+                        throw ServiceException.NOT_IN_PROGRESS(accountId, "ReIndex");
                     }
                     
                     Mailbox.ReIndexStatus status = mbox.getReIndexStatus();
