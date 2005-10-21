@@ -41,7 +41,6 @@ import javax.mail.internet.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.zimbra.cs.imap.ImapHandler.PartSpecifier;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
@@ -301,7 +300,7 @@ class ImapMessage {
 
     private static final byte[] NO_CONTENT = new byte[0];
 
-    byte[] getPart(MimePart mp, PartSpecifier pspec) {
+    byte[] getPart(MimePart mp, ImapPartSpecifier pspec) {
         try {
             mp = Mime.getMimePart(mp, pspec.mPart);
             if (mp == null)

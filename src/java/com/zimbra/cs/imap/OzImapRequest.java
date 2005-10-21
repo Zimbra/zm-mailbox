@@ -22,10 +22,6 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-
-/*
- * Created on Apr 30, 2005
- */
 package com.zimbra.cs.imap;
 
 import java.io.IOException;
@@ -43,8 +39,14 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.tcpserver.TcpServerInputStream;
 import com.zimbra.cs.util.ZimbraLog;
 
-
-class ImapRequest {
+/**
+ * NB: Copied from ImapRequest.java on October 20, 2005 - while there
+ * are two server impls we have to merge all changes to made to
+ * ImapRequest.java since that date, to this file.
+ *
+ * @author dkarp
+ */
+class OzImapRequest {
     static final boolean[] ATOM_CHARS     = new boolean[128];
     static final boolean[] ASTRING_CHARS  = new boolean[128];
     static final boolean[] TAG_CHARS      = new boolean[128];
@@ -73,9 +75,8 @@ class ImapRequest {
             REGEXP_ESCAPED['^'] = REGEXP_ESCAPED['$'] = REGEXP_ESCAPED['?'] = true;
             REGEXP_ESCAPED['{'] = REGEXP_ESCAPED['}'] = REGEXP_ESCAPED['*'] = true;
             REGEXP_ESCAPED['\\'] = true;
-        }
+    }
 
-    private TcpServerInputStream mStream;
     private ImapSession mSession;
     private ArrayList mParts = new ArrayList();
     private String mTag;
@@ -84,13 +85,15 @@ class ImapRequest {
     private int mSize;
     private boolean mUnlogged;
 
-    ImapRequest(String line)  { mParts.add(line); }
-    ImapRequest(TcpServerInputStream tsis, ImapSession session) {
-        mStream  = tsis;
+    OzImapRequest(String line)  {
+        mParts.add(line); 
+    }
+    
+    OzImapRequest(ImapSession session) {
         mSession = session;
     }
 
-    ImapRequest rewind()  { mIndex = mOffset = 0;  mTag = null;  return this; }
+    OzImapRequest rewind()  { mIndex = mOffset = 0;  mTag = null;  return this; }
 
     private static int DEFAULT_MAX_REQUEST_LENGTH = 10000000;
 
@@ -109,6 +112,8 @@ class ImapRequest {
             throw new ImapParseException(mTag, "request too long");
     }
 
+    private TcpServerInputStream mStream;
+    
     void continuation() throws IOException, ImapException {
         if (mLiteral >= 0) {
             Object part = mParts.get(mParts.size() - 1);
@@ -300,6 +305,7 @@ class ImapRequest {
         mOffset = 0;
         return result;
     }
+    
     private String readLiteral(String charset) throws IOException, ImapException {
         try {
             return new String(readLiteral(), charset);
@@ -311,9 +317,11 @@ class ImapRequest {
     String readAstring() throws IOException, ImapException {
         return readAstring(null);
     }
+    
     String readAstring(String charset) throws IOException, ImapException {
         return readAstring(charset, ASTRING_CHARS);
     }
+    
     private String readAstring(String charset, boolean[] acceptable) throws IOException, ImapException {
         int c = peekChar();
         if (c == -1)        throw new ImapParseException(mTag, "unexpected end of line");
@@ -340,12 +348,15 @@ class ImapRequest {
     String readFolder() throws IOException, ImapException {
         return readFolder(false);
     }
+    
     String readEscapedFolder() throws IOException, ImapException {
         return escapeFolder(readFolder(false), false);
     }
+    
     String readFolderPattern() throws IOException, ImapException {
         return escapeFolder(readFolder(true), true);
     }
+    
     private String readFolder(boolean isPattern) throws IOException, ImapException {
         String raw = readAstring(null, isPattern ? PATTERN_CHARS : ASTRING_CHARS);
         if (raw == null || raw.indexOf("&") == -1)
@@ -356,6 +367,7 @@ class ImapRequest {
             throw new ImapParseException(mTag, "invalid modified UTF-7: \"" + raw + '"');
         }
     }
+    
     private String escapeFolder(String unescaped, boolean isPattern) {
         if (unescaped == null)
             return null;
