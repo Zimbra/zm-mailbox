@@ -91,18 +91,18 @@ public class OzSnooper {
     
     public void read(OzConnection handler, int bytesRead, ByteBuffer readBuffer) {
         if (bytesRead > 0) {
-            print(OzUtil.byteBufferToString("read bytes=" + bytesRead, readBuffer, true));
+            print(OzUtil.byteBufferDebugDump("read bytes=" + bytesRead, readBuffer, true));
         } else {
             print("read bytes=" + bytesRead);
         }
     }
 
     public void input(OzConnection handler, ByteBuffer buffer, boolean matched) {
-        print(OzUtil.byteBufferToString("input matched=" + matched, buffer, false));
+        print(OzUtil.byteBufferDebugDump("input matched=" + matched, buffer, false));
     }
     
     public void write(OzConnection handler, ByteBuffer buffer) {
-        print(OzUtil.byteBufferToString("write", buffer, false));
+        print(OzUtil.byteBufferDebugDump("write", buffer, false));
     }
 
     public void wrote(OzConnection handler, int wrote) {

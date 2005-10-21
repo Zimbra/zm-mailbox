@@ -40,7 +40,7 @@ import EDU.oswego.cs.dl.util.concurrent.SynchronizedInt;
 
 public class OzConnection {
 
-    private OzProtocolHandler mProtocolHandler;
+    private OzConnectionHandler mConnectionHandler;
 
     private Log mLog;
 
@@ -52,8 +52,8 @@ public class OzConnection {
 
     private SelectionKey mSelectionKey; 
 
-    OzProtocolHandler getProtocolHandler() {
-        return mProtocolHandler;
+    OzConnectionHandler getConnectionHandler() {
+        return mConnectionHandler;
     }
     
     void addToNDC() {
@@ -65,15 +65,23 @@ public class OzConnection {
         ZimbraLog.clearContext();
     }
     
-    private void logKey(String where) {
-        OzUtil.logSelectionKey(mLog, mSelectionKey, where);
+    /* Caller must lock key! */
+    static void logKey(Log log, SelectionKey selectionKey, String where) {
+        if (selectionKey.isValid()) {
+            log.debug(where +
+                    " iops=" + selectionKey.interestOps() + 
+                    " rops=" + selectionKey.readyOps() + 
+                    " key=" + Integer.toHexString(selectionKey.hashCode()));
+        } else {
+            log.warn(where + " invalid key=" + Integer.toHexString(selectionKey.hashCode()));
+        }
     }
-    
+
     private void enableReadInterest() {
         synchronized (mSelectionKey) {
             int iops = mSelectionKey.interestOps();
             mSelectionKey.interestOps(iops | SelectionKey.OP_READ);
-            if (mLog.isDebugEnabled()) logKey("enabled read interest");
+            logKey(mLog, mSelectionKey, "enabled read interest");
         }
         mSelectionKey.selector().wakeup();
     }
@@ -82,7 +90,7 @@ public class OzConnection {
         synchronized (mSelectionKey) {
             int iops = mSelectionKey.interestOps();
             mSelectionKey.interestOps(iops & (~SelectionKey.OP_READ));
-            if (mLog.isDebugEnabled()) logKey("disabled read interest");
+            logKey(mLog, mSelectionKey, "disabled read interest");
         }
     }   
     
@@ -90,7 +98,7 @@ public class OzConnection {
         synchronized (mSelectionKey) {
             int iops = mSelectionKey.interestOps();
             mSelectionKey.interestOps(iops | SelectionKey.OP_WRITE);
-            if (mLog.isDebugEnabled()) logKey("enabled write interest"); 
+            logKey(mLog, mSelectionKey, "enabled write interest"); 
         }
         mSelectionKey.selector().wakeup();
     }
@@ -99,7 +107,7 @@ public class OzConnection {
         synchronized (mSelectionKey) {
             int iops = mSelectionKey.interestOps();
             mSelectionKey.interestOps(iops & (~SelectionKey.OP_WRITE));
-            if (mLog.isDebugEnabled()) logKey("disabled write interest"); 
+            logKey(mLog, mSelectionKey, "disabled write interest"); 
         }
     }
     
@@ -124,11 +132,11 @@ public class OzConnection {
             mChannel = channel;
             mServer = server;
             mReadBuffer = server.getBufferPool().get();
-            mSelectionKey = channel.register(server.getSelector(), 0, this); 
-            mProtocolHandler = server.newProtocolHandler();
             mLog = mServer.getLog();
             mLog.info("connected buf=" + mReadBuffer.hashCode() + " " + mChannel);
-            mProtocolHandler.handleConnect(this);
+            mSelectionKey = channel.register(server.getSelector(), 0, this); 
+            mConnectionHandler = server.newConnectionHandler(this);
+            mConnectionHandler.handleConnect();
             enableReadInterest();
         } finally {
             clearFromNDC();
@@ -175,7 +183,7 @@ public class OzConnection {
     	public void run() {
             try {
                 addToNDC();
-                mProtocolHandler.handleDisconnect(OzConnection.this, true);
+                mConnectionHandler.handleDisconnect();
                 closeNow();
             } finally {
                 clearFromNDC();
@@ -227,11 +235,11 @@ public class OzConnection {
     private void processReadBufferLocked() throws IOException {
     	boolean trace = mLog.isTraceEnabled(); 
         
-        if (trace) mLog.trace(OzUtil.byteBufferToString("read buffer at start", mReadBuffer, true));
+        if (trace) mLog.trace(OzUtil.byteBufferDebugDump("read buffer at start", mReadBuffer, true));
         
         int bytesRead = mChannel.read(mReadBuffer);
         
-        if (trace) mLog.trace(OzUtil.byteBufferToString("read buffer after read", mReadBuffer, true));
+        if (trace) mLog.trace(OzUtil.byteBufferDebugDump("read buffer after read", mReadBuffer, true));
         
         assert(bytesRead == mReadBuffer.position());
         
@@ -262,7 +270,7 @@ public class OzConnection {
             int matchStart = matchBuffer.position();
             
             if (trace) {
-                mLog.trace(OzUtil.byteBufferToString("matching", matchBuffer, false));
+                mLog.trace(OzUtil.byteBufferDebugDump("matching", matchBuffer, false));
             }
             
             int matchEnd = mMatcher.match(matchBuffer);
@@ -282,7 +290,7 @@ public class OzConnection {
             if (mServer.getSnooper().snoopInputs()) {
                 mServer.getSnooper().input(this, pdu, true);
             }
-            mProtocolHandler.handleInput(this, pdu, true);
+            mConnectionHandler.handleInput(pdu, true);
             handledBytes = matchEnd;
         }
         
@@ -298,7 +306,7 @@ public class OzConnection {
                 if (mServer.getSnooper().snoopInputs()) {
                     mServer.getSnooper().input(this, mReadBuffer, false);
                 }
-                mProtocolHandler.handleInput(this, mReadBuffer, false);
+                mConnectionHandler.handleInput(mReadBuffer, false);
                 mReadBuffer.clear();
             }
         } else {
@@ -347,6 +355,10 @@ public class OzConnection {
     private boolean mCloseAfterWrite = false;
 
     public void writeAscii(String data, boolean addCRLF) throws IOException {
+        writeAscii(data, addCRLF, true);
+    }
+    
+    public void writeAscii(String data, boolean addCRLF, boolean flush) throws IOException {
         byte[] bdata = new byte[data.length() + (addCRLF ? 2 : 0)];
         int n = data.length();
         for (int i = 0; i < n; i++) {
@@ -364,9 +376,17 @@ public class OzConnection {
     }
     
     public void write(ByteBuffer data) throws IOException {
+        write(data, true);
+    }
+    
+    public void write(ByteBuffer data, boolean flush) throws IOException {
+        // TODO even if flush has not been requested, we should flush if we
+        // have too much data!
         synchronized (mWriteBuffers) {
             mWriteBuffers.add(data);
-            enableWriteInterest();
+            if (flush) {
+                enableWriteInterest();
+            }
         }
     }
 
@@ -430,4 +450,5 @@ public class OzConnection {
             }
         }
     }
+
 }

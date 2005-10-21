@@ -22,7 +22,6 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-
 package com.zimbra.cs.ozserver;
 
 import java.io.IOException;
@@ -44,6 +43,16 @@ import org.apache.commons.logging.Log;
 import EDU.oswego.cs.dl.util.concurrent.PooledExecutor;
 import EDU.oswego.cs.dl.util.concurrent.ThreadFactory;
 
+// TODO idle connection support
+
+// TODO STARTTLS and SSL support
+
+// TODO add a clearConnection so that protocol handlers will
+//      let go of the connection objects
+
+// TODO writes should be tasks to - why write only from the
+//      main thread?
+        
 public class OzServer {
     
     private Log mLog;
@@ -58,14 +67,14 @@ public class OzServer {
     
     private Thread mServerThread;
     
-    private OzProtocolHandlerFactory mProtocolHandlerFactory;
+    private OzConnectionHandlerFactory mConnectionHandlerFactory;
     
     private OzSnooper mSnooper = new OzSnooper(null);
     
     private OzBufferPool mBufferPool;
     
     public OzServer(String name, int readBufferSize, InetAddress bindAddress, int port,
-                    OzProtocolHandlerFactory protocolHandlerFactory, Log log)
+                    OzConnectionHandlerFactory connectionHandlerFactory, Log log)
         throws IOException
     {
         mLog = log;
@@ -80,7 +89,7 @@ public class OzServer {
         mServerName = name + "-" + port;
         mBufferPool = new OzBufferPool(mServerName, readBufferSize, mLog);
         
-        mProtocolHandlerFactory = protocolHandlerFactory;
+        mConnectionHandlerFactory = connectionHandlerFactory;
         
         mSelector = Selector.open();
         mServerSocketChannel.register(mSelector, SelectionKey.OP_ACCEPT);
@@ -99,8 +108,8 @@ public class OzServer {
         return mSnooper;
     }
     
-    OzProtocolHandler newProtocolHandler() {
-        return mProtocolHandlerFactory.newProtocolHandler();
+    OzConnectionHandler newConnectionHandler(OzConnection connection) {
+        return mConnectionHandlerFactory.newConnectionHandler(connection);
     }
     
     private void serverLoop() {
@@ -144,9 +153,13 @@ public class OzServer {
                 iter.remove();
 
                 if (readyKey.isValid()) {
-                    if (mLog.isDebugEnabled()) OzUtil.logSelectionKey(mLog, readyKey, "ready acceptable key");
+                    synchronized (readyKey) {
+                        OzConnection.logKey(mLog, readyKey, "ready acceptable key");
+                    }
                 } else {
-                    OzUtil.logSelectionKey(mLog, readyKey, "selected ready key");
+                    synchronized (readyKey) {
+                        OzConnection.logKey(mLog, readyKey, "selected ready key");
+                    }
                     if (readyKey.attachment() != null && readyKey.attachment() instanceof OzConnection) {
                         OzConnection ch = (OzConnection)readyKey.attachment();
                         mLog.warn("ready key was invalid cid=" + ch.getId() + " ip=" + ch.getRemoteAddress());

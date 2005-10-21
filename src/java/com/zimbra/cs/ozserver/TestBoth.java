@@ -42,7 +42,7 @@ import com.zimbra.cs.util.Zimbra;
 
 class TestBoth {
 
-    private static Log mLog = LogFactory.getLog(TestProtocolHandler.class);
+    private static Log mLog = LogFactory.getLog(TestBoth.class);
 
 	private static Options mOptions = new Options();
 	

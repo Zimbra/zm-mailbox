@@ -22,17 +22,13 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-
 package com.zimbra.cs.ozserver;
 
 import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
 
-import org.apache.commons.logging.Log;
+public class OzUtil {
 
-class OzUtil {
-
-    public static String byteBufferToString(String bufferName, ByteBuffer buff, boolean flip) {
+    public static String byteBufferDebugDump(String bufferName, ByteBuffer buff, boolean flip) {
         ByteBuffer buf = buff.duplicate();
         if (flip) {
             buf.flip();
@@ -105,18 +101,5 @@ class OzUtil {
             sb.append((char)buffer.get());
         }
         return sb.toString();
-    }
-
-    public static void logSelectionKey(Log log, SelectionKey selectionKey, String where) {
-        synchronized (selectionKey) {
-            if (selectionKey.isValid()) {
-                log.debug(where +
-                          " iops=" + selectionKey.interestOps() + 
-                          " rops=" + selectionKey.readyOps() + 
-                          " key=" + Integer.toHexString(selectionKey.hashCode()));
-            } else {
-            	log.warn(where + " invalid key=" + Integer.toHexString(selectionKey.hashCode()));
-            }
-        } 
     }
 }

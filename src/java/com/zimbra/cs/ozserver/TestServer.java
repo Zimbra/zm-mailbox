@@ -37,9 +37,9 @@ class TestServer {
     private static OzServer mServer;
 
     public TestServer(int port) throws IOException {
-        OzProtocolHandlerFactory testHandlerFactory = new OzProtocolHandlerFactory() {
-            public OzProtocolHandler newProtocolHandler() {
-                return new TestProtocolHandler();
+        OzConnectionHandlerFactory testHandlerFactory = new OzConnectionHandlerFactory() {
+            public OzConnectionHandler newConnectionHandler(OzConnection conn) {
+                return new TestConnectionHandler(conn);
             }
         };
     	mServer = new OzServer("Test", 64, null, port, testHandlerFactory, mLog);

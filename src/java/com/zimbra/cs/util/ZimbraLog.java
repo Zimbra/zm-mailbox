@@ -22,9 +22,6 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-
-/*
- */
 package com.zimbra.cs.util;
 
 import java.io.File;

@@ -28,10 +28,10 @@ package com.zimbra.cs.ozserver;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-public interface OzProtocolHandler {
-    void handleConnect(OzConnection connection) throws IOException;
+public interface OzConnectionHandler {
+    void handleConnect() throws IOException;
 
-    void handleInput(OzConnection connection, ByteBuffer buffer, boolean matched) throws IOException;
+    void handleInput(ByteBuffer buffer, boolean matched) throws IOException;
 
-    void handleDisconnect(OzConnection connection, boolean byClient);
+    void handleDisconnect();
 }
