@@ -1351,21 +1351,6 @@ list of ids of the mail items contained in each folder.
 
 ---------------------------
 
-Console Command:
-
-General-Purpose SOAP command for interfacing simple admin-console
-commands that don't necessarily need their own full SOAP API.
-
-Helper util is coco.tools.SendConsoleCommand.java 
-
-<ConsoleRequest name="REQUEST"> // (REQUEST is the command, e.g. "reindex")
-   (<p name="name">VALUE</p>)*  // parameters
-</ConsoleRequest>
-
-<ConsoleResponse status="OK|FAIL">RESPONSETEXT</ConsoleResponse>
-
----------------------------
-
 <CheckSpellingRequest>
     [text to spell check]
 </CheckSpellingRequest>

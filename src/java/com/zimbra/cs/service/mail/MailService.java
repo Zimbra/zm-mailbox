@@ -160,10 +160,6 @@ public class MailService implements DocumentService {
     // objects
 //    public static final QName OBJECT_ACTION_REQUEST = QName.get("ObjectActionRequest", NAMESPACE);
 //    public static final QName OBJECT_ACTION_RESPONSE = QName.get("ObjectActionResponse", NAMESPACE);
-    // admin/debug command hook
-    public static final QName CONSOLE_REQUEST = QName.get("ConsoleRequest", NAMESPACE);    
-    public static final QName CONSOLE_RESPONSE = QName.get("ConsoleResponse", NAMESPACE);    
-
 
     public static final String E_MAILBOX = "mbx";
     public static final String E_CONV = "c";
@@ -486,7 +482,5 @@ public class MailService implements DocumentService {
         // objects
 //        dispatcher.registerHandler(OBJECT_ACTION_REQUEST, new ObjectAction());
         
-        // console Request 
-        dispatcher.registerHandler(CONSOLE_REQUEST, new ConsoleRequest());
 	}
 }
