@@ -143,8 +143,8 @@ public class ServiceException extends Exception {
                 SENDERS_FAULT, null);
     }
 
-    public static ServiceException PROXY_ERROR(Throwable cause) {
-        return new ServiceException("error while proxying request to target server: " + (cause != null ? cause.getMessage() : "unknown reason"), 
+    public static ServiceException PROXY_ERROR(Throwable cause, String url) {
+        return new ServiceException("error while proxying request to target server (url=" + url + "): " + (cause != null ? cause.getMessage() : "unknown reason"), 
                 PROXY_ERROR, RECEIVERS_FAULT, cause);
     }
 

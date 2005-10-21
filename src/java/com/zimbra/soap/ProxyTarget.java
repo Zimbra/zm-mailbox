@@ -83,9 +83,9 @@ public class ProxyTarget {
             transport.setAuthToken(mAuthToken);
             response = transport.invokeWithoutSession(request);
         } catch (IOException e) {
-            throw ServiceException.PROXY_ERROR(e);
+            throw ServiceException.PROXY_ERROR(e, mURL);
         } catch (SoapFaultException e) {
-            throw ServiceException.PROXY_ERROR(e);
+            throw ServiceException.PROXY_ERROR(e, mURL);
         } finally {
             if (transport != null)
                 transport.shutdown();
@@ -105,7 +105,7 @@ public class ProxyTarget {
             response = transport.invokeRaw(envelope);
             response = transport.extractBodyElement(response);
         } catch (IOException e) {
-            throw ServiceException.PROXY_ERROR(e);
+            throw ServiceException.PROXY_ERROR(e, mURL);
         } finally {
             if (transport != null)
                 transport.shutdown();

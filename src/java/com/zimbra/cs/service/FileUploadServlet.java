@@ -182,9 +182,9 @@ public class FileUploadServlet extends ZimbraServlet {
             ByteUtil.copy(is = method.getResponseBodyAsStream(), fi.getOutputStream());
             return new Upload(accountId, fi);
         } catch (HttpException e) {
-            throw ServiceException.PROXY_ERROR(e);
+            throw ServiceException.PROXY_ERROR(e, url);
         } catch (MessagingException e) {
-            throw ServiceException.PROXY_ERROR(e);
+            throw ServiceException.PROXY_ERROR(e, url);
         } catch (IOException e) {
             throw ServiceException.FAILURE("can't fetch remote upload: " + uploadId, e);
         } finally {
