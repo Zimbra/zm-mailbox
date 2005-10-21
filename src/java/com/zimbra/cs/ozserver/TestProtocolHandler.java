@@ -28,13 +28,8 @@ package com.zimbra.cs.ozserver;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 class TestProtocolHandler implements OzProtocolHandler {
 
-    private static Log mLog = LogFactory.getLog(TestProtocolHandler.class);
-    
     private OzByteArrayMatcher mCommandMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLF);
     
     private OzByteArrayMatcher mSumDataMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLFDOTCRLF);
@@ -49,35 +44,35 @@ class TestProtocolHandler implements OzProtocolHandler {
     private static final int READING_SUM_DATA = 2;
     private static final int READING_NSUM_DATA = 3;
     
-    private void gotoReadingCommandState(OzConnectionHandler connection) {
+    private void gotoReadingCommandState(OzConnection connection) {
         mReadState = READING_COMMAND;
         mCommandMatcher.clear();
         connection.setMatcher(mCommandMatcher);
-        mLog.info("[server] entered command read state");
+        TestServer.mLog.info("entered command read state");
     }
     
-    private void gotoReadingSumDataState(OzConnectionHandler connection) {
+    private void gotoReadingSumDataState(OzConnection connection) {
         mReadState = READING_SUM_DATA;
         mSumDataMatcher.clear();
         connection.setMatcher(mSumDataMatcher);
-        mLog.info("[server] entered sum read state");
+        TestServer.mLog.info("entered sum read state");
     }
     
-    private void gotoReadingNsumDataState(OzConnectionHandler connection, int target) {
+    private void gotoReadingNsumDataState(OzConnection connection, int target) {
         mReadState = READING_NSUM_DATA;
         mNsumDataMatcher.target(target);
         mNsumDataMatcher.clear();
         connection.setMatcher(mNsumDataMatcher);
-        mLog.info("[server] entered nsum read state");
+        TestServer.mLog.info("entered nsum read state");
     }
     
-    public void handleConnect(OzConnectionHandler connection) throws IOException {
+    public void handleConnect(OzConnection connection) throws IOException {
         // Write greeting
         connection.writeAscii("200 Hello, welcome to test server cid=" + connection.getId(), true);
         gotoReadingCommandState(connection);
     }   
     
-    private void readCommand(OzConnectionHandler connection, ByteBuffer content, boolean matched) throws IOException 
+    private void readCommand(OzConnection connection, ByteBuffer content, boolean matched) throws IOException 
     {
         assert(mReadState == READING_COMMAND);
         
@@ -88,7 +83,7 @@ class TestProtocolHandler implements OzProtocolHandler {
             return;
         }
         String cmd = OzUtil.asciiByteArrayToString(content);
-        mLog.info("[server] got: " + cmd);
+        TestServer.mLog.info("got: " + cmd);
         if (cmd.equals("helo")) {
             connection.writeAscii("200 pleased to meet you", true);
             gotoReadingCommandState(connection);
@@ -112,7 +107,7 @@ class TestProtocolHandler implements OzProtocolHandler {
                 connection.writeAscii("500 number format exception", true);
                 gotoReadingCommandState(connection);
             }
-            mLog.info("nsum target is " + bytesToRead);
+            TestServer.mLog.info("nsum target is " + bytesToRead);
             gotoReadingNsumDataState(connection, bytesToRead); 
         } else {
             connection.writeAscii("500 command " + cmd + " not understood", true);
@@ -120,7 +115,7 @@ class TestProtocolHandler implements OzProtocolHandler {
         }
     }
     
-    private void readSumData(OzConnectionHandler connection, ByteBuffer content, boolean matched) throws IOException
+    private void readSumData(OzConnection connection, ByteBuffer content, boolean matched) throws IOException
     {
         int n = content.limit();
         for (int i = content.position(); i < n; i++) {
@@ -132,7 +127,7 @@ class TestProtocolHandler implements OzProtocolHandler {
             gotoReadingCommandState(connection);
         }
     }
-    private void readNsumData(OzConnectionHandler connection, ByteBuffer content, boolean matched) throws IOException
+    private void readNsumData(OzConnection connection, ByteBuffer content, boolean matched) throws IOException
     {
         int n = content.limit();
         for (int i = content.position(); i < n; i++) {
@@ -145,7 +140,7 @@ class TestProtocolHandler implements OzProtocolHandler {
         }
     }
     
-    public void handleInput(OzConnectionHandler connection, ByteBuffer content, boolean matched) throws IOException
+    public void handleInput(OzConnection connection, ByteBuffer content, boolean matched) throws IOException
     {
         if (mReadState == READING_COMMAND) {
             readCommand(connection, content, matched);
@@ -159,7 +154,7 @@ class TestProtocolHandler implements OzProtocolHandler {
         }
     }
     
-    public void handleDisconnect(OzConnectionHandler connection, boolean byClient) {
-        mLog.info("Test connection closed byclient=" + byClient);
+    public void handleDisconnect(OzConnection connection, boolean byClient) {
+        TestServer.mLog.info("Test connection closed byclient=" + byClient);
     }
 }

@@ -31,10 +31,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.TimerTask;
 
+import org.apache.commons.logging.Log;
+
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.cs.util.ZimbraLog;
 
 class OzBufferPool {
+    
+    private Log mLog;
+    
     private List mFreeBuffers;
     
     private List mAllocatedBuffers;
@@ -51,8 +55,8 @@ class OzBufferPool {
     
     private boolean mDestroyed;
     
-    OzBufferPool(String name, int bufferSize) {
-        mName = name;
+    OzBufferPool(String name, int bufferSize, Log log) {
+        mLog = log;
         mBufferSize = bufferSize;
         mFreeBuffers = new LinkedList();
         mAllocatedBuffers = new ArrayList(16);
@@ -60,7 +64,7 @@ class OzBufferPool {
 
         TimerTask task = new TimerTask() {
             public void run() {
-                ZimbraLog.ozserver.info("buffer pool name=" + mName + " inuse=" + mInUse + " allocated=" + mAllocatedBuffers.size());
+                mLog.info("buffer pool name=" + mName + " inuse=" + mInUse + " allocated=" + mAllocatedBuffers.size());
             }
         };
         Zimbra.sTimer.scheduleAtFixedRate(task, USAGE_DISPLAY_INTERVAL, USAGE_DISPLAY_INTERVAL);
@@ -76,7 +80,7 @@ class OzBufferPool {
         if (mFreeBuffers.isEmpty()) {
             buf = ByteBuffer.allocateDirect(mBufferSize);
             mAllocatedBuffers.add(buf);
-            ZimbraLog.ozserver.info("New direct buffer inuse=" + mInUse + " allocated=" + mAllocatedBuffers.size());
+            mLog.info("New direct buffer inuse=" + mInUse + " allocated=" + mAllocatedBuffers.size());
         } else {
             buf = (ByteBuffer)mFreeBuffers.remove(0);
             buf.clear();
@@ -100,7 +104,7 @@ class OzBufferPool {
             throw new IllegalStateException("trying to destroy a destroyed buffer pool");
         }
         mDestroyed = true;
-        ZimbraLog.ozserver.info("destroying buffer pool name=" + mName + " inuse=" + mInUse + " allocated=" + mAllocatedBuffers.size());
+        mLog.info("destroying buffer pool inuse=" + mInUse + " allocated=" + mAllocatedBuffers.size());
         mAllocatedBuffers.clear();
         mFreeBuffers.clear();
     }

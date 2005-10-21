@@ -27,9 +27,12 @@ package com.zimbra.cs.ozserver;
 
 import java.nio.ByteBuffer;
 
-import com.zimbra.cs.util.ZimbraLog;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class OzCountingMatcher implements OzMatcher {
+
+    private static Log mLog = LogFactory.getLog(OzCountingMatcher.class);
 
     int mTarget = 0;
     
@@ -41,8 +44,10 @@ public class OzCountingMatcher implements OzMatcher {
 
     public int match(ByteBuffer buffer) {
         int nb = buffer.limit() - buffer.position();
-        ZimbraLog.ozserver.debug("counting matcher: position="+ buffer.position() + " limit=" + buffer.limit() +
-                " new=" + nb + " matched=" + mMatched + " target=" + mTarget);
+        if (mLog.isDebugEnabled()) {
+            mLog.debug("counting matcher: position="+ buffer.position() + " limit=" + buffer.limit() +
+                    " new=" + nb + " matched=" + mMatched + " target=" + mTarget);
+        }
         if ((nb + mMatched) < mTarget) {
             mMatched += nb;
             buffer.position(buffer.limit());

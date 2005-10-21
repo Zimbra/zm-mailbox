@@ -76,6 +76,12 @@ public class ZimbraLog {
     public static final String C_ANAME = "aname";
 
     /**
+     * "cid" is the connection id of a server that is monotonically increasing - useful
+     * for tracking individual connections.
+     */
+    public static final String C_CONNECTIONID = "cid";
+    
+    /**
      * "mid" key for context. Id of requested mailbox. Only present if request is
      * dealing with a mailbox.
      */
@@ -157,11 +163,6 @@ public class ZimbraLog {
     public static final org.apache.commons.logging.Log cache = LogFactory.getLog("zimbra.cache");
     
     /**
-     * the "zimbra.ozserver" logger. For tracing ozserver framework
-     */
-    public static final org.apache.commons.logging.Log ozserver = LogFactory.getLog("zimbra.ozserver");
-    
-    /**
      * the "zimbra.filter" logger. For filter-related logs.
      */
     public static final org.apache.commons.logging.Log filter = LogFactory.getLog("zimbra.filter");
@@ -221,21 +222,17 @@ public class ZimbraLog {
         }
     }
     
-    /**
-     * 
-     * @param name account name
-     */
-    public static void addAccountNameToContext(String name) {
-        ZimbraLog.addToContext(C_NAME, name);
+    public static void addAccountNameToContext(String accountName) {
+        ZimbraLog.addToContext(C_NAME, accountName);
     }
     
-    /**
-     * 
-     * @param ip ip address
-     */
-    public static void addIpToContext(String ip) {
-        ZimbraLog.addToContext(C_IP, ip);
+    public static void addIpToContext(String ipAddress) {
+        ZimbraLog.addToContext(C_IP, ipAddress);
     }  
+    
+    public static void addConnectionIdToContext(String connectionId) {
+        ZimbraLog.addToContext(C_CONNECTIONID, connectionId);
+    }
     
     public static void addToContext(Mailbox mbx) {
         addToContext(C_MID, Integer.toString(mbx.getId()));
@@ -267,9 +264,9 @@ public class ZimbraLog {
         p.put("log4j.appender.A1", "org.apache.log4j.ConsoleAppender");
         p.put("log4j.appender.A1.layout", "org.apache.log4j.PatternLayout");
         if (showThreads) {
-        	p.put("log4j.appender.A1.layout.ConversionPattern", "[%t] %p: %m%n");
+        	p.put("log4j.appender.A1.layout.ConversionPattern", "[%t] [%x] %p: %m%n");
         } else {
-        	p.put("log4j.appender.A1.layout.ConversionPattern", "%p: %m%n");
+        	p.put("log4j.appender.A1.layout.ConversionPattern", "[%x] %p: %m%n");
         }
         PropertyConfigurator.configure(p);
     }

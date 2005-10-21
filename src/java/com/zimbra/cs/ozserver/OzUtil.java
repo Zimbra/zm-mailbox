@@ -28,7 +28,7 @@ package com.zimbra.cs.ozserver;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 
-import com.zimbra.cs.util.ZimbraLog;
+import org.apache.commons.logging.Log;
 
 class OzUtil {
 
@@ -99,27 +99,24 @@ class OzUtil {
         return sb.toString();
     }
     
-	public static String asciiByteArrayToString(ByteBuffer buffer) {
+    public static String asciiByteArrayToString(ByteBuffer buffer) {
         StringBuffer sb = new StringBuffer(buffer.limit() - buffer.position());
         for (int i = buffer.position(); i < buffer.limit(); i++) {
-        	sb.append((char)buffer.get());
+            sb.append((char)buffer.get());
         }
-		return sb.toString();
-	}
+        return sb.toString();
+    }
 
-	public static void logSelectionKey(SelectionKey selectionKey, int id, String where) {
+    public static void logSelectionKey(Log log, SelectionKey selectionKey, String where) {
         synchronized (selectionKey) {
-        	if (selectionKey.isValid()) {
-        		ZimbraLog.ozserver.debug(where +
-        				" cid=" + id + 
-						" iops=" + selectionKey.interestOps() + 
-						" rops=" + selectionKey.readyOps() + 
-						" key=" + Integer.toHexString(selectionKey.hashCode()));
+            if (selectionKey.isValid()) {
+                log.debug(where +
+                          " iops=" + selectionKey.interestOps() + 
+                          " rops=" + selectionKey.readyOps() + 
+                          " key=" + Integer.toHexString(selectionKey.hashCode()));
             } else {
-            	ZimbraLog.ozserver.debug(where + 
-                        " invalid cid=" + id + 
-                        " key=" + Integer.toHexString(selectionKey.hashCode()));
+            	log.warn(where + " invalid key=" + Integer.toHexString(selectionKey.hashCode()));
             }
         } 
-	}
+    }
 }

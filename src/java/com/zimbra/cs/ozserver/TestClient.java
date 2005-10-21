@@ -69,7 +69,7 @@ class TestClient {
         mSocketIn = new BufferedReader(new InputStreamReader(mSocket.getInputStream()));
         mSocketOut = new BufferedOutputStream(mSocket.getOutputStream());
         mResponse = mSocketIn.readLine();
-        mLog.info("client: got line: " + mResponse);
+        mLog.info("got: " + mResponse);
     }
     
     public String getLastResponse() {
@@ -80,14 +80,14 @@ class TestClient {
         mSocketOut.write("helo\r\n".getBytes());
         mSocketOut.flush();
         mResponse = mSocketIn.readLine();
-        mLog.info("client: got line: " + mResponse);
+        mLog.info("got: " + mResponse);
     }
     
     public void quit() throws IOException {
         mSocketOut.write("quit\r\n".getBytes());
         mSocketOut.flush();
         mResponse = mSocketIn.readLine();
-        mLog.info("client: got line: " + mResponse);
+        mLog.info("got: " + mResponse);
     }
     
     public void sum(byte[] bytes) throws IOException {
@@ -98,7 +98,7 @@ class TestClient {
         mSocketOut.write(OzByteArrayMatcher.CRLFDOTCRLF);
         mSocketOut.flush();
         mResponse = mSocketIn.readLine();
-        mLog.info("client: got line: " + mResponse);
+        mLog.info("got: " + mResponse);
     }
     
     public void nsum(byte[] bytes) throws IOException {
@@ -106,7 +106,7 @@ class TestClient {
         mSocketOut.write(bytes);
         mSocketOut.flush();
         mResponse = mSocketIn.readLine();
-        mLog.info("client: got line: " + mResponse);
+        mLog.info("got: " + mResponse);
     }
     
     public void close() {
@@ -124,9 +124,9 @@ class TestClient {
     
     public static void run(int port) throws IOException {
         TestClient client = new TestClient("localhost", port);
-        mLog.info("greet: " + client.getLastResponse());
+        mLog.info("got: " + client.getLastResponse());
 
-        mLog.info("client: helo");
+        mLog.info("sending: helo");
         client.helo();
         mLog.info("response: " + client.getLastResponse());
 
@@ -135,7 +135,7 @@ class TestClient {
         byte[] ba = new byte[nb];
         Arrays.fill(ba, 0, nb, bv);
         
-        mLog.info("client: sum n=" + nb + " v=" + bv);
+        mLog.info("sending: sum n=" + nb + " v=" + bv);
         client.sum(ba);
         long sum = new Long(client.getLastResponse()).longValue();
         if (sum != (nb * bv)) {
@@ -144,7 +144,7 @@ class TestClient {
             mLog.info("response: OK expected and got " + sum);
         }
 
-        mLog.info("client: nsum n=" + nb + " v=" + bv);
+        mLog.info("sending: nsum n=" + nb + " v=" + bv);
         client.nsum(ba);
         long nsum = new Long(client.getLastResponse()).longValue();
         if (nsum != (nb * bv)) {
@@ -153,7 +153,7 @@ class TestClient {
             mLog.info("response: OK expected and got " + nsum);
         }
             
-        mLog.info("client: quit");
+        mLog.info("sending: quit");
         client.quit();
         mLog.info("response: " + client.getLastResponse());
         

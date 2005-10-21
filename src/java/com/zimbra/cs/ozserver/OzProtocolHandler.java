@@ -29,9 +29,9 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 public interface OzProtocolHandler {
-    void handleConnect(OzConnectionHandler connection) throws IOException;
+    void handleConnect(OzConnection connection) throws IOException;
 
-    void handleInput(OzConnectionHandler connection, ByteBuffer buffer, boolean matched) throws IOException;
+    void handleInput(OzConnection connection, ByteBuffer buffer, boolean matched) throws IOException;
 
-    void handleDisconnect(OzConnectionHandler connection, boolean byClient);
+    void handleDisconnect(OzConnection connection, boolean byClient);
 }

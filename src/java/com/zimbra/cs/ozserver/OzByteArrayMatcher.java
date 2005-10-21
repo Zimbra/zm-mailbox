@@ -27,10 +27,13 @@ package com.zimbra.cs.ozserver;
 
 import java.nio.ByteBuffer;
 
-import com.zimbra.cs.util.ZimbraLog;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class OzByteArrayMatcher implements OzMatcher {
    
+    private static Log mLog = LogFactory.getLog(OzByteArrayMatcher.class);
+
     public static final byte CR = 13;
     public static final byte LF = 10;
     public static final byte DOT = '.';
@@ -50,7 +53,7 @@ public class OzByteArrayMatcher implements OzMatcher {
     
     public int match(ByteBuffer buf) {
         assert(mMatched < mMatchSequenceLength);
-        boolean trace = ZimbraLog.ozserver.isTraceEnabled(); 
+        boolean trace = mLog.isTraceEnabled(); 
         StringBuffer tsb = null;
         if (trace) tsb = new StringBuffer();
         
@@ -68,7 +71,7 @@ public class OzByteArrayMatcher implements OzMatcher {
                 mMatched++;
                 if (trace) tsb.append("+" + mMatched + " ");
                 if (mMatched == mMatchSequenceLength) {
-                    if (trace) ZimbraLog.ozserver.trace(tsb.toString());
+                    if (trace) mLog.trace(tsb.toString());
                     return buf.position();
                 }
             } else {
@@ -77,13 +80,13 @@ public class OzByteArrayMatcher implements OzMatcher {
                     mMatched++;
                     if (trace) tsb.append("+" + mMatched + " ");
                     if (mMatched == mMatchSequenceLength) {
-                        if (trace) ZimbraLog.ozserver.trace(tsb.toString());
+                        if (trace) mLog.trace(tsb.toString());
                         return buf.position();
                     }
                 }
             }
         }
-        if (trace) ZimbraLog.ozserver.trace(tsb.toString());
+        if (trace) mLog.trace(tsb.toString());
         return -1;
     }
 

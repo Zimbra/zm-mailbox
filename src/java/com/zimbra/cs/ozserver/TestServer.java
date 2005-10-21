@@ -27,8 +27,13 @@ package com.zimbra.cs.ozserver;
 
 import java.io.IOException;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 class TestServer {
     
+    static Log mLog = LogFactory.getLog(TestServer.class);
+
     private static OzServer mServer;
 
     public TestServer(int port) throws IOException {
@@ -37,8 +42,8 @@ class TestServer {
                 return new TestProtocolHandler();
             }
         };
-    	mServer = new OzServer("Test", 64, null, port, testHandlerFactory);
-        mServer.setSnooper(new OzSnooper(System.out, OzSnooper.ALL));
+    	mServer = new OzServer("Test", 64, null, port, testHandlerFactory, mLog);
+        mServer.setSnooper(new OzSnooper(mLog, OzSnooper.ALL));
         mServer.start();
     }
     

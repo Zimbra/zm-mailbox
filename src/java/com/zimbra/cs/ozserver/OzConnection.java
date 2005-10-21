@@ -1,5 +1,5 @@
 /*
- * ***** BEGIN LICENSE BLOCK *****
+ * ***** Begin LICENSE BLOCK *****
  * Version: ZPL 1.1
  * 
  * The contents of this file are subject to the Zimbra Public License
@@ -22,7 +22,6 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-
 package com.zimbra.cs.ozserver;
 
 import java.io.IOException;
@@ -33,13 +32,17 @@ import java.nio.channels.SocketChannel;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+
 import com.zimbra.cs.util.ZimbraLog;
 
 import EDU.oswego.cs.dl.util.concurrent.SynchronizedInt;
 
-public class OzConnectionHandler {
+public class OzConnection {
 
     private OzProtocolHandler mProtocolHandler;
+
+    private Log mLog;
 
     private OzServer mServer;
     
@@ -52,16 +55,25 @@ public class OzConnectionHandler {
     OzProtocolHandler getProtocolHandler() {
         return mProtocolHandler;
     }
+    
+    void addToNDC() {
+        ZimbraLog.addIpToContext(getRemoteAddress());
+        ZimbraLog.addConnectionIdToContext(getIdString());
+    }
 
+    void clearFromNDC() {
+        ZimbraLog.clearContext();
+    }
+    
     private void logKey(String where) {
-        OzUtil.logSelectionKey(mSelectionKey, mId, where);
+        OzUtil.logSelectionKey(mLog, mSelectionKey, where);
     }
     
     private void enableReadInterest() {
         synchronized (mSelectionKey) {
             int iops = mSelectionKey.interestOps();
             mSelectionKey.interestOps(iops | SelectionKey.OP_READ);
-            if (ZimbraLog.ozserver.isDebugEnabled()) logKey("enabled read interest");
+            if (mLog.isDebugEnabled()) logKey("enabled read interest");
         }
         mSelectionKey.selector().wakeup();
     }
@@ -70,7 +82,7 @@ public class OzConnectionHandler {
         synchronized (mSelectionKey) {
             int iops = mSelectionKey.interestOps();
             mSelectionKey.interestOps(iops & (~SelectionKey.OP_READ));
-            if (ZimbraLog.ozserver.isDebugEnabled()) logKey("disabled read interest");
+            if (mLog.isDebugEnabled()) logKey("disabled read interest");
         }
     }   
     
@@ -78,7 +90,7 @@ public class OzConnectionHandler {
         synchronized (mSelectionKey) {
             int iops = mSelectionKey.interestOps();
             mSelectionKey.interestOps(iops | SelectionKey.OP_WRITE);
-            if (ZimbraLog.ozserver.isDebugEnabled()) logKey("enabled write interest"); 
+            if (mLog.isDebugEnabled()) logKey("enabled write interest"); 
         }
         mSelectionKey.selector().wakeup();
     }
@@ -87,38 +99,59 @@ public class OzConnectionHandler {
         synchronized (mSelectionKey) {
             int iops = mSelectionKey.interestOps();
             mSelectionKey.interestOps(iops & (~SelectionKey.OP_WRITE));
-            if (ZimbraLog.ozserver.isDebugEnabled()) logKey("disabled write interest"); 
+            if (mLog.isDebugEnabled()) logKey("disabled write interest"); 
         }
     }
     
     private static SynchronizedInt mIdCounter = new SynchronizedInt(0);
     
-    private int mId;
+    private final int mId;
 
+    private final String mIdString;
+    
+    private final String mRemoteAddress;
+    
     private ByteBuffer mReadBuffer;
 
     private final Object mReadBufferLock = new Object();
 
-    OzConnectionHandler(OzServer server, SocketChannel channel) throws IOException {
+    OzConnection(OzServer server, SocketChannel channel) throws IOException {
         mId = mIdCounter.increment();
-        mChannel = channel;
-        mServer = server;
-        mReadBuffer = server.getBufferPool().get();
-        mSelectionKey = channel.register(server.getSelector(), 0, this); 
-        mProtocolHandler = server.newProtocolHandler();
-        mProtocolHandler.handleConnect(this);
-        ZimbraLog.ozserver.info("connected cid=" + mId + " buf=" + mReadBuffer.hashCode() + " " + mChannel);
-        enableReadInterest();
+        mIdString = Integer.toString(mId);
+        mRemoteAddress = channel.socket().getInetAddress().getHostAddress();
+        try {
+            addToNDC();
+            mChannel = channel;
+            mServer = server;
+            mReadBuffer = server.getBufferPool().get();
+            mSelectionKey = channel.register(server.getSelector(), 0, this); 
+            mProtocolHandler = server.newProtocolHandler();
+            mLog = mServer.getLog();
+            mLog.info("connected buf=" + mReadBuffer.hashCode() + " " + mChannel);
+            mProtocolHandler.handleConnect(this);
+            enableReadInterest();
+        } finally {
+            clearFromNDC();
+        }
     }
 
     public void closeNow() {
         Runnable closeTask = new Runnable() {
             public void run() {
-                ZimbraLog.ozserver.info("closing cid=" + mId);
+                try {
+                    addToNDC();
+                    run0();
+                } finally {
+                    clearFromNDC();
+                }
+            }
+            
+            private void run0() {
+                mLog.info("closing");
                 try {
                     mChannel.close();
                 } catch (IOException ioe) {
-                    ZimbraLog.ozserver.warn("error closing cid=" + mId, ioe);
+                    mLog.warn("error closing", ioe);
                 }
                 mSelectionKey.cancel();
                 synchronized (mReadBufferLock) {
@@ -140,8 +173,13 @@ public class OzConnectionHandler {
     
     private class HandleDisconnectTask implements Runnable {
     	public void run() {
-    		mProtocolHandler.handleDisconnect(OzConnectionHandler.this, true);
-    		closeNow();
+            try {
+                addToNDC();
+                mProtocolHandler.handleDisconnect(OzConnection.this, true);
+                closeNow();
+            } finally {
+                clearFromNDC();
+            }
     	}
     }
     
@@ -149,11 +187,20 @@ public class OzConnectionHandler {
     
     private class HandleReadTask implements Runnable {
         public void run() {
+            try {
+                addToNDC();
+                run0();
+            } finally {
+                clearFromNDC();
+            }
+        }
+        
+        private void run0() {
             Exception e = null;
             try {
                 synchronized (mReadBufferLock) {
                     if (mReadBuffer == null) {
-                        ZimbraLog.ozserver.info("connection cid=" + mId + " ready to read, but already closed");
+                        mLog.info("connection ready to read, but already closed");
                     } else {
                         processReadBufferLocked();
                     }
@@ -165,12 +212,12 @@ public class OzConnectionHandler {
             }
             if (e != null) {
                 if (mChannel.isOpen()) {
-                    ZimbraLog.ozserver.warn("exception during read cid=" + mId, e);
+                    mLog.warn("exception during read", e);
                     closeNow();
                 } else {
                     // someone else may have closed the channel - a shutdown or client went away, etc.
-                    if (ZimbraLog.ozserver.isDebugEnabled()) {
-                        ZimbraLog.ozserver.debug("ignorable " + e + " when reading, connection already closed cid=" + mId, e); 
+                    if (mLog.isDebugEnabled()) {
+                        mLog.debug("ignorable " + e + " when reading, connection already closed", e); 
                     }
                 }
             }
@@ -178,13 +225,13 @@ public class OzConnectionHandler {
     }
 
     private void processReadBufferLocked() throws IOException {
-    	boolean trace = ZimbraLog.ozserver.isTraceEnabled(); 
+    	boolean trace = mLog.isTraceEnabled(); 
         
-        if (trace) ZimbraLog.ozserver.trace(OzUtil.byteBufferToString("cid=" + mId + " read buffer at start", mReadBuffer, true));
+        if (trace) mLog.trace(OzUtil.byteBufferToString("read buffer at start", mReadBuffer, true));
         
         int bytesRead = mChannel.read(mReadBuffer);
         
-        if (trace) ZimbraLog.ozserver.trace(OzUtil.byteBufferToString("cid=" + mId + " read buffer after read", mReadBuffer, true));
+        if (trace) mLog.trace(OzUtil.byteBufferToString("read buffer after read", mReadBuffer, true));
         
         assert(bytesRead == mReadBuffer.position());
         
@@ -193,13 +240,13 @@ public class OzConnectionHandler {
         }
         
         if (bytesRead == -1) {
-            ZimbraLog.ozserver.info("cid=" + mId + " client closed channel " + mChannel);
+            mLog.info("client closed channel " + mChannel);
             mServer.execute(mHandleDisconnectTask);
             return;
         }
         
         if (bytesRead == 0) {
-            ZimbraLog.ozserver.warn("cid=" + mId + " got 0 bytes on supposedly read ready channel " + mChannel);
+            mLog.warn("got 0 bytes on supposedly read ready channel " + mChannel);
             return;
         }
 
@@ -215,13 +262,13 @@ public class OzConnectionHandler {
             int matchStart = matchBuffer.position();
             
             if (trace) {
-                ZimbraLog.ozserver.trace(OzUtil.byteBufferToString("cid=" + mId + " matching", matchBuffer, false));
+                mLog.trace(OzUtil.byteBufferToString("matching", matchBuffer, false));
             }
             
             int matchEnd = mMatcher.match(matchBuffer);
             
-            if (ZimbraLog.ozserver.isDebugEnabled()) {
-            	ZimbraLog.ozserver.debug("cid=" + mId + " match returned " + matchEnd);
+            if (mLog.isDebugEnabled()) {
+            	mLog.debug("match returned " + matchEnd);
             }
             
             if (matchEnd == -1) {
@@ -240,11 +287,11 @@ public class OzConnectionHandler {
         }
         
         if (handledBytes == 0) {
-            if (ZimbraLog.ozserver.isDebugEnabled()) ZimbraLog.ozserver.debug("no bytes handled and no match");
+            if (mLog.isDebugEnabled()) mLog.debug("no bytes handled and no match");
             if (mReadBuffer.hasRemaining()) {
-                if (ZimbraLog.ozserver.isDebugEnabled()) ZimbraLog.ozserver.debug("no bytes handled, no match, but there is room in buffer");
+                if (mLog.isDebugEnabled()) mLog.debug("no bytes handled, no match, but there is room in buffer");
             } else {
-                if (ZimbraLog.ozserver.isDebugEnabled()) ZimbraLog.ozserver.debug("no bytes handled, no match, and buffer is full, overflowing");
+                if (mLog.isDebugEnabled()) mLog.debug("no bytes handled, no match, and buffer is full, overflowing");
                 assert(mReadBuffer.limit() == mReadBuffer.position());
                 assert(mReadBuffer.limit() == mReadBuffer.capacity());
                 mReadBuffer.flip();
@@ -256,10 +303,10 @@ public class OzConnectionHandler {
             }
         } else {
             if (mReadBuffer.position() == handledBytes) {
-                if (ZimbraLog.ozserver.isDebugEnabled()) ZimbraLog.ozserver.debug("handled all bytes in input, clearing buffer (no compacting)");
+                if (mLog.isDebugEnabled()) mLog.debug("handled all bytes in input, clearing buffer (no compacting)");
                 mReadBuffer.clear();
             } else {
-                if (ZimbraLog.ozserver.isDebugEnabled()) ZimbraLog.ozserver.debug("not all handled, compacting "  + (mReadBuffer.position() - handledBytes) + " bytes");
+                if (mLog.isDebugEnabled()) mLog.debug("not all handled, compacting "  + (mReadBuffer.position() - handledBytes) + " bytes");
                 mReadBuffer.position(handledBytes);
                 mReadBuffer.compact();
             }
@@ -281,6 +328,14 @@ public class OzConnectionHandler {
         return mId;
     }
 
+    public String getIdString() {
+        return mIdString;
+    }
+    
+    public String getRemoteAddress() {
+        return mRemoteAddress;
+    }
+    
     /**
      * Buffers that need to written out, when write side of the connection is ready.
      */
@@ -354,7 +409,7 @@ public class OzConnectionHandler {
                     // write. Put the buffer back in the list so whatever is
                     // remaining can be written later.  Note that we do not
                     // clear write interest here.
-                    if (ZimbraLog.ozserver.isDebugEnabled()) ZimbraLog.ozserver.debug("incomplete write, adding buffer back");
+                    if (mLog.isDebugEnabled()) mLog.debug("incomplete write, adding buffer back");
                     mWriteBuffers.add(0, data); 
                     break;
                 }

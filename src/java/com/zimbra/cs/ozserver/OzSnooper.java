@@ -25,8 +25,9 @@
 
 package com.zimbra.cs.ozserver;
 
-import java.io.PrintStream;
 import java.nio.ByteBuffer;
+
+import org.apache.commons.logging.Log;
 
 public class OzSnooper {
     
@@ -41,14 +42,14 @@ public class OzSnooper {
     private boolean mSnoopWrites;
     private boolean mSnoopInputs;
     
-    private PrintStream mPS = null;
+    private Log mLog;
 
-    public OzSnooper(PrintStream ps) {
-        mPS = ps;
+    public OzSnooper(Log log) {
+        mLog = log;
     }
 
-    public OzSnooper(PrintStream ps, int mode) {
-        mPS = ps;
+    public OzSnooper(Log log, int mode) {
+        mLog = log;
         setMode(mode);
     }
 
@@ -83,29 +84,28 @@ public class OzSnooper {
     }
 
     private void print(String s) {
-        synchronized (mPS) {
-            mPS.println("[snoop] [" + Thread.currentThread().getName() + "] " + s);
+        if (mLog.isInfoEnabled()) {
+            mLog.info("snoop: " + s);
         }
     }
     
-    public void read(OzConnectionHandler handler, int bytesRead, ByteBuffer readBuffer) {
+    public void read(OzConnection handler, int bytesRead, ByteBuffer readBuffer) {
         if (bytesRead > 0) {
-            print(OzUtil.byteBufferToString("read cid=" + handler.getId() + " bytes=" + bytesRead, readBuffer, true));
+            print(OzUtil.byteBufferToString("read bytes=" + bytesRead, readBuffer, true));
         } else {
-            print("read cid=" + handler.getId() + " bytes=" + bytesRead);
+            print("read bytes=" + bytesRead);
         }
     }
 
-    public void input(OzConnectionHandler handler, ByteBuffer buffer, boolean matched) {
-        print(OzUtil.byteBufferToString("input cid=" + handler.getId() + " matched=" + matched, buffer, false));
+    public void input(OzConnection handler, ByteBuffer buffer, boolean matched) {
+        print(OzUtil.byteBufferToString("input matched=" + matched, buffer, false));
     }
     
-    public void write(OzConnectionHandler handler, ByteBuffer buffer) {
-        print(OzUtil.byteBufferToString("write cid=" + handler.getId(), buffer, false));
+    public void write(OzConnection handler, ByteBuffer buffer) {
+        print(OzUtil.byteBufferToString("write", buffer, false));
     }
 
-    public void wrote(OzConnectionHandler handler, int wrote) {
-        print("wrote cid=" + handler.getId() + " bytes=" + wrote);
+    public void wrote(OzConnection handler, int wrote) {
+        print("wrote bytes=" + wrote);
     }
-
 }

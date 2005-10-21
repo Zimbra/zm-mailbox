@@ -49,6 +49,7 @@ class TestBoth {
 	static {
 	    mOptions.addOption("t", "threads",     true, "number of client threads (default 4)");
 	    mOptions.addOption("s", "shutdown",    true, "shutdown server every specified seconds");
+        mOptions.addOption("i", "iterations",  true, "iterations of shutdown test (default 1000)");
 	    mOptions.addOption("p", "port",        true, "port (default 10043)");
 	    mOptions.addOption("T", "trace",       false, "trace server/client traffic");
 	    mOptions.addOption("D", "debug",       false, "print debug info");
@@ -86,15 +87,29 @@ class TestBoth {
     }
 
     static class TestClientThread extends Thread {
-    	int mPort;
+    	
+        private int mPort;
+        private boolean mShutdownRequested;
+        
         public TestClientThread(int port, int num) {
             super("TestClientThread-" + num);
             setDaemon(true);
             mPort = port;
         }
 
+        public void shutdown() {
+            synchronized (this) {
+                mShutdownRequested = true;
+            }
+        }
+        
         public void run() {
             while (true) {
+                synchronized (this) {
+                    if (mShutdownRequested) {
+                        return;
+                    }
+                }
                 try {
                     TestClient.run(mPort);
                 } catch (IOException ioe) {
@@ -117,7 +132,7 @@ class TestBoth {
     		Zimbra.toolSetup("TRACE", true);
     	}
         
-        int optThreads = 0;
+        int optThreads = 4;
     	if (cl.hasOption('t')) {
     		try {
     			optThreads = Integer.parseInt(cl.getOptionValue('t'));
@@ -136,9 +151,20 @@ class TestBoth {
                 mLog.error("exception occurred", nfe);
                 usage("bad value for port");
             }
-    	}
-    	final int port = optPort;
+        }
+        final int port = optPort;
         
+        int optIterations = 1000;
+        if (cl.hasOption('i')) {
+            try {
+                optIterations = Integer.parseInt(cl.getOptionValue('i'));
+            } catch (NumberFormatException nfe) {
+                mLog.error("exception occurred", nfe);
+                usage("bad value for iterations");
+            }
+        }
+        final int iterations = optIterations;
+
         if (cl.hasOption('s')) {
             int optSeconds = 0;
             try {
@@ -151,7 +177,7 @@ class TestBoth {
             new Thread() {
                 public void run() {
                     try {
-                        while (true) {
+                        for (int i = 0; i < iterations; i++) {
                             startTest(port, numThreads);
                             Thread.sleep(seconds * 1000);
                             endTest();
@@ -171,28 +197,29 @@ class TestBoth {
         }
     }
         
-    private static TestServer server;
+    private static TestServer mTestServer;
     
-    private static Thread[] threads;
+    private static TestClientThread[] mTestClientThreads;
     
     private static void startTest(int port, int numThreads) throws IOException {
-        server = new TestServer(port);
+        mTestServer = new TestServer(port);
         mLog.info("creating " + numThreads + " client threads");
-        threads = new Thread[numThreads];
+        mTestClientThreads = new TestClientThread[numThreads];
         for (int i = 0; i < numThreads; i++) {
-            threads[i] = new TestClientThread(port, i);
-            threads[i].start();
+            mTestClientThreads[i] = new TestClientThread(port, i);
+            mTestClientThreads[i].start();
         }
     }
     
     private static void endTest() {
-        server.shutdown();
-        for (int i = 0; i < threads.length; i++) {
+        for (int i = 0; i < mTestClientThreads.length; i++) {
             try {
-                threads[i].join();
+                mTestClientThreads[i].shutdown();
+                mTestClientThreads[i].join();
             } catch (InterruptedException ie) {
                 mLog.error("Interrupted while trying to join test clients", ie);
             }
         }
+        mTestServer.shutdown();
     }
 }
