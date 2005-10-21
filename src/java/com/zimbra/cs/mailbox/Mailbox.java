@@ -1408,41 +1408,49 @@ public class Mailbox {
         return mData.indexVolumeId;
     }
     
-    // This is a potentially long-running operation.  Don't synchronize on the
-    // mailbox as that may block other threads that try to work on this
-    // mailbox.  This method puts the mailbox in maintenance mode, and the
-    // other threads will get maintenance error instead of blocking.
     public void reIndex() throws ServiceException {
         reIndex(null);
     }
-//    public void reIndex(ReindexMailbox redoPlayer) throws ServiceException {
-//        MailboxLock lock = Mailbox.beginMaintenance(getAccountId(), getId());
-//        ReindexMailbox redoRecorder = new ReindexMailbox(mId);
-//        try {
-//            beginTransaction("reIndex", redoPlayer, null);
-//            redoRecorder.log();
-//
-//            boolean success = false;
-//            try {
-//                getMailboxIndex().reIndex();
-//                success = true;
-//            } finally {
-//                if (success)
-//                    redoRecorder.commit();
-//                else
-//                    redoRecorder.abort();
-//
-//                // Don't call the endTransaction() method that takes redoRecorder.
-//                // We already called log() on redoRecorder above, and we don't
-//                // want endTransaction to log it again, resulting in two entries
-//                // for the same operation in redolog.
-//                endTransaction(success);
-//            }
-//        } finally {
-//            Mailbox.endMaintenance(lock, true, false);
-//        }
-//    }
     
+    public static class ReIndexStatus {
+        public int mNumProcessed = 0;
+        public int mNumToProcess = 0;
+        public int mNumFailed = 0;
+        public boolean mCancel = false;
+        
+        public String toString() {
+            String toRet = "Completed "+mNumProcessed+" out of " +mNumToProcess
+            + " ("+mNumFailed +" failures";
+            
+            if (mCancel) 
+                return "--CANCELLING--  "+toRet;
+            else 
+                return toRet;
+        }
+        
+        public Object clone() {
+            ReIndexStatus toRet = new ReIndexStatus();
+            toRet.mNumProcessed = mNumProcessed;
+            toRet.mNumToProcess = mNumToProcess;
+            toRet.mNumFailed = mNumFailed;
+            return toRet;
+        }
+    }
+    
+    
+    /**
+     * Status of current reindexing operation for this mailbox, or NULL 
+     * if a re-index is not in progress
+     */
+    private ReIndexStatus mReIndexStatus = null;
+    
+    public synchronized boolean isReIndexInProgress() {
+        return mReIndexStatus != null;
+    }
+    
+    public synchronized ReIndexStatus getReIndexStatus() {
+        return mReIndexStatus;
+    }
 
     public void reIndex(OperationContext octxt) throws ServiceException {
         ReindexMailbox redoRecorder = new ReindexMailbox(mId);
@@ -1485,31 +1493,40 @@ public class Mailbox {
                 } finally {
                     endTransaction(success);
                 }
+                mReIndexStatus = new ReIndexStatus();
+                mReIndexStatus.mNumToProcess = msgs.size();
             }
 
+            long start = System.currentTimeMillis();
+            
             //
             // Second step:
             //      For each message in the list from above
             //      lock mailbox, re-index msg, release lock
             //
-            long start = System.currentTimeMillis();
-            int successful = 0;
-            int tried = 0;
-            
             for (Iterator iter = msgs.iterator(); iter.hasNext();) {
-                if ((tried % 1000) == 0) {
-                    ZimbraLog.mailbox.info("Re-Indexing: Mailbox "+getId()+" on msg "+tried+" out of "+msgs.size());
-                }
                 synchronized(this) {
-                    tried++;
-                    MailboxIndex idx = getMailboxIndex();
-                    SearchResult sr = (SearchResult) iter.next();
-                    
-                    try {
-                        idx.reIndexItem(sr.id, sr.type);
-                        successful++;
-                    } catch(ServiceException e) {
-                        ZimbraLog.mailbox.info("Re-Indexing: Mailbox " +getId()+ " had error on msg "+sr.id+".  Message will not be indexed.", e);
+                    // loop 10 times with the lock held
+                    for (int i = 0; i < 10 && iter.hasNext(); i++) { 
+                        if (ZimbraLog.mailbox.isDebugEnabled() && ((mReIndexStatus.mNumProcessed % 2000) == 0)) {
+                            ZimbraLog.mailbox.debug("Re-Indexing: Mailbox "+getId()+" on msg "+mReIndexStatus.mNumProcessed+" out of "+msgs.size());
+                        }
+                        
+                        if (mReIndexStatus.mCancel) {
+                            ZimbraLog.mailbox.warn("CANCELLING re-index of Mailbox "+getId()+" before it is complete.  ("+mReIndexStatus.mNumProcessed+" processed out of "+msgs.size()+")");                            
+                            throw ServiceException.INTERRUPTED("ReIndexing Canceled");
+                        }
+                        
+                        mReIndexStatus.mNumProcessed++;
+                        MailboxIndex idx = getMailboxIndex();
+                        SearchResult sr = (SearchResult) iter.next();
+                        
+                        try {
+                            idx.reIndexItem(sr.id, sr.type);
+                        } catch(ServiceException e) {
+                            mReIndexStatus.mNumFailed++;
+                            ZimbraLog.mailbox.info("Re-Indexing: Mailbox " +getId()+ " had error on msg "+sr.id+".  Message will not be indexed.", e);
+                        }
                     }
                 }
             }
@@ -1520,14 +1537,17 @@ public class Mailbox {
             long end = System.currentTimeMillis();
             long avg = 0;
             long mps = 0;
-            if (tried > 0) {
-                avg = (end - start) / tried;
+            if (mReIndexStatus.mNumProcessed> 0) {
+                avg = (end - start) / mReIndexStatus.mNumProcessed;
                 mps = avg > 0 ? 1000 / avg : 0;
             }
-            ZimbraLog.mailbox.info("Re-Indexing: Mailbox " + getId() + " COMPLETED.  Re-indexed "+ successful + " out of "+tried +" msgs in " +
-                    (end-start) + "ms.  (avg "+avg+"ms/msg = "+mps+" msgs/sec)");
+            ZimbraLog.mailbox.info("Re-Indexing: Mailbox " + getId() + " COMPLETED.  Re-indexed "+mReIndexStatus.mNumProcessed
+                    +" msgs in " + (end-start) + "ms.  (avg "+avg+"ms/msg = "+mps+" msgs/sec)"
+                    +" ("+mReIndexStatus.mNumFailed+" failed) ");
             
         } finally {
+            mReIndexStatus = null;
+            
             getMailboxIndex().flush();
             if (redoInitted) {
                 if (indexDeleted) {

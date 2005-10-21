@@ -1351,6 +1351,13 @@ list of ids of the mail items contained in each folder.
 
 ---------------------------
 
+<ReIndexRequest id="mailbox-id" action="begin|status|cancel"/>
+
+<ReIndexResponse status="started" | "succeeded/failed/remaining" | "cancelled">
+   -- e.g.  "100/2/50" means 100 success, 2 failures, 50 remaining
+
+---------------------------
+
 <CheckSpellingRequest>
     [text to spell check]
 </CheckSpellingRequest>

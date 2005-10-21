@@ -47,6 +47,9 @@ public class ServiceException extends Exception {
     public static final String NON_READONLY_OPERATION_DENIED = "service.NON_READONLY_OPERATION_DENIED";
     public static final String PROXY_ERROR = "service.PROXY_ERROR";
     public static final String TOO_MANY_HOPS = "service.TOO_MANY_HOPS";
+    public static final String ALREADY_IN_PROGRESS = "service.ALREADY_IN_PROGRESS";
+    public static final String NOT_IN_PROGRESS = "service.NOT_IN_PROGRESS";
+    public static final String INTERRUPTED = "service.INTERRUPTED";
     
     private String mCode;
     
@@ -147,5 +150,17 @@ public class ServiceException extends Exception {
 
     public static ServiceException TOO_MANY_HOPS() {
         return new ServiceException("mountpoint loop detected", TOO_MANY_HOPS, SENDERS_FAULT, null);
+    }
+    
+    public static ServiceException ALREADY_IN_PROGRESS(String mboxId, String action) {
+        return new ServiceException("mbox "+mboxId+" is already running action "+action, ALREADY_IN_PROGRESS, SENDERS_FAULT, null);
+    }
+    
+    public static ServiceException NOT_IN_PROGRESS(String mboxId, String action) {
+        return new ServiceException("mbox "+mboxId+" is not currently running action "+action, NOT_IN_PROGRESS, SENDERS_FAULT, null);
+    }
+
+    public static ServiceException INTERRUPTED(String str) {
+        return new ServiceException("The operation has been interrupted "+str!=null?str:"", INTERRUPTED, RECEIVERS_FAULT, null);
     }
 }
