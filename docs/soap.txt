@@ -1353,8 +1353,10 @@ list of ids of the mail items contained in each folder.
 
 <ReIndexRequest id="mailbox-id" action="begin|status|cancel"/>
 
-<ReIndexResponse status="started" | "succeeded/failed/remaining" | "cancelled">
-   -- e.g.  "100/2/50" means 100 success, 2 failures, 50 remaining
+<ReIndexResponse status="started" | "running" | "cancelled">
+  [<progress numSucceeded="SUCCEEDED" numFailed="FAILED" numRemaining="REMAINING">]
+</ReIndexResponse>
+   -- Progress data is currently ONLY returned by the "status" and "cancelled" calls 
 
 ---------------------------
 

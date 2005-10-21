@@ -239,6 +239,7 @@ public class AdminService implements DocumentService {
 	public static final String E_MAILBOX = "mbox";
 	public static final String E_NUM_OF_PAGES = "numpages";
     public static final String E_VOLUME = "volume";
+    public static final String E_PROGRESS = "progress";
 	
     public static final String A_APPLY_CONFIG = "applyConfig";
     public static final String A_APPLY_COS = "applyCos";
@@ -271,7 +272,9 @@ public class AdminService implements DocumentService {
     public static final String A_NUM_TABLES = "numTables";
     
     public static final String A_NUM_EXECUTED = "numExecuted";
+    public static final String A_NUM_SUCCEEDED= "numSucceeded";
     public static final String A_NUM_FAILED = "numFailed";
+    public static final String A_NUM_REMAINING = "numRemaining";
     public static final String A_OUTPUT = "output";
     public static final String A_DURATION = "duration";
 
