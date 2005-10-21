@@ -42,6 +42,7 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.SpamHandler;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraContext;
@@ -185,11 +186,12 @@ public class ItemAction extends WriteOpDocumentHandler {
         return successes;
     }
 
-    String extractSuccesses(Element response) throws ServiceException {
+    String extractSuccesses(Element response) {
         try {
             return response.getElement(MailService.E_ACTION).getAttribute(MailService.A_ID);
         } catch (ServiceException e) {
-            throw ServiceException.PROXY_ERROR(e);
+            ZimbraLog.misc.warn("could not extract ItemAction successes from proxied response", e);
+            return "";
         }
     }
 }
