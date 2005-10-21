@@ -422,7 +422,7 @@ public class Pop3Handler extends ProtocolHandler {
         if (mMbx != null && mMbx.getNumDeletedMessages() > 0) {
             mState = STATE_UPDATE;
             // TODO: hard/soft could be a user/cos pref
-            int count = mMbx.deleteMarked(false);
+            int count = mMbx.deleteMarked(true);
             sendOK("deleted "+count+" message(s)");
         } else {
             sendOK(mServer.getGoodbye());
