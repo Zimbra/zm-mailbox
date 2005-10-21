@@ -80,8 +80,8 @@ $(BUILD)/Process.h: $(CLASSES)/com/zimbra/znative/Process.class
 # root.
 #
 ZIMBRA_LIB = /opt/zimbra/lib
-TOMCAT_HOME = /opt/zimbra/tomcat
-JAVA_BINARY = /opt/zimbra/java/bin/java
+TOMCAT_HOME ?= /opt/zimbra/tomcat
+JAVA_BINARY ?= /opt/zimbra/java/bin/java
 LAUNCHER_CFLAGS = \
 	-DZIMBRA_LIB='"$(ZIMBRA_LIB)"' \
 	-DTOMCAT_HOME='"$(TOMCAT_HOME)"' \
