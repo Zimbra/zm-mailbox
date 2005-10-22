@@ -83,10 +83,6 @@ public class Search extends DocumentHandler  {
             SoapSession session = (SoapSession) lc.getSession(SessionCache.SESSION_SOAP);
             Mailbox mbox = getRequestedMailbox(lc);
             
-//            mbox.retrieveRemoteCalendar("http://jimandlissa.com/webdav/Penguins.ics");
-//            mbox.retrieveRemoteCalendar("http://icalexchange.com/public/ephil/2005-2006%20Colorado%20Avalanche%20Season.ics", Mailbox.ID_FOLDER_CALENDAR);
-            mbox.refreshFolder(null, Mailbox.ID_FOLDER_CALENDAR, "http://icalexchange.com/public/ephil/2005-2006%20Colorado%20Avalanche%20Season.ics");
-
             SearchParams params = parseCommonParameters(request, lc);
             ZimbraQueryResults results = this.getResults(mbox, params, lc, session);
 
