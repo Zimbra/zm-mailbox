@@ -2,11 +2,9 @@ package com.zimbra.cs.service.admin;
 
 import java.util.Map;
 
-import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
-import com.zimbra.cs.service.util.ParseMailboxID;
 import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
@@ -34,6 +32,8 @@ public class ReIndex extends AdminDocumentHandler {
             String accountId = mreq.getAttribute(AdminService.A_ACCOUNTID);
             
             Mailbox mbox = Mailbox.getMailboxByAccountId(accountId, false);
+            if (mbox == null)
+                throw ServiceException.FAILURE("mailbox not found for account " + accountId, null);
 
             Element response = zc.createElement(AdminService.REINDEX_RESPONSE);
             

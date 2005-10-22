@@ -502,7 +502,7 @@ purges aged messages out of trash, spam, and entire mailbox
   (if <mbox> element is omitted, purges all mailboxes on server)
 -----------------------------
 
-<ReIndexRequest action="begin|status|cancel">
+<ReIndexRequest action="start|status|cancel">
   <mbox id="{account-id}"/>
 </ReIndexRequest>  
 
