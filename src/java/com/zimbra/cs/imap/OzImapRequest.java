@@ -89,6 +89,10 @@ class OzImapRequest {
         mSession = session;
     }
 
+    public OzImapRequest(ArrayList currentRequest, ImapSession session) {
+        // TODO Auto-generated constructor stub
+    }
+
     OzImapRequest rewind()  { mIndex = mOffset = 0;  mTag = null;  return this; }
 
     private static int DEFAULT_MAX_REQUEST_LENGTH = 10000000;
@@ -202,19 +206,25 @@ class OzImapRequest {
     }
 
     private String readContent(boolean[] acceptable) throws ImapParseException {
-        String content = getCurrentLine();
+        return readContent(getCurrentLine(), mOffset, mTag, acceptable);
+    }
+    
+    private static String readContent(String content, int offset, String tag, boolean[] acceptable) throws ImapParseException {
         int i;
-        for (i = mOffset; i < content.length(); i++) {
+        for (i = offset; i < content.length(); i++) {
             char c = content.charAt(i);
             if (c > 0x7F || !acceptable[c])
                 break;
         }
-        if (i == mOffset)
-            throw new ImapParseException(mTag, "zero-length content");
-        String result = content.substring(mOffset, i);
-        mOffset = i;
+        if (i == offset) {
+            throw new ImapParseException(tag, "zero-length content");
+        }
+        String result = content.substring(offset, i);
+        offset = i;
         return result;
     }
+    
+    static String readTag(String line) throws ImapParseException { return readContent(line, 0, null, TAG_CHARS); }
     String readTag() throws ImapParseException     { mTag = readContent(TAG_CHARS);  return mTag; }
     String readAtom() throws ImapParseException    { return readContent(ATOM_CHARS).toUpperCase(); }
     String readNumber() throws ImapParseException  { return readContent(NUMBER_CHARS); }

@@ -1888,7 +1888,8 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
         mConnection.setMatcher(mCommandMatcher);
         mCurrentData = new OzByteBufferGatherer();
         if (newRequest) {
-            mCurrentRequest = new OzImapRequest(mSession);
+            mCurrentRequestData = new ArrayList();
+            mCurrentRequestTag = null;
         }
         if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("entered command read state");
     }
@@ -1898,7 +1899,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
         mLiteralMatcher.target(target);
         mLiteralMatcher.clear();
         mConnection.setMatcher(mLiteralMatcher);
-        mCurrentData = new OzByteBufferGatherer();
+        mCurrentData = new OzByteBufferGatherer(target);
         if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("entered literal read state target=" + target);
     }
     
@@ -1915,7 +1916,6 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
                 SessionCache.clearSession(mSession.getSessionId(), mSession.getAccountId());
                 mSession = null;
             }
-            
             if (connectionStillOpen) {
                 try {
                     if (!mGoodbyeSent) {
@@ -1927,7 +1927,6 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
                 }
                 mConnection.close();
             }
-            
             mState = ConnectionState.CLOSED;
         }
 
@@ -1950,59 +1949,11 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
         gotoClosedState(false);
     }
     
-    private static final class LiteralPlus {
-        private int mOctets;
+    private OzByteBufferGatherer mCurrentData;
+    
+    private ArrayList mCurrentRequestData;
 
-        private int mLength;
-
-        private LiteralPlus() { }
-
-        /** octets specified to be in the literal, for {12+}, this is 12. */
-        public int octets() {
-            return mOctets;
-        }
-
-        /** length of the specification, for {12+} this is 5. */
-        public int length() {
-            return mLength;
-        }
-
-        /** Find a LITERAL+ notation in given line if present. */
-        public static LiteralPlus get(String line) {
-            LiteralPlus result = new LiteralPlus();
-            if (!line.endsWith("+}")) {
-                return result;
-            }
-            
-            int openBraceIndex = line.lastIndexOf("{");
-            if (openBraceIndex < 0) {
-                /* TODO - ANAND - is this an exception? */
-                return result;
-            }
-
-            int digitStart = openBraceIndex + 1;
-            int digitLimit = line.length() - 2; /* +} */
-            if ((digitLimit - digitStart) <= 0) {
-                /* TODO - ANAND - is this an exception? */
-                return result;
-            }
-
-            try {
-                String number = line.substring(digitStart, digitLimit);
-                if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("LITERAL+ found, number of octets=" + number);
-                result.mOctets = Integer.parseInt(number);
-                result.mLength = digitLimit - digitStart + 3; /* {+} */ 
-            } catch (NumberFormatException nfe) {
-                /* TODO - ANAND - is this an exception? */
-                ZimbraLog.imap.warn("LITERAL+ syntax error", nfe);
-            }
-            return result;
-        }
-    }
-
-    private OzByteBufferGatherer mCurrentData; 
-
-    private OzImapRequest mCurrentRequest;
+    private String mCurrentRequestTag;
     
     private String currentDataToAsciiString() {
         byte[] buf = mCurrentData.array();
@@ -2035,34 +1986,67 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
             mCurrentData.add(buffer);
             if (matched) {
                 String line = currentDataToAsciiString();
-                LiteralPlus literal = LiteralPlus.get(line);
-                /* Trimming first takes care of {0+} zero length continuation edge case. */
-                line = line.substring(0, line.length() - literal.length()); 
-                if (literal.octets() > 0) {
-                    mCurrentRequest.handleLine(line, true);
-                    gotoReadLiteralState(literal.octets());    
-                } else {
-                    mCurrentRequest.handleLine(line, false);
+                
+                if (mCurrentRequestData.size() == 0) {
+                    // First line of input inside this request, see if we can steal a tag
+                    // out of this.
+                    try {
+                        mCurrentRequestTag = OzImapRequest.readTag(line);
+                    } catch (ImapParseException ipe) {
+                        sendUntagged("BAD " + ipe.getMessage(), true);
+                        gotoReadLineState(true);
+                        return;
+                    }
+                }
+                
+                ImapLiteral literal;
+                
+                try {
+                    literal = ImapLiteral.parse(mCurrentRequestTag, line);
+                } catch (ImapParseException ipe) {
+                    sendBAD(mCurrentRequestTag, ipe.getMessage());
                     gotoReadLineState(true);
+                    return;
+                }
+
+                // Trimming first takes care of swallowing {0+} zero
+                // length continuation edge case.
+                line = line.substring(0, line.length() - literal.length()); 
+
+                mCurrentRequestData.add(line);
+
+                if (literal.octets() > 0) {
+                    if (literal.blocking()) {
+                        mConnection.writeAscii("+", true);
+                    }
+                    gotoReadLiteralState(literal.octets());
+                    return;
+                } else {
+                    OzImapRequest request = new OzImapRequest(mCurrentRequestData, mSession);
+                    gotoReadLineState(true);
+                    return;
                 }
             } else {
-                // continue to remain in this state until we see that \r\n
+                // continue to remain in this state until we see that
+                // \r\n
+                return;
             }
         }
         
         if (mState == ConnectionState.READLITERAL) {
             mCurrentData.add(buffer);
             if (matched) {
-                // after we read the literal, there is a \r\n at the end of the
-                // literal which will get swallowed and cause processing of
-                // request - so we go to readline state - but not a new command.
-                mCurrentRequest.handleLiteral(mCurrentData.array(), 0, mCurrentData.size());
+                mCurrentRequestData.add(mCurrentData.array());
+                // at the end of a literal there is more of the
+                // command or there is just CRLF (which is the empty
+                // part of the command)
                 gotoReadLineState(false);
+                return;
             } else {
-                // continue to remain in this state and read more of the literal
-                // data
+                // continue to remain in this state and read more of
+                // the literal data
+                return;
             }
         }
-	}
-
+    }
 }
