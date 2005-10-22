@@ -1,7 +1,11 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
+#ifdef DARWIN
+#include <malloc/malloc.h>
+#else
 #include <malloc.h>
+#endif
 #include <stdarg.h>
 #include <stdlib.h>
 

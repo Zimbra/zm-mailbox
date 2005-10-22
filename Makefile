@@ -2,6 +2,16 @@ SRC     = src
 
 BUILD   = build
 
+BUILD_ROOT := $(shell pwd)
+BUILD_PLATFORM := $(shell sh $(BUILD_ROOT)/../ZimbraBuild/rpmconf/Build/get_plat_tag.sh)
+
+SHARED := -shared
+ifeq ($(BUILD_PLATFORM), MACOSX)
+MACJAVAINC := -I/System/Library/Frameworks/JavaVM.framework/Headers
+SHARED := -dynamiclib
+MACDEF := -DDARWIN
+endif
+
 CLASSES = $(BUILD)/classes
 
 JAVA_FILES = \
@@ -51,10 +61,10 @@ remove_classes_list: FORCE
 FORCE: ;
 
 $(BUILD)/libzimbra-native.so: $(BUILD)/IO.o $(BUILD)/Process.o $(BUILD)/zjniutil.o
-	gcc -shared -o $@ $^
+	gcc $(SHARED) -o $@ $^
 
 $(BUILD)/%.o: $(SRC)/native/%.c
-	gcc -I$(BUILD) -Wall -Wmissing-prototypes -c -o $@ $<
+	gcc $(MACDEF) $(MACJAVAINC) -I$(BUILD) -Wall -Wmissing-prototypes -c -o $@ $<
 
 $(BUILD)/Process.o: $(SRC)/native/Process.c $(BUILD)/Process.h $(SRC)/native/zjniutil.h
 
@@ -88,7 +98,7 @@ LAUNCHER_CFLAGS = \
 	-DJAVA_BINARY='"$(JAVA_BINARY)"'
 
 $(BUILD)/zmtomcatstart: $(SRC)/launcher/zmtomcatstart.c
-	gcc $(LAUNCHER_CFLAGS) -Wall -Wmissing-prototypes -o $@ $<
+	gcc $(MACDEF) $(LAUNCHER_CFLAGS) -Wall -Wmissing-prototypes -o $@ $<
 
 #
 # Hack to copy to destination for use on incremental builds in a linux
