@@ -26,7 +26,6 @@ package com.zimbra.cs.imap;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.text.DateFormat;
@@ -86,10 +85,6 @@ class OzImapRequest {
     private int mSize;
     private boolean mUnlogged;
 
-    OzImapRequest(String line)  {
-        mParts.add(line); 
-    }
-    
     OzImapRequest(ImapSession session) {
         mSession = session;
     }
@@ -672,22 +667,5 @@ class OzImapRequest {
             }
         }
         return readSearchClause(search, insertions, charset, MULTIPLE_CLAUSES).toString();
-    }
-
-    public void addLineData(ByteBuffer buffer) {
-        // TODO Auto-generated method stub
-    }
-
-    public int processLine() {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
-    public void addLiteralData(ByteBuffer buffer) {
-        // TODO Auto-generated method stub
-    }
-
-    public void processLiteral() {
-        // TODO Auto-generated method stub
     }
 }

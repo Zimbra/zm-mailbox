@@ -47,6 +47,7 @@ import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.ozserver.OzByteArrayMatcher;
+import com.zimbra.cs.ozserver.OzByteBufferGatherer;
 import com.zimbra.cs.ozserver.OzConnection;
 import com.zimbra.cs.ozserver.OzConnectionHandler;
 import com.zimbra.cs.ozserver.OzCountingMatcher;
@@ -58,6 +59,7 @@ import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraLog;
 
 /**
@@ -1864,8 +1866,6 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
 
     private OzCountingMatcher mLiteralMatcher = new OzCountingMatcher();
     
-    private OzImapRequest mCurrentRequest;
-    
     private static final class ConnectionState {
         private String mName;
         
@@ -1887,8 +1887,9 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
         mState = ConnectionState.READLINE;
         mCommandMatcher.clear();
         mConnection.setMatcher(mCommandMatcher);
+        mCurrentData = new OzByteBufferGatherer();
         if (newRequest) {
-            mCurrentRequest = new OzImapRequest(mSession);
+            mCurrentDataParts = new ArrayList();
         }
         if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("entered command read state");
     }
@@ -1898,6 +1899,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
         mLiteralMatcher.target(target);
         mLiteralMatcher.clear();
         mConnection.setMatcher(mLiteralMatcher);
+        mCurrentData = new OzByteBufferGatherer();
         if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("entered literal read state target=" + target);
     }
     
@@ -1942,7 +1944,103 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
         }
 	}
 
-	public void handleInput(ByteBuffer buffer, boolean matched) throws IOException {
+    public void handleDisconnect() {
+        assert(mState != ConnectionState.UNKNOWN);
+        assert(mState != ConnectionState.CLOSED);
+        ZimbraLog.imap.info("connection closed by client");
+        gotoClosedState(false);
+    }
+    
+    private static final class Literal {
+        private int mSize;
+        private boolean mPlus;
+        
+        int size() {
+            return mSize;
+        }
+
+        void size(int val) {
+            mSize = val;
+        }
+        
+        boolean plus() {
+            return mPlus;
+        }
+        
+        void plus(boolean val) {
+            mPlus = val;
+        }
+    }
+
+    private ArrayList mCurrentDataParts;
+    
+    private OzByteBufferGatherer mCurrentData; 
+
+    private Literal getLiteral() {
+        Literal result = new Literal();
+        
+        byte[] buf = mCurrentData.array();
+        int size = mCurrentData.size();
+        if (size < 3) {
+            /* Need at least '{' 'DIGIT' '}' */
+            return result;
+        }
+        
+        int index = size - 1;
+        if (buf[index--] != '}') {
+            return result;
+        }
+        
+        if (buf[index] == '+') {
+            result.plus(true);
+            index--;
+            if (index < 1) {
+                /* this means that the is only one byte left - since we have
+                 * seen a plus, we need atleast two more bytes: '{' 'DIGIT'
+                 */
+                return result;
+            }
+        }
+        
+        int lastDigitIndex = index;
+        
+        while (index > -1 && (buf[index] >= '0' && buf[index] <= '9')) {
+            index--;
+        }
+        if (index < 0) {
+            /* Perhaps malformed literal, just pretend like there is no literal
+             * and in the command parser will throw the necessary exception.
+             */
+            return result;
+        }
+        
+        if (buf[index] != '{') {
+            /* Perhaps malformed literal, just pretend like there is no literal
+             * and in the command parser will throw the necessary exception.
+             */
+            return result;
+        }
+        
+        /* In both these example cases:
+         * 
+         * DATA:    { 8 8 8 }      { 8 8 8 + }
+         * INDEX:   0 1 2 3 4      0 1 2 3 4 5
+         * 
+         * index is 0, lastDigitIndex is 3.
+         */
+        String encoding = "us-ascii";
+        try {
+            String literal = new String(buf, index + 1, lastDigitIndex - index, encoding);
+            result.size(Integer.parseInt(literal));
+        } catch (UnsupportedEncodingException uee) {
+            Zimbra.halt("exception creating IMAP literal in encoding " + encoding, uee);
+        } catch (NumberFormatException nfe) {
+            assert(false);
+        }
+        return result;
+    }
+    
+    public void handleInput(ByteBuffer buffer, boolean matched) throws IOException {
         assert(mState != null);
         assert(mState != ConnectionState.UNKNOWN);
         
@@ -1952,11 +2050,13 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
         }
 
         if (mState == ConnectionState.READLINE) {
-            mCurrentRequest.addLineData(buffer);
+            mCurrentData.add(buffer);
             if (matched) {
-                int literal = mCurrentRequest.processLine();
-                if (literal > 0) {
-                    gotoReadLiteralState(literal);
+                Literal literal = getLiteral();
+                if (literal.size() > 0) {
+                    gotoReadLiteralState(literal.size());    
+
+
                 } else {
                     // There was no literal - this means the current command is
                     // over
@@ -1968,9 +2068,8 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
         }
         
         if (mState == ConnectionState.READLITERAL) {
-            mCurrentRequest.addLiteralData(buffer);
+            mCurrentData.add(buffer);
             if (matched) {
-                mCurrentRequest.processLiteral();
                 // after we read the literal, there is a \r\n at the end of the
                 // literal which will get swallowed and cause processing of
                 // request - so we go to readline state - but not a new command.
@@ -1982,10 +2081,4 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
         }
 	}
 
-	public void handleDisconnect() {
-        assert(mState != ConnectionState.UNKNOWN);
-        assert(mState != ConnectionState.CLOSED);
-        ZimbraLog.imap.info("connection closed by client");
-        gotoClosedState(false);
-	}
 }
