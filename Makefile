@@ -6,8 +6,9 @@ BUILD_ROOT := $(shell pwd)
 BUILD_PLATFORM := $(shell sh $(BUILD_ROOT)/../ZimbraBuild/rpmconf/Build/get_plat_tag.sh)
 
 SHARED := -shared
+JAVAINC := -I/usr/local/java/include
 ifeq ($(BUILD_PLATFORM), MACOSX)
-MACJAVAINC := -I/System/Library/Frameworks/JavaVM.framework/Headers
+JAVAINC := -I/System/Library/Frameworks/JavaVM.framework/Headers
 SHARED := -dynamiclib
 MACDEF := -DDARWIN
 endif
@@ -64,7 +65,7 @@ $(BUILD)/libzimbra-native.so: $(BUILD)/IO.o $(BUILD)/Process.o $(BUILD)/zjniutil
 	gcc $(SHARED) -o $@ $^
 
 $(BUILD)/%.o: $(SRC)/native/%.c
-	gcc $(MACDEF) $(MACJAVAINC) -I$(BUILD) -Wall -Wmissing-prototypes -c -o $@ $<
+	gcc $(MACDEF) $(JAVAINC) -I$(BUILD) -Wall -Wmissing-prototypes -c -o $@ $<
 
 $(BUILD)/Process.o: $(SRC)/native/Process.c $(BUILD)/Process.h $(SRC)/native/zjniutil.h
 
