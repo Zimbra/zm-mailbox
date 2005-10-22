@@ -6,7 +6,7 @@ BUILD_ROOT := $(shell pwd)
 BUILD_PLATFORM := $(shell sh $(BUILD_ROOT)/../ZimbraBuild/rpmconf/Build/get_plat_tag.sh)
 
 SHARED := -shared
-JAVAINC := -I/usr/local/java/include
+JAVAINC := -I/usr/local/java/include -I/usr/local/java/include/linux
 ifeq ($(BUILD_PLATFORM), MACOSX)
 JAVAINC := -I/System/Library/Frameworks/JavaVM.framework/Headers
 SHARED := -dynamiclib
