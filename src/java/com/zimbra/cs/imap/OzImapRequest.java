@@ -668,4 +668,14 @@ class OzImapRequest {
         }
         return readSearchClause(search, insertions, charset, MULTIPLE_CLAUSES).toString();
     }
+
+    public void handleLine(String line, boolean b) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    public void handleLiteral(byte[] bs, int i, int j) {
+        // TODO Auto-generated method stub
+        
+    }
 }

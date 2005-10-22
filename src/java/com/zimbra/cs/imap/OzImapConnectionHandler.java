@@ -59,7 +59,6 @@ import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraLog;
 
 /**
@@ -1889,7 +1888,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
         mConnection.setMatcher(mCommandMatcher);
         mCurrentData = new OzByteBufferGatherer();
         if (newRequest) {
-            mCurrentDataParts = new ArrayList();
+            mCurrentRequest = new OzImapRequest(mSession);
         }
         if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("entered command read state");
     }
@@ -1951,91 +1950,74 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
         gotoClosedState(false);
     }
     
-    private static final class Literal {
-        private int mSize;
-        private boolean mPlus;
-        
-        int size() {
-            return mSize;
+    private static final class LiteralPlus {
+        private int mOctets;
+
+        private int mLength;
+
+        private LiteralPlus() { }
+
+        /** octets specified to be in the literal, for {12+}, this is 12. */
+        public int octets() {
+            return mOctets;
         }
 
-        void size(int val) {
-            mSize = val;
+        /** length of the specification, for {12+} this is 5. */
+        public int length() {
+            return mLength;
         }
-        
-        boolean plus() {
-            return mPlus;
-        }
-        
-        void plus(boolean val) {
-            mPlus = val;
+
+        /** Find a LITERAL+ notation in given line if present. */
+        public static LiteralPlus get(String line) {
+            LiteralPlus result = new LiteralPlus();
+            if (!line.endsWith("+}")) {
+                return result;
+            }
+            
+            int openBraceIndex = line.lastIndexOf("{");
+            if (openBraceIndex < 0) {
+                /* TODO - ANAND - is this an exception? */
+                return result;
+            }
+
+            int digitStart = openBraceIndex + 1;
+            int digitLimit = line.length() - 2; /* +} */
+            if ((digitLimit - digitStart) <= 0) {
+                /* TODO - ANAND - is this an exception? */
+                return result;
+            }
+
+            try {
+                String number = line.substring(digitStart, digitLimit);
+                if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("LITERAL+ found, number of octets=" + number);
+                result.mOctets = Integer.parseInt(number);
+                result.mLength = digitLimit - digitStart + 3; /* {+} */ 
+            } catch (NumberFormatException nfe) {
+                /* TODO - ANAND - is this an exception? */
+                ZimbraLog.imap.warn("LITERAL+ syntax error", nfe);
+            }
+            return result;
         }
     }
 
-    private ArrayList mCurrentDataParts;
-    
     private OzByteBufferGatherer mCurrentData; 
 
-    private Literal getLiteral() {
-        Literal result = new Literal();
-        
+    private OzImapRequest mCurrentRequest;
+    
+    private String currentDataToAsciiString() {
         byte[] buf = mCurrentData.array();
-        int size = mCurrentData.size();
-        if (size < 3) {
-            /* Need at least '{' 'DIGIT' '}' */
-            return result;
-        }
-        
-        int index = size - 1;
-        if (buf[index--] != '}') {
-            return result;
-        }
-        
-        if (buf[index] == '+') {
-            result.plus(true);
-            index--;
-            if (index < 1) {
-                /* this means that the is only one byte left - since we have
-                 * seen a plus, we need atleast two more bytes: '{' 'DIGIT'
-                 */
-                return result;
+        int n = mCurrentData.size();
+        StringBuffer sb = new StringBuffer(n);
+        boolean found8BitData = false;
+        for (int i = 0; i < n; i++) {
+            if (buf[i] > 127) {
+                found8BitData = true;
             }
+            sb.append((char)buf[i]);
         }
-        
-        int lastDigitIndex = index;
-        
-        while (index > -1 && (buf[index] >= '0' && buf[index] <= '9')) {
-            index--;
-        }
-        if (index < 0) {
-            /* Perhaps malformed literal, just pretend like there is no literal
-             * and in the command parser will throw the necessary exception.
-             */
-            return result;
-        }
-        
-        if (buf[index] != '{') {
-            /* Perhaps malformed literal, just pretend like there is no literal
-             * and in the command parser will throw the necessary exception.
-             */
-            return result;
-        }
-        
-        /* In both these example cases:
-         * 
-         * DATA:    { 8 8 8 }      { 8 8 8 + }
-         * INDEX:   0 1 2 3 4      0 1 2 3 4 5
-         * 
-         * index is 0, lastDigitIndex is 3.
-         */
-        String encoding = "us-ascii";
-        try {
-            String literal = new String(buf, index + 1, lastDigitIndex - index, encoding);
-            result.size(Integer.parseInt(literal));
-        } catch (UnsupportedEncodingException uee) {
-            Zimbra.halt("exception creating IMAP literal in encoding " + encoding, uee);
-        } catch (NumberFormatException nfe) {
-            assert(false);
+        String result = sb.toString();
+        if (found8BitData) {
+            ZimbraLog.imap.warn("8 bit data found in IMAP command: " + result); 
         }
         return result;
     }
@@ -2052,14 +2034,15 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
         if (mState == ConnectionState.READLINE) {
             mCurrentData.add(buffer);
             if (matched) {
-                Literal literal = getLiteral();
-                if (literal.size() > 0) {
-                    gotoReadLiteralState(literal.size());    
-
-
+                String line = currentDataToAsciiString();
+                LiteralPlus literal = LiteralPlus.get(line);
+                /* Trimming first takes care of {0+} zero length continuation edge case. */
+                line = line.substring(0, line.length() - literal.length()); 
+                if (literal.octets() > 0) {
+                    mCurrentRequest.handleLine(line, true);
+                    gotoReadLiteralState(literal.octets());    
                 } else {
-                    // There was no literal - this means the current command is
-                    // over
+                    mCurrentRequest.handleLine(line, false);
                     gotoReadLineState(true);
                 }
             } else {
@@ -2073,6 +2056,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
                 // after we read the literal, there is a \r\n at the end of the
                 // literal which will get swallowed and cause processing of
                 // request - so we go to readline state - but not a new command.
+                mCurrentRequest.handleLiteral(mCurrentData.array(), 0, mCurrentData.size());
                 gotoReadLineState(false);
             } else {
                 // continue to remain in this state and read more of the literal
