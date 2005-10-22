@@ -190,7 +190,7 @@ public class CalendarUtils {
         StringReader reader = new StringReader(calStr);
         try {
             toRet.mCal = calBuilder.build(reader);
-            toRet.mInvite = Invite.createFromICalendar(account, toRet.mSummary, toRet.mCal, false);
+            toRet.mInvite = (Invite)(Invite.createFromICalendar(account, toRet.mSummary, toRet.mCal, false).get(0));
         } catch (ParserException pe) {
             throw ServiceException.FAILURE("Parse Exception parsing raw iCalendar data -- "+pe, pe);
         } catch (IOException ioe) {

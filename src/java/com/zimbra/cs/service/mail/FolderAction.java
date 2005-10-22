@@ -50,6 +50,7 @@ import com.zimbra.soap.ZimbraContext;
  */
 public class FolderAction extends ItemAction {
 
+    public static final String OP_REFRESH = "urlRefresh";
     public static final String OP_RENAME = "rename";
     public static final String OP_EMPTY  = "empty";
     public static final String OP_GRANT  = "grant";
@@ -71,7 +72,7 @@ public class FolderAction extends ItemAction {
         if (operation.endsWith(OP_UPDATE) || operation.endsWith(OP_SPAM))
             throw ServiceException.INVALID_REQUEST("invalid operation on folder: " + operation, null);
         String successes;
-        if (operation.equals(OP_RENAME) || operation.equals(OP_EMPTY) || operation.equals(OP_GRANT) || operation.equals(OP_REVOKE))
+        if (operation.equals(OP_REFRESH) || operation.equals(OP_RENAME) || operation.equals(OP_EMPTY) || operation.equals(OP_GRANT) || operation.equals(OP_REVOKE))
             successes = handleFolder(context, request, operation, act);
         else
             successes = handleCommon(context, request, operation, MailItem.TYPE_FOLDER);
@@ -95,7 +96,10 @@ public class FolderAction extends ItemAction {
 
         if (operation.equals(OP_EMPTY))
             mbox.emptyFolder(octxt, iid.getId(), true);
-        else if (operation.equals(OP_RENAME)) {
+        else if (operation.equals(OP_REFRESH)) {
+            String url = action.getAttribute(MailService.A_URL, null);
+            mbox.refreshFolder(octxt, iid.getId(), url);
+        } else if (operation.equals(OP_RENAME)) {
             String name = action.getAttribute(MailService.A_NAME);
             mbox.renameFolder(octxt, iid.getId(), name);
         } else if (operation.equals(OP_REVOKE)) {

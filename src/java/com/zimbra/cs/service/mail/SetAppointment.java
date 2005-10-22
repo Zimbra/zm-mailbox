@@ -167,7 +167,7 @@ public class SetAppointment extends CalendarRequest {
         
         boolean sentByMe = false; // not applicable in the SetAppointment case
         
-        Invite inv = Invite.createFromICalendar(acct, pm.getFragment(), cal, sentByMe);
+        Invite inv = (Invite)(Invite.createFromICalendar(acct, pm.getFragment(), cal, sentByMe).get(0));
         
         inv.modifyPartStatInMemory(needsReply, partStatStr);
         

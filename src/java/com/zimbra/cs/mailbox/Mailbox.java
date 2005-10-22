@@ -42,6 +42,9 @@ import net.fortuna.ical4j.model.property.ProdId;
 import net.fortuna.ical4j.model.property.Version;
 
 import org.apache.commons.collections.map.LRUMap;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpException;
+import org.apache.commons.httpclient.methods.GetMethod;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -1564,6 +1567,30 @@ public class Mailbox {
                     redoRecorder.abort();
                 }
             }
+        }
+    }
+    
+    public synchronized void retrieveRemoteCalendar(String uri, int folderId) throws ServiceException
+    {
+        HttpClient client = new HttpClient();
+        
+        client.setConnectionTimeout(10000);
+        client.setTimeout(20000);
+        
+        GetMethod get = new GetMethod(uri);
+        
+        try {
+            client.executeMethod(get);
+        } catch (HttpException e) {
+            throw ServiceException.FAILURE("HttpException: "+e, e);
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("IOException: "+e, e);
+        }
+        
+        List /* Invite */ invites = Invite.createFromRawICalendar(getAccount(), "", get.getResponseBodyAsString(), false);
+        for (Iterator iter = invites.iterator(); iter.hasNext();) {
+            Invite inv = (Invite)iter.next();
+            addInvite(null, folderId, inv, true, null);
         }
     }
 
@@ -3414,6 +3441,51 @@ public class Mailbox {
             success = true;
         } finally {
             endTransaction(success);
+        }
+    }
+    
+    public synchronized void refreshFolder(OperationContext octxt, int folderId, String urlOrNull) throws ServiceException {
+        
+        Folder folder = getFolderById(folderId);
+        
+        if (urlOrNull != null) { // update the URL setting
+            boolean success = false;
+            try {
+                beginTransaction("refreshFolder", octxt, null);
+                
+                checkItemChangeID(folder);
+                
+                String curUrl = folder.getUrl();
+                if (urlOrNull.equals("")) {
+                    // clear existing
+                    if (curUrl != null) {
+                        folder.setUrl(null);
+                        folder.saveMetadata();
+                    }
+                } else if (curUrl == null || !curUrl.equals(urlOrNull)) {
+                    // update existing
+                    folder.setUrl(urlOrNull);
+                    folder.saveMetadata();
+                }
+                success = true;
+            } finally {
+                endTransaction(success);
+            }
+        }
+        
+        {
+            boolean success = false;
+            try {
+                beginTransaction("refreshFolderPart2", octxt, null);
+                folder.empty(false);
+                success = true;
+            } finally {
+                endTransaction(success);
+            }
+        }
+        
+        if (folder.getUrl() != null && !folder.getUrl().equals("")) {
+            retrieveRemoteCalendar(folder.getUrl(), folderId);
         }
     }
 

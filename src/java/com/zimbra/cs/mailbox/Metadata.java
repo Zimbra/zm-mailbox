@@ -87,6 +87,7 @@ public class Metadata {
     static final String FN_TYPES           = "t";
     static final String FN_TZMAP           = "tzm"; // calendaring: timezone map
     static final String FN_UID             = "u";
+    static final String FN_URL             = "url";
     static final String FN_MD_VERSION      = "v"; // metadata version
     static final String FN_VIEW            = "vt";
     static final String FN_ELIDED          = "X";

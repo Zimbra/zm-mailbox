@@ -25,6 +25,8 @@
 
 package com.zimbra.cs.mailbox.calendar;
 
+import java.io.IOException;
+import java.io.StringReader;
 import java.net.URI;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -36,6 +38,8 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import net.fortuna.ical4j.data.CalendarBuilder;
+import net.fortuna.ical4j.data.ParserException;
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.ComponentList;
@@ -1183,11 +1187,27 @@ public class Invite {
         return toRet;
     }
     
-    static public Invite createFromICalendar(Account acct, String fragment, Calendar cal, boolean sentByMe) throws ServiceException
+    static public List /* Invite */  createFromRawICalendar(Account acct, String fragment, String calStr, boolean sentByMe) throws ServiceException
+    {
+        try {
+            CalendarBuilder calBuilder = new CalendarBuilder();
+            StringReader reader = new StringReader(calStr);
+            Calendar iCal = calBuilder.build(reader);
+            return createFromICalendar(acct, fragment, iCal, sentByMe); 
+        } catch (ParserException pe) {
+            throw ServiceException.FAILURE("Parse Exception parsing raw iCalendar data -- "+pe, pe);
+        } catch (IOException ioe) {
+            throw ServiceException.FAILURE("IOException parsing raw iCalendar data -- "+ioe, ioe);
+        }
+    }
+    
+    static public List /* Invite */  createFromICalendar(Account acct, String fragment, Calendar cal, boolean sentByMe) throws ServiceException
     {
         // vevent, vtodo: ALARM, props
         // vjournal: props
         // vfreebusy: props
+
+        List /* Invite */ toRet = new ArrayList();
         
         Method method = Method.PUBLISH;
         
@@ -1200,8 +1220,6 @@ public class Invite {
         }
         
         TimeZoneMap tzmap = new TimeZoneMap(acct.getTimeZone());
-        Invite inv = new Invite(method, fragment, tzmap);
-        
         ComponentList comps = cal.getComponents();
         
         for (Iterator iter = comps.iterator(); iter.hasNext();) {
@@ -1210,14 +1228,23 @@ public class Invite {
             if (comp.getName().equals(Component.VTIMEZONE)) {
                 tzmap.add((VTimeZone) comp);
             } else if (comp.getName().equals(Component.VEVENT)) {
+                Invite inv = new Invite(method, fragment, tzmap);
+                
                 inv.setSentByMe(sentByMe);
 
                 // must do this AFTER component-num, mailbox-id and mailitem-id are set! (because the IRecurrence object needs them)
                 inv.parseVEvent((VEvent) comp, method, acct);
-                return inv;
+                
+                toRet.add(inv);
             }
         }
-        return inv;
+        
+        if (toRet.size() == 0) {
+            Invite inv = new Invite(method, fragment, tzmap);
+            toRet.add(inv);
+        }
+
+        return toRet;
     }
 
     private static Calendar makeCalendar(Method method) {

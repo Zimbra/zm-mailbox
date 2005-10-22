@@ -56,7 +56,15 @@ public class Folder extends MailItem {
 	private ArrayList mSubfolders;
     private Folder    mParent;
     private ACL       mRights;
-
+    private String    mUrl;
+    
+    void setUrl(String url) {
+        mUrl = url;
+    }
+    
+    String getUrl() {
+        return mUrl;
+    }
 
     Folder(Mailbox mbox, UnderlyingData ud) throws ServiceException {
         super(mbox, ud);
@@ -428,7 +436,7 @@ public class Folder extends MailItem {
         data.parentId    = data.folderId;
         data.date        = mbox.getOperationTimestamp();
         data.subject     = name;
-		data.metadata    = encodeMetadata(DEFAULT_COLOR, attributes, view, null);
+		data.metadata    = encodeMetadata(DEFAULT_COLOR, attributes, view, null, null);
         data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
 
@@ -850,6 +858,9 @@ public class Folder extends MailItem {
         }
         mDefaultView = (byte) meta.getLong(Metadata.FN_VIEW, view);
         mAttributes  = (byte) meta.getLong(Metadata.FN_ATTRS, 0);
+      
+        if (meta.containsKey(Metadata.FN_URL))
+            mUrl = meta.get(Metadata.FN_URL);
 
         MetadataList mlistACL = meta.getList(Metadata.FN_RIGHTS, true);
         if (mlistACL != null)
@@ -858,18 +869,20 @@ public class Folder extends MailItem {
     }
 	
 	Metadata encodeMetadata(Metadata meta) {
-		return encodeMetadata(meta, mColor, mAttributes, mDefaultView, mRights);
+		return encodeMetadata(meta, mColor, mAttributes, mDefaultView, mRights, mUrl);
 	}
-    private static String encodeMetadata(byte color, byte attributes, byte hint, ACL rights) {
-        return encodeMetadata(new Metadata(), color, attributes, hint, rights).toString();
+    private static String encodeMetadata(byte color, byte attributes, byte hint, ACL rights, String url) {
+        return encodeMetadata(new Metadata(), color, attributes, hint, rights, url).toString();
     }
-	static Metadata encodeMetadata(Metadata meta, byte color, byte attributes, byte hint, ACL rights) {
+	static Metadata encodeMetadata(Metadata meta, byte color, byte attributes, byte hint, ACL rights, String url) {
         if (attributes != 0)
             meta.put(Metadata.FN_ATTRS, attributes);
         if (hint != TYPE_UNKNOWN)
             meta.put(Metadata.FN_VIEW, hint);
         if (rights != null)
             meta.put(Metadata.FN_RIGHTS, rights.encode());
+        if (url != null) 
+            meta.put(Metadata.FN_URL, url);
 		return MailItem.encodeMetadata(meta, color);
 	}
 
