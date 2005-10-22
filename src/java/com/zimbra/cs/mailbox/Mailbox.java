@@ -1578,6 +1578,7 @@ public class Mailbox {
         client.setTimeout(20000);
         
         GetMethod get = new GetMethod(uri);
+        get.setFollowRedirects(true);
         
         try {
             client.executeMethod(get);

@@ -50,7 +50,7 @@ import com.zimbra.soap.ZimbraContext;
  */
 public class FolderAction extends ItemAction {
 
-    public static final String OP_REFRESH = "urlRefresh";
+    public static final String OP_REFRESH = "urlrefresh";
     public static final String OP_RENAME = "rename";
     public static final String OP_EMPTY  = "empty";
     public static final String OP_GRANT  = "grant";
