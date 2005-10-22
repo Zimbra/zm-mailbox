@@ -49,6 +49,7 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.ozserver.OzByteArrayMatcher;
 import com.zimbra.cs.ozserver.OzConnection;
 import com.zimbra.cs.ozserver.OzConnectionHandler;
+import com.zimbra.cs.ozserver.OzCountingMatcher;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.store.StoreManager;
@@ -1857,23 +1858,55 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
         mConnection.writeAscii(line, true, flush);
     }
 
-    private OzImapConnectionState mState = OzImapConnectionState.UNKNOWN;
+    private ConnectionState mState = ConnectionState.UNKNOWN;
     
     private OzByteArrayMatcher mCommandMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLF);
 
-    private void gotoStateCommandRead() {
-        mState = OzImapConnectionState.READCMD;
+    private OzCountingMatcher mLiteralMatcher = new OzCountingMatcher();
+    
+    private OzImapRequest mCurrentRequest;
+    
+    private static final class ConnectionState {
+        private String mName;
+        
+        private ConnectionState(String name) {
+            mName = name;
+        }
+
+        public String toString() {
+            return mName;
+        }
+        
+        public static final ConnectionState READLITERAL = new ConnectionState("READLITERAL");
+        public static final ConnectionState READLINE = new ConnectionState("READLINE");
+        public static final ConnectionState CLOSED = new ConnectionState("CLOSED");
+        public static final ConnectionState UNKNOWN = new ConnectionState("UNKNOWN");
+    }
+
+    private void gotoReadLineState(boolean newRequest) {
+        mState = ConnectionState.READLINE;
         mCommandMatcher.clear();
         mConnection.setMatcher(mCommandMatcher);
+        if (newRequest) {
+            mCurrentRequest = new OzImapRequest(mSession);
+        }
         if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("entered command read state");
     }
 
+    private void gotoReadLiteralState(int target) {
+        mState = ConnectionState.READLITERAL;
+        mLiteralMatcher.target(target);
+        mLiteralMatcher.clear();
+        mConnection.setMatcher(mLiteralMatcher);
+        if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("entered literal read state target=" + target);
+    }
+    
     private Object mCloseLock = new Object();
     
-    private void gotoStateClosed(boolean graceful) {
+    private void gotoClosedState(boolean connectionStillOpen) {
         // Close only once.
         synchronized (mCloseLock) {
-            if (mState == OzImapConnectionState.CLOSED) {
+            if (mState == ConnectionState.CLOSED) {
                 return;
             }
             if (mSession != null) {
@@ -1882,7 +1915,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
                 mSession = null;
             }
             
-            if (graceful) {
+            if (connectionStillOpen) {
                 try {
                     if (!mGoodbyeSent) {
                         sendUntagged(mServer.getGoodbye(), true);
@@ -1891,38 +1924,68 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
                 } catch (IOException e) {
                     ZimbraLog.imap.info("exception while closing connection", e);
                 }
-                
                 mConnection.close();
             }
             
-            mState = OzImapConnectionState.CLOSED;
+            mState = ConnectionState.CLOSED;
         }
 
     }
 	
     public void handleConnect() throws IOException {
-        assert(mState == OzImapConnectionState.UNKNOWN);
+        assert(mState == ConnectionState.UNKNOWN);
         if (!Config.userServicesEnabled()) {
-            gotoStateClosed(true);
+            gotoClosedState(true);
         } else {
             sendUntagged(mServer.getBanner(), true);
-            gotoStateCommandRead();
+            gotoReadLineState(true);
         }
 	}
 
 	public void handleInput(ByteBuffer buffer, boolean matched) throws IOException {
-        assert(mState != OzImapConnectionState.UNKNOWN);
-        if (mState == OzImapConnectionState.CLOSED) {
+        assert(mState != null);
+        assert(mState != ConnectionState.UNKNOWN);
+        
+        if (mState == ConnectionState.CLOSED) {
             ZimbraLog.imap.info("input arrived on closed connection");
             return;
         }
+
+        if (mState == ConnectionState.READLINE) {
+            mCurrentRequest.addLineData(buffer);
+            if (matched) {
+                int literal = mCurrentRequest.processLine();
+                if (literal > 0) {
+                    gotoReadLiteralState(literal);
+                } else {
+                    // There was no literal - this means the current command is
+                    // over
+                    gotoReadLineState(true);
+                }
+            } else {
+                // continue to remain in this state until we see that \r\n
+            }
+        }
         
+        if (mState == ConnectionState.READLITERAL) {
+            mCurrentRequest.addLiteralData(buffer);
+            if (matched) {
+                mCurrentRequest.processLiteral();
+                // after we read the literal, there is a \r\n at the end of the
+                // literal which will get swallowed and cause processing of
+                // request - so we go to readline state - but not a new command.
+                gotoReadLineState(false);
+            } else {
+                // continue to remain in this state and read more of the literal
+                // data
+            }
+        }
 	}
 
 	public void handleDisconnect() {
-        assert(mState != OzImapConnectionState.UNKNOWN);
-        assert(mState != OzImapConnectionState.CLOSED);
+        assert(mState != ConnectionState.UNKNOWN);
+        assert(mState != ConnectionState.CLOSED);
         ZimbraLog.imap.info("connection closed by client");
-        gotoStateClosed(false);
+        gotoClosedState(false);
 	}
 }
