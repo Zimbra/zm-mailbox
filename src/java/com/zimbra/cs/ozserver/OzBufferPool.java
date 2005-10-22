@@ -56,6 +56,7 @@ class OzBufferPool {
     private boolean mDestroyed;
     
     OzBufferPool(String name, int bufferSize, Log log) {
+        mName = name;
         mLog = log;
         mBufferSize = bufferSize;
         mFreeBuffers = new LinkedList();
@@ -64,7 +65,7 @@ class OzBufferPool {
 
         TimerTask task = new TimerTask() {
             public void run() {
-                mLog.info("buffer pool name=" + mName + " inuse=" + mInUse + " allocated=" + mAllocatedBuffers.size());
+                mLog.info(mName + " buffer pool inuse=" + mInUse + " allocated=" + mAllocatedBuffers.size());
             }
         };
         Zimbra.sTimer.scheduleAtFixedRate(task, USAGE_DISPLAY_INTERVAL, USAGE_DISPLAY_INTERVAL);
@@ -80,7 +81,7 @@ class OzBufferPool {
         if (mFreeBuffers.isEmpty()) {
             buf = ByteBuffer.allocateDirect(mBufferSize);
             mAllocatedBuffers.add(buf);
-            mLog.info("New direct buffer inuse=" + mInUse + " allocated=" + mAllocatedBuffers.size());
+            mLog.info("new direct buffer inuse=" + mInUse + " allocated=" + mAllocatedBuffers.size());
         } else {
             buf = (ByteBuffer)mFreeBuffers.remove(0);
             buf.clear();

@@ -77,7 +77,6 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
     private static final DateFormat mDateFormat   = new SimpleDateFormat("dd-MMM-yyyy", Locale.US);
     private static final DateFormat mZimbraFormat = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
 
-    private ImapServer  mServer;
     private ImapSession mSession;
     private Mailbox     mMailbox;
     private LinkedList  mPendingCommands = new LinkedList();
@@ -438,17 +437,12 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
     private static final boolean STOP_PROCESSING = false;
     private static final boolean CONTINUE_PROCESSING = true;
 
-    protected boolean processCommand() throws IOException {
-        OzImapRequest req = null;
+    private boolean processCommand() throws IOException {
+        OzImapRequest req = new OzImapRequest(mCurrentRequestTag, mCurrentRequestData, mSession);
         boolean keepGoing = CONTINUE_PROCESSING;
         try {
             if (mSession != null)
                 ZimbraLog.addAccountNameToContext(mSession.getUsername());
-
-            req = mIncompleteRequest;
-            if (req == null)
-                req = new OzImapRequest(mSession);
-            req.continuation();
 
             ImapCommand cmd = new ImapCommand(req, mSession);
             mIncompleteRequest = req = null;
@@ -543,7 +537,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
         // [UIDPLUS]          RFC 2359: IMAP4 UIDPLUS extension
         // [UNSELECT]         RFC 3691: IMAP UNSELECT command
         boolean authenticated = mSession != null;
-        String nologin = mServer.allowCleartextLogins() || mStartedTLS || authenticated ? "" : "LOGINDISABLED ";
+        String nologin = OzImapServer.allowCleartextLogins() || mStartedTLS || authenticated ? "" : "LOGINDISABLED ";
         String starttls = mStartedTLS || authenticated ? "" : "STARTTLS ";
         String plain = !mStartedTLS || authenticated ? "" : "AUTH=PLAIN "; 
         sendUntagged("CAPABILITY IMAP4rev1 " + nologin + starttls + "CHILDREN ID IDLE LITERAL+ LOGIN-REFERRALS NAMESPACE QUOTA UIDPLUS UNSELECT");
@@ -588,7 +582,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
     }
 
     boolean doLOGOUT(String tag) throws IOException {
-        sendUntagged(mServer.getGoodbye());
+        sendUntagged(OzImapServer.getGoodbye());
         if (mSession != null)
             mSession.loggedOut();
         mGoodbyeSent = true;
@@ -599,7 +593,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
     boolean doLOGIN(String tag, List args) throws IOException {
         if (!checkState(tag, ImapSession.STATE_NOT_AUTHENTICATED))
             return CONTINUE_PROCESSING;
-        else if (!mStartedTLS && !mServer.allowCleartextLogins()) {
+        else if (!mStartedTLS && !OzImapServer.allowCleartextLogins()) {
             sendNO(tag, "cleartext logins disabled");
             return CONTINUE_PROCESSING;
         }
@@ -658,6 +652,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
         mMailbox = mailbox;
         mSession = session;
         // TODO: ANAND: mSession.setHandler(this);
+        // TODO: ANAND: throw out too big inputs.
 
         sendCapability();
         sendOK(tag, "LOGIN completed");
@@ -1919,7 +1914,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
             if (connectionStillOpen) {
                 try {
                     if (!mGoodbyeSent) {
-                        sendUntagged(mServer.getGoodbye(), true);
+                        sendUntagged(OzImapServer.getGoodbye(), true);
                     }
                     mGoodbyeSent = true;
                 } catch (IOException e) {
@@ -1936,8 +1931,9 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
         assert(mState == ConnectionState.UNKNOWN);
         if (!Config.userServicesEnabled()) {
             gotoClosedState(true);
+            ZimbraLog.imap.debug("services disabled");
         } else {
-            sendUntagged(mServer.getBanner(), true);
+            sendUntagged(OzImapServer.getBanner(), true);
             gotoReadLineState(true);
         }
 	}
@@ -2022,8 +2018,11 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
                     gotoReadLiteralState(literal.octets());
                     return;
                 } else {
-                    OzImapRequest request = new OzImapRequest(mCurrentRequestData, mSession);
-                    gotoReadLineState(true);
+                    if (processCommand()) {
+                        gotoReadLineState(true);
+                    } else {
+                        gotoClosedState(true);
+                    }
                     return;
                 }
             } else {

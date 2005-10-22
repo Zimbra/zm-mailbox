@@ -26,9 +26,13 @@
 package com.zimbra.cs.ozserver;
 
 import java.io.IOException;
+import java.net.ServerSocket;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.NetUtil;
 
 class TestServer {
     
@@ -36,18 +40,19 @@ class TestServer {
 
     private static OzServer mServer;
 
-    public TestServer(int port) throws IOException {
+    public TestServer(int port) throws IOException, ServiceException {
         OzConnectionHandlerFactory testHandlerFactory = new OzConnectionHandlerFactory() {
             public OzConnectionHandler newConnectionHandler(OzConnection conn) {
                 return new TestConnectionHandler(conn);
             }
         };
-    	mServer = new OzServer("Test", 64, null, port, testHandlerFactory, mLog);
+        ServerSocket serverSocket = NetUtil.getBoundServerSocket(null, port, false);
+    	mServer = new OzServer("Test", 64, serverSocket, testHandlerFactory, mLog);
         mServer.setSnooper(new OzSnooper(mLog, OzSnooper.ALL));
         mServer.start();
     }
     
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, ServiceException {
     	new TestServer(Integer.parseInt(args[0]));
     }
     

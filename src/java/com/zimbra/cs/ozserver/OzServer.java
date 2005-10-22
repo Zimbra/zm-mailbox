@@ -25,8 +25,6 @@
 package com.zimbra.cs.ozserver;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.channels.SelectionKey;
@@ -73,20 +71,17 @@ public class OzServer {
     
     private OzBufferPool mBufferPool;
     
-    public OzServer(String name, int readBufferSize, InetAddress bindAddress, int port,
+    public OzServer(String name, int readBufferSize, ServerSocket serverSocket,
                     OzConnectionHandlerFactory connectionHandlerFactory, Log log)
         throws IOException
     {
         mLog = log;
 
-        mServerSocketChannel = ServerSocketChannel.open();
+        mServerSocket = serverSocket;
+        mServerSocketChannel = serverSocket.getChannel();
         mServerSocketChannel.configureBlocking(false);
         
-        mServerSocket = mServerSocketChannel.socket();
-        InetSocketAddress address = new InetSocketAddress(bindAddress, port);
-        mServerSocket.bind(address);
-        
-        mServerName = name + "-" + port;
+        mServerName = name + "-" + mServerSocket.getLocalPort();
         mBufferPool = new OzBufferPool(mServerName, readBufferSize, mLog);
         
         mConnectionHandlerFactory = connectionHandlerFactory;

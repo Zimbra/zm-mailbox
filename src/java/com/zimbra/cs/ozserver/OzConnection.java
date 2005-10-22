@@ -133,7 +133,7 @@ public class OzConnection {
             mServer = server;
             mReadBuffer = server.getBufferPool().get();
             mLog = mServer.getLog();
-            mLog.info("connected buf=" + mReadBuffer.hashCode() + " " + mChannel);
+            mLog.info("connected buf=" + OzUtil.intToHexString(mReadBuffer.hashCode(), 0, ' ') + " " + mChannel);
             mSelectionKey = channel.register(server.getSelector(), 0, this); 
             mConnectionHandler = server.newConnectionHandler(this);
             mConnectionHandler.handleConnect();

@@ -38,6 +38,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Zimbra;
 
 class TestBoth {
@@ -120,7 +121,7 @@ class TestBoth {
         
     }
     
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, ServiceException {
     	Zimbra.toolSetup("INFO", true);
 
     	CommandLine cl = parseArgs(args);
@@ -183,9 +184,11 @@ class TestBoth {
                             endTest();
                         }
                     } catch (InterruptedException ie) {
-                        
+                        ie.printStackTrace();
                     } catch (IOException ioe) { 
                         ioe.printStackTrace();
+                    } catch (ServiceException se) {
+                        se.printStackTrace();
                     }
                 }
             }.start();
@@ -201,7 +204,7 @@ class TestBoth {
     
     private static TestClientThread[] mTestClientThreads;
     
-    private static void startTest(int port, int numThreads) throws IOException {
+    private static void startTest(int port, int numThreads) throws IOException, ServiceException {
         mTestServer = new TestServer(port);
         mLog.info("creating " + numThreads + " client threads");
         mTestClientThreads = new TestClientThread[numThreads];

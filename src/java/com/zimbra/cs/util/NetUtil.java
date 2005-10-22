@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.nio.channels.ServerSocketChannel;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -41,7 +42,8 @@ public class NetUtil {
             bindAddress = InetAddress.getByName(address);
         }
         if (!ssl) {
-            serverSocket = new ServerSocket();
+            ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
+            serverSocket = serverSocketChannel.socket();
         } else {
             SSLServerSocketFactory fact = (SSLServerSocketFactory)
             SSLServerSocketFactory.getDefault();

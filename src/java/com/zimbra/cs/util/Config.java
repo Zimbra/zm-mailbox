@@ -162,6 +162,7 @@ public class Config {
      * @return
      */
     public static boolean userServicesEnabled() {
+        initConfig();
     	synchronized (sUserServicesEnabledGuard) {
     		return sUserServicesEnabled;
         }
