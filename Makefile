@@ -12,8 +12,8 @@ ifeq ($(BUILD_PLATFORM), MACOSX)
 JAVAINC := -I/System/Library/Frameworks/JavaVM.framework/Headers
 SHARED := -dynamiclib
 MACDEF := -DDARWIN
-SHARED_EXT := dylib
-LIB_OPTS := -install_name /opt/zimbra/lib/libzimbra-native.dylib
+SHARED_EXT := jnilib
+LIB_OPTS := -install_name /opt/zimbra/lib/libzimbra-native.$(SHARED_EXT)
 endif
 
 CLASSES = $(BUILD)/classes
