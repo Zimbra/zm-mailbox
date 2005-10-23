@@ -268,7 +268,7 @@ public class OzConnection {
         }
         
         if (bytesRead == -1) {
-            mLog.info("client closed connection");
+            if (mLog.isDebugEnabled()) mLog.debug("read detected that client closed connection");
             mServer.execute(mHandleDisconnectTask);
             return;
         }

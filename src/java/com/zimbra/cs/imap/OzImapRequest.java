@@ -36,6 +36,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.imap.ImapSession.ImapFlag;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * NB: Copied from ImapRequest.java on October 20, 2005 - while there
@@ -128,7 +129,7 @@ class OzImapRequest {
         Object part = mParts.get(mIndex);
         if (part instanceof String && mOffset < ((String) part).length() && ((String) part).charAt(mOffset) == c)
             mOffset++;
-        else
+        else 
             throw new ImapParseException(mTag, "end of line or wrong character; expected '" + c + '\'');
     }
 
@@ -162,7 +163,9 @@ class OzImapRequest {
     }
 
     private String readContent(boolean[] acceptable) throws ImapParseException {
-        return readContent(getCurrentLine(), mOffset, mTag, acceptable);
+        String result = readContent(getCurrentLine(), mOffset, mTag, acceptable);
+        mOffset += result.length();
+        return result;
     }
     
     private static String readContent(String content, int offset, String tag, boolean[] acceptable) throws ImapParseException {
