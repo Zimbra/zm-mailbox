@@ -500,6 +500,14 @@
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="CreateServer ${zimbra.server.hostname} zimbraSmtpHostname ${zimbra.smtp.host} zimbraMailPort 7070 zimbraImapCleartextLoginEnabled TRUE" />
 		</java>
+		<echo>Setting installed-service attributes on server ${zimbra.server.hostname}</echo>
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="ModifyServer ${zimbra.server.hostname} zimbraServiceInstalled ldap zimbraServiceInstalled mta zimbraServiceInstalled mailbox" />
+		</java>
+		<echo>Setting enabled-service attributes on server ${zimbra.server.hostname}</echo>
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="ModifyServer ${zimbra.server.hostname} zimbraServiceEnabled ldap zimbraServiceEnabled mta zimbraServiceEnabled mailbox" />
+		</java>
 		<echo>Creating domain: ${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="cd ${zimbra.server.hostname}" />
