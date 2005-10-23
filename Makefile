@@ -7,10 +7,13 @@ BUILD_PLATFORM := $(shell sh $(BUILD_ROOT)/../ZimbraBuild/rpmconf/Build/get_plat
 
 SHARED := -shared
 JAVAINC := -I/usr/local/java/include -I/usr/local/java/include/linux
+SHARED_EXT := so
 ifeq ($(BUILD_PLATFORM), MACOSX)
 JAVAINC := -I/System/Library/Frameworks/JavaVM.framework/Headers
 SHARED := -dynamiclib
 MACDEF := -DDARWIN
+SHARED_EXT := dylib
+LIB_OPTS := -install_name /opt/zimbra/lib/libzimbra-native.dylib
 endif
 
 CLASSES = $(BUILD)/classes
@@ -31,7 +34,7 @@ JAVA_CLASSES = $(patsubst %,$(CLASSES)/%,$(JAVA_FILES:%.java=%.class))
 
 all: FORCE
 	$(MAKE) $(BUILD)/zimbra-native.jar
-	$(MAKE) $(BUILD)/libzimbra-native.so
+	$(MAKE) $(BUILD)/libzimbra-native.$(SHARED_EXT)
 	$(MAKE) $(BUILD)/zmtomcatstart
 
 #
@@ -61,8 +64,8 @@ remove_classes_list: FORCE
 
 FORCE: ;
 
-$(BUILD)/libzimbra-native.so: $(BUILD)/IO.o $(BUILD)/Process.o $(BUILD)/zjniutil.o
-	gcc $(SHARED) -o $@ $^
+$(BUILD)/libzimbra-native.$(SHARED_EXT): $(BUILD)/IO.o $(BUILD)/Process.o $(BUILD)/zjniutil.o
+	gcc $(LIB_OPTS) $(SHARED) -o $@ $^
 
 $(BUILD)/%.o: $(SRC)/native/%.c
 	gcc $(MACDEF) $(JAVAINC) -I$(BUILD) -Wall -Wmissing-prototypes -c -o $@ $<
@@ -107,7 +110,7 @@ $(BUILD)/zmtomcatstart: $(SRC)/launcher/zmtomcatstart.c
 #
 push:
 	cp $(BUILD)/zimbra-native.jar ../ZimbraServer/jars
-	cp $(BUILD)/libzimbra-native.so ../ZimbraServer/lib
+	cp $(BUILD)/libzimbra-native.$(SHARED_EXT) ../ZimbraServer/lib
 
 #
 # Clean
