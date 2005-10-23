@@ -87,7 +87,10 @@ class OzImapRequest {
         mSession = session;
     }
 
-    public OzImapRequest(String tag, ArrayList currentRequest, ImapSession session) {
+    public OzImapRequest(String tag, ArrayList currentRequestParts, ImapSession session) {
+        mSession = session;
+        mTag = tag;
+        mParts = currentRequestParts;
     }
 
     OzImapRequest rewind()  { mIndex = mOffset = 0;  mTag = null;  return this; }

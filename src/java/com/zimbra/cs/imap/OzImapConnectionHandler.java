@@ -1983,9 +1983,11 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
             if (matched) {
                 String line = currentDataToAsciiString();
                 
+                /* Is this the first line of this request? If so, then let's try
+                 * to parse the tag from it so we can report tagged BADs if
+                 * needed. TODO should we also strip the tag here?
+                 */
                 if (mCurrentRequestData.size() == 0) {
-                    // First line of input inside this request, see if we can steal a tag
-                    // out of this.
                     try {
                         mCurrentRequestTag = OzImapRequest.readTag(line);
                     } catch (ImapParseException ipe) {
@@ -1995,8 +1997,8 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
                     }
                 }
                 
+                /* See if there is a literal at the end of this line. */
                 ImapLiteral literal;
-                
                 try {
                     literal = ImapLiteral.parse(mCurrentRequestTag, line);
                 } catch (ImapParseException ipe) {
@@ -2005,10 +2007,14 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
                     return;
                 }
 
-                // Trimming first takes care of swallowing {0+} zero
-                // length continuation edge case.
-                line = line.substring(0, line.length() - literal.length()); 
+                /* If there was a literal, remove it. */
+                if (literal.length() > 0) {
+                    line = line.substring(0, line.length() - literal.length());
+                }
 
+                /* Add either the literal removed line or a no-literal present at all
+                 * line to the request in flight.
+                 */ 
                 mCurrentRequestData.add(line);
 
                 if (literal.octets() > 0) {

@@ -26,7 +26,6 @@ package com.zimbra.cs.ozserver;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.CancelledKeyException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.LinkedList;
@@ -136,7 +135,14 @@ public class OzConnection {
             mLog.info("connected buf=" + OzUtil.intToHexString(mReadBuffer.hashCode(), 0, ' ') + " " + mChannel);
             mSelectionKey = channel.register(server.getSelector(), 0, this); 
             mConnectionHandler = server.newConnectionHandler(this);
-            mConnectionHandler.handleConnect();
+            try {
+                /* TODO - this should be a task */
+                mConnectionHandler.handleConnect();
+            } catch (Throwable t) {
+                mLog.warn("exception occurrent handling connect; will close connection", t);
+                closeNow();
+                return;
+            }
             enableReadInterest();
         } finally {
             clearFromNDC();
@@ -157,9 +163,11 @@ public class OzConnection {
             private void run0() {
                 mLog.info("closing");
                 try {
-                    mChannel.close();
+                    if (mChannel.isOpen()) {
+                        mChannel.close();
+                    }
                 } catch (IOException ioe) {
-                    mLog.warn("error closing", ioe);
+                    mLog.warn("exception closing channel, ignoring and continuing", ioe);
                 }
                 mSelectionKey.cancel();
                 synchronized (mReadBufferLock) {
@@ -170,6 +178,7 @@ public class OzConnection {
                 }
             }
         };
+        
         mServer.runTaskInServerThread(closeTask);
     }
     
@@ -181,14 +190,32 @@ public class OzConnection {
     
     private class HandleDisconnectTask implements Runnable {
     	public void run() {
+    	    boolean closed = false;
             try {
-                addToNDC();
-                mConnectionHandler.handleDisconnect();
-                closeNow();
-            } finally {
-                clearFromNDC();
+                try {
+                    addToNDC();
+                    mConnectionHandler.handleDisconnect();
+                    closeNow();
+                    closed = true;
+                } finally {
+                    clearFromNDC();
+                }
+            } catch (Throwable t) {
+                mLog.warn("exception occurred while handling disconnect", t);
+                if (!closed) {
+                    /*
+                     * Not catching any Throwables from closeNow()
+                     * intentionally. closeNow() runs in server thread, so any
+                     * exception it raises are ignored in the main server loop.
+                     * If closeNow() failure is not being able to create the
+                     * task object or to add that task object to the queue, that
+                     * means the server is fubar - so don't bother to be
+                     * graceful in a worker thread.
+                     */
+                    closeNow();
+                }
             }
-    	}
+        }
     }
     
     private HandleReadTask mHandleReadTask = new HandleReadTask();
@@ -198,35 +225,28 @@ public class OzConnection {
             try {
                 addToNDC();
                 run0();
+            } catch (Throwable t) {
+                if (mChannel.isOpen()) {
+                    mLog.warn("exception occured handling read; will close connection", t);
+                } else {
+                    // someone else may have closed the channel, eg, a shutdown or
+                    // client went away, etc. Consider this case to be normal.
+                    if (mLog.isDebugEnabled()) {
+                        mLog.debug("ignorable (" + t.getClass().getName() + ") when reading, connection already closed", t); 
+                    }
+                }
+                closeNow();
             } finally {
                 clearFromNDC();
             }
         }
         
-        private void run0() {
-            Exception e = null;
-            try {
-                synchronized (mReadBufferLock) {
-                    if (mReadBuffer == null) {
-                        mLog.info("connection ready to read, but already closed");
-                    } else {
-                        processReadBufferLocked();
-                    }
-                }
-            } catch (IOException ioe) {
-                e = ioe;
-            } catch (CancelledKeyException cke) {
-                e = cke;
-            }
-            if (e != null) {
-                if (mChannel.isOpen()) {
-                    mLog.warn("exception during read", e);
-                    closeNow();
+        private void run0() throws IOException {
+            synchronized (mReadBufferLock) {
+                if (mReadBuffer == null) {
+                    mLog.info("connection ready to read, but already closed");
                 } else {
-                    // someone else may have closed the channel - a shutdown or client went away, etc.
-                    if (mLog.isDebugEnabled()) {
-                        mLog.debug("ignorable " + e + " when reading, connection already closed", e); 
-                    }
+                    processReadBufferLocked();
                 }
             }
         }
@@ -248,13 +268,13 @@ public class OzConnection {
         }
         
         if (bytesRead == -1) {
-            mLog.info("client closed channel " + mChannel);
+            mLog.info("client closed connection");
             mServer.execute(mHandleDisconnectTask);
             return;
         }
         
         if (bytesRead == 0) {
-            mLog.warn("got 0 bytes on supposedly read ready channel " + mChannel);
+            mLog.warn("got 0 bytes on supposedly read ready channel");
             return;
         }
 

@@ -48,6 +48,7 @@ public class OzByteBufferGatherer {
         int remaining = buffer.remaining();
         ensureCapacity(remaining);
         buffer.get(mBuffer, mPosition, remaining);
+        mPosition += remaining;
     }
     
     private void ensureCapacity(int forThisManyMore) {

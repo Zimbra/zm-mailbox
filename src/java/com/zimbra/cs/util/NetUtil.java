@@ -75,7 +75,7 @@ public class NetUtil {
         System.err.println("Zimbra server reserving server socket port=" + port + " bindaddr=" + address);
         String key = makeKey(address, port, ssl);
         ServerSocket serverSocket = NetUtil.newBoundServerSocket(address, port, ssl);
-        System.err.println("put table=" + mBoundSockets.hashCode() + " key=" + key + " sock=" + serverSocket);
+        //System.err.println("put table=" + mBoundSockets.hashCode() + " key=" + key + " sock=" + serverSocket);
         mBoundSockets.put(makeKey(address, port, ssl), serverSocket);
         //dumpMap();
     }
@@ -84,7 +84,7 @@ public class NetUtil {
         //dumpMap();
         String key = makeKey(address, port, ssl);
         ServerSocket serverSocket = (ServerSocket)mBoundSockets.get(key);
-        System.err.println("get table=" + mBoundSockets.hashCode() + " key=" + key + " sock=" + serverSocket);
+        //System.err.println("get table=" + mBoundSockets.hashCode() + " key=" + key + " sock=" + serverSocket);
         return serverSocket;
     }
 }

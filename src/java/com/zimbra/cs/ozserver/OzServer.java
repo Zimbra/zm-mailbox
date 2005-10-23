@@ -115,7 +115,7 @@ public class OzServer {
                     Runnable task = (Runnable) taskIter.next();
                     try {
                         task.run();
-                    } catch (Exception e) {
+                    } catch (Throwable e) {
                         mLog.warn("ignoring exception that occurred while running server thread tasks", e);
                     }
                 }
@@ -147,63 +147,43 @@ public class OzServer {
                 SelectionKey readyKey = (SelectionKey) iter.next();
                 iter.remove();
 
-                if (readyKey.isValid()) {
-                    synchronized (readyKey) {
-                        OzConnection.logKey(mLog, readyKey, "ready acceptable key");
-                    }
-                } else {
-                    synchronized (readyKey) {
-                        OzConnection.logKey(mLog, readyKey, "selected ready key");
-                    }
-                    if (readyKey.attachment() != null && readyKey.attachment() instanceof OzConnection) {
-                        OzConnection ch = (OzConnection)readyKey.attachment();
-                        mLog.warn("ready key was invalid cid=" + ch.getId() + " ip=" + ch.getRemoteAddress());
-                    }
-                    // TODO should we remove this key from selector, close connection?
-                    continue;
+                OzConnection selectedConnection = null; 
+                if (readyKey.attachment() != null && readyKey.attachment() instanceof OzConnection) {
+                    selectedConnection = (OzConnection)readyKey.attachment();
+                    selectedConnection.addToNDC();
                 }
-                
-                if (readyKey.isAcceptable()) {
 
-                    OzConnection connection = null;
-                    try {
+                try {
+                    synchronized (readyKey) {
+                        OzConnection.logKey(mLog, readyKey, "ready key");
+                    }
+                    
+                    if (!readyKey.isValid()) {
+                        continue;
+                    }
+                    
+                    if (readyKey.isAcceptable()) {
                         Socket newSocket = mServerSocket.accept();
                         SocketChannel newChannel = newSocket.getChannel(); 
                         newChannel.configureBlocking(false);
-                        connection = new OzConnection(OzServer.this, newChannel);
-                    } catch (Exception e) {
-                        mLog.warn("ignoring exception that occurred while handling acceptable key", e);
-                        if (connection != null) {
-                            connection.closeNow();
-                        }
+                        selectedConnection= new OzConnection(OzServer.this, newChannel);
                     }
-                }
-                
-                if (readyKey.isReadable()) {
-                    OzConnection connection = null;
-                    try {
-                        connection = (OzConnection)readyKey.attachment();
-                        connection.addToNDC();
-                        connection.doRead();
-                    } catch (Exception e) {
-                        mLog.warn("ignoring exception that occurred while handling readable key", e);
-                        connection.closeNow();
-                    } finally {
-                        connection.clearFromNDC();
+                    
+                    if (readyKey.isReadable()) {
+                        selectedConnection.doRead();
                     }
-                }
-                
-                if (readyKey.isWritable()) {
-                    OzConnection connection = null;
-                    try {
-                        connection = (OzConnection)readyKey.attachment();
-                        connection.addToNDC();
-                        connection.doWrite();
-                    } catch (Exception e) {
-                        mLog.warn("ignoring exception that occurred while handling writable key", e);
-                        connection.closeNow();
-                    } finally {
-                        connection.clearFromNDC();
+                    
+                    if (readyKey.isWritable()) {
+                        selectedConnection.doWrite();
+                    }
+                } catch (Throwable t) {
+                    mLog.warn("ignoring exception that occurred while handling selected key", t);
+                    if (selectedConnection != null) {
+                        selectedConnection.closeNow();
+                    }
+                } finally {
+                    if (selectedConnection != null) {
+                        selectedConnection.clearFromNDC();
                     }
                 }
                 
@@ -304,6 +284,7 @@ public class OzServer {
             synchronized (mServerThreadTasks) {
                 mServerThreadTasks.add(task);
             }
+            mSelector.wakeup();
         }
     }
     
@@ -313,7 +294,6 @@ public class OzServer {
         try {
             mPooledExecutor.execute(task);
         } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
