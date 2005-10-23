@@ -70,6 +70,8 @@ import com.zimbra.cs.util.ZimbraLog;
  */
 public class OzImapConnectionHandler implements OzConnectionHandler {
 
+    public static final String PROPERTY_ALLOW_CLEARTEXT_LOGINS = "imap.allows.cleartext.logins"; 
+    
     static final char[] LINE_SEPARATOR       = { '\r', '\n' };
     static final byte[] LINE_SEPARATOR_BYTES = { '\r', '\n' };
 
@@ -522,6 +524,10 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
         return CONTINUE_PROCESSING;
     }
 
+    private boolean allowCleartextLogin() {
+        return Boolean.valueOf(mConnection.getProperty(PROPERTY_ALLOW_CLEARTEXT_LOGINS, Boolean.FALSE.toString())).booleanValue();
+    }
+    
     private void sendCapability() throws IOException {
         // [IMAP4rev1]        RFC 3501: Internet Message Access Protocol - Version 4rev1
         // [LOGINDISABLED]    RFC 3501: Internet Message Access Protocol - Version 4rev1
@@ -537,7 +543,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
         // [UIDPLUS]          RFC 2359: IMAP4 UIDPLUS extension
         // [UNSELECT]         RFC 3691: IMAP UNSELECT command
         boolean authenticated = mSession != null;
-        String nologin = OzImapServer.allowCleartextLogins() || mStartedTLS || authenticated ? "" : "LOGINDISABLED ";
+        String nologin =  allowCleartextLogin() || mStartedTLS || authenticated ? "" : "LOGINDISABLED ";
         String starttls = mStartedTLS || authenticated ? "" : "STARTTLS ";
         String plain = !mStartedTLS || authenticated ? "" : "AUTH=PLAIN "; 
         sendUntagged("CAPABILITY IMAP4rev1 " + nologin + starttls + "CHILDREN ID IDLE LITERAL+ LOGIN-REFERRALS NAMESPACE QUOTA UIDPLUS UNSELECT");
@@ -582,7 +588,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
     }
 
     boolean doLOGOUT(String tag) throws IOException {
-        sendUntagged(OzImapServer.getGoodbye());
+        sendUntagged(ImapServer.getGoodbye());
         if (mSession != null)
             mSession.loggedOut();
         mGoodbyeSent = true;
@@ -593,7 +599,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
     boolean doLOGIN(String tag, List args) throws IOException {
         if (!checkState(tag, ImapSession.STATE_NOT_AUTHENTICATED))
             return CONTINUE_PROCESSING;
-        else if (!mStartedTLS && !OzImapServer.allowCleartextLogins()) {
+        else if (!mStartedTLS && !allowCleartextLogin()) {
             sendNO(tag, "cleartext logins disabled");
             return CONTINUE_PROCESSING;
         }
@@ -1914,7 +1920,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
             if (connectionStillOpen) {
                 try {
                     if (!mGoodbyeSent) {
-                        sendUntagged(OzImapServer.getGoodbye(), true);
+                        sendUntagged(ImapServer.getGoodbye(), true);
                     }
                     mGoodbyeSent = true;
                 } catch (IOException e) {
@@ -1933,7 +1939,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
             gotoClosedState(true);
             ZimbraLog.imap.debug("services disabled");
         } else {
-            sendUntagged(OzImapServer.getBanner(), true);
+            sendUntagged(ImapServer.getBanner(), true);
             gotoReadLineState(true);
         }
 	}

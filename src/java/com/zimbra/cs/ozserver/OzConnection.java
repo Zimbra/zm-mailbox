@@ -28,8 +28,10 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 
@@ -471,4 +473,21 @@ public class OzConnection {
         }
     }
 
+    private Map mProperties = new HashMap();
+    
+    public String getProperty(String key, String defaultValue) {
+        synchronized (mProperties) {
+            String result = (String)mProperties.get(key);
+            if (result == null) {
+                result = mServer.getProperty(key, defaultValue);
+            }
+            return result;
+        }
+    }
+    
+    public void setProperty(String key, String value) {
+        synchronized (mProperties) {
+            mProperties.put(key, value);
+        }
+    }
 }

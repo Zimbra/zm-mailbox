@@ -43,24 +43,6 @@ import com.zimbra.cs.util.ZimbraLog;
 public class OzImapServer {
     private static OzServer mServer;
     
-    private static String mBanner;
-    
-    private static String mGoodbye;
-    
-    private static boolean mAllowCleartextLogins;
-    
-    public static String getBanner() {
-        return mBanner;
-    }
-    
-    public static String getGoodbye() {
-        return mGoodbye;
-    }
-    
-    public static boolean allowCleartextLogins() {
-        return mAllowCleartextLogins;
-    }
-    
     public static void main(String[] args) throws ServiceException, IOException {
         Zimbra.toolSetup("DEBUG", true);
         startup();
@@ -79,7 +61,7 @@ public class OzImapServer {
         };
 
         Server server = Provisioning.getInstance().getLocalServer();
-        mAllowCleartextLogins = server.getBooleanAttr(Provisioning.A_zimbraImapCleartextLoginEnabled, false);
+        boolean allowCleartextLogins = server.getBooleanAttr(Provisioning.A_zimbraImapCleartextLoginEnabled, false);
         String address = server.getAttr(Provisioning.A_zimbraImapBindAddress, null);
         int port = server.getIntAttr(Provisioning.A_zimbraImapBindPort, Config.D_IMAP_BIND_PORT);
 
@@ -94,9 +76,6 @@ public class OzImapServer {
             name = server.getAttr(Provisioning.A_zimbraServiceHostname, null);
         if (name == null || name.trim().equals(""))
             name = "localhost";
-        
-        mBanner  = "OK " + name + " Zimbra IMAP4rev1 service ready";
-        mGoodbye = "BYE Zimbra IMAP4rev1 server terminating connection";
     }
     
     public synchronized static void shutdown() {

@@ -28,16 +28,24 @@
  */
 package com.zimbra.cs.imap;
 
+import java.io.IOException;
 import java.net.ServerSocket;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.localconfig.LC;
+import com.zimbra.cs.ozserver.OzConnection;
+import com.zimbra.cs.ozserver.OzConnectionHandler;
+import com.zimbra.cs.ozserver.OzConnectionHandlerFactory;
+import com.zimbra.cs.ozserver.OzServer;
+import com.zimbra.cs.ozserver.OzSnooper;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServer;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.NetUtil;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * @author dkarp
@@ -48,11 +56,9 @@ public class ImapServer extends TcpServer {
     public static final int DEFAULT_MAX_IDLE_SECONDS = 1800;
     private int mConfigMaxIdleMilliSeconds = DEFAULT_MAX_IDLE_SECONDS * 1000;
 
-    private static ImapServer sImapServer;
+    private static Object sImapServer;
     private static ImapServer sImapSSLServer;
 
-    private String  mBanner;
-    private String  mGoodbye;
     private boolean mAllowCleartextLogins;
     private boolean mConnectionSSL;
 
@@ -74,20 +80,14 @@ public class ImapServer extends TcpServer {
 		return mConfigMaxIdleMilliSeconds;
 	}
 
-    private void setHostname(Server server) {
-        String name = server.getAttr(Provisioning.A_zimbraImapAdvertisedName, null);
-        if (name == null || name.trim().equals(""))
-            name = server.getAttr(Provisioning.A_zimbraServiceHostname, null);
-        if (name == null || name.trim().equals(""))
-            name = "localhost";
-
-        mBanner  = "OK " + name + " Zimbra IMAP4rev1 service ready";
-        mGoodbye = "BYE Zimbra IMAP4rev1 server terminating connection";
+    static String getBanner() {
+        return "OK " + LC.zimbra_server_hostname.value() + " Zimbra IMAP4rev1 service ready";
     }
-
-    public String getBanner()  { return mBanner; }
-    public String getGoodbye() { return mGoodbye; }
-
+    
+    static String getGoodbye() {
+        return "BYE Zimbra IMAP4rev1 server terminating connection";
+    }
+    
     public synchronized static void startupImapServer() throws ServiceException {
         if (sImapServer != null)
             return;
@@ -100,13 +100,34 @@ public class ImapServer extends TcpServer {
 
         ServerSocket serverSocket = NetUtil.getBoundServerSocket(address, port, false);
 
-        sImapServer = new ImapServer(threads, serverSocket, loginOK, false);
-        sImapServer.setSSL(false);
-        sImapServer.setHostname(server);
-        
-        Thread imap = new Thread(sImapServer);
-        imap.setName("ImapServer");
-        imap.start();            
+        if (LC.get("debug_ozimap_enable").equalsIgnoreCase("true")) {
+            ZimbraLog.imap.warn("Enabling NIO based non-SSL IMAP server, it does not support STARTTLS yet!");
+            OzConnectionHandlerFactory imapHandlerFactory = new OzConnectionHandlerFactory() {
+                public OzConnectionHandler newConnectionHandler(OzConnection conn) {
+                    return new OzImapConnectionHandler(conn);
+                }
+            };
+
+            int readBufferSize = 1000; // TODO from config
+            try {
+                OzServer ozserver = new OzServer("IMAP", readBufferSize, serverSocket, imapHandlerFactory, ZimbraLog.imap);
+                ozserver.setProperty(OzImapConnectionHandler.PROPERTY_ALLOW_CLEARTEXT_LOGINS, Boolean.toString(loginOK));
+                if (LC.get("debug_ozimap_snoop").equalsIgnoreCase("true")) {
+                    ozserver.setSnooper(new OzSnooper(ZimbraLog.imap, OzSnooper.ALL));
+                }
+                ozserver.start();
+                sImapServer = ozserver;
+            } catch (IOException ioe) {
+                Zimbra.halt("failed to create OzServer for IMAP", ioe);
+            }
+        } else {
+            ImapServer imapServer = new ImapServer(threads, serverSocket, loginOK, false);
+            imapServer.setSSL(false);
+            sImapServer = imapServer;
+            Thread imap = new Thread(imapServer);
+            imap.setName("ImapServer");
+            imap.start();
+        }
     }
 
     public synchronized static void startupImapSSLServer() throws ServiceException {
@@ -122,7 +143,6 @@ public class ImapServer extends TcpServer {
         
         sImapSSLServer = new ImapServer(threads, serverSocket, true, true);
         sImapSSLServer.setSSL(true);
-        sImapSSLServer.setHostname(server);
 
         Thread imaps = new Thread(sImapSSLServer);
         imaps.setName("ImapSSLServer");
@@ -130,9 +150,14 @@ public class ImapServer extends TcpServer {
     }
 
     public synchronized static void shutdownImapServers() {
-        if (sImapServer != null)
-            sImapServer.shutdown(10); // TODO shutdown grace period from config
-        sImapServer = null;
+        if (sImapServer != null) {
+            if (sImapServer instanceof ImapServer) {
+                ((ImapServer)sImapServer).shutdown(10); // TODO shutdown grace period from config
+            } else if (sImapServer instanceof OzServer) {
+                ((OzServer)sImapServer).shutdown();
+            }
+            sImapServer = null;
+        }
 
         if (sImapSSLServer != null)
             sImapSSLServer.shutdown(10); // TODO shutdown grace period from config

@@ -126,8 +126,29 @@ public class PrivilegedServlet extends HttpServlet {
             if (Process.getegid() == 0) {
                 halt("can not start server with effective gid of 0");
             }
+            
+            synchronized (mInitializedCondition) {
+                mInitialized = true;
+                mInitializedCondition.notifyAll();
+            }
         } catch (Throwable t) {
             halt("PrivilegedServlet init failed", t);
+        }
+    }
+    
+    private static boolean mInitialized = false;
+
+    private static Object mInitializedCondition = new Object(); 
+        
+    public static void waitForInitialization() {
+        synchronized (mInitializedCondition) {
+            while (!mInitialized) {
+                try {
+                    mInitializedCondition.wait();
+                } catch (InterruptedException ie) {
+                    ie.printStackTrace();
+                }
+            }
         }
     }
     

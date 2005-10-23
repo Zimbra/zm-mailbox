@@ -32,8 +32,10 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.logging.Log;
@@ -174,7 +176,15 @@ public class OzServer {
                     }
                     
                     if (readyKey.isWritable()) {
-                        selectedConnection.doWrite();
+                        try {
+                            selectedConnection.doWrite();
+                        } catch (IOException ioe) {
+                            /* When write is a real task we won't have to do this. */
+                            if (mLog.isDebugEnabled()) {
+                                mLog.debug("exception writing, closing connection", ioe);
+                            }
+                            selectedConnection.closeNow();
+                        }
                     }
                 } catch (Throwable t) {
                     mLog.warn("ignoring exception that occurred while handling selected key", t);
@@ -354,4 +364,24 @@ public class OzServer {
     Log getLog() {
         return mLog;
     }
+
+    private Map mProperties = new HashMap();
+    
+    public String getProperty(String key, String defaultValue) {
+        synchronized (mProperties) {
+            String result = (String)mProperties.get(key);
+            if (result == null) {
+                result = defaultValue;
+            }
+            return result;
+        }
+    }
+    
+    public void setProperty(String key, String value) {
+        synchronized (mProperties) {
+            mProperties.put(key, value);
+        }
+    }
 }
+
+

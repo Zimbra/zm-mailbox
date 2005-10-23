@@ -98,7 +98,7 @@ public class ImapHandler extends ProtocolHandler {
             return false;
         }
 
-        sendUntagged(mServer.getBanner(), true);
+        sendUntagged(ImapServer.getBanner(), true);
         return true;
     }
 
@@ -639,7 +639,7 @@ public class ImapHandler extends ProtocolHandler {
     }
 
     boolean doLOGOUT(String tag) throws IOException {
-        sendUntagged(mServer.getGoodbye());
+        sendUntagged(ImapServer.getGoodbye());
         if (mSession != null)
             mSession.loggedOut();
         mGoodbyeSent = true;
@@ -1901,7 +1901,7 @@ public class ImapHandler extends ProtocolHandler {
         try {
             if (mOutputStream != null) {
                 if (!mGoodbyeSent)
-                    sendUntagged(mServer.getGoodbye(), true);
+                    sendUntagged(ImapServer.getGoodbye(), true);
                 mGoodbyeSent = true;
                 mOutputStream.close();
                 mOutputStream = null;

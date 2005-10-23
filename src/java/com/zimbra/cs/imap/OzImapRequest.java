@@ -36,7 +36,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.imap.ImapSession.ImapFlag;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * NB: Copied from ImapRequest.java on October 20, 2005 - while there
