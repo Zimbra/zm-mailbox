@@ -52,8 +52,11 @@ public class VolumeServiceException extends ServiceException {
         return new VolumeServiceException("no such volume: "+ id, NO_SUCH_VOLUME, SENDERS_FAULT, null);
     }
 
-    public static VolumeServiceException ALREADY_EXISTS(int id, Throwable t) {
-        return new VolumeServiceException("volume with that id already exists: " + id, ALREADY_EXISTS, SENDERS_FAULT, t);
+    public static VolumeServiceException ALREADY_EXISTS(int id, String name, String path, Throwable t) {
+        return new VolumeServiceException(
+            "volume with the same id, name, or path already exists: (id=" +
+            id + ", name=\"" + name + "\", path=" + path + ")",
+            ALREADY_EXISTS, SENDERS_FAULT, t);
     }
 
     public static VolumeServiceException CANNOT_DELETE_CURRVOL(int id, String volType) {

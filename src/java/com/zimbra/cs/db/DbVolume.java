@@ -91,7 +91,7 @@ public class DbVolume {
             stmt.executeUpdate();
         } catch (SQLException e) {
             if (e.getErrorCode() == Db.Error.DUPLICATE_ROW)
-                throw VolumeServiceException.ALREADY_EXISTS(nextId, e);
+                throw VolumeServiceException.ALREADY_EXISTS(nextId, name, path, e);
             else
                 throw ServiceException.FAILURE("inserting new volume " + nextId, e);
         } finally {
@@ -128,7 +128,10 @@ public class DbVolume {
             stmt.setShort(pos++, id);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("updating volume " + id, e);
+            if (e.getErrorCode() == Db.Error.DUPLICATE_ROW)
+                throw VolumeServiceException.ALREADY_EXISTS(id, name, path, e);
+            else
+                throw ServiceException.FAILURE("updating volume " + id, e);
         } finally {
             DbPool.closeStatement(stmt);
         }
