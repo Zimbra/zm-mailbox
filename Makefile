@@ -40,7 +40,7 @@ all: FORCE
 #
 # Build jar file that wraps native code and it's shared library.
 #
-$(BUILD)/zimbra-native.jar: remove_classes_list src/java/com/zimbra/znative/Util.java $(JAVA_CLASSES) 
+$(BUILD)/zimbra-native.jar: remove_classes_list $(JAVA_CLASSES) 
 	mkdir -p $(CLASSES)
 	@CLASSES_LIST="$(shell cat $(BUILD)/.classes.list)"; \
 	    if [ -n "$$CLASSES_LIST" ]; then \
@@ -53,11 +53,6 @@ $(BUILD)/zimbra-native.jar: remove_classes_list src/java/com/zimbra/znative/Util
 		$(RM) $@; \
 	    fi
 	jar c0vf $@ -C $(CLASSES) com;
-
-src/java/com/zimbra/znative/Util.java:
-	cat src/java/com/zimbra/znative/Util.java.in | \
-		sed -e "s/@@LIBEXT@@/$(SHARED_EXT)/" > \
-		src/java/com/zimbra/znative/Util.java
 
 $(CLASSES)/%.class: $(SRC)/java/%.java
 	@echo $< >> $(BUILD)/.classes.list
@@ -113,8 +108,10 @@ $(BUILD)/zmtomcatstart: $(SRC)/launcher/zmtomcatstart.c
 # Hack to copy to destination for use on incremental builds in a linux
 # dev environment.
 #
-push:
+push: all
+	p4 edit ../ZimbraServer/jars/zimbra-native.jar
 	cp $(BUILD)/zimbra-native.jar ../ZimbraServer/jars
+	p4 edit ../ZimbraServer/lib/libzimbra-native.$(SHARED_EXT)
 	cp $(BUILD)/libzimbra-native.$(SHARED_EXT) ../ZimbraServer/lib
 
 #
@@ -122,6 +119,5 @@ push:
 #
 clean:
 	$(RM) -r $(BUILD)
-	$(RM) src/java/com/zimbra/znative/Util.java
 
 .PHONY: all push clean
