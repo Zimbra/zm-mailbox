@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import javax.mail.internet.MailDateFormat;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -93,7 +92,6 @@ public class RssServlet extends ZimbraBasicAuthServlet {
             OperationContext octxt = new OperationContext(acct);
             results = mailbox.search(octxt, query, new byte[] { MailItem.TYPE_MESSAGE }, MailboxIndex.SEARCH_ORDER_DATE_DESC, 500);
             SimpleDateFormat sdf = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
-            MailDateFormat mdf = new MailDateFormat();                
             while (results.hasNext()) {
                 ZimbraHit hit = results.getNext();
                 if (hit instanceof MessageHit) {
@@ -105,11 +103,9 @@ public class RssServlet extends ZimbraBasicAuthServlet {
                     item.addElement("author").setText(m.getSender());
                     item.addElement("pubDate").setText(sdf.format(new Date(m.getDate())));
                     /* TODO: guid, links, etc */
-                    /*
-                     Element guid = item.addElement("guid");
-                     guid.setText(acct.getName()+m.getId());
-                     guid.addAttribute("isPermaLink", "false");
-                     */
+                    // Element guid = item.addElement("guid");
+                    // guid.setText(acct.getId()+"/"+m.getId());
+                    // guid.addAttribute("isPermaLink", "false");
                 }
             }
         } catch (IOException e) {

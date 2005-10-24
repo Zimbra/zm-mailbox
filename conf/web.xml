@@ -153,6 +153,11 @@
   </servlet-mapping>
 
   <servlet-mapping>
+    <servlet-name>iCalServlet</servlet-name>
+    <url-pattern>/calendar/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
     <servlet-name>CsvServlet</servlet-name>
     <url-pattern>/csv/*</url-pattern>
   </servlet-mapping>
