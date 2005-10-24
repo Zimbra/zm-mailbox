@@ -330,7 +330,7 @@
 		<copy todir="${dist.db.dir}" file="${src.db.dir}/db.sql" />
 		<copy todir="${dist.db.dir}" file="${build.dir}/versions-init.sql" />
 		<copy todir="${dist.lib.dir}">
-			<fileset dir="${lib.dir}" includes="lib*.so" />
+			<fileset dir="${lib.dir}" includes="libzimbra-native.*" />
 		</copy>
 		<copy todir="${dist.ext.dir}" >
 			<fileset dir="${ext.dir}" includes="*/*.jar" />
@@ -563,7 +563,7 @@
 
 	<target name="tomcat-init-unix" if="is-unix">
 		<copy todir="${zimbra.home.dir}/lib">
-			<fileset dir="${lib.dir}" includes="lib*.so" />
+			<fileset dir="${lib.dir}" includes="libzimbra-native.*" />
 		</copy>
 		<copy todir="${zimbra.home.dir}/bin">
 			<fileset dir="${src.bin.dir}" includes="*" />
