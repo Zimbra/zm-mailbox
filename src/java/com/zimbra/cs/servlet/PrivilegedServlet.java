@@ -25,9 +25,6 @@
 
 package com.zimbra.cs.servlet;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-
 import javax.naming.directory.DirContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -41,6 +38,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.NetUtil;
 import com.zimbra.znative.Process;
+import com.zimbra.znative.Util;
 
 /**
  * Bind to all necessary privileged ports and then drop privilege.
@@ -115,16 +113,16 @@ public class PrivilegedServlet extends HttpServlet {
             }
             
             if (Process.getuid() == 0) {
-                halt("can not start server with uid of 0");
+                Util.halt("can not start server with uid of 0");
             }
             if (Process.geteuid() == 0) {
-                halt("can not start server with effective uid of 0");
+                Util.halt("can not start server with effective uid of 0");
             }
             if (Process.getgid() == 0) {
-                halt("can not start server with gid of 0");
+                Util.halt("can not start server with gid of 0");
             }
             if (Process.getegid() == 0) {
-                halt("can not start server with effective gid of 0");
+                Util.halt("can not start server with effective gid of 0");
             }
             
             synchronized (mInitializedCondition) {
@@ -132,7 +130,7 @@ public class PrivilegedServlet extends HttpServlet {
                 mInitializedCondition.notifyAll();
             }
         } catch (Throwable t) {
-            halt("PrivilegedServlet init failed", t);
+            Util.halt("PrivilegedServlet init failed", t);
         }
     }
     
@@ -151,38 +149,4 @@ public class PrivilegedServlet extends HttpServlet {
             }
         }
     }
-    
-    /**
-     * Logs the given message and shuts down the server.
-     * log4j has not been initialized yet, so we can't use Zimbra.halt.
-     * 
-     * @param message the message to log before shutting down
-     */
-    public static void halt(String message) {
-        try {
-            System.err.println(message);
-        } finally {
-            Runtime.getRuntime().halt(1);
-        }
-    }
-
-    /**
-     * Logs the given message and shuts down the server.
-     * log4j has not been initialized yet, so we can't use Zimbra.halt.
-     * 
-     * @param message the message to log before shutting down
-     * @param t the exception that was thrown
-     */
-    public static void halt(String message, Throwable t) {
-        try {
-            StringWriter sw = new StringWriter();
-            PrintWriter pw = new PrintWriter(sw);
-            pw.println(message);
-            t.printStackTrace(pw);
-            System.err.println(sw.toString());
-        } finally {
-            Runtime.getRuntime().halt(1);
-        }
-    }
-
 }
