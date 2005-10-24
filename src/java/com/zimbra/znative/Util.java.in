@@ -34,7 +34,7 @@ public class Util {
             return mHaveNativeCode;
         }
         try {
-            System.loadLibrary("zimbra-native");
+			System.load("/opt/zimbra/lib/libzimbra-native.@@LIBEXT@@");
             return true;
         } catch (UnsatisfiedLinkError ule) {
             // Catch and proceed. Otherwise this would become an

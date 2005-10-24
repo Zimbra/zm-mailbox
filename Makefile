@@ -13,7 +13,7 @@ JAVAINC := -I/System/Library/Frameworks/JavaVM.framework/Headers
 SHARED := -dynamiclib
 MACDEF := -DDARWIN
 SHARED_EXT := jnilib
-LIB_OPTS := -install_name /opt/zimbra/lib/libzimbra-native.$(SHARED_EXT)
+LIB_OPTS := -install_name /opt/zimbra/lib/libzimbra-native.$(SHARED_EXT) -framework JavaVM
 endif
 
 CLASSES = $(BUILD)/classes
@@ -40,7 +40,7 @@ all: FORCE
 #
 # Build jar file that wraps native code and it's shared library.
 #
-$(BUILD)/zimbra-native.jar: remove_classes_list $(JAVA_CLASSES)
+$(BUILD)/zimbra-native.jar: remove_classes_list src/java/com/zimbra/znative/Util.java $(JAVA_CLASSES) 
 	mkdir -p $(CLASSES)
 	@CLASSES_LIST="$(shell cat $(BUILD)/.classes.list)"; \
 	    if [ -n "$$CLASSES_LIST" ]; then \
@@ -53,6 +53,11 @@ $(BUILD)/zimbra-native.jar: remove_classes_list $(JAVA_CLASSES)
 		$(RM) $@; \
 	    fi
 	jar c0vf $@ -C $(CLASSES) com;
+
+src/java/com/zimbra/znative/Util.java:
+	cat src/java/com/zimbra/znative/Util.java.in | \
+		sed -e "s/@@LIBEXT@@/$(SHARED_EXT)/" > \
+		src/java/com/zimbra/znative/Util.java
 
 $(CLASSES)/%.class: $(SRC)/java/%.java
 	@echo $< >> $(BUILD)/.classes.list
@@ -117,5 +122,6 @@ push:
 #
 clean:
 	$(RM) -r $(BUILD)
+	$(RM) src/java/com/zimbra/znative/Util.java
 
 .PHONY: all push clean
