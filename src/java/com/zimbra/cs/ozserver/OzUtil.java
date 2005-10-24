@@ -49,7 +49,7 @@ public class OzUtil {
         while (buf.hasRemaining()) {
             byte b = buf.get();
             char ch = (char)b;
-            if (ch >= 41 && ch <= 126) {
+            if (ch >= 33 && ch <= 126) {
                 sb.append(" " + ch);
             } else if (ch == '\r') {
                 sb.append("\\r");
