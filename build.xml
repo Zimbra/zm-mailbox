@@ -485,7 +485,7 @@
 		<mkdir dir="${zimbra.home.dir}/openldap/var/openldap-data" />
 	</target>
 
-	<target name="ldap-load" depends="ldap-load-step1,ldap-load-mime-handlers" />
+	<target name="ldap-load" depends="ldap-load-step1,ldap-load-accounts,ldap-load-mime-handlers" />
 
 	<target name="ldap-load-step1" description="rub it">
 		<exec executable="${ldapmodify}">
@@ -516,6 +516,9 @@
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="mcf zimbraDefaultDomainName ${zimbra.server.hostname}" />
 		</java>
+	</target>
+	
+	<target name="ldap-load-accounts">
 		<echo>Creating account: admin@${zimbra.server.hostname}</echo>
 		<!-- This account is used during QA tests. -->
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
