@@ -299,7 +299,7 @@ public final class ZimbraQuery {
         = "(\\d{4})[/-](\\d{1,2})[/-](\\d{1,2})";
 
         protected static final String ABSDATE_YLAST_PATTERN 
-        = "(\\d{1,2})[/-](\\d{1,2})[/-](\\d{4})";
+        = "(\\d{1,2})[/-](\\d{1,2})[/-](\\d{2,4})";
         
         protected static final String RELDATE_PATTERN 
         = "([+-])([0-9]+)([mhdwy][a-z]*)?";
@@ -460,6 +460,9 @@ public final class ZimbraQuery {
                             monthStr = s.substring(m.start(1), m.end(1));
                             dayStr = s.substring(m.start(2), m.end(2));
                             yearStr = s.substring(m.start(3), m.end(3));
+                            if (yearStr.length() == 2) {
+                                yearStr = "20"+yearStr;
+                            }
                         }
                     }
                     
