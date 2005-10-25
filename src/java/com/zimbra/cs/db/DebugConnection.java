@@ -1,0 +1,211 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: ZPL 1.1
+ * 
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.1 ("License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.zimbra.com/license
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+ * the License for the specific language governing rights and limitations
+ * under the License.
+ * 
+ * The Original Code is: Zimbra Collaboration Suite.
+ * 
+ * The Initial Developer of the Original Code is Zimbra, Inc.
+ * Portions created by Zimbra are Copyright (C) 2005 Zimbra, Inc.
+ * All Rights Reserved.
+ * 
+ * Contributor(s): 
+ * 
+ * ***** END LICENSE BLOCK *****
+ */
+package com.zimbra.cs.db;
+
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.SQLWarning;
+import java.sql.Savepoint;
+import java.sql.Statement;
+import java.util.Map;
+
+class DebugConnection implements Connection {
+
+    private Connection mConn;
+    
+    DebugConnection(Connection conn) {
+        mConn = conn;
+    }
+    
+    public Statement createStatement() throws SQLException {
+        return mConn.createStatement();
+    }
+
+    public PreparedStatement prepareStatement(String sql) throws SQLException {
+        return new DebugPreparedStatement(mConn.prepareStatement(sql), sql);
+    }
+
+    public CallableStatement prepareCall(String sql) throws SQLException {
+        return mConn.prepareCall(sql);
+    }
+
+    public String nativeSQL(String sql) throws SQLException {
+        return mConn.nativeSQL(sql);
+    }
+
+    public void setAutoCommit(boolean autoCommit) throws SQLException {
+        mConn.setAutoCommit(autoCommit);
+    }
+
+    public boolean getAutoCommit() throws SQLException {
+        return mConn.getAutoCommit();
+    }
+
+    public void commit() throws SQLException {
+        mConn.commit();
+    }
+
+    public void rollback() throws SQLException {
+        mConn.rollback();
+    }
+
+    public void close() throws SQLException {
+        mConn.close();
+    }
+
+    public boolean isClosed() throws SQLException {
+        return mConn.isClosed();
+    }
+
+    public DatabaseMetaData getMetaData() throws SQLException {
+        return mConn.getMetaData();
+    }
+
+    public void setReadOnly(boolean readOnly) throws SQLException {
+        mConn.setReadOnly(readOnly);
+    }
+
+    public boolean isReadOnly() throws SQLException {
+        return mConn.isReadOnly();
+    }
+
+    public void setCatalog(String catalog) throws SQLException {
+        mConn.setCatalog(catalog);
+    }
+
+    public String getCatalog() throws SQLException {
+        return mConn.getCatalog();
+    }
+
+    public void setTransactionIsolation(int level) throws SQLException {
+        mConn.setTransactionIsolation(level);
+    }
+
+    public int getTransactionIsolation() throws SQLException {
+        return mConn.getTransactionIsolation();
+    }
+
+    public SQLWarning getWarnings() throws SQLException {
+        return mConn.getWarnings();
+    }
+
+    public void clearWarnings() throws SQLException {
+        mConn.clearWarnings();
+    }
+
+    public Statement createStatement(int resultSetType, int resultSetConcurrency)
+    throws SQLException {
+        return mConn.createStatement(resultSetType, resultSetConcurrency);
+    }
+
+    public PreparedStatement prepareStatement(String sql, int resultSetType,
+                                              int resultSetConcurrency)
+    throws SQLException {
+        return new DebugPreparedStatement(
+            mConn.prepareStatement(sql, resultSetType, resultSetConcurrency), sql);
+    }
+
+    public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency)
+    throws SQLException {
+        return mConn.prepareCall(sql, resultSetType, resultSetConcurrency);
+    }
+
+    public Map getTypeMap() throws SQLException {
+        return mConn.getTypeMap();
+    }
+
+    public void setTypeMap(Map map) throws SQLException {
+        mConn.setTypeMap(map);
+    }
+
+    public void setHoldability(int holdability) throws SQLException {
+        mConn.setHoldability(holdability);
+    }
+
+    public int getHoldability() throws SQLException {
+        return mConn.getHoldability();
+    }
+
+    public Savepoint setSavepoint() throws SQLException {
+        return mConn.setSavepoint();
+    }
+
+    public Savepoint setSavepoint(String name) throws SQLException {
+        return mConn.setSavepoint(name);
+    }
+
+    public void rollback(Savepoint savepoint) throws SQLException {
+        mConn.rollback(savepoint);
+    }
+
+    public void releaseSavepoint(Savepoint savepoint) throws SQLException {
+        mConn.releaseSavepoint(savepoint);
+    }
+
+    public Statement createStatement(int resultSetType, int resultSetConcurrency,
+                                     int resultSetHoldability)
+    throws SQLException {
+        return mConn.createStatement(
+            resultSetType, resultSetConcurrency, resultSetHoldability);
+    }
+
+    public PreparedStatement prepareStatement(String sql, int resultSetType,
+                                              int resultSetConcurrency,
+                                              int resultSetHoldability)
+    throws SQLException {
+        return new DebugPreparedStatement(
+            mConn.prepareStatement(sql, resultSetType,
+                resultSetConcurrency, resultSetHoldability), sql);
+    }
+
+    public CallableStatement prepareCall(String sql, int resultSetType,
+                                         int resultSetConcurrency,
+                                         int resultSetHoldability)
+    throws SQLException {
+        return mConn.prepareCall(sql, resultSetType, resultSetConcurrency,
+            resultSetHoldability);
+    }
+
+    public PreparedStatement prepareStatement(String sql, int autoGeneratedKeys)
+    throws SQLException {
+        return new DebugPreparedStatement(
+            mConn.prepareStatement(sql, autoGeneratedKeys), sql);
+    }
+
+    public PreparedStatement prepareStatement(String sql, int[] columnIndexes)
+    throws SQLException {
+        return new DebugPreparedStatement(
+            mConn.prepareStatement(sql, columnIndexes), sql);
+    }
+
+    public PreparedStatement prepareStatement(String sql, String[] columnNames)
+    throws SQLException {
+        return new DebugPreparedStatement(
+            mConn.prepareStatement(sql, columnNames), sql);
+    }
+}

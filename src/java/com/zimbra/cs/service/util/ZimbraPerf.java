@@ -38,7 +38,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.util.Constants;
@@ -53,8 +52,9 @@ public class ZimbraPerf {
     
     /**
      * The number of statements that were executed, as reported by
-     * the JDBC driver.  This number only gets updated when debug logging
-     * is turned on for the <code>zimbra.sqltrace</code> category.
+     * <code>DebugPreparedStatement</code>. This number only gets updated
+     * when debug logging is turned on for the <code>zimbra.sqltrace</code> or
+     * <code>zimbra.perf</code> categories.
      */
     private static int sStatementCount = 0;
     
@@ -65,6 +65,7 @@ public class ZimbraPerf {
     private static int sPrepareCount = 0;
 
     private static final long STATS_WRITE_INTERVAL = Constants.MILLIS_PER_MINUTE;
+    private static final long SLOW_QUERY_THRESHOLD = 300;  // ms
     private static long sLastStatsWrite = System.currentTimeMillis();
     
     private static class StatementStats {
@@ -99,17 +100,25 @@ public class ZimbraPerf {
     }
     
     /**
-     * Updates SQL performance data:
+     * Increments the total SQL statement count.  If <code>sqlperf</code> debug
+     * logging is on,
+     * 
      * <ul>
      *   <li>Updates aggregate timing data for the given statement</li>
-     *   <li>Writes timing data to <code>sqlperf.csv</code> if necessary
-     *   <li>Increments the statement count</li>
+     *   <li>Writes timing data to <code>sqlperf.csv</code> once a minute</li>
+     *   <li>Writes slow queries to <code>slowQueries.csv</code></li>
      * </ul>
      *  
      * @param sql the SQL statement
-     * @param duration execution time
+     * @param durationMillis execution time
+     * @see #getStatementCount()
      */
-    public static void updateDbStats(String sql, int duration) {
+    public static void updateDbStats(String sql, int durationMillis) {
+        sStatementCount++;
+        if (!ZimbraLog.perf.isDebugEnabled()) {
+            return;
+        }
+        
         sql = DbUtil.normalizeSql(sql);
         StatementStats stats = null;
         
@@ -121,24 +130,25 @@ public class ZimbraPerf {
             }
 
             stats.mCount++;
-            stats.mTotalTime += duration;
-            if (duration < stats.mMinTime) {
-                stats.mMinTime = duration;
+            stats.mTotalTime += durationMillis;
+            if (durationMillis < stats.mMinTime) {
+                stats.mMinTime = durationMillis;
             }
-            if (duration > stats.mMaxTime) {
-                stats.mMaxTime = duration;
+            if (durationMillis > stats.mMaxTime) {
+                stats.mMaxTime = durationMillis;
             }
         }
         
-        if (duration > 0) {
-            ThreadLocalData.incrementDbTime(duration);
+        ThreadLocalData.incrementDbTime(durationMillis);
+        
+        if (durationMillis > SLOW_QUERY_THRESHOLD) {
+            writeSlowQuery(sql, durationMillis);
         }
         long now = System.currentTimeMillis();
         if (now - sLastStatsWrite > STATS_WRITE_INTERVAL) {
             writeDbStats();
             sLastStatsWrite = now;
         }
-        sStatementCount++;
     }
 
     /**
@@ -201,7 +211,7 @@ public class ZimbraPerf {
     private static final SimpleDateFormat TIMESTAMP_FORMATTER =
         new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
 
-    public static void writeSlowQuery(String sql, int durationMillis) {
+    private static void writeSlowQuery(String sql, int durationMillis) {
         String filename = LC.zimbra_log_directory.value() + "/slowQueries.csv";
         FileWriter writer = null;
         try {
