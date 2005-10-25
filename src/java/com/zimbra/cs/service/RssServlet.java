@@ -32,9 +32,6 @@ import java.util.Date;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
@@ -57,16 +54,13 @@ import com.zimbra.soap.Element;
 
 public class RssServlet extends ZimbraBasicAuthServlet {
 
-    private static final String  WWW_AUTHENTICATE_HEADER = "WWW-Authenticate";
-    private static final String  WWW_AUTHENTICATE_VALUE = "BASIC realm=\"Zimbra New Mail Feed\"";
-    
+    protected String getRealmHeader()  { return "BASIC realm=\"Zimbra New Mail Feed\""; }
+
     private static final String PARAM_QUERY = "query";
 
-    private static Log mLog = LogFactory.getLog(RssServlet.class);
-
     public void doAuthGet(HttpServletRequest req, HttpServletResponse resp, Account acct, Mailbox mailbox)
-    throws ServiceException, IOException
-    {
+    throws ServiceException, IOException {
+
         //resp.setContentType("text/xml");
         resp.setContentType("application/rss+xml");
             

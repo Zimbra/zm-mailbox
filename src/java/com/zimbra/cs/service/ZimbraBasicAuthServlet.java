@@ -50,10 +50,11 @@ import com.zimbra.cs.servlet.ZimbraServlet;
 
 public abstract class ZimbraBasicAuthServlet extends ZimbraServlet {
 
-    private static final String  WWW_AUTHENTICATE_HEADER = "WWW-Authenticate";
-    private static final String  WWW_AUTHENTICATE_VALUE = "BASIC realm=\"Zimbra\"";
+    private static final String WWW_AUTHENTICATE_HEADER = "WWW-Authenticate";
+    protected String getRealmHeader()  { return "BASIC realm=\"Zimbra\""; }
     
     private static Log mLog = LogFactory.getLog(ZimbraBasicAuthServlet.class);
+
 
     public abstract void doAuthGet(HttpServletRequest req, HttpServletResponse resp, Account acct, Mailbox mailbox)
     throws ServiceException, IOException;
@@ -64,7 +65,7 @@ public abstract class ZimbraBasicAuthServlet extends ZimbraServlet {
 
         // TODO: more liberal parsing of Authorization value...
         if (auth == null || !auth.startsWith("Basic ")) {
-            resp.addHeader(WWW_AUTHENTICATE_HEADER, WWW_AUTHENTICATE_VALUE);            
+            resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader());            
             resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "must authenticate");
             return;
         }
@@ -79,26 +80,31 @@ public abstract class ZimbraBasicAuthServlet extends ZimbraServlet {
         }
         
         String user = userPass.substring(0, loc);
-        String pass = userPass.substring(loc+1);
+        String pass = userPass.substring(loc + 1);
         
         Provisioning prov = Provisioning.getInstance();
         
         try {
             Account acct = prov.getAccountByName(user);
             if (acct == null) {
-                resp.addHeader(WWW_AUTHENTICATE_HEADER, WWW_AUTHENTICATE_VALUE);
+                resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader());
                 resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "invalid username/password");
                 return;
             }
             try {
                 prov.authAccount(acct, pass);
             } catch (ServiceException se) {
-                resp.addHeader(WWW_AUTHENTICATE_HEADER, WWW_AUTHENTICATE_VALUE);
+                resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader());
                 resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "invalid username/password");
                 return;
             }
-            
-            // TODO: handle mailbox not local error and send an http redirect?
+
+            if (!acct.isCorrectHost()) {
+                // wrong host; proxy to the correct target...
+                proxyServletRequest(req, resp, acct.getServer());
+                return;
+            }
+
             Mailbox mailbox = Mailbox.getMailboxByAccount(acct);
             if (mailbox == null) {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "mailbox not found");

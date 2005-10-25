@@ -32,6 +32,7 @@ import java.util.List;
 import javax.mail.Part;
 import javax.mail.internet.ContentDisposition;
 import javax.mail.internet.ParseException;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -53,7 +54,7 @@ import com.zimbra.cs.servlet.ZimbraServlet;
 
 public class CsvServlet extends ZimbraServlet {
 
-    public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
         try {
             AuthToken authToken = getAuthTokenFromCookie(req, resp);
             if (authToken == null) 
@@ -64,12 +65,12 @@ public class CsvServlet extends ZimbraServlet {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "no such account");
                 return;
             }
-            
+
             if (!account.isCorrectHost()) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "wrong server");
+            	proxyServletRequest(req, resp, account.getId());
                 return;
             }
-        
+
             Mailbox mbox = Mailbox.getMailboxByAccount(account);
             List contacts = mbox.getContactList(new Mailbox.OperationContext(account), -1);
             StringBuffer sb = new StringBuffer();

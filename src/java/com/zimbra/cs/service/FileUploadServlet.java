@@ -44,6 +44,7 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -259,7 +260,7 @@ public class FileUploadServlet extends ZimbraServlet {
         }
     }
 
-	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
 		int status = HttpServletResponse.SC_OK;
         List items = null;
         String attachmentId = null;
@@ -270,6 +271,17 @@ public class FileUploadServlet extends ZimbraServlet {
             if (authToken == null) {
                 status = HttpServletResponse.SC_UNAUTHORIZED;
                 break;
+            }
+
+            try {
+                // make sure we're on the right host; proxy if we're not...
+            	Account acct = Provisioning.getInstance().getAccountById(authToken.getAccountId());
+                if (!acct.isCorrectHost()) {
+                    proxyServletRequest(req, resp, acct.getServer());
+                    return;
+                }
+            } catch (ServiceException e) {
+                throw new ServletException(e);
             }
 
             // file upload requires multipart enctype

@@ -25,13 +25,9 @@
 
 /*
  * Created on 2005. 4. 5.
- *
- * TODO To change the template for this generated file go to
- * Window - Preferences - Java - Code Style - Code Templates
  */
 package com.zimbra.cs.servlet;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -54,7 +50,6 @@ import com.zimbra.cs.account.*;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapProtocol;
 
@@ -296,7 +291,7 @@ public class ZimbraServlet extends HttpServlet {
                 resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "cannot proxy method: " + req.getMethod());
             for (Enumeration enm = req.getHeaderNames(); enm.hasMoreElements(); ) {
                 String hname = (String) enm.nextElement(), hlc = hname.toLowerCase();
-                if (hlc.startsWith("x-") || hlc.startsWith("content-"))
+                if (hlc.startsWith("x-") || hlc.startsWith("content-") || hlc.equals("authorization"))
                     method.addRequestHeader(hname, req.getHeader(hname));
             }
 
@@ -316,7 +311,7 @@ public class ZimbraServlet extends HttpServlet {
             Header[] headers = method.getResponseHeaders();
             for (int i = 0; i < headers.length; i++) {
                 String hname = headers[i].getName(), hlc = hname.toLowerCase();
-                if (hlc.startsWith("x-") || hlc.startsWith("content-"))
+                if (hlc.startsWith("x-") || hlc.startsWith("content-") || hlc.startsWith("www-"))
                     resp.addHeader(hname, headers[i].getValue());
             }
             ByteUtil.copy(method.getResponseBodyAsStream(), resp.getOutputStream());
@@ -325,59 +320,5 @@ public class ZimbraServlet extends HttpServlet {
         } catch (ServiceException e) {
             throw new ServletException(e);
         }
-    }
-
-    protected void proxyPost(HttpServletRequest req, HttpServletResponse resp,
-                             String realHost, String realPort,
-                             byte[] postBody)
-    throws IOException {
-        String port;
-        if (realPort != null)
-            port = ":" + realPort;
-        else
-            port = "";
-        
-        String uri = req.getScheme() + "://" + realHost + port + "/" + req.getRequestURI();
-        HttpClient client = new HttpClient();
-        PostMethod method = new PostMethod(uri);
-
-        method.setRequestHeader("Content-type", req.getContentType());
-        ByteArrayInputStream bais = new ByteArrayInputStream(postBody);
-        method.setRequestBody(bais);
-        //method.setRequestContentLength(EntityEnclosingMethod.CONTENT_LENGTH_AUTO);
-        method.setRequestContentLength(postBody.length);
-        
-        int statusCode = -1;
-        int retryCount = 3;
-        
-        for (int attempt = 0; statusCode == -1 && attempt < retryCount; attempt++) {
-            try {
-                // execute the method.
-                statusCode = client.executeMethod(method);
-            } catch (HttpRecoverableException e) {
-                System.err.println(
-                        "A recoverable exception occurred, retrying." + 
-                        e.getMessage());
-            }
-        }
-        // Check that we didn't run out of retries.
-        if (statusCode == -1)
-            throw new IOException("retry limit reached");
-        
-        // Read the response body.
-        byte[] responseBody = method.getResponseBody();
-        
-        // Release the connection.
-        method.releaseConnection();
-
-        if (ZimbraLog.soap.isDebugEnabled())
-            ZimbraLog.soap.debug("response: \n" + new String(responseBody, "utf8"));
-        
-        // send response back to client
-        resp.setContentType(req.getContentType());
-        resp.setBufferSize(responseBody.length);
-        resp.setContentLength(responseBody.length);
-        resp.setStatus(statusCode);
-        resp.getOutputStream().write(responseBody);
     }
 }
