@@ -40,10 +40,13 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 
+import EDU.oswego.cs.dl.util.concurrent.BoundedLinkedQueue;
 import EDU.oswego.cs.dl.util.concurrent.PooledExecutor;
 import EDU.oswego.cs.dl.util.concurrent.ThreadFactory;
 
 // TODO idle connection support
+
+// TODO drop unauthenticated connections in sooner
 
 // TODO STARTTLS and SSL support
 
@@ -91,10 +94,13 @@ public class OzServer {
         mSelector = Selector.open();
         mServerSocketChannel.register(mSelector, SelectionKey.OP_ACCEPT);
         
-        mPooledExecutor = new PooledExecutor();
+        /* TODO revisit these thread pool defaults; also make them
+         * configurable. */
+        mPooledExecutor = new PooledExecutor(new BoundedLinkedQueue(1024));
+        mPooledExecutor.setMaximumPoolSize(50);
+        mPooledExecutor.setMinimumPoolSize(Runtime.getRuntime().availableProcessors() * 2);
+        mPooledExecutor.runWhenBlocked();
         mPooledExecutor.setThreadFactory(new OzThreadFactory());
-        mPooledExecutor.waitWhenBlocked(); // TODO - revisit this - can we wait?
-        setPoolThreadsMax(Runtime.getRuntime().availableProcessors() * 2);
     }
 
     public void setSnooper(OzSnooper snooper) {
@@ -281,7 +287,7 @@ public class OzServer {
 
     private List mServerThreadTasks = new ArrayList(128); 
     
-    void runTaskInServerThread(Runnable task) {
+    void executeInServerThread(Runnable task) {
         if (Thread.currentThread() == mServerThread) {
             if (mLog.isDebugEnabled()) mLog.debug("already in server thread, just running");
             try {

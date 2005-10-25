@@ -53,10 +53,90 @@ public class OzConnection {
 
     private SelectionKey mSelectionKey; 
 
-    OzConnectionHandler getConnectionHandler() {
-        return mConnectionHandler;
-    }
+    private static SynchronizedInt mIdCounter = new SynchronizedInt(0);
     
+    private final int mId;
+
+    private final String mIdString;
+    
+    private final String mRemoteAddress;
+
+    /* guards mReadBuffer and mClosed */
+    private final Object mReadBufferLock = new Object();
+    
+    private ByteBuffer mReadBuffer;
+
+    private boolean mClosed;
+    
+    OzConnection(OzServer server, SocketChannel channel) throws IOException {
+        mId = mIdCounter.increment();
+        mIdString = Integer.toString(mId);
+        mRemoteAddress = channel.socket().getInetAddress().getHostAddress();
+        mChannel = channel;
+        mServer = server;
+        mClosed = false;
+        try {
+            addToNDC();
+            mLog = mServer.getLog();
+            mLog.info("connected");
+            mSelectionKey = channel.register(server.getSelector(), 0, this); 
+            mConnectionHandler = server.newConnectionHandler(this);
+            try {
+                /* TODO - this should be a task */
+                mConnectionHandler.handleConnect();
+            } catch (Throwable t) {
+                mLog.warn("exception occurrent handling connect; will close connection", t);
+                closeNow();
+                return;
+            }
+            enableReadInterest();
+        } finally {
+            clearFromNDC();
+        }
+    }
+
+    public void closeNow() {
+        Runnable closeTask = new Runnable() {
+            public void run() {
+                try {
+                    addToNDC();
+                    run0();
+                } finally {
+                    clearFromNDC();
+                }
+            }
+            
+            private void run0() {
+                mLog.info("closing");
+                try {
+                    if (mChannel.isOpen()) {
+                        mChannel.close();
+                    }
+                    mSelectionKey.cancel();
+                } catch (IOException ioe) {
+                    mLog.warn("exception closing channel, ignoring and continuing", ioe);
+                } finally {
+                    synchronized (mReadBufferLock) { 
+                        if (mClosed && mLog.isDebugEnabled()) {
+                            mLog.debug("duplicate close detected");
+                        }
+                        if (mReadBuffer != null) {
+                            if (mClosed) {
+                                mLog.warn("duplicate close and earlier close leaked buffer");
+                            }
+                            mServer.getBufferPool().recycle(mReadBuffer);
+                            mLog.info("recycled buffer " + OzUtil.intToHexString(mReadBuffer.hashCode(), 0, ' '));
+                            mReadBuffer = null;
+                        }
+                        mClosed = true;
+                    }
+                }
+            }
+        };
+        
+        mServer.executeInServerThread(closeTask);
+    }
+
     void addToNDC() {
         ZimbraLog.addIpToContext(getRemoteAddress());
         ZimbraLog.addConnectionIdToContext(getIdString());
@@ -112,77 +192,11 @@ public class OzConnection {
         }
     }
     
-    private static SynchronizedInt mIdCounter = new SynchronizedInt(0);
-    
-    private final int mId;
-
-    private final String mIdString;
-    
-    private final String mRemoteAddress;
-    
-    private ByteBuffer mReadBuffer;
-
-    private final Object mReadBufferLock = new Object();
-
-    OzConnection(OzServer server, SocketChannel channel) throws IOException {
-        mId = mIdCounter.increment();
-        mIdString = Integer.toString(mId);
-        mRemoteAddress = channel.socket().getInetAddress().getHostAddress();
-        try {
-            addToNDC();
-            mChannel = channel;
-            mServer = server;
-            mReadBuffer = server.getBufferPool().get();
-            mLog = mServer.getLog();
-            mLog.info("connected buf=" + OzUtil.intToHexString(mReadBuffer.hashCode(), 0, ' ') + " " + mChannel);
-            mSelectionKey = channel.register(server.getSelector(), 0, this); 
-            mConnectionHandler = server.newConnectionHandler(this);
-            try {
-                /* TODO - this should be a task */
-                mConnectionHandler.handleConnect();
-            } catch (Throwable t) {
-                mLog.warn("exception occurrent handling connect; will close connection", t);
-                closeNow();
-                return;
-            }
-            enableReadInterest();
-        } finally {
-            clearFromNDC();
-        }
+    OzConnectionHandler getConnectionHandler() {
+        return mConnectionHandler;
     }
+    
 
-    public void closeNow() {
-        Runnable closeTask = new Runnable() {
-            public void run() {
-                try {
-                    addToNDC();
-                    run0();
-                } finally {
-                    clearFromNDC();
-                }
-            }
-            
-            private void run0() {
-                mLog.info("closing");
-                try {
-                    if (mChannel.isOpen()) {
-                        mChannel.close();
-                    }
-                } catch (IOException ioe) {
-                    mLog.warn("exception closing channel, ignoring and continuing", ioe);
-                }
-                mSelectionKey.cancel();
-                synchronized (mReadBufferLock) {
-                    if (mReadBuffer != null) {
-                        mServer.getBufferPool().recycle(mReadBuffer);
-                    }
-                    mReadBuffer = null;
-                }
-            }
-        };
-        
-        mServer.runTaskInServerThread(closeTask);
-    }
     
     public void setMatcher(OzMatcher matcher) {
         mMatcher = matcher;
@@ -246,10 +260,14 @@ public class OzConnection {
         private void run0() throws IOException {
             synchronized (mReadBufferLock) {
                 if (mReadBuffer == null) {
-                    mLog.info("connection ready to read, but already closed");
-                } else {
-                    processReadBufferLocked();
+                    if (mClosed) {
+                        mLog.info("connection ready to read, but already closed");
+                        return;
+                    }
+                    mReadBuffer = mServer.getBufferPool().get();
+                    mLog.info("obtained buffer " + OzUtil.intToHexString(mReadBuffer.hashCode(), 0, ' '));
                 }
+                processReadBufferLocked();
             }
         }
     }

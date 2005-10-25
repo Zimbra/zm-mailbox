@@ -1519,11 +1519,11 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
             Set i4set = mSession.getFolder().getSubsequence(sequenceSet, byUID);
             allPresent = byUID || !i4set.contains(null);
             for (Iterator it = i4set.iterator(); it.hasNext(); ) {
+                ImapMessage i4msg = (ImapMessage) it.next();
+                if (i4msg == null)
+                    continue;
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		        PrintStream result = new PrintStream(baos, false, "utf-8");
-            	ImapMessage i4msg = (ImapMessage) it.next();
-            	if (i4msg == null)
-                    continue;
 	        	try {
                     boolean markMessage = markRead && (i4msg.flags & Flag.FLAG_UNREAD) != 0;
                     boolean empty = true;
@@ -1604,7 +1604,11 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
                 } finally {
                     result.write(')');
                     result.write(LINE_SEPARATOR_BYTES, 0, LINE_SEPARATOR_BYTES.length);
-                    if (baos != null)           ZimbraLog.imap.debug("  S: " + baos);
+                    if (baos != null) {
+                        ByteBuffer bb = ByteBuffer.wrap(baos.toByteArray());
+                        mConnection.write(bb);
+                        ZimbraLog.imap.debug("  S: " + baos);
+                    }
                 }
             }
             sendNotifications(false, false);
@@ -1995,9 +1999,11 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
             if (matched) {
                 String line = currentDataToAsciiString();
                 
-                /* Is this the first line of this request? If so, then let's try
+                /*
+                 * Is this the first line of this request? If so, then let's try
                  * to parse the tag from it so we can report tagged BADs if
-                 * needed. TODO should we also strip the tag here?
+                 * needed. TODO: should we also strip tag here - so we don't
+                 * parse it twice?
                  */
                 if (mCurrentRequestData.size() == 0) {
                     try {
@@ -2019,13 +2025,13 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
                     return;
                 }
 
-                /* If there was a literal, remove it. */
+                /* If there was a literal specifier, remove said specifier. */
                 if (literal.length() > 0) {
                     line = line.substring(0, line.length() - literal.length());
                 }
 
                 /* Add either the literal removed line or a no-literal present at all
-                 * line to the request in flight.
+                 * line (ie, it's line in either case) to the request in flight.
                  */ 
                 mCurrentRequestData.add(line);
 
