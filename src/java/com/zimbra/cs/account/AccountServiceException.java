@@ -48,6 +48,7 @@ public class AccountServiceException extends ServiceException {
     public static final String INVALID_ATTR_VALUE = "account.INVALID_ATTR_VALUE";
     public static final String NO_SUCH_ACCOUNT    = "account.NO_SUCH_ACCOUNT";
     public static final String NO_SUCH_ALIAS      = "account.NO_SUCH_ALIAS";
+    public static final String NO_SUCH_GROUP      = "account.NO_SUCH_GROUP";
     public static final String NO_SUCH_DOMAIN     = "account.NO_SUCH_DOMAIN";    
     public static final String NO_SUCH_COS        = "account.NO_SUCH_COS";        
     public static final String NO_SUCH_SERVER     = "account.NO_SUCH_SERVER";        
@@ -106,6 +107,10 @@ public class AccountServiceException extends ServiceException {
 
     public static AccountServiceException NO_SUCH_ALIAS(String name) {
         return new AccountServiceException("no such alias: "+name, NO_SUCH_ALIAS, SENDERS_FAULT, null);
+    }
+
+    public static AccountServiceException NO_SUCH_GROUP(String name) {
+        return new AccountServiceException("no such group: "+name, NO_SUCH_GROUP, SENDERS_FAULT, null);
     }
     
     public static AccountServiceException NO_SUCH_DOMAIN(String name) {

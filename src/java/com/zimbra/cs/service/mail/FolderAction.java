@@ -165,7 +165,7 @@ public class FolderAction extends ItemAction {
             case ACL.GRANTEE_USER:    throw AccountServiceException.NO_SUCH_ACCOUNT(name);
             case ACL.GRANTEE_COS:     throw AccountServiceException.NO_SUCH_COS(name);
             case ACL.GRANTEE_DOMAIN:  throw AccountServiceException.NO_SUCH_DOMAIN(name);
-            case ACL.GRANTEE_GROUP:
+            case ACL.GRANTEE_GROUP:   throw AccountServiceException.NO_SUCH_GROUP(name);
             default:  throw ServiceException.FAILURE("LDAP entry not found for " + name + " : " + type, null);
         }
     }
