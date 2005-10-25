@@ -43,6 +43,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.PropertyConfigurator;
 
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ZimbraPerf;
@@ -198,16 +200,25 @@ public class SoapServlet extends ZimbraServlet {
     private static StopWatch sSoapStopWatch = StopWatch.getInstance("Soap");
  
     public void doPost(HttpServletRequest req, HttpServletResponse resp)
-        throws ServletException, IOException
-    {
+    throws ServletException, IOException {
         if (ZimbraLog.perf.isDebugEnabled()) {
             ThreadLocalData.reset();
         }
-        
+
+        String realHost = req.getParameter("host");
+        if (realHost != null) {
+            try {
+                Server server = Provisioning.getInstance().getServerByName(realHost);
+                String realPort = req.getParameter("port");	
+                proxyServletRequest(req, resp, server);
+                return;
+            } catch (ServiceException e) {
+                throw new ServletException(e);
+            }
+        }
+
         int len = req.getContentLength();
-        
         byte[] buffer;
-        
         if (len == -1) {
             buffer = readUntilEOF(req.getInputStream());
         } else {
@@ -217,56 +228,49 @@ public class SoapServlet extends ZimbraServlet {
         if (ZimbraLog.soap.isDebugEnabled()) {
             ZimbraLog.soap.debug("SOAP request:\n" + new String(buffer, "utf8"));
         }
+
+        long startTime = sSoapStopWatch.start();
         
-        String realHost = req.getParameter("host");
+        HashMap context = new HashMap();
+        context.put(SERVLET_REQUEST, req);
+        context.put(SoapEngine.REQUEST_IP, req.getRemoteAddr());            
+        //checkAuthToken(req.getCookies(), context);
+
+        Element envelope = null;
+        try {
+            envelope = mEngine.dispatch(req.getRequestURI(), buffer, context);
+        } catch (Throwable e) {
+            if (e instanceof OutOfMemoryError) {
+                Zimbra.halt("handler exception", e);
+            }
+            ZimbraLog.soap.warn("handler exception", e);
+            Element fault = SoapProtocol.Soap12.soapFault(ServiceException.FAILURE(e.toString(), e));
+            envelope = SoapProtocol.Soap12.soapEnvelope(fault);
+        }
+
+        SoapProtocol soapProto = SoapProtocol.determineProtocol(envelope);
+        int statusCode = soapProto.hasFault(envelope) ?
+                HttpServletResponse.SC_INTERNAL_SERVER_ERROR : HttpServletResponse.SC_OK;
         
-        if (realHost != null) {
-            String realPort = req.getParameter("port");	
-            proxyPost(req, resp, realHost, realPort, buffer);
-        } else {
-            long startTime = sSoapStopWatch.start();
-            
-            HashMap context = new HashMap();
-            context.put(SERVLET_REQUEST, req);
-            context.put(SoapEngine.REQUEST_IP, req.getRemoteAddr());            
-            //checkAuthToken(req.getCookies(), context);
+        byte[] soapBytes = envelope.toUTF8();
+        if (ZimbraLog.soap.isDebugEnabled()) {
+            ZimbraLog.soap.debug("SOAP response: \n" + new String(soapBytes, "utf8"));
+        }
+        
+        resp.setContentType(soapProto.getContentType());
+        resp.setBufferSize(soapBytes.length + 2048);
+        resp.setContentLength(soapBytes.length);
+        resp.setStatus(statusCode);
+        resp.getOutputStream().write(soapBytes);
 
-            Element envelope = null;
-            try {
-                envelope = mEngine.dispatch(req.getRequestURI(), buffer, context);
-            } catch (Throwable e) {
-                if (e instanceof OutOfMemoryError) {
-                    Zimbra.halt("handler exception", e);
-                }
-                ZimbraLog.soap.warn("handler exception", e);
-                Element fault = SoapProtocol.Soap12.soapFault(ServiceException.FAILURE(e.toString(), e));
-                envelope = SoapProtocol.Soap12.soapEnvelope(fault);
-            }
-
-            SoapProtocol soapProto = SoapProtocol.determineProtocol(envelope);
-            int statusCode = soapProto.hasFault(envelope) ?
-                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR : HttpServletResponse.SC_OK;
-            
-            byte[] soapBytes = envelope.toUTF8();
-            if (ZimbraLog.soap.isDebugEnabled()) {
-                ZimbraLog.soap.debug("SOAP response: \n" + new String(soapBytes, "utf8"));
-            }
-            
-            resp.setContentType(soapProto.getContentType());
-            resp.setBufferSize(soapBytes.length + 2048);
-            resp.setContentLength(soapBytes.length);
-            resp.setStatus(statusCode);
-            resp.getOutputStream().write(soapBytes);
-
-            sSoapStopWatch.stop(startTime);
-            
-            // If perf logging is enabled, track server response times
-            if (ZimbraLog.perf.isDebugEnabled()) {
-                long responseTime = System.currentTimeMillis() - startTime;
-                String responseName = soapProto.getBodyElement(envelope).getName();
-                ZimbraPerf.writeResponseStats(responseName, responseTime,
-                    ThreadLocalData.getDbTime(), ThreadLocalData.getStatementCount());
-            }
+        sSoapStopWatch.stop(startTime);
+        
+        // If perf logging is enabled, track server response times
+        if (ZimbraLog.perf.isDebugEnabled()) {
+            long responseTime = System.currentTimeMillis() - startTime;
+            String responseName = soapProto.getBodyElement(envelope).getName();
+            ZimbraPerf.writeResponseStats(responseName, responseTime,
+                ThreadLocalData.getDbTime(), ThreadLocalData.getStatementCount());
         }
     }
 }

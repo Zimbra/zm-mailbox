@@ -48,6 +48,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.MailItem;
@@ -110,7 +111,8 @@ public class ContentServlet extends ZimbraServlet {
 
         try {
             if (!iid.isLocal()) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "wrong server");
+                // wrong server; proxy to the right one...
+                proxyServletRequest(req, resp, iid.getAccountId());
                 return;
             }
             String authId = authToken.getAccountId();
@@ -237,7 +239,10 @@ public class ContentServlet extends ZimbraServlet {
 
         try {
             if (!FileUploadServlet.isLocalUpload(uploadId)) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "wrong server");
+                // wrong server; proxy to the right one...
+                String serverId = FileUploadServlet.getUploadServerId(uploadId);
+                Server server = Provisioning.getInstance().getServerById(serverId);
+                proxyServletRequest(req, resp, server);
                 return;
             }
 

@@ -35,24 +35,24 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.servlet.ServletException;
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpRecoverableException;
+import org.apache.commons.httpclient.*;
+import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.account.*;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
@@ -205,7 +205,7 @@ public class ZimbraServlet extends HttpServlet {
                                                         boolean doNotSendHttpError)
     throws IOException {
         String authTokenStr = null;
-        Cookie cookies[] =  req.getCookies();
+        javax.servlet.http.Cookie cookies[] =  req.getCookies();
         if (cookies != null) {
             for (int i = 0; i < cookies.length; i++) {
                 if (cookies[i].getName().equals(cookieName)) {
@@ -233,6 +233,97 @@ public class ZimbraServlet extends HttpServlet {
             if (!doNotSendHttpError)
                 resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "unable to parse authtoken");
             return null;
+        }
+    }
+
+    protected void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, String accountId)
+    throws IOException, ServletException {
+		try {
+            Provisioning prov = Provisioning.getInstance();
+            Account acct = prov.getAccountById(accountId);
+    		if (acct == null) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "no such user");
+                return;
+            }
+            proxyServletRequest(req, resp, acct.getServer());
+		} catch (ServiceException e) {
+			throw new ServletException(e);
+		}
+    }
+
+    protected void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, Server server)
+    throws IOException, ServletException {
+        if (server == null) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "cannot find remote server");
+            return;
+        }
+
+        try {
+            // determine the URI for the remote ContentServlet
+            int port = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
+            boolean useHTTP = port > 0;
+            if (!useHTTP)
+                port = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
+            if (port <= 0)
+                throw ServiceException.FAILURE("remote server " + server.getName() + " has neither http nor https port enabled", null);
+            String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
+
+            StringBuffer url = new StringBuffer(useHTTP ? "http" : "https");
+            url.append("://").append(hostname).append(':').append(port);
+            url.append(req.getRequestURI());
+            String qs = req.getQueryString();
+            if (qs != null)
+                url.append('?').append(qs);
+
+            // create an HTTP client with the same cookies
+            HttpState state = new HttpState();
+            javax.servlet.http.Cookie cookies[] = req.getCookies();
+            if (cookies != null)
+                for (int i = 0; i < cookies.length; i++)
+                    state.addCookie(new Cookie(hostname, cookies[i].getName(), cookies[i].getValue(), "/", null, false));
+            HttpClient client = new HttpClient();
+            client.setState(state);
+
+            // create a duplicate request (same method, same content, same X-headers)
+            HttpMethod method = null;
+            if (req.getMethod().equalsIgnoreCase("GET"))
+                method = new GetMethod(url.toString());
+            else if (req.getMethod().equalsIgnoreCase("POST")) {
+                PostMethod post = new PostMethod(url.toString());
+                post.setRequestBody(req.getInputStream());
+                method = post;
+            } else
+                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "cannot proxy method: " + req.getMethod());
+            for (Enumeration enm = req.getHeaderNames(); enm.hasMoreElements(); ) {
+                String hname = (String) enm.nextElement(), hlc = hname.toLowerCase();
+                if (hlc.startsWith("x-") || hlc.startsWith("content-"))
+                    method.addRequestHeader(hname, req.getHeader(hname));
+            }
+
+            // dispatch the request and copy over the results
+            int statusCode = -1;
+            for (int retryCount = 3; statusCode == -1 && retryCount > 0; retryCount--)
+                try {
+                    statusCode = client.executeMethod(method);
+                } catch (HttpRecoverableException e) { }
+            if (statusCode != HttpStatus.SC_OK) {
+                if (statusCode == -1)
+                    resp.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, "retry limit reached");
+                else
+                	resp.sendError(statusCode, method.getStatusText());
+                return;
+            }
+            Header[] headers = method.getResponseHeaders();
+            for (int i = 0; i < headers.length; i++) {
+                String hname = headers[i].getName(), hlc = hname.toLowerCase();
+                if (hlc.startsWith("x-") || hlc.startsWith("content-"))
+                    resp.addHeader(hname, headers[i].getValue());
+            }
+            ByteUtil.copy(method.getResponseBodyAsStream(), resp.getOutputStream());
+
+            method.releaseConnection();
+        } catch (ServiceException e) {
+            throw new ServletException(e);
         }
     }
 

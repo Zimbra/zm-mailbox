@@ -104,12 +104,24 @@ public class FileUploadServlet extends ZimbraServlet {
     
     private static final int DEFAULT_MAX_SIZE = 5 * 1024 * 1024;
 
-    static boolean isLocalUpload(String uploadId) throws ServiceException {
+    /** Returns the zimbra id of the server the specified upload resides on.
+     * 
+     * @param uploadId  The id of the upload.
+     * @throws ServiceException if the upload id is malformed. */
+    static String getUploadServerId(String uploadId) throws ServiceException {
         if (uploadId == null || uploadId.length() != UPLOAD_ID_LENGTH || uploadId.charAt(UPLOAD_ID_LENGTH / 2) != UPLOAD_PART_DELIMITER)
             throw ServiceException.INVALID_REQUEST("invalid upload ID: " + uploadId, null);
+        return uploadId.substring(0, UPLOAD_ID_LENGTH / 2);
+    }
 
-        Provisioning prov = Provisioning.getInstance();
-        return uploadId.substring(0, UPLOAD_ID_LENGTH / 2).equals(prov.getLocalServer().getId());
+    /** Returns whether the specified upload resides on this server.
+     * 
+     * @param uploadId  The id of the upload.
+     * @throws ServiceException if the upload id is malformed or if there is
+     *         an error accessing LDAP. */
+    static boolean isLocalUpload(String uploadId) throws ServiceException {
+        String serverId = getUploadServerId(uploadId);
+        return Provisioning.getInstance().getLocalServer().getId().equals(serverId);
     }
 
     public static Upload fetchUpload(String accountId, String uploadId, String authtoken) throws ServiceException {
