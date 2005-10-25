@@ -129,9 +129,6 @@ public class AdminService implements DocumentService {
     public static final QName GET_ALL_CONFIG_REQUEST = QName.get("GetAllConfigRequest", NAMESPACE);
     public static final QName GET_ALL_CONFIG_RESPONSE = QName.get("GetAllConfigResponse", NAMESPACE);    
     
-    public static final QName GET_SERVER_AGGREGATE_STATS_REQUEST = QName.get("GetServerAggregateStatsRequest", NAMESPACE);
-    public static final QName GET_SERVER_AGGREGATE_STATS_RESPONSE = QName.get("GetServerAggregateStatsResponse", NAMESPACE);
-    
     public static final QName GET_SERVICE_STATUS_REQUEST = QName.get("GetServiceStatusRequest", NAMESPACE);
     public static final QName GET_SERVICE_STATUS_RESPONSE = QName.get("GetServiceStatusResponse", NAMESPACE);
     
@@ -341,7 +338,6 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(GET_ALL_CONFIG_REQUEST, new GetAllConfig());
         dispatcher.registerHandler(MODIFY_CONFIG_REQUEST, new ModifyConfig());
         
-        dispatcher.registerHandler(GET_SERVER_AGGREGATE_STATS_REQUEST, new GetServerAggregateStats());
         dispatcher.registerHandler(GET_SERVICE_STATUS_REQUEST, new GetServiceStatus());        
         
         dispatcher.registerHandler(PURGE_MESSAGES_REQUEST, new PurgeMessages());
