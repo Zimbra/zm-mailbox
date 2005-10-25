@@ -31,6 +31,7 @@ package com.zimbra.cs.service.mail;
 import net.fortuna.ical4j.model.*;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -43,6 +44,7 @@ import com.zimbra.cs.service.UploadDataSource;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.ExceptionToString;
 import com.zimbra.soap.Element;
@@ -237,9 +239,17 @@ public class ParseMimeMessage {
                         Element elem = (Element) it.next();
                         String eName = elem.getName();
                         if (eName.equals(MailService.E_MIMEPART)) {
-                            int messageId = (int) elem.getAttributeLong(MailService.A_MESSAGE_ID);
+//                            int messageId = (int) elem.getAttributeLong(MailService.A_MESSAGE_ID);
+                            ItemId iid = new ItemId(elem.getAttribute(MailService.A_MESSAGE_ID), null);
                             String part = elem.getAttribute(MailService.A_PART);
-                            attachPart(mmp, mbox.getMessageById(octxt, messageId), part);
+                            if (!iid.hasSubpart()) {
+                                attachPart(mmp, mbox.getMessageById(octxt, iid.getId()), part);
+                            } else {
+                                Appointment appt = mbox.getAppointmentById(octxt, iid.getId());
+                                MimeMessage apptMm = appt.getMimeMessage(iid.getSubpartId());
+                                MimePart apptMp = Mime.getMimePart(apptMm, part);
+                                attachPart(mmp, apptMp, part);
+                            }
                         } else if (eName.equals(MailService.E_MSG)) {
                             int messageId = (int) elem.getAttributeLong(MailService.A_ID);
                             attachMessage(mmp, mbox.getMessageById(octxt, messageId));
@@ -490,7 +500,7 @@ public class ParseMimeMessage {
 
         ContentDisposition cd = new ContentDisposition(Part.ATTACHMENT);
         if (mp.getFileName() != null)
-        	cd.setParameter("filename", mp.getFileName());
+            cd.setParameter("filename", mp.getFileName());
         mbp.setHeader("Content-Disposition", cd.toString());
 
         String desc = mp.getDescription();
@@ -499,6 +509,30 @@ public class ParseMimeMessage {
 
         mmp.addBodyPart(mbp);
     }
+    
+    private static void attachPart(Multipart mmp, MimePart mp, String part)
+    throws IOException, MessagingException, ServiceException {
+        if (mp == null)
+            throw MailServiceException.NO_SUCH_PART(part);
+
+        MimeBodyPart mbp = new MimeBodyPart();
+        mbp.setDataHandler(new DataHandler(new MimePartDataSource(mp)));
+
+        String type = mp.getContentType();
+        mbp.setHeader("Content-Type", type == null ? Mime.CT_APPLICATION_OCTET_STREAM : type);
+
+        ContentDisposition cd = new ContentDisposition(Part.ATTACHMENT);
+        if (mp.getFileName() != null)
+            cd.setParameter("filename", mp.getFileName());
+        mbp.setHeader("Content-Disposition", cd.toString());
+
+        String desc = mp.getDescription();
+        if (desc != null)
+            mbp.setHeader("Content-Description", desc);
+
+        mmp.addBodyPart(mbp);
+    }
+    
 
     private static final class MessageAddresses {
         private final HashMap addrs = new HashMap();
