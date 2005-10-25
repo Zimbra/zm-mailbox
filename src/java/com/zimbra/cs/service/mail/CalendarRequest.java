@@ -203,7 +203,7 @@ public abstract class CalendarRequest extends SendMsg {
             int msgId = 0;
 
             String html = getOrigHtml(csd.mMm);
-            if (html.indexOf("href=\"@@ACCEPT@@\"") >= 0) {
+            if (html != null && html.indexOf("href=\"@@ACCEPT@@\"") >= 0) {
                 try {
                     String localURL = ZimbraServlet.getURLForServer(Provisioning.getInstance().getLocalServer());
                     
