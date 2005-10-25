@@ -397,7 +397,7 @@ OR
        		fb="F|B|T|U"
        		fba="F|B|T|U" // Your current status -- what is returned in FreeBusy for you TODO
        		transp="O|T"
-            [exceptId="EXCEPTION_INSTANCE_ID_MSECS_GMT"] // timestamp of instance this exception overrides
+            [ex="1|0]  // 1 if this Invite is an Exception
             [allDay="1|0"] [name="NAME"]
             [loc="LOCATION"]
             [rsvp="1|0"] // rsvp - 1 if response requested, 0 if no response requested

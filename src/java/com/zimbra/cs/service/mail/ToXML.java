@@ -858,6 +858,10 @@ public class ToXML {
 
             e.addAttribute(MailService.A_APPT_TRANSPARENCY, invite.getTransparency());
             
+            if (invite.getRecurId() != null) {
+                e.addAttribute(MailService.A_APPT_IS_EXCEPTION, true);
+            }
+            
             if (invite.isAllDayEvent())
                 e.addAttribute(MailService.A_APPT_ALLDAY, true);
             
