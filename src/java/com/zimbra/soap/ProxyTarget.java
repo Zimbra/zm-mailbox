@@ -53,15 +53,34 @@ public class ProxyTarget {
 
         mAuthToken = authToken;
 
-        int port = mServer.getIntAttr(Provisioning.A_zimbraMailPort, 0);
-        boolean useHTTP = port > 0;
-        if (!useHTTP)
-            port = mServer.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
-        if (port <= 0)
-            throw ServiceException.FAILURE("remote server " + mServer.getName() + " has neither http nor https port enabled", null);
-        String hostname = mServer.getAttr(Provisioning.A_zimbraServiceHostname);
+        String scheme;
+        int port;
 
-        StringBuffer url = new StringBuffer(useHTTP ? "http" : "https");
+        int localAdminPort = Provisioning.getInstance().getLocalServer().
+            getIntAttr(Provisioning.A_zimbraAdminPort, 0);
+        if (req.getServerPort() == localAdminPort) {
+            scheme = "https";
+            port = mServer.getIntAttr(Provisioning.A_zimbraAdminPort, 0);
+            if (port <= 0)
+                throw ServiceException.FAILURE(
+                        "remote server " + mServer.getName() +
+                        " does not have admin port enabled", null);
+        } else {
+            port = mServer.getIntAttr(Provisioning.A_zimbraMailPort, 0);
+            if (port > 0) {
+                scheme = "http";
+            } else {
+                scheme = "https";
+                port = mServer.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
+                if (port <= 0)
+                    throw ServiceException.FAILURE(
+                            "remote server " + mServer.getName() +
+                            " has neither http nor https port enabled", null);
+            }
+        }
+
+        String hostname = mServer.getAttr(Provisioning.A_zimbraServiceHostname);
+        StringBuffer url = new StringBuffer(scheme);
         url.append("://").append(hostname).append(':').append(port);
         url.append(req.getRequestURI());
         String qs = req.getQueryString();
