@@ -2329,6 +2329,7 @@ public class Mailbox {
     public synchronized BrowseResult browse(OperationContext octxt, String browseBy) throws IOException, ServiceException {
         boolean success = true;
         try {
+            beginTransaction("browse", octxt);
             if (!hasFullAccess())
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions on this mailbox");
             if (browseBy != null)
