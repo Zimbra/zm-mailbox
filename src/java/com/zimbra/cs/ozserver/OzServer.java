@@ -48,6 +48,11 @@ import EDU.oswego.cs.dl.util.concurrent.ThreadFactory;
 
 // TODO drop unauthenticated connections in sooner
 
+// TODO runWhenBlocked is bad for tasks scheduled from
+//      server thread because this will block server
+//      and stop it from reaping connections etc - because
+//      of tasks that execute in server thread.  Revisit this.
+
 // TODO STARTTLS and SSL support
 
 // TODO add a clearConnection so that protocol handlers will
