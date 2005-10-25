@@ -340,11 +340,10 @@ public class ContactCSV {
                     else return sb.toString();
                 }
                 sb.append((char)ch);                    
-                break;
             } else if (ch == ',' && !doubleQuotes) {
                 //reader.reset();
                 return sb.toString();
-            } else if (ch == '\r' || ch == '\n' && !doubleQuotes) {
+            } else if ((ch == '\r' || ch == '\n') && !doubleQuotes) {
                 reader.reset();
                 return sb.toString();
             } else {
