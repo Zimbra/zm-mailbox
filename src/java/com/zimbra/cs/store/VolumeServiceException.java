@@ -31,7 +31,9 @@ public class VolumeServiceException extends ServiceException {
 
     public static final String BAD_CURRVOL_CONFIG    = "volume.BAD_CURRVOL_CONFIG";
     public static final String NO_SUCH_VOLUME        = "volume.NO_SUCH_VOLUME";
+    public static final String NO_SUCH_PATH          = "volume.NO_SUCH_PATH";
     public static final String ALREADY_EXISTS        = "volume.ALREADY_EXISTS";
+    public static final String ID_OUT_OF_RANGE       = "volume.ID_OUT_OF_RANGE";
     public static final String WRONG_TYPE_CURRVOL    = "volume.WRONG_TYPE_CURRVOL";
     public static final String CANNOT_DELETE_CURRVOL = "volume.CANNOT_DELETE_CURRVOL";
     public static final String INVALID_REQUEST       = "volume.INVALID_REQUEST";
@@ -52,11 +54,21 @@ public class VolumeServiceException extends ServiceException {
         return new VolumeServiceException("no such volume: "+ id, NO_SUCH_VOLUME, SENDERS_FAULT, null);
     }
 
+    public static VolumeServiceException NO_SUCH_PATH(String path) {
+        return new VolumeServiceException("path does not exist: "+ path, NO_SUCH_PATH, SENDERS_FAULT, null);
+    }
+
     public static VolumeServiceException ALREADY_EXISTS(int id, String name, String path, Throwable t) {
         return new VolumeServiceException(
             "volume with the same id, name, or path already exists: (id=" +
             id + ", name=\"" + name + "\", path=" + path + ")",
             ALREADY_EXISTS, SENDERS_FAULT, t);
+    }
+
+    public static VolumeServiceException ID_OUT_OF_RANGE(int id) {
+        return new VolumeServiceException(
+                "id " + id + " is out of range [0, " + Volume.ID_MAX + "]",
+                ID_OUT_OF_RANGE, SENDERS_FAULT, null);
     }
 
     public static VolumeServiceException CANNOT_DELETE_CURRVOL(int id, String volType) {

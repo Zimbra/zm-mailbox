@@ -68,6 +68,9 @@ public class DbVolume {
         short nextId = id;
         if (nextId == Volume.ID_AUTO_INCREMENT)
             nextId = getNextVolumeID(conn);
+        if (nextId <= 0 || nextId > Volume.ID_MAX)
+            throw VolumeServiceException.ID_OUT_OF_RANGE(nextId);
+
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement(
@@ -188,20 +191,20 @@ public class DbVolume {
     public static Volume get(Connection conn, short id) throws ServiceException {
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        Volume result = null;
         try {
             stmt = conn.prepareStatement("SELECT * FROM volume WHERE id=?");
             stmt.setShort(1, id);
             rs = stmt.executeQuery();
             if (rs.next())
                 return constructVolume(rs);
+            else
+                throw VolumeServiceException.NO_SUCH_VOLUME(id);
         } catch (SQLException e) {
             throw ServiceException.FAILURE("getting volume entry: " + id, e);
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
         }
-        return result;
     }
 
     /**

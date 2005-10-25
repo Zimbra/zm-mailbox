@@ -56,6 +56,7 @@ public class Volume {
 
     public static final short ID_AUTO_INCREMENT = -1;
     public static final short ID_NONE           = -2;
+    public static final short ID_MAX            = 255;
 
     public static final short TYPE_MESSAGE           =  1;
     public static final short TYPE_MESSAGE_SECONDARY =  2;
@@ -151,6 +152,9 @@ public class Volume {
             if (path == null || path.length() < 1)
                 throw VolumeServiceException.INVALID_REQUEST("Missing volume path");
 
+//            if (!(new File(path)).exists())
+//                throw VolumeServiceException.NO_SUCH_PATH(path);
+
             conn = DbPool.getConnection();
             vol = DbVolume.create(conn, id, type, name, path,
                                   mboxGroupBits, mboxBits,
@@ -198,6 +202,9 @@ public class Volume {
                 throw VolumeServiceException.INVALID_REQUEST("Missing volume name");
             if (path == null || path.length() < 1)
                 throw VolumeServiceException.INVALID_REQUEST("Missing volume path");
+
+//            if (!(new File(path)).exists())
+//                throw VolumeServiceException.NO_SUCH_PATH(path);
 
             conn = DbPool.getConnection();
             vol = DbVolume.update(conn, id, type, name, path,
