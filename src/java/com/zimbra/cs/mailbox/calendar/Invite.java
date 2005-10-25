@@ -884,6 +884,29 @@ public class Invite {
         return null;
     }
     
+    /**
+     * Find the (first) Attendee in our list that matches the passed-in name
+     * 
+     * @param acct
+     * @return The first matching attendee
+     * @throws ServiceException
+     */
+    public ZAttendee getMatchingAttendee(String atName) throws ServiceException {
+        // Find my ATTENDEE record in the Invite, it must be in our response
+        List attendees = getAttendees();
+        
+        for (Iterator iter = attendees.iterator(); iter.hasNext();) {
+            ZAttendee at = (ZAttendee)(iter.next());
+            
+            String thisAtEmail = at.getAddress();
+            if (thisAtEmail.equalsIgnoreCase(atName)) {
+                return at;
+            }
+        }
+        return null;
+    }
+    
+    
     
     /**
      * Updates the ATTENDEE entries in this invite which match entries in the other one -- presumably 

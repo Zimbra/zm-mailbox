@@ -113,15 +113,15 @@ public class CalendarUtils {
     }
     
 
-    static MimeMessage createDefaultCalendarMessage(Account acct, String addr,
+    public static MimeMessage createDefaultCalendarMessage(String fromAddr, String addr,
             String subject, String text, String uid, Calendar cal) throws ServiceException {
         List list = new ArrayList();
         list.add(addr);
-        return createDefaultCalendarMessage(acct, list, subject, text, uid, cal);
+        return createDefaultCalendarMessage(fromAddr, list, subject, text, uid, cal);
     }
     
     
-    static MimeMessage createDefaultCalendarMessage(Account acct, List /* String */ toAts,
+    public static MimeMessage createDefaultCalendarMessage(String fromAddr, List /* String */ toAts,
             String subject, String text, String uid, Calendar cal) throws ServiceException 
     {
         try {
@@ -153,7 +153,7 @@ public class CalendarUtils {
                 addrs[i] = addr;
             }
             mm.addRecipients(javax.mail.Message.RecipientType.TO, addrs);
-            mm.setFrom(new InternetAddress(acct.getName()));
+            mm.setFrom(new InternetAddress(fromAddr));
             mm.setSentDate(new Date());
             mm.saveChanges();
             
@@ -201,6 +201,9 @@ public class CalendarUtils {
     }
             
     
+    public static final boolean RECUR_NOT_ALLOWED = false;
+    public static final boolean RECUR_ALLOWED = true;
+    
     /**
      * Parse an <inv> element 
      * 
@@ -213,11 +216,11 @@ public class CalendarUtils {
      * @throws ServiceException
      */
     static ParseMimeMessage.InviteParserResult parseInviteForCreate(Account account, Element inviteElem, TimeZoneMap tzMap,
-            String uid, boolean recurrenceIdAllowed) throws ServiceException 
+            String uid, boolean recurrenceIdAllowed, boolean recurAllowed) throws ServiceException 
     {
         Invite create = new Invite(Method.PUBLISH, new TimeZoneMap(account.getTimeZone()));
 
-        CalendarUtils.parseInviteElementCommon(account, inviteElem, create, tzMap);
+        CalendarUtils.parseInviteElementCommon(account, inviteElem, create, tzMap, recurAllowed);
         
         if (uid == null || uid.equals("")) {
             uid = inviteElem.getAttribute(MailService.A_UID, null);
@@ -266,11 +269,11 @@ public class CalendarUtils {
      * @throws ServiceException
      */
     static ParseMimeMessage.InviteParserResult parseInviteForModify(Account account, Element inviteElem, 
-            Invite oldInv, List /* Attendee */ attendeesToCancel) throws ServiceException 
+            Invite oldInv, List /* Attendee */ attendeesToCancel, boolean recurAllowed) throws ServiceException 
     {
         Invite mod = new Invite(Method.PUBLISH, oldInv.getTimeZoneMap());
 
-        CalendarUtils.parseInviteElementCommon(account, inviteElem, mod, oldInv.getTimeZoneMap());
+        CalendarUtils.parseInviteElementCommon(account, inviteElem, mod, oldInv.getTimeZoneMap(), recurAllowed);
         
         // use UID from old inv
         String uid = oldInv.getUid();
@@ -641,7 +644,7 @@ public class CalendarUtils {
      */
     private static void parseInviteElementCommon(Account account, 
                                                       Element element, Invite newInv,
-                                                      TimeZoneMap oldTzMap)
+                                                      TimeZoneMap oldTzMap, boolean recurAllowed)
     throws ServiceException {
         boolean allDay = element.getAttributeBool(MailService.A_APPT_ALLDAY, false);
         newInv.setIsAllDayEvent(allDay);
@@ -766,6 +769,9 @@ public class CalendarUtils {
         // RECUR
         Element recur = element.getOptionalElement(MailService.A_APPT_RECUR);
         if (recur != null) {
+            if (!recurAllowed) {
+                throw ServiceException.FAILURE("No <recur> allowed in an exception", null);
+            }
             Recurrence.IRecurrence recurrence = parseRecur(recur, oldTzMap, newInv);
             newInv.setRecurrence(recurrence);
         }
@@ -820,7 +826,7 @@ public class CalendarUtils {
      * @return
      * @throws ServiceException
      */
-    static Invite replyToInvite(Account acct, Invite oldInv, SendInviteReply.ParsedVerb verb, String replySubject, ParsedDateTime exceptDt)
+    public static Invite replyToInvite(Account acct, Invite oldInv, SendInviteReply.ParsedVerb verb, String replySubject, ParsedDateTime exceptDt)
     throws ServiceException
     {
         Invite reply = new Invite(Method.REPLY, new TimeZoneMap(acct.getTimeZone()));
@@ -833,6 +839,8 @@ public class CalendarUtils {
         if (me != null) {
             meReply = new ZAttendee(me.getAddress());
             meReply.setPartStat(verb.getXmlPartStat());
+            meReply.setRole(me.getRole());
+            meReply.setCn(me.getCn());
             reply.addAttendee(meReply);
         } else {
             String name = acct.getName();
@@ -845,10 +853,10 @@ public class CalendarUtils {
         reply.setDtStart(oldInv.getStartTime());
         
         // ORGANIZER
-            reply.setOrganizer(oldInv.getOrganizer());
+        reply.setOrganizer(oldInv.getOrganizer());
         
         // UID
-            reply.setUid(oldInv.getUid());
+        reply.setUid(oldInv.getUid());
         
         // RECURRENCE-ID (if necessary)
         if (exceptDt != null) {

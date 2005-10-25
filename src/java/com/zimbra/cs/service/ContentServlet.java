@@ -39,6 +39,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 
+import net.fortuna.ical4j.model.Calendar;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -52,6 +54,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
+import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.util.*;
@@ -160,6 +163,14 @@ public class ContentServlet extends ZimbraServlet {
                             MimeMessage mm = ((Appointment) mi).getMimeMessage(iid.getSubpartId());
                             mm.writeTo(resp.getOutputStream());
                         } else { 
+//                            Invite[] invites = appt.getInvites();
+//                            for (int i = 0; i < invites.length; i++)
+//                            {
+//                                Calendar cal = invites[i].toICalendar();
+//                                cal.toString();
+//                                resp.getWriter().write(cal.toString());
+//                            }
+                            
                             InputStream is = ((Appointment) mi).getRawMessage();
                             ByteUtil.copy(is, resp.getOutputStream());
                             is.close();

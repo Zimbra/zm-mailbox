@@ -39,7 +39,7 @@ public class CreateAppointmentException extends CreateAppointment {
         
         public ParseMimeMessage.InviteParserResult parseInviteElement(ZimbraContext lc, Account account, Element inviteElem)
         throws ServiceException {
-            return CalendarUtils.parseInviteForCreate(account, inviteElem, mTzMap, mUid, true);
+            return CalendarUtils.parseInviteForCreate(account, inviteElem, mTzMap, mUid, true, CalendarUtils.RECUR_NOT_ALLOWED);
         }
     };
     

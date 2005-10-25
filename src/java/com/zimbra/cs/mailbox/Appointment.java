@@ -461,6 +461,15 @@ public class Appointment extends MailItem {
         return null;
     }
     
+    public Invite[] getInvites() {
+        ArrayList toRet = new ArrayList();
+        for (Iterator iter = mInvites.iterator(); iter.hasNext();) {
+            Invite inv = (Invite)iter.next();
+            toRet.add(inv);
+        }
+        return (Invite[])toRet.toArray(new Invite[0]);
+    }
+    
     public Invite[] getInvites(int invId) {
         ArrayList toRet = new ArrayList();
         for (Iterator iter = mInvites.iterator(); iter.hasNext();) {

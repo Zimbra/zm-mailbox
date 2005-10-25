@@ -147,7 +147,7 @@ public class SendInviteReply extends CalendarRequest {
                                 ParseMimeMessage.NO_INV_ALLOWED_PARSER, parsedMessageData);
                     } else {
                         // build a default "Accepted" response
-                        dat.mMm = createDefaultReply(acct, oldInv, replySubject, verb, iCal); 
+                        dat.mMm = createDefaultReply(acct.getName(), oldInv, replySubject, verb, iCal); 
                     }
                     
                     sendCalendarMessage(lc, appt.getFolderId(), acct, mbox, dat, response);  
@@ -190,24 +190,24 @@ public class SendInviteReply extends CalendarRequest {
         }
     }
     
-    String getReplySubject(ParsedVerb verb, Invite inv) {
+    public static String getReplySubject(ParsedVerb verb, Invite inv) {
         return verb + ": " + inv.getName();
     }
 
-    MimeMessage createDefaultReply(Account acct, Invite inv, String replySubject, ParsedVerb verb, Calendar iCal)
+    public static MimeMessage createDefaultReply(String from, Invite inv, String replySubject, ParsedVerb verb, Calendar iCal)
     throws ServiceException {
         /////////
         // Build the default text part and add it to the mime multipart
-        StringBuffer replyText = new StringBuffer(acct.getName());
+        StringBuffer replyText = new StringBuffer(from);
         replyText.append(" has ");
         replyText.append(verb.toString());
         replyText.append(" your invitation");
         
-        return CalendarUtils.createDefaultCalendarMessage(acct, inv.getOrganizer().getCalAddress().getSchemeSpecificPart(), replySubject, 
+        return CalendarUtils.createDefaultCalendarMessage(from, inv.getOrganizer().getCalAddress().getSchemeSpecificPart(), replySubject, 
                 replyText.toString(), inv.getUid(), iCal);
     }
     
-    protected final static class ParsedVerb {
+    public final static class ParsedVerb {
         String name;
         String xmlPartStat;      // XML participant status
         public ParsedVerb(String name, String xmlPartStat) {
@@ -215,7 +215,7 @@ public class SendInviteReply extends CalendarRequest {
             this.xmlPartStat = xmlPartStat;
         }
         public String toString() { return name; }
-        String getXmlPartStat() { return xmlPartStat; }
+        public String getXmlPartStat() { return xmlPartStat; }
     }
     
     protected final static ParsedVerb VERB_ACCEPT = new ParsedVerb("ACCEPT", IcalXmlStrMap.PARTSTAT_ACCEPTED);
@@ -230,7 +230,7 @@ public class SendInviteReply extends CalendarRequest {
         sVerbs.put(MailService.A_APPT_TENTATIVE, VERB_TENTATIVE); 
     }
     
-    protected ParsedVerb parseVerb(String str) throws ServiceException
+    public static ParsedVerb parseVerb(String str) throws ServiceException
     {
         Object obj = sVerbs.get(str.toLowerCase());
         if (obj != null)

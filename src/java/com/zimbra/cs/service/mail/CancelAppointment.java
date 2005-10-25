@@ -147,7 +147,7 @@ public class CancelAppointment extends CalendarRequest {
         } else {
             List /* URI */ atURIs = CalendarUtils.toListFromAts(defaultInv.getAttendees());
 
-            dat.mMm = CalendarUtils.createDefaultCalendarMessage(acct, atURIs, subject, text, 
+            dat.mMm = CalendarUtils.createDefaultCalendarMessage(acct.getName(), atURIs, subject, text, 
                     defaultInv.getUid(), iCal);
         }
         
@@ -199,7 +199,7 @@ public class CancelAppointment extends CalendarRequest {
         } else {
             List /* URI */ atURIs = CalendarUtils.toListFromAts(inv.getAttendees());
 
-            dat.mMm = CalendarUtils.createDefaultCalendarMessage(acct, atURIs, subject, text, 
+            dat.mMm = CalendarUtils.createDefaultCalendarMessage(acct.getName(), atURIs, subject, text, 
                     inv.getUid(), iCal);
         }
         

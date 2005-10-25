@@ -61,7 +61,7 @@ public class CreateAppointment extends CalendarRequest {
     protected static class CreateAppointmentInviteParser extends ParseMimeMessage.InviteParser { 
         public ParseMimeMessage.InviteParserResult parseInviteElement(ZimbraContext lc, Account account, Element inviteElem) throws ServiceException 
         {
-            return CalendarUtils.parseInviteForCreate(account, inviteElem, null, null, false);
+            return CalendarUtils.parseInviteForCreate(account, inviteElem, null, null, false, CalendarUtils.RECUR_ALLOWED);
         }
     };
 
@@ -76,7 +76,8 @@ public class CreateAppointment extends CalendarRequest {
             Element msgElem = request.getElement(MailService.E_MSG);
 
             // no existing Appt referenced -- this is a new create!
-            ItemId iidFolder = new ItemId(msgElem.getAttribute(MailService.A_FOLDER, DEFAULT_FOLDER), lc);
+            String folderIdStr = msgElem.getAttribute(MailService.A_FOLDER, DEFAULT_FOLDER);
+            ItemId iidFolder = new ItemId(folderIdStr, lc);
             sLog.info("<CreateAppointment folder=" + iidFolder.getId() + "> " + lc.toString());
 
             CreateAppointmentInviteParser parser = new CreateAppointmentInviteParser();

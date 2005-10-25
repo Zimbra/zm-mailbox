@@ -25,6 +25,10 @@
 
 package com.zimbra.cs.service.mail;
 
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.List;
+
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
@@ -34,6 +38,8 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mime.MPartInfo;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
@@ -89,6 +95,32 @@ public abstract class CalendarRequest extends SendMsg {
 
         return csd;
     }
+    
+    protected static void patchCalendarURLs(MimeMessage mm, Invite inv) throws ServiceException
+    {
+        try {
+            boolean changed = false;
+            
+            List /*<MPartInfo>*/ parts = Mime.getParts(mm);
+            for (Iterator it = parts.iterator(); it.hasNext(); ) {
+                MPartInfo mpi = (MPartInfo) it.next();
+                
+                if (mpi.getContentType().match(Mime.CT_TEXT_HTML)) {
+                    String str = (String)(mpi.getMimePart().getContent());
+                    mpi.getMimePart().setText(str, Mime.P_CHARSET_UTF8);
+                    changed = true;
+                }
+            }
+            
+            if (changed) {
+                mm.saveChanges();
+            }
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("IOException "+e, e);
+        } catch (MessagingException e) {
+            throw ServiceException.FAILURE("MessagingException "+e, e);
+        }
+    }
 
     protected static Element sendCalendarMessage(ZimbraContext lc, int apptFolderId, Account acct, Mailbox mbox, CalSendData csd, Element response)
     throws ServiceException { 
@@ -113,7 +145,10 @@ public abstract class CalendarRequest extends SendMsg {
                 csd.mInvite.setFragment(pm.getFragment());
             }
 
-            int[] ids = mbox.addInvite(octxt, apptFolderId, csd.mInvite, false, pm); 
+            int[] ids = mbox.addInvite(octxt, apptFolderId, csd.mInvite, false, pm);
+            
+            // testing
+            // patchCalendarURLs(pm.getMimeMessage(), csd.mInvite);
 
             boolean hasRecipients = true;
             try {

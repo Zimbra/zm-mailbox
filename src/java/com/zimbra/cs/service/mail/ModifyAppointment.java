@@ -72,7 +72,7 @@ public class ModifyAppointment extends CalendarRequest {
         public ParseMimeMessage.InviteParserResult parseInviteElement(ZimbraContext lc, Account account, Element inviteElem) throws ServiceException {
             List atsToCancel = new ArrayList();
 
-            ParseMimeMessage.InviteParserResult toRet = CalendarUtils.parseInviteForModify(account, inviteElem, mInv, atsToCancel);
+            ParseMimeMessage.InviteParserResult toRet = CalendarUtils.parseInviteForModify(account, inviteElem, mInv, atsToCancel, !mInv.hasRecurId());
 
             // send cancellations to any invitees who have been removed...
             updateRemovedInvitees(lc, account, mmbox, mInv.getAppointment(), mInv, atsToCancel);
@@ -167,7 +167,7 @@ public class ModifyAppointment extends CalendarRequest {
             dat.mInvite = CalendarUtils.buildCancelInviteCalendar(acct, inv, text, cancelAt);
             Calendar cal = dat.mInvite.toICalendar();
             
-            dat.mMm = CalendarUtils.createDefaultCalendarMessage(acct, 
+            dat.mMm = CalendarUtils.createDefaultCalendarMessage(acct.getName(), 
                     cancelAt.getAddress(), subject, text, inv.getUid(), cal);
             
             sendCalendarMessage(lc, appt.getFolderId(), acct, mbox, dat, null); 

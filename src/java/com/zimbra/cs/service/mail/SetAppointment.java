@@ -66,7 +66,7 @@ public class SetAppointment extends CalendarRequest {
                 ParseMimeMessage.InviteParserResult toRet = CalendarUtils.parseInviteRaw(account, inviteElem);
                 return toRet;
             } else {
-                return CalendarUtils.parseInviteForCreate(account, inviteElem, null, null, mExceptOk);
+                return CalendarUtils.parseInviteForCreate(account, inviteElem, null, null, mExceptOk, CalendarUtils.RECUR_ALLOWED);
             }
         }
     };
