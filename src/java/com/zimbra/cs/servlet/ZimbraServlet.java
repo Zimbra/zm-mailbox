@@ -245,6 +245,34 @@ public class ZimbraServlet extends HttpServlet {
 			throw new ServletException(e);
 		}
     }
+    
+    /**
+     * Returns URL for the passed-in server, or NULL if there
+     * are no available HTTP or HTTPs ports
+     * 
+     *     http://hostname:7070
+     *     https://hostname
+     *     http://hostname:1234
+     *     
+     * @param server
+     * @return
+     */
+    public static String getURLForServer(Server server) 
+    {
+        // determine the URI for the remote ContentServlet
+        int port = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
+        boolean useHTTP = port > 0;
+        if (!useHTTP)
+            port = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
+        if (port <= 0)
+            return null;
+        String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
+        
+        StringBuffer url = new StringBuffer(useHTTP ? "http" : "https");
+        url.append("://").append(hostname).append(':').append(port);
+        
+        return url.toString();
+    }
 
     protected void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, Server server)
     throws IOException, ServletException {

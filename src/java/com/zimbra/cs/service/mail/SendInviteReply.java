@@ -218,9 +218,9 @@ public class SendInviteReply extends CalendarRequest {
         public String getXmlPartStat() { return xmlPartStat; }
     }
     
-    protected final static ParsedVerb VERB_ACCEPT = new ParsedVerb("ACCEPT", IcalXmlStrMap.PARTSTAT_ACCEPTED);
-    protected final static ParsedVerb VERB_DECLINE = new ParsedVerb("DECLINE", IcalXmlStrMap.PARTSTAT_DECLINED);
-    protected final static ParsedVerb VERB_TENTATIVE = new ParsedVerb("TENTATIVE", IcalXmlStrMap.PARTSTAT_TENTATIVE);
+    public final static ParsedVerb VERB_ACCEPT = new ParsedVerb("ACCEPT", IcalXmlStrMap.PARTSTAT_ACCEPTED);
+    public final static ParsedVerb VERB_DECLINE = new ParsedVerb("DECLINE", IcalXmlStrMap.PARTSTAT_DECLINED);
+    public final static ParsedVerb VERB_TENTATIVE = new ParsedVerb("TENTATIVE", IcalXmlStrMap.PARTSTAT_TENTATIVE);
     
     protected static HashMap /* string, parsedverb */ sVerbs;
     static {
