@@ -70,14 +70,14 @@ public class ICalServlet extends ZimbraBasicAuthServlet {
     private static final String PARAM_QUERY = "query";
 
     private static Log mLog = LogFactory.getLog(ICalServlet.class);
+    
+    private static final long MSECS_PER_DAY = 1000*60*60*24;
 
     public void doAuthGet(HttpServletRequest req, HttpServletResponse resp, Account acct, Mailbox mailbox)
     throws ServiceException, IOException
     {
         String pathInfo = req.getPathInfo().toLowerCase();
         boolean isRss = pathInfo != null && pathInfo.endsWith("rss");
-
-        long MSECS_PER_DAY = 1000*60*60*24;
 
         if (isRss) {
             long start = System.currentTimeMillis() - (7*MSECS_PER_DAY);
