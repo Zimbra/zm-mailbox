@@ -1548,17 +1548,26 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
                             ZimbraLog.imap.error("missing blob for id: " + i4msg.id + ", change: " + i4msg.getRevision());
                             continue;
                         }
-                        raw = ByteUtil.getContent(sm.getContent(blob), i4msg.getSize());
+                        try {
+                            raw = ByteUtil.getContent(sm.getContent(blob), i4msg.getSize());
+                        } catch (IOException e) {
+                            throw ServiceException.FAILURE("error fetching content for message " + i4msg.id, e);
+                        }
                         for (int i = 0; i < fullMessage.size(); i++) {
                             ImapPartSpecifier pspec = (ImapPartSpecifier) fullMessage.get(i);
                             result.print(empty ? "" : " ");  pspec.write(result, raw);  empty = false;
                         }
                     }
 			        if (!parts.isEmpty() || (attributes & ~FETCH_FROM_CACHE) != 0) {
-                        // don't use msg.getMimeMessage() because it implicitly expands TNEF attachments
-                        InputStream is = raw != null ? new ByteArrayInputStream(raw) : mMailbox.getMessageById(getContext(), i4msg.id).getRawMessage();
-                        MimeMessage mm = new MimeMessage(JMSession.getSession(), is);
-                        is.close();
+                        MimeMessage mm;
+                        try {
+                            // don't use msg.getMimeMessage() because it implicitly expands TNEF attachments
+                            InputStream is = raw != null ? new ByteArrayInputStream(raw) : mMailbox.getMessageById(getContext(), i4msg.id).getRawMessage();
+                            mm = new MimeMessage(JMSession.getSession(), is);
+                            is.close();
+                        } catch (IOException e) {
+                            throw ServiceException.FAILURE("error fetching raw content for message " + i4msg.id, e);
+                        }
                         if ((attributes & FETCH_BODY) != 0) {
                             result.print(empty ? "" : " ");  result.print("BODY ");
                             i4msg.getStructure(result, mm, false);  empty = false;
@@ -1587,9 +1596,6 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
                         result.print(empty ? "" : " ");  result.print(i4msg.getFlags(mSession));  empty = false;
                     }
                 } catch (ServiceException e) {
-                    ZimbraLog.imap.warn("ignoring error during " + command + ": ", e);
-                    continue;
-                } catch (IOException e) {
                     ZimbraLog.imap.warn("ignoring error during " + command + ": ", e);
                     continue;
                 } catch (MessagingException e) {
