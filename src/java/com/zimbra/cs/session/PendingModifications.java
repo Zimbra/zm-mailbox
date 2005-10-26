@@ -50,12 +50,13 @@ public final class PendingModifications {
 	    public static final int MODIFIED_CHILDREN  = 0x00000400;
         public static final int MODIFIED_SENDERS   = 0x00000800;
         public static final int MODIFIED_NAME      = 0x00001000;
-	    public static final int MODIFIED_QUERY     = 0x00002000;
+	    public static final int MODIFIED_COLOR     = 0x00002000;
 	    public static final int MODIFIED_POSITION  = 0x00004000;
-	    public static final int MODIFIED_COLOR     = 0x00008000;
+	    public static final int MODIFIED_QUERY     = 0x00008000;
         public static final int MODIFIED_CONTENT   = 0x00010000;
         public static final int MODIFIED_INVITE    = 0x00020000;
-        public static final int MODIFIED_IMAP_UID  = 0x00040000;
+        public static final int MODIFIED_URL       = 0x00040000;
+        public static final int MODIFIED_IMAP_UID  = 0x00080000;
         public static final int MODIFIED_VIEW      = 0x00100000;
         public static final int MODIFIED_ACL       = 0x00200000;
         public static final int MODIFIED_CONFLICT  = 0x00400000;

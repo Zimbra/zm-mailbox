@@ -25,8 +25,6 @@
 
 package com.zimbra.cs.mailbox.calendar;
 
-import java.io.IOException;
-import java.io.StringReader;
 import java.net.URI;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -38,8 +36,6 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import net.fortuna.ical4j.data.CalendarBuilder;
-import net.fortuna.ical4j.data.ParserException;
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.ComponentList;
@@ -1209,21 +1205,7 @@ public class Invite {
         }
         return toRet;
     }
-    
-    static public List /* Invite */  createFromRawICalendar(Account acct, String fragment, String calStr, boolean sentByMe) throws ServiceException
-    {
-        try {
-            CalendarBuilder calBuilder = new CalendarBuilder();
-            StringReader reader = new StringReader(calStr);
-            Calendar iCal = calBuilder.build(reader);
-            return createFromICalendar(acct, fragment, iCal, sentByMe); 
-        } catch (ParserException pe) {
-            throw ServiceException.FAILURE("Parse Exception parsing raw iCalendar data -- "+pe, pe);
-        } catch (IOException ioe) {
-            throw ServiceException.FAILURE("IOException parsing raw iCalendar data -- "+ioe, ioe);
-        }
-    }
-    
+
     static public List /* Invite */  createFromICalendar(Account acct, String fragment, Calendar cal, boolean sentByMe) throws ServiceException
     {
         // vevent, vtodo: ALARM, props

@@ -42,9 +42,6 @@ import net.fortuna.ical4j.model.property.ProdId;
 import net.fortuna.ical4j.model.property.Version;
 
 import org.apache.commons.collections.map.LRUMap;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.methods.GetMethod;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -69,6 +66,7 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.op.*;
+import com.zimbra.cs.service.FeedManager;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.SessionCache;
@@ -1245,19 +1243,19 @@ public class Mailbox {
         // loaded by the earlier call to loadFoldersAndTags in beginTransaction
 
         byte hidden = Folder.FOLDER_IS_IMMUTABLE | Folder.FOLDER_NO_UNREAD_COUNT;
-        Folder root = Folder.create(ID_FOLDER_ROOT, this, null, "ROOT", hidden, MailItem.TYPE_UNKNOWN);
-        Folder.create(ID_FOLDER_TAGS,          this, root, "Tags",          hidden, MailItem.TYPE_TAG);
-        Folder.create(ID_FOLDER_CONVERSATIONS, this, root, "Conversations", hidden, MailItem.TYPE_CONVERSATION);
+        Folder root = Folder.create(ID_FOLDER_ROOT, this, null, "ROOT", hidden, MailItem.TYPE_UNKNOWN, null);
+        Folder.create(ID_FOLDER_TAGS,          this, root, "Tags",          hidden, MailItem.TYPE_TAG, null);
+        Folder.create(ID_FOLDER_CONVERSATIONS, this, root, "Conversations", hidden, MailItem.TYPE_CONVERSATION, null);
 
         byte system = Folder.FOLDER_IS_IMMUTABLE;
-        Folder userRoot = Folder.create(ID_FOLDER_USER_ROOT, this, root, "USER_ROOT", system, MailItem.TYPE_UNKNOWN);
-        Folder.create(ID_FOLDER_INBOX,    this, userRoot, "Inbox",    system, MailItem.TYPE_MESSAGE);
-        Folder.create(ID_FOLDER_TRASH,    this, userRoot, "Trash",    system, MailItem.TYPE_UNKNOWN);
-        Folder.create(ID_FOLDER_SPAM,     this, userRoot, "Junk",     system, MailItem.TYPE_MESSAGE);
-        Folder.create(ID_FOLDER_SENT,     this, userRoot, "Sent",     system, MailItem.TYPE_MESSAGE);
-        Folder.create(ID_FOLDER_DRAFTS,   this, userRoot, "Drafts",   system, MailItem.TYPE_MESSAGE);
-        Folder.create(ID_FOLDER_CONTACTS, this, userRoot, "Contacts", system, MailItem.TYPE_CONTACT);
-        Folder.create(ID_FOLDER_CALENDAR, this, userRoot, "Calendar", system, MailItem.TYPE_APPOINTMENT);
+        Folder userRoot = Folder.create(ID_FOLDER_USER_ROOT, this, root, "USER_ROOT", system, MailItem.TYPE_UNKNOWN, null);
+        Folder.create(ID_FOLDER_INBOX,    this, userRoot, "Inbox",    system, MailItem.TYPE_MESSAGE, null);
+        Folder.create(ID_FOLDER_TRASH,    this, userRoot, "Trash",    system, MailItem.TYPE_UNKNOWN, null);
+        Folder.create(ID_FOLDER_SPAM,     this, userRoot, "Junk",     system, MailItem.TYPE_MESSAGE, null);
+        Folder.create(ID_FOLDER_SENT,     this, userRoot, "Sent",     system, MailItem.TYPE_MESSAGE, null);
+        Folder.create(ID_FOLDER_DRAFTS,   this, userRoot, "Drafts",   system, MailItem.TYPE_MESSAGE, null);
+        Folder.create(ID_FOLDER_CONTACTS, this, userRoot, "Contacts", system, MailItem.TYPE_CONTACT, null);
+        Folder.create(ID_FOLDER_CALENDAR, this, userRoot, "Calendar", system, MailItem.TYPE_APPOINTMENT, null);
         mCurrentChange.itemId = FIRST_USER_ID;
 
         // and write a checkpoint to the tombstones table to help establish a change/date relationship
@@ -1570,32 +1568,6 @@ public class Mailbox {
         }
     }
     
-    public synchronized void retrieveRemoteCalendar(String uri, int folderId) throws ServiceException
-    {
-        HttpClient client = new HttpClient();
-        
-        client.setConnectionTimeout(10000);
-        client.setTimeout(20000);
-        
-        GetMethod get = new GetMethod(uri);
-        get.setFollowRedirects(true);
-        
-        try {
-            client.executeMethod(get);
-        } catch (HttpException e) {
-            throw ServiceException.FAILURE("HttpException: "+e, e);
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("IOException: "+e, e);
-        }
-        
-        List /* Invite */ invites = Invite.createFromRawICalendar(getAccount(), "", get.getResponseBodyAsString(), false);
-        for (Iterator iter = invites.iterator(); iter.hasNext();) {
-            Invite inv = (Invite)iter.next();
-            addInvite(null, folderId, inv, true, null);
-        }
-    }
-
-
     /** Returns whether this type of {@link MailItem} is definitely preloaded
      *  in one of the <code>Mailbox</code>'s caches.
      * 
@@ -3366,12 +3338,17 @@ public class Mailbox {
         }
     }
 
-    public synchronized Folder createFolder(OperationContext octxt, String name, int parentId, byte defaultView) throws ServiceException {
+    public synchronized Folder createFolder(OperationContext octxt, String name, int parentId, byte defaultView, String url)
+    throws ServiceException {
         Folder.validateFolderName(name);
         String path = getFolderById(parentId).getPath() + (parentId == ID_FOLDER_USER_ROOT ? "" : "/") + name;
-        return createFolder(octxt, path, (byte) 0, defaultView);
+        return createFolder(octxt, path, (byte) 0, defaultView, url);
     }
     public synchronized Folder createFolder(OperationContext octxt, String path, byte attrs, byte defaultView) throws ServiceException {
+        return createFolder(octxt, path, attrs, defaultView, null);
+    }
+    public synchronized Folder createFolder(OperationContext octxt, String path, byte attrs, byte defaultView, String url)
+    throws ServiceException {
         if (path != null) {
             path = path.trim();
             if (!path.startsWith("/"))
@@ -3379,7 +3356,7 @@ public class Mailbox {
             if (path.endsWith("/") && path.length() > 1)
                 path = path.substring(0, path.length() - 1);
         }
-        CreateFolder redoRecorder = new CreateFolder(mId, path, attrs, defaultView);
+        CreateFolder redoRecorder = new CreateFolder(mId, path, attrs, defaultView, url);
 
         boolean success = false;
         try {
@@ -3400,7 +3377,7 @@ public class Mailbox {
                 int folderId = playerFolderIds == null ? ID_AUTO_INCREMENT : playerFolderIds[i];
                 Folder subfolder = folder.findSubfolder(parts[i]);
                 if (subfolder == null)
-                    subfolder = Folder.create(getNextItemId(folderId), this, folder, parts[i], (byte) 0, last ? defaultView : MailItem.TYPE_UNKNOWN);
+                    subfolder = Folder.create(getNextItemId(folderId), this, folder, parts[i], (byte) 0, last ? defaultView : MailItem.TYPE_UNKNOWN, last ? url : null);
                 else if (folderId != ID_AUTO_INCREMENT && folderId != subfolder.getId())
                     throw ServiceException.FAILURE("parent folder id changed since operation was recorded", null);
                 else if (last)
@@ -3424,6 +3401,7 @@ public class Mailbox {
             beginTransaction("grantAccess", octxt, null);
 
             Folder folder = getFolderById(folderId);
+            checkItemChangeID(folder);
             folder.grantAccess(grantee, granteeType, rights, inherit);
             success = true;
         } finally {
@@ -3439,55 +3417,51 @@ public class Mailbox {
             beginTransaction("revokeAccess", octxt, null);
 
             Folder folder = getFolderById(folderId);
+            checkItemChangeID(folder);
             folder.revokeAccess(grantee);
             success = true;
         } finally {
             endTransaction(success);
         }
     }
-    
-    public synchronized void refreshFolder(OperationContext octxt, int folderId, String urlOrNull) throws ServiceException {
-        
-        Folder folder = getFolderById(folderId);
-        
-        if (urlOrNull != null) { // update the URL setting
-            boolean success = false;
-            try {
-                beginTransaction("refreshFolder", octxt, null);
-                
-                checkItemChangeID(folder);
-                
-                String curUrl = folder.getUrl();
-                if (urlOrNull.equals("")) {
-                    // clear existing
-                    if (curUrl != null) {
-                        folder.setUrl(null);
-                        folder.saveMetadata();
-                    }
-                } else if (curUrl == null || !curUrl.equals(urlOrNull)) {
-                    // update existing
-                    folder.setUrl(urlOrNull);
-                    folder.saveMetadata();
-                }
-                success = true;
-            } finally {
-                endTransaction(success);
-            }
+
+    public synchronized void setFolderUrl(OperationContext octxt, int folderId, String url) throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("setFolderUrl", octxt);
+
+            Folder folder = getFolderById(folderId);
+            checkItemChangeID(folder);
+            folder.setUrl(url);
+            success = true;
+        } finally {
+            endTransaction(success);
         }
-        
-        {
-            boolean success = false;
+    }
+
+    public synchronized void synchronizeFolder(OperationContext octxt, int folderId) throws ServiceException {
+        Folder folder = getFolderById(octxt, folderId);
+        if (!folder.getUrl().equals(""))
+            importFeed(octxt, folderId, folder.getUrl(), true);
+    }
+
+    public synchronized void importFeed(OperationContext octxt, int folderId, String url, boolean empty) throws ServiceException {
+        if (url == null || url.equals(""))
+            return;
+
+        List items = FeedManager.retrieveRemoteDatasource(getAccount(), url);
+        if (empty)
+            emptyFolder(octxt, folderId, false);
+        for (Iterator it = items.iterator(); it.hasNext(); ) {
+            Object item = it.next();
             try {
-                beginTransaction("refreshFolderPart2", octxt, null);
-                folder.empty(false);
-                success = true;
-            } finally {
-                endTransaction(success);
+                if (item instanceof Invite)
+                    addInvite(octxt, folderId, (Invite) item, true, null);
+                else if (item instanceof ParsedMessage)
+                    addMessage(octxt, (ParsedMessage) item, folderId, false, Flag.FLAG_UNREAD, null);
+            } catch (IOException e) {
+                throw ServiceException.FAILURE("IOException", e);
             }
-        }
-        
-        if (folder.getUrl() != null && !folder.getUrl().equals("")) {
-            retrieveRemoteCalendar(folder.getUrl(), folderId);
         }
     }
 

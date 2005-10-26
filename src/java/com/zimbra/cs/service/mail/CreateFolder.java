@@ -54,15 +54,19 @@ public class CreateFolder extends WriteOpDocumentHandler {
     public Element handle(Element request, Map context) throws ServiceException {
         ZimbraContext lc = getZimbraContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
+        Mailbox.OperationContext octxt = lc.getOperationContext();
 
         Element t = request.getElement(MailService.E_FOLDER);
         String name      = t.getAttribute(MailService.A_NAME);
         String view      = t.getAttribute(MailService.A_DEFAULT_VIEW, null);
+        String url       = t.getAttribute(MailService.A_URL, null);
         ItemId iidParent = new ItemId(t.getAttribute(MailService.A_FOLDER), lc);
 
         Folder folder;
         try {
-            folder = mbox.createFolder(lc.getOperationContext(), name, iidParent.getId(), MailItem.getTypeForName(view));
+            folder = mbox.createFolder(octxt, name, iidParent.getId(), MailItem.getTypeForName(view), url);
+            if (!folder.getUrl().equals(""))
+                mbox.synchronizeFolder(octxt, folder.getId());
         } catch (ServiceException se) {
             if (se.getCode() == MailServiceException.ALREADY_EXISTS && t.getAttributeBool(MailService.A_FETCH_IF_EXISTS, false))
                 folder = mbox.getFolderByName(lc.getOperationContext(), iidParent.getId(), name);

@@ -95,7 +95,7 @@ public class TestConcurrency extends TestCase {
         Thread[] threads = new Thread[numThreads];
 
         // Create thread for moving messages
-        Folder folder = mMbox.createFolder(null, FOLDER_NAME, Mailbox.ID_FOLDER_USER_ROOT, MailItem.TYPE_UNKNOWN);
+        Folder folder = mMbox.createFolder(null, FOLDER_NAME, Mailbox.ID_FOLDER_USER_ROOT, MailItem.TYPE_UNKNOWN, null);
         threads[0] = new Thread(new MoveMessagesThread(folder, 5));
         
         // Create threads for reading messages

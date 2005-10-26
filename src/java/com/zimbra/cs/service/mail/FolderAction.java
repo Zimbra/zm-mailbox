@@ -50,13 +50,15 @@ import com.zimbra.soap.ZimbraContext;
  */
 public class FolderAction extends ItemAction {
 
-    public static final String OP_REFRESH = "urlrefresh";
-    public static final String OP_RENAME = "rename";
-    public static final String OP_EMPTY  = "empty";
-    public static final String OP_GRANT  = "grant";
-    public static final String OP_REVOKE = '!' + OP_GRANT;
-    public static final String OP_UNFLAG = '!' + OP_FLAG;
-    public static final String OP_UNTAG  = '!' + OP_TAG;
+    public static final String OP_RENAME  = "rename";
+    public static final String OP_EMPTY   = "empty";
+    public static final String OP_REFRESH = "sync";
+    public static final String OP_SET_URL = "url";
+    public static final String OP_IMPORT  = "import";
+    public static final String OP_GRANT   = "grant";
+    public static final String OP_REVOKE  = '!' + OP_GRANT;
+    public static final String OP_UNFLAG  = '!' + OP_FLAG;
+    public static final String OP_UNTAG   = '!' + OP_TAG;
 
 	public Element handle(Element request, Map context) throws ServiceException, SoapFaultException {
         ZimbraContext lc = getZimbraContext(context);
@@ -96,9 +98,16 @@ public class FolderAction extends ItemAction {
 
         if (operation.equals(OP_EMPTY))
             mbox.emptyFolder(octxt, iid.getId(), true);
-        else if (operation.equals(OP_REFRESH)) {
-            String url = action.getAttribute(MailService.A_URL, null);
-            mbox.refreshFolder(octxt, iid.getId(), url);
+        else if (operation.equals(OP_REFRESH))
+            mbox.synchronizeFolder(octxt, iid.getId());
+        else if (operation.equals(OP_IMPORT)) {
+            String url = action.getAttribute(MailService.A_URL);
+            mbox.importFeed(octxt, iid.getId(), url, false);
+        } else if (operation.equals(OP_SET_URL)) {
+            String url = action.getAttribute(MailService.A_URL, "");
+            mbox.setFolderUrl(octxt, iid.getId(), url);
+            if (!url.equals(""))
+                mbox.synchronizeFolder(octxt, iid.getId());
         } else if (operation.equals(OP_RENAME)) {
             String name = action.getAttribute(MailService.A_NAME);
             mbox.renameFolder(octxt, iid.getId(), name);

@@ -491,7 +491,7 @@ Conversations:
                  
 Folders:
 
-  <folder id="{folder-id}" name="{folder-name}" l="{parent-id}" [color="{color}"] u="{unread}" n="{msg-count}" [view="{default-type}"]>
+  <folder id="{folder-id}" name="{folder-name}" l="{parent-id}" [color="{color}"] u="{unread}" n="{msg-count}" [view="{default-type}"] [url="{remote-url}"]>
     [<acl> <grant perm="{rights}" gt="{grantee-type}" d="{grantee-name}" [inh="0|1"]/>* </acl>]
   </folder>
 
@@ -503,7 +503,8 @@ Folders:
   {msg-count}    = number of messages/invites in folder
   {default-type} = (optional) default type for the folder; used by web client to decide which view to use;
                    possible values are the same as <SearchRequest>'s {types}: conversation|message|contact|appointment|note
-  
+  {remote-url}   = url (RSS, iCal, etc.) this folder syncs its contents to
+
   folders can have an optional ACL set on them for sharing.  if they do, an <acl> element
     will be returned containing 1 or more <grant> elements, with the following attributes:
     
@@ -840,25 +841,36 @@ if fie="1" is set, the server will fetch the folder if it already exists rather 
 ---------
 
 <FolderActionRequest>
-  <action id="{list}" op="read|delete|rename|move|empty|color|grant" name="..." [l="{target-folder}"] [color="..."] [zid="{grantee-zimbra-id}"]>
+  <action id="{list}" op="read|delete|rename|move|empty|color|grant|url|import|sync" name="..." [l="{target-folder}"]
+                      [name="{new-name}"] [color="{new-color}"] [zid="{grantee-zimbra-id}"] [url="{target-url}"]>
     [<grant perm="..." gt="..." d="..." [inh="0|1"]/>]
   </action>
 </FolderActionRequest>
 
 <FolderActionResponse>
-  <action id="{list}" op="read|delete|rename|move|empty|color|grant" [zid="{grantee-zimbra-id}"]/>
+  <action id="{list}" op="read|delete|empty|rename|move|color|grant" [zid="{grantee-zimbra-id}"]/>
 </FolderActionResponse>
+
+  Actions:
+    op="read" - mark all items in the folder as read
+    op="delete" - hard-delete the folder, all items in the folder, and all the folder's subfolders
+    op="empty" - hard-delete all items in the folder and all the folder's subfolders
+    op="rename" - change the folder's name; if {new-name} begins with '/', the folder is moved to the new path and any missing path elements are created
+    op="move" - move the folder to be a child of {target-folder}
+    op="color" - change the folder's color to {new-color}
+    op="grant" - add the <grant> object to the folder
+    op="!grant" - revoke access from {grantee-zimbra-id} (you can use "00000000-0000-0000-0000-000000000000" to revoke acces granted to "all")
+    op="url" - set the synchronization url on the folder to {target-url}, empty the folder, and synchronize the folder's contents to the remote feed
+    op="sync" - synchronize the folder's contents to the remote feed specified by the folder's {url}
+    op="import" - add the contents to the remote feed at {target-url} to the folder [1-time action]
 
   {list} = on input, list of folders to act on, on output, list of
            folders that were acted on;
            list may only have 1 element for action "rename" or "empty"
-  {grantee-zimbra-id} = zimbra id of principal to revoke access from (for op="!grant" only);
-                        you can use "00000000-0000-0000-0000-000000000000" to revoke acces granted to "all"
-  <grant> is only specified when op="grant"
 
-output of "grant" action includes the zikmbra id the rights were granted on
+output of "grant" action includes the zimbra id the rights were granted on
 
-note that these actions (except for "grant") can be used on search folders as well as standard folders
+note that "delete", "empty", "rename", "move", "color" can be used on search folders as well as standard folders
 
 ---------
 

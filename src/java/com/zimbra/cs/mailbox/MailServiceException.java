@@ -59,10 +59,11 @@ public class MailServiceException extends ServiceException {
     public static final String INVALID_ID      = "mail.INVALID_ID";
     public static final String INVALID_NAME    = "mail.INVALID_NAME";
 	public static final String WRONG_MAILBOX   = "mail.WRONG_MAILBOX";
+    public static final String CANNOT_SUBSCRIBE = "mail.CANNOT_SUBSCRIBE";
 	public static final String CANNOT_CONTAIN  = "mail.CANNOT_CONTAIN";
     public static final String CANNOT_COPY     = "mail.CANNOT_COPY";
 	public static final String CANNOT_TAG      = "mail.CANNOT_TAG";
-	public static final String CANNOT_PARENT   = "mail.CANNOT_PARENT";
+    public static final String CANNOT_PARENT   = "mail.CANNOT_PARENT";
 	public static final String IS_NOT_CHILD    = "mail.IS_NOT_CHILD";
 	public static final String MODIFY_CONFLICT = "mail.MODIFY_CONFLICT";
 	public static final String IMMUTABLE_OBJECT  = "mail.IMMUTABLE_OBJECT";
@@ -208,6 +209,10 @@ public class MailServiceException extends ServiceException {
 
     public static MailServiceException CANNOT_TAG() {
         return new MailServiceException("cannot apply tag to object", CANNOT_TAG, SENDERS_FAULT, null);
+    }
+
+    public static MailServiceException CANNOT_SUBSCRIBE(int id) {
+        return new MailServiceException("cannot add subscription to existing folder " + id, CANNOT_SUBSCRIBE, SENDERS_FAULT, null);
     }
 
     public static MailServiceException CANNOT_CONTAIN() {

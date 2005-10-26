@@ -142,6 +142,11 @@ public class ToXML {
             if (msgs > 0 || fields != NOTIFY_FIELDS)
                 elem.addAttribute(MailService.A_NUM, msgs);
         }
+        if (needToOutput(fields, Change.MODIFIED_URL)) {
+            String url = folder.getUrl();
+            if (!url.equals("") || fields != NOTIFY_FIELDS)
+                elem.addAttribute(MailService.A_URL, url);
+        }
         if (needToOutput(fields, Change.MODIFIED_ACL)) {
             ACL acl = folder.getPermissions();
             if (acl != null || fields != NOTIFY_FIELDS) {

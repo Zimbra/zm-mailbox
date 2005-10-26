@@ -57,14 +57,6 @@ public class Folder extends MailItem {
     private Folder    mParent;
     private ACL       mRights;
     private String    mUrl;
-    
-    void setUrl(String url) {
-        mUrl = url;
-    }
-    
-    String getUrl() {
-        return mUrl;
-    }
 
     Folder(Mailbox mbox, UnderlyingData ud) throws ServiceException {
         super(mbox, ud);
@@ -109,11 +101,17 @@ public class Folder extends MailItem {
     }
 
     /** Returns the folder's set of special attributes.
-     * 
      * @see #FOLDER_IS_IMMUTABLE
      * @see #FOLDER_NO_UNREAD_COUNT */
     public byte getAttributes() {
         return mAttributes;
+    }
+
+    /** Returns the URL the folder syncs to, or <code>""</code> if there
+     *  is no such association.
+     * @see #setUrl(String) */
+    public String getUrl() {
+        return (mUrl == null ? "" : mUrl);
     }
 
     /** Returns whether the folder is the Trash folder or any of its
@@ -390,7 +388,7 @@ public class Folder extends MailItem {
      * @see #validateFolderName(String)
      * @see #canContain(byte) */
     static Folder create(int id, Mailbox mbox, Folder parent, String name) throws ServiceException {
-        return create(id, mbox, parent, name, (byte) 0, TYPE_UNKNOWN);
+        return create(id, mbox, parent, name, (byte) 0, TYPE_UNKNOWN, null);
     }
 
     /** Creates a new Folder with optional attributes and persists it
@@ -403,6 +401,7 @@ public class Folder extends MailItem {
      * @param name        The new folder's name.
      * @param attributes  Any extra constraints on the folder.
      * @param view        The (optional) default object type for the folder.
+     * @param url         The (optional) url to sync folder contents to.
      * @perms {@link ACL#RIGHT_INSERT} on the parent folder
      * @throws ServiceException   The following error codes are possible:<ul>
      *    <li><code>mail.CANNOT_CONTAIN</code> - if the target folder
@@ -418,7 +417,8 @@ public class Folder extends MailItem {
      * @see #canContain(byte)
      * @see #FOLDER_IS_IMMUTABLE
      * @see #FOLDER_NO_UNREAD_COUNT */
-    static Folder create(int id, Mailbox mbox, Folder parent, String name, byte attributes, byte view) throws ServiceException {
+    static Folder create(int id, Mailbox mbox, Folder parent, String name, byte attributes, byte view, String url)
+    throws ServiceException {
         if (id != Mailbox.ID_FOLDER_ROOT) {
             if (parent == null || !parent.canContain(TYPE_FOLDER))
                 throw MailServiceException.CANNOT_CONTAIN();
@@ -436,13 +436,49 @@ public class Folder extends MailItem {
         data.parentId    = data.folderId;
         data.date        = mbox.getOperationTimestamp();
         data.subject     = name;
-		data.metadata    = encodeMetadata(DEFAULT_COLOR, attributes, view, null, null);
+		data.metadata    = encodeMetadata(DEFAULT_COLOR, attributes, view, null, url);
         data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
 
         Folder folder = new Folder(mbox, data);
         folder.finishCreation(parent);
         return folder;
+    }
+
+    /** Sets the remote URL for the folder.  This can point to a remote
+     *  calendar (<code>.ics</code> file), an RSS feed, etc.  Note that you
+     *  cannot add a remote data source to an existing folder, as refreshing
+     *  the linked content empties the folder.<p>
+     * 
+     *  This is <i>not</i> used to mount other Zimbra users' folders; to do
+     *  that, use a {@link Mountpoint}.
+     * 
+     * @param url  The new URL for the folder, or <code>null</code> to
+     *             remove the association with a remote object.
+     * @perms {@link ACL#RIGHT_WRITE} on the folder
+     * @throws ServiceException   The following error codes are possible:<ul>
+     *    <li><code>mail.CANNOT_SUBSCRIBE</code> - if you're attempting to
+     *        associate a URL with an existing, normal folder
+     *    <li><code>mail.IMMUTABLE_OBJECT</code> - if the folder can't be
+     *        modified
+     *    <li><code>service.FAILURE</code> - if there's a database failure
+     *    <li><code>service.PERM_DENIED</code> - if you don't have
+     *        sufficient permissions</ul> */
+    void setUrl(String url) throws ServiceException {
+        if (url == null)
+            url = "";
+        if (getUrl().equals(url))
+            return;
+        if (!getUrl().equals(""))
+            throw MailServiceException.CANNOT_SUBSCRIBE(mId);
+        if (!isMutable())
+            throw MailServiceException.IMMUTABLE_OBJECT(mId);
+        if (!canAccess(ACL.RIGHT_WRITE))
+            throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
+
+        markItemModified(Change.MODIFIED_URL);
+        mUrl = url;
+        saveMetadata();
     }
 
     /** Renames the folder in place.  Altering a folder's case (e.g.
@@ -496,11 +532,11 @@ public class Folder extends MailItem {
         boolean moved   = target != mParent;
 
         if (moved &&!target.canAccess(ACL.RIGHT_INSERT))
-                throw ServiceException.PERM_DENIED("you do not have the required rights on the target folder");
+            throw ServiceException.PERM_DENIED("you do not have the required rights on the target folder");
         if (moved && !mParent.canAccess(ACL.RIGHT_DELETE))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the parent folder");
         if (renamed && !canAccess(ACL.RIGHT_WRITE))
-            throw ServiceException.PERM_DENIED("you do not have the required rights on the parent folder");
+            throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
 
         if (renamed) {
             markItemModified(Change.MODIFIED_NAME);
@@ -881,7 +917,7 @@ public class Folder extends MailItem {
             meta.put(Metadata.FN_VIEW, hint);
         if (rights != null)
             meta.put(Metadata.FN_RIGHTS, rights.encode());
-        if (url != null) 
+        if (url != null && !url.equals("")) 
             meta.put(Metadata.FN_URL, url);
 		return MailItem.encodeMetadata(meta, color);
 	}
