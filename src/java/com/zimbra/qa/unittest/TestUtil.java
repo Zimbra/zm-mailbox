@@ -80,11 +80,33 @@ public class TestUtil {
     }
     
     public static String getSoapUrl() {
-        return "http://localhost:7070/service/soap/";
+        String scheme;
+        int port;
+        try {
+            port = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraMailPort, 0);
+            if (port > 0) {
+                scheme = "http";
+            } else {
+                port = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
+                scheme = "https";
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.test.error("Unable to get user SOAP port", e);
+            port = 80;
+            scheme = "http";
+        }
+        return scheme + "://localhost:" + port + "/service/soap/";
     }
     
     public static String getAdminSoapUrl() {
-        return "https://localhost:7071/service/admin/soap/";
+        int port;
+        try {
+            port = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraAdminPort, 0);
+        } catch (ServiceException e) {
+            ZimbraLog.test.error("Unable to get admin SOAP port", e);
+            port = 7071;
+        }
+        return "https://localhost:" + port + "/service/admin/soap/";
     }
     
     public static LmcSession getSoapSession(String userName)

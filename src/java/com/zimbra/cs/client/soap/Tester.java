@@ -620,7 +620,7 @@ public class Tester {
             smr.setSession(session);
 
             // add an attachment.  XXX hardcoded stuff...
-            String aid = smr.postAttachment("http://dogfood.example.zimbra.com:7070/service/upload", 
+            String aid = smr.postAttachment("http://dogfood.example.zimbra.com/service/upload", 
                                             session, new File("c:/temp/ops.txt"), ".example.zimbra.com", 5000);
             System.out.println("got back attachment id " + aid);
             lMsg.setAttachmentIDs(new String[] { aid});

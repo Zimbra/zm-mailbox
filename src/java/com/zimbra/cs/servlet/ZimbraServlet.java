@@ -250,7 +250,7 @@ public class ZimbraServlet extends HttpServlet {
      * Returns URL for the passed-in server, or NULL if there
      * are no available HTTP or HTTPs ports
      * 
-     *     http://hostname:7070
+     *     http://hostname
      *     https://hostname
      *     http://hostname:1234
      *     
