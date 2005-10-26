@@ -257,8 +257,8 @@ public class FreeBusy {
     }
 
 
-    public static FreeBusy getFreeBusyList(OperationContext octxt, Mailbox mbox, long start, long end) throws ServiceException {
-        Collection appts = mbox.getAppointmentsForRange(octxt, start, end, Mailbox.ID_AUTO_INCREMENT);
+    public static FreeBusy getFreeBusyList(Mailbox mbox, long start, long end) throws ServiceException {
+        Collection appts = mbox.getAppointmentsForRange(null, start, end, Mailbox.ID_AUTO_INCREMENT);
 
         IntervalList intervals = new IntervalList(start, end);
         
@@ -271,7 +271,7 @@ public class FreeBusy {
                 assert(inst.getStart() < end && inst.getEnd() > start);
                 InviteInfo invId = inst.getInviteInfo();
                 try {
-                    Appointment appt = mbox.getAppointmentById(octxt, inst.getAppointmentId());
+                    Appointment appt = mbox.getAppointmentById(null, inst.getAppointmentId());
                     Invite inv = appt.getInvite(invId);
                     if (!inv.isTransparent()) {
                         String freeBusy = inv.getFreeBusyActual();
@@ -347,7 +347,7 @@ public class FreeBusy {
 
         try {
             Mailbox mbox = Mailbox.getMailboxById(1);
-            FreeBusy fb = getFreeBusyList(null, mbox, 0, Long.MAX_VALUE);
+            FreeBusy fb = getFreeBusyList(mbox, 0, Long.MAX_VALUE);
             System.out.println(fb.toString());
         } catch (ServiceException e){
             System.out.println("EXCEPTION: "+e);

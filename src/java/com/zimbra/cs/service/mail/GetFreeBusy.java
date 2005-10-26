@@ -207,7 +207,7 @@ public class GetFreeBusy extends WriteOpDocumentHandler {
             
             Mailbox mbox = id.getMailbox();
 
-            FreeBusy fb = mbox.getFreeBusy(zc.getOperationContext(), start, end);
+            FreeBusy fb = mbox.getFreeBusy(start, end);
             
             for (Iterator iter = fb.iterator(); iter.hasNext(); ) {
                 FreeBusy.Interval cur = (FreeBusy.Interval)iter.next();

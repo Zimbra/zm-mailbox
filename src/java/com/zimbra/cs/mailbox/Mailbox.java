@@ -2282,8 +2282,8 @@ public class Mailbox {
     }
 
 
-    public synchronized FreeBusy getFreeBusy(OperationContext octxt, long start, long end) throws ServiceException {
-        return FreeBusy.getFreeBusyList(octxt, this, start, end);
+    public synchronized FreeBusy getFreeBusy(long start, long end) throws ServiceException {
+        return FreeBusy.getFreeBusyList(this, start, end);
     }
 
     private void addDomains(HashMap domainItems, HashSet newDomains, int flag) {
