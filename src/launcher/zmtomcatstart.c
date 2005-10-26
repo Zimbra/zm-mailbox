@@ -221,7 +221,15 @@ CheckForRunningInstance()
     if (debug_launcher) {
       printf("stat failed: %s\n", strerror(errno));
     }
-    goto NO_INSTANCE;
+
+    if (errno == ENOENT) {
+      goto NO_INSTANCE;
+    }
+    
+    /* If there are any permission problems or some such, crap out now. */
+    fprintf(stderr, "%s: error: stat failed on pid file path: %s: %s\n",
+            progname, TOMCAT_PIDFILE, strerror(errno));
+    exit(1);
   }
 
   if (!S_ISREG(sb.st_mode)) {
@@ -270,25 +278,34 @@ CheckForRunningInstance()
   return;
 }
 
-static void
-RecordRunningInstance(pid_t pid)
-{
-  char buf[64];
-  int len, wrote;
+static int pidfd = -1;
 
+/* Create the pid file in parent process before forking so that 
+ * if we can't create the file for some reason we don't fork. */
+
+static void
+CreatePidFile()
+{
   /* Reset the mask so the pid file has the exact permissions we say
    * it should have. */
   umask(0);
   
-  int fd = creat(TOMCAT_PIDFILE, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-  if (fd < 0) {
+  pidfd = creat(TOMCAT_PIDFILE, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+  if (pidfd < 0) {
     fprintf(stderr, "%s: error: could not create pid file: %s: %s\n",
             progname, TOMCAT_PIDFILE, strerror(errno));
     exit(1);
   }
-  
+}
+
+static void
+RecordPidFromParent(pid_t pid)
+{
+  char buf[64];
+  int len, wrote;
+
   len = snprintf(buf, sizeof(buf), "%d\n", pid);
-  wrote = write(fd, buf, len);
+  wrote = write(pidfd, buf, len);
   if (wrote != len) {
     fprintf(stderr, "%s: error: wrote only %d of %d to pid file: %s: %s\n",
             progname, wrote, len, TOMCAT_PIDFILE, strerror(errno));
@@ -301,24 +318,33 @@ RecordRunningInstance(pid_t pid)
     printf("PID=%s\n", buf);
   }
 
-  close(fd);
+  close(pidfd);
 }
 
 static void
 StartTomcat()
 {
   pid_t pid;
+
+  CreatePidFile();
+
   /* Thank you, Mr. Stevens. */
+
   if ((pid = fork()) != 0) {
-    RecordRunningInstance(pid);
+    RecordPidFromParent(pid);
     exit(0); /* parent process */
   }
 
-  fclose(stdin);
+  /* Now, we are in the child process. */
 
-  /* Now in child process. */
+  close(pidfd);
+
+  fclose(stdin);
+  
   umask(0);
+  
   chdir(TOMCAT_HOME);
+  
 #ifdef BSD_STYLE_UNTESTED /* I haven't tested this, but we might need this? */
   setpgrp(0, getpid());
   if ((fp = open("/dev/tty", O_RDWR)) >= 0) {
