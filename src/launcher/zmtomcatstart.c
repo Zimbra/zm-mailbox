@@ -208,7 +208,7 @@ ShowNewEnv()
 static void
 CheckForRunningInstance()
 {
-  FILE *fp;
+  FILE *fp = NULL;
   struct stat sb;
   pid_t pid;
 
