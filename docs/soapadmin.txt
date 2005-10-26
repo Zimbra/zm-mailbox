@@ -869,6 +869,7 @@ Notes:
 <GetClusterStatusRequest/>
 
 <GetClusterStatusResponse>
+  <clusterName>{cluster-name}</clusterName>	
   <servers>
     <server name="{server-name}" status="{1-or-0}"/>*
   </servers>
