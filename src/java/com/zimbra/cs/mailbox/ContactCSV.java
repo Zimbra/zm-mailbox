@@ -73,12 +73,16 @@ public class ContactCSV {
     public static final String CSV_E_mail_3_Type = "E-mail 3 Type";
     public static final String CSV_E_mail_Address = "E-mail Address";
     public static final String CSV_E_mail = "E-mail";
+    public static final String CSV_E_mail_2 = "E-mail 2";
     public static final String CSV_E_mail_Display_Name = "E-mail Display Name";
     public static final String CSV_E_mail_Type = "E-mail Type";
+    public static final String CSV_Fax = "Fax";
     public static final String CSV_First_Name = "First Name";
     public static final String CSV_Gender = "Gender";
     public static final String CSV_Government_ID_Number = "Government ID Number";
     public static final String CSV_Hobby = "Hobby";
+    public static final String CSV_Home_Address = "Home Address";
+    public static final String CSV_Home_Address_2 = "Home Address 2";
     public static final String CSV_Home_Address_PO_Box = "Home Address PO Box";
     public static final String CSV_Home_City = "Home City";
     public static final String CSV_Home_Country = "Home Country";
@@ -90,6 +94,7 @@ public class ContactCSV {
     public static final String CSV_Home_Street = "Home Street";
     public static final String CSV_Home_Street_2 = "Home Street 2";
     public static final String CSV_Home_Street_3 = "Home Street 3";
+    public static final String CSV_Home_ZIP = "Home ZIP";
     public static final String CSV_ISDN = "ISDN";
     public static final String CSV_Initials = "Initials";
     public static final String CSV_Internet_Free_Busy = "Internet Free Busy";
@@ -101,6 +106,7 @@ public class ContactCSV {
     public static final String CSV_Manager_s_Name = "Manager's Name";
     public static final String CSV_Middle_Name = "Middle Name";
     public static final String CSV_Mileage = "Mileage";
+    public static final String CSV_Mobile = "Mobile";
     public static final String CSV_Mobile_Phone = "Mobile Phone";
     public static final String CSV_Name = "Name";    
     public static final String CSV_Notes = "Notes";
@@ -117,6 +123,8 @@ public class ContactCSV {
     public static final String CSV_Other_Street_2 = "Other Street 2";
     public static final String CSV_Other_Street_3 = "Other Street 3";
     public static final String CSV_Pager = "Pager";
+    public static final String CSV_Phone_Home = "Phone Home";
+    public static final String CSV_Phone_Work = "Phone Work";
     public static final String CSV_Primary_Phone = "Primary Phone";
     public static final String CSV_Priority = "Priority";
     public static final String CSV_Private = "Private";
@@ -134,6 +142,11 @@ public class ContactCSV {
     public static final String CSV_User_3 = "User 3";
     public static final String CSV_User_4 = "User 4";
     public static final String CSV_Web_Page = "Web Page";
+    public static final String CSV_Website = "Website";
+    public static final String CSV_Website_2 = "Website 2";
+    public static final String CSV_Work_Address = "Work Address";
+    public static final String CSV_Work_Address_2 = "Work Address 2";
+    public static final String CSV_Work_ZIP = "Work ZIP";
 
     private static final int OP_MAP = 1; 
     private static final int OP_EMAIL = 2;     
@@ -171,16 +184,26 @@ public class ContactCSV {
         public String getContactName() { return mContactName; }
     }
 
-    private static Mapping addMapping(String csvName, String contactName, int op) {
+    private static Mapping addMapping(String csvName, String contactName, int op, boolean includeInExport) {
         Mapping m = new Mapping(csvName, contactName, op);
+        m.setIncludeInExport(includeInExport);
         sMappings.add(m);
         return m;
     }
+
+    private static Mapping addMapping(String csvName, String contactName, int op) {
+        return addMapping(csvName, contactName, op, true);
+    }
     
-    private static Mapping addMapping(String[] csvName, String contactName, int op) {
+    private static Mapping addMapping(String[] csvName, String contactName, int op, boolean includeInExport) {
         Mapping m = new Mapping(csvName, contactName, op);
+        m.setIncludeInExport(includeInExport);
         sMappings.add(m);
         return m;
+    }    
+
+    private static Mapping addMapping(String[] csvName, String contactName, int op) {
+	return addMapping(csvName, contactName, op, true);
     }    
     
     static {
@@ -198,6 +221,7 @@ public class ContactCSV {
         addMapping(CSV_Business_Phone_2, Contact.A_workPhone2, OP_MAP);
         addMapping(CSV_Business_Postal_Code, Contact.A_workPostalCode, OP_MAP);
         addMapping(CSV_Business_State, Contact.A_workState, OP_MAP);
+        addMapping(new String[] { CSV_Work_Address, CSV_Work_Address_2}, Contact.A_workStreet, OP_STREETADDRESS, false);
         addMapping(new String[] { CSV_Business_Street, CSV_Business_Street_2, CSV_Business_Street_3} , Contact.A_workStreet, OP_STREETADDRESS);
         addMapping(CSV_Callback, Contact.A_callbackPhone, OP_MAP);
         addMapping(CSV_Car_Phone, Contact.A_carPhone, OP_MAP);
@@ -208,13 +232,15 @@ public class ContactCSV {
         addMapping(CSV_Department, Contact.A_department, OP_MAP);
         //CSV_Directory_Server
 
-        Mapping m = addMapping(CSV_E_mail, Contact.A_email, OP_MAP);
-        m.setIncludeInExport(false);
+        addMapping(CSV_E_mail, Contact.A_email, OP_MAP, false);
+        addMapping(CSV_E_mail_2, Contact.A_email2, OP_MAP, false);
         
         addMapping(new String[] {CSV_E_mail_Address, CSV_E_mail_Display_Name, CSV_E_mail_Type}, Contact.A_email, OP_EMAIL);
         addMapping(new String[] {CSV_E_mail_2_Address, CSV_E_mail_2_Display_Name, CSV_E_mail_2_Type}, Contact.A_email2, OP_EMAIL);
         addMapping(new String[] {CSV_E_mail_3_Address, CSV_E_mail_3_Display_Name, CSV_E_mail_3_Type}, Contact.A_email3, OP_EMAIL);
         
+        addMapping(CSV_Fax, Contact.A_workFax, OP_MAP, false);
+
         addMapping(CSV_First_Name, Contact.A_firstName, OP_MAP);
         //CSV_Gender
         //CSV_Government_ID_Number
@@ -228,6 +254,8 @@ public class ContactCSV {
         addMapping(CSV_Home_Postal_Code, Contact.A_homePostalCode, OP_MAP);
         addMapping(CSV_Home_State, Contact.A_homeState, OP_MAP);
         addMapping(new String[] {CSV_Home_Street, CSV_Home_Street_2, CSV_Home_Street_3}, Contact.A_homeStreet, OP_STREETADDRESS);
+        addMapping(new String[] {CSV_Home_Address, CSV_Home_Address_2}, Contact.A_homeStreet, OP_STREETADDRESS, false);
+        addMapping(CSV_Home_ZIP, Contact.A_homePostalCode, OP_MAP, false);
         
         //CSV_ISDN
         addMapping(CSV_Initials, Contact.A_initials, OP_MAP);
@@ -241,9 +269,9 @@ public class ContactCSV {
         addMapping(CSV_Middle_Name, Contact.A_middleName, OP_MAP);
         //CSV_Mileage
         addMapping(CSV_Mobile_Phone, Contact.A_mobilePhone, OP_MAP);
+        addMapping(CSV_Mobile, Contact.A_mobilePhone, OP_MAP, false);
 
-        m = addMapping(CSV_Name, null, OP_NAME);
-        m.setIncludeInExport(false);
+        addMapping(CSV_Name, null, OP_NAME, false);
         
         addMapping(CSV_Notes, Contact.A_notes, OP_MAP);
         //CSV_Office_Location
@@ -258,6 +286,9 @@ public class ContactCSV {
         addMapping(new String[] {CSV_Other_Street, CSV_Other_Street_2, CSV_Other_Street_3}, Contact.A_otherStreet, OP_STREETADDRESS);
         
         addMapping(CSV_Pager, Contact.A_pager, OP_MAP);
+        addMapping(CSV_Phone_Work, Contact.A_workPhone, OP_MAP, false);
+        addMapping(CSV_Phone_Home, Contact.A_homePhone, OP_MAP, false);
+
         //addMapping(CSV_Primary_Phone, Contact.A_, OP_MAP);
         //CSV_Priority
         //CSV_Private
@@ -275,6 +306,9 @@ public class ContactCSV {
         //CSV_User_3
         //CSV_User_4
         addMapping(CSV_Web_Page, Contact.A_workURL, OP_MAP);
+        addMapping(CSV_Website, Contact.A_workURL, OP_MAP, false);
+        addMapping(CSV_Website_2, Contact.A_homeURL, OP_MAP, false);
+        addMapping(CSV_Work_ZIP, Contact.A_workPostalCode, OP_MAP, false);
     };
 
     private HashMap mFieldCols;
