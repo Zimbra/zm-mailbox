@@ -30,6 +30,9 @@ package com.zimbra.cs.service.mail;
 
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -44,6 +47,8 @@ import com.zimbra.soap.WriteOpDocumentHandler;
  * @author dkarp
  */
 public class CreateFolder extends WriteOpDocumentHandler {
+
+    private static Log sLog = LogFactory.getLog(SendMsg.class);
 
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.E_FOLDER, MailService.A_FOLDER };
     private static final String[] RESPONSE_ITEM_PATH = new String[] { };
@@ -66,7 +71,14 @@ public class CreateFolder extends WriteOpDocumentHandler {
         try {
             folder = mbox.createFolder(octxt, name, iidParent.getId(), MailItem.getTypeForName(view), url);
             if (!folder.getUrl().equals(""))
-                mbox.synchronizeFolder(octxt, folder.getId());
+                try {
+                    mbox.synchronizeFolder(octxt, folder.getId());
+                } catch (ServiceException e) {
+                    // if the synchronization fails, roll back the folder create
+                    try { mbox.delete(null, folder.getId(), MailItem.TYPE_FOLDER); }
+                    catch (ServiceException nse) { sLog.warn("error ignored while rolling back folder create", nse); }
+                    throw e;
+                }
         } catch (ServiceException se) {
             if (se.getCode() == MailServiceException.ALREADY_EXISTS && t.getAttributeBool(MailService.A_FETCH_IF_EXISTS, false))
                 folder = mbox.getFolderByName(lc.getOperationContext(), iidParent.getId(), name);
