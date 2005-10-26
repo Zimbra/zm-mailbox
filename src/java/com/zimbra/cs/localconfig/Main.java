@@ -80,6 +80,7 @@ public class Main {
         mOptions.addOption("f", "force",   false, "Allow editing of keys whose change is known to be potentially dangerous.");
         mOptions.addOption("m", "format",  true,  "Show values in one of these formats: plain (default), xml, shell, export, nokey.");
         mOptions.addOption("q", "quiet",   false, "Suppress logging.");
+        mOptions.addOption("u", "unset",   false, "Remove a configuration key.  If this is a key with compiled in defaults, set its value to the empty string.");
         mOptions.addOption("h", "help",    false, "Show this usage information.");
     }
 
@@ -120,7 +121,7 @@ public class Main {
         }
         
         // edit
-        if (cl.hasOption("e")) {
+        if (cl.hasOption("e")) { 
             checkCompatibleOptions("e", "qfrc", cl);
             String[] av = cl.getArgs();
             if (av == null || av.length == 0) {
@@ -154,6 +155,33 @@ public class Main {
             return;
         }
 
+        // unset
+        if (cl.hasOption("u")) { 
+            checkCompatibleOptions("u", "qfc", cl);
+            String[] av = cl.getArgs();
+            if (av == null || av.length == 0) {
+                error("insufficient arguments", null);
+            }
+            for (int i = 0; i < av.length; i++) {
+                String key = av[i];
+                if (!lc.isSet(key)) {
+                    error("key " + key + " is not set", null);
+                }
+                if (KnownKey.isKnown(key)) {
+                    lc.set(key, "");
+                } else {
+                    lc.remove(key);
+                }
+            }
+            try {
+                lc.save();
+            } catch (Exception e) {
+                error("save to " + lc.getConfigFile() + " failed", e);
+            }
+            return;
+        }
+
+        
         // show path
         if (cl.hasOption("p")) {
             checkCompatibleOptions("p", "qc", cl);

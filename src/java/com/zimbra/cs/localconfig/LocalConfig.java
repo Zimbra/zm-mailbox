@@ -138,7 +138,6 @@ public class LocalConfig {
     //
     // Load & save
     //
-    
     void save() throws IOException, ConfigException {
         ConfigWriter xmlWriter = ConfigWriter.getInstance("xml", false, false);
         for (Iterator iter = mConfiguredKeys.keySet().iterator(); iter.hasNext();) {
@@ -185,11 +184,18 @@ public class LocalConfig {
         }
         verify();
     }
+
+    boolean isSet(String key) {
+        return mConfiguredKeys.containsKey(key) || KnownKey.isKnown(key); 
+    }
+    
+    void remove(String key) {
+        mConfiguredKeys.remove(key);
+    }
     
     //
     // Print
     //
-
     static void printDoc(PrintStream ps, String[] keys) {
         if (keys.length == 0) {
             keys = KnownKey.getAll();
