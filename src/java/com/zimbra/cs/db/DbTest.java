@@ -284,7 +284,7 @@ public class DbTest {
 			if (name.indexOf('/') != -1)
 				System.out.println(name + ": invalid folder name");
 			else {
-				Folder folder = mailbox.createFolder(null, name, location, MailItem.TYPE_UNKNOWN);
+				Folder folder = mailbox.createFolder(null, name, location, MailItem.TYPE_UNKNOWN, null);
 				if (folder == null)
 					System.out.println("error: failure during request");
 			}
