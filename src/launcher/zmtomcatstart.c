@@ -232,7 +232,7 @@ CheckForRunningInstance()
 
   fp = fopen(TOMCAT_PIDFILE, "r");
   if (fp == NULL) {
-    fprintf(stderr, "%s: warning: pid file could not be open: %s: %s\n",
+    fprintf(stderr, "%s: warning: fopen failed for pid file: %s: %s\n",
             progname, TOMCAT_PIDFILE, strerror(errno));
     goto NO_INSTANCE;
   }
@@ -298,7 +298,7 @@ RecordRunningInstance(pid_t pid)
   if (debug_launcher) {
     printf("---- New child created ----\n");
     printf("PIDFILE=%s\n", TOMCAT_PIDFILE);
-    printf("PID=%s", buf);
+    printf("PID=%s\n", buf);
   }
 
   close(fd);
@@ -385,7 +385,7 @@ main(int argc, char *argv[])
     if (IsAllowedJVMArg(argv[i])) {
       AddArg(argv[i]);
     } else {
-      fprintf(stderr, "%s: error: JVM option: %s: not allowed for security reasons\n", progname, argv[i]);
+      fprintf(stderr, "%s: error: JVM option: %s: not allowed\n", progname, argv[i]);
       exit(1);
     }
   }
