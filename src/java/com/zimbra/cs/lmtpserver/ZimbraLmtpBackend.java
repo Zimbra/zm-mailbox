@@ -208,8 +208,9 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                                 Account account = rd.account;
                                 Mailbox mbox = rd.mbox;
                                 ParsedMessage pm = rd.pm;
-    
                                 Message msg = null;
+                                
+                                ZimbraLog.addAccountNameToContext(account.getName());
                                 if (!DebugConfig.disableFilter) {
                                     msg = RuleManager.getInstance().applyRules(account, mbox, pm, pm.getRawData().length,
                                                                                rcptEmail, sharedDeliveryCtxt);
@@ -251,6 +252,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                         status = LmtpStatus.TRYAGAIN;
                         mLog.info("try again for message " + rcptEmail + ": exception occurred", e);
                     } finally {
+                        ZimbraLog.clearContext();
                         recipient.setDeliveryStatus(status);
                         if (shared && !rd.skip) {
                             rd.mbox.endSharedDelivery();
