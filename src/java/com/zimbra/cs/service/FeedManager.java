@@ -23,6 +23,7 @@ import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.data.ParserException;
 import net.fortuna.ical4j.model.Calendar;
 
+import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -38,6 +39,8 @@ import com.zimbra.soap.Element;
  */
 public class FeedManager {
 
+    public static final int MAX_REDIRECTS = 3;
+
     public synchronized static List retrieveRemoteDatasource(Account acct, String url) throws ServiceException {
         if (url == null || url.equals(""))
             return Collections.EMPTY_LIST;
@@ -51,12 +54,24 @@ public class FeedManager {
         client.setConnectionTimeout(10000);
         client.setTimeout(20000);
 
-        GetMethod get = new GetMethod(url);
-        get.setFollowRedirects(true);
-
+        String content = null;
         try {
-            client.executeMethod(get);
-            String content = get.getResponseBodyAsString();
+            int redirects = 0;
+            while (redirects < MAX_REDIRECTS) {
+                GetMethod get = new GetMethod(url);
+                get.setFollowRedirects(true);
+                client.executeMethod(get);
+                content = get.getResponseBodyAsString();
+                Header locationHeader = get.getResponseHeader("location");
+                if (locationHeader != null) {
+                    url = locationHeader.getValue();
+                    content = null;
+                    redirects++;
+                } else {
+                    break;
+                }
+            }
+            
             if (content == null || content.length() == 0)
                 throw ServiceException.FAILURE("empty body in response when fetching remote subscription", null);
             if (content.charAt(0) == '<')
@@ -75,7 +90,7 @@ public class FeedManager {
             throw ServiceException.FAILURE("error parsing raw iCalendar data", e);
         }
     }
-
+    
     private static List parseRssFeed(String content) throws ServiceException {
         try {
             Element root = Element.parseXML(content);
