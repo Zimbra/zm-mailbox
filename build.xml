@@ -79,6 +79,8 @@
 	<property name="zimbra.home.dir" location="/opt/zimbra" />
 	<property name="tomcat.home.dir" location="${zimbra.home.dir}/tomcat" />
 
+	<property name="ical4j.jar" value="ical4j-0.9.16-patched.jar" />
+
 	<condition property="is-windows">
 		<os family="windows" />
 	</condition>
@@ -276,7 +278,7 @@
    	   
    	   Please copy {mail,activation,zimbra-native}.jar to $TOMCAT\common\lib
    -->
-	<property name="war.exclude" value="servlet-api.jar,mail.jar,activation.jar,zimbra-native.jar,KeyView.jar" />
+	<property name="war.exclude" value="${ical4j.jar},servlet-api.jar,mail.jar,activation.jar,zimbra-native.jar,KeyView.jar" />
 
 	<target name="war" depends="jar">
 		<echo>war.exclude=${war.exclude}</echo>
@@ -343,7 +345,7 @@
 		</copy>
 		<fixcrlf srcdir="${dist.conf.dir}" eol="unix" includes="**" />
 		<copy todir="${dist.tomcat.commonlib.dir}">
-			<fileset dir="${jars.dir}" includes="mail.jar,activation.jar,zimbra-native.jar" />
+			<fileset dir="${jars.dir}" includes="${ical4j.jar},mail.jar,activation.jar,zimbra-native.jar" />
 		</copy>
 		<copy file="${config.dir}/localconfig.xml" todir="${dist.conf.dir}"/>
 		<!--
@@ -554,6 +556,7 @@
 	</target>
 
     <target name="tomcat-init" depends="localhost-ssl-cert,tomcat-init-unix">
+		<copy todir="${tomcat.home.dir}/common/lib" file="${jars.dir}/${ical4j.jar}" />
 		<copy todir="${tomcat.home.dir}/common/lib" file="${jars.dir}/activation.jar" />
 		<copy todir="${tomcat.home.dir}/common/lib" file="${jars.dir}/mail.jar" />
 		<copy todir="${tomcat.home.dir}/common/lib" file="${jars.dir}/zimbra-native.jar" />
