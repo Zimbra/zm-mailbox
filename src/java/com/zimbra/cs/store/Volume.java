@@ -152,8 +152,8 @@ public class Volume {
             if (path == null || path.length() < 1)
                 throw VolumeServiceException.INVALID_REQUEST("Missing volume path");
 
-//            if (!(new File(path)).exists())
-//                throw VolumeServiceException.NO_SUCH_PATH(path);
+            if (!(new File(path)).exists())
+                throw VolumeServiceException.NO_SUCH_PATH(path);
 
             conn = DbPool.getConnection();
             vol = DbVolume.create(conn, id, type, name, path,
@@ -203,8 +203,8 @@ public class Volume {
             if (path == null || path.length() < 1)
                 throw VolumeServiceException.INVALID_REQUEST("Missing volume path");
 
-//            if (!(new File(path)).exists())
-//                throw VolumeServiceException.NO_SUCH_PATH(path);
+            if (!(new File(path)).exists())
+                throw VolumeServiceException.NO_SUCH_PATH(path);
 
             conn = DbPool.getConnection();
             vol = DbVolume.update(conn, id, type, name, path,
