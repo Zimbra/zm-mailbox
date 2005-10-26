@@ -28,7 +28,9 @@ package com.zimbra.cs.account.ldap;
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.DirContext;
+import javax.naming.directory.NoSuchAttributeException;
 
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
@@ -74,6 +76,8 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
         try {
             ctxt = LdapUtil.getDirContext();
             removeAttr(ctxt, Provisioning.A_zimbraMailForwardingAddress, member);
+        } catch (NoSuchAttributeException nsae) {
+            throw AccountServiceException.NO_SUCH_MEMBER(getName(), member);
         } catch (NamingException ne) {
             throw ServiceException.FAILURE("remove failed for member: " + member, ne);
         } finally {

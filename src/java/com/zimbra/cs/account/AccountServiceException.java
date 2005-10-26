@@ -53,6 +53,7 @@ public class AccountServiceException extends ServiceException {
     public static final String NO_SUCH_COS        = "account.NO_SUCH_COS";        
     public static final String NO_SUCH_SERVER     = "account.NO_SUCH_SERVER";        
     public static final String NO_SUCH_DISTRIBUTION_LIST = "account.NO_SUCH_DISTRIBUTION_LIST";
+    public static final String NO_SUCH_MEMBER     = "account.NO_SUCH_MEMBER";
     public static final String ACCOUNT_EXISTS     = "account.ACCOUNT_EXISTS";        
     public static final String DOMAIN_EXISTS      = "account.DOMAIN_EXISTS";
     public static final String DOMAIN_NOT_EMPTY   = "account.DOMAIN_NOT_EMPTY";
@@ -130,7 +131,12 @@ public class AccountServiceException extends ServiceException {
     }    
 
     public static AccountServiceException NO_SUCH_DISTRIBUTION_LIST(String name) {
-    	return new AccountServiceException("no such distribution list: " + name, NO_SUCH_DISTRIBUTION_LIST, 
+        return new AccountServiceException("no such distribution list: " + name, NO_SUCH_DISTRIBUTION_LIST, 
+                SENDERS_FAULT, null);   
+    }
+    
+    public static AccountServiceException NO_SUCH_MEMBER(String dlName, String mName) {
+        return new AccountServiceException("no such member: " + mName + " in distribution list: " + dlName, NO_SUCH_MEMBER, 
                 SENDERS_FAULT, null);   
     }
     
