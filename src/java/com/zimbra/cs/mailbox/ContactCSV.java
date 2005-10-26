@@ -284,7 +284,7 @@ public class ContactCSV {
     /**
      * read a line of fields into an array list. blank fields (,, or ,"",) will be null. 
      */
-    private static boolean parseLine(BufferedReader reader, List result) throws IOException, ParseException {
+    private boolean parseLine(BufferedReader reader, List result, boolean parsingHeader) throws IOException, ParseException {
         result.clear();
         int ch;
         boolean inField = false;
@@ -292,7 +292,7 @@ public class ContactCSV {
             switch (ch) {
                 case '"':
                     inField = true;
-                    result.add(parseField(reader, true, -1));
+                    result.add(parseField(reader, true, -1, parsingHeader, result.size()));
                     break;
                 case ',':
                     if (inField) inField = false;
@@ -307,7 +307,7 @@ public class ContactCSV {
                     if (ch != '\n') reader.reset();
                     return result.size() > 0;
                 default: // start of field
-                    result.add(parseField(reader, false, ch)); // eats trailing ','
+                    result.add(parseField(reader, false, ch, parsingHeader, result.size())); // eats trailing ','
                     inField = false;
                     break;
             }
@@ -323,11 +323,11 @@ public class ContactCSV {
      * @throws IOException IOException from the reader.
      * @throws ParseException if we reach the end of file while parsing
      */
-    private static String parseField(BufferedReader reader, boolean doubleQuotes, int firstChar) throws IOException, ParseException {
+    private String parseField(BufferedReader reader, boolean doubleQuotes, int firstChar, boolean parsingHeader, int size) throws IOException, ParseException {
         StringBuffer sb = new StringBuffer();
 
         if (firstChar != -1) sb.append((char)firstChar);
-
+        boolean lastField = !parsingHeader && size == mFields.size()-1;
         int ch;
         reader.mark(1);        
         while ((ch = reader.read()) != -1) {
@@ -343,7 +343,7 @@ public class ContactCSV {
             } else if (ch == ',' && !doubleQuotes) {
                 //reader.reset();
                 return sb.toString();
-            } else if ((ch == '\r' || ch == '\n') && !doubleQuotes) {
+            } else if ((ch == '\r' || ch == '\n') && !doubleQuotes && (parsingHeader || lastField)) {
                 reader.reset();
                 return sb.toString();
             } else {
@@ -358,7 +358,7 @@ public class ContactCSV {
     }
     
     private int getColumn(String field) {
-        Integer col = (Integer) mFieldCols.get(field);
+        Integer col = (Integer) mFieldCols.get(field.toLowerCase());
         return col == null ? -1 : col.intValue();
     }
 
@@ -367,18 +367,18 @@ public class ContactCSV {
     private void initFields(BufferedReader reader) throws IOException, ParseException {
         mFields = new ArrayList();
         
-        parseLine(reader, mFields);
+        parseLine(reader, mFields, true);
         
         // create mapping from CSV field name to column
         mFieldCols = new HashMap(mFields.size());
         for (int i=0; i < mFields.size(); i++)
-            mFieldCols.put(mFields.get(i), new Integer(i));
+            mFieldCols.put(mFields.get(i).toString().toLowerCase(), new Integer(i));
         
         mNumFields = mFields.size();
     }
 
     private String getField(String colName, List csv) {
-        Integer col = (Integer) mFieldCols.get(colName);
+        Integer col = (Integer) mFieldCols.get(colName.toLowerCase());
         if (col == null || col.intValue() >= csv.size()) return null;
         else return (String) csv.get(col.intValue());
     }
@@ -483,7 +483,7 @@ public class ContactCSV {
             List result = new ArrayList();
             List fields = new ArrayList();
             
-            while(parseLine(reader, fields)) {
+            while(parseLine(reader, fields, false)) {
                 Map contact = toContact(fields);
                 if (contact.size() > 0)
                     result.add(contact);
