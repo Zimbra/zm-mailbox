@@ -95,11 +95,13 @@ $(BUILD)/Process.h: $(CLASSES)/com/zimbra/znative/Process.class
 #
 ZIMBRA_LIB = /opt/zimbra/lib
 TOMCAT_HOME ?= /opt/zimbra/tomcat
+TOMCAT_PIDFILE ?= /opt/zimbra/log/tomcat.pid
 JAVA_BINARY ?= /opt/zimbra/java/bin/java
 LAUNCHER_CFLAGS = \
 	-DZIMBRA_LIB='"$(ZIMBRA_LIB)"' \
 	-DTOMCAT_HOME='"$(TOMCAT_HOME)"' \
-	-DJAVA_BINARY='"$(JAVA_BINARY)"'
+	-DJAVA_BINARY='"$(JAVA_BINARY)"' \
+	-DTOMCAT_PIDFILE='"$(TOMCAT_PIDFILE)"'
 
 $(BUILD)/zmtomcatstart: $(SRC)/launcher/zmtomcatstart.c
 	gcc $(MACDEF) $(LAUNCHER_CFLAGS) -Wall -Wmissing-prototypes -o $@ $<

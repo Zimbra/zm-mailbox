@@ -1,13 +1,28 @@
-#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #ifdef DARWIN
 #include <malloc/malloc.h>
 #else
 #include <malloc.h>
 #endif
-#include <stdarg.h>
-#include <stdlib.h>
+
+/* Call it zm so there are no conflicts. :-) */
+typedef enum { ZM_FALSE, ZM_TRUE } zmboolean;
+
+/* Set by main() */
+static const char *progname;
+#define PROGNAME "zmtomcatstart";
+
+/* True if environment variable ZIMBRA_TOMCAT_START_DEBUG is set */
+static zmboolean debug_launcher = ZM_FALSE;
 
 /* We pass through only a limited set of environment variables.  By
  * comparison, sudo strips only LD_LIBRARY_PATH.  We are being overly
@@ -190,11 +205,170 @@ ShowNewEnv()
   }
 }
 
+static void
+CheckForRunningInstance()
+{
+  FILE *fp;
+  struct stat sb;
+  pid_t pid;
+
+  if (debug_launcher) {
+      printf("---- GetRunningInstance ----\n");
+      printf("PIDFILE: %s\n", TOMCAT_PIDFILE);
+  }
+
+  if (stat(TOMCAT_PIDFILE, &sb) < 0) {
+    if (debug_launcher) {
+      printf("stat failed: %s\n", strerror(errno));
+    }
+    goto NO_INSTANCE;
+  }
+
+  if (!S_ISREG(sb.st_mode)) {
+    fprintf(stderr, "%s: error: pid file is not a regular file: %s: %s\n",
+            progname, TOMCAT_PIDFILE, strerror(errno));
+    exit(1);
+  }
+
+  fp = fopen(TOMCAT_PIDFILE, "r");
+  if (fp == NULL) {
+    fprintf(stderr, "%s: warning: pid file could not be open: %s: %s\n",
+            progname, TOMCAT_PIDFILE, strerror(errno));
+    goto NO_INSTANCE;
+  }
+
+  if (fscanf(fp, "%d", &pid) < 0) {
+    if (debug_launcher) {
+      printf("did not find a number in pid file\n");
+    }
+    goto NO_INSTANCE;
+  }
+
+  if (kill(pid, 0) < 0) {
+    fprintf(stderr, "%s: info: stale pid %d in pid file: %s\n", 
+            progname, pid, strerror(errno));
+    goto NO_INSTANCE;
+  }
+
+  /* PID found, and there is an associated process. */
+  if (fp != NULL) {
+    fclose(fp);
+  }
+  
+  fprintf(stderr, "%s: error: another instance with pid %d is running\n", 
+          progname, pid);
+  exit(1);
+  return;
+
+ NO_INSTANCE:
+  if (fp != NULL) {
+    fclose(fp);
+  }
+  if (debug_launcher) {
+    printf("assuming no process running\n");
+  }
+  return;
+}
+
+static void
+RecordRunningInstance(pid_t pid)
+{
+  char buf[64];
+  int len, wrote;
+
+  /* Reset the mask so the pid file has the exact permissions we say
+   * it should have. */
+  umask(0);
+  
+  int fd = creat(TOMCAT_PIDFILE, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+  if (fd < 0) {
+    fprintf(stderr, "%s: error: could not create pid file: %s: %s\n",
+            progname, TOMCAT_PIDFILE, strerror(errno));
+    exit(1);
+  }
+  
+  len = snprintf(buf, sizeof(buf), "%d\n", pid);
+  wrote = write(fd, buf, len);
+  if (wrote != len) {
+    fprintf(stderr, "%s: error: wrote only %d of %d to pid file: %s: %s\n",
+            progname, wrote, len, TOMCAT_PIDFILE, strerror(errno));
+    exit(1);
+  }
+
+  if (debug_launcher) {
+    printf("---- New child created ----\n");
+    printf("PIDFILE=%s\n", TOMCAT_PIDFILE);
+    printf("PID=%s", buf);
+  }
+
+  close(fd);
+}
+
+static void
+StartTomcat()
+{
+  pid_t pid;
+  /* Thank you, Mr. Stevens. */
+  if ((pid = fork()) != 0) {
+    RecordRunningInstance(pid);
+    exit(0); /* parent process */
+  }
+
+  fclose(stdin);
+
+  /* Now in child process. */
+  umask(0);
+  chdir(TOMCAT_HOME);
+#ifdef BSD_STYLE_UNTESTED /* I haven't tested this, but we might need this? */
+  setpgrp(0, getpid());
+  if ((fp = open("/dev/tty", O_RDWR)) >= 0) {
+    ioctl(fd, TIOCNOTTY, (char *)0); /* lose control tty */
+    close(fd);
+  }
+#else
+  setpgrp();
+#endif
+   
+  execv(JAVA_BINARY, newArgv);
+}
+
+static void
+CheckJavaBinaryExists()
+{
+  struct stat sb;
+  if (stat(JAVA_BINARY, &sb) < 0) {
+    fprintf(stderr, "%s: error: stat failed for java binary: %s: %s\n",
+            progname, JAVA_BINARY, strerror(errno));
+    exit(1);
+  }
+
+  if (sb.st_uid == getuid()) {
+    if (!(sb.st_mode & S_IXUSR)) {
+      fprintf(stderr, "%s: error: java binary is not executable by user: %s\n",
+              progname, JAVA_BINARY);
+      exit(1);
+    }
+  } else {
+    if (!(sb.st_mode & S_IXOTH)) {
+      fprintf(stderr, "%s: error: java binary is not executable by other: %s\n",
+              progname, JAVA_BINARY);
+      exit(1);
+    }
+  }
+}
+
 int
 main(int argc, char *argv[])
 {
   int i;
-  int debug_launcher = 0;
+
+  progname = (argc > 0 && argv[0] != NULL) ? argv[0] : PROGNAME;
+  if (strrchr(progname, '/') > 0) {
+    progname = strrchr(progname, '/') + 1;
+    if (*progname == '\0') {
+      progname = PROGNAME;
+    }
+  }
 
   if (getenv("ZIMBRA_TOMCAT_START_DEBUG") != NULL) {
     debug_launcher = 1;
@@ -211,7 +385,7 @@ main(int argc, char *argv[])
     if (IsAllowedJVMArg(argv[i])) {
       AddArg(argv[i]);
     } else {
-      fprintf(stderr, "zmtomcatstart: option not allowed: %s\n", argv[i]);
+      fprintf(stderr, "%s: error: JVM option: %s: not allowed for security reasons\n", progname, argv[i]);
       exit(1);
     }
   }
@@ -237,6 +411,11 @@ main(int argc, char *argv[])
     ShowNewArgs();
   }
 
-  execv(JAVA_BINARY, newArgv);
+  CheckJavaBinaryExists();
+
+  CheckForRunningInstance();
+
+  StartTomcat();
+
   return 0;
 }
