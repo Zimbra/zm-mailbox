@@ -77,6 +77,12 @@ public class StatsImageServlet extends ZimbraServlet {
         
         String serverAddr = "";
     	
+        String noDefaultImg = req.getParameter("nodef");
+        boolean noDefault = false;
+        if (noDefaultImg != null && !noDefaultImg.equals("") && noDefaultImg.equals("1")){
+            noDefault = true;
+        }
+        
         try { 
                 
 	        //check if requested server IP is mine if yes, then find the picture, else ask another server for the picture
@@ -88,24 +94,27 @@ public class StatsImageServlet extends ZimbraServlet {
 	        
 	        if (mLog.isDebugEnabled())
 	            mLog.debug("received request to:("+reqPath+")");
-	
 
 	        String reqParts[] = reqPath.split("/");
 	
 	        String reqFilename = reqParts[3];
 	        imgName = LC.stats_img_folder.value() + File.separator + reqFilename;
         } catch (Exception ex) {
-        	imgName = LC.stats_img_folder.value() + File.separator + IMG_NOT_AVAIL;       	
+            imgName = LC.stats_img_folder.value() + File.separator + IMG_NOT_AVAIL;       	
         }       
         try { 
 	        try { 
 	        	is = new FileInputStream(imgName);
 	        } catch (FileNotFoundException ex) {//unlikely case - only if the server's files are broken
 	        	if(is != null)
-	        		is.close();
-	        	
-	        	imgName = LC.stats_img_folder.value() + File.separator + IMG_NOT_AVAIL;
-	        	is = new FileInputStream(imgName);
+                            is.close();
+	        	if (!noDefault){
+                            imgName = LC.stats_img_folder.value() + File.separator + IMG_NOT_AVAIL;
+                            is = new FileInputStream(imgName);
+                        } else {
+                            resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Image not found");
+                            return;
+                        }
 	        }        
         } catch (Exception ex) {
         	if(is != null)
