@@ -75,9 +75,10 @@ public class MailServiceException extends ServiceException {
     public static final String MUST_BE_ORGANIZER = "mail.MUST_BE_ORGANIZER";
     public static final String CANNOT_CANCEL_INSTANCE_OF_EXCEPTION = "mail.CANNOT_CANCEL_INSTANCE_OF_EXCEPTION";
     public static final String INVITE_OUT_OF_DATE = "mail.INVITE_OUT_OF_DATE";
+    public static final String SEND_ABORTED_ADDRESS_FAILURE = "mail.SEND_ABORTED_ADDRESS_FAILURE";
+    public static final String SEND_PARTIAL_ADDRESS_FAILURE = "mail.SEND_PARTIAL_ADDRESS_FAILURE";
     public static final String SEND_FAILURE = "mail.SEND_FAILURE";
         
-
     /**
      * A public inner subclass whose purpose is to group various NoSuchItemXYZ
      * exceptions into a common type so that one can write a catch block to
@@ -275,15 +276,15 @@ public class MailServiceException extends ServiceException {
         return new MailServiceException("The specified Invite is out of date (has been updated): "+request, MUST_BE_ORGANIZER, SENDERS_FAULT, null);
     }
     
-    public static MailServiceException SEND_FAILURE(boolean sentSome, String addrs, Exception ex) {
-        String exStr;
-        if (sentSome) {
-            exStr = "Send failed for some addresses: ";
-        } else {
-            exStr = "Message not sent to any recipients because of these failed addresses: ";
-        }
-        exStr+=addrs;
-        return new MailServiceException(exStr, SEND_FAILURE, SENDERS_FAULT, ex);
+    public static MailServiceException SEND_ABORTED_ADDRESS_FAILURE(String msg, Exception e) {
+        return new MailServiceException(msg, SEND_ABORTED_ADDRESS_FAILURE, SENDERS_FAULT, e);
     }
-    
+
+    public static MailServiceException SEND_PARTIAL_ADDRESS_FAILURE(String msg, Exception e) {
+        return new MailServiceException(msg, SEND_PARTIAL_ADDRESS_FAILURE, SENDERS_FAULT, e);
+    }
+
+    public static MailServiceException SEND_FAILURE(String msg, Exception e) {
+        return new MailServiceException(msg, SEND_FAILURE, SENDERS_FAULT, e);
+    }
 }

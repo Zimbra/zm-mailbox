@@ -260,23 +260,26 @@ public class SendMsg extends WriteOpDocumentHandler {
 	        return (msg != null ? msg.getId() : 0);
 
 	    } catch (SendFailedException sfe) {
-	        mLog.warn("exception ocurred during SendMsg", sfe);
-	        
-            boolean sentSome = false;
-	        if (JMSession.getSmtpConfig().getSendPartial()) {
-	            sentSome = true;
-	        } 
-	        Address[] addrs = sfe.getInvalidAddresses();
-            StringBuffer msg = new StringBuffer();
-	        if (addrs != null && addrs.length > 0) {
-	        	for (int i = 0; i < addrs.length; i++) {
-	        		if (i > 0) {
-	        			msg.append(",");
-	        		}
-	        		msg.append(addrs[i]);
-	        	}
-	        }
-        	throw MailServiceException.SEND_FAILURE(sentSome, msg.toString(), sfe);
+            mLog.warn("exception ocurred during SendMsg", sfe);
+            Address[] invalidAddrs = sfe.getInvalidAddresses();
+            if (invalidAddrs != null && invalidAddrs.length > 0) { 
+                StringBuffer msg = new StringBuffer("Invalid address").append(invalidAddrs.length > 1 ? "es: " : ": ");
+                if (invalidAddrs != null && invalidAddrs.length > 0) {
+                    for (int i = 0; i < invalidAddrs.length; i++) {
+                        if (i > 0) {
+                            msg.append(",");
+                        }
+                        msg.append(invalidAddrs[i]);
+                    }
+                }
+                if (JMSession.getSmtpConfig().getSendPartial()) {
+                    throw MailServiceException.SEND_PARTIAL_ADDRESS_FAILURE(msg.toString(), sfe);
+                } else {
+                    throw MailServiceException.SEND_ABORTED_ADDRESS_FAILURE(msg.toString(), sfe);
+                }
+            } else {
+                throw MailServiceException.SEND_FAILURE("SMTP server reported: " + sfe.getMessage().trim(), sfe);
+            }
 	    } catch (IOException ioe) {
 	        mLog.warn("exception occured during send msg", ioe);
 	        throw ServiceException.FAILURE("IOException", ioe);
