@@ -1,5 +1,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/ioctl.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -345,11 +346,14 @@ StartTomcat()
   
   chdir(TOMCAT_HOME);
   
-#ifdef BSD_STYLE_UNTESTED /* I haven't tested this, but we might need this? */
-  setpgrp(0, getpid());
-  if ((fp = open("/dev/tty", O_RDWR)) >= 0) {
-    ioctl(fd, TIOCNOTTY, (char *)0); /* lose control tty */
-    close(fd);
+#ifdef DARWIN
+  {
+    int tfd;
+    setpgrp(0, getpid());
+    if ((tfd = open("/dev/tty", O_RDWR)) >= 0) {
+      ioctl(tfd, TIOCNOTTY, (char *)0); /* lose control tty */
+      close(tfd);
+    }
   }
 #else
   setpgrp();

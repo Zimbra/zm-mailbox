@@ -14,6 +14,7 @@ SHARED := -dynamiclib
 MACDEF := -DDARWIN
 SHARED_EXT := jnilib
 LIB_OPTS := -install_name /opt/zimbra/lib/libzimbra-native.$(SHARED_EXT) -framework JavaVM
+JAVA_BINARY = /usr/bin/java
 endif
 
 CLASSES = $(BUILD)/classes
