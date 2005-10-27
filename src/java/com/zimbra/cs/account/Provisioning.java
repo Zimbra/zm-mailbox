@@ -733,6 +733,21 @@ public abstract class Provisioning {
     public static final String A_zimbraTimeZoneDaylightOffset = "zimbraTimeZoneDaylightOffset";
     public static final String A_zimbraTimeZoneDaylightRRule = "zimbraTimeZoneDaylightRRule";
 
+    /**
+     * Zimlets
+     */
+    public static final String A_zimbraZimletKeyword           = "zimbraZimletKeyword";
+    public static final String A_zimbraZimletVersion           = "zimbraZimletVersion";
+    public static final String A_zimbraZimletDescription       = "zimbraZimletDescription";
+    public static final String A_zimbraZimletIndexingEnabled   = "zimbraZimletIndexingEnabled";
+    public static final String A_zimbraZimletStoreMatched      = "zimbraZimletStoreMatched"; 
+    public static final String A_zimbraZimletHandlerClass      = "zimbraZimletHandlerClass";
+    public static final String A_zimbraZimletHandlerConfig     = "zimbraZimletHandlerConfig";
+    public static final String A_zimbraZimletContentObject     = "zimbraZimletContentObject";
+    public static final String A_zimbraZimletPanelItem         = "zimbraZimletPanelItem";
+    public static final String A_zimbraZimletScript            = "zimbraZimletScript";
+    public static final String A_zimbraZimletSubscribedZimlets = "zimbraZimletSubscribedZimlets";
+
     private static Provisioning mProvisioning;
 
     public static Provisioning getInstance() {
@@ -920,4 +935,14 @@ public abstract class Provisioning {
     public abstract void removeAlias(DistributionList dl, String alias) throws ServiceException;
 
     public abstract void renameDistributionList(String zimbraId, String newName) throws ServiceException;
+    
+    public abstract List getZimlets() throws ServiceException;
+    
+    public abstract Zimlet createZimlet(String name, Map attrs) throws ServiceException;
+    
+    public abstract void deleteZimlet(String name) throws ServiceException;
+    
+    public abstract void addZimletToCOS(String zimlet, String cos) throws ServiceException;
+    	
+    public abstract void removeZimletFromCOS(String zimlet, String cos) throws ServiceException;
 }

@@ -134,6 +134,8 @@ public class LC {
 
     public static final KnownKey ssl_allow_untrusted_certs;
 
+    public static final KnownKey zimlet_directory;
+    
     static {
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  Changing this setting does not immediately reflect in MySQL server.  You will have to, with abundant precaution, re-generate my.cnf and restart MySQL server for the change to take effect.";
         final String FS = File.separator;
@@ -451,6 +453,11 @@ public class LC {
         ssl_allow_untrusted_certs.setDefault("false");
         ssl_allow_untrusted_certs.setDoc
             ("If true, allow self-signed SSL certificates.");
+        
+        zimlet_directory = new KnownKey("zimlet_directory");
+        zimlet_directory.setDefault("${tomcat_directory}" + FS + "zimlets");
+        zimlet_directory.setDoc
+        	("Path to installed Zimlets.");
     }
 
 }
