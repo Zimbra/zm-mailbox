@@ -95,6 +95,10 @@ public class FeedManager {
             throw ServiceException.FAILURE("error parsing raw iCalendar data", e);
         }
     }
+
+    private static final String HTML_HEADER = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2//EN\">\n" +
+                                              "<HTML><HEAD><META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=iso-8859-1\"><HEAD/><BODY>";
+    private static final String HTML_FOOTER = "</BODY></HTML>";
     
     private static List parseRssFeed(String content) throws ServiceException {
         try {
@@ -104,7 +108,7 @@ public class FeedManager {
                 return parseAtomFeed(root);
 
             Element channel = root.getElement("channel");
-            String linkChannel = channel.getAttribute("link");
+            String hrefChannel = channel.getAttribute("link");
             String subjChannel = channel.getAttribute("title");
             InternetAddress addrChannel = new InternetAddress("", subjChannel);
             Date dateChannel = parseRFC2822Date(channel.getAttribute("lastBuildDate", null), new Date());
@@ -126,12 +130,20 @@ public class FeedManager {
                 } catch (Exception e) {
                     addr = parseDublinCreator(item.getAttribute("creator", null), addr);
                 }
+                String href = item.getAttribute("link", hrefChannel);
+                String text = item.getAttribute("description", "").trim(), ctype;
+                if (text.indexOf("</") != -1 || text.indexOf("/>") != -1) {
+                    ctype = "text/html; charset=\"utf-8\"";  text = HTML_HEADER + text + "<p>" + href + HTML_FOOTER;
+                } else {
+                    ctype = "text/plain; charset=\"utf-8\"";  text += "\r\n\r\n" + href;
+                }
 
                 MimeMessage mm = new MimeMessage(JMSession.getSession());
                 mm.setSentDate(date);
                 mm.addFrom(new InternetAddress[] {addr});
                 mm.setSubject(item.getAttribute("title", subjChannel));
-                mm.setText(item.getAttribute("description", "").trim() + "\r\n\r\n" + item.getAttribute("link", linkChannel), "utf-8");
+                mm.setText(text, "utf-8");
+                mm.setHeader("Content-Type", ctype);
                 // more stuff here!
                 mm.saveChanges();
                 pms.add(new ParsedMessage(mm, date.getTime(), false));
@@ -145,10 +157,6 @@ public class FeedManager {
             throw ServiceException.FAILURE("error encoding rss channel name", e);
         }
     }
-
-    private static final String HTML_HEADER = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2//EN\">\n" +
-                                              "<HTML><HEAD><META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=iso-8859-1\"><HEAD/><BODY>";
-    private static final String HTML_FOOTER = "</BODY></HTML>";
 
     private static List parseAtomFeed(Element feed) throws ServiceException {
         try {
