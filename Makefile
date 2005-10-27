@@ -115,6 +115,8 @@ push: all
 	cp $(BUILD)/zimbra-native.jar ../ZimbraServer/jars
 	p4 edit ../ZimbraServer/lib/libzimbra-native.$(SHARED_EXT)
 	cp $(BUILD)/libzimbra-native.$(SHARED_EXT) ../ZimbraServer/lib
+	p4 edit ../ZimbraServer/libexec/zmtomcatstart.$(shell uname)
+	cp $(BUILD)/zmtomcatstart ../ZimbraServer/libexec/zmtomcatstart.$(shell uname)
 
 #
 # Clean
