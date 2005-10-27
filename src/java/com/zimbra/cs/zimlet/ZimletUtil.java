@@ -196,21 +196,21 @@ public class ZimletUtil {
 		
 	}
 	
-	public static void activateZimlet(String zimlet, String cos) {
+	public static void activateZimlet(String zimlet, String cos) throws ZimletException {
 		Provisioning prov = Provisioning.getInstance();
 		try {
 			prov.addZimletToCOS(zimlet, cos);
 		} catch (Exception e) {
-			System.out.println("Cannot activate Zimlet " + zimlet + " in COS " + cos);
+			throw ZimletException.CANNOT_ACTIVATE(zimlet, e.getCause().getMessage());
 		}
 	}
 	
-	public static void deactivateZimlet(String zimlet, String cos) {
+	public static void deactivateZimlet(String zimlet, String cos) throws ZimletException {
 		Provisioning prov = Provisioning.getInstance();
 		try {
 			prov.removeZimletFromCOS(zimlet, cos);
 		} catch (Exception e) {
-			System.out.println("Cannot deactivate Zimlet " + zimlet + " in COS " + cos);
+			throw ZimletException.CANNOT_DEACTIVATE(zimlet, e.getCause().getMessage());
 		}
 	}
 	
@@ -305,7 +305,7 @@ public class ZimletUtil {
 				break;
 			}
 		} catch (Exception e) {
-			System.out.println("Cannot install zimlet: " + e.getMessage());
+			System.out.println("Error: " + e.getMessage());
 		}
 	}
 	
