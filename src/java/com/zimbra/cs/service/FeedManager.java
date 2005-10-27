@@ -17,6 +17,7 @@ import java.util.List;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MailDateFormat;
 import javax.mail.internet.MimeMessage;
 
 import net.fortuna.ical4j.data.CalendarBuilder;
@@ -27,6 +28,7 @@ import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.dom4j.QName;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -40,16 +42,9 @@ import com.zimbra.soap.Element;
 public class FeedManager {
 
     public static final int MAX_REDIRECTS = 3;
+    public static final String HTTP_USER_AGENT = "User-Agent: Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.1.4322)";
 
-    public synchronized static List retrieveRemoteDatasource(Account acct, String url) throws ServiceException {
-        if (url == null || url.equals(""))
-            return Collections.EMPTY_LIST;
-        String lcurl = url.toLowerCase();
-        if (lcurl.startsWith("webcal:"))
-            url = "http:" + url.substring(7);
-        else if (!lcurl.startsWith("http:") && !lcurl.startsWith("https:"))
-            throw ServiceException.FAILURE("url must begin with http: or https:", null);
-
+    public static List retrieveRemoteDatasource(Account acct, String url) throws ServiceException {
         HttpClient client = new HttpClient();
         client.setConnectionTimeout(10000);
         client.setTimeout(20000);
@@ -57,23 +52,33 @@ public class FeedManager {
         String content = null;
         try {
             int redirects = 0;
-            while (redirects < MAX_REDIRECTS) {
+            do {
+                if (url == null || url.equals(""))
+                    return Collections.EMPTY_LIST;
+                String lcurl = url.toLowerCase();
+                if (lcurl.startsWith("webcal:"))
+                    url = "http:" + url.substring(7);
+                else if (!lcurl.startsWith("http:") && !lcurl.startsWith("https:"))
+                    throw ServiceException.FAILURE("url must begin with http: or https:", null);
+
                 GetMethod get = new GetMethod(url);
                 get.setFollowRedirects(true);
+                get.addRequestHeader("User-Agent", HTTP_USER_AGENT);
                 client.executeMethod(get);
-                content = get.getResponseBodyAsString();
+
                 Header locationHeader = get.getResponseHeader("location");
-                if (locationHeader != null) {
-                    url = locationHeader.getValue();
-                    content = null;
-                    redirects++;
-                } else {
+                if (locationHeader == null) {
+                    content = get.getResponseBodyAsString();
                     break;
                 }
-            }
-            
-            if (content == null || content.length() == 0)
+                url = locationHeader.getValue();
+            } while (++redirects <= MAX_REDIRECTS);
+
+            if (redirects > MAX_REDIRECTS)
+                throw ServiceException.TOO_MANY_HOPS();
+            else if (content == null || content.length() == 0)
                 throw ServiceException.FAILURE("empty body in response when fetching remote subscription", null);
+
             if (content.charAt(0) == '<')
                 return parseRssFeed(content);
             else if (content.charAt(0) == 'B') {
@@ -93,13 +98,17 @@ public class FeedManager {
     
     private static List parseRssFeed(String content) throws ServiceException {
         try {
-            Element root = Element.parseXML(content);
-
-            String channel = root.getElement("channel").getAttribute("title");
-            InternetAddress addrChannel = new InternetAddress("", channel);
-            Date now = new Date();
-
+            Element root = parseXML(content);
             String rname = root.getName();
+            if (rname.equals("feed"))
+                return parseAtomFeed(root);
+
+            Element channel = root.getElement("channel");
+            String linkChannel = channel.getAttribute("link");
+            String subjChannel = channel.getAttribute("title");
+            InternetAddress addrChannel = new InternetAddress("", subjChannel);
+            Date dateChannel = parseRFC2822Date(channel.getAttribute("lastBuildDate", null), new Date());
+
             if (rname.equals("rss"))
                 root = root.getElement("channel");
             else if (!rname.equals("RDF"))
@@ -108,22 +117,28 @@ public class FeedManager {
             ArrayList pms = new ArrayList();
             for (Iterator it = root.elementIterator("item"); it.hasNext(); ) {
                 Element item = (Element) it.next();
-                Date date = parseISO8601(item.getAttribute("date", null));
+                Date date = parseRFC2822Date(item.getAttribute("pubDate", null), null);
                 if (date == null)
-                    date = now;
-                InternetAddress addr = parseCreator(item.getAttribute("creator", null), addrChannel);
+                    date = parseISO8601Date(item.getAttribute("date", null), dateChannel);
+                InternetAddress addr = addrChannel;
+                try {
+                    addr = new InternetAddress(item.getAttribute("author"));
+                } catch (Exception e) {
+                    addr = parseDublinCreator(item.getAttribute("creator", null), addr);
+                }
+
                 MimeMessage mm = new MimeMessage(JMSession.getSession());
                 mm.setSentDate(date);
                 mm.addFrom(new InternetAddress[] {addr});
-                mm.setSubject(item.getAttribute("title"));
-                mm.setText(item.getAttribute("link") + "\r\n\r\n" + item.getAttribute("description"), "utf-8");
+                mm.setSubject(item.getAttribute("title", subjChannel));
+                mm.setText(item.getAttribute("description", "").trim() + "\r\n\r\n" + item.getAttribute("link", linkChannel), "utf-8");
                 // more stuff here!
                 mm.saveChanges();
                 pms.add(new ParsedMessage(mm, date.getTime(), false));
             }
             return pms;
         } catch (org.dom4j.DocumentException e) {
-            throw ServiceException.PARSE_ERROR("could not parse rss feed", e);
+            throw ServiceException.PARSE_ERROR("could not parse feed", e);
         } catch (MessagingException e) {
             throw ServiceException.PARSE_ERROR("error wrapping rss item in MimeMessage", e);
         } catch (UnsupportedEncodingException e) {
@@ -131,39 +146,123 @@ public class FeedManager {
         }
     }
 
-    private static InternetAddress parseCreator(String encoded, InternetAddress addrChannel) {
-        if (encoded == null || encoded.equals(""))
+    private static final String HTML_HEADER = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2//EN\">\n" +
+                                              "<HTML><HEAD><META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=iso-8859-1\"><HEAD/><BODY>";
+    private static final String HTML_FOOTER = "</BODY></HTML>";
+
+    private static List parseAtomFeed(Element feed) throws ServiceException {
+        try {
+            // get defaults from the <feed> element
+            InternetAddress addrFeed = parseAtomAuthor(feed.getOptionalElement("author"), null);
+            if (addrFeed == null)
+                addrFeed = new InternetAddress("", feed.getAttribute("title"));
+            Date dateFeed = parseISO8601Date(feed.getAttribute("updated", null), new Date());
+
+            ArrayList pms = new ArrayList();
+            for (Iterator it = feed.elementIterator("entry"); it.hasNext(); ) {
+                Element item = (Element) it.next();
+                Date date = parseISO8601Date(item.getAttribute("updated", null), null);
+                if (date == null)
+                    date = parseISO8601Date(item.getAttribute("modified", null), dateFeed);
+                InternetAddress addr = parseAtomAuthor(item.getOptionalElement("author"), addrFeed);
+                // figure out the url from the mess of link elements
+                String href = "";
+                for (Iterator itlink = item.elementIterator("link"); itlink.hasNext(); ) {
+                    Element link = (Element) itlink.next();
+                    if (link.getAttribute("rel", "alternate").equals("alternate")) {
+                        href = link.getAttribute("href");  break;
+                    }
+                }
+                String title = item.getAttribute("title");
+                // get the content/summary
+                Element content = item.getOptionalElement("content");
+                if (content == null)
+                    content = item.getOptionalElement("summary");
+                if (content == null)
+                    continue;
+                String text, ctype, type = content.getAttribute("type", "text").trim().toLowerCase();
+                if (type.equals("text") || type.equals("text/plain")) {
+                    ctype = "text/plain; charset=\"utf-8\"";  text = content.getText() + "\r\n\r\n" + href;
+                } else if (type.equals("html") || type.equals("xhtml") || type.equals("text/html") || type.equals("application/xhtml+xml")) {
+                    ctype = "text/html; charset=\"utf-8\"";  text = HTML_HEADER + content.getText() + "<p>" + href + HTML_FOOTER;
+                } else
+                    throw ServiceException.PARSE_ERROR("unsupported content type: " + type, null);
+
+                MimeMessage mm = new MimeMessage(JMSession.getSession());
+                mm.setSentDate(date);
+                mm.addFrom(new InternetAddress[] {addr});
+                mm.setSubject(title);
+                mm.setText(text, "utf-8");
+                mm.setHeader("Content-Type", ctype);
+                // more stuff here!
+                mm.saveChanges();
+                pms.add(new ParsedMessage(mm, date.getTime(), false));
+            }
+            return pms;
+        } catch (MessagingException e) {
+            throw ServiceException.PARSE_ERROR("error wrapping atom item in MimeMessage", e);
+        } catch (UnsupportedEncodingException e) {
+            throw ServiceException.FAILURE("error encoding atom feed name", e);
+        }
+    }
+
+    private static InternetAddress parseDublinCreator(String creator, InternetAddress addrChannel) {
+        if (creator == null || creator.equals(""))
             return addrChannel;
 
         // check for a mailto: link
-        String lc = encoded.trim().toLowerCase(), address = "", personal = encoded;
+        String lc = creator.trim().toLowerCase(), address = "", personal = creator;
         int mailto = lc.indexOf("mailto:");
         if (mailto == -1)
             ;
         else if (mailto == 0 && lc.length() <= 7)
             return addrChannel;
         else if (mailto == 0) {
-            personal = null;  address = encoded = encoded.substring(7);
+            personal = null;  address = creator = creator.substring(7);
         } else {
             // checking for "...[mailto:...]..." or "...(mailto:...)..."
-            char delimit = encoded.charAt(mailto - 1), complement = 0;
+            char delimit = creator.charAt(mailto - 1), complement = 0;
             if (delimit == '[')       complement = ']';
             else if (delimit == '(')  complement = ')';
-            int closing = encoded.indexOf(complement, mailto + 7);
+            int closing = creator.indexOf(complement, mailto + 7);
             if (closing != -1 && closing != mailto + 7) {
-                address = encoded.substring(mailto + 7, closing);
-                personal = (encoded.substring(0, mailto - 1) + encoded.substring(closing + 1)).trim();
+                address = creator.substring(mailto + 7, closing);
+                personal = (creator.substring(0, mailto - 1) + creator.substring(closing + 1)).trim();
             }
         }
 
         try { return new InternetAddress(address, personal); } catch (UnsupportedEncodingException e) { }
-        try { return new InternetAddress("", encoded); }       catch (UnsupportedEncodingException e) { }
+        try { return new InternetAddress("", creator); }       catch (UnsupportedEncodingException e) { }
         return addrChannel;
     }
 
-    private static Date parseISO8601(String encoded) {
+    private static InternetAddress parseAtomAuthor(Element author, InternetAddress addrChannel) {
+        if (author == null)
+            return addrChannel;
+
+        String address  = author.getAttribute("email", "");
+        String personal = author.getAttribute("name", "");
+        if (personal.equals("") && address.equals(""))
+            return addrChannel;
+
+        try { return new InternetAddress(address, personal); }      catch (UnsupportedEncodingException e) { }
+        try { return new InternetAddress("", address + personal); } catch (UnsupportedEncodingException e) { }
+        return addrChannel;
+    }
+
+    private static Date parseRFC2822Date(String encoded, Date fallback) {
         if (encoded == null)
-            return null;
+            return fallback;
+        try {
+            return new MailDateFormat().parse(encoded);
+        } catch (ParseException e) {
+            return fallback;
+        }
+    }
+
+    private static Date parseISO8601Date(String encoded, Date fallback) {
+        if (encoded == null)
+            return fallback;
 
         // normalize format to "2005-10-19T16:25:38-0800"
         int length = encoded.length();
@@ -174,24 +273,50 @@ public class FeedManager {
         else if (length == 10)
             encoded += "T00:00:00-0000";
         else if (length < 17)
-            return null;
+            return fallback;
         else if (encoded.charAt(16) != ':')
             encoded = encoded.substring(0, 16) + ":00" + encoded.substring(16);
         else if (length >= 22 && encoded.charAt(19) == '.')
             encoded = encoded.substring(0, 19) + encoded.substring(21);
-        // remove the ':' from the timezone, if present
+
+        // timezone cleanup: this format understands '-0800', not '-08:00'
         int colon = encoded.lastIndexOf(':');
         if (colon > 19)
             encoded = encoded.substring(0, colon) + encoded.substring(colon + 1);
-        // this format doesn't understand 'Z' as a timezone
-        if (encoded.endsWith("Z"))
+        // timezone cleanup: this format doesn't understand 'Z' or default timezones
+        if (encoded.length() == 19)
+            encoded += "-0000";
+        else if (encoded.endsWith("Z"))
             encoded = encoded.substring(0, encoded.length() - 1) + "-0000";
 
         try {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
-            return sdf.parse(encoded);
+            return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").parse(encoded);
         } catch (ParseException e) {
-            return null;
+            return fallback;
         }
+    }
+
+    private static final QName XHTML_DIV = QName.get("div", "http://www.w3.org/1999/xhtml");
+
+    private static Element parseXML(String xml) throws org.dom4j.DocumentException {
+        return parseXML(org.dom4j.DocumentHelper.parseText(xml).getRootElement());
+    }
+    private static Element parseXML(org.dom4j.Element d4root) {
+        Element elt = Element.XMLElement.mFactory.createElement(d4root.getQName());
+        for (Iterator it = d4root.attributeIterator(); it.hasNext(); ) {
+            org.dom4j.Attribute d4attr = (org.dom4j.Attribute) it.next();
+            elt.addAttribute(d4attr.getQualifiedName(), d4attr.getValue());
+        }
+        String content = d4root.getText();
+        if (content != null && !content.trim().equals(""))
+            elt.setText(content);
+        for (Iterator it = d4root.elementIterator(); it.hasNext(); ) {
+            org.dom4j.Element d4elt = (org.dom4j.Element) it.next();
+            if (d4elt.getQName().equals(XHTML_DIV))
+                elt.setText(d4elt.asXML());
+            else
+                elt.addElement(parseXML(d4elt));
+        }
+        return elt;
     }
 }
