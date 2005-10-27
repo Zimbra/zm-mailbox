@@ -285,7 +285,7 @@ public class DbMailbox {
             mbd.lastItemId    = rs.getInt(2) + ITEM_CHECKPOINT_INCREMENT - 1;
             mbd.lastChangeId  = rs.getInt(4) + CHANGE_CHECKPOINT_INCREMENT - 1;
             mbd.trackSync     = rs.getBoolean(5);
-            mbd.indexVolumeId = rs.getShort(6);
+            mbd.indexVolumeId = DbUtil.getUnsignedTinyIntAsShort(rs, 6);
             try {
                 mbd.config = new Metadata(rs.getString(7)); 
             } catch (ServiceException e) {
@@ -326,7 +326,7 @@ public class DbMailbox {
             rs = stmt.executeQuery();
             if (!rs.next())
                 throw MailServiceException.NO_SUCH_MBOX(data.id);
-            data.indexVolumeId     = rs.getShort(1);
+            data.indexVolumeId = DbUtil.getUnsignedTinyIntAsShort(rs, 1);
         } catch (SQLException e) {
             throw ServiceException.FAILURE("getting mailbox volume info", e);
         } finally {

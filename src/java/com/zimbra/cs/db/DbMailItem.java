@@ -1408,7 +1408,7 @@ public class DbMailItem {
 
             boolean hasBlob = rs.getBoolean(LEAF_CI_HAS_BLOB);
             if (hasBlob) {
-                short volumeId = rs.getShort(LEAF_CI_VOLUME_ID);
+                short volumeId = DbUtil.getUnsignedTinyIntAsShort(rs, LEAF_CI_VOLUME_ID);
                 try {
                     MailboxBlob mblob = sm.getMailboxBlob(mbox, id, revision, volumeId);
                     if (mblob == null)
@@ -1960,7 +1960,7 @@ public class DbMailItem {
         data.indexId     = rs.getInt(CI_INDEX_ID + offset);
         data.date        = rs.getInt(CI_DATE + offset);
         data.size        = rs.getInt(CI_SIZE + offset);
-        data.volumeId    = rs.getShort(CI_VOLUME_ID + offset);
+        data.volumeId    = DbUtil.getUnsignedTinyIntAsShort(rs, CI_VOLUME_ID + offset);
         if (rs.wasNull())
             data.volumeId = -1;
         data.blobDigest  = rs.getString(CI_BLOB_DIGEST + offset);
