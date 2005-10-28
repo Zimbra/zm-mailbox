@@ -95,6 +95,7 @@ public class ContactCSV {
     public static final String CSV_Home_Street_2 = "Home Street 2";
     public static final String CSV_Home_Street_3 = "Home Street 3";
     public static final String CSV_Home_ZIP = "Home ZIP";
+    public static final String CSV_Home_WebPage = "Home WebPage";
     public static final String CSV_ISDN = "ISDN";
     public static final String CSV_Initials = "Initials";
     public static final String CSV_Internet_Free_Busy = "Internet Free Busy";
@@ -146,6 +147,7 @@ public class ContactCSV {
     public static final String CSV_Website_2 = "Website 2";
     public static final String CSV_Work_Address = "Work Address";
     public static final String CSV_Work_Address_2 = "Work Address 2";
+    public static final String CSV_Work_WebPage = "Work WebPage";    
     public static final String CSV_Work_ZIP = "Work ZIP";
 
     private static final int OP_MAP = 1; 
@@ -300,7 +302,7 @@ public class ContactCSV {
         addMapping(CSV_Suffix, Contact.A_nameSuffix, OP_MAP);
         //CSV_TTY_TDD_Phone
         //CSV_Telex
-        addMapping(CSV_Title, Contact.A_jobTitle, OP_MAP); // reconcile with CSV_jobTitle
+        //addMapping(CSV_Title, Contact.A_Title, OP_MAP); // need name title in our contacts
         //CSV_User_1
         //CSV_User_2
         //CSV_User_3
@@ -308,6 +310,8 @@ public class ContactCSV {
         addMapping(CSV_Web_Page, Contact.A_workURL, OP_MAP);
         addMapping(CSV_Website, Contact.A_workURL, OP_MAP, false);
         addMapping(CSV_Website_2, Contact.A_homeURL, OP_MAP, false);
+        addMapping(CSV_Home_WebPage, Contact.A_homeURL, OP_MAP, false);
+        addMapping(CSV_Work_WebPage, Contact.A_workURL, OP_MAP, false);
         addMapping(CSV_Work_ZIP, Contact.A_workPostalCode, OP_MAP, false);
     };
 
