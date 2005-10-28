@@ -81,3 +81,50 @@ For now there are no conventions for the following two items.
       nice, but seems like a overkill - but for simple extensions
       programming we probably should have a generic event mechanism,
       listener registration etc.
+
+
+Extensions with servlets
+
+If an extension needs to process HTTP GET/POST requests, it can do so as follows:
+
+	- implement com.zimbra.cs.extension.ExtensionHttpHandler interface
+	
+	  public class MyHandler implements ExtensionHttpHandler {
+	      
+	      // the path under which MyHandler is registered
+	      public String getPath() {
+	          return super.getPath() + "/myhandler";
+	      }
+	      
+	      // override doGet or doPost or both as needed
+	      // it's your responsibility to authenticate/authorize the requests
+	      // sent to the handler
+	      
+	      public void init(ZimbraExtension ext) ... {
+	          super.init(ext);    // make sure you call superclass's init method.
+	          // your initialization
+	      }
+	  }      
+	  
+	- register the handler in your extension
+	
+	  public class MyExtension implements ZimbraExtension {
+	      public void init() ... {
+	          ExtensionDispatcherServlet.register(this, new MyHandler());
+	      }
+	      
+	      public void destroy() {
+	          ExtensionDispatcherServlet.unregister(this);
+	      }
+	      
+	      public String getName() {
+	          return "myext";
+	      }
+	  }  
+	  
+Your handler will process requests at URI: /service/extension/myext/myhandler.
+You can create any number of handlers. They will be available at: /service/extension/myext/<handler path>.
+
+ExtensionHttpHandlers are not servlets. They live in the service.war's servlet context.
+	  
+	  
