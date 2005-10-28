@@ -150,7 +150,7 @@ public class SendInviteReply extends CalendarRequest {
                         dat.mMm = createDefaultReply(acct.getName(), oldInv, replySubject, verb, iCal); 
                     }
                     
-                    sendCalendarMessage(lc, appt.getFolderId(), acct, mbox, dat, response);  
+                    sendCalendarMessage(lc, appt.getFolderId(), acct, mbox, dat, response, false);  
                 }
                 
                 RecurId recurId = null;

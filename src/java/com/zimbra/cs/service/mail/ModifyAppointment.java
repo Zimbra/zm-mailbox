@@ -136,7 +136,7 @@ public class ModifyAppointment extends CalendarRequest {
             }
         }
 
-        sendCalendarMessage(lc, appt.getFolderId(), acct, mbox, dat, response);
+        sendCalendarMessage(lc, appt.getFolderId(), acct, mbox, dat, response, false);
 
         return response;        
     }
@@ -170,7 +170,7 @@ public class ModifyAppointment extends CalendarRequest {
             dat.mMm = CalendarUtils.createDefaultCalendarMessage(acct.getName(), 
                     cancelAt.getAddress(), subject, text, inv.getUid(), cal);
             
-            sendCalendarMessage(lc, appt.getFolderId(), acct, mbox, dat, null); 
+            sendCalendarMessage(lc, appt.getFolderId(), acct, mbox, dat, null, true); 
         }
     }
 }

@@ -84,7 +84,7 @@ public class CreateAppointment extends CalendarRequest {
             CalSendData dat = handleMsgElement(lc, msgElem, acct, mbox, parser);
 
             Element response = lc.createElement(MailService.CREATE_APPOINTMENT_RESPONSE);
-            return sendCalendarMessage(lc, iidFolder.getId(), acct, mbox, dat, response);
+            return sendCalendarMessage(lc, iidFolder.getId(), acct, mbox, dat, response, false);
         } finally {
             sWatch.stop(startTime);
         }

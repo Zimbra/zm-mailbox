@@ -167,7 +167,8 @@ public abstract class CalendarRequest extends SendMsg {
         return toRet.toString();
     }
 
-    protected static Element sendCalendarMessage(ZimbraContext lc, int apptFolderId, Account acct, Mailbox mbox, CalSendData csd, Element response)
+    protected static Element sendCalendarMessage(ZimbraContext lc, int apptFolderId, Account acct, 
+            Mailbox mbox, CalSendData csd, Element response, boolean ignoreFailedAddresses)
     throws ServiceException { 
         synchronized (mbox) {
             OperationContext octxt = lc.getOperationContext();
@@ -190,8 +191,6 @@ public abstract class CalendarRequest extends SendMsg {
                 csd.mInvite.setFragment(pm.getFragment());
             }
 
-            int[] ids = mbox.addInvite(octxt, apptFolderId, csd.mInvite, false, pm);
-            
             boolean hasRecipients = true;
             try {
                 hasRecipients = csd.mMm.getAllRecipients() != null;
@@ -202,33 +201,35 @@ public abstract class CalendarRequest extends SendMsg {
             
             int msgId = 0;
 
-            String html = getOrigHtml(csd.mMm);
-            if (html != null && html.indexOf("href=\"@@ACCEPT@@\"") >= 0) {
-                try {
-                    String localURL = ZimbraServlet.getURLForServer(Provisioning.getInstance().getLocalServer());
-                    
-                    Address[] addrs = csd.mMm.getAllRecipients();
-                    for (int i = 0; i < addrs.length; i++) {
-                        InternetAddress ia = (InternetAddress)addrs[i];
-                        if (html != null) {
-                            patchCalendarURLs(csd.mMm, html, 
-                                    localURL,
-                                    csd.mInvite.getOrganizer().getCalAddress().getSchemeSpecificPart(),
-                                    csd.mInvite.getUid(),
-                                    ia.getAddress(),
-                                    ids[0]+"-"+ids[1]);
-                        }
-                        
-                        Address[] sendAddrs = new Address[1];
-                        sendAddrs[0] = ia;
-                        csd.mMm.setRecipients(Message.RecipientType.TO, sendAddrs);
-                        
-                        msgId = sendMimeMessage(octxt, mbox, acct, saveFolderId, csd, csd.mMm, csd.mOrigId, csd.mReplyType);                  
-                    }
-                } catch (MessagingException e) { }
-            } else {
-                msgId = sendMimeMessage(octxt, mbox, acct, saveFolderId, csd, csd.mMm, csd.mOrigId, csd.mReplyType);
-            }
+//            String html = getOrigHtml(csd.mMm);
+//            if (html != null && html.indexOf("href=\"@@ACCEPT@@\"") >= 0) {
+//                try {
+//                    String localURL = ZimbraServlet.getURLForServer(Provisioning.getInstance().getLocalServer());
+//                    
+//                    Address[] addrs = csd.mMm.getAllRecipients();
+//                    for (int i = 0; i < addrs.length; i++) {
+//                        InternetAddress ia = (InternetAddress)addrs[i];
+//                        if (html != null) {
+//                            patchCalendarURLs(csd.mMm, html, 
+//                                    localURL,
+//                                    csd.mInvite.getOrganizer().getCalAddress().getSchemeSpecificPart(),
+//                                    csd.mInvite.getUid(),
+//                                    ia.getAddress(),
+//                                    ids[0]+"-"+ids[1]);
+//                        }
+//                        
+//                        Address[] sendAddrs = new Address[1];
+//                        sendAddrs[0] = ia;
+//                        csd.mMm.setRecipients(Message.RecipientType.TO, sendAddrs);
+//                        
+//                        msgId = sendMimeMessage(octxt, mbox, acct, saveFolderId, csd, csd.mMm, csd.mOrigId, csd.mReplyType, ignoreFailedAddresses);                  
+//                    }
+//                } catch (MessagingException e) { }
+//            } else {
+            msgId = sendMimeMessage(octxt, mbox, acct, saveFolderId, csd, csd.mMm, csd.mOrigId, csd.mReplyType, ignoreFailedAddresses);
+//            }
+                
+            int[] ids = mbox.addInvite(octxt, apptFolderId, csd.mInvite, false, pm);
 
             if (response != null && ids != null) {
                 response.addAttribute(MailService.A_APPT_ID, lc.formatItemId(ids[0]));

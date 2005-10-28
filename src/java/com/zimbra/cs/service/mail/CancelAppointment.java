@@ -162,7 +162,7 @@ public class CancelAppointment extends CalendarRequest {
             }
         }
         
-        sendCalendarMessage(lc, appt.getFolderId(), acct, mbox, dat, null);
+        sendCalendarMessage(lc, appt.getFolderId(), acct, mbox, dat, null, true);
     }
     
     
@@ -214,7 +214,7 @@ public class CancelAppointment extends CalendarRequest {
             }
         }
         
-        sendCalendarMessage(lc, appt.getFolderId(), acct, mbox, dat, null);
+        sendCalendarMessage(lc, appt.getFolderId(), acct, mbox, dat, null, true);
     }
      
 }

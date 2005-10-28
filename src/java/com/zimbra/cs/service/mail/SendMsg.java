@@ -35,6 +35,7 @@ import javax.mail.Address;
 import javax.mail.Transport;
 import javax.mail.SendFailedException;
 import javax.mail.MessagingException;
+import javax.mail.Message.RecipientType;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
@@ -166,7 +167,29 @@ public class SendMsg extends WriteOpDocumentHandler {
             folderId = getSentFolder(acct, mbox, octxt);
         }
 
-        return sendMimeMessage(octxt, mbox, acct, folderId, mimeData, mm, origId, replyType);
+        return sendMimeMessage(octxt, mbox, acct, folderId, mimeData, mm, origId, replyType, false);
+    }
+    
+    private static Address[] removeInvalidAddresses(Address[] orig, Address[] invalidAddrs)
+    {
+        if (orig == null || invalidAddrs == null) 
+            return orig;
+            
+        ArrayList newTo = new ArrayList();
+        for (int i = 0; i < orig.length; i++) {
+            boolean invalid = false;
+            for (int j = 0; j < invalidAddrs.length; j++) {
+                if (invalidAddrs[j].equals(orig[i])) {
+                    invalid = true;
+                    break;
+                }
+            }
+            if (!invalid)
+                newTo.add(orig[i]);
+        }
+        Address[] toRet = new Address[newTo.size()];
+        toRet = (Address[])(newTo.toArray(toRet));
+        return toRet;
     }
     
     
@@ -182,11 +205,13 @@ public class SendMsg extends WriteOpDocumentHandler {
      * @param mm
      * @param origId
      * @param replyType
+     * @param ignoreFailedAddresses If TRUE, then will attempt to send even if some addresses fail (no error is returned!)
      * @return
      * @throws ServiceException
      */
     static int sendMimeMessage(OperationContext octxt, Mailbox mbox, Account acct, int saveToFolder,
-                               MimeMessageData mimeData, MimeMessage mm, int origId, String replyType)
+                               MimeMessageData mimeData, MimeMessage mm, int origId, String replyType,
+                               boolean ignoreFailedAddresses)
     throws ServiceException {
         try {
             // slot the message in the parent's conversation if the subjects match
@@ -216,8 +241,30 @@ public class SendMsg extends WriteOpDocumentHandler {
             
             // send the message via SMTP
             try {
+                boolean retry = ignoreFailedAddresses;
                 if (mm.getAllRecipients() != null) {
-                    Transport.send(mm);
+                    do {
+                        try {
+                            Transport.send(mm);
+                            retry = false;
+                        } catch (SendFailedException sfe) {
+                            Address[] invalidAddrs = sfe.getInvalidAddresses();
+                            if (!retry)
+                                throw sfe;
+                            
+                            Address[] to = removeInvalidAddresses(mm.getRecipients(RecipientType.TO), invalidAddrs);
+                            Address[] cc = removeInvalidAddresses(mm.getRecipients(RecipientType.CC), invalidAddrs);
+                            Address[] bcc = removeInvalidAddresses(mm.getRecipients(RecipientType.BCC), invalidAddrs);
+                            
+                            // if there are NO valid addrs, then give up!
+                            if ((to == null || to.length == 0) && (cc == null || cc.length == 0) && (bcc == null || bcc.length == 0))
+                                retry = false;
+                            
+                            mm.setRecipients(RecipientType.TO, to);
+                            mm.setRecipients(RecipientType.CC, cc);
+                            mm.setRecipients(RecipientType.BCC, bcc);
+                        }
+                    } while(retry);
                 }
             } catch (MessagingException e) {
                 rollbackMessage(octxt, mbox, msg);
@@ -225,7 +272,7 @@ public class SendMsg extends WriteOpDocumentHandler {
             } catch (RuntimeException e) {
                 rollbackMessage(octxt, mbox, msg);
                 throw e;
-            }
+            } 
 
             // check if this is a reply, and if so flag the message appropriately
             if (origId > 0) {

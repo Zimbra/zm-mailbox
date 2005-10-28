@@ -7,6 +7,7 @@ import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -68,7 +69,7 @@ public class CreateAppointmentException extends CreateAppointment {
                 Invite inv = appt.getInvite(iid.getSubpartId(), compNum);
 
                 if (inv.hasRecurId()) {
-                    throw ServiceException.FAILURE("Invite id=" + iid.toString(lc) + " comp=" + compNum + " is not the a default invite", null);
+                    throw MailServiceException.INVITE_OUT_OF_DATE("Invite id=" + iid.toString(lc) + " comp=" + compNum + " is not the a default invite");
                 }
 
                 if (appt == null)
@@ -79,7 +80,7 @@ public class CreateAppointmentException extends CreateAppointment {
                 CreateApptExceptionInviteParser parser = new CreateApptExceptionInviteParser(appt.getUid(), inv.getTimeZoneMap());                
                 CalSendData dat = handleMsgElement(lc, msgElem, acct, mbox, parser);
 
-                return sendCalendarMessage(lc, appt.getFolderId(), acct, mbox, dat, response);
+                return sendCalendarMessage(lc, appt.getFolderId(), acct, mbox, dat, response, false);
             }
         } finally {
             sWatch.stop(startTime);
