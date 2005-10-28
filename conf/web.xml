@@ -22,6 +22,12 @@
   </servlet>
 
   <servlet>
+    <servlet-name>ExtensionDispatcherServlet</servlet-name>
+    <servlet-class>com.zimbra.cs.extension.ExtensionDispatcherServlet</servlet-class>
+    <load-on-startup>2</load-on-startup>
+  </servlet>
+  
+  <servlet>
     <servlet-name>SoapServlet</servlet-name>
     <servlet-class>com.zimbra.soap.SoapServlet</servlet-class>
     <load-on-startup>2</load-on-startup>
@@ -137,6 +143,11 @@
       <param-value>7071</param-value>
     </init-param>
   </servlet>
+
+  <servlet-mapping>
+    <servlet-name>ExtensionDispatcherServlet</servlet-name>
+    <url-pattern>/extension/*</url-pattern>
+  </servlet-mapping>
 
   <servlet-mapping>
     <servlet-name>SoapServlet</servlet-name>

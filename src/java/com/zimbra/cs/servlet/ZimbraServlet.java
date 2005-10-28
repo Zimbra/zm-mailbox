@@ -65,7 +65,6 @@ public class ZimbraServlet extends HttpServlet {
 
     public static final String USER_SERVICE_URI  = "/service/soap/";
     public static final String ADMIN_SERVICE_URI = "/service/admin/soap/";
-    public static final String MBOX_MOVE_URI     = "/service/admin/mboximport";
 
     public static final String COOKIE_ZM_AUTH_TOKEN       = "ZM_AUTH_TOKEN";
     public static final String COOKIE_ZM_ADMIN_AUTH_TOKEN = "ZM_ADMIN_AUTH_TOKEN"; 
@@ -175,7 +174,7 @@ public class ZimbraServlet extends HttpServlet {
         }
     }
 
-    protected static AuthToken getAuthTokenFromCookie(HttpServletRequest req,
+    public static AuthToken getAuthTokenFromCookie(HttpServletRequest req,
                                                       HttpServletResponse resp)
     throws IOException {
         return getAuthTokenFromCookieImpl(req, resp, COOKIE_ZM_AUTH_TOKEN, false);
