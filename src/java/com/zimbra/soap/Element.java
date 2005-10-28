@@ -220,6 +220,8 @@ public abstract class Element {
         return JavaScriptElement.parseElement(new JavaScriptElement.JSRequest(js), com.zimbra.soap.SoapProtocol.SoapJS.getEnvelopeQName(), factory);
     }
 
+    private static final String XHTML_NS_URI = "http://www.w3.org/1999/xhtml";
+
     public static Element parseXML(InputStream is) throws org.dom4j.DocumentException { return parseXML(is, XMLElement.mFactory); }
     public static Element parseXML(InputStream is, ElementFactory factory) throws org.dom4j.DocumentException {
         return convertDOM(new org.dom4j.io.SAXReader().read(is).getRootElement(), factory);
@@ -235,11 +237,16 @@ public abstract class Element {
             org.dom4j.Attribute d4attr = (org.dom4j.Attribute) it.next();
             elt.addAttribute(d4attr.getQualifiedName(), d4attr.getValue());
         }
+        String content = null;
         for (Iterator it = d4root.elementIterator(); it.hasNext(); ) {
             org.dom4j.Element d4elt = (org.dom4j.Element) it.next();
-            elt.addElement(convertDOM(d4elt, factory));
+            if (XHTML_NS_URI.equals(d4elt.getNamespaceURI()))
+                content = (content == null ? d4elt.asXML() : content + d4elt.asXML());
+            else
+                elt.addElement(convertDOM(d4elt, factory));
         }
-        String content = d4root.getText();
+        if (content == null)
+            content = d4root.getText();
         if (content != null && !content.trim().equals(""))
             elt.setText(content);
         return elt;
@@ -268,7 +275,7 @@ public abstract class Element {
 
     public static class JavaScriptElement extends Element {
         public static final ElementFactory mFactory = new JavaScriptFactory();
-        
+
         private static final String E_ATTRS     = "_attrs";
         private static final String A_CONTENT   = "_content";
         private static final String A_NAMESPACE = "_jsns";
@@ -624,7 +631,7 @@ public abstract class Element {
                 return '"' + pname + '"';
             for (int i = 0; i < pname.length(); i++) {
                 char c = pname.charAt(i);
-                if (c == '$' || c == '_')
+                if (c == '$' || c == '_' || (c >= 'a' && c <= 'z') || c >= 'A' && c <= 'Z')
                     continue;
                 switch (Character.getType(c)) {
                     // note: not allowing unquoted escape sequences for now...

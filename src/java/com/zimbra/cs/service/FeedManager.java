@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -30,7 +31,6 @@ import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.methods.GetMethod;
-import org.dom4j.QName;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -102,10 +102,12 @@ public class FeedManager {
     private static final String HTML_HEADER = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">\n" +
                                               "<HTML><HEAD><META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\"></HEAD><BODY>";
     private static final String HTML_FOOTER = "</BODY></HTML>";
-    
+
+    private static org.dom4j.QName QN_CONTENT_ENCODED = org.dom4j.QName.get("encoded", "content", "http://purl.org/rss/1.0/modules/content/");
+
     private static List parseRssFeed(InputStream content) throws ServiceException {
         try {
-            Element root = parseXML(content);
+            Element root = Element.parseXML(content);
             String rname = root.getName();
             if (rname.equals("feed"))
                 return parseAtomFeed(root);
@@ -133,8 +135,13 @@ public class FeedManager {
                 } catch (Exception e) {
                     addr = parseDublinCreator(item.getAttribute("creator", null), addr);
                 }
+                String title = parseTitle(item.getAttribute("title", subjChannel));
                 String href = item.getAttribute("link", hrefChannel);
-                String text = item.getAttribute("description", "").trim(), ctype;
+                String text = item.getAttribute("description", null), ctype;
+                if (text == null)
+                    text = item.getAttribute("encoded", null);
+                if (text == null)
+                    text = item.getAttribute("abstract", "");
                 if (text.indexOf("</") != -1 || text.indexOf("/>") != -1) {
                     ctype = "text/html; charset=\"utf-8\"";  text = HTML_HEADER + text + "<p>" + href + HTML_FOOTER;
                 } else {
@@ -144,7 +151,7 @@ public class FeedManager {
                 MimeMessage mm = new MimeMessage(JMSession.getSession());
                 mm.setSentDate(date);
                 mm.addFrom(new InternetAddress[] {addr});
-                mm.setSubject(item.getAttribute("title", subjChannel), "utf-8");
+                mm.setSubject(title, "utf-8");
                 mm.setText(text, "utf-8");
                 mm.setHeader("Content-Type", ctype);
                 // more stuff here!
@@ -176,6 +183,7 @@ public class FeedManager {
                 if (date == null)
                     date = parseISO8601Date(item.getAttribute("modified", null), dateFeed);
                 InternetAddress addr = parseAtomAuthor(item.getOptionalElement("author"), addrFeed);
+                String title = parseTitle(item.getElement("title").getText());
                 // figure out the url from the mess of link elements
                 String href = "";
                 for (Iterator itlink = item.elementIterator("link"); itlink.hasNext(); ) {
@@ -184,7 +192,6 @@ public class FeedManager {
                         href = link.getAttribute("href");  break;
                     }
                 }
-                String title = item.getAttribute("title");
                 // get the content/summary
                 Element content = item.getOptionalElement("content");
                 if (content == null)
@@ -307,27 +314,29 @@ public class FeedManager {
         }
     }
 
-    private static final QName XHTML_DIV = QName.get("div", "http://www.w3.org/1999/xhtml");
-
-    private static Element parseXML(InputStream is) throws org.dom4j.DocumentException {
-        return parseXML(new org.dom4j.io.SAXReader().read(is).getRootElement());
+    private static class UnescapedContent extends org.xml.sax.helpers.DefaultHandler {
+        private StringBuffer str = new StringBuffer();
+        
+        public void startDocument() { str.setLength(0); }
+        public void characters(char[] ch, int offset, int length) {
+            str.append(ch, offset, length);
+        }
+        public String toString() { return str.toString(); }
     }
-    private static Element parseXML(org.dom4j.Element d4root) {
-        Element elt = Element.XMLElement.mFactory.createElement(d4root.getQName());
-        for (Iterator it = d4root.attributeIterator(); it.hasNext(); ) {
-            org.dom4j.Attribute d4attr = (org.dom4j.Attribute) it.next();
-            elt.addAttribute(d4attr.getQualifiedName(), d4attr.getValue());
+
+    private static final String parseTitle(String title) {
+        if (title == null)
+            return "";
+        else if (title.indexOf('<') == -1 && title.indexOf('&') == -1)
+            return title;
+        org.xml.sax.XMLReader parser = new org.cyberneko.html.parsers.SAXParser();
+        org.xml.sax.ContentHandler handler = new UnescapedContent();
+        parser.setContentHandler(handler);
+        try {
+            parser.parse(new org.xml.sax.InputSource(new StringReader(title)));
+            return handler.toString();
+        } catch (Exception e) {
+            return title;
         }
-        String content = d4root.getText();
-        if (content != null && !content.trim().equals(""))
-            elt.setText(content);
-        for (Iterator it = d4root.elementIterator(); it.hasNext(); ) {
-            org.dom4j.Element d4elt = (org.dom4j.Element) it.next();
-            if (d4elt.getQName().equals(XHTML_DIV))
-                elt.setText(d4elt.asXML());
-            else
-                elt.addElement(parseXML(d4elt));
-        }
-        return elt;
     }
 }
