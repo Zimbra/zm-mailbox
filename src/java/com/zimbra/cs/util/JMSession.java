@@ -33,6 +33,7 @@ import javax.mail.Session;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 
 /**
@@ -55,6 +56,8 @@ public class JMSession {
             props.setProperty("mail.smtp.port", sSmtpConfig.getPort()+"");
             props.setProperty("mail.smtp.connectiontimeout", timeout);
             props.setProperty("mail.smtp.timeout", timeout);
+            props.setProperty("mail.smtp.localhost", LC.zimbra_server_hostname.value());
+            
             props.setProperty("mail.smtp.sendpartial", Boolean.toString(sSmtpConfig.getSendPartial()));
             mSession = Session.getInstance(props);
             mLog.info("SMTP Server: "+sSmtpConfig.getHostname());
