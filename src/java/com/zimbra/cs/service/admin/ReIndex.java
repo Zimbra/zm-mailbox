@@ -56,6 +56,8 @@ public class ReIndex extends AdminDocumentHandler {
                     
                     addStatus(response, status);
                 }
+                response.addAttribute(AdminService.A_STATUS, "running");
+                
             } else if (action.equalsIgnoreCase(ACTION_CANCEL)) {
                 synchronized (mbox) {
                     if (!mbox.isReIndexInProgress()) {
