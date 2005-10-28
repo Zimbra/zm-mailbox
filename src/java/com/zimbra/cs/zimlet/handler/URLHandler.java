@@ -29,15 +29,14 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
-package com.zimbra.cs.object.handler;
+package com.zimbra.cs.zimlet.handler;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.zimbra.cs.object.MatchedObject;
-import com.zimbra.cs.object.ObjectHandler;
+import com.zimbra.cs.zimlet.ZimletHandler;
 import com.zimbra.cs.object.ObjectHandlerException;
 
 /**
@@ -46,29 +45,25 @@ import com.zimbra.cs.object.ObjectHandlerException;
  * TODO To change the template for this generated type comment go to
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
-public class URLHandler extends ObjectHandler {
+public class URLHandler implements ZimletHandler {
 
 	// FIXME: this needs to be much more robust...
 	// needed something for testing...
     private Pattern URL_PATTERN =
         Pattern.compile("((telnet:)|((https?|ftp|gopher|news|file):\\/\\/)|(www.[\\w\\.\\_\\-]+))[^\\s\\(\\)\\<\\>\\[\\]\\{\\}\\'\\\"]*");
 	
-	public void parse(String text, List matchedObjects, boolean firstMatchOnly)
-			throws ObjectHandlerException {
+	public String[] match(String text) {
         Matcher m = URL_PATTERN.matcher(text);
-        MatchedObject mo;
+        List l = new ArrayList();
         while (m.find()) {
-            mo = new MatchedObject(this, text.substring(m.start(), m.end()));
-            matchedObjects.add(mo);
-            if (firstMatchOnly)
-                return;
+            l.add(text.substring(m.start(), m.end()));
         }
+        return (String[]) l.toArray(new String[0]);
 	}
     
     public static void test(URLHandler h, String text) throws ObjectHandlerException {
-        ArrayList list = new ArrayList();
-        h.parse(text, list, true);
-        System.out.println(text+" "+(list.size() >0));        
+        String[] array = h.match(text);
+        System.out.println(text+" "+(array.length >0));        
     }
     
     // TOOD: move these to a unit test

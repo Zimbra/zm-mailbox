@@ -29,15 +29,14 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
-package com.zimbra.cs.object.handler;
+package com.zimbra.cs.zimlet.handler;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.zimbra.cs.object.MatchedObject;
-import com.zimbra.cs.object.ObjectHandler;
-import com.zimbra.cs.object.ObjectHandlerException;
+import com.zimbra.cs.zimlet.ZimletHandler;
 
 /**
  * @author schemers
@@ -46,7 +45,7 @@ import com.zimbra.cs.object.ObjectHandlerException;
  * 
  *  
  */
-public class NANPHandler extends ObjectHandler {
+public class NANPHandler implements ZimletHandler {
 
 	// FIXME: this needs to be much more robust...
 	// needed something for testing...
@@ -66,14 +65,12 @@ public class NANPHandler extends ObjectHandler {
 				match.charAt(offset+2) == '1'));
     }
     
-	public void parse(String text, List matchedObjects, boolean firstMatchOnly)
-			throws ObjectHandlerException {
+	public String[] match(String text) {
         Matcher m = NANP_NUMBER_PATTERN.matcher(text);
-        MatchedObject mo;
+        List l = new ArrayList();
         while (m.find()) {
         	String match = text.substring(m.start(), m.end());
         	StringBuffer digits = new StringBuffer(10);
-        	int numDigits = 0;
         	for (int i=0; i < match.length(); i++) {
         		char c = match.charAt(i);
         		if (Character.isDigit(c))
@@ -82,10 +79,8 @@ public class NANPHandler extends ObjectHandler {
         	if (invalid(digits, 0) ||
         		((digits.length() == 10 && invalid(digits, 3))))
         		continue;
-            mo = new MatchedObject(this, match);
-            matchedObjects.add(mo);
-            if (firstMatchOnly)
-                return;
+        	l.add(match);
         }
+        return (String[])l.toArray(new String[0]);
 	}
 }

@@ -35,17 +35,17 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.zimlet.ZimletHandler;
 
 /**
  * @author schemers
  */
-public abstract class ObjectHandler {
+public class ObjectHandler {
 
     private static Log mLog = LogFactory.getLog(ObjectHandler.class);
     
@@ -53,6 +53,21 @@ public abstract class ObjectHandler {
     private static List mHandlerList;
     
     private ObjectType mObjectType;
+    private ZimletHandler mHandlerObject;
+
+    private ObjectHandler(String handlerClass) throws ObjectHandlerException {
+    	Object handlerObj;
+    	try {
+    		handlerObj = Class.forName(handlerClass).newInstance();
+    	} catch (Exception e) {
+    		throw new ObjectHandlerException("cannot create handler class "+handlerClass);
+    	}
+    	
+    	if (!(handlerObj instanceof ZimletHandler)) {
+    		throw new ObjectHandlerException("handler class is not a valid Zimlet handler");
+    	}
+    	mHandlerObject = (ZimletHandler) handlerObj;
+    }
     
     // TODO: this caches handlers for the duration of the VM, which is ok if the Indexer
     // exits/restarts. Might need to add modified column and periodically refresh and/or
@@ -82,10 +97,9 @@ public abstract class ObjectHandler {
         String clazz = dot.getHandlerClass();
         if (clazz == null)
             return null;
-        if (clazz.indexOf('.') == -1)
-            clazz = "com.zimbra.cs.object.handler." + clazz;
+
         try {
-            handler = (ObjectHandler) Class.forName(clazz).newInstance();
+            handler = new ObjectHandler(clazz);
             handler.mObjectType = dot;
             mHandlers.put(dot.getType(), handler);
         } catch (Exception e) {
@@ -95,8 +109,16 @@ public abstract class ObjectHandler {
         return handler;
     }
 
-    public abstract void parse(String text, List matchedObjects, boolean firstMatchOnly)
-            throws ObjectHandlerException; 
+    public void parse(String text, List matchedObjects, boolean firstMatchOnly)
+            throws ObjectHandlerException {
+    	String[] matchedStrings = mHandlerObject.match(text);
+    	for (int i = 0; i < matchedStrings.length; i++) {
+    		MatchedObject mo = new MatchedObject(this, matchedStrings[i]);
+    		matchedObjects.add(mo);
+    		if (firstMatchOnly)
+    			return;
+    	}
+    }
     
     public String getType() {
         return mObjectType.getType();

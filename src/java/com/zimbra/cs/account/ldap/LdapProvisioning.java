@@ -270,28 +270,7 @@ public class LdapProvisioning extends Provisioning {
      * @see com.zimbra.cs.account.Provisioning#getObjectType(java.lang.String)
      */
     public synchronized List getObjectTypes() throws ServiceException {
-        DirContext ctxt = null;
-        try {
-            ctxt = LdapUtil.getDirContext();
-            NamingEnumeration ne = ctxt.search("cn=object," + CONFIG_BASE, "(objectClass=*)", sSubtreeSC);
-            List a = new ArrayList();
-            while (ne.hasMore()) {
-                SearchResult sr = (SearchResult) ne.next();
-                Context srctxt = (Context) sr.getObject();
-                String name = srctxt.getNameInNamespace();
-                srctxt.close();
-                a.add(new LdapObjectType(name, sr.getAttributes()));
-            }
-            return a;
-        } catch (NameNotFoundException e) {
-            return null;
-        } catch (InvalidNameException e) {
-            return null;                        
-        } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to get object type info", e);
-        } finally {
-            LdapUtil.closeContext(ctxt);
-        }
+    	return getZimlets();
     }
 
     private LdapAccount getAccountByQuery(String base, String query, DirContext initCtxt) throws ServiceException {
