@@ -3,9 +3,11 @@
  */
 package com.zimbra.cs.service;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -49,14 +51,14 @@ public class FeedManager {
         client.setConnectionTimeout(10000);
         client.setTimeout(20000);
 
-        String content = null;
+        InputStream content = null;
         try {
             int redirects = 0;
             do {
                 if (url == null || url.equals(""))
                     return Collections.EMPTY_LIST;
                 String lcurl = url.toLowerCase();
-                if (lcurl.startsWith("webcal:"))
+                if (lcurl.startsWith("webcal:") || lcurl.startsWith("feed:"))
                     url = "http:" + url.substring(7);
                 else if (!lcurl.startsWith("http:") && !lcurl.startsWith("https:"))
                     throw ServiceException.FAILURE("url must begin with http: or https:", null);
@@ -68,7 +70,7 @@ public class FeedManager {
 
                 Header locationHeader = get.getResponseHeader("location");
                 if (locationHeader == null) {
-                    content = get.getResponseBodyAsString();
+                    content = new BufferedInputStream(get.getResponseBodyAsStream());
                     break;
                 }
                 url = locationHeader.getValue();
@@ -76,17 +78,18 @@ public class FeedManager {
 
             if (redirects > MAX_REDIRECTS)
                 throw ServiceException.TOO_MANY_HOPS();
-            else if (content == null || content.length() == 0)
-                throw ServiceException.FAILURE("empty body in response when fetching remote subscription", null);
 
-            if (content.charAt(0) == '<')
+            content.mark(10);  int ch = content.read();  content.reset();
+            if (ch == -1)
+                throw ServiceException.FAILURE("empty body in response when fetching remote subscription", null);
+            else if (ch == '<')
                 return parseRssFeed(content);
-            else if (content.charAt(0) == 'B') {
-                Reader reader = new StringReader(content);
+            else if (ch == 'B') {
+                Reader reader = new InputStreamReader(content);
                 Calendar ical = new CalendarBuilder().build(reader);
                 return Invite.createFromICalendar(acct, null, ical, false); 
             } else
-                throw ServiceException.PARSE_ERROR("unrecognized remote content :" + content.substring(0, Math.min(100, content.length())), null);
+                throw ServiceException.PARSE_ERROR("unrecognized remote content", null);
         } catch (HttpException e) {
             throw ServiceException.FAILURE("HttpException: " + e, e);
         } catch (IOException e) {
@@ -96,11 +99,11 @@ public class FeedManager {
         }
     }
 
-    private static final String HTML_HEADER = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2//EN\">\n" +
-                                              "<HTML><HEAD><META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=iso-8859-1\"><HEAD/><BODY>";
+    private static final String HTML_HEADER = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">\n" +
+                                              "<HTML><HEAD><META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\"></HEAD><BODY>";
     private static final String HTML_FOOTER = "</BODY></HTML>";
     
-    private static List parseRssFeed(String content) throws ServiceException {
+    private static List parseRssFeed(InputStream content) throws ServiceException {
         try {
             Element root = parseXML(content);
             String rname = root.getName();
@@ -110,7 +113,7 @@ public class FeedManager {
             Element channel = root.getElement("channel");
             String hrefChannel = channel.getAttribute("link");
             String subjChannel = channel.getAttribute("title");
-            InternetAddress addrChannel = new InternetAddress("", subjChannel);
+            InternetAddress addrChannel = new InternetAddress("", subjChannel, "utf-8");
             Date dateChannel = parseRFC2822Date(channel.getAttribute("lastBuildDate", null), new Date());
 
             if (rname.equals("rss"))
@@ -141,7 +144,7 @@ public class FeedManager {
                 MimeMessage mm = new MimeMessage(JMSession.getSession());
                 mm.setSentDate(date);
                 mm.addFrom(new InternetAddress[] {addr});
-                mm.setSubject(item.getAttribute("title", subjChannel));
+                mm.setSubject(item.getAttribute("title", subjChannel), "utf-8");
                 mm.setText(text, "utf-8");
                 mm.setHeader("Content-Type", ctype);
                 // more stuff here!
@@ -163,7 +166,7 @@ public class FeedManager {
             // get defaults from the <feed> element
             InternetAddress addrFeed = parseAtomAuthor(feed.getOptionalElement("author"), null);
             if (addrFeed == null)
-                addrFeed = new InternetAddress("", feed.getAttribute("title"));
+                addrFeed = new InternetAddress("", feed.getAttribute("title"), "utf-8");
             Date dateFeed = parseISO8601Date(feed.getAttribute("updated", null), new Date());
 
             ArrayList pms = new ArrayList();
@@ -199,7 +202,7 @@ public class FeedManager {
                 MimeMessage mm = new MimeMessage(JMSession.getSession());
                 mm.setSentDate(date);
                 mm.addFrom(new InternetAddress[] {addr});
-                mm.setSubject(title);
+                mm.setSubject(title, "utf-8");
                 mm.setText(text, "utf-8");
                 mm.setHeader("Content-Type", ctype);
                 // more stuff here!
@@ -239,8 +242,8 @@ public class FeedManager {
             }
         }
 
-        try { return new InternetAddress(address, personal); } catch (UnsupportedEncodingException e) { }
-        try { return new InternetAddress("", creator); }       catch (UnsupportedEncodingException e) { }
+        try { return new InternetAddress(address, personal, "utf-8"); } catch (UnsupportedEncodingException e) { }
+        try { return new InternetAddress("", creator, "utf-8"); }       catch (UnsupportedEncodingException e) { }
         return addrChannel;
     }
 
@@ -253,8 +256,8 @@ public class FeedManager {
         if (personal.equals("") && address.equals(""))
             return addrChannel;
 
-        try { return new InternetAddress(address, personal); }      catch (UnsupportedEncodingException e) { }
-        try { return new InternetAddress("", address + personal); } catch (UnsupportedEncodingException e) { }
+        try { return new InternetAddress(address, personal, "utf-8"); }      catch (UnsupportedEncodingException e) { }
+        try { return new InternetAddress("", address + personal, "utf-8"); } catch (UnsupportedEncodingException e) { }
         return addrChannel;
     }
 
@@ -306,8 +309,8 @@ public class FeedManager {
 
     private static final QName XHTML_DIV = QName.get("div", "http://www.w3.org/1999/xhtml");
 
-    private static Element parseXML(String xml) throws org.dom4j.DocumentException {
-        return parseXML(org.dom4j.DocumentHelper.parseText(xml).getRootElement());
+    private static Element parseXML(InputStream is) throws org.dom4j.DocumentException {
+        return parseXML(new org.dom4j.io.SAXReader().read(is).getRootElement());
     }
     private static Element parseXML(org.dom4j.Element d4root) {
         Element elt = Element.XMLElement.mFactory.createElement(d4root.getQName());
