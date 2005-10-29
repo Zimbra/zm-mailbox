@@ -39,6 +39,7 @@ import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.index.AppointmentHit;
 import com.zimbra.cs.index.ContactHit;
 import com.zimbra.cs.index.ConversationHit;
 import com.zimbra.cs.index.ResultsPager;
@@ -51,12 +52,14 @@ import com.zimbra.cs.index.NoteHit;
 import com.zimbra.cs.index.ProxiedHit;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.queryparser.ParseException;
+import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.stats.StopWatch;
@@ -273,6 +276,11 @@ public class Search extends DocumentHandler  {
                 ProxiedHit ph = (ProxiedHit) hit;
                 e = ph.getElement().detach();
                 response.addElement(e);
+            } else if (hit instanceof AppointmentHit) {
+                AppointmentHit ah = (AppointmentHit)hit;
+                addAppointmentHit(lc, response, ah, inline, params);
+            } else {
+                mLog.error("Got an unknown hit type putting search hits: "+hit);
             }
             if (includeMailbox) {
                 String idStr = hit.getMailboxIdStr() + "/" + hit.getItemId();
@@ -319,6 +327,28 @@ public class Search extends DocumentHandler  {
         }
         return c;
     }
+
+    protected Element addAppointmentHit(ZimbraContext lc, Element response, AppointmentHit ah, boolean inline, SearchParams params)
+    throws ServiceException {
+        Appointment appt = ah.getAppointment();
+        Element m;
+        if (inline) {
+            m = ToXML.encodeApptSummary(response, lc, appt, PendingModifications.Change.ALL_FIELDS);
+//            if (!msg.getFragment().equals(""))
+//                m.addAttribute(MailService.E_FRAG, msg.getFragment(), Element.DISP_CONTENT);
+        } else {
+            m = ToXML.encodeApptSummary(response, lc, appt, PendingModifications.Change.ALL_FIELDS);
+        }
+        
+        if (ah.getScore() != 0) {
+            m.addAttribute(MailService.A_SCORE, ah.getScore());
+        }
+        
+        m.addAttribute(MailService.A_CONTENTMATCHED, true);
+
+        return m;
+    }
+    
     
     protected Element addMessageHit(ZimbraContext lc, Element response, MessageHit mh, EmailElementCache eecache, boolean inline, SearchParams params)
     throws ServiceException {

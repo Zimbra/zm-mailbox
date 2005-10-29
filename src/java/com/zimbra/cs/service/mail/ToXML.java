@@ -524,7 +524,6 @@ public class ToXML {
      * @param appt
      * @param fields
      * 
-     *    
      * @return
      */
     public static Element encodeApptSummary(Element parent, ZimbraContext lc, Appointment appt, int fields) {

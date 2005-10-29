@@ -1033,12 +1033,11 @@ public final class MailboxIndex
             } else if (SEARCH_FOR_CONTACTS.equals(strs[i])) {
                 types[i] = MailItem.TYPE_CONTACT;
             } else if (SEARCH_FOR_APPOINTMENTS.equals(strs[i])) {
-                // ignore client requests for "appointment" right now
-//                types[i] = MailItem.TYPE_INVITE;
+                types[i] = MailItem.TYPE_APPOINTMENT;
             } else if (SEARCH_FOR_NOTES.equals(strs[i])) {
                 types[i] = MailItem.TYPE_NOTE;
             } else 
-                throw ServiceException.INVALID_REQUEST("unknown groupBy: "+groupBy, null);
+                throw ServiceException.INVALID_REQUEST("unknown groupBy: "+strs[i], null);
         }
         
         return types;

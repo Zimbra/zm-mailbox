@@ -64,43 +64,52 @@ class ConvQueryResults extends ZimbraQueryResultsImpl {
             ZimbraHit opNext = mResults.getNext();
             
             ConversationHit curHit = null;
-            Integer convId = new Integer(opNext.getConversationId());
             
-            curHit = (ConversationHit)mSeenConversations.get(convId);
-            if (curHit != null) {
-                // we've seen this conv before (and therefore reported it) -- so just do nothing right now... 
+            if ((!(opNext instanceof MessageHit)) && (!(opNext instanceof MessagePartHit)) && (!(opNext instanceof ConversationHit))) {
+                return opNext;
             } else {
-                if (opNext instanceof ConversationHit) {
-                    curHit = (ConversationHit)opNext;
-                } else if (opNext instanceof MessageHit) {
-                    curHit = ((MessageHit)opNext).getConversationResult();
-                } else if (opNext instanceof MessagePartHit) {
-                    curHit = ((MessagePartHit)opNext).getMessageResult().getConversationResult();
-                } else {
-                    // wasn't a Conversation, Message or part hit...so just return it...
-                    return opNext;
-                }
-                mSeenConversations.put(convId, curHit);
+                Integer convId = new Integer(opNext.getConversationId());
                 
-                /* iterate further: try to get all the hits for this result 
-                 * Conversation if they happen to be right here with the first one */
-                while (mResults.hasNext()) {
-                    ZimbraHit nextHit = mResults.peekNext();
-                    if (nextHit.getConversationId() != convId.intValue()) {
-                        return curHit; // no more, all done!
+                curHit = (ConversationHit)mSeenConversations.get(convId);
+                if (curHit != null) {
+                    // we've seen this conv before (and therefore reported it) -- so just do nothing right now... 
+                } else {
+                    if (opNext instanceof ConversationHit) {
+                        curHit = (ConversationHit)opNext;
+                    } else if (opNext instanceof MessageHit) {
+                        curHit = ((MessageHit)opNext).getConversationResult();
+                    } else if (opNext instanceof MessagePartHit) {
+                        curHit = ((MessagePartHit)opNext).getMessageResult().getConversationResult();
                     } else {
-                        // same conv.  Consume this hit!
-                        mResults.getNext();
-                        
-                        //  Now add this hit to the conv we're gonna return
-                        if (nextHit instanceof MessageHit) {
-                            curHit.addMessageHit((MessageHit) nextHit);
-                        } else if (nextHit instanceof MessagePartHit) {
-                            curHit.addMessageHit(((MessagePartHit) nextHit).getMessageResult());
+                        // wasn't a Conversation, Message or part hit...so just return it...
+                        return opNext;
+                    }
+                    mSeenConversations.put(convId, curHit);
+                    
+                    /* iterate further: try to get all the hits for this result 
+                     * Conversation if they happen to be right here with the first one */
+                    while (mResults.hasNext()) {
+                        ZimbraHit nextHit = mResults.peekNext();
+                        if ((!(nextHit instanceof MessageHit)) && (!(nextHit instanceof MessagePartHit)) && (!(nextHit instanceof ConversationHit))) {
+                            return nextHit;
+                        } else {
+                            if (nextHit.getConversationId() != convId.intValue()) {
+                                return curHit; // no more, all done!
+                            } else {
+                                // same conv.  Consume this hit!
+                                mResults.getNext();
+                                
+                                //  Now add this hit to the conv we're gonna return
+                                if (nextHit instanceof MessageHit) {
+                                    curHit.addMessageHit((MessageHit) nextHit);
+                                } else if (nextHit instanceof MessagePartHit) {
+                                    curHit.addMessageHit(((MessagePartHit) nextHit).getMessageResult());
+                                }
+                            }
                         }
                     }
+                    return curHit;
                 }
-                return curHit;
             }
         }
         return null;

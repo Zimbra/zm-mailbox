@@ -73,7 +73,8 @@ class MsgQueryResults extends ZimbraQueryResultsImpl
                 } else if (opNext instanceof MessagePartHit) {
                     curHit = ((MessagePartHit)opNext).getMessageResult();
                 } else {
-                    return curHit; // wasn't a Conv/Message/Part, so just return it as-is
+                    return opNext; // wasn't a Conv/Message/Part, so just return it as-is
+//                    return curHit; // wasn't a Conv/Message/Part, so just return it as-is
                 }
                 
                 mSeenMsgs.put(msgId, curHit);
@@ -102,7 +103,7 @@ class MsgQueryResults extends ZimbraQueryResultsImpl
     private boolean bufferNextHit() throws ServiceException {
         if (mNextHit == null) {
             mNextHit = internalGetNextHit();
-            assert(mNextHit == null || mNextHit instanceof MessageHit);
+//            assert(mNextHit == null || mNextHit instanceof MessageHit);
         }
         return (mNextHit != null);
     }
@@ -115,14 +116,16 @@ class MsgQueryResults extends ZimbraQueryResultsImpl
     public ZimbraHit getNext() throws ServiceException {
         bufferNextHit();
         ZimbraHit toRet = mNextHit;
-        assert(mNextHit == null || mNextHit instanceof MessageHit);
+        assert(mNextHit == null || (!(mNextHit instanceof MessagePartHit) && !(mNextHit instanceof ConversationHit))); 
+//        assert(mNextHit == null || mNextHit instanceof MessageHit);
         mNextHit = null;
         return toRet;
     }
     
     public ZimbraHit peekNext() throws ServiceException {
         bufferNextHit();
-        assert(mNextHit == null || mNextHit instanceof MessageHit);
+//        assert(mNextHit == null || mNextHit instanceof MessageHit);
+        assert(mNextHit == null || (!(mNextHit instanceof MessagePartHit) && !(mNextHit instanceof ConversationHit))); 
         return mNextHit;
     }
     

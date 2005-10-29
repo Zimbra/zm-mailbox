@@ -413,6 +413,10 @@ class DBQueryOperation extends QueryOperation
                 toAdd = this.getResultsSet().getNoteHit(this.getMailbox(), new Integer(sr.id), null, 1.0f);
                 mNextHits.add(toAdd);
                 break;
+            case MailItem.TYPE_APPOINTMENT:
+                toAdd = this.getResultsSet().getAppointmentHit(this.getMailbox(), new Integer(sr.id), null, 1.0f);
+                mNextHits.add(toAdd);
+                break;
                 // Unsupported right now:
                 //            case MailItem.TYPE_DOCUMENT:
             default:
@@ -480,6 +484,10 @@ class DBQueryOperation extends QueryOperation
                 break;
             case MailItem.TYPE_CONTACT:
                 tmp[numUsed] = MailItem.TYPE_CONTACT;
+                numUsed++;
+                break;
+            case MailItem.TYPE_APPOINTMENT:
+                tmp[numUsed] = MailItem.TYPE_APPOINTMENT;
                 numUsed++;
                 break;
 //            case MailItem.TYPE_INVITE:
@@ -624,89 +632,95 @@ class DBQueryOperation extends QueryOperation
                 }
                 
                 byte[] types = getDbQueryTypes();
-
-                Tag[] includeTags = null;
-                Tag[] excludeTags = null;
-                if (mIncludeTags.size() > 0) {
-                    includeTags = (Tag[]) mIncludeTags.toArray(new Tag[mIncludeTags.size()]);
-                }
-                if (mExcludeTags.size() > 0) {
-                    excludeTags = (Tag[]) mExcludeTags.toArray(new Tag[mExcludeTags.size()]);
-                }
-                
-                int[] prohibitedConvIds = null;
-                if (mProhibitedConvIds.size() > 0) {
-                    prohibitedConvIds = new int[mProhibitedConvIds.size()];
-                    int i = 0;
-                    for (Iterator probIter = mProhibitedConvIds.iterator(); probIter.hasNext();) {
-                        Integer cid = (Integer)probIter.next();
-                        prohibitedConvIds[i++] = cid.intValue();
+                if (types.length == 0)  {
+                    mLog.debug("NO RESULTS -- no known types requested");
+                    mDBHitsIter = null;
+                    mCurHitsOffset = -1;
+                    return;
+                } else { 
+                    Tag[] includeTags = null;
+                    Tag[] excludeTags = null;
+                    if (mIncludeTags.size() > 0) {
+                        includeTags = (Tag[]) mIncludeTags.toArray(new Tag[mIncludeTags.size()]);
                     }
-                }
-                
-                DbMailItem.SearchConstraints c = new DbMailItem.SearchConstraints();
-                c.mailboxId = mailboxId;
-                c.tags = includeTags;
-                c.excludeTags = excludeTags;
-                c.folders = folders;
-                c.excludeFolders = excludeFolders;
-                c.convId = mConvId;
-                c.prohibitedConvIds = prohibitedConvIds;
-                c.types = types;
-                c.sort = sort;
-                
-                if (mExcludeTypes.length > 0) {
-                    c.excludeTypes = mExcludeTypes;
-                }
-
-                if (mIncludedItemIds != null) {
-                    c.itemIds = new int[mIncludedItemIds.size()];
-                    int offset = 0;
-                    for (Iterator iter = mIncludedItemIds.iterator(); iter.hasNext(); offset++) {
-                        c.itemIds[offset] = ((Integer)iter.next()).intValue();
+                    if (mExcludeTags.size() > 0) {
+                        excludeTags = (Tag[]) mExcludeTags.toArray(new Tag[mExcludeTags.size()]);
                     }
-                }
-                if (mExcludedItemIds != null && mExcludedItemIds.size() > 0) {
-                    c.prohibitedItemIds = new int[mExcludedItemIds.size()];
-                    int offset = 0;
-                    for (Iterator iter = mExcludedItemIds.iterator(); iter.hasNext(); offset++) {
-                        c.prohibitedItemIds[offset] = ((Integer)iter.next()).intValue();
-                    }
-                }
-                
-                if (mDates.size() > 0) {
-                    c.dates = (SearchConstraints.Range[])mDates.toArray(new SearchConstraints.Range[mDates.size()]);
-                }
-                
-                if (mSizes.size() > 0) {
-                    c.sizes = (SearchConstraints.Range[])mSizes.toArray(new SearchConstraints.Range[mSizes.size()]);
-                }
-                
-                
-                if (mLuceneOp == null) {
-                    c.offset = mCurHitsOffset;
-                    c.limit = mHitsPerChunk;
-                    mDBHits = DbMailItem.search(conn, c);
                     
-                } else {
-                    
-                    do {
-                        // DON'T set an sql LIMIT if we're asking for lucene hits!!!  If we did, then we wouldn't be
-                        // sure that we'd "consumed" all the Lucene-ID's, and therefore we could miss hits!
-                        mLuceneChunk = mLuceneOp.getNextIndexedIdChunk(mHitsPerChunk);
-                        c.indexIds = mLuceneChunk.getIndexIds();
-                        
-                        if (c.indexIds.length == 0) {
-                            // we know we got all the index-id's from lucene.  since we don't have a
-                            // LIMIT clause, we can be assured that this query will get all the remaining results.
-                            mEndOfHits = true;
-                            
-                            mDBHits = new ArrayList(); 
-                        } else {
-                            mDBHits = DbMailItem.search(conn, c);
+                    int[] prohibitedConvIds = null;
+                    if (mProhibitedConvIds.size() > 0) {
+                        prohibitedConvIds = new int[mProhibitedConvIds.size()];
+                        int i = 0;
+                        for (Iterator probIter = mProhibitedConvIds.iterator(); probIter.hasNext();) {
+                            Integer cid = (Integer)probIter.next();
+                            prohibitedConvIds[i++] = cid.intValue();
                         }
-                    } while (mDBHits.size() == 0 && !mEndOfHits);
-                }
+                    }
+                    
+                    DbMailItem.SearchConstraints c = new DbMailItem.SearchConstraints();
+                    c.mailboxId = mailboxId;
+                    c.tags = includeTags;
+                    c.excludeTags = excludeTags;
+                    c.folders = folders;
+                    c.excludeFolders = excludeFolders;
+                    c.convId = mConvId;
+                    c.prohibitedConvIds = prohibitedConvIds;
+                    c.types = types;
+                    c.sort = sort;
+                    
+                    if (mExcludeTypes.length > 0) {
+                        c.excludeTypes = mExcludeTypes;
+                    }
+                    
+                    if (mIncludedItemIds != null) {
+                        c.itemIds = new int[mIncludedItemIds.size()];
+                        int offset = 0;
+                        for (Iterator iter = mIncludedItemIds.iterator(); iter.hasNext(); offset++) {
+                            c.itemIds[offset] = ((Integer)iter.next()).intValue();
+                        }
+                    }
+                    if (mExcludedItemIds != null && mExcludedItemIds.size() > 0) {
+                        c.prohibitedItemIds = new int[mExcludedItemIds.size()];
+                        int offset = 0;
+                        for (Iterator iter = mExcludedItemIds.iterator(); iter.hasNext(); offset++) {
+                            c.prohibitedItemIds[offset] = ((Integer)iter.next()).intValue();
+                        }
+                    }
+                    
+                    if (mDates.size() > 0) {
+                        c.dates = (SearchConstraints.Range[])mDates.toArray(new SearchConstraints.Range[mDates.size()]);
+                    }
+                    
+                    if (mSizes.size() > 0) {
+                        c.sizes = (SearchConstraints.Range[])mSizes.toArray(new SearchConstraints.Range[mSizes.size()]);
+                    }
+                    
+                    
+                    if (mLuceneOp == null) {
+                        c.offset = mCurHitsOffset;
+                        c.limit = mHitsPerChunk;
+                        mDBHits = DbMailItem.search(conn, c);
+                        
+                    } else {
+                        
+                        do {
+                            // DON'T set an sql LIMIT if we're asking for lucene hits!!!  If we did, then we wouldn't be
+                            // sure that we'd "consumed" all the Lucene-ID's, and therefore we could miss hits!
+                            mLuceneChunk = mLuceneOp.getNextIndexedIdChunk(mHitsPerChunk);
+                            c.indexIds = mLuceneChunk.getIndexIds();
+                            
+                            if (c.indexIds.length == 0) {
+                                // we know we got all the index-id's from lucene.  since we don't have a
+                                // LIMIT clause, we can be assured that this query will get all the remaining results.
+                                mEndOfHits = true;
+                                
+                                mDBHits = new ArrayList(); 
+                            } else {
+                                mDBHits = DbMailItem.search(conn, c);
+                            }
+                        } while (mDBHits.size() == 0 && !mEndOfHits);
+                    }
+                } // if types.length check...
                 
             } catch (ServiceException e) {
                 e.printStackTrace();

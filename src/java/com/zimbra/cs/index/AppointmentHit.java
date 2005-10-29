@@ -33,7 +33,10 @@ package com.zimbra.cs.index;
 
 import org.apache.lucene.document.Document;
 
+import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author tim
@@ -41,7 +44,11 @@ import com.zimbra.cs.mailbox.Mailbox;
  * TODO To change the template for this generated type comment go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-public class AppointmentHit extends MessageHit {
+public class AppointmentHit extends ZimbraHit {
+    
+    protected int mId;
+    protected Appointment mAppt;
+    
 
     /**
      * @param results
@@ -51,9 +58,10 @@ public class AppointmentHit extends MessageHit {
      */
     public AppointmentHit(ZimbraQueryResultsImpl results, Mailbox mbx, Document d,
             float score) {
-        super(results, mbx, d, score);
+        super(results, mbx, score);
+        assert(false);
     }
-
+    
     /**
      * @param results
      * @param mbx
@@ -62,7 +70,64 @@ public class AppointmentHit extends MessageHit {
      */
     public AppointmentHit(ZimbraQueryResultsImpl results, Mailbox mbx, int id,
             float score) {
-        super(results, mbx, id, score);
+        super(results, mbx, score);
+
+        mId = id;
+    }
+    
+    public Appointment getAppointment() throws ServiceException {
+        if (mAppt == null) {
+            mAppt = this.getMailbox().getAppointmentById(null, mId);
+        }
+        return mAppt;
     }
 
+    
+    boolean inMailbox() throws ServiceException {
+        return getAppointment().inMailbox();
+    }
+    boolean inTrash() throws ServiceException {
+        return getAppointment().inTrash();
+    }
+    
+    boolean inSpam() throws ServiceException {
+        return getAppointment().inSpam();
+    }
+    
+    public long getDate() throws ServiceException {
+        return getAppointment().getDate();
+    }
+    
+    public int getSize() throws ServiceException {
+        return (int)getAppointment().getSize();
+    }
+    
+    public int getConversationId() throws ServiceException {
+        assert(false);
+        return 0;
+    }
+    
+    public int getItemId() throws ServiceException {
+        return mId;
+    }
+    
+    public byte getItemType() throws ServiceException {
+        return MailItem.TYPE_APPOINTMENT;
+    }
+
+    void setItem(MailItem item) {
+        mAppt = (Appointment)item;
+    }
+    
+    boolean itemIsLoaded() {
+        return (mId == 0) || (mAppt != null);
+    }
+    
+    public String getSubject() throws ServiceException {
+        return getAppointment().getSubject();
+    }
+    
+    public String getName() throws ServiceException {
+        return getAppointment().getSubject();
+    }
 }
