@@ -88,7 +88,7 @@ public class GetMsg extends WriteOpDocumentHandler {
                 if (msg != null)
                     ToXML.encodeMessageAsMP(response, lc, msg, wantHTML, part);
                 else if (appt != null)
-                    ToXML.encodeApptAsMP(response, lc, appt, iid.getSubpartId(), wantHTML, part);
+                    ToXML.encodeApptInviteAsMP(response, lc, appt, iid.getSubpartId(), wantHTML, part);
             }
             return response;
             

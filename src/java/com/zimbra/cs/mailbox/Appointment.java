@@ -1099,7 +1099,12 @@ public class Appointment extends MailItem {
             for (Iterator iter = mReplies.iterator(); iter.hasNext();) {
                 ReplyInfo cur = (ReplyInfo)iter.next();
                 
-                if (inv == null || ((inv.getSeqNo() <= cur.mSeqNo) && (inv.getDTStamp() <= cur.mDtStamp))) {
+                if (inv == null || 
+                        ((inv.getSeqNo() <= cur.mSeqNo) 
+                                && (inv.getDTStamp() <= cur.mDtStamp) 
+                                && (
+                                        (inv.getRecurId() == null && cur.mRecurId == null) 
+                                        || (inv.getRecurId().equals(cur.mRecurId))))) {
                     toRet.add(cur);
                 } else {
                     sLog.info("ReplyList "+this.toString()+" has outdated entries in its Replies list");

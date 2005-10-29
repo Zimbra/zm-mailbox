@@ -607,14 +607,17 @@ OR
 <GetAppointmentRequest id="appointment_id"/>
 
 <GetAppointmentResponse>
-  <appt uid="UID" id="appointment_id">
+  <appt uid="UID" id="appointment_id" f="{flags}" t="{tags}" s="{size}" d="{date}" l="{folder}">
     [<inv id="invite-original-mail-item-id" compNum="component-number">
-      ---See <inv> part of GetMsgResponse---
+      [<replies>
+        [<reply d="TIMESTAMP_OF_REPLY" at="foo@bar.com" ptst="AC|DE|TE|NE" rangeType="1" recurId="YYMMDD[THHMMSS[Z]]" tz="timezonename">]*
+      </replies>] // one or more replies which we have sent out and the
+      ...
+        ---See <inv> part of GetMsgResponse---
+      ...    
     </inv>]+
   </appt>
 </GetAppointmentResponse>
-
-   
 
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------

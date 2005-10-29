@@ -546,12 +546,14 @@ public class ToXML {
             apptElt.addAttribute(MailService.A_CHANGE_DATE, appt.getChangeDate() / 1000);
         
         
-        encodeReplies(apptElt, appt);
         
         for (int i = 0; i < appt.numInvites(); i++) {
             Invite inv = appt.getInvite(i);
 
             Element ie = apptElt.addElement(MailService.E_INVITE);
+            
+            encodeReplies(ie, appt, inv);
+            
             ie.addAttribute(MailService.A_ID, lc.formatItemId(inv.getMailItemId()));
             ie.addAttribute(MailService.A_APPT_COMPONENT_NUM, inv.getComponentNum());
             if (inv.hasRecurId())
@@ -563,10 +565,10 @@ public class ToXML {
         return apptElt;
     }
     
-    private static void encodeReplies(Element parent, Appointment appt) {
+    private static void encodeReplies(Element parent, Appointment appt, Invite inv) {
         Element repliesElt = parent.addElement(MailService.A_APPT_REPLIES);
 
-        List /*Appointment.ReplyInfo */ fbas = appt.getReplyInfo(null);
+        List /*Appointment.ReplyInfo */ fbas = appt.getReplyInfo(inv);
         for (Iterator iter = fbas.iterator(); iter.hasNext(); ) {
             Appointment.ReplyInfo repInfo = (Appointment.ReplyInfo) iter.next();
 
@@ -577,14 +579,14 @@ public class ToXML {
             if (repInfo.mAttendee.hasPartStat()) {
                 curElt.addAttribute(MailService.A_APPT_PARTSTAT, repInfo.mAttendee.getPartStat());
             }
-            curElt.addAttribute("stamp", repInfo.mDtStamp);
+            curElt.addAttribute(MailService.A_DATE, repInfo.mDtStamp);
             curElt.addAttribute("at", repInfo.mAttendee.getAddress());
         }
     }
     
     
     /**
-     * Encodes an Appointment object into <m> element with <mp> elements
+     * Encodes an Invite stored within an Appointment object into <m> element with <mp> elements
      * for message body.
      * @param lc TODO
      * @param msg
@@ -592,7 +594,7 @@ public class ToXML {
      * @return
      * @throws ServiceException
      */
-    public static Element encodeApptAsMP(Element parent, ZimbraContext lc, Appointment appt, int invId, boolean wantHTML, String part)
+    public static Element encodeApptInviteAsMP(Element parent, ZimbraContext lc, Appointment appt, int invId, boolean wantHTML, String part)
     throws ServiceException {
         boolean wholeMessage = (part == null || part.trim().equals(""));
 
