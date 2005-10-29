@@ -32,6 +32,7 @@ import org.dom4j.Namespace;
 import org.dom4j.QName;
 
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.ExceptionToString;
 
 /**
  * @author dkarp
@@ -83,8 +84,10 @@ public class SoapJSProtocol extends SoapProtocol {
         // FIXME: should really be a qualified "attribute"
         eFault.addUniqueElement(REASON).addAttribute(TEXT, reason);
         // FIXME: should really be a qualified "attribute"
-        eFault.addUniqueElement(DETAIL).addUniqueElement(ZimbraNamespace.E_ERROR)
-              .addAttribute(ZimbraNamespace.E_CODE.getName(), e.getCode());
+        Element eError = eFault.addUniqueElement(DETAIL).addUniqueElement(ZimbraNamespace.E_ERROR);
+        eError.addAttribute(ZimbraNamespace.E_CODE.getName(), e.getCode());
+        eError.addUniqueElement(ZimbraNamespace.E_TRACE).setText(ExceptionToString.ToString(e));
+        
         return eFault;
     }
 

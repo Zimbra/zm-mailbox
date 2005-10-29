@@ -48,6 +48,7 @@ public class ZimbraNamespace {
     public static final QName E_BATCH_RESPONSE = QName.get("BatchResponse", ZIMBRA);
     public static final QName E_CODE = QName.get("Code", ZIMBRA); 
     public static final QName E_ERROR = QName.get("Error", ZIMBRA); 
+    public static final QName E_TRACE = QName.get("Trace", ZIMBRA);     
 
     public static final String A_ONERROR = "onerror";
     public static final String DEF_ONERROR = "continue";

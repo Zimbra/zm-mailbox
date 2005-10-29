@@ -33,6 +33,7 @@ import org.dom4j.Namespace;
 import org.dom4j.QName;
 
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.ExceptionToString;
 import com.zimbra.soap.SoapFaultException;
 
 /**
@@ -123,6 +124,7 @@ class Soap12Protocol extends SoapProtocol {
         Element error = eDetail.addUniqueElement(ZimbraNamespace.E_ERROR);
         // FIXME: should really be a qualified "attribute"
         error.addUniqueElement(ZimbraNamespace.E_CODE).setText(e.getCode());
+        error.addUniqueElement(ZimbraNamespace.E_TRACE).setText(ExceptionToString.ToString(e));
         return eFault;
     }
 
