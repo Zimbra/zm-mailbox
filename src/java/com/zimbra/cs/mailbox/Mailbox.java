@@ -1507,8 +1507,8 @@ public class Mailbox {
             //
             for (Iterator iter = msgs.iterator(); iter.hasNext();) {
                 synchronized(this) {
-                    // loop 10 times with the lock held
-                    for (int i = 0; i < 10 && iter.hasNext(); i++) { 
+                    // loop 40 times with the lock held
+                    for (int i = 0; i < 40 && iter.hasNext(); i++) { 
                         if (ZimbraLog.mailbox.isDebugEnabled() && ((mReIndexStatus.mNumProcessed % 2000) == 0)) {
                             ZimbraLog.mailbox.debug("Re-Indexing: Mailbox "+getId()+" on msg "+mReIndexStatus.mNumProcessed+" out of "+msgs.size());
                         }
