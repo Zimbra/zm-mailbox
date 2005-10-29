@@ -729,8 +729,6 @@ class DBQueryOperation extends QueryOperation
                 DbPool.quietClose(conn);
             }
             
-            // exponentially expand the chunk size
-            mHitsPerChunk*=2;
             if (mHitsPerChunk > MAX_HITS_PER_CHUNK) {
                 mHitsPerChunk = MAX_HITS_PER_CHUNK;
             }
@@ -757,6 +755,9 @@ class DBQueryOperation extends QueryOperation
             }
             mCurHitsOffset += mDBHits.size();
             mDBHitsIter = mDBHits.iterator();
+            
+            // exponentially expand the chunk size
+            mHitsPerChunk*=2;
         }
     }
 
