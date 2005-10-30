@@ -149,6 +149,16 @@
     <url-pattern>/extension/*</url-pattern>
   </servlet-mapping>
 
+  <servlet>
+    <servlet-name>ActiveSyncServlet</servlet-name>
+    <servlet-class>com.zimbra.activesync.ActiveSyncServlet</servlet-class>
+    <load-on-startup>8</load-on-startup>
+    <init-param>
+      <param-name>allowed.ports</param-name>
+      <param-value>80, 7070, 443</param-value>
+    </init-param>
+  </servlet>
+
   <servlet-mapping>
     <servlet-name>SoapServlet</servlet-name>
     <url-pattern>/soap/*</url-pattern>
@@ -197,5 +207,10 @@
   <servlet-mapping>
     <servlet-name>StatsImageServlet</servlet-name>
     <url-pattern>/statsimg/*</url-pattern>
+  </servlet-mapping>
+  
+  <servlet-mapping>
+    <servlet-name>ActiveSyncServlet</servlet-name>
+    <url-pattern>/ActiveSync</url-pattern>
   </servlet-mapping>
 </web-app>

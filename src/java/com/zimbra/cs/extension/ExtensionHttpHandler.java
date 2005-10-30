@@ -58,6 +58,17 @@ public abstract class ExtensionHttpHandler {
     }
     
     /**
+     * Processes HTTP OPTIONS requests.
+     * @param req
+     * @param resp
+     * @throws IOException
+     * @throws ServletException
+     */
+    public void doOptions(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
+        throw new ServletException("HTTP GET requests are not supported");
+    }
+    
+    /**
      * Processes HTTP GET requests.
      * @param req
      * @param resp

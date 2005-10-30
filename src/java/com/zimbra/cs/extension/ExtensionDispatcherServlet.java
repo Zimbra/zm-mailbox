@@ -87,7 +87,9 @@ public class ExtensionDispatcherServlet extends ZimbraServlet {
         try {
             ExtensionHttpHandler handler = getHandler(req);
             String method = req.getMethod();
-            if ("GET".equals(method)) {
+            if ("OPTIONS".equals(method)) {
+            	handler.doOptions(req, resp);
+            } else if ("GET".equals(method)) {
                 handler.doGet(req, resp);
             } else if ("POST".equals(method)) {
                 handler.doPost(req, resp);
