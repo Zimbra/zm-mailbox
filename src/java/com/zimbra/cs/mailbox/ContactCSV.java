@@ -307,7 +307,7 @@ public class ContactCSV {
         //CSV_User_2
         //CSV_User_3
         //CSV_User_4
-        addMapping(CSV_Web_Page, Contact.A_workURL, OP_MAP);
+        addMapping(CSV_Web_Page, Contact.A_homeURL, OP_MAP);
         addMapping(CSV_Website, Contact.A_workURL, OP_MAP, false);
         addMapping(CSV_Website_2, Contact.A_homeURL, OP_MAP, false);
         addMapping(CSV_Home_WebPage, Contact.A_homeURL, OP_MAP, false);
