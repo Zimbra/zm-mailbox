@@ -860,9 +860,10 @@ public class DbMailItem {
     }
 
 
-    private static final String FOLDER_TYPES = "(" + MailItem.TYPE_FOLDER + ',' + MailItem.TYPE_SEARCHFOLDER + ',' + MailItem.TYPE_MOUNTPOINT + ')';
+    private static final String FOLDER_TYPES         = "(" + MailItem.TYPE_FOLDER + ',' + MailItem.TYPE_SEARCHFOLDER + ',' + MailItem.TYPE_MOUNTPOINT + ')';
     private static final String FOLDER_AND_TAG_TYPES = "(" + MailItem.TYPE_FOLDER + ',' + MailItem.TYPE_SEARCHFOLDER + ',' + MailItem.TYPE_MOUNTPOINT + ',' + MailItem.TYPE_TAG + ')';
-    
+    private static final String NON_SEARCHABLE_TYPES = "(" + MailItem.TYPE_FOLDER + ',' + MailItem.TYPE_SEARCHFOLDER + ',' + MailItem.TYPE_MOUNTPOINT + ',' + MailItem.TYPE_TAG + ',' + MailItem.TYPE_CONVERSATION + ')';
+
     private static String typeConstraint(byte type) {
         if (type == MailItem.TYPE_FOLDER)
             return FOLDER_TYPES;
@@ -1335,7 +1336,7 @@ public class DbMailItem {
             if (globalMessages)
                 constraint = "date < ? AND type = " + MailItem.TYPE_MESSAGE;
             else
-                constraint = "date < ? AND type >= " + MailItem.FIRST_SEARCHABLE_TYPE +
+                constraint = "date < ? AND type NOT IN " + NON_SEARCHABLE_TYPES +
                              " AND folder_id IN" + DbUtil.suitableNumberOfVariables(folders);
 
             stmt = conn.prepareStatement("SELECT " + LEAF_NODE_FIELDS +
@@ -1650,8 +1651,8 @@ public class DbMailItem {
              */
 
             // Determine the set of matching tags
-            Set searchTagsets = new HashSet();
-            Set searchFlagsets = new HashSet();
+            Set searchTagsets = null;
+            Set searchFlagsets = null;
             int setFlagMask = 0;
             long setTagMask = 0;
             Boolean unread = null;
@@ -1671,34 +1672,21 @@ public class DbMailItem {
                     unread = Boolean.FALSE;
                 } else if (c.excludeTags[i] instanceof Flag) {
                     flagMask |= c.excludeTags[i].getBitmask();
-                } else
+                } else {
                     tagMask |= c.excludeTags[i].getBitmask();
-
-            TagsetCache allFlagsets = getFlagsetCache(conn, c.mailboxId);
-            TagsetCache allTagsets = getTagsetCache(conn, c.mailboxId);
-
-            if (setTagMask != 0 || tagMask != 0) {
-                Iterator iter = allTagsets.getAllTagsets().iterator();
-                while (iter.hasNext()) {
-                    Long tagset = (Long) iter.next();
-                    if ((tagset.longValue() & tagMask) == setTagMask) {
-                        searchTagsets.add(tagset);
-                    }
                 }
+
+            TagsetCache tcFlags = getFlagsetCache(conn, c.mailboxId);
+            TagsetCache tcTags  = getTagsetCache(conn, c.mailboxId);
+            if (setTagMask != 0 || tagMask != 0) {
+                searchTagsets = tcTags.getMatchingTagsets(tagMask, setTagMask);
                 if (searchTagsets.size() == 0) {
                     // No items match the specified tags
                     return result;
                 }
             }
-            
             if (setFlagMask != 0 || flagMask != 0) {
-                Iterator iter = allFlagsets.getAllTagsets().iterator();
-                while (iter.hasNext()) {
-                    Long flagset = (Long) iter.next();
-                    if ((flagset.longValue() & flagMask) == setFlagMask) {
-                        searchFlagsets.add(flagset);
-                    }
-                }
+                searchFlagsets = tcFlags.getMatchingTagsets(flagMask, setFlagMask);
                 if (searchFlagsets.size() == 0) {
                     // No items match the specified flags
                     return result;
@@ -1712,7 +1700,7 @@ public class DbMailItem {
             statement.append(" FROM " + getMailItemTableName(c.mailboxId, "mi"));
             statement.append(" WHERE ");
             if (c.types == null)
-                statement.append("type >= " + MailItem.FIRST_SEARCHABLE_TYPE);
+                statement.append("type NOT IN " + NON_SEARCHABLE_TYPES);
             else
                 statement.append("type IN").append(DbUtil.suitableNumberOfVariables(c.types));
 
@@ -1721,12 +1709,10 @@ public class DbMailItem {
 
             if (c.hasTags != null)
                 statement.append(" AND tags ").append(c.hasTags.booleanValue() ? "!= 0" : "= 0");
-            if (searchTagsets.size() > 0) {
+            if (searchTagsets != null)
                 statement.append(" AND tags IN").append(DbUtil.suitableNumberOfVariables(searchTagsets));
-            }
-            if (searchFlagsets.size() > 0) {
+            if (searchFlagsets != null)
                 statement.append(" AND flags IN").append(DbUtil.suitableNumberOfVariables(searchFlagsets));
-            }
             if (unread != null)
                 statement.append(" AND unread = ?");
 
@@ -1818,20 +1804,12 @@ public class DbMailItem {
             if (c.excludeTypes != null)
                 for (int i = 0; c.types != null && i < c.excludeTypes.length; i++)
                     stmt.setByte(param++, c.excludeTypes[i]);
-            if (searchTagsets.size() > 0) {
-                Iterator i = searchTagsets.iterator();
-                while (i.hasNext()) {
-                    Long tags = (Long) i.next();  
-                    stmt.setLong(param++, tags.longValue());
-                }
-            }
-            if (searchFlagsets.size() > 0) {
-                Iterator i = searchFlagsets.iterator();
-                while (i.hasNext()) {
-                    Long flags = (Long) i.next();
-                    stmt.setLong(param++, flags.longValue());
-                }
-            }
+            if (searchTagsets != null)
+                for (Iterator i = searchTagsets.iterator(); i.hasNext(); )
+                    stmt.setLong(param++, ((Long) i.next()).longValue());
+            if (searchFlagsets != null)
+                for (Iterator i = searchFlagsets.iterator(); i.hasNext(); )
+                    stmt.setLong(param++, ((Long) i.next()).longValue());
             if (unread != null)
                 stmt.setBoolean(param++, unread.booleanValue());
             for (int i = 0; targetFolders != null && i < targetFolders.length; i++)

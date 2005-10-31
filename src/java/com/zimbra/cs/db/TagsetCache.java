@@ -54,7 +54,7 @@ class TagsetCache {
         }
         mTagsets.add(tagset);
     }
-    
+
     void addTagsets(Collection /* Long */ tagsets) {
         // Iterate the collection instead of just calling addAll(), to
         // make sure all the values passed in are Longs.
@@ -63,29 +63,26 @@ class TagsetCache {
             addTagset((Long) i.next());
         }
     }
-    
-    Set getTagsets(long mask) {
+
+    Set getMatchingTagsets(long mask, long value) {
         Set matches = new HashSet();
-        Iterator i = mTagsets.iterator();
-        while (i.hasNext()) {
-            Long tags = (Long) i.next();
-            if ((tags.longValue() & mask) > 0) {
-                matches.add(tags);
-            }
+        for (Iterator it = mTagsets.iterator(); it.hasNext(); ) {
+            Long tagset = (Long) it.next();
+            if ((tagset.longValue() & mask) == value)
+                matches.add(tagset);
         }
         return matches;
     }
-    
+
     Set getAllTagsets() {
         return new HashSet(mTagsets);
     }
-    
+
     /**
      * Applies a bitmask to all the tagsets in the collection, and adds the
      * resulting new tagsets. We do this when we know that the tag changed for one or
      * more items, but we don't have references to the items themselves.
      * <p>
-     * 
      * The end result is that we add a bunch of new tagsets, some of which
      * may not actually exist for any items.  This is ok, since searches on
      * the bogus tagsets will never return data.  When the cache times out,

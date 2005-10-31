@@ -73,8 +73,7 @@ public abstract class MailItem implements Comparable {
      *  {@link Tag}, possibly in another user's {@link Mailbox}. */
     public static final byte TYPE_MOUNTPOINT   = 13;
 
-    public static final byte TYPE_UNKNOWN          = -1;
-    public static final byte FIRST_SEARCHABLE_TYPE = TYPE_MESSAGE;
+    public static final byte TYPE_UNKNOWN = -1;
     
     private static String[] TYPE_NAMES = {
         null,
