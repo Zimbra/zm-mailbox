@@ -218,6 +218,7 @@ public class ToXML {
     public static Element encodeMountpoint(Element parent, ZimbraContext lc, Mountpoint mpt, int fields) {
         Element elem = parent.addElement(MailService.E_MOUNT);
         encodeFolderCommon(elem, lc, mpt, fields);
+        elem.addAttribute(MailService.A_DISPLAY, FolderAction.lookupName(mpt.getOwnerId(), ACL.GRANTEE_USER));
         if (fields == NOTIFY_FIELDS && mpt.getDefaultView() != MailItem.TYPE_UNKNOWN)
             elem.addAttribute(MailService.A_DEFAULT_VIEW, MailItem.getNameForType(mpt.getDefaultView()));
         return elem;
