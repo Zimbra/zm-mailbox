@@ -123,13 +123,13 @@ public class SendInviteReply extends CalendarRequest {
                 if (updateOrg) {
                     String replySubject = getReplySubject(verb, oldInv);
                     
-                    CalSendData dat = new CalSendData();
-                    dat.mOrigId = oldInv.getMailItemId();
-                    dat.mReplyType = TYPE_REPLY;
-                    dat.mSaveToSent = shouldSaveToSent(acct);
-                    dat.mInvite = CalendarUtils.replyToInvite(acct, oldInv, verb, replySubject, exceptDt);
+                    CalSendData csd = new CalSendData();
+                    csd.mOrigId = oldInv.getMailItemId();
+                    csd.mReplyType = TYPE_REPLY;
+                    csd.mSaveToSent = shouldSaveToSent(acct);
+                    csd.mInvite = CalendarUtils.replyToInvite(acct, oldInv, verb, replySubject, exceptDt);
 
-                    Calendar iCal = dat.mInvite.toICalendar();
+                    Calendar iCal = csd.mInvite.toICalendar();
                     
                     ParseMimeMessage.MimeMessageData parsedMessageData = new ParseMimeMessage.MimeMessageData();
                     
@@ -142,14 +142,14 @@ public class SendInviteReply extends CalendarRequest {
                         // the <inv> element is *NOT* allowed -- we always build it manually
                         // based on the params to the <SendInviteReply> and stick it in the 
                         // mbps (additionalParts) parameter...
-                        dat.mMm = ParseMimeMessage.parseMimeMsgSoap(lc, mbox, msgElem, mbps, 
+                        csd.mMm = ParseMimeMessage.parseMimeMsgSoap(lc, mbox, msgElem, mbps, 
                                 ParseMimeMessage.NO_INV_ALLOWED_PARSER, parsedMessageData);
                     } else {
                         // build a default "Accepted" response
-                        dat.mMm = createDefaultReply(acct.getName(), oldInv, replySubject, verb, iCal); 
+                        csd.mMm = createDefaultReply(acct.getName(), oldInv, replySubject, verb, iCal); 
                     }
                     
-                    sendCalendarMessage(lc, appt.getFolderId(), acct, mbox, dat, response, false);  
+                    sendCalendarMessage(lc, appt.getFolderId(), acct, mbox, csd, response, false);  
                 }
                 
                 RecurId recurId = null;
@@ -174,16 +174,12 @@ public class SendInviteReply extends CalendarRequest {
 
                 mbox.modifyPartStat(octxt, apptId, recurId, cnStr, addressStr, role, verb.getXmlPartStat(), Boolean.FALSE, seqNo, dtStamp);
 
-                if (acct.getBooleanAttr(Provisioning.A_zimbraPrefDeleteInviteOnReply, true)) {
+                // move the invite to the Trash if (a) the user wants it and (b) the user is doing the action themselves
+                if (acct.getBooleanAttr(Provisioning.A_zimbraPrefDeleteInviteOnReply, true) && !lc.isDelegatedRequest()) {
                     try {
                         mbox.move(octxt, inviteMsgId, MailItem.TYPE_MESSAGE, Mailbox.ID_FOLDER_TRASH);
                     } catch (MailServiceException.NoSuchItemException nsie) {
                         sLog.debug("can't move nonexistent invite to Trash: " + inviteMsgId);
-                    } catch (MailServiceException e) {
-                        if (e.getCode() == ServiceException.PERM_DENIED)
-                            sLog.debug("don't have permission to move invite to Trash: " + inviteMsgId);
-                        else
-                            throw e;
                     }
                 }
             }
@@ -212,14 +208,14 @@ public class SendInviteReply extends CalendarRequest {
     }
     
     public final static class ParsedVerb {
-        String name;
-        String xmlPartStat;      // XML participant status
+        String mName;
+        String mPartStat;      // XML participant status
         public ParsedVerb(String name, String xmlPartStat) {
-            this.name = name;
-            this.xmlPartStat = xmlPartStat;
+            mName = name;
+            mPartStat = xmlPartStat;
         }
-        public String toString() { return name; }
-        public String getXmlPartStat() { return xmlPartStat; }
+        public String toString() { return mName; }
+        public String getXmlPartStat() { return mPartStat; }
     }
     
     public final static ParsedVerb VERB_ACCEPT = new ParsedVerb("ACCEPT", IcalXmlStrMap.PARTSTAT_ACCEPTED);
