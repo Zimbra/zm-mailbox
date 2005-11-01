@@ -10,6 +10,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -18,10 +19,15 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.mail.BodyPart;
 import javax.mail.MessagingException;
+import javax.mail.internet.ContentType;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MailDateFormat;
+import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
+import javax.mail.internet.MimePart;
 
 import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.data.ParserException;
@@ -35,6 +41,7 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.mail.ParseMimeMessage;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.soap.Element;
 
@@ -99,11 +106,26 @@ public class FeedManager {
         }
     }
 
-    private static final String HTML_HEADER = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">\n" +
-                                              "<HTML><HEAD><META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\"></HEAD><BODY>";
-    private static final String HTML_FOOTER = "</BODY></HTML>";
-
     private static org.dom4j.QName QN_CONTENT_ENCODED = org.dom4j.QName.get("encoded", "content", "http://purl.org/rss/1.0/modules/content/");
+
+    private static final class Enclosure {
+        private String mUrl, mTitle, mCtype;
+        Enclosure(String url, String title, String ctype) {
+            mUrl = url;  mTitle = title;  mCtype = ctype;
+        }
+        String getLocation()     { return mUrl; }
+        String getDescription()  { return mTitle; }
+        String getContentType() {
+            ContentType ctype;
+            try {
+                ctype = new ContentType(mCtype == null ? "text/plain" : mCtype);
+            } catch (javax.mail.internet.ParseException e) {
+                ctype = new ContentType("text", "plain", null);
+            }
+            ctype.setParameter("name", ParseMimeMessage.trimFilename(URLDecoder.decode(mUrl)));
+            return ctype.toString();
+        }
+    }
 
     private static List parseRssFeed(InputStream content) throws ServiceException {
         try {
@@ -117,6 +139,7 @@ public class FeedManager {
             String subjChannel = channel.getAttribute("title");
             InternetAddress addrChannel = new InternetAddress("", subjChannel, "utf-8");
             Date dateChannel = parseRFC2822Date(channel.getAttribute("lastBuildDate", null), new Date());
+            List enclosures = new ArrayList();
 
             if (rname.equals("rss"))
                 root = root.getElement("channel");
@@ -126,43 +149,38 @@ public class FeedManager {
             ArrayList pms = new ArrayList();
             for (Iterator it = root.elementIterator("item"); it.hasNext(); ) {
                 Element item = (Element) it.next();
+                // get the item's date
                 Date date = parseRFC2822Date(item.getAttribute("pubDate", null), null);
                 if (date == null)
                     date = parseISO8601Date(item.getAttribute("date", null), dateChannel);
+                // construct an address for the author
                 InternetAddress addr = addrChannel;
                 try {
                     addr = new InternetAddress(item.getAttribute("author"));
                 } catch (Exception e) {
                     addr = parseDublinCreator(item.getAttribute("creator", null), addr);
                 }
+                // get the item's title and link, defaulting to the channel attributes
                 String title = parseTitle(item.getAttribute("title", subjChannel));
                 String href = item.getAttribute("link", hrefChannel);
-                String text = item.getAttribute("description", null), ctype;
+                // handle the enclosure (associated media link), if any
+                enclosures.clear();
+                Element enc = item.getOptionalElement("enclosure");
+                if (enc != null)
+                    enclosures.add(new Enclosure(enc.getAttribute("url", null), null, enc.getAttribute("type", null)));
+                // get the feed item's content and guess at its type
+                String text = item.getAttribute("description", null);
                 if (text == null)
                     text = item.getAttribute("encoded", null);
                 if (text == null)
                     text = item.getAttribute("abstract", "");
-                if (text.indexOf("</") != -1 || text.indexOf("/>") != -1) {
-                    ctype = "text/html; charset=\"utf-8\"";  text = HTML_HEADER + text + "<p>" + href + HTML_FOOTER;
-                } else {
-                    ctype = "text/plain; charset=\"utf-8\"";  text += "\r\n\r\n" + href;
-                }
+                boolean html = text.indexOf("</") != -1 || text.indexOf("/>") != -1;
 
-                MimeMessage mm = new MimeMessage(JMSession.getSession());
-                mm.setSentDate(date);
-                mm.addFrom(new InternetAddress[] {addr});
-                mm.setSubject(title, "utf-8");
-                mm.setText(text, "utf-8");
-                mm.setHeader("Content-Type", ctype);
-                // more stuff here!
-                mm.saveChanges();
-                pms.add(new ParsedMessage(mm, date.getTime(), false));
+                pms.add(generateMessage(title, text, href, html, addr, date, enclosures));
             }
             return pms;
         } catch (org.dom4j.DocumentException e) {
             throw ServiceException.PARSE_ERROR("could not parse feed", e);
-        } catch (MessagingException e) {
-            throw ServiceException.PARSE_ERROR("error wrapping rss item in MimeMessage", e);
         } catch (UnsupportedEncodingException e) {
             throw ServiceException.FAILURE("error encoding rss channel name", e);
         }
@@ -175,52 +193,98 @@ public class FeedManager {
             if (addrFeed == null)
                 addrFeed = new InternetAddress("", feed.getAttribute("title"), "utf-8");
             Date dateFeed = parseISO8601Date(feed.getAttribute("updated", null), new Date());
+            List enclosures = new ArrayList();
 
             ArrayList pms = new ArrayList();
             for (Iterator it = feed.elementIterator("entry"); it.hasNext(); ) {
                 Element item = (Element) it.next();
+                // get the item's date
                 Date date = parseISO8601Date(item.getAttribute("updated", null), null);
                 if (date == null)
                     date = parseISO8601Date(item.getAttribute("modified", null), dateFeed);
+                // construct an address for the author
                 InternetAddress addr = parseAtomAuthor(item.getOptionalElement("author"), addrFeed);
+                // get the item's title (may be html or xhtml)
                 String title = parseTitle(item.getElement("title").getText());
-                // figure out the url from the mess of link elements
+                // find the item's link and any enclosures (associated media links)
+                enclosures.clear();
                 String href = "";
                 for (Iterator itlink = item.elementIterator("link"); itlink.hasNext(); ) {
                     Element link = (Element) itlink.next();
-                    if (link.getAttribute("rel", "alternate").equals("alternate")) {
-                        href = link.getAttribute("href");  break;
-                    }
+                    String relation = link.getAttribute("rel", "alternate");
+                    if (relation.equals("alternate"))
+                        href = link.getAttribute("href");
+                    else if (relation.equals("enclosure"))
+                        enclosures.add(new Enclosure(link.getAttribute("href", null), link.getAttribute("title", null), link.getAttribute("type", null)));
                 }
-                // get the content/summary
+                // get the content/summary and markup
                 Element content = item.getOptionalElement("content");
                 if (content == null)
                     content = item.getOptionalElement("summary");
                 if (content == null)
                     continue;
-                String text, ctype, type = content.getAttribute("type", "text").trim().toLowerCase();
-                if (type.equals("text") || type.equals("text/plain")) {
-                    ctype = "text/plain; charset=\"utf-8\"";  text = content.getText() + "\r\n\r\n" + href;
-                } else if (type.equals("html") || type.equals("xhtml") || type.equals("text/html") || type.equals("application/xhtml+xml")) {
-                    ctype = "text/html; charset=\"utf-8\"";  text = HTML_HEADER + content.getText() + "<p>" + href + HTML_FOOTER;
-                } else
-                    throw ServiceException.PARSE_ERROR("unsupported content type: " + type, null);
+                String type = content.getAttribute("type", "text").trim().toLowerCase();
+                boolean html = false;
+                if (type.equals("html") || type.equals("xhtml") || type.equals("text/html") || type.equals("application/xhtml+xml"))
+                    html = true;
+                else if (!type.equals("text") && !type.equals("text/plain"))
+                    throw ServiceException.PARSE_ERROR("unsupported atom entry content type: " + type, null);
 
-                MimeMessage mm = new MimeMessage(JMSession.getSession());
-                mm.setSentDate(date);
-                mm.addFrom(new InternetAddress[] {addr});
-                mm.setSubject(title, "utf-8");
-                mm.setText(text, "utf-8");
-                mm.setHeader("Content-Type", ctype);
-                // more stuff here!
-                mm.saveChanges();
-                pms.add(new ParsedMessage(mm, date.getTime(), false));
+                pms.add(generateMessage(title, content.getText(), href, html, addr, date, enclosures));
             }
             return pms;
-        } catch (MessagingException e) {
-            throw ServiceException.PARSE_ERROR("error wrapping atom item in MimeMessage", e);
         } catch (UnsupportedEncodingException e) {
             throw ServiceException.FAILURE("error encoding atom feed name", e);
+        }
+    }
+
+    private static final String HTML_HEADER = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">\n" +
+                                              "<HTML><HEAD><META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\"></HEAD><BODY>";
+    private static final String HTML_FOOTER = "</BODY></HTML>";
+
+    private static ParsedMessage generateMessage(String title, String text, String href, boolean html, InternetAddress addr, Date date, List attach)
+    throws ServiceException {
+        String ctype = html ? "text/html; charset=\"utf-8\"" : "text/plain; charset=\"utf-8\"";
+        String content = html ? HTML_HEADER + text + "<p>" + href + HTML_FOOTER : text + "\r\n\r\n" + href;
+        // cull out invalid enclosures
+        if (attach != null)
+            for (Iterator it = attach.iterator(); it.hasNext(); )
+                if (((Enclosure) it.next()).getLocation() == null)
+                    it.remove();
+        boolean hasAttachments = attach != null && attach.size() > 0;
+
+        // create the MIME message and wrap it
+        try {
+            MimeMessage mm = new MimeMessage(JMSession.getSession());
+            MimePart body = (hasAttachments ? new MimeBodyPart() : (MimePart) mm);
+            body.setText(content, "utf-8");
+            body.setHeader("Content-Type", ctype);
+
+            if (hasAttachments) {
+                // encode each enclosure as an attachment with Content-Location set
+                MimeMultipart mmp = new MimeMultipart("mixed");
+                mmp.addBodyPart((BodyPart) body);
+                for (Iterator it = attach.iterator(); it.hasNext(); ) {
+                    Enclosure enc = (Enclosure) it.next();
+                    MimeBodyPart part = new MimeBodyPart();
+                    part.setText("");
+                    part.addHeader("Content-Location", enc.getLocation());
+                    part.addHeader("Content-Type", enc.getContentType());
+                    if (enc.getDescription() != null)
+                        part.addHeader("Content-Description", enc.getDescription());
+                    mmp.addBodyPart(part);
+                }
+                mm.setContent(mmp);
+            }
+
+            mm.setSentDate(date);
+            mm.addFrom(new InternetAddress[] {addr});
+            mm.setSubject(title, "utf-8");
+            // more stuff here!
+            mm.saveChanges();
+            return new ParsedMessage(mm, date.getTime(), false);
+        } catch (MessagingException e) {
+            throw ServiceException.PARSE_ERROR("error wrapping feed item in MimeMessage", e);
         }
     }
 
@@ -231,13 +295,11 @@ public class FeedManager {
         // check for a mailto: link
         String lc = creator.trim().toLowerCase(), address = "", personal = creator;
         int mailto = lc.indexOf("mailto:");
-        if (mailto == -1)
-            ;
-        else if (mailto == 0 && lc.length() <= 7)
+        if (mailto == 0 && lc.length() <= 7)
             return addrChannel;
         else if (mailto == 0) {
             personal = null;  address = creator = creator.substring(7);
-        } else {
+        } else if (mailto != -1) {
             // checking for "...[mailto:...]..." or "...(mailto:...)..."
             char delimit = creator.charAt(mailto - 1), complement = 0;
             if (delimit == '[')       complement = ']';
@@ -319,6 +381,8 @@ public class FeedManager {
         
         public void startDocument() { str.setLength(0); }
         public void characters(char[] ch, int offset, int length) {
+            if (str.length() > 0)
+                str.append(' ');
             str.append(ch, offset, length);
         }
         public String toString() { return str.toString(); }

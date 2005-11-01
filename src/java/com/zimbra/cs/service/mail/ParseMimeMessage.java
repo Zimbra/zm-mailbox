@@ -637,7 +637,7 @@ public class ParseMimeMessage {
         mLog.debug("--------------------------------------\n");
     }
 
-	private static String trimFilename(String filename) {
+	public static String trimFilename(String filename) {
 	    final char[] delimiter = { '/', '\\', ':' };
 	
 	    if (filename == null || filename.equals(""))
