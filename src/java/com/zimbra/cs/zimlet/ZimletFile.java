@@ -36,6 +36,7 @@ import java.util.zip.ZipFile;
 import com.zimbra.cs.util.ByteUtil;
 
 /**
+ * Represents Zimlet distribution file.
  * 
  * @author jylee
  *
@@ -44,10 +45,11 @@ public class ZimletFile extends ZipFile {
 
 	private static final String XML_SUFFIX = ".xml";
 	private static final String ZIP_SUFFIX = ".zip";
+	private static final String CONFIG_TMPL = "config_template.xml";
 
 	private String mZimletName;
-	private String mDescFile;
 	private String mDescContent;
+	private String mConfigContent;
 	
 	private List   mEntries;
 	
@@ -57,7 +59,7 @@ public class ZimletFile extends ZipFile {
 	}
 
 	private void initialize() throws IOException {
-		String name = getName();
+		String name = getName().toLowerCase();
 		int index = name.lastIndexOf(File.separatorChar);
 		if (index > 0) {
 			name = name.substring(index + 1);
@@ -66,28 +68,35 @@ public class ZimletFile extends ZipFile {
 			name = name.substring(0, name.length() - 4);
 		}
 		mZimletName = name;
-		mDescFile = name + XML_SUFFIX;
+		String descFile = name + XML_SUFFIX;
 		
 		mEntries = new ArrayList();
 		Enumeration entries = entries();
 		boolean zimletDescriptionFound = false;
 		while (entries.hasMoreElements()) {
 			ZipEntry entry = (ZipEntry) entries.nextElement();
-			if (entry.getName().equals(mDescFile)) {
+			String entryName = entry.getName().toLowerCase();
+			if (entryName.equals(descFile)) {
 				zimletDescriptionFound = true;
 				mDescContent = new String(getEntryContent(entry));
+			} else if (entryName.equals(CONFIG_TMPL)) {
+				mConfigContent = new String(getEntryContent(entry));
 			}
-			mEntries.add(entry.getName());
+			mEntries.add(entryName);
 		}
 		
 		if (!zimletDescriptionFound) {
-			throw new FileNotFoundException("Zimlet description " + mDescFile + 
+			throw new FileNotFoundException("Zimlet description " + descFile + 
 											" not found in " + getName());
 		}
 	}
 	
 	public String getZimletDescription() {
 		return mDescContent;
+	}
+	
+	public String getZimletConfig() {
+		return mConfigContent;
 	}
 	
 	public String[] getAllEntryNames() {

@@ -39,6 +39,10 @@ public class ZimletException extends Exception {
 		return new ZimletException(msg);
 	}
 	
+	public static ZimletException INVALID_ZIMLET_CONFIG(String msg) {
+		return new ZimletException(msg);
+	}
+	
 	public static ZimletException CANNOT_CREATE(String zimlet, String reason) {
 		return new ZimletException("Cannot create Zimlet " + zimlet + ": " + reason);
 	}
