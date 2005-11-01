@@ -1104,7 +1104,7 @@ public class Appointment extends MailItem {
                                 && (inv.getDTStamp() <= cur.mDtStamp) 
                                 && (
                                         (inv.getRecurId() == null && cur.mRecurId == null) 
-                                        || (inv.getRecurId().equals(cur.mRecurId))))) {
+                                        || ((inv.getRecurId() != null) && (inv.getRecurId().equals(cur.mRecurId)))))) {
                     toRet.add(cur);
                 } else {
                     sLog.info("ReplyList "+this.toString()+" has outdated entries in its Replies list");
