@@ -308,23 +308,6 @@ public class Search extends DocumentHandler  {
         if (ch.getScore() != 0)
             c.addAttribute(MailService.A_SCORE, ch.getScore());
 
-        Collection s = ch.getMessageHits();
-        if (s != null) {
-            for (Iterator mit = s.iterator(); mit.hasNext(); ) {
-                mh = (MessageHit) mit.next();
-                Message msg = mh.getMessage();
-                Element e = c.addElement(MailService.E_MSG);
-                e.addAttribute(MailService.A_ID, msg.getId());
-                ArrayList parts = mh.getMatchedMimePartNames();
-                if (parts != null) {
-                    for (Iterator mpit = parts.iterator(); mpit.hasNext();) {
-                        Element mp = e.addElement(MailService.E_MIMEPART);
-                        MessagePartHit mph = (MessagePartHit) mpit.next();
-                        mp.addAttribute(MailService.A_PART, mph.getPartName());
-                    }
-                }
-            }
-        }
         return c;
     }
 
