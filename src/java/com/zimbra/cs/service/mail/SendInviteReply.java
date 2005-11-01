@@ -90,7 +90,6 @@ public class SendInviteReply extends CalendarRequest {
             
             synchronized (mbox) {
                 Invite oldInv = null;
-                
                 int apptId; 
                 int inviteMsgId;
                 Appointment appt;
@@ -122,7 +121,7 @@ public class SendInviteReply extends CalendarRequest {
                 }
                 
                 if (updateOrg) {
-                    String replySubject = this.getReplySubject(verb, oldInv);
+                    String replySubject = getReplySubject(verb, oldInv);
                     
                     CalSendData dat = new CalSendData();
                     dat.mOrigId = oldInv.getMailItemId();
@@ -172,18 +171,23 @@ public class SendInviteReply extends CalendarRequest {
                         role = me.getRole();
                     }
                 }
-                
+
                 mbox.modifyPartStat(octxt, apptId, recurId, cnStr, addressStr, role, verb.getXmlPartStat(), Boolean.FALSE, seqNo, dtStamp);
-                        
+
                 if (acct.getBooleanAttr(Provisioning.A_zimbraPrefDeleteInviteOnReply, true)) {
                     try {
                         mbox.move(octxt, inviteMsgId, MailItem.TYPE_MESSAGE, Mailbox.ID_FOLDER_TRASH);
                     } catch (MailServiceException.NoSuchItemException nsie) {
                         sLog.debug("can't move nonexistent invite to Trash: " + inviteMsgId);
+                    } catch (MailServiceException e) {
+                        if (e.getCode() == ServiceException.PERM_DENIED)
+                            sLog.debug("don't have permission to move invite to Trash: " + inviteMsgId);
+                        else
+                            throw e;
                     }
                 }
             }
-            
+
             return response;
         } finally {
             sWatch.stop(startTime);
