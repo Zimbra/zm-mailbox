@@ -701,7 +701,17 @@ public class CalendarUtils {
                     throw MailServiceException.INVALID_REQUEST("<inv> may have <e> end or <d> duration but not both", null);
                 }
                 ParsedDateTime dt = parseDtElement(e, oldTzMap, newInv);
+                
                 if (allDay) {
+                    // HACK ALERT: okay, campers, here's the deal.
+                    //     By definition, our end dates are EXCLUSIVE: DTEND is not included.. eg a meeting 7-8pm actually stops at 7:59
+                    //
+                    //     This makes sense for normal appointments, but apparently this rule is confusing to people when making all-day-events
+                    //
+                    //     For all-day-events, people want to say that a 1-day-long appointment starts on 11/1 and ends on 11/1, for example
+                    //     this is inconsistent (and incompatible with RFC2445) but it is what people want.  Sooo, we to a bit of a hacky
+                    //     translation when sending/receiving all-day-events.
+                    //     
                     dt = dt.add(ParsedDuration.ONE_DAY);
                 }
                 if (dt.hasTime()) { 

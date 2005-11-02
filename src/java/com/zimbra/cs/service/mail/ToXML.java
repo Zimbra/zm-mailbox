@@ -885,6 +885,11 @@ public class ToXML {
             ParsedDateTime dtEnd = invite.getEndTime();
             if (dtEnd != null) {
                 Element endElt = e.addElement(MailService.E_APPT_END_TIME);
+                if (invite.isAllDayEvent()) {
+                    // See CalendarUtils.parseInviteElementCommon, where we parse DTEND
+                    // for a description of why we add -1d when sending to the client
+                    dtEnd = dtEnd.add(ParsedDuration.NEGATIVE_ONE_DAY);
+                }
                 endElt.addAttribute(MailService.A_APPT_DATETIME, dtEnd.getDateTimePartString());
                 String tzName = dtEnd.getTZName();
                 if (tzName != null) {

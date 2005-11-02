@@ -59,6 +59,7 @@ public final class ParsedDuration
     static Pattern sDurationDayTimePattern = Pattern.compile("([+-]?P)(?:(\\d+)D)?(?:T(?:(\\d+)H)?(?:(\\d+)M)?(?:(\\d+)S)?)?");
     
     public static final ParsedDuration ONE_DAY = new ParsedDuration(false, 0, 1, 0, 0, 0);
+    public static final ParsedDuration NEGATIVE_ONE_DAY = new ParsedDuration(false, 0, -1, 0, 0, 0);
     
     private ParsedDuration(boolean negative, int weeks, int days, int hours, int mins, int secs) {
         mNegative = negative;
