@@ -1,7 +1,7 @@
 <zimlet>
 	<name>po</name>
 	<version>1.0</version>
-	<description>Zimbra Purchase Order</description>
+	<description>Purchase Order</description>
 
 	<serverExtension>
 		<hasKeyword>po</hasKeyword>
