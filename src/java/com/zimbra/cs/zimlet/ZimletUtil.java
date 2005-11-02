@@ -227,6 +227,18 @@ public class ZimletUtil {
 		System.out.println(config);
 	}
 	
+	public static void installConfig(String config) throws IOException, ZimletException {
+		ZimletConfig zc = new ZimletConfig(new File(config));
+		String zimletName = zc.getName();
+		String configString = zc.toXMLString();
+		Provisioning prov = Provisioning.getInstance();
+		try {
+			prov.updateZimletConfig(zimletName, configString);
+		} catch (Exception e) {
+			throw ZimletException.INVALID_ZIMLET_CONFIG("cannot update Zimlet config for "+zimletName);
+		}
+	}
+	
 	private static final String ZCSROOT = "c:/opt/zimbra/tomcat";
 	
 	private static final int INSTALL_ZIMLET = 10;
@@ -235,13 +247,15 @@ public class ZimletUtil {
 	private static final int ACTIVATE_ZIMLET = 13;
 	private static final int DEACTIVATE_ZIMLET = 14;
 	private static final int DUMP_CONFIG = 15;
+	private static final int INSTALL_CONFIG = 16;
 	
 	private static final String INSTALL_CMD = "install";
 	private static final String UNINSTALL_CMD = "uninstall";
 	private static final String UPGRADE_CMD = "upgrade";
 	private static final String ACTIVATE_CMD = "activate";
 	private static final String DEACTIVATE_CMD = "deactivate";
-	private static final String CONFIG_CMD = "config";
+	private static final String DUMP_CONFIG_CMD = "config";
+	private static final String INSTALL_CONFIG_CMD = "configure";
 	
 	private static Map mCommands;
 	
@@ -252,17 +266,19 @@ public class ZimletUtil {
 		mCommands.put(UPGRADE_CMD, new Integer(UPGRADE_ZIMLET));
 		mCommands.put(ACTIVATE_CMD, new Integer(ACTIVATE_ZIMLET));
 		mCommands.put(DEACTIVATE_CMD, new Integer(DEACTIVATE_ZIMLET));
-		mCommands.put(CONFIG_CMD, new Integer(DUMP_CONFIG));
+		mCommands.put(DUMP_CONFIG_CMD, new Integer(DUMP_CONFIG));
+		mCommands.put(INSTALL_CONFIG_CMD, new Integer(INSTALL_CONFIG));
 	}
 	
 	private static void usage() {
-		System.out.println("zimlet: [command] zimlet.zip");
+		System.out.println("zimlet: [command] [ zimlet.zip | config.xml ]");
 		System.out.println("\tinstall - installs the zimlet");
 		System.out.println("\tuninstall - uninstalls the zimlet");
 		System.out.println("\tactivate - activates the zimlet");
 		System.out.println("\tdeactivate - deactivates the zimlet");
 		System.out.println("\tupgrade - upgrades the zimlet");
 		System.out.println("\tconfig - dumps the configuration");
+		System.out.println("\tconfigure - installs the configuration");
 		System.exit(1);
 	}
 	
@@ -308,6 +324,9 @@ public class ZimletUtil {
 				break;
 			case DUMP_CONFIG:
 				dumpConfig(zimlet);
+				break;
+			case INSTALL_CONFIG:
+				installConfig(zimlet);
 				break;
 			default:
 				System.out.println("Unknown command " + args[0]);

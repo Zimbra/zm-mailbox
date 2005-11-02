@@ -63,7 +63,7 @@ public class ZimletConfig extends ZimletMeta implements ZimletConf {
 		mGlobalConfig = new HashMap();
 		mSiteConfig = new HashMap();
 		try {
-			mLocalHost = InetAddress.getLocalHost().getHostName();
+			mLocalHost = InetAddress.getLocalHost().getHostName().toLowerCase();
 		} catch (UnknownHostException uhe) {
 			throw ZimletException.INVALID_ZIMLET_CONFIG("cannot figure out hostname on localhost");
 		}
@@ -73,9 +73,11 @@ public class ZimletConfig extends ZimletMeta implements ZimletConf {
 		if (elem.getName().equals(ZIMLET_TAG_GLOBAL)) {
 			parseConfig(elem, mGlobalConfig);
 		} else if (elem.getName().equals(ZIMLET_TAG_HOST)) {
-			String hostname = elem.getAttribute(ZIMLET_ATTR_NAME, "");
+			String hostname = elem.getAttribute(ZIMLET_ATTR_NAME, "").toLowerCase();
 			if (mLocalHost.equals(hostname)) {
 				parseConfig(elem, mSiteConfig);
+			} else {
+				elem.detach();
 			}
 		} else {
 			ZimbraLog.zimlet.warn("unrecognized config element "+elem.getName());
@@ -115,5 +117,9 @@ public class ZimletConfig extends ZimletMeta implements ZimletConf {
 	
 	public String getSiteConf(String key) {
 		return (String) mSiteConfig.get(key);
+	}
+
+	public String toXMLString() {
+		return mTopElement.toString();
 	}
 }
