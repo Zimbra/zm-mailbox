@@ -85,7 +85,7 @@ For now there are no conventions for the following two items.
 
 Extensions with servlets
 
-If an extension needs to process HTTP GET/POST requests, it can do so as follows:
+If an extension needs to process HTTP GET/POST/OPTIONS requests, it can do so as follows:
 
 	- implement com.zimbra.cs.extension.ExtensionHttpHandler interface
 	
@@ -125,6 +125,8 @@ If an extension needs to process HTTP GET/POST requests, it can do so as follows
 Your handler will process requests at URI: /service/extension/myext/myhandler.
 You can create any number of handlers. They will be available at: /service/extension/myext/<handler path>.
 
-ExtensionHttpHandlers are not servlets. They live in the service.war's servlet context.
+ExtensionHttpHandlers are not servlets. They live in the service.war's servlet context. 
+No change should be made to ZimbraServer's web.xml for any extension HTTP handlers that are added.
+
 	  
 	  

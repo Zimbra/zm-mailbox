@@ -65,7 +65,7 @@ public abstract class ExtensionHttpHandler {
      * @throws ServletException
      */
     public void doOptions(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
-        throw new ServletException("HTTP GET requests are not supported");
+        throw new ServletException("HTTP OPTIONS requests are not supported");
     }
     
     /**
