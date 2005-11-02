@@ -81,7 +81,11 @@ class DebugPreparedStatement implements PreparedStatement {
             Object o = mParams.get(paramIndex);
             if (o instanceof String) {
                 // Escape single-quotes
-                o = "'" + ((String) o).replace("'", "''") + "'";
+                String s = (String) o;
+                if (s.indexOf('\'') >= 0) {
+                    s = s.replaceAll("'", "''");
+                }
+                o = "'" + s + "'";
             }
             buf.append(o);
             
