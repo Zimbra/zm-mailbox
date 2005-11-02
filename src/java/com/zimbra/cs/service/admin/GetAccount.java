@@ -33,7 +33,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
@@ -93,7 +92,6 @@ public class GetAccount extends AdminDocumentHandler {
     }
     
     static void doAttrs(Element e, Map attrs) {
-        Element eattrs = e.addUniqueElement(AccountService.E_ATTRS);
         for (Iterator mit = attrs.entrySet().iterator(); mit.hasNext(); ) {
             Map.Entry entry = (Entry) mit.next();
             String name = (String) entry.getKey();
@@ -104,13 +102,13 @@ public class GetAccount extends AdminDocumentHandler {
             if (value instanceof String[]) {
                 String sv[] = (String[]) value;
                 for (int i = 0; i < sv.length; i++) {
-                    Element pref = eattrs.addElement(AccountService.E_ATTR);
-                    pref.addAttribute(AccountService.A_NAME, name);
+                    Element pref = e.addElement(AdminService.E_A);
+                    pref.addAttribute(AdminService.A_N, name);
                     pref.setText(sv[i]);
                 }
             } else if (value instanceof String) {
-                Element pref = eattrs.addElement(AccountService.E_ATTR);
-                pref.addAttribute(AccountService.A_NAME, name);
+                Element pref = e.addElement(AdminService.E_A);
+                pref.addAttribute(AdminService.A_N, name);
                 pref.setText((String) value);
             }
         }       
