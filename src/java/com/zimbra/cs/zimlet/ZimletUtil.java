@@ -177,7 +177,12 @@ public class ZimletUtil {
 
 		String[] files = zf.getAllEntryNames();
 		for (int i = 0; i < files.length; i++) {
-			writeFile(zf.getEntryContent(files[i]), new File(zimletDir, files[i]));
+			String f = files[i];
+			if (f.endsWith("/") || f.endsWith("\\")) {
+				FileUtil.mkdirs(new File(zimletDir, f));
+			} else {
+				writeFile(zf.getEntryContent(f), new File(zimletDir, f));
+			}
 		}
 	}
 	

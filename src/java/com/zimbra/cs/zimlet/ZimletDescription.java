@@ -124,6 +124,9 @@ public class ZimletDescription extends ZimletMeta {
 	}
 	
 	public String[] getScripts() {
+		if (mScripts.isEmpty()) {
+			return null;
+		}
 		return (String[]) mScripts.toArray(new String[0]);
 	}
 	

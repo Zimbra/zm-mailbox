@@ -75,8 +75,8 @@ public class ZimletFile extends ZipFile {
 		boolean zimletDescriptionFound = false;
 		while (entries.hasMoreElements()) {
 			ZipEntry entry = (ZipEntry) entries.nextElement();
-			String entryName = entry.getName().toLowerCase();
-			if (entryName.equals(descFile)) {
+			String entryName = entry.getName();
+			if (entryName.toLowerCase().equals(descFile)) {
 				zimletDescriptionFound = true;
 				mDescContent = new String(getEntryContent(entry));
 			} else if (entryName.equals(CONFIG_TMPL)) {
