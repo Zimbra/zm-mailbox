@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
@@ -91,8 +92,9 @@ public class GetAccount extends AdminDocumentHandler {
         doAttrs(account, attrs);
     }
     
-    static void doAttrs(Element e, Map attrs) throws ServiceException {
-         for (Iterator mit = attrs.entrySet().iterator(); mit.hasNext(); ) {
+    static void doAttrs(Element e, Map attrs) {
+        Element eattrs = e.addUniqueElement(AccountService.E_ATTRS);
+        for (Iterator mit = attrs.entrySet().iterator(); mit.hasNext(); ) {
             Map.Entry entry = (Entry) mit.next();
             String name = (String) entry.getKey();
             Object value = entry.getValue();
@@ -101,10 +103,16 @@ public class GetAccount extends AdminDocumentHandler {
                 value = "VALUE-BLOCKED";
             if (value instanceof String[]) {
                 String sv[] = (String[]) value;
-                for (int i = 0; i < sv.length; i++)
-                    e.addAttribute(name, sv[i], Element.DISP_ELEMENT);
-            } else if (value instanceof String)
-                e.addAttribute(name, (String) value, Element.DISP_ELEMENT);
+                for (int i = 0; i < sv.length; i++) {
+                    Element pref = eattrs.addElement(AccountService.E_ATTR);
+                    pref.addAttribute(AccountService.A_NAME, name);
+                    pref.setText(sv[i]);
+                }
+            } else if (value instanceof String) {
+                Element pref = eattrs.addElement(AccountService.E_ATTR);
+                pref.addAttribute(AccountService.A_NAME, name);
+                pref.setText((String) value);
+            }
         }       
     }
 }

@@ -69,7 +69,7 @@ public class GetInfo extends DocumentHandler  {
         return response;
     }
 
-    private static void doPrefs(Element prefs, Map attrsMap) throws ServiceException {
+    private static void doPrefs(Element prefs, Map attrsMap) {
         for (Iterator mi = attrsMap.entrySet().iterator(); mi.hasNext(); ) {
             Map.Entry entry = (Entry) mi.next();
             String key = (String) entry.getKey();
