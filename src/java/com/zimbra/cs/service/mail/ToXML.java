@@ -147,6 +147,13 @@ public class ToXML {
             if (!url.equals("") || fields != NOTIFY_FIELDS)
                 elem.addAttribute(MailService.A_URL, url);
         }
+        if (lc.isDelegatedRequest())
+            try {
+                short perms = folder.getMailbox().getEffectivePermissions(lc.getOperationContext(), folder.getId());
+                elem.addAttribute(MailService.A_RIGHTS, ACL.rightsToString(perms));
+            } catch (ServiceException e) {
+                mLog.warn("ignoring exception while fetching effective permissions for folder " + folder.getId(), e);
+            }
         if (needToOutput(fields, Change.MODIFIED_ACL)) {
             ACL acl = folder.getPermissions();
             if (acl != null || fields != NOTIFY_FIELDS) {

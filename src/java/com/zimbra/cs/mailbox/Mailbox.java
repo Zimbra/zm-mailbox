@@ -2032,6 +2032,22 @@ public class Mailbox {
         }
     }
 
+    public synchronized short getEffectivePermissions(OperationContext octxt, int folderId) throws ServiceException {
+        // fetch the folder outside the transaction so we get it even if the
+        //   authenticated user doesn't have read permissions on it
+        Folder folder = getFolderById(null, folderId);
+
+        boolean success = false;
+        try {
+            beginTransaction("getEffectivePermissions", octxt);
+            short rights = folder.checkRights((short) ~0, getAuthenticatedAccount());
+            success = true;
+            return rights;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
 
     public synchronized SearchFolder getSearchFolderById(OperationContext octxt, int searchId) throws ServiceException {
         return (SearchFolder) getItemById(octxt, searchId, MailItem.TYPE_SEARCHFOLDER);

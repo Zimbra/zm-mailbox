@@ -104,12 +104,14 @@ public class GetFolder extends DocumentHandler {
         Element proxied = proxyRequest(request, context, iidLocal, iidRemote);
         // return the children of the remote folder as children of the mountpoint
         proxied = proxied.getOptionalElement(MailService.E_FOLDER);
-        if (proxied != null)
+        if (proxied != null) {
+            eRoot.addAttribute(MailService.A_RIGHTS, proxied.getAttribute(MailService.A_RIGHTS, null));
             for (Iterator it = proxied.elementIterator(); it.hasNext(); ) {
                 Element eRemote = (Element) it.next();
                 // skip the <acl> element, if any
                 if (!eRemote.getName().equals(MailService.E_ACL))
                     eRoot.addElement(eRemote.detach());
             }
+        }
     }
 }
