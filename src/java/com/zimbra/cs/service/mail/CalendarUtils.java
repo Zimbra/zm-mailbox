@@ -728,6 +728,10 @@ public class CalendarUtils {
         
         // LOCATION
         newInv.setLocation(location);
+        
+        // FreeBusy
+        String fb = element.getAttribute(MailService.A_APPT_FREEBUSY, IcalXmlStrMap.FBTYPE_BUSY);
+        newInv.setFreeBusy(fb);
 
         // STATUS
         String status = element.getAttribute(MailService.A_APPT_STATUS, IcalXmlStrMap.STATUS_CONFIRMED);

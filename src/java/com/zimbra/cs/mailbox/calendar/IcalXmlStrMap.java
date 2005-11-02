@@ -99,7 +99,7 @@ public class IcalXmlStrMap
     public final static String FBTYPE_BUSY = "B";
     public final static String FBTYPE_FREE = "F";
     public final static String FBTYPE_BUSY_TENTATIVE = "T";
-    public final static String FBTYPE_BUSY_UNAVAILABLE = "U";
+    public final static String FBTYPE_BUSY_UNAVAILABLE = "O";
 
     // transparency 
     public final static String TRANSP_OPAQUE = "O";

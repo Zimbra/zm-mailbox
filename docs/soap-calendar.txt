@@ -57,9 +57,9 @@
        [
        <comp type="event|todo"
             [status="TENT|CONF|CANC"]  // TENTative, CONFirmed (default), CANCelled -- TIM: remove this!
-            [fb="F|B|T|U"]  // free-busy status:
-                               Free, Busy (default), busy-Tentative, busy-Unavailable (a.k.a. OutOfOffice)
-            fba="F|B|T|U" // the "actual" free-busy status of this invite (ie what the client should display) -- this is synthesized taking into account our Attendee's PartStat, the Opacity of the appointment, its Status, etc...
+            [fb="F|B|T|O"]  // free-busy status:
+                               Free, Busy (default), busy-Tentative, OutOfOffice (busy-unavailable)
+            fba="F|B|T|O" // the "actual" free-busy status of this invite (ie what the client should display) -- this is synthesized taking into account our Attendee's PartStat, the Opacity of the appointment, its Status, etc...
             [transp="O|T"]  // transparency: Opaque (default) or Transparent
             [allDay="1|0"]
             [name="NAME"]

@@ -594,7 +594,7 @@ public class Invite {
     public String getStatus() { return mStatus; }
     public void setStatus(String status) { mStatus = status; }
     public String getFreeBusy() { return mFreeBusy; }
-    void setFreeBusy(String fb) { mFreeBusy = fb; }
+    public void setFreeBusy(String fb) { mFreeBusy = fb; }
     public String getTransparency() { return mTransparency; }
     public boolean isTransparent() { return IcalXmlStrMap.TRANSP_TRANSPARENT.equals(mTransparency); }
     public void setTransparency(String transparency) { mTransparency = transparency; }
