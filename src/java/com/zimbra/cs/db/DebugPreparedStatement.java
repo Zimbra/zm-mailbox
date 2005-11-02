@@ -78,7 +78,12 @@ class DebugPreparedStatement implements PreparedStatement {
             if (paramIndex == mParams.size()) {
                 throw new IllegalStateException("Not enough parameters bound for SQL: " + mSql);
             }
-            buf.append(mParams.get(paramIndex));
+            Object o = mParams.get(paramIndex);
+            if (o instanceof String) {
+                // Escape single-quotes
+                o = "'" + ((String) o).replace("'", "''") + "'";
+            }
+            buf.append(o);
             
             // Increment indexes
             start = qPos + 1;
@@ -99,6 +104,7 @@ class DebugPreparedStatement implements PreparedStatement {
     private void log() {
         long time = System.currentTimeMillis() - mStartTime;
         String sql = getSql();
+        sql = sql.replace('\n', ' ');  // Log SQL on one line for easier extraction later
         ZimbraLog.sqltrace.debug(sql + " - " + time + "ms");
         ZimbraPerf.updateDbStats(sql, (int) time);
     }

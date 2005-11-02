@@ -34,6 +34,8 @@ import java.sql.Savepoint;
 import java.sql.Statement;
 import java.util.Map;
 
+import com.zimbra.cs.util.ZimbraLog;
+
 class DebugConnection implements Connection {
 
     private Connection mConn;
@@ -67,10 +69,12 @@ class DebugConnection implements Connection {
     }
 
     public void commit() throws SQLException {
+        ZimbraLog.sqltrace.debug("commit");
         mConn.commit();
     }
 
     public void rollback() throws SQLException {
+        ZimbraLog.sqltrace.debug("rollback");
         mConn.rollback();
     }
 
