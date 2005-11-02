@@ -36,6 +36,7 @@ public class VolumeServiceException extends ServiceException {
     public static final String ID_OUT_OF_RANGE       = "volume.ID_OUT_OF_RANGE";
     public static final String WRONG_TYPE_CURRVOL    = "volume.WRONG_TYPE_CURRVOL";
     public static final String CANNOT_DELETE_CURRVOL = "volume.CANNOT_DELETE_CURRVOL";
+    public static final String CANNOT_CHANGE_TYPE_OF_CURRVOL = "volume.CANNOT_CHANGE_TYPE_OF_CURRVOL";
     public static final String INVALID_REQUEST       = "volume.INVALID_REQUEST";
 
     private VolumeServiceException(String message, String code, boolean isReceiversFault) {
@@ -78,6 +79,15 @@ public class VolumeServiceException extends ServiceException {
     public static VolumeServiceException WRONG_TYPE_CURRVOL(int id, short currVolType) {
         return new VolumeServiceException("volume " + id + " cannot be used as current volume of type " +
             currVolType + " (" + VolumeUtil.getTypeName(currVolType) + ")", WRONG_TYPE_CURRVOL, SENDERS_FAULT, null);
+    }
+
+    public static VolumeServiceException CANNOT_CHANGE_TYPE_OF_CURRVOL(Volume vol, short newType) {
+        String newVolTypeName = VolumeUtil.getTypeName(newType);
+        String currVolTypeName = VolumeUtil.getTypeName(vol.getType());
+        return new VolumeServiceException("cannot change type of volume \"" + vol.getName() +
+                "\" (id=" + vol.getId() + ") to " + newVolTypeName +
+                " because it is the current " + currVolTypeName + " volume",
+                CANNOT_CHANGE_TYPE_OF_CURRVOL, SENDERS_FAULT, null);
     }
 
     public static VolumeServiceException INVALID_REQUEST(String msg) {

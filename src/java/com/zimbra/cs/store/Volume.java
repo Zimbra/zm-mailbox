@@ -187,14 +187,27 @@ public class Volume {
         fileGroupBits = DEFAULT_FILE_GROUP_BITS;
         fileBits = DEFAULT_FILE_BITS;
 
+        // Don't allow changing type of a current volume.  The volume must be
+        // first made non-current before its type can be changed.  A volume
+        // can be made non-current when another volume is made current for
+        // the volume type.
+        Volume vol = getById(id);
+        if (type != vol.getType()) {
+            synchronized (sVolumeGuard) {
+                if ((sCurrMsgVolume != null && id == sCurrMsgVolume.getId()) ||
+                    (sCurrSecondaryMsgVolume != null && id == sCurrSecondaryMsgVolume.getId()) ||
+                    (sCurrIndexVolume != null && id == sCurrIndexVolume.getId())) {
+                    throw VolumeServiceException.CANNOT_CHANGE_TYPE_OF_CURRVOL(vol, type);
+                }
+            }
+        }
+
         ModifyVolume redoRecorder = new ModifyVolume(id, type, name, path,
                                                      mboxGroupBits, mboxBits,
                                                      fileGroupBits, fileBits,
                                                      compressBlobs, compressionThreshold);
         redoRecorder.start(System.currentTimeMillis());
 
-        Short key = new Short(id);
-        Volume vol = null;
         Connection conn = null;
         boolean success = false;
         try {
@@ -217,6 +230,7 @@ public class Volume {
         } finally {
             endTransaction(success, conn, redoRecorder);
             if (success) {
+                Short key = new Short(id);
                 synchronized (sVolumeGuard) {
                     sVolumeMap.put(key, vol);
                 }
