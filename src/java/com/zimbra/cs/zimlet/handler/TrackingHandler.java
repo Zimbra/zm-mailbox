@@ -36,8 +36,11 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.zimbra.cs.zimlet.ZimletHandler;
 import com.zimbra.cs.object.ObjectHandlerException;
+import com.zimbra.cs.zimlet.ZimletConf;
+import com.zimbra.cs.zimlet.ZimletConfig;
+import com.zimbra.cs.zimlet.ZimletException;
+import com.zimbra.cs.zimlet.ZimletHandler;
 
 /**
  * @author schemers
@@ -61,7 +64,7 @@ public class TrackingHandler implements ZimletHandler {
     
     private static final Pattern TRACKING = Pattern.compile("(\\b((" + UPS + ")|(" + FEDEX + "))\\b)");        
 
-	public String[] match(String text) {
+	public String[] match(String text, ZimletConf config) {
         Matcher t = TRACKING.matcher(text);
         List l = new ArrayList();
         while (t.find()) {
@@ -70,8 +73,8 @@ public class TrackingHandler implements ZimletHandler {
         return (String[]) l.toArray(new String[0]);
 	}
     
-    public static void test(TrackingHandler h, String text, boolean expected) throws ObjectHandlerException {
-        String[] array = h.match(text);
+    public static void test(TrackingHandler h, String text, boolean expected) throws ObjectHandlerException, ZimletException {
+        String[] array = h.match(text, new ZimletConfig());
         boolean actual  = array.length > 0;
         if (expected != actual)
             System.out.println("["+text+"] ************** expected="+expected+" actual="+actual);
@@ -79,7 +82,7 @@ public class TrackingHandler implements ZimletHandler {
             System.out.println("["+text+ "] expected="+expected);
     }
 
-    public static void main(String args[]) throws ObjectHandlerException {
+    public static void main(String args[]) throws ObjectHandlerException, ZimletException {
         TrackingHandler th = new TrackingHandler();
         test(th, "792806493666", true);
         test(th, "'792806493666'", true);        

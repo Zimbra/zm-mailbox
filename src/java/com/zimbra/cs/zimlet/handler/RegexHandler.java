@@ -36,6 +36,9 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.zimbra.cs.zimlet.ZimletConf;
+import com.zimbra.cs.zimlet.ZimletConfig;
+import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletHandler;
 
 /**
@@ -48,9 +51,12 @@ public class RegexHandler implements ZimletHandler {
 
     private Pattern mPattern;
 	  
-	public String[] match(String text) {
-		String handlerConfig = "";
+	public String[] match(String text, ZimletConf config) throws ZimletException {
 	    if (mPattern == null) {
+			String handlerConfig = config.getGlobalConf(ZimletConfig.CONFIG_REGEX_VALUE);
+			if (handlerConfig == null) {
+				throw ZimletException.ZIMLET_HANDLER_ERROR("null regex value");
+			}
 	        mPattern = Pattern.compile(handlerConfig);
 	    }
         Matcher m = mPattern.matcher(text);

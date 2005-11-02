@@ -35,6 +35,10 @@ public class ZimletException extends Exception {
 		super(msg);
 	}
 
+	public static ZimletException ZIMLET_HANDLER_ERROR(String msg) {
+		return new ZimletException(msg);
+	}
+	
 	public static ZimletException INVALID_ZIMLET_DESCRIPTION(String msg) {
 		return new ZimletException(msg);
 	}

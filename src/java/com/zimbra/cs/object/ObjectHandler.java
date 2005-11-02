@@ -40,6 +40,8 @@ import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.zimlet.ZimletConfig;
+import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletHandler;
 
 /**
@@ -52,8 +54,9 @@ public class ObjectHandler {
     private static Map mHandlers = new HashMap();
     private static List mHandlerList;
     
-    private ObjectType mObjectType;
+    private ObjectType    mObjectType;
     private ZimletHandler mHandlerObject;
+    private ZimletConfig  mConfigObject;
 
     private ObjectHandler(String handlerClass) throws ObjectHandlerException {
     	Object handlerObj;
@@ -101,6 +104,18 @@ public class ObjectHandler {
         try {
             handler = new ObjectHandler(clazz);
             handler.mObjectType = dot;
+            
+            String config = dot.getHandlerConfig();
+            if (config == null) {
+            	handler.mConfigObject = new ZimletConfig();
+            } else {
+            	handler.mConfigObject = new ZimletConfig(config);
+            }
+            
+            String regex = dot.getServerIndexRegex();
+            if (regex != null) {
+            	handler.mConfigObject.setRegExValue(regex);
+            }
             mHandlers.put(dot.getType(), handler);
         } catch (Exception e) {
             if (mLog.isErrorEnabled())
@@ -111,12 +126,16 @@ public class ObjectHandler {
 
     public void parse(String text, List matchedObjects, boolean firstMatchOnly)
             throws ObjectHandlerException {
-    	String[] matchedStrings = mHandlerObject.match(text);
+    	try {
+    	String[] matchedStrings = mHandlerObject.match(text, mConfigObject);
     	for (int i = 0; i < matchedStrings.length; i++) {
     		MatchedObject mo = new MatchedObject(this, matchedStrings[i]);
     		matchedObjects.add(mo);
     		if (firstMatchOnly)
     			return;
+    	}
+    	} catch (ZimletException ze) {
+    		throw new ObjectHandlerException("error running ZimletHandler " + mObjectType.getType(), ze);
     	}
     }
     
