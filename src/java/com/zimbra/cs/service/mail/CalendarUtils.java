@@ -649,7 +649,7 @@ public class CalendarUtils {
         boolean allDay = element.getAttributeBool(MailService.A_APPT_ALLDAY, false);
         newInv.setIsAllDayEvent(allDay);
         
-        String name = element.getAttribute(MailService.A_NAME);
+        String name = element.getAttribute(MailService.A_NAME, "");
         String location = element.getAttribute(MailService.A_APPT_LOCATION,"");
 
         // ORGANIZER
