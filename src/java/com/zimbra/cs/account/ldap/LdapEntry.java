@@ -93,17 +93,10 @@ public class LdapEntry implements Entry {
         }
     }
 
-    public void refreshIfStale(long ageInMillis) throws ServiceException {
-        long curr = System.currentTimeMillis();
-        if (mLoadtime + ageInMillis < curr) {
-            try {
-                refresh(null, curr);
-            } catch (NamingException e) {
-                throw ServiceException.FAILURE("unable to refresh entry: "+mDn, e);
-            }
-        }
+    public boolean isStale(long ageInMillis) {
+        return mLoadtime + ageInMillis < System.currentTimeMillis(); 
     }
-
+    
     private synchronized void refresh(DirContext initCtxt, long curr) throws NamingException, ServiceException {
         DirContext ctxt = initCtxt;
         try {

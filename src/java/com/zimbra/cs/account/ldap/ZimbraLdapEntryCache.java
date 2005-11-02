@@ -31,8 +31,9 @@
  */
 package com.zimbra.cs.account.ldap;
 
+import java.util.List;
+
 import org.apache.commons.collections.map.LRUMap;
-import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author schemers
@@ -73,46 +74,29 @@ public class ZimbraLdapEntryCache {
            	mIdCache.put(entry.getId(), entry);
         }
     }
-    
-    public synchronized LdapNamedEntry get(String key) {
-        LdapNamedEntry e = (LdapNamedEntry) mNamedCache.get(key);
-        if(e==null)
-        	e = (LdapNamedEntry) mIdCache.get(key);
-        if (e != null && mRefreshTTL != 0) {
-            try { 
-                e.refreshIfStale(mRefreshTTL);
-            } catch (ServiceException se) {
-                remove(e);
-                e = null;
-            }        
+
+    public synchronized void put(List entries, boolean clear) {
+        if (entries != null) {
+            if (clear) clear();
+            for (int i=0; i < entries.size(); i++) 
+                put((LdapNamedEntry) entries.get(i));
         }
-        return e;       
     }
-    
+
     public synchronized LdapNamedEntry getById(String key) {
         LdapNamedEntry e = (LdapNamedEntry) mIdCache.get(key);
-
-        if (e != null && mRefreshTTL != 0) {
-            try { 
-                e.refreshIfStale(mRefreshTTL);
-            } catch (ServiceException se) {
-                remove(e);
-                e = null;
-            }        
+        if (e != null && mRefreshTTL != 0 && e.isStale(mRefreshTTL)) {
+            remove(e);
+            e  = null;
         }
-        return e;       
+        return e;
     }
     
-    public synchronized LdapNamedEntry getByname(String key) {
+    public synchronized LdapNamedEntry getByName(String key) {
         LdapNamedEntry e = (LdapNamedEntry) mNamedCache.get(key);
-
-        if (e != null && mRefreshTTL != 0) {
-            try { 
-                e.refreshIfStale(mRefreshTTL);
-            } catch (ServiceException se) {
-                remove(e);
-                e = null;
-            }        
+        if (e != null && mRefreshTTL != 0 && e.isStale(mRefreshTTL)) {
+            remove(e);
+            e  = null;
         }
         return e;       
     }

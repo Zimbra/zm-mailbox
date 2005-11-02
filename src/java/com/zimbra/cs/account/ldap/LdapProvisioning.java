@@ -314,7 +314,7 @@ public class LdapProvisioning extends Provisioning {
         return null;
     }
 
-    private synchronized Account getAccountById(String zimbraId, DirContext ctxt) throws ServiceException {
+    private Account getAccountById(String zimbraId, DirContext ctxt) throws ServiceException {
         if (zimbraId == null)
             return null;
         LdapAccount a = (LdapAccount) sAccountCache.getById(zimbraId);
@@ -326,12 +326,12 @@ public class LdapProvisioning extends Provisioning {
         return a;
     }
     
-    public synchronized Account getAccountById(String zimbraId) throws ServiceException {
+    public Account getAccountById(String zimbraId) throws ServiceException {
         return getAccountById(zimbraId, null);
     }
 
-    public synchronized Account getAdminAccountByName(String name) throws ServiceException {
-        LdapAccount a = (LdapAccount) sAccountCache.getByname(name);
+    public Account getAdminAccountByName(String name) throws ServiceException {
+        LdapAccount a = (LdapAccount) sAccountCache.getByName(name);
         if (a == null) {
             name = LdapUtil.escapeSearchFilterArg(name);
             a = getAccountByQuery(ADMIN_BASE, "(&(uid="+name+")(objectclass=zimbraAccount))", null);
@@ -343,7 +343,7 @@ public class LdapProvisioning extends Provisioning {
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#getDomainByName(java.lang.String)
      */
-    public synchronized Account getAccountByName(String emailAddress) throws ServiceException {
+    public Account getAccountByName(String emailAddress) throws ServiceException {
         
         int index = emailAddress.indexOf('@');
         String domain = null;
@@ -355,7 +355,7 @@ public class LdapProvisioning extends Provisioning {
                 emailAddress = emailAddress + "@" + domain;            
          }
         
-        LdapAccount account = (LdapAccount) sAccountCache.getByname(emailAddress);
+        LdapAccount account = (LdapAccount) sAccountCache.getByName(emailAddress);
         if (account == null) {
             emailAddress = LdapUtil.escapeSearchFilterArg(emailAddress);
             account = getAccountByQuery("", "(&(|(zimbraMailDeliveryAddress="+emailAddress+")(zimbraMailAlias="+emailAddress+"))(objectclass=zimbraAccount))", null);
@@ -1064,10 +1064,10 @@ public class LdapProvisioning extends Provisioning {
         return null;
     }
 
-    private synchronized Domain getDomainById(String zimbraId, DirContext ctxt) throws ServiceException {
+    private Domain getDomainById(String zimbraId, DirContext ctxt) throws ServiceException {
         if (zimbraId == null)
             return null;
-        LdapDomain domain = (LdapDomain) sDomainCache.get(zimbraId);
+        LdapDomain domain = (LdapDomain) sDomainCache.getById(zimbraId);
         if (domain == null) {
             zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
             domain = getDomainByQuery("(&(zimbraId="+zimbraId+")(objectclass=zimbraDomain))", ctxt);
@@ -1079,15 +1079,15 @@ public class LdapProvisioning extends Provisioning {
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#getDomainById(java.lang.String)
      */
-    public synchronized Domain getDomainById(String zimbraId) throws ServiceException {
+    public Domain getDomainById(String zimbraId) throws ServiceException {
         return getDomainById(zimbraId, null);
     }
 
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#getDomainByName(java.lang.String)
      */
-    public synchronized Domain getDomainByName(String name) throws ServiceException {
-        LdapDomain domain = (LdapDomain) sDomainCache.get(name);
+    public Domain getDomainByName(String name) throws ServiceException {
+        LdapDomain domain = (LdapDomain) sDomainCache.getByName(name);
         if (domain == null) {
             name = LdapUtil.escapeSearchFilterArg(name);
             domain = getDomainByQuery("(&(zimbraDomainName="+name+")(objectclass=zimbraDomain))", null);
@@ -1243,11 +1243,11 @@ public class LdapProvisioning extends Provisioning {
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#getCOSById(java.lang.String)
      */
-    private synchronized Cos getCosById(String zimbraId, DirContext ctxt ) throws ServiceException {
+    private Cos getCosById(String zimbraId, DirContext ctxt ) throws ServiceException {
         if (zimbraId == null)
             return null;
 
-        LdapCos cos = (LdapCos) sCosCache.get(zimbraId);
+        LdapCos cos = (LdapCos) sCosCache.getById(zimbraId);
         if (cos == null) {
             zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
             cos = getCOSByQuery("(&(zimbraId="+zimbraId+")(objectclass=zimbraCOS))", ctxt);
@@ -1259,15 +1259,15 @@ public class LdapProvisioning extends Provisioning {
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#getCOSById(java.lang.String)
      */
-    public synchronized Cos getCosById(String zimbraId) throws ServiceException {
+    public Cos getCosById(String zimbraId) throws ServiceException {
         return getCosById(zimbraId, null);
     }    
 
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#getCOSByName(java.lang.String)
      */
-    public synchronized Cos getCosByName(String name) throws ServiceException {
-        LdapCos cos = (LdapCos) sCosCache.get(name);
+    public Cos getCosByName(String name) throws ServiceException {
+        LdapCos cos = (LdapCos) sCosCache.getByName(name);
         if (cos != null)
             return cos;
 
@@ -1517,7 +1517,7 @@ public class LdapProvisioning extends Provisioning {
         return null;
     }
 
-    private synchronized Server getServerById(String zimbraId, DirContext ctxt, boolean nocache) throws ServiceException {
+    private Server getServerById(String zimbraId, DirContext ctxt, boolean nocache) throws ServiceException {
         if (zimbraId == null)
             return null;
         LdapServer s = null;
@@ -1542,13 +1542,13 @@ public class LdapProvisioning extends Provisioning {
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#getCOSByName(java.lang.String)
      */
-    public synchronized Server getServerByName(String name) throws ServiceException {
+    public Server getServerByName(String name) throws ServiceException {
         return getServerByName(name, false);
     }
 
     public Server getServerByName(String name, boolean nocache) throws ServiceException {
         if (!nocache) {
-        	LdapServer s = (LdapServer) sServerCache.getByname(name);
+        	LdapServer s = (LdapServer) sServerCache.getByName(name);
             if (s != null)
                 return s;
         }
@@ -1571,23 +1571,18 @@ public class LdapProvisioning extends Provisioning {
         }
     }
 
-    public synchronized List getAllServers() throws ServiceException {
+    public List getAllServers() throws ServiceException {
         ArrayList result = new ArrayList();
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
             NamingEnumeration ne = ctxt.search(SERVER_BASE, "(objectclass=zimbraServer)", sSubtreeSC);
-            synchronized (sServerCache) {
-                sServerCache.clear();
-                while (ne.hasMore()) {
-                    SearchResult sr = (SearchResult) ne.next();
-                    Context srctxt = (Context) sr.getObject();
-                    LdapServer s = new LdapServer(srctxt.getNameInNamespace(), sr.getAttributes(), this);
-                    LdapServer cs = (LdapServer) sServerCache.getById((s.getId()));
-                    sServerCache.put(s);
-                    result.add(s);
-                    srctxt.close();
-                }
+            while (ne.hasMore()) {
+                SearchResult sr = (SearchResult) ne.next();
+                Context srctxt = (Context) sr.getObject();
+                LdapServer s = new LdapServer(srctxt.getNameInNamespace(), sr.getAttributes(), this);
+                result.add(s);
+                srctxt.close();
             }
             ne.close();
         } catch (NamingException e) {
@@ -1595,6 +1590,8 @@ public class LdapProvisioning extends Provisioning {
         } finally {
             LdapUtil.closeContext(ctxt);
         }
+        if (result.size() > 0)
+            sServerCache.put(result, true);
         Collections.sort(result);
         return result;
     }
@@ -1855,7 +1852,7 @@ public class LdapProvisioning extends Provisioning {
         return getDistributionListByQuery(dn, "(&(uid="+uid+")(objectclass=zimbraDistributionList))", null);
     }
 
-    public synchronized Server getLocalServer() throws ServiceException {
+    public Server getLocalServer() throws ServiceException {
         String hostname = LC.zimbra_server_hostname.value();
         if (hostname == null) {
             Zimbra.halt("zimbra_server_hostname not specified in localconfig.xml");
@@ -1866,7 +1863,7 @@ public class LdapProvisioning extends Provisioning {
         }
         return local;
     }
-    
+
     /**
      * checks to make sure the specified address is a valid email address (addr part only, no personal part) 
      *
