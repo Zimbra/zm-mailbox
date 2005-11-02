@@ -169,7 +169,7 @@ public class DbVolume {
             stmt = conn.prepareStatement("SELECT MAX(id) FROM volume");
             rs = stmt.executeQuery();
             if (rs.next()) {
-                short id = DbUtil.getUnsignedTinyIntAsShort(rs, 1);
+                short id = rs.getShort(1);
                 return ++id;
             }
         } catch (SQLException e) {
@@ -248,11 +248,11 @@ public class DbVolume {
             stmt = conn.prepareStatement("SELECT message_volume_id, secondary_message_volume_id, index_volume_id FROM current_volumes");
             rs = stmt.executeQuery();
             if (rs.next()) {
-                currVols.msgVolId = DbUtil.getUnsignedTinyIntAsShort(rs, 1);
-                short s = DbUtil.getUnsignedTinyIntAsShort(rs, 2);
+                currVols.msgVolId = rs.getShort(1);
+                short s = rs.getShort(2);
                 if (!rs.wasNull())
                     currVols.secondaryMsgVolId = s;
-                currVols.indexVolId = DbUtil.getUnsignedTinyIntAsShort(rs, 3);
+                currVols.indexVolId = rs.getShort(3);
             }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("getting current volumes", e);
@@ -296,14 +296,14 @@ public class DbVolume {
      * @return
      */
     private static Volume constructVolume(ResultSet rs) throws SQLException {
-        short id = DbUtil.getUnsignedTinyIntAsShort(rs, CN_ID);
-        short type = DbUtil.getUnsignedTinyIntAsShort(rs, CN_TYPE);
+        short id = rs.getShort(CN_ID);
+        short type = rs.getShort(CN_TYPE);
         String name = rs.getString(CN_NAME);
         String path = rs.getString(CN_PATH);
-        short mboxGroupBits = DbUtil.getUnsignedTinyIntAsShort(rs, CN_MAILBOX_GROUP_BITS);
-        short mboxBits = DbUtil.getUnsignedTinyIntAsShort(rs, CN_MAILBOX_BITS);
-        short fileGroupBits = DbUtil.getUnsignedTinyIntAsShort(rs, CN_FILE_GROUP_BITS);
-        short fileBits = DbUtil.getUnsignedTinyIntAsShort(rs, CN_FILE_BITS);
+        short mboxGroupBits = rs.getShort(CN_MAILBOX_GROUP_BITS);
+        short mboxBits = rs.getShort(CN_MAILBOX_BITS);
+        short fileGroupBits = rs.getShort(CN_FILE_GROUP_BITS);
+        short fileBits = rs.getShort(CN_FILE_BITS);
         boolean compressBlobs = rs.getBoolean(CN_COMPRESS_BLOBS);
         long compressionThreshold = rs.getLong(CN_COMPRESSION_THRESHOLD);
         Volume v = new Volume(id, type, name, path, mboxGroupBits, mboxBits,

@@ -333,7 +333,7 @@ public class VolumeUtil extends SoapCLI {
         options.addOptionGroup(og);
         options.addOption(O_ID, "id", true, "Volume ID");
         options.addOption(O_T, "type", true,
-            "Volume type (primaryMessage, secondaryMessage, or index; default is primaryMessage)");
+            "Volume type (primaryMessage, secondaryMessage, or index)");
         options.addOption(O_N, "name", true, "volume name");
         options.addOption(O_P, "path", true, "Root path");
 //        options.addOption(O_FB, "fileBits", true, "File bits; default is 12");

@@ -65,33 +65,6 @@ public class DbUtil {
         return INTEGER_FALSE;
     }
 
-    /**
-     * MySQL Connector/J JDBC driver has a bug when fetching an unsigned
-     * TINYINT value.  It is internally handled as a Java byte and all
-     * numbers are returned as signed value between -128 and 127.
-     * Fix it up by adding 256 to negative values, yielding the correct
-     * unsigned 8-bit range of 0 to 255.
-     * @param rs
-     * @param columnIndex
-     * @return
-     * @throws SQLException
-     */
-    public static short getUnsignedTinyIntAsShort(ResultSet rs, int columnIndex)
-    throws SQLException {
-        short v = rs.getShort(columnIndex);
-        if (v < 0)
-            v += 256;
-        return v;
-    }
-
-    public static short getUnsignedTinyIntAsShort(ResultSet rs, String columnName)
-    throws SQLException {
-        short v = rs.getShort(columnName);
-        if (v < 0)
-            v += 256;
-        return v;
-    }
-
     private static final Pattern PAT_ESCAPED_QUOTES1 = Pattern.compile("\\\\'");
     private static final Pattern PAT_ESCAPED_QUOTES2 = Pattern.compile("''");
     private static final Pattern PAT_STRING_CONSTANT = Pattern.compile("'[^']+'");
