@@ -175,6 +175,11 @@ public class ZimbraLog {
     public static final org.apache.commons.logging.Log system = LogFactory.getLog("zimbra.system");
     
     /**
+     * the "zimbra.mobile" logger. For mobile client interface logs.
+     */
+    public static final org.apache.commons.logging.Log mobile = LogFactory.getLog("zimbra.mobile");
+    
+    /**
      * the "zimbra.extensions" logger. For logging extension loading related info. 
      */
     public static final org.apache.commons.logging.Log extensions = LogFactory.getLog("zimbra.extensions");
