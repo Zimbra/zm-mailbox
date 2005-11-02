@@ -583,6 +583,22 @@ public class ParsedMessage {
 		}
 	}
 
+    private static String compressWhitespace(String value) {
+        if (value == null || value.equals(""))
+            return value;
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0, len = value.length(), last = -1; i < len; i++) {
+            char c = value.charAt(i);
+            if (c <= ' ') {
+                c = ' ';
+                if (c == last)
+                    continue;
+            }
+            sb.append((char) (last = c));
+        }
+        return sb.toString();
+    }
+
 	private void normalizeSubject() {
         if (mNormalizedSubject != null)
             return;
@@ -597,7 +613,7 @@ public class ParsedMessage {
 			mNormalizedSubject = trimPrefixes(mNormalizedSubject);
 			if (mNormalizedSubject != originalSubject)
 				mSubjectPrefixed = true;
-			
+
 			// handle mailing list prefixes like "[xmlbeans-dev] Re: foo"
 			if (mNormalizedSubject.startsWith("[")) {
 				int endBracket = mNormalizedSubject.indexOf(']');
@@ -609,9 +625,11 @@ public class ParsedMessage {
 					mNormalizedSubject = mNormalizedSubject.substring(0, endBracket + 1) + ' ' + realSubject;
 				}
 			}
+
+            mNormalizedSubject = compressWhitespace(mNormalizedSubject);
 		}
 	}
-    
+
     public static String normalize(String subject) {
         if (subject != null) {
             subject = trimPrefixes(StringUtil.stripControlCharacters(subject.trim()));
@@ -621,6 +639,6 @@ public class ParsedMessage {
                     subject = subject.substring(0, endBracket + 1) + ' ' + trimPrefixes(subject.substring(endBracket + 1).trim());
             }
         }
-        return subject;
+        return compressWhitespace(subject);
     }
 }
