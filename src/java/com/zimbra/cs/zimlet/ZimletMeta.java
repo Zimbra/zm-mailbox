@@ -90,7 +90,7 @@ public abstract class ZimletMeta {
 			mTopElement = Element.parseXML(meta);
 			mRawXML = meta;
 		} catch (DocumentException de) {
-			throw ZimletException.INVALID_ZIMLET_DESCRIPTION("Cannot parse Zimlet description");
+			throw ZimletException.INVALID_ZIMLET_DESCRIPTION("Cannot parse Zimlet description: "+de.getMessage());
 		}
 
 		validate();
