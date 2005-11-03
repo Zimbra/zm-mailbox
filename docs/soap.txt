@@ -594,6 +594,7 @@ conversation result:
     <e ...>*
     <su>{subject}</su>
     <fr>{fragment}</fr>
+    [<m id="MATCHED_MSG_ID">]+
   </c>*
 </SearchResponse>
 

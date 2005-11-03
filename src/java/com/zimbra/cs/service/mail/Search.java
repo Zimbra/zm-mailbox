@@ -30,6 +30,7 @@ package com.zimbra.cs.service.mail;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -307,6 +308,15 @@ public class Search extends DocumentHandler  {
         if (ch.getScore() != 0)
             c.addAttribute(MailService.A_SCORE, ch.getScore());
 
+        Collection s = ch.getMessageHits();
+        if (s != null) {
+            for (Iterator mit = s.iterator(); mit.hasNext(); ) {
+                mh = (MessageHit) mit.next();
+                Message msg = mh.getMessage();
+                Element e = c.addElement(MailService.E_MSG);
+                e.addAttribute(MailService.A_ID, msg.getId());
+            }
+        }
         return c;
     }
 
