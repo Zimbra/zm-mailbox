@@ -29,19 +29,14 @@
  */
 package com.zimbra.cs.mime.handler;
 
-import java.io.IOException;
 import java.io.Reader;
 
 import javax.activation.DataSource;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.lucene.demo.html.HTMLParser;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
 import com.zimbra.cs.convert.AttachmentInfo;
-import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeHandler;
 import com.zimbra.cs.mime.MimeHandlerException;
@@ -52,30 +47,81 @@ import com.zimbra.cs.mime.MimeHandlerException;
  *  class that creates a Lucene document from a Java Mail Message
  */
 public class TextHtmlHandler extends MimeHandler {
-    
-    private static Log mLog = LogFactory.getLog(TextHtmlHandler.class);
 
-    private static final int MAX_DECODE_BUFFER = 2048;
-    
-    private String mContent;
-    private HTMLParser mParser;
+    String mContent;
+    private org.xml.sax.XMLReader mParser;
+    private ContentExtractor mHandler;
+    private Reader mReader;
+
+    private class ContentExtractor extends org.xml.sax.helpers.DefaultHandler {
+        private StringBuffer sb = new StringBuffer();
+        private String title = null;
+        boolean inTitle = false;
+        int skipping = 0;
         
-    private void copy(Reader reader, StringBuffer buffer)
-    	throws IOException 
-    {
-        char [] cbuff = new char[MAX_DECODE_BUFFER];
-        int num;
-        while ( (num = reader.read(cbuff, 0, cbuff.length)) != -1) {
-	         buffer.append(cbuff, 0, num);
+        public void startDocument() { sb.setLength(0); }
+        public void startElement(String uri, String localName, String qName, org.xml.sax.Attributes attributes) {
+            String element = localName.toUpperCase();
+            if ("TITLE".equals(element))
+                inTitle = true;
+            else if ("STYLE".equals(element) || "SCRIPT".equals(element))
+                skipping++;
+            else if ("IMG".equals(element) && attributes != null) {
+                String altText = attributes.getValue("alt");
+                if (altText != null && !altText.equals("")) {
+                    if (sb.length() > 0)
+                        sb.append(' ');
+                    sb.append('[').append(altText).append(']');
+                }
+            }
+        }
+        public void characters(char[] ch, int offset, int length) {
+            if (skipping > 0 || length == 0)
+                return;
+            else if (inTitle)
+                title = new String(ch, offset, length);
+            else {
+                while (length > 0) {
+                    char c = ch[offset];
+                    if (c > ' ' && c != 0xA0)
+                        break;
+                    offset++;  length--;
+                }
+                if (length > 0) {
+                    if (sb.length() > 0)
+                        sb.append(' ');
+                    sb.append(ch, offset, length);
+                }
+            }
+        }
+        public void endElement(String uri, String localName, String qName) {
+            String element = localName.toUpperCase();
+            if ("TITLE".equals(element))
+                inTitle = false;
+            else if ("STYLE".equals(element) || "SCRIPT".equals(element))
+                skipping--;
+        }
+
+        public String toString()  { return sb.toString(); }
+        public String getTitle()  { return title == null ? "" : title; }
+        public String getSummary() {
+            if (title != null && mContent.startsWith(title))
+                return title;
+            if (mContent.length() < 200)
+                return mContent;
+            int wsp = Math.max(mContent.lastIndexOf(' ', 200), mContent.lastIndexOf('\n', 200));
+            return (wsp == -1 ? mContent.substring(0, 200) : mContent.substring(0, wsp - 1)).trim();
         }
     }
 
     public void init(DataSource source) throws MimeHandlerException {
         super.init(source);
         try {
-            StringBuffer buffer = new StringBuffer();
-            Reader reader = Mime.decodeText(source.getInputStream(), source.getContentType());
-            mParser = new HTMLParser(reader);
+            mContent = null;
+            mReader = Mime.decodeText(source.getInputStream(), source.getContentType());
+            mParser = new org.cyberneko.html.parsers.SAXParser();
+            mHandler = new ContentExtractor();
+            mParser.setContentHandler(mHandler);
         } catch (Exception e) {
             throw new MimeHandlerException(e);
         }
@@ -85,18 +131,14 @@ public class TextHtmlHandler extends MimeHandler {
      * @see com.zimbra.cs.mime.MimeHandler#populate(org.apache.lucene.document.Document)
      */
     public void addFields(Document doc) throws MimeHandlerException {
-        try {
-            // Add the summary as an UnIndexed field, so that it is stored and returned
-            // with hit documents for display.
-            doc.add(Field.UnIndexed("summary", mParser.getSummary()));
-            // Add the title as a separate Text field, so that it can be searched
-            // separately.
-            doc.add(Field.Text("title", mParser.getTitle()));
-        } catch (IOException e) {
-            throw new MimeHandlerException(e);
-        } catch (InterruptedException e) {
-            throw new MimeHandlerException(e);
-        }
+        // make sure we've parsed the document
+        getContentImpl();
+        // Add the summary as an UnIndexed field, so that it is stored and returned
+        // with hit documents for display.
+        doc.add(Field.UnIndexed("summary", mHandler.getSummary()));
+        // Add the title as a separate Text field, so that it can be searched
+        // separately.
+        doc.add(Field.Text("title", mHandler.getTitle()));
     }
 
     /* (non-Javadoc)
@@ -104,13 +146,12 @@ public class TextHtmlHandler extends MimeHandler {
      */
     protected String getContentImpl() throws MimeHandlerException {
         if (mContent == null) {
-            StringBuffer sb = new StringBuffer();
             try {
-                copy(mParser.getReader(), sb);
-            } catch (IOException e) {
+                mParser.parse(new org.xml.sax.InputSource(mReader));
+                mContent = mHandler.toString();
+            } catch (Exception e) {
                 throw new MimeHandlerException(e);
             }
-            mContent = sb.toString();            
         }
         return mContent;
     }
@@ -125,8 +166,7 @@ public class TextHtmlHandler extends MimeHandler {
     /* (non-Javadoc)
      * @see com.zimbra.cs.mime.MimeHandler#convert(com.zimbra.cs.convert.AttachmentInfo, java.lang.String)
      */
-    public String convert(AttachmentInfo doc, String baseURL) throws IOException, ConversionException {
+    public String convert(AttachmentInfo doc, String baseURL) {
         throw new UnsupportedOperationException();
     }
-            
 }
