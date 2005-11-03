@@ -141,7 +141,7 @@ class LuceneQueryOperation extends QueryOperation
     protected LuceneIndexIdChunk getNextIndexedIdChunk(int maxChunkSize) throws ServiceException {
         try {
             LuceneIndexIdChunk toRet = new LuceneIndexIdChunk();
-            int luceneLen = mLuceneHits.length();
+            int luceneLen = mLuceneHits != null ? mLuceneHits.length() : 0;
             
             while ((toRet.size() < maxChunkSize) && (mCurHitNo < luceneLen)) {
                 Document d = mLuceneHits.doc(mCurHitNo++);
