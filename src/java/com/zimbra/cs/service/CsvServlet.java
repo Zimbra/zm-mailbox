@@ -44,12 +44,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.servlet.ZimbraServlet;
 
 /**
- * simple iCal servlet on a mailbox. URL is:
- * 
- *  http://server/service/ical/cal.ics[?...support-range-at-some-point...]
- *  
- *  need to support a range query at some point, right now get -30 thorugh +90 days from today
- *
+ * export of contacts
  */
 
 public class CsvServlet extends ZimbraServlet {
@@ -72,7 +67,7 @@ public class CsvServlet extends ZimbraServlet {
             }
 
             Mailbox mbox = Mailbox.getMailboxByAccount(account);
-            List contacts = mbox.getContactList(new Mailbox.OperationContext(account), -1);
+            List contacts = mbox.getContactList(new Mailbox.OperationContext(account), Mailbox.ID_FOLDER_CONTACTS);
             StringBuffer sb = new StringBuffer();
             if (contacts == null)
                 contacts = new ArrayList();
