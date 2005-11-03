@@ -130,6 +130,7 @@ public class LdapUtil {
             sEnv.put(Context.SECURITY_AUTHENTICATION, "simple");
             sEnv.put(Context.SECURITY_PRINCIPAL, LC.zimbra_ldap_userdn.value());
             sEnv.put(Context.SECURITY_CREDENTIALS, LC.zimbra_ldap_password.value());
+            sEnv.put(Context.REFERRAL, "follow");
             
             // wait at most 10 seconds for a connection
             sEnv.put("com.sun.jndi.ldap.connect.timeout", sConnectionTimeout);
