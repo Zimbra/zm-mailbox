@@ -610,29 +610,30 @@ public class Mime {
 
         return getBodySubpart(top, preferHtml);
     }
-     
+
     private static MPartInfo getBodySubpart(MPartInfo base, boolean preferHtml) {
         // go through top-level children, stopping at first text part we are interested in
         MPartInfo alternative = null;
         for (Iterator it = base.getChildren().iterator(); it.hasNext(); ) {
             MPartInfo p = (MPartInfo) it.next();
             boolean isAttachment = p.getDisposition().equals(Part.ATTACHMENT);
-            if (p.getContentType().match(CT_TEXT_HTML) && !isAttachment) {
-                if (preferHtml)
-                	return p;
-                else if (alternative == null)
-                    alternative = p;
-            } else if (p.getContentType().match(CT_TEXT_PLAIN) && !isAttachment) {
-                if (!preferHtml)
-                    return p;
-                else if (alternative == null)
+            // the Content-Type we want and the one we'd settle for...
+            String wantType = preferHtml ? CT_TEXT_HTML  : CT_TEXT_PLAIN;
+            String altType  = preferHtml ? CT_TEXT_PLAIN : CT_TEXT_HTML;
+
+            if (p.getContentType().match(wantType) && !isAttachment) {
+                return p;
+            } else if (p.getContentType().match(altType) && !isAttachment) {
+                if (alternative == null)
                     alternative = p;
             } else if (p.getContentType().match(CT_MULTIPART_WILD)) {
-                if (alternative != null)
-                    return alternative;
                 MPartInfo subpart = getBodySubpart(p, preferHtml);
-                if (subpart != null)
+                if (subpart == null)
+                	continue;
+                if (subpart.getContentType().match(wantType))
                     return subpart;
+                if (alternative == null)
+                    alternative = subpart;
             }
         }
         return alternative;
