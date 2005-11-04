@@ -53,9 +53,8 @@ import com.zimbra.soap.Element;
 /**
  * simple iCal servlet on a mailbox. URL is:
  * 
- *  http://server/service/ical/cal.ics[?...support-range-at-some-point...]
+ *  http://server/service/ical/cal.ics
  *  
- *  need to support a range query at some point, right now get -30 thorugh +90 days from today
  *
  */
 
@@ -73,8 +72,9 @@ public class ICalServlet extends ZimbraBasicAuthServlet {
             long end = start + (14 * Constants.MILLIS_PER_DAY);            
             doRss(req, resp, acct, mailbox, start, end);
         } else {
-            long start = System.currentTimeMillis() - (30 * Constants.MILLIS_PER_DAY);
-            long end = start + (90 * Constants.MILLIS_PER_DAY);
+            long start = 0;
+            //long start = System.currentTimeMillis() - (7 * Constants.MILLIS_PER_DAY);
+            long end = System.currentTimeMillis() + (365 * 100 * Constants.MILLIS_PER_DAY);
             doIcal(req, resp, acct, mailbox, start, end);            
         }
     }

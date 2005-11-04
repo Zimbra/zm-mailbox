@@ -4,14 +4,7 @@ Various special URLs/servlets
 Calendar   http://{server}/service/ical/cal.ics  
 ------------------------------------------------------------
 
-Spits out a "text/calendar" file, consististing of appointments in the calendar from a time frame of -30 days, 
-to +90 days. 
-
-Note: If a recurring appt occurs within the range specified, the original appt (with recurrence rule) will be sent,
-not the instance, so the resulting Calendar might have events outside the specified range.
-
-Ideally you should be able to specify a range and/or search query with the URL, to select only certain 
-appointments (including only ones with a certain tag when tagging of appts is supported).
+Spits out a "text/calendar" file, consististing of appointments in the calendar.
 
 to test (on a system with curl installed):
 
