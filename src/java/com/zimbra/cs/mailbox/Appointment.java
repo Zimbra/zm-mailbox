@@ -1300,7 +1300,8 @@ public class Appointment extends MailItem {
         for (Iterator invIter = mInvites.iterator(); invIter.hasNext();) {
             Invite inv = (Invite)invIter.next();
             
-            Calendar invCal = getCalendar(inv.getMailItemId());
+//            Calendar invCal = getCalendar(inv.getMailItemId());
+            Calendar invCal = inv.toICalendar();
             
             for (Iterator compIter = invCal.getComponents().iterator(); compIter.hasNext();) {
                 Component comp = (Component)compIter.next();
