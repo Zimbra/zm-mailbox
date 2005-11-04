@@ -43,8 +43,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.PropertyConfigurator;
 
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ZimbraPerf;
@@ -199,22 +197,9 @@ public class SoapServlet extends ZimbraServlet {
     
     private static StopWatch sSoapStopWatch = StopWatch.getInstance("Soap");
  
-    public void doPost(HttpServletRequest req, HttpServletResponse resp)
-    throws ServletException, IOException {
+    public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         if (ZimbraLog.perf.isDebugEnabled()) {
             ThreadLocalData.reset();
-        }
-
-        String realHost = req.getParameter("host");
-        if (realHost != null) {
-            try {
-                Server server = Provisioning.getInstance().getServerByName(realHost);
-                String realPort = req.getParameter("port");	
-                proxyServletRequest(req, resp, server);
-                return;
-            } catch (ServiceException e) {
-                throw new ServletException(e);
-            }
         }
 
         int len = req.getContentLength();
