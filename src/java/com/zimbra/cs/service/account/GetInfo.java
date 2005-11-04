@@ -167,5 +167,8 @@ public class GetInfo extends DocumentHandler  {
     			}
     		}
     	}
+    	
+    	// load the zimlets in the dev directory and list them
+    	com.zimbra.cs.zimlet.ZimletUtil.listDevZimlets(response);
     }
 }

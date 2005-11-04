@@ -37,14 +37,15 @@ import java.util.ListIterator;
 import java.util.Map;
 
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.extension.ZimbraExtension;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.object.ObjectType;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.util.FileUtil;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.soap.Element;
 
 /**
  * 
@@ -58,16 +59,15 @@ public class ZimletUtil {
 	public static synchronized void loadAll() {
         File zimletRootDir = new File(LC.zimlet_directory.value());
 		if (zimletRootDir == null) {
-			ZimbraLog.zimlet.info(LC.zimbra_extensions_directory.key() + " is null, no extensions loaded");
+			ZimbraLog.zimlet.info(LC.zimlet_directory.key() + " is null, no zimlets loaded");
 			return;
 		}
-        ZimbraLog.zimlet.info("Loading extensions from " + zimletRootDir.getPath());
+        ZimbraLog.zimlet.info("Loading zimlets from " + zimletRootDir.getPath());
 
         Iterator iter;
 
         try {
-    		List zimlets = Provisioning.getInstance().getObjectTypes();
-            iter = zimlets.iterator();
+            iter = Provisioning.getInstance().getObjectTypes().iterator();
         } catch (ServiceException se) {
             ZimbraLog.zimlet.info("Cannot get ObjectTypes from Provisioning while loading Zimlets");
         	return;
@@ -75,7 +75,7 @@ public class ZimletUtil {
         
         while (iter.hasNext()) {
         	ObjectType zimlet = (ObjectType) iter.next();
-			String name = zimlet.getType();
+			String name = zimlet.getHandlerClass();
 			File zimletDir = new File(zimletRootDir, name);
 			try {
 				ZimletClassLoader cl = new ZimletClassLoader(zimletDir, name, ZimletUtil.class.getClassLoader());
@@ -86,6 +86,47 @@ public class ZimletUtil {
 		}
 	}
 
+	private static List sDevZimlets = new ArrayList();
+
+	public static void loadDevZimlets() throws IOException {
+        File zimletRootDir = new File(LC.zimlet_dev_directory.value());
+		if (zimletRootDir == null || !zimletRootDir.exists()) {
+			return;
+		}
+
+        ZimbraLog.zimlet.info("Loading dev zimlets from " + zimletRootDir.getPath());
+        
+        synchronized (sDevZimlets) {
+        	sDevZimlets.clear();
+        	String[] zimlets = zimletRootDir.list();
+        	for (int i = 0; i < zimlets.length; i++) {
+        		sDevZimlets.add(new ZimletFile(zimletRootDir, zimlets[i]));
+        	}
+        }
+	}
+	
+	public static void listDevZimlets(Element elem) {
+		try {
+			loadDevZimlets();
+			synchronized (sDevZimlets) {
+	        	Iterator iter = sDevZimlets.iterator();
+	        	while (iter.hasNext()) {
+	        		ZimletFile zim = (ZimletFile) iter.next();
+	        		Element entry = elem.addElement(AccountService.E_ZIMLET);
+	        		entry.addElement(Element.parseXML(zim.getZimletDescription(), elem.getFactory()));
+	        		ZimletConfig conf = new ZimletConfig(zim.getZimletConfig());
+	        		entry.addElement(Element.parseXML(conf.toXMLString(), elem.getFactory()));
+	        	}
+			}
+		} catch (ZimletException ze) {
+			ZimbraLog.zimlet.info("error loading dev zimlets: "+ze.getMessage());
+		} catch (IOException ioe) {
+			ZimbraLog.zimlet.info("error loading dev zimlets: "+ioe.getMessage());
+		} catch (org.dom4j.DocumentException de) {
+			ZimbraLog.zimlet.info("error parsing zimlet description: "+de.getMessage());
+		}
+	}
+	
 	private static List sInitializedExtensions = new ArrayList();
 	
 	public static synchronized void initAll() {
@@ -98,9 +139,9 @@ public class ZimletUtil {
 				Class clz;
 				try {
 					clz = zcl.loadClass(name);
-					ZimbraExtension ext = (ZimbraExtension)clz.newInstance();
+					ZimletHandler ext = (ZimletHandler)clz.newInstance();
 					try {
-						ext.init();
+						//ext.init();
 						ZimbraLog.zimlet.info("Initialized extension: " + name + "@" + zcl);
 						sInitializedExtensions.add(ext);
 					} catch (Throwable t) { 
@@ -123,9 +164,9 @@ public class ZimletUtil {
 		for (ListIterator iter = sInitializedExtensions.listIterator(sInitializedExtensions.size());
 			iter.hasPrevious();)
 		{
-			ZimbraExtension ext = (ZimbraExtension)iter.previous();
+			ZimletHandler ext = (ZimletHandler)iter.previous();
 			try {
-				ext.destroy();
+				//ext.destroy();
 				ZimbraLog.zimlet.info("Destroyed extension: " + 
 						ext.getClass().getName() + "@" + ext.getClass().getClassLoader());
 				iter.remove();
