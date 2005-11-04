@@ -38,8 +38,6 @@ import com.zimbra.soap.SoapProtocol;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -181,12 +179,12 @@ public class SoapEngine {
                     responseBody.detach();
                 } catch (ServiceException e) {
                     responseBody = responseProto.soapFault(e);
-                    mLog.warn("proxy handler exception ", e);
+                    mLog.info("proxy handler exception", e);
                 } catch (Throwable e) {
                     responseBody = responseProto.soapFault(ServiceException.FAILURE(e.toString(), e));
                     if (e instanceof OutOfMemoryError)
                         Zimbra.halt("proxy handler exception", e);
-                    mLog.warn("proxy handler exception ", e);
+                    mLog.warn("proxy handler exception", e);
                 }
             }
 
@@ -253,32 +251,16 @@ public class SoapEngine {
             handler.getSession(context);
         } catch (ServiceException e) {
             response = soapProto.soapFault(e);
-            if (mLog.isDebugEnabled()) {
-                StringWriter sw = new StringWriter();
-                PrintWriter pw = new PrintWriter(sw);
-                e.printStackTrace(pw);
-                pw.close();
-                mLog.debug("handler exception " + sw.toString());
-            }
+            mLog.info("handler exception", e);
         } catch (SoapFaultException e) {
             response = e.getFault().detach();
-            if (mLog.isDebugEnabled()) {
-                StringWriter sw = new StringWriter();
-                PrintWriter pw = new PrintWriter(sw);
-                e.printStackTrace(pw);
-                pw.close();
-                mLog.debug("handler exception " + sw.toString());
-            }
+            mLog.info("handler exception", e);
         } catch (Throwable e) {
-            // FIXME: temp hack by tim b/c dogfood not generating stack traces
-            e.printStackTrace();
-            
             // TODO: better exception stack traces during develope?
             response = soapProto.soapFault(ServiceException.FAILURE(e.toString(), e));
             if (e instanceof OutOfMemoryError)
                 Zimbra.halt("handler exception", e);
-            if (mLog.isWarnEnabled())
-                mLog.warn("handler exception ", e);
+            mLog.warn("handler exception", e);
         }
         return response;
     }
