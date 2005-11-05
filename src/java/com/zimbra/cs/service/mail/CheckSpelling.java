@@ -38,6 +38,7 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.RemoteServerRequest;
 import com.zimbra.cs.util.ArrayUtil;
+import com.zimbra.cs.util.StringUtil;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
@@ -54,33 +55,40 @@ public class CheckSpelling extends DocumentHandler  {
         ZimbraContext lc = getZimbraContext(context);
         Element response = lc.createElement(MailService.CHECK_SPELLING_RESPONSE);
 
-        // Make sure that the hostname is specified
+        // Make sure that the spell server URL is specified
         Provisioning prov = Provisioning.getInstance();
         Server localServer = prov.getLocalServer();
         String[] urls = localServer.getMultiAttr(Provisioning.A_zimbraSpellCheckURL);
         if (ArrayUtil.isEmpty(urls)) {
-            sLog.debug("zimbraSpellCheckHostname is not defined");
+            sLog.debug(Provisioning.A_zimbraSpellCheckURL + " is not specified");
             return unavailable(response);
         }
         
-        // Issue the request
         String text = request.getTextTrim();
+        if (StringUtil.isNullOrEmpty(text)) {
+            sLog.debug("<CheckSpellingRequest> was empty");
+            response.addAttribute(MailService.A_AVAILABLE, true);
+            return response;
+        }
+        
+        // Issue the request
         Map params = null;
         for (int i = 0; i < urls.length; i++) {
             RemoteServerRequest req = new RemoteServerRequest();
             req.addParameter("text", text);
+            String url = urls[i];
             try {
-                String url = urls[i];
                 sLog.debug("Attempting to check spelling at " + url);
                 req.invoke(url);
                 params = req.getResponseParameters();
+                break; // Successful request.  No need to check the other servers.
             } catch (IOException ex) {
-                sLog.warn("An error occurred while contacting the spelling server", ex);
+                sLog.warn("An error occurred while contacting " + url, ex);
             }
         }
 
         if (params == null) {
-            sLog.warn("Unable to check spelling");
+            sLog.warn("Unable to check spelling.");
             return unavailable(response);
         }
         
