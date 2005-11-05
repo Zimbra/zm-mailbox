@@ -42,12 +42,14 @@ import net.fortuna.ical4j.model.ValidationException;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
 import com.zimbra.cs.service.mail.CalendarUtils;
 import com.zimbra.cs.util.Constants;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
 
 /**
@@ -58,33 +60,51 @@ import com.zimbra.soap.Element;
  *
  */
 
-public class ICalServlet extends ZimbraBasicAuthServlet {
+public class CalendarServlet extends ZimbraBasicAuthServlet {
 
     protected String getRealmHeader()  { return "BASIC realm=\"Zimbra iCal\""; }
 
+      
     public void doAuthGet(HttpServletRequest req, HttpServletResponse resp, Account acct, Mailbox mailbox)
     throws ServiceException, IOException {
         String pathInfo = req.getPathInfo().toLowerCase();
-        boolean isRss = pathInfo != null && pathInfo.endsWith("rss");
 
-        if (isRss) {
+        if (pathInfo == null) pathInfo = "/calendar.ics";
+        
+        ZimbraLog.calendar.info("pathInfo = "+pathInfo);
+
+        String folderPath = getFolderPath(pathInfo);
+        
+        ZimbraLog.calendar.info("folderPath = "+folderPath);
+        
+        Folder folder = mailbox.getFolderByPath(null, folderPath);
+
+        boolean isRss = pathInfo != null && pathInfo.endsWith("rss");
+        
+        if (pathInfo.endsWith(".rss")) {
             long start = System.currentTimeMillis() - (7 * Constants.MILLIS_PER_DAY);
             long end = start + (14 * Constants.MILLIS_PER_DAY);            
-            doRss(req, resp, acct, mailbox, start, end);
+            doRss(req, resp, acct, mailbox, start, end, folder.getId());
         } else {
             long start = 0;
             //long start = System.currentTimeMillis() - (7 * Constants.MILLIS_PER_DAY);
             long end = System.currentTimeMillis() + (365 * 100 * Constants.MILLIS_PER_DAY);
-            doIcal(req, resp, acct, mailbox, start, end);            
+            doIcal(req, resp, acct, mailbox, start, end, folder.getId());            
         }
     }
 
-    private void doIcal(HttpServletRequest req, HttpServletResponse resp, Account acct, Mailbox mailbox, long start, long end)
+    private String getFolderPath(String pathInfo) {
+        if (pathInfo.endsWith(".ics")) return pathInfo.substring(0, pathInfo.length()-4);        
+        else if (pathInfo.endsWith(".rss")) return pathInfo.substring(0, pathInfo.length()-4);
+        else return pathInfo;
+    }
+
+    private void doIcal(HttpServletRequest req, HttpServletResponse resp, Account acct, Mailbox mailbox, long start, long end, int folderId)
     throws ServiceException, IOException {
         resp.setContentType("text/calendar");
 
         try {
-            Calendar cal = mailbox.getCalendarForRange(null, start, end, Mailbox.ID_FOLDER_CALENDAR);
+            Calendar cal = mailbox.getCalendarForRange(null, start, end, folderId);
             
             ByteArrayOutputStream buf = new ByteArrayOutputStream();
             CalendarOutputter calOut = new CalendarOutputter();
@@ -95,7 +115,7 @@ public class ICalServlet extends ZimbraBasicAuthServlet {
         }
     }
 
-    private void doRss(HttpServletRequest req, HttpServletResponse resp, Account acct, Mailbox mailbox, long start, long end)
+    private void doRss(HttpServletRequest req, HttpServletResponse resp, Account acct, Mailbox mailbox, long start, long end, int folderId)
     throws ServiceException, IOException
     {
         resp.setContentType("application/rss+xml");
@@ -113,7 +133,7 @@ public class ICalServlet extends ZimbraBasicAuthServlet {
         channel.addElement("generator").setText("Zimbra RSS Feed Servlet");
 
         OperationContext octxt = new OperationContext(acct);            
-        Collection appts = mailbox.getAppointmentsForRange(octxt, start, end, Mailbox.ID_FOLDER_CALENDAR, null);
+        Collection appts = mailbox.getAppointmentsForRange(octxt, start, end, folderId, null);
                 
         //channel.addElement("description").setText(query);
 

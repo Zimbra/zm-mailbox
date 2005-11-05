@@ -104,6 +104,16 @@
   </servlet>
 
   <servlet>
+    <servlet-name>CalendarServlet</servlet-name>
+    <servlet-class>com.zimbra.cs.service.CalendarServlet</servlet-class>
+    <load-on-startup>5</load-on-startup>
+    <init-param>
+      <param-name>allowed.ports</param-name>
+      <param-value>80, 443, 7070, 7443, 7071</param-value>
+    </init-param>
+  </servlet>
+
+  <servlet>
     <servlet-name>PublicICalServlet</servlet-name>
     <servlet-class>com.zimbra.cs.service.PublicICalServlet</servlet-class>
     <load-on-startup>5</load-on-startup>
@@ -180,7 +190,7 @@
   </servlet-mapping>
 
   <servlet-mapping>
-    <servlet-name>iCalServlet</servlet-name>
+    <servlet-name>CalendarServlet</servlet-name>
     <url-pattern>/calendar/*</url-pattern>
   </servlet-mapping>
 

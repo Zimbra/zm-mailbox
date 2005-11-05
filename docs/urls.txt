@@ -2,6 +2,9 @@ Various special URLs/servlets
 
 ------------------------------------------------------------
 Calendar   http://{server}/service/ical/cal.ics  
+
+Calendar   http://{server}/service/calendar/{calendar-folder}.{ics,rss}
+
 ------------------------------------------------------------
 
 Spits out a "text/calendar" file, consististing of appointments in the calendar.

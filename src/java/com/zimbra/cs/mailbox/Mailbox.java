@@ -2169,13 +2169,13 @@ public class Mailbox {
         return getItemList(octxt, MailItem.TYPE_APPOINTMENT, folderId);
     }
 
-    public synchronized Calendar getCalendarForRange(OperationContext octxt, long start, long end)
+    public synchronized Calendar getCalendarForRange(OperationContext octxt, long start, long end, int folderId)
     throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("getCalendarForRange", octxt);
 
-            Collection /* Appointment */ appts = getAppointmentsForRange(octxt, start, end, ID_AUTO_INCREMENT, null);
+            Collection /* Appointment */ appts = getAppointmentsForRange(octxt, start, end, folderId, null);
             Calendar cal = new Calendar();
 
             // PRODID, VERSION always required

@@ -538,7 +538,7 @@ OR
 //
 // This is intended for interfacing with 3rd party programs
 //
-<GetICalRequest [id="invMsgId"] [s="RANGE_START_MSECS_GMT" e="RANGE_END_MSECS_GMT"/>
+<GetICalRequest [id="invMsgId"] [s="RANGE_START_MSECS_GMT" e="RANGE_END_MSECS_GMT" l="{folder}"/>
 
     -- if id is specified, gets iCalendar representation for one
        Invite

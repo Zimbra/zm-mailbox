@@ -72,7 +72,7 @@ public class GetICal extends WriteOpDocumentHandler {
 //                    Invite inv = msg.getInvite(0);
 //                    cal = inv.getCalendar();
                 } else {
-                    cal = mbx.getCalendarForRange(octxt, rangeStart, rangeEnd);
+                    cal = mbx.getCalendarForRange(octxt, rangeStart, rangeEnd, Mailbox.ID_FOLDER_CALENDAR);
                 }
                 
                 ByteArrayOutputStream buf = new ByteArrayOutputStream();
