@@ -298,6 +298,13 @@ public class DbUtil {
      * contains as many question marks as the number of elements in the
      * given array.  Used for generating SQL IN clauses.
      */
+    public static String suitableNumberOfVariables(short[] array)         { return DbUtil.suitableNumberOfVariables(array.length); }
+
+    /**
+     * Returns a string with the form <code>(?, ?, ?, ...)</code>, which
+     * contains as many question marks as the number of elements in the
+     * given array.  Used for generating SQL IN clauses.
+     */
     public static String suitableNumberOfVariables(int[] array)         { return DbUtil.suitableNumberOfVariables(array.length); }
 
     /**

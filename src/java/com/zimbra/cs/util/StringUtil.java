@@ -247,6 +247,25 @@ public class StringUtil {
     }
     
     /**
+     * Joins an array of <code>short</code>s, separated by a delimiter.
+     */
+    public static String join(String delimiter, short[] array) {
+        if (array == null) {
+            return null;
+        }
+        
+        StringBuffer buf = new StringBuffer();
+        
+        for (int i = 0; i < array.length; i++) {
+            buf.append(array[i]);
+            if (i + 1 < array.length) {
+                buf.append(delimiter);
+            }
+        }
+        return buf.toString();
+    }
+    
+    /**
      * Joins an array of objects, separated by a delimiter.
      */
     public static String join(String delimiter, Object[] array) {

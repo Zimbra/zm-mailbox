@@ -29,11 +29,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbVolume;
@@ -51,8 +49,6 @@ import com.zimbra.cs.util.Zimbra;
  * @author jhahm
  */
 public class Volume {
-
-    private static Log sLog = LogFactory.getLog(Volume.class);
 
     public static final short ID_AUTO_INCREMENT = -1;
     public static final short ID_NONE           = -2;
@@ -326,6 +322,25 @@ public class Volume {
         }
     }
 
+    /**
+     * Returns a new <code>List</code> of <code>Volume</code>s
+     * that match the specified type.
+     */
+    public static List /*<Volume>*/ getByType(short type) {
+        List volumes = getAll();
+        Iterator i = volumes.iterator();
+        while (i.hasNext()) {
+            Volume v = (Volume) i.next();
+            if (v.getType() != type) {
+                i.remove();
+            }
+        }
+        return volumes;
+    }
+    
+    /**
+     * Returns a new <code>List</code> that contains all <code>Volume</code>s.
+     */
     public static List /*<Volume>*/ getAll() {
         List volumes;
         synchronized (sVolumeGuard) {
