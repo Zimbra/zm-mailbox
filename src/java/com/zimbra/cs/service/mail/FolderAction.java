@@ -35,6 +35,8 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -59,6 +61,7 @@ public class FolderAction extends ItemAction {
     public static final String OP_REVOKE  = '!' + OP_GRANT;
     public static final String OP_UNFLAG  = '!' + OP_FLAG;
     public static final String OP_UNTAG   = '!' + OP_TAG;
+    public static final String OP_FB      = "fb";
 
 	public Element handle(Element request, Map context) throws ServiceException, SoapFaultException {
         ZimbraContext lc = getZimbraContext(context);
@@ -74,7 +77,7 @@ public class FolderAction extends ItemAction {
         if (operation.endsWith(OP_UPDATE) || operation.endsWith(OP_SPAM))
             throw ServiceException.INVALID_REQUEST("invalid operation on folder: " + operation, null);
         String successes;
-        if (operation.equals(OP_REFRESH) || operation.equals(OP_RENAME) || operation.equals(OP_EMPTY) || operation.equals(OP_GRANT) || operation.equals(OP_REVOKE))
+        if (operation.equals(OP_REFRESH) || operation.equals(OP_RENAME) || operation.equals(OP_EMPTY) || operation.equals(OP_GRANT) || operation.equals(OP_REVOKE) || operation.equals(OP_FB))
             successes = handleFolder(context, request, operation, act);
         else
             successes = handleCommon(context, request, operation, MailItem.TYPE_FOLDER);
@@ -83,6 +86,18 @@ public class FolderAction extends ItemAction {
         act.addAttribute(MailService.A_OPERATION, operation);
         return response;
 	}
+    
+    private void handleExcludeFreeBusy(OperationContext octxt, Mailbox mbox, ItemId iid, Element action) throws ServiceException
+    {
+        Folder folder = mbox.getFolderById(octxt, iid.getId());
+        if (action.getAttributeBool(MailService.A_EXCLUDE_FREEBUSY, false)) {
+            if (!folder.isTagged(mbox.mExcludeFBFlag))
+                mbox.alterTag(octxt, folder.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_EXCLUDE_FREEBUSY, true);
+        } else {
+            if (folder.isTagged(mbox.mExcludeFBFlag))
+                mbox.alterTag(octxt, folder.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_EXCLUDE_FREEBUSY, false);
+        }
+    }
 
     private String handleFolder(Map context, Element request, String operation, Element actionResponse)
     throws ServiceException, SoapFaultException {
@@ -103,11 +118,14 @@ public class FolderAction extends ItemAction {
         else if (operation.equals(OP_IMPORT)) {
             String url = action.getAttribute(MailService.A_URL);
             mbox.importFeed(octxt, iid.getId(), url, false);
+        } else if (operation.equals(OP_FB)) {
+            handleExcludeFreeBusy(octxt, mbox, iid, action);
         } else if (operation.equals(OP_SET_URL)) {
             String url = action.getAttribute(MailService.A_URL, "");
             mbox.setFolderUrl(octxt, iid.getId(), url);
             if (!url.equals(""))
                 mbox.synchronizeFolder(octxt, iid.getId());
+            handleExcludeFreeBusy(octxt, mbox, iid, action);
         } else if (operation.equals(OP_RENAME)) {
             String name = action.getAttribute(MailService.A_NAME);
             mbox.renameFolder(octxt, iid.getId(), name);

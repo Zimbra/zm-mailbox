@@ -1995,10 +1995,11 @@ public class DbMailItem {
      * invites between 7:00 and 9:00 will return you everything from 7:00 to 8:59:59.99
      * @param start
      * @param end
-     * @param folderId TODO
+     * @param folderId 
      * @return list of invites
      */
-    public static List /* Appointment */ getAppointments(Mailbox mbox, long start, long end, int folderId) 
+    public static List /* Appointment */ getAppointments(Mailbox mbox, long start, long end, 
+            int folderId, int[] excludeFolderIds) 
         throws ServiceException
     {
         Connection conn = mbox.getOperationConnection();
@@ -2006,6 +2007,12 @@ public class DbMailItem {
         ResultSet rs = null;
         try {
             boolean folderSpecified = folderId != Mailbox.ID_AUTO_INCREMENT;
+            
+            
+            String excludeFolderPart = "";
+            if (excludeFolderIds != null) 
+                excludeFolderPart = "AND folder_id NOT IN" + DbUtil.suitableNumberOfVariables(excludeFolderIds);
+            
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                      " FROM " + getMailItemTableName(mbox.getId(), "mi") + ", " + 
                          getAppointmentTableName(mbox.getId(), " appt") +
@@ -2013,11 +2020,19 @@ public class DbMailItem {
                      " AND mi.id = appt.item_id" +
                      " AND appt.start_time < ? AND appt.end_time > ?" +
                      (folderSpecified ? " AND folder_id = ?" : "") +
+                     excludeFolderPart +
                      " GROUP BY mi.id");
-            stmt.setTimestamp(1, new Timestamp(end));
-            stmt.setTimestamp(2, new Timestamp(start));
+            
+            int param = 1;
+            stmt.setTimestamp(param++, new Timestamp(end));
+            stmt.setTimestamp(param++, new Timestamp(start));
             if (folderSpecified)
-                stmt.setInt(3, folderId);
+                stmt.setInt(param++, folderId);
+            if (excludeFolderIds != null) {
+                for (int i = 0; i < excludeFolderIds.length; i++) 
+                    stmt.setInt(param++, excludeFolderIds[i]);
+            }
+            
             rs = stmt.executeQuery();
 
             List /* UnderlyingData */ result = new ArrayList();

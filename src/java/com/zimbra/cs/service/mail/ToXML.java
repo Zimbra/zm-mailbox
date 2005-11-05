@@ -176,6 +176,12 @@ public class ToXML {
     private static Element encodeFolderCommon(Element elem, ZimbraContext lc, Folder folder, int fields) {
         int folderId = folder.getId();
         elem.addAttribute(MailService.A_ID, lc.formatItemId(folder));
+        
+        if ((folder.getFlagBitmask() & Flag.ID_FLAG_EXCLUDE_FREEBUSY)!= 0)
+            elem.addAttribute(MailService.A_EXCLUDE_FREEBUSY, true);
+        else 
+            elem.addAttribute(MailService.A_EXCLUDE_FREEBUSY, false);        
+        
         if (folderId != Mailbox.ID_FOLDER_ROOT) {
             if (needToOutput(fields, Change.MODIFIED_NAME)) {
                 String name = folder.getName();

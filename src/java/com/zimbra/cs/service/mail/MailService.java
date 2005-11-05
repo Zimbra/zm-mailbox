@@ -253,6 +253,8 @@ public class MailService implements DocumentService {
     public static final String A_REPLACE = "replace";
 	public static final String A_BOUNDS = "pos";    
     public static final String A_STATUS = "status";
+    public static final String A_EXCLUDE_FREEBUSY = "excludeFreeBusy";
+    
 
     // object actions
     public static final String A_OBJECT = "obj";

@@ -89,7 +89,7 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
             
             ItemId iidFolder = new ItemId(request.getAttribute(MailService.A_FOLDER, DEFAULT_FOLDER), lc);
 
-            Collection appointments = mbox.getAppointmentsForRange(lc.getOperationContext(), rangeStart, rangeEnd, iidFolder.getId());
+            Collection appointments = mbox.getAppointmentsForRange(lc.getOperationContext(), rangeStart, rangeEnd, iidFolder.getId(), null);
 
             Element response = lc.createElement(MailService.GET_APPT_SUMMARIES_RESPONSE);
             for (Iterator aptIter = appointments.iterator(); aptIter.hasNext(); ) {

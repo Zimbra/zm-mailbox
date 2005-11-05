@@ -304,6 +304,9 @@ public class Mailbox {
     public Flag mUnreadFlag;
     /** flag: IMAP-subscribed folders */
     public Flag mSubscribeFlag;
+    /** flag: Exclude folder from free-busy calculations */
+    public Flag mExcludeFBFlag;
+    
     /** the full set of message flags, in order */
     final Flag[] mFlags = new Flag[31];
 
@@ -1275,6 +1278,7 @@ public class Mailbox {
         mNotifiedFlag  = Flag.instantiate(this, "\\Notified",   Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_NOTIFIED);
         mUnreadFlag    = Flag.instantiate(this, "\\Unread",     Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_UNREAD);
         mSubscribeFlag = Flag.instantiate(this, "\\Subscribed", Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_SUBSCRIBED);
+        mExcludeFBFlag = Flag.instantiate(this, "\\ExcludeFB",  Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_EXCLUDE_FREEBUSY);
     }
 
     private void loadFoldersAndTags() throws ServiceException {
@@ -2171,7 +2175,7 @@ public class Mailbox {
         try {
             beginTransaction("getCalendarForRange", octxt);
 
-            Collection /* Appointment */ appts = getAppointmentsForRange(octxt, start, end, ID_AUTO_INCREMENT);
+            Collection /* Appointment */ appts = getAppointmentsForRange(octxt, start, end, ID_AUTO_INCREMENT, null);
             Calendar cal = new Calendar();
 
             // PRODID, VERSION always required
@@ -2220,7 +2224,8 @@ public class Mailbox {
      *                  Trash folders in the mailbox.
      * @perms {@link ACL#RIGHT_READ} on all returned appointments.
      * @throws ServiceException */
-    public synchronized Collection /*<Appointment>*/ getAppointmentsForRange(OperationContext octxt, long start, long end, int folderId)
+    public synchronized Collection /*<Appointment>*/ getAppointmentsForRange(OperationContext octxt, long start, long end, 
+            int folderId, int[] excludeFolders)
     throws ServiceException {
         boolean success = false;
         try {
@@ -2232,7 +2237,7 @@ public class Mailbox {
 
             // get the list of all visible appointments in the specified folder
             List appointments = new ArrayList();
-            List /* UnderlyingData */ invData = DbMailItem.getAppointments(this, start, end, folderId);
+            List /* UnderlyingData */ invData = DbMailItem.getAppointments(this, start, end, folderId, excludeFolders);
             for (Iterator iter = invData.iterator(); iter.hasNext(); ) {
                 Appointment appt = getAppointment((MailItem.UnderlyingData) iter.next());
                 if (folderId == appt.getFolderId() || (folderId == ID_AUTO_INCREMENT && appt.inMailbox()))

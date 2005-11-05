@@ -31,6 +31,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -258,7 +261,26 @@ public class FreeBusy {
 
 
     public static FreeBusy getFreeBusyList(Mailbox mbox, long start, long end) throws ServiceException {
-        Collection appts = mbox.getAppointmentsForRange(null, start, end, Mailbox.ID_AUTO_INCREMENT);
+
+        List /* Folder */ folders = mbox.getItemList(null, MailItem.TYPE_FOLDER);
+        ArrayList /* Folder */ excludeFolders = new ArrayList();
+        for (Iterator iter = folders.iterator(); iter.hasNext();) {
+            Folder f = (Folder)iter.next();
+            if ((f.getFlagBitmask() & Flag.ID_FLAG_EXCLUDE_FREEBUSY)!= 0)
+                excludeFolders.add(f);
+        }
+        
+        int[] exFolders = null;
+        if (excludeFolders.size() > 0) {
+            exFolders = new int[excludeFolders.size()];
+            int i = 0;
+            for (Iterator iter = excludeFolders.iterator(); iter.hasNext(); i++) {
+                Folder f = (Folder)iter.next();
+                exFolders[i] = f.getId();
+            }
+        }
+        
+        Collection appts = mbox.getAppointmentsForRange(null, start, end, Mailbox.ID_AUTO_INCREMENT, exFolders);
 
         IntervalList intervals = new IntervalList(start, end);
         

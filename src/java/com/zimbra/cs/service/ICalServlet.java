@@ -113,7 +113,7 @@ public class ICalServlet extends ZimbraBasicAuthServlet {
         channel.addElement("generator").setText("Zimbra RSS Feed Servlet");
 
         OperationContext octxt = new OperationContext(acct);            
-        Collection appts = mailbox.getAppointmentsForRange(octxt, start, end, Mailbox.ID_FOLDER_CALENDAR);
+        Collection appts = mailbox.getAppointmentsForRange(octxt, start, end, Mailbox.ID_FOLDER_CALENDAR, null);
                 
         //channel.addElement("description").setText(query);
 

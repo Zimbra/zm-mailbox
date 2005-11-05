@@ -633,7 +633,7 @@ public class Folder extends MailItem {
      * 
      * @perms {@link ACL#RIGHT_WRITE} on the folder */
     void alterTag(Tag tag, boolean add) throws ServiceException {
-        if (tag != mMailbox.mSubscribeFlag) {
+        if (tag != mMailbox.mSubscribeFlag && tag != mMailbox.mExcludeFBFlag) {
             super.alterTag(tag, add);
             return;
         }

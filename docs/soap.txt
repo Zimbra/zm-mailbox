@@ -491,7 +491,7 @@ Conversations:
                  
 Folders:
 
-  <folder id="{folder-id}" name="{folder-name}" l="{parent-id}" [color="{color}"] u="{unread}" n="{msg-count}" [view="{default-type}"] [url="{remote-url}"]>
+  <folder id="{folder-id}" name="{folder-name}" l="{parent-id}" [color="{color}"] u="{unread}" n="{msg-count}" [view="{default-type}"] [url="{remote-url}"] [excludeFreeBusy="exclude-free-busy"]>
     [<acl> <grant perm="{rights}" gt="{grantee-type}" d="{grantee-name}" [inh="0|1"]/>* </acl>]
   </folder>
 
@@ -504,6 +504,7 @@ Folders:
   {default-type} = (optional) default type for the folder; used by web client to decide which view to use;
                    possible values are the same as <SearchRequest>'s {types}: conversation|message|contact|appointment|note
   {remote-url}   = url (RSS, iCal, etc.) this folder syncs its contents to
+  {exclude-free-busy} = 1 if this folder is set (via FolderAction) to be excluded from Free-Busy calculations
 
   folders can have an optional ACL set on them for sharing.  if they do, an <acl> element
     will be returned containing 1 or more <grant> elements, with the following attributes:
@@ -854,8 +855,9 @@ if fie="1" is set, the server will fetch the folder if it already exists rather 
 ---------
 
 <FolderActionRequest>
-  <action id="{list}" op="read|delete|rename|move|empty|color|grant|url|import|sync" name="..." [l="{target-folder}"]
-                      [name="{new-name}"] [color="{new-color}"] [zid="{grantee-zimbra-id}"] [url="{target-url}"]>
+  <action id="{list}" op="read|delete|rename|move|empty|color|grant|url|import|sync|fb" name="..." [l="{target-folder}"]
+                      [name="{new-name}"] [color="{new-color}"] [zid="{grantee-zimbra-id}"] [url="{target-url}"]
+                      [excludeFreeBusy="{exclude-free-busy-boolean}">
     [<grant perm="..." gt="..." d="..." [inh="0|1"]/>]
   </action>
 </FolderActionRequest>
@@ -873,9 +875,10 @@ if fie="1" is set, the server will fetch the folder if it already exists rather 
     op="color" - change the folder's color to {new-color}
     op="grant" - add the <grant> object to the folder
     op="!grant" - revoke access from {grantee-zimbra-id} (you can use "00000000-0000-0000-0000-000000000000" to revoke acces granted to "all")
-    op="url" - set the synchronization url on the folder to {target-url}, empty the folder, and synchronize the folder's contents to the remote feed
+    op="url" - set the synchronization url on the folder to {target-url}, empty the folder, and synchronize the folder's contents to the remote feed, also sets {exclude-free-busy-boolean} 
     op="sync" - synchronize the folder's contents to the remote feed specified by the folder's {url}
     op="import" - add the contents to the remote feed at {target-url} to the folder [1-time action]
+    op="fb" - set the excludeFreeBusy boolean for this folder
 
   {list} = on input, list of folders to act on, on output, list of
            folders that were acted on;

@@ -425,8 +425,8 @@ OR
               OR
               <dur DURATION>
            )   
-           <or d="friendly name" a="address"> // organizer
-           <at d="friendly name" a="address" role="ROLE" ptst="status""/>* // attendee
+           <or d="friendly name" url="address"> // organizer
+           <at d="friendly name" url="address" role="ROLE" ptst="status""/>* // attendee
              // role = CHAir, REQuired, OPTional, NON-participant (ie informational), RESource
              // ptst = NEeds-action, TEntative, ACcept, DEclined, DG (delegated), COmpleted (todo), IN-process (todo)
            <alarm rel-start="RELATIVE_MSECS_MINUS_MEANS_AFTER_START"/>*

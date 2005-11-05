@@ -94,6 +94,11 @@ public class Flag extends Tag {
     public static final int ID_FLAG_SUBSCRIBED = -20;
     public static final int FLAG_SUBSCRIBED    = 1 << getIndex(ID_FLAG_SUBSCRIBED);
         static { FLAG_REP[getIndex(ID_FLAG_SUBSCRIBED)] = '*'; }
+        
+    public static final int ID_FLAG_EXCLUDE_FREEBUSY = -21;
+    public static final int FLAG_EXCLUDE_FREEBUSY = 1 << getIndex(ID_FLAG_EXCLUDE_FREEBUSY);
+         static { FLAG_REP[getIndex(ID_FLAG_EXCLUDE_FREEBUSY)] = 'b'; }
+        
 
     static final String UNREAD_FLAG_ONLY = getAbbreviation(ID_FLAG_UNREAD) + "";
 
@@ -101,7 +106,7 @@ public class Flag extends Tag {
     public static final int FLAGS_ALL = FLAG_FROM_ME   | FLAG_ATTACHED | FLAG_REPLIED  |
                                         FLAG_FORWARDED | FLAG_COPIED   | FLAG_FLAGGED  |
                                         FLAG_DRAFT     | FLAG_DELETED  | FLAG_NOTIFIED |
-                                        FLAG_SUBSCRIBED;
+                                        FLAG_SUBSCRIBED | FLAG_EXCLUDE_FREEBUSY;
 
     public static final byte FLAG_GENERIC         = 0x00;
     public static final byte FLAG_IS_MESSAGE_ONLY = 0x01;
