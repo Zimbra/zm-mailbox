@@ -79,7 +79,9 @@ class DebugPreparedStatement implements PreparedStatement {
                 throw new IllegalStateException("Not enough parameters bound for SQL: " + mSql);
             }
             Object o = mParams.get(paramIndex);
-            if (o instanceof String) {
+            if (o == null) {
+                o = "NULL";
+            } else if (o instanceof String) {
                 // Escape single-quotes
                 String s = (String) o;
                 if (s.indexOf('\'') >= 0) {
@@ -134,7 +136,7 @@ class DebugPreparedStatement implements PreparedStatement {
     }
 
     public void setNull(int parameterIndex, int sqlType) throws SQLException {
-        mParams.set(parameterIndex, "NULL");
+        mParams.set(parameterIndex, null);
         mStmt.setNull(parameterIndex, sqlType);
     }
 
@@ -300,7 +302,7 @@ class DebugPreparedStatement implements PreparedStatement {
     }
 
     public void setNull(int paramIndex, int sqlType, String typeName) throws SQLException {
-        mParams.set(paramIndex, "NULL");
+        mParams.set(paramIndex, null);
         mStmt.setNull(paramIndex, sqlType, typeName);
     }
 
