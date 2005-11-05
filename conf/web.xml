@@ -30,7 +30,7 @@
   <servlet>
     <servlet-name>SoapServlet</servlet-name>
     <servlet-class>com.zimbra.soap.SoapServlet</servlet-class>
-    <load-on-startup>2</load-on-startup>
+    <load-on-startup>3</load-on-startup>
     <init-param>
       <param-name>allowed.ports</param-name>
       <param-value>80, 443, 7070, 7443</param-value>
@@ -49,7 +49,7 @@
   <servlet>
     <servlet-name>AdminServlet</servlet-name>
     <servlet-class>com.zimbra.soap.SoapServlet</servlet-class>
-    <load-on-startup>3</load-on-startup>
+    <load-on-startup>4</load-on-startup>
     <init-param>
       <param-name>allowed.ports</param-name>
       <param-value>7071</param-value>
@@ -72,7 +72,7 @@
   <servlet>
     <servlet-name>ContentServlet</servlet-name>
     <servlet-class>com.zimbra.cs.service.ContentServlet</servlet-class>
-    <load-on-startup>4</load-on-startup>
+    <load-on-startup>5</load-on-startup>
     <init-param>
       <param-name>allowed.ports</param-name>
       <param-value>80, 443, 7070, 7443, 7071</param-value>
@@ -86,7 +86,7 @@
   <servlet>
     <servlet-name>RssServlet</servlet-name>
     <servlet-class>com.zimbra.cs.service.RssServlet</servlet-class>
-    <load-on-startup>4</load-on-startup>
+    <load-on-startup>5</load-on-startup>
     <init-param>
       <param-name>allowed.ports</param-name>
       <param-value>80, 443, 7070, 7443, 7071</param-value>
@@ -96,7 +96,7 @@
   <servlet>
     <servlet-name>iCalServlet</servlet-name>
     <servlet-class>com.zimbra.cs.service.ICalServlet</servlet-class>
-    <load-on-startup>4</load-on-startup>
+    <load-on-startup>5</load-on-startup>
     <init-param>
       <param-name>allowed.ports</param-name>
       <param-value>80, 443, 7070, 7443, 7071</param-value>
@@ -106,7 +106,7 @@
   <servlet>
     <servlet-name>PublicICalServlet</servlet-name>
     <servlet-class>com.zimbra.cs.service.PublicICalServlet</servlet-class>
-    <load-on-startup>4</load-on-startup>
+    <load-on-startup>5</load-on-startup>
     <init-param>
       <param-name>allowed.ports</param-name>
       <param-value>80, 443, 7070, 7443, 7071</param-value>
@@ -117,7 +117,7 @@
   <servlet>
     <servlet-name>CsvServlet</servlet-name>
     <servlet-class>com.zimbra.cs.service.CsvServlet</servlet-class>
-    <load-on-startup>4</load-on-startup>
+    <load-on-startup>5</load-on-startup>
     <init-param>
       <param-name>allowed.ports</param-name>
       <param-value>80, 443, 7070, 7443, 7071</param-value>
