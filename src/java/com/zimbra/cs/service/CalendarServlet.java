@@ -62,9 +62,12 @@ import com.zimbra.soap.Element;
 
 public class CalendarServlet extends ZimbraBasicAuthServlet {
 
+    public CalendarServlet() {
+        mAllowCookieAuth = true;
+    }
+
     protected String getRealmHeader()  { return "BASIC realm=\"Zimbra iCal\""; }
 
-      
     public void doAuthGet(HttpServletRequest req, HttpServletResponse resp, Account acct, Mailbox mailbox)
     throws ServiceException, IOException {
         String pathInfo = req.getPathInfo().toLowerCase();

@@ -1,9 +1,11 @@
 Various special URLs/servlets
 
 ------------------------------------------------------------
+
+# soon to be unsupported
 Calendar   http://{server}/service/ical/cal.ics  
 
-Calendar   http://{server}/service/calendar/{calendar-folder}.{ics,rss}
+Calendar   http://{server}/service/calendar/{calendar-folder}.{ics,rss} // more formats to come
 
 ------------------------------------------------------------
 
@@ -11,7 +13,7 @@ Spits out a "text/calendar" file, consististing of appointments in the calendar.
 
 to test (on a system with curl installed):
 
-curl -u user1:test123 http://localhost:7070/service/ical/cal.ics
+curl -u user1:test123 http://localhost:7070/service/calendar/calendar.ics
 
 Should look something like:
 

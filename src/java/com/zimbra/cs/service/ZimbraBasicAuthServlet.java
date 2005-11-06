@@ -35,6 +35,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.servlet.ZimbraServlet;
@@ -55,55 +56,78 @@ public abstract class ZimbraBasicAuthServlet extends ZimbraServlet {
     
     private static Log mLog = LogFactory.getLog(ZimbraBasicAuthServlet.class);
 
+    protected boolean mAllowCookieAuth;
 
     public abstract void doAuthGet(HttpServletRequest req, HttpServletResponse resp, Account acct, Mailbox mailbox)
     throws ServiceException, IOException;
 
-    public final void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
-        // TODO: should/could also check for auth token cookie?
+    private Account getAccount(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException, ServiceException 
+    {
+        Provisioning prov = Provisioning.getInstance();
+
+        // use cookie if servlet allows
+        if (mAllowCookieAuth) {
+            AuthToken at = getAuthTokenFromCookie(req, resp, true);
+            if (at != null) {
+                Account acct = prov.getAccountById(at.getAccountId());
+                if (acct != null) return acct;
+            }
+        }
+
+        // fallback to basic auth
+
         String auth = req.getHeader("Authorization");
 
         // TODO: more liberal parsing of Authorization value...
         if (auth == null || !auth.startsWith("Basic ")) {
             resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader());            
             resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "must authenticate");
-            return;
+            return null;
         }
-      
+
         // 6 comes from "Basic ".length();
         String userPass = new String(Base64.decodeBase64(auth.substring(6).getBytes()));
 
         int loc = userPass.indexOf(":"); 
         if (loc == -1) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "invalid basic auth credentials");
-            return;
+            return null;
         }
         
         String user = userPass.substring(0, loc);
         String pass = userPass.substring(loc + 1);
-        
-        Provisioning prov = Provisioning.getInstance();
         
         try {
             Account acct = prov.getAccountByName(user);
             if (acct == null) {
                 resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader());
                 resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "invalid username/password");
-                return;
+                return null;
             }
             try {
                 prov.authAccount(acct, pass);
             } catch (ServiceException se) {
                 resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader());
                 resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "invalid username/password");
-                return;
+                return null;
             }
 
             if (!acct.isCorrectHost()) {
                 // wrong host; proxy to the correct target...
                 proxyServletRequest(req, resp, acct.getServer());
-                return;
+                return null;
             }
+            return acct;
+        } catch (ServiceException e) {
+            throw new ServletException(e);
+        }
+        
+    }
+
+    public final void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
+        try {
+            Account acct = getAccount(req, resp);
+            if (acct == null) return;
 
             Mailbox mailbox = Mailbox.getMailboxByAccount(acct);
             if (mailbox == null) {
