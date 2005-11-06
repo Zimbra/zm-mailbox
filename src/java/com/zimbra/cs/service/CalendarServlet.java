@@ -49,7 +49,6 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
 import com.zimbra.cs.service.mail.CalendarUtils;
 import com.zimbra.cs.util.Constants;
-import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
 
 /**
@@ -72,13 +71,13 @@ public class CalendarServlet extends ZimbraBasicAuthServlet {
     throws ServiceException, IOException {
         String pathInfo = req.getPathInfo().toLowerCase();
 
-        if (pathInfo == null) pathInfo = "/calendar.ics";
+        if (pathInfo == null || pathInfo.equals("/") || pathInfo.equals("")) pathInfo = "/calendar.ics";
         
-        ZimbraLog.calendar.info("pathInfo = "+pathInfo);
+        //ZimbraLog.calendar.info("pathInfo = "+pathInfo);
 
         String folderPath = getFolderPath(pathInfo);
         
-        ZimbraLog.calendar.info("folderPath = "+folderPath);
+        //ZimbraLog.calendar.info("folderPath = "+folderPath);
         
         Folder folder = mailbox.getFolderByPath(null, folderPath);
 
