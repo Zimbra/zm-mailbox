@@ -38,10 +38,8 @@ public class DeleteVolume extends AdminDocumentHandler {
         ZimbraContext lc = getZimbraContext(context);
 
         short id = (short) request.getAttributeLong(AdminService.A_ID);
-        boolean deleteFiles = request.getAttributeBool(AdminService.A_VOLUME_DELETE_FILES, false);
-        // make sure the volume exists vefore doing anything heavyweight...
+        // make sure the volume exists before doing anything heavyweight...
         Volume.getById(id);
-        Volume.delete(id, deleteFiles);
 
         Element response = lc.createElement(AdminService.DELETE_VOLUME_RESPONSE);
         return response;

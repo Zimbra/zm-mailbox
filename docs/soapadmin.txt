@@ -700,14 +700,9 @@ Notes:
 
 -----------------------------
 
-<DeleteVolumeRequest id="{id}" [deleteFiles="0|1"]/>
+<DeleteVolumeRequest id="{id}"/>
 
 <DeleteVolumeResponse/>
-
-Notes:
-
-  deleteFiles: if 1, deletes all files under volume root; defaults to 0
-               The file deletion cannot be undone, so use it carefully.
 
 -----------------------------
 

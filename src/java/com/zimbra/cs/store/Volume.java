@@ -26,7 +26,6 @@
 package com.zimbra.cs.store;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -42,7 +41,6 @@ import com.zimbra.cs.redolog.op.ModifyVolume;
 import com.zimbra.cs.redolog.op.RedoableOp;
 import com.zimbra.cs.redolog.op.SetCurrentVolume;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.FileUtil;
 import com.zimbra.cs.util.Zimbra;
 
 /**
@@ -235,17 +233,16 @@ public class Volume {
     }
 
     /**
-     * Remove the volume from the system, and optionally all files under
-     * volume root.  File deletion is irreversible, so use it carefully.
+     * Remove the volume from the system.  Files on the volume being deleted
+     * are not removed.
      * 
      * @param id volume ID
-     * @param deleteFiles if true, all files under volume root are deleted
      * @return true if actual deletion occurred
      * @throws ServiceException
      */
-    public static boolean delete(short id, boolean deleteFiles)
+    public static boolean delete(short id)
     throws ServiceException {
-        DeleteVolume redoRecorder = new DeleteVolume(id, deleteFiles);
+        DeleteVolume redoRecorder = new DeleteVolume(id);
         redoRecorder.start(System.currentTimeMillis());
 
         Volume vol = null;
@@ -275,20 +272,10 @@ public class Volume {
             return deleted;
         } finally {
             endTransaction(success, conn, redoRecorder);
-            if (vol != null) {
-                if (success) {
-                    if (deleteFiles) {
-                        try {
-                            FileUtil.deleteDir(new File(vol.getRootPath()));
-                        } catch (IOException e) {
-                            throw ServiceException.FAILURE("Error while deleting all files from volume " + id, e);
-                        }
-                    }
-                } else {
-                    // Ran into database error.  Undo map entry removal.
-                    synchronized (sVolumeGuard) {
-                        sVolumeMap.put(key, vol);
-                    }
+            if (vol != null && !success) {
+                // Ran into database error.  Undo map entry removal.
+                synchronized (sVolumeGuard) {
+                    sVolumeMap.put(key, vol);
                 }
             }
         }

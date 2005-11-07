@@ -35,14 +35,12 @@ import com.zimbra.cs.store.VolumeServiceException;
 public class DeleteVolume extends RedoableOp {
 
     private short mId;
-    private boolean mDeleteFiles;
 
     public DeleteVolume() {
     }
 
-    public DeleteVolume(short id, boolean deleteFiles) {
+    public DeleteVolume(short id) {
         mId = id;
-        mDeleteFiles = deleteFiles;
     }
 
     public int getOpCode() {
@@ -51,25 +49,22 @@ public class DeleteVolume extends RedoableOp {
 
     protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("id=").append(mId);
-        sb.append(", deleteFiles=").append(mDeleteFiles);
         return sb.toString();
     }
 
     protected void serializeData(DataOutput out) throws IOException {
         out.writeShort(mId);
-        out.writeBoolean(mDeleteFiles);
     }
 
     protected void deserializeData(DataInput in) throws IOException {
         mId = in.readShort();
-        mDeleteFiles = in.readBoolean();
     }
 
     public void redo() throws Exception {
         Volume vol = null;
         try {
             vol = Volume.getById(mId);
-            Volume.delete(mId, mDeleteFiles);
+            Volume.delete(mId);
         } catch (VolumeServiceException e) {
             if (e.getCode() != VolumeServiceException.NO_SUCH_VOLUME)
                 throw e;
