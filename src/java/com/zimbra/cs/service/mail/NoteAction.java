@@ -28,7 +28,10 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -45,8 +48,19 @@ import com.zimbra.soap.ZimbraContext;
  */
 public class NoteAction extends ItemAction {
 
+    protected String[] getProxiedIdPath(Element request) {
+        String operation = getXPath(request, OPERATION_PATH);
+        if (operation != null && NOTE_OPS.contains(operation.toLowerCase()))
+            return TARGET_ITEM_PATH;
+        return super.getProxiedIdPath(request);
+    }
+
 	public static final String OP_EDIT       = "edit";
 	public static final String OP_REPOSITION = "pos";
+
+    private static final Set NOTE_OPS = new HashSet(Arrays.asList(new String[] {
+        OP_EDIT, OP_REPOSITION
+    }));
 
 	public Element handle(Element request, Map context) throws ServiceException, SoapFaultException {
         ZimbraContext lc = getZimbraContext(context);
@@ -57,7 +71,7 @@ public class NoteAction extends ItemAction {
         if (operation.endsWith(OP_READ) || operation.endsWith(OP_SPAM))
             throw ServiceException.INVALID_REQUEST("invalid operation on note: " + operation, null);
         String successes;
-        if (operation.equals(OP_EDIT) || operation.equals(OP_REPOSITION))
+        if (NOTE_OPS.contains(operation))
             successes = handleNote(context, request, operation);
         else
             successes = handleCommon(context, request, operation, MailItem.TYPE_NOTE);
@@ -69,16 +83,13 @@ public class NoteAction extends ItemAction {
         return response;
 	}
 
-    private String handleNote(Map context, Element request, String operation) throws ServiceException, SoapFaultException {
+    private String handleNote(Map context, Element request, String operation) throws ServiceException {
         Element action = request.getElement(MailService.E_ACTION);
 
         ZimbraContext lc = getZimbraContext(context);
-        ItemId iid = new ItemId(action.getAttribute(MailService.A_ID), lc);
-        if (!iid.belongsTo(getRequestedAccount(lc)))
-            return extractSuccesses(proxyRequest(request, context, iid.getAccountId()));
-
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
+        ItemId iid = new ItemId(action.getAttribute(MailService.A_ID), lc);
 
         if (operation.equals(OP_EDIT)) {
             String content = action.getAttribute(MailService.E_CONTENT);

@@ -51,8 +51,8 @@ public class GetFolder extends DocumentHandler {
 
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.E_FOLDER, MailService.A_FOLDER };
     private static final String[] RESPONSE_ITEM_PATH = new String[] { MailService.E_FOLDER };
-    protected String[] getProxiedIdPath()     { return TARGET_FOLDER_PATH; }
-    protected boolean checkMountpointProxy()  { return false; }
+    protected String[] getProxiedIdPath(Element request)     { return TARGET_FOLDER_PATH; }
+    protected boolean checkMountpointProxy(Element request)  { return false; }
     protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
 
     static final String DEFAULT_FOLDER_ID = "" + Mailbox.ID_FOLDER_USER_ROOT;

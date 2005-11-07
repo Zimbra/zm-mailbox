@@ -60,8 +60,8 @@ public class SendInviteReply extends CalendarRequest {
     private static StopWatch sWatch = StopWatch.getInstance("SendInviteReply");
     
     private static final String[] TARGET_APPT_PATH = new String[] { MailService.A_ID };
-    protected String[] getProxiedIdPath()     { return TARGET_APPT_PATH; }
-    protected boolean checkMountpointProxy()  { return false; }
+    protected String[] getProxiedIdPath(Element request)     { return TARGET_APPT_PATH; }
+    protected boolean checkMountpointProxy(Element request)  { return false; }
 
     public Element handle(Element request, Map context) throws ServiceException {
         long startTime = sWatch.start();

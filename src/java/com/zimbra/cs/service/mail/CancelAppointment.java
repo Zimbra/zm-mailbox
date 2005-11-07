@@ -55,8 +55,8 @@ public class CancelAppointment extends CalendarRequest {
     private static StopWatch sWatch = StopWatch.getInstance("CancelAppointment");
 
     private static final String[] TARGET_ITEM_PATH = new String[] { MailService.A_ID };
-    protected String[] getProxiedIdPath()     { return TARGET_ITEM_PATH; }
-    protected boolean checkMountpointProxy()  { return false; }
+    protected String[] getProxiedIdPath(Element request)     { return TARGET_ITEM_PATH; }
+    protected boolean checkMountpointProxy(Element request)  { return false; }
 
     public Element handle(Element request, Map context) throws ServiceException {
         long startTime = sWatch.start();

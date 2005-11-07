@@ -187,22 +187,24 @@ public abstract class DocumentHandler {
         return new ItemId(mpt.getOwnerId(), mpt.getRemoteId());
     }
 
-    protected String[] getProxiedIdPath()     { return null; }
-    protected boolean checkMountpointProxy()  { return false; }
+    protected String[] getProxiedIdPath(Element request)     { return null; }
+    protected boolean checkMountpointProxy(Element request)  { return false; }
     protected String[] getResponseItemPath()  { return null; }
 
     protected Element proxyIfNecessary(Element request, Map context) throws ServiceException, SoapFaultException {
-        String[] xpath = getProxiedIdPath();
+        // find the id of the item we're proxying on...
+        String[] xpath = getProxiedIdPath(request);
         if (xpath == null)
-            return null;
-        String id = getXPath(request, xpath);
+            xpath = getProxiedIdPath(request);
+        String id = (xpath != null ? getXPath(request, xpath) : null);
         if (id == null)
             return null;
+
         ZimbraContext lc = getZimbraContext(context);
         ItemId iid = new ItemId(id, lc);
 
         // if the "target item" is remote, proxy.
-        ItemId iidTarget = getProxyTarget(lc, iid, checkMountpointProxy());
+        ItemId iidTarget = getProxyTarget(lc, iid, checkMountpointProxy(request));
         if (iidTarget != null)
             return proxyRequest(request, context, iid, iidTarget);
 
@@ -218,7 +220,7 @@ public abstract class DocumentHandler {
     protected Element proxyRequest(Element request, Map context, ItemId iidRequested, ItemId iidResolved) throws ServiceException, SoapFaultException {
         // prepare the request for re-processing
         if (iidRequested != iidResolved)
-            setXPath(request, getProxiedIdPath(), iidResolved.toString());
+            setXPath(request, getProxiedIdPath(request), iidResolved.toString());
 
         Element response = proxyRequest(request, context, iidResolved.getAccountId());
 

@@ -47,8 +47,8 @@ public class CreateContact extends WriteOpDocumentHandler  {
 
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.E_CONTACT, MailService.A_FOLDER };
     private static final String[] RESPONSE_ITEM_PATH = new String[] { };
-    protected String[] getProxiedIdPath()     { return TARGET_FOLDER_PATH; }
-    protected boolean checkMountpointProxy()  { return true; }
+    protected String[] getProxiedIdPath(Element request)     { return TARGET_FOLDER_PATH; }
+    protected boolean checkMountpointProxy(Element request)  { return true; }
     protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
 
     private static final String DEFAULT_FOLDER = "" + Mailbox.ID_FOLDER_CONTACTS;

@@ -50,8 +50,8 @@ public class SetAppointment extends CalendarRequest {
     private static StopWatch sWatch = StopWatch.getInstance("SetAppointment");
 
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.A_FOLDER };
-    protected String[] getProxiedIdPath()     { return TARGET_FOLDER_PATH; }
-    protected boolean checkMountpointProxy()  { return true; }
+    protected String[] getProxiedIdPath(Element request)     { return TARGET_FOLDER_PATH; }
+    protected boolean checkMountpointProxy(Element request)  { return true; }
 
     protected static class SetAppointmentInviteParser extends ParseMimeMessage.InviteParser {
         

@@ -56,8 +56,8 @@ public class ModifyAppointment extends CalendarRequest {
     private static StopWatch sWatch = StopWatch.getInstance("ModifyAppointment");
 
     private static final String[] TARGET_APPT_PATH = new String[] { MailService.A_ID };
-    protected String[] getProxiedIdPath()     { return TARGET_APPT_PATH; }
-    protected boolean checkMountpointProxy()  { return false; }
+    protected String[] getProxiedIdPath(Element request)     { return TARGET_APPT_PATH; }
+    protected boolean checkMountpointProxy(Element request)  { return false; }
 
     // very simple: generate a new UID and send a REQUEST
     protected static class ModifyAppointmentParser extends ParseMimeMessage.InviteParser {

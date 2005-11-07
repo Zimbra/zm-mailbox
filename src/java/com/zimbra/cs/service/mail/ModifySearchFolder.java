@@ -45,8 +45,8 @@ import com.zimbra.soap.WriteOpDocumentHandler;
 public class ModifySearchFolder extends WriteOpDocumentHandler  {
 
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.E_SEARCH, MailService.A_ID };
-    protected String[] getProxiedIdPath()     { return TARGET_FOLDER_PATH; }
-    protected boolean checkMountpointProxy()  { return false; }
+    protected String[] getProxiedIdPath(Element request)     { return TARGET_FOLDER_PATH; }
+    protected boolean checkMountpointProxy(Element request)  { return false; }
 
 	public Element handle(Element request, Map context) throws ServiceException {
 		ZimbraContext lc = getZimbraContext(context);

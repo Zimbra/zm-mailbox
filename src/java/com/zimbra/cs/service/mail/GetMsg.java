@@ -52,8 +52,8 @@ public class GetMsg extends WriteOpDocumentHandler {
     private static StopWatch sWatch = StopWatch.getInstance("GetMsg");
 
     private static final String[] TARGET_MSG_PATH = new String[] { MailService.E_MSG, MailService.A_ID };
-    protected String[] getProxiedIdPath()     { return TARGET_MSG_PATH; }
-    protected boolean checkMountpointProxy()  { return false; }
+    protected String[] getProxiedIdPath(Element request)     { return TARGET_MSG_PATH; }
+    protected boolean checkMountpointProxy(Element request)  { return false; }
 
     public Element handle(Element request, Map context) throws ServiceException {
         long startTime = sWatch.start();

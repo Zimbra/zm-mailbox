@@ -53,6 +53,19 @@ import com.zimbra.soap.WriteOpDocumentHandler;
  */
 public class ItemAction extends WriteOpDocumentHandler {
 
+    protected static final String[] OPERATION_PATH = new String[] { MailService.E_ACTION, MailService.A_OPERATION };
+    protected static final String[] TARGET_ITEM_PATH = new String[] { MailService.E_ACTION, MailService.A_ID };
+    protected static final String[] TARGET_FOLDER_PATH = new String[] { MailService.E_ACTION, MailService.A_FOLDER };
+    protected String[] getProxiedIdPath(Element request) {
+        String operation = getXPath(request, OPERATION_PATH);
+        if (operation == null)
+            return null;
+        if (operation.startsWith("!"))
+            operation = operation.substring(1);
+        // move operation needs to be executed in the context of the target folder
+        return (operation.toLowerCase().equals(OP_MOVE) ? TARGET_FOLDER_PATH : null);
+    }
+
     public static final String OP_TAG         = "tag";
     public static final String OP_FLAG        = "flag";
     public static final String OP_READ        = "read";
@@ -90,14 +103,6 @@ public class ItemAction extends WriteOpDocumentHandler {
             op = opAttr.substring(1);
         } else
             op = opAttr;
-
-        // move operation needs to be executed in the context of the target folder
-        if (op.equals(OP_MOVE)) {
-            ItemId iidFolder = new ItemId(action.getAttribute(MailService.A_FOLDER), lc);
-            action.addAttribute(MailService.A_FOLDER, iidFolder.toString());
-            if (!iidFolder.belongsTo(mbox))
-                return extractSuccesses(proxyRequest(request, context, iidFolder.getAccountId()));
-        }
 
         // figure out which items are local and which ones are remote, and proxy accordingly
         ArrayList local = new ArrayList();

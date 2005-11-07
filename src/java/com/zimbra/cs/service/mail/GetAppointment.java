@@ -51,8 +51,8 @@ public class GetAppointment extends DocumentHandler {
 
     private static final String[] TARGET_ITEM_PATH = new String[] { MailService.A_ID };
     private static final String[] RESPONSE_ITEM_PATH = new String[] { };
-    protected String[] getProxiedIdPath()     { return TARGET_ITEM_PATH; }
-    protected boolean checkMountpointProxy()  { return false; }
+    protected String[] getProxiedIdPath(Element request)     { return TARGET_ITEM_PATH; }
+    protected boolean checkMountpointProxy(Element request)  { return false; }
     protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
 
     public Element handle(Element request, Map context) throws ServiceException {

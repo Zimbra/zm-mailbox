@@ -28,7 +28,10 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -36,7 +39,6 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -52,16 +54,34 @@ import com.zimbra.soap.ZimbraContext;
  */
 public class FolderAction extends ItemAction {
 
-    public static final String OP_RENAME  = "rename";
-    public static final String OP_EMPTY   = "empty";
-    public static final String OP_REFRESH = "sync";
-    public static final String OP_SET_URL = "url";
-    public static final String OP_IMPORT  = "import";
-    public static final String OP_GRANT   = "grant";
-    public static final String OP_REVOKE  = '!' + OP_GRANT;
-    public static final String OP_UNFLAG  = '!' + OP_FLAG;
-    public static final String OP_UNTAG   = '!' + OP_TAG;
-    public static final String OP_FB      = "fb";
+    protected String[] getProxiedIdPath(Element request) {
+        String operation = getXPath(request, OPERATION_PATH);
+        if (operation != null && FOLDER_OPS.contains(operation.toLowerCase()))
+            return TARGET_ITEM_PATH;
+        return super.getProxiedIdPath(request);
+    }
+    protected boolean checkMountpointProxy(Element request) {
+        String operation = getXPath(request, OPERATION_PATH);
+        // grant/revoke ops get passed through to the referenced resource
+        if (OP_GRANT.equalsIgnoreCase(operation) || OP_REVOKE.equalsIgnoreCase(operation))
+            return true;
+		return super.checkMountpointProxy(request);
+	}
+
+    public static final String OP_RENAME   = "rename";
+    public static final String OP_EMPTY    = "empty";
+    public static final String OP_REFRESH  = "sync";
+    public static final String OP_FREEBUSY = "fb";
+    public static final String OP_SET_URL  = "url";
+    public static final String OP_IMPORT   = "import";
+    public static final String OP_GRANT    = "grant";
+    public static final String OP_REVOKE   = '!' + OP_GRANT;
+    public static final String OP_UNFLAG   = '!' + OP_FLAG;
+    public static final String OP_UNTAG    = '!' + OP_TAG;
+
+    private static final Set FOLDER_OPS = new HashSet(Arrays.asList(new String[] {
+        OP_RENAME, OP_EMPTY, OP_REFRESH, OP_SET_URL, OP_IMPORT, OP_FREEBUSY, OP_GRANT, OP_REVOKE
+    }));
 
 	public Element handle(Element request, Map context) throws ServiceException, SoapFaultException {
         ZimbraContext lc = getZimbraContext(context);
@@ -70,62 +90,52 @@ public class FolderAction extends ItemAction {
         String operation = action.getAttribute(MailService.A_OPERATION).toLowerCase();
 
         Element response = lc.createElement(MailService.FOLDER_ACTION_RESPONSE);
-        Element act = response.addUniqueElement(MailService.E_ACTION);
+        Element result = response.addUniqueElement(MailService.E_ACTION);
 
         if (operation.equals(OP_TAG) || operation.equals(OP_FLAG) || operation.equals(OP_UNTAG) || operation.equals(OP_UNFLAG))
             throw MailServiceException.CANNOT_TAG();
         if (operation.endsWith(OP_UPDATE) || operation.endsWith(OP_SPAM))
             throw ServiceException.INVALID_REQUEST("invalid operation on folder: " + operation, null);
         String successes;
-        if (operation.equals(OP_REFRESH) || operation.equals(OP_RENAME) || operation.equals(OP_EMPTY) || operation.equals(OP_GRANT) || operation.equals(OP_REVOKE) || operation.equals(OP_FB))
-            successes = handleFolder(context, request, operation, act);
+        if (FOLDER_OPS.contains(operation))
+            successes = handleFolder(context, request, operation, result);
         else
             successes = handleCommon(context, request, operation, MailItem.TYPE_FOLDER);
 
-        act.addAttribute(MailService.A_ID, successes);
-        act.addAttribute(MailService.A_OPERATION, operation);
+        result.addAttribute(MailService.A_ID, successes);
+        result.addAttribute(MailService.A_OPERATION, operation);
         return response;
 	}
-    
-    private void handleExcludeFreeBusy(OperationContext octxt, Mailbox mbox, ItemId iid, Element action) throws ServiceException
-    {
-        Folder folder = mbox.getFolderById(octxt, iid.getId());
-        if (action.getAttributeBool(MailService.A_EXCLUDE_FREEBUSY, false)) {
-            if (!folder.isTagged(mbox.mExcludeFBFlag))
-                mbox.alterTag(octxt, folder.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_EXCLUDE_FREEBUSY, true);
-        } else {
-            if (folder.isTagged(mbox.mExcludeFBFlag))
-                mbox.alterTag(octxt, folder.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_EXCLUDE_FREEBUSY, false);
-        }
-    }
 
-    private String handleFolder(Map context, Element request, String operation, Element actionResponse)
-    throws ServiceException, SoapFaultException {
+    private String handleFolder(Map context, Element request, String operation, Element result)
+    throws ServiceException {
         Element action = request.getElement(MailService.E_ACTION);
 
         ZimbraContext lc = getZimbraContext(context);
-        ItemId iid = new ItemId(action.getAttribute(MailService.A_ID), lc);
-        if (!iid.belongsTo(getRequestedAccount(lc)))
-            return extractSuccesses(proxyRequest(request, context, iid.getAccountId()));
-
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
+        ItemId iid = new ItemId(action.getAttribute(MailService.A_ID), lc);
 
-        if (operation.equals(OP_EMPTY))
+        if (operation.equals(OP_EMPTY)) {
             mbox.emptyFolder(octxt, iid.getId(), true);
-        else if (operation.equals(OP_REFRESH))
+        } else if (operation.equals(OP_REFRESH)) {
             mbox.synchronizeFolder(octxt, iid.getId());
-        else if (operation.equals(OP_IMPORT)) {
+        } else if (operation.equals(OP_IMPORT)) {
             String url = action.getAttribute(MailService.A_URL);
             mbox.importFeed(octxt, iid.getId(), url, false);
-        } else if (operation.equals(OP_FB)) {
-            handleExcludeFreeBusy(octxt, mbox, iid, action);
+        } else if (operation.equals(OP_FREEBUSY)) {
+            boolean fb = action.getAttributeBool(MailService.A_EXCLUDE_FREEBUSY, false);
+            mbox.alterTag(octxt, iid.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_EXCLUDE_FREEBUSY, fb);
         } else if (operation.equals(OP_SET_URL)) {
             String url = action.getAttribute(MailService.A_URL, "");
             mbox.setFolderUrl(octxt, iid.getId(), url);
             if (!url.equals(""))
                 mbox.synchronizeFolder(octxt, iid.getId());
-            handleExcludeFreeBusy(octxt, mbox, iid, action);
+
+            if (action.getAttribute(MailService.A_EXCLUDE_FREEBUSY, null) != null) {
+                boolean fb = action.getAttributeBool(MailService.A_EXCLUDE_FREEBUSY, false);
+                mbox.alterTag(octxt, iid.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_EXCLUDE_FREEBUSY, fb);
+            }
         } else if (operation.equals(OP_RENAME)) {
             String name = action.getAttribute(MailService.A_NAME);
             mbox.renameFolder(octxt, iid.getId(), name);
@@ -141,7 +151,7 @@ public class FolderAction extends ItemAction {
             
             mbox.grantAccess(octxt, iid.getId(), zid, gtype, rights, inherit);
             // kinda hacky -- return the zimbra id of the grantee in the response
-            actionResponse.addAttribute(MailService.A_ZIMBRA_ID, zid);
+            result.addAttribute(MailService.A_ZIMBRA_ID, zid);
         } else
             throw ServiceException.INVALID_REQUEST("unknown operation: " + operation, null);
 

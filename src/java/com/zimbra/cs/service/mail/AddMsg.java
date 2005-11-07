@@ -61,8 +61,8 @@ public class AddMsg extends WriteOpDocumentHandler {
     private static StopWatch sWatch = StopWatch.getInstance("AddMsg");
 
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.E_MSG, MailService.A_FOLDER };
-    protected String[] getProxiedIdPath()     { return TARGET_FOLDER_PATH; }
-    protected boolean checkMountpointProxy()  { return true; }
+    protected String[] getProxiedIdPath(Element request)     { return TARGET_FOLDER_PATH; }
+    protected boolean checkMountpointProxy(Element request)  { return true; }
 
     /* (non-Javadoc)
      * @see com.zimbra.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
