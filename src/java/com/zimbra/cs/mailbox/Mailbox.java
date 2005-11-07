@@ -2857,7 +2857,7 @@ public class Mailbox {
     // please keep this package-visible but not public
     void openConversation(Conversation conv, String hash) throws ServiceException {
         if (hash == null)
-            hash = getHash(conv.getSubject());
+            hash = getHash(conv.getNormalizedSubject());
         conv.open(hash);
         markOtherItemDirty(hash);
         mConvHashes.put(hash, new Integer(conv.getId()));
