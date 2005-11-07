@@ -284,7 +284,6 @@ public class AdminService implements DocumentService {
     public static final String A_VOLUME_FBITS = "fbits";
     public static final String A_VOLUME_COMPRESS_BLOBS = "compressBlobs";
     public static final String A_VOLUME_COMPRESSION_THRESHOLD = "compressionThreshold";
-    public static final String A_VOLUME_DELETE_FILES = "deleteFiles";
 
     public static final String A_VERSION_INFO_INFO = "info";
     public static final String A_VERSION_INFO_VERSION = "version";
