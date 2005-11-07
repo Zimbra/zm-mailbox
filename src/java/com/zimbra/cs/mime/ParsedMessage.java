@@ -36,13 +36,10 @@ import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.ContentType;
 import javax.mail.internet.MailDateFormat;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
@@ -389,7 +386,7 @@ public class ParsedMessage {
     }
     
 	private void analyzeMessage()
-	throws MessagingException, ServiceException {
+        throws MessagingException, ServiceException {
         if (mAnalyzed)
             return;
         mAnalyzed = true;
@@ -410,27 +407,9 @@ public class ParsedMessage {
         int numParseErrors = 0;
         ServiceException conversionError = null;
         
-        Set multipartAlts = new HashSet();
 		for (Iterator it = mMessageParts.iterator(); it.hasNext(); ) {
             MPartInfo mpi = (MPartInfo) it.next();
             try {
-                ContentType ct = mpi.getContentType();
-                if (ct.match(Mime.CT_MULTIPART_ALTERNATIVE)) {
-                    // choose the most-text-like part from multiple alternatives
-                    MPartInfo parent = mpi;
-                    mpi = selectFromAlternatives(parent);
-                    // remember the multipart/alternative parent part so that its children
-                    // do not need to be processed 
-                    if (mpi != null)
-                        multipartAlts.add(parent);
-                } else if (ct.match(Mime.CT_MULTIPART_WILD)) {
-                    // ignore other multipart "container" parts
-                    continue;
-                } else if (multipartAlts.contains(mpi.getParent())) {
-                    // ignore child part whose parent was multipart/alternative
-                    continue;
-                }
-
                 analyzePart(mpi, mpiBody, allTextHandler);
             } catch (MimeHandlerException e) {
                 numParseErrors++;
@@ -480,12 +459,16 @@ public class ParsedMessage {
     private void analyzePart(MPartInfo mpi,
                              MPartInfo mpiBody,
                              TopLevelMessageHandler allTextHandler)
-    throws MimeHandlerException,
-           ObjectHandlerException,
-           MessagingException,
-           ServiceException {
+        throws MimeHandlerException,
+        ObjectHandlerException,
+        MessagingException,
+        ServiceException {
         
         String contentTypeString = mpi.getContentTypeString();
+        // ignore multipart "container" parts
+        if (mpi.getContentType().match(Mime.CT_MULTIPART_WILD)) {
+            return;
+        }
 
         if (parseAppointmentInfo(mpi.getMimePart(), contentTypeString))
             allTextHandler.hasCalendarPart(true);
@@ -534,28 +517,6 @@ public class ParsedMessage {
                 }
             }
         }
-    }
-    
-    /**
-     * Gets all child parts of a multipart/alternative part. Pick text/plain over text/* over other
-     * content types. 
-     * @param mpi the multipart/alternative part
-     * @return the most-text-like part or null if none found
-     */
-    private MPartInfo selectFromAlternatives(MPartInfo mpi) {
-        List children = mpi.getChildren();
-        MPartInfo chosen = null;
-        for (Iterator it = children.iterator(); it.hasNext(); ) {
-            MPartInfo child = (MPartInfo) it.next();
-            ContentType ct = child.getContentType();
-            if (ct.match(Mime.CT_TEXT_PLAIN)) {
-                chosen = child;
-                break;
-            } else if (ct.match(Mime.CT_TEXT_WILD)) {
-                chosen = child;
-            }
-        }
-        return chosen;
     }
     
     /**
