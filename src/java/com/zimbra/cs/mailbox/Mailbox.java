@@ -64,6 +64,7 @@ import com.zimbra.cs.mailbox.calendar.FreeBusy;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.RecurId;
+import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.op.*;
 import com.zimbra.cs.service.FeedManager;
@@ -2185,12 +2186,27 @@ public class Mailbox {
             // REPLY
             cal.getProperties().add(Method.PUBLISH);
             
-            // default timezone
-            ICalTimeZone cur = getAccount().getTimeZone();
-            VTimeZone vtz = cur.toVTimeZone();
-            cal.getComponents().add(vtz);
             
+            // timezones
+            {
+                ICalTimeZone localTz = getAccount().getTimeZone();
+                TimeZoneMap tzmap = new TimeZoneMap(localTz);
+                
+                for (Iterator iter = appts.iterator(); iter.hasNext();) {
+                    Appointment appt = (Appointment)iter.next();
+                    tzmap.add(appt.getTimeZoneMap());
+                }
+                
+                // iterate the tzmap and add all the VTimeZone's 
+                // (TODO: should this code live in TimeZoneMap???) 
+                for (Iterator iter = tzmap.tzIterator(); iter.hasNext();) {
+                    ICalTimeZone cur = (ICalTimeZone) iter.next();
+                    VTimeZone vtz = cur.toVTimeZone();
+                    cal.getComponents().add(vtz);
+                }
+            }
             
+            // build all the event components and add them to the Calendar
             for (Iterator iter = appts.iterator(); iter.hasNext();) {
                 Appointment appt = (Appointment)iter.next();
                 

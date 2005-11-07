@@ -1301,12 +1301,14 @@ public class Appointment extends MailItem {
             Invite inv = (Invite)invIter.next();
             
 //            Calendar invCal = getCalendar(inv.getMailItemId());
-            Calendar invCal = inv.toICalendar();
+//            Calendar invCal = inv.toICalendar();
             
-            for (Iterator compIter = invCal.getComponents().iterator(); compIter.hasNext();) {
-                Component comp = (Component)compIter.next();
-                cal.getComponents().add(comp);
-            }
+//            for (Iterator compIter = invCal.getComponents().iterator(); compIter.hasNext();) {
+//                Component comp = (Component)compIter.next();
+//                cal.getComponents().add(comp);
+//            }
+            Component comp = inv.toVEvent();
+            cal.getComponents().add(comp);
         }
     }
     
