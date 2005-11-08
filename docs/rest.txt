@@ -54,7 +54,7 @@ EXAMPLES
 There are two primary formats, one using a folder, and one using a mail item id.
 
 http://server/user/[~]{account-name}/{folder-path}    // path to a folder 
-http://server/user/[~]{account-name}/_{item-id}       // a mail item id
+http://server/user/[~]{account-name}/?id={item-id}       // a mail item id
 
 A single ~ is allowed and references the authenticated user accessing the data. 
 
@@ -74,17 +74,13 @@ Some examples:
 
 The second format is used to reference something by its mail item id:
 
-/user/roland/_10               // ICS view of calendar, referenced via ID
-/user/roland/_945?fmt=vcard    // contact formatted as a vcard
-/user/roland/_100/2/3          // message with id 100, mime part 2.3
+/user/roland/?id=10                    // ICS view of calendar, referenced via ID
+/user/roland/?id=945&fmt=vcard         // contact formatted as a vcard
+/user/roland/?id=100&part=2.3          // message with id 100, mime part 2.3
 
-To escape a leading "_",  use another "_":
+Can also use "/userid" to represent a user's zimbraId, giving a truly persistent URL:
 
-/user/roland/__10              // default view of folder "_10"
-
-Can also use "_" to represent a user's zimbraId, giving a truly persistent URL:
-
-/user/_85f92db0-3348-4916-9ca5-f74a9a5252e0/_34567
+/userid/85f92db0-3348-4916-9ca5-f74a9a5252e0/?id=34567
 
 When we support documents in a folder, we'd use the document's name as you'd expect:
 
@@ -93,7 +89,7 @@ When we support documents in a folder, we'd use the document's name as you'd exp
 We should of course be able to convert attachments to HTML (via Verity) with this
 syntax:
 
-/user/roland/_564/4?fmt=html   // part 4 (which could be a word doc) in html
+/user/roland/?id=564&part=4&fmt=html   // part 4 (which could be a word doc) in html
 
 ------------------------------------------------------------
 SEARCHING
@@ -260,12 +256,11 @@ Here various ways to access john.doe@zimbra.com's calendar:
 
 shortcut to yourself: 
   /user/~/calendar
-  /user/~/_10       // id 10 is always the calendar folder
+  /user/~/?id=10       // id 10 is always the calendar folder
 
 explicit account: 
    /user/john.doe/calendar
-   /user/john.doe/_10
+   /user/john.doe/?id=10
    /user/john.doe@zimbra.com/calendar
-   /user/_34cc4086-801e-42a0-a67a-ea93c1590c4e/calendar
-   /user/_34cc4086-801e-42a0-a67a-ea93c1590c4e/_10
-   
+   /userid/34cc4086-801e-42a0-a67a-ea93c1590c4e/calendar
+   /user/34cc4086-801e-42a0-a67a-ea93c1590c4e/?id=10
