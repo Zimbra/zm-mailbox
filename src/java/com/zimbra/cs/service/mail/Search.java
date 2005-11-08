@@ -87,7 +87,7 @@ public class Search extends DocumentHandler  {
             Mailbox mbox = getRequestedMailbox(lc);
             
             SearchParams params = parseCommonParameters(request, lc);
-            ZimbraQueryResults results = this.getResults(mbox, params, lc, session);
+            ZimbraQueryResults results = getResults(mbox, params, lc, session);
 
             Element response = lc.createElement(MailService.SEARCH_RESPONSE);
 
@@ -107,7 +107,7 @@ public class Search extends DocumentHandler  {
                 // decisions
                 
                 // FIXME!  workaround bug in resetIterator()
-                results = this.getResults(mbox, params, lc, session);
+                results = getResults(mbox, params, lc, session);
                 
                 pager = new ResultsPager(results, params.getLimit(), 0);
                 response.addAttribute(MailService.A_QUERY_OFFSET, 0);
@@ -189,12 +189,15 @@ public class Search extends DocumentHandler  {
         // Lookup the offset= and limit= parameters in the soap request
         return (int) request.getAttributeLong(MailService.A_QUERY_OFFSET, 0);
     }
-    
+
+    // note that session may be null
     protected ZimbraQueryResults getResults(Mailbox mbox, SearchParams params, ZimbraContext lc, SoapSession session)
     throws ServiceException {
         ZimbraQueryResults results = null;
-        if (!DONT_CACHE_RESULTS)
+        boolean cacheResults = !DONT_CACHE_RESULTS && session != null;
+        if (cacheResults) {
             session.getQueryResults(params.getQueryStr(), params.getTypesStr(), params.getSortByStr());
+        }
 
         if (params.getOffset() > 0) {
             if (results == null) {
@@ -205,7 +208,9 @@ public class Search extends DocumentHandler  {
             } else {
             }
         } else {
-            session.clearCachedQueryResults();
+            if (session != null) {
+                session.clearCachedQueryResults();
+            }
             results = null;
             if (mLog.isDebugEnabled()) {
                 mLog.debug("Re-running query because offset at 0");
@@ -222,7 +227,7 @@ public class Search extends DocumentHandler  {
                 int sort = MailboxIndex.parseSortByString(params.getSortByStr());
                 
                 results = mbox.search(lc.getOperationContext(), params.getQueryStr(), types, sort, params.getLimit() + params.getOffset());
-                if (!DONT_CACHE_RESULTS) {
+                if (cacheResults) {
                     session.putQueryResults(params.getQueryStr(), params.getTypesStr(), params.getSortByStr(), results);
                 }
                 
