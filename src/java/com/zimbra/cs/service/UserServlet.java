@@ -41,14 +41,18 @@ import net.fortuna.ical4j.model.Parameter;
 import net.fortuna.ical4j.model.ValidationException;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
+import com.zimbra.cs.service.formatter.CsvFormatter;
+import com.zimbra.cs.service.formatter.IcsFormatter;
+import com.zimbra.cs.service.formatter.RssFormatter;
 import com.zimbra.cs.service.mail.CalendarUtils;
-import com.zimbra.cs.util.Constants;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
 
 /**
@@ -59,22 +63,126 @@ import com.zimbra.soap.Element;
  *
  */
 
-public class CalendarServlet extends ZimbraBasicAuthServlet {
+public class UserServlet extends ZimbraBasicAuthServlet {
 
-    public CalendarServlet() {
+    public static final String QP_FMT = "fmt"; // format query param
+    
+    public static final String FORMAT_CSV = "csv";
+    public static final String FORMAT_RSS = "rss";
+    public static final String FORMAT_ICS = "ics";    
+
+    public UserServlet() {
         mAllowCookieAuth = true;
     }
 
-    protected String getRealmHeader()  { return "BASIC realm=\"Zimbra iCal\""; }
+    public static class Context {
+        public HttpServletRequest req;
+        public HttpServletResponse resp;
+        public String format;
+        public String accountPath;
+        public String itemPath;
+        public String residualPath;
+        public Account acct;
+        public Account targetAccount;
+        public Mailbox targetMailbox;
+        public OperationContext opContext;
+        
+        public String toString() {
+            StringBuffer sb = new StringBuffer();
+            sb.append("account("+accountPath+")\n");
+            sb.append("itemPath("+itemPath+")\n");
+            sb.append("foramt("+format+")\n");            
+            return sb.toString();
+        }
+    }
+    
+    protected String getRealmHeader()  { return "BASIC realm=\"Zimbra\""; }
+    
+    private Context initContext(HttpServletRequest req, HttpServletResponse resp, Account acct) throws IOException, ServiceException {
+        Context c = new Context();
+        c.req = req;
+        c.resp = resp;
 
-    public void doAuthGet(HttpServletRequest req, HttpServletResponse resp, Account acct, Mailbox mailbox)
+        String pathInfo = req.getPathInfo().toLowerCase();        
+        if (pathInfo == null || pathInfo.equals("/") || pathInfo.equals("") || !pathInfo.startsWith("/")) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "invalid path");
+            return null;
+        }
+        
+        int pos = pathInfo.indexOf('/', 1);
+        if (pos == -1) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "invalid path");
+            return null;
+        }
+        c.accountPath = pathInfo.substring(1, pos);
+
+        c.itemPath = pathInfo.substring(pos+1);
+        c.format = req.getParameter(QP_FMT);
+        if (c.format != null) c.format = c.format.toLowerCase();
+
+        Provisioning prov = Provisioning.getInstance();
+        if (c.accountPath.equals("~")) {
+            c.accountPath = acct.getName();
+        } else if (c.accountPath.startsWith("~")) {
+            c.accountPath = c.accountPath.substring(1);
+        }
+        
+        c.targetAccount = prov.getAccountByName(c.accountPath);
+
+        if (c.targetAccount == null) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "mailbox not found");
+            return null;
+        }
+
+        return c;
+    }
+    
+    public void doAuthGet(HttpServletRequest req, HttpServletResponse resp, Account acct)
     throws ServiceException, IOException {
-        String pathInfo = req.getPathInfo().toLowerCase();
+        Context c = initContext(req, resp, acct);
+        if (c == null) return;
 
+        ZimbraLog.calendar.info("context = "+c);
+
+        c.targetMailbox = Mailbox.getMailboxByAccount(c.targetAccount);
+        if (c.targetMailbox == null) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "mailbox not found");
+            return;             
+        }
+
+        c.opContext = new OperationContext(acct);
+
+        Folder folder = c.targetMailbox.getFolderByPath(c.opContext, c.itemPath);
+
+        if (c.format == null) {
+            switch (folder.getDefaultView()) {
+            case Folder.TYPE_APPOINTMENT: 
+                c.format = "ics";
+                break;
+            case Folder.TYPE_CONTACT:
+                c.format = "csv";
+                break;                
+            }
+        }
+
+        if (c.format == null) {
+            resp.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED, "not implemented yet");
+            return;
+        } else if (c.format.equals(UserServlet.FORMAT_CSV)) {
+            CsvFormatter.format(c, folder);
+        } else if (c.format.equals(UserServlet.FORMAT_ICS)) {
+            IcsFormatter.format(c, folder);
+        } else if (c.format.equals(UserServlet.FORMAT_RSS)) {
+            RssFormatter.format(c, folder);
+        } else {
+            resp.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED, "format not implemented yet: "+c.format);
+            return;            
+        }
+
+        /*
         if (pathInfo == null || pathInfo.equals("/") || pathInfo.equals("")) pathInfo = "/calendar.ics";
         
-        //ZimbraLog.calendar.info("pathInfo = "+pathInfo);
-
+        
         String folderPath = getFolderPath(pathInfo);
         
         //ZimbraLog.calendar.info("folderPath = "+folderPath);
@@ -93,6 +201,7 @@ public class CalendarServlet extends ZimbraBasicAuthServlet {
             long end = System.currentTimeMillis() + (365 * 100 * Constants.MILLIS_PER_DAY);
             doIcal(req, resp, acct, mailbox, start, end, folder.getId());            
         }
+        */
     }
 
     private String getFolderPath(String pathInfo) {

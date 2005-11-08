@@ -62,11 +62,17 @@ public class ICalServlet extends ZimbraBasicAuthServlet {
 
     protected String getRealmHeader()  { return "BASIC realm=\"Zimbra iCal\""; }
 
-    public void doAuthGet(HttpServletRequest req, HttpServletResponse resp, Account acct, Mailbox mailbox)
+    public void doAuthGet(HttpServletRequest req, HttpServletResponse resp, Account acct)
     throws ServiceException, IOException {
         String pathInfo = req.getPathInfo().toLowerCase();
         boolean isRss = pathInfo != null && pathInfo.endsWith("rss");
 
+        Mailbox mailbox = Mailbox.getMailboxByAccount(acct);
+        if (mailbox == null) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "mailbox not found");
+            return;             
+        }
+        
         if (isRss) {
             long start = System.currentTimeMillis() - (7 * Constants.MILLIS_PER_DAY);
             long end = start + (14 * Constants.MILLIS_PER_DAY);            

@@ -58,7 +58,7 @@ public class RssServlet extends ZimbraBasicAuthServlet {
 
     private static final String PARAM_QUERY = "query";
 
-    public void doAuthGet(HttpServletRequest req, HttpServletResponse resp, Account acct, Mailbox mailbox)
+    public void doAuthGet(HttpServletRequest req, HttpServletResponse resp, Account acct)
     throws ServiceException, IOException {
 
         //resp.setContentType("text/xml");
@@ -82,6 +82,12 @@ public class RssServlet extends ZimbraBasicAuthServlet {
             if (query == null) query = "is:unread in:inbox";
 
             channel.addElement("description").setText(query);
+
+            Mailbox mailbox = Mailbox.getMailboxByAccount(acct);
+            if (mailbox == null) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "mailbox not found");
+                return;             
+            }
 
             OperationContext octxt = new OperationContext(acct);
             results = mailbox.search(octxt, query, new byte[] { MailItem.TYPE_MESSAGE }, MailboxIndex.SEARCH_ORDER_DATE_DESC, 500);

@@ -104,8 +104,8 @@
   </servlet>
 
   <servlet>
-    <servlet-name>CalendarServlet</servlet-name>
-    <servlet-class>com.zimbra.cs.service.CalendarServlet</servlet-class>
+    <servlet-name>UserServlet</servlet-name>
+    <servlet-class>com.zimbra.cs.service.UserServlet</servlet-class>
     <load-on-startup>5</load-on-startup>
     <init-param>
       <param-name>allowed.ports</param-name>
@@ -190,8 +190,8 @@
   </servlet-mapping>
 
   <servlet-mapping>
-    <servlet-name>CalendarServlet</servlet-name>
-    <url-pattern>/calendar/*</url-pattern>
+    <servlet-name>UserServlet</servlet-name>
+    <url-pattern>/user/*</url-pattern>
   </servlet-mapping>
 
   <servlet-mapping>

@@ -58,7 +58,7 @@ public abstract class ZimbraBasicAuthServlet extends ZimbraServlet {
 
     protected boolean mAllowCookieAuth;
 
-    public abstract void doAuthGet(HttpServletRequest req, HttpServletResponse resp, Account acct, Mailbox mailbox)
+    public abstract void doAuthGet(HttpServletRequest req, HttpServletResponse resp, Account acct)
     throws ServiceException, IOException;
 
     private Account getAccount(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException, ServiceException 
@@ -128,14 +128,7 @@ public abstract class ZimbraBasicAuthServlet extends ZimbraServlet {
         try {
             Account acct = getAccount(req, resp);
             if (acct == null) return;
-
-            Mailbox mailbox = Mailbox.getMailboxByAccount(acct);
-            if (mailbox == null) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "mailbox not found");
-                return;             
-            }
-
-            doAuthGet(req, resp, acct, mailbox);
+            doAuthGet(req, resp, acct);
         } catch (ServiceException e) {
             throw new ServletException(e);
         }
