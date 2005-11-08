@@ -132,6 +132,8 @@ public class ToXML {
 
         Element elem = parent.addElement(MailService.E_FOLDER);
         encodeFolderCommon(elem, lc, folder, fields);
+        if (needToOutput(fields, Change.MODIFIED_FLAGS))
+            elem.addAttribute(MailService.A_EXCLUDE_FREEBUSY, folder.isTagged(folder.getMailbox().mExcludeFBFlag));
         if (needToOutput(fields, Change.MODIFIED_SIZE)) {
             long size = folder.getSize();
             if (size > 0 || fields != NOTIFY_FIELDS)
@@ -177,12 +179,7 @@ public class ToXML {
     private static Element encodeFolderCommon(Element elem, ZimbraContext lc, Folder folder, int fields) {
         int folderId = folder.getId();
         elem.addAttribute(MailService.A_ID, lc.formatItemId(folder));
-        
-        if ((folder.getFlagBitmask() & Flag.ID_FLAG_EXCLUDE_FREEBUSY)!= 0)
-            elem.addAttribute(MailService.A_EXCLUDE_FREEBUSY, true);
-        else 
-            elem.addAttribute(MailService.A_EXCLUDE_FREEBUSY, false);        
-        
+
         if (folderId != Mailbox.ID_FOLDER_ROOT) {
             if (needToOutput(fields, Change.MODIFIED_NAME)) {
                 String name = folder.getName();
