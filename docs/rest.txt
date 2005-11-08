@@ -268,9 +268,4 @@ explicit account:
    /user/john.doe@zimbra.com/calendar
    /user/_34cc4086-801e-42a0-a67a-ea93c1590c4e/calendar
    /user/_34cc4086-801e-42a0-a67a-ea93c1590c4e/_10
-
-For completeness, here is how you might specify a particular mailbox id (12) on
-a server (using  /mailbox instead of /user):
-
-  /mailbox/mail.foo.com/_5/calendar       // via server's name
-  /mailbox/_d7c72a72..0ae9fb/_5/calendar  // via server's id
+   
