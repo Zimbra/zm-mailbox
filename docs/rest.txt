@@ -167,9 +167,7 @@ http://zimbra.companyB.com/user/john.smith@companyB.com/shared/contacts
 ISSUES/NOTES
 ------------------------------------------------------------
 
-1. how to distinguish between a folder and its contents? Do we need to? (see 3)
-
-2. how do you specify a folder and all sub folders recursively?
+1. how do you specify a folder and all sub folders recursively?
 
   For example, I can see wanting to specify:
 
@@ -178,9 +176,7 @@ ISSUES/NOTES
   /user/roland/sales/*?fmt=zip               // all folders in sales (not including sales)
   /user/roland/sales/*?fmt=zip?recursive=1   //  same as previous, but recursive
 
-  It would be nice if that could be handled view a naming scheme only.
-
-3. user-friendly item "ids"? It would be nice to have user-friendly names 
+2. user-friendly item "ids"? It would be nice to have user-friendly names 
    for items inside of a folder, such as (+ is url-encoded form of a space):
 
   /user/roland/calendar/Staff+Meeting
@@ -189,46 +185,25 @@ ISSUES/NOTES
 
   Exchange allows this type of naming, need to determine how/if we'd want to do
   this, and how to deal with collisions like it does. 
+  
+  Might need to come up with a per-item query-param string, or use search:
+  
+  /user/roland/contacts/?query="Roland Schemers"
 
-4. Potential interesting uses of hierarchical URLS and unresovled parts of the path
-
-  hierarchical URLs are already used to access MIME parts, as already pointed out:
-
-  /user/roland/_100/2/3      // message with id 100, mime part 2.3
-
-  How about for a particular range of calendar events:
-
-  /user/roland/calendar/YYYY?fmt=hmtl        // all appointments for a year
-
-  /user/roland/calendar/YYYY/MM?fmt=rss      // all appointments for a month, RSS feed
-  etc...
-
-  potential other interesting uses, like extracting a single header/attribute
-  from an item (performance issues aside :)):
-
-  /user/roland/_100/header/subject
-
-  In this case we have four path components:
-
-  a. user            -> designating that the user servlet should handle the request
-  b. roland          -> designating the account
-  c. _100            -> designating the mail item id
-  d. header/subject  -> the unresolved part of the path, passed into the handler
-
-5. there will probably by mail-item specific query params, like duration for 
+3. there will probably by mail-item specific query params, like duration for 
    calendars, picking alternate views for .html flavors, etc. Should try and
    standardize where possible. For exmaple:
 
-   /user/roland/calendar/2005/12/25?fmt=hmtl&view=week
+   /user/roland/calendar?start=20051225&fmt=hmtl&view=week
 
-6. calendar free/busy chould also be exported via this mechaism:
+4. calendar free/busy chould also be exported via this mechanism:
 
    /user/schemers/?fmt=vfb
 
    specifying it on the "root" folder would get the free/busy for all calendars that
    are marked to be included in free/busy.
 
-7. initially we might not support things like:
+5. initially we might not support things like:
 
    /user/roland/inbox?fmt=csv
 
@@ -237,11 +212,11 @@ ISSUES/NOTES
    and/or mime parts of the message. The mime body parts would not be incuded, 
    just a URL referencing them.
 
-8. We should have an extension mechanism to allow people to plug in the their own
+6. We should have an extension mechanism to allow people to plug in the their own
    formats. The plugin would get a context containing the query params, the path 
    (resolve/unresovled parts), and the target mail item.
 
-9. I really wanted the following to be equiv, and would like to see if we can
+7. I really wanted the following to be equiv, and would like to see if we can
    still achieve it without too much overhead/quoting issues:
 
    /user/roland/inbox?fmt=rss
