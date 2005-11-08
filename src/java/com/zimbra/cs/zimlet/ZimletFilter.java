@@ -51,7 +51,7 @@ import com.zimbra.cs.util.ZimbraLog;
  */
 public class ZimletFilter extends ZimbraServlet implements Filter {
 
-	private static final String ZIMLET_URL = "^/zimlet/([^/\\?])[/\\?]?";
+	private static final String ZIMLET_URL = "^/service/zimlet/([^/\\?]+)[/\\?]?.*$";
 	private Pattern mPattern;
 	
 	public void init(FilterConfig config) throws ServletException {
@@ -63,11 +63,13 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
 				res instanceof HttpServletResponse);
 	}
 	
-	private String getZimletName(HttpServletRequest req) {
-		Matcher matcher = mPattern.matcher(req.getPathInfo());
-    	ZimbraLog.zimlet.info("matching zimlet url "+req.getPathInfo());
+	private String getZimletName(HttpServletRequest req) throws ServletException {
+		String uri = req.getRequestURI();
+		if (uri == null) {
+			return null;
+		}
+		Matcher matcher = mPattern.matcher(uri);
 		if (matcher.matches()) {
-	    	ZimbraLog.zimlet.info("matched "+matcher.group(1));
 			return matcher.group(1);
 		}
 		return null;
@@ -83,6 +85,7 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
 
         AuthToken authToken = getAuthTokenFromCookie(req, resp);
         if (authToken == null) {
+	    	ZimbraLog.zimlet.info("no auth token");
         	return;
         }
         
@@ -92,6 +95,7 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
         	String zimletName = getZimletName(req);
         	
         	if (zimletName == null) {
+    	    	ZimbraLog.zimlet.debug("no zimlet name");
         		return;
         	}
         	
