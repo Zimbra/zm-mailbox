@@ -1564,100 +1564,103 @@ public class ImapHandler extends ProtocolHandler {
 
         String command = (byUID ? "UID FETCH" : "FETCH");
         boolean allPresent = true;
+        Set i4set;
 
         synchronized (mMailbox) {
-            Set i4set = mSession.getFolder().getSubsequence(sequenceSet, byUID);
-            allPresent = byUID || !i4set.contains(null);
-            for (Iterator it = i4set.iterator(); it.hasNext(); ) {
-                ByteArrayOutputStream baos = ZimbraLog.imap.isDebugEnabled() ? new ByteArrayOutputStream() : null;
-		        PrintStream result = new PrintStream(new ByteUtil.TeeOutputStream(mOutputStream, baos), false, "utf-8");
-            	ImapMessage i4msg = (ImapMessage) it.next();
-            	if (i4msg == null)
-                    continue;
-	        	try {
-                    boolean markMessage = markRead && (i4msg.flags & Flag.FLAG_UNREAD) != 0;
-                    boolean empty = true;
-                    byte[] raw = null;
-                    result.print('*');  result.print(' ');
-                    result.print(i4msg.seq);  result.print(" FETCH (");
-                    if ((attributes & FETCH_UID) != 0) {
-                        result.print(empty ? "" : " ");  result.print("UID "); result.print(i4msg.uid);  empty = false;
-                    }
-                    if ((attributes & FETCH_INTERNALDATE) != 0) {
-			        	result.print(empty ? "" : " ");  result.print(i4msg.getDate(mTimeFormat));  empty = false;
-                    }
-			        if ((attributes & FETCH_RFC822_SIZE) != 0) {
-			        	result.print(empty ? "" : " ");  result.print("RFC822.SIZE ");  result.print(i4msg.getSize());  empty = false;
-                    }
-                    if (!fullMessage.isEmpty()) {
-                        StoreManager sm = StoreManager.getInstance();
-                        MailboxBlob blob = sm.getMailboxBlob(mMailbox, i4msg.id, i4msg.getRevision(), i4msg.getVolumeId());
-                        if (blob == null) {
-                            ZimbraLog.imap.error("missing blob for id: " + i4msg.id + ", change: " + i4msg.getRevision());
-                            continue;
-                        }
-                        try {
-                            raw = ByteUtil.getContent(sm.getContent(blob), i4msg.getSize());
-                        } catch (IOException e) {
-                            throw ServiceException.FAILURE("error fetching content for message " + i4msg.id, e);
-                        }
-                        for (int i = 0; i < fullMessage.size(); i++) {
-                            ImapPartSpecifier pspec = (ImapPartSpecifier) fullMessage.get(i);
-                            result.print(empty ? "" : " ");  pspec.write(result, mOutputStream, raw);  empty = false;
-                        }
-                    }
-			        if (!parts.isEmpty() || (attributes & ~FETCH_FROM_CACHE) != 0) {
-                        // don't use msg.getMimeMessage() because it implicitly expands TNEF attachments
-                        MimeMessage mm;
-                        try {
-                            InputStream is = raw != null ? new ByteArrayInputStream(raw) : mMailbox.getMessageById(getContext(), i4msg.id).getRawMessage();
-                            mm = new MimeMessage(JMSession.getSession(), is);
-                            is.close();
-                        } catch (IOException e) {
-                            throw ServiceException.FAILURE("error fetching raw content for message " + i4msg.id, e);
-                        }
-                        if ((attributes & FETCH_BODY) != 0) {
-                            result.print(empty ? "" : " ");  result.print("BODY ");
-                            i4msg.getStructure(result, mm, false);  empty = false;
-                        }
-                        if ((attributes & FETCH_BODYSTRUCTURE) != 0) {
-                            result.print(empty ? "" : " ");  result.print("BODYSTRUCTURE ");
-                            i4msg.getStructure(result, mm, true);  empty = false;
-                        }
-                        if ((attributes & FETCH_ENVELOPE) != 0) {
-                            result.print(empty ? "" : " ");  result.print("ENVELOPE ");
-                            i4msg.getEnvelope(result, mm);  empty = false;
-                        }
-                        for (int i = 0; i < parts.size(); i++) {
-                            ImapPartSpecifier pspec = (ImapPartSpecifier) parts.get(i);
-                            byte[] content = i4msg.getPart(mm, pspec);
-                            result.print(empty ? "" : " ");  pspec.write(result, mOutputStream, content);  empty = false;
-                        }
-			        }
-                    // FIXME: optimize by doing a single mark-read op on multiple messages
-                    if (markMessage)
-                        mMailbox.alterTag(getContext(), i4msg.id, MailItem.TYPE_MESSAGE, Flag.ID_FLAG_UNREAD, false);
-                    // 6.4.5: "The \Seen flag is implicitly set; if this causes the flags to
-                    //         change, they SHOULD be included as part of the FETCH responses."
-                    if ((attributes & FETCH_FLAGS) != 0 || markMessage) {
-                        mSession.getFolder().undirtyMessage(i4msg);
-                        result.print(empty ? "" : " ");  result.print(i4msg.getFlags(mSession));  empty = false;
-                    }
-                } catch (ServiceException e) {
-                    ZimbraLog.imap.warn("ignoring error during " + command + ": ", e);
-                    continue;
-                } catch (MessagingException e) {
-                    ZimbraLog.imap.warn("ignoring error during " + command + ": ", e);
-                    continue;
-                } finally {
-                    result.write(')');
-                    if (mOutputStream != null)  mOutputStream.write(LINE_SEPARATOR_BYTES);
-                    if (baos != null)           ZimbraLog.imap.debug("  S: " + baos);
+            i4set = mSession.getFolder().getSubsequence(sequenceSet, byUID);
+        }
+        allPresent = byUID || !i4set.contains(null);
+        for (Iterator it = i4set.iterator(); it.hasNext(); ) {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ByteArrayOutputStream baosDebug = ZimbraLog.imap.isDebugEnabled() ? new ByteArrayOutputStream() : null;
+	        PrintStream result = new PrintStream(new ByteUtil.TeeOutputStream(baos, baosDebug), false, "utf-8");
+        	ImapMessage i4msg = (ImapMessage) it.next();
+        	if (i4msg == null)
+                continue;
+        	try {
+                boolean markMessage = markRead && (i4msg.flags & Flag.FLAG_UNREAD) != 0;
+                boolean empty = true;
+                byte[] raw = null;
+                result.print('*');  result.print(' ');
+                result.print(i4msg.seq);  result.print(" FETCH (");
+                if ((attributes & FETCH_UID) != 0) {
+                    result.print(empty ? "" : " ");  result.print("UID "); result.print(i4msg.uid);  empty = false;
                 }
+                if ((attributes & FETCH_INTERNALDATE) != 0) {
+		        	result.print(empty ? "" : " ");  result.print(i4msg.getDate(mTimeFormat));  empty = false;
+                }
+		        if ((attributes & FETCH_RFC822_SIZE) != 0) {
+		        	result.print(empty ? "" : " ");  result.print("RFC822.SIZE ");  result.print(i4msg.getSize());  empty = false;
+                }
+                if (!fullMessage.isEmpty()) {
+                    StoreManager sm = StoreManager.getInstance();
+                    MailboxBlob blob = sm.getMailboxBlob(mMailbox, i4msg.id, i4msg.getRevision(), i4msg.getVolumeId());
+                    if (blob == null) {
+                        ZimbraLog.imap.error("missing blob for id: " + i4msg.id + ", change: " + i4msg.getRevision());
+                        continue;
+                    }
+                    try {
+                        raw = ByteUtil.getContent(sm.getContent(blob), i4msg.getSize());
+                    } catch (IOException e) {
+                        throw ServiceException.FAILURE("error fetching content for message " + i4msg.id, e);
+                    }
+                    for (int i = 0; i < fullMessage.size(); i++) {
+                        ImapPartSpecifier pspec = (ImapPartSpecifier) fullMessage.get(i);
+                        result.print(empty ? "" : " ");  pspec.write(result, baos, raw);  empty = false;
+                    }
+                }
+		        if (!parts.isEmpty() || (attributes & ~FETCH_FROM_CACHE) != 0) {
+                    // don't use msg.getMimeMessage() because it implicitly expands TNEF attachments
+                    MimeMessage mm;
+                    try {
+                        InputStream is = raw != null ? new ByteArrayInputStream(raw) : mMailbox.getMessageById(getContext(), i4msg.id).getRawMessage();
+                        mm = new MimeMessage(JMSession.getSession(), is);
+                        is.close();
+                    } catch (IOException e) {
+                        throw ServiceException.FAILURE("error fetching raw content for message " + i4msg.id, e);
+                    }
+                    if ((attributes & FETCH_BODY) != 0) {
+                        result.print(empty ? "" : " ");  result.print("BODY ");
+                        i4msg.getStructure(result, mm, false);  empty = false;
+                    }
+                    if ((attributes & FETCH_BODYSTRUCTURE) != 0) {
+                        result.print(empty ? "" : " ");  result.print("BODYSTRUCTURE ");
+                        i4msg.getStructure(result, mm, true);  empty = false;
+                    }
+                    if ((attributes & FETCH_ENVELOPE) != 0) {
+                        result.print(empty ? "" : " ");  result.print("ENVELOPE ");
+                        i4msg.getEnvelope(result, mm);  empty = false;
+                    }
+                    for (int i = 0; i < parts.size(); i++) {
+                        ImapPartSpecifier pspec = (ImapPartSpecifier) parts.get(i);
+                        byte[] content = i4msg.getPart(mm, pspec);
+                        result.print(empty ? "" : " ");  pspec.write(result, baos, content);  empty = false;
+                    }
+		        }
+                // FIXME: optimize by doing a single mark-read op on multiple messages
+                if (markMessage)
+                    mMailbox.alterTag(getContext(), i4msg.id, MailItem.TYPE_MESSAGE, Flag.ID_FLAG_UNREAD, false);
+                // 6.4.5: "The \Seen flag is implicitly set; if this causes the flags to
+                //         change, they SHOULD be included as part of the FETCH responses."
+                if ((attributes & FETCH_FLAGS) != 0 || markMessage) {
+                    mSession.getFolder().undirtyMessage(i4msg);
+                    result.print(empty ? "" : " ");  result.print(i4msg.getFlags(mSession));  empty = false;
+                }
+            } catch (ServiceException e) {
+                ZimbraLog.imap.warn("ignoring error during " + command + ": ", e);
+                continue;
+            } catch (MessagingException e) {
+                ZimbraLog.imap.warn("ignoring error during " + command + ": ", e);
+                continue;
+            } finally {
+                result.write(')');
+                baos.write(LINE_SEPARATOR_BYTES);
+                if (mOutputStream != null)  mOutputStream.write(baos.toByteArray());
+                if (baosDebug != null)      ZimbraLog.imap.debug("  S: " + baosDebug);
             }
-            sendNotifications(false, false);
         }
 
+        sendNotifications(false, false);
         if (allPresent)
         	sendOK(tag, command + " completed");
         else {
@@ -1690,6 +1693,7 @@ public class ImapHandler extends ProtocolHandler {
         String command = (byUID ? "UID STORE" : "STORE");
         boolean allPresent = true;
         ArrayList newTags = (operation != STORE_REMOVE ? new ArrayList() : null);
+        List responses = new ArrayList();
         try {
             synchronized (mMailbox) {
                 // if it was a STORE [+-]?FLAGS.SILENT, temporarily disable notifications
@@ -1738,12 +1742,10 @@ public class ImapHandler extends ProtocolHandler {
                         //         caused by a UID command..."
                         if (byUID)
                             result.append(" UID ").append(i4msg.uid);
-                        result.append(')');
-                        sendUntagged(result.toString());
+                        responses.add(result.append(')').toString());
                         mSession.getFolder().undirtyMessage(i4msg);
                     }
                 }
-                sendNotifications(false, false);
             }
         } catch (ServiceException e) {
             deleteTags(newTags);
@@ -1754,6 +1756,9 @@ public class ImapHandler extends ProtocolHandler {
             mSession.getFolder().enableNotifications();
         }
 
+        for (Iterator it = responses.iterator(); it.hasNext(); )
+            sendUntagged((String) it.next());
+        sendNotifications(false, false);
         // RFC 2180 4.2.1: "If the ".SILENT" suffix is used, and the STORE completed successfully for
         //                  all the non-expunged messages, the server SHOULD return a tagged OK."
         // RFC 2180 4.2.3: "If the ".SILENT" suffix is not used, and a mixture of expunged and non-
