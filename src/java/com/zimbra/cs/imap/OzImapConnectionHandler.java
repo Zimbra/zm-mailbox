@@ -824,6 +824,9 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
                     //         empty.  If the server implementation supports inferior hierarchical
                     //         names of INBOX, these are unaffected by a rename of INBOX."
                     // FIXME: move the contents (but not the subfolders) of INBOX to the new folder
+                    ZimbraLog.imap.info("RENAME failed: RENAME of INBOX not supported");
+                    sendNO(tag, "RENAME failed: RENAME of INBOX not supported");
+                    return CONTINUE_PROCESSING;
                 }
             }
         } catch (ServiceException e) {
