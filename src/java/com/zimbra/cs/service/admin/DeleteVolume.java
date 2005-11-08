@@ -40,6 +40,7 @@ public class DeleteVolume extends AdminDocumentHandler {
         short id = (short) request.getAttributeLong(AdminService.A_ID);
         // make sure the volume exists before doing anything heavyweight...
         Volume.getById(id);
+        Volume.delete(id);
 
         Element response = lc.createElement(AdminService.DELETE_VOLUME_RESPONSE);
         return response;
