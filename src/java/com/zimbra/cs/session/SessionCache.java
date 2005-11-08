@@ -138,11 +138,12 @@ public final class SessionCache {
 
         if (sLog.isDebugEnabled())
             sLog.debug("Clearing session " + sessionId);
-        synchronized(sLRUMap) {
-            Session session = (Session) sLRUMap.remove(sessionId);
-            if (session != null)
-                session.doCleanup();
+        Session session = null;
+        synchronized (sLRUMap) {
+            session = (Session) sLRUMap.remove(sessionId);
         }
+        if (session != null)
+            session.doCleanup();
     }
 
     /** Empties the session cache and cleans up any existing {@link Session}s.
