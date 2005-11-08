@@ -326,7 +326,9 @@ public class ImapSession extends Session {
 			try {
 				mHandler.sendNotifications(true, true);
 			} catch (IOException e) {
-				// FIXME: shut down handler
+                // ImapHandler.dropConnection clears our mHandler and calls SessionCache.clearSession,
+                //   which calls Session.doCleanup, which calls Mailbox.removeListener
+                mHandler.dropConnection();
 			}
     }
 
