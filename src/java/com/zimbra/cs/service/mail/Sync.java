@@ -136,7 +136,8 @@ public class Sync extends DocumentHandler {
                                               Change.MODIFIED_FOLDER | Change.MODIFIED_PARENT |
                                               Change.MODIFIED_NAME   | Change.MODIFIED_QUERY |
                                               Change.MODIFIED_COLOR  | Change.MODIFIED_POSITION |
-                                              Change.MODIFIED_VIEW   | Change.MODIFIED_CONFLICT;
+                                              Change.MODIFIED_VIEW   | Change.MODIFIED_CONFLICT |
+                                              Change.MODIFIED_ACL;
 
     private void deltaSync(ZimbraContext lc, Element response, Mailbox mbox, long begin) throws ServiceException {
         // first, handle deleted items
