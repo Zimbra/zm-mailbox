@@ -141,11 +141,7 @@ public class Folder extends MailItem {
     }
 
 
-    boolean canAccess(short rightsNeeded, Account authuser) throws ServiceException {
-        return (checkRights(rightsNeeded, authuser) & rightsNeeded) == rightsNeeded;
-    }
-
-    /** Returns ths subset of the requested access rights that the user has
+    /** Returns the subset of the requested access rights that the user has
      *  been granted on this folder.  The owner of the {@link Mailbox} has
      *  all rights on all items in the Mailbox, as do all admin accounts.
      *  All other users must be explicitly granted access.<p>

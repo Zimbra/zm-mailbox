@@ -589,12 +589,27 @@ public abstract class MailItem implements Comparable {
     boolean canAccess(short rightsNeeded, Account authuser) throws ServiceException {
         if (rightsNeeded == 0)
             return true;
-        // check to see if access has been granted on the enclosing folder
+        return checkRights(rightsNeeded, authuser) == rightsNeeded;
+    }
+
+    /** Returns the subset of the requested access rights that the user has
+     *  been granted on this item.  The owner of the {@link Mailbox} has
+     *  all rights on all items in the Mailbox, as do all admin accounts.
+     *  All other users must be explicitly granted access.  <i>(Tag sharing
+     *  and negative rights not yet implemented.)</i>
+     * 
+     * @param rightsNeeded  A set of rights (e.g. {@link ACL#RIGHT_READ}
+     *                      and {@link ACL#RIGHT_DELETE}).
+     * @param authuser      The user whose rights we need to query.
+     * @see ACL
+     * @see Folder#checkRights(short, Account) */
+    short checkRights(short rightsNeeded, Account authuser) throws ServiceException {
+        // check to see what access has been granted on the enclosing folder
         short granted = getFolder().checkRights(rightsNeeded, authuser);
-        // FIXME: check to see if access has been granted on any of the item's tags
-        //   granted |= getTags().getGrantedRights(rightsNeeded, authacct);
+        // FIXME: check to see what access has been granted on the item's tags
+        //   granted |= getTags().getGrantedRights(rightsNeeded, authuser);
         // and see if the granted rights are sufficient
-        return (granted & rightsNeeded) == rightsNeeded;
+        return (short) (granted & rightsNeeded);
     }
 
 

@@ -149,7 +149,8 @@ public class ToXML {
         }
         if (lc.isDelegatedRequest())
             try {
-                short perms = folder.getMailbox().getEffectivePermissions(lc.getOperationContext(), folder.getId());
+                Mailbox.OperationContext octxt = lc.getOperationContext();
+                short perms = folder.getMailbox().getEffectivePermissions(octxt, folder.getId(), MailItem.TYPE_FOLDER);
                 elem.addAttribute(MailService.A_RIGHTS, ACL.rightsToString(perms));
             } catch (ServiceException e) {
                 mLog.warn("ignoring exception while fetching effective permissions for folder " + folder.getId(), e);

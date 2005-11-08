@@ -1241,7 +1241,7 @@ public class Mailbox {
      *  This function does <u>not</u> have hooks for inserting arbitrary
      *  folders, tags, or messages into a new mailbox.
      * 
-     * @see Folder#create(int, Mailbox, Folder, String, byte) */
+     * @see Folder#create(int, Mailbox, Folder, String, byte, byte, String) */
     private void initialize() throws ServiceException {
         // the new mailbox's caches are created and the default set of tags are
         // loaded by the earlier call to loadFoldersAndTags in beginTransaction
@@ -1572,7 +1572,51 @@ public class Mailbox {
             }
         }
     }
-    
+
+
+    /** Returns the access rights that the user has been granted on this
+     *  item.  The owner of the {@link Mailbox} has all rights on all items
+     *  in the Mailbox, as do all admin accounts.  All other users must be
+     *  explicitly granted access.  <i>(Tag sharing and negative rights not
+     *  yet implemented.)</i>  This operation will succeed even if the
+     *  authenticated user from the {@link Mailbox.OperationContext} does
+     *  not have {@link ACL#RIGHT_READ} on the requested item.<p>
+     * 
+     *  If you want to know if an account has {@link ACL#RIGHT_WRITE} on an
+     *  item, call<pre>
+     *    (mbox.getEffectivePermissions(new OperationContext(acct), itemId) &
+     *         ACL.RIGHT_WRITE) != 0</pre>
+     * 
+     * @param octxt    The context (authenticated user, redo player, other
+     *                 constraints) under which this operation is executed.
+     * @param itemId   The item whose permissions we need to query.
+     * @param type     The item's type, or {@link MailItem#TYPE_UNKNOWN}.
+     * @return An OR'ed-together set of rights, e.g. {@link ACL#RIGHT_READ}
+     *         and {@link ACL#RIGHT_INSERT}.
+     * @throws ServiceException   The following error codes are possible:<ul>
+     *    <li><code>mail.NO_SUCH_ITEM</code> - the specified item does not
+     *        exist
+     *    <li><code>service.FAILURE</code> - if there's a database failure,
+     *        LDAP error, or other internal error</ul>
+     * @see ACL
+     * @see MailItem#checkRights(short, Account) */
+    public synchronized short getEffectivePermissions(OperationContext octxt, int itemId, byte type) throws ServiceException {
+        // fetch the item outside the transaction so we get it even if the
+        //   authenticated user doesn't have read permissions on it
+        MailItem item = getItemById(null, itemId, type);
+
+        boolean success = false;
+        try {
+            beginTransaction("getEffectivePermissions", octxt);
+            // use ~0 to query *all* rights; may need to change this when we do negative rights
+            short rights = item.checkRights((short) ~0, getAuthenticatedAccount());
+            success = true;
+            return rights;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
     /** Returns whether this type of {@link MailItem} is definitely preloaded
      *  in one of the <code>Mailbox</code>'s caches.
      * 
@@ -2037,22 +2081,6 @@ public class Mailbox {
         }
     }
 
-    public synchronized short getEffectivePermissions(OperationContext octxt, int folderId) throws ServiceException {
-        // fetch the folder outside the transaction so we get it even if the
-        //   authenticated user doesn't have read permissions on it
-        Folder folder = getFolderById(null, folderId);
-
-        boolean success = false;
-        try {
-            beginTransaction("getEffectivePermissions", octxt);
-            short rights = folder.checkRights((short) ~0, getAuthenticatedAccount());
-            success = true;
-            return rights;
-        } finally {
-            endTransaction(success);
-        }
-    }
-
 
     public synchronized SearchFolder getSearchFolderById(OperationContext octxt, int searchId) throws ServiceException {
         return (SearchFolder) getItemById(octxt, searchId, MailItem.TYPE_SEARCHFOLDER);
@@ -2401,7 +2429,6 @@ public class Mailbox {
     
     /**
      * @param octxt
-     * @param defaultInvite
      * @param exceptions can be NULL
      * @return appointment ID 
      * @throws ServiceException
@@ -3800,8 +3827,11 @@ public class Mailbox {
     private void commitCache(MailboxChange change) {
         try {
             // committing changes, so notify any listeners
-            for (Iterator it = mListeners.iterator(); it.hasNext(); )
-                ((Session) it.next()).notifyPendingChanges(change.mDirty);
+            if (!mListeners.isEmpty()) {
+                ArrayList listeners = new ArrayList(mListeners);
+                for (Iterator it = listeners.iterator(); it.hasNext(); )
+                    ((Session) it.next()).notifyPendingChanges(change.mDirty);
+            }
 
             // don't care about committed changes to external items
             MailItem.PendingDelete deleted = null;
@@ -4095,7 +4125,6 @@ public class Mailbox {
     /**
      * Tests whether backup may begin on this mailbox.  Backup may begin when
      * there is no shared delivery in progress.
-     * @return
      */
     public boolean backupAllowed() {
         synchronized (mBackupSharedDelivCoord) {
