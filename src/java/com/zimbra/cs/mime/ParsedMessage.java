@@ -35,6 +35,7 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -552,34 +553,44 @@ public class ParsedMessage {
         return false;
     }
 
+    // these *should* be taken from a properties file
+    private static final Set CALENDAR_PREFIXES = new HashSet(Arrays.asList(new String[] { "Accepted:", "Declined:", "Tentative:" }));
     private static final String FWD_TRAILER = "(fwd)";
 
 	private static String trimPrefixes(String subject) {
-		boolean matched, braced;
 		while (true) {
-			int i, length = subject.length();
-            if (subject.endsWith(FWD_TRAILER)) {
+			int length = subject.length();
+            // first, strip off any "(fwd)" at the end
+            while (subject.endsWith(FWD_TRAILER)) {
                 subject = subject.substring(0, length - FWD_TRAILER.length()).trim();
                 length = subject.length();
             }
-			int limit = (length > 4 ? 4 : length);
-			for (matched = braced = false, i = 0; i < limit && !matched; i++) {
-				char c = subject.charAt(i);
-				if (c == ':') {
-					matched = (i > 0);
-					break;
-				} else if (i == 0 && c == '[') {
-					braced = true;
-					limit = (length > 5 ? 5 : length);
-				} else if (!Character.isLetter(c))
-					break;
-			}
+
+            // find the first ':' in the subject
+    		boolean matched = false, braced = false;
+            if (subject.charAt(0) == '[')
+                braced = true;
+            int colon = subject.indexOf(':');
+            if (colon <= (braced ? 1 : 0))
+                return subject;
+
+            // figure out if it's either a known calendar response prefix or a 1-3 letter prefix
+            String prefix = subject.substring(braced ? 1 : 0, colon + 1);
+            if (CALENDAR_PREFIXES.contains(prefix))
+                matched = true;
+            else if (colon <= (braced ? 4 : 3)) {
+            	matched = true;
+            	for (int i = braced ? 1 : 0; i < colon; i++)
+                    if (!Character.isLetter(subject.charAt(i)))
+                    	matched = false;
+            }
+
 			if (!matched)
 				return subject;
 			if (braced && subject.endsWith("]"))
-				subject = subject.substring(i + 1, length - 1).trim();
+				subject = subject.substring(colon + 1, length - 1).trim();
 			else
-				subject = subject.substring(i + 1).trim();
+				subject = subject.substring(colon + 1).trim();
 		}
 	}
 
