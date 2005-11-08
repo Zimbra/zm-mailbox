@@ -134,10 +134,8 @@ public class Sync extends DocumentHandler {
     
     private static final int MUTABLE_FIELDS = Change.MODIFIED_FLAGS  | Change.MODIFIED_TAGS |
                                               Change.MODIFIED_FOLDER | Change.MODIFIED_PARENT |
-                                              Change.MODIFIED_NAME   | Change.MODIFIED_QUERY |
-                                              Change.MODIFIED_COLOR  | Change.MODIFIED_POSITION |
-                                              Change.MODIFIED_VIEW   | Change.MODIFIED_CONFLICT |
-                                              Change.MODIFIED_ACL;
+                                              Change.MODIFIED_NAME   | Change.MODIFIED_CONFLICT |
+                                              Change.MODIFIED_COLOR  | Change.MODIFIED_POSITION;
 
     private void deltaSync(ZimbraContext lc, Element response, Mailbox mbox, long begin) throws ServiceException {
         // first, handle deleted items
@@ -154,18 +152,18 @@ public class Sync extends DocumentHandler {
             for (Iterator it = changed.iterator(); it.hasNext(); ) {
                 MailItem item = (MailItem) it.next();
                 
-                //
                 // For items in the system, if the content has changed since the user last sync'ed 
                 // (because it was edited or created), just send back the folder ID and saved date --
                 // the client will request the whole object out of band -- potentially using the 
                 // content servlet's "include metadata in headers" hack.
                 //
-                //  If it's just the metadata that changed, send back the set of mutable attributes.
-                //
-                if (item.getSavedSequence() > begin && type != MailItem.TYPE_FOLDER && type != MailItem.TYPE_TAG)
+                // If it's just the metadata that changed, send back the set of mutable attributes.
+
+                boolean isMetadataOnly = type == MailItem.TYPE_FOLDER || type == MailItem.TYPE_TAG;
+                if (!isMetadataOnly && item.getSavedSequence() > begin)
                     ToXML.encodeItem(response, lc, item, Change.MODIFIED_FOLDER | Change.MODIFIED_CONFLICT);
                 else
-                    ToXML.encodeItem(response, lc, item, MUTABLE_FIELDS);
+                    ToXML.encodeItem(response, lc, item, isMetadataOnly ? Change.ALL_FIELDS : MUTABLE_FIELDS);
             }
         }
     }
