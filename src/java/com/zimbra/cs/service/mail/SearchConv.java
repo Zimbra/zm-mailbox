@@ -178,7 +178,7 @@ public class SearchConv extends Search {
             }
         }
 
-        response.addAttribute(MailService.A_QUERY_MORE, results.hasNext());
+        response.addAttribute(MailService.A_QUERY_MORE, (offset+iterLen)<msgs.length);
 
         return response;
     }
