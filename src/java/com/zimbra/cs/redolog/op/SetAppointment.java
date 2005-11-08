@@ -63,11 +63,13 @@ public class SetAppointment extends RedoableOp implements CreateAppointmentRecor
         
         out.writeUTF(Invite.encodeMetadata(data.mInv).toString());
         
-        out.writeLong(data.mPm.getReceivedDate());
-        
-        byte[] pmData = data.mPm.getRawData();
-        out.writeInt(pmData.length);
-        out.write(pmData);
+        if (data.mPm != null) {
+	        out.writeLong(data.mPm.getReceivedDate());
+	        
+	        byte[] pmData = data.mPm.getRawData();
+	        out.writeInt(pmData.length);
+	        out.write(pmData);
+        }
     }
     
     static Mailbox.SetAppointmentData deserializeSetAppointmentData(DataInput in, Mailbox mbox) throws IOException, MessagingException {
