@@ -155,7 +155,7 @@ public class ItemAction extends WriteOpDocumentHandler {
             } else
                 throw ServiceException.INVALID_REQUEST("unknown operation: " + op, null);
 
-            successes.append(successes.length() > 0 ? "," : "").append(id);
+            successes.append(successes.length() > 0 ? "," : "").append(lc.formatItemId(id));
         }
 
         return successes.toString();
@@ -186,7 +186,7 @@ public class ItemAction extends WriteOpDocumentHandler {
             action.addAttribute(MailService.A_ID, entry.getValue().toString());
             Element response = proxyRequest(request, context, entry.getKey().toString());
             String completed = extractSuccesses(response);
-            successes.append(completed.length() > 0 && successes.length() > 0 ? "" : ",").append(completed);
+            successes.append(completed.length() > 0 && successes.length() > 0 ? "," : "").append(completed);
         }
         return successes;
     }
