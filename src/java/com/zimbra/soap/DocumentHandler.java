@@ -115,24 +115,29 @@ public abstract class DocumentHandler {
         return "127.0.0.1".equals(peerIP);
     }
 
-    /** Fetches the in-memory {@link Session} object appropriate for this request.
-     *  If none already exists, one is created.
+    /** Fetches the in-memory {@link Session} object appropriate for this
+     *  request.  If none already exists, one is created if possible.
      * 
-     * @param context  The Map containing context information for this SOAP request.
-     * @return A {@link com.zimbra.cs.session.SoapSession}. */
+     * @param context  The Map containing context information for this SOAP
+     *                 request.
+     * @return A {@link com.zimbra.cs.session.SoapSession}, or
+     *         <code>null</code>. */
     public Session getSession(Map context) {
         return getSession(context, SessionCache.SESSION_SOAP);
     }
 
-    /** Fetches or creates a {@link Session} object to persist and manage state
-     *  between SOAP requests.
+    /** Fetches a {@link Session} object to persist and manage state between
+     *  SOAP requests.  If no appropriate session already exists, a new one
+     *  is created if possible.
      * 
-     * @param context      The Map containing context information for this SOAP request.
+     * @param context      The Map containing context information for this
+     *                     SOAP request.
      * @param sessionType  The type of session needed.
-     * @return An in-memory {@link Session} object of the specified type, fetched
-     *         from the request's {@link ZimbraContext} object.  If no matching
-     *         session already exists, a new one is created.
-     * @see SessionCache SessionCache for valid values for <code>sessionType</code>. */
+     * @return An in-memory {@link Session} object of the specified type,
+     *         fetched from the request's {@link ZimbraContext} object, or
+     *         <code>null</code>.
+     * @see SessionCache#SESSION_SOAP
+     * @see SessionCache#SESSION_ADMIN */
     protected Session getSession(Map context, int sessionType) {
         ZimbraContext lc = getZimbraContext(context);
         return (lc == null ? null : lc.getSession(sessionType));
@@ -219,49 +224,61 @@ public abstract class DocumentHandler {
 
     protected Element proxyRequest(Element request, Map context, ItemId iidRequested, ItemId iidResolved) throws ServiceException, SoapFaultException {
         // prepare the request for re-processing
-        if (iidRequested != iidResolved)
+        boolean mountpoint = iidRequested != iidResolved;
+        if (mountpoint)
             setXPath(request, getProxiedIdPath(request), iidResolved.toString());
 
-        Element response = proxyRequest(request, context, iidResolved.getAccountId());
+        Element response = proxyRequest(request, context, iidResolved.getAccountId(), mountpoint);
 
         // translate remote folder IDs back into local mountpoint IDs
         ZimbraContext lc = getZimbraContext(context);
         String[] xpathResponse = getResponseItemPath();
-        if (iidRequested != iidResolved && xpathResponse != null) 
+        if (mountpoint && xpathResponse != null) 
             insertMountpointReferences(response, xpathResponse, iidRequested, iidResolved, lc);
         return response;
     }
 
     protected static Element proxyRequest(Element request, Map context, String acctId) throws SoapFaultException, ServiceException {
-        SoapEngine engine = (SoapEngine) context.get(SoapEngine.ZIMBRA_ENGINE);
+        return proxyRequest(request, context, acctId, false);
+    }
+
+    private static Element proxyRequest(Element request, Map context, String acctId, boolean mountpoint) throws SoapFaultException, ServiceException {
         ZimbraContext lc = getZimbraContext(context);
         // new context for proxied request has a different "requested account"
         ZimbraContext lcTarget = new ZimbraContext(lc, acctId);
+        if (mountpoint)
+            lcTarget.recordMountpointTraversal();
 
         // figure out whether we can just re-dispatch or if we need to proxy via HTTP
         Account acctTarget = Provisioning.getInstance().getAccountById(acctId);
         if (acctTarget == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(acctId);
         String hostTarget = acctTarget.getAttr(Provisioning.A_zimbraMailHost);
-        boolean isLocal = LOCAL_HOST.equalsIgnoreCase(hostTarget) && engine != null;
+        Server serverTarget = Provisioning.getInstance().getServerByName(hostTarget);
+        if (serverTarget == null)
+            throw AccountServiceException.NO_SUCH_SERVER(hostTarget);
+
+        return proxyRequest(request, context, serverTarget, lcTarget);
+    }
+
+    protected static Element proxyRequest(Element request, Map context, Server server, ZimbraContext lc) throws SoapFaultException, ServiceException {
+        SoapEngine engine = (SoapEngine) context.get(SoapEngine.ZIMBRA_ENGINE);
+        boolean isLocal = LOCAL_HOST.equalsIgnoreCase(server.getName()) && engine != null;
 
         Element response = null;
         request.detach();
         if (isLocal) {
             // executing on same server; just hand back to the SoapEngine
             Map contextTarget = new HashMap(context);
-            contextTarget.put(SoapEngine.ZIMBRA_CONTEXT, lcTarget);
-            response = engine.dispatchRequest(request, contextTarget, lcTarget);
-            if (lcTarget.getResponseProtocol().isFault(response))
+            contextTarget.put(SoapEngine.ZIMBRA_CONTEXT, lc);
+            response = engine.dispatchRequest(request, contextTarget, lc);
+            if (lc.getResponseProtocol().isFault(response))
                 throw new SoapFaultException("error in proxied request", response);
         } else {
             // executing remotely; find out target and proxy there
-            Server serverTarget = Provisioning.getInstance().getServerByName(hostTarget);
-            if (serverTarget == null)
-                throw AccountServiceException.NO_SUCH_SERVER(hostTarget);
             HttpServletRequest httpreq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
-            ProxyTarget proxy = new ProxyTarget(serverTarget.getId(), lc.getRawAuthToken(), httpreq);
-            response = proxy.dispatch(request, lcTarget);
+            ProxyTarget proxy = new ProxyTarget(server.getId(), lc.getRawAuthToken(), httpreq);
+            response = proxy.dispatch(request, lc);
             response.detach();
         }
         return response;

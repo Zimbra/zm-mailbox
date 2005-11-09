@@ -86,6 +86,7 @@ public class ZimbraContext {
     public static final String E_ACCOUNT    = "account";   
     public static final String A_BY         = "by";
     public static final String A_HOPCOUNT   = "hops";
+    public static final String A_MOUNTPOINT = "link";
     public static final String E_NO_SESSION = "nosession";
     public static final String E_SESSION_ID = "sessionId";
     public static final String A_ACCOUNT_ID = "acct";
@@ -122,6 +123,7 @@ public class ZimbraContext {
     private ProxyTarget mProxyTarget;
     private boolean     mIsProxyRequest;
     private int         mHopCount;
+    private boolean     mMountpointTraversed;
 
 
     public ZimbraContext(ZimbraContext lc, String targetAccountId) throws ServiceException {
@@ -138,6 +140,7 @@ public class ZimbraContext {
         mHopCount = lc.mHopCount + 1;
         if (mHopCount > MAX_HOP_COUNT)
             throw ServiceException.TOO_MANY_HOPS();
+        mMountpointTraversed = lc.mMountpointTraversed;
     }
 
 	/**
@@ -186,6 +189,7 @@ public class ZimbraContext {
             mHopCount = (int) Math.max(eAccount.getAttributeLong(A_HOPCOUNT, 0), 0);
             if (mHopCount > MAX_HOP_COUNT)
                 throw ServiceException.TOO_MANY_HOPS();
+            mMountpointTraversed = eAccount.getAttributeBool(A_MOUNTPOINT, false);
 		} else {
 		    mRequestedAccountId = null;
 		}
@@ -276,6 +280,23 @@ public class ZimbraContext {
         } catch (ServiceException e) { }
 
         mSessionInfo.add(new SessionInfo(session));
+    }
+
+    /** Records in this context that we've traversed a mountpoint to get here.
+     *  Enforces the "cannot mount a mountpoint" rule forbidding one link from
+     *  pointing to another link.  The rationale for this limitation is that
+     *  we want to avoid having the indirectly addressed resource completely
+     *  change without the user knowing, and we want to know that the target
+     *  of the link is also the owner of the items found therein.  Basically,
+     *  things are just simpler this way.
+     * 
+     * @throws ServiceException   The following error codes are possible:<ul>
+     *    <li><code>service.PERM_DENIED</code> - if you try to traverse two
+     *        mountpoints in the course of a single proxy</ul> */
+    void recordMountpointTraversal() throws ServiceException {
+        if (mMountpointTraversed)
+            throw ServiceException.PERM_DENIED("cannot mount a mountpoint");
+        mMountpointTraversed = true;
     }
 
     public String toString() {
@@ -429,7 +450,7 @@ public class ZimbraContext {
             ctxt.addAttribute(E_AUTH_TOKEN, mRawAuthToken, Element.DISP_CONTENT);
         if (mResponseProtocol != mRequestProtocol)
             ctxt.addElement(E_FORMAT).addAttribute(A_TYPE, mResponseProtocol == SoapProtocol.SoapJS ? TYPE_JAVASCRIPT : TYPE_XML);
-        Element eAcct = ctxt.addElement(E_ACCOUNT).addAttribute(A_HOPCOUNT, mHopCount);
+        Element eAcct = ctxt.addElement(E_ACCOUNT).addAttribute(A_HOPCOUNT, mHopCount).addAttribute(A_MOUNTPOINT, mMountpointTraversed);
         if (mRequestedAccountId != null && !mRequestedAccountId.equalsIgnoreCase(mAuthTokenAccountId))
             eAcct.addAttribute(A_BY, BY_ID).setText(mRequestedAccountId);
         ctxt.addUniqueElement(E_NO_SESSION);
