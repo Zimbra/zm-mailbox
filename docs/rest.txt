@@ -60,17 +60,17 @@ A single ~ is allowed and references the authenticated user accessing the data.
 
 Some examples:
 
-/zimbra/user/roland/inbox?fmt=rss         // RSS feed of inbox 
-/zimbra/user/roland/inbox?fmt=xml         // Zimbra XML representation of inbox
-/zimbra/user/roland/inbox?fmt=zip         // A ZIP file of all messages in the inbox folder
+/zimbra/user/roland/inbox.rss         // RSS feed of inbox 
+/zimbra/user/roland/inbox.xml         // Zimbra XML representation of inbox
+/zimbra/user/roland/inbox.zip         // A ZIP file of all messages in the inbox folder
 
 /zimbra/user/roland/contacts                     // CSV view of contacts folder
 /zimbra/user/roland/contacts?fmt=json            // JSON view of contacts folder
 
 /zimbra/user/roland/calendars                    // ICS view of calendar
 /zimbra/user/janie/holidays                      // Janie's holidays calendar
-/zimbra/user/roland/calendar/project?fmt=html    // html view of calendar/projects calendar
-/zimbra/user/roland/calendar?fmt=atom            // atom feed of calendar
+/zimbra/user/roland/calendar/project.html        // html view of calendar/projects calendar
+/zimbra/user/roland/calendar.atom                // atom feed of calendar
 
 The second format is used to reference something by its mail item id:
 
@@ -98,12 +98,12 @@ SEARCHING
 Since search is a big part of Zimbra, all item URLs should generally allow a search
 query to either gather all results, or constrain them. For example:
 
-/zimbra/user/roland/inbox?fmt=rss
+/zimbra/user/roland/inbox.rss
 
 This would give back a simple RSS feed of all items in the inbox. To send back only
 unread, you'd do:
 
-/zimbra/user/roland/inbox?fmt=rss&query="is:unread"
+/zimbra/user/roland/inbox.rss?query="is:unread"
 
 or:
 
@@ -212,15 +212,20 @@ ISSUES/NOTES
    formats. The plugin would get a context containing the query params, the path 
    (resolve/unresovled parts), and the target mail item.
 
-7. I really wanted the following to be equiv, and would like to see if we can
-   still achieve it without too much overhead/quoting issues:
+7. When using the extension-style format syntax:
 
-   /zimbra/user/roland/inbox?fmt=rss
    /zimbra/user/roland/inbox.rss
+   
+   vs:
+   
+   /zimbra/user/roland/inbox?fmt=rss
 
-  Things get tricky/ambigious when you have a folder and/or document named 
-  "inbox.rss", and even if you don't, you still probably need to do initially
-  try and resolve "inbox.rss" as a folder path.
+  If there is a folder/document that is actually named "inbox.rss", then it takes precedent
+  over the "inbox" folder. So you'll have to explicitly use the fmt query parameter to 
+  disambiguate between the two:
+
+  /zimbra/user/roland/inbox?fmt=rss
+   /zimbra/user/roland/inbox.rss?fmt=zip
    
 ------------------------------------------------------------
 REFERENCES
