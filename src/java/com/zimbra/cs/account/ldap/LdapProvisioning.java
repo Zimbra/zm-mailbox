@@ -401,7 +401,7 @@ public class LdapProvisioning extends Provisioning {
 
         DirContext ctxt = null;
         try {
-            ctxt = LdapUtil.getDirContext();
+            ctxt = LdapUtil.getDirContext(true);
 
             String parts[] = emailAddress.split("@");
             if (parts.length != 2)
@@ -565,7 +565,7 @@ public class LdapProvisioning extends Provisioning {
         DirContext rctxt = null;
         
         try {
-            ctxt = LdapUtil.getDirContext();
+            ctxt = LdapUtil.getDirContext(true);
             
             String parts[] = emailAddress.split("@");
             
@@ -611,7 +611,7 @@ public class LdapProvisioning extends Provisioning {
 
         DirContext ctxt = null;
         try {
-            ctxt = LdapUtil.getDirContext();
+            ctxt = LdapUtil.getDirContext(true);
 
             Attributes attrs = new BasicAttributes(true);
             LdapUtil.mapToAttrs(acctAttrs, attrs);
@@ -866,7 +866,7 @@ public class LdapProvisioning extends Provisioning {
         
         DirContext ctxt = null;
         try {
-            ctxt = LdapUtil.getDirContext();
+            ctxt = LdapUtil.getDirContext(true);
 
             Domain domain = getDomainByName(aliasDomain, ctxt);
             if (domain == null)
@@ -896,30 +896,31 @@ public class LdapProvisioning extends Provisioning {
     
     private void removeAliasInternal(NamedEntry entry, String alias, String[] aliases) throws ServiceException {
         
-        int loc = alias.indexOf("@"); 
-        if (loc == -1)
-            throw ServiceException.INVALID_REQUEST("alias must include the domain", null);
-
-        alias = alias.toLowerCase();
-
-        boolean found = false;
-        for (int i=0; !found && i < aliases.length; i++) {
-            found = aliases[i].equalsIgnoreCase(alias);
-        }
-        
-        if (!found)
-            throw AccountServiceException.NO_SUCH_ALIAS(alias);
-        
-        String aliasDomain = alias.substring(loc+1);
-        String aliasName = alias.substring(0, loc);
-
-        Domain domain = getDomainByName(aliasDomain);
-        if (domain == null)
-            throw AccountServiceException.NO_SUCH_DOMAIN(aliasDomain);
-        
         DirContext ctxt = null;
         try {
-            ctxt = LdapUtil.getDirContext();
+            ctxt = LdapUtil.getDirContext(true);
+            
+            int loc = alias.indexOf("@"); 
+            if (loc == -1)
+                throw ServiceException.INVALID_REQUEST("alias must include the domain", null);
+
+            alias = alias.toLowerCase();
+
+            boolean found = false;
+            for (int i=0; !found && i < aliases.length; i++) {
+                found = aliases[i].equalsIgnoreCase(alias);
+            }
+            
+            if (!found)
+                throw AccountServiceException.NO_SUCH_ALIAS(alias);
+            
+            String aliasDomain = alias.substring(loc+1);
+            String aliasName = alias.substring(0, loc);
+
+            Domain domain = getDomainByName(aliasDomain, ctxt);
+            if (domain == null)
+                throw AccountServiceException.NO_SUCH_DOMAIN(aliasDomain);
+            
             String aliasDn = LdapProvisioning.emailToDN(aliasName, aliasDomain);            
             
             // remove zimbraMailAlias attr first, then alias
@@ -965,7 +966,7 @@ public class LdapProvisioning extends Provisioning {
         DirContext ctxt = null;
         try {
             
-            ctxt = LdapUtil.getDirContext();
+            ctxt = LdapUtil.getDirContext(true);
             
             LdapDomain d = (LdapDomain) getDomainByName(name, ctxt);
             if (d != null) throw AccountServiceException.DOMAIN_EXISTS(name);
@@ -1167,7 +1168,7 @@ public class LdapProvisioning extends Provisioning {
 
         DirContext ctxt = null;
         try {
-            ctxt = LdapUtil.getDirContext();
+            ctxt = LdapUtil.getDirContext(true);
 
             Attributes attrs = new BasicAttributes(true);
             LdapUtil.mapToAttrs(cosAttrs, attrs);
@@ -1206,7 +1207,7 @@ public class LdapProvisioning extends Provisioning {
         newName = newName.toLowerCase().trim();
         DirContext ctxt = null;
         try {
-            ctxt = LdapUtil.getDirContext();
+            ctxt = LdapUtil.getDirContext(true);
             String newDn = cosNametoDN(newName);
             ctxt.rename(cos.mDn, newDn);
             // remove old account from cache
@@ -1346,7 +1347,7 @@ public class LdapProvisioning extends Provisioning {
 
         DirContext ctxt = null;
         try {
-            ctxt = LdapUtil.getDirContext();
+            ctxt = LdapUtil.getDirContext(true);
             ctxt.unbind(acc.getDN());
             sAccountCache.remove(acc);
         } catch (NamingException e) {
@@ -1363,7 +1364,7 @@ public class LdapProvisioning extends Provisioning {
         
         DirContext ctxt = null;
         try {
-            ctxt = LdapUtil.getDirContext();
+            ctxt = LdapUtil.getDirContext(true);
             
             LdapAccount acc = (LdapAccount) getAccountById(zimbraId, ctxt);
             if (acc == null)
@@ -1422,7 +1423,7 @@ public class LdapProvisioning extends Provisioning {
         DirContext ctxt = null;
         LdapDomain d = null;
         try {
-            ctxt = LdapUtil.getDirContext();
+            ctxt = LdapUtil.getDirContext(true);
 
             d = (LdapDomain) getDomainById(zimbraId, ctxt);
             if (d == null)
@@ -1451,7 +1452,7 @@ public class LdapProvisioning extends Provisioning {
         // TODO: should we go through all accounts with this cos and remove the zimbraCOSId attr?
         DirContext ctxt = null;
         try {
-            ctxt = LdapUtil.getDirContext();
+            ctxt = LdapUtil.getDirContext(true);
             ctxt.unbind(c.getDN());
             sCosCache.remove(c);
         } catch (NamingException e) {
@@ -1472,7 +1473,7 @@ public class LdapProvisioning extends Provisioning {
 
         DirContext ctxt = null;
         try {
-            ctxt = LdapUtil.getDirContext();
+            ctxt = LdapUtil.getDirContext(true);
 
             Attributes attrs = new BasicAttributes(true);
             LdapUtil.mapToAttrs(serverAttrs, attrs);
@@ -1626,7 +1627,7 @@ public class LdapProvisioning extends Provisioning {
         // TODO: what if accounts still have this server as a mailbox?
         DirContext ctxt = null;
         try {
-            ctxt = LdapUtil.getDirContext();
+            ctxt = LdapUtil.getDirContext(true);
             ctxt.unbind(s.getDN());
             sServerCache.remove(s);
         } catch (NamingException e) {
@@ -1698,7 +1699,7 @@ public class LdapProvisioning extends Provisioning {
 
         DirContext ctxt = null;
         try {
-            ctxt = LdapUtil.getDirContext();
+            ctxt = LdapUtil.getDirContext(true);
 
             String parts[] = listAddress.split("@");
             if (parts.length != 2)
@@ -1774,7 +1775,7 @@ public class LdapProvisioning extends Provisioning {
     public void renameDistributionList(String zimbraId, String newEmail) throws ServiceException {
         DirContext ctxt = null;
         try {
-            ctxt = LdapUtil.getDirContext();
+            ctxt = LdapUtil.getDirContext(true);
             
             LdapDistributionList dl = (LdapDistributionList) getDistributionListById(zimbraId, ctxt);
             if (dl == null)
@@ -1851,7 +1852,7 @@ public class LdapProvisioning extends Provisioning {
 
         DirContext ctxt = null;
         try {
-            ctxt = LdapUtil.getDirContext();
+            ctxt = LdapUtil.getDirContext(true);
             ctxt.unbind(dl.getDN());
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to purge distribution list: "+zimbraId, e);

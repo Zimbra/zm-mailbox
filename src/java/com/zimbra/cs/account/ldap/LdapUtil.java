@@ -76,6 +76,7 @@ public class LdapUtil {
     private static String ENCODING = "{SSHA}";
 
     private static String sLdapURL;
+    private static String sLdapMasterURL;    
     
     private static final String sConnectionTimeout = "10000"; 
     private static Hashtable sEnv;
@@ -91,7 +92,9 @@ public class LdapUtil {
         if (sLdapURL.length() == 0) {
             sLdapURL = "ldap://" + ldapHost + ":" + ldapPort + "/";
         }
-        
+        sLdapMasterURL = LC.ldap_master_url.value().trim();
+        if (sLdapMasterURL.length() == 0) sLdapMasterURL = sLdapURL;
+
         System.setProperty("com.sun.jndi.ldap.connect.pool.maxsize", "25");
         System.setProperty("com.sun.jndi.ldap.connect.pool.prefsize", "5");
         // idle timeout 2 minutes
@@ -126,11 +129,11 @@ public class LdapUtil {
      * @return
      * @throws NamingException
      */
-    private static synchronized Hashtable getDefaultEnv() {
+    private static synchronized Hashtable getDefaultEnv(boolean master) {
         if (sEnv == null) {
             sEnv = new Hashtable();
             sEnv.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
-            sEnv.put(Context.PROVIDER_URL, sLdapURL);
+            sEnv.put(Context.PROVIDER_URL, master ? sLdapMasterURL : sLdapURL);
             sEnv.put(Context.SECURITY_AUTHENTICATION, "simple");
             sEnv.put(Context.SECURITY_PRINCIPAL, LC.zimbra_ldap_userdn.value());
             sEnv.put(Context.SECURITY_CREDENTIALS, LC.zimbra_ldap_password.value());
@@ -153,14 +156,22 @@ public class LdapUtil {
      * @throws NamingException
      */
     public static DirContext getDirContext() throws ServiceException {
-        
+        return getDirContext(false);
+    }
+ 
+    /**
+     * 
+     * @return
+     * @throws NamingException
+     */
+    public static DirContext getDirContext(boolean master) throws ServiceException {
         try {
-            return new InitialDirContext(getDefaultEnv());
+            return new InitialDirContext(getDefaultEnv(master));
         } catch (NamingException e) {
             throw ServiceException.FAILURE("getDirectContext", e);
         }
     }
-    
+
     private static String joinURLS(String urls[]) {
         if (urls.length == 1) return urls[0];
         StringBuffer url = new StringBuffer();
