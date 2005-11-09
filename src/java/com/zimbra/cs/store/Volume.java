@@ -135,6 +135,35 @@ public class Volume {
                     "Invalid volume type " + type);
     }
 
+    private static void validatePath(String path)
+    throws VolumeServiceException {
+        if (path == null || path.length() < 1)
+            throw VolumeServiceException.INVALID_REQUEST(
+                    "Missing volume path");
+
+        // Make sure path is not a subdirectory of an existing volume.
+        // Note this check doesn't work on Windows when path contains
+        // drive letter and the volume being compared to doesn't, or
+        // vice versa.
+        String pathSlashed = path.replaceAll("\\\\", "/");
+        synchronized (sVolumeGuard) {
+            List vols = getAll();
+            for (Iterator iter = vols.iterator(); iter.hasNext(); ) {
+                Volume v = (Volume) iter.next();
+                String vpath = v.getRootPath().replaceAll("\\\\", "/");
+                int vpathLen = vpath.length();
+                if (vpathLen > 0 && vpath.charAt(vpathLen - 1) != '/')
+                    vpath = vpath + "/";
+                if (pathSlashed.indexOf(vpath) == 0)
+                    throw VolumeServiceException.SUBDIR_OF_ANOTHER_VOLUME(path, v);
+            }
+        }
+
+        File root = new File(path);
+        if (!root.exists() || !root.isDirectory() || !root.canWrite())
+            throw VolumeServiceException.NO_SUCH_PATH(path);
+    }
+
     private static void validateArgs(short id, short type,
                                      String name, String path,
                                      short mboxGroupBits, short mboxBits,
@@ -146,12 +175,7 @@ public class Volume {
         if (name == null || name.length() < 1)
             throw VolumeServiceException.INVALID_REQUEST(
                     "Missing volume name");
-        if (path == null || path.length() < 1)
-            throw VolumeServiceException.INVALID_REQUEST(
-                    "Missing volume path");
-        File root = new File(path);
-        if (!root.exists() || !root.isDirectory() || !root.canWrite())
-            throw VolumeServiceException.NO_SUCH_PATH(path);
+        validatePath(path);
         if (compressionThreshold < 0)
             throw VolumeServiceException.INVALID_REQUEST(
                     "compressionThreshold cannot be a negative number");

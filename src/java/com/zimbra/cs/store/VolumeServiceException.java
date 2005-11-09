@@ -40,6 +40,7 @@ public class VolumeServiceException extends ServiceException {
     public static final String CANNOT_CHANGE_TYPE_OF_CURRVOL = "volume.CANNOT_CHANGE_TYPE_OF_CURRVOL";
     public static final String INVALID_REQUEST               = "volume.INVALID_REQUEST";
     public static final String NOT_ABSOLUTE_PATH             = "volume.NOT_ABSOLUTE_PATH";
+    public static final String SUBDIR_OF_ANOTHER_VOLUME      = "volume.SUBDIR_OF_ANOTHER_VOLUME";
 
     private VolumeServiceException(String message, String code, boolean isReceiversFault) {
         super(message, code, isReceiversFault);
@@ -106,5 +107,12 @@ public class VolumeServiceException extends ServiceException {
         return new VolumeServiceException(
                 "\"" + path + "\" is not an absolute path",
                 NOT_ABSOLUTE_PATH, SENDERS_FAULT, null);
+    }
+
+    public static VolumeServiceException SUBDIR_OF_ANOTHER_VOLUME(String path, Volume anotherVol) {
+        return new VolumeServiceException(
+                "the path \"" + path + "\" is a subdirectory of another volume (id=" +
+                anotherVol.getId() + ", path=" + anotherVol.getRootPath() + ")",
+                SUBDIR_OF_ANOTHER_VOLUME, SENDERS_FAULT, null);
     }
 }
