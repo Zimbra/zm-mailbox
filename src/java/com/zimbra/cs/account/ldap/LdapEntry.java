@@ -152,7 +152,7 @@ public class LdapEntry implements Entry {
         DirContext ctxt = initCtxt;
         try {
             if (ctxt == null)
-                ctxt = LdapUtil.getDirContext();
+                ctxt = LdapUtil.getDirContext(true);
             LdapUtil.modifyAttrs(ctxt, mDn,  attrs, mAttrs);
             refresh(ctxt, 0);
         } catch (InvalidAttributeIdentifierException e) {

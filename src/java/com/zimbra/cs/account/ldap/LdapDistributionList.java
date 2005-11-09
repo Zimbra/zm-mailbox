@@ -62,7 +62,7 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
         
         DirContext ctxt = null;
         try {
-            ctxt = LdapUtil.getDirContext();
+            ctxt = LdapUtil.getDirContext(true);
             addAttr(ctxt, Provisioning.A_zimbraMailForwardingAddress, member);
         } catch (AttributeInUseException aiue) {
             throw AccountServiceException.MEMBER_EXISTS(getName(), member, aiue);
@@ -77,7 +77,7 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
         member = member.toLowerCase();
         DirContext ctxt = null;
         try {
-            ctxt = LdapUtil.getDirContext();
+            ctxt = LdapUtil.getDirContext(true);
             removeAttr(ctxt, Provisioning.A_zimbraMailForwardingAddress, member);
         } catch (NoSuchAttributeException nsae) {
             throw AccountServiceException.NO_SUCH_MEMBER(getName(), member, nsae);
