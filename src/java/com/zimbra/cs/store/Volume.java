@@ -118,12 +118,57 @@ public class Volume {
         }
     }
 
+    public static void validateID(long id)
+    throws VolumeServiceException {
+        if (id != ID_AUTO_INCREMENT && (id < 1 || id > ID_MAX))
+            throw VolumeServiceException.INVALID_REQUEST(
+                    "Volume ID " + id + " is outside the range of [1, " +
+                    ID_MAX + "]");
+    }
+
+    private static void validateType(short type)
+    throws VolumeServiceException {
+        if (type != TYPE_MESSAGE &&
+            type != TYPE_MESSAGE_SECONDARY &&
+            type != TYPE_INDEX)
+            throw VolumeServiceException.INVALID_REQUEST(
+                    "Invalid volume type " + type);
+    }
+
+    private static void validateArgs(short id, short type,
+                                     String name, String path,
+                                     short mboxGroupBits, short mboxBits,
+                                     short fileGroupBits, short fileBits,
+                                     long compressionThreshold)
+    throws VolumeServiceException {
+        validateID(id);
+        validateType(type);
+        if (name == null || name.length() < 1)
+            throw VolumeServiceException.INVALID_REQUEST(
+                    "Missing volume name");
+        if (path == null || path.length() < 1)
+            throw VolumeServiceException.INVALID_REQUEST(
+                    "Missing volume path");
+        File root = new File(path);
+        if (!root.exists() || !root.isDirectory() || !root.canWrite())
+            throw VolumeServiceException.NO_SUCH_PATH(path);
+        if (compressionThreshold < 0)
+            throw VolumeServiceException.INVALID_REQUEST(
+                    "compressionThreshold cannot be a negative number");
+
+        // no validation on the bits params for now
+    }
+
     public static Volume create(short id, short type,
                                 String name, String path,
                                 short mboxGroupBits, short mboxBits,
                                 short fileGroupBits, short fileBits,
                                 boolean compressBlobs, long compressionThreshold)
     throws ServiceException {
+        validateArgs(id, type, name, path,
+                     mboxGroupBits, mboxBits, fileGroupBits, fileBits,
+                     compressionThreshold);
+
         // TODO: For now we don't allow non-default values.
         mboxGroupBits = DEFAULT_MBOX_GROUP_BITS;
         mboxBits = DEFAULT_MBOX_BITS;
@@ -141,14 +186,6 @@ public class Volume {
         Connection conn = null;
         boolean success = false;
         try {
-            if (name == null || name.length() < 1)
-                throw VolumeServiceException.INVALID_REQUEST("Missing volume name");
-            if (path == null || path.length() < 1)
-                throw VolumeServiceException.INVALID_REQUEST("Missing volume path");
-
-            if (!(new File(path)).exists())
-                throw VolumeServiceException.NO_SUCH_PATH(path);
-
             conn = DbPool.getConnection();
             vol = DbVolume.create(conn, id, type, name, path,
                                   mboxGroupBits, mboxBits,
@@ -175,6 +212,10 @@ public class Volume {
                                 short fileGroupBits, short fileBits,
                                 boolean compressBlobs, long compressionThreshold)
     throws ServiceException {
+        validateArgs(id, type, name, path,
+                mboxGroupBits, mboxBits, fileGroupBits, fileBits,
+                compressionThreshold);
+
         // TODO: For now we don't allow non-default values.
         mboxGroupBits = DEFAULT_MBOX_GROUP_BITS;
         mboxBits = DEFAULT_MBOX_BITS;
@@ -205,14 +246,6 @@ public class Volume {
         Connection conn = null;
         boolean success = false;
         try {
-            if (name == null || name.length() < 1)
-                throw VolumeServiceException.INVALID_REQUEST("Missing volume name");
-            if (path == null || path.length() < 1)
-                throw VolumeServiceException.INVALID_REQUEST("Missing volume path");
-
-            if (!(new File(path)).exists())
-                throw VolumeServiceException.NO_SUCH_PATH(path);
-
             conn = DbPool.getConnection();
             vol = DbVolume.update(conn, id, type, name, path,
                                   mboxGroupBits, mboxBits,
@@ -242,6 +275,7 @@ public class Volume {
      */
     public static boolean delete(short id)
     throws ServiceException {
+        validateID(id);
         DeleteVolume redoRecorder = new DeleteVolume(id);
         redoRecorder.start(System.currentTimeMillis());
 
@@ -377,6 +411,9 @@ public class Volume {
      */
     public static void setCurrentVolume(short volType, short id)
     throws ServiceException {
+        validateType(volType);
+        validateID(id);
+
         SetCurrentVolume redoRecorder = new SetCurrentVolume(volType, id);
         redoRecorder.start(System.currentTimeMillis());
 

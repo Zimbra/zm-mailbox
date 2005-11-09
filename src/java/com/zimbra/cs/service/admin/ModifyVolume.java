@@ -37,7 +37,9 @@ public class ModifyVolume extends AdminDocumentHandler {
     public Element handle(Element request, Map context) throws ServiceException {
         ZimbraContext lc = getZimbraContext(context);
 
-        short id = (short) request.getAttributeLong(AdminService.A_ID);
+        long idLong = request.getAttributeLong(AdminService.A_ID);
+        Volume.validateID(idLong);  // avoid Java truncation
+        short id = (short) idLong;
         Volume vol = Volume.getById(id);
 
         Element eVol = request.getElement(AdminService.E_VOLUME);

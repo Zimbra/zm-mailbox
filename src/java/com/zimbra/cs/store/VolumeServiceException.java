@@ -56,7 +56,7 @@ public class VolumeServiceException extends ServiceException {
     }
 
     public static VolumeServiceException NO_SUCH_PATH(String path) {
-        return new VolumeServiceException("path does not exist: "+ path, NO_SUCH_PATH, SENDERS_FAULT, null);
+        return new VolumeServiceException("directory does not exist or is not writable: "+ path, NO_SUCH_PATH, SENDERS_FAULT, null);
     }
 
     public static VolumeServiceException ALREADY_EXISTS(int id, String name, String path, Throwable t) {

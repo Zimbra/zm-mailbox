@@ -38,7 +38,9 @@ public class SetCurrentVolume extends AdminDocumentHandler {
         ZimbraContext lc = getZimbraContext(context);
 
         short volType = (short) request.getAttributeLong(AdminService.A_VOLUME_TYPE);
-        short id = (short) request.getAttributeLong(AdminService.A_ID, Volume.ID_NONE);
+        long idLong = request.getAttributeLong(AdminService.A_ID, Volume.ID_NONE);
+        Volume.validateID(idLong);  // avoid Java truncation
+        short id = (short) idLong;
         Volume.setCurrentVolume(volType, id);
 
         Element response = lc.createElement(AdminService.SET_CURRENT_VOLUME_RESPONSE);
