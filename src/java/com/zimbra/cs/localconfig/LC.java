@@ -99,6 +99,9 @@ public class LC {
     
     public static final KnownKey ldap_host;
     public static final KnownKey ldap_port;
+    public static final KnownKey ldap_url;
+    public static final KnownKey ldap_master_url;
+    public static final KnownKey ldap_is_master;
     public static final KnownKey ldap_root_password;
     
     public static final KnownKey mysql_directory;
@@ -272,11 +275,23 @@ public class LC {
 
         ldap_host = new KnownKey("ldap_host");
         ldap_host.setDefault("localhost");
-        ldap_host.setDoc("LDAP host to use.");
+        ldap_host.setDoc("LDAP host to use.  Deprecated - please use ldap_url instead.");
 
         ldap_port = new KnownKey("ldap_port");
         ldap_port.setDefault("389");
-        ldap_port.setDoc("LDAP port to use.");
+        ldap_port.setDoc("LDAP port to use.  Deprecated - please use ldap_url instead.");
+
+        ldap_url = new KnownKey("ldap_url");
+        ldap_url.setDefault("");
+        ldap_url.setDoc("List of LDAP servers for use by this server.");
+        
+        ldap_master_url = new KnownKey("ldap_master_url");
+        ldap_master_url.setDefault("");
+        ldap_master_url.setDoc("URL to the LDAP master.");
+
+        ldap_is_master = new KnownKey("ldap_is_master");
+        ldap_is_master.setDefault("false");
+        ldap_is_master.setDoc("Is this host the master LDAP server?");
 
         ldap_root_password = new KnownKey("ldap_root_password");
         ldap_root_password.setDefault("zimbra");

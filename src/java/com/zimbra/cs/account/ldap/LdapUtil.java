@@ -86,7 +86,11 @@ public class LdapUtil {
     static {
         String ldapHost = LC.ldap_host.value();
         String ldapPort = LC.ldap_port.value();
-        sLdapURL = "ldap://" + ldapHost + ":" + ldapPort + "/";
+        
+        sLdapURL = LC.ldap_url.value().trim();
+        if (sLdapURL.length() == 0) {
+            sLdapURL = "ldap://" + ldapHost + ":" + ldapPort + "/";
+        }
         
         System.setProperty("com.sun.jndi.ldap.connect.pool.maxsize", "25");
         System.setProperty("com.sun.jndi.ldap.connect.pool.prefsize", "5");
