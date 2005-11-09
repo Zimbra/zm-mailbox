@@ -75,9 +75,12 @@ public class CreateFolder extends WriteOpDocumentHandler {
                     mbox.synchronizeFolder(octxt, folder.getId());
                 } catch (ServiceException e) {
                     // if the synchronization fails, roll back the folder create
-                    try { mbox.delete(null, folder.getId(), MailItem.TYPE_FOLDER); }
-                    catch (ServiceException nse) { sLog.warn("error ignored while rolling back folder create", nse); }
+                    rollbackFolder(folder);
                     throw e;
+                } catch (RuntimeException e) {
+                    // if the synchronization fails, roll back the folder create
+                    rollbackFolder(folder);
+                    throw ServiceException.FAILURE("could not synchronize with remote feed", e);
                 }
         } catch (ServiceException se) {
             if (se.getCode() == MailServiceException.ALREADY_EXISTS && t.getAttributeBool(MailService.A_FETCH_IF_EXISTS, false))
@@ -90,5 +93,13 @@ public class CreateFolder extends WriteOpDocumentHandler {
         if (folder != null)
             ToXML.encodeFolder(response, lc, folder);
         return response;
+    }
+
+    private void rollbackFolder(Folder folder) {
+        try {
+            folder.getMailbox().delete(null, folder.getId(), MailItem.TYPE_FOLDER);
+        } catch (ServiceException nse) {
+            sLog.warn("error ignored while rolling back folder create", nse);
+        }
     }
 }
