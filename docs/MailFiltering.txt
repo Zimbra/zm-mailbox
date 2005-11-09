@@ -1,0 +1,422 @@
+Mail Filtering Functional Specification
+
+Overview
+
+This document specifies the features, user interfaces, SOAP API, and
+LDAP schema for filtering mails. Mail filtering allows a user to
+define a set of rules. When an incoming email matches a rule (e.g., if
+a mail is a check-in message), its corresponding action is taken
+(e.g., file into CVS folder).
+
+Architecture
+
+Filtering happens on the server side when mails arrive from the MTA
+and before they are deposited into mailboxes.
+
+Rules are expressed as a Sieve script as defined by RFC 3028. Here is
+an example:
+
+    #
+    # Example Sieve Filter
+    # Declare any optional features or extension used by the script
+    #
+    require ["fileinto", "reject", ?tag?];
+
+    #
+    # Reject any large messages (note that the four leading dots get
+    # "stuffed" to three)
+    #
+    if size :over 1M
+            {
+            discard;
+       stop;
+            }
+    #
+    # Handle messages from known mailing lists
+    # Move messages from IETF filter discussion list to filter folder
+    #
+    if header :is "Sender" "owner-ietf-mta-filters@imc.org"
+            {
+            fileinto "/mailinglist";  # move to "mailinglist" folder
+            }
+    #
+    # Keep all messages to or from people in my company
+    #
+    elsif address :domain :is ["From", "To"] "zimbra.com"
+            {
+            keep;               # keep in "In" folder
+            }
+
+    #
+    # Try and catch unsolicited email.  If a message is not to me,
+    # or it contains a subject known to be spam, file it away.
+    #
+    elsif anyof (not address :all :contains
+                   ["To", "Cc", "Bcc"] "me@zimbra.com",
+                 header :matches "subject"
+                   ["*make*money*fast*", "*university*dipl*mas*"])
+            {
+            # If message header does not contain my address,
+            # it's from a list.
+            fileinto "/Junk";   # move to "junk" folder
+            }
+    else
+            {
+            # Tag all other (non-company) mail as "personal"
+            tag "personal";
+            }
+
+Features
+
+1. Tests
+
+We support the following tests in rules:
+
+* Any word in the headers, most common ones including From, To, Cc,
+  Bcc, Subject.  See RFC 3028.
+
+  E.g.,
+
+  if header :contains "From" "foo" { action; }
+
+* Any word in the body of the message. Zimbra specific. 
+    body :contains string
+
+  E.g.,
+
+  if body :contains "foo" { action; }
+
+* Date or date range in the Date header. Zimbra specific. 
+    date {:before | :after} ?MM/dd/yyyy?
+
+  E.g.,
+
+  if date :before "11/12/2004" { action; }
+  if allof(date :before "12/31/2004", date :after "1/1/2004") { action; }
+
+* Any full address, local part or domain part of an address in
+  headers. See RFC 3028. E.g.,
+
+  if address :all :contains "From" "foo" { action; }
+
+* An address (sender and/or recipients) is in the user's
+  contacts. Zimbra specific.  
+    addressbook :in header "contacts"  
+
+  E.g.,
+
+  if addressbook :in "From" "contacts" { action; }
+
+* Mail size. See RFC 3028. E.g.,
+
+  if size :over 1M { action; }
+
+* Any meta information about attachments. This is limited to test the
+  existence of the attachments. Zimbra specific. E.g.,
+
+  if attachment { action; }
+
+We support the following matches in the above tests.
+
+* Case-sensitive string matches
+* Case-insensitive string matches
+* Equality
+* Substring matches
+* Wildcards (* matches zero or more characters, ? matches a single character)
+* Existence of headers
+
+Tests can be combined with the following:
+
+* All of
+* Any of
+* Not
+
+Disabled rules can appear with other rules in the script using
+disabled_if. E.g.:
+
+    disabled_if header contains "From" "foo" { action; }
+
+The above rule will not be evaluated and its actions will never be
+executed. This is a Zimbra specific feature.
+
+To reduce complexity, we do NOT support tests of any word in
+attachment for the moment. We index a message after it is delivered to
+a mailbox, so at the time of filtering, we may not have the index
+available yet.
+
+2. Actions
+
+We support the following actions when a rule matches:
+
+* keep		saves a message to the user?s INBOX.
+
+* fileinto	saves a message to the specified folder. The folder name
+  uses the path notation. E.g., /Drafts
+
+* tag		tags a message with the named tag. 
+
+* flag		flags a message as "flagged/unflagged" or "read/unread"
+
+* discard	throws away a message
+
+* stop		stops further evaluation if the current rule is matched
+
+The actions of reject and redirect are NOT supported at the moment.
+
+If a condition is met, multiple actions may be specified. The
+behaviors of the following combination of actions are:
+
+* discard: if combined with other actions, discard is ignored and the
+  other actions will take place. This behavor is specified by RFC 3028.
+
+* stop: actions after stop will be ignored and will not be executed.
+
+* fileinto: multiple fileinto actions result in multiple copies of the
+  message be stored in different folders.
+
+* tag, flag: these actions apply to the message returned from the next
+  (implicit) keep or fileinto actions. E.g.:
+
+  if header :is "From" "boss@firm.com" {
+	tag "Important";
+	fileinto "/Boss";		# msg1 is in Boss folder, 
+                                        # and tagged Important
+	flag "flagged";		
+	fileinto "/Archive";	        # msg2 is in Archive folder
+					# and marked as flagged
+	tag "FromBoss";		
+	keep;			        # msg3 is in INBOX and
+				        # tagged FromBoss
+  }
+
+* keep: multiple keep actions can be specified. But only one copy of
+  the message will be saved in INBOX.
+
+At message delivery time, if a specified tag does not exist, the
+message is not tagged. The UI is expected to help avoid this problem
+by presenting all available tags as a drop-down list when the rule is
+configured.
+
+If a specified folder does not exist, the message is saved to
+INBOX. The UI is expected to show a list of available folders when the
+rule is configured.
+
+3. Rule creation and editing
+
+A UI will be provided to allow users to create/edit rules and
+actions. The system must support:
+
+* The server accepts rules and actions from the client and generates
+  the equivalent Sieve script.
+
+* The server shall validate the rules and actions submitted from the
+  client.
+
+* The server sends an existing Sieve script to the client to be
+  rendered in the UI.
+
+*  Any tag and/or folder specified in the rules will be created
+  automatically at the time rule creation/editing.
+
+User Interface
+
+The user interface can be accessed by selecting Options -> Filter Rules tab.
+ 
+This screen allows a single rule to be created. When user presses the
++ button, additional condition can be created and either and'ed or
+or'ed with the existing condition, depending on the selection of "All
+of" or "Any of".
+
+The order of the rules on screen is significant. It is the order that
+they will be evaluated, from top to bottom, on the server side when
+mails are filtered.
+
+A "raw" script screen will NOT be provided.
+
+SOAP API
+
+1. Getting all rules for a mailbox
+
+<GetRulesRequest>
+</GetRulesRequest>
+
+<GetRulesResponse>
+  <rules>
+  <!-- rule -->
+  <r name="{rule name}" active="0|1">
+     <!-- conditions -->
+     <g op="{anyof | allof}">
+       <c name="{test name}" [mod="{modifier}"] op="{comparator}"
+       [k0="{lhs}"] k1="{rhs}"/>+
+     </g>
+     <!-- actions -->
+     <action name="{action name}">
+       <arg>{argument value}</arg>*
+     </action>+
+  </r>*
+  </rules>
+</GetRulesResponse>
+
+* {test name} contains "header", "size", "body", etc. 
+* {mod} is the test modifier, and is only meaningful for a few tests like address. In that case it indicates what part of address is to be matched, :localpart, :domain, or :all.
+* {comparator} contains ":is", "not :is", ":contains", "not :contains", ":matches", "not :matches" etc. 
+* {lhs} is the left hand side of a condition, such as the header names like "From", "To", etc. 
+* {rhs} is the key
+* {action name} is "fileinto", "keep", "tag", etc.
+
+2. Saving rules for a mailbox
+
+<SaveRulesRequest>
+  <rules>
+    <!-- rule -->
+    <r name="{rule name}" active="0|1">
+       <!-- conditions -->
+       <g op="{anyof | allof}">
+         <c name="{test name}" [mod="{modifier}"] op="{comparator}"
+       [k0="{lhs}"] k1="{rhs}"/>+
+       </g>
+       <!-- actions -->
+       <action name="{action name}">
+         <arg>{argument value}</arg>*
+       </action>+
+    </r>*
+  </rules>
+</SaveRulesRequest>
+
+<SaveRulesResponse>
+</SaveRulesResponse>
+
+Or a SOAP fault indicating validation errors.
+
+LDAP Schema
+
+In zimbraAccount objectClass, an attribute of zimbraMailSieveScript is
+defined to hold the Sieve script in its source form.
+
+Issues
+
+The following issues have been raised. They are deferred to a later release:
+
+1. Can we use the same indexing engine in mail filtering? Can we allow
+filter rules to be created using the client browse constraints? This
+way we avoid two separate search engines and offer a more powerful
+filtering feature. The challenge is how to do this efficiently so that
+the LMTP mail delivery loop can be completed as quickly as possible.
+
+2. Why not support redirect, reject?
+
+3. Run the rules against INBOX or a particular folder?
+
+
+Appendix: Comparison with Outlook
+
+Here's the list of tests supported by Outlook. Those tests also
+supported by us are flagged with a *.
+
+a. From people or distribution list *
+b. With specific words in the subject *
+c. Through the specified account *
+d. Sent only to me *
+e. Where my name is in the To box *
+f. Marked as importance
+g. Marked as sensitivity
+h. Flagged for action
+i. Where my name is in the Cc, To box *
+j. Where my name is not in the To box *
+k. Sent to people or distribution list *
+l. With specific words in Subject , body *
+m. With specific words in the message header *
+n. With specific words in the recipient*s address *
+o. With specific words in the sender*s address *
+p. Assigned to category *
+q. Which is an Out of Office message *
+r. Which has an attachment *
+s. With size in a specific range *
+t. Received in a specific date span *
+u. Uses the form name form
+v. With selected properties of documents or forms
+w. Sender is in specified Address Book *
+x. Which is a meeting invitation or update
+y. On this machine only *
+
+We can support f, g, h if we allow application of filters on the
+messages that are already in the INBOX. We can support x when we are
+done implementing calendar. Outlook category would be equivalent to
+our tags. Tests u, v are specific to Outlook.
+
+The following is a list of actions supported by Outlook. 
+
+a. Move it to the specified folder *
+b. Assign it to the category *
+c. Delete it *
+d. Permanently delete it
+e. Move a copy to the specified folder *
+f. Forward it to people or distribution list
+g. Forward it to people or distribution list as an attachment
+h. Redirect it to people or distribution list
+i. Have server reply using a specific message
+j. Reply using a specific template
+k. Flag message for action in a number of days
+l. Flag message with a colored flag *
+m. Clear the Message Flag *
+n. Mark it as importance *
+o. Print it
+p. Play a sound
+q. Start an application
+r. Mark it as read
+s. Run a script
+t. Stop processing more rules *
+u. Perform a custom action
+v. Display a specific message in the New Item Alert window
+w. Display a Desktop Alert
+
+Items f, g, h, i can be supported easily by implementing the redirect
+and reject actions defined by RFC 3028. We only have one flag.
+
+Appendix: Implementation notes
+
+The Sieve script for each mailbox is stored in source form in
+LDAP. Each if or elsif defines a rule. The name of the rule is defined
+in the comment immediately precedes the if or elsif command. Any
+number of white spaces can be present in between. For example:
+
+    #
+    # Handle messages from known mailing lists
+    # Move messages from IETF filter discussion list to filter folder
+    # 
+    # mailing list rule
+  
+    if header :is "Sender" "owner-ietf-mta-filters@imc.org"
+            {
+            fileinto "/mailinglist";  # move to "mailinglist" folder
+            }
+    #
+    # Keep all messages to or from people in my company
+    #
+    # save my mail rule
+  
+    elsif address :domain :is ["From", "To"] "zimbra.com"
+            {
+            keep;               # keep in "In" folder
+            }
+
+    #
+    # Try and catch unsolicited email.  If a message is not to me,
+    # or it contains a subject known to be spam, file it away.
+    #
+    # spam rule
+  
+    elsif anyof (not address :all :contains
+                   ["To", "Cc", "Bcc"] "me@zimbra.com",
+                 header :matches "subject"
+                   ["*make*money*fast*", "*university*dipl*mas*"])
+            {
+            # If message header does not contain my address,
+            # it's from a list.
+            fileinto "/Junk";   # move to "junk" folder
+            }
+
+When sending Sieve script to the client for editing, we descend the
+parsed tree and generate the XML condition/action elements in the SOAP
+response.
+
