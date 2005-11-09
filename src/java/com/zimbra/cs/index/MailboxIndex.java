@@ -535,7 +535,7 @@ public final class MailboxIndex
             shutdown();
         }
 
-        sMaxUncommittedOps = LC.zimbra_index_max_uncommited_operations.intValue();
+        sMaxUncommittedOps = LC.zimbra_index_max_uncommitted_operations.intValue();
         sLRUSize = LC.zimbra_index_lru_size.intValue();
         if (sLRUSize < 10) sLRUSize = 10;
         sIdleWriterFlushTimeMS = 1000 * LC.zimbra_index_idle_flush_time.intValue();

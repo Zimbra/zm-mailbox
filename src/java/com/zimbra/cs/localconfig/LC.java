@@ -91,7 +91,7 @@ public class LC {
     public static final KnownKey zimbra_gid;
     public static final KnownKey zimbra_log4j_properties;
 
-    public static final KnownKey zimbra_index_max_uncommited_operations;
+    public static final KnownKey zimbra_index_max_uncommitted_operations;
     public static final KnownKey zimbra_index_lru_size;
     public static final KnownKey zimbra_index_idle_flush_time;
     
@@ -251,9 +251,9 @@ public class LC {
         zimbra_log4j_properties.setDoc
             ("Path to log4j configuration properties file.");
 
-        zimbra_index_max_uncommited_operations = new KnownKey("zimbra_index_max_uncommited_operations");
-        zimbra_index_max_uncommited_operations.setDefault("200");
-        zimbra_index_max_uncommited_operations.setDoc
+        zimbra_index_max_uncommitted_operations = new KnownKey("zimbra_index_max_uncommitted_operations");
+        zimbra_index_max_uncommitted_operations.setDefault("200");
+        zimbra_index_max_uncommitted_operations.setDoc
             ("Maximum number of uncommitted indexing operations" +
              " that may accumulate per mailbox before forcing a commit.");
         
