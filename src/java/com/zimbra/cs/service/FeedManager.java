@@ -75,7 +75,8 @@ import com.zimbra.soap.Element;
 public class FeedManager {
 
     public static final int MAX_REDIRECTS = 3;
-    public static final String HTTP_USER_AGENT = "User-Agent: Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.1.4322)";
+    public static final String HTTP_USER_AGENT = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.1.4322) Zimbra/2.0";
+    public static final String HTTP_ACCEPT = "image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, application/x-shockwave-flash, application/vnd.ms-powerpoint, application/vnd.ms-excel, application/msword, */*";
 
     public static List retrieveRemoteDatasource(Account acct, String url) throws ServiceException {
         HttpClient client = new HttpClient();
@@ -97,6 +98,7 @@ public class FeedManager {
                 GetMethod get = new GetMethod(url);
                 get.setFollowRedirects(true);
                 get.addRequestHeader("User-Agent", HTTP_USER_AGENT);
+                get.addRequestHeader("Accept", HTTP_ACCEPT);
                 client.executeMethod(get);
 
                 Header locationHeader = get.getResponseHeader("location");
@@ -113,14 +115,16 @@ public class FeedManager {
             content.mark(10);  int ch = content.read();  content.reset();
             if (ch == -1)
                 throw ServiceException.FAILURE("empty body in response when fetching remote subscription", null);
-            else if (ch == '<')
-                return parseRssFeed(content);
-            else if (ch == 'B') {
+            else if (ch == '<') {
+                return parseRssFeed(Element.parseXML(content));
+            } else if (ch == 'B') {
                 Reader reader = new InputStreamReader(content);
                 Calendar ical = new CalendarBuilder().build(reader);
                 return Invite.createFromICalendar(acct, null, ical, false); 
             } else
                 throw ServiceException.PARSE_ERROR("unrecognized remote content", null);
+        } catch (org.dom4j.DocumentException e) {
+            throw ServiceException.PARSE_ERROR("could not parse feed", e);
         } catch (HttpException e) {
             throw ServiceException.FAILURE("HttpException: " + e, e);
         } catch (IOException e) {
@@ -151,9 +155,8 @@ public class FeedManager {
         }
     }
 
-    private static List parseRssFeed(InputStream content) throws ServiceException {
+    private static List parseRssFeed(Element root) throws ServiceException {
         try {
-            Element root = Element.parseXML(content);
             String rname = root.getName();
             if (rname.equals("feed"))
                 return parseAtomFeed(root);
@@ -193,18 +196,17 @@ public class FeedManager {
                 if (enc != null)
                     enclosures.add(new Enclosure(enc.getAttribute("url", null), null, enc.getAttribute("type", null)));
                 // get the feed item's content and guess at its type
-                String text = item.getAttribute("description", null);
+                String text = item.getAttribute("encoded", null);
+                boolean html = text != null;
                 if (text == null)
-                    text = item.getAttribute("encoded", null);
+                    text = item.getAttribute("description", null);
                 if (text == null)
                     text = item.getAttribute("abstract", "");
-                boolean html = text.indexOf("</") != -1 || text.indexOf("/>") != -1;
+                html |= text.indexOf("</") != -1 || text.indexOf("/>") != -1 || text.indexOf("<p>") != -1;
 
                 pms.add(generateMessage(title, text, href, html, addr, date, enclosures));
             }
             return pms;
-        } catch (org.dom4j.DocumentException e) {
-            throw ServiceException.PARSE_ERROR("could not parse feed", e);
         } catch (UnsupportedEncodingException e) {
             throw ServiceException.FAILURE("error encoding rss channel name", e);
         }
