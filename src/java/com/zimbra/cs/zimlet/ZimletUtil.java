@@ -56,6 +56,8 @@ import com.zimbra.soap.Element;
  */
 public class ZimletUtil {
 	
+	public static final String ZIMLET_DEV_DIR = "_dev";
+	
 	private static List sClassLoaders = new ArrayList();
 	
 	public static synchronized void loadAll() {
@@ -96,12 +98,12 @@ public class ZimletUtil {
 	}
 
 	public static void loadDevZimlets() {
-		loadZimletsFromDir(sDevZimlets, LC.zimlet_directory.value() + File.separator + "_dev");
+		loadZimletsFromDir(sDevZimlets, LC.zimlet_directory.value() + File.separator + ZIMLET_DEV_DIR);
 	}
 
 	private static void loadZimletsFromDir(Map zimlets, String dir) {
         File zimletRootDir = new File(dir);
-		if (zimletRootDir == null || !zimletRootDir.exists()) {
+		if (zimletRootDir == null || !zimletRootDir.exists() || !zimletRootDir.isDirectory()) {
 			return;
 		}
 
@@ -110,6 +112,7 @@ public class ZimletUtil {
         synchronized (zimlets) {
         	zimlets.clear();
         	String[] zimletNames = zimletRootDir.list();
+        	assert(zimletNames != null);
         	for (int i = 0; i < zimletNames.length; i++) {
         		try {
         			zimlets.put(zimletNames[i], new ZimletFile(zimletRootDir, zimletNames[i]));
@@ -128,18 +131,14 @@ public class ZimletUtil {
 		}
 		try {
 			Element entry = elem.addElement(AccountService.E_ZIMLET);
-			entry.addElement(Element.parseXML(zim.getZimletDescription(), elem.getFactory()));
-			String conf = zim.getZimletConfig();
-			if (conf != null) {
-				ZimletConfig config = new ZimletConfig(conf);
-				entry.addElement(Element.parseXML(config.toXMLString(), elem.getFactory()));
+			zim.getZimletDescription().addToElement(entry);
+			if (zim.hasZimletConfig()) {
+				zim.getZimletConfig().addToElement(entry);
 			}
 		} catch (ZimletException ze) {
 			ZimbraLog.zimlet.info("error loading zimlet "+zimlet+": "+ze.getMessage());
 		} catch (IOException ioe) {
 			ZimbraLog.zimlet.info("error loading zimlet "+zimlet+": "+ioe.getMessage());
-		} catch (org.dom4j.DocumentException de) {
-			ZimbraLog.zimlet.info("error parsing description for zimlet "+zimlet+": "+de.getMessage());
 		}
 	}
 	
@@ -151,17 +150,16 @@ public class ZimletUtil {
 	        	while (iter.hasNext()) {
 	        		ZimletFile zim = (ZimletFile) iter.next();
 	        		Element entry = elem.addElement(AccountService.E_ZIMLET);
-	        		entry.addElement(Element.parseXML(zim.getZimletDescription(), elem.getFactory()));
-	        		ZimletConfig conf = new ZimletConfig(zim.getZimletConfig());
-	        		entry.addElement(Element.parseXML(conf.toXMLString(), elem.getFactory()));
+	    			zim.getZimletDescription().addToElement(entry);
+	    			if (zim.hasZimletConfig()) {
+	    				zim.getZimletConfig().addToElement(entry);
+	    			}
 	        	}
 			}
 		} catch (ZimletException ze) {
 			ZimbraLog.zimlet.info("error loading dev zimlets: "+ze.getMessage());
 		} catch (IOException ioe) {
 			ZimbraLog.zimlet.info("error loading dev zimlets: "+ioe.getMessage());
-		} catch (org.dom4j.DocumentException de) {
-			ZimbraLog.zimlet.info("error parsing zimlet description: "+de.getMessage());
 		}
 	}
 	
@@ -231,14 +229,13 @@ public class ZimletUtil {
 	
 	public static void installZimlet(String zimletRoot, String zimlet) throws IOException, ZimletException {
 		ZimletFile zf = new ZimletFile(zimlet);
-		ZimletDescription zd = new ZimletDescription(zf.getZimletDescription());
+		ZimletDescription zd = zf.getZimletDescription();
 		String zimletName = zd.getName();
 		
 		Map attrs = descToMap(zd);
 		
-		String configStr = zf.getZimletConfig();
-		if (configStr != null) {
-			ZimletConfig config = new ZimletConfig(configStr);
+		if (zf.hasZimletConfig()) {
+			ZimletConfig config = zf.getZimletConfig();
 			attrs.put(Provisioning.A_zimbraZimletHandlerConfig, config.toXMLString());
 		}
 		
@@ -313,7 +310,7 @@ public class ZimletUtil {
 	
 	public static void dumpConfig(String zimlet) throws IOException, ZimletException {
 		ZimletFile zf = new ZimletFile(zimlet);
-		String config = zf.getZimletConfig();
+		String config = zf.getZimletConfigString();
 		System.out.println(config);
 	}
 	

@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
 
 /**
@@ -61,6 +62,10 @@ public class ZimletDescription extends ZimletMeta {
 		super(desc);
 	}
 	
+	public ZimletDescription(String desc, String prefix) throws ZimletException {
+		super(desc, prefix);
+	}
+	
 	protected void initialize() {
 		mScripts = new ArrayList();
 		mHasKeyword = FALSE_STR;
@@ -77,10 +82,22 @@ public class ZimletDescription extends ZimletMeta {
 		} else if (elem.getName().equals(ZIMLET_TAG_DESCRIPTION)) {
 			mDescription = elem.getText();
 		} else if (elem.getName().equals(ZIMLET_TAG_SCRIPT)) {
-			mScripts.add(elem.getText());
+			parseResource(elem);
 		}
 	}
 
+	private void parseResource(Element resource) throws ZimletException {
+		String txt = resource.getText();
+		ZimbraLog.zimlet.info(txt);
+		if (!txt.startsWith("http:") &&
+				!txt.startsWith("https:")) {
+			txt = ZIMLET_URL + "/" + mName + "/" + txt;
+			resource.setText(txt);
+			ZimbraLog.zimlet.info("new url: " + txt);
+		}
+		mScripts.add(txt);
+	}
+	
 	private void parseServerExtension(Element serverExt) throws ZimletException {
 		assert(serverExt.getName().equals(ZIMLET_TAG_SERVER_EXTENSION));
 		Iterator iter = serverExt.listElements().iterator();
