@@ -39,6 +39,7 @@ public class VolumeServiceException extends ServiceException {
     public static final String CANNOT_DELETE_CURRVOL         = "volume.CANNOT_DELETE_CURRVOL";
     public static final String CANNOT_CHANGE_TYPE_OF_CURRVOL = "volume.CANNOT_CHANGE_TYPE_OF_CURRVOL";
     public static final String INVALID_REQUEST               = "volume.INVALID_REQUEST";
+    public static final String NOT_ABSOLUTE_PATH             = "volume.NOT_ABSOLUTE_PATH";
 
     private VolumeServiceException(String message, String code, boolean isReceiversFault) {
         super(message, code, isReceiversFault);
@@ -99,5 +100,11 @@ public class VolumeServiceException extends ServiceException {
 
     public static VolumeServiceException INVALID_REQUEST(String msg) {
         return new VolumeServiceException("invalid request: " + msg, INVALID_REQUEST, SENDERS_FAULT, null);
+    }
+
+    public static VolumeServiceException NOT_ABSOLUTE_PATH(String path) {
+        return new VolumeServiceException(
+                "\"" + path + "\" is not an absolute path",
+                NOT_ABSOLUTE_PATH, SENDERS_FAULT, null);
     }
 }

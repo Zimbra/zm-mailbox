@@ -165,6 +165,7 @@ public class Volume {
                                 short fileGroupBits, short fileBits,
                                 boolean compressBlobs, long compressionThreshold)
     throws ServiceException {
+        path = normalizePath(path);
         validateArgs(id, type, name, path,
                      mboxGroupBits, mboxBits, fileGroupBits, fileBits,
                      compressionThreshold);
@@ -212,6 +213,7 @@ public class Volume {
                                 short fileGroupBits, short fileBits,
                                 boolean compressBlobs, long compressionThreshold)
     throws ServiceException {
+        path = normalizePath(path);
         validateArgs(id, type, name, path,
                 mboxGroupBits, mboxBits, fileGroupBits, fileBits,
                 compressionThreshold);
@@ -465,6 +467,85 @@ public class Volume {
             else
                 redoRecorder.abort();
         }
+    }
+
+    /**
+     * Make sure the path is an absolute path, and remove all "." and ".."
+     * from it.  This is similar to File.getCanonicalPath() except symbolic
+     * links are not resolved.
+     *
+     * If there are too many ".." in the path, navigating to parent directory
+     * stops at root.
+     *
+     * Supports unix absolute path, windows absolute path with or without
+     * drive letter, and windows UNC share.
+     *
+     * @param path
+     * @return
+     * @throws VolumeServiceException if path is not absolute
+     */
+    private static String normalizePath(String path)
+    throws VolumeServiceException {
+        if (path == null || path.length() < 1)
+            throw VolumeServiceException.INVALID_REQUEST("Missing volume path");
+        StringBuffer newPath = new StringBuffer();
+        if (path.matches("^[a-zA-Z]:[/\\\\].*$")) {
+            // windows path with drive letter
+            newPath.append(path.substring(0, 2)).append(File.separator);
+            path = path.substring(3);
+        } else if (path.length() >= 2 && path.substring(0, 2).equals("\\\\")) {
+            // windows UNC share
+            newPath.append("\\\\");
+            String original = path;
+            path = path.substring(2);
+            int slash = path.indexOf('/');
+            int backslash = path.indexOf('\\');
+            if (slash < 0)
+                slash = path.length();
+            if (backslash < 0)
+                backslash = path.length();
+            backslash = Math.min(slash, backslash);
+            if (backslash >= 0) {
+                newPath.append(path.substring(0, backslash)).append(File.separator);
+                path = path.substring(backslash + 1);
+            } else {
+                throw VolumeServiceException.NOT_ABSOLUTE_PATH(original);
+            }
+        } else if (path.charAt(0) == '/' || path.charAt(0) == '\\') {
+            newPath.append(File.separator);
+            path = path.substring(1);
+        } else {
+            throw VolumeServiceException.NOT_ABSOLUTE_PATH(path);
+        }
+
+        String dirs[] = path.split("[/\\\\]");
+        if (dirs.length == 0)
+            return newPath.toString();
+
+        String newDirs[] = new String[dirs.length];
+        int numDirs = 0;
+        for (int i = 0; i < dirs.length; i++) {
+            String dir = dirs[i];
+            if (dir.length() == 0 ||                          // empty
+                dir.equals(".") ||                            // single dot
+                (dir.length() > 2 && dir.matches("^\\.+$")))  // 3+ dots
+                continue;  // ignore
+            if (dir.equals("..")) {
+                if (numDirs > 0)
+                    numDirs--;
+            } else {
+                newDirs[numDirs] = dir;
+                numDirs++;
+            }
+        }
+
+        for (int i = 0; i < numDirs; i++) {
+            newPath.append(newDirs[i]);
+            if (i < numDirs - 1)
+                newPath.append(File.separator);
+        }
+
+        return newPath.toString();
     }
 
 
