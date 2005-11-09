@@ -92,7 +92,7 @@ public class Zimbra {
     	ExtensionUtil.loadAll();
     	ExtensionUtil.initAll();
     	
-    	ZimletUtil.loadZimlets();
+    	//ZimletUtil.loadZimlets();
     	
         TransformationStub.getInstance().init();
         

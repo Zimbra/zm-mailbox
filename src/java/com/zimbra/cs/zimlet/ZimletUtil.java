@@ -90,11 +90,13 @@ public class ZimletUtil {
 		}
 	}
 
+	private static boolean sZimletsLoaded = false;
 	private static Map sZimlets = new HashMap();
 	private static Map sDevZimlets = new HashMap();
 
 	public static void loadZimlets() {
 		loadZimletsFromDir(sZimlets, LC.zimlet_directory.value());
+		sZimletsLoaded = true;
 	}
 
 	public static void loadDevZimlets() {
@@ -124,6 +126,9 @@ public class ZimletUtil {
 	}
 	
 	public static void listZimlet(Element elem, String zimlet) {
+		if (!sZimletsLoaded) {
+			loadZimlets();
+		}
 		ZimletFile zim = (ZimletFile) sZimlets.get(zimlet);
 		if (zim == null) {
 			ZimbraLog.zimlet.info("cannot find zimlet "+zimlet);
