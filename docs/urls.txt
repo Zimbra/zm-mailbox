@@ -5,7 +5,10 @@ Various special URLs/servlets
 # soon to be unsupported
 Calendar   http://{server}/service/ical/cal.ics  
 
-Calendar   http://{server}/service/calendar/{calendar-folder}.{ics,rss} // more formats to come
+# new form
+Calendar   http://{server}/{zimbra,service}/user/{username}/{calendar-folder}
+
+Using /zimbra causes the browser to do a redirect to /service.
 
 ------------------------------------------------------------
 
@@ -13,7 +16,7 @@ Spits out a "text/calendar" file, consististing of appointments in the calendar.
 
 to test (on a system with curl installed):
 
-curl -u user1:test123 http://localhost:7070/service/calendar/calendar.ics
+curl -u user1:test123 http://localhost:7070/zimbra/user/user1/calendar
 
 Should look something like:
 
@@ -102,7 +105,12 @@ Notes:
      application to that particular item.
 
 ------------------------------------------------------------
+# soon to be unsupported
 Contacts   http://{server}/service/csv/contacts.csv
+
+# new form
+Contacts   http://{server}/{zimbra,service}/user/{username}/contacts
+
 ------------------------------------------------------------
 
 Spits out a "text/plain" file, consisting of all the contacts an account has, in CSV (comma-separated values)

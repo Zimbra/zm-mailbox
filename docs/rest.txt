@@ -53,43 +53,43 @@ EXAMPLES
 
 There are two primary formats, one using a folder, and one using a mail item id.
 
-http://server/user/[~]{account-name}/{folder-path}    // path to a folder 
-http://server/user/[~]{account-name}/?id={item-id}       // a mail item id
+http://server/zimbra/user/[~]{account-name}/{folder-path}    // path to a folder 
+http://server/zimbra/user/[~]{account-name}/?id={item-id}       // a mail item id
 
 A single ~ is allowed and references the authenticated user accessing the data. 
 
 Some examples:
 
-/user/roland/inbox?fmt=rss         // RSS feed of inbox 
-/user/roland/inbox?fmt=xml         // Zimbra XML representation of inbox
-/user/roland/inbox?fmt=zip         // A ZIP file of all messages in the inbox folder
+/zimbra/user/roland/inbox?fmt=rss         // RSS feed of inbox 
+/zimbra/user/roland/inbox?fmt=xml         // Zimbra XML representation of inbox
+/zimbra/user/roland/inbox?fmt=zip         // A ZIP file of all messages in the inbox folder
 
-/user/roland/contacts                     // CSV view of contacts folder
-/user/roland/contacts?fmt=json            // JSON view of contacts folder
+/zimbra/user/roland/contacts                     // CSV view of contacts folder
+/zimbra/user/roland/contacts?fmt=json            // JSON view of contacts folder
 
-/user/roland/calendars                    // ICS view of calendar
-/user/janie/holidays                      // Janie's holidays calendar
-/user/roland/calendar/project?fmt=html    // html view of calendar/projects calendar
-/user/roland/calendar?fmt=atom            // atom feed of calendar
+/zimbra/user/roland/calendars                    // ICS view of calendar
+/zimbra/user/janie/holidays                      // Janie's holidays calendar
+/zimbra/user/roland/calendar/project?fmt=html    // html view of calendar/projects calendar
+/zimbra/user/roland/calendar?fmt=atom            // atom feed of calendar
 
 The second format is used to reference something by its mail item id:
 
-/user/roland/?id=10                    // ICS view of calendar, referenced via ID
-/user/roland/?id=945&fmt=vcard         // contact formatted as a vcard
-/user/roland/?id=100&part=2.3          // message with id 100, mime part 2.3
+/zimbra/user/roland/?id=10                    // ICS view of calendar, referenced via ID
+/zimbra/user/roland/?id=945&fmt=vcard         // contact formatted as a vcard
+/zimbra/user/roland/?id=100&part=2.3          // message with id 100, mime part 2.3
 
-Can also use "/userid" to represent a user's zimbraId, giving a truly persistent URL:
+Can also use "/zimbra/userid" to represent a user's zimbraId, giving a truly persistent URL:
 
-/userid/85f92db0-3348-4916-9ca5-f74a9a5252e0/?id=34567
+/zimbra/userid/85f92db0-3348-4916-9ca5-f74a9a5252e0/?id=34567
 
 When we support documents in a folder, we'd use the document's name as you'd expect:
 
-/user/smith/work/partner/authentication.doc
+/zimbra/user/smith/work/partner/authentication.doc
 
 We should of course be able to convert attachments to HTML (via Verity) with this
 syntax:
 
-/user/roland/?id=564&part=4&fmt=html   // part 4 (which could be a word doc) in html
+/zimbra/user/roland/?id=564&part=4&fmt=html   // part 4 (which could be a word doc) in html
 
 ------------------------------------------------------------
 SEARCHING
@@ -98,16 +98,16 @@ SEARCHING
 Since search is a big part of Zimbra, all item URLs should generally allow a search
 query to either gather all results, or constrain them. For example:
 
-/user/roland/inbox?fmt=rss
+/zimbra/user/roland/inbox?fmt=rss
 
 This would give back a simple RSS feed of all items in the inbox. To send back only
 unread, you'd do:
 
-/user/roland/inbox?fmt=rss&query="is:unread"
+/zimbra/user/roland/inbox?fmt=rss&query="is:unread"
 
 or:
 
-/user/roland/?fmt=rss&query="in:inbox is:unread"
+/zimbra/user/roland/?fmt=rss&query="in:inbox is:unread"
 
 We probably want to allow the same params that the SearchRequest soap command allows,
 to allow for paging, restricting what types of items are returned, etc:
@@ -128,8 +128,8 @@ ACCESSING DATA ACROSS Zimbra DOMAINs
 to access items across domains within a Zimra install, specify an @ in the mailbox
 name:
 
-/user/schemers@zimbra.com/calendar
-/user/joer@zombo.com/calendar
+/zimbra/user/schemers@zimbra.com/calendar
+/zimbra/user/joer@zombo.com/calendar
 
 Both zimbra.com and zombo.com are part of the same Zimbra install, and thus accounts
 and mailbox locations on both can be resolved internally.
@@ -142,7 +142,7 @@ exact same naming convention.
 For example, if companyA installs Zimbra, and companyB installs Zimbra, someone at
 companyA should be able to reference an item from companyB using the same syntax:
 
-/user/john.smith@companyB.com/shared/contacts
+/zimbra/user/john.smith@companyB.com/shared/contacts
 
 this can be accomplished with DNS SRV records. For example, companyB.com could
 publish a SRV record for _zimbra._tcp:
@@ -157,7 +157,7 @@ _zimbra._tcp.companyB.com
 And get back "zimbra.companyB.com" as the name of the Zimbra sever to
 direct the request to. It would then do the equivalent of:
 
-http://zimbra.companyB.com/user/john.smith@companyB.com/shared/contacts
+http://zimbra.companyB.com/zimbra/user/john.smith@companyB.com/shared/contacts
 
 ------------------------------------------------------------
 ISSUES/NOTES
@@ -167,41 +167,41 @@ ISSUES/NOTES
 
   For example, I can see wanting to specify:
 
-  /user/roland/sales?fmt=zip                 // the sales folder only
-  /user/roland/sales?fmt=zip?recursive=1     // sales folder and all recursive
-  /user/roland/sales/*?fmt=zip               // all folders in sales (not including sales)
-  /user/roland/sales/*?fmt=zip?recursive=1   //  same as previous, but recursive
+  /zimbra/user/roland/sales?fmt=zip                 // the sales folder only
+  /zimbra/user/roland/sales?fmt=zip?recursive=1     // sales folder and all recursive
+  /zimbra/user/roland/sales/*?fmt=zip               // all folders in sales (not including sales)
+  /zimbra/user/roland/sales/*?fmt=zip?recursive=1   //  same as previous, but recursive
 
 2. user-friendly item "ids"? It would be nice to have user-friendly names 
    for items inside of a folder, such as (+ is url-encoded form of a space):
 
-  /user/roland/calendar/Staff+Meeting
-  /user/roland/contacts/Roland+Schemers
-  /user/roland/inbox/Important+Meeting
+  /zimbra/user/roland/calendar/Staff+Meeting
+  /zimbra/user/roland/contacts/Roland+Schemers
+  /zimbra/user/roland/inbox/Important+Meeting
 
   Exchange allows this type of naming, need to determine how/if we'd want to do
   this, and how to deal with collisions like it does. 
   
   Might need to come up with a per-item query-param string, or use search:
   
-  /user/roland/contacts/?query="Roland Schemers"
+  /zimbra/user/roland/contacts/?query="Roland Schemers"
 
 3. there will probably by mail-item specific query params, like duration for 
    calendars, picking alternate views for .html flavors, etc. Should try and
    standardize where possible. For exmaple:
 
-   /user/roland/calendar?start=20051225&fmt=hmtl&view=week
+   /zimbra/user/roland/calendar?start=20051225&fmt=hmtl&view=week
 
 4. calendar free/busy chould also be exported via this mechanism:
 
-   /user/schemers/?fmt=vfb
+   /zimbra/user/schemers/?fmt=vfb
 
    specifying it on the "root" folder would get the free/busy for all calendars that
    are marked to be included in free/busy.
 
 5. initially we might not support things like:
 
-   /user/roland/inbox?fmt=csv
+   /zimbra/user/roland/inbox?fmt=csv
 
    but ideally we'd emit a simple CSV format. We could define to be something like a
    separate column for each header, and specially named columns for the "body" 
@@ -215,8 +215,8 @@ ISSUES/NOTES
 7. I really wanted the following to be equiv, and would like to see if we can
    still achieve it without too much overhead/quoting issues:
 
-   /user/roland/inbox?fmt=rss
-   /user/roland/inbox.rss
+   /zimbra/user/roland/inbox?fmt=rss
+   /zimbra/user/roland/inbox.rss
 
   Things get tricky/ambigious when you have a folder and/or document named 
   "inbox.rss", and even if you don't, you still probably need to do initially
@@ -255,12 +255,12 @@ APPENDIX A: URL forms
 Here various ways to access john.doe@zimbra.com's calendar:
 
 shortcut to yourself: 
-  /user/~/calendar
-  /user/~/?id=10       // id 10 is always the calendar folder
+  /zimbra/user/~/calendar
+  /zimbra/user/~/?id=10       // id 10 is always the calendar folder
 
 explicit account: 
-   /user/john.doe/calendar
-   /user/john.doe/?id=10
-   /user/john.doe@zimbra.com/calendar
-   /userid/34cc4086-801e-42a0-a67a-ea93c1590c4e/calendar
-   /user/34cc4086-801e-42a0-a67a-ea93c1590c4e/?id=10
+   /zimbra/user/john.doe/calendar
+   /zimbra/user/john.doe/?id=10
+   /zimbra/user/john.doe@zimbra.com/calendar
+   /zimbra/userid/34cc4086-801e-42a0-a67a-ea93c1590c4e/calendar
+   /zimbra/user/34cc4086-801e-42a0-a67a-ea93c1590c4e/?id=10
