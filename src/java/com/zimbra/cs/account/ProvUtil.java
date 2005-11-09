@@ -169,7 +169,8 @@ public class ProvUtil {
     private static final int ADD_DISTRIBUTION_LIST_ALIAS = 708;
     private static final int REMOVE_DISTRIBUTION_LIST_ALIAS = 709;
     private static final int RENAME_DISTRIBUTION_LIST = 710;
-
+    private static final int CREATE_DISTRIBUTION_LISTS_BULK = 711;
+    
     private static final int SEARCH_ACCOUNTS = 801;
     private static final int SEARCH_GAL = 802;
     private static final int SYNC_GAL = 803;
@@ -259,7 +260,8 @@ public class ProvUtil {
         addCommand("addDistributionListAlias", "adla", ADD_DISTRIBUTION_LIST_ALIAS);
         addCommand("removeDistributionListAlias", "rdla", REMOVE_DISTRIBUTION_LIST_ALIAS);
         addCommand("renameDistributionList", "rdl", RENAME_DISTRIBUTION_LIST);
-
+        addCommand("createDistributionListsBulk", "cdlbulk", CREATE_DISTRIBUTION_LISTS_BULK);
+        
         addCommand("exit", "quit", EXIT);
         addCommand("help", "?", HELP);        
     }
@@ -396,6 +398,9 @@ public class ProvUtil {
         case CREATE_DISTRIBUTION_LIST:
             doCreateDistributionList(args);
             break;
+        case CREATE_DISTRIBUTION_LISTS_BULK:
+            doCreateDistributionListsBulk(args);
+            break;            
         case GET_ALL_DISTRIBUTION_LISTS:
             doGetAllDistributionLists(args);
             break;
@@ -1066,6 +1071,24 @@ public class ProvUtil {
             Map attrs = getMap(args, 2);
             DistributionList dl = mProvisioning.createDistributionList(name, attrs);
             System.out.println(dl.getId());
+        }
+    }
+    
+    private void doCreateDistributionListsBulk(String[] args) throws ServiceException {
+        if (args.length < 3) {
+            usage();
+        } else {
+            String domain = args[1];
+            String nameMask = args[2];
+            int numAccounts = Integer.parseInt(args[3]);            
+            for(int ix=0; ix < numAccounts; ix++) {
+            	String name = nameMask + Integer.toString(ix) + "@" + domain;
+            	HashMap attrs = new HashMap();
+            	String displayName = nameMask + " N. " + Integer.toString(ix);
+            	StringUtil.addToMultiMap(attrs, "displayName", displayName);
+            	DistributionList dl  = mProvisioning.createDistributionList(name,attrs);
+            	System.out.println(dl.getId());
+           }
         }
     }
     
