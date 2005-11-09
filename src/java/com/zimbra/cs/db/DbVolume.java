@@ -156,7 +156,10 @@ public class DbVolume {
             int num = stmt.executeUpdate();
             return num == 1;
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("deleting volume entry: " + id, e);
+            if (e.getErrorCode() == Db.Error.FOREIGN_KEY_CHILD_EXISTS)
+                throw VolumeServiceException.CANNOT_DELETE_VOLUME_IN_USE(id, e);
+            else
+                throw ServiceException.FAILURE("deleting volume entry: " + id, e);
         } finally {
             DbPool.closeStatement(stmt);
         }        

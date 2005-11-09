@@ -29,15 +29,16 @@ import com.zimbra.cs.service.ServiceException;
 
 public class VolumeServiceException extends ServiceException {
 
-    public static final String BAD_CURRVOL_CONFIG    = "volume.BAD_CURRVOL_CONFIG";
-    public static final String NO_SUCH_VOLUME        = "volume.NO_SUCH_VOLUME";
-    public static final String NO_SUCH_PATH          = "volume.NO_SUCH_PATH";
-    public static final String ALREADY_EXISTS        = "volume.ALREADY_EXISTS";
-    public static final String ID_OUT_OF_RANGE       = "volume.ID_OUT_OF_RANGE";
-    public static final String WRONG_TYPE_CURRVOL    = "volume.WRONG_TYPE_CURRVOL";
-    public static final String CANNOT_DELETE_CURRVOL = "volume.CANNOT_DELETE_CURRVOL";
+    public static final String BAD_CURRVOL_CONFIG            = "volume.BAD_CURRVOL_CONFIG";
+    public static final String NO_SUCH_VOLUME                = "volume.NO_SUCH_VOLUME";
+    public static final String NO_SUCH_PATH                  = "volume.NO_SUCH_PATH";
+    public static final String ALREADY_EXISTS                = "volume.ALREADY_EXISTS";
+    public static final String ID_OUT_OF_RANGE               = "volume.ID_OUT_OF_RANGE";
+    public static final String CANNOT_DELETE_VOLUME_IN_USE   = "volume.CANNOT_DELETE_VOLUME_IN_USE";
+    public static final String WRONG_TYPE_CURRVOL            = "volume.WRONG_TYPE_CURRVOL";
+    public static final String CANNOT_DELETE_CURRVOL         = "volume.CANNOT_DELETE_CURRVOL";
     public static final String CANNOT_CHANGE_TYPE_OF_CURRVOL = "volume.CANNOT_CHANGE_TYPE_OF_CURRVOL";
-    public static final String INVALID_REQUEST       = "volume.INVALID_REQUEST";
+    public static final String INVALID_REQUEST               = "volume.INVALID_REQUEST";
 
     private VolumeServiceException(String message, String code, boolean isReceiversFault) {
         super(message, code, isReceiversFault);
@@ -70,6 +71,12 @@ public class VolumeServiceException extends ServiceException {
         return new VolumeServiceException(
                 "id " + id + " is out of range [0, " + Volume.ID_MAX + "]",
                 ID_OUT_OF_RANGE, SENDERS_FAULT, null);
+    }
+
+    public static VolumeServiceException CANNOT_DELETE_VOLUME_IN_USE(int id, Throwable t) {
+        return new VolumeServiceException(
+                "volume id " + id + " is in use by one or more mailboxes and cannot be deleted",
+                CANNOT_DELETE_VOLUME_IN_USE, SENDERS_FAULT, t);
     }
 
     public static VolumeServiceException CANNOT_DELETE_CURRVOL(int id, String volType) {
