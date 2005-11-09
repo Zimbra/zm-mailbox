@@ -141,7 +141,7 @@ public class TimeZoneMap {
      */
     public static TimeZoneMap decodeFromMetadata(Metadata meta, ICalTimeZone localTZ) throws ServiceException {
         Map map = meta.asMap();
-        ArrayList tzlist = new ArrayList();
+        ICalTimeZone[] tzlist = new ICalTimeZone[map.size()]; 
         
         // first time, find the tz's
         for (Iterator it = map.entrySet().iterator(); it.hasNext(); ) {
@@ -150,7 +150,7 @@ public class TimeZoneMap {
             if (key.charAt(0) == '#') {
                 int idx = Integer.parseInt(key.substring(1));
                 ICalTimeZone tz = ICalTimeZone.decodeFromMetadata((Metadata) entry.getValue());
-                tzlist.add(idx, tz);
+                tzlist[idx] = tz;
             }
         }
 
@@ -161,7 +161,9 @@ public class TimeZoneMap {
             String key = (String) entry.getKey();
             if (key.charAt(0) != '#') {
                 int idx = Integer.parseInt(entry.getValue().toString());
-                tzmap.put(key, tzlist.get(idx));
+                if (tzlist[idx] != null) {
+                    tzmap.put(key, tzlist[idx]);
+                }
             }
         }
         
