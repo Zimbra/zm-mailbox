@@ -58,7 +58,7 @@ public class GetServiceStatus extends AdminDocumentHandler {
         Server monitorServer = prov.getServerByName(monitorHost);
         if (monitorServer == null)
             throw ServiceException.FAILURE("could not find zimbraLogHostname server: " + monitorServer, null);
-        if (!prov.getLocalServer().equals(monitorServer))
+        if (!prov.getLocalServer().getId().equalsIgnoreCase(monitorServer.getId()))
             return proxyRequest(request, context, monitorServer, new ZimbraContext(lc, lc.getRequestedAccountId()));
 
         Element response = lc.createElement(AdminService.GET_SERVICE_STATUS_RESPONSE);
