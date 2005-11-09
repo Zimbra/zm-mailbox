@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbServiceStatus;
 import com.zimbra.cs.db.DbPool.Connection;
@@ -47,15 +48,18 @@ import com.zimbra.soap.ZimbraContext;
 public class GetServiceStatus extends AdminDocumentHandler {
 
 	public Element handle(Element request, Map context) throws SoapFaultException, ServiceException {
+        ZimbraContext lc = getZimbraContext(context);
+
         // this command can only execute on the monitor host, so proxy if necessary
         Provisioning prov = Provisioning.getInstance();
         String monitorHost = prov.getConfig().getAttr(Provisioning.A_zimbraLogHostname);
         if (monitorHost == null || monitorHost.trim().equals(""))
             throw ServiceException.FAILURE("zimbraLogHostname is not configured", null);
-        if (!monitorHost.equalsIgnoreCase(prov.getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname)))
-            return proxyRequest(request, context, monitorHost);
-
-        ZimbraContext lc = getZimbraContext(context);
+        Server monitorServer = prov.getServerByName(monitorHost);
+        if (monitorServer == null)
+            throw ServiceException.FAILURE("could not find zimbraLogHostname server: " + monitorServer, null);
+        if (!prov.getLocalServer().equals(monitorServer))
+            return proxyRequest(request, context, monitorServer, new ZimbraContext(lc, lc.getRequestedAccountId()));
 
         Element response = lc.createElement(AdminService.GET_SERVICE_STATUS_RESPONSE);
 	    Connection conn = null;
