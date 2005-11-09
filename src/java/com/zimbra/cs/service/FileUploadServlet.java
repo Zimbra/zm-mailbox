@@ -25,9 +25,18 @@
 
 package com.zimbra.cs.service;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.TimerTask;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.ContentDisposition;
@@ -35,11 +44,17 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.fileupload.DefaultFileItem;
 import org.apache.commons.fileupload.DiskFileUpload;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadBase;
 import org.apache.commons.fileupload.FileUploadException;
-import org.apache.commons.httpclient.*;
+import org.apache.commons.httpclient.Cookie;
+import org.apache.commons.httpclient.Header;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpException;
+import org.apache.commons.httpclient.HttpState;
+import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -165,9 +180,14 @@ public class FileUploadServlet extends ZimbraServlet {
         if (port <= 0)
             throw ServiceException.FAILURE("remote server " + server.getName() + " has neither http nor https port enabled", null);
         String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
-        String url = (useHTTP ? "http" : "https") + "://" + hostname + ':' + port +
-                     ContentServlet.SERVLET_PATH + ContentServlet.PREFIX_PROXY + '?' +
-                     ContentServlet.PARAM_UPLOAD_ID + '=' + URLEncoder.encode(uploadId);
+        String url;
+		try {
+			url = (useHTTP ? "http" : "https") + "://" + hostname + ':' + port +
+			             ContentServlet.SERVLET_PATH + ContentServlet.PREFIX_PROXY + '?' +
+			             ContentServlet.PARAM_UPLOAD_ID + '=' + URLEncoder.encode(uploadId, "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			throw ServiceException.FAILURE("fetchRemoteUpload(): unsupported encoding", e);
+		}
 
         // create an HTTP client with auth cookie to fetch the file from the remote ContentServlet
         HttpState state = new HttpState();
