@@ -25,11 +25,12 @@
 package com.zimbra.cs.zimlet;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Enumeration;
-import java.util.List;
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -41,20 +42,55 @@ import com.zimbra.cs.util.ByteUtil;
  * @author jylee
  *
  */
-public class ZimletFile extends ZipFile {
+public class ZimletFile extends File {
 
+	public static abstract class ZimletEntry {
+		protected String mName;
+		
+		protected ZimletEntry(String name) {
+			mName = name;
+		}
+		public String getName() {
+			return mName;
+		}
+		public abstract byte[] getContents() throws IOException;
+	}
+	
+	public static class ZimletZipEntry extends ZimletEntry {
+		private ZipFile  mContainer;
+		private ZipEntry mEntry;
+		
+		public ZimletZipEntry(ZipFile f, ZipEntry e) {
+			super(e.getName());
+			mContainer = f;
+			mEntry = e;
+		}
+		public byte[] getContents() throws IOException {
+			return ByteUtil.getContent(mContainer.getInputStream(mEntry), (int)mEntry.getSize());
+		}
+	}
+	
+	public static class ZimletDirEntry extends ZimletEntry {
+		private File mFile;
+		
+		public ZimletDirEntry(File f) {
+			super(f.getName());
+			mFile = f;
+		}
+		public byte[] getContents() throws IOException {
+			return ByteUtil.getContent(new FileInputStream(mFile), 0);
+		}
+	}
+	
 	private static final String XML_SUFFIX = ".xml";
 	private static final String ZIP_SUFFIX = ".zip";
 	private static final String CONFIG_TMPL = "config_template.xml";
 
-	private String mZimletName;
-	private String mDescContent;
-	private String mConfigContent;
-	
-	private List   mEntries;
-	
+	private String mDescFile;
+	private Map    mEntries;
+
 	public ZimletFile(String zimlet) throws IOException {
-		super(getFile(zimlet));
+		super(findZimlet(zimlet));
 		initialize();
 	}
 
@@ -67,54 +103,46 @@ public class ZimletFile extends ZipFile {
 		if (name.endsWith(ZIP_SUFFIX)) {
 			name = name.substring(0, name.length() - 4);
 		}
-		mZimletName = name;
-		String descFile = name + XML_SUFFIX;
+		mDescFile = name + XML_SUFFIX;
 		
-		mEntries = new ArrayList();
-		Enumeration entries = entries();
-		boolean zimletDescriptionFound = false;
-		while (entries.hasMoreElements()) {
-			ZipEntry entry = (ZipEntry) entries.nextElement();
-			String entryName = entry.getName();
-			if (entryName.toLowerCase().equals(descFile)) {
-				zimletDescriptionFound = true;
-				mDescContent = new String(getEntryContent(entry));
-			} else if (entryName.equals(CONFIG_TMPL)) {
-				mConfigContent = new String(getEntryContent(entry));
-			}
-			mEntries.add(entryName);
-		}
-		
-		if (!zimletDescriptionFound) {
-			throw new FileNotFoundException("Zimlet description " + descFile + 
-											" not found in " + getName());
-		}
-	}
-	
-	public String getZimletDescription() {
-		return mDescContent;
-	}
-	
-	public String getZimletConfig() {
-		return mConfigContent;
-	}
-	
-	public String[] getAllEntryNames() {
-		return (String[])mEntries.toArray(new String[0]);
-	}
-	
-	public byte[] getEntryContent(String name) throws IOException {
-		return getEntryContent(getEntry(name));
-	}
+		mEntries = new HashMap();
 
-	public byte[] getEntryContent(ZipEntry entry) throws IOException {
-		if (entry == null) {
-			throw new FileNotFoundException(entry.getName() + " not found in the Zimlet distribution " + mZimletName);
+		if (isDirectory()) {
+			File[] files = listFiles();
+			for (int i = 0; i < files.length; i++) {
+				mEntries.put(files[i].getName().toLowerCase(), new ZimletDirEntry(files[i]));
+			}
+		} else {
+			ZipFile zip = new ZipFile(this);
+			Enumeration entries = zip.entries();
+			while (entries.hasMoreElements()) {
+				ZipEntry entry = (ZipEntry) entries.nextElement();
+				mEntries.put(entry.getName().toLowerCase(), new ZimletZipEntry(zip, entry));
+			}
 		}
-		return ByteUtil.getContent(getInputStream(entry), (int)entry.getSize());
 	}
 	
-	private static File getFile(String zimlet) throws FileNotFoundException {
+	public String getZimletDescription() throws IOException {
+		ZimletEntry entry = (ZimletEntry)mEntries.get(mDescFile);
+		if (entry == null) {
+			return null;
+		}
+		return new String(entry.getContents());
+	}
+	
+	public String getZimletConfig() throws IOException {
+		ZimletEntry entry = (ZimletEntry)mEntries.get(CONFIG_TMPL);
+		if (entry == null) {
+			return null;
+		}
+		return new String(entry.getContents());
+	}
+	
+	public Map getAllEntries() {
+		return mEntries;
+	}
+	
+	private static String findZimlet(String zimlet) throws FileNotFoundException {
 		File zimletFile = new File(zimlet);
 		
 		if (!zimletFile.exists()) {
@@ -130,12 +158,11 @@ public class ZimletFile extends ZipFile {
 			int i;
 			for (i = 0; i < files.length; i++) {
 				if (files[i] == zimletTargetName) {
-					return new File(zimletFile, files[i]);
+					return zimlet + File.separator + files[i];
 				}
 			}
-			throw new FileNotFoundException("Zimlet not found in the directory: " + zimlet);
 		}
 		
-		return zimletFile;
+		return zimlet;
 	}
 }

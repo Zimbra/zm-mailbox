@@ -175,13 +175,15 @@ public class ZimletUtil {
 		File zimletDir = new File(zimletRoot + File.separatorChar + zimletName);
 		FileUtil.mkdirs(zimletDir);
 
-		String[] files = zf.getAllEntryNames();
-		for (int i = 0; i < files.length; i++) {
-			String f = files[i];
-			if (f.endsWith("/") || f.endsWith("\\")) {
-				FileUtil.mkdirs(new File(zimletDir, f));
+		Iterator files = zf.getAllEntries().entrySet().iterator();
+		while (files.hasNext()) {
+			Map.Entry f = (Map.Entry) files.next();
+			ZimletFile.ZimletEntry entry = (ZimletFile.ZimletEntry) f.getValue();
+			String fname = entry.getName();
+			if (fname.endsWith("/") || fname.endsWith("\\")) {
+				FileUtil.mkdirs(new File(zimletDir, fname));
 			} else {
-				writeFile(zf.getEntryContent(f), new File(zimletDir, f));
+				writeFile(entry.getContents(), new File(zimletDir, fname));
 			}
 		}
 	}
