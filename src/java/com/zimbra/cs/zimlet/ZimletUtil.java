@@ -137,7 +137,7 @@ public class ZimletUtil {
 
 	private static Map descToMap(ZimletDescription zd) throws ZimletException {
 		Map attrs = new HashMap();
-		attrs.put(Provisioning.A_zimbraZimletKeyword,         zd.getZimletName());
+		attrs.put(Provisioning.A_zimbraZimletKeyword,         zd.getName());
 		attrs.put(Provisioning.A_zimbraZimletVersion,         zd.getVersion());
 		attrs.put(Provisioning.A_zimbraZimletDescription,     zd.getDescription());
 		attrs.put(Provisioning.A_zimbraZimletIndexingEnabled, zd.getServerExtensionHasKeyword());
@@ -153,10 +153,17 @@ public class ZimletUtil {
 	public static void installZimlet(String zimletRoot, String zimlet) throws IOException, ZimletException {
 		ZimletFile zf = new ZimletFile(zimlet);
 		ZimletDescription zd = new ZimletDescription(zf.getZimletDescription());
-		String zimletName = zd.getZimletName();
+		String zimletName = zd.getName();
+		
+		Map attrs = descToMap(zd);
+		
+		String configStr = zf.getZimletConfig();
+		if (configStr != null) {
+			ZimletConfig config = new ZimletConfig(configStr);
+			attrs.put(Provisioning.A_zimbraZimletHandlerConfig, config.toXMLString());
+		}
 		
 		// add zimlet entry to ldap
-		Map attrs = descToMap(zd);
 		Provisioning prov = Provisioning.getInstance();
 		try {
 			prov.createZimlet(zimletName, attrs);
@@ -214,8 +221,10 @@ public class ZimletUtil {
 		}
 	}
 	
-	public static void dumpConfig(String zimlet) {
-		
+	public static void dumpConfig(String zimlet) throws IOException, ZimletException {
+		ZimletFile zf = new ZimletFile(zimlet);
+		String config = zf.getZimletConfig();
+		System.out.println(config);
 	}
 	
 	private static final String ZCSROOT = "c:/opt/zimbra/tomcat";
