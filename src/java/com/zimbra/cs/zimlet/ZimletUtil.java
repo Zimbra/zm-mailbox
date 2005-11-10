@@ -250,7 +250,9 @@ public class ZimletUtil {
 
 		// install the files
 		File zimletDir = new File(zimletRoot + File.separatorChar + zimletName);
-		FileUtil.mkdirs(zimletDir);
+		if (!zimletDir.exists()) {
+			FileUtil.mkdirs(zimletDir);
+		}
 
 		Iterator files = zf.getAllEntries().entrySet().iterator();
 		while (files.hasNext()) {
@@ -258,9 +260,11 @@ public class ZimletUtil {
 			ZimletFile.ZimletEntry entry = (ZimletFile.ZimletEntry) f.getValue();
 			String fname = entry.getName();
 			if (fname.endsWith("/") || fname.endsWith("\\")) {
-				FileUtil.mkdirs(new File(zimletDir, fname));
+				continue;
 			} else {
-				writeFile(entry.getContents(), new File(zimletDir, fname));
+				File file = new File(zimletDir, fname);
+				file.getParentFile().mkdirs();
+				writeFile(entry.getContents(), file);
 			}
 		}
 	}
@@ -323,7 +327,8 @@ public class ZimletUtil {
 		}
 	}
 	
-	private static final String ZCSROOT = "c:/opt/zimbra/tomcat";
+	private static void test() {
+	}
 	
 	private static final int INSTALL_ZIMLET = 10;
 	private static final int UNINSTALL_ZIMLET = 11;
@@ -332,6 +337,7 @@ public class ZimletUtil {
 	private static final int DEACTIVATE_ZIMLET = 14;
 	private static final int DUMP_CONFIG = 15;
 	private static final int INSTALL_CONFIG = 16;
+	private static final int TEST = 99;
 	
 	private static final String INSTALL_CMD = "install";
 	private static final String UNINSTALL_CMD = "uninstall";
@@ -340,6 +346,7 @@ public class ZimletUtil {
 	private static final String DEACTIVATE_CMD = "deactivate";
 	private static final String DUMP_CONFIG_CMD = "config";
 	private static final String INSTALL_CONFIG_CMD = "configure";
+	private static final String TEST_CMD = "test";
 	
 	private static Map mCommands;
 	
@@ -352,6 +359,7 @@ public class ZimletUtil {
 		mCommands.put(DEACTIVATE_CMD, new Integer(DEACTIVATE_ZIMLET));
 		mCommands.put(DUMP_CONFIG_CMD, new Integer(DUMP_CONFIG));
 		mCommands.put(INSTALL_CONFIG_CMD, new Integer(INSTALL_CONFIG));
+		mCommands.put(TEST_CMD, new Integer(TEST));
 	}
 	
 	private static void usage() {
@@ -379,7 +387,7 @@ public class ZimletUtil {
 			usage();
 		}
 		
-		String zimletRoot = ZCSROOT + File.separatorChar + "zimlet";
+		String zimletRoot = LC.zimlet_directory.value();
 		String zimlet = args[1];
 		
 		int cmd = lookupCmd(args[0]);
@@ -411,6 +419,9 @@ public class ZimletUtil {
 				break;
 			case INSTALL_CONFIG:
 				installConfig(zimlet);
+				break;
+			case TEST:
+				test();
 				break;
 			default:
 				System.out.println("Unknown command " + args[0]);
