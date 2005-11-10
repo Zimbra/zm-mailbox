@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.zimbra.cs.zimlet.ZimletConf;
 import com.zimbra.cs.zimlet.ZimletHandler;
 
 /**
@@ -65,7 +66,7 @@ public class NANPHandler implements ZimletHandler {
 				match.charAt(offset+2) == '1'));
     }
     
-	public String[] match(String text) {
+	public String[] match(String text, ZimletConf config) {
         Matcher m = NANP_NUMBER_PATTERN.matcher(text);
         List l = new ArrayList();
         while (m.find()) {

@@ -38,6 +38,8 @@ import com.zimbra.soap.Element;
  */
 public class ZimletDescription extends ZimletMeta {
 	
+	public static final String ZIMLET_REGEX_EXTENSION_CLASS = "com.zimbra.cs.zimlet.handler.RegexHandler";
+	
 	private String mDescription;
 	private List   mScripts;
 	private String mContentObject;
@@ -46,6 +48,7 @@ public class ZimletDescription extends ZimletMeta {
 	private String mKeyword;
 	private String mHasKeyword;
 	private String mStoreMatched;
+	private String mRegexString;
 	
 	private static final String TRUE_STR = "TRUE";
 	private static final String FALSE_STR = "FALSE";
@@ -88,6 +91,9 @@ public class ZimletDescription extends ZimletMeta {
 				mHasKeyword = TRUE_STR;
 			} else if (elem.getName().equals(ZIMLET_TAG_EXTENSION_CLASS)) {
 				mExtensionClass = elem.getText();
+			} else if (elem.getName().equals(ZIMLET_TAG_REGEX)) {
+				mExtensionClass = ZIMLET_REGEX_EXTENSION_CLASS;
+				mRegexString = elem.getText();
 			}
 		}
 	}
@@ -135,5 +141,9 @@ public class ZimletDescription extends ZimletMeta {
 	
 	public String getStoreMatched() {
 		return mStoreMatched;
+	}
+	
+	public String getRegexString() {
+		return mRegexString;
 	}
 }

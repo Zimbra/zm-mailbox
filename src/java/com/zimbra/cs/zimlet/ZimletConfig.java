@@ -39,11 +39,17 @@ import com.zimbra.soap.Element;
  * @author jylee
  *
  */
-public class ZimletConfig extends ZimletMeta {
+public class ZimletConfig extends ZimletMeta implements ZimletConf {
+	
+	public static final String CONFIG_REGEX_VALUE = "ZIMLET_CONFIG_REGEX_VALUE";
 	
 	private Map mGlobalConfig;
 	private Map mSiteConfig;
 	private String mLocalHost;
+	
+	public ZimletConfig() throws ZimletException {
+		initialize();
+	}
 	
 	public ZimletConfig(String c) throws ZimletException {
 		super(c);
@@ -91,11 +97,23 @@ public class ZimletConfig extends ZimletMeta {
 		return (String) mGlobalConfig.get(key);
 	}
 	
+	public void setRegExValue(String regex) {
+		mGlobalConfig.put(CONFIG_REGEX_VALUE, regex);
+	}
+
 	public Map getGlobalConfig() {
 		return mGlobalConfig;
 	}
 
 	public Map getSiteConfig() {
 		return mSiteConfig;
+	}
+	
+	public String getGlobalConf(String key) {
+		return (String) mGlobalConfig.get(key);
+	}
+	
+	public String getSiteConf(String key) {
+		return (String) mSiteConfig.get(key);
 	}
 }

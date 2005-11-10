@@ -58,4 +58,8 @@ public class LdapZimlet extends LdapEntry implements Zimlet, ObjectType {
     public String getHandlerConfig() {
         return getAttr(Provisioning.A_zimbraZimletHandlerConfig);
     }
+
+    public String getServerIndexRegex() {
+    	return getAttr(Provisioning.A_zimbraZimletServerIndexRegex);
+    }
 }

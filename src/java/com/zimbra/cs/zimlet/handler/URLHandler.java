@@ -36,8 +36,11 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.zimbra.cs.zimlet.ZimletHandler;
 import com.zimbra.cs.object.ObjectHandlerException;
+import com.zimbra.cs.zimlet.ZimletConf;
+import com.zimbra.cs.zimlet.ZimletConfig;
+import com.zimbra.cs.zimlet.ZimletException;
+import com.zimbra.cs.zimlet.ZimletHandler;
 
 /**
  * @author schemers
@@ -52,7 +55,7 @@ public class URLHandler implements ZimletHandler {
     private Pattern URL_PATTERN =
         Pattern.compile("((telnet:)|((https?|ftp|gopher|news|file):\\/\\/)|(www.[\\w\\.\\_\\-]+))[^\\s\\(\\)\\<\\>\\[\\]\\{\\}\\'\\\"]*");
 	
-	public String[] match(String text) {
+	public String[] match(String text, ZimletConf config) {
         Matcher m = URL_PATTERN.matcher(text);
         List l = new ArrayList();
         while (m.find()) {
@@ -61,13 +64,13 @@ public class URLHandler implements ZimletHandler {
         return (String[]) l.toArray(new String[0]);
 	}
     
-    public static void test(URLHandler h, String text) throws ObjectHandlerException {
-        String[] array = h.match(text);
+    public static void test(URLHandler h, String text) throws ObjectHandlerException, ZimletException {
+        String[] array = h.match(text, new ZimletConfig());
         System.out.println(text+" "+(array.length >0));        
     }
     
     // TOOD: move these to a unit test
-    public static void main(String args[]) throws ObjectHandlerException {
+    public static void main(String args[]) throws ObjectHandlerException, ZimletException {
         URLHandler h = new URLHandler();
         test(h,"(http://itproductguidebeta.infoworld.com/article/04/09/23/HNsdchiupdate_1.html?BACKUP%20AND%20RECOVERY) is interesting");
         test(h," http://www.hula-project.org/index.php/Screenshots for screenshots");

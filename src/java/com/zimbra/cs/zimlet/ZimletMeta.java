@@ -59,6 +59,7 @@ public abstract class ZimletMeta {
 	public static final String ZIMLET_TAG_HAS_KEYWORD      = "hasKeyword";
 	public static final String ZIMLET_TAG_MATCH_ON         = "matchOn";
 	public static final String ZIMLET_TAG_EXTENSION_CLASS  = "extensionClass";
+	public static final String ZIMLET_TAG_REGEX            = "regex";
 	
 	/* config description file */
 	public static final String ZIMLET_TAG_CONFIG           = "zimletConfig";
@@ -73,6 +74,10 @@ public abstract class ZimletMeta {
 	protected String mVersion;
 
 	protected String mRawXML;
+	
+	protected ZimletMeta() {
+		// empty
+	}
 	
 	public ZimletMeta(File f) throws ZimletException {
 		this(readFile(f));
