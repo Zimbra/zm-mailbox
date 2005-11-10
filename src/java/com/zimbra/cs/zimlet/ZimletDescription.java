@@ -41,7 +41,6 @@ public class ZimletDescription extends ZimletMeta {
 	
 	public static final String ZIMLET_REGEX_EXTENSION_CLASS = "com.zimbra.cs.zimlet.handler.RegexHandler";
 	
-	private String mDescription;
 	private List   mScripts;
 	private String mContentObject;
 	private String mPanelItem;
@@ -79,8 +78,6 @@ public class ZimletDescription extends ZimletMeta {
 			mPanelItem = elem.toString();
 		} else if (elem.getName().equals(ZIMLET_TAG_SERVER_EXTENSION)) {
 			parseServerExtension(elem);
-		} else if (elem.getName().equals(ZIMLET_TAG_DESCRIPTION)) {
-			mDescription = elem.getText();
 		} else if (elem.getName().equals(ZIMLET_TAG_SCRIPT)) {
 			parseResource(elem);
 		}
@@ -100,24 +97,20 @@ public class ZimletDescription extends ZimletMeta {
 	
 	private void parseServerExtension(Element serverExt) throws ZimletException {
 		assert(serverExt.getName().equals(ZIMLET_TAG_SERVER_EXTENSION));
-		Iterator iter = serverExt.listElements().iterator();
-		while (iter.hasNext()) {
-			Element elem = (Element) iter.next();
-			if (elem.getName().equals(ZIMLET_TAG_HAS_KEYWORD)) {
-				mKeyword = elem.getText();
-				mHasKeyword = TRUE_STR;
-			} else if (elem.getName().equals(ZIMLET_TAG_EXTENSION_CLASS)) {
-				mExtensionClass = elem.getText();
-			} else if (elem.getName().equals(ZIMLET_TAG_REGEX)) {
-				mExtensionClass = ZIMLET_REGEX_EXTENSION_CLASS;
-				mRegexString = elem.getText();
-			}
+		String val = serverExt.getAttribute(ZIMLET_ATTR_HAS_KEYWORD, "");
+		if (val.length() > 0) {
+			mKeyword = val;
+			mHasKeyword = TRUE_STR;
 		}
-	}
-	
-	public String getDescription() {
-		assert(mTopElement != null);
-		return mDescription;
+		val = serverExt.getAttribute(ZIMLET_ATTR_EXTENSION_CLASS, "");
+		if (val.length() > 0) {
+			mExtensionClass = val;
+		}
+		val = serverExt.getAttribute(ZIMLET_ATTR_REGEX, "");
+		if (val.length() > 0) {
+			mExtensionClass = ZIMLET_REGEX_EXTENSION_CLASS;
+			mRegexString = val;
+		}
 	}
 	
 	public String getContentObjectAsXML() {

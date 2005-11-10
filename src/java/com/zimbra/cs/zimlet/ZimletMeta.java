@@ -32,6 +32,7 @@ import java.util.Iterator;
 
 import org.dom4j.DocumentException;
 
+import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
@@ -47,19 +48,20 @@ public abstract class ZimletMeta {
 	public static final String ZIMLET_TAG_ZIMLET = "zimlet";
 
 	/* first level */
-	public static final String ZIMLET_TAG_NAME             = "name";
-	public static final String ZIMLET_TAG_VERSION          = "version";
-	public static final String ZIMLET_TAG_DESCRIPTION      = "description";
+	public static final String ZIMLET_ATTR_VERSION         = "version";
+	public static final String ZIMLET_ATTR_DESCRIPTION     = "description";
+	public static final String ZIMLET_ATTR_NAME            = "name";
+
 	public static final String ZIMLET_TAG_SCRIPT           = "script";
-	public static final String ZIMLET_TAG_SERVER_EXTENSION = "serverExtension";
 	public static final String ZIMLET_TAG_CONTENT_OBJECT   = "contentObject";
 	public static final String ZIMLET_TAG_PANEL_ITEM       = "panelItem";
 	
 	/* for serverExtension branch */
-	public static final String ZIMLET_TAG_HAS_KEYWORD      = "hasKeyword";
-	public static final String ZIMLET_TAG_MATCH_ON         = "matchOn";
-	public static final String ZIMLET_TAG_EXTENSION_CLASS  = "extensionClass";
-	public static final String ZIMLET_TAG_REGEX            = "regex";
+	public static final String ZIMLET_TAG_SERVER_EXTENSION = "serverExtension";
+	public static final String ZIMLET_ATTR_HAS_KEYWORD     = "hasKeyword";
+	public static final String ZIMLET_ATTR_MATCH_ON        = "matchOn";
+	public static final String ZIMLET_ATTR_EXTENSION_CLASS = "extensionClass";
+	public static final String ZIMLET_ATTR_REGEX           = "regex";
 	
 	/* config description file */
 	public static final String ZIMLET_TAG_CONFIG           = "zimletConfig";
@@ -67,7 +69,7 @@ public abstract class ZimletMeta {
 	public static final String ZIMLET_TAG_GLOBAL           = "global";
 	public static final String ZIMLET_TAG_HOST             = "host";
 	public static final String ZIMLET_TAG_PROPERTY         = "property";
-	public static final String ZIMLET_ATTR_NAME            = "name";
+
 	
 	protected String ZIMLET_URL = "/service/zimlet";
 	
@@ -75,6 +77,7 @@ public abstract class ZimletMeta {
 	
 	protected String mName;
 	protected String mVersion;
+	protected String mDescription;
 
 	protected String mRawXML;
 	protected String mGeneratedXML;
@@ -128,16 +131,14 @@ public abstract class ZimletMeta {
 		if (!name.equals(ZIMLET_TAG_ZIMLET) && !name.equals(ZIMLET_TAG_CONFIG)) {
 			throw ZimletException.INVALID_ZIMLET_DESCRIPTION("Top level tag not recognized " + name);
 		}
+		
+		mName = mTopElement.getAttribute(ZIMLET_ATTR_NAME, "");
+		mVersion = mTopElement.getAttribute(ZIMLET_ATTR_VERSION, "");
+		mDescription = mTopElement.getAttribute(ZIMLET_ATTR_DESCRIPTION, "");
+
 		Iterator iter = mTopElement.listElements().iterator();
 		while (iter.hasNext()) {
-			Element elem = (Element) iter.next();
-			if (elem.getName().equals(ZIMLET_TAG_NAME)) {
-				mName = elem.getText();
-			} else if (elem.getName().equals(ZIMLET_TAG_VERSION)) {
-				mVersion = elem.getText();
-			} else {
-				validateElement(elem);
-			}
+			validateElement((Element) iter.next());
 		}
 	}
 	
@@ -149,6 +150,11 @@ public abstract class ZimletMeta {
 	public String getVersion() {
 		assert(mTopElement != null);
 		return mVersion;
+	}
+	
+	public String getDescription() {
+		assert(mTopElement != null);
+		return mDescription;
 	}
 	
 	/*
