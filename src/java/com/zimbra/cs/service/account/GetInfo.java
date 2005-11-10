@@ -143,7 +143,16 @@ public class GetInfo extends DocumentHandler  {
     		for (Iterator iter = zimAttrs.keySet().iterator(); iter.hasNext(); ) {
     			String attrName = (String) iter.next();
     			Object attrValue = zimAttrs.get(attrName);
-    			if (attrValue instanceof String) {
+    			
+    			if (attrName.equals(Provisioning.A_zimbraZimletContentObject) ||
+    					attrName.equals(Provisioning.A_zimbraZimletPanelItem) ||
+    					attrName.equals(Provisioning.A_zimbraZimletHandlerConfig)) {
+    				try {
+    					zim.addElement(Element.parseXML((String) attrValue, response.getFactory()));
+    				} catch (org.dom4j.DocumentException de) {
+    					com.zimbra.cs.util.ZimbraLog.zimlet.error("error parsing "+attrName, de);
+    				}
+    			} else if (attrValue instanceof String) {
     				zim.addAttribute(attrName, (String) attrValue);
     			} else if (attrValue instanceof String[]) {
     				zim.addAttribute(attrName, StringUtil.join(";", (String[])attrValue));
