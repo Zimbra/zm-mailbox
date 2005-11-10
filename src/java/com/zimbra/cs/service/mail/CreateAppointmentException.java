@@ -78,7 +78,7 @@ public class CreateAppointmentException extends CreateAppointment {
 
             ItemId iid = new ItemId(request.getAttribute(MailService.A_ID), lc);
             int compNum = (int) request.getAttributeLong(MailService.E_INVITE_COMPONENT);
-            sLog.info("<CreateAppointmentException id=" + iid.toString(lc) + " comp=" + compNum + "> " + lc.toString());
+            sLog.info("<CreateAppointmentException id=" + lc.formatItemId(iid) + " comp=" + compNum + "> " + lc.toString());
 
             // <M>
             Element msgElem = request.getElement(MailService.E_MSG);
@@ -93,7 +93,7 @@ public class CreateAppointmentException extends CreateAppointment {
                 Invite inv = appt.getInvite(iid.getSubpartId(), compNum);
 
                 if (inv.hasRecurId()) {
-                    throw MailServiceException.INVITE_OUT_OF_DATE("Invite id=" + iid.toString(lc) + " comp=" + compNum + " is not the a default invite");
+                    throw MailServiceException.INVITE_OUT_OF_DATE("Invite id=" + lc.formatItemId(iid) + " comp=" + compNum + " is not the a default invite");
                 }
 
                 if (appt == null)

@@ -100,6 +100,6 @@ public class NoteAction extends ItemAction {
         } else
             throw ServiceException.INVALID_REQUEST("unknown operation: " + operation, null);
 
-        return iid.toString(lc);
+        return lc.formatItemId(iid);
     }
 }

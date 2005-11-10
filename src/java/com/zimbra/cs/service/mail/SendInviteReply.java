@@ -83,7 +83,7 @@ public class SendInviteReply extends CalendarRequest {
             updateOrg = true;
 
             if (sLog.isInfoEnabled()) {
-                sLog.info("<SendInviteReply id=" + iid.toString(lc) + " verb=" + verb + " updateOrg=" + updateOrg + "> " + lc.toString());
+                sLog.info("<SendInviteReply id=" + lc.formatItemId(iid) + " verb=" + verb + " updateOrg=" + updateOrg + "> " + lc.toString());
             }
             
             Element response = lc.createElement(MailService.SEND_INVITE_REPLY_RESPONSE);

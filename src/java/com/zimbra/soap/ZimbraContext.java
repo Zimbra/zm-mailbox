@@ -583,7 +583,7 @@ public class ZimbraContext {
      * @param item  The item whose ID we want to encode.
      * @see ItemId */
     public String formatItemId(MailItem item) {
-        return new ItemId(item).toString(mUnqualifiedItemIds ? null : this);
+        return mUnqualifiedItemIds ? formatItemId(item.getId()) : new ItemId(item).toString(this);
     }
 
     /** Formats the ({@link MailItem}'s ID, subpart ID) pair into a
@@ -597,7 +597,7 @@ public class ZimbraContext {
      * @param subId  The subpart's ID.
      * @see ItemId */
     public String formatItemId(MailItem item, int subId) {
-        return new ItemId(item, subId).toString(mUnqualifiedItemIds ? null : this);
+        return mUnqualifiedItemIds ? formatItemId(item.getId(), subId) : new ItemId(item, subId).toString(this);
     }
 
     /** Formats the item ID in the requested <code>Mailbox</code> into a
@@ -610,7 +610,7 @@ public class ZimbraContext {
      * @param itemId  The item's (local) ID.
      * @see ItemId */
     public String formatItemId(int itemId) {
-        return new ItemId(getRequestedAccountId(), itemId).toString(mUnqualifiedItemIds ? null : this);
+        return new ItemId(mUnqualifiedItemIds ? null : getRequestedAccountId(), itemId).toString(this);
     }
 
     /** Formats the (item ID, subpart ID) pair in the requested account's
@@ -625,6 +625,18 @@ public class ZimbraContext {
      * @param subId   The subpart's ID.
      * @see ItemId */
     public String formatItemId(int itemId, int subId) {
-        return new ItemId(getRequestedAccountId(), itemId, subId).toString(mUnqualifiedItemIds ? null : this);
+        return new ItemId(mUnqualifiedItemIds ? null : getRequestedAccountId(), itemId, subId).toString(this);
+    }
+
+    /** Formats the item ID into a <code>String</code> that's addressable by
+     *  the request's originator.  In other words, if the owner of the item
+     *  ID matches the auth token's principal, you just get a bare ID.  But if
+     *  the owners don't match, you get a formatted ID that refers to the
+     *  correct <code>Mailbox</code> as well as the item in question.
+     * 
+     * @param iid  The item's account, item, and subpart IDs.
+     * @see ItemId */
+    public String formatItemId(ItemId iid) {
+        return mUnqualifiedItemIds ? formatItemId(iid.getId(), iid.getSubpartId()) : iid.toString(this);
     }
 }

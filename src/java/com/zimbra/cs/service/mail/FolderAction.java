@@ -155,7 +155,7 @@ public class FolderAction extends ItemAction {
         } else
             throw ServiceException.INVALID_REQUEST("unknown operation: " + operation, null);
 
-        return iid.toString(lc);
+        return lc.formatItemId(iid);
     }
 
     static byte stringToType(String typeStr) throws ServiceException {
