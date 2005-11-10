@@ -120,7 +120,7 @@ public class Volume {
 
     public static void validateID(long id)
     throws VolumeServiceException {
-        if (id != ID_AUTO_INCREMENT && (id < 1 || id > ID_MAX))
+        if (id != ID_AUTO_INCREMENT && id != ID_NONE && (id < 1 || id > ID_MAX))
             throw VolumeServiceException.INVALID_REQUEST(
                     "Volume ID " + id + " is outside the range of [1, " +
                     ID_MAX + "]");
