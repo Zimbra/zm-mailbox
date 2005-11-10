@@ -157,8 +157,7 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
                                 if ((defaultInvite.getMailItemId() != invId.getMsgId()) ||
                                         (defaultInvite.getComponentNum() != invId.getComponentId())) 
                                 {
-                                    ItemId iid = new ItemId(appointment, inst.getMailItemId());
-                                    instElt.addAttribute(MailService.A_APPT_INV_ID, iid.toString(lc));
+                                    instElt.addAttribute(MailService.A_APPT_INV_ID, lc.formatItemId(appointment, inst.getMailItemId()));
 
                                     instElt.addAttribute(MailService.A_APPT_COMPONENT_NUM, inst.getComponentNum());
 
@@ -234,13 +233,12 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
                         apptElt.addAttribute(MailService.A_APPT_DURATION, defDurationMsecs);
                         apptElt.addAttribute(MailService.A_NAME, defaultInvite.getName());
                         apptElt.addAttribute(MailService.A_APPT_LOCATION, defaultInvite.getLocation());
-                        
+
                         apptElt.addAttribute(MailService.A_ID, lc.formatItemId(appointment));
                         apptElt.addAttribute(MailService.A_FOLDER, lc.formatItemId(appointment.getFolderId()));
-                        
-                        ItemId iid = new ItemId(appointment, defaultInvite.getMailItemId());
-                        apptElt.addAttribute(MailService.A_APPT_INV_ID, iid.toString(lc));
-                        
+
+                        apptElt.addAttribute(MailService.A_APPT_INV_ID, lc.formatItemId(appointment, defaultInvite.getMailItemId()));
+
                         apptElt.addAttribute(MailService.A_APPT_COMPONENT_NUM, defaultInvite.getComponentNum());
                         
                         if (defaultInvite.isAllDayEvent()) {

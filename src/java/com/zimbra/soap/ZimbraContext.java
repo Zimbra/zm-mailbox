@@ -87,6 +87,7 @@ public class ZimbraContext {
     public static final String A_BY         = "by";
     public static final String A_HOPCOUNT   = "hops";
     public static final String A_MOUNTPOINT = "link";
+    public static final String E_NO_QUALIFY = "noqualify";
     public static final String E_NO_SESSION = "nosession";
     public static final String E_SESSION_ID = "sessionId";
     public static final String A_ACCOUNT_ID = "acct";
@@ -119,6 +120,7 @@ public class ZimbraContext {
     private List    mSessionInfo = new ArrayList();
     private boolean mSessionSuppressed;
     private boolean mHaltNotifications;
+    private boolean mUnqualifiedItemIds;
 
     private ProxyTarget mProxyTarget;
     private boolean     mIsProxyRequest;
@@ -136,6 +138,7 @@ public class ZimbraContext {
         mResponseProtocol = lc.mResponseProtocol;
 
         mSessionSuppressed = true;
+        mUnqualifiedItemIds = lc.mUnqualifiedItemIds;
 
         mHopCount = lc.mHopCount + 1;
         if (mHopCount > MAX_HOP_COUNT)
@@ -247,6 +250,9 @@ public class ZimbraContext {
             }
             mSessionSuppressed = ctxt.getOptionalElement(E_NO_SESSION) != null;
         }
+
+        // temporary hack: don't qualify item ids in reponses, if so requested
+        mUnqualifiedItemIds = (ctxt != null && ctxt.getOptionalElement(E_NO_QUALIFY) != null);
     }
 
     /** Parses a <code>&lt;sessionId></code> {@link Element} from the SOAP Header.<p>
@@ -453,7 +459,10 @@ public class ZimbraContext {
         Element eAcct = ctxt.addElement(E_ACCOUNT).addAttribute(A_HOPCOUNT, mHopCount).addAttribute(A_MOUNTPOINT, mMountpointTraversed);
         if (mRequestedAccountId != null && !mRequestedAccountId.equalsIgnoreCase(mAuthTokenAccountId))
             eAcct.addAttribute(A_BY, BY_ID).setText(mRequestedAccountId);
-        ctxt.addUniqueElement(E_NO_SESSION);
+        if (mSessionSuppressed)
+        	ctxt.addUniqueElement(E_NO_SESSION);
+        if (mUnqualifiedItemIds)
+            ctxt.addUniqueElement(E_NO_QUALIFY);
         return ctxt;
     }
 
@@ -574,7 +583,21 @@ public class ZimbraContext {
      * @param item  The item whose ID we want to encode.
      * @see ItemId */
     public String formatItemId(MailItem item) {
-        return new ItemId(item).toString(this);
+        return new ItemId(item).toString(mUnqualifiedItemIds ? null : this);
+    }
+
+    /** Formats the ({@link MailItem}'s ID, subpart ID) pair into a
+     *  <code>String</code> that's addressable by the request's originator.
+     *  In other words, if the owner of the item matches the auth token's
+     *  principal, you just get a bare ID.  But if the owners don't match,
+     *  you get a formatted ID that refers to the correct <code>Mailbox</code>
+     *  as well as the item in question.
+     * 
+     * @param item   The item whose ID we want to encode.
+     * @param subId  The subpart's ID.
+     * @see ItemId */
+    public String formatItemId(MailItem item, int subId) {
+        return new ItemId(item, subId).toString(mUnqualifiedItemIds ? null : this);
     }
 
     /** Formats the item ID in the requested <code>Mailbox</code> into a
@@ -587,7 +610,7 @@ public class ZimbraContext {
      * @param itemId  The item's (local) ID.
      * @see ItemId */
     public String formatItemId(int itemId) {
-        return new ItemId(getRequestedAccountId(), itemId).toString(this);
+        return new ItemId(getRequestedAccountId(), itemId).toString(mUnqualifiedItemIds ? null : this);
     }
 
     /** Formats the (item ID, subpart ID) pair in the requested account's
@@ -602,6 +625,6 @@ public class ZimbraContext {
      * @param subId   The subpart's ID.
      * @see ItemId */
     public String formatItemId(int itemId, int subId) {
-        return new ItemId(getRequestedAccountId(), itemId, subId).toString(this);
+        return new ItemId(getRequestedAccountId(), itemId, subId).toString(mUnqualifiedItemIds ? null : this);
     }
 }

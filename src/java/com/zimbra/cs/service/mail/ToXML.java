@@ -58,7 +58,6 @@ import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.EmailElementCache.CacheNode;
-import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.StringUtil;
@@ -615,10 +614,10 @@ public class ToXML {
         Element m;
         if (wholeMessage) {
             m = encodeMessageCommon(parent, lc, appt, NOTIFY_FIELDS);
-            m.addAttribute(MailService.A_ID, new ItemId(appt, invId).toString(lc));
+            m.addAttribute(MailService.A_ID, lc.formatItemId(appt, invId));
         } else {
             m = parent.addElement(MailService.E_MSG);
-            m.addAttribute(MailService.A_ID, new ItemId(appt, invId).toString(lc));
+            m.addAttribute(MailService.A_ID, lc.formatItemId(appt, invId));
             m.addAttribute(MailService.A_PART, part);
         }
         
