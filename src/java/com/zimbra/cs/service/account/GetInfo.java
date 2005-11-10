@@ -28,13 +28,18 @@
  */
 package com.zimbra.cs.service.account;
 
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.StringUtil;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
@@ -66,6 +71,8 @@ public class GetInfo extends DocumentHandler  {
         doPrefs(prefs, attrMap);
         Element attrs = response.addUniqueElement(AccountService.E_ATTRS);
         doAttrs(attrs, attrMap);
+        Element zimlets = response.addUniqueElement(AccountService.E_ZIMLETS);
+        doZimlets(zimlets, acct);
         return response;
     }
 
@@ -113,5 +120,35 @@ public class GetInfo extends DocumentHandler  {
                 }
             }
         }
+    }
+    
+    private static void doZimlets(Element response, Account acct) throws ServiceException {
+    	Cos cos = acct.getCOS();
+    	String[] attrList = cos.getMultiAttr(Provisioning.A_zimbraZimletAvailableZimlets);
+    	
+    	List zimletList = Provisioning.getInstance().getZimlets();
+    	Map zimMap = new HashMap();
+    	for (Iterator iter = zimletList.iterator(); iter.hasNext(); ) {
+    		Zimlet zimlet = (Zimlet) iter.next();
+    		zimMap.put(zimlet.getAttr(Provisioning.A_cn), zimlet.getAttrs());
+    	}
+
+    	for (int attrIndex = 0; attrIndex < attrList.length; attrIndex++) {
+    		Map zimAttrs = (Map) zimMap.get(attrList[attrIndex]);
+    		if (zimAttrs == null) {
+    			// log
+    			continue;
+    		}
+    		Element zim = response.addElement(AccountService.E_ZIMLET);
+    		for (Iterator iter = zimAttrs.keySet().iterator(); iter.hasNext(); ) {
+    			String attrName = (String) iter.next();
+    			Object attrValue = zimAttrs.get(attrName);
+    			if (attrValue instanceof String) {
+    				zim.addAttribute(attrName, (String) attrValue);
+    			} else if (attrValue instanceof String[]) {
+    				zim.addAttribute(attrName, StringUtil.join(";", (String[])attrValue));
+    			}
+    		}
+    	}
     }
 }

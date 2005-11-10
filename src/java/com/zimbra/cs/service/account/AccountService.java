@@ -79,6 +79,8 @@ public class AccountService implements DocumentService {
     public static final String E_ATTRS = "attrs";
 //    public static final String E_QUOTA = "quota";
     public static final String E_QUOTA_USED = "used";
+    public static final String E_ZIMLET = "zimlet";
+    public static final String E_ZIMLETS = "zimlets";
 
     public static final String A_NAME = "name";
     public static final String A_BY = "by";    
