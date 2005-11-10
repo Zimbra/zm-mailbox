@@ -26,11 +26,36 @@ package com.zimbra.cs.account.ldap;
 
 import javax.naming.directory.Attributes;
 
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.object.ObjectType;
 
-public class LdapZimlet extends LdapEntry implements Zimlet {
+public class LdapZimlet extends LdapEntry implements Zimlet, ObjectType {
 
 	public LdapZimlet(String dn, Attributes attrs) {
 		super(dn, attrs);
 	}
+    public String getType() {
+        return getAttr(Provisioning.A_cn);
+    }
+    
+    public String getDescription() {
+        return getAttr(Provisioning.A_zimbraZimletDescription);
+    }
+    
+    public boolean isIndexingEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraZimletIndexingEnabled, false);
+    }
+    
+    public boolean isStoreMatched() {
+        return false;
+    }
+    
+    public String getHandlerClass() {
+        return getAttr(Provisioning.A_zimbraZimletHandlerClass);
+    }
+    
+    public String getHandlerConfig() {
+        return getAttr(Provisioning.A_zimbraZimletHandlerConfig);
+    }
 }

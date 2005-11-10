@@ -1,0 +1,11 @@
+<zimlet>
+	<name>phone</name>
+	<version>1.0</version>
+	<description>Phone Number</description>
+
+	<serverExtension>
+		<hasKeyword>phone</hasKeyword>
+		<extensionClass>com.zimbra.cs.zimlet.handler.NANPHandler</extensionClass>
+	</serverExtension>
+</zimlet>
+

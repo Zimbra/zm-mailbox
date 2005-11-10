@@ -1,8 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1
+ * Version: ZPL 1.1
  * 
- * The contents of this file are subject to the Mozilla Public License
+ * The contents of this file are subject to the Zimbra Public License
  * Version 1.1 ("License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
  * http://www.zimbra.com/license
@@ -12,7 +12,7 @@
  * the License for the specific language governing rights and limitations
  * under the License.
  * 
- * The Original Code is: Zimbra Collaboration Suite Server.
+ * The Original Code is: Zimbra Collaboration Suite.
  * 
  * The Initial Developer of the Original Code is Zimbra, Inc.
  * Portions created by Zimbra are Copyright (C) 2005 Zimbra, Inc.
@@ -29,15 +29,14 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
-package com.zimbra.cs.object.handler;
+package com.zimbra.cs.zimlet.handler;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.zimbra.cs.object.MatchedObject;
-import com.zimbra.cs.object.ObjectHandler;
+import com.zimbra.cs.zimlet.ZimletHandler;
 import com.zimbra.cs.object.ObjectHandlerException;
 
 /**
@@ -55,29 +54,25 @@ import com.zimbra.cs.object.ObjectHandlerException;
  * 
  *  
  */
-public class TrackingHandler extends ObjectHandler {
+public class TrackingHandler implements ZimletHandler {
 
     private static final String UPS = "1[zZ]\\s?\\w{3}\\s?\\w{3}\\s?\\w{2}\\s?\\w{4}\\s?\\w{3}\\s?\\w{1}";
     private static final String FEDEX = "\\d{12}";
     
     private static final Pattern TRACKING = Pattern.compile("(\\b((" + UPS + ")|(" + FEDEX + "))\\b)");        
 
-	public void parse(String text, List matchedObjects, boolean firstMatchOnly)
-			throws ObjectHandlerException {
+	public String[] match(String text) {
         Matcher t = TRACKING.matcher(text);
-        MatchedObject mo;
+        List l = new ArrayList();
         while (t.find()) {
-            mo = new MatchedObject(this, text.substring(t.start(), t.end()));
-            matchedObjects.add(mo);
-            if (firstMatchOnly)
-                return;
+            l.add(text.substring(t.start(), t.end()));
         }
+        return (String[]) l.toArray(new String[0]);
 	}
     
     public static void test(TrackingHandler h, String text, boolean expected) throws ObjectHandlerException {
-        ArrayList list = new ArrayList();
-        h.parse(text, list, true);
-        boolean actual  = list.size() > 0;
+        String[] array = h.match(text);
+        boolean actual  = array.length > 0;
         if (expected != actual)
             System.out.println("["+text+"] ************** expected="+expected+" actual="+actual);
         else
@@ -85,7 +80,6 @@ public class TrackingHandler extends ObjectHandler {
     }
 
     public static void main(String args[]) throws ObjectHandlerException {
-        ArrayList list = new ArrayList();
         TrackingHandler th = new TrackingHandler();
         test(th, "792806493666", true);
         test(th, "'792806493666'", true);        

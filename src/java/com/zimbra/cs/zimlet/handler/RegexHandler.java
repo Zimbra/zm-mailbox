@@ -1,8 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1
+ * Version: ZPL 1.1
  * 
- * The contents of this file are subject to the Mozilla Public License
+ * The contents of this file are subject to the Zimbra Public License
  * Version 1.1 ("License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
  * http://www.zimbra.com/license
@@ -12,7 +12,7 @@
  * the License for the specific language governing rights and limitations
  * under the License.
  * 
- * The Original Code is: Zimbra Collaboration Suite Server.
+ * The Original Code is: Zimbra Collaboration Suite.
  * 
  * The Initial Developer of the Original Code is Zimbra, Inc.
  * Portions created by Zimbra are Copyright (C) 2005 Zimbra, Inc.
@@ -29,15 +29,14 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
-package com.zimbra.cs.object.handler;
+package com.zimbra.cs.zimlet.handler;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.zimbra.cs.object.MatchedObject;
-import com.zimbra.cs.object.ObjectHandler;
-import com.zimbra.cs.object.ObjectHandlerException;
+import com.zimbra.cs.zimlet.ZimletHandler;
 
 /**
  * @author schemers
@@ -45,22 +44,20 @@ import com.zimbra.cs.object.ObjectHandlerException;
  * Generic object handler that gets its regex from the handler config.
  * 
  */
-public class RegexHandler extends ObjectHandler {
+public class RegexHandler implements ZimletHandler {
 
     private Pattern mPattern;
 	  
-	public void parse(String text, List matchedObjects, boolean firstMatchOnly)
-			throws ObjectHandlerException {
+	public String[] match(String text) {
+		String handlerConfig = "";
 	    if (mPattern == null) {
-	        mPattern = Pattern.compile(getHandlerConfig());
+	        mPattern = Pattern.compile(handlerConfig);
 	    }
         Matcher m = mPattern.matcher(text);
-        MatchedObject mo;
+        List l = new ArrayList();
         while (m.find()) {
-            mo = new MatchedObject(this, text.substring(m.start(), m.end()));
-            matchedObjects.add(mo);
-            if (firstMatchOnly)
-                return;
+        	l.add(text.substring(m.start(), m.end()));
         }
+        return (String[]) l.toArray(new String[0]);
 	}
 }

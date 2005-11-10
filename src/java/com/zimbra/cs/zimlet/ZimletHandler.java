@@ -29,7 +29,6 @@ package com.zimbra.cs.zimlet;
  * @author jylee
  *
  */
-public interface Match {
-	/* XXX: pass in the string form of the message or the structured message object */
+public interface ZimletHandler {
 	public String[] match(String document);
 }
