@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -66,7 +67,10 @@ public class ZimletFile extends File {
 			mEntry = e;
 		}
 		public byte[] getContents() throws IOException {
-			return ByteUtil.getContent(mContainer.getInputStream(mEntry), (int)mEntry.getSize());
+			InputStream is = mContainer.getInputStream(mEntry);
+			byte[] ret = ByteUtil.getContent(is, (int)mEntry.getSize());
+			is.close();
+			return ret;
 		}
 	}
 	
@@ -78,7 +82,10 @@ public class ZimletFile extends File {
 			mFile = f;
 		}
 		public byte[] getContents() throws IOException {
-			return ByteUtil.getContent(new FileInputStream(mFile), (int)mFile.length());
+			InputStream is = new FileInputStream(mFile);
+			byte[] ret = ByteUtil.getContent(is, (int)mFile.length());
+			is.close();
+			return ret;
 		}
 	}
 	
@@ -89,6 +96,13 @@ public class ZimletFile extends File {
 	private String mDescFile;
 	private Map    mEntries;
 
+	private ZimletDescription mDesc;
+	private String            mDescString;
+	private ZimletConfig      mConfig;
+	private String            mConfigString;
+	
+	private String mDevPrefix;
+	
 	public ZimletFile(String zimlet) throws IOException {
 		super(findZimlet(zimlet));
 		initialize();
@@ -114,6 +128,7 @@ public class ZimletFile extends File {
 
 		if (isDirectory()) {
 			File[] files = listFiles();
+			assert(files != null);
 			for (int i = 0; i < files.length; i++) {
 				mEntries.put(files[i].getName().toLowerCase(), new ZimletDirEntry(files[i]));
 			}
@@ -125,24 +140,83 @@ public class ZimletFile extends File {
 				mEntries.put(entry.getName().toLowerCase(), new ZimletZipEntry(zip, entry));
 			}
 		}
-	}
-	
-	public String getZimletDescription() throws IOException {
-		ZimletEntry entry = (ZimletEntry)mEntries.get(mDescFile);
-		if (entry == null) {
-			return null;
+		
+		mDevPrefix = getParentFile().getName();
+		if (!mDevPrefix.equals(ZimletUtil.ZIMLET_DEV_DIR)) {
+			mDevPrefix = null;
 		}
-		return new String(entry.getContents());
 	}
 	
-	public String getZimletConfig() throws IOException {
-		ZimletEntry entry = (ZimletEntry)mEntries.get(CONFIG_TMPL);
-		if (entry == null) {
-			return null;
+	private void initZimletDescription() throws IOException, ZimletException {
+		if (mDesc == null) {
+			ZimletEntry entry = (ZimletEntry)mEntries.get(mDescFile);
+			if (entry == null) {
+				throw new FileNotFoundException("zimlet description not found: " + mDescFile);
+			}
+			mDescString = new String(entry.getContents());
+			mDesc = new ZimletDescription(mDescString, mDevPrefix);
 		}
-		return new String(entry.getContents());
 	}
 	
+	/**
+	 * 
+	 * @return The original XML zimlet description.
+	 * @throws IOException
+	 * @throws ZimletException
+	 */
+	public String getZimletDescString() throws IOException, ZimletException {
+		initZimletDescription();
+		return mDescString;
+	}
+	
+	/**
+	 * 
+	 * @return The zimlet description for this instance.
+	 * @throws IOException
+	 * @throws ZimletException
+	 */
+	public ZimletDescription getZimletDescription() throws IOException, ZimletException {
+		initZimletDescription();
+		return mDesc;
+	}
+	
+	public boolean hasZimletConfig() {
+		return mEntries.containsKey(CONFIG_TMPL);
+	}
+	
+	private void initZimletConfig() throws IOException, ZimletException {
+		if (mConfig == null) {
+			ZimletEntry entry = (ZimletEntry)mEntries.get(CONFIG_TMPL);
+			if (entry == null) {
+				throw new FileNotFoundException("zimlet config not found: " + CONFIG_TMPL);
+			}
+			mConfigString = new String(entry.getContents());
+			mConfig = new ZimletConfig(mConfigString);
+		}
+	}
+	
+	/**
+	 * 
+	 * @return The original XML config template.
+	 * @throws IOException
+	 * @throws ZimletException
+	 */
+	public String getZimletConfigString() throws IOException, ZimletException {
+		initZimletConfig();
+		return mConfigString;
+	}
+
+	/**
+	 * 
+	 * @return The configuration section for this instance.
+	 * @throws IOException
+	 * @throws ZimletException
+	 */
+	public ZimletConfig getZimletConfig() throws IOException, ZimletException {
+		initZimletConfig();
+		return mConfig;
+	}
+
 	public Map getAllEntries() {
 		return mEntries;
 	}

@@ -69,21 +69,35 @@ public abstract class ZimletMeta {
 	public static final String ZIMLET_TAG_PROPERTY         = "property";
 	public static final String ZIMLET_ATTR_NAME            = "name";
 	
+	protected String ZIMLET_URL = "/service/zimlet";
+	
 	protected Element mTopElement;
+	
 	protected String mName;
 	protected String mVersion;
 
 	protected String mRawXML;
+	protected String mGeneratedXML;
 	
 	protected ZimletMeta() {
 		// empty
 	}
 	
 	public ZimletMeta(File f) throws ZimletException {
-		this(readFile(f));
+		this(f, null);
+	}
+
+	public ZimletMeta(File f, String resourcePrefix) throws ZimletException {
+		this(readFile(f), resourcePrefix);
 	}
 
 	public ZimletMeta(String meta) throws ZimletException {
+		this(meta, null);
+	}
+	public ZimletMeta(String meta, String resourcePrefix) throws ZimletException {
+		if (resourcePrefix != null) {
+			ZIMLET_URL = ZIMLET_URL + "/" + resourcePrefix;
+		}
 		initialize();
 
 		try {
@@ -145,9 +159,13 @@ public abstract class ZimletMeta {
 	}
 
 	/*
-	 * returns the original XML document.
+	 * returns XML representation of the parsed DOM tree.
 	 */
 	public String toXMLString() {
+		return toString(Element.XMLElement.mFactory);
+	}
+	
+	public String getRawXML() {
 		return mRawXML;
 	}
 	
@@ -156,11 +174,27 @@ public abstract class ZimletMeta {
 	 */
 	public String toString(Element.ElementFactory f) {
 		try {
-			return Element.parseXML(mRawXML, f).toString();
+			if (mGeneratedXML == null) {
+				mGeneratedXML = mTopElement.toString();
+			}
+			return Element.parseXML(mGeneratedXML, f).toString();
 		} catch (Exception e) {
 			ZimbraLog.zimlet.warn("error parsing the Zimlet file "+mName);
 		}
 		return "";
+	}
+	
+	/*
+	 * attaches the DOM tree underneath the Element passed in.
+	 */
+	public void addToElement(Element elem) throws ZimletException {
+		try {
+			// TODO: cache parsed structure or result or both.
+			Element newElem = Element.parseXML(toXMLString(), elem.getFactory());
+			elem.addElement(newElem);
+		} catch (DocumentException de) {
+			throw ZimletException.ZIMLET_HANDLER_ERROR("cannot parse the dom tree");
+		}
 	}
 	
 	protected abstract void initialize() throws ZimletException;
