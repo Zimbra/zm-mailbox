@@ -86,30 +86,66 @@ public class ZimletUtil {
 		}
 	}
 
-	private static List sDevZimlets = new ArrayList();
+	private static Map sZimlets = new HashMap();
+	private static Map sDevZimlets = new HashMap();
 
-	public static void loadDevZimlets() throws IOException {
-        File zimletRootDir = new File(LC.zimlet_dev_directory.value());
+	public static void loadZimlets() {
+		loadZimletsFromDir(sZimlets, LC.zimlet_directory.value());
+	}
+
+	public static void loadDevZimlets() {
+		loadZimletsFromDir(sDevZimlets, LC.zimlet_dev_directory.value());
+	}
+
+	private static void loadZimletsFromDir(Map zimlets, String dir) {
+        File zimletRootDir = new File(dir);
 		if (zimletRootDir == null || !zimletRootDir.exists()) {
 			return;
 		}
 
         ZimbraLog.zimlet.info("Loading dev zimlets from " + zimletRootDir.getPath());
         
-        synchronized (sDevZimlets) {
-        	sDevZimlets.clear();
-        	String[] zimlets = zimletRootDir.list();
-        	for (int i = 0; i < zimlets.length; i++) {
-        		sDevZimlets.add(new ZimletFile(zimletRootDir, zimlets[i]));
+        synchronized (zimlets) {
+        	zimlets.clear();
+        	String[] zimletNames = zimletRootDir.list();
+        	for (int i = 0; i < zimletNames.length; i++) {
+        		try {
+        			zimlets.put(zimletNames[i], new ZimletFile(zimletRootDir, zimletNames[i]));
+        		} catch (IOException ioe) {
+        			ZimbraLog.zimlet.info("error loading zimlet "+zimletNames[i]);
+        		}
         	}
         }
+	}
+	
+	public static void listZimlet(Element elem, String zimlet) {
+		ZimletFile zim = (ZimletFile) sZimlets.get(zimlet);
+		if (zim == null) {
+			ZimbraLog.zimlet.info("cannot find zimlet "+zimlet);
+			return;
+		}
+		try {
+			Element entry = elem.addElement(AccountService.E_ZIMLET);
+			entry.addElement(Element.parseXML(zim.getZimletDescription(), elem.getFactory()));
+			String conf = zim.getZimletConfig();
+			if (conf != null) {
+				ZimletConfig config = new ZimletConfig(conf);
+				entry.addElement(Element.parseXML(config.toXMLString(), elem.getFactory()));
+			}
+		} catch (ZimletException ze) {
+			ZimbraLog.zimlet.info("error loading zimlet "+zimlet+": "+ze.getMessage());
+		} catch (IOException ioe) {
+			ZimbraLog.zimlet.info("error loading zimlet "+zimlet+": "+ioe.getMessage());
+		} catch (org.dom4j.DocumentException de) {
+			ZimbraLog.zimlet.info("error parsing description for zimlet "+zimlet+": "+de.getMessage());
+		}
 	}
 	
 	public static void listDevZimlets(Element elem) {
 		try {
 			loadDevZimlets();
 			synchronized (sDevZimlets) {
-	        	Iterator iter = sDevZimlets.iterator();
+	        	Iterator iter = sDevZimlets.values().iterator();
 	        	while (iter.hasNext()) {
 	        		ZimletFile zim = (ZimletFile) iter.next();
 	        		Element entry = elem.addElement(AccountService.E_ZIMLET);
@@ -185,9 +221,9 @@ public class ZimletUtil {
 		//attrs.put(Provisioning.A_zimbraZimletStoreMatched,    zd.getStoreMatched());
 		attrs.put(Provisioning.A_zimbraZimletHandlerClass,    zd.getServerExtensionClass());
 		attrs.put(Provisioning.A_zimbraZimletServerIndexRegex, zd.getRegexString());
-		attrs.put(Provisioning.A_zimbraZimletContentObject,   zd.getContentObjectAsXML());
-		attrs.put(Provisioning.A_zimbraZimletPanelItem,       zd.getPanelItemAsXML());
-		attrs.put(Provisioning.A_zimbraZimletScript,          zd.getScripts());
+		//attrs.put(Provisioning.A_zimbraZimletContentObject,   zd.getContentObjectAsXML());
+		//attrs.put(Provisioning.A_zimbraZimletPanelItem,       zd.getPanelItemAsXML());
+		//attrs.put(Provisioning.A_zimbraZimletScript,          zd.getScripts());
 		return attrs;
 	}
 	

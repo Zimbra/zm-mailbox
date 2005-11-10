@@ -35,14 +35,15 @@ import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.httpclient.EasySSLProtocolSocketFactory;
 import com.zimbra.cs.imap.ImapServer;
 import com.zimbra.cs.index.Indexer;
+import com.zimbra.cs.lmtpserver.LmtpServer;
+import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.pop3.Pop3Server;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.servlet.PrivilegedServlet;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.lmtpserver.LmtpServer;
-import com.zimbra.cs.localconfig.LC;
+import com.zimbra.cs.zimlet.ZimletUtil;
 
 /**
  * @author jhahm
@@ -90,6 +91,8 @@ public class Zimbra {
         
     	ExtensionUtil.loadAll();
     	ExtensionUtil.initAll();
+    	
+    	ZimletUtil.loadZimlets();
     	
         TransformationStub.getInstance().init();
         

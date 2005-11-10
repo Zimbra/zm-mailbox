@@ -39,8 +39,8 @@ import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.StringUtil;
-import com.zimbra.cs.zimlet.ZimletConfig;
+import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
@@ -135,40 +135,16 @@ public class GetInfo extends DocumentHandler  {
     	}
 
     	for (int attrIndex = 0; attrIndex < attrList.length; attrIndex++) {
-    		Map zimAttrs = (Map) zimMap.get(attrList[attrIndex]);
+    		String zimletName = attrList[attrIndex];
+    		Map zimAttrs = (Map) zimMap.get(zimletName);
     		if (zimAttrs == null) {
-    			// log
+    			ZimbraLog.zimlet.info("inconsistency in installed zimlets. "+zimletName+" does not exist.");
     			continue;
     		}
-    		Element zim = response.addElement(AccountService.E_ZIMLET);
-    		for (Iterator iter = zimAttrs.keySet().iterator(); iter.hasNext(); ) {
-    			String attrName = (String) iter.next();
-    			Object attrValue = zimAttrs.get(attrName);
-    			
-    			if (attrName.equals(Provisioning.A_zimbraZimletContentObject) ||
-    					attrName.equals(Provisioning.A_zimbraZimletPanelItem)) {
-    				try {
-    					zim.addElement(Element.parseXML((String) attrValue, response.getFactory()));
-    				} catch (org.dom4j.DocumentException de) {
-    					com.zimbra.cs.util.ZimbraLog.zimlet.error("error parsing "+attrName, de);
-    				}
-    			} else if (attrName.equals(Provisioning.A_zimbraZimletHandlerConfig)) {
-    				try {
-    					// run through ZimletConfig parser to get only the config pertinent to localhost.
-    					ZimletConfig conf = new ZimletConfig((String) attrValue);
-    					zim.addElement(Element.parseXML(conf.toXMLString(), response.getFactory()));
-    				} catch (Exception e) {
-    					com.zimbra.cs.util.ZimbraLog.zimlet.error("error parsing "+attrName, e);
-    				}
-    			} else if (attrValue instanceof String) {
-    				zim.addAttribute(attrName, (String) attrValue);
-    			} else if (attrValue instanceof String[]) {
-    				zim.addAttribute(attrName, StringUtil.join(";", (String[])attrValue));
-    			}
-    		}
+        	ZimletUtil.listZimlet(response, zimletName);
     	}
     	
     	// load the zimlets in the dev directory and list them
-    	com.zimbra.cs.zimlet.ZimletUtil.listDevZimlets(response);
+    	ZimletUtil.listDevZimlets(response);
     }
 }

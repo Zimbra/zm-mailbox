@@ -78,7 +78,7 @@ public class ZimletFile extends File {
 			mFile = f;
 		}
 		public byte[] getContents() throws IOException {
-			return ByteUtil.getContent(new FileInputStream(mFile), 0);
+			return ByteUtil.getContent(new FileInputStream(mFile), (int)mFile.length());
 		}
 	}
 	
