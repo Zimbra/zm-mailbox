@@ -381,7 +381,7 @@
 
 	<target name="reset-the-world-stage1" depends="clean,compile,jar,init" description="Run when tomcat is stopped." />
 
-	<target name="reset-the-world-stage2" depends="service-deploy,inject" description="Run when tomcat is running." />
+	<target name="reset-the-world-stage2" depends="service-deploy,load-zimlets,inject" description="Run when tomcat is running." />
 
 	<target name="init" depends="stop-servers,quick-init,ldap-init,tomcat-init,start-ldap,ldap-load,start-tomcat" />
 	
@@ -489,7 +489,7 @@
 		<mkdir dir="${zimbra.home.dir}/openldap/var/openldap-data" />
 	</target>
 
-	<target name="ldap-load" depends="ldap-load-step1,ldap-load-accounts,ldap-load-mime-handlers,ldap-load-zimlets" />
+	<target name="ldap-load" depends="ldap-load-step1,ldap-load-accounts,ldap-load-mime-handlers" />
 
 	<target name="ldap-load-step1" description="rub it">
 		<exec executable="${ldapmodify}">
@@ -557,7 +557,7 @@
 		</exec>
 	</target>
 
-	<target name="ldap-load-zimlets">
+	<target name="load-zimlets">
 		<echo>Loading zimlet: phone</echo>
 		<zip destfile="${dist.zimlet.dir}/phone.zip" update="true">
 			<fileset dir="${build.classes.dir}" includes="**/NANPHandler.class"/>
