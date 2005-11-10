@@ -40,6 +40,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.StringUtil;
+import com.zimbra.cs.zimlet.ZimletConfig;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
@@ -145,12 +146,19 @@ public class GetInfo extends DocumentHandler  {
     			Object attrValue = zimAttrs.get(attrName);
     			
     			if (attrName.equals(Provisioning.A_zimbraZimletContentObject) ||
-    					attrName.equals(Provisioning.A_zimbraZimletPanelItem) ||
-    					attrName.equals(Provisioning.A_zimbraZimletHandlerConfig)) {
+    					attrName.equals(Provisioning.A_zimbraZimletPanelItem)) {
     				try {
     					zim.addElement(Element.parseXML((String) attrValue, response.getFactory()));
     				} catch (org.dom4j.DocumentException de) {
     					com.zimbra.cs.util.ZimbraLog.zimlet.error("error parsing "+attrName, de);
+    				}
+    			} else if (attrName.equals(Provisioning.A_zimbraZimletHandlerConfig)) {
+    				try {
+    					// run through ZimletConfig parser to get only the config pertinent to localhost.
+    					ZimletConfig conf = new ZimletConfig((String) attrValue);
+    					zim.addElement(Element.parseXML(conf.toXMLString(), response.getFactory()));
+    				} catch (Exception e) {
+    					com.zimbra.cs.util.ZimbraLog.zimlet.error("error parsing "+attrName, e);
     				}
     			} else if (attrValue instanceof String) {
     				zim.addAttribute(attrName, (String) attrValue);

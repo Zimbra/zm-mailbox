@@ -948,6 +948,8 @@ public abstract class Provisioning {
     public abstract void deleteZimlet(String name) throws ServiceException;
     
     public abstract void addZimletToCOS(String zimlet, String cos) throws ServiceException;
-    	
+
     public abstract void removeZimletFromCOS(String zimlet, String cos) throws ServiceException;
+
+    public abstract void updateZimletConfig(String zimlet, String config) throws ServiceException;
 }

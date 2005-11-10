@@ -2299,11 +2299,7 @@ public class LdapProvisioning extends Provisioning {
     		Attributes attrs = ctxt.getAttributes(dn);
     		Zimlet z = new LdapZimlet(dn, attrs);
     		return z;
-    	} catch (NameNotFoundException e) {
-    		return null;
-    	} catch (InvalidNameException e) {
-    		return null;            
-    	} catch (NamingException e) {
+    	} catch (Exception e) {
     		throw ServiceException.FAILURE("unable to get zimlet by name: "+name, e);
     	} finally {
     		LdapUtil.closeContext(ctxt);
@@ -2398,6 +2394,20 @@ public class LdapProvisioning extends Provisioning {
     	}
     }
     	 
+    public void updateZimletConfig(String zimlet, String config) throws ServiceException {
+    	DirContext ctxt = LdapUtil.getDirContext();
+
+    	try {
+    		Zimlet zim = getZimlet(zimlet, ctxt);
+    		Map map = new HashMap();
+    		map.put(Provisioning.A_zimbraZimletHandlerConfig, config);
+    		zim.modifyAttrs(map);
+    	} catch (ServiceException e) {
+    		LdapUtil.closeContext(ctxt);
+    		throw ServiceException.FAILURE("unable to update zimlet config: "+zimlet, e);
+    	}
+    	
+    }
 
     public static void main(String args[]) {
         System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", null));
