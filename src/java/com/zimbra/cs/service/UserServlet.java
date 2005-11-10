@@ -45,6 +45,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
@@ -152,7 +153,21 @@ public class UserServlet extends ZimbraBasicAuthServlet {
 
         c.opContext = new OperationContext(acct);
 
-        Folder folder = c.targetMailbox.getFolderByPath(c.opContext, c.itemPath);
+        Folder folder = null;
+        
+        try {
+            folder = c.targetMailbox.getFolderByPath(c.opContext, c.itemPath);
+        } catch (NoSuchItemException nse) {
+           if (c.format == null) {
+              int pos = c.itemPath.lastIndexOf('.');
+              if (pos != -1) {
+                  c.format = c.itemPath.substring(pos+1);                  
+                  c.itemPath = c.itemPath.substring(0, pos);
+                  folder = c.targetMailbox.getFolderByPath(c.opContext, c.itemPath);                  
+              }
+           }
+           if (folder == null) throw nse;
+        }
 
         if (c.format == null) {
             switch (folder.getDefaultView()) {
