@@ -132,10 +132,13 @@ public class LdapProvisioning extends Provisioning {
     // list of time zones to preserve sort order
     private static List /*<WellKnownTimeZone>*/ sTimeZoneList = new ArrayList(MAX_TIMEZONE_CACHE);
 
+    private static Map /*<String name, Zimlet>*/ sZimletMap = new HashMap();
+
     private static final String CONFIG_BASE = "cn=config,cn=zimbra";     
     private static final String COS_BASE = "cn=cos,cn=zimbra"; 
     private static final String SERVER_BASE = "cn=servers,cn=zimbra";
     private static final String ADMIN_BASE = "cn=admins,cn=zimbra";
+    private static final String ZIMLET_BASE = "cn=zimlets,cn=zimbra";
 
     private static final int BY_ID = 1;
 
@@ -163,8 +166,13 @@ public class LdapProvisioning extends Provisioning {
     
     static String domainToAccountBaseDN(String domain) {
         return "ou=people,"+LdapUtil.domainToDN(domain);
-    }    
-     
+    }
+    
+    static String zimletNameToDN(String name) {
+    	return "cn="+name+","+ZIMLET_BASE;
+    }
+    	
+
     private static Pattern sNamePattern = Pattern.compile("([/+])"); 
     
     static String mimeConfigToDN(String name) {
@@ -2283,6 +2291,134 @@ public class LdapProvisioning extends Provisioning {
             LdapUtil.closeContext(newCtxt);
         }
     }
+
+    public List getZimlets() throws ServiceException {
+    	ArrayList result = new ArrayList();
+    	DirContext ctxt = null;
+    	try {
+    		ctxt = LdapUtil.getDirContext();
+    		NamingEnumeration ne = ctxt.search("", "(objectclass=zimbraZimletEntry)", sSubtreeSC);
+    		while (ne.hasMore()) {
+    			SearchResult sr = (SearchResult) ne.next();
+    			Context srctxt = (Context) sr.getObject();
+    			result.add(new LdapZimlet(srctxt.getNameInNamespace(), sr.getAttributes()));
+    			srctxt.close();
+    		}
+    		ne.close();
+    	} catch (NamingException e) {
+    		throw ServiceException.FAILURE("unable to list all Zimlets", e);
+    	} finally {
+    		LdapUtil.closeContext(ctxt);
+    	}
+    	return result;
+    }
+    
+    private Zimlet getZimlet(String name, DirContext ctxt) throws ServiceException {
+    	try {
+    		ctxt = LdapUtil.getDirContext();
+    		String dn = zimletNameToDN(name);            
+    		Attributes attrs = ctxt.getAttributes(dn);
+    		Zimlet z = new LdapZimlet(dn, attrs);
+    		return z;
+    	} catch (NameNotFoundException e) {
+    		return null;
+    	} catch (InvalidNameException e) {
+    		return null;            
+    	} catch (NamingException e) {
+    		throw ServiceException.FAILURE("unable to get zimlet by name: "+name, e);
+    	} finally {
+    		LdapUtil.closeContext(ctxt);
+    	}
+    }
+    
+    public Zimlet createZimlet(String name, Map zimletAttrs) throws ServiceException {
+    	name = name.toLowerCase().trim();
+    	
+    	HashMap attrManagerContext = new HashMap();
+    	AttributeManager.getInstance().preModify(zimletAttrs, null, attrManagerContext, true, true);
+    	
+    	DirContext ctxt = null;
+    	try {
+    		ctxt = LdapUtil.getDirContext();
+    		
+    		Attributes attrs = new BasicAttributes(true);
+    		LdapUtil.mapToAttrs(zimletAttrs, attrs);
+    		LdapUtil.addAttr(attrs, A_objectClass, "zimbraZimletEntry");
+    		
+    		String dn = zimletNameToDN(name);
+    		createSubcontext(ctxt, dn, attrs, "createZimlet");
+    		
+    		Zimlet zimlet = getZimlet(name, ctxt);
+    		AttributeManager.getInstance().postModify(zimletAttrs, zimlet, attrManagerContext, true);
+    		return zimlet;
+    	} catch (NameAlreadyBoundException nabe) {
+    		throw ServiceException.FAILURE("zimlet already exists: "+name, nabe);
+    	} catch (ServiceException se) {
+    		throw se;
+    	} finally {
+    		LdapUtil.closeContext(ctxt);
+    	}
+    }
+    
+    public void deleteZimlet(String name) throws ServiceException {
+    	DirContext ctxt = null;
+    	try {
+    		ctxt = LdapUtil.getDirContext();
+    		LdapZimlet zimlet = (LdapZimlet)getZimlet(name, ctxt);
+    		ctxt.unbind(zimlet.getDN());
+    	} catch (NamingException e) {
+    		throw ServiceException.FAILURE("unable to delete zimlet: "+name, e);
+    	} finally {
+    		LdapUtil.closeContext(ctxt);
+    	}
+    }
+    
+    public void addZimletToCOS(String zimlet, String cos) throws ServiceException {
+    	DirContext ctxt = LdapUtil.getDirContext();
+    	
+    	try {
+    		getZimlet(zimlet, ctxt);
+    	} catch (ServiceException e) {
+    		LdapUtil.closeContext(ctxt);
+    		throw ServiceException.FAILURE("zimlet does not exist: "+zimlet, e);
+    	}
+    	
+    	try {
+    		String zimletDN = zimletNameToDN(zimlet);
+    		LdapUtil.addAttr(ctxt, 
+    				zimletDN, 
+    				A_zimbraZimletSubscribedZimlets,
+    				zimlet);
+    	} catch (NamingException e) {
+    		throw ServiceException.FAILURE("unable to add Zimlet " + zimlet + " to cos "+cos, e);
+    	} finally {
+    		LdapUtil.closeContext(ctxt);
+    	}
+    }
+    
+    public void removeZimletFromCOS(String zimlet, String cos) throws ServiceException {
+    	DirContext ctxt = LdapUtil.getDirContext();
+    	
+    	try {
+    		getZimlet(zimlet, ctxt);
+    	} catch (ServiceException e) {
+    		LdapUtil.closeContext(ctxt);
+    		throw ServiceException.FAILURE("zimlet does not exist: "+zimlet, e);
+    	}
+    	
+    	try {
+    		String zimletDN = zimletNameToDN(zimlet);
+    		LdapUtil.removeAttr(ctxt, 
+    				zimletDN, 
+    				A_zimbraZimletSubscribedZimlets,
+    				zimlet);
+    	} catch (NamingException e) {
+    		throw ServiceException.FAILURE("unable to remove Zimlet " + zimlet + " from cos "+cos, e);
+    	} finally {
+    		LdapUtil.closeContext(ctxt);
+    	}
+    }
+    	 
 
     public static void main(String args[]) {
         System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", null));

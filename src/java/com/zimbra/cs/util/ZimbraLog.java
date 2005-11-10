@@ -183,6 +183,11 @@ public class ZimbraLog {
      * the "zimbra.extensions" logger. For logging extension loading related info. 
      */
     public static final org.apache.commons.logging.Log extensions = LogFactory.getLog("zimbra.extensions");
+
+    /**
+     * the "zimbra.zimlet" logger. For logging zimlet related info. 
+     */
+    public static final org.apache.commons.logging.Log zimlet = LogFactory.getLog("zimbra.zimlet");
     
     public static String getContext() {
         return NDC.peek();
