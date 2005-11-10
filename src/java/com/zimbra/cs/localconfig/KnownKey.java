@@ -110,7 +110,7 @@ public class KnownKey {
     	return mKey;   
     }
     
-    KnownKey(String key) 
+    public KnownKey(String key) 
     {
         mKey = key;
         if (mKnownKeys.containsKey(key)) {
@@ -119,15 +119,15 @@ public class KnownKey {
         mKnownKeys.put(key, this);
     }
     
-    void setDoc(String doc) {
+    public void setDoc(String doc) {
         mDoc = doc;
     }
     
-    void setDefault(String defaultValue) {
+    public void setDefault(String defaultValue) {
         mDefaultValue = defaultValue;
     }
     
-    void setForceToEdit(boolean value) {
+    public void setForceToEdit(boolean value) {
         mForceToEdit = value;
     }
 }

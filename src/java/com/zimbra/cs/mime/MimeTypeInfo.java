@@ -37,14 +37,42 @@ package com.zimbra.cs.mime;
  */
 public interface MimeTypeInfo {
     
+    /**
+     * Gets the mime type
+     * @return
+     */
     public String getType();
     
+    /**
+     * Gets the name of the extension where the handler class is defined.
+     * If it is part of the core, return null.
+     * @return
+     */
+    public String getExtension();
+    
+    /**
+     * Gets the name of the handler class. If no package is specified, 
+     * com.zimbra.cs.mime.handler is assumed. 
+     * @return
+     */
     public String getHandlerClass();
     
+    /**
+     * Whether the content is to be indexed for this mime type.
+     * @return
+     */
     public boolean isIndexingEnabled();
     
+    /**
+     * Gets the description of the mime type
+     * @return
+     */
     public String getDescription();
     
+    /**
+     * Gets a list of file extensions for this mime type.
+     * @return
+     */
     public String[] getFileExtensions();
 
 }

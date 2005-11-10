@@ -70,11 +70,8 @@ import com.zimbra.cs.util.ByteUtil;
 
 public class ContentServlet extends ZimbraServlet {
 
-    protected static final String CONVERSION_SERVLET = "ConversionServlet";
-
     protected static final String SERVLET_PATH = "/service/content";
 
-    protected static final String PREFIX_CNV = "/cnv";
     protected static final String PREFIX_GET = "/get";
     protected static final String PREFIX_PROXY = "/proxy";
 
@@ -88,8 +85,10 @@ public class ContentServlet extends ZimbraServlet {
     protected static final String FORMAT_DEFANGED_HTML = "htmldf";
     protected static final String FORMAT_DEFANGED_HTML_NOT_IMAGES = "htmldfi";
 
-    protected static final String ATTR_MIMEPART = "mimepart";
-    protected static final String ATTR_MSGDIGEST = "msgdigest";
+    protected static final String CONVERSION_PATH = "/extension/convertd";
+    protected static final String ATTR_MIMEPART   = "mimepart";
+    protected static final String ATTR_MSGDIGEST  = "msgdigest";
+    protected static final String ATTR_CONTENTURL = "contenturl";
 
     protected static final String MSGPAGE_BLOCK = "errorpage.attachment.blocked";
     private String mBlockPage = null;
@@ -205,7 +204,8 @@ public class ContentServlet extends ZimbraServlet {
                             } else {
                                 req.setAttribute(ATTR_MIMEPART, mp);
                                 req.setAttribute(ATTR_MSGDIGEST, mi.getDigest());
-                                RequestDispatcher dispatcher = this.getServletContext().getNamedDispatcher(CONVERSION_SERVLET);
+                                req.setAttribute(ATTR_CONTENTURL, req.getRequestURL().toString());
+                                RequestDispatcher dispatcher = getServletContext().getRequestDispatcher(CONVERSION_PATH);
                                 dispatcher.forward(req, resp);
                             }
                         }
@@ -292,7 +292,7 @@ public class ContentServlet extends ZimbraServlet {
         return Mime.getMimePart(msg.getMimeMessage(), part);
     }
     
-    protected void sendbackOriginalDoc(MimePart mp, String contentType, HttpServletResponse resp) 
+    public static void sendbackOriginalDoc(MimePart mp, String contentType, HttpServletResponse resp) 
     throws IOException, MessagingException {
         ContentDisposition cd = new ContentDisposition(Part.INLINE);
         String filename = mp.getFileName();
@@ -306,7 +306,7 @@ public class ContentServlet extends ZimbraServlet {
         sendbackOriginalDoc(mp.getInputStream(), contentType, resp);
     }
     
-    protected void sendbackOriginalDoc(InputStream is, String contentType, HttpServletResponse resp)
+    public static void sendbackOriginalDoc(InputStream is, String contentType, HttpServletResponse resp)
     throws IOException {
         resp.setContentType(contentType);
         try {
@@ -339,25 +339,14 @@ public class ContentServlet extends ZimbraServlet {
      * @throws ServletException
      */
     private void sendbackBlockMessage(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        RequestDispatcher dispatcher = null;
-        if ((dispatcher = getDispatcher(mBlockPage)) != null) {
+        RequestDispatcher dispatcher = getServletContext().getRequestDispatcher(mBlockPage);
+        if (dispatcher != null) {
             dispatcher.forward(req, resp);
             return;
         }
         resp.sendError(HttpServletResponse.SC_FORBIDDEN, "The attachment download has been disabled per security policy.");
     }
     
-    /**
-     * @param path
-     * @return
-     */
-    protected RequestDispatcher getDispatcher(String path) {
-        if (path == null)
-            return null;
-        RequestDispatcher dispatcher = this.getServletContext().getRequestDispatcher(path);
-        return dispatcher;
-    }
-
     public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
         mLog.debug("request url: " + req.getRequestURL() + " path info: " + req.getPathInfo());
         
@@ -374,9 +363,6 @@ public class ContentServlet extends ZimbraServlet {
             getCommand(req, resp, authToken);
         } else if (pathInfo != null && pathInfo.equals(PREFIX_PROXY)) {
             retrieveUpload(req, resp, authToken);
-        } else if (pathInfo != null && pathInfo.startsWith(PREFIX_CNV)) {
-            RequestDispatcher dispatcher = this.getServletContext().getNamedDispatcher(CONVERSION_SERVLET);
-            dispatcher.forward(req, resp);
         } else {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "invalid request");
         }

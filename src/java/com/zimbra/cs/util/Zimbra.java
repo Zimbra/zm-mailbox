@@ -29,7 +29,6 @@ import java.util.Timer;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.convert.TransformationStub;
 import com.zimbra.cs.db.Versions;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.httpclient.EasySSLProtocolSocketFactory;
@@ -94,8 +93,6 @@ public class Zimbra {
     	
     	//ZimletUtil.loadZimlets();
     	
-        TransformationStub.getInstance().init();
-        
         Indexer.GetInstance().startup();
         
         RedoLogProvider redoLog = RedoLogProvider.getInstance();
@@ -140,8 +137,6 @@ public class Zimbra {
 
         StoreManager.getInstance().shutdown();
 
-        TransformationStub.getInstance().destroy();
-        
         ExtensionUtil.destroyAll();
         
         sTimer.cancel();

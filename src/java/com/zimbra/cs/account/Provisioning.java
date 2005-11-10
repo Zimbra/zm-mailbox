@@ -696,6 +696,7 @@ public abstract class Provisioning {
     public static final String A_zimbraMimeType                 = "zimbraMimeType";
     public static final String A_zimbraMimeIndexingEnabled      = "zimbraMimeIndexingEnabled";
     public static final String A_zimbraMimeHandlerClass         = "zimbraMimeHandlerClass";
+    public static final String A_zimbraMimeHandlerExtension     = "zimbraMimeHandlerExtension";
     public static final String A_zimbraMimeFileExtension        = "zimbraMimeFileExtension";
     
     /**

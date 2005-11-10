@@ -49,6 +49,7 @@ import org.apache.lucene.document.Field;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.convert.AttachmentInfo;
 import com.zimbra.cs.convert.ConversionException;
+import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.object.MatchedObject;
@@ -154,7 +155,7 @@ public abstract class MimeHandler {
                 clazz = "com.zimbra.cs.mime.handler." + clazz;
             try {
                 handlerInfo = new HandlerInfo();
-                handlerInfo.mClass = Class.forName(clazz);
+                handlerInfo.mClass = ExtensionUtil.loadClass(mt.getExtension(), clazz);
                 handlerInfo.mMimeType = mt;
                 handlerInfo.mRealMimeType = mimeType;
                 mHandlers.put(mimeType, handlerInfo);

@@ -76,11 +76,22 @@ public class ExtensionDispatcherServlet extends ZimbraServlet {
     /**
      * Gets the handler for handling HTTP requests for an extension.
      * 
-     * @param path path in request URI in the form of <ext name>/<handler path>
+     * @param path path in request URI in the form of <ext name>/<handler path>/*
      * @return
      */
     public static ExtensionHttpHandler getHandler(String path) {
-        return (ExtensionHttpHandler) sHandlers.get(path);
+        ExtensionHttpHandler handler = null;
+        int slash = -1;
+        do {
+            handler = (ExtensionHttpHandler) sHandlers.get(path);
+            if (handler == null) {
+                slash = path.lastIndexOf('/');
+                if (slash != -1) {
+                    path = path.substring(0, slash);
+                }
+            }
+        } while (handler == null && slash > 0);
+        return handler;
     }
     
     public void service(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
@@ -131,7 +142,7 @@ public class ExtensionDispatcherServlet extends ZimbraServlet {
         ZimbraLog.extensions.debug("getting handler registered at " + extPath);
         ExtensionHttpHandler handler = getHandler(extPath);
         if (handler == null)
-            throw ServiceException.FAILURE("HTTP handler not found at " + extPath, null);
+            throw ServiceException.FAILURE("Extension HTTP handler not found at " + extPath, null);
         return handler;
     }
 }
