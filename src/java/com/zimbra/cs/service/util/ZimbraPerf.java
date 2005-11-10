@@ -109,7 +109,7 @@ public class ZimbraPerf {
      *   <li>Writes slow queries to <code>slowQueries.csv</code></li>
      * </ul>
      *  
-     * @param sql the SQL statement
+     * @param normalized the SQL statement
      * @param durationMillis execution time
      * @see #getStatementCount()
      */
@@ -119,14 +119,14 @@ public class ZimbraPerf {
             return;
         }
         
-        sql = DbUtil.normalizeSql(sql);
+        String normalized = DbUtil.normalizeSql(sql);
         StatementStats stats = null;
         
         synchronized (sSqlToStats) {
-            stats = (StatementStats) sSqlToStats.get(sql);
+            stats = (StatementStats) sSqlToStats.get(normalized);
             if (stats == null) {
-                stats = new StatementStats(sql);
-                sSqlToStats.put(sql, stats);
+                stats = new StatementStats(normalized);
+                sSqlToStats.put(normalized, stats);
             }
 
             stats.mCount++;
@@ -142,7 +142,7 @@ public class ZimbraPerf {
         ThreadLocalData.incrementDbTime(durationMillis);
         
         if (durationMillis > SLOW_QUERY_THRESHOLD) {
-            writeSlowQuery(sql, durationMillis);
+            writeSlowQuery(sql, normalized, durationMillis);
         }
         long now = System.currentTimeMillis();
         if (now - sLastStatsWrite > STATS_WRITE_INTERVAL) {
@@ -211,7 +211,7 @@ public class ZimbraPerf {
     private static final SimpleDateFormat TIMESTAMP_FORMATTER =
         new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
 
-    private static void writeSlowQuery(String sql, int durationMillis) {
+    private static void writeSlowQuery(String sql, String normalized, int durationMillis) {
         String filename = LC.zimbra_log_directory.value() + "/slowQueries.csv";
         FileWriter writer = null;
         try {
@@ -225,7 +225,7 @@ public class ZimbraPerf {
                 writer = new FileWriter(file, true);
             }
             writer.write(TIMESTAMP_FORMATTER.format(new Date()) + "," + durationMillis +
-                ",\"" + sql + "\",\"" + DbUtil.normalizeSql(sql) + "\"\n");
+                ",\"" + sql + "\",\"" + normalized + "\"\n");
             writer.close();
         } catch (IOException e) {
             ZimbraLog.perf.warn("Unable to write to " + filename + ": " + e.toString());
