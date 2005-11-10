@@ -2384,10 +2384,10 @@ public class LdapProvisioning extends Provisioning {
     	}
     	
     	try {
-    		String zimletDN = zimletNameToDN(zimlet);
+    		String cosDN = cosNametoDN(cos);
     		LdapUtil.addAttr(ctxt, 
-    				zimletDN, 
-    				A_zimbraZimletSubscribedZimlets,
+    				cosDN, 
+    				A_zimbraZimletAvailableZimlets,
     				zimlet);
     	} catch (NamingException e) {
     		throw ServiceException.FAILURE("unable to add Zimlet " + zimlet + " to cos "+cos, e);
@@ -2407,10 +2407,10 @@ public class LdapProvisioning extends Provisioning {
     	}
     	
     	try {
-    		String zimletDN = zimletNameToDN(zimlet);
+    		String cosDN = cosNametoDN(cos);
     		LdapUtil.removeAttr(ctxt, 
-    				zimletDN, 
-    				A_zimbraZimletSubscribedZimlets,
+    				cosDN, 
+    				A_zimbraZimletAvailableZimlets,
     				zimlet);
     	} catch (NamingException e) {
     		throw ServiceException.FAILURE("unable to remove Zimlet " + zimlet + " from cos "+cos, e);

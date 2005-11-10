@@ -46,4 +46,12 @@ public class ZimletException extends Exception {
 	public static ZimletException CANNOT_DELETE(String zimlet, String reason) {
 		return new ZimletException("Cannot delete Zimlet " + zimlet + ": " + reason);
 	}
+
+	public static ZimletException CANNOT_ACTIVATE(String zimlet, String reason) {
+		return new ZimletException("Cannot activate Zimlet " + zimlet + ": " + reason);
+	}
+
+	public static ZimletException CANNOT_DEACTIVATE(String zimlet, String reason) {
+		return new ZimletException("Cannot deactivate Zimlet " + zimlet + ": " + reason);
+	}
 }
