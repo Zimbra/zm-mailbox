@@ -35,6 +35,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.localconfig.LC;
@@ -94,7 +96,7 @@ public class ZimletUtil {
 	}
 
 	public static void loadDevZimlets() {
-		loadZimletsFromDir(sDevZimlets, LC.zimlet_dev_directory.value());
+		loadZimletsFromDir(sDevZimlets, LC.zimlet_directory.value() + File.separator + "_dev");
 	}
 
 	private static void loadZimletsFromDir(Map zimlets, String dir) {
@@ -103,7 +105,7 @@ public class ZimletUtil {
 			return;
 		}
 
-        ZimbraLog.zimlet.info("Loading dev zimlets from " + zimletRootDir.getPath());
+        ZimbraLog.zimlet.info("Loading zimlets from " + zimletRootDir.getPath());
         
         synchronized (zimlets) {
         	zimlets.clear();
@@ -328,6 +330,19 @@ public class ZimletUtil {
 	}
 	
 	private static void test() {
+		String ZIMLET_URL = "^/service/zimlet/([^/\\?]+)[/\\?]?.*$";
+		String t1 = "/service/zimlet/po";
+		String t2 = "/service/zimlet/foo?123";
+		Pattern mPattern = Pattern.compile(ZIMLET_URL);
+		Matcher matcher = mPattern.matcher(t1);
+		if (matcher.matches()) {
+			System.out.println( matcher.group(1) );
+		}
+		matcher = mPattern.matcher(t2);
+		if (matcher.matches()) {
+			System.out.println( matcher.group(1) );
+		}
+
 	}
 	
 	private static final int INSTALL_ZIMLET = 10;
