@@ -32,6 +32,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -74,6 +75,7 @@ public class UserServlet extends ZimbraBasicAuthServlet {
 
     public UserServlet() {
         mAllowCookieAuth = true;
+        mAccountProxy = false;
     }
 
     public static class Context {
@@ -135,6 +137,14 @@ public class UserServlet extends ZimbraBasicAuthServlet {
             return null;
         }
 
+        if (!c.targetAccount.isCorrectHost()) {
+            try {
+                proxyServletRequest(req, resp, c.targetAccount.getServer());
+                return null;
+            } catch (ServletException e) {
+                throw ServiceException.FAILURE("proxy error", e);
+            }
+        }
         return c;
     }
     

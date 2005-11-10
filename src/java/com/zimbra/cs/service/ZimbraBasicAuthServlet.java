@@ -37,7 +37,6 @@ import org.apache.commons.logging.LogFactory;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.servlet.ZimbraServlet;
 
 /**
@@ -56,7 +55,8 @@ public abstract class ZimbraBasicAuthServlet extends ZimbraServlet {
     
     private static Log mLog = LogFactory.getLog(ZimbraBasicAuthServlet.class);
 
-    protected boolean mAllowCookieAuth;
+    protected boolean mAllowCookieAuth = false; // by default, don't check cookie
+    protected boolean mAccountProxy = true; // by default, proxy based on account that is authenticated
 
     public abstract void doAuthGet(HttpServletRequest req, HttpServletResponse resp, Account acct)
     throws ServiceException, IOException;
@@ -112,7 +112,7 @@ public abstract class ZimbraBasicAuthServlet extends ZimbraServlet {
                 return null;
             }
 
-            if (!acct.isCorrectHost()) {
+            if (!acct.isCorrectHost() && mAccountProxy) {
                 // wrong host; proxy to the correct target...
                 proxyServletRequest(req, resp, acct.getServer());
                 return null;
