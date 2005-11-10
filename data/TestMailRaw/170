@@ -1,0 +1,42 @@
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by dogfood.liquidsys.com (Postfix) with ESMTP id AE26015CBCC;
+	Wed,  9 Nov 2005 12:20:06 -0800 (PST)
+Received: from dogfood.liquidsys.com ([127.0.0.1])
+ by localhost (dogfood.liquidsys.com [127.0.0.1]) (amavisd-new, port 10024)
+ with ESMTP id 12610-01; Wed,  9 Nov 2005 12:20:03 -0800 (PST)
+Received: from liquidsys.com (exch1.liquidsys.com [10.10.130.37])
+	by dogfood.liquidsys.com (Postfix) with ESMTP id C0B8515CBC8;
+	Wed,  9 Nov 2005 12:20:03 -0800 (PST)
+Received: from depot.liquidsys.com ([10.10.130.24]) by liquidsys.com with Microsoft SMTPSVC(6.0.3790.211);
+	 Wed, 9 Nov 2005 12:20:13 -0800
+From: build <build@acme.com>
+To: "p4 users" <p4users@acme.com>
+X-From-Perforce: Indeed
+Subject: P4 #16130 ( bug: 4570 static linking for bdb dependencies )
+Message-ID: <EXCH1m3gzsEPYl8dsTT0000000f@liquidsys.com>
+X-OriginalArrivalTime: 09 Nov 2005 20:20:13.0625 (UTC) FILETIME=[FDBD1A90:01C5E56A]
+Date: 9 Nov 2005 12:20:13 -0800
+X-Virus-Scanned: amavisd-new at dogfood
+X-Spam-Status: No, hits=-4.702 tagged_above=-10 required=8 autolearn=ham
+ tests=[ALL_TRUSTED=-3.3, AWL=0.310, BAYES_00=-2.599, SORTED_RECIPS=0.887]
+X-Spam-Level: 
+
+Change 16130 by build@BUILD_FC3 on 2005/11/09 12:18:27
+
+	http://bugzilla.liquidsys.com/show_bug.cgi?id=4570
+	bug: 4570
+	bug 4560
+	bug #4550
+	bugzilla #4540
+	bugzilla: 4530
+	bugzilla 4520
+	junebug 4510
+	static linking for bdb dependencies
+
+Affected files ...
+
+.... //depot/main/ThirdParty/PostFix/PostFix-2.2.3/builds/FC3/postfix-2.2.3.tgz#5 edit
+.... //depot/main/ThirdParty/openldap/Makefile#7 edit
+.... //depot/main/ThirdParty/openldap/builds/FC3/openldap-2.2.28.tgz#4 edit
+.... //depot/main/ThirdParty/sleepycat/Makefile#6 edit
+.... //depot/main/ThirdParty/sleepycat/builds/FC3/sleepycat-4.2.52.4.tgz#3 edit
