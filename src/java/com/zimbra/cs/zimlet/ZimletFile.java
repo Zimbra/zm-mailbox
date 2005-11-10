@@ -94,6 +94,11 @@ public class ZimletFile extends File {
 		initialize();
 	}
 
+	public ZimletFile(File parent, String zimlet) throws IOException {
+		super(parent, zimlet);
+		initialize();
+	}
+	
 	private void initialize() throws IOException {
 		String name = getName().toLowerCase();
 		int index = name.lastIndexOf(File.separatorChar);

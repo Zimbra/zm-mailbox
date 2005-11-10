@@ -137,17 +137,30 @@ public abstract class ZimletMeta {
 		return mVersion;
 	}
 	
+	/*
+	 * returns JSON representation of the parsed DOM tree.
+	 */
 	public String toJSONString() {
-		try {
-			return Element.parseXML(mRawXML, Element.JavaScriptElement.mFactory).toString();
-		} catch (Exception e) {
-			ZimbraLog.zimlet.warn("error parsing the Zimlet description file");
-			return "";
-		}
+		return toString(Element.JavaScriptElement.mFactory);
 	}
-	
+
+	/*
+	 * returns the original XML document.
+	 */
 	public String toXMLString() {
 		return mRawXML;
+	}
+	
+	/*
+	 * returns either XML or JSON representation of parsed and possibly modified DOM tree.
+	 */
+	public String toString(Element.ElementFactory f) {
+		try {
+			return Element.parseXML(mRawXML, f).toString();
+		} catch (Exception e) {
+			ZimbraLog.zimlet.warn("error parsing the Zimlet file "+mName);
+		}
+		return "";
 	}
 	
 	protected abstract void initialize() throws ZimletException;
