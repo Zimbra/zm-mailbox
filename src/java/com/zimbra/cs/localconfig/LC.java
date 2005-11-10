@@ -274,11 +274,11 @@ public class LC {
             ("Directory for storing generated statistics images.");
 
         ldap_host = new KnownKey("ldap_host");
-        ldap_host.setDefault("localhost");
+        ldap_host.setDefault("");
         ldap_host.setDoc("LDAP host to use.  Deprecated - please use ldap_url instead.");
 
         ldap_port = new KnownKey("ldap_port");
-        ldap_port.setDefault("389");
+        ldap_port.setDefault("");
         ldap_port.setDoc("LDAP port to use.  Deprecated - please use ldap_url instead.");
 
         ldap_url = new KnownKey("ldap_url");
