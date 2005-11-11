@@ -206,7 +206,11 @@ public class ContentServlet extends ZimbraServlet {
                                 req.setAttribute(ATTR_MIMEPART, mp);
                                 req.setAttribute(ATTR_MSGDIGEST, mi.getDigest());
                                 RequestDispatcher dispatcher = this.getServletContext().getNamedDispatcher(CONVERSION_SERVLET);
-                                dispatcher.forward(req, resp);
+                                if (dispatcher != null) {
+                                    dispatcher.forward(req, resp);
+                                } else {
+                                    resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, CONVERSION_SERVLET + " not found");
+                                }
                             }
                         }
                         return;
