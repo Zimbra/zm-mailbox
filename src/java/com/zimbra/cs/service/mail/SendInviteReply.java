@@ -112,6 +112,11 @@ public class SendInviteReply extends CalendarRequest {
                     oldInv = appt.getInvite(inviteMsgId, compNum);  
                 }
                 
+                if ((mbox.getEffectivePermissions(octxt, apptId, MailItem.TYPE_APPOINTMENT) & ACL.RIGHT_ACTION) == 0)
+                {
+                    throw ServiceException.PERM_DENIED("You do not have ACTION rights for Appointment "+apptId);
+                }
+                
                 // see if there is a specific Exception being referenced by this reply...
                 Element exc = request.getOptionalElement("exceptId");
                 ParsedDateTime exceptDt = null;
