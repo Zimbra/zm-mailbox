@@ -50,7 +50,6 @@ public class Metadata {
     // ****PLEASE KEEP THESE IN SORTED ORDER TO MAKE IT EASIER TO AVOID DUPS****
 
     // FIXME: FRAGMENT and FIRST conflict.
-    // FIXME: LOCATION and BOUNDS conflict
     // FIXME: SENDER and SORT conflict
     // FIXME: RECIPIENTS and TYPES conflict
     static final String FN_ATTRS           = "a";
@@ -82,6 +81,8 @@ public class Metadata {
     static final String FN_REPLY_TO        = "rt";
     static final String FN_SENDER          = "s";
     static final String FN_SORT            = "s";
+    static final String FN_SYNC_DATE       = "sd";
+    static final String FN_SYNC_GUID       = "sg";
     static final String FN_SENDER_LIST     = "sl";
     static final String FN_RECIPIENTS      = "t";
     static final String FN_TYPES           = "t";

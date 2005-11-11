@@ -48,6 +48,19 @@ import com.zimbra.cs.util.StringUtil;
  */
 public class Folder extends MailItem {
 
+    public static final class SyncData {
+        String url;
+        String lastGuid;
+        long   lastDate;
+
+        SyncData(String link)  { url = link; }
+        SyncData(String link, String guid, long date) {
+            url = link;  lastGuid = guid;  lastDate = date;
+        }
+
+        public boolean alreadySeen(String guid, long date)  { return lastDate >= date; }
+    }
+
     public static final byte FOLDER_IS_IMMUTABLE    = 0x01;
     public static final byte FOLDER_NO_UNREAD_COUNT = 0x02;
 
@@ -56,7 +69,7 @@ public class Folder extends MailItem {
 	private ArrayList mSubfolders;
     private Folder    mParent;
     private ACL       mRights;
-    private String    mUrl;
+    private SyncData  mSyncData;
 
     Folder(Mailbox mbox, UnderlyingData ud) throws ServiceException {
         super(mbox, ud);
@@ -111,7 +124,14 @@ public class Folder extends MailItem {
      *  is no such association.
      * @see #setUrl(String) */
     public String getUrl() {
-        return (mUrl == null ? "" : mUrl);
+        return (mSyncData == null || mSyncData.url == null ? "" : mSyncData.url);
+    }
+
+    /** Returns the URL the folder syncs to, or <code>""</code> if there
+     *  is no such association.
+     * @see #setUrl(String) */
+    public SyncData getSyncData() {
+        return mSyncData;
     }
 
     /** Returns whether the folder is the Trash folder or any of its
@@ -432,7 +452,7 @@ public class Folder extends MailItem {
         data.parentId    = data.folderId;
         data.date        = mbox.getOperationTimestamp();
         data.subject     = name;
-		data.metadata    = encodeMetadata(DEFAULT_COLOR, attributes, view, null, url);
+		data.metadata    = encodeMetadata(DEFAULT_COLOR, attributes, view, null, new SyncData(url));
         data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
 
@@ -473,7 +493,33 @@ public class Folder extends MailItem {
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
 
         markItemModified(Change.MODIFIED_URL);
-        mUrl = url;
+        mSyncData = new SyncData(url);
+        saveMetadata();
+    }
+
+    /** Records the last-synced information for a subscribed folder.  If the
+     *  folder does not have an associated URL, no action is taken and no
+     *  exception is thrown.
+     * 
+     * @param guid  The last synchronized remote item's GUID.
+     * @param date  The last synchronized remote item's timestamp.
+     * @perms {@link ACL#RIGHT_WRITE} on the folder
+     * @throws ServiceException   The following error codes are possible:<ul>
+     *    <li><code>mail.IMMUTABLE_OBJECT</code> - if the folder can't be
+     *        modified
+     *    <li><code>service.FAILURE</code> - if there's a database failure
+     *    <li><code>service.PERM_DENIED</code> - if you don't have
+     *        sufficient permissions</ul> */
+    void setSubscriptionData(String guid, long date) throws ServiceException {
+        if (getUrl().equals(""))
+            return;
+        if (!isMutable())
+            throw MailServiceException.IMMUTABLE_OBJECT(mId);
+        if (!canAccess(ACL.RIGHT_WRITE))
+            throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
+
+        markItemModified(Change.MODIFIED_URL);
+        mSyncData = new SyncData(getUrl(), guid, date);
         saveMetadata();
     }
 
@@ -890,9 +936,9 @@ public class Folder extends MailItem {
         }
         mDefaultView = (byte) meta.getLong(Metadata.FN_VIEW, view);
         mAttributes  = (byte) meta.getLong(Metadata.FN_ATTRS, 0);
-      
+
         if (meta.containsKey(Metadata.FN_URL))
-            mUrl = meta.get(Metadata.FN_URL);
+            mSyncData = new SyncData(meta.get(Metadata.FN_URL), meta.get(Metadata.FN_SYNC_GUID, null), meta.getLong(Metadata.FN_SYNC_DATE, 0));
 
         MetadataList mlistACL = meta.getList(Metadata.FN_RIGHTS, true);
         if (mlistACL != null)
@@ -901,20 +947,24 @@ public class Folder extends MailItem {
     }
 	
 	Metadata encodeMetadata(Metadata meta) {
-		return encodeMetadata(meta, mColor, mAttributes, mDefaultView, mRights, mUrl);
+		return encodeMetadata(meta, mColor, mAttributes, mDefaultView, mRights, mSyncData);
 	}
-    private static String encodeMetadata(byte color, byte attributes, byte hint, ACL rights, String url) {
-        return encodeMetadata(new Metadata(), color, attributes, hint, rights, url).toString();
+    private static String encodeMetadata(byte color, byte attributes, byte hint, ACL rights, SyncData fsd) {
+        return encodeMetadata(new Metadata(), color, attributes, hint, rights, fsd).toString();
     }
-	static Metadata encodeMetadata(Metadata meta, byte color, byte attributes, byte hint, ACL rights, String url) {
+	static Metadata encodeMetadata(Metadata meta, byte color, byte attributes, byte hint, ACL rights, SyncData fsd) {
         if (attributes != 0)
             meta.put(Metadata.FN_ATTRS, attributes);
         if (hint != TYPE_UNKNOWN)
             meta.put(Metadata.FN_VIEW, hint);
         if (rights != null)
             meta.put(Metadata.FN_RIGHTS, rights.encode());
-        if (url != null && !url.equals("")) 
-            meta.put(Metadata.FN_URL, url);
+        if (fsd != null && fsd.url != null && !fsd.url.equals("")) {
+            meta.put(Metadata.FN_URL, fsd.url);
+            meta.put(Metadata.FN_SYNC_GUID, fsd.lastGuid);
+            if (fsd.lastDate > 0)
+                meta.put(Metadata.FN_SYNC_DATE, fsd.lastDate);
+        }
 		return MailItem.encodeMetadata(meta, color);
 	}
 

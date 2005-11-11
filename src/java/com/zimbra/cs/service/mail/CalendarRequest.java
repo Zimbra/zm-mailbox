@@ -226,7 +226,7 @@ public abstract class CalendarRequest extends SendMsg {
             msgId = sendMimeMessage(octxt, mbox, acct, saveFolderId, csd, csd.mMm, csd.mOrigId, csd.mReplyType, ignoreFailedAddresses);
 //            }
                 
-            int[] ids = mbox.addInvite(octxt, apptFolderId, csd.mInvite, false, pm);
+            int[] ids = mbox.addInvite(octxt, csd.mInvite, apptFolderId, false, pm);
 
             if (response != null && ids != null) {
                 response.addAttribute(MailService.A_APPT_ID, lc.formatItemId(ids[0]));

@@ -2497,15 +2497,15 @@ public class Mailbox {
      * Directly add an Invite into the system...this process also gets triggered when we add a Message
      * that has a text/calendar Mime part: but this API is useful when you don't want to add a corresponding
      * message.
-     * 
      * @param octxt
      * @param inv
-     * @param pm
      * @param force if true, then force override the existing appointment, false use normal RFC2446 sequencing rules
+     * @param pm
+     * 
      * @return int[2] = { appointment-id, invite-mail-item-id }  Note that even though the invite has a mail-item-id, that mail-item does not really exist, it can ONLY be referenced through the appointment "apptId-invMailItemId"
      * @throws ServiceException
      */
-    public synchronized int[] addInvite(OperationContext octxt, int folder, Invite inv, boolean force, ParsedMessage pm)
+    public synchronized int[] addInvite(OperationContext octxt, Invite inv, int folder, boolean force, ParsedMessage pm)
     throws ServiceException {
         CreateInvite redoRecorder = new CreateInvite();
         CreateInvite redoPlayer = (octxt == null ? null : (CreateInvite) octxt.player);
@@ -3509,22 +3509,40 @@ public class Mailbox {
             importFeed(octxt, folderId, folder.getUrl(), true);
     }
 
-    public synchronized void importFeed(OperationContext octxt, int folderId, String url, boolean empty) throws ServiceException {
+    public synchronized void importFeed(OperationContext octxt, int folderId, String url, boolean subscription) throws ServiceException {
         if (url == null || url.equals(""))
             return;
 
-        List items = FeedManager.retrieveRemoteDatasource(getAccount(), url);
-        if (empty)
+        Folder folder = getFolderById(octxt, folderId);
+        FeedManager.SubscriptionData sdata = FeedManager.retrieveRemoteDatasource(getAccount(), url, folder.getSyncData());
+        if (sdata.items.isEmpty())
+            return;
+
+        if (subscription && sdata.items.get(0) instanceof Invite)
             emptyFolder(octxt, folderId, false);
-        for (Iterator it = items.iterator(); it.hasNext(); ) {
+        for (Iterator it = sdata.items.iterator(); it.hasNext(); ) {
             Object item = it.next();
             try {
                 if (item instanceof Invite)
-                    addInvite(octxt, folderId, (Invite) item, true, null);
+                    addInvite(octxt, (Invite) item, folderId, true, null);
                 else if (item instanceof ParsedMessage)
                     addMessage(octxt, (ParsedMessage) item, folderId, false, Flag.FLAG_UNREAD, null);
             } catch (IOException e) {
                 throw ServiceException.FAILURE("IOException", e);
+            }
+        }
+
+        // FIXME: use redo recorder/player
+        if (subscription && sdata.lastGuid != null) {
+            boolean success = false;
+            try {
+                beginTransaction("setSubscriptionData", octxt);
+                getFolderById(folderId).setSubscriptionData(sdata.lastGuid, sdata.lastDate);
+                success = true;
+            } catch (Exception e) {
+                ZimbraLog.mailbox.warn("could not update feed metadata", e);
+            } finally {
+                endTransaction(success);
             }
         }
     }

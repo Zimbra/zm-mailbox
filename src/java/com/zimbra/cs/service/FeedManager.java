@@ -38,7 +38,6 @@ import java.net.URLDecoder;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -63,6 +62,7 @@ import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.methods.GetMethod;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.mail.ParseMimeMessage;
@@ -74,11 +74,27 @@ import com.zimbra.soap.Element;
  */
 public class FeedManager {
 
+    public static final class SubscriptionData {
+        public List   items;
+        public String lastGuid;
+        public long   lastDate = -1;
+        public long   feedDate = System.currentTimeMillis();
+
+        SubscriptionData()           { items = new ArrayList(); }
+        SubscriptionData(List list)  { items = list; }
+        SubscriptionData(long fdate) { items = new ArrayList();  feedDate = fdate; }
+
+        void recordItem(String guid, long date, Object item) {
+            items.add(item);
+            if (date > lastDate)  { lastGuid = guid;  lastDate = date; }
+        }
+    }
+
     public static final int MAX_REDIRECTS = 3;
     public static final String HTTP_USER_AGENT = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.1.4322) Zimbra/2.0";
     public static final String HTTP_ACCEPT = "image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, application/x-shockwave-flash, application/vnd.ms-powerpoint, application/vnd.ms-excel, application/msword, */*";
 
-    public static List retrieveRemoteDatasource(Account acct, String url) throws ServiceException {
+    public static SubscriptionData retrieveRemoteDatasource(Account acct, String url, Folder.SyncData fsd) throws ServiceException {
         HttpClient client = new HttpClient();
         client.setConnectionTimeout(10000);
         client.setTimeout(20000);
@@ -88,7 +104,7 @@ public class FeedManager {
             int redirects = 0;
             do {
                 if (url == null || url.equals(""))
-                    return Collections.EMPTY_LIST;
+                    return new SubscriptionData();
                 String lcurl = url.toLowerCase();
                 if (lcurl.startsWith("webcal:") || lcurl.startsWith("feed:"))
                     url = "http:" + url.substring(7);
@@ -116,11 +132,11 @@ public class FeedManager {
             if (ch == -1)
                 throw ServiceException.FAILURE("empty body in response when fetching remote subscription", null);
             else if (ch == '<') {
-                return parseRssFeed(Element.parseXML(content));
+                return parseRssFeed(Element.parseXML(content), fsd);
             } else if (ch == 'B') {
                 Reader reader = new InputStreamReader(content);
                 Calendar ical = new CalendarBuilder().build(reader);
-                return Invite.createFromICalendar(acct, null, ical, false); 
+                return new SubscriptionData(Invite.createFromICalendar(acct, null, ical, false)); 
             } else
                 throw ServiceException.PARSE_ERROR("unrecognized remote content", null);
         } catch (org.dom4j.DocumentException e) {
@@ -155,11 +171,11 @@ public class FeedManager {
         }
     }
 
-    private static List parseRssFeed(Element root) throws ServiceException {
+    private static SubscriptionData parseRssFeed(Element root, Folder.SyncData fsd) throws ServiceException {
         try {
             String rname = root.getName();
             if (rname.equals("feed"))
-                return parseAtomFeed(root);
+                return parseAtomFeed(root, fsd);
 
             Element channel = root.getElement("channel");
             String hrefChannel = channel.getAttribute("link");
@@ -167,13 +183,13 @@ public class FeedManager {
             InternetAddress addrChannel = new InternetAddress("", subjChannel, "utf-8");
             Date dateChannel = parseRFC2822Date(channel.getAttribute("lastBuildDate", null), new Date());
             List enclosures = new ArrayList();
+            SubscriptionData sdata = new SubscriptionData(dateChannel.getTime());
 
             if (rname.equals("rss"))
                 root = root.getElement("channel");
             else if (!rname.equals("RDF"))
                 throw ServiceException.PARSE_ERROR("unknown top-level rss element name: " + root.getQualifiedName(), null);
 
-            ArrayList pms = new ArrayList();
             for (Iterator it = root.elementIterator("item"); it.hasNext(); ) {
                 Element item = (Element) it.next();
                 // get the item's date
@@ -190,6 +206,10 @@ public class FeedManager {
                 // get the item's title and link, defaulting to the channel attributes
                 String title = parseTitle(item.getAttribute("title", subjChannel));
                 String href = item.getAttribute("link", hrefChannel);
+                String guid = item.getAttribute("guid", href);
+                // make sure we haven't already seen this item
+                if (fsd != null && fsd.alreadySeen(guid, date.getTime()))
+                    continue;
                 // handle the enclosure (associated media link), if any
                 enclosures.clear();
                 Element enc = item.getOptionalElement("enclosure");
@@ -204,15 +224,16 @@ public class FeedManager {
                     text = item.getAttribute("abstract", "");
                 html |= text.indexOf("</") != -1 || text.indexOf("/>") != -1 || text.indexOf("<p>") != -1;
 
-                pms.add(generateMessage(title, text, href, html, addr, date, enclosures));
+                ParsedMessage pm = generateMessage(title, text, href, html, addr, date, enclosures);
+                sdata.recordItem(guid, date.getTime(), pm);
             }
-            return pms;
+            return sdata;
         } catch (UnsupportedEncodingException e) {
             throw ServiceException.FAILURE("error encoding rss channel name", e);
         }
     }
 
-    private static List parseAtomFeed(Element feed) throws ServiceException {
+    private static SubscriptionData parseAtomFeed(Element feed, Folder.SyncData fsd) throws ServiceException {
         try {
             // get defaults from the <feed> element
             InternetAddress addrFeed = parseAtomAuthor(feed.getOptionalElement("author"), null);
@@ -220,8 +241,8 @@ public class FeedManager {
                 addrFeed = new InternetAddress("", feed.getAttribute("title"), "utf-8");
             Date dateFeed = parseISO8601Date(feed.getAttribute("updated", null), new Date());
             List enclosures = new ArrayList();
+            SubscriptionData sdata = new SubscriptionData(dateFeed.getTime());
 
-            ArrayList pms = new ArrayList();
             for (Iterator it = feed.elementIterator("entry"); it.hasNext(); ) {
                 Element item = (Element) it.next();
                 // get the item's date
@@ -243,6 +264,10 @@ public class FeedManager {
                     else if (relation.equals("enclosure"))
                         enclosures.add(new Enclosure(link.getAttribute("href", null), link.getAttribute("title", null), link.getAttribute("type", null)));
                 }
+                String guid = item.getAttribute("id", href);
+                // make sure we haven't already seen this item
+                if (fsd != null && fsd.alreadySeen(guid, date.getTime()))
+                    continue;
                 // get the content/summary and markup
                 Element content = item.getOptionalElement("content");
                 if (content == null)
@@ -256,9 +281,10 @@ public class FeedManager {
                 else if (!type.equals("text") && !type.equals("text/plain"))
                     throw ServiceException.PARSE_ERROR("unsupported atom entry content type: " + type, null);
 
-                pms.add(generateMessage(title, content.getText(), href, html, addr, date, enclosures));
+                ParsedMessage pm = generateMessage(title, content.getText(), href, html, addr, date, enclosures);
+                sdata.recordItem(guid, date.getTime(), pm);
             }
-            return pms;
+            return sdata;
         } catch (UnsupportedEncodingException e) {
             throw ServiceException.FAILURE("error encoding atom feed name", e);
         }
