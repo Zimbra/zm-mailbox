@@ -27,23 +27,27 @@ package com.zimbra.cs.service.formatter;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import javax.servlet.http.HttpServletResponse;
-
 import net.fortuna.ical4j.data.CalendarOutputter;
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.ValidationException;
 
 import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.UserServlet;
+import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.util.Constants;
 
-public class IcsFormatter {
-    public static void format(UserServlet.Context context, Folder f) throws IOException, ServiceException {
-        if (f.getDefaultView() != Folder.TYPE_APPOINTMENT) {
-            context.resp.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED, "support for requested folder type not implemented yet");
-            return;
-        }
+public class IcsFormatter extends Formatter {
+
+    public String getType() {
+        return "ics";
+    }
+
+    public boolean format(Context context, MailItem item) throws IOException, ServiceException {
+        if ((!(item instanceof Folder)) || ((Folder) item).getDefaultView() != Folder.TYPE_APPOINTMENT)
+                return notImplemented(context);
+
+        Folder f = (Folder) item;
         context.resp.setContentType("text/calendar");
 
         try {
@@ -57,5 +61,6 @@ public class IcsFormatter {
         } catch (ValidationException e) {
             throw ServiceException.FAILURE(" mbox:"+context.targetMailbox.getId()+" unable to get calendar "+e, e);
         }
+        return true;
     }
 }

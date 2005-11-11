@@ -31,20 +31,36 @@ import java.util.List;
 import javax.mail.Part;
 import javax.mail.internet.ContentDisposition;
 import javax.mail.internet.ParseException;
-import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.ContactCSV;
 import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.UserServlet;
+import com.zimbra.cs.service.UserServlet.Context;
 
-public class CsvFormatter {
-    public static void format(UserServlet.Context context, Folder f) throws IOException, ServiceException {
-        if (f.getDefaultView() != Folder.TYPE_CONTACT) {
-            context.resp.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED, "CSV support for requested folder type not implemented yet");
-            return;
+public class CsvFormatter extends Formatter {
+
+    public String getType() {
+        return "csv";
+    }
+
+    public boolean format(Context context, MailItem item) throws IOException, ServiceException {
+        List contacts = null;
+        
+        if (item instanceof Folder) {
+            Folder f = (Folder) item;
+            if (f.getDefaultView() != Folder.TYPE_CONTACT) {
+                return notImplemented(context, "CSV support for requested folder type not implemented yet");
+            }
+            contacts = context.targetMailbox.getContactList(context.opContext, f.getId());
+        } else if (item instanceof Contact) {
+            contacts = new ArrayList();
+            contacts.add(item);
+        } else {
+            return notImplemented(context, "CSV format not supported for given type");
         }
-        List contacts = context.targetMailbox.getContactList(context.opContext, f.getId());
+        
         StringBuffer sb = new StringBuffer();
         if (contacts == null)
             contacts = new ArrayList();
@@ -56,5 +72,6 @@ public class CsvFormatter {
         context.resp.addHeader("Content-Disposition", cd.toString());
         context.resp.setContentType("text/plain");
         context.resp.getOutputStream().print(sb.toString());
+        return true;
     }
 }

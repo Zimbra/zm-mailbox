@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 
 import javax.servlet.ServletException;
@@ -45,12 +46,14 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
 import com.zimbra.cs.service.formatter.CsvFormatter;
+import com.zimbra.cs.service.formatter.Formatter;
 import com.zimbra.cs.service.formatter.IcsFormatter;
 import com.zimbra.cs.service.formatter.RssFormatter;
 import com.zimbra.cs.service.mail.CalendarUtils;
@@ -68,23 +71,28 @@ import com.zimbra.soap.Element;
 public class UserServlet extends ZimbraBasicAuthServlet {
 
     public static final String QP_FMT = "fmt"; // format query param
-    
-    public static final String FORMAT_CSV = "csv";
-    public static final String FORMAT_RSS = "rss";
-    public static final String FORMAT_ICS = "ics";    
+    public static final String QP_ID = "id"; // id query param
+
+    private HashMap mFormatters;
 
     public UserServlet() {
         mAllowCookieAuth = true;
         mAccountProxy = false;
+        mFormatters = new HashMap();
+        addFormatter(new CsvFormatter());
+        addFormatter(new IcsFormatter());
+        addFormatter(new RssFormatter());
     }
 
+    private void addFormatter(Formatter f) { mFormatters.put(f.getType(), f); }    
+    
     public static class Context {
         public HttpServletRequest req;
         public HttpServletResponse resp;
         public String format;
         public String accountPath;
         public String itemPath;
-        public String residualPath;
+        public int itemId;        
         public Account acct;
         public Account targetAccount;
         public Mailbox targetMailbox;
@@ -97,6 +105,8 @@ public class UserServlet extends ZimbraBasicAuthServlet {
             sb.append("foramt("+format+")\n");            
             return sb.toString();
         }
+        
+        
     }
     
     protected String getRealmHeader()  { return "BASIC realm=\"Zimbra\""; }
@@ -121,6 +131,8 @@ public class UserServlet extends ZimbraBasicAuthServlet {
 
         c.itemPath = pathInfo.substring(pos+1);
         c.format = req.getParameter(QP_FMT);
+        String id = req.getParameter(QP_ID);
+        c.itemId = id == null ? -1 : Integer.parseInt(id);
         if (c.format != null) c.format = c.format.toLowerCase();
 
         Provisioning prov = Provisioning.getInstance();
@@ -148,85 +160,73 @@ public class UserServlet extends ZimbraBasicAuthServlet {
         return c;
     }
     
+    private String defaultFormat(MailItem item) {
+        int type = (item instanceof Folder) ? ((Folder)item).getDefaultView() : item.getType();
+        switch (type) {
+        case Folder.TYPE_APPOINTMENT: 
+            return "ics";
+        case Folder.TYPE_CONTACT:
+            return "csv";
+        default : 
+            return null;
+        }
+    }
+    
     public void doAuthGet(HttpServletRequest req, HttpServletResponse resp, Account acct)
     throws ServiceException, IOException {
-        Context c = initContext(req, resp, acct);
-        if (c == null) return;
+        Context context = initContext(req, resp, acct);
+        if (context == null) return;
 
-        ZimbraLog.calendar.info("context = "+c);
+        ZimbraLog.calendar.info("context = "+context);
 
-        c.targetMailbox = Mailbox.getMailboxByAccount(c.targetAccount);
-        if (c.targetMailbox == null) {
+        context.targetMailbox = Mailbox.getMailboxByAccount(context.targetAccount);
+        if (context.targetMailbox == null) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "mailbox not found");
             return;             
         }
 
-        c.opContext = new OperationContext(acct);
+        context.opContext = new OperationContext(acct);
 
-        Folder folder = null;
+        MailItem item = null;
         
-        try {
-            folder = c.targetMailbox.getFolderByPath(c.opContext, c.itemPath);
-        } catch (NoSuchItemException nse) {
-           if (c.format == null) {
-              int pos = c.itemPath.lastIndexOf('.');
-              if (pos != -1) {
-                  c.format = c.itemPath.substring(pos+1);                  
-                  c.itemPath = c.itemPath.substring(0, pos);
-                  folder = c.targetMailbox.getFolderByPath(c.opContext, c.itemPath);                  
-              }
-           }
-           if (folder == null) throw nse;
-        }
-
-        if (c.format == null) {
-            switch (folder.getDefaultView()) {
-            case Folder.TYPE_APPOINTMENT: 
-                c.format = "ics";
-                break;
-            case Folder.TYPE_CONTACT:
-                c.format = "csv";
-                break;                
+        if (context.itemId != -1) {
+            item = context.targetMailbox.getItemById(context.opContext, context.itemId, MailItem.TYPE_UNKNOWN);
+        } else {
+            Folder folder = null;
+            try {
+                folder = context.targetMailbox.getFolderByPath(context.opContext, context.itemPath);
+            } catch (NoSuchItemException nse) {
+                if (context.format == null) {
+                    int pos = context.itemPath.lastIndexOf('.');
+                    if (pos != -1) {
+                        context.format = context.itemPath.substring(pos+1);                  
+                        context.itemPath = context.itemPath.substring(0, pos);
+                        folder = context.targetMailbox.getFolderByPath(context.opContext, context.itemPath);                  
+                    }
+                }
+                if (folder == null) throw nse;
             }
+            item = folder;
         }
 
-        if (c.format == null) {
+        if (item == null) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "item not found");
+            return;
+        }
+        if (context.format == null) context.format = defaultFormat(item);
+
+        if (context.format == null) {
             resp.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED, "not implemented yet");
             return;
-        } else if (c.format.equals(UserServlet.FORMAT_CSV)) {
-            CsvFormatter.format(c, folder);
-        } else if (c.format.equals(UserServlet.FORMAT_ICS)) {
-            IcsFormatter.format(c, folder);
-        } else if (c.format.equals(UserServlet.FORMAT_RSS)) {
-            RssFormatter.format(c, folder);
-        } else {
-            resp.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED, "format not implemented yet: "+c.format);
-            return;            
         }
 
-        /*
-        if (pathInfo == null || pathInfo.equals("/") || pathInfo.equals("")) pathInfo = "/calendar.ics";
-        
-        
-        String folderPath = getFolderPath(pathInfo);
-        
-        //ZimbraLog.calendar.info("folderPath = "+folderPath);
-        
-        Folder folder = mailbox.getFolderByPath(null, folderPath);
-
-        boolean isRss = pathInfo != null && pathInfo.endsWith("rss");
-        
-        if (pathInfo.endsWith(".rss")) {
-            long start = System.currentTimeMillis() - (7 * Constants.MILLIS_PER_DAY);
-            long end = start + (14 * Constants.MILLIS_PER_DAY);            
-            doRss(req, resp, acct, mailbox, start, end, folder.getId());
-        } else {
-            long start = 0;
-            //long start = System.currentTimeMillis() - (7 * Constants.MILLIS_PER_DAY);
-            long end = System.currentTimeMillis() + (365 * 100 * Constants.MILLIS_PER_DAY);
-            doIcal(req, resp, acct, mailbox, start, end, folder.getId());            
+        Formatter formatter = (Formatter) mFormatters.get(context.format);
+        if (formatter == null) {
+            resp.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED, "not implemented yet");
+            return;
         }
-        */
+
+        formatter.format(context, item);
     }
 
     private String getFolderPath(String pathInfo) {
