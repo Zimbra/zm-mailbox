@@ -28,6 +28,9 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -52,6 +55,33 @@ public class ProxyServlet extends ZimbraServlet {
 	private static final String AUTH_PARAM = "auth";
 	private static final String AUTH_BASIC = "basic";
 	
+	private List getWhitelistDomains(HttpServletRequest req) {
+		List l = new ArrayList();
+		// TODO: fetch from ldap.
+		l.add(new String("*.zimbra.com"));
+		l.add(new String("*.liquidsys.com"));
+		return l;
+	}
+	
+	private boolean checkPermissionOnTarget(HttpServletRequest req, URL target) {
+		String host = target.getHost().toLowerCase();
+		List l = getWhitelistDomains(req);
+		Iterator iter = l.iterator();
+		while (iter.hasNext()) {
+			String domain = (String) iter.next();
+			if (domain.equals("*")) {
+				return true;
+			}
+			if (domain.charAt(0) == '*') {
+				domain = domain.substring(1);
+			}
+			if (host.endsWith(domain)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
 		doPost(req, resp);
 	}
@@ -68,9 +98,13 @@ public class ProxyServlet extends ZimbraServlet {
 			return;
 		}
 		
-		// TODO: validate the URL from whitelist
-		
 		URL url = new URL(target);
+		
+		if (!checkPermissionOnTarget(req, url)) {
+			resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+			return;
+		}
+		
 		URLConnection conn = url.openConnection();
 		
 		String auth, user, pass;
