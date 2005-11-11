@@ -1,0 +1,80 @@
+LDAP Replication
+
+The ZCS suite now support LDAP replication, with an easy to use setup process.
+
+LDAP replication allows you to spread the load of LDAP searches amongst several
+servers on your network, reserving the master LDAP server for write operations.
+
+Multiple LDAP replica servers can be configured in a multi-node installation.
+
+To set up LDAP in a multi-node installation:
+
+- Install the master LDAP server first, as in the normal installation.  The
+  LDAP master must be running for replication to be set up.
+
+NOTE: replication setup will stop and start the services on the 
+  master LDAP server.  If you are in a production environment, this
+  will interrupt services to your users.
+
+- On hosts that will run LDAP replica servers:
+
+  - When selecting packages to install, select zimbra-ldap (in addition to
+    any other packages you may wish to install)
+
+  - During the configuration phase, the LDAP service will be enabled by
+    default.  DISABLE the LDAP service on the replica.
+
+  - Set the LDAP master host and port to point at the previously installed
+    master server.
+
+  - Configure other installed packages (if any) normally.
+
+  - Apply the configuration, and verify that all services have started as
+    expected.  The LDAP service will NOT be started on the replica host at
+    this stage.
+	
+  - On the LDAP MASTER host, as the zimbra user, run the command 
+    zmupdateauthkeys.  This will allow the replica to communicate with
+    the master for initial setup.
+
+  - On the LDAP REPLICA host, as the zimbra user, run the command
+    zmldapenablereplica.
+
+	The following sequence of actions will be performed:
+		- The connection to the master will be tested.
+		- The replication server's configuration will be updated.
+		- A replication user with read access to the master DB will be 
+		  created
+		- Zimbra services on the LDAP master and replica servers 
+		  will be stopped
+		- The LDAP database will be copied over to the replica
+		- Zimbra services on the LDAP master and replica servers
+		  will be started
+
+  - At this stage, the replica is completely configured, and all services
+    on the replica server will go to the local DB for read operations
+    (mta excepted).
+    Write operations will still go to the ldap master.
+
+  - If the mta service is running on the replica server, and you wish
+    to have mta lookups performed against the replica, run, as the zimbra
+    user, the command "zmmtainit localhost".
+
+- Pointing other hosts at the replica servers
+
+  - To point other ZCS hosts at your replica servers, modify the ldap_url
+    config key (as the zimbra user):
+    zmcontrol stop
+    zmlocalconfig -e ldap_url="new url"
+
+    The value of the new url will be a space separated list of ldap urls.
+    The ldap master url should be the last in the list:
+    "ldap://ld1.mydomain.com ldap://ld2.mydomain.com ldap://master.mydomain.com"
+
+  - If the mta is configured on this host, run (as the zimbra user):
+    zmmtainit hostname
+    where hostname is the name of the ldap replica you wish to use for mta
+    lookups.
+
+  - Start the zimbra services on this host.
+
