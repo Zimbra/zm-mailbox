@@ -1860,8 +1860,6 @@ public class DbMailItem {
             if (sLog.isDebugEnabled())
                 sLog.debug("SQL: " + statement);
             
-            System.out.println("SQL: "+statement);
-
             rs = stmt.executeQuery();
             while (rs.next())
                 result.add(SearchResult.createResult(rs, c.sort, fullRows));

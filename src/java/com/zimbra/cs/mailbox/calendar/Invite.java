@@ -1422,9 +1422,8 @@ public class Invite {
                 }
             }
         }
-        
-        
-        System.out.println("Invite.toICalendar=\n"+toRet.toString());
+
+        sLog.debug("Invite.toICalendar=\n"+toRet.toString());
         
         return toRet;
     }
