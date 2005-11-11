@@ -1319,7 +1319,6 @@ public class Recurrence
                             // hmm - there must be two different exceptions that both match this
                             // original instance!  What do we do here?  TODO read more to see
                             // what the RFC says -- for now we'll log and add the extra instances...
-                            System.out.println("WARNING: multiple exceptions for same instance.  Using BOTH right now!");
                             if (exceptInstances[exceptNum] == null) {
                                 numActiveExceptions++;                            
                                 exceptInstances[exceptNum] = except.expandInstances(appt, start, end);

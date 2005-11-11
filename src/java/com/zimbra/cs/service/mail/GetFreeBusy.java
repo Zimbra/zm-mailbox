@@ -91,8 +91,6 @@ public class GetFreeBusy extends WriteOpDocumentHandler {
             
             String idParam = request.getAttribute(MailService.A_UID);
             
-            System.out.println("<GetFreeBusyRequest uid=\""+ idParam + "\">");
-            
             ArrayList /*ParseItemId*/local = new ArrayList();
             HashMap /*Server,ParamStr*/remote = new HashMap();
             partitionItems(zc, response, rangeStart, rangeEnd, idParam, local, remote);
@@ -122,7 +120,6 @@ public class GetFreeBusy extends WriteOpDocumentHandler {
             
             String server = (String)(entry.getKey());
             String paramStr = ((StringBuffer)(entry.getValue())).toString();
-            System.out.println("PRXOXYING <GetFreeBusyRequest uid=\""+paramStr+"\"> to server "+server);
             
             try {
                 Element req = zc.createElement(MailService.GET_FREE_BUSY_REQUEST);
