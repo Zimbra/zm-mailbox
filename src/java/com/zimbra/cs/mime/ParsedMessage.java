@@ -561,6 +561,8 @@ public class ParsedMessage {
                 subject = subject.substring(0, length - FWD_TRAILER.length()).trim();
                 length = subject.length();
             }
+            if (length == 0)
+                return subject;
 
             // find the first ':' in the subject
     		boolean matched = false, braced = false;
@@ -616,7 +618,7 @@ public class ParsedMessage {
 		if (mSubject == null)
 			mNormalizedSubject = mSubject = "";
 		else {
-			String originalSubject = mNormalizedSubject = StringUtil.stripControlCharacters(mNormalizedSubject.trim());
+			String originalSubject = mNormalizedSubject = StringUtil.stripControlCharacters(mNormalizedSubject).trim();
 			mNormalizedSubject = trimPrefixes(mNormalizedSubject);
 			if (mNormalizedSubject != originalSubject)
 				mSubjectPrefixed = true;
@@ -639,7 +641,7 @@ public class ParsedMessage {
 
     public static String normalize(String subject) {
         if (subject != null) {
-            subject = trimPrefixes(StringUtil.stripControlCharacters(subject.trim()));
+            subject = trimPrefixes(StringUtil.stripControlCharacters(subject).trim());
             if (subject.startsWith("[")) {
                 int endBracket = subject.indexOf(']');
                 if (endBracket != -1 && subject.length() > endBracket + 1)
