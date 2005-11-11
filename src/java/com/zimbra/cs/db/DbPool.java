@@ -123,8 +123,11 @@ public class DbPool {
             	throw ServiceException.FAILURE("closing database connection", e);
             } finally {
                 // Connection is being returned to the pool.  Decrement its stack
-                // trace counter.
-                if (ZimbraLog.sqltrace.isDebugEnabled()) {
+                // trace counter.  Null check is required for the stack trace in
+                // case this is a maintenance/logger connection, or if sqltrace
+                // debug logging was turned on between the getConnection() and
+                // close() calls.
+                if (mStackTrace != null && ZimbraLog.sqltrace.isDebugEnabled()) {
                     synchronized(sConnectionStackCounter) {
                         sConnectionStackCounter.decrement(SystemUtil.getStackTrace(mStackTrace));
                     }
