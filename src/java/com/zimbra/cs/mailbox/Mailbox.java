@@ -3728,6 +3728,7 @@ public class Mailbox {
             if (conn != null)
                 DbPool.quietRollback(conn);
             rollbackCache(mCurrentChange);
+            
             return;
         }
 
@@ -3742,6 +3743,7 @@ public class Mailbox {
         //    indexing entry will do fsync, which will fsync
         //    this entry at the same time.
         if (redoRecorder != null)
+        
             redoRecorder.log(!indexingNeeded);
 
         boolean allGood = false;
@@ -3808,38 +3810,39 @@ public class Mailbox {
                 if (conn != null)
                     DbPool.quietRollback(conn);
                 rollbackCache(mCurrentChange);
-                return;
             }
         }
 
-        // 5. Write commit record for main transaction.
-        //    By writing the commit record for main transaction before
-        //    calling MailItem.reindex(), we are guaranteed to see the
-        //    commit-main record in the redo stream before
-        //    commit-index record.  This order ensures that during
-        //    crash recovery the main transaction is redone before
-        //    indexing.  If the order were reversed, crash recovery
-        //    would attempt to index an item which hasn't been created
-        //    yet or would attempt to index the item with
-        //    pre-modification value.  The first case would result in
-        //    a redo error, and the second case would index the wrong
-        //    value.
-        if (redoRecorder != null)
-            redoRecorder.commit();
-
-        // 6. The commit redo record for indexing sub-transaction is
-        //    written in batch by another thread.  To avoid the batch
-        //    commit thread's writing commit-index before this thread's
-        //    writing commit-main (step 5 above), the index redo object
-        //    is initialized to block the commit attempt by default.
-        //    At this point we've written the commit-main record, so
-        //    unblock the commit on indexing.
-        if (indexRedo != null)
-            indexRedo.allowCommit();
-
-        // 7. We are finally done with database and redo commits.
-        //    Cache update comes last.
-        commitCache(mCurrentChange);
+        if (allGood) {
+            // 5. Write commit record for main transaction.
+            //    By writing the commit record for main transaction before
+            //    calling MailItem.reindex(), we are guaranteed to see the
+            //    commit-main record in the redo stream before
+            //    commit-index record.  This order ensures that during
+            //    crash recovery the main transaction is redone before
+            //    indexing.  If the order were reversed, crash recovery
+            //    would attempt to index an item which hasn't been created
+            //    yet or would attempt to index the item with
+            //    pre-modification value.  The first case would result in
+            //    a redo error, and the second case would index the wrong
+            //    value.
+            if (redoRecorder != null)
+                redoRecorder.commit();
+            
+            // 6. The commit redo record for indexing sub-transaction is
+            //    written in batch by another thread.  To avoid the batch
+            //    commit thread's writing commit-index before this thread's
+            //    writing commit-main (step 5 above), the index redo object
+            //    is initialized to block the commit attempt by default.
+            //    At this point we've written the commit-main record, so
+            //    unblock the commit on indexing.
+            if (indexRedo != null)
+                indexRedo.allowCommit();
+            
+            // 7. We are finally done with database and redo commits.
+            //    Cache update comes last.
+            commitCache(mCurrentChange);
+        }
     }
 
     private void commitCache(MailboxChange change) {
