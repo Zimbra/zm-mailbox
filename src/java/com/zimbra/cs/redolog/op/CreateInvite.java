@@ -108,7 +108,7 @@ public class CreateInvite extends RedoableOp implements CreateAppointmentRecorde
         int mboxId = getMailboxId();
         Mailbox mailbox = Mailbox.getMailboxById(mboxId);
         
-        mailbox.addInvite(getOperationContext(), mFolderId, mInvite, mForce, null);
+        mailbox.addInvite(getOperationContext(), mInvite, mFolderId, mForce, null);
     }
 
     protected String getPrintableData() {
