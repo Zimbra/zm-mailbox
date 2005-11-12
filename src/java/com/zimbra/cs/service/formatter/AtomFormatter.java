@@ -25,7 +25,6 @@
 package com.zimbra.cs.service.formatter;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;

@@ -43,9 +43,9 @@ import com.zimbra.cs.service.formatter.AtomFormatter;
 import com.zimbra.cs.service.formatter.CsvFormatter;
 import com.zimbra.cs.service.formatter.Formatter;
 import com.zimbra.cs.service.formatter.IcsFormatter;
+import com.zimbra.cs.service.formatter.NativeFormatter;
 import com.zimbra.cs.service.formatter.RssFormatter;
 import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * simple iCal servlet on a mailbox. URL is:
@@ -59,6 +59,7 @@ public class UserServlet extends ZimbraServlet {
 
     public static final String QP_FMT = "fmt"; // format query param
     public static final String QP_ID = "id"; // id query param
+    public static final String QP_PART = "part"; // part query param    
     public static final String QP_QUERY = "query"; // query query param    
     public static final String QP_TYPES = "types"; // types 
 
@@ -69,7 +70,8 @@ public class UserServlet extends ZimbraServlet {
         addFormatter(new CsvFormatter());
         addFormatter(new IcsFormatter());
         addFormatter(new RssFormatter());
-        addFormatter(new AtomFormatter());        
+        addFormatter(new AtomFormatter());
+        addFormatter(new NativeFormatter());
     }
 
     private void addFormatter(Formatter f) { mFormatters.put(f.getType(), f); }    
@@ -106,6 +108,15 @@ public class UserServlet extends ZimbraServlet {
 
         public String getQueryString() {
             return req.getParameter(QP_QUERY);
+        }
+
+        public boolean hasPart() {
+            String p = getPart();
+            return p != null && p.length() > 0;
+        }
+
+        public String getPart() {
+            return req.getParameter(QP_PART);
         }
 
         public String getTypesString() {
@@ -180,7 +191,7 @@ public class UserServlet extends ZimbraServlet {
         case MailItem.TYPE_CONTACT:
             return "csv";
         default : 
-            return null;
+            return "native";
         }
     }
 
@@ -206,6 +217,8 @@ public class UserServlet extends ZimbraServlet {
             Account acct = getAccount(req, resp);
             if (acct == null) return;
             doAuthGet(req, resp, acct);
+        } catch (NoSuchItemException e) {
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND, "no such item");
         } catch (ServiceException se) {
             throw new ServletException(se);
         }
@@ -216,8 +229,6 @@ public class UserServlet extends ZimbraServlet {
     {
         Context context = initContext(req, resp, acct);
         if (context == null) return;
-
-        ZimbraLog.calendar.info("context = "+context);
 
         context.targetMailbox = Mailbox.getMailboxByAccount(context.targetAccount);
         if (context.targetMailbox == null) {
