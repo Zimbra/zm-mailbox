@@ -1071,7 +1071,7 @@ public class Mailbox {
             return lock;
         }
     }
-    public static void endMaintenance(MailboxLock lock, boolean success, boolean clearCache) throws ServiceException {
+    public static void endMaintenance(MailboxLock lock, boolean success, boolean removeFromCache) throws ServiceException {
         if (lock == null)
             throw ServiceException.INVALID_REQUEST("no lock provided", null);
         synchronized (sMailboxCache) {
@@ -1082,10 +1082,25 @@ public class Mailbox {
             sMailboxCache.remove(mailboxKey);
             if (success) {
                 sMailboxCache.put(lock.accountId, mailboxKey);
-                if (lock.mailbox != null && !clearCache) {
-                    assert(lock == lock.mailbox.mMaintenance);
-                    lock.mailbox.mMaintenance = null;
-                    sMailboxCache.put(mailboxKey, lock.mailbox);
+                Mailbox mbox = lock.mailbox;
+                if (mbox != null) {
+                    assert(lock == mbox.mMaintenance);
+
+                    // Backend data may have changed while mailbox was in
+                    // maintenance mode.  Invalidate the cache.
+                    mbox.mItemCache.clear();
+
+                    if (removeFromCache) {
+                        // We're going to let the Mailbox drop out of the
+                        // cache and eventually get GC'd.  Some immediate
+                        // cleanup is necessary though.
+                        if (mbox.mMailboxIndex != null)
+                            mbox.mMailboxIndex.flush();
+                        // Note: mbox is left in maintenance mode.
+                    } else {
+                        lock.mailbox.mMaintenance = null;
+                        sMailboxCache.put(mailboxKey, lock.mailbox);
+                    }
                 }
             } else {
                 // on failed maintenance, mark the Mailbox object as off-limits to everyone
@@ -4151,5 +4166,22 @@ public class Mailbox {
         synchronized (mBackupSharedDelivCoord) {
             return mBackupSharedDelivCoord.mNumDelivs < 1;
         }
+    }
+
+    public static void dumpMailboxCache() {
+        StringBuffer sb = new StringBuffer();
+        sb.append("MAILBOX CACHE DUMP\n");
+        sb.append("----------------------------------------------------------------------\n");
+        synchronized (sMailboxCache) {
+            for (Iterator iter = sMailboxCache.entrySet().iterator(); iter.hasNext(); ) {
+                Map.Entry entry = (Map.Entry) iter.next();
+                Object key = entry.getKey();
+                Object value = entry.getValue();
+                sb.append("key=" + key.toString() + " (type=" + key.getClass().getName() + ", hash=" + key.hashCode() + ")\n");
+                sb.append("  v=" + value.toString() + " (type=" + value.getClass().getName() + ", hash=" + value.hashCode() + ")\n");
+            }
+        }
+        sb.append("----------------------------------------------------------------------\n");
+        ZimbraLog.mailbox.debug(sb.toString());
     }
 }
