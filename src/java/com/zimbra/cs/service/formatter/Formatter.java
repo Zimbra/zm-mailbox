@@ -16,6 +16,7 @@ import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.UserServlet.Context;
@@ -51,8 +52,12 @@ public abstract class Formatter {
         if (query != null) {
             try {
                 if (item instanceof Folder) {
-                    query = "in:"+((Folder)item).getPath()+" "+query; 
+                    Folder f = (Folder) item;
+                    ZimbraLog.misc.info("folderId: "+f.getId());
+                    if (f.getId() != Mailbox.ID_FOLDER_USER_ROOT)
+                        query = "in:"+f.getPath()+" "+query; 
                 }
+                ZimbraLog.misc.info("query: "+query);
                 ZimbraQueryResults results = context.targetMailbox.search(context.opContext, query, new byte[] { MailItem.TYPE_MESSAGE }, MailboxIndex.SEARCH_ORDER_DATE_DESC, 500);
                 return new QueryResultIterator(results);                
             } catch (IOException e) {

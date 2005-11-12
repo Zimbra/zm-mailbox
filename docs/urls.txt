@@ -2,7 +2,7 @@ Various special URLs/servlets
 
 ------------------------------------------------------------
 
-# soon to be unsupported
+# no longer supported
 Calendar   http://{server}/service/ical/cal.ics  
 
 # new form
@@ -16,7 +16,7 @@ Spits out a "text/calendar" file, consististing of appointments in the calendar.
 
 to test (on a system with curl installed):
 
-curl -u user1:test123 http://localhost:7070/zimbra/user/user1/calendar
+curl -L -u user1:test123 http://localhost:7070/zimbra/user/user1/calendar
 
 Should look something like:
 
@@ -64,13 +64,18 @@ END:VEVENT
 END:VCALENDAR
 
 ------------------------------------------------------------
+# no longer supported
 RSS  http://{server}/service/rss/index.rss[?query=...]
+
+# new form
+RSS  http://{server}/{zimbra,service}/user/{folder}.rss[?query=...]
+
 ------------------------------------------------------------
-Spits out a "application/rss+xml" file, consististing of an RSS feed of unread email messages in the inbox.
+Spits out a "application/rss+xml" file, consisting of an RSS feed of email messages in the specified folder. 
 
 For example. Assuming there are two unread messages in the inbox:
 
-curl -u user1:test123 http://localhost:7070/service/rss/index.rss
+curl -L -u user1:test123 http://localhost:7070/zimbra/user/user1/inbox.rss?query=is:unread
 
 <?xml version="1.0"?>
 <rss version="2.0">
@@ -110,7 +115,6 @@ Contacts   http://{server}/service/csv/contacts.csv
 
 # new form
 Contacts   http://{server}/{zimbra,service}/user/{username}/contacts
-
 ------------------------------------------------------------
 
 Spits out a "text/plain" file, consisting of all the contacts an account has, in CSV (comma-separated values)
