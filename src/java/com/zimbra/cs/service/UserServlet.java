@@ -34,6 +34,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -58,7 +59,8 @@ public class UserServlet extends ZimbraServlet {
 
     public static final String QP_FMT = "fmt"; // format query param
     public static final String QP_ID = "id"; // id query param
-    public static final String QP_QUERY = "query"; // id query param    
+    public static final String QP_QUERY = "query"; // query query param    
+    public static final String QP_TYPES = "types"; // types 
 
     private HashMap mFormatters;
 
@@ -103,6 +105,11 @@ public class UserServlet extends ZimbraServlet {
 
         public String getQueryString() {
             return req.getParameter(QP_QUERY);
+        }
+
+        public String getTypesString() {
+            String ts = req.getParameter(QP_TYPES);
+            return (ts == null || ts.length() == 0) ? MailboxIndex.SEARCH_FOR_MESSAGES : ts;
         }
 
         public String toString() {

@@ -58,7 +58,8 @@ public abstract class Formatter {
                         query = "in:"+f.getPath()+" "+query; 
                 }
                 ZimbraLog.misc.info("query: "+query);
-                ZimbraQueryResults results = context.targetMailbox.search(context.opContext, query, new byte[] { MailItem.TYPE_MESSAGE }, MailboxIndex.SEARCH_ORDER_DATE_DESC, 500);
+                byte[] types = MailboxIndex.parseGroupByString(context.getTypesString());
+                ZimbraQueryResults results = context.targetMailbox.search(context.opContext, query, types, MailboxIndex.SEARCH_ORDER_DATE_DESC, 500);
                 return new QueryResultIterator(results);                
             } catch (IOException e) {
                 // TODO Auto-generated catch block

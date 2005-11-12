@@ -112,11 +112,13 @@ or:
 We probably want to allow the same params that the SearchRequest soap command allows,
 to allow for paging, restricting what types of items are returned, etc:
 
+ types="{types}" (done)
+ 
  [limit="..."] 
  [offset="..."]
  [sortBy="{sort-by}"]
  [groupBy="{group-by}"] 
- [types="{types}"] 
+
  [cursorId="prevId"]
 
 ------------------------------------------------------------
