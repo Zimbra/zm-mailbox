@@ -41,21 +41,11 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.service.mail.CalendarUtils;
 import com.zimbra.cs.util.Constants;
+import com.zimbra.cs.util.DateUtil;
 import com.zimbra.soap.Element;
 
 public class AtomFormatter extends Formatter {
 
-    private SimpleDateFormat mDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
-
-    private String getISO8601(Date date)
-    {
-      String result = mDateFormat.format(date);
-      //convert YYYYMMDDTHH:mm:ss+HH00 into YYYYMMDDTHH:mm:ss+HH:00 
-      //- note the added colon for the Timezone
-      result = result.substring(0, result.length()-2) 
-        + ":" + result.substring(result.length()-2);
-      return result;
-    }
     
     public boolean format(Context context, MailItem mailItem) throws IOException, ServiceException {
         
@@ -75,11 +65,8 @@ public class AtomFormatter extends Formatter {
         feed.addElement("generator").setText("Zimbra Atom Feed Servlet");
         
         feed.addElement("id").setText(context.req.getRequestURL().toString());
-        feed.addElement("updated").setText(getISO8601(new Date(context.targetMailbox.getLastChangeDate())));
+        feed.addElement("updated").setText(DateUtil.toISO8601(new Date(context.targetMailbox.getLastChangeDate())));
                 
-        //channel.addElement("description").setText(query);
-        
-//        MailDateFormat mdf = new MailDateFormat();
         while(iterator.hasNext()) {
             MailItem itItem = (MailItem) iterator.next();
             if (itItem instanceof Appointment) {
@@ -110,7 +97,7 @@ public class AtomFormatter extends Formatter {
             Invite inv = appt.getInvite(invId.getMsgId(), invId.getComponentId());
             Element entry = feed.addElement("entry");
             entry.addElement("title").setText(inv.getName());
-            entry.addElement("updated").setText(getISO8601(new Date(inst.getStart())));
+            entry.addElement("updated").setText(DateUtil.toISO8601(new Date(inst.getStart())));
             entry.addElement("summary").setText(inv.getFragment());
             entry.addElement("author").setText(CalendarUtils.paramVal(inv.getOrganizer(), Parameter.CN));
         }                    
@@ -122,7 +109,7 @@ public class AtomFormatter extends Formatter {
         entry.addElement("title").setText(m.getSubject());
         entry.addElement("summary").setText(m.getFragment());
         entry.addElement("author").setText(m.getSender());
-        entry.addElement("modified").setText(getISO8601(new Date(m.getDate())));
+        entry.addElement("modified").setText(DateUtil.toISO8601(new Date(m.getDate())));
     }
 
     public String getType() {

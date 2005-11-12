@@ -71,6 +71,7 @@ import com.zimbra.cs.account.*;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.DateUtil;
 import com.zimbra.cs.util.EmailUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraLog;
@@ -1942,7 +1943,7 @@ public class LdapProvisioning extends Provisioning {
         Date lastLogon = acct.getGeneralizedTimeAttr(Provisioning.A_zimbraLastLogonTimestamp, null);
         if (lastLogon == null) {
             HashMap attrs = new HashMap();
-            attrs.put(Provisioning.A_zimbraLastLogonTimestamp, LdapUtil.generalizedTime(new Date()));
+            attrs.put(Provisioning.A_zimbraLastLogonTimestamp, DateUtil.toGeneralizedTime(new Date()));
             try {
                 acct.modifyAttrs(attrs);
             } catch (ServiceException e) {
@@ -1956,7 +1957,7 @@ public class LdapProvisioning extends Provisioning {
             long current = System.currentTimeMillis();
             if (current - freq >= lastLogon.getTime()) {
                 HashMap attrs = new HashMap();
-                attrs.put(Provisioning.A_zimbraLastLogonTimestamp, LdapUtil.generalizedTime(new Date()));
+                attrs.put(Provisioning.A_zimbraLastLogonTimestamp, DateUtil.toGeneralizedTime(new Date()));
                 try {
                     acct.modifyAttrs(attrs);
                 } catch (ServiceException e) {
@@ -2198,7 +2199,7 @@ public class LdapProvisioning extends Provisioning {
         String encodedPassword = LdapUtil.generateSSHA(newPassword, null);
 
         attrs.put(Provisioning.A_userPassword, encodedPassword);
-        attrs.put(Provisioning.A_zimbraPasswordModifiedTime, LdapUtil.generalizedTime(new Date()));
+        attrs.put(Provisioning.A_zimbraPasswordModifiedTime, DateUtil.toGeneralizedTime(new Date()));
     }
     
     /* (non-Javadoc)
@@ -2247,7 +2248,7 @@ public class LdapProvisioning extends Provisioning {
             attrs.put(Provisioning.A_zimbraPasswordMustChange, "");
 
         attrs.put(Provisioning.A_userPassword, encodedPassword);
-        attrs.put(Provisioning.A_zimbraPasswordModifiedTime, LdapUtil.generalizedTime(new Date()));
+        attrs.put(Provisioning.A_zimbraPasswordModifiedTime, DateUtil.toGeneralizedTime(new Date()));
         
         acct.modifyAttrs(attrs);
     }

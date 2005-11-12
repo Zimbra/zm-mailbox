@@ -35,8 +35,6 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -46,7 +44,6 @@ import javax.mail.BodyPart;
 import javax.mail.MessagingException;
 import javax.mail.internet.ContentType;
 import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MailDateFormat;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
@@ -66,6 +63,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.mail.ParseMimeMessage;
+import com.zimbra.cs.util.DateUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.soap.Element;
 
@@ -181,7 +179,7 @@ public class FeedManager {
             String hrefChannel = channel.getAttribute("link");
             String subjChannel = channel.getAttribute("title");
             InternetAddress addrChannel = new InternetAddress("", subjChannel, "utf-8");
-            Date dateChannel = parseRFC2822Date(channel.getAttribute("lastBuildDate", null), new Date());
+            Date dateChannel = DateUtil.parseRFC2822Date(channel.getAttribute("lastBuildDate", null), new Date());
             List enclosures = new ArrayList();
             SubscriptionData sdata = new SubscriptionData(dateChannel.getTime());
 
@@ -193,9 +191,9 @@ public class FeedManager {
             for (Iterator it = root.elementIterator("item"); it.hasNext(); ) {
                 Element item = (Element) it.next();
                 // get the item's date
-                Date date = parseRFC2822Date(item.getAttribute("pubDate", null), null);
+                Date date = DateUtil.parseRFC2822Date(item.getAttribute("pubDate", null), null);
                 if (date == null)
-                    date = parseISO8601Date(item.getAttribute("date", null), dateChannel);
+                    date = DateUtil.parseISO8601Date(item.getAttribute("date", null), dateChannel);
                 // construct an address for the author
                 InternetAddress addr = addrChannel;
                 try {
@@ -239,16 +237,16 @@ public class FeedManager {
             InternetAddress addrFeed = parseAtomAuthor(feed.getOptionalElement("author"), null);
             if (addrFeed == null)
                 addrFeed = new InternetAddress("", feed.getAttribute("title"), "utf-8");
-            Date dateFeed = parseISO8601Date(feed.getAttribute("updated", null), new Date());
+            Date dateFeed = DateUtil.parseISO8601Date(feed.getAttribute("updated", null), new Date());
             List enclosures = new ArrayList();
             SubscriptionData sdata = new SubscriptionData(dateFeed.getTime());
 
             for (Iterator it = feed.elementIterator("entry"); it.hasNext(); ) {
                 Element item = (Element) it.next();
                 // get the item's date
-                Date date = parseISO8601Date(item.getAttribute("updated", null), null);
+                Date date = DateUtil.parseISO8601Date(item.getAttribute("updated", null), null);
                 if (date == null)
-                    date = parseISO8601Date(item.getAttribute("modified", null), dateFeed);
+                    date = DateUtil.parseISO8601Date(item.getAttribute("modified", null), dateFeed);
                 // construct an address for the author
                 InternetAddress addr = parseAtomAuthor(item.getOptionalElement("author"), addrFeed);
                 // get the item's title (may be html or xhtml)
@@ -380,52 +378,6 @@ public class FeedManager {
         try { return new InternetAddress(address, personal, "utf-8"); }      catch (UnsupportedEncodingException e) { }
         try { return new InternetAddress("", address + personal, "utf-8"); } catch (UnsupportedEncodingException e) { }
         return addrChannel;
-    }
-
-    private static Date parseRFC2822Date(String encoded, Date fallback) {
-        if (encoded == null)
-            return fallback;
-        try {
-            return new MailDateFormat().parse(encoded);
-        } catch (ParseException e) {
-            return fallback;
-        }
-    }
-
-    private static Date parseISO8601Date(String encoded, Date fallback) {
-        if (encoded == null)
-            return fallback;
-
-        // normalize format to "2005-10-19T16:25:38-0800"
-        int length = encoded.length();
-        if (length == 4)
-            encoded += "-01-01T00:00:00-0000";
-        else if (length == 7)
-            encoded += "-01T00:00:00-0000";
-        else if (length == 10)
-            encoded += "T00:00:00-0000";
-        else if (length < 17)
-            return fallback;
-        else if (encoded.charAt(16) != ':')
-            encoded = encoded.substring(0, 16) + ":00" + encoded.substring(16);
-        else if (length >= 22 && encoded.charAt(19) == '.')
-            encoded = encoded.substring(0, 19) + encoded.substring(21);
-
-        // timezone cleanup: this format understands '-0800', not '-08:00'
-        int colon = encoded.lastIndexOf(':');
-        if (colon > 19)
-            encoded = encoded.substring(0, colon) + encoded.substring(colon + 1);
-        // timezone cleanup: this format doesn't understand 'Z' or default timezones
-        if (encoded.length() == 19)
-            encoded += "-0000";
-        else if (encoded.endsWith("Z"))
-            encoded = encoded.substring(0, encoded.length() - 1) + "-0000";
-
-        try {
-            return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").parse(encoded);
-        } catch (ParseException e) {
-            return fallback;
-        }
     }
 
     private static class UnescapedContent extends org.xml.sax.helpers.DefaultHandler {

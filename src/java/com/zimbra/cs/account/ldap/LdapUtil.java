@@ -28,11 +28,8 @@ package com.zimbra.cs.account.ldap;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -611,42 +608,6 @@ public class LdapUtil {
             dns[i] = domainToDN(parts, i);
         }
         return dns;
-    }
-    
-    public static Date generalizedTime(String time) {
-        try {
-            SimpleDateFormat fmt = new SimpleDateFormat("yyyyMMddHHmmss'Z'");
-            Date localDate = fmt.parse(time);
-            if (time.endsWith("Z")) {
-                Date date = new Date();
-                if (fmt.getCalendar().getTimeZone().inDaylightTime(date))
-                    localDate =
-                        new Date(localDate.getTime() +
-                                fmt.getCalendar().getTimeZone().getRawOffset() +
-                                fmt.getCalendar().getTimeZone().getDSTSavings());
-                else
-                    localDate =
-                        new Date(localDate.getTime() +
-                                fmt.getCalendar().getTimeZone().getRawOffset());
-            }
-            return localDate;
-        } catch(ParseException pe) {
-            return null;
-        }            
-    }
-
-    public static String generalizedTime(Date date) {
-        SimpleDateFormat fmt =  new SimpleDateFormat("yyyyMMddHHmmss'Z'");
-        Date gmtDate;
-        if (fmt.getCalendar().getTimeZone().inDaylightTime(date))
-            gmtDate = new Date(date.getTime() -
-                               fmt.getCalendar().getTimeZone().getRawOffset() -
-                               fmt.getCalendar().getTimeZone().getDSTSavings());
-        else
-            gmtDate =
-                new Date(date.getTime() -
-                         fmt.getCalendar().getTimeZone().getRawOffset());
-        return (fmt.format(gmtDate));        
     }
     
     public static void main(String args[]) throws NamingException {

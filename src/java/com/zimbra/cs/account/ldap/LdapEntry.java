@@ -46,6 +46,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.DateUtil;
 
 /**
  * @author schemers
@@ -311,7 +312,7 @@ public class LdapEntry implements Entry {
         String v = getAttr(name);
         if (v == null)
             return defaultValue;
-        Date d = LdapUtil.generalizedTime(v);
+        Date d = DateUtil.parseGeneralizedTime(v);
         return d == null ? defaultValue : d;
     }
 
