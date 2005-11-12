@@ -33,27 +33,23 @@ import java.util.Iterator;
 import net.fortuna.ical4j.model.Parameter;
 
 import com.zimbra.cs.mailbox.Appointment;
-import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.UserServlet;
+import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.service.mail.CalendarUtils;
 import com.zimbra.cs.util.Constants;
 import com.zimbra.soap.Element;
 
 public class RssFormatter extends Formatter {
-    
-    public boolean format(UserServlet.Context context, MailItem item) throws IOException, ServiceException {
-        if ((!(item instanceof Folder)) || ((Folder) item).getDefaultView() != Folder.TYPE_APPOINTMENT)
-            return notImplemented(context);
 
-        Folder f = (Folder) item;
-
-        if (f.getDefaultView() != Folder.TYPE_APPOINTMENT) {
-            return notImplemented(context);
-        }
+    private SimpleDateFormat mDateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
+        
+    public boolean format(Context context, MailItem mailItem) throws IOException, ServiceException {
+        
+        Iterator iterator = getMailItems(context, mailItem, getDefaultStartTime(), getDefaultEndTime());
         
         context.resp.setContentType("application/rss+xml");
         
@@ -69,44 +65,65 @@ public class RssFormatter extends Formatter {
             
         channel.addElement("generator").setText("Zimbra RSS Feed Servlet");
 
-        long start = System.currentTimeMillis() - (7 * Constants.MILLIS_PER_DAY);
-        long end = start + (14 * Constants.MILLIS_PER_DAY);
-        Collection appts = context.targetMailbox.getAppointmentsForRange(context.opContext, start, end, f.getId(), null);
                 
         //channel.addElement("description").setText(query);
-
-        SimpleDateFormat sdf = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
+        
 //        MailDateFormat mdf = new MailDateFormat();
-        for (Iterator apptIt = appts.iterator(); apptIt.hasNext(); ) {            
-            Appointment appt = (Appointment) apptIt.next();
-
-            Collection instances = appt.expandInstances(start, end);
-            for (Iterator instIt = instances.iterator(); instIt.hasNext(); ) {
-                Appointment.Instance inst = (Appointment.Instance) instIt.next();
-                InviteInfo invId = inst.getInviteInfo();
-                Invite inv = appt.getInvite(invId.getMsgId(), invId.getComponentId());
-                Element rssItem = channel.addElement("item");
-                rssItem.addElement("title").setText(inv.getName());
-                rssItem.addElement("pubDate").setText(sdf.format(new Date(inst.getStart())));
-                /*                
-                StringBuffer desc = new StringBuffer();
-                sb.append("Start: ").append(sdf.format(new Date(inst.getStart()))).append("\n");
-                sb.append("End: ").append(sdf.format(new Date(inst.getEnd()))).append("\n");
-                sb.append("Location: ").append(inv.getLocation()).append("\n");
-                sb.append("Notes: ").append(inv.getFragment()).append("\n");
-                item.addElement("description").setText(sb.toString());
-                */
-                rssItem.addElement("description").setText(inv.getFragment());
-                rssItem.addElement("author").setText(CalendarUtils.paramVal(inv.getOrganizer(), Parameter.CN));
-                /* TODO: guid, links, etc */
-                //Element guid = item.addElement("guid");
-                //guid.setText(appt.getUid()+"-"+inv.getStartTime().getUtcTime());
-                //guid.addAttribute("isPermaLink", "false");
-            }                    
+        while(iterator.hasNext()) {
+            MailItem itItem = (MailItem) iterator.next();
+            if (itItem instanceof Appointment) {
+                addAppointment((Appointment)itItem, channel, context);                
+            } else if (itItem instanceof Message) {
+                addMessage((Message) itItem, channel, context);
+            }
         }
         sb.append(rss.toString());
         context.resp.getOutputStream().write(sb.toString().getBytes());
         return true;
+    }
+
+    public long getDefaultStartTime() {    
+        return System.currentTimeMillis() - (7*Constants.MILLIS_PER_DAY);
+    }
+
+    // eventually get this from query param ?end=long|YYYYMMMDDHHMMSS
+    public long getDefaultEndTime() {
+        return System.currentTimeMillis() + (7*Constants.MILLIS_PER_DAY);
+    }
+    
+    private void addAppointment(Appointment appt, Element channel, Context context) {
+        Collection instances = appt.expandInstances(context.getStartTime(), context.getEndTime());
+        for (Iterator instIt = instances.iterator(); instIt.hasNext(); ) {
+            Appointment.Instance inst = (Appointment.Instance) instIt.next();
+            InviteInfo invId = inst.getInviteInfo();
+            Invite inv = appt.getInvite(invId.getMsgId(), invId.getComponentId());
+            Element rssItem = channel.addElement("item");
+            rssItem.addElement("title").setText(inv.getName());
+            rssItem.addElement("pubDate").setText(mDateFormat.format(new Date(inst.getStart())));
+            /*                
+            StringBuffer desc = new StringBuffer();
+            sb.append("Start: ").append(sdf.format(new Date(inst.getStart()))).append("\n");
+            sb.append("End: ").append(sdf.format(new Date(inst.getEnd()))).append("\n");
+            sb.append("Location: ").append(inv.getLocation()).append("\n");
+            sb.append("Notes: ").append(inv.getFragment()).append("\n");
+            item.addElement("description").setText(sb.toString());
+            */
+            rssItem.addElement("description").setText(inv.getFragment());
+            rssItem.addElement("author").setText(CalendarUtils.paramVal(inv.getOrganizer(), Parameter.CN));
+        }                    
+        
+    }
+     
+    private void addMessage(Message m, Element channel, Context context) {
+        Element item = channel.addElement("item");
+        item.addElement("title").setText(m.getSubject());
+        item.addElement("description").setText(m.getFragment());
+        item.addElement("author").setText(m.getSender());
+        item.addElement("pubDate").setText(mDateFormat.format(new Date(m.getDate())));
+        /* TODO: guid, links, etc */
+        // Element guid = item.addElement("guid");
+        // guid.setText(acct.getId()+"/"+m.getId());
+        // guid.addAttribute("isPermaLink", "false");
     }
 
     public String getType() {

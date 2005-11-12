@@ -57,6 +57,8 @@ import com.zimbra.cs.service.formatter.Formatter;
 import com.zimbra.cs.service.formatter.IcsFormatter;
 import com.zimbra.cs.service.formatter.RssFormatter;
 import com.zimbra.cs.service.mail.CalendarUtils;
+import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.util.Constants;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
 
@@ -68,16 +70,15 @@ import com.zimbra.soap.Element;
  *
  */
 
-public class UserServlet extends ZimbraBasicAuthServlet {
+public class UserServlet extends ZimbraServlet {
 
     public static final String QP_FMT = "fmt"; // format query param
     public static final String QP_ID = "id"; // id query param
+    public static final String QP_QUERY = "query"; // id query param    
 
     private HashMap mFormatters;
 
     public UserServlet() {
-        mAllowCookieAuth = true;
-        mAccountProxy = false;
         mFormatters = new HashMap();
         addFormatter(new CsvFormatter());
         addFormatter(new IcsFormatter());
@@ -97,7 +98,29 @@ public class UserServlet extends ZimbraBasicAuthServlet {
         public Account targetAccount;
         public Mailbox targetMailbox;
         public OperationContext opContext;
+        private long mStartTime = -1;
+        private long mEndTime = -1;
         
+        // eventually get this from query param ?start=long|YYYYMMMDDHHMMSS
+        public long getStartTime() {
+            if (mStartTime == -1) {
+                //
+            }
+            return mStartTime;
+        }
+
+        // eventually get this from query param ?end=long|YYYYMMMDDHHMMSS
+        public long getEndTime() {
+            if (mEndTime == -1) {
+                // query param
+            }
+            return mEndTime;
+        }
+
+        public String getQueryString() {
+            return req.getParameter(QP_QUERY);
+        }
+
         public String toString() {
             StringBuffer sb = new StringBuffer();
             sb.append("account("+accountPath+")\n");
@@ -105,8 +128,6 @@ public class UserServlet extends ZimbraBasicAuthServlet {
             sb.append("foramt("+format+")\n");            
             return sb.toString();
         }
-        
-        
     }
     
     protected String getRealmHeader()  { return "BASIC realm=\"Zimbra\""; }
@@ -171,9 +192,37 @@ public class UserServlet extends ZimbraBasicAuthServlet {
             return null;
         }
     }
+
+    private Account getAccount(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException
+    {
+        try {        
+            Provisioning prov = Provisioning.getInstance();
+            Account acct = null;
+
+            // check cookie first
+            acct = cookieAuthRequest(req, resp, true);
+            // fallback to basic auth        
+            if (acct == null) acct = basicAuthRequest(req, resp);
+            return acct;            
+        } catch (ServiceException e) {
+            throw new ServletException(e);
+        }        
+    }
+
+    public void doGet(HttpServletRequest req, HttpServletResponse resp)
+    throws ServletException, IOException {
+        try {
+            Account acct = getAccount(req, resp);
+            if (acct == null) return;
+            doAuthGet(req, resp, acct);
+        } catch (ServiceException se) {
+            throw new ServletException(se);
+        }
+    }
     
-    public void doAuthGet(HttpServletRequest req, HttpServletResponse resp, Account acct)
-    throws ServiceException, IOException {
+    private void doAuthGet(HttpServletRequest req, HttpServletResponse resp, Account acct)
+        throws ServletException, IOException, ServiceException 
+    {
         Context context = initContext(req, resp, acct);
         if (context == null) return;
 
@@ -225,6 +274,8 @@ public class UserServlet extends ZimbraBasicAuthServlet {
             resp.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED, "not implemented yet");
             return;
         }
+        
+
 
         formatter.format(context, item);
     }

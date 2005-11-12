@@ -26,12 +26,15 @@ package com.zimbra.cs.service.formatter;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import net.fortuna.ical4j.data.CalendarOutputter;
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.ValidationException;
 
-import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServlet.Context;
@@ -43,17 +46,23 @@ public class IcsFormatter extends Formatter {
         return "ics";
     }
 
-    public boolean format(Context context, MailItem item) throws IOException, ServiceException {
-        if ((!(item instanceof Folder)) || ((Folder) item).getDefaultView() != Folder.TYPE_APPOINTMENT)
-                return notImplemented(context);
-
-        Folder f = (Folder) item;
+    public boolean format(Context context, MailItem mailItem) throws IOException, ServiceException {
+        
+        Iterator iterator = getMailItems(context, mailItem, getDefaultStartTime(), getDefaultEndTime());
+        
+        List appts = new ArrayList();
+        // this is lame
+        while (iterator.hasNext()) {
+            MailItem item = (MailItem) iterator.next();
+            if (item instanceof Appointment) appts.add(item);
+        }
+        
         context.resp.setContentType("text/calendar");
 
         try {
             long start = 0;
             long end = System.currentTimeMillis() + (365 * 100 * Constants.MILLIS_PER_DAY);            
-            Calendar cal = context.targetMailbox.getCalendarForRange(context.opContext, start, end, f.getId());
+            Calendar cal = context.targetMailbox.getCalendarForAppointments(appts);
             ByteArrayOutputStream buf = new ByteArrayOutputStream();
             CalendarOutputter calOut = new CalendarOutputter();
             calOut.output(cal, buf);            
@@ -63,4 +72,14 @@ public class IcsFormatter extends Formatter {
         }
         return true;
     }
+    
+    public long getDefaultStartTime() {    
+        return 0;
+    }
+
+    // eventually get this from query param ?end=long|YYYYMMMDDHHMMSS
+    public long getDefaultEndTime() {
+        return  System.currentTimeMillis() + (365 * 100 * Constants.MILLIS_PER_DAY);            
+    }
+
 }

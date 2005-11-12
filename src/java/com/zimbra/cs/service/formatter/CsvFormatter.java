@@ -26,6 +26,7 @@ package com.zimbra.cs.service.formatter;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.mail.Part;
@@ -34,7 +35,6 @@ import javax.mail.internet.ParseException;
 
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.ContactCSV;
-import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServlet.Context;
@@ -45,33 +45,29 @@ public class CsvFormatter extends Formatter {
         return "csv";
     }
 
-    public boolean format(Context context, MailItem item) throws IOException, ServiceException {
-        List contacts = null;
+    public boolean format(Context context, MailItem mailItem) throws IOException, ServiceException {
+        Iterator iterator = getMailItems(context, mailItem, -1, -1);
         
-        if (item instanceof Folder) {
-            Folder f = (Folder) item;
-            if (f.getDefaultView() != Folder.TYPE_CONTACT) {
-                return notImplemented(context, "CSV support for requested folder type not implemented yet");
-            }
-            contacts = context.targetMailbox.getContactList(context.opContext, f.getId());
-        } else if (item instanceof Contact) {
-            contacts = new ArrayList();
-            contacts.add(item);
-        } else {
-            return notImplemented(context, "CSV format not supported for given type");
+        List contacts = new ArrayList();
+
+        // this is lame, need to change the ContactCSV so we can iterator over them instead of put them into an array
+        while (iterator.hasNext()) {
+            MailItem item = (MailItem) iterator.next();
+            if (item instanceof Contact) contacts.add(item);
         }
         
         StringBuffer sb = new StringBuffer();
-        if (contacts == null)
-            contacts = new ArrayList();
         ContactCSV.toCSV(contacts, sb);
 
         ContentDisposition cd = null;
         try { cd = new ContentDisposition(Part.ATTACHMENT); } catch (ParseException e) {}
+        String fname = context.itemPath;
+        if (fname == null) fname ="contacts";
         cd.setParameter("filename", context.itemPath+".csv");
         context.resp.addHeader("Content-Disposition", cd.toString());
         context.resp.setContentType("text/plain");
         context.resp.getOutputStream().print(sb.toString());
         return true;
     }
+
 }
