@@ -108,8 +108,7 @@ public class UserServlet extends ZimbraServlet {
         }
 
         public String getTypesString() {
-            String ts = req.getParameter(QP_TYPES);
-            return (ts == null || ts.length() == 0) ? MailboxIndex.SEARCH_FOR_MESSAGES : ts;
+            return req.getParameter(QP_TYPES);
         }
 
         public String toString() {

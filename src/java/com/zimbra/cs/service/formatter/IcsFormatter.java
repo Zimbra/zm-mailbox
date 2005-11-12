@@ -34,6 +34,7 @@ import net.fortuna.ical4j.data.CalendarOutputter;
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.ValidationException;
 
+import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.ServiceException;
@@ -45,7 +46,12 @@ public class IcsFormatter extends Formatter {
     public String getType() {
         return "ics";
     }
-
+    
+    public String getDefaultSearchTypes() {
+        return MailboxIndex.SEARCH_FOR_APPOINTMENTS;
+    }
+  
+    
     public boolean format(Context context, MailItem mailItem) throws IOException, ServiceException {
         
         Iterator iterator = getMailItems(context, mailItem, getDefaultStartTime(), getDefaultEndTime());

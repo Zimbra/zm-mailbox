@@ -33,6 +33,7 @@ import javax.mail.Part;
 import javax.mail.internet.ContentDisposition;
 import javax.mail.internet.ParseException;
 
+import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.ContactCSV;
 import com.zimbra.cs.mailbox.MailItem;
@@ -43,6 +44,10 @@ public class CsvFormatter extends Formatter {
 
     public String getType() {
         return "csv";
+    }
+
+    public String getDefaultSearchTypes() {
+        return MailboxIndex.SEARCH_FOR_CONTACTS;
     }
 
     public boolean format(Context context, MailItem mailItem) throws IOException, ServiceException {

@@ -25,6 +25,7 @@ import com.zimbra.cs.util.ZimbraLog;
 public abstract class Formatter {
     
     public abstract String getType();
+    private static final byte[] SEARCH_TYPES = new byte[] { MailItem.TYPE_MESSAGE };
 
     // eventually get this from query param ?start=long|YYYYMMMDDHHMMSS
     public long getDefaultStartTime() {
@@ -33,6 +34,10 @@ public abstract class Formatter {
     
     public long getDefaultEndTime() {
         return -1;
+    }
+    
+    public String getDefaultSearchTypes() {
+        return MailboxIndex.SEARCH_FOR_MESSAGES;
     }
 
     public abstract boolean format(UserServlet.Context context, MailItem item) throws IOException, ServiceException;    
@@ -58,7 +63,9 @@ public abstract class Formatter {
                         query = "in:"+f.getPath()+" "+query; 
                 }
                 ZimbraLog.misc.info("query: "+query);
-                byte[] types = MailboxIndex.parseGroupByString(context.getTypesString());
+                String searchTypes = context.getTypesString();
+                if (searchTypes == null) searchTypes = getDefaultSearchTypes();
+                byte[] types = MailboxIndex.parseGroupByString(searchTypes);
                 ZimbraQueryResults results = context.targetMailbox.search(context.opContext, query, types, MailboxIndex.SEARCH_ORDER_DATE_DESC, 500);
                 return new QueryResultIterator(results);                
             } catch (IOException e) {
