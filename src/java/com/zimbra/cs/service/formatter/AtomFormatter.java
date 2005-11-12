@@ -99,7 +99,10 @@ public class AtomFormatter extends Formatter {
             entry.addElement("title").setText(inv.getName());
             entry.addElement("updated").setText(DateUtil.toISO8601(new Date(inst.getStart())));
             entry.addElement("summary").setText(inv.getFragment());
-            entry.addElement("author").setText(CalendarUtils.paramVal(inv.getOrganizer(), Parameter.CN));
+            Element author = entry.addElement("author");
+            // TODO: only personal part in name            
+            author.addElement("name").setText(CalendarUtils.paramVal(inv.getOrganizer(), Parameter.CN));            
+            author.addElement("email").setText(CalendarUtils.paramVal(inv.getOrganizer(), Parameter.CN));
         }                    
         
     }
@@ -108,7 +111,10 @@ public class AtomFormatter extends Formatter {
         Element entry = feed.addElement("entry");
         entry.addElement("title").setText(m.getSubject());
         entry.addElement("summary").setText(m.getFragment());
-        entry.addElement("author").setText(m.getSender());
+        Element author = entry.addElement("author");
+        // TODO: only personal part in name
+        author.addElement("name").setText(m.getSender());
+        author.addElement("email").setText(m.getSender());
         entry.addElement("modified").setText(DateUtil.toISO8601(new Date(m.getDate())));
     }
 
