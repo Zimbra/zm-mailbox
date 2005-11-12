@@ -593,6 +593,10 @@
 			<arg line="install" />
 			<arg file="${dist.zimlet.dir}/url.zip" />
 		</java>
+		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="configure" />
+			<arg file="${config.dir}/zimlets/url/config.xml" />
+		</java>
 	</target>
 
     <target name="tomcat-init" depends="localhost-ssl-cert,tomcat-init-unix">

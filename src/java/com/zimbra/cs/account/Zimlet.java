@@ -24,6 +24,6 @@
  */
 package com.zimbra.cs.account;
 
-public interface Zimlet extends Entry {
+public interface Zimlet extends NamedEntry {
 
 }

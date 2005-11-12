@@ -28,9 +28,8 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
+import java.util.Set;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -39,6 +38,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.codec.binary.Base64;
 
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.ZimbraLog;
@@ -55,18 +56,20 @@ public class ProxyServlet extends ZimbraServlet {
 	private static final String AUTH_PARAM = "auth";
 	private static final String AUTH_BASIC = "basic";
 	
-	private List getWhitelistDomains(HttpServletRequest req) {
-		List l = new ArrayList();
-		// TODO: fetch from ldap.
-		l.add(new String("*.zimbra.com"));
-		l.add(new String("*.liquidsys.com"));
-		return l;
+	private Set getAllowedDomains(HttpServletRequest req, AuthToken auth) throws ServiceException {
+		return Provisioning.getInstance().getAccountById(auth.getAccountId()).getCOS().getMultiAttrSet(Provisioning.A_zimbraProxyAllowedDomains);
 	}
 	
-	private boolean checkPermissionOnTarget(HttpServletRequest req, URL target) {
+	private boolean checkPermissionOnTarget(HttpServletRequest req, URL target, AuthToken auth) {
 		String host = target.getHost().toLowerCase();
-		List l = getWhitelistDomains(req);
-		Iterator iter = l.iterator();
+		Set domains;
+		try {
+			domains = getAllowedDomains(req, auth);
+		} catch (ServiceException se) {
+			ZimbraLog.zimlet.info("error getting allowedDomains: "+se.getMessage());
+			return false;
+		}
+		Iterator iter = domains.iterator();
 		while (iter.hasNext()) {
 			String domain = (String) iter.next();
 			if (domain.equals("*")) {
@@ -100,7 +103,7 @@ public class ProxyServlet extends ZimbraServlet {
 		
 		URL url = new URL(target);
 		
-		if (!checkPermissionOnTarget(req, url)) {
+		if (!checkPermissionOnTarget(req, url, authToken)) {
 			resp.sendError(HttpServletResponse.SC_FORBIDDEN);
 			return;
 		}

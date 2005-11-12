@@ -30,11 +30,20 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.object.ObjectType;
 
-public class LdapZimlet extends LdapEntry implements Zimlet, ObjectType {
+public class LdapZimlet extends LdapNamedEntry implements Zimlet, ObjectType {
 
 	public LdapZimlet(String dn, Attributes attrs) {
 		super(dn, attrs);
 	}
+	
+	public String getName() {
+		return getType();
+	}
+	
+	public String getId() {
+		return getType();
+	}
+	
     public String getType() {
         return getAttr(Provisioning.A_cn);
     }

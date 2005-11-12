@@ -39,6 +39,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import javax.mail.internet.AddressException;
@@ -73,6 +74,8 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.EmailUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.cs.zimlet.ZimletException;
+import com.zimbra.cs.zimlet.ZimletUtil;
 
 /**
  * @author schemers
@@ -132,7 +135,8 @@ public class LdapProvisioning extends Provisioning {
     // list of time zones to preserve sort order
     private static List /*<WellKnownTimeZone>*/ sTimeZoneList = new ArrayList(MAX_TIMEZONE_CACHE);
 
-    private static Map /*<String name, Zimlet>*/ sZimletMap = new HashMap();
+    private static final int MAX_ZIMLET_CACHE = 100;
+    private static ZimbraLdapEntryCache sZimletCache = new ZimbraLdapEntryCache(MAX_ZIMLET_CACHE, ENTRY_TTL);
 
     private static final String CONFIG_BASE = "cn=config,cn=zimbra";     
     private static final String COS_BASE = "cn=cos,cn=zimbra"; 
@@ -270,7 +274,7 @@ public class LdapProvisioning extends Provisioning {
      * @see com.zimbra.cs.account.Provisioning#getObjectType(java.lang.String)
      */
     public synchronized List getObjectTypes() throws ServiceException {
-    	return getZimlets();
+    	return listAllZimlets();
     }
 
     private LdapAccount getAccountByQuery(String base, String query, DirContext initCtxt) throws ServiceException {
@@ -2271,7 +2275,37 @@ public class LdapProvisioning extends Provisioning {
         }
     }
 
-    public List getZimlets() throws ServiceException {
+    public Zimlet getZimlet(String name) throws ServiceException {
+    	return getZimlet(name, null);
+    }
+    
+    public Zimlet getZimlet(String name, DirContext ctxt) throws ServiceException {
+    	LdapZimlet zimlet = (LdapZimlet) sZimletCache.getByName(name);
+    	if (zimlet == null) {
+        	DirContext localCtxt = null;
+        	try {
+        		if (ctxt == null) {
+               		ctxt = localCtxt = LdapUtil.getDirContext();
+        		}
+        		String dn = zimletNameToDN(name);            
+        		Attributes attrs = ctxt.getAttributes(dn);
+        		zimlet = new LdapZimlet(dn, attrs);
+        		ZimletUtil.reloadZimlet(name);
+        		sZimletCache.put(zimlet);  // put LdapZimlet into the cache after successful ZimletUtil.reloadZimlet()
+        	} catch (NamingException ne) {
+        		throw ServiceException.FAILURE("unable to get zimlet: "+name, ne);
+        	} catch (ZimletException ze) {
+        		throw ServiceException.FAILURE("unable to load zimlet: "+name, ze);
+            } finally {
+            	if (localCtxt != null) {
+            		LdapUtil.closeContext(localCtxt);
+            	}
+        	}
+    	}
+    	return zimlet;
+    }
+    
+    public List listAllZimlets() throws ServiceException {
     	ArrayList result = new ArrayList();
     	DirContext ctxt = null;
     	try {
@@ -2285,25 +2319,11 @@ public class LdapProvisioning extends Provisioning {
     		}
     		ne.close();
     	} catch (NamingException e) {
-    		throw ServiceException.FAILURE("unable to list all Zimlets", e);
+    		throw ServiceException.FAILURE("unable to list all zimlets", e);
     	} finally {
     		LdapUtil.closeContext(ctxt);
     	}
     	return result;
-    }
-    
-    private Zimlet getZimlet(String name, DirContext ctxt) throws ServiceException {
-    	try {
-    		ctxt = LdapUtil.getDirContext();
-    		String dn = zimletNameToDN(name);            
-    		Attributes attrs = ctxt.getAttributes(dn);
-    		Zimlet z = new LdapZimlet(dn, attrs);
-    		return z;
-    	} catch (Exception e) {
-    		throw ServiceException.FAILURE("unable to get zimlet by name: "+name, e);
-    	} finally {
-    		LdapUtil.closeContext(ctxt);
-    	}
     }
     
     public Zimlet createZimlet(String name, Map zimletAttrs) throws ServiceException {
@@ -2323,7 +2343,7 @@ public class LdapProvisioning extends Provisioning {
     		String dn = zimletNameToDN(name);
     		createSubcontext(ctxt, dn, attrs, "createZimlet");
     		
-    		Zimlet zimlet = getZimlet(name, ctxt);
+    		Zimlet zimlet = getZimlet(name);
     		AttributeManager.getInstance().postModify(zimletAttrs, zimlet, attrManagerContext, true);
     		return zimlet;
     	} catch (NameAlreadyBoundException nabe) {
@@ -2339,8 +2359,9 @@ public class LdapProvisioning extends Provisioning {
     	DirContext ctxt = null;
     	try {
     		ctxt = LdapUtil.getDirContext();
-    		LdapZimlet zimlet = (LdapZimlet)getZimlet(name, ctxt);
+    		LdapZimlet zimlet = (LdapZimlet)getZimlet(name);
     		ctxt.unbind(zimlet.getDN());
+    		sZimletCache.remove(zimlet);
     	} catch (NamingException e) {
     		throw ServiceException.FAILURE("unable to delete zimlet: "+name, e);
     	} finally {
@@ -2365,7 +2386,7 @@ public class LdapProvisioning extends Provisioning {
     				A_zimbraZimletAvailableZimlets,
     				zimlet);
     	} catch (NamingException e) {
-    		throw ServiceException.FAILURE("unable to add Zimlet " + zimlet + " to cos "+cos, e);
+    		throw ServiceException.FAILURE("unable to add zimlet " + zimlet + " to cos "+cos, e);
     	} finally {
     		LdapUtil.closeContext(ctxt);
     	}
@@ -2407,6 +2428,30 @@ public class LdapProvisioning extends Provisioning {
     		throw ServiceException.FAILURE("unable to update zimlet config: "+zimlet, e);
     	}
     	
+    }
+
+    public void addAllowedDomains(String domains, String cosName) throws ServiceException {
+    	Cos cos = getCosByName(cosName);
+    	Set domainSet = cos.getMultiAttrSet(Provisioning.A_zimbraProxyAllowedDomains);
+    	String[] domainArray = domains.toLowerCase().split(",");
+    	for (int i = 0; i < domainArray.length; i++) {
+    		domainSet.add(domainArray[i]);
+    	}
+    	Map newlist = new HashMap();
+    	newlist.put(Provisioning.A_zimbraProxyAllowedDomains, domainSet.toArray(new String[0]));
+    	cos.modifyAttrs(newlist);
+    }
+
+    public void removeAllowedDomains(String domains, String cosName) throws ServiceException {
+    	Cos cos = getCosByName(cosName);
+    	Set domainSet = cos.getMultiAttrSet(Provisioning.A_zimbraProxyAllowedDomains);
+    	String[] domainArray = domains.toLowerCase().split(",");
+    	for (int i = 0; i < domainArray.length; i++) {
+    		domainSet.remove(domainArray[i]);
+    	}
+    	Map newlist = new HashMap();
+    	newlist.put(Provisioning.A_zimbraProxyAllowedDomains, domainSet.toArray(new String[0]));
+    	cos.modifyAttrs(newlist);
     }
 
     public static void main(String args[]) {

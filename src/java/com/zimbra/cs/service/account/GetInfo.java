@@ -127,17 +127,10 @@ public class GetInfo extends DocumentHandler  {
     	Cos cos = acct.getCOS();
     	String[] attrList = cos.getMultiAttr(Provisioning.A_zimbraZimletAvailableZimlets);
     	
-    	List zimletList = Provisioning.getInstance().getZimlets();
-    	Map zimMap = new HashMap();
-    	for (Iterator iter = zimletList.iterator(); iter.hasNext(); ) {
-    		Zimlet zimlet = (Zimlet) iter.next();
-    		zimMap.put(zimlet.getAttr(Provisioning.A_cn), zimlet.getAttrs());
-    	}
-
     	for (int attrIndex = 0; attrIndex < attrList.length; attrIndex++) {
     		String zimletName = attrList[attrIndex];
-    		Map zimAttrs = (Map) zimMap.get(zimletName);
-    		if (zimAttrs == null) {
+    		Zimlet zimlet = (Zimlet) Provisioning.getInstance().getZimlet(zimletName);
+    		if (zimlet == null) {
     			ZimbraLog.zimlet.info("inconsistency in installed zimlets. "+zimletName+" does not exist.");
     			continue;
     		}

@@ -753,6 +753,7 @@ public abstract class Provisioning {
     public static final String A_zimbraZimletScript            = "zimbraZimletScript";
     public static final String A_zimbraZimletAvailableZimlets  = "zimbraZimletAvailableZimlets";
     public static final String A_zimbraZimletServerIndexRegex  = "zimbraZimletServerIndexRegex";
+    public static final String A_zimbraProxyAllowedDomains     = "zimbraProxyAllowedDomains";
 
     private static Provisioning mProvisioning;
 
@@ -942,7 +943,9 @@ public abstract class Provisioning {
 
     public abstract void renameDistributionList(String zimbraId, String newName) throws ServiceException;
     
-    public abstract List getZimlets() throws ServiceException;
+    public abstract Zimlet getZimlet(String name) throws ServiceException;
+    
+    public abstract List listAllZimlets() throws ServiceException;
     
     public abstract Zimlet createZimlet(String name, Map attrs) throws ServiceException;
     
@@ -953,4 +956,8 @@ public abstract class Provisioning {
     public abstract void removeZimletFromCOS(String zimlet, String cos) throws ServiceException;
 
     public abstract void updateZimletConfig(String zimlet, String config) throws ServiceException;
+    
+    public abstract void addAllowedDomains(String domains, String cos) throws ServiceException;
+
+    public abstract void removeAllowedDomains(String domains, String cos) throws ServiceException;
 }

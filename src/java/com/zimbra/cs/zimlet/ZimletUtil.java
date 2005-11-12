@@ -57,6 +57,7 @@ import com.zimbra.soap.Element;
 public class ZimletUtil {
 	
 	public static final String ZIMLET_DEV_DIR = "_dev";
+	public static final String ZIMLET_ALLOWED_DOMAINS = "allowedDomains";
 	
 	private static List sClassLoaders = new ArrayList();
 	
@@ -103,6 +104,19 @@ public class ZimletUtil {
 		loadZimletsFromDir(sDevZimlets, LC.zimlet_directory.value() + File.separator + ZIMLET_DEV_DIR);
 	}
 
+	public static void reloadZimlet(String zimlet) throws ZimletException {
+		ZimletFile zf;
+		try {
+			zf = new ZimletFile(LC.zimlet_directory.value() + File.separator + zimlet);
+		} catch (IOException ioe) {
+			throw ZimletException.ZIMLET_HANDLER_ERROR("cannot load zimlet "+zimlet);
+		}
+		synchronized (sZimlets) {
+			sZimlets.remove(zimlet);
+			sZimlets.put(zimlet, zf);
+		}
+	}
+	
 	private static void loadZimletsFromDir(Map zimlets, String dir) {
         File zimletRootDir = new File(dir);
 		if (zimletRootDir == null || !zimletRootDir.exists() || !zimletRootDir.isDirectory()) {
@@ -244,14 +258,6 @@ public class ZimletUtil {
 			attrs.put(Provisioning.A_zimbraZimletHandlerConfig, config.toXMLString());
 		}
 		
-		// add zimlet entry to ldap
-		Provisioning prov = Provisioning.getInstance();
-		try {
-			prov.createZimlet(zimletName, attrs);
-		} catch (ServiceException se) {
-			throw ZimletException.CANNOT_CREATE(zimletName, se.getCause().getMessage());
-		}
-
 		// install the files
 		File zimletDir = new File(zimletRoot + File.separatorChar + zimletName);
 		if (!zimletDir.exists()) {
@@ -270,6 +276,14 @@ public class ZimletUtil {
 				file.getParentFile().mkdirs();
 				writeFile(entry.getContents(), file);
 			}
+		}
+
+		// add zimlet entry to ldap
+		Provisioning prov = Provisioning.getInstance();
+		try {
+			prov.createZimlet(zimletName, attrs);
+		} catch (ServiceException se) {
+			throw ZimletException.CANNOT_CREATE(zimletName, se.getCause().getMessage());
 		}
 	}
 	
@@ -326,8 +340,12 @@ public class ZimletUtil {
 		Provisioning prov = Provisioning.getInstance();
 		try {
 			prov.updateZimletConfig(zimletName, configString);
+			String allowedDomains = zc.getConfigValue(ZIMLET_ALLOWED_DOMAINS);
+			if (allowedDomains != null) {
+				prov.addAllowedDomains(allowedDomains, "default");  // XXX to default cos for now
+			}
 		} catch (Exception e) {
-			throw ZimletException.INVALID_ZIMLET_CONFIG("cannot update Zimlet config for "+zimletName);
+			throw ZimletException.INVALID_ZIMLET_CONFIG("cannot update Zimlet config for "+zimletName+" : "+e.getMessage());
 		}
 	}
 	
