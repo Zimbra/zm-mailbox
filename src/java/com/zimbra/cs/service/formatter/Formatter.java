@@ -87,7 +87,7 @@ public abstract class Formatter {
 
     private Collection getMailItemsFromFolder(Context context, Folder folder, long startTime, long endTime) throws ServiceException {
         switch (folder.getDefaultView()) {
-        case MailItem.TYPE_APPOINTMENT:
+        case MailItem.TYPE_APPOINTMENT:            
             return context.targetMailbox.getAppointmentsForRange(context.opContext, startTime, endTime, folder.getId(), null);
         case MailItem.TYPE_CONTACT:
             return context.targetMailbox.getContactList(context.opContext, folder.getId());

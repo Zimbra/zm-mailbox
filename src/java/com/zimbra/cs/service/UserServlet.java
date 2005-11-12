@@ -34,12 +34,12 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.service.formatter.AtomFormatter;
 import com.zimbra.cs.service.formatter.CsvFormatter;
 import com.zimbra.cs.service.formatter.Formatter;
 import com.zimbra.cs.service.formatter.IcsFormatter;
@@ -69,6 +69,7 @@ public class UserServlet extends ZimbraServlet {
         addFormatter(new CsvFormatter());
         addFormatter(new IcsFormatter());
         addFormatter(new RssFormatter());
+        addFormatter(new AtomFormatter());        
     }
 
     private void addFormatter(Formatter f) { mFormatters.put(f.getType(), f); }    

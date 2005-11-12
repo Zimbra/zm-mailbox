@@ -43,42 +43,52 @@ import com.zimbra.cs.service.mail.CalendarUtils;
 import com.zimbra.cs.util.Constants;
 import com.zimbra.soap.Element;
 
-public class RssFormatter extends Formatter {
+public class AtomFormatter extends Formatter {
 
-    private SimpleDateFormat mDateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
-        
+    private SimpleDateFormat mDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+
+    private String getISO8601(Date date)
+    {
+      String result = mDateFormat.format(date);
+      //convert YYYYMMDDTHH:mm:ss+HH00 into YYYYMMDDTHH:mm:ss+HH:00 
+      //- note the added colon for the Timezone
+      result = result.substring(0, result.length()-2) 
+        + ":" + result.substring(result.length()-2);
+      return result;
+    }
+    
     public boolean format(Context context, MailItem mailItem) throws IOException, ServiceException {
         
         Iterator iterator = getMailItems(context, mailItem, getDefaultStartTime(), getDefaultEndTime());
         
-        context.resp.setContentType("application/rss+xml");
+        context.resp.setContentType("application/atom+xml");
         
         StringBuffer sb = new StringBuffer();
 
-        sb.append("<?xml version=\"1.0\"?>\n");
+        sb.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
             
-        Element.XMLElement rss = new Element.XMLElement("rss");
-        rss.addAttribute("version", "2.0");
+        Element.XMLElement feed = new Element.XMLElement("feed");
+        feed.addAttribute("xmlns", "http://www.w3.org/2005/Atom");
 
-        Element channel = rss.addElement("channel");
-        channel.addElement("title").setText("Zimbra " + context.itemPath);
+        feed.addElement("title").setText("Zimbra " + context.itemPath);
             
-        channel.addElement("generator").setText("Zimbra RSS Feed Servlet");
-
+        feed.addElement("generator").setText("Zimbra Atom Feed Servlet");
+        
+        feed.addElement("id").setText(context.req.getRequestURL().toString());
+        feed.addElement("updated").setText(getISO8601(new Date(context.targetMailbox.getLastChangeDate())));
                 
         //channel.addElement("description").setText(query);
         
 //        MailDateFormat mdf = new MailDateFormat();
         while(iterator.hasNext()) {
-            
             MailItem itItem = (MailItem) iterator.next();
             if (itItem instanceof Appointment) {
-                addAppointment((Appointment)itItem, channel, context);                
+                addAppointment((Appointment)itItem, feed, context);                
             } else if (itItem instanceof Message) {
-                addMessage((Message) itItem, channel, context);
+                addMessage((Message) itItem, feed, context);
             }
         }
-        sb.append(rss.toString());
+        sb.append(feed.toString());
         context.resp.getOutputStream().write(sb.toString().getBytes());
         return true;
     }
@@ -92,42 +102,30 @@ public class RssFormatter extends Formatter {
         return System.currentTimeMillis() + (7*Constants.MILLIS_PER_DAY);
     }
     
-    private void addAppointment(Appointment appt, Element channel, Context context) {
-        Collection instances = appt.expandInstances(getDefaultStartTime(),  getDefaultEndTime());
+    private void addAppointment(Appointment appt, Element feed, Context context) {
+        Collection instances = appt.expandInstances(getDefaultStartTime(), getDefaultEndTime());
         for (Iterator instIt = instances.iterator(); instIt.hasNext(); ) {
             Appointment.Instance inst = (Appointment.Instance) instIt.next();
             InviteInfo invId = inst.getInviteInfo();
             Invite inv = appt.getInvite(invId.getMsgId(), invId.getComponentId());
-            Element rssItem = channel.addElement("item");
-            rssItem.addElement("title").setText(inv.getName());
-            rssItem.addElement("pubDate").setText(mDateFormat.format(new Date(inst.getStart())));
-            /*                
-            StringBuffer desc = new StringBuffer();
-            sb.append("Start: ").append(sdf.format(new Date(inst.getStart()))).append("\n");
-            sb.append("End: ").append(sdf.format(new Date(inst.getEnd()))).append("\n");
-            sb.append("Location: ").append(inv.getLocation()).append("\n");
-            sb.append("Notes: ").append(inv.getFragment()).append("\n");
-            item.addElement("description").setText(sb.toString());
-            */
-            rssItem.addElement("description").setText(inv.getFragment());
-            rssItem.addElement("author").setText(CalendarUtils.paramVal(inv.getOrganizer(), Parameter.CN));
+            Element entry = feed.addElement("entry");
+            entry.addElement("title").setText(inv.getName());
+            entry.addElement("updated").setText(getISO8601(new Date(inst.getStart())));
+            entry.addElement("summary").setText(inv.getFragment());
+            entry.addElement("author").setText(CalendarUtils.paramVal(inv.getOrganizer(), Parameter.CN));
         }                    
         
     }
      
-    private void addMessage(Message m, Element channel, Context context) {
-        Element item = channel.addElement("item");
-        item.addElement("title").setText(m.getSubject());
-        item.addElement("description").setText(m.getFragment());
-        item.addElement("author").setText(m.getSender());
-        item.addElement("pubDate").setText(mDateFormat.format(new Date(m.getDate())));
-        /* TODO: guid, links, etc */
-        // Element guid = item.addElement("guid");
-        // guid.setText(acct.getId()+"/"+m.getId());
-        // guid.addAttribute("isPermaLink", "false");
+    private void addMessage(Message m, Element feed, Context context) {
+        Element entry = feed.addElement("entry");
+        entry.addElement("title").setText(m.getSubject());
+        entry.addElement("summary").setText(m.getFragment());
+        entry.addElement("author").setText(m.getSender());
+        entry.addElement("modified").setText(getISO8601(new Date(m.getDate())));
     }
 
     public String getType() {
-        return "rss";
+        return "atom";
     }
 }
