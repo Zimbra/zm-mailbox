@@ -68,7 +68,8 @@ public class PrivilegedServlet extends HttpServlet {
             
             System.setProperty("javax.net.ssl.keyStore", LC.tomcat_keystore.value());
             System.setProperty("javax.net.ssl.keyStorePassword", "zimbra");
-
+            System.setProperty("javax.net.ssl.trustStorePassword", "changeit");
+            
             server = Provisioning.getInstance().getLocalServer();
 
             port = server.getIntAttr(Provisioning.A_zimbraPop3BindPort, Config.D_POP3_BIND_PORT);
