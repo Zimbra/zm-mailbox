@@ -62,7 +62,7 @@ public class Sync extends DocumentHandler {
         Element response = lc.createElement(MailService.SYNC_RESPONSE);
         response.addAttribute(MailService.A_CHANGE_DATE, System.currentTimeMillis() / 1000);
         synchronized (mbox) {
-            mbox.beginTrackingSync();
+            mbox.beginTrackingSync(null);
 
             long token = mbox.getLastChangeID();
             response.addAttribute(MailService.A_TOKEN, token);

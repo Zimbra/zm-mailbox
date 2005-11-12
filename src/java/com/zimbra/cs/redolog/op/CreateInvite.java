@@ -40,11 +40,27 @@ public class CreateInvite extends RedoableOp implements CreateAppointmentRecorde
 {
     private int mApptId;
     private Invite mInvite;
-    private boolean mForce;
     private int mFolderId;
+    private boolean mForce;
     
-    protected void serializeData(DataOutput out) throws IOException 
-    {
+    public CreateInvite() { }
+
+    public CreateInvite(int mailboxId, Invite inv, int folderId, boolean force) {
+        setMailboxId(mailboxId);
+        mInvite = inv;
+        mFolderId = folderId;
+        mForce = force;
+    }
+
+    public int getOpCode() {
+        return OP_CREATE_INVITE;
+    }
+
+    protected String getPrintableData() {
+        return new String("ApptId = "+mApptId);
+    }
+
+    protected void serializeData(DataOutput out) throws IOException {
         out.writeInt(mApptId);
         out.writeInt(mFolderId);
         out.writeBoolean(mForce);
@@ -70,27 +86,6 @@ public class CreateInvite extends RedoableOp implements CreateAppointmentRecorde
             throw new IOException("Cannot read serialized entry for CreateInvite "+ex.toString());
         }
     }
-
-    public CreateInvite() 
-    {
-        super(); 
-        mApptId = 0;
-    }
-    
-    public void setInvite(Invite inv) {
-        mInvite = inv;
-    }
-    
-    public Invite getInvite() { 
-        return mInvite;
-    }
-    
-    public void setForce(boolean force) { mForce = force; }
-    public boolean getForce() { return mForce; }
-    
-    public void setFolderId(int folderId) {
-        mFolderId = folderId;
-    }
     
     public int getAppointmentId() {
         return mApptId;
@@ -100,19 +95,8 @@ public class CreateInvite extends RedoableOp implements CreateAppointmentRecorde
         mApptId = id;
     }
 
-    public int getOpCode() {
-        return OP_CREATE_INVITE;
-    }
-
     public void redo() throws Exception {
-        int mboxId = getMailboxId();
-        Mailbox mailbox = Mailbox.getMailboxById(mboxId);
-        
+        Mailbox mailbox = Mailbox.getMailboxById(getMailboxId());
         mailbox.addInvite(getOperationContext(), mInvite, mFolderId, mForce, null);
     }
-
-    protected String getPrintableData() {
-        return new String("ApptId = "+mApptId);
-    }
-
 }
