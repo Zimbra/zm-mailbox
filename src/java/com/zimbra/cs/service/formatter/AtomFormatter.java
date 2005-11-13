@@ -46,7 +46,7 @@ import com.zimbra.soap.Element;
 public class AtomFormatter extends Formatter {
 
     
-    public boolean format(Context context, MailItem mailItem) throws IOException, ServiceException {
+    public void format(Context context, MailItem mailItem) throws IOException, ServiceException {
         
         Iterator iterator = getMailItems(context, mailItem, getDefaultStartTime(), getDefaultEndTime());
         
@@ -76,7 +76,6 @@ public class AtomFormatter extends Formatter {
         }
         sb.append(feed.toString());
         context.resp.getOutputStream().write(sb.toString().getBytes());
-        return true;
     }
 
     public long getDefaultStartTime() {    

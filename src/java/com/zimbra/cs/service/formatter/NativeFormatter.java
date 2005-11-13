@@ -38,6 +38,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.util.ByteUtil;
 
@@ -52,19 +53,19 @@ public class NativeFormatter extends Formatter {
         return MailboxIndex.SEARCH_FOR_MESSAGES;
     }
 
-    public boolean format(Context context, MailItem mailItem) throws IOException, ServiceException {
+    public void format(Context context, MailItem mailItem) throws IOException, ServiceException, UserServletException {
         try {
             if (mailItem instanceof Message) {
-                return handleMessage(context, (Message)mailItem);
+                handleMessage(context, (Message)mailItem);
             } else {
-                return notImplemented(context);
+                throw UserServletException.notImplemented("can only handle messages");
             }
         } catch (MessagingException me) {
             throw ServiceException.FAILURE(me.getMessage(), me);
         }
     }
     
-    private boolean handleMessage(Context context, Message message) throws IOException, ServiceException, MessagingException {
+    private void handleMessage(Context context, Message message) throws IOException, ServiceException, MessagingException {
         /*
         if (sync) {
             hdr.append("X-Zimbra-Conv: ").append(msg.getConversationId()).append("\n");
@@ -72,17 +73,16 @@ public class NativeFormatter extends Formatter {
         }
         */
         if (context.hasPart()) {
-            return handleMessagePart(context, message);
+            handleMessagePart(context, message);
         } else {
             context.resp.setContentType(Mime.CT_TEXT_PLAIN);
             InputStream is = message.getRawMessage();
             ByteUtil.copy(is, context.resp.getOutputStream());
             is.close();
         }
-        return true;
     }
     
-    private boolean handleMessagePart(Context context, Message message) throws IOException, ServiceException, MessagingException {
+    private void handleMessagePart(Context context, Message message) throws IOException, ServiceException, MessagingException {
         MimePart mp = getMimePart(message, context.getPart());
         if (mp != null) {
             String contentType = mp.getContentType();
@@ -90,10 +90,9 @@ public class NativeFormatter extends Formatter {
                 contentType = Mime.CT_APPLICATION_OCTET_STREAM;
             }
             sendbackOriginalDoc(mp, contentType, context.resp);
-            return true;
+            return;
         }
         context.resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "part not found");
-        return false;
     }
 
     public static MimePart getMimePart(Appointment appt, String part) throws IOException, MessagingException, ServiceException {

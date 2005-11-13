@@ -48,6 +48,27 @@ GOALS/CONCEPTS
 5) we should design this with "publishing" and "public" folders/wiki in mind
 
 ------------------------------------------------------------
+URLL
+------------------------------------------------------------
+
+ *  http://server/zimbra/user/[~][{username}]/[{folder}]?[{query-params}]
+ *         fmt={ics, csv, etc}
+ *         id={item-id}
+ *         part={mime-part}
+ *         query={search-query}
+ *         types={types} // when searching
+ *         auth={auth-types}
+ *         
+ *            {types}   = comma-separated list.  Legal values are:
+ *                        conversation|message|contact|appointment|note
+ *                        (default is "conversation")
+ *                         
+ *            {auth-types} = comma-separated list. Legal values are:
+ *                           co     cookie
+ *                           ba     basic auth
+ *                           (default is "co,ba", i.e. check both)
+ 
+------------------------------------------------------------
 EXAMPLES
 ------------------------------------------------------------
 
@@ -55,6 +76,10 @@ There are two primary formats, one using a folder, and one using a mail item id.
 
 http://server/zimbra/user/[~]{account-name}/{folder-path}    // path to a folder 
 http://server/zimbra/user/[~]{account-name}/?id={item-id}       // a mail item id
+
+
+
+
 
 A single ~ is allowed and references the authenticated user accessing the data. 
 

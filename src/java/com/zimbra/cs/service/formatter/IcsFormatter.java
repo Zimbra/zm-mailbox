@@ -52,7 +52,7 @@ public class IcsFormatter extends Formatter {
     }
   
     
-    public boolean format(Context context, MailItem mailItem) throws IOException, ServiceException {
+    public void format(Context context, MailItem mailItem) throws IOException, ServiceException {
         
         Iterator iterator = getMailItems(context, mailItem, getDefaultStartTime(), getDefaultEndTime());
         
@@ -76,7 +76,6 @@ public class IcsFormatter extends Formatter {
         } catch (ValidationException e) {
             throw ServiceException.FAILURE(" mbox:"+context.targetMailbox.getId()+" unable to get calendar "+e, e);
         }
-        return true;
     }
     
     public long getDefaultStartTime() {    

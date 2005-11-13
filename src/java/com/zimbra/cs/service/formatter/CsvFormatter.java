@@ -50,7 +50,7 @@ public class CsvFormatter extends Formatter {
         return MailboxIndex.SEARCH_FOR_CONTACTS;
     }
 
-    public boolean format(Context context, MailItem mailItem) throws IOException, ServiceException {
+    public void format(Context context, MailItem mailItem) throws IOException, ServiceException {
         Iterator iterator = getMailItems(context, mailItem, -1, -1);
         
         List contacts = new ArrayList();
@@ -72,7 +72,6 @@ public class CsvFormatter extends Formatter {
         context.resp.addHeader("Content-Disposition", cd.toString());
         context.resp.setContentType("text/plain");
         context.resp.getOutputStream().print(sb.toString());
-        return true;
     }
 
 }

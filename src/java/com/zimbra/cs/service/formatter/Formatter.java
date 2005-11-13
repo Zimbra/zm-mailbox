@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
-import javax.servlet.http.HttpServletResponse;
-
 import com.zimbra.cs.index.AppointmentHit;
 import com.zimbra.cs.index.ContactHit;
 import com.zimbra.cs.index.MailboxIndex;
@@ -19,6 +17,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServlet;
+import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.util.ZimbraLog;
 
@@ -40,17 +39,7 @@ public abstract class Formatter {
         return MailboxIndex.SEARCH_FOR_MESSAGES;
     }
 
-    public abstract boolean format(UserServlet.Context context, MailItem item) throws IOException, ServiceException;    
-    
-    public boolean notImplemented(Context context, String message) throws IOException {
-        context.resp.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED, message);
-        return false;
-    }
-    
-    public boolean notImplemented(Context context) throws IOException {
-        context.resp.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED, "support for requested item/format not implemented yet");
-        return false;
-    }
+    public abstract void format(UserServlet.Context context, MailItem item) throws UserServletException, ServiceException, IOException;
 
     public Iterator getMailItems(Context context, MailItem item, long startTime, long endTime) throws ServiceException {
         String query = context.getQueryString();

@@ -47,7 +47,7 @@ public class RssFormatter extends Formatter {
 
     private SimpleDateFormat mDateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
         
-    public boolean format(Context context, MailItem mailItem) throws IOException, ServiceException {
+    public void format(Context context, MailItem mailItem) throws IOException, ServiceException {
         
         Iterator iterator = getMailItems(context, mailItem, getDefaultStartTime(), getDefaultEndTime());
         
@@ -80,7 +80,6 @@ public class RssFormatter extends Formatter {
         }
         sb.append(rss.toString());
         context.resp.getOutputStream().write(sb.toString().getBytes());
-        return true;
     }
 
     public long getDefaultStartTime() {    
