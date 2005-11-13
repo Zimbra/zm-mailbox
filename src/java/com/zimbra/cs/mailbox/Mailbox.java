@@ -789,11 +789,11 @@ public class Mailbox {
     public synchronized void setConfig(OperationContext octxt, String section, Metadata config) throws ServiceException {
         if (section == null)
             throw new IllegalArgumentException();
-        // FIXME: needs redolog support
 
+        SetConfig redoPlayer = new SetConfig(mId, section, config);
         boolean success = false;
         try {
-            beginTransaction("setConfig", octxt, null);
+            beginTransaction("setConfig", octxt, redoPlayer);
 
             // make sure they have sufficient rights to view the config
             if (!hasFullAccess())
@@ -1848,18 +1848,16 @@ public class Mailbox {
     public synchronized List /*<MailItem>*/ getItemList(OperationContext octxt, byte type, int folderId) throws ServiceException {
         if (type == MailItem.TYPE_UNKNOWN)
             return null;
-        Folder folder = null;
         List result = new ArrayList();
 
         boolean success = false;
         try {
             // tag/folder caches are populated in beginTransaction...
-            beginTransaction("getItemList", null);
+            beginTransaction("getItemList", octxt);
             if (!hasFullAccess())
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
 
-            if (folderId != -1)
-                folder = getFolderById(folderId);
+            Folder folder = folderId == -1 ? null : getFolderById(folderId);
 
             if (type == MailItem.TYPE_TAG) {
                 if (folderId != -1 && folderId != ID_FOLDER_TAGS)
@@ -1906,7 +1904,7 @@ public class Mailbox {
     public synchronized int[] listItemIds(OperationContext octxt, byte type, int folderId) throws ServiceException {
         boolean success = false;
         try {
-            beginTransaction("listItemIds", null);
+            beginTransaction("listItemIds", octxt);
             if (!hasFullAccess())
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
 
@@ -1925,14 +1923,14 @@ public class Mailbox {
     }
 
 
-    // FIXME: need to redolog this operation
-    public void beginTrackingSync() throws ServiceException {
+    public void beginTrackingSync(OperationContext octxt) throws ServiceException {
         if (isTrackingSync())
             return;
 
+        TrackSync redoRecorder = new TrackSync(mId);
         boolean success = false;
         try {
-            beginTransaction("beginTrackingSync", null);
+            beginTransaction("beginTrackingSync", octxt, redoRecorder);
             if (!hasFullAccess())
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
 
@@ -2456,7 +2454,7 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("setAppointment", octxt, redoRecorder);
-            
+
             // allocate IDs for all of the passed-in invites (and the appointment!) if necessary
             if (redoPlayer == null || redoPlayer.getAppointmentId() == 0) {
                 assert(defaultInv.mInv.getMailItemId() == 0);
@@ -2520,9 +2518,10 @@ public class Mailbox {
      * @return int[2] = { appointment-id, invite-mail-item-id }  Note that even though the invite has a mail-item-id, that mail-item does not really exist, it can ONLY be referenced through the appointment "apptId-invMailItemId"
      * @throws ServiceException
      */
-    public synchronized int[] addInvite(OperationContext octxt, Invite inv, int folder, boolean force, ParsedMessage pm)
+    public synchronized int[] addInvite(OperationContext octxt, Invite inv, int folderId, boolean force, ParsedMessage pm)
     throws ServiceException {
-        CreateInvite redoRecorder = new CreateInvite();
+        // XXX: should the ParsedMessage be passed into the redo recorder?
+        CreateInvite redoRecorder = new CreateInvite(mId, inv, folderId, force);
         CreateInvite redoPlayer = (octxt == null ? null : (CreateInvite) octxt.player);
         
         boolean success = false;
@@ -2537,21 +2536,18 @@ public class Mailbox {
                 // id already set before we stored the invite in the redoRecorder!!!
             }
             
-            redoRecorder.setInvite(inv);
-            redoRecorder.setForce(force);
-            redoRecorder.setFolderId(folder);
-            
             Appointment appt = getAppointmentByUid(inv.getUid());
             if (appt == null) { 
                 // ONLY create an appointment if this is a REQUEST method...otherwise don't.
                 if (inv.getMethod().equals("REQUEST") || inv.getMethod().equals("PUBLISH")) {
-                    appt = createAppointment(folder, Volume.getCurrentMessageVolume().getId(), "", inv.getUid(), pm, inv);
+                    appt = createAppointment(folderId, Volume.getCurrentMessageVolume().getId(), "", inv.getUid(), pm, inv);
                 } else {
 //                  mLog.info("Mailbox " + getId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c not a REQUEST and no Appointment could be found");
-                  return null; // for now, just ignore this Invitation
+                    return null; // for now, just ignore this Invitation
                 }
             } else {
                 appt.processNewInvite(pm, inv, force, Volume.getCurrentMessageVolume().getId());
+                redoPlayer.setAppointmentId(appt.getId());
             }
 
             success = true;
@@ -3353,7 +3349,7 @@ public class Mailbox {
 
     Appointment createAppointment(int folderId, short volumeId, String tags, String uid, ParsedMessage pm, Invite invite)
     throws ServiceException {
-        // FIXME: assuming that we're in the middle of a CreateMessage op
+        // FIXME: assuming that we're in the middle of a AddInvite op
         CreateAppointmentPlayer redoPlayer   = (CreateAppointmentPlayer) mCurrentChange.getRedoPlayer();
         CreateAppointmentRecorder redoRecorder = (CreateAppointmentRecorder) mCurrentChange.getRedoRecorder();
 
@@ -3473,11 +3469,11 @@ public class Mailbox {
     }
 
     public synchronized void grantAccess(OperationContext octxt, int folderId, String grantee, byte granteeType, short rights, boolean inherit) throws ServiceException {
-        // FIXME: add redoplayer
+        GrantAccess redoPlayer = new GrantAccess(mId, folderId, grantee, granteeType, rights, inherit);
 
         boolean success = false;
         try {
-            beginTransaction("grantAccess", octxt, null);
+            beginTransaction("grantAccess", octxt, redoPlayer);
 
             Folder folder = getFolderById(folderId);
             checkItemChangeID(folder);
@@ -3489,11 +3485,11 @@ public class Mailbox {
     }
 
     public synchronized void revokeAccess(OperationContext octxt, int folderId, String grantee) throws ServiceException {
-        // FIXME: add redoplayer
+        RevokeAccess redoPlayer = new RevokeAccess(mId, folderId, grantee);
 
         boolean success = false;
         try {
-            beginTransaction("revokeAccess", octxt, null);
+            beginTransaction("revokeAccess", octxt, redoPlayer);
 
             Folder folder = getFolderById(folderId);
             checkItemChangeID(folder);
@@ -3505,9 +3501,11 @@ public class Mailbox {
     }
 
     public synchronized void setFolderUrl(OperationContext octxt, int folderId, String url) throws ServiceException {
+        SetFolderUrl redoRecorder = new SetFolderUrl(mId, folderId, url);
+
         boolean success = false;
         try {
-            beginTransaction("setFolderUrl", octxt);
+            beginTransaction("setFolderUrl", octxt, redoRecorder);
 
             Folder folder = getFolderById(folderId);
             checkItemChangeID(folder);
@@ -3528,13 +3526,17 @@ public class Mailbox {
         if (url == null || url.equals(""))
             return;
 
-        Folder folder = getFolderById(octxt, folderId);
-        FeedManager.SubscriptionData sdata = FeedManager.retrieveRemoteDatasource(getAccount(), url, folder.getSyncData());
+        // get the remote data, skipping anything we've already seen (if applicable)
+        Folder.SyncData fsd = subscription ? getFolderById(octxt, folderId).getSyncData() : null;
+        FeedManager.SubscriptionData sdata = FeedManager.retrieveRemoteDatasource(getAccount(), url, fsd);
         if (sdata.items.isEmpty())
             return;
 
+        // clear out the folder if we're replacing the previous content
         if (subscription && sdata.items.get(0) instanceof Invite)
             emptyFolder(octxt, folderId, false);
+
+        // add the newly-fetched items to the folder
         for (Iterator it = sdata.items.iterator(); it.hasNext(); ) {
             Object item = it.next();
             try {
@@ -3547,18 +3549,25 @@ public class Mailbox {
             }
         }
 
-        // FIXME: use redo recorder/player
-        if (subscription && sdata.lastGuid != null) {
-            boolean success = false;
+        // update the subscription to avoid downloading items twice
+        if (subscription && sdata.lastDate > 0)
             try {
-                beginTransaction("setSubscriptionData", octxt);
-                getFolderById(folderId).setSubscriptionData(sdata.lastGuid, sdata.lastDate);
-                success = true;
+                setSubscriptionData(octxt, folderId, sdata.lastDate, sdata.lastGuid);
             } catch (Exception e) {
                 ZimbraLog.mailbox.warn("could not update feed metadata", e);
-            } finally {
-                endTransaction(success);
             }
+    }
+
+    public synchronized void setSubscriptionData(OperationContext octxt, int folderId, long date, String guid) throws ServiceException {
+        SetSubscriptionData redoRecorder = new SetSubscriptionData(mId, folderId, date, guid);
+
+        boolean success = false;
+        try {
+            beginTransaction("setSubscriptionData", octxt, redoRecorder);
+            getFolderById(folderId).setSubscriptionData(guid, date);
+            success = true;
+        } finally {
+            endTransaction(success);
         }
     }
 
