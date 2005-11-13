@@ -1039,9 +1039,17 @@ public class ToXML {
         // figure out attachment name
         try {
             String fname = mp.getFileName();
-            if (fname != null)
+            if (fname == null && Mime.CT_MESSAGE_RFC822.equals(contentTypeString)) {
+                // "filename" for attached messages is the Subject
+                Object content = mp.getContent();
+                if (content instanceof MimeMessage)
+                    fname = ((MimeMessage) content).getSubject();
+            }
+            if (fname != null && !fname.equals(""))
                 elem.addAttribute(MailService.A_CONTENT_FILENAME, StringUtil.stripControlCharacters(fname));
-        } catch (MessagingException me) { }
+        } catch (MessagingException me) {
+        } catch (IOException ioe) {
+        }
         
         // figure out content-id (used in displaying attached images)
         try {
