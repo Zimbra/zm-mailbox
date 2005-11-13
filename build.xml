@@ -47,7 +47,6 @@
 	<property name="dist.openldap.etc.dir" location="${dist.openldap.dir}/etc/openldap" />
 	<property name="dist.openldap.schema.dir" location="${dist.openldap.etc.dir}/schema" />
 	<property name="dist.tarfile" value="dev-service.tar" />
-	<property name="dist.zimlet.dir" location="${dist.dir}/zimlets" />
 
 	<property name="config.dir" location="conf" />
 
@@ -165,7 +164,6 @@
 		<mkdir dir="${dist.openldap.etc.dir}" />
 		<mkdir dir="${dist.openldap.schema.dir}" />
 		<mkdir dir="${generated.java.dir}" />
-		<mkdir dir="${dist.zimlet.dir}" />
 	</target>
 
     <target name="javadoc" depends="set-buildinfo-vars">
@@ -381,7 +379,7 @@
 
 	<target name="reset-the-world-stage1" depends="clean,compile,jar,init" description="Run when tomcat is stopped." />
 
-	<target name="reset-the-world-stage2" depends="service-deploy,load-zimlets,inject" description="Run when tomcat is running." />
+	<target name="reset-the-world-stage2" depends="service-deploy,inject" description="Run when tomcat is running." />
 
 	<target name="init" depends="stop-servers,quick-init,ldap-init,tomcat-init,start-ldap,ldap-load,start-tomcat" />
 	
@@ -555,48 +553,6 @@
 			<arg line="-a -c -w zimbra -D uid=zimbra,cn=admins,cn=zimbra -x -f" />
 			<arg file="conf/ldap/zimbra_mimehandlers.ldif" />
 		</exec>
-	</target>
-
-	<target name="load-zimlets">
-		<echo>Loading zimlet: phone</echo>
-		<zip destfile="${dist.zimlet.dir}/phone.zip" update="true">
-			<fileset dir="${build.classes.dir}" includes="**/NANPHandler.class"/>
-			<fileset dir="${config.dir}/zimlets/phone" includes="phone.xml"/>
-		</zip>
-		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="install" />
-			<arg file="${dist.zimlet.dir}/phone.zip" />
-		</java>
-		<echo>Loading zimlet: po</echo>
-		<zip destfile="${dist.zimlet.dir}/po.zip" update="true">
-			<fileset dir="${config.dir}/zimlets/po" includes="po.xml"/>
-		</zip>
-		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="install" />
-			<arg file="${dist.zimlet.dir}/po.zip" />
-		</java>
-		<echo>Loading zimlet: tracking</echo>
-		<zip destfile="${dist.zimlet.dir}/tracking.zip" update="true">
-			<fileset dir="${build.classes.dir}" includes="**/TrackingHandler.class"/>
-			<fileset dir="${config.dir}/zimlets/tracking" includes="tracking.xml"/>
-		</zip>
-		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="install" />
-			<arg file="${dist.zimlet.dir}/tracking.zip" />
-		</java>
-		<echo>Loading zimlet: url</echo>
-		<zip destfile="${dist.zimlet.dir}/url.zip" update="true">
-			<fileset dir="${build.classes.dir}" includes="**/URLHandler.class"/>
-			<fileset dir="${config.dir}/zimlets/url" includes="url.xml"/>
-		</zip>
-		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="install" />
-			<arg file="${dist.zimlet.dir}/url.zip" />
-		</java>
-		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="configure" />
-			<arg file="${config.dir}/zimlets/url/config.xml" />
-		</java>
 	</target>
 
     <target name="tomcat-init" depends="localhost-ssl-cert,tomcat-init-unix">
