@@ -66,9 +66,10 @@ public class CsvFormatter extends Formatter {
 
         ContentDisposition cd = null;
         try { cd = new ContentDisposition(Part.ATTACHMENT); } catch (ParseException e) {}
+        // todo: get from folder name
         String fname = context.itemPath;
-        if (fname == null) fname ="contacts";
-        cd.setParameter("filename", context.itemPath+".csv");
+        if (fname == null || fname.length() == 0) fname ="contacts";
+        cd.setParameter("filename", fname+".csv");
         context.resp.addHeader("Content-Disposition", cd.toString());
         context.resp.setContentType("text/plain");
         context.resp.getOutputStream().print(sb.toString());
