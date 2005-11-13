@@ -102,17 +102,6 @@
       <param-value>80, 443, 7070, 7443, 7071</param-value>
     </init-param>
   </servlet>
-  
-
-  <servlet>
-    <servlet-name>CsvServlet</servlet-name>
-    <servlet-class>com.zimbra.cs.service.CsvServlet</servlet-class>
-    <load-on-startup>5</load-on-startup>
-    <init-param>
-      <param-name>allowed.ports</param-name>
-      <param-value>80, 443, 7070, 7443, 7071</param-value>
-    </init-param>
-  </servlet>
 
   <servlet>
     <servlet-name>FileUploadServlet</servlet-name>
@@ -181,11 +170,6 @@
   <servlet-mapping>
     <servlet-name>UserServlet</servlet-name>
     <url-pattern>/user/*</url-pattern>
-  </servlet-mapping>
-
-  <servlet-mapping>
-    <servlet-name>CsvServlet</servlet-name>
-    <url-pattern>/csv/*</url-pattern>
   </servlet-mapping>
 
   <servlet-mapping>
