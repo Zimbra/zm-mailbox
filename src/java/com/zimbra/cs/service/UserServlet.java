@@ -45,6 +45,7 @@ import com.zimbra.cs.service.formatter.Formatter;
 import com.zimbra.cs.service.formatter.IcsFormatter;
 import com.zimbra.cs.service.formatter.NativeFormatter;
 import com.zimbra.cs.service.formatter.RssFormatter;
+import com.zimbra.cs.service.formatter.ZipFormatter;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.servlet.ZimbraServlet;
 
@@ -99,6 +100,7 @@ public class UserServlet extends ZimbraServlet {
         addFormatter(new RssFormatter());
         addFormatter(new AtomFormatter());
         addFormatter(new NativeFormatter());
+        addFormatter(new ZipFormatter());
     }
 
     private void addFormatter(Formatter f) {
