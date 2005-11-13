@@ -627,6 +627,10 @@ public class ContactCSV {
     }
 
     public static void toCSV(List contacts, StringBuffer sb) {
+        toCSV(contacts.iterator(), sb);
+    }        
+
+    public static void toCSV(Iterator contacts, StringBuffer sb) {
 
         for (Iterator it = sMappings.iterator(); it.hasNext(); ) {
             Mapping mp = (Mapping) it.next();
@@ -643,8 +647,8 @@ public class ContactCSV {
 
         sb.append("\n");
         
-        for (Iterator it = contacts.iterator(); it.hasNext(); ) {
-            Object c = it.next();
+        while (contacts.hasNext()) {
+            Object c = contacts.next();
             if (c instanceof Contact) {
                 Contact contact = (Contact) c;
                 toCSVContact(contact.getFields(), sb);
@@ -653,7 +657,7 @@ public class ContactCSV {
                 toCSVContact(map, sb);
             }
         }
-    }        
+    } 
 
     public static class ParseException extends Exception {
         ParseException(String msg) {

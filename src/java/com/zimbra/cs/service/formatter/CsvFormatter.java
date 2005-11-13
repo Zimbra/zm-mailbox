@@ -25,16 +25,13 @@
 package com.zimbra.cs.service.formatter;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 
 import javax.mail.Part;
 import javax.mail.internet.ContentDisposition;
 import javax.mail.internet.ParseException;
 
 import com.zimbra.cs.index.MailboxIndex;
-import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.ContactCSV;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.ServiceException;
@@ -53,16 +50,8 @@ public class CsvFormatter extends Formatter {
     public void format(Context context, MailItem mailItem) throws IOException, ServiceException {
         Iterator iterator = getMailItems(context, mailItem, -1, -1);
         
-        List contacts = new ArrayList();
-
-        // this is lame, need to change the ContactCSV so we can iterator over them instead of put them into an array
-        while (iterator.hasNext()) {
-            MailItem item = (MailItem) iterator.next();
-            if (item instanceof Contact) contacts.add(item);
-        }
-        
         StringBuffer sb = new StringBuffer();
-        ContactCSV.toCSV(contacts, sb);
+        ContactCSV.toCSV(iterator, sb);
 
         ContentDisposition cd = null;
         try { cd = new ContentDisposition(Part.ATTACHMENT); } catch (ParseException e) {}
