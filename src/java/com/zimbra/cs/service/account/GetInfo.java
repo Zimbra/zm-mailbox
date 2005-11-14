@@ -126,15 +126,15 @@ public class GetInfo extends DocumentHandler  {
     private static void doZimlets(Element response, Account acct) throws ServiceException {
     	Cos cos = acct.getCOS();
     	String[] attrList = cos.getMultiAttr(Provisioning.A_zimbraZimletAvailableZimlets);
-    	
+    	String zimletName = null;
     	for (int attrIndex = 0; attrIndex < attrList.length; attrIndex++) {
-    		String zimletName = attrList[attrIndex];
-    		Zimlet zimlet = (Zimlet) Provisioning.getInstance().getZimlet(zimletName);
-    		if (zimlet == null) {
-    			ZimbraLog.zimlet.info("inconsistency in installed zimlets. "+zimletName+" does not exist.");
-    			continue;
+    		try {
+    			zimletName = attrList[attrIndex];
+    			Provisioning.getInstance().getZimlet(zimletName);
+    			ZimletUtil.listZimlet(response, zimletName);
+    		} catch (ServiceException se) {
+				ZimbraLog.zimlet.error("inconsistency in installed zimlets. "+zimletName+" does not exist.");
     		}
-        	ZimletUtil.listZimlet(response, zimletName);
     	}
     	
     	// load the zimlets in the dev directory and list them
