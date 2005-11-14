@@ -3886,7 +3886,7 @@ public class Mailbox {
     private void commitCache(MailboxChange change) {
         try {
             // committing changes, so notify any listeners
-            if (!mListeners.isEmpty()) {
+            if (!mListeners.isEmpty() && change.mDirty != null && change.mDirty.hasNotifications()) {
                 ArrayList listeners = new ArrayList(mListeners);
                 for (Iterator it = listeners.iterator(); it.hasNext(); )
                     ((Session) it.next()).notifyPendingChanges(change.mDirty);
