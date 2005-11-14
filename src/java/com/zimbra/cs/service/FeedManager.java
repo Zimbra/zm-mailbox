@@ -382,14 +382,26 @@ public class FeedManager {
 
     private static class UnescapedContent extends org.xml.sax.helpers.DefaultHandler {
         private StringBuffer str = new StringBuffer();
-        
-        public void startDocument() { str.setLength(0); }
+        private boolean continued;
+
+        public void startDocument() {
+            str.setLength(0);  continued = false;
+        }
         public void characters(char[] ch, int offset, int length) {
-            if (str.length() > 0)
+            if (!continued && str.length() > 0)
                 str.append(' ');
             str.append(ch, offset, length);
+            continued = true;
         }
-        public String toString() { return str.toString(); }
+        public void startElement(String uri, String localName, String qName, org.xml.sax.Attributes attributes) {
+            continued = false;
+        }
+        public void endElement(String uri, String localName, String qName) {
+            continued = false;
+        }
+        public String toString() {
+            return str.toString();
+        }
     }
 
     private static final String parseTitle(String title) {
