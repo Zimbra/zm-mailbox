@@ -103,12 +103,6 @@ public class CreateInvite extends RedoableOp implements CreateAppointmentRecorde
         }
     }
     
-    public ParsedMessage getParsedMessage(Mailbox mbox) throws MessagingException, ServiceException {
-    	if (mData != null) {
-    	}
-    	return null;
-    }
-    
     public int getAppointmentId() {
         return mApptId;
     }
