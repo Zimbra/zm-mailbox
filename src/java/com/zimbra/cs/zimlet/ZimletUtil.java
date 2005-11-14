@@ -58,6 +58,7 @@ public class ZimletUtil {
 	
 	public static final String ZIMLET_DEV_DIR = "_dev";
 	public static final String ZIMLET_ALLOWED_DOMAINS = "allowedDomains";
+	public static final String ZIMLET_DEFAULT_COS = "default";
 	
 	private static List sClassLoaders = new ArrayList();
 	
@@ -246,17 +247,16 @@ public class ZimletUtil {
 		return attrs;
 	}
 	
-	public static void installZimlet(String zimletRoot, String zimlet) throws IOException, ZimletException {
+	public static void deployZimlet(String zimletRoot, String zimlet) throws IOException, ZimletException {
+		String zimletName = installZimlet(zimletRoot, zimlet);
+		ldapDeploy(zimletRoot, zimletName);
+		activateZimlet(zimletName, ZIMLET_DEFAULT_COS);
+	}
+	
+	public static String installZimlet(String zimletRoot, String zimlet) throws IOException, ZimletException {
 		ZimletFile zf = new ZimletFile(zimlet);
 		ZimletDescription zd = zf.getZimletDescription();
 		String zimletName = zd.getName();
-		
-		Map attrs = descToMap(zd);
-		
-		if (zf.hasZimletConfig()) {
-			ZimletConfig config = zf.getZimletConfig();
-			attrs.put(Provisioning.A_zimbraZimletHandlerConfig, config.toXMLString());
-		}
 		
 		// install the files
 		File zimletDir = new File(zimletRoot + File.separatorChar + zimletName);
@@ -277,7 +277,20 @@ public class ZimletUtil {
 				writeFile(entry.getContents(), file);
 			}
 		}
-
+		return zimletName;
+	}
+	
+	public static void ldapDeploy(String zimletRoot, String zimlet) throws IOException, ZimletException {
+		ZimletFile zf = new ZimletFile(zimletRoot + File.separator + zimlet);
+		ZimletDescription zd = zf.getZimletDescription();
+		String zimletName = zd.getName();
+		Map attrs = descToMap(zd);
+		
+		if (zf.hasZimletConfig()) {
+			ZimletConfig config = zf.getZimletConfig();
+			attrs.put(Provisioning.A_zimbraZimletHandlerConfig, config.toXMLString());
+		}
+		
 		// add zimlet entry to ldap
 		Provisioning prov = Provisioning.getInstance();
 		try {
@@ -372,6 +385,8 @@ public class ZimletUtil {
 	private static final int DEACTIVATE_ZIMLET = 14;
 	private static final int DUMP_CONFIG = 15;
 	private static final int INSTALL_CONFIG = 16;
+	private static final int LDAP_DEPLOY = 17;
+	private static final int DEPLOY_ZIMLET = 18;
 	private static final int TEST = 99;
 	
 	private static final String INSTALL_CMD = "install";
@@ -381,6 +396,8 @@ public class ZimletUtil {
 	private static final String DEACTIVATE_CMD = "deactivate";
 	private static final String DUMP_CONFIG_CMD = "config";
 	private static final String INSTALL_CONFIG_CMD = "configure";
+	private static final String LDAP_DEPLOY_CMD = "ldap-deploy";
+	private static final String DEPLOY_CMD = "deploy";
 	private static final String TEST_CMD = "test";
 	
 	private static Map mCommands;
@@ -394,15 +411,19 @@ public class ZimletUtil {
 		mCommands.put(DEACTIVATE_CMD, new Integer(DEACTIVATE_ZIMLET));
 		mCommands.put(DUMP_CONFIG_CMD, new Integer(DUMP_CONFIG));
 		mCommands.put(INSTALL_CONFIG_CMD, new Integer(INSTALL_CONFIG));
+		mCommands.put(LDAP_DEPLOY_CMD, new Integer(LDAP_DEPLOY));
+		mCommands.put(DEPLOY_CMD, new Integer(DEPLOY_ZIMLET));
 		mCommands.put(TEST_CMD, new Integer(TEST));
 	}
 	
 	private static void usage() {
-		System.out.println("zimlet: [command] [ zimlet.zip | config.xml ]");
-		System.out.println("\tinstall - installs the zimlet");
-		System.out.println("\tuninstall - uninstalls the zimlet");
-		System.out.println("\tactivate - activates the zimlet");
-		System.out.println("\tdeactivate - deactivates the zimlet");
+		System.out.println("zimlet: [command] [ zimlet.zip | config.xml | zimlet ]");
+		System.out.println("\tdeploy - install, ldap-deploy, then activate on default COS");
+		System.out.println("\tinstall - installs the zimlet files on this host");
+		System.out.println("\tuninstall - uninstalls the zimlet files on this host");
+		System.out.println("\tldap-deploy - add the zimlet entry to the LDAP server");
+		System.out.println("\tactivate - activates the zimlet on a COS");
+		System.out.println("\tdeactivate - deactivates the zimlet from a COS");
 		System.out.println("\tupgrade - upgrades the zimlet");
 		System.out.println("\tconfig - dumps the configuration");
 		System.out.println("\tconfigure - installs the configuration");
@@ -428,11 +449,17 @@ public class ZimletUtil {
 		int cmd = lookupCmd(args[0]);
 		try {
 			switch (cmd) {
+			case DEPLOY_ZIMLET:
+				deployZimlet(zimletRoot, zimlet);
+				break;
 			case INSTALL_ZIMLET:
 				installZimlet(zimletRoot, zimlet);
 				break;
 			case UNINSTALL_ZIMLET:
 				uninstallZimlet(zimlet);
+				break;
+			case LDAP_DEPLOY:
+				ldapDeploy(zimletRoot, zimlet);
 				break;
 			case UPGRADE_ZIMLET:
 				upgradeZimlet(zimlet);
