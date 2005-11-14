@@ -27,6 +27,7 @@ package com.zimbra.cs.service.formatter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -35,6 +36,7 @@ import javax.mail.internet.ContentDisposition;
 import javax.mail.internet.ParseException;
 
 
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.service.ServiceException;
@@ -43,6 +45,8 @@ import com.zimbra.cs.util.ByteUtil;
 
 public class ZipFormatter extends Formatter {
 
+    private Pattern ILLEGAL_CHARS = Pattern.compile("[\\/\\:\\*\\?\\\"\\<\\>\\|]");
+    
     public void format(Context context, MailItem mailItem) throws IOException, ServiceException {
         
         Iterator iterator = getMailItems(context, mailItem, getDefaultStartTime(), getDefaultEndTime());
@@ -51,7 +55,7 @@ public class ZipFormatter extends Formatter {
 
         
         try {
-            ContentDisposition cd =  new ContentDisposition(Part.INLINE);
+            ContentDisposition cd =  new ContentDisposition(Part.ATTACHMENT);
             // TODO: get name from folder/search/query/etc
             String filename = "messages.zip";
             cd.setParameter("filename", filename);
@@ -67,8 +71,9 @@ public class ZipFormatter extends Formatter {
             MailItem itItem = (MailItem) iterator.next();
             if (!(itItem instanceof Message)) continue;
             Message message = (Message) itItem;
+            
             // Add ZIP entry to output stream.
-            out.putNextEntry(new ZipEntry(message.getId()+".eml"));
+            out.putNextEntry(new ZipEntry(getZipEntryName(message, context)));
         
             // Transfer bytes from the file to the ZIP file
             InputStream is = message.getRawMessage();
@@ -79,6 +84,21 @@ public class ZipFormatter extends Formatter {
         }
         // Complete the ZIP file
         out.close();
+    }
+
+    private String getZipEntryName(Message m, Context context) throws ServiceException {
+        Folder f = context.targetMailbox.getFolderById(context.opContext, m.getFolderId());
+        String folderPath = f.getPath();
+        if (folderPath.startsWith("/")) {
+            if (folderPath.length() == 1) folderPath = "";
+            else folderPath = folderPath.substring(1);
+        }
+
+        // TODO: more bullet proofing on path lengths and illegal chars        
+        String subject = m.getSubject();
+        if (subject == null) subject = "";
+        if (subject.length() > 128) subject = subject.substring(0, 127); 
+        return folderPath + (folderPath.length() > 0 ? "/" : "") + ILLEGAL_CHARS.matcher(subject).replaceAll("_") + " "+ m.getId() + ".eml";
     }
 
     public String getType() {
