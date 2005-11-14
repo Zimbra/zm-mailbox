@@ -726,6 +726,7 @@ public abstract class Provisioning {
     public static final String A_zimbraVirusBlockEncryptedArchive = "zimbraVirusBlockEncryptedArchive";
     public static final String A_zimbraVirusDefinitionsUpdateFrequency = "zimbraVirusDefinitionsUpdateFrequency";
     
+    public static final String A_zimbraForeignPrincipal = "zimbraForeignPrincipal";
     public static final String A_zimbraFileUploadMaxSize = "zimbraFileUploadMaxSize";
 
     /**

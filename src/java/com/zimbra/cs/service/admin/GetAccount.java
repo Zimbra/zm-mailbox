@@ -29,6 +29,7 @@
 package com.zimbra.cs.service.admin;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -36,6 +37,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
@@ -47,6 +49,7 @@ public class GetAccount extends AdminDocumentHandler {
     public static final String BY_NAME = "name";
     public static final String BY_ID = "id";
     public static final String BY_ADMIN_NAME = "adminName";
+    public static final String BY_FOREIGN_PRINCIPAL = "foreignPrincipal";
     
 	public Element handle(Element request, Map context) throws ServiceException {
 
@@ -66,6 +69,19 @@ public class GetAccount extends AdminDocumentHandler {
             account = prov.getAccountById(value);
         } else if (key.equals(BY_ADMIN_NAME)) {
             account = prov.getAdminAccountByName(value);
+        } else if (key.equals(BY_FOREIGN_PRINCIPAL)) {
+            String query = "(" + Provisioning.A_zimbraForeignPrincipal +"=" + LdapUtil.escapeSearchFilterArg(value) + ")";
+            List accounts = prov.searchAccounts(query, null, null, true, Provisioning.SA_ACCOUNT_FLAG);
+            if (accounts != null && accounts.size() > 0) {
+                Element response = lc.createElement(AdminService.GET_ACCOUNT_RESPONSE);
+                for (Iterator it= accounts.iterator(); it.hasNext(); ) {
+                    Object obj = it.next();
+                    if (obj instanceof Account) {
+                        doAccount(response, (Account)obj, applyCos);
+                    }
+                }
+                return response;
+            }
         } else {
             throw ServiceException.INVALID_REQUEST("unknown value for by: "+key, null);
         }

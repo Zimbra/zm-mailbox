@@ -65,7 +65,7 @@ Notes:
 -----------------------------
 
 <GetAccountRequest [applyCos="{apply-cos}"]>
-  <account by="id|name">...</account>
+  <account by="id|name|foreignPrincipal">...</account>
 </GetAccountRequest>
 
 <GetAccountResponse>
