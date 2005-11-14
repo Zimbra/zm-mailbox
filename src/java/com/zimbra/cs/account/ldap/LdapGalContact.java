@@ -57,9 +57,12 @@ public class LdapGalContact implements GalContact {
             return;
         try {
             // doesn't handle multi-value attrs
-            String val = LdapUtil.getAttrString(attrs, accountAttr);
-            if (val != null && !val.equals(""))
-                mAttrs.put(contactAttr, val);            
+            String val[] = LdapUtil.getMultiAttrString(attrs, accountAttr);
+            if (val.length == 1) {
+                mAttrs.put(contactAttr, val[0]);
+            } else if (val.length > 1) {
+                mAttrs.put(contactAttr, val);
+            }
         } catch (NamingException e) {
             // ignore
         }

@@ -73,8 +73,15 @@ public class SearchGal extends DocumentHandler {
         Map attrs = contact.getAttrs();
         for (Iterator it = attrs.entrySet().iterator(); it.hasNext();) {
             Map.Entry entry = (Entry) it.next();
-            cn.addAttribute((String) entry.getKey(), (String) entry.getValue(),
-                    Element.DISP_ELEMENT);
+            Object value = entry.getValue();
+            if (value instanceof String[]) {
+                String sa[] = (String[]) value;
+                for (int i = 0; i < sa.length; i++) {
+                    cn.addAttribute((String) entry.getKey(), sa[i], Element.DISP_ELEMENT);
+                }
+            } else {
+                cn.addAttribute((String) entry.getKey(), (String) entry.getValue(), Element.DISP_ELEMENT);
+            }
         }
     }
 }
