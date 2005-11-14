@@ -2547,7 +2547,7 @@ public class Mailbox {
                 }
             } else {
                 appt.processNewInvite(pm, inv, force, Volume.getCurrentMessageVolume().getId());
-                redoPlayer.setAppointmentId(appt.getId());
+                redoRecorder.setAppointmentId(appt.getId());
             }
 
             success = true;
