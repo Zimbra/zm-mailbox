@@ -113,8 +113,7 @@ public class UserServlet extends ZimbraServlet {
         mFormatters.put(f.getType(), f);
     }
 
-    private Account getAccount(HttpServletRequest req,
-            HttpServletResponse resp, Context context) throws IOException,
+    private Account getAccount(Context context) throws IOException,
             ServletException, UserServletException {
         try {
             Provisioning prov = Provisioning.getInstance();
@@ -122,22 +121,16 @@ public class UserServlet extends ZimbraServlet {
 
             // check cookie first
             if (context.cookieAuthAllowed()) {
-                acct = cookieAuthRequest(req, resp, true);
+                acct = cookieAuthRequest(context.req, context.resp, true);
                 if (acct != null)
                     return acct;
             }
 
             // fallback to basic auth
             if (context.basicAuthAllowed()) {
-                acct = basicAuthRequest(req, resp);
-                if (acct != null && !context.noSetCookie()) {
-                    // basic auth succeded
-                    try {
-                        AuthToken authToken = new AuthToken(acct);                        
-                        context.cookie = authToken.getEncoded();
-                        context.resp.addCookie(new Cookie(COOKIE_ZM_AUTH_TOKEN, context.cookie));
-                    } catch (AuthTokenException e) {
-                    }
+                acct = basicAuthRequest(context.req, context.resp);
+                if (acct != null) {
+                    context.basicAuthHappened = true;
                 }
                 // always return
                 return acct;
@@ -157,25 +150,39 @@ public class UserServlet extends ZimbraServlet {
             throws ServletException, IOException {
         try {
             Context context = new Context(req, resp);
-            Account acct = getAccount(req, resp, context);
+            Account acct = getAccount(context);
             if (acct == null)
                 return;
 
             context.setAccount(acct);
+            
+            // send cookie back if need be. 
+            String authTokenCookie = null;
+            if (context.basicAuthHappened && !context.noSetCookie()) {
+                try {
+                    AuthToken authToken = new AuthToken(acct);                        
+                    authTokenCookie = authToken.getEncoded();
+                    context.resp.addCookie(new Cookie(COOKIE_ZM_AUTH_TOKEN, authTokenCookie));
+                } catch (AuthTokenException e) {
+                }
+            }
 
             // this should handle both explicit /user/user-on-other-server/ and
             // /user/~/?id={account-id-on-other-server}:id
 
             if (!context.targetAccount.isCorrectHost()) {
                 try {
-                    proxyServletRequest(req, resp, context.targetAccount
-                            .getServer());
+                    if (context.basicAuthHappened && authTokenCookie == null) 
+                        authTokenCookie = new AuthToken(acct).getEncoded();
+                    proxyServletRequest(req, resp, context.targetAccount.getServer(),
+                                                context.basicAuthHappened ? authTokenCookie : null);
                     return;
                 } catch (ServletException e) {
                     throw ServiceException.FAILURE("proxy error", e);
+                } catch (AuthTokenException e) {
+                    throw ServiceException.FAILURE("proxy error", e);                    
                 }
             }
-
             doAuthGet(req, resp, context);
         } catch (NoSuchItemException e) {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND, "no such item");
@@ -250,7 +257,7 @@ public class UserServlet extends ZimbraServlet {
         public HttpServletRequest req;
         public HttpServletResponse resp;
         public String format;
-        public String cookie;
+        public boolean basicAuthHappened;
         public String accountPath;
         public String itemPath;
         public ItemId itemId;

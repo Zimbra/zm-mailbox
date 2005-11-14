@@ -297,7 +297,7 @@ public class FileUploadServlet extends ZimbraServlet {
                 // make sure we're on the right host; proxy if we're not...
             	Account acct = Provisioning.getInstance().getAccountById(authToken.getAccountId());
                 if (!acct.isCorrectHost()) {
-                    proxyServletRequest(req, resp, acct.getServer());
+                    proxyServletRequest(req, resp, acct.getServer(), null);
                     return;
                 }
             } catch (ServiceException e) {

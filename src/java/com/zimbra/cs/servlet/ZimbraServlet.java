@@ -243,7 +243,7 @@ public class ZimbraServlet extends HttpServlet {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "no such user");
                 return;
             }
-            proxyServletRequest(req, resp, acct.getServer());
+            proxyServletRequest(req, resp, acct.getServer(), null);
 		} catch (ServiceException e) {
 			throw new ServletException(e);
 		}
@@ -277,7 +277,7 @@ public class ZimbraServlet extends HttpServlet {
         return url.toString();
     }
 
-    protected void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, Server server)
+    protected void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, Server server, String authToken)
     throws IOException, ServletException {
         if (server == null) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "cannot find remote server");
@@ -307,6 +307,9 @@ public class ZimbraServlet extends HttpServlet {
             if (cookies != null)
                 for (int i = 0; i < cookies.length; i++)
                     state.addCookie(new Cookie(hostname, cookies[i].getName(), cookies[i].getValue(), "/", null, false));
+            if (authToken != null) {
+                state.addCookie(new Cookie(hostname, COOKIE_ZM_AUTH_TOKEN, authToken, "/", null, false));                
+            }
             HttpClient client = new HttpClient();
             client.setState(state);
 

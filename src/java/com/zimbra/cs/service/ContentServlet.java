@@ -242,7 +242,7 @@ public class ContentServlet extends ZimbraServlet {
                 // wrong server; proxy to the right one...
                 String serverId = FileUploadServlet.getUploadServerId(uploadId);
                 Server server = Provisioning.getInstance().getServerById(serverId);
-                proxyServletRequest(req, resp, server);
+                proxyServletRequest(req, resp, server, null);
                 return;
             }
 
