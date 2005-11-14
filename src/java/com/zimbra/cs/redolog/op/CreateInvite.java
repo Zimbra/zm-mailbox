@@ -29,10 +29,13 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import javax.mail.MessagingException;
+
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mime.ParsedMessage;
 
 import com.zimbra.cs.service.ServiceException;
 
@@ -42,14 +45,16 @@ public class CreateInvite extends RedoableOp implements CreateAppointmentRecorde
     private Invite mInvite;
     private int mFolderId;
     private boolean mForce;
+    private byte[] mData;
     
     public CreateInvite() { }
 
-    public CreateInvite(int mailboxId, Invite inv, int folderId, boolean force) {
+    public CreateInvite(int mailboxId, Invite inv, int folderId, byte[] data, boolean force) {
         setMailboxId(mailboxId);
         mInvite = inv;
         mFolderId = folderId;
         mForce = force;
+        mData = data;
     }
 
     public int getOpCode() {
@@ -65,9 +70,14 @@ public class CreateInvite extends RedoableOp implements CreateAppointmentRecorde
         out.writeInt(mFolderId);
         out.writeBoolean(mForce);
         
+        int dataLen = mData != null ? mData.length : 0;
+        out.writeInt(dataLen);
+        if (dataLen > 0) {
+        	out.write(mData);
+        }
+        
         ICalTimeZone localTz = mInvite.getTimeZoneMap().getLocalTimeZone();
         out.writeUTF(localTz.encodeAsMetadata().toString());
-        
         out.writeUTF(Invite.encodeMetadata(mInvite).toString());
     }
 
@@ -75,6 +85,12 @@ public class CreateInvite extends RedoableOp implements CreateAppointmentRecorde
         mApptId = in.readInt();
         mFolderId = in.readInt();
         mForce = in.readBoolean();
+        
+        int dataLen = in.readInt();
+        if (dataLen > 0) {
+        	mData = new byte[dataLen];
+        	in.readFully(mData);
+        }
         
         try {
             ICalTimeZone localTz = ICalTimeZone.decodeFromMetadata(new Metadata(in.readUTF()));
@@ -87,6 +103,12 @@ public class CreateInvite extends RedoableOp implements CreateAppointmentRecorde
         }
     }
     
+    public ParsedMessage getParsedMessage(Mailbox mbox) throws MessagingException, ServiceException {
+    	if (mData != null) {
+    	}
+    	return null;
+    }
+    
     public int getAppointmentId() {
         return mApptId;
     }
@@ -96,7 +118,8 @@ public class CreateInvite extends RedoableOp implements CreateAppointmentRecorde
     }
 
     public void redo() throws Exception {
-        Mailbox mailbox = Mailbox.getMailboxById(getMailboxId());
-        mailbox.addInvite(getOperationContext(), mInvite, mFolderId, mForce, null);
+        Mailbox mbox = Mailbox.getMailboxById(getMailboxId());
+		ParsedMessage pm = new ParsedMessage(mData, getTimestamp(), mbox.attachmentsIndexingEnabled());
+		mbox.addInvite(getOperationContext(), mInvite, mFolderId, mForce, pm);
     }
 }

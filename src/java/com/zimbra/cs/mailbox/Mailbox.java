@@ -2520,8 +2520,20 @@ public class Mailbox {
      */
     public synchronized int[] addInvite(OperationContext octxt, Invite inv, int folderId, boolean force, ParsedMessage pm)
     throws ServiceException {
-        // XXX: should the ParsedMessage be passed into the redo recorder?
-        CreateInvite redoRecorder = new CreateInvite(mId, inv, folderId, force);
+    	
+        byte[] data = null;
+        
+        if (pm != null) {
+        	try {
+        		data = pm.getRawData();
+        	} catch (MessagingException me) {
+                throw MailServiceException.MESSAGE_PARSE_ERROR(me);
+        	} catch (IOException ie) {
+        		throw MailServiceException.FAILURE("Caught IOException", ie);
+        	}
+        }
+    	
+        CreateInvite redoRecorder = new CreateInvite(mId, inv, folderId, data, force);
         CreateInvite redoPlayer = (octxt == null ? null : (CreateInvite) octxt.player);
         
         boolean success = false;
