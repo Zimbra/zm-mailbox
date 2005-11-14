@@ -50,6 +50,8 @@ import com.zimbra.cs.util.BlobMetaDataEncodingException;
  */
 public class AuthToken {
 
+    private static final long DEFAULT_AUTH_LIFETIME = 60*60*12;
+    
     // TODO: config
     private static final int AUTHTOKEN_CACHE_SIZE = 5000;
     
@@ -139,13 +141,35 @@ public class AuthToken {
 			throw new AuthTokenException("blob decoding exception", e);
 		}
 	}
-	
+
+    /**
+     * @deprecated use AuthToken(Account)
+     * @param acct
+     * @param expires
+     */
 	public AuthToken(Account acct, long expires) {
 	    this(acct, expires, false, null);
 	}
 
+    public AuthToken(Account acct) throws AccountServiceException {
+        this(acct, null);
+    }
+
+    public AuthToken(Account acct, Account adminAcct) throws AccountServiceException {
+        mAccountId = acct.getId();
+        mEncoded = null;
+        mAdminAccountId = null;
+        mIsAdmin = "TRUE".equals(acct.getAttr(Provisioning.A_zimbraIsAdminAccount));
+        long lifetime = mIsAdmin ?
+                acct.getTimeInterval(Provisioning.A_zimbraAdminAuthTokenLifetime, DEFAULT_AUTH_LIFETIME*1000) :                                    
+                acct.getTimeInterval(Provisioning.A_zimbraAuthTokenLifetime, DEFAULT_AUTH_LIFETIME*1000);
+        mExpires = System.currentTimeMillis() + lifetime;
+        mAdminAccountId = adminAcct != null ? adminAcct.getId() : null;        
+        mEncoded = null;
+        mAdminAccountId = null;
+    }
+
     /**
-     * 
      * @param acct account authtoken will be valid for
      * @param expires when the token expires
      * @param isAdmin true if acct is an admin account
@@ -171,7 +195,7 @@ public class AuthToken {
 	public long getExpires() {
 		return mExpires;
 	}
-	
+
 	public boolean isExpired() {
 		return System.currentTimeMillis() > mExpires;
 	}
@@ -233,7 +257,7 @@ public class AuthToken {
 
     public static void main(String args[]) throws ServiceException, AuthTokenException {
         Account a = Provisioning.getInstance().getAccountByName("user1@example.zimbra.com");
-        AuthToken at = new AuthToken(a, System.currentTimeMillis()+60*60*24);
+        AuthToken at = new AuthToken(a);
         long start = System.currentTimeMillis();
         String encoded = at.getEncoded();
         for (int i = 0; i < 1000; i++) {

@@ -44,9 +44,6 @@ import com.zimbra.soap.ZimbraContext;
  */
 public class Auth extends DocumentHandler  {
 
-	// FIXME: config, sane value, default to 12 hours for now...
-	private static final long DEFAULT_AUTH_LIFETIME = 60*60*12;
-
     /** Returns (or creates) the in-memory {@link Session} object appropriate
      *  for this request.<p>
      * 
@@ -79,15 +76,7 @@ public class Auth extends DocumentHandler  {
             throw se;
         }
 
-        boolean isAdmin = "TRUE".equals(acct.getAttr(Provisioning.A_zimbraIsAdminAccount));
-
-        long lifetime = isAdmin ?
-                acct.getTimeInterval(Provisioning.A_zimbraAdminAuthTokenLifetime, DEFAULT_AUTH_LIFETIME*1000) :                                    
-                acct.getTimeInterval(Provisioning.A_zimbraAuthTokenLifetime, DEFAULT_AUTH_LIFETIME*1000);
-                    
-        long expires = System.currentTimeMillis()+ lifetime;
-
-        AuthToken at = new AuthToken(acct, expires, isAdmin, null);
+        AuthToken at = new AuthToken(acct);
         String token;
         try {
             token = at.getEncoded();
@@ -97,7 +86,7 @@ public class Auth extends DocumentHandler  {
 
         Element response = lc.createElement(AccountService.AUTH_RESPONSE);
         response.addAttribute(AccountService.E_AUTH_TOKEN, token, Element.DISP_CONTENT);
-        response.addAttribute(AccountService.E_LIFETIME, lifetime, Element.DISP_CONTENT);
+        response.addAttribute(AccountService.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.DISP_CONTENT);
         if (acct.isCorrectHost()) {
             Session session = lc.getNewSession(acct.getId(), SessionCache.SESSION_SOAP);
             if (session != null)

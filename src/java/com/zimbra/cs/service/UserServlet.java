@@ -29,10 +29,13 @@ import java.io.IOException;
 import java.util.HashMap;
 
 import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -67,6 +70,7 @@ import com.zimbra.cs.servlet.ZimbraServlet;
  *             {auth-types} = comma-separated list. Legal values are:
  *                            co     cookie
  *                            ba     basic auth
+ *                            nsc    do not set a cookie when using basic auth
  *                            (default is &quot;co,ba&quot;, i.e. check both)
  * </pre>
  */
@@ -89,6 +93,8 @@ public class UserServlet extends ZimbraServlet {
 
     public static final String AUTH_BASIC = "ba"; // basic auth
 
+    public static final String AUTH_NO_SET_COOKIE = "nsc"; // don't set auth token cookie after basic auth
+    
     public static final String AUTH_DEFAULT = "co,ba"; // both
 
     private HashMap mFormatters;
@@ -124,6 +130,15 @@ public class UserServlet extends ZimbraServlet {
             // fallback to basic auth
             if (context.basicAuthAllowed()) {
                 acct = basicAuthRequest(req, resp);
+                if (acct != null && !context.noSetCookie()) {
+                    // basic auth succeded
+                    try {
+                        AuthToken authToken = new AuthToken(acct);                        
+                        context.cookie = authToken.getEncoded();
+                        context.resp.addCookie(new Cookie(COOKIE_ZM_AUTH_TOKEN, context.cookie));
+                    } catch (AuthTokenException e) {
+                    }
+                }
                 // always return
                 return acct;
             }
@@ -233,27 +248,17 @@ public class UserServlet extends ZimbraServlet {
 
     public static class Context {
         public HttpServletRequest req;
-
         public HttpServletResponse resp;
-
         public String format;
-
+        public String cookie;
         public String accountPath;
-
         public String itemPath;
-
         public ItemId itemId;
-
         public Account authAccount;
-
         public Account targetAccount;
-
         public Mailbox targetMailbox;
-
         public OperationContext opContext;
-
         private long mStartTime = -1;
-
         private long mEndTime = -1;
 
         public Context(HttpServletRequest req, HttpServletResponse resp)
@@ -333,6 +338,10 @@ public class UserServlet extends ZimbraServlet {
 
         public boolean cookieAuthAllowed() {
             return getAuth().indexOf(AUTH_COOKIE) != -1;
+        }
+
+        public boolean noSetCookie() {
+            return getAuth().indexOf(AUTH_NO_SET_COOKIE) != -1;
         }
 
         public boolean basicAuthAllowed() {

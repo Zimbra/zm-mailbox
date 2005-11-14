@@ -43,8 +43,6 @@ import com.zimbra.soap.ZimbraContext;
  */
 public class Auth extends AdminDocumentHandler {
 
-	private static final long DEFAULT_AUTH_LIFETIME = 60*60*10;
-
     /** Returns (or creates) the in-memory {@link Session} object appropriate
      *  for this request.<p>
      * 
@@ -88,17 +86,15 @@ public class Auth extends AdminDocumentHandler {
         }
 
         Element response = lc.createElement(AdminService.AUTH_RESPONSE);
-        long lifetime = acct.getTimeInterval(Provisioning.A_zimbraAdminAuthTokenLifetime, DEFAULT_AUTH_LIFETIME*1000);
-        long expires = System.currentTimeMillis()+ lifetime;
         String token;
-        AuthToken at = new AuthToken(acct, expires, true, null);
+        AuthToken at = new AuthToken(acct);
         try {
             token = at.getEncoded();
         } catch (AuthTokenException e) {
             throw  ServiceException.FAILURE("unable to encode auth token", e);
         }
         response.addAttribute(AdminService.E_AUTH_TOKEN, token, Element.DISP_CONTENT);
-        response.addAttribute(AdminService.E_LIFETIME, lifetime, Element.DISP_CONTENT);
+        response.addAttribute(AdminService.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.DISP_CONTENT);
         Session session = lc.getNewSession(acct.getId(), SessionCache.SESSION_ADMIN);
         if (session != null)
             ZimbraContext.encodeSession(response, session, true);
