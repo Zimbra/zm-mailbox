@@ -26,6 +26,10 @@ public abstract class Formatter {
     public abstract String getType();
     private static final byte[] SEARCH_TYPES = new byte[] { MailItem.TYPE_MESSAGE };
 
+    public boolean requiresAuth() {
+        return true;
+    }
+    
     // eventually get this from query param ?start=long|YYYYMMMDDHHMMSS
     public long getDefaultStartTime() {
         return -1;

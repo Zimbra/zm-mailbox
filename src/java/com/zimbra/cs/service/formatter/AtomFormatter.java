@@ -29,8 +29,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 
-import net.fortuna.ical4j.model.Parameter;
-
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Message;
@@ -38,7 +36,6 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServlet.Context;
-import com.zimbra.cs.service.mail.CalendarUtils;
 import com.zimbra.cs.util.Constants;
 import com.zimbra.cs.util.DateUtil;
 import com.zimbra.soap.Element;

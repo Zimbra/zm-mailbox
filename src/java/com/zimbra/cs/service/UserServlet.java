@@ -46,6 +46,7 @@ import com.zimbra.cs.service.formatter.AtomFormatter;
 import com.zimbra.cs.service.formatter.CsvFormatter;
 import com.zimbra.cs.service.formatter.Formatter;
 import com.zimbra.cs.service.formatter.IcsFormatter;
+import com.zimbra.cs.service.formatter.IfbFormatter;
 import com.zimbra.cs.service.formatter.NativeFormatter;
 import com.zimbra.cs.service.formatter.RssFormatter;
 import com.zimbra.cs.service.formatter.ZipFormatter;
@@ -62,6 +63,8 @@ import com.zimbra.cs.servlet.ZimbraServlet;
  *          query={search-query}
  *          types={types} // when searching
  *          auth={auth-types}
+ *          start={start-time}  // milli for now
+ *          end={end-time}  // milli for now *          
  *          
  *             {types}   = comma-separated list.  Legal values are:
  *                         conversation|message|contact|appointment|note
@@ -86,6 +89,10 @@ public class UserServlet extends ZimbraServlet {
     public static final String QP_QUERY = "query"; // query query param
 
     public static final String QP_TYPES = "types"; // types
+    
+    public static final String QP_START = "start"; // start time
+    
+    public static final String QP_END = "end"; // end time
 
     public static final String QP_AUTH = "auth"; // auth types
 
@@ -107,40 +114,52 @@ public class UserServlet extends ZimbraServlet {
         addFormatter(new AtomFormatter());
         addFormatter(new NativeFormatter());
         addFormatter(new ZipFormatter());
+        addFormatter(new IfbFormatter());        
     }
 
     private void addFormatter(Formatter f) {
         mFormatters.put(f.getType(), f);
     }
 
-    private Account getAccount(Context context) throws IOException,
+    public Formatter getFormatter(String type) {
+        return (Formatter) mFormatters.get(type);
+    }
+
+    private void getAccount(Context context) throws IOException,
             ServletException, UserServletException {
         try {
             Provisioning prov = Provisioning.getInstance();
-            Account acct = null;
 
             // check cookie first
             if (context.cookieAuthAllowed()) {
-                acct = cookieAuthRequest(context.req, context.resp, true);
-                if (acct != null)
-                    return acct;
+                context.authAccount = cookieAuthRequest(context.req, context.resp, true);
+                if (context.authAccount != null)
+                    return;
             }
 
             // fallback to basic auth
             if (context.basicAuthAllowed()) {
-                acct = basicAuthRequest(context.req, context.resp);
-                if (acct != null) {
+                context.authAccount = basicAuthRequest(context.req, context.resp);
+                if (context.authAccount != null) {
                     context.basicAuthHappened = true;
+                    // send cookie back if need be. 
+                    if (!context.noSetCookie()) {
+                        try {
+                            AuthToken authToken = new AuthToken(context.authAccount);
+                            context.authTokenCookie = authToken.getEncoded();
+                            context.resp.addCookie(new Cookie(COOKIE_ZM_AUTH_TOKEN, context.authTokenCookie));
+                        } catch (AuthTokenException e) {
+                        }
+                    }
                 }
                 // always return
-                return acct;
+                return;
             }
 
             // when we support unauth'd/public things, change this to create the
             // special "public" account
             throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED,
                     "need to authenticate");
-
         } catch (ServiceException e) {
             throw new ServletException(e);
         }
@@ -149,33 +168,37 @@ public class UserServlet extends ZimbraServlet {
     public void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         try {
-            Context context = new Context(req, resp);
-            Account acct = getAccount(context);
-            if (acct == null)
-                return;
+            Context context = new Context(req, resp, this);
 
-            context.setAccount(acct);
-            
-            // send cookie back if need be. 
-            String authTokenCookie = null;
-            if (context.basicAuthHappened && !context.noSetCookie()) {
-                try {
-                    AuthToken authToken = new AuthToken(acct);                        
-                    authTokenCookie = authToken.getEncoded();
-                    context.resp.addCookie(new Cookie(COOKIE_ZM_AUTH_TOKEN, authTokenCookie));
-                } catch (AuthTokenException e) {
-                }
+            // if they specify /~/, we must auth
+            if (context.targetAccount == null && context.accountPath.equals("~")) {
+                getAccount(context);
+                if (context.authAccount == null) return;
+                context.targetAccount = context.authAccount;
+            }
+
+            // at this point we must have a target account
+            if (context.targetAccount == null)
+                throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "target account not found");
+
+            // auth is required if we haven't, or if they haven't specified a formatter that doesn't need auth.
+            boolean authRequired = context.authAccount == null &&
+                            (context.formatter == null || context.formatter.requiresAuth());
+
+            // need this before proxy if we want to support sending cookie from a basic-auth
+            if (authRequired) {
+                getAccount(context);
+                if (context.authAccount == null) return;                
             }
 
             // this should handle both explicit /user/user-on-other-server/ and
-            // /user/~/?id={account-id-on-other-server}:id
-
+            // /user/~/?id={account-id-on-other-server}:id            
             if (!context.targetAccount.isCorrectHost()) {
                 try {
-                    if (context.basicAuthHappened && authTokenCookie == null) 
-                        authTokenCookie = new AuthToken(acct).getEncoded();
+                    if (context.basicAuthHappened && context.authTokenCookie == null) 
+                        context.authTokenCookie = new AuthToken(context.authAccount).getEncoded();
                     proxyServletRequest(req, resp, context.targetAccount.getServer(),
-                                                context.basicAuthHappened ? authTokenCookie : null);
+                                                context.basicAuthHappened ? context.authTokenCookie : null);
                     return;
                 } catch (ServletException e) {
                     throw ServiceException.FAILURE("proxy error", e);
@@ -183,7 +206,10 @@ public class UserServlet extends ZimbraServlet {
                     throw ServiceException.FAILURE("proxy error", e);                    
                 }
             }
-            doAuthGet(req, resp, context);
+            if (context.authAccount == null)
+                doUnAuthGet(req, resp, context);
+            else
+                doAuthGet(req, resp, context);
         } catch (NoSuchItemException e) {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND, "no such item");
         } catch (ServiceException se) {
@@ -235,41 +261,75 @@ public class UserServlet extends ZimbraServlet {
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST,
                     "item not found");
 
-        if (context.format == null)
+        if (context.format == null) {
             context.format = defaultFormat(item);
+            if (context.format == null)
+                throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "unsupported format");
+        }            
 
-        if (context.format == null)
-            throw new UserServletException(
-                    HttpServletResponse.SC_NOT_IMPLEMENTED,
-                    "not implemented yet");
+        if (context.formatter == null)
+            context.formatter = (Formatter) mFormatters.get(context.format);
 
-        Formatter formatter = (Formatter) mFormatters.get(context.format);
+        if (context.formatter == null)
+            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "unsupported format");
 
-        if (formatter == null)
-            throw new UserServletException(
-                    HttpServletResponse.SC_NOT_IMPLEMENTED,
-                    "not implemented yet");
+        context.formatter.format(context, item);
+    }
 
-        formatter.format(context, item);
+    private void doUnAuthGet(HttpServletRequest req, HttpServletResponse resp,
+            Context context) throws ServletException, IOException,
+            ServiceException, UserServletException {
+        context.targetMailbox = Mailbox
+                .getMailboxByAccount(context.targetAccount);
+        if (context.targetMailbox == null) {
+            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST,
+                    "mailbox not found");
+        }
+        
+        // this SUCKS! Need an OperationContext that is for "public/unauth'd" access
+        context.opContext = null; // new OperationContext(context.authAccount);
+
+        MailItem item = null;
+
+        if (context.itemId != null) {
+            item = context.targetMailbox.getItemById(context.opContext, context.itemId.getId(), MailItem.TYPE_UNKNOWN);
+        } else {
+            Folder folder = context.targetMailbox.getFolderByPath(context.opContext, context.itemPath);
+            item = folder;
+        }
+
+        if (item == null && context.getQueryString() == null)
+            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST,
+                    "item not found");
+
+        // UnAuth'd get *MUST* already have formatter set!
+        if (context.formatter == null)
+            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "unsupported format");
+        context.formatter.format(context, item);
     }
 
     public static class Context {
         public HttpServletRequest req;
         public HttpServletResponse resp;
         public String format;
+        public Formatter formatter;        
         public boolean basicAuthHappened;
         public String accountPath;
+        public String authTokenCookie;
         public String itemPath;
         public ItemId itemId;
         public Account authAccount;
         public Account targetAccount;
         public Mailbox targetMailbox;
         public OperationContext opContext;
-        private long mStartTime = -1;
-        private long mEndTime = -1;
+        private long mStartTime = -2;
+        private long mEndTime = -2;
 
-        public Context(HttpServletRequest req, HttpServletResponse resp)
-                throws IOException, UserServletException {
+        Context(HttpServletRequest req, HttpServletResponse resp, UserServlet servlet)
+                throws IOException, UserServletException, ServiceException {
+            
+            Provisioning prov = Provisioning.getInstance();
+            
             this.req = req;
             this.resp = resp;
 
@@ -297,8 +357,27 @@ public class UserServlet extends ZimbraServlet {
                         HttpServletResponse.SC_BAD_REQUEST,
                         "invalid id requested");
             }
-            if (this.format != null)
+
+            if (this.format != null) {
                 this.format = this.format.toLowerCase();
+                this.formatter = (Formatter) servlet.getFormatter(this.format);
+                if (this.formatter == null)
+                    throw new UserServletException(
+                            HttpServletResponse.SC_NOT_IMPLEMENTED,
+                            "not implemented yet");
+            }                
+
+            // see if we can get target account or not
+            if (itemId != null && itemId.getAccountId() != null) {
+                targetAccount = prov.getAccountById(itemId.getAccountId());
+                return;
+            } else if (accountPath.equals("~")) {
+                // can't resolve this yet
+                return;
+            } else if (accountPath.startsWith("~")) {
+                accountPath = accountPath.substring(1);
+            }
+            targetAccount = prov.getAccountByName(accountPath);                
         }
 
         public void setAccount(Account acct) throws IOException,
@@ -325,16 +404,18 @@ public class UserServlet extends ZimbraServlet {
 
         // eventually get this from query param ?start=long|YYYYMMMDDHHMMSS
         public long getStartTime() {
-            if (mStartTime == -1) {
-                //
+            if (mStartTime == -2) {
+                String st = req.getParameter(QP_START);
+                mStartTime = (st != null) ? Long.parseLong(st) : -1;
             }
             return mStartTime;
         }
 
         // eventually get this from query param ?end=long|YYYYMMMDDHHMMSS
         public long getEndTime() {
-            if (mEndTime == -1) {
-                // query param
+            if (mEndTime == -2) {
+                String et = req.getParameter(QP_END);
+                mEndTime = (et != null) ? Long.parseLong(et) : -1;                
             }
             return mEndTime;
         }
