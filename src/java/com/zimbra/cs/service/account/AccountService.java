@@ -65,6 +65,9 @@ public class AccountService implements DocumentService {
     public static final QName SYNC_GAL_REQUEST = QName.get("SyncGalRequest", NAMESPACE);
     public static final QName SYNC_GAL_RESPONSE = QName.get("SyncGalResponse", NAMESPACE);  
 
+    public static final QName MODIFY_PROPERTIES_REQUEST = QName.get("ModifyPropertiesRequest", NAMESPACE);
+    public static final QName MODIFY_PROPERTIES_RESPONSE = QName.get("ModifyPropertiesResponse", NAMESPACE);
+
     public static final String E_ACTION = "action";
     public static final String E_AUTH_TOKEN = "authToken";
     public static final String E_REFERRAL = "refer";
@@ -81,9 +84,12 @@ public class AccountService implements DocumentService {
     public static final String E_QUOTA_USED = "used";
     public static final String E_ZIMLET = "zimlet";
     public static final String E_ZIMLETS = "zimlets";
+    public static final String E_PROPERTY = "prop";
+    public static final String E_PROPERTIES = "props";
 
     public static final String A_NAME = "name";
     public static final String A_BY = "by";    
+    public static final String A_ZIMLET = "zimlet";
 
 	public void registerHandlers(DocumentDispatcher dispatcher) {
 
@@ -101,6 +107,8 @@ public class AccountService implements DocumentService {
         dispatcher.registerHandler(SEARCH_GAL_REQUEST, new SearchGal());
         
         dispatcher.registerHandler(SYNC_GAL_REQUEST, new SyncGal());        
+
+        dispatcher.registerHandler(MODIFY_PROPERTIES_REQUEST, new ModifyProperties());
 	}
 
 }

@@ -28,19 +28,19 @@
  */
 package com.zimbra.cs.service.account;
 
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.cs.zimlet.ZimletUtil;
+import com.zimbra.cs.zimlet.ZimletProperty;
+import com.zimbra.cs.zimlet.ZimletUserProperties;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
@@ -74,6 +74,8 @@ public class GetInfo extends DocumentHandler  {
         doAttrs(attrs, attrMap);
         Element zimlets = response.addUniqueElement(AccountService.E_ZIMLETS);
         doZimlets(zimlets, acct);
+        Element props = response.addUniqueElement(AccountService.E_PROPERTIES);
+        doProperties(props, acct);
         return response;
     }
 
@@ -139,5 +141,18 @@ public class GetInfo extends DocumentHandler  {
     	
     	// load the zimlets in the dev directory and list them
     	ZimletUtil.listDevZimlets(response);
+    }
+    
+    private static void doProperties(Element response, Account acct) throws ServiceException {
+    	ZimletUserProperties zp = ZimletUserProperties.getProperties(acct);
+    	Set props = zp.getAllProperties();
+    	Iterator iter = props.iterator();
+    	while (iter.hasNext()) {
+    		ZimletProperty prop = (ZimletProperty) iter.next();
+    		Element elem = response.addElement(AccountService.E_PROPERTY);
+    		elem.addAttribute(AccountService.A_ZIMLET, prop.getZimletName());
+    		elem.addAttribute(AccountService.A_NAME, prop.getKey());
+    		elem.setText((String) prop.getValue());
+    	}
     }
 }
