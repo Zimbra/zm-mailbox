@@ -44,8 +44,6 @@ import javax.mail.internet.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import net.fortuna.ical4j.model.Parameter;
-import net.fortuna.ical4j.model.property.Organizer;
 //
 import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.mailbox.*;
@@ -54,6 +52,7 @@ import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.ParsedDuration;
 import com.zimbra.cs.mailbox.calendar.Recurrence;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
+import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.ServiceException;
@@ -916,11 +915,14 @@ public class ToXML {
             e.addAttribute(MailService.A_APPT_LOCATION, invite.getLocation());
             
             // Organizer
-            Organizer org = invite.getOrganizer();
+            ZOrganizer org = invite.getOrganizer();
             if (org != null) {
                 Element orgElt = e.addUniqueElement(MailService.E_APPT_ORGANIZER);
-                orgElt.addAttribute(MailService.A_DISPLAY, CalendarUtils.paramVal(org, Parameter.CN));
-                String str = org.getCalAddress().getSchemeSpecificPart();
+                
+                if (org.hasCn()) {
+                    orgElt.addAttribute(MailService.A_DISPLAY, org.getCn());
+                }
+                String str = org.getAddress();
                 orgElt.addAttribute(MailService.A_URL, str);
             }
             

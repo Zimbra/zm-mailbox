@@ -210,7 +210,7 @@ public class SendInviteReply extends CalendarRequest {
         replyText.append(verb.toString());
         replyText.append(" your invitation");
         
-        return CalendarUtils.createDefaultCalendarMessage(from, inv.getOrganizer().getCalAddress().getSchemeSpecificPart(), replySubject, 
+        return CalendarUtils.createDefaultCalendarMessage(from, inv.getOrganizer().getAddress(), replySubject, 
                 replyText.toString(), inv.getUid(), iCal);
     }
     

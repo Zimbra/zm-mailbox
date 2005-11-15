@@ -99,8 +99,8 @@ public class AtomFormatter extends Formatter {
             entry.addElement("summary").setText(inv.getFragment());
             Element author = entry.addElement("author");
             // TODO: only personal part in name            
-            author.addElement("name").setText(CalendarUtils.paramVal(inv.getOrganizer(), Parameter.CN));            
-            author.addElement("email").setText(CalendarUtils.paramVal(inv.getOrganizer(), Parameter.CN));
+            author.addElement("name").setText(inv.getOrganizer().getCn());            
+            author.addElement("email").setText(inv.getOrganizer().getAddress());
         }                    
         
     }

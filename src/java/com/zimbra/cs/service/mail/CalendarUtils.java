@@ -27,7 +27,6 @@ package com.zimbra.cs.service.mail;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.net.URI;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -56,10 +55,8 @@ import net.fortuna.ical4j.model.ParameterList;
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.Recur;
 import net.fortuna.ical4j.model.component.VEvent;
-import net.fortuna.ical4j.model.parameter.Cn;
 import net.fortuna.ical4j.model.parameter.PartStat;
 import net.fortuna.ical4j.model.property.Method;
-import net.fortuna.ical4j.model.property.Organizer;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -75,6 +72,7 @@ import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.Recurrence;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
+import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.soap.Element;
 
@@ -659,19 +657,23 @@ public class CalendarUtils {
         } else {
             String cn = orgElt.getAttribute(MailService.A_DISPLAY, null);
             String address = orgElt.getAttribute(MailService.A_ADDRESS);
-            URI uri = null;
-            try { 
-                uri = new URI("MAILTO", address, null);
-            } catch (java.net.URISyntaxException e) {
-                throw ServiceException.FAILURE("Building Organizer URI", e);
-            }
             
-            Organizer org = new Organizer(uri);
+            ZOrganizer org = new ZOrganizer(cn, address);
             newInv.setOrganizer(org);
-            ParameterList params = org.getParameters();
-            if (cn != null) {
-                params.add(new Cn(cn));
-            }
+            
+//            URI uri = null;
+//            try { 
+//                uri = new URI("MAILTO", address, null);
+//            } catch (java.net.URISyntaxException e) {
+//                throw ServiceException.FAILURE("Building Organizer URI", e);
+//            }
+//            
+//            Organizer org = new Organizer(uri);
+//            newInv.setOrganizer(org);
+//            ParameterList params = org.getParameters();
+//            if (cn != null) {
+//                params.add(new Cn(cn));
+//            }
         }
         
         // SUMMARY (aka Name or Subject)

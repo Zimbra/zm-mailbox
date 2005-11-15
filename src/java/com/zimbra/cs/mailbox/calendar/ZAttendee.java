@@ -94,7 +94,7 @@ public class ZAttendee {
     private static final String FN_RSVP_BOOL       = "v";
 
     public String getAddress() {
-        return mAddress != null ? mAddress : ""; 
+        return mAddress != null ? mAddress : "";
     }
     public String getCn() { return mCn != null ? mCn : ""; }
     public String getRole() { return mRole != null ? mRole : ""; }
@@ -102,6 +102,12 @@ public class ZAttendee {
     public Boolean getRsvp() { return mRsvp != null ? mRsvp : Boolean.FALSE; }
     
     public void setAddress(String address) {
+        if (address != null) {
+            if (address.toLowerCase().startsWith("mailto:")) {
+                // MAILTO:  --> 
+                address = address.substring(7); 
+            }
+        }
         mAddress = address; 
     }
     public void setCn(String cn) { mCn = cn; }
@@ -213,6 +219,5 @@ public class ZAttendee {
         } catch (java.net.URISyntaxException e) {
             throw ServiceException.FAILURE("Building Attendee URI for address "+mAddress, e);
         }
-            
     }
 }

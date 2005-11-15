@@ -334,8 +334,8 @@ public class Invite {
         meta.put(FN_DTSTAMP, inv.getDTStamp());
         meta.put(FN_SEQ_NO, inv.getSeqNo());
         
-        if (inv.getOrganizer() != null) {
-            meta.put(FN_ORGANIZER, encodeAsMetadata(inv.getOrganizer()));
+        if (inv.getPrivOrg() != null) {
+            meta.put(FN_ORGANIZER, encodeAsMetadata(inv.getPrivOrg()));
         }
         
         List ats = inv.getAttendees();
@@ -851,10 +851,10 @@ public class Invite {
      * @throws ServiceException
      */
     public boolean thisAcctIsOrganizer(Account acct) throws ServiceException {
-        if (getOrganizer() == null) {
+        if (getPrivOrg() == null) {
             return true; // assume we are...is this right?
         }
-        String addr = getOrganizer().getCalAddress().getSchemeSpecificPart();
+        String addr = getPrivOrg().getCalAddress().getSchemeSpecificPart();
         return AccountUtil.addressMatchesAccount(acct, addr);
     }
     
@@ -1140,8 +1140,17 @@ public class Invite {
         mOrganizer = org;
     }
     
-    public Organizer getOrganizer() {
+    public void setOrganizer(ZOrganizer org) throws ServiceException {
+        mOrganizer = org.iCal4jOrganizer();
+    }
+    
+    
+    private Organizer getPrivOrg() {
         return mOrganizer;
+    }
+    
+    public ZOrganizer getOrganizer() {
+        return new ZOrganizer(mOrganizer);
     }
     
     public String getType() {
