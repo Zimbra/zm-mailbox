@@ -27,6 +27,7 @@ package com.zimbra.cs.service;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.Iterator;
 
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -47,6 +48,8 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.calendar.FreeBusy;
+import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.RecurId;
@@ -69,14 +72,139 @@ public class PublicICalServlet extends ZimbraServlet
     private static final String PARAM_RECUR = "r";
     private static final String PARAM_VERB = "v";
     private static final String PARAM_INVID = "invId";
+    
+    private static final long MSEC_PER_DAY = 1000*60*60*24;
+    
+    private static final long MAX_PERIOD_SIZE_IN_DAYS = 200;
+    
+    private static final long ONE_MONTH = MSEC_PER_DAY*31;
+    
+    private static final String NL = "\n";
 
     
     public final void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
         String pathInfo = req.getPathInfo().toLowerCase();
         boolean isReply = pathInfo != null && pathInfo.endsWith("reply");
+        boolean isFreeBusy = pathInfo != null && pathInfo.endsWith("freebusy.ifb");
         
         if (isReply) {
             doReply(req, resp);
+        } else if (isFreeBusy) {
+            doGetFreeBusy(req, resp);
+        }
+    }
+    
+    /**
+     * 
+     * http://localhost:7070/service/pubcal/freebusy.ifb?acct=user@host.com
+     * 
+     * @param req
+     * @param resp
+     * @throws IOException
+     * @throws ServletException
+     */
+    public final void doGetFreeBusy(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
+        String acctName = req.getParameter("acct");
+        String startStr = req.getParameter("s");
+        String endStr = req.getParameter("e");
+        
+        resp.setContentType(Mime.CT_TEXT_PLAIN);
+        
+        if (checkBlankOrNull(resp, "acct", acctName)) {
+            return;
+        }
+
+        long now = new Date().getTime();
+        
+        long rangeStart = now - ONE_MONTH;
+        long rangeEnd = now + (2 * ONE_MONTH); 
+            
+        if (startStr != null) {
+            rangeStart = Long.parseLong(startStr);
+        }
+        
+        if (endStr != null) {
+            rangeEnd = Long.parseLong(endStr);
+        }
+        
+        if (rangeEnd < rangeStart) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "End time must be after Start time");
+            return;
+        }
+        
+        long days = (rangeEnd-rangeStart)/MSEC_PER_DAY;
+        if (days > MAX_PERIOD_SIZE_IN_DAYS) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Requested range is too large (Maximum "+MAX_PERIOD_SIZE_IN_DAYS+" days)");
+            return;
+        }
+        
+        try {
+            Account acct = Provisioning.getInstance().getAccountByName(acctName);
+            if (acct == null) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Account "+acctName+" not found");
+                return;
+            }
+            
+            Mailbox mbox = Mailbox.getMailboxByAccountId(acct.getId());
+            if (mbox == null) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "mailbox not found");
+                return;             
+            }
+            
+            ParsedDateTime dtStart = ParsedDateTime.fromUTCTime(rangeStart);
+            ParsedDateTime dtEnd = ParsedDateTime.fromUTCTime(rangeEnd);
+
+            
+            StringBuffer toRet = new StringBuffer("BEGIN:VFREEBUSY").append(NL);
+            
+            toRet.append("ORGANIZER:").append(mbox.getAccount().getName()).append(NL);
+            toRet.append("DTSTART:").append(dtStart.toString()).append(NL);
+            toRet.append("DTEND:").append(dtEnd.toString()).append(NL);
+            toRet.append("URL:").append(req.getRequestURL()).append('?').append(req.getQueryString()).append(NL);
+            
+            FreeBusy fb = mbox.getFreeBusy(rangeStart, rangeEnd);
+            
+//            BEGIN:VFREEBUSY
+//            ORGANIZER:jsmith@host.com
+//            DTSTART:19980313T141711Z
+//            DTEND:19980410T141711Z
+//            FREEBUSY:19980314T233000Z/19980315T003000Z
+//            FREEBUSY:19980316T153000Z/19980316T163000Z
+//            FREEBUSY:19980318T030000Z/19980318T040000Z
+//            URL:http://www.host.com/calendar/busytime/jsmith.ifb
+//            END:VFREEBUSY
+            
+            
+            for (Iterator iter = fb.iterator(); iter.hasNext(); ) {
+                FreeBusy.Interval cur = (FreeBusy.Interval)iter.next();
+                String status = cur.getStatus();
+                
+                if (status.equals(IcalXmlStrMap.FBTYPE_FREE)) {
+                    continue;
+                } else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY)) {
+                    toRet.append("FREEBUSY:");
+                } else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY_TENTATIVE)) {
+                    toRet.append("FREEBUSY;FBTYPE=BUSY-TENTATIVE:");
+                } else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY_UNAVAILABLE)) {
+                    toRet.append("FREEBUSY;FBTYPE=BUSY-UNAVAILABLE:");
+                } else {
+                    assert(false);
+                    toRet.append(":");
+                }
+                
+                ParsedDateTime curStart = ParsedDateTime.fromUTCTime(cur.getStart());
+                ParsedDateTime curEnd = ParsedDateTime.fromUTCTime(cur.getEnd());
+                
+                toRet.append(curStart.toString()).append('/').append(curEnd.toString()).append(NL);
+            }
+            
+            toRet.append("END:VFREEBUSY").append(NL);
+            
+            resp.getOutputStream().write(toRet.toString().getBytes());
+          
+        } catch (ServiceException e) {
+            e.printStackTrace();
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Caught exception: "+e);
         }
     }
     
@@ -99,7 +227,7 @@ public class PublicICalServlet extends ZimbraServlet
 
             Account acct = Provisioning.getInstance().getAccountByName(org);
             if (acct == null) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Account "+org+" not found");
+                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Account "+org+" not found");
                 return;             
             }
             
