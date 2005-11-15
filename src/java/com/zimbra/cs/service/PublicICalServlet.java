@@ -108,7 +108,7 @@ public class PublicICalServlet extends ZimbraServlet
         String startStr = req.getParameter("s");
         String endStr = req.getParameter("e");
         
-        resp.setContentType(Mime.CT_TEXT_PLAIN);
+        resp.setContentType(Mime.CT_TEXT_CALENDAR);
         
         if (checkBlankOrNull(resp, "acct", acctName)) {
             return;
