@@ -61,8 +61,6 @@ public class PrivilegedServlet extends HttpServlet {
         int port;
         String address;
         try {
-            checkLDAP();
-
             if (LC.ssl_allow_untrusted_certs.booleanValue())
                 EasySSLProtocolSocketFactory.init();
             
@@ -70,6 +68,8 @@ public class PrivilegedServlet extends HttpServlet {
             System.setProperty("javax.net.ssl.keyStorePassword", "zimbra");
             System.setProperty("javax.net.ssl.trustStorePassword", "changeit");
             
+            checkLDAP();
+
             server = Provisioning.getInstance().getLocalServer();
 
             port = server.getIntAttr(Provisioning.A_zimbraPop3BindPort, Config.D_POP3_BIND_PORT);
