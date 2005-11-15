@@ -153,11 +153,16 @@ public class PublicICalServlet extends ZimbraServlet
             
             ParsedDateTime dtStart = ParsedDateTime.fromUTCTime(rangeStart);
             ParsedDateTime dtEnd = ParsedDateTime.fromUTCTime(rangeEnd);
+            ParsedDateTime dtNow = ParsedDateTime.fromUTCTime(now);
 
-            
-            StringBuffer toRet = new StringBuffer("BEGIN:VFREEBUSY").append(NL);
+            //StringBuffer toRet = new StringBuffer("BEGIN:VFREEBUSY").append(NL);
+            StringBuffer toRet = new StringBuffer("BEGIN:VCALENDAR").append(NL);
+            toRet.append("VERSION:2.0").append(NL);
+            toRet.append("METHOD:PUBLISH").append(NL);
+            toRet.append("BEGIN:VFREEBUSY").append(NL);
             
             toRet.append("ORGANIZER:").append(mbox.getAccount().getName()).append(NL);
+            toRet.append("DTSTAMP:").append(dtNow.toString()).append(NL);
             toRet.append("DTSTART:").append(dtStart.toString()).append(NL);
             toRet.append("DTEND:").append(dtEnd.toString()).append(NL);
             toRet.append("URL:").append(req.getRequestURL()).append('?').append(req.getQueryString()).append(NL);
@@ -199,6 +204,7 @@ public class PublicICalServlet extends ZimbraServlet
             }
             
             toRet.append("END:VFREEBUSY").append(NL);
+            toRet.append("END:VCALENDAR").append(NL);
             
             resp.getOutputStream().write(toRet.toString().getBytes());
           
