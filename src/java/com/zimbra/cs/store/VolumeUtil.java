@@ -25,7 +25,10 @@
 package com.zimbra.cs.store;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
@@ -108,17 +111,12 @@ public class VolumeUtil extends SoapCLI {
             } else if (cl.hasOption(O_SC)) {
                 if (id == null)
                     throw new ParseException("volume id is missing");
-                if (type == null)
-                    throw new ParseException("type is missing");
-                short t = VolumeUtil.getTypeId(type);
-                if (t < 0)
-                    throw new IllegalArgumentException("invalid volume type: " + type);
                 short shortId = Short.parseShort(id);
                 if (shortId < 0)
                     throw new IllegalArgumentException("id cannot be less than 0");
-                util.setCurrentVolume(shortId, t);
+                util.setCurrentVolume(shortId);
             } else if (cl.hasOption(O_TS)) {
-                util.setCurrentVolume(Volume.ID_NONE, Volume.TYPE_MESSAGE_SECONDARY);
+            	util.unsetCurrentSecondaryMessageVolume();
             } else {
                 throw new ParseException("No action (-a,-d,-l,-e,-dc,-sc,-ts) is specified");
             }
@@ -131,32 +129,50 @@ public class VolumeUtil extends SoapCLI {
         System.exit(1);
     }
 
-    private void setCurrentVolume(short id, short type) throws SoapFaultException, IOException, ServiceException {
-        Element req = new Element.XMLElement(AdminService.SET_CURRENT_VOLUME_REQUEST);
-        if (id >= 0) {
-            req.addAttribute(AdminService.A_ID, id);
-        }
+    private void setCurrentVolume(short id) throws SoapFaultException, IOException, ServiceException {
+    	Integer idInt = new Integer(id);
+    	Map vols = getVolumes(idInt.toString(), true);
+    	Map vol = (Map) vols.get(idInt);
+    	if (vol == null) {
+    		System.err.println("Volume " + id + " does not exist");
+    		System.exit(1);
+    	}
+    	short type = (short) ((Integer) vol.get(AdminService.A_VOLUME_TYPE)).intValue();
+    	Element req = new Element.XMLElement(AdminService.SET_CURRENT_VOLUME_REQUEST);
         req.addAttribute(AdminService.A_VOLUME_TYPE, type);
+        req.addAttribute(AdminService.A_ID, id);
         auth();
         getTransport().invokeWithoutSession(req);
-        if (id >= 0) {
-            System.out.println("Volume " + id + " is now the current " + VolumeUtil.getTypeName(type) + " volume.");
-        } else {
-            System.out.println("Turned off the current secondary message volume.");
-        }
+        System.out.println("Volume " + id + " is now the current " +
+        		           VolumeUtil.getTypeName(type) + " volume.");
     }
 
-    private void displayCurrentVolumes() throws SoapFaultException, IOException, ServiceException {
-        Element req = new Element.XMLElement(AdminService.GET_CURRENT_VOLUMES_REQUEST);
+    private void unsetCurrentSecondaryMessageVolume()
+    throws SoapFaultException, IOException, ServiceException {
+        Element req = new Element.XMLElement(AdminService.SET_CURRENT_VOLUME_REQUEST);
+        req.addAttribute(AdminService.A_VOLUME_TYPE, Volume.TYPE_MESSAGE_SECONDARY);
+        req.addAttribute(AdminService.A_ID, Volume.ID_NONE);
         auth();
+        getTransport().invokeWithoutSession(req);
+        System.out.println("Turned off the current secondary message volume.");
+    }
+
+    private void displayCurrentVolumes()
+    throws SoapFaultException, IOException, ServiceException {
+    	Map vols = getVolumes(null, true);
+        Element req = new Element.XMLElement(AdminService.GET_CURRENT_VOLUMES_REQUEST);
         Element resp = getTransport().invokeWithoutSession(req);
         for (Iterator it = resp.elementIterator(AdminService.E_VOLUME); it.hasNext(); ) {
             Element volElem = (Element) it.next();
-            listVolumes(volElem.getAttribute(AdminService.A_ID), false);
+            Integer key = new Integer(volElem.getAttribute(AdminService.A_ID));
+            Map vol = (Map) vols.get(key);
+            listVolume(vol);
         }
     }
 
-    private void listVolumes(String id, boolean auth) throws SoapFaultException, IOException, ServiceException {
+    private Map getVolumes(String id, boolean auth)
+    throws SoapFaultException, IOException, ServiceException {
+    	Map vols = new LinkedHashMap();
         if (auth)
             auth();
         Element req = null;
@@ -171,8 +187,7 @@ public class VolumeUtil extends SoapCLI {
             Element volElem = (Element) it.next();
             String vid = volElem.getAttribute(AdminService.A_ID);
             String name = volElem.getAttribute(AdminService.A_VOLUME_NAME);
-            short t = (short) volElem.getAttributeLong(AdminService.A_VOLUME_TYPE);
-            String type = VolumeUtil.getTypeName(t);
+            short type = (short) volElem.getAttributeLong(AdminService.A_VOLUME_TYPE);
             String path = volElem.getAttribute(AdminService.A_VOLUME_ROOTPATH);
 //            String fbits = volElem.getAttribute(AdminService.A_VOLUME_FBITS);
 //            String fgbits = volElem.getAttribute(AdminService.A_VOLUME_FGBITS);
@@ -180,26 +195,64 @@ public class VolumeUtil extends SoapCLI {
 //            String mgbits = volElem.getAttribute(AdminService.A_VOLUME_MGBITS);
             boolean compressed = volElem.getAttributeBool(AdminService.A_VOLUME_COMPRESS_BLOBS);
             String threshold = volElem.getAttribute(AdminService.A_VOLUME_COMPRESSION_THRESHOLD);
-            System.out.println("   Volume id: " + vid);
-            System.out.println("        name: " + name);
-            System.out.println("        type: " + type);
-            System.out.println("        path: " + path);
-            System.out.print("  compressed: " + compressed);
-            if (compressed)
-                System.out.println("\t         threshold: " + threshold + " bytes");
-            else
-                System.out.println();
-//            System.out.println("   file bits: " + fbits +      "\t   file group bits: " + fgbits);
-//            System.out.println("mailbox bits: " + mbits +      "\tmailbox group bits: " + mgbits);
-            System.out.println();
+
+            Map vol = new HashMap();
+            Integer key = new Integer(vid);
+            vol.put(AdminService.A_ID, key);
+            vol.put(AdminService.A_VOLUME_NAME, name);
+            vol.put(AdminService.A_VOLUME_TYPE, new Integer(type));
+            vol.put(AdminService.A_VOLUME_ROOTPATH, path);
+//            vol.put(AdminService.A_VOLUME_FBITS, new Integer(fbits));
+//            vol.put(AdminService.A_VOLUME_FGBITS, new Integer(fgbits));
+//            vol.put(AdminService.A_VOLUME_MBITS, new Integer(mbits));
+//            vol.put(AdminService.A_VOLUME_MGBITS, new Integer(mgbits));
+            vol.put(AdminService.A_VOLUME_COMPRESS_BLOBS, new Boolean(compressed));
+            vol.put(AdminService.A_VOLUME_COMPRESSION_THRESHOLD, new Integer(threshold));
+            vols.put(key, vol);
         }
+
+        return vols;
+    }
+
+    private void listVolume(Map vol) {
+		short vid = (short) ((Integer) vol.get(AdminService.A_ID)).intValue();
+        short type = (short) ((Integer) vol.get(AdminService.A_VOLUME_TYPE)).intValue();
+        boolean compressed = ((Boolean) vol.get(AdminService.A_VOLUME_COMPRESS_BLOBS)).booleanValue();
+        int threshold = ((Integer) vol.get(AdminService.A_VOLUME_COMPRESSION_THRESHOLD)).intValue();
+//        int fbits = ((Integer) vol.get(AdminService.A_VOLUME_FBITS)).intValue();
+//        int fgbits = ((Integer) vol.get(AdminService.A_VOLUME_FGBITS)).intValue();
+//        int mbits = ((Integer) vol.get(AdminService.A_VOLUME_MBITS)).intValue();
+//        int mgbits = ((Integer) vol.get(AdminService.A_VOLUME_MGBITS)).intValue();
+
+        System.out.println("   Volume id: " + vid);
+        System.out.println("        name: " + vol.get(AdminService.A_VOLUME_NAME));
+        System.out.println("        type: " + VolumeUtil.getTypeName(type));
+        System.out.println("        path: " + vol.get(AdminService.A_VOLUME_ROOTPATH));
+        System.out.print("  compressed: " + compressed);
+        if (compressed)
+            System.out.println("\t         threshold: " + threshold + " bytes");
+        else
+            System.out.println();
+//        System.out.println("   file bits: " + fbits +      "\t   file group bits: " + fgbits);
+//        System.out.println("mailbox bits: " + mbits +      "\tmailbox group bits: " + mgbits);
+        System.out.println();
+    }
+
+    private void listVolumes(String id, boolean auth)
+    throws SoapFaultException, IOException, ServiceException {
+    	Map vols = getVolumes(id, auth);
+    	for (Iterator iter = vols.keySet().iterator(); iter.hasNext(); ) {
+    		Integer key = (Integer) iter.next();
+    		Map vol = (Map) vols.get(key);
+    		listVolume(vol);
+    	}
     }
 
     private void deleteVolume(String id) throws SoapFaultException, IOException, ServiceException {
         Element req = new Element.XMLElement(AdminService.DELETE_VOLUME_REQUEST);
         req.addAttribute(AdminService.A_ID, id);
         auth();
-        Element resp = getTransport().invokeWithoutSession(req);
+        getTransport().invokeWithoutSession(req);
         System.out.println("Deleted volume " + id);
     }
 
@@ -214,7 +267,7 @@ public class VolumeUtil extends SoapCLI {
         addAttributes(vol, name, type, path, fileBits, fileGroupBits,
                 mailboxBits, mailboxGroupBits, compress, compressThreshold);
         auth();
-        Element resp = getTransport().invokeWithoutSession(req);
+        getTransport().invokeWithoutSession(req);
         System.out.println("Edited volume " + id);
     }
 
@@ -372,7 +425,6 @@ public class VolumeUtil extends SoapCLI {
         printOpt(O_DC, 0);
         printOpt(O_SC, 0);
         printOpt(O_ID, 2);
-        printOpt(O_T, 2);
         printOpt(O_TS, 0);
     }
     
