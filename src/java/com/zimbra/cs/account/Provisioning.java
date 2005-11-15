@@ -452,6 +452,8 @@ public abstract class Provisioning {
 
     public static final String A_zimbraLogHostname = "zimbraLogHostname";
 
+    public static final String A_zimbraMessageCacheSize = "zimbraMessageCacheSize";
+
     public static final String A_zimbraMtaAuthEnabled = "zimbraMtaAuthEnabled";
     public static final String A_zimbraMtaBlockedExtension = "zimbraMtaBlockedExtension";
     public static final String A_zimbraMtaCommonBlockedExtension = "zimbraMtaCommonBlockedExtension";
