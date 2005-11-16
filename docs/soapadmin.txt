@@ -25,6 +25,8 @@ When updating multiple attributes, you need to specify all the old values at the
 
 Note: Only works with admin accounts
 
+Access: domain admin sufficient
+
 ----------------------------
  <DelegateAuthRequest xmlns="urn:zimbraAdmin" [duration="{duration}"]>
    <account by="id|name">...</account> 
@@ -62,6 +64,8 @@ Notes:
 
   default value for zimbraAccountStatus is "active"  
 
+Access: domain admin sufficient
+
 -----------------------------
 
 <GetAccountRequest [applyCos="{apply-cos}"]>
@@ -79,6 +83,8 @@ Notes:
  if {apply-cos} is 1, then COS rules apply and unset attrs on an account will get their value from the COS.
 
  if {apply-cos} is 0, then only attributes directly set on the account will be returned
+
+Access: domain admin sufficient
 
 -----------------------------
 
@@ -107,6 +113,8 @@ Notes:
 
   an empty attribute value removes the specified attr
 
+Access: domain admin sufficient. limited set of attributes that can be updated by a domain admin.
+
 -----------------------------
 
 <RenameAccountRequest>
@@ -120,6 +128,8 @@ Notes:
   </account>  
 </RenameAccountResponse>
 
+Access: domain admin sufficient
+
 -----------------------------
 
 <DeleteAccountRequest>
@@ -127,6 +137,8 @@ Notes:
 </DeleteAccountRequest>
 
 <DeleteAccountResponse/>
+
+Access: domain admin sufficient
 
 -----------------------------
 
@@ -137,6 +149,8 @@ Notes:
 
 <SetPasswordResponse/>
 
+Access: domain admin sufficient
+
 -----------------------------
 
 <AddAccountAliasRequest>
@@ -146,6 +160,8 @@ Notes:
 
 <AddAccountAliasResponse/>
 
+Access: domain admin sufficient
+
 -----------------------------
 
 <RemoveAccountAliasRequest>
@@ -154,6 +170,8 @@ Notes:
 </RemoveAccountAliasRequest>
 
 <RemoveAccountAliasResponse/>
+
+Access: domain admin sufficient
 
 -----------------------------
 
@@ -191,6 +209,8 @@ SearchAccountsRequest
             accounts|distributionlists|aliases 
             (default is accounts)
 
+Access: domain admin sufficient
+
 -----------------------------
 
 <GetAllAccountsRequest>
@@ -202,6 +222,8 @@ SearchAccountsRequest
     <a n="...">...</a>+
   </account>  
 </GetAllAccountsResponse>
+
+Access: domain admin sufficient
 
 -----------------------------
 
@@ -500,6 +522,9 @@ Notes:
 
 purges aged messages out of trash, spam, and entire mailbox
   (if <mbox> element is omitted, purges all mailboxes on server)
+  
+  Access: domain admin sufficient
+  
 -----------------------------
 
 <ReIndexRequest action="start|status|cancel">
@@ -510,6 +535,8 @@ purges aged messages out of trash, spam, and entire mailbox
   [<progress numSucceeded="SUCCEEDED" numFailed="FAILED" numRemaining="REMAINING">]
 </ReIndexResponse>
    -- Progress data is currently ONLY returned by the "status" and "cancelled" calls 
+
+Access: domain admin sufficient
 
 ---------------------------
 
@@ -525,6 +552,8 @@ the <mbox> element is left out of the response if no mailbox existed for that ac
   [<mbox mbxid="{mailbox-id}"/>]
 </DeleteMailboxResponse>
 
+Access: domain admin sufficient
+
 -----------------------------
 <GetMailboxRequest>
   <mbox id="{account-id}"/>
@@ -533,6 +562,8 @@ the <mbox> element is left out of the response if no mailbox existed for that ac
 <GetMailboxResponse>
   <mbox mbxid="{mailbox-id}" s="{size-in-bytes}"/>
 </GetMailboxResponse>
+
+Access: domain admin sufficient
 
 -----------------------------
 
@@ -745,6 +776,8 @@ Notes:
   description
   zimbraNotes
 
+Access: domain admin sufficient
+
 -----------------------------
 
 <GetDistributionListRequest [limit="{limit}"] [offset="{offset}"]
@@ -770,6 +803,8 @@ Notes:
     more-flag = true if more accounts left to return
     total = total number of distribution lists (not affected by limit/offset)
 
+Access: domain admin sufficient
+
 -----------------------------
 
 <GetAllDistributionListsRequest>
@@ -782,6 +817,8 @@ Notes:
   </dl>
 </GetAllDistributionListsResponse>
 
+Access: domain admin sufficient
+
 -----------------------------
 
 <AddDistributionListMemberRequest>
@@ -792,6 +829,8 @@ Notes:
 <AddDistributionListMemberResponse>
 </AddDistributionListMemeberResponse>
 
+Access: domain admin sufficient
+
 -----------------------------
 
 <RemoveDistributionListMemberRequest>
@@ -801,6 +840,8 @@ Notes:
 
 <RemoveDistributionListMemberResponse>
 </RemoveDistributionListMemberResponse>
+
+Access: domain admin sufficient
 
 -----------------------------
 
@@ -820,6 +861,8 @@ Notes:
 
   an empty attribute value removes the specified attr
 
+Access: domain admin sufficient
+
 -----------------------------
 
 <DeleteDistributionListRequest>
@@ -827,6 +870,8 @@ Notes:
 </DeleteDistributionListRequest>
 
 <DeleteDistributionListResponse/>
+
+Access: domain admin sufficient
 
 -----------------------------
 
@@ -837,6 +882,8 @@ Notes:
 
 <AddDistributionListAliasResponse/>
 
+Access: domain admin sufficient
+
 -----------------------------
 
 <RemoveDistributionListAliasRequest>
@@ -845,6 +892,8 @@ Notes:
 </RemoveDistributionListAliasRequest>
 
 <RemoveDistributionListAliasResponse/>
+
+Access: domain admin sufficient
 
 -----------------------------
 
@@ -858,6 +907,8 @@ Notes:
     <a n="...">...</a>+
   </dl>  
 </RenameDistributionListResponse>
+
+Access: domain admin sufficient
 
 -----------------------------
 

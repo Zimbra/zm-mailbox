@@ -66,7 +66,10 @@ public class Auth extends AdminDocumentHandler {
             acct = prov.getAdminAccountByName(name);
         } else {
             acct = prov.getAccountByName(name);
-            if (acct != null && !acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false)) {
+            boolean ok = acct != null &&
+                (acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false) || 
+                        acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false));
+            if (!ok) {
                 throw ServiceException.PERM_DENIED("not an admin account");
             }
         }

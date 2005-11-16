@@ -226,8 +226,11 @@ public class SoapEngine {
             AuthToken at = lc != null ? lc.getAuthToken() : null;
             if (at == null)
                 return soapProto.soapFault(ServiceException.AUTH_REQUIRED());
-            if (needsAdminAuth && !at.isAdmin()) 
-                return soapProto.soapFault(ServiceException.PERM_DENIED("need admin token"));
+            if (needsAdminAuth && !at.isAdmin()) {
+                boolean ok = handler.domainAuthSufficient(context) && at.isDomainAdmin();
+                if (!ok)
+                    return soapProto.soapFault(ServiceException.PERM_DENIED("need admin token"));
+            }
 
             // Make sure that the account is active and has not been deleted
             // since the last request

@@ -50,7 +50,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
     public boolean needsAdminAuth(Map context) {
         return true;
     }
-
+    
     public boolean isAdminCommand() {
         return true;
     }

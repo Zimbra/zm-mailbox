@@ -96,6 +96,14 @@ public abstract class DocumentHandler {
         return false;
     }
 
+    /**
+     * returns true if domain admin auth is sufficient to run this command. This should be overriden only on admin
+     * commands that can be run in a restricted "domain admin" mode.
+     */
+    public boolean domainAuthSufficient(Map context) {
+        return false; 
+    }
+
     /** Returns whether the command is in the administration command set. */
     public boolean isAdminCommand() {
         return false;

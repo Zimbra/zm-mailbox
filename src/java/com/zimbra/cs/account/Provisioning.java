@@ -324,6 +324,8 @@ public abstract class Provisioning {
     public static final String A_zimbraDefaultDomainName = "zimbraDefaultDomainName";
 
     
+    public static final String A_zimbraDomainDefaultCOSId = "zimbraDomainDefaultCOSId";
+    
     /**
      * For a zimbraDomain object, the domain's name (i.e., widgets.com) 
      */
@@ -375,6 +377,11 @@ public abstract class Provisioning {
      * set to true if an account is an admin account
      */
     public static final String A_zimbraIsAdminAccount = "zimbraIsAdminAccount";    
+
+    /**
+     * set to true if an account is an domain admin account
+     */
+    public static final String A_zimbraIsDomainAdminAccount = "zimbraIsDomainAdminAccount";    
 
     /**
      * Set for entries (accounts/lists) in the directory that have a local address

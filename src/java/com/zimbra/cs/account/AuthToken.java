@@ -59,7 +59,8 @@ public class AuthToken {
     // original admin id
     private static final String C_AID  = "aid";    
 	private static final String C_EXP = "exp";
-	private static final String C_ADMIN = "admin";
+    private static final String C_ADMIN = "admin";
+    private static final String C_DOMAIN = "domain";    
 	private static LRUMap mCache = new LRUMap(AUTHTOKEN_CACHE_SIZE);
     
     private static Log mLog = LogFactory.getLog(AuthToken.class); 
@@ -68,7 +69,8 @@ public class AuthToken {
     private String mAdminAccountId;    
 	private long mExpires;
 	private String mEncoded;
-	private boolean mIsAdmin;
+    private boolean mIsAdmin;
+    private boolean mIsDomainAdmin;    
 	private static AuthTokenKey mTempKey;
     
     private static AuthTokenKey getCurrentKey() throws AuthTokenException {
@@ -133,6 +135,8 @@ public class AuthToken {
             mExpires = Long.parseLong((String)map.get(C_EXP));
             String ia = (String) map.get(C_ADMIN);
             mIsAdmin = "1".equals(ia);
+            String da = (String) map.get(C_DOMAIN);            
+            mIsDomainAdmin = "1".equals(da);
         } catch (ServiceException e) {
             throw new AuthTokenException("service exception", e);
         } catch (DecoderException e) {
@@ -160,6 +164,7 @@ public class AuthToken {
         mEncoded = null;
         mAdminAccountId = null;
         mIsAdmin = "TRUE".equals(acct.getAttr(Provisioning.A_zimbraIsAdminAccount));
+        mIsDomainAdmin = "TRUE".equals(acct.getAttr(Provisioning.A_zimbraIsDomainAdminAccount));        
         long lifetime = mIsAdmin ?
                 acct.getTimeInterval(Provisioning.A_zimbraAdminAuthTokenLifetime, DEFAULT_AUTH_LIFETIME*1000) :                                    
                 acct.getTimeInterval(Provisioning.A_zimbraAuthTokenLifetime, DEFAULT_AUTH_LIFETIME*1000);
@@ -180,7 +185,8 @@ public class AuthToken {
         mAccountId = acct.getId();
         mAdminAccountId = adminAcct != null ? adminAcct.getId() : null;
 		mExpires = expires;
-		mIsAdmin = isAdmin;
+        mIsAdmin = isAdmin;
+        mIsDomainAdmin = "TRUE".equals(acct.getAttr(Provisioning.A_zimbraIsDomainAdminAccount));
 		mEncoded = null;
 	}
 
@@ -200,10 +206,14 @@ public class AuthToken {
 		return System.currentTimeMillis() > mExpires;
 	}
 
-	public boolean isAdmin() {
-		return mIsAdmin;
-	}
+    public boolean isAdmin() {
+        return mIsAdmin;
+    }
 
+    public boolean isDomainAdmin() {
+        return mIsDomainAdmin;
+    }
+    
 	public String getEncoded() throws AuthTokenException {
 		if (mEncoded == null) {
 			StringBuffer encodedBuff = new StringBuffer(64);
