@@ -51,7 +51,6 @@ public class ObjectHandler {
 
     private static Log mLog = LogFactory.getLog(ObjectHandler.class);
     
-    private static Map mHandlers = new HashMap();
     private static List mHandlerList;
     
     private ObjectType    mObjectType;
@@ -116,7 +115,6 @@ public class ObjectHandler {
             if (regex != null) {
             	handler.mConfigObject.setRegExValue(regex);
             }
-            mHandlers.put(dot.getType(), handler);
         } catch (Exception e) {
             if (mLog.isErrorEnabled())
                 mLog.error("loadHandler caught exception", e);
