@@ -660,20 +660,6 @@ public class CalendarUtils {
             
             ZOrganizer org = new ZOrganizer(cn, address);
             newInv.setOrganizer(org);
-            
-//            URI uri = null;
-//            try { 
-//                uri = new URI("MAILTO", address, null);
-//            } catch (java.net.URISyntaxException e) {
-//                throw ServiceException.FAILURE("Building Organizer URI", e);
-//            }
-//            
-//            Organizer org = new Organizer(uri);
-//            newInv.setOrganizer(org);
-//            ParameterList params = org.getParameters();
-//            if (cn != null) {
-//                params.add(new Cn(cn));
-//            }
         }
         
         // SUMMARY (aka Name or Subject)
