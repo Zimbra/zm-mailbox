@@ -42,5 +42,6 @@ public interface Config extends Entry {
     public boolean isInheritedDomainAttr(String name);
 
     public boolean isInheritedServerAttr(String name);
+    
+    public boolean isDomainAdminModifiableAttr(String name);
 }
-

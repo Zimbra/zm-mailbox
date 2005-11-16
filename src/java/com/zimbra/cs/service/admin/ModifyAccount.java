@@ -28,10 +28,12 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.Iterator;
 import java.util.Map;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ZimbraLog;
@@ -42,6 +44,13 @@ import com.zimbra.soap.ZimbraContext;
  * @author schemers
  */
 public class ModifyAccount extends AdminDocumentHandler {
+
+    /**
+     * must be careful and only allow modifies to accounts/attrs domain admin has access to
+     */
+    public boolean domainAuthSufficient(Map context) {
+        return true;
+    }
 
 	public Element handle(Element request, Map context) throws ServiceException {
 
@@ -54,6 +63,18 @@ public class ModifyAccount extends AdminDocumentHandler {
 	    Account account = prov.getAccountById(id);
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
+
+        if (!canAccessAccount(lc, account))
+            throw ServiceException.PERM_DENIED("can not access account");
+
+        if (isDomainAdminOnly(lc)) {
+            Config conf = prov.getConfig();
+            for (Iterator it = attrs.keySet().iterator(); it.hasNext();) {
+                String attrName = (String) it.next();
+                if (!conf.isDomainAdminModifiableAttr(attrName))
+                    throw ServiceException.PERM_DENIED("can not modify attr: "+attrName);
+            }
+        }
 
         // pass in true to checkImmutable
         account.modifyAttrs(attrs, true);

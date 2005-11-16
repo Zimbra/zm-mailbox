@@ -648,7 +648,7 @@ public class LdapProvisioning extends Provisioning {
      * @see com.zimbra.cs.account.Provisioning#getAllDomains()
      */
     public List getAllAdminAccounts() throws ServiceException {
-        return searchAccounts("(zimbraIsAdminAccount=TRUE)", null, null, true, Provisioning.SA_ACCOUNT_FLAG);
+        return searchAccounts("(|(zimbraIsAdminAccount=TRUE)(zimbraIsDomainAdminAccount=TRUE))", null, null, true, Provisioning.SA_ACCOUNT_FLAG);
     }
 
     /* (non-Javadoc)

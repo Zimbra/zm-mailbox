@@ -47,12 +47,14 @@ public class LdapConfig extends LdapEntry implements Config {
     private Set mInheritableAccountAttrs;
     private Set mInheritableDomainAttrs;
     private Set mInheritableServerAttrs;
+    private Set mDomainAdminModifiableAttrs;    
     
     LdapConfig(String dn, Attributes attrs) {
         super(dn, attrs);
         mInheritableAccountAttrs = getMultiAttrSet(Provisioning.A_zimbraCOSInheritedAttr);
         mInheritableDomainAttrs = getMultiAttrSet(Provisioning.A_zimbraDomainInheritedAttr);
         mInheritableServerAttrs = getMultiAttrSet(Provisioning.A_zimbraServerInheritedAttr);
+        mDomainAdminModifiableAttrs = getMultiAttrSet(Provisioning.A_zimbraDomainAdminModifiableAttr);
     }
 
     /* (non-Javadoc)
@@ -75,4 +77,12 @@ public class LdapConfig extends LdapEntry implements Config {
     public boolean isInheritedServerAttr(String name) {
         return mInheritableServerAttrs.contains(name);
     }
+
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.account.Config#isInheritedServerAttr(java.lang.String)
+     */
+    public boolean isDomainAdminModifiableAttr(String name) {
+        return mDomainAdminModifiableAttrs.contains(name);
+    }
+    
 }
