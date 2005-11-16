@@ -42,7 +42,7 @@ import com.zimbra.cs.util.ZimbraLog;
  */
 public class ZimletUserProperties {
 	
-	private static final String SEPARATOR = ";";
+	private static final String SEPARATOR = ":";
 	private static final long   TTL = 30 * 60 * 1000;  // 30 mins TTL for cache
 	private long mCreateTime;
 
