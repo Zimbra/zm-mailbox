@@ -35,6 +35,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.MailItem;
@@ -96,6 +97,20 @@ public abstract class DocumentHandler {
         return false;
     }
 
+    public boolean isDomainAdminOnly(ZimbraContext lc) {
+        AuthToken at = lc.getAuthToken(); 
+        return at.isDomainAdmin() && !at.isAdmin();
+    }
+
+    public boolean canAccessAccount(ZimbraContext lc, Account target) throws ServiceException {
+        AuthToken at = lc.getAuthToken();
+        if (at.isAdmin()) return true;
+        if (!at.isDomainAdmin()) return false;
+        Account acct = Provisioning.getInstance().getAccountById(lc.getAuthtokenAccountId());
+        return acct.getDomain().getId().equals(target.getDomain().getId());
+    }
+
+    
     /**
      * returns true if domain admin auth is sufficient to run this command. This should be overriden only on admin
      * commands that can be run in a restricted "domain admin" mode.

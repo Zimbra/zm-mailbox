@@ -51,6 +51,13 @@ public class GetAccount extends AdminDocumentHandler {
     public static final String BY_ADMIN_NAME = "adminName";
     public static final String BY_FOREIGN_PRINCIPAL = "foreignPrincipal";
     
+    /**
+     * must be careful and only return accounts a domain admin can see
+     */
+    public boolean domainAuthSufficient(Map context) {
+        return true;
+    }
+
 	public Element handle(Element request, Map context) throws ServiceException {
 
         ZimbraContext lc = getZimbraContext(context);
@@ -88,6 +95,9 @@ public class GetAccount extends AdminDocumentHandler {
 
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(value);
+
+        if (!canAccessAccount(lc, account))
+            throw ServiceException.PERM_DENIED("can not access account");
 
 	    Element response = lc.createElement(AdminService.GET_ACCOUNT_RESPONSE);
         doAccount(response, account, applyCos);

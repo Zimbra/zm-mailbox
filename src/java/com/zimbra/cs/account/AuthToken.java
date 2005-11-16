@@ -221,8 +221,10 @@ public class AuthToken {
             BlobMetaData.encodeMetaData(C_EXP, Long.toString(mExpires), encodedBuff);
             if (mAdminAccountId != null)
                 BlobMetaData.encodeMetaData(C_AID, mAdminAccountId, encodedBuff);                
-			if (mIsAdmin)
-				BlobMetaData.encodeMetaData(C_ADMIN, "1", encodedBuff);
+            if (mIsAdmin)
+                BlobMetaData.encodeMetaData(C_ADMIN, "1", encodedBuff);
+            if (mIsDomainAdmin)
+                BlobMetaData.encodeMetaData(C_DOMAIN, "1", encodedBuff);            
 			String data = new String(Hex.encodeHex(encodedBuff.toString().getBytes()));
             AuthTokenKey key = getCurrentKey();
 			String hmac = getHmac(data, key.getKey());

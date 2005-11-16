@@ -144,6 +144,10 @@ public class LdapAccount extends LdapNamedEntry implements Account {
         if (cos == null) {
             String id = super.getAttr(Provisioning.A_zimbraCOSId);
             if (id != null) cos = mProv.getCosById(id); 
+            if (cos == null) {
+                String domainCosId = getDomain().getAttr(Provisioning.A_zimbraDomainDefaultCOSId, null);
+                if (domainCosId != null) cos = mProv.getCosById(domainCosId);
+            }
             if (cos == null) cos = mProv.getCosByName(Provisioning.DEFAULT_COS_NAME);
             if (cos != null) setCachedData(DATA_COS, cos);
         }
