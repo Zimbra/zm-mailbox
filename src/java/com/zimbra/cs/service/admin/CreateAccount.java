@@ -31,7 +31,6 @@ package com.zimbra.cs.service.admin;
 import java.util.Map;
 
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.EmailUtil;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -59,12 +58,8 @@ public class CreateAccount extends AdminDocumentHandler {
 	    String password = request.getAttribute(AdminService.E_PASSWORD, null);
 	    Map attrs = AdminService.getAttrs(request, true);
 
-        String parts[] = EmailUtil.getLocalPartAndDomain(name);
-        if (parts == null)
-            throw ServiceException.INVALID_REQUEST("must be valid email address: "+name, null);
-
-        if (!canAccessDomain(lc, parts[1]))
-            throw ServiceException.PERM_DENIED("can not access domain: "+parts[1]);   
+        if (!canAccessEmail(lc, name))
+            throw ServiceException.PERM_DENIED("can not access account:"+name);
 
 	    Account account = prov.createAccount(name, password, attrs);
 

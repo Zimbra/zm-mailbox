@@ -37,6 +37,13 @@ import com.zimbra.soap.ZimbraContext;
 
 public class AddDistributionListAlias extends AdminDocumentHandler {
 
+    /**
+     * must be careful and only allow access to domain if domain admin
+     */
+    public boolean domainAuthSufficient(Map context) {
+        return true;
+    }
+
 	public Element handle(Element request, Map context) throws ServiceException {
 
         ZimbraContext lc = getZimbraContext(context);
@@ -48,6 +55,12 @@ public class AddDistributionListAlias extends AdminDocumentHandler {
 	    DistributionList dl = prov.getDistributionListById(id);
         if (dl == null)
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(id);
+
+        if (!canAccessEmail(lc, dl.getName()))
+            throw ServiceException.PERM_DENIED("can not access dl");
+
+        if (!canAccessEmail(lc, alias))
+            throw ServiceException.PERM_DENIED("can not access email: "+alias);
 
         prov.addAlias(dl, alias);
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(

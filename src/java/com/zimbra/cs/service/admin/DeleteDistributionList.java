@@ -37,6 +37,13 @@ import com.zimbra.soap.ZimbraContext;
 
 public class DeleteDistributionList extends AdminDocumentHandler {
 
+    /**
+     * must be careful and only allow access to domain if domain admin
+     */
+    public boolean domainAuthSufficient(Map context) {
+        return true;
+    }
+
     public Element handle(Element request, Map context) throws ServiceException {
 
         ZimbraContext lc = getZimbraContext(context);
@@ -47,7 +54,10 @@ public class DeleteDistributionList extends AdminDocumentHandler {
         DistributionList distributionList = prov.getDistributionListById(id);
         if (distributionList == null)
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(id);
-        
+
+        if (!canAccessEmail(lc, distributionList.getName()))
+            throw ServiceException.PERM_DENIED("can not access dl");
+
         prov.deleteDistributionList(distributionList.getId());
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(

@@ -50,6 +50,13 @@ public class SearchAccounts extends AdminDocumentHandler {
     public static final String BY_NAME = "name";
     public static final String BY_ID = "id";
     
+    /**
+     * must be careful and only allow access to domain if domain admin
+     */
+    public boolean domainAuthSufficient(Map context) {
+        return true;
+    }
+    
     public Element handle(Element request, Map context) throws ServiceException {
 
         ZimbraContext lc = getZimbraContext(context);
@@ -77,6 +84,16 @@ public class SearchAccounts extends AdminDocumentHandler {
         String[] attrs = attrsStr == null ? null : attrsStr.split(",");
 
         ArrayList accounts;
+        
+        // if we are a domain admin only, restrict to domain
+        if (isDomainAdminOnly(lc)) {
+            if (domain == null) {
+                domain = getAuthTokenAccountDomain(lc).getName();
+            } else {
+                if (!canAccessDomain(lc, domain)) 
+                    throw ServiceException.PERM_DENIED("can not access domain"); 
+            }
+        }
 
         Domain d = null;
         if (domain != null) {

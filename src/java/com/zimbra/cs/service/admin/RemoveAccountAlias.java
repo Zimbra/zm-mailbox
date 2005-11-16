@@ -43,6 +43,13 @@ import com.zimbra.soap.ZimbraContext;
  */
 public class RemoveAccountAlias extends AdminDocumentHandler {
 
+    /**
+     * must be careful and only allow access to domain if domain admin
+     */
+    public boolean domainAuthSufficient(Map context) {
+        return true;
+    }
+
 	public Element handle(Element request, Map context) throws ServiceException {
 
         ZimbraContext lc = getZimbraContext(context);
@@ -55,6 +62,9 @@ public class RemoveAccountAlias extends AdminDocumentHandler {
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
 
+        if (!canAccessAccount(lc, account))
+            throw ServiceException.PERM_DENIED("can not access account");
+   
         prov.removeAlias(account, alias);
         
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(

@@ -48,6 +48,13 @@ public class GetAllAccounts extends AdminDocumentHandler {
     public static final String BY_NAME = "name";
     public static final String BY_ID = "id";
     
+    /**
+     * must be careful and only allow access to domain if domain admin
+     */
+    public boolean domainAuthSufficient(Map context) {
+        return true;
+    }
+    
 	public Element handle(Element request, Map context) throws ServiceException {
 	    
         ZimbraContext lc = getZimbraContext(context);
@@ -56,9 +63,10 @@ public class GetAllAccounts extends AdminDocumentHandler {
         Element response = null;
 
         Element d = request.getOptionalElement(AdminService.E_DOMAIN);
-        if (d != null) {
-            String key = d.getAttribute(AdminService.A_BY);
-            String value = d.getText();
+        if (d != null || isDomainAdminOnly(lc)) {
+            
+            String key = d == null ? BY_NAME : d.getAttribute(AdminService.A_BY);
+            String value = d == null ? getAuthTokenAccountDomain(lc).getName() : d.getText();
 	    
             Domain domain = null;
         
@@ -72,6 +80,10 @@ public class GetAllAccounts extends AdminDocumentHandler {
 	    
             if (domain == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(value);
+            
+            if (!canAccessDomain(lc, domain)) 
+                throw ServiceException.PERM_DENIED("can not access domain"); 
+
             response = lc.createElement(AdminService.GET_ALL_ACCOUNTS_RESPONSE);
             doDomain(response, domain);
 

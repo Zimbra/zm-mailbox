@@ -37,6 +37,13 @@ import com.zimbra.soap.ZimbraContext;
 
 public class RemoveDistributionListAlias extends AdminDocumentHandler {
 
+    /**
+     * must be careful and only allow access to domain if domain admin
+     */
+    public boolean domainAuthSufficient(Map context) {
+        return true;
+    }
+
 	public Element handle(Element request, Map context) throws ServiceException {
 
         ZimbraContext lc = getZimbraContext(context);
@@ -49,6 +56,12 @@ public class RemoveDistributionListAlias extends AdminDocumentHandler {
         if (dl == null)
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(id);
 
+        if (!canAccessEmail(lc, dl.getName()))
+            throw ServiceException.PERM_DENIED("can not access dl");
+
+        if (!canAccessEmail(lc, alias)) // sanity check
+            throw ServiceException.PERM_DENIED("can not access email: "+alias);
+        
         prov.removeAlias(dl, alias);
         
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(

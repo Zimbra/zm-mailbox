@@ -43,6 +43,13 @@ public class GetDistributionList extends AdminDocumentHandler {
     public static final String BY_NAME = "name";
     public static final String BY_ID = "id";
     
+    /**
+     * must be careful and only allow access to domain if domain admin
+     */
+    public boolean domainAuthSufficient(Map context) {
+        return true;
+    }
+
     public Element handle(Element request, Map context) throws ServiceException {
 	    
         ZimbraContext lc = getZimbraContext(context);
@@ -75,6 +82,9 @@ public class GetDistributionList extends AdminDocumentHandler {
         if (distributionList == null)
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(value);
 
+        if (!canAccessEmail(lc, distributionList.getName()))
+            throw ServiceException.PERM_DENIED("can not access dl");
+            
         Element response = lc.createElement(AdminService.GET_DISTRIBUTION_LIST_RESPONSE);
         Element dlElement = doDistributionList(response, distributionList);
         

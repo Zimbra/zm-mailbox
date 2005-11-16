@@ -47,6 +47,7 @@ import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
+import com.zimbra.cs.util.EmailUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraLog;
 
@@ -111,6 +112,10 @@ public abstract class DocumentHandler {
         return acct.getDomain().getId().equals(target.getDomain().getId());
     }
 
+    public Domain getAuthTokenAccountDomain(ZimbraContext lc) throws ServiceException {
+        return lc.getAuthtokenAccount().getDomain();
+    }
+
     public boolean canAccessDomain(ZimbraContext lc, String domainName) throws ServiceException {
         AuthToken at = lc.getAuthToken();
         if (at.isAdmin()) return true;
@@ -122,6 +127,12 @@ public abstract class DocumentHandler {
         return canAccessDomain(lc, domain.getName());
     }
 
+    public boolean canAccessEmail(ZimbraContext lc, String email) throws ServiceException {
+        String parts[] = EmailUtil.getLocalPartAndDomain(email);
+        if (parts == null)
+            throw ServiceException.INVALID_REQUEST("must be valid email address: "+email, null);
+        return canAccessDomain(lc, parts[1]);
+    }
     
     /**
      * returns true if domain admin auth is sufficient to run this command. This should be overriden only on admin

@@ -40,6 +40,13 @@ import com.zimbra.soap.ZimbraContext;
 
 public class RenameDistributionList extends AdminDocumentHandler {
 
+    /**
+     * must be careful and only allow access to domain if domain admin
+     */
+    public boolean domainAuthSufficient(Map context) {
+        return true;
+    }
+
 	public Element handle(Element request, Map context) throws ServiceException {
 
         ZimbraContext lc = getZimbraContext(context);
@@ -52,6 +59,12 @@ public class RenameDistributionList extends AdminDocumentHandler {
         if (dl == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
 
+        if (!canAccessEmail(lc, dl.getName()))
+            throw ServiceException.PERM_DENIED("can not access dl");
+
+        if (!canAccessEmail(lc, newName)) //
+            throw ServiceException.PERM_DENIED("can not access email: "+newName);
+        
         String oldName = dl.getName();
 
         prov.renameDistributionList(id, newName);

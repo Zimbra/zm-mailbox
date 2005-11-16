@@ -37,6 +37,13 @@ import com.zimbra.soap.ZimbraContext;
 
 public class ModifyDistributionList extends AdminDocumentHandler {
 
+    /**
+     * must be careful and only allow access to domain if domain admin
+     */
+    public boolean domainAuthSufficient(Map context) {
+        return true;
+    }
+
     public Element handle(Element request, Map context) throws ServiceException {
 
         ZimbraContext lc = getZimbraContext(context);
@@ -48,7 +55,10 @@ public class ModifyDistributionList extends AdminDocumentHandler {
         DistributionList distributionList = prov.getDistributionListById(id);
         if (distributionList == null)
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(id);
-        
+
+        if (!canAccessEmail(lc, distributionList.getName()))
+            throw ServiceException.PERM_DENIED("can not access dl");
+
         // pass in true to checkImmutable
         distributionList.modifyAttrs(attrs, true);
 

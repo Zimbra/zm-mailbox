@@ -36,6 +36,13 @@ import com.zimbra.soap.ZimbraContext;
 
 public class CreateDistributionList extends AdminDocumentHandler {
 
+    /**
+     * must be careful and only allow access to domain if domain admin
+     */
+    public boolean domainAuthSufficient(Map context) {
+        return true;
+    }
+
     public Element handle(Element request, Map context) throws ServiceException {
 	    
         ZimbraContext lc = getZimbraContext(context);
@@ -43,7 +50,10 @@ public class CreateDistributionList extends AdminDocumentHandler {
 	    
         String name = request.getAttribute(AdminService.E_NAME).toLowerCase();
         Map attrs = AdminService.getAttrs(request, true);
-	    
+
+        if (!canAccessEmail(lc, name))
+            throw ServiceException.PERM_DENIED("can not access address: "+name);
+
         DistributionList dl = prov.createDistributionList(name, attrs);
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(

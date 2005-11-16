@@ -26,6 +26,9 @@ package com.zimbra.cs.service.admin;
 
 import java.util.Map;
 
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
@@ -45,6 +48,13 @@ public class ReIndex extends AdminDocumentHandler {
     private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminService.E_MAILBOX, AdminService.A_ACCOUNTID };
     protected String[] getProxiedAccountPath()  { return TARGET_ACCOUNT_PATH; }
     
+    /**
+     * must be careful and only allow access to domain if domain admin
+     */
+    public boolean domainAuthSufficient(Map context) {
+        return true;
+    }
+    
     public Element handle(Element request, Map context) throws ServiceException, SoapFaultException {
         long startTime = sWatch.start();
         ZimbraContext zc = getZimbraContext(context);
@@ -54,7 +64,14 @@ public class ReIndex extends AdminDocumentHandler {
             
             Element mreq = request.getElement(AdminService.E_MAILBOX);
             String accountId = mreq.getAttribute(AdminService.A_ACCOUNTID);
-            
+
+            Account account = Provisioning.getInstance().getAccountById(accountId);
+            if (account == null)
+                throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
+
+            if (!canAccessAccount(zc, account))
+                throw ServiceException.PERM_DENIED("can not access account");
+
             Mailbox mbox = Mailbox.getMailboxByAccountId(accountId, false);
             if (mbox == null)
                 throw ServiceException.FAILURE("mailbox not found for account " + accountId, null);

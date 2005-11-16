@@ -43,6 +43,13 @@ import com.zimbra.soap.ZimbraContext;
  */
 public class AddAccountAlias extends AdminDocumentHandler {
 
+    /**
+     * must be careful and only allow access to domain if domain admin
+     */
+    public boolean domainAuthSufficient(Map context) {
+        return true;
+    }
+
 	public Element handle(Element request, Map context) throws ServiceException {
 
         ZimbraContext lc = getZimbraContext(context);
@@ -54,6 +61,12 @@ public class AddAccountAlias extends AdminDocumentHandler {
 	    Account account = prov.getAccountById(id);
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
+
+        if (!canAccessAccount(lc, account))
+            throw ServiceException.PERM_DENIED("can not access account");
+
+        if (!canAccessEmail(lc, alias))
+            throw ServiceException.PERM_DENIED("can not access account: "+alias);
 
         prov.addAlias(account, alias);
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(

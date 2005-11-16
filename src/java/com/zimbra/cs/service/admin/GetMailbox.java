@@ -30,6 +30,9 @@ package com.zimbra.cs.service.admin;
 
 import java.util.Map;
 
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
@@ -40,14 +43,28 @@ import com.zimbra.soap.ZimbraContext;
  */
 public class GetMailbox extends AdminDocumentHandler {
 
+    /**
+     * must be careful and only allow access to domain if domain admin
+     */
+    public boolean domainAuthSufficient(Map context) {
+        return true;
+    }
+
     public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraContext zc = getZimbraContext(context);
 
         Element mreq = request.getElement(AdminService.E_MAILBOX);
         String accountId = mreq.getAttribute(AdminService.A_ACCOUNTID);
 
+        Account account = Provisioning.getInstance().getAccountById(accountId);
+        if (account == null)
+            throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
+
+        if (!canAccessAccount(zc, account))
+            throw ServiceException.PERM_DENIED("can not access account");
+
         Mailbox mbox = Mailbox.getMailboxByAccountId(accountId);
-        Element response = lc.createElement(AdminService.GET_MAILBOX_RESPONSE);
+        Element response = zc.createElement(AdminService.GET_MAILBOX_RESPONSE);
         Element m = response.addElement(AdminService.E_MAILBOX);
         m.addAttribute(AdminService.A_MAILBOXID, mbox.getId());
         m.addAttribute(AdminService.A_SIZE, mbox.getSize());

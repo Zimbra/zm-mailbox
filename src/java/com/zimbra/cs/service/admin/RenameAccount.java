@@ -34,7 +34,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.EmailUtil;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
@@ -68,12 +67,8 @@ public class RenameAccount extends AdminDocumentHandler {
 
         String oldName = account.getName();
 
-        String parts[] = EmailUtil.getLocalPartAndDomain(newName);
-        if (parts == null)
-            throw ServiceException.INVALID_REQUEST("must be valid email address: "+newName, null);
-        
-        if (!canAccessDomain(lc, parts[1]))
-            throw ServiceException.PERM_DENIED("can not access domain: "+parts[1]);   
+        if (!canAccessEmail(lc, newName))
+            throw ServiceException.PERM_DENIED("can not access account: "+newName);
 
         prov.renameAccount(id, newName);
 

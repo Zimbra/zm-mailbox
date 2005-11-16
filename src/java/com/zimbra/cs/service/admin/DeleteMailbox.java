@@ -30,6 +30,9 @@ package com.zimbra.cs.service.admin;
 
 import java.util.Map;
 
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.stats.StopWatch;
@@ -47,14 +50,28 @@ public class DeleteMailbox extends AdminDocumentHandler {
     private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminService.E_MAILBOX, AdminService.A_ACCOUNTID };
     protected String[] getProxiedAccountPath()  { return TARGET_ACCOUNT_PATH; }
 
+    /**
+     * must be careful and only allow access to domain if domain admin
+     */
+    public boolean domainAuthSufficient(Map context) {
+        return true;
+    }
+
     public Element handle(Element request, Map context) throws ServiceException {
         long startTime = sWatch.start();
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraContext zc = getZimbraContext(context);
 
         try {
             Element mreq = request.getElement(AdminService.E_MAILBOX);
             String accountId = mreq.getAttribute(AdminService.A_ACCOUNTID);
 
+            Account account = Provisioning.getInstance().getAccountById(accountId);
+            if (account == null)
+                throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
+
+            if (!canAccessAccount(zc, account))
+                throw ServiceException.PERM_DENIED("can not access account");
+            
             Mailbox mbox = Mailbox.getMailboxByAccountId(accountId, false);
             int mailboxId = -1;
             if (mbox != null) {
@@ -67,7 +84,7 @@ public class DeleteMailbox extends AdminDocumentHandler {
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "DeleteMailbox","id", idString}));
             
-            Element response = lc.createElement(AdminService.DELETE_MAILBOX_RESPONSE);
+            Element response = zc.createElement(AdminService.DELETE_MAILBOX_RESPONSE);
             if (mbox != null)
                 response.addElement(AdminService.E_MAILBOX)
                         .addAttribute(AdminService.A_MAILBOXID, mailboxId);
