@@ -4082,31 +4082,31 @@ public class Mailbox {
     }
 
 
-    // Coordinate backup and shared delivery, delivery of a message to
-    // multiple recipients.  Full backup of a mailbox and shared delivery
-    // are mutually exclusive.  More precisely, a backup may not begin
+    // Coordinate other conflicting operations (such as backup) and shared delivery, delivery of a message to
+    // multiple recipients.  Such operation on a mailbox and shared delivery
+    // are mutually exclusive.  More precisely, the op may not begin
     // when there is a shared delivery in progress for the mailbox.
     // Delivery of a shared message to the mailbox must be denied and
-    // deferred when the mailbox is being backed up or has a backup request
-    // pending.
-    private static class BackupAndSharedDeliveryCoordinator {
+    // deferred when the mailbox is being operated on or has a request
+    // for such op pending.
+    private static class SharedDeliveryCoordinator {
         public int mNumDelivs;
-        public boolean mBackupModeOn;
-        public BackupAndSharedDeliveryCoordinator() {
+        public boolean mSharedDeliveryAllowed;
+        public SharedDeliveryCoordinator() {
             mNumDelivs = 0;
-            mBackupModeOn = false;
+            mSharedDeliveryAllowed = true;
         }
     }
 
-    private BackupAndSharedDeliveryCoordinator mBackupSharedDelivCoord =
-        new BackupAndSharedDeliveryCoordinator();
+    private SharedDeliveryCoordinator mSharedDelivCoord =
+        new SharedDeliveryCoordinator();
 
     /**
      * Puts mailbox in shared delivery mode.  A shared delivery is delivery of
-     * a message to multiple recipients.  Full backup on mailbox is disallowed
+     * a message to multiple recipients.  Conflicting op on mailbox is disallowed
      * while mailbox is in shared delivery mode.  (See bug 2187)
      * Conversely, a shared delivery may not start on a mailbox that is
-     * currently being backed up or when there is a pending backup request.
+     * currently being operated on or when there is a pending op request.
      * For example, thread A puts mailbox in shared delivery mode.  Thread B
      * then tries to backup the mailbox.  Backup cannot start until thread A is
      * done, but mailbox is immediately put into backup-pending mode.
@@ -4118,13 +4118,13 @@ public class Mailbox {
      *         not begin because of a pending backup request
      */
     public boolean beginSharedDelivery() {
-        synchronized (mBackupSharedDelivCoord) {
-            assert(mBackupSharedDelivCoord.mNumDelivs >= 0);
-            if (!mBackupSharedDelivCoord.mBackupModeOn) {
-                mBackupSharedDelivCoord.mNumDelivs++;
+        synchronized (mSharedDelivCoord) {
+            assert(mSharedDelivCoord.mNumDelivs >= 0);
+            if (mSharedDelivCoord.mSharedDeliveryAllowed) {
+                mSharedDelivCoord.mNumDelivs++;
                 return true;
             } else {
-                // If backup request is pending on this mailbox, don't allow
+                // If request for other ops is pending on this mailbox, don't allow
                 // any more shared deliveries from starting.
                 return false;
             }
@@ -4135,59 +4135,59 @@ public class Mailbox {
      * @see com.zimbra.cs.mailbox.Mailbox#beginSharedDelivery()
      */
     public void endSharedDelivery() {
-        synchronized (mBackupSharedDelivCoord) {
-            mBackupSharedDelivCoord.mNumDelivs--;
-            assert(mBackupSharedDelivCoord.mNumDelivs >= 0);
-            if (mBackupSharedDelivCoord.mNumDelivs == 0) {
+        synchronized (mSharedDelivCoord) {
+            mSharedDelivCoord.mNumDelivs--;
+            assert(mSharedDelivCoord.mNumDelivs >= 0);
+            if (mSharedDelivCoord.mNumDelivs == 0) {
                 // Wake up any waiting backup thread.
-                mBackupSharedDelivCoord.notifyAll();
+                mSharedDelivCoord.notifyAll();
             }
         }
     }
 
     /**
-     * Turns backup mode on/off.  If turning on, waits until backup can begin,
+     * Turns shared delivery on/off.  If turning off, waits until the op can begin,
      * i.e. until all currently ongoing shared deliveries finish.  A thread
-     * turning backup mode on must turn it off at the end of backup, otherwise
+     * turning shared delivery off must turn it on at the end of the operation, otherwise
      * no further shared deliveries are possible to the mailbox.
      * @param onoff
      */
-    public void setBackupMode(boolean onoff) {
-        synchronized (mBackupSharedDelivCoord) {
+    public void setSharedDeliveryAllowed(boolean onoff) {
+        synchronized (mSharedDelivCoord) {
             if (onoff) {
-                // turning on
-                mBackupSharedDelivCoord.mBackupModeOn = true;
+                // allow shared delivery
+                mSharedDelivCoord.mSharedDeliveryAllowed = true;
             } else {
-                // turning off
-                mBackupSharedDelivCoord.mBackupModeOn = false;
-                mBackupSharedDelivCoord.notifyAll();
+                // disallow shared delivery
+                mSharedDelivCoord.mSharedDeliveryAllowed = false;
             }
+            mSharedDelivCoord.notifyAll();
         }
     }
 
     /**
-     * Wait until backup can begin on this mailbox.  Backup may begin when
-     * there is no shared delivery in progress.  Call setBackupMode(true)
+     * Wait until shared delivery is completed on this mailbox.  Other conflicting ops may begin when
+     * there is no shared delivery in progress.  Call setSharedDeliveryAllowed(false)
      * before calling this method.
      *
      */
-    public void waitUntilBackupAllowed() {
-        synchronized (mBackupSharedDelivCoord) {
-            while (mBackupSharedDelivCoord.mNumDelivs > 0) {
+    public void waitUntilSharedDeliveryCompletes() {
+        synchronized (mSharedDelivCoord) {
+            while (mSharedDelivCoord.mNumDelivs > 0) {
                 try {
-                    mBackupSharedDelivCoord.wait(3000);
+                    mSharedDelivCoord.wait(3000);
                 } catch (InterruptedException e) {}
             }
         }
     }
 
     /**
-     * Tests whether backup may begin on this mailbox.  Backup may begin when
+     * Tests whether shared delivery is completed on this mailbox.  Other conflicting ops may begin when
      * there is no shared delivery in progress.
      */
-    public boolean backupAllowed() {
-        synchronized (mBackupSharedDelivCoord) {
-            return mBackupSharedDelivCoord.mNumDelivs < 1;
+    public boolean isSharedDeliveryComplete() {
+        synchronized (mSharedDelivCoord) {
+            return mSharedDelivCoord.mNumDelivs < 1;
         }
     }
 
