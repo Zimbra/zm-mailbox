@@ -88,6 +88,7 @@ public class SoapTestHarness {
 	private SoapHttpTransport mTransport;
 	private String mAuthToken;
     private String mSessionId;
+    private long mCounter = 0;
 	
 	/** any props we have set */
 	private HashMap mProps; 
@@ -368,11 +369,20 @@ public class SoapTestHarness {
 		StringBuffer sb = new StringBuffer();
 		//System.out.println("("+text+")");
 		while (matcher.find()) {
-			String replace = (String) mProps.get(matcher.group(2));
+            String name = matcher.group(2);
+			String replace = (String) mProps.get(name);
+            if (replace == null) {
+                if (name.equals("TIME")) {
+                    replace = System.currentTimeMillis()+"";
+                } else if (name.equals("COUNTER")) {
+                    replace = ++mCounter +"";
+                }
+            }
+            
 			if (replace != null) {
 				matcher.appendReplacement(sb, replace);
 			} else {
-				throw new HarnessException("unknown property: "+matcher.group(1));
+                 throw new HarnessException("unknown property: "+matcher.group(1));
 				//matcher.appendReplacement(sb, matcher.group(1));
 			}
 		}
