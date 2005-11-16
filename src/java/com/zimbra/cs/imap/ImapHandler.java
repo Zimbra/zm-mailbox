@@ -50,7 +50,6 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.SessionCache;
-import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServerInputStream;
 import com.zimbra.cs.util.*;
@@ -1596,17 +1595,7 @@ public class ImapHandler extends ProtocolHandler {
 		        	result.print(empty ? "" : " ");  result.print("RFC822.SIZE ");  result.print(i4msg.getSize());  empty = false;
                 }
                 if (!fullMessage.isEmpty()) {
-                    StoreManager sm = StoreManager.getInstance();
-                    MailboxBlob blob = sm.getMailboxBlob(mMailbox, i4msg.id, i4msg.getRevision(), i4msg.getVolumeId());
-                    if (blob == null) {
-                        ZimbraLog.imap.error("missing blob for id: " + i4msg.id + ", change: " + i4msg.getRevision());
-                        continue;
-                    }
-                    try {
-                        raw = ByteUtil.getContent(sm.getContent(blob), i4msg.getSize());
-                    } catch (IOException e) {
-                        throw ServiceException.FAILURE("error fetching content for message " + i4msg.id, e);
-                    }
+                    raw = mMailbox.getMessageById(getContext(), i4msg.id).getMessageContent();
                     for (int i = 0; i < fullMessage.size(); i++) {
                         ImapPartSpecifier pspec = (ImapPartSpecifier) fullMessage.get(i);
                         result.print(empty ? "" : " ");  pspec.write(result, baos, raw);  empty = false;
@@ -1620,7 +1609,7 @@ public class ImapHandler extends ProtocolHandler {
                         mm = new MimeMessage(JMSession.getSession(), is);
                         is.close();
                     } catch (IOException e) {
-                        throw ServiceException.FAILURE("error fetching raw content for message " + i4msg.id, e);
+                        throw ServiceException.FAILURE("error closing stream for message " + i4msg.id, e);
                     }
                     if ((attributes & FETCH_BODY) != 0) {
                         result.print(empty ? "" : " ");  result.print("BODY ");

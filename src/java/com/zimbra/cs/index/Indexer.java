@@ -130,11 +130,7 @@ public class Indexer
         switch (itemType) {
 //            case MailItem.TYPE_INVITE:
             case MailItem.TYPE_MESSAGE:
-                Message msg = mbox.getMessageById(null, itemId);
-                MailboxBlob blob = StoreManager.getInstance().getMailboxBlob(mbox, itemId, item.getSavedSequence(), item.getVolumeId());
-                if (blob == null)
-                    throw ServiceException.FAILURE("Missing blob (mailbox=" + mbox.getId() + ", id=" + itemId + ")", null);
-                InputStream is = StoreManager.getInstance().getContent(blob);
+                InputStream is = mbox.getMessageById(null, itemId).getRawMessage();
                 MimeMessage mm;
     			try {
     				mm = new MimeMessage(JMSession.getSession(), is);

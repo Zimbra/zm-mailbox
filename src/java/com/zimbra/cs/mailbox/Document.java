@@ -58,14 +58,8 @@ public class Document extends MailItem {
     	return mContentType;
     }
 
-    public InputStream getRawDocument() throws IOException, ServiceException {
-        MailboxBlob blob = getBlob();
-        if (blob == null) {
-            StringBuffer sb = new StringBuffer("Missing document content: mailbox=");
-            sb.append(getMailboxId()).append(", id=").append(mId);
-            throw ServiceException.FAILURE(sb.toString(), null);
-        }
-        return StoreManager.getInstance().getContent(blob);
+    public InputStream getRawDocument() throws ServiceException {
+        return MessageCache.getRawContent(this);
     }
 
 

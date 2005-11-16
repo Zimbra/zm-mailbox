@@ -53,10 +53,8 @@ import com.zimbra.cs.ozserver.OzConnectionHandler;
 import com.zimbra.cs.ozserver.OzCountingMatcher;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.SessionCache;
-import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.BuildInfo;
-import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.ZimbraLog;
@@ -1545,17 +1543,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
 			        	result.print(empty ? "" : " ");  result.print("RFC822.SIZE ");  result.print(i4msg.getSize());  empty = false;
                     }
                     if (!fullMessage.isEmpty()) {
-                        StoreManager sm = StoreManager.getInstance();
-                        MailboxBlob blob = sm.getMailboxBlob(mMailbox, i4msg.id, i4msg.getRevision(), i4msg.getVolumeId());
-                        if (blob == null) {
-                            ZimbraLog.imap.error("missing blob for id: " + i4msg.id + ", change: " + i4msg.getRevision());
-                            continue;
-                        }
-                        try {
-                            raw = ByteUtil.getContent(sm.getContent(blob), i4msg.getSize());
-                        } catch (IOException e) {
-                            throw ServiceException.FAILURE("error fetching content for message " + i4msg.id, e);
-                        }
+                        raw = mMailbox.getMessageById(getContext(), i4msg.id).getMessageContent();
                         for (int i = 0; i < fullMessage.size(); i++) {
                             ImapPartSpecifier pspec = (ImapPartSpecifier) fullMessage.get(i);
                             result.print(empty ? "" : " ");  pspec.write(result, raw);  empty = false;

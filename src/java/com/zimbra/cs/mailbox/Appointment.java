@@ -660,6 +660,7 @@ public class Appointment extends MailItem {
         // WARNING: this code is currently duplicated in Message.java -- until the two
         // functions are unified in MailItem, make sure you keep both versions in sync!
         //
+        MessageCache.purge(this);
 
         markItemModified(Change.MODIFIED_CONTENT  | Change.MODIFIED_DATE |
                          Change.MODIFIED_IMAP_UID | Change.MODIFIED_SIZE);
@@ -1286,14 +1287,8 @@ public class Appointment extends MailItem {
         }
     }
     
-    public InputStream getRawMessage() throws IOException, ServiceException {
-        MailboxBlob msgBlob = getBlob();
-        if (msgBlob == null) {
-            StringBuffer sb = new StringBuffer("Missing message content: mailbox=");
-            sb.append(mMailbox.getId()).append(", msg=").append(mId);
-            throw ServiceException.FAILURE(sb.toString(), null);
-        }
-        return StoreManager.getInstance().getContent(msgBlob);
+    public InputStream getRawMessage() throws ServiceException {
+        return MessageCache.getRawContent(this);
     }
     
     void appendRawCalendarData(Calendar cal) throws ServiceException {

@@ -45,16 +45,12 @@ import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.Indexer;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.calendar.*;
-import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.TnefConverter;
 import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.cs.util.JMSession;
-import com.zimbra.cs.util.ZimbraLog;
 
 import net.fortuna.ical4j.model.*;
 import net.fortuna.ical4j.model.property.*;
@@ -83,28 +79,28 @@ public class Message extends MailItem {
     public static class ApptInfo {
         private int mAppointmentId;
         private int mComponentNo;
-        
+
         public ApptInfo(int apptId, int componentNo) {
             mAppointmentId = apptId;
             mComponentNo = componentNo;
         }
-        
-        public int getAppointmentId() { return mAppointmentId; }
-        public int getComponentNo() { return mComponentNo; }
-        
+
+        public int getAppointmentId()  { return mAppointmentId; }
+        public int getComponentNo()    { return mComponentNo; }
+
         private static final String FN_APPTID = "a";
         private static final String FN_COMPNO = "c";
-        
+
         Metadata encodeMetadata() {
             Metadata md = new Metadata();
             md.put(FN_APPTID, mAppointmentId);
             md.put(FN_COMPNO, mComponentNo);
             return md; 
         }
-        
-        static ApptInfo decodemetadata(Metadata md) throws ServiceException {
-            int apptId = (int)md.getLong(FN_APPTID);
-            int componentNo = (int)md.getLong(FN_COMPNO);
+
+        static ApptInfo decodeMetadata(Metadata md) throws ServiceException {
+            int apptId = (int) md.getLong(FN_APPTID);
+            int componentNo = (int) md.getLong(FN_COMPNO);
             return new ApptInfo(apptId, componentNo);
         }
     }
@@ -123,7 +119,7 @@ public class Message extends MailItem {
 
 
     /**
-     * this one will call back into decodemetadata() to do our initialization
+     * this one will call back into decodeMetadata() to do our initialization
      * 
      * @param mbox
      * @param ud
@@ -247,16 +243,24 @@ public class Message extends MailItem {
      *  postprocessing has been performed to make opaque attachments (e.g.
      *  TNEF) visible.
      * 
-     * @return The InputStream returned by the {@link StoreManager}.
-     * @throws IOException when errors occur opening, reading, or
-     *                     uncompressing the file.
+     * @return The InputStream fetched from the {@link MessageCache}.
      * @throws ServiceException when the message file does not exist.
-     * @see #getMimeMessage */
-    public InputStream getRawMessage() throws IOException, ServiceException {
-        MailboxBlob msgBlob = getBlob();
-        if (msgBlob == null)
-            throw ServiceException.FAILURE("missing blob for id: " + mId + ", change: " + mData.modContent, null);
-        return StoreManager.getInstance().getContent(msgBlob);
+     * @see #getMimeMessage()
+     * @see #getMessageContent() */
+    public InputStream getRawMessage() throws ServiceException {
+        return MessageCache.getRawContent(this);
+    }
+
+    /** Returns the raw, uncompressed content of the message as a byte array.
+     *  This is the message body as received via SMTP; no postprocessing has
+     *  been performed to make opaque attachments (e.g. TNEF) visible.
+     * 
+     * @return The InputStream returned by the {@link MessageCache}.
+     * @throws ServiceException when the message file does not exist.
+     * @see #getMimeMessage()
+     * @see #getRawMessage() */
+    public byte[] getMessageContent() throws ServiceException {
+        return MessageCache.getItemContent(this);
     }
 
     /** Returns a JavaMail {@link javax.mail.internet.MimeMessage}
@@ -269,32 +273,11 @@ public class Message extends MailItem {
      * @throws ServiceException when errors occur opening, reading,
      *                          uncompressing, or parsing the message file,
      *                          or when the file does not exist.
-     * @see #getRawMessage
+     * @see #getRawMessage()
+     * @see #getMessageContent()
      * @see TnefConverter */
     public MimeMessage getMimeMessage() throws ServiceException {
-        InputStream is = null;
-        MimeMessage mm = null;
-        try {
-            is = getRawMessage();
-            mm = new MimeMessage(JMSession.getSession(), is);
-            is.close();
-
-            try {
-                Mime.accept(new TnefConverter(), mm);
-            } catch (Exception e) {
-                // If the conversion bombs for any reason, revert to the original
-                ZimbraLog.mailbox.info("unable to convert TNEF attachment for message " + mId, e);
-                is = getRawMessage();
-                mm = new MimeMessage(JMSession.getSession(), is);
-                is.close();
-            }
-            
-            return mm;
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("IOException while getting MimeMessage for item " + mId, e);
-        } catch (MessagingException e) {
-            throw ServiceException.FAILURE("MessagingException while getting MimeMessage for item " + mId, e);
-        }
+        return MessageCache.getMimeMessage(this);
     }
 
     public static final class SortDateAscending implements Comparator {
@@ -335,7 +318,6 @@ public class Message extends MailItem {
     boolean isIndexed()       { return true; }
     boolean canHaveChildren() { return false; }
 
-    // boolean canParent(MailItem item) { return (item instanceof Note); }
     boolean canParent(MailItem item)  { return false; }
 
 
@@ -386,10 +368,9 @@ public class Message extends MailItem {
         return msg;
     }
 
-   static UnderlyingData createItemData(int id, Folder folder, MailItem parent,
-                                        ParsedMessage pm, int msgSize, String msgDigest,
-                                        short volumeId, boolean unread, int flags, long tags,
-                                        DraftInfo dinfo) 
+    static UnderlyingData createItemData(int id, Folder folder, MailItem parent, ParsedMessage pm,
+                                         int msgSize, String msgDigest, short volumeId,
+                                         boolean unread, int flags, long tags, DraftInfo dinfo)
     throws ServiceException {
         if (folder == null)
             throw MailServiceException.CANNOT_CONTAIN();
@@ -556,6 +537,7 @@ public class Message extends MailItem {
         PendingDelete info = getDeletionInfo();
         info.itemIds.clear();  info.unreadIds.clear();
         mMailbox.markOtherItemDirty(info);
+        MessageCache.purge(this);
 
         markItemModified(Change.MODIFIED_CONTENT  | Change.MODIFIED_DATE |
                          Change.MODIFIED_IMAP_UID | Change.MODIFIED_SIZE);
@@ -606,7 +588,7 @@ public class Message extends MailItem {
             MetadataList mdList = meta.getList(Metadata.FN_APPT_IDS);
             for (int i = 0; i < mdList.size(); i++) {
                 Metadata md = mdList.getMap(i);
-                mApptInfos.add(ApptInfo.decodemetadata(md));
+                mApptInfos.add(ApptInfo.decodeMetadata(md));
             }
         }
 
@@ -687,5 +669,4 @@ public class Message extends MailItem {
         sb.append("}");
         return sb.toString();
     }
-    
 }

@@ -722,7 +722,7 @@ public class ToXML {
             content.addAttribute(MailService.A_URL, CONTENT_SERVLET_URI + lc.formatItemId(msg));
         else
 			try {
-				byte[] raw = ByteUtil.getContent(msg.getRawMessage(), size);
+				byte[] raw = msg.getMessageContent();
     			if (!ByteUtil.isASCII(raw))
                     content.addAttribute(MailService.A_URL, CONTENT_SERVLET_URI + lc.formatItemId(msg));
                 else
