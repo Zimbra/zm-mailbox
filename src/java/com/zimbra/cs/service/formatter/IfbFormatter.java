@@ -83,6 +83,7 @@ public class IfbFormatter extends Formatter {
         StringBuffer toRet = new StringBuffer("BEGIN:VCALENDAR").append(NL);
         toRet.append("VERSION:2.0").append(NL);
         toRet.append("METHOD:PUBLISH").append(NL);
+        toRet.append("PRODID:Zimbra-Calendar-Provider").append(NL);
         toRet.append("BEGIN:VFREEBUSY").append(NL);
             
         toRet.append("ORGANIZER:").append(context.targetMailbox.getAccount().getName()).append(NL);
