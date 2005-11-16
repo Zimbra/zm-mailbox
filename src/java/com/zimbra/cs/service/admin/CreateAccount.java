@@ -31,6 +31,7 @@ package com.zimbra.cs.service.admin;
 import java.util.Map;
 
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.EmailUtil;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -42,6 +43,13 @@ import com.zimbra.soap.ZimbraContext;
  */
 public class CreateAccount extends AdminDocumentHandler {
 
+    /**
+     * must be careful and only create accounts for the domain admin!
+     */
+    public boolean domainAuthSufficient(Map context) {
+        return true;
+    }
+    
 	public Element handle(Element request, Map context) throws ServiceException {
 
         ZimbraContext lc = getZimbraContext(context);
@@ -50,6 +58,13 @@ public class CreateAccount extends AdminDocumentHandler {
 	    String name = request.getAttribute(AdminService.E_NAME).toLowerCase();
 	    String password = request.getAttribute(AdminService.E_PASSWORD, null);
 	    Map attrs = AdminService.getAttrs(request, true);
+
+        String parts[] = EmailUtil.getLocalPartAndDomain(name);
+        if (parts == null)
+            throw ServiceException.INVALID_REQUEST("must be valid email address: "+name, null);
+
+        if (!canAccessDomain(lc, parts[1]))
+            throw ServiceException.PERM_DENIED("can not access domain: "+parts[1]);   
 
 	    Account account = prov.createAccount(name, password, attrs);
 

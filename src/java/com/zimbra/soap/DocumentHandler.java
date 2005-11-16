@@ -36,6 +36,7 @@ import javax.servlet.http.HttpServletRequest;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.MailItem;
@@ -108,6 +109,17 @@ public abstract class DocumentHandler {
         if (!at.isDomainAdmin()) return false;
         Account acct = Provisioning.getInstance().getAccountById(lc.getAuthtokenAccountId());
         return acct.getDomain().getId().equals(target.getDomain().getId());
+    }
+
+    public boolean canAccessDomain(ZimbraContext lc, String domainName) throws ServiceException {
+        AuthToken at = lc.getAuthToken();
+        if (at.isAdmin()) return true;
+        if (!at.isDomainAdmin()) return false;
+        return lc.getAuthtokenAccount().getDomain().getName().equals(domainName);
+    }
+
+    public boolean canAccessDomain(ZimbraContext lc, Domain domain) throws ServiceException {
+        return canAccessDomain(lc, domain.getName());
     }
 
     

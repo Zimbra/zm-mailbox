@@ -326,6 +326,8 @@ public abstract class Provisioning {
     
     public static final String A_zimbraDomainDefaultCOSId = "zimbraDomainDefaultCOSId";
     
+    public static final String A_zimbraDomainAdminModifiableAttr = "zimbraDomainAdminModifiableAttr";
+
     /**
      * For a zimbraDomain object, the domain's name (i.e., widgets.com) 
      */

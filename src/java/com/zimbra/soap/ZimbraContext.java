@@ -343,6 +343,14 @@ public class ZimbraContext {
         return mAuthTokenAccountId;
     }
 
+    
+    /** Returns the account of the auth token. 
+     * @throws ServiceException 
+     */
+    public Account getAuthtokenAccount() throws ServiceException {
+        return Provisioning.getInstance().getAccountById(mAuthTokenAccountId);
+    }
+
     /** Returns whether the authenticated user is the same as the user whose
      *  context the operation is set to execute in. */
     public boolean isDelegatedRequest() {

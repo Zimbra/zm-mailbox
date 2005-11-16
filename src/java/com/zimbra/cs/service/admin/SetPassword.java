@@ -43,6 +43,13 @@ import com.zimbra.soap.ZimbraContext;
  */
 public class SetPassword extends AdminDocumentHandler {
 
+    /**
+     * must be careful and only allow on accounts domain admin has access to
+     */
+    public boolean domainAuthSufficient(Map context) {
+        return true;
+    }
+
 	public Element handle(Element request, Map context) throws ServiceException {
 
         ZimbraContext lc = getZimbraContext(context);
@@ -54,7 +61,10 @@ public class SetPassword extends AdminDocumentHandler {
 	    Account account = prov.getAccountById(id);
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
-
+        
+        if (!canAccessAccount(lc, account))
+            throw ServiceException.PERM_DENIED("can not access account");
+ 
         prov.setPassword(account, newPassword);
         
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(

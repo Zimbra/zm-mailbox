@@ -48,6 +48,13 @@ public class DeleteAccount extends AdminDocumentHandler {
     protected String[] getProxiedAccountPath()  { return TARGET_ACCOUNT_PATH; }
 
     /**
+     * must be careful and only allow deletes domain admin has access to
+     */
+    public boolean domainAuthSufficient(Map context) {
+        return true;
+    }
+
+    /**
      * Deletes an account and its mailbox.
      */
     public Element handle(Element request, Map context) throws ServiceException {
@@ -62,6 +69,10 @@ public class DeleteAccount extends AdminDocumentHandler {
         Account account = prov.getAccountById(id);
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
+        
+        if (!canAccessAccount(lc, account))
+            throw ServiceException.PERM_DENIED("can not access account");
+        
         if (!account.isCorrectHost()) {
             // Request must be sent to the host that the mailbox is on, so that
             // the mailbox can be deleted

@@ -23,7 +23,7 @@ When updating multiple attributes, you need to specify all the old values at the
    <lifetime>...</lifetime>
  </AuthResponse>
 
-Note: Only works with admin accounts
+Note: Only works with admin/domain-admin accounts
 
 Access: domain admin sufficient
 
