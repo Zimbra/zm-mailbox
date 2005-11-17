@@ -130,7 +130,7 @@ public class FeedManager {
 
             content.mark(10);  int ch = content.read();  content.reset();
             if (ch == -1)
-                throw ServiceException.FAILURE("empty body in response when fetching remote subscription", null);
+                throw ServiceException.PARSE_ERROR("empty body in response when fetching remote subscription", null);
             else if (ch == '<') {
                 return parseRssFeed(Element.parseXML(content), fsd);
             } else if (ch == 'B') {
