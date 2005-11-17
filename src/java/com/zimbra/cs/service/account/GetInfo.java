@@ -76,6 +76,8 @@ public class GetInfo extends DocumentHandler  {
         doZimlets(zimlets, acct);
         Element props = response.addUniqueElement(AccountService.E_PROPERTIES);
         doProperties(props, acct);
+        GetAccountInfo.addUrls(response, acct);
+        
         return response;
     }
 

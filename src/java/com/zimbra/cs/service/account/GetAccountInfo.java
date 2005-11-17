@@ -33,7 +33,9 @@ import java.util.Map;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
@@ -74,7 +76,27 @@ public class GetAccountInfo extends DocumentHandler  {
         response.addElement(AccountService.E_NAME).setText(account.getName());
         addAttr(response, Provisioning.A_zimbraId, account.getId());
         addAttr(response, Provisioning.A_zimbraMailHost, account.getAttr(Provisioning.A_zimbraMailHost));
+ 
+        addUrls(response, account);
+        
         return response;
+    }
+
+    static void addUrls(Element response, Account account) throws ServiceException {
+        Server server = account.getServer();
+        String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);        
+        if (server == null) return;
+        
+        int port = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
+        if (port > 0) {
+            String url = "http://" + hostname + ":" + port + ZimbraServlet.USER_SERVICE_URI;
+            response.addElement(AccountService.E_SOAP_URL).setText(url);
+        }
+        int sslPort = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
+        if (sslPort > 0) {
+            String url = "https://" + hostname + ":" + sslPort + ZimbraServlet.USER_SERVICE_URI;
+            response.addElement(AccountService.E_SOAP_URL).setText(url);
+        }
     }
 
     private static void addAttr(Element response, String name, String value) {

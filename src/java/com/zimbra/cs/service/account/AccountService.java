@@ -86,10 +86,12 @@ public class AccountService implements DocumentService {
     public static final String E_ZIMLETS = "zimlets";
     public static final String E_PROPERTY = "prop";
     public static final String E_PROPERTIES = "props";
-
+    public static final String E_SOAP_URL = "soapURL";
+    
     public static final String A_NAME = "name";
     public static final String A_BY = "by";    
     public static final String A_ZIMLET = "zimlet";
+    
 
 	public void registerHandlers(DocumentDispatcher dispatcher) {
 

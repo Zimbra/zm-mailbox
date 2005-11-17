@@ -317,6 +317,7 @@ global soap/system errors used with zimbra:Error/Code:
      ...
      <pref name="{name}">{value}</pref>
    </prefs>
+   <mailURL>{mail-url}</mailURL>+
 </GetInfoResponse>
  
   {account-name} = email address (user@domain)
@@ -324,7 +325,14 @@ global soap/system errors used with zimbra:Error/Code:
   prefs = user-settable preferences
   attrs = account attrs that aren't user-settable, but the front-end needs. 
           Only attributes listed in zimbraAccountClientAttrs will be returned.
-    
+          
+  {mail-url} = URL to talk to for soap service for this account. i.e:
+  
+       http://server:7070/service/soap/
+
+       Multiple URLs can be returned if both http and https (SSL) are enabled. If only one of the two is enabled,
+       the only one URL will be returned.       
+
 ----------------------------
 
 <GetAccountInfoRequest>
@@ -334,6 +342,7 @@ global soap/system errors used with zimbra:Error/Code:
 <GetAccountInfoResponse>
    <name>{account-name}</name>
    <attr name="{name}">{value}</a>+
+   <mailURL>{mail-url}</mailURL>+
 </GetInfoResponse>
  
   {account-name} = email address (user@domain)
@@ -342,7 +351,14 @@ global soap/system errors used with zimbra:Error/Code:
   
       zimbraId       - the unique UUID of the zimbra account
       zimbraMailHost - the server on which this user's mail resides
-    
+
+  {mail-url} = URL to talk to for soap service for this account. i.e:
+  
+       http://server:7070/service/soap/
+
+       Multiple URLs can be returned if both http and https (SSL) are enabled. If only one of the two is enabled,
+       the only one URL will be returned.       
+
 ----------------------------
 
  <SearchGalRequest>
