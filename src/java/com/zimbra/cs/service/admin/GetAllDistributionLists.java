@@ -42,6 +42,13 @@ public class GetAllDistributionLists extends AdminDocumentHandler {
     public static final String BY_NAME = "name";
     public static final String BY_ID = "id";
     
+    /**
+     * must be careful and only allow on dls domain admin has access to
+     */
+    public boolean domainAuthSufficient(Map context) {
+        return true;
+    }
+    
     public Element handle(Element request, Map context) throws ServiceException {
 	    
         ZimbraContext lc = getZimbraContext(context);
@@ -50,11 +57,11 @@ public class GetAllDistributionLists extends AdminDocumentHandler {
         Element response = null;
         
         Element d = request.getOptionalElement(AdminService.E_DOMAIN);
+        Domain domain = null;
+        
         if (d != null) {
             String key = d.getAttribute(AdminService.A_BY);
             String value = d.getText();
-        
-            Domain domain = null;
         
             if (key.equals(BY_NAME)) {
                 domain = prov.getDomainByName(value);
@@ -63,18 +70,25 @@ public class GetAllDistributionLists extends AdminDocumentHandler {
             } else {
                 throw ServiceException.INVALID_REQUEST("unknown value for by: "+key, null);
             }
-        
             if (domain == null)
-                throw AccountServiceException.NO_SUCH_DOMAIN(value);
+                throw AccountServiceException.NO_SUCH_DOMAIN(value);            
+        }
+        
+        if (isDomainAdminOnly(lc)) {
+            if (domain != null && !canAccessDomain(lc, domain))
+                throw ServiceException.PERM_DENIED("can not access domain");
+            domain = getAuthTokenAccountDomain(lc);
+        }
+
+        if (domain != null) {
             response = lc.createElement(AdminService.GET_ALL_DISTRIBUTION_LISTS_RESPONSE);
             doDomain(response, domain);
-
         } else {
             response = lc.createElement(AdminService.GET_ALL_DISTRIBUTION_LISTS_RESPONSE);
             List domains = prov.getAllDomains();
             for (Iterator dit=domains.iterator(); dit.hasNext(); ) {
-                Domain domain = (Domain) dit.next();
-                doDomain(response, domain);                
+                Domain dm = (Domain) dit.next();
+                doDomain(response, dm);                
             }
         }
         return response;        
