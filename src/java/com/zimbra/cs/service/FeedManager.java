@@ -104,8 +104,10 @@ public class FeedManager {
                 if (url == null || url.equals(""))
                     return new SubscriptionData();
                 String lcurl = url.toLowerCase();
-                if (lcurl.startsWith("webcal:") || lcurl.startsWith("feed:"))
+                if (lcurl.startsWith("webcal:"))
                     url = "http:" + url.substring(7);
+                else if (lcurl.startsWith("feed:"))
+                    url = "http:" + url.substring(5);
                 else if (!lcurl.startsWith("http:") && !lcurl.startsWith("https:"))
                     throw ServiceException.FAILURE("url must begin with http: or https:", null);
 
@@ -140,11 +142,11 @@ public class FeedManager {
         } catch (org.dom4j.DocumentException e) {
             throw ServiceException.PARSE_ERROR("could not parse feed", e);
         } catch (HttpException e) {
-            throw ServiceException.FAILURE("HttpException: " + e, e);
+            throw ServiceException.RESOURCE_UNREACHABLE("HttpException: " + e, e);
         } catch (IOException e) {
-            throw ServiceException.FAILURE("IOException: " + e, e);
+            throw ServiceException.RESOURCE_UNREACHABLE("IOException: " + e, e);
         } catch (ParserException e) {
-            throw ServiceException.FAILURE("error parsing raw iCalendar data", e);
+            throw ServiceException.PARSE_ERROR("error parsing raw iCalendar data", e);
         }
     }
 
@@ -219,7 +221,9 @@ public class FeedManager {
                 if (text == null)
                     text = item.getAttribute("description", null);
                 if (text == null)
-                    text = item.getAttribute("abstract", "");
+                    text = item.getAttribute("abstract", null);
+                if (text == null)
+                    continue;
                 html |= text.indexOf("</") != -1 || text.indexOf("/>") != -1 || text.indexOf("<p>") != -1;
 
                 ParsedMessage pm = generateMessage(title, text, href, html, addr, date, enclosures);
@@ -394,10 +398,10 @@ public class FeedManager {
             continued = true;
         }
         public void startElement(String uri, String localName, String qName, org.xml.sax.Attributes attributes) {
-            continued = false;
+            continued = localName.toUpperCase().equals("A");
         }
         public void endElement(String uri, String localName, String qName) {
-            continued = false;
+            continued = localName.toUpperCase().equals("A");
         }
         public String toString() {
             return str.toString();

@@ -39,6 +39,7 @@ public class ServiceException extends Exception {
     public static final String INVALID_REQUEST = "service.INVALID_REQUEST";
     public static final String UNKNOWN_DOCUMENT = "service.UNKNOWN_DOCUMENT";
     public static final String PARSE_ERROR = "service.PARSE_ERROR";
+    public static final String RESOURCE_UNREACHABLE = "service.RESOURCE_UNREACHABLE";
     public static final String TEMPORARILY_UNAVAILABLE = "service.TEMPORARILY_UNAVAILABLE";
     public static final String PERM_DENIED = "service.PERM_DENIED";
     public static final String AUTH_REQUIRED = "service.AUTH_REQUIRED";
@@ -112,9 +113,13 @@ public class ServiceException extends Exception {
     public static ServiceException UNKNOWN_DOCUMENT(String message, Throwable cause) {
         return new ServiceException("unknown document: "+message, UNKNOWN_DOCUMENT, SENDERS_FAULT, cause);
     }
-    
+
     public static ServiceException PARSE_ERROR(String message, Throwable cause) {
         return new ServiceException("parse error: "+message, PARSE_ERROR, SENDERS_FAULT, cause);
+    }
+
+    public static ServiceException RESOURCE_UNREACHABLE(String message, Throwable cause) {
+        return new ServiceException("resource unreachable: " + message, RESOURCE_UNREACHABLE, RECEIVERS_FAULT, cause);
     }
 
     public static ServiceException TEMPORARILY_UNAVAILABLE() {
