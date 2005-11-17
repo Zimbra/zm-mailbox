@@ -292,7 +292,7 @@ public class Pop3Handler extends ProtocolHandler {
         default:
             break;
         }
-        throw new Pop3CmdException("unknonwn command");        
+        throw new Pop3CmdException("unknown command");        
     }
 
     /* (non-Javadoc)
