@@ -116,6 +116,8 @@ public class Mountpoint extends Folder {
         if (parent == null || !parent.canContain(TYPE_MOUNTPOINT))
             throw MailServiceException.CANNOT_CONTAIN();
         validateFolderName(name);
+        if (view != TYPE_UNKNOWN)
+            validateType(view);
         if (parent.findSubfolder(name) != null)
             throw MailServiceException.ALREADY_EXISTS(name);
         Mailbox mbox = parent.getMailbox();

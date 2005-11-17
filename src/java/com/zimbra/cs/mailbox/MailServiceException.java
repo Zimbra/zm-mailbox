@@ -58,6 +58,7 @@ public class MailServiceException extends ServiceException {
     public static final String QUOTA_EXCEEDED  = "mail.QUOTA_EXCEEDED";
     public static final String INVALID_ID      = "mail.INVALID_ID";
     public static final String INVALID_NAME    = "mail.INVALID_NAME";
+    public static final String INVALID_TYPE    = "mail.INVALID_TYPE";
 	public static final String WRONG_MAILBOX   = "mail.WRONG_MAILBOX";
     public static final String CANNOT_SUBSCRIBE = "mail.CANNOT_SUBSCRIBE";
 	public static final String CANNOT_CONTAIN  = "mail.CANNOT_CONTAIN";
@@ -202,6 +203,10 @@ public class MailServiceException extends ServiceException {
 
     public static MailServiceException INVALID_NAME(String name) {
         return new MailServiceException("invalid tag/folder name: " + name, INVALID_NAME, SENDERS_FAULT, null);
+    }
+
+    public static MailServiceException INVALID_TYPE(byte type) {
+        return new MailServiceException("invalid item type: " + type, INVALID_TYPE, SENDERS_FAULT, null);
     }
 
     public static MailServiceException WRONG_MAILBOX() {

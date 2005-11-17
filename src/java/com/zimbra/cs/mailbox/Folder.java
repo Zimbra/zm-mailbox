@@ -444,6 +444,8 @@ public class Folder extends MailItem {
             if (!parent.canAccess(ACL.RIGHT_INSERT))
                 throw ServiceException.PERM_DENIED("you do not have the required rights on the parent folder");
         }
+        if (view != TYPE_UNKNOWN)
+            validateType(view);
 
         UnderlyingData data = new UnderlyingData();
         data.id          = id;

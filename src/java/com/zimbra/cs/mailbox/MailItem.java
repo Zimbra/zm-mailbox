@@ -73,8 +73,9 @@ public abstract class MailItem implements Comparable {
      *  {@link Tag}, possibly in another user's {@link Mailbox}. */
     public static final byte TYPE_MOUNTPOINT   = 13;
 
+    static final byte TYPE_MAX = TYPE_MOUNTPOINT;
     public static final byte TYPE_UNKNOWN = -1;
-    
+
     private static String[] TYPE_NAMES = {
         null,
         "folder",
@@ -92,16 +93,29 @@ public abstract class MailItem implements Comparable {
         "remote folder"
     };
 
-    /** Returns the human-readable name (<code>&quot;folder&quot;</code>,
-     *  etc.) for the item's type. */
+    /** Throws {@link ServiceException} <code>mail.INVALID_TYPE</code> if the
+     *  specified internal Zimbra item type is not supported.  At present, all
+     *  types from 1 to {@link #TYPE_MAX} <b>except 7</b> are supported. */
+    static byte validateType(byte type) throws ServiceException {
+        if (type <= 0 || type > TYPE_MAX || type == 7)
+            throw MailServiceException.INVALID_TYPE(type);
+        return type;
+    }
+
+    /** Returns the human-readable name (e.g. <code>"tag"</code>) for the
+     *  item's type.  Returns <code>null</code> if parameter is null. */
     public static String getNameForType(MailItem item) {
         return getNameForType(item == null ? TYPE_UNKNOWN : item.getType());
     }
-    /** Returns the human-readable name (<code>&quot;folder&quot;</code>,
-     *  etc.) for the specified item type. */
+
+    /** Returns the human-readable name (e.g. <code>"tag"</code>) for the
+     *  specified item type.  Returns <code>null</code> for unknown types. */
     public static String getNameForType(byte type) {
-        return (type == TYPE_UNKNOWN ? "unknown" : TYPE_NAMES[type]);
+        return (type <= 0 || type > TYPE_MAX ? null : TYPE_NAMES[type]);
     }
+
+    /** Returns the internal Zimbra item type (e.g. {@link #TYPE_TAG}) for
+     *  the specified human-readable type name (e.g. <code>"tag"</code>). */
     public static byte getTypeForName(String name) {
         if (name != null && !name.trim().equals(""))
             for (byte i = 1; i < TYPE_NAMES.length; i++)
