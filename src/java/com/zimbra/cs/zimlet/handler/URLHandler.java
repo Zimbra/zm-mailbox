@@ -65,7 +65,7 @@ public class URLHandler implements ZimletHandler {
 	}
     
     public static void test(URLHandler h, String text) throws ObjectHandlerException, ZimletException {
-        String[] array = h.match(text, new ZimletConfig());
+        String[] array = h.match(text, new ZimletConfig((String)null));
         System.out.println(text+" "+(array.length >0));        
     }
     

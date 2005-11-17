@@ -29,6 +29,8 @@ import javax.naming.directory.Attributes;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.object.ObjectType;
+import com.zimbra.cs.zimlet.ZimletHandler;
+import com.zimbra.cs.zimlet.ZimletUtil;
 
 public class LdapZimlet extends LdapNamedEntry implements Zimlet, ObjectType {
 
@@ -60,8 +62,12 @@ public class LdapZimlet extends LdapNamedEntry implements Zimlet, ObjectType {
         return false;
     }
     
-    public String getHandlerClass() {
+    public String getHandlerClassName() {
         return getAttr(Provisioning.A_zimbraZimletHandlerClass);
+    }
+    
+    public ZimletHandler getHandler() {
+    	return ZimletUtil.getHandler(getName());
     }
     
     public String getHandlerConfig() {

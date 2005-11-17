@@ -30,10 +30,8 @@ package com.zimbra.cs.object;
 
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -57,18 +55,18 @@ public class ObjectHandler {
     private ZimletHandler mHandlerObject;
     private ZimletConfig  mConfigObject;
 
-    private ObjectHandler(String handlerClass) throws ObjectHandlerException {
-    	Object handlerObj;
-    	try {
-    		handlerObj = Class.forName(handlerClass).newInstance();
-    	} catch (Exception e) {
-    		throw new ObjectHandlerException("cannot create handler class "+handlerClass);
+    private ObjectHandler(ObjectType obj) throws ObjectHandlerException, ZimletException {
+        mObjectType = obj;
+    	mHandlerObject = (ZimletHandler) obj.getHandler();
+    	if (mHandlerObject == null) {
+    		throw new ObjectHandlerException("null handler for "+obj.getType());
     	}
-    	
-    	if (!(handlerObj instanceof ZimletHandler)) {
-    		throw new ObjectHandlerException("handler class is not a valid Zimlet handler");
-    	}
-    	mHandlerObject = (ZimletHandler) handlerObj;
+       	mConfigObject = new ZimletConfig(obj.getHandlerConfig());
+       	
+        String regex = obj.getServerIndexRegex();
+        if (regex != null) {
+        	mConfigObject.setRegExValue(regex);
+        }
     }
     
     // TODO: this caches handlers for the duration of the VM, which is ok if the Indexer
@@ -96,25 +94,12 @@ public class ObjectHandler {
      */
     private static synchronized ObjectHandler loadHandler(ObjectType dot) {
         ObjectHandler handler = null;
-        String clazz = dot.getHandlerClass();
+        String clazz = dot.getHandlerClassName();
         if (clazz == null)
             return null;
 
         try {
-            handler = new ObjectHandler(clazz);
-            handler.mObjectType = dot;
-            
-            String config = dot.getHandlerConfig();
-            if (config == null) {
-            	handler.mConfigObject = new ZimletConfig();
-            } else {
-            	handler.mConfigObject = new ZimletConfig(config);
-            }
-            
-            String regex = dot.getServerIndexRegex();
-            if (regex != null) {
-            	handler.mConfigObject.setRegExValue(regex);
-            }
+            handler = new ObjectHandler(dot);
         } catch (Exception e) {
             if (mLog.isErrorEnabled())
                 mLog.error("loadHandler caught exception", e);
@@ -125,13 +110,13 @@ public class ObjectHandler {
     public void parse(String text, List matchedObjects, boolean firstMatchOnly)
             throws ObjectHandlerException {
     	try {
-    	String[] matchedStrings = mHandlerObject.match(text, mConfigObject);
-    	for (int i = 0; i < matchedStrings.length; i++) {
-    		MatchedObject mo = new MatchedObject(this, matchedStrings[i]);
-    		matchedObjects.add(mo);
-    		if (firstMatchOnly)
-    			return;
-    	}
+    		String[] matchedStrings = mHandlerObject.match(text, mConfigObject);
+    		for (int i = 0; i < matchedStrings.length; i++) {
+    			MatchedObject mo = new MatchedObject(this, matchedStrings[i]);
+    			matchedObjects.add(mo);
+    			if (firstMatchOnly)
+    				return;
+    		}
     	} catch (ZimletException ze) {
     		throw new ObjectHandlerException("error running ZimletHandler " + mObjectType.getType(), ze);
     	}
@@ -151,9 +136,5 @@ public class ObjectHandler {
     
     public boolean isIndexingEnabled() {
         return mObjectType.isIndexingEnabled();
-    }
-    
-    public boolean storeMatched() {
-        return mObjectType.isStoreMatched();
     }
 }

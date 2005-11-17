@@ -47,15 +47,11 @@ public class ZimletConfig extends ZimletMeta implements ZimletConf {
 	private Map mSiteConfig;
 	private String mLocalHost;
 	
-	public ZimletConfig() throws ZimletException {
-		initialize();
-	}
-	
 	public ZimletConfig(String c) throws ZimletException {
 		super(c);
 	}
 	
-	public ZimletConfig (File f) throws ZimletException {
+	public ZimletConfig(File f) throws ZimletException {
 		super(f);
 	}
 	

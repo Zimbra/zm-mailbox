@@ -28,19 +28,16 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.util.ArrayList;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.localconfig.LC;
-import com.zimbra.cs.object.ObjectType;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.util.FileUtil;
@@ -60,48 +57,49 @@ public class ZimletUtil {
 	public static final String ZIMLET_ALLOWED_DOMAINS = "allowedDomains";
 	public static final String ZIMLET_DEFAULT_COS = "default";
 	
-	private static List sClassLoaders = new ArrayList();
-	
-	public static synchronized void loadAll() {
-        File zimletRootDir = new File(LC.zimlet_directory.value());
-		if (zimletRootDir == null) {
-			ZimbraLog.zimlet.info(LC.zimlet_directory.key() + " is null, no zimlets loaded");
-			return;
-		}
-        ZimbraLog.zimlet.info("Loading zimlets from " + zimletRootDir.getPath());
-
-        Iterator iter;
-
-        try {
-            iter = Provisioning.getInstance().getObjectTypes().iterator();
-        } catch (ServiceException se) {
-            ZimbraLog.zimlet.info("Cannot get ObjectTypes from Provisioning while loading Zimlets");
-        	return;
-        }
-        
-        while (iter.hasNext()) {
-        	ObjectType zimlet = (ObjectType) iter.next();
-			String name = zimlet.getHandlerClass();
-			File zimletDir = new File(zimletRootDir, name);
-			try {
-				ZimletClassLoader cl = new ZimletClassLoader(zimletDir, name, ZimletUtil.class.getClassLoader());
-				sClassLoaders.add(cl);
-			} catch (MalformedURLException mue) {
-				ZimbraLog.zimlet.info("Unable to load Zimlet extension: " + name);
-			}
-		}
-	}
-
 	private static boolean sZimletsLoaded = false;
 	private static Map sZimlets = new HashMap();
 	private static Map sDevZimlets = new HashMap();
+	private static Map sZimletHandlers = new HashMap();
 
-	public static void loadZimlets() {
-		loadZimletsFromDir(sZimlets, LC.zimlet_directory.value());
-		sZimletsLoaded = true;
+	public static ZimletHandler getHandler(String name) {
+		loadZimlets();
+		Class zh = (Class) sZimletHandlers.get(name);
+		if (zh == null) {
+			ZimletFile zf = (ZimletFile) sZimlets.get(name);
+			if (zf == null) {
+				return null;
+			}
+			try {
+				String clazz = zf.getZimletDescription().getServerExtensionClass();
+				if (clazz != null) {
+					URL[] urls = { zf.toURL() };
+					URLClassLoader cl = new URLClassLoader(urls, ZimletUtil.class.getClassLoader());
+					zh = cl.loadClass(clazz);
+					ZimbraLog.zimlet.info("Loaded class "+zh.getName());
+					sZimletHandlers.put(name, zh);
+				}
+			} catch (Exception e) {
+				ZimbraLog.zimlet.info("Unable to load zimlet handler: "+e.getMessage());
+				return null;
+			}
+		}
+		try {
+			return (ZimletHandler) zh.newInstance();
+		} catch (Exception e) {
+			ZimbraLog.zimlet.info("Unable to instantiate zimlet handler: "+e.getMessage());
+		}
+		return null;
+	}
+	
+	public synchronized static void loadZimlets() {
+		if (!sZimletsLoaded) {
+			loadZimletsFromDir(sZimlets, LC.zimlet_directory.value());
+			sZimletsLoaded = true;
+		}
 	}
 
-	public static void loadDevZimlets() {
+	public synchronized static void loadDevZimlets() {
 		loadZimletsFromDir(sDevZimlets, LC.zimlet_directory.value() + File.separator + ZIMLET_DEV_DIR);
 	}
 
@@ -134,16 +132,14 @@ public class ZimletUtil {
         		try {
         			zimlets.put(zimletNames[i], new ZimletFile(zimletRootDir, zimletNames[i]));
         		} catch (IOException ioe) {
-        			ZimbraLog.zimlet.info("error loading zimlet "+zimletNames[i]);
+        			ZimbraLog.zimlet.info("error loading zimlet "+zimletNames[i]+": "+ioe.getMessage());
         		}
         	}
         }
 	}
 	
 	public static void listZimlet(Element elem, String zimlet) {
-		if (!sZimletsLoaded) {
-			loadZimlets();
-		}
+		loadZimlets();
 		ZimletFile zim = (ZimletFile) sZimlets.get(zimlet);
 		if (zim == null) {
 			ZimbraLog.zimlet.info("cannot find zimlet "+zimlet);
@@ -180,55 +176,6 @@ public class ZimletUtil {
 			ZimbraLog.zimlet.info("error loading dev zimlets: "+ze.getMessage());
 		} catch (IOException ioe) {
 			ZimbraLog.zimlet.info("error loading dev zimlets: "+ioe.getMessage());
-		}
-	}
-	
-	private static List sInitializedExtensions = new ArrayList();
-	
-	public static synchronized void initAll() {
-		ZimbraLog.zimlet.info("Initializing extensions");
-		for (Iterator clIter = sClassLoaders.iterator(); clIter.hasNext();) {
-			ZimletClassLoader zcl = (ZimletClassLoader)clIter.next();
-			List classes = zcl.getExtensionClassNames();
-			for (Iterator nameIter = classes.iterator(); nameIter.hasNext();) {
-				String name = (String)nameIter.next();
-				Class clz;
-				try {
-					clz = zcl.loadClass(name);
-					ZimletHandler ext = (ZimletHandler)clz.newInstance();
-					try {
-						//ext.init();
-						ZimbraLog.zimlet.info("Initialized extension: " + name + "@" + zcl);
-						sInitializedExtensions.add(ext);
-					} catch (Throwable t) { 
-						ZimbraLog.zimlet.warn("exception in " + name + ".init()", t);
-					}
-				} catch (InstantiationException e) {
-					ZimbraLog.zimlet.warn("exception occurred initializing extension " + name, e);
-				} catch (IllegalAccessException e) {
-					ZimbraLog.zimlet.warn("exception occurred initializing extension " + name, e);
-				} catch (ClassNotFoundException e) {
-					ZimbraLog.zimlet.warn("exception occurred initializing extension " + name, e);
-				}
-				
-			}
-		}
-	}
-
-	public static synchronized void destroyAll() {
-		ZimbraLog.zimlet.info("Destroying extensions");
-		for (ListIterator iter = sInitializedExtensions.listIterator(sInitializedExtensions.size());
-			iter.hasPrevious();)
-		{
-			ZimletHandler ext = (ZimletHandler)iter.previous();
-			try {
-				//ext.destroy();
-				ZimbraLog.zimlet.info("Destroyed extension: " + 
-						ext.getClass().getName() + "@" + ext.getClass().getClassLoader());
-				iter.remove();
-			} catch (Throwable t) {
-				ZimbraLog.zimlet.warn("exception in " + ext.getClass().getName() + ".destroy()", t);
-			}
 		}
 	}
 

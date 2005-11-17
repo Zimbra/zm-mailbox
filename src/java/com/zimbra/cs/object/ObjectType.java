@@ -29,6 +29,8 @@
  */
 package com.zimbra.cs.object;
 
+import com.zimbra.cs.zimlet.ZimletHandler;
+
 /**
  * @author kchen
  *
@@ -43,9 +45,9 @@ public interface ObjectType {
     
     public boolean isIndexingEnabled();
     
-    public boolean isStoreMatched();
+    public String getHandlerClassName();
     
-    public String getHandlerClass();
+    public ZimletHandler getHandler();
     
     public String getHandlerConfig();
 

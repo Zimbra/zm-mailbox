@@ -350,13 +350,13 @@ public abstract class MimeHandler {
             if (!h.isIndexingEnabled())
                 continue;
             ArrayList matchedObjects = new ArrayList();
-            h.parse(text, matchedObjects, !h.storeMatched());
+            h.parse(text, matchedObjects, true);
             if (!matchedObjects.isEmpty()) {
                      if (l_objects.length() > 0)
                     l_objects.append(',');
                 l_objects.append(h.getType());
 
-                if (h.storeMatched()) {
+                if (false /*h.storeMatched()*/) {
                     HashSet set = new HashSet();
                     for (Iterator mit = matchedObjects.iterator(); mit.hasNext(); ) {
                         MatchedObject mo = (MatchedObject) mit.next();

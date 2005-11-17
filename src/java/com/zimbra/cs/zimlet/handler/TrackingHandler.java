@@ -74,7 +74,7 @@ public class TrackingHandler implements ZimletHandler {
 	}
     
     public static void test(TrackingHandler h, String text, boolean expected) throws ObjectHandlerException, ZimletException {
-        String[] array = h.match(text, new ZimletConfig());
+        String[] array = h.match(text, new ZimletConfig((String)null));
         boolean actual  = array.length > 0;
         if (expected != actual)
             System.out.println("["+text+"] ************** expected="+expected+" actual="+actual);

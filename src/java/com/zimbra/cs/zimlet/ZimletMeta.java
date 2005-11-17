@@ -32,7 +32,6 @@ import java.util.Iterator;
 
 import org.dom4j.DocumentException;
 
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
@@ -102,7 +101,9 @@ public abstract class ZimletMeta {
 			ZIMLET_URL = ZIMLET_URL + "/" + resourcePrefix;
 		}
 		initialize();
-
+		if (meta == null) {
+			return;
+		}
 		try {
 			mTopElement = Element.parseXML(meta);
 			mRawXML = meta;
