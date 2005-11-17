@@ -42,8 +42,13 @@ public class UserServletException extends Exception {
     int getHttpStatusCode() {
        return mCode;
     }
-    
+
     public static UserServletException notImplemented(String message) {
         return new UserServletException(HttpServletResponse.SC_NOT_IMPLEMENTED, message);
     }
+
+    public static UserServletException badRequest(String message) {
+        return new UserServletException(HttpServletResponse.SC_BAD_REQUEST, message);
+    }
+    
 }
