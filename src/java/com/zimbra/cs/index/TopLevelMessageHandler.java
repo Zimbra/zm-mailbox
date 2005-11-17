@@ -77,6 +77,7 @@ public final class TopLevelMessageHandler {
     private Document     mDocument;
     private StringBuffer mContent;
     private String       mBodyContent;
+    private String       mFragment;
     private boolean      mHasCalendar;
 //    private String mDomains;
 
@@ -113,8 +114,11 @@ public final class TopLevelMessageHandler {
     }
 
     public String getFragment() {
-        String remainder = (mBodyContent == null ? mContent.toString() : mBodyContent).trim();
-        return Fragment.getFragment(remainder, mHasCalendar);
+        if (mFragment == null) {
+            String remainder = (mBodyContent == null ? mContent.toString() : mBodyContent).trim();
+            mFragment = Fragment.getFragment(remainder, mHasCalendar);
+        }
+        return mFragment;
     }
 
     public Document getDocument(ParsedMessage pm)
@@ -135,7 +139,10 @@ public final class TopLevelMessageHandler {
         mDocument.add(new Field(LuceneFields.L_H_SUBJECT, subject,                  false, true, true));
         mDocument.add(new Field(LuceneFields.L_SORT_SUBJECT, subject.toUpperCase(), true, true, false));
         mDocument.add(new Field(LuceneFields.L_SORT_NAME, sortFrom.toUpperCase(),   false, true, false));
-        
+
+        // calculate the fragment *before* we add non-content data
+        mFragment = getFragment();
+
         // add subject and from to main content for better searching
         addContent(subject);
         
