@@ -162,10 +162,14 @@ public class LC {
              " not change this setting.");
         
         zimbra_java_home = new KnownKey("zimbra_java_home");
-        zimbra_java_home.setDefault("${zimbra_home}" + FS + "java");
+        if (System.getProperty("os.name").equalsIgnoreCase("Mac OS X")) {
+            zimbra_java_home.setDefault("/System/Library/Frameworks/JavaVM.framework/Versions/1.5/Home");
+        } else {
+            zimbra_java_home.setDefault("${zimbra_home}" + FS + "java");
+        }
         zimbra_java_home.setDoc
             ("Path to a JDK/J2SDK.");
-        
+
         zimbra_log_directory = new KnownKey("zimbra_log_directory");
         zimbra_log_directory.setDefault("${zimbra_home}" + FS + "log");
         zimbra_log_directory.setDoc
