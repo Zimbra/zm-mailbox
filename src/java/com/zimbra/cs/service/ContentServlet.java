@@ -39,8 +39,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 
-import net.fortuna.ical4j.model.Calendar;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -55,12 +53,12 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
-import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.util.*;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * The content servlet returns an attachment document in its original format.
@@ -109,19 +107,26 @@ public class ContentServlet extends ZimbraServlet {
         String fmt = req.getParameter(PARAM_FORMAT);
 
         try {
+            // need to proxy the fetch if the mailbox lives on another server
             if (!iid.isLocal()) {
                 // wrong server; proxy to the right one...
                 proxyServletRequest(req, resp, iid.getAccountId());
                 return;
             }
+
             String authId = authToken.getAccountId();
             String accountId = iid.getAccountId() != null ? iid.getAccountId() : authId;
-            // need to proxy the fetch if the mailbox lives on another server
+            ZimbraLog.addAccountToContext(accountId, ZimbraLog.C_NAME, ZimbraLog.C_ID);
+            if (!accountId.equalsIgnoreCase(authId))
+                ZimbraLog.addToContext(ZimbraLog.C_AID, authId);
+            ZimbraLog.addIpToContext(req.getRemoteAddr());
+
             Mailbox mbox = Mailbox.getMailboxByAccountId(accountId);
             if (mbox == null) {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "mailbox not found");
                 return;				
             }
+            ZimbraLog.addToContext(mbox);
 
             MailItem mi = mbox.getItemById(new Mailbox.OperationContext(authId), iid.getId(), MailItem.TYPE_UNKNOWN);
             if (mi == null) {
@@ -220,7 +225,9 @@ public class ContentServlet extends ZimbraServlet {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND, "no such item");
         } catch (ServiceException e) {
             throw new ServletException(e);
-		}
+		} finally {
+            ZimbraLog.clearContext();      
+        }
         /*
          out.println("hello world "+req.getParameter("id"));
          out.println("path info: "+req.getPathInfo());
