@@ -52,6 +52,7 @@ import com.zimbra.cs.service.formatter.RssFormatter;
 import com.zimbra.cs.service.formatter.ZipFormatter;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * 
@@ -191,6 +192,10 @@ public class UserServlet extends ZimbraServlet {
                 if (context.authAccount == null) return;                
             }
 
+            if (context.authAccount != null)
+                ZimbraLog.addAccountNameToContext(context.authAccount.getName());
+            ZimbraLog.addIpToContext(context.req.getRemoteAddr());
+            
             // this should handle both explicit /user/user-on-other-server/ and
             // /user/~/?id={account-id-on-other-server}:id            
             if (!context.targetAccount.isCorrectHost()) {
@@ -203,7 +208,7 @@ public class UserServlet extends ZimbraServlet {
                 } catch (ServletException e) {
                     throw ServiceException.FAILURE("proxy error", e);
                 } catch (AuthTokenException e) {
-                    throw ServiceException.FAILURE("proxy error", e);                    
+                    throw ServiceException.FAILURE("proxy error", e);
                 }
             }
             if (context.authAccount == null)
@@ -217,18 +222,25 @@ public class UserServlet extends ZimbraServlet {
         } catch (UserServletException e) {
             // add check for ServiceException root cause?
             resp.sendError(e.getHttpStatusCode(), e.getMessage());
+        } finally {
+            ZimbraLog.clearContext();
         }
     }
 
     private void doAuthGet(HttpServletRequest req, HttpServletResponse resp,
-            Context context) throws ServletException, IOException,
-            ServiceException, UserServletException {
-        context.targetMailbox = Mailbox
-                .getMailboxByAccount(context.targetAccount);
+            Context context) throws ServletException, IOException, ServiceException, UserServletException 
+    {
+        context.targetMailbox = Mailbox.getMailboxByAccount(context.targetAccount);
+
         if (context.targetMailbox == null) {
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST,
                     "mailbox not found");
         }
+
+        ZimbraLog.addToContext(context.targetMailbox);
+
+        ZimbraLog.mailbox.info("UserServlet: "+context.req.getRequestURL().toString());
+        
         context.opContext = new OperationContext(context.authAccount);
 
         MailItem item = null;
@@ -285,6 +297,10 @@ public class UserServlet extends ZimbraServlet {
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST,
                     "mailbox not found");
         }
+
+        ZimbraLog.addToContext(context.targetMailbox);
+        
+        ZimbraLog.mailbox.info("UserServlet: "+context.req.getRequestURL().toString());
         
         // this SUCKS! Need an OperationContext that is for "public/unauth'd" access
         context.opContext = null; // new OperationContext(context.authAccount);
@@ -378,28 +394,6 @@ public class UserServlet extends ZimbraServlet {
                 accountPath = accountPath.substring(1);
             }
             targetAccount = prov.getAccountByName(accountPath);                
-        }
-
-        public void setAccount(Account acct) throws IOException,
-                ServiceException, UserServletException {
-            this.authAccount = acct;
-            Provisioning prov = Provisioning.getInstance();
-            if (accountPath.equals("~")) {
-                accountPath = acct.getName();
-            } else if (accountPath.startsWith("~")) {
-                accountPath = accountPath.substring(1);
-            }
-
-            if (itemId != null && itemId.getAccountId() != null) {
-                targetAccount = prov.getAccountById(itemId.getAccountId());
-            } else {
-                targetAccount = prov.getAccountByName(accountPath);
-            }
-
-            if (targetAccount == null)
-                throw new UserServletException(
-                        HttpServletResponse.SC_BAD_REQUEST,
-                        "target account not found");
         }
 
         // eventually get this from query param ?start=long|YYYYMMMDDHHMMSS
