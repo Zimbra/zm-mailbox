@@ -101,7 +101,14 @@ public class ICalTimeZone extends net.fortuna.ical4j.model.TimeZone
         meta.put(FN_STDTODAY_DTSTART, mStdToDayDtStart);  
         meta.put(FN_STDTODAY_RULE, mStdToDayRule);
         return meta;
-   }
+    }
+
+    public int    getStandardOffset()  { return mStdOffset; }
+    public String getStandardDtStart() { return mDayToStdDtStart; }
+    public String getStandardRule()    { return mDayToStdRule; }
+    public int    getDaylightOffset()  { return mDaylightOffset; }
+    public String getDaylightDtStart() { return mStdToDayDtStart; }
+    public String getDaylightRule()    { return mStdToDayRule; }
 
     public static ICalTimeZone decodeFromMetadata(Metadata m) throws ServiceException {
         String tzId = m.get(FN_TZ_NAME);
@@ -139,6 +146,25 @@ public class ICalTimeZone extends net.fortuna.ical4j.model.TimeZone
         mTzId = tzId;
     }
 
+    /**
+     * 
+     * @param tzId       iCal TZID string
+     * @param stdOffset  standard time offset from UTC in milliseconds
+     * @param stdDtStart iCal datetime string specifying the beginning of the
+     *                   period for which stdRRule applies.  The format is
+     *                   "YYYYMMDDThhmmss" with 24-hour hour.  In practice,
+     *                   the date portion is set to some very early date, like
+     *                   "16010101", and only the time portion varies according
+     *                   to the rules of the time zone.
+     * @param stdRRule   iCal recurrence rule for transition into standard
+     *                   time (i.e. transition out of daylight time)
+     *                   e.g. "FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=10;BYDAY=-1SU"
+     * @param dayOffset  daylight time offset from UTC in milliseconds
+     * @param dayDtStart iCal datetime string specifying the beginning of the
+     *                   period for which dayRRUle applies
+     * @param dayRRule   iCal recurrence rule for transition into daylight
+     *                   time
+     */
     public ICalTimeZone(String tzId,
                         int stdOffset, String stdDtStart, String stdRRule,
                         int dayOffset, String dayDtStart, String dayRRule) {
