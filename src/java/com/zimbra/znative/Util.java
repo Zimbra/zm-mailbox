@@ -44,8 +44,8 @@ public class Util {
         } else {
             try {
                 if (osName.equalsIgnoreCase("Mac OS X")) {
-                    /* TODO: is this really required?  I think not.  loadLibrary
-                     * should just work on the mac...
+                    /* TODO: is this really required?  I think not.
+                     * loadLibrary should just work on the mac...
                      */ 
                     System.load("/opt/zimbra/lib/libzimbra-native.jnilib");
                 } else {
