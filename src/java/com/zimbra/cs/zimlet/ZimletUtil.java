@@ -37,6 +37,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
@@ -287,6 +288,40 @@ public class ZimletUtil {
 		}
 	}
 	
+	public static void aclZimlet(String zimlet, String[] args) throws ZimletException {
+		for (int i = 2; i < args.length; i+=2) {
+			String cos = args[i];
+			String action = args[i+1].toLowerCase();
+			if (action.equals("grant")) {
+				activateZimlet(zimlet, cos);
+			} else if (action.equals("deny")) {
+				deactivateZimlet(zimlet, cos);
+			} else {
+				throw ZimletException.ZIMLET_HANDLER_ERROR("invalid acl command "+args[i+1]);
+			}
+		}
+	}
+	
+	public static void listAcls(String zimlet) throws ZimletException {
+		System.out.println("Listing COS entries for Zimlet "+zimlet+"...");
+		Provisioning prov = Provisioning.getInstance();
+		try {
+			Iterator iter = prov.getAllCos().iterator();
+			while (iter.hasNext()) {
+				NamedEntry cos = (NamedEntry) iter.next();
+				String[] zimlets = cos.getMultiAttr(Provisioning.A_zimbraZimletAvailableZimlets);
+				for (int i = 0; i < zimlets.length; i++) {
+					if (zimlets[i].equals(zimlet)) {
+						System.out.println("\t"+cos.getName());
+						break;
+					}
+				}
+			}
+		} catch (Exception e) {
+			throw ZimletException.ZIMLET_HANDLER_ERROR("cannot list acls "+e.getMessage());
+		}
+	}
+	
 	public static void dumpConfig(String zimlet) throws IOException, ZimletException {
 		ZimletFile zf = new ZimletFile(zimlet);
 		String config = zf.getZimletConfigString();
@@ -327,9 +362,8 @@ public class ZimletUtil {
 	
 	private static final int INSTALL_ZIMLET = 10;
 	private static final int UNINSTALL_ZIMLET = 11;
-	private static final int UPGRADE_ZIMLET = 12;
-	private static final int ACTIVATE_ZIMLET = 13;
-	private static final int DEACTIVATE_ZIMLET = 14;
+	private static final int ACL_ZIMLET = 13;
+	private static final int LIST_ACLS = 14;
 	private static final int DUMP_CONFIG = 15;
 	private static final int INSTALL_CONFIG = 16;
 	private static final int LDAP_DEPLOY = 17;
@@ -338,12 +372,11 @@ public class ZimletUtil {
 	
 	private static final String INSTALL_CMD = "install";
 	private static final String UNINSTALL_CMD = "uninstall";
-	private static final String UPGRADE_CMD = "upgrade";
-	private static final String ACTIVATE_CMD = "activate";
-	private static final String DEACTIVATE_CMD = "deactivate";
-	private static final String DUMP_CONFIG_CMD = "config";
+	private static final String ACL_CMD = "acl";
+	private static final String LIST_ACLS_CMD = "listacls";
+	private static final String DUMP_CONFIG_CMD = "dumpconfigtemplate";
 	private static final String INSTALL_CONFIG_CMD = "configure";
-	private static final String LDAP_DEPLOY_CMD = "ldap-deploy";
+	private static final String LDAP_DEPLOY_CMD = "ldapdeploy";
 	private static final String DEPLOY_CMD = "deploy";
 	private static final String TEST_CMD = "test";
 	
@@ -353,9 +386,8 @@ public class ZimletUtil {
 		mCommands = new HashMap();
 		mCommands.put(INSTALL_CMD, new Integer(INSTALL_ZIMLET));
 		mCommands.put(UNINSTALL_CMD, new Integer(UNINSTALL_ZIMLET));
-		mCommands.put(UPGRADE_CMD, new Integer(UPGRADE_ZIMLET));
-		mCommands.put(ACTIVATE_CMD, new Integer(ACTIVATE_ZIMLET));
-		mCommands.put(DEACTIVATE_CMD, new Integer(DEACTIVATE_ZIMLET));
+		mCommands.put(ACL_CMD, new Integer(ACL_ZIMLET));
+		mCommands.put(LIST_ACLS_CMD, new Integer(LIST_ACLS));
 		mCommands.put(DUMP_CONFIG_CMD, new Integer(DUMP_CONFIG));
 		mCommands.put(INSTALL_CONFIG_CMD, new Integer(INSTALL_CONFIG));
 		mCommands.put(LDAP_DEPLOY_CMD, new Integer(LDAP_DEPLOY));
@@ -368,11 +400,10 @@ public class ZimletUtil {
 		System.out.println("\tdeploy - install, ldap-deploy, then activate on default COS");
 		System.out.println("\tinstall - installs the zimlet files on this host");
 		System.out.println("\tuninstall - uninstalls the zimlet files on this host");
-		System.out.println("\tldap-deploy - add the zimlet entry to the LDAP server");
-		System.out.println("\tactivate - activates the zimlet on a COS");
-		System.out.println("\tdeactivate - deactivates the zimlet from a COS");
-		System.out.println("\tupgrade - upgrades the zimlet");
-		System.out.println("\tconfig - dumps the configuration");
+		System.out.println("\tldapDeploy - add the zimlet entry to the LDAP server");
+		System.out.println("\tacl - change the ACL for the zimlet on a COS");
+		System.out.println("\tlistAcls - list ACLs for the Zimlet");
+		System.out.println("\tdumpConfigTemplate - dumps the configuration");
 		System.out.println("\tconfigure - installs the configuration");
 		System.exit(1);
 	}
@@ -408,20 +439,14 @@ public class ZimletUtil {
 			case LDAP_DEPLOY:
 				ldapDeploy(zimletRoot, zimlet);
 				break;
-			case UPGRADE_ZIMLET:
-				upgradeZimlet(zimlet);
-				break;
-			case ACTIVATE_ZIMLET:
-				if (args.length < 3) {
+			case ACL_ZIMLET:
+				if (args.length < 3 || args.length % 2 != 0) {
 					usage();
 				}
-				activateZimlet(zimlet, args[2]);
+				aclZimlet(zimlet, args);
 				break;
-			case DEACTIVATE_ZIMLET:
-				if (args.length < 3) {
-					usage();
-				}
-				deactivateZimlet(zimlet, args[2]);
+			case LIST_ACLS:
+				listAcls(zimlet);
 				break;
 			case DUMP_CONFIG:
 				dumpConfig(zimlet);
