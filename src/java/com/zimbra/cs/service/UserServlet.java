@@ -96,6 +96,8 @@ public class UserServlet extends ZimbraServlet {
     public static final String QP_PART = "part"; // part query param
 
     public static final String QP_QUERY = "query"; // query query param
+    
+    public static final String QP_VIEW = "view"; // view query param    
 
     public static final String QP_TYPES = "types"; // types
     
@@ -113,13 +115,13 @@ public class UserServlet extends ZimbraServlet {
     
     public static final String AUTH_DEFAULT = "co,ba"; // both
 
-    private HashMap mFormatters;
+    private HashMap<String, Formatter> mFormatters;
 
     protected static final String MSGPAGE_BLOCK = "errorpage.attachment.blocked";
     private String mBlockPage = null;
 
     public UserServlet() {
-        mFormatters = new HashMap();
+        mFormatters = new HashMap<String, Formatter>();
         addFormatter(new CsvFormatter());
         addFormatter(new IcsFormatter());
         addFormatter(new RssFormatter());
@@ -135,7 +137,7 @@ public class UserServlet extends ZimbraServlet {
     }
 
     public Formatter getFormatter(String type) {
-        return (Formatter) mFormatters.get(type);
+        return mFormatters.get(type);
     }
 
     private void getAccount(Context context) throws IOException,
@@ -298,7 +300,7 @@ public class UserServlet extends ZimbraServlet {
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "unsupported format");
 
         if (context.formatter.canBeBlocked()) {
-            if (checkGlobalOverride(Provisioning.A_zimbraAttachmentsBlocked, context.authAccount)) {
+            if (Formatter.checkGlobalOverride(Provisioning.A_zimbraAttachmentsBlocked, context.authAccount)) {
                 sendbackBlockMessage(context.req, context.resp);
                 return;
             }
@@ -464,6 +466,15 @@ public class UserServlet extends ZimbraServlet {
             return req.getParameter(QP_PART);
         }
 
+        public boolean hasView() {
+            String v = getView();
+            return v != null && v.length() > 0;
+        }
+
+        public String getView() {
+            return req.getParameter(QP_VIEW);
+        }
+
         public String getTypesString() {
             return req.getParameter(QP_TYPES);
         }
@@ -494,23 +505,6 @@ public class UserServlet extends ZimbraServlet {
         }
     }
     
-    /**
-     * 
-     * @param attr
-     * @param accountId
-     * @return
-     * @throws ServletException
-     */
-    private boolean checkGlobalOverride(String attr, Account account) throws ServletException {
-        Provisioning prov = Provisioning.getInstance();
-        try {
-            return prov.getConfig().getBooleanAttr(attr, false)
-                    || account.getBooleanAttr(attr, false);
-        } catch (ServiceException e) {
-            throw new ServletException(e);
-        }
-    }
-
     /**
      * @param req
      * @param resp

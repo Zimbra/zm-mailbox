@@ -5,6 +5,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
+import javax.servlet.ServletException;
+
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.AppointmentHit;
 import com.zimbra.cs.index.ContactHit;
 import com.zimbra.cs.index.MailboxIndex;
@@ -52,7 +56,7 @@ public abstract class Formatter {
         return MailboxIndex.SEARCH_FOR_MESSAGES;
     }
 
-    public abstract void format(UserServlet.Context context, MailItem item) throws UserServletException, ServiceException, IOException;
+    public abstract void format(UserServlet.Context context, MailItem item) throws UserServletException, ServiceException, IOException, ServletException;
 
     public Iterator getMailItems(Context context, MailItem item, long startTime, long endTime) throws ServiceException {
         String query = context.getQueryString();
@@ -98,6 +102,23 @@ public abstract class Formatter {
         }
     }
  
+    /**
+     * 
+     * @param attr
+     * @param accountId
+     * @return
+     * @throws ServletException
+     */
+    public static boolean checkGlobalOverride(String attr, Account account) throws ServletException {
+        Provisioning prov = Provisioning.getInstance();
+        try {
+            return prov.getConfig().getBooleanAttr(attr, false)
+                    || account.getBooleanAttr(attr, false);
+        } catch (ServiceException e) {
+            throw new ServletException(e);
+        }
+    }
+
     private static class QueryResultIterator implements Iterator {
 
         private ZimbraQueryResults mResults;

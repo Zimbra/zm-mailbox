@@ -31,7 +31,11 @@ import javax.mail.MessagingException;
 import javax.mail.Part;
 import javax.mail.internet.ContentDisposition;
 import javax.mail.internet.MimePart;
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
+
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.MailItem;
@@ -41,9 +45,15 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.cs.util.ZimbraLog;
 
 public class NativeFormatter extends Formatter {
 
+    private static final String CONVERSION_PATH = "/extension/convertd";
+    private static final String ATTR_MIMEPART   = "mimepart";
+    private static final String ATTR_MSGDIGEST  = "msgdigest";
+    private static final String ATTR_CONTENTURL = "contenturl";
+    
     public String getType() {
         return "native";
     }
@@ -53,7 +63,7 @@ public class NativeFormatter extends Formatter {
         return MailboxIndex.SEARCH_FOR_MESSAGES;
     }
 
-    public void format(Context context, MailItem mailItem) throws IOException, ServiceException, UserServletException {
+    public void format(Context context, MailItem mailItem) throws IOException, ServiceException, UserServletException, ServletException {
         try {
             if (mailItem instanceof Message) {
                 handleMessage(context, (Message)mailItem);
@@ -65,7 +75,7 @@ public class NativeFormatter extends Formatter {
         }
     }
     
-    private void handleMessage(Context context, Message message) throws IOException, ServiceException, MessagingException {
+    private void handleMessage(Context context, Message message) throws IOException, ServiceException, MessagingException, ServletException {
         /*
         if (sync) {
             hdr.append("X-Zimbra-Conv: ").append(msg.getConversationId()).append("\n");
@@ -82,14 +92,29 @@ public class NativeFormatter extends Formatter {
         }
     }
     
-    private void handleMessagePart(Context context, Message message) throws IOException, ServiceException, MessagingException {
+    private void handleMessagePart(Context context, Message message) throws IOException, ServiceException, MessagingException, ServletException {
         MimePart mp = getMimePart(message, context.getPart());
         if (mp != null) {
             String contentType = mp.getContentType();
             if (contentType == null) {
                 contentType = Mime.CT_APPLICATION_OCTET_STREAM;
             }
-            sendbackOriginalDoc(mp, contentType, context.resp);
+            boolean html = checkGlobalOverride(Provisioning.A_zimbraAttachmentsViewInHtmlOnly, context.authAccount) ||
+                            (context.hasView() && context.getView().equals("html"));
+            ZimbraLog.mailbox.info("view = "+context.getView());
+            ZimbraLog.mailbox.info("html = "+html);
+            
+
+            if (!html) {
+                sendbackOriginalDoc(mp, contentType, context.resp);
+            } else {
+                context.req.setAttribute(ATTR_MIMEPART, mp);
+                context.req.setAttribute(ATTR_MSGDIGEST, message.getDigest());
+                context.req.setAttribute(ATTR_CONTENTURL, context.req.getRequestURL().toString());
+                RequestDispatcher dispatcher = context.req.getRequestDispatcher(CONVERSION_PATH);
+                dispatcher.forward(context.req, context.resp);
+            }
+//            sendbackOriginalDoc(mp, contentType, context.resp);
             return;
         }
         context.resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "part not found");
