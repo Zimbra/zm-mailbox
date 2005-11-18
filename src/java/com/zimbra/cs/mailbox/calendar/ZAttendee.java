@@ -48,8 +48,8 @@ public class ZAttendee {
     public ZAttendee(String address, String cn, String role, String ptst, Boolean rsvp) {
         setAddress(address);
         mCn = cn;
-        mRole = role;
-        mPartStat = ptst;
+        setRole(role);
+        setPartStat(ptst);
         mRsvp = rsvp;
     }
     
@@ -71,13 +71,13 @@ public class ZAttendee {
         // role
         Role role = (Role) params.getParameter(Parameter.ROLE);
         if (role != null) {
-            mRole = IcalXmlStrMap.sRoleMap.toXml(role.getValue());
+            setRole(role.getValue());
         }
         
         // partstat
         PartStat partStat = (PartStat) params.getParameter(Parameter.PARTSTAT);
         if (partStat != null) {
-            mPartStat = IcalXmlStrMap.sPartStatMap.toXml(partStat.getValue());
+            setPartStat(partStat.getValue());
         }
         
         // rsvp?
@@ -111,8 +111,19 @@ public class ZAttendee {
         mAddress = address; 
     }
     public void setCn(String cn) { mCn = cn; }
-    public void setRole(String role) { mRole = role; }
-    public void setPartStat(String partStat) { mPartStat = partStat; }
+    public void setRole(String role) {
+        if (role != null && !IcalXmlStrMap.sRoleMap.validXml(role)) {
+            role = IcalXmlStrMap.sRoleMap.toXml(role);
+        }
+        mRole = role; 
+    }
+    public void setPartStat(String partStat) { 
+        if (partStat != null && !IcalXmlStrMap.sPartStatMap.validXml(partStat)) {
+            partStat = IcalXmlStrMap.sRoleMap.toXml(partStat);
+        }
+        mPartStat = partStat; 
+    }
+    
     public void setRsvp(Boolean rsvp) { mRsvp = rsvp; }
     
     public boolean hasCn() { return mCn != null; }

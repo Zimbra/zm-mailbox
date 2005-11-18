@@ -30,7 +30,7 @@ package com.zimbra.cs.mailbox.calendar;
 
 import java.util.HashMap;
 
-import net.fortuna.ical4j.model.Recur;
+//import net.fortuna.ical4j.model.Recur;
 import net.fortuna.ical4j.model.parameter.PartStat;
 import net.fortuna.ical4j.model.parameter.Role;
 import net.fortuna.ical4j.model.property.Status;
@@ -159,12 +159,12 @@ public class IcalXmlStrMap
         sTranspMap.add(Transp.TRANSPARENT.getValue(), TRANSP_TRANSPARENT);
         sTranspMap.add(Transp.OPAQUE.getValue(), TRANSP_OPAQUE);
         
-        sFreqMap.add(Recur.DAILY, FREQ_DAILY);
-        sFreqMap.add(Recur.HOURLY, FREQ_HOURLY);
-        sFreqMap.add(Recur.MINUTELY, FREQ_MINUTELY);
-        sFreqMap.add(Recur.MONTHLY, FREQ_MONTHLY);
-        sFreqMap.add(Recur.SECONDLY, FREQ_SECONDLY);
-        sFreqMap.add(Recur.WEEKLY, FREQ_WEEKLY);
-        sFreqMap.add(Recur.YEARLY, FREQ_YEARLY);
+        sFreqMap.add(ZRecur.Frequency.DAILY.toString(), FREQ_DAILY);
+        sFreqMap.add(ZRecur.Frequency.HOURLY.toString(), FREQ_HOURLY);
+        sFreqMap.add(ZRecur.Frequency.MINUTELY.toString(), FREQ_MINUTELY);
+        sFreqMap.add(ZRecur.Frequency.MONTHLY.toString(), FREQ_MONTHLY);
+        sFreqMap.add(ZRecur.Frequency.SECONDLY.toString(), FREQ_SECONDLY);
+        sFreqMap.add(ZRecur.Frequency.WEEKLY.toString(), FREQ_WEEKLY);
+        sFreqMap.add(ZRecur.Frequency.YEARLY.toString(), FREQ_YEARLY);
     }
 }

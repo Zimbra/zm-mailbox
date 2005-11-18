@@ -27,11 +27,6 @@ package com.zimbra.cs.mailbox.calendar;
 
 import java.util.*;
 
-import net.fortuna.ical4j.model.NumberList;
-import net.fortuna.ical4j.model.Recur;
-import net.fortuna.ical4j.model.WeekDay;
-import net.fortuna.ical4j.model.WeekDayList;
-
 import java.text.ParseException;
 
 import com.zimbra.cs.util.ZimbraLog;
@@ -42,7 +37,6 @@ import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
 
-import net.fortuna.ical4j.model.parameter.Value;
 
 
 /**
@@ -188,7 +182,7 @@ public class Recurrence
      */
     public static interface IInstanceGeneratingRule extends IRecurrence 
     {
-        public Recur getRecur();
+        public ZRecur getRecur();
         
         public ParsedDateTime getDtStart();
         
@@ -276,8 +270,11 @@ public class Recurrence
         public MultiRuleSorter(Metadata meta, TimeZoneMap tzmap) throws ServiceException {
             int numRules = (int) meta.getLong(FN_NUM_RULES);
             mRules = new ArrayList(numRules);
-            for (int i = 0; i < numRules; i++)
-                mRules.add(Recurrence.decodeRule(meta.getMap(FN_RULE + i), tzmap));
+            for (int i = 0; i < numRules; i++) {
+                try {
+                    mRules.add(Recurrence.decodeRule(meta.getMap(FN_RULE + i), tzmap));
+                } catch(Exception e) {}
+            }
         }
         
         public MultiRuleSorter(ArrayList /* IInstanceGeneratingRule */ rules) {
@@ -369,7 +366,7 @@ public class Recurrence
             return mDtEnd;
         }
         
-        public Recur getRecur() { return null; }
+        public ZRecur getRecur() { return null; }
         public ParsedDateTime getDtStart() { return mDtStart; }
         
         public ParsedDateTime getDtEndOrNull() { return mDtEnd; }
@@ -494,7 +491,7 @@ public class Recurrence
      */
     public static class SimpleRepeatingRule implements IInstanceGeneratingRule {
         public SimpleRepeatingRule(ParsedDateTime dtstart, ParsedDuration duration, 
-                Recur recur, InviteInfo invId)
+                ZRecur recur, InviteInfo invId)
         {
             mDtStart = dtstart;
             mRecur = recur;
@@ -526,21 +523,24 @@ public class Recurrence
             Element rule = parent.addElement(MailService.E_APPT_RULE);
 
             // FREQ
-            String freq = IcalXmlStrMap.sFreqMap.toXml(mRecur.getFrequency());
+            String freq = IcalXmlStrMap.sFreqMap.toXml(mRecur.getFrequency().toString());
             rule.addAttribute(MailService.A_APPT_RULE_FREQ, freq);
 
             // UNTIL or COUNT
-            Date untilDate = mRecur.getUntil();
+            ParsedDateTime untilDate = mRecur.getUntil();
             if (untilDate != null) {
-//                String d = DateTimeFormat.getInstance().format(untilDate);
-                String d = untilDate.toString();
-                rule.addElement(MailService.E_APPT_RULE_UNTIL).
-                    addAttribute(MailService.A_APPT_DATETIME, d);
+//              String d = DateTimeFormat.getInstance().format(untilDate);
+//                String d = untilDate.toString();
+                Element untilElt = rule.addElement(MailService.E_APPT_RULE_UNTIL);
+                untilElt.addAttribute(MailService.A_APPT_DATETIME, untilDate.getDateTimePartString());
+                String tzName = untilDate.getTZName();
+                if (tzName != null) {
+                    untilElt.addAttribute(MailService.A_APPT_TIMEZONE, tzName);
+                }
             } else {
                 int count = mRecur.getCount();
                 if (count > 0) {
-                    rule.addElement(MailService.E_APPT_RULE_COUNT).
-                        addAttribute(MailService.A_APPT_RULE_COUNT_NUM, count);
+                    rule.addElement(MailService.E_APPT_RULE_COUNT).addAttribute(MailService.A_APPT_RULE_COUNT_NUM, count);
                 }
             }
 
@@ -552,91 +552,89 @@ public class Recurrence
             }
 
             // BYSECOND
-            NumberList bySecond = mRecur.getSecondList();
+            List<Integer> bySecond = mRecur.getBySecondList();
             if (!bySecond.isEmpty()) {
                 rule.addElement(MailService.E_APPT_RULE_BYSECOND).
-                    addAttribute(MailService.A_APPT_RULE_BYSECOND_SECLIST, bySecond.toString());
+                    addAttribute(MailService.A_APPT_RULE_BYSECOND_SECLIST, ZRecur.listAsStr(bySecond));
             }
 
             // BYMINUTE
-            NumberList byMinute = mRecur.getMinuteList();
+            List <Integer> byMinute = mRecur.getByMinuteList();
             if (!byMinute.isEmpty()) {
                 rule.addElement(MailService.E_APPT_RULE_BYMINUTE).
-                    addAttribute(MailService.A_APPT_RULE_BYMINUTE_MINLIST, byMinute.toString());
+                addAttribute(MailService.A_APPT_RULE_BYMINUTE_MINLIST, ZRecur.listAsStr(byMinute));
             }
 
             // BYHOUR
-            NumberList byHour = mRecur.getHourList();
+            List<Integer> byHour = mRecur.getByHourList();
             if (!byHour.isEmpty()) {
                 rule.addElement(MailService.E_APPT_RULE_BYHOUR).
-                    addAttribute(MailService.A_APPT_RULE_BYHOUR_HRLIST, byHour.toString());
+                    addAttribute(MailService.A_APPT_RULE_BYHOUR_HRLIST, ZRecur.listAsStr(byHour));
             }
 
             // BYDAY
-            WeekDayList byDay = mRecur.getDayList();
+            List<ZRecur.ZWeekDayNum> byDay = mRecur.getByDayList();
             if (!byDay.isEmpty()) {
                 Element bydayElt = rule.addElement(MailService.E_APPT_RULE_BYDAY);
-                for (int i = 0; i < byDay.size(); i++) {
-                    WeekDay wkday = (WeekDay) byDay.get(i);
+                for (ZRecur.ZWeekDayNum wdn : byDay) {
                     Element wkdayElt = bydayElt.addElement(MailService.E_APPT_RULE_BYDAY_WKDAY);
-                    int offset = wkday.getOffset();
-                    if (offset != 0)
-                        wkdayElt.addAttribute(MailService.A_APPT_RULE_BYDAY_WKDAY_ORDWK, offset);
-                    wkdayElt.addAttribute(MailService.A_APPT_RULE_DAY, wkday.getDay());
+                    if (wdn.mOrdinal != 0) 
+                        wkdayElt.addAttribute(MailService.A_APPT_RULE_BYDAY_WKDAY_ORDWK, wdn.mOrdinal);
+                    wkdayElt.addAttribute(MailService.A_APPT_RULE_DAY, wdn.mDay.toString());
                 }
             }
 
             // BYMONTHDAY
-            NumberList byMonthDay = mRecur.getMonthDayList();
+            List<Integer> byMonthDay = mRecur.getByMonthDayList();
             if (!byMonthDay.isEmpty()) {
                 rule.addElement(MailService.E_APPT_RULE_BYMONTHDAY).
-                    addAttribute(MailService.A_APPT_RULE_BYMONTHDAY_MODAYLIST, byMonthDay.toString());
+                   addAttribute(MailService.A_APPT_RULE_BYMONTHDAY_MODAYLIST, ZRecur.listAsStr(byMonthDay));
             }
 
             // BYYEARDAY
-            NumberList byYearDay = mRecur.getYearDayList();
+            List<Integer> byYearDay = mRecur.getByYearDayList();
             if (!byYearDay.isEmpty()) {
                 rule.addElement(MailService.E_APPT_RULE_BYYEARDAY).
-                    addAttribute(MailService.A_APPT_RULE_BYYEARDAY_YRDAYLIST, byYearDay.toString());
+                    addAttribute(MailService.A_APPT_RULE_BYYEARDAY_YRDAYLIST, ZRecur.listAsStr(byYearDay));
             }
 
             // BYWEEKNO
-            NumberList byWeekNo = mRecur.getWeekNoList();
+            List<Integer> byWeekNo = mRecur.getByWeekNoList();
             if (!byWeekNo.isEmpty()) {
                 rule.addElement(MailService.E_APPT_RULE_BYWEEKNO).
-                    addAttribute(MailService.A_APPT_RULE_BYWEEKNO_WKLIST, byWeekNo.toString());
+                    addAttribute(MailService.A_APPT_RULE_BYWEEKNO_WKLIST, ZRecur.listAsStr(byWeekNo));
             }
 
             // BYMONTH
-            NumberList byMonth = mRecur.getMonthList();
+            List<Integer> byMonth = mRecur.getByMonthList();
             if (!byMonth.isEmpty()) {
                 rule.addElement(MailService.E_APPT_RULE_BYMONTH).
-                    addAttribute(MailService.A_APPT_RULE_BYMONTH_MOLIST, byMonth.toString());
+                    addAttribute(MailService.A_APPT_RULE_BYMONTH_MOLIST, ZRecur.listAsStr(byMonth));
             }
 
             // BYSETPOS
-            NumberList bySetPos = mRecur.getSetPosList();
+            List<Integer> bySetPos = mRecur.getBySetPosList();
             if (!bySetPos.isEmpty()) {
                 rule.addElement(MailService.E_APPT_RULE_BYSETPOS).
-                    addAttribute(MailService.A_APPT_RULE_BYSETPOS_POSLIST, bySetPos.toString());
+                   addAttribute(MailService.A_APPT_RULE_BYSETPOS_POSLIST, ZRecur.listAsStr(bySetPos));
             }
 
             // WKST
-            String wkst = mRecur.getWeekStartDay();
+            ZRecur.ZWeekDay wkst = mRecur.getWkSt();
             if (wkst != null) {
                 rule.addElement(MailService.E_APPT_RULE_WKST).
-                    addAttribute(MailService.A_APPT_RULE_DAY, wkst);
+                    addAttribute(MailService.A_APPT_RULE_DAY, wkst.toString());
             }
 
-            // x-name
-            Map xNames = mRecur.getExperimentalValues();
-            for (Iterator iter = mRecur.getExperimentalValues().entrySet().iterator();
-                 iter.hasNext(); ) {
-                Map.Entry entry = (Map.Entry) iter.next();
-                Element xElt = rule.addElement(MailService.E_APPT_RULE_XNAME);
-                xElt.addAttribute(MailService.A_APPT_RULE_XNAME_NAME, (String) entry.getKey());
-                xElt.addAttribute(MailService.A_APPT_RULE_XNAME_VALUE, (String) entry.getValue());
-            }
+//            // x-name
+//            Map xNames = mRecur.getExperimentalValues();
+//            for (Iterator iter = mRecur.getExperimentalValues().entrySet().iterator();
+//                 iter.hasNext(); ) {
+//                Map.Entry entry = (Map.Entry) iter.next();
+//                Element xElt = rule.addElement(MailService.E_APPT_RULE_XNAME);
+//                xElt.addAttribute(MailService.A_APPT_RULE_XNAME_NAME, (String) entry.getKey());
+//                xElt.addAttribute(MailService.A_APPT_RULE_XNAME_VALUE, (String) entry.getValue());
+//            }
 
             return rule;
         }
@@ -646,10 +644,11 @@ public class Recurrence
             ArrayList toRet = null;
         
             try {
-                net.fortuna.ical4j.model.DateTime dateStart = new net.fortuna.ical4j.model.DateTime(start);
-                net.fortuna.ical4j.model.DateTime endDate = new net.fortuna.ical4j.model.DateTime(end);
+//                net.fortuna.ical4j.model.DateTime dateStart = new net.fortuna.ical4j.model.DateTime(start);
+//                net.fortuna.ical4j.model.DateTime endDate = new net.fortuna.ical4j.model.DateTime(end);
                 
-                List dateList = mRecur.getDates(mDtStart.iCal4jDate(), dateStart, endDate, Value.DATE_TIME);  
+//                List dateList = mRecur.getDates(mDtStart.iCal4jDate(), dateStart, endDate, Value.DATE_TIME);  
+                List <java.util.Date> dateList = mRecur.expandRecurrenceOverRange(mDtStart, start, end);
                 
                 toRet = new ArrayList(dateList.size());
                 
@@ -674,7 +673,7 @@ public class Recurrence
             return toRet;
         }
         
-        public Recur getRecur() { return mRecur; }
+        public ZRecur getRecur() { return mRecur; }
 
 
         public ParsedDateTime getStartTime() {
@@ -764,18 +763,14 @@ public class Recurrence
             } catch (ParseException e) {
                 throw ServiceException.FAILURE("ParseException ", e);
             }
-            try {
-                mRecur = new Recur(meta.get(FN_RECUR));
-            } catch (ParseException e) {
-                throw ServiceException.FAILURE("Error parsing RECUR for appointment: " + meta.get(FN_RECUR), e);
-            }
+            mRecur = new ZRecur(meta.get(FN_RECUR).toString());
             
             mInvId = InviteInfo.fromMetadata(meta.getMap(FN_INVID), tzmap);
         }
 
         // define the value
         private ParsedDateTime mDtStart;
-        private Recur mRecur;
+        private ZRecur mRecur;
         private ParsedDuration mDuration;
         private InviteInfo mInvId;
     }    

@@ -822,6 +822,7 @@ public class Invite {
     public String getMethod() { return mMethod.getValue(); }
     
     public void setMethod(Method method) { mMethod = method; }
+    public void setMethod(String methodStr) { mMethod = lookupMethod(methodStr); }
     
     public static Organizer createOrganizer(String addressStr) {
         Organizer toRet = new Organizer(URI.create(addressStr));
@@ -1087,7 +1088,7 @@ public class Invite {
                 for (Iterator iter = addRecurs.iterator(); iter.hasNext();) {
                     Object next = iter.next();
                     if (next instanceof Recur) {
-                        Recur cur = (Recur)next;
+                        ZRecur cur = new ZRecur((Recur)next);
                         addRules.add(new Recurrence.SimpleRepeatingRule(mStart, duration, cur, new InviteInfo(this)));
                     } else {
                         RDate cur = (RDate)next;
@@ -1100,7 +1101,7 @@ public class Invite {
                 for (Iterator iter = subRules.iterator(); iter.hasNext();) {
                     Object next = iter.next();
                     if (next instanceof Recur) {
-                        Recur cur = (Recur)iter.next();
+                        ZRecur cur = new ZRecur((Recur)next);
                         subRules.add(new Recurrence.SimpleRepeatingRule(mStart, duration, cur, new InviteInfo(this)));
                     } else {
                         ExDate cur = (ExDate)next;
@@ -1289,7 +1290,7 @@ public class Invite {
                     break;
                 case Recurrence.TYPE_REPEATING:
                     Recurrence.SimpleRepeatingRule srr = (Recurrence.SimpleRepeatingRule)cur;
-                    event.getProperties().add(new RRule(srr.getRecur()));
+                    event.getProperties().add(new RRule(srr.getRecur().getRecur()));
                     break;
                 }
                 
@@ -1304,7 +1305,7 @@ public class Invite {
                     break;
                 case Recurrence.TYPE_REPEATING:
                     Recurrence.SimpleRepeatingRule srr = (Recurrence.SimpleRepeatingRule)cur;
-                    event.getProperties().add(new ExRule(srr.getRecur()));
+                    event.getProperties().add(new ExRule(srr.getRecur().getRecur()));
                     break;
                 }
             }

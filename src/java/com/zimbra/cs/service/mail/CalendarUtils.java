@@ -53,7 +53,6 @@ import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Parameter;
 import net.fortuna.ical4j.model.ParameterList;
 import net.fortuna.ical4j.model.Property;
-import net.fortuna.ical4j.model.Recur;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.parameter.PartStat;
 import net.fortuna.ical4j.model.property.Method;
@@ -72,6 +71,7 @@ import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.Recurrence;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
+import com.zimbra.cs.mailbox.calendar.ZRecur;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.soap.Element;
@@ -587,14 +587,14 @@ public class CalendarUtils {
                         }
                     }  // iterate inside <rule>
 
-                    try {
-                        Recur recur = new Recur(recurBuf.toString());
+                    try { 
+                        ZRecur recur = new ZRecur(recurBuf.toString());
                         if (exclude) {
                             subRules.add(new Recurrence.SimpleRepeatingRule(inv.getStartTime(), dur, recur, null));
                         } else {
                             addRules.add(new Recurrence.SimpleRepeatingRule(inv.getStartTime(), dur, recur, null));
                         }
-                    } catch (ParseException ex) {
+                    } catch (ServiceException ex) {
                         throw MailServiceException.INVALID_REQUEST("Exception parsing <recur> <rule>", ex);
                     }
                     
