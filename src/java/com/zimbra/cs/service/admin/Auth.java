@@ -62,15 +62,17 @@ public class Auth extends AdminDocumentHandler {
 		String password = request.getAttribute(AdminService.E_PASSWORD);
 		Provisioning prov = Provisioning.getInstance();
 		Account acct = null;
+        boolean isDomainAdmin = false;
         if (name.indexOf("@") == -1) {
             acct = prov.getAdminAccountByName(name);
         } else {
             acct = prov.getAccountByName(name);
-            boolean ok = acct != null &&
-                (acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false) || 
-                        acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false));
-            if (!ok) {
-                throw ServiceException.PERM_DENIED("not an admin account");
+            if (acct != null) {
+                isDomainAdmin = acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);
+                boolean isAdmin= acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);            
+                boolean ok = (isDomainAdmin || isAdmin);
+                if (!ok) 
+                    throw ServiceException.PERM_DENIED("not an admin account");
             }
         }
 
@@ -98,6 +100,7 @@ public class Auth extends AdminDocumentHandler {
         }
         response.addAttribute(AdminService.E_AUTH_TOKEN, token, Element.DISP_CONTENT);
         response.addAttribute(AdminService.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.DISP_CONTENT);
+        response.addElement(AdminService.E_A).addAttribute(AdminService.A_N, Provisioning.A_zimbraIsDomainAdminAccount).setText(isDomainAdmin+"");
         Session session = lc.getNewSession(acct.getId(), SessionCache.SESSION_ADMIN);
         if (session != null)
             ZimbraContext.encodeSession(response, session, true);
