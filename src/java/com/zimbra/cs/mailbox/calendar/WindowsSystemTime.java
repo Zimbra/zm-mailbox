@@ -57,11 +57,10 @@ public class WindowsSystemTime {
             // we have a recurrence rule as opposed to an absolute time
             if (mDayOfWeek < 0 || mDayOfWeek > 6)
                 throw new IllegalArgumentException(
-                        "DayOfWeek field must be in [0, 6] range", null);
+                        "DayOfWeek field must be in [0, 6] range");
             if (mDay < 0 || mDay > 5)
                 throw new IllegalArgumentException(
-                        "Day field specifying week number must be in [1, 5] range",
-                        null);
+                        "Day field specifying week number must be in [1, 5] range");
         }
     }
 
