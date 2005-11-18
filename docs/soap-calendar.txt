@@ -54,6 +54,37 @@
      <su>{subject}</su>
 
      <inv [uid="uid-for-create"]>  // optional: client can request the UID to use
+       [                            // Time zone components define the time zones referenced in the
+                                    // rest of the <inv>, for start/end times and recurrence rules.
+                                    // Time zones defined in the LDAP server don't need to be defined
+                                    // here, but all custom time zones must be defined before being
+                                    // referenced.
+       <tz
+           tzid="timezonename"      // this name is referenced in various DATETIME data in the rest of <inv>
+           stdoffset="<minutes>"    // offset from UTC in standard time; local = UTC + offset
+           dayoffset="<minutes>"    // offset from UTC in daylight time
+       >
+           [                        // If daylight savings time is not used, <stddate> and <daydate> must be
+                                    // omitted.  If DST is used, both <stddate> and <daydate> must be present.
+           <standard                // time/rule for transitioning from daylight time to standard time
+               mon="<number>"         // month; 1=January, 2=February, etc.
+               dow="<number>"         // day of week; 0=Sunday, 1=Monday, etc.
+               week="<number>"        // week number; 1=first, 2=second, 3=third, 4=fourth, -1=last
+               hour="<number>"        // transition hour (0..23)
+               min="<number>"         // transition minute (0..59)
+               sec="<number>"         // transition second; 0..59, usually 0
+           />
+           <daylight                // time/rule for transitioning from standard time to daylight time
+               mon="<number>"
+               dow="<number>"
+               week="<number>"
+               hour="<number>"
+               min="<number>"
+               sec="<number>"
+           />
+           ]?
+       </tz>
+       ]+
        [
        <comp type="event|todo"
             [status="TENT|CONF|CANC"]  // TENTative, CONFirmed (default), CANCelled -- TIM: remove this!

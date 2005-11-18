@@ -254,7 +254,6 @@ public class MailService implements DocumentService {
 	public static final String A_BOUNDS = "pos";    
     public static final String A_STATUS = "status";
     public static final String A_EXCLUDE_FREEBUSY = "excludeFreeBusy";
-    
 
     // object actions
     public static final String A_OBJECT = "obj";
@@ -333,6 +332,10 @@ public class MailService implements DocumentService {
     public static final String E_APPT_RULE_WKST = "wkst";
     public static final String E_APPT_RULE_XNAME = "rule-x-name";
 
+    public static final String E_APPT_TZ = "tz";
+    public static final String E_APPT_TZ_STANDARD = "standard";
+    public static final String E_APPT_TZ_DAYLIGHT = "daylight";
+
     public static final String A_UID = "uid";
     public static final String A_DEFAULT = "default";
     public static final String A_EXCEPT = "except";
@@ -394,6 +397,15 @@ public class MailService implements DocumentService {
     public static final String A_APPT_DURATION_HOURS = "h";
     public static final String A_APPT_DURATION_MINUTES = "m";
     public static final String A_APPT_DURATION_SECONDS = "s";
+
+    public static final String A_APPT_TZ_STDOFFSET = "stdoff";
+    public static final String A_APPT_TZ_DAYOFFSET = "dayoff";
+    public static final String A_APPT_TZ_WEEK = "week";
+    public static final String A_APPT_TZ_DAYOFWEEK = "dow";
+    public static final String A_APPT_TZ_MONTH = "mon";
+    public static final String A_APPT_TZ_HOUR = "hour";
+    public static final String A_APPT_TZ_MINUTE = "min";
+    public static final String A_APPT_TZ_SECOND = "sec";
 
     // spell checking
     public static final String A_AVAILABLE = "available";

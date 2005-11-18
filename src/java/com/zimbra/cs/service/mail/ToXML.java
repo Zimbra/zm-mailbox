@@ -47,10 +47,15 @@ import org.apache.commons.logging.LogFactory;
 //
 import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.mailbox.*;
+import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.ParsedDuration;
 import com.zimbra.cs.mailbox.calendar.Recurrence;
+import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
+import com.zimbra.cs.mailbox.calendar.WindowsSystemTime;
+import com.zimbra.cs.mailbox.calendar.WindowsTZUtils;
+import com.zimbra.cs.mailbox.calendar.WindowsTimeZoneInformation;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mime.MPartInfo;
@@ -561,7 +566,8 @@ public class ToXML {
             Invite inv = appt.getInvite(i);
 
             Element ie = apptElt.addElement(MailService.E_INVITE);
-            
+            encodeTimeZoneMap(ie, appt.getTimeZoneMap());
+
             encodeReplies(ie, appt, inv);
             
             ie.addAttribute(MailService.A_ID, lc.formatItemId(inv.getMailItemId()));
@@ -569,7 +575,7 @@ public class ToXML {
             if (inv.hasRecurId())
                 ie.addAttribute(MailService.A_APPT_RECURRENCE_ID, inv.getRecurId().toString());
 
-            ToXML.encodeInvite(ie, lc, appt, inv, NOTIFY_FIELDS, false);
+            encodeInvite(ie, lc, appt, inv, NOTIFY_FIELDS, false);
         }
         
         return apptElt;
@@ -665,7 +671,8 @@ public class ToXML {
             if (sent != null)
                 m.addAttribute(MailService.A_SENT_DATE, sent.getTime());
 
-            Element invElt = m.addElement(MailService.E_INVITE); 
+            Element invElt = m.addElement(MailService.E_INVITE);
+            encodeTimeZoneMap(invElt, appt.getTimeZoneMap());
             Invite[] invs = appt.getInvites(invId);
             for (int i = 0; i < invs.length; i++) {
                 encodeInvite(invElt, lc, appt, invs[i], NOTIFY_FIELDS, repliesWithInvites);
@@ -800,7 +807,46 @@ public class ToXML {
             elem.addAttribute(MailService.A_CHANGE_DATE, mi.getChangeDate() / 1000);
         return elem;
     }
-    
+
+    private static void encodeTimeZoneMap(Element parent, TimeZoneMap tzmap) {
+        assert(tzmap != null);
+        for (Iterator iter = tzmap.tzIterator(); iter.hasNext(); ) {
+            ICalTimeZone tz = (ICalTimeZone) iter.next();
+            WindowsTimeZoneInformation tzwin = WindowsTZUtils.ICalToWindows(tz);
+            Element e = parent.addElement(MailService.E_APPT_TZ);
+            e.addAttribute(MailService.A_ID, tzwin.getName());
+            e.addAttribute(MailService.A_APPT_TZ_STDOFFSET, tzwin.getStandardOffset() / 60 / 1000);
+            e.addAttribute(MailService.A_APPT_TZ_DAYOFFSET, tzwin.getDaylightOffset() / 60 / 1000);
+
+            if (tz.useDaylightTime()) {
+                int week;
+                WindowsSystemTime stddate = tzwin.getStandardDate();
+                assert(stddate != null);
+                Element std = e.addElement(MailService.E_APPT_TZ_STANDARD);
+                week = stddate.getDay();
+                if (week == 5) week = -1;
+                std.addAttribute(MailService.A_APPT_TZ_WEEK, week);
+                std.addAttribute(MailService.A_APPT_TZ_DAYOFWEEK, stddate.getDayOfWeek());
+                std.addAttribute(MailService.A_APPT_TZ_MONTH, stddate.getMonth());
+                std.addAttribute(MailService.A_APPT_TZ_HOUR, stddate.getHour());
+                std.addAttribute(MailService.A_APPT_TZ_MINUTE, stddate.getMinute());
+                std.addAttribute(MailService.A_APPT_TZ_SECOND, stddate.getSecond());
+
+                WindowsSystemTime daydate = tzwin.getDaylightDate();
+                assert(daydate != null);
+                Element day = e.addElement(MailService.E_APPT_TZ_DAYLIGHT);
+                week = daydate.getDay();
+                if (week == 5) week = -1;
+                day.addAttribute(MailService.A_APPT_TZ_WEEK, week);
+                day.addAttribute(MailService.A_APPT_TZ_DAYOFWEEK, daydate.getDayOfWeek());
+                day.addAttribute(MailService.A_APPT_TZ_MONTH, daydate.getMonth());
+                day.addAttribute(MailService.A_APPT_TZ_HOUR, daydate.getHour());
+                day.addAttribute(MailService.A_APPT_TZ_MINUTE, daydate.getMinute());
+                day.addAttribute(MailService.A_APPT_TZ_SECOND, daydate.getSecond());
+            }
+        }
+    }
+
     public static Element encodeInvite(Element parent, ZimbraContext lc, Appointment apptOrNull, Invite invite, int fields, boolean includeReplies) {
         boolean allFields = true;
         
@@ -810,7 +856,7 @@ public class ToXML {
                 return parent;
             }
         }
-            
+
         Element e = parent.addElement(MailService.E_INVITE_COMPONENT);
 
         e.addAttribute(MailService.A_APPT_COMPONENT_NUM, invite.getComponentNum());
@@ -952,9 +998,10 @@ public class ToXML {
                 atElt.addAttribute(MailService.A_URL, at.getAddress());
             }
         }
+
         return e;
     }
-    
+
     private static Element encodeInvitesForMessage(Element parent, ZimbraContext lc, Message msg, int fields)
     throws ServiceException {
         if (fields != NOTIFY_FIELDS)
@@ -981,6 +1028,7 @@ public class ToXML {
 //                        ie.addAttribute("method", inv.getMethod());
                         addedMethod = true;
                     }
+                    encodeTimeZoneMap(ie, appt.getTimeZoneMap());
                     encodeInvite(ie, lc, null, inv, fields, true); // NULL b/c we don't want to encode all of the reply-status here!
                 } else {
                     // invite not in this appointment anymore
