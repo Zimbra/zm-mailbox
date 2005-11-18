@@ -171,7 +171,7 @@
     <target name="javadoc" depends="set-buildinfo-vars">
         <javadoc sourcepath="src/java" destdir="docs/api" classpathref="class.path"
                  access="private" packagenames="com.zimbra.*" additionalparam='-tag perms:m:"Permissions Required:"'
-                 source="1.4" breakiterator="yes" windowtitle="ZimbraServer v${zimbra.buildinfo.version}">
+                 breakiterator="yes" windowtitle="ZimbraServer v${zimbra.buildinfo.version}">
         	<link href="http://java.sun.com/j2se/1.4.2/docs/api/"/>
         	<link href="http://java.sun.com/products/javamail/javadocs/"/>
         	<link href="http://jakarta.apache.org/commons/logging/api/"/>
@@ -241,12 +241,12 @@
 				public static final String HOST = "${zimbra.buildinfo.host}";
 			}
 		</echo>
-		<javac destdir="${build.classes.dir}" debug="true" source="1.4" target="1.4" srcdir="${build.dir}/buildinfo">
+		<javac destdir="${build.classes.dir}" debug="true" srcdir="${build.dir}/buildinfo">
 		</javac>
 	</target>
 
 	<target name="compile" depends="build-init" description="Compiles the source code">
-		<javac destdir="${build.classes.dir}" debug="true" source="1.4" target="1.4" classpathref="class.path">
+		<javac destdir="${build.classes.dir}" debug="true" classpathref="class.path">
 			<src refid="all.java.path" />
 		</javac>
 
