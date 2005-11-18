@@ -816,9 +816,10 @@ public class ToXML {
             Element e = parent.addElement(MailService.E_APPT_TZ);
             e.addAttribute(MailService.A_ID, tzwin.getName());
             e.addAttribute(MailService.A_APPT_TZ_STDOFFSET, tzwin.getStandardOffset() / 60 / 1000);
-            e.addAttribute(MailService.A_APPT_TZ_DAYOFFSET, tzwin.getDaylightOffset() / 60 / 1000);
 
             if (tz.useDaylightTime()) {
+                e.addAttribute(MailService.A_APPT_TZ_DAYOFFSET, tzwin.getDaylightOffset() / 60 / 1000);
+
                 int week;
                 WindowsSystemTime stddate = tzwin.getStandardDate();
                 assert(stddate != null);

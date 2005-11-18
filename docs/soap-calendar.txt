@@ -62,7 +62,7 @@
        <tz
            tzid="timezonename"      // this name is referenced in various DATETIME data in the rest of <inv>
            stdoffset="<minutes>"    // offset from UTC in standard time; local = UTC + offset
-           dayoffset="<minutes>"    // offset from UTC in daylight time
+           [dayoffset="<minutes>"]  // offset from UTC in daylight time; present only if DST is used
        >
            [                        // If daylight savings time is not used, <stddate> and <daydate> must be
                                     // omitted.  If DST is used, both <stddate> and <daydate> must be present.
