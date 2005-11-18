@@ -32,6 +32,10 @@ package com.zimbra.cs.util;
  */
 public class Constants
 {
-    public static long MILLIS_PER_DAY = 24 * 60 * 60 * 1000;
-    public static long MILLIS_PER_MINUTE = 60 * 1000;
+    public static final long MILLIS_PER_SECOND = 1000;
+    public static final long MILLIS_PER_MINUTE = MILLIS_PER_SECOND * 60;
+    public static final long MILLIS_PER_HOUR =  MILLIS_PER_MINUTE * 60;
+    public static final long MILLIS_PER_DAY = MILLIS_PER_HOUR * 24;
+    public static final long MILLIS_PER_WEEK = MILLIS_PER_DAY * 7;    
+    public static final long MILLIS_PER_MONTH = MILLIS_PER_DAY * 31;    
 }
