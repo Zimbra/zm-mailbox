@@ -64,4 +64,8 @@ public class CsvFormatter extends Formatter {
         context.resp.getOutputStream().print(sb.toString());
     }
 
+    public boolean canBeBlocked() {
+        return false;
+    }
+
 }

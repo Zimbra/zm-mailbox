@@ -126,4 +126,8 @@ public class RssFormatter extends Formatter {
     public String getType() {
         return "rss";
     }
+
+    public boolean canBeBlocked() {
+        return false;
+    }
 }

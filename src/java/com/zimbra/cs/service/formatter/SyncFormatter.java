@@ -161,5 +161,9 @@ public class SyncFormatter extends Formatter {
                 is.close();
         }
     }
+
+    public boolean canBeBlocked() {
+        return true;
+    }
 }
 

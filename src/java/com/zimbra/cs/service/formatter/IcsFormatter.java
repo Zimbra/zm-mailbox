@@ -91,4 +91,8 @@ public class IcsFormatter extends Formatter {
     public long getDefaultEndTime() {
         return  System.currentTimeMillis() + (365 * 100 * Constants.MILLIS_PER_DAY);            
     }
+
+    public boolean canBeBlocked() {
+        return false;
+    }
 }

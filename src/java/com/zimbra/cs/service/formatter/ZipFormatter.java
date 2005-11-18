@@ -104,4 +104,8 @@ public class ZipFormatter extends Formatter {
     public String getType() {
         return "zip";
     }
+
+    public boolean canBeBlocked() {
+        return true;
+    }
 }

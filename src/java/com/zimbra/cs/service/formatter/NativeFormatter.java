@@ -125,5 +125,9 @@ public class NativeFormatter extends Formatter {
                 is.close();
         }
     }
+
+    public boolean canBeBlocked() {
+        return true;
+    }
 }
 

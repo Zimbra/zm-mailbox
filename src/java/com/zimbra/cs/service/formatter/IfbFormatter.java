@@ -143,4 +143,8 @@ public class IfbFormatter extends Formatter {
         return  System.currentTimeMillis() + (2 * ONE_MONTH);
     }
 
+    public boolean canBeBlocked() {
+        return false;
+    }
+
 }

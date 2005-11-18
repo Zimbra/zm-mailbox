@@ -28,6 +28,7 @@ package com.zimbra.cs.service;
 import java.io.IOException;
 import java.util.HashMap;
 
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -113,6 +114,9 @@ public class UserServlet extends ZimbraServlet {
     public static final String AUTH_DEFAULT = "co,ba"; // both
 
     private HashMap mFormatters;
+
+    protected static final String MSGPAGE_BLOCK = "errorpage.attachment.blocked";
+    private String mBlockPage = null;
 
     public UserServlet() {
         mFormatters = new HashMap();
@@ -293,6 +297,12 @@ public class UserServlet extends ZimbraServlet {
         if (context.formatter == null)
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "unsupported format");
 
+        if (context.formatter.canBeBlocked()) {
+            if (checkGlobalOverride(Provisioning.A_zimbraAttachmentsBlocked, context.authAccount)) {
+                sendbackBlockMessage(context.req, context.resp);
+                return;
+            }
+        }
         context.formatter.format(context, item);
     }
 
@@ -483,5 +493,49 @@ public class UserServlet extends ZimbraServlet {
             return "native";
         }
     }
+    
+    /**
+     * 
+     * @param attr
+     * @param accountId
+     * @return
+     * @throws ServletException
+     */
+    private boolean checkGlobalOverride(String attr, Account account) throws ServletException {
+        Provisioning prov = Provisioning.getInstance();
+        try {
+            return prov.getConfig().getBooleanAttr(attr, false)
+                    || account.getBooleanAttr(attr, false);
+        } catch (ServiceException e) {
+            throw new ServletException(e);
+        }
+    }
 
+    /**
+     * @param req
+     * @param resp
+     * @throws IOException
+     * @throws ServletException
+     */
+    private void sendbackBlockMessage(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        RequestDispatcher dispatcher = getServletContext().getRequestDispatcher(mBlockPage);
+        if (dispatcher != null) {
+            dispatcher.forward(req, resp);
+            return;
+        }
+        resp.sendError(HttpServletResponse.SC_FORBIDDEN, "The attachment download has been disabled per security policy.");
+    }
+    
+    public void init() throws ServletException {
+        String name = getServletName();
+        ZimbraLog.mailbox.info("Servlet " + name + " starting up");
+        super.init();
+        mBlockPage = getInitParameter(MSGPAGE_BLOCK);
+    }
+
+    public void destroy() {
+        String name = getServletName();
+        ZimbraLog.mailbox.info("Servlet " + name + " shutting down");
+        super.destroy();
+    }
 }

@@ -26,9 +26,18 @@ public abstract class Formatter {
     public abstract String getType();
     private static final byte[] SEARCH_TYPES = new byte[] { MailItem.TYPE_MESSAGE };
 
+    /**
+     * @return true if this formatter requires auth
+     */
     public boolean requiresAuth() {
         return true;
     }
+    
+    /**
+     * 
+     * @return true if this formatter can be blocked by zimbraAttachmentsBlocked attr.
+     */
+    public abstract boolean canBeBlocked();
     
     // eventually get this from query param ?start=long|YYYYMMMDDHHMMSS
     public long getDefaultStartTime() {

@@ -116,4 +116,8 @@ public class AtomFormatter extends Formatter {
     public String getType() {
         return "atom";
     }
+
+    public boolean canBeBlocked() {
+        return false;
+    }
 }
