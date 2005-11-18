@@ -53,8 +53,14 @@ public class IcsFormatter extends Formatter {
   
     
     public void format(Context context, MailItem mailItem) throws IOException, ServiceException {
-        
-        Iterator iterator = getMailItems(context, mailItem, getDefaultStartTime(), getDefaultEndTime());
+
+        long start = Math.max(context.getStartTime(), getDefaultStartTime());
+        long cend = context.getEndTime();
+        long end = cend == -1 ? getDefaultEndTime() : Math.min(context.getEndTime(), getDefaultEndTime());
+
+        //ZimbraLog.mailbox.info("start = "+new Date(start));
+        //ZimbraLog.mailbox.info("end = "+new Date(end));
+        Iterator iterator = getMailItems(context, mailItem, start, end);
         
         List appts = new ArrayList();
         // this is lame
@@ -66,8 +72,6 @@ public class IcsFormatter extends Formatter {
         context.resp.setContentType("text/calendar");
 
         try {
-            long start = 0;
-            long end = System.currentTimeMillis() + (365 * 100 * Constants.MILLIS_PER_DAY);            
             Calendar cal = context.targetMailbox.getCalendarForAppointments(appts);
             ByteArrayOutputStream buf = new ByteArrayOutputStream();
             CalendarOutputter calOut = new CalendarOutputter();
@@ -78,6 +82,7 @@ public class IcsFormatter extends Formatter {
         }
     }
     
+    // get the whole calendar
     public long getDefaultStartTime() {    
         return 0;
     }
@@ -86,5 +91,4 @@ public class IcsFormatter extends Formatter {
     public long getDefaultEndTime() {
         return  System.currentTimeMillis() + (365 * 100 * Constants.MILLIS_PER_DAY);            
     }
-
 }

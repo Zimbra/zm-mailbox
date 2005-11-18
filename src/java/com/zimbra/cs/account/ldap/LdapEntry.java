@@ -46,6 +46,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.Constants;
 import com.zimbra.cs.util.DateUtil;
 
 /**
@@ -265,16 +266,16 @@ public class LdapEntry implements Entry {
                     long n = Long.parseLong(v.substring(0, v.length()-1));
                     switch (units) {
                     case 'd':
-                        n = n * (1000*60*60*24);
+                        n = n * Constants.MILLIS_PER_DAY;
                         break;
                     case 'h':
-                        n = n * (1000*60*60);
+                        n = n * Constants.MILLIS_PER_HOUR;
                         break;
                     case 'm':
-                        n = n * (1000*60);
+                        n = n * Constants.MILLIS_PER_MINUTE;
                         break;
                     case 's':
-                        n = n * (1000);
+                        n = n * Constants.MILLIS_PER_SECOND;
                         break;
                     default:
                         throw AccountServiceException.INVALID_ATTR_VALUE("unable to parse duration: "+v, null);

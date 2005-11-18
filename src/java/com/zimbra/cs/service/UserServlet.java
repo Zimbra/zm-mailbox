@@ -53,6 +53,7 @@ import com.zimbra.cs.service.formatter.SyncFormatter;
 import com.zimbra.cs.service.formatter.ZipFormatter;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.util.DateUtil;
 import com.zimbra.cs.util.ZimbraLog;
 
 /**
@@ -65,8 +66,8 @@ import com.zimbra.cs.util.ZimbraLog;
  *          query={search-query}
  *          types={types} // when searching
  *          auth={auth-types}
- *          start={start-time}  // milli for now
- *          end={end-time}  // milli for now *          
+ *          start={time}
+ *          end={time}
  *          
  *             {types}   = comma-separated list.  Legal values are:
  *                         conversation|message|contact|appointment|note
@@ -77,6 +78,11 @@ import com.zimbra.cs.util.ZimbraLog;
  *                            ba     basic auth
  *                            nsc    do not set a cookie when using basic auth
  *                            (default is &quot;co,ba&quot;, i.e. check both)
+ *                            
+ *            {time} = (time in milliseconds) |
+ *                     YYYY/dd/mm |
+ *                     mm/dd/YYYY |
+ *                     [-]nnnn{minute,hour,day,week,month,year}  // relative
  * </pre>
  */
 
@@ -402,7 +408,8 @@ public class UserServlet extends ZimbraServlet {
         public long getStartTime() {
             if (mStartTime == -2) {
                 String st = req.getParameter(QP_START);
-                mStartTime = (st != null) ? Long.parseLong(st) : -1;
+                mStartTime = (st != null) ? DateUtil.parseDateSpecifier(st, -1) : -1;
+                //ZimbraLog.mailbox.debug("mStartTime == "+new Date(mStartTime));                
             }
             return mStartTime;
         }
@@ -411,7 +418,8 @@ public class UserServlet extends ZimbraServlet {
         public long getEndTime() {
             if (mEndTime == -2) {
                 String et = req.getParameter(QP_END);
-                mEndTime = (et != null) ? Long.parseLong(et) : -1;                
+                mEndTime = (et != null) ? DateUtil.parseDateSpecifier(et, -1) : -1;
+                //ZimbraLog.mailbox.debug("mEndTime == "+new Date(mEndTime));
             }
             return mEndTime;
         }
