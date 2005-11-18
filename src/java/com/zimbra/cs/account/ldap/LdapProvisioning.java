@@ -96,9 +96,9 @@ public class LdapProvisioning extends Provisioning {
 
     private static final long ONE_DAY_IN_MILLIS = 1000*60*60*24;
 
-    private static final SearchControls sObjectSC = new SearchControls(SearchControls.OBJECT_SCOPE, 0, 0, null, true, false);
+    private static final SearchControls sObjectSC = new SearchControls(SearchControls.OBJECT_SCOPE, 0, 0, null, false, false);
 
-    static final SearchControls sSubtreeSC = new SearchControls(SearchControls.SUBTREE_SCOPE, 0, 0, null, true, false);
+    static final SearchControls sSubtreeSC = new SearchControls(SearchControls.SUBTREE_SCOPE, 0, 0, null, false, false);
     
     private static Log mLog = LogFactory.getLog(LdapProvisioning.class);
     
@@ -252,11 +252,8 @@ public class LdapProvisioning extends Provisioning {
             NamingEnumeration ne = ctxt.search("cn=mime," + CONFIG_BASE, "(" + Provisioning.A_zimbraMimeFileExtension + "=" + ext + ")", sSubtreeSC);
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
-                Context srctxt = (Context) sr.getObject();
-                String name = srctxt.getNameInNamespace();
-                srctxt.close();
                 ne.close();
-                return new LdapMimeType(name, sr.getAttributes());
+                return new LdapMimeType(sr.getNameInNamespace(), sr.getAttributes());
             }
             return null;
         } catch (NameNotFoundException e) {
@@ -286,12 +283,8 @@ public class LdapProvisioning extends Provisioning {
             NamingEnumeration ne = ctxt.search(base, query, sSubtreeSC);
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
-                // GAG
-                Context srctxt = (Context) sr.getObject();
-                String name = srctxt.getNameInNamespace();
-                srctxt.close();
                 ne.close();
-                return new LdapAccount(name, sr.getAttributes(), this);
+                return new LdapAccount(sr.getNameInNamespace(), sr.getAttributes(), this);
             }
         } catch (NameNotFoundException e) {
             return null;
@@ -714,9 +707,7 @@ public class LdapProvisioning extends Provisioning {
             NamingEnumeration ne = ctxt.search(base, query, searchControls);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
-                Context srctxt = (Context) sr.getObject();
-                String dn = srctxt.getNameInNamespace();
-                srctxt.close();
+                String dn = sr.getNameInNamespace();
                 // skip admin accounts
                 if (dn.endsWith("cn=zimbra")) continue;
                 Attributes attrs = sr.getAttributes();
@@ -1041,11 +1032,8 @@ public class LdapProvisioning extends Provisioning {
             NamingEnumeration ne = ctxt.search("", query, sSubtreeSC);
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
-                Context srctxt = (Context) sr.getObject();
-                String name = srctxt.getNameInNamespace();
                 ne.close();
-                srctxt.close();
-                return new LdapDomain(name, sr.getAttributes(), this);
+                return new LdapDomain(sr.getNameInNamespace(), sr.getAttributes(), this);
             }
         } catch (NameNotFoundException e) {
             return null;
@@ -1100,16 +1088,15 @@ public class LdapProvisioning extends Provisioning {
      * @see com.zimbra.cs.account.Provisioning#getAllDomains()
      */
     public List getAllDomains() throws ServiceException {
-        ArrayList result = new ArrayList();
+        ArrayList<LdapDomain> result = new ArrayList<LdapDomain>();
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
+
             NamingEnumeration ne = ctxt.search("", "(objectclass=zimbraDomain)", sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
-                Context srctxt = (Context) sr.getObject();
-                result.add(new LdapDomain(srctxt.getNameInNamespace(), sr.getAttributes(), this));
-                srctxt.close();
+                result.add(new LdapDomain(sr.getNameInNamespace(), sr.getAttributes(), this));
             }
             ne.close();
         } catch (NamingException e) {
@@ -1221,11 +1208,8 @@ public class LdapProvisioning extends Provisioning {
             NamingEnumeration ne = ctxt.search(COS_BASE, query, sSubtreeSC);
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
-                Context srctxt = (Context) sr.getObject();
-                String name = srctxt.getNameInNamespace();
-                srctxt.close();
                 ne.close();
-                return new LdapCos(name, sr.getAttributes(), this);
+                return new LdapCos(sr.getNameInNamespace(), sr.getAttributes(), this);
             }
         } catch (NameNotFoundException e) {
             return null;
@@ -1310,9 +1294,7 @@ public class LdapProvisioning extends Provisioning {
             NamingEnumeration ne = ctxt.search(COS_BASE, "(objectclass=zimbraCOS)", sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
-                Context srctxt = (Context) sr.getObject();
-                result.add(new LdapCos(srctxt.getNameInNamespace(), sr.getAttributes(),this));
-                srctxt.close();
+                result.add(new LdapCos(sr.getNameInNamespace(), sr.getAttributes(),this));
             }
             ne.close();
         } catch (NamingException e) {
@@ -1510,11 +1492,8 @@ public class LdapProvisioning extends Provisioning {
             NamingEnumeration ne = ctxt.search(SERVER_BASE, query, sSubtreeSC);
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
-                Context srctxt = (Context) sr.getObject();
-                String name = srctxt.getNameInNamespace();
-                srctxt.close();
                 ne.close();
-                return new LdapServer(name, sr.getAttributes(), this);
+                return new LdapServer(sr.getNameInNamespace(), sr.getAttributes(), this);
             }
         } catch (NameNotFoundException e) {
             return null;
@@ -1591,10 +1570,8 @@ public class LdapProvisioning extends Provisioning {
             NamingEnumeration ne = ctxt.search(SERVER_BASE, "(objectclass=zimbraServer)", sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
-                Context srctxt = (Context) sr.getObject();
-                LdapServer s = new LdapServer(srctxt.getNameInNamespace(), sr.getAttributes(), this);
+                LdapServer s = new LdapServer(sr.getNameInNamespace(), sr.getAttributes(), this);
                 result.add(s);
-                srctxt.close();
             }
             ne.close();
         } catch (NamingException e) {
@@ -1645,11 +1622,9 @@ public class LdapProvisioning extends Provisioning {
                 sTimeZoneMap.clear();
                 while (ne.hasMore()) {
                     SearchResult sr = (SearchResult) ne.next();
-                    Context srctxt = (Context) sr.getObject();
-                    LdapWellKnownTimeZone tz = new LdapWellKnownTimeZone(srctxt.getNameInNamespace(), sr.getAttributes());
+                    LdapWellKnownTimeZone tz = new LdapWellKnownTimeZone(sr.getNameInNamespace(), sr.getAttributes());
                     sTimeZoneMap.put(tz.getId(), tz);
                     sTimeZoneList.add(tz);
-                    srctxt.close();
                 }
                 ne.close();
                 sTimeZoneInited = true;
@@ -1744,12 +1719,8 @@ public class LdapProvisioning extends Provisioning {
             NamingEnumeration ne = ctxt.search(base, query, sSubtreeSC);
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
-                // GAG
-                Context srctxt = (Context) sr.getObject();
-                String name = srctxt.getNameInNamespace();
-                srctxt.close();
                 ne.close();
-                return new LdapDistributionList(name, sr.getAttributes());
+                return new LdapDistributionList(sr.getNameInNamespace(), sr.getAttributes());
             }
         } catch (NameNotFoundException e) {
             return null;
@@ -2314,9 +2285,7 @@ public class LdapProvisioning extends Provisioning {
     		NamingEnumeration ne = ctxt.search("", "(objectclass=zimbraZimletEntry)", sSubtreeSC);
     		while (ne.hasMore()) {
     			SearchResult sr = (SearchResult) ne.next();
-    			Context srctxt = (Context) sr.getObject();
-    			result.add(new LdapZimlet(srctxt.getNameInNamespace(), sr.getAttributes()));
-    			srctxt.close();
+             result.add(new LdapZimlet(sr.getNameInNamespace(), sr.getAttributes()));
     		}
     		ne.close();
     	} catch (NamingException e) {

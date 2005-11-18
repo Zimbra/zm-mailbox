@@ -79,7 +79,7 @@ public class LdapUtil {
     private static Hashtable sEnv;
     private static String[] sEmptyMulti = new String[0];
 
-    static final SearchControls sSubtreeSC = new SearchControls(SearchControls.SUBTREE_SCOPE, 0, 0, null, true, false);
+    static final SearchControls sSubtreeSC = new SearchControls(SearchControls.SUBTREE_SCOPE, 0, 0, null, false, false);
     
     static {
         String ldapHost = LC.ldap_host.value();
@@ -238,10 +238,8 @@ public class LdapUtil {
 
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
-                Context srctxt = (Context) sr.getObject();
                 if (resultDn == null) {
-                    resultDn = srctxt.getNameInNamespace();
-                    srctxt.close();
+                    resultDn = sr.getNameInNamespace();
                 } else {
                     tooMany = true;
                     break;
@@ -726,7 +724,7 @@ public class LdapUtil {
             }                
         }
         ZimbraLog.misc.debug("searchLdapGal query:"+query);
-        SearchControls sc = new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, galAttrList, true, false);
+        SearchControls sc = new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, galAttrList, false, false);
         result.token = null;        
         DirContext ctxt = null;
         try {
@@ -734,13 +732,11 @@ public class LdapUtil {
             NamingEnumeration ne = ctxt.search(base, query, sc);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
-                Context srctxt = (Context) sr.getObject();
-                String dn = srctxt.getNameInNamespace();
+                String dn = sr.getNameInNamespace();
                 LdapGalContact lgc = new LdapGalContact(dn, sr.getAttributes(), galAttrList, galAttrMap); 
                 String mts = (String) lgc.getAttrs().get("modifyTimeStamp");
                 if (result.token == null || (mts !=null && (mts.compareTo(result.token) > 0))) result.token = mts;
                 result.matches.add(lgc);
-                srctxt.close();
             }
             ne.close();
         } catch (SizeLimitExceededException sle) {

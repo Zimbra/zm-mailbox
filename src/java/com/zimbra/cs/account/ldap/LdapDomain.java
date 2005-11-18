@@ -207,19 +207,14 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 Context srctxt = null;
-                try {
-                    srctxt = (Context) sr.getObject();
-                    String dn = srctxt.getNameInNamespace();
-                    LdapGalContact lgc = new LdapGalContact(dn, sr.getAttributes(), galAttrList, galAttrMap);
-                    String mts = (String) lgc.getAttrs().get("modifyTimeStamp");
-                    if (result.token == null || (mts !=null && (mts.compareTo(result.token) > 0))) result.token = mts;                    
-                    String cts = (String) lgc.getAttrs().get("createTimeStamp");                    
-                    if (result.token == null || (cts !=null && (cts.compareTo(result.token) > 0))) result.token = cts;                    
-                    result.matches.add(lgc);
-                } finally {
-                    if (srctxt != null)
-                        srctxt.close();
-                }
+
+                String dn = sr.getNameInNamespace();
+                LdapGalContact lgc = new LdapGalContact(dn, sr.getAttributes(), galAttrList, galAttrMap);
+                String mts = (String) lgc.getAttrs().get("modifyTimeStamp");
+                if (result.token == null || (mts !=null && (mts.compareTo(result.token) > 0))) result.token = mts;                    
+                String cts = (String) lgc.getAttrs().get("createTimeStamp");                    
+                if (result.token == null || (cts !=null && (cts.compareTo(result.token) > 0))) result.token = cts;                    
+                result.matches.add(lgc);
             }
             ne.close();
             ne = null;
