@@ -41,6 +41,8 @@ import java.util.Map.Entry;
 import javax.mail.MessagingException;
 import javax.mail.internet.*;
 
+import net.fortuna.ical4j.model.TimeZone.SimpleOnset;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -53,9 +55,6 @@ import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.ParsedDuration;
 import com.zimbra.cs.mailbox.calendar.Recurrence;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
-import com.zimbra.cs.mailbox.calendar.WindowsSystemTime;
-import com.zimbra.cs.mailbox.calendar.WindowsTZUtils;
-import com.zimbra.cs.mailbox.calendar.WindowsTimeZoneInformation;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mime.MPartInfo;
@@ -812,38 +811,32 @@ public class ToXML {
         assert(tzmap != null);
         for (Iterator iter = tzmap.tzIterator(); iter.hasNext(); ) {
             ICalTimeZone tz = (ICalTimeZone) iter.next();
-            WindowsTimeZoneInformation tzwin = WindowsTZUtils.ICalToWindows(tz);
             Element e = parent.addElement(MailService.E_APPT_TZ);
-            e.addAttribute(MailService.A_ID, tzwin.getName());
-            e.addAttribute(MailService.A_APPT_TZ_STDOFFSET, tzwin.getStandardOffset() / 60 / 1000);
+            e.addAttribute(MailService.A_ID, tz.getID());
+            e.addAttribute(MailService.A_APPT_TZ_STDOFFSET, tz.getStandardOffset() / 60 / 1000);
 
             if (tz.useDaylightTime()) {
-                e.addAttribute(MailService.A_APPT_TZ_DAYOFFSET, tzwin.getDaylightOffset() / 60 / 1000);
+                SimpleOnset standard = tz.getStandardOnset();
+                SimpleOnset daylight = tz.getDaylightOnset();
+                if (standard != null && daylight != null) {
+                    e.addAttribute(MailService.A_APPT_TZ_DAYOFFSET, tz.getDaylightOffset() / 60 / 1000);
 
-                int week;
-                WindowsSystemTime stddate = tzwin.getStandardDate();
-                assert(stddate != null);
-                Element std = e.addElement(MailService.E_APPT_TZ_STANDARD);
-                week = stddate.getDay();
-                if (week == 5) week = -1;
-                std.addAttribute(MailService.A_APPT_TZ_WEEK, week);
-                std.addAttribute(MailService.A_APPT_TZ_DAYOFWEEK, stddate.getDayOfWeek());
-                std.addAttribute(MailService.A_APPT_TZ_MONTH, stddate.getMonth());
-                std.addAttribute(MailService.A_APPT_TZ_HOUR, stddate.getHour());
-                std.addAttribute(MailService.A_APPT_TZ_MINUTE, stddate.getMinute());
-                std.addAttribute(MailService.A_APPT_TZ_SECOND, stddate.getSecond());
+                    Element std = e.addElement(MailService.E_APPT_TZ_STANDARD);
+                    std.addAttribute(MailService.A_APPT_TZ_WEEK, standard.getWeek());
+                    std.addAttribute(MailService.A_APPT_TZ_DAYOFWEEK, standard.getDayOfWeek());
+                    std.addAttribute(MailService.A_APPT_TZ_MONTH, standard.getMonth());
+                    std.addAttribute(MailService.A_APPT_TZ_HOUR, standard.getHour());
+                    std.addAttribute(MailService.A_APPT_TZ_MINUTE, standard.getMinute());
+                    std.addAttribute(MailService.A_APPT_TZ_SECOND, standard.getSecond());
 
-                WindowsSystemTime daydate = tzwin.getDaylightDate();
-                assert(daydate != null);
-                Element day = e.addElement(MailService.E_APPT_TZ_DAYLIGHT);
-                week = daydate.getDay();
-                if (week == 5) week = -1;
-                day.addAttribute(MailService.A_APPT_TZ_WEEK, week);
-                day.addAttribute(MailService.A_APPT_TZ_DAYOFWEEK, daydate.getDayOfWeek());
-                day.addAttribute(MailService.A_APPT_TZ_MONTH, daydate.getMonth());
-                day.addAttribute(MailService.A_APPT_TZ_HOUR, daydate.getHour());
-                day.addAttribute(MailService.A_APPT_TZ_MINUTE, daydate.getMinute());
-                day.addAttribute(MailService.A_APPT_TZ_SECOND, daydate.getSecond());
+                    Element day = e.addElement(MailService.E_APPT_TZ_DAYLIGHT);
+                    day.addAttribute(MailService.A_APPT_TZ_WEEK, daylight.getWeek());
+                    day.addAttribute(MailService.A_APPT_TZ_DAYOFWEEK, daylight.getDayOfWeek());
+                    day.addAttribute(MailService.A_APPT_TZ_MONTH, daylight.getMonth());
+                    day.addAttribute(MailService.A_APPT_TZ_HOUR, daylight.getHour());
+                    day.addAttribute(MailService.A_APPT_TZ_MINUTE, daylight.getMinute());
+                    day.addAttribute(MailService.A_APPT_TZ_SECOND, daylight.getSecond());
+                }
             }
         }
     }

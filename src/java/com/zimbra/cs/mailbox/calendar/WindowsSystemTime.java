@@ -25,6 +25,8 @@
 
 package com.zimbra.cs.mailbox.calendar;
 
+import net.fortuna.ical4j.model.TimeZone.SimpleOnset;
+
 /**
  * Java representation of Windows SYSTEMTIME structure in Winbase.h
  * @author jhahm
@@ -86,5 +88,24 @@ public class WindowsSystemTime {
         sb.append("    wMilliseconds = ").append(mMilliseconds).append("\n");
         sb.append("}");
         return sb.toString();
+    }
+
+    public SimpleOnset toSimpleOnset() {
+        if (mYear != 0) return null;
+        int week = mDay;
+        if (week == 5)
+            week = -1;
+        return new SimpleOnset(week, mDayOfWeek + 1, mMonth,
+                               mHour, mMinute, mSecond);
+    }
+
+    public static WindowsSystemTime fromSimpleOnset(SimpleOnset onset) {
+        if (onset == null) return null;
+        int week = onset.getWeek();
+        if (week == -1)
+            week = 5;
+        return new WindowsSystemTime(
+                0, onset.getMonth(), onset.getDayOfWeek() - 1, week,
+                onset.getHour(), onset.getMinute(), onset.getSecond(), 0);
     }
 }

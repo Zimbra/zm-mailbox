@@ -93,7 +93,7 @@ public class ICalTimeZone extends net.fortuna.ical4j.model.TimeZone
         meta.put(FN_TZ_NAME, mTzId);
         meta.put(FN_HAS_DAYLIGHT, mHasDaylight);
 
-        meta.put(FN_STD_OFFSET, mStdOffset);
+        meta.put(FN_STD_OFFSET, mStandardOffset);
         meta.put(FN_DAYTOSTD_DTSTART, mDayToStdDtStart); 
         meta.put(FN_DAYTOSTD_RULE, mDayToStdRule);
 
@@ -103,7 +103,7 @@ public class ICalTimeZone extends net.fortuna.ical4j.model.TimeZone
         return meta;
     }
 
-    public int    getStandardOffset()  { return mStdOffset; }
+    public int    getStandardOffset()  { return mStandardOffset; }
     public String getStandardDtStart() { return mDayToStdDtStart; }
     public String getStandardRule()    { return mDayToStdRule; }
     public int    getDaylightOffset()  { return mDaylightOffset; }
@@ -130,61 +130,40 @@ public class ICalTimeZone extends net.fortuna.ical4j.model.TimeZone
         mTzId = tzId;
         mHasDaylight = meta.getBool(FN_HAS_DAYLIGHT, false);
 
-        mStdOffset = (int) meta.getLong(FN_STD_OFFSET, 0);
+        mStandardOffset = (int) meta.getLong(FN_STD_OFFSET, 0);
         mDayToStdDtStart = meta.get(FN_DAYTOSTD_DTSTART, null);
         mDayToStdRule = meta.get(FN_DAYTOSTD_RULE, null);
 
-        mDaylightOffset = (int) meta.getLong(FN_DAYLIGHT_OFFSET, mStdOffset);
+        mDaylightOffset = (int) meta.getLong(FN_DAYLIGHT_OFFSET, mStandardOffset);
         mStdToDayDtStart = meta.get(FN_STDTODAY_DTSTART, mDayToStdDtStart);
         mStdToDayRule = meta.get(FN_STDTODAY_RULE, null);
 
-        commonInit();
+        initFromICalData();
     }
-    
+
     public ICalTimeZone(String tzId, VTimeZone vtz) {
         super(tzId, vtz);
         mTzId = tzId;
     }
 
-    /**
-     * 
-     * @param tzId       iCal TZID string
-     * @param stdOffset  standard time offset from UTC in milliseconds
-     * @param stdDtStart iCal datetime string specifying the beginning of the
-     *                   period for which stdRRule applies.  The format is
-     *                   "YYYYMMDDThhmmss" with 24-hour hour.  In practice,
-     *                   the date portion is set to some very early date, like
-     *                   "16010101", and only the time portion varies according
-     *                   to the rules of the time zone.
-     * @param stdRRule   iCal recurrence rule for transition into standard
-     *                   time (i.e. transition out of daylight time)
-     *                   e.g. "FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=10;BYDAY=-1SU"
-     * @param dayOffset  daylight time offset from UTC in milliseconds
-     * @param dayDtStart iCal datetime string specifying the beginning of the
-     *                   period for which dayRRUle applies
-     * @param dayRRule   iCal recurrence rule for transition into daylight
-     *                   time
-     */
     public ICalTimeZone(String tzId,
                         int stdOffset, String stdDtStart, String stdRRule,
                         int dayOffset, String dayDtStart, String dayRRule) {
-        super(0, tzId);
+        super(tzId,
+              stdOffset, stdDtStart, stdRRule,
+              dayOffset, dayDtStart, dayRRule);
         mTzId = tzId;
-        mHasDaylight = stdOffset != dayOffset;
-        mStdOffset = stdOffset;
-        if (stdDtStart != null)
-            mDayToStdDtStart = stdDtStart;
-        mDayToStdRule = stdRRule;
-        mDaylightOffset = dayOffset;
-        if (dayDtStart != null)
-            mStdToDayDtStart = dayDtStart;
-        else
-            mStdToDayDtStart = mDayToStdDtStart;
-        mStdToDayRule = dayRRule;
-        commonInit();
     }
 
-    // test main
+    public ICalTimeZone(String tzId,
+                        int standardOffset, SimpleOnset standardOnset,
+                        int daylightOffset, SimpleOnset daylightOnset) {
+        super(tzId,
+              standardOffset, standardOnset, daylightOffset, daylightOnset);
+        mTzId = tzId;
+    }
+
+// test main
 
     public static void main(String[] args) throws Exception {
         boolean pass = SelfTest.doit();
@@ -290,6 +269,7 @@ public class ICalTimeZone extends net.fortuna.ical4j.model.TimeZone
         public static boolean verifyTZRules(ICalTimeZone tz, int year) {
             boolean goodOrBad = true;
             System.out.println("Verifying DST rules for time zone " + tz.getID());
+            String tzStr = tz.toString();
 
             String defStandardTime = null;
             String defDaylightTime = null;
@@ -316,6 +296,7 @@ public class ICalTimeZone extends net.fortuna.ical4j.model.TimeZone
                     goodOrBad = false;
                 }
                 System.out.println("  DST supported:   " + tz.mHasDaylight);
+                System.out.println("  toString:\n" + tz.toString());
             } else {
             	if (onsets[0] == null || onsets[1] == null) {
             		System.out.println("ERROR: Not enough onset dates present in a DST TZ.");
@@ -326,22 +307,66 @@ public class ICalTimeZone extends net.fortuna.ical4j.model.TimeZone
                 System.out.println("  Daylight Offset: " + offsetToHHMM(tz.mDaylightOffset));
                 System.out.println("  Daylight Start:  " + tz.mStdToDayDtStart);
                 System.out.println("  Daylight RRule:  " + tz.mStdToDayRule);
-                System.out.println("  Standard Offset: " + offsetToHHMM(tz.mStdOffset));
+                System.out.println("  Standard Offset: " + offsetToHHMM(tz.mStandardOffset));
                 System.out.println("  Standard Start:  " + tz.mDayToStdDtStart);
                 System.out.println("  Standard RRule:  " + tz.mDayToStdRule);
+                System.out.println("  toString:\n" + tz.toString());
 
                 defStandardTime = parseHHMMSS(tz.mDayToStdDtStart);
                 defDaylightTime = parseHHMMSS(tz.mStdToDayDtStart);
                 if (!defStandardTime.equals(actualStandardTime) ||
                     !defDaylightTime.equals(actualDaylightTime)) {
                     System.out.println("ERROR: Onset times don't match between definition and actual.");
+                    System.out.println("defStandardTime    = " + defStandardTime);
+                    System.out.println("actualStandardTime = " + actualStandardTime);
+                    System.out.println("defDaylightTime    = " + defDaylightTime);
+                    System.out.println("actualDaylightTime = " + actualDaylightTime);
                 	goodOrBad = false;
                 }
-
-                // TODO: Verify defined and actual offsets in standard/daylight match.
-                // TODO: Verify actual day-of-week in week-of-month matches the rule.
             }
+
+            ICalTimeZone onsetClone = cloneFromSimpleOnset(tz);
+            String onsetCloneStr = onsetClone.toString();
+            if (!onsetClone.hasSameRules(tz)) {
+                System.out.println("ERROR: Onset-clone doesn't have the same rules as original.");
+                System.out.println("Onset-clone:\n" + onsetCloneStr);
+                goodOrBad = false;
+            }
+
+            ICalTimeZone icalClone = cloneFromICalData(onsetClone);
+            String icalCloneStr = icalClone.toString(); 
+            if (!icalClone.hasSameRules(onsetClone)) {
+                System.out.println("ERROR: iCal-clone doesn't have the same rules as Onset-clone.");
+                System.out.println("iCal-clone:\n" + icalCloneStr);
+                goodOrBad = false;
+            }
+
+            if (!tzStr.equals(onsetCloneStr)) {
+                System.out.println("ERROR: Onset-clone's toString is different than original.");
+                goodOrBad = false;
+            }
+            if (!tzStr.equals(icalCloneStr)) {
+                System.out.println("ERROR: iCal-clone's toString is different than original.");
+                goodOrBad = false;
+            }
+
             return goodOrBad;
+        }
+
+        private static ICalTimeZone cloneFromSimpleOnset(ICalTimeZone tz) {
+            ICalTimeZone newtz = new ICalTimeZone(
+                    tz.getID(),
+                    tz.getStandardOffset(), tz.getStandardOnset(),
+                    tz.getDaylightOffset(), tz.getDaylightOnset());
+            return newtz;
+        }
+
+        private static ICalTimeZone cloneFromICalData(ICalTimeZone tz) {
+            ICalTimeZone newtz = new ICalTimeZone(
+                    tz.getID(),
+                    tz.getStandardOffset(), tz.mDayToStdDtStart, tz.mDayToStdRule,
+                    tz.getDaylightOffset(), tz.mStdToDayDtStart, tz.mStdToDayRule);
+            return newtz;
         }
 
         private static String parseHHMMSS(String text) {

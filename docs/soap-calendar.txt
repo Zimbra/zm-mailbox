@@ -68,7 +68,7 @@
                                     // omitted.  If DST is used, both <stddate> and <daydate> must be present.
            <standard                // time/rule for transitioning from daylight time to standard time
                mon="<number>"         // month; 1=January, 2=February, etc.
-               dow="<number>"         // day of week; 0=Sunday, 1=Monday, etc.
+               wkday="<number>"       // day of week; 1=Sunday, 2=Monday, etc.
                week="<number>"        // week number; 1=first, 2=second, 3=third, 4=fourth, -1=last
                hour="<number>"        // transition hour (0..23)
                min="<number>"         // transition minute (0..59)
@@ -76,7 +76,7 @@
            />
            <daylight                // time/rule for transitioning from standard time to daylight time
                mon="<number>"
-               dow="<number>"
+               wkday="<number>"
                week="<number>"
                hour="<number>"
                min="<number>"
