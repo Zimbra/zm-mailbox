@@ -95,6 +95,14 @@ public final class ParsedDateTime {
             return parse(dateStr, tz, tzmap.getLocalTimeZone());
         }
     }
+
+    public static ParsedDateTime parse(String str, ICalTimeZone tz)
+    throws ParseException {
+        if (tz == null)
+            throw new ParseException("TZ must not be null", 1);
+        
+        return parse(str, tz, null);
+    }
     
     public static ParsedDateTime parse(String str, ICalTimeZone tz, ICalTimeZone localTZ)
             throws ParseException {
@@ -393,6 +401,11 @@ public final class ParsedDateTime {
             return "";
         }
     }
+    
+    public GregorianCalendar getCalendarCopy() {
+        return (GregorianCalendar)(mCal.clone());
+    }
+    
 
     public long getUtcTime() {
         return mCal.getTimeInMillis();
