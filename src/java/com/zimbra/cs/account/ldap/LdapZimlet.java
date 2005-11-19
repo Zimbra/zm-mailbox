@@ -24,11 +24,15 @@
  */
 package com.zimbra.cs.account.ldap;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.naming.directory.Attributes;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.object.ObjectType;
+import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.zimlet.ZimletHandler;
 import com.zimbra.cs.zimlet.ZimletUtil;
 
@@ -76,5 +80,19 @@ public class LdapZimlet extends LdapNamedEntry implements Zimlet, ObjectType {
 
     public String getServerIndexRegex() {
     	return getAttr(Provisioning.A_zimbraZimletServerIndexRegex);
+    }
+
+    public boolean isEnabled() {
+    	return getBooleanAttr(Provisioning.A_zimbraZimletEnabled, false);
+    }
+
+    public void setEnabled(boolean enabled) throws ServiceException {
+    	Map attr = new HashMap();
+    	String val = LdapUtil.LDAP_FALSE;
+    	if (enabled) {
+    		val = LdapUtil.LDAP_TRUE;
+    	}
+    	attr.put(Provisioning.A_zimbraZimletEnabled, val);
+   		modifyAttrs(attr);
     }
 }

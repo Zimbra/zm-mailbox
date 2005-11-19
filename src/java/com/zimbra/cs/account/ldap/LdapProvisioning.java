@@ -2293,6 +2293,7 @@ public class LdapProvisioning extends Provisioning {
     	} finally {
     		LdapUtil.closeContext(ctxt);
     	}
+    	Collections.sort(result);
     	return result;
     }
     
@@ -2307,8 +2308,14 @@ public class LdapProvisioning extends Provisioning {
     		ctxt = LdapUtil.getDirContext();
     		
     		Attributes attrs = new BasicAttributes(true);
+    		String hasKeyword = LdapUtil.LDAP_FALSE;
+    		if (zimletAttrs.containsKey(A_zimbraZimletKeyword)) {
+    			hasKeyword = LdapUtil.LDAP_TRUE;
+    		}
     		LdapUtil.mapToAttrs(zimletAttrs, attrs);
     		LdapUtil.addAttr(attrs, A_objectClass, "zimbraZimletEntry");
+    		LdapUtil.addAttr(attrs, A_zimbraZimletEnabled, LdapUtil.LDAP_FALSE);
+    		LdapUtil.addAttr(attrs, A_zimbraZimletIndexingEnabled, hasKeyword);
     		
     		String dn = zimletNameToDN(name);
     		createSubcontext(ctxt, dn, attrs, "createZimlet");

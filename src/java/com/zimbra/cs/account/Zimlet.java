@@ -24,6 +24,9 @@
  */
 package com.zimbra.cs.account;
 
-public interface Zimlet extends NamedEntry {
+import com.zimbra.cs.service.ServiceException;
 
+public interface Zimlet extends NamedEntry {
+	public boolean isEnabled();
+	public void setEnabled(boolean enabled) throws ServiceException;
 }

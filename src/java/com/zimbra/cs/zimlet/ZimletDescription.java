@@ -26,7 +26,6 @@ package com.zimbra.cs.zimlet;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import com.zimbra.cs.util.ZimbraLog;
@@ -46,12 +45,7 @@ public class ZimletDescription extends ZimletMeta {
 	private String mPanelItem;
 	private String mExtensionClass;
 	private String mKeyword;
-	private String mHasKeyword;
-	private String mStoreMatched;
 	private String mRegexString;
-	
-	private static final String TRUE_STR = "TRUE";
-	private static final String FALSE_STR = "FALSE";
 	
 	public ZimletDescription(File desc) throws ZimletException {
 		super(desc);
@@ -67,8 +61,6 @@ public class ZimletDescription extends ZimletMeta {
 	
 	protected void initialize() {
 		mScripts = new ArrayList();
-		mHasKeyword = FALSE_STR;
-		mStoreMatched = FALSE_STR;
 	}
 
 	protected void validateElement(Element elem) throws ZimletException {
@@ -100,7 +92,6 @@ public class ZimletDescription extends ZimletMeta {
 		String val = serverExt.getAttribute(ZIMLET_ATTR_HAS_KEYWORD, "");
 		if (val.length() > 0) {
 			mKeyword = val;
-			mHasKeyword = TRUE_STR;
 		}
 		val = serverExt.getAttribute(ZIMLET_ATTR_EXTENSION_CLASS, "");
 		if (val.length() > 0) {
@@ -148,12 +139,8 @@ public class ZimletDescription extends ZimletMeta {
 		return mKeyword;
 	}
 	
-	public String getServerExtensionHasKeyword() {
-		return mHasKeyword;
-	}
-	
-	public String getStoreMatched() {
-		return mStoreMatched;
+	public boolean getServerExtensionHasKeyword() {
+		return (mKeyword != null);
 	}
 	
 	public String getRegexString() {

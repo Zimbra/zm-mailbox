@@ -62,4 +62,12 @@ public class ZimletException extends Exception {
 	public static ZimletException CANNOT_DEACTIVATE(String zimlet, String reason) {
 		return new ZimletException("Cannot deactivate Zimlet " + zimlet + ": " + reason);
 	}
+
+	public static ZimletException CANNOT_ENABLE(String zimlet, String reason) {
+		return new ZimletException("Cannot enable Zimlet " + zimlet + ": " + reason);
+	}
+
+	public static ZimletException CANNOT_DISABLE(String zimlet, String reason) {
+		return new ZimletException("Cannot disable Zimlet " + zimlet + ": " + reason);
+	}
 }

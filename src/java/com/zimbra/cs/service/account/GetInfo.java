@@ -36,6 +36,7 @@ import java.util.Set;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.cs.zimlet.ZimletUtil;
@@ -134,8 +135,10 @@ public class GetInfo extends DocumentHandler  {
     	for (int attrIndex = 0; attrIndex < attrList.length; attrIndex++) {
     		try {
     			zimletName = attrList[attrIndex];
-    			Provisioning.getInstance().getZimlet(zimletName);
-    			ZimletUtil.listZimlet(response, zimletName);
+    			Zimlet z = Provisioning.getInstance().getZimlet(zimletName);
+    			if (z != null && z.isEnabled()) {
+    				ZimletUtil.listZimlet(response, zimletName);
+    			}
     		} catch (ServiceException se) {
 				ZimbraLog.zimlet.error("inconsistency in installed zimlets. "+zimletName+" does not exist.");
     		}

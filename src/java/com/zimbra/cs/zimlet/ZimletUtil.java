@@ -30,6 +30,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -38,6 +39,7 @@ import java.util.regex.Pattern;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.NamedEntry;
+import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
@@ -123,7 +125,7 @@ public class ZimletUtil {
 			return;
 		}
 
-        ZimbraLog.zimlet.info("Loading zimlets from " + zimletRootDir.getPath());
+        ZimbraLog.zimlet.debug("Loading zimlets from " + zimletRootDir.getPath());
         
         synchronized (zimlets) {
         	zimlets.clear();
@@ -185,8 +187,6 @@ public class ZimletUtil {
 		attrs.put(Provisioning.A_zimbraZimletKeyword,         zd.getName());
 		attrs.put(Provisioning.A_zimbraZimletVersion,         zd.getVersion());
 		attrs.put(Provisioning.A_zimbraZimletDescription,     zd.getDescription());
-		attrs.put(Provisioning.A_zimbraZimletIndexingEnabled, zd.getServerExtensionHasKeyword());
-		//attrs.put(Provisioning.A_zimbraZimletStoreMatched,    zd.getStoreMatched());
 		attrs.put(Provisioning.A_zimbraZimletHandlerClass,    zd.getServerExtensionClass());
 		attrs.put(Provisioning.A_zimbraZimletServerIndexRegex, zd.getRegexString());
 		//attrs.put(Provisioning.A_zimbraZimletContentObject,   zd.getContentObjectAsXML());
@@ -199,6 +199,7 @@ public class ZimletUtil {
 		String zimletName = installZimlet(zimletRoot, zimlet);
 		ldapDeploy(zimletRoot, zimletName);
 		activateZimlet(zimletName, ZIMLET_DEFAULT_COS);
+		enableZimlet(zimletName, true);
 	}
 	
 	public static String installZimlet(String zimletRoot, String zimlet) throws IOException, ZimletException {
@@ -266,10 +267,6 @@ public class ZimletUtil {
 		}
 	}
 	
-	public static void upgradeZimlet(String zimlet) {
-		
-	}
-	
 	public static void activateZimlet(String zimlet, String cos) throws ZimletException {
 		Provisioning prov = Provisioning.getInstance();
 		try {
@@ -285,6 +282,16 @@ public class ZimletUtil {
 			prov.removeZimletFromCOS(zimlet, cos);
 		} catch (Exception e) {
 			throw ZimletException.CANNOT_DEACTIVATE(zimlet, e.getCause().getMessage());
+		}
+	}
+	
+	public static void enableZimlet(String zimlet, boolean enabled) throws ZimletException {
+		Provisioning prov = Provisioning.getInstance();
+		try {
+			Zimlet z = prov.getZimlet(zimlet);
+			z.setEnabled(enabled);
+		} catch (Exception e) {
+			throw ZimletException.CANNOT_ENABLE(zimlet, e.getCause().getMessage());
 		}
 	}
 	
@@ -320,6 +327,59 @@ public class ZimletUtil {
 		} catch (Exception e) {
 			throw ZimletException.ZIMLET_HANDLER_ERROR("cannot list acls "+e.getMessage());
 		}
+	}
+	
+	public static void listInstalledZimletsOnHost() throws ZimletException {
+		loadZimlets();
+		ZimletFile[] zimlets = (ZimletFile[]) sZimlets.values().toArray(new ZimletFile[0]);
+		Arrays.sort(zimlets);
+		for (int i = 0; i < zimlets.length; i++) {
+			System.out.println("\t"+zimlets[i].getName());
+		}
+	}
+	
+	public static void listInstalledZimletsInLdap() throws ZimletException {
+		Provisioning prov = Provisioning.getInstance();
+		try {
+			Iterator iter = prov.listAllZimlets().iterator();
+			while (iter.hasNext()) {
+				String disabled = "";
+				Zimlet z = (Zimlet) iter.next();
+				if (!z.isEnabled()) {
+					disabled = " (disabled)";
+				}
+				System.out.println("\t"+z.getName()+disabled);
+			}
+		} catch (Exception e) {
+			throw ZimletException.ZIMLET_HANDLER_ERROR("cannot list installed zimlets in LDAP "+e.getMessage());
+		}
+	}
+	
+	public static void listZimletsInCos() throws ZimletException {
+		Provisioning prov = Provisioning.getInstance();
+		try {
+			Iterator iter = prov.getAllCos().iterator();
+			while (iter.hasNext()) {
+				NamedEntry cos = (NamedEntry) iter.next();
+				System.out.println("  "+cos.getName()+":");
+				String[] zimlets = cos.getMultiAttr(Provisioning.A_zimbraZimletAvailableZimlets);
+				Arrays.sort(zimlets);
+				for (int i = 0; i < zimlets.length; i++) {
+					System.out.println("\t"+zimlets[i]);
+				}
+			}
+		} catch (Exception e) {
+			throw ZimletException.ZIMLET_HANDLER_ERROR("cannot list zimlets in COS "+e.getMessage());
+		}
+	}
+	
+	public static void listAllZimlets() throws ZimletException {
+		System.out.println("Installed Zimlet files on this host:");
+		listInstalledZimletsOnHost();
+		System.out.println("Installed Zimlets in LDAP:");
+		listInstalledZimletsInLdap();
+		System.out.println("Available Zimlets in COS:");
+		listZimletsInCos();
 	}
 	
 	public static void dumpConfig(String zimlet) throws IOException, ZimletException {
@@ -362,49 +422,65 @@ public class ZimletUtil {
 	
 	private static final int INSTALL_ZIMLET = 10;
 	private static final int UNINSTALL_ZIMLET = 11;
+	private static final int LIST_ZIMLETS = 12;
 	private static final int ACL_ZIMLET = 13;
 	private static final int LIST_ACLS = 14;
 	private static final int DUMP_CONFIG = 15;
 	private static final int INSTALL_CONFIG = 16;
 	private static final int LDAP_DEPLOY = 17;
 	private static final int DEPLOY_ZIMLET = 18;
+	private static final int ENABLE_ZIMLET = 19;
+	private static final int DISABLE_ZIMLET = 20;
 	private static final int TEST = 99;
 	
 	private static final String INSTALL_CMD = "install";
 	private static final String UNINSTALL_CMD = "uninstall";
+	private static final String LIST_CMD = "listzimlets";
 	private static final String ACL_CMD = "acl";
 	private static final String LIST_ACLS_CMD = "listacls";
 	private static final String DUMP_CONFIG_CMD = "dumpconfigtemplate";
 	private static final String INSTALL_CONFIG_CMD = "configure";
 	private static final String LDAP_DEPLOY_CMD = "ldapdeploy";
 	private static final String DEPLOY_CMD = "deploy";
+	private static final String ENABLE_CMD = "enable";
+	private static final String DISABLE_CMD = "disable";
 	private static final String TEST_CMD = "test";
 	
 	private static Map mCommands;
 	
+	private static void addCommand(String cmd, int cmdId) {
+		mCommands.put(cmd, new Integer(cmdId));
+	}
+	
 	private static void setup() {
 		mCommands = new HashMap();
-		mCommands.put(INSTALL_CMD, new Integer(INSTALL_ZIMLET));
-		mCommands.put(UNINSTALL_CMD, new Integer(UNINSTALL_ZIMLET));
-		mCommands.put(ACL_CMD, new Integer(ACL_ZIMLET));
-		mCommands.put(LIST_ACLS_CMD, new Integer(LIST_ACLS));
-		mCommands.put(DUMP_CONFIG_CMD, new Integer(DUMP_CONFIG));
-		mCommands.put(INSTALL_CONFIG_CMD, new Integer(INSTALL_CONFIG));
-		mCommands.put(LDAP_DEPLOY_CMD, new Integer(LDAP_DEPLOY));
-		mCommands.put(DEPLOY_CMD, new Integer(DEPLOY_ZIMLET));
-		mCommands.put(TEST_CMD, new Integer(TEST));
+		addCommand(INSTALL_CMD, INSTALL_ZIMLET);
+		addCommand(UNINSTALL_CMD, UNINSTALL_ZIMLET);
+		addCommand(LIST_CMD, LIST_ZIMLETS);
+		addCommand(ACL_CMD, ACL_ZIMLET);
+		addCommand(LIST_ACLS_CMD, LIST_ACLS);
+		addCommand(DUMP_CONFIG_CMD, DUMP_CONFIG);
+		addCommand(INSTALL_CONFIG_CMD, INSTALL_CONFIG);
+		addCommand(LDAP_DEPLOY_CMD, LDAP_DEPLOY);
+		addCommand(DEPLOY_CMD, DEPLOY_ZIMLET);
+		addCommand(ENABLE_CMD, ENABLE_ZIMLET);
+		addCommand(DISABLE_CMD, DISABLE_ZIMLET);
+		addCommand(TEST_CMD, TEST);
 	}
 	
 	private static void usage() {
 		System.out.println("zimlet: [command] [ zimlet.zip | config.xml | zimlet ]");
-		System.out.println("\tdeploy - install, ldap-deploy, then activate on default COS");
-		System.out.println("\tinstall - installs the zimlet files on this host");
-		System.out.println("\tuninstall - uninstalls the zimlet files on this host");
-		System.out.println("\tldapDeploy - add the zimlet entry to the LDAP server");
-		System.out.println("\tacl - change the ACL for the zimlet on a COS");
-		System.out.println("\tlistAcls - list ACLs for the Zimlet");
-		System.out.println("\tdumpConfigTemplate - dumps the configuration");
-		System.out.println("\tconfigure - installs the configuration");
+		System.out.println("\tdeploy {zimlet.zip} - install, ldapDeploy, grant ACL on default COS, then enable zimlet");
+		System.out.println("\tinstall {zimlet.zip} - installs the zimlet files on this host");
+		System.out.println("\tuninstall {zimlet} - uninstalls the zimlet files on this host");
+		System.out.println("\tenable {zimlet} - enables the zimlet");
+		System.out.println("\tdisable {zimlet} - disables the zimlet");
+		System.out.println("\tldapDeploy {zimlet} - add the zimlet entry to the LDAP server");
+		System.out.println("\tacl {zimlet} {cos1} grant|deny [{cos2} grant|deny...] - change the ACL for the zimlet on a COS");
+		System.out.println("\tlistAcl {zimlet} - list ACLs for the Zimlet");
+		System.out.println("\tlistZimlets - show status of all the Zimlets in the system.");
+		System.out.println("\tdumpConfigTemplate {zimlet.zip} - dumps the configuration");
+		System.out.println("\tconfigure {zimlet} {config.xml} - installs the configuration");
 		System.exit(1);
 	}
 	
@@ -417,15 +493,27 @@ public class ZimletUtil {
 	}
 	
 	private static void dispatch(String[] args) {
-		if (args.length < 2) {
+		if (args.length < 1) {
 			usage();
 		}
 		
 		String zimletRoot = LC.zimlet_directory.value();
-		String zimlet = args[1];
 		
 		int cmd = lookupCmd(args[0]);
 		try {
+			switch (cmd) {
+			case LIST_ZIMLETS:
+				listAllZimlets();
+				System.exit(0);
+			case TEST:
+				test();
+				System.exit(0);
+			}
+
+			if (args.length < 2) {
+				usage();
+			}
+			String zimlet = args[1];
 			switch (cmd) {
 			case DEPLOY_ZIMLET:
 				deployZimlet(zimletRoot, zimlet);
@@ -448,21 +536,25 @@ public class ZimletUtil {
 			case LIST_ACLS:
 				listAcls(zimlet);
 				break;
+			case ENABLE_ZIMLET:
+				enableZimlet(zimlet, true);
+				break;
+			case DISABLE_ZIMLET:
+				enableZimlet(zimlet, false);
+				break;
 			case DUMP_CONFIG:
 				dumpConfig(zimlet);
 				break;
 			case INSTALL_CONFIG:
 				installConfig(zimlet);
 				break;
-			case TEST:
-				test();
-				break;
 			default:
-				System.out.println("Unknown command " + args[0]);
+				usage();
 				break;
 			}
 		} catch (Exception e) {
 			System.out.println("Error: " + e.getMessage());
+			System.exit(1);
 		}
 	}
 	

@@ -753,6 +753,7 @@ public abstract class Provisioning {
     /**
      * Zimlets
      */
+    public static final String A_zimbraZimletEnabled           = "zimbraZimletEnabled";
     public static final String A_zimbraZimletKeyword           = "zimbraZimletKeyword";
     public static final String A_zimbraZimletVersion           = "zimbraZimletVersion";
     public static final String A_zimbraZimletDescription       = "zimbraZimletDescription";
