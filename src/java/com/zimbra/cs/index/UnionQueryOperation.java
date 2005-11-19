@@ -293,7 +293,7 @@ class UnionQueryOperation extends QueryOperation
             if (mLog.isDebugEnabled()) {
                 mLog.debug("Executing: "+qop.toString());
             }
-            qop.prepare(mbx, res, mbidx, chunkSize);
+            qop.prepare(mbx, res, mbidx, chunkSize+1); // add 1 to chunksize b/c we buffer
         }
         
         internalGetNext();

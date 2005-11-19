@@ -57,9 +57,11 @@ public class AppointmentHit extends ZimbraHit {
      * @param score
      */
     public AppointmentHit(ZimbraQueryResultsImpl results, Mailbox mbx, Document d,
-            float score) {
+            float score, MailItem.UnderlyingData ud) throws ServiceException {
         super(results, mbx, score);
         assert(false);
+        if (ud != null)
+            mAppt = (Appointment)mbx.getItemFromUnderlyingData(ud);
     }
     
     /**
@@ -69,10 +71,13 @@ public class AppointmentHit extends ZimbraHit {
      * @param score
      */
     public AppointmentHit(ZimbraQueryResultsImpl results, Mailbox mbx, int id,
-            float score) {
+            float score, MailItem.UnderlyingData ud) throws ServiceException {
         super(results, mbx, score);
 
         mId = id;
+        
+        if (ud != null)
+            mAppt = (Appointment)mbx.getItemFromUnderlyingData(ud);
     }
     
     public Appointment getAppointment() throws ServiceException {

@@ -119,13 +119,13 @@ public abstract class ZimbraHit
     /**
      * @param item which has been preloaded from the database or some other cache
      */
-    abstract void setItem(MailItem item);
+    abstract void setItem(MailItem item) throws ServiceException;
     
     /**
      * @return TRUE if our associated MailItem is already loaded (or we don't have one, 
      * ie ProxiedHit )
      */
-    abstract boolean itemIsLoaded();
+    abstract boolean itemIsLoaded() throws ServiceException;
     
     /**
      * Returns the logical "subject" -- by which we mean the subject for sorting purposes.

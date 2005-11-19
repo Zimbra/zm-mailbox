@@ -40,10 +40,13 @@ import com.zimbra.cs.service.ServiceException;
  */
 public final class ContactHit extends ZimbraHit {
     
-    public ContactHit(ZimbraQueryResultsImpl results, Mailbox mbx, int itemId, Document d, float score) {
+    public ContactHit(ZimbraQueryResultsImpl results, Mailbox mbx, int itemId, Document d, float score, MailItem.UnderlyingData ud) throws ServiceException {
         super(results, mbx, score);
         
         mItemId = itemId;
+        
+        if (ud != null)
+            mContact = (Contact)mbx.getItemFromUnderlyingData(ud);
     }
     
     private Contact mContact = null;

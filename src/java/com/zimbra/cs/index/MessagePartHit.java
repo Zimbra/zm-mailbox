@@ -57,9 +57,12 @@ public final class MessagePartHit extends ZimbraHit {
 
     int mMailboxBlobId = -1;
     
-    protected MessagePartHit(ZimbraQueryResultsImpl res, Mailbox mbx, Document d, float score) {
+    protected MessagePartHit(ZimbraQueryResultsImpl res, Mailbox mbx, Document d, float score, MailItem.UnderlyingData ud) throws ServiceException {
         super(res, mbx, score);
         mDoc = d;
+        if (ud != null) {
+            getMessageResult(ud);
+        }
     }
 
     public long getDate() throws ServiceException {
@@ -119,12 +122,12 @@ public final class MessagePartHit extends ZimbraHit {
         }
     }
     
-    void setItem(MailItem item) {
+    void setItem(MailItem item) throws ServiceException {
         MessageHit mh = getMessageResult();
         mh.setItem(item);
     }
     
-    boolean itemIsLoaded() {
+    boolean itemIsLoaded() throws ServiceException {
         return getMessageResult().itemIsLoaded();
     }
     
@@ -188,14 +191,19 @@ public final class MessagePartHit extends ZimbraHit {
     //
     // Hierarchy access:
     //
+    
+    public MessageHit getMessageResult() throws ServiceException {
+        return getMessageResult(null);
+    }
+    
 
     /**
      * @return Message that contains this document
      */
-    public MessageHit getMessageResult() {
+    public MessageHit getMessageResult(MailItem.UnderlyingData ud) throws ServiceException {
         if (mMessage == null) {
             mMessage = 
-                getResults().getMessageHit(getMailbox(), new Integer(getItemId()), mDoc, getScore());
+                getResults().getMessageHit(getMailbox(), new Integer(getItemId()), mDoc, getScore(), ud);
             mMessage.addPart(this);
         }
         return mMessage;

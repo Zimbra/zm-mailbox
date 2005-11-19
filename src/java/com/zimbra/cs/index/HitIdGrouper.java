@@ -52,6 +52,10 @@ public class HitIdGrouper extends BufferingResultsGrouper {
         super(hits);
         mSortOrder = sortOrder;
     }
+    
+    public boolean hasNext() throws ServiceException {
+        return (mBufferedHit.size() > 0 || (mHits.hasNext()));
+    }
      
     protected boolean bufferHits() throws ServiceException {
         if (mBufferedHit.size() > 0){
@@ -68,6 +72,7 @@ public class HitIdGrouper extends BufferingResultsGrouper {
         // buffer all the hits with the same sort field
         while(mHits.hasNext() && (curGroupHit.compareBySortField(mSortOrder, mHits.peekNext()) == 0))
         {
+            System.out.println("HitIdGrouper buffering "+mHits.peekNext());
             if (mLog.isDebugEnabled()) {
                 mLog.debug("HitIdGrouper buffering "+mHits.peekNext());
             }

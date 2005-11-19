@@ -113,19 +113,14 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
       }
       return ch;
   }
-
-//  protected ContactHit getContactHit(Mailbox mbx, Document d, float score) {
-//      Integer blobId = Integer.decode(d.get(LuceneFields.L_MAILBOX_BLOB_ID));
-//      return getContactHit(mbx, blobId, d, score);
-//  }
   
-  protected ContactHit getContactHit(Mailbox mbx, Integer blobId, Document d, float score) {
+  protected ContactHit getContactHit(Mailbox mbx, Integer blobId, Document d, float score, MailItem.UnderlyingData ud) throws ServiceException {
       ContactHit hit = (ContactHit) mContactHits.get(blobId);
       if (hit == null) {
           if (d != null) {
-              hit = new ContactHit(this, mbx, blobId.intValue(), d, score);
+              hit = new ContactHit(this, mbx, blobId.intValue(), d, score, ud);
           } else {
-              hit = new ContactHit(this, mbx, blobId.intValue(), d, score);
+              hit = new ContactHit(this, mbx, blobId.intValue(), d, score, ud);
           }
           mContactHits.put(blobId, hit);
       } else {
@@ -133,19 +128,14 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
       }
       return hit;
   }
-  
-//  protected NoteHit getNoteHit(Mailbox mbx, Document d, float score) {
-//      Integer blobId = Integer.decode(d.get(LuceneFields.L_MAILBOX_BLOB_ID));
-//      return getNoteHit(mbx, blobId, d, score);
-//  }
 
-  protected NoteHit getNoteHit(Mailbox mbx, Integer blobId, Document d, float score) {
+  protected NoteHit getNoteHit(Mailbox mbx, Integer blobId, Document d, float score, MailItem.UnderlyingData ud) throws ServiceException {
       NoteHit hit = (NoteHit) mNoteHits.get(blobId);
       if (hit == null) {
           if (d != null) {
-              hit = new NoteHit(this, mbx, d, score);
+              hit = new NoteHit(this, mbx, d, score, ud);
           } else {
-              hit = new NoteHit(this, mbx, d, score);
+              hit = new NoteHit(this, mbx, d, score, ud);
           }
           mNoteHits.put(blobId, hit);
       } else {
@@ -154,13 +144,13 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
       return hit;
   }
   
-  protected AppointmentHit getAppointmentHit(Mailbox mbx, Integer blobId, Document d, float score) {
+  protected AppointmentHit getAppointmentHit(Mailbox mbx, Integer blobId, Document d, float score, MailItem.UnderlyingData ud) throws ServiceException {
       AppointmentHit hit = (AppointmentHit) mApptHits.get(blobId);
       if (hit == null) {
           if (d != null) {
-              hit = new AppointmentHit(this, mbx, d, score);
+              hit = new AppointmentHit(this, mbx, d, score, ud);
           } else {
-              hit = new AppointmentHit(this, mbx, blobId.intValue(), score);
+              hit = new AppointmentHit(this, mbx, blobId.intValue(), score, ud);
           }
           mApptHits.put(blobId, hit);
       } else {
@@ -169,18 +159,13 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
       return hit;
   }
 
-//  protected MessageHit getMessageHit(Mailbox mbx, Document d, float score) {
-//      Integer messageId = Integer.decode(d.get(LuceneFields.L_MAILBOX_BLOB_ID));
-//      return getMessageHit(mbx, messageId, d, score);
-//  }
-
-  protected MessageHit getMessageHit(Mailbox mbx, Integer messageId, Document d, float score) {
+  protected MessageHit getMessageHit(Mailbox mbx, Integer messageId, Document d, float score, MailItem.UnderlyingData underlyingData) throws ServiceException {
       MessageHit hit = (MessageHit) mMessageHits.get(messageId);
       if (hit == null) {
           if (d != null) {
-              hit = new MessageHit(this, mbx, d, score);
+              hit = new MessageHit(this, mbx, d, score, underlyingData);
           } else {
-              hit = new MessageHit(this, mbx, messageId.intValue(), score);
+              hit = new MessageHit(this, mbx, messageId.intValue(), score, underlyingData);
           }
           mMessageHits.put(messageId, hit);
       } else {
@@ -188,26 +173,13 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
       }
       return hit;
   }
-
-//  protected MessagePartHit getMessagePartHit(Mailbox mbx, Document d, float score) 
-//  {
-//      String partKey = d.get(LuceneFields.L_MAILBOX_BLOB_ID) + "-" + d.get(LuceneFields.L_PARTNAME);
-//      MessagePartHit hit = (MessagePartHit) mPartHits.get(partKey);
-//      if (hit == null) {
-//          hit = new MessagePartHit(this, mbx, d, score);
-//          mPartHits.put(partKey, hit);
-//      } else {
-//          hit.updateScore(score);
-//      }
-//      return hit;
-//  }    
   
-  protected MessagePartHit getMessagePartHit(Mailbox mbx, Integer mailboxBlobId, Document d, float score) 
+  protected MessagePartHit getMessagePartHit(Mailbox mbx, Integer mailboxBlobId, Document d, float score, MailItem.UnderlyingData underlyingData) throws ServiceException 
   {
       String partKey = d.get(LuceneFields.L_MAILBOX_BLOB_ID) + "-" + d.get(LuceneFields.L_PARTNAME);
       MessagePartHit hit = (MessagePartHit) mPartHits.get(partKey);
       if (hit == null) {
-          hit = new MessagePartHit(this, mbx, d, score);
+          hit = new MessagePartHit(this, mbx, d, score, underlyingData);
           mPartHits.put(partKey, hit);
       } else {
           hit.updateScore(score);

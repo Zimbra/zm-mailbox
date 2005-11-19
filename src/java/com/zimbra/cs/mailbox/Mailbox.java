@@ -1829,6 +1829,18 @@ public class Mailbox {
         logCacheActivity(key, retVal);
         return retVal;
     }
+    
+    public synchronized MailItem getItemFromUnderlyingData(MailItem.UnderlyingData data) throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("getItemFromUd", null);
+            MailItem toRet = getItem(data);
+            success = true;
+            return toRet;
+        } finally {
+            endTransaction(success);
+        }
+    }
 
     /** translate from the DB representation of an item to its Mailbox abstraction */
     MailItem getItem(MailItem.UnderlyingData data) throws ServiceException {

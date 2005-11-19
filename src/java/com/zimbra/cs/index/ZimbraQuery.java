@@ -1443,20 +1443,23 @@ public final class ZimbraQuery {
          
         mClauses = parser.Parse();
         
-        if (true) {
-            if (ParseTree.SPEW) System.out.println("QueryString: "+queryString);
-            ParseTree.Node pt = ParseTree.build(mClauses);
-            if (ParseTree.SPEW) System.out.println("PT: "+pt.toString());
-            if (ParseTree.SPEW)System.out.println("Simplified:");
-            pt = pt.simplify();
-            if (ParseTree.SPEW)System.out.println("PT: "+pt.toString());
-            if (ParseTree.SPEW)System.out.println("Pushing nots down:");
-            pt.pushNotsDown();
-            if (ParseTree.SPEW)System.out.println("PT: "+pt.toString());
-            
-            mParseTree = pt;
-            
-        }
+        if (ParseTree.SPEW) System.out.println("QueryString: "+queryString);
+        
+        ParseTree.Node pt = ParseTree.build(mClauses);
+        
+        if (ParseTree.SPEW) System.out.println("PT: "+pt.toString());
+        if (ParseTree.SPEW)System.out.println("Simplified:");
+        
+        pt = pt.simplify();
+        
+        if (ParseTree.SPEW)System.out.println("PT: "+pt.toString());
+        if (ParseTree.SPEW)System.out.println("Pushing nots down:");
+        
+        pt.pushNotsDown();
+        
+        if (ParseTree.SPEW)System.out.println("PT: "+pt.toString());
+        
+        mParseTree = pt;
 	}
     
     /**

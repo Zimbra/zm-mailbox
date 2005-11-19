@@ -69,16 +69,22 @@ public class MessageHit extends ZimbraHit {
 
     private ConversationHit mConversationHit = null;
 
-    protected MessageHit(ZimbraQueryResultsImpl results, Mailbox mbx, Document d, float score) {
+    protected MessageHit(ZimbraQueryResultsImpl results, Mailbox mbx, Document d, float score, MailItem.UnderlyingData underlyingData) throws ServiceException {
         super(results, mbx, score);
         mDoc = d;
         assert (d != null);
+        if (underlyingData != null) {
+            mMessage = (Message)mbx.getItemFromUnderlyingData(underlyingData);
+        }
     }
 
-    protected MessageHit(ZimbraQueryResultsImpl results, Mailbox mbx, int id, float score) {
+    protected MessageHit(ZimbraQueryResultsImpl results, Mailbox mbx, int id, float score, MailItem.UnderlyingData underlyingData) throws ServiceException {
         super(results, mbx, score);
         mMessageId = id;
         assert (id != 0);
+        if (underlyingData != null) {
+            mMessage = (Message)mbx.getItemFromUnderlyingData(underlyingData);
+        }
     }
     
     /* (non-Javadoc)
@@ -98,7 +104,7 @@ public class MessageHit extends ZimbraHit {
     int getFolderId() throws ServiceException {
         return getMessage().getFolderId();
     }
-
+    
     public int getConversationId() throws ServiceException {
         if (mConversationId == 0) {
             mConversationId = getMessage().getConversationId();
@@ -113,10 +119,6 @@ public class MessageHit extends ZimbraHit {
                 if (dateStr != null) {
                     mCachedDate = DateField.stringToTime(dateStr);
                     
-                    // Tim: 5/11/2005 - now that the DB has been changed to store dates in msec
-                    // precision, we do NOT want to manually truncate the date here...
-                       // fix for Bug 311 -- SQL truncates dates when it stores them
-                       //mCachedDate = (mCachedDate /1000) * 1000;
                     return mCachedDate;
                 }
             }
@@ -237,22 +239,16 @@ public class MessageHit extends ZimbraHit {
     public long getDateHeader() throws ServiceException {
         if (mMessage == null && mDoc != null) {
             String dateStr = mDoc.get(LuceneFields.L_DATE);
-            //                mLog.info(toString() + " " + dateStr);
             if (dateStr != null) {
                 return DateField.stringToTime(dateStr);
             } else {
                 return 0;
             }
         }
-        //            mLog.info(toString() + " Called getMessage().getDate()");
         return getMessage().getDate();
     }
 
     public String getSender() throws ServiceException {
-        //		    if (mMessage == null && mDoc != null) {
-        //            if (false) {
-        //		        return mDoc.get(LuceneFields.L_H_FROM);
-        //		    }
         ParsedAddress cn = new ParsedAddress(getMessage().getSender());
         return cn.getSortString();
     }

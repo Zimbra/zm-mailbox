@@ -652,15 +652,8 @@ class IntersectionQueryOperation extends QueryOperation {
     protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res,
             MailboxIndex mbidx, int chunkSize) throws ServiceException, IOException 
     {
-        if (chunkSize > 1000) {
-            chunkSize = 1000;
-        } else if (chunkSize < 50) {
-            chunkSize = 50;
-        }
-        
         // scale up the chunk size since we are doing an intersection...
-        chunkSize = chunkSize * 3;
-        
+        chunkSize = (chunkSize+1) * 3;
         
         mMessageGrouper = new HitGrouper[mQueryOperations.size()];
         this.setupResults(mbx, res);

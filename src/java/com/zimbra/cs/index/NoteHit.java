@@ -40,10 +40,13 @@ import com.zimbra.cs.service.ServiceException;
  */
 public final class NoteHit extends ZimbraHit {
     
-    public NoteHit(ZimbraQueryResultsImpl results, Mailbox mbx, Document d, float score) {
+    public NoteHit(ZimbraQueryResultsImpl results, Mailbox mbx, Document d, float score, MailItem.UnderlyingData ud)  throws ServiceException {
         super(results, mbx, score);
         
         mDocument = d;
+        
+        if (ud != null)
+            mNote = (Note)mbx.getItemFromUnderlyingData(ud);
     }
     
     private Document mDocument = null;

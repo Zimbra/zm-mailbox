@@ -164,10 +164,15 @@ public class ResultsPager
         } else {
             hit = mResults.getNext();
         }
+        if (hit != null) { 
+            mHits.add(0, hit);
+        }
 
-        for (int i = 0; hit != null && i < mNumResultsRequested; i++) {
-            mHits.add(i, hit);
+        for (int i = 1; hit != null && i < mNumResultsRequested; i++) {
             hit = mResults.getNext();
+            if (hit != null) {
+                mHits.add(i, hit);
+            }
         }
     }
     

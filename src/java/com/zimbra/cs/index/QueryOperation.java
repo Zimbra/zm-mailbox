@@ -82,16 +82,20 @@ abstract class QueryOperation implements ZimbraQueryResults
     
     final static QueryOpSortComparator sQueryOpSortComparator = new QueryOpSortComparator();
 
-    private final static boolean USE_PRELOADING_GROUPER = true;
+    private final static boolean USE_PRELOADING_GROUPER = true; // mostly useful for debugging
     
     ////////////////////
     // Top-Level Execution  
     final ZimbraQueryResults run(Mailbox mbox, MailboxIndex mbidx, byte[] types, int searchOrder, int chunkSize) throws IOException, ServiceException
     {
-        if (chunkSize < 30) {
-            chunkSize = 30;
-        } else if (chunkSize > 1000) {
-            chunkSize = 1000;
+        mIsToplevelQueryOp = true;
+        
+        chunkSize++; // one extra for checking the "more" flag at the end of the results
+        
+        if (chunkSize < 26) {
+            chunkSize = 26;
+        } else if (chunkSize > 5000) {
+            chunkSize = 5000;
         }
         
         int retType = MailboxIndex.SEARCH_RETURN_DOCUMENTS;
@@ -110,27 +114,32 @@ abstract class QueryOperation implements ZimbraQueryResults
         boolean preloadOuterResults = false;
         
         int outerChunkSize = chunkSize;
-
         
         switch (retType) {
         case MailboxIndex.SEARCH_RETURN_CONVERSATIONS:
             if (USE_PRELOADING_GROUPER) {
+                chunkSize+= 2; // one for the ConvQueryResults, one for the Grouper 
                 setupResults(mbox, new ConvQueryResults(new ItemPreloadingGrouper(this, chunkSize, mbox), types, searchOrder));
-                chunkSize*=3; // guess 2 msgs per conv
+                chunkSize*=2; // guess 2 msgs per conv
             } else {
+                chunkSize++; // one for the ConvQueryResults
                 setupResults(mbox, new ConvQueryResults(this, types, searchOrder));
+                chunkSize*=2;
             }
             preloadOuterResults = true;
             break;
         case MailboxIndex.SEARCH_RETURN_MESSAGES:
             if (USE_PRELOADING_GROUPER) {
+                chunkSize+= 2; // one for the MsgQueryResults, one for the Grouper 
                 setupResults(mbox, new MsgQueryResults(new ItemPreloadingGrouper(this, chunkSize, mbox), types, searchOrder));
             } else {
+                chunkSize++; // one for the MsgQueryResults
                 setupResults(mbox, new MsgQueryResults(this, types, searchOrder));
             }
             break;
         case MailboxIndex.SEARCH_RETURN_DOCUMENTS:
             if (USE_PRELOADING_GROUPER) {
+                chunkSize++; // one for the grouper
                 setupResults(mbox, new UngroupedQueryResults(new ItemPreloadingGrouper(this, chunkSize, mbox), types, searchOrder));
             } else {
                 setupResults(mbox, new UngroupedQueryResults(this, types, searchOrder));
@@ -198,6 +207,9 @@ abstract class QueryOperation implements ZimbraQueryResults
      * Internals
      *
      *******************/
+    
+    private boolean mIsToplevelQueryOp = false;
+    protected boolean isTopLevelQueryOp() { return mIsToplevelQueryOp; }
     
     private ZimbraQueryResultsImpl mResults;
     private Mailbox mMailbox;

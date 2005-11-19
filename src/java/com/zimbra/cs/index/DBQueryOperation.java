@@ -395,26 +395,26 @@ class DBQueryOperation extends QueryOperation
                 if (docs != null) {
                     for (Iterator iter = docs.iterator(); iter.hasNext();) {
                         Document doc = (Document)iter.next();
-                        toAdd = this.getResultsSet().getMessagePartHit(this.getMailbox(), new Integer(sr.id), doc, 1.0f);
+                        toAdd = this.getResultsSet().getMessagePartHit(this.getMailbox(), new Integer(sr.id), doc, 1.0f, sr.data);
                         toAdd.cacheSortField(this.getResultsSet().getSearchOrder(), sr.sortkey);
                         mNextHits.add(toAdd);
                     }
                 } else {
-                    toAdd = this.getResultsSet().getMessageHit(this.getMailbox(), new Integer(sr.id), null, 1.0f);
+                    toAdd = this.getResultsSet().getMessageHit(this.getMailbox(), new Integer(sr.id), null, 1.0f, sr.data);
                     toAdd.cacheSortField(this.getResultsSet().getSearchOrder(), sr.sortkey);
                     mNextHits.add(toAdd);
                 }
                 break;
             case MailItem.TYPE_CONTACT:
-                toAdd = this.getResultsSet().getContactHit(this.getMailbox(), new Integer(sr.id), null, 1.0f);
+                toAdd = this.getResultsSet().getContactHit(this.getMailbox(), new Integer(sr.id), null, 1.0f, sr.data);
                 mNextHits.add(toAdd);
                 break;
             case MailItem.TYPE_NOTE:
-                toAdd = this.getResultsSet().getNoteHit(this.getMailbox(), new Integer(sr.id), null, 1.0f);
+                toAdd = this.getResultsSet().getNoteHit(this.getMailbox(), new Integer(sr.id), null, 1.0f, sr.data);
                 mNextHits.add(toAdd);
                 break;
             case MailItem.TYPE_APPOINTMENT:
-                toAdd = this.getResultsSet().getAppointmentHit(this.getMailbox(), new Integer(sr.id), null, 1.0f);
+                toAdd = this.getResultsSet().getAppointmentHit(this.getMailbox(), new Integer(sr.id), null, 1.0f, sr.data);
                 mNextHits.add(toAdd);
                 break;
                 // Unsupported right now:
@@ -473,14 +473,10 @@ class DBQueryOperation extends QueryOperation
             case MailItem.TYPE_CONVERSATION:
                 tmp[numUsed] = MailItem.TYPE_MESSAGE;
                 numUsed++;
-//                tmp[numUsed] = MailItem.TYPE_INVITE;
-//                numUsed++;
                 break;
             case MailItem.TYPE_MESSAGE:
                 tmp[numUsed] = MailItem.TYPE_MESSAGE;
                 numUsed++;
-//                tmp[numUsed] = MailItem.TYPE_INVITE;
-//                numUsed++;
                 break;
             case MailItem.TYPE_CONTACT:
                 tmp[numUsed] = MailItem.TYPE_CONTACT;
@@ -490,10 +486,6 @@ class DBQueryOperation extends QueryOperation
                 tmp[numUsed] = MailItem.TYPE_APPOINTMENT;
                 numUsed++;
                 break;
-//            case MailItem.TYPE_INVITE:
-//                tmp[numUsed] = MailItem.TYPE_INVITE;
-//                numUsed++;
-//                break;
             case MailItem.TYPE_DOCUMENT:
                 tmp[numUsed] = MailItem.TYPE_DOCUMENT;
                 numUsed++;
@@ -695,12 +687,12 @@ class DBQueryOperation extends QueryOperation
                         c.sizes = (SearchConstraints.Range[])mSizes.toArray(new SearchConstraints.Range[mSizes.size()]);
                     }
                     
-                    
                     if (mLuceneOp == null) {
                         c.offset = mCurHitsOffset;
                         c.limit = mHitsPerChunk;
-                        mDBHits = DbMailItem.search(conn, c);
                         
+                        boolean getFullRows = this.isTopLevelQueryOp();
+                        mDBHits = DbMailItem.search(conn, c, getFullRows);
                     } else {
                         
                         do {
@@ -766,9 +758,7 @@ class DBQueryOperation extends QueryOperation
      */
     protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res, MailboxIndex mbidx, int chunkSize) throws ServiceException, IOException
     {
-        if (chunkSize < 50) {
-            chunkSize = 50;
-        } else if (chunkSize > MAX_HITS_PER_CHUNK) {
+        if (chunkSize > MAX_HITS_PER_CHUNK) {
             chunkSize = MAX_HITS_PER_CHUNK;
         }
         
@@ -777,7 +767,7 @@ class DBQueryOperation extends QueryOperation
         setupResults(mbx, res);
         
         if (mLuceneOp != null) {
-            mHitsPerChunk = mHitsPerChunk * 3; 
+            mHitsPerChunk *= 2; // enlarge chunk size b/c of join
             mLuceneOp.setDBOperation(this);
             mLuceneOp.prepare(mbx, res, mbidx, mHitsPerChunk);
         }
