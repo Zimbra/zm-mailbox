@@ -43,6 +43,9 @@ import com.zimbra.soap.ZimbraContext;
  */
 public class GetMailbox extends AdminDocumentHandler {
 
+    private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminService.E_MAILBOX, AdminService.A_ACCOUNTID };
+    protected String[] getProxiedAccountPath()  { return TARGET_ACCOUNT_PATH; }
+
     /**
      * must be careful and only allow access to domain if domain admin
      */
