@@ -53,6 +53,7 @@ import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Parameter;
 import net.fortuna.ical4j.model.ParameterList;
 import net.fortuna.ical4j.model.Property;
+import net.fortuna.ical4j.model.TimeZone.SimpleOnset;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.parameter.PartStat;
 import net.fortuna.ical4j.model.property.Method;
@@ -626,7 +627,50 @@ public class CalendarUtils {
             throw ServiceException.FAILURE("Caught ParseException: "+pe, pe);
         }
     }
-    
+
+    private static void parseTimeZones(Element parent, TimeZoneMap tzMap)
+    throws ServiceException {
+        assert(tzMap != null);
+        for (Iterator iter = parent.elementIterator(MailService.E_APPT_TZ);
+             iter.hasNext(); ) {
+            Element tzElem = (Element) iter.next();
+            String tzid = tzElem.getAttribute(MailService.A_ID);
+            int standardOffset = 
+                (int) tzElem.getAttributeLong(MailService.A_APPT_TZ_STDOFFSET);
+            int daylightOffset =
+                (int) tzElem.getAttributeLong(MailService.A_APPT_TZ_DAYOFFSET,
+                                          standardOffset);
+            SimpleOnset standardOnset = null;
+            SimpleOnset daylightOnset = null;
+            if (daylightOffset != standardOffset) {
+                Element standard = tzElem.getOptionalElement(MailService.E_APPT_TZ_STANDARD);
+                Element daylight = tzElem.getOptionalElement(MailService.E_APPT_TZ_DAYLIGHT);
+                if (standard == null || daylight == null)
+                    throw MailServiceException.INVALID_REQUEST(
+                            "DST time zone missing standard and/or daylight onset", null);
+                standardOnset = parseSimpleOnset(standard);
+                daylightOnset = parseSimpleOnset(daylight);
+            }
+
+            ICalTimeZone tz = new ICalTimeZone(
+                    tzid,
+                    standardOffset, standardOnset,
+                    daylightOffset, daylightOnset);
+            tzMap.add(tz);
+        }
+    }
+
+    private static SimpleOnset parseSimpleOnset(Element element)
+    throws ServiceException {
+        int week = (int) element.getAttributeLong(MailService.A_APPT_TZ_WEEK);
+        int wkday = (int) element.getAttributeLong(MailService.A_APPT_TZ_DAYOFWEEK);
+        int month = (int) element.getAttributeLong(MailService.A_APPT_TZ_MONTH);
+        int hour = (int) element.getAttributeLong(MailService.A_APPT_TZ_HOUR);
+        int minute = (int) element.getAttributeLong(MailService.A_APPT_TZ_MINUTE);
+        int second = (int) element.getAttributeLong(MailService.A_APPT_TZ_SECOND);
+        return new SimpleOnset(week, wkday, month, hour, minute, second);
+    }
+
     /**
      * UID, DTSTAMP, and SEQUENCE **MUST** be set by caller
      * 
@@ -640,13 +684,15 @@ public class CalendarUtils {
      * @return
      * @throws ServiceException
      */
-    private static void parseInviteElementCommon(Account account, 
-                                                      Element element, Invite newInv,
-                                                      TimeZoneMap oldTzMap, boolean recurAllowed)
+    private static void parseInviteElementCommon(Account account,
+                                                 Element element, Invite newInv,
+                                                 TimeZoneMap oldTzMap, boolean recurAllowed)
     throws ServiceException {
+        parseTimeZones(element.getParent(), newInv.getTimeZoneMap());
+
         boolean allDay = element.getAttributeBool(MailService.A_APPT_ALLDAY, false);
         newInv.setIsAllDayEvent(allDay);
-        
+
         String name = element.getAttribute(MailService.A_NAME, "");
         String location = element.getAttribute(MailService.A_APPT_LOCATION,"");
 
@@ -661,10 +707,10 @@ public class CalendarUtils {
             ZOrganizer org = new ZOrganizer(cn, address);
             newInv.setOrganizer(org);
         }
-        
+
         // SUMMARY (aka Name or Subject)
         newInv.setName(name);
-        
+
         // DTSTART
         {
             Element s = element.getElement(MailService.E_APPT_START_TIME);
@@ -689,7 +735,7 @@ public class CalendarUtils {
                     throw MailServiceException.INVALID_REQUEST("<inv> may have <e> end or <d> duration but not both", null);
                 }
                 ParsedDateTime dt = parseDtElement(e, oldTzMap, newInv);
-                
+
                 if (allDay) {
                     // HACK ALERT: okay, campers, here's the deal.
                     //     By definition, our end dates are EXCLUSIVE: DTEND is not included.. eg a meeting 7-8pm actually stops at 7:59
@@ -714,7 +760,7 @@ public class CalendarUtils {
                 newInv.setDtEnd(dt); 
             }
         }
-        
+
         // DURATION
         {
             Element d = element.getOptionalElement(MailService.E_APPT_DURATION);
