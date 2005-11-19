@@ -129,15 +129,15 @@ public class ZimbraMailAdapter implements MailAdapter
         // check spam headers set by system spam detector
         if (sSpamHeader != null) {
             String val = pm.getMimeMessage().getHeader(sSpamHeader, null);
-            if (sSpamHeaderValue != null) {
-                if (val != null) {
+            if (val != null) {
+                if (sSpamHeaderValue != null) {
                     Matcher m = sSpamHeaderValue.matcher(val);
                     mSpam = m.matches();
+                } else {
+                    // no expected header value is configured; 
+                    // presence of the header (regardless of its value) indicates spam
+                    mSpam = true;
                 }
-            } else {
-                // no expected header value is specified; 
-                // presence of the header (regardless of its value) indicates spam
-                mSpam = true;
             }
         }
     }    
