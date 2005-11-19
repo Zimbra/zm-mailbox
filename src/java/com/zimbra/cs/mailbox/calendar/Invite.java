@@ -1088,7 +1088,7 @@ public class Invite {
                 for (Iterator iter = addRecurs.iterator(); iter.hasNext();) {
                     Object next = iter.next();
                     if (next instanceof Recur) {
-                        ZRecur cur = new ZRecur((Recur)next);
+                        ZRecur cur = new ZRecur(((Recur)next).toString(), mTzMap);
                         addRules.add(new Recurrence.SimpleRepeatingRule(mStart, duration, cur, new InviteInfo(this)));
                     } else {
                         RDate cur = (RDate)next;
@@ -1101,7 +1101,7 @@ public class Invite {
                 for (Iterator iter = subRules.iterator(); iter.hasNext();) {
                     Object next = iter.next();
                     if (next instanceof Recur) {
-                        ZRecur cur = new ZRecur((Recur)next);
+                        ZRecur cur = new ZRecur(((Recur)next).toString(), mTzMap);
                         subRules.add(new Recurrence.SimpleRepeatingRule(mStart, duration, cur, new InviteInfo(this)));
                     } else {
                         ExDate cur = (ExDate)next;
@@ -1290,7 +1290,11 @@ public class Invite {
                     break;
                 case Recurrence.TYPE_REPEATING:
                     Recurrence.SimpleRepeatingRule srr = (Recurrence.SimpleRepeatingRule)cur;
-                    event.getProperties().add(new RRule(srr.getRecur().getRecur()));
+                    try {
+                        event.getProperties().add(new RRule(new Recur(srr.getRecur().toString())));
+                    } catch(ParseException e) {
+                        throw ServiceException.FAILURE("Parsing Recur Rule: "+srr.getRecur().toString(), e);
+                    }
                     break;
                 }
                 
@@ -1305,7 +1309,12 @@ public class Invite {
                     break;
                 case Recurrence.TYPE_REPEATING:
                     Recurrence.SimpleRepeatingRule srr = (Recurrence.SimpleRepeatingRule)cur;
-                    event.getProperties().add(new ExRule(srr.getRecur().getRecur()));
+                    try {
+                        event.getProperties().add(new ExRule(new Recur(srr.getRecur().toString())));
+                    } catch(ParseException e) {
+                        throw ServiceException.FAILURE("Parsing ExRule: "+srr.getRecur().toString(), e);
+                    }
+                        
                     break;
                 }
             }

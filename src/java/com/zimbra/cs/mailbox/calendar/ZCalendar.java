@@ -71,27 +71,27 @@ public class ZCalendar {
      *    Components
      *    Properties
      */
-    private static class Calendar
+    private static class ZVCalendar
     {
-        List <Component> mComponents = new ArrayList();
-        List <Property> mProperties = new ArrayList();
+        List <ZComponent> mComponents = new ArrayList();
+        List <ZProperty> mProperties = new ArrayList();
         
-        Calendar() { }
+        ZVCalendar() { }
         
-        public void addProperty(Property prop) { mProperties.add(prop); }
-        public void addComponent(Component comp) { mComponents.add(comp); }
+        public void addProperty(ZProperty prop) { mProperties.add(prop); }
+        public void addComponent(ZComponent comp) { mComponents.add(comp); }
         
-        Component getComponent(ICalTok tok) { return findComponent(mComponents, tok); }
-        Property getProperty(ICalTok tok) { return findProp(mProperties, tok); }
+        ZComponent getComponent(ICalTok tok) { return findComponent(mComponents, tok); }
+        ZProperty getProperty(ICalTok tok) { return findProp(mProperties, tok); }
         String getPropVal(ICalTok tok, String defaultValue) {
-            Property prop = getProperty(tok);
+            ZProperty prop = getProperty(tok);
             if (prop != null) 
                 return prop.mValue;
             
             return defaultValue;
         }
         long getPropLongVal(ICalTok tok, long defaultValue) {
-            Property prop = getProperty(tok);
+            ZProperty prop = getProperty(tok);
             if (prop != null) 
                 return Long.parseLong(prop.mValue);
             
@@ -101,11 +101,11 @@ public class ZCalendar {
         public String toString() {
             StringBuffer toRet = new StringBuffer("BEGIN:VCALENDAR\n");
             String INDENT = "\t";
-            for (Property prop : mProperties) {
+            for (ZProperty prop : mProperties) {
                 toRet.append(prop.toString(INDENT));
             }
             
-            for (Component comp : mComponents) {
+            for (ZComponent comp : mComponents) {
                 toRet.append(comp.toString(INDENT));
             }
             toRet.append("END:VCALENDAR");
@@ -114,10 +114,10 @@ public class ZCalendar {
         
         public void toICalendar(Writer w) throws IOException {
             w.write("BEGIN:VCALENDAR\n");
-            for (Property prop : mProperties)
+            for (ZProperty prop : mProperties)
                 prop.toICalendar(w);
             
-            for (Component comp : mComponents)
+            for (ZComponent comp : mComponents)
                 comp.toICalendar(w);
 
             w.write("END:VCALENDAR");
@@ -132,14 +132,14 @@ public class ZCalendar {
      *     Properties
      *     Components
      */
-    private static class Component
+    private static class ZComponent
     {
-        Component(String name) {
+        ZComponent(String name) {
             mName = name.toUpperCase();
             mTok = ICalTok.lookup(mName);
         }
         
-        Component(ICalTok tok) {
+        ZComponent(ICalTok tok) {
             mTok = tok;
             mName = tok.toString();
         }
@@ -150,23 +150,23 @@ public class ZCalendar {
         public String getName() { return mName; }
         public ICalTok getTok() { return mTok; }
         
-        List <Property> mProperties = new ArrayList();
-        List <Component> mComponents = new ArrayList();
+        List <ZProperty> mProperties = new ArrayList();
+        List <ZComponent> mComponents = new ArrayList();
         
-        public void addProperty(Property prop) { mProperties.add(prop); }
-        public void addComponent(Component comp) { mComponents.add(comp); }
+        public void addProperty(ZProperty prop) { mProperties.add(prop); }
+        public void addComponent(ZComponent comp) { mComponents.add(comp); }
         
-        Component getComponent(ICalTok tok) { return findComponent(mComponents, tok); }
-        Property getProperty(ICalTok tok) { return findProp(mProperties, tok); }
+        ZComponent getComponent(ICalTok tok) { return findComponent(mComponents, tok); }
+        ZProperty getProperty(ICalTok tok) { return findProp(mProperties, tok); }
         String getPropVal(ICalTok tok, String defaultValue) {
-            Property prop = getProperty(tok);
+            ZProperty prop = getProperty(tok);
             if (prop != null) 
                 return prop.mValue;
             
             return defaultValue;
         }
         long getPropLongVal(ICalTok tok, long defaultValue) {
-            Property prop = getProperty(tok);
+            ZProperty prop = getProperty(tok);
             if (prop != null) 
                 return Long.parseLong(prop.mValue);
             
@@ -181,10 +181,10 @@ public class ZCalendar {
         public String toString(String INDENT) {
             StringBuffer toRet = new StringBuffer(INDENT).append("COMPONENT:").append(mName).append('(').append(mTok).append(')').append('\n');
             String NEW_INDENT = INDENT+'\t';
-            for (Property prop : mProperties) {
+            for (ZProperty prop : mProperties) {
                 toRet.append(prop.toString(NEW_INDENT));
             }
-            for (Component comp : mComponents) {
+            for (ZComponent comp : mComponents) {
                 toRet.append(comp.toString(NEW_INDENT));
             }
             toRet.append(INDENT).append("END:").append(mName).append('\n');
@@ -197,10 +197,10 @@ public class ZCalendar {
             w.write(name);
             w.write('\n');
             
-            for (Property prop : mProperties) 
+            for (ZProperty prop : mProperties) 
                 prop.toICalendar(w);
 
-            for (Component comp : mComponents) 
+            for (ZComponent comp : mComponents) 
                 comp.toICalendar(w);
             
             w.write("END:");
@@ -264,32 +264,32 @@ public class ZCalendar {
      *    Parameters
      *    Value
      */
-    private static class Property 
+    private static class ZProperty 
     {
-        Property(String name) {
+        ZProperty(String name) {
             setName(name);
             mTok = ICalTok.lookup(mName);
         }
-        Property(ICalTok tok) {
+        ZProperty(ICalTok tok) {
             mTok = tok;
             mName = tok.toString();
         }
-        Property(ICalTok tok, String value) {
+        ZProperty(ICalTok tok, String value) {
             mTok = tok;
             mName = tok.toString();
             setValue(value);
         }
-        Property(ICalTok tok, boolean value) {
+        ZProperty(ICalTok tok, boolean value) {
             mTok = tok;
             mName = tok.toString();
             mValue = value ? "TRUE" : "FALSE";
         }
-        Property(ICalTok tok, long value) {
+        ZProperty(ICalTok tok, long value) {
             mTok = tok;
             mName = tok.toString();
             mValue = Long.toString(value);
         }
-        Property(ICalTok tok, int value) {
+        ZProperty(ICalTok tok, int value) {
             mTok = tok;
             mName = tok.toString();
             mValue = Integer.toString(value);
@@ -303,14 +303,14 @@ public class ZCalendar {
         }
         
         
-        List <Parameter> mParameters = new ArrayList();
+        List <ZParameter> mParameters = new ArrayList();
         
-        public void addParameter(Parameter param) { mParameters.add(param); }
+        public void addParameter(ZParameter param) { mParameters.add(param); }
         
-        Parameter getParameter(ICalTok tok) { return findParameter(mParameters, tok); }
+        ZParameter getParameter(ICalTok tok) { return findParameter(mParameters, tok); }
         
         public String paramVal(ICalTok tok, String defaultValue) { 
-            Parameter param = getParameter(tok);
+            ZParameter param = getParameter(tok);
             if (param != null) {
                 return param.mValue;
             }
@@ -325,7 +325,7 @@ public class ZCalendar {
         public String toString(String INDENT) {
             StringBuffer toRet = new StringBuffer(INDENT).append("PROPERTY:").append(mName).append('(').append(mTok).append(')').append('\n');
             String NEW_INDENT = INDENT+'\t';
-            for (Parameter param: mParameters) {
+            for (ZParameter param: mParameters) {
                 toRet.append(param.toString(NEW_INDENT));
             }
             toRet.append(NEW_INDENT).append("VALUE=\"").append(mValue).append("\"\n");
@@ -335,7 +335,7 @@ public class ZCalendar {
         
         public void toICalendar(Writer w) throws IOException {
             w.write(escape(mName));
-            for (Parameter param: mParameters)
+            for (ZParameter param: mParameters)
                 param.toICalendar(w);
 
             w.write(':');
@@ -359,19 +359,19 @@ public class ZCalendar {
      *
      * Name:Value pair
      */
-    private static class Parameter
+    private static class ZParameter
     {
-        Parameter(String name, String value) {
+        ZParameter(String name, String value) {
             setName(name);
             setValue(value);
             mTok = ICalTok.lookup(mName);
         }
-        Parameter(ICalTok tok, String value) {
+        ZParameter(ICalTok tok, String value) {
             mTok = tok;
             mName = tok.toString();
             setValue(value);
         }
-        Parameter(ICalTok tok, boolean value) {
+        ZParameter(ICalTok tok, boolean value) {
             mTok = tok;
             mName = tok.toString();
             mValue = value ? "TRUE" : "FALSE";
@@ -414,9 +414,9 @@ public class ZCalendar {
         String mValue;
     }
     
-    private static Property findProp(List <Property> list, ICalTok tok)
+    private static ZProperty findProp(List <ZProperty> list, ICalTok tok)
     {
-        for (Property prop : list) {
+        for (ZProperty prop : list) {
             if (prop.mTok == tok) {
                 return prop;
             }
@@ -424,9 +424,9 @@ public class ZCalendar {
         return null;
     }
     
-    private static Parameter findParameter(List <Parameter> list, ICalTok tok)
+    private static ZParameter findParameter(List <ZParameter> list, ICalTok tok)
     {
-        for (Parameter param: list) {
+        for (ZParameter param: list) {
             if (param.mTok == tok) {
                 return param;
             }
@@ -434,9 +434,9 @@ public class ZCalendar {
         return null;
     }
     
-    private static Component findComponent(List <Component> list, ICalTok tok)
+    private static ZComponent findComponent(List <ZComponent> list, ICalTok tok)
     {
-        for (Component comp: list) {
+        for (ZComponent comp: list) {
             if (comp.mTok == tok) {
                 return comp;
             }
@@ -446,19 +446,18 @@ public class ZCalendar {
 
     private static class ZContentHandler implements ContentHandler
     {
-        Calendar mCal = null;
-        ArrayList<Component> mComponents = new ArrayList();
-        Property mCurProperty = null;
+        ZVCalendar mCal = null;
+        ArrayList<ZComponent> mComponents = new ArrayList();
+        ZProperty mCurProperty = null;
         
         public void startCalendar() { 
-            mCal = new Calendar(); 
+            mCal = new ZVCalendar(); 
         }
         
         public void endCalendar() { }
 
         public void startComponent(String name) {
-//            System.out.println("StartComponent("+name+")");
-            Component newComponent = new Component(name);
+            ZComponent newComponent = new ZComponent(name);
             if (mComponents.size() > 0) {
                 mComponents.get(mComponents.size()-1).mComponents.add(newComponent);
             } else {
@@ -468,12 +467,11 @@ public class ZCalendar {
         }
         
         public void endComponent(String name) { 
-//            System.out.println("EndComponent("+name+")");
             mComponents.remove(mComponents.size()-1);
         }
 
         public void startProperty(String name) { 
-            mCurProperty = new Property(name);
+            mCurProperty = new ZProperty(name);
             
             if (mComponents.size() > 0) {
                 mComponents.get(mComponents.size()-1).mProperties.add(mCurProperty);
@@ -489,7 +487,7 @@ public class ZCalendar {
         public void endProperty(String name) { mCurProperty = null; }
 
         public void parameter(String name, String value) throws URISyntaxException { 
-            Parameter param = new Parameter(name, value);
+            ZParameter param = new ZParameter(name, value);
             if (mCurProperty != null) {
                 mCurProperty.mParameters.add(param);
             } else {
@@ -521,13 +519,13 @@ public class ZCalendar {
         return toRet;
     }
     
-    static ZOrganizer organizerFromProperty(Property prop) {
+    static ZOrganizer organizerFromProperty(ZProperty prop) {
         String cn = prop.paramVal(ICalTok.CN, null);
         
         return new ZOrganizer(cn, prop.mValue);
     }
     
-    static ZAttendee attendeeFromProperty(Property prop) {
+    static ZAttendee attendeeFromProperty(ZProperty prop) {
         String cn = prop.paramVal(ICalTok.CN, null);
         String role = prop.paramVal(ICalTok.ROLE, null);
         String partstat = prop.paramVal(ICalTok.PARTSTAT, null);
@@ -541,38 +539,38 @@ public class ZCalendar {
         return toRet;
     }
     
-    static Property organizerToProperty(ZOrganizer org) {
-        Property toRet = new Property(ICalTok.ORGANIZER, "MAILTO:"+org.getAddress());
+    static ZProperty organizerToProperty(ZOrganizer org) {
+        ZProperty toRet = new ZProperty(ICalTok.ORGANIZER, "MAILTO:"+org.getAddress());
         if (org.hasCn()) {
-            toRet.addParameter(new Parameter(ICalTok.CN, org.getCn()));
+            toRet.addParameter(new ZParameter(ICalTok.CN, org.getCn()));
         }
         return toRet;
     }
     
-    static Property atToProperty(ZAttendee at) throws ServiceException {
-        Property toRet = new Property(ICalTok.ATTENDEE, "MAILTO:"+at.getAddress());
+    static ZProperty atToProperty(ZAttendee at) throws ServiceException {
+        ZProperty toRet = new ZProperty(ICalTok.ATTENDEE, "MAILTO:"+at.getAddress());
         if (at.hasCn()) 
-            toRet.addParameter(new Parameter(ICalTok.CN, at.getCn()));
+            toRet.addParameter(new ZParameter(ICalTok.CN, at.getCn()));
         if (at.hasPartStat())
-            toRet.addParameter(new Parameter(ICalTok.PARTSTAT, IcalXmlStrMap.sPartStatMap.toIcal(at.getPartStat())));
+            toRet.addParameter(new ZParameter(ICalTok.PARTSTAT, IcalXmlStrMap.sPartStatMap.toIcal(at.getPartStat())));
         if (at.hasRsvp())
-            toRet.addParameter(new Parameter(ICalTok.RSVP, at.getRsvp()));
+            toRet.addParameter(new ZParameter(ICalTok.RSVP, at.getRsvp()));
         if (at.hasRole())
-            toRet.addParameter(new Parameter(ICalTok.ROLE, IcalXmlStrMap.sRoleMap.toIcal(at.getRole())));
+            toRet.addParameter(new ZParameter(ICalTok.ROLE, IcalXmlStrMap.sRoleMap.toIcal(at.getRole())));
         
         return toRet;
     }
     
-    static Property recurIdToProperty(RecurId recurId) {
-        Property toRet = new Property(ICalTok.RECURRENCE_ID, recurId.toString());
+    static ZProperty recurIdToProperty(RecurId recurId) {
+        ZProperty toRet = new ZProperty(ICalTok.RECURRENCE_ID, recurId.toString());
         return toRet;
     }
     
-    static Component inviteToVEvent(Invite inv) throws ServiceException
+    static ZComponent inviteToVEvent(Invite inv) throws ServiceException
     {
-        Component event = new Component(ICalTok.VEVENT);
+        ZComponent event = new ZComponent(ICalTok.VEVENT);
         
-        event.addProperty(new Property(ICalTok.UID, inv.getUid()));
+        event.addProperty(new ZProperty(ICalTok.UID, inv.getUid()));
         
         IRecurrence recur = inv.getRecurrence();
         if (recur != null) {
@@ -586,7 +584,7 @@ public class ZCalendar {
                     break;
                 case Recurrence.TYPE_REPEATING:
                     Recurrence.SimpleRepeatingRule srr = (Recurrence.SimpleRepeatingRule)cur;
-                    event.addProperty(new Property(ICalTok.RRULE, srr.getRecur().toString()));
+                    event.addProperty(new ZProperty(ICalTok.RRULE, srr.getRecur().toString()));
                     break;
                 }
                 
@@ -601,7 +599,7 @@ public class ZCalendar {
                     break;
                 case Recurrence.TYPE_REPEATING:
                     Recurrence.SimpleRepeatingRule srr = (Recurrence.SimpleRepeatingRule)cur;
-                    event.addProperty(new Property(ICalTok.EXRULE, srr.getRecur().toString()));
+                    event.addProperty(new ZProperty(ICalTok.EXRULE, srr.getRecur().toString()));
                     break;
                 }
             }
@@ -615,53 +613,53 @@ public class ZCalendar {
         
         // allDay
         if (inv.isAllDayEvent())
-            event.addProperty(new Property(ICalTok.X_MICROSOFT_CDO_ALLDAYEVENT, true));
+            event.addProperty(new ZProperty(ICalTok.X_MICROSOFT_CDO_ALLDAYEVENT, true));
         
         // SUMMARY (aka Name or Subject)
         String name = inv.getName();
         if (name != null && name.length()>0)
-            event.addProperty(new Property(ICalTok.SUMMARY, name));
+            event.addProperty(new ZProperty(ICalTok.SUMMARY, name));
         
         // DESCRIPTION
         String fragment = inv.getFragment();
         if (fragment != null && fragment.length()>0)
-            event.addProperty(new Property(ICalTok.DESCRIPTION, fragment));
+            event.addProperty(new ZProperty(ICalTok.DESCRIPTION, fragment));
         
         // COMMENT
         String comment = inv.getComment();
         if (comment != null && comment.length()>0) 
-            event.addProperty(new Property(ICalTok.COMMENT, comment));
+            event.addProperty(new ZProperty(ICalTok.COMMENT, comment));
         
         // DTSTART
-        event.addProperty(new Property(ICalTok.DTSTART, inv.getStartTime().toString()));
+        event.addProperty(new ZProperty(ICalTok.DTSTART, inv.getStartTime().toString()));
         
         // DTEND
         ParsedDateTime dtend = inv.getEndTime();
         if (dtend != null) 
-            event.addProperty(new Property(ICalTok.DTEND, inv.getEndTime().toString()));
+            event.addProperty(new ZProperty(ICalTok.DTEND, inv.getEndTime().toString()));
         
         // DURATION
         ParsedDuration dur = inv.getDuration();
         if (dur != null)
-            event.addProperty(new Property(ICalTok.DURATION, dur.toString()));
+            event.addProperty(new ZProperty(ICalTok.DURATION, dur.toString()));
         
         // LOCATION
         String location = inv.getLocation();
         if (location != null)
-            event.addProperty(new Property(ICalTok.LOCATION, location.toString()));
+            event.addProperty(new ZProperty(ICalTok.LOCATION, location.toString()));
         
         // STATUS
-        event.addProperty(new Property(ICalTok.STATUS, IcalXmlStrMap.sStatusMap.toIcal(inv.getStatus())));
+        event.addProperty(new ZProperty(ICalTok.STATUS, IcalXmlStrMap.sStatusMap.toIcal(inv.getStatus())));
         
         // Microsoft Outlook compatibility for free-busy status
         {
             String outlookFreeBusy = IcalXmlStrMap.sOutlookFreeBusyMap.toIcal(inv.getFreeBusy());
-            event.addProperty(new Property(ICalTok.X_MICROSOFT_CDO_BUSYSTATUS, outlookFreeBusy));
-            event.addProperty(new Property(ICalTok.X_MICROSOFT_CDO_INTENDEDSTATUS, outlookFreeBusy));
+            event.addProperty(new ZProperty(ICalTok.X_MICROSOFT_CDO_BUSYSTATUS, outlookFreeBusy));
+            event.addProperty(new ZProperty(ICalTok.X_MICROSOFT_CDO_INTENDEDSTATUS, outlookFreeBusy));
         }
         
         // TRANSPARENCY
-        event.addProperty(new Property(ICalTok.TRANSP, IcalXmlStrMap.sTranspMap.toIcal(inv.getTransparency())));
+        event.addProperty(new ZProperty(ICalTok.TRANSP, IcalXmlStrMap.sTranspMap.toIcal(inv.getTransparency())));
         
         // ATTENDEES
         for (ZAttendee at : (List<ZAttendee>)inv.getAttendees()) 
@@ -674,15 +672,15 @@ public class ZCalendar {
         
         // DTSTAMP
         ParsedDateTime dtStamp = ParsedDateTime.fromUTCTime(inv.getDTStamp());
-        event.addProperty(new Property(ICalTok.DTSTAMP, dtStamp.toString()));
+        event.addProperty(new ZProperty(ICalTok.DTSTAMP, dtStamp.toString()));
         
         // SEQUENCE
-        event.addProperty(new Property(ICalTok.SEQUENCE, inv.getSeqNo()));
+        event.addProperty(new ZProperty(ICalTok.SEQUENCE, inv.getSeqNo()));
         
         return event;
     }
     
-    static List<Invite> createFromCalendar(Calendar cal)
+    static List<Invite> createFromCalendar(ZVCalendar cal)
     {
         List <Invite> toRet = new ArrayList();
         
@@ -690,12 +688,12 @@ public class ZCalendar {
         
         String methodStr = cal.getPropVal(ICalTok.METHOD, ICalTok.PUBLISH.toString());
         
-        for (Component comp : cal.mComponents) {
+        for (ZComponent comp : cal.mComponents) {
             switch(comp.mTok) {
             case VTIMEZONE:
                 String tzname = comp.getPropVal(ICalTok.TZID, null);
                 
-                Component daylight = comp.getComponent(ICalTok.DAYLIGHT);
+                ZComponent daylight = comp.getComponent(ICalTok.DAYLIGHT);
                 
                 String daydtStart = null;
                 int dayoffsetTime = 0;
@@ -712,7 +710,7 @@ public class ZCalendar {
                     dayrrule = daylight.getPropVal(ICalTok.RRULE, null);
                 }
                 
-                Component standard = comp.getComponent(ICalTok.STANDARD); 
+                ZComponent standard = comp.getComponent(ICalTok.STANDARD); 
                 if (standard != null) {
                     stddtStart = standard.getPropVal(ICalTok.DTSTART, null);
                     String stdtzOffsetTo = standard.getPropVal(ICalTok.TZOFFSETTO, null);
@@ -736,7 +734,7 @@ public class ZCalendar {
                     ArrayList addRecurs = new ArrayList();
                     ArrayList subRecurs = new ArrayList();
                     
-                    for (Property prop : comp.mProperties) {
+                    for (ZProperty prop : comp.mProperties) {
                         System.out.println(prop);
 
                         if (prop.mTok == null) 
@@ -789,15 +787,14 @@ public class ZCalendar {
                             newInv.setUid(prop.getValue());
                             break;
                         case RRULE:
-                            ZRecur recur = new ZRecur(prop.getValue());
+                            ZRecur recur = new ZRecur(prop.getValue(), tzmap);
                             addRecurs.add(recur);
                             newInv.setIsRecurrence(true);
                             break;
                         case RDATE:
                             break;
                         case EXRULE:
-                            ZRecur exrecur = new ZRecur(prop.getValue());
-//                            ExRule exrule = new ExRule(exrecur);
+                            ZRecur exrecur = new ZRecur(prop.getValue(), tzmap);
                             subRecurs.add(exrecur);
                             newInv.setIsRecurrence(true);                            
                             break;

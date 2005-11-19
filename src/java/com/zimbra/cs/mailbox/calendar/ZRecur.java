@@ -15,435 +15,462 @@ import java.util.Set;
 
 import com.zimbra.cs.service.ServiceException;
 
-import net.fortuna.ical4j.model.Recur;
-import net.fortuna.ical4j.model.WeekDay;
-import net.fortuna.ical4j.model.WeekDayList;
-import net.fortuna.ical4j.model.parameter.Value;
-
-
 public class ZRecur {
-    public ZRecur(String str) throws ServiceException {
-        TimeZoneMap tzmap = new TimeZoneMap(ICalTimeZone.getUTC());
-        parse(str, tzmap);
+
+    public static enum Frequency { DAILY, HOURLY, MINUTELY, MONTHLY, SECONDLY, WEEKLY, YEARLY }
+    
+    public static enum ZWeekDay { 
+        FR, MO, SA, SU, TH, TU, WE;
+        
+        public int getCalendarDay() {
+            switch (this) {
+            case SU:
+                return Calendar.SUNDAY;
+            case MO:
+                return Calendar.MONDAY;
+            case TU:
+                return Calendar.TUESDAY;
+            case WE:
+                return Calendar.WEDNESDAY;
+            case TH:
+                return Calendar.THURSDAY;
+            case FR:
+                return Calendar.FRIDAY;
+            }
+            return Calendar.SATURDAY;
+        }
+    }
+    
+    public static class ZWeekDayNum {
+        public static class DayOnlyComparator implements Comparator
+        {
+            public int compare(Object lhs, Object rhs)
+            {
+                ZWeekDayNum zlhs = (ZWeekDayNum)lhs;
+                ZWeekDayNum zrhs = (ZWeekDayNum)rhs;
+                
+                return zlhs.mDay.getCalendarDay() - zrhs.mDay.getCalendarDay();
+            }
+            
+        }
+        
+        public ZWeekDay mDay;
+        public int mOrdinal; // -4,-3,-2,-1,+1,+2,+3,+4
+        
+        public ZWeekDayNum() {}
+        public ZWeekDayNum(int ord, ZWeekDay day) { mOrdinal = ord; mDay = day; };
+        
+        public String toString() {
+            if (mOrdinal != 0) 
+                return Integer.toString(mOrdinal)+mDay;
+            else
+                return mDay.toString();
+        }
+    };
+    
+    private static enum Tokens {
+        BYDAY, BYHOUR, BYMINUTE, BYMONTH, BYMONTHDAY, BYSECOND, BYSETPOS, BYWEEKNO, 
+        BYYEARDAY, COUNT, FREQ, INTERVAL, UNTIL, WKST;
+    }
+    
+    /**
+     * For performance reasons,we stop expanding instances of a recurrence once
+     * this many instances have been returned.  This only counts instances actually
+     * returned, it does not count any instances in intermediate values, so
+     * a recurrence like:
+     */
+    private static final int MAXIMUM_INSTANCES_EXPANDED = 200;
+    
+    public static String listAsStr(List l) {
+        StringBuffer toRet = new StringBuffer();
+        boolean first = true;
+        for (Object obj  : l) {
+            if (!first)
+                toRet.append(',');
+            else
+                first = false;
+            toRet.append(obj.toString());
+        }
+            
+        return toRet.toString();
+    }
+    
+    public static void main(String[] args) {
+        ParsedDateTime dtStart = null;
+        try {
+            dtStart = ParsedDateTime.parse("20050101T123456", ICalTimeZone.getUTC());
+        } catch(ParseException e) {
+            System.out.println("Caught ParseException at start: "+e);
+        }
+
+        Date rangeStart;
+        Date rangeEnd;
+        
+        GregorianCalendar cal = new GregorianCalendar();
+        cal.setTimeZone(ICalTimeZone.getUTC());
+        
+        cal.set(2005, 4, 15, 0, 0, 0);
+        rangeStart = cal.getTime();
+
+        cal.set(2006, 0, 1, 0, 0, 0);
+        rangeEnd = cal.getTime();
+        
+
+        try {
+            ZRecur test = new ZRecur("FREQ=DAILY;BYMONTH=5,6");
+            System.out.println("\n\n"+test.toString()+"\n-------------------------------------------------");
+            List<Date> dateList = test.expandRecurrenceOverRange(dtStart, rangeStart.getTime(), rangeEnd.getTime());
+            for (Date d : dateList) {
+                cal.setTime(d);
+                cal.setTimeZone(ICalTimeZone.getUTC());
+                System.out.printf("%tc\n", cal);
+            }
+        } catch (ServiceException e) {
+            System.out.println("Caught ServiceException"+e);
+            e.printStackTrace();
+        }
         
         try {
-            mRecur = new Recur(str);
+            ZRecur test = new ZRecur("FREQ=DAILY;BYMONTH=5,6;BYDAY=TH,-1MO");
+            System.out.println("\n\n"+test.toString()+"\n-------------------------------------------------");
+            List<Date> dateList = test.expandRecurrenceOverRange(dtStart, rangeStart.getTime(), rangeEnd.getTime());
+            for (Date d : dateList) {
+                cal.setTime(d);
+                cal.setTimeZone(ICalTimeZone.getUTC());
+                System.out.printf("%tc\n", cal);
+            }
+        } catch (ServiceException e) {
+            System.out.println("Caught ServiceException"+e);
+            e.printStackTrace();
+        }
+        
+        try {
+            ZRecur test = new ZRecur("FREQ=DAILY;BYMONTH=5,6;BYMONTHDAY=1,3,5,7,9,31");
+            System.out.println("\n\n"+test.toString()+"\n-------------------------------------------------");
+            List<Date> dateList = test.expandRecurrenceOverRange(dtStart, rangeStart.getTime(), rangeEnd.getTime());
+            for (Date d : dateList) {
+                cal.setTime(d);
+                System.out.printf("%tc\n", cal);
+            }
+        } catch (ServiceException e) {
+            System.out.println("Caught ServiceException"+e);
+            e.printStackTrace();
+        }
+        
+        try {
+            ZRecur test = new ZRecur("FREQ=DAILY;BYMONTH=5,6;BYMONTHDAY=1,3,5,7,9,31;BYDAY=SU,SA");
+            System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
+            List<Date> dateList = test.expandRecurrenceOverRange(dtStart, rangeStart.getTime(), rangeEnd.getTime());
+            for (Date d : dateList) {
+                cal.setTime(d);
+                System.out.printf("%tc\n", cal);
+            }
+        } catch (ServiceException e) {
+            System.out.println("Caught ServiceException"+e);
+            e.printStackTrace();
+        }
+
+        
+        try {
+            ZRecur test = new ZRecur("FREQ=DAILY;BYMONTH=5,6;BYMONTHDAY=1,3,5,7,9,31;BYDAY=SU,SA;BYHOUR=21,0");
+            System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
+            List<Date> dateList = test.expandRecurrenceOverRange(dtStart, rangeStart.getTime(), rangeEnd.getTime());
+            for (Date d : dateList) {
+                cal.setTime(d);
+                System.out.printf("%tc\n", cal);
+            }
+        } catch (ServiceException e) {
+            System.out.println("Caught ServiceException"+e);
+            e.printStackTrace();
+        }
+
+        try {
+            ZRecur test = new ZRecur("FREQ=DAILY;BYMONTH=5,6;BYMONTHDAY=1,3,5,7,9,31;BYDAY=SU;BYHOUR=21,0;BYMINUTE=23");
+            System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
+            List<Date> dateList = test.expandRecurrenceOverRange(dtStart, rangeStart.getTime(), rangeEnd.getTime());
+            for (Date d : dateList) {
+                cal.setTime(d);
+                System.out.printf("%tc\n", cal);
+            }
+        } catch (ServiceException e) {
+            System.out.println("Caught ServiceException"+e);
+            e.printStackTrace();
+        }
+
+        try {
+            ZRecur test = new ZRecur("FREQ=DAILY;BYMONTH=5,6;BYMONTHDAY=1,3,5,7,9,31;BYDAY=SU;BYHOUR=1,21,0;BYSECOND=0,59");
+            System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
+            List<Date> dateList = test.expandRecurrenceOverRange(dtStart, rangeStart.getTime(), rangeEnd.getTime());
+            for (Date d : dateList) {
+                cal.setTime(d);
+                System.out.printf("%tc\n", cal);
+            }
+        } catch (ServiceException e) {
+            System.out.println("Caught ServiceException"+e);
+            e.printStackTrace();
+        }
+
+        try {
+            // parse error testing
+            ZRecur test = new ZRecur("FREQ=DAILY;BIYMONTH=5,6;BYMONTHDAY=1,3,5,7,9,31;BYDAY=SU;BYHOUR=1,21,0;BYSECOND=0,59;BYSETPOS=1,-1,3,1000,,-1000");
+            System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
+            List<Date> dateList = test.expandRecurrenceOverRange(dtStart, rangeStart.getTime(), rangeEnd.getTime());
+            for (Date d : dateList) {
+                cal.setTime(d);
+                System.out.printf("%tc\n", cal);
+            }
+        } catch (ServiceException e) {
+            System.out.println("Caught ServiceException"+e);
+            e.printStackTrace();
+        }
+        
+        try {
+            ZRecur test = new ZRecur("FREQ=HOURLY;BIYMONTH=6;BYMONTHDAY=1,3;BYHOUR=2,14");
+            System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
+            List<Date> dateList = test.expandRecurrenceOverRange(dtStart, rangeStart.getTime(), rangeEnd.getTime());
+            for (Date d : dateList) {
+                cal.setTime(d);
+                System.out.printf("%tc\n", cal);
+            }
+        } catch (ServiceException e) {
+            System.out.println("Caught ServiceException"+e);
+            e.printStackTrace();
+        }
+        
+        try {
+            ZRecur test = new ZRecur("FREQ=HOURLY;BIYMONTH=6;BYMONTHDAY=1;;BYMINUTE=10;BYSECOND=11,12");
+            System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
+            List<Date> dateList = test.expandRecurrenceOverRange(dtStart, rangeStart.getTime(), rangeEnd.getTime());
+            for (Date d : dateList) {
+                cal.setTime(d);
+                System.out.printf("%tc\n", cal);
+            }
+        } catch (ServiceException e) {
+            System.out.println("Caught ServiceException"+e);
+            e.printStackTrace();
+        }
+        
+        
+
+        cal.set(2010, 0, 1, 0, 0, 0);
+        rangeEnd = cal.getTime();
+        
+        try {
+            ZRecur test = new ZRecur("FREQ=YEARLY");
+            System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
+            List<Date> dateList = test.expandRecurrenceOverRange(dtStart, rangeStart.getTime(), rangeEnd.getTime());
+            for (Date d : dateList) {
+                cal.setTime(d);
+                System.out.printf("%tc\n", cal);
+            }
+        } catch (ServiceException e) {
+            System.out.println("Caught ServiceException"+e);
+            e.printStackTrace();
+        }
+
+
+        try {
+            ZRecur test = new ZRecur("FREQ=YEARLY;BYYEARDAY=-1");
+            System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
+            List<Date> dateList = test.expandRecurrenceOverRange(dtStart, rangeStart.getTime(), rangeEnd.getTime());
+            for (Date d : dateList) {
+                cal.setTime(d);
+                System.out.printf("%tc\n", cal);
+            }
+        } catch (ServiceException e) {
+            System.out.println("Caught ServiceException"+e);
+            e.printStackTrace();
+        }
+                
+        try {
+            ZRecur test = new ZRecur("FREQ=SECONDLY");
+            System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
+            List<Date> dateList = test.expandRecurrenceOverRange(dtStart, rangeStart.getTime(), rangeEnd.getTime());
+            for (Date d : dateList) {
+                cal.setTime(d);
+                System.out.printf("%tc\n", cal);
+            }
+        } catch (ServiceException e) {
+            System.out.println("Caught ServiceException"+e);
+            e.printStackTrace();
+        }
+        
+        try {
+            ParsedDateTime myDtStart = ParsedDateTime.parse("16010101T020000", ICalTimeZone.getUTC());
+                        
+            ZRecur test = new ZRecur("FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=12;BYDAY=-1SU");
+            System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
+            List<Date> dateList = test.expandRecurrenceOverRange(myDtStart, rangeStart.getTime(), rangeEnd.getTime());
+            for (Date d : dateList) {
+                cal.setTime(d);
+                System.out.printf("%tc\n", cal);
+            }
         } catch (ParseException e) {
-            throw ServiceException.FAILURE("Parsing Recur string: \""+str+"\"", e);
+            System.out.println("Caught ParseException"+e);
+            e.printStackTrace();
+        } catch (ServiceException e) {
+            System.out.println("Caught ServiceException"+e);
+            e.printStackTrace();
         }
+        
+        cal.set(2010, 0, 1, 0, 0, 0);
+        rangeEnd = cal.getTime();
+        
+        try {
+            ZRecur test = new ZRecur("FREQ=YEARLY;BYMONTH=12;BYDAY=1WE");
+            System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
+            List<Date> dateList = test.expandRecurrenceOverRange(dtStart, rangeStart.getTime(), rangeEnd.getTime());
+            for (Date d : dateList) {
+                cal.setTime(d);
+                System.out.printf("%tc\n", cal);
+            }
+        } catch (ServiceException e) {
+            System.out.println("Caught ServiceException"+e);
+            e.printStackTrace();
+        }
+        
+
     }
     
-    public String toString() {
-        return mRecur.toString();
+    private List<ZWeekDayNum> mByDayList = new ArrayList<ZWeekDayNum>();
+    private List<Integer> mByHourList = new ArrayList<Integer>();
+    private List<Integer> mByMinuteList = new ArrayList<Integer>();
+    private List<Integer> mByMonthDayList = new ArrayList<Integer>();
+    private List<Integer> mByMonthList = new ArrayList<Integer>();
+    private List<Integer> mBySecondList = new ArrayList<Integer>();
+    
+    private List<Integer> mBySetPosList = new ArrayList<Integer>();
+    private List<Integer> mByWeekNoList = new ArrayList<Integer>();
+    private List<Integer> mByYearDayList = new ArrayList<Integer>();
+    
+    private int mCount = 0;
+    private Frequency mFreq = Frequency.WEEKLY;
+    private int mInterval = 0;
+    private ParsedDateTime mUntil = null;
+    private ZWeekDay mWkSt = null;
+    
+
+    public ZRecur(String str, TimeZoneMap tzmap) throws ServiceException {
+        parse(str, tzmap);
+    }
+    
+    private ZRecur(String str) throws ServiceException {
+        parse(str, new TimeZoneMap(ICalTimeZone.getUTC()));
+    }
+    
+    public List<Integer> getByHourList() {
+        return this.mByHourList;
     }
 
-    public ZRecur(Recur recur) throws ServiceException {
-        mRecur = recur;
+    public void setByHourList(List<Integer> byHourList) {
+        this.mByHourList = byHourList;
     }
-    
-    public static enum Frequency { SECONDLY, MINUTELY, HOURLY, DAILY, WEEKLY, MONTHLY, YEARLY };
-    
-    private boolean checkMonthList(GregorianCalendar cal)
-    {
-        if (mByMonthList.size() > 0) {
-            for (Integer cur: mByMonthList) {
-                int curMonth = cal.get(Calendar.MONTH)+1;
-                if (cur == curMonth)
-                    return true;
-                
-                // since the month list is in order, if we hit a HIGHER month,
-                // then we know out current month isn't in the list, and therefore
-                // we should go to this next one
-                if (cur > curMonth) {
-                    cal.set(Calendar.MONTH, cur-1);
-                    return false; // must re-start checks
-                }
-            }
-            
-            // we've not found a match AND we've not found a 
-            // higher value in our list -- so wrap
-            cal.set(Calendar.MONTH, mByMonthList.get(0)-1);
-            cal.add(Calendar.YEAR, 1);
-            return false; // must re-start checks
-        }
-        return true;
-    }
-    
-    private boolean checkHourList(GregorianCalendar cal)
-    {
-        if (mByHourList.size() > 0) {
-            for (Integer cur: mByHourList) {
-                int curHour = cal.get(Calendar.HOUR_OF_DAY);
-                if (curHour == cur.intValue())
-                    return true;
-                
-                // since the month list is in order, if we hit a HIGHER month,
-                // then we know out current month isn't in the list, and therefore
-                // we should go to this next one
-                if (cur > curHour) {
-                    cal.set(Calendar.HOUR_OF_DAY, cur);
-                    return false; // must re-start checks
-                }
-            }
-            
-            // we've not found a match AND we've not found a 
-            // higher value in our list -- so wrap
-            cal.set(Calendar.HOUR, mByHourList.get(0));
-            cal.add(Calendar.DAY_OF_YEAR, 1);
-            return false; // must re-start checks
-        }
-        return true;
-    }
-    
-    private boolean checkYearDayList(GregorianCalendar cal)
-    {
-        if (mByYearDayList.size() > 0) {
-            for (Integer cur: mByYearDayList) {
-                int curYearDay = cal.get(Calendar.DAY_OF_YEAR);
-                if (cur == curYearDay)
-                    return true;
-                
-                // since the YearDay list is in order, if we hit a HIGHER one,
-                // then we know out current one isn't in the list, and therefore
-                // we should go to this one we just found in the list
-                if (cur > curYearDay) {
-                    cal.set(Calendar.DAY_OF_YEAR, cur);
-                    return false;
-                }
-            }
-            
-            // we've not found a match AND we've not found a 
-            // higher value in our list -- so wrap
-            cal.set(Calendar.DAY_OF_YEAR, mByYearDayList.get(0));
-            cal.add(Calendar.YEAR, 1);
-            return false;
-        }
-        return true;
-    }
-    
-    private boolean checkMonthDayList(GregorianCalendar cal)
-    {
-        if (mByMonthDayList.size() > 0) {
-            for (Integer cur: mByMonthDayList) {
-                int curMonthDay = cal.get(Calendar.DAY_OF_MONTH);
-                if (cur == curMonthDay)
-                    return true;
-                
-                // since the list is in order, if we hit a HIGHER one,
-                // then we know out current one isn't in the list, and therefore
-                // we should go to this one we just found in the list
-                if (cur > curMonthDay) {
-                    cal.set(Calendar.DAY_OF_MONTH, cur);
-                    return false;
-                }
-            }
-            
-            // we've not found a match AND we've not found a 
-            // higher value in our list -- so wrap
-            cal.set(Calendar.DAY_OF_MONTH, mByMonthDayList.get(0));
-            cal.add(Calendar.MONTH, 1);
-            return false;
-        }
-        return true;
-    }
-    
-    private boolean checkDayList(GregorianCalendar cal)
-    {
-        assert(mFreq!=Frequency.MONTHLY && mFreq!=Frequency.YEARLY && mFreq!=Frequency.WEEKLY);
-        
-        if (mByDayList.size() > 0) {
-            for (ZWeekDayNum listCur: mByDayList) {
-                int curDayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
-                if (listCur.mDay.getCalendarDay() == curDayOfWeek)
-                    return true;
-                
-                // since the DayOfWeek list is in week-order, if we hit a HIGHER one,
-                // then we know out current one isn't in the list, and therefore
-                // we should go to this one we just found in the list
-                if (listCur.mDay.getCalendarDay() > curDayOfWeek) {
-                    cal.set(Calendar.DAY_OF_WEEK, listCur.mDay.getCalendarDay());
-                    return false;
-                }
-            }
-            
-            // we've not found a match AND we've not found a 
-            // higher value in our list -- so wrap
-            cal.set(Calendar.DAY_OF_WEEK, mByDayList.get(0).mDay.getCalendarDay());
-            cal.add(Calendar.WEEK_OF_YEAR, 1);
-            return false;
-        }
-        return true;
-    }
-    
-    private List<Calendar> expandDayListForWeekly(List<Calendar> list)
-    {
-        // this func ONLY works for expanding, NOT for contracting
-        assert(mFreq==Frequency.WEEKLY);
-        
-        if (mByDayList.size() <= 0)
-            return list;
-        
-        List<Calendar> toRet = new LinkedList<Calendar>();
-        
-        for (Calendar cur : list) { 
-            for (ZWeekDayNum day : mByDayList) {
-                cur.set(Calendar.DAY_OF_WEEK, day.mDay.getCalendarDay());
-                toRet.add((Calendar)(cur.clone()));
-            }
-        }
-        
-        return toRet;
-    }
-    
-    private List<Calendar> expandMonthDayList(List<Calendar> list)
-    {
-        // this func ONLY works for expanding, NOT for contracting
-        assert(mFreq==Frequency.MONTHLY || mFreq==Frequency.YEARLY);
-        
-        if (mByMonthDayList.size() <= 0)
-            return list;
-        
-        List<Calendar> toRet = new LinkedList<Calendar>();
-        
-        for (Calendar cur : list) { 
-            int curMonth = cur.get(Calendar.MONTH);
-            for (Integer moday: mByMonthDayList) {
-                if (moday != 0) {
-                    if (moday > 0) 
-                        cur.set(Calendar.DAY_OF_MONTH, moday);
-                    else {
-                        cur.set(Calendar.DAY_OF_MONTH, 1);
-                        cur.roll(Calendar.DAY_OF_MONTH, moday);
-                    }
-                    
-                    // unfortunately, cal.set seems to roll the month fwd if the
-                    // day is out of range (e.g. June 31) -- so check to see if that
-                    // happened, and if it did then we'll just skip this date
-                    if (cur.get(Calendar.MONTH) == curMonth)
-                        toRet.add((Calendar)(cur.clone()));
-                }
-            }
-        }
-        
-        return toRet;
-    }
-    
-    private List<Calendar> expandMonthList(List<Calendar> list)
-    {
-        // this func ONLY works for expanding, NOT for contracting
-        assert(mFreq==Frequency.YEARLY);
-        
-        if (mByMonthList.size() <= 0)
-            return list;
-        
-        List<Calendar> toRet = new LinkedList<Calendar>();
-        
-        for (Calendar cur : list) { 
-            for (Integer month: mByMonthList) {
-                cur.set(Calendar.MONTH, month);
-                    
-                toRet.add((Calendar)(cur.clone()));
-            }
-        }
-        
-        return toRet;
-    }
-    
-    private List<Calendar> expandDayListForMonthlyYearly(List<Calendar> list)
-    {
-        // this func ONLY works for expanding, NOT for contracting
-        assert(mFreq==Frequency.MONTHLY || mFreq==Frequency.YEARLY);
-        
-        if (mByDayList.size() <= 0)
-            return list;
-        
-        List<Calendar> toRet = new ArrayList<Calendar>();
-        Set<Integer> months = new HashSet<Integer>();
-        
-        
-        for (Calendar cur : list) {
-            int curYear = cur.get(Calendar.YEAR); 
-            int curMonth = cur.get(Calendar.MONTH);
-            if (!months.contains(curMonth)) {
-                months.add(curMonth);
-                
-                for (ZWeekDayNum day : mByDayList) {
-                    
-                    // find all the cals matching this day-of-week
-                    ArrayList<Integer> matching = new ArrayList<Integer>();
-                    
-                    cur.set(Calendar.DAY_OF_MONTH, 1);
-                    do {
-                        if (cur.get(Calendar.DAY_OF_WEEK) == day.mDay.getCalendarDay()) 
-                            matching.add(cur.get(Calendar.DAY_OF_MONTH));
-                        cur.add(Calendar.DAY_OF_MONTH, 1);
-                    } while(cur.get(Calendar.MONTH) == curMonth);
-                    
-                    cur.set(Calendar.MONTH, curMonth);
-                    cur.set(Calendar.YEAR, curYear);
-                    
-                    if (day.mOrdinal == 0) {
-                        for (Integer matchDay: matching) {
-                            cur.set(Calendar.DAY_OF_MONTH, matchDay);
-                            toRet.add((Calendar)(cur.clone()));
-                        }
-                    } else {
-                        if (day.mOrdinal > 0) {
-                            if (day.mOrdinal < matching.size()) {
-                                cur.set(Calendar.DAY_OF_MONTH, matching.get(day.mOrdinal));
-                                toRet.add((Calendar)(cur.clone()));
-                            }
-                        } else {
-                            if ((-1 * day.mOrdinal)<=(matching.size())) {
-                                cur.set(Calendar.DAY_OF_MONTH, matching.get(matching.size()+day.mOrdinal));
-                                toRet.add((Calendar)(cur.clone()));
-                            }
-                        }
-                    }
-                } // foreach mByDayList
-            } // month already seen?
-        }
 
-        
-        // we unfortunately have to sort here because, for example, the "-1FR" could happen before the "-1TH"
-        assert (toRet instanceof ArrayList);
-        Collections.sort(toRet);
-        
-        return toRet;
+    public List<Integer> getByMinuteList() {
+        return this.mByMinuteList;
     }
-    
-    private List<Calendar> expandYearDayList(List<Calendar> list)
-    {
-        // this func ONLY works for expanding, NOT for contracting
-        assert(mFreq==Frequency.YEARLY);
-        
-        if (mByYearDayList.size() <= 0)
-            return list;
-        
-        List<Calendar> toRet = new LinkedList<Calendar>();
-        Set<Integer> years = new HashSet<Integer>();
-        
-        
-        for (Calendar cur : list) {
-            int curYear = cur.get(Calendar.YEAR); 
-            if (!years.contains(curYear)) {
-                years.add(curYear);
-                
-                for (Integer yearDay : mByYearDayList) {
-                    
-                    if (yearDay > 0) 
-                        cur.set(Calendar.DAY_OF_YEAR, yearDay);
-                    else {
-                        cur.set(Calendar.DAY_OF_YEAR, 1);
-                        cur.roll(Calendar.DAY_OF_YEAR, yearDay);
-                    }
-                    
-                    toRet.add((Calendar)(cur.clone()));
-                }
-            } // year already seen?
-        }
-        
-        return toRet;
+
+    public void setByMinuteList(List<Integer> byMinuteList) {
+        this.mByMinuteList = byMinuteList;
     }
-    
-    
-    private List<Calendar> expandHourList(List<Calendar> list)
-    {
-        // this func ONLY works for expanding, NOT for contracting
-        assert(mFreq==Frequency.DAILY || mFreq==Frequency.WEEKLY || mFreq==Frequency.MONTHLY || mFreq==Frequency.YEARLY);
-        
-        if (mByHourList.size() <= 0)
-            return list;
-        
-        List<Calendar> toRet = new LinkedList<Calendar>();
-        
-        for (Calendar cur : list) { 
-            for (Integer hour : mByHourList) {
-                cur.set(Calendar.HOUR_OF_DAY, hour);
-                toRet.add((Calendar)(cur.clone()));
-            }
-        }
-        
-        return toRet;
+
+    public List<Integer> getByMonthDayList() {
+        return this.mByMonthDayList;
     }
-    
-    private List<Calendar> expandMinuteList(List<Calendar> list)
-    {
-        // this func ONLY works for expanding, NOT for contracting
-        assert(mFreq != Frequency.MINUTELY && mFreq != Frequency.SECONDLY);
-        
-        if (mByMinuteList.size() <= 0)
-            return list;
-        
-        List<Calendar> toRet = new LinkedList<Calendar>();
-        
-        for (Calendar cur : list) { 
-            for (Integer minute: mByMinuteList) {
-                cur.set(Calendar.MINUTE, minute);
-                toRet.add((Calendar)(cur.clone()));
-            }
-        }
-        
-        return toRet;
+
+    public void setByMonthDayList(List<Integer> byMonthDayList) {
+        this.mByMonthDayList = byMonthDayList;
     }
-    
-    private List<Calendar> expandSecondList(List<Calendar> list)
-    {
-        // this func ONLY works for expanding, NOT for contracting
-        assert(mFreq != Frequency.SECONDLY);
-        
-        if (mBySecondList.size() <= 0)
-            return list;
-        
-        List<Calendar> toRet = new LinkedList<Calendar>();
-        
-        for (Calendar cur : list) { 
-            for (Integer second: mBySecondList) {
-                cur.set(Calendar.SECOND, second);
-                toRet.add((Calendar)(cur.clone()));
-            }
-        }
-        
-        return toRet;
+
+    public List<Integer> getByMonthList() {
+        return this.mByMonthList;
     }
-    
-    private List<Calendar> handleSetPos(List<Calendar> list)
-    {
-        if (mBySetPosList.size() <= 0) 
-            return list;
-        
-        
-        Calendar[] array = new Calendar[list.size()];
-        array = list.toArray(array);
-        
-        LinkedList<Calendar> toRet = new LinkedList<Calendar>();
-        
-        ArrayList<Integer> idxsToInclude = new ArrayList<Integer>();
-            
-        for (Integer cur : mBySetPosList) {
-            int idx = cur;
-            if (idx>=-366 && idx <= 366 && idx!= 0) { 
-                if (idx> 0)
-                    idx--; // 1-indexed!
-                else
-                    idx = array.length + idx;
-                
-                if (idx>=0 && idx < array.length)
-                    if (!idxsToInclude.contains(idx))
-                        idxsToInclude.add(idx);
-            }
-        }
-        
-        Collections.sort(idxsToInclude);
-        
-        for (Integer idx : idxsToInclude) {
-            toRet.add(array[idx]);
-        }
-        
-        return toRet;
+
+    public void setByMonthList(List<Integer> byMonthList) {
+        this.mByMonthList = byMonthList;
     }
-    
-    public List<java.util.Date> testExpandRecurrence(ParsedDateTime dtStart, long rangeStart, long rangeEnd) throws ServiceException {
+
+    public List<Integer> getBySecondList() {
+        return this.mBySecondList;
+    }
+
+    public void setBySecondList(List<Integer> bySecondList) {
+        this.mBySecondList = bySecondList;
+    }
+
+    public List<Integer> getBySetPosList() {
+        return this.mBySetPosList;
+    }
+
+    public void setBySetPosList(List<Integer> bySetPosList) {
+        this.mBySetPosList = bySetPosList;
+    }
+
+    public List<Integer> getByWeekNoList() {
+        return this.mByWeekNoList;
+    }
+
+    public void setByWeekNoList(List<Integer> byWeekNoList) {
+        this.mByWeekNoList = byWeekNoList;
+    }
+
+    public List<Integer> getByYearDayList() {
+        return this.mByYearDayList;
+    }
+
+    public void setByYearDayList(List<Integer> byYearDayList) {
+        this.mByYearDayList = byYearDayList;
+    }
+
+    public int getCount() {
+        return this.mCount;
+    }
+
+    public void setCount(int count) {
+        this.mCount = count;
+    }
+
+    public Frequency getFrequency() {
+        return this.mFreq;
+    }
+
+    public void setFrequency(Frequency freq) {
+        this.mFreq = freq;
+    }
+
+    public int getInterval() {
+        return this.mInterval;
+    }
+
+    public void setInterval(int interval) {
+        this.mInterval = interval;
+    }
+
+    public ParsedDateTime getUntil() {
+        return this.mUntil;
+    }
+
+    public void setUntil(ParsedDateTime until) {
+        this.mUntil = until;
+    }
+
+    public ZWeekDay getWkSt() {
+        return this.mWkSt;
+    }
+
+    public void setWkSt(ZWeekDay wkSt) {
+        this.mWkSt = wkSt;
+    }
+
+    public void setByDayList(List<ZWeekDayNum> byDayList) {
+        this.mByDayList = byDayList;
+    }
+
+    public List<ZWeekDayNum> getByDayList() {
+        return this.mByDayList;
+    }
+
+    public List<java.util.Date> expandRecurrenceOverRange(ParsedDateTime dtStart, long rangeStart, long rangeEnd) throws ServiceException {
         List<java.util.Date> toRet = new LinkedList<java.util.Date>();
         
         java.util.Date earliestDate = new java.util.Date(rangeStart);
@@ -472,9 +499,9 @@ public class ZRecur {
         
         int interval = mInterval;
         if (interval <= 0) 
-            mInterval = 1;
+            interval = 1;
         
-        int count = this.getCount();
+        int count = mCount;
         if (count <= 0 || count > MAXIMUM_INSTANCES_EXPANDED)
             count = MAXIMUM_INSTANCES_EXPANDED;
         
@@ -689,195 +716,7 @@ public class ZRecur {
         
         return toRet;
     }
-    
-    private int effectiveWeekStartDay() {
-        if (mWkSt != null) 
-            return mWkSt.getCalendarDay();
-        else
-            return Calendar.MONDAY;
-    }
-    
-    public static enum ZWeekDay { 
-        SU, MO, TU, WE, TH, FR, SA;
-        
-        public int getCalendarDay() {
-            switch (this) {
-            case SU:
-                return Calendar.SUNDAY;
-            case MO:
-                return Calendar.MONDAY;
-            case TU:
-                return Calendar.TUESDAY;
-            case WE:
-                return Calendar.WEDNESDAY;
-            case TH:
-                return Calendar.THURSDAY;
-            case FR:
-                return Calendar.FRIDAY;
-            }
-            return Calendar.SATURDAY;
-        }
-    }
-    
-    public static class ZWeekDayNum {
-        public static class DayOnlyComparator implements Comparator
-        {
-            public int compare(Object lhs, Object rhs)
-            {
-                ZWeekDayNum zlhs = (ZWeekDayNum)lhs;
-                ZWeekDayNum zrhs = (ZWeekDayNum)rhs;
-                
-                return zlhs.mDay.getCalendarDay() - zrhs.mDay.getCalendarDay();
-            }
-            
-        }
-        
-        public int mOrdinal; // -4,-3,-2,-1,+1,+2,+3,+4
-        public ZWeekDay mDay;
-        
-        public ZWeekDayNum(int ord, ZWeekDay day) { mOrdinal = ord; mDay = day; }
-        public ZWeekDayNum() {};
-        
-        public String toString() {
-            if (mOrdinal != 0) 
-                return Integer.toString(mOrdinal)+mDay;
-            else
-                return mDay.toString();
-        }
-    }
-    
-    public static String listAsStr(List l) {
-        StringBuffer toRet = new StringBuffer();
-        boolean first = true;
-        for (Object obj  : l) {
-            if (!first)
-                toRet.append(',');
-            else
-                first = false;
-            toRet.append(obj.toString());
-        }
-            
-        return toRet.toString();
-    }
-    
-    public Frequency getFrequency() {
-        return Frequency.valueOf(mRecur.getFrequency());
-    }
-
-    public int getInterval() { 
-        return mRecur.getInterval(); 
-    }
-    
-    public ParsedDateTime getUntil() { 
-        net.fortuna.ical4j.model.Date date = mRecur.getUntil();
-        if (date != null) 
-            return ParsedDateTime.fromUTCTime(date.getTime());
-        else
-            return null;
-    }
-
-    public int getCount() { 
-        return mRecur.getCount();
-    }
-    
-    public List<Integer> getBySecondList() { 
-        return (List<Integer>)(mRecur.getSecondList());
-    }
-    
-    public List<Integer> getByMinuteList() {
-        return (List<Integer>)(mRecur.getMinuteList());
-    }
-    
-    public List<Integer> getByHourList() { 
-        return (List<Integer>)(mRecur.getHourList());
-    }
-    
-    public List<ZWeekDayNum> getByDayList() {
-        List<ZWeekDayNum> toRet = new ArrayList<ZWeekDayNum>();
-        
-        WeekDayList wdl = mRecur.getDayList();
-        for (WeekDay wd : ((List<WeekDay>)wdl)) {
-            ZWeekDay zwd = ZWeekDay.valueOf(wd.getDay());
-            
-            toRet.add(new ZWeekDayNum(wd.getOffset(), zwd));
-        }
-        return toRet;
-    }
-    
-    public List<Integer> getByMonthDayList() {
-        return (List<Integer>)(mRecur.getMonthDayList());
-    }
-    
-    public List<Integer> getByYearDayList() { 
-        return (List<Integer>)(mRecur.getYearDayList());        
-    }
-    
-    public List<Integer> getByWeekNoList() { 
-        return (List<Integer>)(mRecur.getWeekNoList());        
-    }
-    
-    public List<Integer> getByMonthList() { 
-        return (List<Integer>)(mRecur.getMonthList());        
-    }
-    
-    public List<Integer> getBySetPosList() { 
-        return (List<Integer>)(mRecur.getSetPosList());        
-    }
-    
-    public ZWeekDay getWkSt() {
-        String wkSt = mRecur.getWeekStartDay();
-        if (wkSt != null) 
-            return ZWeekDay.valueOf(wkSt);
-        else
-            return null;
-    }
-    
-    public List<java.util.Date> expandRecurrenceOverRange(ParsedDateTime dtStart, long rangeStart, long rangeEnd) throws ServiceException {
-        if (true) {
-            net.fortuna.ical4j.model.DateTime dateStart = new net.fortuna.ical4j.model.DateTime(rangeStart);
-            net.fortuna.ical4j.model.DateTime dateEnd = new net.fortuna.ical4j.model.DateTime(rangeEnd);
-            
-            List dateList = mRecur.getDates(dtStart.iCal4jDate(), dateStart, dateEnd, Value.DATE_TIME);
-            
-            return dateList;
-        } else {
-            return testExpandRecurrence(dtStart, rangeStart, rangeEnd);
-        }
-    }
-
-    Recur getRecur() { return mRecur; }
-    
-    private Recur mRecur;
-    
-    private Frequency mFreq = Frequency.WEEKLY;
-    private ParsedDateTime mUntil = null;
-    private int mCount = 0;
-    private int mInterval = 0;
-    
-
-    /**
-     * For performance reasons,we stop expanding instances of a recurrence once
-     * this many instances have been returned.  This only counts instances actually
-     * returned, it does not count any instances in intermediate values, so
-     * a recurrence like:
-     */
-    private static final int MAXIMUM_INSTANCES_EXPANDED = 200;
-    
-    private List<Integer> mBySecondList = new ArrayList<Integer>();
-    private List<Integer> mByMinuteList = new ArrayList<Integer>();
-    private List<Integer> mByHourList = new ArrayList<Integer>();
-    private List<ZWeekDayNum> mByDayList = new ArrayList<ZWeekDayNum>();
-    private List<Integer> mByMonthDayList = new ArrayList<Integer>();
-    private List<Integer> mByYearDayList = new ArrayList<Integer>();
-    private List<Integer> mByWeekNoList = new ArrayList<Integer>();
-    private List<Integer> mByMonthList = new ArrayList<Integer>();
-    private List<Integer> mBySetPosList = new ArrayList<Integer>();
-    
-    
-    private ZWeekDay mWkSt = null;
-    
-    
-    String myString() {
+    public String toString() {
         StringBuffer toRet = new StringBuffer("FREQ=").append(mFreq);
         
         if (mUntil != null) 
@@ -907,10 +746,417 @@ public class ZRecur {
         
         return toRet.toString();
     }
+    /**
+     * This version is for HOURLY/DAILY frequencies: it does NOT check the ordinal at all,
+     * it only verifies that the day-of-the-week matches 
+     * 
+     * @param cal
+     * @return
+     */
+    private boolean checkDayList(GregorianCalendar cal)
+    {
+        assert(mFreq!=Frequency.MONTHLY && mFreq!=Frequency.YEARLY && mFreq!=Frequency.WEEKLY);
+        
+        if (mByDayList.size() > 0) {
+            for (ZWeekDayNum listCur: mByDayList) {
+                int curDayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
+                if (listCur.mDay.getCalendarDay() == curDayOfWeek)
+                    return true;
+                
+                // since the DayOfWeek list is in week-order, if we hit a HIGHER one,
+                // then we know out current one isn't in the list, and therefore
+                // we should go to this one we just found in the list
+                if (listCur.mDay.getCalendarDay() > curDayOfWeek) {
+                    cal.set(Calendar.DAY_OF_WEEK, listCur.mDay.getCalendarDay());
+                    return false;
+                }
+            }
+            
+            // we've not found a match AND we've not found a 
+            // higher value in our list -- so wrap
+            cal.set(Calendar.DAY_OF_WEEK, mByDayList.get(0).mDay.getCalendarDay());
+            cal.add(Calendar.WEEK_OF_YEAR, 1);
+            return false;
+        }
+        return true;
+    }
+    
+    /**
+     * @param cal
+     * @return
+     */
+    private boolean checkHourList(GregorianCalendar cal)
+    {
+        if (mByHourList.size() > 0) {
+            for (Integer cur: mByHourList) {
+                int curHour = cal.get(Calendar.HOUR_OF_DAY);
+                if (curHour == cur.intValue())
+                    return true;
+                
+                // since the month list is in order, if we hit a HIGHER month,
+                // then we know out current month isn't in the list, and therefore
+                // we should go to this next one
+                if (cur > curHour) {
+                    cal.set(Calendar.HOUR_OF_DAY, cur);
+                    return false; // must re-start checks
+                }
+            }
+            
+            // we've not found a match AND we've not found a 
+            // higher value in our list -- so wrap
+            cal.set(Calendar.HOUR, mByHourList.get(0));
+            cal.add(Calendar.DAY_OF_YEAR, 1);
+            return false; // must re-start checks
+        }
+        return true;
+    }
+    private boolean checkMonthDayList(GregorianCalendar cal)
+    {
+        if (mByMonthDayList.size() > 0) {
+            for (Integer cur: mByMonthDayList) {
+                int curMonthDay = cal.get(Calendar.DAY_OF_MONTH);
+                if (cur == curMonthDay)
+                    return true;
+                
+                // since the list is in order, if we hit a HIGHER one,
+                // then we know out current one isn't in the list, and therefore
+                // we should go to this one we just found in the list
+                if (cur > curMonthDay) {
+                    cal.set(Calendar.DAY_OF_MONTH, cur);
+                    return false;
+                }
+            }
+            
+            // we've not found a match AND we've not found a 
+            // higher value in our list -- so wrap
+            cal.set(Calendar.DAY_OF_MONTH, mByMonthDayList.get(0));
+            cal.add(Calendar.MONTH, 1);
+            return false;
+        }
+        return true;
+    }
+    private boolean checkMonthList(GregorianCalendar cal)
+    {
+        if (mByMonthList.size() > 0) {
+            for (Integer cur: mByMonthList) {
+                int curMonth = cal.get(Calendar.MONTH)+1;
+                if (cur == curMonth)
+                    return true;
+                
+                // since the month list is in order, if we hit a HIGHER month,
+                // then we know out current month isn't in the list, and therefore
+                // we should go to this next one
+                if (cur > curMonth) {
+                    cal.set(Calendar.MONTH, cur-1);
+                    return false; // must re-start checks
+                }
+            }
+            
+            // we've not found a match AND we've not found a 
+            // higher value in our list -- so wrap
+            cal.set(Calendar.MONTH, mByMonthList.get(0)-1);
+            cal.add(Calendar.YEAR, 1);
+            return false; // must re-start checks
+        }
+        return true;
+    }
+    private boolean checkYearDayList(GregorianCalendar cal)
+    {
+        if (mByYearDayList.size() > 0) {
+            for (Integer cur: mByYearDayList) {
+                int curYearDay = cal.get(Calendar.DAY_OF_YEAR);
+                if (cur == curYearDay)
+                    return true;
+                
+                // since the YearDay list is in order, if we hit a HIGHER one,
+                // then we know out current one isn't in the list, and therefore
+                // we should go to this one we just found in the list
+                if (cur > curYearDay) {
+                    cal.set(Calendar.DAY_OF_YEAR, cur);
+                    return false;
+                }
+            }
+            
+            // we've not found a match AND we've not found a 
+            // higher value in our list -- so wrap
+            cal.set(Calendar.DAY_OF_YEAR, mByYearDayList.get(0));
+            cal.add(Calendar.YEAR, 1);
+            return false;
+        }
+        return true;
+    }
+    private List<Calendar> expandDayListForMonthlyYearly(List<Calendar> list)
+    {
+        // this func ONLY works for expanding, NOT for contracting
+        assert(mFreq==Frequency.MONTHLY || mFreq==Frequency.YEARLY);
+        
+        if (mByDayList.size() <= 0)
+            return list;
+        
+        List<Calendar> toRet = new ArrayList<Calendar>();
+        Set<Integer> months = new HashSet<Integer>();
+        
+        
+        for (Calendar cur : list) {
+            int curYear = cur.get(Calendar.YEAR); 
+            int curMonth = cur.get(Calendar.MONTH);
+            if (!months.contains(curMonth)) {
+                months.add(curMonth);
+                
+                for (ZWeekDayNum day : mByDayList) {
+                    
+                    // find all the cals matching this day-of-week
+                    ArrayList<Integer> matching = new ArrayList<Integer>();
+                    
+                    cur.set(Calendar.DAY_OF_MONTH, 1);
+                    do {
+                        if (cur.get(Calendar.DAY_OF_WEEK) == day.mDay.getCalendarDay()) 
+                            matching.add(cur.get(Calendar.DAY_OF_MONTH));
+                        cur.add(Calendar.DAY_OF_MONTH, 1);
+                    } while(cur.get(Calendar.MONTH) == curMonth);
+                    
+                    cur.set(Calendar.MONTH, curMonth);
+                    cur.set(Calendar.YEAR, curYear);
+                    
+                    if (day.mOrdinal == 0) {
+                        for (Integer matchDay: matching) {
+                            cur.set(Calendar.DAY_OF_MONTH, matchDay);
+                            toRet.add((Calendar)(cur.clone()));
+                        }
+                    } else {
+                        if (day.mOrdinal > 0) {
+                            if (day.mOrdinal < matching.size()) {
+                                cur.set(Calendar.DAY_OF_MONTH, matching.get(day.mOrdinal-1));
+                                toRet.add((Calendar)(cur.clone()));
+                            }
+                        } else {
+                            if ((-1 * day.mOrdinal)<=(matching.size())) {
+                                cur.set(Calendar.DAY_OF_MONTH, matching.get(matching.size()+day.mOrdinal));
+                                toRet.add((Calendar)(cur.clone()));
+                            }
+                        }
+                    }
+                } // foreach mByDayList
+            } // month already seen?
+        }
+
+        
+        // we unfortunately have to sort here because, for example, the "-1FR" could happen before the "-1TH"
+        assert (toRet instanceof ArrayList);
+        Collections.sort(toRet);
+        
+        return toRet;
+    }
+    /**
+     * Very simple function b/c it can completely ignore the Ordinal value
+     * 
+     * @param list
+     * @return
+     */
+    private List<Calendar> expandDayListForWeekly(List<Calendar> list)
+    {
+        // this func ONLY works for expanding, NOT for contracting
+        assert(mFreq==Frequency.WEEKLY);
+        
+        if (mByDayList.size() <= 0)
+            return list;
+        
+        List<Calendar> toRet = new LinkedList<Calendar>();
+        
+        for (Calendar cur : list) { 
+            for (ZWeekDayNum day : mByDayList) {
+                cur.set(Calendar.DAY_OF_WEEK, day.mDay.getCalendarDay());
+                toRet.add((Calendar)(cur.clone()));
+            }
+        }
+        
+        return toRet;
+    }
+    private List<Calendar> expandHourList(List<Calendar> list)
+    {
+        // this func ONLY works for expanding, NOT for contracting
+        assert(mFreq==Frequency.DAILY || mFreq==Frequency.WEEKLY || mFreq==Frequency.MONTHLY || mFreq==Frequency.YEARLY);
+        
+        if (mByHourList.size() <= 0)
+            return list;
+        
+        List<Calendar> toRet = new LinkedList<Calendar>();
+        
+        for (Calendar cur : list) { 
+            for (Integer hour : mByHourList) {
+                cur.set(Calendar.HOUR_OF_DAY, hour);
+                toRet.add((Calendar)(cur.clone()));
+            }
+        }
+        
+        return toRet;
+    }
+    private List<Calendar> expandMinuteList(List<Calendar> list)
+    {
+        // this func ONLY works for expanding, NOT for contracting
+        assert(mFreq != Frequency.MINUTELY && mFreq != Frequency.SECONDLY);
+        
+        if (mByMinuteList.size() <= 0)
+            return list;
+        
+        List<Calendar> toRet = new LinkedList<Calendar>();
+        
+        for (Calendar cur : list) { 
+            for (Integer minute: mByMinuteList) {
+                cur.set(Calendar.MINUTE, minute);
+                toRet.add((Calendar)(cur.clone()));
+            }
+        }
+        
+        return toRet;
+    }
+    private List<Calendar> expandMonthDayList(List<Calendar> list)
+    {
+        // this func ONLY works for expanding, NOT for contracting
+        assert(mFreq==Frequency.MONTHLY || mFreq==Frequency.YEARLY);
+        
+        if (mByMonthDayList.size() <= 0)
+            return list;
+        
+        List<Calendar> toRet = new LinkedList<Calendar>();
+        
+        for (Calendar cur : list) { 
+            int curMonth = cur.get(Calendar.MONTH);
+            for (Integer moday: mByMonthDayList) {
+                if (moday != 0) {
+                    if (moday > 0) 
+                        cur.set(Calendar.DAY_OF_MONTH, moday);
+                    else {
+                        cur.set(Calendar.DAY_OF_MONTH, 1);
+                        cur.roll(Calendar.DAY_OF_MONTH, moday);
+                    }
+                    
+                    // unfortunately, cal.set seems to roll the month fwd if the
+                    // day is out of range (e.g. June 31) -- so check to see if that
+                    // happened, and if it did then we'll just skip this date
+                    if (cur.get(Calendar.MONTH) == curMonth)
+                        toRet.add((Calendar)(cur.clone()));
+                }
+            }
+        }
+        
+        return toRet;
+    }
+    
+    
+    private List<Calendar> expandMonthList(List<Calendar> list)
+    {
+        // this func ONLY works for expanding, NOT for contracting
+        assert(mFreq==Frequency.YEARLY);
+        
+        if (mByMonthList.size() <= 0)
+            return list;
+        
+        List<Calendar> toRet = new LinkedList<Calendar>();
+        
+        for (Calendar cur : list) { 
+            for (Integer month: mByMonthList) {
+                cur.set(Calendar.MONTH, month-1);
+                    
+                toRet.add((Calendar)(cur.clone()));
+            }
+        }
+        
+        return toRet;
+    }
+    
+    
+    private List<Calendar> expandSecondList(List<Calendar> list)
+    {
+        // this func ONLY works for expanding, NOT for contracting
+        assert(mFreq != Frequency.SECONDLY);
+        
+        if (mBySecondList.size() <= 0)
+            return list;
+        
+        List<Calendar> toRet = new LinkedList<Calendar>();
+        
+        for (Calendar cur : list) { 
+            for (Integer second: mBySecondList) {
+                cur.set(Calendar.SECOND, second);
+                toRet.add((Calendar)(cur.clone()));
+            }
+        }
+        
+        return toRet;
+    }
+    
+    private List<Calendar> expandYearDayList(List<Calendar> list)
+    {
+        // this func ONLY works for expanding, NOT for contracting
+        assert(mFreq==Frequency.YEARLY);
+        
+        if (mByYearDayList.size() <= 0)
+            return list;
+        
+        List<Calendar> toRet = new LinkedList<Calendar>();
+        Set<Integer> years = new HashSet<Integer>();
+        
+        
+        for (Calendar cur : list) {
+            int curYear = cur.get(Calendar.YEAR); 
+            if (!years.contains(curYear)) {
+                years.add(curYear);
+                
+                for (Integer yearDay : mByYearDayList) {
+                    
+                    if (yearDay > 0) 
+                        cur.set(Calendar.DAY_OF_YEAR, yearDay);
+                    else {
+                        cur.set(Calendar.DAY_OF_YEAR, 1);
+                        cur.roll(Calendar.DAY_OF_YEAR, yearDay);
+                    }
+                    
+                    toRet.add((Calendar)(cur.clone()));
+                }
+            } // year already seen?
+        }
+        
+        return toRet;
+    }
+    
+    private List<Calendar> handleSetPos(List<Calendar> list)
+    {
+        if (mBySetPosList.size() <= 0) 
+            return list;
+        
+        
+        Calendar[] array = new Calendar[list.size()];
+        array = list.toArray(array);
+        
+        LinkedList<Calendar> toRet = new LinkedList<Calendar>();
+        
+        ArrayList<Integer> idxsToInclude = new ArrayList<Integer>();
+            
+        for (Integer cur : mBySetPosList) {
+            int idx = cur;
+            if (idx>=-366 && idx <= 366 && idx!= 0) { 
+                if (idx> 0)
+                    idx--; // 1-indexed!
+                else
+                    idx = array.length + idx;
+                
+                if (idx>=0 && idx < array.length)
+                    if (!idxsToInclude.contains(idx))
+                        idxsToInclude.add(idx);
+            }
+        }
+        
+        Collections.sort(idxsToInclude);
+        
+        for (Integer idx : idxsToInclude) {
+            toRet.add(array[idx]);
+        }
+        
+        return toRet;
+    }
     
     private void parse(String str, TimeZoneMap tzmap) throws ServiceException {
-        boolean atFreq = false;
-        
         try {
             for (String tok : str.split(";")) {
                 String[] s = tok.split("=");
@@ -936,31 +1182,31 @@ public class ZRecur {
                         mInterval = Integer.parseInt(rhs);
                         break;
                     case BYSECOND:
-                        parseIntList(rhs, mBySecondList);
+                        parseIntList(rhs, mBySecondList, 0, 59);
                         break;
                     case BYMINUTE:
-                        parseIntList(rhs, mByMinuteList);
+                        parseIntList(rhs, mByMinuteList, 0, 59);
                         break;
                     case BYHOUR:
-                        parseIntList(rhs, mByHourList);
+                        parseIntList(rhs, mByHourList, 0, 23);
                         break;
                     case BYDAY:
                         parseByDayList(rhs, mByDayList);
                         break;
                     case BYMONTHDAY:
-                        parseIntList(rhs, mByMonthDayList);
+                        parseIntList(rhs, mByMonthDayList, -31, 31);
                         break;
                     case BYYEARDAY:
-                        parseIntList(rhs, mByYearDayList);
+                        parseIntList(rhs, mByYearDayList, -366, 366);
                         break;
                     case BYWEEKNO:
-                        parseIntList(rhs, mByWeekNoList);
+                        parseIntList(rhs, mByWeekNoList, -53, 53);
                         break;
                     case BYMONTH:
-                        parseIntList(rhs, mByMonthList);
+                        parseIntList(rhs, mByMonthList, 1, 12);
                         break;
                     case BYSETPOS:
-                        parseIntList(rhs, mBySetPosList);
+                        parseIntList(rhs, mBySetPosList, Integer.MIN_VALUE, Integer.MAX_VALUE);
                         break;
                     case WKST:
                         mWkSt = ZWeekDay.valueOf(rhs);
@@ -975,16 +1221,6 @@ public class ZRecur {
         }
     }
     
-    private void parseIntList(String str, List<Integer> list) {
-        for (String s : str.split(","))
-            try {
-                list.add(new Integer(s));
-            } catch (Exception e) {
-                System.out.println(new Formatter().format("Skipping unparsable Recur int list entry: \"%s\" in parameter list: \"%s\"", s, str));
-            }
-        
-        Collections.sort(list);
-    }
     
     private void parseByDayList(String str, List<ZWeekDayNum> list) {
         for (String s : str.split(",")) {
@@ -1007,230 +1243,18 @@ public class ZRecur {
     }
     
     
-    private static enum Tokens {
-        FREQ, UNTIL, COUNT, INTERVAL, BYSECOND, BYMINUTE, BYHOUR, BYDAY, 
-        BYMONTHDAY, BYYEARDAY, BYWEEKNO, BYMONTH, BYSETPOS, WKST;
-    }
-    
-    
-    public static void main(String[] args) {
-        ParsedDateTime dtStart = null;
-        try {
-            dtStart = ParsedDateTime.parse("20050101T123456", ICalTimeZone.getUTC());
-        } catch(ParseException e) {
-            System.out.println("Caught ParseException at start: "+e);
-        }
-
-        Date rangeStart;
-        Date rangeEnd;
-        
-        GregorianCalendar cal = new GregorianCalendar();
-        cal.setTimeZone(ICalTimeZone.getUTC());
-        
-        cal.set(2005, 4, 15, 0, 0, 0);
-        rangeStart = cal.getTime();
-
-        cal.set(2006, 0, 1, 0, 0, 0);
-        rangeEnd = cal.getTime();
-
-        try {
-            ZRecur test = new ZRecur("FREQ=DAILY;BYMONTH=5,6");
-            System.out.println("\n\n"+test.toString()+"\n-------------------------------------------------");
-            List<Date> dateList = test.testExpandRecurrence(dtStart, rangeStart.getTime(), rangeEnd.getTime());
-            for (Date d : dateList) {
-                cal.setTime(d);
-                cal.setTimeZone(ICalTimeZone.getUTC());
-                System.out.printf("%tc\n", cal);
+    private void parseIntList(String str, List<Integer> list, int min, int max) {
+        for (String s : str.split(","))
+            try {
+                int readInt = Integer.parseInt(s);
+                if (readInt >= min && readInt <= max) {
+                    list.add(readInt);
+                }
+            } catch (Exception e) {
+                System.out.println(new Formatter().format("Skipping unparsable Recur int list entry: \"%s\" in parameter list: \"%s\"", s, str));
             }
-        } catch (ServiceException e) {
-            System.out.println("Caught ServiceException"+e);
-            e.printStackTrace();
-        }
         
-        try {
-            ZRecur test = new ZRecur("FREQ=DAILY;BYMONTH=5,6;BYDAY=TH,-1MO");
-            System.out.println("\n\n"+test.toString()+"\n-------------------------------------------------");
-            List<Date> dateList = test.testExpandRecurrence(dtStart, rangeStart.getTime(), rangeEnd.getTime());
-            for (Date d : dateList) {
-                cal.setTime(d);
-                cal.setTimeZone(ICalTimeZone.getUTC());
-                System.out.printf("%tc\n", cal);
-            }
-        } catch (ServiceException e) {
-            System.out.println("Caught ServiceException"+e);
-            e.printStackTrace();
-        }
-        
-        try {
-            ZRecur test = new ZRecur("FREQ=DAILY;BYMONTH=5,6;BYMONTHDAY=1,3,5,7,9,31");
-            System.out.println("\n\n"+test.toString()+"\n-------------------------------------------------");
-            List<Date> dateList = test.testExpandRecurrence(dtStart, rangeStart.getTime(), rangeEnd.getTime());
-            for (Date d : dateList) {
-                cal.setTime(d);
-                System.out.printf("%tc\n", cal);
-            }
-        } catch (ServiceException e) {
-            System.out.println("Caught ServiceException"+e);
-            e.printStackTrace();
-        }
-        
-        try {
-            ZRecur test = new ZRecur("FREQ=DAILY;BYMONTH=5,6;BYMONTHDAY=1,3,5,7,9,31;BYDAY=SU,SA");
-            System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
-            List<Date> dateList = test.testExpandRecurrence(dtStart, rangeStart.getTime(), rangeEnd.getTime());
-            for (Date d : dateList) {
-                cal.setTime(d);
-                System.out.printf("%tc\n", cal);
-            }
-        } catch (ServiceException e) {
-            System.out.println("Caught ServiceException"+e);
-            e.printStackTrace();
-        }
-
-        
-        try {
-            ZRecur test = new ZRecur("FREQ=DAILY;BYMONTH=5,6;BYMONTHDAY=1,3,5,7,9,31;BYDAY=SU,SA;BYHOUR=21,0");
-            System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
-            List<Date> dateList = test.testExpandRecurrence(dtStart, rangeStart.getTime(), rangeEnd.getTime());
-            for (Date d : dateList) {
-                cal.setTime(d);
-                System.out.printf("%tc\n", cal);
-            }
-        } catch (ServiceException e) {
-            System.out.println("Caught ServiceException"+e);
-            e.printStackTrace();
-        }
-
-        try {
-            ZRecur test = new ZRecur("FREQ=DAILY;BYMONTH=5,6;BYMONTHDAY=1,3,5,7,9,31;BYDAY=SU;BYHOUR=21,0;BYMINUTE=23");
-            System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
-            List<Date> dateList = test.testExpandRecurrence(dtStart, rangeStart.getTime(), rangeEnd.getTime());
-            for (Date d : dateList) {
-                cal.setTime(d);
-                System.out.printf("%tc\n", cal);
-            }
-        } catch (ServiceException e) {
-            System.out.println("Caught ServiceException"+e);
-            e.printStackTrace();
-        }
-
-        try {
-            ZRecur test = new ZRecur("FREQ=DAILY;BYMONTH=5,6;BYMONTHDAY=1,3,5,7,9,31;BYDAY=SU;BYHOUR=1,21,0;BYSECOND=0,59");
-            System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
-            List<Date> dateList = test.testExpandRecurrence(dtStart, rangeStart.getTime(), rangeEnd.getTime());
-            for (Date d : dateList) {
-                cal.setTime(d);
-                System.out.printf("%tc\n", cal);
-            }
-        } catch (ServiceException e) {
-            System.out.println("Caught ServiceException"+e);
-            e.printStackTrace();
-        }
-
-        try {
-            // parse error testing
-            ZRecur test = new ZRecur("FREQ=DAILY;BIYMONTH=5,6;BYMONTHDAY=1,3,5,7,9,31;BYDAY=SU;BYHOUR=1,21,0;BYSECOND=0,59;BYSETPOS=1,-1,3,1000,,-1000");
-            System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
-            List<Date> dateList = test.testExpandRecurrence(dtStart, rangeStart.getTime(), rangeEnd.getTime());
-            for (Date d : dateList) {
-                cal.setTime(d);
-                System.out.printf("%tc\n", cal);
-            }
-        } catch (ServiceException e) {
-            System.out.println("Caught ServiceException"+e);
-            e.printStackTrace();
-        }
-        
-        try {
-            ZRecur test = new ZRecur("FREQ=HOURLY;BIYMONTH=6;BYMONTHDAY=1,3;BYHOUR=2,14");
-            System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
-            List<Date> dateList = test.testExpandRecurrence(dtStart, rangeStart.getTime(), rangeEnd.getTime());
-            for (Date d : dateList) {
-                cal.setTime(d);
-                System.out.printf("%tc\n", cal);
-            }
-        } catch (ServiceException e) {
-            System.out.println("Caught ServiceException"+e);
-            e.printStackTrace();
-        }
-        
-        try {
-            ZRecur test = new ZRecur("FREQ=HOURLY;BIYMONTH=6;BYMONTHDAY=1;;BYMINUTE=10;BYSECOND=11,12");
-            System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
-            List<Date> dateList = test.testExpandRecurrence(dtStart, rangeStart.getTime(), rangeEnd.getTime());
-            for (Date d : dateList) {
-                cal.setTime(d);
-                System.out.printf("%tc\n", cal);
-            }
-        } catch (ServiceException e) {
-            System.out.println("Caught ServiceException"+e);
-            e.printStackTrace();
-        }
-        
-        
-
-        cal.set(2010, 0, 1, 0, 0, 0);
-        rangeEnd = cal.getTime();
-        
-        try {
-            ZRecur test = new ZRecur("FREQ=YEARLY");
-            System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
-            List<Date> dateList = test.testExpandRecurrence(dtStart, rangeStart.getTime(), rangeEnd.getTime());
-            for (Date d : dateList) {
-                cal.setTime(d);
-                System.out.printf("%tc\n", cal);
-            }
-        } catch (ServiceException e) {
-            System.out.println("Caught ServiceException"+e);
-            e.printStackTrace();
-        }
-
-
-        try {
-            ZRecur test = new ZRecur("FREQ=YEARLY;BYYEARDAY=-1");
-            System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
-            List<Date> dateList = test.testExpandRecurrence(dtStart, rangeStart.getTime(), rangeEnd.getTime());
-            for (Date d : dateList) {
-                cal.setTime(d);
-                System.out.printf("%tc\n", cal);
-            }
-        } catch (ServiceException e) {
-            System.out.println("Caught ServiceException"+e);
-            e.printStackTrace();
-        }
-                
-        try {
-            ZRecur test = new ZRecur("FREQ=SECONDLY");
-            System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
-            List<Date> dateList = test.testExpandRecurrence(dtStart, rangeStart.getTime(), rangeEnd.getTime());
-            for (Date d : dateList) {
-                cal.setTime(d);
-                System.out.printf("%tc\n", cal);
-            }
-        } catch (ServiceException e) {
-            System.out.println("Caught ServiceException"+e);
-            e.printStackTrace();
-        }
-        
-        try {
-            ParsedDateTime myDtStart = ParsedDateTime.parse("16010101T020000", ICalTimeZone.getUTC());
-                        
-            ZRecur test = new ZRecur("FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=10;BYDAY=-1SU");
-            System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
-            List<Date> dateList = test.testExpandRecurrence(myDtStart, rangeStart.getTime(), rangeEnd.getTime());
-            for (Date d : dateList) {
-                cal.setTime(d);
-                System.out.printf("%tc\n", cal);
-            }
-        } catch (ParseException e) {
-            System.out.println("Caught ParseException"+e);
-            e.printStackTrace();
-        } catch (ServiceException e) {
-            System.out.println("Caught ServiceException"+e);
-            e.printStackTrace();
-        }
-        
-        
+        Collections.sort(list);
     }
     
 }

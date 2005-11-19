@@ -589,7 +589,7 @@ public class CalendarUtils {
                     }  // iterate inside <rule>
 
                     try { 
-                        ZRecur recur = new ZRecur(recurBuf.toString());
+                        ZRecur recur = new ZRecur(recurBuf.toString(), invTzMap);
                         if (exclude) {
                             subRules.add(new Recurrence.SimpleRepeatingRule(inv.getStartTime(), dur, recur, null));
                         } else {
