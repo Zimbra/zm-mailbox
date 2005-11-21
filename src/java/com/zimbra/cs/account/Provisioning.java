@@ -846,6 +846,8 @@ public abstract class Provisioning {
     public abstract Account getAccountById(String zimbraId) throws ServiceException;
 
     public abstract Account getAccountByName(String emailAddress) throws ServiceException;
+    
+    public abstract Account getAccountByForeignPrincipal(String principal) throws ServiceException;
 
     /** return accounts from search accounts */
     public static final int SA_ACCOUNT_FLAG = 0x1;

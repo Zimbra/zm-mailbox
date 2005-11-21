@@ -77,18 +77,7 @@ public class GetAccount extends AdminDocumentHandler {
         } else if (key.equals(BY_ADMIN_NAME)) {
             account = prov.getAdminAccountByName(value);
         } else if (key.equals(BY_FOREIGN_PRINCIPAL)) {
-            String query = "(" + Provisioning.A_zimbraForeignPrincipal +"=" + LdapUtil.escapeSearchFilterArg(value) + ")";
-            List accounts = prov.searchAccounts(query, null, null, true, Provisioning.SA_ACCOUNT_FLAG);
-            if (accounts != null && accounts.size() > 0) {
-                Element response = lc.createElement(AdminService.GET_ACCOUNT_RESPONSE);
-                for (Iterator it= accounts.iterator(); it.hasNext(); ) {
-                    Object obj = it.next();
-                    if (obj instanceof Account) {
-                        doAccount(response, (Account)obj, applyCos);
-                    }
-                }
-                return response;
-            }
+            account = prov.getAccountByForeignPrincipal(value);
         } else {
             throw ServiceException.INVALID_REQUEST("unknown value for by: "+key, null);
         }

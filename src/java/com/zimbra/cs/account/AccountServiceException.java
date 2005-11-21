@@ -46,6 +46,7 @@ public class AccountServiceException extends ServiceException {
     public static final String INVALID_PASSWORD   = "account.INVALID_PASSWORD";
     public static final String INVALID_ATTR_NAME  = "account.INVALID_ATTR_NAME";
     public static final String INVALID_ATTR_VALUE = "account.INVALID_ATTR_VALUE";
+    public static final String MULTIPLE_ACCOUNTS_MATCHED  = "account.MULTIPLE_ACCOUNTS_MATCHED";    
     public static final String NO_SUCH_ACCOUNT    = "account.NO_SUCH_ACCOUNT";
     public static final String NO_SUCH_ALIAS      = "account.NO_SUCH_ALIAS";
     public static final String NO_SUCH_GROUP      = "account.NO_SUCH_GROUP";
@@ -86,7 +87,11 @@ public class AccountServiceException extends ServiceException {
     public static AccountServiceException PASSWORD_LOCKED() {
         return new AccountServiceException("password is locked and can't be changed", PASSWORD_LOCKED, SENDERS_FAULT, null);
     }
-    
+
+    public static AccountServiceException MULTIPLE_ACCOUNTS_MATCHED(String desc) {
+        return new AccountServiceException("lookup returned multiple accounts: "+desc, MULTIPLE_ACCOUNTS_MATCHED, SENDERS_FAULT, null);
+    }
+
     public static AccountServiceException PASSWORD_CHANGE_TOO_SOON() {
         return new AccountServiceException("password can't be chnaged yet", PASSWORD_CHANGE_TOO_SOON, SENDERS_FAULT, null);
     }

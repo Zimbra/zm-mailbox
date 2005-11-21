@@ -44,6 +44,10 @@ import com.zimbra.soap.ZimbraContext;
  */
 public class Auth extends DocumentHandler  {
 
+    public static final String BY_NAME = "name";
+    public static final String BY_ID = "id";
+    public static final String BY_FOREIGN_PRINCIPAL = "foreignPrincipal";
+    
     /** Returns (or creates) the in-memory {@link Session} object appropriate
      *  for this request.<p>
      * 
@@ -59,20 +63,33 @@ public class Auth extends DocumentHandler  {
 	public Element handle(Element request, Map context) throws ServiceException {
         ZimbraContext lc = getZimbraContext(context);
 
-		String name = request.getAttribute(AccountService.E_ACCOUNT);
+
 		String password = request.getAttribute(AccountService.E_PASSWORD);
+        Element acctEl = request.getElement(AccountService.E_ACCOUNT);
+        String value = acctEl.getText();
+        String by = acctEl.getAttribute(AccountService.A_BY, BY_NAME);
         Provisioning prov = Provisioning.getInstance();
-		Account acct = prov.getAccountByName(name);
+        
+        Account acct = null;
+        
+        if (by.equals(BY_NAME)) {
+            acct = prov.getAccountByName(value);            
+        } else if (by.equals(BY_ID)) {
+            acct = prov.getAccountById(value);
+        } else if (by.equals(BY_FOREIGN_PRINCIPAL)) {
+            acct = prov.getAccountByForeignPrincipal(value);
+        }
+
 		if (acct == null)
-			throw AccountServiceException.AUTH_FAILED(name);
+			throw AccountServiceException.AUTH_FAILED(value);
 
 		try {
 		    prov.authAccount(acct, password);
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                    new String[] {"cmd", "Auth","account", name}));
+                    new String[] {"cmd", "Auth","account", acct.getName()}));
         } catch (ServiceException se) {
             ZimbraLog.security.warn(ZimbraLog.encodeAttrs(
-                    new String[] {"cmd", "Auth","account", name, "error", se.getMessage()}));             
+                    new String[] {"cmd", "Auth","account", acct.getName(), "error", se.getMessage()}));             
             throw se;
         }
 

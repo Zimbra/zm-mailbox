@@ -283,6 +283,8 @@ public class LdapProvisioning extends Provisioning {
             NamingEnumeration ne = ctxt.search(base, query, sSubtreeSC);
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
+                if (ne.hasMore())
+                    throw AccountServiceException.MULTIPLE_ACCOUNTS_MATCHED("getAccountByQuery: "+query);
                 ne.close();
                 return new LdapAccount(sr.getNameInNamespace(), sr.getAttributes(), this);
             }
@@ -305,7 +307,7 @@ public class LdapProvisioning extends Provisioning {
         LdapAccount a = (LdapAccount) sAccountCache.getById(zimbraId);
         if (a == null) {
             zimbraId= LdapUtil.escapeSearchFilterArg(zimbraId);
-       		a = getAccountByQuery("","(&(zimbraId="+zimbraId+")(objectclass=zimbraAccount))", ctxt);
+            a = getAccountByQuery("","(&(zimbraId="+zimbraId+")(objectclass=zimbraAccount))", ctxt);
             sAccountCache.put(a);
         }
         return a;
@@ -313,6 +315,11 @@ public class LdapProvisioning extends Provisioning {
     
     public Account getAccountById(String zimbraId) throws ServiceException {
         return getAccountById(zimbraId, null);
+    }
+
+    public Account getAccountByForeignPrincipal(String foreignPrincipal) throws ServiceException {
+        foreignPrincipal = LdapUtil.escapeSearchFilterArg(foreignPrincipal);
+        return getAccountByQuery("","(&(zimbraForeignPrincipal="+foreignPrincipal+")(objectclass=zimbraAccount))", null);
     }
 
     public Account getAdminAccountByName(String name) throws ServiceException {

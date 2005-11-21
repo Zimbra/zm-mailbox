@@ -259,9 +259,10 @@ global soap/system errors used with zimbra:Error/Code:
    account.INVALID_PASSWORD     - new password does not meet the system's rules (length, content, etc.)
    account.INVALID_PREF_NAME    - the specified preference name is invalid
    account.INVALID_PREF_VALUE   - the specified preference value is invalid
+   account.MULTIPLE_ACCOUNTS_MATCHED - when auth by foreignPrincipal matches multiple accounts with the same foreignPrincipal
    
  <AuthRequest xmlns="urn:zimbraAccount">
-   <account by="name">...</account>
+   <account by="name|id|foreignPrincipal">...</account>
    <password>...</password>
   [<prefs>[<pref name="..."/>...]</prefs>]
  </AuthRequest>
