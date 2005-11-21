@@ -86,7 +86,7 @@ public class DebugConfig {
         disableConversation = booleanValue("debug_disable_conversation", false);
         disableFilter = booleanValue("debug_disable_filter", false);
         disableMessageAnalysis = booleanValue("debug_disable_message_analysis", false);
-        if (disableMimePartExtraction) {
+        if (disableMessageAnalysis) {
             disableMimePartExtraction = true;
             disableIndexing = true;
             disableObjects = true;
