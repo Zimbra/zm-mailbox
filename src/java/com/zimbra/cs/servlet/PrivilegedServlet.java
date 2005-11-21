@@ -50,7 +50,7 @@ public class PrivilegedServlet extends HttpServlet {
         try {
             ctxt = LdapUtil.getDirContext();
         } catch (ServiceException e) {
-            throw new RuntimeException("Error communicating with LDAP", e);
+            Util.halt("Error communicating with LDAP", e);
         } finally {
             LdapUtil.closeContext(ctxt);
         }
