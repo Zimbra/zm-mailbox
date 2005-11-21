@@ -106,7 +106,7 @@ public class PrivilegedServlet extends HttpServlet {
                 String user = LC.zimbra_user.value();
                 int uid = LC.zimbra_uid.intValue();
                 int gid = LC.zimbra_gid.intValue();
-                System.err.println("Zimbra server process is running as root, changing to user=" + user + " uid=" + uid + " gid" + gid);
+                System.err.println("Zimbra server process is running as root, changing to user=" + user + " uid=" + uid + " gid=" + gid);
                 Process.setPrivileges(user, uid, gid);
                 System.err.println("Zimbra server process, after change, is running with uid=" + Process.getuid() + " euid=" + Process.geteuid() + " gid=" + Process.getgid() + " egid=" + Process.getegid());
             } else {
