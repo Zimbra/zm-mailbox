@@ -83,7 +83,7 @@ public class Util {
      */
     public static void halt(String message) {
         try {
-            System.err.println(message);
+            System.err.println("Fatal error: terminating: " + message);
         } finally {
             Runtime.getRuntime().halt(1);
         }
@@ -105,7 +105,7 @@ public class Util {
             PrintWriter pw = new PrintWriter(sw);
             pw.println(message);
             t.printStackTrace(pw);
-            System.err.println(sw.toString());
+            System.err.println("Fatal error: terminating: " + sw.toString());
         } finally {
             Runtime.getRuntime().halt(1);
         }
