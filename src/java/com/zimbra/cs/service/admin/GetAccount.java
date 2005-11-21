@@ -29,7 +29,6 @@
 package com.zimbra.cs.service.admin;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -37,7 +36,6 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
