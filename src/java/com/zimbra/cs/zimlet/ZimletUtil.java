@@ -626,6 +626,32 @@ public class ZimletUtil {
 		installConfig(new ZimletConfig(new File(config)));
 	}
 	
+	public static void listPriority() {
+		Provisioning prov = Provisioning.getInstance();
+		try {
+			System.out.println("Pri\tZimlet");
+			Iterator iter = prov.listAllZimlets().iterator();
+			while (iter.hasNext()) {
+				Zimlet z = (Zimlet) iter.next();
+				if (z.getPriority() >= 0) {
+					System.out.println(z.getPriority() + "\t" + z.getName());
+				}
+			}
+		} catch (ServiceException se) {
+			ZimbraLog.zimlet.info("error reading zimlets : "+se.getMessage());
+		}
+	}
+	
+	public static void setPriority(String zimlet, int priority) {
+		Provisioning prov = Provisioning.getInstance();
+		try {
+			Zimlet z = prov.getZimlet(zimlet);
+			z.setPriority(priority);
+		} catch (ServiceException se) {
+			ZimbraLog.zimlet.info("error setting zimlet priority : "+se.getMessage());
+		}
+	}
+	
 	private static void test() {
 		String ZIMLET_URL = "^/service/zimlet/([^/\\?]+)[/\\?]?.*$";
 		String t1 = "/service/zimlet/po";
@@ -653,6 +679,8 @@ public class ZimletUtil {
 	private static final int DEPLOY_ZIMLET = 18;
 	private static final int ENABLE_ZIMLET = 19;
 	private static final int DISABLE_ZIMLET = 20;
+	private static final int LIST_PRIORITY = 21;
+	private static final int SET_PRIORITY = 22;
 	private static final int TEST = 99;
 	
 	private static final String INSTALL_CMD = "install";
@@ -666,6 +694,8 @@ public class ZimletUtil {
 	private static final String DEPLOY_CMD = "deploy";
 	private static final String ENABLE_CMD = "enable";
 	private static final String DISABLE_CMD = "disable";
+	private static final String LIST_PRIORITY_CMD = "listpriority";
+	private static final String SET_PRIORITY_CMD = "setpriority";
 	private static final String TEST_CMD = "test";
 	
 	private static Map mCommands;
@@ -687,6 +717,8 @@ public class ZimletUtil {
 		addCommand(DEPLOY_CMD, DEPLOY_ZIMLET);
 		addCommand(ENABLE_CMD, ENABLE_ZIMLET);
 		addCommand(DISABLE_CMD, DISABLE_ZIMLET);
+		addCommand(LIST_PRIORITY_CMD, LIST_PRIORITY);
+		addCommand(SET_PRIORITY_CMD, SET_PRIORITY);
 		addCommand(TEST_CMD, TEST);
 	}
 	
@@ -703,6 +735,8 @@ public class ZimletUtil {
 		System.out.println("\tlistZimlets - show status of all the Zimlets in the system.");
 		System.out.println("\tdumpConfigTemplate {zimlet.zip} - dumps the configuration");
 		System.out.println("\tconfigure {zimlet} {config.xml} - installs the configuration");
+		System.out.println("\tlistPriority - show the current Zimlet priorities (0 high, 9 low)");
+		System.out.println("\tsetPriority {zimlet} {priority} - set Zimlet priority");
 		System.exit(1);
 	}
 	
@@ -721,12 +755,15 @@ public class ZimletUtil {
 			case LIST_ZIMLETS:
 				listAllZimlets();
 				System.exit(0);
+			case LIST_PRIORITY:
+				listPriority();
+				System.exit(0);
 			case TEST:
 				test();
 				System.exit(0);
 			}
 
-			if (args.length < argPos) {
+			if (args.length < argPos+1) {
 				usage();
 			}
 			String zimlet = args[argPos++];
@@ -744,10 +781,16 @@ public class ZimletUtil {
 				ldapDeploy(zimlet);
 				break;
 			case ACL_ZIMLET:
-				if (args.length < (argPos+1) || args.length % 2 != 0) {
+				if (args.length < (argPos+2) || args.length % 2 != 0) {
 					usage();
 				}
 				aclZimlet(zimlet, args);
+				break;
+			case SET_PRIORITY:
+				if (args.length < (argPos+1)) {
+					usage();
+				}
+				setPriority(zimlet, Integer.parseInt(args[argPos]));
 				break;
 			case LIST_ACLS:
 				listAcls(zimlet);

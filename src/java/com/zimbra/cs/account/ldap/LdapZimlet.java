@@ -95,4 +95,14 @@ public class LdapZimlet extends LdapNamedEntry implements Zimlet, ObjectType {
     	attr.put(Provisioning.A_zimbraZimletEnabled, val);
    		modifyAttrs(attr);
     }
+    
+    public int getPriority() {
+    	return getIntAttr(Provisioning.A_zimbraZimletPriority, -1);
+    }
+    
+    public void setPriority(int priority) throws ServiceException {
+    	Map attr = new HashMap();
+    	attr.put(Provisioning.A_zimbraZimletPriority, Integer.toString(priority));
+    	modifyAttrs(attr);
+    }
 }
