@@ -103,17 +103,19 @@ public class ZimletFile extends File {
 	
 	private String mDevPrefix;
 	
-	public ZimletFile(String zimlet) throws IOException {
+	private String mZimletName;
+	
+	public ZimletFile(String zimlet) throws IOException, ZimletException {
 		super(findZimlet(zimlet));
 		initialize();
 	}
 
-	public ZimletFile(File parent, String zimlet) throws IOException {
+	public ZimletFile(File parent, String zimlet) throws IOException, ZimletException {
 		super(parent, zimlet);
 		initialize();
 	}
 	
-	private void initialize() throws IOException {
+	private void initialize() throws IOException, ZimletException {
 		String name = getName().toLowerCase();
 		int index = name.lastIndexOf(File.separatorChar);
 		if (index > 0) {
@@ -145,6 +147,8 @@ public class ZimletFile extends File {
 		if (!mDevPrefix.equals(ZimletUtil.ZIMLET_DEV_DIR)) {
 			mDevPrefix = null;
 		}
+		initZimletDescription();
+		mZimletName = mDesc.getName();
 	}
 	
 	private void initZimletDescription() throws IOException, ZimletException {
@@ -219,6 +223,10 @@ public class ZimletFile extends File {
 
 	public Map getAllEntries() {
 		return mEntries;
+	}
+	
+	public String getZimletName() {
+		return mZimletName;
 	}
 	
 	private static String findZimlet(String zimlet) throws FileNotFoundException {

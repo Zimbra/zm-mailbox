@@ -67,6 +67,13 @@ public class ZimletUtil {
 	private static Map sDevZimlets = new HashMap();
 	private static Map sZimletHandlers = new HashMap();
 
+	/**
+	 * Loads all the Zimlets, locates the server side ZimletHandler for each Zimlets,
+	 * loads the class and instantiate the object, then returns the instance.
+	 * 
+	 * @param name of the Zimlet
+	 * @return ZimletHandler object
+	 */
 	public static ZimletHandler getHandler(String name) {
 		loadZimlets();
 		Class zh = (Class) sZimletHandlers.get(name);
@@ -97,6 +104,11 @@ public class ZimletUtil {
 		return null;
 	}
 	
+	/**
+	 * 
+	 * Load all the installed Zimlets.
+	 *
+	 */
 	public synchronized static void loadZimlets() {
 		if (!sZimletsLoaded) {
 			loadZimletsFromDir(sZimlets, LC.zimlet_directory.value());
@@ -104,10 +116,22 @@ public class ZimletUtil {
 		}
 	}
 
+	/**
+	 * 
+	 * Load all the Zimlets in the dev test directory.
+	 *
+	 */
 	public synchronized static void loadDevZimlets() {
 		loadZimletsFromDir(sDevZimlets, LC.zimlet_directory.value() + File.separator + ZIMLET_DEV_DIR);
 	}
 
+	/**
+	 * 
+	 * Throw away the cached Zimlet, and reloads from the file system.
+	 * 
+	 * @param zimlet
+	 * @throws ZimletException
+	 */
 	public static void reloadZimlet(String zimlet) throws ZimletException {
 		ZimletFile zf;
 		try {
@@ -121,6 +145,13 @@ public class ZimletUtil {
 		}
 	}
 	
+	/**
+	 * 
+	 * Load all the Zimlets found in the directory.
+	 * 
+	 * @param zimlets - Zimlet cache
+	 * @param dir - directory
+	 */
 	private static void loadZimletsFromDir(Map zimlets, String dir) {
         File zimletRootDir = new File(dir);
 		if (zimletRootDir == null || !zimletRootDir.exists() || !zimletRootDir.isDirectory()) {
@@ -138,11 +169,20 @@ public class ZimletUtil {
         			zimlets.put(zimletNames[i], new ZimletFile(zimletRootDir, zimletNames[i]));
         		} catch (IOException ioe) {
         			ZimbraLog.zimlet.info("error loading zimlet "+zimletNames[i]+": "+ioe.getMessage());
+        		} catch (ZimletException ze) {
+        			ZimbraLog.zimlet.info("error loading zimlet "+zimletNames[i]+": "+ze.getMessage());
         		}
         	}
         }
 	}
 	
+	/**
+	 * 
+	 * List the Zimlet description as XML or JSON Element.
+	 * 
+	 * @param elem - Parent Element node
+	 * @param zimlet
+	 */
 	public static void listZimlet(Element elem, String zimlet) {
 		loadZimlets();
 		ZimletFile zim = (ZimletFile) sZimlets.get(zimlet);
@@ -163,6 +203,12 @@ public class ZimletUtil {
 		}
 	}
 	
+	/**
+	 * 
+	 * List the description of all the dev test Zimlets as Element.
+	 * 
+	 * @param elem - Parent element node
+	 */
 	public static void listDevZimlets(Element elem) {
 		try {
 			loadDevZimlets();
@@ -197,8 +243,29 @@ public class ZimletUtil {
 		return attrs;
 	}
 	
-	public static void deployZimlet(String zimletRoot, String zimlet) throws IOException, ZimletException {
-		String zimletName = installZimlet(zimletRoot, zimlet);
+	private static String getZimletDir() {
+		return LC.zimlet_directory.value();
+	}
+
+	/**
+	 * 
+	 * Deploys the specified Zimlets.  The following actions are taken.
+	 * 1.  Install the Zimlet files on the machine.
+	 * 2.  Check the LDAP for the Zimlet entry.  If the entry already exists, stop.
+	 * 3.  Install the LDAP entry for the Zimlet.
+	 * 4.  Install Zimlet config.
+	 * 5.  Activate the zimlet on default COS.
+	 * 6.  Enable the Zimlet.
+	 * 
+	 * @param zimletRoot
+	 * @param zimlet
+	 * @throws IOException
+	 * @throws ZimletException
+	 */
+	public static void deployZimlet(String zimlet) throws IOException, ZimletException {
+		String zimletRoot = getZimletDir();
+		ZimletFile zf = installZimlet(zimlet);
+		String zimletName = zf.getZimletName();
 		Provisioning prov = Provisioning.getInstance();
 		try {
 			Zimlet z = prov.getZimlet(zimletName);
@@ -207,14 +274,28 @@ public class ZimletUtil {
 				return;
 			}
 		} catch (Exception e) {
-			ldapDeploy(zimletRoot, zimletName);
+			ldapDeploy(zimletName);
+		}
+		if (zf.hasZimletConfig()) {
+			installConfig(zf.getZimletConfig());
 		}
 		activateZimlet(zimletName, ZIMLET_DEFAULT_COS);
 		enableZimlet(zimletName);
 	}
 	
-	public static String installZimlet(String zimletRoot, String zimlet) throws IOException, ZimletException {
+	/**
+	 * 
+	 * Install the Zimlet files on this machine.
+	 * 
+	 * @param zimletRoot
+	 * @param zimlet
+	 * @return
+	 * @throws IOException
+	 * @throws ZimletException
+	 */
+	public static ZimletFile installZimlet(String zimlet) throws IOException, ZimletException {
 		ZimbraLog.zimlet.info("Installing Zimlet " + zimlet + " on this host.");
+		String zimletRoot = getZimletDir();
 		ZimletFile zf = new ZimletFile(zimlet);
 		ZimletDescription zd = zf.getZimletDescription();
 		String zimletName = zd.getName();
@@ -238,20 +319,25 @@ public class ZimletUtil {
 				writeFile(entry.getContents(), file);
 			}
 		}
-		return zimletName;
+		return zf;
 	}
 	
-	public static void ldapDeploy(String zimletRoot, String zimlet) throws IOException, ZimletException {
+	/**
+	 * 
+	 * Deploy the Zimlet to LDAP.
+	 * 
+	 * @param zimletRoot
+	 * @param zimlet
+	 * @throws IOException
+	 * @throws ZimletException
+	 */
+	public static void ldapDeploy(String zimlet) throws IOException, ZimletException {
 		ZimbraLog.zimlet.info("Deploying Zimlet " + zimlet + " in LDAP.");
+		String zimletRoot = getZimletDir();
 		ZimletFile zf = new ZimletFile(zimletRoot + File.separator + zimlet);
 		ZimletDescription zd = zf.getZimletDescription();
 		String zimletName = zd.getName();
 		Map attrs = descToMap(zd);
-		
-		if (zf.hasZimletConfig()) {
-			ZimletConfig config = zf.getZimletConfig();
-			attrs.put(Provisioning.A_zimbraZimletHandlerConfig, config.toXMLString());
-		}
 		
 		// add zimlet entry to ldap
 		Provisioning prov = Provisioning.getInstance();
@@ -271,6 +357,13 @@ public class ZimletUtil {
 		bais.close();
 	}
 
+	/**
+	 * 
+	 * Delete the Zimlet from LDAP.
+	 * 
+	 * @param zimlet
+	 * @throws ZimletException
+	 */
 	public static void uninstallZimlet(String zimlet) throws ZimletException {
 		ZimbraLog.zimlet.info("Uninstalling Zimlet " + zimlet + " from LDAP.");
 		Provisioning prov = Provisioning.getInstance();
@@ -287,6 +380,14 @@ public class ZimletUtil {
 		}
 	}
 	
+	/**
+	 * 
+	 * Add the Zimlet to specified COS.
+	 * 
+	 * @param zimlet
+	 * @param cos
+	 * @throws ZimletException
+	 */
 	public static void activateZimlet(String zimlet, String cos) throws ZimletException {
 		ZimbraLog.zimlet.info("Adding Zimlet " + zimlet + " to COS " + cos);
 		Provisioning prov = Provisioning.getInstance();
@@ -297,6 +398,14 @@ public class ZimletUtil {
 		}
 	}
 	
+	/**
+	 * 
+	 * Remove the Zimlet from COS.
+	 * 
+	 * @param zimlet
+	 * @param cos
+	 * @throws ZimletException
+	 */
 	public static void deactivateZimlet(String zimlet, String cos) throws ZimletException {
 		ZimbraLog.zimlet.info("Removing Zimlet " + zimlet + " from COS " + cos);
 		Provisioning prov = Provisioning.getInstance();
@@ -307,6 +416,14 @@ public class ZimletUtil {
 		}
 	}
 	
+	/**
+	 * 
+	 * Change the enabled status of the Zimlet.
+	 * 
+	 * @param zimlet
+	 * @param enabled
+	 * @throws ZimletException
+	 */
 	public static void setZimletEnable(String zimlet, boolean enabled) throws ZimletException {
 		Provisioning prov = Provisioning.getInstance();
 		try {
@@ -317,16 +434,38 @@ public class ZimletUtil {
 		}
 	}
 	
+	/**
+	 * 
+	 * Enable the Zimlet.  Only the enabled Zimlets are available to the users.
+	 * 
+	 * @param zimlet
+	 * @throws ZimletException
+	 */
 	public static void enableZimlet(String zimlet) throws ZimletException {
 		ZimbraLog.zimlet.info("Enabling Zimlet " + zimlet);
 		setZimletEnable(zimlet, true);
 	}
 	
+	/**
+	 * 
+	 * Disable the Zimlet.  Disabled Zimlets are not available to the users.
+	 * 
+	 * @param zimlet
+	 * @throws ZimletException
+	 */
 	public static void disableZimlet(String zimlet) throws ZimletException {
 		ZimbraLog.zimlet.info("Disabling Zimlet " + zimlet);
 		setZimletEnable(zimlet, false);
 	}
 	
+	/**
+	 * 
+	 * Change the Zimlet COS ACL.
+	 * 
+	 * @param zimlet
+	 * @param args
+	 * @throws ZimletException
+	 */
 	public static void aclZimlet(String zimlet, String[] args) throws ZimletException {
 		for (int i = 2; i < args.length; i+=2) {
 			String cos = args[i];
@@ -341,6 +480,13 @@ public class ZimletUtil {
 		}
 	}
 	
+	/**
+	 * 
+	 * List all the COS the Zimlet is available to.
+	 * 
+	 * @param zimlet
+	 * @throws ZimletException
+	 */
 	public static void listAcls(String zimlet) throws ZimletException {
 		System.out.println("Listing COS entries for Zimlet "+zimlet+"...");
 		Provisioning prov = Provisioning.getInstance();
@@ -361,6 +507,12 @@ public class ZimletUtil {
 		}
 	}
 	
+	/**
+	 * 
+	 * Print all the Zimlets installed on this host.
+	 * 
+	 * @throws ZimletException
+	 */
 	public static void listInstalledZimletsOnHost() throws ZimletException {
 		loadZimlets();
 		ZimletFile[] zimlets = (ZimletFile[]) sZimlets.values().toArray(new ZimletFile[0]);
@@ -370,6 +522,12 @@ public class ZimletUtil {
 		}
 	}
 	
+	/**
+	 * 
+	 * Print all the Zimlets on LDAP.
+	 * 
+	 * @throws ZimletException
+	 */
 	public static void listInstalledZimletsInLdap() throws ZimletException {
 		Provisioning prov = Provisioning.getInstance();
 		try {
@@ -387,6 +545,12 @@ public class ZimletUtil {
 		}
 	}
 	
+	/**
+	 * 
+	 * Print the Zimlet COS ACL for all the Zimlets.
+	 * 
+	 * @throws ZimletException
+	 */
 	public static void listZimletsInCos() throws ZimletException {
 		Provisioning prov = Provisioning.getInstance();
 		try {
@@ -405,6 +569,12 @@ public class ZimletUtil {
 		}
 	}
 	
+	/**
+	 * 
+	 * Print all the Zimlets installed on the host, on LDAP, and COS ACL.
+	 * 
+	 * @throws ZimletException
+	 */
 	public static void listAllZimlets() throws ZimletException {
 		System.out.println("Installed Zimlet files on this host:");
 		listInstalledZimletsOnHost();
@@ -414,14 +584,29 @@ public class ZimletUtil {
 		listZimletsInCos();
 	}
 	
+	/**
+	 * 
+	 * Dump the config template for the Zimlet.
+	 * 
+	 * @param zimlet
+	 * @throws IOException
+	 * @throws ZimletException
+	 */
 	public static void dumpConfig(String zimlet) throws IOException, ZimletException {
 		ZimletFile zf = new ZimletFile(zimlet);
 		String config = zf.getZimletConfigString();
 		System.out.println(config);
 	}
 	
-	public static void installConfig(String config) throws IOException, ZimletException {
-		ZimletConfig zc = new ZimletConfig(new File(config));
+	/**
+	 * 
+	 * Install the Zimlet configuration.
+	 * 
+	 * @param config
+	 * @throws IOException
+	 * @throws ZimletException
+	 */
+	public static void installConfig(ZimletConfig zc) throws IOException, ZimletException {
 		String zimletName = zc.getName();
 		ZimbraLog.zimlet.info("Installing Zimlet config for " + zimletName);
 		String configString = zc.toXMLString();
@@ -435,6 +620,10 @@ public class ZimletUtil {
 		} catch (Exception e) {
 			throw ZimletException.INVALID_ZIMLET_CONFIG("cannot update Zimlet config for "+zimletName+" : "+e.getMessage());
 		}
+	}
+	
+	public static void installConfig(String config) throws IOException, ZimletException {
+		installConfig(new ZimletConfig(new File(config)));
 	}
 	
 	private static void test() {
@@ -526,13 +715,7 @@ public class ZimletUtil {
 	}
 	
 	private static void dispatch(String[] args) {
-		if (args.length < 1) {
-			usage();
-		}
-		
-		String zimletRoot = LC.zimlet_directory.value();
-		
-		int cmd = lookupCmd(args[0]);
+		int cmd = lookupCmd(args[argPos++]);
 		try {
 			switch (cmd) {
 			case LIST_ZIMLETS:
@@ -543,25 +726,25 @@ public class ZimletUtil {
 				System.exit(0);
 			}
 
-			if (args.length < 2) {
+			if (args.length < argPos) {
 				usage();
 			}
-			String zimlet = args[1];
+			String zimlet = args[argPos++];
 			switch (cmd) {
 			case DEPLOY_ZIMLET:
-				deployZimlet(zimletRoot, zimlet);
+				deployZimlet(zimlet);
 				break;
 			case INSTALL_ZIMLET:
-				installZimlet(zimletRoot, zimlet);
+				installZimlet(zimlet);
 				break;
 			case UNINSTALL_ZIMLET:
 				uninstallZimlet(zimlet);
 				break;
 			case LDAP_DEPLOY:
-				ldapDeploy(zimletRoot, zimlet);
+				ldapDeploy(zimlet);
 				break;
 			case ACL_ZIMLET:
-				if (args.length < 3 || args.length % 2 != 0) {
+				if (args.length < (argPos+1) || args.length % 2 != 0) {
 					usage();
 				}
 				aclZimlet(zimlet, args);
@@ -591,8 +774,33 @@ public class ZimletUtil {
 		}
 	}
 	
+	private static boolean sQuietMode = false;
+	private static int argPos = 0;
+	
+	private static void getOpt(String[] args) {
+		if (args.length < 1) {
+			usage();
+		}
+		
+		int index = 0;
+		while (index < args.length) {
+			if (args[index].equals("-q")) {
+				sQuietMode = true;
+			} else {
+				break;
+			}
+			index++;
+		}
+		argPos = index;
+	}
+	
     public static void main(String[] args) throws IOException {
-        Zimbra.toolSetup();
+    	getOpt(args);
+    	if (sQuietMode) {
+    		Zimbra.toolSetup("WARN");
+    	} else {
+    		Zimbra.toolSetup();
+    	}
         setup();
         dispatch(args);
     }

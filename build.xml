@@ -573,51 +573,55 @@
 		</zip>
 		<zip destfile="${dist.zimlet.dir}/url.zip" update="true">
 			<fileset dir="${build.classes.dir}" includes="**/URLHandler.class"/>
-			<fileset dir="${config.dir}/zimlets/url" includes="url.xml"/>
+			<fileset dir="${config.dir}/zimlets/url" includes="config_template.xml,url.xml"/>
 		</zip>
 	</target>
 
 	<target name="deploy-zimlets" description="install files, deploy to LDAP">
 		<echo>Deploying zimlet: phone</echo>
 		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="-q" />
 			<arg line="deploy" />
 			<arg file="${dist.zimlet.dir}/phone.zip" />
 		</java>
 		<echo>Deploying zimlet: po</echo>
 		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="-q" />
 			<arg line="deploy" />
 			<arg file="${dist.zimlet.dir}/po.zip" />
 		</java>
 		<echo>Deploying zimlet: tracking</echo>
 		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="-q" />
 			<arg line="deploy" />
 			<arg file="${dist.zimlet.dir}/tracking.zip" />
 		</java>
 		<echo>Deploying zimlet: url</echo>
 		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="-q" />
 			<arg line="deploy" />
 			<arg file="${dist.zimlet.dir}/url.zip" />
-		</java>
-		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="configure" />
-			<arg file="${config.dir}/zimlets/url/config.xml" />
 		</java>
 	</target>
 
 	<target name="install-zimlets" description="install files only">
 		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="-q" />
 			<arg line="install" />
 			<arg file="${dist.zimlet.dir}/phone.zip" />
 		</java>
 		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="-q" />
 			<arg line="install" />
 			<arg file="${dist.zimlet.dir}/po.zip" />
 		</java>
 		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="-q" />
 			<arg line="install" />
 			<arg file="${dist.zimlet.dir}/tracking.zip" />
 		</java>
 		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="-q" />
 			<arg line="install" />
 			<arg file="${dist.zimlet.dir}/url.zip" />
 		</java>
