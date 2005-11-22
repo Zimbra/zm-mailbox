@@ -303,7 +303,7 @@ public class DbPool {
                 stackTraceMsg = buf.toString();
             }
             ZimbraLog.sqltrace.warn("Connection pool is 75% utilized.  " + numActive +
-                "connections out of a maximum of " + maxActive + " in use.  "+ stackTraceMsg);
+                " connections out of a maximum of " + maxActive + " in use.  "+ stackTraceMsg);
         }
         
         if (ZimbraLog.sqltrace.isDebugEnabled() || ZimbraLog.perf.isDebugEnabled()) {
