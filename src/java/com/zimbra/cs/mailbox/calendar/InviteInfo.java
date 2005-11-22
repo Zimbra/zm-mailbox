@@ -28,9 +28,8 @@
  */
 package com.zimbra.cs.mailbox.calendar;
 
-import net.fortuna.ical4j.model.property.Method;
-
 import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.service.ServiceException;
 
 public class InviteInfo implements Comparable {
@@ -88,7 +87,7 @@ public class InviteInfo implements Comparable {
         int msgId, compNum;
         RecurId recurrenceId = null;
         int methodInt = 0;
-        String method = Method.REQUEST.getValue();
+        String method = ICalTok.REQUEST.toString();
         
         msgId = (int)md.getLong(FN_MSGID);
         compNum = (int)md.getLong(FN_COMPNUM);
@@ -96,7 +95,7 @@ public class InviteInfo implements Comparable {
         methodInt = (int)md.getLong(FN_METHOD);
         switch(methodInt) {
         case METHOD_CANCEL:
-            method = Method.CANCEL.getValue();
+            method = ICalTok.CANCEL.toString();
         } 
         
         if (md.containsKey(FN_RECURRENCEID)) {
@@ -114,7 +113,7 @@ public class InviteInfo implements Comparable {
             md.put(FN_RECURRENCEID, mRecurrenceId.encodeMetadata());
         }
         
-        if (mMethod.equals(Method.CANCEL.getValue())) {
+        if (mMethod.equals(ICalTok.CANCEL.toString())) {
             md.put(FN_METHOD, METHOD_CANCEL);
         } else {
             md.put(FN_METHOD, METHOD_REQUEST);

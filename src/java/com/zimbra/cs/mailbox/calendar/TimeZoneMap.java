@@ -37,25 +37,18 @@ import java.util.Map.Entry;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.service.ServiceException;
 
-import net.fortuna.ical4j.model.ComponentList;
-import net.fortuna.ical4j.model.Property;
-import net.fortuna.ical4j.model.WeekDay;
-import net.fortuna.ical4j.model.component.Daylight;
-import net.fortuna.ical4j.model.component.Standard;
-import net.fortuna.ical4j.model.component.VTimeZone;
-
 public class TimeZoneMap {
 
     static HashMap sDayWeekDayMap;
     static {
         sDayWeekDayMap = new HashMap();
-        sDayWeekDayMap.put(WeekDay.SU, new Integer(java.util.Calendar.SUNDAY));
-        sDayWeekDayMap.put(WeekDay.MO, new Integer(java.util.Calendar.MONDAY));
-        sDayWeekDayMap.put(WeekDay.TU, new Integer(java.util.Calendar.TUESDAY));
-        sDayWeekDayMap.put(WeekDay.WE, new Integer(java.util.Calendar.WEDNESDAY));
-        sDayWeekDayMap.put(WeekDay.TH, new Integer(java.util.Calendar.THURSDAY));
-        sDayWeekDayMap.put(WeekDay.FR, new Integer(java.util.Calendar.FRIDAY));
-        sDayWeekDayMap.put(WeekDay.SA, new Integer(java.util.Calendar.SATURDAY));
+        sDayWeekDayMap.put(ZRecur.ZWeekDay.SU, new Integer(java.util.Calendar.SUNDAY));
+        sDayWeekDayMap.put(ZRecur.ZWeekDay.MO, new Integer(java.util.Calendar.MONDAY));
+        sDayWeekDayMap.put(ZRecur.ZWeekDay.TU, new Integer(java.util.Calendar.TUESDAY));
+        sDayWeekDayMap.put(ZRecur.ZWeekDay.WE, new Integer(java.util.Calendar.WEDNESDAY));
+        sDayWeekDayMap.put(ZRecur.ZWeekDay.TH, new Integer(java.util.Calendar.THURSDAY));
+        sDayWeekDayMap.put(ZRecur.ZWeekDay.FR, new Integer(java.util.Calendar.FRIDAY));
+        sDayWeekDayMap.put(ZRecur.ZWeekDay.SA, new Integer(java.util.Calendar.SATURDAY));
     }
     
     
@@ -189,37 +182,37 @@ public class TimeZoneMap {
     public void add(ICalTimeZone tz) {
     	mTzMap.put(tz.getID(), tz);
     }
-
-    public void add(VTimeZone vtz) throws ServiceException {
-        String tzid = vtz.getProperties().getProperty(Property.TZID).getValue();
-        if (mTzMap.get(tzid)!=null) {
-            return; // he says he's already got one of those
-        }
-
-        String dayName = null;
-        String stdName = null;
-
-        ComponentList c = vtz.getObservances();
-        Object o;
-
-        Daylight daylight = (Daylight)c.getComponent(net.fortuna.ical4j.model.component.Observance.DAYLIGHT);
-        if (daylight != null) {
-            Property prop = daylight.getProperties().getProperty(Property.TZNAME);
-            if (prop!= null) {
-                dayName = prop.getValue();
-            }
-        }
-
-        Standard std = (Standard)c.getComponent(net.fortuna.ical4j.model.component.Observance.STANDARD);
-        if (std != null) {
-            Property prop = std.getProperties().getProperty(Property.TZNAME);
-            if (prop!= null) {
-                stdName = prop.getValue();
-            }
-        }
-
-        ICalTimeZone javaTZ = new ICalTimeZone(tzid, vtz);
-
-        mTzMap.put(tzid, javaTZ);
-    }
+//
+//    public void add(VTimeZone vtz) throws ServiceException {
+//        String tzid = vtz.getProperties().getProperty(Property.TZID).getValue();
+//        if (mTzMap.get(tzid)!=null) {
+//            return; // he says he's already got one of those
+//        }
+//
+//        String dayName = null;
+//        String stdName = null;
+//
+//        ComponentList c = vtz.getObservances();
+//        Object o;
+//
+//        Daylight daylight = (Daylight)c.getComponent(net.fortuna.ical4j.model.component.Observance.DAYLIGHT);
+//        if (daylight != null) {
+//            Property prop = daylight.getProperties().getProperty(Property.TZNAME);
+//            if (prop!= null) {
+//                dayName = prop.getValue();
+//            }
+//        }
+//
+//        Standard std = (Standard)c.getComponent(net.fortuna.ical4j.model.component.Observance.STANDARD);
+//        if (std != null) {
+//            Property prop = std.getProperties().getProperty(Property.TZNAME);
+//            if (prop!= null) {
+//                stdName = prop.getValue();
+//            }
+//        }
+//
+//        ICalTimeZone javaTZ = new ICalTimeZone(tzid, vtz);
+//
+//        mTzMap.put(tzid, javaTZ);
+//    }
 }

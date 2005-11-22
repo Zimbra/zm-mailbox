@@ -30,8 +30,7 @@ import java.util.List;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.WellKnownTimeZone;
-
-import net.fortuna.ical4j.model.TimeZone.SimpleOnset;
+import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
 
 /**
  * Java representation of Windows TIME_ZONE_INFORMATION structure in Winbase.h

@@ -37,6 +37,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Mailbox.SetAppointmentData;
 import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
@@ -160,14 +161,14 @@ public class SetAppointment extends CalendarRequest {
         ParsedMessage pm = new ParsedMessage(mm, mbox.attachmentsIndexingEnabled());
         
         pm.analyze();
-        net.fortuna.ical4j.model.Calendar cal = pm.getiCalendar();
+        ZVCalendar cal = pm.getiCalendar();
         if (cal == null) {
             throw ServiceException.FAILURE("SetAppointment could not find an iCalendar part for <default>", null);
         }
         
         boolean sentByMe = false; // not applicable in the SetAppointment case
         
-        Invite inv = (Invite)(Invite.createFromICalendar(acct, pm.getFragment(), cal, sentByMe).get(0));
+        Invite inv = (Invite)(Invite.createFromCalendar(acct, pm.getFragment(), cal, sentByMe).get(0));
         
         inv.modifyPartStatInMemory(needsReply, partStatStr);
         

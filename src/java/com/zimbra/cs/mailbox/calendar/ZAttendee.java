@@ -32,14 +32,6 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.service.ServiceException;
 
-import net.fortuna.ical4j.model.Parameter;
-import net.fortuna.ical4j.model.ParameterList;
-import net.fortuna.ical4j.model.parameter.Cn;
-import net.fortuna.ical4j.model.parameter.PartStat;
-import net.fortuna.ical4j.model.parameter.Role;
-import net.fortuna.ical4j.model.parameter.Rsvp;
-import net.fortuna.ical4j.model.property.Attendee;
-
 public class ZAttendee {
     
     private String mAddress;
@@ -60,35 +52,35 @@ public class ZAttendee {
         setAddress(address);
     }
     
-    public ZAttendee(Attendee at) {
-        ParameterList params = at.getParameters();
-        
-        setAddress(at.getCalAddress().getSchemeSpecificPart());
-        
-        // CN
-        Cn cn = (Cn)params.getParameter(Parameter.CN);
-        if (cn != null) {
-            mCn = cn.getValue();
-        }
-        
-        // role
-        Role role = (Role) params.getParameter(Parameter.ROLE);
-        if (role != null) {
-            setRole(role.getValue());
-        }
-        
-        // partstat
-        PartStat partStat = (PartStat) params.getParameter(Parameter.PARTSTAT);
-        if (partStat != null) {
-            setPartStat(partStat.getValue());
-        }
-        
-        // rsvp?
-        Parameter rsvpParam = params.getParameter(Parameter.RSVP);
-        if (rsvpParam != null) {
-            mRsvp = ((Rsvp) rsvpParam).getRsvp();
-        }
-    }
+//    public ZAttendee(Attendee at) {
+//        ParameterList params = at.getParameters();
+//        
+//        setAddress(at.getCalAddress().getSchemeSpecificPart());
+//        
+//        // CN
+//        Cn cn = (Cn)params.getParameter(Parameter.CN);
+//        if (cn != null) {
+//            mCn = cn.getValue();
+//        }
+//        
+//        // role
+//        Role role = (Role) params.getParameter(Parameter.ROLE);
+//        if (role != null) {
+//            setRole(role.getValue());
+//        }
+//        
+//        // partstat
+//        PartStat partStat = (PartStat) params.getParameter(Parameter.PARTSTAT);
+//        if (partStat != null) {
+//            setPartStat(partStat.getValue());
+//        }
+//        
+//        // rsvp?
+//        Parameter rsvpParam = params.getParameter(Parameter.RSVP);
+//        if (rsvpParam != null) {
+//            mRsvp = ((Rsvp) rsvpParam).getRsvp();
+//        }
+//    }
     
     private static final String FN_ADDRESS         = "a";
     private static final String FN_CN              = "cn";
@@ -232,35 +224,35 @@ public class ZAttendee {
         return toRet;
     }
     
-    
-    public Attendee iCal4jAttendee() throws ServiceException
-    {
-        ParameterList p = new ParameterList();
-        
-        if (mCn != null && !mCn.equals("")) {
-            Cn cn = new Cn(mCn);
-            p.add(cn);
-        }
-        
-        if (mRole != null && !mRole.equals("")) {
-            Role role = new Role(IcalXmlStrMap.sRoleMap.toIcal(mRole));
-            p.add(role);
-        }
-        
-        if (mPartStat != null && !mPartStat.equals("")) {
-            PartStat partStat = new PartStat(IcalXmlStrMap.sPartStatMap.toIcal(mPartStat));
-            p.add(partStat);
-        }
-        
-        if (mRsvp != null) {
-            Rsvp rsvp = new Rsvp(mRsvp);
-            p.add(rsvp);
-        }
-        
-        try {
-            return new Attendee(p, new URI("MAILTO", mAddress, null));
-        } catch (java.net.URISyntaxException e) {
-            throw ServiceException.FAILURE("Building Attendee URI for address "+mAddress, e);
-        }
-    }
+//    
+//    public Attendee iCal4jAttendee() throws ServiceException
+//    {
+//        ParameterList p = new ParameterList();
+//        
+//        if (mCn != null && !mCn.equals("")) {
+//            Cn cn = new Cn(mCn);
+//            p.add(cn);
+//        }
+//        
+//        if (mRole != null && !mRole.equals("")) {
+//            Role role = new Role(IcalXmlStrMap.sRoleMap.toIcal(mRole));
+//            p.add(role);
+//        }
+//        
+//        if (mPartStat != null && !mPartStat.equals("")) {
+//            PartStat partStat = new PartStat(IcalXmlStrMap.sPartStatMap.toIcal(mPartStat));
+//            p.add(partStat);
+//        }
+//        
+//        if (mRsvp != null) {
+//            Rsvp rsvp = new Rsvp(mRsvp);
+//            p.add(rsvp);
+//        }
+//        
+//        try {
+//            return new Attendee(p, new URI("MAILTO", mAddress, null));
+//        } catch (java.net.URISyntaxException e) {
+//            throw ServiceException.FAILURE("Building Attendee URI for address "+mAddress, e);
+//        }
+//    }
 }

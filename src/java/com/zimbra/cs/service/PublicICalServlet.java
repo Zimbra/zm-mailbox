@@ -25,53 +25,29 @@
 package com.zimbra.cs.service;
 
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.Date;
 import java.util.Iterator;
 
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.Transport;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import net.fortuna.ical4j.model.Calendar;
-import net.fortuna.ical4j.model.property.Method;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.calendar.FreeBusy;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
-import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
-import com.zimbra.cs.mailbox.calendar.RecurId;
-import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
-import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.service.mail.SendInviteReply;
-import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.cs.util.AccountUtil;
 
 
 public class PublicICalServlet extends ZimbraServlet 
 {
     private static Log sLog = LogFactory.getLog(PublicICalServlet.class);
-    
-    private static final String PARAM_ORG = "org";
-    private static final String PARAM_UID = "uid";
-    private static final String PARAM_AT = "at"; 
-    private static final String PARAM_RECUR = "r";
-    private static final String PARAM_VERB = "v";
-    private static final String PARAM_INVID = "invId";
     
     private static final long MSEC_PER_DAY = 1000*60*60*24;
     

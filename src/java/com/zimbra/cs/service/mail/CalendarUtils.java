@@ -43,8 +43,6 @@ import javax.mail.internet.MimeMultipart;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.JMSession;
 
-import net.fortuna.ical4j.model.TimeZone.SimpleOnset;
-
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.WellKnownTimeZone;
@@ -61,6 +59,7 @@ import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mailbox.calendar.ZRecur;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
+import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
@@ -173,10 +172,9 @@ public class CalendarUtils {
         toRet.mSummary = content.getAttribute("summary");
         
         String calStr = content.getText();
-        ZCalendarBuilder calBuilder = new ZCalendarBuilder();
         StringReader reader = new StringReader(calStr);
 //        try {
-            toRet.mCal = calBuilder.build(reader);
+            toRet.mCal = ZCalendarBuilder.build(reader);
             
             List<Invite> invs = Invite.createFromCalendar(account, toRet.mSummary, toRet.mCal, false);
             
@@ -802,7 +800,7 @@ public class CalendarUtils {
             ZAttendee at = new ZAttendee(address, cn, role, partStat, rsvp ? Boolean.TRUE : Boolean.FALSE); 
 
             if (newInv.getMethod().equals(ICalTok.PUBLISH.toString())) {
-                newInv.setMethod(ICalTok.METHOD.toString());
+                newInv.setMethod(ICalTok.REQUEST.toString());
             }
             newInv.addAttendee(at);
         }

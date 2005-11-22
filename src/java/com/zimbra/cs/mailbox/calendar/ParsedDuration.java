@@ -33,9 +33,6 @@ import java.util.GregorianCalendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import net.fortuna.ical4j.model.Property;
-import net.fortuna.ical4j.model.property.Duration;
-
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.soap.Element;
@@ -137,10 +134,10 @@ public final class ParsedDuration
         return toRet.toString();
     }
     
-    public static ParsedDuration parse(Property prop) throws ServiceException
-    {
-        return parse(((Duration)prop).getValue());
-    }
+//    public static ParsedDuration parse(Property prop) throws ServiceException
+//    {
+//        return parse(((Duration)prop).getValue());
+//    }
     
     public static ParsedDuration parse(boolean negative, int weeks, int days, int hours, int mins, int secs) {
         ParsedDuration toRet = new ParsedDuration();

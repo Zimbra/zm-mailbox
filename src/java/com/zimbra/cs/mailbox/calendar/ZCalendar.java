@@ -32,7 +32,7 @@ public class ZCalendar {
         EXRULE, FBTYPE, FLOAT, FMTTYPE, FREEBUSY, GEO,
         INTEGER, LANGUAGE, LAST_MODIFIED, LOCATION, MEMBER, METHOD,
         ORGANIZER, PARTSTAT, PERCENT_COMPLETE, PERIOD, PRIORITY, PRODID,
-        RANGE, RDATE, RECUR, RECURRENCE_ID, RELATED, RELATED_TO,
+        RDATE, RECUR, RECURRENCE_ID, RELATED, RELATED_TO,
         RELTYPE, REPEAT, RESOURCES, ROLE, RRULE, RSVP,
         SENT_BY, SEQUENCE, STATUS, SUMMARY, TEXT, TIME,
         TRANSP, TRIGGER, TZID, TZNAME, TZOFFSETFROM,
@@ -40,9 +40,27 @@ public class ZCalendar {
         VALARM, VALUE, VERSION, VEVENT, VFREEBUSY, VJOURNAL,
         VTIMEZONE, VTODO, 
         
+        // METHOD
         PUBLISH, REQUEST, REPLY, ADD, CANCEL, REFRESH, COUNTER, DECLINECOUNTER,
         
+        // ROLE
+        CHAIR, REQ_PARTICIPANT, OPT_PARTICIPANT, NON_PARTICIPANT,
+        
+        // STATUS
+        TENTATIVE, CONFIRMED, /*CANCELLED,*/ NEEDS_ACTION, /*COMPLETED,*/ IN_PROCESS, CANCELLED,
+        DRAFT, FINAL,
+        
+        // PARTSTAT
+        ACCEPTED, /*COMPLETED,*/ DECLINED, DELEGATED, /*IN_PROCESS,*/ /*NEEDS_ACTION,*/ /*TENTATIVE,*/
+        
+        // TRANSPARENCY
+        TRANSPARENT, OPAQUE,
+        
+        // VTIMEZONE
         STANDARD, DAYLIGHT,
+        
+        // RECURRENCE-ID
+        RANGE, THISANDFUTURE, THISANDPRIOR,
         
         X_MICROSOFT_CDO_ALLDAYEVENT, X_MICROSOFT_CDO_BUSYSTATUS, X_MICROSOFT_CDO_INTENDEDSTATUS;        
         
@@ -309,6 +327,14 @@ public class ZCalendar {
         public void addParameter(ZParameter param) { mParameters.add(param); }
         
         ZParameter getParameter(ICalTok tok) { return findParameter(mParameters, tok); }
+        
+        String getParameterVal(ICalTok tok, String defaultValue) { 
+            ZParameter param = findParameter(mParameters, tok); 
+            if (param != null)
+                return param.getValue();
+            else
+                return defaultValue;
+        }
         
         public String paramVal(ICalTok tok, String defaultValue) { 
             ZParameter param = getParameter(tok);

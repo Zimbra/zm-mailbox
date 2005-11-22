@@ -45,12 +45,6 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
-import net.fortuna.ical4j.data.CalendarBuilder;
-import net.fortuna.ical4j.data.ParserException;
-import net.fortuna.ical4j.model.Calendar;
-import net.fortuna.ical4j.model.Component;
-import net.fortuna.ical4j.model.property.Method;
-
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
@@ -62,6 +56,7 @@ import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.Recurrence;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
@@ -212,7 +207,7 @@ public class Appointment extends MailItem {
                 
                 if (cur != firstInv) {
                     
-                    if (cur.getMethod().equals(Method.REQUEST.getValue()) || (cur.getMethod().equals(Method.PUBLISH.getValue()))) {
+                    if (cur.getMethod().equals(ICalTok.REQUEST.toString()) || (cur.getMethod().equals(ICalTok.PUBLISH.toString()))) {
                         assert (cur.hasRecurId());
                         
                         if (cur.hasRecurId()) {
@@ -233,7 +228,7 @@ public class Appointment extends MailItem {
                         } else {
                             sLog.debug("Got second invite with no RecurID: " + cur.toString());
                         }
-                    } else if (cur.getMethod().equals(Method.CANCEL.getValue())) {
+                    } else if (cur.getMethod().equals(ICalTok.CANCEL.toString())) {
                         assert(cur.hasRecurId());
                         if (cur.hasRecurId()) {
                             Recurrence.CancellationRule cancelRule =   
@@ -516,7 +511,7 @@ public class Appointment extends MailItem {
     void processNewInvite(ParsedMessage pm, Invite invite, boolean force, short volumeId)
     throws ServiceException {
         String method = invite.getMethod();
-        if (method.equals(Method.REQUEST.getValue()) || method.equals(Method.CANCEL.getValue()) || method.equals(Method.PUBLISH.getValue())) {
+        if (method.equals(ICalTok.REQUEST.toString()) || method.equals(ICalTok.CANCEL.toString()) || method.equals(ICalTok.PUBLISH.toString())) {
             processNewInviteRequestOrCancel(pm, invite, force, volumeId);
         } else if (method.equals("REPLY")) {
             processNewInviteReply(pm, invite, force);
@@ -541,7 +536,7 @@ public class Appointment extends MailItem {
 
         // Remove everyone that is made obselete by this request
         boolean addNewOne = true;
-        boolean isCancel = method.equals(Method.CANCEL.getValue());
+        boolean isCancel = method.equals(ICalTok.CANCEL.toString());
 
         if (!canAccess(isCancel ? ACL.RIGHT_DELETE : ACL.RIGHT_WRITE))
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions on this appointment");
@@ -636,8 +631,8 @@ public class Appointment extends MailItem {
         boolean hasRequests = false;
         for (Iterator iter = mInvites.iterator(); iter.hasNext();) {
             Invite cur = (Invite)iter.next();
-            if (cur.getMethod().equals(Method.REQUEST.getValue()) ||
-                    cur.getMethod().equals(Method.PUBLISH.getValue())) 
+            if (cur.getMethod().equals(ICalTok.REQUEST.toString()) ||
+                    cur.getMethod().equals(ICalTok.PUBLISH.toString())) 
             {
                 hasRequests = true;
                 break;
@@ -1295,21 +1290,21 @@ public class Appointment extends MailItem {
         return MessageCache.getRawContent(this);
     }
     
-    void appendRawCalendarData(Calendar cal) throws ServiceException {
-        for (Iterator invIter = mInvites.iterator(); invIter.hasNext();) {
-            Invite inv = (Invite)invIter.next();
-            
-//            Calendar invCal = getCalendar(inv.getMailItemId());
-//            Calendar invCal = inv.toICalendar();
-            
-//            for (Iterator compIter = invCal.getComponents().iterator(); compIter.hasNext();) {
-//                Component comp = (Component)compIter.next();
-//                cal.getComponents().add(comp);
-//            }
-            Component comp = inv.toVEvent();
-            cal.getComponents().add(comp);
-        }
-    }
+//    void appendRawCalendarData(Calendar cal) throws ServiceException {
+//        for (Iterator invIter = mInvites.iterator(); invIter.hasNext();) {
+//            Invite inv = (Invite)invIter.next();
+//            
+////            Calendar invCal = getCalendar(inv.getMailItemId());
+////            Calendar invCal = inv.toICalendar();
+//            
+////            for (Iterator compIter = invCal.getComponents().iterator(); compIter.hasNext();) {
+////                Component comp = (Component)compIter.next();
+////                cal.getComponents().add(comp);
+////            }
+//            Component comp = inv.toVEvent();
+//            cal.getComponents().add(comp);
+//        }
+//    }
     
 
     void appendRawCalendarData(ZVCalendar cal) throws ServiceException {
@@ -1330,30 +1325,30 @@ public class Appointment extends MailItem {
     }
     
     
-    Calendar getCalendar(int invId) throws ServiceException {
-        try {
-            MimeMessage mm = getMimeMessage(invId);
-            
-            List parts = Mime.getParts(mm);
-            for (int i=0; i<parts.size(); i++) {
-                MPartInfo partInfo = (MPartInfo) parts.get(i);
-                if (partInfo.getContentType().match(Mime.CT_TEXT_CALENDAR)) {
-                    java.io.InputStream is = partInfo.getMimePart().getInputStream();
-                    CalendarBuilder builder = new CalendarBuilder();
-                    Calendar iCal = builder.build(is);
-                    return iCal;
-                }
-            }
-            throw ServiceException.FAILURE("Could not parse detailed iCalendar data for mailbox "+
-                    getMailboxId()+" appt "+getId(), null);
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("reading mime message", e);
-        } catch (ParserException e) {
-            throw ServiceException.FAILURE("parsing iCalendar", e);
-        } catch (MessagingException e) {
-            throw ServiceException.FAILURE("reading mime message", e);
-        }
-    }
+//    Calendar getCalendar(int invId) throws ServiceException {
+//        try {
+//            MimeMessage mm = getMimeMessage(invId);
+//            
+//            List parts = Mime.getParts(mm);
+//            for (int i=0; i<parts.size(); i++) {
+//                MPartInfo partInfo = (MPartInfo) parts.get(i);
+//                if (partInfo.getContentType().match(Mime.CT_TEXT_CALENDAR)) {
+//                    java.io.InputStream is = partInfo.getMimePart().getInputStream();
+//                    CalendarBuilder builder = new CalendarBuilder();
+//                    Calendar iCal = builder.build(is);
+//                    return iCal;
+//                }
+//            }
+//            throw ServiceException.FAILURE("Could not parse detailed iCalendar data for mailbox "+
+//                    getMailboxId()+" appt "+getId(), null);
+//        } catch (IOException e) {
+//            throw ServiceException.FAILURE("reading mime message", e);
+//        } catch (ParserException e) {
+//            throw ServiceException.FAILURE("parsing iCalendar", e);
+//        } catch (MessagingException e) {
+//            throw ServiceException.FAILURE("reading mime message", e);
+//        }
+//    }
     
 
     public MimeMessage getMimeMessage() throws ServiceException {

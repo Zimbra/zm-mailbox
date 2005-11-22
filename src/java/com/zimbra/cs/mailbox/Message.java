@@ -45,15 +45,14 @@ import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.Indexer;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.calendar.*;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.TnefConverter;
 import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.AccountUtil;
-
-import net.fortuna.ical4j.model.*;
-import net.fortuna.ical4j.model.property.*;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -323,7 +322,7 @@ public class Message extends MailItem {
 
     static Message create(int id, Folder folder, MailItem parent, ParsedMessage pm,
                           int msgSize, String digest, short volumeId, boolean unread,
-                          int flags, long tags, DraftInfo dinfo, boolean noICal, Calendar cal)  
+                          int flags, long tags, DraftInfo dinfo, boolean noICal, ZVCalendar cal)  
     throws ServiceException {
         if (folder == null || !folder.canContain(TYPE_MESSAGE))
             throw MailServiceException.CANNOT_CONTAIN();
@@ -332,7 +331,7 @@ public class Message extends MailItem {
         
         Mailbox mbox = folder.getMailbox();
         
-        TimeZoneMap tzmap = null;
+//        TimeZoneMap tzmap = null;
         
         List /* Invite */ components = null;
         String methodStr = null;
@@ -349,10 +348,11 @@ public class Message extends MailItem {
                 throw ServiceException.INVALID_REQUEST("unable to parse invite sender: " + pm.getSender(), e);
             }
 
-            tzmap = new TimeZoneMap(acct.getTimeZone());
-            components = Invite.parseCalendarComponentsForNewMessage(sentByMe, mbox, cal, id, pm.getFragment(), tzmap);
-            Method method = (Method) cal.getProperties().getProperty(Property.METHOD);
-            methodStr = method != null ? method.getValue() : "PUBLISH";
+//            tzmap = new TimeZoneMap(acct.getTimeZone());
+//            components = Invite.parseCalendarComponentsForNewMessage(sentByMe, mbox, cal, id, pm.getFragment(), tzmap);
+            components = Invite.createFromCalendar(acct, pm.getFragment(), cal, sentByMe, mbox, id);
+//            method = (Method) cal.getProperties().getProperty(Property.METHOD);
+            methodStr = cal.getPropVal(ICalTok.METHOD, ICalTok.PUBLISH.toString());
         }
 
         UnderlyingData data = createItemData(id, folder, parent, pm, msgSize, digest,
@@ -418,7 +418,7 @@ public class Message extends MailItem {
            if (createAppt) {
                if (appt == null) { 
                    // ONLY create an appointment if this is a REQUEST method...otherwise don't.
-                   if (method.equals(Method.REQUEST.getValue())) {
+                   if (method.equals(ICalTok.REQUEST.toString())) {
                        appt = mbox.createAppointment(Mailbox.ID_FOLDER_CALENDAR, volumeId, "", cur.getUid(), pm, cur);
                    } else {
                        sLog.info("Mailbox " + getMailboxId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c no Appointment could be found");

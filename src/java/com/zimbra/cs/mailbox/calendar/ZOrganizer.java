@@ -3,11 +3,6 @@ package com.zimbra.cs.mailbox.calendar;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import net.fortuna.ical4j.model.Parameter;
-import net.fortuna.ical4j.model.ParameterList;
-import net.fortuna.ical4j.model.parameter.Cn;
-import net.fortuna.ical4j.model.property.Organizer;
-
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
@@ -20,19 +15,19 @@ public class ZOrganizer {
         setAddress(address);
     }
     
-    public ZOrganizer(Organizer org) {
-        ParameterList params = org.getParameters();
-        
-        String addr = org.getCalAddress().getSchemeSpecificPart();
-        
-        // CN
-        Cn cn = (Cn)params.getParameter(Parameter.CN);
-        if (cn != null) {
-            mCn = cn.getValue();
-        }
-        
-        setAddress(addr);
-    }
+//    public ZOrganizer(Organizer org) {
+//        ParameterList params = org.getParameters();
+//        
+//        String addr = org.getCalAddress().getSchemeSpecificPart();
+//        
+//        // CN
+//        Cn cn = (Cn)params.getParameter(Parameter.CN);
+//        if (cn != null) {
+//            mCn = cn.getValue();
+//        }
+//        
+//        setAddress(addr);
+//    }
     
 
     private static final String FN_ADDRESS         = "a";
@@ -104,21 +99,21 @@ public class ZOrganizer {
         }
     }
     
-    public Organizer iCal4jOrganizer() throws ServiceException
-    {
-        ParameterList p = new ParameterList();
-        
-        if (mCn != null && !mCn.equals("")) {
-            Cn cn = new Cn(mCn);
-            p.add(cn);
-        }
-        
-        try {
-            return new Organizer(p, new URI("MAILTO", mAddress, null));
-        } catch (java.net.URISyntaxException e) {
-            throw ServiceException.FAILURE("Building Attendee URI for address "+mAddress, e);
-        }
-    }    
+//    public Organizer iCal4jOrganizer() throws ServiceException
+//    {
+//        ParameterList p = new ParameterList();
+//        
+//        if (mCn != null && !mCn.equals("")) {
+//            Cn cn = new Cn(mCn);
+//            p.add(cn);
+//        }
+//        
+//        try {
+//            return new Organizer(p, new URI("MAILTO", mAddress, null));
+//        } catch (java.net.URISyntaxException e) {
+//            throw ServiceException.FAILURE("Building Attendee URI for address "+mAddress, e);
+//        }
+//    }    
 
     private String mCn;
     private String mAddress;

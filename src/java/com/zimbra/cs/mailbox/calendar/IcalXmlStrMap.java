@@ -30,13 +30,8 @@ package com.zimbra.cs.mailbox.calendar;
 
 import java.util.HashMap;
 
-//import net.fortuna.ical4j.model.Recur;
-import net.fortuna.ical4j.model.parameter.PartStat;
-import net.fortuna.ical4j.model.parameter.Role;
-import net.fortuna.ical4j.model.property.Status;
-import net.fortuna.ical4j.model.property.Transp;
-
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.service.ServiceException;
 
 public class IcalXmlStrMap
@@ -129,22 +124,22 @@ public class IcalXmlStrMap
     public final static String ROLE_CHAIR = "CHA";
     
     static {
-        sRoleMap.add(Role.CHAIR.getName(), ROLE_CHAIR);
-        sRoleMap.add(Role.REQ_PARTICIPANT.getValue(), ROLE_REQUIRED);
-        sRoleMap.add(Role.OPT_PARTICIPANT.getValue(), ROLE_OPT_PARTICIPANT);
-        sRoleMap.add(Role.NON_PARTICIPANT.getValue(), ROLE_NON_PARTICIPANT);
+        sRoleMap.add(ICalTok.CHAIR.toString(), ROLE_CHAIR);
+        sRoleMap.add(ICalTok.REQ_PARTICIPANT.toString(), ROLE_REQUIRED);
+        sRoleMap.add(ICalTok.OPT_PARTICIPANT.toString(), ROLE_OPT_PARTICIPANT);
+        sRoleMap.add(ICalTok.NON_PARTICIPANT.toString(), ROLE_NON_PARTICIPANT);
 
-        sStatusMap.add(Status.VEVENT_TENTATIVE.getValue(), STATUS_TENTATIVE);
-        sStatusMap.add(Status.VEVENT_CONFIRMED.getValue(), STATUS_CONFIRMED);
-        sStatusMap.add(Status.VEVENT_CANCELLED.getValue(), STATUS_CANCELLED);
+        sStatusMap.add(ICalTok.TENTATIVE.toString(), STATUS_TENTATIVE);
+        sStatusMap.add(ICalTok.CONFIRMED.toString(), STATUS_CONFIRMED);
+        sStatusMap.add(ICalTok.CANCELLED.toString(), STATUS_CANCELLED);
 
-        sPartStatMap.add(PartStat.ACCEPTED.getValue(), PARTSTAT_ACCEPTED);
-        sPartStatMap.add(PartStat.COMPLETED.getValue(), PARTSTAT_COMPLETED);
-        sPartStatMap.add(PartStat.DECLINED.getValue(), PARTSTAT_DECLINED);
-        sPartStatMap.add(PartStat.DELEGATED.getValue(), PARTSTAT_DELEGATED);
-        sPartStatMap.add(PartStat.IN_PROCESS.getValue(), PARTSTAT_IN_PROCESS);
-        sPartStatMap.add(PartStat.NEEDS_ACTION.getValue(), PARTSTAT_NEEDS_ACTION);
-        sPartStatMap.add(PartStat.TENTATIVE.getValue(), PARTSTAT_TENTATIVE);
+        sPartStatMap.add(ICalTok.ACCEPTED.toString(), PARTSTAT_ACCEPTED);
+        sPartStatMap.add(ICalTok.COMPLETED.toString(), PARTSTAT_COMPLETED);
+        sPartStatMap.add(ICalTok.DECLINED.toString(), PARTSTAT_DECLINED);
+        sPartStatMap.add(ICalTok.DELEGATED.toString(), PARTSTAT_DELEGATED);
+        sPartStatMap.add(ICalTok.IN_PROCESS.toString(), PARTSTAT_IN_PROCESS);
+        sPartStatMap.add(ICalTok.NEEDS_ACTION.toString(), PARTSTAT_NEEDS_ACTION);
+        sPartStatMap.add(ICalTok.TENTATIVE.toString(), PARTSTAT_TENTATIVE);
 
         sFreeBusyMap.add(FreeBusy.FBTYPE_FREE, FBTYPE_FREE);
         sFreeBusyMap.add(FreeBusy.FBTYPE_BUSY, FBTYPE_BUSY);
@@ -156,8 +151,8 @@ public class IcalXmlStrMap
         sOutlookFreeBusyMap.add(FreeBusy.FBTYPE_OUTLOOK_TENTATIVE, FBTYPE_BUSY_TENTATIVE);
         sOutlookFreeBusyMap.add(FreeBusy.FBTYPE_OUTLOOK_OUTOFOFFICE, FBTYPE_BUSY_UNAVAILABLE);
 
-        sTranspMap.add(Transp.TRANSPARENT.getValue(), TRANSP_TRANSPARENT);
-        sTranspMap.add(Transp.OPAQUE.getValue(), TRANSP_OPAQUE);
+        sTranspMap.add(ICalTok.TRANSPARENT.toString(), TRANSP_TRANSPARENT);
+        sTranspMap.add(ICalTok.OPAQUE.toString(), TRANSP_OPAQUE);
         
         sFreqMap.add(ZRecur.Frequency.DAILY.toString(), FREQ_DAILY);
         sFreqMap.add(ZRecur.Frequency.HOURLY.toString(), FREQ_HOURLY);

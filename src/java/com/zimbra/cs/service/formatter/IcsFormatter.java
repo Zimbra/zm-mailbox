@@ -26,17 +26,15 @@ package com.zimbra.cs.service.formatter;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import net.fortuna.ical4j.data.CalendarOutputter;
-import net.fortuna.ical4j.model.Calendar;
-import net.fortuna.ical4j.model.ValidationException;
-
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.util.Constants;
@@ -71,15 +69,16 @@ public class IcsFormatter extends Formatter {
         
         context.resp.setContentType("text/calendar");
 
-        try {
-            Calendar cal = context.targetMailbox.getCalendarForAppointments(appts);
+//        try {
+            ZVCalendar cal = context.targetMailbox.getZCalendarForAppointments(appts);
             ByteArrayOutputStream buf = new ByteArrayOutputStream();
-            CalendarOutputter calOut = new CalendarOutputter();
-            calOut.output(cal, buf);            
+            OutputStreamWriter wout = new OutputStreamWriter(buf);
+            cal.toICalendar(wout);
+            wout.flush();
             context.resp.getOutputStream().write(buf.toByteArray());
-        } catch (ValidationException e) {
-            throw ServiceException.FAILURE(" mbox:"+context.targetMailbox.getId()+" unable to get calendar "+e, e);
-        }
+//        } catch (ValidationException e) {
+//            throw ServiceException.FAILURE(" mbox:"+context.targetMailbox.getId()+" unable to get calendar "+e, e);
+//        }
     }
     
     // get the whole calendar

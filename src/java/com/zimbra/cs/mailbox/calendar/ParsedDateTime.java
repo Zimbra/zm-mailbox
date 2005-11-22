@@ -40,16 +40,6 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.service.ServiceException;
 
-import net.fortuna.ical4j.model.DateTime;
-import net.fortuna.ical4j.model.Parameter;
-import net.fortuna.ical4j.model.Property;
-import net.fortuna.ical4j.model.parameter.TzId;
-import net.fortuna.ical4j.model.property.DateProperty;
-import net.fortuna.ical4j.model.property.DtEnd;
-import net.fortuna.ical4j.model.property.DtStart;
-import net.fortuna.ical4j.model.property.RecurrenceId;
-
-
 public final class ParsedDateTime {
     
     public static final boolean USE_BROKEN_OUTLOOK_MODE = true;
@@ -73,31 +63,31 @@ public final class ParsedDateTime {
         return new ParsedDateTime(new java.util.Date(utc));
     }
     
-    public static ParsedDateTime parse(Property prop, TimeZoneMap tzmap)
-            throws ParseException {
-        assert (prop instanceof DtStart || prop instanceof DtEnd || prop instanceof RecurrenceId);
-        
-        DateProperty dateProp = (DateProperty)prop;
-        if (dateProp.isUtc()) {
-            return parse(dateProp.getValue(), ICalTimeZone.getUTC(), tzmap.getLocalTimeZone());
-        } else {
-            TzId paramTzId = (TzId)prop.getParameters().getParameter(Parameter.TZID);
-            String tzid = null;
-            if (paramTzId != null) {
-                tzid = paramTzId.getValue();
-            }
-            
-            if (tzid != null && tzid.equals("null")) {
-                tzid = null;
-            }
-            
-            String dateStr = prop.getValue();
-            
-            ICalTimeZone tz = tzmap.getTimeZone(tzid);
-            
-            return parse(dateStr, tz, tzmap.getLocalTimeZone());
-        }
-    }
+//    public static ParsedDateTime parse(Property prop, TimeZoneMap tzmap)
+//            throws ParseException {
+//        assert (prop instanceof DtStart || prop instanceof DtEnd || prop instanceof RecurrenceId);
+//        
+//        DateProperty dateProp = (DateProperty)prop;
+//        if (dateProp.isUtc()) {
+//            return parse(dateProp.getValue(), ICalTimeZone.getUTC(), tzmap.getLocalTimeZone());
+//        } else {
+//            TzId paramTzId = (TzId)prop.getParameters().getParameter(Parameter.TZID);
+//            String tzid = null;
+//            if (paramTzId != null) {
+//                tzid = paramTzId.getValue();
+//            }
+//            
+//            if (tzid != null && tzid.equals("null")) {
+//                tzid = null;
+//            }
+//            
+//            String dateStr = prop.getValue();
+//            
+//            ICalTimeZone tz = tzmap.getTimeZone(tzid);
+//            
+//            return parse(dateStr, tz, tzmap.getLocalTimeZone());
+//        }
+//    }
 
     public static ParsedDateTime parse(String str, ICalTimeZone tz)
     throws ParseException {
@@ -175,6 +165,21 @@ public final class ParsedDateTime {
             throw new ParseException("Invalid TimeString specified: " + str, 0);
         }
     }
+    
+    
+    public static ParsedDateTime parse(ZProperty prop, TimeZoneMap tzmap) throws ParseException
+    {
+        String tzname = prop.getParameterVal(ICalTok.TZID, null);
+        
+        ICalTimeZone tz = null;
+        if (tzname != null) 
+            tz = tzmap.getTimeZone(tzname);
+        
+        if (tz == null) 
+            tz = tzmap.getLocalTimeZone();
+        
+        return parse(prop.getValue(), tz);
+    }
 
     public static ParsedDateTime parse(String str, TimeZoneMap tzmap)
     throws ParseException {
@@ -206,26 +211,26 @@ public final class ParsedDateTime {
         MAX_DATETIME = new ParsedDateTime(cal, ICalTimeZone.getUTC(), false);
     }
     
-    public net.fortuna.ical4j.model.Date iCal4jDate() throws ServiceException {
-        try {
-            net.fortuna.ical4j.model.Date toRet;         
-            if (mHasTime) {
-                DateTime dtToRet = null;                
-                dtToRet = new net.fortuna.ical4j.model.DateTime(getDateTimePartString(), new net.fortuna.ical4j.model.TimeZone(getTimeZone().toVTimeZone()));
-                toRet = dtToRet;
-            } else {
-                if (USE_BROKEN_OUTLOOK_MODE) {
-                    DateTime dtToRet = new net.fortuna.ical4j.model.DateTime(this.getDateTimePartString()+"T000000", new net.fortuna.ical4j.model.TimeZone(getTimeZone().toVTimeZone()));
-                    toRet = dtToRet;
-                } else {
-                    toRet = new net.fortuna.ical4j.model.Date(this.getDateTimePartString());
-                }
-            }
-            return toRet;
-        } catch (ParseException e) {
-            throw ServiceException.FAILURE("Caught ParseException: "+e, e);
-        }
-    }
+//    public net.fortuna.ical4j.model.Date iCal4jDate() throws ServiceException {
+//        try {
+//            net.fortuna.ical4j.model.Date toRet;         
+//            if (mHasTime) {
+//                DateTime dtToRet = null;                
+//                dtToRet = new net.fortuna.ical4j.model.DateTime(getDateTimePartString(), new net.fortuna.ical4j.model.TimeZone(getTimeZone().toVTimeZone()));
+//                toRet = dtToRet;
+//            } else {
+//                if (USE_BROKEN_OUTLOOK_MODE) {
+//                    DateTime dtToRet = new net.fortuna.ical4j.model.DateTime(this.getDateTimePartString()+"T000000", new net.fortuna.ical4j.model.TimeZone(getTimeZone().toVTimeZone()));
+//                    toRet = dtToRet;
+//                } else {
+//                    toRet = new net.fortuna.ical4j.model.Date(this.getDateTimePartString());
+//                }
+//            }
+//            return toRet;
+//        } catch (ParseException e) {
+//            throw ServiceException.FAILURE("Caught ParseException: "+e, e);
+//        }
+//    }
 
     private GregorianCalendar mCal;
     

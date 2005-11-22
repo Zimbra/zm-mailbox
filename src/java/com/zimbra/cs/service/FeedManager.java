@@ -49,10 +49,6 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimePart;
 
-import net.fortuna.ical4j.data.CalendarBuilder;
-import net.fortuna.ical4j.data.ParserException;
-import net.fortuna.ical4j.model.Calendar;
-
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
@@ -61,6 +57,8 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.mail.ParseMimeMessage;
 import com.zimbra.cs.util.DateUtil;
@@ -135,8 +133,8 @@ public class FeedManager {
                 return parseRssFeed(Element.parseXML(content), fsd);
             } else if (ch == 'B') {
                 Reader reader = new InputStreamReader(content);
-                Calendar ical = new CalendarBuilder().build(reader);
-                return new SubscriptionData(Invite.createFromICalendar(acct, null, ical, false)); 
+                ZVCalendar ical = ZCalendarBuilder.build(reader);
+                return new SubscriptionData(Invite.createFromCalendar(acct, null, ical, false)); 
             } else
                 throw ServiceException.PARSE_ERROR("unrecognized remote content", null);
         } catch (org.dom4j.DocumentException e) {
@@ -145,8 +143,6 @@ public class FeedManager {
             throw ServiceException.RESOURCE_UNREACHABLE("HttpException: " + e, e);
         } catch (IOException e) {
             throw ServiceException.RESOURCE_UNREACHABLE("IOException: " + e, e);
-        } catch (ParserException e) {
-            throw ServiceException.PARSE_ERROR("error parsing raw iCalendar data", e);
         }
     }
 

@@ -32,6 +32,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.util.*;
@@ -42,10 +43,6 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 import javax.mail.internet.MimeUtility;
 
-import net.fortuna.ical4j.data.CalendarBuilder;
-import net.fortuna.ical4j.data.ParserException;
-import net.fortuna.ical4j.model.Calendar;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.document.Document;
@@ -55,6 +52,8 @@ import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.index.TopLevelMessageHandler;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.localconfig.DebugConfig;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.object.ObjectHandlerException;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ByteUtil;
@@ -87,7 +86,7 @@ public class ParsedMessage {
     private String mNormalizedSubject;
 	private boolean mSubjectPrefixed;
 	private List /*<Document>*/ mLuceneDocuments;
-	private Calendar miCalendar;
+	private ZVCalendar miCalendar;
 
     // m*Raw* should only be assigned by setRawData so these fields can kept in sync
     private byte[] mRawData;
@@ -372,7 +371,7 @@ public class ParsedMessage {
      * 
      * @return the iCalendar object or null if this is an ordinary message
      */
-    public Calendar getiCalendar() {
+    public ZVCalendar getiCalendar() {
         try {
             analyze();
         } catch (ServiceException e) {
@@ -521,10 +520,10 @@ public class ParsedMessage {
      * @param contentTypeString
      * @throws MessagingException
      */
-    private boolean parseAppointmentInfo(MimePart mimePart, String contentTypeString) throws MessagingException {
+    private boolean parseAppointmentInfo(MimePart mimePart, String contentTypeString) throws MessagingException, ServiceException {
         if (contentTypeString.indexOf(Mime.CT_TEXT_CALENDAR) != -1) {
             try {
-                CalendarBuilder calBuilder = new CalendarBuilder();
+//                CalendarBuilder calBuilder = new CalendarBuilder();
                 
 //                {
 //                    Reader is = new UnfoldingReader(new InputStreamReader(mimePart.getInputStream()));
@@ -536,13 +535,15 @@ public class ParsedMessage {
 //                }
                 
                 InputStream is = mimePart.getInputStream();
+                miCalendar = ZCalendarBuilder.build(new InputStreamReader(is));
                 
-                miCalendar = calBuilder.build(is);
+                
+//                miCalendar = calBuilder.build(is);
             } catch (IOException e) {
                 sLog.warn("error reading text/calendar mime part", e);
-            } catch (ParserException e) {
-                sLog.warn("error parsing text/calendar mime part", e);
-                sLog.warn("\tcaused by: ", e.getCause());
+//            } catch (ParserException e) {
+//                sLog.warn("error parsing text/calendar mime part", e);
+//                sLog.warn("\tcaused by: ", e.getCause());
             }
             return true;
         }

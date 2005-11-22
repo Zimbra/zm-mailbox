@@ -35,12 +35,6 @@ import java.util.*;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import net.fortuna.ical4j.model.Calendar;
-import net.fortuna.ical4j.model.component.VTimeZone;
-import net.fortuna.ical4j.model.property.Method;
-import net.fortuna.ical4j.model.property.ProdId;
-import net.fortuna.ical4j.model.property.Version;
-
 import org.apache.commons.collections.map.LRUMap;
 
 import com.zimbra.cs.account.Account;
@@ -2226,44 +2220,44 @@ public class Mailbox {
         return getItemList(octxt, MailItem.TYPE_APPOINTMENT, folderId);
     }
 
-    public synchronized Calendar getCalendarForAppointments(Collection appts)
-    throws ServiceException {
-        Calendar cal = new Calendar();
-
-        // PRODID, VERSION always required
-        cal.getProperties().add(new ProdId("Zimbra-Calendar-Provider"));
-        cal.getProperties().add(Version.VERSION_2_0);
-            
-        // REPLY
-        cal.getProperties().add(Method.PUBLISH);
-            
-            
-        // timezones
-        {
-            ICalTimeZone localTz = getAccount().getTimeZone();
-            TimeZoneMap tzmap = new TimeZoneMap(localTz);
-                
-            for (Iterator iter = appts.iterator(); iter.hasNext();) {
-                Appointment appt = (Appointment)iter.next();
-                tzmap.add(appt.getTimeZoneMap());
-            }
-                
-            // iterate the tzmap and add all the VTimeZone's 
-            // (TODO: should this code live in TimeZoneMap???) 
-            for (Iterator iter = tzmap.tzIterator(); iter.hasNext();) {
-                ICalTimeZone cur = (ICalTimeZone) iter.next();
-                VTimeZone vtz = cur.toVTimeZone();
-                cal.getComponents().add(vtz);
-            }
-        }
-            
-        // build all the event components and add them to the Calendar
-        for (Iterator iter = appts.iterator(); iter.hasNext();) {
-            Appointment appt = (Appointment)iter.next();
-            appt.appendRawCalendarData(cal);
-        }
-        return cal;
-    }
+//    public synchronized Calendar getCalendarForAppointments(Collection appts)
+//    throws ServiceException {
+//        Calendar cal = new Calendar();
+//
+//        // PRODID, VERSION always required
+//        cal.getProperties().add(new ProdId("Zimbra-Calendar-Provider"));
+//        cal.getProperties().add(Version.VERSION_2_0);
+//            
+//        // REPLY
+//        cal.getProperties().add(Method.PUBLISH);
+//            
+//            
+//        // timezones
+//        {
+//            ICalTimeZone localTz = getAccount().getTimeZone();
+//            TimeZoneMap tzmap = new TimeZoneMap(localTz);
+//                
+//            for (Iterator iter = appts.iterator(); iter.hasNext();) {
+//                Appointment appt = (Appointment)iter.next();
+//                tzmap.add(appt.getTimeZoneMap());
+//            }
+//                
+//            // iterate the tzmap and add all the VTimeZone's 
+//            // (TODO: should this code live in TimeZoneMap???) 
+//            for (Iterator iter = tzmap.tzIterator(); iter.hasNext();) {
+//                ICalTimeZone cur = (ICalTimeZone) iter.next();
+//                VTimeZone vtz = cur.toVTimeZone();
+//                cal.getComponents().add(vtz);
+//            }
+//        }
+//            
+//        // build all the event components and add them to the Calendar
+//        for (Iterator iter = appts.iterator(); iter.hasNext();) {
+//            Appointment appt = (Appointment)iter.next();
+//            appt.appendRawCalendarData(cal);
+//        }
+//        return cal;
+//    }
     
     public synchronized ZVCalendar getZCalendarForAppointments(Collection appts) throws ServiceException {
         ZVCalendar cal = new ZVCalendar();
@@ -2297,18 +2291,18 @@ public class Mailbox {
         return cal;
     }
     
-
-    public synchronized Calendar getCalendarForRange(OperationContext octxt, long start, long end, int folderId)
-    throws ServiceException {
-        boolean success = false;
-        try {
-            beginTransaction("getCalendarForRange", octxt);
-            Collection /* Appointment */ appts = getAppointmentsForRange(octxt, start, end, folderId, null);
-            return getCalendarForAppointments(appts);
-        } finally {
-            endTransaction(success);
-        }
-    }
+//
+//    public synchronized Calendar getCalendarForRange(OperationContext octxt, long start, long end, int folderId)
+//    throws ServiceException {
+//        boolean success = false;
+//        try {
+//            beginTransaction("getCalendarForRange", octxt);
+//            Collection /* Appointment */ appts = getAppointmentsForRange(octxt, start, end, folderId, null);
+//            return getCalendarForAppointments(appts);
+//        } finally {
+//            endTransaction(success);
+//        }
+//    }
     
     public synchronized ZVCalendar getZCalendarForRange(OperationContext octxt, long start, long end, int folderId)
     throws ServiceException {
@@ -2831,7 +2825,7 @@ public class Mailbox {
 
             short volumeId = redoPlayer == null ? Volume.getCurrentMessageVolume().getId()
                                                 : redoPlayer.getVolumeId();
-            Calendar iCal = pm.getiCalendar();
+            ZVCalendar iCal = pm.getiCalendar();
             msg = Message.create(messageId, folder, convTarget, pm, msgSize, digest,
                                  volumeId, unread, flags, tags, dinfo, noICal, iCal);
             

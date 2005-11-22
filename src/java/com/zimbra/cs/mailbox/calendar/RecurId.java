@@ -32,15 +32,11 @@ import java.util.TimeZone;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.soap.Element;
-
-import net.fortuna.ical4j.model.property.RecurrenceId;
-import net.fortuna.ical4j.model.Parameter;
-import net.fortuna.ical4j.model.parameter.Range;
-import net.fortuna.ical4j.model.parameter.TzId;
 
 public class RecurId 
 {
@@ -51,52 +47,52 @@ public class RecurId
     private int mRange;
     private ParsedDateTime mDateTime;
     
-    public RecurrenceId getRecurrenceId(TimeZone localTz) throws ServiceException {
-        RecurrenceId toRet = new RecurrenceId();
-        try {
-            toRet.setValue(mDateTime.getDateTimePartString());
-            if (mDateTime.isUTC()) {
-                toRet.setUtc(true);
-            } else {
-                String tzName = mDateTime.getTZName();
-                if (tzName == null) {
-                    toRet.getParameters().add(new TzId(localTz.getID()));
-                } else {
-                    toRet.getParameters().add(new TzId(tzName));
-                }
-            }
-            
-            switch (mRange) {
-            case RANGE_THISANDFUTURE:
-                toRet.getParameters().add(Range.THISANDFUTURE);
-                break;
-            case RANGE_THISANDPRIOR:
-                toRet.getParameters().add(Range.THISANDPRIOR);
-                break;
-            }
-        } catch (ParseException e) {
-            throw ServiceException.FAILURE("Parsing: "+mDateTime.toString(), e);
-        }
-        
-        return toRet;
-    }
-    
-    public static RecurId parse(RecurrenceId rid, TimeZoneMap tzmap) throws ParseException
-    {
-        ParsedDateTime dt = ParsedDateTime.parse(rid, tzmap);
-        
-        Range range = (Range)rid.getParameters().getParameter(Parameter.RANGE);
-        int rangeVal = RANGE_NONE;
-        if (range != null) {
-            if (range.getValue().equals(Range.THISANDFUTURE.getValue())) {
-                rangeVal = RANGE_THISANDFUTURE;
-            } else if (range.getValue().equals(Range.THISANDPRIOR.getValue())) {
-                rangeVal = RANGE_THISANDPRIOR;
-            }
-        } 
-
-        return new RecurId(dt, rangeVal);
-    }
+//    public RecurrenceId getRecurrenceId(TimeZone localTz) throws ServiceException {
+//        RecurrenceId toRet = new RecurrenceId();
+//        try {
+//            toRet.setValue(mDateTime.getDateTimePartString());
+//            if (mDateTime.isUTC()) {
+//                toRet.setUtc(true);
+//            } else {
+//                String tzName = mDateTime.getTZName();
+//                if (tzName == null) {
+//                    toRet.getParameters().add(new TzId(localTz.getID()));
+//                } else {
+//                    toRet.getParameters().add(new TzId(tzName));
+//                }
+//            }
+//            
+//            switch (mRange) {
+//            case RANGE_THISANDFUTURE:
+//                toRet.getParameters().add(Range.THISANDFUTURE);
+//                break;
+//            case RANGE_THISANDPRIOR:
+//                toRet.getParameters().add(Range.THISANDPRIOR);
+//                break;
+//            }
+//        } catch (ParseException e) {
+//            throw ServiceException.FAILURE("Parsing: "+mDateTime.toString(), e);
+//        }
+//        
+//        return toRet;
+//    }
+//    
+//    public static RecurId parse(RecurrenceId rid, TimeZoneMap tzmap) throws ParseException
+//    {
+//        ParsedDateTime dt = ParsedDateTime.parse(rid, tzmap);
+//        
+//        Range range = (Range)rid.getParameters().getParameter(Parameter.RANGE);
+//        int rangeVal = RANGE_NONE;
+//        if (range != null) {
+//            if (range.getValue().equals(Range.THISANDFUTURE.getValue())) {
+//                rangeVal = RANGE_THISANDFUTURE;
+//            } else if (range.getValue().equals(Range.THISANDPRIOR.getValue())) {
+//                rangeVal = RANGE_THISANDPRIOR;
+//            }
+//        } 
+//
+//        return new RecurId(dt, rangeVal);
+//    }
     
     public static RecurId createFromInstance(Appointment.Instance inst) {
         return new RecurId(ParsedDateTime.fromUTCTime(inst.getStart()), RANGE_NONE);
@@ -121,15 +117,21 @@ public class RecurId
     
     public String toString() {
         StringBuffer toRet = new StringBuffer(mDateTime.toString());
+        String range = getRangeStr();
+        if (range != null)
+            toRet.append(";RANGE=").append(range);
+        return toRet.toString();
+    }
+    
+    private String getRangeStr()
+    {
         switch (mRange) {
         case RANGE_THISANDFUTURE:
-            toRet.append("-THISANDFUTURE");
-            break;
+            return "THISANDFUTURE";
         case RANGE_THISANDPRIOR:
-            toRet.append("-THISANDPRIOR");
-            break;
+            return "THISANDPRIOR";
         }
-        return toRet.toString();
+        return null;
     }
     
     public boolean equals(Object other) {
@@ -192,7 +194,13 @@ public class RecurId
     }
     
     public ZProperty toProperty() {
-        ZProperty toRet = new ZProperty(ICalTok.RECURRENCE_ID, toString());
+//        ZProperty toRet = new ZProperty(ICalTok.RECURRENCE_ID, toString());
+//        return toRet;
+        ZProperty toRet = mDateTime.toProperty(ICalTok.RECURRENCE_ID);
+        String range = getRangeStr();
+        if (range != null) 
+            toRet.addParameter(new ZParameter(ICalTok.RANGE, range));
+        
         return toRet;
     }
     

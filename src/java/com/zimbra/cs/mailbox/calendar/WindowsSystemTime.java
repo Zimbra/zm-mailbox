@@ -25,7 +25,7 @@
 
 package com.zimbra.cs.mailbox.calendar;
 
-import net.fortuna.ical4j.model.TimeZone.SimpleOnset;
+import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
 
 /**
  * Java representation of Windows SYSTEMTIME structure in Winbase.h
