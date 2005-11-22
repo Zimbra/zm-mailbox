@@ -52,8 +52,10 @@ import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.util.ArrayUtil;
 import com.zimbra.cs.util.Constants;
 import com.zimbra.cs.util.TimeoutMap;
+import com.zimbra.cs.util.ZimbraLog;
 
 
 /**
@@ -66,12 +68,12 @@ public class DbMailItem {
     /** Maps the mailbox id to the set of all tag combinations stored for all
      *  items in the mailbox.  Enables fast database lookup by tag. */
     private static final Map /* <Long, TagsetCache */ sTagsetCache =
-        new TimeoutMap(15 * Constants.MILLIS_PER_MINUTE);
+        new TimeoutMap(120 * Constants.MILLIS_PER_MINUTE);
 
     /** Maps the mailbox id to the set of all flag combinations stored for all
      *  items in the mailbox.  Enables fast database lookup by flag. */
     private static final Map /* <Long, TagsetCache> */ sFlagsetCache =
-        new TimeoutMap(15 * Constants.MILLIS_PER_MINUTE);
+        new TimeoutMap(120 * Constants.MILLIS_PER_MINUTE);
 
 
     public static void create(Mailbox mbox, UnderlyingData data) throws ServiceException {
@@ -122,10 +124,14 @@ public class DbMailItem {
                 throw ServiceException.FAILURE("failed to create object", null);
 
             // Track the tags and flags for fast lookup later
-            TagsetCache tagsets = getTagsetCache(conn, mbox.getId());
-            tagsets.addTagset(data.tags);
-            TagsetCache flagsets = getFlagsetCache(conn, mbox.getId());
-            flagsets.addTagset(data.flags);
+            if (areTagsetsLoaded(mbox.getId())) {
+                TagsetCache tagsets = getTagsetCache(conn, mbox.getId());
+                tagsets.addTagset(data.tags);
+            }
+            if (areFlagsetsLoaded(mbox.getId())) {
+                TagsetCache flagsets = getFlagsetCache(conn, mbox.getId());
+                flagsets.addTagset(data.flags);
+            }
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
             if (e.getErrorCode() == Db.Error.DUPLICATE_ROW)
@@ -396,8 +402,10 @@ public class DbMailItem {
             
             // Update the flagset cache.  Assume that the item's in-memory
             // data has already been updated.
-            TagsetCache flagsets = getFlagsetCache(conn, mbox.getId());
-            flagsets.addTagset(item.getInternalFlagBitmask());
+            if (areFlagsetsLoaded(mbox.getId())) {
+                TagsetCache flagsets = getFlagsetCache(conn, mbox.getId());
+                flagsets.addTagset(item.getInternalFlagBitmask());
+            }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("rewriting row data for mailbox " + item.getMailboxId() + ", item " + item.getId(), e);
         } finally {
@@ -517,10 +525,10 @@ public class DbMailItem {
 
             // Update the flagset or tagset cache.  Assume that the item's in-memory
             // data has already been updated.
-            if (tag instanceof Flag) {
+            if (tag instanceof Flag && areFlagsetsLoaded(mbox.getId())) {
                 TagsetCache flagsets = getFlagsetCache(conn, mbox.getId());
                 flagsets.addTagset(item.getInternalFlagBitmask());
-            } else {
+            } else if (areTagsetsLoaded(mbox.getId())) {
                 TagsetCache tagsets = getTagsetCache(conn, mbox.getId());
                 tagsets.addTagset(item.getTagBitmask());
             }
@@ -553,10 +561,10 @@ public class DbMailItem {
 
             // Update the flagset or tagset cache.  Assume that the item's in-memory
             // data has already been updated.
-            if (tag instanceof Flag) {
+            if (tag instanceof Flag && areFlagsetsLoaded(mbox.getId())) {
                 TagsetCache flagsets = getFlagsetCache(conn, mbox.getId());
                 flagsets.applyMask(tag.getBitmask(), add);
-            } else {
+            } else if (areTagsetsLoaded(mbox.getId())) {
                 TagsetCache tagsets = getTagsetCache(conn, mbox.getId());
                 tagsets.applyMask(tag.getBitmask(), add);
             }
@@ -645,8 +653,10 @@ public class DbMailItem {
             stmt.setLong(4, tag.getBitmask());
         	stmt.executeUpdate();
 
-            TagsetCache tagsets = getTagsetCache(conn, mbox.getId());
-            tagsets.applyMask(tag.getTagBitmask(), false);
+            if (areTagsetsLoaded(mbox.getId())) {
+                TagsetCache tagsets = getTagsetCache(conn, mbox.getId());
+                tagsets.applyMask(tag.getTagBitmask(), false);
+            }
         } catch (SQLException e) {
         	throw ServiceException.FAILURE("clearing all references to tag " + tag.getId(), e);
         } finally {
@@ -1653,43 +1663,46 @@ public class DbMailItem {
             // Determine the set of matching tags
             Set searchTagsets = null;
             Set searchFlagsets = null;
-            int setFlagMask = 0;
-            long setTagMask = 0;
             Boolean unread = null;
-            for (int i = 0; c.tags != null && i < c.tags.length; i++)
-                if (c.tags[i].getId() == Flag.ID_FLAG_UNREAD) {
-                    unread = Boolean.TRUE; 
-                } else if (c.tags[i] instanceof Flag) {
-                    setFlagMask |= c.tags[i].getBitmask();
-                } else {
-                    setTagMask |= c.tags[i].getBitmask();
+            
+            if (!ArrayUtil.isEmpty(c.tags) || !ArrayUtil.isEmpty(c.excludeTags)) {
+                int setFlagMask = 0;
+                long setTagMask = 0;
+                for (int i = 0; c.tags != null && i < c.tags.length; i++)
+                    if (c.tags[i].getId() == Flag.ID_FLAG_UNREAD) {
+                        unread = Boolean.TRUE; 
+                    } else if (c.tags[i] instanceof Flag) {
+                        setFlagMask |= c.tags[i].getBitmask();
+                    } else {
+                        setTagMask |= c.tags[i].getBitmask();
+                    }
+                int flagMask = setFlagMask;
+                long tagMask = setTagMask;
+                
+                for (int i = 0; c.excludeTags != null && i < c.excludeTags.length; i++)
+                    if (c.excludeTags[i].getId() == Flag.ID_FLAG_UNREAD) {
+                        unread = Boolean.FALSE;
+                    } else if (c.excludeTags[i] instanceof Flag) {
+                        flagMask |= c.excludeTags[i].getBitmask();
+                    } else {
+                        tagMask |= c.excludeTags[i].getBitmask();
+                    }
+                
+                TagsetCache tcFlags = getFlagsetCache(conn, c.mailboxId);
+                TagsetCache tcTags  = getTagsetCache(conn, c.mailboxId);
+                if (setTagMask != 0 || tagMask != 0) {
+                    searchTagsets = tcTags.getMatchingTagsets(tagMask, setTagMask);
+                    if (searchTagsets.size() == 0) {
+                        // No items match the specified tags
+                        return result;
+                    }
                 }
-            int flagMask = setFlagMask;
-            long tagMask = setTagMask;
-
-            for (int i = 0; c.excludeTags != null && i < c.excludeTags.length; i++)
-                if (c.excludeTags[i].getId() == Flag.ID_FLAG_UNREAD) {
-                    unread = Boolean.FALSE;
-                } else if (c.excludeTags[i] instanceof Flag) {
-                    flagMask |= c.excludeTags[i].getBitmask();
-                } else {
-                    tagMask |= c.excludeTags[i].getBitmask();
-                }
-
-            TagsetCache tcFlags = getFlagsetCache(conn, c.mailboxId);
-            TagsetCache tcTags  = getTagsetCache(conn, c.mailboxId);
-            if (setTagMask != 0 || tagMask != 0) {
-                searchTagsets = tcTags.getMatchingTagsets(tagMask, setTagMask);
-                if (searchTagsets.size() == 0) {
-                    // No items match the specified tags
-                    return result;
-                }
-            }
-            if (setFlagMask != 0 || flagMask != 0) {
-                searchFlagsets = tcFlags.getMatchingTagsets(flagMask, setFlagMask);
-                if (searchFlagsets.size() == 0) {
-                    // No items match the specified flags
-                    return result;
+                if (setFlagMask != 0 || flagMask != 0) {
+                    searchFlagsets = tcFlags.getMatchingTagsets(flagMask, setFlagMask);
+                    if (searchFlagsets.size() == 0) {
+                        // No items match the specified flags
+                        return result;
+                    }
                 }
             }
             
@@ -2163,6 +2176,12 @@ public class DbMailItem {
     public static String getTombstoneTableName(int mailboxId) {
         return DbMailbox.getDatabaseName(mailboxId) + ".tombstone";
     }
+    
+    private static boolean areTagsetsLoaded(int mailboxId) {
+        synchronized(sTagsetCache) {
+            return sTagsetCache.containsKey(new Integer(mailboxId));
+        }
+    }
 
     private static TagsetCache getTagsetCache(Connection conn, int mailboxId)
     throws ServiceException {
@@ -2177,6 +2196,7 @@ public class DbMailItem {
         // the tagset cache for a single mailbox outside the
         // synchronized block.
         if (tagsets == null) {
+            ZimbraLog.cache.info("Loading tagset cache");
             tagsets = new TagsetCache("Mailbox " + mailboxId + " tags");
             tagsets.addTagsets(DbMailbox.getDistinctTagsets(conn, mailboxId));
         }
@@ -2186,6 +2206,12 @@ public class DbMailItem {
         }
         
         return tagsets;
+    }
+
+    private static boolean areFlagsetsLoaded(int mailboxId) {
+        synchronized(sFlagsetCache) {
+            return sFlagsetCache.containsKey(new Integer(mailboxId));
+        }
     }
 
     private static TagsetCache getFlagsetCache(Connection conn, int mailboxId)
@@ -2201,6 +2227,7 @@ public class DbMailItem {
         // the flagset cache for a single mailbox outside the
         // synchronized block.
         if (flagsets == null) {
+            ZimbraLog.cache.info("Loading tagset cache");
             flagsets = new TagsetCache("Mailbox " + mailboxId + " flags");
             flagsets.addTagsets(DbMailbox.getDistinctFlagsets(conn, mailboxId));
         }
