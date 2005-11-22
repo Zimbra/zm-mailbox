@@ -66,6 +66,8 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.op.*;
 import com.zimbra.cs.service.FeedManager;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.StatsFile;
+import com.zimbra.cs.service.util.ZimbraPerf;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -1799,7 +1801,11 @@ public class Mailbox {
         if (item == null)
             item = (MailItem) getItemCache().get(key);
         
-        logCacheActivity(key, item);
+        byte type = MailItem.TYPE_UNKNOWN;
+        if (item != null) {
+            type = item.getType();
+        }
+        logCacheActivity(key, type, item);
         return item;
     }
     MailItem getCachedItem(Integer key, byte type) throws ServiceException {
@@ -1823,7 +1829,7 @@ public class Mailbox {
         }
 
         MailItem retVal = (item == null || MailItem.isAcceptableType(type, item.mData.type) ? item : null);
-        logCacheActivity(key, retVal);
+        logCacheActivity(key, type, retVal);
         return retVal;
     }
     
@@ -4103,20 +4109,25 @@ public class Mailbox {
         return getAccount().getBooleanAttr(Provisioning.A_zimbraAttachmentsIndexingEnabled, true);
     }
 
-    private void logCacheActivity(Integer key, MailItem item) {
-        if (!ZimbraLog.cache.isDebugEnabled())
+    private static final StatsFile STATS_FILE =
+        new StatsFile("perf_item_cache.csv", new String[] { "id", "type", "hit" }, false);
+
+    private void logCacheActivity(Integer key, byte type, MailItem item) {
+        if (!ZimbraLog.cache.isDebugEnabled() && !ZimbraLog.perf.isDebugEnabled())
             return;
+
         if (item == null) {
             ZimbraLog.cache.debug("Cache miss for item " + key + " in mailbox " + getId());
+            ZimbraPerf.writeStats(STATS_FILE, key, type, "0");
             return;
         }
 
         // Don't log cache hits for folders, search folders and tags.  We always
         // keep these in memory, so cache hits are not interesting.
-        byte type = item.getType();
         if (isCachedType(type))
             return;
         ZimbraLog.cache.debug("Cache hit for " + MailItem.getNameForType(type) + " " + key + " in mailbox " + getId());
+        ZimbraPerf.writeStats(STATS_FILE, key, type, "1");
     }
 
 

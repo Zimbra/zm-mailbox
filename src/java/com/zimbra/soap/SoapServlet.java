@@ -45,6 +45,7 @@ import org.apache.log4j.PropertyConfigurator;
 
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.StatsFile;
 import com.zimbra.cs.service.util.ZimbraPerf;
 import com.zimbra.cs.service.util.ThreadLocalData;
 import com.zimbra.cs.servlet.ZimbraServlet;
@@ -196,8 +197,11 @@ public class SoapServlet extends ZimbraServlet {
     }
     
     private static StopWatch sSoapStopWatch = StopWatch.getInstance("Soap");
- 
+    private static final StatsFile STATS_FILE =
+        new StatsFile("perf_soap.csv", new String[] { "response" }, true);
+    
     public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        // Performance
         if (ZimbraLog.perf.isDebugEnabled()) {
             ThreadLocalData.reset();
         }
@@ -252,10 +256,8 @@ public class SoapServlet extends ZimbraServlet {
         
         // If perf logging is enabled, track server response times
         if (ZimbraLog.perf.isDebugEnabled()) {
-            long responseTime = System.currentTimeMillis() - startTime;
             String responseName = soapProto.getBodyElement(envelope).getName();
-            ZimbraPerf.writeResponseStats(responseName, responseTime,
-                ThreadLocalData.getDbTime(), ThreadLocalData.getStatementCount());
+            ZimbraPerf.writeStats(STATS_FILE, responseName);
         }
     }
 }

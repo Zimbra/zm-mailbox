@@ -48,6 +48,9 @@ import com.zimbra.cs.mailbox.Notification;
 import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.StatsFile;
+import com.zimbra.cs.service.util.ThreadLocalData;
+import com.zimbra.cs.service.util.ZimbraPerf;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.ZimbraLog;
@@ -127,6 +130,10 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         }
     }
 
+    private static final String STAT_NUM_RECIPIENTS = "num_recipients";
+    private static final StatsFile STATS_FILE =
+        new StatsFile("perf_lmtp.csv", new String[] { STAT_NUM_RECIPIENTS }, true);
+    
     private void deliverMessageToLocalMailboxes(byte[] data, List /*<LmtpAddress>*/ recipients, String envSender)
     throws MessagingException, ServiceException {
 
@@ -197,6 +204,11 @@ public class ZimbraLmtpBackend implements LmtpBackend {
             // We now know which addresses are valid and which ParsedMessage
             // version each recipient needs.  Deliver!
             try {
+                // Performance
+                if (ZimbraLog.perf.isDebugEnabled()) {
+                    ThreadLocalData.reset();
+                }
+
                 for (Iterator iter = recipients.iterator(); iter.hasNext(); ) {
                     LmtpAddress recipient = (LmtpAddress) iter.next();
                     String rcptEmail = recipient.getEmailAddress();
@@ -260,6 +272,11 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                         }
                     }
                 }
+                
+                if (ZimbraLog.perf.isDebugEnabled()) {
+                    ZimbraPerf.writeStats(STATS_FILE, recipients.size());
+                }
+                
             } finally {
                 // Clean up blobs in incoming directory after delivery to all recipients.
                 if (shared) {

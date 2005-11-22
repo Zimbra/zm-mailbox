@@ -28,6 +28,8 @@ package com.zimbra.cs.service.util;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.zimbra.cs.util.ZimbraLog;
+
 
 /**
  * Maintains per-thread data, used to keep track of performance statistics and
@@ -37,6 +39,7 @@ import java.util.Map;
  */
 public class ThreadLocalData {
 
+    private static final String TL_START_TIME = "StartTime";
     private static final String TL_DB_TIME = "DbTime";
     private static final String TL_STATEMENT_COUNT = "SqlStatementCount";
     
@@ -44,15 +47,26 @@ public class ThreadLocalData {
 
     /**
      * Resets all per-thread data.
-     *
      */
     public static void reset() {
-        Map map = (Map) sThreadLocal.get();
-        if (map != null) {
-            map.clear();
-        }
+        Map map = getThreadLocalMap();
+        map.clear();
+        map.put(TL_START_TIME, new Long(System.currentTimeMillis()));
     }
 
+    /**
+     * Returns the number of milliseconds elapsed since {@link #reset} was last called. 
+     */
+    public static long getProcessingTime() {
+        Map map = getThreadLocalMap();
+        Long startTime = (Long) map.get(TL_START_TIME);
+        if (startTime == null) {
+            ZimbraLog.perf.warn("", new IllegalStateException("getProcessingTime() called before reset()"));
+            return 0;
+        }
+        return System.currentTimeMillis() - startTime.longValue();
+    }
+    
     /**
      * Returns the total database execution time in milliseconds for the current thread.
      */

@@ -6,6 +6,7 @@ package com.zimbra.cs.mailbox;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -17,6 +18,8 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.TnefConverter;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.StatsFile;
+import com.zimbra.cs.service.util.ZimbraPerf;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.JMSession;
@@ -59,6 +62,9 @@ public class MessageCache {
         }
     }
 
+    private static final StatsFile STATS_FILE =
+        new StatsFile("perf_message_cache.csv", new String[] { "id", "hit" }, false);
+
     /** Returns an {@link InputStream} of the raw, uncompressed content of
      *  the item.  For messages, this is the body as received via SMTP; no
      *  postprocessing has been performed to make opaque attachments (e.g.
@@ -100,6 +106,11 @@ public class MessageCache {
             if (ZimbraLog.cache.isDebugEnabled())
                 ZimbraLog.cache.debug("msgcache: found raw content in cache: " + item.getDigest());
         }
+        
+        if (ZimbraLog.perf.isDebugEnabled()) {
+            ZimbraPerf.writeStats(STATS_FILE, item.getId(), cacheHit ? "1" : "0");
+        }
+        
         return cn.mContent;
     }
 
@@ -173,6 +184,11 @@ public class MessageCache {
             if (ZimbraLog.cache.isDebugEnabled())
                 ZimbraLog.cache.debug("msgcache: found mime message in cache: " + msg.getDigest());
         }
+
+        if (ZimbraLog.perf.isDebugEnabled()) {
+            ZimbraPerf.writeStats(STATS_FILE, msg.getId(), cacheHit ? "1" : "0");
+        }
+        
         return cn.mMessage;
     }
 

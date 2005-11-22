@@ -49,6 +49,9 @@ import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.StatsFile;
+import com.zimbra.cs.service.util.ThreadLocalData;
+import com.zimbra.cs.service.util.ZimbraPerf;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServerInputStream;
@@ -143,6 +146,7 @@ public class ImapHandler extends ProtocolHandler {
         boolean mValid;
         String  mTag;
         int     mCommand;
+        String  mCommandString;  // For performance logging
         List    mArguments = new LinkedList();
 
         ImapCommand(ImapRequest req, ImapSession session) throws IOException, ImapException {
@@ -161,6 +165,7 @@ public class ImapHandler extends ProtocolHandler {
             Boolean byUID = Boolean.FALSE;
             req.skipSpace();
             String command = req.readAtom();
+            mCommandString = command;
             do {
                 switch (command.charAt(0)) {
                     case 'A':
@@ -450,6 +455,10 @@ public class ImapHandler extends ProtocolHandler {
                     return true;
             }
         }
+        
+        String getCommandString() {
+            return mCommandString;
+        }
     }
 
     protected void setIdle(boolean idle) {
@@ -459,11 +468,18 @@ public class ImapHandler extends ProtocolHandler {
     }
 
     private static final boolean STOP_PROCESSING = false, CONTINUE_PROCESSING = true;
-
+    
+    private static StatsFile STATS_FILE =
+        new StatsFile("perf_imap.csv", new String[] { "command" }, true);
+    
     protected boolean processCommand() throws IOException {
         ImapRequest req = null;
         boolean keepGoing = CONTINUE_PROCESSING;
         ZimbraLog.clearContext();
+        if (ZimbraLog.perf.isDebugEnabled()) {
+            ThreadLocalData.reset();
+        }
+
         try {
             // FIXME: throw an exception instead?
             if (mInputStream == null)
@@ -499,6 +515,9 @@ public class ImapHandler extends ProtocolHandler {
             // FIXME: need to enqueue and process off queue, I think...
             setIdle(false);
             keepGoing = cmd.execute();
+            if (ZimbraLog.perf.isDebugEnabled()) {
+                ZimbraPerf.writeStats(STATS_FILE, cmd.getCommandString());
+            }
         } catch (ImapContinuationException ice) {
             mIncompleteRequest = req.rewind();
             if (ice.sendContinuation)

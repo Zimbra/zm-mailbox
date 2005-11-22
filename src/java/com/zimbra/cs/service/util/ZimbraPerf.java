@@ -41,6 +41,7 @@ import java.util.Map;
 import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.util.Constants;
+import com.zimbra.cs.util.StringUtil;
 import com.zimbra.cs.util.ZimbraLog;
 
 /**
@@ -106,7 +107,7 @@ public class ZimbraPerf {
      * <ul>
      *   <li>Updates aggregate timing data for the given statement</li>
      *   <li>Writes timing data to <code>sqlperf.csv</code> once a minute</li>
-     *   <li>Writes slow queries to <code>slowQueries.csv</code></li>
+     *   <li>Writes slow queries to <code>slow_queries.csv</code></li>
      * </ul>
      *  
      * @param normalized the SQL statement
@@ -212,7 +213,7 @@ public class ZimbraPerf {
         new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
 
     private static void writeSlowQuery(String sql, String normalized, int durationMillis) {
-        String filename = LC.zimbra_log_directory.value() + "/slowQueries.csv";
+        String filename = LC.zimbra_log_directory.value() + "/slow_queries.csv";
         FileWriter writer = null;
         try {
             File file = new File(filename);
@@ -232,25 +233,163 @@ public class ZimbraPerf {
         }
     }
     
-    public static void writeResponseStats(String responseName, long requestMillis,
-        long dbMillis, int statementCount) {
-        String filename = LC.zimbra_log_directory.value() + "/responses.csv";
+    private static Map /* <String, FileWriter> */ sWriterMap = new HashMap();
+
+    private static FileWriter getWriter(StatsFile statsFile)
+    throws IOException {
         FileWriter writer = null;
-        try {
-            File file = new File(filename);
+        
+        synchronized (sWriterMap) {
+            writer = (FileWriter) sWriterMap.get(statsFile.getFilename());
+            if (writer != null) {
+                return writer;
+            }
+            
+            File file = statsFile.getFile();
+            StringBuffer buf = new StringBuffer();
+            
+            // If the file doesn't exist, write the header
             if (!file.exists()) {
-                // There's a remote possibility that two processes will do this at the same time.
-                // Worst case, we'll lose one line of data.
                 writer = new FileWriter(file);
-                writer.write("timestamp,response_name,exec_time,db_time,statement_count\n");
+                buf.append("timestamp");
+                String[] statNames = statsFile.getStatNames();
+                if (statNames.length > 0) {
+                    buf.append(',');
+                    buf.append(StringUtil.join(",", statNames));
+                }
+                if (statsFile.shouldLogThreadLocal()) {
+                    buf.append(",exec_time,db_time,sql_count");
+                }
+                buf.append('\n');
+                writer.write(buf.toString());
             } else {
                 writer = new FileWriter(file, true);
             }
-            writer.write(TIMESTAMP_FORMATTER.format(new Date()) + "," + responseName + "," +
-                requestMillis + "," + dbMillis + "," + statementCount + "\n");
-            writer.close();
+            
+            sWriterMap.put(statsFile.getFilename(), writer);
+        }
+        
+        return writer;
+    }
+    
+    private static void removeWriter(StatsFile statsFile) {
+        synchronized (sWriterMap) {
+            sWriterMap.remove(statsFile.getFilename());
+        }
+    }
+    
+    /**
+     * Logs statistical information to the specified <code>StatsFile</code>,
+     * which contains one stat definition.
+     *  
+     * @param statsFile the <code>StatsFile</code> object, which contains the
+     *        filename and names of the statistics to be logged.
+     * @param stat the statistic to be logged
+     */
+    public static void writeStats(StatsFile statsFile, Object stat) {
+        writeStats(statsFile, stat, null, null, null);
+    }
+    
+    /**
+     * Logs statistical information to the specified <code>StatsFile</code>,
+     * which contains two stat definitions.  Stats are logged in the same order
+     * as defined in the <code>StatsFile</code>.
+     *  
+     * @param statsFile the <code>StatsFile</code> object, which contains the
+     *        filename and any extra columns written for the given event
+     * @param stat1 the first statistic
+     * @param stat2 the second statistic
+     * @param eventName the event name
+     */
+    public static void writeStats(StatsFile statsFile, Object stat1, Object stat2) {
+        writeStats(statsFile, stat1, stat2, null, null);
+    }
+    
+    /**
+     * Logs statistical information to the specified <code>StatsFile</code>,
+     * which contains three stat definitions.  Stats are logged in the same order
+     * as defined in the <code>StatsFile</code>.
+     *  
+     * @param statsFile the <code>StatsFile</code> object, which contains the
+     *        filename and any extra columns written for the given event
+     * @param stat1 the first statistic
+     * @param stat2 the second statistic
+     * @param eventName the event name
+     */
+    public static void writeStats(StatsFile statsFile,
+                                       Object stat1, Object stat2, Object stat3) {
+        writeStats(statsFile, stat1, stat2, stat3, null);
+    }
+    
+    /**
+     * Logs statistical information to the specified <code>StatsFile</code>.
+     * Stats are logged in the same order as defined in the <code>StatsFile</code>.
+     *  
+     * @param statsFile the <code>StatsFile</code> object, which contains the
+     *        filename and any extra columns written for the given event
+     * @param stat1 the first statistic
+     * @param stat2 the second statistic
+     * @param stat3 the third statistic
+     * @param stats the rest of the statistics
+     */
+    public static void writeStats(StatsFile statsFile,
+                                  Object stat1, Object stat2, Object stat3,
+                                  List stats) {
+        if (stats == null) {
+            stats = new ArrayList();
+        }
+        String[] statNames = statsFile.getStatNames();
+        stats.add(0, stat1);
+        if (statNames.length >= 2) {
+            stats.add(1, stat2);
+        }
+        if (statNames.length >= 3) {
+            stats.add(2, stat3);
+        }
+        
+        FileWriter writer = null;
+        try {
+            StringBuffer buf = new StringBuffer();
+            writer = getWriter(statsFile);
+            // Write timestamp and event name
+            buf.append(TIMESTAMP_FORMATTER.format(new Date()));;
+            
+            // Write stats
+            for (Object value : stats) {
+                if (value == null) {
+                    value = "";
+                } else if (value instanceof String) {
+                    // Put quotes around strings
+                    String s = (String) value;
+                    if (s.indexOf('"') >= 0) {
+                        // Escape any internal quotes
+                        s = s.replaceAll("\"", "\"\"");
+                    }
+                    value = "\"" + s + "\"";
+                }
+                buf.append(',');
+                buf.append(value);
+            }
+            
+            // Write ThreadLocalData
+            if (statsFile.shouldLogThreadLocal()) {
+                buf.append(',').append(ThreadLocalData.getProcessingTime());
+                buf.append(',').append(ThreadLocalData.getDbTime());
+                buf.append(',').append(ThreadLocalData.getStatementCount());
+            }
+            buf.append('\n');
+            writer.write(buf.toString());
+            writer.flush();
         } catch (IOException e) {
-            ZimbraLog.perf.warn("Unable to write to " + filename + ": " + e.toString());
+            ZimbraLog.perf.warn("Unable to write to " + statsFile.getFile().getPath() + ": " + e.toString());
+            if (writer != null) {
+                try {
+                    writer.close();
+                } catch (IOException e2) {
+                    ZimbraLog.perf.warn(e2.toString());
+                }
+                removeWriter(statsFile);
+            }
         }
     }
 }
