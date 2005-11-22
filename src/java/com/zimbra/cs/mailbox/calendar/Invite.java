@@ -1348,11 +1348,18 @@ public class Invite {
         
         vcal.addProperty(new ZProperty(ICalTok.METHOD, mMethod.toString()));
         
+        
         // timezones
+        ICalTimeZone local = mTzMap.getLocalTimeZone();
+        if (!mTzMap.contains(local)) {
+            vcal.addComponent(local.newToVTimeZone());
+        }
+        
         for (Iterator iter = mTzMap.tzIterator(); iter.hasNext();) {
             ICalTimeZone cur = (ICalTimeZone) iter.next();
             vcal.addComponent(cur.newToVTimeZone());
         }
+        
         
         vcal.addComponent(newToVEvent());
         return vcal;
@@ -1428,13 +1435,21 @@ public class Invite {
         String methodStr = cal.getPropVal(ICalTok.METHOD, ICalTok.PUBLISH.toString());
         
         int compNum = 0;
-        
+
+        // process the TIMEZONE's first: everything depends on them being there...
         for (ZComponent comp : cal.mComponents) {
             switch(comp.getTok()) {
             case VTIMEZONE:
                 ICalTimeZone tz = ICalTimeZone.fromVTimeZone(comp);
                 tzmap.add(tz);
                 break;
+                
+            }
+        }
+        
+        // now, process the other components (currently, only VEVENT)
+        for (ZComponent comp : cal.mComponents) {
+            switch(comp.getTok()) {
             case VEVENT:
                 try {
                     Invite newInv = new Invite(tzmap);
@@ -1589,27 +1604,12 @@ public class Invite {
                     if (newInv.getAttendees().size() > 1) {
                         newInv.setHasOtherAttendees(true);
                     }
-                    
-//                    System.out.println("\n\n\n\n"+newInv.toICalendar().toString());
-
-                    
-//                    StringWriter sw = new StringWriter();
-                    
-//                    Writer w = new FoldingWriter(sw);
-                    
-//                    newInv.newToVEvent().toICalendar(w);
-                    
-//                    System.out.println("\n\n\n\n"+sw.toString());
-                    
                 } catch (ServiceException e) {
                     System.out.println(e);
                     e.printStackTrace();
                 } catch (ParseException e) {
                     System.out.println(e);
                     e.printStackTrace();
-//                } catch (IOException e) {
-//                    System.out.println(e);
-//                    e.printStackTrace();
                 }
                 
                 break;

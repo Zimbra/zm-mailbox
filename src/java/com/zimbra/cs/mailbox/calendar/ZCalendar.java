@@ -470,6 +470,140 @@ public class ZCalendar {
         }
         return null;
     }
+    
+//    private static class UnfoldingReader : extends FilterReader
+//    {
+//        Reader mIn;
+//        
+//        char[] mBuf = new char[3];
+//        
+//        boolean buffering = false;
+//        boolean atNl = false;
+//        int bufPos = 0;
+//        
+//        
+//        
+//        UnfoldingReader(Reader in) {
+//            mIn = in;
+//        }
+//        
+//        int read() {
+//            int read = read();
+//            
+//            // buffering?
+//            //    yes:
+//            //       at nl?
+//            //         yes:
+//            //           is space?
+//            //             yes:
+//            //               eat 1 space, done buffering
+//            //             no:
+//            //               don't eat, done buffering
+//            //         no:
+//            //           is it a '\n'?
+//            //              yes: 
+//            //                 at nl=true.  still buffering
+//            //              no:
+//            //                 don't eat.  done buffering
+//            //    no:
+//            //      is it a '\r'?
+//            //          buffering, not at nl
+//            //      is it a '\n'?
+//            //          buffering.  at nl
+//            //      return it
+//            //
+//            if (buffering) {
+//                if (atNl) {
+//                    if ((char)read == ' ') {
+//                        
+//                    }
+//                }
+//            } else {
+//                
+//            }
+//            
+//            
+//        }
+//        
+//        int read(char[] cbuf, int off, int len) {
+//            
+//            for (int i = 0; i < len; i++) {
+//                int read = read();
+//                if (read == -1)
+//                    return i;
+//                
+//                cbuf[i+off] = (char)read;
+//            }
+//            return len;
+//        }
+//        
+//        
+//    }
+//    
+//    
+//    private static class Parser 
+//    {
+//        ZVCalendar mCal = null;
+//        ArrayList<ZComponent> mComponents = new ArrayList();
+//        ZProperty mCurProperty = null;
+//        StringBuffer curLine = null;
+//        
+//        StreamTokenizer mTokenizer;
+//        
+//n        static enum Token {
+//            BEGIN, VCALENDAR, END, COLON;
+//
+//            Token lookup(String str) {
+//                if (str.equals(":")) 
+//                    return COLON;
+//                
+//                return Token.valueOf(str);
+//            }
+//        }
+//
+//        static ZVCalendar parse(Reader in) throws ServiceException {
+//            Parser p = new Parser(in);
+//            return p.mCal;
+//        }
+//        
+//        private Parser(Reader in) throws ServiceException {
+//            mTokenizer = new StreamTokenizer(in);
+//            mTokenizer.wordChars(32, 127);
+//            mTokenizer.whitespaceChars(0, 20);
+//            mTokenizer.eolIsSignificant(true);
+//            mTokenizer.quoteChar('"');
+//            mTokenizer.ordinaryChar(';');
+//            mTokenizer.ordinaryChar(':');
+//            mTokenizer.ordinaryChar('=');
+//        }
+//        
+//        private int nextToken()
+//        {
+//            int toRet = nextToken();
+//            
+//        }
+//        
+//        private void parseError(String expected) throws ServiceException 
+//        {
+//            throw ServiceException.PARSE_ERROR("Expected \""+expected+"\" at l, cause)
+//        }
+//       
+//        private void expectToken(String token) throws ServiceException
+//        {
+//            if (tokeniser.nextToken() != StreamTokenizer.TT_WORD) {
+//                throw ServiceException.PARSE_ERROR("Expected \""+token, cause)
+//            
+//        }
+//            
+//            
+//        
+//        private void expectToken(Integer ch) throws ServiceException
+//        {
+//
+//        }
+//        
+//        
+//    }
 
     private static class ZContentHandler implements ContentHandler
     {

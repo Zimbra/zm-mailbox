@@ -56,7 +56,6 @@ public class TimeZoneMap {
     private ICalTimeZone mLocalTZ;
     
     
-    
     /**
      * 
      * @param localTZ local time zone of user account
@@ -182,37 +181,4 @@ public class TimeZoneMap {
     public void add(ICalTimeZone tz) {
     	mTzMap.put(tz.getID(), tz);
     }
-//
-//    public void add(VTimeZone vtz) throws ServiceException {
-//        String tzid = vtz.getProperties().getProperty(Property.TZID).getValue();
-//        if (mTzMap.get(tzid)!=null) {
-//            return; // he says he's already got one of those
-//        }
-//
-//        String dayName = null;
-//        String stdName = null;
-//
-//        ComponentList c = vtz.getObservances();
-//        Object o;
-//
-//        Daylight daylight = (Daylight)c.getComponent(net.fortuna.ical4j.model.component.Observance.DAYLIGHT);
-//        if (daylight != null) {
-//            Property prop = daylight.getProperties().getProperty(Property.TZNAME);
-//            if (prop!= null) {
-//                dayName = prop.getValue();
-//            }
-//        }
-//
-//        Standard std = (Standard)c.getComponent(net.fortuna.ical4j.model.component.Observance.STANDARD);
-//        if (std != null) {
-//            Property prop = std.getProperties().getProperty(Property.TZNAME);
-//            if (prop!= null) {
-//                stdName = prop.getValue();
-//            }
-//        }
-//
-//        ICalTimeZone javaTZ = new ICalTimeZone(tzid, vtz);
-//
-//        mTzMap.put(tzid, javaTZ);
-//    }
 }

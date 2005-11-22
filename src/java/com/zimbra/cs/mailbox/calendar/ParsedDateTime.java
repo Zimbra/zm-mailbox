@@ -38,10 +38,13 @@ import java.util.regex.Pattern;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
-import com.zimbra.cs.service.ServiceException;
 
 public final class ParsedDateTime {
     
+    /**
+     * This means that "Date" events are treated as having a time of 00:00:00 in the
+     * creator's default timezone
+     */
     public static final boolean USE_BROKEN_OUTLOOK_MODE = true;
     
     public static void main(String[] args) {
@@ -63,32 +66,6 @@ public final class ParsedDateTime {
         return new ParsedDateTime(new java.util.Date(utc));
     }
     
-//    public static ParsedDateTime parse(Property prop, TimeZoneMap tzmap)
-//            throws ParseException {
-//        assert (prop instanceof DtStart || prop instanceof DtEnd || prop instanceof RecurrenceId);
-//        
-//        DateProperty dateProp = (DateProperty)prop;
-//        if (dateProp.isUtc()) {
-//            return parse(dateProp.getValue(), ICalTimeZone.getUTC(), tzmap.getLocalTimeZone());
-//        } else {
-//            TzId paramTzId = (TzId)prop.getParameters().getParameter(Parameter.TZID);
-//            String tzid = null;
-//            if (paramTzId != null) {
-//                tzid = paramTzId.getValue();
-//            }
-//            
-//            if (tzid != null && tzid.equals("null")) {
-//                tzid = null;
-//            }
-//            
-//            String dateStr = prop.getValue();
-//            
-//            ICalTimeZone tz = tzmap.getTimeZone(tzid);
-//            
-//            return parse(dateStr, tz, tzmap.getLocalTimeZone());
-//        }
-//    }
-
     public static ParsedDateTime parse(String str, ICalTimeZone tz)
     throws ParseException {
         if (tz == null)
@@ -136,20 +113,22 @@ public final class ParsedDateTime {
                 // FORM #3: DATE WITH LOCAL TIME AND TIME ZONE REFERENCE
                 //}
             } else {
-                tz = null;
+                if (!USE_BROKEN_OUTLOOK_MODE) // all-day events should *not* have a timezone
+                    tz = null;
             }
             
             GregorianCalendar cal = new GregorianCalendar();
             if (zulu) {
                 cal.setTimeZone(ICalTimeZone.getUTC());
                 
-            } else if (tz != null) {
-                cal.setTimeZone(tz);
             } else {
-                tz = localTZ;
-                cal.setTimeZone(localTZ);
-            }
-            
+                if (tz == null)
+                    tz = localTZ;
+
+                if (tz != null) // localTZ could have been null
+                    cal.setTimeZone(tz);
+            }         
+
             cal.clear();
 
             boolean hasTime = false;
@@ -158,7 +137,7 @@ public final class ParsedDateTime {
                 cal.set(year, month, date, hour, minute, second);
                 hasTime = true;
             } else {
-                cal.set(year, month, date);
+                cal.set(year, month, date, 0, 0, 0);
             }
             return new ParsedDateTime(cal, tz, hasTime);
         } else {
@@ -211,27 +190,6 @@ public final class ParsedDateTime {
         MAX_DATETIME = new ParsedDateTime(cal, ICalTimeZone.getUTC(), false);
     }
     
-//    public net.fortuna.ical4j.model.Date iCal4jDate() throws ServiceException {
-//        try {
-//            net.fortuna.ical4j.model.Date toRet;         
-//            if (mHasTime) {
-//                DateTime dtToRet = null;                
-//                dtToRet = new net.fortuna.ical4j.model.DateTime(getDateTimePartString(), new net.fortuna.ical4j.model.TimeZone(getTimeZone().toVTimeZone()));
-//                toRet = dtToRet;
-//            } else {
-//                if (USE_BROKEN_OUTLOOK_MODE) {
-//                    DateTime dtToRet = new net.fortuna.ical4j.model.DateTime(this.getDateTimePartString()+"T000000", new net.fortuna.ical4j.model.TimeZone(getTimeZone().toVTimeZone()));
-//                    toRet = dtToRet;
-//                } else {
-//                    toRet = new net.fortuna.ical4j.model.Date(this.getDateTimePartString());
-//                }
-//            }
-//            return toRet;
-//        } catch (ParseException e) {
-//            throw ServiceException.FAILURE("Caught ParseException: "+e, e);
-//        }
-//    }
-
     private GregorianCalendar mCal;
     
     public ICalTimeZone getTimeZone() { return mICalTimeZone; }
@@ -347,8 +305,7 @@ public final class ParsedDateTime {
         StringBuffer toRet = new StringBuffer();
 
         toRet.append(fourDigitFormat.format(mCal.get(java.util.Calendar.YEAR)));
-        toRet.append(twoDigitFormat
-                .format(mCal.get(java.util.Calendar.MONTH) + 1));
+        toRet.append(twoDigitFormat.format(mCal.get(java.util.Calendar.MONTH) + 1));
         toRet.append(twoDigitFormat.format(mCal.get(java.util.Calendar.DATE)));
 
         // if HOUR is set, then assume it is a DateTime, otherwise assume it is
@@ -367,8 +324,7 @@ public final class ParsedDateTime {
                 toRet.append("00");
             }
             if (mCal.isSet(java.util.Calendar.SECOND)) {
-                toRet.append(twoDigitFormat.format(mCal
-                        .get(java.util.Calendar.SECOND)));
+                toRet.append(twoDigitFormat.format(mCal.get(java.util.Calendar.SECOND)));
             } else {
                 toRet.append("00");
             }
@@ -376,7 +332,10 @@ public final class ParsedDateTime {
             if (isUTC()) {
                 toRet.append("Z");
             }
+        } else if (USE_BROKEN_OUTLOOK_MODE) {
+            toRet.append("T000000");
         }
+        
         return toRet.toString();
     }
     
@@ -392,8 +351,8 @@ public final class ParsedDateTime {
      * @return The name of the TimeZone
      */
     public String getTZName() {
-        if ((USE_BROKEN_OUTLOOK_MODE || mHasTime) && !isUTC()) {
-                return mICalTimeZone.getID();
+        if ((mHasTime || USE_BROKEN_OUTLOOK_MODE) && !isUTC() && mICalTimeZone!=null) {
+            return mICalTimeZone.getID();
         }
         return null;
     }
@@ -431,8 +390,13 @@ public final class ParsedDateTime {
         ZProperty toRet = new ZProperty(tok, getDateTimePartString());
         
         String tzName = getTZName();
-        if (tzName != null) {
-            toRet.addParameter(new ZParameter(ICalTok.TZID, tzName));
+        if (!USE_BROKEN_OUTLOOK_MODE && !hasTime()) {
+            toRet.addParameter(new ZParameter(ICalTok.VALUE, ICalTok.DATE.toString()));
+        } else {
+            assert(isUTC() || tzName != null);
+            if (tzName != null) {
+                toRet.addParameter(new ZParameter(ICalTok.TZID, tzName));
+            } 
         }
         return toRet;
     }

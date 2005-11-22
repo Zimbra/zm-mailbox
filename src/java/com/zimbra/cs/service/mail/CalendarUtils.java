@@ -133,7 +133,6 @@ public class CalendarUtils {
             Address[] addrs = new Address[toAts.size()];
             
             for (int i = toAts.size()-1; i>=0; i--) {
-//                String toAddr = ((URI)toAts.get(i)).getSchemeSpecificPart();
                 String toAddr = (String)toAts.get(i);
                 InternetAddress addr = new InternetAddress(toAddr);
                 addrs[i] = addr;
@@ -173,18 +172,11 @@ public class CalendarUtils {
         
         String calStr = content.getText();
         StringReader reader = new StringReader(calStr);
-//        try {
-            toRet.mCal = ZCalendarBuilder.build(reader);
+        toRet.mCal = ZCalendarBuilder.build(reader);
             
-            List<Invite> invs = Invite.createFromCalendar(account, toRet.mSummary, toRet.mCal, false);
+        List<Invite> invs = Invite.createFromCalendar(account, toRet.mSummary, toRet.mCal, false);
             
-//            toRet.mInvite = (Invite)(Invite.createFromICalendar(account, toRet.mSummary, toRet.mCal, false).get(0));
-            toRet.mInvite = invs.get(0);
-//        } catch (ParserException pe) {
-//            throw ServiceException.FAILURE("Parse Exception parsing raw iCalendar data -- "+pe, pe);
-//        } catch (IOException ioe) {
-//            throw ServiceException.FAILURE("IOException parsing raw iCalendar data -- "+ioe, ioe);
-//        }
+        toRet.mInvite = invs.get(0);
         
         return toRet;
     }
@@ -233,10 +225,9 @@ public class CalendarUtils {
         // DTSTAMP
         create.setDtStamp(new Date().getTime());
       
-      // SEQUENCE
+        // SEQUENCE
         create.setSeqNo(0);
 
-//        Calendar iCal = create.toICalendar();
         ZVCalendar iCal = create.newToICalendar();
         
         String summaryStr = create.getName() != null ? create.getName() : "";
@@ -311,7 +302,6 @@ public class CalendarUtils {
     private static boolean attendeeListContains(List /* ZAttendee */ list, ZAttendee at) {
         for (Iterator iter = list.iterator(); iter.hasNext();) {
             ZAttendee cur = (ZAttendee)iter.next();
-//            if (cur.getCalAddress().equals(at.getCalAddress())) {
             if (cur.addressesMatch(at)) {
                 return true;
             }
@@ -319,11 +309,8 @@ public class CalendarUtils {
         return false;
     }
 
-    static RecurId parseRecurId(Element e,
-                                TimeZoneMap invTzMap,
-                                Invite inv)
-    throws ServiceException
-    {
+    static RecurId parseRecurId(Element e, TimeZoneMap invTzMap, Invite inv)
+    throws ServiceException {
         String range = e.getAttribute("range", "");
         
         ParsedDateTime dt = parseDateTime(e, invTzMap, inv);
@@ -507,8 +494,6 @@ public class CalendarUtils {
                                 // as UTC time, i.e. ending in "Z".
                                 // (RFC2445 Section 4.3.10 Recurrence Rule)
                                 ParsedDateTime untilCal = parseDateTime(ruleEltName, d, tz, invTzMap, inv);
-//                                DateTimeFormat dtf = DateTimeFormat.getInstance();
-//                                String dtUTC = dtf.format(untilCal.getDate(), true);
                                 recurBuf.append(untilCal.getDateTimePartString());
                             }
                         } else if (ruleEltName.equals(MailService.E_APPT_RULE_COUNT)) {
