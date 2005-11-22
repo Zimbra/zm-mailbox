@@ -836,7 +836,7 @@ public final class ZimbraQuery {
             
             // size:100b size:1kb size:1mb bigger:10kb smaller:3gb
             // 
-            // n+{b,kb,mb,gb}    // default is kb?
+            // n+{b,kb,mb}    // default is b
             int multiplier = 1;
             switch (typeChar) {
             case 'k':
@@ -844,9 +844,6 @@ public final class ZimbraQuery {
                 break;
             case 'm':
                 multiplier = 1024*1024;
-                break;
-            case 'g':
-                multiplier = 1024*1024*1024;
                 break;
             }
             

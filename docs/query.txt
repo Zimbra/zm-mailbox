@@ -49,7 +49,7 @@ DATE:  absolute-date = mm/dd/yyyy | yyyy/dd/mm  OR
        relative-date = [+/-]nnnn{minute,hour,day,week,month,year}
        (need to figure out how to represent "this week", "last
        week", "this month", etc)
-SIZE: ([<>])?n+{b,kb,mb,gb}    // default is kb?
+SIZE: ([<>])?n+{b,kb,mb}    // default is b
 DB_MSG_ID: ??
 NUM: ([<>])?n+
 
