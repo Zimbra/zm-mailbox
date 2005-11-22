@@ -481,7 +481,11 @@ public final class MailboxIndex
                 // Flush out more index writers if map is too big.
                 toRemove.clear();
                 synchronized (sOpenIndexWriters) {
-                    int excess = sOpenIndexWriters.size() - (mMaxSize - 1);
+                    int excess = sOpenIndexWriters.size() - (mMaxSize - 20);
+                    
+                    if (excess > sOpenIndexWriters.size()) 
+                        excess = sOpenIndexWriters.size();
+                    
                     if (excess > 0) {
                         int num = 0;
                     	for (Iterator it = sOpenIndexWriters.entrySet().iterator();

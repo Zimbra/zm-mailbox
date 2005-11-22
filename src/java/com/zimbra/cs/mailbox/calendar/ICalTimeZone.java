@@ -27,6 +27,7 @@ package com.zimbra.cs.mailbox.calendar;
 
 import java.text.ParseException;
 import java.util.Calendar;
+import java.util.Formatter;
 import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.List;
@@ -39,6 +40,9 @@ import org.apache.commons.logging.LogFactory;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.WellKnownTimeZone;
 import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.service.ServiceException;
 
 /**
@@ -505,5 +509,119 @@ public class ICalTimeZone extends net.fortuna.ical4j.model.TimeZone
 
             return onsetTime;
         }
+    }
+    
+    private static final long MSEC_PER_HOUR = 1000 * 60 * 60;
+    private static final long MSEC_PER_MIN = 1000 * 60;
+    private static final long MSEC_PER_SEC = 1000;    
+    
+    /**
+     * Input: TZOFFSETTO: [+-]HHMM(SS)?
+     * Output: msec offset from GMT
+     * @param utcOffset
+     * @return
+     */
+    static int tzOffsetToTime(String utcOffset) {
+        int toRet = 0;
+        
+        toRet += (Integer.parseInt(utcOffset.substring(1,3)) * MSEC_PER_HOUR);
+        toRet += (Integer.parseInt(utcOffset.substring(3,5)) * MSEC_PER_MIN);
+        if (utcOffset.length() >= 7) {
+            toRet += (Integer.parseInt(utcOffset.substring(5,7)) * MSEC_PER_SEC);
+        }
+        if (utcOffset.charAt(0) == '-') {
+            toRet *= -1;
+        }
+        return toRet;
+    }
+    
+    /**
+     * Input: msec GMT
+     * Output: TZOFFSETTO: [+-]HHMM(SS)?
+     * @param utcOffset
+     * @return
+     */
+    static String timeToTzOffsetString(int time)
+    {
+       StringBuffer toRet = new StringBuffer(time > 0 ? "+" : "-");
+       
+       time = Math.abs(time / 1000); // msecs->secs
+       
+       int secs = time % 60;
+       time = time / 60;
+       
+       int mins = time % 60;
+       int hours = time / 60;
+       
+       if (secs > 0) { 
+           toRet.append(new Formatter().format("%02d%02d%02d", hours, mins, secs));
+       } else {
+           toRet.append(new Formatter().format("%02d%02d", hours, mins));
+       }
+       return toRet.toString();
+    }
+    
+    public ZComponent newToVTimeZone()
+    {
+        ZComponent vtz = new ZComponent(ICalTok.VTIMEZONE);
+        vtz.addProperty(new ZProperty(ICalTok.TZID, getID()));
+        
+        if (mDayToStdDtStart != null) {
+            ZComponent standard = new ZComponent(ICalTok.STANDARD);
+            vtz.addComponent(standard);
+            
+            standard.addProperty(new ZProperty(ICalTok.DTSTART, mDayToStdDtStart));
+            standard.addProperty(new ZProperty(ICalTok.TZOFFSETTO, timeToTzOffsetString(mStandardOffset)));
+            standard.addProperty(new ZProperty(ICalTok.TZOFFSETFROM, timeToTzOffsetString(mDaylightOffset)));
+            standard.addProperty(new ZProperty(ICalTok.RRULE, mDayToStdRule));
+        }
+        
+        if (mStdToDayDtStart != null) {
+            ZComponent daylight = new ZComponent(ICalTok.DAYLIGHT);
+            vtz.addComponent(daylight);
+            
+            daylight.addProperty(new ZProperty(ICalTok.DTSTART, mStdToDayDtStart));
+            daylight.addProperty(new ZProperty(ICalTok.TZOFFSETTO, timeToTzOffsetString(mDaylightOffset)));
+            daylight.addProperty(new ZProperty(ICalTok.TZOFFSETFROM, timeToTzOffsetString(mStandardOffset)));
+            daylight.addProperty(new ZProperty(ICalTok.RRULE, mStdToDayRule));
+        }
+        
+        return vtz;
+    }
+    
+    public static ICalTimeZone fromVTimeZone(ZComponent comp)
+    {
+        String tzname = comp.getPropVal(ICalTok.TZID, null);
+        
+        ZComponent daylight = comp.getComponent(ICalTok.DAYLIGHT);
+        
+        String daydtStart = null;
+        int dayoffsetTime = 0;
+        String dayrrule = null;
+        
+        String stddtStart = null;
+        int stdoffsetTime = 0;
+        String stdrrule = null;
+        
+        if (daylight != null) {
+            daydtStart = daylight.getPropVal(ICalTok.DTSTART, null);
+            String daytzOffsetTo = daylight.getPropVal(ICalTok.TZOFFSETTO, null);
+            dayoffsetTime = tzOffsetToTime(daytzOffsetTo);  
+            dayrrule = daylight.getPropVal(ICalTok.RRULE, null);
+        }
+        
+        ZComponent standard = comp.getComponent(ICalTok.STANDARD); 
+        if (standard != null) {
+            stddtStart = standard.getPropVal(ICalTok.DTSTART, null);
+            String stdtzOffsetTo = standard.getPropVal(ICalTok.TZOFFSETTO, null);
+            stdoffsetTime = tzOffsetToTime(stdtzOffsetTo);  
+            stdrrule = standard.getPropVal(ICalTok.RRULE, null);
+        }
+        
+        ICalTimeZone tz = new ICalTimeZone(tzname, 
+                stdoffsetTime, stddtStart, stdrrule,
+                dayoffsetTime, daydtStart, dayrrule);
+
+        return tz;
     }
 }

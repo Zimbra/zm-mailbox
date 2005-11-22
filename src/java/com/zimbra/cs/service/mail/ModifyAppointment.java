@@ -33,8 +33,6 @@ import java.util.Map;
 import javax.mail.Address;
 import javax.mail.MessagingException;
 
-import net.fortuna.ical4j.model.Calendar;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -43,6 +41,7 @@ import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.stats.StopWatch;
@@ -165,7 +164,7 @@ public class ModifyAppointment extends CalendarRequest {
             }
             
             dat.mInvite = CalendarUtils.buildCancelInviteCalendar(acct, inv, text, cancelAt);
-            Calendar cal = dat.mInvite.toICalendar();
+            ZVCalendar cal = dat.mInvite.newToICalendar();
             
             dat.mMm = CalendarUtils.createDefaultCalendarMessage(acct.getName(), 
                     cancelAt.getAddress(), subject, text, inv.getUid(), cal);

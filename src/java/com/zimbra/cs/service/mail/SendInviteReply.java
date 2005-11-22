@@ -43,13 +43,12 @@ import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
-
-import net.fortuna.ical4j.model.Calendar;
 
 /**
  * @author tim
@@ -136,7 +135,7 @@ public class SendInviteReply extends CalendarRequest {
                     csd.mSaveToSent = shouldSaveToSent(acct);
                     csd.mInvite = CalendarUtils.replyToInvite(acct, oldInv, verb, replySubject, exceptDt);
 
-                    Calendar iCal = csd.mInvite.toICalendar();
+                    ZVCalendar iCal = csd.mInvite.newToICalendar();
                     
                     ParseMimeMessage.MimeMessageData parsedMessageData = new ParseMimeMessage.MimeMessageData();
                     
@@ -201,7 +200,7 @@ public class SendInviteReply extends CalendarRequest {
         return verb + ": " + inv.getName();
     }
 
-    public static MimeMessage createDefaultReply(String from, Invite inv, String replySubject, ParsedVerb verb, Calendar iCal)
+    public static MimeMessage createDefaultReply(String from, Invite inv, String replySubject, ParsedVerb verb, ZVCalendar iCal)
     throws ServiceException {
         /////////
         // Build the default text part and add it to the mime multipart

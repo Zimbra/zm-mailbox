@@ -35,6 +35,9 @@ import java.util.GregorianCalendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.service.ServiceException;
 
 import net.fortuna.ical4j.model.DateTime;
@@ -417,5 +420,15 @@ public final class ParsedDateTime {
 
     public String toString() {
         return getTZParamString() + getDateTimePartString();
+    }
+    
+    public ZProperty toProperty(ICalTok tok) {
+        ZProperty toRet = new ZProperty(tok, getDateTimePartString());
+        
+        String tzName = getTZName();
+        if (tzName != null) {
+            toRet.addParameter(new ZParameter(ICalTok.TZID, tzName));
+        }
+        return toRet;
     }
 }

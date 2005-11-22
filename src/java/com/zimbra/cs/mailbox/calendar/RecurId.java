@@ -31,6 +31,8 @@ import java.util.TimeZone;
 
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.soap.Element;
@@ -187,6 +189,11 @@ public class RecurId
         md.put(FN_DT, mDateTime.toString());
         md.put(FN_RANGE, mRange);
         return md;
+    }
+    
+    public ZProperty toProperty() {
+        ZProperty toRet = new ZProperty(ICalTok.RECURRENCE_ID, toString());
+        return toRet;
     }
     
     public Element toXml(Element parent) {

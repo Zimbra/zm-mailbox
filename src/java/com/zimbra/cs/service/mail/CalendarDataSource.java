@@ -33,15 +33,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 
 import javax.activation.DataSource;
 import javax.mail.internet.ContentType;
 
-import net.fortuna.ical4j.data.CalendarOutputter;
-import net.fortuna.ical4j.model.Calendar;
-import net.fortuna.ical4j.model.Property;
-import net.fortuna.ical4j.model.ValidationException;
-import net.fortuna.ical4j.model.property.Method;
+import com.zimbra.cs.mailbox.calendar.ZCalendar;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 
 /**
  * @author tim
@@ -51,22 +49,23 @@ import net.fortuna.ical4j.model.property.Method;
  */
 class CalendarDataSource implements DataSource
 {
-    private Calendar iCal;
+    private ZCalendar.ZVCalendar mICal;
     private String mUid;
     private String mMethod;
     private String mAttachName; // NULL if we want a text/calendar part, or set if we want an attached file
+    private byte[] mBuf = null;
 
-    public CalendarDataSource(Calendar iCal, String uid, String attachmentName) {
-        this.iCal = iCal;
+    public CalendarDataSource(ZCalendar.ZVCalendar iCal, String uid, String attachmentName) {
+        mICal = iCal;
         mUid = uid;
         mAttachName = attachmentName;
         if (mAttachName == null || mAttachName.equals("")) {
             mAttachName = "meeting.ics";
         }
         
-        Method method = (Method)(iCal.getProperties().getProperty(Property.METHOD));
-        
-        mMethod = method.getValue();
+//        Method method = (Method)(iCal.getProperties().getProperty(Property.METHOD));
+//        mMethod = method.getValue();
+        mMethod = iCal.getPropVal(ICalTok.METHOD, ICalTok.PUBLISH.toString());
     }
 
     public String getContentType() {
@@ -92,19 +91,17 @@ class CalendarDataSource implements DataSource
      * @throws IOException
      */
     public InputStream getInputStream() throws IOException {
-        try { 
-            ByteArrayOutputStream buf = new ByteArrayOutputStream();
-            CalendarOutputter calOut = new CalendarOutputter();
-            
-            calOut.output(iCal, buf);
-            
-            ByteArrayInputStream in = new ByteArrayInputStream(buf.toByteArray());
-            return in;
-        } catch (ValidationException e) {
-            IOException ioe = new IOException("CalendarDataSource.getInputStream");
-            ioe.initCause(e);
-            throw ioe;
+        synchronized(this) {
+            if (mBuf == null) {
+                ByteArrayOutputStream buf = new ByteArrayOutputStream();
+                OutputStreamWriter wout = new OutputStreamWriter(buf);
+                mICal.toICalendar(wout);
+                wout.flush();
+                mBuf = buf.toByteArray();
+            }
         }
+        ByteArrayInputStream in = new ByteArrayInputStream(mBuf);
+        return in;
     }
 
     /* (non-Javadoc)

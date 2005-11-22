@@ -27,16 +27,14 @@ package com.zimbra.cs.service.mail;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.Map;
-
-import net.fortuna.ical4j.data.CalendarOutputter;
-import net.fortuna.ical4j.model.Calendar;
-import net.fortuna.ical4j.model.ValidationException;
 
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.soap.Element;
@@ -66,20 +64,22 @@ public class GetICal extends WriteOpDocumentHandler {
         
         try {
             try {
-                Calendar cal = null;
+                ZVCalendar cal = null;
                 if (msgId > 0) {
                     Message msg = mbx.getMessageById(octxt, msgId);
 //                    Invite inv = msg.getInvite(0);
 //                    cal = inv.getCalendar();
                 } else {
-                    cal = mbx.getCalendarForRange(octxt, rangeStart, rangeEnd, Mailbox.ID_FOLDER_CALENDAR);
+                    cal = mbx.getZCalendarForRange(octxt, rangeStart, rangeEnd, Mailbox.ID_FOLDER_CALENDAR);
                 }
                 
                 ByteArrayOutputStream buf = new ByteArrayOutputStream();
-                CalendarOutputter calOut = new CalendarOutputter();
+//                CalendarOutputter calOut = new CalendarOutputter();
                 
                 try {
-                    calOut.output(cal, buf);
+                    OutputStreamWriter wout = new OutputStreamWriter(buf);
+                    cal.toICalendar(wout);
+                    wout.flush();
                     
                     Element response = lc.createElement(MailService.GET_ICAL_RESPONSE);
                     
@@ -92,8 +92,8 @@ public class GetICal extends WriteOpDocumentHandler {
                     return response;
                 } catch (IOException e) {
                     throw ServiceException.FAILURE("IO Exception while outputing Calendar for Invite: "+ msgId + "-" + compNum, e);
-                } catch (ValidationException e) {
-                    throw ServiceException.FAILURE("Validation Exception while outputing Calendar for Invite: "+ msgId + "-" + compNum, e);
+//                } catch (ValidationException e) {
+//                    throw ServiceException.FAILURE("Validation Exception while outputing Calendar for Invite: "+ msgId + "-" + compNum, e);
                 }
             } catch(MailServiceException.NoSuchItemException e) {
                 throw ServiceException.FAILURE("Error could get default invite for Invite: "+ msgId + "-" + compNum, e);

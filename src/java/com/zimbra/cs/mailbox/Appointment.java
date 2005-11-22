@@ -62,6 +62,7 @@ import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.Recurrence;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -253,8 +254,11 @@ public class Appointment extends MailItem {
             endTime = dtEndTime.getUtcTime();
         } else {
             mRecurrence = null;
-            startTime = firstInv.getStartTime().getUtcTime();
-            endTime = firstInv.getEffectiveEndTime().getUtcTime();
+            ParsedDateTime dtStart = firstInv.getStartTime();
+            ParsedDateTime dtEnd = firstInv.getEffectiveEndTime();
+            
+            startTime = dtStart.getUtcTime();
+            endTime = dtEnd.getUtcTime();
         }
         
         if (mStartTime != startTime || mEndTime != endTime) {
@@ -1306,6 +1310,25 @@ public class Appointment extends MailItem {
             cal.getComponents().add(comp);
         }
     }
+    
+
+    void appendRawCalendarData(ZVCalendar cal) throws ServiceException {
+        for (Iterator invIter = mInvites.iterator(); invIter.hasNext();) {
+            Invite inv = (Invite)invIter.next();
+            
+//            Calendar invCal = getCalendar(inv.getMailItemId());
+//            Calendar invCal = inv.toICalendar();
+            
+//            for (Iterator compIter = invCal.getComponents().iterator(); compIter.hasNext();) {
+//                Component comp = (Component)compIter.next();
+//                cal.getComponents().add(comp);
+//            }
+//            Component comp = inv.toVEvent();
+//            cal.getComponents().add(comp);
+            cal.addComponent(inv.newToVEvent());
+        }
+    }
+    
     
     Calendar getCalendar(int invId) throws ServiceException {
         try {

@@ -28,8 +28,6 @@
  */
 package com.zimbra.cs.service.mail;
 
-import net.fortuna.ical4j.model.*;
-
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.MailboxBlob;
@@ -37,6 +35,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mime.BlobDataSource;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.ContentServlet;
@@ -120,7 +119,8 @@ public class ParseMimeMessage {
         public InviteParserResult getResult() { return mResult; }
     }
     static class InviteParserResult {
-        public Calendar mCal;
+//        public Calendar mCal;
+        public ZCalendar.ZVCalendar mCal;
         public String mUid;
         public String mSummary;
         public Invite mInvite;

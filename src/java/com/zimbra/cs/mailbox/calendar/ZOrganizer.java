@@ -9,6 +9,9 @@ import net.fortuna.ical4j.model.parameter.Cn;
 import net.fortuna.ical4j.model.property.Organizer;
 
 import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.service.ServiceException;
 
 public class ZOrganizer {
@@ -78,6 +81,20 @@ public class ZOrganizer {
             throw ServiceException.FAILURE("Could not create URI for address "+mAddress, e);
         }
     }
+    
+    static ZOrganizer fromProperty(ZProperty prop) {
+        String cn = prop.paramVal(ICalTok.CN, null);
+        return new ZOrganizer(cn, prop.mValue);
+    }
+    
+    public ZProperty toProperty() {
+        ZProperty toRet = new ZProperty(ICalTok.ORGANIZER, "MAILTO:"+getAddress());
+        if (hasCn()) {
+            toRet.addParameter(new ZParameter(ICalTok.CN, getCn()));
+        }
+        return toRet;
+    }
+    
     
     public String toString() {
         if (mCn != null) {

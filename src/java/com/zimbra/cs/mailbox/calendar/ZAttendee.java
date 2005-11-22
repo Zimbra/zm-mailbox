@@ -27,6 +27,9 @@ package com.zimbra.cs.mailbox.calendar;
 import java.net.URI;
 
 import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.service.ServiceException;
 
 import net.fortuna.ical4j.model.Parameter;
@@ -200,6 +203,35 @@ public class ZAttendee {
         
         return new ZAttendee(addressStr, cnStr, roleStr, partStatStr, rsvpBool);
     }
+    
+    public static ZAttendee fromProperty(ZProperty prop) {
+        String cn = prop.paramVal(ICalTok.CN, null);
+        String role = prop.paramVal(ICalTok.ROLE, null);
+        String partstat = prop.paramVal(ICalTok.PARTSTAT, null);
+        String rsvpStr = prop.paramVal(ICalTok.ROLE, "FALSE");
+        boolean rsvp = false;
+        if (rsvpStr.equalsIgnoreCase("TRUE")) {
+            rsvp = true;
+        }
+        
+        ZAttendee toRet = new ZAttendee(prop.mValue, cn, role, partstat, rsvp);
+        return toRet;
+    }
+    
+    public ZProperty toProperty() throws ServiceException {
+        ZProperty toRet = new ZProperty(ICalTok.ATTENDEE, "MAILTO:"+getAddress());
+        if (hasCn()) 
+            toRet.addParameter(new ZParameter(ICalTok.CN, getCn()));
+        if (hasPartStat())
+            toRet.addParameter(new ZParameter(ICalTok.PARTSTAT, IcalXmlStrMap.sPartStatMap.toIcal(getPartStat())));
+        if (hasRsvp())
+            toRet.addParameter(new ZParameter(ICalTok.RSVP, getRsvp()));
+        if (hasRole())
+            toRet.addParameter(new ZParameter(ICalTok.ROLE, IcalXmlStrMap.sRoleMap.toIcal(getRole())));
+        
+        return toRet;
+    }
+    
     
     public Attendee iCal4jAttendee() throws ServiceException
     {

@@ -32,8 +32,6 @@ import javax.mail.Address;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeBodyPart;
 
-import net.fortuna.ical4j.model.Calendar;
-import net.fortuna.ical4j.model.property.Method;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -43,6 +41,8 @@ import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.RecurId;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.stats.StopWatch;
@@ -98,8 +98,8 @@ public class CancelAppointment extends CalendarRequest {
                     
                     for (int i = invites.length-1; i >= 0; i--) {
                         if (invites[i] != null && 
-                                (invites[i].getMethod().equals(Method.REQUEST.getValue()) ||
-                                        invites[i].getMethod().equals(Method.PUBLISH.getValue()))
+                                (invites[i].getMethod().equals(ICalTok.REQUEST.toString()) ||
+                                        invites[i].getMethod().equals(ICalTok.PUBLISH.toString()))
                                         ) {
                             cancelInvite(lc, request, acct, mbox, appt, invites[i]);
                         }
@@ -129,7 +129,7 @@ public class CancelAppointment extends CalendarRequest {
         dat.mSaveToSent = shouldSaveToSent(acct);
         dat.mInvite = CalendarUtils.buildCancelInstanceCalendar(acct, defaultInv, text, recurId);
 
-        Calendar iCal = dat.mInvite.toICalendar();
+        ZVCalendar iCal = dat.mInvite.newToICalendar();
         
         // did they specify a custom <m> message?  If so, then we don't have to build one...
         Element msgElem = request.getOptionalElement(MailService.E_MSG);
@@ -180,7 +180,7 @@ public class CancelAppointment extends CalendarRequest {
         dat.mSaveToSent = shouldSaveToSent(acct);
         dat.mInvite = CalendarUtils.buildCancelInviteCalendar(acct, inv, text);
         
-        Calendar iCal = dat.mInvite.toICalendar();
+        ZVCalendar iCal = dat.mInvite.newToICalendar();
         
         
         // did they specify a custom <m> message?  If so, then we don't have to build one...

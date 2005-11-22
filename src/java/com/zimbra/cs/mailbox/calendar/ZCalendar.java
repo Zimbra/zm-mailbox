@@ -3,27 +3,25 @@ package com.zimbra.cs.mailbox.calendar;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.StringWriter;
+import java.io.Reader;
 import java.io.Writer;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
 import com.zimbra.cs.service.ServiceException;
 
 import net.fortuna.ical4j.data.CalendarParser;
 import net.fortuna.ical4j.data.CalendarParserImpl;
 import net.fortuna.ical4j.data.ContentHandler;
-import net.fortuna.ical4j.data.FoldingWriter;
+import net.fortuna.ical4j.data.ParserException;
 import net.fortuna.ical4j.data.UnfoldingReader;
-import net.fortuna.ical4j.model.property.ExDate;
-import net.fortuna.ical4j.model.property.RDate;
 
 public class ZCalendar {
+    
+    public static final String sZimbraProdID = "Zimbra-Calendar-Provider";
     
     public static enum ICalTok {
         ACTION, ALTREP, ATTACH, ATTENDEE, BINARY, BOOLEAN,
@@ -42,7 +40,7 @@ public class ZCalendar {
         VALARM, VALUE, VERSION, VEVENT, VFREEBUSY, VJOURNAL,
         VTIMEZONE, VTODO, 
         
-        PUBLISH, REQUEST,
+        PUBLISH, REQUEST, REPLY, ADD, CANCEL, REFRESH, COUNTER, DECLINECOUNTER,
         
         STANDARD, DAYLIGHT,
         
@@ -71,26 +69,29 @@ public class ZCalendar {
      *    Components
      *    Properties
      */
-    private static class ZVCalendar
+    public static class ZVCalendar
     {
         List <ZComponent> mComponents = new ArrayList();
         List <ZProperty> mProperties = new ArrayList();
         
-        ZVCalendar() { }
+        public ZVCalendar() { 
+            addProperty(new ZProperty(ICalTok.PRODID, sZimbraProdID));
+            addProperty(new ZProperty(ICalTok.VERSION, "2.0"));
+        }
         
         public void addProperty(ZProperty prop) { mProperties.add(prop); }
         public void addComponent(ZComponent comp) { mComponents.add(comp); }
         
-        ZComponent getComponent(ICalTok tok) { return findComponent(mComponents, tok); }
-        ZProperty getProperty(ICalTok tok) { return findProp(mProperties, tok); }
-        String getPropVal(ICalTok tok, String defaultValue) {
+        public ZComponent getComponent(ICalTok tok) { return findComponent(mComponents, tok); }
+        public ZProperty getProperty(ICalTok tok) { return findProp(mProperties, tok); }
+        public String getPropVal(ICalTok tok, String defaultValue) {
             ZProperty prop = getProperty(tok);
             if (prop != null) 
                 return prop.mValue;
             
             return defaultValue;
         }
-        long getPropLongVal(ICalTok tok, long defaultValue) {
+        public long getPropLongVal(ICalTok tok, long defaultValue) {
             ZProperty prop = getProperty(tok);
             if (prop != null) 
                 return Long.parseLong(prop.mValue);
@@ -132,7 +133,7 @@ public class ZCalendar {
      *     Properties
      *     Components
      */
-    private static class ZComponent
+    public static class ZComponent
     {
         ZComponent(String name) {
             mName = name.toUpperCase();
@@ -264,32 +265,32 @@ public class ZCalendar {
      *    Parameters
      *    Value
      */
-    private static class ZProperty 
+    public static class ZProperty 
     {
-        ZProperty(String name) {
+        public ZProperty(String name) {
             setName(name);
             mTok = ICalTok.lookup(mName);
         }
-        ZProperty(ICalTok tok) {
+        public ZProperty(ICalTok tok) {
             mTok = tok;
             mName = tok.toString();
         }
-        ZProperty(ICalTok tok, String value) {
+        public ZProperty(ICalTok tok, String value) {
             mTok = tok;
             mName = tok.toString();
             setValue(value);
         }
-        ZProperty(ICalTok tok, boolean value) {
+        public ZProperty(ICalTok tok, boolean value) {
             mTok = tok;
             mName = tok.toString();
             mValue = value ? "TRUE" : "FALSE";
         }
-        ZProperty(ICalTok tok, long value) {
+        public ZProperty(ICalTok tok, long value) {
             mTok = tok;
             mName = tok.toString();
             mValue = Long.toString(value);
         }
-        ZProperty(ICalTok tok, int value) {
+        public ZProperty(ICalTok tok, int value) {
             mTok = tok;
             mName = tok.toString();
             mValue = Integer.toString(value);
@@ -359,7 +360,7 @@ public class ZCalendar {
      *
      * Name:Value pair
      */
-    private static class ZParameter
+    public static class ZParameter
     {
         ZParameter(String name, String value) {
             setName(name);
@@ -496,411 +497,23 @@ public class ZCalendar {
         }
     }
     
-    private static final long MSEC_PER_HOUR = 1000 * 60 * 60;
-    private static final long MSEC_PER_MIN = 1000 * 60;
-    private static final long MSEC_PER_SEC = 1000;    
-    
-    /**
-     * For TZOFFSETTO: [+-]HHMM(SS)?
-     * @param utcOffset
-     * @return
-     */
-    static int tzOffsetToTime(String utcOffset) {
-        int toRet = 0;
-        
-        toRet += (Integer.parseInt(utcOffset.substring(1,3)) * MSEC_PER_HOUR);
-        toRet += (Integer.parseInt(utcOffset.substring(3,5)) * MSEC_PER_MIN);
-        if (utcOffset.length() >= 7) {
-            toRet += (Integer.parseInt(utcOffset.substring(5,7)) * MSEC_PER_SEC);
-        }
-        if (utcOffset.charAt(0) == '-') {
-            toRet *= -1;
-        }
-        return toRet;
-    }
-    
-    static ZOrganizer organizerFromProperty(ZProperty prop) {
-        String cn = prop.paramVal(ICalTok.CN, null);
-        
-        return new ZOrganizer(cn, prop.mValue);
-    }
-    
-    static ZAttendee attendeeFromProperty(ZProperty prop) {
-        String cn = prop.paramVal(ICalTok.CN, null);
-        String role = prop.paramVal(ICalTok.ROLE, null);
-        String partstat = prop.paramVal(ICalTok.PARTSTAT, null);
-        String rsvpStr = prop.paramVal(ICalTok.ROLE, "FALSE");
-        boolean rsvp = false;
-        if (rsvpStr.equalsIgnoreCase("TRUE")) {
-            rsvp = true;
-        }
-        
-        ZAttendee toRet = new ZAttendee(prop.mValue, cn, role, partstat, rsvp);
-        return toRet;
-    }
-    
-    static ZProperty organizerToProperty(ZOrganizer org) {
-        ZProperty toRet = new ZProperty(ICalTok.ORGANIZER, "MAILTO:"+org.getAddress());
-        if (org.hasCn()) {
-            toRet.addParameter(new ZParameter(ICalTok.CN, org.getCn()));
-        }
-        return toRet;
-    }
-    
-    static ZProperty atToProperty(ZAttendee at) throws ServiceException {
-        ZProperty toRet = new ZProperty(ICalTok.ATTENDEE, "MAILTO:"+at.getAddress());
-        if (at.hasCn()) 
-            toRet.addParameter(new ZParameter(ICalTok.CN, at.getCn()));
-        if (at.hasPartStat())
-            toRet.addParameter(new ZParameter(ICalTok.PARTSTAT, IcalXmlStrMap.sPartStatMap.toIcal(at.getPartStat())));
-        if (at.hasRsvp())
-            toRet.addParameter(new ZParameter(ICalTok.RSVP, at.getRsvp()));
-        if (at.hasRole())
-            toRet.addParameter(new ZParameter(ICalTok.ROLE, IcalXmlStrMap.sRoleMap.toIcal(at.getRole())));
-        
-        return toRet;
-    }
-    
-    static ZProperty recurIdToProperty(RecurId recurId) {
-        ZProperty toRet = new ZProperty(ICalTok.RECURRENCE_ID, recurId.toString());
-        return toRet;
-    }
-    
-    static ZComponent inviteToVEvent(Invite inv) throws ServiceException
+    public static class ZCalendarBuilder
     {
-        ZComponent event = new ZComponent(ICalTok.VEVENT);
-        
-        event.addProperty(new ZProperty(ICalTok.UID, inv.getUid()));
-        
-        IRecurrence recur = inv.getRecurrence();
-        if (recur != null) {
-            for (Iterator iter = recur.addRulesIterator(); iter!=null && iter.hasNext();) {
-                IRecurrence cur = (IRecurrence)iter.next();
-
-                switch (cur.getType()) { 
-                case Recurrence.TYPE_SINGLE_INSTANCE:
-                    Recurrence.SingleInstanceRule sir = (Recurrence.SingleInstanceRule)cur;
-                    // FIXME
-                    break;
-                case Recurrence.TYPE_REPEATING:
-                    Recurrence.SimpleRepeatingRule srr = (Recurrence.SimpleRepeatingRule)cur;
-                    event.addProperty(new ZProperty(ICalTok.RRULE, srr.getRecur().toString()));
-                    break;
-                }
-                
+        public static ZVCalendar build(Reader reader) throws ServiceException {
+            CalendarParser parser = new CalendarParserImpl();
+            
+            ZContentHandler handler = new ZContentHandler();
+            
+            try {
+                parser.parse(new UnfoldingReader(reader), handler);
+            } catch(IOException e) {
+                throw ServiceException.FAILURE("Caught IOException parsing calendar: "+e, e);
+            } catch(ParserException e) {
+                throw ServiceException.FAILURE("Caught ParseException parsing calendar: "+e, e);
             }
-            for (Iterator iter = recur.subRulesIterator(); iter!=null && iter.hasNext();) {
-                IRecurrence cur = (IRecurrence)iter.next();
-
-                switch (cur.getType()) { 
-                case Recurrence.TYPE_SINGLE_INSTANCE:
-                    Recurrence.SingleInstanceRule sir = (Recurrence.SingleInstanceRule)cur;
-                    // FIXME
-                    break;
-                case Recurrence.TYPE_REPEATING:
-                    Recurrence.SimpleRepeatingRule srr = (Recurrence.SimpleRepeatingRule)cur;
-                    event.addProperty(new ZProperty(ICalTok.EXRULE, srr.getRecur().toString()));
-                    break;
-                }
-            }
+            
+            return handler.mCal;
         }
-        
-        
-        // ORGANIZER
-        ZOrganizer org = inv.getOrganizer();
-        if (org != null)
-            event.addProperty(organizerToProperty(org));
-        
-        // allDay
-        if (inv.isAllDayEvent())
-            event.addProperty(new ZProperty(ICalTok.X_MICROSOFT_CDO_ALLDAYEVENT, true));
-        
-        // SUMMARY (aka Name or Subject)
-        String name = inv.getName();
-        if (name != null && name.length()>0)
-            event.addProperty(new ZProperty(ICalTok.SUMMARY, name));
-        
-        // DESCRIPTION
-        String fragment = inv.getFragment();
-        if (fragment != null && fragment.length()>0)
-            event.addProperty(new ZProperty(ICalTok.DESCRIPTION, fragment));
-        
-        // COMMENT
-        String comment = inv.getComment();
-        if (comment != null && comment.length()>0) 
-            event.addProperty(new ZProperty(ICalTok.COMMENT, comment));
-        
-        // DTSTART
-        event.addProperty(new ZProperty(ICalTok.DTSTART, inv.getStartTime().toString()));
-        
-        // DTEND
-        ParsedDateTime dtend = inv.getEndTime();
-        if (dtend != null) 
-            event.addProperty(new ZProperty(ICalTok.DTEND, inv.getEndTime().toString()));
-        
-        // DURATION
-        ParsedDuration dur = inv.getDuration();
-        if (dur != null)
-            event.addProperty(new ZProperty(ICalTok.DURATION, dur.toString()));
-        
-        // LOCATION
-        String location = inv.getLocation();
-        if (location != null)
-            event.addProperty(new ZProperty(ICalTok.LOCATION, location.toString()));
-        
-        // STATUS
-        event.addProperty(new ZProperty(ICalTok.STATUS, IcalXmlStrMap.sStatusMap.toIcal(inv.getStatus())));
-        
-        // Microsoft Outlook compatibility for free-busy status
-        {
-            String outlookFreeBusy = IcalXmlStrMap.sOutlookFreeBusyMap.toIcal(inv.getFreeBusy());
-            event.addProperty(new ZProperty(ICalTok.X_MICROSOFT_CDO_BUSYSTATUS, outlookFreeBusy));
-            event.addProperty(new ZProperty(ICalTok.X_MICROSOFT_CDO_INTENDEDSTATUS, outlookFreeBusy));
-        }
-        
-        // TRANSPARENCY
-        event.addProperty(new ZProperty(ICalTok.TRANSP, IcalXmlStrMap.sTranspMap.toIcal(inv.getTransparency())));
-        
-        // ATTENDEES
-        for (ZAttendee at : (List<ZAttendee>)inv.getAttendees()) 
-            event.addProperty(atToProperty(at));
-        
-        // RECURRENCE-ID
-        RecurId recurId = inv.getRecurId();
-        if (recurId != null) 
-            event.addProperty(recurIdToProperty(recurId));
-        
-        // DTSTAMP
-        ParsedDateTime dtStamp = ParsedDateTime.fromUTCTime(inv.getDTStamp());
-        event.addProperty(new ZProperty(ICalTok.DTSTAMP, dtStamp.toString()));
-        
-        // SEQUENCE
-        event.addProperty(new ZProperty(ICalTok.SEQUENCE, inv.getSeqNo()));
-        
-        return event;
-    }
-    
-    static List<Invite> createFromCalendar(ZVCalendar cal)
-    {
-        List <Invite> toRet = new ArrayList();
-        
-        TimeZoneMap tzmap = new TimeZoneMap(ICalTimeZone.getUTC());
-        
-        String methodStr = cal.getPropVal(ICalTok.METHOD, ICalTok.PUBLISH.toString());
-        
-        for (ZComponent comp : cal.mComponents) {
-            switch(comp.mTok) {
-            case VTIMEZONE:
-                String tzname = comp.getPropVal(ICalTok.TZID, null);
-                
-                ZComponent daylight = comp.getComponent(ICalTok.DAYLIGHT);
-                
-                String daydtStart = null;
-                int dayoffsetTime = 0;
-                String dayrrule = null;
-                
-                String stddtStart = null;
-                int stdoffsetTime = 0;
-                String stdrrule = null;
-                
-                if (daylight != null) {
-                    daydtStart = daylight.getPropVal(ICalTok.DTSTART, null);
-                    String daytzOffsetTo = daylight.getPropVal(ICalTok.TZOFFSETTO, null);
-                    dayoffsetTime = tzOffsetToTime(daytzOffsetTo);  
-                    dayrrule = daylight.getPropVal(ICalTok.RRULE, null);
-                }
-                
-                ZComponent standard = comp.getComponent(ICalTok.STANDARD); 
-                if (standard != null) {
-                    stddtStart = standard.getPropVal(ICalTok.DTSTART, null);
-                    String stdtzOffsetTo = standard.getPropVal(ICalTok.TZOFFSETTO, null);
-                    stdoffsetTime = tzOffsetToTime(stdtzOffsetTo);  
-                    stdrrule = standard.getPropVal(ICalTok.RRULE, null);
-                }
-                
-                ICalTimeZone tz = new ICalTimeZone(tzname, 
-                        stdoffsetTime, stddtStart, stdrrule,
-                        dayoffsetTime, daydtStart, dayrrule);
-
-                tzmap.add(tz);
-                break;
-            case VEVENT:
-                try {
-                    Invite newInv = new Invite(tzmap);
-                    newInv.setMethod(methodStr);
-                    
-                    toRet.add(newInv);
-                    
-                    ArrayList addRecurs = new ArrayList();
-                    ArrayList subRecurs = new ArrayList();
-                    
-                    for (ZProperty prop : comp.mProperties) {
-                        System.out.println(prop);
-
-                        if (prop.mTok == null) 
-                            continue;
-                        
-                        switch (prop.mTok) {
-                        case ORGANIZER:
-                            newInv.setOrganizer(organizerFromProperty(prop));
-                            break;
-                        case ATTENDEE:
-                            newInv.addAttendee(attendeeFromProperty(prop));
-                            break;
-                        case DTSTAMP:
-                            ParsedDateTime dtstamp = ParsedDateTime.parse(prop.mValue, tzmap);
-                            newInv.setDtStamp(dtstamp.getUtcTime());
-                            break;
-                        case RECURRENCE_ID:
-                            ParsedDateTime rid = ParsedDateTime.parse(prop.getValue(), tzmap);
-                            newInv.setRecurId(new RecurId(rid, RecurId.RANGE_NONE));
-                            break;
-                        case SEQUENCE:
-                            newInv.setSeqNo(prop.getIntValue());
-                            break;
-                        case DTSTART:
-                            ParsedDateTime dtstart = ParsedDateTime.parse(prop.mValue, tzmap);
-                            newInv.setDtStart(dtstart);
-                            break;
-                        case DTEND:
-                            ParsedDateTime dtend = ParsedDateTime.parse(prop.mValue, tzmap);
-                            System.out.println(dtend.toString());
-                            newInv.setDtEnd(dtend);
-                            break;
-                        case DURATION:
-                            ParsedDuration dur = ParsedDuration.parse(prop.getValue());
-                            newInv.setDuration(dur);
-                            break;
-                        case LOCATION:
-                            newInv.setLocation(prop.getValue());
-                            break;
-                        case SUMMARY:
-                            newInv.setName(prop.mValue);
-                            break;
-                        case DESCRIPTION:
-                            newInv.setFragment(prop.mValue);
-                            break;
-                        case COMMENT:
-                            newInv.setComment(prop.getValue());
-                            break;
-                        case UID:
-                            newInv.setUid(prop.getValue());
-                            break;
-                        case RRULE:
-                            ZRecur recur = new ZRecur(prop.getValue(), tzmap);
-                            addRecurs.add(recur);
-                            newInv.setIsRecurrence(true);
-                            break;
-                        case RDATE:
-                            break;
-                        case EXRULE:
-                            ZRecur exrecur = new ZRecur(prop.getValue(), tzmap);
-                            subRecurs.add(exrecur);
-                            newInv.setIsRecurrence(true);                            
-                            break;
-                        case EXDATE:
-                            break;
-                        case STATUS:
-                            String status = IcalXmlStrMap.sStatusMap.toXml(prop.getValue());
-                            if (status != null)
-                                newInv.setStatus(status);
-                            break;
-                        case TRANSP:
-                            String transp = IcalXmlStrMap.sTranspMap.toXml(prop.getValue());
-                            if (transp!=null) {
-                                newInv.setTransparency(transp);
-                            }
-                            break;
-                        case X_MICROSOFT_CDO_ALLDAYEVENT:
-                            if (prop.getBoolValue()) 
-                                newInv.setIsAllDayEvent(true);
-                            break;
-                        case X_MICROSOFT_CDO_BUSYSTATUS:
-                            String fb = IcalXmlStrMap.sOutlookFreeBusyMap.toXml(prop.getValue());
-                            if (fb != null)
-                                newInv.setFreeBusy(fb);
-                            break;
-                        }
-                    }
-                    
-                    ParsedDuration duration = newInv.getDuration();
-                    
-                    if (duration == null) {
-                        ParsedDateTime end = newInv.getEndTime();
-                        if (end != null) {
-                            duration = end.difference(newInv.getStartTime());
-                        }
-                    }
-                    
-                    ArrayList /* IInstanceGeneratingRule */ addRules = new ArrayList();
-                    if (addRecurs.size() > 0) {
-                        for (Iterator iter = addRecurs.iterator(); iter.hasNext();) {
-                            Object next = iter.next();
-                            if (next instanceof ZRecur) {
-                                ZRecur cur = (ZRecur)next;
-                                addRules.add(new Recurrence.SimpleRepeatingRule(newInv.getStartTime(), duration, cur, new InviteInfo(newInv)));
-                            } else {
-                                RDate cur = (RDate)next;
-                                // TODO add the dates here!
-                            }
-                        }
-                    }
-                    ArrayList /* IInstanceGeneratingRule */  subRules = new ArrayList();
-                    if (subRules.size() > 0) {
-                        for (Iterator iter = subRules.iterator(); iter.hasNext();) {
-                            Object next = iter.next();
-                            if (next instanceof ZRecur) {
-                                ZRecur cur = (ZRecur)iter.next();
-                                subRules.add(new Recurrence.SimpleRepeatingRule(newInv.getStartTime(), duration, cur, new InviteInfo(newInv)));
-                            } else {
-                                ExDate cur = (ExDate)next;
-                                // TODO add the dates here!
-                            }
-                        }
-                    }
-                    
-                    if (newInv.hasRecurId()) {
-                        if (addRules.size() > 0) {
-                            newInv.setRecurrence(new Recurrence.ExceptionRule(newInv.getRecurId(),  
-                                    newInv.getStartTime(), duration, new InviteInfo(newInv), addRules, subRules));
-                        }
-                    } else {
-                        if (addRules.size() > 0) { // since exclusions can't affect DtStart, just ignore them if there are no add rules
-                            newInv.setRecurrence(new Recurrence.RecurrenceRule(newInv.getStartTime(), duration, new InviteInfo(newInv), addRules, subRules));
-                        }
-                    }
-                    
-                    if (newInv.getAttendees().size() > 1) {
-                        newInv.setHasOtherAttendees(true);
-                    }
-                    
-                    System.out.println("\n\n\n\n"+newInv.toICalendar().toString());
-
-                    
-                    StringWriter sw = new StringWriter();
-                    
-                    Writer w = new FoldingWriter(sw);
-                    
-                    inviteToVEvent(newInv).toICalendar(w);
-                    
-                    System.out.println("\n\n\n\n"+sw.toString());
-                    
-                } catch (ServiceException e) {
-                    System.out.println(e);
-                    e.printStackTrace();
-                } catch (ParseException e) {
-                    System.out.println(e);
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    System.out.println(e);
-                    e.printStackTrace();
-                }
-                
-                break;
-            }
-        }
-        
-        return toRet;
     }
 
     /**
@@ -916,7 +529,8 @@ public class ZCalendar {
             ZContentHandler handler = new ZContentHandler();
             parser.parse(new UnfoldingReader(in), handler);
             System.out.println(handler.mCal.toString());
-            createFromCalendar(handler.mCal);
+//            createFromCalendar(handler.mCal);
+            Invite.createFromCalendar(null, null, handler.mCal, false);
             
         } catch(Exception e) {
             System.out.println("Caught exception: "+e);

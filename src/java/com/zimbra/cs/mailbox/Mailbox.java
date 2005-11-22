@@ -65,6 +65,9 @@ import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.op.*;
 import com.zimbra.cs.service.FeedManager;
@@ -2261,6 +2264,39 @@ public class Mailbox {
         }
         return cal;
     }
+    
+    public synchronized ZVCalendar getZCalendarForAppointments(Collection appts) throws ServiceException {
+        ZVCalendar cal = new ZVCalendar();
+
+        // REPLY
+        cal.addProperty(new ZProperty(ICalTok.METHOD, ICalTok.PUBLISH.toString()));
+            
+        // timezones
+        {
+            ICalTimeZone localTz = getAccount().getTimeZone();
+            TimeZoneMap tzmap = new TimeZoneMap(localTz);
+                
+            for (Iterator iter = appts.iterator(); iter.hasNext();) {
+                Appointment appt = (Appointment)iter.next();
+                tzmap.add(appt.getTimeZoneMap());
+            }
+                
+            // iterate the tzmap and add all the VTimeZone's 
+            // (TODO: should this code live in TimeZoneMap???) 
+            for (Iterator iter = tzmap.tzIterator(); iter.hasNext();) {
+                ICalTimeZone cur = (ICalTimeZone) iter.next();
+                cal.addComponent(cur.newToVTimeZone());
+            }
+        }
+            
+        // build all the event components and add them to the Calendar
+        for (Iterator iter = appts.iterator(); iter.hasNext();) {
+            Appointment appt = (Appointment)iter.next();
+            appt.appendRawCalendarData(cal);
+        }
+        return cal;
+    }
+    
 
     public synchronized Calendar getCalendarForRange(OperationContext octxt, long start, long end, int folderId)
     throws ServiceException {
@@ -2273,6 +2309,19 @@ public class Mailbox {
             endTransaction(success);
         }
     }
+    
+    public synchronized ZVCalendar getZCalendarForRange(OperationContext octxt, long start, long end, int folderId)
+    throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("getCalendarForRange", octxt);
+            Collection /* Appointment */ appts = getAppointmentsForRange(octxt, start, end, folderId, null);
+            return getZCalendarForAppointments(appts);
+        } finally {
+            endTransaction(success);
+        }
+    }
+    
 
     /** Returns a <code>Collection</code> of all {@link Appointment}s which
      *  overlap the specified time period.  There is no guarantee that the

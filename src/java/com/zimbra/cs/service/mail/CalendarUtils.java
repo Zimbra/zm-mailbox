@@ -25,7 +25,6 @@
 
 package com.zimbra.cs.service.mail;
 
-import java.io.IOException;
 import java.io.StringReader;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -41,27 +40,14 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.JMSession;
 
-import net.fortuna.ical4j.data.CalendarBuilder;
-import net.fortuna.ical4j.data.ParserException;
-import net.fortuna.ical4j.model.Calendar;
-import net.fortuna.ical4j.model.Parameter;
-import net.fortuna.ical4j.model.ParameterList;
-import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.TimeZone.SimpleOnset;
-import net.fortuna.ical4j.model.component.VEvent;
-import net.fortuna.ical4j.model.parameter.PartStat;
-import net.fortuna.ical4j.model.property.Method;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.WellKnownTimeZone;
-import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
@@ -72,16 +58,18 @@ import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.Recurrence;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
+import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mailbox.calendar.ZRecur;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.soap.Element;
 
 
 public class CalendarUtils {
-    private static Log sLog = LogFactory.getLog(CalendarUtils.class);
-    
-    static MimeBodyPart makeICalIntoMimePart(String uid, Calendar iCal) 
+    static MimeBodyPart makeICalIntoMimePart(String uid, ZCalendar.ZVCalendar iCal) 
     throws ServiceException
     {
         try {
@@ -113,7 +101,7 @@ public class CalendarUtils {
     
 
     public static MimeMessage createDefaultCalendarMessage(String fromAddr, String addr,
-            String subject, String text, String uid, Calendar cal) throws ServiceException {
+            String subject, String text, String uid, ZCalendar.ZVCalendar cal) throws ServiceException {
         List list = new ArrayList();
         list.add(addr);
         return createDefaultCalendarMessage(fromAddr, list, subject, text, uid, cal);
@@ -121,7 +109,7 @@ public class CalendarUtils {
     
     
     public static MimeMessage createDefaultCalendarMessage(String fromAddr, List /* String */ toAts,
-            String subject, String text, String uid, Calendar cal) throws ServiceException 
+            String subject, String text, String uid, ZCalendar.ZVCalendar cal) throws ServiceException 
     {
         try {
             MimeMessage mm = new MimeMessage(JMSession.getSession()) { protected void updateHeaders() throws MessagingException { String msgid = getMessageID(); super.updateHeaders(); if (msgid != null) setHeader("Message-ID", msgid); } };
@@ -185,16 +173,20 @@ public class CalendarUtils {
         toRet.mSummary = content.getAttribute("summary");
         
         String calStr = content.getText();
-        CalendarBuilder calBuilder = new CalendarBuilder();
+        ZCalendarBuilder calBuilder = new ZCalendarBuilder();
         StringReader reader = new StringReader(calStr);
-        try {
+//        try {
             toRet.mCal = calBuilder.build(reader);
-            toRet.mInvite = (Invite)(Invite.createFromICalendar(account, toRet.mSummary, toRet.mCal, false).get(0));
-        } catch (ParserException pe) {
-            throw ServiceException.FAILURE("Parse Exception parsing raw iCalendar data -- "+pe, pe);
-        } catch (IOException ioe) {
-            throw ServiceException.FAILURE("IOException parsing raw iCalendar data -- "+ioe, ioe);
-        }
+            
+            List<Invite> invs = Invite.createFromCalendar(account, toRet.mSummary, toRet.mCal, false);
+            
+//            toRet.mInvite = (Invite)(Invite.createFromICalendar(account, toRet.mSummary, toRet.mCal, false).get(0));
+            toRet.mInvite = invs.get(0);
+//        } catch (ParserException pe) {
+//            throw ServiceException.FAILURE("Parse Exception parsing raw iCalendar data -- "+pe, pe);
+//        } catch (IOException ioe) {
+//            throw ServiceException.FAILURE("IOException parsing raw iCalendar data -- "+ioe, ioe);
+//        }
         
         return toRet;
     }
@@ -217,7 +209,7 @@ public class CalendarUtils {
     static ParseMimeMessage.InviteParserResult parseInviteForCreate(Account account, Element inviteElem, TimeZoneMap tzMap,
             String uid, boolean recurrenceIdAllowed, boolean recurAllowed) throws ServiceException 
     {
-        Invite create = new Invite(Method.PUBLISH, new TimeZoneMap(account.getTimeZone()));
+        Invite create = new Invite(ICalTok.PUBLISH.toString(), new TimeZoneMap(account.getTimeZone()));
 
         CalendarUtils.parseInviteElementCommon(account, inviteElem, create, tzMap, recurAllowed);
         
@@ -246,7 +238,8 @@ public class CalendarUtils {
       // SEQUENCE
         create.setSeqNo(0);
 
-        Calendar iCal = create.toICalendar();
+//        Calendar iCal = create.toICalendar();
+        ZVCalendar iCal = create.newToICalendar();
         
         String summaryStr = create.getName() != null ? create.getName() : "";
         
@@ -270,7 +263,7 @@ public class CalendarUtils {
     static ParseMimeMessage.InviteParserResult parseInviteForModify(Account account, Element inviteElem, 
             Invite oldInv, List /* Attendee */ attendeesToCancel, boolean recurAllowed) throws ServiceException 
     {
-        Invite mod = new Invite(Method.PUBLISH, oldInv.getTimeZoneMap());
+        Invite mod = new Invite(ICalTok.PUBLISH.toString(), oldInv.getTimeZoneMap());
 
         CalendarUtils.parseInviteElementCommon(account, inviteElem, mod, oldInv.getTimeZoneMap(), recurAllowed);
         
@@ -299,7 +292,7 @@ public class CalendarUtils {
             }
         }
         
-        Calendar iCal = mod.toICalendar();
+        ZVCalendar iCal = mod.newToICalendar();
         
         String summaryStr = "";
         if (mod.getName() != null) {
@@ -802,14 +795,14 @@ public class CalendarUtils {
             
             boolean rsvp = cur.getAttributeBool(MailService.A_APPT_RSVP, false);
             
-            if (partStat.equals(PartStat.NEEDS_ACTION.getValue())) {
+            if (partStat.equals(ICalTok.PARTSTAT.toString())) {
                 rsvp = true;
             }
             
             ZAttendee at = new ZAttendee(address, cn, role, partStat, rsvp ? Boolean.TRUE : Boolean.FALSE); 
 
-            if (newInv.getMethod().equals(Method.PUBLISH.getValue())) {
-                newInv.setMethod(Method.REQUEST);
+            if (newInv.getMethod().equals(ICalTok.PUBLISH.toString())) {
+                newInv.setMethod(ICalTok.METHOD.toString());
             }
             newInv.addAttendee(at);
         }
@@ -833,23 +826,23 @@ public class CalendarUtils {
         
     }
     
-    static List /*VEvent*/ cancelAppointment(Account acct, Appointment appt, String comment) {
-        List toRet = new ArrayList();
-
-        // for each invite, get the recurrence and add an UNTIL
-        for (int i = appt.numInvites()-1; i >= 0; i--) {
-            Invite inv = appt.getInvite(i);
-            try {
-                VEvent event = cancelInvite(acct, inv, comment, null, null).toVEvent();
-                toRet.add(event);
-            } catch (ServiceException e) {
-                sLog.debug("Error creating cancellation for invite "+i+" for appt "+appt.getId());
-            }
-        }
-        
-        return toRet;
-    }
-    
+//    static List cancelAppointment(Account acct, Appointment appt, String comment) {
+//        List<ZComponent>  toRet = new ArrayList<ZComponent>();
+//
+//        // for each invite, get the recurrence and add an UNTIL
+//        for (int i = appt.numInvites()-1; i >= 0; i--) {
+//            Invite inv = appt.getInvite(i);
+//            try {
+//                ZComponent event = cancelInvite(acct, inv, comment, null, null).newToVEvent();
+//                toRet.add(event);
+//            } catch (ServiceException e) {
+//                sLog.debug("Error creating cancellation for invite "+i+" for appt "+appt.getId());
+//            }
+//        }
+//        
+//        return toRet;
+//    }
+//    
     /**
      * RFC2446 4.2.2: 
      * 
@@ -877,7 +870,7 @@ public class CalendarUtils {
     public static Invite replyToInvite(Account acct, Invite oldInv, SendInviteReply.ParsedVerb verb, String replySubject, ParsedDateTime exceptDt)
     throws ServiceException
     {
-        Invite reply = new Invite(Method.REPLY, new TimeZoneMap(acct.getTimeZone()));
+        Invite reply = new Invite(ICalTok.REPLY.toString(), new TimeZoneMap(acct.getTimeZone()));
         
         reply.getTimeZoneMap().add(oldInv.getTimeZoneMap());
         
@@ -988,7 +981,7 @@ public class CalendarUtils {
     static Invite cancelInvite(Account acct, Invite inv, String comment, ZAttendee forAttendee, RecurId recurId) throws ServiceException 
     {
 //        TimeZoneMap tzMap = new TimeZoneMap(acct.getTimeZone());
-        Invite cancel = new Invite(Method.CANCEL, comment, inv.getTimeZoneMap());
+        Invite cancel = new Invite(ICalTok.CANCEL.toString(), comment, inv.getTimeZoneMap());
         
         // ORGANIZER (FIXME: should check to make sure it is us!) 
         cancel.setOrganizer(inv.getOrganizer());
@@ -1040,20 +1033,20 @@ public class CalendarUtils {
         return cancel;
     }
 
-    
-    // ical4j helper
-    public static String paramVal(Property prop, String paramName) {
-        return CalendarUtils.paramVal(prop, paramName, "");
-    }
-
-
-    // ical4j helper
-    public static String paramVal(Property prop, String paramName, String defaultValue) {
-        ParameterList params = prop.getParameters();
-        Parameter param = params.getParameter(paramName);
-        if (param == null) {
-            return defaultValue;
-        }
-        return param.getValue();
-    }
+//    
+//    // ical4j helper
+//    public static String paramVal(Property prop, String paramName) {
+//        return CalendarUtils.paramVal(prop, paramName, "");
+//    }
+//
+//
+//    // ical4j helper
+//    public static String paramVal(Property prop, String paramName, String defaultValue) {
+//        ParameterList params = prop.getParameters();
+//        Parameter param = params.getParameter(paramName);
+//        if (param == null) {
+//            return defaultValue;
+//        }
+//        return param.getValue();
+//    }
 }
