@@ -125,6 +125,15 @@ class Soap12Protocol extends SoapProtocol {
         // FIXME: should really be a qualified "attribute"
         error.addUniqueElement(ZimbraNamespace.E_CODE).setText(e.getCode());
         error.addUniqueElement(ZimbraNamespace.E_TRACE).setText(ExceptionToString.ToString(e));
+        
+        if (e.getArgs() != null) {
+            for (ServiceException.Argument arg : e.getArgs()) {
+                Element val = error.addElement("a");
+                val.addAttribute("n", arg.mName);
+                val.setText(arg.mValue);
+            }
+        }
+        
         return eFault;
     }
 

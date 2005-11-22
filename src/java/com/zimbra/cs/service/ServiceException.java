@@ -53,8 +53,28 @@ public class ServiceException extends Exception {
     public static final String INTERRUPTED = "service.INTERRUPTED";
     
     private String mCode;
+    private Argument[] mArgs = null;
+    
+    public static final String HOST            = "host";
+    public static final String URL             = "url"; 
+    public static final String MAILBOX_ID      = "mboxId";
+    public static final String ACCOUNT_ID      = "acctId"; 
     
     
+    public static class Argument {
+        public Argument(String name, String value) {
+            mName = name;
+            mValue = value;
+        }
+        
+        public Argument(String name, long value) {
+            mName = name;
+            mValue = Long.toString(value);
+        }
+        
+        public String mName;
+        public String mValue;
+    }
     
     /**
      * Comment for <code>mReceiver</code>
@@ -70,20 +90,31 @@ public class ServiceException extends Exception {
     public static final boolean SENDERS_FAULT = false; // client's fault
     private boolean mReceiver;
     
-    protected ServiceException(String message, String code, boolean isReceiversFault) {
+    
+    protected ServiceException(String message, String code, boolean isReceiversFault, Throwable cause, Argument... arguments)
+    {
+        super(message, cause);
+        mCode = code;
+        mReceiver = isReceiversFault;
+        
+        mArgs = arguments;
+    }
+    
+    protected ServiceException(String message, String code, boolean isReceiversFault, Argument... arguments)
+    {
         super(message);
         mCode = code;
         mReceiver = isReceiversFault;
+        
+        mArgs = arguments;
     }
-    
-    protected ServiceException(String message, String code, boolean isReceiversFault, Throwable cause) {
-        super(message,cause);
-        mCode = code;
-        mReceiver = isReceiversFault;
-    }
-    
+
     public String getCode() {
         return mCode;
+    }
+    
+    public Argument[] getArgs() {
+        return mArgs;
     }
     
     /**
@@ -127,45 +158,43 @@ public class ServiceException extends Exception {
     }
 
     public static ServiceException PERM_DENIED(String message) {
-        return new ServiceException("permission denied: "+message, PERM_DENIED, SENDERS_FAULT, null);
+        return new ServiceException("permission denied: "+message, PERM_DENIED, SENDERS_FAULT);
     }
     
     public static ServiceException AUTH_EXPIRED() {
-        return new ServiceException("auth credentials have expired", AUTH_EXPIRED, SENDERS_FAULT, null);
+        return new ServiceException("auth credentials have expired", AUTH_EXPIRED, SENDERS_FAULT);
     }
     
     public static ServiceException AUTH_REQUIRED() {
-        return new ServiceException("no valid authtoken present", AUTH_REQUIRED, SENDERS_FAULT, null);
+        return new ServiceException("no valid authtoken present", AUTH_REQUIRED, SENDERS_FAULT);
     }
 
     public static ServiceException WRONG_HOST(String target, Throwable cause) {
-        return new ServiceException("operation sent to wrong host (you want '" + target + "')", WRONG_HOST, 
-                SENDERS_FAULT, cause);
+        return new ServiceException("operation sent to wrong host (you want '" + target + "')", WRONG_HOST, SENDERS_FAULT, cause, new Argument(HOST, target));
     }
 
     public static ServiceException NON_READONLY_OPERATION_DENIED() {
-        return new ServiceException("non-readonly operation denied", NON_READONLY_OPERATION_DENIED, 
-                SENDERS_FAULT, null);
+        return new ServiceException("non-readonly operation denied", NON_READONLY_OPERATION_DENIED, SENDERS_FAULT);
     }
 
     public static ServiceException PROXY_ERROR(Throwable cause, String url) {
         return new ServiceException("error while proxying request to target server (url=" + url + "): " + (cause != null ? cause.getMessage() : "unknown reason"), 
-                PROXY_ERROR, RECEIVERS_FAULT, cause);
+                PROXY_ERROR, RECEIVERS_FAULT, cause, new Argument(URL, url));
     }
 
     public static ServiceException TOO_MANY_HOPS() {
-        return new ServiceException("mountpoint loop detected", TOO_MANY_HOPS, SENDERS_FAULT, null);
+        return new ServiceException("mountpoint loop detected", TOO_MANY_HOPS, SENDERS_FAULT);
     }
     
     public static ServiceException ALREADY_IN_PROGRESS(String mboxId, String action) {
-        return new ServiceException("mbox "+mboxId+" is already running action "+action, ALREADY_IN_PROGRESS, SENDERS_FAULT, null);
+        return new ServiceException("mbox "+mboxId+" is already running action "+action, ALREADY_IN_PROGRESS, SENDERS_FAULT, new Argument(MAILBOX_ID, mboxId), new Argument("action", action));
     }
     
     public static ServiceException NOT_IN_PROGRESS(String mboxId, String action) {
-        return new ServiceException("mbox "+mboxId+" is not currently running action "+action, NOT_IN_PROGRESS, SENDERS_FAULT, null);
+        return new ServiceException("mbox "+mboxId+" is not currently running action "+action, NOT_IN_PROGRESS, SENDERS_FAULT, new Argument(MAILBOX_ID, mboxId), new Argument("action", action));
     }
 
     public static ServiceException INTERRUPTED(String str) {
-        return new ServiceException("The operation has been interrupted "+str!=null?str:"", INTERRUPTED, RECEIVERS_FAULT, null);
+        return new ServiceException("The operation has been interrupted "+str!=null?str:"", INTERRUPTED, RECEIVERS_FAULT);
     }
 }

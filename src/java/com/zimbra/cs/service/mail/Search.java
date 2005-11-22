@@ -235,7 +235,10 @@ public class Search extends DocumentHandler  {
                 e.printStackTrace();
                 throw ServiceException.FAILURE("IO error", e);
             } catch (ParseException e) {
-                throw MailServiceException.QUERY_PARSE_ERROR(params.getQueryStr(), e);
+                if (e.currentToken != null)
+                    throw MailServiceException.QUERY_PARSE_ERROR(params.getQueryStr(), e, e.currentToken.image, e.currentToken.beginLine, e.currentToken.beginColumn);
+                else 
+                    throw MailServiceException.QUERY_PARSE_ERROR(params.getQueryStr(), e, "", -1, -1);
             }
         }
         return results;

@@ -88,6 +88,13 @@ public class SoapJSProtocol extends SoapProtocol {
         eError.addAttribute(ZimbraNamespace.E_CODE.getName(), e.getCode());
         eError.addAttribute(ZimbraNamespace.E_TRACE.getName(), ExceptionToString.ToString(e));
         
+        if (e.getArgs() != null) {
+            for (ServiceException.Argument arg : e.getArgs()) {
+                Element val = eError.addElement("a");
+                val.addAttribute("n", arg.mName);
+                val.setText(arg.mValue);
+            }
+        }
         return eFault;
     }
 
