@@ -124,9 +124,60 @@ If an extension needs to process HTTP GET/POST/OPTIONS requests, it can do so as
 	  
 Your handler will process requests at URI: /service/extension/myext/myhandler.
 You can create any number of handlers. They will be available at: /service/extension/myext/<handler path>.
+If you choose not to override getPath in your handler, it will be processing requests
+at /service/extension/myext.
 
+If two handlers A and B, A registers at /myext/myhandler, B registers at /myext/myhandler/foo, then the
+following shows what happens:
+
+    request path            handler invoked
+    /myext/myhandler			A
+    /myext/myhandler/bar		A
+    /myext/myhandler/foo		B
+    /myext/myhandler/foo/baz	B
+    
 ExtensionHttpHandlers are not servlets. They live in the service.war's servlet context. 
 No change should be made to ZimbraServer's web.xml for any extension HTTP handlers that are added.
 
-	  
-	  
+
+Customizing HTTP handlers
+
+Sometimes it is necessary to allow third party to customize responses from HTTP handlers
+at runtime. For example, customer may want error pages to have a different look and feel than
+the boilerplate one.
+
+You can try the following technique using the error page example:
+
+  - choose a name under your handler's namespace, say, /myext/myhandler/error
+  - in your handler code, when error happens, dispatch to
+    /extension/myext/myhandler/error
+    
+        RequestDispatcher dispatcher = req.getRequestDispatcher("/extension/myext/myhandler/error");
+        dispatcher.forward(req, resp);
+    
+  - also in your handler code, if a request's path matches /extension/myext/myhandler/error,
+    display the boilerplate error page
+
+If a third party wants to customize the error page, he only needs to code and register another handler
+explicitly at /myext/myhandler/error (in another jar file). When that happens, the boilerplate error page
+will be bypassed and new handler invoked to display the customized error page.
+
+    
+Loading classes dynamically
+
+It is useful to define "plugins" by providing their class names in configuration.
+The Zimbra server core then loads them using
+
+    String className = ...; // read from config
+    Class cls = Class.forName(className);
+    Object instance = cls.newInstance();
+  
+If, however, the class exists in an extension, the above won't work because it loads classes
+from Zimbra server core. Instead, try the following:
+
+    String className = ...; // read from config
+    String extName = ...;   // also read from config
+    Class cls = ExtensionUtil.loadClass(extName, className);
+    Object instance = cls.newInstance();
+  
+  
