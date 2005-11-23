@@ -5,10 +5,10 @@ cd main/ThirdParty/apache-httpd
 wget http://archive.apache.org/dist/httpd/httpd-2.0.54.tar.gz
 
 cd ../amavisd
-wget http://www.ijs.si/software/amavisd/amavisd-new-2.3.1.tar.gz
-tar xzf amavisd-new-2.3.1.tar.gz
-cd amavisd-new-2.3.1
-patch -p0 < ../amavisd.patch
+wget http://www.ijs.si/software/amavisd/amavisd-new-2.3.3.tar.gz
+tar xzf amavisd-new-2.3.3.tar.gz
+cd amavisd-new-2.3.3
+patch -p0 < ../amavisd.2.3.3.patch
 
 mkdir ../snmp
 get snmp-5.1.2.tar.gz
