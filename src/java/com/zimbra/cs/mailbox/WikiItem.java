@@ -79,7 +79,7 @@ public class WikiItem extends MailItem {
 	}
 	
 	public String getAuthor() {
-		return mFields.get(WIKI_WORD);
+		return mFields.get(AUTHOR);
 	}
 	
 	public String getModifiedTime() {

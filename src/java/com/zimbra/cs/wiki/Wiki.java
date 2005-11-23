@@ -25,13 +25,16 @@
 package com.zimbra.cs.wiki;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.ServiceException;
 
@@ -44,7 +47,6 @@ public class Wiki {
 	
 	private static Map<String,Wiki> wikiMap;
 	
-	private static final String WIKI_ACCOUNT = "user1";
 	private static final String WIKI_FOLDER =  "inbox";
 	
 	static {
@@ -52,9 +54,13 @@ public class Wiki {
 	}
 	
 	public static Wiki getInstance() throws ServiceException {
-		return getInstance(WIKI_ACCOUNT);
+		return getInstance(LC.wiki_user.value());
 	}
+	
 	public static Wiki getInstance(String acct) throws ServiceException {
+		if (!LC.wiki_enabled.booleanValue()) {
+			throw ServiceException.FAILURE("wiki disabled", null);
+		}
 		Wiki w;
 		synchronized (wikiMap) {
 			w = wikiMap.get(acct);
@@ -65,32 +71,55 @@ public class Wiki {
 		}
 		return w;
 	}
+	
 	private Wiki(String wikiAcct) throws ServiceException {
 		mWikiWords = new HashMap<String,WikiWord>();
 		
 		mWikiAccount = wikiAcct;
 		
 		Account acct = Provisioning.getInstance().getAccountByName(mWikiAccount);
+		Mailbox mbox = Mailbox.getMailboxByAccount(acct);
+		OperationContext octxt = new OperationContext(acct);
+		Folder f = mbox.getFolderByPath(octxt, WIKI_FOLDER);
 		mWikiAccountId = acct.getId();
-		Folder f = Mailbox.getMailboxByAccount(acct).getFolderByPath(new OperationContext(acct), WIKI_FOLDER);
 		mFolderId = f.getId();
+		loadWiki(octxt, mbox);
 	}
+	
+	private void loadWiki(OperationContext octxt, Mailbox mbox) throws ServiceException {
+	    List<MailItem> wikiList = mbox.getItemList(octxt, MailItem.TYPE_WIKI, mFolderId);
+	    // this is List, so it'd better be in the natural chronological order of MailItem in the folder.
+
+	    for (MailItem item : wikiList) {
+	    	assert(item instanceof WikiItem);
+	    	WikiItem witem = (WikiItem) item;
+	    	addWiki(witem);
+	    }
+	}
+	
 	public String getWikiAccount() {
 		return mWikiAccount;
 	}
+	
 	public String getWikiAccountId() {
 		return mWikiAccountId;
 	}
+	
 	public String getWikiFolder() {
 		return WIKI_FOLDER;
 	}
+	
 	public int getWikiFolderId() {
 		return mFolderId;
 	}
+	
 	public WikiWord lookupWiki(String wikiWord) {
 		return mWikiWords.get(wikiWord);
 	}
+	
 	public void addWiki(WikiItem wikiItem) throws ServiceException {
+		com.zimbra.cs.util.ZimbraLog.zimlet.info("adding wiki item " + 
+				wikiItem.getWikiWord() + " : " + wikiItem.getChangeDate() + " : " + wikiItem.getAuthor());
 		String wikiStr = wikiItem.getWikiWord();
 		WikiWord w;
 		w = mWikiWords.get(wikiStr);

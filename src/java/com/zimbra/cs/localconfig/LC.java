@@ -138,6 +138,8 @@ public class LC {
     public static final KnownKey ssl_allow_untrusted_certs;
 
     public static final KnownKey zimlet_directory;
+    public static final KnownKey wiki_enabled;
+    public static final KnownKey wiki_user;
     
     static {
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  Changing this setting does not immediately reflect in MySQL server.  You will have to, with abundant precaution, re-generate my.cnf and restart MySQL server for the change to take effect.";
@@ -477,6 +479,16 @@ public class LC {
         zimlet_directory.setDefault("${tomcat_directory}" + FS + "webapps" + FS + "service" + FS + "zimlet");
         zimlet_directory.setDoc
         	("Path to installed Zimlets.");
+        
+        wiki_enabled = new KnownKey("wiki_enabled");
+        wiki_enabled.setDefault("false");
+        wiki_enabled.setDoc
+            ("Enable wiki app.");
+        
+        wiki_user = new KnownKey("wiki_user");
+        wiki_user.setDefault("wiki");
+        wiki_user.setDoc
+            ("Wiki user.");
     }
 
 }

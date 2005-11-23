@@ -749,6 +749,7 @@ public abstract class MailItem implements Comparable {
 			case TYPE_NOTE:         return new Note(mbox, data);
             case TYPE_APPOINTMENT:  return new Appointment(mbox, data);
             case TYPE_MOUNTPOINT:   return new Mountpoint(mbox, data);
+            case TYPE_WIKI:         return new WikiItem(mbox, data);
 			default:                return null;
 		}
 	}
