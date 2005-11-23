@@ -161,6 +161,9 @@ public class MailService implements DocumentService {
 //    public static final QName OBJECT_ACTION_REQUEST = QName.get("ObjectActionRequest", NAMESPACE);
 //    public static final QName OBJECT_ACTION_RESPONSE = QName.get("ObjectActionResponse", NAMESPACE);
 
+    public static final QName SAVE_WIKI_REQUEST = QName.get("SaveWikiRequest", NAMESPACE);
+    public static final QName SAVE_WIKI_RESPONSE = QName.get("SaveWikiResponse", NAMESPACE);
+
     public static final String E_MAILBOX = "mbx";
     public static final String E_CONV = "c";
 	public static final String E_MSG = "m";
@@ -496,5 +499,6 @@ public class MailService implements DocumentService {
         // objects
 //        dispatcher.registerHandler(OBJECT_ACTION_REQUEST, new ObjectAction());
         
+        dispatcher.registerHandler(SAVE_WIKI_REQUEST, new SaveWiki());
 	}
 }

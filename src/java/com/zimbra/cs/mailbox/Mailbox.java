@@ -53,6 +53,7 @@ import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.BrowseResult.DomainItem;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
+import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.Note.Rectangle;
 import com.zimbra.cs.mailbox.calendar.FreeBusy;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
@@ -4257,6 +4258,54 @@ public class Mailbox {
         }
     }
 
+    public synchronized WikiItem createWiki(OperationContext oc, ParsedMessage pm, int folderId) throws ServiceException {
+    	beginTransaction("wiki", oc);
+    	int itemId = getNextItemId(ID_AUTO_INCREMENT);
+       	short volumeId = Volume.getCurrentMessageVolume().getId();
+       	WikiItem wiki;
+        boolean success = false;
+        
+        try {
+           	byte[] rawData = pm.getRawData();
+           	String rawDigest = pm.getRawDigest();
+           	int    rawSize = pm.getRawSize();
+            StoreManager sm = StoreManager.getInstance();
+            Blob blob = sm.storeIncoming(rawData, rawDigest, null, volumeId);
+            markOtherItemDirty(blob);
+
+    		UnderlyingData data = new UnderlyingData();
+            data.id         = itemId;
+            data.folderId   = folderId;
+            data.indexId    = itemId;
+            data.volumeId   = volumeId;
+            data.flags      = 0;
+            data.date       = getOperationTimestamp();
+            data.size       = rawSize;
+            data.blobDigest = rawDigest;
+
+            wiki = WikiItem.create(this, data, pm, oc.authuser.getId());
+            mCurrentChange.setIndexedItem(wiki, null);
+
+            sm.link(blob, this, itemId, wiki.getSavedSequence(), volumeId);
+            sm.delete(blob);
+            
+            success = true;
+
+        } catch (IOException ioe) {
+            throw MailServiceException.MESSAGE_PARSE_ERROR(ioe);
+        } catch (MessagingException me) {
+            throw MailServiceException.MESSAGE_PARSE_ERROR(me);
+        } finally {
+        	endTransaction(success);
+        }
+
+        return wiki;
+    }
+
+    public WikiItem getWikiById(int id) throws ServiceException {
+    	return (WikiItem)getItemById(id, MailItem.TYPE_WIKI);
+    }
+    
     public static void dumpMailboxCache() {
         StringBuffer sb = new StringBuffer();
         sb.append("MAILBOX CACHE DUMP\n");

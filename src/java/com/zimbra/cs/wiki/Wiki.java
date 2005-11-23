@@ -1,0 +1,103 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1
+ * 
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 ("License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.zimbra.com/license
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+ * the License for the specific language governing rights and limitations
+ * under the License.
+ * 
+ * The Original Code is: Zimbra Collaboration Suite Server.
+ * 
+ * The Initial Developer of the Original Code is Zimbra, Inc.
+ * Portions created by Zimbra are Copyright (C) 2005 Zimbra, Inc.
+ * All Rights Reserved.
+ * 
+ * Contributor(s): 
+ * 
+ * ***** END LICENSE BLOCK *****
+ */
+package com.zimbra.cs.wiki;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.WikiItem;
+import com.zimbra.cs.service.ServiceException;
+
+public class Wiki {
+	private String mWikiAccount;
+	private String mWikiAccountId;
+	private int    mFolderId;
+	
+	private Map<String,WikiWord>    mWikiWords;
+	
+	private static Map<String,Wiki> wikiMap;
+	
+	private static final String WIKI_ACCOUNT = "user1";
+	private static final String WIKI_FOLDER =  "inbox";
+	
+	static {
+		wikiMap = new HashMap<String,Wiki>();
+	}
+	
+	public static Wiki getInstance() throws ServiceException {
+		return getInstance(WIKI_ACCOUNT);
+	}
+	public static Wiki getInstance(String acct) throws ServiceException {
+		Wiki w;
+		synchronized (wikiMap) {
+			w = wikiMap.get(acct);
+			if (w == null) {
+				w = new Wiki(acct);
+				wikiMap.put(acct, w);
+			}
+		}
+		return w;
+	}
+	private Wiki(String wikiAcct) throws ServiceException {
+		mWikiWords = new HashMap<String,WikiWord>();
+		
+		mWikiAccount = wikiAcct;
+		
+		Account acct = Provisioning.getInstance().getAccountByName(mWikiAccount);
+		mWikiAccountId = acct.getId();
+		Folder f = Mailbox.getMailboxByAccount(acct).getFolderByPath(new OperationContext(acct), WIKI_FOLDER);
+		mFolderId = f.getId();
+	}
+	public String getWikiAccount() {
+		return mWikiAccount;
+	}
+	public String getWikiAccountId() {
+		return mWikiAccountId;
+	}
+	public String getWikiFolder() {
+		return WIKI_FOLDER;
+	}
+	public int getWikiFolderId() {
+		return mFolderId;
+	}
+	public WikiWord lookupWiki(String wikiWord) {
+		return mWikiWords.get(wikiWord);
+	}
+	public void addWiki(WikiItem wikiItem) throws ServiceException {
+		String wikiStr = wikiItem.getWikiWord();
+		WikiWord w;
+		w = mWikiWords.get(wikiStr);
+		if (w == null) {
+			w = new WikiWord(wikiStr);
+			mWikiWords.put(wikiStr, w);
+		}
+		w.addWikiItem(wikiItem);
+	}
+}

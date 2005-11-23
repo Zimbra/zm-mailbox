@@ -72,8 +72,10 @@ public abstract class MailItem implements Comparable {
     /** Item is a {@link Mountpoint} pointing to a {@link Folder} or
      *  {@link Tag}, possibly in another user's {@link Mailbox}. */
     public static final byte TYPE_MOUNTPOINT   = 13;
+    /** Item is a wiki item {@link WikiItem} */
+    public static final byte TYPE_WIKI         = 14;
 
-    static final byte TYPE_MAX = TYPE_MOUNTPOINT;
+    static final byte TYPE_MAX = TYPE_WIKI;
     public static final byte TYPE_UNKNOWN = -1;
 
     private static String[] TYPE_NAMES = {
@@ -90,7 +92,8 @@ public abstract class MailItem implements Comparable {
         "flag",
         "appointment",
         "virtual conversation",
-        "remote folder"
+        "remote folder",
+        "wiki"
     };
 
     /** Throws {@link ServiceException} <code>mail.INVALID_TYPE</code> if the
