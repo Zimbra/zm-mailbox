@@ -769,6 +769,7 @@ public abstract class Provisioning {
     public static final String A_zimbraZimletServerIndexRegex  = "zimbraZimletServerIndexRegex";
     public static final String A_zimbraZimletUserProperties    = "zimbraZimletUserProperties";
     public static final String A_zimbraProxyAllowedDomains     = "zimbraProxyAllowedDomains";
+    public static final String A_zimbraProxyCacheableContentTypes = "zimbraProxyCacheableContentTypes";
 
     private static Provisioning mProvisioning;
 
