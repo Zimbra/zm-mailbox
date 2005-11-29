@@ -436,6 +436,7 @@
 		<delete dir="${zimbra.home.dir}/redolog" />
 		<delete dir="${zimbra.home.dir}/repl" />
 		<delete dir="${zimbra.home.dir}/backup" />
+		<delete dir="${zimbra.home.dir}/lib/ext" />
 		<delete failonerror="no">
 			<fileset dir="${zimbra.home.dir}/log" includes="*.log" />
 		</delete>
