@@ -266,7 +266,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                     } finally {
                         ZimbraLog.clearContext();
                         recipient.setDeliveryStatus(status);
-                        if (shared && !rd.skip) {
+                        if (shared && rd != null && !rd.skip) {
                             rd.mbox.endSharedDelivery();
                             rd.skip = true;
                         }
