@@ -999,10 +999,34 @@ public class Mailbox {
     public static Mailbox getMailboxById(int mailboxId) throws ServiceException {
         if (mailboxId <= 0)
             throw MailServiceException.NO_SUCH_MBOX(mailboxId);
+        Object obj = null;
+        Integer mailboxKey = new Integer(mailboxId);
+        Mailbox mailbox = null;
 
         synchronized (sMailboxCache) {
-            Integer mailboxKey = new Integer(mailboxId);
-            Object obj = sMailboxCache.get(mailboxKey);
+            obj = sMailboxCache.get(mailboxKey);
+        }
+
+        // Load mailbox from the database
+        if (obj == null) {
+            Connection conn = null;
+            try {
+                conn = DbPool.getConnection();
+                MailboxData mdata = DbMailbox.getMailboxStats(conn, mailboxId);
+                if (mdata == null)
+                    throw MailServiceException.NO_SUCH_MBOX(mailboxId);
+                mailbox = new Mailbox(mdata);
+            } finally {
+                if (conn != null)
+                    DbPool.quietClose(conn);
+            }
+        }
+
+        synchronized (sMailboxCache) {
+            if (obj == null) {
+                // In case another thread just initialized the mailbox
+                obj = sMailboxCache.get(mailboxKey);
+            }
             if (obj instanceof Mailbox)
                 return (Mailbox) obj;
             else if (obj instanceof MailboxLock) {
@@ -1013,16 +1037,10 @@ public class Mailbox {
                     return lock.mailbox;
             }
 
-            Mailbox mailbox = null;
-            Connection conn = null;
             boolean success = false;
+            Connection conn = null;
             try {
                 conn = DbPool.getConnection();
-                MailboxData mdata = DbMailbox.getMailboxStats(conn, mailboxId);
-                if (mdata == null)
-                    throw MailServiceException.NO_SUCH_MBOX(mailboxId);
-                mailbox = new Mailbox(mdata);
-
                 mailbox.beginTransaction("getMailboxById", null, null, conn);
                 if (obj instanceof MailboxLock)
                     ((MailboxLock) obj).mailbox = mailbox;
@@ -1046,7 +1064,6 @@ public class Mailbox {
         }
     }
  
-
     public static MailboxLock beginMaintenance(String accountId, int mailboxId) throws ServiceException {
         synchronized (sMailboxCache) {
             Integer mailboxKey = (Integer) sMailboxCache.get(accountId.toLowerCase());
