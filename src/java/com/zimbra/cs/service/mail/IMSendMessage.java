@@ -1,0 +1,86 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1
+ * 
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 ("License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.zimbra.com/license
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+ * the License for the specific language governing rights and limitations
+ * under the License.
+ * 
+ * The Original Code is: Zimbra Collaboration Suite Server.
+ * 
+ * The Initial Developer of the Original Code is Zimbra, Inc.
+ * Portions created by Zimbra are Copyright (C) 2005 Zimbra, Inc.
+ * All Rights Reserved.
+ * 
+ * Contributor(s): 
+ * 
+ * ***** END LICENSE BLOCK *****
+ */
+package com.zimbra.cs.service.mail;
+
+import java.util.Map;
+
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.soap.DocumentHandler;
+import com.zimbra.soap.Element;
+import com.zimbra.soap.SoapFaultException;
+
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.im.IMMessage;
+import com.zimbra.cs.mailbox.im.IMPersona;
+import com.zimbra.cs.mailbox.im.IMMessage.TextPart;
+import com.zimbra.soap.ZimbraContext;
+
+public class IMSendMessage extends DocumentHandler {
+
+    public Element handle(Element request, Map context) throws ServiceException, SoapFaultException 
+    {
+        ZimbraContext lc = getZimbraContext(context);
+        Mailbox mbox = super.getRequestedMailbox(lc);
+
+        Element response = lc.createElement(MailService.IM_SEND_MESSAGE_RESPONSE);
+
+        Element msgElt = request.getElement("message");
+        
+        String threadId = msgElt.getAttribute("thread", null);
+        String addr = null;
+        
+        if (threadId == null)
+            addr = msgElt.getAttribute("addr");
+        
+        String subject = null;
+        String body = null;
+        
+        Element subjElt = msgElt.getOptionalElement("subject");
+        if (subjElt != null) {
+            subject = subjElt.getText();
+        }
+        
+        Element bodyElt = msgElt.getOptionalElement("body");
+        if (bodyElt != null) {
+            body = bodyElt.getText();
+        }
+        
+        IMMessage msg = new IMMessage(subject==null?null:new TextPart(subject),
+                body==null?null:new TextPart(body));
+                
+
+        IMPersona persona = mbox.getIMPersona();
+        
+        if (threadId != null) {
+            persona.sendMessage(threadId, msg);
+        } else {
+            threadId = persona.newChat(addr, msg);
+        }
+        
+        response.addAttribute("thread", threadId);
+        
+        return response;        
+    }
+}

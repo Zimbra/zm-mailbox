@@ -63,6 +63,8 @@ import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.cs.mailbox.im.IMPersona;
+import com.zimbra.cs.mailbox.im.IMRouter;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.op.*;
 import com.zimbra.cs.service.FeedManager;
@@ -1440,6 +1442,11 @@ public class Mailbox {
             else
                 redoRecorder.abort();
         }
+    }
+    
+    public synchronized IMPersona getIMPersona() throws ServiceException
+    {
+        return IMRouter.getInstance().findPersona(this.getAccount().getName());
     }
 
     public short getIndexVolume() {
