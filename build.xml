@@ -559,6 +559,7 @@
 	</target>
 
 	<target name="load-zimlets" depends="package-zimlets,deploy-zimlets"/>
+	<target name="reload-zimlets" depends="load-zimlets,restart-tomcat"/>
 
 	<target name="package-zimlets">
 		<zip destfile="${dist.zimlet.dir}/com_zimbra_phone.zip" update="true">
@@ -575,6 +576,9 @@
 		<zip destfile="${dist.zimlet.dir}/com_zimbra_url.zip" update="true">
 			<fileset dir="${build.classes.dir}" includes="**/URLHandler.class"/>
 			<fileset dir="${config.dir}/zimlets/com_zimbra_url" />
+		</zip>
+		<zip destfile="${dist.zimlet.dir}/com_zimbra_ymaps.zip" update="true">
+			<fileset dir="${config.dir}/zimlets/com_zimbra_ymaps" />
 		</zip>
 	</target>
 
@@ -603,6 +607,12 @@
 			<arg line="deploy" />
 			<arg file="${dist.zimlet.dir}/com_zimbra_url.zip" />
 		</java>
+		<echo>Deploying zimlet: ymaps</echo>
+		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="-q" />
+			<arg line="deploy" />
+			<arg file="${dist.zimlet.dir}/com_zimbra_ymaps.zip" />
+		</java>
 	</target>
 
 	<target name="install-zimlets" depends='package-zimlets' description="install files only">
@@ -625,6 +635,11 @@
 			<arg line="-q" />
 			<arg line="install" />
 			<arg file="${dist.zimlet.dir}/com_zimbra_url.zip" />
+		</java>
+		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="-q" />
+			<arg line="install" />
+			<arg file="${dist.zimlet.dir}/com_zimbra_ymaps.zip" />
 		</java>
 	</target>
 
@@ -690,6 +705,7 @@
 	</target>
 
 	<!-- Tomcat service control -->
+	<target name="restart-tomcat" depends="stop-tomcat,start-tomcat"/>
 	<target name="stop-tomcat" depends="stop-tomcat-windows,stop-tomcat-unix"/>
 
 	<target name="stop-tomcat-windows" if="is-windows">
