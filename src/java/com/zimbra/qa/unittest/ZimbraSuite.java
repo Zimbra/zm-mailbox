@@ -75,7 +75,6 @@ public class ZimbraSuite extends TestSuite
         // xxx bburtin Commenting out conversion tests until TNEF code is in place
         // suite.addTest(new TestSuite(TestConversion.class));
         suite.addTest(new TestSuite(TestMailItem.class));
-        suite.addTest(new TestSuite(TestTimeoutMap.class));
         suite.addTest(new TestSuite(TestConcurrency.class));
         
         synchronized (sAdditionalSuites) {
