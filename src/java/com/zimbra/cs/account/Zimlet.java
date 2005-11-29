@@ -31,4 +31,6 @@ public interface Zimlet extends NamedEntry {
 	public void setEnabled(boolean enabled) throws ServiceException;
 	public int getPriority();
 	public void setPriority(int priority) throws ServiceException;
+	public boolean isExtension();
+	public void setExtension(boolean extension) throws ServiceException;
 }

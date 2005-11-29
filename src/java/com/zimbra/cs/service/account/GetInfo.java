@@ -136,7 +136,7 @@ public class GetInfo extends DocumentHandler  {
     		try {
     			zimletName = attrList[attrIndex];
     			Zimlet z = Provisioning.getInstance().getZimlet(zimletName);
-    			if (z != null && z.isEnabled()) {
+    			if (z != null && z.isEnabled() && !z.isExtension()) {
     				ZimletUtil.listZimlet(response, zimletName);
     			}
     		} catch (ServiceException se) {

@@ -40,7 +40,7 @@ public class ZimletDescription extends ZimletMeta {
 	
 	public static final String ZIMLET_REGEX_EXTENSION_CLASS = "com.zimbra.cs.zimlet.handler.RegexHandler";
 	
-	private List   mScripts;
+	private List<String> mScripts;
 	private String mContentObject;
 	private String mPanelItem;
 	private String mExtensionClass;
@@ -60,7 +60,7 @@ public class ZimletDescription extends ZimletMeta {
 	}
 	
 	protected void initialize() {
-		mScripts = new ArrayList();
+		mScripts = new ArrayList<String>();
 	}
 
 	protected void validateElement(Element elem) throws ZimletException {
@@ -128,7 +128,7 @@ public class ZimletDescription extends ZimletMeta {
 		if (mScripts.isEmpty()) {
 			return null;
 		}
-		return (String[]) mScripts.toArray(new String[0]);
+		return mScripts.toArray(new String[0]);
 	}
 	
 	public String getServerExtensionClass() {

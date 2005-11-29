@@ -42,6 +42,7 @@ import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
@@ -63,9 +64,9 @@ public class ZimletUtil {
 	public static final String ZIMLET_DEFAULT_COS = "default";
 	
 	private static boolean sZimletsLoaded = false;
-	private static Map sZimlets = new HashMap();
-	private static Map sDevZimlets = new HashMap();
-	private static Map sZimletHandlers = new HashMap();
+	private static Map<String,ZimletFile> sZimlets = new HashMap<String,ZimletFile>();
+	private static Map<String,ZimletFile> sDevZimlets = new HashMap<String,ZimletFile>();
+	private static Map<String,Class> sZimletHandlers = new HashMap<String,Class>();
 
 	/**
 	 * Loads all the Zimlets, locates the server side ZimletHandler for each Zimlets,
@@ -152,7 +153,7 @@ public class ZimletUtil {
 	 * @param zimlets - Zimlet cache
 	 * @param dir - directory
 	 */
-	private static void loadZimletsFromDir(Map zimlets, String dir) {
+	private static void loadZimletsFromDir(Map<String,ZimletFile> zimlets, String dir) {
         File zimletRootDir = new File(dir);
 		if (zimletRootDir == null || !zimletRootDir.exists() || !zimletRootDir.isDirectory()) {
 			return;
@@ -231,7 +232,7 @@ public class ZimletUtil {
 	}
 
 	private static Map descToMap(ZimletDescription zd) throws ZimletException {
-		Map attrs = new HashMap();
+		Map<String,String> attrs = new HashMap<String,String>();
 		attrs.put(Provisioning.A_zimbraZimletKeyword,         zd.getName());
 		attrs.put(Provisioning.A_zimbraZimletVersion,         zd.getVersion());
 		attrs.put(Provisioning.A_zimbraZimletDescription,     zd.getDescription());
@@ -263,9 +264,9 @@ public class ZimletUtil {
 	 * @throws ZimletException
 	 */
 	public static void deployZimlet(String zimlet) throws IOException, ZimletException {
-		String zimletRoot = getZimletDir();
 		ZimletFile zf = installZimlet(zimlet);
 		String zimletName = zf.getZimletName();
+		ZimletDescription zd = zf.getZimletDescription();
 		Provisioning prov = Provisioning.getInstance();
 		try {
 			Zimlet z = prov.getZimlet(zimletName);
@@ -279,7 +280,9 @@ public class ZimletUtil {
 		if (zf.hasZimletConfig()) {
 			installConfig(zf.getZimletConfig());
 		}
-		activateZimlet(zimletName, ZIMLET_DEFAULT_COS);
+		if (!zd.isExtension()) {
+			activateZimlet(zimletName, ZIMLET_DEFAULT_COS);
+		}
 		enableZimlet(zimletName);
 	}
 	
@@ -342,9 +345,15 @@ public class ZimletUtil {
 		// add zimlet entry to ldap
 		Provisioning prov = Provisioning.getInstance();
 		try {
-			prov.createZimlet(zimletName, attrs);
+			Zimlet zim = prov.createZimlet(zimletName, attrs);
+			if (zd.isExtension()) {
+				zim.setExtension(true);
+			}
 		} catch (ServiceException se) {
-			throw ZimletException.CANNOT_CREATE(zimletName, se.getCause().getMessage());
+			if (se.getCause() != null) {
+				throw ZimletException.CANNOT_CREATE(zimletName, se.getCause().getMessage());
+			}
+			throw ZimletException.CANNOT_CREATE(zimletName, se.getMessage());
 		}
 	}
 	
@@ -698,14 +707,14 @@ public class ZimletUtil {
 	private static final String SET_PRIORITY_CMD = "setpriority";
 	private static final String TEST_CMD = "test";
 	
-	private static Map mCommands;
+	private static Map<String,Integer> mCommands;
 	
 	private static void addCommand(String cmd, int cmdId) {
 		mCommands.put(cmd, new Integer(cmdId));
 	}
 	
 	private static void setup() {
-		mCommands = new HashMap();
+		mCommands = new HashMap<String,Integer>();
 		addCommand(INSTALL_CMD, INSTALL_ZIMLET);
 		addCommand(UNINSTALL_CMD, UNINSTALL_ZIMLET);
 		addCommand(LIST_CMD, LIST_ZIMLETS);

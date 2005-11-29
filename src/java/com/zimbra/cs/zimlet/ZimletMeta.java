@@ -50,6 +50,7 @@ public abstract class ZimletMeta {
 	public static final String ZIMLET_ATTR_VERSION         = "version";
 	public static final String ZIMLET_ATTR_DESCRIPTION     = "description";
 	public static final String ZIMLET_ATTR_NAME            = "name";
+	public static final String ZIMLET_ATTR_EXTENSION       = "extension";
 
 	public static final String ZIMLET_TAG_SCRIPT           = "script";
 	public static final String ZIMLET_TAG_CONTENT_OBJECT   = "contentObject";
@@ -77,6 +78,7 @@ public abstract class ZimletMeta {
 	protected String mName;
 	protected String mVersion;
 	protected String mDescription;
+	protected boolean mIsExtension;
 
 	protected String mRawXML;
 	protected String mGeneratedXML;
@@ -136,6 +138,11 @@ public abstract class ZimletMeta {
 		mName = mTopElement.getAttribute(ZIMLET_ATTR_NAME, "");
 		mVersion = mTopElement.getAttribute(ZIMLET_ATTR_VERSION, "");
 		mDescription = mTopElement.getAttribute(ZIMLET_ATTR_DESCRIPTION, "");
+		try {
+			mIsExtension = mTopElement.getAttributeBool(ZIMLET_ATTR_EXTENSION, false);
+		} catch (Exception se) {
+			mIsExtension = false;
+		}
 
 		Iterator iter = mTopElement.listElements().iterator();
 		while (iter.hasNext()) {
@@ -158,6 +165,11 @@ public abstract class ZimletMeta {
 		return mDescription;
 	}
 	
+	public boolean isExtension() {
+		assert(mTopElement != null);
+		return mIsExtension;
+	}
+
 	/*
 	 * returns JSON representation of the parsed DOM tree.
 	 */

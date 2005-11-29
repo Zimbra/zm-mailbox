@@ -87,7 +87,7 @@ public class LdapZimlet extends LdapNamedEntry implements Zimlet, ObjectType {
     }
 
     public void setEnabled(boolean enabled) throws ServiceException {
-    	Map attr = new HashMap();
+    	Map<String,String> attr = new HashMap<String,String>();
     	String val = LdapUtil.LDAP_FALSE;
     	if (enabled) {
     		val = LdapUtil.LDAP_TRUE;
@@ -101,8 +101,22 @@ public class LdapZimlet extends LdapNamedEntry implements Zimlet, ObjectType {
     }
     
     public void setPriority(int priority) throws ServiceException {
-    	Map attr = new HashMap();
+    	Map<String,String> attr = new HashMap<String,String>();
     	attr.put(Provisioning.A_zimbraZimletPriority, Integer.toString(priority));
     	modifyAttrs(attr);
+    }
+    
+    public boolean isExtension() {
+    	return getBooleanAttr(Provisioning.A_zimbraZimletIsExtension, false);
+    }
+
+    public void setExtension(boolean extension) throws ServiceException {
+    	Map<String,String> attr = new HashMap<String,String>();
+    	String val = LdapUtil.LDAP_FALSE;
+    	if (extension) {
+    		val = LdapUtil.LDAP_TRUE;
+    	}
+    	attr.put(Provisioning.A_zimbraZimletIsExtension, val);
+   		modifyAttrs(attr);
     }
 }
