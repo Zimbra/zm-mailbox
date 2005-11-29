@@ -22,11 +22,9 @@ IMGetRoster -- get buddy list
      
      <items>
         [
-          <item addr="foo@bar.com" [name="friendly name"] subscription="both|from|to">
+          <item addr="foo@bar.com" [name="friendly name"] subscription="both|from|to" group="groupnum,groupnum...">
              [<presence SEE BELOW>]*
-   
-             [<group num="groupnum">]*   // 0 or more groups
-          
+             
              [ // block/allow list 
                 <block type="id|group|subscription|default" ( [id="foo@bar.com"] OR [value="both|to|from|none"] ) priority="positive number MUST BE UNIQUE">
                    <message/>

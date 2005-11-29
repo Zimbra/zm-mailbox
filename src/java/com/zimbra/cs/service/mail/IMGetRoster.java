@@ -102,12 +102,17 @@ public class IMGetRoster extends DocumentHandler {
                     // presence
                     encodePresence(e, buddy.getPresence());
                     
+                    StringBuffer groupStr = null;
                     // groups
                     for (IMGroup grp : buddy.groups()) {
-                        Element grpElt = e.addElement("group");
                         Integer idx = groupIdCache.get(grp);
-                        grpElt.addAttribute("num", idx);
+                        if (groupStr == null)
+                            groupStr = new StringBuffer(idx.toString());
+                        else 
+                            groupStr.append(',').append(idx.toString());
                     }
+                    if (groupStr != null) 
+                        e.addAttribute("group", groupStr.toString());
                     
                 }
             }
