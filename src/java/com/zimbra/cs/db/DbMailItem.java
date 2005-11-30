@@ -54,6 +54,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.ArrayUtil;
 import com.zimbra.cs.util.Constants;
+import com.zimbra.cs.util.StringUtil;
 import com.zimbra.cs.util.TimeoutMap;
 import com.zimbra.cs.util.ZimbraLog;
 
@@ -1244,41 +1245,77 @@ public class DbMailItem {
     }
 
     private static void completeConversation(Mailbox mbox, UnderlyingData data) throws ServiceException {
-        List list = new ArrayList();
+        List<UnderlyingData> list = new ArrayList<UnderlyingData>();
         list.add(data);
         completeConversations(mbox, list);
     }
-    private static void completeConversations(Mailbox mbox, List convData) throws ServiceException {
+    private static void completeConversations(Mailbox mbox, List<UnderlyingData> convData) throws ServiceException {
         if (convData == null || convData.isEmpty())
             return;
-        Map conversations = new HashMap();
+        Map<Integer, UnderlyingData> conversations = new HashMap<Integer, UnderlyingData>();
 
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
+        
         for (int i = 0; i < convData.size(); i += DbUtil.IN_CLAUSE_BATCH_SIZE)
             try {
                 int count = Math.min(DbUtil.IN_CLAUSE_BATCH_SIZE, convData.size() - i);
-                String sql = "SELECT parent_id, GROUP_CONCAT(id), SUM(unread)," +
-                             " CONCAT(GROUP_CONCAT(-flags), ',', GROUP_CONCAT(tags)), COUNT(id) " +
-                             "FROM " + getMailItemTableName(mbox.getId()) +
+                String sql = "SELECT parent_id, id, unread, flags, tags" +
+                             " FROM " + getMailItemTableName(mbox.getId()) +
                              " WHERE parent_id IN " + DbUtil.suitableNumberOfVariables(count) +
-                             " GROUP BY parent_id";
+                             " ORDER BY parent_id";
                 stmt = conn.prepareStatement(sql);
                 for (int index = i, attr = 1; index < i + count; index++) {
-                    UnderlyingData data = (UnderlyingData) convData.get(index);
+                    UnderlyingData data = convData.get(index);
                     assert(data.type == MailItem.TYPE_CONVERSATION);
                     stmt.setInt(attr++, data.id);
-                    conversations.put(new Integer(data.id), data);
+                    conversations.put(data.id, data);
                 }
                 rs = stmt.executeQuery();
+
+                int lastConvId = -1;
+                boolean firstTime = true;
+                List<Long> inheritedTags = new ArrayList<Long>();
+                List<Integer> children = new ArrayList<Integer>();
+                int unreadCount = 0;
+                
                 while (rs.next()) {
-                    UnderlyingData data = (UnderlyingData) conversations.get(new Integer(rs.getInt(1)));
-                    data.children      = rs.getString(2);
-                    data.unreadCount   = rs.getInt(3);
-                    data.inheritedTags = rs.getString(4);
-                    data.messageCount  = rs.getInt(5);
+                    int convId = rs.getInt(1);
+                    if (convId != lastConvId) {
+                        // New conversation.  Update stats for the last one and reset counters.
+                        if (!firstTime) {
+                            // Update stats for the previous conversation
+                            UnderlyingData data = conversations.get(lastConvId);
+                            data.children      = StringUtil.join(",", children);
+                            data.unreadCount   = unreadCount;
+                            data.inheritedTags = StringUtil.join(",", inheritedTags);
+                            data.messageCount  = children.size();
+                        } else {
+                            firstTime = false;
+                        }
+                        lastConvId = convId;
+                        children.clear();
+                        inheritedTags.clear();
+                        unreadCount = 0;
+                    }
+                    
+                    // Read next row
+                    children.add(rs.getInt(2));
+                    boolean unread = rs.getBoolean(3);
+                    if (unread) {
+                        unreadCount++;
+                    }
+                    inheritedTags.add(-rs.getLong(4));
+                    inheritedTags.add(rs.getLong(5));
                 }
+                
+                // Update the last conversation
+                UnderlyingData data = conversations.get(lastConvId);
+                data.children      = StringUtil.join(",", children);
+                data.unreadCount   = unreadCount;
+                data.inheritedTags = StringUtil.join(",", inheritedTags);
+                data.messageCount  = children.size();
             } catch (SQLException e) {
                 throw ServiceException.FAILURE("completing conversation data", e);
             } finally {
