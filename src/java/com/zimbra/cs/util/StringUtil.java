@@ -54,7 +54,7 @@ public class StringUtil {
 		}
 		if (i >= raw.length())
 			return raw;
-		StringBuffer sb = new StringBuffer(raw.substring(0, i));
+		StringBuilder sb = new StringBuilder(raw.substring(0, i));
 		for ( ; i < raw.length(); i++) {
 			char c = raw.charAt(i);
 			if (c >= 0x20 || c == 0x09 || c == 0x0A || c == 0x0D)
@@ -102,7 +102,7 @@ public class StringUtil {
         
         int i=0;
         
-        StringBuffer sb = new StringBuffer(32);
+        StringBuilder sb = new StringBuilder(32);
         int term = TERM_WHITESPACE;
         boolean inStr = false;
         
@@ -149,7 +149,7 @@ public class StringUtil {
                             (term == TERM_DBLQUOTE && ch == '"'))) {
                     inStr = false;
                     result.add(sb.toString());
-                    sb = new StringBuffer(32);
+                    sb = new StringBuilder(32);
                     term = TERM_WHITESPACE;
                     continue scan;
                 }
@@ -254,7 +254,7 @@ public class StringUtil {
             return null;
         }
         
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         
         for (int i = 0; i < array.length; i++) {
             buf.append(array[i]);
@@ -273,7 +273,7 @@ public class StringUtil {
             return null;
         }
         
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         
         for (int i = 0; i < array.length; i++) {
             buf.append(array[i]);
