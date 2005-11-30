@@ -494,9 +494,14 @@ OR
 //        
 //   -- If any of: START, DURATION, END or RECUR change, then all exceptions are implicitly canceled!
 //
+// This call MAY NOT change the target folder of the appointment -- because ModifyAppointment
+// only works on a single Invite, and since all of the Invites in a specific Appointment must
+// be in the same Folder, the folder may not be changed with this API.  To move Appointments
+// between folders you should use the ItemActionRequest API with op="move"
+// 
 //
 <ModifyAppointmentRequest id="INVITE_ID_OF_DEFAULT_INVITE" comp="COMPONENT_NUM_DEFAULT_INVITE">
-   rest is SAME as CreateAppointmentRequest
+   rest is SAME as CreateAppointmentRequest except THE TARGET FOLDER IS IGNORED (see above)
 </ModifyAppointmentRequest>
 
 <ModifyAppointmentResponse apptId="appointment-id" invId="invite-message-id/>
