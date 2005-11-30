@@ -179,6 +179,9 @@ public class MailService implements DocumentService {
     public static final QName SAVE_WIKI_REQUEST = QName.get("SaveWikiRequest", NAMESPACE);
     public static final QName SAVE_WIKI_RESPONSE = QName.get("SaveWikiResponse", NAMESPACE);
 
+    public static final QName GET_ZIMLETS_REQUEST = QName.get("GetZimletsRequest", NAMESPACE);
+    public static final QName GET_ZIMLETS_RESPONSE = QName.get("GetZimletsResponse", NAMESPACE);
+
     public static final String E_MAILBOX = "mbx";
     public static final String E_CONV = "c";
 	public static final String E_MSG = "m";
@@ -517,6 +520,9 @@ public class MailService implements DocumentService {
         // wiki
         dispatcher.registerHandler(SAVE_WIKI_REQUEST, new SaveWiki());
         
+        // zimlet
+        dispatcher.registerHandler(GET_ZIMLETS_REQUEST, new GetZimlets());
+
         // IM
         dispatcher.registerHandler(IM_GET_ROSTER_REQUEST, new IMGetRoster());
         dispatcher.registerHandler(IM_SET_PRESENCE_REQUEST, new IMSetPresence());
