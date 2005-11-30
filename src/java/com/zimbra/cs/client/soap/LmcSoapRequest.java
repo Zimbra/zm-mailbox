@@ -53,6 +53,9 @@ public abstract class LmcSoapRequest {
     private static boolean sDumpXML = false;
     public static synchronized void setDumpXML(boolean b) { sDumpXML = b; }
 
+    private static int sRetryCount = 3;
+    public static synchronized void setRetryCount(int n) { sRetryCount = n; }
+
     /*
 	 * If session is null, no auth information will be sent.  Otherwise the 
 	 * auth information in session will be sent.
@@ -106,6 +109,7 @@ public abstract class LmcSoapRequest {
 		try {
 			trans = new SoapHttpTransport(targetURL);
 			trans.setTimeout(SOAP_TIMEOUT);
+            trans.setRetryCount(sRetryCount);
 
 			// set the auth token and session id in the transport for this request to use
             String curSessionID = null;

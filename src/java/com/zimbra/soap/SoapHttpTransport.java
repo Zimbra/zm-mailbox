@@ -191,14 +191,15 @@ public class SoapHttpTransport extends SoapTransport {
     			// execute the method.
     			statusCode = mClient.executeMethod(method);
     		} catch (HttpRecoverableException e) {
-    			System.err.println(
-    					"A recoverable exception occurred, retrying." + 
-						e.getMessage());
+                if (attempt == mRetryCount - 1)
+                    throw e;
+                else {
+        			System.err.println(
+        					"A recoverable exception occurred, retrying." + 
+    						e.getMessage());
+                }
     		}
     	}
-    	// Check that we didn't run out of retries.
-    	if (statusCode == -1)
-    		throw new IOException("retry limit reached");
 
     	// Read the response body.
     	byte[] responseBody = method.getResponseBody();

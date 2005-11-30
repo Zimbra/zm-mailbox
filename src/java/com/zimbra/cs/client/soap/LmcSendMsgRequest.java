@@ -90,7 +90,7 @@ public class LmcSendMsgRequest extends LmcSoapRequest {
                                  File f,
                                  String domain,  // cookie domain e.g. ".example.zimbra.com"
                                  int msTimeout)
-        throws LmcSoapClientException
+        throws LmcSoapClientException, IOException
     {
         String aid = null;
         
@@ -126,15 +126,13 @@ public class LmcSendMsgRequest extends LmcSoapRequest {
                 throw new LmcSoapClientException("Attachment post failed, status=" + statusCode);
             }
         } catch (IOException e) {
+            System.err.println("Attachment post failed");
         	e.printStackTrace();
-            throw new LmcSoapClientException("Attachment post failed");
+            throw e;
         } finally {
         	mPost.releaseConnection();
         }
 
-        
         return aid;
     }
- 
-
 }

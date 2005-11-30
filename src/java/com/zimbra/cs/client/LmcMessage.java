@@ -123,7 +123,7 @@ public class LmcMessage {
                                      LmcSession session,
                                      String cookieDomain,
                                      int msTimeout)
-    throws LmcSoapClientException {
+    throws LmcSoapClientException, IOException {
         // set the cookie.
         if (session == null)
             System.err.println(System.currentTimeMillis() + " " + Thread.currentThread() + " LmcMessage.downloadAttachment session=null");
@@ -149,8 +149,9 @@ public class LmcMessage {
                 throw new LmcSoapClientException("Attachment download failed, status=" + statusCode);
             }
         } catch (IOException e) {
+            System.err.println("Attachment download failed");
             e.printStackTrace();
-            throw new LmcSoapClientException("Attachment download failed");
+            throw e;
         } finally {
             get.releaseConnection();
         }
