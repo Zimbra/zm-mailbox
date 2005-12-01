@@ -105,8 +105,8 @@ public class ItemAction extends WriteOpDocumentHandler {
             op = opAttr;
 
         // figure out which items are local and which ones are remote, and proxy accordingly
-        ArrayList local = new ArrayList();
-        HashMap remote = new HashMap();
+        ArrayList<Integer> local = new ArrayList<Integer>();
+        HashMap<String, StringBuffer> remote = new HashMap<String, StringBuffer>();
         partitionItems(lc, action.getAttribute(MailService.A_ID), local, remote);
         // we don't yet support moving from a remote mailbox
         if (op.equals(OP_MOVE) && !remote.isEmpty())
@@ -120,8 +120,7 @@ public class ItemAction extends WriteOpDocumentHandler {
         TargetConstraint tcon = TargetConstraint.parseConstraint(mbox, constraint);
 
         // iterate over the local items and perform the requested operation
-        for (int i = 0; i < local.size(); i++) {
-            int id = ((Integer) local.get(i)).intValue();
+        for (int id: local) {
             if (op.equals(OP_FLAG))
                 mbox.alterTag(octxt, id, type, Flag.ID_FLAG_FLAGGED, flagValue, tcon);
             else if (op.equals(OP_READ))
@@ -148,10 +147,14 @@ public class ItemAction extends WriteOpDocumentHandler {
                     throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
                 String flags = action.getAttribute(MailService.A_FLAGS, null);
                 String tags  = action.getAttribute(MailService.A_TAGS, null);
+                byte color = (byte) action.getAttributeLong(MailService.A_COLOR, -1);
+
                 if (iidFolder.getId() > 0)
                     mbox.move(octxt, id, type, iidFolder.getId(), tcon);
                 if (tags != null || flags != null)
                     mbox.setTags(octxt, id, type, flags, tags, tcon);
+                if (color >= 0)
+                    mbox.setColor(octxt, id, type, color);
             } else
                 throw ServiceException.INVALID_REQUEST("unknown operation: " + op, null);
 
@@ -161,15 +164,15 @@ public class ItemAction extends WriteOpDocumentHandler {
         return successes.toString();
     }
 
-    private void partitionItems(ZimbraContext lc, String ids, ArrayList local, HashMap remote) throws ServiceException {
+    private void partitionItems(ZimbraContext lc, String ids, ArrayList<Integer> local, HashMap<String, StringBuffer> remote) throws ServiceException {
         Account acct = getRequestedAccount(lc);
         String targets[] = ids.split(",");
         for (int i = 0; i < targets.length; i++) {
             ItemId iid = new ItemId(targets[i], lc);
             if (iid.belongsTo(acct))
-                local.add(new Integer(iid.getId()));
+                local.add(iid.getId());
             else {
-                StringBuffer sb = (StringBuffer) remote.get(iid.getAccountId());
+                StringBuffer sb = remote.get(iid.getAccountId());
                 if (sb == null)
                     remote.put(iid.getAccountId(), new StringBuffer(iid.toString()));
                 else
