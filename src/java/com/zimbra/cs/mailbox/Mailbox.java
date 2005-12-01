@@ -163,9 +163,9 @@ public class Mailbox {
         boolean    active;
         Connection conn      = null;
         RedoableOp recorder  = null;
-        Map        itemCache = null;
         MailItem   indexItem = null;
         Object     indexData = null;
+        Map<Integer, MailItem> itemCache = null;
         OperationContext octxt = null;
         TargetConstraint tcon  = null;
 
@@ -275,13 +275,13 @@ public class Mailbox {
     private MailboxData   mData;
     private MailboxChange mCurrentChange = new MailboxChange();
 
-    private Map           mFolderCache;
-    private Map           mTagCache;
-    private SoftReference mItemCache      = new SoftReference(null);
-    private LRUMap        mConvHashes     = new LRUMap(MAX_MSGID_CACHE);
-    private LRUMap        mSentMessageIDs = new LRUMap(MAX_MSGID_CACHE);
-    private Set           mListeners      = new HashSet();
-    
+    private Map<Integer, Folder> mFolderCache;
+    private Map<Object, Tag>     mTagCache;
+    private SoftReference<Map<Integer, MailItem>> mItemCache = new SoftReference<Map<Integer, MailItem>>(null);
+    private LRUMap       mConvHashes     = new LRUMap(MAX_MSGID_CACHE);
+    private LRUMap       mSentMessageIDs = new LRUMap(MAX_MSGID_CACHE);
+    private Set<Session> mListeners      = new HashSet<Session>();
+
     private MailboxLock  mMaintenance = null;
     private MailboxIndex mMailboxIndex = null;
 
@@ -388,9 +388,9 @@ public class Mailbox {
     private void purgeListeners() {
         if (ZimbraLog.mailbox.isDebugEnabled())
             ZimbraLog.mailbox.debug("purging listeners");
-        Set purged = new HashSet(mListeners);
-        for (Iterator it = purged.iterator(); it.hasNext(); )
-            SessionCache.clearSession((Session) it.next());
+        Set<Session> purged = new HashSet<Session>(mListeners);
+        for (Session session : purged)
+            SessionCache.clearSession(session);
         // this may be redundant, as Session.doCleanup should dequeue
         //   the listener, but empty the list here just to be sure
         mListeners.clear();
@@ -613,9 +613,9 @@ public class Mailbox {
     /** Adds the item ids to the current change's list of items deleted during
      *  the transaction.
      * @param itemIds  The list of deleted items' ids. */
-    void markItemDeleted(List itemIds) {
-        for (int i = 0; i < itemIds.size(); i++)
-            mCurrentChange.mDirty.recordDeleted(((Integer) itemIds.get(i)).intValue());
+    void markItemDeleted(List<Integer> itemIds) {
+        for (int id : itemIds)
+            mCurrentChange.mDirty.recordDeleted(id);
     }
 
     /** Adds the item to the current change's list of items modified during
@@ -712,13 +712,13 @@ public class Mailbox {
             recorder.setChangeId(getOperationChangeID());
 
         // keep a hard reference to the item cache to avoid having it GCed during the op 
-        Object cache = mItemCache.get();
+        Map<Integer, MailItem> cache = mItemCache.get();
         if (cache == null) {
-            cache = new LinkedHashMap(MAX_ITEM_CACHE_WITH_LISTENERS, (float) 0.75, true);
-            mItemCache = new SoftReference(cache);
+            cache = new LinkedHashMap<Integer, MailItem>(MAX_ITEM_CACHE_WITH_LISTENERS, (float) 0.75, true);
+            mItemCache = new SoftReference<Map<Integer, MailItem>>(cache);
             ZimbraLog.cache.debug("created a new MailItem cache for mailbox " + getId());
         }
-        mCurrentChange.itemCache = (Map) cache;
+        mCurrentChange.itemCache = cache;
 
         // don't permit mailbox access during maintenance
         if (mMaintenance != null && mMaintenance.owner != Thread.currentThread())
@@ -816,7 +816,7 @@ public class Mailbox {
     }
 
 
-    private Map getItemCache() throws ServiceException {
+    private Map<Integer, MailItem> getItemCache() throws ServiceException {
         if (!mCurrentChange.isActive())
             throw ServiceException.FAILURE("cannot access item cache outside a transaction", null);
         return mCurrentChange.itemCache;
@@ -829,14 +829,15 @@ public class Mailbox {
             if (item instanceof Flag)
                 mFlags[((Flag) item).getIndex()] = (Flag) item;
             if (mTagCache != null) {
-                mTagCache.put(new Integer(item.getId()), item);
-                mTagCache.put(((Tag) item).getName().toLowerCase(), item);
+                Tag tag = (Tag) item;
+                mTagCache.put(tag.getId(), tag);
+                mTagCache.put(tag.getName().toLowerCase(), tag);
             }
         } else if (item instanceof Folder) {
             if (mFolderCache != null)
-                mFolderCache.put(new Integer(item.getId()), item);
+                mFolderCache.put(item.getId(), (Folder) item);
         } else
-            getItemCache().put(new Integer(item.getId()), item);
+            getItemCache().put(item.getId(), item);
 
         if (ZimbraLog.cache.isDebugEnabled())
             ZimbraLog.cache.debug("cached " + MailItem.getNameForType(item) + " " + item.getId() + " in mailbox " + getId());
@@ -848,18 +849,18 @@ public class Mailbox {
         if (item instanceof Tag) {
             if (mTagCache == null)
                 return;
-            mTagCache.remove(new Integer(item.getId()));
+            mTagCache.remove(item.getId());
             mTagCache.remove(((Tag) item).getName().toLowerCase());
         } else if (item instanceof Folder) {
             if (mFolderCache == null)
                 return;
-            mFolderCache.remove(new Integer(item.getId()));
+            mFolderCache.remove(item.getId());
         } else
-            getItemCache().remove(new Integer(item.getId()));
-        
+            getItemCache().remove(item.getId());
+
         if (ZimbraLog.cache.isDebugEnabled())
             ZimbraLog.cache.debug("uncached " + MailItem.getNameForType(item) + " " + item.getId() + " in mailbox " + getId());
-        
+
         item.uncacheChildren();
     }
 
@@ -871,11 +872,11 @@ public class Mailbox {
      * 
      * @param itemId  The id of the item to uncache */
     void uncacheItem(Integer itemId) throws ServiceException {
-        Object obj = getItemCache().remove(itemId);
+        MailItem item = getItemCache().remove(itemId);
         if (ZimbraLog.cache.isDebugEnabled())
             ZimbraLog.cache.debug("uncached item " + itemId + " in mailbox " + getId());
-        if (obj != null && obj instanceof MailItem)
-            ((MailItem) obj).uncacheChildren();
+        if (item != null)
+            item.uncacheChildren();
     }
     
     /** Removes all items of a specified type from the <code>Mailbox</code>'s
@@ -1140,11 +1141,9 @@ public class Mailbox {
             mailboxIds = new int[col.size()];
             // mMailboxCache contains accountId -> mailboxId mappings as well as
             //   mailboxId -> Mailbox mappings.  we just want to iterate over the first of these...
-            for (Iterator it = col.iterator(); it.hasNext(); ) {
-                Object o = it.next();
+            for (Object o : col)
                 if (o instanceof Integer)
-                    mailboxIds[i++] = ((Integer) o).intValue();
-            }
+                    mailboxIds[i++] = (Integer) o;
         }
         int[] result = new int[i];
         System.arraycopy(mailboxIds, 0, result, 0, i);
@@ -1163,11 +1162,9 @@ public class Mailbox {
             accountIds = new String[set.size()];
             // mMailboxCache contains accountId -> mailboxId mappings as well as
             //   mailboxId -> Mailbox mappings.  we just want to iterate over the first of these...
-            for (Iterator it = set.iterator(); it.hasNext(); ) {
-                Object o = it.next();
+            for (Object o : set)
                 if (o instanceof String)
                     accountIds[i++] = (String) o;
-            }
         }
         String[] result = new String[i];
         System.arraycopy(accountIds, 0, result, 0, i);
@@ -1322,8 +1319,8 @@ public class Mailbox {
         ZimbraLog.cache.debug("Initializing folder and tag caches for mailbox " + getId());
 
         try {
-            Map folderData = (mFolderCache == null ? new HashMap() : null);
-            Map tagData    = (mTagCache == null ? new HashMap() : null);
+            Map<Integer, MailItem.UnderlyingData> folderData = (mFolderCache == null ? new HashMap<Integer, MailItem.UnderlyingData>() : null);
+            Map<Integer, MailItem.UnderlyingData> tagData    = (mTagCache == null ? new HashMap<Integer, MailItem.UnderlyingData>() : null);
             MailboxData stats = DbMailItem.getFoldersAndTags(this, folderData, tagData);
 
             if (stats != null) {
@@ -1339,14 +1336,13 @@ public class Mailbox {
             }
 
             if (folderData != null) {
-                mFolderCache = new HashMap();
+                mFolderCache = new HashMap<Integer, Folder>();
                 // create the folder objects and, as a side-effect, populate the new cache
-                for (Iterator it = folderData.values().iterator(); it.hasNext(); )
-                    MailItem.constructItem(this, (MailItem.UnderlyingData) it.next());
+                for (MailItem.UnderlyingData ud : folderData.values())
+                    MailItem.constructItem(this, ud);
                 // establish the folder hierarchy
-                for (Iterator it = mFolderCache.values().iterator(); it.hasNext(); ) {
-                    Folder folder = (Folder) it.next();
-                    Folder parent = (Folder) mFolderCache.get(new Integer(folder.getParentId()));
+                for (Folder folder : mFolderCache.values()) {
+                    Folder parent = mFolderCache.get(folder.getParentId());
                     // FIXME: side effect of this is that parent is marked as dirty...
                     if (parent != null)
                         parent.addChild(folder);
@@ -1354,10 +1350,10 @@ public class Mailbox {
             }
 
             if (tagData != null) {
-                mTagCache = new HashMap();
+                mTagCache = new HashMap<Object, Tag>();
                 // create the tag objects and, as a side-effect, populate the new cache
-                for (Iterator it = tagData.values().iterator(); it.hasNext(); )
-                    new Tag(this, (Tag.UnderlyingData) it.next());
+                for (MailItem.UnderlyingData ud : tagData.values())
+                    new Tag(this, ud);
                 // flags don't change and thus can be reused in the new cache
                 for (int i = 0; i < mFlags.length; i++) {
                     if (mFlags[i] == null)
@@ -1367,7 +1363,8 @@ public class Mailbox {
                 }
             }
         } catch (ServiceException e) {
-            mTagCache = mFolderCache = null;
+            mTagCache = null;
+            mFolderCache = null;
             throw e;
         }
     }
@@ -1740,7 +1737,7 @@ public class Mailbox {
             return null;
 
         MailItem items[] = new MailItem[ids.length];
-        Set uncached = new HashSet();
+        Set<Integer> uncached = new HashSet<Integer>();
 
         // try the cache first
         Integer miss = null;
@@ -1820,11 +1817,11 @@ public class Mailbox {
     MailItem getCachedItem(Integer key) throws ServiceException {
         MailItem item = null;
         if (mTagCache != null)
-            item = (MailItem) mTagCache.get(key);
+            item = mTagCache.get(key);
         if (item == null && mFolderCache != null)
-            item = (MailItem) mFolderCache.get(key);
+            item = mFolderCache.get(key);
         if (item == null)
-            item = (MailItem) getItemCache().get(key);
+            item = getItemCache().get(key);
         
         byte type = MailItem.TYPE_UNKNOWN;
         if (item != null) {
@@ -1841,15 +1838,15 @@ public class Mailbox {
             case MailItem.TYPE_FLAG:
             case MailItem.TYPE_TAG:
                 if (mTagCache != null)
-                    item = (MailItem) mTagCache.get(key);
+                    item = mTagCache.get(key);
                 break;
             case MailItem.TYPE_SEARCHFOLDER:
             case MailItem.TYPE_FOLDER:
                 if (mFolderCache != null)
-                    item = (MailItem) mFolderCache.get(key);
+                    item = mFolderCache.get(key);
                 break;
             default:
-                item = (MailItem) getItemCache().get(key);
+                item = getItemCache().get(key);
             break;
         }
 
@@ -1862,9 +1859,9 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("getItemFromUd", null);
-            MailItem toRet = getItem(data);
+            MailItem item = getItem(data);
             success = true;
-            return toRet;
+            return item;
         } finally {
             endTransaction(success);
         }
@@ -1874,7 +1871,7 @@ public class Mailbox {
     MailItem getItem(MailItem.UnderlyingData data) throws ServiceException {
         if (data == null)
             return null;
-        MailItem item = getCachedItem(new Integer(data.id), data.type);
+        MailItem item = getCachedItem(data.id, data.type);
         // XXX: should we sanity-check the cached version to make sure all the data matches?
         if (item != null)
             return item;
@@ -1882,13 +1879,13 @@ public class Mailbox {
     }
 
     /** Returns all the MailItems of a given type, optionally in a specified folder */
-    public synchronized List /*<MailItem>*/ getItemList(OperationContext octxt, byte type) throws ServiceException {
+    public synchronized List<MailItem> getItemList(OperationContext octxt, byte type) throws ServiceException {
         return getItemList(octxt, type, -1);
     }
-    public synchronized List /*<MailItem>*/ getItemList(OperationContext octxt, byte type, int folderId) throws ServiceException {
+    public synchronized List<MailItem> getItemList(OperationContext octxt, byte type, int folderId) throws ServiceException {
         if (type == MailItem.TYPE_UNKNOWN)
             return null;
-        List result = new ArrayList();
+        List<MailItem> result = new ArrayList<MailItem>();
 
         boolean success = false;
         try {
@@ -1902,36 +1899,30 @@ public class Mailbox {
             if (type == MailItem.TYPE_TAG) {
                 if (folderId != -1 && folderId != ID_FOLDER_TAGS)
                     return null;
-                for (Iterator it = mTagCache.entrySet().iterator(); it.hasNext(); ) {
-                    Map.Entry entry = (Map.Entry) it.next();
+                for (Map.Entry<Object, Tag> entry : mTagCache.entrySet())
                     if (entry.getKey() instanceof String)
                         result.add(entry.getValue());
-                }
                 success = true;
                 return result;
             } else if (type == MailItem.TYPE_FOLDER || type == MailItem.TYPE_SEARCHFOLDER) {
-                for (Iterator it = mFolderCache.values().iterator(); it.hasNext(); ) {
-                    Folder subfolder = (Folder) it.next();
+                for (Folder subfolder : mFolderCache.values())
                     if (folder == null || subfolder.getParentId() == folderId)
                         if ((type == MailItem.TYPE_SEARCHFOLDER) == (subfolder instanceof SearchFolder))
                             result.add(subfolder);
-                }
                 success = true;
                 return result;
             }
 
-            List dataList = null;
+            List<MailItem.UnderlyingData> dataList = null;
             if (folder != null)
                 dataList = DbMailItem.getByFolder(folder, type);
             else
                 dataList = DbMailItem.getByType(this, type);
             if (dataList == null)
                 return null;
-            for (Iterator it = dataList.iterator(); it.hasNext(); ) {
-                MailItem.UnderlyingData data = (MailItem.UnderlyingData) it.next();
+            for (MailItem.UnderlyingData data : dataList)
                 if (data != null)
                     result.add(getItem(data));
-            }
             success = true;
         } finally {
             endTransaction(success);
@@ -1949,12 +1940,12 @@ public class Mailbox {
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
 
             Folder folder = getFolderById(folderId);
-            List idList = DbMailItem.listByFolder(folder, type, true);
+            List<DbMailItem.SearchResult> idList = DbMailItem.listByFolder(folder, type, true);
             if (idList == null)
                 return null;
             int i = 0, result[] = new int[idList.size()];
-            for (Iterator it = idList.iterator(); it.hasNext(); )
-                result[i++] = ((DbMailItem.SearchResult) it.next()).id;
+            for (DbMailItem.SearchResult sr : idList)
+                result[i++] = sr.id;
             success = true;
             return result;
         } finally {
@@ -2001,13 +1992,13 @@ public class Mailbox {
     }
 
     /** @return a List of the MailItems of the given type modified since a given time */
-    public synchronized List /*<MailItem>*/ getModifiedItems(byte type, long lastSync) throws ServiceException {
+    public synchronized List<MailItem> getModifiedItems(byte type, long lastSync) throws ServiceException {
         if (type == MailItem.TYPE_UNKNOWN)
             return null;
         else if (lastSync >= getLastChangeID())
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
 
-        List result = new ArrayList();
+        List<MailItem> result = new ArrayList<MailItem>();
         boolean success = false;
         try {
             beginTransaction("getModifiedItems", null);
@@ -2015,31 +2006,25 @@ public class Mailbox {
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
 
             if (type == MailItem.TYPE_TAG) {
-                for (Iterator it = mTagCache.entrySet().iterator(); it.hasNext(); ) {
-                    Map.Entry entry = (Map.Entry) it.next();
+                for (Map.Entry<Object, Tag> entry : mTagCache.entrySet())
                     if (entry.getKey() instanceof String) {
-                        Tag tag = (Tag) entry.getValue();
+                        Tag tag = entry.getValue();
                         if (tag.getModifiedSequence() > lastSync && !(tag instanceof Flag))
-                            result.add(entry.getValue());
+                            result.add(tag);
                     }
-                }
             } else if (type == MailItem.TYPE_FOLDER || type == MailItem.TYPE_SEARCHFOLDER) {
-                for (Iterator it = mFolderCache.values().iterator(); it.hasNext(); ) {
-                    Folder subfolder = (Folder) it.next();
+                for (Folder subfolder : mFolderCache.values())
                     if (type != MailItem.TYPE_SEARCHFOLDER || subfolder instanceof SearchFolder)
                         if (subfolder.getModifiedSequence() > lastSync)
                             result.add(subfolder);
-                }
                 Collections.sort(result);
             } else {
-                List dataList = DbMailItem.getModifiedItems(this, type, lastSync);
+                List<MailItem.UnderlyingData> dataList = DbMailItem.getModifiedItems(this, type, lastSync);
                 if (dataList == null)
                     return null;
-                for (Iterator it = dataList.iterator(); it.hasNext(); ) {
-                    MailItem.UnderlyingData data = (MailItem.UnderlyingData) it.next();
+                for (MailItem.UnderlyingData data : dataList)
                     if (data != null)
                         result.add(getItem(data));
-                }
             }
             success = true;
             return result;
@@ -2076,7 +2061,7 @@ public class Mailbox {
 
             if (name == null || name.equals(""))
                 throw ServiceException.INVALID_REQUEST("tag name may not be null", null);
-            Tag tag = (Tag) mTagCache.get(name.toLowerCase());
+            Tag tag = mTagCache.get(name.toLowerCase());
             if (tag == null)
                 throw MailServiceException.NO_SUCH_TAG(name);
             checkAccess(tag);
@@ -2226,10 +2211,8 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("getSenderList", null);
-
             Conversation conv = getConversationById(convId);
             SenderList sl = conv.getSenderList();
-
             success = true;
             return sl;
         } finally {
@@ -2369,7 +2352,7 @@ public class Mailbox {
      *                  Trash folders in the mailbox.
      * @perms {@link ACL#RIGHT_READ} on all returned appointments.
      * @throws ServiceException */
-    public synchronized Collection /*<Appointment>*/ getAppointmentsForRange(OperationContext octxt, long start, long end, 
+    public synchronized Collection<Appointment> getAppointmentsForRange(OperationContext octxt, long start, long end, 
             int folderId, int[] excludeFolders)
     throws ServiceException {
         boolean success = false;
@@ -2381,10 +2364,10 @@ public class Mailbox {
                 getFolderById(folderId);
 
             // get the list of all visible appointments in the specified folder
-            List appointments = new ArrayList();
-            List /* UnderlyingData */ invData = DbMailItem.getAppointments(this, start, end, folderId, excludeFolders);
-            for (Iterator iter = invData.iterator(); iter.hasNext(); ) {
-                Appointment appt = getAppointment((MailItem.UnderlyingData) iter.next());
+            List<Appointment> appointments = new ArrayList<Appointment>();
+            List<UnderlyingData> invData = DbMailItem.getAppointments(this, start, end, folderId, excludeFolders);
+            for (MailItem.UnderlyingData data : invData) {
+                Appointment appt = getAppointment(data);
                 if (folderId == appt.getFolderId() || (folderId == ID_AUTO_INCREMENT && appt.inMailbox()))
                     if (appt.canAccess(ACL.RIGHT_READ))
                         appointments.add(appt);
@@ -2452,14 +2435,11 @@ public class Mailbox {
         return FreeBusy.getFreeBusyList(this, start, end);
     }
 
-    private void addDomains(HashMap domainItems, HashSet newDomains, int flag) {
-        for (Iterator it = newDomains.iterator(); it.hasNext(); ) {
-            String domain = (String) it.next();
-            DomainItem di = (DomainItem) domainItems.get(domain);
-            if (di == null) {
-                di = new DomainItem(domain);
-                domainItems.put(domain, di);
-            }
+    private void addDomains(HashMap<String, DomainItem> domainItems, HashSet<String> newDomains, int flag) {
+        for (String domain : newDomains) {
+            DomainItem di = domainItems.get(domain);
+            if (di == null)
+                domainItems.put(domain, di = new DomainItem(domain));
             di.setFlag(flag);
         }
     }
@@ -2480,8 +2460,8 @@ public class Mailbox {
             if (browseBy == BROWSE_BY_ATTACHMENTS) {
                 idx.getAttachments(browseResult.getResult());
             } else if (browseBy == BROWSE_BY_DOMAINS) {
-                HashMap domainItems = new HashMap();
-                HashSet set = new HashSet();
+                HashMap<String, DomainItem> domainItems = new HashMap<String, DomainItem>();
+                HashSet<String> set = new HashSet<String>();
                 
                 idx.getDomainsForField(LuceneFields.L_H_CC, set);
                 addDomains(domainItems, set, DomainItem.F_CC);
@@ -2493,9 +2473,9 @@ public class Mailbox {
                 set.clear();             
                 idx.getDomainsForField(LuceneFields.L_H_TO, set);
                 addDomains(domainItems, set, DomainItem.F_TO);
-                
+
                 browseResult.getResult().addAll(domainItems.values());
-                
+
             } else if (browseBy == BROWSE_BY_OBJECTS) {
                 idx.getObjects(browseResult.getResult());
             } else { 
@@ -2551,9 +2531,9 @@ public class Mailbox {
                 defaultInv.mInv.setInviteId(mailItemId);
 
                 if (exceptions != null) {
-                    for (int i = 0; i < exceptions.length; i++) {
+                    for (SetAppointmentData sad : exceptions) {
                         mailItemId = getNextItemId(Mailbox.ID_AUTO_INCREMENT);
-                        exceptions[i].mInv.setMailItemId(mailItemId);
+                        sad.mInv.setMailItemId(mailItemId);
                     }
                 }
             } else {
@@ -2580,8 +2560,8 @@ public class Mailbox {
              
             // handle the exceptions!
             if (exceptions != null) {
-                for (int i = 0; i < exceptions.length; i++) {
-                    appt.processNewInvite(exceptions[i].mPm, exceptions[i].mInv, exceptions[i].mForce, Volume.getCurrentMessageVolume().getId());
+                for (SetAppointmentData sad : exceptions) {
+                    appt.processNewInvite(sad.mPm, sad.mInv, sad.mForce, Volume.getCurrentMessageVolume().getId());
                 }
             }
             
@@ -2617,7 +2597,7 @@ public class Mailbox {
         	} catch (MessagingException me) {
                 throw MailServiceException.MESSAGE_PARSE_ERROR(me);
         	} catch (IOException ie) {
-        		throw MailServiceException.FAILURE("Caught IOException", ie);
+        		throw ServiceException.FAILURE("Caught IOException", ie);
         	}
         }
     	
@@ -3128,9 +3108,9 @@ public class Mailbox {
             beginTransaction("resetImapUid", octxt, redoRecorder);
             SetImapUid redoPlayer = (SetImapUid) mCurrentChange.getRedoPlayer();
 
-            for (int i = 0; i < msgIds.length; i++) {
-                Message msg = getMessageById(msgIds[i]);
-                int imapId = redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getImapUid(msgIds[i]);
+            for (int id : msgIds) {
+                Message msg = getMessageById(id);
+                int imapId = redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getImapUid(id);
                 msg.setImapUid(getNextItemId(imapId));
                 redoRecorder.setImapUid(msg.getId(), msg.getImapUID());
             }
@@ -3600,6 +3580,22 @@ public class Mailbox {
         }
     }
 
+    public synchronized void setPermissions(OperationContext octxt, int folderId, ACL acl) throws ServiceException {
+        SetPermissions redoPlayer = new SetPermissions(mId, folderId, acl);
+
+        boolean success = false;
+        try {
+            beginTransaction("setPermissions", octxt, redoPlayer);
+
+            Folder folder = getFolderById(folderId);
+            checkItemChangeID(folder);
+            folder.setPermissions(acl);
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
     public synchronized void setFolderUrl(OperationContext octxt, int folderId, String url) throws ServiceException {
         SetFolderUrl redoRecorder = new SetFolderUrl(mId, folderId, url);
 
@@ -3972,11 +3968,9 @@ public class Mailbox {
     private void commitCache(MailboxChange change) {
         try {
             // committing changes, so notify any listeners
-            if (!mListeners.isEmpty() && change.mDirty != null && change.mDirty.hasNotifications()) {
-                ArrayList listeners = new ArrayList(mListeners);
-                for (Iterator it = listeners.iterator(); it.hasNext(); )
-                    ((Session) it.next()).notifyPendingChanges(change.mDirty);
-            }
+            if (!mListeners.isEmpty() && change.mDirty != null && change.mDirty.hasNotifications())
+                for (Session session : new ArrayList<Session>(mListeners))
+                    session.notifyPendingChanges(change.mDirty);
 
             // don't care about committed changes to external items
             MailItem.PendingDelete deleted = null;

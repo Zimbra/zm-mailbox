@@ -30,6 +30,7 @@ package com.zimbra.cs.service.mail;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -79,8 +80,8 @@ public class FolderAction extends ItemAction {
     public static final String OP_UNFLAG   = '!' + OP_FLAG;
     public static final String OP_UNTAG    = '!' + OP_TAG;
 
-    private static final Set FOLDER_OPS = new HashSet(Arrays.asList(new String[] {
-        OP_RENAME, OP_EMPTY, OP_REFRESH, OP_SET_URL, OP_IMPORT, OP_FREEBUSY, OP_GRANT, OP_REVOKE
+    private static final Set FOLDER_OPS = new HashSet<String>(Arrays.asList(new String[] {
+        OP_RENAME, OP_EMPTY, OP_REFRESH, OP_SET_URL, OP_IMPORT, OP_FREEBUSY, OP_GRANT, OP_REVOKE, OP_UPDATE
     }));
 
 	public Element handle(Element request, Map context) throws ServiceException, SoapFaultException {
@@ -94,7 +95,7 @@ public class FolderAction extends ItemAction {
 
         if (operation.equals(OP_TAG) || operation.equals(OP_FLAG) || operation.equals(OP_UNTAG) || operation.equals(OP_UNFLAG))
             throw MailServiceException.CANNOT_TAG();
-        if (operation.endsWith(OP_UPDATE) || operation.endsWith(OP_SPAM))
+        if (operation.endsWith(OP_SPAM))
             throw ServiceException.INVALID_REQUEST("invalid operation on folder: " + operation, null);
         String successes;
         if (FOLDER_OPS.contains(operation))
@@ -147,11 +148,43 @@ public class FolderAction extends ItemAction {
             boolean inherit = grant.getAttributeBool(MailService.A_INHERIT, false);
             short rights = ACL.stringToRights(grant.getAttribute(MailService.A_RIGHTS));
             byte gtype   = stringToType(grant.getAttribute(MailService.A_GRANT_TYPE));
-            String zid   = lookupZimbraId(grant.getAttribute(MailService.A_DISPLAY, null), gtype, lc);
+            String zid   = grant.getAttribute(MailService.A_ZIMBRA_ID, null);
+            if (zid == null)
+                zid = lookupZimbraId(grant.getAttribute(MailService.A_DISPLAY), gtype, lc);
             
             mbox.grantAccess(octxt, iid.getId(), zid, gtype, rights, inherit);
             // kinda hacky -- return the zimbra id of the grantee in the response
             result.addAttribute(MailService.A_ZIMBRA_ID, zid);
+        } else if (operation.equals(OP_UPDATE)) {
+            // duplicating code from ItemAction.java for now...
+            ItemId iidFolder = new ItemId(action.getAttribute(MailService.A_FOLDER, GetFolder.DEFAULT_FOLDER_ID), lc);
+            if (!iidFolder.belongsTo(mbox))
+                throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
+            String flags = action.getAttribute(MailService.A_FLAGS, null);
+            String tags  = action.getAttribute(MailService.A_TAGS, null);
+            byte color = (byte) action.getAttributeLong(MailService.A_COLOR, -1);
+            Element eAcl = action.getElement(MailService.E_ACL);
+            ACL acl = null;
+            if (eAcl != null) {
+                acl = new ACL();
+                for (Iterator<Element> it = eAcl.elementIterator(MailService.E_GRANT); it.hasNext(); ) {
+                    Element grant = it.next();
+                    String zid   = grant.getAttribute(MailService.A_ZIMBRA_ID);
+                    byte gtype   = stringToType(grant.getAttribute(MailService.A_GRANT_TYPE));
+                    short rights = ACL.stringToRights(grant.getAttribute(MailService.A_RIGHTS));
+                    boolean inherit = grant.getAttributeBool(MailService.A_INHERIT, false);
+                    acl.grantAccess(zid, gtype, rights, inherit);
+                }
+            }
+
+            if (iidFolder.getId() > 0)
+                mbox.move(octxt, iid.getId(), MailItem.TYPE_FOLDER, iidFolder.getId(), null);
+            if (tags != null || flags != null)
+                mbox.setTags(octxt, iid.getId(), MailItem.TYPE_FOLDER, flags, tags, null);
+            if (color >= 0)
+                mbox.setColor(octxt, iid.getId(), MailItem.TYPE_FOLDER, color);
+            if (acl != null)
+                mbox.setPermissions(octxt, iid.getId(), acl);
         } else
             throw ServiceException.INVALID_REQUEST("unknown operation: " + operation, null);
 

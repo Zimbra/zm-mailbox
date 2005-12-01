@@ -66,7 +66,7 @@ public class Folder extends MailItem {
 
 	protected byte    mAttributes;
     protected byte    mDefaultView;
-	private ArrayList mSubfolders;
+	private ArrayList<Folder> mSubfolders;
     private Folder    mParent;
     private ACL       mRights;
     private SyncData  mSyncData;
@@ -220,9 +220,10 @@ public class Folder extends MailItem {
      * @param rights    A bitmask of the rights being granted.
      * @param inherit   Whether subfolders inherit these same rights.
      * @perms {@link ACL#RIGHT_ADMIN} on the folder
-     * @throws ServiceException if the caller does not have the right
-     *         to set permissions on the folder or if the database
-     *         update fails */
+     * @throws ServiceException The following error codes are possible:<ul>
+     *    <li><code>service.FAILURE</code> - if there's a database failure
+     *    <li><code>service.PERM_DENIED</code> - if you don't have
+     *        sufficient permissions</ul> */
     void grantAccess(String zimbraId, byte type, short rights, boolean inherit) throws ServiceException {
         if (!canAccess(ACL.RIGHT_ADMIN))
             throw ServiceException.PERM_DENIED("you do not have admin rights to folder " + getPath());
@@ -238,9 +239,10 @@ public class Folder extends MailItem {
      * 
      * @param zimbraId  The zimbraId of the entry being revoked rights.
      * @perms {@link ACL#RIGHT_ADMIN} on the folder
-     * @throws ServiceException if the caller does not have the right
-     *         to set permissions on the folder or if the database
-     *         update fails */
+     * @throws ServiceException The following error codes are possible:<ul>
+     *    <li><code>service.FAILURE</code> - if there's a database failure
+     *    <li><code>service.PERM_DENIED</code> - if you don't have
+     *        sufficient permissions</ul> */
     void revokeAccess(String zimbraId) throws ServiceException {
         if (!canAccess(ACL.RIGHT_ADMIN))
             throw ServiceException.PERM_DENIED("you do not have admin rights to folder " + getPath());
@@ -249,6 +251,25 @@ public class Folder extends MailItem {
             return;
         if (mRights.isEmpty())
             mRights = null;
+        saveMetadata();
+    }
+
+    /** Replaces the folder's {@link ACL} with the supplied one and updates
+     *  the database accordingly.
+     * 
+     * @param acl  The new ACL being applied (<code>null</code> is OK).
+     * @perms {@link ACL#RIGHT_ADMIN} on the folder
+     * @throws ServiceException The following error codes are possible:<ul>
+     *    <li><code>service.FAILURE</code> - if there's a database failure
+     *    <li><code>service.PERM_DENIED</code> - if you don't have
+     *        sufficient permissions</ul> */
+    void setPermissions(ACL acl) throws ServiceException {
+        if (!canAccess(ACL.RIGHT_ADMIN))
+            throw ServiceException.PERM_DENIED("you do not have admin rights to folder " + getPath());
+        markItemModified(Change.MODIFIED_ACL);
+        if (acl == null && mRights == null)
+            return;
+        mRights = acl;
         saveMetadata();
     }
 
@@ -273,18 +294,16 @@ public class Folder extends MailItem {
     Folder findSubfolder(String name) {
         if (name == null || mSubfolders == null)
             return null;
-        for (int i = 0; i < mSubfolders.size(); i++) {
-            Folder subfolder = (Folder) mSubfolders.get(i);
+        for (Folder subfolder : mSubfolders)
             if (subfolder != null && name.equalsIgnoreCase(subfolder.getName()))
                 return subfolder;
-        }
         return null;
     }
 
-    private static final class SortByName implements Comparator {
-        public int compare(Object o1, Object o2) {
-            String n1 = ((Folder) o1).getName();
-            String n2 = ((Folder) o2).getName();
+    private static final class SortByName implements Comparator<Folder> {
+        public int compare(Folder f1, Folder f2) {
+            String n1 = f1.getName();
+            String n2 = f2.getName();
             return n1.compareToIgnoreCase(n2);
         }
     }
@@ -295,18 +314,16 @@ public class Folder extends MailItem {
      * @return The sorted List of subfolders, or <code>null</code>
      *         if the folder has no subfolders. 
      * @throws ServiceException */
-    public List getSubfolders(Mailbox.OperationContext octxt) throws ServiceException {
+    public List<Folder> getSubfolders(Mailbox.OperationContext octxt) throws ServiceException {
         if (mSubfolders == null)
             return null;
         Collections.sort(mSubfolders, new SortByName());
         if (octxt == null || octxt.authuser == null)
             return Collections.unmodifiableList(mSubfolders);
-        ArrayList visible = new ArrayList();
-        for (int i = 0; i < mSubfolders.size(); i++) {
-            Folder subfolder = (Folder) mSubfolders.get(i);
+        ArrayList<Folder> visible = new ArrayList<Folder>();
+        for (Folder subfolder : mSubfolders)
             if (subfolder.canAccess(ACL.RIGHT_READ, octxt.authuser))
                 visible.add(subfolder);
-        }
         return visible.isEmpty() ? null : visible;
     }
 
@@ -314,14 +331,14 @@ public class Folder extends MailItem {
      *  subfolders.  The tree traversal is done depth-first, so this folder
      *  is the first element in the list, followed by its children, then
      *  its grandchildren, etc. */
-    public List getSubfolderHierarchy() {
-        return accumulateHierarchy(new ArrayList());
+    public List<Folder> getSubfolderHierarchy() {
+        return accumulateHierarchy(new ArrayList<Folder>());
     }
-    private List accumulateHierarchy(List list) {
+    private List<Folder> accumulateHierarchy(List<Folder> list) {
         list.add(this);
         if (mSubfolders != null)
-            for (Iterator it = mSubfolders.iterator(); it.hasNext(); )
-                ((Folder) it.next()).accumulateHierarchy(list);
+            for (Folder subfolder : mSubfolders)
+                subfolder.accumulateHierarchy(list);
         return list;
     }
 
@@ -623,8 +640,8 @@ public class Folder extends MailItem {
     private void recursiveAlterUnread(boolean unread) throws ServiceException {
         alterUnread(unread);
         if (mSubfolders != null)
-            for (Iterator it = mSubfolders.iterator(); it.hasNext(); )
-                ((Folder) it.next()).recursiveAlterUnread(unread);
+            for (Folder subfolder : mSubfolders)
+                subfolder.recursiveAlterUnread(unread);
     }
 
     /** Updates the unread state of all items in the folder.  Persists the
@@ -743,7 +760,7 @@ public class Folder extends MailItem {
             markItemModified(Change.MODIFIED_CHILDREN);
             Folder subfolder = (Folder) child;
             if (mSubfolders == null)
-                mSubfolders = new ArrayList();
+                mSubfolders = new ArrayList<Folder>();
             else {
                 Folder existing = findSubfolder(subfolder.getName());
                 if (existing == child)
@@ -851,8 +868,8 @@ public class Folder extends MailItem {
 
     void uncacheChildren() throws ServiceException {
         if (mSubfolders != null)
-            for (Iterator it = mSubfolders.iterator(); it.hasNext(); )
-                mMailbox.uncache((MailItem) it.next());
+            for (Folder subfolder : mSubfolders)
+                mMailbox.uncache(subfolder);
     }
 
 

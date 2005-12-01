@@ -138,8 +138,9 @@ public abstract class RedoableOp {
     public static final int OP_REVOKE_ACCESS            = 48;    
     public static final int OP_SET_URL                  = 49;    
     public static final int OP_SET_SUBSCRIPTION_DATA    = 50;    
+    public static final int OP_SET_PERMISSIONS          = 51;    
 
-    public static final int OP_LAST				        = 51;
+    public static final int OP_LAST				        = 52;
 
 	// Element index is same as Redoable.OP_* constants.
 	// The strings must match the class names.
@@ -195,6 +196,7 @@ public abstract class RedoableOp {
         "RevokeAccess",
         "SetFolderUrl",
         "SetSubscriptionData",          // 50
+        "SetPermissions",
 	};
 
 	public static String getOpClassName(int opcode) {

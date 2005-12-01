@@ -191,11 +191,11 @@ public class ACL {
     }
 
     /** The <code>List</code> of all {@link ACL.Grant}s set on an item. */
-    private List mGrants = new ArrayList();
+    private List<Grant> mGrants = new ArrayList<Grant>();
 
 
-    ACL()  { }
-    ACL(MetadataList mlist) {
+    public ACL()  { }
+    public ACL(MetadataList mlist) {
         for (int i = 0; i < mlist.size(); i++)
             try {
                 mGrants.add(new Grant(mlist.getMap(i)));
@@ -215,13 +215,11 @@ public class ACL {
      *         granted to the user, or <code>null</code>. */
     Short getGrantedRights(Account authuser, boolean inheritedOnly) throws ServiceException {
         short rightsGranted = 0, matches = 0;
-        for (int i = 0; i < mGrants.size(); i++) {
-            Grant grant = (Grant) mGrants.get(i);
+        for (Grant grant : mGrants)
             if (!inheritedOnly || grant.isGrantInherited()) {
                 rightsGranted |= grant.getGrantedRights(authuser);
                 matches++;
             }
-        }
         return (matches > 0 ? new Short(rightsGranted) : null);
     }
 
@@ -238,19 +236,17 @@ public class ACL {
      * @param type      The type of object the grantee's ID refers to.
      * @param rights    A bitmask of the rights being granted.
      * @param inherit   Whether subfolders inherit these same rights. */
-    void grantAccess(String zimbraId, byte type, short rights, boolean inherit) throws ServiceException {
+    public void grantAccess(String zimbraId, byte type, short rights, boolean inherit) throws ServiceException {
         if (type == GRANTEE_ALL)
             zimbraId = GUID_ALL;
         else if (zimbraId == null)
             throw ServiceException.INVALID_REQUEST("missing grantee id", null);
         if (!mGrants.isEmpty())
-            for (Iterator it = mGrants.iterator(); it.hasNext(); ) {
-                Grant acl = (Grant) it.next();
-                if (acl.isGrantee(zimbraId)) {
-                    acl.setRights(rights, inherit);
+            for (Grant grant : mGrants)
+                if (grant.isGrantee(zimbraId)) {
+                    grant.setRights(rights, inherit);
                     return;
                 }
-            }
         mGrants.add(new Grant(zimbraId, type, rights, inherit));
     }
 
@@ -264,9 +260,9 @@ public class ACL {
         if (mGrants == null || mGrants.isEmpty())
             return false;
         int count = mGrants.size();
-        for (Iterator it = mGrants.iterator(); it.hasNext(); ) {
-            Grant acl = (Grant) it.next();
-            if (acl.isGrantee(zimbraId))
+        for (Iterator<Grant> it = mGrants.iterator(); it.hasNext(); ) {
+            Grant grant = it.next();
+            if (grant.isGrantee(zimbraId))
                 it.remove();
         }
         return (mGrants.size() != count);
@@ -276,9 +272,13 @@ public class ACL {
      *  {@link MetadataList} for serialization. */
     MetadataList encode() {
         MetadataList mlist = new MetadataList();
-        for (int i = 0; i < mGrants.size(); i++)
-            mlist.add(((Grant) mGrants.get(i)).encode());
+        for (Grant grant : mGrants)
+            mlist.add(grant.encode());
         return mlist;
+    }
+
+    public String toString() {
+        return encode().toString();
     }
 
     /** Returns a different <code>ACL</code> with the same contents. */
