@@ -1,13 +1,17 @@
+This install doc is aimed at developers internal to Zimbra.
+You'll see paths to internal shares and the like.  It's also 
+useful to setting up a development build with CVS, but that's 
+not the main focus.
+
 NOTE: Most or all binaries needed for installation are available
 on the \\kenny share. For example, Windows installers are located
 at: \\kenny\Public\software\windows. It might be best to copy the
 installers to your local machine before installing.
 
-0. Install Perforce (P4)
+1. Install Perforce (P4) (www.perforce.com)
+   Configure server port to "eric:1666".
 
-  Configure server port to "eric:1666".
-
-1. Checkout the following from Perforce:
+2. Checkout the following from Perforce:
 
   ZimbraServer - the backend system
 
@@ -19,15 +23,14 @@ installers to your local machine before installing.
   various 3rd party jars/servers. It's very very large since all the built servers and
   3rd Party code (multiple versions) are in there.
 
-2. Install latest JDK. Need full JDK, not just a JRE, since ant uses
-   the compiler.  1.5.x
+3. Install latest 1.5.x JDK. Need full JDK, not just a JRE.
    
    Recommend installing in c:\opt\zimbra\java
    
    Set the JAVA_HOME environment variable to point to the installed
    JDK location.
 
-3. Install Eclipse
+4. Install Eclipse (www.eclipse.org)
 
   You should install the Perforce plugin for Eclipse. To
   install, select Help | Software Updates | Find and Install... 
@@ -45,12 +48,12 @@ installers to your local machine before installing.
   Once you get the Perforce Perspective open right click on ZimbraServer
   and select "Import as project". Do the same for Ajax and ZimbraWebClient.
 
-4. Install Tomcat 5.5.x
+5. Install Tomcat 5.5.x
 
   On Windows, install Tomcat to c:\opt\zimbra\tomcat
   
-  copy ZimbraServer/conf/tomcat-5.5/server.xml to {tomcat-install}/conf/
-  copy ZimbraServer/conf/tomcat-5.5/tomcat-users.xml {tomcat-install/conf/
+  copy ZimbraServer/conf/tomcat-5.5/server.xml to c:\opt\zimbra\tomcat\conf\
+  copy ZimbraServer/conf/tomcat-5.5/tomcat-users.xml c:\opt\zimbra\tomcat\conf\
   
   The server.xml file is configured to use port 7070 by
   default. Production would of course use 80, and we'll also need to
@@ -58,17 +61,11 @@ installers to your local machine before installing.
   
   The ZimbraServer/build.xml relies on a zimbra/zimbra user in the
   tomcat-users.xml file to deploy
-  
-  IMPORTANT: Copy the files mail.jar, activation.jar and zimbraos.jar
-  from <workspace>\ZimbraServer\jars to your <tomcat>\common\lib.
-  
-  Copy \opt\zimbra\tomcat\conf\keystore to the conf directory of your
-  Tomcat installation directory if it is not in \opt\zimbra\tomcat.
-  
-  On Linux startup with:
-      $ JAVA_HOME={java-home} {tomcat-install}/bin/startup.sh
 
-5. Install MySQL 4.1.x
+  On Linux startup with:
+      $ JAVA_HOME={java-home} {tomcat-install}/bin/startup.sh      
+
+6. Install MySQL 4.1.x 
 
   On Windows, install MySQL to c:\opt\zimbra\mysql
 
@@ -99,19 +96,20 @@ installers to your local machine before installing.
   On Windows, follow instructions to install MySQL as a service
   with the required database admin user password.
 
-6. Install OpenLDAP (Get pkg from \\kenny)
+7. Install OpenLDAP (Get pkg from \\kenny)
+   Or http://download.bergmans.us/openldap/
 
   On Windows, install to c:\opt\zimbra\openldap. Then go to the
   openldap directory and run "slapd install" to install it as a
   Windows service.
 
-7. On Linux, probably want to chown /opt to yourself and/or give group
+8. On Linux, probably want to chown /opt to yourself and/or give group
    write access to /opt, so you don't have to worry about running as
    root.
   
    All the index, blobs, data, etc, get installed under /opt/zimbra/*.
   
-8. Initialize system
+9. Initialize system
 
 	From inside Eclipse on the Java Perspective select:
 	
@@ -129,7 +127,7 @@ installers to your local machine before installing.
 	If you install ant standalone, you can also run "ant reset-the-world" 
 	from within the ZimbraServer root directory.
      
-9. Test deployment
+10. Test deployment
 
   You should now be able to go to:
 
