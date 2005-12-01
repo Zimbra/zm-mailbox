@@ -77,7 +77,7 @@ class ImapRequest {
 
     private TcpServerInputStream mStream;
     private ImapSession mSession;
-    private ArrayList mParts = new ArrayList();
+    private ArrayList<Object> mParts = new ArrayList<Object>();
     private String mTag;
     private int mIndex, mOffset;
     private int mLiteral = -1;
@@ -352,8 +352,9 @@ class ImapRequest {
             return raw;
         try {
             return new String(raw.getBytes("US-ASCII"), "imap-utf-7");
-        } catch (Exception e) {
-            throw new ImapParseException(mTag, "invalid modified UTF-7: \"" + raw + '"');
+        } catch (Throwable t) {
+            ZimbraLog.imap.debug("ignoring error while decoding folder name: " + raw, t);
+            return raw;
         }
     }
     private String escapeFolder(String unescaped, boolean isPattern) {
@@ -373,7 +374,7 @@ class ImapRequest {
     }
     
     List readFlags() throws ImapParseException {
-        List tags = new ArrayList();
+        List<String> tags = new ArrayList<String>();
         String content = getCurrentLine();
         boolean parens = (peekChar() == '(');
         if (parens)
@@ -411,14 +412,14 @@ class ImapRequest {
         }
     }
 
-    Map readParameters(boolean nil) throws IOException, ImapException {
+    Map<String, String> readParameters(boolean nil) throws IOException, ImapException {
         if (peekChar() != '(') {
             if (!nil)
                 throw new ImapParseException(mTag, "did not find expected '('");
             skipNIL();  return null;
         }
 
-        Map params = new HashMap();
+        Map<String, String> params = new HashMap<String, String>();
         skipChar('(');
         do {
             String name = readString("utf-8");
@@ -430,7 +431,7 @@ class ImapRequest {
         return params;
     }
 
-    int readFetch(List parts) throws IOException, ImapException {
+    int readFetch(List<ImapPartSpecifier> parts) throws IOException, ImapException {
         boolean list = peekChar() == '(';
         int attributes = 0;
         if (list)  skipChar('(');
@@ -458,7 +459,7 @@ class ImapRequest {
                     attributes |= ImapHandler.FETCH_MARK_READ;
                 String sectionPart = "", sectionText = "";
                 int partialStart = -1, partialCount = -1;
-                List headers = null;
+                List<String> headers = null;
                 boolean done = false;
 
                 skipChar('[');
@@ -470,7 +471,7 @@ class ImapRequest {
                 if (!done && peekChar() != ']') {
                     sectionText = readAtom();
                     if (sectionText.equals("HEADER.FIELDS") || sectionText.equals("HEADER.FIELDS.NOT")) {
-                        headers = new ArrayList();
+                        headers = new ArrayList<String>();
                         skipSpace();  skipChar('(');
                         while (peekChar() != ')') {
                             if (!headers.isEmpty())  skipSpace();
@@ -505,7 +506,7 @@ class ImapRequest {
         return attributes;
     }
 
-    private static final Map NEGATED_SEARCH = new HashMap();
+    private static final Map<String, String> NEGATED_SEARCH = new HashMap<String, String>();
         static {
             NEGATED_SEARCH.put("ANSWERED",   "UNANSWERED");
             NEGATED_SEARCH.put("DELETED",    "UNDELETED");
@@ -522,7 +523,7 @@ class ImapRequest {
             NEGATED_SEARCH.put("UNKEYWORD",  "KEYWORD");
             NEGATED_SEARCH.put("UNSEEN",     "SEEN");
         }
-    private static final Map INDEXED_HEADER = new HashMap();
+    private static final Map<String, String> INDEXED_HEADER = new HashMap<String, String>();
         static {
             INDEXED_HEADER.put("CC",      "cc:");
             INDEXED_HEADER.put("FROM",    "from:");
@@ -550,17 +551,17 @@ class ImapRequest {
     private ImapFlag getFlag(String name) {
         return mSession == null ? null : mSession.getFlagByName(name);
     }
-    private void insertFlag(String name, StringBuffer sb, TreeMap insertions) {
+    private void insertFlag(String name, StringBuffer sb, TreeMap<Integer, Object> insertions) {
         insertFlag(getFlag(name), sb, insertions);
     }
-    private void insertFlag(ImapFlag i4flag, StringBuffer sb, TreeMap insertions) {
-        insertions.put(new Integer(sb.length()), i4flag);
+    private void insertFlag(ImapFlag i4flag, StringBuffer sb, TreeMap<Integer, Object> insertions) {
+        insertions.put(sb.length(), i4flag);
     }
 
     private static final boolean SINGLE_CLAUSE = true, MULTIPLE_CLAUSES = false;
     private static final String SUBCLAUSE = "";
 
-    private StringBuffer readSearchClause(StringBuffer search, TreeMap insertions, String charset, boolean single)
+    private StringBuffer readSearchClause(StringBuffer search, TreeMap<Integer, Object> insertions, String charset, boolean single)
     throws IOException, ImapException {
         boolean first = true;
         int nots = 0;
@@ -572,7 +573,7 @@ class ImapRequest {
 
             if (key.equals("NOT"))  { nots++; first = false; continue; }
             else if ((nots % 2) != 0) {
-                if (NEGATED_SEARCH.containsKey(key))  key = (String) NEGATED_SEARCH.get(key);
+                if (NEGATED_SEARCH.containsKey(key))  key = NEGATED_SEARCH.get(key);
                 else                                  search.append('-');
             }
             nots = 0;
@@ -598,7 +599,7 @@ class ImapRequest {
             else if (key.equals("BODY"))        { skipSpace(); readAndQuoteString(search, charset); }
             else if (key.equals("CC"))          { skipSpace(); search.append("cc:"); readAndQuoteString(search, charset); }
             else if (key.equals("FROM"))        { skipSpace(); search.append("from:"); readAndQuoteString(search, charset); }
-            else if (key.equals("HEADER"))      { skipSpace(); String hdr = readAstring().toUpperCase(), prefix = (String) INDEXED_HEADER.get(hdr);
+            else if (key.equals("HEADER"))      { skipSpace(); String hdr = readAstring().toUpperCase(), prefix = INDEXED_HEADER.get(hdr);
                                                   if (prefix == null)  throw new ImapParseException(mTag, "unindexed header: " + hdr);
                                                   skipSpace(); search.append(prefix); readAndQuoteString(search, charset); }
             else if (key.equals("KEYWORD"))     { skipSpace(); ImapFlag i4flag = getFlag(readAtom());
@@ -616,14 +617,14 @@ class ImapRequest {
             else if (key.equals("SUBJECT"))     { skipSpace(); search.append("subject:"); readAndQuoteString(search, charset); }
             else if (key.equals("TEXT"))        { skipSpace(); readAndQuoteString(search, charset); }
             else if (key.equals("TO"))          { skipSpace(); search.append("to:"); readAndQuoteString(search, charset); }
-            else if (key.equals("UID"))         { skipSpace(); insertions.put(new Integer(search.length()), '-' + readSequence()); }
+            else if (key.equals("UID"))         { skipSpace(); insertions.put(search.length(), '-' + readSequence()); }
             else if (key.equals("UNKEYWORD"))   { skipSpace(); ImapFlag i4flag = getFlag(readAtom());
                                                   if (i4flag != null && i4flag.mPositive)    search.append('-');
                                                   if (i4flag != null && !i4flag.mPermanent)  insertFlag(i4flag, search, insertions);  
                                                   else  search.append(i4flag == null ? "item:all" : "tag:" + i4flag.mName); }
             else if (key.equals(SUBCLAUSE))     { skipChar('(');  readSearchClause(search, insertions, charset, MULTIPLE_CLAUSES);  skipChar(')'); }
             else if (Character.isDigit(key.charAt(0)) || key.charAt(0) == '*')
-                insertions.put(new Integer(search.length()), validateSequence(key));
+                insertions.put(search.length(), validateSequence(key));
             else if (key.equals("OR")) {
                 search.append("((");      skipSpace();  readSearchClause(search, insertions, charset, SINGLE_CLAUSE);
                 search.append(") or (");  skipSpace();  readSearchClause(search, insertions, charset, SINGLE_CLAUSE);
@@ -639,7 +640,7 @@ class ImapRequest {
             throw new ImapParseException(mTag, "missing search-key after NOT");
         return search;
     }
-    String readSearch(TreeMap insertions) throws IOException, ImapException {
+    String readSearch(TreeMap<Integer, Object> insertions) throws IOException, ImapException {
         String charset = null;
         StringBuffer search = new StringBuffer();
         int c = peekChar();
