@@ -43,8 +43,8 @@ public abstract class Element {
     protected String  mName;
     protected String  mPrefix = "";
     protected Element mParent;
-    protected Map     mAttributes;
-    protected Map     mNamespaces;
+    protected Map<String, Object> mAttributes;
+    protected Map<String, String> mNamespaces;
 
     public static final byte DISP_ATTRIBUTE = 0;
     public static final byte DISP_CONTENT   = 1;
@@ -63,7 +63,7 @@ public abstract class Element {
 
     protected Element setNamespace(String prefix, String uri) {
         if (prefix != null && uri != null && !uri.equals("")) {
-            if (mNamespaces == null)  mNamespaces = new HashMap();
+            if (mNamespaces == null)  mNamespaces = new HashMap<String, String>();
             mNamespaces.put(prefix, uri);
         }
         return this;
@@ -108,13 +108,13 @@ public abstract class Element {
     public abstract Element getOptionalElement(String name);
     public Element getOptionalElement(QName qname)                  { return getOptionalElement(qname.getName()); }
 
-    public abstract Set listAttributes();
-    public List listElements()                    { return listElements(null); }
-    public abstract List listElements(String name);
+    public abstract Set<Attribute> listAttributes();
+    public List<Element>   listElements()                    { return listElements(null); }
+    public abstract List<Element> listElements(String name);
 
-    public Iterator attributeIterator()           { return listAttributes().iterator(); }
-    public Iterator elementIterator()             { return listElements().iterator(); }
-    public Iterator elementIterator(String name)  { return listElements(name).iterator(); }
+    public Iterator<Attribute> attributeIterator()           { return listAttributes().iterator(); }
+    public Iterator<Element>   elementIterator()             { return listElements().iterator(); }
+    public Iterator<Element>   elementIterator(String name)  { return listElements(name).iterator(); }
 
     public abstract String getText();
     public String getTextTrim()  { return getText().trim().replaceAll("\\s+", " "); }
@@ -267,7 +267,7 @@ public abstract class Element {
         private Object  mValue;
         private Element mParent;
 
-        Attribute(Map.Entry entry, Element parent)  { mKey = (String) entry.getKey(); mValue = entry.getValue(); mParent = parent; }
+        Attribute(Map.Entry<String, Object> entry, Element parent)  { mKey = entry.getKey(); mValue = entry.getValue(); mParent = parent; }
         public String getKey()              { return mKey; }
         public String getValue()            { return mValue.toString(); }
         public void setValue(String value)  { mParent.addAttribute(mKey, value); mValue = value; }
@@ -280,7 +280,7 @@ public abstract class Element {
         private static final String A_CONTENT   = "_content";
         private static final String A_NAMESPACE = "_jsns";
 
-        public JavaScriptElement(String name)  { mName = name; mAttributes = new HashMap(); }
+        public JavaScriptElement(String name)  { mName = name; mAttributes = new HashMap<String, Object>(); }
         public JavaScriptElement(QName qname)  { this(qname.getName()); setNamespace("", qname.getNamespaceURI()); }
 
         private static final class JavaScriptFactory implements ElementFactory {
@@ -307,9 +307,9 @@ public abstract class Element {
             else if (obj != null && !(obj instanceof List))
                 throw new ContainerException("already stored attribute with name: " + name);
 
-            List content = (List) obj;
+            List<Element> content = (List) obj;
             if (content == null)
-                mAttributes.put(name, content = new ArrayList());
+                mAttributes.put(name, content = new ArrayList<Element>());
             content.add(elt);
             elt.mParent = this;
             return elt;
@@ -414,33 +414,30 @@ public abstract class Element {
             return null;
         }
 
-        public Set listAttributes() {
+        public Set<Attribute> listAttributes() {
             if (mAttributes.isEmpty())
-                return Collections.EMPTY_SET;
-            HashSet list = new HashSet();
-            for (Iterator it = mAttributes.entrySet().iterator(); it.hasNext(); ) {
-                Map.Entry attr = (Map.Entry) it.next();
+                return Collections.emptySet();
+            HashSet<Attribute> set = new HashSet<Attribute>();
+            for (Map.Entry<String, Object> attr : mAttributes.entrySet()) {
                 Object obj = attr.getValue();
                 if (obj != null && !(obj instanceof Element || obj instanceof List))
-                    list.add(new Attribute(attr, this));
+                    set.add(new Attribute(attr, this));
             }
-            return list;
+            return set;
         }
 
-        public List listElements(String name) {
+        public List<Element> listElements(String name) {
             if (mAttributes.isEmpty())
-                return Collections.EMPTY_LIST;
-            ArrayList list = new ArrayList();
-            for (Iterator it = mAttributes.entrySet().iterator(); it.hasNext(); ) {
-                Map.Entry attr = (Map.Entry) it.next();
+                return Collections.emptyList();
+            ArrayList<Element> list = new ArrayList<Element>();
+            for (Map.Entry<String, Object> attr : mAttributes.entrySet())
                 if (name == null || name.equals(attr.getKey())) {
                     Object obj = attr.getValue();
                     if (obj instanceof Element)
-                        list.add(obj);
+                        list.add((Element) obj);
                     else if (obj instanceof List)
-                        list.addAll((List) obj);
+                        list.addAll((List<Element>) obj);
                 }
-            }
             return list;
         }
 
@@ -586,7 +583,7 @@ public abstract class Element {
             return elt;
         }
 
-        private static final HashSet RESERVED_KEYWORDS = new HashSet(Arrays.asList(new String[] {
+        private static final HashSet<String> RESERVED_KEYWORDS = new HashSet<String>(Arrays.asList(new String[] {
                 A_NAMESPACE, "abstract", "boolean", "break", "byte", "case", "catch", "char", "class", "continue",
                 "const", "debugger", "default", "delete", "do", "double", "else", "extends", "enum", "export", 
                 "false", "final", "finally", "float", "for", "function", "goto", "if", "implements", "import", "in",
@@ -707,8 +704,8 @@ public abstract class Element {
     }
     
     public static class XMLElement extends Element {
-        private String mText;
-        private List   mChildren;
+        private String        mText;
+        private List<Element> mChildren;
 
         public static final ElementFactory mFactory = new XMLFactory();
 
@@ -746,7 +743,7 @@ public abstract class Element {
                 throw new ContainerException("cannot add children to element containing text");
 
             if (mChildren == null)
-                mChildren = new ArrayList();
+                mChildren = new ArrayList<Element>();
             mChildren.add(elt);
             elt.mParent = this;
             return elt;
@@ -772,7 +769,7 @@ public abstract class Element {
                 addElement(key).setText(value);
             else {
                 if (mAttributes == null)
-                    mAttributes = new HashMap();
+                    mAttributes = new HashMap<String, Object>();
                 mAttributes.put(key, value);
             }
             return this;
@@ -810,37 +807,33 @@ public abstract class Element {
 
         public Element getOptionalElement(String name) {
             if (mChildren != null)
-                for (Iterator it = mChildren.iterator(); it.hasNext(); ) {
-                    Element elt = (Element) it.next();
+                for (Element elt : mChildren)
                     if (elt.getName().equals(name))
                         return elt;
-                }
             return null;
         }
 
         public Element getOptionalElement(QName qname) { 
             if (mChildren != null)
-                for (Iterator it = mChildren.iterator(); it.hasNext(); ) {
-                    Element elt = (Element) it.next();
+                for (Element elt : mChildren)
                     if (elt.getQName().equals(qname))
                         return elt;
-                }
             return null;
         }
 
-        public Set listAttributes() {
+        public Set<Attribute> listAttributes() {
             if (mAttributes == null || mAttributes.isEmpty())
-                return Collections.EMPTY_SET;
-            HashSet set = new HashSet();
-            for (Iterator it = mAttributes.entrySet().iterator(); it.hasNext(); )
-                set.add(new Attribute((Map.Entry) it.next(), this));
+                return Collections.emptySet();
+            HashSet<Attribute> set = new HashSet<Attribute>();
+            for (Map.Entry<String, Object> attr : mAttributes.entrySet())
+                set.add(new Attribute(attr, this));
             return set;
         }
 
-        public List listElements(String name) {
+        public List<Element> listElements(String name) {
             if (mChildren == null)
-                return Collections.EMPTY_LIST;
-            ArrayList list = new ArrayList();
+                return Collections.emptyList();
+            ArrayList<Element> list = new ArrayList<Element>();
             if (name == null || name.trim().equals(""))
                 list.addAll(mChildren);
             else
@@ -914,16 +907,13 @@ public abstract class Element {
             sb.append("<").append(qn);
             // element's attributes
             if (mAttributes != null)
-                for (Iterator it = mAttributes.entrySet().iterator(); it.hasNext(); ) {
-                    Map.Entry attr = (Map.Entry) it.next();
-                    sb.append(' ').append((String) attr.getKey()).append("=\"").append(xmlEncode((String) attr.getValue(), true)).append('"');
-                }
+                for (Map.Entry<String, Object> attr : mAttributes.entrySet())
+                    sb.append(' ').append(attr.getKey()).append("=\"").append(xmlEncode((String) attr.getValue(), true)).append('"');
             // new namespaces defined on this element
             if (mNamespaces != null)
-                for (Iterator it = mNamespaces.entrySet().iterator(); it.hasNext(); ) {
-                    Map.Entry ns = (Map.Entry) it.next();
-                    String prefix = (String) ns.getKey();
-                    String uri = (String) ns.getValue();
+                for (Map.Entry<String, String> ns : mNamespaces.entrySet()) {
+                    String prefix = ns.getKey();
+                    String uri = ns.getValue();
                     if (namespaceDeclarationNeeded(prefix, uri))
                         sb.append(' ').append(A_NAMESPACE).append(prefix.equals("") ? "" : ":").append(prefix).append("=\"").append(xmlEncode(uri, true)).append('"');
                 }
@@ -931,13 +921,11 @@ public abstract class Element {
             if (mChildren != null || mText != null) {
                 sb.append('>');
                 if (mChildren != null) {
-                    for (Iterator it = mChildren.iterator(); it.hasNext(); ) {
-                        Element child = (Element) it.next();
+                    for (Element child : mChildren)
                         if (child instanceof XMLElement)
                             ((XMLElement) child).toString(sb, indent < 0 ? -1 : indent + INDENT_SIZE);
                         else
                             sb.append(xmlEncode(child.toString(), false));
-                    }
                     indent(sb, indent, true);
                 } else
                     sb.append(xmlEncode(mText, false));
