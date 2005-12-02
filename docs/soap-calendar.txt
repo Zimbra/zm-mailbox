@@ -131,7 +131,14 @@
                     [ <date DATETIME>
                     [ <rule freq="FREQ"
                          // FREQ: SEC,MIN,HOU,DAI,WEE,MON,YEA
-                      [<until DATETIME/> OR <count num="COUNT"/>]? // optional UNTIL or COUNT param
+
+                      [
+                        <until d="YYYYMMDD[ThhmmssZ]/> // UNTIL *MUST* be Date value or DateTime in UTC w/ trailing 'Z' 
+                               OR
+                        <count num="COUNT"/> // count of instances to generate
+                      ]? // optional UNTIL or COUNT param
+
+                      
                       [  // each of the following can occur at most once
                         <interval ival="COUNT"/>                  // COUNT: positive integer
                         <bysecond seclist="second[,second...]"/>  // second: 0 to 59
