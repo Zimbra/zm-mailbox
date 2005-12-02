@@ -11,6 +11,16 @@ cd amavisd-new-2.3.3
 patch -p0 < ../amavisd.2.3.3.patch
 
 mkdir ../snmp
+get net-snmp-5.1.2.tar.gz
+tar xzf net-snmp-5.1.2.tar.gz
+cd net-snmp-5.1.2
+./configure --prefix=/opt/zimbra/snmp-5.1.2
+make
+make install
+cd /opt/zimbra
+tar czf snmp-5.1.2.tar.gz snmp-5.1.2
+mv snmp-5.1.2.tar.gz CVSROOT/ThirdParty/snmp
+
 get snmp-5.1.2.tar.gz
 
 cd ../aspell
