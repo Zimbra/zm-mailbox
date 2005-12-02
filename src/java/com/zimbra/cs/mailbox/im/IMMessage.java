@@ -57,7 +57,16 @@ public class IMMessage {
             // TODO: strip HTML tags here
             return mText;
         }
+        
+        public String toString() {
+            return mText;
+        }
     }
+    
+    public String toString() {
+        return "MESSAGE: "+mSubject+" "+mBody;
+    }
+    
     
     public IMMessage(TextPart subject, TextPart body) {
         mSubject = subject;

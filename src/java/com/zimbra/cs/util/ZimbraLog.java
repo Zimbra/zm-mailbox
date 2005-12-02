@@ -125,6 +125,11 @@ public class ZimbraLog {
     public static final org.apache.commons.logging.Log calendar = LogFactory.getLog("zimbra.calendar");
     
     /**
+     * the "zimbra.calendar" logger. For calendar-related events.
+     */
+    public static final org.apache.commons.logging.Log im = LogFactory.getLog("zimbra.im");
+    
+    /**
      * the "zimbra.account" logger. For account-related events.
      */
     public static final org.apache.commons.logging.Log account = LogFactory.getLog("zimbra.account");

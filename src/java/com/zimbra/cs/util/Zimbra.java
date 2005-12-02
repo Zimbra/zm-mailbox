@@ -36,6 +36,7 @@ import com.zimbra.cs.imap.ImapServer;
 import com.zimbra.cs.index.Indexer;
 import com.zimbra.cs.lmtpserver.LmtpServer;
 import com.zimbra.cs.localconfig.LC;
+import com.zimbra.cs.mailbox.im.IMRouter;
 import com.zimbra.cs.pop3.Pop3Server;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.service.ServiceException;
@@ -132,6 +133,7 @@ public class Zimbra {
         SessionCache.shutdown();
 
         Indexer.GetInstance().shutdown();
+        IMRouter.getInstance().shutdown();
 
         redoLog.shutdown();
 

@@ -33,6 +33,7 @@ import com.zimbra.cs.mailbox.im.IMChat;
 import com.zimbra.cs.mailbox.im.IMGroup;
 import com.zimbra.cs.mailbox.im.IMPersona;
 import com.zimbra.cs.mailbox.im.IMPresence;
+import com.zimbra.cs.mailbox.im.IMRouter;
 import com.zimbra.cs.mailbox.im.IMChat.Participant;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.DocumentHandler;
@@ -49,7 +50,7 @@ public class IMGetRoster extends DocumentHandler {
         Element response = lc.createElement(MailService.IM_GET_ROSTER_RESPONSE);
         
         synchronized (mbox) { 
-            IMPersona persona = mbox.getIMPersona();
+            IMPersona persona = IMRouter.getInstance().findPersona(lc.getOperationContext(), mbox, true);
             
             encodePresence(response, persona.getMyPresence());
 
@@ -80,7 +81,7 @@ public class IMGetRoster extends DocumentHandler {
                     Element participantsElt = e.addElement("pcps");
                     for (Participant part : chat.participants()) {
                         Element pe = participantsElt.addElement("p");
-                        pe.addAttribute("addr", part.getAddress());
+                        pe.addAttribute("addr", part.getAddress().getAddr());
                     }
                     
                 }
@@ -91,7 +92,7 @@ public class IMGetRoster extends DocumentHandler {
                 Element items = response.addElement("items");
                 for (IMBuddy buddy : persona.buddies()) {
                     Element e = items.addElement("item");
-                    e.addAttribute("addr", buddy.getAddress());
+                    e.addAttribute("addr", buddy.getAddress().getAddr());
                     
                     String buddyName = buddy.getName();
                     if (buddyName != null && buddyName.length()>0) 

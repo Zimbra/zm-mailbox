@@ -34,6 +34,7 @@ import com.zimbra.soap.SoapFaultException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.im.IMChat;
 import com.zimbra.cs.mailbox.im.IMPersona;
+import com.zimbra.cs.mailbox.im.IMRouter;
 import com.zimbra.soap.ZimbraContext;
 
 public class IMModifyChat extends DocumentHandler 
@@ -51,20 +52,22 @@ public class IMModifyChat extends DocumentHandler
         
         String threadId = request.getAttribute("thread");
         
-        IMPersona persona = mbox.getIMPersona();
-        
-        IMChat chat = persona.lookupChatOrNull(threadId);
-        
-        if (chat == null)
+        synchronized(mbox) {
+            IMPersona persona = IMRouter.getInstance().findPersona(lc.getOperationContext(), mbox, true);
+            
+            IMChat chat = persona.lookupChatOrNull(threadId);
+            
+            if (chat == null)
             throw ServiceException.FAILURE("Unknown thread: "+threadId, null);
-        
-        String opStr = request.getAttribute("op");
-        Op op = Op.valueOf(opStr);
-        
-        switch(op) {
-        case CLOSE:
-            persona.removeChat(chat);
-            break;
+            
+            String opStr = request.getAttribute("op");
+            Op op = Op.valueOf(opStr);
+            
+            switch(op) {
+            case CLOSE:
+                persona.closeChat(lc.getOperationContext(), chat);
+                break;
+            }
         }
         
         return response;        

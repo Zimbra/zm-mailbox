@@ -64,7 +64,6 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mailbox.im.IMPersona;
-import com.zimbra.cs.mailbox.im.IMRouter;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.op.*;
 import com.zimbra.cs.service.FeedManager;
@@ -1441,9 +1440,22 @@ public class Mailbox {
         }
     }
     
-    public synchronized IMPersona getIMPersona() throws ServiceException
+//    public synchronized IMPersona getIMPersona(OperationContext octxt) throws ServiceException
+//    {
+//        boolean loaded = IMRouter.getInstance().isPersonaLoaded(this.getAccount().getName());
+//        IMPersona toRet = IMRouter.getInstance().findPersona(octxt, this, this.getAccount().getName());
+//        
+//        if (!loaded) 
+//            toRet.refreshPresenceData(octxt, this);
+//        
+//        return toRet;
+//    }
+    
+    public synchronized void flushIMPersona(OperationContext octxt, IMPersona persona) throws ServiceException
     {
-        return IMRouter.getInstance().findPersona(this.getAccount().getName());
+        assert(persona.getAddr().getAddr().equals(this.getAccount().getName()));
+        Metadata md = persona.encodeAsMetatata();
+        this.setConfig(octxt, "im", md);
     }
 
     public short getIndexVolume() {

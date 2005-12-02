@@ -32,4 +32,5 @@ public class IMGroup {
     }
     
     public String getName() { return mName; }
+    public String toString() { return "GROUP: "+mName; }
 }

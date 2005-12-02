@@ -24,20 +24,56 @@
  */
 package com.zimbra.cs.mailbox.im;
 
+import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.service.ServiceException;
+
 public class IMPresence {
     public enum Show {
-        AWAY, CHAT, DND, XA;  
+        AWAY, CHAT, DND, XA, ONLINE, OFFLINE;  
     }
     
     private Show mShow;
     private byte mPriority;
     private String mStatus;
     
+    public String toString() {
+        return mShow.toString() + " pri="+mPriority+" st="+mStatus; 
+    }
+    
     public IMPresence(Show show, byte prio, String status) {
+        assert(show != null);
         mShow = show;
         mPriority = prio;
         mStatus = status;
     }
+    
+    private static final String FN_SHOW = "h";
+    private static final String FN_PRIORITY = "p";
+    private static final String FN_STATUS = "t";
+    
+    public Metadata encodeAsMetadata()
+    {
+        Metadata meta = new Metadata();
+        
+        meta.put(FN_SHOW, mShow.toString());
+        meta.put(FN_PRIORITY, Byte.toString(mPriority));
+        if (mStatus != null && mStatus.length() > 0) 
+            meta.put(FN_STATUS, mStatus);
+
+        return meta;
+    }
+    
+    static IMPresence decodeMetadata(Metadata meta) throws ServiceException
+    {
+        Show show = Show.valueOf(meta.get(FN_SHOW));
+        byte priority = Byte.parseByte(meta.get(FN_PRIORITY));
+        String status = null;
+        if (meta.containsKey(FN_STATUS))
+            status = meta.get(FN_STATUS);
+     
+        return new IMPresence(show, priority, status);
+    }
+    
     
     public Show getShow() { return mShow; }
     public byte getPriority() { return mPriority; }

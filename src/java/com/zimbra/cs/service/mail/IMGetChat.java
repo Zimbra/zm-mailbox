@@ -35,6 +35,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.im.IMChat;
 import com.zimbra.cs.mailbox.im.IMMessage;
 import com.zimbra.cs.mailbox.im.IMPersona;
+import com.zimbra.cs.mailbox.im.IMRouter;
 import com.zimbra.cs.mailbox.im.IMChat.Participant;
 import com.zimbra.cs.mailbox.im.IMMessage.Lang;
 import com.zimbra.cs.mailbox.im.IMMessage.TextPart;
@@ -42,65 +43,66 @@ import com.zimbra.soap.ZimbraContext;
 
 
 public class IMGetChat extends DocumentHandler {
-
+    
     public Element handle(Element request, Map context) throws ServiceException, SoapFaultException 
     {
         ZimbraContext lc = getZimbraContext(context);
         Mailbox mbox = super.getRequestedMailbox(lc);
-
+        
         Element response = lc.createElement(MailService.IM_GET_CHAT_RESPONSE);
         
-
         String threadId = request.getAttribute("thread");
         
-        IMPersona persona = mbox.getIMPersona();
-        
-        IMChat chat = persona.lookupChatOrNull(threadId);
-        
-        if (chat == null)
-            throw ServiceException.FAILURE("Unknown thread: "+threadId, null);
-
-        // chat
-        Element ce = response.addElement("chat");
-        ce.addAttribute("thread", chat.getThreadId());
-        
-        // participants
-        {
-            Element e = ce.addElement("pcps");
-            for (Participant part : chat.participants()) {
-                Element pe = e.addElement("p");
-                pe.addAttribute("addr", part.getAddress());
-            }
-        }
-        
-        // messages
-        {
-            Element messages = ce.addElement("messages");
-            int curOffset = 0;
+        synchronized (mbox) {
+            IMPersona persona = IMRouter.getInstance().findPersona(lc.getOperationContext(), mbox, true);
             
-            for (IMMessage msg : chat.messages()) {
-                Element me = messages.addElement("message");
-                me.addAttribute("seq", curOffset+chat.getFirstSeqNo());
-
-                // subject 
-                {
-                    TextPart subj = msg.getSubject(Lang.DEFAULT);
-                    if (subj != null) {
-                        Element se = me.addElement("subject");
-                        se.setText(subj.getHtmlText());
-                    }
+            IMChat chat = persona.lookupChatOrNull(threadId);
+            
+            if (chat == null)
+                throw ServiceException.FAILURE("Unknown thread: "+threadId, null);
+            
+            // chat
+            Element ce = response.addElement("chat");
+            ce.addAttribute("thread", chat.getThreadId());
+            
+            // participants
+            {
+                Element e = ce.addElement("pcps");
+                for (Participant part : chat.participants()) {
+                    Element pe = e.addElement("p");
+                    pe.addAttribute("addr", part.getAddress().getAddr());
                 }
+            }
+            
+            // messages
+            {
+                Element messages = ce.addElement("messages");
+                int curOffset = 0;
                 
-                // body
-                {
-                    TextPart body = msg.getBody(Lang.DEFAULT);
-                    if (body != null) {
-                        Element se = me.addElement("body");
-                        se.setText(body.getHtmlText());
+                for (IMMessage msg : chat.messages()) {
+                    Element me = messages.addElement("message");
+                    me.addAttribute("seq", curOffset+chat.getFirstSeqNo());
+                    
+                    // subject 
+                    {
+                        TextPart subj = msg.getSubject(Lang.DEFAULT);
+                        if (subj != null) {
+                            Element se = me.addElement("subject");
+                            se.setText(subj.getHtmlText());
+                        }
                     }
+                    
+                    // body
+                    {
+                        TextPart body = msg.getBody(Lang.DEFAULT);
+                        if (body != null) {
+                            Element se = me.addElement("body");
+                            se.setText(body.getHtmlText());
+                        }
+                    }
+                    
+                    curOffset++;
                 }
-                
-                curOffset++;
             }
         }
         
@@ -108,5 +110,5 @@ public class IMGetChat extends DocumentHandler {
         
         return response;        
     }
-
+    
 }

@@ -32,7 +32,9 @@ import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraContext;
+import com.zimbra.cs.mailbox.im.IMPersona;
 import com.zimbra.cs.mailbox.im.IMPresence;
+import com.zimbra.cs.mailbox.im.IMRouter;
 
 public class IMSetPresence extends DocumentHandler {
 
@@ -55,7 +57,11 @@ public class IMSetPresence extends DocumentHandler {
         
         IMPresence presence = new IMPresence(IMPresence.Show.valueOf(showStr), (byte)1, statusStr);
         
-        mbox.getIMPersona().setMyPresence(presence);
+        Mailbox.OperationContext oc = lc.getOperationContext();
+        synchronized(mbox) {
+            IMPersona persona = IMRouter.getInstance().findPersona(oc, mbox, true);
+            persona.setMyPresence(oc, presence);
+        }
         
         return response;
     }

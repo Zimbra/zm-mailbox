@@ -32,8 +32,10 @@ import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.im.IMAddr;
 import com.zimbra.cs.mailbox.im.IMMessage;
 import com.zimbra.cs.mailbox.im.IMPersona;
+import com.zimbra.cs.mailbox.im.IMRouter;
 import com.zimbra.cs.mailbox.im.IMMessage.TextPart;
 import com.zimbra.soap.ZimbraContext;
 
@@ -70,13 +72,16 @@ public class IMSendMessage extends DocumentHandler {
         IMMessage msg = new IMMessage(subject==null?null:new TextPart(subject),
                 body==null?null:new TextPart(body));
                 
-
-        IMPersona persona = mbox.getIMPersona();
+        Mailbox.OperationContext oc = lc.getOperationContext();
         
-        if (threadId != null) {
-            persona.sendMessage(threadId, msg);
-        } else {
-            threadId = persona.newChat(addr, msg);
+        synchronized(mbox) {
+            IMPersona persona = IMRouter.getInstance().findPersona(lc.getOperationContext(), mbox, true);
+            
+            if (threadId != null) {
+                persona.sendMessage(oc, threadId, msg);
+            } else {
+                threadId = persona.newChat(oc, new IMAddr(addr), msg);
+            }
         }
         
         response.addAttribute("thread", threadId);

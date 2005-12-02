@@ -27,7 +27,9 @@ package com.zimbra.cs.service.mail;
 import java.util.Map;
 
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.im.IMAddr;
 import com.zimbra.cs.mailbox.im.IMPersona;
+import com.zimbra.cs.mailbox.im.IMRouter;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
@@ -49,7 +51,7 @@ public class IMSubscribe extends DocumentHandler {
         if (op.equalsIgnoreCase("remove")) 
             add = false;
 
-        String addr = request.getAttribute("addr");
+        IMAddr addr = new IMAddr(request.getAttribute("addr"));
         String name = request.getAttribute("name", "");
         String groupStr = request.getAttribute("group", null);
         String[] groups;
@@ -57,18 +59,17 @@ public class IMSubscribe extends DocumentHandler {
             groups = groupStr.split(",");
         else
             groups = new String[0];
-        
-        synchronized (mbox) { 
-            IMPersona persona = mbox.getIMPersona();
+
+        Mailbox.OperationContext oc = lc.getOperationContext();
+        synchronized(mbox) {
+            IMPersona persona = IMRouter.getInstance().findPersona(oc, mbox, true);
             
             if (add) 
-                persona.addOutgoingSubscription(addr, name, groups);
+                persona.addOutgoingSubscription(oc, addr, name, groups);
             else
-                persona.removeOutgoingSubscription(addr, name, groups);
-            
+                persona.removeOutgoingSubscription(oc, addr, name, groups);
         }
         
         return response;
     }
-
 }

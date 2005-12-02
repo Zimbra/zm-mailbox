@@ -34,25 +34,25 @@ import java.util.Map;
 public class IMChat {
     
     public static class Participant {
-        private String mAddress;
+        private IMAddr mAddress;
         private String mName;
         private String mResource;
         
-        private void init(String address, String resource, String name)
+        private void init(IMAddr address, String resource, String name)
         {
             mAddress = address;
             mName = name;
             mResource = resource;
         }
         
-        public String getAddress() { return mAddress; }
+        public IMAddr getAddress() { return mAddress; }
         public String getName()    { return mName; }
         public String mResource()  { return mResource; }
         
-        public Participant(String address) {
+        public Participant(IMAddr address) {
             init(address, null, null);
         }
-        public Participant(String address, String resource, String name) {
+        public Participant(IMAddr address, String resource, String name) {
             init(address, resource, name);
         }
     }
@@ -68,17 +68,21 @@ public class IMChat {
     List<IMMessage> mMessages = new LinkedList();
 
     private String mThreadId;
-    private Map<String, Participant> mParticipants = new HashMap();
+    private Map<IMAddr, Participant> mParticipants = new HashMap();
 
-    public IMChat(String threadId, Participant initialPart)
+    IMChat(String threadId, Participant initialPart)
     {
         mThreadId = threadId;
         mParticipants.put(initialPart.getAddress(), initialPart);
     }
     
+    public String toString() {
+        return "CHAT:"+mThreadId+"("+mParticipants.size()+" parts)";
+    }
+    
     public String getThreadId() { return mThreadId; }
     
-    private Participant findParticipant(String addrFrom,String resourceFrom, String nameFrom)
+    private Participant findParticipant(IMAddr addrFrom,String resourceFrom, String nameFrom)
     {
         Participant part = mParticipants.get(addrFrom);
         if (part == null) {
@@ -99,7 +103,12 @@ public class IMChat {
     }
     
     
-    public void addMessage(String addrFrom, String resourceFrom, String nameFrom, IMMessage msg)
+    void removeParticipant(IMAddr addr) 
+    {
+        mParticipants.remove(addr);
+    }
+    
+    void addMessage(IMAddr addrFrom, String resourceFrom, String nameFrom, IMMessage msg)
     {
         // will trigger the add
         findParticipant(addrFrom, resourceFrom, nameFrom);
@@ -112,7 +121,7 @@ public class IMChat {
      * 
      * @param msg
      */
-    public void addMessage(IMMessage msg)
+    void addMessage(IMMessage msg)
     {
         mMessages.add(msg);
     }
