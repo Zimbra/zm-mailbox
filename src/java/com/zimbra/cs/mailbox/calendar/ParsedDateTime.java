@@ -43,7 +43,7 @@ public final class ParsedDateTime {
     
     /**
      * This means that "Date" events are treated as having a time of 00:00:00 in the
-     * creator's default timezone
+     * creator's default timezone, UNLESS they have the "UTC only" flag set
      */
     public static final boolean USE_BROKEN_OUTLOOK_MODE = true;
     
@@ -71,10 +71,20 @@ public final class ParsedDateTime {
         if (tz == null)
             throw new ParseException("TZ must not be null", 1);
         
-        return parse(str, tz, null);
+        return parse(str, tz, null, false);
     }
     
+    public static ParsedDateTime parseUtcOnly(String str) throws ParseException {
+        return parse(str, null, null, true);
+    }    
+    
     public static ParsedDateTime parse(String str, ICalTimeZone tz, ICalTimeZone localTZ)
+    throws ParseException {
+        return parse(str, tz, localTZ, false);
+    }
+    
+    
+    public static ParsedDateTime parse(String str, ICalTimeZone tz, ICalTimeZone localTZ, boolean utcOnly)
             throws ParseException {
         Matcher m = sDateTimePattern.matcher(str);
         
@@ -90,7 +100,7 @@ public final class ParsedDateTime {
             // 0-indexed!
             date = Integer.parseInt(m.group(3));
 
-            if (m.group(4) != null) { // T....part
+            if (m.group(4) != null) { // has a T....part
                 hour = Integer.parseInt(m.group(4));
                 minute = Integer.parseInt(m.group(5));
                 second = Integer.parseInt(m.group(6));
@@ -99,7 +109,8 @@ public final class ParsedDateTime {
                 if (m.group(7) != null && m.group(7).equals("Z")) {
                     zulu = true;
                 }
-                if (zulu) {
+                
+                if (zulu || utcOnly) {
                     // RFC2445 Section 4.3.5 Date-Time
                     // FORM #2: DATE WITH UTC TIME
                     tz = ICalTimeZone.getUTC();
@@ -118,13 +129,12 @@ public final class ParsedDateTime {
             }
             
             GregorianCalendar cal = new GregorianCalendar();
-            if (zulu) {
+            if (zulu || utcOnly) {
                 cal.setTimeZone(ICalTimeZone.getUTC());
-                
             } else {
                 if (tz == null)
                     tz = localTZ;
-
+                
                 if (tz != null) // localTZ could have been null
                     cal.setTimeZone(tz);
             }         
@@ -159,6 +169,12 @@ public final class ParsedDateTime {
         
         return parse(prop.getValue(), tz);
     }
+    
+    public static ParsedDateTime parseUtcOnly(ZProperty prop) throws ParseException
+    {
+        return parse(prop.getValue(), null, null, true);
+    }
+    
 
     public static ParsedDateTime parse(String str, TimeZoneMap tzmap)
     throws ParseException {
@@ -333,7 +349,7 @@ public final class ParsedDateTime {
                 toRet.append("Z");
             }
         } else if (USE_BROKEN_OUTLOOK_MODE) {
-            toRet.append("T000000");
+            toRet.append("T000000Z");
         }
         
         return toRet.toString();
@@ -351,7 +367,7 @@ public final class ParsedDateTime {
      * @return The name of the TimeZone
      */
     public String getTZName() {
-        if ((mHasTime || USE_BROKEN_OUTLOOK_MODE) && !isUTC() && mICalTimeZone!=null) {
+        if ((mHasTime || USE_BROKEN_OUTLOOK_MODE) && mICalTimeZone!=null && !isUTC() ) {
             return mICalTimeZone.getID();
         }
         return null;

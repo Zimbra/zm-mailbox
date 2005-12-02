@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.ZimbraLog;
 
 public class ZRecur {
 
@@ -1161,7 +1162,8 @@ public class ZRecur {
             for (String tok : str.split(";")) {
                 String[] s = tok.split("=");
                 if (s.length != 2) {
-                    System.out.println(new Formatter().format("Parse error for recur: \"%s\" at token \"%s\"", str, tok));
+                    if (ZimbraLog.calendar.isDebugEnabled())
+                        ZimbraLog.calendar.debug(new Formatter().format("Parse error for recur: \"%s\" at token \"%s\"", str, tok));
                     continue;
                 }
                     
@@ -1173,7 +1175,7 @@ public class ZRecur {
                         mFreq = Frequency.valueOf(rhs);
                         break;
                     case UNTIL:
-                        mUntil = ParsedDateTime.parse(rhs, tzmap);
+                        mUntil = ParsedDateTime.parseUtcOnly(rhs);
                         break;
                     case COUNT:
                         mCount = Integer.parseInt(rhs);
