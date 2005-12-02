@@ -527,7 +527,7 @@ public final class MailboxIndex
         private void closeWriters(List writers) {
             for (Iterator it = writers.iterator(); it.hasNext(); ) {
                 MailboxIndex mi = (MailboxIndex) it.next();
-                mLog.info("Flushing index writer: " + mi);
+                mLog.debug("Flushing index writer: " + mi);
                 mi.flush();
             }
         }
