@@ -71,7 +71,7 @@ public class DefangFilter extends DefaultFilter {
     /**
      * disable all form/input type tags
      */
-    private static final boolean ENABLE_INPUT_TAGS = false;
+    private static final boolean ENABLE_INPUT_TAGS = true;
     
     /**
      * enable table tags
