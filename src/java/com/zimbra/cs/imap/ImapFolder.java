@@ -41,18 +41,21 @@ import com.zimbra.cs.util.ZimbraLog;
 
 
 class ImapFolder {
-    private int       mFolderId;
-    private String    mPath;
-    private boolean   mWritable;
-    private String    mQuery;
-    private int       mUIDValidityValue;
-    private ArrayList mSequence    = new ArrayList();
-    private HashMap   mUIDs        = new HashMap();
-    private int       mHighwaterUID = -1;
-    private int       mFirstUnread  = -1;
-    private int       mLastSize     = 0;
-    private HashSet   mDirtyMessages = new HashSet();
-    private boolean   mNotificationsSuspended;
+    private int     mFolderId;
+    private String  mPath;
+    private boolean mWritable;
+    private String  mQuery;
+
+    private ArrayList<ImapMessage>        mSequence = new ArrayList<ImapMessage>();
+    private HashMap<Integer, ImapMessage> mUIDs     = new HashMap<Integer, ImapMessage>();
+
+    private int mUIDValidityValue;
+    private int mHighwaterUID = -1;
+    private int mFirstUnread  = -1;
+    private int mLastSize     = 0;
+
+    private boolean              mNotificationsSuspended;
+    private HashSet<ImapMessage> mDirtyMessages = new HashSet<ImapMessage>();
 
     ImapFolder(String name, boolean select, Mailbox mailbox, OperationContext octxt) throws ServiceException {
         boolean debug = ZimbraLog.imap.isDebugEnabled();
@@ -82,10 +85,9 @@ class ImapFolder {
             // FIXME: need to check messages for flag "IMAP dirty" and assign new IMAP IDs if necessary
             Collections.sort(msgs, new Message.SortImapUID());
             StringBuffer added = debug ? new StringBuffer("  ** added: ") : null;
-            for (Iterator it = msgs.iterator(); it.hasNext(); ) {
-                Message msg = (Message) it.next();
+            for (Message msg : (List<Message>) msgs) {
                 ImapMessage i4msg = cache(msg);
-                if (mFirstUnread == -1 && msg.isUnread())
+                if (mFirstUnread == -1 && (msg).isUnread())
                     mFirstUnread = i4msg.seq;
                 if (debug)  added.append(' ').append(i4msg.id);
             }
@@ -102,8 +104,8 @@ class ImapFolder {
      * 
      * @param search   The search folder being exposed.
      * @param mailbox  The {@link Mailbox} belonging to the user. */
-    private List loadVirtualFolder(SearchFolder search, Mailbox mailbox, OperationContext octxt) throws ServiceException {
-        List msgs = new ArrayList();
+    private List<MailItem> loadVirtualFolder(SearchFolder search, Mailbox mailbox, OperationContext octxt) throws ServiceException {
+        List<MailItem> msgs = new ArrayList<MailItem>();
         try {
             ZimbraQueryResults zqr = mailbox.search(octxt, mQuery, ImapHandler.MESSAGE_TYPES, MailboxIndex.SEARCH_ORDER_DATE_ASC, 1000);
             int i = 0, hitIds[] = new int[100];
@@ -131,9 +133,17 @@ class ImapFolder {
         return msgs;
     }
 
+    /** Returns the selected folder's zimbra ID. */
     int getId()           { return mFolderId; }
+    /** Returns the number of messages in the folder.  Messages that have been
+     *  received or deleted since the client was last notified are still
+     *  included in this count. */
     int getSize()         { return mSequence.size(); }
+    /** Returns the search folder query associated with this IMAP folder, or
+     *  <code>""</code> if the SELECTed folder is not a search folder. */
     String getQuery()     { return mQuery == null ? "" : mQuery; }
+    /** Returns the folder's IMAP UID validity value.
+     * @see #getUIDValidity(Folder) */
     int getUIDValidity()  { return mUIDValidityValue; }
     int getFirstUnread()  { return mFirstUnread; }
     int getHighwaterUID() { return mHighwaterUID; }
@@ -180,8 +190,8 @@ class ImapFolder {
 
     static int getUIDValidity(Folder folder) { return Math.max(folder.getModifiedSequence(), 1); }
 
-    ImapMessage getById(int id)        { if (id <= 0) return null;   return checkRemoved((ImapMessage) mUIDs.get(new Integer(-id))); }
-    ImapMessage getByImapId(int uid)   { if (uid <= 0) return null;  return checkRemoved((ImapMessage) mUIDs.get(new Integer(uid))); }
+    ImapMessage getById(int id)        { if (id <= 0) return null;   return checkRemoved(mUIDs.get(new Integer(-id))); }
+    ImapMessage getByImapId(int uid)   { if (uid <= 0) return null;  return checkRemoved(mUIDs.get(new Integer(uid))); }
     ImapMessage getBySequence(int seq) { return checkRemoved(seq > 0 && seq <= mSequence.size() ? (ImapMessage) mSequence.get(seq - 1) : null); }
     ImapMessage getLastMessage()       { return getBySequence(mSequence.size()); }
     private ImapMessage checkRemoved(ImapMessage i4msg)  { return (i4msg == null || i4msg.expunged ? null : i4msg); }
@@ -219,64 +229,61 @@ class ImapFolder {
         if (mDirtyMessages.remove(i4msg))
             i4msg.added = false;
     }
-    Iterator dirtyIterator()  { return mDirtyMessages.iterator(); }
-    void clearDirty()         { mDirtyMessages.clear(); }
+    Iterator<ImapMessage> dirtyIterator()  { return mDirtyMessages.iterator(); }
+    void clearDirty()                      { mDirtyMessages.clear(); }
 
     void dirtyTag(int id) {
         dirtyTag(id, false);
     }
     void dirtyTag(int id, boolean removeTag) {
         long mask = 1L << Tag.getIndex(id);
-        for (int i = 0; i < mSequence.size(); i++) {
-            ImapMessage i4msg = (ImapMessage) mSequence.get(i);
+        for (ImapMessage i4msg : mSequence)
             if (i4msg != null && (i4msg.tags & mask) != 0) {
                 mDirtyMessages.add(i4msg);
                 if (removeTag)
                 	i4msg.tags &= ~mask;
             }
-        }
     }
 
-    private static class NullableComparator implements Comparator {
-        public int compare(Object o1, Object o2) {
+    private static class NullableComparator implements Comparator<ImapMessage> {
+        public int compare(ImapMessage o1, ImapMessage o2) {
             if (o1 == null)       return o2 == null ? 0 : -1;
             else if (o2 == null)  return 1;
-            int seq1 = ((ImapMessage) o1).seq;
-            int seq2 = ((ImapMessage) o2).seq;
-            return (seq1 < seq2 ? -1 : (seq1 == seq2 ? 0 : 1));
+            return (o1.seq < o2.seq ? -1 : (o1.seq == o2.seq ? 0 : 1));
         }
     }
 
-    Set getFlaggedMessages(ImapSession.ImapFlag i4flag) {
+    Set<ImapMessage> getFlaggedMessages(ImapSession.ImapFlag i4flag) {
         if (i4flag == null || mSequence.size() == 0)
-            return Collections.EMPTY_SET;
-        TreeSet result = new TreeSet(new NullableComparator());
-        for (Iterator it = mSequence.iterator(); it.hasNext(); ) {
-            ImapMessage i4msg = (ImapMessage) it.next();
+            return Collections.emptySet();
+        TreeSet<ImapMessage> result = new TreeSet<ImapMessage>(new NullableComparator());
+        for (ImapMessage i4msg : mSequence)
             if (i4msg != null && (i4msg.sflags & i4flag.mBitmask) != 0)
                 result.add(i4msg);
-        }
         return result;
     }
 
-    Set getSubsequence(String subseqStr, boolean byUID) {
+    private int parseId(String id) {
+        // valid values will always be positive ints, so force it there...
+        return (int) Math.max(-1, Math.min(Integer.MAX_VALUE, Long.parseLong(id)));
+    }
+    Set<ImapMessage> getSubsequence(String subseqStr, boolean byUID) {
         if (subseqStr == null || subseqStr.trim().equals("") || mSequence.size() == 0)
-            return Collections.EMPTY_SET;
+            return Collections.emptySet();
         ImapMessage i4msg = getLastMessage();
         int lastID = (i4msg == null ? (byUID ? Integer.MAX_VALUE : mSequence.size()) : (byUID ? i4msg.uid : i4msg.seq));
 
-        TreeSet result = new TreeSet(new NullableComparator());
-        String[] subsets = subseqStr.split(",");
-        for (int i = 0; i < subsets.length; i++)
-            if (subsets[i].indexOf(':') == -1) {
+        TreeSet<ImapMessage> result = new TreeSet<ImapMessage>(new NullableComparator());
+        for (String subset : subseqStr.split(","))
+            if (subset.indexOf(':') == -1) {
                 // single message -- get it and add it (may be null)
-                int id = (subsets[i].equals("*") ? lastID : Integer.parseInt(subsets[i]));
+                int id = (subset.equals("*") ? lastID : parseId(subset));
                 result.add(byUID ? getByImapId(id) : getBySequence(id));
             } else {
                 // colon-delimited range -- get them and add them (may be null)
-                String[] range = subsets[i].split(":", 2);
-                int lower = (range[0].equals("*") ? lastID : Integer.parseInt(range[0]));
-                int upper = (range[1].equals("*") ? lastID : Integer.parseInt(range[1]));
+                String[] range = subset.split(":", 2);
+                int lower = (range[0].equals("*") ? lastID : parseId(range[0]));
+                int upper = (range[1].equals("*") ? lastID : parseId(range[1]));
                 if (lower > upper)  { int tmp = upper; upper = lower; lower = tmp; }
                 if (!byUID) {
                     upper = Math.min(lastID, upper);
@@ -320,8 +327,7 @@ class ImapFolder {
     void expungeMessages(Mailbox mailbox, String sequenceSet) throws ServiceException {
         Set i4set = (sequenceSet == null ? null : getSubsequence(sequenceSet, true));
         synchronized (mailbox) {
-            for (Iterator it = mSequence.iterator(); it.hasNext(); ) {
-                ImapMessage i4msg = (ImapMessage) it.next();
+            for (ImapMessage i4msg : mSequence)
                 if (i4msg != null && !i4msg.expunged && (i4msg.flags & Flag.FLAG_DELETED) > 0)
                     if (i4set == null || i4set.contains(i4msg)) {
                         // message tagged for deletion -- delete now
@@ -335,13 +341,12 @@ class ImapFolder {
                                 throw e;
                         }
                     }
-            }
         }
     }
-    List collapseExpunged() {
+    List<Integer> collapseExpunged() {
         // FIXME: need synchronization
         boolean debug = ZimbraLog.imap.isDebugEnabled();
-        List removed = new ArrayList();
+        List<Integer> removed = new ArrayList<Integer>();
         boolean trimmed = false;
         int seq = 1;
         if (debug)  ZimbraLog.imap.debug("  ** iterating (collapseExpunged)");
@@ -354,7 +359,7 @@ class ImapFolder {
                 //   and the subsequent call to setIndex() will correctly set the mUIDs mapping
                 uncache(i4msg);
                 lit.remove();
-                removed.add(new Integer(seq--));
+                removed.add(seq--);
                 trimmed = true;
             } else if (trimmed)
                 setIndex(i4msg, seq);
