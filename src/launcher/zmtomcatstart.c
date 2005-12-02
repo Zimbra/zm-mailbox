@@ -122,7 +122,7 @@ StripEnv()
  */
 static const char *AllowedJVMArgs[] = {
   "-XX:+AggressiveHeap",
-  "-XX:+AllowUserSignalHandlers"
+  "-XX:+AllowUserSignalHandlers",
   "-XX:+Print",
   "-XX:NewRatio",
   "-Xcomp",
