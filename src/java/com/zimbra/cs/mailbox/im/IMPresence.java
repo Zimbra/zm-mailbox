@@ -26,6 +26,7 @@ package com.zimbra.cs.mailbox.im;
 
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.soap.Element;
 
 public class IMPresence {
     public enum Show {
@@ -51,7 +52,7 @@ public class IMPresence {
     private static final String FN_PRIORITY = "p";
     private static final String FN_STATUS = "t";
     
-    public Metadata encodeAsMetadata()
+    Metadata encodeAsMetadata()
     {
         Metadata meta = new Metadata();
         
@@ -74,6 +75,19 @@ public class IMPresence {
         return new IMPresence(show, priority, status);
     }
     
+    public Element toXml(Element parent) {
+        Element e = parent.addElement("presence");
+            
+        IMPresence.Show show = mShow;
+        if (show != null)
+            e.addAttribute("show", show.toString());
+                
+        if (mStatus != null) {
+            Element se = e.addElement("status");
+            se.setText(mStatus);
+        }
+        return e;
+    }
     
     public Show getShow() { return mShow; }
     public byte getPriority() { return mPriority; }

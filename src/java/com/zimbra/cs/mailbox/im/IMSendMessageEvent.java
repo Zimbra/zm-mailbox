@@ -3,7 +3,9 @@ package com.zimbra.cs.mailbox.im;
 import java.util.Formatter;
 import java.util.List;
 
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.soap.Element;
 
 public class IMSendMessageEvent implements IMEvent {
     
@@ -18,9 +20,47 @@ public class IMSendMessageEvent implements IMEvent {
         mTargets = targets;
         mMessage = message;
     }
+    
+    /**
+     * @author tim
+     *
+     * Use an inner class for the notification here since each target mbox's notification
+     * has to be different (different sequence ID for each chat participant)
+     * 
+     */
+    public class IMMessageNotification implements IMNotification {
+        int mSeqNo;
+        
+        private IMMessageNotification(int seq) {
+            mSeqNo = seq;
+        }
+        
+        public Element toXml(Element parent) throws ServiceException {
+            Element e = parent.addElement("message");
+            e.addAttribute("from", mFromAddr.toString());
+            e.addAttribute("threadId", mThreadId);
+            e.addAttribute("ts", mMessage.getTimestamp());
+            
+            e.addAttribute("seq", mSeqNo);
+            
+            mMessage.toXml(e);
+            return e;
+        }
+    }
+    
+    IMMessageNotification getNotification(int seq) {
+        return new IMMessageNotification(seq);
+    }
 
     public void run() throws ServiceException {
-        IMRouter.getInstance().onNewMessage(mFromAddr, mThreadId, mTargets, mMessage);
+        for (IMAddr addr : mTargets) {
+            Mailbox mbox = IMRouter.getInstance().getMailboxFromAddr(addr);
+            synchronized (mbox) {
+                IMPersona persona = IMRouter.getInstance().findPersona(null, mbox, false);
+                int seqNo = persona.handleMessage(mFromAddr, mThreadId, mMessage);
+                mbox.postIMNotification(getNotification(seqNo));
+            }
+        }
     }
     
     public String toString() {
@@ -28,5 +68,4 @@ public class IMSendMessageEvent implements IMEvent {
                 mFromAddr, mThreadId, mMessage.toString()).toString();
     }
     
-
 }

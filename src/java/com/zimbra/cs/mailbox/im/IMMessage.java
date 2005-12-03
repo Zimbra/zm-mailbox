@@ -24,8 +24,11 @@
 
 package com.zimbra.cs.mailbox.im;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.zimbra.soap.Element;
 
 /**
  * @author tim
@@ -64,13 +67,14 @@ public class IMMessage {
     }
     
     public String toString() {
-        return "MESSAGE: "+mSubject+" "+mBody;
+        return "MESSAGE("+mDate+"): "+mSubject+" "+mBody;
     }
     
     
     public IMMessage(TextPart subject, TextPart body) {
         mSubject = subject;
         mBody = body;
+        mDate = new Date();
     }
     
     void addSubject(TextPart subj) {
@@ -109,6 +113,26 @@ public class IMMessage {
     
     Map<Lang, TextPart> mLangSubjects;
     Map<Lang, TextPart> mLangBodies;
+    Date mDate;
+    
+    public Element toXml(Element parent) {
+        {
+            if (mSubject != null) {
+                Element e = parent.addElement("subject");
+                e.setText(mSubject.getHtmlText());
+            }
+        }
+        {
+            if (mBody != null) {
+                Element e = parent.addElement("body");
+                e.setText(mBody.getHtmlText());
+            }
+        }
+        return parent;
+    }
+    
+    public long getTimestamp() { return mDate.getTime(); }
+    public Date getDate() { return mDate; }
     
     public TextPart getSubject(Lang lang) {
         if (lang == Lang.DEFAULT

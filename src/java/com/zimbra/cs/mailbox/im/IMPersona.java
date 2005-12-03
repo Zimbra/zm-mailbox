@@ -16,6 +16,8 @@ import com.zimbra.cs.mailbox.im.IMChat.Participant;
 import com.zimbra.cs.mailbox.im.IMPresence.Show;
 import com.zimbra.cs.mailbox.im.IMSubscriptionEvent.Op;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.StringUtil;
+import com.zimbra.soap.Element;
 
 /**
  * @author tim
@@ -26,6 +28,10 @@ public class IMPersona {
 
     private IMAddr mAddr;
     private Mailbox mMbox;
+    private Map<IMAddr, IMBuddy> mBuddyList = new HashMap();
+    private Map<String, IMGroup> mGroups = new HashMap();
+    private Map<String, IMChat> mChats = new HashMap();
+    private boolean mSubsLoaded = false;
     
     public String toString() {
         return new Formatter().format("PERSONA:%s  Presence:%s SubsLoaded:%s", 
@@ -40,17 +46,13 @@ public class IMPersona {
     
     public IMAddr getAddr() { return mAddr; }
     
-    Map<IMAddr, IMBuddy> mBuddyList = new HashMap();
-    Map<String, IMGroup> mGroups = new HashMap();
-    Map<String, IMChat> mChats = new HashMap();
-    
-    private boolean mSubsLoaded = false;
-    
     void loadSubs() {
         if (!mSubsLoaded) {
             for (IMBuddy buddy : mBuddyList.values()) {
                 if (buddy.getSubType().isOutgoing()) {
-                    IMRouter.getInstance().postProbePresence(mAddr, buddy.getAddress());
+                    
+                    IMProbeEvent event = new IMProbeEvent(mAddr, buddy.getAddress());
+                    IMRouter.getInstance().postEvent(event);
                 }
             }
             mSubsLoaded = true;
@@ -79,7 +81,7 @@ public class IMPersona {
      * @param name
      * @return
      */
-    IMBuddy getBuddy(IMAddr address, String name) {
+    private IMBuddy getOrCreateBuddy(IMAddr address, String name) {
         IMBuddy toRet = mBuddyList.get(address);
         if (toRet == null) {
             toRet = new IMBuddy(address, name);
@@ -88,7 +90,7 @@ public class IMPersona {
         return toRet;
     }
     
-    IMChat getChat(String thread, IMAddr fromAddress) {
+    private IMChat getOrCreateChat(String thread, IMAddr fromAddress) {
         IMChat toRet = mChats.get(thread);
         if (toRet == null) {
             Participant part;
@@ -111,9 +113,42 @@ public class IMPersona {
         return mChats.get(threadId);
     }
     
+    static class SubscribedNotification implements IMNotification {
+        IMAddr mAddr;
+        String mName;
+        String[] mGroups;
+        boolean mRemove;
+        
+        SubscribedNotification(IMAddr address, String name, String[] groups, boolean remove) {
+            mAddr = address;
+            mName = name;
+            mGroups = groups;
+            mRemove = remove;
+        }
+        
+        public Element toXml(Element parent) {
+            Element e;
+            if (mRemove) { 
+                e = parent.addElement("unsubscribed");
+            } else {
+                e = parent.addElement("subscribed");
+                e.addAttribute("name", mName);
+            }
+            
+            if (mGroups != null) {
+                e.addAttribute("groups", StringUtil.join(",", mGroups));
+            }
+            
+            e.addAttribute("to", mAddr.getAddr());
+
+            return e;
+        }
+    }
+    
+    
     public void addOutgoingSubscription(OperationContext octxt, IMAddr address, String name, String[] groups) throws ServiceException 
     { 
-        IMBuddy buddy = getBuddy(address, name);
+        IMBuddy buddy = getOrCreateBuddy(address, name);
         
         for (String grpName : groups) {
             IMGroup group = this.getGroup(grpName);
@@ -124,14 +159,17 @@ public class IMPersona {
         if (!st.isOutgoing())
             buddy.setSubType(st.setOutgoing());
             
-        IMRouter.getInstance().postSubscriptionUpdate(mAddr, address, Op.SUBSCRIBE);
+        IMEvent event = new IMSubscriptionEvent(mAddr, address, Op.SUBSCRIBE);
+        IMRouter.getInstance().postEvent(event);
+        
+        mMbox.postIMNotification(new SubscribedNotification(address, name, groups, false));
         
         mMbox.flushIMPersona(octxt, this);
     }
     
     public void removeOutgoingSubscription(OperationContext octxt, IMAddr address, String name, String[] groups) throws ServiceException
     {
-        IMBuddy buddy = getBuddy(address, name);
+        IMBuddy buddy = getOrCreateBuddy(address, name);
         
         for (String grpName : groups) {
             IMGroup group = this.getGroup(grpName);
@@ -141,13 +179,16 @@ public class IMPersona {
         SubType st = buddy.getSubType();
         if (st.isOutgoing())
             buddy.setSubType(st.clearOutgoing());
-            
-        IMRouter.getInstance().postSubscriptionUpdate(mAddr, address, Op.UNSUBSCRIBE);
+
+        IMEvent event = new IMSubscriptionEvent(mAddr, address, Op.UNSUBSCRIBE);
+        IMRouter.getInstance().postEvent(event);
+        
+        mMbox.postIMNotification(new SubscribedNotification(address, name, groups, false));
         
         flush(octxt);
     }
     
-    void flush(OperationContext octxt) throws ServiceException {
+    private void flush(OperationContext octxt) throws ServiceException {
         mMbox.flushIMPersona(octxt, this);
     }
     
@@ -184,8 +225,13 @@ public class IMPersona {
             if (buddy.getSubType().isIncoming()) 
                 targets.add(buddy.getAddress());
         }
+
+        IMPresenceUpdateEvent event = new IMPresenceUpdateEvent(mAddr, mMyPresence, targets);
+        IMRouter.getInstance().postEvent(event);
         
-        IMRouter.getInstance().postPresenceUpdate(mAddr, mMyPresence, targets);
+        // need to send it to myself in case there I have other sessions listening...
+        mMbox.postIMNotification(event);
+        
         flush(octxt);
     }
     
@@ -239,7 +285,7 @@ public class IMPersona {
     
     private void sendMessage(OperationContext octxt, IMChat chat, IMMessage message) throws ServiceException
     {
-        chat.addMessage(message);
+        int seqNo = chat.addMessage(message);
         
         ArrayList toList = new ArrayList();
         for (Participant part : chat.participants()) {
@@ -249,7 +295,11 @@ public class IMPersona {
         
         flush(octxt);
         
-        IMRouter.getInstance().postSendMessage(mAddr, chat.getThreadId(), toList, message);
+        IMSendMessageEvent event = new IMSendMessageEvent(mAddr, chat.getThreadId(), toList, message);
+
+        mMbox.postIMNotification(event.getNotification(seqNo));
+        
+        IMRouter.getInstance().postEvent(event);
     }
     
     public void closeChat(OperationContext octxt, IMChat chat) throws ServiceException {
@@ -260,7 +310,10 @@ public class IMPersona {
         }
         
         mChats.remove(chat.getThreadId());
-        IMRouter.getInstance().postLeftChat(mAddr, chat.getThreadId(), toList);
+        
+        IMLeftChatEvent event = new IMLeftChatEvent(mAddr, chat.getThreadId(), toList);
+        
+        IMRouter.getInstance().postEvent(event);
         flush(octxt);
     }
     
@@ -307,24 +360,17 @@ public class IMPersona {
             return new IMPersona(address, mbox);
         }
     }
-    
-    public void refreshPresenceData(OperationContext octxt, Mailbox mbox) throws ServiceException {
-        for (IMBuddy buddy : buddies()) {
-            if (buddy.getSubType().isOutgoing()) 
-                IMRouter.getInstance().postProbePresence(this.getAddr(), buddy.getAddress());
-        }
-    }
-    
+
     /**
-     * HANDLE functions deal with incoming changes via the IMRouter
+     * HANDLE* functions are called by IMEvent execution
      * 
      * @param octxt
      * @param address
      * @throws ServiceException
      */
-    public void handleAddIncomingSubscription(IMAddr address) throws ServiceException
+    void handleAddIncomingSubscription(IMAddr address) throws ServiceException
     {
-        IMBuddy buddy = this.getBuddy(address, null);
+        IMBuddy buddy = this.getOrCreateBuddy(address, null);
         SubType st = buddy.getSubType();
         if (!st.isIncoming()) {
             buddy.setSubType(st.setIncoming());
@@ -333,15 +379,24 @@ public class IMPersona {
         if (mMyPresence != null) {
             ArrayList<IMAddr> target= new ArrayList();
             target.add(address);
-            IMRouter.getInstance().postPresenceUpdate(mAddr, mMyPresence, target);
+            
+            // no need to send it to myself here
+            IMPresenceUpdateEvent event = new IMPresenceUpdateEvent(mAddr, mMyPresence, target); 
+            IMRouter.getInstance().postEvent(event);
         }
             
         flush(null);
     }
     
-    public void handleRemoveIncomingSubscription(IMAddr address) throws ServiceException
+    /**
+     * HANDLE* functions are called by IMEvent execution
+     * 
+     * @param address
+     * @throws ServiceException
+     */
+    void handleRemoveIncomingSubscription(IMAddr address) throws ServiceException
     {
-        IMBuddy buddy = this.getBuddy(address, null);
+        IMBuddy buddy = this.getOrCreateBuddy(address, null);
         SubType st = buddy.getSubType();
         if (st.isIncoming()) {
             buddy.setSubType(st.clearIncoming());
@@ -349,6 +404,13 @@ public class IMPersona {
         flush(null);
     }
 
+    /**
+     * HANDLE* functions are called by IMEvent execution
+     * 
+     * @param from
+     * @param threadId
+     * @throws ServiceException
+     */
     void handleLeftChat(IMAddr from, String threadId) throws ServiceException {
         IMChat chat = mChats.get(threadId);
         chat.removeParticipant(from);
@@ -356,7 +418,7 @@ public class IMPersona {
     }
     
     /**
-     * HANDLE* functions deal with incoming changes from the IMRouter 
+     * HANDLE* functions are called by IMEvent execution
      * 
      * @param from
      * @param presence
@@ -369,14 +431,15 @@ public class IMPersona {
     }
     
     /**
-     * HANDLE* functions deal with incoming changes from the IMRouter
+     * HANDLE* functions are called by IMEvent execution
      * 
      * @param from
      * @param threadId
      * @param message
+     * @return sequence number of message in chat
      */
-    void handleMessage(IMAddr from, String threadId, IMMessage message) {
-        IMChat chat = getChat(threadId, from);
-        chat.addMessage(from, null, null, message);
+    int handleMessage(IMAddr from, String threadId, IMMessage message) {
+        IMChat chat = getOrCreateChat(threadId, from);
+        return chat.addMessage(from, null, null, message);
     }
 }

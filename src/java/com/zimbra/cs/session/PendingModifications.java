@@ -69,7 +69,9 @@ public final class PendingModifications {
 	    Change(Object thing, int reason)  { what = thing;  why = reason; }
 	}
 
-	public HashMap created, modified, deleted;
+	public HashMap /* int, MailItem */ created;
+    public HashMap /* int, Change */ modified;
+    public HashMap /* int, Object */ deleted;
 
     public boolean hasNotifications() {
         return ((deleted  != null && deleted.size() > 0) ||

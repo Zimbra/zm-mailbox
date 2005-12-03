@@ -37,6 +37,7 @@ import java.util.Date;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.im.IMNotification;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.StringUtil;
 
@@ -92,7 +93,8 @@ public abstract class Session {
     }
 
     public abstract void notifyPendingChanges(PendingModifications pns);
-
+    
+    public abstract void notifyIM(IMNotification imn);
 
     protected void finalize() {
         doCleanup(); // just in case it hasn't happened yet...

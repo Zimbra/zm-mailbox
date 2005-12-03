@@ -124,3 +124,51 @@ IMModifyChat -- add/remove users from multi-user chat, adjust save preferences, 
 
 IMModifyWhitelist -- block/allow
 -----------------
+
+
+============================================================
+IM NOTIFICATIONS
+============================================================
+
+//
+// In soap header block (see soap.txt):
+//
+  [<soap:Header>
+     <context xmlns="urn:zimbra">
+
+       ...
+       
+       <notify>
+          [<deleted.../>]
+          [<created.../>]
+          [<modified.../>]
+          [
+             <im>
+                [
+                // NEW MESSAGE RECEIVED:
+                   <message from="address" threadId="UID" ts="TIMESTAMP>
+                      [<subject [lang="LANG"]>SUBJECT</subject>]
+                      [<body [lang="LANG"]>BODY</body>]
+                   </message>
+                ]*
+                [
+                   <presence from="FROMADDR" [lang="en"] [show="away|chat|dnd|xa"] [priority="0-255"]>
+                     [<status>CDATA</status>]
+                   </presence>   
+                ]*
+                [
+                   <subscribe from="FROMADDR"/> // they added you to their buddy list
+                ]*
+                [
+                   <subscribed to="TOADDR" name="NAME" groups="GROUPS" /> // you added them to your buddy list
+                ]*
+                [
+                   <unsubscribed to="TOADDR" groups="GROUPS" /> // you removed them from your buddy list
+                ]*
+                [
+                   <leftchat threadId="UID" addr="ADDRESS"> // specified user left the chat
+                ]*
+                
+             </im>]
+          ]?     
+        </notify>]

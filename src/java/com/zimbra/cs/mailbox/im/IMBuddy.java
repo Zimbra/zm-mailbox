@@ -131,11 +131,7 @@ public class IMBuddy {
         return "BUDDY: "+mAddress+"("+mName+")";
     }
     
-    public IMAddr getAddress() { return mAddress; }
-    
-    public String getName() { return mName; }
-    
-    public void setSubType(SubType st) { mSubType = st; }
+    void setSubType(SubType st) { mSubType = st; }
 
     void clearGroups() {
         mGroups.clear();
@@ -151,7 +147,7 @@ public class IMBuddy {
         }
     }
     
-    public void setPresence(IMPresence presence) {
+    void setPresence(IMPresence presence) {
         mPresence = presence;
     }
     
@@ -171,6 +167,10 @@ public class IMBuddy {
         return mGroups.size();
     }
     
+    public IMAddr getAddress() { return mAddress; }
+    
+    public String getName() { return mName; }
+    
     public IMPresence getPresence() { 
         return mPresence;
     }
@@ -183,7 +183,7 @@ public class IMBuddy {
     private static final String FN_NUM_GROUPS  = "ng"; 
     private static final String FN_SUBTYPE    = "s"; 
     
-    public Metadata encodeAsMetadata()
+    Metadata encodeAsMetadata()
     {
         Metadata meta = new Metadata();
 
@@ -202,7 +202,7 @@ public class IMBuddy {
         return meta;
     }
     
-    public static IMBuddy decodeFromMetadata(Metadata meta, IMPersona persona) throws ServiceException
+    static IMBuddy decodeFromMetadata(Metadata meta, IMPersona persona) throws ServiceException
     {
         String address = meta.get(FN_ADDRESS);
         String name = meta.get(FN_NAME, null);

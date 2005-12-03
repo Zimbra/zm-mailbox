@@ -3,9 +3,11 @@ package com.zimbra.cs.mailbox.im;
 import java.util.Formatter;
 import java.util.List;
 
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.soap.Element;
 
-public class IMPresenceUpdateEvent implements IMEvent {
+public class IMPresenceUpdateEvent implements IMEvent, IMNotification {
 
     IMAddr mFromAddr;
     IMPresence mPresence;
@@ -19,12 +21,25 @@ public class IMPresenceUpdateEvent implements IMEvent {
     }
     
     public void run() throws ServiceException {
-        IMRouter.getInstance().onPresenceUpdate(mFromAddr, mPresence, mToAddrs);
+        for (IMAddr addr : mToAddrs) {
+            Mailbox mbox = IMRouter.getInstance().getMailboxFromAddr(addr);
+            synchronized (mbox) {
+                IMPersona persona = IMRouter.getInstance().findPersona(null, mbox, false);
+                persona.handlePresenceUpdate(mFromAddr, mPresence);
+                mbox.postIMNotification(this);
+            }
+        }
     }
 
     public String toString() {
         return new Formatter().format("IMPresenceUpdateEvent: From: %s  Presence: %s", 
                 mFromAddr, mPresence.toString()).toString();
+    }
+    
+    public Element toXml(Element parent) {
+        Element toRet = mPresence.toXml(parent);
+        toRet.addAttribute("from", mFromAddr.getAddr());
+        return toRet;
     }
     
 }

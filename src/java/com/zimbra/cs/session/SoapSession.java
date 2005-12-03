@@ -29,10 +29,12 @@
 package com.zimbra.cs.session;
 
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.*;
+import com.zimbra.cs.mailbox.im.IMNotification;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.GetFolder;
 import com.zimbra.cs.service.mail.ToXML;
@@ -63,6 +65,7 @@ public class SoapSession extends Session {
     private ZimbraQueryResults   mQueryResults = null;
 
     private PendingModifications mChanges = new PendingModifications();
+    private List<IMNotification> mIMNotifications = new LinkedList();
 
     private static final long SOAP_SESSION_TIMEOUT_MSEC = 10 * Constants.MILLIS_PER_MINUTE;
 
@@ -89,6 +92,10 @@ public class SoapSession extends Session {
         synchronized (this) {
             mNotify = true;
         }
+    }
+    
+    public void notifyIM(IMNotification imn) { 
+        mIMNotifications.add(imn);
     }
 
     /** Handles the set of changes from a single Mailbox transaction.
@@ -249,7 +256,7 @@ public class SoapSession extends Session {
                 ctxt.addUniqueElement(ZimbraContext.E_CHANGE)
                     .addAttribute(ZimbraContext.A_CHANGE_ID, mbox.getLastChangeID())
                     .addAttribute(ZimbraContext.A_ACCOUNT_ID, explicitAcct);
-                if (!mNotify || !mChanges.hasNotifications())
+                if (!mNotify || (!mChanges.hasNotifications() && mIMNotifications.size()==0))
                     return ctxt;
 
                 // <notify [acct="4f778920-1a84-11da-b804-6b188d2a20c4"]/>
@@ -257,7 +264,7 @@ public class SoapSession extends Session {
                                       .addAttribute(ZimbraContext.A_ACCOUNT_ID, explicitAcct);
 
                 if (mChanges.deleted != null && mChanges.deleted.size() > 0) {
-                    StringBuffer ids = new StringBuffer();
+                    StringBuilder ids = new StringBuilder ();
                     for (Iterator it = mChanges.deleted.values().iterator(); it.hasNext(); ) {
                         if (ids.length() != 0)
                             ids.append(',');
@@ -286,6 +293,18 @@ public class SoapSession extends Session {
                         else if (chg.why != 0 && chg.what instanceof Mailbox)
                             ToXML.encodeMailbox(eModified, (Mailbox) chg.what, chg.why);
                     }
+                }
+                
+                if (mIMNotifications.size() > 0) {
+                    Element eIM = eNotify.addUniqueElement("im");
+                    for (IMNotification imn : mIMNotifications) {
+                        try {
+                            imn.toXml(eIM);
+                        } catch (ServiceException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    mIMNotifications.clear();
                 }
 
                 mChanges.clear();

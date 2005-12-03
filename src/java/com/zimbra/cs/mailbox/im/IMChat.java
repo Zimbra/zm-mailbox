@@ -108,12 +108,14 @@ public class IMChat {
         mParticipants.remove(addr);
     }
     
-    void addMessage(IMAddr addrFrom, String resourceFrom, String nameFrom, IMMessage msg)
+    int addMessage(IMAddr addrFrom, String resourceFrom, String nameFrom, IMMessage msg)
     {
         // will trigger the add
         findParticipant(addrFrom, resourceFrom, nameFrom);
         
         mMessages.add(msg);
+        
+        return mMessages.size()+mFirstSeqNo;
     }
     
     /**
@@ -121,8 +123,9 @@ public class IMChat {
      * 
      * @param msg
      */
-    void addMessage(IMMessage msg)
+    int addMessage(IMMessage msg)
     {
         mMessages.add(msg);
+        return mMessages.size()+mFirstSeqNo;
     }
 }

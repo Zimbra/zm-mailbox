@@ -63,6 +63,7 @@ import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.cs.mailbox.im.IMNotification;
 import com.zimbra.cs.mailbox.im.IMPersona;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.op.*;
@@ -3974,6 +3975,12 @@ public class Mailbox {
             // 7. We are finally done with database and redo commits.
             //    Cache update comes last.
             commitCache(mCurrentChange);
+        }
+    }
+    
+    public synchronized void postIMNotification(IMNotification n) {
+        for (Session session : mListeners) {
+            session.notifyIM(n);
         }
     }
 

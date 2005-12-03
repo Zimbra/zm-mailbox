@@ -35,6 +35,7 @@ import java.util.*;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.im.IMNotification;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.Session;
@@ -270,6 +271,7 @@ public class ImapSession extends Session {
         return hits;
     }
 
+    public void notifyIM(IMNotification imn) { }
 
     public void notifyPendingChanges(PendingModifications pns) {
         if (!pns.hasNotifications())

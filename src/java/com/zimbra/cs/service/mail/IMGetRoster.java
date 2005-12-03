@@ -52,7 +52,7 @@ public class IMGetRoster extends DocumentHandler {
         synchronized (mbox) { 
             IMPersona persona = IMRouter.getInstance().findPersona(lc.getOperationContext(), mbox, true);
             
-            encodePresence(response, persona.getMyPresence());
+            persona.getMyPresence().toXml(response);
 
             Map<IMGroup, Integer> groupIdCache = new HashMap();
             
@@ -101,7 +101,11 @@ public class IMGetRoster extends DocumentHandler {
                     e.addAttribute("subscription", buddy.getSubType().toString());
                     
                     // presence
-                    encodePresence(e, buddy.getPresence());
+                    IMPresence presence = buddy.getPresence();
+                    if (presence == null) 
+                        e.addElement("presence");
+                    else
+                        presence.toXml(e);
                     
                     StringBuffer groupStr = null;
                     // groups
@@ -121,24 +125,4 @@ public class IMGetRoster extends DocumentHandler {
 
         return response;        
     }
-    
-    static Element encodePresence(Element parent, IMPresence presence)
-    {
-        Element e = parent.addElement("presence");
-        
-        if (presence != null) {
-            IMPresence.Show show = presence.getShow();
-            if (show != null)
-                e.addAttribute("show", show.toString());
-            
-            String statusStr = presence.getStatus();
-            if (statusStr != null) {
-                Element se = e.addElement("status");
-                se.setText(statusStr);
-            }
-        }
-        
-        return e;
-    }
-
 }

@@ -2,9 +2,11 @@ package com.zimbra.cs.mailbox.im;
 
 import java.util.Formatter;
 
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.soap.Element;
 
-public class IMSubscriptionEvent implements IMEvent {
+public class IMSubscriptionEvent implements IMEvent, IMNotification {
     
     static enum Op {
         SUBSCRIBE, UNSUBSCRIBE;
@@ -21,11 +23,30 @@ public class IMSubscriptionEvent implements IMEvent {
     }
 
     public void run() throws ServiceException {
-        IMRouter.getInstance().onSubscriptionEvent(mFromAddr, mToAddr, mOp);
+        Mailbox mbox = IMRouter.getInstance().getMailboxFromAddr(mToAddr);
+        synchronized (mbox) {
+            IMPersona persona = IMRouter.getInstance().findPersona(null, mbox, false);
+            switch (mOp) {
+            case SUBSCRIBE:
+                persona.handleAddIncomingSubscription(mFromAddr);
+                break;
+            case UNSUBSCRIBE:
+                persona.handleRemoveIncomingSubscription(mFromAddr);
+                break;
+            }
+        }
     }
     
     public String toString() {
         return new Formatter().format("IMSubscriptionEvent: %s --> %s Op=%s", mFromAddr, mToAddr, mOp.toString()).toString();
     }
-
+    
+    public Element toXml(Element parent) {
+        if (mOp == Op.SUBSCRIBE) {
+            Element toRet = parent.addElement("subscribe");
+            toRet.addAttribute("from", mFromAddr.getAddr());
+            return toRet;
+        } else 
+            return parent;
+    }
 }
