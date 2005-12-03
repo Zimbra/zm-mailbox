@@ -331,7 +331,7 @@ public class ContentServlet extends ZimbraServlet {
         try {
             is = mp.getInputStream();
             String html = HtmlDefang.defang(is, FORMAT_DEFANGED_HTML.equals(fmt));
-            ByteArrayInputStream bais = new ByteArrayInputStream(html.getBytes());
+            ByteArrayInputStream bais = new ByteArrayInputStream(html.getBytes("utf-8"));
             ByteUtil.copy(bais, resp.getOutputStream());
         } finally {
             if (is != null)

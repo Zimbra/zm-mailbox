@@ -61,10 +61,17 @@ public class HtmlDefang {
     
     public static String defang(InputStream html, boolean neuterImages) throws IOException
     {
-        return defang(new InputStreamReader(html), neuterImages);
+        XMLInputSource source = new XMLInputSource(null, null, null, html, null);
+        return defang(source, neuterImages);        
     }
     
     public static String defang(Reader htmlReader, boolean neuterImages) throws IOException
+    {
+        XMLInputSource source = new XMLInputSource(null, null, null, htmlReader, null);
+        return defang(source, neuterImages);        
+    }
+    
+    public static String defang(XMLInputSource source, boolean neuterImages) throws IOException
     {
         StringWriter out = new StringWriter();
         // create writer filter
@@ -91,7 +98,7 @@ public class HtmlDefang {
         parser.setFeature("http://cyberneko.org/html/features/balance-tags", false); 
         parser.setFeature("http://xml.org/sax/features/namespaces", false);
         // parse document
-        XMLInputSource source = new XMLInputSource(null, null, null, htmlReader, null);
+    
         parser.parse(source);
         return out.toString();
     }
