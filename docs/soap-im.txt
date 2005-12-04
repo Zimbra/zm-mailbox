@@ -3,7 +3,6 @@ IMGetRoster -- get buddy list
 <IMGetRosterRequest/>
 
 <IMGetRosterResponse>
-   <roster>
      <groups> // like email-element-cache -- only valid for this single message!
         [<group num="groupnum" name="name">
            // Block-Allow list per-group settings
@@ -39,7 +38,6 @@ IMGetRoster -- get buddy list
      <subscription-defaults>
         [block/allow list "fall through" settings]*
      </subscription-defaults>
-   </roster>
 </IMGetRosterResponse>
 
 
