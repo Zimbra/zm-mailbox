@@ -46,13 +46,9 @@ IMGetRoster -- get buddy list
 
 IMSubscribe -- subscribe to someone's presence / modify subscription 
 -----------
-<IMSubscribeRequest>
-  [<subscribe addr="foo@bar.com" [name="friendly name"] [group="group,group..."] [op="add|remove"]/>]+
-</IMSubscribeRequest>
+<IMSubscribeRequest addr="foo@bar.com" [name="friendly name"] [group="group,group..."] [op="add|remove"]/>
 
 <IMSubscribeResponse/>
-
-
 
 IMSubscribeReply -- jabber "subscribed" message: subscription response
 ----------------
