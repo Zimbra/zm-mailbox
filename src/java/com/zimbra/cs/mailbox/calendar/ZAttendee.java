@@ -24,8 +24,6 @@
  */
 package com.zimbra.cs.mailbox.calendar;
 
-import java.net.URI;
-
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
@@ -51,36 +49,6 @@ public class ZAttendee {
     public ZAttendee(String address) {
         setAddress(address);
     }
-    
-//    public ZAttendee(Attendee at) {
-//        ParameterList params = at.getParameters();
-//        
-//        setAddress(at.getCalAddress().getSchemeSpecificPart());
-//        
-//        // CN
-//        Cn cn = (Cn)params.getParameter(Parameter.CN);
-//        if (cn != null) {
-//            mCn = cn.getValue();
-//        }
-//        
-//        // role
-//        Role role = (Role) params.getParameter(Parameter.ROLE);
-//        if (role != null) {
-//            setRole(role.getValue());
-//        }
-//        
-//        // partstat
-//        PartStat partStat = (PartStat) params.getParameter(Parameter.PARTSTAT);
-//        if (partStat != null) {
-//            setPartStat(partStat.getValue());
-//        }
-//        
-//        // rsvp?
-//        Parameter rsvpParam = params.getParameter(Parameter.RSVP);
-//        if (rsvpParam != null) {
-//            mRsvp = ((Rsvp) rsvpParam).getRsvp();
-//        }
-//    }
     
     private static final String FN_ADDRESS         = "a";
     private static final String FN_CN              = "cn";
@@ -114,7 +82,7 @@ public class ZAttendee {
     }
     public void setPartStat(String partStat) { 
         if (partStat != null && !IcalXmlStrMap.sPartStatMap.validXml(partStat)) {
-            partStat = IcalXmlStrMap.sRoleMap.toXml(partStat);
+            partStat = IcalXmlStrMap.sPartStatMap.toXml(partStat);
         }
         mPartStat = partStat; 
     }
@@ -200,7 +168,7 @@ public class ZAttendee {
         String cn = prop.paramVal(ICalTok.CN, null);
         String role = prop.paramVal(ICalTok.ROLE, null);
         String partstat = prop.paramVal(ICalTok.PARTSTAT, null);
-        String rsvpStr = prop.paramVal(ICalTok.ROLE, "FALSE");
+        String rsvpStr = prop.paramVal(ICalTok.RSVP, "FALSE");
         boolean rsvp = false;
         if (rsvpStr.equalsIgnoreCase("TRUE")) {
             rsvp = true;
@@ -223,36 +191,4 @@ public class ZAttendee {
         
         return toRet;
     }
-    
-//    
-//    public Attendee iCal4jAttendee() throws ServiceException
-//    {
-//        ParameterList p = new ParameterList();
-//        
-//        if (mCn != null && !mCn.equals("")) {
-//            Cn cn = new Cn(mCn);
-//            p.add(cn);
-//        }
-//        
-//        if (mRole != null && !mRole.equals("")) {
-//            Role role = new Role(IcalXmlStrMap.sRoleMap.toIcal(mRole));
-//            p.add(role);
-//        }
-//        
-//        if (mPartStat != null && !mPartStat.equals("")) {
-//            PartStat partStat = new PartStat(IcalXmlStrMap.sPartStatMap.toIcal(mPartStat));
-//            p.add(partStat);
-//        }
-//        
-//        if (mRsvp != null) {
-//            Rsvp rsvp = new Rsvp(mRsvp);
-//            p.add(rsvp);
-//        }
-//        
-//        try {
-//            return new Attendee(p, new URI("MAILTO", mAddress, null));
-//        } catch (java.net.URISyntaxException e) {
-//            throw ServiceException.FAILURE("Building Attendee URI for address "+mAddress, e);
-//        }
-//    }
 }
