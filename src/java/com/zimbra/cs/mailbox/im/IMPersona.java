@@ -342,7 +342,7 @@ public class IMPersona {
             for (int i = 0; i < numBuddies; i++) {
                 IMBuddy buddy = IMBuddy.decodeFromMetadata(meta.getMap(FN_BUDDY+i), toRet);
                 assert(!buddy.getAddress().equals(address));
-                toRet.mBuddyList.put(address, buddy);
+                toRet.mBuddyList.put(buddy.getAddress(), buddy);
             }
             assert(toRet.getAddr().equals(address));
             return toRet;
