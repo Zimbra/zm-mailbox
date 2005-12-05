@@ -181,6 +181,9 @@ public class ProxyServlet extends ZimbraServlet {
 	
 	private boolean canCacheProxyContent(HttpServletRequest req, URL url, URLContents content, AuthToken authToken) 
 			throws ServiceException {
+		if (content.contentType == null) {
+			return false;
+		}
 		// don't cache protected resources.
 		String auth = req.getParameter(AUTH_PARAM);
 		if (auth != null) {
