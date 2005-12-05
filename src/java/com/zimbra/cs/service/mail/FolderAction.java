@@ -30,7 +30,6 @@ package com.zimbra.cs.service.mail;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -167,8 +166,7 @@ public class FolderAction extends ItemAction {
             ACL acl = null;
             if (eAcl != null) {
                 acl = new ACL();
-                for (Iterator<Element> it = eAcl.elementIterator(MailService.E_GRANT); it.hasNext(); ) {
-                    Element grant = it.next();
+                for (Element grant : eAcl.listElements(MailService.E_GRANT)) {
                     String zid   = grant.getAttribute(MailService.A_ZIMBRA_ID);
                     byte gtype   = stringToType(grant.getAttribute(MailService.A_GRANT_TYPE));
                     short rights = ACL.stringToRights(grant.getAttribute(MailService.A_RIGHTS));
