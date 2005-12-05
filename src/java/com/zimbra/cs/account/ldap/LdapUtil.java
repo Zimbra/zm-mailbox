@@ -75,7 +75,6 @@ public class LdapUtil {
     private static String sLdapURL;
     private static String sLdapMasterURL;    
     
-    private static final String sConnectionTimeout = "10000"; 
     private static Hashtable sEnv;
     private static String[] sEmptyMulti = new String[0];
 
@@ -92,10 +91,12 @@ public class LdapUtil {
         sLdapMasterURL = LC.ldap_master_url.value().trim();
         if (sLdapMasterURL.length() == 0) sLdapMasterURL = sLdapURL;
 
-        System.setProperty("com.sun.jndi.ldap.connect.pool.maxsize", "25");
-        System.setProperty("com.sun.jndi.ldap.connect.pool.prefsize", "5");
-        // idle timeout 2 minutes
-        System.setProperty("com.sun.jndi.ldap.connect.pool.timeout", "120000");
+        /* See http://java.sun.com/products/jndi/tutorial/ldap/connect/config.html */
+        System.setProperty("com.sun.jndi.ldap.connect.pool.debug", LC.ldap_connect_pool_debug.value());
+        System.setProperty("com.sun.jndi.ldap.connect.pool.initsize", LC.ldap_connect_pool_initsize.value());
+        System.setProperty("com.sun.jndi.ldap.connect.pool.maxsize", LC.ldap_connect_pool_maxsize.value());
+        System.setProperty("com.sun.jndi.ldap.connect.pool.prefsize", LC.ldap_connect_pool_prefsize.value());
+        System.setProperty("com.sun.jndi.ldap.connect.pool.timeout", LC.ldap_connect_pool_timeout.value());
     }
 
     public static void closeContext(Context ctxt) {
@@ -137,11 +138,11 @@ public class LdapUtil {
             sEnv.put(Context.REFERRAL, "follow");
             
             // wait at most 10 seconds for a connection
-            sEnv.put("com.sun.jndi.ldap.connect.timeout", sConnectionTimeout);
+            sEnv.put("com.sun.jndi.ldap.connect.timeout", LC.ldap_connect_timeout.value());
             // enable connection pooling
             sEnv.put("com.sun.jndi.ldap.connect.pool", "true");
             // env.put("java.naming.ldap.derefAliases", "never");
-            // TODO: tune pooling, see http://java.sun.com/products/jndi/tutorial/ldap/connect/config.html
+            //
             // default: env.put("java.naming.ldap.version", "3");
         }
         return sEnv;
@@ -197,7 +198,7 @@ public class LdapUtil {
         }
         env.put(Context.REFERRAL, "follow");
         // wait at most 10 seconds
-        env.put("com.sun.jndi.ldap.connect.timeout", sConnectionTimeout);
+        env.put("com.sun.jndi.ldap.connect.timeout", LC.ldap_connect_timeout.value());
         // enable connection pooling
         env.put("com.sun.jndi.ldap.connect.pool", "true");
         return new InitialDirContext(env);
@@ -209,7 +210,7 @@ public class LdapUtil {
 
         Hashtable env = new Hashtable();
         // wait at most 10 seconds
-        env.put("com.sun.jndi.ldap.connect.timeout", sConnectionTimeout);        
+        env.put("com.sun.jndi.ldap.connect.timeout", LC.ldap_connect_timeout.value());        
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
         env.put(Context.PROVIDER_URL, joinURLS(urls));
         env.put(Context.SECURITY_AUTHENTICATION, "simple");

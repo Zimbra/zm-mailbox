@@ -103,7 +103,13 @@ public class LC {
     public static final KnownKey ldap_master_url;
     public static final KnownKey ldap_is_master;
     public static final KnownKey ldap_root_password;
-    
+    public static final KnownKey ldap_connect_timeout;
+    public static final KnownKey ldap_connect_pool_debug;
+    public static final KnownKey ldap_connect_pool_initsize;
+    public static final KnownKey ldap_connect_pool_maxsize;
+    public static final KnownKey ldap_connect_pool_prefsize;
+    public static final KnownKey ldap_connect_pool_timeout;
+
     public static final KnownKey mysql_directory;
     public static final KnownKey mysql_data_directory;
     public static final KnownKey mysql_socket;
@@ -312,6 +318,39 @@ public class LC {
              " program which will change the password in both slapd.conf" +
              " and in local config.");
 
+        ldap_connect_timeout = new KnownKey("ldap_connect_timeout");
+        ldap_connect_timeout.setDefault("10000");
+        ldap_connect_timeout.setDoc
+            ("Milliseconds after which a connection attempt is aborted.");
+
+        ldap_connect_pool_debug = new KnownKey("ldap_connect_pool_debug");
+        ldap_connect_pool_debug.setDefault("false");
+        ldap_connect_pool_debug.setDoc
+            ("Whether to debug LDAP connection pooling.");
+        
+        ldap_connect_pool_initsize = new KnownKey("ldap_connect_pool_initsize");
+        ldap_connect_pool_initsize.setDefault("1");
+        ldap_connect_pool_initsize.setDoc
+            ("Initial number of active LDAP connections to ramp up to.");
+        
+        ldap_connect_pool_maxsize = new KnownKey("ldap_connect_pool_maxsize");
+        ldap_connect_pool_maxsize.setDefault("25");
+        ldap_connect_pool_maxsize.setDoc
+            ("Maximum number of LDAP active and idle connections allowed.");
+        
+        ldap_connect_pool_prefsize = new KnownKey("ldap_connect_pool_prefsize");
+        ldap_connect_pool_prefsize.setDefault("${ldap_connect_pool_maxsize}");
+        ldap_connect_pool_prefsize.setDoc
+            ("Preferred number  of LDAP connections - setting both maxsize" +
+             " and prefsize to the same value maintains the connection pool" +
+             " at a fixed size.");
+        
+        ldap_connect_pool_timeout = new KnownKey("ldap_connect_pool_timeout");
+        ldap_connect_pool_timeout.setDefault("120000");
+        ldap_connect_pool_timeout.setDoc
+            ("Milliseconds of idle time before an idle connection is bumped" +
+             " from the pool.");
+
         mysql_directory = new KnownKey("mysql_directory");
         mysql_directory.setDefault("${zimbra_home}" + FS + "mysql");
         mysql_directory.setDoc
@@ -393,8 +432,6 @@ public class LC {
         mysql_table_cache.setDefault("500");
         mysql_table_cache.setDoc
             ("Consult MySQL documentation for table_cache. " + ZM_MYCNF_CAVEAT);
-
-
         zimbra_logger_mysql_password = new KnownKey("zimbra_logger_mysql_password");
         zimbra_logger_mysql_password.setDefault("zimbra");
         zimbra_logger_mysql_password.setForceToEdit(true);
