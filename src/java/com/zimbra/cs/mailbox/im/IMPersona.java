@@ -169,21 +169,12 @@ public class IMPersona {
     
     public void removeOutgoingSubscription(OperationContext octxt, IMAddr address, String name, String[] groups) throws ServiceException
     {
-        IMBuddy buddy = getOrCreateBuddy(address, name);
-        
-        for (String grpName : groups) {
-            IMGroup group = this.getGroup(grpName);
-            buddy.addGroup(group);
-        }
-        
-        SubType st = buddy.getSubType();
-        if (st.isOutgoing())
-            buddy.setSubType(st.clearOutgoing());
+        mBuddyList.remove(address);
 
         IMEvent event = new IMSubscriptionEvent(mAddr, address, Op.UNSUBSCRIBE);
         IMRouter.getInstance().postEvent(event);
         
-        mMbox.postIMNotification(new SubscribedNotification(address, name, groups, false));
+        mMbox.postIMNotification(new SubscribedNotification(address, name, groups, true));
         
         flush(octxt);
     }
@@ -396,11 +387,7 @@ public class IMPersona {
      */
     void handleRemoveIncomingSubscription(IMAddr address) throws ServiceException
     {
-        IMBuddy buddy = this.getOrCreateBuddy(address, null);
-        SubType st = buddy.getSubType();
-        if (st.isIncoming()) {
-            buddy.setSubType(st.clearIncoming());
-        }
+        mBuddyList.remove(address);
         flush(null);
     }
 
