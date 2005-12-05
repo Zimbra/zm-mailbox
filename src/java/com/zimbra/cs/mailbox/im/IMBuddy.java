@@ -197,6 +197,7 @@ public class IMBuddy {
         int offset = 0;
         for (IMGroup group : mGroups) {
             meta.put(FN_GROUP+offset, group.getName());
+            offset++;
         }
         
         return meta;
