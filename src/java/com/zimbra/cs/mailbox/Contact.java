@@ -202,7 +202,7 @@ public class Contact extends MailItem {
                 break;
             case FA_COMPANY_LAST_C_FIRST:
                 result.append(company);
-                if (first.length() > 0 && last.length() > 0) {
+                if (first.length() > 0 || last.length() > 0) {
                     result.append(" (").append(last);
                     if (first.length() > 0 && last.length() > 0)
                         result.append(", ");
@@ -211,7 +211,7 @@ public class Contact extends MailItem {
                 break;
             case FA_COMPANY_FIRST_LAST:
                 result.append(company);
-                if (first.length() > 0 && last.length() > 0) {
+                if (first.length() > 0 || last.length() > 0) {
                     result.append(" (").append(first);
                     if (first.length() > 0 && last.length() > 0)
                         result.append(' ');
@@ -220,6 +220,103 @@ public class Contact extends MailItem {
                 break;
         }
         return result.toString().trim();
+    }
+    
+    /**
+     * Convert from a fileAs string to the internal fileAs format.
+     * 
+     * @param attrs
+     */
+    public static void normalizeFileAs(Map<String, String> attrs) {
+    	
+		String fileAs = attrs.get(A_fileAs);
+		if (fileAs == null || fileAs.length() == 0) {
+			return;
+		}
+    	
+        String last = attrs.get(A_lastName);
+        last = last == null ? "" : last;
+        String first = attrs.get(A_firstName);
+        first = first == null ? "" : first;
+        String company = attrs.get(A_company);
+        company = company == null ? "" : company;
+        
+        //FA_LAST_C_FIRST = 1
+        StringBuilder sb = new StringBuilder();
+        sb.append(last);
+        if (last.length() > 0 && first.length() > 0) sb.append(", ");
+        sb.append(first);
+        if (sb.toString().equals(fileAs)) {
+        	attrs.put(A_fileAs, new Integer(FA_LAST_C_FIRST).toString());
+        	return;
+        }
+        
+        //FA_FIRST_LAST = 2
+        sb = new StringBuilder();
+        sb.append(first);
+        if (last.length() > 0 && first.length() > 0) sb.append(' ');
+        sb.append(last);
+        if (sb.toString().equals(fileAs)) {
+        	attrs.put(A_fileAs, new Integer(FA_FIRST_LAST).toString());
+        	return;
+        }
+        
+        //FA_COMPANY = 3
+        if (company.equals(fileAs)) {
+        	attrs.put(A_fileAs, new Integer(FA_COMPANY).toString());
+        	return;
+        }
+
+        //FA_LAST_C_FIRST_COMPANY = 4
+        sb = new StringBuilder();
+        sb.append(last);
+        if (last.length() > 0 && first.length() > 0) sb.append(", ");
+        sb.append(first);
+        if (company.length() > 0) sb.append(" (").append(company).append(')');
+        if (sb.toString().equals(fileAs)) {
+        	attrs.put(A_fileAs, new Integer(FA_LAST_C_FIRST_COMPANY).toString());
+        	return;
+        }
+
+        //FA_FIRST_LAST_COMPANY = 5
+        sb = new StringBuilder();
+        sb.append(first);
+        if (last.length() > 0 && first.length() > 0) sb.append(' ');
+        sb.append(last);
+        if (company.length() > 0) sb.append(" (").append(company).append(')');
+        if (sb.toString().equals(fileAs)) {
+        	attrs.put(A_fileAs, new Integer(FA_FIRST_LAST_COMPANY).toString());
+        	return;
+        }
+        
+        //FA_COMPANY_LAST_C_FIRST = 6
+        sb = new StringBuilder();
+        sb.append(company);
+        if (last.length() > 0 || first.length() > 0) {
+            sb.append(" (").append(last);
+            if (last.length() > 0 && first.length() > 0) sb.append(", ");
+            sb.append(first).append(')');
+        }
+        if (sb.toString().equals(fileAs)) {
+        	attrs.put(A_fileAs, new Integer(FA_COMPANY_LAST_C_FIRST).toString());
+        	return;
+        }
+        
+        //FA_COMPANY_FIRST_LAST = 7
+        sb = new StringBuilder();
+        sb.append(company);
+        if (last.length() > 0 || first.length() > 0) {
+            sb.append(" (").append(first);
+            if (last.length() > 0 && first.length() > 0) sb.append(' ');
+            sb.append(last).append(')');
+        }
+        if (sb.toString().equals(fileAs)) {
+        	attrs.put(A_fileAs, new Integer(FA_COMPANY_FIRST_LAST).toString());
+        	return;
+        }
+
+        //FA_EXPLICIT = 8
+        attrs.put(A_fileAs, new Integer(FA_EXPLICIT).toString() + ':' + fileAs);
     }
 
     /** The list of all "email" fields in the contact's map. */
