@@ -150,6 +150,8 @@ public class IMPersona {
     { 
         IMBuddy buddy = getOrCreateBuddy(address, name);
         
+        buddy.clearGroups();
+
         for (String grpName : groups) {
             IMGroup group = this.getGroup(grpName);
             buddy.addGroup(group);
