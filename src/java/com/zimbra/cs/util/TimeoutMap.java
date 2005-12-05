@@ -39,11 +39,11 @@ import java.util.TreeMap;
  * @author bburtin
  *
  */
-public class TimeoutMap implements Map {
+public class TimeoutMap<K, V> implements Map<K, V> {
     
     private long mTimeoutMillis;
-    private Map mMap = new HashMap();
-    private Map /* <Long, Object> */ mTimestamps = new TreeMap();
+    private Map<K, V> mMap = new HashMap<K, V>();
+    private Map<Long, K> mTimestamps = new TreeMap<Long, K>();
     private long mLastTimestamp = 0;
 
     public TimeoutMap(long timeoutMillis) {
@@ -73,28 +73,26 @@ public class TimeoutMap implements Map {
         return mMap.containsValue(value);
     }
 
-    public Object get(Object key) {
+    public V get(Object key) {
         prune();
         return mMap.get(key);
     }
 
-    public Object put(Object key, Object value) {
+    public V put(K key, V value) {
         prune();
         mTimestamps.put(getTimestamp(), key);
         return mMap.put(key, value);
     }
 
-    public Object remove(Object key) {
+    public V remove(Object key) {
         prune();
         return mMap.remove(key);
     }
 
-    public void putAll(Map t) {
+    public void putAll(Map<? extends K, ? extends V> t) {
         prune();
-        Iterator i = t.keySet().iterator();
-        while (i.hasNext()) {
-            mTimestamps.put(getTimestamp(), i.next());
-        }
+        for (K key : t.keySet())
+            mTimestamps.put(getTimestamp(), key);
         mMap.putAll(t);
     }
 
@@ -103,17 +101,17 @@ public class TimeoutMap implements Map {
         mMap.clear();
     }
 
-    public Set keySet() {
+    public Set<K> keySet() {
         prune();
         return mMap.keySet();
     }
 
-    public Collection values() {
+    public Collection<V> values() {
         prune();
         return mMap.values();
     }
 
-    public Set entrySet() {
+    public Set<Map.Entry<K, V>> entrySet() {
         prune();
         return mMap.entrySet();
     }
@@ -123,9 +121,9 @@ public class TimeoutMap implements Map {
      */
     private void prune() {
         long now = System.currentTimeMillis();
-        Iterator i = mTimestamps.keySet().iterator();
+        Iterator<Long> i = mTimestamps.keySet().iterator();
         while (i.hasNext()) {
-            Long timestamp = (Long) i.next();
+            Long timestamp = i.next();
             if (now - timestamp.longValue() > mTimeoutMillis) {
                 Object key = mTimestamps.get(timestamp);
                 mMap.remove(key);
