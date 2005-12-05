@@ -76,7 +76,7 @@ public class IMPresence {
     }
     
     public Element toXml(Element parent) {
-        Element e = parent.addElement("presence");
+        Element e = parent.addUniqueElement("presence");
             
         IMPresence.Show show = mShow;
         if (show != null)

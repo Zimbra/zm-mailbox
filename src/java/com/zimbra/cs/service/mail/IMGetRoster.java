@@ -58,7 +58,7 @@ public class IMGetRoster extends DocumentHandler {
             
             // groups
             {
-                Element groups = response.addElement("groups");
+                Element groups = response.addUniqueElement("groups");
                 Integer curNum = 0;
                 for (IMGroup grp : persona.groups()) {
                     groupIdCache.put(grp, curNum);
@@ -73,7 +73,7 @@ public class IMGetRoster extends DocumentHandler {
             
             // chats
             {
-                Element chats = response.addElement("chats");
+                Element chats = response.addUniqueElement("chats");
                 for (IMChat chat : persona.chats()) {
                     Element e = chats.addElement("chat");
                     e.addAttribute("threadId", chat.getThreadId());
@@ -89,7 +89,7 @@ public class IMGetRoster extends DocumentHandler {
             
             // items (buddies)
             {
-                Element items = response.addElement("items");
+                Element items = response.addUniqueElement("items");
                 for (IMBuddy buddy : persona.buddies()) {
                     Element e = items.addElement("item");
                     e.addAttribute("addr", buddy.getAddress().getAddr());
@@ -103,7 +103,7 @@ public class IMGetRoster extends DocumentHandler {
                     // presence
                     IMPresence presence = buddy.getPresence();
                     if (presence == null) 
-                        e.addElement("presence");
+                        e.addUniqueElement("presence");
                     else
                         presence.toXml(e);
                     
