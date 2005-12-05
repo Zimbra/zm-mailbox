@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.PushbackInputStream;
 import java.net.Socket;
 
 import javax.mail.MessagingException;
@@ -62,6 +63,7 @@ public class Pop3Handler extends ProtocolHandler {
     
     private static final byte[] LINE_SEPARATOR = { '\r', '\n'};
     private static final String TERMINATOR = ".";
+    private static final int TERMINATOR_C = '.';    
     private static final byte[] TERMINATOR_BYTE = { '.' };
     
     // Connection specific data
@@ -392,31 +394,48 @@ public class Pop3Handler extends ProtocolHandler {
      *   hit end of a line
      */
     private void sendMessage(InputStream is, int maxNumBodyLines) throws IOException {
-        BufferedReader br = new BufferedReader(new InputStreamReader(is));
-        String line;
+        
         boolean inBody = false;
         int numBodyLines = 0;
         
-        while ((line = br.readLine()) != null) {
-            if (line.length() > 0 && line.startsWith(TERMINATOR)) {
-                mOutputStream.write(TERMINATOR_BYTE);
+        PushbackInputStream stream = new PushbackInputStream(is);
+        int c;
+        
+        boolean startOfLine = true;
+        int lineLength = 0;
+
+        while ((c = stream.read()) != -1) {
+            if (c == '\r' || c == '\n') {
+                if (c == '\r') {
+                    int peek = stream.read();
+                    if (peek != '\n' && peek != -1) stream.unread(peek);
+                }
+    
+                if (!inBody) {
+                    if (lineLength == 0)
+                        inBody = true;
+                } else {
+                    numBodyLines++;
+                }                         
+                if (inBody && numBodyLines >= maxNumBodyLines)
+                    break;
+                startOfLine = true;
+                lineLength = 0;
+                mOutputStream.write(LINE_SEPARATOR);
+                continue;
+            } else if (c == TERMINATOR_C && startOfLine) {
+                mOutputStream.write(c); // we'll end up writing it twice
             }
-            mOutputStream.write(line.getBytes());
-            mOutputStream.write(LINE_SEPARATOR);
-            if (!inBody) {
-                if (line.length() == 0)
-                    inBody = true;
-            } else {
-                numBodyLines++;
-            }
-            if (inBody && numBodyLines >= maxNumBodyLines)
-                break;
-        }
+            if (startOfLine) startOfLine = false;
+            lineLength++;
+            mOutputStream.write(c);
+        }     
+        if (lineLength != 0) mOutputStream.write(LINE_SEPARATOR);
         mOutputStream.write(TERMINATOR_BYTE);
         mOutputStream.write(LINE_SEPARATOR);
         mOutputStream.flush();
     }
-  
+
     private void doQUIT() throws IOException, ServiceException, Pop3CmdException {
         dropConnection = true;
         if (mMbx != null && mMbx.getNumDeletedMessages() > 0) {
