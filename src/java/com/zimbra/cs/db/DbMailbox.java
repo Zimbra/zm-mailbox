@@ -121,7 +121,7 @@ public class DbMailbox {
             ZimbraLog.mailbox.info("Creating database " + dbName);
 
             String template = new String(ByteUtil.getContent(file));
-            Map vars = new HashMap();
+            Map<String, String> vars = new HashMap<String, String>();
             vars.put("DATABASE_NAME", dbName);
             String script = StringUtil.fillTemplate(template, vars);
             DbUtil.executeScript(conn, new StringReader(script));
@@ -242,15 +242,15 @@ public class DbMailbox {
         }
     }
 
-    public static Map getMailboxes(Connection conn) throws ServiceException {
-        HashMap result = new HashMap();
+    public static Map<String, Integer> getMailboxes(Connection conn) throws ServiceException {
+        HashMap<String, Integer> result = new HashMap<String, Integer>();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement("SELECT id, account_id FROM mailbox");
             rs = stmt.executeQuery();
             while (rs.next())
-                result.put(rs.getString(2), new Integer(rs.getInt(1)));
+                result.put(rs.getString(2), rs.getInt(1));
             return result;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("fetching mailboxes", e);
@@ -362,9 +362,9 @@ public class DbMailbox {
         }
     }
 
-    static Set /* <Long> */ getDistinctTagsets(Connection conn, int mailboxId)
+    static Set<Long> getDistinctTagsets(Connection conn, int mailboxId)
     throws ServiceException {
-        Set tagsets = new HashSet();
+        Set<Long> tagsets = new HashSet<Long>();
 
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -373,8 +373,7 @@ public class DbMailbox {
                 "FROM " + DbMailItem.getMailItemTableName(mailboxId));
             rs = stmt.executeQuery();
             while (rs.next()) {
-                long tags = rs.getLong(1);
-                tagsets.add(new Long(tags));
+                tagsets.add(rs.getLong(1));
             }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("getting distinct tagsets", e);
@@ -386,9 +385,9 @@ public class DbMailbox {
         return tagsets;
     }
 
-    static Set /* <Long> */ getDistinctFlagsets(Connection conn, int mailboxId)
+    static Set<Long> getDistinctFlagsets(Connection conn, int mailboxId)
     throws ServiceException {
-        Set flagsets = new HashSet();
+        Set<Long> flagsets = new HashSet<Long>();
 
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -397,8 +396,7 @@ public class DbMailbox {
                 "FROM " + DbMailItem.getMailItemTableName(mailboxId));
             rs = stmt.executeQuery();
             while (rs.next()) {
-                long flags = rs.getLong(1);
-                flagsets.add(new Long(flags));
+                flagsets.add(rs.getLong(1));
             }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("getting distinct flagsets", e);

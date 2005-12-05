@@ -27,13 +27,12 @@ package com.zimbra.cs.db;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 import com.zimbra.cs.util.StringUtil;
 
 class TagsetCache {
-    private Set mTagsets = new HashSet();
+    private Set<Long> mTagsets = new HashSet<Long>();
     private String mName;
     
     TagsetCache(String name) {
@@ -45,37 +44,23 @@ class TagsetCache {
     }
 
     void addTagset(long tagset) {
-        addTagset(new Long(tagset));
-    }
-    
-    void addTagset(Long tagset) {
-        if (tagset == null) {
-            throw new IllegalArgumentException("tagset cannot be null");
-        }
         mTagsets.add(tagset);
     }
-
-    void addTagsets(Collection /* Long */ tagsets) {
-        // Iterate the collection instead of just calling addAll(), to
-        // make sure all the values passed in are Longs.
-        Iterator i = tagsets.iterator();
-        while (i.hasNext()) {
-            addTagset((Long) i.next());
-        }
+    
+    void addTagsets(Collection<Long> tagsets) {
+        mTagsets.addAll(tagsets);
     }
 
-    Set getMatchingTagsets(long mask, long value) {
-        Set matches = new HashSet();
-        for (Iterator it = mTagsets.iterator(); it.hasNext(); ) {
-            Long tagset = (Long) it.next();
-            if ((tagset.longValue() & mask) == value)
+    Set<Long> getMatchingTagsets(long mask, long value) {
+        Set<Long> matches = new HashSet<Long>();
+        for (long tagset : mTagsets)
+            if ((tagset & mask) == value)
                 matches.add(tagset);
-        }
         return matches;
     }
 
-    Set getAllTagsets() {
-        return new HashSet(mTagsets);
+    Set<Long> getAllTagsets() {
+        return new HashSet<Long>(mTagsets);
     }
 
     /**
@@ -89,12 +74,10 @@ class TagsetCache {
      * the bogus tagsets are removed.
      */
     void applyMask(long mask, boolean add) {
-        Iterator i = mTagsets.iterator();
-        Set newTagsets = new HashSet();
-        while (i.hasNext()) {
-            long tags = ((Long) i.next()).longValue();
+        Set<Long> newTagsets = new HashSet<Long>();
+        for (long tags : mTagsets) {
             long newTags = add ? tags | mask : tags & ~mask;
-            newTagsets.add(new Long(newTags));
+            newTagsets.add(newTags);
         }
         addTagsets(newTagsets);
     }

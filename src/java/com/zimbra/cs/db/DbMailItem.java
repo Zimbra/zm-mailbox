@@ -68,13 +68,13 @@ public class DbMailItem {
 
     /** Maps the mailbox id to the set of all tag combinations stored for all
      *  items in the mailbox.  Enables fast database lookup by tag. */
-    private static final Map /* <Long, TagsetCache */ sTagsetCache =
-        new TimeoutMap(120 * Constants.MILLIS_PER_MINUTE);
+    private static final Map<Integer, TagsetCache> sTagsetCache =
+        new TimeoutMap<Integer, TagsetCache>(120 * Constants.MILLIS_PER_MINUTE);
 
     /** Maps the mailbox id to the set of all flag combinations stored for all
      *  items in the mailbox.  Enables fast database lookup by flag. */
-    private static final Map /* <Long, TagsetCache> */ sFlagsetCache =
-        new TimeoutMap(120 * Constants.MILLIS_PER_MINUTE);
+    private static final Map<Integer, TagsetCache> sFlagsetCache =
+        new TimeoutMap<Integer, TagsetCache>(120 * Constants.MILLIS_PER_MINUTE);
 
 
     public static void create(Mailbox mbox, UnderlyingData data) throws ServiceException {
@@ -665,7 +665,7 @@ public class DbMailItem {
         }
     }
 
-    public static List markDeletionTargets(Folder folder) throws ServiceException {
+    public static List<Integer> markDeletionTargets(Folder folder) throws ServiceException {
         Mailbox mbox = folder.getMailbox();
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -692,7 +692,7 @@ public class DbMailItem {
         }
     }
 
-    public static List markDeletionTargets(Mailbox mbox, List ids) throws ServiceException {
+    public static List<Integer> markDeletionTargets(Mailbox mbox, List<Integer> ids) throws ServiceException {
         Connection conn = mbox.getOperationConnection();
         String table = getMailItemTableName(mbox);
         PreparedStatement stmt = null;
@@ -707,7 +707,7 @@ public class DbMailItem {
                         " WHERE id = pid AND type = " + MailItem.TYPE_CONVERSATION);
                 int attr = 1;
                 for (int index = i; index < i + count; index++)
-                	stmt.setInt(attr++, ((Integer) ids.get(index)).intValue());
+                	stmt.setInt(attr++, ids.get(index));
                 stmt.setInt(attr++, mbox.getOperationChangeID());
                 stmt.setInt(attr++, mbox.getOperationTimestamp());
                 stmt.executeUpdate();
@@ -722,9 +722,9 @@ public class DbMailItem {
         return getPurgedConversations(mbox);
     }
 
-    private static List getPurgedConversations(Mailbox mbox) throws ServiceException {
+    private static List<Integer> getPurgedConversations(Mailbox mbox) throws ServiceException {
         Connection conn = mbox.getOperationConnection();
-        ArrayList purgedConvs = new ArrayList();
+        ArrayList<Integer> purgedConvs = new ArrayList<Integer>();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -732,7 +732,7 @@ public class DbMailItem {
                     " WHERE type = " + MailItem.TYPE_CONVERSATION + " AND size <= 0");
             rs = stmt.executeQuery();
             while (rs.next())
-                purgedConvs.add(new Integer(rs.getInt(1)));
+                purgedConvs.add(rs.getInt(1));
             return purgedConvs;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("getting list of purged conversations", e);
@@ -752,8 +752,8 @@ public class DbMailItem {
         if (item instanceof VirtualConversation)
             return;
 
-        List ids = new ArrayList();
-        ids.add(new Integer(item.getId()));
+        List<Integer> ids = new ArrayList<Integer>();
+        ids.add(item.getId());
         delete(item.getMailbox(), ids);
     }
 
@@ -761,16 +761,14 @@ public class DbMailItem {
      * Deletes <code>MailItem</code>s with the specified ids from the <code>mail_item</code>
      * table.  Assumes that there is no data referencing the specified id's.
      */
-    public static void delete(Mailbox mbox, List ids) throws ServiceException {
+    public static void delete(Mailbox mbox, List<Integer> ids) throws ServiceException {
         // trim out any non-persisted items
         if (ids == null || ids.size() == 0)
             return;
-        List targets = new ArrayList();
-        for (Iterator it = ids.iterator(); it.hasNext(); ) {
-            Integer id = (Integer) it.next();
-            if (id.intValue() > 0)
+        List<Integer> targets = new ArrayList<Integer>();
+        for (int id : ids)
+            if (id > 0)
                 targets.add(id);
-        }
         if (targets.size() == 0)
             return;
 
@@ -782,7 +780,7 @@ public class DbMailItem {
                 stmt = conn.prepareStatement("DELETE FROM " + getMailItemTableName(mbox) +
                         " WHERE id IN" + DbUtil.suitableNumberOfVariables(count));
                 for (int index = i, attr = 1; index < i + count; index++)
-                	stmt.setInt(attr++, ((Integer) targets.get(index)).intValue());
+                	stmt.setInt(attr++, targets.get(index));
                 stmt.executeUpdate();
             } catch (SQLException e) {
                 throw ServiceException.FAILURE("deleting item(s): " + ids, e);
@@ -917,7 +915,7 @@ public class DbMailItem {
     }
 
 
-    public static Mailbox.MailboxData getFoldersAndTags(Mailbox mbox, Map folderData, Map tagData) throws ServiceException {
+    public static Mailbox.MailboxData getFoldersAndTags(Mailbox mbox, Map<Integer, MailItem.UnderlyingData> folderData, Map<Integer, MailItem.UnderlyingData> tagData) throws ServiceException {
         boolean fetchFolders = folderData != null;
         boolean fetchTags    = tagData != null;
         if (!fetchFolders && !fetchTags)
@@ -936,9 +934,9 @@ public class DbMailItem {
             while (rs.next()) {
                 UnderlyingData data = constructItem(rs);
                 if (fetchFolders && MailItem.isAcceptableType(MailItem.TYPE_FOLDER, data.type))
-                    folderData.put(new Integer(data.id), data);
+                    folderData.put(data.id, data);
                 else if (fetchTags && MailItem.isAcceptableType(MailItem.TYPE_TAG, data.type))
-                    tagData.put(new Integer(data.id), data);
+                    tagData.put(data.id, data);
             }
             rs.close();
             stmt.close();
@@ -957,7 +955,7 @@ public class DbMailItem {
                 mbd.size += size;
 
                 if (fetchFolders) {
-	                UnderlyingData data = (UnderlyingData) folderData.get(new Integer(rs.getInt(1)));
+	                UnderlyingData data = folderData.get(rs.getInt(1));
 	                assert(data != null);
                     data.size += size;
 	                data.unreadCount += unread;
@@ -970,7 +968,7 @@ public class DbMailItem {
                     long tags = rs.getLong(3);
                     for (int i = 0; tags != 0 && i < MailItem.MAX_TAG_COUNT - 1; i++)
                         if ((tags & (1L << i)) != 0) {
-        	                UnderlyingData data = (UnderlyingData) tagData.get(new Integer(i + MailItem.TAG_ID_OFFSET));
+        	                UnderlyingData data = tagData.get(i + MailItem.TAG_ID_OFFSET);
         	                if (data != null)
         	                    data.unreadCount += unread;
                             // could track cumulative size if desired...
@@ -987,12 +985,12 @@ public class DbMailItem {
         }
     }
 
-    public static List /*<UnderlyingData>*/ getByType(Mailbox mbox, byte type) throws ServiceException {
+    public static List<UnderlyingData> getByType(Mailbox mbox, byte type) throws ServiceException {
         if (Mailbox.isCachedType(type))
             throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
         Connection conn = mbox.getOperationConnection();
 
-        ArrayList result = new ArrayList();
+        ArrayList<UnderlyingData> result = new ArrayList<UnderlyingData>();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -1014,13 +1012,13 @@ public class DbMailItem {
         }
     }
 
-    public static List /*<UnderlyingData>*/ getByParent(MailItem parent) throws ServiceException {
+    public static List<UnderlyingData> getByParent(MailItem parent) throws ServiceException {
     	return getByParent(parent, DEFAULT_SORT_ORDER);
     }
-    public static List /*<UnderlyingData>*/ getByParent(MailItem parent, byte sort) throws ServiceException {
+    public static List<UnderlyingData> getByParent(MailItem parent, byte sort) throws ServiceException {
         Mailbox mbox = parent.getMailbox();
         Connection conn = mbox.getOperationConnection();
-        ArrayList result = new ArrayList();
+        ArrayList<UnderlyingData> result = new ArrayList<UnderlyingData>();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -1045,10 +1043,10 @@ public class DbMailItem {
         }
     }
     
-    public static List /*<UnderlyingData>*/ getUnreadMessages(MailItem relativeTo) throws ServiceException {
+    public static List<UnderlyingData> getUnreadMessages(MailItem relativeTo) throws ServiceException {
         Mailbox mbox = relativeTo.getMailbox();
         Connection conn = mbox.getOperationConnection();
-        ArrayList result = new ArrayList();
+        ArrayList<UnderlyingData> result = new ArrayList<UnderlyingData>();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -1086,13 +1084,13 @@ public class DbMailItem {
         }
     }
 
-    public static List /*<UnderlyingData>*/ getByFolder(Folder folder, byte type) throws ServiceException {
+    public static List<UnderlyingData> getByFolder(Folder folder, byte type) throws ServiceException {
         if (Mailbox.isCachedType(type))
             throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
         Mailbox mbox = folder.getMailbox();
         Connection conn = mbox.getOperationConnection();
 
-        ArrayList result = new ArrayList();
+        ArrayList<UnderlyingData> result = new ArrayList<UnderlyingData>();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -1144,19 +1142,19 @@ public class DbMailItem {
         }
     }
 
-    public static List /*<UnderlyingData>*/ getById(Mailbox mbox, Collection ids, byte type) throws ServiceException {
+    public static List<UnderlyingData> getById(Mailbox mbox, Collection<Integer> ids, byte type) throws ServiceException {
         if (Mailbox.isCachedType(type))
             throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
 
-        List result = new ArrayList();
+        List<UnderlyingData> result = new ArrayList<UnderlyingData>();
         if (ids.isEmpty())
             return result;
-        List conversations = new ArrayList();
+        List<UnderlyingData> conversations = new ArrayList<UnderlyingData>();
 
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        Iterator it = ids.iterator();
+        Iterator<Integer> it = ids.iterator();
         for (int i = 0; i < ids.size(); i += DbUtil.IN_CLAUSE_BATCH_SIZE)
             try {
                 int count = Math.min(DbUtil.IN_CLAUSE_BATCH_SIZE, ids.size() - i);
@@ -1164,7 +1162,7 @@ public class DbMailItem {
                         " FROM " + getMailItemTableName(mbox.getId(), "mi") +
                         " WHERE id IN " + DbUtil.suitableNumberOfVariables(count));
                 for (int index = i, attr = 1; index < i + count; index++)
-                    stmt.setInt(attr++, ((Integer) it.next()).intValue());
+                    stmt.setInt(attr++, it.next());
 
                 rs = stmt.executeQuery();
                 while (rs.next()) {
@@ -1215,12 +1213,12 @@ public class DbMailItem {
         }
     }
 
-    public static List /*<UnderlyingData>*/ getModifiedItems(Mailbox mbox, byte type, long lastSync) throws ServiceException {
+    public static List<UnderlyingData> getModifiedItems(Mailbox mbox, byte type, long lastSync) throws ServiceException {
         if (Mailbox.isCachedType(type))
             throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
 
         Connection conn = mbox.getOperationConnection();
-        ArrayList result = new ArrayList();
+        ArrayList<UnderlyingData> result = new ArrayList<UnderlyingData>();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -1361,7 +1359,7 @@ public class DbMailItem {
             info.size   = 0;
             accumulateLeafNodes(info, mbox, rs);
             // make sure that the folder is in the list of deleted item ids
-            info.itemIds.add(new Integer(folderId));
+            info.itemIds.add(folderId);
 
             return info;
         } catch (SQLException e) {
@@ -1372,7 +1370,7 @@ public class DbMailItem {
         }
     }
 
-    public static PendingDelete getLeafNodes(Mailbox mbox, List folders, int before, boolean globalMessages) throws ServiceException {
+    public static PendingDelete getLeafNodes(Mailbox mbox, List<Folder> folders, int before, boolean globalMessages) throws ServiceException {
         PendingDelete info = new PendingDelete();
 
         Connection conn = mbox.getOperationConnection();
@@ -1392,8 +1390,8 @@ public class DbMailItem {
             int attr = 1;
             stmt.setInt(attr++, before);
             if (!globalMessages)
-                for (Iterator it = folders.iterator(); it.hasNext(); )
-                    stmt.setInt(attr++, ((Folder) it.next()).getId());
+                for (Folder folder : folders)
+                    stmt.setInt(attr++, folder.getId());
             rs = stmt.executeQuery();
 
             info.rootId = 0;
@@ -1441,13 +1439,13 @@ public class DbMailItem {
             }
             // detect deleted virtual conversations
             if (isMessage > 0 && rs.getBoolean(LEAF_CI_IS_NOT_CHILD))
-                info.itemIds.add(new Integer(-id));
+                info.itemIds.add(-id);
 
             if (isMessage > 0 || size > 0) {
                 if (info.messages == null)
-                    info.messages = new HashMap();
+                    info.messages = new HashMap<Integer, DbMailItem.LocationCount>();
                 Integer folderID = new Integer(rs.getInt(LEAF_CI_FOLDER_ID));
-                LocationCount count = (LocationCount) info.messages.get(folderID);
+                LocationCount count = info.messages.get(folderID);
                 if (count == null)
                     info.messages.put(folderID, new LocationCount(isMessage, size));
                 else
@@ -1470,7 +1468,7 @@ public class DbMailItem {
             boolean indexed = !rs.wasNull();
             if (indexed) {
                 if (info.sharedIndex == null)
-                    info.sharedIndex = new HashSet();
+                    info.sharedIndex = new HashSet<Integer>();
                 boolean shared = rs.getBoolean(LEAF_CI_IS_COPIED);
                 if (!shared)  info.indexIds.add(indexId);
                 else          info.sharedIndex.add(indexId);
@@ -1491,12 +1489,12 @@ public class DbMailItem {
             stmt = conn.prepareStatement("SELECT index_id FROM " + getMailItemTableName(mbox) +
                     " WHERE index_id IN " + DbUtil.suitableNumberOfVariables(info.sharedIndex));
             int attr = 1;
-            for (Iterator it = info.sharedIndex.iterator(); it.hasNext(); )
-            	stmt.setInt(attr++, ((Integer) it.next()).intValue());
+            for (int id : info.sharedIndex)
+            	stmt.setInt(attr++, id);
             rs = stmt.executeQuery();
 
             while (rs.next())
-                info.sharedIndex.remove(new Integer(rs.getInt(1)));
+                info.sharedIndex.remove(rs.getInt(1));
             info.indexIds.addAll(info.sharedIndex);
             info.sharedIndex.clear();
         } catch (SQLException e) {
@@ -1553,7 +1551,7 @@ public class DbMailItem {
 
         boolean automaticEmptySet() {
             // Check for tags and folders that are both included and excluded.
-            Set s = new HashSet();
+            Set<Integer> s = new HashSet<Integer>();
             addIdsToSet(s, tags);
             addIdsToSet(s, folders);
             assert(!(setContainsAnyId(s, excludeTags) || setContainsAnyId(s, excludeFolders)));
@@ -1584,10 +1582,10 @@ public class DbMailItem {
         Range[] checkIntervals(Range[] intervals) {
             if (intervals == null)
                 return intervals;
-            HashSet badDates = new HashSet();
-            for (int i = 0; i < intervals.length; i++)
-                if (!intervals[i].isValid())
-                    badDates.add(intervals[i]);
+            HashSet<Range> badDates = new HashSet<Range>();
+            for (Range range : intervals)
+                if (!range.isValid())
+                    badDates.add(range);
             if (badDates.size() == 0)
                 return intervals;
             else if (badDates.size() == intervals.length)
@@ -1602,19 +1600,17 @@ public class DbMailItem {
             return intervals;
         }
 
-        private void addIdsToSet(Set s, MailItem[] items) {
-            if (items == null)
-                return;
-            for (int i = 0; i < items.length; i++)
-                s.add(new Integer(items[i].getId()));
+        private void addIdsToSet(Set<Integer> s, MailItem[] items) {
+            if (items != null)
+                for (MailItem item : items)
+                    s.add(item.getId());
         }
         
-        private boolean setContainsAnyId(Set s, MailItem[] items) {
-            if (items == null)
-                return false;
-            for (int i = 0; i < items.length; i++)
-                if (s.contains(new Integer(items[i].getId())))
-                    return true;
+        private boolean setContainsAnyId(Set<Integer> s, MailItem[] items) {
+            if (items != null)
+                for (MailItem item : items)
+                    if (s.contains(item.getId()))
+                        return true;
             return false;
         }
     }
@@ -1658,10 +1654,10 @@ public class DbMailItem {
         }
     }
 
-    public static Collection search(Connection conn, int mailboxId, Tag[] tags,
-            Tag[] excludeTags, Folder[] folders, Folder[] excludeFolders, byte type,
-            byte sort) throws ServiceException
-    {
+    public static Collection<SearchResult> search(Connection conn, int mailboxId,
+            Tag[] tags, Tag[] excludeTags, Folder[] folders, Folder[] excludeFolders,
+            byte type, byte sort)
+    throws ServiceException {
         SearchConstraints c = new SearchConstraints();
         c.mailboxId = mailboxId;
         c.tags      = tags;
@@ -1674,16 +1670,16 @@ public class DbMailItem {
         return search(conn, c);
     }
 
-    public static Collection search(Connection conn, SearchConstraints c) throws ServiceException {
-        return search(new ArrayList(), conn, c, false);
+    public static Collection<SearchResult> search(Connection conn, SearchConstraints c) throws ServiceException {
+        return search(new ArrayList<SearchResult>(), conn, c, false);
     }
-    public static Collection search(Connection conn, SearchConstraints c, boolean fullRows) throws ServiceException {
-        return search(new ArrayList(), conn, c, fullRows);
+    public static Collection<SearchResult> search(Connection conn, SearchConstraints c, boolean fullRows) throws ServiceException {
+        return search(new ArrayList<SearchResult>(), conn, c, fullRows);
     }
-    public static Collection search(Collection result, Connection conn, SearchConstraints c) throws ServiceException {
+    public static Collection<SearchResult> search(Collection<SearchResult> result, Connection conn, SearchConstraints c) throws ServiceException {
         return search(result, conn, c, false);
     }
-    public static Collection search(Collection result, Connection conn, SearchConstraints c, boolean fullRows) throws ServiceException {
+    public static Collection<SearchResult> search(Collection<SearchResult> result, Connection conn, SearchConstraints c, boolean fullRows) throws ServiceException {
         if (c.automaticEmptySet())
             return result;
         c.checkDates();
@@ -1698,8 +1694,8 @@ public class DbMailItem {
              */
 
             // Determine the set of matching tags
-            Set searchTagsets = null;
-            Set searchFlagsets = null;
+            Set<Long> searchTagsets = null;
+            Set<Long> searchFlagsets = null;
             Boolean unread = null;
             
             if (!ArrayUtil.isEmpty(c.tags) || !ArrayUtil.isEmpty(c.excludeTags)) {
@@ -1849,57 +1845,58 @@ public class DbMailItem {
             stmt = conn.prepareStatement(statement.toString());
             int param = 1;
             if (c.types != null)
-                for (int i = 0; c.types != null && i < c.types.length; i++)
-                    stmt.setByte(param++, c.types[i]);
-            if (c.excludeTypes != null)
-                for (int i = 0; c.types != null && i < c.excludeTypes.length; i++)
-                    stmt.setByte(param++, c.excludeTypes[i]);
+                for (byte type : c.types)
+                    stmt.setByte(param++, type);
+            if (c.excludeTypes != null && c.types != null)
+                for (byte type : c.excludeTypes)
+                    stmt.setByte(param++, type);
             if (searchTagsets != null)
-                for (Iterator i = searchTagsets.iterator(); i.hasNext(); )
-                    stmt.setLong(param++, ((Long) i.next()).longValue());
+                for (long tagset : searchTagsets)
+                    stmt.setLong(param++, tagset);
             if (searchFlagsets != null)
-                for (Iterator i = searchFlagsets.iterator(); i.hasNext(); )
-                    stmt.setLong(param++, ((Long) i.next()).longValue());
+                for (long flagset : searchFlagsets)
+                    stmt.setLong(param++, flagset);
             if (unread != null)
                 stmt.setBoolean(param++, unread.booleanValue());
-            for (int i = 0; targetFolders != null && i < targetFolders.length; i++)
-                stmt.setInt(param++, targetFolders[i].getId());
+            if (targetFolders != null)
+                for (Folder folder : targetFolders)
+                    stmt.setInt(param++, folder.getId());
             if (c.convId > 0)
                 stmt.setInt(param++, c.convId);
             else if (c.prohibitedConvIds != null)
-                for (int i = 0; i < c.prohibitedConvIds.length; i++)
-                    stmt.setInt(param++, c.prohibitedConvIds[i]);
+                for (int id : c.prohibitedConvIds)
+                    stmt.setInt(param++, id);
             if (c.itemIds != null)
-                for (int i = 0; i < c.itemIds.length; i++)
-                    stmt.setInt(param++, c.itemIds[i]);
+                for (int id : c.itemIds)
+                    stmt.setInt(param++, id);
             if (c.prohibitedItemIds != null)
-                for (int i = 0; i < c.prohibitedItemIds.length; i++)
-                    stmt.setInt(param++, c.prohibitedItemIds[i]);
+                for (int id : c.prohibitedItemIds)
+                    stmt.setInt(param++, id);
             if (c.indexIds != null)
-                for (int i = 0; i < c.indexIds.length; i++)
-                    stmt.setInt(param++, c.indexIds[i]);
+                for (int id : c.indexIds)
+                    stmt.setInt(param++, id);
             if (c.dates != null)
-                for (int i = 0; i < c.dates.length; i++) {
-                    if (c.dates[i].lowest > 0)
-                        stmt.setInt(param++, (int) Math.min(c.dates[i].lowest / 1000, Integer.MAX_VALUE));
-                    if (c.dates[i].highest > 0)
-                        stmt.setInt(param++, (int) Math.min(c.dates[i].highest / 1000, Integer.MAX_VALUE));
+                for (SearchConstraints.Range date : c.dates) {
+                    if (date.lowest > 0)
+                        stmt.setInt(param++, (int) Math.min(date.lowest / 1000, Integer.MAX_VALUE));
+                    if (date.highest > 0)
+                        stmt.setInt(param++, (int) Math.min(date.highest / 1000, Integer.MAX_VALUE));
                 }
             if (c.sizes != null)
-                for (int i = 0; i < c.sizes.length; i++) {
-                    if (c.sizes[i].lowest >= 0)
-                        stmt.setInt(param++, (int) c.sizes[i].lowest);
-                    if (c.sizes[i].highest >= 0)
-                        stmt.setInt(param++, (int) c.sizes[i].highest);
+                for (SearchConstraints.Range size : c.sizes) {
+                    if (size.lowest >= 0)
+                        stmt.setInt(param++, (int) size.lowest);
+                    if (size.highest >= 0)
+                        stmt.setInt(param++, (int) size.highest);
                 }
             if (c.modified != null)
-                for (int i = 0; i < c.modified.length; i++) {
-                    if (c.modified[i].lowest > 0)
-                        stmt.setLong(param++, c.modified[i].lowest);
-                    if (c.modified[i].highest > 0)
-                        stmt.setLong(param++, c.modified[i].highest);
+                for (SearchConstraints.Range modified : c.modified) {
+                    if (modified.lowest > 0)
+                        stmt.setLong(param++, modified.lowest);
+                    if (modified.highest > 0)
+                        stmt.setLong(param++, modified.highest);
                 }
-                
+
             // FIXME: include COLLATION for sender/subject sort
 
             if (c.offset >= 0 && c.limit >= 0) {
@@ -1922,14 +1919,14 @@ public class DbMailItem {
         }
     }
 
-    public static List listByFolder(Folder folder, byte type) throws ServiceException {
+    public static List<SearchResult> listByFolder(Folder folder, byte type) throws ServiceException {
     	return listByFolder(folder, type, true);
     }
-    public static List listByFolder(Folder folder, byte type, boolean descending) throws ServiceException {
+    public static List<SearchResult> listByFolder(Folder folder, byte type, boolean descending) throws ServiceException {
         Mailbox mbox = folder.getMailbox();
         Connection conn = mbox.getOperationConnection();
 
-        ArrayList result = new ArrayList();
+        ArrayList<SearchResult> result = new ArrayList<SearchResult>();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -2010,8 +2007,7 @@ public class DbMailItem {
     // INVITE STUFF BELOW HERE!
     //////////////////////////////////////
     public static UnderlyingData getAppointment(Mailbox mbox, String uid)
-    throws ServiceException
-    {
+    throws ServiceException {
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -2046,17 +2042,15 @@ public class DbMailItem {
      * @param folderId 
      * @return list of invites
      */
-    public static List /* Appointment */ getAppointments(Mailbox mbox, long start, long end, 
-            int folderId, int[] excludeFolderIds) 
-        throws ServiceException
-    {
+    public static List<UnderlyingData> getAppointments(Mailbox mbox, long start, long end, 
+                                                       int folderId, int[] excludeFolderIds) 
+    throws ServiceException {
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
             boolean folderSpecified = folderId != Mailbox.ID_AUTO_INCREMENT;
-            
-            
+
             String excludeFolderPart = "";
             if (excludeFolderIds != null) 
                 excludeFolderPart = "AND folder_id NOT IN" + DbUtil.suitableNumberOfVariables(excludeFolderIds);
@@ -2077,13 +2071,13 @@ public class DbMailItem {
             if (folderSpecified)
                 stmt.setInt(param++, folderId);
             if (excludeFolderIds != null) {
-                for (int i = 0; i < excludeFolderIds.length; i++) 
-                    stmt.setInt(param++, excludeFolderIds[i]);
+                for (int id : excludeFolderIds)
+                    stmt.setInt(param++, id);
             }
-            
+
             rs = stmt.executeQuery();
 
-            List /* UnderlyingData */ result = new ArrayList();
+            List<UnderlyingData> result = new ArrayList<UnderlyingData>();
             while (rs.next())
                 result.add(constructItem(rs));
             return result;
@@ -2226,7 +2220,7 @@ public class DbMailItem {
         TagsetCache tagsets = null;
 
         synchronized (sTagsetCache) {
-            tagsets = (TagsetCache) sTagsetCache.get(id);
+            tagsets = sTagsetCache.get(id);
         }
 
         // All access to a mailbox is synchronized, so we can initialize
@@ -2257,7 +2251,7 @@ public class DbMailItem {
         TagsetCache flagsets = null;
 
         synchronized (sFlagsetCache) {
-            flagsets = (TagsetCache) sFlagsetCache.get(id);
+            flagsets = sFlagsetCache.get(id);
         }
 
         // All access to a mailbox is synchronized, so we can initialize
@@ -2276,4 +2270,3 @@ public class DbMailItem {
         return flagsets;
     }
 }
-

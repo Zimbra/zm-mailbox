@@ -738,7 +738,7 @@ public class Conversation extends MailItem {
                 if (!isTagged(mMailbox.mCopiedFlag))
                     info.indexIds.add(new Integer(child.getIndexId()));
                 else if (info.sharedIndex == null)
-                    (info.sharedIndex = new HashSet()).add(new Integer(child.getIndexId()));
+                    (info.sharedIndex = new HashSet<Integer>()).add(child.getIndexId());
                 else
                     info.sharedIndex.add(new Integer(child.getIndexId()));
             }
@@ -748,7 +748,7 @@ public class Conversation extends MailItem {
             } catch (Exception e1) { }
 
             Integer folderId = new Integer(child.getFolderId());
-            LocationCount count = (LocationCount) info.messages.get(folderId);
+            LocationCount count = info.messages.get(folderId);
             if (count == null)
                 info.messages.put(folderId, new LocationCount(1, child.getSize()));
             else
@@ -764,7 +764,7 @@ public class Conversation extends MailItem {
             int remaining = mChildren.length - info.itemIds.size();
             Message[] msgs = new Message[remaining];
             for (int i = 0, loc = 0; i < mChildren.length; i++)
-                if (!info.itemIds.contains(new Integer(mChildren.array[i])))
+                if (!info.itemIds.contains(mChildren.array[i]))
                     msgs[loc++] = mMailbox.getMessageById(mChildren.array[i]);
             recalculateMetadata(msgs, true);
         }

@@ -719,12 +719,12 @@ public abstract class MailItem implements Comparable {
     static MailItem getById(Mailbox mbox, int id, byte type) throws ServiceException {
         return mbox.getItem(DbMailItem.getById(mbox, id, type));
     }
-    static List getById(Mailbox mbox, Collection ids, byte type) throws ServiceException {
+    static List<MailItem> getById(Mailbox mbox, Collection<Integer> ids, byte type) throws ServiceException {
         if (ids == null || ids.isEmpty())
-            return Collections.EMPTY_LIST;
-        List items = new ArrayList(), data = DbMailItem.getById(mbox, ids, type);
-        for (int i = 0; i < data.size(); i++)
-            items.add(mbox.getItem((UnderlyingData) data.get(i)));
+            return Collections.emptyList();
+        List<MailItem> items = new ArrayList<MailItem>();
+        for (UnderlyingData ud : DbMailItem.getById(mbox, ids, type))
+            items.add(mbox.getItem(ud));
         return items;
     }
 
@@ -1258,30 +1258,30 @@ public abstract class MailItem implements Comparable {
         /** The total size of all the items being deleted. */
 		public long size;
         /** The ids of all items being deleted. */
-		public List itemIds   = new ArrayList();
+		public List<Integer> itemIds   = new ArrayList<Integer>();
         /** The ids of all unread items being deleted.  This is a subset of
          *  {@link #itemIds}. */
-        public List unreadIds = new ArrayList();
+        public List<Integer> unreadIds = new ArrayList<Integer>();
         /** The ids of all items that must be deleted but whose deletion
          *  must be deferred because of foreign key constraints. (E.g.
          *  {@link Conversation}s whose messages are all deleted during a
          *  {@link Folder} delete.) */
-        public List cascadeIds;
+        public List<Integer> cascadeIds;
         /** The document ids that need to be removed from the index. */
-        public List indexIds  = new ArrayList();
+        public List<Integer> indexIds  = new ArrayList<Integer>();
         /** The ids of all items with the {@link Flag#FLAG_COPIED} flag being
          *  deleted.  Items in <code>sharedIndex</code> whose last copies are
          *  being removed are added to {@link #indexIds} via a call to
          *  {@link DbMailItem#resolveSharedIndex}. */
-        public Set  sharedIndex;
+        public Set<Integer> sharedIndex;
         /** The {@link com.zimbra.cs.store.Blob}s for all items being deleted that have content
          *  persisted in the store. */
-        public List blobs     = new ArrayList();
+        public List<MailboxBlob> blobs = new ArrayList<MailboxBlob>();
         /** The number of {@link Contact}s being deleted. */
         public int  contacts  = 0;
         /** Maps {@link Folder} ids to {@link DbMailItem.LocationCount}s
          *  tracking various per-folder counts for items being deleted. */
-        public Map  messages  = new HashMap();
+        public Map<Integer, DbMailItem.LocationCount> messages = new HashMap<Integer, DbMailItem.LocationCount>();
 
         /** Combines the data from another <code>PendingDelete</code> into
          *  this object.  The other <code>PendingDelete</code> is unmodified.
@@ -1387,7 +1387,7 @@ public abstract class MailItem implements Comparable {
             if (!isTagged(mMailbox.mCopiedFlag))
                 info.indexIds.add(new Integer(mData.indexId));
             else
-                (info.sharedIndex = new HashSet()).add(new Integer(mData.indexId));
+                (info.sharedIndex = new HashSet<Integer>()).add(mData.indexId);
         }
         if (mData.blobDigest != null && mData.blobDigest.length() > 0)
 			try {
@@ -1403,10 +1403,9 @@ public abstract class MailItem implements Comparable {
 	}
 
 	void propagateDeletion(PendingDelete info) throws ServiceException {
-        for (Iterator it = info.messages.entrySet().iterator(); it.hasNext(); ) {
-            Map.Entry entry = (Map.Entry) it.next();
-            Folder folder = mMailbox.getFolderById(((Integer) entry.getKey()).intValue());
-            DbMailItem.LocationCount lc = (DbMailItem.LocationCount) entry.getValue();
+        for (Map.Entry<Integer, DbMailItem.LocationCount> entry : info.messages.entrySet()) {
+            Folder folder = mMailbox.getFolderById(entry.getKey());
+            DbMailItem.LocationCount lc = entry.getValue();
             folder.updateMessageCount(-lc.count);
             folder.updateSize(-lc.size);
         }
@@ -1414,9 +1413,8 @@ public abstract class MailItem implements Comparable {
         if (info.unreadIds.isEmpty())
             return;
         // FIXME: try to get these from cache (use mMailbox.getItemById[])
-        List unreadData = DbMailItem.getById(mMailbox, info.unreadIds, TYPE_MESSAGE);
-        for (Iterator it = unreadData.iterator(); it.hasNext(); )
-            mMailbox.getItem((UnderlyingData) it.next()).updateUnread(-1);
+        for (UnderlyingData data : DbMailItem.getById(mMailbox, info.unreadIds, TYPE_MESSAGE))
+            mMailbox.getItem(data).updateUnread(-1);
 	}
 
     void purgeCache(PendingDelete info, boolean purgeItem) throws ServiceException {

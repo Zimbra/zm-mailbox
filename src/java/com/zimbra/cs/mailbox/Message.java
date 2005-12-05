@@ -114,7 +114,7 @@ public class Message extends MailItem {
     private String mRawSubject;
 
     private DraftInfo mDraftInfo;
-    private ArrayList /* ApptInfo */ mApptInfos;
+    private ArrayList<ApptInfo> mApptInfos;
 
 
     /**
@@ -226,13 +226,13 @@ public class Message extends MailItem {
         return mApptInfos != null;
     }
 
-    public Iterator /* ApptInfo */ getApptInfoIterator() {
+    public Iterator<ApptInfo> getApptInfoIterator() {
         return mApptInfos.iterator();
     }
 
     public ApptInfo getApptInfo(int componentId) {
         if (componentId < 0 || componentId < mApptInfos.size())
-            return (ApptInfo)(mApptInfos.get(componentId));
+            return mApptInfos.get(componentId);
         else
             return null;
     }
@@ -279,10 +279,10 @@ public class Message extends MailItem {
         return MessageCache.getMimeMessage(this);
     }
 
-    public static final class SortDateAscending implements Comparator {
-        public int compare(Object o1, Object o2) {
-            long t1 = ((Message) o1).getDate();
-            long t2 = ((Message) o2).getDate();
+    public static final class SortDateAscending implements Comparator<Message> {
+        public int compare(Message m1, Message m2) {
+            long t1 = m1.getDate();
+            long t2 = m2.getDate();
 
             if (t1 < t2)        return -1;
             else if (t1 == t2)  return 0;
@@ -290,10 +290,10 @@ public class Message extends MailItem {
         }
     }
 
-    public static final class SortDateDescending implements Comparator {
-    	public int compare(Object o1, Object o2) {
-    		long t1 = ((Message) o1).getDate();
-    		long t2 = ((Message) o2).getDate();
+    public static final class SortDateDescending implements Comparator<Message> {
+    	public int compare(Message m1, Message m2) {
+    		long t1 = m1.getDate();
+    		long t2 = m2.getDate();
 
     		if (t1 < t2)        return 1;
     		else if (t1 == t2)  return 0;
@@ -301,10 +301,10 @@ public class Message extends MailItem {
     	}
     }
 
-    public static final class SortImapUID implements Comparator {
-        public int compare(Object o1, Object o2) {
-            int uid1 = ((Message) o1).getImapUID();
-            int uid2 = ((Message) o2).getImapUID();
+    public static final class SortImapUID implements Comparator<Message> {
+        public int compare(Message m1, Message m2) {
+            int uid1 = m1.getImapUID();
+            int uid2 = m2.getImapUID();
 
             return uid1 - uid2;
         }
@@ -432,7 +432,7 @@ public class Message extends MailItem {
            if (appt != null) {
                ApptInfo info = new ApptInfo(appt.getId(), cur.getComponentNum());
                if (mApptInfos == null) {
-                   mApptInfos = new ArrayList();
+                   mApptInfos = new ArrayList<ApptInfo>();
                }
                mApptInfos.add(info);
                updatedMetadata = true;
@@ -584,7 +584,7 @@ public class Message extends MailItem {
         mImapUID = (int) meta.getLong(Metadata.FN_IMAP_ID, 0);
 
         if (meta.containsKey(Metadata.FN_APPT_IDS)) {
-            mApptInfos = new ArrayList();
+            mApptInfos = new ArrayList<ApptInfo>();
             MetadataList mdList = meta.getList(Metadata.FN_APPT_IDS);
             for (int i = 0; i < mdList.size(); i++) {
                 Metadata md = mdList.getMap(i);
