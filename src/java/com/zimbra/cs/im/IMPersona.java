@@ -1,4 +1,4 @@
-package com.zimbra.cs.mailbox.im;
+package com.zimbra.cs.im;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -8,13 +8,13 @@ import java.util.Iterator;
 import java.util.Map;
 
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.im.IMBuddy.SubType;
+import com.zimbra.cs.im.IMChat.Participant;
+import com.zimbra.cs.im.IMPresence.Show;
+import com.zimbra.cs.im.IMSubscriptionEvent.Op;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.mailbox.im.IMBuddy.SubType;
-import com.zimbra.cs.mailbox.im.IMChat.Participant;
-import com.zimbra.cs.mailbox.im.IMPresence.Show;
-import com.zimbra.cs.mailbox.im.IMSubscriptionEvent.Op;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.StringUtil;
 import com.zimbra.soap.Element;

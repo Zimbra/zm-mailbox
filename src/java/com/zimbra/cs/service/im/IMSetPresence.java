@@ -26,15 +26,15 @@ package com.zimbra.cs.service.im;
 
 import java.util.Map;
 
+import com.zimbra.cs.im.IMPersona;
+import com.zimbra.cs.im.IMPresence;
+import com.zimbra.cs.im.IMRouter;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraContext;
-import com.zimbra.cs.mailbox.im.IMPersona;
-import com.zimbra.cs.mailbox.im.IMPresence;
-import com.zimbra.cs.mailbox.im.IMRouter;
 
 public class IMSetPresence extends DocumentHandler {
 

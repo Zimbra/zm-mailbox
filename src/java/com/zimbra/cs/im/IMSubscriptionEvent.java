@@ -1,4 +1,4 @@
-package com.zimbra.cs.mailbox.im;
+package com.zimbra.cs.im;
 
 import java.util.Formatter;
 

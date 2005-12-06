@@ -31,10 +31,10 @@ import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 
+import com.zimbra.cs.im.IMChat;
+import com.zimbra.cs.im.IMPersona;
+import com.zimbra.cs.im.IMRouter;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.im.IMChat;
-import com.zimbra.cs.mailbox.im.IMPersona;
-import com.zimbra.cs.mailbox.im.IMRouter;
 import com.zimbra.soap.ZimbraContext;
 
 public class IMModifyChat extends DocumentHandler 

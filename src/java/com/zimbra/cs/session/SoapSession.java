@@ -32,9 +32,9 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.*;
-import com.zimbra.cs.mailbox.im.IMNotification;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.GetFolder;
 import com.zimbra.cs.service.mail.ToXML;

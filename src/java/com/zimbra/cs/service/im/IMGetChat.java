@@ -31,14 +31,14 @@ import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 
+import com.zimbra.cs.im.IMChat;
+import com.zimbra.cs.im.IMMessage;
+import com.zimbra.cs.im.IMPersona;
+import com.zimbra.cs.im.IMRouter;
+import com.zimbra.cs.im.IMChat.Participant;
+import com.zimbra.cs.im.IMMessage.Lang;
+import com.zimbra.cs.im.IMMessage.TextPart;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.im.IMChat;
-import com.zimbra.cs.mailbox.im.IMMessage;
-import com.zimbra.cs.mailbox.im.IMPersona;
-import com.zimbra.cs.mailbox.im.IMRouter;
-import com.zimbra.cs.mailbox.im.IMChat.Participant;
-import com.zimbra.cs.mailbox.im.IMMessage.Lang;
-import com.zimbra.cs.mailbox.im.IMMessage.TextPart;
 import com.zimbra.soap.ZimbraContext;
 
 

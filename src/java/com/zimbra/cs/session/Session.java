@@ -36,8 +36,8 @@ import java.util.Date;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.im.IMNotification;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.StringUtil;
 

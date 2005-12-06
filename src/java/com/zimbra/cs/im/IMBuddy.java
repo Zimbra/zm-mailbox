@@ -22,7 +22,7 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.mailbox.im;
+package com.zimbra.cs.im;
 
 import java.util.Collections;
 import java.util.HashMap;

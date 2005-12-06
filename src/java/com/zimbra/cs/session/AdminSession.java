@@ -27,7 +27,7 @@
  */
 package com.zimbra.cs.session;
 
-import com.zimbra.cs.mailbox.im.IMNotification;
+import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Constants;
 

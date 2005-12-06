@@ -22,7 +22,7 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.mailbox.im;
+package com.zimbra.cs.im;
 
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.service.ServiceException;
