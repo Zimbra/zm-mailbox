@@ -26,9 +26,12 @@ package com.zimbra.cs.im;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Timer;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -43,22 +46,39 @@ public class IMRouter implements Runnable {
     private Map<IMAddr, IMPersona> mBuddyListMap = new HashMap();
     private LinkedBlockingQueue<IMEvent> mQueue = new LinkedBlockingQueue();
     private boolean mShutdown = false;
+    private Timer mTimer;
     
     private IMRouter() {
         new Thread(this).start();
+        mTimer = new Timer();
     }
     
-    public synchronized IMPersona findPersona(OperationContext octxt, Mailbox mbox, boolean loadSubs) throws ServiceException 
+    public Object getLock(IMAddr addr) throws ServiceException {
+        Account acct = Provisioning.getInstance().getAccountByName(addr.getAddr());
+        if (acct != null) 
+            return Mailbox.getMailboxByAccount(acct);
+        else
+            throw MailServiceException.NO_SUCH_MBOX(addr.getAddr());
+    }
+    
+    void flush(OperationContext octxt, IMPersona persona) throws ServiceException {
+        Mailbox mbox = Mailbox.getMailboxByAccount(Provisioning.getInstance().getAccountByName(persona.getAddr().getAddr()));
+        assert(persona.getAddr().getAddr().equals(mbox.getAccount().getName()));
+        Metadata md = persona.encodeAsMetatata();
+        mbox.setConfig(octxt, "im", md);
+    }
+    
+    public synchronized IMPersona findPersona(OperationContext octxt, IMAddr addr, boolean loadSubs) throws ServiceException 
     {
-        IMAddr addr = new IMAddr(mbox.getAccount().getName());
         IMPersona toRet = mBuddyListMap.get(addr);
         if (toRet == null) {
+            Mailbox mbox = Mailbox.getMailboxByAccount(Provisioning.getInstance().getAccountByName(addr.getAddr()));
             Metadata md = mbox.getConfig(octxt, "im");
             if (md != null)
-                toRet = IMPersona.decodeFromMetadata(mbox, addr, md);
+                toRet = IMPersona.decodeFromMetadata(addr, md);
                     
             if (toRet == null)
-                toRet = new IMPersona(addr, mbox);
+                toRet = new IMPersona(addr);
             
             mBuddyListMap.put(addr, toRet);
         }
@@ -68,6 +88,30 @@ public class IMRouter implements Runnable {
         }
         return toRet;
     }
+    
+    public synchronized IMPersona findPersona(OperationContext octxt, Mailbox mbox, boolean loadSubs) throws ServiceException 
+    {
+        IMAddr addr = new IMAddr(mbox.getAccount().getName());
+        IMPersona toRet = mBuddyListMap.get(addr);
+        if (toRet == null) {
+            Metadata md = mbox.getConfig(octxt, "im");
+            if (md != null)
+                toRet = IMPersona.decodeFromMetadata(addr, md);
+                    
+            if (toRet == null)
+                toRet = new IMPersona(addr);
+            
+            mBuddyListMap.put(addr, toRet);
+        }
+        
+        if (loadSubs) {
+            toRet.loadSubs();
+        }
+        return toRet;
+    }
+    
+    
+    Timer getTimer() { return mTimer; }
     
     /**
      * Post an event to the router's asynchronous execution queue.  The event
@@ -112,10 +156,12 @@ public class IMRouter implements Runnable {
 
         // force the queue to wakeup...
         mQueue.add(new IMNullEvent());
+        
+        mTimer.cancel();
     }
     
-    Mailbox getMailboxFromAddr(IMAddr addr) throws ServiceException {
-        return Mailbox.getMailboxByAccount(Provisioning.getInstance().getAccountByName(addr.getAddr()));
-    }
+//    Mailbox getMailboxFromAddr(IMAddr addr) throws ServiceException {
+//        return Mailbox.getMailboxByAccount(Provisioning.getInstance().getAccountByName(addr.getAddr()));
+//    }
     
 }

@@ -219,7 +219,7 @@ public class IMBuddy {
         int numGroups = (int)meta.getLong(FN_NUM_GROUPS);
 
         for (int i = 0; i < numGroups; i++) {
-            IMGroup group = persona.getGroup(meta.get(FN_GROUP+i));
+            IMGroup group = persona.getOrCreateGroup(meta.get(FN_GROUP+i));
             toRet.addGroup(group);
         }
         

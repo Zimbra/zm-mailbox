@@ -272,7 +272,8 @@ public class ImapSession extends Session {
     }
 
     public void notifyIM(IMNotification imn) { }
-
+    protected boolean shouldRegisterWithIM() { return false; }
+    
     public void notifyPendingChanges(PendingModifications pns) {
         if (!pns.hasNotifications())
             return;

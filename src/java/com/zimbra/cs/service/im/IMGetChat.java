@@ -27,33 +27,30 @@ package com.zimbra.cs.service.im;
 import java.util.Map;
 
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 
 import com.zimbra.cs.im.IMChat;
 import com.zimbra.cs.im.IMMessage;
 import com.zimbra.cs.im.IMPersona;
-import com.zimbra.cs.im.IMRouter;
 import com.zimbra.cs.im.IMChat.Participant;
 import com.zimbra.cs.im.IMMessage.Lang;
 import com.zimbra.cs.im.IMMessage.TextPart;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.soap.ZimbraContext;
 
-public class IMGetChat extends DocumentHandler {
+public class IMGetChat extends IMDocumentHandler {
     
     public Element handle(Element request, Map context) throws ServiceException, SoapFaultException 
     {
         ZimbraContext lc = getZimbraContext(context);
-        Mailbox mbox = super.getRequestedMailbox(lc);
         
         Element response = lc.createElement(IMService.IM_GET_CHAT_RESPONSE);
         
         String threadId = request.getAttribute(IMService.A_THREAD_ID); 
         
-        synchronized (mbox) {
-            IMPersona persona = IMRouter.getInstance().findPersona(lc.getOperationContext(), mbox, true);
+        Object lock = super.getLock(lc);
+        synchronized (lock) {
+            IMPersona persona = super.getRequestedPersona(lc, lock);
             
             IMChat chat = persona.lookupChatOrNull(threadId);
             

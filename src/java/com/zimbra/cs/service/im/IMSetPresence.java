@@ -28,21 +28,18 @@ import java.util.Map;
 
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.im.IMPresence;
-import com.zimbra.cs.im.IMRouter;
-import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraContext;
 
-public class IMSetPresence extends DocumentHandler {
+public class IMSetPresence extends IMDocumentHandler {
 
     @Override
     public Element handle(Element request, Map context) throws ServiceException, SoapFaultException 
     {
         ZimbraContext lc = getZimbraContext(context);
-        Mailbox mbox = super.getRequestedMailbox(lc);
 
         Element response = lc.createElement(IMService.IM_SET_PRESENCE_RESPONSE);
         
@@ -57,9 +54,10 @@ public class IMSetPresence extends DocumentHandler {
         
         IMPresence presence = new IMPresence(IMPresence.Show.valueOf(showStr.toUpperCase()), (byte)1, statusStr);
         
-        Mailbox.OperationContext oc = lc.getOperationContext();
-        synchronized(mbox) {
-            IMPersona persona = IMRouter.getInstance().findPersona(oc, mbox, true);
+        OperationContext oc = lc.getOperationContext();
+        Object lock = super.getLock(lc);
+        synchronized (lock) {
+            IMPersona persona = super.getRequestedPersona(lc, lock);
             persona.setMyPresence(oc, presence);
         }
         

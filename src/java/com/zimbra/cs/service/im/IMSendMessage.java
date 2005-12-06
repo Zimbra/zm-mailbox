@@ -27,24 +27,21 @@ package com.zimbra.cs.service.im;
 import java.util.Map;
 
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 
 import com.zimbra.cs.im.IMAddr;
 import com.zimbra.cs.im.IMMessage;
 import com.zimbra.cs.im.IMPersona;
-import com.zimbra.cs.im.IMRouter;
 import com.zimbra.cs.im.IMMessage.TextPart;
-import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.soap.ZimbraContext;
 
-public class IMSendMessage extends DocumentHandler {
+public class IMSendMessage extends IMDocumentHandler {
 
     public Element handle(Element request, Map context) throws ServiceException, SoapFaultException 
     {
         ZimbraContext lc = getZimbraContext(context);
-        Mailbox mbox = super.getRequestedMailbox(lc);
 
         Element response = lc.createElement(IMService.IM_SEND_MESSAGE_RESPONSE);
 
@@ -72,10 +69,11 @@ public class IMSendMessage extends DocumentHandler {
         IMMessage msg = new IMMessage(subject==null?null:new TextPart(subject),
                 body==null?null:new TextPart(body));
                 
-        Mailbox.OperationContext oc = lc.getOperationContext();
+        OperationContext oc = lc.getOperationContext();
         
-        synchronized(mbox) {
-            IMPersona persona = IMRouter.getInstance().findPersona(lc.getOperationContext(), mbox, true);
+        Object lock = super.getLock(lc);
+        synchronized(lock) {
+            IMPersona persona = super.getRequestedPersona(lc, lock);
             
             if (threadId != null) {
                 persona.sendMessage(oc, threadId, msg);

@@ -169,7 +169,6 @@ public final class SessionCache {
     // Internals below here... 
     //////////////////////////////////////////////////////////////////////////////
 
-    // TODO make me configurable!
     /** The frequency at which we sweep the cache to delete idle sessions. */
     private static final long SESSION_SWEEP_INTERVAL_MSEC = 1 * Constants.MILLIS_PER_MINUTE;
 
@@ -185,7 +184,7 @@ public final class SessionCache {
     private static long sContextSeqNo = 1;
 
 
-    private SessionCache() {
+    static {
         Zimbra.sTimer.schedule(new SweepMapTimerTask(), 30000, SESSION_SWEEP_INTERVAL_MSEC);
     }
 
@@ -203,7 +202,7 @@ public final class SessionCache {
         }
     }
 
-    private final class SweepMapTimerTask extends TimerTask {
+    private static final class SweepMapTimerTask extends TimerTask {
         public void run() {
             if (sLog.isDebugEnabled())
                 logActiveSessions();

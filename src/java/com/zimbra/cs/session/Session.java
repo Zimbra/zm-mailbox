@@ -37,6 +37,8 @@ import java.util.Date;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.im.IMNotification;
+import com.zimbra.cs.im.IMPersona;
+import com.zimbra.cs.im.IMRouter;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.StringUtil;
@@ -49,6 +51,7 @@ public abstract class Session {
     private   long    mLastAccessed;
     private   boolean mCleanedUp = false;
     private   Mailbox mMailbox;
+    private   IMPersona mPersona;
 
     /** Implementation of the Session interface */
     public Session(String accountId, String sessionId, int type) throws ServiceException {
@@ -61,6 +64,12 @@ public abstract class Session {
             // add this Session to the Mailbox or die trying
             mMailbox = Mailbox.getMailboxByAccountId(accountId);
             mMailbox.addListener(this);
+         
+            // add this Session to the IM Persona, or die trying
+            if (this.shouldRegisterWithIM()) {
+                mPersona = IMRouter.getInstance().findPersona(null, mMailbox, false);
+                mPersona.addListener(this);
+            }
         }
         updateAccessTime();
     }
@@ -95,6 +104,11 @@ public abstract class Session {
     public abstract void notifyPendingChanges(PendingModifications pns);
     
     public abstract void notifyIM(IMNotification imn);
+    
+    /**
+     * @return TRUE if this session should be registered with IM
+     */
+    protected abstract boolean shouldRegisterWithIM();
 
     protected void finalize() {
         doCleanup(); // just in case it hasn't happened yet...
@@ -109,6 +123,8 @@ public abstract class Session {
             cleanup();
             if (mMailbox != null)
                 mMailbox.removeListener(this);
+            if (mPersona != null) 
+                mPersona.removeListener(this);
         } finally {
             mCleanedUp = true;
         }

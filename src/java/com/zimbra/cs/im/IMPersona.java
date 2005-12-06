@@ -4,20 +4,23 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Formatter;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.im.IMBuddy.SubType;
 import com.zimbra.cs.im.IMChat.Participant;
 import com.zimbra.cs.im.IMPresence.Show;
 import com.zimbra.cs.im.IMSubscriptionEvent.Op;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.im.IMService;
+import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.StringUtil;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
 
 /**
@@ -28,21 +31,22 @@ import com.zimbra.soap.Element;
 public class IMPersona {
 
     private IMAddr mAddr;
-    private Mailbox mMbox;
     private Map<IMAddr, IMBuddy> mBuddyList = new HashMap();
     private Map<String, IMGroup> mGroups = new HashMap();
     private Map<String, IMChat> mChats = new HashMap();
     private boolean mSubsLoaded = false;
+    
+    private Set<Session> mListeners = new HashSet();
+    
     
     public String toString() {
         return new Formatter().format("PERSONA:%s  Presence:%s SubsLoaded:%s", 
                 mAddr, mMyPresence, mSubsLoaded ? "YES" : "NO").toString();
     }
     
-    IMPersona(IMAddr addr, Mailbox mbox) {
+    IMPersona(IMAddr addr) {
         assert(addr != null);
         mAddr = addr; 
-        mMbox = mbox;
     }
     
     public IMAddr getAddr() { return mAddr; }
@@ -51,7 +55,6 @@ public class IMPersona {
         if (!mSubsLoaded) {
             for (IMBuddy buddy : mBuddyList.values()) {
                 if (buddy.getSubType().isOutgoing()) {
-                    
                     IMProbeEvent event = new IMProbeEvent(mAddr, buddy.getAddress());
                     IMRouter.getInstance().postEvent(event);
                 }
@@ -67,7 +70,7 @@ public class IMPersona {
      * @param name
      * @return
      */
-    IMGroup getGroup(String name) {
+    IMGroup getOrCreateGroup(String name) {
         IMGroup toRet = mGroups.get(name);
         if (toRet == null) {
             toRet = new IMGroup(name);
@@ -146,15 +149,47 @@ public class IMPersona {
         }
     }
     
+    public synchronized void addListener(Session session) {
+        if (mListeners.size() == 0) {
+            String status = mMyPresence.getStatus();
+            try {
+                setMyPresence(null, new IMPresence(Show.ONLINE, (byte)1,status));
+            } catch(ServiceException e) {
+                ZimbraLog.im.debug("ServiceException when going offline", e);
+            }
+        }
+        mListeners.add(session);
+    }
     
-    public void addOutgoingSubscription(OperationContext octxt, IMAddr address, String name, String[] groups) throws ServiceException 
+    public synchronized void removeListener(Session session) {
+        mListeners.remove(session);
+        if (mListeners.size() == 0) {
+            String status = mMyPresence.getStatus();
+            try {
+                setMyPresence(null, new IMPresence(Show.OFFLINE, (byte)1,status));
+            } catch(ServiceException e) {
+                ZimbraLog.im.debug("ServiceException when going offline", e);
+            }
+        }
+    }
+    
+    synchronized void postIMNotification(IMNotification not) throws ServiceException {
+        for (Session session : mListeners) 
+            session.notifyIM(not);
+    }
+    
+    synchronized void flush(OperationContext octxt) throws ServiceException {
+        IMRouter.getInstance().flush(octxt, this);
+    }
+    
+    public synchronized void addOutgoingSubscription(OperationContext octxt, IMAddr address, String name, String[] groups) throws ServiceException 
     { 
         IMBuddy buddy = getOrCreateBuddy(address, name);
         
         buddy.clearGroups();
 
         for (String grpName : groups) {
-            IMGroup group = this.getGroup(grpName);
+            IMGroup group = this.getOrCreateGroup(grpName);
             buddy.addGroup(group);
         }
         
@@ -165,25 +200,20 @@ public class IMPersona {
         IMEvent event = new IMSubscriptionEvent(mAddr, address, Op.SUBSCRIBE);
         IMRouter.getInstance().postEvent(event);
         
-        mMbox.postIMNotification(new SubscribedNotification(address, name, groups, false));
-        
-        mMbox.flushIMPersona(octxt, this);
+        postIMNotification(new SubscribedNotification(address, name, groups, false));
+        flush(octxt);
     }
     
-    public void removeOutgoingSubscription(OperationContext octxt, IMAddr address, String name, String[] groups) throws ServiceException
+    public synchronized void removeOutgoingSubscription(OperationContext octxt, IMAddr address, String name, String[] groups) throws ServiceException
     {
         mBuddyList.remove(address);
 
         IMEvent event = new IMSubscriptionEvent(mAddr, address, Op.UNSUBSCRIBE);
         IMRouter.getInstance().postEvent(event);
-        
-        mMbox.postIMNotification(new SubscribedNotification(address, name, groups, true));
+
+        postIMNotification(new SubscribedNotification(address, name, groups, true));
         
         flush(octxt);
-    }
-    
-    private void flush(OperationContext octxt) throws ServiceException {
-        mMbox.flushIMPersona(octxt, this);
     }
     
     public Iterable<IMGroup> groups() {
@@ -210,7 +240,7 @@ public class IMPersona {
         }; 
     }
     
-    public void setMyPresence(OperationContext octxt, IMPresence presence) throws ServiceException
+    public synchronized void setMyPresence(OperationContext octxt, IMPresence presence) throws ServiceException
     {
         mMyPresence = presence;
         ArrayList<IMAddr> targets = new ArrayList();
@@ -224,7 +254,7 @@ public class IMPersona {
         IMRouter.getInstance().postEvent(event);
         
         // need to send it to myself in case there I have other sessions listening...
-        mMbox.postIMNotification(event);
+        postIMNotification(event);
         
         flush(octxt);
     }
@@ -237,7 +267,7 @@ public class IMPersona {
      * @param address
      * @param message
      */
-    public String newChat(OperationContext octxt, IMAddr address, IMMessage message) throws ServiceException
+    public synchronized String newChat(OperationContext octxt, IMAddr address, IMMessage message) throws ServiceException
     {
         String threadId = LdapUtil.generateUUID();
 
@@ -267,7 +297,7 @@ public class IMPersona {
      * @param address
      * @param message
      */
-    public void sendMessage(OperationContext octxt, String threadId, IMMessage message) throws ServiceException 
+    public synchronized void sendMessage(OperationContext octxt, String threadId, IMMessage message) throws ServiceException 
     {
         IMChat chat = mChats.get(threadId);
         if (chat == null) {
@@ -277,7 +307,7 @@ public class IMPersona {
         sendMessage(octxt, chat, message);
     }
     
-    private void sendMessage(OperationContext octxt, IMChat chat, IMMessage message) throws ServiceException
+    private synchronized void sendMessage(OperationContext octxt, IMChat chat, IMMessage message) throws ServiceException
     {
         message.setFrom(mAddr);
         
@@ -293,12 +323,12 @@ public class IMPersona {
         
         IMSendMessageEvent event = new IMSendMessageEvent(mAddr, chat.getThreadId(), toList, message);
 
-        mMbox.postIMNotification(event.getNotification(seqNo));
+        postIMNotification(event.getNotificationEvent(seqNo));
         
         IMRouter.getInstance().postEvent(event);
     }
     
-    public void closeChat(OperationContext octxt, IMChat chat) throws ServiceException {
+    public synchronized void closeChat(OperationContext octxt, IMChat chat) throws ServiceException {
         ArrayList toList = new ArrayList();
         for (Participant part : chat.participants()) {
             if (!part.getAddress().equals(mAddr))
@@ -318,7 +348,7 @@ public class IMPersona {
     private static final String FN_NUM_BUDDIES = "nb";
     private static final String FN_BUDDY       = "b";
     
-    public Metadata encodeAsMetatata()
+    synchronized Metadata encodeAsMetatata()
     {
         Metadata meta = new Metadata();
         
@@ -334,11 +364,11 @@ public class IMPersona {
         return meta;
     }
     
-    static IMPersona decodeFromMetadata(Mailbox mbox, IMAddr address, Metadata meta) throws ServiceException
+    static IMPersona decodeFromMetadata(IMAddr address, Metadata meta) throws ServiceException
     {
         String mdAddr = meta.get(FN_ADDRESS);
         if (mdAddr.equals(address.getAddr())) {
-            IMPersona toRet = new IMPersona(address, mbox);
+            IMPersona toRet = new IMPersona(address);
 
             IMPresence presence = IMPresence.decodeMetadata(meta.getMap(FN_PRESENCE));
             toRet.mMyPresence = presence;
@@ -353,7 +383,7 @@ public class IMPersona {
             return toRet;
         } else {
             // addresses don't match!  clear buddy list!
-            return new IMPersona(address, mbox);
+            return new IMPersona(address);
         }
     }
 
@@ -372,6 +402,7 @@ public class IMPersona {
             buddy.setSubType(st.setIncoming());
         }
         
+        // send my presence to the newly-subscribed person
         if (mMyPresence != null) {
             ArrayList<IMAddr> target= new ArrayList();
             target.add(address);

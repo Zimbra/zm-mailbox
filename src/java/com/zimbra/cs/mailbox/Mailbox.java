@@ -284,7 +284,7 @@ public class Mailbox {
 
     private MailboxLock  mMaintenance = null;
     private MailboxIndex mMailboxIndex = null;
-
+    
     /** flag: messages sent by me */
     public Flag mSentFlag;
     /** flag: messages/contacts with attachments */
@@ -367,6 +367,7 @@ public class Mailbox {
         if (mMaintenance != null)
             throw MailServiceException.MAINTENANCE(mId);
         mListeners.add(session);
+        
         if (ZimbraLog.mailbox.isDebugEnabled())
             ZimbraLog.mailbox.debug("adding listener: " + session);
     }
@@ -377,6 +378,7 @@ public class Mailbox {
      * @param session  The listener to deregister for notifications. */
     public synchronized void removeListener(Session session) {
         mListeners.remove(session);
+            
         if (ZimbraLog.mailbox.isDebugEnabled())
             ZimbraLog.mailbox.debug("clearing listener: " + session);
     }
@@ -395,8 +397,7 @@ public class Mailbox {
         //   the listener, but empty the list here just to be sure
         mListeners.clear();
     }
-
-
+    
     /** Returns whether the server is keeping track of message deletes
      *  (etc.) for sync clients.  By default, sync tracking is off.
      * 
@@ -1408,24 +1409,6 @@ public class Mailbox {
             else
                 redoRecorder.abort();
         }
-    }
-    
-//    public synchronized IMPersona getIMPersona(OperationContext octxt) throws ServiceException
-//    {
-//        boolean loaded = IMRouter.getInstance().isPersonaLoaded(this.getAccount().getName());
-//        IMPersona toRet = IMRouter.getInstance().findPersona(octxt, this, this.getAccount().getName());
-//        
-//        if (!loaded) 
-//            toRet.refreshPresenceData(octxt, this);
-//        
-//        return toRet;
-//    }
-    
-    public synchronized void flushIMPersona(OperationContext octxt, IMPersona persona) throws ServiceException
-    {
-        assert(persona.getAddr().getAddr().equals(this.getAccount().getName()));
-        Metadata md = persona.encodeAsMetatata();
-        this.setConfig(octxt, "im", md);
     }
 
     public short getIndexVolume() {

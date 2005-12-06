@@ -31,25 +31,22 @@ import com.zimbra.cs.im.IMChat;
 import com.zimbra.cs.im.IMGroup;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.im.IMPresence;
-import com.zimbra.cs.im.IMRouter;
 import com.zimbra.cs.im.IMChat.Participant;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraContext;
 
-public class IMGetRoster extends DocumentHandler {
+public class IMGetRoster extends IMDocumentHandler {
     
     public Element handle(Element request, Map context) throws ServiceException, SoapFaultException {
         ZimbraContext lc = getZimbraContext(context);
-        Mailbox mbox = super.getRequestedMailbox(lc);
 
         Element response = lc.createElement(IMService.IM_GET_ROSTER_RESPONSE);
-        
-        synchronized (mbox) { 
-            IMPersona persona = IMRouter.getInstance().findPersona(lc.getOperationContext(), mbox, true);
+
+        Object lock = super.getLock(lc);
+        synchronized (lock) { 
+            IMPersona persona = super.getRequestedPersona(lc, lock);
             
             persona.getMyPresence().toXml(response);
 

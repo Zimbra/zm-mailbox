@@ -2,44 +2,41 @@ package com.zimbra.cs.im;
 
 import java.util.Formatter;
 
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.im.IMService;
 import com.zimbra.soap.Element;
 
-public class IMSubscriptionEvent implements IMEvent, IMNotification {
+public class IMSubscriptionEvent extends IMEvent implements IMNotification {
     
     static enum Op {
         SUBSCRIBE, UNSUBSCRIBE;
     }
     
     IMAddr mFromAddr; // person who RECEIVES the presence updates
-    IMAddr mToAddr; // person who SENDS the presence updates
+    //IMAddr mToAddr; // person who SENDS the presence updates
     Op mOp;
     
     IMSubscriptionEvent(IMAddr fromAddr, IMAddr toAddr, Op op) {
+        super(toAddr);
         mFromAddr = fromAddr;
-        mToAddr = toAddr;
         mOp = op;
     }
-
-    public void run() throws ServiceException {
-        Mailbox mbox = IMRouter.getInstance().getMailboxFromAddr(mToAddr);
-        synchronized (mbox) {
-            IMPersona persona = IMRouter.getInstance().findPersona(null, mbox, false);
-            switch (mOp) {
-            case SUBSCRIBE:
-                persona.handleAddIncomingSubscription(mFromAddr);
-                break;
-            case UNSUBSCRIBE:
-                persona.handleRemoveIncomingSubscription(mFromAddr);
-                break;
-            }
+    
+    protected void handleTarget(IMPersona persona) throws ServiceException {
+        switch (mOp) {
+        case SUBSCRIBE:
+            persona.handleAddIncomingSubscription(mFromAddr);
+            persona.postIMNotification(this);
+            break;
+        case UNSUBSCRIBE:
+            persona.handleRemoveIncomingSubscription(mFromAddr);
+            break;
         }
     }
     
     public String toString() {
-        return new Formatter().format("IMSubscriptionEvent: %s --> %s Op=%s", mFromAddr, mToAddr, mOp.toString()).toString();
+        IMAddr toAddr = mTargets.get(0);
+        return new Formatter().format("IMSubscriptionEvent: %s --> %s Op=%s", mFromAddr, toAddr, mOp.toString()).toString();
     }
     
     public Element toXml(Element parent) {

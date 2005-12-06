@@ -3,22 +3,20 @@ package com.zimbra.cs.im;
 import java.util.Formatter;
 import java.util.List;
 
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.im.IMService;
 import com.zimbra.soap.Element;
 
-public class IMSendMessageEvent implements IMEvent {
+public class IMSendMessageEvent extends IMEvent {
     
     IMAddr mFromAddr;
     String mThreadId;
-    List<IMAddr> mTargets;
     IMMessage mMessage;
     
     IMSendMessageEvent(IMAddr fromAddr, String threadId, List<IMAddr> targets, IMMessage message) {
+        super(targets);
         mFromAddr = fromAddr;
         mThreadId = threadId;
-        mTargets = targets;
         mMessage = message;
     }
     
@@ -49,19 +47,13 @@ public class IMSendMessageEvent implements IMEvent {
         }
     }
     
-    IMMessageNotification getNotification(int seq) {
-        return new IMMessageNotification(seq);
+    IMMessageNotification getNotificationEvent(int seqNo) {
+        return new IMMessageNotification(seqNo);
     }
-
-    public void run() throws ServiceException {
-        for (IMAddr addr : mTargets) {
-            Mailbox mbox = IMRouter.getInstance().getMailboxFromAddr(addr);
-            synchronized (mbox) {
-                IMPersona persona = IMRouter.getInstance().findPersona(null, mbox, false);
-                int seqNo = persona.handleMessage(mFromAddr, mThreadId, mMessage);
-                mbox.postIMNotification(getNotification(seqNo));
-            }
-        }
+    
+    protected void handleTarget(IMPersona persona) throws ServiceException {
+        int seqNo = persona.handleMessage(mFromAddr, mThreadId, mMessage);
+        persona.postIMNotification(new IMMessageNotification(seqNo));
     }
     
     public String toString() {

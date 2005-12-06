@@ -97,6 +97,9 @@ public class SoapSession extends Session {
     public void notifyIM(IMNotification imn) { 
         mIMNotifications.add(imn);
     }
+    
+    protected boolean shouldRegisterWithIM() { return true; }
+    
 
     /** Handles the set of changes from a single Mailbox transaction.
      *  <p>

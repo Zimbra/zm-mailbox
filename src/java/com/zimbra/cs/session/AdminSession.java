@@ -47,6 +47,7 @@ public class AdminSession extends Session {
     public void notifyPendingChanges(PendingModifications pns) { }
     
     public void notifyIM(IMNotification imn) { }
+    protected boolean shouldRegisterWithIM() { return false; }
 
     protected void cleanup() {
     }

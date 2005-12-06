@@ -28,22 +28,18 @@ import java.util.Map;
 
 import com.zimbra.cs.im.IMAddr;
 import com.zimbra.cs.im.IMPersona;
-import com.zimbra.cs.im.IMRouter;
-import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraContext;
 
-public class IMSubscribe extends DocumentHandler {
+public class IMSubscribe extends IMDocumentHandler {
 
     @Override
     public Element handle(Element request, Map context) throws ServiceException, SoapFaultException 
     {
         ZimbraContext lc = getZimbraContext(context);
-        Mailbox mbox = super.getRequestedMailbox(lc);
-
         Element response = lc.createElement(IMService.IM_SUBSCRIBE_RESPONSE);
         
         String op = request.getAttribute(IMService.A_OPERATION);
@@ -60,9 +56,10 @@ public class IMSubscribe extends DocumentHandler {
         else
             groups = new String[0];
 
-        Mailbox.OperationContext oc = lc.getOperationContext();
-        synchronized(mbox) {
-            IMPersona persona = IMRouter.getInstance().findPersona(oc, mbox, true);
+        OperationContext oc = lc.getOperationContext();
+        Object lock = super.getLock(lc);
+        synchronized (lock) {
+            IMPersona persona = super.getRequestedPersona(lc, lock);
             
             if (add) 
                 persona.addOutgoingSubscription(oc, addr, name, groups);
