@@ -408,6 +408,79 @@ public class LdapUtil {
     }
 
     /**
+     * "modify" the entry. If value is null or "", then remove attribute, otherwise replace/add it.
+     */
+    private static void modifyAttr(ArrayList<ModificationItem> modList, String name, String value, Attributes currentAttrs) {
+        int mod_op = (value == null || value.equals("")) ? DirContext.REMOVE_ATTRIBUTE : DirContext.REPLACE_ATTRIBUTE;
+        if (mod_op == DirContext.REMOVE_ATTRIBUTE) {
+            // make sure it exists
+            if (currentAttrs.get(name) == null)
+                return;
+        }
+        BasicAttribute ba = new BasicAttribute(name);
+        if (mod_op == DirContext.REPLACE_ATTRIBUTE)
+            ba.add(value);
+        modList.add(new ModificationItem(mod_op, ba));
+    }
+
+    /**
+     * remove the attr with the specified value
+     */
+    private static void removeAttr(ArrayList<ModificationItem> modList, String name, String value, Attributes currentAttrs) {
+        Attribute a = currentAttrs.get(name);
+        if (a == null || !a.contains(value)) return;
+        
+        BasicAttribute ba = new BasicAttribute(name);
+        ba.add(value);
+        modList.add(new ModificationItem(DirContext.REMOVE_ATTRIBUTE, ba));
+    }
+
+    /**
+     * remove the attr with the specified value
+     */
+    private static void removeAttr(ArrayList<ModificationItem> modList, String name, String value[], Attributes currentAttrs) {
+        Attribute a = currentAttrs.get(name);
+        if (a == null) return;
+
+        BasicAttribute ba = null;
+        for (int i=0; i < value.length; i++) {
+            if (!a.contains(value[i])) continue;
+            if (ba == null) ba = new BasicAttribute(name);
+            ba.add(value[i]);
+        }
+        if (ba != null) modList.add(new ModificationItem(DirContext.REMOVE_ATTRIBUTE, ba));
+
+    }
+
+    /**
+     * add an additional attr with the specified value
+     */
+    private static void addAttr(ArrayList<ModificationItem> modList, String name, String value, Attributes currentAttrs) {
+        Attribute a = currentAttrs.get(name);
+        if (a != null && a.contains(value)) return;
+        
+        BasicAttribute ba = new BasicAttribute(name);
+        ba.add(value);
+        modList.add(new ModificationItem(DirContext.ADD_ATTRIBUTE, ba));
+    }
+
+    
+    /**
+     * add an additional attr with the specified value
+     */
+    private static void addAttr(ArrayList<ModificationItem> modList, String name, String value[], Attributes currentAttrs) {
+        Attribute a = currentAttrs.get(name);
+
+        BasicAttribute ba = null;
+        for (int i=0; i < value.length; i++) {
+            if (a != null && a.contains(value[i])) continue;
+            if (ba == null) ba = new BasicAttribute(name);
+            ba.add(value[i]);
+        }
+        if (ba != null) modList.add(new ModificationItem(DirContext.ADD_ATTRIBUTE, ba));
+    }
+    
+    /**
      * modifies the specified entry. attrs should be a map consisting of keys that are Strings, and values that are
      * either: null (in which case the attr is removed), a String (in which case the attr is modified), or a String[],
      * (in which case a multi-valued attr is updated).
@@ -416,37 +489,45 @@ public class LdapUtil {
      * @param attrs
      * @param currentAttrs
      * @throws NamingException
+     * @throws ServiceException 
      */
-    public static void modifyAttrs(DirContext ctxt, String dn, Map attrs, Attributes currentAttrs) throws NamingException {
-        ArrayList modlist = new ArrayList();
+    public static void modifyAttrs(DirContext ctxt, String dn, Map attrs, Attributes currentAttrs) throws NamingException, ServiceException {
+        ArrayList<ModificationItem> modlist = new ArrayList<ModificationItem>();
         for (Iterator mit=attrs.entrySet().iterator(); mit.hasNext(); ) {
             Map.Entry me = (Entry) mit.next();
             Object v= me.getValue();
             String key = (String) me.getKey();
+            boolean doAdd = key.charAt(0) == '+';
+            boolean doRemove = key.charAt(0) == '-';
+            
+            if (doAdd || doRemove) {
+                // make sure there other changes without +/- going on at the same time 
+                key = key.substring(1);
+                if (attrs.containsKey(key)) 
+                    throw ServiceException.INVALID_REQUEST("can't mix +attrName/-attrName with attrName", null);
+            }
+
             if (v == null || v instanceof String) {
-                int mod_op = (v == null || v.equals("")) ? DirContext.REMOVE_ATTRIBUTE : DirContext.REPLACE_ATTRIBUTE;
-                if (mod_op == DirContext.REMOVE_ATTRIBUTE) {
-                    // make sure it exists
-                    if (currentAttrs.get(key) == null)
-                        continue;
-                }
-                BasicAttribute ba = new BasicAttribute(key);
-                if (mod_op == DirContext.REPLACE_ATTRIBUTE)
-                    ba.add(v);
-                modlist.add(new ModificationItem(mod_op, ba));
+                if (doAdd) addAttr(modlist, key, (String)v, currentAttrs);
+                else if (doRemove) removeAttr(modlist, key, (String)v, currentAttrs);
+                else modifyAttr(modlist, key, (String)v, currentAttrs);
             } else if (v instanceof String[]) {
                 String[] sa = (String[]) v;
                 if (sa.length == 0) {
                     // make sure it exists
                     if (currentAttrs.get(key) != null) {
-                        BasicAttribute ba = new BasicAttribute((String)me.getKey());
+                        BasicAttribute ba = new BasicAttribute(key);
                         modlist.add(new ModificationItem(DirContext.REMOVE_ATTRIBUTE, ba));
                     }
                 } else {
-                    BasicAttribute ba = new BasicAttribute((String)me.getKey());
-                    for (int i=0; i < sa.length; i++)
-                            ba.add(sa[i]);
-                    modlist.add(new ModificationItem(DirContext.REPLACE_ATTRIBUTE, ba));
+                    if (doAdd) addAttr(modlist, key, sa, currentAttrs);
+                    else if (doRemove) removeAttr(modlist, key, sa, currentAttrs);
+                    else {
+                        BasicAttribute ba = new BasicAttribute(key);
+                        for (int i=0; i < sa.length; i++)
+                                ba.add(sa[i]);
+                        modlist.add(new ModificationItem(DirContext.REPLACE_ATTRIBUTE, ba));
+                    }
                 }
             }
         }

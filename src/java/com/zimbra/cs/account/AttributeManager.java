@@ -171,8 +171,9 @@ public class AttributeManager {
     {
     	String[] keys = (String[]) attrs.keySet().toArray(new String[0]);
 		for (int i = 0; i < keys.length; i++) {
-			String name = keys[i];
+		    String name = keys[i];
             Object value = attrs.get(name);
+            if (name.charAt(0) == '-' || name.charAt(0) == '+') name = name.substring(1);
             AttributeInfo info = (AttributeInfo) mAttrs.get(name.toLowerCase());
             if (info != null) {
                 info.checkValue(value, checkImmutable);
@@ -190,6 +191,7 @@ public class AttributeManager {
 		for (int i = 0; i < keys.length; i++) {
 			String name = keys[i];
             Object value = attrs.get(name);
+            if (name.charAt(0) == '-' || name.charAt(0) == '+') name = name.substring(1);
             AttributeInfo info = (AttributeInfo) mAttrs.get(name.toLowerCase());
             if (info != null) {
                 if (info.getCallback() != null) {
