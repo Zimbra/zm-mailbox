@@ -671,7 +671,7 @@
 		</chmod>
 	</target>
 
-	<target name="stop-servers" depends="stop-ldap,stop-tomcat" />
+	<target name="stop-servers" depends="stop-tomcat,stop-ldap" />
 	
 	<!-- LDAP service control -->
 	<target name="stop-ldap" depends="stop-ldap-windows,stop-ldap-unix" />
