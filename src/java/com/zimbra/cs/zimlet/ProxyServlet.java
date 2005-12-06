@@ -31,6 +31,7 @@ import java.util.zip.GZIPInputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -101,10 +102,6 @@ public class ProxyServlet extends ZimbraServlet {
 		return false;
 	}
 	
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
-		doPost(req, resp);
-	}
-	
 	private static class URLContents {
 		public String url;
 		public String contentType;
@@ -124,7 +121,8 @@ public class ProxyServlet extends ZimbraServlet {
 			this.isCompressed = compress;
 			this.returnCode = 0;
 			this.createTime = System.currentTimeMillis();
-			byte[] rawData = ByteUtil.getContent(conn.getInputStream(), conn.getContentLength()); 
+			byte[] rawData = ByteUtil.getContent(conn.getInputStream(), conn.getContentLength());
+			//ZimbraLog.zimlet.info("******\n"+new String(rawData)+"\n******");
 			if (compress) {
 				this.data = ByteUtil.compress(rawData);
 			} else {
@@ -146,6 +144,33 @@ public class ProxyServlet extends ZimbraServlet {
 		return content;
 	}
 	
+	private boolean canProxyHeader(String header) {
+		if (header == null) return false;
+		header = header.toLowerCase();
+		if (header.startsWith("accept") ||
+			header.equals("content-length") ||
+			header.equals("connection") ||
+			header.equals("keep-alive") ||
+			header.equals("pragma") ||
+			header.equals("host") ||
+			header.equals("user-agent") ||
+			header.equals("cache-control") ||
+			header.equals("cookie")) {
+			return false;
+		}
+		return true;
+	}
+	
+	private void copyPostedData(HttpServletRequest req, HttpURLConnection conn) throws IOException {
+		if (req.getMethod().equals("GET") || req.getContentLength() <= 0) {
+			return;
+		}
+		conn.setDoOutput(true);
+		ByteUtil.copy(req.getInputStream(), conn.getOutputStream());
+		//byte[] data = ByteUtil.getContent(req.getInputStream(), 0);
+		//ZimbraLog.zimlet.info("==========\n"+new String(data)+"==========\n");
+	}
+	
 	private URLContents fetchURLContent(HttpServletRequest req, URL url) throws IOException {
 		URLConnection conn = url.openConnection();
 		
@@ -163,8 +188,19 @@ public class ProxyServlet extends ZimbraServlet {
 			conn.setRequestProperty("Authorization", "Basic " + new String(Base64.encodeBase64(cred.getBytes())));
 		}
 		
+		Enumeration headers = req.getHeaderNames();
+		while (headers.hasMoreElements()) {
+			String hdr = (String) headers.nextElement();
+			//ZimbraLog.zimlet.info(hdr + ": " + req.getHeader(hdr));
+			if (canProxyHeader(hdr)) {
+				conn.setRequestProperty(hdr, req.getHeader(hdr));
+			}
+		}
 		if (conn instanceof HttpURLConnection) {
 			HttpURLConnection httpconn = (HttpURLConnection) conn;
+			
+			httpconn.setRequestMethod(req.getMethod());
+			copyPostedData(req, httpconn);
 			int status = httpconn.getResponseCode();
 			if (status != HttpURLConnection.HTTP_OK) {
 				ZimbraLog.zimlet.info("remote host returned error: "+status);
@@ -221,7 +257,15 @@ public class ProxyServlet extends ZimbraServlet {
 		return content;
 	}
 	
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
+		doProxy(req, resp);
+	}
+	
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
+		doProxy(req, resp);
+	}
+
+	private void doProxy(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
         AuthToken authToken = getAuthTokenFromCookie(req, resp);
         if (authToken == null) {
         	return;
