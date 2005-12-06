@@ -54,21 +54,21 @@ public class IMGetRoster extends DocumentHandler {
             
             persona.getMyPresence().toXml(response);
 
-            Map<IMGroup, Integer> groupIdCache = new HashMap();
+//            Map<IMGroup, Integer> groupIdCache = new HashMap();
             
-            // groups
-            {
-                Element groups = response.addUniqueElement("groups");
-                Integer curNum = 0;
-                for (IMGroup grp : persona.groups()) {
-                    groupIdCache.put(grp, curNum);
-                    
-                    Element e = groups.addElement("group");
-                    e.addAttribute("num", curNum);
-                    e.addAttribute("name", grp.getName());
-                    curNum++;
-                }
-            }
+//            // groups
+//            {
+//                Element groups = response.addUniqueElement("groups");
+//                Integer curNum = 0;
+//                for (IMGroup grp : persona.groups()) {
+//                    groupIdCache.put(grp, curNum);
+//                    
+//                    Element e = groups.addElement("group");
+//                    e.addAttribute("num", curNum);
+//                    e.addAttribute("name", grp.getName());
+//                    curNum++;
+//                }
+//            }
             
             
             // chats
@@ -110,14 +110,19 @@ public class IMGetRoster extends DocumentHandler {
                     StringBuffer groupStr = null;
                     // groups
                     for (IMGroup grp : buddy.groups()) {
-                        Integer idx = groupIdCache.get(grp);
                         if (groupStr == null)
-                            groupStr = new StringBuffer(idx.toString());
+                            groupStr = new StringBuffer(grp.getName());
                         else 
-                            groupStr.append(',').append(idx.toString());
+                            groupStr.append(',').append(grp.getName());
+                        
+//                        Integer idx = groupIdCache.get(grp);
+//                        if (groupStr == null)
+//                            groupStr = new StringBuffer(idx.toString());
+//                        else 
+//                            groupStr.append(',').append(idx.toString());
                     }
                     if (groupStr != null) 
-                        e.addAttribute("group", groupStr.toString());
+                        e.addAttribute("groups", groupStr.toString());
                     
                 }
             }

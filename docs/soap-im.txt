@@ -3,12 +3,8 @@ IMGetRoster -- get buddy list
 <IMGetRosterRequest/>
 
 <IMGetRosterResponse>
-     <groups> // like email-element-cache -- only valid for this single message!
-        [<group num="groupnum" name="name">
-           // Block-Allow list per-group settings
-         </group>]*
-     </groups>
-   
+     <presence SEE BELOW/> // MY current presence value
+     
      <chats>
         [  // 0 or more active chats
            <chat thread="threadID">
@@ -21,7 +17,7 @@ IMGetRoster -- get buddy list
      
      <items>
         [
-          <item addr="foo@bar.com" [name="friendly name"] subscription="both|from|to" group="groupnum,groupnum...">
+          <item addr="foo@bar.com" [name="friendly name"] subscription="both|from|to" groups="group,group,group">
              [<presence SEE BELOW>]*
              
              [ // block/allow list 
@@ -44,7 +40,7 @@ IMGetRoster -- get buddy list
 
 IMSubscribe -- subscribe to someone's presence / modify subscription 
 -----------
-<IMSubscribeRequest addr="foo@bar.com" [name="friendly name"] [group="group,group..."] [op="add|remove"]/>
+<IMSubscribeRequest addr="foo@bar.com" [name="friendly name"] [groups="group,group..."] [op="add|remove"]/>
 
 <IMSubscribeResponse/>
 

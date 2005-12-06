@@ -53,7 +53,7 @@ public class IMSubscribe extends DocumentHandler {
 
         IMAddr addr = new IMAddr(request.getAttribute("addr"));
         String name = request.getAttribute("name", "");
-        String groupStr = request.getAttribute("group", null);
+        String groupStr = request.getAttribute("groups", null);
         String[] groups;
         if (groupStr != null) 
             groups = groupStr.split(",");
