@@ -279,6 +279,8 @@ public class IMPersona {
     
     private void sendMessage(OperationContext octxt, IMChat chat, IMMessage message) throws ServiceException
     {
+        message.setFrom(mAddr);
+        
         int seqNo = chat.addMessage(message);
         
         ArrayList toList = new ArrayList();

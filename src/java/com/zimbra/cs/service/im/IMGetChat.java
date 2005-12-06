@@ -82,6 +82,7 @@ public class IMGetChat extends DocumentHandler {
                     Element me = messages.addElement(IMService.E_MESSAGE);
                     me.addAttribute(IMService.A_SEQ, curOffset+chat.getFirstSeqNo());
                     me.addAttribute(IMService.A_TIMESTAMP, msg.getTimestamp());
+                    me.addAttribute(IMService.A_FROM, msg.getFrom().getAddr());
                     
                     // subject 
                     {
