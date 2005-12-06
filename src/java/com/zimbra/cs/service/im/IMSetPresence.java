@@ -48,14 +48,14 @@ public class IMSetPresence extends DocumentHandler {
         
         Element e = request.getElement("presence");
         
-        String showStr = e.getAttribute("show", null);
+        String showStr = e.getAttribute("show", IMPresence.Show.ONLINE.toString());
         String statusStr = null;
         Element status = e.getOptionalElement("status");
         if (status != null) {
             statusStr = status.getText();
         }
         
-        IMPresence presence = new IMPresence(IMPresence.Show.valueOf(showStr), (byte)1, statusStr);
+        IMPresence presence = new IMPresence(IMPresence.Show.valueOf(showStr.toUpperCase()), (byte)1, statusStr);
         
         Mailbox.OperationContext oc = lc.getOperationContext();
         synchronized(mbox) {
