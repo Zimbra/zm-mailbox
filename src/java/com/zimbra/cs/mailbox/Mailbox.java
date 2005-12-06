@@ -177,7 +177,7 @@ public class Mailbox {
         Metadata config   = null;
 
         PendingModifications mDirty = new PendingModifications();
-        LinkedList mOtherDirtyStuff = new LinkedList();
+        List<Object> mOtherDirtyStuff = new LinkedList<Object>();
 
         void setTimestamp(long millis)   {
             if (depth == 1)
@@ -1002,34 +1002,9 @@ public class Mailbox {
     public static Mailbox getMailboxById(int mailboxId) throws ServiceException {
         if (mailboxId <= 0)
             throw MailServiceException.NO_SUCH_MBOX(mailboxId);
-        Object obj = null;
-        Integer mailboxKey = new Integer(mailboxId);
-        Mailbox mailbox = null;
 
         synchronized (sMailboxCache) {
-            obj = sMailboxCache.get(mailboxKey);
-        }
-
-        // Load mailbox from the database
-        if (obj == null) {
-            Connection conn = null;
-            try {
-                conn = DbPool.getConnection();
-                MailboxData mdata = DbMailbox.getMailboxStats(conn, mailboxId);
-                if (mdata == null)
-                    throw MailServiceException.NO_SUCH_MBOX(mailboxId);
-                mailbox = new Mailbox(mdata);
-            } finally {
-                if (conn != null)
-                    DbPool.quietClose(conn);
-            }
-        }
-
-        synchronized (sMailboxCache) {
-            if (obj == null) {
-                // In case another thread just initialized the mailbox
-                obj = sMailboxCache.get(mailboxKey);
-            }
+            Object obj = sMailboxCache.get(mailboxId);
             if (obj instanceof Mailbox)
                 return (Mailbox) obj;
             else if (obj instanceof MailboxLock) {
@@ -1040,29 +1015,23 @@ public class Mailbox {
                     return lock.mailbox;
             }
 
-            boolean success = false;
+            // fetch the Mailbox data from the database
             Connection conn = null;
             try {
                 conn = DbPool.getConnection();
-                mailbox.beginTransaction("getMailboxById", null, null, conn);
+                MailboxData mdata = DbMailbox.getMailboxStats(conn, mailboxId);
+                if (mdata == null)
+                    throw MailServiceException.NO_SUCH_MBOX(mailboxId);
+                Mailbox mailbox = new Mailbox(mdata);
                 if (obj instanceof MailboxLock)
                     ((MailboxLock) obj).mailbox = mailbox;
                 else
-                    sMailboxCache.put(mailboxKey, mailbox);
-                DbMailItem.writeCheckpoint(mailbox);
-                success = true;
+                    sMailboxCache.put(mailboxId, mailbox);
+                // DbMailItem.writeCheckpoint(mailbox);
                 return mailbox;
             } finally {
-                try {
-                    if (mailbox != null) {
-                        mailbox.endTransaction(success);
-                        conn = null;
-                    } else if (conn != null)
-                        conn.rollback();
-                } finally {
-                    if (conn != null)
-                        DbPool.quietClose(conn);
-                }
+                if (conn != null)
+                    DbPool.quietClose(conn);
             }
         }
     }
@@ -3979,9 +3948,8 @@ public class Mailbox {
     }
     
     public synchronized void postIMNotification(IMNotification n) {
-        for (Session session : mListeners) {
+        for (Session session : mListeners)
             session.notifyIM(n);
-        }
     }
 
     private void commitCache(MailboxChange change) {
@@ -4020,7 +3988,7 @@ public class Mailbox {
                 try {
                     int[] indexIds = new int[deleted.indexIds.size()];
                     for (int i = 0; i < deleted.indexIds.size(); i++)
-                        indexIds[i] = ((Integer) deleted.indexIds.get(i)).intValue();
+                        indexIds[i] = deleted.indexIds.get(i);
                     int[] deletedIds = getMailboxIndex().deleteDocuments(indexIds);
                     if (deletedIds != indexIds)
                         ZimbraLog.mailbox.warn("could not delete all index entries for items: " + deleted.itemIds);
