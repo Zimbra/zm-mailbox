@@ -46,11 +46,11 @@ public class IMSetPresence extends DocumentHandler {
 
         Element response = lc.createElement(IMService.IM_SET_PRESENCE_RESPONSE);
         
-        Element e = request.getElement("presence");
+        Element e = request.getElement(IMService.E_PRESENCE);
         
-        String showStr = e.getAttribute("show", IMPresence.Show.ONLINE.toString());
+        String showStr = e.getAttribute(IMService.A_SHOW, IMPresence.Show.ONLINE.toString());
         String statusStr = null;
-        Element status = e.getOptionalElement("status");
+        Element status = e.getOptionalElement(IMService.E_STATUS);
         if (status != null) {
             statusStr = status.getText();
         }

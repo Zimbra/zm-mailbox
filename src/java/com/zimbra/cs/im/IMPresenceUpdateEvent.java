@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.im.IMService;
 import com.zimbra.soap.Element;
 
 public class IMPresenceUpdateEvent implements IMEvent, IMNotification {
@@ -38,7 +39,7 @@ public class IMPresenceUpdateEvent implements IMEvent, IMNotification {
     
     public Element toXml(Element parent) {
         Element toRet = mPresence.toXml(parent);
-        toRet.addAttribute("from", mFromAddr.getAddr());
+        toRet.addAttribute(IMService.A_FROM, mFromAddr.getAddr());
         return toRet;
     }
     

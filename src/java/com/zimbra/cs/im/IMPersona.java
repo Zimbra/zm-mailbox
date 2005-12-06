@@ -16,6 +16,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.im.IMService;
 import com.zimbra.cs.util.StringUtil;
 import com.zimbra.soap.Element;
 
@@ -129,17 +130,17 @@ public class IMPersona {
         public Element toXml(Element parent) {
             Element e;
             if (mRemove) { 
-                e = parent.addElement("unsubscribed");
+                e = parent.addElement(IMService.E_UNSUBSCRIBED);
             } else {
-                e = parent.addElement("subscribed");
-                e.addAttribute("name", mName);
+                e = parent.addElement(IMService.E_SUBSCRIBED);
+                e.addAttribute(IMService.A_NAME, mName);
             }
             
             if (mGroups != null) {
-                e.addAttribute("groups", StringUtil.join(",", mGroups));
+                e.addAttribute(IMService.A_GROUPS, StringUtil.join(",", mGroups));
             }
             
-            e.addAttribute("to", mAddr.getAddr());
+            e.addAttribute(IMService.A_TO, mAddr.getAddr());
 
             return e;
         }

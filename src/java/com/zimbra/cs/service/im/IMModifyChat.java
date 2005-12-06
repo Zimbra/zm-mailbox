@@ -50,7 +50,7 @@ public class IMModifyChat extends DocumentHandler
 
         Element response = lc.createElement(IMService.IM_MODIFY_CHAT_RESPONSE);
         
-        String threadId = request.getAttribute("thread");
+        String threadId = request.getAttribute(IMService.A_THREAD_ID);
         
         synchronized(mbox) {
             IMPersona persona = IMRouter.getInstance().findPersona(lc.getOperationContext(), mbox, true);
@@ -60,7 +60,7 @@ public class IMModifyChat extends DocumentHandler
             if (chat == null)
             throw ServiceException.FAILURE("Unknown thread: "+threadId, null);
             
-            String opStr = request.getAttribute("op");
+            String opStr = request.getAttribute(IMService.A_OPERATION);
             Op op = Op.valueOf(opStr);
             
             switch(op) {

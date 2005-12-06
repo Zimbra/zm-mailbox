@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.im.IMService;
 import com.zimbra.soap.Element;
 
 public class IMSendMessageEvent implements IMEvent {
@@ -36,12 +37,12 @@ public class IMSendMessageEvent implements IMEvent {
         }
         
         public Element toXml(Element parent) throws ServiceException {
-            Element e = parent.addElement("message");
-            e.addAttribute("from", mFromAddr.toString());
-            e.addAttribute("threadId", mThreadId);
-            e.addAttribute("ts", mMessage.getTimestamp());
+            Element e = parent.addElement(IMService.E_MESSAGE);
+            e.addAttribute(IMService.A_FROM, mFromAddr.toString());
+            e.addAttribute(IMService.A_THREAD_ID, mThreadId);
+            e.addAttribute(IMService.A_TIMESTAMP, mMessage.getTimestamp());
             
-            e.addAttribute("seq", mSeqNo);
+            e.addAttribute(IMService.A_SEQ, mSeqNo);
             
             mMessage.toXml(e);
             return e;

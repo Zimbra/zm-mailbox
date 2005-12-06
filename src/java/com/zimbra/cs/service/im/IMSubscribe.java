@@ -46,14 +46,14 @@ public class IMSubscribe extends DocumentHandler {
 
         Element response = lc.createElement(IMService.IM_SUBSCRIBE_RESPONSE);
         
-        String op = request.getAttribute("op");
+        String op = request.getAttribute(IMService.A_OPERATION);
         boolean add = true;
         if (op.equalsIgnoreCase("remove")) 
             add = false;
 
-        IMAddr addr = new IMAddr(request.getAttribute("addr"));
-        String name = request.getAttribute("name", "");
-        String groupStr = request.getAttribute("groups", null);
+        IMAddr addr = new IMAddr(request.getAttribute(IMService.A_ADDRESS));
+        String name = request.getAttribute(IMService.A_NAME, "");
+        String groupStr = request.getAttribute(IMService.A_GROUPS, null);
         String[] groups;
         if (groupStr != null) 
             groups = groupStr.split(",");

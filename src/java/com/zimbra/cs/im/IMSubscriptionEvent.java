@@ -4,6 +4,7 @@ import java.util.Formatter;
 
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.im.IMService;
 import com.zimbra.soap.Element;
 
 public class IMSubscriptionEvent implements IMEvent, IMNotification {
@@ -43,8 +44,8 @@ public class IMSubscriptionEvent implements IMEvent, IMNotification {
     
     public Element toXml(Element parent) {
         if (mOp == Op.SUBSCRIBE) {
-            Element toRet = parent.addElement("subscribe");
-            toRet.addAttribute("from", mFromAddr.getAddr());
+            Element toRet = parent.addElement(IMService.E_SUBSCRIBE);
+            toRet.addAttribute(IMService.A_FROM, mFromAddr.getAddr());
             return toRet;
         } else 
             return parent;

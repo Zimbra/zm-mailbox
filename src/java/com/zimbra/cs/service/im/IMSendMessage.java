@@ -48,23 +48,23 @@ public class IMSendMessage extends DocumentHandler {
 
         Element response = lc.createElement(IMService.IM_SEND_MESSAGE_RESPONSE);
 
-        Element msgElt = request.getElement("message");
+        Element msgElt = request.getElement(IMService.E_MESSAGE);
         
-        String threadId = msgElt.getAttribute("thread", null);
+        String threadId = msgElt.getAttribute(IMService.A_THREAD_ID, null);
         String addr = null;
         
         if (threadId == null)
-            addr = msgElt.getAttribute("addr");
+            addr = msgElt.getAttribute(IMService.A_ADDRESS);
         
         String subject = null;
         String body = null;
         
-        Element subjElt = msgElt.getOptionalElement("subject");
+        Element subjElt = msgElt.getOptionalElement(IMService.E_SUBJECT);
         if (subjElt != null) {
             subject = subjElt.getText();
         }
         
-        Element bodyElt = msgElt.getOptionalElement("body");
+        Element bodyElt = msgElt.getOptionalElement(IMService.E_BODY);
         if (bodyElt != null) {
             body = bodyElt.getText();
         }
@@ -84,7 +84,7 @@ public class IMSendMessage extends DocumentHandler {
             }
         }
         
-        response.addAttribute("thread", threadId);
+        response.addAttribute(IMService.A_THREAD_ID, threadId);
         
         return response;        
     }

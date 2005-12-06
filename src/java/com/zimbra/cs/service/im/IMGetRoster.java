@@ -53,34 +53,17 @@ public class IMGetRoster extends DocumentHandler {
             
             persona.getMyPresence().toXml(response);
 
-//            Map<IMGroup, Integer> groupIdCache = new HashMap();
-            
-//            // groups
-//            {
-//                Element groups = response.addUniqueElement("groups");
-//                Integer curNum = 0;
-//                for (IMGroup grp : persona.groups()) {
-//                    groupIdCache.put(grp, curNum);
-//                    
-//                    Element e = groups.addElement("group");
-//                    e.addAttribute("num", curNum);
-//                    e.addAttribute("name", grp.getName());
-//                    curNum++;
-//                }
-//            }
-            
-            
             // chats
             {
-                Element chats = response.addUniqueElement("chats");
+                Element chats = response.addUniqueElement(IMService.E_CHATS);
                 for (IMChat chat : persona.chats()) {
-                    Element e = chats.addElement("chat");
-                    e.addAttribute("threadId", chat.getThreadId());
+                    Element e = chats.addElement(IMService.E_CHATS);
+                    e.addAttribute(IMService.A_THREAD_ID, chat.getThreadId());
                     
-                    Element participantsElt = e.addElement("pcps");
+                    Element participantsElt = e.addElement(IMService.E_PARTICIPANTS);
                     for (Participant part : chat.participants()) {
-                        Element pe = participantsElt.addElement("p");
-                        pe.addAttribute("addr", part.getAddress().getAddr());
+                        Element pe = participantsElt.addElement(IMService.E_PARTICIPANT);
+                        pe.addAttribute(IMService.A_ADDRESS, part.getAddress().getAddr());
                     }
                     
                 }
@@ -88,21 +71,21 @@ public class IMGetRoster extends DocumentHandler {
             
             // items (buddies)
             {
-                Element items = response.addUniqueElement("items");
+                Element items = response.addUniqueElement(IMService.E_ITEMS);
                 for (IMBuddy buddy : persona.buddies()) {
-                    Element e = items.addElement("item");
-                    e.addAttribute("addr", buddy.getAddress().getAddr());
+                    Element e = items.addElement(IMService.E_ITEM);
+                    e.addAttribute(IMService.A_ADDRESS, buddy.getAddress().getAddr());
                     
                     String buddyName = buddy.getName();
                     if (buddyName != null && buddyName.length()>0) 
-                        e.addAttribute("name", buddy.getName());
+                        e.addAttribute(IMService.A_NAME, buddy.getName());
                     
-                    e.addAttribute("subscription", buddy.getSubType().toString());
+                    e.addAttribute(IMService.A_SUBSCRIPTION, buddy.getSubType().toString());
                     
                     // presence
                     IMPresence presence = buddy.getPresence();
                     if (presence == null) 
-                        e.addUniqueElement("presence");
+                        e.addUniqueElement(IMService.E_PRESENCE);
                     else
                         presence.toXml(e);
                     
@@ -113,15 +96,9 @@ public class IMGetRoster extends DocumentHandler {
                             groupStr = new StringBuffer(grp.getName());
                         else 
                             groupStr.append(',').append(grp.getName());
-                        
-//                        Integer idx = groupIdCache.get(grp);
-//                        if (groupStr == null)
-//                            groupStr = new StringBuffer(idx.toString());
-//                        else 
-//                            groupStr.append(',').append(idx.toString());
                     }
                     if (groupStr != null) 
-                        e.addAttribute("groups", groupStr.toString());
+                        e.addAttribute(IMService.A_GROUPS, groupStr.toString());
                     
                 }
             }

@@ -136,7 +136,7 @@ IM NOTIFICATIONS
              <im>
                 [
                 // NEW MESSAGE RECEIVED:
-                   <message from="address" threadId="UID" ts="TIMESTAMP>
+                   <message from="address" thread="UID" ts="TIMESTAMP>
                       [<subject [lang="LANG"]>SUBJECT</subject>]
                       [<body [lang="LANG"]>BODY</body>]
                    </message>
@@ -156,7 +156,7 @@ IM NOTIFICATIONS
                    <unsubscribed to="TOADDR" groups="GROUPS" /> // you removed them from your buddy list
                 ]*
                 [
-                   <leftchat threadId="UID" addr="ADDRESS"> // specified user left the chat
+                   <leftchat thread="UID" addr="ADDRESS"> // specified user left the chat
                 ]*
                 
              </im>]

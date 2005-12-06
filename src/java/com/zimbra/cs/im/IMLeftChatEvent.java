@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.im.IMService;
 import com.zimbra.soap.Element;
 
 public class IMLeftChatEvent implements IMEvent, IMNotification {
@@ -36,9 +37,9 @@ public class IMLeftChatEvent implements IMEvent, IMNotification {
     }
     
     public Element toXml(Element parent) {
-        Element toRet = parent.addElement("leftchat");
-        toRet.addAttribute("threadId", mThreadId);
-        toRet.addAttribute("addr", mFromAddr.getAddr());
+        Element toRet = parent.addElement(IMService.E_LEFTCHAT);
+        toRet.addAttribute(IMService.A_THREAD_ID, mThreadId);
+        toRet.addAttribute(IMService.A_ADDRESS, mFromAddr.getAddr());
         return toRet;
     }
 }
