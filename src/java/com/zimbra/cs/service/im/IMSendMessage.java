@@ -22,7 +22,7 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.service.mail;
+package com.zimbra.cs.service.im;
 
 import java.util.Map;
 
@@ -46,7 +46,7 @@ public class IMSendMessage extends DocumentHandler {
         ZimbraContext lc = getZimbraContext(context);
         Mailbox mbox = super.getRequestedMailbox(lc);
 
-        Element response = lc.createElement(MailService.IM_SEND_MESSAGE_RESPONSE);
+        Element response = lc.createElement(IMService.IM_SEND_MESSAGE_RESPONSE);
 
         Element msgElt = request.getElement("message");
         

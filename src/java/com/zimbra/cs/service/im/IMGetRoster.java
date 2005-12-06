@@ -22,9 +22,8 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.service.mail;
+package com.zimbra.cs.service.im;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.cs.mailbox.Mailbox;
@@ -47,7 +46,7 @@ public class IMGetRoster extends DocumentHandler {
         ZimbraContext lc = getZimbraContext(context);
         Mailbox mbox = super.getRequestedMailbox(lc);
 
-        Element response = lc.createElement(MailService.IM_GET_ROSTER_RESPONSE);
+        Element response = lc.createElement(IMService.IM_GET_ROSTER_RESPONSE);
         
         synchronized (mbox) { 
             IMPersona persona = IMRouter.getInstance().findPersona(lc.getOperationContext(), mbox, true);

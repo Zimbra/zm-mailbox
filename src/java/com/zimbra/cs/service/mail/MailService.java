@@ -162,20 +162,6 @@ public class MailService implements DocumentService {
 //    public static final QName OBJECT_ACTION_RESPONSE = QName.get("ObjectActionResponse", NAMESPACE);
     
     
-    // IM
-    public static final QName IM_GET_ROSTER_REQUEST = QName.get("IMGetRosterRequest", NAMESPACE);    
-    public static final QName IM_GET_ROSTER_RESPONSE = QName.get("IMGetRosterResponse", NAMESPACE);    
-    public static final QName IM_SUBSCRIBE_REQUEST = QName.get("IMSubscribeRequest", NAMESPACE);    
-    public static final QName IM_SUBSCRIBE_RESPONSE = QName.get("IMSubscribeResponse", NAMESPACE);    
-    public static final QName IM_SET_PRESENCE_REQUEST = QName.get("IMSetPresenceRequest", NAMESPACE);    
-    public static final QName IM_SET_PRESENCE_RESPONSE = QName.get("IMSetPresenceResponse", NAMESPACE);    
-    public static final QName IM_GET_CHAT_REQUEST = QName.get("IMGetChatRequest", NAMESPACE);    
-    public static final QName IM_GET_CHAT_RESPONSE = QName.get("IMGetChatResponse", NAMESPACE);
-    public static final QName IM_MODIFY_CHAT_REQUEST = QName.get("IMModifyChatRequest", NAMESPACE);    
-    public static final QName IM_MODIFY_CHAT_RESPONSE = QName.get("IMModifyChatResponse", NAMESPACE);    
-    public static final QName IM_SEND_MESSAGE_REQUEST = QName.get("IMSendMessageRequest", NAMESPACE);    
-    public static final QName IM_SEND_MESSAGE_RESPONSE = QName.get("IMSendMessageResponse", NAMESPACE);    
-
     public static final QName SAVE_WIKI_REQUEST = QName.get("SaveWikiRequest", NAMESPACE);
     public static final QName SAVE_WIKI_RESPONSE = QName.get("SaveWikiResponse", NAMESPACE);
 
@@ -523,12 +509,5 @@ public class MailService implements DocumentService {
         // zimlet
         dispatcher.registerHandler(GET_ZIMLETS_REQUEST, new GetZimlets());
 
-        // IM
-        dispatcher.registerHandler(IM_GET_ROSTER_REQUEST, new IMGetRoster());
-        dispatcher.registerHandler(IM_SET_PRESENCE_REQUEST, new IMSetPresence());
-        dispatcher.registerHandler(IM_SUBSCRIBE_REQUEST, new IMSubscribe());
-        dispatcher.registerHandler(IM_SEND_MESSAGE_REQUEST, new IMSendMessage());
-        dispatcher.registerHandler(IM_GET_CHAT_REQUEST, new IMGetChat());
-        dispatcher.registerHandler(IM_MODIFY_CHAT_REQUEST, new IMModifyChat());
 	}
 }

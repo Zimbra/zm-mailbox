@@ -44,6 +44,10 @@
       <param-name>engine.handler.1</param-name>
       <param-value>com.zimbra.cs.service.mail.MailService</param-value>
     </init-param>
+    <init-param>
+      <param-name>engine.handler.2</param-name>
+      <param-value>com.zimbra.cs.service.im.IMService</param-value>
+    </init-param>
   </servlet>
 
   <servlet>
@@ -66,6 +70,10 @@
     <init-param>
       <param-name>engine.handler.2</param-name>
       <param-value>com.zimbra.cs.service.mail.MailService</param-value>
+    </init-param>
+    <init-param>
+      <param-name>engine.handler.3</param-name>
+      <param-value>com.zimbra.cs.service.im.IMService</param-value>
     </init-param>
   </servlet>
 

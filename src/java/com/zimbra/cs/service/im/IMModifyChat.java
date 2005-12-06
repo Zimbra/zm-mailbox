@@ -22,7 +22,7 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.service.mail;
+package com.zimbra.cs.service.im;
 
 import java.util.Map;
 
@@ -48,7 +48,7 @@ public class IMModifyChat extends DocumentHandler
         ZimbraContext lc = getZimbraContext(context);
         Mailbox mbox = super.getRequestedMailbox(lc);
 
-        Element response = lc.createElement(MailService.IM_MODIFY_CHAT_RESPONSE);
+        Element response = lc.createElement(IMService.IM_MODIFY_CHAT_RESPONSE);
         
         String threadId = request.getAttribute("thread");
         

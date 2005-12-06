@@ -22,7 +22,7 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.service.mail;
+package com.zimbra.cs.service.im;
 
 import java.util.Map;
 
@@ -49,7 +49,7 @@ public class IMGetChat extends DocumentHandler {
         ZimbraContext lc = getZimbraContext(context);
         Mailbox mbox = super.getRequestedMailbox(lc);
         
-        Element response = lc.createElement(MailService.IM_GET_CHAT_RESPONSE);
+        Element response = lc.createElement(IMService.IM_GET_CHAT_RESPONSE);
         
         String threadId = request.getAttribute("thread");
         

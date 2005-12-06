@@ -22,21 +22,21 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.service.mail;
+package com.zimbra.cs.service.im;
 
 import java.util.Map;
 
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.im.IMAddr;
+import com.zimbra.cs.mailbox.im.IMPersona;
+import com.zimbra.cs.mailbox.im.IMRouter;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraContext;
-import com.zimbra.cs.mailbox.im.IMPersona;
-import com.zimbra.cs.mailbox.im.IMPresence;
-import com.zimbra.cs.mailbox.im.IMRouter;
 
-public class IMSetPresence extends DocumentHandler {
+public class IMSubscribe extends DocumentHandler {
 
     @Override
     public Element handle(Element request, Map context) throws ServiceException, SoapFaultException 
@@ -44,23 +44,30 @@ public class IMSetPresence extends DocumentHandler {
         ZimbraContext lc = getZimbraContext(context);
         Mailbox mbox = super.getRequestedMailbox(lc);
 
-        Element response = lc.createElement(MailService.IM_SET_PRESENCE_RESPONSE);
+        Element response = lc.createElement(IMService.IM_SUBSCRIBE_RESPONSE);
         
-        Element e = request.getElement("presence");
-        
-        String showStr = e.getAttribute("show", null);
-        String statusStr = null;
-        Element status = e.getOptionalElement("status");
-        if (status != null) {
-            statusStr = status.getText();
-        }
-        
-        IMPresence presence = new IMPresence(IMPresence.Show.valueOf(showStr), (byte)1, statusStr);
-        
+        String op = request.getAttribute("op");
+        boolean add = true;
+        if (op.equalsIgnoreCase("remove")) 
+            add = false;
+
+        IMAddr addr = new IMAddr(request.getAttribute("addr"));
+        String name = request.getAttribute("name", "");
+        String groupStr = request.getAttribute("groups", null);
+        String[] groups;
+        if (groupStr != null) 
+            groups = groupStr.split(",");
+        else
+            groups = new String[0];
+
         Mailbox.OperationContext oc = lc.getOperationContext();
         synchronized(mbox) {
             IMPersona persona = IMRouter.getInstance().findPersona(oc, mbox, true);
-            persona.setMyPresence(oc, presence);
+            
+            if (add) 
+                persona.addOutgoingSubscription(oc, addr, name, groups);
+            else
+                persona.removeOutgoingSubscription(oc, addr, name, groups);
         }
         
         return response;
