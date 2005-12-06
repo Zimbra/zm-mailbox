@@ -1,9 +1,11 @@
 package com.zimbra.cs.mailbox.calendar;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.net.URISyntaxException;
 import java.text.ParseException;
@@ -12,6 +14,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.ZimbraLog;
 
 import net.fortuna.ical4j.data.CalendarParser;
 import net.fortuna.ical4j.data.CalendarParserImpl;
@@ -228,52 +231,49 @@ public class ZCalendar {
         }        
     }
 
-    private static final Pattern CHECK_ESCAPE = Pattern.compile("[,;\"\n\\\\]");
-    private static final Pattern CHECK_UNESCAPE = Pattern.compile("\\\\");
-    private static final Pattern ESCAPE_PATTERN_1 = Pattern.compile("([,;\"])");
-    private static final Pattern ESCAPE_PATTERN_2 = Pattern.compile("[\r\n]+");
-    private static final Pattern ESCAPE_PATTERN_3 = Pattern.compile("\\\\");
+    // these are the characters that MUST be escaped: , ; " \n and \ -- note that \
+    // becomes \\\\ here because it is double-unescaped during the compile process!
+    private static final Pattern MUST_ESCAPE = Pattern.compile("[,;\"\n\\\\]");
+    private static final Pattern SIMPLE_ESCAPE = Pattern.compile("([,;\"\\\\])");
+    private static final Pattern NEWLINE_ESCAPE = Pattern.compile("[\r\n]+");
     
     /**
-     * Convenience method for escaping special characters.
-     * @param aValue a string value to escape
-     * @return an escaped representation of the specified
-     * string
+     * ,;"\ and \n must all be escaped.  
      */
-    public static String escape(final String aValue) {
-        if (aValue != null && CHECK_ESCAPE.matcher(aValue).find()) {
-            return ESCAPE_PATTERN_1.matcher(
-                    ESCAPE_PATTERN_2.matcher(
-                            ESCAPE_PATTERN_3.matcher(aValue).replaceAll("\\\\\\\\"))
-                        .replaceAll("\\\\n"))
-                .replaceAll("\\\\$1");
+    public static String escape(String str) {
+        if (str!= null && MUST_ESCAPE.matcher(str).find()) {
+            // escape ([,;"])'s
+            String toRet = SIMPLE_ESCAPE.matcher(str).replaceAll("\\\\$1");
+            
+            // escape
+            return NEWLINE_ESCAPE.matcher(toRet).replaceAll("\\\\n");
+            
         }
 
-        return aValue;
+        return str;
     }
     
-    private static final Pattern UNESCAPE_PATTERN_1 = Pattern.compile("\\\\([,;\"])");
-    private static final Pattern UNESCAPE_PATTERN_2 = Pattern.compile("\\\\n", Pattern.CASE_INSENSITIVE);
-    private static final Pattern UNESCAPE_PATTERN_3 = Pattern.compile("\\\\\\\\");
+    private static final Pattern SIMPLE_ESCAPED = Pattern.compile("\\\\([,;\"\\\\])");
+    private static final Pattern NEWLINE_ESCAPED = Pattern.compile("\\\\n");
     
-    /**
-     * Convenience method for replacing escaped special characters
-     * with their original form.
-     * @param aValue a string value to unescape
-     * @return a string representation of the specified
-     * string with escaped characters replaced with their
-     * original form
-     */
-    public static String unescape(final String aValue) {
-        if (aValue != null && CHECK_UNESCAPE.matcher(aValue).find()) {
-            return UNESCAPE_PATTERN_3.matcher(
-                    UNESCAPE_PATTERN_2.matcher(
-                            UNESCAPE_PATTERN_1.matcher(aValue).replaceAll("$1"))
-                        .replaceAll("\n"))
-                .replaceAll("\\\\");
+    
+    public static String unescape(String str) {
+        if (str != null && str.indexOf('\\') >= 0) {
+            String toRet = SIMPLE_ESCAPED.matcher(str).replaceAll("$1"); 
+            return NEWLINE_ESCAPED.matcher(toRet).replaceAll("\n"); 
         }
-        return aValue;
+        return str;
     }
+    
+    public static String unquote(String str) {
+        if (str != null && str.length()>2) {
+            if ((str.charAt(0) == '\"') && (str.charAt(str.length()-1) == '\"'))
+                return str.substring(1, str.length()-1);
+        }
+        return str;
+    }
+    
+    
     
     /**
      * @author tim
@@ -339,7 +339,7 @@ public class ZCalendar {
         public String paramVal(ICalTok tok, String defaultValue) { 
             ZParameter param = getParameter(tok);
             if (param != null) {
-                return param.mValue;
+                return unquote(param.getValue());
             }
             return defaultValue;
         }
@@ -361,15 +361,20 @@ public class ZCalendar {
         }
         
         public void toICalendar(Writer w) throws IOException {
-            w.write(escape(mName));
+            StringWriter sw = new StringWriter();
+            
+            sw.write(escape(mName));
             for (ZParameter param: mParameters)
-                param.toICalendar(w);
+                param.toICalendar(sw);
 
-            w.write(':');
-            w.write(escape(mValue));
-            w.write('\n');
+            sw.write(':');
+            sw.write(escape(mValue));
+            sw.write('\n');
+            
+            w.write(sw.toString());
+            
+//            System.out.println("PARAMOUT: "+sw.toString());
         }
-        
         
         String getValue() { return mValue; }
         long getLongValue() { return Long.parseLong(mValue); };
@@ -401,14 +406,14 @@ public class ZCalendar {
         ZParameter(ICalTok tok, boolean value) {
             mTok = tok;
             mName = tok.toString();
-            mValue = value ? "TRUE" : "FALSE";
+            maValue = value ? "TRUE" : "FALSE";
         }
         
         public void setName(String name) {
             mName = unescape(name.toUpperCase());
         }
         public void setValue(String value) {
-            mValue = unescape(value);
+            maValue = unescape(unquote(value));
         }
 
         public String toString() {
@@ -416,29 +421,29 @@ public class ZCalendar {
         }
         
         public String toString(String INDENT) {
-            StringBuffer toRet = new StringBuffer(INDENT).append("PARAM:").append(mName).append('(').append(mTok).append(')').append(':').append(mValue).append('\n');
+            StringBuffer toRet = new StringBuffer(INDENT).append("PARAM:").append(mName).append('(').append(mTok).append(')').append(':').append(maValue).append('\n');
             return toRet.toString();
         }
         public void toICalendar(Writer w) throws IOException {
             w.write(';');
             w.write(escape(mName));
             w.write('=');
-            if (mValue.startsWith("\"") && mValue.endsWith("\"")) {
+            if (maValue.startsWith("\"") && maValue.endsWith("\"")) {
                 w.write('\"');
-                w.write(escape(mValue.substring(1, mValue.length()-1)));
+                w.write(escape(maValue.substring(1, maValue.length()-1)));
                 w.write('\"');
             } else {
-                w.write(escape(mValue));
+                w.write(escape(maValue));
             }
         }
         
-        String getValue() { return mValue; }
-        long getLongValue() { return Long.parseLong(mValue); };
-        int getIntValue() { return Integer.parseInt(mValue); };
+        String getValue() { return maValue; }
+        long getLongValue() { return Long.parseLong(maValue); };
+        int getIntValue() { return Integer.parseInt(maValue); };
         
         ICalTok mTok;
         String mName;
-        String mValue;
+        String maValue;
     }
     
     private static ZProperty findProp(List <ZProperty> list, ICalTok tok)
@@ -652,7 +657,7 @@ public class ZCalendar {
             if (mCurProperty != null) {
                 mCurProperty.mParameters.add(param);
             } else {
-                System.out.println("ERROR: got parameter "+name+","+value+" outside of Property");
+                ZimbraLog.calendar.debug("ERROR: got parameter "+name+","+value+" outside of Property");
             }
         }
     }
@@ -660,6 +665,13 @@ public class ZCalendar {
     public static class ZCalendarBuilder
     {
         public static ZVCalendar build(Reader reader) throws ServiceException {
+            BufferedReader br = new BufferedReader(reader);
+            reader = br;
+            try {
+                reader.mark(32000);
+            } catch(IOException e) {
+                e.printStackTrace();
+            }
             CalendarParser parser = new CalendarParserImpl();
             
             ZContentHandler handler = new ZContentHandler();
@@ -669,7 +681,20 @@ public class ZCalendar {
             } catch(IOException e) {
                 throw ServiceException.FAILURE("Caught IOException parsing calendar: "+e, e);
             } catch(ParserException e) {
-                throw ServiceException.FAILURE("Caught ParseException parsing calendar: "+e, e);
+                StringBuilder s = new StringBuilder("Caught ParseException parsing calendar: "+e);
+                try {
+                    reader.reset();
+                    
+                    Reader r = new UnfoldingReader(reader);
+                    s.append('\n');
+                    while(r.ready()) {
+                        s.append((char)(r.read()));
+                    }
+                } catch(IOException ioe) {
+                    ioe.printStackTrace();
+                }
+                
+                throw ServiceException.FAILURE(s.toString(), e);
             }
             
             return handler.mCal;
@@ -681,6 +706,43 @@ public class ZCalendar {
      */
     public static void main(String[] args) {
         try {
+            /**
+             * ,;"\ and \n must all be escaped.  
+             */
+            {
+                String s;
+                
+                s = "This, is; my \"string\", and\\or \nI hope\r\nyou like it";
+                System.out.println("Original: "+s+"\n\n\nEscaped: "+escape(s)+"\n\n\nUnescaped:"+unescape(escape(s)));
+
+                System.out.println("\n\n\n");
+                
+                s = "\"Foo Bar Gub\"";
+                System.out.println("Unquoted:"+s+"\nQuoted:"+unquote(s));
+                
+                System.out.println("\n\n\n");
+                
+                s = "Blah Bar Blah";
+                System.out.println("Unquoted:"+s+"\nQuoted:"+unquote(s));
+                System.out.println("\n\n\n");
+
+                {
+                    s =  "\"US & Canadia -- Foo\\Bar\"";
+                    System.out.println("String = "+s);
+                    ZParameter param = new ZParameter(ICalTok.TZID, s);
+                    System.out.println("TZID   = "+param.getValue());
+                    StringWriter writer = new StringWriter();
+                    param.toICalendar(writer);
+                    System.out.println("ICAL: "+writer.toString());
+                    System.out.println("\n\n\n");
+                }
+                    
+                
+            }
+            
+
+            if (false) {
+            
             File inFile = new File("c:\\test.ics");
             FileReader in = new FileReader(inFile);
             
@@ -691,6 +753,7 @@ public class ZCalendar {
             System.out.println(handler.mCal.toString());
 //            createFromCalendar(handler.mCal);
             Invite.createFromCalendar(null, null, handler.mCal, false);
+            }
             
         } catch(Exception e) {
             System.out.println("Caught exception: "+e);
