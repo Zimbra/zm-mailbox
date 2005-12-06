@@ -918,7 +918,7 @@ Access: domain admin sufficient
     <server name="{server-name}" status="{1-or-0}"/>*
   </servers>
   <services>
-    <service name="{service-name}" status="{state-string-from-console}"  owner="{server-name}" lastOwner="{server-name}" restarts="{number}"/>*
+    <service name="{service-name}" state="{state-string-from-console}"  owner="{server-name}" lastOwner="{server-name}" restarts="{number}"/>*
   </services>
 </GetClusterStatusResponse>
 
