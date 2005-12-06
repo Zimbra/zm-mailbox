@@ -44,7 +44,7 @@ public class IMService implements DocumentService {
     public static final String E_CHAT           = "chat";
     public static final String E_PARTICIPANT    = "p";
     public static final String E_PARTICIPANTS   = "pcps";
-    public static final String E_ITEMS          = "item";
+    public static final String E_ITEMS          = "items";
     public static final String E_ITEM           = "item";
     public static final String E_PRESENCE       = "presence";
     public static final String E_STATUS         = "status";

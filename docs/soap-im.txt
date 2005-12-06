@@ -70,9 +70,9 @@ IMGetChat -- return the chat history (param = num messages)
 
 <IMGetChatResponse>
    <chat thread="threadID">
-      <participants> // like email-element-cache -- only valid for this single message!
-         <participant id="num" addr="foo@bar.com" [name="friendly"] [resource="resource"]/>*
-      </participants>
+      <pcps> // like email-element-cache -- only valid for this single message!
+         <p id="num" addr="foo@bar.com" [name="friendly"] [resource="resource"]/>*
+      </pcps>
       <messages>
          <message seq="sequence-number" ts="timestamp" from="id">
             [<subject [lang="LANGUAGE"]>SUBJECT</subject>]*   // Zimbra-HTML-Special encoding
