@@ -83,7 +83,7 @@ public class IMPresence {
             e.addAttribute("show", show.toString());
                 
         if (mStatus != null) {
-            Element se = e.addElement("status");
+            Element se = e.addUniqueElement("status");
             se.setText(mStatus);
         }
         return e;
