@@ -48,7 +48,10 @@ public class IMGetRoster extends IMDocumentHandler {
         synchronized (lock) { 
             IMPersona persona = super.getRequestedPersona(lc, lock);
             
-            persona.getMyPresence().toXml(response);
+            {
+                Element pe = response.addUniqueElement(IMService.E_PRESENCE);
+                persona.getMyPresence().toXml(pe);
+            }
 
             // chats
             {
