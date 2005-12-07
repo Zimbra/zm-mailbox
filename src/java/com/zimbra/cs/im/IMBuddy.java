@@ -131,6 +131,8 @@ public class IMBuddy {
         return "BUDDY: "+mAddress+"("+mName+")";
     }
     
+    void setName(String name) { mName = name; }
+
     void setSubType(SubType st) { mSubType = st; }
 
     void clearGroups() {
