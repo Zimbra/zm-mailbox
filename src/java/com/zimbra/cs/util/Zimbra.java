@@ -43,7 +43,6 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.servlet.PrivilegedServlet;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.zimlet.ZimletUtil;
 
 /**
  * @author jhahm
@@ -83,6 +82,7 @@ public class Zimbra {
                             " release=" + BuildInfo.RELEASE +
                             " builddate=" + BuildInfo.DATE +
                             " buildhost=" + BuildInfo.HOST);
+        ZimbraLog.misc.info("LANG environment is set to: " + System.getenv("LANG"));
         
         checkForClasses();
         
