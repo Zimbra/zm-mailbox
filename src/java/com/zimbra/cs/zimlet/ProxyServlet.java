@@ -119,9 +119,19 @@ public class ProxyServlet extends ZimbraServlet {
 			this.url = conn.getURL().toString();
 			this.contentType = conn.getContentType();
 			this.isCompressed = compress;
-			this.returnCode = 0;
+			this.returnCode = HttpServletResponse.SC_OK;
 			this.createTime = System.currentTimeMillis();
-			byte[] rawData = ByteUtil.getContent(conn.getInputStream(), conn.getContentLength());
+			InputStream stream = null;
+			if (conn instanceof HttpURLConnection) {
+				HttpURLConnection hconn = (HttpURLConnection) conn;
+				
+				this.returnCode = hconn.getResponseCode();
+				if (returnCode != HttpServletResponse.SC_OK) {
+					stream = hconn.getErrorStream();
+				}
+			}
+			if (stream == null) stream = conn.getInputStream();
+			byte[] rawData = ByteUtil.getContent(stream, conn.getContentLength());
 			//ZimbraLog.zimlet.info("******\n"+new String(rawData)+"\n******");
 			if (compress) {
 				this.data = ByteUtil.compress(rawData);
@@ -167,8 +177,6 @@ public class ProxyServlet extends ZimbraServlet {
 		}
 		conn.setDoOutput(true);
 		ByteUtil.copy(req.getInputStream(), conn.getOutputStream());
-		//byte[] data = ByteUtil.getContent(req.getInputStream(), 0);
-		//ZimbraLog.zimlet.info("==========\n"+new String(data)+"==========\n");
 	}
 	
 	private URLContents fetchURLContent(HttpServletRequest req, URL url) throws IOException {
@@ -191,8 +199,8 @@ public class ProxyServlet extends ZimbraServlet {
 		Enumeration headers = req.getHeaderNames();
 		while (headers.hasMoreElements()) {
 			String hdr = (String) headers.nextElement();
-			//ZimbraLog.zimlet.info(hdr + ": " + req.getHeader(hdr));
 			if (canProxyHeader(hdr)) {
+				//ZimbraLog.zimlet.info(hdr + ": " + req.getHeader(hdr));
 				conn.setRequestProperty(hdr, req.getHeader(hdr));
 			}
 		}
@@ -203,8 +211,7 @@ public class ProxyServlet extends ZimbraServlet {
 			copyPostedData(req, httpconn);
 			int status = httpconn.getResponseCode();
 			if (status != HttpURLConnection.HTTP_OK) {
-				ZimbraLog.zimlet.info("remote host returned error: "+status);
-				return new URLContents(url, HttpServletResponse.SC_NOT_FOUND);
+				ZimbraLog.zimlet.info("remote host returned error on proxy request: "+status);
 			}
 		}
 
@@ -288,9 +295,8 @@ public class ProxyServlet extends ZimbraServlet {
 		
 		// fetch the contents
 		URLContents content = getURLContent(req, url, authToken);
-		if (content.returnCode != 0) {
-			resp.sendError(content.returnCode);
-			return;
+		if (content.returnCode != HttpServletResponse.SC_OK) {
+			resp.setStatus(content.returnCode);
 		}
 		
 		InputStream data = new ByteArrayInputStream(content.data);
