@@ -1286,7 +1286,7 @@ public class Mailbox {
     private void loadFoldersAndTags() throws ServiceException {
         if (mFolderCache != null && mTagCache != null)
             return;
-        ZimbraLog.cache.debug("Initializing folder and tag caches for mailbox " + getId());
+        ZimbraLog.cache.info("Initializing folder and tag caches for mailbox " + getId());
 
         try {
             Map<Integer, MailItem.UnderlyingData> folderData = (mFolderCache == null ? new HashMap<Integer, MailItem.UnderlyingData>() : null);
@@ -1296,11 +1296,11 @@ public class Mailbox {
             if (stats != null) {
                 if (mData.size != stats.size) {
                     mCurrentChange.mDirty.recordModified(this, Change.MODIFIED_SIZE);
-                    ZimbraLog.mailbox.info("setting mailbox size to " + stats.size + " (was " + mData.size + ") for mailbox " + mId);
+                    ZimbraLog.mailbox.debug("setting mailbox size to " + stats.size + " (was " + mData.size + ") for mailbox " + mId);
                     mData.size = stats.size;
                 }
                 if (mData.contacts != stats.contacts) {
-                    ZimbraLog.mailbox.info("setting contact count to " + stats.contacts + " (was " + mData.contacts + ") for mailbox " + mId);
+                    ZimbraLog.mailbox.debug("setting contact count to " + stats.contacts + " (was " + mData.contacts + ") for mailbox " + mId);
                     mData.contacts = stats.contacts;
                 }
             }
