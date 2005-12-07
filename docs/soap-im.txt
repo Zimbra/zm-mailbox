@@ -55,9 +55,7 @@ IMSetPresence -- modify your presence state
 -------------
 <IMSetPresenceRequest>
    [
-     <presence [lang="en"] [show="away|chat|dnd|xa|online|offline"] [priority="0-255"]>
-        [<status>CDATA</status>]
-     </presence>   
+     <presence [lang="en"] [show="away|chat|dnd|xa|online|offline"] [priority="0-255"] [status="STATUS"]/>
    ]+  // if multiple, each must have a different lang  
 </IMSetPresenceRequest>
 
@@ -142,9 +140,7 @@ IM NOTIFICATIONS
                    </message>
                 ]*
                 [
-                   <presence from="FROMADDR" [lang="en"] [show="away|chat|dnd|xa"] [priority="0-255"]>
-                     [<status>CDATA</status>]
-                   </presence>   
+                   <presence from="FROMADDR" [lang="en"] [show="away|chat|dnd|xa"] [priority="0-255"] [status="STATUS"]/>
                 ]*
                 [
                    <subscribe from="FROMADDR"/> // they added you to their buddy list
