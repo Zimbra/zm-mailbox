@@ -31,7 +31,8 @@ public class IMPresenceUpdateEvent extends IMEvent implements IMNotification {
     }
     
     public Element toXml(Element parent) {
-        Element toRet = mPresence.toXml(parent);
+        Element toRet = parent.addElement(IMService.E_PRESENCE); 
+        mPresence.toXml(toRet);
         toRet.addAttribute(IMService.A_FROM, mFromAddr.getAddr());
         return toRet;
     }

@@ -54,7 +54,8 @@ public class IMProbeEvent extends IMEvent implements IMNotification {
      * @see com.zimbra.cs.im.IMNotification#toXml(com.zimbra.soap.Element)
      */
     public Element toXml(Element parent) {
-        Element toRet = mPresence.toXml(parent);
+        Element toRet = parent.addElement(IMService.E_PRESENCE);
+        mPresence.toXml(toRet);
         toRet.addAttribute(IMService.A_FROM, mFromAddr.getAddr());
         return toRet;
     }

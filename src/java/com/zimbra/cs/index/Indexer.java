@@ -37,29 +37,19 @@ import java.util.Map;
 
 import javax.mail.internet.MimeMessage;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-//import org.apache.lucene.document.DateField;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
-import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Note;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.Zimbra;
 
@@ -76,9 +66,6 @@ public class Indexer
 {
     private static Log mLog = LogFactory.getLog(Indexer.class);
 
-    //We store a separate index for every mailbox.  This is where we do the mapping.
-    //private HashMap mMbxIndexes;
-    
     private static Indexer sInstance = new Indexer();
     
     public static Indexer GetInstance() {
@@ -87,18 +74,12 @@ public class Indexer
 
     private Indexer() 
     {
-//        mMbxIndexes = new HashMap();
         sInstance = this;
 	}
     
     /////////////////////////////////////////////////////////////
     // External API (called by IndexTask, IndexerDaemon
     /////////////////////////////////////////////////////////////
-    
-//    public ZimbraSearcher getSearcher(int mailboxId) throws IOException
-//    {
-//    	return new ZimbraSearcher(getMailboxIndex(mailboxId));
-//    }
     
     public MailboxIndex.AdminInterface getAdminInterface(int mailboxId) throws ServiceException
     {
@@ -128,8 +109,9 @@ public class Indexer
         redo.log();
         redo.allowCommit();
         switch (itemType) {
-//            case MailItem.TYPE_INVITE:
-            case MailItem.TYPE_MESSAGE:
+        case MailItem.TYPE_APPOINTMENT:
+            break;
+        case MailItem.TYPE_MESSAGE:
                 InputStream is = mbox.getMessageById(null, itemId).getRawMessage();
                 MimeMessage mm;
     			try {
@@ -358,41 +340,6 @@ public class Indexer
         }
 	}
     
-//    /**
-//     * Flushes all of the outstanding index writes so that they are visible to other processes
-//     */
-//    public void flush() 
-//    {
-//    	mLog.debug("Indexer.flush()");
-//    	// TODO track recent unflushed writers and only flush them
-//    	synchronized(mMbxIndexes) { 
-//    		Collection c = mMbxIndexes.keySet();
-//    		Iterator i = c.iterator();
-//    		
-//    		while (i.hasNext()) {
-//    			// Get the key:  
-//    			Object key = i.next();  
-//    			// Get value associated with this key:  
-//    			MailboxIndex idx = (MailboxIndex)mMbxIndexes.get(key);
-//    			idx.flush();
-//    		}
-//    	}
-//    }
-//
-//    /**
-//     * Flushes outstanding index writes to a single mailbox.
-//     * @param mailboxId
-//     */
-//    public void flush(int mailboxId)
-//	{
-//    	MailboxIndex mboxIdx = null;
-//    	synchronized (mMbxIndexes) {
-//    		mboxIdx = (MailboxIndex) mMbxIndexes.get(Integer.toString(mailboxId));
-//    	}
-//    	if (mboxIdx != null)
-//    		mboxIdx.flush();
-//	}
-
     /**
      * Server startup-time initialization
      */
@@ -434,50 +381,6 @@ public class Indexer
     	MailboxIndex.flushAllWriters();
     }
 
-//    public static String GetPathForArchiveIndex(int mailboxId, int subIdxNum, String root) throws ServiceException 
-//    {
-//        if (root == null) {
-//            Mailbox mbox = Mailbox.getMailboxById(mailboxId);
-//            root = mbox.getIndexRootDir();
-//        }
-//    	int len = root.length() + 10;
-//    	StringBuffer toRet = new StringBuffer(len);
-//    	toRet.append(root).append(File.separator).append(subIdxNum);
-//    	return toRet.toString();
-//    }
-
-
-    /////////////////////////////////////////////////////////////
-    // Per-Mailbox Indexes
-    /////////////////////////////////////////////////////////////
-    
-//    public MailboxIndex getMailboxIndex(int mailboxId) throws ServiceException 
-//	{
-//		return getMailboxIndex(Integer.toString(mailboxId));
-//	}
-//	
-//    public MailboxIndex getMailboxIndex(int mailboxId, String root) throws ServiceException 
-//	{
-//		return getMailboxIndex(Integer.toString(mailboxId), root);
-//	}
-//
-//    private MailboxIndex getMailboxIndex(String mailboxIdStr) throws ServiceException {
-//        return getMailboxIndex(mailboxIdStr, null);
-//    }
-//    
-//	private MailboxIndex getMailboxIndex(String mailboxIdStr, String root) throws ServiceException 
-//	{
-//		// TODO use an LRU here to keep the # open indexes reasonable
-//	    synchronized(mMbxIndexes) {
-//	        MailboxIndex retVal = (MailboxIndex) mMbxIndexes.get(mailboxIdStr);
-//			if (null == retVal) {
-//				retVal = new MailboxIndex(Integer.parseInt(mailboxIdStr, 10), root);
-//				mMbxIndexes.put(mailboxIdStr, retVal);
-//			}
-//			return retVal;
-//		}
-//	}
-    
     /////////////////////////////////////////////////////////////
     // Statistics
     /////////////////////////////////////////////////////////////
@@ -519,74 +422,5 @@ public class Indexer
 					  ", requeued: " + mNumRequeued +
 					  ", retrylimit: " + mNumRetryLimit);
     	}
-    }
-	
-
-    /////////////////////////////////////////////////////////////
-	// main and command-line parsing
-    /////////////////////////////////////////////////////////////
-
-    public static void usage(Options options) {
-        HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp(Indexer.class.getName(), options); 
-        System.exit(1);
-    }
-
-    private static CommandLine parseCmdlineArgs(String args[], Options options) {
-        CommandLineParser parser = new GnuParser();
-
-        // Loose convention for naming options:
-        //
-        // Options applicable for normal, production usage have lowercase
-        // letter.  Options for debugging, testing, or diagnostic
-        // uses have uppercase letter.
-
-        options.addOption("h", "help", false, "print usage");
-        options.addOption("t", "threads", true, "number of Indexer threads (default 4)");
-        options.addOption("s", "sleep", true, "number of seconds to sleep between index queue scans (default 1)");
-
-        CommandLine cl = null;
-        boolean err = false;
-        try {
-            cl = parser.parse(options, args);
-        } catch (ParseException pe) {
-            System.err.println("error: " + pe.getMessage());
-            err = true;
-        }
-        
-        if (err || cl.hasOption("h"))
-            usage(options);
-
-        return cl;
-    }
-
-    public static void main(String args[]) {
-        Zimbra.toolSetup();
-
-        // command line argument parsing
-        Options options = new Options();
-        CommandLine cl = parseCmdlineArgs(args, options);
-
-        int numThreads = 4;
-//        long numSleepSeconds = 1;
-
-        try {
-        	// FIXME: Two or more worker threads will result in MySQL deadlock
-        	// while inserting into conversation table.
-    		//numThreads = Integer.parseInt(cl.getOptionValue("t", "4"));
-    		numThreads = Integer.parseInt(cl.getOptionValue("t", "1"));
-//    		numSleepSeconds = Long.parseLong(cl.getOptionValue("s", "1"));
-    	} catch (NumberFormatException e) {
-    		e.printStackTrace();
-    		usage(options);
-    	}
-
-    	mLog.info("Starting Indexer");
-
-    	mLog.info("Running " + numThreads + " indexer threads");
-
-    	//indexer.start();
-
-        mLog.info("Exiting Indexer");
     }
 }

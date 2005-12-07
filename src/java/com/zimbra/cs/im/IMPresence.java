@@ -75,18 +75,14 @@ public class IMPresence {
         return new IMPresence(show, priority, status);
     }
     
-    public Element toXml(Element parent) {
-        Element e = parent.addUniqueElement("presence");
-            
+    public void toXml(Element parent) {
         IMPresence.Show show = mShow;
         if (show != null)
-            e.addAttribute("show", show.toString());
+            parent.addAttribute("show", show.toString());
                 
         if (mStatus != null) {
-            Element se = e.addUniqueElement("status");
-            se.setText(mStatus);
+            parent.addAttribute("status", mStatus);
         }
-        return e;
     }
     
     public Show getShow() { return mShow; }

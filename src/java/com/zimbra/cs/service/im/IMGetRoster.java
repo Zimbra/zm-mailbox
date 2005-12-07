@@ -83,8 +83,10 @@ public class IMGetRoster extends IMDocumentHandler {
                     IMPresence presence = buddy.getPresence();
                     if (presence == null) 
                         e.addUniqueElement(IMService.E_PRESENCE);
-                    else
-                        presence.toXml(e);
+                    else {
+                        Element pe = e.addUniqueElement(IMService.E_PRESENCE);
+                        presence.toXml(pe);
+                    }
                     
                     StringBuffer groupStr = null;
                     // groups
