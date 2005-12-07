@@ -694,10 +694,11 @@ public class ZimletUtil {
 	
 	private static final String INSTALL_CMD = "install";
 	private static final String UNINSTALL_CMD = "uninstall";
+	private static final String UNDEPLOY_CMD = "undeploy";
 	private static final String LIST_CMD = "listzimlets";
 	private static final String ACL_CMD = "acl";
 	private static final String LIST_ACLS_CMD = "listacls";
-	private static final String DUMP_CONFIG_CMD = "dumpconfigtemplate";
+	private static final String DUMP_CONFIG_CMD = "getconfigtemplate";
 	private static final String INSTALL_CONFIG_CMD = "configure";
 	private static final String LDAP_DEPLOY_CMD = "ldapdeploy";
 	private static final String DEPLOY_CMD = "deploy";
@@ -715,6 +716,8 @@ public class ZimletUtil {
 	
 	private static void setup() {
 		mCommands = new HashMap<String,Integer>();
+		addCommand(DEPLOY_CMD, DEPLOY_ZIMLET);
+		addCommand(UNDEPLOY_CMD, UNINSTALL_ZIMLET);
 		addCommand(INSTALL_CMD, INSTALL_ZIMLET);
 		addCommand(UNINSTALL_CMD, UNINSTALL_ZIMLET);
 		addCommand(LIST_CMD, LIST_ZIMLETS);
@@ -723,7 +726,6 @@ public class ZimletUtil {
 		addCommand(DUMP_CONFIG_CMD, DUMP_CONFIG);
 		addCommand(INSTALL_CONFIG_CMD, INSTALL_CONFIG);
 		addCommand(LDAP_DEPLOY_CMD, LDAP_DEPLOY);
-		addCommand(DEPLOY_CMD, DEPLOY_ZIMLET);
 		addCommand(ENABLE_CMD, ENABLE_ZIMLET);
 		addCommand(DISABLE_CMD, DISABLE_ZIMLET);
 		addCommand(LIST_PRIORITY_CMD, LIST_PRIORITY);
@@ -734,9 +736,9 @@ public class ZimletUtil {
 	private static void usage() {
 		System.out.println("zimlet: [command] [ zimlet.zip | config.xml | zimlet ]");
 		System.out.println("\tdeploy {zimlet.zip} - install, ldapDeploy, grant ACL on default COS, then enable zimlet");
+		System.out.println("\tundeploy {zimlet} - remove the zimlet entry from the system");
 		System.out.println("\tinstall {zimlet.zip} - installs the zimlet files on this host");
 		System.out.println("\tldapDeploy {zimlet} - add the zimlet entry to the system");
-		System.out.println("\tuninstall {zimlet} - remove the zimlet entry from the system");
 		System.out.println("\tenable {zimlet} - enables the zimlet");
 		System.out.println("\tdisable {zimlet} - disables the zimlet");
 		System.out.println("\tacl {zimlet} {cos1} grant|deny [{cos2} grant|deny...] - change the ACL for the zimlet on a COS");
