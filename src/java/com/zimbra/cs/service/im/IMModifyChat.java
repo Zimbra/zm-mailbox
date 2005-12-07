@@ -30,6 +30,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 
+import com.zimbra.cs.im.IMAddr;
 import com.zimbra.cs.im.IMChat;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.soap.ZimbraContext;
@@ -37,7 +38,7 @@ import com.zimbra.soap.ZimbraContext;
 public class IMModifyChat extends IMDocumentHandler 
 {
     static enum Op {
-        CLOSE;
+        CLOSE, ADDUSER;
     }
 
     public Element handle(Element request, Map context) throws ServiceException, SoapFaultException 
@@ -59,11 +60,15 @@ public class IMModifyChat extends IMDocumentHandler
             throw ServiceException.FAILURE("Unknown thread: "+threadId, null);
             
             String opStr = request.getAttribute(IMService.A_OPERATION);
-            Op op = Op.valueOf(opStr);
+            Op op = Op.valueOf(opStr.toUpperCase());
             
             switch(op) {
             case CLOSE:
                 persona.closeChat(lc.getOperationContext(), chat);
+                break;
+            case ADDUSER:
+                String newUser = request.getAttribute(IMService.A_ADDRESS);
+                persona.addUserToChat(chat, new IMAddr(newUser));
                 break;
             }
         }

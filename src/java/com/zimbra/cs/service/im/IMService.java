@@ -49,6 +49,7 @@ public class IMService implements DocumentService {
     public static final String E_PRESENCE       = "presence";
     public static final String E_STATUS         = "status";
     public static final String E_LEFTCHAT       = "leftchat";
+    public static final String E_ENTEREDCHAT    = "leftchat";
     public static final String E_SUBSCRIBE      = "subscribe";
     public static final String E_SUBSCRIBED     = "subscribed";
     public static final String E_UNSUBSCRIBED   = "unsubscribed";

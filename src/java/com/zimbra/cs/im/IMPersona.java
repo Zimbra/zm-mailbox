@@ -329,7 +329,7 @@ public class IMPersona {
     }
     
     public synchronized void closeChat(OperationContext octxt, IMChat chat) throws ServiceException {
-        ArrayList toList = new ArrayList();
+        ArrayList<IMAddr> toList = new ArrayList();
         for (Participant part : chat.participants()) {
             if (!part.getAddress().equals(mAddr))
                 toList.add(part.getAddress());
@@ -338,9 +338,29 @@ public class IMPersona {
         mChats.remove(chat.getThreadId());
         
         IMLeftChatEvent event = new IMLeftChatEvent(mAddr, chat.getThreadId(), toList);
-        
         IMRouter.getInstance().postEvent(event);
-        flush(octxt);
+    }
+    
+    public synchronized void addUserToChat(IMChat chat, IMAddr addr) throws ServiceException {
+        ArrayList<IMAddr> toList = new ArrayList();
+        for (Participant part : chat.participants()) {
+            if (!part.getAddress().equals(mAddr))
+                toList.add(part.getAddress());
+        }
+        
+        // do we have a buddy for this new user?  If so, then use the buddy's info
+        IMBuddy buddy = mBuddyList.get(addr);
+        IMChat.Participant part;
+        
+        if (buddy != null)
+            part = new IMChat.Participant(buddy.getAddress(), null, buddy.getName());
+        else
+            part = new IMChat.Participant(addr);
+        
+        chat.addParticipant(part);
+        
+        IMEnteredChatEvent event = new IMEnteredChatEvent(mAddr, chat.getThreadId(), toList, addr);
+        IMRouter.getInstance().postEvent(event);
     }
     
     private static final String FN_ADDRESS     = "a";
@@ -436,9 +456,28 @@ public class IMPersona {
      */
     void handleLeftChat(IMAddr from, String threadId) throws ServiceException {
         IMChat chat = mChats.get(threadId);
-        chat.removeParticipant(from);
-        flush(null);
+        if (chat != null) {
+            chat.removeParticipant(from);
+        }
     }
+    
+    public void handleAddChatUser(String threadId, IMAddr addr) throws ServiceException {
+        IMChat chat = mChats.get(threadId);
+            
+        if (chat != null) {
+            // do we have a buddy for this new user?  If so, then use the buddy's info
+            IMBuddy buddy = mBuddyList.get(addr);
+            IMChat.Participant part;
+            
+            if (buddy != null)
+                part = new IMChat.Participant(buddy.getAddress(), null, buddy.getName());
+            else
+                part = new IMChat.Participant(addr);
+            
+            chat.addParticipant(part);
+        }
+    }
+    
     
     /**
      * HANDLE* functions are called by IMEvent execution

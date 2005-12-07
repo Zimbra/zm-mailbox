@@ -76,6 +76,10 @@ public class IMChat {
         mParticipants.put(initialPart.getAddress(), initialPart);
     }
     
+    public void addParticipant(Participant part) {
+        mParticipants.put(part.getAddress(), part);
+    }
+    
     public String toString() {
         return "CHAT:"+mThreadId+"("+mParticipants.size()+" parts)";
     }
