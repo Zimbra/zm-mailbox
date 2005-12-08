@@ -1461,7 +1461,8 @@ public class Invite {
                     ArrayList subRecurs = new ArrayList();
                     
                     newInv.setComponentNum(compNum);
-                    newInv.setMailboxId(mbx.getId());
+                    if (mbx != null)
+                        newInv.setMailboxId(mbx.getId());
                     newInv.setMailItemId(mailItemId);
                     newInv.setSentByMe(sentByMe);
                     compNum++;
