@@ -64,6 +64,9 @@ public class LmtpAddressTester {
 				continue;
 			}
 			
+            if (args.length == 0) {
+                args = new String[] { "BODY", "SIZE" };
+            }
 			if (test(input, args) != validity) {
 				System.err.println("incorrect result:line " + i + ":" + line);
 			}
@@ -72,10 +75,11 @@ public class LmtpAddressTester {
 	
 	private static boolean test(String line, String[] allowedParams) {
 		System.out.println("==>" + line + "<==");
-		LmtpAddress addr = new LmtpAddress(line, allowedParams);
+		LmtpAddress addr = new LmtpAddress(line, allowedParams, "+");
 		System.out.println("  valid=" + addr.isValid());
 		if (addr.isValid()) {
 			System.out.println("  local-part=/" + addr.getLocalPart() + "/");
+            System.out.println("  normalized-local=/" + addr.getNormalizedLocalPart() + "/");
 			System.out.println("  domain-part=/" + addr.getDomainPart() + "/");
 			Map params = addr.getParameters();
 			int i = 0;

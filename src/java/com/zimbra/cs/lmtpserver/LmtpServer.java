@@ -30,6 +30,7 @@ import java.net.ServerSocket;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.localconfig.LC;
@@ -37,8 +38,8 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.stats.Counter;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServer;
-import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.NetUtil;
+import com.zimbra.cs.util.Zimbra;
 
 public class LmtpServer extends TcpServer {
 
@@ -104,6 +105,19 @@ public class LmtpServer extends TcpServer {
         m421Error = new String("421 4.3.2 " + name + " Service not available, closing transmission channel");
 	}
 
+    /*
+     * Config to allow address extensions.
+     */
+    private String mRecipientDelimiter;
+    
+    public void setConfigRecipientDelimiter(String delimiter) {
+        mRecipientDelimiter = delimiter; 
+    }
+
+    public String getConfigRecipientDelimiter() {
+        return mRecipientDelimiter;
+    }
+    
 	public String getConfigName() {
 		return mConfigName;
 	}
@@ -167,16 +181,29 @@ public class LmtpServer extends TcpServer {
 		if (theInstance != null)
 			return;
 
-        Server config = Provisioning.getInstance().getLocalServer();
-        int numThreads = config.getIntAttr(Provisioning.A_zimbraLmtpNumThreads, Config.D_LMTP_THREADS);
-        int port = config.getIntAttr(Provisioning.A_zimbraLmtpBindPort, Config.D_LMTP_BIND_PORT);
-        String address = config.getAttr(Provisioning.A_zimbraLmtpBindAddress, null);
-        String advertisedName = config.getAttr(Provisioning.A_zimbraLmtpAdvertisedName, null);
+        Server sconfig = Provisioning.getInstance().getLocalServer();
+        
+        int numThreads = sconfig.getIntAttr(Provisioning.A_zimbraLmtpNumThreads, -1);
+        if (numThreads < 0) {
+            Zimbra.halt("invalid value " + numThreads + " for " + Provisioning.A_zimbraLmtpNumThreads);
+        }
+
+        int port = sconfig.getIntAttr(Provisioning.A_zimbraLmtpBindPort, -1);
+        if (port < 0) {
+            Zimbra.halt("invalid value " + port + " for " + Provisioning.A_zimbraLmtpBindPort);
+        }
+
+        String address = sconfig.getAttr(Provisioning.A_zimbraLmtpBindAddress, null);
+        String advertisedName = sconfig.getAttr(Provisioning.A_zimbraLmtpAdvertisedName, null);
+        
+        Config gconfig = Provisioning.getInstance().getConfig();
+        String delimiter = gconfig.getAttr(Provisioning.A_zimbraMtaRecipientDelimiter, null);
 
         ServerSocket serverSocket = NetUtil.getBoundServerSocket(address, port, false);
 
         theInstance = new LmtpServer(numThreads, serverSocket);
-
+        theInstance.setConfigRecipientDelimiter(delimiter);
+        
         if (advertisedName == null || advertisedName.length() == 0) {
             theInstance.setConfigNameFromHostname();
         } else {

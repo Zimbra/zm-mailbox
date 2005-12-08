@@ -32,43 +32,56 @@ public class LmtpAddress {
 	
 	private boolean mIsValid;
 	private String mLocalPart;
+    private String mNormalizedLocalPart;
 	private String mDomainPart;
 	private Map mParameters;
 	private LmtpStatus mDeliveryStatus;
 	private String mEmailAddress;
 	private String[] mAllowedParameters;
 	
-	public LmtpAddress(String arg, String[] allowedParameters) {
+	public LmtpAddress(String arg, String[] allowedParameters, String rcptDelim) {
 		mAllowedParameters = allowedParameters;
 		mParameters = new HashMap();
 		mIsValid = parse(arg);
-		mDeliveryStatus = LmtpStatus.TRYAGAIN; // A conservative assumption
+		mDeliveryStatus = LmtpStatus.TRYAGAIN;
 		
 		if (!mIsValid) {
 			return;
 		}
-		
-		int l1 = (mLocalPart != null) ? mLocalPart.length() : 0; 
-		int l2 = (mDomainPart != null) ? mDomainPart.length() : 0;
-		StringBuffer sb = new StringBuffer(l1 + l2 + 1);
-		if (mLocalPart != null) {
-			sb.append(mLocalPart);
-		}
-		if (mDomainPart != null) {
-			sb.append("@").append(mDomainPart);
-		}
-		
-		mEmailAddress = sb.toString();
+
+        int delimIndex = -1;
+        if (mLocalPart != null && rcptDelim != null && (delimIndex = mLocalPart.indexOf(rcptDelim)) > 0) {
+            // NB: > 0 makes sure that if the first character is the extension
+            // characater we do try to remove extension.
+            mNormalizedLocalPart = mLocalPart.substring(0, delimIndex); 
+        } else {
+            mNormalizedLocalPart = mLocalPart;
+        }
+
+        int l1 = (mLocalPart != null) ? mLocalPart.length() : 0; 
+        int l2 = (mDomainPart != null) ? mDomainPart.length() : 0;
+        StringBuilder sb = new StringBuilder(l1 + l2 + 1);
+        if (mNormalizedLocalPart != null) {
+            sb.append(mNormalizedLocalPart);
+        }
+        if (mDomainPart != null) {
+            sb.append("@").append(mDomainPart);
+        }
+        mEmailAddress = sb.toString();
 	}
 	
 	public String getEmailAddress() {
-		return mEmailAddress;
+        return mEmailAddress;
 	}
-	
+    
 	public String getLocalPart() {
 		return mLocalPart;
 	}
 	
+    public String getNormalizedLocalPart() {
+        return mNormalizedLocalPart;
+    }
+    
 	public String getDomainPart() {
 		return mDomainPart;
 	}
@@ -497,7 +510,9 @@ public class LmtpAddress {
 			if (debug) say("no paramters allowed in this context");
 			return false;
 		}
+        if (debug) say("checking " + mAllowedParameters.length + " allowed parameters");
 		for (int i = 0; i < mAllowedParameters.length; i++) {
+            if (debug) say("checking key " + key + " against allowed " + mAllowedParameters[i]);
 			if (key.equalsIgnoreCase(mAllowedParameters[i])) {
 				if (debug) say("parameter " + key + " is allowed");
 				return true;

@@ -98,3 +98,10 @@
 -:<"j\"@bar>
 -:<"j\"k@bar>
 -:<"foo"xyz@bar>
+
+#
+# Check address extensions (see recipient_delimiter docs).
+#
++:<a+b>
++:<+ab>
++:<ba+>

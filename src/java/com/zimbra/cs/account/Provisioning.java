@@ -470,7 +470,9 @@ public abstract class Provisioning {
     public static final String A_zimbraMtaMaxMessageSize = "zimbraMtaMaxMessageSize";
     public static final String A_zimbraMtaRelayHost = "zimbraMtaRelayHost";
     public static final String A_zimbraMtaTlsAuthOnly = "zimbraMtaTlsAuthOnly";
-
+    public static final String A_zimbraMtaRecipientDelimiter = "zimbraMtaRecipientDelimiter";
+    
+    
     public static final String A_zimbraPrefTimeZoneId = "zimbraPrefTimeZoneId";
     public static final String A_zimbraPrefUseTimeZoneListInCalendar = "zimbraPrefUseTimeZoneListInCalendar";
 

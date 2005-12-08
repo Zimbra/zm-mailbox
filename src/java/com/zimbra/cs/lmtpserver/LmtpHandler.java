@@ -309,7 +309,7 @@ public class LmtpHandler extends ProtocolHandler {
 			return;
 		}
 		
-		LmtpAddress addr = new LmtpAddress(arg, new String[] { "BODY", "SIZE" });
+		LmtpAddress addr = new LmtpAddress(arg, new String[] { "BODY", "SIZE" }, null);
 		if (!addr.isValid()) {
 		    sendResponse("501 5.5.4 Syntax error in parameters");
 		    return;
@@ -354,7 +354,7 @@ public class LmtpHandler extends ProtocolHandler {
     		return;
     	}
     	
-		LmtpAddress addr = new LmtpAddress(arg, null);
+		LmtpAddress addr = new LmtpAddress(arg, null, mServer.getConfigRecipientDelimiter());
 		if (!addr.isValid()) {
 			sendResponse("501 5.5.4 Syntax error in parameters");
 			return;
