@@ -24,64 +24,38 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.Iterator;
 import java.util.Map;
 
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
-import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
 public class GetZimlets extends AdminDocumentHandler  {
 
-	private static final String TYPE_EXTENSION = "extension";
-	
 	public Element handle(Element request, Map context) throws ServiceException {
 		ZimbraContext lc = getZimbraContext(context);
         Account acct = getRequestedAccount(lc);
 		
-        String type = request.getAttribute(AdminService.A_T, null);
-
         Element response = lc.createElement(AdminService.GET_ZIMLETS_RESPONSE);
         Element zimlets = response.addUniqueElement(AccountService.E_ZIMLETS);
-        doZimlets(zimlets, acct, type);
+        doExtensionZimlets(zimlets, acct);
         
         return response;
     }
 
-	private boolean checkZimlet(Zimlet z, String type) {
-		if (z == null || !z.isEnabled()) {
-			return false;
-		} else if (type == null) {
-			return !z.isExtension();
-		} else if (type.equals(TYPE_EXTENSION)) {
-			return z.isExtension();
+	private void doExtensionZimlets(Element response, Account acct) throws ServiceException {
+		Iterator zimlets = Provisioning.getInstance().listAllZimlets().iterator();
+		while (zimlets.hasNext()) {
+			Zimlet z = (Zimlet) zimlets.next();
+			if (z.isExtension()) {
+				ZimletUtil.listZimlet(response, z.getName());
+			}
 		}
-		return true;
-	}
-	
-	private void doZimlets(Element response, Account acct, String type) throws ServiceException {
-    	Cos cos = acct.getCOS();
-    	String[] attrList = cos.getMultiAttr(Provisioning.A_zimbraZimletAvailableZimlets);
-    	String zimletName = null;
-    	for (int attrIndex = 0; attrIndex < attrList.length; attrIndex++) {
-    		try {
-    			zimletName = attrList[attrIndex];
-    			Zimlet z = Provisioning.getInstance().getZimlet(zimletName);
-    			if (checkZimlet(z, type)) {
-    				ZimletUtil.listZimlet(response, zimletName);
-    			}
-    		} catch (ServiceException se) {
-				ZimbraLog.zimlet.error("inconsistency in installed zimlets. "+zimletName+" does not exist.");
-    		}
-    	}
-    	
-    	// load the zimlets in the dev directory and list them
-    	ZimletUtil.listDevZimlets(response);
     }
 }
