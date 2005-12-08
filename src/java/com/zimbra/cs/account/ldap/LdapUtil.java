@@ -35,6 +35,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.Map.Entry;
 
 import javax.naming.AuthenticationException;
@@ -53,7 +54,6 @@ import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 
 import org.apache.commons.codec.binary.Base64;
-import org.doomdark.uuid.UUIDGenerator;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Domain.SearchGalResult;
@@ -297,10 +297,8 @@ public class LdapUtil {
         }
     }
     
-    private static final UUIDGenerator UUID_GEN = UUIDGenerator.getInstance();
-    
     public static String generateUUID() {
-        return UUID_GEN.generateTimeBasedUUID().toString();
+        return UUID.randomUUID().toString();
     }
 
     public static String getAttrString(Attributes attrs, String name) throws NamingException {
