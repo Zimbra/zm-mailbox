@@ -77,12 +77,10 @@ public class ZimletDescription extends ZimletMeta {
 
 	private void parseResource(Element resource) throws ZimletException {
 		String txt = resource.getText();
-		ZimbraLog.zimlet.info(txt);
 		if (!txt.startsWith("http:") &&
 				!txt.startsWith("https:")) {
 			txt = ZIMLET_URL + "/" + mName + "/" + txt;
 			resource.setText(txt);
-			ZimbraLog.zimlet.info("new url: " + txt);
 		}
 		mScripts.add(txt);
 	}
