@@ -200,6 +200,9 @@ public class AdminService implements DocumentService {
     public static final QName REINDEX_REQUEST = QName.get("ReIndexRequest", NAMESPACE);
     public static final QName REINDEX_RESPONSE = QName.get("ReIndexResponse", NAMESPACE);
     
+    public static final QName GET_ZIMLETS_REQUEST = QName.get("GetZimletsRequest", NAMESPACE);
+    public static final QName GET_ZIMLETS_RESPONSE = QName.get("GetZimletsResponse", NAMESPACE);
+
     public static final String E_ACCOUNT = "account";
     public static final String E_AUTH_TOKEN = "authToken";
     public static final String E_NAME = "name";
@@ -377,6 +380,8 @@ public class AdminService implements DocumentService {
         
         dispatcher.registerHandler(REINDEX_REQUEST, new ReIndex());
         
+        // zimlet
+        dispatcher.registerHandler(GET_ZIMLETS_REQUEST, new GetZimlets());
     }
 
     /**
