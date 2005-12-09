@@ -61,16 +61,19 @@ public class OzConnection {
     
     private final String mRemoteAddress;
 
-    /* guards mReadBuffer and mClosed */
-    private final Object mReadBufferLock = new Object();
+    /* guards read operations and mClosed */
+    private final Object mReadLock = new Object();
     
-    private ByteBuffer mReadBuffer;
-
     private boolean mClosed;
     
+    private final boolean mDebug;
+    
+    private final boolean mTrace;
+
     OzConnection(OzServer server, SocketChannel channel) throws IOException {
         mId = mIdCounter.increment();
         mIdString = Integer.toString(mId);
+        
         mRemoteAddress = channel.socket().getInetAddress().getHostAddress();
         mChannel = channel;
         mServer = server;
@@ -78,9 +81,12 @@ public class OzConnection {
         try {
             addToNDC();
             mLog = mServer.getLog();
+            mDebug = mLog.isDebugEnabled();
+            mTrace = mLog.isTraceEnabled();
             mLog.info("connected");
             mSelectionKey = channel.register(server.getSelector(), 0, this); 
             mConnectionHandler = server.newConnectionHandler(this);
+            
             try {
                 /* TODO - this should be a task */
                 mConnectionHandler.handleConnect();
@@ -95,6 +101,21 @@ public class OzConnection {
         }
     }
 
+    public Log getLog() {
+        return mLog;
+    }
+    
+    /* always access it through the get method which synchronizes - TODO revisit this synch and remove if possible */
+    private OzFilter mFilter;
+    
+    synchronized void setFilter(OzFilter filter) {
+        mFilter = filter;
+    }
+    
+    private synchronized OzFilter getFilter() {
+        return mFilter;
+    }
+    
     public void closeNow() {
         Runnable closeTask = new Runnable() {
             public void run() {
@@ -116,18 +137,8 @@ public class OzConnection {
                 } catch (IOException ioe) {
                     mLog.warn("exception closing channel, ignoring and continuing", ioe);
                 } finally {
-                    synchronized (mReadBufferLock) { 
-                        if (mClosed && mLog.isDebugEnabled()) {
-                            mLog.debug("duplicate close detected");
-                        }
-                        if (mReadBuffer != null) {
-                            if (mClosed) {
-                                mLog.warn("duplicate close and earlier close leaked buffer");
-                            }
-                            mServer.getBufferPool().recycle(mReadBuffer);
-                            mLog.info("recycled buffer " + OzUtil.intToHexString(mReadBuffer.hashCode(), 0, ' '));
-                            mReadBuffer = null;
-                        }
+                    synchronized (mReadLock) { 
+                        if (mClosed && mDebug) mLog.debug("duplicate close detected");
                         mClosed = true;
                     }
                 }
@@ -146,7 +157,7 @@ public class OzConnection {
         ZimbraLog.clearContext();
     }
     
-    /* Caller must lock key! */
+    /* Caller must lock selectionkey! */
     static void logKey(Log log, SelectionKey selectionKey, String where) {
         if (selectionKey.isValid()) {
             log.debug(where +
@@ -158,7 +169,7 @@ public class OzConnection {
         }
     }
 
-    private void enableReadInterest() {
+    void enableReadInterest() {
         synchronized (mSelectionKey) {
             int iops = mSelectionKey.interestOps();
             mSelectionKey.interestOps(iops | SelectionKey.OP_READ);
@@ -212,6 +223,9 @@ public class OzConnection {
                     addToNDC();
                     mConnectionHandler.handleDisconnect();
                     closeNow();
+                    if (mFilter != null) {
+                        mFilter.close();
+                    }
                     closed = true;
                 } finally {
                     clearFromNDC();
@@ -234,20 +248,59 @@ public class OzConnection {
         }
     }
     
+    private ByteBuffer getReadByteBuffer() {
+        if (mFilter != null) {
+            return mFilter.getReadBuffer();
+        } else {
+            return ByteBuffer.allocate(mServer.getReadBufferSize());
+        }
+    }
+    
     private HandleReadTask mHandleReadTask = new HandleReadTask();
     
     private class HandleReadTask implements Runnable {
         public void run() {
             try {
                 addToNDC();
-                run0();
+                ByteBuffer rbb = getReadByteBuffer();
+                mLog.info("obtained buffer " + OzUtil.intToHexString(rbb.hashCode(), 0, ' '));
+                if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("read buffer at start", rbb, true));
+                int bytesRead = -1;
+                synchronized (mReadLock) {
+                    bytesRead = mChannel.read(rbb);
+                }
+                if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("read buffer after channel read", rbb, true));
+                
+                assert(bytesRead == rbb.position());
+                
+                if (bytesRead == -1) {
+                    if (mDebug) mLog.debug("channel read detected that client closed connection");
+                    mServer.execute(mHandleDisconnectTask);
+                    return;
+                }
+                
+                if (bytesRead == 0) {
+                    mLog.warn("got 0 bytes on supposedly read ready channel");
+                    return;
+                }
+                
+                if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("read from channel bytes=" + bytesRead, rbb, true));
+                
+                ByteBuffer dataBuffer;
+                if (mFilter == null) {
+                    if (mDebug) mLog.debug("no filter will process read bytes");
+                    processRead(rbb);
+                } else {
+                    if (mDebug) mLog.debug("handing read bytes to filter");
+                    mFilter.read(rbb);
+                }
             } catch (Throwable t) {
                 if (mChannel.isOpen()) {
                     mLog.warn("exception occured handling read; will close connection", t);
                 } else {
                     // someone else may have closed the channel, eg, a shutdown or
                     // client went away, etc. Consider this case to be normal.
-                    if (mLog.isDebugEnabled()) {
+                    if (mDebug) {
                         mLog.debug("ignorable (" + t.getClass().getName() + ") when reading, connection already closed", t); 
                     }
                 }
@@ -256,109 +309,64 @@ public class OzConnection {
                 clearFromNDC();
             }
         }
-        
-        private void run0() throws IOException {
-            synchronized (mReadBufferLock) {
-                if (mReadBuffer == null) {
-                    if (mClosed) {
-                        mLog.info("connection ready to read, but already closed");
-                        return;
-                    }
-                    mReadBuffer = mServer.getBufferPool().get();
-                    mLog.info("obtained buffer " + OzUtil.intToHexString(mReadBuffer.hashCode(), 0, ' '));
-                }
-                processReadBufferLocked();
-            }
-        }
     }
 
-    private void processReadBufferLocked() throws IOException {
-    	boolean trace = mLog.isTraceEnabled(); 
-        
-        if (trace) mLog.trace(OzUtil.byteBufferDebugDump("read buffer at start", mReadBuffer, true));
-        
-        int bytesRead = mChannel.read(mReadBuffer);
-        
-        if (trace) mLog.trace(OzUtil.byteBufferDebugDump("read buffer after read", mReadBuffer, true));
-        
-        assert(bytesRead == mReadBuffer.position());
-        
-        if (mServer.getSnooper().snoopReads()) {
-            mServer.getSnooper().read(this, bytesRead, mReadBuffer);
-        }
-        
-        if (bytesRead == -1) {
-            if (mLog.isDebugEnabled()) mLog.debug("read detected that client closed connection");
-            mServer.execute(mHandleDisconnectTask);
-            return;
-        }
-        
-        if (bytesRead == 0) {
-            mLog.warn("got 0 bytes on supposedly read ready channel");
-            return;
-        }
-
+    /* Do not call directly.  For use by filters. */
+    public void processRead(ByteBuffer dataBuffer) throws IOException { 
         int handledBytes = 0;
         
-        // Create a copy which we can trash.  (duplicate() does not
-        // copy underlying buffer)
-        ByteBuffer matchBuffer = mReadBuffer.duplicate();
+        // Create a copy which we can trash.  NB: duplicate() does not
+        // copy underlying buffer.
+        ByteBuffer matchBuffer = dataBuffer.duplicate();
         matchBuffer.flip();
         
         // We may have read more than one PDU 
         while (matchBuffer.position() < matchBuffer.limit()) {
             int matchStart = matchBuffer.position();
             
-            if (trace) {
-                mLog.trace(OzUtil.byteBufferDebugDump("matching", matchBuffer, false));
-            }
+            if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("matching", matchBuffer, false));
             
             int matchEnd = mMatcher.match(matchBuffer);
             
-            if (mLog.isDebugEnabled()) {
-            	mLog.debug("match returned " + matchEnd);
-            }
+            if (mDebug) mLog.debug("match returned " + matchEnd);
             
             if (matchEnd == -1) {
                 break;
             }
             
-            ByteBuffer pdu = mReadBuffer.duplicate();
+            ByteBuffer pdu = dataBuffer.duplicate();
             pdu.position(matchStart);
             pdu.limit(matchBuffer.position());
             mMatcher.trim(pdu);
-            if (mServer.getSnooper().snoopInputs()) {
-                mServer.getSnooper().input(this, pdu, true);
-            }
+            if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("input matched=" + true, pdu, false));
             mConnectionHandler.handleInput(pdu, true);
             handledBytes = matchEnd;
         }
-        
+            
         if (handledBytes == 0) {
-            if (mLog.isDebugEnabled()) mLog.debug("no bytes handled and no match");
-            if (mReadBuffer.hasRemaining()) {
-                if (mLog.isDebugEnabled()) mLog.debug("no bytes handled, no match, but there is room in buffer");
+            if (mDebug) mLog.debug("no bytes handled and no match");
+            if (dataBuffer.hasRemaining()) {
+                if (mDebug) mLog.debug("no bytes handled, no match, but there is room in buffer");
             } else {
-                if (mLog.isDebugEnabled()) mLog.debug("no bytes handled, no match, and buffer is full, overflowing");
-                assert(mReadBuffer.limit() == mReadBuffer.position());
-                assert(mReadBuffer.limit() == mReadBuffer.capacity());
-                mReadBuffer.flip();
-                if (mServer.getSnooper().snoopInputs()) {
-                    mServer.getSnooper().input(this, mReadBuffer, false);
-                }
-                mConnectionHandler.handleInput(mReadBuffer, false);
-                mReadBuffer.clear();
+                if (mDebug) mLog.debug("no bytes handled, no match, and buffer is full, overflowing");
+                assert(dataBuffer.limit() == dataBuffer.position());
+                assert(dataBuffer.limit() == dataBuffer.capacity());
+                dataBuffer.flip();
+                if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("input matched=" + false, dataBuffer, false));
+                mConnectionHandler.handleInput(dataBuffer, false);
+                dataBuffer.clear();
             }
         } else {
-            if (mReadBuffer.position() == handledBytes) {
-                if (mLog.isDebugEnabled()) mLog.debug("handled all bytes in input, clearing buffer (no compacting)");
-                mReadBuffer.clear();
+            if (dataBuffer.position() == handledBytes) {
+                if (mDebug) mLog.debug("handled all bytes in input, clearing buffer (no compacting)");
+                dataBuffer.clear();
             } else {
-                if (mLog.isDebugEnabled()) mLog.debug("not all handled, compacting "  + (mReadBuffer.position() - handledBytes) + " bytes");
-                mReadBuffer.position(handledBytes);
-                mReadBuffer.compact();
+                if (mDebug) mLog.debug("not all handled, compacting "  + (dataBuffer.position() - handledBytes) + " bytes");
+                dataBuffer.position(handledBytes);
+                dataBuffer.compact();
             }
         }
+        
         enableReadInterest();
         return;
     }
@@ -387,7 +395,7 @@ public class OzConnection {
     /**
      * Buffers that need to written out, when write side of the connection is ready.
      */
-    List mWriteBuffers = new LinkedList();
+    List<ByteBuffer> mWriteBuffers = new LinkedList<ByteBuffer>();
 
     /**
      * Always looked at with mWriteBuffers locked.
@@ -412,24 +420,54 @@ public class OzConnection {
             bdata[n] = OzByteArrayMatcher.CR;
             bdata[n+1] = OzByteArrayMatcher.LF;
         }
-        write(ByteBuffer.wrap(bdata));
+        write(ByteBuffer.wrap(bdata), flush);
     }
-    
-    public void write(ByteBuffer data) throws IOException {
-        write(data, true);
+
+    public void write(ByteBuffer wbb) throws IOException {
+        write(wbb, true);
     }
-    
-    public void write(ByteBuffer data, boolean flush) throws IOException {
+
+    public void write(ByteBuffer wbb, boolean flush) throws IOException {
         // TODO even if flush has not been requested, we should flush if we
         // have too much data!
+        if (mFilter != null) {
+            if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("pre-filter outgoing", wbb, false));
+            mFilter.write(wbb, flush);
+        } else {
+            if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("pre-filter outgoing", wbb, false));
+            writeQueueAppend(wbb, flush);
+        }
+    }
+
+    /** For use by filters, do not call directly. */
+    public void writeQueueAppend(ByteBuffer wbb, boolean flush) {
         synchronized (mWriteBuffers) {
-            mWriteBuffers.add(data);
+            mWriteBuffers.add(wbb);
             if (flush) {
                 enableWriteInterest();
             }
         }
     }
-
+    
+    /** For use by filters, do not call directly. */
+    public void writeQueuePrepend(ByteBuffer wbb, boolean flush) {
+        synchronized (mWriteBuffers) {
+            mWriteBuffers.add(0, wbb);
+            if (flush) {
+                enableWriteInterest();
+            }
+        }
+    }
+    
+    void interposedWrite(ByteBuffer data) {
+    }
+    
+    public boolean isWritePending() {
+        synchronized (mWriteBuffers) {
+            return !mWriteBuffers.isEmpty();
+        }
+    }
+    
     /**
      * This method runs in the server thread.
      * 
@@ -455,13 +493,9 @@ public class OzConnection {
                 assert(data != null);
                 assert(data.hasRemaining());
                 
-                if (mServer.getSnooper().snoopWrites()) {
-                    mServer.getSnooper().write(this, data);
-                }
+                if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("raw outgoing", data, false));
                 int wrote = mChannel.write(data);
-                if  (mServer.getSnooper().snoopWrites()) {
-                    mServer.getSnooper().wrote(this, wrote);
-                }
+                if (mTrace) mLog.trace("raw outgoing wrote=" + wrote);
                 
                 if (data.hasRemaining()) {
                     // If not all data was written, stop - we will write again
@@ -469,7 +503,7 @@ public class OzConnection {
                     // write. Put the buffer back in the list so whatever is
                     // remaining can be written later.  Note that we do not
                     // clear write interest here.
-                    if (mLog.isDebugEnabled()) mLog.debug("incomplete write, adding buffer back");
+                    if (mDebug) mLog.debug("incomplete write, adding buffer back");
                     mWriteBuffers.add(0, data); 
                     break;
                 }

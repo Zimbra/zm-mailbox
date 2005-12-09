@@ -39,9 +39,9 @@ class OzBufferPool {
     
     private Log mLog;
     
-    private List mFreeBuffers;
+    private List<ByteBuffer> mFreeBuffers;
     
-    private List mAllocatedBuffers;
+    private List<ByteBuffer> mAllocatedBuffers;
     
     private int mInUse = 0;
     
@@ -59,8 +59,8 @@ class OzBufferPool {
         mName = name;
         mLog = log;
         mBufferSize = bufferSize;
-        mFreeBuffers = new LinkedList();
-        mAllocatedBuffers = new ArrayList(16);
+        mFreeBuffers = new LinkedList<ByteBuffer>();
+        mAllocatedBuffers = new ArrayList<ByteBuffer>(16);
         mEmptyBuffer = new byte[mBufferSize];
 
         TimerTask task = new TimerTask() {
@@ -68,7 +68,9 @@ class OzBufferPool {
                 mLog.info(mName + " buffer pool inuse=" + mInUse + " allocated=" + mAllocatedBuffers.size());
             }
         };
-        Zimbra.sTimer.scheduleAtFixedRate(task, USAGE_DISPLAY_INTERVAL, USAGE_DISPLAY_INTERVAL);
+        if (false) {
+            Zimbra.sTimer.scheduleAtFixedRate(task, USAGE_DISPLAY_INTERVAL, USAGE_DISPLAY_INTERVAL);
+        }
     }
     
     synchronized ByteBuffer get() {

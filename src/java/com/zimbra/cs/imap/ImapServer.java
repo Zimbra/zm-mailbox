@@ -38,7 +38,6 @@ import com.zimbra.cs.ozserver.OzConnection;
 import com.zimbra.cs.ozserver.OzConnectionHandler;
 import com.zimbra.cs.ozserver.OzConnectionHandlerFactory;
 import com.zimbra.cs.ozserver.OzServer;
-import com.zimbra.cs.ozserver.OzSnooper;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServer;
@@ -112,9 +111,6 @@ public class ImapServer extends TcpServer {
             try {
                 OzServer ozserver = new OzServer("IMAP", readBufferSize, serverSocket, imapHandlerFactory, ZimbraLog.imap);
                 ozserver.setProperty(OzImapConnectionHandler.PROPERTY_ALLOW_CLEARTEXT_LOGINS, Boolean.toString(loginOK));
-                if (LC.get("debug_ozimap_snoop").equalsIgnoreCase("true")) {
-                    ozserver.setSnooper(new OzSnooper(ZimbraLog.imap, OzSnooper.ALL));
-                }
                 ozserver.start();
                 sImapServer = ozserver;
             } catch (IOException ioe) {

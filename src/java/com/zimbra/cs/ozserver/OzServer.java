@@ -38,6 +38,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.net.ssl.SSLContext;
+
 import org.apache.commons.logging.Log;
 
 import EDU.oswego.cs.dl.util.concurrent.BoundedLinkedQueue;
@@ -58,8 +60,8 @@ import EDU.oswego.cs.dl.util.concurrent.ThreadFactory;
 // TODO add a clearConnection so that protocol handlers will
 //      let go of the connection objects
 
-// TODO writes should be tasks to - why write only from the
-//      main thread?
+// TODO writes and connection handles should be tasks to - why write
+//      only from the main thread?
         
 public class OzServer {
     
@@ -77,10 +79,12 @@ public class OzServer {
     
     private OzConnectionHandlerFactory mConnectionHandlerFactory;
     
-    private OzSnooper mSnooper = new OzSnooper(null);
-    
     private OzBufferPool mBufferPool;
+
+    private int mReadBufferSize;
     
+    private SSLContext mSSLContext;
+
     public OzServer(String name, int readBufferSize, ServerSocket serverSocket,
                     OzConnectionHandlerFactory connectionHandlerFactory, Log log)
         throws IOException
@@ -90,9 +94,10 @@ public class OzServer {
         mServerSocket = serverSocket;
         mServerSocketChannel = serverSocket.getChannel();
         mServerSocketChannel.configureBlocking(false);
-        
+
         mServerName = name + "-" + mServerSocket.getLocalPort();
         mBufferPool = new OzBufferPool(mServerName, readBufferSize, mLog);
+        mReadBufferSize = readBufferSize;
         
         mConnectionHandlerFactory = connectionHandlerFactory;
         
@@ -108,14 +113,6 @@ public class OzServer {
         mPooledExecutor.setThreadFactory(new OzThreadFactory());
     }
 
-    public void setSnooper(OzSnooper snooper) {
-        mSnooper = snooper;
-    }
-    
-    public OzSnooper getSnooper() {
-        return mSnooper;
-    }
-    
     OzConnectionHandler newConnectionHandler(OzConnection connection) {
         return mConnectionHandlerFactory.newConnectionHandler(connection);
     }
@@ -155,9 +152,9 @@ public class OzServer {
                 continue;
             }
             
-            Iterator iter = mSelector.selectedKeys().iterator();
+            Iterator<SelectionKey> iter = mSelector.selectedKeys().iterator();
             while (iter.hasNext()) {
-                SelectionKey readyKey = (SelectionKey) iter.next();
+                SelectionKey readyKey = iter.next();
                 iter.remove();
 
                 OzConnection selectedConnection = null; 
@@ -290,7 +287,7 @@ public class OzServer {
         mServerThread.start();
     }
 
-    private List mServerThreadTasks = new ArrayList(128); 
+    private List<Runnable> mServerThreadTasks = new ArrayList<Runnable>(128); 
     
     void executeInServerThread(Runnable task) {
         if (Thread.currentThread() == mServerThread) {
@@ -372,6 +369,10 @@ public class OzServer {
         return mBufferPool;
     }
 
+    int getReadBufferSize() {
+        return mReadBufferSize;
+    }
+   
     Log getLog() {
         return mLog;
     }

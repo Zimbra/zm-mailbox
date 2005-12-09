@@ -33,7 +33,6 @@ import com.zimbra.cs.ozserver.OzConnection;
 import com.zimbra.cs.ozserver.OzConnectionHandler;
 import com.zimbra.cs.ozserver.OzConnectionHandlerFactory;
 import com.zimbra.cs.ozserver.OzServer;
-import com.zimbra.cs.ozserver.OzSnooper;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.NetUtil;
@@ -68,7 +67,6 @@ public class OzImapServer {
         ServerSocket serverSocket = NetUtil.getBoundServerSocket(address, port, false);
 
         mServer = new OzServer("IMAP", IMAP_READ_BUFFER_SIZE, serverSocket, imapHandlerFactory, ZimbraLog.imap);
-        mServer.setSnooper(new OzSnooper(ZimbraLog.imap, OzSnooper.ALL));
         mServer.start();
         
         String name = server.getAttr(Provisioning.A_zimbraImapAdvertisedName, null);

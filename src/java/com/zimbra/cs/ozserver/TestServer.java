@@ -33,6 +33,7 @@ import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.NetUtil;
+import com.zimbra.cs.util.Zimbra;
 
 class TestServer {
     
@@ -42,17 +43,18 @@ class TestServer {
 
     public TestServer(int port) throws IOException, ServiceException {
         OzConnectionHandlerFactory testHandlerFactory = new OzConnectionHandlerFactory() {
-            public OzConnectionHandler newConnectionHandler(OzConnection conn) {
-                return new TestConnectionHandler(conn);
+            public OzConnectionHandler newConnectionHandler(OzConnection connection) {
+                connection.setFilter(new OzTLSFilter(connection));
+                return new TestConnectionHandler(connection);
             }
         };
         ServerSocket serverSocket = NetUtil.getBoundServerSocket(null, port, false);
     	mServer = new OzServer("Test", 64, serverSocket, testHandlerFactory, mLog);
-        mServer.setSnooper(new OzSnooper(mLog, OzSnooper.ALL));
         mServer.start();
     }
     
     public static void main(String[] args) throws IOException, ServiceException {
+        Zimbra.toolSetup("TRACE", true);
     	new TestServer(Integer.parseInt(args[0]));
     }
     
