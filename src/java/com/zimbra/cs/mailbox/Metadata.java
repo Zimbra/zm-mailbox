@@ -60,6 +60,7 @@ public class Metadata {
     static final String FN_APPT_START      = "aps";
     static final String FN_COLOR           = "c";
     static final String FN_COMPONENT       = "comp";
+    static final String FN_CREATOR         = "cr";
     static final String FN_MIME_TYPE       = "ct";
     static final String FN_DRAFT           = "d";
     static final String FN_REPLY_ORIG      = "do";
@@ -90,7 +91,9 @@ public class Metadata {
     static final String FN_UID             = "u";
     static final String FN_URL             = "url";
     static final String FN_MD_VERSION      = "v"; // metadata version
+    static final String FN_VERSION         = "ver";
     static final String FN_VIEW            = "vt";
+    static final String FN_WIKI_WORD       = "ww";
     static final String FN_ELIDED          = "X";
 
 

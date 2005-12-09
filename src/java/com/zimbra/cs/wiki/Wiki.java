@@ -37,6 +37,7 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.ZimbraLog;
 
 public class Wiki {
 	private String mWikiAccount;
@@ -118,8 +119,10 @@ public class Wiki {
 	}
 	
 	public void addWiki(WikiItem wikiItem) throws ServiceException {
-		com.zimbra.cs.util.ZimbraLog.zimlet.info("adding wiki item " + 
-				wikiItem.getWikiWord() + " : " + wikiItem.getChangeDate() + " : " + wikiItem.getAuthor());
+		ZimbraLog.wiki.debug("adding wiki item " + 
+				wikiItem.getWikiWord() + " : " + 
+				wikiItem.getChangeDate() + " : " + 
+				wikiItem.getCreator());
 		String wikiStr = wikiItem.getWikiWord();
 		WikiWord w;
 		w = mWikiWords.get(wikiStr);

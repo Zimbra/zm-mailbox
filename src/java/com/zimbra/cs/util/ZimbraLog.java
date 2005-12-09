@@ -194,6 +194,11 @@ public class ZimbraLog {
      */
     public static final org.apache.commons.logging.Log zimlet = LogFactory.getLog("zimbra.zimlet");
     
+    /**
+     * the "zimbra.wiki" logger. For wiki and document sharing. 
+     */
+    public static final org.apache.commons.logging.Log wiki = LogFactory.getLog("zimbra.wiki");
+    
     public static String getContext() {
         return NDC.peek();
     }

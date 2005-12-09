@@ -32,11 +32,7 @@ import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
 
-public class WikiItem extends MailItem {
-
-	public static String WIKI_WORD = "wikiWord";
-	public static String AUTHOR = "author";
-	public static String MODIFIED_TIME = "modifiedTime";
+public class WikiItem extends Document {
 	
 	WikiItem(Mailbox mbox, UnderlyingData data) throws ServiceException {
 		super(mbox, data);
@@ -44,23 +40,23 @@ public class WikiItem extends MailItem {
 	
 	private Map<String,String> mFields;
 	
-	@Override boolean isTaggable() { return false; }
-	@Override boolean isCopyable() { return false; }
-	@Override boolean isMovable() { return false; }
+	@Override boolean isTaggable() { return true; }
+	@Override boolean isCopyable() { return true; }
+	@Override boolean isMovable() { return true; }
 	@Override boolean isMutable() { return false; }
-	@Override boolean isIndexed() { return false; }
+	@Override boolean isIndexed() { return true; }
 	@Override boolean canHaveChildren() { return false; }
 
 	@Override 
 	Metadata encodeMetadata(Metadata meta) {
 		return encodeMetadata(meta, mColor);
 	}
-    private static String encodeMetadata(byte color, Map fields) {
+    static String encodeMetadata(byte color, Map fields) {
         return encodeMetadata(new Metadata(), color, fields).toString();
     }
     static Metadata encodeMetadata(Metadata meta, byte color, Map fields) {
         meta.put(Metadata.FN_FIELDS, new Metadata(fields));
-        return MailItem.encodeMetadata(meta, color);
+        return Document.encodeMetadata(meta, color);
     }
 	
     void decodeMetadata(Metadata meta) throws ServiceException {
@@ -75,26 +71,23 @@ public class WikiItem extends MailItem {
     }
 
 	public String getWikiWord() {
-		return mFields.get(WIKI_WORD);
+		return mFields.get(Metadata.FN_WIKI_WORD);
 	}
 	
-	public String getAuthor() {
-		return mFields.get(AUTHOR);
+	public String getCreator() {
+		return mFields.get(Metadata.FN_CREATOR);
 	}
 	
-	public String getModifiedTime() {
-		return mFields.get(MODIFIED_TIME);
+	public long getCreatedTime() {
+		return getDate();
 	}
 	
 	public static WikiItem create(Mailbox mbox, UnderlyingData data, ParsedMessage pm, String author) throws ServiceException {
 		Map<String,String> fields = new HashMap<String,String>();
-		fields.put(WIKI_WORD, pm.getSubject());
-		fields.put(AUTHOR, author);
-		fields.put(MODIFIED_TIME, Long.toString(pm.getDateHeader()));
+		fields.put(Metadata.FN_WIKI_WORD, pm.getSubject());
+		fields.put(Metadata.FN_CREATOR, author);
 
 		data.type     = TYPE_WIKI;
-        data.sender   = pm.getSender();
-        data.subject  = pm.getNormalizedSubject();
         data.metadata = encodeMetadata(DEFAULT_COLOR, fields);
         data.contentChanged(mbox);
         DbMailItem.create(mbox, data);

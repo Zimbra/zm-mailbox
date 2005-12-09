@@ -29,14 +29,14 @@
 package com.zimbra.cs.mailbox;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.store.StoreManager;
 
 
 /**
@@ -44,9 +44,10 @@ import com.zimbra.cs.store.StoreManager;
  */
 public class Document extends MailItem {
 
-    private String  mContentType;
-    private String  mFragment;
-    private HashMap mAttributes;
+	Map<String,String> mFields;
+	long   mVersion;
+    String mContentType;
+    String mFragment;
 
 	public Document(Mailbox mbox, UnderlyingData data) throws ServiceException {
 		super(mbox, data);
@@ -54,14 +55,29 @@ public class Document extends MailItem {
             throw new IllegalArgumentException();
 	}
 
-    private String getContentType() {
-    	return mContentType;
+	public String getFragment() {
+    	return mFields.get(Metadata.FN_FRAGMENT);
+	}
+	
+	public long getVersion() {
+		return Long.valueOf(mFields.get(Metadata.FN_VERSION));
+	}
+	
+	public String getFilename() {
+		return getSubject();
+	}
+	
+    public String getContentType() {
+    	return mFields.get(Metadata.FN_MIME_TYPE);
     }
 
     public InputStream getRawDocument() throws ServiceException {
         return MessageCache.getRawContent(this);
     }
 
+    synchronized static long getNextVersion() {
+    	return 0;  // XXX implement it
+    }
 
     boolean isTaggable()      { return true; }
     boolean isCopyable()      { return true; }
@@ -81,7 +97,11 @@ public class Document extends MailItem {
         if (content == null)
             throw ServiceException.INVALID_REQUEST("content may not be empty", null);
 
-        Mailbox mbox = folder.getMailbox();
+		Map<String,String> fields = new HashMap<String,String>();
+        fields.put(Metadata.FN_MIME_TYPE, type);
+        fields.put(Metadata.FN_VERSION, Long.toString(getNextVersion()));
+
+		Mailbox mbox = folder.getMailbox();
         UnderlyingData data = new UnderlyingData();
         data.id          = id;
         data.type        = TYPE_DOCUMENT;
@@ -93,7 +113,7 @@ public class Document extends MailItem {
         data.date        = mbox.getOperationTimestamp();
         data.size        = (int) content.length();
         data.subject     = filename;
-        data.metadata    = encodeMetadata(DEFAULT_COLOR, type, null);
+        data.metadata    = encodeMetadata(DEFAULT_COLOR, fields);
         data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
 
@@ -103,22 +123,25 @@ public class Document extends MailItem {
         return doc;
     }
 
-
     void decodeMetadata(Metadata meta) throws ServiceException {
         super.decodeMetadata(meta);
-        mFragment    = meta.get(Metadata.FN_FRAGMENT, null);
-        mContentType = meta.get(Metadata.FN_MIME_TYPE, Mime.CT_DEFAULT);
+        Metadata metaAttrs = meta.getMap(Metadata.FN_FIELDS);
+
+        mFields = new HashMap<String,String>();
+        for (Iterator it = metaAttrs.asMap().entrySet().iterator(); it.hasNext(); ) {
+            Map.Entry entry = (Map.Entry) it.next();
+            mFields.put(entry.getKey().toString(), entry.getValue().toString());
+        }
     }
 
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mColor, mContentType, mFragment);
+        return encodeMetadata(meta, mColor);
     }
-    private static String encodeMetadata(byte color, String contentType, String fragment) {
-        return encodeMetadata(new Metadata(), color, contentType, fragment).toString();
+    static String encodeMetadata(byte color, Map fields) {
+        return encodeMetadata(new Metadata(), color, fields).toString();
     }
-    static Metadata encodeMetadata(Metadata meta, byte color, String contentType, String fragment) {
-        meta.put(Metadata.FN_FRAGMENT,  fragment);
-        meta.put(Metadata.FN_MIME_TYPE, contentType);
+    static Metadata encodeMetadata(Metadata meta, byte color, Map fields) {
+        meta.put(Metadata.FN_FIELDS, new Metadata(fields));
         return MailItem.encodeMetadata(meta, color);
     }
 
