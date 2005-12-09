@@ -29,6 +29,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.StringUtil;
 
 public class ZAttendee {
     
@@ -89,9 +90,9 @@ public class ZAttendee {
     
     public void setRsvp(Boolean rsvp) { mRsvp = rsvp; }
     
-    public boolean hasCn() { return mCn != null; }
-    public boolean hasRole() { return mRole != null; }
-    public boolean hasPartStat() { return mPartStat != null; }
+    public boolean hasCn() { return !StringUtil.isNullOrEmpty(mCn); }
+    public boolean hasRole() { return !StringUtil.isNullOrEmpty(mRole); }
+    public boolean hasPartStat() { return !StringUtil.isNullOrEmpty(mPartStat); }
     public boolean hasRsvp() { return mRsvp != null; }
 
     public boolean addressesMatch(ZAttendee other) {
@@ -104,16 +105,16 @@ public class ZAttendee {
     
     public String toString() {
         StringBuffer toRet = new StringBuffer("ZATTENDEE:");
-        if (mCn != null) {
+        if (hasCn()) {
             toRet.append("CN=").append(mCn).append(";");
         }
-        if (mRole != null) {
+        if (hasRole()) {
             toRet.append("ROLE=").append(mRole).append(";");
         }
-        if (mPartStat != null) {
+        if (hasPartStat()) {
             toRet.append("PARTSTAT=").append(mPartStat).append(";");
         }
-        if (mRsvp!= null) {
+        if (hasRsvp()) {
             toRet.append("RSVP=").append(mRsvp).append(";");
         }
         

@@ -428,7 +428,9 @@ public class ZCalendar {
             w.write(';');
             w.write(escape(mName));
             w.write('=');
-            if (maValue.startsWith("\"") && maValue.endsWith("\"")) {
+            if (maValue == null || maValue.length()==0) {
+                w.write("\"\""); // bug 4941: cannot put a completely blank parameter value, will confuse parsers
+            } else if (maValue.startsWith("\"") && maValue.endsWith("\"")) {
                 w.write('\"');
                 w.write(escape(maValue.substring(1, maValue.length()-1)));
                 w.write('\"');
