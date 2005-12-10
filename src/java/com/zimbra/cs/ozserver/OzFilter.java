@@ -29,18 +29,12 @@ import java.nio.ByteBuffer;
 
 public interface OzFilter {
 
-    void read(ByteBuffer readBB) throws IOException;
-
-    boolean haveUnwrapped();
-
-    ByteBuffer unwrapped();
+    void read() throws IOException;
 
     void write(ByteBuffer writeBB, boolean flush) throws IOException;
 
-    boolean haveWrapped();
-    
-    ByteBuffer wrapped();
-    
+    void wrote(int totalWritten) throws IOException;
+
     void close() throws IOException;
 
     void shutdown() throws IOException;

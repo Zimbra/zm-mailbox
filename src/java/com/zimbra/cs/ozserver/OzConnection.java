@@ -286,13 +286,12 @@ public class OzConnection {
                 
                 if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("read from channel bytes=" + bytesRead, rbb, true));
                 
-                ByteBuffer dataBuffer;
                 if (mFilter == null) {
                     if (mDebug) mLog.debug("no filter will process read bytes");
                     processRead(rbb);
                 } else {
                     if (mDebug) mLog.debug("handing read bytes to filter");
-                    mFilter.read(rbb);
+                    mFilter.read();
                 }
             } catch (Throwable t) {
                 if (mChannel.isOpen()) {
@@ -451,15 +450,14 @@ public class OzConnection {
     
     /** For use by filters, do not call directly. */
     public void writeQueuePrepend(ByteBuffer wbb, boolean flush) {
+        if (mDebug) mLog.debug("write buffer prepend");
         synchronized (mWriteBuffers) {
+            if (mDebug) mLog.debug("write buffer prepend: locked");
             mWriteBuffers.add(0, wbb);
             if (flush) {
                 enableWriteInterest();
             }
         }
-    }
-    
-    void interposedWrite(ByteBuffer data) {
     }
     
     public boolean isWritePending() {
@@ -477,9 +475,14 @@ public class OzConnection {
     void doWrite() throws IOException {
         // It is possible that more than one buffer can be written
         // so we call channel write until we fail to write fully
+        int totalWritten = 0;
         while (true) {
             synchronized (mWriteBuffers) {
-                if (mWriteBuffers.isEmpty()) { 
+                if (mWriteBuffers.isEmpty()) {
+                    if (totalWritten == 0) mLog.warn("wrote no bytes to a write ready channel");
+                    if (mFilter != null) {
+                        mFilter.wrote(totalWritten);
+                    }
                     // nothing more to write
                 	disableWriteInterest();
                 	if (mCloseAfterWrite) {
@@ -493,9 +496,10 @@ public class OzConnection {
                 assert(data != null);
                 assert(data.hasRemaining());
                 
-                if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("raw outgoing", data, false));
+                if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("channel write", data, false));
                 int wrote = mChannel.write(data);
-                if (mTrace) mLog.trace("raw outgoing wrote=" + wrote);
+                totalWritten += wrote;
+                if (mDebug) mLog.trace("channel wrote=" + wrote + " totalWritten=" + totalWritten);
                 
                 if (data.hasRemaining()) {
                     // If not all data was written, stop - we will write again

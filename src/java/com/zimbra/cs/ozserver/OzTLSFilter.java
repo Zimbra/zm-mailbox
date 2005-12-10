@@ -110,13 +110,28 @@ public class OzTLSFilter implements OzFilter {
 
     }
 
-    private void handshake(ByteBuffer readBB) throws IOException {
-        assert(!mHandshakeComplete);
+    private boolean handshake() throws IOException {
+        synchronized (mReadBB) {
+            handshake0(mReadBB);
+            if (!mReadBB.hasRemaining()) {
+            }
+            return mHandshakeComplete;
+        }
+    }
 
+    private void handshake0(ByteBuffer rbb) throws IOException {
+        if (mHandshakeComplete) {
+            if (mDebug) debug("handshake deferred: already complete");
+            return;
+        }
+        
+        if (!rbb.hasRemaining()) {
+            if (mDebug) debug("handshake deferred: no bytes in input");
+            return;
+        }
+        
         if (mConnection.isWritePending()) {
-            // TODO - is there a DoS here where write is still pending,
-            // but we keep getting read data?
-            if (mDebug) debug("write pending");
+            if (mDebug) debug("handshake deferred: write pending");
             return;
         }
 
@@ -124,7 +139,9 @@ public class OzTLSFilter implements OzFilter {
         case NEED_UNWRAP:
             unwrap: while (mHandshakeStatus == HandshakeStatus.NEED_UNWRAP) {
                 ByteBuffer unwrappedBB = ByteBuffer.allocate(mApplicationBufferSize);
-                SSLEngineResult result = mSSLEngine.unwrap(readBB, unwrappedBB);
+                rbb.flip();
+                SSLEngineResult result = mSSLEngine.unwrap(rbb, unwrappedBB);
+                rbb.compact();
                 if (mDebug) debug("handshake unwrap result " + result);
                 mHandshakeStatus = result.getHandshakeStatus();
                 switch (result.getStatus()) {
@@ -136,6 +153,7 @@ public class OzTLSFilter implements OzFilter {
                         mHandshakeStatus = runTasks();
                         break;
                     case FINISHED:
+                        if (mDebug) debug("handshake finished");
                         mHandshakeComplete = true;
                         break unwrap;
                     }
@@ -160,7 +178,6 @@ public class OzTLSFilter implements OzFilter {
             ByteBuffer dest = ByteBuffer.allocate(mPacketBufferSize);
             dest.clear();
             SSLEngineResult result = mSSLEngine.wrap(mHandshakeBB, dest);
-            if (mDebug) debug("dest.position=" + dest.position() + " limit=" + dest.limit() + " capacity=" + dest.capacity());
             mHandshakeStatus = result.getHandshakeStatus();
             if (mDebug) debug("handshake wrap result " + result);
             switch (result.getStatus()) {
@@ -168,13 +185,13 @@ public class OzTLSFilter implements OzFilter {
                 switch (mHandshakeStatus) {
                 case NEED_TASK: 
                     mHandshakeStatus = runTasks();
-                    dest.flip();
-                    mConnection.writeQueuePrepend(dest, true);
-                    break;
+                    // fall through
                 case FINISHED:
                 case NEED_UNWRAP:
                 case NEED_WRAP:
                     if (mDebug) debug("in wrap handshake status was " + result.getStatus());
+                    dest.flip();
+                    mConnection.writeQueuePrepend(dest, true);
                 }
                 break;
             case BUFFER_OVERFLOW:
@@ -182,7 +199,7 @@ public class OzTLSFilter implements OzFilter {
             case CLOSED:
                 throw new IOException("TLS handshake: XXX in wrap got status " + result.getStatus());
             }
-        break;
+            break;
         default:
             throw new RuntimeException();
         }
@@ -191,26 +208,25 @@ public class OzTLSFilter implements OzFilter {
     private HandshakeStatus runTasks() {
         Runnable runnable;
         while ((runnable = mSSLEngine.getDelegatedTask()) != null) {
+            if (mDebug) debug("run task " + runnable);
             runnable.run();
         }
+        
         return mSSLEngine.getHandshakeStatus();
     }
     
-    public void read(ByteBuffer rbb) throws IOException {
-        ByteBuffer readBB = rbb.duplicate();
-        readBB.flip();
-        if (mDebug) debug("readBB position=" + readBB.position() + " limit=" + readBB.limit() + " capacity=" + readBB.capacity());
-        if (!mHandshakeComplete) {
-            handshake(readBB);
-        }
-        
-        if (!mHandshakeComplete || !readBB.hasRemaining()) {
+    public void read() throws IOException {
+        if (mDebug) debug("readBB position=" + mReadBB.position() + " limit=" + mReadBB.limit() + " capacity=" + mReadBB.capacity());
+
+        if (!handshake()) {
             return; 
         }
         
         resizeUnwrappedBB();
         
-        SSLEngineResult result = mSSLEngine.unwrap(readBB, mUnwrappedBB);
+        mReadBB.flip();
+        SSLEngineResult result = mSSLEngine.unwrap(mReadBB, mUnwrappedBB);
+        mReadBB.compact();
         if (mDebug) debug("read unwrap result " + result);
         switch (result.getStatus()) {
         case BUFFER_UNDERFLOW:
@@ -236,20 +252,17 @@ public class OzTLSFilter implements OzFilter {
         // TODO Auto-generated method stub
     }
 
-    public boolean haveUnwrapped() {
-        return mHandshakeComplete && mUnwrappedBB.hasRemaining();
-    }
-
-    public ByteBuffer unwrapped() {
-        return mUnwrappedBB;
-    }
-
     private ByteBuffer mWrappedBB = ByteBuffer.allocate(1024); // REMIND - size this
 
     List<ByteBuffer> mPendingWriteBuffers = new LinkedList<ByteBuffer>();
     
     private boolean mPendingFlush;
     
+    public void wrote(int totalWritten) throws IOException {
+        if (mDebug) mLog.debug("write completed " + totalWritten + " written try continue handshake");
+        handshake();
+    }
+
     public void write(ByteBuffer src, boolean flush) throws IOException {
         synchronized (mPendingWriteBuffers) {
             if (!mHandshakeComplete) {
@@ -266,7 +279,7 @@ public class OzTLSFilter implements OzFilter {
                 mPendingWriteBuffers.add(src);
                 return;
             }
-            
+
             mPendingWriteBuffers.add(src);
             if (mDebug) debug("write: pending buffers size " + mPendingWriteBuffers.size());
             
@@ -292,14 +305,6 @@ public class OzTLSFilter implements OzFilter {
                 }
             }
         }
-    }
-
-    public boolean haveWrapped() {
-        return mWrappedBB.hasRemaining();
-    }
-
-    public ByteBuffer wrapped() {
-        return mWrappedBB;
     }
 
     public void close() throws IOException {

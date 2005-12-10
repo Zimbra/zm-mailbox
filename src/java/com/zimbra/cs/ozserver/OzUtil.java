@@ -34,7 +34,7 @@ public class OzUtil {
             buf.flip();
         }
 
-        StringBuffer sb = new StringBuffer(buf.remaining() * 4);
+        StringBuilder sb = new StringBuilder(buf.remaining() * 4);
         
         sb.append(bufferName);
         sb.append(" position=").append(buf.position());
@@ -47,10 +47,9 @@ public class OzUtil {
         sb.append("[").append(intToDecString(0, 10, ' ')).append("] ");
         
         while (buf.hasRemaining()) {
-            byte b = buf.get();
-            char ch = (char)b;
+            int ch = (buf.get() & 0xFF);
             if (ch >= 33 && ch <= 126) {
-                sb.append(" " + ch);
+                sb.append(" " + (char)ch);
             } else if (ch == '\r') {
                 sb.append("\\r");
             } else if (ch == '\n') {
@@ -74,7 +73,7 @@ public class OzUtil {
     }
 
     public static String intToHexString(int value, int width, char pad) {
-        StringBuffer sb = new StringBuffer(width);
+        StringBuilder sb = new StringBuilder(width);
         String sv = Integer.toHexString(value).toUpperCase();
         int numPad = width - sv.length();
         for (int i = 0; i < numPad; i++) {
@@ -85,7 +84,7 @@ public class OzUtil {
     }
 
     public static String intToDecString(int value, int width, char pad) {
-        StringBuffer sb = new StringBuffer(width);
+        StringBuilder sb = new StringBuilder(width);
         String sv = Integer.toString(value);
         int numPad = width - sv.length();
         for (int i = 0; i < numPad; i++) {
@@ -96,7 +95,7 @@ public class OzUtil {
     }
     
     public static String asciiByteArrayToString(ByteBuffer buffer) {
-        StringBuffer sb = new StringBuffer(buffer.limit() - buffer.position());
+        StringBuilder sb = new StringBuilder(buffer.limit() - buffer.position());
         for (int i = buffer.position(); i < buffer.limit(); i++) {
             sb.append((char)buffer.get());
         }
