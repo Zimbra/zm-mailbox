@@ -67,8 +67,10 @@ public abstract class Session {
          
             // add this Session to the IM Persona, or die trying
             if (this.shouldRegisterWithIM()) {
-                mPersona = IMRouter.getInstance().findPersona(null, mMailbox, false);
-                mPersona.addListener(this);
+                synchronized(mMailbox) {
+                    mPersona = IMRouter.getInstance().findPersona(null, mMailbox, false);
+                    mPersona.addListener(this);
+                }
             }
         }
         updateAccessTime();
@@ -124,7 +126,9 @@ public abstract class Session {
             if (mMailbox != null)
                 mMailbox.removeListener(this);
             if (mPersona != null) 
-                mPersona.removeListener(this);
+                synchronized(mMailbox) {
+                    mPersona.removeListener(this);
+                }
         } finally {
             mCleanedUp = true;
         }
