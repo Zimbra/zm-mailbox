@@ -104,8 +104,7 @@ public class CalendarUtils {
             ZCalendar.ZVCalendar cal) throws ServiceException {
         List list = new ArrayList();
         list.add(addr);
-        return createDefaultCalendarMessage(fromAddr, list, subject, text, uid,
-                cal);
+        return createDefaultCalendarMessage(fromAddr, list, subject, text, uid, cal);
     }
 
     public static MimeMessage createDefaultCalendarMessage(String fromAddr,

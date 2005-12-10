@@ -45,6 +45,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.stats.StopWatch;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
@@ -158,18 +159,22 @@ public class ModifyAppointment extends CalendarRequest {
         for (Iterator cancelIter = toCancel.iterator(); cancelIter.hasNext(); ) {
             ZAttendee cancelAt = (ZAttendee)cancelIter.next();
             
-            if (sLog.isDebugEnabled()) {
-                sLog.debug("Sending cancellation message \"" + subject + "\" to " +
-                           cancelAt.getAddress().toString());
+            try {
+                if (sLog.isDebugEnabled()) {
+                    sLog.debug("Sending cancellation message \"" + subject + "\" to " +
+                            cancelAt.getAddress().toString());
+                }
+                
+                dat.mInvite = CalendarUtils.buildCancelInviteCalendar(acct, inv, text, cancelAt);
+                ZVCalendar cal = dat.mInvite.newToICalendar();
+                
+                dat.mMm = CalendarUtils.createDefaultCalendarMessage(acct.getName(), 
+                        cancelAt.getAddress(), subject, text, inv.getUid(), cal);
+                
+                sendCalendarMessage(lc, appt.getFolderId(), acct, mbox, dat, null, true);
+            } catch (ServiceException ex) {
+                ZimbraLog.calendar.debug("Could not inform attendee "+cancelAt+" that it was removed from meeting "+inv.toString()+" b/c of exception: "+ex.toString());
             }
-            
-            dat.mInvite = CalendarUtils.buildCancelInviteCalendar(acct, inv, text, cancelAt);
-            ZVCalendar cal = dat.mInvite.newToICalendar();
-            
-            dat.mMm = CalendarUtils.createDefaultCalendarMessage(acct.getName(), 
-                    cancelAt.getAddress(), subject, text, inv.getUid(), cal);
-            
-            sendCalendarMessage(lc, appt.getFolderId(), acct, mbox, dat, null, true); 
         }
     }
 }
