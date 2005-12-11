@@ -2176,13 +2176,30 @@ public class LdapProvisioning extends Provisioning {
         setPassword(acct, newPassword, true);
     }
 
-    private void setPassword(Cos cos, Attributes attrs, String newPassword) throws AccountServiceException {
-        // TODO Auto-generated method stub
+    private int getInt(Attributes attrs, String name, int defaultValue) throws NamingException {
+        String v = LdapUtil.getAttrString(attrs, name);
+        if (v == null)
+            return defaultValue;
+        else {
+            try {
+                return Integer.parseInt(v);
+            } catch (NumberFormatException e) {
+                return defaultValue;
+            }
+        }
+    }
 
-        int minLength = cos != null ? cos.getIntAttr(Provisioning.A_zimbraPasswordMinLength, 0) : 0;
+    // called by create account
+    private void setPassword(Cos cos, Attributes attrs, String newPassword) throws AccountServiceException, NamingException {
+        int minLength = getInt(attrs, Provisioning.A_zimbraPasswordMinLength, -1);
+        if (minLength == -1) minLength = cos != null ? cos.getIntAttr(Provisioning.A_zimbraPasswordMinLength, 0) : 0;
+
         if (minLength > 0 && newPassword.length() < minLength)
             throw AccountServiceException.INVALID_PASSWORD("too short");
-        int maxLength = cos != null ? cos.getIntAttr(Provisioning.A_zimbraPasswordMaxLength, 0) : 0;        
+        
+        int maxLength = getInt(attrs, Provisioning.A_zimbraPasswordMaxLength, -1);
+        if (maxLength == -1) maxLength = cos != null ? cos.getIntAttr(Provisioning.A_zimbraPasswordMaxLength, 0) : 0;
+        
         if (maxLength > 0 && newPassword.length() > maxLength)
             throw AccountServiceException.INVALID_PASSWORD("too long");
 
