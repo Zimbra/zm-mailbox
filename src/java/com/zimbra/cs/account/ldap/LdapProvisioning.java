@@ -1409,10 +1409,23 @@ public class LdapProvisioning extends Provisioning {
             d = (LdapDomain) getDomainById(zimbraId, ctxt);
             if (d == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(zimbraId);
-            
+
+            String name = d.getName();
+
             ctxt.unbind("ou=people,"+d.getDN());
             ctxt.unbind(d.getDN());
             sDomainCache.remove(d);
+            
+            String defaultDomain = getConfig().getAttr(A_zimbraDefaultDomainName, null);
+            if (name.equalsIgnoreCase(defaultDomain)) {
+                try {
+                    HashMap attrs = new HashMap();
+                    attrs.put(A_zimbraDefaultDomainName, "");
+                    getConfig().modifyAttrs(attrs);
+                } catch (Exception e) {
+                    ZimbraLog.account.warn("unable to remove config attr:"+A_zimbraDefaultDomainName, e); 
+                }
+            }
         } catch (ContextNotEmptyException e) {
             throw AccountServiceException.DOMAIN_NOT_EMPTY(d.getName());
         } catch (NamingException e) {
