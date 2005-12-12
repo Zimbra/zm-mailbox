@@ -273,7 +273,7 @@ class LuceneQueryOperation extends QueryOperation
     {
         return 20;
     }
-    
+
     void addClause(Query q, boolean truth) {
         if (truth) {
             mQuery.add(new BooleanClause(q, true, false));

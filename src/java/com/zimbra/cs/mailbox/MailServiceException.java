@@ -79,6 +79,7 @@ public class MailServiceException extends ServiceException {
     public static final String SEND_ABORTED_ADDRESS_FAILURE = "mail.SEND_ABORTED_ADDRESS_FAILURE";
     public static final String SEND_PARTIAL_ADDRESS_FAILURE = "mail.SEND_PARTIAL_ADDRESS_FAILURE";
     public static final String SEND_FAILURE = "mail.SEND_FAILURE";
+    public static final String TOO_MANY_QUERY_TERMS_EXPANDED = "mail.TOO_MANY_QUERY_TERMS_EXPANDED"; 
 
     
     
@@ -309,4 +310,11 @@ public class MailServiceException extends ServiceException {
     public static MailServiceException SEND_FAILURE(String msg, Exception e) {
         return new MailServiceException(msg, SEND_FAILURE, SENDERS_FAULT, e);
     }
+    
+    public static MailServiceException TOO_MANY_QUERY_TERMS_EXPANDED(String msg, String token, int max) {
+        return new MailServiceException(msg, TOO_MANY_QUERY_TERMS_EXPANDED, SENDERS_FAULT, new Argument("TOKEN", token), new Argument("MAX", max));
+    }
+    
+    
+        
 }

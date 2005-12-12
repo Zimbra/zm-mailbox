@@ -223,13 +223,13 @@ public final class ZimbraQueryParser {
             if (tok.charAt(0) == '@') {
                 return new ZimbraQuery.DomainQuery(mAnalyzer, modifier, target, tok);
             }
-            return new ZimbraQuery.TextQuery(mAnalyzer, modifier,target,tok);
+            return new ZimbraQuery.TextQuery(mMailbox, mAnalyzer, modifier,target,tok);
           case SIZE:
           case BIGGER:
           case SMALLER:
             return new ZimbraQuery.SizeQuery(mAnalyzer, modifier,target,tok);
           default:
-            return new ZimbraQuery.TextQuery(mAnalyzer, modifier,target,tok);
+            return new ZimbraQuery.TextQuery(mMailbox, mAnalyzer, modifier,target,tok);
         }
     }
     

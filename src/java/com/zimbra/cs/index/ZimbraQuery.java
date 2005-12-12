@@ -43,7 +43,10 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.PhraseQuery;
+import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 
@@ -1062,11 +1065,24 @@ public final class ZimbraQuery {
     
     public static class TextQuery extends BaseQuery
     {
-        private ArrayList mTokens;
-        public TextQuery(Analyzer analyzer, int modifier, int qType, String text) {
+        private ArrayList<String> mTokens;
+        
+        // simple prefix wildcards
+        private String mWildcardPrefix;
+        
+        // for complicated wildcards
+        private LinkedList<String> mOredTokens;
+        private String mWildcardTerm;
+        
+        private static final int MAX_WILDCARD_TERMS = 100;
+        
+        public TextQuery(Mailbox mbox, Analyzer analyzer, int modifier, int qType, String text) throws ServiceException {
             super(modifier, qType);
-            
+
+            mOredTokens = new LinkedList();
             mTokens = new ArrayList(1);
+            mWildcardTerm = null;
+            mWildcardPrefix = null;
             
             TokenStream source = analyzer.tokenStream(QueryTypeString(qType), new StringReader(text));
             org.apache.lucene.analysis.Token t;
@@ -1088,13 +1104,46 @@ public final class ZimbraQuery {
             catch (IOException e) {
                 // ignore
             }
+            
+                // must look at original text here b/c analyzer strips *'s
+                if (text.length() > 0 && text.charAt(text.length()-1) == '*')
+                {
+                    // wildcard query!
+                    String wcToken;
+                    
+                    if (mTokens.size() > 0)
+                        wcToken = mTokens.remove(mTokens.size()-1);
+                    else
+                        wcToken = text;
+                    
+                    // the field may have a tokenizer which removed the *
+//                    if (wcToken.indexOf('*') < 0)
+//                        wcToken = wcToken+'*';
+                    
+                    // strip the '*' from the end
+                    int starIdx = wcToken.indexOf('*');
+                    if (starIdx >= 0)
+                        wcToken = wcToken.substring(0, starIdx);
+                    
+                    if (wcToken.length() > 0) 
+                        mWildcardPrefix = wcToken;
+                    
+                    
+//                    if (wcToken.length() >= 1) {
+//                        mWildcardTerm = wcToken;
+//                        MailboxIndex mbidx = mbox.getMailboxIndex();
+//                        List<String> expandedTokens = mbidx.expandWildcardToken(QueryTypeString(qType), wcToken, MAX_WILDCARD_TERMS);
+//                        
+//                        for (String token : expandedTokens) {
+//                            mOredTokens.add(token);
+//                        }
+//                    }
+                }
+                
         }
         
         protected QueryOperation getQueryOperation(boolean truth) {
-            LuceneQueryOperation lop = LuceneQueryOperation.Create();
-
-            Query q = null;
-            if (mTokens.size() <= 0) {
+            if (mTokens.size() <= 0 && mOredTokens.size()<=0 && mWildcardPrefix==null) {
                 // if we have no tokens, that is usually because the analyzer removed them
                 // -- the user probably queried for a stop word like "a" or "an" or "the"
                 // 
@@ -1103,30 +1152,47 @@ public final class ZimbraQuery {
                 // we pass NULL to addClause which will add a blank clause for us...
                 return new NoTermQueryOperation();
             } else {
+                LuceneQueryOperation lop = LuceneQueryOperation.Create();
+                String fieldName = QueryTypeString(getQueryType());
+
                 if (mTokens.size() == 1) {
-                    String fieldName = QueryTypeString(getQueryType());
-                    String queryTerm = (String)mTokens.get(0);
-                    
+                    TermQuery q = null;
+                    String queryTerm = mTokens.get(0);
                     q = new TermQuery(new Term(fieldName, queryTerm));
-                } else {
+                    lop.addClause(q,calcTruth(truth));
+                } else if (mTokens.size() > 1) {
                     PhraseQuery p = new PhraseQuery();
                     p.setSlop(0); // TODO configurable?
-                    String fieldName = QueryTypeString(getQueryType());
                     for (int i=0; i<mTokens.size(); i++) {
-                        p.add(new Term(fieldName, (String) mTokens.get(i)));
+                        p.add(new Term(fieldName, mTokens.get(i)));
                     }
-                    q=p;
+                    lop.addClause(p,calcTruth(truth));
                 }
+                
+                if (mWildcardPrefix != null) {
+                    lop.addClause(new PrefixQuery(new Term(fieldName, mWildcardPrefix)), calcTruth(truth));
+                }
+                
+                if (mOredTokens.size() > 0) {
+                    BooleanQuery orQuery = new BooleanQuery();
+                    for (String token : mOredTokens) {
+                        orQuery.add(new TermQuery(new Term(fieldName, token)), false, false);
+                    }
+                    
+                    lop.addClause(orQuery, calcTruth(truth));
+                }
+                
+                return lop;
             }
-            lop.addClause(q,calcTruth(truth));
-            
-            return lop;
         }
         
         public String toString(int expLevel) {
             String ret = super.toString(expLevel)+",";
             for (int i = 0; i < mTokens.size(); i++) {
-            	ret+=","+((String)mTokens.get(i)).toString();
+            	ret+=","+(mTokens.get(i)).toString();
+            }
+            if (mWildcardTerm != null) {
+                ret+=" WILDCARD="+mWildcardTerm+" ["+mOredTokens.size()+" terms]";
             }
             return ret+")";
         }

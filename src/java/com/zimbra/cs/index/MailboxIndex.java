@@ -56,6 +56,7 @@ import com.zimbra.cs.db.DbMailItem.SearchResult;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -130,6 +131,60 @@ public final class MailboxIndex
         enumerateTermsForField(new Term(field,""), new TermEnumCallback(collection));
     }
     
+    public List<String> expandWildcardToken(String field, String token, int maxToReturn) throws ServiceException 
+    {
+        // right now, only support wildcards like foo*
+        assert(token.indexOf('*') >= 0);
+
+        // strip the '*' from the end
+        int starIdx = token.indexOf('*');
+        if (starIdx >= 0)
+            token = token.substring(0, starIdx);
+        
+        // all lucene text should be in lowercase...
+        token = token.toLowerCase();
+        
+        try {
+            CountedIndexReader reader = this.getCountedIndexReader();
+            try {
+                List<String> toRet = new ArrayList();
+                Term firstTerm = new Term(field, token);
+                
+                IndexReader iReader = reader.getReader();
+                
+                TermEnum terms = iReader.terms(firstTerm);
+                
+                do {
+                    Term cur = terms.term();
+                    if (cur != null) {
+                        if (!cur.field().equals(firstTerm.field())) {
+                            break;
+                        }
+                        
+                        String curText = cur.text();
+                        
+                        if (curText.startsWith(token)) {
+                            // we don't care about deletions, they will be filtered later
+                            toRet.add(cur.text());
+                            if (toRet.size()>maxToReturn) {
+                                throw MailServiceException.TOO_MANY_QUERY_TERMS_EXPANDED("Wildcard text: \""+token
+                                        +"\" expands to too many terms (maximum allowed is "+maxToReturn+")", token, maxToReturn);
+                            }
+                        } else {
+                            if (curText.compareTo(token) > 0)
+                                break;
+                        }
+                    }
+                } while (terms.next());
+                
+                return toRet;
+            } finally {
+                reader.release();
+            }
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Caught IOException opening index", e);
+        }
+    }
     
     /**
      * Force all outstanding index writes to go through.  
