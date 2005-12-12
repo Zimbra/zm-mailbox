@@ -142,7 +142,7 @@ public class ItemAction extends WriteOpDocumentHandler {
                 mbox.move(octxt, id, type, folderId, tcon);
                 SpamHandler.getInstance().handle(mbox, id, type, flagValue);
             } else if (op.equals(OP_UPDATE)) {
-                ItemId iidFolder = new ItemId(action.getAttribute(MailService.A_FOLDER, GetFolder.DEFAULT_FOLDER_ID), lc);
+                ItemId iidFolder = new ItemId(action.getAttribute(MailService.A_FOLDER, "-1"), lc);
                 if (!iidFolder.belongsTo(mbox))
                     throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
                 String flags = action.getAttribute(MailService.A_FLAGS, null);
