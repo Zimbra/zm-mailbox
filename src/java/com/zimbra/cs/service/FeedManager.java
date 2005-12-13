@@ -29,7 +29,6 @@ package com.zimbra.cs.service;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
@@ -95,7 +94,7 @@ public class FeedManager {
         client.setConnectionTimeout(10000);
         client.setTimeout(20000);
 
-        InputStream content = null;
+        BufferedInputStream content = null;
         try {
             int redirects = 0;
             do {
@@ -126,17 +125,18 @@ public class FeedManager {
             if (redirects > MAX_REDIRECTS)
                 throw ServiceException.TOO_MANY_HOPS();
 
-            content.mark(10);  int ch = content.read();  content.reset();
-            if (ch == -1)
-                throw ServiceException.PARSE_ERROR("empty body in response when fetching remote subscription", null);
-            else if (ch == '<') {
-                return parseRssFeed(Element.parseXML(content), fsd);
-            } else if (ch == 'B') {
-                Reader reader = new InputStreamReader(content);
-                ZVCalendar ical = ZCalendarBuilder.build(reader);
-                return new SubscriptionData(Invite.createFromCalendar(acct, null, ical, false)); 
-            } else
-                throw ServiceException.PARSE_ERROR("unrecognized remote content", null);
+            switch (getLeadingChar(content)) {
+                case -1:
+                    throw ServiceException.PARSE_ERROR("empty body in response when fetching remote subscription", null);
+                case '<':
+                    return parseRssFeed(Element.parseXML(content), fsd);
+                case 'B':  case 'b':
+                    Reader reader = new InputStreamReader(content);
+                    ZVCalendar ical = ZCalendarBuilder.build(reader);
+                    return new SubscriptionData(Invite.createFromCalendar(acct, null, ical, false));
+                default:
+                    throw ServiceException.PARSE_ERROR("unrecognized remote content", null);
+            }
         } catch (org.dom4j.DocumentException e) {
             throw ServiceException.PARSE_ERROR("could not parse feed", e);
         } catch (HttpException e) {
@@ -144,6 +144,27 @@ public class FeedManager {
         } catch (IOException e) {
             throw ServiceException.RESOURCE_UNREACHABLE("IOException: " + e, e);
         }
+    }
+
+    private static int getLeadingChar(BufferedInputStream is) throws IOException {
+        is.mark(10);
+        int ch = is.read();
+        switch (ch) {
+            case 0xEF:
+                if (is.read() == 0xBB && is.read() == 0xBF)
+                    ch = is.read();
+                break;
+            case 0xFE:
+                if (is.read() == 0xFF && is.read() == 0x00)
+                    ch = is.read();
+                break;
+            case 0xFF:
+                if (is.read() == 0xFE)
+                    ch = is.read();
+                break;
+        }
+        is.reset();
+        return ch;
     }
 
     private static org.dom4j.QName QN_CONTENT_ENCODED = org.dom4j.QName.get("encoded", "content", "http://purl.org/rss/1.0/modules/content/");
@@ -178,7 +199,7 @@ public class FeedManager {
             String subjChannel = channel.getAttribute("title");
             InternetAddress addrChannel = new InternetAddress("", subjChannel, "utf-8");
             Date dateChannel = DateUtil.parseRFC2822Date(channel.getAttribute("lastBuildDate", null), new Date());
-            List enclosures = new ArrayList();
+            List<Enclosure> enclosures = new ArrayList<Enclosure>();
             SubscriptionData sdata = new SubscriptionData(dateChannel.getTime());
 
             if (rname.equals("rss"))
@@ -238,7 +259,7 @@ public class FeedManager {
             if (addrFeed == null)
                 addrFeed = new InternetAddress("", feed.getAttribute("title"), "utf-8");
             Date dateFeed = DateUtil.parseISO8601Date(feed.getAttribute("updated", null), new Date());
-            List enclosures = new ArrayList();
+            List<Enclosure> enclosures = new ArrayList<Enclosure>();
             SubscriptionData sdata = new SubscriptionData(dateFeed.getTime());
 
             for (Iterator it = feed.elementIterator("entry"); it.hasNext(); ) {
@@ -292,7 +313,7 @@ public class FeedManager {
                                               "<HTML><HEAD><META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\"></HEAD><BODY>";
     private static final String HTML_FOOTER = "</BODY></HTML>";
 
-    private static ParsedMessage generateMessage(String title, String text, String href, boolean html, InternetAddress addr, Date date, List attach)
+    private static ParsedMessage generateMessage(String title, String text, String href, boolean html, InternetAddress addr, Date date, List<Enclosure> attach)
     throws ServiceException {
         String ctype = html ? "text/html; charset=\"utf-8\"" : "text/plain; charset=\"utf-8\"";
         String content = html ? HTML_HEADER + text + "<p>" + href + HTML_FOOTER : text + "\r\n\r\n" + href;
@@ -314,8 +335,7 @@ public class FeedManager {
                 // encode each enclosure as an attachment with Content-Location set
                 MimeMultipart mmp = new MimeMultipart("mixed");
                 mmp.addBodyPart((BodyPart) body);
-                for (Iterator it = attach.iterator(); it.hasNext(); ) {
-                    Enclosure enc = (Enclosure) it.next();
+                for (Enclosure enc : attach) {
                     MimeBodyPart part = new MimeBodyPart();
                     part.setText("");
                     part.addHeader("Content-Location", enc.getLocation());
