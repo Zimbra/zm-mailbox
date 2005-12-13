@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.security.KeyStore;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -71,18 +72,17 @@ public class OzTLSFilter implements OzFilter {
     }
     
     private SSLEngine mSSLEngine;
+    private Object mHandshakeLock = new Object();
     private HandshakeStatus mHandshakeStatus;
     private boolean mHandshakeComplete;
+    private ByteBuffer mHandshakeBB;
     
     private OzConnection mConnection;
 
     private final boolean mDebug;
     private Log mLog;
-    private ByteBuffer mHandshakeBB;
-    private ByteBuffer mUnwrappedBB;
 
     private ByteBuffer mReadBB;
-    
     private int mPacketBufferSize;
     private int mApplicationBufferSize;
     
@@ -111,15 +111,13 @@ public class OzTLSFilter implements OzFilter {
     }
 
     private boolean handshake() throws IOException {
-        synchronized (mReadBB) {
-            handshake0(mReadBB);
-            if (!mReadBB.hasRemaining()) {
-            }
+        synchronized (mHandshakeLock) {
+            handshakeLocked(mReadBB);
             return mHandshakeComplete;
         }
     }
 
-    private void handshake0(ByteBuffer rbb) throws IOException {
+    private void handshakeLocked(ByteBuffer rbb) throws IOException {
         if (mHandshakeComplete) {
             if (mDebug) debug("handshake deferred: already complete");
             return;
@@ -191,7 +189,7 @@ public class OzTLSFilter implements OzFilter {
                 case NEED_WRAP:
                     if (mDebug) debug("in wrap handshake status was " + result.getStatus());
                     dest.flip();
-                    mConnection.writeQueuePrepend(dest, true);
+                    mConnection.channelWrite(dest, true);
                 }
                 break;
             case BUFFER_OVERFLOW:
@@ -222,25 +220,18 @@ public class OzTLSFilter implements OzFilter {
             return; 
         }
         
-        resizeUnwrappedBB();
-        
         mReadBB.flip();
-        SSLEngineResult result = mSSLEngine.unwrap(mReadBB, mUnwrappedBB);
+        ByteBuffer unwrappedBB = ByteBuffer.allocate(mApplicationBufferSize);
+        SSLEngineResult result = mSSLEngine.unwrap(mReadBB, unwrappedBB);
         mReadBB.compact();
         if (mDebug) debug("read unwrap result " + result);
         switch (result.getStatus()) {
         case BUFFER_UNDERFLOW:
         case OK:
-            switch (result.getHandshakeStatus()) {
-            case NEED_TASK:
+            if (result.getHandshakeStatus() == HandshakeStatus.NEED_TASK) {
                 runTasks();
-                break;
-            case NEED_UNWRAP:
-            case FINISHED:
-            case NOT_HANDSHAKING:
-            default:
-                throw new RuntimeException("TLS filter: can't yet handle: " + result.getHandshakeStatus());
             }
+            mConnection.processRead(unwrappedBB);
             break;
         case BUFFER_OVERFLOW:
         case CLOSED:
@@ -259,10 +250,55 @@ public class OzTLSFilter implements OzFilter {
     private boolean mPendingFlush;
     
     public void wrote(int totalWritten) throws IOException {
-        if (mDebug) mLog.debug("write completed " + totalWritten + " written try continue handshake");
-        handshake();
+        if (mDebug) debug("write completed " + totalWritten + " checking if handshake complete: " + mHandshakeStatus);
+
+        synchronized (mReadBB) {
+            switch (mHandshakeStatus) {
+            case FINISHED:
+                mHandshakeComplete = true;
+                if (mDebug) debug("handshake completed");
+                processPendingWrites();
+                // Fall through and register for read
+                
+            case NEED_UNWRAP:
+                mConnection.enableReadInterest();
+                break;
+                
+            case NEED_WRAP:
+                handshake();
+                break;
+            }
+        }
     }
 
+    public void processPendingWrites() throws IOException {
+        synchronized (mPendingWriteBuffers) {
+            if (mDebug) debug("write: pending buffers size " + mPendingWriteBuffers.size());
+            
+            for (Iterator<ByteBuffer> iter = mPendingWriteBuffers.iterator(); iter.hasNext();) {
+                ByteBuffer srcbb = iter.next();
+                ByteBuffer dest = ByteBuffer.allocate(mPacketBufferSize);
+                if (mDebug) debug(OzUtil.byteBufferDebugDump("application buffer wrap", srcbb, false));
+                SSLEngineResult result = mSSLEngine.wrap(srcbb, dest);
+                if (mDebug) debug("write wrap result " + result);
+                switch (result.getStatus()) {
+                case OK:
+                    if (result.getHandshakeStatus() == HandshakeStatus.NEED_TASK) {
+                        runTasks();
+                    }
+                    dest.flip();
+                    mConnection.channelWrite(dest, mPendingFlush);
+                    iter.remove();
+                    break;
+                case BUFFER_OVERFLOW:
+                case BUFFER_UNDERFLOW:
+                case CLOSED:
+                    throw new RuntimeException("can not handle wrap status: " + result.getStatus());
+                }
+            }
+        }
+    }
+    
     public void write(ByteBuffer src, boolean flush) throws IOException {
         synchronized (mPendingWriteBuffers) {
             if (!mHandshakeComplete) {
@@ -279,31 +315,8 @@ public class OzTLSFilter implements OzFilter {
                 mPendingWriteBuffers.add(src);
                 return;
             }
-
             mPendingWriteBuffers.add(src);
-            if (mDebug) debug("write: pending buffers size " + mPendingWriteBuffers.size());
-            
-            for (ByteBuffer srcbb : mPendingWriteBuffers) {
-                ByteBuffer dest = ByteBuffer.allocate(1024);
-                SSLEngineResult result = mSSLEngine.wrap(srcbb, dest);
-                if (mDebug) debug("write wrap result " + result);
-                switch (result.getStatus()) {
-                case OK:
-                    switch (result.getHandshakeStatus()) {
-                    case NEED_TASK:
-                        runTasks();
-                    case FINISHED:
-                    case NEED_UNWRAP:
-                    case NEED_WRAP:
-                    case NOT_HANDSHAKING:
-                        throw new RuntimeException("can not handle wrap HANDSHAKE status: " + result.getHandshakeStatus());
-                    }
-                case BUFFER_OVERFLOW:
-                case BUFFER_UNDERFLOW:
-                case CLOSED:
-                    throw new RuntimeException("can not handle wrap status: " + result.getStatus());
-                }
-            }
+            processPendingWrites();
         }
     }
 

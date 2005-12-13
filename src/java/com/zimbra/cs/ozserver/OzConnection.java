@@ -207,8 +207,6 @@ public class OzConnection {
         return mConnectionHandler;
     }
     
-
-    
     public void setMatcher(OzMatcher matcher) {
         mMatcher = matcher;
     }
@@ -434,26 +432,14 @@ public class OzConnection {
             mFilter.write(wbb, flush);
         } else {
             if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("pre-filter outgoing", wbb, false));
-            writeQueueAppend(wbb, flush);
+            channelWrite(wbb, flush);
         }
     }
 
     /** For use by filters, do not call directly. */
-    public void writeQueueAppend(ByteBuffer wbb, boolean flush) {
+    public void channelWrite(ByteBuffer wbb, boolean flush) {
         synchronized (mWriteBuffers) {
             mWriteBuffers.add(wbb);
-            if (flush) {
-                enableWriteInterest();
-            }
-        }
-    }
-    
-    /** For use by filters, do not call directly. */
-    public void writeQueuePrepend(ByteBuffer wbb, boolean flush) {
-        if (mDebug) mLog.debug("write buffer prepend");
-        synchronized (mWriteBuffers) {
-            if (mDebug) mLog.debug("write buffer prepend: locked");
-            mWriteBuffers.add(0, wbb);
             if (flush) {
                 enableWriteInterest();
             }
@@ -479,12 +465,12 @@ public class OzConnection {
         while (true) {
             synchronized (mWriteBuffers) {
                 if (mWriteBuffers.isEmpty()) {
+                    disableWriteInterest();
                     if (totalWritten == 0) mLog.warn("wrote no bytes to a write ready channel");
                     if (mFilter != null) {
                         mFilter.wrote(totalWritten);
                     }
                     // nothing more to write
-                	disableWriteInterest();
                 	if (mCloseAfterWrite) {
                 		closeNow();
                 	}
