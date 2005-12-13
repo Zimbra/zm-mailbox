@@ -948,3 +948,16 @@ Access: domain admin sufficient
 
 -----------------------------
 
+<GetZimletsRequest/>
+
+<GetZimletsResponse>
+  <zimlets>
+    <zimlet>
+      <zimlet extension="true" version="{version-string}" name="{zimlet-name}" description="{zimlet-description}">
+        <include>...</include>+
+      </zimlet>
+    </zimlet>
+  </zimlets>
+</GetZimletsResponse>
+
+-----------------------------
