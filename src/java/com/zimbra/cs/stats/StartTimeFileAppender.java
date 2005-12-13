@@ -25,13 +25,22 @@
 
 package com.zimbra.cs.stats;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import org.apache.log4j.FileAppender;
+
+import com.zimbra.cs.util.SystemUtil;
+import com.zimbra.cs.util.ZimbraLog;
 
 public class StartTimeFileAppender extends FileAppender {
     
+    private static final SimpleDateFormat TIMESTAMP_FORMATTER =
+        new SimpleDateFormat("yyyyMMdd-HHmm");
+
     public void setFile(String file) {
-        long secondsSinceEpoch = System.currentTimeMillis() / 1000;
-        file = file.replaceAll("%s", Long.toString(secondsSinceEpoch));
+        String timestamp = TIMESTAMP_FORMATTER.format(new Date());
+        file = file.replaceAll("%s", timestamp);
         super.setFile(file);
     }
 }

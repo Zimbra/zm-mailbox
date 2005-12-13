@@ -39,62 +39,53 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
+import com.zimbra.soap.ZimbraContext;
 
 /**
  * @author schemers
  */
 public class GetMsg extends WriteOpDocumentHandler {
 
-    private static StopWatch sWatch = StopWatch.getInstance("GetMsg");
-
     private static final String[] TARGET_MSG_PATH = new String[] { MailService.E_MSG, MailService.A_ID };
     protected String[] getProxiedIdPath(Element request)     { return TARGET_MSG_PATH; }
     protected boolean checkMountpointProxy(Element request)  { return false; }
 
     public Element handle(Element request, Map context) throws ServiceException {
-        long startTime = sWatch.start();
-        try {
-            ZimbraContext lc = getZimbraContext(context);
-            Mailbox mbox = getRequestedMailbox(lc);
-            OperationContext octxt = lc.getOperationContext();
-
-            Element eMsg = request.getElement(MailService.E_MSG);
-            ItemId iid = new ItemId(eMsg.getAttribute(MailService.A_ID), lc);
-            boolean raw = eMsg.getAttributeBool(MailService.A_RAW, false);
-            boolean read = eMsg.getAttributeBool(MailService.A_MARK_READ, false);
-            String part = eMsg.getAttribute(MailService.A_PART, null);
-
-            Message msg = null;
-            Appointment appt = null;
-
-            if (!iid.hasSubpart()) {
-                msg = mbox.getMessageById(octxt, iid.getId());
-                
-                if (read && msg.isUnread() && !RedoLogProvider.getInstance().isSlave())
-                    mbox.alterTag(octxt, iid.getId(), MailItem.TYPE_MESSAGE, Flag.ID_FLAG_UNREAD, false);
-            } else {
-                appt = mbox.getAppointmentById(octxt, iid.getId());
-            }
+        ZimbraContext lc = getZimbraContext(context);
+        Mailbox mbox = getRequestedMailbox(lc);
+        OperationContext octxt = lc.getOperationContext();
+        
+        Element eMsg = request.getElement(MailService.E_MSG);
+        ItemId iid = new ItemId(eMsg.getAttribute(MailService.A_ID), lc);
+        boolean raw = eMsg.getAttributeBool(MailService.A_RAW, false);
+        boolean read = eMsg.getAttributeBool(MailService.A_MARK_READ, false);
+        String part = eMsg.getAttribute(MailService.A_PART, null);
+        
+        Message msg = null;
+        Appointment appt = null;
+        
+        if (!iid.hasSubpart()) {
+            msg = mbox.getMessageById(octxt, iid.getId());
             
-            Element response = lc.createElement(MailService.GET_MSG_RESPONSE);
-            if (raw) {
-                ToXML.encodeMessageAsMIME(response, lc, msg, part);
-            } else {
-                boolean wantHTML = eMsg.getAttributeBool(MailService.A_WANT_HTML, false);
-                if (msg != null)
-                    ToXML.encodeMessageAsMP(response, lc, msg, wantHTML, part);
-                else if (appt != null)
-                    ToXML.encodeApptInviteAsMP(response, lc, appt, iid.getSubpartId(), wantHTML, part);
-            }
-            return response;
-            
-        } finally {
-            sWatch.stop(startTime);
+            if (read && msg.isUnread() && !RedoLogProvider.getInstance().isSlave())
+                mbox.alterTag(octxt, iid.getId(), MailItem.TYPE_MESSAGE, Flag.ID_FLAG_UNREAD, false);
+        } else {
+            appt = mbox.getAppointmentById(octxt, iid.getId());
         }
+        
+        Element response = lc.createElement(MailService.GET_MSG_RESPONSE);
+        if (raw) {
+            ToXML.encodeMessageAsMIME(response, lc, msg, part);
+        } else {
+            boolean wantHTML = eMsg.getAttributeBool(MailService.A_WANT_HTML, false);
+            if (msg != null)
+                ToXML.encodeMessageAsMP(response, lc, msg, wantHTML, part);
+            else if (appt != null)
+                ToXML.encodeApptInviteAsMP(response, lc, appt, iid.getSubpartId(), wantHTML, part);
+        }
+        return response;
     }
 
     public boolean isReadOnly() {

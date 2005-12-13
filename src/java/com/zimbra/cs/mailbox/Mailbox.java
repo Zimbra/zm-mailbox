@@ -46,11 +46,10 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbMailItem.SearchResult;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.im.IMNotification;
-import com.zimbra.cs.im.IMPersona;
-import com.zimbra.cs.index.ZimbraQuery;
-import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.index.ZimbraQuery;
+import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.BrowseResult.DomainItem;
@@ -69,17 +68,20 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.op.*;
 import com.zimbra.cs.service.FeedManager;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.util.StatsFile;
-import com.zimbra.cs.service.util.ZimbraPerf;
 import com.zimbra.cs.session.PendingModifications;
+import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.cs.session.Session;
+import com.zimbra.cs.stats.StatsFile;
 import com.zimbra.cs.stats.StopWatch;
+import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.Volume;
-import com.zimbra.cs.util.*;
+import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.cs.util.StringUtil;
+import com.zimbra.cs.util.ZimbraLog;
 
 
 /**
@@ -756,17 +758,25 @@ public class Mailbox {
             beginTransaction("getConfig", octxt, null);
 
             // make sure they have sufficient rights to view the config
-            if (!hasFullAccess())
+            if (!hasFullAccess()) {
+                success = true;
                 return null;
+            }
 
             Metadata meta = mCurrentChange.config == null ? mData.config : mCurrentChange.config;
-            if (meta == null)
+            if (meta == null) {
+                success = true;
                 return null;
+            }
             String config = meta.get(section, null);
-            if (config == null)
+            if (config == null) {
+                success = true;
                 return null;
+            }
             try {
-                return new Metadata(config);
+                meta = new Metadata(config);
+                success = true;
+                return meta;
             } catch (ServiceException e) {
                 ZimbraLog.mailbox.warn("could not decode config metadata for section:" + section);
                 return null;
@@ -2674,7 +2684,7 @@ public class Mailbox {
         return addMessage(octxt, pm, folderId, noICal, flags, tags, Mailbox.ID_AUTO_INCREMENT, rcptEmail, sharedDeliveryCtxt);
     }
 
-    private static final StopWatch sWatch = StopWatch.getInstance("MailboxAddMessage");
+    private static final StopWatch sWatch = StopWatch.getInstance("mbox_add_msg");
     
     public synchronized Message addMessage(OperationContext octxt, ParsedMessage pm,
                                            int folderId, boolean noICal, int flags, String tagStr, int conversationId,

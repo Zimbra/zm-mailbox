@@ -58,43 +58,33 @@ public class SearchMultipleMailboxes extends Search {
     public boolean needsAdminAuth(Map context) { return true; }
     
     public Element handle(Element request, Map context) throws ServiceException {
-        long startTime =  sWatch.start();
+        ZimbraContext lc = getZimbraContext(context);
+        String encodedAuthToken = getEncodedAuthToken(lc);
+        
+        SearchParams params = parseCommonParameters(request, lc);
+        
+        CrossMailboxSearch xmbsearch = getXMBSearch(request);
+        ZimbraQueryResults results = xmbsearch.getSearchResults(encodedAuthToken, params);
+        
+        // TODO: log all the requested mailboxes? Is logging the query string too sensitive?
+        ZimbraLog.security.info(ZimbraLog.encodeAttrs(
+            new String[] {"cmd", "SearchMultipleMailboxes", "query", params.getQueryStr()}));
+        
+        Element retVal = null;
+        
         try {
-            ZimbraContext lc = getZimbraContext(context);
-            String encodedAuthToken = getEncodedAuthToken(lc);
-
-            SearchParams params = parseCommonParameters(request, lc);
+            Element response = lc.createElement(AdminService.SEARCH_MULTIPLE_MAILBOXES_RESPONSE);
+            response.addAttribute(MailService.A_QUERY_OFFSET, Integer.toString(params.getOffset()));
             
-            CrossMailboxSearch xmbsearch = getXMBSearch(request);
-            ZimbraQueryResults results = xmbsearch.getSearchResults(encodedAuthToken, params);
-            
-            // TODO: log all the requested mailboxes? Is logging the query string too sensitive?
-            ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                    new String[] {"cmd", "SearchMultipleMailboxes", "query", params.getQueryStr()}));
-
-            Element retVal = null;
-
-            try {
-                Element response = lc.createElement(AdminService.SEARCH_MULTIPLE_MAILBOXES_RESPONSE);
-                response.addAttribute(MailService.A_QUERY_OFFSET, Integer.toString(params.getOffset()));
-                
-                ResultsPager pager = ResultsPager.create(results, params);
-                retVal = putHits(lc, response, pager, INCLUDE_MAILBOX_INFO, params);
-            } finally {
-                if (DONT_CACHE_RESULTS) {
-                    results.doneWithSearchResults();
-                }
-            }
-            
-            if (mLog.isDebugEnabled()) {
-                mLog.debug("Search Element Handler Finished in "+(System.currentTimeMillis()-startTime)+"ms");
-            }
-            
-            return retVal;
-            
+            ResultsPager pager = ResultsPager.create(results, params);
+            retVal = putHits(lc, response, pager, INCLUDE_MAILBOX_INFO, params);
         } finally {
-            sWatch.stop(startTime);
+            if (DONT_CACHE_RESULTS) {
+                results.doneWithSearchResults();
+            }
         }
+        
+        return retVal;
     }
     
     private static String getEncodedAuthToken(ZimbraContext lc)  throws ServiceException {

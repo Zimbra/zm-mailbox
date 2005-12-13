@@ -33,7 +33,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.service.util.ZimbraPerf;
+import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.ZimbraLog;
 
 /**

@@ -46,7 +46,9 @@ import org.apache.commons.pool.impl.GenericObjectPool;
 
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.util.ZimbraPerf;
+import com.zimbra.cs.stats.Counter;
+import com.zimbra.cs.stats.StopWatch;
+import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.SystemUtil;
 import com.zimbra.cs.util.ValueCounter;
 import com.zimbra.cs.util.ZimbraLog;
@@ -63,6 +65,10 @@ public class DbPool {
     private static String sLoggerRootUrl = null;    
     private static GenericObjectPool sConnectionPool;
     private static ValueCounter sConnectionStackCounter = new ValueCounter();
+    
+    private static StopWatch sConnStopWatch = StopWatch.getInstance("db_conn");
+    private static Counter sPoolSizeCounter = Counter.getInstance("db_pool_size");
+    
     
 	public static class Connection {
 		private java.sql.Connection mConnection;
@@ -208,6 +214,11 @@ public class DbPool {
             sLog.fatal("can't init Pool", e);
             System.exit(1);
         }
+        
+        // Only the average pool size is interesting
+        sPoolSizeCounter.setShowAverage(true);
+        sPoolSizeCounter.setShowCount(false);
+        sPoolSizeCounter.setShowTotal(false);
     };
 
     private static Properties getZimbraDbProps() {
@@ -265,6 +276,8 @@ public class DbPool {
     public static Connection getConnection() throws ServiceException {
         java.sql.Connection conn = null;
 
+        long start = sConnStopWatch.start();
+        
         try {
 	        String url = "jdbc:apache:commons:dbcp:zimbra";
 	        conn = DriverManager.getConnection(url);
@@ -282,6 +295,8 @@ public class DbPool {
         // If the connection pool is overutilized, warn about potential leaks
         int numActive = sConnectionPool.getNumActive();
         int maxActive = sConnectionPool.getMaxActive();
+        sPoolSizeCounter.increment(numActive);
+
         if (numActive > maxActive * 0.75) {
             String stackTraceMsg =
                 "Turn on debug logging for zimbra.sqltrace to see stack " +
@@ -321,6 +336,7 @@ public class DbPool {
             }
         }
         
+        sConnStopWatch.stop(start);
         return zimbraConn;
     }
     

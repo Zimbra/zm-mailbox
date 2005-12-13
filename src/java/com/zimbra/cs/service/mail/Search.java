@@ -39,18 +39,7 @@ import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.index.AppointmentHit;
-import com.zimbra.cs.index.ContactHit;
-import com.zimbra.cs.index.ConversationHit;
-import com.zimbra.cs.index.ResultsPager;
-import com.zimbra.cs.index.ZimbraHit;
-import com.zimbra.cs.index.ZimbraQueryResults;
-import com.zimbra.cs.index.MailboxIndex;
-import com.zimbra.cs.index.MessageHit;
-import com.zimbra.cs.index.MessagePartHit;
-import com.zimbra.cs.index.NoteHit;
-import com.zimbra.cs.index.ProxiedHit;
-import com.zimbra.cs.index.SearchParams;
+import com.zimbra.cs.index.*;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Conversation;
@@ -62,7 +51,6 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
-import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
@@ -74,55 +62,45 @@ import com.zimbra.soap.ZimbraContext;
 public class Search extends DocumentHandler  {
     protected static Log mLog = LogFactory.getLog(Search.class);
     
-    protected static StopWatch sWatch = StopWatch.getInstance("Search");
-    
     protected static final boolean DONT_CACHE_RESULTS = true;
     
     public Element handle(Element request, Map context) throws ServiceException {
-        long startTime =  sWatch.start();
+        ZimbraContext lc = getZimbraContext(context);
+        SoapSession session = (SoapSession) lc.getSession(SessionCache.SESSION_SOAP);
+        Mailbox mbox = getRequestedMailbox(lc);
         
+        SearchParams params = parseCommonParameters(request, lc);
+        ZimbraQueryResults results = getResults(mbox, params, lc, session);
+        
+        Element response = lc.createElement(MailService.SEARCH_RESPONSE);
+        
+        //
+        // create a "pager" which generate one page's worth of data for the client (using
+        // the cursor data, etc)
+        //
+        // If the pager detects "new results at head" -- ie new data came into our search, then
+        // we'll skip back to the beginning of the search
+        //
+        ResultsPager pager;            
         try {
-            ZimbraContext lc = getZimbraContext(context);
-            SoapSession session = (SoapSession) lc.getSession(SessionCache.SESSION_SOAP);
-            Mailbox mbox = getRequestedMailbox(lc);
+            pager = ResultsPager.create(results, params);
+            response.addAttribute(MailService.A_QUERY_OFFSET, params.getOffset());
+        } catch (ResultsPager.NewResultsAtHeadException e) {
+            // NOTE: this branch is unused right now, TODO remove this depending on usability
+            // decisions
             
-            SearchParams params = parseCommonParameters(request, lc);
-            ZimbraQueryResults results = getResults(mbox, params, lc, session);
-
-            Element response = lc.createElement(MailService.SEARCH_RESPONSE);
-
-            //
-            // create a "pager" which generate one page's worth of data for the client (using
-            // the cursor data, etc)
-            //
-            // If the pager detects "new results at head" -- ie new data came into our search, then
-            // we'll skip back to the beginning of the search
-            //
-            ResultsPager pager;            
-            try {
-                pager = ResultsPager.create(results, params);
-                response.addAttribute(MailService.A_QUERY_OFFSET, params.getOffset());
-            } catch (ResultsPager.NewResultsAtHeadException e) {
-                // NOTE: this branch is unused right now, TODO remove this depending on usability
-                // decisions
-                
-                // FIXME!  workaround bug in resetIterator()
-                results = getResults(mbox, params, lc, session);
-                
-                pager = new ResultsPager(results, params.getLimit(), 0);
-                response.addAttribute(MailService.A_QUERY_OFFSET, 0);
-                response.addAttribute("newResults", true);
-            }
+            // FIXME!  workaround bug in resetIterator()
+            results = getResults(mbox, params, lc, session);
             
-            Element retVal = putHits(lc, response, pager, DONT_INCLUDE_MAILBOX_INFO, params);
-            if (DONT_CACHE_RESULTS)
-                results.doneWithSearchResults();
-            if (mLog.isDebugEnabled())
-                mLog.debug("Search Element Handler Finished in "+(System.currentTimeMillis()-startTime)+"ms");
-            return retVal;
-        } finally {
-            sWatch.stop(startTime);
+            pager = new ResultsPager(results, params.getLimit(), 0);
+            response.addAttribute(MailService.A_QUERY_OFFSET, 0);
+            response.addAttribute("newResults", true);
         }
+        
+        Element retVal = putHits(lc, response, pager, DONT_INCLUDE_MAILBOX_INFO, params);
+        if (DONT_CACHE_RESULTS)
+            results.doneWithSearchResults();
+        return retVal;
     }
     
     protected SearchParams parseCommonParameters(Element request, ZimbraContext lc) throws ServiceException {

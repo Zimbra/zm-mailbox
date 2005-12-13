@@ -22,46 +22,130 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-
 package com.zimbra.cs.stats;
 
-public class 
-Counter extends Accumulator 
-{
-    private String mUnit;
-    
-    private long mCount = 0;
-    
-    public synchronized void increment() {
-        mCount++;
-    }
+import java.util.ArrayList;
+import java.util.List;
 
-    public synchronized void increment(int size) {
-        mCount += size;
-    }
+import com.zimbra.cs.util.StringUtil;
 
-    protected String getLabel(int column) {
-        return getName() + ":total:" + mUnit;
+/**
+ * <code>Accumulator</code> implementation that keeps track of a total
+ * and number of values (count) for the given statistic.
+ * 
+ * @author bburtin
+ */
+public class Counter extends Accumulator {
+
+    public static Counter getInstance(String name, String units) {
+        Counter c = getInstance(name);
+        c.mUnits = units;
+        return c;
     }
     
-    protected String getData(int column) {
-        return Long.toString(mCount);
-    }
-    
-    protected int numColumns() {
-        return 1;
-    }
-    
-    Counter() {
-    }
-    
-    public static Counter getInstance(String module, String unit) {
-        Counter c = (Counter)getInstance(module, Counter.class);
-        c.mUnit = unit;
+    public static Counter getInstance(String name) {
+        Counter c = (Counter) getInstance(name, Counter.class);
         return c;
     }
 
-    public static Counter getInstance(String module) {
-        return getInstance(module, "count");
+    private long mCount = 0;
+    private long mTotal = 0;
+    private String mUnits = null;
+    protected boolean mShowCount = false;
+    protected boolean mShowTotal = true;
+    protected boolean mShowAverage = false;
+    
+    /**
+     * Sets the name of the unit of measurement, or <code>null</code> if none.
+     * This string is appended to the column label.
+     */
+    public void setUnits(String units) { mUnits = units; }
+    
+    /**
+     * If <code>true</code>, the count of values will be logged in a column
+     * called <code>[name]_count</code>.  The default is <code>false</code>.
+     */
+    public void setShowCount(boolean showCount) { mShowCount = showCount; }
+    
+    /**
+     * If <code>true</code>, the total of values will be logged in a column
+     * called <code>[name]</code>.  The default is <code>true</code>.
+     */
+    public void setShowTotal(boolean showTotal) { mShowTotal = showTotal; }
+    
+    /**
+     * If <code>true</code>, the average of values will be logged in a column
+     * called <code>[name]_avg</code>.  The default is <code>false</code>.
+     */
+    public void setShowAverage(boolean showAverage) { mShowAverage = showAverage; }
+
+    /**
+     * Increments the total by the specified value.  Increments the count by 1.
+     */
+    public synchronized void increment(long value) {
+        mCount++;
+        mTotal += value;
+    }
+
+    /**
+     * Increments the count and total by 1.  
+     */
+    public synchronized void increment() {
+        increment(1);
+    }
+    
+    synchronized void reset() {
+        mCount = 0;
+        mTotal = 0;
+    }
+    
+    protected List<String> getLabels() {
+        List<String> labels = new ArrayList<String>();
+        if (mShowTotal) {
+            if (StringUtil.isNullOrEmpty(mUnits)) {
+                labels.add(getName());
+            } else {
+                labels.add(getName() + "_" + mUnits);
+            }
+        }
+        if (mShowCount) {
+            labels.add(getName() + "_count");
+        }
+        if (mShowAverage) {
+            labels.add(getName() + "_avg");
+        }
+        return labels;
+    }
+    
+    protected synchronized List getData() {
+        List data = new ArrayList();
+        if (mShowTotal) {
+            data.add(mTotal);
+        }
+        if (mShowCount) {
+            data.add(mCount);
+        }
+        if (mShowAverage) {
+            if (mCount == 0) {
+                data.add(0);
+            } else {
+                data.add(String.format("%.2f", ((double) mTotal / (double) mCount)));
+            }
+        }
+        return data;
+    }
+    
+    protected int getNumColumns() {
+        int numColumns = 0;
+        if (mShowTotal) {
+            numColumns++;
+        }
+        if (mShowCount) {
+            numColumns++;
+        }
+        if (mShowAverage) {
+            numColumns++;
+        }
+        return numColumns;
     }
 }

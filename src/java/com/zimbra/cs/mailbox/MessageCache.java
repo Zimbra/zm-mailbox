@@ -18,8 +18,8 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.TnefConverter;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.util.StatsFile;
-import com.zimbra.cs.service.util.ZimbraPerf;
+import com.zimbra.cs.stats.StatsFile;
+import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.JMSession;
@@ -108,7 +108,7 @@ public class MessageCache {
         }
         
         if (ZimbraLog.perf.isDebugEnabled()) {
-            ZimbraPerf.writeStats(STATS_FILE, item.getId(), cacheHit ? "1" : "0");
+            ZimbraPerf.writeStats(STATS_FILE, item.getId(), cacheHit ? 1 : 0);
         }
         
         return cn.mContent;

@@ -32,12 +32,13 @@ import javax.mail.Address;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeBodyPart;
 
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.mailbox.*;
+import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.RecurId;
@@ -45,74 +46,66 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
 public class CancelAppointment extends CalendarRequest {
 
     private static Log sLog = LogFactory.getLog(CancelAppointment.class);
-    private static StopWatch sWatch = StopWatch.getInstance("CancelAppointment");
-
     private static final String[] TARGET_ITEM_PATH = new String[] { MailService.A_ID };
     protected String[] getProxiedIdPath(Element request)     { return TARGET_ITEM_PATH; }
     protected boolean checkMountpointProxy(Element request)  { return false; }
 
     public Element handle(Element request, Map context) throws ServiceException {
-        long startTime = sWatch.start();
-        try {
-            ZimbraContext lc = getZimbraContext(context);
-            Account acct = getRequestedAccount(lc);
-            Mailbox mbox = getRequestedMailbox(lc);
-            OperationContext octxt = lc.getOperationContext();
+        ZimbraContext lc = getZimbraContext(context);
+        Account acct = getRequestedAccount(lc);
+        Mailbox mbox = getRequestedMailbox(lc);
+        OperationContext octxt = lc.getOperationContext();
+        
+        ItemId iid = new ItemId(request.getAttribute(MailService.A_ID), lc);
+        int compNum = (int) request.getAttributeLong(MailService.E_INVITE_COMPONENT);
+        
+        sLog.info("<CancelAppointment id=" + iid + " comp=" + compNum + ">");
+        
+        synchronized (mbox) {
+            Appointment appt = mbox.getAppointmentById(octxt, iid.getId()); 
+            Invite inv = appt.getInvite(iid.getSubpartId(), compNum);
             
-            ItemId iid = new ItemId(request.getAttribute(MailService.A_ID), lc);
-            int compNum = (int) request.getAttributeLong(MailService.E_INVITE_COMPONENT);
+            if (appt == null) {
+                throw MailServiceException.NO_SUCH_APPOINTMENT(inv.getUid(), " for CancelAppointmentRequest(" + iid + "," + compNum + ")");
+            }
             
-            sLog.info("<CancelAppointment id=" + iid + " comp=" + compNum + ">");
-            
-            synchronized (mbox) {
-                Appointment appt = mbox.getAppointmentById(octxt, iid.getId()); 
-                Invite inv = appt.getInvite(iid.getSubpartId(), compNum);
-
-                if (appt == null) {
-                    throw MailServiceException.NO_SUCH_APPOINTMENT(inv.getUid(), " for CancelAppointmentRequest(" + iid + "," + compNum + ")");
-                }
-
-                Element recurElt = request.getOptionalElement(MailService.E_INSTANCE);
-                if (recurElt != null) {
-                    RecurId recurId = CalendarUtils.parseRecurId(recurElt, inv.getTimeZoneMap(), inv);
-                    cancelInstance(lc, request, acct, mbox, appt, inv, recurId);
-                } else {
+            Element recurElt = request.getOptionalElement(MailService.E_INSTANCE);
+            if (recurElt != null) {
+                RecurId recurId = CalendarUtils.parseRecurId(recurElt, inv.getTimeZoneMap(), inv);
+                cancelInstance(lc, request, acct, mbox, appt, inv, recurId);
+            } else {
                 
-                    // if recur is not set, then we're cancelling the entire appointment...
-                    
-                    // first, pull a list of all the invites and THEN start cancelling them: since cancelling them
-                    // will remove them from the appointment's list, we can get really confused if we just directly
-                    // iterate through the list...
-                    
-                    Invite invites[] = new Invite[appt.numInvites()];
-                    for (int i = appt.numInvites()-1; i >= 0; i--) {
-                        invites[i] = appt.getInvite(i);
-                    }
-                    
-                    for (int i = invites.length-1; i >= 0; i--) {
-                        if (invites[i] != null && 
-                                (invites[i].getMethod().equals(ICalTok.REQUEST.toString()) ||
-                                        invites[i].getMethod().equals(ICalTok.PUBLISH.toString()))
-                                        ) {
-                            cancelInvite(lc, request, acct, mbox, appt, invites[i]);
-                        }
+                // if recur is not set, then we're cancelling the entire appointment...
+                
+                // first, pull a list of all the invites and THEN start cancelling them: since cancelling them
+                // will remove them from the appointment's list, we can get really confused if we just directly
+                // iterate through the list...
+                
+                Invite invites[] = new Invite[appt.numInvites()];
+                for (int i = appt.numInvites()-1; i >= 0; i--) {
+                    invites[i] = appt.getInvite(i);
+                }
+                
+                for (int i = invites.length-1; i >= 0; i--) {
+                    if (invites[i] != null && 
+                        (invites[i].getMethod().equals(ICalTok.REQUEST.toString()) ||
+                            invites[i].getMethod().equals(ICalTok.PUBLISH.toString()))
+                    ) {
+                        cancelInvite(lc, request, acct, mbox, appt, invites[i]);
                     }
                 }
-            } // synchronized on mailbox
-            
-            Element response = lc.createElement(MailService.CANCEL_APPOINTMENT_RESPONSE);
-            return response;
-        } finally {
-            sWatch.stop(startTime);
-        }        
-    }
+            }
+        } // synchronized on mailbox
+        
+        Element response = lc.createElement(MailService.CANCEL_APPOINTMENT_RESPONSE);
+        return response;
+    }        
     
     void cancelInstance(ZimbraContext lc, Element request, Account acct, Mailbox mbox, Appointment appt, Invite defaultInv, RecurId recurId) 
     throws ServiceException {

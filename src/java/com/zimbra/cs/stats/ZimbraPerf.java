@@ -23,7 +23,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.service.util;
+package com.zimbra.cs.stats;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -40,6 +40,7 @@ import java.util.Map;
 
 import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.localconfig.LC;
+import com.zimbra.cs.service.util.ThreadLocalData;
 import com.zimbra.cs.util.Constants;
 import com.zimbra.cs.util.StringUtil;
 import com.zimbra.cs.util.ZimbraLog;
@@ -68,6 +69,15 @@ public class ZimbraPerf {
     private static final long STATS_WRITE_INTERVAL = Constants.MILLIS_PER_MINUTE;
     private static final long SLOW_QUERY_THRESHOLD = 300;  // ms
     private static long sLastStatsWrite = System.currentTimeMillis();
+    
+    /**
+     * Returns <code>true</code> if we are collecting performance data.  Performance
+     * data is collected when the <code>zimbra.perf</code> logging category is
+     * set to <code>DEBUG</code>.
+     */
+    public static boolean isPerfEnabled() {
+        return ZimbraLog.perf.isDebugEnabled();
+    }
     
     private static class StatementStats {
         String mSql;

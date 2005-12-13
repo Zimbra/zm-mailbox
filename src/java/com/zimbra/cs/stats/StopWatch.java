@@ -25,67 +25,29 @@
 
 package com.zimbra.cs.stats;
 
-public class 
-StopWatch extends Accumulator
-{
-    public static final StopWatch getInstance(String module) {
-        StopWatch ta = (StopWatch)getInstance(module, StopWatch.class);
+/**
+ * A <code>Counter</code> that supports <code>start()</code>
+ * and <code>stop()</code> methods for conveniently timing events.
+ * Lots the count, total and average times by default.
+ * 
+ * @author bburtin
+ */
+public class StopWatch
+extends Counter {
+    
+    public static StopWatch getInstance(String name) {
+        StopWatch ta = (StopWatch)getInstance(name, StopWatch.class);
+        ta.setShowCount(true);
+        ta.setShowAverage(true);
+        ta.setUnits("ms");
         return ta;
     }
 
-    private long mNumTimes = 0;
-    private long mTotalTime = 0;
-    private long mPrevNumTimes = 0;
-    private long mPrevClock = 0;
-
-    public long start() { 
+    public long start() {
         return System.currentTimeMillis();
     }
     
-    public synchronized void stop(long startTime) {
-        mNumTimes++;
-        mTotalTime += System.currentTimeMillis() - startTime;
-    }
-    
-    protected String getLabel(int column) {
-        StringBuffer ret = new StringBuffer(getName());
-        switch (column) {
-        case 0:
-            ret.append(":total:count");
-            break;
-        case 1:
-            ret.append(":total:millis");
-            break;
-        case 2:
-            ret.append(":interval:ops/sec");
-            break;
-        default:
-            throw new IllegalArgumentException();
-        }
-        return ret.toString();
-    }
-    
-    protected synchronized String getData(int column) {
-        switch (column) {
-        case 0:
-            return Long.toString(mNumTimes);
-        case 1:
-            return Long.toString(mTotalTime);
-        case 2:
-            long now = System.currentTimeMillis();
-            long rateInLastInterval = 0;
-            if ((now - mPrevClock) != 0) {
-                rateInLastInterval = (1000 * (mNumTimes - mPrevNumTimes)) / (now - mPrevClock);
-            }
-            mPrevNumTimes = mNumTimes;
-            mPrevClock = now;
-            return Long.toString(rateInLastInterval);
-        default:
-            throw new IllegalArgumentException();
-        }
-    }
-    
-    protected int numColumns() {
-        return 3;
+    public void stop(long startTime) {
+        increment(System.currentTimeMillis() - startTime);
     }
 }

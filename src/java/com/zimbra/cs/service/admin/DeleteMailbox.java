@@ -35,7 +35,6 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
@@ -44,8 +43,6 @@ import com.zimbra.soap.ZimbraContext;
  * @author dkarp
  */
 public class DeleteMailbox extends AdminDocumentHandler {
-
-    private StopWatch sWatch = StopWatch.getInstance("DeleteMailbox");
 
     private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminService.E_MAILBOX, AdminService.A_ACCOUNTID };
     protected String[] getProxiedAccountPath()  { return TARGET_ACCOUNT_PATH; }
@@ -58,39 +55,34 @@ public class DeleteMailbox extends AdminDocumentHandler {
     }
 
     public Element handle(Element request, Map context) throws ServiceException {
-        long startTime = sWatch.start();
         ZimbraContext zc = getZimbraContext(context);
 
-        try {
-            Element mreq = request.getElement(AdminService.E_MAILBOX);
-            String accountId = mreq.getAttribute(AdminService.A_ACCOUNTID);
-
-            Account account = Provisioning.getInstance().getAccountById(accountId);
-            if (account == null)
-                throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
-
-            if (!canAccessAccount(zc, account))
-                throw ServiceException.PERM_DENIED("can not access account");
-            
-            Mailbox mbox = Mailbox.getMailboxByAccountId(accountId, false);
-            int mailboxId = -1;
-            if (mbox != null) {
-                mailboxId = mbox.getId();
-                mbox.deleteMailbox();
-            }
-
-            String idString = (mbox == null) ?
-                "<no mailbox for account " + accountId + ">" : Integer.toString(mailboxId);
-            ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                new String[] {"cmd", "DeleteMailbox","id", idString}));
-            
-            Element response = zc.createElement(AdminService.DELETE_MAILBOX_RESPONSE);
-            if (mbox != null)
-                response.addElement(AdminService.E_MAILBOX)
-                        .addAttribute(AdminService.A_MAILBOXID, mailboxId);
-            return response;
-        } finally {
-            sWatch.stop(startTime);
+        Element mreq = request.getElement(AdminService.E_MAILBOX);
+        String accountId = mreq.getAttribute(AdminService.A_ACCOUNTID);
+        
+        Account account = Provisioning.getInstance().getAccountById(accountId);
+        if (account == null)
+            throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
+        
+        if (!canAccessAccount(zc, account))
+            throw ServiceException.PERM_DENIED("can not access account");
+        
+        Mailbox mbox = Mailbox.getMailboxByAccountId(accountId, false);
+        int mailboxId = -1;
+        if (mbox != null) {
+            mailboxId = mbox.getId();
+            mbox.deleteMailbox();
         }
+        
+        String idString = (mbox == null) ?
+            "<no mailbox for account " + accountId + ">" : Integer.toString(mailboxId);
+        ZimbraLog.security.info(ZimbraLog.encodeAttrs(
+            new String[] {"cmd", "DeleteMailbox","id", idString}));
+        
+        Element response = zc.createElement(AdminService.DELETE_MAILBOX_RESPONSE);
+        if (mbox != null)
+            response.addElement(AdminService.E_MAILBOX)
+            .addAttribute(AdminService.A_MAILBOXID, mailboxId);
+        return response;
     }
 }

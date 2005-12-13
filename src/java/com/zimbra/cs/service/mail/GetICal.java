@@ -30,27 +30,23 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.Map;
 
-import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
+import com.zimbra.soap.ZimbraContext;
 
 
 public class GetICal extends WriteOpDocumentHandler {
 
-    private static StopWatch sWatch = StopWatch.getInstance("GetICal");
-    
     /* (non-Javadoc)
      * @see com.zimbra.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
      */
     public Element handle(Element request, Map context) throws ServiceException {
-        long startTime = sWatch.start();
         ZimbraContext lc = getZimbraContext(context);
         Mailbox mbx = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
@@ -100,8 +96,6 @@ public class GetICal extends WriteOpDocumentHandler {
             }
         } catch(MailServiceException.NoSuchItemException e) {
             throw ServiceException.FAILURE("No Such Invite Message: "+ msgId, e);
-        } finally {
-            sWatch.stop(startTime);
         }
     }
     

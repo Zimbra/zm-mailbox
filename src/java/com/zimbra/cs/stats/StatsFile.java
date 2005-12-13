@@ -22,7 +22,7 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.service.util;
+package com.zimbra.cs.stats;
 
 import java.io.File;
 

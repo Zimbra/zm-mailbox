@@ -37,14 +37,15 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.mailbox.*;
+import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
@@ -53,7 +54,6 @@ import com.zimbra.soap.ZimbraContext;
 public class ModifyAppointment extends CalendarRequest {
 
     private static Log sLog = LogFactory.getLog(ModifyAppointment.class);
-    private static StopWatch sWatch = StopWatch.getInstance("ModifyAppointment");
 
     private static final String[] TARGET_APPT_PATH = new String[] { MailService.A_ID };
     protected String[] getProxiedIdPath(Element request)     { return TARGET_APPT_PATH; }
@@ -83,35 +83,30 @@ public class ModifyAppointment extends CalendarRequest {
 
     
     public Element handle(Element request, Map context) throws ServiceException {
-        long startTime = sWatch.start();
-        try {
-            ZimbraContext lc = getZimbraContext(context);
-            Account acct = getRequestedAccount(lc);
-            Mailbox mbox = getRequestedMailbox(lc);
-            OperationContext octxt = lc.getOperationContext();
-
-            ItemId iid = new ItemId(request.getAttribute(MailService.A_ID), lc);
-            int compNum = (int) request.getAttributeLong(MailService.E_INVITE_COMPONENT, 0);
-            sLog.info("<ModifyAppointment id=" + iid + " comp=" + compNum + ">");
+        ZimbraContext lc = getZimbraContext(context);
+        Account acct = getRequestedAccount(lc);
+        Mailbox mbox = getRequestedMailbox(lc);
+        OperationContext octxt = lc.getOperationContext();
+        
+        ItemId iid = new ItemId(request.getAttribute(MailService.A_ID), lc);
+        int compNum = (int) request.getAttributeLong(MailService.E_INVITE_COMPONENT, 0);
+        sLog.info("<ModifyAppointment id=" + iid + " comp=" + compNum + ">");
+        
+        synchronized(mbox) {
+            Appointment appt = mbox.getAppointmentById(octxt, iid.getId());
+            if (appt == null) {
+                throw MailServiceException.NO_SUCH_APPOINTMENT(iid.toString(), "Could not find appointment");
+            }
+            Invite inv = appt.getInvite(iid.getSubpartId(), compNum);
+            if (inv == null) {
+                throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());
+            }
             
-            synchronized(mbox) {
-                Appointment appt = mbox.getAppointmentById(octxt, iid.getId());
-                if (appt == null) {
-                    throw MailServiceException.NO_SUCH_APPOINTMENT(iid.toString(), "Could not find appointment");
-                }
-                Invite inv = appt.getInvite(iid.getSubpartId(), compNum);
-                if (inv == null) {
-                    throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());
-                }
-                
-                // response
-                Element response = lc.createElement(MailService.MODIFY_APPOINTMENT_RESPONSE);
-                
-                return modifyAppointment(lc, request, acct, mbox, appt, inv, response);
-            } // synchronized on mailbox                
-        } finally {
-            sWatch.stop(startTime);
-        }        
+            // response
+            Element response = lc.createElement(MailService.MODIFY_APPOINTMENT_RESPONSE);
+            
+            return modifyAppointment(lc, request, acct, mbox, appt, inv, response);
+        } // synchronized on mailbox                
     }
     
     protected static Element modifyAppointment(ZimbraContext lc, Element request, Account acct, Mailbox mbox,

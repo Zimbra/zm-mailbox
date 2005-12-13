@@ -43,17 +43,17 @@ import com.zimbra.cs.util.Zimbra;
 
 public class LmtpServer extends TcpServer {
 
-    Counter mLmtpRcvdMsgs = Counter.getInstance("LmtpRcvdMsgs");
-    Counter mLmtpRcvdData = Counter.getInstance("LmtpRcvdData", "bytes");
-    Counter mLmtpRcvdRcpt = Counter.getInstance("LmtpRcvdRcpt");
-    Counter mLmtpDlvdMsgs = Counter.getInstance("LmtpDlvdMsgs");
-    Counter mLmtpDlvdData = Counter.getInstance("LmtpDlvdData", "bytes");
+    Counter mLmtpRcvdMsgs = Counter.getInstance("lmtp_rcvd_msgs");
+    Counter mLmtpRcvdBytes = Counter.getInstance("lmtp_rcvd_bytes");
+    Counter mLmtpRcvdRcpt = Counter.getInstance("lmtp_rcvd_rcpt");
+    Counter mLmtpDlvdMsgs = Counter.getInstance("lmtp_dlvd_msgs");
+    Counter mLmtpDlvdBytes = Counter.getInstance("lmtp_dlvd_bytes");
 
 	private Log mLog;
 
 	public LmtpServer(int numThreads, ServerSocket serverSocket) {
 		super("LmtpServer", numThreads, serverSocket);
-		mLog = LogFactory.getLog(LmtpServer.class.getName() + "/" + serverSocket.getLocalPort()); 
+		mLog = LogFactory.getLog(LmtpServer.class.getName() + "/" + serverSocket.getLocalPort());
 	}
 
 	protected ProtocolHandler newProtocolHandler() {

@@ -33,7 +33,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-import com.zimbra.cs.service.util.ZimbraPerf;
+import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.ZimbraLog;
 
 

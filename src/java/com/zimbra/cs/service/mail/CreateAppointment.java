@@ -28,7 +28,7 @@
  */
 package com.zimbra.cs.service.mail;
 
-import java.util.*;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -37,7 +37,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
@@ -47,7 +46,6 @@ import com.zimbra.soap.ZimbraContext;
 public class CreateAppointment extends CalendarRequest {
     
     private static Log sLog = LogFactory.getLog(CreateAppointment.class);
-    private static StopWatch sWatch = StopWatch.getInstance("CreateAppointment");
 
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.E_MSG, MailService.A_FOLDER };
     private static final String[] RESPONSE_ITEM_PATH = new String[] { };
@@ -66,27 +64,22 @@ public class CreateAppointment extends CalendarRequest {
     };
 
     public Element handle(Element request, Map context) throws ServiceException {
-        long startTime = sWatch.start();
-        try {
-            ZimbraContext lc = getZimbraContext(context);
-            Account acct = getRequestedAccount(lc);
-            Mailbox mbox = getRequestedMailbox(lc);
-
-            // <M>
-            Element msgElem = request.getElement(MailService.E_MSG);
-
-            // no existing Appt referenced -- this is a new create!
-            String folderIdStr = msgElem.getAttribute(MailService.A_FOLDER, DEFAULT_FOLDER);
-            ItemId iidFolder = new ItemId(folderIdStr, lc);
-            sLog.info("<CreateAppointment folder=" + iidFolder.getId() + "> " + lc.toString());
-
-            CreateAppointmentInviteParser parser = new CreateAppointmentInviteParser();
-            CalSendData dat = handleMsgElement(lc, msgElem, acct, mbox, parser);
-
-            Element response = lc.createElement(MailService.CREATE_APPOINTMENT_RESPONSE);
-            return sendCalendarMessage(lc, iidFolder.getId(), acct, mbox, dat, response, false);
-        } finally {
-            sWatch.stop(startTime);
-        }
+        ZimbraContext lc = getZimbraContext(context);
+        Account acct = getRequestedAccount(lc);
+        Mailbox mbox = getRequestedMailbox(lc);
+        
+        // <M>
+        Element msgElem = request.getElement(MailService.E_MSG);
+        
+        // no existing Appt referenced -- this is a new create!
+        String folderIdStr = msgElem.getAttribute(MailService.A_FOLDER, DEFAULT_FOLDER);
+        ItemId iidFolder = new ItemId(folderIdStr, lc);
+        sLog.info("<CreateAppointment folder=" + iidFolder.getId() + "> " + lc.toString());
+        
+        CreateAppointmentInviteParser parser = new CreateAppointmentInviteParser();
+        CalSendData dat = handleMsgElement(lc, msgElem, acct, mbox, parser);
+        
+        Element response = lc.createElement(MailService.CREATE_APPOINTMENT_RESPONSE);
+        return sendCalendarMessage(lc, iidFolder.getId(), acct, mbox, dat, response, false);
     }
 }

@@ -59,6 +59,8 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Domain.SearchGalResult;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.stats.StopWatch;
+import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.ZimbraLog;
 
 /**
@@ -157,6 +159,8 @@ public class LdapUtil {
         return getDirContext(false);
     }
  
+    private static StopWatch sWatch = StopWatch.getInstance("ldap_dc");
+    
     /**
      * 
      * @return
@@ -164,7 +168,10 @@ public class LdapUtil {
      */
     public static DirContext getDirContext(boolean master) throws ServiceException {
         try {
-            return new InitialDirContext(getDefaultEnv(master));
+            long start = sWatch.start();
+            DirContext dirContext = new InitialDirContext(getDefaultEnv(master));
+            sWatch.stop(start);
+            return dirContext;
         } catch (NamingException e) {
             throw ServiceException.FAILURE("getDirectContext", e);
         }

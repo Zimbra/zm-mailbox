@@ -25,7 +25,9 @@
 
 package com.zimbra.cs.service.mail;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Map;
 
 import javax.mail.internet.MimeMessage;
 
@@ -41,14 +43,12 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
 public class SetAppointment extends CalendarRequest {
 
     private static Log sLog = LogFactory.getLog(SetAppointment.class);
-    private static StopWatch sWatch = StopWatch.getInstance("SetAppointment");
 
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.A_FOLDER };
     protected String[] getProxiedIdPath(Element request)     { return TARGET_FOLDER_PATH; }
@@ -74,61 +74,56 @@ public class SetAppointment extends CalendarRequest {
     
     
     public Element handle(Element request, Map context) throws ServiceException {
-        long startTime = sWatch.start();
-        try {
-            ZimbraContext lc = getZimbraContext(context);
-            Account acct = getRequestedAccount(lc);
-            Mailbox mbox = getRequestedMailbox(lc);
-            OperationContext octxt = lc.getOperationContext();
+        ZimbraContext lc = getZimbraContext(context);
+        Account acct = getRequestedAccount(lc);
+        Mailbox mbox = getRequestedMailbox(lc);
+        OperationContext octxt = lc.getOperationContext();
+        
+        ItemId iidFolder = new ItemId(request.getAttribute(MailService.A_FOLDER, CreateAppointment.DEFAULT_FOLDER), lc);
+        
+        sLog.info("<SetAppointment> " + lc.toString());
+        
+        SetAppointmentData defaultData;
+        ArrayList /* SetAppointmentData */ exceptions = new ArrayList();
+        
+        synchronized (mbox) {
+            // First, the <default>
+            {
+                Element e = request.getElement(MailService.A_DEFAULT);
+                defaultData = getSetAppointmentData(lc, acct, mbox, e, new SetAppointmentInviteParser(false));
+            }
             
-            ItemId iidFolder = new ItemId(request.getAttribute(MailService.A_FOLDER, CreateAppointment.DEFAULT_FOLDER), lc);
+            // for each <exception>
+            for (Iterator iter = request.elementIterator(MailService.A_EXCEPT); iter.hasNext(); ) {
+                Element e = (Element) iter.next();
+                SetAppointmentData exDat = getSetAppointmentData(lc, acct, mbox, e, new SetAppointmentInviteParser(true));
+                exceptions.add(exDat);
+            }
             
-            sLog.info("<SetAppointment> " + lc.toString());
             
-            SetAppointmentData defaultData;
-            ArrayList /* SetAppointmentData */ exceptions = new ArrayList();
+            SetAppointmentData[] exceptArray = null;
+            if (exceptions.size() > 0) {
+                exceptArray = new SetAppointmentData[exceptions.size()];
+                exceptions.toArray(exceptArray);
+            }
             
-            synchronized (mbox) {
-                // First, the <default>
-                {
-                    Element e = request.getElement(MailService.A_DEFAULT);
-                    defaultData = getSetAppointmentData(lc, acct, mbox, e, new SetAppointmentInviteParser(false));
-                }
-                
-                // for each <exception>
-                for (Iterator iter = request.elementIterator(MailService.A_EXCEPT); iter.hasNext(); ) {
-                    Element e = (Element) iter.next();
-                    SetAppointmentData exDat = getSetAppointmentData(lc, acct, mbox, e, new SetAppointmentInviteParser(true));
-                    exceptions.add(exDat);
-                }
-                
-                
-                SetAppointmentData[] exceptArray = null;
-                if (exceptions.size() > 0) {
-                    exceptArray = new SetAppointmentData[exceptions.size()];
-                    exceptions.toArray(exceptArray);
-                }
-                
-                int apptId = mbox.setAppointment(octxt, iidFolder.getId(), defaultData, exceptArray);
-                
-                Element response = lc.createElement(MailService.SET_APPOINTMENT_RESPONSE);
-
-                response.addElement(MailService.A_DEFAULT)
-                        .addAttribute(MailService.A_ID, lc.formatItemId(defaultData.mInv.getMailItemId()));
-                
-                for (Iterator iter = exceptions.iterator(); iter.hasNext();) {
-                    SetAppointmentData cur = (SetAppointmentData) iter.next();
-                    Element e = response.addElement(MailService.A_EXCEPT);
-                    e.addAttribute(MailService.A_APPT_RECURRENCE_ID, cur.mInv.getRecurId().toString());
-                    e.addAttribute(MailService.A_ID, lc.formatItemId(cur.mInv.getMailItemId()));
-                }
-                response.addAttribute(MailService.A_APPT_ID, lc.formatItemId(apptId));
-                
-                return response;
-            } // synchronized(mbox)
-        } finally {
-            sWatch.stop(startTime);
-        }
+            int apptId = mbox.setAppointment(octxt, iidFolder.getId(), defaultData, exceptArray);
+            
+            Element response = lc.createElement(MailService.SET_APPOINTMENT_RESPONSE);
+            
+            response.addElement(MailService.A_DEFAULT)
+            .addAttribute(MailService.A_ID, lc.formatItemId(defaultData.mInv.getMailItemId()));
+            
+            for (Iterator iter = exceptions.iterator(); iter.hasNext();) {
+                SetAppointmentData cur = (SetAppointmentData) iter.next();
+                Element e = response.addElement(MailService.A_EXCEPT);
+                e.addAttribute(MailService.A_APPT_RECURRENCE_ID, cur.mInv.getRecurId().toString());
+                e.addAttribute(MailService.A_ID, lc.formatItemId(cur.mInv.getMailItemId()));
+            }
+            response.addAttribute(MailService.A_APPT_ID, lc.formatItemId(apptId));
+            
+            return response;
+        } // synchronized(mbox)
     }
     
     static private SetAppointmentData getSetAppointmentData(ZimbraContext lc, Account acct, Mailbox mbox, 

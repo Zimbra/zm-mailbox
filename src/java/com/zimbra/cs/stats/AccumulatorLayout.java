@@ -40,11 +40,7 @@ public class AccumulatorLayout extends Layout {
     }
 
     public String format(LoggingEvent event) {
-        String msg = event.getRenderedMessage();
-        StringBuffer sb = new StringBuffer(msg.length() + 32);
-        long secondsSinceEpoch = System.currentTimeMillis() / 1000;
-        sb.append(secondsSinceEpoch).append(",").append(msg).append("\n");
-        return sb.toString();
+        return event.getRenderedMessage() + "\n";
     }
 
     public boolean ignoresThrowable() {

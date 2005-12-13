@@ -24,7 +24,7 @@
  */
 package com.zimbra.cs.service.mail;
 
-import java.util.*;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -37,16 +37,14 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.stats.StopWatch;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
-import com.zimbra.cs.service.util.ItemId;
 
 
 public class CreateAppointmentException extends CreateAppointment {
     
     private static Log sLog = LogFactory.getLog(CreateAppointmentException.class);
-    private static StopWatch sWatch = StopWatch.getInstance("CreateAppointmentException");
 
     private static final String[] TARGET_APPT_PATH = new String[] { MailService.A_ID };
     protected String[] getProxiedIdPath(Element request)     { return TARGET_APPT_PATH; }
@@ -69,45 +67,40 @@ public class CreateAppointmentException extends CreateAppointment {
     };
     
     public Element handle(Element request, Map context) throws ServiceException {
-        long startTime = sWatch.start();
-        try {
-            ZimbraContext lc = getZimbraContext(context);
-            Account acct = getRequestedAccount(lc);
-            Mailbox mbox = getRequestedMailbox(lc);
-            OperationContext octxt = lc.getOperationContext();
-
-            ItemId iid = new ItemId(request.getAttribute(MailService.A_ID), lc);
-            int compNum = (int) request.getAttributeLong(MailService.E_INVITE_COMPONENT);
-            sLog.info("<CreateAppointmentException id=" + lc.formatItemId(iid) + " comp=" + compNum + "> " + lc.toString());
-
-            // <M>
-            Element msgElem = request.getElement(MailService.E_MSG);
+        ZimbraContext lc = getZimbraContext(context);
+        Account acct = getRequestedAccount(lc);
+        Mailbox mbox = getRequestedMailbox(lc);
+        OperationContext octxt = lc.getOperationContext();
+        
+        ItemId iid = new ItemId(request.getAttribute(MailService.A_ID), lc);
+        int compNum = (int) request.getAttributeLong(MailService.E_INVITE_COMPONENT);
+        sLog.info("<CreateAppointmentException id=" + lc.formatItemId(iid) + " comp=" + compNum + "> " + lc.toString());
+        
+        // <M>
+        Element msgElem = request.getElement(MailService.E_MSG);
+        
+        if (msgElem.getAttribute(MailService.A_FOLDER, null) != null) {
+            throw ServiceException.FAILURE("You may not specify a target Folder when creating an Exception for an existing appointment", null);
+        }
+        
+        Element response = lc.createElement(MailService.CREATE_APPOINTMENT_EXCEPTION_RESPONSE);
+        synchronized(mbox) {
+            Appointment appt = mbox.getAppointmentById(octxt, iid.getId()); 
+            Invite inv = appt.getInvite(iid.getSubpartId(), compNum);
             
-            if (msgElem.getAttribute(MailService.A_FOLDER, null) != null) {
-                throw ServiceException.FAILURE("You may not specify a target Folder when creating an Exception for an existing appointment", null);
+            if (inv.hasRecurId()) {
+                throw MailServiceException.INVITE_OUT_OF_DATE("Invite id=" + lc.formatItemId(iid) + " comp=" + compNum + " is not the a default invite");
             }
-
-            Element response = lc.createElement(MailService.CREATE_APPOINTMENT_EXCEPTION_RESPONSE);
-            synchronized(mbox) {
-                Appointment appt = mbox.getAppointmentById(octxt, iid.getId()); 
-                Invite inv = appt.getInvite(iid.getSubpartId(), compNum);
-
-                if (inv.hasRecurId()) {
-                    throw MailServiceException.INVITE_OUT_OF_DATE("Invite id=" + lc.formatItemId(iid) + " comp=" + compNum + " is not the a default invite");
-                }
-
-                if (appt == null)
-                    throw ServiceException.FAILURE("Could not find Appointment for id=" + iid.getId() + " comp=" + compNum + ">", null);
-                else if (!appt.isRecurring())
-                    throw ServiceException.FAILURE("Appointment " + appt.getId() + " is not a recurring appointment", null);
-
-                CreateApptExceptionInviteParser parser = new CreateApptExceptionInviteParser(appt.getUid(), inv.getTimeZoneMap());                
-                CalSendData dat = handleMsgElement(lc, msgElem, acct, mbox, parser);
-
-                return sendCalendarMessage(lc, appt.getFolderId(), acct, mbox, dat, response, false);
-            }
-        } finally {
-            sWatch.stop(startTime);
+            
+            if (appt == null)
+                throw ServiceException.FAILURE("Could not find Appointment for id=" + iid.getId() + " comp=" + compNum + ">", null);
+            else if (!appt.isRecurring())
+                throw ServiceException.FAILURE("Appointment " + appt.getId() + " is not a recurring appointment", null);
+            
+            CreateApptExceptionInviteParser parser = new CreateApptExceptionInviteParser(appt.getUid(), inv.getTimeZoneMap());                
+            CalSendData dat = handleMsgElement(lc, msgElem, acct, mbox, parser);
+            
+            return sendCalendarMessage(lc, appt.getFolderId(), acct, mbox, dat, response, false);
         }
     }
 

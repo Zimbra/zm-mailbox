@@ -29,12 +29,15 @@
 package com.zimbra.cs.service.mail;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.Map;
 
 import javax.mail.Address;
-import javax.mail.Transport;
-import javax.mail.SendFailedException;
 import javax.mail.MessagingException;
+import javax.mail.SendFailedException;
+import javax.mail.Transport;
 import javax.mail.Message.RecipientType;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
@@ -48,21 +51,20 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.ParsedAddress;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.FileUploadServlet;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.FileUploadServlet.Upload;
+import com.zimbra.cs.service.mail.ParseMimeMessage.MimeMessageData;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.cs.service.FileUploadServlet;
-import com.zimbra.cs.service.FileUploadServlet.Upload;
-import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.mail.ParseMimeMessage.MimeMessageData;
-import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
+import com.zimbra.soap.ZimbraContext;
 
 
 /**
@@ -73,49 +75,42 @@ import com.zimbra.soap.WriteOpDocumentHandler;
 public class SendMsg extends WriteOpDocumentHandler {
     
     private static Log mLog = LogFactory.getLog(SendMsg.class);
-    private static StopWatch sWatch = StopWatch.getInstance("SendMsg");
 
     /* (non-Javadoc)
      * @see com.zimbra.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
      */
     public Element handle(Element request, Map context) throws ServiceException {
-        long startTime = sWatch.start();
-
-        try {
-            ZimbraContext lc = getZimbraContext(context);
-            Account acct = getRequestedAccount(lc);
-            Mailbox mbox = getRequestedMailbox(lc);
-            OperationContext octxt = lc.getOperationContext();
-
-            mLog.info("<SendMsg> " + lc.toString());
-
-            // <M>
-            Element msgElem = request.getElement(MailService.E_MSG);
-
-            boolean saveToSent = shouldSaveToSent(acct);
-
-            // check to see whether the entire message has been uploaded under separate cover
-            String attachment = msgElem.getAttribute(MailService.A_ATTACHMENT_ID, null);
-
-            // holds return data about the MimeMessage
-            MimeMessageData mimeData = new MimeMessageData();
-            MimeMessage mm;
-            if (attachment != null) {
-                mm = parseUploadedMessage(lc, attachment, mimeData);
-            } else {
-                mm = ParseMimeMessage.parseMimeMsgSoap(lc, mbox, msgElem, null, mimeData);
-            }
-            
-            int msgId = sendMimeMessage(octxt, mbox, acct, saveToSent, mimeData, mm, msgElem);
-
-            Element response = lc.createElement(MailService.SEND_MSG_RESPONSE);
-            Element respElement = response.addElement(MailService.E_MSG);
-            if (saveToSent && msgId > 0)
-            	respElement.addAttribute(MailService.A_ID, msgId);
-            return response;
-        } finally {
-            sWatch.stop(startTime);
+        ZimbraContext lc = getZimbraContext(context);
+        Account acct = getRequestedAccount(lc);
+        Mailbox mbox = getRequestedMailbox(lc);
+        OperationContext octxt = lc.getOperationContext();
+        
+        mLog.info("<SendMsg> " + lc.toString());
+        
+        // <M>
+        Element msgElem = request.getElement(MailService.E_MSG);
+        
+        boolean saveToSent = shouldSaveToSent(acct);
+        
+        // check to see whether the entire message has been uploaded under separate cover
+        String attachment = msgElem.getAttribute(MailService.A_ATTACHMENT_ID, null);
+        
+        // holds return data about the MimeMessage
+        MimeMessageData mimeData = new MimeMessageData();
+        MimeMessage mm;
+        if (attachment != null) {
+            mm = parseUploadedMessage(lc, attachment, mimeData);
+        } else {
+            mm = ParseMimeMessage.parseMimeMsgSoap(lc, mbox, msgElem, null, mimeData);
         }
+        
+        int msgId = sendMimeMessage(octxt, mbox, acct, saveToSent, mimeData, mm, msgElem);
+        
+        Element response = lc.createElement(MailService.SEND_MSG_RESPONSE);
+        Element respElement = response.addElement(MailService.E_MSG);
+        if (saveToSent && msgId > 0)
+            respElement.addAttribute(MailService.A_ID, msgId);
+        return response;
     }
 
     protected static boolean shouldSaveToSent(Account acct) {

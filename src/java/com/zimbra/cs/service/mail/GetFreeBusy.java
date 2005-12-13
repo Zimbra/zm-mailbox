@@ -25,6 +25,12 @@
 
 package com.zimbra.cs.service.mail;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -34,15 +40,11 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.calendar.FreeBusy;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.stats.StopWatch;
+import com.zimbra.cs.service.util.ParseMailboxID;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
-import com.zimbra.soap.ZimbraContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
-
-import java.util.*;
-
-import com.zimbra.cs.service.util.*;
+import com.zimbra.soap.ZimbraContext;
 
 public class GetFreeBusy extends WriteOpDocumentHandler {
 
@@ -60,7 +62,6 @@ public class GetFreeBusy extends WriteOpDocumentHandler {
 //    (f)ree (b)usy (t)entative and (o)ut-of-office
     
     private static Log sLog = LogFactory.getLog(GetFreeBusy.class);
-    private static StopWatch sWatch = StopWatch.getInstance("GetFreeBusy");
     
     private static final long MSEC_PER_DAY = 1000*60*60*24;
     
@@ -69,48 +70,43 @@ public class GetFreeBusy extends WriteOpDocumentHandler {
     
     public Element handle(Element request, Map context) throws ServiceException 
     {
-        long startTime = sWatch.start();
-        try {
-            ZimbraContext zc = getZimbraContext(context);
-
-            long rangeStart = request.getAttributeLong(MailService.A_APPT_START_TIME);
-            long rangeEnd = request.getAttributeLong(MailService.A_APPT_END_TIME);
-            
-            if (rangeEnd < rangeStart) {
-                throw ServiceException.INVALID_REQUEST("End time must be after Start time", null);
-            }
-            
-            long days = (rangeEnd-rangeStart)/MSEC_PER_DAY;
-            if (days > MAX_PERIOD_SIZE_IN_DAYS) {
-                throw ServiceException.INVALID_REQUEST("Requested range is too large (Maximum "+MAX_PERIOD_SIZE_IN_DAYS+" days)", null);
-            }
-            
-            
-            
-            Element response = zc.createElement(MailService.GET_FREE_BUSY_RESPONSE);
-            
-            String idParam = request.getAttribute(MailService.A_UID);
-            
-            ArrayList /*ParseItemId*/local = new ArrayList();
-            HashMap /*Server,ParamStr*/remote = new HashMap();
-            partitionItems(zc, response, rangeStart, rangeEnd, idParam, local, remote);
-            proxyRemoteItems(context, zc, response, rangeStart, rangeEnd, remote);
-
-            if (!local.isEmpty()) {
-                for (Iterator iter = local.iterator(); iter.hasNext();)
-                {
-                    ParseMailboxID id = (ParseMailboxID)(iter.next());
-                    try {
-                        getForOneMailbox(zc, response, id, rangeStart, rangeEnd);
-                    } catch (ServiceException e) {
-                        addFailureInfo(response, rangeStart, rangeEnd, id.toString(), e);
-                    }
+        ZimbraContext zc = getZimbraContext(context);
+        
+        long rangeStart = request.getAttributeLong(MailService.A_APPT_START_TIME);
+        long rangeEnd = request.getAttributeLong(MailService.A_APPT_END_TIME);
+        
+        if (rangeEnd < rangeStart) {
+            throw ServiceException.INVALID_REQUEST("End time must be after Start time", null);
+        }
+        
+        long days = (rangeEnd-rangeStart)/MSEC_PER_DAY;
+        if (days > MAX_PERIOD_SIZE_IN_DAYS) {
+            throw ServiceException.INVALID_REQUEST("Requested range is too large (Maximum "+MAX_PERIOD_SIZE_IN_DAYS+" days)", null);
+        }
+        
+        
+        
+        Element response = zc.createElement(MailService.GET_FREE_BUSY_RESPONSE);
+        
+        String idParam = request.getAttribute(MailService.A_UID);
+        
+        ArrayList /*ParseItemId*/local = new ArrayList();
+        HashMap /*Server,ParamStr*/remote = new HashMap();
+        partitionItems(zc, response, rangeStart, rangeEnd, idParam, local, remote);
+        proxyRemoteItems(context, zc, response, rangeStart, rangeEnd, remote);
+        
+        if (!local.isEmpty()) {
+            for (Iterator iter = local.iterator(); iter.hasNext();)
+            {
+                ParseMailboxID id = (ParseMailboxID)(iter.next());
+                try {
+                    getForOneMailbox(zc, response, id, rangeStart, rangeEnd);
+                } catch (ServiceException e) {
+                    addFailureInfo(response, rangeStart, rangeEnd, id.toString(), e);
                 }
             }
-            return response;
-        } finally {
-            sWatch.stop(startTime);
         }
+        return response;
     }
     
     protected static void proxyRemoteItems(Map context,ZimbraContext zc,Element response,long rangeStart,long rangeEnd,Map /* Server, ParamStr */ remote)

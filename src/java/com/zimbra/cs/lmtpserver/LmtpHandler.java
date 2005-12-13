@@ -413,7 +413,7 @@ public class LmtpHandler extends ProtocolHandler {
         int dataLength = data.length;
         int numRecipients = mEnvelope.getRecipients().size();
         mServer.mLmtpRcvdMsgs.increment();
-        mServer.mLmtpRcvdData.increment(dataLength);
+        mServer.mLmtpRcvdBytes.increment(dataLength);
         mServer.mLmtpRcvdRcpt.increment(numRecipients);
     	
         mServer.getConfigBackend().deliver(mEnvelope, data);
@@ -436,7 +436,7 @@ public class LmtpHandler extends ProtocolHandler {
     	}
         
         mServer.mLmtpDlvdMsgs.increment(numDelivered);
-        mServer.mLmtpDlvdData.increment(numDelivered * dataLength);
+        mServer.mLmtpDlvdBytes.increment(numDelivered * dataLength);
         
     	reset();
     }

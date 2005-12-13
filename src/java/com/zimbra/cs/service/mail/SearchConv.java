@@ -33,11 +33,11 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.zimbra.cs.index.ZimbraHit;
-import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.MessageHit;
 import com.zimbra.cs.index.SearchParams;
+import com.zimbra.cs.index.ZimbraHit;
+import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.service.ServiceException;
@@ -53,55 +53,47 @@ public class SearchConv extends Search {
     private static Log sLog = LogFactory.getLog(Search.class);
 
     public Element handle(Element request, Map context) throws ServiceException {
-        long startTime = sWatch.start();
+        if (sLog.isDebugEnabled())
+            sLog.debug("**Start SearchConv");
         
+        ZimbraContext lc = getZimbraContext(context);
+        Mailbox mbox = getRequestedMailbox(lc);
+        Mailbox.OperationContext octxt = lc.getOperationContext();
+        
+        SoapSession session = (SoapSession) lc.getSession(SessionCache.SESSION_SOAP);
+        SearchParams params = parseCommonParameters(request, lc);
+        
+        String cidStr = request.getAttribute(MailService.A_CONV_ID);
+        int cid = 0;
         try {
-            if (sLog.isDebugEnabled())
-                sLog.debug("**Start SearchConv");
-
-            ZimbraContext lc = getZimbraContext(context);
-            Mailbox mbox = getRequestedMailbox(lc);
-            Mailbox.OperationContext octxt = lc.getOperationContext();
-
-            SoapSession session = (SoapSession) lc.getSession(SessionCache.SESSION_SOAP);
-            SearchParams params = parseCommonParameters(request, lc);
-
-            String cidStr = request.getAttribute(MailService.A_CONV_ID);
-            int cid = 0;
-            try {
-                cid = Integer.parseInt(cidStr);
-            } catch(NumberFormatException e) {}
-
-            //
-            // append (conv:(convid)) onto the beginning of the queryStr
-            //
-            StringBuffer queryBuffer = new StringBuffer("conv:\"");
-            queryBuffer.append(cid);
-            queryBuffer.append("\" (");
-            queryBuffer.append(params.getQueryStr());
-            queryBuffer.append(")");
-            params.setQueryStr(queryBuffer.toString());
-            
-            // 
-            // force to group-by-message
-            // 
-            params.setTypesStr(MailboxIndex.GROUP_BY_MESSAGE);
-            
-            ZimbraQueryResults results = this.getResults(mbox, params, lc, session);
-            
-            Element response = lc.createElement(MailService.SEARCH_CONV_RESPONSE);
-            response.addAttribute(MailService.A_QUERY_OFFSET, Integer.toString(params.getOffset()));
-
-            Message[] msgs = mbox.getMessagesByConversation(octxt, cid, MailboxIndex.getDbMailItemSortByte(params.getSortBy()));
-            
-            Element retVal = putHits(lc, response, msgs, results, params);
-            if (sLog.isDebugEnabled())
-                sLog.debug("************ElementHandler Finished " + (System.currentTimeMillis() - startTime));
-
-            return retVal;
-        } finally {
-            sWatch.stop(startTime);
-        }
+            cid = Integer.parseInt(cidStr);
+        } catch(NumberFormatException e) {}
+        
+        //
+        // append (conv:(convid)) onto the beginning of the queryStr
+        //
+        StringBuffer queryBuffer = new StringBuffer("conv:\"");
+        queryBuffer.append(cid);
+        queryBuffer.append("\" (");
+        queryBuffer.append(params.getQueryStr());
+        queryBuffer.append(")");
+        params.setQueryStr(queryBuffer.toString());
+        
+        // 
+        // force to group-by-message
+        // 
+        params.setTypesStr(MailboxIndex.GROUP_BY_MESSAGE);
+        
+        ZimbraQueryResults results = this.getResults(mbox, params, lc, session);
+        
+        Element response = lc.createElement(MailService.SEARCH_CONV_RESPONSE);
+        response.addAttribute(MailService.A_QUERY_OFFSET, Integer.toString(params.getOffset()));
+        
+        Message[] msgs = mbox.getMessagesByConversation(octxt, cid, MailboxIndex.getDbMailItemSortByte(params.getSortBy()));
+        
+        Element retVal = putHits(lc, response, msgs, results, params);
+        
+        return retVal;
     }
     
     /**
