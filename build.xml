@@ -580,6 +580,9 @@
 		<zip destfile="${dist.zimlet.dir}/com_zimbra_ymaps.zip" update="true">
 			<fileset dir="${config.dir}/zimlets/com_zimbra_ymaps" />
 		</zip>
+		<zip destfile="${dist.zimlet.dir}/com_zimbra_bugz.zip" update="true">
+			<fileset dir="${config.dir}/zimlets/com_zimbra_bugz" />
+		</zip>
 	</target>
 
 	<target name="deploy-zimlets" depends='package-zimlets' description="install files, deploy to LDAP">
@@ -613,6 +616,12 @@
 			<arg line="deploy" />
 			<arg file="${dist.zimlet.dir}/com_zimbra_ymaps.zip" />
 		</java>
+		<echo>Deploying zimlet: bugz</echo>
+		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="-q" />
+			<arg line="deploy" />
+			<arg file="${dist.zimlet.dir}/com_zimbra_bugz.zip" />
+		</java>
 	</target>
 
 	<target name="install-zimlets" depends='package-zimlets' description="install files only">
@@ -640,6 +649,11 @@
 			<arg line="-q" />
 			<arg line="install" />
 			<arg file="${dist.zimlet.dir}/com_zimbra_ymaps.zip" />
+		</java>
+		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="-q" />
+			<arg line="install" />
+			<arg file="${dist.zimlet.dir}/com_zimbra_bugz.zip" />
 		</java>
 	</target>
 
