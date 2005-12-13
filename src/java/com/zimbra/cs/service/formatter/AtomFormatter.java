@@ -45,7 +45,7 @@ public class AtomFormatter extends Formatter {
     
     public void format(Context context, MailItem mailItem) throws IOException, ServiceException {
         
-        Iterator iterator = getMailItems(context, mailItem, getDefaultStartTime(), getDefaultEndTime());
+        Iterator iterator = getMailItems(context, mailItem, context.getStartTime(), context.getEndTime());
         
         context.resp.setContentType("application/atom+xml");
         
@@ -85,7 +85,7 @@ public class AtomFormatter extends Formatter {
     }
     
     private void addAppointment(Appointment appt, Element feed, Context context) {
-        Collection instances = appt.expandInstances(getDefaultStartTime(), getDefaultEndTime());
+        Collection instances = appt.expandInstances(context.getStartTime(), context.getEndTime());
         for (Iterator instIt = instances.iterator(); instIt.hasNext(); ) {
             Appointment.Instance inst = (Appointment.Instance) instIt.next();
             InviteInfo invId = inst.getInviteInfo();

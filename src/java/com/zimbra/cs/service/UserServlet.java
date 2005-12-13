@@ -420,8 +420,8 @@ public class UserServlet extends ZimbraServlet {
         public long getStartTime() {
             if (mStartTime == -2) {
                 String st = req.getParameter(QP_START);
-                mStartTime = (st != null) ? DateUtil.parseDateSpecifier(st, -1) : -1;
-                //ZimbraLog.mailbox.debug("mStartTime == "+new Date(mStartTime));                
+                long defaultStartTime = formatter.getDefaultStartTime();
+                mStartTime = (st != null) ? DateUtil.parseDateSpecifier(st, defaultStartTime) : defaultStartTime;
             }
             return mStartTime;
         }
@@ -430,8 +430,8 @@ public class UserServlet extends ZimbraServlet {
         public long getEndTime() {
             if (mEndTime == -2) {
                 String et = req.getParameter(QP_END);
-                mEndTime = (et != null) ? DateUtil.parseDateSpecifier(et, -1) : -1;
-                //ZimbraLog.mailbox.debug("mEndTime == "+new Date(mEndTime));
+                long defaultEndTime = formatter.getDefaultEndTime();                
+                mEndTime = (et != null) ? DateUtil.parseDateSpecifier(et, defaultEndTime) : defaultEndTime;
             }
             return mEndTime;
         }

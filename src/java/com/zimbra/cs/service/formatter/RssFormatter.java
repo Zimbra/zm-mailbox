@@ -45,8 +45,10 @@ public class RssFormatter extends Formatter {
     private SimpleDateFormat mDateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
         
     public void format(Context context, MailItem mailItem) throws IOException, ServiceException {
+        //ZimbraLog.mailbox.info("start = "+new Date(context.getStartTime()));
+        //ZimbraLog.mailbox.info("end = "+new Date(context.getEndTime()));
         
-        Iterator iterator = getMailItems(context, mailItem, getDefaultStartTime(), getDefaultEndTime());
+        Iterator iterator = getMailItems(context, mailItem, context.getStartTime(), context.getEndTime());
         
         context.resp.setContentType("application/rss+xml");
         
@@ -89,7 +91,7 @@ public class RssFormatter extends Formatter {
     }
     
     private void addAppointment(Appointment appt, Element channel, Context context) {
-        Collection instances = appt.expandInstances(getDefaultStartTime(),  getDefaultEndTime());
+        Collection instances = appt.expandInstances(context.getStartTime(), context.getEndTime());
         for (Iterator instIt = instances.iterator(); instIt.hasNext(); ) {
             Appointment.Instance inst = (Appointment.Instance) instIt.next();
             InviteInfo invId = inst.getInviteInfo();

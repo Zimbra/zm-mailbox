@@ -48,17 +48,11 @@ public class IcsFormatter extends Formatter {
     public String getDefaultSearchTypes() {
         return MailboxIndex.SEARCH_FOR_APPOINTMENTS;
     }
-  
-    
+
     public void format(Context context, MailItem mailItem) throws IOException, ServiceException {
-
-        long start = Math.max(context.getStartTime(), getDefaultStartTime());
-        long cend = context.getEndTime();
-        long end = cend == -1 ? getDefaultEndTime() : Math.min(context.getEndTime(), getDefaultEndTime());
-
-        //ZimbraLog.mailbox.info("start = "+new Date(start));
-        //ZimbraLog.mailbox.info("end = "+new Date(end));
-        Iterator iterator = getMailItems(context, mailItem, start, end);
+        //ZimbraLog.mailbox.info("start = "+new Date(context.getStartTime()));
+        //ZimbraLog.mailbox.info("end = "+new Date(context.getEndTime()));
+        Iterator iterator = getMailItems(context, mailItem, context.getStartTime(), context.getEndTime());
         
         List appts = new ArrayList();
         // this is lame
