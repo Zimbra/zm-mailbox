@@ -4177,6 +4177,7 @@ public class Mailbox {
             assert(mSharedDelivCoord.mNumDelivs >= 0);
             if (mSharedDelivCoord.mSharedDeliveryAllowed) {
                 mSharedDelivCoord.mNumDelivs++;
+                ZimbraLog.misc.info("# of shared deliv incr to " + mSharedDelivCoord.mNumDelivs + " for mailbox " + getId());
                 return true;
             } else {
                 // If request for other ops is pending on this mailbox, don't allow
@@ -4192,6 +4193,7 @@ public class Mailbox {
     public void endSharedDelivery() {
         synchronized (mSharedDelivCoord) {
             mSharedDelivCoord.mNumDelivs--;
+            ZimbraLog.misc.info("# of shared deliv decr to " + mSharedDelivCoord.mNumDelivs + " for mailbox " + getId());
             assert(mSharedDelivCoord.mNumDelivs >= 0);
             if (mSharedDelivCoord.mNumDelivs == 0) {
                 // Wake up any waiting backup thread.
@@ -4231,6 +4233,8 @@ public class Mailbox {
             while (mSharedDelivCoord.mNumDelivs > 0) {
                 try {
                     mSharedDelivCoord.wait(3000);
+                    ZimbraLog.misc.info("wake up from wait for completion of shared delivery; mailbox=" + getId() + 
+                            " # of shared deliv=" + mSharedDelivCoord.mNumDelivs);
                 } catch (InterruptedException e) {}
             }
         }
