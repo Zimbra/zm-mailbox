@@ -320,6 +320,18 @@ global soap/system errors used with zimbra:Error/Code:
      ...
      <pref name="{name}">{value}</pref>
    </prefs>
+   <props>
+     <prop zimlet="{zimlet-name}" name="{name}">{value}</prop>
+     ...
+     <prop zimlet="{zimlet-name}" name="{name}">{value}</prop>
+   </props>
+   <zimlets>
+     <zimlet>
+       <zimlet>...</zimlet>
+       <zimletConfig>...</zimletConfig>
+     </zimlet>
+     ...
+   </zimlets>
    <mailURL>{mail-url}</mailURL>+
 </GetInfoResponse>
  
