@@ -28,7 +28,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
 
 /**
@@ -55,10 +54,6 @@ public class ZimletDescription extends ZimletMeta {
 		super(desc);
 	}
 	
-	public ZimletDescription(String desc, String prefix) throws ZimletException {
-		super(desc, prefix);
-	}
-	
 	protected void initialize() {
 		mScripts = new ArrayList<String>();
 	}
@@ -76,13 +71,7 @@ public class ZimletDescription extends ZimletMeta {
 	}
 
 	private void parseResource(Element resource) throws ZimletException {
-		String txt = resource.getText();
-		if (!txt.startsWith("http:") &&
-				!txt.startsWith("https:")) {
-			txt = ZIMLET_URL + "/" + mName + "/" + txt;
-			resource.setText(txt);
-		}
-		mScripts.add(txt);
+		mScripts.add(resource.getText());
 	}
 	
 	private void parseServerExtension(Element serverExt) throws ZimletException {

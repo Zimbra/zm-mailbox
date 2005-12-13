@@ -327,6 +327,7 @@ global soap/system errors used with zimbra:Error/Code:
    </props>
    <zimlets>
      <zimlet>
+       <zimletContext baseUrl="..."/>
        <zimlet>...</zimlet>
        <zimletConfig>...</zimletConfig>
      </zimlet>

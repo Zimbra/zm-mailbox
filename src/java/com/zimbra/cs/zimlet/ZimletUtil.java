@@ -42,7 +42,6 @@ import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Zimlet;
-import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
@@ -59,6 +58,7 @@ import com.zimbra.soap.Element;
  */
 public class ZimletUtil {
 	
+	public static final String ZIMLET_BASE = "/service/zimlet";
 	public static final String ZIMLET_DEV_DIR = "_dev";
 	public static final String ZIMLET_ALLOWED_DOMAINS = "allowedDomains";
 	public static final String ZIMLET_DEFAULT_COS = "default";
@@ -192,7 +192,10 @@ public class ZimletUtil {
 			return;
 		}
 		try {
+			String zimletBase = ZIMLET_BASE + "/" + zim.getName() + "/";
 			Element entry = elem.addElement(AccountService.E_ZIMLET);
+			Element zimletContext = entry.addElement(AccountService.E_ZIMLET_CONTEXT);
+			zimletContext.addAttribute(AccountService.A_ZIMLET_BASE_URL, zimletBase);
 			zim.getZimletDescription().addToElement(entry);
 			if (zim.hasZimletConfig()) {
 				zim.getZimletConfig().addToElement(entry);
@@ -217,7 +220,10 @@ public class ZimletUtil {
 	        	Iterator iter = sDevZimlets.values().iterator();
 	        	while (iter.hasNext()) {
 	        		ZimletFile zim = (ZimletFile) iter.next();
-	        		Element entry = elem.addElement(AccountService.E_ZIMLET);
+	    			String zimletBase = ZIMLET_BASE + "/" + ZIMLET_DEV_DIR + "/" + zim.getName() + "/";
+	    			Element entry = elem.addElement(AccountService.E_ZIMLET);
+	    			Element zimletContext = entry.addElement(AccountService.E_ZIMLET_CONTEXT);
+	    			zimletContext.addAttribute(AccountService.A_ZIMLET_BASE_URL, zimletBase);
 	    			zim.getZimletDescription().addToElement(entry);
 	    			if (zim.hasZimletConfig()) {
 	    				zim.getZimletConfig().addToElement(entry);
@@ -377,6 +383,7 @@ public class ZimletUtil {
 		ZimbraLog.zimlet.info("Uninstalling Zimlet " + zimlet + " from LDAP.");
 		Provisioning prov = Provisioning.getInstance();
 		try {
+			@SuppressWarnings({"unchecked"})
 			List<Cos> cos = prov.getAllCos();
 			for (Cos c : cos) {
 				try {

@@ -84,6 +84,7 @@ public class AccountService implements DocumentService {
     public static final String E_QUOTA_USED = "used";
     public static final String E_ZIMLET = "zimlet";
     public static final String E_ZIMLETS = "zimlets";
+    public static final String E_ZIMLET_CONTEXT = "zimletContext";
     public static final String E_PROPERTY = "prop";
     public static final String E_PROPERTIES = "props";
     public static final String E_SOAP_URL = "soapURL";
@@ -91,6 +92,7 @@ public class AccountService implements DocumentService {
     public static final String A_NAME = "name";
     public static final String A_BY = "by";    
     public static final String A_ZIMLET = "zimlet";
+    public static final String A_ZIMLET_BASE_URL = "baseUrl";
     
 
 	public void registerHandlers(DocumentDispatcher dispatcher) {

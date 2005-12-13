@@ -94,14 +94,12 @@ public class ZimletFile extends File {
 	private static final String CONFIG_TMPL = "config_template.xml";
 
 	private String mDescFile;
-	private Map    mEntries;
+	private Map<String,ZimletEntry> mEntries;
 
 	private ZimletDescription mDesc;
 	private String            mDescString;
 	private ZimletConfig      mConfig;
 	private String            mConfigString;
-	
-	private String mDevPrefix;
 	
 	private String mZimletName;
 	
@@ -126,7 +124,7 @@ public class ZimletFile extends File {
 		}
 		mDescFile = name + XML_SUFFIX;
 		
-		mEntries = new HashMap();
+		mEntries = new HashMap<String,ZimletEntry>();
 
 		if (isDirectory()) {
 			File[] files = listFiles();
@@ -143,10 +141,6 @@ public class ZimletFile extends File {
 			}
 		}
 		
-		mDevPrefix = getParentFile().getName();
-		if (!mDevPrefix.equals(ZimletUtil.ZIMLET_DEV_DIR)) {
-			mDevPrefix = null;
-		}
 		initZimletDescription();
 		mZimletName = mDesc.getName();
 	}
@@ -158,7 +152,7 @@ public class ZimletFile extends File {
 				throw new FileNotFoundException("zimlet description not found: " + mDescFile);
 			}
 			mDescString = new String(entry.getContents());
-			mDesc = new ZimletDescription(mDescString, mDevPrefix);
+			mDesc = new ZimletDescription(mDescString);
 		}
 	}
 	

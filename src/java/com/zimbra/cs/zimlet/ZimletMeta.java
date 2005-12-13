@@ -70,9 +70,6 @@ public abstract class ZimletMeta {
 	public static final String ZIMLET_TAG_HOST             = "host";
 	public static final String ZIMLET_TAG_PROPERTY         = "property";
 
-	
-	protected String ZIMLET_URL = "/service/zimlet";
-	
 	protected Element mTopElement;
 	
 	protected String mName;
@@ -88,20 +85,10 @@ public abstract class ZimletMeta {
 	}
 	
 	public ZimletMeta(File f) throws ZimletException {
-		this(f, null);
-	}
-
-	public ZimletMeta(File f, String resourcePrefix) throws ZimletException {
-		this(readFile(f), resourcePrefix);
+		this(readFile(f));
 	}
 
 	public ZimletMeta(String meta) throws ZimletException {
-		this(meta, null);
-	}
-	public ZimletMeta(String meta, String resourcePrefix) throws ZimletException {
-		if (resourcePrefix != null) {
-			ZIMLET_URL = ZIMLET_URL + "/" + resourcePrefix;
-		}
 		initialize();
 		if (meta == null) {
 			return;
