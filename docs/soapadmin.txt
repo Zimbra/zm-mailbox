@@ -953,6 +953,7 @@ Access: domain admin sufficient
 <GetZimletsResponse>
   <zimlets>
     <zimlet>
+      <zimletContext baseUrl="..."/>
       <zimlet extension="true" version="{version-string}" name="{zimlet-name}" description="{zimlet-description}">
         <include>...</include>+
       </zimlet>
