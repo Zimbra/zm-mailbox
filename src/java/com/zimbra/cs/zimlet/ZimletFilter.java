@@ -83,32 +83,41 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
 		HttpServletRequest  req = (HttpServletRequest) request;
 		HttpServletResponse resp = (HttpServletResponse) response;
 
-        AuthToken authToken = getAuthTokenFromCookie(req, resp);
-        if (authToken == null) {
-	    	ZimbraLog.zimlet.info("no auth token");
-        	return;
+        AuthToken authToken = getAuthTokenFromCookie(req, resp, true);
+        boolean isAdmin = false;
+        if (authToken == null) { //check for admin auth token
+        	authToken = getAdminAuthTokenFromCookie(req, resp);
+            if (authToken == null) {
+            	ZimbraLog.zimlet.info("no auth token");
+            	return;
+            } else {
+            	isAdmin = true;
+            }
         }
         
+        
         try {
-        	Account account = Provisioning.getInstance().getAccountById(authToken.getAccountId());
-        	String[] attrList = account.getCOS().getMultiAttr(Provisioning.A_zimbraZimletAvailableZimlets);
-        	String zimletName = getZimletName(req);
-        	
-        	if (zimletName == null) {
-    	    	ZimbraLog.zimlet.debug("no zimlet name");
-        		return;
-        	}
-        	
-        	boolean found = false;
-        	for (int i = 0; i < attrList.length; i++) {
-        		if (zimletName.equals(attrList[i])) {
-        			found = true;
-        			break;
-        		}
-        	}
-        	if (!found) {
-            	ZimbraLog.zimlet.info("unauthorized request to zimlet "+zimletName+" from user "+authToken.getAccountId());
-        		return;
+        	if(!isAdmin) {
+	        	Account account = Provisioning.getInstance().getAccountById(authToken.getAccountId());
+	        	String[] attrList = account.getCOS().getMultiAttr(Provisioning.A_zimbraZimletAvailableZimlets);
+	        	String zimletName = getZimletName(req);
+	        	
+	        	if (zimletName == null) {
+	    	    	ZimbraLog.zimlet.debug("no zimlet name");
+	        		return;
+	        	}
+	        	
+	        	boolean found = false;
+	        	for (int i = 0; i < attrList.length; i++) {
+	        		if (zimletName.equals(attrList[i])) {
+	        			found = true;
+	        			break;
+	        		}
+	        	}
+	        	if (!found) {
+	            	ZimbraLog.zimlet.info("unauthorized request to zimlet "+zimletName+" from user "+authToken.getAccountId());
+	        		return;
+	        	}
         	}
         } catch (ServiceException se) {
         	ZimbraLog.zimlet.info("cannot resolve account "+authToken.getAccountId());
