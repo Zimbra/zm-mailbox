@@ -1308,12 +1308,22 @@ public class DbMailItem {
                     inheritedTags.add(rs.getLong(5));
                 }
                 
-                // Update the last conversation
+                // Update the last conversation.
                 UnderlyingData data = conversations.get(lastConvId);
-                data.children      = StringUtil.join(",", children);
-                data.unreadCount   = unreadCount;
-                data.inheritedTags = StringUtil.join(",", inheritedTags);
-                data.messageCount  = children.size();
+                if (data != null) {
+                    data.children      = StringUtil.join(",", children);
+                    data.unreadCount   = unreadCount;
+                    data.inheritedTags = StringUtil.join(",", inheritedTags);
+                    data.messageCount  = children.size();
+                } else {
+                    // Data error: no messages found
+                    StringBuilder msg = new StringBuilder("No messages found for conversations:");
+                    for (UnderlyingData ud : convData) {
+                        msg.append(' ').append(ud.id);
+                    }
+                    msg.append(".  lastConvId=").append(lastConvId);
+                    sLog.error(msg);
+                }
             } catch (SQLException e) {
                 throw ServiceException.FAILURE("completing conversation data", e);
             } finally {
