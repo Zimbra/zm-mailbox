@@ -506,8 +506,5 @@ public class MailService implements DocumentService {
         // wiki
         dispatcher.registerHandler(SAVE_WIKI_REQUEST, new SaveWiki());
         
-        // zimlet
-        dispatcher.registerHandler(GET_ZIMLETS_REQUEST, new GetZimlets());
-
 	}
 }

@@ -38,7 +38,11 @@ import com.zimbra.soap.ZimbraContext;
 
 public class GetZimlets extends AdminDocumentHandler  {
 
-	public Element handle(Element request, Map context) throws ServiceException {
+    public boolean domainAuthSufficient(Map context) {
+        return true;
+    }
+
+    public Element handle(Element request, Map context) throws ServiceException {
 		ZimbraContext lc = getZimbraContext(context);
         Account acct = getRequestedAccount(lc);
 		
