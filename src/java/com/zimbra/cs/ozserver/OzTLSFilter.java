@@ -39,6 +39,7 @@ import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLEngineResult;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.SSLEngineResult.HandshakeStatus;
+import javax.net.ssl.SSLEngineResult.Status;
 
 import org.apache.commons.logging.Log;
 
@@ -220,23 +221,33 @@ public class OzTLSFilter implements OzFilter {
             return; 
         }
         
-        mReadBB.flip();
+        SSLEngineResult result;
         ByteBuffer unwrappedBB = ByteBuffer.allocate(mApplicationBufferSize);
-        SSLEngineResult result = mSSLEngine.unwrap(mReadBB, unwrappedBB);
-        mReadBB.compact();
-        if (mDebug) debug("read unwrap result " + result);
-        switch (result.getStatus()) {
-        case BUFFER_UNDERFLOW:
-        case OK:
-            if (result.getHandshakeStatus() == HandshakeStatus.NEED_TASK) {
-                runTasks();
+        do {
+            if (mDebug) debug(OzUtil.byteBufferDebugDump("readBB before flip in unwrap", mReadBB, true));
+            mReadBB.flip();
+            if (mDebug) debug(OzUtil.byteBufferDebugDump("readBB after flip in unwrap", mReadBB, false));
+            
+            if (mDebug) debug("unwrap loop iteration  ***************************");
+            result = mSSLEngine.unwrap(mReadBB, unwrappedBB);
+            if (mDebug) debug(OzUtil.byteBufferDebugDump("after unwrap unwrappedBB", unwrappedBB, true));
+            if (mDebug) debug(OzUtil.byteBufferDebugDump("after unwrap readBB", mReadBB, true));
+            mReadBB.compact();
+            if (mDebug) debug("read unwrap result " + result);
+            
+            switch (result.getStatus()) {
+            case BUFFER_UNDERFLOW:
+            case OK:
+                if (result.getHandshakeStatus() == HandshakeStatus.NEED_TASK) {
+                    runTasks();
+                }
+                break;
+            case BUFFER_OVERFLOW:
+            case CLOSED:
+                throw new IOException("TLS filter: SSLEngine error during read: " + result.getStatus());
             }
-            mConnection.processRead(unwrappedBB);
-            break;
-        case BUFFER_OVERFLOW:
-        case CLOSED:
-            throw new IOException("TLS filter: SSLEngine error during read: " + result.getStatus());
-        }
+        } while (mReadBB.position() != 0 && result.getStatus() != Status.BUFFER_UNDERFLOW);
+        mConnection.processRead(unwrappedBB);
     }
     
     private void resizeUnwrappedBB() {

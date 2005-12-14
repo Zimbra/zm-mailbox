@@ -316,6 +316,7 @@ public class OzConnection {
         // copy underlying buffer.
         ByteBuffer matchBuffer = dataBuffer.duplicate();
         matchBuffer.flip();
+        if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("matching", matchBuffer, false));
         
         // We may have read more than one PDU 
         while (matchBuffer.position() < matchBuffer.limit()) {
@@ -339,7 +340,7 @@ public class OzConnection {
             mConnectionHandler.handleInput(pdu, true);
             handledBytes = matchEnd;
         }
-            
+
         if (handledBytes == 0) {
             if (mDebug) mLog.debug("no bytes handled and no match");
             if (dataBuffer.hasRemaining()) {
