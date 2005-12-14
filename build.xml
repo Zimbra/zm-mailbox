@@ -82,6 +82,8 @@
 
 	<property name="ical4j.jar" value="ical4j-0.9.16-patched.jar" />
 
+	<property name="zimlets" value="com_zimbra_phone,com_zimbra_po,com_zimbra_tracking,com_zimbra_url,com_zimbra_ymaps,com_zimbra_sforce,com_zimbra_amzn,com_zimbra_bugz"/>
+
 	<condition property="is-windows">
 		<os family="windows" />
 	</condition>
@@ -387,7 +389,7 @@
 
 	<target name="reset-the-world-stage1" depends="clean,compile,jar,init" description="Run when tomcat is stopped." />
 
-	<target name="reset-the-world-stage2" depends="service-deploy,load-zimlets,inject" description="Run when tomcat is running." />
+	<target name="reset-the-world-stage2" depends="service-deploy,deploy-zimlets,inject" description="Run when tomcat is running." />
 
 	<target name="init" depends="stop-servers,quick-init,ldap-init,tomcat-init,start-ldap,ldap-load,start-tomcat" />
 	
@@ -564,110 +566,52 @@
 		</exec>
 	</target>
 
-	<target name="load-zimlets" depends="package-zimlets,deploy-zimlets"/>
-	<target name="reload-zimlets" depends="load-zimlets,restart-tomcat"/>
-	<target name="reload-extra-zimlets" depends="deploy-extra-zimlets,restart-tomcat"/>
+	<target name="reload-zimlets" depends="install-zimlets,restart-tomcat"/>
 
+	<target name="package-zimlets" depends="package-zimlets-core,package-zimlets-extra"/>
+	<target name="package-zimlets-core">
+		<foreach list="${zimlets}" target="package-zimlet" param="zimlet"/>
+	</target>
 	<target name="package-zimlet">
+		<echo>${zimlet}</echo>
 		<zip destfile="${dist.zimlet.dir}/${zimlet}.zip" update="true" >
 			<fileset dir="${config.dir}/zimlets/${zimlet}" />
 		</zip>
 	</target>
-	<target name="deploy-zimlet">
-		<echo>Deploying zimlet: ${zimlet}</echo>
-		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-q" />
-			<arg line="deploy" />
-			<arg file="${dist.zimlet.dir}/${zimlet}.zip" />
-		</java>
+
+	<target name="package-zimlets-extra">
+		<!-- todo:  remove these classes from service.jar -->
+		<!-- todo2:  just use RegexHandler instead of creating custom classes -->
+		<zip destfile="${dist.zimlet.dir}/com_zimbra_phone.zip" update="true">
+			<fileset dir="${build.classes.dir}" includes="**/NANPHandler.class"/>
+		</zip>
+		<zip destfile="${dist.zimlet.dir}/com_zimbra_tracking.zip" update="true">
+			<fileset dir="${build.classes.dir}" includes="**/TrackingHandler.class"/>
+		</zip>
+		<zip destfile="${dist.zimlet.dir}/com_zimbra_url.zip" update="true" >
+			<fileset dir="${build.classes.dir}" includes="**/URLHandler.class"/>
+		</zip>
+	</target>
+	
+	<target name="deploy-zimlets" depends="package-zimlets">
+		<foreach list="${zimlets}" target="install-zimlet" param="zimlet">
+			<param name="action" value="deploy"/>
+		</foreach>
+	</target>
+	<target name="install-zimlets" depends="package-zimlets">
+		<foreach list="${zimlets}" target="install-zimlet" param="zimlet">
+			<param name="action" value="install"/>
+		</foreach>
 	</target>
 	<target name="install-zimlet">
-		<echo>Installing zimlet: ${zimlet}</echo>
+		<echo>${action} ${zimlet}</echo>
 		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="-q" />
-			<arg line="install" />
+			<arg line="${action}" />
 			<arg file="${dist.zimlet.dir}/${zimlet}.zip" />
 		</java>
 	</target>
 	
-	<property name="extra-zimlets" value="com_zimbra_ymaps,com_zimbra_sforce,com_zimbra_amzn,com_zimbra_bugz"/>
-	<target name="deploy-extra-zimlets">
-		<foreach list="${extra-zimlets}" target="package-zimlet" param="zimlet"/>
-		<foreach list="${extra-zimlets}" target="deploy-zimlet" param="zimlet"/>
-	</target>
-	<target name="install-extra-zimlets">
-		<foreach list="${extra-zimlets}" target="package-zimlet" param="zimlet"/>
-		<foreach list="${extra-zimlets}" target="install-zimlet" param="zimlet"/>
-	</target>
-		
-	<target name="package-zimlets">
-		<zip destfile="${dist.zimlet.dir}/com_zimbra_phone.zip" update="true">
-			<fileset dir="${build.classes.dir}" includes="**/NANPHandler.class"/>
-			<fileset dir="${config.dir}/zimlets/com_zimbra_phone" />
-		</zip>
-		<zip destfile="${dist.zimlet.dir}/com_zimbra_po.zip" update="true">
-			<fileset dir="${config.dir}/zimlets/com_zimbra_po" />
-		</zip>
-		<zip destfile="${dist.zimlet.dir}/com_zimbra_tracking.zip" update="true">
-			<fileset dir="${build.classes.dir}" includes="**/TrackingHandler.class"/>
-			<fileset dir="${config.dir}/zimlets/com_zimbra_tracking" />
-		</zip>
-		<zip destfile="${dist.zimlet.dir}/com_zimbra_url.zip" update="true" >
-			<fileset dir="${build.classes.dir}" includes="**/URLHandler.class"/>
-			<fileset dir="${config.dir}/zimlets/com_zimbra_url" />
-		</zip>
-	</target>
-
-	<target name="deploy-zimlets" depends='package-zimlets,deploy-extra-zimlets' description="install files, deploy to LDAP">
-		<echo>Deploying zimlet: phone</echo>
-		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-q" />
-			<arg line="deploy" />
-			<arg file="${dist.zimlet.dir}/com_zimbra_phone.zip" />
-		</java>
-		<echo>Deploying zimlet: po</echo>
-		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-q" />
-			<arg line="deploy" />
-			<arg file="${dist.zimlet.dir}/com_zimbra_po.zip" />
-		</java>
-		<echo>Deploying zimlet: tracking</echo>
-		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-q" />
-			<arg line="deploy" />
-			<arg file="${dist.zimlet.dir}/com_zimbra_tracking.zip" />
-		</java>
-		<echo>Deploying zimlet: url</echo>
-		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-q" />
-			<arg line="deploy" />
-			<arg file="${dist.zimlet.dir}/com_zimbra_url.zip" />
-		</java>
-	</target>
-
-	<target name="install-zimlets" depends='package-zimlets,install-extra-zimlets' description="install files only">
-		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-q" />
-			<arg line="install" />
-			<arg file="${dist.zimlet.dir}/com_zimbra_phone.zip" />
-		</java>
-		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-q" />
-			<arg line="install" />
-			<arg file="${dist.zimlet.dir}/com_zimbra_po.zip" />
-		</java>
-		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-q" />
-			<arg line="install" />
-			<arg file="${dist.zimlet.dir}/com_zimbra_tracking.zip" />
-		</java>
-		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-q" />
-			<arg line="install" />
-			<arg file="${dist.zimlet.dir}/com_zimbra_url.zip" />
-		</java>
-	</target>
-
     <target name="tomcat-init" depends="localhost-ssl-cert,tomcat-init-unix">
 		<copy todir="${tomcat.home.dir}/common/lib" file="${jars.dir}/${ical4j.jar}" />
 		<copy todir="${tomcat.home.dir}/common/lib" file="${jars.dir}/activation.jar" />
