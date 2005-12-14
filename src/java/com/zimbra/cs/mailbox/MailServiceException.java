@@ -292,11 +292,17 @@ public class MailServiceException extends ServiceException {
     }
     
     public static MailServiceException CANNOT_CANCEL_INSTANCE_OF_EXCEPTION(String request) {
-        return new MailServiceException("You cannot cancel a specific instance of an Exception, specify the default invite instead: "+request, MUST_BE_ORGANIZER, SENDERS_FAULT);
+        return new MailServiceException(
+                "You cannot cancel a specific instance of an Exception, specify the default invite instead: "+request,
+                CANNOT_CANCEL_INSTANCE_OF_EXCEPTION,
+                SENDERS_FAULT);
     }
 
     public static MailServiceException INVITE_OUT_OF_DATE(String request) {
-        return new MailServiceException("The specified Invite is out of date (has been updated): "+request, MUST_BE_ORGANIZER, SENDERS_FAULT);
+        return new MailServiceException(
+                "The specified Invite is out of date (has been updated): "+request,
+                INVITE_OUT_OF_DATE,
+                SENDERS_FAULT);
     }
     
     public static MailServiceException SEND_ABORTED_ADDRESS_FAILURE(String msg, Exception e) {

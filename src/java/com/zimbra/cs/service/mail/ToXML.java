@@ -60,6 +60,7 @@ import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.EmailElementCache.CacheNode;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.StringUtil;
@@ -608,8 +609,9 @@ public class ToXML {
      * @return
      * @throws ServiceException
      */
-    public static Element encodeApptInviteAsMP(Element parent, ZimbraContext lc, Appointment appt, int invId, boolean wantHTML, String part)
+    public static Element encodeApptInviteAsMP(Element parent, ZimbraContext lc, Appointment appt, ItemId iid, boolean wantHTML, String part)
     throws ServiceException {
+        int invId = iid.getSubpartId();
         boolean wholeMessage = (part == null || part.trim().equals(""));
 
         boolean repliesWithInvites = true;
@@ -626,6 +628,8 @@ public class ToXML {
         
         try {
             MimeMessage mm = appt.getMimeMessage(invId);
+            if (mm == null)
+                throw MailServiceException.INVITE_OUT_OF_DATE("Invite id=" + lc.formatItemId(iid));
             if (!wholeMessage) {
                 MimePart mp = Mime.getMimePart(mm, part);
                 if (mp == null)
