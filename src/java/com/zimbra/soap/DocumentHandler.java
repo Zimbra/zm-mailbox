@@ -33,9 +33,9 @@ import java.util.Iterator;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
+import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -100,27 +100,19 @@ public abstract class DocumentHandler {
     }
 
     public boolean isDomainAdminOnly(ZimbraContext lc) {
-        AuthToken at = lc.getAuthToken(); 
-        return at.isDomainAdmin() && !at.isAdmin();
+        return AccessManager.getInstance().isDomainAdminOnly(lc.getAuthToken());
     }
 
     public boolean canAccessAccount(ZimbraContext lc, Account target) throws ServiceException {
-        AuthToken at = lc.getAuthToken();
-        if (at.isAdmin()) return true;
-        if (!at.isDomainAdmin()) return false;
-        Account acct = Provisioning.getInstance().getAccountById(lc.getAuthtokenAccountId());
-        return acct.getDomain().getId().equals(target.getDomain().getId());
+        return AccessManager.getInstance().canAccessAccount(lc.getAuthToken(), target);
     }
 
     public Domain getAuthTokenAccountDomain(ZimbraContext lc) throws ServiceException {
-        return lc.getAuthtokenAccount().getDomain();
+        return AccessManager.getInstance().getDomain(lc.getAuthToken());
     }
 
     public boolean canAccessDomain(ZimbraContext lc, String domainName) throws ServiceException {
-        AuthToken at = lc.getAuthToken();
-        if (at.isAdmin()) return true;
-        if (!at.isDomainAdmin()) return false;
-        return lc.getAuthtokenAccount().getDomain().getName().equals(domainName);
+        return AccessManager.getInstance().canAccessDomain(lc.getAuthToken(), domainName);
     }
 
     public boolean canAccessDomain(ZimbraContext lc, Domain domain) throws ServiceException {
@@ -133,7 +125,7 @@ public abstract class DocumentHandler {
             throw ServiceException.INVALID_REQUEST("must be valid email address: "+email, null);
         return canAccessDomain(lc, parts[1]);
     }
-    
+
     /**
      * returns true if domain admin auth is sufficient to run this command. This should be overriden only on admin
      * commands that can be run in a restricted "domain admin" mode.
