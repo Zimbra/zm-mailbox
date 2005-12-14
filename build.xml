@@ -127,6 +127,12 @@
 		<isset property="is-unix" />
 	</condition>
 	
+	<taskdef resource="net/sf/antcontrib/antlib.xml">
+	   <classpath>
+	     <pathelement location="jars/ant-contrib-1.0b1.jar"/>
+	   </classpath>
+	</taskdef>
+	
 	<path id="class.path">
 		<pathelement location="${build.classes.dir}" />
 		<fileset dir="${jars.dir}">
@@ -560,7 +566,40 @@
 
 	<target name="load-zimlets" depends="package-zimlets,deploy-zimlets"/>
 	<target name="reload-zimlets" depends="load-zimlets,restart-tomcat"/>
+	<target name="reload-extra-zimlets" depends="deploy-extra-zimlets,restart-tomcat"/>
 
+	<target name="package-zimlet">
+		<zip destfile="${dist.zimlet.dir}/${zimlet}.zip" update="true" >
+			<fileset dir="${config.dir}/zimlets/${zimlet}" />
+		</zip>
+	</target>
+	<target name="deploy-zimlet">
+		<echo>Deploying zimlet: ${zimlet}</echo>
+		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="-q" />
+			<arg line="deploy" />
+			<arg file="${dist.zimlet.dir}/${zimlet}.zip" />
+		</java>
+	</target>
+	<target name="install-zimlet">
+		<echo>Installing zimlet: ${zimlet}</echo>
+		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="-q" />
+			<arg line="install" />
+			<arg file="${dist.zimlet.dir}/${zimlet}.zip" />
+		</java>
+	</target>
+	
+	<property name="extra-zimlets" value="com_zimbra_ymaps,com_zimbra_sforce,com_zimbra_amzn,com_zimbra_bugz"/>
+	<target name="deploy-extra-zimlets">
+		<foreach list="${extra-zimlets}" target="package-zimlet" param="zimlet"/>
+		<foreach list="${extra-zimlets}" target="deploy-zimlet" param="zimlet"/>
+	</target>
+	<target name="install-extra-zimlets">
+		<foreach list="${extra-zimlets}" target="package-zimlet" param="zimlet"/>
+		<foreach list="${extra-zimlets}" target="install-zimlet" param="zimlet"/>
+	</target>
+		
 	<target name="package-zimlets">
 		<zip destfile="${dist.zimlet.dir}/com_zimbra_phone.zip" update="true">
 			<fileset dir="${build.classes.dir}" includes="**/NANPHandler.class"/>
@@ -573,19 +612,13 @@
 			<fileset dir="${build.classes.dir}" includes="**/TrackingHandler.class"/>
 			<fileset dir="${config.dir}/zimlets/com_zimbra_tracking" />
 		</zip>
-		<zip destfile="${dist.zimlet.dir}/com_zimbra_url.zip" update="true">
+		<zip destfile="${dist.zimlet.dir}/com_zimbra_url.zip" update="true" >
 			<fileset dir="${build.classes.dir}" includes="**/URLHandler.class"/>
 			<fileset dir="${config.dir}/zimlets/com_zimbra_url" />
 		</zip>
-		<zip destfile="${dist.zimlet.dir}/com_zimbra_ymaps.zip" update="true">
-			<fileset dir="${config.dir}/zimlets/com_zimbra_ymaps" />
-		</zip>
-		<zip destfile="${dist.zimlet.dir}/com_zimbra_bugz.zip" update="true">
-			<fileset dir="${config.dir}/zimlets/com_zimbra_bugz" />
-		</zip>
 	</target>
 
-	<target name="deploy-zimlets" depends='package-zimlets' description="install files, deploy to LDAP">
+	<target name="deploy-zimlets" depends='package-zimlets,deploy-extra-zimlets' description="install files, deploy to LDAP">
 		<echo>Deploying zimlet: phone</echo>
 		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="-q" />
@@ -610,21 +643,9 @@
 			<arg line="deploy" />
 			<arg file="${dist.zimlet.dir}/com_zimbra_url.zip" />
 		</java>
-		<echo>Deploying zimlet: ymaps</echo>
-		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-q" />
-			<arg line="deploy" />
-			<arg file="${dist.zimlet.dir}/com_zimbra_ymaps.zip" />
-		</java>
-		<echo>Deploying zimlet: bugz</echo>
-		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-q" />
-			<arg line="deploy" />
-			<arg file="${dist.zimlet.dir}/com_zimbra_bugz.zip" />
-		</java>
 	</target>
 
-	<target name="install-zimlets" depends='package-zimlets' description="install files only">
+	<target name="install-zimlets" depends='package-zimlets,install-extra-zimlets' description="install files only">
 		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="-q" />
 			<arg line="install" />
@@ -644,16 +665,6 @@
 			<arg line="-q" />
 			<arg line="install" />
 			<arg file="${dist.zimlet.dir}/com_zimbra_url.zip" />
-		</java>
-		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-q" />
-			<arg line="install" />
-			<arg file="${dist.zimlet.dir}/com_zimbra_ymaps.zip" />
-		</java>
-		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-q" />
-			<arg line="install" />
-			<arg file="${dist.zimlet.dir}/com_zimbra_bugz.zip" />
 		</java>
 	</target>
 
@@ -728,8 +739,10 @@
 			<arg value="apache tomcat" />
 		</exec>
 		<!-- Wait for Tomcat to really go away. -->
-		<echo>Waiting 5 seconds for tomcat to stop</echo>
-		<sleep seconds="5" />
+		<echo>Waiting for tomcat to stop</echo>
+		<waitfor checkevery="1" checkeveryunit="second" maxwait="10" maxwaitunit="second">
+			<not><http url="http://${deploy.host}:${deploy.port}/" /></not>
+		</waitfor>
 	</target>
 
 	<target name="stop-tomcat-unix" if="is-unix">
