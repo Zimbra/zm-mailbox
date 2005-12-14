@@ -106,7 +106,7 @@ public class SenderList {
         private static final String FN_DISPLAY  = "d";
 
         HashMap readNodes(MetadataList mlist) throws ServiceException {
-            HashMap nodes = new HashMap();
+            HashMap<String, CacheNode> nodes = new HashMap<String, CacheNode>();
             for (int i = 0; i < mlist.size(); i++) {
                 Metadata meta = mlist.getMap(i);
                 CacheNode node = add(new SenderNode(meta.get(FN_EMAIL, null), meta.get(FN_PERSONAL, null),
@@ -170,7 +170,7 @@ public class SenderList {
 
     private ListEntry mFirst;
     private int       mElided = 0;
-    private LinkedList /*<ListEntry>*/ mEntries = new LinkedList();
+    private LinkedList<ListEntry> mEntries = new LinkedList<ListEntry>();
 
     SenderCache mCache = new SenderCache();
 
@@ -182,13 +182,13 @@ public class SenderList {
         if (senders == null || senders.equals(""))
             return;
 
-        HashSet removed = null;
+        HashSet<Integer> removed = null;
         while (senders.length() > 0 && Character.isDigit(senders.charAt(0))) {
             int delimiter = senders.indexOf(':');
             if (delimiter == -1)
                 break;
             if (removed == null)
-                removed = new HashSet();
+                removed = new HashSet<Integer>();
             removed.add(Integer.decode(senders.substring(0, delimiter)));
             senders = senders.substring(delimiter + 1);
         }
@@ -264,10 +264,10 @@ public class SenderList {
             return;
         }
 
-        ListIterator lit = mEntries.listIterator();
+        ListIterator<ListEntry> lit = mEntries.listIterator();
         while (lit.hasNext()) {
             int index = lit.nextIndex();
-            ListEntry nextEntry = (ListEntry) lit.next();
+            ListEntry nextEntry = lit.next();
             if (le.date < nextEntry.date) {
                 if (index > 0 || mElided == 0) {
                     lit.previous();
@@ -310,8 +310,8 @@ public class SenderList {
                         if (mElided > 0 && getParticipants().size() <= MINIMUM_CACHED)
                             throw new RefreshException("too few cached");
                     }
-                    return;
                 }
+                return;
             }
         }
         
@@ -347,7 +347,7 @@ public class SenderList {
         if (left.mFirst != null && right.mFirst != null) {
             result.mFirst = result.copyNode(left.mFirst.date < right.mFirst.date ? left.mFirst : right.mFirst);
             result.mElided++;
-            if (((ListEntry) left.mEntries.getFirst()).date > ((ListEntry) right.mEntries.getFirst()).date) {
+            if (left.mEntries.getFirst().date > right.mEntries.getFirst().date) {
                 SenderList temp = left; left = right; right = temp;
             }
             rightIter = right.mEntries.listIterator(1);
@@ -356,17 +356,17 @@ public class SenderList {
             if (left.mFirst == null) {
                 SenderList temp = left; left = right; right = temp;
             }
-            if (left.mFirst.date < ((ListEntry) right.mEntries.getFirst()).date) {
+            if (left.mFirst.date < right.mEntries.getFirst().date) {
                 result.mFirst = left.mFirst;
                 rightIter = right.mEntries.listIterator();
             } else {
-                result.mFirst = (ListEntry) right.mEntries.getFirst();
+                result.mFirst = right.mEntries.getFirst();
                 result.mElided++;
                 rightIter = right.mEntries.listIterator(1);
             }
         }
 
-        int earliestIncluded = ((ListEntry) left.mEntries.getFirst()).date;
+        int earliestIncluded = left.mEntries.getFirst().date;
         while (rightIter.hasNext()) {
             if (((ListEntry) rightIter.next()).date > earliestIncluded) {
                 rightIter.previous();
@@ -412,7 +412,7 @@ public class SenderList {
     }
 
     private Set getParticipants() {
-        LinkedHashSet set = new LinkedHashSet();
+        LinkedHashSet<CacheNode> set = new LinkedHashSet<CacheNode>();
         if (mFirst != null && mFirst.address != null)
             set.add(mFirst.address);
         for (Iterator it = mEntries.iterator(); it.hasNext(); ) {
@@ -442,7 +442,7 @@ public class SenderList {
 
     public CacheNode[] getLastAddresses() {
         CacheNode first = getFirstAddress();
-        LinkedHashSet set = new LinkedHashSet();
+        LinkedHashSet<CacheNode> set = new LinkedHashSet<CacheNode>();
         for (ListIterator lit = mEntries.listIterator(mEntries.size()); lit.hasPrevious(); ) {
             CacheNode node = ((ListEntry) lit.previous()).address;
             if (node != null && node != first && !set.contains(node))

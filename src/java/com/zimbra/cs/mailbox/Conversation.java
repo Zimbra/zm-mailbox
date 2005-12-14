@@ -618,22 +618,25 @@ public class Conversation extends MailItem {
 
         markItemModified(Change.MODIFIED_SIZE | Change.MODIFIED_SENDERS);
 
-        mData.size--;
-        mMailbox.updateSize(-1);
-
         Message msg = (Message) child;
         boolean recalcSubject = false;
         try {
             getSenderList();
             int firstId = mSenderList.getEarliest().messageId;
             mSenderList.remove(msg);
-            recalcSubject = firstId != mSenderList.getEarliest().messageId;
+            SenderList.ListEntry newFirst = mSenderList.getEarliest();
+            recalcSubject = newFirst == null || firstId != newFirst.messageId;
         } catch (SenderList.RefreshException e) {
             // get a no-gaps version of the SenderList, so there's no chance that the remove can throw an exception 
             getSenderList(true);
             try { mSenderList.remove(msg); } catch (Exception e2) {}
             recalcSubject = true;
         }
+
+        // need to postpone this until *after* any sender list recalculation, as that can reset the conversation size
+        mData.size--;
+        mMailbox.updateSize(-1);
+
         try {
             if (recalcSubject)
             	recalculateSubject(mMailbox.getMessageById(mSenderList.getEarliest().messageId));
