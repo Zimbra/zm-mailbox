@@ -153,6 +153,47 @@ public class DateUtil {
     private static final Pattern sRelDatePattern = Pattern.compile(RELDATE_PATTERN);
     private static final Pattern sAbsMillisecsDatePattern = Pattern.compile(ABS_MILLISECS_PATTERN);
     
+    /**
+     * parse a date specifier string. Examples are:
+     * <pre> 
+     * absolute dates:
+     * 
+     *  mm/dd/yyyy (i.e., 12/25/1998)
+     *  yyyy/dd/mm (i.e., 1989/12/25)
+     *  \\d+       (num milliseconds, i.e., 1132276598000)
+     *  
+     *  relative dates:
+     *
+     *  [mp+-]?([0-9]+)([mhdwy][a-z]*)?g
+     * 
+     *   p/+/{not-specified}   current time plus an offset (p and '' are supported for use in query params)
+     *   m/-                   current time minus an offset
+     *   
+     *   (0-9)+    value
+     *   
+     *   ([mhdwy][a-z]*)  units, everything after the first character is ignored (except for "mi" case):
+     *   m(onths)
+     *   mi(nutes)
+     *   d(ays)
+     *   w(eeks)
+     *   h(ours)
+     *   y(ears)
+     *   
+     *  examples:
+     *     1day     1 day from now
+     *    +1day     1 day from now 
+     *    p1day     1 day from now
+     *    +60mi     60 minutes from now
+     *    +1week    1 week from now
+     *    +6mon     6 months from now 
+     *    1year     1 year from now
+     *
+     * </pre>
+     * 
+     * @param dateStr
+     * @param defaultValue
+     * @return
+     */
     public static long parseDateSpecifier(String dateStr, long defaultValue) {
         try {
             Matcher m = sAbsMillisecsDatePattern.matcher(dateStr);
@@ -164,8 +205,8 @@ public class DateUtil {
             m = sAbsYFirstPattern.matcher(dateStr);
             if (m.matches()) {
                 yearStr = m.group(1);
-                dayStr = m.group(2);                
-                monthStr = m.group(3);
+                monthStr = m.group(2);                
+                dayStr = m.group(3);                
                 return new SimpleDateFormat("MM/dd/yyyy").parse(monthStr+"/"+dayStr+"/"+yearStr).getTime();
             }
             m = sAbsYLastPattern.matcher(dateStr);
@@ -214,7 +255,7 @@ public class DateUtil {
     
     public static void main(String args[]) {
         System.out.println("date = " + new Date(parseDateSpecifier("12/25/1998", 0)));
-        System.out.println("date = " + new Date(parseDateSpecifier("1989/25/12", 0)));
+        System.out.println("date = " + new Date(parseDateSpecifier("1989/12/25", 0)));
         System.out.println("date = " + new Date(parseDateSpecifier("1day", 0)));        
         System.out.println("date = " + new Date(parseDateSpecifier("+1day", 0)));
         System.out.println("date = " + new Date(parseDateSpecifier("+10day", 0)));

@@ -48,26 +48,63 @@ GOALS/CONCEPTS
 5) we should design this with "publishing" and "public" folders/wiki in mind
 
 ------------------------------------------------------------
-URLL
+URL
 ------------------------------------------------------------
 
- *  http://server/zimbra/user/[~][{username}]/[{folder}]?[{query-params}]
- *         fmt={ics, csv, etc}
- *         id={item-id}
- *         part={mime-part}
- *         query={search-query}
- *         types={types} // when searching
- *         auth={auth-types}
- *         
- *            {types}   = comma-separated list.  Legal values are:
- *                        conversation|message|contact|appointment|note
- *                        (default is "conversation")
- *                         
- *            {auth-types} = comma-separated list. Legal values are:
- *                           co     cookie
- *                           ba     basic auth
- *                           (default is "co,ba", i.e. check both)
+   http://server/zimbra/user/[~][{username}]/[{folder}]?[{query-params}]
+          fmt={ics, csv, etc}
+          id={item-id}
+          part={mime-part}
+          query={search-query}
+          types={types} // when searching
+          start={date-specifier}
+          end={date-specifier}
+          auth={auth-types}
  
+          {types}   = comma-separated list.  Legal values are:
+                      conversation|message|contact|appointment|note
+                      (default is "conversation")
+ 
+          {date-specifier} = mm/dd/yyyy | yyyy/dd/mm | \d+ (milliseconds) | [mp+-]?([0-9]+)([mhdwy][a-z]*)
+
+              absolute dates:
+  
+              mm/dd/yyyy (i.e., 12/25/1998)
+              yyyy/dd/mm (i.e., 1989/12/25)
+              \d+       (num milliseconds, i.e., 1132276598000)   
+  
+             relative dates:
+  
+             [mp+-]?([0-9]+)([mhdwy][a-z]*)?g
+
+             p/+/{not-specified}   current time plus an offset (p and '' are supported for use in query params)
+             m/-                   current time minus an offset
+ 
+             ([mhdwy][a-z]*)  units, everything after the first character is ignored (except for "mi" case):
+
+             m(onths)
+             mi(nutes)
+             d(ays)
+             w(eeks)
+             h(ours)
+             y(ears)
+     
+             examples:
+               1day     1 day from now
+              +2days    2 days from now 
+              p1day     1 day from now
+              -2days     2 days ago
+              +60mi     60 minutes from now
+              +1week    1 week from now
+              +6mon     6 months from now 
+              1year     1 year from now
+  
+          {auth-types} = comma-separated list. Legal values are:
+              co     cookie
+              ba     basic auth
+              nsc    do not set a cookie when using basic auth
+              (default is "co,ba", i.e. check both)
+
 ------------------------------------------------------------
 EXAMPLES
 ------------------------------------------------------------
@@ -77,17 +114,13 @@ There are two primary formats, one using a folder, and one using a mail item id.
 http://server/zimbra/user/[~]{account-name}/{folder-path}    // path to a folder 
 http://server/zimbra/user/[~]{account-name}/?id={item-id}       // a mail item id
 
-
-
-
-
 A single ~ is allowed and references the authenticated user accessing the data. 
 
 Some examples:
 
-/zimbra/user/roland/inbox.rss         // RSS feed of inbox 
-/zimbra/user/roland/inbox.xml         // Zimbra XML representation of inbox
-/zimbra/user/roland/inbox.zip         // A ZIP file of all messages in the inbox folder
+/zimbra/user/roland/inbox.rss                    // RSS feed of inbox
+/zimbra/user/roland/inbox.xml                    // Zimbra XML representation of inbox
+/zimbra/user/roland/inbox.zip                    // A ZIP file of all messages in the inbox folder
 
 /zimbra/user/roland/contacts                     // CSV view of contacts folder
 /zimbra/user/roland/contacts?fmt=json            // JSON view of contacts folder
@@ -95,7 +128,8 @@ Some examples:
 /zimbra/user/roland/calendars                    // ICS view of calendar
 /zimbra/user/janie/holidays                      // Janie's holidays calendar
 /zimbra/user/roland/calendar/project.html        // html view of calendar/projects calendar
-/zimbra/user/roland/calendar.atom                // atom feed of calendar
+/zimbra/user/roland/calendar.atom                           // atom feed of calendar  (-7/+7 days by default)
+/zimbra/user/roland/calendar.atom?start=0day&end=+2weeks    // atom feed of calendar for next two weeks
 
 The second format is used to reference something by its mail item id:
 

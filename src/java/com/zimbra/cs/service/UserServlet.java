@@ -416,7 +416,6 @@ public class UserServlet extends ZimbraServlet {
             targetAccount = prov.getAccountByName(accountPath);                
         }
 
-        // eventually get this from query param ?start=long|YYYYMMMDDHHMMSS
         public long getStartTime() {
             if (mStartTime == -2) {
                 String st = req.getParameter(QP_START);
@@ -426,7 +425,6 @@ public class UserServlet extends ZimbraServlet {
             return mStartTime;
         }
 
-        // eventually get this from query param ?end=long|YYYYMMMDDHHMMSS
         public long getEndTime() {
             if (mEndTime == -2) {
                 String et = req.getParameter(QP_END);
