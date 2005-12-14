@@ -320,7 +320,7 @@ public class Message extends MailItem {
     boolean canParent(MailItem item)  { return false; }
 
 
-    static Message create(int id, Folder folder, MailItem parent, ParsedMessage pm,
+    static Message create(int id, Folder folder, Conversation conv, ParsedMessage pm,
                           int msgSize, String digest, short volumeId, boolean unread,
                           int flags, long tags, DraftInfo dinfo, boolean noICal, ZVCalendar cal)  
     throws ServiceException {
@@ -355,38 +355,17 @@ public class Message extends MailItem {
             methodStr = cal.getPropVal(ICalTok.METHOD, ICalTok.PUBLISH.toString());
         }
 
-        UnderlyingData data = createItemData(id, folder, parent, pm, msgSize, digest,
-                                             volumeId, unread, flags, tags, dinfo);
-        DbMailItem.create(mbox, data);
-        Message msg = new Message(mbox, data);
-
-        // process the components in this invite (must do this last so blob is created, etc)
-        if (components != null)
-            msg.processInvitesAfterCreate(methodStr, volumeId, !noICal, pm, components);
-        
-        msg.finishCreation(parent);
-        return msg;
-    }
-
-    static UnderlyingData createItemData(int id, Folder folder, MailItem parent, ParsedMessage pm,
-                                         int msgSize, String msgDigest, short volumeId,
-                                         boolean unread, int flags, long tags, DraftInfo dinfo)
-    throws ServiceException {
-        if (folder == null)
-            throw MailServiceException.CANNOT_CONTAIN();
-
-        Mailbox mbox = folder.getMailbox();
         UnderlyingData data = new UnderlyingData();
         data.id          = id;
         data.type        = TYPE_MESSAGE;
-        if (parent != null)
-            data.parentId = parent.getId();
+        if (conv != null)
+            data.parentId = conv.getId();
         data.folderId    = folder.getId();
         data.indexId     = id;
         data.volumeId    = volumeId;
         data.date        = (int) (pm.getReceivedDate() / 1000);
         data.size        = msgSize;
-        data.blobDigest  = msgDigest;
+        data.blobDigest  = digest;
         data.flags       = flags;
         data.tags        = tags;
         data.sender      = pm.getParsedSender().getSortString();
@@ -394,7 +373,15 @@ public class Message extends MailItem {
         data.metadata    = encodeMetadata(DEFAULT_COLOR, pm, flags, dinfo, null);
         data.unreadCount = unread ? 1 : 0; 
         data.contentChanged(mbox);
-        return data;
+        DbMailItem.create(mbox, data);
+        Message msg = new Message(mbox, data);
+
+        // process the components in this invite (must do this last so blob is created, etc)
+        if (components != null)
+            msg.processInvitesAfterCreate(methodStr, volumeId, !noICal, pm, components);
+
+        msg.finishCreation(conv);
+        return msg;
     }
 
    /**
