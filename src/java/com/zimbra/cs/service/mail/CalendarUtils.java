@@ -658,16 +658,17 @@ private static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap i
 
     private static SimpleOnset parseSimpleOnset(Element element)
             throws ServiceException {
-        int week = (int) element.getAttributeLong(MailService.A_APPT_TZ_WEEK);
+        int week = (int) element.getAttributeLong(MailService.A_APPT_TZ_WEEK, 0);
         int wkday = (int) element
-                .getAttributeLong(MailService.A_APPT_TZ_DAYOFWEEK);
+                .getAttributeLong(MailService.A_APPT_TZ_DAYOFWEEK, 0);
         int month = (int) element.getAttributeLong(MailService.A_APPT_TZ_MONTH);
+        int mday = (int) element.getAttributeLong(MailService.A_APPT_TZ_DAYOFMONTH, 0);
         int hour = (int) element.getAttributeLong(MailService.A_APPT_TZ_HOUR);
         int minute = (int) element
                 .getAttributeLong(MailService.A_APPT_TZ_MINUTE);
         int second = (int) element
                 .getAttributeLong(MailService.A_APPT_TZ_SECOND);
-        return new SimpleOnset(week, wkday, month, hour, minute, second);
+        return new SimpleOnset(week, wkday, month, mday, hour, minute, second);
     }
 
     /**

@@ -95,7 +95,7 @@ public class WindowsSystemTime {
         int week = mDay;
         if (week == 5)
             week = -1;
-        return new SimpleOnset(week, mDayOfWeek + 1, mMonth,
+        return new SimpleOnset(week, mDayOfWeek + 1, mMonth, mDay,
                                mHour, mMinute, mSecond);
     }
 

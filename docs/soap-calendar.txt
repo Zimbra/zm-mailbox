@@ -72,17 +72,24 @@
            [                        // If daylight savings time is not used, <stddate> and <daydate> must be
                                     // omitted.  If DST is used, both <stddate> and <daydate> must be present.
            <standard                // time/rule for transitioning from daylight time to standard time
+                                    // Either specify week/wkday combo, or mday.
+               [
                week="<number>"        // week number; 1=first, 2=second, 3=third, 4=fourth, -1=last
                wkday="<number>"       // day of week; 1=Sunday, 2=Monday, etc.
+               ]
                mon="<number>"         // month; 1=January, 2=February, etc.
+               [mday="<number>"]      // day of month (1..31)
                hour="<number>"        // transition hour (0..23)
                min="<number>"         // transition minute (0..59)
                sec="<number>"         // transition second; 0..59, usually 0
            />
            <daylight                // time/rule for transitioning from standard time to daylight time
+               [
                week="<number>"
                wkday="<number>"
+               ]
                mon="<number>"
+               [mday="<number>"]
                hour="<number>"
                min="<number>"
                sec="<number>"

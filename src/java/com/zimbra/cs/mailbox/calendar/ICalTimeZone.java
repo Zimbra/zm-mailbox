@@ -71,25 +71,33 @@ import com.zimbra.cs.service.ServiceException;
 public class ICalTimeZone extends SimpleTimeZone
 {
     public static class SimpleOnset {
-        private int mWeek      = 0;
-        private int mDayOfWeek = 0;
-        private int mMonth     = 0;
-        private int mHour      = 0;
-        private int mMinute    = 0;
-        private int mSecond    = 0;
+        private int mWeek       = 0;
+        private int mDayOfWeek  = 0;
+        private int mMonth      = 0;
+        private int mDayOfMonth = 0;
+        private int mHour       = 0;
+        private int mMinute     = 0;
+        private int mSecond     = 0;
 
-        public int getWeek()      { return mWeek; }       // week 1, 2, 3, 4, -1 (last)
-        public int getDayOfWeek() { return mDayOfWeek; }  // 1=Sunday, 2=Monday, etc.
-        public int getMonth()     { return mMonth; }      // 1=January, 2=February, etc.
-        public int getHour()      { return mHour; }       // 0..23
-        public int getMinute()    { return mMinute; }     // 0..59
-        public int getSecond()    { return mSecond; }     // 0..59
+        public int getWeek()       { return mWeek; }       // week 1, 2, 3, 4, -1 (last)
+        public int getDayOfWeek()  { return mDayOfWeek; }  // 1=Sunday, 2=Monday, etc.
+        public int getMonth()      { return mMonth; }      // 1=January, 2=February, etc.
+        public int getDayOfMonth() { return mDayOfMonth; }
+        public int getHour()       { return mHour; }       // 0..23
+        public int getMinute()     { return mMinute; }     // 0..59
+        public int getSecond()     { return mSecond; }     // 0..59
 
-        public SimpleOnset(int week, int dayOfWeek, int month,
+        // whether this onset is defined with a recurrence rule or as a specific date
+        public boolean hasRule() {
+            return mWeek != 0;
+        }
+
+        public SimpleOnset(int week, int dayOfWeek, int month, int dayOfMonth,
                            int hour, int minute, int second) {
             mWeek = week;
             mDayOfWeek = dayOfWeek;
             mMonth = month;
+            mDayOfMonth = dayOfMonth;
             mHour = hour;
             mMinute = minute;
             mSecond = second;
@@ -100,9 +108,11 @@ public class ICalTimeZone extends SimpleTimeZone
             sb.append("week=").append(mWeek);
             sb.append(", dayOfWeek=").append(mDayOfWeek);
             sb.append(", month=").append(mMonth);
+            sb.append(", dayOfMonth=").append(mDayOfMonth);
             sb.append(", hour=").append(mHour);
             sb.append(", minute=").append(mMinute);
             sb.append(", second=").append(mSecond);
+            sb.append(", hasRule=").append(hasRule());
             return sb.toString();
         }
     }
@@ -210,15 +220,11 @@ public class ICalTimeZone extends SimpleTimeZone
         initFromICalData();
     }
     
-    protected void initFromICalData() {
+    private void initFromICalData() {
         setRawOffset(mStandardOffset);
         if (mHasDaylight) {
-            OnsetParser std = new OnsetParser(mDayToStdRule, mDayToStdDtStart);
-            OnsetParser day = new OnsetParser(mStdToDayRule, mStdToDayDtStart);
-            mStandardOnset = new SimpleOnset(std.mWeek, std.mDayOfWeek, std.mMonth,
-                                             std.mHour, std.mMinute, std.mSecond);
-            mDaylightOnset = new SimpleOnset(day.mWeek, day.mDayOfWeek, day.mMonth,
-                                             day.mHour, day.mMinute, day.mSecond);
+            mStandardOnset = parseOnset(mDayToStdRule, mDayToStdDtStart);
+            mDaylightOnset = parseOnset(mStdToDayRule, mStdToDayDtStart);
 
             SimpleTimeZoneRule stzDaylight =
                 new SimpleTimeZoneRule(mDaylightOnset);
@@ -235,110 +241,119 @@ public class ICalTimeZone extends SimpleTimeZone
             setDSTSavings(mDaylightOffset - mStandardOffset);
         }
     }
-    
+
     private static class SimpleTimeZoneRule {
         // onset rule values transformed to suit SimpleTimeZone API
-        public int mMonth = 0;
-        public int mDayOfMonth = 0;
-        public int mDayOfWeek = 0;
-        public int mDtStartMillis = 0;
+        public int mMonth;
+        public int mDayOfMonth;
+        public int mDayOfWeek;
+        public int mDtStartMillis;
 
         public SimpleTimeZoneRule(SimpleOnset onset) {
             // iCalendar month is 1-based.  Java month is 0-based.
             mMonth = onset.getMonth() - 1;
-            int week = onset.getWeek();
-            if (week < 0) {
-                // For specifying day-of-week of last Nth week of month,
-                // e.g. -2SA for Saturday of 2nd to last week of month,
-                // java.util.SimpleTimeZone wants negative week number
-                // in dayOfMonth.
-                mDayOfMonth = week;
-
-                mDayOfWeek = onset.getDayOfWeek();
+            if (onset.hasRule()) {
+                int week = onset.getWeek();
+                if (week < 0) {
+                    // For specifying day-of-week of last Nth week of month,
+                    // e.g. -2SA for Saturday of 2nd to last week of month,
+                    // java.util.SimpleTimeZone wants negative week number
+                    // in dayOfMonth.
+                    mDayOfMonth = week;
+    
+                    mDayOfWeek = onset.getDayOfWeek();
+                } else {
+                    // For positive week, onset date is day of week on or
+                    // after day of month.  First week is day 1 through day 7,
+                    // second week is day 8 through day 14, etc.
+                    mDayOfMonth = (week - 1) * 7 + 1;
+    
+                    // Another peculiarity of java.util.SimpleTimeZone class.
+                    // For positive week, day-of-week must be specified as
+                    // a negative value.
+                    mDayOfWeek = -1 * onset.getDayOfWeek();
+                }
             } else {
-                // For positive week, onset date is day of week on or
-                // after day of month.  First week is day 1 through day 7,
-                // second week is day 8 through day 14, etc.
-                mDayOfMonth = (week - 1) * 7 + 1;
-
-                // Another peculiarity of java.util.SimpleTimeZone class.
-                // For positive week, day-of-week must be specified as
-                // a negative value.
-                mDayOfWeek = -1 * onset.getDayOfWeek();
+                mDayOfMonth = onset.getDayOfMonth();
+                mDayOfWeek = 0;
             }
             mDtStartMillis =
                 onset.getHour() * 3600000 + onset.getMinute() * 60000 + onset.getSecond() * 1000;
         }
     }
-    
-    private static class OnsetParser {
-        private int mMonth = 0;
-        private int mWeek = 0;
-        private int mDayOfWeek = 0;
 
-        private int mHour = 0;
-        private int mMinute = 0;
-        private int mSecond = 0;
+    private static SimpleOnset parseOnset(String rrule, String dtstart) {
+        int week = 0;
+        int dayOfWeek = 0;
+        int month = 0;
+        int dayOfMonth = 0;
+        int hour = 0;
+        int minute = 0;
+        int second = 0;
 
-        /**
-         * Parse an iCalendar recurrence rule and DTSTART into numeric fields.
-         * @param rrule
-         * @param dtstart
-         * @return
-         */
-        private OnsetParser(String rrule, String dtstart) {
-            if (rrule != null) {
-                for (StringTokenizer t = new StringTokenizer(rrule.toUpperCase(), ";=");
-                     t.hasMoreTokens();) {
-                    String token = t.nextToken();
-                    if ("BYMONTH".equals(token)) {
-                        mMonth = Integer.parseInt(t.nextToken());
-                    } else if ("BYDAY".equals(token)) {
-                        boolean negative = false;
-                        int weekNum = 1;
-                        String value = t.nextToken();
-    
-                        char sign = value.charAt(0);
-                        if (sign == '-') {
-                            negative = true;
-                            value = value.substring(1);
-                        } if (sign == '+') {
-                            value = value.substring(1);
-                        }
-                        char num = value.charAt(0);
-                        if (Character.isDigit(num)) {
-                            weekNum = num - '0';
-                            value = value.substring(1);
-                        }
-                        mWeek = negative ? -1 * weekNum : weekNum;
+        if (rrule != null) {
+            for (StringTokenizer t = new StringTokenizer(rrule.toUpperCase(), ";=");
+                 t.hasMoreTokens();) {
+                String token = t.nextToken();
+                if ("BYMONTH".equals(token)) {
+                    month = Integer.parseInt(t.nextToken());
+                } else if ("BYDAY".equals(token)) {
+                    boolean negative = false;
+                    int weekNum = 1;
+                    String value = t.nextToken();
 
-                        Integer day = (Integer) sDayOfWeekMap.get(value);
-                        if (day == null)
-                            throw new IllegalArgumentException("Invalid day of week value: " + value);
-                        mDayOfWeek = day.intValue();
-                    } else {
-                        String s = t.nextToken();  // skip value of unused param
+                    char sign = value.charAt(0);
+                    if (sign == '-') {
+                        negative = true;
+                        value = value.substring(1);
+                    } if (sign == '+') {
+                        value = value.substring(1);
                     }
+                    char num = value.charAt(0);
+                    if (Character.isDigit(num)) {
+                        weekNum = num - '0';
+                        value = value.substring(1);
+                    }
+                    week = negative ? -1 * weekNum : weekNum;
+
+                    Integer day = (Integer) sDayOfWeekMap.get(value);
+                    if (day == null)
+                        throw new IllegalArgumentException("Invalid day of week value: " + value);
+                    dayOfWeek = day.intValue();
+                } else {
+                    String s = t.nextToken();  // skip value of unused param
                 }
             }
-    
+        } else {
+            // No RRULE provided.  Get month and day of month from DTSTART.
+            week = 0;
+            month = dayOfMonth = 1;
             if (dtstart != null) {
-                // Discard date and decompose time fields.
                 try {
-                    int indexOfT = dtstart.indexOf('T');
-                    mHour = Integer.parseInt(dtstart.substring(indexOfT + 1, indexOfT + 3));
-                    mMinute = Integer.parseInt(dtstart.substring(indexOfT + 3, indexOfT + 5));
-                    mSecond = Integer.parseInt(dtstart.substring(indexOfT + 5, indexOfT + 7));
-                } catch (StringIndexOutOfBoundsException se) {
-                    mHour = mMinute = mSecond = 0;
-                } catch (NumberFormatException ne) {
-                    mHour = mMinute = mSecond  = 0;
-                }
+                    month = Integer.parseInt(dtstart.substring(4, 6));
+                    dayOfWeek = Integer.parseInt(dtstart.substring(6, 8));
+                } catch (StringIndexOutOfBoundsException se) {}
             }
         }
+
+        if (dtstart != null) {
+            // Discard date and decompose time fields.
+            try {
+                int indexOfT = dtstart.indexOf('T');
+                hour = Integer.parseInt(dtstart.substring(indexOfT + 1, indexOfT + 3));
+                minute = Integer.parseInt(dtstart.substring(indexOfT + 3, indexOfT + 5));
+                second = Integer.parseInt(dtstart.substring(indexOfT + 5, indexOfT + 7));
+            } catch (StringIndexOutOfBoundsException se) {
+                hour = minute = second = 0;
+            } catch (NumberFormatException ne) {
+                hour = minute = second  = 0;
+            }
+        }
+
+        return new SimpleOnset(week, dayOfWeek, month, dayOfMonth,
+                               hour, minute, second);
     }
 
-    
     // maps Java weekday number to iCalendar weekday name
     private static String sDayOfWeekNames[] = new String[Calendar.SATURDAY + 1];
     static {
@@ -435,8 +450,8 @@ public class ICalTimeZone extends SimpleTimeZone
     }
 
     public ICalTimeZone(String tzId,
-                    int standardOffset, SimpleOnset standardOnset,
-                    int daylightOffset, SimpleOnset daylightOnset) {
+                        int standardOffset, SimpleOnset standardOnset,
+                        int daylightOffset, SimpleOnset daylightOnset) {
         super(0, tzId);
         mStandardOffset = standardOffset;
         mDaylightOffset = daylightOffset;
@@ -496,7 +511,7 @@ public class ICalTimeZone extends SimpleTimeZone
     }
 
     private static String toICalRRule(SimpleOnset onset) {
-        if (onset.getMonth() == 0) return null;
+        if (!onset.hasRule()) return null;
         StringBuffer sb =
             new StringBuffer("FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=");
         sb.append(onset.getMonth()).append(";BYDAY=");

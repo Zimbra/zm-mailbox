@@ -410,6 +410,7 @@ public class MailService implements DocumentService {
     public static final String A_APPT_TZ_WEEK = "week";
     public static final String A_APPT_TZ_DAYOFWEEK = "wkday";
     public static final String A_APPT_TZ_MONTH = "mon";
+    public static final String A_APPT_TZ_DAYOFMONTH = "mday";
     public static final String A_APPT_TZ_HOUR = "hour";
     public static final String A_APPT_TZ_MINUTE = "min";
     public static final String A_APPT_TZ_SECOND = "sec";
