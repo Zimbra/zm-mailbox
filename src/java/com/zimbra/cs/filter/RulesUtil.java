@@ -98,7 +98,7 @@ public class RulesUtil {
     
     private void saveRules(String acctEmail, String pwd, String path, String mailHost, int port) throws Exception {
         // construct URL to source host
-        URL src = new URL("https", mailHost, port, ZimbraServlet.ADMIN_SERVICE_URI);
+        URL src = new URL("http", mailHost, port, ZimbraServlet.USER_SERVICE_URI);
         SoapTransport trans = new SoapHttpTransport(src.toExternalForm()); 
         
         // authenticate 
