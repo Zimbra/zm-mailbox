@@ -181,6 +181,11 @@
   </servlet-mapping>
 
   <servlet-mapping>
+    <servlet-name>UserServlet</servlet-name>
+    <url-pattern>/home/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
     <servlet-name>FileUploadServlet</servlet-name>
     <url-pattern>/upload</url-pattern>
   </servlet-mapping>
