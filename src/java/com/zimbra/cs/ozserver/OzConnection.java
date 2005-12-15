@@ -211,6 +211,10 @@ public class OzConnection {
         mMatcher = matcher;
     }
 
+    public OzMatcher getMatcher() {
+        return mMatcher;
+    }
+
     private HandleDisconnectTask mHandleDisconnectTask = new HandleDisconnectTask();
     
     private class HandleDisconnectTask implements Runnable {
@@ -310,61 +314,37 @@ public class OzConnection {
 
     /* Do not call directly.  For use by filters. */
     public void processRead(ByteBuffer dataBuffer) throws IOException { 
-        int handledBytes = 0;
-        
-        // Create a copy which we can trash.  NB: duplicate() does not
-        // copy underlying buffer.
-        ByteBuffer matchBuffer = dataBuffer.duplicate();
-        matchBuffer.flip();
-        if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("matching", matchBuffer, false));
+        dataBuffer.flip();
         
         // We may have read more than one PDU 
-        while (matchBuffer.position() < matchBuffer.limit()) {
-            int matchStart = matchBuffer.position();
+        while (dataBuffer.hasRemaining()) {
+            ByteBuffer pdu = dataBuffer.duplicate();
+            int initialPosition = dataBuffer.position();
             
-            if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("matching", matchBuffer, false));
+            if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("invoking matcher", dataBuffer, false));
+            boolean matched = mMatcher.match(dataBuffer);
+            if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("after matcher", dataBuffer, false));
             
-            int matchEnd = mMatcher.match(matchBuffer);
+            if (mDebug) mLog.debug("match returned " + matched);
             
-            if (mDebug) mLog.debug("match returned " + matchEnd);
-            
-            if (matchEnd == -1) {
+            if (!matched) {
+                dataBuffer.position(initialPosition);
                 break;
             }
             
-            ByteBuffer pdu = dataBuffer.duplicate();
-            pdu.position(matchStart);
-            pdu.limit(matchBuffer.position());
-            mMatcher.trim(pdu);
+            pdu.position(initialPosition);
+            pdu.limit(dataBuffer.position());
             if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("input matched=" + true, pdu, false));
             mConnectionHandler.handleInput(pdu, true);
-            handledBytes = matchEnd;
         }
 
-        if (handledBytes == 0) {
-            if (mDebug) mLog.debug("no bytes handled and no match");
-            if (dataBuffer.hasRemaining()) {
-                if (mDebug) mLog.debug("no bytes handled, no match, but there is room in buffer");
-            } else {
-                if (mDebug) mLog.debug("no bytes handled, no match, and buffer is full, overflowing");
-                assert(dataBuffer.limit() == dataBuffer.position());
-                assert(dataBuffer.limit() == dataBuffer.capacity());
-                dataBuffer.flip();
-                if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("input matched=" + false, dataBuffer, false));
-                mConnectionHandler.handleInput(dataBuffer, false);
-                dataBuffer.clear();
-            }
-        } else {
-            if (dataBuffer.position() == handledBytes) {
-                if (mDebug) mLog.debug("handled all bytes in input, clearing buffer (no compacting)");
-                dataBuffer.clear();
-            } else {
-                if (mDebug) mLog.debug("not all handled, compacting "  + (dataBuffer.position() - handledBytes) + " bytes");
-                dataBuffer.position(handledBytes);
-                dataBuffer.compact();
-            }
+        if (dataBuffer.hasRemaining()) {
+            if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("input matched=" + false, dataBuffer, false));
+            mConnectionHandler.handleInput(dataBuffer, false);
         }
-        
+
+        dataBuffer.clear();
+
         enableReadInterest();
         return;
     }
@@ -398,7 +378,7 @@ public class OzConnection {
                             disableWriteInterest();
                             if (totalWritten == 0) mLog.warn("wrote no bytes to a write ready channel");
                             if (mFilter != null) {
-                                mFilter.wrote(totalWritten);
+                                mFilter.writeCompleted(totalWritten);
                             }
                             // nothing more to write
                             if (mCloseAfterWrite) {
@@ -545,4 +525,5 @@ public class OzConnection {
             mProperties.put(key, value);
         }
     }
+
 }

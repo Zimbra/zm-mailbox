@@ -1861,32 +1861,17 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
         mConnection.writeAscii(line, true, flush);
     }
 
-    private ConnectionState mState = ConnectionState.UNKNOWN;
-    
     private OzByteArrayMatcher mCommandMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLF);
 
     private OzCountingMatcher mLiteralMatcher = new OzCountingMatcher();
     
-    private static final class ConnectionState {
-        private String mName;
-        
-        private ConnectionState(String name) {
-            mName = name;
-        }
+    private enum ConnectionState { READLITERAL, READLINE, CLOSED, UNKNOWN };
 
-        public String toString() {
-            return mName;
-        }
-        
-        public static final ConnectionState READLITERAL = new ConnectionState("READLITERAL");
-        public static final ConnectionState READLINE = new ConnectionState("READLINE");
-        public static final ConnectionState CLOSED = new ConnectionState("CLOSED");
-        public static final ConnectionState UNKNOWN = new ConnectionState("UNKNOWN");
-    }
-
+    private ConnectionState mState = ConnectionState.UNKNOWN;
+    
     private void gotoReadLineState(boolean newRequest) {
         mState = ConnectionState.READLINE;
-        mCommandMatcher.clear();
+        mCommandMatcher.reset();
         mConnection.setMatcher(mCommandMatcher);
         mCurrentData = new OzByteBufferGatherer();
         if (newRequest) {
@@ -1899,7 +1884,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
     private void gotoReadLiteralState(int target) {
         mState = ConnectionState.READLITERAL;
         mLiteralMatcher.target(target);
-        mLiteralMatcher.clear();
+        mLiteralMatcher.reset();
         mConnection.setMatcher(mLiteralMatcher);
         mCurrentData = new OzByteBufferGatherer(target);
         if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("entered literal read state target=" + target);
@@ -1958,109 +1943,83 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
 
     private String mCurrentRequestTag;
     
-    private String currentDataToAsciiString() {
-        byte[] buf = mCurrentData.array();
-        int n = mCurrentData.size();
-        StringBuffer sb = new StringBuffer(n);
-        boolean found8BitData = false;
-        for (int i = 0; i < n; i++) {
-            if (buf[i] > 127) {
-                found8BitData = true;
-            }
-            sb.append((char)buf[i]);
-        }
-        String result = sb.toString();
-        if (found8BitData) {
-            ZimbraLog.imap.warn("8 bit data found in IMAP command: " + result); 
-        }
-        return result;
-    }
-    
     public void handleInput(ByteBuffer buffer, boolean matched) throws IOException {
-        assert(mState != null);
-        assert(mState != ConnectionState.UNKNOWN);
-        
-        if (mState == ConnectionState.CLOSED) {
-            ZimbraLog.imap.info("input arrived on closed connection");
+        mCurrentData.add(buffer);
+        if (!matched) {
             return;
         }
 
+        mCurrentData.trim(mConnection.getMatcher().trailingTrimLength());
+
+        if (mState == ConnectionState.CLOSED) {
+            ZimbraLog.imap.info("input arrived on closed connection");
+            mCurrentData.clear();
+            return;
+        }
+                
+        if (mState == ConnectionState.READLITERAL) {
+            mCurrentRequestData.add(mCurrentData.array());
+            // at the end of a literal there is more of the
+            // command or there is just CRLF (which is the empty
+            // part of the command)
+            gotoReadLineState(false);
+            return;
+        }
+        
         if (mState == ConnectionState.READLINE) {
-            mCurrentData.add(buffer);
-            if (matched) {
-                String line = currentDataToAsciiString();
-                
-                /*
-                 * Is this the first line of this request? If so, then let's try
-                 * to parse the tag from it so we can report tagged BADs if
-                 * needed. TODO: should we also strip tag here - so we don't
-                 * parse it twice?
-                 */
-                if (mCurrentRequestData.size() == 0) {
-                    try {
-                        mCurrentRequestTag = OzImapRequest.readTag(line);
-                    } catch (ImapParseException ipe) {
-                        sendUntagged("BAD " + ipe.getMessage(), true);
-                        gotoReadLineState(true);
-                        return;
-                    }
-                }
-                
-                /* See if there is a literal at the end of this line. */
-                ImapLiteral literal;
+            String line = mCurrentData.toAsciiString();
+            /*
+             * Is this the first line of this request? If so, then let's try
+             * to parse the tag from it so we can report tagged BADs if
+             * needed. TODO: should we also strip tag here - so we don't
+             * parse it twice?
+             */
+            if (mCurrentRequestData.size() == 0) {
                 try {
-                    literal = ImapLiteral.parse(mCurrentRequestTag, line);
+                    mCurrentRequestTag = OzImapRequest.readTag(line);
                 } catch (ImapParseException ipe) {
-                    sendBAD(mCurrentRequestTag, ipe.getMessage());
+                    sendUntagged("BAD " + ipe.getMessage(), true);
                     gotoReadLineState(true);
                     return;
                 }
-
-                /* If there was a literal specifier, remove said specifier. */
-                if (literal.length() > 0) {
-                    line = line.substring(0, line.length() - literal.length());
+            }
+            
+            /* See if there is a literal at the end of this line. */
+            ImapLiteral literal;
+            try {
+                literal = ImapLiteral.parse(mCurrentRequestTag, line);
+            } catch (ImapParseException ipe) {
+                sendBAD(mCurrentRequestTag, ipe.getMessage());
+                gotoReadLineState(true);
+                return;
+            }
+            
+            /* If there was a literal specifier, remove said specifier. */
+            if (literal.length() > 0) {
+                line = line.substring(0, line.length() - literal.length());
+            }
+            
+            /* Add either the literal removed line or a no-literal present at all
+             * line (ie, it's line in either case) to the request in flight.
+             */ 
+            mCurrentRequestData.add(line);
+            
+            if (literal.octets() > 0) {
+                if (literal.blocking()) {
+                    mConnection.writeAscii("+", true);
                 }
-
-                /* Add either the literal removed line or a no-literal present at all
-                 * line (ie, it's line in either case) to the request in flight.
-                 */ 
-                mCurrentRequestData.add(line);
-
-                if (literal.octets() > 0) {
-                    if (literal.blocking()) {
-                        mConnection.writeAscii("+", true);
-                    }
-                    gotoReadLiteralState(literal.octets());
-                    return;
+                gotoReadLiteralState(literal.octets());
+                return;
+            } else {
+                if (processCommand()) {
+                    gotoReadLineState(true);
                 } else {
-                    if (processCommand()) {
-                        gotoReadLineState(true);
-                    } else {
-                        gotoClosedState(true);
-                    }
-                    return;
+                    gotoClosedState(true);
                 }
-            } else {
-                // continue to remain in this state until we see that
-                // \r\n
                 return;
             }
         }
-        
-        if (mState == ConnectionState.READLITERAL) {
-            mCurrentData.add(buffer);
-            if (matched) {
-                mCurrentRequestData.add(mCurrentData.array());
-                // at the end of a literal there is more of the
-                // command or there is just CRLF (which is the empty
-                // part of the command)
-                gotoReadLineState(false);
-                return;
-            } else {
-                // continue to remain in this state and read more of
-                // the literal data
-                return;
-            }
-        }
+
+        throw new RuntimeException("internal error in IMAP server: bad state " + mState);
     }
 }

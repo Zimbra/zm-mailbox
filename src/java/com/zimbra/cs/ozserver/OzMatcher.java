@@ -27,8 +27,34 @@ package com.zimbra.cs.ozserver;
 
 import java.nio.ByteBuffer;
 
+/**
+ * An OzMatcher are stateful objects used to find the end of a
+ * Protocol Data Unit (PDU) in a stream of incoming data. 
+ */
 public interface OzMatcher {
-    int match(ByteBuffer buffer);
-    void trim(ByteBuffer buffer);
-    void clear();
+    
+    /**
+     * Process the given buffer, advancing its position, until the desired end
+     * of PDU is reached.  Never advance the buffer's position beyond the match.
+     * This method will be invoked will different buffers, as and when IO occurs.
+     */ 
+    boolean match(ByteBuffer buffer);
+    
+    /**
+     * Some PDUs have a sequence of bytes at the end that are used to demarcate
+     * the end.  Return the number of bytes so they can be trimmed by the caller.
+     * This method is never called until a match has occurred, in the interest of
+     * matchers that may have variable length PDU terminator. 
+     */
+    int trailingTrimLength();
+    
+    /**
+     * Has this matcher reached its nirvana?
+     */
+    boolean matched();
+    
+    /**
+     * Reset matcher state for reuse. 
+     */
+    void reset();
 }

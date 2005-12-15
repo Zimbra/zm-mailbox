@@ -41,8 +41,8 @@ public class OzByteArrayMatcher implements OzMatcher {
     public static final byte[] CRLF = new byte[]{ CR, LF };
     public static final byte[] CRLFDOTCRLF = new byte[] { CR, LF, DOT, CR, LF };
 
-    private byte[] mMatchSequence;
-    private int mMatchSequenceLength;
+    private final byte[] mMatchSequence;
+    private final int mMatchSequenceLength;
     private int mMatched;
     
     public OzByteArrayMatcher(byte[] endSequence) {
@@ -51,28 +51,28 @@ public class OzByteArrayMatcher implements OzMatcher {
         mMatched = 0;
     }
     
-    public int match(ByteBuffer buf) {
+    public boolean match(ByteBuffer buf) {
         assert(mMatched < mMatchSequenceLength);
-        boolean trace = mLog.isTraceEnabled(); 
-        StringBuffer tsb = null;
-        if (trace) tsb = new StringBuffer();
+        boolean trace = true; // mLog.isTraceEnabled(); 
+        StringBuilder tsb = null;
+        if (trace) tsb = new StringBuilder();
         
         int n = buf.remaining();
-        
-        if (trace) tsb.append("remaining=" + n + " matchedAtStart=" + mMatched + " ");
-        
+        if (trace) tsb.append("new bytes to look at=" + n + ", already matched=" + mMatched + " ");
         for (int i = 0; i < n; i++) {
             byte b = buf.get();
             
-            if (trace && b >= 32 && b <=126) tsb.append("'" + (char)b + "'/");
-            if (trace) tsb.append((int)b + " ");
+            if (trace) {
+                if (b >= 32 && b <=126) tsb.append("'" + (char)b + "'/"); 
+                tsb.append((int)b + " ");
+            }
 
             if (mMatchSequence[mMatched] == b) {
                 mMatched++;
                 if (trace) tsb.append("+" + mMatched + " ");
                 if (mMatched == mMatchSequenceLength) {
                     if (trace) mLog.trace(tsb.toString());
-                    return buf.position();
+                    return true;
                 }
             } else {
                 mMatched = 0; // break the match
@@ -81,25 +81,25 @@ public class OzByteArrayMatcher implements OzMatcher {
                     if (trace) tsb.append("+" + mMatched + " ");
                     if (mMatched == mMatchSequenceLength) {
                         if (trace) mLog.trace(tsb.toString());
-                        return buf.position();
+                        return true;
                     }
                 }
             }
         }
         if (trace) mLog.trace(tsb.toString());
-        return -1;
+        return false;
     }
 
-    public void clear() {
+    public void reset() {
         mMatched = 0;
     }
-    
-    /**
-     * Remove the terminator from the buffer
-     * 
-     * @param buffer
-     */
-    public void trim(ByteBuffer buffer) {
-    	buffer.limit(buffer.limit() - mMatchSequenceLength);
+
+    public int trailingTrimLength() {
+        assert(matched());
+        return mMatched;
+    }
+
+    public boolean matched() {
+        return mMatched == mMatchSequenceLength;
     }
 }

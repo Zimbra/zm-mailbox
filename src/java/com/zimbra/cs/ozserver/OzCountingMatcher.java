@@ -42,30 +42,34 @@ public class OzCountingMatcher implements OzMatcher {
     	mTarget = target;
     }
 
-    public int match(ByteBuffer buffer) {
-        int nb = buffer.limit() - buffer.position();
+    public boolean match(ByteBuffer buffer) {
+        int nb = buffer.remaining();
         if (mLog.isDebugEnabled()) {
-            mLog.debug("counting matcher: position="+ buffer.position() + " limit=" + buffer.limit() +
-                    " new=" + nb + " matched=" + mMatched + " target=" + mTarget);
+            mLog.debug("counting matcher: remaining=" + nb + " matched=" + mMatched + " target=" + mTarget);
         }
         if ((nb + mMatched) < mTarget) {
             mMatched += nb;
             buffer.position(buffer.limit());
-            return -1;
+            return false;
         } else {
             // Set the buffer position just after the match
             int newPosition = buffer.position() + (mTarget - mMatched);
             buffer.position(newPosition);
             mMatched = mTarget;
-            return buffer.position();
+            return true;
         }
 	}  
 
-	public void trim(ByteBuffer buffer) {
-		// nothing to do
-	}
-
-    public void clear() {
+    public void reset() {
     	mMatched = 0;
+    }
+
+    public boolean matched() {
+        return mMatched == mTarget;
+    }
+    
+    public int trailingTrimLength() {
+        assert(matched());
+        return 0;
     }
 }

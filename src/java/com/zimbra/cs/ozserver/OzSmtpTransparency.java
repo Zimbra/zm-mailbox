@@ -42,16 +42,15 @@ public class OzSmtpTransparency {
         List positions = null;
         
         while (work.hasRemaining()) {
-            int matchPos = matcher.match(work);
-            if (matchPos == -1) {
-                break;
-            } else {
+            if (matcher.match(work)) {
                 if (positions == null) {
                     positions = new LinkedList();
                 }
-                positions.add(new Integer(matchPos));
+                positions.add(new Integer(work.position()));
+            } else {
+                break;
             }
-            matcher.clear();
+            matcher.reset();
         }
         
         if (positions == null) {

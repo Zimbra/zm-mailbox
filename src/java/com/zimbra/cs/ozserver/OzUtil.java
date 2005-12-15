@@ -94,11 +94,4 @@ public class OzUtil {
         return sb.toString();
     }
     
-    public static String asciiByteArrayToString(ByteBuffer buffer) {
-        StringBuilder sb = new StringBuilder(buffer.limit() - buffer.position());
-        for (int i = buffer.position(); i < buffer.limit(); i++) {
-            sb.append((char)buffer.get());
-        }
-        return sb.toString();
-    }
 }

@@ -30,7 +30,7 @@ import java.nio.ByteBuffer;
  * Build ByteBuffers into a single byte array - synchronization is entirely upto
  * the user of this class - two concurrent adds will blow up.
  */
-public class OzByteBufferGatherer {
+public final class OzByteBufferGatherer {
 
     private byte[] mBuffer;
     private int mPosition;
@@ -65,7 +65,30 @@ public class OzByteBufferGatherer {
         return mBuffer;
     }
     
+    public byte get(int i) {
+        return mBuffer[i];
+    }
+    
+    public String toAsciiString() {
+        StringBuilder sb = new StringBuilder(mPosition);
+        for (int i = 0; i < mPosition; i++) {
+            sb.append((char)mBuffer[i]);
+        }
+        return sb.toString();
+    }
+
     public int size() {
         return mPosition;
+    }
+    
+    public void clear() {
+        mPosition = 0;
+    }
+
+    public void trim(int n) {
+        if (n > mPosition) {
+            throw new IllegalArgumentException("Can not trim " + n + " bytes from " + mPosition + " total bytes");
+        }
+        mPosition -= n;
     }
 }
