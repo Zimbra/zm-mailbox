@@ -73,6 +73,11 @@ public class AuthToken {
     private boolean mIsDomainAdmin;    
 	private static AuthTokenKey mTempKey;
     
+    public String toString() {
+        return "AuthToken(acct="+mAccountId+" admin="+mAdminAccountId+" exp="
+        +mExpires+" isAdm="+mIsAdmin+" isDomAd="+mIsDomainAdmin+")";
+    }
+    
     private static AuthTokenKey getCurrentKey() throws AuthTokenException {
         try {
             AuthTokenKey key = AuthTokenKey.getCurrentKey();
