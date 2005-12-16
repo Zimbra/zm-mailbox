@@ -136,7 +136,8 @@ public class ExtensionDispatcherServlet extends ZimbraServlet {
        
     private ExtensionHttpHandler getHandler(HttpServletRequest req) throws ServiceException {
         String uri = req.getRequestURI();
-        String extPath = uri.substring(EXTENSION_PATH.length());
+        int pos = uri.indexOf(EXTENSION_PATH);
+        String extPath = uri.substring(pos + EXTENSION_PATH.length());
         if (extPath.length() == 0)
             throw ServiceException.INVALID_REQUEST("Invalid request: " + uri, null);
         ZimbraLog.extensions.debug("getting handler registered at " + extPath);
