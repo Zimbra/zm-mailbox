@@ -537,6 +537,9 @@
 	
 	<target name="ldap-load-accounts">
 		<echo>Creating account: admin@${zimbra.server.hostname}</echo>
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="mc default zimbraFeatureIMEnabled TRUE" />
+		</java>
 		<!-- This account is used during QA tests. -->
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="ca admin@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} cn 'Administrator' displayName 'Administrator' zimbraIsAdminAccount TRUE zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana'" />
