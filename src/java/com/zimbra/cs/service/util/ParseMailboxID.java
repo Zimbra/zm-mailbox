@@ -180,7 +180,9 @@ public class ParseMailboxID
         } else if (idStr.indexOf('-') >= 0) {
             // UID
             acct = Provisioning.getInstance().getAccountById(idStr);
-            
+            if (acct == null)
+                throw AccountServiceException.NO_SUCH_ACCOUNT(idStr);
+
             if (acct.isCorrectHost()) {
                 mIsLocal = true;
                 mMailbox = Mailbox.getMailboxByAccountId(acct.getId());
