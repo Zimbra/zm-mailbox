@@ -151,7 +151,14 @@ public final class ParsedDateTime {
             }
             return new ParsedDateTime(cal, tz, hasTime);
         } else {
-            throw new ParseException("Invalid TimeString specified: " + str, 0);
+            if (str.length() == 9 && str.charAt(8) == 'Z') {
+                // Some systems/sites are known to generate dates with
+                // year, month, date followed by "Z".  That's an invalid
+                // format, but we'll try to work with it, by ignoring
+                // the unnecessary "Z".
+                return parse(str.substring(0, 8), tz, localTZ, utcOnly);
+            } else
+                throw new ParseException("Invalid TimeString specified: " + str, 0);
         }
     }
     
