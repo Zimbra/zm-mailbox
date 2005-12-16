@@ -349,7 +349,12 @@ public class Appointment extends MailItem {
             instances = mRecurrence.expandInstances(this, start, end);
         } else {
             if (getStartTime() < end && getEndTime() > start) {
-                instances.add(new Instance(this, new InviteInfo(getDefaultInvite()),getStartTime(), getEndTime(), false));
+                Invite defaultInv = getDefaultInvite();
+                if (defaultInv != null)
+                    instances.add(new Instance(this,
+                                               new InviteInfo(defaultInv),
+                                               getStartTime(), getEndTime(),
+                                               false));
             }
         }
         return instances;
