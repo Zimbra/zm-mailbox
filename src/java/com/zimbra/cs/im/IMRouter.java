@@ -70,7 +70,18 @@ public class IMRouter implements Runnable {
     
     public synchronized IMPersona findPersona(OperationContext octxt, IMAddr addr, boolean loadSubs) throws ServiceException 
     {
+        // first, just check the map
         IMPersona toRet = mBuddyListMap.get(addr);
+        
+        // okay, maybe it's an alias -- get the account and resolve it to the cannonical name
+        if (toRet == null) {
+            Account acct = Provisioning.getInstance().getAccountByName(addr.getAddr());            
+            String canonName = acct.getName();
+            addr = new IMAddr(canonName);
+            toRet = mBuddyListMap.get(addr);
+        }
+        
+        // okay, we might have to create the persona
         if (toRet == null) {
             Mailbox mbox = Mailbox.getMailboxByAccount(Provisioning.getInstance().getAccountByName(addr.getAddr()));
             Metadata md = mbox.getConfig(octxt, "im");

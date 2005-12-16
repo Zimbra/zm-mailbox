@@ -34,7 +34,7 @@ public class IMProbeEvent extends IMEvent implements IMNotification {
         Object lock = IMRouter.getInstance().getLock(toAddr);
         synchronized (lock) {
             IMPersona persona = IMRouter.getInstance().findPersona(null, toAddr, false);
-            mPresence = persona.getMyPresence();
+            mPresence = persona.getEffectivePresence();
         }
         
         // we can immediately send it to the requestor here, since we are in the

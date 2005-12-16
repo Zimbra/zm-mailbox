@@ -50,7 +50,7 @@ public class IMGetRoster extends IMDocumentHandler {
             
             {
                 Element pe = response.addUniqueElement(IMService.E_PRESENCE);
-                persona.getMyPresence().toXml(pe);
+                persona.getEffectivePresence().toXml(pe);
             }
 
             // chats

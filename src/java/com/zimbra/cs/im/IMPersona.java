@@ -63,7 +63,11 @@ public class IMPersona {
         }
     }
     
-    private IMPresence mMyPresence = new IMPresence(Show.OFFLINE, (byte)1, null);
+    // these TWO parameters make up my presence - the first one is the presence
+    // I have saved in the DB, and the second is a flag if I am online or offline
+    private IMPresence mMyPresence = new IMPresence(Show.ONLINE, (byte)1, null);
+    private boolean mIsOnline = false;
+    
 
     /**
      * Finds an existing group OR CREATES ONE
@@ -151,12 +155,7 @@ public class IMPersona {
     
     public synchronized void addListener(Session session) {
         if (mListeners.size() == 0) {
-            String status = mMyPresence.getStatus();
-            try {
-                setMyPresence(null, new IMPresence(Show.ONLINE, (byte)1,status));
-            } catch(ServiceException e) {
-                ZimbraLog.im.debug("ServiceException when going offline", e);
-            }
+            mIsOnline = true;
         }
         mListeners.add(session);
     }
@@ -164,12 +163,7 @@ public class IMPersona {
     public synchronized void removeListener(Session session) {
         mListeners.remove(session);
         if (mListeners.size() == 0) {
-            String status = mMyPresence.getStatus();
-            try {
-                setMyPresence(null, new IMPresence(Show.OFFLINE, (byte)1,status));
-            } catch(ServiceException e) {
-                ZimbraLog.im.debug("ServiceException when going offline", e);
-            }
+            mIsOnline = false;
         }
     }
     
@@ -261,7 +255,12 @@ public class IMPersona {
         flush(octxt);
     }
     
-    public IMPresence getMyPresence() { return mMyPresence; }
+    public IMPresence getEffectivePresence() {
+        if (mIsOnline) 
+            return mMyPresence;
+        else 
+            return new IMPresence(Show.OFFLINE, mMyPresence.getPriority(), mMyPresence.getStatus());
+    }
     
     /**
      * Creates a new chat to "address" (sending a message)
