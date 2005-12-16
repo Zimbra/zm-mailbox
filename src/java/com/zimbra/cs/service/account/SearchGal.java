@@ -54,6 +54,9 @@ public class SearchGal extends DocumentHandler {
         Element response = lc.createElement(AccountService.SEARCH_GAL_RESPONSE);
         Account acct = getRequestedAccount(getZimbraContext(context));
 
+        while (n.endsWith("*")) 
+            n = n.substring(0, n.length()-1);
+            
         SearchGalResult result = acct.getDomain().searchGal(n, null);
         List contacts = result.matches;
         for (Iterator it = contacts.iterator(); it.hasNext();) {
