@@ -41,10 +41,13 @@ class TestServer {
 
     private static OzServer mServer;
 
-    public TestServer(int port) throws IOException, ServiceException {
+    public TestServer(int port, boolean secure) throws IOException, ServiceException {
+        final boolean isSecure = secure;
         OzConnectionHandlerFactory testHandlerFactory = new OzConnectionHandlerFactory() {
             public OzConnectionHandler newConnectionHandler(OzConnection connection) {
-                connection.setFilter(new OzTLSFilter(connection));
+                if (isSecure) {
+                    connection.setFilter(new OzTLSFilter(connection));
+                }
                 return new TestConnectionHandler(connection);
             }
         };
@@ -55,7 +58,7 @@ class TestServer {
     
     public static void main(String[] args) throws IOException, ServiceException {
         Zimbra.toolSetup("TRACE", true);
-    	new TestServer(Integer.parseInt(args[0]));
+    	new TestServer(Integer.parseInt(args[0]), Boolean.parseBoolean(args[1]));
     }
     
     void shutdown() {

@@ -79,8 +79,6 @@ public class OzServer {
     
     private OzConnectionHandlerFactory mConnectionHandlerFactory;
     
-    private OzBufferPool mBufferPool;
-
     private int mReadBufferSize;
     
     private SSLContext mSSLContext;
@@ -96,7 +94,6 @@ public class OzServer {
         mServerSocketChannel.configureBlocking(false);
 
         mServerName = name + "-" + mServerSocket.getLocalPort();
-        mBufferPool = new OzBufferPool(mServerName, readBufferSize, mLog);
         mReadBufferSize = readBufferSize;
         
         mConnectionHandlerFactory = connectionHandlerFactory;
@@ -184,15 +181,7 @@ public class OzServer {
                     }
                     
                     if (readyKey.isWritable()) {
-                        try {
-                            selectedConnection.doWrite();
-                        } catch (IOException ioe) {
-                            /* When write is a real task we won't have to do this. */
-                            if (mLog.isDebugEnabled()) {
-                                mLog.debug("exception writing, closing connection", ioe);
-                            }
-                            selectedConnection.closeNow();
-                        }
+                        selectedConnection.doWrite();
                     }
                 } catch (Throwable t) {
                     mLog.warn("ignoring exception that occurred while handling selected key", t);
@@ -242,7 +231,6 @@ public class OzServer {
         mLog.info("closed selector");
 
         mLog.info("initiating buffer pool destroy");
-        mBufferPool.destroy();
 
         synchronized (mShutdownCompleteCondition) {
             mShutdownComplete = true;
@@ -257,6 +245,7 @@ public class OzServer {
     private Object mShutdownCompleteCondition = new Object();
     
     public void shutdown() {
+        if (mLog.isDebugEnabled()) mLog.debug("server shutdown requested");
         synchronized (this) {
             mShutdownRequested = true;
         }
@@ -363,10 +352,6 @@ public class OzServer {
     
     Selector getSelector() {
         return mSelector;
-    }
-
-    OzBufferPool getBufferPool() {
-        return mBufferPool;
     }
 
     int getReadBufferSize() {

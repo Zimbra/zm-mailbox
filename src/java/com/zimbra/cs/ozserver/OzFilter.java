@@ -37,7 +37,7 @@ public interface OzFilter {
 
     void writeCompleted(int totalWritten) throws IOException;
 
-    void close() throws IOException;
+    void closeNow() throws IOException;
 
-    void shutdown() throws IOException;
+    void close() throws IOException;
 }

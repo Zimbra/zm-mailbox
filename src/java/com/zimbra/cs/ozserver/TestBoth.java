@@ -48,10 +48,12 @@ class TestBoth {
 	private static Options mOptions = new Options();
 	
 	static {
-	    mOptions.addOption("t", "threads",     true, "number of client threads (default 4)");
-	    mOptions.addOption("s", "shutdown",    true, "shutdown server every specified seconds");
-        mOptions.addOption("i", "iterations",  true, "iterations of shutdown test (default 1000)");
-	    mOptions.addOption("p", "port",        true, "port (default 10043)");
+	    mOptions.addOption("t", "threads",     true,  "number of client threads (default 4)");
+	    mOptions.addOption("s", "shutdown",    true,  "shutdown server every specified seconds");
+        mOptions.addOption("S", "secure",      false, "whether to use SSL");
+        mOptions.addOption("i", "iterations",  true,  "iterations of shutdown test (default 1000)");
+        mOptions.addOption("c", "count",       true,  "number of transactions per client thread");
+	    mOptions.addOption("p", "port",        true,  "port (default 10043)");
 	    mOptions.addOption("T", "trace",       false, "trace server/client traffic");
 	    mOptions.addOption("D", "debug",       false, "print debug info");
 	    mOptions.addOption("h", "help",        false, "show this help");
@@ -89,13 +91,17 @@ class TestBoth {
 
     static class TestClientThread extends Thread {
     	
+        private boolean mSecure;
         private int mPort;
         private boolean mShutdownRequested;
+        private int mTransactions;
         
-        public TestClientThread(int port, int num) {
-            super("TestClientThread-" + num);
+        public TestClientThread(int port, boolean secure, int threadNumber, int numTransactions) {
+            super("TestClientThread-" + threadNumber);
             setDaemon(true);
             mPort = port;
+            mSecure = secure;
+            mTransactions = numTransactions;
         }
 
         public void shutdown() {
@@ -105,14 +111,14 @@ class TestBoth {
         }
         
         public void run() {
-            while (true) {
+            for (int i = 0; i < mTransactions; i++) {
                 synchronized (this) {
                     if (mShutdownRequested) {
                         return;
                     }
                 }
                 try {
-                    TestClient.run(mPort);
+                    TestClient.run(mPort, mSecure);
                 } catch (IOException ioe) {
                     ioe.printStackTrace();
                 }
@@ -166,6 +172,21 @@ class TestBoth {
         }
         final int iterations = optIterations;
 
+        
+        int optTransactions = Integer.MAX_VALUE;
+        if (cl.hasOption('c')) {
+            try {
+                optTransactions = Integer.parseInt(cl.getOptionValue('c'));
+            } catch (NumberFormatException nfe) {
+                mLog.error("exception occurred", nfe);
+                usage("bad value for transaction count");
+            }
+        }
+        final int transactions = optTransactions;
+
+        
+        final boolean secure = cl.hasOption('S');
+        
         if (cl.hasOption('s')) {
             int optSeconds = 0;
             try {
@@ -179,7 +200,7 @@ class TestBoth {
                 public void run() {
                     try {
                         for (int i = 0; i < iterations; i++) {
-                            startTest(port, numThreads);
+                            startTest(port, secure, numThreads, transactions);
                             Thread.sleep(seconds * 1000);
                             endTest();
                         }
@@ -193,7 +214,7 @@ class TestBoth {
                 }
             }.start();
         } else {
-            startTest(port, numThreads);
+            startTest(port, secure, numThreads, transactions);
             BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
             br.readLine();
             endTest();
@@ -204,12 +225,12 @@ class TestBoth {
     
     private static TestClientThread[] mTestClientThreads;
     
-    private static void startTest(int port, int numThreads) throws IOException, ServiceException {
-        mTestServer = new TestServer(port);
+    private static void startTest(int port, boolean secure, int numThreads, int numTransactions) throws IOException, ServiceException {
+        mTestServer = new TestServer(port, secure);
         mLog.info("creating " + numThreads + " client threads");
         mTestClientThreads = new TestClientThread[numThreads];
         for (int i = 0; i < numThreads; i++) {
-            mTestClientThreads[i] = new TestClientThread(port, i);
+            mTestClientThreads[i] = new TestClientThread(port, secure, i, numTransactions);
             mTestClientThreads[i].start();
         }
     }

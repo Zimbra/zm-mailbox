@@ -105,7 +105,6 @@ public class OzConnection {
         return mLog;
     }
     
-    /* always access it through the get method which synchronizes - TODO revisit this synch and remove if possible */
     private OzFilter mFilter;
     
     synchronized void setFilter(OzFilter filter) {
@@ -138,7 +137,7 @@ public class OzConnection {
                     mLog.warn("exception closing channel, ignoring and continuing", ioe);
                 } finally {
                     synchronized (mReadLock) { 
-                        if (mClosed && mDebug) mLog.debug("duplicate close detected");
+                        if (mDebug && mDebug) mLog.debug("duplicate close detected");
                         mClosed = true;
                     }
                 }
@@ -157,12 +156,32 @@ public class OzConnection {
         ZimbraLog.clearContext();
     }
     
-    /* Caller must lock selectionkey! */
+    static private String opsToString(int ops) {
+        StringBuilder sb = new StringBuilder();
+        if ((ops & SelectionKey.OP_READ) != 0) {
+            sb.append("READ,");
+        }
+        if ((ops & SelectionKey.OP_ACCEPT) != 0) {
+            sb.append("ACCEPT,");
+        }
+        if ((ops & SelectionKey.OP_CONNECT) != 0) {
+            sb.append("CONNECT,");
+        }
+        if ((ops & SelectionKey.OP_WRITE) != 0) {
+            sb.append("WRITE,");
+        }
+        if (sb.length() > 0) {
+            sb.deleteCharAt(sb.length()-1);
+        }
+        return sb.toString();
+    }
+    
+    /* Caller must lock selectionkey. */
     static void logKey(Log log, SelectionKey selectionKey, String where) {
         if (selectionKey.isValid()) {
             log.debug(where +
-                    " iops=" + selectionKey.interestOps() + 
-                    " rops=" + selectionKey.readyOps() + 
+                    " interest=" + opsToString(selectionKey.interestOps()) + 
+                    " ready=" + opsToString(selectionKey.readyOps()) + 
                     " key=" + Integer.toHexString(selectionKey.hashCode()));
         } else {
             log.warn(where + " invalid key=" + Integer.toHexString(selectionKey.hashCode()));
@@ -226,7 +245,7 @@ public class OzConnection {
                     mConnectionHandler.handleDisconnect();
                     closeNow();
                     if (mFilter != null) {
-                        mFilter.close();
+                        mFilter.closeNow();
                     }
                     closed = true;
                 } finally {
@@ -285,8 +304,6 @@ public class OzConnection {
                     mLog.warn("got 0 bytes on supposedly read ready channel");
                     return;
                 }
-                
-                if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("read from channel bytes=" + bytesRead, rbb, true));
                 
                 if (mFilter == null) {
                     if (mDebug) mLog.debug("no filter will process read bytes");
@@ -368,53 +385,54 @@ public class OzConnection {
     private class HandleWriteTask implements Runnable {
         public void run() {
             addToNDC();
-            // It is possible that more than one buffer can be written
-            // so we call channel write until we fail to write fully
-            int totalWritten = 0;
-            while (true) {
-                synchronized (mWriteBuffers) {
-                    try {
-                        if (mWriteBuffers.isEmpty()) {
-                            disableWriteInterest();
-                            if (totalWritten == 0) mLog.warn("wrote no bytes to a write ready channel");
-                            if (mFilter != null) {
-                                mFilter.writeCompleted(totalWritten);
+            try {
+                int totalWritten = 0;
+                while (true) {
+                    synchronized (mWriteBuffers) {
+                        try {
+                            if (mWriteBuffers.isEmpty()) {
+                                if (totalWritten == 0) mLog.warn("wrote no bytes to a write ready channel");
+                                if (mFilter != null) {
+                                    mFilter.writeCompleted(totalWritten);
+                                }
+                                // nothing more to write
+                                if (mCloseAfterWrite) {
+                                    closeNow();
+                                }
+                                return;
                             }
-                            // nothing more to write
-                            if (mCloseAfterWrite) {
-                                closeNow();
+                            
+                            ByteBuffer data = (ByteBuffer)mWriteBuffers.remove(0);
+                            
+                            assert(data != null);
+                            assert(data.hasRemaining());
+                            
+                            if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("channel write", data, false));
+                            int wrote = mChannel.write(data);
+                            totalWritten += wrote;
+                            if (mDebug) mLog.trace("channel wrote=" + wrote + " totalWritten=" + totalWritten);
+                            
+                            if (data.hasRemaining()) {
+                                // If not all data was written, stop - we will write again
+                                // when we get called at a later time when available for
+                                // write. Put the buffer back in the list so whatever is
+                                // remaining can be written later.  Note that we do not
+                                // clear write interest here.
+                                if (mDebug) mLog.debug("incomplete write, adding buffer back");
+                                mWriteBuffers.add(0, data); 
+                                break;
                             }
-                            return;
+                        } catch (IOException ioe) {
+                            /* When write is a real task we won't have to do this. */
+                            if (mLog.isDebugEnabled()) {
+                                mLog.debug("exception writing, closing connection", ioe);
+                            }
+                            closeNow();
                         }
-                        
-                        ByteBuffer data = (ByteBuffer)mWriteBuffers.remove(0);
-                        
-                        assert(data != null);
-                        assert(data.hasRemaining());
-                        
-                        if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("channel write", data, false));
-                        int wrote = mChannel.write(data);
-                        totalWritten += wrote;
-                        if (mDebug) mLog.trace("channel wrote=" + wrote + " totalWritten=" + totalWritten);
-                        
-                        if (data.hasRemaining()) {
-                            // If not all data was written, stop - we will write again
-                            // when we get called at a later time when available for
-                            // write. Put the buffer back in the list so whatever is
-                            // remaining can be written later.  Note that we do not
-                            // clear write interest here.
-                            if (mDebug) mLog.debug("incomplete write, adding buffer back");
-                            mWriteBuffers.add(0, data); 
-                            break;
-                        }
-                    } catch (IOException ioe) {
-                        /* When write is a real task we won't have to do this. */
-                        if (mLog.isDebugEnabled()) {
-                            mLog.debug("exception writing, closing connection", ioe);
-                        }
-                        closeNow();
                     }
                 }
+            } finally {
+                clearFromNDC();
             }
         }
     }
@@ -501,8 +519,8 @@ public class OzConnection {
         disableReadInterest();
         synchronized (mWriteBuffers) {
             mCloseAfterWrite = true;
+            
             if (mWriteBuffers.isEmpty()) {
-                disableWriteInterest();
                 closeNow();
             }
         }
