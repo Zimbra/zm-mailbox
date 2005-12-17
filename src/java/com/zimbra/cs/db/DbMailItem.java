@@ -887,6 +887,7 @@ public class DbMailItem {
     public static final byte SORT_BY_SENDER  = 0x02;
     public static final byte SORT_BY_SUBJECT = 0x04;
     public static final byte SORT_BY_ID      = 0x08;
+    public static final byte SORT_NONE       = 0x10;
 
     public static final byte DEFAULT_SORT_ORDER = SORT_BY_DATE | SORT_DESCENDING;
 
@@ -898,6 +899,7 @@ public class DbMailItem {
             case SORT_BY_SENDER:   return "sender";
             case SORT_BY_SUBJECT:  return "subject";
             case SORT_BY_ID:       return "id";
+            case SORT_NONE:        return "NULL";
             case SORT_BY_DATE:
             default:               return "date";
         }
@@ -907,8 +909,11 @@ public class DbMailItem {
         return sortQuery(sort, "");
     }
     private static String sortQuery(byte sort, String prefix) {
+        String field = sortField(sort);
+        if ("NULL".equalsIgnoreCase(field))
+            return "";
         StringBuffer statement = new StringBuffer(" ORDER BY ");
-        statement.append(prefix).append(sortField(sort));
+        statement.append(prefix).append(field);
         if ((sort & SORT_DIRECTION_MASK) == SORT_DESCENDING)
             statement.append(" DESC");
         return statement.toString();
@@ -985,7 +990,7 @@ public class DbMailItem {
         }
     }
 
-    public static List<UnderlyingData> getByType(Mailbox mbox, byte type) throws ServiceException {
+    public static List<UnderlyingData> getByType(Mailbox mbox, byte type, byte sort) throws ServiceException {
         if (Mailbox.isCachedType(type))
             throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
         Connection conn = mbox.getOperationConnection();
@@ -996,7 +1001,7 @@ public class DbMailItem {
         try {
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                     " FROM " + getMailItemTableName(mbox.getId(), " mi") +
-                    " WHERE type IN " + typeConstraint(type));
+                    " WHERE type IN " + typeConstraint(type) + sortQuery(sort));
             rs = stmt.executeQuery();
             while (rs.next())
                 result.add(constructItem(rs));
@@ -1084,7 +1089,7 @@ public class DbMailItem {
         }
     }
 
-    public static List<UnderlyingData> getByFolder(Folder folder, byte type) throws ServiceException {
+    public static List<UnderlyingData> getByFolder(Folder folder, byte type, byte sort) throws ServiceException {
         if (Mailbox.isCachedType(type))
             throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
         Mailbox mbox = folder.getMailbox();
@@ -1097,7 +1102,7 @@ public class DbMailItem {
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                     " FROM " + getMailItemTableName(folder.getMailboxId(), " mi") +
                     " WHERE folder_id = ? AND type IN " + typeConstraint(type) +
-                    " ORDER BY date DESC");
+                    sortQuery(sort));
             stmt.setInt(1, folder.getId());
             rs = stmt.executeQuery();
 

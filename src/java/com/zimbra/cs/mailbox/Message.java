@@ -279,28 +279,6 @@ public class Message extends MailItem {
         return MessageCache.getMimeMessage(this);
     }
 
-    public static final class SortDateAscending implements Comparator<Message> {
-        public int compare(Message m1, Message m2) {
-            long t1 = m1.getDate();
-            long t2 = m2.getDate();
-
-            if (t1 < t2)        return -1;
-            else if (t1 == t2)  return 0;
-            else                return 1;
-        }
-    }
-
-    public static final class SortDateDescending implements Comparator<Message> {
-    	public int compare(Message m1, Message m2) {
-    		long t1 = m1.getDate();
-    		long t2 = m2.getDate();
-
-    		if (t1 < t2)        return 1;
-    		else if (t1 == t2)  return 0;
-    		else                return -1;
-    	}
-    }
-
     public static final class SortImapUID implements Comparator<Message> {
         public int compare(Message m1, Message m2) {
             int uid1 = m1.getImapUID();

@@ -29,10 +29,10 @@
 package com.zimbra.cs.service.mail;
 
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
+import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
@@ -50,39 +50,41 @@ public class GetContacts extends DocumentHandler  {
         Mailbox mbox = getRequestedMailbox(lc);
         Mailbox.OperationContext octxt = lc.getOperationContext();
 
-        ArrayList attrs = null;
-        ArrayList ids = null;        
-        for (Iterator it = request.elementIterator(); it.hasNext(); ) {
-            Element e = (Element) it.next();
+        byte sort = DbMailItem.SORT_NONE;
+        String sortStr = request.getAttribute(MailService.A_SORTBY, "");
+        if (sortStr.equals(MailboxIndex.SORT_BY_NAME_ASCENDING))
+            sort = DbMailItem.SORT_BY_SENDER | DbMailItem.SORT_ASCENDING;
+        else if (sortStr.equals(MailboxIndex.SORT_BY_NAME_DESCENDING))
+            sort = DbMailItem.SORT_BY_SENDER | DbMailItem.SORT_DESCENDING;
+
+        ArrayList<String> attrs = null;
+        ArrayList<Integer> ids = null;
+        for (Element e : request.listElements())
             if (e.getName().equals(MailService.E_ATTRIBUTE)) {
                 String name = e.getAttribute(MailService.A_ATTRIBUTE_NAME);
                 if (attrs == null)
-                    attrs = new ArrayList();
+                    attrs = new ArrayList<String>();
                 attrs.add(name);
             } else if (e.getName().equals(MailService.E_CONTACT)) {
                 int id = (int) e.getAttributeLong(MailService.A_ID);
                 if (ids == null)
-                    ids = new ArrayList();
-                ids.add(new Integer(id));
+                    ids = new ArrayList<Integer>();
+                ids.add(id);
             }
-        }
         
         Element response = lc.createElement(MailService.GET_CONTACTS_RESPONSE);
         ContactAttrCache cacache = null; //new ContactAttrCache();
 
         if (ids != null) {
-            for (Iterator it = ids.iterator(); it.hasNext(); ) {
-            	Contact con = mbox.getContactById(octxt, ((Integer) it.next()).intValue());
+            for (int id : ids) {
+            	Contact con = mbox.getContactById(octxt, id);
                 if (con != null)
                     ToXML.encodeContact(response, lc, con, cacache, false, attrs);
             }
         } else {
-        	List contacts = mbox.getContactList(octxt, -1);
-            for (Iterator it = contacts.iterator(); it.hasNext(); ) {
-                Contact con = (Contact) it.next();
+        	for (Contact con : mbox.getContactList(octxt, -1, sort))
                 if (con != null)
                     ToXML.encodeContact(response, lc, con, cacache, false, attrs);
-            }
         }
         return response;
     }

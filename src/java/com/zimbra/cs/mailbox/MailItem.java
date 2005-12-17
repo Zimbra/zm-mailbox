@@ -72,7 +72,7 @@ public abstract class MailItem implements Comparable {
     /** Item is a {@link Mountpoint} pointing to a {@link Folder} or
      *  {@link Tag}, possibly in another user's {@link Mailbox}. */
     public static final byte TYPE_MOUNTPOINT   = 13;
-    /** Item is a wiki item {@link WikiItem} */
+    /** Item is a {@link WikiItem} */
     public static final byte TYPE_WIKI         = 14;
 
     static final byte TYPE_MAX = TYPE_WIKI;
@@ -653,6 +653,49 @@ public abstract class MailItem implements Comparable {
         return (myDate < theirDate ? -1 : (myDate == theirDate ? 0 : 1));
     }
 
+    public static final class SortDateAscending implements Comparator<MailItem> {
+        public int compare(MailItem m1, MailItem m2) {
+            long t1 = m1.getDate();
+            long t2 = m2.getDate();
+
+            if (t1 < t2)        return -1;
+            else if (t1 == t2)  return 0;
+            else                return 1;
+        }
+    }
+
+    public static final class SortDateDescending implements Comparator<MailItem> {
+        public int compare(MailItem m1, MailItem m2) {
+            long t1 = m1.getDate();
+            long t2 = m2.getDate();
+
+            if (t1 < t2)        return 1;
+            else if (t1 == t2)  return 0;
+            else                return -1;
+        }
+    }
+
+    public static final class SortSubjectAscending implements Comparator<MailItem> {
+        public int compare(MailItem m1, MailItem m2) {
+            return m1.getSubject().compareTo(m2.getSubject());
+        }
+    }
+
+    public static final class SortSubjectDescending implements Comparator<MailItem> {
+        public int compare(MailItem m1, MailItem m2) {
+            return -m1.getSubject().compareTo(m2.getSubject());
+        }
+    }
+
+    static Comparator<MailItem> getComparator(byte sort) {
+        boolean ascending = (sort & DbMailItem.SORT_DIRECTION_MASK) == DbMailItem.SORT_ASCENDING;
+        switch (sort & DbMailItem.SORT_FIELD_MASK) {
+            case DbMailItem.SORT_BY_DATE:     return ascending ? new SortDateAscending() : new SortDateDescending();
+            case DbMailItem.SORT_BY_SUBJECT:  return ascending ? new SortSubjectAscending() : new SortSubjectDescending();
+        }
+        return null;
+    }
+
 
     /** Adds the item to the index.
      * 
@@ -675,7 +718,7 @@ public abstract class MailItem implements Comparable {
     MailItem getCachedParent() throws ServiceException {
         if (mData.parentId == -1)
             return null;
-        return mMailbox.getCachedItem(new Integer(mData.parentId));
+        return mMailbox.getCachedItem(mData.parentId);
     }
     /** Returns the item's parent.  Returns <code>null</code> if the item
      *  does not have a parent.

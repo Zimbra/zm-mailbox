@@ -1181,14 +1181,13 @@ NOTE: should we return modified attrs in response?
 
 ----------
 
-<GetContactsRequest>
+<GetContactsRequest [sortBy="nameAsc|nameDesc"]>
   <a n="..."/>*
   <cn id="{contact-id}"/>*
 </GetContactsRequest>
 
-if <a n="..."/> present, return only the specified attribute(s).
-
-if <cn id="..."/> present, only get the specified contact(s).
+  if <a n="..."/> present, return only the specified attribute(s).
+  if <cn id="..."/> present, only get the specified contact(s).
 
 <GetContactsResponse>
   <cn>...</cn>*

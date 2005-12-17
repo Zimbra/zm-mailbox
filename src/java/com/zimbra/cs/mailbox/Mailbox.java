@@ -467,7 +467,7 @@ public class Mailbox {
      *  number is persisted as <code>MAIL_ITEM.MOD_METADATA</code> in all
      *  non-delete cases, as <code>MAIL_ITEM.MOD_CONTENT</code> for any 
      *  items that were created or had their "content" modified, and as
-     *  <code>tombstone.sequence</code> for hard deletes. */
+     *  <code>TOMBSTONE.SEQUENCE</code> for hard deletes. */
     public int getOperationChangeID() throws ServiceException {
         if (mCurrentChange.changeId == MailboxChange.NO_CHANGE)
             setOperationChangeID(ID_AUTO_INCREMENT);
@@ -1858,6 +1858,9 @@ public class Mailbox {
         return getItemList(octxt, type, -1);
     }
     public synchronized List<MailItem> getItemList(OperationContext octxt, byte type, int folderId) throws ServiceException {
+        return getItemList(octxt, type, folderId, DbMailItem.SORT_NONE);
+    }
+    public synchronized List<MailItem> getItemList(OperationContext octxt, byte type, int folderId, byte sort) throws ServiceException {
         if (type == MailItem.TYPE_UNKNOWN)
             return null;
         List<MailItem> result = new ArrayList<MailItem>();
@@ -1877,27 +1880,34 @@ public class Mailbox {
                 for (Map.Entry<Object, Tag> entry : mTagCache.entrySet())
                     if (entry.getKey() instanceof String)
                         result.add(entry.getValue());
+                Comparator<MailItem> comp = MailItem.getComparator(sort);
+                if (comp != null)
+                    Collections.sort(result, comp);
                 success = true;
                 return result;
-            } else if (type == MailItem.TYPE_FOLDER || type == MailItem.TYPE_SEARCHFOLDER) {
+            } else if (type == MailItem.TYPE_FOLDER || type == MailItem.TYPE_SEARCHFOLDER || type == MailItem.TYPE_MOUNTPOINT) {
                 for (Folder subfolder : mFolderCache.values())
-                    if (folder == null || subfolder.getParentId() == folderId)
-                        if ((type == MailItem.TYPE_SEARCHFOLDER) == (subfolder instanceof SearchFolder))
+                    if (subfolder.getType() == type)
+                        if (folder == null || subfolder.getParentId() == folderId)
                             result.add(subfolder);
+                Comparator<MailItem> comp = MailItem.getComparator(sort);
+                if (comp != null)
+                    Collections.sort(result, comp);
                 success = true;
                 return result;
             }
 
             List<MailItem.UnderlyingData> dataList = null;
             if (folder != null)
-                dataList = DbMailItem.getByFolder(folder, type);
+                dataList = DbMailItem.getByFolder(folder, type, sort);
             else
-                dataList = DbMailItem.getByType(this, type);
+                dataList = DbMailItem.getByType(this, type, sort);
             if (dataList == null)
                 return null;
             for (MailItem.UnderlyingData data : dataList)
                 if (data != null)
                     result.add(getItem(data));
+            // sort was already done by the DbMailItem call...
             success = true;
         } finally {
             endTransaction(success);
@@ -2120,8 +2130,14 @@ public class Mailbox {
     Contact getContactById(int id) throws ServiceException {
         return (Contact) getItemById(id, MailItem.TYPE_CONTACT);
     }
-    public synchronized List getContactList(OperationContext octxt, int folderId) throws ServiceException {
-        return getItemList(octxt, MailItem.TYPE_CONTACT, folderId);
+    public synchronized List<Contact> getContactList(OperationContext octxt, int folderId) throws ServiceException {
+        return getContactList(octxt, folderId, DbMailItem.SORT_NONE);
+    }
+    public synchronized List<Contact> getContactList(OperationContext octxt, int folderId, byte sort) throws ServiceException {
+        List<Contact> contacts = new ArrayList<Contact>();
+        for (MailItem item : getItemList(octxt, MailItem.TYPE_CONTACT, folderId, sort))
+            contacts.add((Contact) item);
+        return contacts;
     }
 
 
@@ -2675,13 +2691,13 @@ public class Mailbox {
     public synchronized Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags, String tags)
     throws IOException, ServiceException {
         SharedDeliveryContext sharedDeliveryCtxt = new SharedDeliveryContext(false);
-        return addMessage(octxt, pm, folderId, noICal, flags, tags, Mailbox.ID_AUTO_INCREMENT, ":API:", sharedDeliveryCtxt);
+        return addMessage(octxt, pm, folderId, noICal, flags, tags, ID_AUTO_INCREMENT, ":API:", sharedDeliveryCtxt);
     }
 
     public synchronized Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags, String tags,
                                            String rcptEmail, SharedDeliveryContext sharedDeliveryCtxt)
     throws IOException, ServiceException {
-        return addMessage(octxt, pm, folderId, noICal, flags, tags, Mailbox.ID_AUTO_INCREMENT, rcptEmail, sharedDeliveryCtxt);
+        return addMessage(octxt, pm, folderId, noICal, flags, tags, ID_AUTO_INCREMENT, rcptEmail, sharedDeliveryCtxt);
     }
 
     private static final StopWatch sWatch = StopWatch.getInstance("mbox_add_msg");
@@ -2784,7 +2800,7 @@ public class Mailbox {
             Conversation conv = null;
             String hash = null;
             if (!DebugConfig.disableConversation) {
-                if (conversationId != ID_AUTO_INCREMENT)
+                if (conversationId != ID_AUTO_INCREMENT) {
                     try {
                         conv = getConversationById(conversationId);
                         if (debug)  ZimbraLog.mailbox.debug("  fetched explicitly-specified conversation " + conv.getId());
@@ -2793,7 +2809,7 @@ public class Mailbox {
                             throw e;
                         if (debug)  ZimbraLog.mailbox.debug("  could not find explicitly-specified conversation " + conversationId);
                     }
-                else if (conv == null && !isSpam && !isDraft && pm.isReply()) {
+                } else if (!isSpam && !isDraft && pm.isReply()) {
                     conv = getConversationByHash(hash = getHash(subject));
                     if (debug)  ZimbraLog.mailbox.debug("  found conversation " + (conv == null ? -1 : conv.getId()) + " for hash: " + hash);
                     if (conv != null && timestamp > conv.getDate() + ONE_MONTH_MILLIS) {
@@ -2814,7 +2830,7 @@ public class Mailbox {
             ZVCalendar iCal = pm.getiCalendar();
             msg = Message.create(messageId, folder, convTarget, pm, msgSize, digest,
                                  volumeId, unread, flags, tags, dinfo, noICal, iCal);
-            
+
             redoRecorder.setMessageId(msg.getId());
 
             // step 4: create a conversation for the message, if necessary
