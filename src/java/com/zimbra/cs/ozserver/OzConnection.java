@@ -29,6 +29,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -386,54 +387,53 @@ public class OzConnection {
         public void run() {
             addToNDC();
             try {
-                int totalWritten = 0;
-                while (true) {
-                    synchronized (mWriteBuffers) {
-                        try {
-                            if (mWriteBuffers.isEmpty()) {
-                                if (totalWritten == 0) mLog.warn("wrote no bytes to a write ready channel");
-                                if (mFilter != null) {
-                                    mFilter.writeCompleted(totalWritten);
-                                }
-                                // nothing more to write
-                                if (mCloseAfterWrite) {
-                                    closeNow();
-                                }
-                                return;
-                            }
-                            
-                            ByteBuffer data = (ByteBuffer)mWriteBuffers.remove(0);
-                            
-                            assert(data != null);
-                            assert(data.hasRemaining());
-                            
-                            if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("channel write", data, false));
-                            int wrote = mChannel.write(data);
-                            totalWritten += wrote;
-                            if (mDebug) mLog.trace("channel wrote=" + wrote + " totalWritten=" + totalWritten);
-                            
-                            if (data.hasRemaining()) {
-                                // If not all data was written, stop - we will write again
-                                // when we get called at a later time when available for
-                                // write. Put the buffer back in the list so whatever is
-                                // remaining can be written later.  Note that we do not
-                                // clear write interest here.
-                                if (mDebug) mLog.debug("incomplete write, adding buffer back");
-                                mWriteBuffers.add(0, data); 
-                                break;
-                            }
-                        } catch (IOException ioe) {
-                            /* When write is a real task we won't have to do this. */
-                            if (mLog.isDebugEnabled()) {
-                                mLog.debug("exception writing, closing connection", ioe);
-                            }
-                            closeNow();
-                        }
-                    }
+                synchronized (mWriteBuffers) {
+                    writeLocked();
                 }
+            } catch (IOException ioe) {
+                mLog.info("exception occured");
             } finally {
                 clearFromNDC();
             }
+        }
+        
+        private void writeLocked() throws IOException {
+            int totalWritten = 0;
+            boolean allWritten = true;
+            for (Iterator<ByteBuffer> iter = mWriteBuffers.iterator(); iter.hasNext(); iter.remove()) {
+                ByteBuffer data = iter.next();
+                assert(data != null);
+                assert(data.hasRemaining());
+
+                if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("channel write", data, false));
+                int wrote = mChannel.write(data);
+                totalWritten += wrote;
+                if (mDebug) mLog.trace("channel wrote=" + wrote + " totalWritten=" + totalWritten);
+                
+                if (data.hasRemaining()) {
+                    // If not all data was written, stop - we will write again
+                    // when we get called at a later time when available for
+                    // write. Put the buffer back in the list so whatever is
+                    // remaining can be written later.  Note that we do not
+                    // clear write interest here.
+                    if (mDebug) mLog.debug("incomplete write, adding buffer back");
+                    allWritten = false;
+                    enableWriteInterest();
+                    break;
+                }
+            }
+
+            if (totalWritten == 0) mLog.warn("wrote no bytes to a write ready channel");
+            
+            if (allWritten) {
+                if (mFilter != null) {
+                    mFilter.writeCompleted(totalWritten);
+                }
+
+                if (mCloseAfterWrite) {
+                    closeNow();
+                }
+            }            
         }
     }
     

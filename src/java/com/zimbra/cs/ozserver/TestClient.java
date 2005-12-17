@@ -29,6 +29,7 @@ import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
@@ -37,6 +38,13 @@ import java.util.Random;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import javax.net.SocketFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import java.security.cert.X509Certificate;
 
 // client action  -> server action
 //
@@ -64,8 +72,14 @@ class TestClient {
     
     BufferedOutputStream mSocketOut;
     
-    public TestClient(String host, int port) throws IOException {
-        mSocket = new Socket(host, port);
+    private static DummySSLSocketFactory mSocketFactory = new DummySSLSocketFactory();
+    
+    public TestClient(String host, int port, boolean ssl) throws IOException {
+        if (ssl) {
+            mSocket = mSocketFactory.createSocket(host, port); 
+        } else {
+            mSocket = new Socket(host, port);
+        }
         mSocketIn = new BufferedReader(new InputStreamReader(mSocket.getInputStream()));
         mSocketOut = new BufferedOutputStream(mSocket.getOutputStream());
         mResponse = mSocketIn.readLine();
@@ -122,8 +136,8 @@ class TestClient {
     private static final int MAX_DIGEST_BYTES = 20;
 
     
-    public static void run(int port) throws IOException {
-        TestClient client = new TestClient("localhost", port);
+    public static void run(int port, boolean ssl) throws IOException {
+        TestClient client = new TestClient("phillip", port, ssl);
         mLog.info("got: " + client.getLastResponse());
 
         mLog.info("sending: helo");
@@ -161,6 +175,73 @@ class TestClient {
     }
     
     public static void main(String[] args) throws IOException {
-        run(Integer.parseInt(args[0]));
+        run(Integer.parseInt(args[0]), Boolean.parseBoolean(args[1]));
+    }
+    
+    public static class DummySSLSocketFactory extends SSLSocketFactory {
+        private SSLSocketFactory factory;
+        
+        public DummySSLSocketFactory() {
+            try {
+                SSLContext sslcontext = SSLContext.getInstance("TLS");
+                sslcontext.init(null,
+                                new TrustManager[] { new DummyTrustManager()},
+                                null);
+                factory = (SSLSocketFactory)sslcontext.getSocketFactory();
+            } catch(Exception ex) {
+                // ignore
+            }
+        }
+        
+        public static SocketFactory getDefault() {
+            return new DummySSLSocketFactory();
+        }
+        
+        public Socket createSocket(Socket socket, String s, int i, boolean flag) throws IOException {
+            return factory.createSocket(socket, s, i, flag);
+        }
+        
+        public Socket createSocket(InetAddress inaddr, int i,
+                                   InetAddress inaddr1, int j) throws IOException {
+            return factory.createSocket(inaddr, i, inaddr1, j);
+        }
+        
+        public Socket createSocket(InetAddress inaddr, int i) throws IOException {
+            return factory.createSocket(inaddr, i);
+        }
+
+        public Socket createSocket(String s, int i, InetAddress inaddr, int j) throws IOException {
+            return factory.createSocket(s, i, inaddr, j);
+        }
+
+        public Socket createSocket(String s, int i) throws IOException {
+            return factory.createSocket(s, i);
+        }
+
+        public String[] getDefaultCipherSuites() {
+            return factory.getDefaultCipherSuites();
+        }
+
+        public String[] getSupportedCipherSuites() {
+            return factory.getSupportedCipherSuites();
+        }
+    }
+
+    /**
+     * DummyTrustManager - NOT SECURE
+     */
+    public static class DummyTrustManager implements X509TrustManager {
+        
+        public void checkClientTrusted(X509Certificate[] cert, String authType) {
+            // everything is trusted
+        }
+        
+        public void checkServerTrusted(X509Certificate[] cert, String authType) {
+            // everything is trusted
+        }
+        
+        public X509Certificate[] getAcceptedIssuers() {
+            return new X509Certificate[0];
+        }
     }
 }

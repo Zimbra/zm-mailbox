@@ -154,6 +154,8 @@ public class OzTLSFilter implements OzFilter {
                     case FINISHED:
                         if (mDebug) debug("handshake finished");
                         mHandshakeComplete = true;
+                        if (mDebug) debug("handshake completed");
+                        processPendingWrites();
                         break unwrap;
                     }
                     break;
@@ -174,10 +176,10 @@ public class OzTLSFilter implements OzFilter {
             /* Falling through, because while unwrapping, we are asked to wrap. */
             
         case NEED_WRAP:
-            wrap: while (true) {
+            //wrap: while (true) {
                 ByteBuffer dest = ByteBuffer.allocate(mPacketBufferSize);
-                dest.clear();
                 SSLEngineResult result = mSSLEngine.wrap(mHandshakeBB, dest);
+                dest.flip();
                 mHandshakeStatus = result.getHandshakeStatus();
                 if (mDebug) debug("handshake wrap result " + result);
                 switch (result.getStatus()) {
@@ -185,11 +187,10 @@ public class OzTLSFilter implements OzFilter {
                     if (mHandshakeStatus == HandshakeStatus.NEED_TASK) {
                         mHandshakeStatus = runTasks();
                     }
-                    dest.flip();
                     if (mDebug) debug("handshake: writing bytes");
                     mConnection.channelWrite(dest, true);
                     if (mHandshakeStatus != HandshakeStatus.NEED_WRAP) {
-                        break wrap;
+                        //break wrap;
                     }
                     break;
                 case BUFFER_OVERFLOW:
@@ -197,8 +198,9 @@ public class OzTLSFilter implements OzFilter {
                 case CLOSED:
                     throw new IOException("TLS handshake: XXX in wrap got status " + result.getStatus());
                 }
-                break;
-            }
+            //}
+            break;
+            
         default:
             throw new RuntimeException("TLS handshake: can not deal with handshake status: " + mHandshakeStatus);
         }
@@ -311,6 +313,7 @@ public class OzTLSFilter implements OzFilter {
     }
     
     public void write(ByteBuffer src, boolean flush) throws IOException {
+        if (mDebug) debug("write called");
         synchronized (mPendingWriteBuffers) {
             if (!mHandshakeComplete) {
                 mPendingWriteBuffers.add(src);

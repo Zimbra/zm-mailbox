@@ -53,18 +53,20 @@ public class OzByteArrayMatcher implements OzMatcher {
     
     public boolean match(ByteBuffer buf) {
         assert(mMatched < mMatchSequenceLength);
-        boolean trace = true; // mLog.isTraceEnabled(); 
-        StringBuilder tsb = null;
-        if (trace) tsb = new StringBuilder();
+        final boolean trace = true; // mLog.isTraceEnabled(); 
         
         int n = buf.remaining();
-        if (trace) tsb.append("new bytes to look at=" + n + ", already matched=" + mMatched + " ");
+        if (trace) mLog.trace("new bytes to look at=" + n + ", already matched=" + mMatched);
+        
+        StringBuilder tsb;
+        if (trace) tsb = new StringBuilder("byte array matcher trace ");
+        
         for (int i = 0; i < n; i++) {
             byte b = buf.get();
             
             if (trace) {
                 if (b >= 32 && b <=126) tsb.append("'" + (char)b + "'/"); 
-                tsb.append((int)b + " ");
+                if (trace) tsb.append((int)b + " ");
             }
 
             if (mMatchSequence[mMatched] == b) {
