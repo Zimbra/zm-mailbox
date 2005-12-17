@@ -156,6 +156,11 @@ public class IMPersona {
     public synchronized void addListener(Session session) {
         if (mListeners.size() == 0) {
             mIsOnline = true;
+            try {
+                pushMyPresence();
+            } catch(ServiceException e) {
+                e.printStackTrace();
+            }
         }
         mListeners.add(session);
     }
@@ -164,6 +169,11 @@ public class IMPersona {
         mListeners.remove(session);
         if (mListeners.size() == 0) {
             mIsOnline = false;
+            try {
+                pushMyPresence();
+            } catch(ServiceException e) {
+                e.printStackTrace();
+            }
         }
     }
     
@@ -236,23 +246,32 @@ public class IMPersona {
         }; 
     }
     
-    public synchronized void setMyPresence(OperationContext octxt, IMPresence presence) throws ServiceException
+
+    synchronized void pushMyPresence() throws ServiceException
     {
-        mMyPresence = presence;
+        IMPresence presence = getEffectivePresence();
+        
         ArrayList<IMAddr> targets = new ArrayList();
         
         for (IMBuddy buddy : buddies()) {
             if (buddy.getSubType().isIncoming()) 
                 targets.add(buddy.getAddress());
         }
-
-        IMPresenceUpdateEvent event = new IMPresenceUpdateEvent(mAddr, mMyPresence, targets);
+        
+        IMPresenceUpdateEvent event = new IMPresenceUpdateEvent(mAddr, presence, targets);
         IMRouter.getInstance().postEvent(event);
         
         // need to send it to myself in case there I have other sessions listening...
         postIMNotification(event);
         
+    }
+    
+    
+    public synchronized void setMyPresence(OperationContext octxt, IMPresence presence) throws ServiceException
+    {
+        mMyPresence = presence;
         flush(octxt);
+        pushMyPresence();
     }
     
     public IMPresence getEffectivePresence() {
