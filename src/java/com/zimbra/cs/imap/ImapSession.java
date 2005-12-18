@@ -63,8 +63,8 @@ public class ImapSession extends Session {
     private String      mIdleTag;
     private ImapHandler mHandler;
     private ImapFolder  mSelectedFolder;
-    private Map         mFlags = new LinkedHashMap();
-    private Map         mTags = new HashMap();
+    private Map<Object, ImapFlag> mFlags = new LinkedHashMap<Object, ImapFlag>();
+    private Map<Object, ImapFlag> mTags = new HashMap<Object, ImapFlag>();
     private boolean     mCheckingSpam;
 
     public ImapSession(String accountId, String contextId) throws ServiceException {
@@ -155,7 +155,7 @@ public class ImapSession extends Session {
     }
 
     private ImapFlag cache(ImapFlag i4flag) {
-        Map map = (i4flag.mId <= 0 ? mFlags : mTags);
+        Map<Object, ImapFlag> map = (i4flag.mId <= 0 ? mFlags : mTags);
         Long bitmask = new Long(i4flag.mBitmask);
         map.put(i4flag.mImapName, i4flag);
         if (!map.containsKey(bitmask))
@@ -188,15 +188,15 @@ public class ImapSession extends Session {
         if (!Tag.validateId(tagId))
             return;
         int index = Tag.getIndex(tagId);
-        ImapFlag i4flag = (ImapFlag) mTags.remove(new Long(1L << index));
+        ImapFlag i4flag = mTags.remove(new Long(1L << index));
         if (i4flag != null)
             mTags.remove(i4flag.mImapName);
     }
     ImapFlag getFlagByName(String name) {
-        ImapFlag i4flag = (ImapFlag) mFlags.get(name);
-        return (i4flag != null ? i4flag : (ImapFlag) mTags.get(name));
+        ImapFlag i4flag = mFlags.get(name);
+        return (i4flag != null ? i4flag : mTags.get(name));
     }
-    ImapFlag getTagByMask(long mask)  { return (ImapFlag) mTags.get(new Long(mask)); }
+    ImapFlag getTagByMask(long mask)  { return mTags.get(new Long(mask)); }
     String getRealTagName(String name) {
         ImapFlag i4flag = getFlagByName(name);
         return (i4flag == null ? null : i4flag.mName);
@@ -233,8 +233,8 @@ public class ImapSession extends Session {
     }
     Map getMatchingSubscriptions(Mailbox mbox, String pattern) throws ServiceException {
         String childPattern = pattern + "/.*";
-        HashMap hits = new HashMap();
-        ArrayList children = new ArrayList();
+        HashMap<String, String> hits = new HashMap<String, String>();
+        ArrayList<String> children = new ArrayList<String>();
 
         // 6.3.9: "A special situation occurs when using LSUB with the % wildcard. Consider 
         //         what happens if "foo/bar" (with a hierarchy delimiter of "/") is subscribed
@@ -243,9 +243,7 @@ public class ImapSession extends Session {
 
         // figure out the set of subscribed mailboxes that match the pattern
         Folder root = mbox.getFolderById(getContext(), Mailbox.ID_FOLDER_USER_ROOT);
-        List hierarchy = root.getSubfolderHierarchy();
-        for (Iterator it = hierarchy.iterator(); it.hasNext(); ) {
-            Folder folder = (Folder) it.next();
+        for (Folder folder : root.getSubfolderHierarchy()) {
             if (!folder.isTagged(mbox.mSubscribeFlag))
                 continue;
             String path = folder.getPath().substring(1);
@@ -258,8 +256,7 @@ public class ImapSession extends Session {
             return hits;
 
         // figure out the set of unsubscribed mailboxes that match the pattern and are parents of subscribed mailboxes
-        for (int i = 0; i < children.size(); i++) {
-            String partName = (String) children.get(i);
+        for (String partName : children) {
             int delimiter = partName.lastIndexOf('/');
             while (delimiter > 0) {
                 partName = partName.substring(0, delimiter);
@@ -281,7 +278,7 @@ public class ImapSession extends Session {
         if (pns.deleted != null)
             if (!handleDeletes(pns.deleted))
                 return;
-        ArrayList newMessages = (mSelectedFolder == null ? null : new ArrayList());
+        ArrayList<Message> newMessages = (mSelectedFolder == null ? null : new ArrayList<Message>());
         if (pns.created != null)
             if (!handleCreates(pns.created, newMessages))
                 return;
@@ -293,13 +290,13 @@ public class ImapSession extends Session {
         if (mSelectedFolder != null && newMessages != null && newMessages.size() != 0) {
             boolean debug = ZimbraLog.imap.isDebugEnabled();
             Collections.sort(newMessages, new Message.SortImapUID());
-            boolean renumber = ((Message) newMessages.get(0)).getImapUID() < mSelectedFolder.getHighwaterUID();
+            boolean renumber = newMessages.get(0).getImapUID() < mSelectedFolder.getHighwaterUID();
 
             if (!renumber) {
                 // if messages have acceptable UIDs, just add 'em
                 StringBuffer added = debug ? new StringBuffer("  ** adding messages (ntfn):") : null;
-                for (int i = 0; i < newMessages.size(); i++) {
-                    ImapMessage i4msg = mSelectedFolder.cache((Message) newMessages.get(i));
+                for (Message msg : newMessages) {
+                    ImapMessage i4msg = mSelectedFolder.cache(msg);
                     if (debug)  added.append(' ').append(i4msg.id);
                     i4msg.added = true;
                     mSelectedFolder.dirtyMessage(i4msg);
@@ -312,7 +309,7 @@ public class ImapSession extends Session {
                 StringBuffer added = debug ? new StringBuffer() : null;
                 int[] msgIds = new int[newMessages.size()];
                 for (int i = 0; i < msgIds.length; i++) {
-                    msgIds[i] = ((Message) newMessages.get(i)).getId();
+                    msgIds[i] = newMessages.get(i).getId();
                     if (debug)  added.append(' ').append(msgIds[i]);
                 }
                 try {
@@ -335,10 +332,9 @@ public class ImapSession extends Session {
 			}
     }
 
-    private boolean handleDeletes(Map deleted) {
+    private boolean handleDeletes(Map<Integer, Object> deleted) {
         boolean selected = mSelectedFolder != null;
-        for (Iterator it = deleted.values().iterator(); it.hasNext(); ) {
-            Object obj = it.next();
+        for (Object obj : deleted.values()) {
             int id = (obj instanceof MailItem ? ((MailItem) obj).getId() : ((Integer) obj).intValue());
             if (Tag.validateId(id)) {
                 uncacheTag(id);
@@ -365,10 +361,9 @@ public class ImapSession extends Session {
         return true;
     }
 
-    private boolean handleCreates(Map created, List newMessages) {
+    private boolean handleCreates(Map<Integer, MailItem> created, List<Message> newMessages) {
         boolean selected = mSelectedFolder != null;
-        for (Iterator it = created.values().iterator(); it.hasNext(); ) {
-            MailItem item = (MailItem) it.next();
+        for (MailItem item : created.values()) {
             if (item instanceof Tag)
                 cacheTag((Tag) item);
             else if (!selected || item == null || item.getId() <= 0)
@@ -378,32 +373,31 @@ public class ImapSession extends Session {
                 // make sure this message hasn't already been detected in the folder
                 if (mSelectedFolder.getById(msgId) != null)
                     continue;
-                newMessages.add(item);
+                newMessages.add((Message) item);
                 ZimbraLog.imap.debug("  ** created (ntfn): " + msgId);
             }
         }
         return true;
     }
 
-    private boolean handleModifies(Map modified, List newMessages) {
+    private boolean handleModifies(Map<Integer, Change> modified, List<Message> newMessages) {
         boolean selected = mSelectedFolder != null;
         boolean virtual = selected && mSelectedFolder.isVirtual();
         boolean debug = ZimbraLog.imap.isDebugEnabled();
-        for (Iterator it = modified.values().iterator(); it.hasNext(); ) {
-            Change chg = (Change) it.next();
+        for (Change chg : modified.values()) {
             if (chg.what instanceof Tag && (chg.why & Change.MODIFIED_NAME) != 0) {
                 Tag ltag = (Tag) chg.what;
                 uncacheTag(ltag.getId());
                 cacheTag(ltag);
                 if (selected)
                     mSelectedFolder.dirtyTag(ltag.getId());
-            } else if (chg.what instanceof Mailbox && (chg.why & Change.MODIFIED_CONFIG) != 0)
-                try {
-                    parseConfig(((Mailbox) chg.what).getConfig(getContext(), "imap"));
-                } catch (ServiceException e) { }
-            else if (!selected)
+//            } else if (chg.what instanceof Mailbox && (chg.why & Change.MODIFIED_CONFIG) != 0) {
+//                try {
+//                    parseConfig(((Mailbox) chg.what).getConfig(getContext(), "imap"));
+//                } catch (ServiceException e) { }
+            } else if (!selected) {
                 continue;
-            else if (chg.what instanceof Folder && ((Folder) chg.what).getId() == mSelectedFolder.getId()) {
+            } else if (chg.what instanceof Folder && ((Folder) chg.what).getId() == mSelectedFolder.getId()) {
                 Folder folder = (Folder) chg.what;
                 if ((chg.why & Change.MODIFIED_FLAGS) != 0 && (folder.getFlagBitmask() & Flag.FLAG_DELETED) != 0) {
                     // notify client that mailbox is deselected due to \Noselect?
@@ -428,7 +422,7 @@ public class ImapSession extends Session {
                 ImapMessage i4msg = mSelectedFolder.getById(msg.getId());
                 if (i4msg == null) {
                     if (inFolder && !virtual) {
-                        newMessages.add(chg.what);
+                        newMessages.add(msg);
                         if (debug)  ZimbraLog.imap.debug("  ** moved (ntfn): " + msg.getId());
                     }
                 } else if (!inFolder && !virtual)
@@ -439,7 +433,7 @@ public class ImapSession extends Session {
                     // if the IMAP uid changed, need to bump it to the back of the sequence!
                     i4msg.expunged = true;
                     if (!virtual)
-                        newMessages.add(chg.what);
+                        newMessages.add(msg);
                     if (debug)  ZimbraLog.imap.debug("  ** imap uid changed (ntfn): " + msg.getId());
                 }
             }
