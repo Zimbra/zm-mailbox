@@ -217,16 +217,16 @@ public class DbVolume {
      * @return Map containing volume entries
      * @throws SQLException
      */
-    public static Map /*<Short,Volume>*/ getAll(Connection conn) throws ServiceException {
+    public static Map<Short, Volume> getAll(Connection conn) throws ServiceException {
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        Map result = new HashMap();
+        Map<Short, Volume> result = new HashMap<Short, Volume>();
         try {
             stmt = conn.prepareStatement("SELECT * FROM volume");
             rs = stmt.executeQuery();
             while (rs.next()) {
                 Volume v = constructVolume(rs);
-                result.put(new Short(v.getId()), v);
+                result.put(v.getId(), v);
             }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("getting all volume entries", e);

@@ -69,7 +69,7 @@ public class Volume {
     // sVolumeMap, sCurrMsgVolume, sCurrSecondaryMsgVolume, and
     // sCurrIndexVolume are all synchronized on sVolumeGuard.
     private static final Object sVolumeGuard = new Object();
-    private static Map sVolumeMap = new HashMap();
+    private static Map<Short, Volume> sVolumeMap = new HashMap<Short, Volume>();
     private static Volume sCurrMsgVolume;
     private static Volume sCurrSecondaryMsgVolume;
     private static Volume sCurrIndexVolume;
@@ -86,21 +86,21 @@ public class Volume {
         Connection conn = null;
         try {
             conn = DbPool.getConnection();
-            Map volumes = DbVolume.getAll(conn);
+            Map<Short, Volume> volumes = DbVolume.getAll(conn);
             DbVolume.CurrentVolumes currVols = DbVolume.getCurrentVolumes(conn);
             if (currVols == null)
                 throw VolumeServiceException.BAD_CURRVOL_CONFIG("Missing current volumes info from configuration");
 
-            Volume currMsgVol = (Volume) volumes.get(new Short(currVols.msgVolId));
+            Volume currMsgVol = volumes.get(new Short(currVols.msgVolId));
             if (currMsgVol == null)
                 throw VolumeServiceException.BAD_CURRVOL_CONFIG("Unknown current message volume " + currVols.msgVolId);
             Volume currSecondaryMsgVol = null;
             if (currVols.secondaryMsgVolId != ID_NONE) {
-                currSecondaryMsgVol = (Volume) volumes.get(new Short(currVols.secondaryMsgVolId));
+                currSecondaryMsgVol = volumes.get(new Short(currVols.secondaryMsgVolId));
                 if (currSecondaryMsgVol == null)
                     throw VolumeServiceException.BAD_CURRVOL_CONFIG("Unknown current secondary message volume " + currVols.secondaryMsgVolId);
             }
-            Volume currIndexVol = (Volume) volumes.get(new Short(currVols.indexVolId));
+            Volume currIndexVol = volumes.get(new Short(currVols.indexVolId));
             if (currIndexVol == null)
                 throw VolumeServiceException.BAD_CURRVOL_CONFIG("Unknown current index volume " + currVols.indexVolId);
 
@@ -147,9 +147,7 @@ public class Volume {
         // vice versa.
         String pathSlashed = path.replaceAll("\\\\", "/");
         synchronized (sVolumeGuard) {
-            List vols = getAll();
-            for (Iterator iter = vols.iterator(); iter.hasNext(); ) {
-                Volume v = (Volume) iter.next();
+            for (Volume v : getAll()) {
                 String vpath = v.getRootPath().replaceAll("\\\\", "/");
                 int vpathLen = vpath.length();
                 if (vpathLen > 0 && vpath.charAt(vpathLen - 1) != '/')
@@ -319,7 +317,7 @@ public class Volume {
                 throw VolumeServiceException.CANNOT_DELETE_CURRVOL(id, "index");
 
             // Remove from map now.
-            vol = (Volume) sVolumeMap.remove(key);
+            vol = sVolumeMap.remove(key);
         }
 
         Connection conn = null;
@@ -345,7 +343,7 @@ public class Volume {
     	Volume v = null;
         Short key = new Short(id);
         synchronized (sVolumeGuard) {
-        	v = (Volume) sVolumeMap.get(key);
+        	v = sVolumeMap.get(key);
         }
         if (v != null)
             return v;
@@ -388,10 +386,10 @@ public class Volume {
     /**
      * Returns a new <code>List</code> that contains all <code>Volume</code>s.
      */
-    public static List /*<Volume>*/ getAll() {
-        List volumes;
+    public static List<Volume> getAll() {
+        List<Volume> volumes;
         synchronized (sVolumeGuard) {
-        	volumes = new ArrayList(sVolumeMap.values());
+        	volumes = new ArrayList<Volume>(sVolumeMap.values());
         }
         return volumes;
     }
