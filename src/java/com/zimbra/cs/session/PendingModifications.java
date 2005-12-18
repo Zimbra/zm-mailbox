@@ -69,9 +69,9 @@ public final class PendingModifications {
 	    Change(Object thing, int reason)  { what = thing;  why = reason; }
 	}
 
-	public HashMap /* int, MailItem */ created;
-    public HashMap /* int, Change */ modified;
-    public HashMap /* int, Object */ deleted;
+	public HashMap<Integer, MailItem> created;
+    public HashMap<Integer, Change> modified;
+    public HashMap<Integer, Object> deleted;
 
     public boolean hasNotifications() {
         return ((deleted  != null && deleted.size() > 0) ||
@@ -82,8 +82,8 @@ public final class PendingModifications {
     public void recordCreated(MailItem item) {
 //        ZimbraLog.mailbox.debug("--> NOTIFY: created " + item.getId());
         if (created == null)
-            created = new HashMap();
-        created.put(new Integer(item.getId()), item);
+            created = new HashMap<Integer, MailItem>();
+        created.put(item.getId(), item);
     }
 
     public void recordDeleted(int id) {
@@ -101,7 +101,7 @@ public final class PendingModifications {
         if (modified != null)
             modified.remove(key);
         if (deleted == null)
-            deleted = new HashMap();
+            deleted = new HashMap<Integer, Object>();
         deleted.put(key, value);
     }
 
@@ -119,9 +119,9 @@ public final class PendingModifications {
         else if (deleted != null && deleted.containsKey(key))
             return;
         else if (modified == null)
-            modified = new HashMap();
+            modified = new HashMap<Integer, Change>();
         else {
-            chg = (Change) modified.get(key);
+            chg = modified.get(key);
             if (chg != null) {
                 chg.what = item;
                 chg.why |= reason;
@@ -132,5 +132,5 @@ public final class PendingModifications {
         modified.put(key, chg);
     }
     
-    public void clear()  { created = deleted = modified = null; }
+    public void clear()  { created = null;  deleted = null;  modified = null; }
 }
