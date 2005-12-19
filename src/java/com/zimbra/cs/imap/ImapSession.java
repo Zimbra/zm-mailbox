@@ -231,7 +231,7 @@ public class ImapSession extends Session {
         if (folder.isTagged(mbox.mSubscribeFlag))
             mbox.alterTag(null, folder.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_SUBSCRIBED, false);
     }
-    Map getMatchingSubscriptions(Mailbox mbox, String pattern) throws ServiceException {
+    Map<String, String> getMatchingSubscriptions(Mailbox mbox, String pattern) throws ServiceException {
         String childPattern = pattern + "/.*";
         HashMap<String, String> hits = new HashMap<String, String>();
         ArrayList<String> children = new ArrayList<String>();

@@ -76,7 +76,6 @@ public class ImapHandler extends ProtocolHandler {
     private ImapServer  mServer;
     private ImapSession mSession;
     private Mailbox     mMailbox;
-    private LinkedList  mPendingCommands = new LinkedList();
     private ImapRequest mIncompleteRequest = null;
     private boolean     mStartedTLS;
     private boolean     mGoodbyeSent;
@@ -147,7 +146,7 @@ public class ImapHandler extends ProtocolHandler {
         String  mTag;
         int     mCommand;
         String  mCommandString;  // For performance logging
-        List    mArguments = new LinkedList();
+        List<Object> mArguments = new LinkedList<Object>();
 
         ImapCommand(ImapRequest req, ImapSession session) throws IOException, ImapException {
             if (session != null && session.isIdle()) {
@@ -216,15 +215,15 @@ public class ImapHandler extends ProtocolHandler {
                         }
                         break;
                     case 'D':
-                        if (command.equals("DONE")) {
-                            mCommand = CMD_IDLE;  mArguments.add(Boolean.FALSE);
-                            mValid = req.eof();
-                            return;
-                        } else if (command.equals("DELETE")) {
+                        if (command.equals("DELETE")) {
                             mCommand = CMD_DELETE;
                             req.skipSpace();  mArguments.add(req.readFolder());
                             mValid = req.eof();
                             return;
+//                        } else if (command.equals("DONE")) {
+//                            mCommand = CMD_IDLE;  mArguments.add(Boolean.FALSE);
+//                            mValid = req.eof();
+//                            return;
                         }
                         break;
                     case 'E':
@@ -247,7 +246,7 @@ public class ImapHandler extends ProtocolHandler {
                     case 'F':
                         if (command.equals("FETCH")) {
                             mCommand = CMD_FETCH;
-                            List parts = new ArrayList();
+                            List<ImapPartSpecifier> parts = new ArrayList<ImapPartSpecifier>();
                             req.skipSpace();  mArguments.add(req.readSequence());
                             req.skipSpace();  mArguments.add(new Integer(req.readFetch(parts)));
                             mArguments.add(parts);  mArguments.add(byUID);
@@ -269,15 +268,15 @@ public class ImapHandler extends ProtocolHandler {
                         }
                         break;
                     case 'I':
-                        if (command.equals("IDLE")) {
-                            mCommand = CMD_IDLE;  mValid = req.eof();
-                            mArguments.add(IDLE_START);  mArguments.add(Boolean.TRUE);
-                            return;
-                        } else if (command.equals("ID")) {
+                        if (command.equals("ID")) {
                             mCommand = CMD_ID;
                             req.skipSpace();  mArguments.add(req.readParameters(true));
                             mValid = req.eof();
                             return;
+//                        } else if (command.equals("IDLE")) {
+//                            mCommand = CMD_IDLE;  mValid = req.eof();
+//                            mArguments.add(IDLE_START);  mArguments.add(Boolean.TRUE);
+//                            return;
                         }
                         break;
                     case 'L':
@@ -341,7 +340,7 @@ public class ImapHandler extends ProtocolHandler {
                             return;
                         } else if (command.equals("SEARCH")) {
                             mCommand = CMD_SEARCH;
-                            TreeMap insertions = new TreeMap();
+                            TreeMap<Integer, Object> insertions = new TreeMap<Integer, Object>();
                             req.skipSpace();  mArguments.add(req.readSearch(insertions));
                             mArguments.add(insertions);  mArguments.add(byUID);
                             mValid = req.eof();
@@ -381,7 +380,7 @@ public class ImapHandler extends ProtocolHandler {
                             return;
                         } else if (command.equals("SETQUOTA")) {
                             mCommand = CMD_SETQUOTA;
-                            HashMap limits = new HashMap();
+                            HashMap<String, String> limits = new HashMap<String, String>();
                             req.skipSpace();  mArguments.add(req.readAstring());
                             req.skipSpace();  req.skipChar('(');
                             while (req.peekChar() != ')') {
@@ -593,8 +592,8 @@ public class ImapHandler extends ProtocolHandler {
         boolean authenticated = mSession != null;
         String nologin = mServer.allowCleartextLogins() || mStartedTLS || authenticated ? "" : "LOGINDISABLED ";
         String starttls = mStartedTLS || authenticated ? "" : "STARTTLS ";
-        String plain = !mStartedTLS || authenticated ? "" : "AUTH=PLAIN "; 
-        sendUntagged("CAPABILITY IMAP4rev1 " + nologin + starttls + "CHILDREN ID IDLE LITERAL+ LOGIN-REFERRALS NAMESPACE QUOTA UIDPLUS UNSELECT");
+//        String plain = !mStartedTLS || authenticated ? "" : "AUTH=PLAIN "; 
+        sendUntagged("CAPABILITY IMAP4rev1 " + nologin + starttls + "CHILDREN ID LITERAL+ LOGIN-REFERRALS NAMESPACE QUOTA UIDPLUS UNSELECT");
     }
 
     boolean doNOOP(String tag) throws IOException {
@@ -991,13 +990,11 @@ public class ImapHandler extends ProtocolHandler {
         }
         if (pattern.startsWith("/"))
             pattern = pattern.substring(1);
-        ArrayList matches = new ArrayList();
+        ArrayList<String> matches = new ArrayList<String>();
         try {
             synchronized (mMailbox) {
                 Folder root = mMailbox.getFolderById(getContext(), Mailbox.ID_FOLDER_USER_ROOT);
-                List folders = root.getSubfolderHierarchy();
-                for (Iterator it = folders.iterator(); it.hasNext(); ) {
-                    Folder folder = (Folder) it.next();
+                for (Folder folder : root.getSubfolderHierarchy()) {
                     if (!ImapFolder.isFolderVisible(folder))
                         continue;
                     String path = folder.getPath().substring(1);
@@ -1012,8 +1009,8 @@ public class ImapHandler extends ProtocolHandler {
             return canContinue(e);
         }
 
-        for (int i = 0; i < matches.size(); i++)
-            sendUntagged((String) matches.get(i));
+        for (String match : matches)
+            sendUntagged(match);
         sendNotifications(true, false);
         sendOK(tag, "LIST completed");
         return CONTINUE_PROCESSING;
@@ -1048,24 +1045,23 @@ public class ImapHandler extends ProtocolHandler {
             pattern = pattern.substring(1);
 
         try {
-            Map subs;
+            Map<String, String> subs;
             synchronized (mMailbox) {
                 subs = mSession.getMatchingSubscriptions(mMailbox, pattern);
-                for (Iterator it = subs.entrySet().iterator(); it.hasNext(); ) {
-                    Map.Entry hit = (Map.Entry) it.next();
+                for (Map.Entry<String, String> hit : subs.entrySet()) {
                     Folder folder = null;
                     try {
-                        folder = mMailbox.getFolderByPath(getContext(), (String) hit.getKey());
+                        folder = mMailbox.getFolderByPath(getContext(), hit.getKey());
                     } catch (MailServiceException.NoSuchItemException nsie) { }
                     // FIXME: need to determine "name attributes" for mailbox (\Marked, \Unmarked, \Noinferiors, \Noselect)
                     boolean visible = hit.getValue() != null && ImapFolder.isFolderVisible(folder);
                     String attributes = visible ? getFolderAttributes(folder) : "\\Noselect";
-                    hit.setValue("LSUB (" + attributes + ") \"/\" " + ImapFolder.encodeFolder((String) hit.getKey()));
+                    hit.setValue("LSUB (" + attributes + ") \"/\" " + ImapFolder.encodeFolder(hit.getKey()));
                 }
             }
 
-            for (Iterator it = subs.values().iterator(); it.hasNext(); )
-                sendUntagged((String) it.next());
+            for (String sub : subs.values())
+                sendUntagged(sub);
         } catch (ServiceException e) {
             ZimbraLog.imap.warn("LSUB failed", e);
             sendNO(tag, "LSUB failed");
@@ -1139,7 +1135,7 @@ public class ImapHandler extends ProtocolHandler {
             return CONTINUE_PROCESSING;
         }
 
-        ArrayList newTags = new ArrayList();
+        ArrayList<Tag> newTags = new ArrayList<Tag>();
         StringBuffer appendHint = new StringBuffer();
         try {
             synchronized (mMailbox) {
@@ -1228,12 +1224,12 @@ public class ImapHandler extends ProtocolHandler {
 
     private Tag createTag(String name) throws ServiceException {
         // notification will update mTags hash
-        return mMailbox.createTag(getContext(), name, Tag.DEFAULT_COLOR);
+        return mMailbox.createTag(getContext(), name, MailItem.DEFAULT_COLOR);
     }
-    private List findOrCreateTags(List tagNames, List newTags) throws ServiceException {
+    private List<ImapFlag> findOrCreateTags(List tagNames, List<Tag> newTags) throws ServiceException {
         if (tagNames == null || tagNames.size() == 0)
-            return Collections.EMPTY_LIST;
-        ArrayList result = new ArrayList();
+            return Collections.emptyList();
+        ArrayList<ImapFlag> result = new ArrayList<ImapFlag>();
         for (int i = 0; i < tagNames.size(); i++) {
             String name = (String) tagNames.get(i);
             ImapFlag i4flag = mSession.getFlagByName(name);
@@ -1254,18 +1250,15 @@ public class ImapHandler extends ProtocolHandler {
         }
         return result;
     }
-    private void deleteTags(ArrayList ltags) {
-        if (mMailbox == null || ltags == null)
-            return;
-        for (int i = 0; i < ltags.size(); i++) {
-            Tag ltag = (Tag) ltags.get(i);
-            try {
-                // notification will update mTags hash
-                mMailbox.delete(getContext(), ltag.getId(), MailItem.TYPE_TAG);
-            } catch (ServiceException e) {
-                ZimbraLog.imap.warn("failed to delete tag: " + ltag.getName(), e);
-            }
-        }
+    private void deleteTags(List<Tag> ltags) {
+        if (mMailbox != null && ltags != null)
+            for (Tag ltag : ltags)
+                try {
+                    // notification will update mTags hash
+                    mMailbox.delete(getContext(), ltag.getId(), MailItem.TYPE_TAG);
+                } catch (ServiceException e) {
+                    ZimbraLog.imap.warn("failed to delete tag: " + ltag.getName(), e);
+                }
     }
 
     static final Boolean IDLE_START = Boolean.TRUE;
@@ -1459,7 +1452,7 @@ public class ImapHandler extends ProtocolHandler {
         TreeMap insertions = (TreeMap) args.remove(0);
         boolean byUID  = ((Boolean) args.remove(0)).booleanValue();
 
-        ArrayList hits = new ArrayList();
+        ArrayList<Integer> hits = new ArrayList<Integer>();
         try {
             synchronized (mMailbox) {
                 ImapFolder i4folder = mSession.getFolder();
@@ -1498,7 +1491,7 @@ public class ImapHandler extends ProtocolHandler {
                     for (ZimbraHit hit = zqr.getFirstHit(); hit != null; hit = zqr.getNext()) {
                         ImapMessage i4msg = mSession.getFolder().getById(hit.getItemId());
                         if (i4msg != null)
-                        	hits.add(new Integer(byUID ? i4msg.uid : i4msg.seq));
+                        	hits.add(byUID ? i4msg.uid : i4msg.seq);
                     }
                 } finally {
                     zqr.doneWithSearchResults();
@@ -1574,7 +1567,7 @@ public class ImapHandler extends ProtocolHandler {
             attributes |= FETCH_UID;
         boolean markRead = mSession.getFolder().isWritable() && (attributes & FETCH_MARK_READ) != 0;
 
-        List fullMessage = new ArrayList();
+        List<ImapPartSpecifier> fullMessage = new ArrayList<ImapPartSpecifier>();
         if (parts != null && !parts.isEmpty())
             for (Iterator it = parts.iterator(); it.hasNext(); ) {
                 ImapPartSpecifier pspec = (ImapPartSpecifier) it.next();
@@ -1615,8 +1608,7 @@ public class ImapHandler extends ProtocolHandler {
                 }
                 if (!fullMessage.isEmpty()) {
                     raw = mMailbox.getMessageById(getContext(), i4msg.id).getMessageContent();
-                    for (int i = 0; i < fullMessage.size(); i++) {
-                        ImapPartSpecifier pspec = (ImapPartSpecifier) fullMessage.get(i);
+                    for (ImapPartSpecifier pspec : fullMessage) {
                         result.print(empty ? "" : " ");  pspec.write(result, baos, raw);  empty = false;
                     }
                 }
@@ -1703,8 +1695,8 @@ public class ImapHandler extends ProtocolHandler {
 
         String command = (byUID ? "UID STORE" : "STORE");
         boolean allPresent = true;
-        ArrayList newTags = (operation != STORE_REMOVE ? new ArrayList() : null);
-        List responses = new ArrayList();
+        List<Tag> newTags = (operation != STORE_REMOVE ? new ArrayList<Tag>() : null);
+        List<String> responses = new ArrayList<String>();
         try {
             synchronized (mMailbox) {
                 // if it was a STORE [+-]?FLAGS.SILENT, temporarily disable notifications
@@ -1767,8 +1759,8 @@ public class ImapHandler extends ProtocolHandler {
             mSession.getFolder().enableNotifications();
         }
 
-        for (Iterator it = responses.iterator(); it.hasNext(); )
-            sendUntagged((String) it.next());
+        for (String response : responses)
+            sendUntagged(response);
         sendNotifications(false, false);
         // RFC 2180 4.2.1: "If the ".SILENT" suffix is used, and the STORE completed successfully for
         //                  all the non-expunged messages, the server SHOULD return a tagged OK."
@@ -1792,7 +1784,7 @@ public class ImapHandler extends ProtocolHandler {
 
         String command = (byUID ? "UID COPY" : "COPY");
         String copyuid = "";
-        List newMessages = new ArrayList();
+        List<MailItem> newMessages = new ArrayList<MailItem>();
         try {
             synchronized (mMailbox) {
                 Folder folder = mMailbox.getFolderByPath(getContext(), folderName);
@@ -1814,7 +1806,7 @@ public class ImapHandler extends ProtocolHandler {
                     return CONTINUE_PROCESSING;
                 }
 
-                List srcUIDs = new ArrayList(), copyUIDs = new ArrayList();
+                List<Integer> srcUIDs = new ArrayList<Integer>(), copyUIDs = new ArrayList<Integer>();
                 for (Iterator it = i4set.iterator(); it.hasNext(); ) {
                     ImapMessage i4msg = (ImapMessage) it.next();
                     if (i4msg == null)
@@ -1824,8 +1816,8 @@ public class ImapHandler extends ProtocolHandler {
                     if (copy == null)
                         continue;
                     newMessages.add(copy);
-                    srcUIDs.add(new Integer(i4msg.uid));
-                    copyUIDs.add(new Integer(copy.getId()));
+                    srcUIDs.add(i4msg.uid);
+                    copyUIDs.add(copy.getId());
                 }
 
                 if (srcUIDs.size() > 0)
@@ -1865,11 +1857,11 @@ public class ImapHandler extends ProtocolHandler {
         return CONTINUE_PROCESSING;
     }
 
-    private void deleteMessages(List messages) {
+    private void deleteMessages(List<MailItem> messages) {
         if (messages != null && !messages.isEmpty()) {
-            for (Iterator it = messages.iterator(); it.hasNext(); )
+            for (MailItem item : messages)
                 try {
-                    mMailbox.delete(getContext(), ((Message) it.next()).getId(), MailItem.TYPE_MESSAGE);
+                    mMailbox.delete(getContext(), item.getId(), MailItem.TYPE_MESSAGE);
                 } catch (ServiceException e) {
                     ZimbraLog.imap.warn("could not roll back creation of message", e);
                 }
@@ -1893,8 +1885,8 @@ public class ImapHandler extends ProtocolHandler {
             i4folder.checkpointSize();
 
             // notify of any message flag changes
-            for (Iterator it = i4folder.dirtyIterator(); it.hasNext(); ) {
-                ImapMessage i4msg = (ImapMessage) it.next();
+            for (Iterator<ImapMessage> it = i4folder.dirtyIterator(); it.hasNext(); ) {
+                ImapMessage i4msg = it.next();
                 if (i4msg.added)
                     i4msg.added = false;
                 else
@@ -1978,22 +1970,6 @@ public class ImapHandler extends ProtocolHandler {
         if (ZimbraLog.imap.isInfoEnabled()) ZimbraLog.imap.info(withClientInfo(message));
     }
 
-    private void DEBUG(String message, Throwable e) {
-        if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug(withClientInfo(message), e);
-    }
-
-    private void DEBUG(String message) {
-        if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug(withClientInfo(message));
-    }
-
-    private void WARN(String message, Throwable e) {
-        if (ZimbraLog.imap.isWarnEnabled()) ZimbraLog.imap.warn(withClientInfo(message), e);
-    }
-
-    private void WARN(String message) {
-        if (ZimbraLog.imap.isWarnEnabled()) ZimbraLog.imap.warn(withClientInfo(message));
-    }
-
     private StringBuffer withClientInfo(String message) {
         int length = 64;
         if (message != null) length += message.length();
@@ -2002,8 +1978,9 @@ public class ImapHandler extends ProtocolHandler {
 
 
     public static void main(String[] args) throws IOException, ImapException {
-        List fargs = new LinkedList();
-        List parts = new ArrayList();
+        List<Object> fargs = new LinkedList<Object>();
+        List<ImapPartSpecifier> parts = new ArrayList<ImapPartSpecifier>();
+        List<String> pieces = new ArrayList<String>();
         ImapHandler handler = new ImapHandler(null);
         handler.mOutputStream = System.out;
 
@@ -2075,22 +2052,22 @@ public class ImapHandler extends ProtocolHandler {
         handler.doFETCH("A009", fargs);
 
         System.out.println("> A010 FETCH 7 (ENVELOPE BODY.PEEK[1] BODY[HEADER.FIELDS (DATE SUBJECT)]");
-        List headers = new LinkedList();  headers.add("date");  headers.add("subject");
+        List<String> headers = new LinkedList<String>();  headers.add("date");  headers.add("subject");
         parts.clear();  parts.add(new ImapPartSpecifier("BODY", "1", ""));  parts.add(new ImapPartSpecifier("BODY", "", "HEADER.FIELDS").setHeaders(headers));
         fargs.clear();  fargs.add("7");  fargs.add(new Integer(FETCH_ENVELOPE));  fargs.add(parts);  fargs.add(Boolean.FALSE);
         handler.doFETCH("A010", fargs);
 
         System.out.println("> A011 STORE 1 +FLAGS ($MDNSent)");
-        List flags = new ArrayList();  flags.add("$MDNSENT");
+        List<String> flags = new ArrayList<String>();  flags.add("$MDNSENT");
         fargs.clear();  fargs.add("1");  fargs.add(flags);  fargs.add(STORE_ADD);  fargs.add(Boolean.FALSE);  fargs.add(Boolean.FALSE);
         handler.doSTORE("A011", fargs);
 
         ImapRequest req = new ImapRequest("X001 LOGIN user1@example.zimbra.com \"\\\\\\\"test123\\\"\\\\\"");
-        parts.clear();  parts.add(req.readTag());  req.skipSpace();  parts.add(req.readAtom());  req.skipSpace();  parts.add(req.readAstring());  req.skipSpace();  parts.add(req.readAstring());  assert(req.eof());
-        System.out.println(parts);
+        pieces.clear();  pieces.add(req.readTag());  req.skipSpace();  pieces.add(req.readAtom());  req.skipSpace();  pieces.add(req.readAstring());  req.skipSpace();  pieces.add(req.readAstring());  assert(req.eof());
+        System.out.println(pieces);
 
         req = new ImapRequest("X002 CREATE ~peter/mail/&U,BTFw-/&ZeVnLIqe-");
-        parts.clear();  parts.add(req.readTag());  req.skipSpace();  parts.add(req.readAtom());  req.skipSpace();  parts.add(req.readFolder());  assert(req.eof());
-        System.out.println(parts);
+        pieces.clear();  pieces.add(req.readTag());  req.skipSpace();  pieces.add(req.readAtom());  req.skipSpace();  pieces.add(req.readFolder());  assert(req.eof());
+        System.out.println(pieces);
     }
 }
