@@ -406,8 +406,9 @@ public class IMPersona {
     
     static IMPersona decodeFromMetadata(IMAddr address, Metadata meta) throws ServiceException
     {
-        String mdAddr = meta.get(FN_ADDRESS);
-        if (mdAddr.equals(address.getAddr())) {
+        // FIXME: how are config entries getting written w/o an ADDRESS setting?  
+        String mdAddr = meta.get(FN_ADDRESS, null); 
+        if (mdAddr!=null && mdAddr.equals(address.getAddr())) {
             IMPersona toRet = new IMPersona(address);
 
             IMPresence presence = IMPresence.decodeMetadata(meta.getMap(FN_PRESENCE));
