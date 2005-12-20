@@ -235,7 +235,7 @@ public class ZimbraContext {
             HttpServletRequest req = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
             if (req != null) {
             	mProxyTarget = new ProxyTarget(targetServerId, mRawAuthToken, req);
-                mIsProxyRequest = mProxyTarget != null && !mProxyTarget.isTargetLocal();
+                mIsProxyRequest = !mProxyTarget.isTargetLocal();
             } else
                 sLog.warn("Missing SERVLET_REQUEST key in request context");
         }

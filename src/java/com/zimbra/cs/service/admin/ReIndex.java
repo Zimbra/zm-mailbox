@@ -33,7 +33,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraContext;
 
 public class ReIndex extends AdminDocumentHandler {
@@ -51,10 +50,10 @@ public class ReIndex extends AdminDocumentHandler {
     public boolean domainAuthSufficient(Map context) {
         return true;
     }
-    
-    public Element handle(Element request, Map context) throws ServiceException, SoapFaultException {
+
+    public Element handle(Element request, Map context) throws ServiceException {
         ZimbraContext zc = getZimbraContext(context);
-        
+
         String action = request.getAttribute(MailService.E_ACTION);
         
         Element mreq = request.getElement(AdminService.E_MAILBOX);
