@@ -54,11 +54,11 @@ public class IcsFormatter extends Formatter {
         //ZimbraLog.mailbox.info("end = "+new Date(context.getEndTime()));
         Iterator iterator = getMailItems(context, mailItem, context.getStartTime(), context.getEndTime());
         
-        List appts = new ArrayList();
+        List<Appointment> appts = new ArrayList<Appointment>();
         // this is lame
         while (iterator.hasNext()) {
             MailItem item = (MailItem) iterator.next();
-            if (item instanceof Appointment) appts.add(item);
+            if (item instanceof Appointment) appts.add((Appointment) item);
         }
         
         context.resp.setContentType("text/calendar");
