@@ -1,8 +1,3 @@
-Return-Path: <pubcookie-dev-bounces@mailman.u.washington.edu>
-Received: from popserver1.Stanford.EDU ([unix socket]) by
-	popserver1.Stanford.EDU (Cyrus v2.1.16) with LMTP; Fri, 27 Feb 2004
-	15:25:16 -0800
-X-Sieve: CMU Sieve 2.2
 Received: from leland2.Stanford.EDU (leland2.Stanford.EDU [171.67.16.118])
 	by popserver1.Stanford.EDU (8.12.10/8.12.10) with ESMTP id i1RNPFrW011464;
 	Fri, 27 Feb 2004 15:25:15 -0800 (PST)
@@ -23,64 +18,48 @@ Received: from red0.cac.washington.edu (red0.cac.washington.edu
 Received: from localhost (dors@localhost)ESMTP id i1RNOhSX009487; Fri, 27
 	Feb 2004 15:24:43 -0800
 Date: Fri, 27 Feb 2004 15:24:43 -0800 (PST)
-X-Zimbra-Received: Fri, 27 Feb 2004 15:24:43 -0800 (PST)
+X-Zimbra-Received: Fri, 27 Feb 2005 15:24:43 -0800 (PST)
 From: =?iso-8859-2?Q?Andrzej_K=B1kol?=  <dors@cac.washington.edu>
-To: Jim Fox <fox@cac.washington.edu>, =?iso-8859-2?q?mi=E9rt_nem_jelzi_a_hib=E1t=3F?= <sam@bam.com>
-Subject: Re: [pubcookie-dev] summary of current activities (anchors)
-In-Reply-To: <Pine.LNX.4.58.0402270848570.15454@los.cac.washington.edu>
-Message-ID: <Pine.LNX.4.58.0402271502300.7302@red0.cac.washington.edu>
-References: <Pine.LNX.4.58.0402241658020.7646@red1.cac.washington.edu>
-	 <Pine.LNX.4.58.0402270848570.15454@los.cac.washington.edu>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-X-Uwash-Spam: Gauge=IIIIIIII, Probability=8%, Report='__TO_MALFORMED_2 0,
-	__IN_REP_TO 0, __HAS_MSGID 0, __SANE_MSGID 0, __REFERENCES 0,
-	__MIME_VERSION 0, __CT_TEXT_PLAIN 0, __CT 0, EMAIL_ATTRIBUTION 0,
-	QUOTED_EMAIL_TEXT 0, __MIME_TEXT_ONLY 0, REFERENCES 0.000, IN_REP_TO 0'
-cc: pubcookie-dev@u.washington.edu
-X-BeenThere: pubcookie-dev@u.washington.edu
-X-Mailman-Version: 2.1
-Precedence: list
-List-Id: Pubcookie Developers List <pubcookie-dev.u.washington.edu>
-List-Unsubscribe:
-	<http://mailman.u.washington.edu/mailman/listinfo/pubcookie-dev>,
-	<mailto:pubcookie-dev-request@mailman.u.washington.edu?subject=unsubscribe>
-List-Archive: <http://mailman.u.washington.edu/pipermail/pubcookie-dev>
-List-Post: <mailto:pubcookie-dev@u.washington.edu>
-List-Help:
-	<mailto:pubcookie-dev-request@mailman.u.washington.edu?subject=help>
-List-Subscribe:
-	<http://mailman.u.washington.edu/mailman/listinfo/pubcookie-dev>,
-	<mailto:pubcookie-dev-request@mailman.u.washington.edu?subject=subscribe>
-Sender: pubcookie-dev-bounces@mailman.u.washington.edu
-Errors-To: pubcookie-dev-bounces@mailman.u.washington.edu
-X-Evolution-Source: imap://smith@smith.pobox.stanford.edu/
-X-Evolution: 00000001-0110
+To: Jim Fox <fox@dmd.washington.edu>
+Subject: Test Phone Number Formats
 
 
-On Fri, 27 Feb 2004, Jim Fox wrote:
+When international phone numbers appear in text, they are not recognized. I
+think this would be pre-GA enhancement that we need in general, but I think it's
+a bug that the last 10 digits in the following text are recognized as U.S.
+numbers (i.e., that the +91 gets dropped). My $.02. -S
 
-> I think we cannot preserve these with our present methodology.
-> The browser remembers the anchor, but does not send it with the
-> request.  Pubcookie never sees it.
 
-Wow ... for some reason I thought the browser would
-have sent the anchor in the request, e.g. "GET
-/foo.html#bar". But they're smarter than that; they
-remember it, i.e. "GET /foo.html", just like you said.
++91-805-123-6738 (home)
++91-988-019-3964 (cell)
 
-I think we can leave it where it stands: a known
-issue, and one that doesn't come up often and has a
-workaround. In that respect it's something like the
-"multipart/form-data" issue, where the browser has
-to obtain a session cookie before attempting the
-request.
+The following number:
 
-Sorry for creating such a hullabaloo about it. I'll
-mark it as "completed" online.
++91-805-123-6738
 
--Nathan
-_______________________________________________
-pubcookie-dev mailing list
-pubcookie-dev@u.washington.edu
-http://mailman.u.washington.edu/mailman/listinfo/pubcookie-dev
+is recognized as "805-123-6738" and attempts to call +1805-123-6738.
+
++1-800-555-1212 (prefered) (US)
++1.800.555.1212 (allowed) (US)
++18005551212 (allowed) (US)
++41-22-730-5989 (Switzerland)
+
+800-555-1212
+(800) 555-1212
+555-1212
++1 800 555 1212 (allowed, but not searchable) 
+
+adfasdf as +1-800-555-1212 (prefered) (US)
+f fadf a +1.800.555.1212 (allowed) (US)
+dfsadf as asd +18005551212 (allowed) (US)
+dfasd  +41-22-730-5989 (Switzerland)
+sd
+df sdaf 800-555-1212
+sdf asdf (800) 555-1212
+dsf asdf 555-1212
+dfs +1 800 555 1212 (allowed, but not searchable) 
+
+el: 740-576-4230
+fax: 770-556-4200 
+
+Phone numbers are to be expressed in ITU E.123 compliant format: +1-800-555-1212 Where +1 in this example is the country code for the US.
