@@ -31,13 +31,15 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.zimbra.cs.util.ZimbraLog;
+
 public class OzSmtpTransparency {
     
     public static ByteBuffer apply(ByteBuffer orig) {
         
         ByteBuffer work = orig.duplicate();
         
-        OzByteArrayMatcher matcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLFDOTCRLF);
+        OzByteArrayMatcher matcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLFDOTCRLF, ZimbraLog.lmtp);
         
         List positions = null;
         

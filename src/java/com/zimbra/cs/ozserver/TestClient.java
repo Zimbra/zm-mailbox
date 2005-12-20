@@ -52,9 +52,9 @@ import java.security.cert.X509Certificate;
 //
 // helo           -> ok
 //
-// sum            -> md5sum
+// sum            -> calculated sum
 //
-// nsum <n>       -> md5sum
+// nsum <n>       -> calculated sum
 //
 // quit           -> ok and close()
 

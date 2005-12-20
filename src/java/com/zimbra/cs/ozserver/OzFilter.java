@@ -35,7 +35,7 @@ public interface OzFilter {
 
     void write(ByteBuffer wbb, boolean flush) throws IOException;
 
-    void writeCompleted(int totalWritten) throws IOException;
+    void writeCompleted() throws IOException;
 
     void closeNow() throws IOException;
 

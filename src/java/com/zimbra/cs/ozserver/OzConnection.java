@@ -331,7 +331,13 @@ public class OzConnection {
     }
 
     /* Do not call directly.  For use by filters. */
-    public void processRead(ByteBuffer dataBuffer) throws IOException { 
+    public void processRead(ByteBuffer dataBuffer) throws IOException {
+        synchronized (mReadLock) {
+            processReadLocked(dataBuffer);
+        }
+    }
+
+    public void processReadLocked(ByteBuffer dataBuffer) throws IOException { 
         dataBuffer.flip();
         
         // We may have read more than one PDU 
@@ -387,9 +393,14 @@ public class OzConnection {
         public void run() {
             addToNDC();
             try {
+                boolean allWritten;
                 synchronized (mWriteBuffers) {
-                    writeLocked();
+                    allWritten = writeLocked();
                 }
+                if (mFilter != null && allWritten) {
+                    mFilter.writeCompleted();
+                }
+
             } catch (IOException ioe) {
                 mLog.info("exception occured");
             } finally {
@@ -397,7 +408,7 @@ public class OzConnection {
             }
         }
         
-        private void writeLocked() throws IOException {
+        private boolean writeLocked() throws IOException {
             int totalWritten = 0;
             boolean allWritten = true;
             for (Iterator<ByteBuffer> iter = mWriteBuffers.iterator(); iter.hasNext(); iter.remove()) {
@@ -426,14 +437,12 @@ public class OzConnection {
             if (totalWritten == 0) mLog.warn("wrote no bytes to a write ready channel");
             
             if (allWritten) {
-                if (mFilter != null) {
-                    mFilter.writeCompleted(totalWritten);
-                }
-
                 if (mCloseAfterWrite) {
                     closeNow();
                 }
             }            
+            
+            return allWritten;
         }
     }
     

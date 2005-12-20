@@ -262,8 +262,8 @@ public class OzTLSFilter implements OzFilter {
     
     private boolean mPendingFlush;
     
-    public void writeCompleted(int totalWritten) throws IOException {
-        if (mDebug) debug("write completed " + totalWritten + " checking if handshake complete: " + mHandshakeStatus);
+    public void writeCompleted() throws IOException {
+        if (mDebug) debug("write completed checking if handshake complete: " + mHandshakeStatus);
 
         synchronized (mReadBB) {
             switch (mHandshakeStatus) {

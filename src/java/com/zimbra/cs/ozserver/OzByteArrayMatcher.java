@@ -28,12 +28,12 @@ package com.zimbra.cs.ozserver;
 import java.nio.ByteBuffer;
 
 import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 public class OzByteArrayMatcher implements OzMatcher {
    
-    private static Log mLog = LogFactory.getLog(OzByteArrayMatcher.class);
-
+    private Log mLog;
+    private final boolean mTrace;
+    
     public static final byte CR = 13;
     public static final byte LF = 10;
     public static final byte DOT = '.';
@@ -45,50 +45,51 @@ public class OzByteArrayMatcher implements OzMatcher {
     private final int mMatchSequenceLength;
     private int mMatched;
     
-    public OzByteArrayMatcher(byte[] endSequence) {
+    public OzByteArrayMatcher(byte[] endSequence, Log log) {
         mMatchSequence = endSequence;
         mMatchSequenceLength = endSequence.length;
         mMatched = 0;
+        mLog = log;
+        mTrace = log.isTraceEnabled();
     }
     
     public boolean match(ByteBuffer buf) {
         assert(mMatched < mMatchSequenceLength);
-        final boolean trace = true; // mLog.isTraceEnabled(); 
         
         int n = buf.remaining();
-        if (trace) mLog.trace("new bytes to look at=" + n + ", already matched=" + mMatched);
+        if (mTrace) mLog.trace("new bytes to look at=" + n + ", already matched=" + mMatched);
         
-        StringBuilder tsb;
-        if (trace) tsb = new StringBuilder("byte array matcher trace ");
+        StringBuilder tsb = null;
+        if (mTrace) tsb = new StringBuilder("byte array matcher trace ");
         
         for (int i = 0; i < n; i++) {
             byte b = buf.get();
             
-            if (trace) {
+            if (mTrace) {
                 if (b >= 32 && b <=126) tsb.append("'" + (char)b + "'/"); 
-                if (trace) tsb.append((int)b + " ");
+                if (mTrace) tsb.append((int)b + " ");
             }
 
             if (mMatchSequence[mMatched] == b) {
                 mMatched++;
-                if (trace) tsb.append("+" + mMatched + " ");
+                if (mTrace) tsb.append("+" + mMatched + " ");
                 if (mMatched == mMatchSequenceLength) {
-                    if (trace) mLog.trace(tsb.toString());
+                    if (mTrace) mLog.trace(tsb.toString());
                     return true;
                 }
             } else {
                 mMatched = 0; // break the match
                 if (mMatchSequence[mMatched] == b) { // but now does it match start of sequence?
                     mMatched++;
-                    if (trace) tsb.append("+" + mMatched + " ");
+                    if (mTrace) tsb.append("+" + mMatched + " ");
                     if (mMatched == mMatchSequenceLength) {
-                        if (trace) mLog.trace(tsb.toString());
+                        if (mTrace) mLog.trace(tsb.toString());
                         return true;
                     }
                 }
             }
         }
-        if (trace) mLog.trace(tsb.toString());
+        if (mTrace) mLog.trace(tsb.toString());
         return false;
     }
 

@@ -1861,7 +1861,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
         mConnection.writeAscii(line, true, flush);
     }
 
-    private OzByteArrayMatcher mCommandMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLF);
+    private OzByteArrayMatcher mCommandMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLF, ZimbraLog.imap);
 
     private OzCountingMatcher mLiteralMatcher = new OzCountingMatcher();
     

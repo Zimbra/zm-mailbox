@@ -28,11 +28,13 @@ package com.zimbra.cs.ozserver;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import com.zimbra.cs.util.ZimbraLog;
+
 class TestConnectionHandler implements OzConnectionHandler {
 
-    private OzByteArrayMatcher mCommandMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLF);
+    private OzByteArrayMatcher mCommandMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLF, ZimbraLog.misc);
     
-    private OzByteArrayMatcher mSumDataMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLFDOTCRLF);
+    private OzByteArrayMatcher mSumDataMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLFDOTCRLF, ZimbraLog.misc);
     
     private OzCountingMatcher mNsumDataMatcher = new OzCountingMatcher();
     
