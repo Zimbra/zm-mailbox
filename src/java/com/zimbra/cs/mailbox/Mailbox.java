@@ -753,31 +753,25 @@ public class Mailbox {
         if (section == null || section.equals(""))
             return null;
 
-        boolean success = false;
+        // note: defaulting to true, not false...
+        boolean success = true;
         try {
             beginTransaction("getConfig", octxt, null);
 
             // make sure they have sufficient rights to view the config
-            if (!hasFullAccess()) {
-                success = true;
+            if (!hasFullAccess())
                 return null;
-            }
 
             Metadata meta = mCurrentChange.config == null ? mData.config : mCurrentChange.config;
-            if (meta == null) {
-                success = true;
+            if (meta == null)
                 return null;
-            }
             String config = meta.get(section, null);
-            if (config == null) {
-                success = true;
+            if (config == null)
                 return null;
-            }
             try {
-                meta = new Metadata(config);
-                success = true;
-                return meta;
+                return new Metadata(config);
             } catch (ServiceException e) {
+                success = false;
                 ZimbraLog.mailbox.warn("could not decode config metadata for section:" + section);
                 return null;
             }
@@ -1401,11 +1395,8 @@ public class Mailbox {
                 } catch (IOException iox) { }
                 try {
                     StoreManager sm = StoreManager.getInstance();
-                    List volumes = Volume.getAll();
-                    for (Iterator iter = volumes.iterator(); iter.hasNext(); ) {
-                    	Volume vol = (Volume) iter.next();
+                    for (Volume vol : Volume.getAll())
                         sm.deleteStore(this, vol.getId());
-                    }
                 } catch (IOException iox) { }
     
                 // twiddle the mailbox lock [must be the last command of this function!]
@@ -1997,9 +1988,9 @@ public class Mailbox {
                         if (tag.getModifiedSequence() > lastSync && !(tag instanceof Flag))
                             result.add(tag);
                     }
-            } else if (type == MailItem.TYPE_FOLDER || type == MailItem.TYPE_SEARCHFOLDER) {
+            } else if (type == MailItem.TYPE_FOLDER || type == MailItem.TYPE_SEARCHFOLDER || type == MailItem.TYPE_MOUNTPOINT) {
                 for (Folder subfolder : mFolderCache.values())
-                    if (type != MailItem.TYPE_SEARCHFOLDER || subfolder instanceof SearchFolder)
+                    if (type == MailItem.TYPE_FOLDER || subfolder.getType() == type)
                         if (subfolder.getModifiedSequence() > lastSync)
                             result.add(subfolder);
                 Collections.sort(result);
@@ -2264,7 +2255,7 @@ public class Mailbox {
 //        return cal;
 //    }
     
-    public synchronized ZVCalendar getZCalendarForAppointments(Collection appts) throws ServiceException {
+    public synchronized ZVCalendar getZCalendarForAppointments(Collection<Appointment> appts) throws ServiceException {
         ZVCalendar cal = new ZVCalendar();
 
         // REPLY
@@ -2274,25 +2265,21 @@ public class Mailbox {
         {
             ICalTimeZone localTz = getAccount().getTimeZone();
             TimeZoneMap tzmap = new TimeZoneMap(localTz);
-                
-            for (Iterator iter = appts.iterator(); iter.hasNext();) {
-                Appointment appt = (Appointment)iter.next();
+
+            for (Appointment appt : appts)
                 tzmap.add(appt.getTimeZoneMap());
-            }
                 
             // iterate the tzmap and add all the VTimeZone's 
             // (TODO: should this code live in TimeZoneMap???) 
-            for (Iterator iter = tzmap.tzIterator(); iter.hasNext();) {
+            for (Iterator iter = tzmap.tzIterator(); iter.hasNext(); ) {
                 ICalTimeZone cur = (ICalTimeZone) iter.next();
                 cal.addComponent(cur.newToVTimeZone());
             }
         }
             
         // build all the event components and add them to the Calendar
-        for (Iterator iter = appts.iterator(); iter.hasNext();) {
-            Appointment appt = (Appointment)iter.next();
+        for (Appointment appt : appts)
             appt.appendRawCalendarData(cal);
-        }
         return cal;
     }
     
@@ -2314,7 +2301,7 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("getCalendarForRange", octxt);
-            Collection /* Appointment */ appts = getAppointmentsForRange(octxt, start, end, folderId, null);
+            Collection<Appointment> appts = getAppointmentsForRange(octxt, start, end, folderId, null);
             return getZCalendarForAppointments(appts);
         } finally {
             endTransaction(success);
@@ -3624,17 +3611,15 @@ public class Mailbox {
             emptyFolder(octxt, folderId, false);
 
         // add the newly-fetched items to the folder
-        for (Iterator it = sdata.items.iterator(); it.hasNext(); ) {
-            Object item = it.next();
+        for (Object obj : sdata.items)
             try {
-                if (item instanceof Invite)
-                    addInvite(octxt, (Invite) item, folderId, true, null);
-                else if (item instanceof ParsedMessage)
-                    addMessage(octxt, (ParsedMessage) item, folderId, false, Flag.FLAG_UNREAD, null);
+                if (obj instanceof Invite)
+                    addInvite(octxt, (Invite) obj, folderId, true, null);
+                else if (obj instanceof ParsedMessage)
+                    addMessage(octxt, (ParsedMessage) obj, folderId, false, Flag.FLAG_UNREAD, null);
             } catch (IOException e) {
                 throw ServiceException.FAILURE("IOException", e);
             }
-        }
 
         // update the subscription to avoid downloading items twice
         if (subscription && sdata.lastDate > 0)
@@ -3949,33 +3934,30 @@ public class Mailbox {
             //    unblock the commit on indexing.
             if (indexRedo != null)
                 indexRedo.allowCommit();
-            
+
             // 7. We are finally done with database and redo commits.
             //    Cache update comes last.
             commitCache(mCurrentChange);
         }
     }
     
-    public synchronized void postIMNotification(IMNotification n) {
+    public synchronized void postIMNotification(IMNotification imn) {
         for (Session session : mListeners)
-            session.notifyIM(n);
+            session.notifyIM(imn);
     }
 
     private void commitCache(MailboxChange change) {
+        if (change == null)
+            return;
+
+        // save for notifications (below)
+        PendingModifications dirty = null;
+        if (dirty != null && dirty.hasNotifications()) {
+            dirty = change.mDirty;
+            change.mDirty = new PendingModifications();
+        }
+
         try {
-            // committing changes, so notify any listeners
-            if (!mListeners.isEmpty() && change.mDirty != null && change.mDirty.hasNotifications())
-                for (Session session : new ArrayList<Session>(mListeners))
-                    session.notifyPendingChanges(change.mDirty);
-
-            // don't care about committed changes to external items
-            MailItem.PendingDelete deleted = null;
-            for (Iterator it = change.mOtherDirtyStuff.iterator(); it.hasNext(); ) {
-                Object obj = it.next();
-                if (obj instanceof MailItem.PendingDelete)
-                    deleted = ((MailItem.PendingDelete) obj).add(deleted);
-            }
-
             // the mailbox data has changed, so commit the changes
             if (change.sync != null)
                 mData.trackSync = change.sync.booleanValue();
@@ -3985,12 +3967,18 @@ public class Mailbox {
                 mData.lastItemId = change.itemId;
             if (change.contacts != MailboxChange.NO_CHANGE)
                 mData.contacts = change.contacts;
+            if (change.config != null)
+                mData.config = change.config;
             if (change.changeId != MailboxChange.NO_CHANGE && change.changeId > mData.lastChangeId) {
                 mData.lastChangeId   = change.changeId;
                 mData.lastChangeDate = change.timestamp;
             }
-            if (change.config != null)
-                mData.config = change.config;
+
+            // accumulate all the info about deleted items; don't care about committed changes to external items
+            MailItem.PendingDelete deleted = null;
+            for (Object obj : change.mOtherDirtyStuff)
+                if (obj instanceof MailItem.PendingDelete)
+                    deleted = ((MailItem.PendingDelete) obj).add(deleted);
 
             // delete any index entries associated with items deleted from db
             if (deleted != null && deleted.indexIds != null && deleted.indexIds.size() > 0)
@@ -4010,34 +3998,41 @@ public class Mailbox {
             // delete any blobs associated with items deleted from db/index
             StoreManager sm = StoreManager.getInstance();
             if (deleted != null && deleted.blobs != null)
-                for (Iterator it = deleted.blobs.iterator(); it.hasNext(); ) {
-                    MailboxBlob blob = (MailboxBlob) it.next();
+                for (MailboxBlob blob : deleted.blobs)
                     try {
                         sm.delete(blob);
                     } catch (IOException e) {
                         ZimbraLog.mailbox.warn("could not delete blob " + blob.getPath() + " during commit");
                     }
-                }
         } catch (RuntimeException e) {
             ZimbraLog.mailbox.error("ignoring error during cache commit", e);
         } finally {
             // keep our MailItem cache at a reasonable size
             trimItemCache();
-
-            // get ready for the next change
+            // make sure we're ready for the next change
             change.reset();
         }
+
+        // committed changes, so notify any listeners
+        if (!mListeners.isEmpty() && dirty != null && dirty.hasNotifications())
+            for (Session session : new ArrayList<Session>(mListeners))
+                try {
+                    session.notifyPendingChanges(dirty);
+                } catch (RuntimeException e) {
+                    ZimbraLog.mailbox.error("ignoring error during notification", e);
+                }
     }
 
     private void rollbackCache(MailboxChange change) {
+        if (change == null)
+            return;
+
         try {
             // rolling back changes, so purge dirty items from the various caches
-            Map cache = mCurrentChange.itemCache;
-            Map[] maps = new Map[] {change.mDirty.created, change.mDirty.deleted, change.mDirty.modified};
-            for (int i = 0; i < maps.length; i++)
-                if (maps[i] != null)
-                    for (Iterator it = maps[i].values().iterator(); it.hasNext(); ) {
-                        Object obj = it.next();
+            Map cache = change.itemCache;
+            for (Map map : new Map[] {change.mDirty.created, change.mDirty.deleted, change.mDirty.modified})
+                if (map != null)
+                    for (Object obj : map.values()) {
                         if (obj instanceof Change)
                             obj = ((Change) obj).what;
 
@@ -4054,11 +4049,10 @@ public class Mailbox {
             // roll back any changes to external items
             // FIXME: handle mOtherDirtyStuff:
             //    - LeafNodeInfo (re-index all un-indexed files)
-            //    - MailboxBlob         (delink/remove new file)
+            //    - MailboxBlob  (delink/remove new file)
             //    - String       (remove from mConvHashes map)
             StoreManager sm = StoreManager.getInstance();
-            for (Iterator it = change.mOtherDirtyStuff.iterator(); it.hasNext(); ) {
-                Object obj = it.next();
+            for (Object obj : change.mOtherDirtyStuff) {
                 if (obj instanceof MailboxBlob) {
                     MailboxBlob blob = (MailboxBlob) obj;
                     try {
@@ -4073,17 +4067,17 @@ public class Mailbox {
                     } catch (IOException e) {
                         ZimbraLog.mailbox.warn("could not delete blob " + blob.getPath() + " during rollback");
                     }
-                } else if (obj instanceof String && obj != null)
+                } else if (obj instanceof String && obj != null) {
                     mConvHashes.remove(obj);
+                }
             }
         } catch (RuntimeException e) {
             ZimbraLog.mailbox.error("ignoring error during cache rollback", e);
         } finally {
             // keep our MailItem cache at a reasonable size
             trimItemCache();
-
             // toss any pending changes to the Mailbox object and get ready for the next change
-            mCurrentChange.reset();
+            change.reset();
         }
     }
 
@@ -4276,8 +4270,8 @@ public class Mailbox {
         }
     }
 
-    public synchronized WikiItem createWiki(OperationContext oc, ParsedMessage pm, int folderId) throws ServiceException {
-    	beginTransaction("wiki", oc);
+    public synchronized WikiItem createWiki(OperationContext octxt, ParsedMessage pm, int folderId) throws ServiceException {
+    	beginTransaction("wiki", octxt);
     	int itemId = getNextItemId(ID_AUTO_INCREMENT);
        	short volumeId = Volume.getCurrentMessageVolume().getId();
        	WikiItem wiki;
@@ -4301,7 +4295,7 @@ public class Mailbox {
             data.size       = rawSize;
             data.blobDigest = rawDigest;
 
-            wiki = WikiItem.create(this, data, pm, oc.authuser.getId());
+            wiki = WikiItem.create(this, data, pm, octxt.authuser.getId());
             mCurrentChange.setIndexedItem(wiki, null);
 
             sm.link(blob, this, itemId, wiki.getSavedSequence(), volumeId);
@@ -4321,7 +4315,7 @@ public class Mailbox {
     }
 
     public WikiItem getWikiById(int id) throws ServiceException {
-    	return (WikiItem)getItemById(id, MailItem.TYPE_WIKI);
+    	return (WikiItem) getItemById(id, MailItem.TYPE_WIKI);
     }
     
     public static void dumpMailboxCache() {
