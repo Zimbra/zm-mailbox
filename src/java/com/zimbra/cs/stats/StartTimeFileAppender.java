@@ -30,9 +30,6 @@ import java.util.Date;
 
 import org.apache.log4j.FileAppender;
 
-import com.zimbra.cs.util.SystemUtil;
-import com.zimbra.cs.util.ZimbraLog;
-
 public class StartTimeFileAppender extends FileAppender {
     
     private static final SimpleDateFormat TIMESTAMP_FORMATTER =

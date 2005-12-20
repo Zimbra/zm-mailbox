@@ -27,7 +27,6 @@ package com.zimbra.cs.mailbox.calendar;
 
 import java.text.ParseException;
 import java.util.Date;
-import java.util.TimeZone;
 
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Metadata;

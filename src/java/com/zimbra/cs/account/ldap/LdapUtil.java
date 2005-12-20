@@ -60,7 +60,6 @@ import com.zimbra.cs.account.Domain.SearchGalResult;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.stats.StopWatch;
-import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.ZimbraLog;
 
 /**

@@ -35,7 +35,6 @@ import java.util.Iterator;
 import java.util.Map;
 
 import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.ServiceException;
 
 
