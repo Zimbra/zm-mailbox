@@ -73,13 +73,12 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
     static final char[] LINE_SEPARATOR       = { '\r', '\n' };
     static final byte[] LINE_SEPARATOR_BYTES = { '\r', '\n' };
 
-    private static final DateFormat mTimeFormat   = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss Z", Locale.US);
-    private static final DateFormat mDateFormat   = new SimpleDateFormat("dd-MMM-yyyy", Locale.US);
-    private static final DateFormat mZimbraFormat = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
+    static final DateFormat mTimeFormat   = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss Z", Locale.US);
+    static final DateFormat mDateFormat   = new SimpleDateFormat("dd-MMM-yyyy", Locale.US);
+    static final DateFormat mZimbraFormat = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
 
     private ImapSession mSession;
     private Mailbox     mMailbox;
-    private LinkedList  mPendingCommands = new LinkedList();
     private OzImapRequest mIncompleteRequest = null;
     private boolean     mStartedTLS;
     private boolean     mGoodbyeSent;
@@ -126,7 +125,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
         boolean mValid;
         String  mTag;
         int     mCommand;
-        List    mArguments = new LinkedList();
+        List<Object> mArguments = new LinkedList<Object>();
 
         ImapCommand(OzImapRequest req, ImapSession session) throws IOException, ImapException {
             if (session != null && session.isIdle()) {
@@ -225,7 +224,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
                     case 'F':
                         if (command.equals("FETCH")) {
                             mCommand = CMD_FETCH;
-                            List parts = new ArrayList();
+                            List<ImapPartSpecifier> parts = new ArrayList<ImapPartSpecifier>();
                             req.skipSpace();  mArguments.add(req.readSequence());
                             req.skipSpace();  mArguments.add(new Integer(req.readFetch(parts)));
                             mArguments.add(parts);  mArguments.add(byUID);
@@ -319,7 +318,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
                             return;
                         } else if (command.equals("SEARCH")) {
                             mCommand = CMD_SEARCH;
-                            TreeMap insertions = new TreeMap();
+                            TreeMap<Integer, Object> insertions = new TreeMap<Integer, Object>();
                             req.skipSpace();  mArguments.add(req.readSearch(insertions));
                             mArguments.add(insertions);  mArguments.add(byUID);
                             mValid = req.eof();
@@ -359,7 +358,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
                             return;
                         } else if (command.equals("SETQUOTA")) {
                             mCommand = CMD_SETQUOTA;
-                            HashMap limits = new HashMap();
+                            HashMap<String, String> limits = new HashMap<String, String>();
                             req.skipSpace();  mArguments.add(req.readAstring());
                             req.skipSpace();  req.skipChar('(');
                             while (req.peekChar() != ')') {
@@ -543,7 +542,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
         boolean authenticated = mSession != null;
         String nologin =  allowCleartextLogin() || mStartedTLS || authenticated ? "" : "LOGINDISABLED ";
         String starttls = mStartedTLS || authenticated ? "" : "STARTTLS ";
-        String plain = !mStartedTLS || authenticated ? "" : "AUTH=PLAIN "; 
+//        String plain = !mStartedTLS || authenticated ? "" : "AUTH=PLAIN "; 
         sendUntagged("CAPABILITY IMAP4rev1 " + nologin + starttls + "CHILDREN ID IDLE LITERAL+ LOGIN-REFERRALS NAMESPACE QUOTA UIDPLUS UNSELECT");
     }
 
@@ -921,13 +920,11 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
         }
         if (pattern.startsWith("/"))
             pattern = pattern.substring(1);
-        ArrayList matches = new ArrayList();
+        ArrayList<String> matches = new ArrayList<String>();
         try {
             synchronized (mMailbox) {
                 Folder root = mMailbox.getFolderById(getContext(), Mailbox.ID_FOLDER_USER_ROOT);
-                List folders = root.getSubfolderHierarchy();
-                for (Iterator it = folders.iterator(); it.hasNext(); ) {
-                    Folder folder = (Folder) it.next();
+                for (Folder folder : root.getSubfolderHierarchy()) {
                     if (!ImapFolder.isFolderVisible(folder))
                         continue;
                     String path = folder.getPath().substring(1);
@@ -942,8 +939,8 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
             return canContinue(e);
         }
 
-        for (int i = 0; i < matches.size(); i++)
-            sendUntagged((String) matches.get(i));
+        for (String match : matches)
+            sendUntagged(match);
         sendNotifications(true, false);
         sendOK(tag, "LIST completed");
         return CONTINUE_PROCESSING;
@@ -978,24 +975,23 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
             pattern = pattern.substring(1);
 
         try {
-            Map subs;
+            Map<String, String> subs;
             synchronized (mMailbox) {
                 subs = mSession.getMatchingSubscriptions(mMailbox, pattern);
-                for (Iterator it = subs.entrySet().iterator(); it.hasNext(); ) {
-                    Map.Entry hit = (Map.Entry) it.next();
+                for (Map.Entry<String, String> hit : subs.entrySet()) {
                     Folder folder = null;
                     try {
-                        folder = mMailbox.getFolderByPath(getContext(), (String) hit.getKey());
+                        folder = mMailbox.getFolderByPath(getContext(), hit.getKey());
                     } catch (MailServiceException.NoSuchItemException nsie) { }
                     // FIXME: need to determine "name attributes" for mailbox (\Marked, \Unmarked, \Noinferiors, \Noselect)
                     boolean visible = hit.getValue() != null && ImapFolder.isFolderVisible(folder);
                     String attributes = visible ? getFolderAttributes(folder) : "\\Noselect";
-                    hit.setValue("LSUB (" + attributes + ") \"/\" " + ImapFolder.encodeFolder((String) hit.getKey()));
+                    hit.setValue("LSUB (" + attributes + ") \"/\" " + ImapFolder.encodeFolder(hit.getKey()));
                 }
             }
 
-            for (Iterator it = subs.values().iterator(); it.hasNext(); )
-                sendUntagged((String) it.next());
+            for (String sub : subs.values())
+                sendUntagged(sub);
         } catch (ServiceException e) {
             ZimbraLog.imap.warn("LSUB failed", e);
             sendNO(tag, "LSUB failed");
@@ -1069,7 +1065,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
             return CONTINUE_PROCESSING;
         }
 
-        ArrayList newTags = new ArrayList();
+        ArrayList<Tag> newTags = new ArrayList<Tag>();
         StringBuffer appendHint = new StringBuffer();
         try {
             synchronized (mMailbox) {
@@ -1088,9 +1084,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
                 int flagMask = Flag.FLAG_UNREAD;
                 StringBuffer tagStr = new StringBuffer();
                 if (tagNames != null) {
-                    List i4flags = findOrCreateTags(tagNames, newTags);
-                    for (int i = 0; i < i4flags.size(); i++) {
-                        ImapFlag i4flag = (ImapFlag) i4flags.get(i);
+                    for (ImapFlag i4flag : findOrCreateTags(tagNames, newTags)) {
                         if (!i4flag.mPermanent)
                             sflags |= i4flag.mBitmask;
                         else if (Tag.validateId(i4flag.mId))
@@ -1158,12 +1152,12 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
 
     private Tag createTag(String name) throws ServiceException {
         // notification will update mTags hash
-        return mMailbox.createTag(getContext(), name, Tag.DEFAULT_COLOR);
+        return mMailbox.createTag(getContext(), name, MailItem.DEFAULT_COLOR);
     }
-    private List findOrCreateTags(List tagNames, List newTags) throws ServiceException {
+    private List<ImapFlag> findOrCreateTags(List tagNames, List<Tag> newTags) throws ServiceException {
         if (tagNames == null || tagNames.size() == 0)
-            return Collections.EMPTY_LIST;
-        ArrayList result = new ArrayList();
+            return Collections.emptyList();
+        List<ImapFlag> result = new ArrayList<ImapFlag>();
         for (int i = 0; i < tagNames.size(); i++) {
             String name = (String) tagNames.get(i);
             ImapFlag i4flag = mSession.getFlagByName(name);
@@ -1184,18 +1178,15 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
         }
         return result;
     }
-    private void deleteTags(ArrayList ltags) {
-        if (mMailbox == null || ltags == null)
-            return;
-        for (int i = 0; i < ltags.size(); i++) {
-            Tag ltag = (Tag) ltags.get(i);
-            try {
-                // notification will update mTags hash
-                mMailbox.delete(getContext(), ltag.getId(), MailItem.TYPE_TAG);
-            } catch (ServiceException e) {
-                ZimbraLog.imap.warn("failed to delete tag: " + ltag.getName(), e);
-            }
-        }
+    private void deleteTags(List<Tag> ltags) {
+        if (mMailbox != null && ltags != null)
+            for (Tag ltag : ltags)
+                try {
+                    // notification will update mTags hash
+                    mMailbox.delete(getContext(), ltag.getId(), MailItem.TYPE_TAG);
+                } catch (ServiceException e) {
+                    ZimbraLog.imap.warn("failed to delete tag: " + ltag.getName(), e);
+                }
     }
 
     static final Boolean IDLE_START = Boolean.TRUE;
@@ -1389,7 +1380,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
         TreeMap insertions = (TreeMap) args.remove(0);
         boolean byUID  = ((Boolean) args.remove(0)).booleanValue();
 
-        ArrayList hits = new ArrayList();
+        List<Integer> hits = new ArrayList<Integer>();
         try {
             synchronized (mMailbox) {
                 ImapFolder i4folder = mSession.getFolder();
@@ -1400,7 +1391,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
                         pieces[--count] = (Map.Entry) it.next();
                     for (int i = 0; i < pieces.length; i++) {
                         int point = ((Integer) pieces[i].getKey()).intValue();
-                        Set i4set;
+                        Set<ImapMessage> i4set;
                         if (pieces[i].getValue() instanceof String) {
                             String key = (String) pieces[i].getValue();
                             if (key.startsWith("-"))
@@ -1428,7 +1419,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
                     for (ZimbraHit hit = zqr.getFirstHit(); hit != null; hit = zqr.getNext()) {
                         ImapMessage i4msg = mSession.getFolder().getById(hit.getItemId());
                         if (i4msg != null)
-                        	hits.add(new Integer(byUID ? i4msg.uid : i4msg.seq));
+                        	hits.add(byUID ? i4msg.uid : i4msg.seq);
                     }
                 } finally {
                     zqr.doneWithSearchResults();
@@ -1446,8 +1437,8 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
 
         Collections.sort(hits);
         StringBuffer result = new StringBuffer("SEARCH");
-        for (int i = 0; i < hits.size(); i++)
-            result.append(' ').append(hits.get(i));
+        for (int hit : hits)
+            result.append(' ').append(hit);
 
         sendUntagged(result.toString());
         sendNotifications(false, false);
@@ -1455,21 +1446,21 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
         return CONTINUE_PROCESSING;
     }
 
-    private boolean isAllMessages(Set i4set) {
+    private boolean isAllMessages(Set<ImapMessage> i4set) {
         if (mSession == null || mSession.getFolder() == null)
             return false;
         int size = i4set.size() - (i4set.contains(null) ? 1 : 0);
         return size == mSession.getFolder().getSize();
     }
-    private String encodeSequence(Set i4set, boolean abbreviateAll) {
+    private String encodeSequence(Set<ImapMessage> i4set, boolean abbreviateAll) {
         i4set.remove(null);
         if (i4set.isEmpty())
             return "item:none";
         else if (abbreviateAll && isAllMessages(i4set))
             return "item:all";
         StringBuffer sb = new StringBuffer("item:{");
-        for (Iterator it = i4set.iterator(); it.hasNext(); )
-            sb.append(sb.length() == 6 ? "" : ",").append(((ImapMessage) it.next()).id);
+        for (ImapMessage i4msg : i4set)
+            sb.append(sb.length() == 6 ? "" : ",").append(i4msg.id);
         return sb.append('}').toString();
     }
 
@@ -1504,7 +1495,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
             attributes |= FETCH_UID;
         boolean markRead = mSession.getFolder().isWritable() && (attributes & FETCH_MARK_READ) != 0;
 
-        List fullMessage = new ArrayList();
+        List<ImapPartSpecifier> fullMessage = new ArrayList<ImapPartSpecifier>();
         if (parts != null && !parts.isEmpty())
             for (Iterator it = parts.iterator(); it.hasNext(); ) {
                 ImapPartSpecifier pspec = (ImapPartSpecifier) it.next();
@@ -1517,10 +1508,9 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
         boolean allPresent = true;
 
         synchronized (mMailbox) {
-            Set i4set = mSession.getFolder().getSubsequence(sequenceSet, byUID);
+            Set<ImapMessage> i4set = mSession.getFolder().getSubsequence(sequenceSet, byUID);
             allPresent = byUID || !i4set.contains(null);
-            for (Iterator it = i4set.iterator(); it.hasNext(); ) {
-                ImapMessage i4msg = (ImapMessage) it.next();
+            for (ImapMessage i4msg : i4set) {
                 if (i4msg == null)
                     continue;
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -1544,8 +1534,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
                     }
                     if (!fullMessage.isEmpty()) {
                         raw = mMailbox.getMessageById(getContext(), i4msg.id).getMessageContent();
-                        for (int i = 0; i < fullMessage.size(); i++) {
-                            ImapPartSpecifier pspec = (ImapPartSpecifier) fullMessage.get(i);
+                        for (ImapPartSpecifier pspec : fullMessage) {
                             result.print(empty ? "" : " ");  pspec.write(result, raw);  empty = false;
                         }
                     }
@@ -1636,7 +1625,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
 
         String command = (byUID ? "UID STORE" : "STORE");
         boolean allPresent = true;
-        ArrayList newTags = (operation != STORE_REMOVE ? new ArrayList() : null);
+        List<Tag> newTags = (operation != STORE_REMOVE ? new ArrayList<Tag>() : null);
         try {
             synchronized (mMailbox) {
                 // if it was a STORE [+-]?FLAGS.SILENT, temporarily disable notifications
@@ -1644,12 +1633,11 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
                     mSession.getFolder().disableNotifications();
 
                 // get sets of relevant messages and tags
-                Set i4set = mSession.getFolder().getSubsequence(sequenceSet, byUID);
-                List i4flags = findOrCreateTags(flagList, newTags);
+                Set<ImapMessage> i4set = mSession.getFolder().getSubsequence(sequenceSet, byUID);
+                List<ImapFlag> i4flags = findOrCreateTags(flagList, newTags);
                 allPresent = byUID || !i4set.contains(null);
 
-                for (Iterator it = i4set.iterator(); it.hasNext(); ) {
-                    ImapMessage i4msg = (ImapMessage) it.next();
+                for (ImapMessage i4msg : i4set) {
                     if (i4msg == null)
                         continue;
 
@@ -1658,8 +1646,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
                         byte sflags = (operation != STORE_REPLACE ? i4msg.sflags : 0);
                         int  flags  = (operation != STORE_REPLACE ? i4msg.flags : Flag.FLAG_UNREAD | (i4msg.flags & ~ImapMessage.IMAP_FLAGS));
                         long tags   = (operation != STORE_REPLACE ? i4msg.tags : 0);
-                        for (int i = 0; i < i4flags.size(); i++) {
-                            ImapFlag i4flag = (ImapFlag) i4flags.get(i);
+                        for (ImapFlag i4flag : i4flags) {
                             if (Tag.validateId(i4flag.mId))
                                 tags = (operation == STORE_REMOVE ^ !i4flag.mPositive ? tags & ~i4flag.mBitmask : tags | i4flag.mBitmask);
                             else if (!i4flag.mPermanent)
@@ -1723,7 +1710,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
 
         String command = (byUID ? "UID COPY" : "COPY");
         String copyuid = "";
-        List newMessages = new ArrayList();
+        List<MailItem> newMessages = new ArrayList<MailItem>();
         try {
             synchronized (mMailbox) {
                 Folder folder = mMailbox.getFolderByPath(getContext(), folderName);
@@ -1737,7 +1724,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
                     return CONTINUE_PROCESSING;
                 }
 
-                Set i4set = mSession.getFolder().getSubsequence(sequenceSet, byUID);
+                Set<ImapMessage> i4set = mSession.getFolder().getSubsequence(sequenceSet, byUID);
                 // RFC 2180 4.4.1: "The server MAY disallow the COPY of messages in a multi-
                 //                  accessed mailbox that contains expunged messages."
                 if (i4set.contains(null) && !byUID) {
@@ -1745,9 +1732,8 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
                     return CONTINUE_PROCESSING;
                 }
 
-                List srcUIDs = new ArrayList(), copyUIDs = new ArrayList();
-                for (Iterator it = i4set.iterator(); it.hasNext(); ) {
-                    ImapMessage i4msg = (ImapMessage) it.next();
+                List<Integer> srcUIDs = new ArrayList<Integer>(), copyUIDs = new ArrayList<Integer>();
+                for (ImapMessage i4msg : i4set) {
                     if (i4msg == null)
                         continue;
                     // FIXME: should optimize to a move, as 95% of IMAP COPY ops are really moves...
@@ -1755,8 +1741,8 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
                     if (copy == null)
                         continue;
                     newMessages.add(copy);
-                    srcUIDs.add(new Integer(i4msg.uid));
-                    copyUIDs.add(new Integer(copy.getId()));
+                    srcUIDs.add(i4msg.uid);
+                    copyUIDs.add(copy.getId());
                 }
 
                 if (srcUIDs.size() > 0)
@@ -1796,15 +1782,14 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
         return CONTINUE_PROCESSING;
     }
 
-    private void deleteMessages(List messages) {
-        if (messages != null && !messages.isEmpty()) {
-            for (Iterator it = messages.iterator(); it.hasNext(); )
+    private void deleteMessages(List<MailItem> messages) {
+        if (messages != null && !messages.isEmpty())
+            for (MailItem item : messages)
                 try {
-                    mMailbox.delete(getContext(), ((Message) it.next()).getId(), MailItem.TYPE_MESSAGE);
+                    mMailbox.delete(getContext(), item.getId(), MailItem.TYPE_MESSAGE);
                 } catch (ServiceException e) {
                     ZimbraLog.imap.warn("could not roll back creation of message", e);
                 }
-        }
     }
 
 
@@ -1824,8 +1809,8 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
             i4folder.checkpointSize();
 
             // notify of any message flag changes
-            for (Iterator it = i4folder.dirtyIterator(); it.hasNext(); ) {
-                ImapMessage i4msg = (ImapMessage) it.next();
+            for (Iterator<ImapMessage> it = i4folder.dirtyIterator(); it.hasNext(); ) {
+                ImapMessage i4msg = it.next();
                 if (i4msg.added)
                     i4msg.added = false;
                 else
