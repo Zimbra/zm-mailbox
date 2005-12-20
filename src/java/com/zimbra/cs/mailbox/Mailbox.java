@@ -3952,7 +3952,7 @@ public class Mailbox {
 
         // save for notifications (below)
         PendingModifications dirty = null;
-        if (dirty != null && dirty.hasNotifications()) {
+        if (change.mDirty != null && change.mDirty.hasNotifications()) {
             dirty = change.mDirty;
             change.mDirty = new PendingModifications();
         }
