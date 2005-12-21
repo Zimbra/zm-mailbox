@@ -262,8 +262,7 @@ public class FeedManager {
             List<Enclosure> enclosures = new ArrayList<Enclosure>();
             SubscriptionData sdata = new SubscriptionData(dateFeed.getTime());
 
-            for (Iterator it = feed.elementIterator("entry"); it.hasNext(); ) {
-                Element item = (Element) it.next();
+            for (Element item : feed.listElements("entry")) {
                 // get the item's date
                 Date date = DateUtil.parseISO8601Date(item.getAttribute("updated", null), null);
                 if (date == null)
@@ -271,7 +270,11 @@ public class FeedManager {
                 // construct an address for the author
                 InternetAddress addr = parseAtomAuthor(item.getOptionalElement("author"), addrFeed);
                 // get the item's title (may be html or xhtml)
-                String title = parseTitle(item.getElement("title").getText());
+                Element tblock = item.getElement("title");
+                String type = tblock.getAttribute("type", "text").trim().toLowerCase();
+                String title = tblock.getText();
+                if (type.equals("html") || type.equals("xhtml") || type.equals("text/html") || type.equals("application/xhtml+xml"))
+                    title = parseTitle(title);
                 // find the item's link and any enclosures (associated media links)
                 enclosures.clear();
                 String href = "";
@@ -293,7 +296,7 @@ public class FeedManager {
                     content = item.getOptionalElement("summary");
                 if (content == null)
                     continue;
-                String type = content.getAttribute("type", "text").trim().toLowerCase();
+                type = content.getAttribute("type", "text").trim().toLowerCase();
                 boolean html = false;
                 if (type.equals("html") || type.equals("xhtml") || type.equals("text/html") || type.equals("application/xhtml+xml"))
                     html = true;
