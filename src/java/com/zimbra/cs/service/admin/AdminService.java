@@ -202,6 +202,16 @@ public class AdminService implements DocumentService {
     
     public static final QName GET_ZIMLETS_REQUEST = QName.get("GetZimletsRequest", NAMESPACE);
     public static final QName GET_ZIMLETS_RESPONSE = QName.get("GetZimletsResponse", NAMESPACE);
+    public static final QName GET_ALL_ZIMLETS_REQUEST = QName.get("GetAllZimletsRequest", NAMESPACE);
+    public static final QName GET_ALL_ZIMLETS_RESPONSE = QName.get("GetAllZimletsResponse", NAMESPACE);
+    public static final QName DEPLOY_ZIMLET_REQUEST = QName.get("DeployZimletRequest", NAMESPACE);
+    public static final QName DEPLOY_ZIMLET_RESPONSE = QName.get("DeployZimletResponse", NAMESPACE);
+    public static final QName UNDEPLOY_ZIMLET_REQUEST = QName.get("UndeployZimletRequest", NAMESPACE);
+    public static final QName UNDEPLOY_ZIMLET_RESPONSE = QName.get("UndeployZimletResponse", NAMESPACE);
+    public static final QName CONFIGURE_ZIMLET_REQUEST = QName.get("ConfigureZimletRequest", NAMESPACE);
+    public static final QName CONFIGURE_ZIMLET_RESPONSE = QName.get("ConfigureZimletResponse", NAMESPACE);
+    public static final QName MODIFY_ZIMLET_REQUEST = QName.get("ModifyZimletRequest", NAMESPACE);
+    public static final QName MODIFY_ZIMLET_RESPONSE = QName.get("ModifyZimletResponse", NAMESPACE);
 
     public static final String E_ACCOUNT = "account";
     public static final String E_AUTH_TOKEN = "authToken";
@@ -210,6 +220,7 @@ public class AdminService implements DocumentService {
     public static final String E_BINDDN = "bindDn";
     public static final String E_CODE = "code";
     public static final String E_COS = "cos";
+    public static final String A_COS = "cos";
     public static final String E_CN = "cn";    
     public static final String E_DOMAIN = "domain";
     public static final String E_DL = "dl";
@@ -297,6 +308,14 @@ public class AdminService implements DocumentService {
     public static final String E_LICENSE_EXPIRATION = "expiration";
     public static final String A_LICENSE_EXPIRATION_DATE = "date";
 
+    public static final String E_ZIMLET = "zimlet";
+    public static final String E_ACL = "acl";
+    public static final String E_PRIORITY = "priority";
+    public static final String A_EXTENSION = "extension";
+    public static final String A_VALUE = "value";
+    public static final String A_PRIORITY = "priority";
+    public static final String A_ACL = "acl";
+    
 	public static final String ADMIN_URI = "https://localhost:7071/";
 	
     public void registerHandlers(DocumentDispatcher dispatcher) {
@@ -382,6 +401,11 @@ public class AdminService implements DocumentService {
         
         // zimlet
         dispatcher.registerHandler(GET_ZIMLETS_REQUEST, new GetZimlets());
+        dispatcher.registerHandler(GET_ALL_ZIMLETS_REQUEST, new GetAllZimlets());
+        dispatcher.registerHandler(DEPLOY_ZIMLET_REQUEST, new DeployZimlet());
+        dispatcher.registerHandler(UNDEPLOY_ZIMLET_REQUEST, new UndeployZimlet());
+        dispatcher.registerHandler(CONFIGURE_ZIMLET_REQUEST, new ConfigureZimlet());
+        dispatcher.registerHandler(MODIFY_ZIMLET_REQUEST, new ModifyZimlet());
     }
 
     /**

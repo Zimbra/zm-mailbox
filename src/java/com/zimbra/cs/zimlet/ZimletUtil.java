@@ -68,6 +68,18 @@ public class ZimletUtil {
 	private static Map<String,ZimletFile> sDevZimlets = new HashMap<String,ZimletFile>();
 	private static Map<String,Class> sZimletHandlers = new HashMap<String,Class>();
 
+	public static String[] listZimletNames() {
+		String[] zimlets = sZimlets.keySet().toArray(new String[0]);
+		Arrays.sort(zimlets);
+		return zimlets;
+	}
+	
+	public static String[] listDevZimletNames() {
+		String[] zimlets = sDevZimlets.keySet().toArray(new String[0]);
+		Arrays.sort(zimlets);
+		return zimlets;
+	}
+	
 	/**
 	 * Loads all the Zimlets, locates the server side ZimletHandler for each Zimlets,
 	 * loads the class and instantiate the object, then returns the instance.

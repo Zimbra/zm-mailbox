@@ -948,6 +948,34 @@ Access: domain admin sufficient
 
 -----------------------------
 
+<ConfigureZimletRequest fileid="{uploaded-config-file}"/>
+
+<ConfigureZimletResponse/>
+
+-----------------------------
+
+<DeployZimletRequest fileid="{uploaded-zimlet-file}"/>
+
+<DeployZimletResponse/>
+
+-----------------------------
+
+<GetAllZimletsRequest/>
+
+<GetAllZimletsResponse>
+  <zimlets>
+    <zimlet name="{zimlet-name}" priority="int" extension="true/false" status="enabled/disabled"/>
+    ...
+  </zimlets>
+  <cos name="default">
+    <zimlet name="{zimlet-name}" priority="int" extension="true/false" status="enabled/disabled"/>
+    ...
+  </cos>
+  ...
+</GetZimletsResponse>
+
+-----------------------------
+
 <GetZimletsRequest/>
 
 <GetZimletsResponse>
@@ -960,5 +988,23 @@ Access: domain admin sufficient
     </zimlet>
   </zimlets>
 </GetZimletsResponse>
+
+-----------------------------
+
+<ModifyZimletRequest>
+  <zimlet name="{zimlet-name}">
+    <status [value="enabled/disabled"]/>
+    <acl [cos="{cos-name}" acl="grant/deny"]/>
+    <priority [value="integer"]/>
+  </zimlet>
+</ModifyZimletRequest>
+
+<ModifyZimletResponse/>
+
+-----------------------------
+
+<UndeployZimletRequest name="{zimlet-name}"/>
+
+<UndeployZimletResponse/>
 
 -----------------------------
