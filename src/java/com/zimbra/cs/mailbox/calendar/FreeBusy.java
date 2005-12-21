@@ -30,6 +30,7 @@ import java.util.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
@@ -283,6 +284,8 @@ public class FreeBusy {
 
         IntervalList intervals = new IntervalList(start, end);
         
+        Account acct = mbox.getAccount();
+        
         for (Iterator iter = appts.iterator(); iter.hasNext(); ) {
             Appointment cur = (Appointment)iter.next();
             
@@ -295,7 +298,7 @@ public class FreeBusy {
                     Appointment appt = mbox.getAppointmentById(null, inst.getAppointmentId());
                     Invite inv = appt.getInvite(invId);
                     if (!inv.isTransparent()) {
-                        String freeBusy = inv.getFreeBusyActual();
+                        String freeBusy = appt.getEffectiveFreeBusyActual(acct, inv, inst);
                         Interval ival = new Interval(inst.getStart(), inst.getEnd(), freeBusy);
                         intervals.addInterval(ival);
                     }
