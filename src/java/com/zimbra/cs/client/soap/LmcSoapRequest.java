@@ -48,13 +48,15 @@ import com.zimbra.cs.util.StringUtil;
 public abstract class LmcSoapRequest {
 
     private static Log sLog = LogFactory.getLog(LmcSoapRequest.class);
-    private static int SOAP_TIMEOUT = 30000;  // number of ms to wait for server's response
 
     private static boolean sDumpXML = false;
     public static synchronized void setDumpXML(boolean b) { sDumpXML = b; }
 
     private static int sRetryCount = 3;
     public static synchronized void setRetryCount(int n) { sRetryCount = n; }
+
+    private static int sTimeoutMillis = 30000;
+    public static synchronized void setTimeout(int millis) { sTimeoutMillis = millis; }
 
     /*
 	 * If session is null, no auth information will be sent.  Otherwise the 
@@ -108,7 +110,7 @@ public abstract class LmcSoapRequest {
 		SoapHttpTransport trans = null;
 		try {
 			trans = new SoapHttpTransport(targetURL);
-			trans.setTimeout(SOAP_TIMEOUT);
+			trans.setTimeout(sTimeoutMillis);
             trans.setRetryCount(sRetryCount);
 
 			// set the auth token and session id in the transport for this request to use
