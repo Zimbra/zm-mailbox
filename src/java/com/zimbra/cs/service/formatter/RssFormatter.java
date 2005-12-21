@@ -50,6 +50,7 @@ public class RssFormatter extends Formatter {
         
         Iterator iterator = getMailItems(context, mailItem, context.getStartTime(), context.getEndTime());
         
+        context.resp.setCharacterEncoding("UTF-8");
         context.resp.setContentType("application/rss+xml");
         
         StringBuffer sb = new StringBuffer();
@@ -78,7 +79,7 @@ public class RssFormatter extends Formatter {
             }
         }
         sb.append(rss.toString());
-        context.resp.getOutputStream().write(sb.toString().getBytes());
+        context.resp.getOutputStream().write(sb.toString().getBytes("UTF-8"));
     }
 
     public long getDefaultStartTime() {    

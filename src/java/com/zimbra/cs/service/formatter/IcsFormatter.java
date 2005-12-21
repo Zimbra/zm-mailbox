@@ -61,12 +61,13 @@ public class IcsFormatter extends Formatter {
             if (item instanceof Appointment) appts.add((Appointment) item);
         }
         
+        context.resp.setCharacterEncoding("UTF-8");
         context.resp.setContentType("text/calendar");
 
 //        try {
             ZVCalendar cal = context.targetMailbox.getZCalendarForAppointments(appts);
             ByteArrayOutputStream buf = new ByteArrayOutputStream();
-            OutputStreamWriter wout = new OutputStreamWriter(buf);
+            OutputStreamWriter wout = new OutputStreamWriter(buf, "UTF-8");
             cal.toICalendar(wout);
             wout.flush();
             context.resp.getOutputStream().write(buf.toByteArray());

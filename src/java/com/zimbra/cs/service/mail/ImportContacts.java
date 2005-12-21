@@ -103,7 +103,7 @@ public class ImportContacts extends DocumentHandler  {
             throw MailServiceException.NO_SUCH_UPLOAD(attachId);
         uploads.add(up);
         try {
-            return new BufferedReader(new InputStreamReader(up.getInputStream()));
+            return new BufferedReader(new InputStreamReader(up.getInputStream(), "UTF-8"));
         } catch (IOException e) {
             throw ServiceException.FAILURE(e.getMessage(), e);
         }

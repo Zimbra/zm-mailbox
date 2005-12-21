@@ -47,6 +47,7 @@ public class AtomFormatter extends Formatter {
         
         Iterator iterator = getMailItems(context, mailItem, context.getStartTime(), context.getEndTime());
         
+        context.resp.setCharacterEncoding("UTF-8");
         context.resp.setContentType("application/atom+xml");
         
         StringBuffer sb = new StringBuffer();
@@ -72,7 +73,7 @@ public class AtomFormatter extends Formatter {
             }
         }
         sb.append(feed.toString());
-        context.resp.getOutputStream().write(sb.toString().getBytes());
+        context.resp.getOutputStream().write(sb.toString().getBytes("UTF-8"));
     }
 
     public long getDefaultStartTime() {    

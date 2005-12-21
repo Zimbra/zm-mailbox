@@ -62,6 +62,7 @@ public class IfbFormatter extends Formatter {
   
     
     public void format(Context context, MailItem mailItem) throws IOException, ServiceException, UserServletException {
+        context.resp.setCharacterEncoding("UTF-8");
         context.resp.setContentType(Mime.CT_TEXT_CALENDAR);
 
         long now = System.currentTimeMillis();
@@ -131,7 +132,7 @@ public class IfbFormatter extends Formatter {
         toRet.append("END:VFREEBUSY").append(NL);
         toRet.append("END:VCALENDAR").append(NL);
             
-        context.resp.getOutputStream().write(toRet.toString().getBytes());
+        context.resp.getOutputStream().write(toRet.toString().getBytes("UTF-8"));
     }
     
     public long getDefaultStartTime() {

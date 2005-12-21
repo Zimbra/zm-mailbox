@@ -60,6 +60,7 @@ public class CsvFormatter extends Formatter {
         if (fname == null || fname.length() == 0) fname ="contacts";
         cd.setParameter("filename", fname+".csv");
         context.resp.addHeader("Content-Disposition", cd.toString());
+        context.resp.setCharacterEncoding("UTF-8");
         context.resp.setContentType("text/plain");
         context.resp.getOutputStream().print(sb.toString());
     }
