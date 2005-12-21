@@ -530,7 +530,7 @@ public class CrossMailboxSearch
             
             // make the get
             Server svr = Provisioning.getInstance().getServerByName(server);
-            String url = URLUtil.getMailURL(svr, path + "?id=" + mailboxIdStr + "/" + itemId);
+            String url = URLUtil.getMailURL(svr, path + "?id=" + mailboxIdStr + "/" + itemId, false);
             GetMethod get = new GetMethod(url);
             client.setConnectionTimeout(30000);
             int statusCode = -1;

@@ -134,7 +134,19 @@ public abstract class Provisioning {
      * individually listed aliases exist.
      */
     public static final String DOMAIN_TYPE_LOCAL = "local";
-    
+
+    /**
+     * Possible values for zimbraMailMode. "mixed" means web server should
+     * authenticate in HTTPS and redirect to HTTP (useful if all clients are on
+     * the intranet and you want only do authentication in the clear - TODO we
+     * should add networks to not redirect to at some point which would be sweet -
+     * that would mean that if you are in mixed mode and coming from a trusted
+     * local network we would redirect you to http after login, but if you came
+     * externally you would stay in https - one day we will do this.) "both"
+     * says to run both https and http, and not do any redirects between the
+     * two.
+     */
+    public enum MAIL_MODE { http, https, mixed, both }
 
     // attributes
     public static final String A_dc = "dc";
@@ -464,6 +476,9 @@ public abstract class Provisioning {
     public static final String A_zimbraMessageCacheSize = "zimbraMessageCacheSize";
 
     public static final String A_zimbraMtaAuthEnabled = "zimbraMtaAuthEnabled";
+    public static final String A_zimbraMtaAuthHost = "zimbraMtaAuthHost";
+    public static final String A_zimbraMtaAuthURL = "zimbraMtaAuthURL";
+
     public static final String A_zimbraMtaBlockedExtension = "zimbraMtaBlockedExtension";
     public static final String A_zimbraMtaCommonBlockedExtension = "zimbraMtaCommonBlockedExtension";
     public static final String A_zimbraMtaDnsLookupsEnabled = "zimbraMtaDnsLookupsEnabled";
@@ -601,9 +616,9 @@ public abstract class Provisioning {
      */
     public static final String A_zimbraCOSId = "zimbraCOSId";
 
-
     public static final String A_zimbraMailPort = "zimbraMailPort";
     public static final String A_zimbraMailSSLPort = "zimbraMailSSLPort";
+    public static final String A_zimbraMailMode = "zimbraMailMode";
     public static final String A_zimbraAdminPort = "zimbraAdminPort";
 
     public static final String A_zimbraSmtpHostname = "zimbraSmtpHostname";
@@ -982,4 +997,5 @@ public abstract class Provisioning {
     public abstract void addAllowedDomains(String domains, String cos) throws ServiceException;
 
     public abstract void removeAllowedDomains(String domains, String cos) throws ServiceException;
+    
 }

@@ -68,6 +68,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.*;
+import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.service.ServiceException;
@@ -456,10 +457,10 @@ public class LdapProvisioning extends Provisioning {
             if (attrs.get(Provisioning.A_zimbraMailHost) == null) {
             	String localMailHost = getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname);
             	if (localMailHost != null) {
-            		attrs.put(Provisioning.A_zimbraMailHost, localMailHost);
-                	int lmtpPort = getLocalServer().getIntAttr(Provisioning.A_zimbraLmtpBindPort, com.zimbra.cs.util.Config.D_LMTP_BIND_PORT);
-                	String transport = "lmtp:" + localMailHost + ":" + lmtpPort;
-                	attrs.put(Provisioning.A_zimbraMailTransport, transport);
+                    attrs.put(Provisioning.A_zimbraMailHost, localMailHost);
+                    int lmtpPort = getLocalServer().getIntAttr(Provisioning.A_zimbraLmtpBindPort, com.zimbra.cs.util.Config.D_LMTP_BIND_PORT);
+                    String transport = "lmtp:" + localMailHost + ":" + lmtpPort;
+                    attrs.put(Provisioning.A_zimbraMailTransport, transport);
             	}
             }
 
@@ -1465,6 +1466,11 @@ public class LdapProvisioning extends Provisioning {
         HashMap attrManagerContext = new HashMap();
         AttributeManager.getInstance().preModify(serverAttrs, null, attrManagerContext, true, true);
 
+        String authHost = (String)serverAttrs.get(A_zimbraMtaAuthHost);
+        if (authHost != null) {
+            serverAttrs.put(A_zimbraMtaAuthURL, URLUtil.getMtaAuthURL(authHost));
+        }
+        
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext(true);
@@ -1472,7 +1478,7 @@ public class LdapProvisioning extends Provisioning {
             Attributes attrs = new BasicAttributes(true);
             LdapUtil.mapToAttrs(serverAttrs, attrs);
             Attribute oc = LdapUtil.addAttr(attrs, A_objectClass, "zimbraServer");
-            
+
             String zimbraIdStr = LdapUtil.generateUUID();
             attrs.put(A_zimbraId, zimbraIdStr);
             attrs.put(A_cn, name);
@@ -2479,5 +2485,5 @@ public class LdapProvisioning extends Provisioning {
         System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", "uid=%u,ou=people,%D"));
         System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", "n(%n)u(%u)d(%d)D(%D)(%%)"));
     }  
- 
+
 }

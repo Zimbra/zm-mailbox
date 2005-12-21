@@ -31,11 +31,16 @@
  */
 package com.zimbra.cs.httpclient;
 
+import java.util.Iterator;
+import java.util.List;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.servlet.ZimbraServlet;
 
 /**
  * @author jhahm
@@ -51,30 +56,71 @@ public class URLUtil {
     private static final String SCHEME_HTTPS = "https://";
 
     /**
+     * Return the URL where SOAP service is available for given store server.
+     * 
+     * @see getMailURL()
+     */
+    public static String getSoapURL(Server server, boolean preferSSL) throws ServiceException {
+        return getMailURL(server, ZimbraServlet.USER_SERVICE_URI, preferSSL);  
+    }
+    
+    /**
      * Returns absolute URL with scheme, host, and port for mail app on server.
-     * If server supports both SSL and non-SSL, non-SSL takes precedence.
+     * 
      * @param server
      * @param path what follows port number; begins with slash
-     * @return
+     * @param preferSSL if both SSL and and non-SSL are available, whether to prefer SSL 
+     * @return desired URL
      */
-    public static String getMailURL(Server server, String path) {
-        String scheme = SCHEME_HTTP;
+    public static String getMailURL(Server server, String path, boolean preferSSL) throws ServiceException {
         String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
+        if (hostname == null) {
+            throw ServiceException.INVALID_REQUEST("server " + server.getName() + " does not have " + Provisioning.A_zimbraServiceHostname, null);
+        }
+        
+        String modeString = server.getAttr(Provisioning.A_zimbraMailMode, null);
+        if (modeString == null) {
+            throw ServiceException.INVALID_REQUEST("server " + server.getName() + " does not have " + Provisioning.A_zimbraMailMode + " set, maybe it is not a store server?", null);
+        }
+        
+        Provisioning.MAIL_MODE mode;
+        try {
+            mode = Provisioning.MAIL_MODE.valueOf(modeString);
+        } catch (IllegalArgumentException iae) {
+            throw ServiceException.INVALID_REQUEST("server " + server.getName() + " has invalid " + Provisioning.A_zimbraMailMode + ": " + modeString, iae);
+        }
+        
+        boolean ssl;
+        
+        switch (mode) {
+        case both:
+        case mixed:
+            ssl = preferSSL;
+            break;
+        case https:
+            ssl = true;
+            break;
+        case http:
+            ssl = false;
+            break;
+        default:
+            throw ServiceException.INVALID_REQUEST("server " + server.getName() + " has unknown " + Provisioning.A_zimbraMailMode + ": " + mode, null);
+        }
+        
+        String scheme;
         int port = 0;
 
-        int httpPort = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
-        if (httpPort > 0) {
-        	port = httpPort;
-            scheme = SCHEME_HTTP;
+        if (ssl) {
+            scheme = SCHEME_HTTPS;
+            port = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
+            if (port < 1) {
+                throw ServiceException.INVALID_REQUEST("server " + server.getName() + " has invalid " + Provisioning.A_zimbraMailSSLPort + ": " + port, null);
+            }
         } else {
-            int httpsPort = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
-            if (httpsPort > 0) {
-            	port = httpsPort;
-                scheme = SCHEME_HTTPS;
-            } else {
-                // Bad configuration...  Just assume HTTP on port 80.
-                scheme = SCHEME_HTTP;
-                port = 80;
+            scheme = SCHEME_HTTP;
+            port = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
+            if (port < 1) {
+                throw ServiceException.INVALID_REQUEST("server " + server.getName() + " has invalid " + Provisioning.A_zimbraMailPort + ": " + port, null);
             }
         }
 
@@ -97,4 +143,23 @@ public class URLUtil {
         sb.append(SCHEME_HTTPS).append(hostname).append(":").append(port).append(path);
         return sb.toString();
     }
+    
+    /**
+     * Utility method to translate zimbraMtaAuthHost -> zimbraMtaAuthURL.
+     * 
+     * Not the best place for this method, but do not want to pollute
+     * Provisioning with utility methods either.
+     */
+    public static String getMtaAuthURL(String authHost) throws ServiceException {
+        List servers = Provisioning.getInstance().getAllServers();
+        for (Iterator it = servers.iterator(); it.hasNext();) {
+            Server server = (Server) it.next();
+            String serviceName = server.getAttr(Provisioning.A_zimbraServiceHostname, null);
+            if (authHost.equalsIgnoreCase(serviceName)) {
+                return URLUtil.getSoapURL(server, true);
+            }
+        }
+        throw ServiceException.INVALID_REQUEST("specified " + Provisioning.A_zimbraMtaAuthHost + " does not correspond to a valid service hostname: " + authHost, null);
+    }
+
 }

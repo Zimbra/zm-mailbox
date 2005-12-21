@@ -197,7 +197,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
             return mTransport;
         }
         Server server = Provisioning.getInstance().getServerByName(mServer);
-        String url = URLUtil.getMailURL(server, ZimbraServlet.USER_SERVICE_URI);
+        String url = URLUtil.getMailURL(server, ZimbraServlet.USER_SERVICE_URI, false);
         SoapTransport toRet = new SoapHttpTransport(url);
         toRet.setAuthToken(mAuthToken);
         return toRet;
