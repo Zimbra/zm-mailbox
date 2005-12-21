@@ -1,0 +1,88 @@
+ <AuthRequest xmlns="urn:zimbraAccount">
+   <account by="name|id|foreignPrincipal">...</account>
+   [<password>...</password>]
+   [<preauth timestamp="{timestamp}" expires="{expires}">{computed-preauth-value}</preauth>]
+  [<prefs>[<pref name="..."/>...]</prefs>]
+ </AuthRequest>
+
+
+{timestamp} = current time, in milliseconds. The timestamp must be within 5 minutes of the server's time for the preauth to work.
+
+{expires} = expiration time of the authtoken. set to 0 to use the default expiration time.
+
+{computed-preauth-value} = see below
+
+<preauth> is used to grant a token to an identity that has already been authenticated via an external system. 
+
+The pre-auth value is computed as follows:
+
+1. concat the values for account, expires, timestamp together
+2. compute the hmac on that value using the zimbraPreAuthKey value for the account's domain
+3. convert value to hex
+
+For example:
+
+account:  user1
+expires: 0
+timestamp: 1135200294007
+
+concat them together to get a string (order is important): "user1|0|1135200294007"
+
+compute the SHA1 HMAC of that string, using the zimbraPreAuthKey:
+
+hex(hmacsha1("user1|0|1135200294007", "82370c9794d9dd6582102660a06d5f2519c46778a02c03714fe525de7d0d09d5"))
+
+result = c19adc701b2c5b503b6388ac0173fb2dea72926f
+
+the resulting soap would look like:
+
+      <AuthRequest xmlns='urn:zimbraAccount'>
+        <account by="name">user1</account>
+        <preauth timestamp="1135200294007" expires="0">c19adc701b2c5b503b6388ac0173fb2dea72926f</preauth>
+      </AuthRequest>
+
+
+Java code to compute value is as follows:
+
+   public static  String computePreAuth(Map<String,String> params, String key) {
+        TreeSet<String> names = new TreeSet<String>(params.keySet());
+        StringBuilder sb = new StringBuilder();
+        for (String name : names) {
+            if (sb.length() > 0) sb.append('|');
+            sb.append(params.get(name));
+        }
+        return getHmac(sb.toString(), key.getBytes());
+    }
+
+    private static String getHmac(String data, byte[] key) {
+        try {
+            ByteKey bk = new ByteKey(key);
+            Mac mac = Mac.getInstance("HmacSHA1");
+            mac.init(bk);
+            return new String(Hex.encodeHex(mac.doFinal(data.getBytes())));
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("fatal error", e);
+        } catch (InvalidKeyException e) {
+            throw new RuntimeException("fatal error", e);
+        }
+    }
+    
+    static class ByteKey implements SecretKey {
+        private byte[] mKey;
+        
+        ByteKey(byte[] key) {
+            mKey = (byte[]) key.clone();;
+        }
+        
+        public byte[] getEncoded() {
+            return mKey;
+        }
+
+        public String getAlgorithm() {
+            return "HmacSHA1";
+        }
+
+        public String getFormat() {
+            return "RAW";
+        }       
+        

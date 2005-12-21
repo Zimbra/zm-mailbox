@@ -152,7 +152,6 @@ public class AuthToken {
 	}
 
     /**
-     * @deprecated use AuthToken(Account)
      * @param acct
      * @param expires
      */

@@ -64,10 +64,11 @@ public class Auth extends DocumentHandler  {
         ZimbraContext lc = getZimbraContext(context);
 
 
-		String password = request.getAttribute(AccountService.E_PASSWORD);
         Element acctEl = request.getElement(AccountService.E_ACCOUNT);
         String value = acctEl.getText();
         String by = acctEl.getAttribute(AccountService.A_BY, BY_NAME);
+        Element preAuthEl = request.getOptionalElement(AccountService.E_PREAUTH);
+        String password = request.getAttribute(AccountService.E_PASSWORD, null);
         Provisioning prov = Provisioning.getInstance();
         
         Account acct = null;
@@ -83,8 +84,19 @@ public class Auth extends DocumentHandler  {
 		if (acct == null)
 			throw AccountServiceException.AUTH_FAILED(value);
 
+        long expires = 0;
+
 		try {
-		    prov.authAccount(acct, password);
+            if (password != null) {
+                prov.authAccount(acct, password);
+            } else if (preAuthEl != null) {
+                long timestamp = preAuthEl.getAttributeLong(AccountService.A_TIMESTAMP);
+                expires = preAuthEl.getAttributeLong(AccountService.A_EXPIRES, 0);
+                String preAuth = preAuthEl.getTextTrim();
+                prov.preAuthAccount(acct, value, timestamp, expires, preAuth);
+            } else {
+                throw ServiceException.INVALID_REQUEST("must specify "+AccountService.E_PASSWORD, null);
+            }
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                     new String[] {"cmd", "Auth","account", acct.getName()}));
         } catch (ServiceException se) {
@@ -93,7 +105,8 @@ public class Auth extends DocumentHandler  {
             throw se;
         }
 
-        AuthToken at = new AuthToken(acct);
+        AuthToken at = expires ==  0 ? new AuthToken(acct) : new AuthToken(acct, expires);
+
         String token;
         try {
             token = at.getEncoded();

@@ -902,6 +902,8 @@ public abstract class Provisioning {
 
     public abstract void authAccount(Account acct, String password) throws ServiceException;
     
+    public abstract void preAuthAccount(Account acct, String value, long timestamp, long expires, String preAuth) throws ServiceException;
+    
     public abstract void changePassword(Account acct, String currentPassword, String newPassword) throws ServiceException;
     
     public abstract void setPassword(Account acct, String newPassword) throws ServiceException;

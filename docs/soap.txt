@@ -265,7 +265,8 @@ global soap/system errors used with zimbra:Error/Code:
    
  <AuthRequest xmlns="urn:zimbraAccount">
    <account by="name|id|foreignPrincipal">...</account>
-   <password>...</password>
+   [<password>...</password>]
+   [<preauth timestamp="{timestamp}" expires="{expires}">{computed-preauth-value}</preauth>]
   [<prefs>[<pref name="..."/>...]</prefs>]
  </AuthRequest>
  
@@ -275,7 +276,9 @@ global soap/system errors used with zimbra:Error/Code:
    <sessionId .../>
    [<prefs><pref name="{name}" modified="{modified-time}">{value}</pref>...</prefs>]
  </AuthResponse>
- 
+
+one of <password> or <preauth> must be specified. see preauth.txt for a discussion of preauth.
+
 ---------
 
  <ChangePasswordRequest>

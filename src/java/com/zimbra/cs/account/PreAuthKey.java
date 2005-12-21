@@ -44,6 +44,7 @@ import javax.crypto.SecretKey;
 import org.apache.commons.codec.binary.Hex;
 
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.Constants;
 
 /**
  * @author schemers
@@ -70,6 +71,7 @@ public class PreAuthKey {
         TreeSet<String> names = new TreeSet<String>(params.keySet());
         StringBuilder sb = new StringBuilder();
         for (String name : names) {
+            if (sb.length() > 0) sb.append('|');
             sb.append(params.get(name));
         }
         return getHmac(sb.toString(), key.getBytes());
@@ -110,10 +112,11 @@ public class PreAuthKey {
     }
     
     public static void main(String args[]) throws ServiceException {
+        long now = System.currentTimeMillis();
         HashMap<String,String> params = new HashMap<String,String>();
         params.put("account", "user1@slapshot");
-        params.put("timestamp", "11351211830000");
-        params.put("lifetime", (60*60*10)+"");
+        params.put("timestamp", now+"");
+        params.put("expires", (now+Constants.MILLIS_PER_MINUTE*4)+"");
         String key = generateRandomPreAuthKey();
         System.out.printf("key=%s preAuth=%s\n", key, computePreAuth(params, key));
         System.out.printf("key=%s preAuth=%s\n", "helloworld", computePreAuth(params, "helloworld"));

@@ -76,6 +76,7 @@ public class ProvUtil {
         System.out.println("  GetAllDomains(gad) [-v]");
         System.out.println("  ModifyDomain(md) {domain|id} [attr1 value1 [attr2 value2...]]");        
         //System.out.println("  GenerateDomainPreAuthKey(gdpak) {domain|id}");        
+        //System.out.println("  GenerateDomainPreAuth(gdpa) {domain|id} {name} timestamp|0 expires|0");                
         System.out.println();
 
         System.out.println("  CreateCos(cc) {name} [attr1 value1 [attr2 value2...]]");
@@ -177,12 +178,13 @@ public class ProvUtil {
     private static final int SYNC_GAL = 803;
     
     private static final int GENERATE_DOMAIN_PRE_AUTH_KEY =  804;
+    private static final int GENERATE_DOMAIN_PRE_AUTH =  805;    
 
     private static final int BY_ID = 1;
     private static final int BY_EMAIL = 2;
     private static final int BY_NAME = 3;
     
-    private Map mCommandIndex;
+    private Map<String,Integer> mCommandIndex;
     private Provisioning mProvisioning;
     
     private int guessType(String value) {
@@ -235,7 +237,8 @@ public class ProvUtil {
         addCommand("getAllDomains", "gad", GET_ALL_DOMAINS);
         addCommand("modifyDomain", "md", MODIFY_DOMAIN);
         addCommand("deleteDomain", "dd", DELETE_DOMAIN);
-        addCommand("generatePreAuthDomainKey", "gdpak", GENERATE_DOMAIN_PRE_AUTH_KEY);
+        addCommand("generateDomainPreAuthKey", "gdpak", GENERATE_DOMAIN_PRE_AUTH_KEY);
+        addCommand("generateDomainPreAuth", "gdpa", GENERATE_DOMAIN_PRE_AUTH);        
 
         addCommand("createCos", "cc", CREATE_COS);
         addCommand("getCos", "gc", GET_COS);
@@ -315,6 +318,9 @@ public class ProvUtil {
         case GENERATE_DOMAIN_PRE_AUTH_KEY:
             doGenerateDomainPreAuthKey(args);
             break;
+        case GENERATE_DOMAIN_PRE_AUTH:
+            doGenerateDomainPreAuth(args);
+            break;            
         case GET_ACCOUNT:
             doGetAccount(args); 
             break;
@@ -445,13 +451,39 @@ public class ProvUtil {
     }
 
     private void doGenerateDomainPreAuthKey(String[] args) throws ServiceException {
-        String key = args[1];
-        Domain domain = lookupDomain(key);
-        String preAuthKey = PreAuthKey.generateRandomPreAuthKey();
-        HashMap<String,String> attrs = new HashMap<String,String>();
-        attrs.put(Provisioning.A_zimbraPreAuthKey, preAuthKey);
-        domain.modifyAttrs(attrs);
-        System.out.printf("preAuthKey: %s\n", preAuthKey);
+        if (args.length < 2) {
+            usage();
+        } else {
+            String key = args[1];
+            Domain domain = lookupDomain(key);
+            String preAuthKey = PreAuthKey.generateRandomPreAuthKey();
+            HashMap<String,String> attrs = new HashMap<String,String>();
+            attrs.put(Provisioning.A_zimbraPreAuthKey, preAuthKey);
+            domain.modifyAttrs(attrs);
+            System.out.printf("preAuthKey: %s\n", preAuthKey);
+        }
+    }
+
+    private void doGenerateDomainPreAuth(String[] args) throws ServiceException {
+        if (args.length != 5) {
+            usage();
+        } else {
+            String key = args[1];
+            Domain domain = lookupDomain(key);
+            String preAuthKey = domain.getAttr(Provisioning.A_zimbraPreAuthKey, null);
+            if (preAuthKey == null)
+                throw ServiceException.INVALID_REQUEST("domain not configured for preauth", null);
+
+            String name = args[2];
+            long timestamp = Long.parseLong(args[3]);
+            if (timestamp == 0) timestamp = System.currentTimeMillis();
+            long expires = Long.parseLong(args[4]);
+            HashMap<String,String> params = new HashMap<String,String>();
+            params.put("account", name);
+            params.put("timestamp", timestamp+"");
+            params.put("expires", expires+"");
+            System.out.printf("account: %s\ntimestamp: %s\nexpires: %s\npreAuth: %s\n", name, timestamp, expires,PreAuthKey.computePreAuth(params, preAuthKey));
+        }
     }
 
     private void doHelp(String[] args) throws ServiceException {
