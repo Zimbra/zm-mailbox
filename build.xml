@@ -515,7 +515,7 @@
 		</java>
 		<echo>Provisioning server entry for ${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="CreateServer ${zimbra.server.hostname} zimbraSmtpHostname ${zimbra.smtp.host} zimbraMailPort 7070 zimbraImapCleartextLoginEnabled TRUE" />
+			<arg line="CreateServer ${zimbra.server.hostname} zimbraSmtpHostname ${zimbra.smtp.host} zimbraMailPort 7070 zimbraMailMode http zimbraImapCleartextLoginEnabled TRUE" />
 		</java>
 		<echo>Setting installed-service attributes on server ${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
