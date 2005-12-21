@@ -35,7 +35,6 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.util.ParseMailboxID;
-import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapHttpTransport;
@@ -197,7 +196,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
             return mTransport;
         }
         Server server = Provisioning.getInstance().getServerByName(mServer);
-        String url = URLUtil.getMailURL(server, ZimbraServlet.USER_SERVICE_URI, false);
+        String url = URLUtil.getSoapURL(server, false);
         SoapTransport toRet = new SoapHttpTransport(url);
         toRet.setAuthToken(mAuthToken);
         return toRet;
