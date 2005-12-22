@@ -30,6 +30,7 @@
 package com.zimbra.cs.service;
 
 import java.io.IOException;
+import java.net.URLEncoder;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
@@ -41,6 +42,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.service.account.Auth;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.ZimbraLog;
@@ -48,7 +50,9 @@ import com.zimbra.cs.util.ZimbraLog;
 public class PreAuthServlet extends ZimbraServlet {
 
     public static final String PARAM_PREAUTH = "preauth";
+    public static final String PARAM_AUTHTOKEN = "authtoken";
     public static final String PARAM_ACCOUNT = "account";
+    public static final String PARAM_ISREDIRECT = "isredirect";
     public static final String PARAM_BY = "by";
     public static final String PARAM_TIMESTAMP = "timestamp";
     public static final String PARAM_EXPIRES = "expires";    
@@ -83,43 +87,66 @@ public class PreAuthServlet extends ZimbraServlet {
     throws ServletException, IOException
     {
         try {
-            String preAuth = getRequiredParam(req, resp, PARAM_PREAUTH);            
-            String account = getRequiredParam(req, resp, PARAM_ACCOUNT);
-            String accountBy = getOptionalParam(req, PARAM_BY, Auth.BY_NAME);
-            long timestamp = Long.parseLong(getRequiredParam(req, resp, PARAM_TIMESTAMP));
-            long expires = Long.parseLong(getRequiredParam(req, resp, PARAM_EXPIRES));
+            String isRedirect = getOptionalParam(req, PARAM_ISREDIRECT, "0");
+            if (isRedirect.equals("1")) {
+                String authToken = getRequiredParam(req, resp, PARAM_AUTHTOKEN);
+                setCookieAndRedirect(resp, authToken);
+                return;
+            } else {
+                String preAuth = getRequiredParam(req, resp, PARAM_PREAUTH);            
+                String account = getRequiredParam(req, resp, PARAM_ACCOUNT);
+                String accountBy = getOptionalParam(req, PARAM_BY, Auth.BY_NAME);
+                long timestamp = Long.parseLong(getRequiredParam(req, resp, PARAM_TIMESTAMP));
+                long expires = Long.parseLong(getRequiredParam(req, resp, PARAM_EXPIRES));
             
-            Provisioning prov = Provisioning.getInstance();
+                Provisioning prov = Provisioning.getInstance();
             
-            Account acct = null;
-            if (accountBy.equals(Auth.BY_NAME)) {
-                acct = prov.getAccountByName(account);            
-            } else if (accountBy.equals(Auth.BY_ID)) {
-                acct = prov.getAccountById(account);
-            } else if (accountBy.equals(Auth.BY_FOREIGN_PRINCIPAL)) {
-                acct = prov.getAccountByForeignPrincipal(account);
+                Account acct = null;
+                if (accountBy.equals(Auth.BY_NAME)) {
+                    acct = prov.getAccountByName(account);            
+                } else if (accountBy.equals(Auth.BY_ID)) {
+                    acct = prov.getAccountById(account);
+                } else if (accountBy.equals(Auth.BY_FOREIGN_PRINCIPAL)) {
+                    acct = prov.getAccountByForeignPrincipal(account);
+                }
+            
+                if (acct == null)
+                    throw AccountServiceException.AUTH_FAILED(account);
+                
+                prov.preAuthAccount(acct, account, accountBy, timestamp, expires, preAuth);
+            
+                AuthToken at =  expires ==  0 ? new AuthToken(acct) : new AuthToken(acct, expires);
+                try {
+                    String authToken = at.getEncoded();
+                    
+                    if (acct.isCorrectHost()) {
+                        setCookieAndRedirect(resp, at.getEncoded());
+                    } else {
+                        redirectToCorrectServer(req, resp, acct, at.getEncoded());
+                    }
+                } catch (AuthTokenException e) {
+                    throw  ServiceException.FAILURE("unable to encode auth token", e);
+                }
             }
-            
-            if (acct == null)
-                throw AccountServiceException.AUTH_FAILED(account);
-
-            prov.preAuthAccount(acct, account, accountBy, timestamp, expires, preAuth);
-            
-            AuthToken at =  expires ==  0 ? new AuthToken(acct) : new AuthToken(acct, expires);
-            String authToken;
-            try {
-                authToken = at.getEncoded();
-            } catch (AuthTokenException e) {
-                throw  ServiceException.FAILURE("unable to encode auth token", e);
-            }
-            Cookie c = new Cookie(COOKIE_ZM_AUTH_TOKEN, authToken);
-            c.setPath("/");
-            resp.addCookie(c);
-            resp.sendRedirect(DEFAULT_MAIL_URL);
         } catch (ServiceException e) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
             return;
         }
+    }
+
+    private void redirectToCorrectServer(HttpServletRequest req, HttpServletResponse resp, Account acct, String token) throws ServiceException, IOException {
+        StringBuilder sb = new StringBuilder();
+        sb.append(URLUtil.getMailURL(acct.getServer(), req.getRequestURI(), true));
+        sb.append('?').append(PARAM_ISREDIRECT).append('=').append('1');
+        sb.append('&').append(PARAM_AUTHTOKEN).append('=').append(token);
+        resp.sendRedirect(sb.toString());
+    }
+
+    private void setCookieAndRedirect(HttpServletResponse resp, String authToken) throws IOException {
+        Cookie c = new Cookie(COOKIE_ZM_AUTH_TOKEN, authToken);
+        c.setPath("/");
+        resp.addCookie(c);
+        resp.sendRedirect(DEFAULT_MAIL_URL);
     }
 
 }

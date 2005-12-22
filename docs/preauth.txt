@@ -97,7 +97,7 @@ preauth servlet:
         timestamp={time}
         expires={expires}
         isredirect={1|0}
-        authToken={...}
+        authtoken={...}
         preauth={....}
 
 
