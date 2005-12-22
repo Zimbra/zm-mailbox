@@ -30,7 +30,6 @@
 package com.zimbra.cs.service;
 
 import java.io.IOException;
-import java.net.URLEncoder;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
@@ -87,19 +86,28 @@ public class PreAuthServlet extends ZimbraServlet {
     throws ServletException, IOException
     {
         try {
+            Provisioning prov = Provisioning.getInstance();
+            
             String isRedirect = getOptionalParam(req, PARAM_ISREDIRECT, "0");
-            if (isRedirect.equals("1")) {
-                String authToken = getRequiredParam(req, resp, PARAM_AUTHTOKEN);
+            String authToken = getOptionalParam(req, PARAM_AUTHTOKEN, null);            
+            if (isRedirect.equals("1") && authToken != null) {
                 setCookieAndRedirect(resp, authToken);
                 return;
+            } else if (authToken != null) {
+                // see if we need a redirect to the correct server
+                AuthToken at = AuthToken.getAuthToken(authToken);
+                Account acct = prov.getAccountById(at.getAccountId());
+                if (acct.isCorrectHost()) {
+                    setCookieAndRedirect(resp, authToken);
+                } else {
+                    redirectToCorrectServer(req, resp, acct, authToken);
+                }
             } else {
                 String preAuth = getRequiredParam(req, resp, PARAM_PREAUTH);            
                 String account = getRequiredParam(req, resp, PARAM_ACCOUNT);
                 String accountBy = getOptionalParam(req, PARAM_BY, Auth.BY_NAME);
                 long timestamp = Long.parseLong(getRequiredParam(req, resp, PARAM_TIMESTAMP));
                 long expires = Long.parseLong(getRequiredParam(req, resp, PARAM_EXPIRES));
-            
-                Provisioning prov = Provisioning.getInstance();
             
                 Account acct = null;
                 if (accountBy.equals(Auth.BY_NAME)) {
@@ -115,9 +123,9 @@ public class PreAuthServlet extends ZimbraServlet {
                 
                 prov.preAuthAccount(acct, account, accountBy, timestamp, expires, preAuth);
             
-                AuthToken at =  expires ==  0 ? new AuthToken(acct) : new AuthToken(acct, expires);
+                AuthToken at = (expires ==  0) ? new AuthToken(acct) : new AuthToken(acct, expires);
                 try {
-                    String authToken = at.getEncoded();
+                    authToken = at.getEncoded();
                     
                     if (acct.isCorrectHost()) {
                         setCookieAndRedirect(resp, at.getEncoded());
@@ -129,6 +137,9 @@ public class PreAuthServlet extends ZimbraServlet {
                 }
             }
         } catch (ServiceException e) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+            return;
+        } catch (AuthTokenException e) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
             return;
         }
