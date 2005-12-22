@@ -71,6 +71,8 @@ public class OzConnection {
     
     private final boolean mTrace;
 
+    private boolean mReadPending;
+    
     OzConnection(OzServer server, SocketChannel channel) throws IOException {
         mId = mIdCounter.increment();
         mIdString = Integer.toString(mId);
@@ -112,10 +114,6 @@ public class OzConnection {
         mFilter = filter;
     }
     
-    private synchronized OzFilter getFilter() {
-        return mFilter;
-    }
-    
     public void closeNow() {
         Runnable closeTask = new Runnable() {
             public void run() {
@@ -149,7 +147,6 @@ public class OzConnection {
     }
 
     void addToNDC() {
-        ZimbraLog.addToContext("t", Thread.currentThread().getName());
         ZimbraLog.addIpToContext(getRemoteAddress());
         ZimbraLog.addConnectionIdToContext(getIdString());
     }
@@ -191,12 +188,18 @@ public class OzConnection {
     }
 
     void enableReadInterest() {
-        synchronized (mSelectionKey) {
-            int iops = mSelectionKey.interestOps();
-            mSelectionKey.interestOps(iops | SelectionKey.OP_READ);
-            logKey(mLog, mSelectionKey, "enabled read interest");
+        synchronized (mReadLock) {
+            if (mReadPending) {
+                return;
+            }
+            synchronized (mSelectionKey) {
+                int iops = mSelectionKey.interestOps();
+                mSelectionKey.interestOps(iops | SelectionKey.OP_READ);
+                logKey(mLog, mSelectionKey, "enabled read interest");
+            }
+            mSelectionKey.selector().wakeup();
+            mReadPending = true;
         }
-        mSelectionKey.selector().wakeup();
     }
     
     private void disableReadInterest() {
@@ -294,6 +297,7 @@ public class OzConnection {
                 int bytesRead = -1;
                 synchronized (mReadLock) {
                     bytesRead = mChannel.read(rbb);
+                    mReadPending = false;
                 }
                 if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("read buffer after channel read", rbb, true));
                 
