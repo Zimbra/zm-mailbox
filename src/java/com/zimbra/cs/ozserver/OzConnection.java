@@ -149,6 +149,7 @@ public class OzConnection {
     }
 
     void addToNDC() {
+        ZimbraLog.addToContext("t", Thread.currentThread().getName());
         ZimbraLog.addIpToContext(getRemoteAddress());
         ZimbraLog.addConnectionIdToContext(getIdString());
     }
@@ -243,6 +244,7 @@ public class OzConnection {
             try {
                 try {
                     addToNDC();
+                    if (mDebug) mLog.debug("starting disconnect task");
                     mConnectionHandler.handleDisconnect();
                     closeNow();
                     if (mFilter != null) {
@@ -250,6 +252,7 @@ public class OzConnection {
                     }
                     closed = true;
                 } finally {
+                    if (mDebug) mLog.debug("finished disconnect task");
                     clearFromNDC();
                 }
             } catch (Throwable t) {
@@ -284,6 +287,7 @@ public class OzConnection {
         public void run() {
             try {
                 addToNDC();
+                if (mDebug) mLog.debug("starting read task");
                 ByteBuffer rbb = getReadByteBuffer();
                 mLog.info("obtained buffer " + OzUtil.intToHexString(rbb.hashCode(), 0, ' '));
                 if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("read buffer at start", rbb, true));
@@ -297,6 +301,7 @@ public class OzConnection {
                 
                 if (bytesRead == -1) {
                     if (mDebug) mLog.debug("channel read detected that client closed connection");
+                    if (mDebug) mLog.debug("scheduling disconnect task");
                     mServer.execute(mHandleDisconnectTask);
                     return;
                 }
@@ -325,6 +330,7 @@ public class OzConnection {
                 }
                 closeNow();
             } finally {
+                if (mDebug) mLog.debug("finished read task");
                 clearFromNDC();
             }
         }
@@ -370,6 +376,7 @@ public class OzConnection {
         dataBuffer.clear();
 
         enableReadInterest();
+        
         return;
     }
 
@@ -379,11 +386,13 @@ public class OzConnection {
         // we don't get another ready notification before the worker
         // will get a chance to run and disable read interest.
         disableReadInterest();
+        if (mDebug) mLog.debug("scheduling read task");
         mServer.execute(mHandleReadTask);
     }
 
     void doWrite() throws IOException {
         disableWriteInterest();
+        if (mDebug) mLog.debug("scheduling write task");
         mServer.execute(mHandleWriteTask);
     }
 
@@ -391,8 +400,9 @@ public class OzConnection {
         
     private class HandleWriteTask implements Runnable {
         public void run() {
-            addToNDC();
             try {
+                addToNDC();
+                if (mDebug) mLog.debug("starting write task");
                 boolean allWritten;
                 synchronized (mWriteBuffers) {
                     allWritten = writeLocked();
@@ -400,10 +410,10 @@ public class OzConnection {
                 if (mFilter != null && allWritten) {
                     mFilter.writeCompleted();
                 }
-
             } catch (IOException ioe) {
                 mLog.info("exception occured");
             } finally {
+                if (mDebug) mLog.debug("finished write task");
                 clearFromNDC();
             }
         }
@@ -497,10 +507,10 @@ public class OzConnection {
         // TODO even if flush has not been requested, we should flush if we
         // have too much data!
         if (mFilter != null) {
-            if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("pre-filter outgoing", wbb, false));
+            if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("write handed to filter", wbb, false));
             mFilter.write(wbb, flush);
         } else {
-            if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("pre-filter outgoing", wbb, false));
+            if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("write handed to channel", wbb, false));
             channelWrite(wbb, flush);
         }
     }
@@ -525,7 +535,7 @@ public class OzConnection {
      * Close after all pending writes.
      */
     public void close() {
-        disableReadInterest();
+        //disableReadInterest();
         synchronized (mWriteBuffers) {
             mCloseAfterWrite = true;
             

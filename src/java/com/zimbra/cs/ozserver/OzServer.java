@@ -116,15 +116,13 @@ public class OzServer {
     
     private void serverLoop() {
         while (true) {
-            synchronized (mServerThreadTasks) {
-                if (mLog.isDebugEnabled()) mLog.debug("running " + mServerThreadTasks.size() + " server thread tasks");
-                for (Iterator taskIter = mServerThreadTasks.iterator(); taskIter.hasNext(); taskIter.remove()) {
-                    Runnable task = (Runnable) taskIter.next();
-                    try {
-                        task.run();
-                    } catch (Throwable e) {
-                        mLog.warn("ignoring exception that occurred while running server thread tasks", e);
-                    }
+            if (mLog.isDebugEnabled()) mLog.debug("running " + mServerThreadTasks.size() + " server thread tasks");
+            Runnable task = null;
+            while ((task = getNextServerThreadTask()) != null) {
+                try {
+                    task.run();
+                } catch (Throwable e) {
+                    mLog.warn("ignoring exception that occurred while running server thread tasks", e);
                 }
             }
             
@@ -277,6 +275,15 @@ public class OzServer {
     }
 
     private List<Runnable> mServerThreadTasks = new ArrayList<Runnable>(128); 
+    
+    private Runnable getNextServerThreadTask() {
+        synchronized (mServerThreadTasks) {
+            if (mServerThreadTasks.isEmpty()) {
+                return null;
+            }
+            return mServerThreadTasks.remove(0);
+        }
+    }
     
     void executeInServerThread(Runnable task) {
         if (Thread.currentThread() == mServerThread) {

@@ -37,6 +37,7 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLEngineResult;
+import javax.net.ssl.SSLException;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.SSLEngineResult.HandshakeStatus;
 import javax.net.ssl.SSLEngineResult.Status;
@@ -118,6 +119,13 @@ public class OzTLSFilter implements OzFilter {
         }
     }
 
+    private void handshakeCompleted() throws IOException {
+        if (mDebug) debug("handshake completed");
+        mHandshakeComplete = true;
+        processPendingWrites();
+        mConnection.enableReadInterest();
+    }
+    
     private void handshakeLocked(ByteBuffer rbb) throws IOException {
         if (mHandshakeComplete) {
             if (mDebug) debug("handshake deferred: already complete");
@@ -152,10 +160,7 @@ public class OzTLSFilter implements OzFilter {
                         mHandshakeStatus = runTasks();
                         break;
                     case FINISHED:
-                        if (mDebug) debug("handshake finished");
-                        mHandshakeComplete = true;
-                        if (mDebug) debug("handshake completed");
-                        processPendingWrites();
+                        handshakeCompleted();
                         break unwrap;
                     }
                     break;
@@ -176,7 +181,7 @@ public class OzTLSFilter implements OzFilter {
             /* Falling through, because while unwrapping, we are asked to wrap. */
             
         case NEED_WRAP:
-            //wrap: while (true) {
+            wrap: while (true) {
                 ByteBuffer dest = ByteBuffer.allocate(mPacketBufferSize);
                 SSLEngineResult result = mSSLEngine.wrap(mHandshakeBB, dest);
                 dest.flip();
@@ -190,7 +195,7 @@ public class OzTLSFilter implements OzFilter {
                     if (mDebug) debug("handshake: writing bytes");
                     mConnection.channelWrite(dest, true);
                     if (mHandshakeStatus != HandshakeStatus.NEED_WRAP) {
-                        //break wrap;
+                        break wrap;
                     }
                     break;
                 case BUFFER_OVERFLOW:
@@ -198,9 +203,9 @@ public class OzTLSFilter implements OzFilter {
                 case CLOSED:
                     throw new IOException("TLS handshake: XXX in wrap got status " + result.getStatus());
                 }
-            //}
+            }
             break;
-            
+        
         default:
             throw new RuntimeException("TLS handshake: can not deal with handshake status: " + mHandshakeStatus);
         }
@@ -268,10 +273,8 @@ public class OzTLSFilter implements OzFilter {
         synchronized (mReadBB) {
             switch (mHandshakeStatus) {
             case FINISHED:
-                mHandshakeComplete = true;
-                if (mDebug) debug("handshake completed");
-                processPendingWrites();
-                // Fall through and register for read
+                handshakeCompleted();
+                break;
                 
             case NEED_UNWRAP:
                 mConnection.enableReadInterest();
@@ -335,11 +338,31 @@ public class OzTLSFilter implements OzFilter {
     }
 
     public void closeNow() throws IOException {
+        if (mDebug) debug("closeNow");
         mSSLEngine.closeInbound();
     }
+
+    private boolean mClosedOutbound = false;
     
     public void close() throws IOException {
-        // TODO
+        if (mDebug) debug("close");
+        if (!mClosedOutbound) {
+            mSSLEngine.closeOutbound();
+            mClosedOutbound = true;
+        }
+
+        if (mConnection.isWritePending()) {
+            return;
+        }
+
+        /* "fire and forget" close_notify */
+        ByteBuffer dest = ByteBuffer.allocate(mPacketBufferSize);
+        SSLEngineResult result = mSSLEngine.wrap(mHandshakeBB, dest);
+        if (result.getStatus() != Status.CLOSED) {
+            throw new SSLException("Improper close state");
+        }
+        dest.flip();
+        mConnection.channelWrite(dest, true);
     }
 
     private void debug(String msg) {
