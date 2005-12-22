@@ -1,51 +1,199 @@
- <AuthRequest xmlns="urn:zimbraAccount">
-   <account by="name|id|foreignPrincipal">...</account>
-   [<password>...</password>]
-   [<preauth timestamp="{timestamp}" expires="{expires}">{computed-preauth-value}</preauth>]
-  [<prefs>[<pref name="..."/>...]</prefs>]
- </AuthRequest>
+------------------------------------------------------------
+What is preuath?
+------------------------------------------------------------
 
+Preauth stands for pre-authentication, and is a mechanism to enable a trusted 
+third party to "vouch" for a user's identity. For example, if a user has 
+already signed into a portal and wants to enter the mail application, they 
+should not have to be prompted again for their password.
 
-{timestamp} = current time, in milliseconds. The timestamp must be within 5 minutes of the server's time for the preauth to work.
+This can be accomplished by having the mail link they click on in the portal
+constuct a special URL and redirect the user to the Zimbra server, which 
+will then verify the data passed in the URL and create authentication token 
+(the standard mechanism within Zimbra to identify users), save it in a cookie,
+and redirect the user to the mail app.
 
-{expires} = expiration time of the authtoken. set to 0 to use the default expiration time.
+------------------------------------------------------------
+How does it work?
+------------------------------------------------------------
 
-{computed-preauth-value} = see below
+It works by having a key that is shared between the third party and Zimbra.
+Knowing this key, the third party specifies the desired username, a timestamp
+(to ensure the request is "fresh"), optionally an expiration time, and then
+computes a SHA-1 HMAC over that data using  secret key.
 
-<preauth> is used to grant a token to an identity that has already been authenticated via an external system. 
+The server computes the HMAC using the supplied data, and its key, to verify
+that it matches the HMAC sent in the request. If it does, the server will
+construct an auth token, save it in a cookie, and redirect the user to the 
+mail application.
 
-The pre-auth value is computed as follows:
+------------------------------------------------------------
+Preparing a domain for preauth
+------------------------------------------------------------
 
-1. concat the values for account, by, expires, timestamp together (in that order)
-2. compute the hmac on that value using the zimbraPreAuthKey value for the account's domain
-3. convert value to hex
+In order for preauth to be enabled for a domain, you need to run the
+zmprov commmand and create a key:
+
+prov> gdpak domain.com
+preAuthKey: 4e2816f16c44fab20ecdee39fb850c3b0bb54d03f1d8e073aaea376a4f407f0c
+prov>
+
+Make note of that key value, as you'll need to use it to generate the
+computed-preauth values below. Also make sure you keep it secret, as it
+can be used to generate valid authtokens for any user in the given domain!
+
+Behind the scenes, this command is simply generating 32 random bytes,
+hex encoding them, then setting the "zimbraPreAuthKey" attr for the specified
+domain with the value of the key.
+
+After generating the key, you'll probably need to restart the ZCS server so it
+picks up the updated value.
+
+------------------------------------------------------------
+What are the interfaces?
+------------------------------------------------------------
+
+There are two interfaces. One interface is URL-based, for ease of integration.
+The other interface is SOAP-based, for cases where the third party wants more
+control over generating the auth token and redirecting the user.
+
+We'll describe the URL interface first, followed by the SOAP interface.
+
+------------------------------------------------------------
+URL Interface
+------------------------------------------------------------
+
+The URL interface uses the /service/reauth URL:
+
+/service/preauth?
+        account={account-identifier}
+        by={by-value}
+        timestamp={time}
+        expires={expires}
+        preauth={computed-preauth}
+
+The values are as follows:
+
+ {account-identifier}   depends on the value of the "by" attr. If "by" is not
+                        specified, it is the name (i.e., john.doe@domain.com).
+
+ {by-value}             name|id|foreignPrincipal, same as AuthRequest. defaults
+                        to name.
+
+ {timestamp}            current time, in milliseconds. The timestamp must
+                        be within 5 minutes of the server's time for the 
+                        preauth to work.
+
+ {expires}              expiration time of the authtoken, in milliseconds. 
+                        set to 0 to use the default expiration time for the
+                        account. Can be used to sync the authtoken expiration
+                        time with the external system's notion of expiration
+                        (like a Kerberos TGT lifetime, for example).
+
+{computed-preauth}      the computed pre-auth value. See below for details.
+
+The preauth value is computed as follows:
+
+  1. concat the values for account, by, expires, timestamp together 
+     (in that order, order is definitely important!), separated by "|"
+
+  2. compute the HMAC on that value using the shared key
+     (the zimbraPreAuthKey value for the account's domain, generating one
+      is described below).
+
+  3. convert the HMAC value into a hex string.
+
+For example, given the following values:
+
+key: 6b7ead4bd425836e8cf0079cd6c1a05acc127acd07c8ee4b61023e19250e929c
+
+account: john.doe@domain.com
+by: name
+expires: 0
+timestamp: 1135280708088
+
+You would concat the account/by/expires/timestamp values together to get:
+
+john.doe@domain.com|name|0|1135280708088
+
+You would then compute the SHA-1 HMAC on that string, using the key:
+
+preauth = hmac("john.doe@domain.com|name|0|1135280708088", 
+          "6b7ead4bd425836e8cf0079cd6c1a05acc127acd07c8ee4b61023e19250e929c");
+
+finally, you would take the returned hmac (which is most likely an array of
+bytes), and convert it to a hex string:
+
+preauth-value : b248f6cfd027edd45c5369f8490125204772f844
+
+The resulting URL would be:
+
+/service/preauth?account=john.doe@domain.com&expires=0\
+    &timestamp=1135280708088&preauth=b248f6cfd027edd45c5369f8490125204772f844
+
+Hitting that URL on the ZCS server will cause the preauth value to be verified,
+followed by a redirect to /zimbra/mail with the authtoken in a cookie.
+
+------------------------------------------------------------
+SOAP Interface
+------------------------------------------------------------
+
+The SOAP interface uses the standard AuthRequest message, but instead of
+passing in a password, you specify <preauth> data.
 
 For example:
 
-account:  user1
-by: name
-expires: 0
-timestamp: 1135210291075
+ <AuthRequest xmlns="urn:zimbraAccount">
+   <account by="name|id|foreignPrincipal">{account-identifier}</account>
+   <preauth timestamp="{timestamp}" 
+            expires="{expires}">{computed-preauth}</preauth>
+ </AuthRequest>
 
-concat them together to get a string (order is important): "user1|name|0|1135210291075"
+The values are exactly the same as they were for the URL case:
 
-compute the SHA1 HMAC of that string, using the zimbraPreAuthKey:
+ <AuthRequest xmlns="urn:zimbraAccount">
+   <account>john.doe@domain.com</account>
+   <preauth timestamp="1135280708088"
+            expires="0}">b248f6cfd027edd45c5369f8490125204772f844</preauth>
+ </AuthRequest>
 
-hex(hmacsha1("user1|name|0|1135210291075", "82370c9794d9dd6582102660a06d5f2519c46778a02c03714fe525de7d0d09d5"))
+The authtoken will be return in the AuthResponse. At which point, you can
+"inject" it into the app via the URL interface:
 
-result = 35856d8d94523d9c19084b54fbc07fdc9d8f4743
+https://server/service/preauth?isredirect=1&authtoken={...}
 
-the resulting soap would look like:
+Going to this URL will set the cookie and redirect to /zimbra/mail.
 
-      <AuthRequest xmlns='urn:zimbraAccount'>
-        <account by="name">user1</account>
-        <preauth timestamp="1135200294007" expires="0">c19adc701b2c5b503b6388ac0173fb2dea72926f</preauth>
-      </AuthRequest>
+------------------------------------------------------------
+Sample Java code for computing the preauth value
+------------------------------------------------------------
 
+The following Java Code (1.5) will compute the pre-auth value.
 
-Java code to compute value is as follows:
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeSet;
+import javax.crypto.Mac;
+import javax.crypto.SecretKey;
 
-   public static  String computePreAuth(Map<String,String> params, String key) {
+public class test {
+ 
+ public static void main(String args[]) { 
+     HashMap<String,String> params = new HashMap<String,String>();
+     params.put("account", "john.doe@domain.com");
+     params.put("by", "name"); // needs to be part of hmac
+     params.put("timestamp", "1135280708088");
+     params.put("expires", "0");
+     String key = 
+        "6b7ead4bd425836e8cf0079cd6c1a05acc127acd07c8ee4b61023e19250e929c";
+     System.out.printf("preAuth: %s\n", computePreAuth(params, key)); 
+  }
+
+  public static  String computePreAuth(Map<String,String> params, String key) 
+  {
         TreeSet<String> names = new TreeSet<String>(params.keySet());
         StringBuilder sb = new StringBuilder();
         for (String name : names) {
@@ -60,7 +208,7 @@ Java code to compute value is as follows:
             ByteKey bk = new ByteKey(key);
             Mac mac = Mac.getInstance("HmacSHA1");
             mac.init(bk);
-            return new String(Hex.encodeHex(mac.doFinal(data.getBytes())));
+            return toHex(mac.doFinal(data.getBytes()));
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("fatal error", e);
         } catch (InvalidKeyException e) {
@@ -86,39 +234,31 @@ Java code to compute value is as follows:
         public String getFormat() {
             return "RAW";
         }       
+   }
+
+    public static String toHex(byte[] data) {
+        StringBuilder sb = new StringBuilder(data.length * 2);
+        for (int i=0; i<data.length; i++ ) {
+           sb.append(hex[(data[i] & 0xf0) >>> 4]);
+           sb.append(hex[data[i] & 0x0f] );
+        }
+	return sb.toString();
+    }
+
+    private static final char[] hex = 
+       { '0' , '1' , '2' , '3' , '4' , '5' , '6' , '7' ,
+         '8' , '9' , 'a' , 'b' , 'c' , 'd' , 'e' , 'f'};
+}
+
+You can also use zmprov while debugging to generate preAuth values for
+comparison:
+
+prov> gdpa domain.com john.doe@domain.com name 1135280708088 0 
+account: john.doe@domain.com
+by: name
+timestamp: 1135280708088
+expires: 0
+preAuth: b248f6cfd027edd45c5369f8490125204772f844
+prov> 
         
 ------------------------------------------------
-
-preauth servlet:
-
-/service/preauth?
-        account=user1@zimbra.com
-        by={name|id|foreignPrincipal}
-        timestamp={time}
-        expires={expires}
-        isredirect={1|0}
-        authtoken={...}
-        preauth={....}
-
-
-1) hit /service/preauth servlet, pass in:
-
-     account       account name/id/foreignPrincipal
-     by            name|id|foreignPrincipal (default is name)
-     timestamp     (current time in millis)
-     expires       (expires of authtoken in millis)
-     preauth
-
-For example:
-
- /service/preauth?account=user1&by=name&expires=0&timestamp=1135210291075&preauth=82370c9794d9dd6582102660a06d5f2519c46778a02c03714fe525de7d0d09d5
-
-2) it will internally do a the Provisioning.preAuthAccount call, set a cookie, and do the redirect
-
-The server will take the info, lookup zimbraPreAuthKey to verify the request is valid and recent(5 minute window?). If ok, it will return an auth token
-
-3) If already on correct host, then set ZM_AUTH_TOKEN cookie and redirect to /zimbra/mail.
-
-4) If on wrong host, redirect to correct host. Redirect to:
-
-  /zimbra/preauth?isredirect=1&authtoken={token}
