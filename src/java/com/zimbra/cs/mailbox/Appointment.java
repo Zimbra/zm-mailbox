@@ -977,8 +977,6 @@ public class Appointment extends MailItem {
             for (Iterator iter = mReplies.iterator(); iter.hasNext();) {
                 ReplyInfo cur = (ReplyInfo)iter.next();
                 
-//                if ( (cur.mRecurId == null && recurId == null) ||
-//                        (cur.mRecurId.withinRange(recurId))) {
                 if (recurMatches(cur.mRecurId, recurId)) {
                     if (cur.mSeqNo <= seqNo && cur.mDtStamp <= dtStamp) {
                         iter.remove();
@@ -991,7 +989,6 @@ public class Appointment extends MailItem {
             for (Iterator iter = mReplies.iterator(); iter.hasNext();) {
                 ReplyInfo cur = (ReplyInfo)iter.next();
                 
-//                if (attendeeMatches(at, cur.mAttendee)) {
                 if (at.addressesMatch(cur.mAttendee)) {
                     if (recurMatches(inv.getRecurId(), cur.mRecurId)) {
                         if (inv.getSeqNo() >= cur.mSeqNo) {
@@ -1078,23 +1075,54 @@ public class Appointment extends MailItem {
             return lhs.equals(rhs);
         }
         
+        /**
+         * Find the "Effective" attendee for a particular Instance
+         * 
+         * Three possible returns
+         *    1) an exact match (reply is to default and asking for default OR reply is to specific instance and asking for it)
+         *    2) the default, if one is set
+         *    3) null
+         * 
+         * @param acct
+         * @param inv 
+         * @param inst Instance to look up, or "null" for the default instance
+         * @return
+         * @throws ServiceException
+         */
         ZAttendee getEffectiveAttendee(Account acct, Invite inv, Instance inst) throws ServiceException {
+            ZAttendee defaultAt = null;
+            
             for (Iterator iter = mReplies.iterator(); iter.hasNext();) {
                 ReplyInfo cur = (ReplyInfo)iter.next();
                 
                 if (AccountUtil.addressMatchesAccount(acct, cur.mAttendee.getAddress())) {
-                    if ((cur.mRecurId == null && inv.getRecurId() == null) ||
-                            (inst!=null && cur.mRecurId != null && cur.mRecurId.withinRange(inst.getStart()))) {
+                    if (
+                            (cur.mRecurId == null && inst == null) || // asking for default instance
+                            (inst!=null && cur.mRecurId != null && cur.mRecurId.withinRange(inst.getStart())) // matches specific requested instance
+                    ) {
+                        //
+                        // we found exactly what they're looking for!  Either the default (and they asked for it) or the
+                        // specific one they asked for
+                        //
                         if (inv.getSeqNo() <= cur.mSeqNo) {
                             if (inv.getDTStamp() <= cur.mDtStamp) {
                                 return cur.mAttendee;
                             }
                         }
                     }
+                    
+                    if (cur.mRecurId == null) {
+                        // save the default reply if it is valid: we will return it if we don't find an exact match
+                        if ((inv.getSeqNo() <= cur.mSeqNo) && (inv.getDTStamp() <= cur.mDtStamp))
+                            defaultAt = cur.mAttendee;
+                    }
                 }
             }
             
-            return inv.getMatchingAttendee(acct);
+            if (defaultAt == null)
+                return inv.getMatchingAttendee(acct);
+            else
+                return defaultAt;
         }
         
         List /* ReplyInfo */ getReplyInfo(Invite inv) {
@@ -1118,26 +1146,7 @@ public class Appointment extends MailItem {
         }
         
 
-        ZAttendee getEffectiveAttendee(Account acct, Invite inv, RecurId recurId) throws ServiceException {
-            for (Iterator iter = mReplies.iterator(); iter.hasNext();) {
-                ReplyInfo cur = (ReplyInfo)iter.next();
-                
-                if (AccountUtil.addressMatchesAccount(acct, cur.mAttendee.getAddress())) {
-                    if ((cur.mRecurId == null && inv.getRecurId() == null) ||
-                            (recurId!=null && cur.mRecurId.withinRange(recurId))) {
-                        if (inv.getSeqNo() <= cur.mSeqNo) {
-                            if (inv.getDTStamp() <= cur.mDtStamp) {
-                                return cur.mAttendee;
-                            }
-                        }
-                    }
-                }
-            }
-            
-            return inv.getMatchingAttendee(acct);
-        }
-        
-    }
+    } // class ReplyList
             
     /**
      * Get all of the Reply data corresponding to this invite

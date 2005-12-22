@@ -145,6 +145,9 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
                         if (!defaultFba.equals(instFba)) {
                             instElt.addAttribute(MailService.A_APPT_FREEBUSY_ACTUAL, instFba); 
                         }
+                        if (!defaultPtSt.equals(instPtSt)) {
+                            instElt.addAttribute(MailService.A_APPT_PARTSTAT, instPtSt); 
+                        }
                         
                         if (inst.isException()) {
                             instElt.addAttribute(MailService.A_APPT_IS_EXCEPTION, true);
@@ -178,10 +181,6 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
                             
                             if (!defaultInvite.getStatus().equals(inv.getStatus())) {
                                 instElt.addAttribute(MailService.A_APPT_STATUS, inv.getStatus());
-                            }
-                            
-                            if (!defaultPtSt.equals(instPtSt)) {
-                                instElt.addAttribute(MailService.A_APPT_PARTSTAT, instPtSt); 
                             }
                             
                             if (!defaultInvite.getFreeBusy().equals(inv.getFreeBusy())) {
