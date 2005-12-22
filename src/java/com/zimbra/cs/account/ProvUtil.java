@@ -76,7 +76,7 @@ public class ProvUtil {
         System.out.println("  GetAllDomains(gad) [-v]");
         System.out.println("  ModifyDomain(md) {domain|id} [attr1 value1 [attr2 value2...]]");        
         //System.out.println("  GenerateDomainPreAuthKey(gdpak) {domain|id}");        
-        //System.out.println("  GenerateDomainPreAuth(gdpa) {domain|id} {name} timestamp|0 expires|0");                
+        //System.out.println("  GenerateDomainPreAuth(gdpa) {domain|id} {name} {name|id|foreignPrincipal} {timestamp|0} {expires|0}");                
         System.out.println();
 
         System.out.println("  CreateCos(cc) {name} [attr1 value1 [attr2 value2...]]");
@@ -465,7 +465,7 @@ public class ProvUtil {
     }
 
     private void doGenerateDomainPreAuth(String[] args) throws ServiceException {
-        if (args.length != 5) {
+        if (args.length != 6) {
             usage();
         } else {
             String key = args[1];
@@ -475,14 +475,16 @@ public class ProvUtil {
                 throw ServiceException.INVALID_REQUEST("domain not configured for preauth", null);
 
             String name = args[2];
-            long timestamp = Long.parseLong(args[3]);
+            String by = args[3];            
+            long timestamp = Long.parseLong(args[4]);
             if (timestamp == 0) timestamp = System.currentTimeMillis();
-            long expires = Long.parseLong(args[4]);
+            long expires = Long.parseLong(args[5]);
             HashMap<String,String> params = new HashMap<String,String>();
             params.put("account", name);
+            params.put("by", by);            
             params.put("timestamp", timestamp+"");
             params.put("expires", expires+"");
-            System.out.printf("account: %s\ntimestamp: %s\nexpires: %s\npreAuth: %s\n", name, timestamp, expires,PreAuthKey.computePreAuth(params, preAuthKey));
+            System.out.printf("account: %s\nby: %s\ntimestamp: %s\nexpires: %s\npreAuth: %s\n", name, by, timestamp, expires,PreAuthKey.computePreAuth(params, preAuthKey));
         }
     }
 

@@ -16,23 +16,24 @@
 
 The pre-auth value is computed as follows:
 
-1. concat the values for account, expires, timestamp together
+1. concat the values for account, by, expires, timestamp together (in that order)
 2. compute the hmac on that value using the zimbraPreAuthKey value for the account's domain
 3. convert value to hex
 
 For example:
 
 account:  user1
+by: name
 expires: 0
-timestamp: 1135200294007
+timestamp: 1135210291075
 
-concat them together to get a string (order is important): "user1|0|1135200294007"
+concat them together to get a string (order is important): "user1|name|0|1135210291075"
 
 compute the SHA1 HMAC of that string, using the zimbraPreAuthKey:
 
-hex(hmacsha1("user1|0|1135200294007", "82370c9794d9dd6582102660a06d5f2519c46778a02c03714fe525de7d0d09d5"))
+hex(hmacsha1("user1|name|0|1135210291075", "82370c9794d9dd6582102660a06d5f2519c46778a02c03714fe525de7d0d09d5"))
 
-result = c19adc701b2c5b503b6388ac0173fb2dea72926f
+result = 35856d8d94523d9c19084b54fbc07fdc9d8f4743
 
 the resulting soap would look like:
 
@@ -86,3 +87,38 @@ Java code to compute value is as follows:
             return "RAW";
         }       
         
+------------------------------------------------
+
+preauth servlet:
+
+/service/preauth?
+        account=user1@zimbra.com
+        by={name|id|foreignPrincipal}
+        timestamp={time}
+        expires={expires}
+        isredirect={1|0}
+        authToken={...}
+        preauth={....}
+
+
+1) hit /service/preauth servlet, pass in:
+
+     account       account name/id/foreignPrincipal
+     by            name|id|foreignPrincipal (default is name)
+     timestamp     (current time in millis)
+     expires       (expires of authtoken in millis)
+     preauth
+
+For example:
+
+ /service/preauth?account=user1&by=name&expires=0&timestamp=1135210291075&preauth=82370c9794d9dd6582102660a06d5f2519c46778a02c03714fe525de7d0d09d5
+
+2) it will internally do a the Provisioning.preAuthAccount call, set a cookie, and do the redirect
+
+The server will take the info, lookup zimbraPreAuthKey to verify the request is valid and recent(5 minute window?). If ok, it will return an auth token
+
+3) If already on correct host, then set ZM_AUTH_TOKEN cookie and redirect to /zimbra/mail.
+
+4) If on wrong host, redirect to correct host. Redirect to:
+
+  /zimbra/preauth?isredirect=1&authtoken={token}

@@ -1896,7 +1896,7 @@ public class LdapProvisioning extends Provisioning {
     
     public static final long TIMESTAMP_WINDOW = Constants.MILLIS_PER_MINUTE * 5; 
 
-    public void preAuthAccount(Account acct, String acctValue, long timestamp, long expires, String preAuth) throws ServiceException {
+    public void preAuthAccount(Account acct, String acctValue, String acctBy, long timestamp, long expires, String preAuth) throws ServiceException {
         if (preAuth == null || preAuth.length() == 0)
             throw ServiceException.INVALID_REQUEST("preAuth must not be empty", null);
 
@@ -1914,6 +1914,7 @@ public class LdapProvisioning extends Provisioning {
         // compute expected preAuth
         HashMap<String,String> params = new HashMap<String,String>();
         params.put("account", acctValue);
+        params.put("by", acctBy);
         params.put("timestamp", timestamp+"");
         params.put("expires", expires+"");
         String computedPreAuth = PreAuthKey.computePreAuth(params, domainPreAuthKey);

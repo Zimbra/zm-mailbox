@@ -41,6 +41,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.service.account.Auth;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.ZimbraLog;
 
@@ -48,6 +49,7 @@ public class PreAuthServlet extends ZimbraServlet {
 
     public static final String PARAM_PREAUTH = "preauth";
     public static final String PARAM_ACCOUNT = "account";
+    public static final String PARAM_BY = "by";
     public static final String PARAM_TIMESTAMP = "timestamp";
     public static final String PARAM_EXPIRES = "expires";    
     
@@ -71,22 +73,37 @@ public class PreAuthServlet extends ZimbraServlet {
         else return param;
     }
 
+    private String getOptionalParam(HttpServletRequest req, String paramName, String def) throws ServiceException {
+        String param = req.getParameter(paramName);
+        if (param == null) return def;
+        else return param;
+    }
+    
     public void doGet(HttpServletRequest req, HttpServletResponse resp)
     throws ServletException, IOException
     {
         try {
             String preAuth = getRequiredParam(req, resp, PARAM_PREAUTH);            
             String account = getRequiredParam(req, resp, PARAM_ACCOUNT);
+            String accountBy = getOptionalParam(req, PARAM_BY, Auth.BY_NAME);
             long timestamp = Long.parseLong(getRequiredParam(req, resp, PARAM_TIMESTAMP));
             long expires = Long.parseLong(getRequiredParam(req, resp, PARAM_EXPIRES));
             
             Provisioning prov = Provisioning.getInstance();
-            Account acct = prov.getAccountByName(account);
+            
+            Account acct = null;
+            if (accountBy.equals(Auth.BY_NAME)) {
+                acct = prov.getAccountByName(account);            
+            } else if (accountBy.equals(Auth.BY_ID)) {
+                acct = prov.getAccountById(account);
+            } else if (accountBy.equals(Auth.BY_FOREIGN_PRINCIPAL)) {
+                acct = prov.getAccountByForeignPrincipal(account);
+            }
             
             if (acct == null)
                 throw AccountServiceException.AUTH_FAILED(account);
 
-            prov.preAuthAccount(acct, account, timestamp, expires, preAuth);
+            prov.preAuthAccount(acct, account, accountBy, timestamp, expires, preAuth);
             
             AuthToken at =  expires ==  0 ? new AuthToken(acct) : new AuthToken(acct, expires);
             String authToken;

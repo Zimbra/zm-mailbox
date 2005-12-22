@@ -93,7 +93,7 @@ public class Auth extends DocumentHandler  {
                 long timestamp = preAuthEl.getAttributeLong(AccountService.A_TIMESTAMP);
                 expires = preAuthEl.getAttributeLong(AccountService.A_EXPIRES, 0);
                 String preAuth = preAuthEl.getTextTrim();
-                prov.preAuthAccount(acct, value, timestamp, expires, preAuth);
+                prov.preAuthAccount(acct, value, by, timestamp, expires, preAuth);
             } else {
                 throw ServiceException.INVALID_REQUEST("must specify "+AccountService.E_PASSWORD, null);
             }
