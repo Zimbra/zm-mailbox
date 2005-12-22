@@ -160,7 +160,6 @@ public class ContentServlet extends ZimbraServlet {
                     } else if (mi instanceof Appointment) {
                         Appointment appt = (Appointment) mi;
                         if (sync) {
-                            hdr.append("X-Zimbra-DefaultInvId: ").append(appt.getDefaultInvite().getMailItemId()).append("\n");
                             resp.getOutputStream().write(hdr.toString().getBytes());
                         }
                         

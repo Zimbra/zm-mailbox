@@ -68,11 +68,7 @@ public class SyncFormatter extends Formatter {
         addHeader(context, hdr, "X-Zimbra-Flags", mailItem.getFlagString());
         addHeader(context, hdr, "X-Zimbra-Received", mailItem.getDate()+"");
                 
-        if (mailItem instanceof Appointment) {
-            //hdr.append("X-Zimbra-DefaultInvId: ").append(((Appointment)mailItem).getDefaultInvite().getMailItemId()).append("\n");
-            addHeader(context, hdr, "X-Zimbra-DefaultInvId", ((Appointment)mailItem).getDefaultInvite().getMailItemId()+"");
-        } else if (mailItem instanceof Message) {
-            //hdr.append("X-Zimbra-Conv: ").append(((Message)mailItem).getConversationId()).append("\n");
+        if (mailItem instanceof Message) {
             addHeader(context, hdr, "X-Zimbra-Conv", ((Message)mailItem).getConversationId()+"");
         }
         // dump headers to content
