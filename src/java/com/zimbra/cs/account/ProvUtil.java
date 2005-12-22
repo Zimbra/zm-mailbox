@@ -75,8 +75,8 @@ public class ProvUtil {
         System.out.println("  GetDomain(gd) {domain|id}");
         System.out.println("  GetAllDomains(gad) [-v]");
         System.out.println("  ModifyDomain(md) {domain|id} [attr1 value1 [attr2 value2...]]");        
-        //System.out.println("  GenerateDomainPreAuthKey(gdpak) {domain|id}");        
-        //System.out.println("  GenerateDomainPreAuth(gdpa) {domain|id} {name} {name|id|foreignPrincipal} {timestamp|0} {expires|0}");                
+        System.out.println("  GenerateDomainPreAuthKey(gdpak) {domain|id}");        
+        System.out.println("  GenerateDomainPreAuth(gdpa) {domain|id} {name} {name|id|foreignPrincipal} {timestamp|0} {expires|0}");                
         System.out.println();
 
         System.out.println("  CreateCos(cc) {name} [attr1 value1 [attr2 value2...]]");
