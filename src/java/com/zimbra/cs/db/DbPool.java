@@ -46,9 +46,6 @@ import org.apache.commons.pool.impl.GenericObjectPool;
 
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.stats.Accumulator;
-import com.zimbra.cs.stats.Counter;
-import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.SystemUtil;
 import com.zimbra.cs.util.ValueCounter;

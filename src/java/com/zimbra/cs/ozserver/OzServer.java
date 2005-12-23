@@ -141,7 +141,7 @@ public class OzServer {
                 mLog.warn("OzServer IOException in select", ioe);
             }
 
-            if (mLog.isDebugEnabled()) mLog.debug("selected readyCount=" + readyCount);
+            if (mLog.isDebugEnabled()) mLog.debug("selected " + readyCount);
 
             if (readyCount == 0) {
                 continue;
@@ -184,7 +184,7 @@ public class OzServer {
                 } catch (Throwable t) {
                     mLog.warn("ignoring exception that occurred while handling selected key", t);
                     if (selectedConnection != null) {
-                        selectedConnection.closeNow();
+                        selectedConnection.closeConnection();
                     }
                 } finally {
                     if (selectedConnection != null) {

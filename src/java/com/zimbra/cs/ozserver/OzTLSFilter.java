@@ -350,6 +350,7 @@ public class OzTLSFilter implements OzFilter {
     public void closeNow() throws IOException {
         if (mDebug) debug("closeNow");
         mSSLEngine.closeInbound();
+        mConnection.channelClose();
     }
 
     private Object mCloseLock = new Object();
@@ -406,7 +407,7 @@ public class OzTLSFilter implements OzFilter {
     }
 
     private void debug(String msg) {
-        mLog.debug("TLS filter: " + msg);
+        mLog.debug("TLS: " + msg);
     }
 
     public ByteBuffer getReadBuffer() {

@@ -116,31 +116,27 @@ public class OzConnection {
         mFilter = filter;
     }
 
-    public void closeNow() {
+    public void closeConnection() {
         Runnable closeTask = new Runnable() {
             public void run() {
                 try {
                     addToNDC();
-                    run0();
+                    mLog.info("closing");
+                    try {
+                        if (mChannel.isOpen()) {
+                            mChannel.close();
+                        }
+                        mSelectionKey.cancel();
+                    } catch (IOException ioe) {
+                        mLog.warn("exception closing channel, ignoring and continuing", ioe);
+                    } finally {
+                        synchronized (mReadLock) { 
+                            if (mDebug && mClosed) mLog.debug("duplicate close detected");
+                            mClosed = true;
+                        }
+                    }
                 } finally {
                     clearFromNDC();
-                }
-            }
-            
-            private void run0() {
-                mLog.info("closing");
-                try {
-                    if (mChannel.isOpen()) {
-                        mChannel.close();
-                    }
-                    mSelectionKey.cancel();
-                } catch (IOException ioe) {
-                    mLog.warn("exception closing channel, ignoring and continuing", ioe);
-                } finally {
-                    synchronized (mReadLock) { 
-                        if (mDebug && mDebug) mLog.debug("duplicate close detected");
-                        mClosed = true;
-                    }
                 }
             }
         };
@@ -291,7 +287,7 @@ public class OzConnection {
                 mConnectionHandler.handleConnect();
             } catch (Throwable t) {
                 mLog.warn("exception occurred handling connect; will close connection", t);
-                closeNow();
+                closeConnection();
                 return;
             }
             enableReadInterest();
@@ -305,13 +301,14 @@ public class OzConnection {
     	    boolean closed = false;
             try {
                 mConnectionHandler.handleDisconnect();
-                closeNow();
                 if (mFilter != null) {
                     mFilter.closeNow();
+                } else {
+                    closeConnection();
                 }
                 closed = true;
             } catch (Throwable t) {
-                mLog.warn("exception occurred while handling disconnect", t);
+                mLog.warn("exception occurred handling disconnect", t);
                 if (!closed) {
                     /*
                      * Not catching any Throwables from closeNow()
@@ -322,7 +319,7 @@ public class OzConnection {
                      * means the server is fubar - so don't bother to be
                      * graceful in a worker thread.
                      */
-                    closeNow();
+                    closeConnection();
                 }
             }
         }
@@ -347,7 +344,7 @@ public class OzConnection {
                         return;
                     }
                     ByteBuffer rbb = getReadByteBuffer();
-                    mLog.info("obtained buffer " + OzUtil.intToHexString(rbb.hashCode(), 0, ' '));
+                    if (mDebug) mLog.debug("obtained buffer " + OzUtil.intToHexString(rbb.hashCode(), 0, ' '));
                     if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("read buffer at start", rbb, true));
                     bytesRead = mChannel.read(rbb);
                     mReadPending = false;
@@ -376,7 +373,7 @@ public class OzConnection {
                 }
             } catch (Throwable t) {
                 if (mChannel.isOpen()) {
-                    mLog.warn("exception occurred handling read; will close connection", t);
+                    mLog.warn("exception occurred read; will close connection", t);
                 } else {
                     // someone else may have closed the channel, eg, a shutdown or
                     // client went away, etc. Consider this case to be normal.
@@ -384,7 +381,7 @@ public class OzConnection {
                         mLog.debug("ignorable (" + t.getClass().getName() + ") when reading, connection already closed", t); 
                     }
                 }
-                closeNow();
+                closeConnection();
             }
         }
     }
@@ -461,7 +458,7 @@ public class OzConnection {
                 }
             } catch (Throwable t) {
                 mLog.info("exception occurred handling write", t);
-                closeNow();
+                closeConnection();
             }
         }
         
@@ -498,7 +495,7 @@ public class OzConnection {
                 mWritePending = false;
 
                 if (mCloseAfterWrite) {
-                    closeNow();
+                    closeConnection();
                 }
             }            
             
@@ -603,7 +600,7 @@ public class OzConnection {
             mCloseAfterWrite = true;
 
             if (mWriteBuffers.isEmpty()) {
-                closeNow();
+                closeConnection();
             }
         }
     }
