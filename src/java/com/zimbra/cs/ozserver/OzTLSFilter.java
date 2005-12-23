@@ -201,7 +201,7 @@ public class OzTLSFilter implements OzFilter {
                 case BUFFER_OVERFLOW:
                 case BUFFER_UNDERFLOW:
                 case CLOSED:
-                    throw new IOException("TLS handshake: XXX in wrap got status " + result.getStatus());
+                    throw new IOException("TLS handshake: in wrap got status " + result.getStatus());
                 }
             }
             break;
@@ -222,7 +222,7 @@ public class OzTLSFilter implements OzFilter {
     }
     
     public void read() throws IOException {
-        if (mDebug) debug("readBB position=" + mReadBB.position() + " limit=" + mReadBB.limit() + " capacity=" + mReadBB.capacity());
+        if (mDebug) debug("read: readBB position=" + mReadBB.position() + " limit=" + mReadBB.limit() + " capacity=" + mReadBB.capacity());
 
         if (!handshake()) {
             return; 
@@ -231,29 +231,31 @@ public class OzTLSFilter implements OzFilter {
         SSLEngineResult result;
         ByteBuffer unwrappedBB = ByteBuffer.allocate(mApplicationBufferSize);
         do {
-            if (mDebug) debug(OzUtil.byteBufferDebugDump("readBB before flip in unwrap", mReadBB, true));
+            if (mDebug) debug(OzUtil.byteBufferDebugDump("read: readBB before flip", mReadBB, true));
             mReadBB.flip();
-            if (mDebug) debug(OzUtil.byteBufferDebugDump("readBB after flip in unwrap", mReadBB, false));
+            if (mDebug) debug(OzUtil.byteBufferDebugDump("read: readBB after flip", mReadBB, false));
             
-            if (mDebug) debug("unwrap loop iteration  ***************************");
+            if (mDebug) debug("read: invoking unwrap");
             result = mSSLEngine.unwrap(mReadBB, unwrappedBB);
-            if (mDebug) debug(OzUtil.byteBufferDebugDump("after unwrap unwrappedBB", unwrappedBB, true));
-            if (mDebug) debug(OzUtil.byteBufferDebugDump("after unwrap readBB", mReadBB, true));
+            if (mDebug) debug(OzUtil.byteBufferDebugDump("read: after unwrap unwrappedBB", unwrappedBB, true));
+            if (mDebug) debug(OzUtil.byteBufferDebugDump("read: after unwrap readBB", mReadBB, true));
+            
             mReadBB.compact();
-            if (mDebug) debug("read unwrap result " + result);
+            
+            if (mDebug) debug("read: unwrap result " + result);
             
             switch (result.getStatus()) {
             case BUFFER_UNDERFLOW:
+            case CLOSED:
             case OK:
                 if (result.getHandshakeStatus() == HandshakeStatus.NEED_TASK) {
                     runTasks();
                 }
                 break;
             case BUFFER_OVERFLOW:
-            case CLOSED:
                 throw new IOException("TLS filter: SSLEngine error during read: " + result.getStatus());
             }
-        } while (mReadBB.position() != 0 && result.getStatus() != Status.BUFFER_UNDERFLOW);
+        } while (mReadBB.position() != 0 && result.getStatus() == Status.OK);
         mConnection.processRead(unwrappedBB);
     }
     
@@ -268,8 +270,16 @@ public class OzTLSFilter implements OzFilter {
     private boolean mPendingFlush;
     
     public void writeCompleted() throws IOException {
-        if (mDebug) debug("write completed checking if handshake complete: " + mHandshakeStatus);
+        if (mDebug) debug("write completed: checking if handshake complete: " + mHandshakeStatus);
 
+        if (isClosePending()) {
+            if (mDebug) debug("write completed: close pending");
+            if (!isNextStageClosed()) {
+                initiateNextStageClose();
+            }
+            return;
+        }
+        
         synchronized (mReadBB) {
             switch (mHandshakeStatus) {
             case FINISHED:
@@ -342,16 +352,46 @@ public class OzTLSFilter implements OzFilter {
         mSSLEngine.closeInbound();
     }
 
-    private boolean mClosedOutbound = false;
+    private Object mCloseLock = new Object();
+    private boolean mClosePending = false;
+    private boolean mClosedNextStage = false;
     
+    private boolean isClosePending() {
+        synchronized (mCloseLock) {
+            return mClosePending;
+        }
+    }
+
+    private void initiateNextStageClose() {
+        synchronized (mCloseLock) {
+            mClosedNextStage = true;
+            mConnection.channelClose();
+        }
+    }
+    
+    private boolean isNextStageClosed() {
+        synchronized (mCloseLock) {
+            return mClosedNextStage;
+        }
+    }
+    
+    private void initiateClose() {
+        if (mDebug) debug("initiating close");
+        synchronized (mCloseLock) {
+            if (!mClosePending) {
+                mSSLEngine.closeOutbound();
+                mClosePending = true;
+            }
+        }
+    }
+
     public void close() throws IOException {
         if (mDebug) debug("close");
-        if (!mClosedOutbound) {
-            mSSLEngine.closeOutbound();
-            mClosedOutbound = true;
-        }
+    
+        initiateClose();
 
         if (mConnection.isWritePending()) {
+            if (mDebug) debug("close: writing pending, will close when write is done");
             return;
         }
 

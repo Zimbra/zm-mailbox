@@ -45,36 +45,36 @@ class TestBoth {
 
     private static Log mLog = LogFactory.getLog(TestBoth.class);
 
-	private static Options mOptions = new Options();
-	
-	static {
-	    mOptions.addOption("t", "threads",     true,  "number of client threads (default 4)");
-	    mOptions.addOption("s", "shutdown",    true,  "shutdown server every specified seconds");
+    private static Options mOptions = new Options();
+        
+    static {
+        mOptions.addOption("t", "threads",     true,  "number of client threads (default 4)");
+        mOptions.addOption("s", "shutdown",    true,  "shutdown server every specified seconds");
         mOptions.addOption("S", "secure",      false, "whether to use SSL");
         mOptions.addOption("i", "iterations",  true,  "iterations of shutdown test (default 1000)");
         mOptions.addOption("c", "count",       true,  "number of transactions per client thread");
-	    mOptions.addOption("p", "port",        true,  "port (default 10043)");
-	    mOptions.addOption("T", "trace",       false, "trace server/client traffic");
-	    mOptions.addOption("D", "debug",       false, "print debug info");
-	    mOptions.addOption("h", "help",        false, "show this help");
-	}
-	
-	private static void usage(String errmsg) {
-		if (errmsg != null) { 
-			mLog.error(errmsg);
-		}
+        mOptions.addOption("p", "port",        true,  "port (default 10043)");
+        mOptions.addOption("T", "trace",       false, "trace server/client traffic");
+        mOptions.addOption("D", "debug",       false, "print debug info");
+        mOptions.addOption("h", "help",        false, "show this help");
+    }
+        
+    private static void usage(String errmsg) {
+        if (errmsg != null) { 
+            mLog.error(errmsg);
+        }
         HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp("TestBoth [options]", mOptions);
-		System.exit((errmsg == null) ? 0 : 1);
-	}
-
-	private static CommandLine parseArgs(String args[]) {
-		StringBuffer gotCL = new StringBuffer("cmdline: ");
-		for (int i = 0; i < args.length; i++) {
-			gotCL.append("'").append(args[i]).append("' ");
-		}
-		//mLog.info(gotCL);
-		
+        System.exit((errmsg == null) ? 0 : 1);
+    }
+    
+    private static CommandLine parseArgs(String args[]) {
+        StringBuffer gotCL = new StringBuffer("cmdline: ");
+        for (int i = 0; i < args.length; i++) {
+            gotCL.append("'").append(args[i]).append("' ");
+        }
+        //mLog.info(gotCL);
+        
         CommandLineParser parser = new GnuParser();
         CommandLine cl = null;
         try {
@@ -84,13 +84,13 @@ class TestBoth {
         }
         
         if (cl.hasOption('h')) {
-        	usage(null);
+            usage(null);
         }
         return cl;
     }
 
     static class TestClientThread extends Thread {
-    	
+        
         private boolean mSecure;
         private int mPort;
         private boolean mShutdownRequested;
@@ -128,30 +128,30 @@ class TestBoth {
     }
     
     public static void main(String[] args) throws IOException, ServiceException {
-    	Zimbra.toolSetup("INFO", true);
+        Zimbra.toolSetup("INFO", true);
 
-    	CommandLine cl = parseArgs(args);
+        CommandLine cl = parseArgs(args);
 
-    	if (cl.hasOption('D')) {
-    		Zimbra.toolSetup("DEBUG", true);
-    	}
-    	if (cl.hasOption('T')) {
-    		Zimbra.toolSetup("TRACE", true);
-    	}
+        if (cl.hasOption('D')) {
+            Zimbra.toolSetup("DEBUG", true);
+        }
+        if (cl.hasOption('T')) {
+            Zimbra.toolSetup("TRACE", true);
+        }
         
         int optThreads = 4;
-    	if (cl.hasOption('t')) {
-    		try {
-    			optThreads = Integer.parseInt(cl.getOptionValue('t'));
-    		} catch (NumberFormatException nfe) {
-    			mLog.error("exception occurred", nfe);
-    			usage("bad value for number of threads");
-    		}
-    	}
+        if (cl.hasOption('t')) {
+            try {
+                optThreads = Integer.parseInt(cl.getOptionValue('t'));
+            } catch (NumberFormatException nfe) {
+                mLog.error("exception occurred", nfe);
+                usage("bad value for number of threads");
+            }
+        }
         final int numThreads = optThreads;
-    	
-    	int optPort = 10043;
-    	if (cl.hasOption('p')) {
+        
+        int optPort = 10043;
+        if (cl.hasOption('p')) {
             try {
                 optPort = Integer.parseInt(cl.getOptionValue('p'));
             } catch (NumberFormatException nfe) {

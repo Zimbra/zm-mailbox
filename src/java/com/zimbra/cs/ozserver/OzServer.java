@@ -175,11 +175,11 @@ public class OzServer {
                     }
                     
                     if (readyKey.isReadable()) {
-                        selectedConnection.doRead();
+                        selectedConnection.doReadReady();
                     }
                     
                     if (readyKey.isWritable()) {
-                        selectedConnection.doWrite();
+                        selectedConnection.doWriteReady();
                     }
                 } catch (Throwable t) {
                     mLog.warn("ignoring exception that occurred while handling selected key", t);

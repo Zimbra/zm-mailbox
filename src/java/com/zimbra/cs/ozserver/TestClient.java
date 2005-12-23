@@ -138,7 +138,6 @@ class TestClient {
     
     public static void run(int port, boolean ssl) throws IOException {
         TestClient client = new TestClient("phillip", port, ssl);
-        mLog.info("got: " + client.getLastResponse());
 
         mLog.info("sending: helo");
         client.helo();
