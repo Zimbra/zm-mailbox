@@ -92,7 +92,7 @@ public class VolumeUtil extends SoapCLI {
             
             if (cl.hasOption(O_A)) {
                 if (id != null)
-                    throw new IllegalArgumentException("id cannot be specified when adding a volume");
+                    throw new ParseException("id cannot be specified when adding a volume");
 //                util.addVolume(name, type, path, fileBits, fileGroupBits, mailboxBits, mailboxGroupBits, compress, compressThreshold);
                 util.addVolume(name, type, path, null, null, null, null, compress, compressThreshold);
             } else if (cl.hasOption(O_D)) {
@@ -113,7 +113,7 @@ public class VolumeUtil extends SoapCLI {
                     throw new ParseException("volume id is missing");
                 short shortId = Short.parseShort(id);
                 if (shortId < 0)
-                    throw new IllegalArgumentException("id cannot be less than 0");
+                    throw new ParseException("id cannot be less than 0");
                 util.setCurrentVolume(shortId);
             } else if (cl.hasOption(O_TS)) {
             	util.unsetCurrentSecondaryMessageVolume();
@@ -125,6 +125,7 @@ public class VolumeUtil extends SoapCLI {
             util.usage(e);
         } catch (Exception e) {
             System.err.println("Error occurred: " + e.getMessage());
+            util.usage(null);
         }
         System.exit(1);
     }
@@ -259,8 +260,8 @@ public class VolumeUtil extends SoapCLI {
     private void editVolume(String id, String name, String type, String path,
             String fileBits, String fileGroupBits, String mailboxBits,
             String mailboxGroupBits, String compress, String compressThreshold)
-            throws SoapFaultException, IOException, ServiceException {
-        
+    throws ParseException, SoapFaultException, IOException, ServiceException {
+
         Element req = new Element.XMLElement(AdminService.MODIFY_VOLUME_REQUEST);
         req.addAttribute(AdminService.A_ID, id);
         Element vol = req.addElement(AdminService.E_VOLUME);
@@ -274,10 +275,10 @@ public class VolumeUtil extends SoapCLI {
     private void addVolume(String name, String type, String path,
             String fileBits, String fileGroupBits, String mailboxBits,
             String mailboxGroupBits, String compress, String compressThreshold)
-            throws SoapFaultException, IOException, ServiceException {
+            throws ParseException, SoapFaultException, IOException, ServiceException {
 
         if (name == null || type == null || path == null)
-            throw new IllegalArgumentException("at least one of the required parameters (name, type, path) is missing");
+            throw new ParseException("at least one of the required parameters (name, type, path) is missing");
         Element req = new Element.XMLElement(AdminService.CREATE_VOLUME_REQUEST);
         Element vol = req.addElement(AdminService.E_VOLUME);
 //        if (fileBits == null)
@@ -304,7 +305,8 @@ public class VolumeUtil extends SoapCLI {
     private void addAttributes(Element vol, String name, String type,
             String path, String fileBits, String fileGroupBits,
             String mailboxBits, String mailboxGroupBits, String compress,
-            String compressThreshold) {
+            String compressThreshold)
+    throws ParseException {
         
 //        // validate numeric bits parameters if they are present
 //        try {
@@ -312,41 +314,41 @@ public class VolumeUtil extends SoapCLI {
 //            if (fileBits != null) {
 //                n = Integer.parseInt(fileBits);
 //                if (n < 0)
-//                    throw new IllegalArgumentException("bits parameter cannot be negative");
+//                    throw new ParseException("bits parameter cannot be negative");
 //            }
 //            if (fileGroupBits != null) {
 //                n = Integer.parseInt(fileGroupBits);
 //                if (n < 0)
-//                    throw new IllegalArgumentException(
+//                    throw new ParseException(
 //                            "bits parameter cannot be negative");
 //            }
 //            if (mailboxBits != null) {
 //                n = Integer.parseInt(mailboxBits);
 //                if (n < 0)
-//                    throw new IllegalArgumentException(
+//                    throw new ParseException(
 //                            "bits parameter cannot be negative");
 //            }
 //            if (mailboxGroupBits != null) {
 //                n = Integer.parseInt(mailboxGroupBits);
 //                if (n < 0)
-//                    throw new IllegalArgumentException(
+//                    throw new ParseException(
 //                            "bits parameter cannot be negative");
 //            }
 //        } catch (NumberFormatException e) {
-//            throw new IllegalArgumentException("at least one value of the bits parameters is not a valid number");
+//            throw new ParseException("at least one value of the bits parameters is not a valid number");
 //        }
 
         // validate compress parameter
         if (compress != null) {
             if (!"true".equals(compress) && !"false".equals(compress))
-                throw new IllegalArgumentException("expecting true or false for compress option");
+                throw new ParseException("expecting true or false for compress option");
         }
         
         // the parameters may be null in the case of modifications
         if (type != null) {
             short t = VolumeUtil.getTypeId(type);
             if (t < 0)
-                throw new IllegalArgumentException("invalid volume type: " + type);
+                throw new ParseException("invalid volume type: " + type);
             vol.addAttribute(AdminService.A_VOLUME_TYPE, t);
         }
         if (name != null)
@@ -402,7 +404,7 @@ public class VolumeUtil extends SoapCLI {
             System.err.println("Error parsing command line arguments: " + e.getMessage());
         }
 
-        System.out.println(getCommandUsage());
+        System.err.println(getCommandUsage());
         printOpt(O_A, 0);
         printOpt(O_N, 2);
         printOpt(O_T, 2);
@@ -415,13 +417,13 @@ public class VolumeUtil extends SoapCLI {
         printOpt(O_CT, 2);
         printOpt(O_E, 0);
         printOpt(O_ID, 2);
-        System.out.println("  any of the options listed under -a can also be specified " );
-        System.out.println("  to have its value modified.");
+        System.err.println("  any of the options listed under -a can also be specified " );
+        System.err.println("  to have its value modified.");
         printOpt(O_D, 0);
         printOpt(O_ID, 2);
         printOpt(O_L, 0);
         printOpt(O_ID, 2);
-        System.out.println("  -id is optional.");
+        System.err.println("  -id is optional.");
         printOpt(O_DC, 0);
         printOpt(O_SC, 0);
         printOpt(O_ID, 2);
@@ -439,7 +441,7 @@ public class VolumeUtil extends SoapCLI {
         
         buf.append(PADDING.substring(0, 35-buf.length()));
         buf.append(opt.getDescription());
-        System.out.println(buf.toString());
+        System.err.println(buf.toString());
     }
 
     /**
