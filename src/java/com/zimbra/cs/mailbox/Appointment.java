@@ -494,16 +494,15 @@ public class Appointment extends MailItem {
     }
     
     public Invite getDefaultInvite() {
-        //Invite first = null;
+        Invite first = null;
         for (Iterator iter = mInvites.iterator(); iter.hasNext();) {
             Invite cur = (Invite) iter.next();
             if (!cur.hasRecurId())
                 return cur;
-            //if (first == null)
-            //    first = cur;
+            if (first == null)
+                first = cur;
         }
-        //return first;
-        return null;
+        return first;
     }
     
     /**
