@@ -8,7 +8,7 @@ already signed into a portal and wants to enter the mail application, they
 should not have to be prompted again for their password.
 
 This can be accomplished by having the mail link they click on in the portal
-constuct a special URL and redirect the user to the Zimbra server, which 
+construct a special URL and redirect the user to the Zimbra server, which 
 will then verify the data passed in the URL and create authentication token 
 (the standard mechanism within Zimbra to identify users), save it in a cookie,
 and redirect the user to the mail app.
@@ -32,7 +32,7 @@ Preparing a domain for preauth
 ------------------------------------------------------------
 
 In order for preauth to be enabled for a domain, you need to run the
-zmprov commmand and create a key:
+zmprov command and create a key:
 
 prov> gdpak domain.com
 preAuthKey: 4e2816f16c44fab20ecdee39fb850c3b0bb54d03f1d8e073aaea376a4f407f0c
@@ -40,7 +40,7 @@ prov>
 
 Make note of that key value, as you'll need to use it to generate the
 computed-preauth values below. Also make sure you keep it secret, as it
-can be used to generate valid authtokens for any user in the given domain!
+can be used to generate valid auth tokens for any user in the given domain!
 
 Behind the scenes, this command is simply generating 32 random bytes,
 hex encoding them, then setting the "zimbraPreAuthKey" attr for the specified
@@ -86,7 +86,7 @@ The values are as follows:
 
  {expires}              expiration time of the authtoken, in milliseconds. 
                         set to 0 to use the default expiration time for the
-                        account. Can be used to sync the authtoken expiration
+                        account. Can be used to sync the auth token expiration
                         time with the external system's notion of expiration
                         (like a Kerberos TGT lifetime, for example).
 
@@ -132,7 +132,7 @@ The resulting URL would be:
     &timestamp=1135280708088&preauth=b248f6cfd027edd45c5369f8490125204772f844
 
 Hitting that URL on the ZCS server will cause the preauth value to be verified,
-followed by a redirect to /zimbra/mail with the authtoken in a cookie.
+followed by a redirect to /zimbra/mail with the auth token in a cookie.
 
 ------------------------------------------------------------
 SOAP Interface
@@ -157,7 +157,7 @@ The values are exactly the same as they were for the URL case:
             expires="0}">b248f6cfd027edd45c5369f8490125204772f844</preauth>
  </AuthRequest>
 
-The authtoken will be return in the AuthResponse. At which point, you can
+The auth token will be return in the AuthResponse. At which point, you can
 "inject" it into the app via the URL interface:
 
 https://server/service/preauth?isredirect=1&authtoken={...}
