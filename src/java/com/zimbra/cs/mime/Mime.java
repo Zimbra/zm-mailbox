@@ -41,6 +41,8 @@ import java.util.Set;
 
 import javax.activation.DataSource;
 import javax.mail.BodyPart;
+import javax.mail.Message.RecipientType;
+import javax.mail.Address;
 import javax.mail.MessagingException;
 import javax.mail.Part;
 import javax.mail.internet.AddressException;
@@ -475,6 +477,47 @@ public class Mime {
             }
         } catch (MessagingException e) {
             return NO_ADDRESSES;
+        }
+    }
+
+    static RecipientType[] sRcptTypes;
+    static {
+        sRcptTypes = new RecipientType[3];
+        sRcptTypes[0] = RecipientType.TO;
+        sRcptTypes[1] = RecipientType.CC;
+        sRcptTypes[2] = RecipientType.BCC;
+    }
+
+    /**
+     * Remove all email addresses in rcpts from To/Cc/Bcc headers of a
+     * MimeMessage.
+     * @param mm
+     * @param rcpts
+     * @throws MessagingException
+     */
+    public static void removeRecipients(MimeMessage mm, String[] rcpts)
+    throws MessagingException {
+        for (int i = 0; i < sRcptTypes.length; i++) {
+            RecipientType rcptType = sRcptTypes[i];
+            Address[] addrs = mm.getRecipients(rcptType);
+            if (addrs == null) continue;
+            ArrayList<InternetAddress> list =
+                new ArrayList<InternetAddress>(addrs.length);
+            for (int j = 0; j < addrs.length; j++) {
+                InternetAddress inetAddr = (InternetAddress) addrs[j];
+                String addr = inetAddr.getAddress();
+                boolean match = false;
+                for (int k = 0; k < rcpts.length; k++)
+                    if (addr.equalsIgnoreCase(rcpts[k]))
+                        match = true;
+                if (!match)
+                    list.add(inetAddr);
+            }
+            if (list.size() < addrs.length) {
+                InternetAddress[] newRcpts = new InternetAddress[list.size()];
+                list.toArray(newRcpts);
+                mm.setRecipients(rcptType, newRcpts);
+            }
         }
     }
 

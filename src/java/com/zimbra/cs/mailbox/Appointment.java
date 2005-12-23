@@ -56,6 +56,7 @@ import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.Recurrence;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
+import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
@@ -493,13 +494,15 @@ public class Appointment extends MailItem {
     }
     
     public Invite getDefaultInvite() {
+        //Invite first = null;
         for (Iterator iter = mInvites.iterator(); iter.hasNext();) {
             Invite cur = (Invite) iter.next();
-            
-            if (!cur.hasRecurId()) {
+            if (!cur.hasRecurId())
                 return cur;
-            }
+            //if (first == null)
+            //    first = cur;
         }
+        //return first;
         return null;
     }
     
@@ -1180,7 +1183,7 @@ public class Appointment extends MailItem {
     public String getEffectiveFreeBusyActual(Account acct, Invite inv, Instance inst) throws ServiceException 
     {
         ZAttendee at = mReplyList.getEffectiveAttendee(acct, inv, inst);
-        if (at == null) {
+        if (at == null || inv.isOrganizer(at)) {
             return inv.getFreeBusyActual();
         }
 
@@ -1204,7 +1207,7 @@ public class Appointment extends MailItem {
     public String getEffectivePartStat(Account acct, Invite inv, Instance inst) throws ServiceException
     {
         ZAttendee at = mReplyList.getEffectiveAttendee(acct, inv, inst);
-        if (at == null) {
+        if (at == null || inv.isOrganizer(at)) {
             return inv.getPartStat();
         }
 

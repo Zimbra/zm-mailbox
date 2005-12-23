@@ -1101,6 +1101,10 @@ public class Invite {
     public ZOrganizer getOrganizer() {
         return mOrganizer;
     }
+
+    public boolean isOrganizer(ZAttendee attendee) {
+        return attendee.addressMatches(mOrganizer.getAddress());
+    }
     
     public String getType() {
         return "event";

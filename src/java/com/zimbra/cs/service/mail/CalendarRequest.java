@@ -180,6 +180,25 @@ public abstract class CalendarRequest extends SendMsg {
                 }
             }
 
+            // Never send a notification to the person making the SOAP request
+            // in a non-delegated request.
+            if (!lc.isDelegatedRequest()) {
+                String[] aliases = acct.getAliases();
+                String[] addrs;
+                if (aliases != null && aliases.length > 0) {
+                    addrs = new String[aliases.length + 1];
+                    addrs[0] = acct.getAttr(Provisioning.A_mail);
+                    for (int i = 0; i < aliases.length; i++)
+                        addrs[i + 1] = aliases[i];
+                } else {
+                    addrs = new String[1];
+                    addrs[0] = acct.getAttr(Provisioning.A_mail);
+                }
+                try {
+                    Mime.removeRecipients(csd.mMm, addrs);
+                } catch (MessagingException e) {}
+            }
+
             // DON'T try to do a full text-extraction attachments: if the calendar message doesn't 
             // have useful text in the body, then so be it
             ParsedMessage pm = new ParsedMessage(csd.mMm, false);
