@@ -39,7 +39,7 @@ public class SetCurrentVolume extends AdminDocumentHandler {
 
         short volType = (short) request.getAttributeLong(AdminService.A_VOLUME_TYPE);
         long idLong = request.getAttributeLong(AdminService.A_ID, Volume.ID_NONE);
-        Volume.validateID(idLong);  // avoid Java truncation
+        Volume.validateID(idLong, true);  // avoid Java truncation
         short id = (short) idLong;
         Volume.setCurrentVolume(volType, id);
 

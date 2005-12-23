@@ -120,7 +120,14 @@ public class Volume {
 
     public static void validateID(long id)
     throws VolumeServiceException {
-        if (id != ID_AUTO_INCREMENT && id != ID_NONE && (id < 1 || id > ID_MAX))
+        validateID(id, false);
+    }
+
+    public static void validateID(long id, boolean allowReservedVals)
+    throws VolumeServiceException {
+        if (allowReservedVals && (id == ID_AUTO_INCREMENT || id == ID_NONE))
+            return;
+        if (id < 1 || id > ID_MAX)
             throw VolumeServiceException.INVALID_REQUEST(
                     "Volume ID " + id + " is outside the range of [1, " +
                     ID_MAX + "]");
@@ -168,7 +175,7 @@ public class Volume {
                                      short fileGroupBits, short fileBits,
                                      long compressionThreshold)
     throws VolumeServiceException {
-        validateID(id);
+        validateID(id, true);
         validateType(type);
         if (name == null || name.length() < 1)
             throw VolumeServiceException.INVALID_REQUEST(
@@ -436,7 +443,7 @@ public class Volume {
     public static void setCurrentVolume(short volType, short id)
     throws ServiceException {
         validateType(volType);
-        validateID(id);
+        validateID(id, true);
 
         SetCurrentVolume redoRecorder = new SetCurrentVolume(volType, id);
         redoRecorder.start(System.currentTimeMillis());
