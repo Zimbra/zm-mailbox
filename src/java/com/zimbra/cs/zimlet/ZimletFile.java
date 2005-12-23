@@ -46,10 +46,18 @@ import com.zimbra.cs.util.ByteUtil;
  * @author jylee
  *
  */
-public class ZimletFile {
+public class ZimletFile implements Comparable {
 
 	private File mBase;
 	private InputStream mBaseStream;
+	
+	public int compareTo(Object obj) {
+		if (obj instanceof ZimletFile) {
+			ZimletFile f = (ZimletFile) obj;
+			return getName().compareTo(f.getName());
+		}
+		return 0;
+	}
 	
 	public static abstract class ZimletEntry {
 		protected String mName;
