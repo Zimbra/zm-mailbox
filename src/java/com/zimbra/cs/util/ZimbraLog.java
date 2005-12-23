@@ -271,14 +271,20 @@ public class ZimbraLog {
      * If System.getProperty(zimbra.log4j.level) is set then log at that level.
      * Else log at the specified defaultLevel.
      */
-    public static void toolSetupLog4j(String defaultLevel, boolean showThreads) {
+    public static void toolSetupLog4j(String defaultLevel, String logFile, boolean showThreads) {
         String level = System.getProperty("zimbra.log4j.level");
         if (level == null) {
             level = defaultLevel;
         }
         Properties p = new Properties();
         p.put("log4j.rootLogger", level + ",A1");
-        p.put("log4j.appender.A1", "org.apache.log4j.ConsoleAppender");
+        if (logFile != null) {
+            p.put("log4j.appender.A1", "org.apache.log4j.FileAppender");
+            p.put("log4j.appender.A1.File", logFile);
+            p.put("log4j.appender.A1.Append", "false");
+        } else {
+            p.put("log4j.appender.A1", "org.apache.log4j.ConsoleAppender");
+        }
         p.put("log4j.appender.A1.layout", "org.apache.log4j.PatternLayout");
         if (showThreads) {
         	p.put("log4j.appender.A1.layout.ConversionPattern", "[%t] [%x] %p: %m%n");
@@ -298,9 +304,9 @@ public class ZimbraLog {
     public static void toolSetupLog4j(String defaultLevel, String propsFile) {   
         if (propsFile != null && new File(propsFile).exists()) {
         	PropertyConfigurator.configure(propsFile);
-            return;
+        } else {
+            toolSetupLog4j(defaultLevel, null, false);
         }
-        toolSetupLog4j(defaultLevel, false);
     }
 
     

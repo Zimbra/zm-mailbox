@@ -53,6 +53,7 @@ class TestBoth {
         mOptions.addOption("S", "secure",      false, "whether to use SSL");
         mOptions.addOption("i", "iterations",  true,  "iterations of shutdown test (default 1000)");
         mOptions.addOption("c", "count",       true,  "number of transactions per client thread");
+        mOptions.addOption("l", "logfile",    true,  "send logging output to given file");
         mOptions.addOption("p", "port",        true,  "port (default 10043)");
         mOptions.addOption("T", "trace",       false, "trace server/client traffic");
         mOptions.addOption("D", "debug",       false, "print debug info");
@@ -69,12 +70,6 @@ class TestBoth {
     }
     
     private static CommandLine parseArgs(String args[]) {
-        StringBuffer gotCL = new StringBuffer("cmdline: ");
-        for (int i = 0; i < args.length; i++) {
-            gotCL.append("'").append(args[i]).append("' ");
-        }
-        //mLog.info(gotCL);
-        
         CommandLineParser parser = new GnuParser();
         CommandLine cl = null;
         try {
@@ -128,15 +123,19 @@ class TestBoth {
     }
     
     public static void main(String[] args) throws IOException, ServiceException {
-        Zimbra.toolSetup("INFO", true);
-
         CommandLine cl = parseArgs(args);
 
-        if (cl.hasOption('D')) {
-            Zimbra.toolSetup("DEBUG", true);
+        String logFile = null;
+        if (cl.hasOption('l')) {
+            logFile = cl.getOptionValue('l');
         }
+        
         if (cl.hasOption('T')) {
-            Zimbra.toolSetup("TRACE", true);
+            Zimbra.toolSetup("TRACE", logFile, true);
+        } else if (cl.hasOption('D')) {
+            Zimbra.toolSetup("DEBUG", logFile, true);
+        } else {
+            Zimbra.toolSetup("INFO", logFile, true);
         }
         
         int optThreads = 4;

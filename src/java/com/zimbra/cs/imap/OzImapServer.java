@@ -43,7 +43,7 @@ public class OzImapServer {
     private static OzServer mServer;
     
     public static void main(String[] args) throws ServiceException, IOException {
-        Zimbra.toolSetup("DEBUG", true);
+        Zimbra.toolSetup("DEBUG", null, true);
         startup();
     }
 

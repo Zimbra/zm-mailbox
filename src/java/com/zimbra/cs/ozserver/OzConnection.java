@@ -121,7 +121,7 @@ public class OzConnection {
             public void run() {
                 try {
                     addToNDC();
-                    mLog.info("closing");
+                    mLog.info("closing connection");
                     try {
                         if (mChannel.isOpen()) {
                             mChannel.close();
@@ -189,9 +189,11 @@ public class OzConnection {
     void enableReadInterest() {
         synchronized (mReadLock) {
             if (mReadPending) {
+                if (mTrace) mLog.trace("noop enable read interest - read already pending");
                 return;
             }
             if (mClosed) {
+                if (mTrace) mLog.trace("noop enable read interest - channel already closed"); 
                 return;
             }
             synchronized (mSelectionKey) {
@@ -215,6 +217,11 @@ public class OzConnection {
     private void enableWriteInterest() {
         synchronized (mWriteLock) {
             if (mWritePending) {
+                if (mTrace) mLog.trace("skipping enable write interest - write already pending");
+                return;
+            }
+            if (!mChannel.isOpen()) {
+                if (mTrace) mLog.trace("skipping enable write interest - channel already closed");
                 return;
             }
             synchronized (mSelectionKey) {
@@ -261,14 +268,16 @@ public class OzConnection {
         
 
         public void run() {
-            int taskId = 0;
             try {
-                if (mDebug) taskId = mTaskCounter.incrementAndGet();
+                if (mDebug) {
+                    ZimbraLog.addToContext("op", mName);
+                    ZimbraLog.addToContext("id", new Integer(mTaskCounter.incrementAndGet()).toString());
+                }
                 addToNDC();
-                if (mDebug) mLog.debug("starting " + mName + " taskid=" + taskId);
+                if (mDebug) mLog.debug("starting " + mName);
                 doTask();
             } finally {
-                if (mDebug) mLog.debug("finished " + mName + " taskid=" + taskId);
+                if (mDebug) mLog.debug("finished " + mName);
                 clearFromNDC();
             }
         }

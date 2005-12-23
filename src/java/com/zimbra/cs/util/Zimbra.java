@@ -178,11 +178,11 @@ public class Zimbra {
     }
 
     public static void toolSetup(String defaultLogLevel) {
-    	toolSetup(defaultLogLevel, false);
+    	toolSetup(defaultLogLevel, null, false);
     }
     
-    public static void toolSetup(String defaultLogLevel, boolean showThreads) {
-        ZimbraLog.toolSetupLog4j(defaultLogLevel, showThreads);
+    public static void toolSetup(String defaultLogLevel, String logFile, boolean showThreads) {
+        ZimbraLog.toolSetupLog4j(defaultLogLevel, logFile, showThreads);
         if (LC.ssl_allow_untrusted_certs.booleanValue())
             EasySSLProtocolSocketFactory.init();
     }

@@ -57,7 +57,7 @@ class TestServer {
     }
     
     public static void main(String[] args) throws IOException, ServiceException {
-        Zimbra.toolSetup("TRACE", true);
+        Zimbra.toolSetup("TRACE", null, true);
     	new TestServer(Integer.parseInt(args[0]), Boolean.parseBoolean(args[1]));
     }
     
