@@ -62,6 +62,7 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.Volume;
 
 
@@ -735,7 +736,9 @@ public final class MailboxIndex
         int sizeAfter = 0;
         while (true) {
         	synchronized (sOpenIndexWriters) {
-        		if (sOpenIndexWriters.size() < sLRUSize) {
+                int numOpenWriters = sOpenIndexWriters.size();
+                ZimbraPerf.COUNTER_IDX_WRT.increment(numOpenWriters);
+        		if (numOpenWriters < sLRUSize) {
                     // Put then get.  Entry will be added to map if it's not there
                     // already, and get will force access time to be updated.
                     sOpenIndexWriters.put(this, this);

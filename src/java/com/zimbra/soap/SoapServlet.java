@@ -48,7 +48,6 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ThreadLocalData;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.stats.StatsFile;
-import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.StringUtil;
 import com.zimbra.cs.util.Zimbra;
@@ -196,9 +195,8 @@ public class SoapServlet extends ZimbraServlet {
         service.registerHandlers(mEngine.getDocumentDispatcher());
     }
     
-    private static StopWatch sSoapStopWatch = StopWatch.getInstance("soap");
     private static final StatsFile STATS_FILE =
-        new StatsFile("perf_soap.csv", new String[] { "response" }, true);
+        new StatsFile("perf_soap", new String[] { "response" }, true);
     
     public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         // Performance
@@ -218,7 +216,7 @@ public class SoapServlet extends ZimbraServlet {
             ZimbraLog.soap.debug("SOAP request:\n" + new String(buffer, "utf8"));
         }
 
-        long startTime = sSoapStopWatch.start();
+        long startTime = ZimbraPerf.STOPWATCH_SOAP.start();
         
         HashMap context = new HashMap();
         context.put(SERVLET_REQUEST, req);
@@ -252,7 +250,7 @@ public class SoapServlet extends ZimbraServlet {
         resp.setStatus(statusCode);
         resp.getOutputStream().write(soapBytes);
 
-        sSoapStopWatch.stop(startTime);
+        ZimbraPerf.STOPWATCH_SOAP.stop(startTime);
         
         // If perf logging is enabled, track server response times
         if (ZimbraPerf.isPerfEnabled()) {

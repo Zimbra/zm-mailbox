@@ -49,8 +49,6 @@ import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ThreadLocalData;
-import com.zimbra.cs.stats.StatsFile;
-import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.ZimbraLog;
@@ -130,10 +128,6 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         }
     }
 
-    private static final String STAT_NUM_RECIPIENTS = "num_recipients";
-    private static final StatsFile STATS_FILE =
-        new StatsFile("perf_lmtp.csv", new String[] { STAT_NUM_RECIPIENTS }, true);
-    
     private void deliverMessageToLocalMailboxes(byte[] data, List /*<LmtpAddress>*/ recipients, String envSender)
     throws MessagingException, ServiceException {
 
@@ -272,11 +266,6 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                         }
                     }
                 }
-                
-                if (ZimbraLog.perf.isDebugEnabled()) {
-                    ZimbraPerf.writeStats(STATS_FILE, recipients.size());
-                }
-                
             } finally {
                 // Clean up blobs in incoming directory after delivery to all recipients.
                 if (shared) {

@@ -35,12 +35,10 @@ package com.zimbra.cs.stats;
 public class StopWatch
 extends Counter {
     
-    public static StopWatch getInstance(String name) {
-        StopWatch ta = (StopWatch)getInstance(name, StopWatch.class);
-        ta.setShowCount(true);
-        ta.setShowAverage(true);
-        ta.setUnits("ms");
-        return ta;
+    StopWatch(String name) {
+        super(name, "ms");
+        setShowCount(true);
+        setShowAverage(true);
     }
 
     public long start() {

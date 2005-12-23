@@ -72,6 +72,7 @@ import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.stats.Accumulator;
 import com.zimbra.cs.stats.StatsFile;
 import com.zimbra.cs.stats.StopWatch;
 import com.zimbra.cs.stats.ZimbraPerf;
@@ -2687,16 +2688,14 @@ public class Mailbox {
         return addMessage(octxt, pm, folderId, noICal, flags, tags, ID_AUTO_INCREMENT, rcptEmail, sharedDeliveryCtxt);
     }
 
-    private static final StopWatch sWatch = StopWatch.getInstance("mbox_add_msg");
-    
     public synchronized Message addMessage(OperationContext octxt, ParsedMessage pm,
                                            int folderId, boolean noICal, int flags, String tagStr, int conversationId,
                                            String rcptEmail, SharedDeliveryContext sharedDeliveryCtxt)
     throws IOException, ServiceException {
-        long start = sWatch.start();
+        long start = ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.start();
         Message msg = addMessageInternal(octxt, pm, folderId, noICal, flags, tagStr, conversationId,
                                          rcptEmail, null, sharedDeliveryCtxt);
-        sWatch.stop(start);
+        ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.stop(start);
         return msg;
     }
 
@@ -4119,7 +4118,7 @@ public class Mailbox {
     }
 
     private static final StatsFile STATS_FILE =
-        new StatsFile("perf_item_cache.csv", new String[] { "id", "type", "hit" }, false);
+        new StatsFile("perf_item_cache", new String[] { "id", "type", "hit" }, false);
 
     private void logCacheActivity(Integer key, byte type, MailItem item) {
         if (!ZimbraLog.cache.isDebugEnabled() && !ZimbraLog.perf.isDebugEnabled())

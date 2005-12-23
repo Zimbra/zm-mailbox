@@ -26,6 +26,7 @@ package com.zimbra.cs.stats;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import com.zimbra.cs.util.StringUtil;
 
@@ -37,29 +38,21 @@ import com.zimbra.cs.util.StringUtil;
  */
 public class Counter extends Accumulator {
 
-    public static Counter getInstance(String name, String units) {
-        Counter c = getInstance(name);
-        c.mUnits = units;
-        return c;
+    Counter(String name, String units) {
+        super(name);
+        mUnits = units;
     }
     
-    public static Counter getInstance(String name) {
-        Counter c = (Counter) getInstance(name, Counter.class);
-        return c;
+    Counter(String name) {
+        this(name, null);
     }
-
+    
     private long mCount = 0;
     private long mTotal = 0;
     private String mUnits = null;
     protected boolean mShowCount = false;
     protected boolean mShowTotal = true;
     protected boolean mShowAverage = false;
-    
-    /**
-     * Sets the name of the unit of measurement, or <code>null</code> if none.
-     * This string is appended to the column label.
-     */
-    public void setUnits(String units) { mUnits = units; }
     
     /**
      * If <code>true</code>, the count of values will be logged in a column
@@ -99,7 +92,7 @@ public class Counter extends Accumulator {
         mTotal = 0;
     }
     
-    protected List<String> getLabels() {
+    protected List<String> getColumns() {
         List<String> labels = new ArrayList<String>();
         if (mShowTotal) {
             if (StringUtil.isNullOrEmpty(mUnits)) {
@@ -120,16 +113,16 @@ public class Counter extends Accumulator {
     protected synchronized List getData() {
         List data = new ArrayList();
         if (mShowTotal) {
-            data.add(mTotal);
+            data.add(mCount > 0 ? mCount : "");
         }
         if (mShowCount) {
-            data.add(mCount);
+            data.add(mCount > 0 ? mCount : "");
         }
         if (mShowAverage) {
-            if (mCount == 0) {
-                data.add(0);
+            if (mCount > 0) {
+                data.add(String.format(Locale.US, "%.2f", ((double) mTotal / (double) mCount)));
             } else {
-                data.add(String.format("%.2f", ((double) mTotal / (double) mCount)));
+                data.add("");
             }
         }
         return data;

@@ -37,12 +37,15 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TimerTask;
 
+import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.util.ThreadLocalData;
 import com.zimbra.cs.util.Constants;
 import com.zimbra.cs.util.StringUtil;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraLog;
 
 /**
@@ -50,6 +53,30 @@ import com.zimbra.cs.util.ZimbraLog;
  */
 public class ZimbraPerf {
 
+    // Accumulators
+    public static Counter COUNTER_LMTP_RCVD_MSGS = new Counter("lmtp_rcvd_msgs");
+    public static Counter COUNTER_LMTP_RCVD_BYTES = new Counter("lmtp_rcvd_bytes");
+    public static Counter COUNTER_LMTP_RCVD_RCPT = new Counter("lmtp_rcvd_rcpt");
+    public static Counter COUNTER_LMTP_DLVD_MSGS = new Counter("lmtp_dlvd_msgs");
+    public static Counter COUNTER_LMTP_DLVD_BYTES = new Counter("lmtp_dlvd_bytes");
+    public static StopWatch STOPWATCH_DB_CONN = new StopWatch("db_conn");
+    public static Counter COUNTER_DB_POOL_SIZE = new Counter("db_pool_size");
+    public static StopWatch STOPWATCH_LDAP_DC = new StopWatch("ldap_dc");
+    public static StopWatch STOPWATCH_MBOX_ADD_MSG = new StopWatch("mbox_add_msg");
+    public static Counter COUNTER_MBOX_MSG_CACHE = new Counter("mbox_msg_cache"); 
+    public static StopWatch STOPWATCH_SOAP = new StopWatch("soap");
+    public static Counter COUNTER_IDX_WRT = new Counter("idx_wrt");
+    
+    private static Accumulator[] sAccumulators = {
+        COUNTER_LMTP_RCVD_MSGS, COUNTER_LMTP_RCVD_BYTES, COUNTER_LMTP_RCVD_RCPT,
+        COUNTER_LMTP_DLVD_MSGS, COUNTER_LMTP_DLVD_BYTES,
+        STOPWATCH_DB_CONN, COUNTER_DB_POOL_SIZE,
+        STOPWATCH_LDAP_DC,
+        STOPWATCH_MBOX_ADD_MSG, COUNTER_MBOX_MSG_CACHE,
+        STOPWATCH_SOAP,
+        COUNTER_IDX_WRT
+    };
+    
     private static Map /* <String, StatementStats */ sSqlToStats = new HashMap();
     
     /**
@@ -297,7 +324,9 @@ public class ZimbraPerf {
      * @param stat the statistic to be logged
      */
     public static void writeStats(StatsFile statsFile, Object stat) {
-        writeStats(statsFile, stat, null, null, null);
+        List stats = new ArrayList();
+        stats.add(stat);
+        writeStats(statsFile, stats);
     }
     
     /**
@@ -312,7 +341,10 @@ public class ZimbraPerf {
      * @param eventName the event name
      */
     public static void writeStats(StatsFile statsFile, Object stat1, Object stat2) {
-        writeStats(statsFile, stat1, stat2, null, null);
+        List stats = new ArrayList();
+        stats.add(stat1);
+        stats.add(stat2);
+        writeStats(statsFile, stats);
     }
     
     /**
@@ -327,8 +359,12 @@ public class ZimbraPerf {
      * @param eventName the event name
      */
     public static void writeStats(StatsFile statsFile,
-                                       Object stat1, Object stat2, Object stat3) {
-        writeStats(statsFile, stat1, stat2, stat3, null);
+                                  Object stat1, Object stat2, Object stat3) {
+        List stats = new ArrayList();
+        stats.add(stat1);
+        stats.add(stat2);
+        stats.add(stat3);
+        writeStats(statsFile, stats);
     }
     
     /**
@@ -337,26 +373,9 @@ public class ZimbraPerf {
      *  
      * @param statsFile the <code>StatsFile</code> object, which contains the
      *        filename and any extra columns written for the given event
-     * @param stat1 the first statistic
-     * @param stat2 the second statistic
-     * @param stat3 the third statistic
-     * @param stats the rest of the statistics
+     * @param stats statistical values
      */
-    public static void writeStats(StatsFile statsFile,
-                                  Object stat1, Object stat2, Object stat3,
-                                  List stats) {
-        if (stats == null) {
-            stats = new ArrayList();
-        }
-        String[] statNames = statsFile.getStatNames();
-        stats.add(0, stat1);
-        if (statNames.length >= 2) {
-            stats.add(1, stat2);
-        }
-        if (statNames.length >= 3) {
-            stats.add(2, stat3);
-        }
-        
+    public static void writeStats(StatsFile statsFile, List<Object> stats) {
         FileWriter writer = null;
         try {
             StringBuffer buf = new StringBuffer();
@@ -374,8 +393,10 @@ public class ZimbraPerf {
                     if (s.indexOf('"') >= 0) {
                         // Escape any internal quotes
                         s = s.replaceAll("\"", "\"\"");
+                        value = "\"" + s + "\"";
+                    } else if (s.indexOf(',') >= 0) {
+                        value = "\"" + s + "\"";
                     }
-                    value = "\"" + s + "\"";
                 }
                 buf.append(',');
                 buf.append(value);
@@ -401,5 +422,64 @@ public class ZimbraPerf {
                 removeWriter(statsFile);
             }
         }
+    }
+
+    static final long DUMP_FREQUENCY = Constants.MILLIS_PER_MINUTE;
+    private static StatsFile sZimbraStatsFile = null;
+
+    static  {
+        // Only the average is interesting for these counters
+        COUNTER_DB_POOL_SIZE.setShowAverage(true);
+        COUNTER_DB_POOL_SIZE.setShowCount(false);
+        COUNTER_DB_POOL_SIZE.setShowTotal(false);
+        COUNTER_MBOX_MSG_CACHE.setShowAverage(true);
+        COUNTER_MBOX_MSG_CACHE.setShowCount(false);
+        COUNTER_MBOX_MSG_CACHE.setShowTotal(false);
+        COUNTER_IDX_WRT.setShowAverage(true);
+        COUNTER_IDX_WRT.setShowCount(false);
+        COUNTER_IDX_WRT.setShowTotal(false);
+
+        // Initialize zimbrastats
+        List<String> columns = new ArrayList<String>();
+        for (Accumulator a : sAccumulators) {
+            for (String column : a.getColumns()) {
+                columns.add(column);
+            }
+        }
+        String[] columnsArray = new String[columns.size()];
+        columns.toArray(columnsArray);
+        sZimbraStatsFile = new StatsFile("zimbrastats", columnsArray, false);
+        
+        Zimbra.sTimer.scheduleAtFixedRate(new ZimbraStatsDumper(), DUMP_FREQUENCY, DUMP_FREQUENCY);
+    }
+
+    /**
+     * <code>TimerTask</code> implementation that writes a row to zimbrastats.csv once a minute.
+     */
+    private static final class ZimbraStatsDumper extends TimerTask {
+        
+        public boolean cancel() {
+            ZimbraLog.perf.error("StatsDumper canceled");
+            return super.cancel();
+        }
+        
+        public void run() {
+            try {
+                List<Object> data = new ArrayList<Object>();
+                for (Accumulator a : sAccumulators) {
+                    synchronized (a) {
+                        data.addAll(a.getData());
+                        a.reset();
+                    }
+                }
+                writeStats(sZimbraStatsFile, data);
+            } catch (Throwable t) {
+                if (t instanceof OutOfMemoryError) {
+                    throw (OutOfMemoryError) t;
+                }
+                ZimbraLog.misc.error("Accumulator error", t);
+            }
+        }
+        
     }
 }

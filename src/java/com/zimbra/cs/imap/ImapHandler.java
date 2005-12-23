@@ -469,7 +469,7 @@ public class ImapHandler extends ProtocolHandler {
     private static final boolean STOP_PROCESSING = false, CONTINUE_PROCESSING = true;
     
     private static StatsFile STATS_FILE =
-        new StatsFile("perf_imap.csv", new String[] { "command" }, true);
+        new StatsFile("perf_imap", new String[] { "command" }, true);
     
     protected boolean processCommand() throws IOException {
         ImapRequest req = null;

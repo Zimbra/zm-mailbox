@@ -35,19 +35,12 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.stats.Counter;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServer;
 import com.zimbra.cs.util.NetUtil;
 import com.zimbra.cs.util.Zimbra;
 
 public class LmtpServer extends TcpServer {
-
-    Counter mLmtpRcvdMsgs = Counter.getInstance("lmtp_rcvd_msgs");
-    Counter mLmtpRcvdBytes = Counter.getInstance("lmtp_rcvd_bytes");
-    Counter mLmtpRcvdRcpt = Counter.getInstance("lmtp_rcvd_rcpt");
-    Counter mLmtpDlvdMsgs = Counter.getInstance("lmtp_dlvd_msgs");
-    Counter mLmtpDlvdBytes = Counter.getInstance("lmtp_dlvd_bytes");
 
 	private Log mLog;
 

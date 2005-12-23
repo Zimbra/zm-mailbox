@@ -36,6 +36,7 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.util.Config;
 
@@ -412,9 +413,9 @@ public class LmtpHandler extends ProtocolHandler {
 
         int dataLength = data.length;
         int numRecipients = mEnvelope.getRecipients().size();
-        mServer.mLmtpRcvdMsgs.increment();
-        mServer.mLmtpRcvdBytes.increment(dataLength);
-        mServer.mLmtpRcvdRcpt.increment(numRecipients);
+        ZimbraPerf.COUNTER_LMTP_RCVD_MSGS.increment();
+        ZimbraPerf.COUNTER_LMTP_RCVD_BYTES.increment(dataLength);
+        ZimbraPerf.COUNTER_LMTP_RCVD_RCPT.increment(numRecipients);
     	
         mServer.getConfigBackend().deliver(mEnvelope, data);
 
@@ -435,8 +436,8 @@ public class LmtpHandler extends ProtocolHandler {
     		}
     	}
         
-        mServer.mLmtpDlvdMsgs.increment(numDelivered);
-        mServer.mLmtpDlvdBytes.increment(numDelivered * dataLength);
+        ZimbraPerf.COUNTER_LMTP_DLVD_MSGS.increment(numDelivered);
+        ZimbraPerf.COUNTER_LMTP_DLVD_BYTES.increment(numDelivered * dataLength);
         
     	reset();
     }

@@ -25,6 +25,8 @@
 package com.zimbra.cs.stats;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import com.zimbra.cs.localconfig.LC;
 
@@ -43,16 +45,20 @@ public class StatsFile {
     private String[] mStatNames = new String[0];
     private File mFile;
 
+    private static final SimpleDateFormat TIMESTAMP_FORMATTER =
+        new SimpleDateFormat("yyyyMMdd-HHmm");
+
     /**
-     * @param filename the filename, stored in {@link LC#zimbra_log_directory}
+     * @param filename the name of this <code>StatsFile</code>.  The actual filename
+     *        stored in {@link LC#zimbra_log_directory} is <code>[name]-[timestamp].csv</code>.
      * @param statNames the names of any extra stat columns, or <code>null</code>
      *        if none
      * @param logThreadLocal <code>true</code> if statistics from {@link ThreadLocalData}
      *        should be logged
      */
-    public StatsFile(String filename, String[] statNames, boolean logThreadLocal) {
-        mFilename = filename;
-        mFile = new File(LC.zimbra_log_directory.value() + "/" + filename);
+    public StatsFile(String name, String[] statNames, boolean logThreadLocal) {
+        mFilename = name + "-" + TIMESTAMP_FORMATTER.format(new Date()) + ".csv";
+        mFile = new File(LC.zimbra_log_directory.value() + "/" + mFilename);
         if (statNames != null) {
             mStatNames = statNames;
         }
