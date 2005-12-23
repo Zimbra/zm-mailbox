@@ -113,10 +113,18 @@ public class Counter extends Accumulator {
     protected synchronized List getData() {
         List data = new ArrayList();
         if (mShowTotal) {
-            data.add(mCount > 0 ? mCount : "");
+            if (mCount > 0) {
+                data.add(mTotal);
+            } else {
+                data.add("");
+            }
         }
         if (mShowCount) {
-            data.add(mCount > 0 ? mCount : "");
+            if (mCount > 0) {
+                data.add(mCount);
+            } else {
+                data.add("");
+            }
         }
         if (mShowAverage) {
             if (mCount > 0) {
