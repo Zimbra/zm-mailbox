@@ -29,11 +29,14 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
+import java.net.MalformedURLException;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 
 import com.zimbra.cs.util.ByteUtil;
 
@@ -43,8 +46,11 @@ import com.zimbra.cs.util.ByteUtil;
  * @author jylee
  *
  */
-public class ZimletFile extends File {
+public class ZimletFile {
 
+	private File mBase;
+	private InputStream mBaseStream;
+	
 	public static abstract class ZimletEntry {
 		protected String mName;
 		
@@ -89,6 +95,18 @@ public class ZimletFile extends File {
 		}
 	}
 	
+	public static class ZimletRawEntry extends ZimletEntry {
+		private byte[] mData;
+		
+		public ZimletRawEntry(InputStream is, String name) throws IOException {
+			super(name);
+			mData = ByteUtil.getContent(is, 0);
+		}
+		public byte[] getContents() throws IOException {
+			return mData;
+		}
+	}
+	
 	private static final String XML_SUFFIX = ".xml";
 	private static final String ZIP_SUFFIX = ".zip";
 	private static final String CONFIG_TMPL = "config_template.xml";
@@ -104,17 +122,22 @@ public class ZimletFile extends File {
 	private String mZimletName;
 	
 	public ZimletFile(String zimlet) throws IOException, ZimletException {
-		super(findZimlet(zimlet));
+		mBase = new File(findZimlet(zimlet));
 		initialize();
 	}
 
 	public ZimletFile(File parent, String zimlet) throws IOException, ZimletException {
-		super(parent, zimlet);
+		mBase = new File(parent, zimlet);
 		initialize();
 	}
 	
+	public ZimletFile(String name, InputStream is) throws IOException, ZimletException {
+		mBaseStream = is;
+		initialize(name);
+	}
+
 	private void initialize() throws IOException, ZimletException {
-		String name = getName().toLowerCase();
+		String name = mBase.getName().toLowerCase();
 		int index = name.lastIndexOf(File.separatorChar);
 		if (index > 0) {
 			name = name.substring(index + 1);
@@ -122,18 +145,31 @@ public class ZimletFile extends File {
 		if (name.endsWith(ZIP_SUFFIX)) {
 			name = name.substring(0, name.length() - 4);
 		}
+		initialize(name);
+	}
+	
+	private void initialize(String name) throws IOException, ZimletException {
 		mDescFile = name + XML_SUFFIX;
 		
 		mEntries = new HashMap<String,ZimletEntry>();
 
-		if (isDirectory()) {
-			File[] files = listFiles();
+		if (mBaseStream != null) {
+			ZipInputStream zis = new ZipInputStream(mBaseStream);
+			ZipEntry entry = zis.getNextEntry();
+			while (entry != null) {
+				mEntries.put(entry.getName().toLowerCase(), new ZimletRawEntry(zis, entry.getName()));
+				zis.closeEntry();
+				entry = zis.getNextEntry();
+			}
+			zis.close();
+		} else if (mBase.isDirectory()) {
+			File[] files = mBase.listFiles();
 			assert(files != null);
 			for (int i = 0; i < files.length; i++) {
 				mEntries.put(files[i].getName().toLowerCase(), new ZimletDirEntry(files[i]));
 			}
 		} else {
-			ZipFile zip = new ZipFile(this);
+			ZipFile zip = new ZipFile(mBase);
 			Enumeration entries = zip.entries();
 			while (entries.hasMoreElements()) {
 				ZipEntry entry = (ZipEntry) entries.nextElement();
@@ -221,6 +257,14 @@ public class ZimletFile extends File {
 	
 	public String getZimletName() {
 		return mZimletName;
+	}
+	
+	public String getName() {
+		return getZimletName();
+	}
+	
+	public URL toURL() throws MalformedURLException {
+		return mBase.toURL();
 	}
 	
 	private static String findZimlet(String zimlet) throws FileNotFoundException {

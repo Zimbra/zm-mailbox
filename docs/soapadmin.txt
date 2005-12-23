@@ -948,13 +948,17 @@ Access: domain admin sufficient
 
 -----------------------------
 
-<ConfigureZimletRequest fileid="{uploaded-config-file}"/>
+<ConfigureZimletRequest>
+  <content aid="{attachment-id}"/>
+</ConfigureZimletRequest>
 
 <ConfigureZimletResponse/>
 
 -----------------------------
 
-<DeployZimletRequest fileid="{uploaded-zimlet-file}"/>
+<DeployZimletRequest>
+  <content aid="{attachment-id}"/>
+<DeployZimletRequest/>
 
 <DeployZimletResponse/>
 

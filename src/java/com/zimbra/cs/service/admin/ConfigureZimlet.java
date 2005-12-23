@@ -27,7 +27,12 @@ package com.zimbra.cs.service.admin;
 import java.io.IOException;
 import java.util.Map;
 
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.FileUploadServlet.Upload;
+import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.soap.Element;
@@ -38,14 +43,22 @@ public class ConfigureZimlet extends AdminDocumentHandler {
 	@Override
 	public Element handle(Element request, Map context) throws ServiceException {
 		ZimbraContext lc = getZimbraContext(context);
+        Element content = request.getElement(MailService.E_CONTENT);
+        String attachment = content.getAttribute(MailService.A_ATTACHMENT_ID, null);
+        Upload up = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), attachment, lc.getRawAuthToken());
+        if (up == null)
+            throw MailServiceException.NO_SUCH_UPLOAD(attachment);
+
         Element response = lc.createElement(AdminService.CONFIGURE_ZIMLET_RESPONSE);
-		String configFile = "";
 		try {
-			ZimletUtil.installConfig(configFile);
+			byte[] blob = ByteUtil.getContent(up.getInputStream(), 0);
+			ZimletUtil.installConfig(new String(blob));
 		} catch (IOException ioe) {
-			throw ServiceException.FAILURE("cannot deploy", ioe);
+			throw ServiceException.FAILURE("cannot configure", ioe);
 		} catch (ZimletException ze) {
-			throw ServiceException.FAILURE("cannot deploy", ze);
+			throw ServiceException.FAILURE("cannot configure", ze);
+		} finally {
+			FileUploadServlet.deleteUpload(up);
 		}
 		return response;
 	}

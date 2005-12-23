@@ -28,6 +28,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Arrays;
@@ -276,13 +277,12 @@ public class ZimletUtil {
 	 * 5.  Activate the zimlet on default COS.
 	 * 6.  Enable the Zimlet.
 	 * 
-	 * @param zimletRoot
 	 * @param zimlet
 	 * @throws IOException
 	 * @throws ZimletException
 	 */
-	public static void deployZimlet(String zimlet) throws IOException, ZimletException {
-		ZimletFile zf = installZimlet(zimlet);
+	public static void deployZimlet(ZimletFile zf) throws IOException, ZimletException {
+		installZimlet(zf);
 		String zimletName = zf.getZimletName();
 		ZimletDescription zd = zf.getZimletDescription();
 		Provisioning prov = Provisioning.getInstance();
@@ -303,23 +303,21 @@ public class ZimletUtil {
 		}
 		enableZimlet(zimletName);
 	}
-	
+
 	/**
 	 * 
-	 * Install the Zimlet files on this machine.
+	 * Install the Zimlet file on this machine.
 	 * 
-	 * @param zimletRoot
 	 * @param zimlet
 	 * @return
 	 * @throws IOException
 	 * @throws ZimletException
 	 */
-	public static ZimletFile installZimlet(String zimlet) throws IOException, ZimletException {
-		ZimbraLog.zimlet.info("Installing Zimlet " + zimlet + " on this host.");
-		String zimletRoot = getZimletDir();
-		ZimletFile zf = new ZimletFile(zimlet);
+	public static void installZimlet(ZimletFile zf) throws IOException, ZimletException {
 		ZimletDescription zd = zf.getZimletDescription();
 		String zimletName = zd.getName();
+		ZimbraLog.zimlet.info("Installing Zimlet " + zimletName + " on this host.");
+		String zimletRoot = getZimletDir();
 		
 		// install the files
 		File zimletDir = new File(zimletRoot + File.separatorChar + zimletName);
@@ -340,14 +338,12 @@ public class ZimletUtil {
 				writeFile(entry.getContents(), file);
 			}
 		}
-		return zf;
 	}
 	
 	/**
 	 * 
 	 * Deploy the Zimlet to LDAP.
 	 * 
-	 * @param zimletRoot
 	 * @param zimlet
 	 * @throws IOException
 	 * @throws ZimletException
@@ -799,10 +795,10 @@ public class ZimletUtil {
 			String zimlet = args[argPos++];
 			switch (cmd) {
 			case DEPLOY_ZIMLET:
-				deployZimlet(zimlet);
+				deployZimlet(new ZimletFile(zimlet));
 				break;
 			case INSTALL_ZIMLET:
-				installZimlet(zimlet);
+				installZimlet(new ZimletFile(zimlet));
 				break;
 			case UNINSTALL_ZIMLET:
 				uninstallZimlet(zimlet);
