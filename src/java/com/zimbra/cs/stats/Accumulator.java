@@ -28,34 +28,25 @@ package com.zimbra.cs.stats;
 import java.util.List;
 
 /**
- * Abstraction for a statistic that increases over time.  A single
- * accumulator might keep track multiple statistics, eg, elapsed
- * time and average time.
- *
- * Required magic in log4j.properties to log statistics.
- * 
- *   # Appender STATS writes to file "stats"
- *   log4j.appender.STATS=org.apache.log4j.FileAppender
- *   log4j.appender.STATS.File=/temp/stats.log
- *   log4j.appender.STATS.Append=false
- *   log4j.appender.STATS.layout=org.apache.log4j.PatternLayout
- *   log4j.appender.STATS.layout.ConversionPattern=%r,%m%n
- *   log4j.additivity.com.zimbra.cs.stats=false
- *   log4j.logger.com.zimbra.cs.stats=DEBUG,STATS
+ * Defines an interface to an object that keeps track of
+ * one or more statistics.
  */
-public abstract class Accumulator {
+public interface Accumulator {
 
-    protected abstract List<String> getColumns();
-    protected abstract List getData();
-    abstract void reset();
-
-    private String mName;
+    /**
+     * Returns stat names.  The size of the <code>List</code> must match the size of the
+     * <code>List</code> returned by {@link #getData()}.
+     */
+    public List<String> getNames();
     
-    Accumulator(String name) {
-        mName = name;
-    }
+    /**
+     * Returns stat values.  The size of the <code>List</code> must match the size of the
+     * <code>List</code> returned by {@link #getNames()}.
+     */
+    public List<Object> getData();
     
-    public String getName() {
-        return mName;
-    }
+    /**
+     * Resets the values tracked by this <code>Accumulator</code>.
+     */
+    public void reset();
 }

@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -44,6 +45,9 @@ import org.apache.commons.logging.LogFactory;
 
 import EDU.oswego.cs.dl.util.concurrent.BoundedLinkedQueue;
 import EDU.oswego.cs.dl.util.concurrent.PooledExecutor;
+
+import com.zimbra.cs.stats.Accumulator;
+import com.zimbra.cs.stats.ZimbraPerf;
 
 /**
  * @author jhahm
@@ -197,4 +201,37 @@ public abstract class TcpServer implements Runnable {
 		}
 		mLog.info("finished accept loop");
 	}
+    
+    /**
+     * Registers an <code>Accumulator</code> that tracks the number of active
+     * handlers for this <code>TcpServer</code>.
+
+     * @param statName the name of the column logged to zimbrastats.csv
+     */
+    protected final void trackHandlerStats(String statName) {
+        ZimbraPerf.addAccumulator(new NumHandlers(statName));
+    }
+    
+    private class NumHandlers
+    implements Accumulator {
+        List<String> mNames;
+        
+        NumHandlers(String name) {
+            mNames = new ArrayList<String>();
+            mNames.add(name);
+        }
+
+        public List<Object> getData() {
+            List l = new ArrayList();
+            l.add(numActiveHandlers());
+            return l;
+        }
+
+        public List<String> getNames() {
+            return mNames;
+        }
+
+        public void reset() {
+        }
+    }
 }

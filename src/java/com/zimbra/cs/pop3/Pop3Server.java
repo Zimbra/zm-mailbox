@@ -61,6 +61,7 @@ public class Pop3Server extends TcpServer {
 		mLog = LogFactory.getLog(Pop3Server.class.getName() + "/" + serverSocket.getLocalPort());
         mAllowCleartextLogins = loginOK;
         mConnectionSSL = ssl;
+        trackHandlerStats(ssl ? "pop_ssl_conn" : "pop_conn");
 	}
 
 	protected ProtocolHandler newProtocolHandler() {
@@ -191,7 +192,7 @@ public class Pop3Server extends TcpServer {
             sPopSSLServer.shutdown(10); // TODO shutdown grace period from config
         sPopSSLServer = null;
 	}
-    
+
     public static void main(String args[]) throws ServiceException {
         Zimbra.toolSetup();
         startupPop3Server();

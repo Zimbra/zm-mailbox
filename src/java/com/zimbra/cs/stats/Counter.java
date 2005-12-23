@@ -36,23 +36,25 @@ import com.zimbra.cs.util.StringUtil;
  * 
  * @author bburtin
  */
-public class Counter extends Accumulator {
+public class Counter
+implements Accumulator {
 
-    Counter(String name, String units) {
-        super(name);
-        mUnits = units;
-    }
-    
-    Counter(String name) {
-        this(name, null);
-    }
-    
+    private String mName;
     private long mCount = 0;
     private long mTotal = 0;
     private String mUnits = null;
     protected boolean mShowCount = false;
     protected boolean mShowTotal = true;
     protected boolean mShowAverage = false;
+    
+    Counter(String name, String units) {
+        mName = name;
+        mUnits = units;
+    }
+    
+    Counter(String name) {
+        this(name, null);
+    }
     
     /**
      * If <code>true</code>, the count of values will be logged in a column
@@ -87,30 +89,30 @@ public class Counter extends Accumulator {
         increment(1);
     }
     
-    synchronized void reset() {
+    public synchronized void reset() {
         mCount = 0;
         mTotal = 0;
     }
     
-    protected List<String> getColumns() {
+    public List<String> getNames() {
         List<String> labels = new ArrayList<String>();
         if (mShowTotal) {
             if (StringUtil.isNullOrEmpty(mUnits)) {
-                labels.add(getName());
+                labels.add(mName);
             } else {
-                labels.add(getName() + "_" + mUnits);
+                labels.add(mName + "_" + mUnits);
             }
         }
         if (mShowCount) {
-            labels.add(getName() + "_count");
+            labels.add(mName + "_count");
         }
         if (mShowAverage) {
-            labels.add(getName() + "_avg");
+            labels.add(mName + "_avg");
         }
         return labels;
     }
     
-    protected synchronized List getData() {
+    public synchronized List<Object> getData() {
         List data = new ArrayList();
         if (mShowTotal) {
             if (mCount > 0) {
@@ -128,6 +130,8 @@ public class Counter extends Accumulator {
         }
         if (mShowAverage) {
             if (mCount > 0) {
+                // Force US locale, so that the file format is the same for all locales
+                // and we don't run into problems with commas.
                 data.add(String.format(Locale.US, "%.2f", ((double) mTotal / (double) mCount)));
             } else {
                 data.add("");

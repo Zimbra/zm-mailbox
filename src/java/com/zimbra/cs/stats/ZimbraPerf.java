@@ -29,15 +29,10 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.TimerTask;
+import java.util.*;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbUtil;
@@ -53,6 +48,8 @@ import com.zimbra.cs.util.ZimbraLog;
  */
 public class ZimbraPerf {
 
+    static Log sLog = LogFactory.getLog(ZimbraPerf.class);
+
     // Accumulators
     public static Counter COUNTER_LMTP_RCVD_MSGS = new Counter("lmtp_rcvd_msgs");
     public static Counter COUNTER_LMTP_RCVD_BYTES = new Counter("lmtp_rcvd_bytes");
@@ -67,7 +64,7 @@ public class ZimbraPerf {
     public static StopWatch STOPWATCH_SOAP = new StopWatch("soap");
     public static Counter COUNTER_IDX_WRT = new Counter("idx_wrt");
     
-    private static Accumulator[] sAccumulators = {
+    private static Accumulator[] CORE_ACCUMULATORS = {
         COUNTER_LMTP_RCVD_MSGS, COUNTER_LMTP_RCVD_BYTES, COUNTER_LMTP_RCVD_RCPT,
         COUNTER_LMTP_DLVD_MSGS, COUNTER_LMTP_DLVD_BYTES,
         STOPWATCH_DB_CONN, COUNTER_DB_POOL_SIZE,
@@ -76,6 +73,8 @@ public class ZimbraPerf {
         STOPWATCH_SOAP,
         COUNTER_IDX_WRT
     };
+    private static List<Accumulator> sAccumulators;
+    private static boolean sStartedZimbraStats = false;
     
     private static Map /* <String, StatementStats */ sSqlToStats = new HashMap();
     
@@ -104,6 +103,19 @@ public class ZimbraPerf {
      */
     public static boolean isPerfEnabled() {
         return ZimbraLog.perf.isDebugEnabled();
+    }
+
+    public static void addAccumulator(Accumulator a) {
+        if (a == null) {
+            throw new IllegalArgumentException("Accumulator cannot be null");
+        }
+        if (sStartedZimbraStats) {
+            sLog.warn("addAccumulator() called after zimbrastats logging has started", new Throwable());
+        } else {
+            synchronized(sAccumulators) {
+                sAccumulators.add(a);
+            }
+        }
     }
     
     private static class StatementStats {
@@ -428,6 +440,11 @@ public class ZimbraPerf {
     private static StatsFile sZimbraStatsFile = null;
 
     static  {
+        sAccumulators = new ArrayList<Accumulator>();
+        for (Accumulator a : CORE_ACCUMULATORS) {
+            sAccumulators.add(a);
+        }
+        
         // Only the average is interesting for these counters
         COUNTER_DB_POOL_SIZE.setShowAverage(true);
         COUNTER_DB_POOL_SIZE.setShowCount(false);
@@ -438,17 +455,6 @@ public class ZimbraPerf {
         COUNTER_IDX_WRT.setShowAverage(true);
         COUNTER_IDX_WRT.setShowCount(false);
         COUNTER_IDX_WRT.setShowTotal(false);
-
-        // Initialize zimbrastats
-        List<String> columns = new ArrayList<String>();
-        for (Accumulator a : sAccumulators) {
-            for (String column : a.getColumns()) {
-                columns.add(column);
-            }
-        }
-        String[] columnsArray = new String[columns.size()];
-        columns.toArray(columnsArray);
-        sZimbraStatsFile = new StatsFile("zimbrastats", columnsArray, false);
         
         Zimbra.sTimer.scheduleAtFixedRate(new ZimbraStatsDumper(), DUMP_FREQUENCY, DUMP_FREQUENCY);
     }
@@ -465,6 +471,22 @@ public class ZimbraPerf {
         
         public void run() {
             try {
+                if (!sStartedZimbraStats) {
+                    sStartedZimbraStats = true;
+                    // Initialize the stats file
+                    List<String> columns = new ArrayList<String>();
+                    synchronized (sAccumulators) {
+                        for (Accumulator a : sAccumulators) {
+                            for (String column : a.getNames()) {
+                                columns.add(column);
+                            }
+                        }
+                    }
+                    String[] columnsArray = new String[columns.size()];
+                    columns.toArray(columnsArray);
+                    sZimbraStatsFile = new StatsFile("zimbrastats", columnsArray, false);
+                }
+                
                 List<Object> data = new ArrayList<Object>();
                 for (Accumulator a : sAccumulators) {
                     synchronized (a) {

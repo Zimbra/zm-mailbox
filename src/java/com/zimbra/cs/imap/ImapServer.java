@@ -66,6 +66,7 @@ public class ImapServer extends TcpServer {
         super(ssl ? "ImapSSLServer" : "ImapServer", numThreads, serverSocket);
         mAllowCleartextLogins = loginOK;
         mConnectionSSL = ssl;
+        trackHandlerStats(ssl ? "imap_ssl_conn" : "imap_conn");
     }
 
 	protected ProtocolHandler newProtocolHandler() {
