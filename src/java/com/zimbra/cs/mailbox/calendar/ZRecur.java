@@ -97,9 +97,10 @@ public class ZRecur {
     }
     
     public static void main(String[] args) {
+        ICalTimeZone tzUTC = ICalTimeZone.getUTC();
         ParsedDateTime dtStart = null;
         try {
-            dtStart = ParsedDateTime.parse("20050101T123456", ICalTimeZone.getUTC());
+            dtStart = ParsedDateTime.parse("20050101T123456", tzUTC, tzUTC);
         } catch(ParseException e) {
             System.out.println("Caught ParseException at start: "+e);
         }
@@ -108,7 +109,7 @@ public class ZRecur {
         Date rangeEnd;
         
         GregorianCalendar cal = new GregorianCalendar();
-        cal.setTimeZone(ICalTimeZone.getUTC());
+        cal.setTimeZone(tzUTC);
         
         cal.set(2005, 4, 15, 0, 0, 0);
         rangeStart = cal.getTime();
@@ -117,13 +118,14 @@ public class ZRecur {
         rangeEnd = cal.getTime();
         
 
+        TimeZoneMap tzmap = new TimeZoneMap(tzUTC);
         try {
-            ZRecur test = new ZRecur("FREQ=DAILY;BYMONTH=5,6");
+            ZRecur test = new ZRecur("FREQ=DAILY;BYMONTH=5,6", tzmap);
             System.out.println("\n\n"+test.toString()+"\n-------------------------------------------------");
             List<Date> dateList = test.expandRecurrenceOverRange(dtStart, rangeStart.getTime(), rangeEnd.getTime());
             for (Date d : dateList) {
                 cal.setTime(d);
-                cal.setTimeZone(ICalTimeZone.getUTC());
+                cal.setTimeZone(tzUTC);
                 System.out.printf("%tc\n", cal);
             }
         } catch (ServiceException e) {
@@ -132,12 +134,12 @@ public class ZRecur {
         }
         
         try {
-            ZRecur test = new ZRecur("FREQ=DAILY;BYMONTH=5,6;BYDAY=TH,-1MO");
+            ZRecur test = new ZRecur("FREQ=DAILY;BYMONTH=5,6;BYDAY=TH,-1MO", tzmap);
             System.out.println("\n\n"+test.toString()+"\n-------------------------------------------------");
             List<Date> dateList = test.expandRecurrenceOverRange(dtStart, rangeStart.getTime(), rangeEnd.getTime());
             for (Date d : dateList) {
                 cal.setTime(d);
-                cal.setTimeZone(ICalTimeZone.getUTC());
+                cal.setTimeZone(tzUTC);
                 System.out.printf("%tc\n", cal);
             }
         } catch (ServiceException e) {
@@ -146,7 +148,7 @@ public class ZRecur {
         }
         
         try {
-            ZRecur test = new ZRecur("FREQ=DAILY;BYMONTH=5,6;BYMONTHDAY=1,3,5,7,9,31");
+            ZRecur test = new ZRecur("FREQ=DAILY;BYMONTH=5,6;BYMONTHDAY=1,3,5,7,9,31", tzmap);
             System.out.println("\n\n"+test.toString()+"\n-------------------------------------------------");
             List<Date> dateList = test.expandRecurrenceOverRange(dtStart, rangeStart.getTime(), rangeEnd.getTime());
             for (Date d : dateList) {
@@ -159,7 +161,7 @@ public class ZRecur {
         }
         
         try {
-            ZRecur test = new ZRecur("FREQ=DAILY;BYMONTH=5,6;BYMONTHDAY=1,3,5,7,9,31;BYDAY=SU,SA");
+            ZRecur test = new ZRecur("FREQ=DAILY;BYMONTH=5,6;BYMONTHDAY=1,3,5,7,9,31;BYDAY=SU,SA", tzmap);
             System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
             List<Date> dateList = test.expandRecurrenceOverRange(dtStart, rangeStart.getTime(), rangeEnd.getTime());
             for (Date d : dateList) {
@@ -173,7 +175,7 @@ public class ZRecur {
 
         
         try {
-            ZRecur test = new ZRecur("FREQ=DAILY;BYMONTH=5,6;BYMONTHDAY=1,3,5,7,9,31;BYDAY=SU,SA;BYHOUR=21,0");
+            ZRecur test = new ZRecur("FREQ=DAILY;BYMONTH=5,6;BYMONTHDAY=1,3,5,7,9,31;BYDAY=SU,SA;BYHOUR=21,0", tzmap);
             System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
             List<Date> dateList = test.expandRecurrenceOverRange(dtStart, rangeStart.getTime(), rangeEnd.getTime());
             for (Date d : dateList) {
@@ -186,7 +188,7 @@ public class ZRecur {
         }
 
         try {
-            ZRecur test = new ZRecur("FREQ=DAILY;BYMONTH=5,6;BYMONTHDAY=1,3,5,7,9,31;BYDAY=SU;BYHOUR=21,0;BYMINUTE=23");
+            ZRecur test = new ZRecur("FREQ=DAILY;BYMONTH=5,6;BYMONTHDAY=1,3,5,7,9,31;BYDAY=SU;BYHOUR=21,0;BYMINUTE=23", tzmap);
             System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
             List<Date> dateList = test.expandRecurrenceOverRange(dtStart, rangeStart.getTime(), rangeEnd.getTime());
             for (Date d : dateList) {
@@ -199,7 +201,7 @@ public class ZRecur {
         }
 
         try {
-            ZRecur test = new ZRecur("FREQ=DAILY;BYMONTH=5,6;BYMONTHDAY=1,3,5,7,9,31;BYDAY=SU;BYHOUR=1,21,0;BYSECOND=0,59");
+            ZRecur test = new ZRecur("FREQ=DAILY;BYMONTH=5,6;BYMONTHDAY=1,3,5,7,9,31;BYDAY=SU;BYHOUR=1,21,0;BYSECOND=0,59", tzmap);
             System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
             List<Date> dateList = test.expandRecurrenceOverRange(dtStart, rangeStart.getTime(), rangeEnd.getTime());
             for (Date d : dateList) {
@@ -213,7 +215,7 @@ public class ZRecur {
 
         try {
             // parse error testing
-            ZRecur test = new ZRecur("FREQ=DAILY;BIYMONTH=5,6;BYMONTHDAY=1,3,5,7,9,31;BYDAY=SU;BYHOUR=1,21,0;BYSECOND=0,59;BYSETPOS=1,-1,3,1000,,-1000");
+            ZRecur test = new ZRecur("FREQ=DAILY;BIYMONTH=5,6;BYMONTHDAY=1,3,5,7,9,31;BYDAY=SU;BYHOUR=1,21,0;BYSECOND=0,59;BYSETPOS=1,-1,3,1000,,-1000", tzmap);
             System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
             List<Date> dateList = test.expandRecurrenceOverRange(dtStart, rangeStart.getTime(), rangeEnd.getTime());
             for (Date d : dateList) {
@@ -226,7 +228,7 @@ public class ZRecur {
         }
         
         try {
-            ZRecur test = new ZRecur("FREQ=HOURLY;BIYMONTH=6;BYMONTHDAY=1,3;BYHOUR=2,14");
+            ZRecur test = new ZRecur("FREQ=HOURLY;BIYMONTH=6;BYMONTHDAY=1,3;BYHOUR=2,14", tzmap);
             System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
             List<Date> dateList = test.expandRecurrenceOverRange(dtStart, rangeStart.getTime(), rangeEnd.getTime());
             for (Date d : dateList) {
@@ -239,7 +241,7 @@ public class ZRecur {
         }
         
         try {
-            ZRecur test = new ZRecur("FREQ=HOURLY;BIYMONTH=6;BYMONTHDAY=1;;BYMINUTE=10;BYSECOND=11,12");
+            ZRecur test = new ZRecur("FREQ=HOURLY;BIYMONTH=6;BYMONTHDAY=1;;BYMINUTE=10;BYSECOND=11,12", tzmap);
             System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
             List<Date> dateList = test.expandRecurrenceOverRange(dtStart, rangeStart.getTime(), rangeEnd.getTime());
             for (Date d : dateList) {
@@ -257,7 +259,7 @@ public class ZRecur {
         rangeEnd = cal.getTime();
         
         try {
-            ZRecur test = new ZRecur("FREQ=YEARLY");
+            ZRecur test = new ZRecur("FREQ=YEARLY", tzmap);
             System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
             List<Date> dateList = test.expandRecurrenceOverRange(dtStart, rangeStart.getTime(), rangeEnd.getTime());
             for (Date d : dateList) {
@@ -271,7 +273,7 @@ public class ZRecur {
 
 
         try {
-            ZRecur test = new ZRecur("FREQ=YEARLY;BYYEARDAY=-1");
+            ZRecur test = new ZRecur("FREQ=YEARLY;BYYEARDAY=-1", tzmap);
             System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
             List<Date> dateList = test.expandRecurrenceOverRange(dtStart, rangeStart.getTime(), rangeEnd.getTime());
             for (Date d : dateList) {
@@ -284,7 +286,7 @@ public class ZRecur {
         }
                 
         try {
-            ZRecur test = new ZRecur("FREQ=SECONDLY");
+            ZRecur test = new ZRecur("FREQ=SECONDLY", tzmap);
             System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
             List<Date> dateList = test.expandRecurrenceOverRange(dtStart, rangeStart.getTime(), rangeEnd.getTime());
             for (Date d : dateList) {
@@ -297,9 +299,8 @@ public class ZRecur {
         }
         
         try {
-            ParsedDateTime myDtStart = ParsedDateTime.parse("16010101T020000", ICalTimeZone.getUTC());
-                        
-            ZRecur test = new ZRecur("FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=12;BYDAY=-1SU");
+            ParsedDateTime myDtStart = ParsedDateTime.parse("16010101T020000", tzUTC, tzUTC);
+            ZRecur test = new ZRecur("FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=12;BYDAY=-1SU", tzmap);
             System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
             List<Date> dateList = test.expandRecurrenceOverRange(myDtStart, rangeStart.getTime(), rangeEnd.getTime());
             for (Date d : dateList) {
@@ -318,7 +319,7 @@ public class ZRecur {
         rangeEnd = cal.getTime();
         
         try {
-            ZRecur test = new ZRecur("FREQ=YEARLY;BYMONTH=12;BYDAY=1WE");
+            ZRecur test = new ZRecur("FREQ=YEARLY;BYMONTH=12;BYDAY=1WE", tzmap);
             System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
             List<Date> dateList = test.expandRecurrenceOverRange(dtStart, rangeStart.getTime(), rangeEnd.getTime());
             for (Date d : dateList) {
@@ -353,10 +354,6 @@ public class ZRecur {
 
     public ZRecur(String str, TimeZoneMap tzmap) throws ServiceException {
         parse(str, tzmap);
-    }
-    
-    private ZRecur(String str) throws ServiceException {
-        parse(str, new TimeZoneMap(ICalTimeZone.getUTC()));
     }
     
     public List<Integer> getByHourList() {

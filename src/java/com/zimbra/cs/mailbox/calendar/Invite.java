@@ -1425,16 +1425,16 @@ public class Invite {
 //  }
     
     public static List<Invite> createFromCalendar(Account account, String fragment, ZVCalendar cal, boolean sentByMe)
-    {
+    throws ServiceException {
         return createFromCalendar(account, fragment, cal, sentByMe, null, 0);
     }
     
     //     static public List /* Invite */  createFromICalendar(Account acct, String fragment, Calendar cal, boolean sentByMe) throws ServiceException
     public static List<Invite> createFromCalendar(Account account, String fragment, ZVCalendar cal, boolean sentByMe, Mailbox mbx, int mailItemId)
-    {
+    throws ServiceException {
         List <Invite> toRet = new ArrayList();
         
-        TimeZoneMap tzmap = new TimeZoneMap(ICalTimeZone.getUTC());
+        TimeZoneMap tzmap = new TimeZoneMap(account.getTimeZone());
         
         String methodStr = cal.getPropVal(ICalTok.METHOD, ICalTok.PUBLISH.toString());
         

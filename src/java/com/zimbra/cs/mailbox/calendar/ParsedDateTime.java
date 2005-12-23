@@ -66,14 +66,6 @@ public final class ParsedDateTime {
         return new ParsedDateTime(new java.util.Date(utc));
     }
     
-    public static ParsedDateTime parse(String str, ICalTimeZone tz)
-    throws ParseException {
-        if (tz == null)
-            throw new ParseException("TZ must not be null", 1);
-        
-        return parse(str, tz, null, false);
-    }
-    
     public static ParsedDateTime parseUtcOnly(String str) throws ParseException {
         return parse(str, null, null, true);
     }    
@@ -174,7 +166,7 @@ public final class ParsedDateTime {
         if (tz == null) 
             tz = tzmap.getLocalTimeZone();
         
-        return parse(prop.getValue(), tz);
+        return parse(prop.getValue(), tz, tzmap.getLocalTimeZone());
     }
     
     public static ParsedDateTime parseUtcOnly(ZProperty prop) throws ParseException
