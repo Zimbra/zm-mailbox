@@ -294,7 +294,7 @@ public class OzServer {
                 mLog.warn("ignoring exception that occurred while running server thread task from server thread", e);
             }
         } else {
-            if (mLog.isDebugEnabled()) mLog.debug("scheduling for server thread later");
+            if (mLog.isDebugEnabled()) mLog.debug("scheduled in server thread for later execution");
             synchronized (mServerThreadTasks) {
                 mServerThreadTasks.add(task);
             }

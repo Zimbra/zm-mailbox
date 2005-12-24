@@ -122,15 +122,15 @@ public class OzConnection {
                 try {
                     addToNDC();
                     mLog.info("closing connection");
-                    try {
-                        if (mChannel.isOpen()) {
-                            mChannel.close();
-                        }
-                        mSelectionKey.cancel();
-                    } catch (IOException ioe) {
-                        mLog.warn("exception closing channel, ignoring and continuing", ioe);
-                    } finally {
-                        synchronized (mReadLock) { 
+                    synchronized (mReadLock) { 
+                        try {
+                            if (mChannel.isOpen()) {
+                                mChannel.close();
+                            }
+                            mSelectionKey.cancel();
+                        } catch (IOException ioe) {
+                            mLog.warn("exception closing channel, ignoring and continuing", ioe);
+                        } finally {
                             if (mDebug && mClosed) mLog.debug("duplicate close detected");
                             mClosed = true;
                         }
@@ -141,6 +141,7 @@ public class OzConnection {
             }
         };
         
+        if (mDebug) mLog.debug("scheduling close on server");
         mServer.executeInServerThread(closeTask);
     }
 
@@ -604,7 +605,12 @@ public class OzConnection {
      * For use by filters.   Do not call directly.
      */
     public void channelClose() {
-        disableReadInterest();
+        synchronized (mReadLock) {
+            if (mClosed) {
+                return;
+            }
+            disableReadInterest();
+        }
         synchronized (mWriteLock) {
             mCloseAfterWrite = true;
 
