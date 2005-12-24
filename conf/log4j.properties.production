@@ -38,17 +38,6 @@ log4j.appender.SYSLOG.Facility=LOCAL0
 log4j.appender.SYSLOG.layout=org.apache.log4j.PatternLayout
 log4j.appender.SYSLOG.layout.ConversionPattern=%d %-5p [%t] [%x] %c{1} - %m%n
 
-# Appender STATS writes to file "stats"
-log4j.appender.STATS=com.zimbra.cs.stats.StartTimeFileAppender
-log4j.appender.STATS.File=/opt/zimbra/log/zimbrastats-%s.log
-log4j.appender.STATS.Append=false
-log4j.appender.STATS.layout=com.zimbra.cs.stats.AccumulatorLayout
- 
-# Redirect archive.util.Stats to use STATS appender and ONLY
-# the STATS appender
-log4j.additivity.com.zimbra.cs.stats=false
-log4j.logger.com.zimbra.cs.stats=DEBUG,STATS
-
 log4j.logger.zimbra=INFO
 log4j.logger.com.zimbra=INFO
 log4j.logger.com.zimbra.cs.util.StopWatch=INFO
