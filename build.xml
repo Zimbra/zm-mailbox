@@ -80,6 +80,10 @@
 	<property name="zimbra.home.dir" location="/opt/zimbra" />
 	<property name="tomcat.home.dir" location="${zimbra.home.dir}/tomcat" />
 
+	<property name="ical4j.jar" value="ical4j-0.9.16-patched.jar" />
+
+	<property name="zimlets" value="com_zimbra_phone,com_zimbra_po,com_zimbra_tracking,com_zimbra_url,com_zimbra_ymaps,com_zimbra_sforce,com_zimbra_amzn,com_zimbra_bugz,wikipedia"/>
+
 	<condition property="is-windows">
 		<os family="windows" />
 	</condition>
@@ -125,6 +129,12 @@
 		<isset property="is-unix" />
 	</condition>
 	
+	<taskdef resource="net/sf/antcontrib/antlib.xml">
+	   <classpath>
+	     <pathelement location="jars/ant-contrib-1.0b1.jar"/>
+	   </classpath>
+	</taskdef>
+	
 	<path id="class.path">
 		<pathelement location="${build.classes.dir}" />
 		<fileset dir="${jars.dir}">
@@ -169,8 +179,8 @@
     <target name="javadoc" depends="set-buildinfo-vars">
         <javadoc sourcepath="src/java" destdir="docs/api" classpathref="class.path"
                  access="private" packagenames="com.zimbra.*" additionalparam='-tag perms:m:"Permissions Required:"'
-                 source="1.4" breakiterator="yes" windowtitle="ZimbraServer v${zimbra.buildinfo.version}">
-        	<link href="http://java.sun.com/j2se/1.4.2/docs/api/"/>
+                 breakiterator="yes" windowtitle="ZimbraServer v${zimbra.buildinfo.version}">
+        	<link href="http://java.sun.com/j2se/1.5.0/docs/api/"/>
         	<link href="http://java.sun.com/products/javamail/javadocs/"/>
         	<link href="http://jakarta.apache.org/commons/logging/api/"/>
         	<link href="http://ical4j.sourceforge.net/api/"/>
@@ -239,12 +249,12 @@
 				public static final String HOST = "${zimbra.buildinfo.host}";
 			}
 		</echo>
-		<javac destdir="${build.classes.dir}" debug="true" source="1.4" target="1.4" srcdir="${build.dir}/buildinfo">
+		<javac destdir="${build.classes.dir}" debug="true" srcdir="${build.dir}/buildinfo">
 		</javac>
 	</target>
 
 	<target name="compile" depends="build-init" description="Compiles the source code">
-		<javac destdir="${build.classes.dir}" debug="true" source="1.4" target="1.4" classpathref="class.path">
+		<javac destdir="${build.classes.dir}" debug="true" classpathref="class.path">
 			<src refid="all.java.path" />
 		</javac>
 
@@ -278,7 +288,7 @@
    	   
    	   Please copy {mail,activation,zimbra-native}.jar to $TOMCAT\common\lib
    -->
-	<property name="war.exclude" value="servlet-api.jar,mail.jar,activation.jar,zimbra-native.jar,KeyView.jar" />
+	<property name="war.exclude" value="${ical4j.jar},servlet-api.jar,mail.jar,activation.jar,zimbra-native.jar,KeyView.jar" />
 
 	<target name="war" depends="jar">
 		<echo>war.exclude=${war.exclude}</echo>
@@ -290,7 +300,7 @@
 		</war>
 	</target>
 
-	<target name="deploy" depends="service-deploy" description="Deploy service.war to tomcat"/>
+	<target name="deploy" depends="service-deploy,install-zimlets" description="Deploy service.war to tomcat"/>
 	
 	<target name="service-deploy" depends="war">
 		<echo message="Updating ${zimbra.home.dir}/conf/log4j.properties; if it fails on windows, try again." />
@@ -345,7 +355,7 @@
 		</copy>
 		<fixcrlf srcdir="${dist.conf.dir}" eol="unix" includes="**" />
 		<copy todir="${dist.tomcat.commonlib.dir}">
-			<fileset dir="${jars.dir}" includes="mail.jar,activation.jar,zimbra-native.jar" />
+			<fileset dir="${jars.dir}" includes="${ical4j.jar},mail.jar,activation.jar,zimbra-native.jar" />
 		</copy>
 		<copy file="${config.dir}/localconfig.xml" todir="${dist.conf.dir}"/>
 		<!--
@@ -379,7 +389,7 @@
 
 	<target name="reset-the-world-stage1" depends="clean,compile,jar,init" description="Run when tomcat is stopped." />
 
-	<target name="reset-the-world-stage2" depends="service-deploy,load-zimlets,inject" description="Run when tomcat is running." />
+	<target name="reset-the-world-stage2" depends="service-deploy,deploy-zimlets,inject" description="Run when tomcat is running." />
 
 	<target name="init" depends="stop-servers,quick-init,ldap-init,tomcat-init,start-ldap,ldap-load,start-tomcat" />
 	
@@ -434,6 +444,7 @@
 		<delete dir="${zimbra.home.dir}/redolog" />
 		<delete dir="${zimbra.home.dir}/repl" />
 		<delete dir="${zimbra.home.dir}/backup" />
+		<delete dir="${zimbra.home.dir}/lib/ext" />
 		<delete failonerror="no">
 			<fileset dir="${zimbra.home.dir}/log" includes="*.log" />
 		</delete>
@@ -504,7 +515,7 @@
 		</java>
 		<echo>Provisioning server entry for ${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="CreateServer ${zimbra.server.hostname} zimbraSmtpHostname ${zimbra.smtp.host} zimbraMailPort 7070 zimbraImapCleartextLoginEnabled TRUE" />
+			<arg line="CreateServer ${zimbra.server.hostname} zimbraSmtpHostname ${zimbra.smtp.host} zimbraMailPort 7070 zimbraMailMode http zimbraImapCleartextLoginEnabled TRUE" />
 		</java>
 		<echo>Setting installed-service attributes on server ${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
@@ -526,6 +537,9 @@
 	
 	<target name="ldap-load-accounts">
 		<echo>Creating account: admin@${zimbra.server.hostname}</echo>
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="mc default zimbraFeatureIMEnabled TRUE" />
+		</java>
 		<!-- This account is used during QA tests. -->
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="ca admin@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} cn 'Administrator' displayName 'Administrator' zimbraIsAdminAccount TRUE zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana'" />
@@ -555,45 +569,54 @@
 		</exec>
 	</target>
 
-	<target name="load-zimlets">
-		<echo>Loading zimlet: phone</echo>
-		<zip destfile="${dist.zimlet.dir}/phone.zip" update="true">
-			<fileset dir="${build.classes.dir}" includes="**/NANPHandler.class"/>
-			<fileset dir="${config.dir}/zimlets/phone" includes="phone.xml"/>
+	<target name="reload-zimlets" depends="install-zimlets,restart-tomcat"/>
+
+	<target name="package-zimlets" depends="package-zimlets-core,package-zimlets-extra"/>
+	<target name="package-zimlets-core">
+		<foreach list="${zimlets}" target="package-zimlet" param="zimlet"/>
+	</target>
+	<target name="package-zimlet">
+		<echo>${zimlet}</echo>
+		<zip destfile="${dist.zimlet.dir}/${zimlet}.zip" update="true" >
+			<fileset dir="${config.dir}/zimlets/${zimlet}" />
 		</zip>
-		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="install" />
-			<arg file="${dist.zimlet.dir}/phone.zip" />
-		</java>
-		<echo>Loading zimlet: po</echo>
-		<zip destfile="${dist.zimlet.dir}/po.zip" update="true">
-			<fileset dir="${config.dir}/zimlets/po" includes="po.xml"/>
-		</zip>
-		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="install" />
-			<arg file="${dist.zimlet.dir}/po.zip" />
-		</java>
-		<echo>Loading zimlet: tracking</echo>
-		<zip destfile="${dist.zimlet.dir}/tracking.zip" update="true">
-			<fileset dir="${build.classes.dir}" includes="**/TrackingHandler.class"/>
-			<fileset dir="${config.dir}/zimlets/tracking" includes="tracking.xml"/>
-		</zip>
-		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="install" />
-			<arg file="${dist.zimlet.dir}/tracking.zip" />
-		</java>
-		<echo>Loading zimlet: url</echo>
-		<zip destfile="${dist.zimlet.dir}/url.zip" update="true">
-			<fileset dir="${build.classes.dir}" includes="**/URLHandler.class"/>
-			<fileset dir="${config.dir}/zimlets/url" includes="url.xml"/>
-		</zip>
-		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="install" />
-			<arg file="${dist.zimlet.dir}/url.zip" />
-		</java>
 	</target>
 
+	<target name="package-zimlets-extra">
+		<!-- todo:  remove these classes from service.jar -->
+		<!-- todo2:  just use RegexHandler instead of creating custom classes -->
+		<zip destfile="${dist.zimlet.dir}/com_zimbra_phone.zip" update="true">
+			<fileset dir="${build.classes.dir}" includes="**/NANPHandler.class"/>
+		</zip>
+		<zip destfile="${dist.zimlet.dir}/com_zimbra_tracking.zip" update="true">
+			<fileset dir="${build.classes.dir}" includes="**/TrackingHandler.class"/>
+		</zip>
+		<zip destfile="${dist.zimlet.dir}/com_zimbra_url.zip" update="true" >
+			<fileset dir="${build.classes.dir}" includes="**/URLHandler.class"/>
+		</zip>
+	</target>
+	
+	<target name="deploy-zimlets" depends="package-zimlets">
+		<foreach list="${zimlets}" target="install-zimlet" param="zimlet">
+			<param name="action" value="deploy"/>
+		</foreach>
+	</target>
+	<target name="install-zimlets" depends="package-zimlets">
+		<foreach list="${zimlets}" target="install-zimlet" param="zimlet">
+			<param name="action" value="install"/>
+		</foreach>
+	</target>
+	<target name="install-zimlet">
+		<echo>${action} ${zimlet}</echo>
+		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="-q" />
+			<arg line="${action}" />
+			<arg file="${dist.zimlet.dir}/${zimlet}.zip" />
+		</java>
+	</target>
+	
     <target name="tomcat-init" depends="localhost-ssl-cert,tomcat-init-unix">
+		<copy todir="${tomcat.home.dir}/common/lib" file="${jars.dir}/${ical4j.jar}" />
 		<copy todir="${tomcat.home.dir}/common/lib" file="${jars.dir}/activation.jar" />
 		<copy todir="${tomcat.home.dir}/common/lib" file="${jars.dir}/mail.jar" />
 		<copy todir="${tomcat.home.dir}/common/lib" file="${jars.dir}/zimbra-native.jar" />
@@ -620,7 +643,7 @@
 		</chmod>
 	</target>
 
-	<target name="stop-servers" depends="stop-ldap,stop-tomcat" />
+	<target name="stop-servers" depends="stop-tomcat,stop-ldap" />
 	
 	<!-- LDAP service control -->
 	<target name="stop-ldap" depends="stop-ldap-windows,stop-ldap-unix" />
@@ -654,6 +677,7 @@
 	</target>
 
 	<!-- Tomcat service control -->
+	<target name="restart-tomcat" depends="stop-tomcat,start-tomcat"/>
 	<target name="stop-tomcat" depends="stop-tomcat-windows,stop-tomcat-unix"/>
 
 	<target name="stop-tomcat-windows" if="is-windows">
@@ -662,8 +686,10 @@
 			<arg value="apache tomcat" />
 		</exec>
 		<!-- Wait for Tomcat to really go away. -->
-		<echo>Waiting 5 seconds for tomcat to stop</echo>
-		<sleep seconds="5" />
+		<echo>Waiting for tomcat to stop</echo>
+		<waitfor checkevery="1" checkeveryunit="second" maxwait="10" maxwaitunit="second">
+			<not><http url="http://${deploy.host}:${deploy.port}/" /></not>
+		</waitfor>
 	</target>
 
 	<target name="stop-tomcat-unix" if="is-unix">
