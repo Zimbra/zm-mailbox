@@ -1,8 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- * Version: ZPL 1.1
+ * Version: MPL 1.1
  * 
- * The contents of this file are subject to the Zimbra Public License
+ * The contents of this file are subject to the Mozilla Public License
  * Version 1.1 ("License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
  * http://www.zimbra.com/license
@@ -12,7 +12,7 @@
  * the License for the specific language governing rights and limitations
  * under the License.
  * 
- * The Original Code is: Zimbra Collaboration Suite.
+ * The Original Code is: Zimbra Collaboration Suite Server.
  * 
  * The Initial Developer of the Original Code is Zimbra, Inc.
  * Portions created by Zimbra are Copyright (C) 2005 Zimbra, Inc.
@@ -44,8 +44,8 @@ public class Util {
         } else {
             try {
                 if (osName.equalsIgnoreCase("Mac OS X")) {
-                    /* TODO: is this really required?  I think not.  loadLibrary
-                     * should just work on the mac...
+                    /* TODO: is this really required?  I think not.
+                     * loadLibrary should just work on the mac...
                      */ 
                     System.load("/opt/zimbra/lib/libzimbra-native.jnilib");
                 } else {
@@ -83,7 +83,7 @@ public class Util {
      */
     public static void halt(String message) {
         try {
-            System.err.println(message);
+            System.err.println("Fatal error: terminating: " + message);
         } finally {
             Runtime.getRuntime().halt(1);
         }
@@ -105,7 +105,7 @@ public class Util {
             PrintWriter pw = new PrintWriter(sw);
             pw.println(message);
             t.printStackTrace(pw);
-            System.err.println(sw.toString());
+            System.err.println("Fatal error: terminating: " + sw.toString());
         } finally {
             Runtime.getRuntime().halt(1);
         }

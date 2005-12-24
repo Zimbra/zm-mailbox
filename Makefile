@@ -14,6 +14,7 @@ SHARED := -dynamiclib
 MACDEF := -DDARWIN
 SHARED_EXT := jnilib
 LIB_OPTS := -install_name /opt/zimbra/lib/libzimbra-native.$(SHARED_EXT) -framework JavaVM
+JAVA_BINARY = /usr/bin/java
 endif
 
 CLASSES = $(BUILD)/classes
@@ -95,11 +96,13 @@ $(BUILD)/Process.h: $(CLASSES)/com/zimbra/znative/Process.class
 #
 ZIMBRA_LIB = /opt/zimbra/lib
 TOMCAT_HOME ?= /opt/zimbra/tomcat
+TOMCAT_PIDFILE ?= /opt/zimbra/log/tomcat.pid
 JAVA_BINARY ?= /opt/zimbra/java/bin/java
 LAUNCHER_CFLAGS = \
 	-DZIMBRA_LIB='"$(ZIMBRA_LIB)"' \
 	-DTOMCAT_HOME='"$(TOMCAT_HOME)"' \
-	-DJAVA_BINARY='"$(JAVA_BINARY)"'
+	-DJAVA_BINARY='"$(JAVA_BINARY)"' \
+	-DTOMCAT_PIDFILE='"$(TOMCAT_PIDFILE)"'
 
 $(BUILD)/zmtomcatstart: $(SRC)/launcher/zmtomcatstart.c
 	gcc $(MACDEF) $(LAUNCHER_CFLAGS) -Wall -Wmissing-prototypes -o $@ $<
@@ -113,6 +116,8 @@ push: all
 	cp $(BUILD)/zimbra-native.jar ../ZimbraServer/jars
 	p4 edit ../ZimbraServer/lib/libzimbra-native.$(SHARED_EXT)
 	cp $(BUILD)/libzimbra-native.$(SHARED_EXT) ../ZimbraServer/lib
+	p4 edit ../ZimbraServer/libexec/zmtomcatstart.$(shell uname)
+	cp $(BUILD)/zmtomcatstart ../ZimbraServer/libexec/zmtomcatstart.$(shell uname)
 
 #
 # Clean
