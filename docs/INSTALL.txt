@@ -13,15 +13,16 @@ installers to your local machine before installing.
 
 2. Checkout the following from Perforce:
 
-  ZimbraServer - the backend system
+   ZimbraServer - the backend system
 
-  ZimbraWebClient - the dhtml interface
+   ZimbraWebClient - the dhtml interface
 
-  Ajax - DTML/Ajax toolkit
+   Ajax - DTML/Ajax toolkit
   
-  Optional:  ThirdParty - not needed to run, but has javadocs and source for the
-  various 3rd party jars/servers. It's very very large since all the built servers and
-  3rd Party code (multiple versions) are in there.
+   Optional: ThirdParty - not needed to run, but has javadocs and
+   source for the various 3rd party jars/servers. It's very very large
+   since all the built servers and 3rd Party code (multiple versions)
+   are in there.
 
 3. Install latest 1.5.x JDK. Need full JDK, not just a JRE.
    
@@ -32,53 +33,54 @@ installers to your local machine before installing.
 
 4. Install Eclipse (www.eclipse.org)
 
-  You should install the Perforce plugin for Eclipse. To
-  install, select Help | Software Updates | Find and Install... 
-  Then select the "Search for new features to install" and hit Next. 
-  From this screen, add a new remote site using the URL:
+   You should install the Perforce plugin for Eclipse. To install,
+   select Help | Software Updates | Find and Install...  Then select
+   the "Search for new features to install" and hit Next.  From this
+   screen, add a new remote site using the URL:
   
-    http://www.perforce.com/downloads/http/p4-wsad/install/
+   http://www.perforce.com/downloads/http/p4-wsad/install/
   
-  This will add a P4 entry to the list on the left. Select that and 
-  continue through the wizard. 
+   This will add a P4 entry to the list on the left. Select that and
+   continue through the wizard.
   
-  NOTE: You will need to configure the plugin with your Perforce
-  information before using the Perforce Perspective.
+   NOTE: You will need to configure the plugin with your Perforce
+   information before using the Perforce Perspective.
   
-  Once you get the Perforce Perspective open right click on ZimbraServer
-  and select "Import as project". Do the same for Ajax and ZimbraWebClient.
+   Once you get the Perforce Perspective open right click on
+   ZimbraServer and select "Import as project". Do the same for Ajax
+   and ZimbraWebClient.
 
 5. Install Tomcat 5.5.x
 
-  On Windows, install Tomcat to c:\opt\zimbra\tomcat
+   On Windows, install Tomcat to c:\opt\zimbra\tomcat
   
-  copy ZimbraServer/conf/tomcat-5.5/server.xml to c:\opt\zimbra\tomcat\conf\
-  copy ZimbraServer/conf/tomcat-5.5/tomcat-users.xml c:\opt\zimbra\tomcat\conf\
+   copy ZimbraServer/conf/tomcat-5.5/server.xml to c:\opt\zimbra\tomcat\conf\
+   copy ZimbraServer/conf/tomcat-5.5/tomcat-users.xml c:\opt\zimbra\tomcat\conf\
   
-  The server.xml file is configured to use port 7070 by
-  default. Production would of course use 80, and we'll also need to
-  configure SSL
+   The server.xml file is configured to use port 7070 by
+   default. Production would of course use 80, and we'll also need to
+   configure SSL
   
-  The ZimbraServer/build.xml relies on a zimbra/zimbra user in the
-  tomcat-users.xml file to deploy
+   The ZimbraServer/build.xml relies on a zimbra/zimbra user in the
+   tomcat-users.xml file to deploy
 
-  On Linux startup with:
+   On Linux startup with:
       $ JAVA_HOME={java-home} {tomcat-install}/bin/startup.sh      
 
 6. Install MySQL 4.1.x 
 
-  On Windows, install MySQL to c:\opt\zimbra\mysql
+   On Windows, install MySQL to c:\opt\zimbra\mysql
 
-  Install it to run on port 7306
+   Install it to run on port 7306
 
-  We expect for now an admin account of "root" with password "zimbra".
-  This is different then the OS root account (if on Linux). The
-  ZimbraServer/build.xml file relies on the root account to create
-  the zimbra database and user/pass.
+   We expect for now an admin account of "root" with password
+   "zimbra".  This is different then the OS root account (if on
+   Linux). The ZimbraServer/build.xml file relies on the root account
+   to create the zimbra database and user/pass.
 
   On Linux, you can run the script ./configure in the main directory
-  of the binary mysql distribtion.  This script creates
-  a minimal mysql system, and starts up mqsql server.  Use can use
+  of the binary mysql distribtion.  This script creates a minimal
+  mysql system, and starts up mqsql server.  Use can use
   "{mysql-path}/mysqld_safe --no-defaults" to start the server and use
   "kill `cat {mysql-path}/data/{hostname}.pid`" to shut it down.  Also
   on linux after you have started the server, you have to allow
@@ -93,15 +95,15 @@ installers to your local machine before installing.
     mysql> flush privileges;
     Query OK, 0 rows affected (0.00 sec)
 
-  On Windows, follow instructions to install MySQL as a service
-  with the required database admin user password.
+   On Windows, follow instructions to install MySQL as a service with
+   the required database admin user password.
 
 7. Install OpenLDAP (Get pkg from \\kenny)
    Or http://download.bergmans.us/openldap/
 
-  On Windows, install to c:\opt\zimbra\openldap. Then go to the
-  openldap directory and run "slapd install" to install it as a
-  Windows service.
+   On Windows, install to c:\opt\zimbra\openldap. Then go to the
+   openldap directory and run "slapd install" to install it as a
+   Windows service.
 
 8. On Linux, probably want to chown /opt to yourself and/or give group
    write access to /opt, so you don't have to worry about running as
@@ -122,23 +124,26 @@ installers to your local machine before installing.
   	
   	Add: ZimbraWebClient/build.xml
     	Run "deploy" and "admin-deploy"
+
     This will compile/deploy the DHTML interface and the Admin Colsole.
     	
-	If you install ant standalone, you can also run "ant reset-the-world" 
-	from within the ZimbraServer root directory.
+    If you install ant standalone, you can also run "ant
+    reset-the-world" from within the ZimbraServer root directory.
      
 10. Test deployment
 
-  You should now be able to go to:
+    You should now be able to go to:
 
-    http://localhost:7070/zimbra/
+        http://localhost:7070/zimbra/
   
-  and login as "user1[@{hostname}]" (the domain is optional), with password 
-  "test123", where {hostname} is the name of your local machine.
+    and login as "user1[@{hostname}]" (the domain is optional), with
+    password "test123", where {hostname} is the name of your local
+    machine.
   
-  You can log into the Admin Console by going to:
+    You can log into the Admin Console by going to:
   
-    https://localhost:7071/zimbra/admin
+        https://localhost:7071/zimbra/admin
     
-  and login as "admin@{hostname}" (the domain is mandatory), with the password 
-  "test123", where {hostname} is the name of your local machine.
+    and login as "admin@{hostname}" (the domain is mandatory), with
+    the password "test123", where {hostname} is the name of your local
+    machine.
