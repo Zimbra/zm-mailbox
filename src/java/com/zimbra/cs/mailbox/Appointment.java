@@ -347,13 +347,19 @@ public class Appointment extends MailItem {
         if (mRecurrence != null) {
             instances = mRecurrence.expandInstances(this, start, end);
         } else {
-            if (getStartTime() < end && getEndTime() > start) {
-                Invite defaultInv = getDefaultInvite();
-                if (defaultInv != null)
-                    instances.add(new Instance(this,
-                                               new InviteInfo(defaultInv),
-                                               getStartTime(), getEndTime(),
-                                               false));
+            if (mInvites != null) {
+                for (Iterator iter = mInvites.iterator(); iter.hasNext(); ) {
+                    Invite inv = (Invite) iter.next();
+                    assert(inv.getStartTime() != null);
+                    long invStart = inv.getStartTime().getUtcTime();
+                    long invEnd = inv.getEffectiveEndTime().getUtcTime();
+                    if (invStart < end && invEnd > start) {
+                        Instance inst = new Instance(this, new InviteInfo(inv),
+                                                     invStart, invEnd,
+                                                     inv.hasRecurId());
+                        instances.add(inst);
+                    }
+                }
             }
         }
         return instances;
