@@ -25,6 +25,7 @@
 package com.zimbra.cs.util;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.URL;
 import java.net.UnknownHostException;
 
@@ -187,9 +188,10 @@ public abstract class SoapCLI {
             System.err.println("Error parsing command line arguments: " + e.getMessage());
         }
 
+        PrintWriter pw = new PrintWriter(System.err, true);
         HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp(getCommandUsage(),
-                null, mOptions,
+        formatter.printHelp(pw, formatter.getWidth(), getCommandUsage(),
+                null, mOptions, formatter.getLeftPadding(), formatter.getDescPadding(),
                 getTrailer());
         
     }
