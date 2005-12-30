@@ -82,7 +82,7 @@
 
 	<property name="ical4j.jar" value="ical4j-0.9.16-patched.jar" />
 
-	<property name="zimlets" value="com_zimbra_phone,com_zimbra_po,com_zimbra_tracking,com_zimbra_url,com_zimbra_ymaps,com_zimbra_sforce,com_zimbra_amzn,com_zimbra_bugz,wikipedia"/>
+	<property name="zimlets" value="com_zimbra_phone,com_zimbra_po,com_zimbra_tracking,com_zimbra_url,com_zimbra_ymaps,com_zimbra_sforce,com_zimbra_amzn,com_zimbra_bugz"/>
 
 	<condition property="is-windows">
 		<os family="windows" />
