@@ -89,6 +89,7 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
         	authToken = getAdminAuthTokenFromCookie(req, resp);
             if (authToken == null) {
             	ZimbraLog.zimlet.info("no auth token");
+            	resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
             	return;
             } else {
             	isAdmin = true;
@@ -104,6 +105,7 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
 	        	
 	        	if (zimletName == null) {
 	    	    	ZimbraLog.zimlet.debug("no zimlet name");
+	            	resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
 	        		return;
 	        	}
 	        	
@@ -116,11 +118,13 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
 	        	}
 	        	if (!found) {
 	            	ZimbraLog.zimlet.info("unauthorized request to zimlet "+zimletName+" from user "+authToken.getAccountId());
+	            	resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
 	        		return;
 	        	}
         	}
         } catch (ServiceException se) {
         	ZimbraLog.zimlet.info("cannot resolve account "+authToken.getAccountId());
+        	resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
         	return;
         }
         chain.doFilter(req, resp);
