@@ -96,10 +96,10 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
             }
         }
         
-        
         try {
-        	if(!isAdmin) {
-	        	Account account = Provisioning.getInstance().getAccountById(authToken.getAccountId());
+        	Account account = Provisioning.getInstance().getAccountById(authToken.getAccountId());
+        	boolean isDomainAdmin = account.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);
+        	if (!isAdmin && !isDomainAdmin) {
 	        	String[] attrList = account.getCOS().getMultiAttr(Provisioning.A_zimbraZimletAvailableZimlets);
 	        	String zimletName = getZimletName(req);
 	        	
