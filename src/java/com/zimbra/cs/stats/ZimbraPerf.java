@@ -50,7 +50,9 @@ public class ZimbraPerf {
 
     static Log sLog = LogFactory.getLog(ZimbraPerf.class);
 
-    // Accumulators
+    // Accumulators.  To add a new accumulator, create a static instance here,
+    // add it to the CORE_ACCUMULATORS array and if necessary, set options
+    // in the static init code below.
     public static Counter COUNTER_LMTP_RCVD_MSGS = new Counter("lmtp_rcvd_msgs");
     public static Counter COUNTER_LMTP_RCVD_BYTES = new Counter("lmtp_rcvd_bytes");
     public static Counter COUNTER_LMTP_RCVD_RCPT = new Counter("lmtp_rcvd_rcpt");
@@ -62,6 +64,8 @@ public class ZimbraPerf {
     public static StopWatch STOPWATCH_MBOX_ADD_MSG = new StopWatch("mbox_add_msg");
     public static Counter COUNTER_MBOX_MSG_CACHE = new Counter("mbox_msg_cache"); 
     public static StopWatch STOPWATCH_SOAP = new StopWatch("soap");
+    public static StopWatch STOPWATCH_IMAP = new StopWatch("imap");
+    public static StopWatch STOPWATCH_POP = new StopWatch("pop");
     public static Counter COUNTER_IDX_WRT = new Counter("idx_wrt");
     
     private static Accumulator[] CORE_ACCUMULATORS = {
@@ -71,6 +75,8 @@ public class ZimbraPerf {
         STOPWATCH_LDAP_DC,
         STOPWATCH_MBOX_ADD_MSG, COUNTER_MBOX_MSG_CACHE,
         STOPWATCH_SOAP,
+        STOPWATCH_IMAP,
+        STOPWATCH_POP,
         COUNTER_IDX_WRT
     };
     private static List<Accumulator> sAccumulators;
@@ -112,6 +118,7 @@ public class ZimbraPerf {
         if (sStartedZimbraStats) {
             sLog.warn("addAccumulator() called after zimbrastats logging has started", new Throwable());
         } else {
+            sLog.debug("Adding accumulator for stats: " + StringUtil.join(",", a.getNames()));
             synchronized(sAccumulators) {
                 sAccumulators.add(a);
             }
@@ -442,7 +449,7 @@ public class ZimbraPerf {
     static  {
         sAccumulators = new ArrayList<Accumulator>();
         for (Accumulator a : CORE_ACCUMULATORS) {
-            sAccumulators.add(a);
+            addAccumulator(a);
         }
         
         // Only the average is interesting for these counters

@@ -45,6 +45,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServerInputStream;
 import com.zimbra.cs.util.Config;
@@ -133,10 +134,14 @@ public class Pop3Handler extends ProtocolHandler {
     protected boolean processCommand() throws IOException {
         // TODO: catch IOException too?
         ZimbraLog.clearContext();
+        long start = ZimbraPerf.STOPWATCH_POP.start();
+        
         try {
             if (mAccountName != null) ZimbraLog.addAccountNameToContext(mAccountName);
             ZimbraLog.addIpToContext(mRemoteAddress);
-            return processCommandInternal();
+            boolean result = processCommandInternal();
+            ZimbraPerf.STOPWATCH_POP.stop(start);
+            return result;
         } catch (Pop3CmdException e) {
             sendERR(e.getResponse());
             DEBUG(e.getMessage(), e);
