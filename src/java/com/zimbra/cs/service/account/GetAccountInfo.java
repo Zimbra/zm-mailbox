@@ -84,8 +84,9 @@ public class GetAccountInfo extends DocumentHandler  {
 
     static void addUrls(Element response, Account account) throws ServiceException {
         Server server = account.getServer();
-        String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);        
         if (server == null) return;
+        String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);        
+        if (hostname == null) return;
         
         int port = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
         if (port > 0) {
