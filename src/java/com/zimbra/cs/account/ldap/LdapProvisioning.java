@@ -709,23 +709,28 @@ public class LdapProvisioning extends Provisioning {
             returnAttrs = fixReturnAttrs(returnAttrs, flags);
 
             SearchControls searchControls = 
-                new SearchControls(SearchControls.SUBTREE_SCOPE, 0, 0, returnAttrs, true, false);
+                new SearchControls(SearchControls.SUBTREE_SCOPE, 0, 0, returnAttrs, false, false);
 
             // we don't want to ever cache any of these, since they might not have all their attributes
 
-            NamingEnumeration ne = ctxt.search(base, query, searchControls);
-            while (ne.hasMore()) {
-                SearchResult sr = (SearchResult) ne.next();
-                String dn = sr.getNameInNamespace();
-                // skip admin accounts
-                if (dn.endsWith("cn=zimbra")) continue;
-                Attributes attrs = sr.getAttributes();
-                Attribute objectclass = attrs.get("objectclass");
-                if (objectclass == null || objectclass.contains("zimbraAccount")) result.add(new LdapAccount(dn, attrs, this));
-                else if (objectclass.contains("zimbraAlias")) result.add(new LdapAlias(dn, attrs));
-                else if (objectclass.contains("zimbraDistributionList")) result.add(new LdapDistributionList(dn, attrs));                
+            NamingEnumeration ne = null;
+
+            try {
+                ne = ctxt.search(base, query, searchControls);
+                while (ne.hasMoreElements()) {
+                    SearchResult sr = (SearchResult) ne.nextElement();
+                    String dn = sr.getNameInNamespace();
+                //  skip admin accounts
+                    if (dn.endsWith("cn=zimbra")) continue;
+                    Attributes attrs = sr.getAttributes();
+                    Attribute objectclass = attrs.get("objectclass");
+                    if (objectclass == null || objectclass.contains("zimbraAccount")) result.add(new LdapAccount(dn, attrs, this));
+                    else if (objectclass.contains("zimbraAlias")) result.add(new LdapAlias(dn, attrs));
+                    else if (objectclass.contains("zimbraDistributionList")) result.add(new LdapDistributionList(dn, attrs));   
+                }
+            } finally {
+                if (ne != null) ne.close();
             }
-            ne.close();
         } catch (NameNotFoundException e) {
             return result;
         } catch (InvalidNameException e) {
@@ -2320,16 +2325,16 @@ public class LdapProvisioning extends Provisioning {
     }
 
     public Zimlet getZimlet(String name) throws ServiceException {
-    	return getZimlet(name, null);
+    	    return getZimlet(name, null);
     }
-    
-    public Zimlet getZimlet(String name, DirContext ctxt) throws ServiceException {
+
+    private Zimlet getZimlet(String name, DirContext initCtxt) throws ServiceException {
     	LdapZimlet zimlet = (LdapZimlet) sZimletCache.getByName(name);
     	if (zimlet == null) {
-        	DirContext localCtxt = null;
+        	DirContext ctxt = initCtxt;
         	try {
         		if (ctxt == null) {
-               		ctxt = localCtxt = LdapUtil.getDirContext();
+        		    ctxt = LdapUtil.getDirContext();
         		}
         		String dn = zimletNameToDN(name);            
         		Attributes attrs = ctxt.getAttributes(dn);
@@ -2341,8 +2346,8 @@ public class LdapProvisioning extends Provisioning {
         	} catch (ZimletException ze) {
         		throw ServiceException.FAILURE("unable to load zimlet: "+name, ze);
             } finally {
-            	if (localCtxt != null) {
-            		LdapUtil.closeContext(localCtxt);
+            	if (initCtxt == null) {
+            		LdapUtil.closeContext(ctxt);
             	}
         	}
     	}

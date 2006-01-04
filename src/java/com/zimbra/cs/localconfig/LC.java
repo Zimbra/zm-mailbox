@@ -339,7 +339,7 @@ public class LC {
             ("Maximum number of LDAP active and idle connections allowed.");
         
         ldap_connect_pool_prefsize = new KnownKey("ldap_connect_pool_prefsize");
-        ldap_connect_pool_prefsize.setDefault("${ldap_connect_pool_maxsize}");
+        ldap_connect_pool_prefsize.setDefault("0");
         ldap_connect_pool_prefsize.setDoc
             ("Preferred number  of LDAP connections - setting both maxsize" +
              " and prefsize to the same value maintains the connection pool" +

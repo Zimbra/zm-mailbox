@@ -98,12 +98,15 @@ public class LdapUtil {
         System.setProperty("com.sun.jndi.ldap.connect.pool.maxsize", LC.ldap_connect_pool_maxsize.value());
         System.setProperty("com.sun.jndi.ldap.connect.pool.prefsize", LC.ldap_connect_pool_prefsize.value());
         System.setProperty("com.sun.jndi.ldap.connect.pool.timeout", LC.ldap_connect_pool_timeout.value());
+        System.setProperty("com.sun.jndi.ldap.connect.pool.protocol", "plain ssl");
     }
 
     public static void closeContext(Context ctxt) {
         try {
-            if (ctxt != null)
+            if (ctxt != null) {
+                //ZimbraLog.account.error("closeDirContext", new RuntimeException("------------------- CLOSE"));
                 ctxt.close();
+            }
         } catch (NamingException e) {
             // TODO log?
             //e.printStackTrace();
@@ -168,6 +171,7 @@ public class LdapUtil {
             long start = ZimbraPerf.STOPWATCH_LDAP_DC.start();
             DirContext dirContext = new InitialDirContext(getDefaultEnv(master));
             ZimbraPerf.STOPWATCH_LDAP_DC.stop(start);
+            //ZimbraLog.account.error("getDirContext", new RuntimeException("------------------- OPEN"));
             return dirContext;
         } catch (NamingException e) {
             throw ServiceException.FAILURE("getDirectContext", e);
