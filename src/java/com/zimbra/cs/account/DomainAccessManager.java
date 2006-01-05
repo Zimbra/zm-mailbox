@@ -37,6 +37,8 @@ public class DomainAccessManager extends AccessManager {
     public boolean canAccessAccount(AuthToken at, Account target) throws ServiceException {
         if (at.isAdmin()) return true;
         if (!at.isDomainAdmin()) return false;
+        // don't allow a domain-only admin to access a global admin's account
+        if (target.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false)) return false;
         return getDomain(at).getId().equals(target.getDomain().getId());
     }
 
