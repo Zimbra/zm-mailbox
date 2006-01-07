@@ -1593,8 +1593,8 @@ public class Invite {
                         }
                     }
                     ArrayList /* IInstanceGeneratingRule */  subRules = new ArrayList();
-                    if (subRules.size() > 0) {
-                        for (Iterator iter = subRules.iterator(); iter.hasNext();) {
+                    if (subRecurs.size() > 0) {
+                        for (Iterator iter = subRecurs.iterator(); iter.hasNext();) {
                             Object next = iter.next();
                             if (next instanceof ZRecur) {
                                 ZRecur cur = (ZRecur)iter.next();
