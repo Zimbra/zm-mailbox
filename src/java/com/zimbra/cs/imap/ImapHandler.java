@@ -1904,8 +1904,11 @@ public class ImapHandler extends ProtocolHandler {
         }
     }
 
-
     protected void dropConnection() {
+        dropConnection(true);
+    }
+    
+    protected void dropConnection(boolean sendBanner) {
         if (mSession != null) {
             mSession.setHandler(null);
             SessionCache.clearSession(mSession.getSessionId(), mSession.getAccountId());
@@ -1914,7 +1917,7 @@ public class ImapHandler extends ProtocolHandler {
 
         try {
             if (mOutputStream != null) {
-                if (!mGoodbyeSent)
+                if (sendBanner && !mGoodbyeSent)
                     sendUntagged(ImapServer.getGoodbye(), true);
                 mGoodbyeSent = true;
                 mOutputStream.close();
@@ -1931,7 +1934,7 @@ public class ImapHandler extends ProtocolHandler {
 
     protected void notifyIdleConnection() {
         // we can, and do, drop idle connections after the timeout
-        dropConnection();
+        dropConnection(false);
     }
 
     void sendOK(String tag, String response) throws IOException  { sendResponse(tag, response.equals("") ? "OK" : "OK " + response, true); }
