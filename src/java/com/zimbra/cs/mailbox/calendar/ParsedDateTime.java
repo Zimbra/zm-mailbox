@@ -116,8 +116,12 @@ public final class ParsedDateTime {
                 // FORM #3: DATE WITH LOCAL TIME AND TIME ZONE REFERENCE
                 //}
             } else {
-                if (!USE_BROKEN_OUTLOOK_MODE) // all-day events should *not* have a timezone
-                    tz = null;
+            	// no timezone if it is a DATE entry....note that we *DO* need a
+            	// 'local time zone' as a fallback: if we're in BROKEN_OUTLOOK_MODE
+            	// we will need to use this local time zone as the zone to render
+            	// the appt in (remember, outlook all-day-appts must be 0:00-0:00 in 
+            	// the client's timezone!)
+            	tz = null;
             }
             
             GregorianCalendar cal = new GregorianCalendar();
@@ -148,7 +152,10 @@ public final class ParsedDateTime {
                 // year, month, date followed by "Z".  That's an invalid
                 // format, but we'll try to work with it, by ignoring
                 // the unnecessary "Z".
-                return parse(str.substring(0, 8), tz, localTZ, utcOnly);
+            	//
+            	// Since they requested "Z", we'll pass in UTC as their 'default timezone' 
+            	// just in case it somehow comes to that (ie Outlook hack)
+                return parse(str.substring(0, 8), tz, ICalTimeZone.getUTC(), utcOnly);
             } else
                 throw new ParseException("Invalid TimeString specified: " + str, 0);
         }
@@ -348,7 +355,14 @@ public final class ParsedDateTime {
                 toRet.append("Z");
             }
         } else if (USE_BROKEN_OUTLOOK_MODE) {
-            toRet.append("T000000Z");
+            toRet.append("T000000");
+        	// OUTLOOK HACK -- remember, outlook all-day-appts 
+        	// must be rendered as 0:00-0:00 in the client's timezone...but we
+            // need to correctly fallback to UTC here (e.g. UNTILs w/ DATE values
+            // that are implicitly therefore in UTC) in some cases.  Sheesh.
+            if (getTZName() == null) {
+                toRet.append("Z");
+            }
         }
         
         return toRet.toString();
