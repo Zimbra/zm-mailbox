@@ -46,19 +46,20 @@ public class ResultsPager
     private String mPrevSortValueStr;
     private long mPrevSortValueLong;
     
-    private int mPrevOffset;
     private int mNumResultsRequested;
 
     private boolean mFixedOffset;
     
     private List mHits;
     
+    public int getSortOrder() { return mSortOrder; }
+    
     static public ResultsPager create(ZimbraQueryResults results, SearchParams params) throws ServiceException
     {
         ResultsPager toRet;
         
         if (!params.hasCursor() || params.getOffset()==0) {
-            toRet = new ResultsPager(results, params.getLimit(), params.getOffset());
+            toRet = new ResultsPager(results, params.getSortBy(), params.getLimit(), params.getOffset());
         } else {
             // are we paging FORWARD or BACKWARD?  If requested starting-offset is the same or bigger then the cursor's offset, 
             // then we're going FORWARD, otherwise we're going BACKWARD
@@ -79,7 +80,6 @@ public class ResultsPager
         mPrevMailItemId = prevItemId;
         mPrevSortValueStr = prevSortValueStr;
         mPrevSortValueLong = prevSortValueLong;
-        mPrevOffset = prevOffset;
         mNumResultsRequested = numResultsRequested;
         
         mFixedOffset = false;
@@ -99,8 +99,9 @@ public class ResultsPager
      * @param offset
      * @throws ServiceException
      */
-    public ResultsPager(ZimbraQueryResults results, int numResults, int offset) throws ServiceException {
+    public ResultsPager(ZimbraQueryResults results, int sortOrder, int numResults, int offset) throws ServiceException {
         mResults = results;
+        mSortOrder = sortOrder;
         mNumResultsRequested = numResults;
         mFixedOffset = true;
         

@@ -278,4 +278,21 @@ public abstract class ZimbraHit
         else 
             return 1; 
     }
+    
+    public final Object getSortField(int sortOrder) throws ServiceException {
+        switch (sortOrder) {
+        case MailboxIndex.SEARCH_ORDER_DATE_ASC:
+        case MailboxIndex.SEARCH_ORDER_DATE_DESC: /* 5...4...3...*/
+        	return getDate();
+        case MailboxIndex.SEARCH_ORDER_SUBJ_ASC:
+        case MailboxIndex.SEARCH_ORDER_SUBJ_DESC:
+        	return getSubject().toUpperCase();
+        case MailboxIndex.SEARCH_ORDER_NAME_ASC:
+        case MailboxIndex.SEARCH_ORDER_NAME_DESC:
+        	return getName().toUpperCase();
+        default:
+            throw new IllegalArgumentException("Unknown sort order: "+sortOrder);
+        }
+    	
+    }
 }
