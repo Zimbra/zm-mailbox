@@ -516,10 +516,18 @@ public class Invite {
         } else {
             ZAttendee at = getMatchingAttendee(acct);
             if (at != null) {
-                if (at.getPartStat().equals(IcalXmlStrMap.PARTSTAT_NEEDS_ACTION) &&
-                        (mMethod == ICalTok.REQUEST || mMethod == ICalTok.COUNTER)) {
-                    setNeedsReply(true);
-                }
+            	//
+            	// for BUG 4866 -- basically, if the incoming invite doesn't have a
+            	// PARTSTAT for us, assume it is "NEEDS-ACTION" iff this Invite supports
+            	// NEEDS_ACTION (ie is a Request or a Counter)
+            	//
+            	if (mMethod == ICalTok.REQUEST || mMethod == ICalTok.COUNTER) {
+            		String ps = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
+            		if (at.hasPartStat())
+            			ps = at.getPartStat();
+            		if (ps.equals(IcalXmlStrMap.PARTSTAT_NEEDS_ACTION))
+            			setNeedsReply(true);
+            	}
             } else {
                 // if this is the first time we're parsing this, and we can't find ourself on the
                 // attendee list, then allow a reply...
@@ -673,14 +681,9 @@ public class Invite {
     public String getLocation() { return mLocation; }
     public void setLocation(String location) { mLocation = location; }
     public boolean isAllDayEvent() { return ((mFlags & APPT_FLAG_ALLDAY)!=0); }
-    void setHasOtherAttendees(boolean hasOtherAttendees) {
-        if (hasOtherAttendees) {
-            mFlags |= APPT_FLAG_OTHER_ATTENDEES;
-        } else {
-            mFlags &= ~APPT_FLAG_OTHER_ATTENDEES;
-        }
+    public boolean hasOtherAttendees() {
+    	return ((mAttendees != null) && (mAttendees.size() > 0));
     }
-    public boolean hasOtherAttendees() { return ((mFlags & APPT_FLAG_OTHER_ATTENDEES)!=0); }
     void setIsRecurrence(boolean isRecurrence) {
         if (isRecurrence) {
             mFlags |= APPT_FLAG_ISRECUR;
@@ -731,7 +734,11 @@ public class Invite {
     public static final int APPT_FLAG_TODO            = 0x01;
     public static final int APPT_FLAG_EVENT           = 0x02;
     public static final int APPT_FLAG_ALLDAY          = 0x04;
-    public static final int APPT_FLAG_OTHER_ATTENDEES = 0x08;
+    
+    // TIM: removed this, wasn't being reliably set, and isn't necessary
+    //  [instead we just check for mAttendees.size()>0 ]
+    //public static final int APPT_FLAG_OTHER_ATTENDEES = 0x08;
+    
     public static final int APPT_FLAG_HASALARM        = 0x10;
     public static final int APPT_FLAG_ISRECUR         = 0x20;
     public static final int APPT_FLAG_NEEDS_REPLY     = 0x40;
@@ -766,7 +773,7 @@ public class Invite {
     protected int mMailItemId = 0;
     protected int mComponentNum = 0;
     
-    private List /* ZAttendee */ mAttendees = new ArrayList();
+    private List <ZAttendee> mAttendees = new ArrayList();
     private ZOrganizer mOrganizer;
     private ArrayList /* VAlarm */ mAlarms = new ArrayList();
 //    private Method mMethod;
@@ -882,17 +889,21 @@ public class Invite {
                     ZAttendee at = (ZAttendee)(iter.next());
                     
                     if (otherAt.addressesMatch(at)) {
-                        if (!otherAt.getRole().equals(at.getRole())) {
-                            at.setRole(otherAt.getRole());
-                            modified = true;
-                        }
+                    	
+                    	// BUG:4911  When an invitee responds they include an ATTENDEE record, but
+                    	// it doesn't have to have all fields.  In particular, we don't want to let them
+                    	// change their ROLE...
+//                        if (otherAt.hasRole() && !otherAt.getRole().equals(at.getRole())) {
+//                            at.setRole(otherAt.getRole());
+//                            modified = true;
+//                        }
                         
-                        if (!otherAt.getPartStat().equals(at.getPartStat())) {
+                        if (otherAt.hasPartStat() && !otherAt.getPartStat().equals(at.getPartStat())) {
                             at.setPartStat(otherAt.getPartStat());
                             modified = true;
                         }
                         
-                        if (!otherAt.getRsvp().equals(at.getRsvp())) {
+                        if (otherAt.hasRsvp() && !otherAt.getRsvp().equals(at.getRsvp())) {
                             at.setRsvp(otherAt.getRsvp());
                             modified = true;
                         }
@@ -1604,10 +1615,6 @@ public class Invite {
                         if (addRules.size() > 0) { // since exclusions can't affect DtStart, just ignore them if there are no add rules
                             newInv.setRecurrence(new Recurrence.RecurrenceRule(newInv.getStartTime(), duration, new InviteInfo(newInv), addRules, subRules));
                         }
-                    }
-                    
-                    if (newInv.getAttendees().size() > 1) {
-                        newInv.setHasOtherAttendees(true);
                     }
                 } catch (ServiceException e) {
                     System.out.println(e);
