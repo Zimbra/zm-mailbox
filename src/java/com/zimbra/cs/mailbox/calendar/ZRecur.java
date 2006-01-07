@@ -481,6 +481,11 @@ public class ZRecur {
         if (earliestDate.compareTo(rangeEndDate)>=0)
             return toRet;
         
+        if (mUntil != null) {
+        	if (mUntil.compareTo(rangeEndDate) < 0) 
+        		rangeEndDate = mUntil.getDate();
+        }
+        
         GregorianCalendar cur = dtStart.getCalendarCopy();
         
         // until we hit rangeEnd, or we've SAVED count entries:
