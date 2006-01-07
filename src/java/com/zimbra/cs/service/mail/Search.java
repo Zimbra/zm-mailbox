@@ -92,7 +92,7 @@ public class Search extends DocumentHandler  {
             // FIXME!  workaround bug in resetIterator()
             results = getResults(mbox, params, lc, session);
             
-            pager = new ResultsPager(results, params.getLimit(), 0);
+            pager = new ResultsPager(results, params.getSortBy(), params.getLimit(), 0);
             response.addAttribute(MailService.A_QUERY_OFFSET, 0);
             response.addAttribute("newResults", true);
         }
@@ -242,6 +242,7 @@ public class Search extends DocumentHandler  {
 //          for (ZimbraHit hit = results.skipToHit(offset); hit != null; hit = results.getNext()) {
             totalNumHits++;
             boolean inline = (totalNumHits == 1 && params.getFetchFirst());
+            boolean addSortField = true;
             Element e = null;
             if (hit instanceof ConversationHit) {
                 ConversationHit ch = (ConversationHit) hit;
@@ -254,7 +255,7 @@ public class Search extends DocumentHandler  {
                 e = addMessagePartHit(response, mph, eecache);                
             } else if (hit instanceof ContactHit) {
                 ContactHit ch = (ContactHit) hit;
-                ToXML.encodeContact(response, lc, ch.getContact(), null, true, null);
+                e = ToXML.encodeContact(response, lc, ch.getContact(), null, true, null);
             } else if (hit instanceof NoteHit) {
                 NoteHit nh = (NoteHit) hit;
                 e = ToXML.encodeNote(response,lc, nh.getNote());
@@ -262,11 +263,15 @@ public class Search extends DocumentHandler  {
                 ProxiedHit ph = (ProxiedHit) hit;
                 e = ph.getElement().detach();
                 response.addElement(e);
+                addSortField = false;
             } else if (hit instanceof AppointmentHit) {
                 AppointmentHit ah = (AppointmentHit)hit;
-                addAppointmentHit(lc, response, ah, inline, params);
+                e = addAppointmentHit(lc, response, ah, inline, params);
             } else {
                 mLog.error("Got an unknown hit type putting search hits: "+hit);
+            }
+            if (e != null && addSortField) {
+            	e.addAttribute(MailService.A_SORT_FIELD, hit.getSortField(pager.getSortOrder()).toString());
             }
             if (includeMailbox) {
                 String idStr = hit.getMailboxIdStr() + "/" + hit.getItemId();

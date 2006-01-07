@@ -626,7 +626,7 @@ conversation result:
 --------------------
 
 <SearchResponse offset="..." more="{more-flag}">
-  <c id="{conv-id}" t="{tags}" n="{num-msgs}" d="{date}" f="{flags} [mbx="UID"]>
+  <c id="{conv-id}" t="{tags}" n="{num-msgs}" d="{date}" f="{flags} [mbx="UID"] sf="SORT-FIELD-VALUE">
     <e ...>*
     <su>{subject}</su>
     <fr>{fragment}</fr>
@@ -637,7 +637,7 @@ conversation result:
 message result:
 ---------------
 <SearchResponse offset="..." more="{more-flag}">
-   <m id="{message-id}" f="{flags}" s="{size}" d="{date}" cid="{conv-id}" score="..." [mbx="UID"]>
+   <m id="{message-id}" f="{flags}" s="{size}" d="{date}" cid="{conv-id}" score="..." [mbx="UID"] sf="SORT-FIELD-VALUE">
      <e .../>  <!- sender only -->
      <su>{subject}</su>
      <fr>{fragment}</fr>
@@ -663,7 +663,7 @@ message-part result:
 --------------------
 <SearchResponse offset="..." more="{more-flag}">
     <mp part="{mime-part-name}" s="{size-in-bytes} mid="{message-id}"
-        ct="{content-type}" name="{name}" filename="{filename}" score="..."/>
+        ct="{content-type}" name="{name}" filename="{filename}" score="..."/ sf="SORT-FIELD-VALUE">
  
 </SearchResponse>
 
@@ -682,7 +682,7 @@ message-part result:
 ------------
 
 <SearchConvResponse offset="..." more="{more-flag}">
-   <m id="{message-id}" [cm="1"] f="{flags}" s="{size}" d="{date}" cid="{conv-id}" score="...">
+   <m id="{message-id}" [cm="1"] f="{flags}" s="{size}" d="{date}" cid="{conv-id}" score="..." sf="SORT-FIELD-VALUE">
      <e .../>  <!- sender only -->
      <su>{subject}</su>
      <fr>{fragment}</fr>

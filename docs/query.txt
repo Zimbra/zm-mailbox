@@ -22,7 +22,7 @@ Tim's short-short summary of the query grammar as of now (updated)
    larger:{SIZE}
    smaller:{SIZE}
    tag:{TAG} // is this the same as folder label?
-   my:{MY_SAVED_SEARCH_NAME}
+   my:{MY_SAVED_SEARCH_NAME}   (UNIMPLEMENTED)
    message:{DB_MSG_ID}
    conv:{DB_CONV_ID}
 *   conv-count:{NUM}
@@ -85,7 +85,7 @@ header-related
   subject:
 
   
-saved-search-related:
+saved-search-related:     (UNIMPLEMENTED)
 
   my:{name-of-saved-search}
   
