@@ -117,6 +117,10 @@ class TestConnectionHandler implements OzConnectionHandler {
             }
             TestServer.mLog.info("nsum target is " + bytesToRead);
             gotoReadingNsumDataState(bytesToRead); 
+        } else if (cmd.equalsIgnoreCase("starttls")) {
+            mConnection.writeAscii("250 go ahead, start tls negotiation now", true);
+            mConnection.setFilter(new OzTLSFilter(mConnection));
+            gotoReadingCommandState();
         } else {
             mConnection.writeAscii("500 command " + cmd + " not understood", true);
             gotoReadingCommandState();

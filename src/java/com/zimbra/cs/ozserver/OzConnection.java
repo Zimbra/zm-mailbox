@@ -355,7 +355,7 @@ public class OzConnection {
                     }
                     ByteBuffer rbb = getReadByteBuffer();
                     if (mDebug) mLog.debug("obtained buffer " + OzUtil.intToHexString(rbb.hashCode(), 0, ' '));
-                    if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("read buffer at start", rbb, true));
+                    if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("read buffer before channel read", rbb, true));
                     bytesRead = mChannel.read(rbb);
                     mReadPending = false;
                     if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("read buffer after channel read", rbb, true));
@@ -373,13 +373,8 @@ public class OzConnection {
                         return;
                     }
                     
-                    if (mFilter == null) {
-                        if (mDebug) mLog.debug("no filter will process read bytes");
-                        processRead(rbb);
-                    } else {
-                        if (mDebug) mLog.debug("handing read bytes to filter");
-                        mFilter.read();
-                    }
+                    processRead(rbb, false);
+
                 }
             } catch (Throwable t) {
                 if (mChannel.isOpen()) {
@@ -397,19 +392,31 @@ public class OzConnection {
     }
 
     /* Do not call directly.  For use by filters. */
-    public void processRead(ByteBuffer dataBuffer) throws IOException {
+    public void processRead(ByteBuffer dataBuffer, boolean fromFilter) throws IOException {
         synchronized (mReadLock) {
-            processReadLocked(dataBuffer);
+            processReadLocked(dataBuffer, fromFilter);
         }
     }
 
-    public void processReadLocked(ByteBuffer dataBuffer) throws IOException { 
+    public void processReadLocked(ByteBuffer dataBuffer, boolean fromFilter) throws IOException {
+        if (mTrace) mLog.trace("readbb before flip " + dataBuffer);
         dataBuffer.flip();
+        if (mTrace) mLog.trace("readbb after flip " + dataBuffer);
         
         // We may have read more than one PDU 
         while (dataBuffer.hasRemaining()) {
             ByteBuffer pdu = dataBuffer.duplicate();
             int initialPosition = dataBuffer.position();
+
+            // An iteration may result in new filter getting set, so check each time.
+            if (!fromFilter && mFilter != null) {
+                if (mDebug) mLog.debug("filter present, handing input to filter");
+                if (mTrace) mLog.trace("readbb before compact " + dataBuffer);
+                dataBuffer.compact();
+                if (mTrace) mLog.trace("readbb after compact " + dataBuffer);
+                mFilter.read();
+                return;
+            }
             
             if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("invoking matcher", dataBuffer, false));
             boolean matched = mMatcher.match(dataBuffer);
@@ -429,6 +436,15 @@ public class OzConnection {
         }
 
         if (dataBuffer.hasRemaining()) {
+            if (!fromFilter && mFilter != null) {
+                if (mDebug) mLog.debug("filter present (for unmatched portion), handing input to filter");
+                if (mTrace) mLog.trace("readbb before compact " + dataBuffer);
+                dataBuffer.compact();
+                if (mTrace) mLog.trace("readbb after compact " + dataBuffer);
+                mFilter.read();
+                return;
+            }
+
             if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("input matched=" + false, dataBuffer, false));
             mConnectionHandler.handleInput(dataBuffer, false);
         }

@@ -149,7 +149,7 @@ public class OzTLSFilter implements OzFilter {
                 rbb.flip();
                 SSLEngineResult result = mSSLEngine.unwrap(rbb, unwrappedBB);
                 rbb.compact();
-                if (mDebug) debug("handshake unwrap result " + result);
+                if (mDebug) debug("handshake: unwrap result " + result);
                 mHandshakeStatus = result.getHandshakeStatus();
                 switch (result.getStatus()) {
                 case OK:
@@ -178,7 +178,7 @@ public class OzTLSFilter implements OzFilter {
             if (mHandshakeStatus != HandshakeStatus.NEED_WRAP) {
                 break;
             }
-            /* Falling through, because while unwrapping, we are asked to wrap. */
+            /* Falling through, because while unwrapping, we were asked to wrap. */
             
         case NEED_WRAP:
             wrap: while (true) {
@@ -186,7 +186,7 @@ public class OzTLSFilter implements OzFilter {
                 SSLEngineResult result = mSSLEngine.wrap(mHandshakeBB, dest);
                 dest.flip();
                 mHandshakeStatus = result.getHandshakeStatus();
-                if (mDebug) debug("handshake wrap result " + result);
+                if (mDebug) debug("handshake: wrap result " + result);
                 switch (result.getStatus()) {
                 case OK:
                     if (mHandshakeStatus == HandshakeStatus.NEED_TASK) {
@@ -222,7 +222,7 @@ public class OzTLSFilter implements OzFilter {
     }
     
     public void read() throws IOException {
-        if (mDebug) debug("read: readBB position=" + mReadBB.position() + " limit=" + mReadBB.limit() + " capacity=" + mReadBB.capacity());
+        if (mDebug) debug("read: readBB: " + mReadBB);
 
         if (!handshake()) {
             return; 
@@ -230,11 +230,10 @@ public class OzTLSFilter implements OzFilter {
         
         SSLEngineResult result;
         ByteBuffer unwrappedBB = ByteBuffer.allocate(mApplicationBufferSize);
+        
         do {
-            if (mDebug) debug(OzUtil.byteBufferDebugDump("read: readBB before flip", mReadBB, true));
             mReadBB.flip();
-            if (mDebug) debug(OzUtil.byteBufferDebugDump("read: readBB after flip", mReadBB, false));
-            
+
             if (mDebug) debug("read: invoking unwrap");
             result = mSSLEngine.unwrap(mReadBB, unwrappedBB);
             if (mDebug) debug(OzUtil.byteBufferDebugDump("read: after unwrap unwrappedBB", unwrappedBB, true));
@@ -256,7 +255,7 @@ public class OzTLSFilter implements OzFilter {
                 throw new IOException("TLS filter: SSLEngine error during read: " + result.getStatus());
             }
         } while (mReadBB.position() != 0 && result.getStatus() == Status.OK);
-        mConnection.processRead(unwrappedBB);
+        mConnection.processRead(unwrappedBB, true);
     }
     
     private void resizeUnwrappedBB() {

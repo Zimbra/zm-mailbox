@@ -34,13 +34,23 @@ public class OzUtil {
             buf.flip();
         }
 
-        StringBuilder sb = new StringBuilder(buf.remaining() * 4);
+        StringBuilder sb = new StringBuilder(buf.remaining() * 5);
         
         sb.append(bufferName);
+        if (flip) {
+            sb.append(" [flipped]");
+        } else {
+            sb.append(" [original]");
+        }
         sb.append(" position=").append(buf.position());
+        if (flip) sb.append('/').append(buff.position());
         sb.append(" limit=").append(buf.limit());
+        if (flip) sb.append('/').append(buff.limit());
         sb.append(" capacity=").append(buf.capacity());
-        sb.append(" hasRemaining=").append(buf.hasRemaining()).append('\n');
+        if (flip) sb.append('/').append(buff.capacity());
+        sb.append(" hasRemaining=").append(buf.hasRemaining());
+        if (flip) sb.append('/').append(buff.hasRemaining());
+        sb.append('\n');
 
         int n = 1;
         int remaining = buf.remaining();
