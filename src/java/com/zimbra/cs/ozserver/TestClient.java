@@ -88,7 +88,7 @@ class TestClient {
         mResponse = mSocketIn.readLine();
         mLog.info("got: " + mResponse);
         
-        String cid = mResponse.substring(mResponse.indexOf('='));
+        String cid = mResponse.substring(mResponse.indexOf('=') + 1);
         ZimbraLog.addToContext("cid", cid);
     }
     
