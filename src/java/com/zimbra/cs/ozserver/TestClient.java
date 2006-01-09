@@ -39,6 +39,8 @@ import java.util.Random;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.zimbra.cs.util.ZimbraLog;
+
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
@@ -75,6 +77,7 @@ class TestClient {
     private static DummySSLSocketFactory mSocketFactory = new DummySSLSocketFactory();
     
     public TestClient(String host, int port, boolean ssl) throws IOException {
+        ZimbraLog.clearContext();
         if (ssl) {
             mSocket = mSocketFactory.createSocket(host, port); 
         } else {
@@ -84,6 +87,9 @@ class TestClient {
         mSocketOut = new BufferedOutputStream(mSocket.getOutputStream());
         mResponse = mSocketIn.readLine();
         mLog.info("got: " + mResponse);
+        
+        String cid = mResponse.substring(mResponse.indexOf('='));
+        ZimbraLog.addToContext("cid", cid);
     }
     
     public String getLastResponse() {

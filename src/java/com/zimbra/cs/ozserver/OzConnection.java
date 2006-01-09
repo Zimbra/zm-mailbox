@@ -252,23 +252,23 @@ public class OzConnection {
         }
         
         public void run() {
-            try {
-                if (mDebug) {
-                    ZimbraLog.addToContext("op", mName);
-                    ZimbraLog.addToContext("opid", new Integer(mTaskCounter.incrementAndGet()).toString());
-                }
-                addToNDC();
-                if (mDebug) mLog.debug("starting " + mName);
-                synchronized (mLock) {
+            synchronized (mLock) {
+                try {
+                    if (mDebug) {
+                        ZimbraLog.addToContext("op", mName);
+                        ZimbraLog.addToContext("opid", new Integer(mTaskCounter.incrementAndGet()).toString());
+                    }
+                    addToNDC();
+                    if (mDebug) mLog.debug("starting " + mName);
                     if (mClosed) {
                         if (mDebug) mLog.debug("connection already closed, aborting " + mName);
                         return;
                     }
                     doTask();
+                } finally {
+                    if (mDebug) mLog.debug("finished " + mName);
+                    clearFromNDC();
                 }
-            } finally {
-                if (mDebug) mLog.debug("finished " + mName);
-                clearFromNDC();
             }
         }
         

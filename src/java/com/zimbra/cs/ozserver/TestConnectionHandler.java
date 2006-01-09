@@ -144,9 +144,11 @@ class TestConnectionHandler implements OzConnectionHandler {
 
     public void handleInput(ByteBuffer content, boolean matched) throws IOException
     {
-        TestServer.mLog.info("adding " + content.remaining() + " bytes to " + mIncomingData.size()); 
+        int newBytes = content.remaining();
+        int oldSize = mIncomingData.size();
         mIncomingData.add(content);
-        TestServer.mLog.info(mIncomingData.size() + " bytes accumulated"); 
+        int newSize = mIncomingData.size();
+        if (TestServer.mLog.isDebugEnabled()) TestServer.mLog.debug("accumulator: oldsz=" + oldSize + " newb=" + newBytes + " newsz=" + newSize);
         
         if (matched) {
             mIncomingData.trim(mConnection.getMatcher().trailingTrimLength());
