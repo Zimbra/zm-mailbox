@@ -85,7 +85,8 @@ class TestConnectionHandler implements OzConnectionHandler {
     
     public void handleConnect() throws IOException {
         // Write greeting
-        mConnection.writeAscii("200 Hello, welcome to test server cid=" + mConnection.getId(), true);
+        mConnection.setIdleNotifyTime(5000);
+        mConnection.writeAsciiWithCRLF("200 Hello, welcome to test server cid=" + mConnection.getId());
         gotoReadingCommandState();
     }   
     
@@ -104,10 +105,10 @@ class TestConnectionHandler implements OzConnectionHandler {
     private void doCommandInternal(String cmd) throws IOException 
     {
         if (cmd.equals("helo")) {
-            mConnection.writeAscii("200 pleased to meet you", true);
+            mConnection.writeAsciiWithCRLF("200 pleased to meet you");
             gotoReadingCommandState();
         } else if (cmd.equals("quit")) {
-            mConnection.writeAscii("200 buh bye", true);
+            mConnection.writeAsciiWithCRLF("200 buh bye");
             mConnection.close();
         } else if (cmd.equals("sum")) {
             gotoReadingSumDataState();
@@ -115,7 +116,7 @@ class TestConnectionHandler implements OzConnectionHandler {
             int bytesToRead = 0;
             int spIdx = cmd.indexOf(' '); 
             if (spIdx == -1) {
-                mConnection.writeAscii("500 bad nsum command", true);
+                mConnection.writeAsciiWithCRLF("500 bad nsum command");
                 gotoReadingCommandState();
                 return;
             }
@@ -123,17 +124,17 @@ class TestConnectionHandler implements OzConnectionHandler {
             try {
                 bytesToRead = Integer.valueOf(number).intValue();
             } catch (Exception nfe) {
-                mConnection.writeAscii("500 number format exception", true);
+                mConnection.writeAsciiWithCRLF("500 number format exception");
                 gotoReadingCommandState();
             }
             TestServer.mLog.info("nsum target is " + bytesToRead);
             gotoReadingNsumDataState(bytesToRead); 
         } else if (cmd.equalsIgnoreCase("starttls")) {
-            mConnection.writeAscii("250 go ahead, start tls negotiation now", true);
+            mConnection.writeAsciiWithCRLF("250 go ahead, start tls negotiation now");
             mConnection.addFilter(new OzTLSFilter(mConnection, TestServer.mLog));
             gotoReadingCommandState();
         } else {
-            mConnection.writeAscii("500 command " + cmd + " not understood", true);
+            mConnection.writeAsciiWithCRLF("500 command " + cmd + " not understood");
             gotoReadingCommandState();
         }
     }
@@ -145,7 +146,7 @@ class TestConnectionHandler implements OzConnectionHandler {
         for (int i = 0; i < mIncomingData.size(); i++) {
             mSum += data[i];
         }
-        mConnection.writeAscii(new Long(mSum).toString(), true);
+        mConnection.writeAsciiWithCRLF(new Long(mSum).toString());
         mSum = 0;
         gotoReadingCommandState();
     }
@@ -165,10 +166,16 @@ class TestConnectionHandler implements OzConnectionHandler {
             } else if (mReadState == READING_SUM_DATA || mReadState == READING_NSUM_DATA) {
                 doSum();
             } else {
-                mConnection.writeAscii("500 internal server error - wrong read state" + mReadState, true);
+                mConnection.writeAsciiWithCRLF("500 internal server error - wrong read state" + mReadState);
                 mConnection.close();
             }
         }
+    }
+    
+    public void handleIdle() throws IOException {
+        TestServer.mLog.info("connection was idle, terminating");
+        mConnection.writeAsciiWithCRLF("250 sorry you have been idle and are being terminated");
+        mConnection.close();
     }
     
     public void handleDisconnect() {

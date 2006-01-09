@@ -146,7 +146,7 @@ public class OzServer {
                     }
 
                     synchronized (readyKey) {
-                        OzConnection.logKey(mLog, readyKey, "ready key");
+                        OzUtil.logKey(mLog, readyKey, "ready key");
                     }
                     
                     if (readyKey.isAcceptable()) {

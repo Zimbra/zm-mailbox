@@ -1843,7 +1843,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
     }
 
     private void sendLine(String line, boolean flush) throws IOException {
-        mConnection.writeAscii(line, true, flush);
+        mConnection.writeAsciiWithCRLF(line, flush);
     }
 
     private OzByteArrayMatcher mCommandMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLF, ZimbraLog.imap);
@@ -1930,6 +1930,10 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
 
     private String mCurrentRequestTag;
     
+    public void handleIdle() throws IOException {
+        
+    }
+
     public void handleInput(ByteBuffer buffer, boolean matched) throws IOException {
         mCurrentData.add(buffer);
         if (!matched) {
@@ -1993,7 +1997,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
             
             if (literal.octets() > 0) {
                 if (literal.blocking()) {
-                    mConnection.writeAscii("+", true);
+                    mConnection.writeAsciiWithCRLF("+");
                 }
                 gotoReadLiteralState(literal.octets());
                 return;

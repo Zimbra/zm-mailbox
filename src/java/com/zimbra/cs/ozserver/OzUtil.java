@@ -25,6 +25,9 @@
 package com.zimbra.cs.ozserver;
 
 import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+
+import org.apache.commons.logging.Log;
 
 public class OzUtil {
 
@@ -101,6 +104,40 @@ public class OzUtil {
             sb.append(pad);
         }
         sb.append(sv);
+        return sb.toString();
+    }
+
+    /** Caller must lock selectionkey, or this method may except. */
+    static void logKey(Log log, SelectionKey selectionKey, String where) {
+        if (selectionKey.isValid()) {
+            if (log.isDebugEnabled()) {
+                log.debug(where +
+                          " interest=" + OzUtil.opsToString(selectionKey.interestOps()) + 
+                          " ready=" + OzUtil.opsToString(selectionKey.readyOps()) + 
+                          " key=" + Integer.toHexString(selectionKey.hashCode()));
+            }
+        } else {
+            log.warn(where + " invalid key=" + Integer.toHexString(selectionKey.hashCode()));
+        }
+    }
+
+    private static String opsToString(int ops) {
+        StringBuilder sb = new StringBuilder();
+        if ((ops & SelectionKey.OP_READ) != 0) {
+            sb.append("READ,");
+        }
+        if ((ops & SelectionKey.OP_ACCEPT) != 0) {
+            sb.append("ACCEPT,");
+        }
+        if ((ops & SelectionKey.OP_CONNECT) != 0) {
+            sb.append("CONNECT,");
+        }
+        if ((ops & SelectionKey.OP_WRITE) != 0) {
+            sb.append("WRITE,");
+        }
+        if (sb.length() > 0) {
+            sb.deleteCharAt(sb.length()-1);
+        }
         return sb.toString();
     }
     
