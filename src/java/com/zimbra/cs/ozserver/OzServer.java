@@ -134,50 +134,49 @@ public class OzServer {
                 SelectionKey readyKey = iter.next();
                 iter.remove();
 
-                OzConnection selectedConnection = null; 
-                if (readyKey.attachment() != null && readyKey.attachment() instanceof OzConnection) {
-                    selectedConnection = (OzConnection)readyKey.attachment();
-                    selectedConnection.addToNDC();
-                }
-
+                OzConnection readyConnection = null; 
                 try {
-                    synchronized (readyKey) {
-                        if (!readyKey.isValid()) {
-                            continue;
-                        }
-                        
-                        OzConnection.logKey(mLog, readyKey, "ready key");
+                    if (readyKey.attachment() != null && readyKey.attachment() instanceof OzConnection) {
+                        readyConnection = (OzConnection)readyKey.attachment();
+                        readyConnection.addToNDC();
+                    }
                     
-                        if (readyKey.isAcceptable()) {
-                            Socket newSocket = mServerSocket.accept();
-                            SocketChannel newChannel = newSocket.getChannel(); 
-                            newChannel.configureBlocking(false);
-                            selectedConnection= new OzConnection(OzServer.this, newChannel);
-                        }
-                        
-                        if (readyKey.isReadable()) {
-                            selectedConnection.doReadReady();
-                        }
-                        
-                        if (readyKey.isWritable()) {
-                            selectedConnection.doWriteReady();
-                        }
+                    if (!readyKey.isValid()) {
+                        continue;
+                    }
+
+                    synchronized (readyKey) {
+                        OzConnection.logKey(mLog, readyKey, "ready key");
+                    }
+                    
+                    if (readyKey.isAcceptable()) {
+                        Socket newSocket = mServerSocket.accept();
+                        SocketChannel newChannel = newSocket.getChannel(); 
+                        newChannel.configureBlocking(false);
+                        readyConnection= new OzConnection(OzServer.this, newChannel);
+                    }
+                    
+                    if (readyKey.isReadable()) {
+                        readyConnection.doReadReady();
+                    }
+                    
+                    if (readyKey.isWritable()) {
+                        readyConnection.doWriteReady();
                     }
                 } catch (Throwable t) {
                     mLog.warn("ignoring exception that occurred while handling selected key", t);
-                    if (selectedConnection != null) {
-                        selectedConnection.closeConnection();
+                    if (readyConnection != null) {
+                        readyConnection.closeConnection();
                     }
                 } finally {
-                    if (selectedConnection != null) {
-                        selectedConnection.clearFromNDC();
+                    if (readyConnection != null) {
+                        readyConnection.clearFromNDC();
                     }
                 }
                 
             } /* end of ready keys loop */
 
             if (mLog.isDebugEnabled()) mLog.debug("processed " + readyCount + " ready keys");
-
         }
         
         assert(mShutdownRequested);

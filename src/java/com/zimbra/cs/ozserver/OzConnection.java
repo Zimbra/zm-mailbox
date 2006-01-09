@@ -63,9 +63,7 @@ public class OzConnection {
     
     private final String mRemoteAddress;
 
-    private final Object mReadLock = new Object();
-    
-    private final Object mWriteLock = new Object(); 
+    private final Object mLock = new Object();
     
     private boolean mClosed;
     
@@ -118,10 +116,8 @@ public class OzConnection {
 
     public void closeConnection() {
         try {
-            synchronized (mSelectionKey) {
-                mLog.info("closing channel");
-                mChannel.close();
-            }
+            mLog.info("closing channel");
+            mChannel.close();
         } catch (IOException ioe) {
             mLog.warn("exception closing channel, ignoring and continuing", ioe);
         } finally {
@@ -175,7 +171,7 @@ public class OzConnection {
     }
 
     public void enableReadInterest() {
-        synchronized (mReadLock) {
+        synchronized (mLock) {
             if (mReadPending) {
                 if (mTrace) mLog.trace("noop enable read interest - read already pending");
                 return;
@@ -194,7 +190,7 @@ public class OzConnection {
             mReadPending = true;
         }
     }
-    
+
     private void disableReadInterest() {
         synchronized (mSelectionKey) {
             int iops = mSelectionKey.interestOps();
@@ -204,7 +200,7 @@ public class OzConnection {
     }   
     
     private void enableWriteInterest() {
-        synchronized (mWriteLock) {
+        synchronized (mLock) {
             if (mWritePending) {
                 if (mTrace) mLog.trace("skipping enable write interest - write already pending");
                 return;
@@ -255,7 +251,6 @@ public class OzConnection {
             mServer.execute(this);
         }
         
-
         public void run() {
             try {
                 if (mDebug) {
@@ -264,7 +259,13 @@ public class OzConnection {
                 }
                 addToNDC();
                 if (mDebug) mLog.debug("starting " + mName);
-                doTask();
+                synchronized (mLock) {
+                    if (mClosed) {
+                        if (mDebug) mLog.debug("connection already closed, aborting " + mName);
+                        return;
+                    }
+                    doTask();
+                }
             } finally {
                 if (mDebug) mLog.debug("finished " + mName);
                 clearFromNDC();
@@ -273,7 +274,6 @@ public class OzConnection {
         
         protected abstract void doTask();
     }
-    
     
     private class ConnectTask extends Task {
         ConnectTask() { super("connect"); }
@@ -336,33 +336,28 @@ public class OzConnection {
         public void doTask() {
             try {
                 int bytesRead = -1;
-                synchronized (mReadLock) {
-                    if (mClosed) {
-                        return;
-                    }
-                    ByteBuffer rbb = getReadByteBuffer();
-                    if (mDebug) mLog.debug("obtained buffer " + OzUtil.intToHexString(rbb.hashCode(), 0, ' '));
-                    if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("read buffer before channel read", rbb, true));
-                    bytesRead = mChannel.read(rbb);
-                    mReadPending = false;
-                    if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("read buffer after channel read", rbb, true));
-                    
-                    assert(bytesRead == rbb.position());
-                    
-                    if (bytesRead == -1) {
-                        if (mDebug) mLog.debug("channel read detected that client closed connection");
-                        mDisconnectTask.schedule();
-                        return;
-                    }
-                    
-                    if (bytesRead == 0) {
-                        mLog.warn("got no bytes on supposedly read ready channel");
-                        return;
-                    }
-                    
-                    processRead(rbb, false);
+                ByteBuffer rbb = getReadByteBuffer();
+                if (mDebug) mLog.debug("obtained buffer " + OzUtil.intToHexString(rbb.hashCode(), 0, ' '));
 
+                if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("read buffer before channel read", rbb, true));
+                bytesRead = mChannel.read(rbb);
+                mReadPending = false;
+                if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("read buffer after channel read", rbb, true));
+                
+                assert(bytesRead == rbb.position());
+                
+                if (bytesRead == -1) {
+                    if (mDebug) mLog.debug("channel read detected that client closed connection");
+                    mDisconnectTask.schedule();
+                    return;
                 }
+                
+                if (bytesRead == 0) {
+                    mLog.warn("got no bytes on supposedly read ready channel");
+                    return;
+                }
+                
+                processRead(rbb, false);
             } catch (Throwable t) {
                 if (mChannel.isOpen()) {
                     mLog.warn("exception occurred read; will close connection", t);
@@ -378,14 +373,7 @@ public class OzConnection {
         }
     }
 
-    /* Do not call directly.  For use by filters. */
     public void processRead(ByteBuffer dataBuffer, boolean fromFilter) throws IOException {
-        synchronized (mReadLock) {
-            processReadLocked(dataBuffer, fromFilter);
-        }
-    }
-
-    public void processReadLocked(ByteBuffer dataBuffer, boolean fromFilter) throws IOException {
         if (mTrace) mLog.trace("readbb before flip " + dataBuffer);
         dataBuffer.flip();
         if (mTrace) mLog.trace("readbb after flip " + dataBuffer);
@@ -461,9 +449,7 @@ public class OzConnection {
         protected void doTask() {
             try {
                 boolean allWritten;
-                synchronized (mWriteLock) {
-                    allWritten = writeLocked();
-                }
+                allWritten = writeLocked();
                 if (mFilter != null && allWritten) {
                     mFilter.writeCompleted();
                 }
@@ -575,7 +561,7 @@ public class OzConnection {
 
     /** For use by filters, do not call directly. */
     public void channelWrite(ByteBuffer wbb, boolean flush) {
-        synchronized (mWriteLock) {
+        synchronized (mLock) {
             mWriteBuffers.add(wbb);
             if (flush) {
                 enableWriteInterest();
@@ -584,7 +570,7 @@ public class OzConnection {
     }
 
     public boolean isWritePending() {
-        synchronized (mWriteLock) {
+        synchronized (mLock) {
             return mWritePending;
         }
     }
@@ -602,19 +588,17 @@ public class OzConnection {
         }
     }
 
-    /**
-     * For use by filters.   Do not call directly.
-     */
-    public void channelClose() {
-        synchronized (mReadLock) {
+    /** For use by filters.  Do not call directly. */
+    void channelClose() {
+        synchronized (mLock) {
             if (mClosed) {
                 return;
             }
+            
             disableReadInterest();
-        }
-        synchronized (mWriteLock) {
+            
             mCloseAfterWrite = true;
-
+            
             if (mWriteBuffers.isEmpty()) {
                 closeConnection();
             }
