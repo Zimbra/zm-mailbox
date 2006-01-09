@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -82,11 +83,14 @@ public class OzConnection {
     private ReadTask mReadTask;
     
     private WriteTask mWriteTask;
+
+    private ByteBuffer mReadBuffer = ByteBuffer.allocate(1024);
     
     OzConnection(OzServer server, SocketChannel channel) throws IOException {
+        mFilters.add(new OzBottomFilter());
         mId = mIdCounter.incrementAndGet();
         mIdString = Integer.toString(mId);
-        
+
         mRemoteAddress = channel.socket().getInetAddress().getHostAddress();
         mChannel = channel;
         mServer = server;
@@ -104,17 +108,57 @@ public class OzConnection {
         mConnectTask.schedule();
     }
 
-    public Log getLog() {
-        return mLog;
+    private List<OzFilter> mFilters = new ArrayList<OzFilter>();
+    
+    private AtomicInteger mFilterChangeId = new AtomicInteger();
+    
+    /**
+     * Adds an IO filter at the top of the filter stack. IO model is a stack of
+     * filters, with the top most filter in the stack handling all inbound
+     * network packets and outbound application packets, while the bottom most
+     * filter handles all inbound application packets and outbound network
+     * packets. The bottom most filter is builtin to the framework and can not
+     * be removed.
+     */
+    public void addFilter(OzFilter filter) {
+        addFilter(filter, false);
     }
     
-    private OzFilter mFilter;
-    
-    synchronized void setFilter(OzFilter filter) {
-        mFilter = filter;
+    private void addFilter(OzFilter filter, boolean bottomFilter) {
+        synchronized (mLock) {
+            OzFilter nextFilter = null;
+            
+            if (!bottomFilter) {
+                nextFilter = mFilters.get(0);
+            }
+            
+            int prefSize = filter.getPreferredReadBufferSize();
+            if (mReadBuffer == null || mReadBuffer.capacity() < filter.getPreferredReadBufferSize()) { 
+                mReadBuffer = ByteBuffer.allocate(prefSize);
+            }
+            mFilters.add(0, filter);
+            filter.setNextFilter(nextFilter);
+            mFilterChangeId.incrementAndGet();
+        }
     }
 
-    public void closeConnection() {
+    /**
+     * Removes the top most filter.
+     */
+    public OzFilter removeFilter() {
+        synchronized (mLock) {
+            assert mFilters.size() != 0; // must always have atleast bottom filter present.
+            if (mFilters.size() == 1) {
+                throw new IllegalStateException("attempt to remove bottom most filter");
+            }
+            mFilterChangeId.incrementAndGet();
+            OzFilter removedFilter = mFilters.remove(0);
+            removedFilter.setNextFilter(null);
+            return removedFilter;
+        }
+    }
+    
+    void channelClose() {
         try {
             mLog.info("closing channel");
             mChannel.close();
@@ -285,7 +329,7 @@ public class OzConnection {
                 mConnectionHandler.handleConnect();
             } catch (Throwable t) {
                 mLog.warn("exception occurred handling connect; will close connection", t);
-                closeConnection();
+                channelClose();
                 return;
             }
         }
@@ -298,35 +342,14 @@ public class OzConnection {
     	    boolean closed = false;
             try {
                 mConnectionHandler.handleDisconnect();
-                if (mFilter != null) {
-                    mFilter.closeNow();
-                } else {
-                    closeConnection();
-                }
+                closeNow();
                 closed = true;
             } catch (Throwable t) {
                 mLog.warn("exception occurred handling disconnect", t);
                 if (!closed) {
-                    /*
-                     * Not catching any Throwables from closeNow()
-                     * intentionally. closeNow() runs in server thread, so any
-                     * exception it raises are ignored in the main server loop.
-                     * If closeNow() failure is not being able to create the
-                     * task object or to add that task object to the queue, that
-                     * means the server is fubar - so don't bother to be
-                     * graceful in a worker thread.
-                     */
-                    closeConnection();
+                    channelClose();
                 }
             }
-        }
-    }
-    
-    private ByteBuffer getReadByteBuffer() {
-        if (mFilter != null) {
-            return mFilter.getReadBuffer();
-        } else {
-            return ByteBuffer.allocate(mServer.getReadBufferSize());
         }
     }
     
@@ -336,7 +359,7 @@ public class OzConnection {
         public void doTask() {
             try {
                 int bytesRead = -1;
-                ByteBuffer rbb = getReadByteBuffer();
+                ByteBuffer rbb = mReadBuffer;
                 if (mDebug) mLog.debug("obtained buffer " + OzUtil.intToHexString(rbb.hashCode(), 0, ' '));
 
                 if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("read buffer before channel read", rbb, true));
@@ -357,7 +380,21 @@ public class OzConnection {
                     return;
                 }
                 
-                processRead(rbb, false);
+                while (rbb != null && rbb.position() > 0) {
+                    int filterChangeId = mFilterChangeId.get();
+                    for (int i = 0; i < mFilters.size(); i++) {
+                        OzFilter filter = mFilters.get(i);
+                        rbb = filter.read(rbb);
+                        if (filterChangeId != mFilterChangeId.get()) {
+                            // re-filtering
+                            break;
+                        }
+                        if (rbb == null) {
+                            break;
+                        }
+                    }
+                }
+                
             } catch (Throwable t) {
                 if (mChannel.isOpen()) {
                     mLog.warn("exception occurred read; will close connection", t);
@@ -368,65 +405,9 @@ public class OzConnection {
                         mLog.debug("ignorable (" + t.getClass().getName() + ") when reading, connection already closed", t); 
                     }
                 }
-                closeConnection();
+                channelClose();
             }
         }
-    }
-
-    public void processRead(ByteBuffer dataBuffer, boolean fromFilter) throws IOException {
-        if (mTrace) mLog.trace("readbb before flip " + dataBuffer);
-        dataBuffer.flip();
-        if (mTrace) mLog.trace("readbb after flip " + dataBuffer);
-        
-        // We may have read more than one PDU 
-        while (dataBuffer.hasRemaining()) {
-            ByteBuffer pdu = dataBuffer.duplicate();
-            int initialPosition = dataBuffer.position();
-
-            // An iteration may result in new filter getting set, so check each time.
-            if (!fromFilter && mFilter != null) {
-                if (mDebug) mLog.debug("filter present, handing input to filter");
-                if (mTrace) mLog.trace("readbb before compact " + dataBuffer);
-                dataBuffer.compact();
-                if (mTrace) mLog.trace("readbb after compact " + dataBuffer);
-                mFilter.read();
-                return;
-            }
-            
-            if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("invoking matcher", dataBuffer, false));
-            boolean matched = mMatcher.match(dataBuffer);
-            if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("after matcher", dataBuffer, false));
-            
-            if (mDebug) mLog.debug("match returned " + matched);
-            
-            if (!matched) {
-                dataBuffer.position(initialPosition);
-                break;
-            }
-            
-            pdu.position(initialPosition);
-            pdu.limit(dataBuffer.position());
-            if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("input matched=" + true, pdu, false));
-            mConnectionHandler.handleInput(pdu, true);
-        }
-
-        if (dataBuffer.hasRemaining()) {
-            if (!fromFilter && mFilter != null) {
-                if (mDebug) mLog.debug("filter present (for unmatched portion), handing input to filter");
-                if (mTrace) mLog.trace("readbb before compact " + dataBuffer);
-                dataBuffer.compact();
-                if (mTrace) mLog.trace("readbb after compact " + dataBuffer);
-                mFilter.read();
-                return;
-            }
-
-            if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("input matched=" + false, dataBuffer, false));
-            mConnectionHandler.handleInput(dataBuffer, false);
-        }
-
-        dataBuffer.clear();
-
-        return;
     }
 
     void doReadReady() throws IOException {
@@ -449,54 +430,106 @@ public class OzConnection {
         protected void doTask() {
             try {
                 boolean allWritten;
-                allWritten = writeLocked();
-                if (mFilter != null && allWritten) {
-                    mFilter.writeCompleted();
+                allWritten = channelWrite();
+                if (allWritten) {
+                    for (OzFilter filter : mFilters) {
+                        filter.writeCompleted();
+                    }
                 }
             } catch (Throwable t) {
                 mLog.info("exception occurred handling write", t);
-                closeConnection();
+                channelClose();
             }
         }
-        
-        private boolean writeLocked() throws IOException {
-            int totalWritten = 0;
-            boolean allWritten = true;
-            for (Iterator<ByteBuffer> iter = mWriteBuffers.iterator(); iter.hasNext(); iter.remove()) {
-                ByteBuffer data = iter.next();
-                assert(data != null);
-                assert(data.hasRemaining());
+    }
 
-                if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("channel write", data, false));
-                int wrote = mChannel.write(data);
-                totalWritten += wrote;
-                if (mDebug) mLog.trace("channel wrote=" + wrote + " totalWritten=" + totalWritten);
+    private class OzBottomFilter extends OzFilter {
+
+        public int getPreferredReadBufferSize() {
+            return 1024;
+        }
+
+        public ByteBuffer read(ByteBuffer rbb) throws IOException {
+            if (mTrace) mLog.trace("bottom filter: rbb before flip: " + rbb);
+            rbb.flip();
+            if (mTrace) mLog.trace("bottom filter: rbb after flip: " + rbb);
+            
+            int filterChangeId = mFilterChangeId.get();
+            
+            // We may have read more than one PDU 
+            while (rbb.hasRemaining()) {
+                ByteBuffer pdu = rbb.duplicate();
+                int initialPosition = rbb.position();
                 
-                if (data.hasRemaining()) {
-                    mWritePending = false;
-                    // If not all data was written, stop - we will write again
-                    // when we get called at a later time when available for
-                    // write. Put the buffer back in the list so whatever is
-                    // remaining can be written later.  Note that we do not
-                    // clear write interest here.
-                    if (mDebug) mLog.debug("incomplete write, adding buffer back");
-                    allWritten = false;
-                    enableWriteInterest();
+                if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("bottom filter: invoking matcher", rbb, false));
+                boolean matched = mMatcher.match(rbb);
+                if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("bottom filter: after matcher", rbb, false));
+                
+                if (mDebug) mLog.debug("match returned " + matched);
+                
+                if (!matched) {
+                    rbb.position(initialPosition);
                     break;
                 }
-            }
+                    
+                pdu.position(initialPosition);
+                pdu.limit(rbb.position());
+                if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("bottom filter: input matched", pdu, false));
+                mConnectionHandler.handleInput(pdu, true);
 
-            if (totalWritten == 0) mLog.warn("wrote no bytes to a write ready channel");
-            
-            if (allWritten) {
-                mWritePending = false;
-
-                if (mCloseAfterWrite) {
-                    closeConnection();
+                // The earlier call might have resulted in a filter being added
+                // to the stack. Check for that condition and bubble back up and
+                // refilter whatever else remains in the buffer throug the new
+                // filter.
+                if (mFilterChangeId.get() != filterChangeId) {
+                    mLog.info("bottom filter: filter stack has changed, refiltering");
+                    rbb.compact();
+                    return rbb;
                 }
-            }            
+            }
             
-            return allWritten;
+            // Just spill all the unmatched stuff to the handler
+            if (rbb.hasRemaining()) {
+                if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("bottom filter: input unmatched", rbb, false));
+                mConnectionHandler.handleInput(rbb, false);
+            }
+            
+            rbb.clear();
+            return null;
+        }
+
+        public void write(ByteBuffer wbb, boolean flush) throws IOException {
+            synchronized (mLock) {
+                if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("bottom filter: queueing write", wbb, false));
+                mWriteBuffers.add(wbb);
+                if (flush) {
+                    enableWriteInterest();
+                }
+            }
+        }
+
+        public void writeCompleted() throws IOException {
+        }
+
+        public void closeNow() throws IOException {
+            if (mDebug) mLog.debug("bottom filter: closeNow");
+            channelClose();
+        }
+
+        public void close() throws IOException {
+            synchronized (mLock) {
+                if (mClosed) {
+                    return;
+                }
+                
+                disableReadInterest();
+                
+                mCloseAfterWrite = true;
+                
+                if (mWriteBuffers.isEmpty()) {
+                    channelClose();
+                }
+            }
         }
     }
     
@@ -547,25 +580,51 @@ public class OzConnection {
         write(wbb, true);
     }
 
+    private boolean channelWrite() throws IOException {
+        int totalWritten = 0;
+        boolean allWritten = true;
+        for (Iterator<ByteBuffer> iter = mWriteBuffers.iterator(); iter.hasNext(); iter.remove()) {
+            ByteBuffer data = iter.next();
+            assert(data != null);
+            assert(data.hasRemaining());
+
+            if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("channel write", data, false));
+            int wrote = mChannel.write(data);
+            totalWritten += wrote;
+            if (mDebug) mLog.trace("channel wrote=" + wrote + " totalWritten=" + totalWritten);
+            
+            if (data.hasRemaining()) {
+                mWritePending = false;
+                // If not all data was written, stop - we will write again
+                // when we get called at a later time when available for
+                // write. Put the buffer back in the list so whatever is
+                // remaining can be written later.  Note that we do not
+                // clear write interest here.
+                if (mDebug) mLog.debug("incomplete write, adding buffer back");
+                allWritten = false;
+                enableWriteInterest();
+                break;
+            }
+        }
+
+        if (totalWritten == 0) mLog.warn("wrote no bytes to a write ready channel");
+        
+        if (allWritten) {
+            mWritePending = false;
+
+            if (mCloseAfterWrite) {
+                channelClose();
+            }
+        }            
+        
+        return allWritten;
+    }
+
     public void write(ByteBuffer wbb, boolean flush) throws IOException {
         // TODO even if flush has not been requested, we should flush if we
         // have too much data!
-        if (mFilter != null) {
-            if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("write handed to filter", wbb, false));
-            mFilter.write(wbb, flush);
-        } else {
-            if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("write handed to channel", wbb, false));
-            channelWrite(wbb, flush);
-        }
-    }
-
-    /** For use by filters, do not call directly. */
-    public void channelWrite(ByteBuffer wbb, boolean flush) {
         synchronized (mLock) {
-            mWriteBuffers.add(wbb);
-            if (flush) {
-                enableWriteInterest();
-            }
+            mFilters.get(0).write(wbb, flush);
         }
     }
 
@@ -576,35 +635,25 @@ public class OzConnection {
     }
     
     public void close() {
-        if (mFilter != null) {
+        synchronized (mLock) {
             try {
-                mFilter.close();
-            } catch (IOException ioe) {
-                mLog.warn("filter exception on close", ioe);
+                mFilters.get(0).close();
+            } catch (Throwable t) {
                 channelClose();
             }
-        } else {
-            channelClose();
         }
     }
 
-    /** For use by filters.  Do not call directly. */
-    void channelClose() {
+    public void closeNow() {
         synchronized (mLock) {
-            if (mClosed) {
-                return;
-            }
-            
-            disableReadInterest();
-            
-            mCloseAfterWrite = true;
-            
-            if (mWriteBuffers.isEmpty()) {
-                closeConnection();
+            try {
+                mFilters.get(0).closeNow();
+            } catch (Throwable t) {
+                channelClose();
             }
         }
     }
-
+    
     private Map mProperties = new HashMap();
     
     public String getProperty(String key, String defaultValue) {

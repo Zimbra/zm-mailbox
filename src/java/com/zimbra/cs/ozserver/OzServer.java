@@ -166,7 +166,7 @@ public class OzServer {
                 } catch (Throwable t) {
                     mLog.warn("ignoring exception that occurred while handling selected key", t);
                     if (readyConnection != null) {
-                        readyConnection.closeConnection();
+                        readyConnection.channelClose();
                     }
                 } finally {
                     if (readyConnection != null) {

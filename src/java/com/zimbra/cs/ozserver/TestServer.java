@@ -46,7 +46,7 @@ class TestServer {
         OzConnectionHandlerFactory testHandlerFactory = new OzConnectionHandlerFactory() {
             public OzConnectionHandler newConnectionHandler(OzConnection connection) {
                 if (isSecure) {
-                    connection.setFilter(new OzTLSFilter(connection));
+                    connection.addFilter(new OzTLSFilter(connection, TestServer.mLog));
                 }
                 return new TestConnectionHandler(connection);
             }

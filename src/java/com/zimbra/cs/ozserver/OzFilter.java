@@ -27,17 +27,27 @@ package com.zimbra.cs.ozserver;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-public interface OzFilter {
+public abstract class OzFilter {
 
-    ByteBuffer getReadBuffer();
+    public abstract int getPreferredReadBufferSize();
 
-    void read() throws IOException;
+    public abstract ByteBuffer read(ByteBuffer rbb) throws IOException;
 
-    void write(ByteBuffer wbb, boolean flush) throws IOException;
+    public abstract void write(ByteBuffer wbb, boolean flush) throws IOException;
 
-    void writeCompleted() throws IOException;
+    public abstract void writeCompleted() throws IOException;
 
-    void closeNow() throws IOException;
+    public abstract void closeNow() throws IOException;
 
-    void close() throws IOException;
+    public abstract void close() throws IOException;
+
+    private OzFilter mNextFilter;
+    
+    void setNextFilter(OzFilter next) {
+        mNextFilter = next;
+    }
+    
+    protected OzFilter getNextFilter() {
+        return mNextFilter;
+    }
 }
