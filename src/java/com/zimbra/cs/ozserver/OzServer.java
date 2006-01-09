@@ -31,10 +31,8 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -46,23 +44,17 @@ import EDU.oswego.cs.dl.util.concurrent.BoundedLinkedQueue;
 import EDU.oswego.cs.dl.util.concurrent.PooledExecutor;
 import EDU.oswego.cs.dl.util.concurrent.ThreadFactory;
 
-// TODO idle connection support
-
-// TODO drop unauthenticated connections in sooner
+// TODO idle connection support and drop unauthenticated connections
+//      in sooner
 
 // TODO runWhenBlocked is bad for tasks scheduled from
 //      server thread because this will block server
 //      and stop it from reaping connections etc - because
 //      of tasks that execute in server thread.  Revisit this.
 
-// TODO STARTTLS and SSL support
-
 // TODO add a clearConnection so that protocol handlers will
 //      let go of the connection objects
 
-// TODO writes and connection handles should be tasks to - why write
-//      only from the main thread?
-        
 public class OzServer {
     
     private Log mLog;

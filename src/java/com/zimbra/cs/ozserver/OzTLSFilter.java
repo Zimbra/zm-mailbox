@@ -82,6 +82,8 @@ public class OzTLSFilter implements OzFilter {
     private OzConnection mConnection;
 
     private final boolean mDebug;
+    private final boolean mTrace;
+    
     private Log mLog;
 
     private ByteBuffer mReadBB;
@@ -100,6 +102,7 @@ public class OzTLSFilter implements OzFilter {
         mReadBB = ByteBuffer.allocate(mPacketBufferSize);
         mLog = connection.getLog();
         mDebug = mLog.isDebugEnabled();
+        mTrace = mLog.isTraceEnabled();
         
         if (mDebug) debug("appsize=" + mApplicationBufferSize + " pktsize=" + mPacketBufferSize);
 
@@ -236,8 +239,8 @@ public class OzTLSFilter implements OzFilter {
 
             if (mDebug) debug("read: invoking unwrap");
             result = mSSLEngine.unwrap(mReadBB, unwrappedBB);
-            if (mDebug) debug(OzUtil.byteBufferDebugDump("read: after unwrap unwrappedBB", unwrappedBB, true));
-            if (mDebug) debug(OzUtil.byteBufferDebugDump("read: after unwrap readBB", mReadBB, true));
+            if (mTrace) trace(OzUtil.byteBufferDebugDump("read: after unwrap unwrappedBB", unwrappedBB, true));
+            if (mTrace) trace(OzUtil.byteBufferDebugDump("read: after unwrap readBB", mReadBB, true));
             
             mReadBB.compact();
             
@@ -303,8 +306,9 @@ public class OzTLSFilter implements OzFilter {
             for (Iterator<ByteBuffer> iter = mPendingWriteBuffers.iterator(); iter.hasNext();) {
                 ByteBuffer srcbb = iter.next();
                 ByteBuffer dest = ByteBuffer.allocate(mPacketBufferSize);
-                if (mDebug) debug(OzUtil.byteBufferDebugDump("application buffer wrap", srcbb, false));
+                if (mTrace) trace(OzUtil.byteBufferDebugDump("application buffer before wrap", srcbb, false));
                 SSLEngineResult result = mSSLEngine.wrap(srcbb, dest);
+                if (mTrace) trace(OzUtil.byteBufferDebugDump("network buffer after wrap", dest, true));
                 if (mDebug) debug("write wrap result " + result);
                 switch (result.getStatus()) {
                 case OK:
@@ -390,11 +394,6 @@ public class OzTLSFilter implements OzFilter {
     
         initiateClose();
 
-        if (mConnection.isWritePending()) {
-            if (mDebug) debug("close: writing pending, will close when write is done");
-            return;
-        }
-
         /* "fire and forget" close_notify */
         ByteBuffer dest = ByteBuffer.allocate(mPacketBufferSize);
         SSLEngineResult result = mSSLEngine.wrap(mHandshakeBB, dest);
@@ -407,6 +406,10 @@ public class OzTLSFilter implements OzFilter {
 
     private void debug(String msg) {
         mLog.debug("TLS: " + msg);
+    }
+
+    private void trace(String msg) {
+        mLog.trace("TLS: " + msg);
     }
 
     public ByteBuffer getReadBuffer() {
