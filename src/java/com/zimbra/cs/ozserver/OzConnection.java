@@ -117,32 +117,17 @@ public class OzConnection {
     }
 
     public void closeConnection() {
-        Runnable closeTask = new Runnable() {
-            public void run() {
-                try {
-                    addToNDC();
-                    mLog.info("closing connection");
-                    synchronized (mReadLock) { 
-                        try {
-                            if (mChannel.isOpen()) {
-                                mChannel.close();
-                            }
-                            mSelectionKey.cancel();
-                        } catch (IOException ioe) {
-                            mLog.warn("exception closing channel, ignoring and continuing", ioe);
-                        } finally {
-                            if (mDebug && mClosed) mLog.debug("duplicate close detected");
-                            mClosed = true;
-                        }
-                    }
-                } finally {
-                    clearFromNDC();
-                }
+        try {
+            synchronized (mSelectionKey) {
+                mLog.info("closing channel");
+                mChannel.close();
             }
-        };
-        
-        if (mDebug) mLog.debug("scheduling close on server");
-        mServer.executeInServerThread(closeTask);
+        } catch (IOException ioe) {
+            mLog.warn("exception closing channel, ignoring and continuing", ioe);
+        } finally {
+            if (mDebug && mClosed) mLog.debug("duplicate close detected");
+            mClosed = true;
+        }
     }
 
     void addToNDC() {
@@ -178,16 +163,18 @@ public class OzConnection {
     /* Caller must lock selectionkey. */
     static void logKey(Log log, SelectionKey selectionKey, String where) {
         if (selectionKey.isValid()) {
-            log.debug(where +
-                    " interest=" + opsToString(selectionKey.interestOps()) + 
-                    " ready=" + opsToString(selectionKey.readyOps()) + 
-                    " key=" + Integer.toHexString(selectionKey.hashCode()));
+            if (log.isDebugEnabled()) {
+                log.debug(where +
+                          " interest=" + opsToString(selectionKey.interestOps()) + 
+                          " ready=" + opsToString(selectionKey.readyOps()) + 
+                          " key=" + Integer.toHexString(selectionKey.hashCode()));
+            }
         } else {
             log.warn(where + " invalid key=" + Integer.toHexString(selectionKey.hashCode()));
         }
     }
 
-    void enableReadInterest() {
+    public void enableReadInterest() {
         synchronized (mReadLock) {
             if (mReadPending) {
                 if (mTrace) mLog.trace("noop enable read interest - read already pending");
@@ -197,6 +184,7 @@ public class OzConnection {
                 if (mTrace) mLog.trace("noop enable read interest - channel already closed"); 
                 return;
             }
+
             synchronized (mSelectionKey) {
                 int iops = mSelectionKey.interestOps();
                 mSelectionKey.interestOps(iops | SelectionKey.OP_READ);
@@ -272,7 +260,7 @@ public class OzConnection {
             try {
                 if (mDebug) {
                     ZimbraLog.addToContext("op", mName);
-                    ZimbraLog.addToContext("id", new Integer(mTaskCounter.incrementAndGet()).toString());
+                    ZimbraLog.addToContext("opid", new Integer(mTaskCounter.incrementAndGet()).toString());
                 }
                 addToNDC();
                 if (mDebug) mLog.debug("starting " + mName);
@@ -300,7 +288,6 @@ public class OzConnection {
                 closeConnection();
                 return;
             }
-            enableReadInterest();
         }
     }
     
@@ -451,8 +438,6 @@ public class OzConnection {
 
         dataBuffer.clear();
 
-        enableReadInterest();
-        
         return;
     }
 

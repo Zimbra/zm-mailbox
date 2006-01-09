@@ -116,16 +116,6 @@ public class OzServer {
     
     private void serverLoop() {
         while (true) {
-            if (mLog.isDebugEnabled()) mLog.debug("running " + mServerThreadTasks.size() + " server thread tasks");
-            Runnable task = null;
-            while ((task = getNextServerThreadTask()) != null) {
-                try {
-                    task.run();
-                } catch (Throwable e) {
-                    mLog.warn("ignoring exception that occurred while running server thread tasks", e);
-                }
-            }
-            
             synchronized (this) {
                 if (mShutdownRequested) {
                     break;
@@ -146,7 +136,7 @@ public class OzServer {
             if (readyCount == 0) {
                 continue;
             }
-            
+
             Iterator<SelectionKey> iter = mSelector.selectedKeys().iterator();
             while (iter.hasNext()) {
                 SelectionKey readyKey = iter.next();
@@ -160,26 +150,26 @@ public class OzServer {
 
                 try {
                     synchronized (readyKey) {
+                        if (!readyKey.isValid()) {
+                            continue;
+                        }
+                        
                         OzConnection.logKey(mLog, readyKey, "ready key");
-                    }
                     
-                    if (!readyKey.isValid()) {
-                        continue;
-                    }
-                    
-                    if (readyKey.isAcceptable()) {
-                        Socket newSocket = mServerSocket.accept();
-                        SocketChannel newChannel = newSocket.getChannel(); 
-                        newChannel.configureBlocking(false);
-                        selectedConnection= new OzConnection(OzServer.this, newChannel);
-                    }
-                    
-                    if (readyKey.isReadable()) {
-                        selectedConnection.doReadReady();
-                    }
-                    
-                    if (readyKey.isWritable()) {
-                        selectedConnection.doWriteReady();
+                        if (readyKey.isAcceptable()) {
+                            Socket newSocket = mServerSocket.accept();
+                            SocketChannel newChannel = newSocket.getChannel(); 
+                            newChannel.configureBlocking(false);
+                            selectedConnection= new OzConnection(OzServer.this, newChannel);
+                        }
+                        
+                        if (readyKey.isReadable()) {
+                            selectedConnection.doReadReady();
+                        }
+                        
+                        if (readyKey.isWritable()) {
+                            selectedConnection.doWriteReady();
+                        }
                     }
                 } catch (Throwable t) {
                     mLog.warn("ignoring exception that occurred while handling selected key", t);
@@ -274,34 +264,6 @@ public class OzServer {
         mServerThread.start();
     }
 
-    private List<Runnable> mServerThreadTasks = new ArrayList<Runnable>(128); 
-    
-    private Runnable getNextServerThreadTask() {
-        synchronized (mServerThreadTasks) {
-            if (mServerThreadTasks.isEmpty()) {
-                return null;
-            }
-            return mServerThreadTasks.remove(0);
-        }
-    }
-    
-    void executeInServerThread(Runnable task) {
-        if (Thread.currentThread() == mServerThread) {
-            if (mLog.isDebugEnabled()) mLog.debug("already in server thread, just running");
-            try {
-                task.run();
-            } catch (Exception e) {
-                mLog.warn("ignoring exception that occurred while running server thread task from server thread", e);
-            }
-        } else {
-            if (mLog.isDebugEnabled()) mLog.debug("scheduled in server thread for later execution");
-            synchronized (mServerThreadTasks) {
-                mServerThreadTasks.add(task);
-            }
-            mSelector.wakeup();
-        }
-    }
-    
     private PooledExecutor mPooledExecutor;
 
     void execute(Runnable task) {

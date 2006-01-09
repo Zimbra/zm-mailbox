@@ -1858,6 +1858,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
         mState = ConnectionState.READLINE;
         mCommandMatcher.reset();
         mConnection.setMatcher(mCommandMatcher);
+        mConnection.enableReadInterest();
         mCurrentData = new OzByteBufferGatherer();
         if (newRequest) {
             mCurrentRequestData = new ArrayList();
@@ -1871,6 +1872,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
         mLiteralMatcher.target(target);
         mLiteralMatcher.reset();
         mConnection.setMatcher(mLiteralMatcher);
+        mConnection.enableReadInterest();
         mCurrentData = new OzByteBufferGatherer(target);
         if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("entered literal read state target=" + target);
     }

@@ -60,6 +60,7 @@ class TestConnectionHandler implements OzConnectionHandler {
         mCommandMatcher.reset();
         mIncomingData.clear();
         mConnection.setMatcher(mCommandMatcher);
+        mConnection.enableReadInterest();
         TestServer.mLog.info("entered command read state");
     }
     
@@ -68,6 +69,7 @@ class TestConnectionHandler implements OzConnectionHandler {
         mSumDataMatcher.reset();
         mIncomingData.clear();
         mConnection.setMatcher(mSumDataMatcher);
+        mConnection.enableReadInterest();
         TestServer.mLog.info("entered sum read state");
     }
     
@@ -77,6 +79,7 @@ class TestConnectionHandler implements OzConnectionHandler {
         mNsumDataMatcher.reset();
         mIncomingData.clear();
         mConnection.setMatcher(mNsumDataMatcher);
+        mConnection.enableReadInterest();
         TestServer.mLog.info("entered nsum read state");
     }
     

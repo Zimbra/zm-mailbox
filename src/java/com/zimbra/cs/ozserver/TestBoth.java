@@ -114,8 +114,8 @@ class TestBoth {
                 }
                 try {
                     TestClient.run(mPort, mSecure);
-                } catch (IOException ioe) {
-                    ioe.printStackTrace();
+                } catch (Throwable t) {
+                    TestServer.mLog.warn("exception in test client thread", t);
                 }
             }
         }
