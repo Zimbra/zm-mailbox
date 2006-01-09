@@ -142,8 +142,8 @@ class TestClient {
     private static final int MAX_DIGEST_BYTES = 20;
 
     
-    public static void run(int port, boolean ssl) throws IOException {
-        TestClient client = new TestClient("localhost", port, ssl);
+    public static void run(String host, int port, boolean ssl) throws IOException {
+        TestClient client = new TestClient(host, port, ssl);
 
         mLog.info("sending: helo");
         client.helo();
@@ -180,7 +180,7 @@ class TestClient {
     }
     
     public static void main(String[] args) throws IOException {
-        run(Integer.parseInt(args[0]), Boolean.parseBoolean(args[1]));
+        run(args[0], Integer.parseInt(args[1]), Boolean.parseBoolean(args[2]));
     }
     
     public static class DummySSLSocketFactory extends SSLSocketFactory {

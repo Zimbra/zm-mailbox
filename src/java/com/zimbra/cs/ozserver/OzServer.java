@@ -106,6 +106,16 @@ public class OzServer {
         return mConnectionHandlerFactory.newConnectionHandler(connection);
     }
     
+
+    private Object mSelectorGuard = new Object();
+
+    void wakeupSelector() {
+        synchronized (mSelectorGuard) {
+            mSelector.wakeup();
+        }
+    }
+
+
     private void serverLoop() {
         while (true) {
             synchronized (this) {
@@ -119,6 +129,7 @@ public class OzServer {
             try {
                 if (mLog.isDebugEnabled()) mLog.debug("entering select");
                 readyCount = mSelector.select();
+                synchronized (mSelectorGuard) { }
             } catch (IOException ioe) {
                 mLog.warn("OzServer IOException in select", ioe);
             }
@@ -228,7 +239,8 @@ public class OzServer {
         synchronized (this) {
             mShutdownRequested = true;
         }
-        mSelector.wakeup();
+
+        wakeupSelector();
         
         synchronized (mShutdownCompleteCondition) {
             while (!mShutdownComplete) {

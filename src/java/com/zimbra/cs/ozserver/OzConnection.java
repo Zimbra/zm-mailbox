@@ -211,7 +211,8 @@ public class OzConnection {
                 mSelectionKey.interestOps(iops | SelectionKey.OP_READ);
                 OzUtil.logKey(mLog, mSelectionKey, "enabled read interest");
             }
-            mSelectionKey.selector().wakeup();
+
+            mServer.wakeupSelector();
             mReadPending = true;
         }
     }
@@ -239,7 +240,7 @@ public class OzConnection {
                 mSelectionKey.interestOps(iops | SelectionKey.OP_WRITE);
                 OzUtil.logKey(mLog, mSelectionKey, "enabled write interest"); 
             }
-            mSelectionKey.selector().wakeup();
+            mServer.wakeupSelector();
             mWritePending = true;
         }
     }
