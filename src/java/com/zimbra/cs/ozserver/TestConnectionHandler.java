@@ -92,9 +92,17 @@ class TestConnectionHandler implements OzConnectionHandler {
     private void doCommand() throws IOException 
     {
         assert(mReadState == READING_COMMAND);
-        
         String cmd = mIncomingData.toAsciiString();
-        TestServer.mLog.info("got: " + cmd);
+        try {
+            TestServer.mLog.info("server executing: " + cmd);
+            doCommandInternal(cmd);
+        } finally {
+            TestServer.mLog.info("server finished: " + cmd);
+        }
+    }
+
+    private void doCommandInternal(String cmd) throws IOException 
+    {
         if (cmd.equals("helo")) {
             mConnection.writeAscii("200 pleased to meet you", true);
             gotoReadingCommandState();
