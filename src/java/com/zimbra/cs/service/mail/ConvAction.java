@@ -47,8 +47,6 @@ public class ConvAction extends ItemAction {
         Element action = request.getElement(MailService.E_ACTION);
         String operation = action.getAttribute(MailService.A_OPERATION).toLowerCase();
 
-        if (operation.endsWith(OP_UPDATE))
-            throw ServiceException.INVALID_REQUEST("invalid operation on conv: " + operation, null);
         String successes = handleCommon(context, request, operation, MailItem.TYPE_CONVERSATION);
 
         Element response = lc.createElement(MailService.CONV_ACTION_RESPONSE);
