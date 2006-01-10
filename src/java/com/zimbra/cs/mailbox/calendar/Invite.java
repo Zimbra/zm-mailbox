@@ -1509,6 +1509,8 @@ public class Invite {
                         case DTSTART:
                             ParsedDateTime dtstart = ParsedDateTime.parse(prop, tzmap);
                             newInv.setDtStart(dtstart);
+                            if (!dtstart.hasTime()) 
+                            	newInv.setIsAllDayEvent(true);
                             break;
                         case DTEND:
                             ParsedDateTime dtend = ParsedDateTime.parse(prop, tzmap);
