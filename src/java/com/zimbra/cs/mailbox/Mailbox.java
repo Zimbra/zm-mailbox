@@ -3418,7 +3418,7 @@ public class Mailbox {
         return appt;
     }
 
-    public synchronized Contact createContact(OperationContext octxt, Map attrs, int folderId, String tags)
+    public synchronized Contact createContact(OperationContext octxt, Map<String, String> attrs, int folderId, String tags)
     throws ServiceException {
         CreateContact redoRecorder = new CreateContact(mId, folderId, attrs, tags);
 
@@ -3448,7 +3448,7 @@ public class Mailbox {
         }
     }
 
-    public synchronized void modifyContact(OperationContext octxt, int contactId, Map attrs, boolean replace)
+    public synchronized void modifyContact(OperationContext octxt, int contactId, Map<String, String> attrs, boolean replace)
     throws ServiceException {
         ModifyContact redoRecorder = new ModifyContact(mId, contactId, attrs, replace);
 

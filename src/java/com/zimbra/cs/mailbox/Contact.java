@@ -119,7 +119,7 @@ public class Contact extends MailItem {
 
     /** Relates contact fields (<code>"firstName"</code>) to this contact's
      *  values (<code>"John"</code>). */
-    private Map mFields;
+    private Map<String, String> mFields;
 
 
     public Contact(Mailbox mbox, UnderlyingData data) throws ServiceException {
@@ -130,15 +130,15 @@ public class Contact extends MailItem {
 
     /** Returns a new <code>Map</code> containing all the contact's
      *  field/value pairs. */
-    public Map getFields() {
-        return new HashMap(mFields);
+    public Map<String, String> getFields() {
+        return new HashMap<String, String>(mFields);
     }
 
     public String getFileAsString() throws ServiceException {
         return getFileAsString(mFields);
     }
-    public static String getFileAsString(Map fields) throws ServiceException {
-        String fileAs = (String) fields.get(A_fileAs);
+    public static String getFileAsString(Map<String, String> fields) throws ServiceException {
+        String fileAs = fields.get(A_fileAs);
         String[] fileParts = (fileAs == null ? null : fileAs.split(":", 2));
         int fileAsInt = FA_DEFAULT;
         if (fileParts != null)
@@ -150,13 +150,13 @@ public class Contact extends MailItem {
                 throw ServiceException.INVALID_REQUEST("invalid fileAs value: " + fileAs, null);
             }
         
-        String company = (String) fields.get(A_company);
+        String company = fields.get(A_company);
         if (company == null)
             company = "";
-        String first = (String) fields.get(A_firstName);
+        String first = fields.get(A_firstName);
         if (first == null)
             first = "";
-        String last = (String) fields.get(A_lastName);
+        String last = fields.get(A_lastName);
         if (last == null)
             last = "";
         
@@ -228,12 +228,10 @@ public class Contact extends MailItem {
      * @param attrs
      */
     public static void normalizeFileAs(Map<String, String> attrs) {
-    	
 		String fileAs = attrs.get(A_fileAs);
-		if (fileAs == null || fileAs.length() == 0) {
+		if (fileAs == null || fileAs.length() == 0)
 			return;
-		}
-    	
+
         String last = attrs.get(A_lastName);
         last = last == null ? "" : last;
         String first = attrs.get(A_firstName);
@@ -325,10 +323,10 @@ public class Contact extends MailItem {
     /** Returns a list of all email addresses for this contact.  This is used
      *  by {@link com.zimbra.cs.index.Indexer#indexContact} to populate the
      *  "To" field with the contact's email addresses. */
-    public List /*<String>*/ getEmailAddresses() {
-        ArrayList result = new ArrayList();
-        for (int i = 0; i < EMAIL_FIELDS.length; i++) {
-            String value = (String) mFields.get(EMAIL_FIELDS[i]);
+    public List<String> getEmailAddresses() {
+        ArrayList<String> result = new ArrayList<String>();
+        for (String field : EMAIL_FIELDS) {
+            String value = mFields.get(field);
             if (value != null)
                 result.add(value);
         }
@@ -362,7 +360,7 @@ public class Contact extends MailItem {
      *    <li><code>service.PERM_DENIED</code> - if you don't have
      *        sufficient permissions</ul>
      * @see #canContain(byte) */
-    static Contact create(int id, Folder folder, short volumeId, Map fields, String tags) throws ServiceException {
+    static Contact create(int id, Folder folder, short volumeId, Map<String, String> fields, String tags) throws ServiceException {
         if (folder == null || !folder.canContain(TYPE_CONTACT))
             throw MailServiceException.CANNOT_CONTAIN();
         if (!folder.canAccess(ACL.RIGHT_INSERT))
@@ -370,9 +368,11 @@ public class Contact extends MailItem {
 
         if (fields == null)
             throw ServiceException.INVALID_REQUEST("contact must have fields", null);
-        for (Iterator it = fields.values().iterator(); it.hasNext(); ) {
-            String value = StringUtil.stripControlCharacters((String) it.next());
-            if (value == null || value.equals(""))
+        for (Iterator<Map.Entry<String, String>> it = fields.entrySet().iterator(); it.hasNext(); ) {
+            Map.Entry<String, String> entry = it.next();
+            String key   = StringUtil.stripControlCharacters(entry.getKey());
+            String value = StringUtil.stripControlCharacters(entry.getValue());
+            if (key == null || key.trim().equals("") || value == null || value.equals(""))
                 it.remove();
         }
         if (fields.isEmpty())
@@ -423,7 +423,7 @@ public class Contact extends MailItem {
      *    <li><code>service.FAILURE</code> - if there's a database failure
      *    <li><code>service.PERM_DENIED</code> - if you don't have
      *        sufficient permissions</ul> */
-    void modify(Map fields, boolean replace) throws ServiceException {
+    void modify(Map<String, String> fields, boolean replace) throws ServiceException {
         if (fields == null || fields.isEmpty()) {
             if (replace)
                 throw ServiceException.INVALID_REQUEST("contact must have fields", null);
@@ -436,11 +436,10 @@ public class Contact extends MailItem {
 
         if (replace)
             mFields.clear();
-        for (Iterator it = fields.entrySet().iterator(); it.hasNext(); ) {
-            Map.Entry entry = (Map.Entry) it.next();
-            String key   = StringUtil.stripControlCharacters((String) entry.getKey());
-            String value = StringUtil.stripControlCharacters((String) entry.getValue());
-            if (key != null && !key.equals("")) {
+        for (Map.Entry<String, String> entry : fields.entrySet()) {
+            String key   = StringUtil.stripControlCharacters(entry.getKey());
+            String value = StringUtil.stripControlCharacters(entry.getValue());
+            if (key != null && !key.trim().equals("")) {
                 if (value != null && !value.equals(""))
                     mFields.put(key, value);
                 else
@@ -475,7 +474,7 @@ public class Contact extends MailItem {
             metaAttrs = meta.getMap(Metadata.FN_FIELDS);
         }
 
-        mFields = new HashMap();
+        mFields = new HashMap<String, String>();
         for (Iterator it = metaAttrs.asMap().entrySet().iterator(); it.hasNext(); ) {
             Map.Entry entry = (Map.Entry) it.next();
             mFields.put(entry.getKey().toString(), entry.getValue().toString());
@@ -485,10 +484,10 @@ public class Contact extends MailItem {
     Metadata encodeMetadata(Metadata meta) {
         return encodeMetadata(meta, mColor, mFields);
     }
-    private static String encodeMetadata(byte color, Map fields) {
+    private static String encodeMetadata(byte color, Map<String, String> fields) {
         return encodeMetadata(new Metadata(), color, fields).toString();
     }
-    static Metadata encodeMetadata(Metadata meta, byte color, Map fields) {
+    static Metadata encodeMetadata(Metadata meta, byte color, Map<String, String> fields) {
         meta.put(Metadata.FN_FIELDS, new Metadata(fields));
         return MailItem.encodeMetadata(meta, color);
     }
@@ -498,10 +497,8 @@ public class Contact extends MailItem {
         StringBuffer sb = new StringBuffer();
         sb.append("contact: {");
         appendCommonMembers(sb);
-        for (Iterator it = mFields.entrySet().iterator(); it.hasNext(); ) {
-            Map.Entry entry = (Map.Entry) it.next();
+        for (Map.Entry entry : mFields.entrySet())
             sb.append(", ").append(entry.getKey()).append(": ").append(entry.getValue());
-        }
         sb.append("}");
         return sb.toString();
     }
