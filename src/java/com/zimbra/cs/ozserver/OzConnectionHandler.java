@@ -34,4 +34,6 @@ public interface OzConnectionHandler {
     void handleInput(ByteBuffer buffer, boolean matched) throws IOException;
 
     void handleDisconnect();
+    
+    void handleIdle() throws IOException;
 }

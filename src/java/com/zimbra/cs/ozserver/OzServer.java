@@ -31,10 +31,8 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -46,23 +44,17 @@ import EDU.oswego.cs.dl.util.concurrent.BoundedLinkedQueue;
 import EDU.oswego.cs.dl.util.concurrent.PooledExecutor;
 import EDU.oswego.cs.dl.util.concurrent.ThreadFactory;
 
-// TODO idle connection support
-
-// TODO drop unauthenticated connections in sooner
+// TODO idle connection support and drop unauthenticated connections
+//      in sooner
 
 // TODO runWhenBlocked is bad for tasks scheduled from
 //      server thread because this will block server
 //      and stop it from reaping connections etc - because
 //      of tasks that execute in server thread.  Revisit this.
 
-// TODO STARTTLS and SSL support
-
 // TODO add a clearConnection so that protocol handlers will
 //      let go of the connection objects
 
-// TODO writes and connection handles should be tasks to - why write
-//      only from the main thread?
-        
 public class OzServer {
     
     private Log mLog;
@@ -79,11 +71,11 @@ public class OzServer {
     
     private OzConnectionHandlerFactory mConnectionHandlerFactory;
     
-    private int mReadBufferSize;
+    private int mReadBufferSizeHint;
     
     private SSLContext mSSLContext;
 
-    public OzServer(String name, int readBufferSize, ServerSocket serverSocket,
+    public OzServer(String name, int readBufferSizeHint, ServerSocket serverSocket,
                     OzConnectionHandlerFactory connectionHandlerFactory, Log log)
         throws IOException
     {
@@ -94,7 +86,7 @@ public class OzServer {
         mServerSocketChannel.configureBlocking(false);
 
         mServerName = name + "-" + mServerSocket.getLocalPort();
-        mReadBufferSize = readBufferSize;
+        mReadBufferSizeHint = readBufferSizeHint;
         
         mConnectionHandlerFactory = connectionHandlerFactory;
         
@@ -114,18 +106,18 @@ public class OzServer {
         return mConnectionHandlerFactory.newConnectionHandler(connection);
     }
     
+
+    private Object mSelectorGuard = new Object();
+
+    void wakeupSelector() {
+        synchronized (mSelectorGuard) {
+            mSelector.wakeup();
+        }
+    }
+
+
     private void serverLoop() {
         while (true) {
-            if (mLog.isDebugEnabled()) mLog.debug("running " + mServerThreadTasks.size() + " server thread tasks");
-            Runnable task = null;
-            while ((task = getNextServerThreadTask()) != null) {
-                try {
-                    task.run();
-                } catch (Throwable e) {
-                    mLog.warn("ignoring exception that occurred while running server thread tasks", e);
-                }
-            }
-            
             synchronized (this) {
                 if (mShutdownRequested) {
                     break;
@@ -137,6 +129,7 @@ public class OzServer {
             try {
                 if (mLog.isDebugEnabled()) mLog.debug("entering select");
                 readyCount = mSelector.select();
+                synchronized (mSelectorGuard) { }
             } catch (IOException ioe) {
                 mLog.warn("OzServer IOException in select", ioe);
             }
@@ -146,56 +139,55 @@ public class OzServer {
             if (readyCount == 0) {
                 continue;
             }
-            
+
             Iterator<SelectionKey> iter = mSelector.selectedKeys().iterator();
             while (iter.hasNext()) {
                 SelectionKey readyKey = iter.next();
                 iter.remove();
 
-                OzConnection selectedConnection = null; 
-                if (readyKey.attachment() != null && readyKey.attachment() instanceof OzConnection) {
-                    selectedConnection = (OzConnection)readyKey.attachment();
-                    selectedConnection.addToNDC();
-                }
-
+                OzConnection readyConnection = null; 
                 try {
-                    synchronized (readyKey) {
-                        OzConnection.logKey(mLog, readyKey, "ready key");
+                    if (readyKey.attachment() != null && readyKey.attachment() instanceof OzConnection) {
+                        readyConnection = (OzConnection)readyKey.attachment();
+                        readyConnection.addToNDC();
                     }
                     
                     if (!readyKey.isValid()) {
                         continue;
+                    }
+
+                    synchronized (readyKey) {
+                        OzUtil.logKey(mLog, readyKey, "ready key");
                     }
                     
                     if (readyKey.isAcceptable()) {
                         Socket newSocket = mServerSocket.accept();
                         SocketChannel newChannel = newSocket.getChannel(); 
                         newChannel.configureBlocking(false);
-                        selectedConnection= new OzConnection(OzServer.this, newChannel);
+                        readyConnection= new OzConnection(OzServer.this, newChannel);
                     }
                     
                     if (readyKey.isReadable()) {
-                        selectedConnection.doReadReady();
+                        readyConnection.doReadReady();
                     }
                     
                     if (readyKey.isWritable()) {
-                        selectedConnection.doWriteReady();
+                        readyConnection.doWriteReady();
                     }
                 } catch (Throwable t) {
                     mLog.warn("ignoring exception that occurred while handling selected key", t);
-                    if (selectedConnection != null) {
-                        selectedConnection.closeConnection();
+                    if (readyConnection != null) {
+                        readyConnection.channelClose();
                     }
                 } finally {
-                    if (selectedConnection != null) {
-                        selectedConnection.clearFromNDC();
+                    if (readyConnection != null) {
+                        readyConnection.clearFromNDC();
                     }
                 }
                 
             } /* end of ready keys loop */
 
             if (mLog.isDebugEnabled()) mLog.debug("processed " + readyCount + " ready keys");
-
         }
         
         assert(mShutdownRequested);
@@ -228,8 +220,6 @@ public class OzServer {
         }
         mLog.info("closed selector");
 
-        mLog.info("initiating buffer pool destroy");
-
         synchronized (mShutdownCompleteCondition) {
             mShutdownComplete = true;
             mShutdownCompleteCondition.notify();
@@ -247,7 +237,8 @@ public class OzServer {
         synchronized (this) {
             mShutdownRequested = true;
         }
-        mSelector.wakeup();
+
+        wakeupSelector();
         
         synchronized (mShutdownCompleteCondition) {
             while (!mShutdownComplete) {
@@ -264,9 +255,12 @@ public class OzServer {
         mServerThread = new Thread() {
             public void run() {
                 try {
+                    mLog.info("starting server loop");
                     serverLoop();
                 } catch (Throwable t) {
                     shutdown();
+                } finally {
+                    mLog.info("ended server loop");
                 }
             }
         };        
@@ -274,34 +268,6 @@ public class OzServer {
         mServerThread.start();
     }
 
-    private List<Runnable> mServerThreadTasks = new ArrayList<Runnable>(128); 
-    
-    private Runnable getNextServerThreadTask() {
-        synchronized (mServerThreadTasks) {
-            if (mServerThreadTasks.isEmpty()) {
-                return null;
-            }
-            return mServerThreadTasks.remove(0);
-        }
-    }
-    
-    void executeInServerThread(Runnable task) {
-        if (Thread.currentThread() == mServerThread) {
-            if (mLog.isDebugEnabled()) mLog.debug("already in server thread, just running");
-            try {
-                task.run();
-            } catch (Exception e) {
-                mLog.warn("ignoring exception that occurred while running server thread task from server thread", e);
-            }
-        } else {
-            if (mLog.isDebugEnabled()) mLog.debug("scheduled in server thread for later execution");
-            synchronized (mServerThreadTasks) {
-                mServerThreadTasks.add(task);
-            }
-            mSelector.wakeup();
-        }
-    }
-    
     private PooledExecutor mPooledExecutor;
 
     void execute(Runnable task) {
@@ -361,19 +327,19 @@ public class OzServer {
         return mSelector;
     }
 
-    int getReadBufferSize() {
-        return mReadBufferSize;
+    int getReadBufferSizeHint() {
+        return mReadBufferSizeHint;
     }
    
     Log getLog() {
         return mLog;
     }
 
-    private Map mProperties = new HashMap();
+    private Map<String, String> mProperties = new HashMap<String, String>();
     
     public String getProperty(String key, String defaultValue) {
         synchronized (mProperties) {
-            String result = (String)mProperties.get(key);
+            String result = mProperties.get(key);
             if (result == null) {
                 result = defaultValue;
             }

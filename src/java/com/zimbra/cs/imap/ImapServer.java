@@ -38,6 +38,7 @@ import com.zimbra.cs.ozserver.OzConnection;
 import com.zimbra.cs.ozserver.OzConnectionHandler;
 import com.zimbra.cs.ozserver.OzConnectionHandlerFactory;
 import com.zimbra.cs.ozserver.OzServer;
+import com.zimbra.cs.ozserver.OzTLSFilter;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServer;
@@ -51,12 +52,8 @@ import com.zimbra.cs.util.ZimbraLog;
  */
 public class ImapServer extends TcpServer {
 
-    // Config idle. should be at least 30 minutes, per IMAP4 RFC 3501.
-    public static final int DEFAULT_MAX_IDLE_SECONDS = 1800;
-    private int mConfigMaxIdleMilliSeconds = DEFAULT_MAX_IDLE_SECONDS * 1000;
-
     private static Object sImapServer;
-    private static ImapServer sImapSSLServer;
+    private static Object sImapSSLServer;
 
     private boolean mAllowCleartextLogins;
     private boolean mConnectionSSL;
@@ -77,7 +74,7 @@ public class ImapServer extends TcpServer {
     boolean isConnectionSSL()       { return mConnectionSSL; }
 
 	public int getConfigMaxIdleMilliSeconds() {
-		return mConfigMaxIdleMilliSeconds;
+		return IMAP_AUTHED_CONNECTION_MAX_IDLE_MILLISECONDS;
 	}
 
     static String getBanner() {
@@ -87,6 +84,11 @@ public class ImapServer extends TcpServer {
     static String getGoodbye() {
         return "BYE Zimbra IMAP4rev1 server terminating connection";
     }
+    
+    public static final int IMAP_READ_SIZE_HINT = 4096;
+    public static final int IMAP_UNAUTHED_CONNECTION_MAX_IDLE_MILLISECONDS = 60 * 1000; // throw out connections that do not authenticate in a minute
+    public static final int IMAP_AUTHED_CONNECTION_MAX_IDLE_MILLISECONDS = 1800 * 1000; // Config idle. should be at least 30 minutes, per IMAP4 RFC 3501.
+
     
     public synchronized static void startupImapServer() throws ServiceException {
         if (sImapServer != null)
@@ -100,17 +102,16 @@ public class ImapServer extends TcpServer {
 
         ServerSocket serverSocket = NetUtil.getBoundServerSocket(address, port, false);
 
-        if (LC.get("debug_ozimap_enable").equalsIgnoreCase("true")) {
-            ZimbraLog.imap.warn("Enabling NIO based non-SSL IMAP server, it does not support STARTTLS yet!");
+        if (LC.get("nio_imap_enable").equalsIgnoreCase("true")) {
             OzConnectionHandlerFactory imapHandlerFactory = new OzConnectionHandlerFactory() {
                 public OzConnectionHandler newConnectionHandler(OzConnection conn) {
+                    conn.setIdleNotifyTime(IMAP_UNAUTHED_CONNECTION_MAX_IDLE_MILLISECONDS);
                     return new OzImapConnectionHandler(conn);
                 }
             };
 
-            int readBufferSize = 1000; // TODO from config
             try {
-                OzServer ozserver = new OzServer("IMAP", readBufferSize, serverSocket, imapHandlerFactory, ZimbraLog.imap);
+                OzServer ozserver = new OzServer("IMAP", IMAP_READ_SIZE_HINT, serverSocket, imapHandlerFactory, ZimbraLog.imap);
                 ozserver.setProperty(OzImapConnectionHandler.PROPERTY_ALLOW_CLEARTEXT_LOGINS, Boolean.toString(loginOK));
                 ozserver.start();
                 sImapServer = ozserver;
@@ -136,14 +137,34 @@ public class ImapServer extends TcpServer {
         String address = server.getAttr(Provisioning.A_zimbraImapSSLBindAddress, null);
         int port = server.getIntAttr(Provisioning.A_zimbraImapSSLBindPort, Config.D_IMAP_SSL_BIND_PORT);
         
-        ServerSocket serverSocket = NetUtil.getBoundServerSocket(address, port, true);
-        
-        sImapSSLServer = new ImapServer(threads, serverSocket, true, true);
-        sImapSSLServer.setSSL(true);
-
-        Thread imaps = new Thread(sImapSSLServer);
-        imaps.setName("ImapSSLServer");
-        imaps.start();            
+        if (LC.get("nio_imap_enable").equalsIgnoreCase("true")) {
+            ServerSocket serverSocket = NetUtil.getBoundServerSocket(address, port, false);
+            
+            OzConnectionHandlerFactory imapHandlerFactory = new OzConnectionHandlerFactory() {
+                public OzConnectionHandler newConnectionHandler(OzConnection conn) {
+                    conn.setIdleNotifyTime(IMAP_UNAUTHED_CONNECTION_MAX_IDLE_MILLISECONDS);
+                    conn.addFilter(new OzTLSFilter(conn, ZimbraLog.imap));
+                    return new OzImapConnectionHandler(conn);
+                }
+            };
+            try {
+                OzServer ozserver = new OzServer("IMAPS", IMAP_READ_SIZE_HINT, serverSocket, imapHandlerFactory, ZimbraLog.imap);
+                ozserver.setProperty(OzImapConnectionHandler.PROPERTY_SECURE_SERVER, "true");
+                ozserver.start();
+                sImapSSLServer = ozserver;
+            } catch (IOException ioe) {
+                Zimbra.halt("failed to create OzServer for IMAPS", ioe);
+            }
+        } else {
+            ServerSocket serverSocket = NetUtil.getBoundServerSocket(address, port, true);
+            
+            ImapServer imapsServer = new ImapServer(threads, serverSocket, true, true);
+            imapsServer.setSSL(true);
+            sImapSSLServer = imapsServer;
+            Thread imaps = new Thread(imapsServer);
+            imaps.setName("ImapSSLServer");
+            imaps.start();            
+        }
     }
 
     public synchronized static void shutdownImapServers() {
@@ -156,9 +177,14 @@ public class ImapServer extends TcpServer {
             sImapServer = null;
         }
 
-        if (sImapSSLServer != null)
-            sImapSSLServer.shutdown(10); // TODO shutdown grace period from config
-        sImapSSLServer = null;
+        if (sImapSSLServer != null) {
+            if (sImapSSLServer instanceof ImapServer) {
+                ((ImapServer)sImapSSLServer).shutdown(10); // TODO shutdown grace period from config
+            } else if (sImapSSLServer instanceof OzServer) {
+                ((OzServer)sImapSSLServer).shutdown();
+            }
+            sImapSSLServer = null;
+        }
     }
     
     public static void main(String args[]) throws ServiceException {

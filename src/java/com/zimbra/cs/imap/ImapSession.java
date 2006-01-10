@@ -61,7 +61,7 @@ public class ImapSession extends Session {
     private String      mUsername;
     private byte        mState;
     private String      mIdleTag;
-    private ImapHandler mHandler;
+    private ImapSessionHandler mHandler;
     private ImapFolder  mSelectedFolder;
     private Map<Object, ImapFlag> mFlags = new LinkedHashMap<Object, ImapFlag>();
     private Map<Object, ImapFlag> mTags = new HashMap<Object, ImapFlag>();
@@ -84,7 +84,7 @@ public class ImapSession extends Session {
 
     static byte getState(ImapSession s)  { return s == null ? STATE_NOT_AUTHENTICATED : s.mState; }
 
-    void setHandler(ImapHandler handler)  { mHandler = handler; }
+    void setHandler(ImapSessionHandler handler)  { mHandler = handler; }
 
     String getUsername()          { return mUsername; }
     void setUsername(String name) { mUsername = name; }
@@ -218,8 +218,13 @@ public class ImapSession extends Session {
     }
     void clearTagCache()  { mTags.clear(); }
 
-    DateFormat getDateFormat()        { return mHandler.mDateFormat; }
-    DateFormat getZimbraDateFormat()  { return mHandler.mZimbraFormat; }
+    DateFormat getDateFormat() {
+        return mHandler.getDateFormat();
+    }
+    
+    DateFormat getZimbraDateFormat() {
+        return mHandler.getZimbraFormat();
+    }
 
     void subscribe(Folder folder) throws ServiceException {
         Mailbox mbox = folder.getMailbox();

@@ -39,6 +39,8 @@ import java.util.Random;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.zimbra.cs.util.ZimbraLog;
+
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
@@ -75,6 +77,7 @@ class TestClient {
     private static DummySSLSocketFactory mSocketFactory = new DummySSLSocketFactory();
     
     public TestClient(String host, int port, boolean ssl) throws IOException {
+        ZimbraLog.clearContext();
         if (ssl) {
             mSocket = mSocketFactory.createSocket(host, port); 
         } else {
@@ -83,7 +86,10 @@ class TestClient {
         mSocketIn = new BufferedReader(new InputStreamReader(mSocket.getInputStream()));
         mSocketOut = new BufferedOutputStream(mSocket.getOutputStream());
         mResponse = mSocketIn.readLine();
-        mLog.info("got: " + mResponse);
+        mLog.info("cgot: " + mResponse);
+        
+        String cid = mResponse.substring(mResponse.indexOf('=') + 1);
+        ZimbraLog.addToContext("cid", cid);
     }
     
     public String getLastResponse() {
@@ -94,14 +100,14 @@ class TestClient {
         mSocketOut.write("helo\r\n".getBytes());
         mSocketOut.flush();
         mResponse = mSocketIn.readLine();
-        mLog.info("got: " + mResponse);
+        mLog.info("cgot: " + mResponse);
     }
     
     public void quit() throws IOException {
         mSocketOut.write("quit\r\n".getBytes());
         mSocketOut.flush();
         mResponse = mSocketIn.readLine();
-        mLog.info("got: " + mResponse);
+        mLog.info("cgot: " + mResponse);
     }
     
     public void sum(byte[] bytes) throws IOException {
@@ -112,7 +118,7 @@ class TestClient {
         mSocketOut.write(OzByteArrayMatcher.CRLFDOTCRLF);
         mSocketOut.flush();
         mResponse = mSocketIn.readLine();
-        mLog.info("got: " + mResponse);
+        mLog.info("cgot: " + mResponse);
     }
     
     public void nsum(byte[] bytes) throws IOException {
@@ -120,7 +126,7 @@ class TestClient {
         mSocketOut.write(bytes);
         mSocketOut.flush();
         mResponse = mSocketIn.readLine();
-        mLog.info("got: " + mResponse);
+        mLog.info("cgot: " + mResponse);
     }
     
     public void close() {
@@ -136,8 +142,8 @@ class TestClient {
     private static final int MAX_DIGEST_BYTES = 20;
 
     
-    public static void run(int port, boolean ssl) throws IOException {
-        TestClient client = new TestClient("localhost", port, ssl);
+    public static void run(String host, int port, boolean ssl) throws IOException {
+        TestClient client = new TestClient(host, port, ssl);
 
         mLog.info("sending: helo");
         client.helo();
@@ -174,7 +180,7 @@ class TestClient {
     }
     
     public static void main(String[] args) throws IOException {
-        run(Integer.parseInt(args[0]), Boolean.parseBoolean(args[1]));
+        run(args[0], Integer.parseInt(args[1]), Boolean.parseBoolean(args[2]));
     }
     
     public static class DummySSLSocketFactory extends SSLSocketFactory {
