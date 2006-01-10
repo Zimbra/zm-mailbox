@@ -349,12 +349,12 @@ public final class MailboxIndex
     }
     
     // you **MUST** call ZimbraQueryResults.doneWithSearchResults() when you are done with them!
-    public synchronized ZimbraQueryResults search(ZimbraQuery query, byte[] types, int searchOrder,
+    public synchronized ZimbraQueryResults search(ZimbraQuery query, byte[] types, SortBy searchOrder,
             boolean includeTrash, boolean includeSpam, int chunkSize) throws IOException
     {
-        if (searchOrder < MailboxIndex.FIRST_SEARCH_ORDER_NUM || searchOrder > MailboxIndex.LAST_SEARCH_ORDER_NUM) {
-            throw new IllegalArgumentException("invalid searchOrder("+searchOrder+") to searchEx (check argument order)");
-        }
+//        if (searchOrder < MailboxIndex.FIRST_SEARCH_ORDER_NUM || searchOrder > MailboxIndex.LAST_SEARCH_ORDER_NUM) {
+//            throw new IllegalArgumentException("invalid searchOrder("+searchOrder+") to searchEx (check argument order)");
+//        }
         
         try {
             if (mLog.isDebugEnabled()) {
@@ -379,32 +379,25 @@ public final class MailboxIndex
         }
     }
     
-    synchronized Sort getSort(int searchOrder) {
-        Sort sort;
+    synchronized Sort getSort(SortBy searchOrder) {
         switch (searchOrder) {
-        case MailboxIndex.SEARCH_ORDER_DATE_DESC:
-            sort = mLuceneSortDateDesc;
-        break;
-        case MailboxIndex.SEARCH_ORDER_DATE_ASC:
-            sort = mLuceneSortDateAsc;
-        break;
-        case MailboxIndex.SEARCH_ORDER_SUBJ_DESC:
-            sort = mLuceneSortSubjectDesc;
-        break;
-        case MailboxIndex.SEARCH_ORDER_SUBJ_ASC:
-            sort = mLuceneSortSubjectAsc;
-        break;
-        case MailboxIndex.SEARCH_ORDER_NAME_DESC:
-            sort = mLuceneSortNameDesc;
-        break;
-        case MailboxIndex.SEARCH_ORDER_NAME_ASC:
-            sort = mLuceneSortNameAsc;
-        break;
+        case DATE_DESCENDING:
+        	return mLuceneSortDateDesc;
+        case DATE_ASCENDING:
+        	return mLuceneSortDateAsc;
+        case SUBJ_DESCENDING:
+        	return mLuceneSortSubjectDesc;
+        case SUBJ_ASCENDING:
+            return mLuceneSortSubjectAsc;
+        case NAME_DESCENDING:
+            return mLuceneSortNameDesc;
+        case NAME_ASCENDING:
+        	return mLuceneSortNameAsc;
         default:
-            sort = mLuceneSortDateDesc;
+        	return mLuceneSortDateDesc;
         }
-        return sort;
     }
+    
     
     public String toString() {
         StringBuffer ret = new StringBuffer("MailboxIndex(");
@@ -1053,14 +1046,9 @@ public final class MailboxIndex
     public static final int SEARCH_ORDER_NAME_DESC  = 107;
     public static final int LAST_SEARCH_ORDER_NUM   = 107;
 	
-    public static boolean isSortDescending(int sortOrder) {
-        switch (sortOrder) {
-        case SEARCH_ORDER_DATE_DESC:
-        case SEARCH_ORDER_SUBJ_DESC:
-        case SEARCH_ORDER_NAME_DESC:
-            return true;
-        }
-        return false;
+    public static boolean isSortDescending(SortBy sortOrder) {
+    	byte sortByte = sortOrder.getDbMailItemSortByte();
+    	return (sortByte & DbMailItem.SORT_DESCENDING)!=0;
     }
     
     public static final String GROUP_BY_CONVERSATION = "conversation";
@@ -1072,17 +1060,42 @@ public final class MailboxIndex
     public static final String SEARCH_FOR_CONTACTS = "contact";
     public static final String SEARCH_FOR_APPOINTMENTS = "appointment";
     public static final String SEARCH_FOR_NOTES = "note";
-
-    public static final String SORT_BY_DATE_ASCENDING   = "dateAsc";
-    public static final String SORT_BY_DATE_DESCENDING  = "dateDesc";
-    public static final String SORT_BY_SUBJ_ASCENDING   = "subjAsc";
-    public static final String SORT_BY_SUBJ_DESCENDING  = "subjDesc";
-    public static final String SORT_BY_NAME_ASCENDING   = "nameAsc";
-    public static final String SORT_BY_NAME_DESCENDING  = "nameDesc";
-    public static final String SORT_BY_SCORE_DESCENDING = "scoreDesc";
-
     
-    
+    public static enum SortBy {
+    	DATE_ASCENDING  ("dateAsc",   (byte)(DbMailItem.SORT_BY_DATE | DbMailItem.SORT_ASCENDING)), 
+    	DATE_DESCENDING ("dateDesc",  (byte)(DbMailItem.SORT_BY_DATE | DbMailItem.SORT_DESCENDING)),
+    	SUBJ_ASCENDING  ("subjAsc",   (byte)(DbMailItem.SORT_BY_SUBJECT | DbMailItem.SORT_ASCENDING)),
+    	SUBJ_DESCENDING ("subjDesc",  (byte)(DbMailItem.SORT_BY_SUBJECT | DbMailItem.SORT_DESCENDING)),
+    	NAME_ASCENDING  ("nameAsc",   (byte)(DbMailItem.SORT_BY_SENDER | DbMailItem.SORT_ASCENDING)),
+    	NAME_DESCENDING ("nameDesc",  (byte)(DbMailItem.SORT_BY_SENDER | DbMailItem.SORT_DESCENDING)),
+    	SCORE_DESCENDING("scoreDesc", (byte)0);
+
+		static HashMap<String, SortBy> sNameMap = new HashMap();
+    	
+    	static {
+    		for (SortBy s : SortBy.values()) 
+    			sNameMap.put(s.mName, s);
+    	}
+    	
+    	byte mSort;
+    	String mName;
+    	
+    	SortBy(String str, byte sort) {
+    		mName = str;
+    		mSort = sort;
+    	}
+    	
+    	public String getName() { return mName; }
+    	
+    	public byte getDbMailItemSortByte() {
+    		return mSort;
+    	}
+    	
+    	public static SortBy lookup(String str) {
+    		return sNameMap.get(str);
+    	}
+    }
+
     public static byte getDbMailItemSortByte(int searchOrder) {
         byte sort = 0;
         
@@ -1136,31 +1149,6 @@ public final class MailboxIndex
         
         return types;
     }
-    
-    public static int parseSortByString(String sortBy) throws ServiceException
-    {
-        int sort = MailboxIndex.SEARCH_ORDER_DATE_ASC;
-        
-        if (SORT_BY_DATE_ASCENDING.equals(sortBy))
-            sort = MailboxIndex.SEARCH_ORDER_DATE_ASC;
-        else if (SORT_BY_DATE_DESCENDING.equals(sortBy))
-            sort = MailboxIndex.SEARCH_ORDER_DATE_DESC;
-        else if (SORT_BY_SCORE_DESCENDING.equals(sortBy)) 
-            sort = MailboxIndex.SEARCH_ORDER_NATIVE;
-        else if (SORT_BY_SUBJ_DESCENDING.equals(sortBy)) 
-            sort = MailboxIndex.SEARCH_ORDER_SUBJ_DESC;
-        else if (SORT_BY_SUBJ_ASCENDING.equals(sortBy)) 
-            sort = MailboxIndex.SEARCH_ORDER_SUBJ_ASC;
-        else if (SORT_BY_NAME_DESCENDING.equals(sortBy)) 
-            sort = MailboxIndex.SEARCH_ORDER_NAME_DESC;
-        else if (SORT_BY_NAME_ASCENDING.equals(sortBy)) 
-            sort = MailboxIndex.SEARCH_ORDER_NAME_ASC;
-        else
-            throw ServiceException.INVALID_REQUEST("unknown sortBy: "+sortBy, null);
-        
-        return sort;
-    }
-    
     
     protected synchronized Spans getSpans(SpanQuery q) throws IOException {
         CountedIndexReader reader = this.getCountedIndexReader();

@@ -50,6 +50,7 @@ import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.BrowseResult.DomainItem;
@@ -2367,7 +2368,7 @@ public class Mailbox {
      * @throws ParseException
      * @throws ServiceException
      */
-    public ZimbraQueryResults search(OperationContext octxt, String queryString, byte[] types, int sortBy, int chunkSize) 
+    public ZimbraQueryResults search(OperationContext octxt, String queryString, byte[] types, SortBy sortBy, int chunkSize) 
     throws IOException, ParseException, ServiceException {
         Account acct = getAccount();
         boolean includeTrash = 
@@ -2392,7 +2393,7 @@ public class Mailbox {
      * @throws ServiceException
      */
     public synchronized ZimbraQueryResults search(OperationContext octxt, String queryString, byte[] types,
-                                                  int sortBy, boolean includeTrash, boolean includeSpam, int chunkSize)
+                                                  SortBy sortBy, boolean includeTrash, boolean includeSpam, int chunkSize)
     throws IOException, ParseException, ServiceException {
         boolean success = false;
         try {

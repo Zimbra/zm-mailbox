@@ -89,7 +89,7 @@ public class SearchConv extends Search {
         Element response = lc.createElement(MailService.SEARCH_CONV_RESPONSE);
         response.addAttribute(MailService.A_QUERY_OFFSET, Integer.toString(params.getOffset()));
         
-        Message[] msgs = mbox.getMessagesByConversation(octxt, cid, MailboxIndex.getDbMailItemSortByte(params.getSortBy()));
+        Message[] msgs = mbox.getMessagesByConversation(octxt, cid, params.getSortBy().getDbMailItemSortByte());
         
         Element retVal = putHits(lc, response, msgs, results, params);
         

@@ -65,6 +65,7 @@ import org.apache.lucene.search.spans.Spans;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -83,7 +84,7 @@ import com.zimbra.cs.util.Zimbra;
  */
 public class IndexEditor {
 	
-    private static int sortOrder = MailboxIndex.SEARCH_ORDER_DATE_DESC;
+    private static SortBy sortOrder = SortBy.DATE_DESCENDING;
 	private BufferedReader inputReader = null;
     private PrintStream outputStream = null;
     
@@ -157,7 +158,7 @@ public class IndexEditor {
 	
 	public interface QueryRunner
 	{
-	    public ZimbraQueryResults runQuery(String qstr, byte[] types, int sortBy) throws IOException, ParseException, MailServiceException, ServiceException;
+	    public ZimbraQueryResults runQuery(String qstr, byte[] types, SortBy sortBy) throws IOException, ParseException, MailServiceException, ServiceException;
 	}
 	
 	public class SingleQueryRunner implements QueryRunner
@@ -170,7 +171,7 @@ public class IndexEditor {
             mMailbox = Mailbox.getMailboxById(mailboxId).getMailboxIndex();
 	    }
 	    
-	    public ZimbraQueryResults runQuery(String qstr, byte[] types, int sortBy) throws IOException, MailServiceException, ParseException, ServiceException
+	    public ZimbraQueryResults runQuery(String qstr, byte[] types, SortBy sortBy) throws IOException, MailServiceException, ParseException, ServiceException
 	    {
 	        ZimbraQuery zq = new ZimbraQuery(qstr, Mailbox.getMailboxById(mMailboxId));
             
@@ -205,7 +206,7 @@ public class IndexEditor {
 	    }
 	    
 	    
-	    public ZimbraQueryResults runQuery(String qstr, byte[] types, int sortBy) throws IOException, MailServiceException, ParseException, ServiceException
+	    public ZimbraQueryResults runQuery(String qstr, byte[] types, SortBy sortBy) throws IOException, MailServiceException, ParseException, ServiceException
 	    {
 	        ZimbraQueryResults[] res = new ZimbraQueryResults[mMailbox.length];
 	        for (int i = 0; i < mMailbox.length; i++) {
@@ -1236,22 +1237,22 @@ public class IndexEditor {
                     int msgId = Integer.parseInt(msg);
                     reIndexMsg(mailboxId, msgId);
                 } else if (command.equals("sort da")) {
-                    sortOrder = MailboxIndex.SEARCH_ORDER_DATE_ASC;
+                    sortOrder = SortBy.DATE_ASCENDING;
                     outputStream.println("---->Search order = DATE_ASCENDING");
                 } else if (command.equals("sort dd")) {
-                    sortOrder = MailboxIndex.SEARCH_ORDER_DATE_DESC;
+                    sortOrder = SortBy.DATE_DESCENDING;
                     outputStream.println("---->Search order = DATE_DESCENDING");
                 } else if (command.equals("sort sa")) {
-                    sortOrder = MailboxIndex.SEARCH_ORDER_SUBJ_ASC;
+                    sortOrder = SortBy.SUBJ_ASCENDING;
                     outputStream.println("---->Search order = SUBJ_ASCENDING");
                 } else if (command.equals("sort sd")) {
-                    sortOrder = MailboxIndex.SEARCH_ORDER_SUBJ_DESC;
+                    sortOrder = SortBy.SUBJ_DESCENDING;
                     outputStream.println("---->Search order = SUBJ_DESCENDING");
                 } else if (command.equals("sort na")) {
-                    sortOrder = MailboxIndex.SEARCH_ORDER_NAME_ASC;
+                    sortOrder = SortBy.NAME_ASCENDING;
                     outputStream.println("---->Search order = NAME_ASCENDING");
                 } else if (command.equals("sort nd")) {
-                    sortOrder = MailboxIndex.SEARCH_ORDER_NAME_DESC;
+                    sortOrder = SortBy.NAME_DESCENDING;
                     outputStream.println("---->Search order = NAME_DESCENDING");
                 } else if (command.equals("q") || command.equals("query")) {
                     QueryRunner runner = new SingleQueryRunner(mailboxId);

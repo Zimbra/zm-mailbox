@@ -26,6 +26,8 @@
 package com.zimbra.cs.index;
 
 import java.util.HashMap;
+
+import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.service.ServiceException;
 
 /**
@@ -38,7 +40,7 @@ class MsgQueryResults extends ZimbraQueryResultsImpl
 //    QueryOperation mResults;
     ZimbraQueryResults mResults;
 
-    public MsgQueryResults(ZimbraQueryResults topLevelQueryOperation, byte[] types, int searchOrder) {
+    public MsgQueryResults(ZimbraQueryResults topLevelQueryOperation, byte[] types, SortBy searchOrder) {
         super(types, searchOrder);
         mResults = topLevelQueryOperation;
     }

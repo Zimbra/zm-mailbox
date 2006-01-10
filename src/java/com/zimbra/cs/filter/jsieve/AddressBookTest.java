@@ -163,7 +163,7 @@ public class AddressBookTest extends AbstractTest {
                             } catch (AddressException e1) {
                             }
                             results = mbox.search(null, "To:" + iaddrStr, 
-                                    SEARCH_TYPE, MailboxIndex.SEARCH_ORDER_DATE_ASC, 100);
+                                    SEARCH_TYPE, MailboxIndex.SortBy.DATE_ASCENDING, 100);
                             mLog.debug("searching for " + iaddrStr);
                             if (results.hasNext()) {
                                 mLog.debug("found " + iaddrStr + " in contacts");

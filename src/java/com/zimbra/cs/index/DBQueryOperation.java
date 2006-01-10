@@ -45,6 +45,7 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbMailItem.SearchConstraints;
 import com.zimbra.cs.db.DbMailItem.SearchResult;
 import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -599,7 +600,7 @@ class DBQueryOperation extends QueryOperation
             return;
         }
         int mailboxId = this.getMailbox().getId();
-        int searchOrder = this.getResultsSet().getSearchOrder();
+        SortBy searchOrder = this.getResultsSet().getSearchOrder();
         
         if (mIncludedItemIds != null && mIncludedItemIds.size() == 0) {
             mNoResultsQuery = true;
@@ -610,7 +611,7 @@ class DBQueryOperation extends QueryOperation
             try {
                 conn = DbPool.getConnection();
 
-                byte sort = MailboxIndex.getDbMailItemSortByte(searchOrder);
+                byte sort = searchOrder.getDbMailItemSortByte();
 
                 Folder[] folders = null;
                 Folder[] excludeFolders = null;

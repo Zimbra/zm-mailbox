@@ -32,6 +32,8 @@
 package com.zimbra.cs.index;
 
 import java.util.*;
+
+import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.service.ServiceException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -45,10 +47,10 @@ import org.apache.commons.logging.LogFactory;
  *
  */
 public class HitIdGrouper extends BufferingResultsGrouper {
-    private int mSortOrder;
+    private SortBy mSortOrder;
     private static Log mLog = LogFactory.getLog(HitIdGrouper.class);
     
-    public HitIdGrouper(ZimbraQueryResults hits, int sortOrder) {
+    public HitIdGrouper(ZimbraQueryResults hits, SortBy sortOrder) {
         super(hits);
         mSortOrder = sortOrder;
     }

@@ -168,7 +168,7 @@ public class TestUtil {
         types[0] = type;
 
         Set ids = new HashSet();
-        ZimbraQueryResults r = mbox.search(null, query, types, MailboxIndex.SEARCH_ORDER_DATE_DESC, 100);
+        ZimbraQueryResults r = mbox.search(null, query, types, MailboxIndex.SortBy.DATE_DESCENDING, 100);
         while (r.hasNext()) {
             ZimbraHit hit = r.getNext();
             ids.add(new Integer(hit.getItemId()));

@@ -400,7 +400,7 @@ public class DbTest {
 			}
 		}
         returnTypes[0] = type;
-		ZimbraQueryResults results = mailbox.search(null, "in:" + target, returnTypes, MailboxIndex.SEARCH_ORDER_DATE_DESC, 100);
+		ZimbraQueryResults results = mailbox.search(null, "in:" + target, returnTypes, MailboxIndex.SortBy.DATE_DESCENDING, 100);
 		try {
 		    for (ZimbraHit hit = results.getFirstHit(); hit != null; hit = results.getNext())
 		    	if (type == MailItem.TYPE_CONVERSATION)
@@ -503,7 +503,7 @@ public class DbTest {
 		Tag tag = mailbox.getTagById(null, tagId);
 		if (tag == null)
 			return;
-		ZimbraQueryResults results = mailbox.search(null, "tag:" + tag.getName(), new byte[] {MailItem.TYPE_CONVERSATION}, MailboxIndex.SEARCH_ORDER_DATE_DESC, 100);
+		ZimbraQueryResults results = mailbox.search(null, "tag:" + tag.getName(), new byte[] {MailItem.TYPE_CONVERSATION}, MailboxIndex.SortBy.DATE_DESCENDING, 100);
 		try {
 		    for (ZimbraHit hit = results.getFirstHit(); hit != null; hit = results.getNext())
 		        displayConversationSummary(((ConversationHit) hit).getConversation());
@@ -677,7 +677,7 @@ public class DbTest {
 					sb.append(' ');
 				sb.append(tok.nextToken());
 			}
-			ZimbraQueryResults results = mailbox.search(null, sb.toString(), new byte[] {MailItem.TYPE_CONVERSATION}, MailboxIndex.SEARCH_ORDER_DATE_DESC, 100);
+			ZimbraQueryResults results = mailbox.search(null, sb.toString(), new byte[] {MailItem.TYPE_CONVERSATION}, MailboxIndex.SortBy.DATE_DESCENDING, 100);
 			try {
 			    for (ZimbraHit hit = results.getFirstHit(); hit != null; hit = results.getNext())
 			        displayConversationSummary(((ConversationHit) hit).getConversation());

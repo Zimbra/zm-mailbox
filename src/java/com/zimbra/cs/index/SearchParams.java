@@ -55,7 +55,7 @@ public final class SearchParams
     public String getTypesStr() { return mGroupByStr; }
     public byte[] getTypes() { return types; }
     public String getSortByStr() { return mSortByStr; }
-    public int getSortBy() { return sortBy; }
+    public MailboxIndex.SortBy getSortBy() { return mSortBy; }
     public boolean getFetchFirst() { return mFetchFirst; }
     public boolean getMarkRead() { return mMarkRead; }
     public boolean getWantHtml() { return mWantHtml; }
@@ -70,7 +70,7 @@ public final class SearchParams
     }
     public void setSortByStr(String sortByStr) throws ServiceException { 
         mSortByStr = sortByStr;
-        sortBy = MailboxIndex.parseSortByString(mSortByStr);        
+        mSortBy = MailboxIndex.SortBy.lookup(sortByStr);
     }
     public void setFetchFirst(boolean fetch) { mFetchFirst = fetch; }
     public void setMarkRead(boolean read) { mMarkRead = read; }
@@ -120,6 +120,6 @@ public final class SearchParams
     private String mSortByStr;
     
     // parsed:
-    private int sortBy; // parsed value of sort by string
+    private MailboxIndex.SortBy mSortBy;
     private byte[] types; // types to seach for
 }

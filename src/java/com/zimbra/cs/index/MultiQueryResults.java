@@ -31,6 +31,7 @@
  */
 package com.zimbra.cs.index;
 
+import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.service.ServiceException;
 
 
@@ -46,11 +47,11 @@ import com.zimbra.cs.service.ServiceException;
  */
 public class MultiQueryResults implements ZimbraQueryResults
 {
-    int mSortOrder;
+    SortBy mSortOrder;
     HitIdGrouper[] mGroupedHits;
     private ZimbraHit mCachedNextHit = null;
     
-    public MultiQueryResults(ZimbraQueryResults[] res, int sortOrder)
+    public MultiQueryResults(ZimbraQueryResults[] res, SortBy sortOrder)
     {
         mSortOrder = sortOrder;
         

@@ -40,7 +40,7 @@ import com.zimbra.cs.service.ServiceException;
 public class ResultsPager 
 {
     private ZimbraQueryResults mResults;
-    private int mSortOrder;
+    private MailboxIndex.SortBy mSortOrder;
     private int mPrevMailItemId;
     
     private String mPrevSortValueStr;
@@ -52,7 +52,7 @@ public class ResultsPager
     
     private List mHits;
     
-    public int getSortOrder() { return mSortOrder; }
+    public MailboxIndex.SortBy getSortOrder() { return mSortOrder; }
     
     static public ResultsPager create(ZimbraQueryResults results, SearchParams params) throws ServiceException
     {
@@ -73,7 +73,7 @@ public class ResultsPager
         return toRet;
     }
     
-    public ResultsPager(ZimbraQueryResults results, int sortOrder, int prevItemId, String prevSortValueStr, long prevSortValueLong, int prevOffset, 
+    public ResultsPager(ZimbraQueryResults results, MailboxIndex.SortBy sortOrder, int prevItemId, String prevSortValueStr, long prevSortValueLong, int prevOffset, 
             boolean forward, int numResultsRequested) throws ServiceException {
         mResults = results;
         mSortOrder = sortOrder;
@@ -99,7 +99,7 @@ public class ResultsPager
      * @param offset
      * @throws ServiceException
      */
-    public ResultsPager(ZimbraQueryResults results, int sortOrder, int numResults, int offset) throws ServiceException {
+    public ResultsPager(ZimbraQueryResults results, MailboxIndex.SortBy sortOrder, int numResults, int offset) throws ServiceException {
         mResults = results;
         mSortOrder = sortOrder;
         mNumResultsRequested = numResults;

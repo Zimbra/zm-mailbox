@@ -42,6 +42,7 @@ import junit.framework.TestFailure;
 import junit.framework.TestResult;
 import junit.framework.TestSuite;
 
+import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -490,7 +491,7 @@ public class UnitTests extends TestCase {
                 break;
             }
             
-            ZimbraQueryResults res = searcher.search(zq, types, MailboxIndex.SEARCH_ORDER_DATE_DESC, false, false, 100);
+            ZimbraQueryResults res = searcher.search(zq, types, SortBy.DATE_DESCENDING, false, false, 100);
             try {
                 
 //                long endTime = System.currentTimeMillis();
