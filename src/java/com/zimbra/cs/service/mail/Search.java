@@ -271,7 +271,7 @@ public class Search extends DocumentHandler  {
                 mLog.error("Got an unknown hit type putting search hits: "+hit);
             }
             if (e != null && addSortField) {
-            	e.addAttribute(MailService.A_SORT_FIELD, pager.getSortOrder().toString());
+            	e.addAttribute(MailService.A_SORT_FIELD, hit.getSortField(pager.getSortOrder()).toString());
             }
             if (includeMailbox) {
                 String idStr = hit.getMailboxIdStr() + "/" + hit.getItemId();
