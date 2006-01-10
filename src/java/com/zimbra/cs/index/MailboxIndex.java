@@ -132,6 +132,108 @@ public final class MailboxIndex
         enumerateTermsForField(new Term(field,""), new TermEnumCallback(collection));
     }
     
+    /**
+    Finds and returns the smallest of three integers 
+    */
+   private static final int min(int a, int b, int c) {
+       int t = (a < b) ? a : b;
+       return (t < c) ? t : c;
+   }
+   
+   /**
+    * This static array saves us from the time required to create a new array
+    * everytime editDistance is called.
+    */
+   private int e[][] = new int[1][1];
+   
+   /**
+    Levenshtein distance also known as edit distance is a measure of similiarity
+    between two strings where the distance is measured as the number of character 
+    deletions, insertions or substitutions required to transform one string to 
+    the other string. 
+    <p>This method takes in four parameters; two strings and their respective 
+    lengths to compute the Levenshtein distance between the two strings.
+    The result is returned as an integer.
+    */ 
+   private final int editDistance(String s, String t, int n, int m) {
+       if (e.length <= n || e[0].length <= m) {
+           e = new int[Math.max(e.length, n+1)][Math.max(e[0].length, m+1)];
+       }
+       int d[][] = e; // matrix
+       int i; // iterates through s
+       int j; // iterates through t
+       char s_i; // ith character of s
+       
+       if (n == 0) return m;
+       if (m == 0) return n;
+       
+       // init matrix d
+       for (i = 0; i <= n; i++) d[i][0] = i;
+       for (j = 0; j <= m; j++) d[0][j] = j;
+       
+       // start computing edit distance
+       for (i = 1; i <= n; i++) {
+           s_i = s.charAt(i - 1);
+           for (j = 1; j <= m; j++) {
+               if (s_i != t.charAt(j-1))
+                   d[i][j] = min(d[i-1][j], d[i][j-1], d[i-1][j-1])+1;
+               else d[i][j] = min(d[i-1][j]+1, d[i][j-1]+1, d[i-1][j-1]);
+           }
+       }
+       
+       // we got the result!
+       return d[n][m];
+   }
+    
+    private List<String> suggestSpelling(String field, String token) throws ServiceException {
+        LinkedList<String> toRet = new LinkedList();
+        
+        token = token.toLowerCase();
+        
+        try {
+            CountedIndexReader reader = this.getCountedIndexReader();
+            try {
+                IndexReader iReader = reader.getReader();
+                
+                Term term = new Term(field, token);
+                int freq = iReader.docFreq(term);
+                int numDocs = iReader.numDocs();
+                
+                if (freq == 0 && numDocs > 0) {
+                    
+//                    float frequency = ((float)freq)/((float)numDocs);
+                    
+//                    System.out.println("Term: "+token+" appears in "+frequency*100+"% of documents");
+                    
+                    int suggestionDistance = Integer.MAX_VALUE;
+                    
+                    FuzzyTermEnum fuzzyEnum = new FuzzyTermEnum(iReader, term, 0.5f, 1);
+                    if (fuzzyEnum != null) {
+                        do {
+                            Term cur = fuzzyEnum.term();
+                            if (cur != null) {
+                                String curText = cur.text();
+                                System.out.println("\tSUGGEST: "+curText+" ["+fuzzyEnum.docFreq()+" docs]");
+                                int curDiff = editDistance(curText, token, curText.length(), token.length());
+                                if (curDiff < suggestionDistance) {
+                                    suggestionDistance = curDiff;
+                                    toRet = new LinkedList();
+                                    toRet.add(curText);
+                                }
+                            }
+                        } while(fuzzyEnum.next());
+                    }
+                }
+            } finally {
+                reader.release();
+            }
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Caught IOException opening index", e);
+        }
+        
+        return toRet;
+    }
+    
     public List<String> expandWildcardToken(String field, String token, int maxToReturn) throws ServiceException 
     {
         // right now, only support wildcards like foo*
@@ -148,7 +250,7 @@ public final class MailboxIndex
         try {
             CountedIndexReader reader = this.getCountedIndexReader();
             try {
-                List<String> toRet = new ArrayList();
+                List<String> toRet = new LinkedList();
                 Term firstTerm = new Term(field, token);
                 
                 IndexReader iReader = reader.getReader();
@@ -422,7 +524,46 @@ public final class MailboxIndex
         mMailboxId = mailboxId;
 
         Volume indexVol = Volume.getById(mailbox.getIndexVolume());
-        mIdxPath = indexVol.getMailboxDir(mailboxId, Volume.TYPE_INDEX) + File.separatorChar + '0';
+        String idxParentDir = indexVol.getMailboxDir(mailboxId, Volume.TYPE_INDEX);
+        
+        // this must be different from the idxParentDir (see the IMPORTANT comment below)
+        mIdxPath = idxParentDir + File.separatorChar + '0';
+        
+        {
+        	File parentDirFile = new File(idxParentDir);
+        	
+        	// IMPORTANT!  Don't make the actual index directory (mIdxPath) yet!  
+        	//
+        	// The runtime open-index code checks the existance of the actual index directory:  
+        	// if it does exist but we cannot open the index, we do *NOT* create it under the 
+        	// assumption that the index was somehow corrupted and shouldn't be messed-with....on the 
+        	// other hand if the index dir does NOT exist, then we assume it has never existed (or 
+        	// was deleted intentionally) and therefore we should just create an index.
+        	if (!parentDirFile.exists())
+        		parentDirFile.mkdirs();
+        	
+        	if (!parentDirFile.canRead()) {
+        		throw ServiceException.FAILURE("Cannot READ index directory (mailbox="+mailbox.getId()+ " idxPath="+mIdxPath+")", null);
+        	}
+        	if (!parentDirFile.canWrite()) {
+        		throw ServiceException.FAILURE("Cannot WRITE index directory (mailbox="+mailbox.getId()+ " idxPath="+mIdxPath+")", null);
+        	}
+
+        	// the Lucene code does not atomically swap the "segments" and "segments.new"
+        	// files...so it is possible that a previous run of the server crashed exactly in such
+        	// a way that we have a "segments.new" file but not a "segments" file.  We we will check here 
+        	// for the special situation that we have a segments.new
+        	// file but not a segments file...
+        	File segments = new File(mIdxPath, "segments");
+        	if (!segments.exists()) {
+        		File segments_new = new File(mIdxPath, "segments.new");
+        		if (segments_new.exists()) 
+        			segments_new.renameTo(segments);
+        	}
+//        } catch(IOException e) {
+//        	throw ServiceException.FAILURE("Error validating index path (mailbox="+mailbox.getId()+ " root="+root+")", e);
+        }	
+        
         mLuceneSortDateDesc = new Sort(new SortField(LuceneFields.L_DATE, SortField.STRING, true));
         mLuceneSortDateAsc = new Sort(new SortField(LuceneFields.L_DATE, SortField.STRING, false));
         mLuceneSortSubjectDesc = new Sort(new SortField(LuceneFields.L_SORT_SUBJECT, SortField.STRING, true));
@@ -792,7 +933,8 @@ public final class MailboxIndex
                 idxFile.mkdirs();
             }
             writer = new IndexWriter(idxFile, ZimbraAnalyzer.getInstance(), true);
-            // TODO throw error if this fails...?
+            if (writer == null) 
+            	throw new IOException("Failed to open IndexWriter in directory "+idxFile.getAbsolutePath());
         }
 
         ///////////////////////////////////////////////////
@@ -880,6 +1022,7 @@ public final class MailboxIndex
     {
         IndexReader reader = null;
         try {
+        	
             /* uggghhh!  nasty.  FIXME - need to coordinate with index writer better 
              (manually create a RamDirectory and index into that?) */
             flush();
@@ -920,37 +1063,30 @@ public final class MailboxIndex
     static class CountedIndexReader {
         private IndexReader mReader;
         private int mCount = 1;
-//        private static Log mLog = LogFactory.getLog(CountedIndexReader.class);
         
         public CountedIndexReader(IndexReader reader) {
             mReader= reader;
-//            mLog.debug("Created new CountedIndexReader: "+toString());
         }
         public IndexReader getReader() { return mReader; }
         
         public synchronized void addRef() {
-//            mLog.debug("addRef CountedIndexReader: "+toString());
             mCount++;
         }
         
         public synchronized void forceClose() {
-//            mLog.debug("forceClose CountedIndexReader: "+toString());
             closeIt();
         }
         
         public synchronized void release() {
-//            mLog.debug("release CountedIndexReader: "+toString());
             mCount--;
             assert(mCount >= 0);
             if (0 == mCount) {
-//                mLog.debug("Closing IndexReader for CountedIndexReader: "+toString());
                 closeIt();
             }
         }
         
         private void closeIt() {
             try {
-//                mLog.debug("IndexReader for CountedIndexReader: "+toString()+" closed.");
                 mReader.close();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -964,8 +1100,6 @@ public final class MailboxIndex
                 throw new java.lang.RuntimeException("Reader isn't closed in CountedIndexReader's finalizer!");
             }
         }
-        
-        
     }
     
     static class CountedIndexSearcher {

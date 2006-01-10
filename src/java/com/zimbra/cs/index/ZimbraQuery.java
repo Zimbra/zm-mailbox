@@ -1073,7 +1073,7 @@ public final class ZimbraQuery {
         private LinkedList<String> mOredTokens;
         private String mWildcardTerm;
         
-        private static final int MAX_WILDCARD_TERMS = 100;
+        private static final int MAX_WILDCARD_TERMS = 500;
         
         public TextQuery(Mailbox mbox, Analyzer analyzer, int modifier, int qType, String text) throws ServiceException {
             super(modifier, qType);
@@ -1104,41 +1104,45 @@ public final class ZimbraQuery {
                 // ignore
             }
             
-                // must look at original text here b/c analyzer strips *'s
-                if (text.length() > 0 && text.charAt(text.length()-1) == '*')
-                {
-                    // wildcard query!
-                    String wcToken;
-                    
-                    if (mTokens.size() > 0)
-                        wcToken = mTokens.remove(mTokens.size()-1);
-                    else
-                        wcToken = text;
-                    
-                    // the field may have a tokenizer which removed the *
-//                    if (wcToken.indexOf('*') < 0)
-//                        wcToken = wcToken+'*';
-                    
-                    // strip the '*' from the end
-                    int starIdx = wcToken.indexOf('*');
-                    if (starIdx >= 0)
-                        wcToken = wcToken.substring(0, starIdx);
-                    
-                    if (wcToken.length() > 0) 
-                        mWildcardPrefix = wcToken;
-                    
-                    
-//                    if (wcToken.length() >= 1) {
-//                        mWildcardTerm = wcToken;
-//                        MailboxIndex mbidx = mbox.getMailboxIndex();
-//                        List<String> expandedTokens = mbidx.expandWildcardToken(QueryTypeString(qType), wcToken, MAX_WILDCARD_TERMS);
-//                        
-//                        for (String token : expandedTokens) {
-//                            mOredTokens.add(token);
-//                        }
-//                    }
-                }
+            // must look at original text here b/c analyzer strips *'s
+            if (text.length() > 0 && text.charAt(text.length()-1) == '*')
+            {
+                // wildcard query!
+                String wcToken;
                 
+                if (mTokens.size() > 0)
+                    wcToken = mTokens.remove(mTokens.size()-1);
+                else
+                    wcToken = text;
+                
+                // the field may have a tokenizer which removed the *
+                if (wcToken.indexOf('*') < 0)
+                    wcToken = wcToken+'*';
+                
+//                // strip the '*' from the end
+//                int starIdx = wcToken.indexOf('*');
+//                if (starIdx >= 0)
+//                    wcToken = wcToken.substring(0, starIdx);
+//                
+//                if (wcToken.length() > 0) 
+//                    mWildcardPrefix = wcToken;
+//                
+                
+                if (wcToken.length() >= 1) {
+                    mWildcardTerm = wcToken;
+                    MailboxIndex mbidx = mbox.getMailboxIndex();
+                    List<String> expandedTokens = mbidx.expandWildcardToken(QueryTypeString(qType), wcToken, MAX_WILDCARD_TERMS);
+                    
+                    for (String token : expandedTokens) {
+                        mOredTokens.add(token);
+                    }
+                }
+            }
+            
+//            MailboxIndex mbidx = mbox.getMailboxIndex();
+//            for (String token : mTokens) {
+//                mbidx.suggestSpelling(QueryTypeString(qType), token);
+//            }
         }
         
         protected QueryOperation getQueryOperation(boolean truth) {
