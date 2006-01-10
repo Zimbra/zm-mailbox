@@ -683,8 +683,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         // XXX: could use mSession.getMailbox() instead of saving a copy...
         mMailbox = mailbox;
         mSession = session;
-        // TODO: ANAND: mSession.setHandler(this);
-        // TODO: ANAND: throw out too big inputs.
+        mSession.setHandler(this);
 
         sendCapability();
         sendOK(tag, "LOGIN completed");
@@ -1852,6 +1851,8 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             if (received || removed)
                 sendUntagged(i4folder.getSize() + " EXISTS");
 
+            if (flush)
+                mConnection.flush();
         }
     }
 

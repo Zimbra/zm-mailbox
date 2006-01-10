@@ -41,6 +41,8 @@ public abstract class OzFilter {
 
     public abstract void close() throws IOException;
 
+    public abstract void flush() throws IOException;
+    
     private OzFilter mNextFilter;
     
     void setNextFilter(OzFilter next) {

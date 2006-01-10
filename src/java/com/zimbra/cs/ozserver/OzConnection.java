@@ -489,7 +489,7 @@ public class OzConnection {
 
         public void write(ByteBuffer wbb, boolean flush) throws IOException {
             synchronized (mLock) {
-                if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("plain filter: queueing write", wbb, false));
+                if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("plain filter: write: flush=" + flush, wbb, false));
                 mWriteBuffers.add(wbb);
                 if (flush) {
                     enableWriteInterest();
@@ -517,6 +517,15 @@ public class OzConnection {
                 
                 if (mWriteBuffers.isEmpty()) {
                     channelClose();
+                }
+            }
+        }
+
+        public void flush() throws IOException {
+            synchronized (mLock) {
+                if (mTrace) mLog.trace("plain filter: flush called");
+                if (!mWriteBuffers.isEmpty()) {
+                    enableWriteInterest();
                 }
             }
         }
@@ -670,6 +679,12 @@ public class OzConnection {
         }
     }
 
+    public void flush() throws IOException {
+        synchronized (mLock) {
+            mFilters.get(0).flush();
+        }
+    }
+    
     public boolean isWritePending() {
         synchronized (mLock) {
             return mWritePending;

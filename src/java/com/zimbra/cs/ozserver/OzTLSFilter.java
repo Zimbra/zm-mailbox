@@ -323,6 +323,8 @@ public class OzTLSFilter extends OzFilter {
                     throw new RuntimeException("can not handle wrap status: " + result.getStatus());
                 }
             }
+            
+            mPendingFlush = false;
         }
     }
     
@@ -343,8 +345,26 @@ public class OzTLSFilter extends OzFilter {
                 mPendingWriteBuffers.add(src);
                 return;
             }
+            
+            if (flush) {
+                mPendingFlush = true;
+            }
             mPendingWriteBuffers.add(src);
+            if (mDebug) debug("write: processing pending writes");
             processPendingWrites();
+        }
+    }
+
+    public void flush() throws IOException {
+        if (mDebug) debug("flush called");
+        synchronized (mPendingWriteBuffers) {
+            mPendingFlush = true;
+            if (mHandshakeComplete) {
+                if (mTrace) trace("handshake completed, will flush");
+                processPendingWrites();
+            } else {
+                if (mTrace) trace("handshake in progress not flushing what is queued in this filter");
+            }
         }
     }
 
@@ -413,4 +433,5 @@ public class OzTLSFilter extends OzFilter {
     public int getPreferredReadBufferSize() {
         return mPacketBufferSize;
     }
+
 }
