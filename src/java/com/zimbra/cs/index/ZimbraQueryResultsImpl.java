@@ -28,6 +28,7 @@
  */
 package com.zimbra.cs.index;
 
+import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
@@ -74,7 +75,7 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
     private HashMap mNoteHits;
     private HashMap mApptHits;
   
-  ZimbraQueryResultsImpl(byte[] types, int searchOrder) { 
+  ZimbraQueryResultsImpl(byte[] types, SortBy searchOrder) { 
       mTypes = types;
       
       mSearchOrder = searchOrder;
@@ -93,9 +94,9 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
   }
   
   private byte[] mTypes;
-  private int mSearchOrder;
+  private SortBy mSearchOrder;
   
-  int getSearchOrder() {
+  SortBy getSearchOrder() {
       return mSearchOrder;
   }
   

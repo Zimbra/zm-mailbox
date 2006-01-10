@@ -1495,7 +1495,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                     search = '(' + i4folder.getQuery() + ") (" + search + ')';
                 ZimbraLog.imap.info("[ search is: " + search + " ]");
 
-                ZimbraQueryResults zqr = mMailbox.search(getContext(), search, MESSAGE_TYPES, MailboxIndex.SEARCH_ORDER_DATE_ASC, 1000);
+                ZimbraQueryResults zqr = mMailbox.search(getContext(), search, MESSAGE_TYPES, MailboxIndex.SortBy.DATE_ASCENDING, 1000);
                 try {
                     for (ZimbraHit hit = zqr.getFirstHit(); hit != null; hit = zqr.getNext()) {
                         ImapMessage i4msg = mSession.getFolder().getById(hit.getItemId());

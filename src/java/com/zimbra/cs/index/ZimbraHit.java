@@ -31,6 +31,7 @@ package com.zimbra.cs.index;
 import java.util.Comparator;
 import java.util.Date;
 
+import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.ServiceException;
@@ -83,18 +84,18 @@ public abstract class ZimbraHit
         return mScore;
     }
 
-    final public void cacheSortField(int sortType, Object sortKey) {
+    final public void cacheSortField(SortBy sortType, Object sortKey) {
         switch(sortType) {
-        case MailboxIndex.SEARCH_ORDER_DATE_ASC:
-        case MailboxIndex.SEARCH_ORDER_DATE_DESC:
+        case DATE_ASCENDING:
+        case DATE_DESCENDING:
             mCachedDate = ((Long)sortKey).longValue();
             break;
-        case MailboxIndex.SEARCH_ORDER_NAME_ASC:
-        case MailboxIndex.SEARCH_ORDER_NAME_DESC:
+        case NAME_ASCENDING:
+        case NAME_DESCENDING:
             mCachedName = (String)sortKey;
             break;
-        case MailboxIndex.SEARCH_ORDER_SUBJ_ASC:
-        case MailboxIndex.SEARCH_ORDER_SUBJ_DESC:
+        case SUBJ_ASCENDING:
+        case SUBJ_DESCENDING:
             mCachedSubj = (String)sortKey;
             break;
         }
@@ -151,9 +152,9 @@ public abstract class ZimbraHit
     
     private static class ZimbraHitSortAndIdComparator implements Comparator 
     {
-        int mSortOrder;
+        SortBy mSortOrder;
         
-        ZimbraHitSortAndIdComparator(int sortOrder){
+        ZimbraHitSortAndIdComparator(SortBy sortOrder){
             mSortOrder = sortOrder;
         }
         
@@ -192,7 +193,7 @@ public abstract class ZimbraHit
      * 
      * @param sortOrder
      */
-    static public Comparator getSortAndIdComparator(int sortOrder) {
+    static public Comparator getSortAndIdComparator(SortBy sortOrder) {
         return new ZimbraHitSortAndIdComparator(sortOrder); 
     }
     
@@ -204,26 +205,26 @@ public abstract class ZimbraHit
      * @return <0 if "this" is BEFORE other, 0 if EQUAL, >0 if this AFTER other
      * @throws ServiceException
      */
-    final int compareBySortField(int sortOrder, ZimbraHit other) throws ServiceException {
+    final int compareBySortField(MailboxIndex.SortBy sortOrder, ZimbraHit other) throws ServiceException {
         long retVal = 0;
         final boolean dumpComp = false;
         
         switch (sortOrder) {
-        case MailboxIndex.SEARCH_ORDER_DATE_ASC:
+        case DATE_ASCENDING:
             if (dumpComp) {
                 System.out.println("Comparing DateAsc: \""+getDate()+"\" to \"" + other.getDate()+"\"");
                 System.out.println("\tMySubj: \""+getSubject()+"\" other: \"" + other.getSubject()+"\"");
             }
             retVal = (other.getDate() - getDate());
             break;
-        case MailboxIndex.SEARCH_ORDER_DATE_DESC: /* 5...4...3...*/
+        case DATE_DESCENDING: /* 5...4...3...*/
             if (dumpComp) {
                 System.out.println("Comparing DateDesc: \""+getDate()+"\" to \"" + other.getDate()+"\"");
                 System.out.println("\tMySubj: \""+getSubject()+"\" other: \"" + other.getSubject()+"\"");
             }
             retVal = (getDate() - other.getDate());
             break;
-        case MailboxIndex.SEARCH_ORDER_SUBJ_ASC:
+        case SUBJ_ASCENDING:
             if (dumpComp) {
                 System.out.println("Comparing SubjAsc: \""+getSubject()+"\" to \"" + other.getSubject()+"\"");
             }
@@ -233,7 +234,7 @@ public abstract class ZimbraHit
              */
             retVal = -1 * (getSubject().toUpperCase().compareTo(other.getSubject().toUpperCase()));
             break;
-        case MailboxIndex.SEARCH_ORDER_SUBJ_DESC:
+        case SUBJ_DESCENDING:
             if (dumpComp) {
                 System.out.println("Comparing SubjDesc: \""+getSubject()+"\" to \"" + other.getSubject()+"\"");
             }
@@ -243,7 +244,7 @@ public abstract class ZimbraHit
              */
             retVal = (getSubject().toUpperCase().compareTo(other.getSubject().toUpperCase()));
            break;
-        case MailboxIndex.SEARCH_ORDER_NAME_ASC:
+        case NAME_ASCENDING:
             if (dumpComp) {
                 System.out.println("Comparing NameAsc: \""+getName()+"\" to \"" + other.getName()+"\"");
             }
@@ -253,7 +254,7 @@ public abstract class ZimbraHit
              */
             retVal = -1 * (getName().toUpperCase().compareTo(other.getName().toUpperCase()));
             break;
-        case MailboxIndex.SEARCH_ORDER_NAME_DESC:
+        case NAME_DESCENDING:
             if (dumpComp) {
                 System.out.println("Comparing NameDesc: \""+getName()+"\" to \"" + other.getName()+"\"");
             }

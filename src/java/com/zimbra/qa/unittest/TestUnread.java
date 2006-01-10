@@ -377,7 +377,7 @@ public class TestUnread extends TestCase
         verifySetUp();
         
         byte[] types = { MailItem.TYPE_MESSAGE };
-        ZimbraQueryResults results = mMbox.search(null, "is:unread", types, MailboxIndex.SEARCH_ORDER_DATE_DESC, 100);
+        ZimbraQueryResults results = mMbox.search(null, "is:unread", types, MailboxIndex.SortBy.DATE_DESCENDING, 100);
         assertTrue("No search results found", results.hasNext());
         results.doneWithSearchResults();
     }

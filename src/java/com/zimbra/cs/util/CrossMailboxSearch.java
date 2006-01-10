@@ -408,7 +408,7 @@ public class CrossMailboxSearch
                 }
                 auth(user, pw, port, host);
                 
-                String sortStr = MailboxIndex.SORT_BY_DATE_DESCENDING;
+                String sortStr = MailboxIndex.SortBy.DATE_DESCENDING.getName();
                 String typesStr = MailboxIndex.GROUP_BY_MESSAGE;
                 
                 // set search params

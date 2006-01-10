@@ -49,6 +49,7 @@ import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 
+import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.index.queryparser.ZimbraQueryParser;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.Folder;
@@ -1541,7 +1542,7 @@ public final class ZimbraQuery {
 	 * @throws IOException
 	 * @throws ServiceException
 	 */
-	public ZimbraQueryResults execute(int mailboxId, MailboxIndex mbidx, byte[] types, int searchOrder,
+	public ZimbraQueryResults execute(int mailboxId, MailboxIndex mbidx, byte[] types, SortBy searchOrder,
 	        boolean includeTrash, boolean includeSpam, int chunkSize) throws IOException, ServiceException 
 	        {
 	    BaseQuery head = getHead();

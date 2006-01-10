@@ -31,6 +31,7 @@ package com.zimbra.cs.index;
 import java.io.IOException;
 import java.util.Comparator;
 
+import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
@@ -86,7 +87,7 @@ abstract class QueryOperation implements ZimbraQueryResults
     
     ////////////////////
     // Top-Level Execution  
-    final ZimbraQueryResults run(Mailbox mbox, MailboxIndex mbidx, byte[] types, int searchOrder, int chunkSize) throws IOException, ServiceException
+    final ZimbraQueryResults run(Mailbox mbox, MailboxIndex mbidx, byte[] types, SortBy searchOrder, int chunkSize) throws IOException, ServiceException
     {
         mIsToplevelQueryOp = true;
         

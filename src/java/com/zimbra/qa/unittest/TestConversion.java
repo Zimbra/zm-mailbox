@@ -81,7 +81,7 @@ public class TestConversion extends TestCase {
         Mailbox mbox = Mailbox.getMailboxByAccount(account);
         String query = "subject:Rich text (TNEF) test";
         ZimbraQueryResults results = mbox.search(null, query,
-            new byte[] { MailItem.TYPE_MESSAGE}, MailboxIndex.SEARCH_ORDER_SUBJ_ASC, 100);
+            new byte[] { MailItem.TYPE_MESSAGE}, MailboxIndex.SortBy.SUBJ_ASCENDING, 100);
         assertTrue("No results found for '" + query + "'", results.hasNext());
         
         // Make sure that attachments have been extracted out of winmail.dat

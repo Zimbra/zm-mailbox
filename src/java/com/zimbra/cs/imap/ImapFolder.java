@@ -107,7 +107,7 @@ class ImapFolder {
     private List<MailItem> loadVirtualFolder(SearchFolder search, Mailbox mailbox, OperationContext octxt) throws ServiceException {
         List<MailItem> msgs = new ArrayList<MailItem>();
         try {
-            ZimbraQueryResults zqr = mailbox.search(octxt, mQuery, ImapHandler.MESSAGE_TYPES, MailboxIndex.SEARCH_ORDER_DATE_ASC, 1000);
+            ZimbraQueryResults zqr = mailbox.search(octxt, mQuery, ImapHandler.MESSAGE_TYPES, MailboxIndex.SortBy.DATE_ASCENDING, 1000);
             int i = 0, hitIds[] = new int[100];
             Arrays.fill(hitIds, Mailbox.ID_AUTO_INCREMENT);
             try {

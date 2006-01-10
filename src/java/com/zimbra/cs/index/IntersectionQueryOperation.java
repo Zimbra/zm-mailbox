@@ -37,6 +37,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 import org.apache.commons.logging.Log;
@@ -233,7 +234,7 @@ class IntersectionQueryOperation extends QueryOperation {
     private static class HitGrouper {
         private QueryOperation mSubOp = null;
 
-        private int mSortOrder;
+        private SortBy mSortOrder;
 
         public String toString() {
             StringBuffer toRet = new StringBuffer(mSubOp.toString()+"\n\t");
@@ -244,7 +245,7 @@ class IntersectionQueryOperation extends QueryOperation {
             return toRet.toString();
         }
 
-        HitGrouper(QueryOperation subOperation, int sortOrder) {
+        HitGrouper(QueryOperation subOperation, SortBy sortOrder) {
             mSubOp = subOperation;
             mSortOrder = sortOrder;
         }

@@ -40,6 +40,7 @@ import org.apache.commons.logging.LogFactory;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.*;
+import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Conversation;
@@ -118,7 +119,7 @@ public class Search extends DocumentHandler  {
         if (groupByStr == null)
             groupByStr = request.getAttribute(MailService.A_GROUPBY, MailboxIndex.GROUP_BY_CONVERSATION);
         params.setTypesStr(groupByStr);
-        params.setSortByStr(request.getAttribute(MailService.A_SORTBY, MailboxIndex.SORT_BY_DATE_DESCENDING));
+        params.setSortByStr(request.getAttribute(MailService.A_SORTBY, MailboxIndex.SortBy.DATE_DESCENDING.getName()));
         params.setFetchFirst(request.getAttributeBool(MailService.A_FETCH, false));
         if (params.getFetchFirst()) {
             params.setWantHtml(request.getAttributeBool(MailService.A_WANT_HTML, false));
@@ -202,9 +203,8 @@ public class Search extends DocumentHandler  {
         if (results == null) {
             try {
                 byte[] types = MailboxIndex.parseGroupByString(params.getTypesStr());
-                int sort = MailboxIndex.parseSortByString(params.getSortByStr());
                 
-                results = mbox.search(lc.getOperationContext(), params.getQueryStr(), types, sort, params.getLimit() + params.getOffset());
+                results = mbox.search(lc.getOperationContext(), params.getQueryStr(), types, params.getSortBy(), params.getLimit() + params.getOffset());
                 if (cacheResults) {
                     session.putQueryResults(params.getQueryStr(), params.getTypesStr(), params.getSortByStr(), results);
                 }
@@ -271,7 +271,7 @@ public class Search extends DocumentHandler  {
                 mLog.error("Got an unknown hit type putting search hits: "+hit);
             }
             if (e != null && addSortField) {
-            	e.addAttribute(MailService.A_SORT_FIELD, hit.getSortField(pager.getSortOrder()).toString());
+            	e.addAttribute(MailService.A_SORT_FIELD, pager.getSortOrder().toString());
             }
             if (includeMailbox) {
                 String idStr = hit.getMailboxIdStr() + "/" + hit.getItemId();
