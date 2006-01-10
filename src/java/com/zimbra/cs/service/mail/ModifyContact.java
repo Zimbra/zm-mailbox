@@ -29,7 +29,6 @@
 package com.zimbra.cs.service.mail;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import com.zimbra.cs.mailbox.Contact;
@@ -61,9 +60,8 @@ public class ModifyContact extends WriteOpDocumentHandler  {
 
         ItemId iid = new ItemId(cn.getAttribute(MailService.A_ID), lc);
 
-        HashMap attrs = new HashMap();
-        for (Iterator it = cn.elementIterator(MailService.E_ATTRIBUTE); it.hasNext(); ) {
-            Element e = (Element) it.next();
+        HashMap<String, String> attrs = new HashMap<String, String>();
+        for (Element e : cn.listElements(MailService.E_ATTRIBUTE)) {
             String name = e.getAttribute(MailService.A_ATTRIBUTE_NAME);
             attrs.put(name, e.getText());
         }

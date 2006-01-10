@@ -29,7 +29,6 @@
 package com.zimbra.cs.service.mail;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import com.zimbra.cs.mailbox.Contact;
@@ -60,11 +59,12 @@ public class CreateContact extends WriteOpDocumentHandler  {
         Element cn = request.getElement(MailService.E_CONTACT);
         ItemId iidFolder = new ItemId(cn.getAttribute(MailService.A_FOLDER, DEFAULT_FOLDER), lc);
         String tagsStr = cn.getAttribute(MailService.A_TAGS, null);
-        HashMap attrs = new HashMap();
+        HashMap<String, String> attrs = new HashMap<String, String>();
 
-        for (Iterator it = cn.elementIterator(MailService.E_ATTRIBUTE); it.hasNext(); ) {
-            Element e = (Element) it.next();
+        for (Element e : cn.listElements(MailService.E_ATTRIBUTE)) {
             String name = e.getAttribute(MailService.A_ATTRIBUTE_NAME);
+            if (name.trim().equals(""))
+                throw ServiceException.INVALID_REQUEST("at least one contact field name is blank", null);
             String value = e.getText();
             if (value != null && !value.equals(""))
                 attrs.put(name, value);

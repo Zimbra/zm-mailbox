@@ -36,7 +36,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.*;
@@ -251,11 +250,11 @@ public class ToXML {
     }
 
     public static Element encodeContact(Element parent, ZimbraContext lc, Contact contact,
-										ContactAttrCache cacache, boolean summary, List attrFilter) {
+										ContactAttrCache cacache, boolean summary, List<String> attrFilter) {
         return encodeContact(parent, lc, contact, cacache, summary, attrFilter, NOTIFY_FIELDS);
     }
     public static Element encodeContact(Element parent, ZimbraContext lc, Contact contact,
-            ContactAttrCache cacache, boolean summary, List attrFilter, int fields) {
+            ContactAttrCache cacache, boolean summary, List<String> attrFilter, int fields) {
         Element elem = parent.addElement(MailService.E_CONTACT);
         elem.addAttribute(MailService.A_ID, lc.formatItemId(contact));
         if (needToOutput(fields, Change.MODIFIED_CONTENT) && contact.getSavedSequence() != 0)
@@ -269,13 +268,12 @@ public class ToXML {
         if (summary || !needToOutput(fields, Change.MODIFIED_CONTENT))
             return elem;
 
-        Map attrs = contact.getFields();
+        Map<String, String> attrs = contact.getFields();
         if (attrFilter != null) {
-            for (Iterator it = attrFilter.iterator(); it.hasNext(); ) {
-            	// HERE: How to distinguish between a non-existent attribute and
-            	// an existing attribute with null or empty string value?
-                String name = (String) it.next();
-                String value = (String) attrs.get(name);
+            for (String name : attrFilter) {
+            	// XXX: How to distinguish between a non-existent attribute and
+            	//      an existing attribute with null or empty string value?
+                String value = attrs.get(name);
 				if (value == null || value.equals(""))
 				    continue;
                 if (cacache != null)
@@ -284,11 +282,10 @@ public class ToXML {
                     elem.addAttribute(name, value, Element.DISP_ELEMENT);
             }
         } else {
-            for (Iterator it = attrs.entrySet().iterator(); it.hasNext(); ) {
-                Map.Entry me = (Entry) it.next();
-                String name = (String) me.getKey();
-                String value = (String) me.getValue();
-				if (value == null || value.equals(""))
+            for (Map.Entry<String, String> me : attrs.entrySet()) {
+                String name = me.getKey();
+                String value = me.getValue();
+				if (name == null || name.trim().equals("") || value == null || value.equals(""))
 				    continue;
                 if (cacache != null)
                     cacache.makeAttr(elem, name, value);
@@ -675,14 +672,9 @@ public class ToXML {
 
             Element invElt = m.addElement(MailService.E_INVITE);
             encodeTimeZoneMap(invElt, appt.getTimeZoneMap());
-            Invite[] invs = appt.getInvites(invId);
-            for (int i = 0; i < invs.length; i++) {
-                encodeInvite(invElt, lc, appt, invs[i], NOTIFY_FIELDS, repliesWithInvites);
-            }
-            
-//            if (msg.isInvite())
-//                encodeInvitesForMessage(m, msg, NOTIFY_FIELDS);
-            
+            for (Invite inv : appt.getInvites(invId))
+                encodeInvite(invElt, lc, appt, inv, NOTIFY_FIELDS, repliesWithInvites);
+
             List parts = Mime.getParts(mm);
             if (parts != null && !parts.isEmpty()) {
                 MPartInfo body = Mime.getBody(parts, wantHTML);
@@ -776,7 +768,6 @@ public class ToXML {
         String fragment = msg.getFragment();
         if (!fragment.equals(""))
             e.addAttribute(MailService.E_FRAG, fragment, Element.DISP_CONTENT);
-
         
         if (msg.isInvite()) 
             try {
@@ -900,8 +891,8 @@ public class ToXML {
                 List /*Appointment.ReplyInfo */ fbas = apptOrNull.getReplyInfo(invite);
 
                 Element repliesElt = e.addElement(MailService.A_APPT_REPLIES);
-                for (Iterator iter = fbas.iterator(); iter.hasNext();) {
-                    Appointment.ReplyInfo repInfo = (Appointment.ReplyInfo)iter.next();
+                for (Iterator iter = fbas.iterator(); iter.hasNext(); ) {
+                    Appointment.ReplyInfo repInfo = (Appointment.ReplyInfo) iter.next();
 
                     Element curElt = repliesElt.addElement(MailService.E_APPT_REPLY);
                     if (repInfo.mRecurId != null) {
