@@ -422,7 +422,46 @@ public final class MailboxIndex
         mMailboxId = mailboxId;
 
         Volume indexVol = Volume.getById(mailbox.getIndexVolume());
-        mIdxPath = indexVol.getMailboxDir(mailboxId, Volume.TYPE_INDEX) + File.separatorChar + '0';
+        String idxParentDir = indexVol.getMailboxDir(mailboxId, Volume.TYPE_INDEX);
+        
+        // this must be different from the idxParentDir (see the IMPORTANT comment below)
+        mIdxPath = idxParentDir + File.separatorChar + '0';
+        
+        {
+        	File parentDirFile = new File(idxParentDir);
+        	
+        	// IMPORTANT!  Don't make the actual index directory (mIdxPath) yet!  
+        	//
+        	// The runtime open-index code checks the existance of the actual index directory:  
+        	// if it does exist but we cannot open the index, we do *NOT* create it under the 
+        	// assumption that the index was somehow corrupted and shouldn't be messed-with....on the 
+        	// other hand if the index dir does NOT exist, then we assume it has never existed (or 
+        	// was deleted intentionally) and therefore we should just create an index.
+        	if (!parentDirFile.exists())
+        		parentDirFile.mkdirs();
+        	
+        	if (!parentDirFile.canRead()) {
+        		throw ServiceException.FAILURE("Cannot READ index directory (mailbox="+mailbox.getId()+ " idxPath="+mIdxPath+")", null);
+        	}
+        	if (!parentDirFile.canWrite()) {
+        		throw ServiceException.FAILURE("Cannot WRITE index directory (mailbox="+mailbox.getId()+ " idxPath="+mIdxPath+")", null);
+        	}
+
+        	// the Lucene code does not atomically swap the "segments" and "segments.new"
+        	// files...so it is possible that a previous run of the server crashed exactly in such
+        	// a way that we have a "segments.new" file but not a "segments" file.  We we will check here 
+        	// for the special situation that we have a segments.new
+        	// file but not a segments file...
+        	File segments = new File(mIdxPath, "segments");
+        	if (!segments.exists()) {
+        		File segments_new = new File(mIdxPath, "segments.new");
+        		if (segments_new.exists()) 
+        			segments_new.renameTo(segments);
+        	}
+//        } catch(IOException e) {
+//        	throw ServiceException.FAILURE("Error validating index path (mailbox="+mailbox.getId()+ " root="+root+")", e);
+        }	
+        
         mLuceneSortDateDesc = new Sort(new SortField(LuceneFields.L_DATE, SortField.STRING, true));
         mLuceneSortDateAsc = new Sort(new SortField(LuceneFields.L_DATE, SortField.STRING, false));
         mLuceneSortSubjectDesc = new Sort(new SortField(LuceneFields.L_SORT_SUBJECT, SortField.STRING, true));
@@ -792,7 +831,8 @@ public final class MailboxIndex
                 idxFile.mkdirs();
             }
             writer = new IndexWriter(idxFile, ZimbraAnalyzer.getInstance(), true);
-            // TODO throw error if this fails...?
+            if (writer == null) 
+            	throw new IOException("Failed to open IndexWriter in directory "+idxFile.getAbsolutePath());
         }
 
         ///////////////////////////////////////////////////
@@ -880,6 +920,7 @@ public final class MailboxIndex
     {
         IndexReader reader = null;
         try {
+        	
             /* uggghhh!  nasty.  FIXME - need to coordinate with index writer better 
              (manually create a RamDirectory and index into that?) */
             flush();
@@ -920,37 +961,30 @@ public final class MailboxIndex
     static class CountedIndexReader {
         private IndexReader mReader;
         private int mCount = 1;
-//        private static Log mLog = LogFactory.getLog(CountedIndexReader.class);
         
         public CountedIndexReader(IndexReader reader) {
             mReader= reader;
-//            mLog.debug("Created new CountedIndexReader: "+toString());
         }
         public IndexReader getReader() { return mReader; }
         
         public synchronized void addRef() {
-//            mLog.debug("addRef CountedIndexReader: "+toString());
             mCount++;
         }
         
         public synchronized void forceClose() {
-//            mLog.debug("forceClose CountedIndexReader: "+toString());
             closeIt();
         }
         
         public synchronized void release() {
-//            mLog.debug("release CountedIndexReader: "+toString());
             mCount--;
             assert(mCount >= 0);
             if (0 == mCount) {
-//                mLog.debug("Closing IndexReader for CountedIndexReader: "+toString());
                 closeIt();
             }
         }
         
         private void closeIt() {
             try {
-//                mLog.debug("IndexReader for CountedIndexReader: "+toString()+" closed.");
                 mReader.close();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -964,8 +998,6 @@ public final class MailboxIndex
                 throw new java.lang.RuntimeException("Reader isn't closed in CountedIndexReader's finalizer!");
             }
         }
-        
-        
     }
     
     static class CountedIndexSearcher {
