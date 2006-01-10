@@ -835,7 +835,7 @@ private static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap i
 
             boolean rsvp = cur.getAttributeBool(MailService.A_APPT_RSVP, false);
 
-            if (partStat.equals(ICalTok.PARTSTAT.toString())) {
+            if (partStat.equals(IcalXmlStrMap.PARTSTAT_NEEDS_ACTION)) {
                 rsvp = true;
             }
 
