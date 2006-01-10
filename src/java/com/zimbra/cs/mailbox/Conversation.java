@@ -622,10 +622,18 @@ public class Conversation extends MailItem {
         boolean recalcSubject = false;
         try {
             getSenderList();
-            int firstId = mSenderList.getEarliest().messageId;
+            // find the id of the old "first message" in the conversation
+            SenderList.ListEntry oldFirst = mSenderList.getEarliest();
+            int firstId = oldFirst != null ? oldFirst.messageId : -1;
+            if (oldFirst == null)
+                ZimbraLog.mailbox.info("empty conversation sender list before remove: " + mId);
+            // remove the message from the cached sender list
             mSenderList.remove(msg);
+            // and determine if the "first message" in the conversation has changed
             SenderList.ListEntry newFirst = mSenderList.getEarliest();
             recalcSubject = newFirst == null || firstId != newFirst.messageId;
+            if (newFirst == null)
+                ZimbraLog.mailbox.info("empty conversation sender list after remove: " + mId);
         } catch (SenderList.RefreshException e) {
             // get a no-gaps version of the SenderList, so there's no chance that the remove can throw an exception 
             getSenderList(true);
@@ -637,12 +645,17 @@ public class Conversation extends MailItem {
         mData.size--;
         mMailbox.updateSize(-1);
 
-        try {
-            if (recalcSubject)
-            	recalculateSubject(mMailbox.getMessageById(mSenderList.getEarliest().messageId));
-        } catch (MailServiceException.NoSuchItemException nsie) {
-            recalcSubject = false;
-            sLog.warn("can't fetch message " + mSenderList.getEarliest().messageId + " to calculate conv subject");
+        if (recalcSubject) {
+            try {
+                SenderList.ListEntry first = mSenderList.getEarliest();
+                if (first != null)
+                    recalculateSubject(mMailbox.getMessageById(first.messageId));
+                else
+                    ZimbraLog.mailbox.info("empty conversation sender list at subject recalc: " + mId);
+            } catch (MailServiceException.NoSuchItemException nsie) {
+                recalcSubject = false;
+                ZimbraLog.mailbox.warn("can't fetch message " + mSenderList.getEarliest().messageId + " to calculate conv subject");
+            }
         }
         if (recalcSubject)
             saveData(null);
