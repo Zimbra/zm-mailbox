@@ -482,6 +482,7 @@ public abstract class Provisioning {
     public static final String A_zimbraMtaBlockedExtension = "zimbraMtaBlockedExtension";
     public static final String A_zimbraMtaCommonBlockedExtension = "zimbraMtaCommonBlockedExtension";
     public static final String A_zimbraMtaDnsLookupsEnabled = "zimbraMtaDnsLookupsEnabled";
+    public static final String A_zimbraMtaMyNetworks = "zimbraMtaMyNetworks";    
     public static final String A_zimbraMtaMaxMessageSize = "zimbraMtaMaxMessageSize";
     public static final String A_zimbraMtaRelayHost = "zimbraMtaRelayHost";
     public static final String A_zimbraMtaTlsAuthOnly = "zimbraMtaTlsAuthOnly";
