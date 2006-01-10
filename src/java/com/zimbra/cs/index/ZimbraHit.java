@@ -174,7 +174,7 @@ public abstract class ZimbraHit
 						rhsId = rhs.getConversationId();
 					}
 					
-                    if (!MailboxIndex.isSortDescending(mSortOrder)) { 
+                    if (!mSortOrder.isDescending()) { 
                         retVal = lhsId - rhsId;
                     } else {
                         retVal = rhsId - lhsId;
@@ -264,6 +264,12 @@ public abstract class ZimbraHit
              */
             retVal = (getName().toUpperCase().compareTo(other.getName().toUpperCase()));
             break;
+        case SCORE_DESCENDING:
+            if (dumpComp) {
+                System.out.println("Comparing ScoreDesc: \""+getScore()+"\" to \"" + other.getScore()+"\"");
+            }
+            retVal = (long)(10000L*(getScore() - other.getScore()));
+        	break;
         default:
             throw new IllegalArgumentException("Unknown sort order: "+sortOrder);
         }
@@ -280,20 +286,21 @@ public abstract class ZimbraHit
             return 1; 
     }
     
-    public final Object getSortField(int sortOrder) throws ServiceException {
-        switch (sortOrder) {
-        case MailboxIndex.SEARCH_ORDER_DATE_ASC:
-        case MailboxIndex.SEARCH_ORDER_DATE_DESC: /* 5...4...3...*/
-        	return getDate();
-        case MailboxIndex.SEARCH_ORDER_SUBJ_ASC:
-        case MailboxIndex.SEARCH_ORDER_SUBJ_DESC:
-        	return getSubject().toUpperCase();
-        case MailboxIndex.SEARCH_ORDER_NAME_ASC:
-        case MailboxIndex.SEARCH_ORDER_NAME_DESC:
-        	return getName().toUpperCase();
-        default:
-            throw new IllegalArgumentException("Unknown sort order: "+sortOrder);
-        }
-    	
-    }
+    public final Object getSortField(SortBy sortOrder) throws ServiceException {
+    	switch (sortOrder) {
+    	case DATE_ASCENDING:
+    	case DATE_DESCENDING: /* 5...4...3...*/
+    		return getDate();
+    	case SUBJ_ASCENDING:
+    	case SUBJ_DESCENDING:
+    		return getSubject().toUpperCase();
+    	case NAME_ASCENDING:
+    	case NAME_DESCENDING:
+    		return getName().toUpperCase();
+    	case SCORE_DESCENDING:
+    		return getScore();
+    	default:
+    		throw new IllegalArgumentException("Unknown sort order: "+sortOrder);
+    	}
+    }    
 }

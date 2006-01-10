@@ -65,9 +65,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.Volume;
 
-
 /**
- * 
  * @author tim
  *
  * Encapsulates the Index for one particular mailbox
@@ -352,10 +350,6 @@ public final class MailboxIndex
     public synchronized ZimbraQueryResults search(ZimbraQuery query, byte[] types, SortBy searchOrder,
             boolean includeTrash, boolean includeSpam, int chunkSize) throws IOException
     {
-//        if (searchOrder < MailboxIndex.FIRST_SEARCH_ORDER_NUM || searchOrder > MailboxIndex.LAST_SEARCH_ORDER_NUM) {
-//            throw new IllegalArgumentException("invalid searchOrder("+searchOrder+") to searchEx (check argument order)");
-//        }
-        
         try {
             if (mLog.isDebugEnabled()) {
                 String str = this.toString() +" search([";
@@ -393,6 +387,8 @@ public final class MailboxIndex
             return mLuceneSortNameDesc;
         case NAME_ASCENDING:
         	return mLuceneSortNameAsc;
+        case SCORE_DESCENDING:
+        	return null;
         default:
         	return mLuceneSortDateDesc;
         }
@@ -913,7 +909,6 @@ public final class MailboxIndex
     {
         IndexReader reader = null;
         try {
-        	
             /* uggghhh!  nasty.  FIXME - need to coordinate with index writer better 
              (manually create a RamDirectory and index into that?) */
             flush();
@@ -1035,22 +1030,6 @@ public final class MailboxIndex
     public static final int SEARCH_RETURN_DOCUMENTS     = 3;
     public static final int LAST_SEARCH_RETURN_NUM = 3;
 
-    // return the query in the native order (usually lucene docId order, but depends)
-    public static final int FIRST_SEARCH_ORDER_NUM = 101;
-    public static final int SEARCH_ORDER_NATIVE     = 101; // score
-    public static final int SEARCH_ORDER_DATE_ASC   = 102;
-    public static final int SEARCH_ORDER_DATE_DESC  = 103;
-    public static final int SEARCH_ORDER_SUBJ_ASC   = 104;
-    public static final int SEARCH_ORDER_SUBJ_DESC  = 105;
-    public static final int SEARCH_ORDER_NAME_ASC   = 106;
-    public static final int SEARCH_ORDER_NAME_DESC  = 107;
-    public static final int LAST_SEARCH_ORDER_NUM   = 107;
-	
-    public static boolean isSortDescending(SortBy sortOrder) {
-    	byte sortByte = sortOrder.getDbMailItemSortByte();
-    	return (sortByte & DbMailItem.SORT_DESCENDING)!=0;
-    }
-    
     public static final String GROUP_BY_CONVERSATION = "conversation";
     public static final String GROUP_BY_MESSAGE      = "message";
     public static final String GROUP_BY_NONE         = "none";
@@ -1091,38 +1070,13 @@ public final class MailboxIndex
     		return mSort;
     	}
     	
+    	public boolean isDescending() {
+        	return (mSort & DbMailItem.SORT_DESCENDING)!=0;
+    	}
+    	
     	public static SortBy lookup(String str) {
     		return sNameMap.get(str);
     	}
-    }
-
-    public static byte getDbMailItemSortByte(int searchOrder) {
-        byte sort = 0;
-        
-        switch (searchOrder){
-        case MailboxIndex.SEARCH_ORDER_DATE_ASC:
-            sort = DbMailItem.SORT_BY_DATE | DbMailItem.SORT_ASCENDING;
-            break;
-        case MailboxIndex.SEARCH_ORDER_DATE_DESC:
-            sort = DbMailItem.SORT_BY_DATE | DbMailItem.SORT_DESCENDING;
-            break;
-        case MailboxIndex.SEARCH_ORDER_NAME_ASC:
-            sort = DbMailItem.SORT_BY_SENDER | DbMailItem.SORT_ASCENDING;
-            break;
-        case MailboxIndex.SEARCH_ORDER_NAME_DESC:
-            sort = DbMailItem.SORT_BY_SENDER | DbMailItem.SORT_DESCENDING;
-            break;
-        case MailboxIndex.SEARCH_ORDER_SUBJ_ASC:
-            sort = DbMailItem.SORT_BY_SUBJECT | DbMailItem.SORT_ASCENDING;
-            break;
-        case MailboxIndex.SEARCH_ORDER_SUBJ_DESC:
-            sort = DbMailItem.SORT_BY_SUBJECT | DbMailItem.SORT_DESCENDING;
-            break;
-        default:
-            sort = DbMailItem.SORT_BY_DATE | DbMailItem.SORT_DESCENDING;
-            break;
-        }
-        return sort;
     }
 
     public static byte[] parseGroupByString(String groupBy) throws ServiceException
@@ -1412,16 +1366,16 @@ public final class MailboxIndex
     
     private static class ChkIndexStage1Callback implements TermEnumInterface 
     {
-        public HashSet msgsInMailbox = new HashSet(); // hash of all messages in my mailbox
+        HashSet msgsInMailbox = new HashSet(); // hash of all messages in my mailbox
         private MailboxIndex idx = null;
         private ArrayList toDelete = new ArrayList(); // to be deleted from index
         DbMailItem.SearchResult compareTo = new DbMailItem.SearchResult();  
         
-        public ChkIndexStage1Callback(MailboxIndex idx) {
+        ChkIndexStage1Callback(MailboxIndex idx) {
             this.idx = idx;
         }
         
-        public void doIndexRepair() throws IOException 
+        void doIndexRepair() throws IOException 
         {
             // delete first -- that way if there were any re-indexes along the way we know we're OK
             if (toDelete.size() > 0) {
@@ -1467,25 +1421,19 @@ public final class MailboxIndex
     
     private static class ChkIndexStage2Callback 
     {
-//        static class NoMoreMessagesInMailboxException extends Exception {
-//            NoMoreMessagesInMailboxException(Term term)
-//        }
         public List msgsInMailbox = new LinkedList(); // hash of all messages in my mailbox
-//        private MailboxIndex idx = null;
         private ListIterator msgsIter;
         
-//        private List mMissingTerms = null;
         private String mSortField;
         DbMailItem.SearchResult mCur = null;
         
         
-        public ChkIndexStage2Callback(MailboxIndex idx, String sortField, boolean reversed) {
-//            this.idx = idx;
+        ChkIndexStage2Callback(MailboxIndex idx, String sortField, boolean reversed) {
             mSortField = sortField;
             this.reversed = reversed;
         }
         
-        public boolean beginIterating() {
+        boolean beginIterating() {
             msgsIter = msgsInMailbox.listIterator();
             mCur = (DbMailItem.SearchResult)msgsIter.next();
             return (mCur!= null);
@@ -1501,7 +1449,7 @@ public final class MailboxIndex
             }
         }
         
-        public void onDocument(Document doc) 
+        void onDocument(Document doc) 
         {
             int idxId = Integer.parseInt(doc.get(LuceneFields.L_MAILBOX_BLOB_ID));
             
@@ -1607,7 +1555,7 @@ public final class MailboxIndex
         
     } // class
                     
-    public synchronized void chkIndex(boolean repair) throws ServiceException 
+    synchronized void chkIndex(boolean repair) throws ServiceException 
     {
         flush();
         
@@ -1626,7 +1574,6 @@ public final class MailboxIndex
             c.sort = DbMailItem.SORT_BY_DATE;
             c.types = new byte[] {
                     MailItem.TYPE_CONTACT, 
-//                    MailItem.TYPE_INVITE,
                     MailItem.TYPE_MESSAGE,
                     MailItem.TYPE_NOTE
             };
