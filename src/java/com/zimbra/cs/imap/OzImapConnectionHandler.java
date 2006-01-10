@@ -51,6 +51,7 @@ import com.zimbra.cs.ozserver.OzByteBufferGatherer;
 import com.zimbra.cs.ozserver.OzConnection;
 import com.zimbra.cs.ozserver.OzConnectionHandler;
 import com.zimbra.cs.ozserver.OzCountingMatcher;
+import com.zimbra.cs.ozserver.OzTLSFilter;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.util.AccountUtil;
@@ -66,16 +67,17 @@ import com.zimbra.cs.util.ZimbraLog;
  *
  * @author dkarp
  */
-public class OzImapConnectionHandler implements OzConnectionHandler {
+public class OzImapConnectionHandler implements OzConnectionHandler, ImapSessionHandler {
 
     public static final String PROPERTY_ALLOW_CLEARTEXT_LOGINS = "imap.allows.cleartext.logins"; 
-    
+    public static final String PROPERTY_SECURE_SERVER = "imap.secure.server";
+
     static final char[] LINE_SEPARATOR       = { '\r', '\n' };
     static final byte[] LINE_SEPARATOR_BYTES = { '\r', '\n' };
 
-    static final DateFormat mTimeFormat   = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss Z", Locale.US);
-    static final DateFormat mDateFormat   = new SimpleDateFormat("dd-MMM-yyyy", Locale.US);
-    static final DateFormat mZimbraFormat = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
+    private DateFormat mTimeFormat   = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss Z", Locale.US);
+    private DateFormat mDateFormat   = new SimpleDateFormat("dd-MMM-yyyy", Locale.US);
+    private DateFormat mZimbraFormat = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
 
     private ImapSession mSession;
     private Mailbox     mMailbox;
@@ -87,6 +89,14 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
     
     public OzImapConnectionHandler(OzConnection connection) {
         mConnection = connection;
+    }
+
+    public DateFormat getDateFormat() {
+        return mDateFormat;
+    }
+
+    public DateFormat getZimbraFormat() {
+        return mZimbraFormat;
     }
 
     private final class ImapCommand {
@@ -400,6 +410,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
                 case CMD_NOOP:         return doNOOP(mTag);
                 case CMD_ID:           return doID(mTag, mArguments);
                 case CMD_AUTHENTICATE: return doAUTHENTICATE(mTag, mArguments);
+                case CMD_STARTTLS:     return doSTARTTLS(mTag);
                 case CMD_LOGOUT:       return doLOGOUT(mTag);
                 case CMD_LOGIN:        return doLOGIN(mTag, mArguments);
                 case CMD_SELECT:       return doSELECT(mTag, mArguments);
@@ -566,6 +577,23 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
         return CONTINUE_PROCESSING;
     }
 
+    boolean doSTARTTLS(String tag) throws IOException {
+        if (!checkState(tag, ImapSession.STATE_NOT_AUTHENTICATED))
+            return CONTINUE_PROCESSING;
+        else if (mStartedTLS) {
+            sendNO(tag, "TLS already started");
+            return CONTINUE_PROCESSING;
+        }
+        sendOK(tag, "Begin TLS negotiation now");
+
+        mConnection.addFilter(new OzTLSFilter(mConnection, ZimbraLog.imap));
+
+        mStartedTLS = true;
+
+        return CONTINUE_PROCESSING;
+    }
+
+
     boolean doAUTHENTICATE(String tag, List args) throws IOException {
         if (!checkState(tag, ImapSession.STATE_NOT_AUTHENTICATED))
             return CONTINUE_PROCESSING;
@@ -638,6 +666,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
                 for (Iterator it = mailbox.getTagList(session.getContext()).iterator(); it.hasNext(); )
                     session.cacheTag((Tag) it.next());
             }
+            mConnection.setIdleNotifyTime(ImapServer.IMAP_AUTHED_CONNECTION_MAX_IDLE_MILLISECONDS);
         } catch (ServiceException e) {
             if (mSession != null)
             	mSession.clearTagCache();
@@ -1793,7 +1822,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
     }
 
 
-    void sendNotifications(boolean notifyExpunges, boolean flush) throws IOException {
+    public void sendNotifications(boolean notifyExpunges, boolean flush) throws IOException {
         if (mSession == null || mSession.getFolder() == null || mMailbox == null)
             return;
 
@@ -1890,6 +1919,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
                 SessionCache.clearSession(mSession.getSessionId(), mSession.getAccountId());
                 mSession = null;
             }
+            
             if (connectionStillOpen) {
                 try {
                     if (!mGoodbyeSent) {
@@ -1905,21 +1935,27 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
         }
 
     }
-	
+    
+    public void dropConnection(boolean connectionIsOpen) {
+        gotoClosedState(connectionIsOpen);
+    }
+
     public void handleConnect() throws IOException {
         assert(mState == ConnectionState.UNKNOWN);
         if (!Config.userServicesEnabled()) {
             gotoClosedState(true);
             ZimbraLog.imap.debug("services disabled");
-        } else {
-            sendUntagged(ImapServer.getBanner(), true);
-            gotoReadLineState(true);
+            return;
         }
-	}
+        if (mConnection.getProperty(PROPERTY_SECURE_SERVER, null) != null) {
+            mStartedTLS = true;
+        }
+        sendUntagged(ImapServer.getBanner(), true);
+        gotoReadLineState(true);
+    }
 
     public void handleDisconnect() {
         assert(mState != ConnectionState.UNKNOWN);
-        assert(mState != ConnectionState.CLOSED);
         ZimbraLog.imap.info("connection closed by client");
         gotoClosedState(false);
     }
@@ -1931,7 +1967,8 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
     private String mCurrentRequestTag;
     
     public void handleIdle() throws IOException {
-        
+        ZimbraLog.imap.info("idle connection");
+        gotoClosedState(true);
     }
 
     public void handleInput(ByteBuffer buffer, boolean matched) throws IOException {
@@ -2013,4 +2050,5 @@ public class OzImapConnectionHandler implements OzConnectionHandler {
 
         throw new RuntimeException("internal error in IMAP server: bad state " + mState);
     }
+
 }

@@ -71,11 +71,11 @@ public class OzServer {
     
     private OzConnectionHandlerFactory mConnectionHandlerFactory;
     
-    private int mReadBufferSize;
+    private int mReadBufferSizeHint;
     
     private SSLContext mSSLContext;
 
-    public OzServer(String name, int readBufferSize, ServerSocket serverSocket,
+    public OzServer(String name, int readBufferSizeHint, ServerSocket serverSocket,
                     OzConnectionHandlerFactory connectionHandlerFactory, Log log)
         throws IOException
     {
@@ -86,7 +86,7 @@ public class OzServer {
         mServerSocketChannel.configureBlocking(false);
 
         mServerName = name + "-" + mServerSocket.getLocalPort();
-        mReadBufferSize = readBufferSize;
+        mReadBufferSizeHint = readBufferSizeHint;
         
         mConnectionHandlerFactory = connectionHandlerFactory;
         
@@ -220,8 +220,6 @@ public class OzServer {
         }
         mLog.info("closed selector");
 
-        mLog.info("initiating buffer pool destroy");
-
         synchronized (mShutdownCompleteCondition) {
             mShutdownComplete = true;
             mShutdownCompleteCondition.notify();
@@ -257,9 +255,12 @@ public class OzServer {
         mServerThread = new Thread() {
             public void run() {
                 try {
+                    mLog.info("starting server loop");
                     serverLoop();
                 } catch (Throwable t) {
                     shutdown();
+                } finally {
+                    mLog.info("ended server loop");
                 }
             }
         };        
@@ -326,19 +327,19 @@ public class OzServer {
         return mSelector;
     }
 
-    int getReadBufferSize() {
-        return mReadBufferSize;
+    int getReadBufferSizeHint() {
+        return mReadBufferSizeHint;
     }
    
     Log getLog() {
         return mLog;
     }
 
-    private Map mProperties = new HashMap();
+    private Map<String, String> mProperties = new HashMap<String, String>();
     
     public String getProperty(String key, String defaultValue) {
         synchronized (mProperties) {
-            String result = (String)mProperties.get(key);
+            String result = mProperties.get(key);
             if (result == null) {
                 result = defaultValue;
             }

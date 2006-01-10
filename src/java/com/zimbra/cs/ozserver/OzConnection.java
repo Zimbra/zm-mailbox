@@ -91,7 +91,6 @@ public class OzConnection {
     private ByteBuffer mReadBuffer;
     
     OzConnection(OzServer server, SocketChannel channel) throws IOException {
-        addFilter(new OzPlainFilter(), true);
         mId = mIdCounter.incrementAndGet();
         mIdString = Integer.toString(mId);
 
@@ -103,6 +102,8 @@ public class OzConnection {
         mDebug = mLog.isDebugEnabled();
         mTrace = mLog.isTraceEnabled();
         mSelectionKey = channel.register(server.getSelector(), 0, this); 
+
+        addFilter(new OzPlainFilter(), true);
 
         mConnectTask = new ConnectTask();
         mReadTask = new ReadTask();
@@ -433,7 +434,7 @@ public class OzConnection {
     private class OzPlainFilter extends OzFilter {
 
         public int getPreferredReadBufferSize() {
-            return 1024;
+            return mServer.getReadBufferSizeHint();
         }
 
         public ByteBuffer read(ByteBuffer rbb) throws IOException {
@@ -479,6 +480,7 @@ public class OzConnection {
             if (rbb.hasRemaining()) {
                 if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("plain filter: input unmatched", rbb, false));
                 mConnectionHandler.handleInput(rbb, false);
+                enableReadInterest();
             }
             
             rbb.clear();
@@ -543,12 +545,14 @@ public class OzConnection {
             synchronized (mIdleGuard) {
                 if (mIdle) {
                     try {
+                        mLog.info("connection has been idle");
                         mConnectionHandler.handleIdle();
                     } catch (Throwable t) {
                         mLog.warn("exception occurred handling idle; will close connection", t);
                         channelClose();
                     }
                 } else {
+                    if (mDebug) mLog.debug("idle task - connection has been busy");
                     mIdle = true;
                 }
             }
@@ -573,7 +577,6 @@ public class OzConnection {
         }
     }
     
-
     public int getId() {
         return mId;
     }
@@ -693,11 +696,11 @@ public class OzConnection {
         }
     }
     
-    private Map mProperties = new HashMap();
+    private Map<String, String> mProperties = new HashMap<String, String>();
     
     public String getProperty(String key, String defaultValue) {
         synchronized (mProperties) {
-            String result = (String)mProperties.get(key);
+            String result = mProperties.get(key);
             if (result == null) {
                 result = mServer.getProperty(key, defaultValue);
             }

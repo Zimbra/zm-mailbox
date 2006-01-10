@@ -60,7 +60,7 @@ import com.zimbra.cs.util.*;
 /**
  * @author dkarp
  */
-public class ImapHandler extends ProtocolHandler {
+public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
 
     static final char[] LINE_SEPARATOR       = { '\r', '\n' };
     static final byte[] LINE_SEPARATOR_BYTES = { '\r', '\n' };
@@ -68,9 +68,9 @@ public class ImapHandler extends ProtocolHandler {
     private TcpServerInputStream mInputStream;
     private OutputStream         mOutputStream;
 
-    DateFormat mTimeFormat   = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss Z", Locale.US);
-    DateFormat mDateFormat   = new SimpleDateFormat("dd-MMM-yyyy", Locale.US);
-    DateFormat mZimbraFormat = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
+    private DateFormat mTimeFormat   = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss Z", Locale.US);
+    private DateFormat mDateFormat   = new SimpleDateFormat("dd-MMM-yyyy", Locale.US);
+    private DateFormat mZimbraFormat = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
 
     private String      mRemoteAddress;
     private ImapServer  mServer;
@@ -80,10 +80,17 @@ public class ImapHandler extends ProtocolHandler {
     private boolean     mStartedTLS;
     private boolean     mGoodbyeSent;
 
-
     public ImapHandler(ImapServer server) {
         super(server);
         mServer = server;
+    }
+
+    public DateFormat getDateFormat() {
+        return mDateFormat;
+    }
+
+    public DateFormat getZimbraFormat() {
+        return mZimbraFormat;
     }
 
     protected boolean setupConnection(Socket connection) throws IOException {
@@ -1870,8 +1877,7 @@ public class ImapHandler extends ProtocolHandler {
         }
     }
 
-
-    void sendNotifications(boolean notifyExpunges, boolean flush) throws IOException {
+    public void sendNotifications(boolean notifyExpunges, boolean flush) throws IOException {
         if (mSession == null || mSession.getFolder() == null || mMailbox == null)
             return;
 
@@ -1910,7 +1916,7 @@ public class ImapHandler extends ProtocolHandler {
         dropConnection(true);
     }
     
-    protected void dropConnection(boolean sendBanner) {
+    public void dropConnection(boolean sendBanner) {
         if (mSession != null) {
             mSession.setHandler(null);
             SessionCache.clearSession(mSession.getSessionId(), mSession.getAccountId());
@@ -2075,4 +2081,5 @@ public class ImapHandler extends ProtocolHandler {
         pieces.clear();  pieces.add(req.readTag());  req.skipSpace();  pieces.add(req.readAtom());  req.skipSpace();  pieces.add(req.readFolder());  assert(req.eof());
         System.out.println(pieces);
     }
+
 }
