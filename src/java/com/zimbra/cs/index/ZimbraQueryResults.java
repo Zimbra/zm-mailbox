@@ -29,6 +29,7 @@
  */
 package com.zimbra.cs.index;
 
+import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.service.ServiceException;
 
 /**
@@ -58,4 +59,6 @@ public interface ZimbraQueryResults {
      * @throws ServiceException
      */
     void doneWithSearchResults() throws ServiceException;
+
+    SortBy getSortBy();
 }

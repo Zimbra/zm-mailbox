@@ -85,11 +85,15 @@ abstract class QueryOperation implements ZimbraQueryResults
 
     private final static boolean USE_PRELOADING_GROUPER = true; // mostly useful for debugging
     
+    private SortBy mSortOrder = null;
+    public SortBy getSortBy() { return mSortOrder; }
+    
     ////////////////////
     // Top-Level Execution  
     final ZimbraQueryResults run(Mailbox mbox, MailboxIndex mbidx, byte[] types, SortBy searchOrder, int chunkSize) throws IOException, ServiceException
     {
         mIsToplevelQueryOp = true;
+        mSortOrder = searchOrder;
         
         chunkSize++; // one extra for checking the "more" flag at the end of the results
         

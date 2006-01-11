@@ -230,7 +230,7 @@ class LuceneQueryOperation extends QueryOperation
                     BooleanQuery outerQuery = new BooleanQuery();
                     outerQuery.add(new BooleanClause(new TermQuery(new Term(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE)), true, false));
                     outerQuery.add(new BooleanClause(mQuery, true, false));
-                    mLuceneHits = mSearcher.getSearcher().search(outerQuery, mbidx.getSort(res.getSearchOrder()));
+                    mLuceneHits = mSearcher.getSearcher().search(outerQuery, mbidx.getSort(res.getSortBy()));
                 } else {
                     assert(false);
                 }

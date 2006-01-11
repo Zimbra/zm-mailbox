@@ -662,7 +662,7 @@ class IntersectionQueryOperation extends QueryOperation {
         for (int i = 0; i < mQueryOperations.size(); i++) {
             QueryOperation op = (QueryOperation) mQueryOperations.get(i);
             op.prepare(mbx, res, mbidx, chunkSize);
-            mMessageGrouper[i] = new HitGrouper(op, res.getSearchOrder());
+            mMessageGrouper[i] = new HitGrouper(op, res.getSortBy());
 
             if (!op.hasNext()) {
                 //
@@ -692,7 +692,7 @@ class IntersectionQueryOperation extends QueryOperation {
                 QueryOperation nullOp = new NullQueryOperation();
                 addQueryOp(nullOp);
                 mMessageGrouper[0] = new HitGrouper(nullOp, res
-                        .getSearchOrder());
+                        .getSortBy());
                 return;
             }
         }

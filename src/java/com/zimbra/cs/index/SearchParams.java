@@ -32,6 +32,7 @@
  */
 package com.zimbra.cs.index;
 
+import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.ToXML.OutputParticipants;
 
@@ -71,6 +72,10 @@ public final class SearchParams
     public void setSortByStr(String sortByStr) throws ServiceException { 
         mSortByStr = sortByStr;
         mSortBy = MailboxIndex.SortBy.lookup(sortByStr);
+        if (mSortBy == null) {
+        	mSortBy = SortBy.DATE_DESCENDING;
+        	mSortByStr = mSortByStr.toString();
+        }
     }
     public void setFetchFirst(boolean fetch) { mFetchFirst = fetch; }
     public void setMarkRead(boolean read) { mMarkRead = read; }

@@ -625,7 +625,7 @@ For the optional <cursor> element:
 conversation result:
 --------------------
 
-<SearchResponse offset="..." more="{more-flag}">
+<SearchResponse sortBy="sort-by" offset="..." more="{more-flag}">
   <c id="{conv-id}" t="{tags}" n="{num-msgs}" d="{date}" f="{flags} [mbx="UID"] sf="SORT-FIELD-VALUE">
     <e ...>*
     <su>{subject}</su>
@@ -636,7 +636,7 @@ conversation result:
 
 message result:
 ---------------
-<SearchResponse offset="..." more="{more-flag}">
+<SearchResponse sortBy="sort-by" offset="..." more="{more-flag}">
    <m id="{message-id}" f="{flags}" s="{size}" d="{date}" cid="{conv-id}" score="..." [mbx="UID"] sf="SORT-FIELD-VALUE">
      <e .../>  <!- sender only -->
      <su>{subject}</su>
@@ -681,7 +681,7 @@ message-part result:
 
 ------------
 
-<SearchConvResponse offset="..." more="{more-flag}">
+<SearchConvResponse sortBy="sort-by" offset="..." more="{more-flag}">
    <m id="{message-id}" [cm="1"] f="{flags}" s="{size}" d="{date}" cid="{conv-id}" score="..." sf="SORT-FIELD-VALUE">
      <e .../>  <!- sender only -->
      <su>{subject}</su>

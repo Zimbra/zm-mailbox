@@ -47,15 +47,17 @@ public interface ZimbraQueryParserConstants {
   int COMPANY = 45;
   int METADATA = 46;
   int ITEM = 47;
-  int PLUS = 48;
-  int MINUS = 49;
-  int TEXT_TOK = 50;
-  int INITIAL_TERM_CHAR = 51;
-  int SUBSEQUENT_TERM_CHAR = 52;
-  int ERROR_BRACES_WITH_NEWLINE = 54;
-  int BRACES_TOK = 55;
-  int ERROR_QUOTE_WITH_NEWLINE = 57;
-  int QUOTED_TOK = 58;
+  int SORTBY = 48;
+  int SORT = 49;
+  int PLUS = 50;
+  int MINUS = 51;
+  int TEXT_TOK = 52;
+  int INITIAL_TERM_CHAR = 53;
+  int SUBSEQUENT_TERM_CHAR = 54;
+  int ERROR_BRACES_WITH_NEWLINE = 56;
+  int BRACES_TOK = 57;
+  int ERROR_QUOTE_WITH_NEWLINE = 59;
+  int QUOTED_TOK = 60;
 
   int DEFAULT = 0;
   int BRACES_STATE = 1;
@@ -110,6 +112,8 @@ public interface ZimbraQueryParserConstants {
     "\"company:\"",
     "\"metadata:\"",
     "\"item:\"",
+    "\"sortby:\"",
+    "\"sort:\"",
     "\"+\"",
     "\"-\"",
     "<TEXT_TOK>",

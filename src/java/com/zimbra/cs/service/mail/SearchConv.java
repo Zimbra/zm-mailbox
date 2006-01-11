@@ -38,6 +38,7 @@ import com.zimbra.cs.index.MessageHit;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.service.ServiceException;
@@ -89,7 +90,10 @@ public class SearchConv extends Search {
         Element response = lc.createElement(MailService.SEARCH_CONV_RESPONSE);
         response.addAttribute(MailService.A_QUERY_OFFSET, Integer.toString(params.getOffset()));
         
-        Message[] msgs = mbox.getMessagesByConversation(octxt, cid, params.getSortBy().getDbMailItemSortByte());
+        SortBy sb = results.getSortBy();
+        response.addAttribute(MailService.A_SORTBY, sb.getName());
+        
+        Message[] msgs = mbox.getMessagesByConversation(octxt, cid, sb.getDbMailItemSortByte());
         
         Element retVal = putHits(lc, response, msgs, results, params);
         

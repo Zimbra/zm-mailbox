@@ -63,17 +63,19 @@ import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author tim
- * 
- * Very simple wrapper classes that each represent a node in the parse tree for the
- * query string.
+ *
+ * Represents a search query.  Call flow is simple:
+ *    -- Constructor() -- parse the query string
+ *    -- execute() -- Begin the search, get the ZimbraQueryResults iterator
  */
 public final class ZimbraQuery {
      
-    
-    
     /************************************************************************
      * 
      * BaseQuery
+     *
+     * Very simple wrapper classes that each represent a node in the parse tree for the
+     * query string.
      * 
      ***********************************************************************/
     public static abstract class BaseQuery
@@ -1498,6 +1500,23 @@ public final class ZimbraQuery {
     private AbstractList mClauses;
     private ParseTree.Node mParseTree = null;
     
+	
+    /**
+     * the query string can OPTIONALLY have a "sortby:" element which will override 
+     * the sortBy specified in the <SearchRequest> xml...this is basically to allow 
+     * people to do more with cut-and-pasted search strings 
+     */
+    private SortBy mSortByOverride = null;
+    
+    private void handleSortByOverride(String str) throws ServiceException
+    {
+    	SortBy sortBy = SortBy.lookup(str);
+    	if (sortBy == null) 
+    		throw ServiceException.FAILURE("Unkown sortBy: specified in search string: "+str, null);
+    	
+    	mSortByOverride = sortBy;
+   }
+    
 	/**
 	 * @throws ParseException
 	 * @throws ServiceException
@@ -1509,6 +1528,10 @@ public final class ZimbraQuery {
         parser.init(new ZimbraAnalyzer(), mbx);
          
         mClauses = parser.Parse();
+        
+        String sortByStr = parser.getSortByStr();
+        if (sortByStr != null)
+        	handleSortByOverride(sortByStr);
         
         if (ParseTree.SPEW) System.out.println("QueryString: "+queryString);
         
@@ -1543,8 +1566,15 @@ public final class ZimbraQuery {
 	 * @throws ServiceException
 	 */
 	public ZimbraQueryResults execute(int mailboxId, MailboxIndex mbidx, byte[] types, SortBy searchOrder,
-	        boolean includeTrash, boolean includeSpam, int chunkSize) throws IOException, ServiceException 
-	        {
+	        boolean includeTrash, boolean includeSpam, int chunkSize) throws IOException, ServiceException  
+    {
+		if (mSortByOverride != null) {
+	    	if (mLog.isDebugEnabled())
+	    		mLog.debug("Overriding SortBy parameter to execute ("+searchOrder.toString()+") w/ specification from QueryString: "+mSortByOverride.toString());
+			
+			searchOrder = mSortByOverride;
+		}
+		
 	    BaseQuery head = getHead();
 	    if (null != head) {
             
