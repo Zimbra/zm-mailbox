@@ -28,6 +28,8 @@
  */
 package com.zimbra.cs.session;
 
+import java.io.IOException;
+import java.io.Writer;
 import java.util.*;
 
 import org.apache.commons.logging.Log;
@@ -176,7 +178,7 @@ public final class SessionCache {
 
     /** The cache of all active {@link Session}s.  The keys of the Map are session IDs
      *  and the values are the Sessions themselves. */
-    static LinkedHashMap sLRUMap = new LinkedHashMap(500);
+    static LinkedHashMap<String, Session>sLRUMap = new LinkedHashMap(500);
 
     /** Whether we've received a {@link #shutdown()} call to kill the cache. */
     private static boolean sShutdown = false;
@@ -200,6 +202,26 @@ public final class SessionCache {
             session.updateAccessTime();
             sLRUMap.put(sessionId, session);
         }
+    }
+    
+    public static void dumpState(Writer w) {
+    	synchronized(sLRUMap) {
+			try {
+				w.write("\nACTIVE SESSIONS:\n");
+			} catch(IOException e) {};
+			
+    		for (Session s: sLRUMap.values()) {
+    			s.dumpState(w);
+    			try {
+    				w.write('\n');
+    			} catch(IOException e) {};
+    		}
+    		
+			try {
+				w.write('\n');
+			} catch(IOException e) {};
+    		
+    	}
     }
 
     private static final class SweepMapTimerTask extends TimerTask {
