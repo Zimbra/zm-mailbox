@@ -30,6 +30,7 @@ package com.zimbra.cs.index;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
@@ -40,13 +41,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.document.Document;
 
-import sun.security.krb5.internal.crypto.d;
-
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbMailItem.SearchConstraints;
 import com.zimbra.cs.db.DbMailItem.SearchResult;
 import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.index.LuceneQueryOperation.LuceneIndexIdChunk;
+import com.zimbra.cs.index.LuceneQueryOperation.LuceneIndexIdChunk.ScoredLuceneHit;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -339,14 +340,49 @@ class DBQueryOperation extends QueryOperation
         }
     }
     
-    private Collection /* Integer blobid */ mDBHits;
+    private Collection <SearchResult> mDBHits;
     private Iterator mDBHitsIter;
     private int mCurHitsOffset = 0; // -1 means "no more results"
-//    private final int HITS_PER_CHUNK = 100;
     private boolean atStart = true; // don't re-fill buffer twice if they call hasNext() then reset() w/o actually getting next
     
     private int mHitsPerChunk = 100;
-    private static final int MAX_HITS_PER_CHUNK = 2000; 
+    private static final int MAX_HITS_PER_CHUNK = 2000;
+    
+    private static class ScoredDBHit implements Comparable {
+    	public SearchResult mSr;
+    	public float mScore;
+    	
+    	ScoredDBHit(SearchResult sr, float score) {
+    		mSr = sr;
+    		mScore = score;
+    	}
+    	
+    	long scoreAsLong() { 
+    		return (long)(mScore * 10000);
+    	}
+    	
+    	public int compareTo(Object o) {
+    		ScoredDBHit other = (ScoredDBHit)o;
+
+    		long mys = scoreAsLong();
+    		long os = other.scoreAsLong();
+    		
+    		if (mys == os) 
+    			return mSr.id - other.mSr.id;
+    		else {
+    			long l = os - mys;
+    			if (l > 0) 
+    				return 1;
+    			else if (l < 0)
+    				return -1;
+    			else return 0;
+    		}
+    	}
+    	
+    	public boolean equals(Object o) {
+    		return (o==this) || (compareTo(o) == 0);
+    	}
+    }
     
     /******************
      * 
@@ -387,8 +423,11 @@ class DBQueryOperation extends QueryOperation
             
             Integer srIdInt = new Integer(sr.id);
             List /*Document*/ docs = null;
+            float score = 1.0f;
             if (mLuceneChunk != null) {
-                docs = mLuceneChunk.getDocuments(srIdInt);
+            	LuceneIndexIdChunk.ScoredLuceneHit sh = mLuceneChunk.getScoredHit(srIdInt);
+            	docs = sh.mDocs;
+            	score = sh.mScore;
             }
             
             ZimbraHit toAdd;
@@ -398,26 +437,26 @@ class DBQueryOperation extends QueryOperation
                 if (docs != null) {
                     for (Iterator iter = docs.iterator(); iter.hasNext();) {
                         Document doc = (Document)iter.next();
-                        toAdd = this.getResultsSet().getMessagePartHit(this.getMailbox(), new Integer(sr.id), doc, 1.0f, sr.data);
+                        toAdd = this.getResultsSet().getMessagePartHit(this.getMailbox(), new Integer(sr.id), doc, score, sr.data);
                         toAdd.cacheSortField(this.getResultsSet().getSearchOrder(), sr.sortkey);
                         mNextHits.add(toAdd);
                     }
                 } else {
-                    toAdd = this.getResultsSet().getMessageHit(this.getMailbox(), new Integer(sr.id), null, 1.0f, sr.data);
+                    toAdd = this.getResultsSet().getMessageHit(this.getMailbox(), new Integer(sr.id), null, score, sr.data);
                     toAdd.cacheSortField(this.getResultsSet().getSearchOrder(), sr.sortkey);
                     mNextHits.add(toAdd);
                 }
                 break;
             case MailItem.TYPE_CONTACT:
-                toAdd = this.getResultsSet().getContactHit(this.getMailbox(), new Integer(sr.id), null, 1.0f, sr.data);
+                toAdd = this.getResultsSet().getContactHit(this.getMailbox(), new Integer(sr.id), null, score, sr.data);
                 mNextHits.add(toAdd);
                 break;
             case MailItem.TYPE_NOTE:
-                toAdd = this.getResultsSet().getNoteHit(this.getMailbox(), new Integer(sr.id), null, 1.0f, sr.data);
+                toAdd = this.getResultsSet().getNoteHit(this.getMailbox(), new Integer(sr.id), null, score, sr.data);
                 mNextHits.add(toAdd);
                 break;
             case MailItem.TYPE_APPOINTMENT:
-                toAdd = this.getResultsSet().getAppointmentHit(this.getMailbox(), new Integer(sr.id), null, 1.0f, sr.data);
+                toAdd = this.getResultsSet().getAppointmentHit(this.getMailbox(), new Integer(sr.id), null, score, sr.data);
                 mNextHits.add(toAdd);
                 break;
                 // Unsupported right now:
@@ -711,7 +750,25 @@ class DBQueryOperation extends QueryOperation
                                 
                                 mDBHits = new ArrayList(); 
                             } else {
-                                mDBHits = DbMailItem.search(conn, c);
+                            	mDBHits = DbMailItem.search(conn, c);
+                            	
+                            	if (searchOrder == SortBy.SCORE_DESCENDING) {
+                            		// oops, have to re-sort by SCORE here...
+                            		ScoredDBHit[] scHits = new ScoredDBHit[mDBHits.size()];
+                            		int offset = 0;
+                            		for (SearchResult sr : mDBHits) {
+                            			ScoredLuceneHit lucScore = mLuceneChunk.getScoredHit(sr.id);
+                            			
+                            			scHits[offset++] = new ScoredDBHit(sr, lucScore.mScore);
+                            		}
+                            		
+                            		Arrays.sort(scHits);
+                            		
+                            		mDBHits = new ArrayList(scHits.length);
+                            		for (ScoredDBHit sdbHit : scHits)
+                            			mDBHits.add(sdbHit.mSr);
+                            	}
+                            	
                             }
                         } while (mDBHits.size() == 0 && !mEndOfHits);
                     }

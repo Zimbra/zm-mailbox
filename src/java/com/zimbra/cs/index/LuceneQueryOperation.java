@@ -104,7 +104,21 @@ class LuceneQueryOperation extends QueryOperation
         mCurHitNo = 0;
     }
     
+    /**
+     * @author tim
+     *
+     * We use this data structure to track a "chunk" of Lucene hits which
+     * the DBQueryOperation will use to check against the DB.
+     * 
+     */
     protected static class LuceneIndexIdChunk {
+    	
+    	static class ScoredLuceneHit {
+    		ScoredLuceneHit(float score) { mScore= score; }
+    		public List<Document> mDocs = new ArrayList();
+    		public float mScore; // highest score in list
+    	}
+    	
         int[] getIndexIds() { 
             int[] toRet = new int[mHits.keySet().size()];
             int i = 0;
@@ -117,25 +131,25 @@ class LuceneQueryOperation extends QueryOperation
         
         private int size() { return mHits.size(); }
 
-        private void addHit(int indexId, Document doc) {
-            addHit(new Integer(indexId), doc);
+        private void addHit(int indexId, Document doc, float score) {
+            addHit(new Integer(indexId), doc, score);
         }
         
-        private void addHit(Integer indexId, Document doc) {
-            List docs = (List)mHits.get(indexId);
-            if (docs == null) {
-                docs = new ArrayList();
-                mHits.put(indexId, docs);
-            }
-            docs.add(doc);
+        private void addHit(Integer indexId, Document doc, float score) {
+        	ScoredLuceneHit sh = mHits.get(indexId);
+        	if (sh == null) {
+        		sh = new ScoredLuceneHit(score);
+                mHits.put(indexId, sh);
+        	}
+        	
+        	sh.mDocs.add(doc);
         }
         
-        List /* Document */ getDocuments(Integer indexId) { 
-            return (List)mHits.get(indexId); 
+        ScoredLuceneHit getScoredHit(Integer indexId) { 
+        	return mHits.get(indexId);
         }
         
-        private HashMap /* indexId, List(partName) */ mHits = new HashMap();
-        
+        private HashMap <Integer /*indexId*/, ScoredLuceneHit> mHits = new HashMap();
     }
     
     protected LuceneIndexIdChunk getNextIndexedIdChunk(int maxChunkSize) throws ServiceException {
@@ -144,12 +158,13 @@ class LuceneQueryOperation extends QueryOperation
             int luceneLen = mLuceneHits != null ? mLuceneHits.length() : 0;
             
             while ((toRet.size() < maxChunkSize) && (mCurHitNo < luceneLen)) {
+            	float score = mLuceneHits.score(mCurHitNo);
                 Document d = mLuceneHits.doc(mCurHitNo++);
                 
                 String mbid = d.get(LuceneFields.L_MAILBOX_BLOB_ID);
                 try {
                     if (mbid != null) {
-                        toRet.addHit(Integer.parseInt(mbid), d);
+                        toRet.addHit(Integer.parseInt(mbid), d, score);
                     }
                 } catch (NumberFormatException e) {
                     e.printStackTrace();
