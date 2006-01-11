@@ -96,7 +96,7 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
   private byte[] mTypes;
   private SortBy mSearchOrder;
   
-  SortBy getSearchOrder() {
+  public SortBy getSortBy() {
       return mSearchOrder;
   }
   

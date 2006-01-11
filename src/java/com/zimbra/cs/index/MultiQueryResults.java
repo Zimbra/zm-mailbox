@@ -51,6 +51,9 @@ public class MultiQueryResults implements ZimbraQueryResults
     HitIdGrouper[] mGroupedHits;
     private ZimbraHit mCachedNextHit = null;
     
+    public SortBy getSortBy() {
+        return mSortOrder;
+    }
     public MultiQueryResults(ZimbraQueryResults[] res, SortBy sortOrder)
     {
         mSortOrder = sortOrder;

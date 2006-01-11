@@ -24,9 +24,9 @@
  */
 options {
     STATIC = false;
-//    DEBUG_PARSER = true ;
-//    DEBUG_LOOKAHEAD = false;
-//    DEBUG_TOKEN_MANAGER = true ;
+//    DEBUG_LOOKAHEAD = true;
+    DEBUG_PARSER = true ;
+    DEBUG_TOKEN_MANAGER = true ;
     ERROR_REPORTING = true;
     JAVA_UNICODE_ESCAPE=true;
     OPTIMIZE_TOKEN_MANAGER=true;
@@ -235,6 +235,13 @@ public final class ZimbraQueryParser {
     
     private Analyzer mAnalyzer = null;
     private Mailbox mMailbox = null;
+    
+	// the query string can OPTIONALLY have a "sortby:" element which will override the
+	// sortBy specified in the <SearchRequest> xml...this is basically to allow people
+	// to do more with cut-and-pasted search strings
+    private String mSortByStr = null;
+    public String getSortByStr() { return mSortByStr; }
+    
     public void init(Analyzer analyzer, Mailbox mbx) {
        mAnalyzer = analyzer;
 	   mMailbox = mbx;
@@ -333,6 +340,8 @@ PARSER_END(ZimbraQueryParser)
 |  <COMPANY:    "company:">
 |  <METADATA:   "metadata:">
 |  <ITEM:       "item:">
+|  <SORTBY:     "sortby:">
+|  <SORT:       "sort:">
 }
 
 <DEFAULT>TOKEN :
@@ -511,6 +520,15 @@ ZimbraQuery.BaseQuery Clause() throws ServiceException :
 
 }
 
+void SortBy() :
+{
+    Token t = null;
+}
+{
+   (<SORTBY>|<SORT>) t=<TEXT_TOK> { mSortByStr = t.image; }
+   | {}
+}
+
 ArrayList Query() throws ServiceException :
 {
     ZimbraQuery.BaseQuery clause = null;
@@ -518,10 +536,11 @@ ArrayList Query() throws ServiceException :
     int modifier;
 }
 {
-    modifier=Modifier() clause=Clause() { if (clause != null) { clause.setModifier(modifier); AddClause(clauses,clause); } }
+    SortBy() modifier=Modifier() clause=Clause() { if (clause != null) { clause.setModifier(modifier); AddClause(clauses,clause); } }
     (
+        SortBy() {}
         clause=Conjunction() { AddClause(clauses,clause); }
-        modifier=Modifier() clause=Clause() { if (clause != null) { clause.setModifier(modifier); AddClause(clauses,clause); } }
+        modifier=Modifier() clause=Clause() SortBy() { if (clause != null) { clause.setModifier(modifier); AddClause(clauses,clause); } }
         )* {}
     {
         return clauses;

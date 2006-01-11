@@ -26,6 +26,8 @@
 package com.zimbra.cs.index;
 
 import java.util.*;
+
+import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.service.ServiceException;
 
 /**
@@ -51,6 +53,10 @@ public abstract class BufferingResultsGrouper implements ZimbraQueryResults {
      */
     protected abstract boolean bufferHits() throws ServiceException;
     
+    
+    public SortBy getSortBy() {
+        return mHits.getSortBy();
+    }
     
     public BufferingResultsGrouper(ZimbraQueryResults hits) {
         mHits = hits;

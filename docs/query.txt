@@ -35,6 +35,9 @@ Tim's short-short summary of the query grammar as of now (updated)
    keywords: {TEXT}
    company: {TEXT}
    metadata: {TEXT}
+   
+   sort:(score|dateasc|datedesc|subjasc|subjdesc|nameasc|namedesc)
+      -- overrides the sort field specified in the <SearchRequest> 
 
 * : not currently supported
 
@@ -52,6 +55,7 @@ DATE:  absolute-date = mm/dd/yyyy | yyyy/dd/mm  OR
 SIZE: ([<>])?n+{b,kb,mb}    // default is b
 DB_MSG_ID: ??
 NUM: ([<>])?n+
+
 
 ----------------------------------------
  

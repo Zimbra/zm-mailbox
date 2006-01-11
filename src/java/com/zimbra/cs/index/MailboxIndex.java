@@ -1047,13 +1047,13 @@ public final class MailboxIndex
     	SUBJ_DESCENDING ("subjDesc",  (byte)(DbMailItem.SORT_BY_SUBJECT | DbMailItem.SORT_DESCENDING)),
     	NAME_ASCENDING  ("nameAsc",   (byte)(DbMailItem.SORT_BY_SENDER | DbMailItem.SORT_ASCENDING)),
     	NAME_DESCENDING ("nameDesc",  (byte)(DbMailItem.SORT_BY_SENDER | DbMailItem.SORT_DESCENDING)),
-    	SCORE_DESCENDING("scoreDesc", (byte)0);
+    	SCORE_DESCENDING("score", (byte)0);
 
 		static HashMap<String, SortBy> sNameMap = new HashMap();
     	
     	static {
     		for (SortBy s : SortBy.values()) 
-    			sNameMap.put(s.mName, s);
+    			sNameMap.put(s.mName.toLowerCase(), s);
     	}
     	
     	byte mSort;
@@ -1075,7 +1075,10 @@ public final class MailboxIndex
     	}
     	
     	public static SortBy lookup(String str) {
-    		return sNameMap.get(str);
+    		if (str != null)
+    			return sNameMap.get(str.toLowerCase());
+    		else
+    			return null;
     	}
     }
 

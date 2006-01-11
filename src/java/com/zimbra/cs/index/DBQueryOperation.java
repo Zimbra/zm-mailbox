@@ -438,12 +438,12 @@ class DBQueryOperation extends QueryOperation
                     for (Iterator iter = docs.iterator(); iter.hasNext();) {
                         Document doc = (Document)iter.next();
                         toAdd = this.getResultsSet().getMessagePartHit(this.getMailbox(), new Integer(sr.id), doc, score, sr.data);
-                        toAdd.cacheSortField(this.getResultsSet().getSearchOrder(), sr.sortkey);
+                        toAdd.cacheSortField(this.getResultsSet().getSortBy(), sr.sortkey);
                         mNextHits.add(toAdd);
                     }
                 } else {
                     toAdd = this.getResultsSet().getMessageHit(this.getMailbox(), new Integer(sr.id), null, score, sr.data);
-                    toAdd.cacheSortField(this.getResultsSet().getSearchOrder(), sr.sortkey);
+                    toAdd.cacheSortField(this.getResultsSet().getSortBy(), sr.sortkey);
                     mNextHits.add(toAdd);
                 }
                 break;
@@ -641,7 +641,7 @@ class DBQueryOperation extends QueryOperation
             return;
         }
         int mailboxId = this.getMailbox().getId();
-        SortBy searchOrder = this.getResultsSet().getSearchOrder();
+        SortBy searchOrder = this.getResultsSet().getSortBy();
         
         if (mIncludedItemIds != null && mIncludedItemIds.size() == 0) {
             mNoResultsQuery = true;

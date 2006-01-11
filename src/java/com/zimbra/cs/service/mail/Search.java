@@ -40,6 +40,7 @@ import org.apache.commons.logging.LogFactory;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.*;
+import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Conversation;
@@ -74,6 +75,11 @@ public class Search extends DocumentHandler  {
         
         Element response = lc.createElement(MailService.SEARCH_RESPONSE);
         
+        // must use results.getSortBy() because the results might have ignored our sortBy
+        // request and used something else...
+        SortBy sb = results.getSortBy();
+        response.addAttribute(MailService.A_SORTBY, sb.getName());
+        
         //
         // create a "pager" which generate one page's worth of data for the client (using
         // the cursor data, etc)
@@ -91,8 +97,8 @@ public class Search extends DocumentHandler  {
             
             // FIXME!  workaround bug in resetIterator()
             results = getResults(mbox, params, lc, session);
-            
-            pager = new ResultsPager(results, params.getSortBy(), params.getLimit(), 0);
+
+            pager = new ResultsPager(results, sb, params.getLimit(), 0);
             response.addAttribute(MailService.A_QUERY_OFFSET, 0);
             response.addAttribute("newResults", true);
         }

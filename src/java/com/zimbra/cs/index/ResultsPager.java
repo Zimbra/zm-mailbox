@@ -59,7 +59,9 @@ public class ResultsPager
         ResultsPager toRet;
         
         if (!params.hasCursor() || params.getOffset()==0) {
-            toRet = new ResultsPager(results, params.getSortBy(), params.getLimit(), params.getOffset());
+            // must use results.getSortBy() because the results might have ignored our sortBy
+            // request and used something else...
+            toRet = new ResultsPager(results, results.getSortBy(), params.getLimit(), params.getOffset());
         } else {
             // are we paging FORWARD or BACKWARD?  If requested starting-offset is the same or bigger then the cursor's offset, 
             // then we're going FORWARD, otherwise we're going BACKWARD
@@ -68,7 +70,9 @@ public class ResultsPager
                 forward = false;
             }
             
-            toRet = new ResultsPager(results, params.getSortBy(), params.getPrevMailItemId(), params.getPrevSortValueStr(), params.getPrevSortValueLong(), params.getPrevOffset(), forward, params.getLimit());
+            // must use results.getSortBy() because the results might have ignored our sortBy
+            // request and used something else...
+            toRet = new ResultsPager(results, results.getSortBy(), params.getPrevMailItemId(), params.getPrevSortValueStr(), params.getPrevSortValueLong(), params.getPrevOffset(), forward, params.getLimit());
         }
         return toRet;
     }
