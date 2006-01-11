@@ -212,11 +212,10 @@ public class CalendarUtils {
         if (tzMap == null) {
             tzMap = new TimeZoneMap(account.getTimeZone());
         }
-        Invite create = new Invite(ICalTok.PUBLISH.toString(), new TimeZoneMap(
-                account.getTimeZone()));
+        Invite create = new Invite(ICalTok.PUBLISH.toString(), tzMap);
 
         CalendarUtils.parseInviteElementCommon(account, inviteElem, create,
-                tzMap, recurAllowed);
+                recurAllowed);
 
         if (uid == null || uid.equals("")) {
             uid = inviteElem.getAttribute(MailService.A_UID, null);
@@ -273,8 +272,7 @@ public class CalendarUtils {
         Invite mod = new Invite(ICalTok.PUBLISH.toString(), oldInv
                 .getTimeZoneMap());
 
-        CalendarUtils.parseInviteElementCommon(account, inviteElem, mod, oldInv
-                .getTimeZoneMap(), recurAllowed);
+        CalendarUtils.parseInviteElementCommon(account, inviteElem, mod, recurAllowed);
 
         // use UID from old inv
         String uid = oldInv.getUid();
@@ -606,7 +604,9 @@ private static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap i
         } else {
             return new Recurrence.RecurrenceRule(inv.getStartTime(), dur, null, addRules, subRules);
         }
-    }    static ParsedDateTime parseDtElement(Element e, TimeZoneMap tzMap,
+    }
+
+	static ParsedDateTime parseDtElement(Element e, TimeZoneMap tzMap,
             Invite inv) throws ServiceException {
         String d = e.getAttribute(MailService.A_APPT_DATETIME);
         String tzId = e.getAttribute(MailService.A_APPT_TIMEZONE, null);
@@ -634,6 +634,10 @@ private static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap i
                     .getAttributeLong(MailService.A_APPT_TZ_STDOFFSET);
             int daylightOffset = (int) tzElem.getAttributeLong(
                     MailService.A_APPT_TZ_DAYOFFSET, standardOffset);
+            // minutes to milliseconds
+            standardOffset *= 60 * 1000;
+            daylightOffset *= 60 * 1000;
+
             SimpleOnset standardOnset = null;
             SimpleOnset daylightOnset = null;
             if (daylightOffset != standardOffset) {
@@ -689,9 +693,10 @@ private static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap i
      * @throws ServiceException
      */
     private static void parseInviteElementCommon(Account account,
-            Element element, Invite newInv, TimeZoneMap oldTzMap,
+            Element element, Invite newInv,
             boolean recurAllowed) throws ServiceException {
-        parseTimeZones(element.getParent(), newInv.getTimeZoneMap());
+    	TimeZoneMap tzMap = newInv.getTimeZoneMap();
+        parseTimeZones(element.getParent(), tzMap);
 
         boolean allDay = element.getAttributeBool(MailService.A_APPT_ALLDAY,
                 false);
@@ -720,7 +725,7 @@ private static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap i
         // DTSTART
         {
             Element s = element.getElement(MailService.E_APPT_START_TIME);
-            ParsedDateTime dt = parseDtElement(s, oldTzMap, newInv);
+            ParsedDateTime dt = parseDtElement(s, tzMap, newInv);
             if (dt.hasTime()) {
                 if (allDay) {
                     throw MailServiceException
@@ -749,7 +754,7 @@ private static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap i
                                     "<inv> may have <e> end or <d> duration but not both",
                                     null);
                 }
-                ParsedDateTime dt = parseDtElement(e, oldTzMap, newInv);
+                ParsedDateTime dt = parseDtElement(e, tzMap, newInv);
 
                 if (allDay) {
                     // HACK ALERT: okay, campers, here's the deal.
@@ -855,7 +860,7 @@ private static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap i
                 throw ServiceException.FAILURE(
                         "No <recur> allowed in an exception", null);
             }
-            Recurrence.IRecurrence recurrence = parseRecur(recur, oldTzMap,
+            Recurrence.IRecurrence recurrence = parseRecur(recur, tzMap,
                     newInv);
             newInv.setRecurrence(recurrence);
         }
