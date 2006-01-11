@@ -695,6 +695,11 @@ private static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap i
     private static void parseInviteElementCommon(Account account,
             Element element, Invite newInv,
             boolean recurAllowed) throws ServiceException {
+
+    	Element compElem = element.getOptionalElement(MailService.E_INVITE_COMPONENT);
+    	if (compElem != null)
+    		element = compElem;
+
     	TimeZoneMap tzMap = newInv.getTimeZoneMap();
         parseTimeZones(element.getParent(), tzMap);
 
