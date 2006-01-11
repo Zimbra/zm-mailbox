@@ -84,6 +84,12 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         super(server);
         mServer = server;
     }
+    
+    public void dumpState(Writer w) {
+    	try {
+    		w.write("\n\tImapHandler(Thread-Per-Connection) "+this.toString());
+    	} catch(IOException e) {};
+    }
 
     public DateFormat getDateFormat() {
         return mDateFormat;

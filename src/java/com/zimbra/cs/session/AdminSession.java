@@ -27,6 +27,9 @@
  */
 package com.zimbra.cs.session;
 
+import java.io.IOException;
+import java.io.Writer;
+
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Constants;
@@ -42,6 +45,13 @@ public class AdminSession extends Session {
 
     protected long getSessionIdleLifetime() {
         return ADMIN_SESSION_TIMEOUT_MSEC;
+    }
+    
+    public void dumpState(Writer w) {
+    	try {
+    		w.write("AdminSession - ");
+    	} catch(IOException e) { e.printStackTrace(); }
+    	super.dumpState(w);
     }
 
     public void notifyPendingChanges(PendingModifications pns) { }

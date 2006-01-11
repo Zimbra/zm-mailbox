@@ -212,6 +212,9 @@ public class AdminService implements DocumentService {
     public static final QName CONFIGURE_ZIMLET_RESPONSE = QName.get("ConfigureZimletResponse", NAMESPACE);
     public static final QName MODIFY_ZIMLET_REQUEST = QName.get("ModifyZimletRequest", NAMESPACE);
     public static final QName MODIFY_ZIMLET_RESPONSE = QName.get("ModifyZimletResponse", NAMESPACE);
+    
+    public static final QName DUMP_SESSIONS_REQUEST = QName.get("DumpSessionsRequest", NAMESPACE);
+    public static final QName DUMP_SESSIONS_RESPONSE = QName.get("DumpSessionsResponse", NAMESPACE);
 
     public static final String E_ACCOUNT = "account";
     public static final String E_AUTH_TOKEN = "authToken";
@@ -406,6 +409,7 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(UNDEPLOY_ZIMLET_REQUEST, new UndeployZimlet());
         dispatcher.registerHandler(CONFIGURE_ZIMLET_REQUEST, new ConfigureZimlet());
         dispatcher.registerHandler(MODIFY_ZIMLET_REQUEST, new ModifyZimlet());
+        dispatcher.registerHandler(DUMP_SESSIONS_REQUEST, new DumpSessions());
     }
 
     /**

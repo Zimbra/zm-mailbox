@@ -51,6 +51,7 @@ import com.zimbra.cs.ozserver.OzByteBufferGatherer;
 import com.zimbra.cs.ozserver.OzConnection;
 import com.zimbra.cs.ozserver.OzConnectionHandler;
 import com.zimbra.cs.ozserver.OzCountingMatcher;
+import com.zimbra.cs.ozserver.OzMatcher;
 import com.zimbra.cs.ozserver.OzTLSFilter;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.SessionCache;
@@ -89,6 +90,27 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
     
     public OzImapConnectionHandler(OzConnection connection) {
         mConnection = connection;
+    }
+    
+    public void dumpState(Writer w) {
+    	StringBuilder s = new StringBuilder("\n\tOzImapConnectionHandler ").append(this.toString()).append("\n");
+    	if (mIncompleteRequest != null) 
+    		s.append("\t\tIncompleteRequest: ").append(mIncompleteRequest.toString()).append('\n');
+    	
+    	if (mConnection == null) {
+    		s.append("\t\tCONNECTION IS NULL\n");
+    	} else {
+    		s.append("\t\t").append(mConnection.toString()).append(" matcher=");
+    		OzMatcher matcher = mConnection.getMatcher();
+    		s.append(matcher.toString()).append('\n');
+    	}
+    	
+    	s.append("\t\tStartedTLS=").append(mStartedTLS ? "true" : "false").append('\n');
+    	s.append("\t\tGoodbyeSent=").append(mGoodbyeSent ? "true" : "false").append('\n');
+    	
+    	try {
+    		w.write(s.toString());
+    	} catch(IOException e) {};
     }
 
     public DateFormat getDateFormat() {

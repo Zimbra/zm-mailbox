@@ -41,6 +41,13 @@ public class OzCountingMatcher implements OzMatcher {
     public void target(int target) {
     	mTarget = target;
     }
+    
+    public String toString() {
+    	StringBuilder toRet = new StringBuilder("OzCountingMatcher('");
+    	toRet.append(mTarget).append(", ");
+    	toRet.append(mMatched).append(")");
+    	return toRet.toString();
+    }
 
     public boolean match(ByteBuffer buffer) {
         int nb = buffer.remaining();

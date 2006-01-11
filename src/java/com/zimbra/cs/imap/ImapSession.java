@@ -29,6 +29,7 @@
 package com.zimbra.cs.imap;
 
 import java.io.IOException;
+import java.io.Writer;
 import java.text.DateFormat;
 import java.util.*;
 
@@ -76,6 +77,21 @@ public class ImapSession extends Session {
 
             parseConfig(getMailbox().getConfig(getContext(), "imap"));
         } catch (ServiceException e) { }
+    }
+    
+    public void dumpState(Writer w) {
+    	try {
+    		StringBuilder s = new StringBuilder(this.toString());
+    		s.append("\n\t\tuser=").append(mUsername);
+    		s.append("\n\t\tstate=").append(mState);
+    		s.append("\n\t\tidleTag=").append(mIdleTag);
+    		s.append("\n\t\tselectedFolder=").append(mSelectedFolder.toString());
+    		s.append("\n\t\tcheckingSpam=").append(mCheckingSpam);
+    		
+    		w.write(s.toString());
+    		if (mHandler != null) 
+    			mHandler.dumpState(w);
+    	} catch(IOException e) { e.printStackTrace(); }
     }
 
     protected long getSessionIdleLifetime() {

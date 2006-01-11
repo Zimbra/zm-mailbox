@@ -1012,3 +1012,10 @@ Access: domain admin sufficient
 <UndeployZimletResponse/>
 
 -----------------------------
+
+<DumpSessionsRequest>
+
+<DumpSessionsResponse>
+   Session State Dump
+</DumpSessionsResponse>
+
