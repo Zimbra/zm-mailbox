@@ -205,8 +205,10 @@ public class ToXML {
             if (view != MailItem.TYPE_UNKNOWN)
                 elem.addAttribute(MailService.A_DEFAULT_VIEW, MailItem.getNameForType(view));
         }
-        if (needToOutput(fields, Change.MODIFIED_CONFLICT))
+        if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
             elem.addAttribute(MailService.A_CHANGE_DATE, folder.getChangeDate() / 1000);
+            elem.addAttribute(MailService.A_REVISION, folder.getModifiedSequence());
+        }
         return elem;
     }
 
@@ -315,8 +317,10 @@ public class ToXML {
             elem.addAttribute(MailService.A_COLOR, note.getColor());
         if (needToOutput(fields, Change.MODIFIED_CONTENT))
             elem.addAttribute(MailService.E_CONTENT, note.getContent(), Element.DISP_CONTENT);
-        if (needToOutput(fields, Change.MODIFIED_CONFLICT))
+        if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
             elem.addAttribute(MailService.A_CHANGE_DATE, note.getChangeDate() / 1000);
+            elem.addAttribute(MailService.A_REVISION, note.getModifiedSequence());
+        }
         return elem;
 	}
 
@@ -335,8 +339,10 @@ public class ToXML {
     		if (unreadCount > 0 || fields != NOTIFY_FIELDS)
                 elem.addAttribute(MailService.A_UNREAD, unreadCount);
         }
-        if (needToOutput(fields, Change.MODIFIED_CONFLICT))
+        if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
             elem.addAttribute(MailService.A_CHANGE_DATE, tag.getChangeDate() / 1000);
+            elem.addAttribute(MailService.A_REVISION, tag.getModifiedSequence());
+        }
 		return elem;
 	}
 
@@ -416,8 +422,10 @@ public class ToXML {
             }
         }
 
-        if (needToOutput(fields, Change.MODIFIED_CONFLICT))
+        if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
             c.addAttribute(MailService.A_CHANGE_DATE, conv.getChangeDate() / 1000);
+            c.addAttribute(MailService.A_REVISION, conv.getModifiedSequence());
+        }
         return c;
     }
 
@@ -553,11 +561,11 @@ public class ToXML {
         if (needToOutput(fields, Change.MODIFIED_FOLDER))
             apptElt.addAttribute(MailService.A_FOLDER, lc.formatItemId(appt.getFolderId()));
         recordItemTags(apptElt, appt, fields);
-        if (needToOutput(fields, Change.MODIFIED_CONFLICT))
+        if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
             apptElt.addAttribute(MailService.A_CHANGE_DATE, appt.getChangeDate() / 1000);
-        
-        
-        
+            apptElt.addAttribute(MailService.A_REVISION, appt.getModifiedSequence());
+        }
+
         for (int i = 0; i < appt.numInvites(); i++) {
             Invite inv = appt.getInvite(i);
 
@@ -796,8 +804,10 @@ public class ToXML {
                 elem.addAttribute(MailService.A_CONV_ID, lc.formatItemId(msg.getConversationId()));
         }
         recordItemTags(elem, mi, fields);
-        if (needToOutput(fields, Change.MODIFIED_CONFLICT))
+        if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
             elem.addAttribute(MailService.A_CHANGE_DATE, mi.getChangeDate() / 1000);
+            elem.addAttribute(MailService.A_REVISION, mi.getModifiedSequence());
+        }
         return elem;
     }
 
