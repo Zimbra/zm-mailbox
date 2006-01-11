@@ -106,7 +106,7 @@ public class FeedManager {
                 else if (lcurl.startsWith("feed:"))
                     url = "http:" + url.substring(5);
                 else if (!lcurl.startsWith("http:") && !lcurl.startsWith("https:"))
-                    throw ServiceException.FAILURE("url must begin with http: or https:", null);
+                    throw ServiceException.INVALID_REQUEST("url must begin with http: or https:", null);
 
                 GetMethod get = new GetMethod(url);
                 get.setFollowRedirects(true);
