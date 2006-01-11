@@ -31,6 +31,8 @@
  */
 package com.zimbra.cs.session;
 
+import java.io.IOException;
+import java.io.Writer;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -43,8 +45,8 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.StringUtil;
 
-public abstract class Session {
-
+public abstract class Session 
+{
     protected String  mAccountId;
     private   String  mSessionId;
     private   int     mSessionType;
@@ -74,6 +76,12 @@ public abstract class Session {
             }
         }
         updateAccessTime();
+    }
+    
+    public void dumpState(Writer w) {
+    	try {
+    		w.write(this.toString());
+    	} catch(IOException e) { e.printStackTrace(); };
     }
 
     /** Returns the Session's identifier. */

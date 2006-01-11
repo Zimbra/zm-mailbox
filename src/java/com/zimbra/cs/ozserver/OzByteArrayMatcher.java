@@ -45,6 +45,25 @@ public class OzByteArrayMatcher implements OzMatcher {
     private final int mMatchSequenceLength;
     private int mMatched;
     
+    public String toString() {
+    	StringBuilder toRet = new StringBuilder("OzByteArrayMatcher(");
+    	if (mMatchSequence == CRLF)
+    		toRet.append("CRLF, ");
+    	else if (mMatchSequence == CRLFDOTCRLF) 
+    		toRet.append("CRLFDOTCRLF, ");
+    	else {
+    		toRet.append("'");
+    		for (byte b : mMatchSequence) 
+    			toRet.append(b);
+    		toRet.append("', ");
+    	}
+    	
+    	toRet.append(mMatched);
+    	
+    	toRet.append(")");
+    	return toRet.toString();
+    }
+    
     public OzByteArrayMatcher(byte[] endSequence, Log log) {
         mMatchSequence = endSequence;
         mMatchSequenceLength = endSequence.length;

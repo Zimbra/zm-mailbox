@@ -40,7 +40,6 @@ import org.apache.commons.logging.LogFactory;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.*;
-import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Conversation;
@@ -101,6 +100,7 @@ public class Search extends DocumentHandler  {
         Element retVal = putHits(lc, response, pager, DONT_INCLUDE_MAILBOX_INFO, params);
         if (DONT_CACHE_RESULTS)
             results.doneWithSearchResults();
+        
         return retVal;
     }
     
