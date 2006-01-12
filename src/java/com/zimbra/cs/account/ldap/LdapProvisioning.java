@@ -2325,12 +2325,16 @@ public class LdapProvisioning extends Provisioning {
     }
 
     public Zimlet getZimlet(String name) throws ServiceException {
-    	    return getZimlet(name, null);
+    	return getZimlet(name, null, true);
     }
 
-    private Zimlet getZimlet(String name, DirContext initCtxt) throws ServiceException {
+    Zimlet lookupZimlet(String name, DirContext ctxt) throws ServiceException {
+    	return getZimlet(name, ctxt, false);
+    }
+    
+    private Zimlet getZimlet(String name, DirContext initCtxt, boolean useCache) throws ServiceException {
     	LdapZimlet zimlet = (LdapZimlet) sZimletCache.getByName(name);
-    	if (zimlet == null) {
+    	if (!useCache || zimlet == null) {
         	DirContext ctxt = initCtxt;
         	try {
         		if (ctxt == null) {
@@ -2339,8 +2343,10 @@ public class LdapProvisioning extends Provisioning {
         		String dn = zimletNameToDN(name);            
         		Attributes attrs = ctxt.getAttributes(dn);
         		zimlet = new LdapZimlet(dn, attrs);
-        		ZimletUtil.reloadZimlet(name);
-        		sZimletCache.put(zimlet);  // put LdapZimlet into the cache after successful ZimletUtil.reloadZimlet()
+        		if (useCache) {
+        			ZimletUtil.reloadZimlet(name);
+        			sZimletCache.put(zimlet);  // put LdapZimlet into the cache after successful ZimletUtil.reloadZimlet()
+        		}
         	} catch (NamingException ne) {
         		throw ServiceException.FAILURE("unable to get zimlet: "+name, ne);
         	} catch (ZimletException ze) {
@@ -2397,7 +2403,7 @@ public class LdapProvisioning extends Provisioning {
     		String dn = zimletNameToDN(name);
     		createSubcontext(ctxt, dn, attrs, "createZimlet");
     		
-    		Zimlet zimlet = getZimlet(name);
+    		Zimlet zimlet = lookupZimlet(name, ctxt);
     		AttributeManager.getInstance().postModify(zimletAttrs, zimlet, attrManagerContext, true);
     		return zimlet;
     	} catch (NameAlreadyBoundException nabe) {
@@ -2413,7 +2419,7 @@ public class LdapProvisioning extends Provisioning {
     	DirContext ctxt = null;
     	try {
     		ctxt = LdapUtil.getDirContext();
-    		LdapZimlet zimlet = (LdapZimlet)getZimlet(name);
+    		LdapZimlet zimlet = (LdapZimlet)lookupZimlet(name, ctxt);
     		ctxt.unbind(zimlet.getDN());
     		sZimletCache.remove(zimlet);
     	} catch (NamingException e) {
@@ -2427,7 +2433,7 @@ public class LdapProvisioning extends Provisioning {
     	DirContext ctxt = LdapUtil.getDirContext();
     	
     	try {
-    		getZimlet(zimlet, ctxt);
+    		lookupZimlet(zimlet, ctxt);
     	} catch (ServiceException e) {
     		LdapUtil.closeContext(ctxt);
     		throw ServiceException.FAILURE("zimlet does not exist: "+zimlet, e);
@@ -2450,7 +2456,7 @@ public class LdapProvisioning extends Provisioning {
     	DirContext ctxt = LdapUtil.getDirContext();
     	
     	try {
-    		getZimlet(zimlet, ctxt);
+    		lookupZimlet(zimlet, ctxt);
     	} catch (ServiceException e) {
     		LdapUtil.closeContext(ctxt);
     		throw ServiceException.FAILURE("zimlet does not exist: "+zimlet, e);
@@ -2473,7 +2479,7 @@ public class LdapProvisioning extends Provisioning {
     	DirContext ctxt = LdapUtil.getDirContext();
 
     	try {
-    		Zimlet zim = getZimlet(zimlet, ctxt);
+    		Zimlet zim = lookupZimlet(zimlet, ctxt);
     		Map map = new HashMap();
     		map.put(Provisioning.A_zimbraZimletHandlerConfig, config);
     		zim.modifyAttrs(map);
