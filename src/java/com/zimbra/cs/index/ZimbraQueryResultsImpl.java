@@ -104,7 +104,7 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
       return mTypes;
   }
   
-  protected ConversationHit getConversationHit(Mailbox mbx, Integer convId, float score) {
+  protected ConversationHit getConversationHit(Mailbox mbx, int convId, float score) {
       ConversationHit ch = (ConversationHit) mConversationHits.get(convId);
       if (ch == null) {
           ch = new ConversationHit(this, mbx, convId, score);
@@ -115,72 +115,64 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
       return ch;
   }
   
-  protected ContactHit getContactHit(Mailbox mbx, Integer blobId, Document d, float score, MailItem.UnderlyingData ud) throws ServiceException {
-      ContactHit hit = (ContactHit) mContactHits.get(blobId);
+  protected ContactHit getContactHit(Mailbox mbx, int mailItemId, Document d, float score, MailItem.UnderlyingData ud) throws ServiceException {
+      ContactHit hit = (ContactHit) mContactHits.get(mailItemId);
       if (hit == null) {
-          if (d != null) {
-              hit = new ContactHit(this, mbx, blobId.intValue(), d, score, ud);
-          } else {
-              hit = new ContactHit(this, mbx, blobId.intValue(), d, score, ud);
-          }
-          mContactHits.put(blobId, hit);
+    	  hit = new ContactHit(this, mbx, mailItemId, d, score, ud);
+          mContactHits.put(mailItemId, hit);
       } else {
           hit.updateScore(score);
       }
       return hit;
   }
 
-  protected NoteHit getNoteHit(Mailbox mbx, Integer blobId, Document d, float score, MailItem.UnderlyingData ud) throws ServiceException {
-      NoteHit hit = (NoteHit) mNoteHits.get(blobId);
+  protected NoteHit getNoteHit(Mailbox mbx, int mailItemId, Document d, float score, MailItem.UnderlyingData ud) throws ServiceException {
+      NoteHit hit = (NoteHit) mNoteHits.get(mailItemId);
       if (hit == null) {
-          if (d != null) {
-              hit = new NoteHit(this, mbx, d, score, ud);
-          } else {
-              hit = new NoteHit(this, mbx, d, score, ud);
-          }
-          mNoteHits.put(blobId, hit);
+    	  hit = new NoteHit(this, mbx, mailItemId, d, score, ud);
+          mNoteHits.put(mailItemId, hit);
       } else {
           hit.updateScore(score);
       }
       return hit;
   }
   
-  protected AppointmentHit getAppointmentHit(Mailbox mbx, Integer blobId, Document d, float score, MailItem.UnderlyingData ud) throws ServiceException {
-      AppointmentHit hit = (AppointmentHit) mApptHits.get(blobId);
+  protected AppointmentHit getAppointmentHit(Mailbox mbx, int mailItemId, Document d, float score, MailItem.UnderlyingData ud) throws ServiceException {
+      AppointmentHit hit = (AppointmentHit) mApptHits.get(mailItemId);
       if (hit == null) {
           if (d != null) {
-              hit = new AppointmentHit(this, mbx, d, score, ud);
+              hit = new AppointmentHit(this, mbx, mailItemId, d, score, ud);
           } else {
-              hit = new AppointmentHit(this, mbx, blobId.intValue(), score, ud);
+              hit = new AppointmentHit(this, mbx, mailItemId, score, ud);
           }
-          mApptHits.put(blobId, hit);
+          mApptHits.put(mailItemId, hit);
       } else {
           hit.updateScore(score);
       }
       return hit;
   }
 
-  protected MessageHit getMessageHit(Mailbox mbx, Integer messageId, Document d, float score, MailItem.UnderlyingData underlyingData) throws ServiceException {
-      MessageHit hit = (MessageHit) mMessageHits.get(messageId);
+  protected MessageHit getMessageHit(Mailbox mbx, int mailItemId, Document d, float score, MailItem.UnderlyingData underlyingData) throws ServiceException {
+      MessageHit hit = (MessageHit) mMessageHits.get(mailItemId);
       if (hit == null) {
           if (d != null) {
-              hit = new MessageHit(this, mbx, d, score, underlyingData);
+              hit = new MessageHit(this, mbx, mailItemId, d, score, underlyingData);
           } else {
-              hit = new MessageHit(this, mbx, messageId.intValue(), score, underlyingData);
+              hit = new MessageHit(this, mbx, mailItemId, score, underlyingData);
           }
-          mMessageHits.put(messageId, hit);
+          mMessageHits.put(mailItemId, hit);
       } else {
           hit.updateScore(score);
       }
       return hit;
   }
   
-  protected MessagePartHit getMessagePartHit(Mailbox mbx, Integer mailboxBlobId, Document d, float score, MailItem.UnderlyingData underlyingData) throws ServiceException 
+  protected MessagePartHit getMessagePartHit(Mailbox mbx, int mailItemId, Document d, float score, MailItem.UnderlyingData underlyingData) throws ServiceException 
   {
-      String partKey = d.get(LuceneFields.L_MAILBOX_BLOB_ID) + "-" + d.get(LuceneFields.L_PARTNAME);
+	  String partKey = Integer.toString(mailItemId) + "-" + d.get(LuceneFields.L_PARTNAME);
       MessagePartHit hit = (MessagePartHit) mPartHits.get(partKey);
       if (hit == null) {
-          hit = new MessagePartHit(this, mbx, d, score, underlyingData);
+          hit = new MessagePartHit(this, mbx, mailItemId, d, score, underlyingData);
           mPartHits.put(partKey, hit);
       } else {
           hit.updateScore(score);

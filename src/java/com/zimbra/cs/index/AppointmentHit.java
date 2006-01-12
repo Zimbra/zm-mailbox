@@ -48,7 +48,6 @@ public class AppointmentHit extends ZimbraHit {
     
     protected int mId;
     protected Appointment mAppt;
-    
 
     /**
      * @param results
@@ -56,10 +55,10 @@ public class AppointmentHit extends ZimbraHit {
      * @param d
      * @param score
      */
-    public AppointmentHit(ZimbraQueryResultsImpl results, Mailbox mbx, Document d,
-            float score, MailItem.UnderlyingData ud) throws ServiceException {
+    public AppointmentHit(ZimbraQueryResultsImpl results, Mailbox mbx, 
+    		int mailItemId, Document d, float score, MailItem.UnderlyingData ud) throws ServiceException {
         super(results, mbx, score);
-        assert(false);
+        mId = mailItemId;
         if (ud != null)
             mAppt = (Appointment)mbx.getItemFromUnderlyingData(ud);
     }

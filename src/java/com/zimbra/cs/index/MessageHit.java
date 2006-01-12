@@ -69,19 +69,21 @@ public class MessageHit extends ZimbraHit {
 
     private ConversationHit mConversationHit = null;
 
-    protected MessageHit(ZimbraQueryResultsImpl results, Mailbox mbx, Document d, float score, MailItem.UnderlyingData underlyingData) throws ServiceException {
+    protected MessageHit(ZimbraQueryResultsImpl results, Mailbox mbx, int mailItemId, Document d, float score, MailItem.UnderlyingData underlyingData) throws ServiceException {
         super(results, mbx, score);
         mDoc = d;
         assert (d != null);
+        mMessageId = mailItemId;
+        assert (mailItemId != 0);
         if (underlyingData != null) {
             mMessage = (Message)mbx.getItemFromUnderlyingData(underlyingData);
         }
     }
 
-    protected MessageHit(ZimbraQueryResultsImpl results, Mailbox mbx, int id, float score, MailItem.UnderlyingData underlyingData) throws ServiceException {
+    protected MessageHit(ZimbraQueryResultsImpl results, Mailbox mbx, int mailItemId, float score, MailItem.UnderlyingData underlyingData) throws ServiceException {
         super(results, mbx, score);
-        mMessageId = id;
-        assert (id != 0);
+        mMessageId = mailItemId;
+        assert (mailItemId != 0);
         if (underlyingData != null) {
             mMessage = (Message)mbx.getItemFromUnderlyingData(underlyingData);
         }
@@ -141,19 +143,7 @@ public class MessageHit extends ZimbraHit {
     }
 
     public int getItemId() {
-        if (mMessageId != 0) {
-            return mMessageId;
-        }
-        String mbid = mDoc.get(LuceneFields.L_MAILBOX_BLOB_ID);
-        try {
-            if (mbid != null) {
-                mMessageId = Integer.parseInt(mbid);
-            }
-            return mMessageId;
-        } catch (NumberFormatException e) {
-            e.printStackTrace();
-            return 0;
-        }
+    	return mMessageId;
     }
     
     public byte getItemType() throws ServiceException {
