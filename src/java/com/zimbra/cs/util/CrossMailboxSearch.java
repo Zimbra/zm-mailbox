@@ -88,7 +88,6 @@ import com.zimbra.soap.SoapTransport;
  */
 public class CrossMailboxSearch 
 {
-    
     /**
      * @param allowLocal TRUE if local tasks (ie directly run the search) are OK, FALSE if they aren't.  
      * Basically this is here so that I can use this class both in the Command-Line-Tool case (where I ALWAYS
@@ -137,7 +136,6 @@ public class CrossMailboxSearch
                 }
             }
         }
-        
         return results;
     }
     
@@ -160,21 +158,24 @@ public class CrossMailboxSearch
         CrossMailboxSearch.ServerSearchTask server;
         
         // hackhackhack
-        String hostname = Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname);
+        String hostname = null;
         if (!id.isLocal()) {
             hostname = id.getServer();
+        } else {
+        	hostname = Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname);
         }
+        
         
         server = (CrossMailboxSearch.ServerSearchTask)(mHashMap.get(hostname));
         if (server == null) {
-            if (mAllowLocalTask && hack==0 && id.isLocal()) { // hackhackhack
+            if (mAllowLocalTask /*&& hack<1*/ && id.isLocal()) { // hackhackhack
                 server = new CrossMailboxSearch.LocalServerSearchTask();
             } else {
                 server = new CrossMailboxSearch.RemoteServerSearchTask();
             }
-            if (mAllowLocalTask) {
-                hostname = hostname+"/"+hack;  // hackhackhack 
-            }
+//            if (mAllowLocalTask) {
+//                hostname = hostname+"/"+hack;  // hackhackhack 
+//            }
             mHashMap.put(hostname, server);
         }
         
@@ -184,9 +185,9 @@ public class CrossMailboxSearch
             server.addMailbox(id);
         }
         
-        if (mAllowLocalTask) {
-            hack++; // comment/uncomment this line to force the NONFIRST mailbox in the request to go via loopback
-        }
+//        if (mAllowLocalTask) { // hackhackhack
+//            hack++; // comment/uncomment this line to force the NONFIRST mailbox in the request to go via loopback
+//        }
     }
     
     public static void main(String[] args) {
@@ -228,7 +229,7 @@ public class CrossMailboxSearch
     private HashMap /* ServerID, ServerSearchTask */ mHashMap;
     private boolean mAllServersAllMailboxes = false;
     private boolean mAllowLocalTask = true;
-    private int hack = 0; // hackhack
+//    private int hack = -999; // hackhack
     
     
     private static abstract class ServerSearchTask {
@@ -436,11 +437,6 @@ public class CrossMailboxSearch
                 }
                 outputResults(res, offset, limit, outputDirFile);
                 
-                
-//                if (cl.hasOption()) {
-                    
-//                }
-                
             } catch (org.apache.commons.cli.ParseException e) {
                 usage(e.toString(), options);
                 return;
@@ -466,9 +462,10 @@ public class CrossMailboxSearch
             q.setRequired(true);
             options.addOption(q);
             
-            Option m = new Option("m", "mbox", true, "ID of Mailbox (see below for more info)");
+            Option m = new Option("m", "mbox", true, "IDs of Mailboxes (comma-separated.  UIDs or email-addresses or /SERVER/MAILBOXID all OK)");
             m.setRequired(true);
             m.setValueSeparator(',');
+            m.setArgs(Integer.MAX_VALUE);
             options.addOption(m);
             
             Option s = new Option("s", "server", true, "ID ");
@@ -504,6 +501,7 @@ public class CrossMailboxSearch
             HelpFormatter formatter = new HelpFormatter();
             System.out.println("java " + CrossMailboxSearch.class.getName() + " <options> ");
             formatter.printHelp("Available options:", options);
+            System.out.println("\nEG: java "+CrossMailboxSearch.class.getName()+" -q \"in:inbox\" -m df1a6a4b-1b69-41d9-b217-b81cfde02642,f9f5109f-66a3-4967-988f-e4f2a21c2f8a -s localhost -p 7071 -user zimbra -pwd zimbra -v");
         }
         
         private int saveMessageBody(File destDir, int resultId, String server, String mailboxIdStr, int itemId) 
@@ -588,9 +586,9 @@ public class CrossMailboxSearch
                     output.append(offset);
                     output.append(") ");
                     
-                    output.append(ph.getMailboxIdStr());
-                    output.append('/');
-                    output.append(ph.getItemId());
+                    output.append(ph.getParsedItemID().toString());
+//                    output.append('/');
+//                    output.append(ph.getItemId());
                     output.append(" - ");
                     Date date = new Date(cur.getDate());
                     output.append(date);

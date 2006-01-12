@@ -196,7 +196,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
             return mTransport;
         }
         Server server = Provisioning.getInstance().getServerByName(mServer);
-        String url = URLUtil.getSoapURL(server, false);
+        String url = URLUtil.getAdminURL(server, "/service/admin/soap");
         SoapTransport toRet = new SoapHttpTransport(url);
         toRet.setAuthToken(mAuthToken);
         return toRet;

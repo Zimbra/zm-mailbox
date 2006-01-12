@@ -40,6 +40,8 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.mail.Search;
 import com.zimbra.cs.service.util.ParseMailboxID;
+import com.zimbra.cs.session.Session;
+import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.util.CrossMailboxSearch;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
@@ -56,6 +58,14 @@ public class SearchMultipleMailboxes extends Search {
     //
     public boolean needsAuth(Map context) { return true; }
     public boolean needsAdminAuth(Map context) { return true; }
+    
+    /** Fetches the in-memory {@link Session} object appropriate for this request.
+     *  If none already exists, one is created.
+     * @return An {@link com.zimbra.cs.session.AdminSession}. */
+    public Session getSession(Map context) {
+        return getSession(context, SessionCache.SESSION_ADMIN);
+    }
+    
     
     public Element handle(Element request, Map context) throws ServiceException {
         ZimbraContext lc = getZimbraContext(context);

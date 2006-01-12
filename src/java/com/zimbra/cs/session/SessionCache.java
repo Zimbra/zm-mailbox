@@ -299,8 +299,8 @@ public final class SessionCache {
                 }
             }
 
-            sLog.debug("Detected " + accountCounter.getTotal() + " active sessions.  " +
-                       sessionTypeCounter + ".  Accounts: " + accountList);
+//            sLog.debug("Detected " + accountCounter.getTotal() + " active sessions.  " +
+//                       sessionTypeCounter + ".  Accounts: " + accountList);
             if (manySessionsList.length() > 0) {
                 sLog.info("Found accounts that have a large number of sessions: " +
                           manySessionsList);

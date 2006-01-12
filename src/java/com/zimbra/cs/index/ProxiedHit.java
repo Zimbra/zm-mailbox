@@ -56,7 +56,7 @@ public class ProxiedHit extends ZimbraHit
     
     protected Element mElement;
     
-    private ItemId getParsedItemID() throws ServiceException {
+    public ItemId getParsedItemID() throws ServiceException {
         if (itemID == null)
             itemID = new ItemId(mElement.getAttribute(MailService.A_ID), null);
         return itemID;
@@ -95,6 +95,8 @@ public class ProxiedHit extends ZimbraHit
         return mProxiedConvId;
     }
 
+    
+    
     public int getItemId() throws ServiceException {
         if (mProxiedMsgId <= 0) {
             ItemId id = getParsedItemID();
@@ -127,7 +129,7 @@ public class ProxiedHit extends ZimbraHit
     }
     
     public String getFragment() throws ServiceException {
-        Element frag = mElement.getElement(MailService.E_FRAG);
+        Element frag = mElement.getOptionalElement(MailService.E_FRAG);
         if (frag != null) {
             return frag.getText();
         }
