@@ -93,9 +93,9 @@ public class CreateAppointmentException extends CreateAppointment {
             }
             
             if (appt == null)
-                throw ServiceException.FAILURE("Could not find Appointment for id=" + iid.getId() + " comp=" + compNum + ">", null);
+                throw MailServiceException.NO_SUCH_APPT(inv.getUid(), " for CreateAppointmentExceptionRequest(" + iid + "," + compNum + ")");
             else if (!appt.isRecurring())
-                throw ServiceException.FAILURE("Appointment " + appt.getId() + " is not a recurring appointment", null);
+                throw ServiceException.INVALID_REQUEST("Appointment " + appt.getId() + " is not a recurring appointment", null);
             
             CreateApptExceptionInviteParser parser = new CreateApptExceptionInviteParser(appt.getUid(), inv.getTimeZoneMap());                
             CalSendData dat = handleMsgElement(lc, msgElem, acct, mbox, parser);

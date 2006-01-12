@@ -72,7 +72,6 @@ public class MailServiceException extends ServiceException {
 	public static final String QUERY_PARSE_ERROR = "mail.QUERY_PARSE_ERROR";
     public static final String MESSAGE_PARSE_ERROR = "mail.MESSAGE_PARSE_ERROR";
     public static final String ICALENDAR_PARSE_ERROR = "mail.ICALENDAR_PARSE_ERROR";
-    public static final String NO_SUCH_APPOINTMENT = "mail.NO_SUCH_APPOINTMENT";
     public static final String MUST_BE_ORGANIZER = "mail.MUST_BE_ORGANIZER";
     public static final String CANNOT_CANCEL_INSTANCE_OF_EXCEPTION = "mail.CANNOT_CANCEL_INSTANCE_OF_EXCEPTION";
     public static final String INVITE_OUT_OF_DATE = "mail.INVITE_OUT_OF_DATE";
@@ -171,6 +170,10 @@ public class MailServiceException extends ServiceException {
         return new NoSuchItemException("no such appointment: " + uid, NO_SUCH_APPT, SENDERS_FAULT, new Argument(UID, uid));
     }
 
+    public static MailServiceException NO_SUCH_APPT(String uid, String msg) {
+        return new MailServiceException("no such appointment: "+uid+" "+msg, NO_SUCH_APPT, SENDERS_FAULT, new Argument(UID, uid));
+    }
+    
     public static MailServiceException NO_SUCH_DOC(int id) {
         return new NoSuchItemException("no such document: " + id, NO_SUCH_DOC, SENDERS_FAULT, new Argument(ITEM_ID, id));
     }
@@ -283,10 +286,6 @@ public class MailServiceException extends ServiceException {
         return new MailServiceException("Couldn't parse iCalendar information: "+s, ICALENDAR_PARSE_ERROR, SENDERS_FAULT, t);
     }
 
-    public static MailServiceException NO_SUCH_APPOINTMENT(String uid, String msg) {
-        return new MailServiceException("No such Appointment: "+uid+" "+msg, NO_SUCH_APPOINTMENT, SENDERS_FAULT, new Argument(UID, uid));
-    }
-    
     public static MailServiceException MUST_BE_ORGANIZER(String request) {
         return new MailServiceException("You are not Organizer in call to: "+request, MUST_BE_ORGANIZER, SENDERS_FAULT);
     }
