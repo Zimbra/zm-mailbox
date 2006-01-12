@@ -111,8 +111,12 @@ public class SendInviteReply extends CalendarRequest {
                 inviteMsgId = iid.getId();
                 Message msg = mbox.getMessageById(octxt, inviteMsgId);
                 Message.ApptInfo info = msg.getApptInfo(compNum);
+                if (info == null)
+                	throw MailServiceException.NO_SUCH_APPT(iid.toString(), "Could not find appointment");
                 apptId = info.getAppointmentId();
                 appt = mbox.getAppointmentById(octxt, apptId);
+                if (appt == null)
+                	throw MailServiceException.NO_SUCH_APPT(iid.toString(), "Could not find appointment");
                 oldInv = appt.getInvite(inviteMsgId, compNum);  
             }
             
