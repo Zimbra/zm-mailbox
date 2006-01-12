@@ -40,9 +40,10 @@ import com.zimbra.cs.service.ServiceException;
  */
 public final class NoteHit extends ZimbraHit {
     
-    public NoteHit(ZimbraQueryResultsImpl results, Mailbox mbx, Document d, float score, MailItem.UnderlyingData ud)  throws ServiceException {
+    public NoteHit(ZimbraQueryResultsImpl results, Mailbox mbx, int mailItemId, Document d, float score, MailItem.UnderlyingData ud)  throws ServiceException {
         super(results, mbx, score);
-        
+    
+        mMailItemId = mailItemId;
         mDocument = d;
         
         if (ud != null)
@@ -51,6 +52,7 @@ public final class NoteHit extends ZimbraHit {
     
     private Document mDocument = null;
     private Note mNote = null;
+    private int mMailItemId;
     
     /* (non-Javadoc)
      * @see com.zimbra.cs.index.ZimbraHit#getDate()
@@ -119,8 +121,7 @@ public final class NoteHit extends ZimbraHit {
      * @see com.zimbra.cs.index.ZimbraHit#getMessageId()
      */
     public int getItemId() throws ServiceException {
-        String mbid = mDocument.get(LuceneFields.L_MAILBOX_BLOB_ID);
-        return Integer.parseInt(mbid);
+    	return mMailItemId;
     }
     
     public byte getItemType() throws ServiceException {

@@ -442,26 +442,26 @@ class DBQueryOperation extends QueryOperation
                 if (docs != null) {
                     for (Iterator iter = docs.iterator(); iter.hasNext();) {
                         Document doc = (Document)iter.next();
-                        toAdd = this.getResultsSet().getMessagePartHit(this.getMailbox(), new Integer(sr.id), doc, score, sr.data);
+                        toAdd = this.getResultsSet().getMessagePartHit(this.getMailbox(), sr.id, doc, score, sr.data);
                         toAdd.cacheSortField(this.getResultsSet().getSortBy(), sr.sortkey);
                         mNextHits.add(toAdd);
                     }
                 } else {
-                    toAdd = this.getResultsSet().getMessageHit(this.getMailbox(), new Integer(sr.id), null, score, sr.data);
+                    toAdd = this.getResultsSet().getMessageHit(this.getMailbox(), sr.id, null, score, sr.data);
                     toAdd.cacheSortField(this.getResultsSet().getSortBy(), sr.sortkey);
                     mNextHits.add(toAdd);
                 }
                 break;
             case MailItem.TYPE_CONTACT:
-                toAdd = this.getResultsSet().getContactHit(this.getMailbox(), new Integer(sr.id), null, score, sr.data);
+                toAdd = this.getResultsSet().getContactHit(this.getMailbox(), sr.id, null, score, sr.data);
                 mNextHits.add(toAdd);
                 break;
             case MailItem.TYPE_NOTE:
-                toAdd = this.getResultsSet().getNoteHit(this.getMailbox(), new Integer(sr.id), null, score, sr.data);
+                toAdd = this.getResultsSet().getNoteHit(this.getMailbox(), sr.id, null, score, sr.data);
                 mNextHits.add(toAdd);
                 break;
             case MailItem.TYPE_APPOINTMENT:
-                toAdd = this.getResultsSet().getAppointmentHit(this.getMailbox(), new Integer(sr.id), null, score, sr.data);
+                toAdd = this.getResultsSet().getAppointmentHit(this.getMailbox(), sr.id, null, score, sr.data);
                 mNextHits.add(toAdd);
                 break;
                 // Unsupported right now:
@@ -762,7 +762,7 @@ class DBQueryOperation extends QueryOperation
                             		ScoredDBHit[] scHits = new ScoredDBHit[mDBHits.size()];
                             		int offset = 0;
                             		for (SearchResult sr : mDBHits) {
-                            			ScoredLuceneHit lucScore = mLuceneChunk.getScoredHit(sr.id);
+                            			ScoredLuceneHit lucScore = mLuceneChunk.getScoredHit(sr.indexId);
                             			
                             			scHits[offset++] = new ScoredDBHit(sr, lucScore.mScore);
                             		}

@@ -55,10 +55,11 @@ public final class MessagePartHit extends ZimbraHit {
 
     private MessageHit mMessage = null;
 
-    int mMailboxBlobId = -1;
+    int mMailItemId = 0;
     
-    protected MessagePartHit(ZimbraQueryResultsImpl res, Mailbox mbx, Document d, float score, MailItem.UnderlyingData ud) throws ServiceException {
+    protected MessagePartHit(ZimbraQueryResultsImpl res, Mailbox mbx, int mailItemId, Document d, float score, MailItem.UnderlyingData ud) throws ServiceException {
         super(res, mbx, score);
+        mMailItemId = mailItemId;
         mDoc = d;
         if (ud != null) {
             getMessageResult(ud);
@@ -91,11 +92,13 @@ public final class MessagePartHit extends ZimbraHit {
     }
 
     public String getSubject() throws ServiceException {
-        if (mDoc != null) {
-            mCachedSubj = mDoc.get(LuceneFields.L_SORT_SUBJECT);
-        } else {
-            mCachedSubj = getMessageResult().getSubject();
-        }
+    	if (mCachedSubj == null) {
+    		if (mDoc != null) {
+    			mCachedSubj = mDoc.get(LuceneFields.L_SORT_SUBJECT);
+    		} else {
+    			mCachedSubj = getMessageResult().getSubject();
+    		}
+    	}
         return mCachedSubj; 
     }
     
@@ -107,19 +110,7 @@ public final class MessagePartHit extends ZimbraHit {
     }
 
     public int getItemId() {
-        if (mMailboxBlobId != -1) {
-            return mMailboxBlobId;
-        }
-        String mbid = mDoc.get(LuceneFields.L_MAILBOX_BLOB_ID);
-        try {
-            if (mbid != null) {
-                mMailboxBlobId = Integer.parseInt(mbid);
-            }
-            return mMailboxBlobId;
-        } catch (NumberFormatException e) {
-            e.printStackTrace();
-            return 0;
-        }
+    	return mMailItemId;
     }
     
     void setItem(MailItem item) throws ServiceException {
@@ -191,11 +182,9 @@ public final class MessagePartHit extends ZimbraHit {
     //
     // Hierarchy access:
     //
-    
     public MessageHit getMessageResult() throws ServiceException {
         return getMessageResult(null);
     }
-    
 
     /**
      * @return Message that contains this document
