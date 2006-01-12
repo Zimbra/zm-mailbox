@@ -95,7 +95,7 @@ public class ModifyAppointment extends CalendarRequest {
         synchronized(mbox) {
             Appointment appt = mbox.getAppointmentById(octxt, iid.getId());
             if (appt == null) {
-                throw MailServiceException.NO_SUCH_APPOINTMENT(iid.toString(), "Could not find appointment");
+                throw MailServiceException.NO_SUCH_APPT(iid.toString(), "Could not find appointment");
             }
             Invite inv = appt.getInvite(iid.getSubpartId(), compNum);
             if (inv == null) {

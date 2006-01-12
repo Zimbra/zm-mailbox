@@ -72,7 +72,7 @@ public class CancelAppointment extends CalendarRequest {
             Invite inv = appt.getInvite(iid.getSubpartId(), compNum);
             
             if (appt == null) {
-                throw MailServiceException.NO_SUCH_APPOINTMENT(inv.getUid(), " for CancelAppointmentRequest(" + iid + "," + compNum + ")");
+                throw MailServiceException.NO_SUCH_APPT(inv.getUid(), " for CancelAppointmentRequest(" + iid + "," + compNum + ")");
             }
             
             Element recurElt = request.getOptionalElement(MailService.E_INSTANCE);
