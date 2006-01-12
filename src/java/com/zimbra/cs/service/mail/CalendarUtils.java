@@ -619,7 +619,7 @@ private static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap i
             return ParsedDateTime.parse(d, timezone, inv.getTimeZoneMap()
                     .getLocalTimeZone());
         } catch (ParseException pe) {
-            throw ServiceException.FAILURE("Caught ParseException: " + pe, pe);
+            throw ServiceException.INVALID_REQUEST("Caught ParseException: " + pe, pe);
         }
     }
 
@@ -862,7 +862,7 @@ private static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap i
         Element recur = element.getOptionalElement(MailService.A_APPT_RECUR);
         if (recur != null) {
             if (!recurAllowed) {
-                throw ServiceException.FAILURE(
+                throw ServiceException.INVALID_REQUEST(
                         "No <recur> allowed in an exception", null);
             }
             Recurrence.IRecurrence recurrence = parseRecur(recur, tzMap,
