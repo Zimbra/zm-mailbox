@@ -30,12 +30,14 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.Map;
 
+import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.WriteOpDocumentHandler;
 import com.zimbra.soap.ZimbraContext;
@@ -51,7 +53,7 @@ public class GetICal extends WriteOpDocumentHandler {
         Mailbox mbx = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
         
-        int msgId = (int)request.getAttributeLong(MailService.A_ID, -1);
+        String iidStr = request.getAttribute(MailService.A_ID, null);
         long rangeStart = request.getAttributeLong(MailService.A_APPT_START_TIME, -1);
         long rangeEnd = request.getAttributeLong(MailService.A_APPT_END_TIME, -1);
         
@@ -61,10 +63,17 @@ public class GetICal extends WriteOpDocumentHandler {
         try {
             try {
                 ZVCalendar cal = null;
-                if (msgId > 0) {
-                    Message msg = mbx.getMessageById(octxt, msgId);
-//                    Invite inv = msg.getInvite(0);
-//                    cal = inv.getCalendar();
+                if (iidStr != null) {
+                	ItemId iid = new ItemId(iidStr, lc);
+                    Appointment appt = mbx.getAppointmentById(octxt, iid.getId());
+                    if (appt == null) {
+                        throw MailServiceException.NO_SUCH_APPT(iid.toString(), "Could not find appointment");
+                    }
+                    Invite inv = appt.getInvite(iid.getSubpartId(), compNum);
+                    if (inv == null) {
+                        throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());
+                    }
+                    cal = inv.newToICalendar();
                 } else {
                     cal = mbx.getZCalendarForRange(octxt, rangeStart, rangeEnd, Mailbox.ID_FOLDER_CALENDAR);
                 }
@@ -81,23 +90,19 @@ public class GetICal extends WriteOpDocumentHandler {
                     
                     Element icalElt = response.addElement(MailService.E_APPT_ICAL);
                     
-                    icalElt.addAttribute(MailService.A_ID, msgId);
+                    icalElt.addAttribute(MailService.A_ID, iidStr);
                     
                     icalElt.addText(buf.toString());
                     
                     return response;
                 } catch (IOException e) {
-                    throw ServiceException.FAILURE("IO Exception while outputing Calendar for Invite: "+ msgId + "-" + compNum, e);
-//                } catch (ValidationException e) {
-//                    throw ServiceException.FAILURE("Validation Exception while outputing Calendar for Invite: "+ msgId + "-" + compNum, e);
+                    throw ServiceException.FAILURE("IO Exception while outputing Calendar for Invite: "+ iidStr + "-" + compNum, e);
                 }
             } catch(MailServiceException.NoSuchItemException e) {
-                throw ServiceException.FAILURE("Error could get default invite for Invite: "+ msgId + "-" + compNum, e);
+                throw ServiceException.FAILURE("Error could get default invite for Invite: "+ iidStr + "-" + compNum, e);
             }
         } catch(MailServiceException.NoSuchItemException e) {
-            throw ServiceException.FAILURE("No Such Invite Message: "+ msgId, e);
+            throw ServiceException.FAILURE("No Such Invite Message: "+ iidStr, e);
         }
     }
-    
-
 }
