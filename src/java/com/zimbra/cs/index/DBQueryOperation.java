@@ -421,13 +421,18 @@ class DBQueryOperation extends QueryOperation
         if (mDBHitsIter != null && mDBHitsIter.hasNext()) {
             SearchResult sr = (SearchResult) mDBHitsIter.next();
             
-            Integer srIdInt = new Integer(sr.id);
             List /*Document*/ docs = null;
             float score = 1.0f;
             if (mLuceneChunk != null) {
-            	LuceneIndexIdChunk.ScoredLuceneHit sh = mLuceneChunk.getScoredHit(srIdInt);
-            	docs = sh.mDocs;
-            	score = sh.mScore;
+            	LuceneIndexIdChunk.ScoredLuceneHit sh = mLuceneChunk.getScoredHit(sr.indexId);
+            	if (sh != null) { 
+            		docs = sh.mDocs;
+            		score = sh.mScore;
+            	} else {
+            		mLog.info("Could not find ScoredLuceneHit for sr.indexId="+sr.indexId+" sr.id="+sr.id+" type="+sr.type);
+            		docs = null;
+            		score = 1.0f;
+            	}
             }
             
             ZimbraHit toAdd;
