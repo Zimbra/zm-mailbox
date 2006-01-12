@@ -49,6 +49,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
@@ -280,8 +281,9 @@ public class Search extends DocumentHandler  {
             	e.addAttribute(MailService.A_SORT_FIELD, hit.getSortField(pager.getSortOrder()).toString());
             }
             if (includeMailbox) {
-                String idStr = hit.getMailboxIdStr() + "/" + hit.getItemId();
-                e.addAttribute(MailService.A_ID, idStr);
+//                String idStr = hit.getMailboxIdStr() + "/" + hit.getItemId();
+            	ItemId iid = new ItemId(hit.getAcctIdStr(), hit.getItemId());
+                e.addAttribute(MailService.A_ID, iid.toString());
             }
             if (totalNumHits >= limit) {
                 if (mLog.isDebugEnabled()) {

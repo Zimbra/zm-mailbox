@@ -45,7 +45,18 @@ public abstract class ZimbraHit
     final public Mailbox getMailbox() { return mMailbox; }
     final ZimbraQueryResultsImpl getResults() { return mResults; }
     
-    public String getMailboxIdStr() throws ServiceException { return Integer.toString(mMailbox.getId()); } 
+    public String getMailboxIdStr() throws ServiceException {
+    	if (mMailbox == null) {
+    		return "NULL_MAILBOXID";
+    	}
+    	return Integer.toString(mMailbox.getId()); 
+    }
+    
+    public String getAcctIdStr() throws ServiceException {
+    	if (mMailbox == null) return "NULL_ACCOUNTID";
+    	return mMailbox.getAccountId(); 
+    }
+    
     
     public ZimbraHit(ZimbraQueryResultsImpl results, Mailbox mbx,  float score) {
         mMailbox = mbx;
@@ -79,7 +90,7 @@ public abstract class ZimbraHit
     protected String mCachedName = null;
     protected String mCachedSubj = null;
 
-    private float mScore = (float) -3.575;
+    private float mScore = (float) 1.0;
     final public float getScore() {
         return mScore;
     }
