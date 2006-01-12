@@ -50,14 +50,6 @@
 	<property name="dist.zimlet.dir" location="${dist.dir}/zimlets" />
 
 	<property name="config.dir" location="conf" />
-	<condition property="web.xml.source" value="${config.dir}/web.xml">
-		<not>
-			<isset property="is-production" />
-		</not>
-	</condition>
-	<condition property="web.xml.source" value="${config.dir}/production/web.xml">
-		<isset property="is-production" />
-	</condition>
 
 	<property name="warfile" location="${dist.tomcat.webapps.dir}/service.war" />
 
@@ -300,7 +292,7 @@
 
 	<target name="war" depends="jar">
 		<echo>war.exclude=${war.exclude}</echo>
-		<war warfile="${warfile}" webxml="${web.xml.source}">
+		<war warfile="${warfile}" webxml="${config.dir}/web.xml">
 			<fileset dir="WebRoot"/>
 			<lib dir="${dist.lib.dir}" includes="zimbrastore.jar" />
 			<lib dir="${jars.dir}" includes="*.jar" excludes="${war.exclude}" />
