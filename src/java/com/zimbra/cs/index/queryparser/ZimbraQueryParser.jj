@@ -536,11 +536,11 @@ ArrayList Query() throws ServiceException :
     int modifier;
 }
 {
-    SortBy() modifier=Modifier() clause=Clause() { if (clause != null) { clause.setModifier(modifier); AddClause(clauses,clause); } }
+    SortBy() modifier=Modifier() clause=Clause() SortBy() { if (clause != null) { clause.setModifier(modifier); AddClause(clauses,clause); } }
     (
-        SortBy() {}
         clause=Conjunction() { AddClause(clauses,clause); }
         modifier=Modifier() clause=Clause() SortBy() { if (clause != null) { clause.setModifier(modifier); AddClause(clauses,clause); } }
+        SortBy() {}
         )* {}
     {
         return clauses;
