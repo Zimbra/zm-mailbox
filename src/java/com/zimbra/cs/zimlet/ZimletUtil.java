@@ -80,6 +80,25 @@ public class ZimletUtil {
 		return zimlets;
 	}
 	
+	public static ZimletConfig getZimletConfig(String zimlet) {
+		loadZimlets();
+		loadDevZimlets();
+		ZimletFile zf;
+		zf = sZimlets.get(zimlet);
+		if (zf == null) {
+			zf = sDevZimlets.get(zimlet);
+		}
+		if (zf == null) {
+			return null;
+		}
+		try {
+			return zf.getZimletConfig();
+		} catch (Exception e) {
+			ZimbraLog.zimlet.info("error loading zimlet "+zimlet, e);
+		}
+		return null;
+	}
+	
 	/**
 	 * Loads all the Zimlets, locates the server side ZimletHandler for each Zimlets,
 	 * loads the class and instantiate the object, then returns the instance.

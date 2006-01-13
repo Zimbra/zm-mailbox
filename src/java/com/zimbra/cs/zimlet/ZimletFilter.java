@@ -27,6 +27,7 @@ package com.zimbra.cs.zimlet;
 import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.Set;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -96,27 +97,19 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
             }
         }
         
+    	String zimletName = getZimletName(req);
+    	if (zimletName == null) {
+	    	ZimbraLog.zimlet.info("no zimlet in the request");
+        	resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+    		return;
+    	}
+    	
         try {
         	Account account = Provisioning.getInstance().getAccountById(authToken.getAccountId());
         	boolean isDomainAdmin = account.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);
         	if (!isAdmin && !isDomainAdmin) {
-	        	String[] attrList = account.getCOS().getMultiAttr(Provisioning.A_zimbraZimletAvailableZimlets);
-	        	String zimletName = getZimletName(req);
-	        	
-	        	if (zimletName == null) {
-	    	    	ZimbraLog.zimlet.debug("no zimlet name");
-	            	resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
-	        		return;
-	        	}
-	        	
-	        	boolean found = false;
-	        	for (int i = 0; i < attrList.length; i++) {
-	        		if (zimletName.equals(attrList[i])) {
-	        			found = true;
-	        			break;
-	        		}
-	        	}
-	        	if (!found) {
+	        	Set zimlets = account.getCOS().getMultiAttrSet(Provisioning.A_zimbraZimletAvailableZimlets);
+	        	if (!zimlets.contains(zimletName)) {
 	            	ZimbraLog.zimlet.info("unauthorized request to zimlet "+zimletName+" from user "+authToken.getAccountId());
 	            	resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
 	        		return;
