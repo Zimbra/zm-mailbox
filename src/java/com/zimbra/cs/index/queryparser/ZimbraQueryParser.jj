@@ -25,8 +25,8 @@
 options {
     STATIC = false;
 //    DEBUG_LOOKAHEAD = true;
-    DEBUG_PARSER = true ;
-    DEBUG_TOKEN_MANAGER = true ;
+//    DEBUG_PARSER = true ;
+//    DEBUG_TOKEN_MANAGER = true ;
     ERROR_REPORTING = true;
     JAVA_UNICODE_ESCAPE=true;
     OPTIMIZE_TOKEN_MANAGER=true;
