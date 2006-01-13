@@ -358,13 +358,25 @@ public abstract class MailItem implements Comparable {
                 return true;
             if ((inclusions & INCLUDE_SPAM) != 0 && item.inSpam())
                 return true;
-            if ((inclusions & INCLUDE_SENT) != 0 && item.getFolderId() == getSentFolder())
+            if ((inclusions & INCLUDE_SENT) != 0 && inSent(item))
                 return true;
-            if ((inclusions & INCLUDE_OTHERS) != 0 && !item.inTrash() && !item.inSpam() && item.getFolderId() != getSentFolder())
+            if ((inclusions & INCLUDE_OTHERS) != 0 && !item.inTrash() && !item.inSpam() && !inSent(item))
                 return true;
             return false;
         }
-        private int getSentFolder() {
+        /** Returns whether an item is in the user's sent folder.  Returns
+         *  <code>false</code> if the user has set their sent folder to be
+         *  any folder other than the default "/Sent" folder, folder 5.<p>
+         *  
+         *  The reason we don't just compare the item's folder against the
+         *  user's configured sent folder is that when the user sets their
+         *  sent folder to be "/Inbox", *all* Inbox messages will be skipped
+         *  when the "sent" folder is excluded via tcon, which is not what
+         *  we want.  See bug 3972 for details. */
+        private boolean inSent(MailItem item) {
+            // only count as "in sent" if the item's in the real "/Sent" folder
+            if (item.getFolderId() != Mailbox.ID_FOLDER_SENT)
+                return false;
             if (sentFolder == -1) {
                 sentFolder = Mailbox.ID_FOLDER_SENT;
                 try {
@@ -373,7 +385,10 @@ public abstract class MailItem implements Comparable {
                         sentFolder = mailbox.getFolderByPath(null, sent).getId();
                 } catch (ServiceException e) { }
             }
-            return sentFolder;
+            // only count as "in sent" if the user's sent folder is 5 and
+            //   the item's in there
+            return sentFolder == Mailbox.ID_FOLDER_SENT && sentFolder == item.getFolderId();
+            // return sentFolder == item.getFolderId();
         }
     }
 
@@ -400,9 +415,9 @@ public abstract class MailItem implements Comparable {
         mbox.cache(this);
     }
 
-    /** Returns the item's ID.  IDs are unique within a {@link Mailbox} and are
-     *  assigned in monotonically-increasing (though not necessarily gap-free)
-     *  order. */
+    /** Returns the item's ID.  IDs are unique within a {@link Mailbox} and
+     *  are assigned in monotonically-increasing (though not necessarily
+     *  gap-free) order. */
     public int getId() {
         return mData.id;
     }
@@ -442,14 +457,22 @@ public abstract class MailItem implements Comparable {
         return mData.folderId;
     }
 
+    /** Returns the ID of the {@link Volume} the item's blob is stored on.
+     *  Returns -1 for items that have no stored blob. */
     public short getVolumeId() {
     	return mData.volumeId;
     }
 
-    public int getIndexId() {
+    /** Returns the ID the item is referenced by in the index.  Returns -1
+     *  for non-indexed items.  For indexed items, the "index ID" will be the
+     *  same as the item ID unless the item is a copy of another item; in that
+     *  case, the "index ID" is the same as the original item's "index ID". */
+    int getIndexId() {
         return mData.indexId;
     }
 
+    /** Returns the SHA-1 hash of the item's uncompressed blob.  Returns
+     *  <code>""</code> for items that have no stored blob. */
     public String getDigest() {
         return (mData.blobDigest == null ? "" : mData.blobDigest);
     }
