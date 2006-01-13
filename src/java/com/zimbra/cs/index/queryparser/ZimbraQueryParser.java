@@ -867,7 +867,8 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
       SortBy();
       modifier = Modifier();
       clause = Clause();
-                                                   if (clause != null) { clause.setModifier(modifier); AddClause(clauses,clause); }
+      SortBy();
+                                                            if (clause != null) { clause.setModifier(modifier); AddClause(clauses,clause); }
       label_4:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -911,8 +912,6 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
         case COMPANY:
         case METADATA:
         case ITEM:
-        case SORTBY:
-        case SORT:
         case PLUS:
         case MINUS:
         case TEXT_TOK:
@@ -923,14 +922,14 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
           jj_la1[24] = jj_gen;
           break label_4;
         }
-        SortBy();
-
         clause = Conjunction();
                                AddClause(clauses,clause);
         modifier = Modifier();
         clause = Clause();
         SortBy();
                                                        if (clause != null) { clause.setModifier(modifier); AddClause(clauses,clause); }
+        SortBy();
+
       }
 
         {if (true) return clauses;}
@@ -988,7 +987,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
       jj_la1_0 = new int[] {0x60,0x80,0x80,0x1e0,0x0,0x100,0x1e0,0x0,0x100,0x1e0,0x0,0x0,0x0,0x100,0x7000,0xf8c00,0x100000,0xfe00000,0x30000000,0x0,0x3ffffc00,0x3ffffd00,0x0,0x0,0x3ffffde0,0x1,0x1,};
    }
    private static void jj_la1_1() {
-      jj_la1_1 = new int[] {0x0,0xc0000,0x0,0x101c0000,0x10100000,0x10100000,0x121c0000,0x12100000,0x12100000,0x101c0000,0xc0000,0x10100000,0x10100000,0x101c0000,0x0,0x7c04,0xfa,0x300,0x1,0x10100000,0x1010ffff,0x1010ffff,0x30000,0x30000,0x101fffff,0x20000000,0x20000000,};
+      jj_la1_1 = new int[] {0x0,0xc0000,0x0,0x101c0000,0x10100000,0x10100000,0x121c0000,0x12100000,0x12100000,0x101c0000,0xc0000,0x10100000,0x10100000,0x101c0000,0x0,0x7c04,0xfa,0x300,0x1,0x10100000,0x1010ffff,0x1010ffff,0x30000,0x30000,0x101cffff,0x20000000,0x20000000,};
    }
 
   public ZimbraQueryParser(java.io.InputStream stream) {
