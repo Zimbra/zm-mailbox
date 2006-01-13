@@ -865,8 +865,7 @@ public class ToXML {
 
         e.addAttribute(MailService.A_APPT_COMPONENT_NUM, invite.getComponentNum());
         
-        // currently the RSVP attribute is the only attribute that changes
-        e.addAttribute(MailService.A_APPT_RSVP, invite.needsReply());
+        e.addAttribute(MailService.A_APPT_RSVP, invite.getRsvp());
         
         if (allFields) {
             try {

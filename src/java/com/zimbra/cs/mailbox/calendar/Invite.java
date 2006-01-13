@@ -84,6 +84,7 @@ public class Invite {
             String loc,
             int flags,
             String partStat,
+            boolean rsvp,
             RecurId recurrenceId,
             long dtstamp,
             int seqno,
@@ -111,6 +112,7 @@ public class Invite {
         mLocation = loc != null ? loc : "";
         mFlags = flags;
         mPartStat = partStat;
+        mRsvp = rsvp;
         mRecurrenceId = recurrenceId;
         mDTStamp = dtstamp;
         mSeqNo = seqno;
@@ -154,6 +156,7 @@ public class Invite {
      * @param sequenceNoOrZero RFC2445 sequencying.  If 0, then will use current highest sequence no, or 1
      * @param needsReply TRUE if this mailbox is expected to reply to this invite
      * @param partStat IcalXMLStrMap.PARTSTAT_* RFC2445 Participant Status of this mailbox
+     * @param rsvp RFC2445 RSVP
      * @param sentByMe TRUE if this mailbox sent this invite 
      */
     public static Invite createInvite(
@@ -180,6 +183,7 @@ public class Invite {
             int sequenceNoOrZero,
             boolean needsReply,
             String partStat,
+            boolean rsvp,
             boolean sentByMe) throws ServiceException
     {
         return new Invite(
@@ -201,6 +205,7 @@ public class Invite {
                 location,
                 Invite.APPT_FLAG_EVENT | (needsReply ? Invite.APPT_FLAG_NEEDS_REPLY : 0) | (allDayEvent ? Invite.APPT_FLAG_ALLDAY : 0),
                 partStat,
+                rsvp,
                 recurId,
                 dtStampOrZero,
                 sequenceNoOrZero,
@@ -244,6 +249,7 @@ public class Invite {
     private static final String FN_NUM_ATTENDEES   = "numAt";
     private static final String FN_ORGANIZER       = "org";
     private static final String FN_PARTSTAT        = "ptst";
+    private static final String FN_RSVP            = "rsvp";
     private static final String FN_RECURRENCE = "recurrence";
     private static final String FN_RECUR_ID        = "rid";
     private static final String FN_SEQ_NO          = "seq";
@@ -287,6 +293,7 @@ public class Invite {
         meta.put(FN_LOCATION, inv.mLocation);
         meta.put(FN_APPT_FLAGS, inv.getFlags());
         meta.put(FN_PARTSTAT, inv.getPartStat());
+        meta.put(FN_RSVP, inv.getRsvp());
         
         meta.put(FN_TZMAP, inv.mTzMap.encodeAsMetadata());
         
@@ -398,6 +405,8 @@ public class Invite {
         int flags = (int) meta.getLong(FN_APPT_FLAGS, 0);
         // For existing invites with no partstat, default to ACCEPTED status.
         String partStat = meta.get(FN_PARTSTAT, IcalXmlStrMap.PARTSTAT_ACCEPTED);
+        // For existing invites with no RSVP, default to true.
+        boolean rsvp = meta.getBool(FN_RSVP, true);
         long dtstamp = meta.getLong(FN_DTSTAMP, 0);
         int seqno = (int) meta.getLong(FN_SEQ_NO, 0);
         
@@ -425,7 +434,7 @@ public class Invite {
             
         return new Invite(methodStr, tzMap, appt, uid, status, freebusy, transp,
                 dtStart, dtEnd, duration, recurrence, org, attendees,
-                name, comment, loc, flags, partStat,
+                name, comment, loc, flags, partStat, rsvp,
                 recurrenceId, dtstamp, seqno,
                 mailboxId, mailItemId, componentNum, sentByMe, fragment);
     }
@@ -512,10 +521,12 @@ public class Invite {
         boolean iAmOrganizer = thisAcctIsOrganizer(acct);
         if (iAmOrganizer) {
             setPartStat(IcalXmlStrMap.PARTSTAT_ACCEPTED);
+            setRsvp(false);
             setNeedsReply(false);
         } else {
             ZAttendee at = getMatchingAttendee(acct);
             if (at != null) {
+            	setRsvp(at.getRsvp().booleanValue());
             	//
             	// for BUG 4866 -- basically, if the incoming invite doesn't have a
             	// PARTSTAT for us, assume it is "NEEDS-ACTION" iff this Invite supports
@@ -525,13 +536,14 @@ public class Invite {
             		String ps = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
             		if (at.hasPartStat())
             			ps = at.getPartStat();
-            		if (ps.equals(IcalXmlStrMap.PARTSTAT_NEEDS_ACTION))
+            		if (getRsvp() || ps.equals(IcalXmlStrMap.PARTSTAT_NEEDS_ACTION))
             			setNeedsReply(true);
             	}
             } else {
                 // if this is the first time we're parsing this, and we can't find ourself on the
                 // attendee list, then allow a reply...
                 setNeedsReply(true);
+                setRsvp(true);
             }
         }
     }
@@ -562,6 +574,8 @@ public class Invite {
 //    void setCalendar(Calendar cal) { miCal = cal; }
     public int getFlags() { return mFlags; }
     public String getPartStat() { return mPartStat; }
+    public boolean getRsvp() { return mRsvp; }
+    public void setRsvp(boolean rsvp) { mRsvp = rsvp; }
     public String getUid() { return mUid; };
     public void setUid(String uid) { mUid = uid; }
     public int getMailboxId() { return mMailboxId; }
@@ -710,6 +724,7 @@ public class Invite {
         sb.append(", uid: ").append(this.mUid);
         sb.append(", status: ").append(getStatus());
         sb.append(", partStat: ").append(getPartStat());
+        sb.append(", rsvp: ").append(getRsvp());
         sb.append(", freeBusy: ").append(getFreeBusy());
         sb.append(", transp: ").append(getTransparency());
         sb.append(", start: ").append(this.mStart);
@@ -767,7 +782,9 @@ public class Invite {
     // iCalendar PARTSTAT values.
     // For meeting organizer, this should always be "AC".  (accepted)
     protected String mPartStat = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
-    
+
+    protected boolean mRsvp = false;
+
     // not in metadata:
     protected int mMailboxId = 0;
     protected int mMailItemId = 0;
