@@ -67,7 +67,7 @@ import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.soap.Element;
 
 public class CalendarUtils {
-    static MimeBodyPart makeICalIntoMimePart(String uid,
+    public static MimeBodyPart makeICalIntoMimePart(String uid,
             ZCalendar.ZVCalendar iCal) throws ServiceException {
         try {
             MimeBodyPart mbp = new MimeBodyPart();

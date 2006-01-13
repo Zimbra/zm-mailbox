@@ -204,7 +204,7 @@ public class SendMsg extends WriteOpDocumentHandler {
      * @return
      * @throws ServiceException
      */
-    static int sendMimeMessage(OperationContext octxt, Mailbox mbox, Account acct, int saveToFolder,
+    public static int sendMimeMessage(OperationContext octxt, Mailbox mbox, Account acct, int saveToFolder,
                                MimeMessageData mimeData, MimeMessage mm, int origId, String replyType,
                                boolean ignoreFailedAddresses)
     throws ServiceException {
