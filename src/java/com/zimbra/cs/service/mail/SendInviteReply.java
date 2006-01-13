@@ -82,8 +82,6 @@ public class SendInviteReply extends CalendarRequest {
         ParsedVerb verb = parseVerb(verbStr);
         
         boolean updateOrg = request.getAttributeBool(MailService.A_APPT_UPDATE_ORGANIZER, true);
-        // FIXME -- HACK until client is fixed
-        updateOrg = true;
         
         if (sLog.isInfoEnabled()) {
             sLog.info("<SendInviteReply id=" + lc.formatItemId(iid) + " verb=" + verb + " updateOrg=" + updateOrg + "> " + lc.toString());
