@@ -235,73 +235,58 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
 /// Parser States
 ///
   final public ZimbraQuery.BaseQuery Conjunction() throws ParseException {
-    trace_call("Conjunction");
-    try {
-      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case AND_TOKEN:
-        jj_consume_token(AND_TOKEN);
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case AND_TOKEN:
+      jj_consume_token(AND_TOKEN);
                   {if (true) return new ZimbraQuery.ConjQuery(mAnalyzer, AND_TOKEN);}
-        break;
-      case OR_TOKEN:
-        jj_consume_token(OR_TOKEN);
+      break;
+    case OR_TOKEN:
+      jj_consume_token(OR_TOKEN);
                   {if (true) return new ZimbraQuery.ConjQuery(mAnalyzer, OR_TOKEN);}
-        break;
-      default:
-        jj_la1[0] = jj_gen;
+      break;
+    default:
+      jj_la1[0] = jj_gen;
       {if (true) return new ZimbraQuery.ConjQuery(mAnalyzer, AND_TOKEN);}
-      }
-    throw new Error("Missing return statement in function");
-    } finally {
-      trace_return("Conjunction");
     }
+    throw new Error("Missing return statement in function");
   }
 
   final public int Modifier() throws ParseException {
-    trace_call("Modifier");
-    try {
     Token mod = null;
-      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case PLUS:
-        jj_consume_token(PLUS);
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case PLUS:
+      jj_consume_token(PLUS);
              {if (true) return PLUS;}
-        break;
-      case MINUS:
-        jj_consume_token(MINUS);
+      break;
+    case MINUS:
+      jj_consume_token(MINUS);
                  {if (true) return MINUS;}
-        break;
-      case NOT_TOKEN:
-        jj_consume_token(NOT_TOKEN);
+      break;
+    case NOT_TOKEN:
+      jj_consume_token(NOT_TOKEN);
                      {if (true) return MINUS;}
-        break;
-      default:
-        jj_la1[1] = jj_gen;
+      break;
+    default:
+      jj_la1[1] = jj_gen;
 
         {if (true) return 0;}
-      }
-    throw new Error("Missing return statement in function");
-    } finally {
-      trace_return("Modifier");
     }
+    throw new Error("Missing return statement in function");
   }
 
   final public int DateModifier() throws ParseException {
-    trace_call("DateModifier");
-    try {
     Token mod = null;
-      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case NOT_TOKEN:
-        jj_consume_token(NOT_TOKEN);
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case NOT_TOKEN:
+      jj_consume_token(NOT_TOKEN);
                   {if (true) return NOT_TOKEN;}
-        break;
-      default:
-        jj_la1[2] = jj_gen;
+      break;
+    default:
+      jj_la1[2] = jj_gen;
 
         {if (true) return 0;}
-      }
-    throw new Error("Missing return statement in function");
-    } finally {
-      trace_return("DateModifier");
     }
+    throw new Error("Missing return statement in function");
   }
 
 /***
@@ -310,69 +295,64 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
  *
  **/
   final public ZimbraQuery.BaseQuery Rhs_Text(int target) throws ParseException, ServiceException {
-    trace_call("Rhs_Text");
-    try {
     ArrayList clauses = new ArrayList();
     Token t;
     int modifier = 0;
     ZimbraQuery.BaseQuery clause = null;
-      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case LPAREN:
-        jj_consume_token(LPAREN);
-        modifier = Modifier();
-        clause = Rhs_Text(target);
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case LPAREN:
+      jj_consume_token(LPAREN);
+      modifier = Modifier();
+      clause = Rhs_Text(target);
                                                                clause.setModifier(modifier);  AddClause(clauses,clause);
-        label_1:
-        while (true) {
-          switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case AND_TOKEN:
-          case OR_TOKEN:
-          case NOT_TOKEN:
-          case LPAREN:
-          case PLUS:
-          case MINUS:
-          case TEXT_TOK:
-          case QUOTED_TOK:
-            ;
-            break;
-          default:
-            jj_la1[3] = jj_gen;
-            break label_1;
-          }
-          clause = Conjunction();
-                                   AddClause(clauses,clause);
-          modifier = Modifier();
-          clause = Rhs_Text(target);
-                                                          clause.setModifier(modifier); AddClause(clauses,clause);
-        }
-        jj_consume_token(RPAREN);
-                       {if (true) return new ZimbraQuery.SubQuery(mAnalyzer, 0,clauses);}
-        break;
-      case TEXT_TOK:
-      case QUOTED_TOK:
+      label_1:
+      while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case AND_TOKEN:
+        case OR_TOKEN:
+        case NOT_TOKEN:
+        case LPAREN:
+        case PLUS:
+        case MINUS:
         case TEXT_TOK:
-          t = jj_consume_token(TEXT_TOK);
-          break;
         case QUOTED_TOK:
-          t = jj_consume_token(QUOTED_TOK);
+          ;
           break;
         default:
-          jj_la1[4] = jj_gen;
-          jj_consume_token(-1);
-          throw new ParseException();
+          jj_la1[3] = jj_gen;
+          break label_1;
         }
-                                           {if (true) return GetQuery(modifier, target, t.image);}
+        clause = Conjunction();
+                                   AddClause(clauses,clause);
+        modifier = Modifier();
+        clause = Rhs_Text(target);
+                                                          clause.setModifier(modifier); AddClause(clauses,clause);
+      }
+      jj_consume_token(RPAREN);
+                       {if (true) return new ZimbraQuery.SubQuery(mAnalyzer, 0,clauses);}
+      break;
+    case TEXT_TOK:
+    case QUOTED_TOK:
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case TEXT_TOK:
+        t = jj_consume_token(TEXT_TOK);
+        break;
+      case QUOTED_TOK:
+        t = jj_consume_token(QUOTED_TOK);
         break;
       default:
-        jj_la1[5] = jj_gen;
+        jj_la1[4] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
-    throw new Error("Missing return statement in function");
-    } finally {
-      trace_return("Rhs_Text");
+                                           {if (true) return GetQuery(modifier, target, t.image);}
+      break;
+    default:
+      jj_la1[5] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
     }
+    throw new Error("Missing return statement in function");
   }
 
 /***
@@ -381,74 +361,69 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
  *
  **/
   final public ZimbraQuery.BaseQuery Rhs_Item(int target) throws ParseException, ServiceException {
-    trace_call("Rhs_Item");
-    try {
     ArrayList clauses = new ArrayList();
     Token t;
     int modifier = 0;
     ZimbraQuery.BaseQuery clause = null;
-      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case LPAREN:
-        jj_consume_token(LPAREN);
-        modifier = Modifier();
-        clause = Rhs_Text(target);
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case LPAREN:
+      jj_consume_token(LPAREN);
+      modifier = Modifier();
+      clause = Rhs_Text(target);
                                                                clause.setModifier(modifier);  AddClause(clauses,clause);
-        label_2:
-        while (true) {
-          switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case AND_TOKEN:
-          case OR_TOKEN:
-          case NOT_TOKEN:
-          case LPAREN:
-          case PLUS:
-          case MINUS:
-          case TEXT_TOK:
-          case BRACES_TOK:
-          case QUOTED_TOK:
-            ;
-            break;
-          default:
-            jj_la1[6] = jj_gen;
-            break label_2;
-          }
-          clause = Conjunction();
-                                   AddClause(clauses,clause);
-          modifier = Modifier();
-          clause = Rhs_Item(target);
-                                                          clause.setModifier(modifier); AddClause(clauses,clause);
-        }
-        jj_consume_token(RPAREN);
-                       {if (true) return new ZimbraQuery.SubQuery(mAnalyzer, 0,clauses);}
-        break;
-      case TEXT_TOK:
-      case BRACES_TOK:
-      case QUOTED_TOK:
+      label_2:
+      while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case AND_TOKEN:
+        case OR_TOKEN:
+        case NOT_TOKEN:
+        case LPAREN:
+        case PLUS:
+        case MINUS:
         case TEXT_TOK:
-          t = jj_consume_token(TEXT_TOK);
-          break;
-        case QUOTED_TOK:
-          t = jj_consume_token(QUOTED_TOK);
-          break;
         case BRACES_TOK:
-          t = jj_consume_token(BRACES_TOK);
+        case QUOTED_TOK:
+          ;
           break;
         default:
-          jj_la1[7] = jj_gen;
-          jj_consume_token(-1);
-          throw new ParseException();
+          jj_la1[6] = jj_gen;
+          break label_2;
         }
-                                                          {if (true) return ItemQuery(modifier, target, t.image);}
+        clause = Conjunction();
+                                   AddClause(clauses,clause);
+        modifier = Modifier();
+        clause = Rhs_Item(target);
+                                                          clause.setModifier(modifier); AddClause(clauses,clause);
+      }
+      jj_consume_token(RPAREN);
+                       {if (true) return new ZimbraQuery.SubQuery(mAnalyzer, 0,clauses);}
+      break;
+    case TEXT_TOK:
+    case BRACES_TOK:
+    case QUOTED_TOK:
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case TEXT_TOK:
+        t = jj_consume_token(TEXT_TOK);
+        break;
+      case QUOTED_TOK:
+        t = jj_consume_token(QUOTED_TOK);
+        break;
+      case BRACES_TOK:
+        t = jj_consume_token(BRACES_TOK);
         break;
       default:
-        jj_la1[8] = jj_gen;
+        jj_la1[7] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
-    throw new Error("Missing return statement in function");
-    } finally {
-      trace_return("Rhs_Item");
+                                                          {if (true) return ItemQuery(modifier, target, t.image);}
+      break;
+    default:
+      jj_la1[8] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
     }
+    throw new Error("Missing return statement in function");
   }
 
 /***
@@ -458,71 +433,333 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
  *
  **/
   final public ZimbraQuery.BaseQuery Rhs_Date(int target) throws ParseException, ServiceException {
-    trace_call("Rhs_Date");
-    try {
     ArrayList clauses = new ArrayList();
     Token t,u;
     int modifier = 0;
     ZimbraQuery.BaseQuery clause = null;
-      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case LPAREN:
-        jj_consume_token(LPAREN);
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case LPAREN:
+      jj_consume_token(LPAREN);
+      modifier = DateModifier();
+      clause = Rhs_Date(target);
+                                                                   if (modifier == NOT_TOKEN) { clause.setModifier(MINUS); } AddClause(clauses,clause);
+      label_3:
+      while (true) {
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case AND_TOKEN:
+        case OR_TOKEN:
+        case NOT_TOKEN:
+        case LPAREN:
+        case PLUS:
+        case MINUS:
+        case TEXT_TOK:
+        case QUOTED_TOK:
+          ;
+          break;
+        default:
+          jj_la1[9] = jj_gen;
+          break label_3;
+        }
+        clause = Conjunction();
+                                   AddClause(clauses,clause);
         modifier = DateModifier();
         clause = Rhs_Date(target);
-                                                                   if (modifier == NOT_TOKEN) { clause.setModifier(MINUS); } AddClause(clauses,clause);
-        label_3:
-        while (true) {
-          switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case AND_TOKEN:
-          case OR_TOKEN:
-          case NOT_TOKEN:
-          case LPAREN:
-          case PLUS:
-          case MINUS:
-          case TEXT_TOK:
-          case QUOTED_TOK:
-            ;
-            break;
-          default:
-            jj_la1[9] = jj_gen;
-            break label_3;
-          }
-          clause = Conjunction();
-                                   AddClause(clauses,clause);
-          modifier = DateModifier();
-          clause = Rhs_Date(target);
                                                               if (modifier == NOT_TOKEN) { clause.setModifier(MINUS); } AddClause(clauses,clause);
-        }
-        jj_consume_token(RPAREN);
+      }
+      jj_consume_token(RPAREN);
                        {if (true) return new ZimbraQuery.SubQuery(mAnalyzer, 0,clauses);}
+      break;
+    case PLUS:
+    case MINUS:
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case MINUS:
+        u = jj_consume_token(MINUS);
         break;
       case PLUS:
-      case MINUS:
-        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case MINUS:
-          u = jj_consume_token(MINUS);
-          break;
-        case PLUS:
-          u = jj_consume_token(PLUS);
-          break;
-        default:
-          jj_la1[10] = jj_gen;
-          jj_consume_token(-1);
-          throw new ParseException();
-        }
-        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case TEXT_TOK:
-          t = jj_consume_token(TEXT_TOK);
-          break;
-        case QUOTED_TOK:
-          t = jj_consume_token(QUOTED_TOK);
-          break;
-        default:
-          jj_la1[11] = jj_gen;
-          jj_consume_token(-1);
-          throw new ParseException();
-        }
+        u = jj_consume_token(PLUS);
+        break;
+      default:
+        jj_la1[10] = jj_gen;
+        jj_consume_token(-1);
+        throw new ParseException();
+      }
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case TEXT_TOK:
+        t = jj_consume_token(TEXT_TOK);
+        break;
+      case QUOTED_TOK:
+        t = jj_consume_token(QUOTED_TOK);
+        break;
+      default:
+        jj_la1[11] = jj_gen;
+        jj_consume_token(-1);
+        throw new ParseException();
+      }
                                                                {if (true) return GetQuery(0, target, u.image+t.image);}
+      break;
+    case TEXT_TOK:
+    case QUOTED_TOK:
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case TEXT_TOK:
+        t = jj_consume_token(TEXT_TOK);
+        break;
+      case QUOTED_TOK:
+        t = jj_consume_token(QUOTED_TOK);
+        break;
+      default:
+        jj_la1[12] = jj_gen;
+        jj_consume_token(-1);
+        throw new ParseException();
+      }
+                                           {if (true) return GetQuery(0, target, t.image);}
+      break;
+    default:
+      jj_la1[13] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
+    }
+    throw new Error("Missing return statement in function");
+  }
+
+//////////////////////////////
+//
+// Main grammar
+//
+  final public ZimbraQuery.BaseQuery Clause() throws ParseException, ServiceException {
+    Token t = null;
+
+    ZimbraQuery.BaseQuery q = null;
+    ArrayList subExp = null;
+    int target;
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case LPAREN:
+      jj_consume_token(LPAREN);
+      subExp = Query();
+      jj_consume_token(RPAREN);
+                                       {if (true) return new ZimbraQuery.SubQuery(mAnalyzer, 0, subExp);}
+      break;
+    case CONTENT:
+    case SUBJECT:
+    case FROM:
+    case TO:
+    case CC:
+    case IN:
+    case HAS:
+    case FILENAME:
+    case TYPE:
+    case ATTACHMENT:
+    case IS:
+    case DATE:
+    case DAY:
+    case WEEK:
+    case MONTH:
+    case YEAR:
+    case AFTER:
+    case BEFORE:
+    case SIZE:
+    case BIGGER:
+    case SMALLER:
+    case TAG:
+    case MESSAGE:
+    case MY:
+    case CONV:
+    case CONV_COUNT:
+    case CONV_MINM:
+    case CONV_MAXM:
+    case CONV_START:
+    case CONV_END:
+    case AUTHOR:
+    case TITLE:
+    case KEYWORDS:
+    case COMPANY:
+    case METADATA:
+    case ITEM:
+    case TEXT_TOK:
+    case QUOTED_TOK:
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case FROM:
+      case TO:
+      case CC:
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case FROM:
+          t = jj_consume_token(FROM);
+          break;
+        case TO:
+          t = jj_consume_token(TO);
+          break;
+        case CC:
+          t = jj_consume_token(CC);
+          break;
+        default:
+          jj_la1[14] = jj_gen;
+          jj_consume_token(-1);
+          throw new ParseException();
+        }
+        q = Rhs_Text(t.kind);
+        break;
+      case ITEM:
+        t = jj_consume_token(ITEM);
+        q = Rhs_Item(t.kind);
+        break;
+      case CONTENT:
+      case SUBJECT:
+      case IN:
+      case HAS:
+      case FILENAME:
+      case TYPE:
+      case ATTACHMENT:
+      case MESSAGE:
+      case AUTHOR:
+      case TITLE:
+      case KEYWORDS:
+      case COMPANY:
+      case METADATA:
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case CONTENT:
+          t = jj_consume_token(CONTENT);
+          break;
+        case MESSAGE:
+          t = jj_consume_token(MESSAGE);
+          break;
+        case SUBJECT:
+          t = jj_consume_token(SUBJECT);
+          break;
+        case IN:
+          t = jj_consume_token(IN);
+          break;
+        case TYPE:
+          t = jj_consume_token(TYPE);
+          break;
+        case ATTACHMENT:
+          t = jj_consume_token(ATTACHMENT);
+          break;
+        case HAS:
+          t = jj_consume_token(HAS);
+          break;
+        case FILENAME:
+          t = jj_consume_token(FILENAME);
+          break;
+        case AUTHOR:
+          t = jj_consume_token(AUTHOR);
+          break;
+        case TITLE:
+          t = jj_consume_token(TITLE);
+          break;
+        case KEYWORDS:
+          t = jj_consume_token(KEYWORDS);
+          break;
+        case COMPANY:
+          t = jj_consume_token(COMPANY);
+          break;
+        case METADATA:
+          t = jj_consume_token(METADATA);
+          break;
+        default:
+          jj_la1[15] = jj_gen;
+          jj_consume_token(-1);
+          throw new ParseException();
+        }
+        q = Rhs_Text(t.kind);
+        break;
+      case IS:
+      case TAG:
+      case MY:
+      case CONV:
+      case CONV_COUNT:
+      case CONV_MINM:
+      case CONV_MAXM:
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case MY:
+          t = jj_consume_token(MY);
+          break;
+        case IS:
+          t = jj_consume_token(IS);
+          break;
+        case TAG:
+          t = jj_consume_token(TAG);
+          break;
+        case CONV:
+          t = jj_consume_token(CONV);
+          break;
+        case CONV_COUNT:
+          t = jj_consume_token(CONV_COUNT);
+          break;
+        case CONV_MINM:
+          t = jj_consume_token(CONV_MINM);
+          break;
+        case CONV_MAXM:
+          t = jj_consume_token(CONV_MAXM);
+          break;
+        default:
+          jj_la1[16] = jj_gen;
+          jj_consume_token(-1);
+          throw new ParseException();
+        }
+        q = Rhs_Text(t.kind);
+        break;
+      case DATE:
+      case DAY:
+      case WEEK:
+      case MONTH:
+      case YEAR:
+      case AFTER:
+      case BEFORE:
+      case CONV_START:
+      case CONV_END:
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case DATE:
+          t = jj_consume_token(DATE);
+          break;
+        case DAY:
+          t = jj_consume_token(DAY);
+          break;
+        case MONTH:
+          t = jj_consume_token(MONTH);
+          break;
+        case WEEK:
+          t = jj_consume_token(WEEK);
+          break;
+        case YEAR:
+          t = jj_consume_token(YEAR);
+          break;
+        case AFTER:
+          t = jj_consume_token(AFTER);
+          break;
+        case BEFORE:
+          t = jj_consume_token(BEFORE);
+          break;
+        case CONV_START:
+          t = jj_consume_token(CONV_START);
+          break;
+        case CONV_END:
+          t = jj_consume_token(CONV_END);
+          break;
+        default:
+          jj_la1[17] = jj_gen;
+          jj_consume_token(-1);
+          throw new ParseException();
+        }
+        q = Rhs_Date(t.kind);
+        break;
+      case SIZE:
+      case BIGGER:
+      case SMALLER:
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case SIZE:
+          t = jj_consume_token(SIZE);
+          break;
+        case BIGGER:
+          t = jj_consume_token(BIGGER);
+          break;
+        case SMALLER:
+          t = jj_consume_token(SMALLER);
+          break;
+        default:
+          jj_la1[18] = jj_gen;
+          jj_consume_token(-1);
+          throw new ParseException();
+        }
+        q = Rhs_Text(t.kind);
         break;
       case TEXT_TOK:
       case QUOTED_TOK:
@@ -534,42 +771,69 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
           t = jj_consume_token(QUOTED_TOK);
           break;
         default:
-          jj_la1[12] = jj_gen;
+          jj_la1[19] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
-                                           {if (true) return GetQuery(0, target, t.image);}
+                                              {if (true) return GetQuery(0,CONTENT,t.image);}
         break;
       default:
-        jj_la1[13] = jj_gen;
+        jj_la1[20] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
+        {if (true) return q;}
+      break;
+    default:
+      jj_la1[21] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
+    }
     throw new Error("Missing return statement in function");
-    } finally {
-      trace_return("Rhs_Date");
+  }
+
+  final public void SortBy() throws ParseException {
+    Token t = null;
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case SORTBY:
+    case SORT:
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case SORTBY:
+        jj_consume_token(SORTBY);
+        break;
+      case SORT:
+        jj_consume_token(SORT);
+        break;
+      default:
+        jj_la1[22] = jj_gen;
+        jj_consume_token(-1);
+        throw new ParseException();
+      }
+      t = jj_consume_token(TEXT_TOK);
+                                    mSortByStr = t.image;
+      break;
+    default:
+      jj_la1[23] = jj_gen;
+
     }
   }
 
-//////////////////////////////
-//
-// Main grammar
-//
-  final public ZimbraQuery.BaseQuery Clause() throws ParseException, ServiceException {
-    trace_call("Clause");
-    try {
-    Token t = null;
-
-    ZimbraQuery.BaseQuery q = null;
-    ArrayList subExp = null;
-    int target;
+  final public ArrayList Query() throws ParseException, ServiceException {
+    ZimbraQuery.BaseQuery clause = null;
+    ArrayList clauses = new ArrayList();
+    int modifier;
+    SortBy();
+    modifier = Modifier();
+    clause = Clause();
+    SortBy();
+                                                            if (clause != null) { clause.setModifier(modifier); AddClause(clauses,clause); }
+    label_4:
+    while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case AND_TOKEN:
+      case OR_TOKEN:
+      case NOT_TOKEN:
       case LPAREN:
-        jj_consume_token(LPAREN);
-        subExp = Query();
-        jj_consume_token(RPAREN);
-                                       {if (true) return new ZimbraQuery.SubQuery(mAnalyzer, 0, subExp);}
-        break;
       case CONTENT:
       case SUBJECT:
       case FROM:
@@ -606,369 +870,55 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
       case COMPANY:
       case METADATA:
       case ITEM:
+      case PLUS:
+      case MINUS:
       case TEXT_TOK:
       case QUOTED_TOK:
-        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case FROM:
-        case TO:
-        case CC:
-          switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case FROM:
-            t = jj_consume_token(FROM);
-            break;
-          case TO:
-            t = jj_consume_token(TO);
-            break;
-          case CC:
-            t = jj_consume_token(CC);
-            break;
-          default:
-            jj_la1[14] = jj_gen;
-            jj_consume_token(-1);
-            throw new ParseException();
-          }
-          q = Rhs_Text(t.kind);
-          break;
-        case ITEM:
-          t = jj_consume_token(ITEM);
-          q = Rhs_Item(t.kind);
-          break;
-        case CONTENT:
-        case SUBJECT:
-        case IN:
-        case HAS:
-        case FILENAME:
-        case TYPE:
-        case ATTACHMENT:
-        case MESSAGE:
-        case AUTHOR:
-        case TITLE:
-        case KEYWORDS:
-        case COMPANY:
-        case METADATA:
-          switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case CONTENT:
-            t = jj_consume_token(CONTENT);
-            break;
-          case MESSAGE:
-            t = jj_consume_token(MESSAGE);
-            break;
-          case SUBJECT:
-            t = jj_consume_token(SUBJECT);
-            break;
-          case IN:
-            t = jj_consume_token(IN);
-            break;
-          case TYPE:
-            t = jj_consume_token(TYPE);
-            break;
-          case ATTACHMENT:
-            t = jj_consume_token(ATTACHMENT);
-            break;
-          case HAS:
-            t = jj_consume_token(HAS);
-            break;
-          case FILENAME:
-            t = jj_consume_token(FILENAME);
-            break;
-          case AUTHOR:
-            t = jj_consume_token(AUTHOR);
-            break;
-          case TITLE:
-            t = jj_consume_token(TITLE);
-            break;
-          case KEYWORDS:
-            t = jj_consume_token(KEYWORDS);
-            break;
-          case COMPANY:
-            t = jj_consume_token(COMPANY);
-            break;
-          case METADATA:
-            t = jj_consume_token(METADATA);
-            break;
-          default:
-            jj_la1[15] = jj_gen;
-            jj_consume_token(-1);
-            throw new ParseException();
-          }
-          q = Rhs_Text(t.kind);
-          break;
-        case IS:
-        case TAG:
-        case MY:
-        case CONV:
-        case CONV_COUNT:
-        case CONV_MINM:
-        case CONV_MAXM:
-          switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case MY:
-            t = jj_consume_token(MY);
-            break;
-          case IS:
-            t = jj_consume_token(IS);
-            break;
-          case TAG:
-            t = jj_consume_token(TAG);
-            break;
-          case CONV:
-            t = jj_consume_token(CONV);
-            break;
-          case CONV_COUNT:
-            t = jj_consume_token(CONV_COUNT);
-            break;
-          case CONV_MINM:
-            t = jj_consume_token(CONV_MINM);
-            break;
-          case CONV_MAXM:
-            t = jj_consume_token(CONV_MAXM);
-            break;
-          default:
-            jj_la1[16] = jj_gen;
-            jj_consume_token(-1);
-            throw new ParseException();
-          }
-          q = Rhs_Text(t.kind);
-          break;
-        case DATE:
-        case DAY:
-        case WEEK:
-        case MONTH:
-        case YEAR:
-        case AFTER:
-        case BEFORE:
-        case CONV_START:
-        case CONV_END:
-          switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case DATE:
-            t = jj_consume_token(DATE);
-            break;
-          case DAY:
-            t = jj_consume_token(DAY);
-            break;
-          case MONTH:
-            t = jj_consume_token(MONTH);
-            break;
-          case WEEK:
-            t = jj_consume_token(WEEK);
-            break;
-          case YEAR:
-            t = jj_consume_token(YEAR);
-            break;
-          case AFTER:
-            t = jj_consume_token(AFTER);
-            break;
-          case BEFORE:
-            t = jj_consume_token(BEFORE);
-            break;
-          case CONV_START:
-            t = jj_consume_token(CONV_START);
-            break;
-          case CONV_END:
-            t = jj_consume_token(CONV_END);
-            break;
-          default:
-            jj_la1[17] = jj_gen;
-            jj_consume_token(-1);
-            throw new ParseException();
-          }
-          q = Rhs_Date(t.kind);
-          break;
-        case SIZE:
-        case BIGGER:
-        case SMALLER:
-          switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case SIZE:
-            t = jj_consume_token(SIZE);
-            break;
-          case BIGGER:
-            t = jj_consume_token(BIGGER);
-            break;
-          case SMALLER:
-            t = jj_consume_token(SMALLER);
-            break;
-          default:
-            jj_la1[18] = jj_gen;
-            jj_consume_token(-1);
-            throw new ParseException();
-          }
-          q = Rhs_Text(t.kind);
-          break;
-        case TEXT_TOK:
-        case QUOTED_TOK:
-          switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case TEXT_TOK:
-            t = jj_consume_token(TEXT_TOK);
-            break;
-          case QUOTED_TOK:
-            t = jj_consume_token(QUOTED_TOK);
-            break;
-          default:
-            jj_la1[19] = jj_gen;
-            jj_consume_token(-1);
-            throw new ParseException();
-          }
-                                              {if (true) return GetQuery(0,CONTENT,t.image);}
-          break;
-        default:
-          jj_la1[20] = jj_gen;
-          jj_consume_token(-1);
-          throw new ParseException();
-        }
-        {if (true) return q;}
+        ;
         break;
       default:
-        jj_la1[21] = jj_gen;
-        jj_consume_token(-1);
-        throw new ParseException();
+        jj_la1[24] = jj_gen;
+        break label_4;
       }
-    throw new Error("Missing return statement in function");
-    } finally {
-      trace_return("Clause");
-    }
-  }
-
-  final public void SortBy() throws ParseException {
-    trace_call("SortBy");
-    try {
-    Token t = null;
-      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case SORTBY:
-      case SORT:
-        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case SORTBY:
-          jj_consume_token(SORTBY);
-          break;
-        case SORT:
-          jj_consume_token(SORT);
-          break;
-        default:
-          jj_la1[22] = jj_gen;
-          jj_consume_token(-1);
-          throw new ParseException();
-        }
-        t = jj_consume_token(TEXT_TOK);
-                                    mSortByStr = t.image;
-        break;
-      default:
-        jj_la1[23] = jj_gen;
-
-      }
-    } finally {
-      trace_return("SortBy");
-    }
-  }
-
-  final public ArrayList Query() throws ParseException, ServiceException {
-    trace_call("Query");
-    try {
-    ZimbraQuery.BaseQuery clause = null;
-    ArrayList clauses = new ArrayList();
-    int modifier;
-      SortBy();
+      clause = Conjunction();
+                               AddClause(clauses,clause);
       modifier = Modifier();
       clause = Clause();
       SortBy();
-                                                            if (clause != null) { clause.setModifier(modifier); AddClause(clauses,clause); }
-      label_4:
-      while (true) {
-        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case AND_TOKEN:
-        case OR_TOKEN:
-        case NOT_TOKEN:
-        case LPAREN:
-        case CONTENT:
-        case SUBJECT:
-        case FROM:
-        case TO:
-        case CC:
-        case IN:
-        case HAS:
-        case FILENAME:
-        case TYPE:
-        case ATTACHMENT:
-        case IS:
-        case DATE:
-        case DAY:
-        case WEEK:
-        case MONTH:
-        case YEAR:
-        case AFTER:
-        case BEFORE:
-        case SIZE:
-        case BIGGER:
-        case SMALLER:
-        case TAG:
-        case MESSAGE:
-        case MY:
-        case CONV:
-        case CONV_COUNT:
-        case CONV_MINM:
-        case CONV_MAXM:
-        case CONV_START:
-        case CONV_END:
-        case AUTHOR:
-        case TITLE:
-        case KEYWORDS:
-        case COMPANY:
-        case METADATA:
-        case ITEM:
-        case PLUS:
-        case MINUS:
-        case TEXT_TOK:
-        case QUOTED_TOK:
-          ;
-          break;
-        default:
-          jj_la1[24] = jj_gen;
-          break label_4;
-        }
-        clause = Conjunction();
-                               AddClause(clauses,clause);
-        modifier = Modifier();
-        clause = Clause();
-        SortBy();
                                                        if (clause != null) { clause.setModifier(modifier); AddClause(clauses,clause); }
-        SortBy();
+      SortBy();
 
-      }
+    }
 
         {if (true) return clauses;}
     throw new Error("Missing return statement in function");
-    } finally {
-      trace_return("Query");
-    }
   }
 
   final public ArrayList DoParse() throws ParseException, ServiceException {
-    trace_call("DoParse");
-    try {
     ArrayList clauses;
-      clauses = Query();
+    clauses = Query();
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case 0:
+    case 61:
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 0:
       case 61:
-        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 61:
-          jj_consume_token(61);
-          break;
-        case 0:
-          jj_consume_token(0);
-          break;
-        default:
-          jj_la1[25] = jj_gen;
-          jj_consume_token(-1);
-          throw new ParseException();
-        }
+        jj_consume_token(61);
+        break;
+      case 0:
+        jj_consume_token(0);
         break;
       default:
-        jj_la1[26] = jj_gen;
-        ;
+        jj_la1[25] = jj_gen;
+        jj_consume_token(-1);
+        throw new ParseException();
       }
+      break;
+    default:
+      jj_la1[26] = jj_gen;
+      ;
+    }
         {if (true) return clauses;}
     throw new Error("Missing return statement in function");
-    } finally {
-      trace_return("DoParse");
-    }
   }
 
   public ZimbraQueryParserTokenManager token_source;
@@ -1049,7 +999,6 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
     jj_ntk = -1;
     if (token.kind == kind) {
       jj_gen++;
-      trace_token(token, "");
       return token;
     }
     token = oldToken;
@@ -1062,7 +1011,6 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
     else token = token.next = token_source.getNextToken();
     jj_ntk = -1;
     jj_gen++;
-      trace_token(token, " (in getNextToken)");
     return token;
   }
 
@@ -1122,53 +1070,10 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
     return new ParseException(token, exptokseq, tokenImage);
   }
 
-  private int trace_indent = 0;
-  private boolean trace_enabled = true;
-
   final public void enable_tracing() {
-    trace_enabled = true;
   }
 
   final public void disable_tracing() {
-    trace_enabled = false;
-  }
-
-  final private void trace_call(String s) {
-    if (trace_enabled) {
-      for (int i = 0; i < trace_indent; i++) { System.out.print(" "); }
-      System.out.println("Call:   " + s);
-    }
-    trace_indent = trace_indent + 2;
-  }
-
-  final private void trace_return(String s) {
-    trace_indent = trace_indent - 2;
-    if (trace_enabled) {
-      for (int i = 0; i < trace_indent; i++) { System.out.print(" "); }
-      System.out.println("Return: " + s);
-    }
-  }
-
-  final private void trace_token(Token t, String where) {
-    if (trace_enabled) {
-      for (int i = 0; i < trace_indent; i++) { System.out.print(" "); }
-      System.out.print("Consumed token: <" + tokenImage[t.kind]);
-      if (t.kind != 0 && !tokenImage[t.kind].equals("\"" + t.image + "\"")) {
-        System.out.print(": \"" + t.image + "\"");
-      }
-      System.out.println(">" + where);
-    }
-  }
-
-  final private void trace_scan(Token t1, int t2) {
-    if (trace_enabled) {
-      for (int i = 0; i < trace_indent; i++) { System.out.print(" "); }
-      System.out.print("Visited token: <" + tokenImage[t1.kind]);
-      if (t1.kind != 0 && !tokenImage[t1.kind].equals("\"" + t1.image + "\"")) {
-        System.out.print(": \"" + t1.image + "\"");
-      }
-      System.out.println(">; Expected token: <" + tokenImage[t2] + ">");
-    }
   }
 
 }
