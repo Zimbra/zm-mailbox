@@ -53,7 +53,7 @@ public class LdapGalContact implements GalContact {
     }
 
     private void addAttr(Attributes attrs, String accountAttr, String contactAttr) {
-        if (mAttrs.containsKey(accountAttr))
+        if (mAttrs.containsKey(contactAttr))
             return;
         try {
             // doesn't handle multi-value attrs
