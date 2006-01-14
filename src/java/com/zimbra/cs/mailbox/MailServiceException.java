@@ -28,6 +28,8 @@
  */
 package com.zimbra.cs.mailbox;
 
+import javax.mail.Address;
+
 import com.zimbra.cs.service.ServiceException;
 
 
@@ -304,16 +306,35 @@ public class MailServiceException extends ServiceException {
                 SENDERS_FAULT);
     }
     
-    public static MailServiceException SEND_ABORTED_ADDRESS_FAILURE(String msg, Exception e) {
-        return new MailServiceException(msg, SEND_ABORTED_ADDRESS_FAILURE, SENDERS_FAULT, e);
+    private static MailServiceException internal_SEND_FAILURE(String failureType, String msg, Exception e,  Address[] invalid, Address[] unsent) {
+    	int len = 0;
+    	if (invalid != null)
+    		len += invalid.length;
+    	if (unsent != null)
+    		len += unsent.length;
+    	Argument[] args = new Argument[len];
+    	
+    	int offset = 0;
+    	for (Address addr : invalid) {
+    		args[offset++] = new Argument("invalid", addr.toString());
+    	}
+    	for (Address addr : unsent) {
+    		args[offset++] = new Argument("unsent", addr.toString());
+    	}
+    	
+    	return new MailServiceException(msg, failureType, SENDERS_FAULT, e, args);
+    }
+    
+    public static MailServiceException SEND_ABORTED_ADDRESS_FAILURE(String msg, Exception e, Address[] invalid, Address[] unsent) {
+    	return internal_SEND_FAILURE(SEND_ABORTED_ADDRESS_FAILURE, msg, e, invalid, unsent);
     }
 
-    public static MailServiceException SEND_PARTIAL_ADDRESS_FAILURE(String msg, Exception e) {
-        return new MailServiceException(msg, SEND_PARTIAL_ADDRESS_FAILURE, SENDERS_FAULT, e);
+    public static MailServiceException SEND_PARTIAL_ADDRESS_FAILURE(String msg, Exception e, Address[] invalid, Address[] unsent) {
+    	return internal_SEND_FAILURE(SEND_PARTIAL_ADDRESS_FAILURE, msg, e, invalid, unsent);
     }
 
-    public static MailServiceException SEND_FAILURE(String msg, Exception e) {
-        return new MailServiceException(msg, SEND_FAILURE, SENDERS_FAULT, e);
+    public static MailServiceException SEND_FAILURE(String msg, Exception e, Address[] invalid, Address[] unsent) {
+    	return internal_SEND_FAILURE(SEND_FAILURE, msg, e, invalid, unsent);
     }
     
     public static MailServiceException TOO_MANY_QUERY_TERMS_EXPANDED(String msg, String token, int max) {
