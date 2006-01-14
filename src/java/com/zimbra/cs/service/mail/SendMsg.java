@@ -304,6 +304,7 @@ public class SendMsg extends WriteOpDocumentHandler {
 	    } catch (SendFailedException sfe) {
             mLog.warn("exception ocurred during SendMsg", sfe);
             Address[] invalidAddrs = sfe.getInvalidAddresses();
+            Address[] validUnsentAddrs = sfe.getValidUnsentAddresses();
             if (invalidAddrs != null && invalidAddrs.length > 0) { 
                 StringBuffer msg = new StringBuffer("Invalid address").append(invalidAddrs.length > 1 ? "es: " : ": ");
                 if (invalidAddrs != null && invalidAddrs.length > 0) {
@@ -315,12 +316,12 @@ public class SendMsg extends WriteOpDocumentHandler {
                     }
                 }
                 if (JMSession.getSmtpConfig().getSendPartial()) {
-                    throw MailServiceException.SEND_PARTIAL_ADDRESS_FAILURE(msg.toString(), sfe);
+                    throw MailServiceException.SEND_PARTIAL_ADDRESS_FAILURE(msg.toString(), sfe, invalidAddrs, validUnsentAddrs);
                 } else {
-                    throw MailServiceException.SEND_ABORTED_ADDRESS_FAILURE(msg.toString(), sfe);
+                	throw MailServiceException.SEND_ABORTED_ADDRESS_FAILURE(msg.toString(), sfe, invalidAddrs, validUnsentAddrs);
                 }
             } else {
-                throw MailServiceException.SEND_FAILURE("SMTP server reported: " + sfe.getMessage().trim(), sfe);
+                throw MailServiceException.SEND_FAILURE("SMTP server reported: " + sfe.getMessage().trim(), sfe, invalidAddrs, validUnsentAddrs);
             }
 	    } catch (IOException ioe) {
 	        mLog.warn("exception occured during send msg", ioe);
