@@ -184,7 +184,7 @@ public class SendInviteReply extends CalendarRequest {
                 }
             }
             
-            mbox.modifyPartStat(octxt, apptId, recurId, cnStr, addressStr, role, verb.getXmlPartStat(), Boolean.FALSE, seqNo, dtStamp);
+            mbox.modifyPartStat(octxt, apptId, recurId, cnStr, addressStr, null, role, verb.getXmlPartStat(), Boolean.FALSE, seqNo, dtStamp);
             
             // move the invite to the Trash if (a) the user wants it and (b) the user is doing the action themselves
             if (acct.getBooleanAttr(Provisioning.A_zimbraPrefDeleteInviteOnReply, true) && !lc.isDelegatedRequest()) {

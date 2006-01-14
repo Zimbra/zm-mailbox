@@ -48,7 +48,10 @@ public class ZCalendar {
         
         // ROLE
         CHAIR, REQ_PARTICIPANT, OPT_PARTICIPANT, NON_PARTICIPANT,
-        
+
+        // CUTYPE
+        INDIVIDUAL, GROUP, RESOURCE, ROOM, UNKNOWN,
+
         // STATUS
         TENTATIVE, CONFIRMED, /*CANCELLED,*/ NEEDS_ACTION, /*COMPLETED,*/ IN_PROCESS, CANCELLED,
         DRAFT, FINAL,

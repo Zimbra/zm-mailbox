@@ -370,6 +370,7 @@ public class MailService implements DocumentService {
     public static final String A_APPT_NEEDS_REPLY = "needsReply";
     public static final String A_APPT_TYPE = "type";
     public static final String A_APPT_SENDUPDATE = "sendUpd";
+    public static final String A_APPT_CUTYPE = "cutype";
     public static final String A_APPT_ROLE = "role";
     public static final String A_APPT_RSVP = "rsvp";
     public static final String A_APPT_OTHER_ATTENDEES = "otherAtt";

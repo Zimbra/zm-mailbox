@@ -35,13 +35,15 @@ public class ZAttendee {
     
     private String mAddress;
     private String mCn;
+    private String mCUType;
     private String mRole;
     private String mPartStat;
     private Boolean mRsvp;
     
-    public ZAttendee(String address, String cn, String role, String ptst, Boolean rsvp) {
+    public ZAttendee(String address, String cn, String cutype, String role, String ptst, Boolean rsvp) {
         setAddress(address);
         mCn = cn;
+        setCUType(cutype);
         setRole(role);
         setPartStat(ptst);
         mRsvp = rsvp;
@@ -54,6 +56,7 @@ public class ZAttendee {
     private static final String FN_ADDRESS         = "a";
     private static final String FN_CN              = "cn";
     private static final String FN_PARTSTAT        = "ptst";
+    private static final String FN_CUTYPE          = "cut";
     private static final String FN_ROLE            = "r";
     private static final String FN_RSVP_BOOL       = "v";
 
@@ -61,6 +64,7 @@ public class ZAttendee {
         return mAddress != null ? mAddress : "";
     }
     public String getCn() { return mCn != null ? mCn : ""; }
+    public String getCUType() { return mCUType != null ? mCUType : ""; }
     public String getRole() { return mRole != null ? mRole : ""; }
     public String getPartStat() { return mPartStat != null ? mPartStat : ""; }
     public Boolean getRsvp() { return mRsvp != null ? mRsvp : Boolean.FALSE; }
@@ -75,6 +79,12 @@ public class ZAttendee {
         mAddress = address; 
     }
     public void setCn(String cn) { mCn = cn; }
+    public void setCUType(String cutype) {
+        if (cutype != null && !IcalXmlStrMap.sCUTypeMap.validXml(cutype)) {
+            cutype = IcalXmlStrMap.sCUTypeMap.toXml(cutype);
+        }
+        mCUType = cutype; 
+    }
     public void setRole(String role) {
         if (role != null && !IcalXmlStrMap.sRoleMap.validXml(role)) {
             role = IcalXmlStrMap.sRoleMap.toXml(role);
@@ -91,6 +101,7 @@ public class ZAttendee {
     public void setRsvp(Boolean rsvp) { mRsvp = rsvp; }
     
     public boolean hasCn() { return !StringUtil.isNullOrEmpty(mCn); }
+    public boolean hasCUType() { return !StringUtil.isNullOrEmpty(mCUType); }
     public boolean hasRole() { return !StringUtil.isNullOrEmpty(mRole); }
     public boolean hasPartStat() { return !StringUtil.isNullOrEmpty(mPartStat); }
     public boolean hasRsvp() { return mRsvp != null; }
@@ -117,6 +128,9 @@ public class ZAttendee {
         if (hasRsvp()) {
             toRet.append("RSVP=").append(mRsvp).append(";");
         }
+        if (hasCUType()) {
+            toRet.append("CUTYPE=").append(mCUType).append(";");
+        }
         
         toRet.append(mAddress);
         return toRet.toString();
@@ -130,7 +144,11 @@ public class ZAttendee {
         if (mCn != null) {
             meta.put(FN_CN, mCn);
         }
-        
+
+        if (mCUType != null) {
+        	meta.put(FN_CUTYPE, mCUType);
+        }
+
         if (mRole != null) {
             meta.put(FN_ROLE, mRole);
         }
@@ -151,6 +169,7 @@ public class ZAttendee {
         }
         String addressStr = meta.get(FN_ADDRESS, null);
         String cnStr = meta.get(FN_CN, null);
+        String cutypeStr = meta.get(FN_CUTYPE, null);
         String roleStr = meta.get(FN_ROLE, null);
         String partStatStr = meta.get(FN_PARTSTAT, null);
         Boolean rsvpBool = null;
@@ -162,12 +181,13 @@ public class ZAttendee {
             }
         }
         
-        return new ZAttendee(addressStr, cnStr, roleStr, partStatStr, rsvpBool);
+        return new ZAttendee(addressStr, cnStr, cutypeStr, roleStr, partStatStr, rsvpBool);
     }
     
     public static ZAttendee fromProperty(ZProperty prop) {
         String cn = prop.paramVal(ICalTok.CN, null);
         String role = prop.paramVal(ICalTok.ROLE, null);
+        String cutype = prop.paramVal(ICalTok.CUTYPE, null);
         String partstat = prop.paramVal(ICalTok.PARTSTAT, null);
         String rsvpStr = prop.paramVal(ICalTok.RSVP, "FALSE");
         boolean rsvp = false;
@@ -175,7 +195,7 @@ public class ZAttendee {
             rsvp = true;
         }
         
-        ZAttendee toRet = new ZAttendee(prop.mValue, cn, role, partstat, rsvp);
+        ZAttendee toRet = new ZAttendee(prop.mValue, cn, cutype, role, partstat, rsvp);
         return toRet;
     }
     
@@ -189,6 +209,8 @@ public class ZAttendee {
             toRet.addParameter(new ZParameter(ICalTok.RSVP, getRsvp()));
         if (hasRole())
             toRet.addParameter(new ZParameter(ICalTok.ROLE, IcalXmlStrMap.sRoleMap.toIcal(getRole())));
+        if (hasCUType())
+            toRet.addParameter(new ZParameter(ICalTok.CUTYPE, IcalXmlStrMap.sCUTypeMap.toIcal(getCUType())));
         
         return toRet;
     }

@@ -986,7 +986,12 @@ public class ToXML {
                 if (at.hasCn()) {
                     atElt.addAttribute(MailService.A_DISPLAY, at.getCn());
                 }
-                
+
+                // calendar user type
+                if (at.hasCUType()) {
+                	atElt.addAttribute(MailService.A_APPT_CUTYPE, at.getCUType());
+                }
+
                 // role
                 if (at.hasRole()) {
                     atElt.addAttribute(MailService.A_APPT_ROLE, at.getRole());

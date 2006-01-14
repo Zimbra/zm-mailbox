@@ -1037,7 +1037,7 @@ public class Appointment extends MailItem {
             return true;
         }
         
-        void modifyPartStat(Account acctOrNull, RecurId recurId, String cnStr, String addressStr, String roleStr, 
+        void modifyPartStat(Account acctOrNull, RecurId recurId, String cnStr, String addressStr, String cutypeStr, String roleStr, 
                 String partStatStr, Boolean needsReply, int seqNo, long dtStamp)  throws ServiceException {
             for (Iterator iter = mReplies.iterator(); iter.hasNext();) {
                 ReplyInfo cur = (ReplyInfo)iter.next();
@@ -1052,7 +1052,11 @@ public class Appointment extends MailItem {
                         if (cur.mAttendee.hasCn()) {
                             cnStr = cur.mAttendee.getCn();
                         }
-                        
+
+                        if (cur.mAttendee.hasCUType()) {
+                        	cutypeStr = cur.mAttendee.getCUType();
+                        }
+
                         if (cur.mAttendee.hasRole()) {
                             roleStr = cur.mAttendee.getRole();
                         }
@@ -1060,6 +1064,7 @@ public class Appointment extends MailItem {
                         ZAttendee newAt = new ZAttendee(
                                 cur.mAttendee.getAddress(),
                                 cnStr,
+                                cutypeStr,
                                 roleStr,
                                 partStatStr,
                                 needsReply
@@ -1075,7 +1080,7 @@ public class Appointment extends MailItem {
             
             // no existing partstat for this instance...add a new one 
             ReplyInfo inf = new ReplyInfo();
-            inf.mAttendee = new ZAttendee(addressStr, cnStr, roleStr, partStatStr, needsReply);
+            inf.mAttendee = new ZAttendee(addressStr, cnStr, cutypeStr, roleStr, partStatStr, needsReply);
             inf.mRecurId = recurId;
             inf.mDtStamp = dtStamp;
             inf.mSeqNo = seqNo;
@@ -1239,6 +1244,7 @@ public class Appointment extends MailItem {
      * @param recurId
      * @param cnStr
      * @param addressStr
+     * @param cutypeStr
      * @param roleStr
      * @param partStatStr
      * @param needsReply
@@ -1246,9 +1252,9 @@ public class Appointment extends MailItem {
      * @param dtStamp
      * @throws ServiceException
      */
-    void modifyPartStat(Account acctOrNull, RecurId recurId, String cnStr, String addressStr, String roleStr,
+    void modifyPartStat(Account acctOrNull, RecurId recurId, String cnStr, String addressStr, String cutypeStr, String roleStr,
             String partStatStr, Boolean needsReply, int seqNo, long dtStamp) throws ServiceException {
-        mReplyList.modifyPartStat(acctOrNull, recurId, cnStr, addressStr, roleStr, partStatStr, needsReply, seqNo, dtStamp);
+        mReplyList.modifyPartStat(acctOrNull, recurId, cnStr, addressStr, cutypeStr, roleStr, partStatStr, needsReply, seqNo, dtStamp);
     }
     
     private void processNewInviteReply(ParsedMessage pm, Invite reply, boolean force)
