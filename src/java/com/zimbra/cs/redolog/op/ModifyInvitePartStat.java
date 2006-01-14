@@ -48,6 +48,7 @@ public class ModifyInvitePartStat extends RedoableOp
     private RecurId mRecurId = null;
     private String mCnStr = null;
     private String mAddressStr = null;
+    private String mCUTypeStr = null;
     private String mRoleStr = null;
     private String mPartStatStr = null; // "AC" (accepted), "TE" (tentative), etc.
     private Boolean mNeedsReply;
@@ -58,7 +59,7 @@ public class ModifyInvitePartStat extends RedoableOp
     }
 
     public ModifyInvitePartStat(int mailboxId, int apptId, RecurId recurId, 
-            String cnStr, String addressStr, String roleStr, String partStatStr, Boolean needsReply, 
+            String cnStr, String addressStr, String cutypeStr, String roleStr, String partStatStr, Boolean needsReply, 
             int seqNo, long dtStamp)
     {
         setMailboxId(mailboxId);
@@ -66,6 +67,7 @@ public class ModifyInvitePartStat extends RedoableOp
         mRecurId = recurId;
         mCnStr = cnStr != null ? cnStr : "";
         mAddressStr = addressStr != null ? addressStr : "";
+        mCUTypeStr = cutypeStr != null ? cutypeStr : "";
         mRoleStr = roleStr != null ? roleStr : "";
         mPartStatStr = partStatStr != null ? partStatStr : "";
         mNeedsReply = needsReply;
@@ -79,7 +81,7 @@ public class ModifyInvitePartStat extends RedoableOp
 
     public void redo() throws Exception {
         Mailbox mbox = Mailbox.getMailboxById(getMailboxId());
-        mbox.modifyPartStat(getOperationContext(), mApptId, mRecurId, mCnStr, mAddressStr, mRoleStr, mPartStatStr, mNeedsReply, mSeqNo, mDtStamp); 
+        mbox.modifyPartStat(getOperationContext(), mApptId, mRecurId, mCnStr, mAddressStr, mCUTypeStr, mRoleStr, mPartStatStr, mNeedsReply, mSeqNo, mDtStamp); 
     }
 
     protected String getPrintableData() {
@@ -89,6 +91,7 @@ public class ModifyInvitePartStat extends RedoableOp
         }
         sb.append(", cn=").append(mCnStr);
         sb.append(", address=").append(mAddressStr);
+        sb.append(", cutype=").append(mCUTypeStr);
         sb.append(", role=").append(mRoleStr);
         sb.append(", part=").append(mPartStatStr);
         sb.append(", need-reply=").append(mNeedsReply);
@@ -108,6 +111,7 @@ public class ModifyInvitePartStat extends RedoableOp
         
         out.writeUTF(mCnStr);
         out.writeUTF(mAddressStr);
+        out.writeUTF(mCUTypeStr);
         out.writeUTF(mRoleStr);
         out.writeUTF(mPartStatStr);
         out.writeBoolean(mNeedsReply.booleanValue());
@@ -134,6 +138,7 @@ public class ModifyInvitePartStat extends RedoableOp
             
             mCnStr = in.readUTF();
             mAddressStr = in.readUTF();
+            mCUTypeStr = in.readUTF();
             mRoleStr = in.readUTF();
             mPartStatStr = in.readUTF();
             mNeedsReply = new Boolean(in.readBoolean());

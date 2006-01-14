@@ -125,13 +125,14 @@
 //           [ <desc>DESCRIPTION</desc> ]? // Will use message FRAGMENT if not specified
            
            <or d="friendly name" a="address"> // organizer
-           <at d="friendly name" a="address" role="ROLE" ptst="status"/>* // attendee
-             // role = CHAir, REQuired, OPTional, NON-participant (ie informational), RESource
+           <at d="friendly name" a="address" role="ROLE" ptst="status" [cutype="CUTYPE"]/>* // attendee
+             // role = CHAir, REQuired, OPTional, NON-participant (ie informational)
              // ptst (ParTSTat - participation status) = NEeds-action, TEntative, ACcept, DEclined,
              // DG (delegated), COmpleted (todo), IN-process (todo)
-             
+             // cutype (calendar user type) = INDividual, GROup, RESource, ROOm, UNKnown
+
            [ <alarm rel-start="RELATIVE_TIME_POSITIVE_MEANS_BEFORE"/> ]*
-  
+
            [
              <recur>  // see below
                 [ <add|exclude>
@@ -485,9 +486,10 @@ OR
               <dur DURATION>
            )   
            <or d="friendly name" url="address"> // organizer
-           <at d="friendly name" url="address" role="ROLE" ptst="status""/>* // attendee
-             // role = CHAir, REQuired, OPTional, NON-participant (ie informational), RESource
+           <at d="friendly name" url="address" role="ROLE" ptst="status"" [cutype="CUTYPE"]/>* // attendee
+             // role = CHAir, REQuired, OPTional, NON-participant (ie informational)
              // ptst = NEeds-action, TEntative, ACcept, DEclined, DG (delegated), COmpleted (todo), IN-process (todo)
+             // cutype (calendar user type) = INDividual, GROup, RESource, ROOm, UNKnown
            <alarm rel-start="RELATIVE_MSECS_MINUS_MEANS_AFTER_START"/>*
            [
              <recur>

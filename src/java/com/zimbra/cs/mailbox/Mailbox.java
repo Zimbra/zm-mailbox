@@ -3048,6 +3048,7 @@ public class Mailbox {
      * @param recurId
      * @param cnStr
      * @param addressStr
+     * @param cutypeStr
      * @param roleStr
      * @param partStatStr
      * @param needsReply
@@ -3056,10 +3057,10 @@ public class Mailbox {
      * @throws ServiceException
      */
     public synchronized void modifyPartStat(OperationContext octxt, int apptId, RecurId recurId,
-            String cnStr, String addressStr, String roleStr, String partStatStr, Boolean needsReply, int seqNo, long dtStamp) 
+            String cnStr, String addressStr, String cutypeStr, String roleStr, String partStatStr, Boolean needsReply, int seqNo, long dtStamp) 
     throws ServiceException {
         
-        ModifyInvitePartStat redoRecorder = new ModifyInvitePartStat(mId, apptId, recurId, cnStr, addressStr, roleStr, partStatStr, needsReply, seqNo, dtStamp);
+        ModifyInvitePartStat redoRecorder = new ModifyInvitePartStat(mId, apptId, recurId, cnStr, addressStr, cutypeStr, roleStr, partStatStr, needsReply, seqNo, dtStamp);
         
         boolean success = false;
         try {
@@ -3069,7 +3070,7 @@ public class Mailbox {
             
             Account acct = getAccount();
         
-            appt.modifyPartStat(acct, recurId, cnStr, addressStr, roleStr, partStatStr, needsReply, seqNo, dtStamp);
+            appt.modifyPartStat(acct, recurId, cnStr, addressStr, cutypeStr, roleStr, partStatStr, needsReply, seqNo, dtStamp);
             markItemModified(appt, Change.MODIFIED_INVITE);
             
             success = true;

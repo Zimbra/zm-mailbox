@@ -74,6 +74,7 @@ public class IcalXmlStrMap
     public static IcalXmlStrMap sStatusMap = new IcalXmlStrMap("Status");
     public static IcalXmlStrMap sPartStatMap = new IcalXmlStrMap("PartStat");
     public static IcalXmlStrMap sRoleMap = new IcalXmlStrMap("Role");
+    public static IcalXmlStrMap sCUTypeMap = new IcalXmlStrMap("CUType");
     
     private HashMap fwdMap = new HashMap();
     private HashMap bakMap = new HashMap();
@@ -122,9 +123,22 @@ public class IcalXmlStrMap
     public final static String ROLE_OPT_PARTICIPANT = "OPT";
     public final static String ROLE_REQUIRED = "REQ";
     public final static String ROLE_CHAIR = "CHA";
-    
+
+    // attendee calendar user type
+    public final static String CUTYPE_INDIVIDUAL = "IND";
+    public final static String CUTYPE_GROUP      = "GRO";
+    public final static String CUTYPE_RESOURCE   = "RES";
+    public final static String CUTYPE_ROOM       = "ROO";
+    public final static String CUTYPE_UNKNOWN    = "UNK";
+
     static {
-        sRoleMap.add(ICalTok.CHAIR.toString(), ROLE_CHAIR);
+    	sCUTypeMap.add(ICalTok.INDIVIDUAL.toString(), CUTYPE_INDIVIDUAL);
+    	sCUTypeMap.add(ICalTok.GROUP.toString(), CUTYPE_GROUP);
+    	sCUTypeMap.add(ICalTok.RESOURCE.toString(), CUTYPE_RESOURCE);
+    	sCUTypeMap.add(ICalTok.ROOM.toString(), CUTYPE_ROOM);
+    	sCUTypeMap.add(ICalTok.UNKNOWN.toString(), CUTYPE_UNKNOWN);
+
+    	sRoleMap.add(ICalTok.CHAIR.toString(), ROLE_CHAIR);
         sRoleMap.add(ICalTok.REQ_PARTICIPANT.toString(), ROLE_REQUIRED);
         sRoleMap.add(ICalTok.OPT_PARTICIPANT.toString(), ROLE_OPT_PARTICIPANT);
         sRoleMap.add(ICalTok.NON_PARTICIPANT.toString(), ROLE_NON_PARTICIPANT);

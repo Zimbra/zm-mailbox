@@ -836,6 +836,9 @@ private static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap i
             String cn = cur.getAttribute(MailService.A_DISPLAY, null);
             String address = cur.getAttribute(MailService.A_ADDRESS);
 
+            String cutype = cur.getAttribute(MailService.A_APPT_CUTYPE, null);
+            validateAttr(IcalXmlStrMap.sCUTypeMap, MailService.A_APPT_CUTYPE, cutype);
+
             String role = cur.getAttribute(MailService.A_APPT_ROLE);
             validateAttr(IcalXmlStrMap.sRoleMap, MailService.A_APPT_ROLE, role);
 
@@ -849,7 +852,7 @@ private static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap i
                 rsvp = true;
             }
 
-            ZAttendee at = new ZAttendee(address, cn, role, partStat,
+            ZAttendee at = new ZAttendee(address, cn, cutype, role, partStat,
                     rsvp ? Boolean.TRUE : Boolean.FALSE);
 
             if (newInv.getMethod().equals(ICalTok.PUBLISH.toString())) {
