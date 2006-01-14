@@ -103,6 +103,8 @@ public class SendInviteReply extends CalendarRequest {
                 apptId = iid.getId();
                 inviteMsgId = iid.getSubpartId();
                 appt = mbox.getAppointmentById(octxt, apptId); 
+                if (appt == null)
+                	throw MailServiceException.NO_SUCH_APPT(iid.toString(), "Could not find appointment");
                 oldInv = appt.getInvite(inviteMsgId, compNum);
             } else {
                 // accepting the message: go find the appointment and then the invite
@@ -117,6 +119,8 @@ public class SendInviteReply extends CalendarRequest {
                 	throw MailServiceException.NO_SUCH_APPT(iid.toString(), "Could not find appointment");
                 oldInv = appt.getInvite(inviteMsgId, compNum);  
             }
+            if (oldInv == null)
+            	throw MailServiceException.NO_SUCH_APPT(iid.toString(), "Could not find appointment");
             
             if ((mbox.getEffectivePermissions(octxt, apptId, MailItem.TYPE_APPOINTMENT) & ACL.RIGHT_ACTION) == 0)
             {
