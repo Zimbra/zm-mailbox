@@ -356,7 +356,7 @@ public class Message extends MailItem {
 
         // process the components in this invite (must do this last so blob is created, etc)
         if (components != null)
-            msg.processInvitesAfterCreate(methodStr, volumeId, !noICal, pm, components);
+            msg.processInvitesAfterCreate(methodStr, folder.getId(), volumeId, !noICal, pm, components);
 
         msg.finishCreation(conv);
         return msg;
@@ -367,7 +367,7 @@ public class Message extends MailItem {
     * constraints on the Appointments table
     * @param invites
     */
-   private void processInvitesAfterCreate(String method, short volumeId, boolean createAppt,
+   private void processInvitesAfterCreate(String method, int folderId, short volumeId, boolean createAppt,
                                           ParsedMessage pm, List /* Invite */ invites) 
    throws ServiceException {
        // since this is the first time we've seen this Invite Message, we need to process it
@@ -390,7 +390,7 @@ public class Message extends MailItem {
                        return; // for now, just ignore this Invitation
                    }
                } else {
-                   appt.processNewInvite(pm, cur, false, volumeId);
+                   appt.processNewInvite(pm, cur, false, folderId, volumeId);
                }
            }
            

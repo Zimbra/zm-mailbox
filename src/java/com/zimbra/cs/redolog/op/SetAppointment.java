@@ -183,8 +183,9 @@ public class SetAppointment extends RedoableOp implements CreateAppointmentRecor
         return mApptId;
     }
     
-    public void setAppointmentId(int id) {
+    public void setAppointmentId(int id, int folderId) {
         mApptId = id;
+        mFolderId = folderId;
     }
 
     public int getOpCode() {

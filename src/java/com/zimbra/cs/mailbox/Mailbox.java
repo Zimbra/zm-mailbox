@@ -2533,13 +2533,15 @@ public class Mailbox {
                 }
             } else {
                 appt.removeAllInvites(); 
-                appt.processNewInvite(defaultInv.mPm, defaultInv.mInv, defaultInv.mForce, Volume.getCurrentMessageVolume().getId());
+                appt.processNewInvite(defaultInv.mPm, defaultInv.mInv, defaultInv.mForce, folderId, Volume.getCurrentMessageVolume().getId());
             }
+
+            redoRecorder.setAppointmentId(appt.getId(), appt.getFolderId());
              
             // handle the exceptions!
             if (exceptions != null) {
                 for (SetAppointmentData sad : exceptions) {
-                    appt.processNewInvite(sad.mPm, sad.mInv, sad.mForce, Volume.getCurrentMessageVolume().getId());
+                    appt.processNewInvite(sad.mPm, sad.mInv, sad.mForce, folderId, Volume.getCurrentMessageVolume().getId());
                 }
             }
             
@@ -2604,8 +2606,8 @@ public class Mailbox {
                     return null; // for now, just ignore this Invitation
                 }
             } else {
-                appt.processNewInvite(pm, inv, force, Volume.getCurrentMessageVolume().getId());
-                redoRecorder.setAppointmentId(appt.getId());
+                appt.processNewInvite(pm, inv, force, folderId, Volume.getCurrentMessageVolume().getId());
+                redoRecorder.setAppointmentId(appt.getId(), appt.getFolderId());
             }
 
             success = true;
@@ -3415,7 +3417,7 @@ public class Mailbox {
         Appointment appt = Appointment.create(createId, getFolderById(folderId), volumeId, tags, uid, pm, invite);
 
         if (redoRecorder != null)
-        	redoRecorder.setAppointmentId(appt.getId());
+        	redoRecorder.setAppointmentId(appt.getId(), appt.getFolderId());
         return appt;
     }
 

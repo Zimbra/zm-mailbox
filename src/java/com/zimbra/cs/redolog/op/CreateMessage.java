@@ -160,8 +160,9 @@ public class CreateMessage extends RedoableOp implements CreateAppointmentPlayer
     	return mAppointmentId;
     }
 
-    public void setAppointmentId(int appointmentId) {
+    public void setAppointmentId(int appointmentId, int folderId) {
     	mAppointmentId = appointmentId;
+    	mFolderId = folderId;
     }
 
 	public int getOpCode() {
