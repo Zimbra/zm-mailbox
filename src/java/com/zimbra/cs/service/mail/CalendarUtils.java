@@ -837,7 +837,8 @@ private static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap i
             String address = cur.getAttribute(MailService.A_ADDRESS);
 
             String cutype = cur.getAttribute(MailService.A_APPT_CUTYPE, null);
-            validateAttr(IcalXmlStrMap.sCUTypeMap, MailService.A_APPT_CUTYPE, cutype);
+            if (cutype != null)
+            	validateAttr(IcalXmlStrMap.sCUTypeMap, MailService.A_APPT_CUTYPE, cutype);
 
             String role = cur.getAttribute(MailService.A_APPT_ROLE);
             validateAttr(IcalXmlStrMap.sRoleMap, MailService.A_APPT_ROLE, role);
