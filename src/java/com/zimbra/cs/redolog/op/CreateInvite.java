@@ -105,8 +105,9 @@ public class CreateInvite extends RedoableOp implements CreateAppointmentRecorde
         return mApptId;
     }
     
-    public void setAppointmentId(int id) {
+    public void setAppointmentId(int id, int folderId) {
         mApptId = id;
+        mFolderId = folderId;
     }
 
     public void redo() throws Exception {

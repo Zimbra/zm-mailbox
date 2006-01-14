@@ -519,11 +519,11 @@ public class Appointment extends MailItem {
      * @param invite
      * @param force if true, then force update to this appointment, otherwise use RFC2446 sequencing rules
      */
-    void processNewInvite(ParsedMessage pm, Invite invite, boolean force, short volumeId)
+    void processNewInvite(ParsedMessage pm, Invite invite, boolean force, int folderId, short volumeId)
     throws ServiceException {
         String method = invite.getMethod();
         if (method.equals(ICalTok.REQUEST.toString()) || method.equals(ICalTok.CANCEL.toString()) || method.equals(ICalTok.PUBLISH.toString())) {
-            processNewInviteRequestOrCancel(pm, invite, force, volumeId);
+            processNewInviteRequestOrCancel(pm, invite, force, folderId, volumeId);
         } else if (method.equals("REPLY")) {
             processNewInviteReply(pm, invite, force);
         }
@@ -541,7 +541,7 @@ public class Appointment extends MailItem {
         saveMetadata();
     }
 
-    private void processNewInviteRequestOrCancel(ParsedMessage pm, Invite newInvite, boolean force, short volumeId)
+    private void processNewInviteRequestOrCancel(ParsedMessage pm, Invite newInvite, boolean force, int folderId, short volumeId)
     throws ServiceException {
         String method = newInvite.getMethod();
 
@@ -553,7 +553,7 @@ public class Appointment extends MailItem {
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions on this appointment");
 
         boolean modifiedAppt = false;
-        Invite prev = null; // (the first) invite which has been made obscelete by the new one coming in
+        Invite prev = null; // (the first) invite which has been made obsolete by the new one coming in
         
         ArrayList /* Invite */ toRemove = new ArrayList(); // Invites to remove from our blob store
 
@@ -639,7 +639,13 @@ public class Appointment extends MailItem {
             Integer i = (Integer)iter.next();
             mInvites.remove(i.intValue());
         }
-        
+
+        if (getFolderId() != folderId) {
+        	// Move appointment to a different folder.
+        	Folder folder = getMailbox().getFolderById(folderId);
+        	move(folder);
+        }
+
         boolean hasRequests = false;
         for (Iterator iter = mInvites.iterator(); iter.hasNext();) {
             Invite cur = (Invite)iter.next();
