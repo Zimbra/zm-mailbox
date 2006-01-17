@@ -208,6 +208,8 @@ public class DbPool {
             sLog.fatal("can't init Pool", e);
             System.exit(1);
         }
+        
+        ZimbraPerf.addAccumulator(new DbStats());
     };
 
     private static Properties getZimbraDbProps() {
@@ -284,7 +286,6 @@ public class DbPool {
         // If the connection pool is overutilized, warn about potential leaks
         int numActive = sConnectionPool.getNumActive();
         int maxActive = sConnectionPool.getMaxActive();
-        ZimbraPerf.COUNTER_DB_POOL_SIZE.increment(numActive);
 
         if (numActive > maxActive * 0.75) {
             String stackTraceMsg =
@@ -423,5 +424,12 @@ public class DbPool {
                 throw ServiceException.FAILURE("closing statement", e);
             }
         }
+    }
+    
+    /**
+     * Returns the number of connections currently in use.
+     */
+    static int getSize() {
+        return sConnectionPool.getNumActive();
     }
 }

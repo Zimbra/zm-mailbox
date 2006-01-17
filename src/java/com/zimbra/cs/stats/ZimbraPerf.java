@@ -59,10 +59,10 @@ public class ZimbraPerf {
     public static Counter COUNTER_LMTP_DLVD_MSGS = new Counter("lmtp_dlvd_msgs");
     public static Counter COUNTER_LMTP_DLVD_BYTES = new Counter("lmtp_dlvd_bytes");
     public static StopWatch STOPWATCH_DB_CONN = new StopWatch("db_conn");
-    public static Counter COUNTER_DB_POOL_SIZE = new Counter("db_pool_size");
     public static StopWatch STOPWATCH_LDAP_DC = new StopWatch("ldap_dc");
     public static StopWatch STOPWATCH_MBOX_ADD_MSG = new StopWatch("mbox_add_msg");
     public static Counter COUNTER_MBOX_MSG_CACHE = new Counter("mbox_msg_cache"); 
+    public static Counter COUNTER_MBOX_ITEM_CACHE = new Counter("mbox_item_cache");
     public static StopWatch STOPWATCH_SOAP = new StopWatch("soap");
     public static StopWatch STOPWATCH_IMAP = new StopWatch("imap");
     public static StopWatch STOPWATCH_POP = new StopWatch("pop");
@@ -71,9 +71,9 @@ public class ZimbraPerf {
     private static Accumulator[] CORE_ACCUMULATORS = {
         COUNTER_LMTP_RCVD_MSGS, COUNTER_LMTP_RCVD_BYTES, COUNTER_LMTP_RCVD_RCPT,
         COUNTER_LMTP_DLVD_MSGS, COUNTER_LMTP_DLVD_BYTES,
-        STOPWATCH_DB_CONN, COUNTER_DB_POOL_SIZE,
+        STOPWATCH_DB_CONN,
         STOPWATCH_LDAP_DC,
-        STOPWATCH_MBOX_ADD_MSG, COUNTER_MBOX_MSG_CACHE,
+        STOPWATCH_MBOX_ADD_MSG, COUNTER_MBOX_MSG_CACHE, COUNTER_MBOX_ITEM_CACHE,
         STOPWATCH_SOAP,
         STOPWATCH_IMAP,
         STOPWATCH_POP,
@@ -116,7 +116,8 @@ public class ZimbraPerf {
             throw new IllegalArgumentException("Accumulator cannot be null");
         }
         if (sStartedZimbraStats) {
-            sLog.warn("addAccumulator() called after zimbrastats logging has started", new Throwable());
+            sLog.warn("addAccumulator() called for " + StringUtil.join(", ", a.getNames()) +
+                " after zimbrastats logging has started.  Not tracking this statistic.");
         } else {
             sLog.debug("Adding accumulator for stats: " + StringUtil.join(",", a.getNames()));
             synchronized(sAccumulators) {
@@ -453,12 +454,16 @@ public class ZimbraPerf {
         }
         
         // Only the average is interesting for these counters
-        COUNTER_DB_POOL_SIZE.setShowAverage(true);
-        COUNTER_DB_POOL_SIZE.setShowCount(false);
-        COUNTER_DB_POOL_SIZE.setShowTotal(false);
         COUNTER_MBOX_MSG_CACHE.setShowAverage(true);
+        COUNTER_MBOX_MSG_CACHE.setAverageName("mbox_msg_cache");
         COUNTER_MBOX_MSG_CACHE.setShowCount(false);
         COUNTER_MBOX_MSG_CACHE.setShowTotal(false);
+        
+        COUNTER_MBOX_ITEM_CACHE.setShowAverage(true);
+        COUNTER_MBOX_ITEM_CACHE.setAverageName("mbox_item_cache");
+        COUNTER_MBOX_ITEM_CACHE.setShowCount(false);
+        COUNTER_MBOX_ITEM_CACHE.setShowTotal(false);
+        
         COUNTER_IDX_WRT.setShowAverage(true);
         COUNTER_IDX_WRT.setShowCount(false);
         COUNTER_IDX_WRT.setShowTotal(false);

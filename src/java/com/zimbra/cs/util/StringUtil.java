@@ -285,6 +285,9 @@ public class StringUtil {
     }
     
     public static String join(String delimiter, Collection col) {
+        if (col == null) {
+            return null;
+        }
         Object[] array = new Object[col.size()];
         col.toArray(array);
         return join(delimiter, array);

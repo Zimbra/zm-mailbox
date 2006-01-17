@@ -39,17 +39,24 @@ import com.zimbra.cs.util.StringUtil;
 public class Counter
 implements Accumulator {
 
-    private String mName;
     private long mCount = 0;
     private long mTotal = 0;
-    private String mUnits = null;
-    protected boolean mShowCount = false;
-    protected boolean mShowTotal = true;
-    protected boolean mShowAverage = false;
+    private boolean mShowCount = false;
+    private boolean mShowTotal = true;
+    private boolean mShowAverage = false;
+    private String mCountName;
+    private String mTotalName;
+    private String mAverageName;
     
     Counter(String name, String units) {
-        mName = name;
-        mUnits = units;
+        mCountName = name + "_count";
+        if (StringUtil.isNullOrEmpty(units)) {
+            mTotalName = name;
+            mAverageName = name + "_avg";
+        } else {
+            mTotalName = name + "_" + units;
+            mAverageName = name + "_" + units + "_avg";
+        }
     }
     
     Counter(String name) {
@@ -61,6 +68,24 @@ implements Accumulator {
      * called <code>[name]_count</code>.  The default is <code>false</code>.
      */
     public void setShowCount(boolean showCount) { mShowCount = showCount; }
+
+    /**
+     * Sets the name of the count column.  The default name is
+     * <code>name_count</code>.
+     */
+    public void setCountName(String countName) { mCountName = countName; }
+    
+    /**
+     * Sets the name of the total column.  The default name is
+     * <code>name[_units]</code>.
+     */
+    public void setTotalName(String totalName) { mTotalName = totalName; }
+    
+    /**
+     * Sets the name of average column.  The default name is
+     * <code>name[_units]_avg</code>.
+     */
+    public void setAverageName(String averageName) { mAverageName = averageName; }
     
     /**
      * If <code>true</code>, the total of values will be logged in a column
@@ -97,17 +122,13 @@ implements Accumulator {
     public List<String> getNames() {
         List<String> labels = new ArrayList<String>();
         if (mShowTotal) {
-            if (StringUtil.isNullOrEmpty(mUnits)) {
-                labels.add(mName);
-            } else {
-                labels.add(mName + "_" + mUnits);
-            }
+            labels.add(mTotalName);
         }
         if (mShowCount) {
-            labels.add(mName + "_count");
+            labels.add(mCountName);
         }
         if (mShowAverage) {
-            labels.add(mName + "_avg");
+            labels.add(mAverageName);
         }
         return labels;
     }
