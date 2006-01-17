@@ -38,6 +38,7 @@ import java.text.ParseException;
 import java.util.*;
 
 import javax.mail.MessagingException;
+import javax.mail.internet.ContentType;
 import javax.mail.internet.MailDateFormat;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
@@ -54,11 +55,13 @@ import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.cs.mime.handler.TextCalendarHandler;
 import com.zimbra.cs.object.ObjectHandlerException;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.StringUtil;
+import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * @author jhahm
@@ -426,6 +429,8 @@ public class ParsedMessage {
                           " (" + ct + ", Message-ID: " + msgid + ")", e);
             }
 		}
+        if (miCalendar != null)
+            allTextHandler.hasCalendarPart(true);
         if (numParseErrors > 0) {
             String msgid = getMessageID();
             String sbj = mMimeMessage.getSubject();
@@ -452,46 +457,37 @@ public class ParsedMessage {
         }
 	}
 
-    private void analyzePart(MPartInfo mpi,
-                             MPartInfo mpiBody,
-                             TopLevelMessageHandler allTextHandler)
-        throws MimeHandlerException,
-        ObjectHandlerException,
-        MessagingException,
-        ServiceException {
-        
-        String contentTypeString = mpi.getContentTypeString();
+	private void analyzePart(MPartInfo mpi, MPartInfo mpiBody, TopLevelMessageHandler allTextHandler)
+	throws MimeHandlerException, ObjectHandlerException, MessagingException, ServiceException {
+	    ContentType ct = mpi.getContentType();
         // ignore multipart "container" parts
-        if (mpi.getContentType().match(Mime.CT_MULTIPART_WILD)) {
+        if (ct.match(Mime.CT_MULTIPART_WILD))
             return;
-        }
 
-        if (parseAppointmentInfo(mpi.getMimePart(), contentTypeString))
-            allTextHandler.hasCalendarPart(true);
-
-        MimeHandler handler = MimeHandler.getMimeHandler(contentTypeString);
+        MimeHandler handler = MimeHandler.getMimeHandler(ct.getBaseType());
         assert(handler != null);
 
-        boolean isTextType =
-            mpi.getContentType().match(Mime.CT_TEXT_WILD);
-        boolean isMsgRfc822Type =
-            contentTypeString.equalsIgnoreCase(Mime.CT_MESSAGE_RFC822);
+        boolean isTextType = ct.match(Mime.CT_TEXT_WILD);
+        boolean isMessageType = ct.match(Mime.CT_MESSAGE_RFC822);
 
         if (handler.isIndexingEnabled()) {
-
             handler.init(mpi.getMimePart().getDataHandler().getDataSource());
             handler.setPartName(mpi.getPartName());
             handler.setFilename(mpi.getFilename());
             try {
-                handler.setMessageDigest(this.getRawDigest());
+                handler.setMessageDigest(getRawDigest());
             } catch (MessagingException e) {
                 throw new MimeHandlerException("unable to get message digest", e);
             } catch (IOException e) {
                 throw new MimeHandlerException("unable to get message digest", e);
             }
 
+            // remember the first iCalendar attachment
+            if (miCalendar == null)
+                miCalendar = handler.getICalendar();
+
             if (mpi == mpiBody ||
-                (mIndexAttachments && !DebugConfig.disableIndexingAttachmentsTogether)) {
+                    (mIndexAttachments && !DebugConfig.disableIndexingAttachmentsTogether)) {
                 // add ALL TEXT from EVERY PART to the toplevel body content.
                 // This is necessary for queries with multiple words -- where
                 // one word is in the body and one is in a sub-attachment.
@@ -499,55 +495,30 @@ public class ParsedMessage {
             }
 
             if (mIndexAttachments && !DebugConfig.disableIndexingAttachmentsSeparately &&
-                !isTextType && !isMsgRfc822Type) {
+                    !isTextType && !isMessageType) {
                 // Each non-text MIME part is also indexed as a separate
                 // Lucene document.  This is necessary so that we can tell the
                 // client what parts match if a search matched a particular
                 // part.
                 Document doc = handler.getDocument();
-
                 if (doc != null) {
-                    int partSize = mpi.mPart.getSize();
+                    int partSize = mpi.getMimePart().getSize();
                     doc.add(Field.Text(LuceneFields.L_SIZE, Integer.toString(partSize)));
                     mLuceneDocuments.add(doc);
                 }
             }
         }
-    }
-    
-    /**
-     * @param mimePart
-     * @param contentTypeString
-     * @throws MessagingException
-     */
-    private boolean parseAppointmentInfo(MimePart mimePart, String contentTypeString) throws MessagingException, ServiceException {
-        if (contentTypeString.indexOf(Mime.CT_TEXT_CALENDAR) != -1) {
+
+        // make sure we've got the text/calendar handler installed
+        if (miCalendar == null && ct.match(Mime.CT_TEXT_CALENDAR)) {
+            if (handler.isIndexingEnabled())
+                ZimbraLog.index.warn("TextCalendarHandler not correctly installed");
             try {
-//                CalendarBuilder calBuilder = new CalendarBuilder();
-                
-//                {
-//                    Reader is = new UnfoldingReader(new InputStreamReader(mimePart.getInputStream()));
-//                    for (int i = is.read(); i != -1; i = is.read()) {
-//                        char ch = (char)i;
-//                        System.out.print(ch);
-//                    }
-//                    System.out.println();
-//                }
-                
-                InputStream is = mimePart.getInputStream();
-                miCalendar = ZCalendarBuilder.build(new InputStreamReader(is));
-                
-                
-//                miCalendar = calBuilder.build(is);
-            } catch (IOException e) {
-                sLog.warn("error reading text/calendar mime part", e);
-//            } catch (ParserException e) {
-//                sLog.warn("error parsing text/calendar mime part", e);
-//                sLog.warn("\tcaused by: ", e.getCause());
+                miCalendar = ZCalendarBuilder.build(new InputStreamReader(mpi.getMimePart().getInputStream()));
+            } catch (IOException ioe) {
+                ZimbraLog.index.warn("error reading text/calendar mime part", ioe);
             }
-            return true;
         }
-        return false;
     }
 
     // these *should* be taken from a properties file

@@ -95,8 +95,8 @@ public class ZCalendar {
      */
     public static class ZVCalendar
     {
-        List <ZComponent> mComponents = new ArrayList();
-        List <ZProperty> mProperties = new ArrayList();
+        List<ZComponent> mComponents = new ArrayList<ZComponent>();
+        List<ZProperty> mProperties = new ArrayList<ZProperty>();
         
         public ZVCalendar() { 
             addProperty(new ZProperty(ICalTok.PRODID, sZimbraProdID));
@@ -105,7 +105,7 @@ public class ZCalendar {
         
         public void addProperty(ZProperty prop) { mProperties.add(prop); }
         public void addComponent(ZComponent comp) { mComponents.add(comp); }
-        
+
         public ZComponent getComponent(ICalTok tok) { return findComponent(mComponents, tok); }
         public ZProperty getProperty(ICalTok tok) { return findProp(mProperties, tok); }
         public String getPropVal(ICalTok tok, String defaultValue) {
@@ -170,20 +170,20 @@ public class ZCalendar {
         }
         
         private String mName;
-        private ICalTok mTok;
+        ICalTok mTok;
         
         public String getName() { return mName; }
         public ICalTok getTok() { return mTok; }
-        
-        List <ZProperty> mProperties = new ArrayList();
-        List <ZComponent> mComponents = new ArrayList();
+
+        List<ZProperty> mProperties = new ArrayList<ZProperty>();
+        List<ZComponent> mComponents = new ArrayList<ZComponent>();
         
         public void addProperty(ZProperty prop) { mProperties.add(prop); }
         public void addComponent(ZComponent comp) { mComponents.add(comp); }
         
         ZComponent getComponent(ICalTok tok) { return findComponent(mComponents, tok); }
         ZProperty getProperty(ICalTok tok) { return findProp(mProperties, tok); }
-        String getPropVal(ICalTok tok, String defaultValue) {
+        public String getPropVal(ICalTok tok, String defaultValue) {
             ZProperty prop = getProperty(tok);
             if (prop != null) 
                 return prop.mValue;
@@ -352,7 +352,7 @@ public class ZCalendar {
         }
         
         
-        List <ZParameter> mParameters = new ArrayList();
+        List<ZParameter> mParameters = new ArrayList<ZParameter>();
         
         public void addParameter(ZParameter param) { mParameters.add(param); }
         
@@ -478,7 +478,7 @@ public class ZCalendar {
         String maValue;
     }
     
-    private static ZProperty findProp(List <ZProperty> list, ICalTok tok)
+    static ZProperty findProp(List <ZProperty> list, ICalTok tok)
     {
         for (ZProperty prop : list) {
             if (prop.mTok == tok) {
@@ -488,7 +488,7 @@ public class ZCalendar {
         return null;
     }
     
-    private static ZParameter findParameter(List <ZParameter> list, ICalTok tok)
+    static ZParameter findParameter(List <ZParameter> list, ICalTok tok)
     {
         for (ZParameter param: list) {
             if (param.mTok == tok) {
@@ -498,7 +498,7 @@ public class ZCalendar {
         return null;
     }
     
-    private static ZComponent findComponent(List <ZComponent> list, ICalTok tok)
+    static ZComponent findComponent(List <ZComponent> list, ICalTok tok)
     {
         for (ZComponent comp: list) {
             if (comp.mTok == tok) {
@@ -645,7 +645,7 @@ public class ZCalendar {
     private static class ZContentHandler implements ContentHandler
     {
         ZVCalendar mCal = null;
-        ArrayList<ZComponent> mComponents = new ArrayList();
+        ArrayList<ZComponent> mComponents = new ArrayList<ZComponent>();
         ZProperty mCurProperty = null;
         
         public void startCalendar() { 
