@@ -946,29 +946,35 @@ public class ICalTimeZone extends SimpleTimeZone
     {
         String tzname = comp.getPropVal(ICalTok.TZID, null);
         
+        ZComponent standard = comp.getComponent(ICalTok.STANDARD); 
         ZComponent daylight = comp.getComponent(ICalTok.DAYLIGHT);
-        
-        String daydtStart = null;
-        int dayoffsetTime = 0;
-        String dayrrule = null;
+        if (standard == null) {
+        	standard = daylight;
+        	daylight = null;
+        }
+        if (standard == null)
+        	throw new IllegalArgumentException("VTIMEZONE has neither STANDARD nor DAYLIGHT: TZID=" + tzname);
         
         String stddtStart = null;
         int stdoffsetTime = 0;
         String stdrrule = null;
+        
+        if (standard != null) {
+            stddtStart = standard.getPropVal(ICalTok.DTSTART, null);
+            String stdtzOffsetTo = standard.getPropVal(ICalTok.TZOFFSETTO, null);
+            stdoffsetTime = tzOffsetToTime(stdtzOffsetTo);  
+            stdrrule = standard.getPropVal(ICalTok.RRULE, null);
+        }
+        
+        String daydtStart = null;
+        int dayoffsetTime = stdoffsetTime;
+        String dayrrule = null;
         
         if (daylight != null) {
             daydtStart = daylight.getPropVal(ICalTok.DTSTART, null);
             String daytzOffsetTo = daylight.getPropVal(ICalTok.TZOFFSETTO, null);
             dayoffsetTime = tzOffsetToTime(daytzOffsetTo);  
             dayrrule = daylight.getPropVal(ICalTok.RRULE, null);
-        }
-        
-        ZComponent standard = comp.getComponent(ICalTok.STANDARD); 
-        if (standard != null) {
-            stddtStart = standard.getPropVal(ICalTok.DTSTART, null);
-            String stdtzOffsetTo = standard.getPropVal(ICalTok.TZOFFSETTO, null);
-            stdoffsetTime = tzOffsetToTime(stdtzOffsetTo);  
-            stdrrule = standard.getPropVal(ICalTok.RRULE, null);
         }
         
         ICalTimeZone tz = new ICalTimeZone(tzname, 
