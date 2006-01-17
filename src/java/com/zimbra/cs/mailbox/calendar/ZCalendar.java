@@ -258,8 +258,8 @@ public class ZCalendar {
     
     private static final Pattern SIMPLE_ESCAPED = Pattern.compile("\\\\([,;\"\\\\])");
     private static final Pattern NEWLINE_ESCAPED = Pattern.compile("\\\\n");
-    
-    
+
+
     public static String unescape(String str) {
         if (str != null && str.indexOf('\\') >= 0) {
             String toRet = SIMPLE_ESCAPED.matcher(str).replaceAll("$1"); 
@@ -267,7 +267,34 @@ public class ZCalendar {
         }
         return str;
     }
-    
+
+
+    // From RFC2445, Section 4.1 Content Lines:
+    //
+    // param-value = paramtext / quoted-string
+    // paramtext = *SAFE-CHAR
+    // quoted-string = DQUOTE *QSAFE-CHAR DQUOTE
+    // NON-US-ASCII = %x80-F8
+    // QSAFE-CHAR = WSP / %x21 / %x23-7E / NON-US-ASCII
+    // ; Any character except CTLs and DQUOTE
+    // SAFE-CHAR  = WSP / %x21 / %x23-2B / %x2D-39 / %x3C-7E
+    //              / NON-US-ASCII
+    // ; Any character except CTLs, DQUOTE, ";", ":", ","
+    // CTL = %x00-08 / %x0A-1F / %x7F
+    //
+    // Thus a parameter value cannot contain CTLs or DQUOTE.
+    // When a value has to be quoted, there is no need to escape
+    // DQUOTE because it may not occur in the value.
+    //
+    private static final Pattern MUST_QUOTE = Pattern.compile("[;:,]");
+
+    public static String quote(String str) {
+        if (str != null && MUST_QUOTE.matcher(str).find())
+        	return "\"" + str + "\"";
+        else
+	        return str;
+    }
+
     public static String unquote(String str) {
         if (str != null && str.length()>2) {
             if ((str.charAt(0) == '\"') && (str.charAt(str.length()-1) == '\"'))
@@ -438,7 +465,7 @@ public class ZCalendar {
                 w.write(escape(maValue.substring(1, maValue.length()-1)));
                 w.write('\"');
             } else {
-                w.write(escape(maValue));
+                w.write(quote(maValue));
             }
         }
         

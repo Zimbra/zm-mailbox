@@ -186,22 +186,35 @@ public final class ParsedDateTime {
     throws ParseException {
         if (str == null)
             return null;
+
+        String datetime;
         ICalTimeZone tz = null;
-        String tzid = null;
-        if (str.startsWith("TZID=")) {
-            int colonIdx = str.indexOf(":");
-            tzid = str.substring(5, colonIdx); // 5 for 'TZID='
-            
-            if (tzid != null) {
-                str = str.substring(colonIdx + 1);
-                if (tzid.equals("GMT") || tzid.equals("UTC")) {
-                    str+="Z";
+        int propValueColonIdx = str.lastIndexOf(':');  // colon before property value
+        if (propValueColonIdx != -1) {
+        	datetime = str.substring(propValueColonIdx + 1);
+
+            int tzidIdx = str.indexOf("TZID=");
+            if (tzidIdx != -1) {
+                String tzid;
+            	int valueParamIdx = str.lastIndexOf(";VALUE=");
+            	if (valueParamIdx > tzidIdx)
+            		tzid = str.substring(tzidIdx + 5, valueParamIdx);
+            	else
+            		tzid = str.substring(tzidIdx + 5, propValueColonIdx);
+
+                if ((tzid.equals("GMT") || tzid.equals("UTC"))
+                	&& !datetime.endsWith("Z")) {
+                	datetime += "Z";
                 } else {
                     tz = tzmap.getTimeZone(tzid);
                 }
             }
+        } else {
+        	// no parameters; the whole thing is property value
+        	datetime = str;
         }
-        return parse(str, tz, tzmap.getLocalTimeZone());
+
+        return parse(datetime, tz, tzmap.getLocalTimeZone());
     }
     
     public static ParsedDateTime MAX_DATETIME;
