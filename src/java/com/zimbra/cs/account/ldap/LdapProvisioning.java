@@ -2069,7 +2069,10 @@ public class LdapProvisioning extends Provisioning {
         }
         
         if (authMech.equals(Provisioning.AM_LDAP) || authMech.equals(Provisioning.AM_AD)) {
-            boolean allowFallback = d.getBooleanAttr(Provisioning.A_zimbraAuthFallbackToLocal, false);
+            boolean allowFallback = 
+                d.getBooleanAttr(Provisioning.A_zimbraAuthFallbackToLocal, false) ||
+                acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false) ||
+                acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);                
             try {
                 externalLdapAuth(d, acct, password);
                 return;
