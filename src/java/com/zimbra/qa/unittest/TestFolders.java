@@ -33,9 +33,11 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbResults;
 import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.util.ZimbraLog;
 
 /**
@@ -47,14 +49,13 @@ public class TestFolders extends TestCase
     private Account mAccount;
     private Connection mConn;
     
-    private static String FOLDER_PREFIX = "TestFolders";
+    private static String NAME_PREFIX = "TestFolders";
     
     /**
      * Creates the message used for tag tests 
      */
     protected void setUp()
     throws Exception {
-        ZimbraLog.test.debug("TestFolders.setUp()");
         super.setUp();
 
         mAccount = TestUtil.getAccount("user1");
@@ -63,18 +64,20 @@ public class TestFolders extends TestCase
         
         // Wipe out folders for this test, in case the last test didn't
         // exit cleanly
-        deleteFolders();
+        cleanUp();
     }
 
+    /**
+     * Creates a hierarchy twenty folders deep.
+     */
     public void testManySubfolders()
     throws Exception {
-        ZimbraLog.test.debug("testManySubfolders");
         final int NUM_LEVELS = 20;
         int parentId = Mailbox.ID_FOLDER_INBOX;
         Folder top = null;
         
         for (int i = 1; i <= NUM_LEVELS; i++) {
-            Folder folder = mMbox.createFolder(null, FOLDER_PREFIX + i, parentId, MailItem.TYPE_UNKNOWN, null);
+            Folder folder = mMbox.createFolder(null, NAME_PREFIX + i, parentId, MailItem.TYPE_UNKNOWN, null);
             if (i == 1) {
                 top = folder;
             }
@@ -84,27 +87,61 @@ public class TestFolders extends TestCase
         mMbox.delete(null, top.getId(), top.getType());
     }
     
-    protected void tearDown() throws Exception {
-        ZimbraLog.test.debug("TestFolders.tearDown()");
+    /**
+     * Deletes a folder that contains messages in a conversation.  Confirms
+     * that the conversation size was correctly decremented.
+     */
+    public void testMarkDeletionTargets()
+    throws Exception {
+        String name = NAME_PREFIX + "MDT";
 
-        deleteFolders();
+        // Create three messages and move two of them into a new folder.
+        Message m1 = TestUtil.insertMessage(mMbox, 1, name);
+        ZimbraLog.test.debug("Created message 1, id=" + m1.getId());
+        Message m2 = TestUtil.insertMessage(mMbox, 2, "RE: " + name);
+        ZimbraLog.test.debug("Created message 2, id=" + m2.getId());
+        Message m3 = TestUtil.insertMessage(mMbox, 3, "RE: " + name);
+        ZimbraLog.test.debug("Created message 3, id=" + m3.getId());
         
+        Folder f = mMbox.createFolder(null, name, Mailbox.ID_FOLDER_INBOX, MailItem.TYPE_UNKNOWN, null);
+        mMbox.move(null, m1.getId(), m1.getType(), f.getId());
+        mMbox.move(null, m2.getId(), m2.getType(), f.getId());
+        
+        // Verify conversation size
+        Conversation conv = mMbox.getConversationById(null, m1.getConversationId());
+        int convId = conv.getId();
+        assertEquals("Conversation size before folder delete", 3, conv.getSize());
+
+        // Delete the folder and confirm that the conversation size was decremented
+        mMbox.delete(null, f.getId(), f.getType());
+        conv = mMbox.getConversationById(null, convId);
+        assertEquals("Conversation size after folder delete", 1, conv.getSize());
+    }
+
+    private void cleanUp()
+    throws Exception {
+        deleteTestData(MailItem.TYPE_MESSAGE);
+        deleteTestData(MailItem.TYPE_FOLDER);
+    }
+    
+    protected void tearDown() throws Exception {
+        cleanUp();
         DbPool.quietClose(mConn);
         super.tearDown();
     }
 
-    private void deleteFolders()
+    private void deleteTestData(byte type)
     throws Exception {
         // Delete folders bottom-up to avoid orphaned folders
         String sql =
             "SELECT id " +
             "FROM " + DbMailItem.getMailItemTableName(mMbox) +
-            " WHERE subject LIKE '" + FOLDER_PREFIX + "%' " +
+            " WHERE type = " + type + " AND subject LIKE '%" + NAME_PREFIX + "%' " +
             "ORDER BY id DESC";
         DbResults results = DbUtil.executeQuery(sql);
         while (results.next()) {
             int id = results.getInt(1);
-            mMbox.delete(null, id, MailItem.TYPE_FOLDER);
+            mMbox.delete(null, id, type);
         }
     }
 }

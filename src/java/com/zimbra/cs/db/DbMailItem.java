@@ -92,6 +92,7 @@ public class DbMailItem {
             stmt.setInt(pos++, data.id);
             stmt.setByte(pos++, data.type);
             if (data.parentId <= 0)
+                // Messages in virtual conversations are stored with a null parent_id
                 stmt.setNull(pos++, Types.INTEGER);
             else
                 stmt.setInt(pos++, data.parentId);
@@ -161,6 +162,7 @@ public class DbMailItem {
             int pos = 1;
             stmt.setInt(pos++, id);
             if (parentId <= 0)
+                // Messages in virtual conversations are stored with a null parent_id
                 stmt.setNull(pos++, Types.INTEGER);
             else
                 stmt.setInt(pos++, parentId);
@@ -385,6 +387,7 @@ public class DbMailItem {
                     " WHERE id = ?");
             stmt.setByte(1, item.getType());
             if (item.getParentId() <= 0)
+                // Messages in virtual conversations are stored with a null parent_id
                 stmt.setNull(2, Types.INTEGER);
             else
             	stmt.setInt(2, item.getParentId());
@@ -665,6 +668,15 @@ public class DbMailItem {
         }
     }
 
+    /**
+     * Updates all conversations affected by a folder deletion.  For all conversations
+     * that have messages in the given folder, updates their message count and nulls out
+     * metadata so that the sender list is recalculated the next time the conversation
+     * is instantiated.
+     * 
+     * @param folder the folder that is being deleted
+     * @return the ids of any conversation that were purged as a result of this operation
+     */
     public static List<Integer> markDeletionTargets(Folder folder) throws ServiceException {
         Mailbox mbox = folder.getMailbox();
         Connection conn = mbox.getOperationConnection();
@@ -673,9 +685,9 @@ public class DbMailItem {
         try {
             String table = getMailItemTableName(folder);
             stmt = conn.prepareStatement("UPDATE " + table + ", " +
-                    "(SELECT parent_id pid, COUNT(*) count, GROUP_CONCAT(id SEPARATOR ':') deleted FROM " +
+                    "(SELECT parent_id pid, COUNT(*) count FROM " +
                     getMailItemTableName(folder) + " WHERE folder_id = ? AND parent_id IS NOT NULL GROUP BY parent_id) x" +
-                    " SET size = size - count, metadata = CONCAT(deleted, ':', metadata), mod_metadata = ?, change_date = ?" +
+                    " SET size = size - count, metadata = NULL, mod_metadata = ?, change_date = ?" +
                     " WHERE id = pid AND type = " + MailItem.TYPE_CONVERSATION);
             stmt.setInt(1, folder.getId());
             stmt.setInt(2, mbox.getOperationChangeID());
@@ -692,6 +704,16 @@ public class DbMailItem {
         }
     }
 
+    /**
+     * Updates all affected conversations when a <code>List</code> of <code>MailItem</code>s
+     * is deleted.  Updates each conversation's message count and nulls out
+     * metadata so that the sender list is recalculated the next time the conversation
+     * is instantiated.
+     * 
+     * @param mbox the mailbox
+     * @param ids of the items being deleted
+     * @return the ids of any conversation that were purged as a result of this operation
+     */
     public static List<Integer> markDeletionTargets(Mailbox mbox, List<Integer> ids) throws ServiceException {
         Connection conn = mbox.getOperationConnection();
         String table = getMailItemTableName(mbox);
@@ -701,9 +723,9 @@ public class DbMailItem {
             try {
                 int count = Math.min(DbUtil.IN_CLAUSE_BATCH_SIZE, ids.size() - i);
                 stmt = conn.prepareStatement("UPDATE " + table + ", " +
-                        "(SELECT parent_id pid, COUNT(*) count, GROUP_CONCAT(id SEPARATOR ':') deleted FROM " + getMailItemTableName(mbox) +
+                        "(SELECT parent_id pid, COUNT(*) count FROM " + getMailItemTableName(mbox) +
                         " WHERE id IN" + DbUtil.suitableNumberOfVariables(count) + "AND parent_id IS NOT NULL GROUP BY parent_id) x" +
-                        " SET size = size - count, metadata = CONCAT(deleted, ':', metadata), mod_metadata = ?, change_date = ?" +
+                        " SET size = size - count, metadata = NULL, mod_metadata = ?, change_date = ?" +
                         " WHERE id = pid AND type = " + MailItem.TYPE_CONVERSATION);
                 int attr = 1;
                 for (int index = i; index < i + count; index++)

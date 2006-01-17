@@ -663,6 +663,7 @@ public class Conversation extends MailItem {
         	saveMetadata();
     }
 
+    /*
     private void merge(Conversation other) throws ServiceException {
         if (other == this)
             return;
@@ -704,6 +705,7 @@ public class Conversation extends MailItem {
         // delete the old conversation (must do this after moving the messages because of cascading delete)
         other.delete();
     }
+    */
 
     /** Determines the set of {@link Message}s to be deleted from this
      *  <code>Conversation</code>.  Assembles a new {@link PendingDelete}
@@ -790,35 +792,31 @@ public class Conversation extends MailItem {
 
 
     void decodeMetadata(String metadata) throws ServiceException {
-        String content = metadata;
-        while (content.length() > 0 && Character.isDigit(content.charAt(0))) {
-            int delimiter = content.indexOf(':');
-            if (delimiter == -1)
-                break;
-            content = content.substring(delimiter + 1);
+        Metadata meta = null;
+        boolean recalculate = true;
+
+        // When a folder is deleted, DbMailItem.markDeletionTargets()
+        // nulls out metadata for all affected conversations.
+        if (metadata != null) {
+            try {
+                meta = new Metadata(metadata, this);
+                recalculate = false;
+            } catch (ServiceException e) {
+                sLog.warn(String.format("Unable to parse metadata.  id=%d, data='%s'", getId(), metadata), e);
+            }
         }
-        Metadata meta;
-        try {
-            meta = new Metadata(content, this);
-        } catch (ServiceException e) {
-            // parse failed, so recalculate the metadata by hand...
+
+        if (recalculate) {
             Message[] msgs = getMessages(SORT_ID_ASCENDING);
             recalculateMetadata(msgs, true);
             recalculateSubject(msgs[0]);
+            getSenderList();
             return;
         }
 
-        // if emptying trash told us that we're short a few messages, pass that info to the SenderList
-        String encoded = meta.get(Metadata.FN_SENDER_LIST, null);
-        if (encoded != null && content != metadata)
-            meta.put(Metadata.FN_SENDER_LIST, metadata.substring(0, metadata.length() - content.length()) + encoded);
-
         decodeMetadata(meta);
-
-        // if the subject changed due to trash emptying, better find out now...
-        if (mEncodedSenders == null || content != metadata)
-            getSenderList();
     }
+    
     void decodeMetadata(Metadata meta) throws ServiceException {
         super.decodeMetadata(meta);
 
