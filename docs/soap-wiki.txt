@@ -1,0 +1,31 @@
+// APIs needed for demo.
+
+// Create
+// the syntax is pretty mucn identical to SaveDraft soap call.
+// the subject field becomes the wikiword or the title of the document.
+<SaveWikiRequest>
+  <m>
+    <e t="{type}" a="{email-address}" p="{personal-name}"/>+
+    <su>{subject}</su>*
+    <mp ct="{content-type}">
+      <content>...</content>
+    </mp>
+    <attach [aid="{attach-upload-id}"]>
+      [<m id="{message-id}"/>]*
+      [<mp mid="{message-id}" part="{part-id}"/>]*
+    </attach>
+  </m>
+</SaveWikiRequest>
+
+
+// we can add more fields if we want.
+<SaveWikiResponse>
+  <m id="{message-id}" url="{publish-url}"/>
+</SaveWikiResponse>
+
+// Search
+// per Dan, the client should be able to search the mailbox using the existing api.
+
+// Get
+// we can use UserServlet and add a new formatter for wiki for adding logos, etc.
+// or we can create a simple servlet for this.
