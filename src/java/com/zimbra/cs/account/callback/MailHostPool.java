@@ -48,9 +48,11 @@ public class MailHostPool implements AttributeCallback {
             throw ServiceException.INVALID_REQUEST(Provisioning.A_zimbraMailHostPool+" not a String or String[]", null);
 
         Provisioning prov = Provisioning.getInstance();
-        for (int i=0; i < pool.length; i++) 
+        for (int i=0; i < pool.length; i++) {
+            if (pool[i] == null || pool[i].equals("")) continue;
             if (prov.getServerById(pool[i]) == null)
                     throw ServiceException.INVALID_REQUEST("specified "+Provisioning.A_zimbraMailHostPool+" does not correspond to a valid server: "+pool[i], null);
+        }
     }
 
     public void postModify(Map context, String attrName, Entry entry, boolean isCreate) {
