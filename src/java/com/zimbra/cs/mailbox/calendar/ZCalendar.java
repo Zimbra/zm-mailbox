@@ -398,7 +398,11 @@ public class ZCalendar {
                 param.toICalendar(sw);
 
             sw.write(':');
-            sw.write(escape(mValue));
+            if (mName.equals(ICalTok.RRULE.toString()) ||
+                mName.equals(ICalTok.EXRULE.toString()))
+            	sw.write(mValue);
+            else
+	            sw.write(escape(mValue));
             sw.write('\n');
             
             w.write(sw.toString());
