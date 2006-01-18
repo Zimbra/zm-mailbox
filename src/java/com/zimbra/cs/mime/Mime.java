@@ -27,6 +27,7 @@
  * Created on Apr 17, 2004
  */
 package com.zimbra.cs.mime;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -35,7 +36,6 @@ import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -63,7 +63,7 @@ import org.apache.commons.logging.LogFactory;
 public class Mime {
     
     private static Log mLog = LogFactory.getLog(Mime.class);
-    
+
     // content types
     public static final String CT_TEXT_PLAIN = "text/plain";
     public static final String CT_TEXT_HTML = "text/html";
@@ -119,8 +119,8 @@ public class Mime {
      * @throws IOException
      * @throws MessagingException
      */
-    public static List getParts(MimeMessage mm) throws IOException, MessagingException {
-        List parts = new ArrayList();
+    public static List<MPartInfo> getParts(MimeMessage mm) throws IOException, MessagingException {
+        List<MPartInfo> parts = new ArrayList<MPartInfo>();
         if (mm != null)
             handlePart(mm, "", parts, null, 0);
         return parts;
@@ -128,8 +128,8 @@ public class Mime {
     
 	// FIXME: this needs to be more robust and ignore exceptions on parts it can't handle
 	// so we get as many as possible
-	private static void handlePart(MimePart mp, String prefix, 
-			List partList, MPartInfo parent, int partNum) throws IOException, MessagingException {
+	private static void handlePart(MimePart mp, String prefix, List<MPartInfo> partList, MPartInfo parent, int partNum)
+    throws IOException, MessagingException {
 		String cts = mp.getContentType();
 		if (cts == null)
 			cts = CT_DEFAULT;
@@ -182,7 +182,7 @@ public class Mime {
 		partList.add(mpart);
 		if (parent != null) {
 			if (parent.mChildren == null)
-				parent.mChildren = new ArrayList();
+				parent.mChildren = new ArrayList<MPartInfo>();
 			parent.mChildren.add(mpart);
 		}
 
@@ -215,8 +215,8 @@ public class Mime {
 		}
 	}
     
-    private static void handleMultiPart(MimeMultipart mmp, String prefix,
-            List partList, MPartInfo parent) throws IOException, MessagingException {
+    private static void handleMultiPart(MimeMultipart mmp, String prefix, List<MPartInfo> partList, MPartInfo parent)
+    throws IOException, MessagingException {
         for (int i = 0; i < mmp.getCount(); i++) {
             BodyPart bp = mmp.getBodyPart(i);
             if (!(bp instanceof MimePart))
@@ -287,18 +287,14 @@ public class Mime {
                 
                 // Make a copy of the parts array and iterate the copy,
                 // in case the visitor is adding or removing parts.
-                List parts = new ArrayList();
-                for (int i = 0; i < multi.getCount(); i++) {
+                List<BodyPart> parts = new ArrayList<BodyPart>();
+                for (int i = 0; i < multi.getCount(); i++)
                     parts.add(multi.getBodyPart(i));
-                }
-                Iterator i = parts.iterator();
-                while (i.hasNext()) {
-                    BodyPart bodyPart = (BodyPart) i.next();
-                    if (bodyPart instanceof MimeBodyPart) {
+                for (BodyPart bodyPart : parts) {
+                    if (bodyPart instanceof MimeBodyPart)
                         accept(visitor, (MimeBodyPart) bodyPart);
-                    } else {
+                    else
                         mLog.info("Mime.accept(): Unexpected BodyPart subclass: " + bodyPart.getClass().getName());
-                    }
                 }
                 visitor.visitMultipart(multi, MimeVisitor.VISIT_END);
             }
@@ -431,14 +427,12 @@ public class Mime {
 	  * returns a <code>Set</code> of unique content-type strings, or an
 	  * empty set if there are no attachments.
 	  */
-	 public static Set /* MPartInfo */ getAttachmentList(List parts) {
+	 public static Set<String> getAttachmentList(List<MPartInfo> parts) {
 	     // get a set of all the content types 
-	     HashSet set = new HashSet();
-	     for (Iterator it = parts.iterator(); it.hasNext(); ) {
-	         MPartInfo mpi = (MPartInfo) it.next();
+	     HashSet<String> set = new HashSet<String>();
+         for (MPartInfo mpi : parts)
 	         if (mpi.isFilterableAttachment())
 	             set.add(mpi.getContentTypeString());
-	     }
 	     return set;
 	 }
 	 
@@ -448,12 +442,10 @@ public class Mime {
 	 * @param parts
 	 * @return
 	 */
-	public static boolean hasAttachment(List parts) {
-	    for (Iterator it = parts.iterator(); it.hasNext(); ) {
-	        MPartInfo mpi = (MPartInfo) it.next();
+	public static boolean hasAttachment(List<MPartInfo> parts) {
+        for (MPartInfo mpi : parts)
 	        if (mpi.isFilterableAttachment())
 	            return true;
-	    }
 	    return false;
 	}
 
@@ -497,12 +489,10 @@ public class Mime {
      */
     public static void removeRecipients(MimeMessage mm, String[] rcpts)
     throws MessagingException {
-        for (int i = 0; i < sRcptTypes.length; i++) {
-            RecipientType rcptType = sRcptTypes[i];
+        for (RecipientType rcptType : sRcptTypes) {
             Address[] addrs = mm.getRecipients(rcptType);
             if (addrs == null) continue;
-            ArrayList<InternetAddress> list =
-                new ArrayList<InternetAddress>(addrs.length);
+            ArrayList<InternetAddress> list = new ArrayList<InternetAddress>(addrs.length);
             for (int j = 0; j < addrs.length; j++) {
                 InternetAddress inetAddr = (InternetAddress) addrs[j];
                 String addr = inetAddr.getAddress();
@@ -657,8 +647,7 @@ public class Mime {
     private static MPartInfo getBodySubpart(MPartInfo base, boolean preferHtml) {
         // go through top-level children, stopping at first text part we are interested in
         MPartInfo alternative = null;
-        for (Iterator it = base.getChildren().iterator(); it.hasNext(); ) {
-            MPartInfo p = (MPartInfo) it.next();
+        for (MPartInfo p : base.getChildren()) {
             boolean isAttachment = p.getDisposition().equals(Part.ATTACHMENT);
             // the Content-Type we want and the one we'd settle for...
             String wantType = preferHtml ? CT_TEXT_HTML  : CT_TEXT_PLAIN;

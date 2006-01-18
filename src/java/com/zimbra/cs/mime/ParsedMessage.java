@@ -38,6 +38,7 @@ import java.text.ParseException;
 import java.util.*;
 
 import javax.mail.MessagingException;
+import javax.mail.internet.ContentType;
 import javax.mail.internet.MailDateFormat;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
@@ -73,7 +74,7 @@ public class ParsedMessage {
     private boolean mAnalyzed = false;
     private boolean mIndexAttachments = true;
 
-    private List /*<MPartInfo>*/ mMessageParts;
+    private List<MPartInfo> mMessageParts;
     private String mRecipients;
     private String mSender;
     private ParsedAddress mParsedSender;
@@ -85,7 +86,7 @@ public class ParsedMessage {
     private String mSubject;
     private String mNormalizedSubject;
 	private boolean mSubjectPrefixed;
-	private List /*<Document>*/ mLuceneDocuments;
+	private List<Document> mLuceneDocuments;
 	private ZVCalendar miCalendar;
 
     // m*Raw* should only be assigned by setRawData so these fields can kept in sync
@@ -144,7 +145,7 @@ public class ParsedMessage {
             mHasAttachments = Mime.hasAttachment(mMessageParts);
         } catch (Exception e) {
             sLog.warn("exception while parsing message; message will not be indexed", e);
-            mMessageParts = new ArrayList();
+            mMessageParts = new ArrayList<MPartInfo>();
         }
         return this;
     }
@@ -386,8 +387,8 @@ public class ParsedMessage {
         if (mAnalyzed)
             return;
         mAnalyzed = true;
-        
-        mLuceneDocuments = new ArrayList();
+
+        mLuceneDocuments = new ArrayList<Document>();
 
         if (DebugConfig.disableMessageAnalysis) {
 			// Note this also suppresses fragment support in conversation
@@ -402,6 +403,7 @@ public class ParsedMessage {
 
         int numParseErrors = 0;
         ServiceException conversionError = null;
+
         
 		for (Iterator it = mMessageParts.iterator(); it.hasNext(); ) {
             MPartInfo mpi = (MPartInfo) it.next();
@@ -452,38 +454,29 @@ public class ParsedMessage {
         }
 	}
 
-    private void analyzePart(MPartInfo mpi,
-                             MPartInfo mpiBody,
-                             TopLevelMessageHandler allTextHandler)
-        throws MimeHandlerException,
-        ObjectHandlerException,
-        MessagingException,
-        ServiceException {
-        
-        String contentTypeString = mpi.getContentTypeString();
+    private void analyzePart(MPartInfo mpi, MPartInfo mpiBody, TopLevelMessageHandler allTextHandler)
+    throws MimeHandlerException, ObjectHandlerException, MessagingException, ServiceException {
+        ContentType ct = mpi.getContentType();
         // ignore multipart "container" parts
-        if (mpi.getContentType().match(Mime.CT_MULTIPART_WILD)) {
+        if (ct.match(Mime.CT_MULTIPART_WILD))
             return;
-        }
 
-        if (parseAppointmentInfo(mpi.getMimePart(), contentTypeString))
+        if (parseAppointmentInfo(mpi.getMimePart(), ct))
             allTextHandler.hasCalendarPart(true);
 
-        MimeHandler handler = MimeHandler.getMimeHandler(contentTypeString);
+        MimeHandler handler = MimeHandler.getMimeHandler(ct.getBaseType());
         assert(handler != null);
 
-        boolean isTextType =
-            mpi.getContentType().match(Mime.CT_TEXT_WILD);
-        boolean isMsgRfc822Type =
-            contentTypeString.equalsIgnoreCase(Mime.CT_MESSAGE_RFC822);
+        boolean isTextType = ct.match(Mime.CT_TEXT_WILD);
+        boolean isMessageType = ct.match(Mime.CT_MESSAGE_RFC822);
 
         if (handler.isIndexingEnabled()) {
-
             handler.init(mpi.getMimePart().getDataHandler().getDataSource());
+
             handler.setPartName(mpi.getPartName());
             handler.setFilename(mpi.getFilename());
             try {
-                handler.setMessageDigest(this.getRawDigest());
+                handler.setMessageDigest(getRawDigest());
             } catch (MessagingException e) {
                 throw new MimeHandlerException("unable to get message digest", e);
             } catch (IOException e) {
@@ -491,7 +484,7 @@ public class ParsedMessage {
             }
 
             if (mpi == mpiBody ||
-                (mIndexAttachments && !DebugConfig.disableIndexingAttachmentsTogether)) {
+                    (mIndexAttachments && !DebugConfig.disableIndexingAttachmentsTogether)) {
                 // add ALL TEXT from EVERY PART to the toplevel body content.
                 // This is necessary for queries with multiple words -- where
                 // one word is in the body and one is in a sub-attachment.
@@ -499,7 +492,7 @@ public class ParsedMessage {
             }
 
             if (mIndexAttachments && !DebugConfig.disableIndexingAttachmentsSeparately &&
-                !isTextType && !isMsgRfc822Type) {
+                    !isTextType && !isMessageType) {
                 // Each non-text MIME part is also indexed as a separate
                 // Lucene document.  This is necessary so that we can tell the
                 // client what parts match if a search matched a particular
@@ -520,8 +513,8 @@ public class ParsedMessage {
      * @param contentTypeString
      * @throws MessagingException
      */
-    private boolean parseAppointmentInfo(MimePart mimePart, String contentTypeString) throws MessagingException, ServiceException {
-        if (contentTypeString.indexOf(Mime.CT_TEXT_CALENDAR) != -1) {
+    private boolean parseAppointmentInfo(MimePart mimePart, ContentType ct) throws MessagingException, ServiceException {
+        if (ct.match(Mime.CT_TEXT_CALENDAR)) {
             try {
 //                CalendarBuilder calBuilder = new CalendarBuilder();
                 
@@ -551,7 +544,7 @@ public class ParsedMessage {
     }
 
     // these *should* be taken from a properties file
-    private static final Set CALENDAR_PREFIXES = new HashSet(Arrays.asList(new String[] { "Accepted:", "Declined:", "Tentative:" }));
+    private static final Set<String> CALENDAR_PREFIXES = new HashSet<String>(Arrays.asList(new String[] { "Accepted:", "Declined:", "Tentative:" }));
     private static final String FWD_TRAILER = "(fwd)";
 
 	private static String trimPrefixes(String subject) {

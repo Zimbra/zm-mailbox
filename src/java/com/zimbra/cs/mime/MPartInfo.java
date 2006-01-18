@@ -37,7 +37,7 @@ import javax.mail.internet.MimePart;
 public class MPartInfo {
 	MimePart mPart;
 	MPartInfo mParent;
-	List mChildren;
+	List<MPartInfo> mChildren;
 	String mPartName;
 	ContentType mContentType;
 	String mContentTypeString;
@@ -91,7 +91,7 @@ public class MPartInfo {
 		return mChildren != null && !mChildren.isEmpty();
 	}
 
-	public List getChildren() {
+	public List<MPartInfo> getChildren() {
 		return mChildren;
 	}
 	
