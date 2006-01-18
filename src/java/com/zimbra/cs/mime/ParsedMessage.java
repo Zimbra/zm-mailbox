@@ -76,7 +76,7 @@ public class ParsedMessage {
     private boolean mAnalyzed = false;
     private boolean mIndexAttachments = true;
 
-    private List /*<MPartInfo>*/ mMessageParts;
+    private List<MPartInfo> mMessageParts;
     private String mRecipients;
     private String mSender;
     private ParsedAddress mParsedSender;
@@ -88,7 +88,7 @@ public class ParsedMessage {
     private String mSubject;
     private String mNormalizedSubject;
 	private boolean mSubjectPrefixed;
-	private List /*<Document>*/ mLuceneDocuments;
+	private List<Document> mLuceneDocuments;
 	private ZVCalendar miCalendar;
 
     // m*Raw* should only be assigned by setRawData so these fields can kept in sync
@@ -147,7 +147,7 @@ public class ParsedMessage {
             mHasAttachments = Mime.hasAttachment(mMessageParts);
         } catch (Exception e) {
             sLog.warn("exception while parsing message; message will not be indexed", e);
-            mMessageParts = new ArrayList();
+            mMessageParts = new ArrayList<MPartInfo>();
         }
         return this;
     }
@@ -389,8 +389,8 @@ public class ParsedMessage {
         if (mAnalyzed)
             return;
         mAnalyzed = true;
-        
-        mLuceneDocuments = new ArrayList();
+
+        mLuceneDocuments = new ArrayList<Document>();
 
         if (DebugConfig.disableMessageAnalysis) {
 			// Note this also suppresses fragment support in conversation
@@ -405,6 +405,7 @@ public class ParsedMessage {
 
         int numParseErrors = 0;
         ServiceException conversionError = null;
+
         
 		for (Iterator it = mMessageParts.iterator(); it.hasNext(); ) {
             MPartInfo mpi = (MPartInfo) it.next();
@@ -457,9 +458,9 @@ public class ParsedMessage {
         }
 	}
 
-	private void analyzePart(MPartInfo mpi, MPartInfo mpiBody, TopLevelMessageHandler allTextHandler)
-	throws MimeHandlerException, ObjectHandlerException, MessagingException, ServiceException {
-	    ContentType ct = mpi.getContentType();
+    private void analyzePart(MPartInfo mpi, MPartInfo mpiBody, TopLevelMessageHandler allTextHandler)
+    throws MimeHandlerException, ObjectHandlerException, MessagingException, ServiceException {
+        ContentType ct = mpi.getContentType();
         // ignore multipart "container" parts
         if (ct.match(Mime.CT_MULTIPART_WILD))
             return;
@@ -522,7 +523,7 @@ public class ParsedMessage {
     }
 
     // these *should* be taken from a properties file
-    private static final Set CALENDAR_PREFIXES = new HashSet(Arrays.asList(new String[] { "Accepted:", "Declined:", "Tentative:" }));
+    private static final Set<String> CALENDAR_PREFIXES = new HashSet<String>(Arrays.asList(new String[] { "Accepted:", "Declined:", "Tentative:" }));
     private static final String FWD_TRAILER = "(fwd)";
 
 	private static String trimPrefixes(String subject) {
