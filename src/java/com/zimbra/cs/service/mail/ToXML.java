@@ -258,13 +258,14 @@ public class ToXML {
             ContactAttrCache cacache, boolean summary, List<String> attrFilter, int fields) {
         Element elem = parent.addElement(MailService.E_CONTACT);
         elem.addAttribute(MailService.A_ID, lc.formatItemId(contact));
-        if (needToOutput(fields, Change.MODIFIED_CONTENT) && contact.getSavedSequence() != 0)
-            elem.addAttribute(MailService.A_REVISION, contact.getSavedSequence());
         if (needToOutput(fields, Change.MODIFIED_FOLDER))
             elem.addAttribute(MailService.A_FOLDER, lc.formatItemId(contact.getFolderId()));
         recordItemTags(elem, contact, fields);
         if (needToOutput(fields, Change.MODIFIED_CONFLICT))
             elem.addAttribute(MailService.A_CHANGE_DATE, contact.getChangeDate() / 1000);
+        if (needToOutput(fields, Change.MODIFIED_CONFLICT | Change.MODIFIED_CONTENT))
+            if (contact.getSavedSequence() != 0)
+                elem.addAttribute(MailService.A_REVISION, contact.getSavedSequence());
 
         if (summary || !needToOutput(fields, Change.MODIFIED_CONTENT))
             return elem;
