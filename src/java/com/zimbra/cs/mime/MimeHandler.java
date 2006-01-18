@@ -52,6 +52,7 @@ import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.localconfig.DebugConfig;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.object.MatchedObject;
 import com.zimbra.cs.object.ObjectHandler;
 import com.zimbra.cs.object.ObjectHandlerException;
@@ -275,7 +276,11 @@ public abstract class MimeHandler {
     private static byte[] sDrainBuffer = new byte[4096];
 
     protected abstract String getContentImpl() throws MimeHandlerException;
-    
+
+    public ZVCalendar getICalendar() throws MimeHandlerException {
+        return null;
+    }
+
     /**
      * Converts the document into HTML/images for viewing.
      * 
