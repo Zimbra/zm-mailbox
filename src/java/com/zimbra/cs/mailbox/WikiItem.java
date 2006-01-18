@@ -32,7 +32,7 @@ import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
 
-public class WikiItem extends Document {
+public class WikiItem extends MailItem {
 	
 	WikiItem(Mailbox mbox, UnderlyingData data) throws ServiceException {
 		super(mbox, data);
