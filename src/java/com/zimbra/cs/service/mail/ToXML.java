@@ -43,7 +43,6 @@ import javax.mail.internet.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-//
 import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
@@ -469,7 +468,7 @@ public class ToXML {
                 MimePart mp = Mime.getMimePart(mm, part);
                 if (mp == null)
                     throw MailServiceException.NO_SUCH_PART(part);
-                Object content = mp.getContent();
+                Object content = Mime.getMessageContent(mp);
                 if (!(content instanceof MimeMessage))
                     throw MailServiceException.NO_SUCH_PART(part);
                 mm = (MimeMessage) content;
@@ -639,7 +638,7 @@ public class ToXML {
                 MimePart mp = Mime.getMimePart(mm, part);
                 if (mp == null)
                     throw MailServiceException.NO_SUCH_PART(part);
-                Object content = mp.getContent();
+                Object content = Mime.getMessageContent(mp);
                 if (!(content instanceof MimeMessage))
                     throw MailServiceException.NO_SUCH_PART(part);
                 mm = (MimeMessage) content;
@@ -1100,7 +1099,7 @@ public class ToXML {
             String fname = mp.getFileName();
             if (fname == null && Mime.CT_MESSAGE_RFC822.equals(contentTypeString)) {
                 // "filename" for attached messages is the Subject
-                Object content = mp.getContent();
+                Object content = Mime.getMessageContent(mp);
                 if (content instanceof MimeMessage)
                     fname = ((MimeMessage) content).getSubject();
             }

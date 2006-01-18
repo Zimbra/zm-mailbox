@@ -250,7 +250,7 @@ class ImapMessage {
             //         as the first element of the parenthesized list, there is a sequence of one
             //         or more nested body structures.  The second element of the parenthesized
             //         list is the multipart subtype (mixed, digest, parallel, alternative, etc.)."
-            MimeMultipart multi = (MimeMultipart) mp.getContent();
+            MimeMultipart multi = (MimeMultipart) Mime.getMultipartContent(mp, mp.getContentType());
             for (int i = 0; i < multi.getCount(); i++)
                 getStructure(ps, (MimePart) multi.getBodyPart(i), extensions);
             ps.write(' ');  ps.print(subtype);
@@ -281,7 +281,7 @@ class ImapMessage {
                 // 7.4.2: "A body type of type MESSAGE and subtype RFC822 contains, immediately
                 //         after the basic fields, the envelope structure, body structure, and
                 //         size in text lines of the encapsulated message."
-                Object content = mp.getContent();
+                Object content = Mime.getMessageContent(mp);
                 ps.write(' ');  getEnvelope(ps, (MimeMessage) content);
                 ps.write(' ');  getStructure(ps, (MimePart) content, extensions);
             }
@@ -308,7 +308,7 @@ class ImapMessage {
             String modifier = pspec.mModifier;
             // TEXT and HEADER* modifiers operate on rfc822 messages
             if ((modifier.equals("TEXT") || modifier.startsWith("HEADER")) && !(mp instanceof MimeMessage)) {
-                Object content = mp.getContent();
+                Object content = Mime.getMessageContent(mp);
                 if (!(content instanceof MimeMessage))
                     return null;
                 mp = (MimeMessage) content;

@@ -160,10 +160,14 @@ public class Mime {
 				mLog.info("Unrecognized Content-Type " + cts + "; assuming " + CT_DEFAULT);
 			ct = new ContentType(CT_DEFAULT);
 		}
-        String disp = mp.getDisposition();
-        String filename = mp.getFileName();
         boolean isMultipart = ct.match(CT_MULTIPART_WILD); 
         boolean isMessage = !isMultipart && ct.match(CT_MESSAGE_RFC822);
+
+        String disp = null, filename = null;
+        try {
+            disp = mp.getDisposition();
+            filename = mp.getFileName();
+        } catch (ParseException pe) { }
 
         // the top-level part of a non-multipart message is numbered "1"
         if (!isMultipart && mp instanceof MimeMessage)
@@ -193,28 +197,18 @@ public class Mime {
 			String newPrefix = prefix.length() > 0 ? (prefix + '.') : "";
             if (mp instanceof MimeMessage)
                 mpart.mPartName = newPrefix + "TEXT";
-			mpart.mContent = mp.getContent();
-            // handle unparsed content due to miscapitalization of content-type value
-            if (mpart.mContent instanceof InputStream)
-                try {
-                    mpart.mContent = new MimeMultipart(new InputStreamDataSource((InputStream) mpart.mContent, cts));
-                } catch (Exception e) {}
+			mpart.mContent = getMultipartContent(mp, cts);
 			if (mpart.mContent instanceof MimeMultipart)
 				handleMultiPart((MimeMultipart) mpart.mContent, newPrefix, partList, mpart);
 		} else if (isMessage) {
-			mpart.mContent = mp.getContent();
-            // handle unparsed content due to miscapitalization of content-type value
-            if (mpart.mContent instanceof InputStream)
-                try {
-                    mpart.mContent = new MimeMessage(null, (InputStream) mpart.mContent);
-                } catch (Exception e) {}
+			mpart.mContent = getMessageContent(mp);
 			if (mpart.mContent instanceof MimeMessage)
 				handlePart((MimeMessage) mpart.mContent, prefix, partList, mpart, 0);
 		} else {
 			// nothing to do at this stage
 		}
 	}
-    
+
     private static void handleMultiPart(MimeMultipart mmp, String prefix, List<MPartInfo> partList, MPartInfo parent)
     throws IOException, MessagingException {
         for (int i = 0; i < mmp.getCount(); i++) {
@@ -223,6 +217,34 @@ public class Mime {
                 continue;
             handlePart((MimePart) bp, prefix + (i + 1), partList, parent, i+1);
         }
+    }
+    
+    /** Returns the MimeMultipart object encapsulating the body of a MIME
+     *  part with content-type "message/rfc822".  Use this method instead of
+     *  {@link Part#getContent()} to work around JavaMail's fascism about
+     *  proper MIME format and failure to support RFC 2184. */
+    public static Object getMessageContent(MimePart message822Part) throws IOException, MessagingException {
+        Object content = message822Part.getContent();
+        if (content instanceof InputStream)
+            try {
+                // handle unparsed content due to miscapitalization of content-type value
+                content = new MimeMessage(null, (InputStream) content);
+            } catch (Exception e) {}
+            return content;
+    }
+    
+    /** Returns the MimeMultipart object encapsulating the body of a MIME
+     *  part with content-type "multipart/*".  Use this method instead of
+     *  {@link Part#getContent()} to work around JavaMail's fascism about
+     *  proper MIME format and failure to support RFC 2184. */
+    public static Object getMultipartContent(MimePart multipartPart, String contentType) throws IOException, MessagingException {
+        Object content = multipartPart.getContent();
+        if (content instanceof InputStream)
+            try {
+                // handle unparsed content due to miscapitalization of content-type value
+                content = new MimeMultipart(new InputStreamDataSource((InputStream) content, contentType));
+            } catch (Exception e) {}
+            return content;
     }
 
     /**
@@ -273,14 +295,7 @@ public class Mime {
         boolean isMessage = !isMultipart && ct.match(CT_MESSAGE_RFC822);
         
         if (isMultipart) {
-            // handle unparsed content due to miscapitalization of content-type value
-            Object content = mp.getContent();
-            if (content instanceof InputStream)
-                try {
-                    content = new MimeMultipart(new InputStreamDataSource((InputStream) content, cts));
-                } catch (Exception e) {
-                    mLog.info("Mime.accept(): Unable to parse multipart InputStream", e);
-                }
+            Object content = getMultipartContent(mp, cts);
             if (content instanceof MimeMultipart) {
                 MimeMultipart multi = (MimeMultipart) content;
                 visitor.visitMultipart(multi, MimeVisitor.VISIT_BEGIN);
@@ -299,14 +314,7 @@ public class Mime {
                 visitor.visitMultipart(multi, MimeVisitor.VISIT_END);
             }
         } else if (isMessage) {
-            Object content = mp.getContent();
-            // handle unparsed content due to miscapitalization of content-type value
-            if (content instanceof InputStream)
-                try {
-                    content = new MimeMessage(null, (InputStream) content);
-                } catch (Exception e) {
-                    mLog.info("Mime.accept(): Unable to parse message InputStream", e);
-                }
+            Object content = getMessageContent(mp);
             if (content instanceof MimeMessage) {
                 accept(visitor, (MimeMessage) content);
             }
@@ -353,7 +361,7 @@ public class Mime {
             if (ct == null)
                 return null;
             if (ct.startsWith(CT_MULTIPART + '/')) {
-                Object content = mp.getContent();
+                Object content = getMultipartContent(mp, ct);
                 if (content instanceof MimeMultipart && ((MimeMultipart) content).getCount() >= index) {
                     BodyPart bp = ((MimeMultipart) content).getBodyPart(index - 1);
                     if (bp instanceof MimePart) {
@@ -365,7 +373,7 @@ public class Mime {
                 // the top-level part of a non-multipart message is numbered "1"
                 break;
             } else if (ct.startsWith(CT_MESSAGE_RFC822)) {
-                Object content = mp.getContent();
+                Object content = getMessageContent(mp);
                 if (content instanceof MimeMessage) {
                     if (mp instanceof MimeMessage) {
                         // the top-level part of a non-multipart message is numbered "1"
