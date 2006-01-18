@@ -54,6 +54,7 @@ import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.methods.GetMethod;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
@@ -133,7 +134,14 @@ public class FeedManager {
                 case 'B':  case 'b':
                     Reader reader = new InputStreamReader(content);
                     ZVCalendar ical = ZCalendarBuilder.build(reader);
-                    return new SubscriptionData(Invite.createFromCalendar(acct, null, ical, false));
+                    // Bug 4984: Some ical files on the Internet are missing UID.
+                    // Add a fake one.
+                    List<Invite> invites = Invite.createFromCalendar(acct, null, ical, false);
+                    for (Invite inv: invites) {
+                    	if (inv.getUid() == null)
+                    		inv.setUid(LdapUtil.generateUUID());
+                    }
+                    return new SubscriptionData(invites);
                 default:
                     throw ServiceException.PARSE_ERROR("unrecognized remote content", null);
             }

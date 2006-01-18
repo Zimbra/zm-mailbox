@@ -2151,7 +2151,7 @@ public class DbMailItem {
             stmt.setTimestamp(4, endTs);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("writing invite to appt table" + appt.getUid(), e);
+            throw ServiceException.FAILURE("writing invite to appt table: UID=" + appt.getUid(), e);
         } finally {
             DbPool.closeStatement(stmt);
         }
