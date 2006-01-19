@@ -167,7 +167,14 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                     }
                     attachmentsIndexingEnabled = mbox.attachmentsIndexingEnabled();
                 } catch (ServiceException se) {
-                    ZimbraLog.mailbox.warn("Exception delivering mail to " + rcptEmail, se);
+                    if (se.isReceiversFault()) {
+                    	ZimbraLog.mailbox.info("Recoverable exception getting mailbox for " + rcptEmail, se);
+                    	boolean skip = true;
+                    	rcptMap.put(recipient, new RecipientDetail(null, null, null, skip));
+                    } else {
+                    	ZimbraLog.mailbox.warn("Unrecoverable exception getting mailbox for " + rcptEmail, se);
+                    }
+                    continue;
                 }
 
                 if (account != null && mbox != null) {
