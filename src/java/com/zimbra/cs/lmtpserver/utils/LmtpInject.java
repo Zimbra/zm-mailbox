@@ -239,7 +239,8 @@ public class LmtpInject {
             
             synchronized (injector.mFinishCond) {
                 try {
-                    injector.mFinishCond.wait();
+                	if (!injector.mFinished)
+                		injector.mFinishCond.wait();
                 } catch (InterruptedException e) {
                     mLog.warn("InterruptedException while waiting for queue to clear", e);
                 }
@@ -295,7 +296,11 @@ public class LmtpInject {
 	private ThreadPool mThreadPool;
 	private LmtpClientPool mLmtpClientPool;
 
+	// have to use a flag AND a conditional, just in case the conditional
+	// gets signalled before the mainthread gets to wait()
+	private boolean mFinished = false;
 	private final Object mFinishCond = new Object();
+	
 	private int mNumInputFiles;
 	private int mSucceeded;
 	private int mFailed;
@@ -453,6 +458,7 @@ public class LmtpInject {
 		if (mEndTime == 0 && mSucceeded + mFailed + mIgnored + mWarmUpThreshold == mNumInputFiles) {
 			mEndTime = System.currentTimeMillis();
 			synchronized (mFinishCond) {
+				mFinished = true;
 				mFinishCond.notify();
 			}
 		}
