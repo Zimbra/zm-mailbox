@@ -568,6 +568,11 @@ class DBQueryOperation extends QueryOperation
         return false;
     }
     
+    /**
+     * @param a1
+     * @param a2
+     * @return the UNION of the two byte arrays
+     */
     private byte[] combineByteArraysNoDups(byte[] a1, byte[] a2) {
         byte[] tmp = new byte[a2.length];
         int tmpOff = 0;
@@ -596,6 +601,11 @@ class DBQueryOperation extends QueryOperation
         return array;
     }
     
+    /**
+     * @param a1
+     * @param a2
+     * @return the INTERSECTION of the two byte arrays
+     */
     private byte[] intersectByteArrays(byte[] a1, byte[] a2) {
         byte[] tmp = new byte[a1.length + a2.length];
         int tmpOff = 0;
