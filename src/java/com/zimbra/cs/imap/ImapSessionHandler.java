@@ -5,7 +5,7 @@ import java.io.Writer;
 import java.text.DateFormat;
 
 interface ImapSessionHandler {
-    void dropConnection(boolean connectionIsOpen);
+    void dropConnection();
     DateFormat getDateFormat();
     DateFormat getZimbraFormat();
     void sendNotifications(boolean notifyExpunges, boolean flush) throws IOException;

@@ -1916,11 +1916,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         }
     }
 
-    protected void dropConnection() {
-        dropConnection(true);
-    }
-    
-    public void dropConnection(boolean sendBanner) {
+    public void dropConnection() {
         if (mSession != null) {
             mSession.setHandler(null);
             SessionCache.clearSession(mSession.getSessionId(), mSession.getAccountId());
@@ -1929,8 +1925,12 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
 
         try {
             if (mOutputStream != null) {
-                if (sendBanner && !mGoodbyeSent)
-                    sendUntagged(ImapServer.getGoodbye(), true);
+                if (!mGoodbyeSent) {
+                    // We never send out goodbye in non-NIO case because it would cause
+                    // the write to deadlock with the connection thread which might in the
+                    // middle of a read.
+                    // sendUntagged(ImapServer.getGoodbye(), true);
+                }
                 mGoodbyeSent = true;
                 mOutputStream.close();
                 mOutputStream = null;
@@ -1946,7 +1946,11 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
 
     protected void notifyIdleConnection() {
         // we can, and do, drop idle connections after the timeout
-        dropConnection(false);
+
+        // TODO in the TcpServer case, is this duplicated effort with
+        // session timeout code that also drops connections?
+
+        dropConnection();
     }
 
     void sendOK(String tag, String response) throws IOException  { sendResponse(tag, response.equals("") ? "OK" : "OK " + response, true); }
