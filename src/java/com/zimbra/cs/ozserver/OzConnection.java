@@ -179,15 +179,16 @@ public class OzConnection {
             mClosed = true;
             synchronized (mIdleGuard) {
                 if (mIdleTaskHandle != null) {
-                    if (mDebug) mLog.debug("cancelling idle timer for this connection");
+                    if (mDebug) mLog.debug("cancelling idle timer on close");
                     mIdleTaskHandle.cancel(true);
+                    mIdleTaskHandle = null;
                 }
             }
         }
     }
 
     void addToNDC() {
-        ZimbraLog.addToContext("t", Thread.currentThread().getName());
+        //ZimbraLog.addToContext("t", Thread.currentThread().getName());
         ZimbraLog.addIpToContext(getRemoteAddress());
         ZimbraLog.addConnectionIdToContext(getIdString());
     }
@@ -547,7 +548,9 @@ public class OzConnection {
         public IdleTask() { super("idle"); }
         
         public void schedule() {
-            
+            // idle task is run from the timer thread (also this
+            // method is never called - Idle task is a sub-class of
+            // Task just so we can get log context when it runs.
         }
         
         protected void doTask() {
@@ -586,6 +589,16 @@ public class OzConnection {
         }
     }
     
+    public void cancelIdleNotifications() {
+        synchronized (mIdleGuard) {
+            if (mIdleTaskHandle != null) {
+                if (mDebug) mLog.debug("cancelling idle timer");
+                mIdleTaskHandle.cancel(false);
+                mIdleTaskHandle = null;
+            }
+        }
+    }
+
     public int getId() {
         return mId;
     }

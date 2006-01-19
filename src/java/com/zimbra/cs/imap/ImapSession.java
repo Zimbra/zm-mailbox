@@ -349,7 +349,7 @@ public class ImapSession extends Session {
 			} catch (IOException e) {
                 // ImapHandler.dropConnection clears our mHandler and calls SessionCache.clearSession,
                 //   which calls Session.doCleanup, which calls Mailbox.removeListener
-                mHandler.dropConnection(false);
+                mHandler.dropConnection();
 			}
     }
 
@@ -467,6 +467,6 @@ public class ImapSession extends Session {
         // XXX: is there a synchronization issue here?
         //   (hack: omit the goodbye banner because it causes a read/write scoket deadlock with the non-NIO server)
         if (mHandler != null)
-            mHandler.dropConnection(false);
+            mHandler.dropConnection();
     }
 }

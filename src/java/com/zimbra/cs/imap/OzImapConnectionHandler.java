@@ -688,7 +688,11 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                 for (Iterator it = mailbox.getTagList(session.getContext()).iterator(); it.hasNext(); )
                     session.cacheTag((Tag) it.next());
             }
-            mConnection.setIdleNotifyTime(ImapServer.IMAP_AUTHED_CONNECTION_MAX_IDLE_MILLISECONDS);
+
+            // Session timeout will take care of closing an IMAP
+            // connection with no activity.
+            if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("post auth disabling idle notify in lieu of session expiry");
+            mConnection.cancelIdleNotifications();
         } catch (ServiceException e) {
             if (mSession != null)
             	mSession.clearTagCache();
@@ -1931,36 +1935,39 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
     
     private Object mCloseLock = new Object();
     
-    private void gotoClosedState(boolean connectionStillOpen) {
-        // Close only once.
+    private void gotoClosedState(boolean sendBanner) {
         synchronized (mCloseLock) {
+            // Close only once
             if (mState == ConnectionState.CLOSED) {
+                ZimbraLog.imap.info("goto closed state - already closed", new IllegalStateException("duplicate close"));
                 return;
             }
+
             if (mSession != null) {
                 mSession.setHandler(null);
                 SessionCache.clearSession(mSession.getSessionId(), mSession.getAccountId());
                 mSession = null;
             }
-            
-            if (connectionStillOpen) {
+
+            if (sendBanner) {
                 try {
                     if (!mGoodbyeSent) {
                         sendUntagged(ImapServer.getGoodbye(), true);
                     }
                     mGoodbyeSent = true;
                 } catch (IOException e) {
-                    ZimbraLog.imap.info("exception while closing connection", e);
+                    ZimbraLog.imap.info("exception sending goodbye banner", e);
                 }
-                mConnection.close();
             }
-            mState = ConnectionState.CLOSED;
-        }
 
+            mConnection.close();
+            mState = ConnectionState.CLOSED;
+            if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("entered closed state: banner " + (sendBanner ? "" : "not") + " sent");
+        }
     }
-    
-    public void dropConnection(boolean connectionIsOpen) {
-        gotoClosedState(connectionIsOpen);
+
+    public void dropConnection() {
+        gotoClosedState(true);
     }
 
     public void handleConnect() throws IOException {
