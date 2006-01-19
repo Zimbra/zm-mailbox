@@ -80,7 +80,8 @@ public class ZRecur {
      * returned, it does not count any instances in intermediate values, so
      * a recurrence like:
      */
-    private static final int MAXIMUM_INSTANCES_EXPANDED = 200;
+    private static final int MAXIMUM_INSTANCES_RETURNED = 200;
+    private static final int MAXIMUM_INSTANCES_EXPANDED = 10000;
     
     public static String listAsStr(List l) {
         StringBuffer toRet = new StringBuffer();
@@ -504,12 +505,15 @@ public class ZRecur {
         if (interval <= 0) 
             interval = 1;
         
-        int count = mCount;
-        if (count <= 0 || count > MAXIMUM_INSTANCES_EXPANDED)
-            count = MAXIMUM_INSTANCES_EXPANDED;
+        int expansionsLeft = MAXIMUM_INSTANCES_EXPANDED;
+        if (mCount > 0)
+        	expansionsLeft = mCount;
         
+        if (expansionsLeft > MAXIMUM_INSTANCES_EXPANDED)
+        	expansionsLeft = MAXIMUM_INSTANCES_EXPANDED;
         
-        while (toRet.size() < count 
+        while (expansionsLeft > 0
+        		&& toRet.size() < MAXIMUM_INSTANCES_RETURNED
                 && (toRet.size() == 0 || (toRet.get(toRet.size()-1).before(rangeEndDate)))
                 && (cur.getTime().before(rangeEndDate)))
         {
@@ -710,10 +714,17 @@ public class ZRecur {
             // add all the ones that match!
             for (Calendar addCal : addList) {
                 Date toAdd = addCal.getTime();
+                
+                // we still have expanded this instance, even if it isn't in our 
+                // current date window
+                expansionsLeft--;
+                
                 if (toAdd.compareTo(earliestDate)>=0 && toAdd.compareTo(rangeEndDate)<0)
                     toRet.add(toAdd);
-                if (toRet.size() > count)
-                    return toRet;
+
+                // quick dropout if we know we're done
+                if (expansionsLeft <= 0 || toRet.size() > MAXIMUM_INSTANCES_RETURNED)
+                	return toRet;
             }
         }
         
