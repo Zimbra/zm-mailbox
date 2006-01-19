@@ -38,6 +38,7 @@
 	<property name="dist.conf.dir" location="${dist.dir}/conf" />
 	<property name="dist.db.dir" location="${dist.dir}/db" />
 	<property name="dist.lib.dir" location="${dist.dir}/lib" />
+	<property name="dist.jars.dir" location="${dist.dir}/lib/jars" />
 	<property name="dist.ext.dir" location="${dist.dir}/lib/ext" />
 	<property name="dist.tomcat.dir" location="${dist.dir}/tomcat" />
 	<property name="dist.tomcat.webapps.dir" location="${dist.tomcat.dir}/webapps" />
@@ -173,6 +174,7 @@
 		<mkdir dir="${dist.libexec.dir}" />
 		<mkdir dir="${dist.conf.dir}" />
 		<mkdir dir="${dist.lib.dir}" />
+		<mkdir dir="${dist.jars.dir}" />
 		<mkdir dir="${dist.ext.dir}" />
 		<mkdir dir="${dist.tomcat.webapps.dir}" />
 		<mkdir dir="${dist.tomcat.conf.dir}" />
@@ -280,7 +282,7 @@
 		<copy todir="${build.classes.dir}/com/zimbra/cs/account/">
 			<fileset dir="${config.dir}" includes="zimbraattrs.xml" />
 		</copy>
-		<jar destfile="${dist.lib.dir}/zimbrastore.jar" basedir="${build.classes.dir}" />
+		<jar destfile="${dist.jars.dir}/zimbrastore.jar" basedir="${build.classes.dir}" />
 	</target>
 
 	<target name="clean" description="Removes any temporary files">
@@ -302,7 +304,7 @@
 		<echo>war.exclude=${war.exclude}</echo>
 		<war warfile="${warfile}" webxml="${web.xml.source}">
 			<fileset dir="WebRoot"/>
-			<lib dir="${dist.lib.dir}" includes="zimbrastore.jar" />
+			<lib dir="${dist.jars.dir}" includes="zimbrastore.jar" />
 			<lib dir="${jars.dir}" includes="*.jar" excludes="${war.exclude}" />
 			<classes dir="${config.dir}" includes="sieveConfig.xml" />
 		</war>
@@ -355,7 +357,7 @@
 		<copy todir="${dist.ext.dir}" >
 			<fileset dir="${ext.dir}" includes="*/*.jar" />
 		</copy>
-		<copy todir="${dist.lib.dir}">
+		<copy todir="${dist.jars.dir}">
 			<fileset dir="${jars.dir}" includes="*.jar" excludes="servlet-api.jar" />
 		</copy>
 		<copy todir="${dist.tomcat.conf.dir}">
@@ -630,13 +632,13 @@
 		<copy todir="${tomcat.home.dir}/common/lib" file="${jars.dir}/zimbra-native.jar" />
 		<copy todir="${tomcat.home.dir}/common/endorsed" file="${jars.dir}/zimbra-charset.jar" />
 		<copy todir="${zimbra.home.dir}/conf" file="${config.dir}/log4j.properties" />
-		<copy todir="${zimbra.home.dir}/lib" file="${dist.lib.dir}/zimbrastore.jar" />
 		<copy todir="${zimbra.home.dir}/lib/ext">
     		<fileset dir="${ext.dir}" includes="*/*.jar"/>
     	</copy>
-		<copy todir="${zimbra.home.dir}/lib">
+		<copy todir="${zimbra.home.dir}/lib/jars">
 			<fileset dir="${jars.dir}" includes="*.jar" excludes="servlet-api.jar" />
 		</copy>
+		<copy todir="${zimbra.home.dir}/lib/jars" file="${dist.jars.dir}/zimbrastore.jar" />
 	</target>
 
 	<target name="tomcat-init-unix" if="is-unix">
