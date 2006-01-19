@@ -45,13 +45,6 @@ public abstract class ZimbraHit
     final public Mailbox getMailbox() { return mMailbox; }
     final ZimbraQueryResultsImpl getResults() { return mResults; }
     
-    public String getMailboxIdStr() throws ServiceException {
-    	if (mMailbox == null) {
-    		return "NULL_MAILBOXID";
-    	}
-    	return Integer.toString(mMailbox.getId()); 
-    }
-    
     public String getAcctIdStr() throws ServiceException {
     	if (mMailbox == null) return "NULL_ACCOUNTID";
     	return mMailbox.getAccountId(); 
