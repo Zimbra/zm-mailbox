@@ -139,9 +139,6 @@ public class AdminService implements DocumentService {
     public static final QName GET_MAILBOX_REQUEST = QName.get("GetMailboxRequest", NAMESPACE);
     public static final QName GET_MAILBOX_RESPONSE= QName.get("GetMailboxResponse", NAMESPACE);    
 
-    public static final QName SEARCH_MULTIPLE_MAILBOXES_REQUEST = QName.get("SearchMultiMailboxRequest", NAMESPACE);
-    public static final QName SEARCH_MULTIPLE_MAILBOXES_RESPONSE = QName.get("SearchMultiMailboxResponse", NAMESPACE);
-    
     public static final QName MAINTAIN_TABLES_REQUEST = QName.get("MaintainTablesRequest", NAMESPACE);
     public static final QName MAINTAIN_TABLES_RESPONSE = QName.get("MaintainTablesResponse", NAMESPACE);
     
@@ -213,6 +210,9 @@ public class AdminService implements DocumentService {
     public static final QName MODIFY_ZIMLET_REQUEST = QName.get("ModifyZimletRequest", NAMESPACE);
     public static final QName MODIFY_ZIMLET_RESPONSE = QName.get("ModifyZimletResponse", NAMESPACE);
     
+    public static final QName SEARCH_MULTIPLE_MAILBOXES_REQUEST = QName.get("SearchMultiMailboxRequest", NAMESPACE);
+    public static final QName SEARCH_MULTIPLE_MAILBOXES_RESPONSE = QName.get("SearchMultiMailboxResponse", NAMESPACE);
+
     public static final QName DUMP_SESSIONS_REQUEST = QName.get("DumpSessionsRequest", NAMESPACE);
     public static final QName DUMP_SESSIONS_RESPONSE = QName.get("DumpSessionsResponse", NAMESPACE);
 
@@ -367,8 +367,6 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(PURGE_MESSAGES_REQUEST, new PurgeMessages());
         dispatcher.registerHandler(DELETE_MAILBOX_REQUEST, new DeleteMailbox());
         dispatcher.registerHandler(GET_MAILBOX_REQUEST, new GetMailbox());        
-
-        dispatcher.registerHandler(SEARCH_MULTIPLE_MAILBOXES_REQUEST, new SearchMultipleMailboxes());
 
         dispatcher.registerHandler(MAINTAIN_TABLES_REQUEST, new MaintainTables());
         
