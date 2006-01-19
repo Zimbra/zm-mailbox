@@ -288,7 +288,7 @@ public class UserServlet extends ZimbraServlet {
                     "item not found");
 
         if (context.format == null) {
-            context.format = defaultFormat(item);
+            context.format = defaultFormat(item, context);
             if (context.format == null)
                 throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "unsupported format");
         }            
@@ -490,9 +490,12 @@ public class UserServlet extends ZimbraServlet {
         return "BASIC realm=\"Zimbra\"";
     }
 
-    private String defaultFormat(MailItem item) {
+    private String defaultFormat(MailItem item, Context context) {
         int type = (item instanceof Folder) ? ((Folder) item).getDefaultView()
                 : (item != null ? item.getType() : MailItem.TYPE_UNKNOWN);
+        
+        if (context.hasPart()) return "native";
+        
         switch (type) {
         case MailItem.TYPE_APPOINTMENT:
             return "ics";

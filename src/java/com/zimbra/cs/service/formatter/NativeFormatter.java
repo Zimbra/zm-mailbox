@@ -30,6 +30,7 @@ import java.io.InputStream;
 import javax.mail.MessagingException;
 import javax.mail.Part;
 import javax.mail.internet.ContentDisposition;
+import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -67,8 +68,10 @@ public class NativeFormatter extends Formatter {
         try {
             if (mailItem instanceof Message) {
                 handleMessage(context, (Message)mailItem);
+            } else if (mailItem instanceof Appointment) {
+                handleAppt(context, (Appointment)mailItem);
             } else {
-                throw UserServletException.notImplemented("can only handle messages");
+                throw UserServletException.notImplemented("can only handle messages/appts");
             }
         } catch (MessagingException me) {
             throw ServiceException.FAILURE(me.getMessage(), me);
@@ -83,7 +86,8 @@ public class NativeFormatter extends Formatter {
         }
         */
         if (context.hasPart()) {
-            handleMessagePart(context, message);
+            MimePart mp = getMimePart(message, context.getPart());            
+            handleMessagePart(context, mp, message);
         } else {
             context.resp.setContentType(Mime.CT_TEXT_PLAIN);
             InputStream is = message.getRawMessage();
@@ -91,10 +95,29 @@ public class NativeFormatter extends Formatter {
             is.close();
         }
     }
+
+    private void handleAppt(Context context, Appointment appt) throws IOException, ServiceException, MessagingException, ServletException {
+        if (context.hasPart()) {
+            MimePart mp = null;
+            if (context.itemId.hasSubpart()) {
+                MimeMessage mbp = appt.getMimeMessage(context.itemId.getSubpartId());
+                mp = Mime.getMimePart(mbp, context.getPart());
+            } else {
+                mp = getMimePart(appt, context.getPart());
+            }            
+            handleMessagePart(context, mp, appt);
+        } else {
+            context.resp.setContentType(Mime.CT_TEXT_PLAIN);
+            InputStream is = appt.getRawMessage();
+            ByteUtil.copy(is, context.resp.getOutputStream());
+            is.close();
+        }
+    }
     
-    private void handleMessagePart(Context context, Message message) throws IOException, ServiceException, MessagingException, ServletException {
-        MimePart mp = getMimePart(message, context.getPart());
-        if (mp != null) {
+    private void handleMessagePart(Context context, MimePart mp, MailItem mi) throws IOException, ServiceException, MessagingException, ServletException {
+        if (mp == null) {
+            context.resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "part not found");
+        } else {
             String contentType = mp.getContentType();
             if (contentType == null) {
                 contentType = Mime.CT_APPLICATION_OCTET_STREAM;
@@ -109,7 +132,7 @@ public class NativeFormatter extends Formatter {
                 sendbackOriginalDoc(mp, contentType, context.resp);
             } else {
                 context.req.setAttribute(ATTR_MIMEPART, mp);
-                context.req.setAttribute(ATTR_MSGDIGEST, message.getDigest());
+                context.req.setAttribute(ATTR_MSGDIGEST, mi.getDigest());
                 context.req.setAttribute(ATTR_CONTENTURL, context.req.getRequestURL().toString());
                 RequestDispatcher dispatcher = context.req.getRequestDispatcher(CONVERSION_PATH);
                 dispatcher.forward(context.req, context.resp);
@@ -117,9 +140,8 @@ public class NativeFormatter extends Formatter {
 //            sendbackOriginalDoc(mp, contentType, context.resp);
             return;
         }
-        context.resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "part not found");
     }
-
+    
     public static MimePart getMimePart(Appointment appt, String part) throws IOException, MessagingException, ServiceException {
         return Mime.getMimePart(appt.getMimeMessage(), part);
     }
