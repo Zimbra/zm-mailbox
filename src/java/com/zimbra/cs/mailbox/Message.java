@@ -390,7 +390,10 @@ public class Message extends MailItem {
                        return; // for now, just ignore this Invitation
                    }
                } else {
-                   appt.processNewInvite(pm, cur, false, folderId, volumeId);
+            	   // When updating an existing appointment, ignore the
+            	   // passed-in folderId which will usually be Inbox.  Leave
+            	   // the appointment in the folder it's currently in.
+                   appt.processNewInvite(pm, cur, false, appt.getFolderId(), volumeId);
                }
            }
            
