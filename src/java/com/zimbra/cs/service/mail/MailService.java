@@ -429,7 +429,6 @@ public class MailService implements DocumentService {
 
     // wiki
     public static final String E_WIKIWORD = "w";
-    public static final String E_WIKIWORDS = "words";
 
     public void registerHandlers(DocumentDispatcher dispatcher) {
 

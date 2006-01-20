@@ -37,9 +37,9 @@
 // ListWiki
 <ListWikiRequest/>
 
-// returns comma separated list of wiki words for this account
+// returns list of wiki words for this account
 <ListWikiResponse xmlns:ns0="urn:zimbraMail">
-  <words>{word}[,{word}]*</words>
+  [<w>{word}</w>]+
 </ListWikiResponse>
 
 // GetWiki

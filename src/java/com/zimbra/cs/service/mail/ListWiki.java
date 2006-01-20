@@ -41,15 +41,10 @@ public class ListWiki extends DocumentHandler {
 
         Set<String> wikiWords = Wiki.getInstance().listWiki();
         Element response = lc.createElement(MailService.LIST_WIKI_RESPONSE);
-        Element m = response.addElement(MailService.E_WIKIWORDS);
-        StringBuffer words = new StringBuffer();
-        String del = "";
         for (String w : wikiWords) {
-        	words.append(del);
-        	words.append(w);
-        	del = ",";
+            Element m = response.addElement(MailService.E_WIKIWORD);
+            m.addText(w);
         }
-        m.addText(words.toString());
         return response;
 	}
 }
