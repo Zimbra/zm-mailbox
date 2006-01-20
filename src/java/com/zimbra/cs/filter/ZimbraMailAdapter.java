@@ -207,6 +207,7 @@ public class ZimbraMailAdapter implements MailAdapter
             boolean dup = false;
             List nontermActions = new ArrayList(5);
             
+            Message lastMsgByTermAction = null;
             while (actionsIter.hasNext()) {
                 Action action = (Action) actionsIter.next();
                 
@@ -227,6 +228,8 @@ public class ZimbraMailAdapter implements MailAdapter
                     if (msg == null) {
                         dup = true;
                         break;
+                    } else {
+                        lastMsgByTermAction = msg;
                     }
                     
                 } else if (actionClass == ActionFileInto.class) {
@@ -247,6 +250,8 @@ public class ZimbraMailAdapter implements MailAdapter
                     if (msg == null) {
                         dup = true;
                         break;
+                    } else {
+                        lastMsgByTermAction = msg;
                     }
                     
                 } else if (actionClass == ActionTag.class ||
@@ -272,9 +277,16 @@ public class ZimbraMailAdapter implements MailAdapter
             if (dup) {
                 ZimbraLog.filter.debug("filter actions ignored for duplicate messages that are not delivered");
             } else {
-                // there may be non-terminal actions left; file a message to INBOX and apply the non-terminal actions on that message
+                // there may be non-terminal actions left; 
+                // apply to the message by the last terminal action
+                // or if no execution of terminal action is found, 
+                // file a message to INBOX and apply the non-terminal actions on that message
                 if (!nontermActions.isEmpty()) {
-                    addMessage(Mailbox.ID_FOLDER_INBOX, nontermActions);
+                    if (lastMsgByTermAction != null) {
+                        alterMessage(lastMsgByTermAction, nontermActions);
+                    } else {
+                        addMessage(Mailbox.ID_FOLDER_INBOX, nontermActions);
+                    }
                 }
             }
         } catch (ServiceException e) {
@@ -294,7 +306,24 @@ public class ZimbraMailAdapter implements MailAdapter
     }
     
     private Message addMessage(int folderId, List nontermActions) throws IOException, ServiceException {
-        
+        TagAndFlag tf = getTagAndFlag(nontermActions);
+        Message msg = mMailbox.addMessage(null, mParsedMessage, folderId, false, tf.flagBits, tf.tags, mRecipient, mSharedDeliveryCtxt);
+        if (msg != null) {
+            mMessages.add(msg);
+            if (ZimbraLog.filter.isDebugEnabled())
+                ZimbraLog.filter.debug("Saved message " + msg.getId() + " to mailbox: " + msg.getMailboxId() + " folder: " + folderId + 
+                    " tags: " + tf.tags + " flags: 0x" + Integer.toHexString(tf.flagBits));
+        }
+        return msg;
+    }
+    
+    private void alterMessage(Message msg, List nontermActions) throws IOException, ServiceException {
+        TagAndFlag tf = getTagAndFlag(nontermActions);
+        long tags = (tf.tags == null ? MailItem.TAG_UNCHANGED : Tag.tagsToBitmask(tf.tags));
+        mMailbox.setTags(null, msg.getId(), MailItem.TYPE_MESSAGE, tf.flagBits, tags, null);
+    }
+    
+    private TagAndFlag getTagAndFlag(List nontermActions) throws ServiceException {
         StringBuffer tagsBuf = null;
         int flagBits = Flag.FLAG_UNREAD;
         for (Iterator it = nontermActions.listIterator(); it.hasNext(); ) {
@@ -335,14 +364,14 @@ public class ZimbraMailAdapter implements MailAdapter
         String tags = null;
         if (tagsBuf != null)
             tags = tagsBuf.toString();
-        Message msg = mMailbox.addMessage(null, mParsedMessage, folderId, false, flagBits, tags, mRecipient, mSharedDeliveryCtxt);
-        if (msg != null) {
-            mMessages.add(msg);
-            if (ZimbraLog.filter.isDebugEnabled())
-                ZimbraLog.filter.debug("Saved message " + msg.getId() + " to mailbox: " + msg.getMailboxId() + " folder: " + folderId + 
-                    " tags: " + tags + " flags: 0x" + Integer.toHexString(flagBits));
-        }
-        return msg;
+        return new TagAndFlag(tags, flagBits);
+    }
+    
+    private static class TagAndFlag {
+        private TagAndFlag(String t, int f) { tags = t; flagBits = f; }
+        
+        private String tags;
+        private int flagBits;
     }
     
     /**
