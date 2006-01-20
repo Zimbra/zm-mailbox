@@ -79,7 +79,7 @@ public class Tag extends MailItem {
     }
 
 
-    static long tagsToBitmask(String csv) {
+    public static long tagsToBitmask(String csv) {
         long bitmask = 0;
         if (csv != null && !csv.equals("")) {
             String[] tags = csv.split(",");
