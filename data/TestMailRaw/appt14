@@ -28,22 +28,35 @@ UyAmIENhbmFkYSk7IFRpanVhbmENCkxvY2F0aW9uOkZyb250IENvbmZlcmVuY2UgUm9vbQ0KDQoq
 fip+Kn4qfip+Kn4qfip+Kn4qDQoNCg0K
 
 ------_=_NextPart_001_01C525DA.4CB6EC01
-Content-Type: text/html;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: 7bit
 
-PCFET0NUWVBFIEhUTUwgUFVCTElDICItLy9XM0MvL0RURCBIVE1MIDMuMi8vRU4iPg0KPEhUTUw+
-DQo8SEVBRD4NCjxNRVRBIEhUVFAtRVFVSVY9IkNvbnRlbnQtVHlwZSIgQ09OVEVOVD0idGV4dC9o
-dG1sOyBjaGFyc2V0PXV0Zi04Ij4NCjxNRVRBIE5BTUU9IkdlbmVyYXRvciIgQ09OVEVOVD0iTVMg
-RXhjaGFuZ2UgU2VydmVyIHZlcnNpb24gNi41LjcyMjYuMCI+DQo8VElUTEU+RG9jIE1lZXRpbmc8
-L1RJVExFPg0KPC9IRUFEPg0KPEJPRFk+DQo8IS0tIENvbnZlcnRlZCBmcm9tIHRleHQvcGxhaW4g
-Zm9ybWF0IC0tPg0KDQo8UD48Rk9OVCBTSVpFPTI+VHlwZTpTaW5nbGUgTWVldGluZzxCUj4NCk9y
-Z2FuaXplcjpSb2xhbmQgU2NoZW1lcnM8QlI+DQpTdGFydCBUaW1lOkZyaWRheSwgTWFyY2ggMTEs
-IDIwMDUgMTA6MzAgQU08QlI+DQpFbmQgVGltZTpGcmlkYXksIE1hcmNoIDExLCAyMDA1IDExOjMw
-IEFNPEJSPg0KVGltZSBab25lOihHTVQtMDg6MDApIFBhY2lmaWMgVGltZSAoVVMgJmFtcDsgQ2Fu
-YWRhKTsgVGlqdWFuYTxCUj4NCkxvY2F0aW9uOkZyb250IENvbmZlcmVuY2UgUm9vbTxCUj4NCjxC
-Uj4NCip+Kn4qfip+Kn4qfip+Kn4qfio8QlI+DQo8QlI+DQo8QlI+DQo8L0ZPTlQ+DQo8L1A+DQoN
-CjwvQk9EWT4NCjwvSFRNTD4=
+
+We had a great meeting with MySQL at LinuxWorld.  You can read more 
+about their new offer at http://www.mysql.com/products/database/cluster/.  
+They want to meet with us in Seattle to talk about how we can improve
+the performance of our product even more by leveraging their new 
+release.  Additionally, they want us to bring the performance test
+server that you ordered.
+
+Can you meet with them next Friday?  If not, I am free on Sept 26th.
+
+They want to meet at their office:
+2510 Fairview Ave Seattle WA 98102
+
+We are going to be meeting with Bob Thomas and Jill Marks.  In you have 
+any questions they recommended that you send Jill a note at 
+jill.marks@mysql.com.
+
+You should also read up on MySQL's latest release.  I'd recommend a couple books:
+
+The Definitive Guide to MySQL (ISBN 1590591445)
+MySQL Developer's Guide (ISBN 0 67232 871 2)
+
+Additionally, Ari placed the order for the test server.  You need to approve
+the PO - GR733454-8788Q and you can track the server with the FedEx tracking
+number 792806493888.
+
 
 ------_=_NextPart_001_01C525DA.4CB6EC01
 Content-class: urn:content-classes:calendarmessage
