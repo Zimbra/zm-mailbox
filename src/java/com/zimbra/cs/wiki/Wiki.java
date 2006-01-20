@@ -27,6 +27,7 @@ package com.zimbra.cs.wiki;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -114,6 +115,9 @@ public class Wiki {
 		return mFolderId;
 	}
 	
+	public Set<String> listWiki() {
+		return mWikiWords.keySet();
+	}
 	public WikiWord lookupWiki(String wikiWord) {
 		return mWikiWords.get(wikiWord);
 	}

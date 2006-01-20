@@ -22,27 +22,34 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.wiki;
 
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.mailbox.WikiItem;
+package com.zimbra.cs.service.mail;
+
+import java.util.Map;
+import java.util.Set;
+
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.wiki.Wiki;
+import com.zimbra.soap.DocumentHandler;
+import com.zimbra.soap.Element;
+import com.zimbra.soap.ZimbraContext;
 
-public class WikiId {
-	Account mAcct;
-	int     mId;
-	
-	public WikiId(WikiItem wikiItem) throws ServiceException {
-		Mailbox mbox = wikiItem.getMailbox();
-		mAcct = mbox.getAccount();
-		mId = wikiItem.getId();
-	}
-	
-	public WikiItem getWikiItem(OperationContext octxt) throws ServiceException {
-		Mailbox mbox = Mailbox.getMailboxByAccount(mAcct);
-		WikiItem wiki = mbox.getWikiById(octxt, mId);
-		return wiki;
+public class ListWiki extends DocumentHandler {
+
+	public Element handle(Element request, Map context) throws ServiceException {
+		ZimbraContext lc = getZimbraContext(context);
+
+        Set<String> wikiWords = Wiki.getInstance().listWiki();
+        Element response = lc.createElement(MailService.LIST_WIKI_RESPONSE);
+        Element m = response.addElement(MailService.E_WIKIWORDS);
+        StringBuffer words = new StringBuffer();
+        String del = "";
+        for (String w : wikiWords) {
+        	words.append(del);
+        	words.append(w);
+        	del = ",";
+        }
+        m.addText(words.toString());
+        return response;
 	}
 }

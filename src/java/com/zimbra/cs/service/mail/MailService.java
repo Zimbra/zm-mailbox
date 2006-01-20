@@ -164,6 +164,10 @@ public class MailService implements DocumentService {
     
     public static final QName SAVE_WIKI_REQUEST = QName.get("SaveWikiRequest", NAMESPACE);
     public static final QName SAVE_WIKI_RESPONSE = QName.get("SaveWikiResponse", NAMESPACE);
+    public static final QName LIST_WIKI_REQUEST = QName.get("ListWikiRequest", NAMESPACE);
+    public static final QName LIST_WIKI_RESPONSE = QName.get("ListWikiResponse", NAMESPACE);
+    public static final QName GET_WIKI_REQUEST = QName.get("GetWikiRequest", NAMESPACE);
+    public static final QName GET_WIKI_RESPONSE = QName.get("GetWikiResponse", NAMESPACE);
 
     public static final QName GET_ZIMLETS_REQUEST = QName.get("GetZimletsRequest", NAMESPACE);
     public static final QName GET_ZIMLETS_RESPONSE = QName.get("GetZimletsResponse", NAMESPACE);
@@ -423,6 +427,9 @@ public class MailService implements DocumentService {
     public static final String A_WORD = "word";
     public static final String A_SUGGESTIONS = "suggestions";
 
+    // wiki
+    public static final String E_WIKIWORD = "w";
+    public static final String E_WIKIWORDS = "words";
 
     public void registerHandlers(DocumentDispatcher dispatcher) {
 
@@ -508,6 +515,7 @@ public class MailService implements DocumentService {
         
         // wiki
         dispatcher.registerHandler(SAVE_WIKI_REQUEST, new SaveWiki());
-        
+        dispatcher.registerHandler(LIST_WIKI_REQUEST, new ListWiki());
+        dispatcher.registerHandler(GET_WIKI_REQUEST, new GetWiki());
 	}
 }

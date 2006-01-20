@@ -26,6 +26,7 @@ package com.zimbra.cs.wiki;
 
 import java.util.Vector;
 
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.ServiceException;
 
@@ -51,14 +52,14 @@ public class WikiWord {
 		return mWikiIds.size();
 	}
 
-	public WikiItem getWikiItem() throws ServiceException {
-		return mWikiIds.lastElement().getWikiItem();
+	public WikiItem getWikiItem(OperationContext octxt) throws ServiceException {
+		return mWikiIds.lastElement().getWikiItem(octxt);
 	}
 
-	public WikiItem getWikiItem(int rev) throws ServiceException {
+	public WikiItem getWikiItem(OperationContext octxt, int rev) throws ServiceException {
 		if (rev >= mWikiIds.size()) {
 			throw new IllegalArgumentException();
 		}
-		return mWikiIds.get(rev).getWikiItem();
+		return mWikiIds.get(rev).getWikiItem(octxt);
 	}
 }

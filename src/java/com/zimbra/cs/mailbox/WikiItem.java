@@ -24,13 +24,17 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
 import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.wiki.WikiId;
 
 public class WikiItem extends MailItem {
 	
@@ -82,6 +86,14 @@ public class WikiItem extends MailItem {
 		return getDate();
 	}
 	
+    public byte[] getMessageContent() throws ServiceException {
+        return MessageCache.getItemContent(this);
+    }
+
+    public InputStream getRawMessage() throws ServiceException {
+        return MessageCache.getRawContent(this);
+    }
+    
 	public static WikiItem create(Mailbox mbox, UnderlyingData data, ParsedMessage pm, String author) throws ServiceException {
 		Map<String,String> fields = new HashMap<String,String>();
 		fields.put(Metadata.FN_WIKI_WORD, pm.getSubject());
@@ -96,4 +108,5 @@ public class WikiItem extends MailItem {
         wikiItem.finishCreation(null);
         return wikiItem;
 	}
+	
 }

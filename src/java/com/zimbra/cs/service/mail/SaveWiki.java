@@ -89,6 +89,8 @@ public class SaveWiki extends WriteOpDocumentHandler {
             FileUploadServlet.deleteUploads(mimeData.uploads);
 
         Element response = lc.createElement(MailService.SAVE_WIKI_RESPONSE);
+        Element m = response.addElement(MailService.E_MSG);
+        m.addAttribute(MailService.A_ID, lc.formatItemId(wikiItem));
         return response;
 	}
 

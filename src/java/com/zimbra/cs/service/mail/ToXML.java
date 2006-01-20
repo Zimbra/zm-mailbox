@@ -1206,4 +1206,40 @@ public class ToXML {
         for (int i = 0; i < recipients.length; i++)
             eecache.makeEmail(m, recipients[i], emailType, unique);
     }
+    
+    
+	public static Element encodeWiki(Element parent, ZimbraContext lc, WikiItem wiki, String part)
+	throws ServiceException {
+        boolean wholeMessage = (part == null || part.trim().equals(""));
+
+        Element m;
+        if (wholeMessage) {
+            m = encodeMessageCommon(parent, lc, wiki, NOTIFY_FIELDS);
+            m.addAttribute(MailService.A_ID, lc.formatItemId(wiki));
+        } else {
+            m = parent.addElement(MailService.E_MSG);
+            m.addAttribute(MailService.A_ID, lc.formatItemId(wiki));
+            m.addAttribute(MailService.A_PART, part);
+        }
+
+        Element content = m.addUniqueElement(MailService.E_CONTENT);
+        int size = (int) wiki.getSize() + 2048;
+        if (!wholeMessage)
+            content.addAttribute(MailService.A_URL, CONTENT_SERVLET_URI + lc.formatItemId(wiki) + PART_PARAM_STRING + part);
+        else if (size > MAX_INLINE_MSG_SIZE)
+            content.addAttribute(MailService.A_URL, CONTENT_SERVLET_URI + lc.formatItemId(wiki));
+        else
+			try {
+				byte[] raw = wiki.getMessageContent();
+    			if (!ByteUtil.isASCII(raw))
+                    content.addAttribute(MailService.A_URL, CONTENT_SERVLET_URI + lc.formatItemId(wiki));
+                else
+                    content.setText(new String(raw, "US-ASCII"));
+            } catch (IOException ex) {
+                throw ServiceException.FAILURE(ex.getMessage(), ex);
+            }
+
+        return m;
+	}
+
 }

@@ -20,12 +20,43 @@
 
 // we can add more fields if we want.
 <SaveWikiResponse>
-  <m id="{message-id}" url="{publish-url}"/>
+  <m id="{item-id}"/>
 </SaveWikiResponse>
 
 // Search
-// per Dan, the client should be able to search the mailbox using the existing api.
+// can't search in WikiItems yet.
 
 // Get
-// we can use UserServlet and add a new formatter for wiki for adding logos, etc.
-// or we can create a simple servlet for this.
+// through the rest URL:
+// http://server/zimbra/user/[~]{account-name}/?id={item-id}
+//
+// through the SOAP API:
+// the list of wiki words are managed by the server.  currently Subject:
+// header value is used for the wiki word.
+
+// ListWiki
+<ListWikiRequest/>
+
+// returns comma separated list of wiki words for this account
+<ListWikiResponse xmlns:ns0="urn:zimbraMail">
+  <words>{word}[,{word}]*</words>
+</ListWikiResponse>
+
+// GetWiki
+<GetWikiRequest>
+  <w name="{word}"/>
+</GetWikiRequest>
+
+// the format is identical to GetMsgResponse
+<GetWikiResponse>
+  <m l="2" rev="600" id="600" d="1137716227000" s="194">
+    <content>Message-ID: &lt;11724626.01137716227775.JavaMail.SYSTEM@JLee-D610&gt;
+Subject: save wiki test
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+test 123
+    </content>
+  </m>
+</GetWikiResponse>

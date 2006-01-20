@@ -4321,8 +4321,8 @@ public class Mailbox {
         return wiki;
     }
 
-    public WikiItem getWikiById(int id) throws ServiceException {
-    	return (WikiItem) getItemById(id, MailItem.TYPE_WIKI);
+    public WikiItem getWikiById(OperationContext octxt, int id) throws ServiceException {
+    	return (WikiItem) getItemById(octxt, id, MailItem.TYPE_WIKI);
     }
     
     public static void dumpMailboxCache() {
