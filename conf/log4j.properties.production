@@ -38,6 +38,17 @@ log4j.appender.SYSLOG.Facility=LOCAL0
 log4j.appender.SYSLOG.layout=org.apache.log4j.PatternLayout
 log4j.appender.SYSLOG.layout.ConversionPattern=%d %-5p [%t] [%x] %c{1} - %m%n
 
+# Appender ACTIVESYNC writes to the file "activesync.log".
+log4j.appender.ACTIVESYNC=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.ACTIVESYNC.File=/opt/zimbra/log/activesync.log
+log4j.appender.ACTIVESYNC.DatePattern='.'yyyy-MM-dd
+log4j.appender.ACTIVESYNC.Append=true
+log4j.appender.ACTIVESYNC.layout=org.apache.log4j.PatternLayout
+log4j.appender.ACTIVESYNC.layout.ConversionPattern=%d %-5p [%t] [%x] %c{1} - %m%n
+
+log4j.additivity.zimbra.mobile=false
+log4j.logger.zimbra.mobile=DEBUG,ACTIVESYNC
+
 log4j.logger.zimbra=INFO
 log4j.logger.com.zimbra=INFO
 log4j.logger.com.zimbra.cs.util.StopWatch=INFO
