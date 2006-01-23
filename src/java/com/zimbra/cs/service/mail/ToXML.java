@@ -43,6 +43,7 @@ import javax.mail.internet.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
@@ -164,12 +165,13 @@ public class ToXML {
                 if (acl != null)
                     for (Iterator it = acl.grantIterator(); it.hasNext(); ) {
                         ACL.Grant grant = (ACL.Grant) it.next();
+                        NamedEntry nentry = FolderAction.lookupGranteeByZimbraId(grant.getGranteeId(), grant.getGranteeType());
                         eACL.addElement(MailService.E_GRANT)
                             .addAttribute(MailService.A_ZIMBRA_ID, grant.getGranteeId())
                             .addAttribute(MailService.A_GRANT_TYPE, FolderAction.typeToString(grant.getGranteeType()))
                             .addAttribute(MailService.A_INHERIT, grant.isGrantInherited())
                             .addAttribute(MailService.A_RIGHTS, ACL.rightsToString(grant.getGrantedRights()))
-                            .addAttribute(MailService.A_DISPLAY, FolderAction.lookupName(grant.getGranteeId(), grant.getGranteeType()));
+                            .addAttribute(MailService.A_DISPLAY, nentry == null ? null : nentry.getName());
                     }
             }
         }
@@ -231,7 +233,8 @@ public class ToXML {
     public static Element encodeMountpoint(Element parent, ZimbraContext lc, Mountpoint mpt, int fields) {
         Element elem = parent.addElement(MailService.E_MOUNT);
         encodeFolderCommon(elem, lc, mpt, fields);
-        elem.addAttribute(MailService.A_DISPLAY, FolderAction.lookupName(mpt.getOwnerId(), ACL.GRANTEE_USER));
+        NamedEntry nentry = FolderAction.lookupGranteeByZimbraId(mpt.getOwnerId(), ACL.GRANTEE_USER);
+        elem.addAttribute(MailService.A_DISPLAY, nentry == null ? null : nentry.getName());
         if (fields == NOTIFY_FIELDS && mpt.getDefaultView() != MailItem.TYPE_UNKNOWN)
             elem.addAttribute(MailService.A_DEFAULT_VIEW, MailItem.getNameForType(mpt.getDefaultView()));
         return elem;

@@ -148,15 +148,24 @@ public class FolderAction extends ItemAction {
             short rights = ACL.stringToRights(grant.getAttribute(MailService.A_RIGHTS));
             byte gtype   = stringToType(grant.getAttribute(MailService.A_GRANT_TYPE));
             String zid   = grant.getAttribute(MailService.A_ZIMBRA_ID, null);
-            if (zid == null)
-                zid = lookupZimbraId(grant.getAttribute(MailService.A_DISPLAY), gtype, lc);
-            
+            NamedEntry nentry = null;
+            if (gtype != ACL.GRANTEE_ALL) {
+                if (zid == null) {
+                    nentry = lookupGranteeByName(grant.getAttribute(MailService.A_DISPLAY), gtype, lc);
+                    zid = nentry.getId();
+                } else
+                    nentry = lookupGranteeByZimbraId(zid, gtype);
+            } else
+                zid = ACL.GUID_ALL;
+
             mbox.grantAccess(octxt, iid.getId(), zid, gtype, rights, inherit);
-            // kinda hacky -- return the zimbra id of the grantee in the response
+            // kinda hacky -- return the zimbra id and name of the grantee in the response
             result.addAttribute(MailService.A_ZIMBRA_ID, zid);
+            if (nentry != null)
+                result.addAttribute(MailService.A_DISPLAY, nentry.getName());
         } else if (operation.equals(OP_UPDATE)) {
             // duplicating code from ItemAction.java for now...
-            ItemId iidFolder = new ItemId(action.getAttribute(MailService.A_FOLDER, GetFolder.DEFAULT_FOLDER_ID), lc);
+            ItemId iidFolder = new ItemId(action.getAttribute(MailService.A_FOLDER, "-1"), lc);
             if (!iidFolder.belongsTo(mbox))
                 throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
             String flags = action.getAttribute(MailService.A_FLAGS, null);
@@ -207,9 +216,9 @@ public class FolderAction extends ItemAction {
         return null;
     }
 
-    static String lookupZimbraId(String name, byte type, ZimbraContext lc) throws ServiceException {
+    static NamedEntry lookupGranteeByName(String name, byte type, ZimbraContext lc) throws ServiceException {
         if (type == ACL.GRANTEE_ALL)
-            return ACL.GUID_ALL;
+            return null;
 
         Provisioning prov = Provisioning.getInstance();
         NamedEntry nentry = null;
@@ -228,7 +237,7 @@ public class FolderAction extends ItemAction {
             }
 
         if (nentry != null)
-            return (type == ACL.GRANTEE_ALL ? null : nentry.getId());
+            return nentry;
         switch (type) {
             case ACL.GRANTEE_USER:    throw AccountServiceException.NO_SUCH_ACCOUNT(name);
             case ACL.GRANTEE_COS:     throw AccountServiceException.NO_SUCH_COS(name);
@@ -238,16 +247,16 @@ public class FolderAction extends ItemAction {
         }
     }
 
-    static String lookupName(String zid, byte type) {
+    static NamedEntry lookupGranteeByZimbraId(String zid, byte type) {
         try {
-            NamedEntry nentry = null;
             switch (type) {
-                case ACL.GRANTEE_USER:    nentry = Provisioning.getInstance().getAccountById(zid);  break;
-                case ACL.GRANTEE_COS:     nentry = Provisioning.getInstance().getCosById(zid);      break;
-                case ACL.GRANTEE_DOMAIN:  nentry = Provisioning.getInstance().getDomainById(zid);   break;
-                case ACL.GRANTEE_GROUP:   nentry = null;                                            break;
+                case ACL.GRANTEE_USER:    return Provisioning.getInstance().getAccountById(zid);
+                case ACL.GRANTEE_COS:     return Provisioning.getInstance().getCosById(zid);
+                case ACL.GRANTEE_DOMAIN:  return Provisioning.getInstance().getDomainById(zid);
+                case ACL.GRANTEE_GROUP:   return null;
+                case ACL.GRANTEE_ALL:
+                default:                  return null;
             }
-            return (nentry == null ? null : nentry.getName());
         } catch (ServiceException e) {
             return null;
         }
