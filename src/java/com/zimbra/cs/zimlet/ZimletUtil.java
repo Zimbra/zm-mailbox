@@ -555,12 +555,26 @@ public class ZimletUtil {
 	 * 
 	 * @throws ZimletException
 	 */
-	public static void listInstalledZimletsOnHost() throws ZimletException {
+	public static void listInstalledZimletsOnHost(boolean everything) throws ZimletException {
 		loadZimlets();
 		ZimletFile[] zimlets = (ZimletFile[]) sZimlets.values().toArray(new ZimletFile[0]);
 		Arrays.sort(zimlets);
 		for (int i = 0; i < zimlets.length; i++) {
-			System.out.println("\t"+zimlets[i].getName());
+			ZimletDescription zd;
+			try {
+				String extra = "";
+				zd = zimlets[i].getZimletDescription();
+				boolean isExtension = (zd != null && zd.isExtension());
+				if (!everything && isExtension) {
+					continue;
+				}
+				if (isExtension) {
+					extra += " (ext)";
+				}
+				System.out.println("\t"+zimlets[i].getName()+extra);
+			} catch (IOException ioe) {
+				ZimbraLog.zimlet.info("error reading zimlet : "+ioe.getMessage());
+			}
 		}
 	}
 	
@@ -570,17 +584,24 @@ public class ZimletUtil {
 	 * 
 	 * @throws ZimletException
 	 */
-	public static void listInstalledZimletsInLdap() throws ZimletException {
+	public static void listInstalledZimletsInLdap(boolean everything) throws ZimletException {
 		Provisioning prov = Provisioning.getInstance();
 		try {
 			Iterator iter = prov.listAllZimlets().iterator();
 			while (iter.hasNext()) {
-				String disabled = "";
+				String extra = "";
 				Zimlet z = (Zimlet) iter.next();
-				if (!z.isEnabled()) {
-					disabled = " (disabled)";
+				boolean isExtension = z.isExtension();
+				if (!everything && isExtension) {
+					continue;
 				}
-				System.out.println("\t"+z.getName()+disabled);
+				if (!z.isEnabled()) {
+					extra += " (disabled)";
+				}
+				if (isExtension) {
+					extra += " (ext)";
+				}
+				System.out.println("\t"+z.getName()+extra);
 			}
 		} catch (Exception e) {
 			throw ZimletException.ZIMLET_HANDLER_ERROR("cannot list installed zimlets in LDAP "+e.getMessage());
@@ -617,11 +638,11 @@ public class ZimletUtil {
 	 * 
 	 * @throws ZimletException
 	 */
-	public static void listAllZimlets() throws ZimletException {
+	public static void listAllZimlets(boolean everything) throws ZimletException {
 		System.out.println("Installed Zimlet files on this host:");
-		listInstalledZimletsOnHost();
+		listInstalledZimletsOnHost(everything);
 		System.out.println("Installed Zimlets in LDAP:");
-		listInstalledZimletsInLdap();
+		listInstalledZimletsInLdap(everything);
 		System.out.println("Available Zimlets in COS:");
 		listZimletsInCos();
 	}
@@ -797,7 +818,11 @@ public class ZimletUtil {
 		try {
 			switch (cmd) {
 			case LIST_ZIMLETS:
-				listAllZimlets();
+				boolean everything = false;
+				if (args.length > argPos && args[argPos].equals("all")) {
+					everything = true;
+				}
+				listAllZimlets(everything);
 				System.exit(0);
 			case LIST_PRIORITY:
 				listPriority();
