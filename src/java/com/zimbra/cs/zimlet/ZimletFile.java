@@ -106,10 +106,18 @@ public class ZimletFile implements Comparable {
 	public static class ZimletRawEntry extends ZimletEntry {
 		private byte[] mData;
 		
-		public ZimletRawEntry(InputStream is, String name) throws IOException {
+		public ZimletRawEntry(InputStream is, String name, int size) throws IOException {
 			super(name);
-			mData = ByteUtil.getContent(is, 0);
-		}
+			mData = new byte[size];
+    		int num;
+    		int offset, len;
+    		offset = 0;
+    		len = size;
+    		while (len > 0 && (num = is.read(mData, offset, len)) != -1) {
+    			offset += num;
+    			len -= num;
+    		}
+	    }
 		public byte[] getContents() throws IOException {
 			return mData;
 		}
@@ -150,13 +158,13 @@ public class ZimletFile implements Comparable {
 		if (index > 0) {
 			name = name.substring(index + 1);
 		}
-		if (name.endsWith(ZIP_SUFFIX)) {
-			name = name.substring(0, name.length() - 4);
-		}
 		initialize(name);
 	}
 	
 	private void initialize(String name) throws IOException, ZimletException {
+		if (name.endsWith(ZIP_SUFFIX)) {
+			name = name.substring(0, name.length() - 4);
+		}
 		mDescFile = name + XML_SUFFIX;
 		
 		mEntries = new HashMap<String,ZimletEntry>();
@@ -165,7 +173,7 @@ public class ZimletFile implements Comparable {
 			ZipInputStream zis = new ZipInputStream(mBaseStream);
 			ZipEntry entry = zis.getNextEntry();
 			while (entry != null) {
-				mEntries.put(entry.getName().toLowerCase(), new ZimletRawEntry(zis, entry.getName()));
+				mEntries.put(entry.getName().toLowerCase(), new ZimletRawEntry(zis, entry.getName(), (int)entry.getSize()));
 				zis.closeEntry();
 				entry = zis.getNextEntry();
 			}
