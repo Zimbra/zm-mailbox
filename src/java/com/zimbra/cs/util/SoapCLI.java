@@ -102,12 +102,18 @@ public abstract class SoapCLI {
         // host can be specified
         mHost = "localhost";
         // get admin port number from provisioning
-        mPort = Provisioning.getInstance().getConfig().getIntAttr(Provisioning.A_zimbraAdminPort, 0);
+        com.zimbra.cs.account.Config conf = null;
+        try {
+	        conf = Provisioning.getInstance().getConfig();
+        } catch (ServiceException e) {
+        	throw ServiceException.FAILURE("Unable to connect to LDAP directory", e);
+        }
+        mPort = conf.getIntAttr(Provisioning.A_zimbraAdminPort, 0);
         if (mPort == 0)
             throw ServiceException.FAILURE("Unable to get admin port number from provisioning", null);
         mOptions = new Options();
     }
-    
+
     /**
      * Parses the command line arguments. If -h,--help is specified, displays usage and returns null.
      * @param args the command line arguments

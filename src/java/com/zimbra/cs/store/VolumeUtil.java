@@ -75,7 +75,12 @@ public class VolumeUtil extends SoapCLI {
         Zimbra.toolSetup();
         VolumeUtil util = null;
         try {
-            util = new VolumeUtil();
+	        util = new VolumeUtil();
+        } catch (ServiceException e) {
+        	System.err.println(e.getMessage());
+        	System.exit(1);
+        }
+        try {
             CommandLine cl = util.getCommandLine(args);
             if (cl == null)
                 return;
@@ -369,7 +374,7 @@ public class VolumeUtil extends SoapCLI {
             vol.addAttribute(AdminService.A_VOLUME_COMPRESSION_THRESHOLD,
                     compressThreshold);
     }
-    
+
     protected String getCommandUsage() {
         return "zmvolume {-a | -d | -l | -e | -dc | -sc } <options>";
     }
@@ -429,7 +434,7 @@ public class VolumeUtil extends SoapCLI {
         printOpt(O_ID, 2);
         printOpt(O_TS, 0);
     }
-    
+
     private static final String PADDING = "                                                  ";
     
     private void printOpt(String optStr, int leftPad) {
