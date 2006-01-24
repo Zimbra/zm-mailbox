@@ -38,11 +38,12 @@ public class LmtpInputStream extends TcpServerInputStream {
 	
 	private static final int[] EOM = new int[] { CR, LF, (int)'.', CR, LF };
 	private static final int EOMLEN = EOM.length;
-	
-	//private static Log mLog = LogFactory.getLog(LmtpInputStream.class);
-	
+
 	public byte[] readMessage(int sizeHint) throws IOException {
-		int matched = -1;
+		// We start our state as though \r\n was already matched - so if
+		// the first line is ".\r\n" we recognize that as end of message.
+		int matched = 1;
+		boolean initialPhantomMatch = true;
 		
 		if (sizeHint == 0) {
 			sizeHint = 8192;
@@ -53,7 +54,7 @@ public class LmtpInputStream extends TcpServerInputStream {
 			int ch = read();
 
 			if (ch == -1) {
-				throw new IOException("premature end of input reading message data");
+				throw new IOException("EOF when looking for <CR><LF>.<CR><LF>");
 			}
 			
 			if (ch == EOM[matched + 1]) {
@@ -65,17 +66,29 @@ public class LmtpInputStream extends TcpServerInputStream {
 				}
 			}
 			
+			// Flush sequence that started looking like EOM, but wasn't.
 			if (matched > -1) {
-				// Flush sequence that looked like EOM but wasn't. 
-				for (int i = 0; i <= matched; i++) {
-					bos.write((char)EOM[i]);
+				
+				int flushFrom = 0;
+				if (initialPhantomMatch) {
+					initialPhantomMatch = false;
+					flushFrom = 2;
 				}
 
+				for (int i = flushFrom; i <= matched; i++) {
+					if (i == 2) {
+						// We encountered "\r\n." but it did not lead to EOM.
+						// Swallow "." so we end up removing SMTP transparency.
+						continue;
+					}
+					bos.write((char)EOM[i]);
+				}
+				
 				// Reset match counter.
 				matched = -1;
 				
 				// We might be at the beginning of EOM.
-				if (ch == EOM[matched + 1]) {
+				if (ch == EOM[0]) {
 					matched++;
 					continue;
 				}
