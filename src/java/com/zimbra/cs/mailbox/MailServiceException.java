@@ -315,12 +315,14 @@ public class MailServiceException extends ServiceException {
     	Argument[] args = new Argument[len];
     	
     	int offset = 0;
-    	for (Address addr : invalid) {
-    		args[offset++] = new Argument("invalid", addr.toString());
-    	}
-    	for (Address addr : unsent) {
-    		args[offset++] = new Argument("unsent", addr.toString());
-    	}
+        if (invalid != null) {
+            for (Address addr : invalid)
+                args[offset++] = new Argument("invalid", addr.toString());
+        }
+        if (unsent != null) {
+        	for (Address addr : unsent)
+        		args[offset++] = new Argument("unsent", addr.toString());
+        }
     	
     	return new MailServiceException(msg, failureType, SENDERS_FAULT, e, args);
     }
