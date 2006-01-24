@@ -73,7 +73,7 @@ public abstract class ZimletMeta {
 	protected Element mTopElement;
 	
 	protected String mName;
-	protected String mVersion;
+	protected Version mVersion;
 	protected String mDescription;
 	protected boolean mIsExtension;
 
@@ -123,7 +123,7 @@ public abstract class ZimletMeta {
 		}
 		
 		mName = mTopElement.getAttribute(ZIMLET_ATTR_NAME, "");
-		mVersion = mTopElement.getAttribute(ZIMLET_ATTR_VERSION, "");
+		mVersion = new Version(mTopElement.getAttribute(ZIMLET_ATTR_VERSION, ""));
 		mDescription = mTopElement.getAttribute(ZIMLET_ATTR_DESCRIPTION, "");
 		try {
 			mIsExtension = mTopElement.getAttributeBool(ZIMLET_ATTR_EXTENSION, false);
@@ -142,7 +142,7 @@ public abstract class ZimletMeta {
 		return mName;
 	}
 	
-	public String getVersion() {
+	public Version getVersion() {
 		assert(mTopElement != null);
 		return mVersion;
 	}
