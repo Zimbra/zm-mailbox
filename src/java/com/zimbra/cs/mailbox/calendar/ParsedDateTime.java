@@ -35,9 +35,13 @@ import java.util.GregorianCalendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.WellKnownTimeZone;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
+import com.zimbra.cs.service.ServiceException;
 
 public final class ParsedDateTime {
     
@@ -162,14 +166,14 @@ public final class ParsedDateTime {
     }
     
     
-    public static ParsedDateTime parse(ZProperty prop, TimeZoneMap tzmap) throws ParseException
-    {
+    public static ParsedDateTime parse(ZProperty prop, TimeZoneMap tzmap)
+    throws ParseException, ServiceException {
         String tzname = prop.getParameterVal(ICalTok.TZID, null);
         
         ICalTimeZone tz = null;
         if (tzname != null) 
-            tz = tzmap.getTimeZone(tzname);
-        
+        	tz = lookupAndAddToTzMap(tzname, tzmap);
+
         if (tz == null) 
             tz = tzmap.getLocalTimeZone();
         
@@ -180,10 +184,9 @@ public final class ParsedDateTime {
     {
         return parse(prop.getValue(), null, null, true);
     }
-    
 
     public static ParsedDateTime parse(String str, TimeZoneMap tzmap)
-    throws ParseException {
+    throws ParseException, ServiceException {
         if (str == null)
             return null;
 
@@ -206,7 +209,7 @@ public final class ParsedDateTime {
                 	&& !datetime.endsWith("Z")) {
                 	datetime += "Z";
                 } else {
-                    tz = tzmap.getTimeZone(tzid);
+                	tz = lookupAndAddToTzMap(tzid, tzmap);
                 }
             }
         } else {
@@ -441,5 +444,31 @@ public final class ParsedDateTime {
             } 
         }
         return toRet;
+    }
+
+    private static ICalTimeZone lookupAndAddToTzMap(String tzId,
+            										TimeZoneMap tzMap)
+    throws ServiceException {
+        int len = tzId.length();
+        if (len >= 2 && tzId.charAt(0) == '"' && tzId.charAt(len - 1) == '"') {
+            tzId = tzId.substring(1, len - 1);
+        }
+        if (tzId.equals(""))
+            return null;
+
+        ICalTimeZone zone = tzMap.getTimeZone(tzId);
+        if (zone == null) {
+        	// Is it a system-defined TZ?
+	        WellKnownTimeZone knownTZ =
+	        	Provisioning.getInstance().getTimeZoneById(tzId);
+	        if (knownTZ != null)
+	            zone = knownTZ.toTimeZone();
+	        if (zone != null)
+            	tzMap.add(zone);
+	        else
+                throw MailServiceException.INVALID_REQUEST(
+                        "invalid time zone \"" + tzId + "\"", null);
+        }
+        return zone;
     }
 }
