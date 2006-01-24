@@ -271,7 +271,7 @@ public class ZimletUtil {
 	private static Map descToMap(ZimletDescription zd) throws ZimletException {
 		Map<String,String> attrs = new HashMap<String,String>();
 		attrs.put(Provisioning.A_zimbraZimletKeyword,         zd.getName());
-		attrs.put(Provisioning.A_zimbraZimletVersion,         zd.getVersion());
+		attrs.put(Provisioning.A_zimbraZimletVersion,         zd.getVersion().toString());
 		attrs.put(Provisioning.A_zimbraZimletDescription,     zd.getDescription());
 		attrs.put(Provisioning.A_zimbraZimletHandlerClass,    zd.getServerExtensionClass());
 		attrs.put(Provisioning.A_zimbraZimletServerIndexRegex, zd.getRegexString());
@@ -300,19 +300,47 @@ public class ZimletUtil {
 	 * @throws ZimletException
 	 */
 	public static void deployZimlet(ZimletFile zf) throws IOException, ZimletException {
-		installZimlet(zf);
+		Provisioning prov = Provisioning.getInstance();
 		String zimletName = zf.getZimletName();
 		ZimletDescription zd = zf.getZimletDescription();
-		Provisioning prov = Provisioning.getInstance();
 		try {
+			// check if the zimlet already exists in LDAP.
 			Zimlet z = prov.getZimlet(zimletName);
-			if (z != null && z.isEnabled()) {
+			Version ver = new Version(z.getAttr(Provisioning.A_zimbraZimletVersion));
+			if (zd.getVersion().equals(ver)) {
 				ZimbraLog.zimlet.info("Zimlet " + zimletName + " already installed in LDAP.");
 				return;
+			} else if (zd.getVersion().compareTo(ver) < 0) {
+				ZimbraLog.zimlet.info("Zimlet " + zimletName + " being installed is of an older version.");
+				return;
 			}
-		} catch (Exception e) {
-			ldapDeploy(zimletName);
+			// upgrade
+			ZimbraLog.zimlet.info("Upgrading Zimlet " + zimletName + " to " +zd.getVersion().toString());
+			try {
+				prov.deleteZimlet(z.getName());
+				installZimlet(zf);
+				ldapDeploy(zimletName);
+				if (zf.hasZimletConfig()) {
+					installConfig(zf.getZimletConfig());
+				}
+				return;
+			} catch (ServiceException se) {
+				ZimbraLog.zimlet.info("Upgrade failed: "+se.getMessage());
+				if (se.getCause() != null) {
+					throw ZimletException.CANNOT_CREATE(zimletName, se.getCause().getMessage());
+				}
+				throw ZimletException.CANNOT_CREATE(zimletName, se.getMessage());
+			}
+		} catch (ServiceException se) {
+			// zimlet was not found in LDAP.  continue with deploy.
 		}
+		
+		// install files
+		installZimlet(zf);
+		
+		// deploy in LDAP
+		ldapDeploy(zimletName);
+		
 		if (zf.hasZimletConfig()) {
 			installConfig(zf.getZimletConfig());
 		}
@@ -367,13 +395,18 @@ public class ZimletUtil {
 	 * @throws ZimletException
 	 */
 	public static void ldapDeploy(String zimlet) throws IOException, ZimletException {
-		ZimbraLog.zimlet.info("Deploying Zimlet " + zimlet + " in LDAP.");
 		String zimletRoot = getZimletDir();
 		ZimletFile zf = new ZimletFile(zimletRoot + File.separator + zimlet);
+		ldapDeploy(zf);
+	}
+	
+	public static void ldapDeploy(ZimletFile zf) throws IOException, ZimletException {
 		ZimletDescription zd = zf.getZimletDescription();
 		String zimletName = zd.getName();
 		Map attrs = descToMap(zd);
 		
+		ZimbraLog.zimlet.info("Deploying Zimlet " + zimletName + " in LDAP.");
+
 		// add zimlet entry to ldap
 		Provisioning prov = Provisioning.getInstance();
 		try {
