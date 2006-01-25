@@ -31,9 +31,6 @@ package com.zimbra.cs.store;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
@@ -43,8 +40,6 @@ import com.zimbra.cs.util.Zimbra;
  * @author jhahm
  */
 public abstract class StoreManager {
-
-    private static Log mLog = LogFactory.getLog(StoreManager.class);
 
 	private static StoreManager sInstance;
 	static {

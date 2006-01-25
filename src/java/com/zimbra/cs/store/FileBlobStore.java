@@ -39,6 +39,7 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.cs.service.ServiceException;
@@ -57,10 +58,18 @@ public class FileBlobStore extends StoreManager {
 
 	FileBlobStore() throws Exception {
         mUniqueFilenameGenerator = new UniqueFileNameGenerator();
+        long sweepMaxAgeMS =
+        	LC.zimbra_store_sweeper_max_age.intValue() * 60 * 1000;
+        mSweeper = new IncomingDirectorySweeper(SWEEP_INTERVAL_MS,
+        										sweepMaxAgeMS);
+        mSweeper.start();
 	}
 
     public void shutdown() {
-        // nothing to do
+    	mSweeper.signalShutdown();
+    	try {
+			mSweeper.join();
+		} catch (InterruptedException e) {}
     }
     
     private static boolean onWindows() {
@@ -370,6 +379,108 @@ public class FileBlobStore extends StoreManager {
             StringBuffer sb = new StringBuffer();
             sb.append(time).append("-").append(seq).append(".msg");
             return sb.toString();
+        }
+    }
+
+
+    private static final long SWEEP_INTERVAL_MS = 60 * 1000;  // 1 minute
+
+    private IncomingDirectorySweeper mSweeper;
+
+    private static class IncomingDirectorySweeper extends Thread {
+        private boolean mShutdown = false;
+    	private long mSweepIntervalMS;
+    	private long mMaxAgeMS;
+
+    	public IncomingDirectorySweeper(long sweepIntervalMS,
+    									long maxAgeMS) {
+    		super("IncomingDirectorySweeper");
+    		mSweepIntervalMS = sweepIntervalMS;
+    		mMaxAgeMS = maxAgeMS;
+    	}
+
+        public synchronized void signalShutdown() {
+        	mShutdown = true;
+            wakeup();
+        }
+
+        public synchronized void wakeup() {
+        	notify();
+        }
+
+        public void run() {
+            mLog.info(getName() + " thread starting");
+
+            boolean shutdown = false;
+            long startTime = System.currentTimeMillis();
+
+            while (!shutdown) {
+                // Sleep until next scheduled wake-up time, or until notified.
+                synchronized (this) {
+                    if (!mShutdown) {
+                    	long now = System.currentTimeMillis();
+                        long until = startTime + mSweepIntervalMS;
+                        if (until > now) {
+                        	try {
+    							wait(until - now);
+    						} catch (InterruptedException e) {}
+                        }
+                    }
+                    shutdown = mShutdown;
+                    if (shutdown) break;
+                }
+
+                int numDeleted = 0;
+                startTime = System.currentTimeMillis();
+
+                // Delete old files in incoming directory of each volume.
+                List<Volume> allVolumes = Volume.getAll();
+                for (Volume volume : allVolumes) {
+                	short volType = volume.getType();
+                	if (volType != Volume.TYPE_MESSAGE &&
+                		volType != Volume.TYPE_MESSAGE_SECONDARY)
+                		continue;
+                	File directory = new File(volume.getIncomingMsgDir());
+                	if (!directory.exists()) continue;
+                	File[] files = directory.listFiles();
+                	if (files == null) continue;
+                	for (int i = 0; i < files.length; i++) {
+        				// Check for shutdown after every 100 files.
+                		if (i % 100 == 0) {
+        					synchronized (this) {
+        						shutdown = mShutdown;
+        					}
+        					if (shutdown) break;
+        				}
+
+        				File file = files[i];
+                		if (file.isDirectory()) continue;
+                		long age = startTime - file.lastModified();
+                		if (age >= mMaxAgeMS) {
+                			boolean deleted = file.delete();
+                			if (!deleted) {
+                				mLog.warn("Sweeper unable to delete " +
+                						  file.getAbsolutePath());
+                			} else if (mLog.isDebugEnabled()) {
+                				mLog.debug("Sweeper deleted " +
+                						   file.getAbsolutePath());
+                				numDeleted++;
+                			}
+                		}
+                	}
+                	synchronized (this) {
+                		shutdown = mShutdown;
+                	}
+                	if (shutdown) break;
+                }
+
+                long elapsed = System.currentTimeMillis() - startTime;
+
+                mLog.debug("Incoming directory sweep deleted " + numDeleted +
+                		   " files in " + elapsed + "ms");
+            }
+
+            mLog.info(getName() + " thread exiting");
         }
     }
 }

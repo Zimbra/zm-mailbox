@@ -91,6 +91,8 @@ public class LC {
     public static final KnownKey zimbra_gid;
     public static final KnownKey zimbra_log4j_properties;
 
+    public static final KnownKey zimbra_store_sweeper_max_age;
+
     public static final KnownKey zimbra_index_max_uncommitted_operations;
     public static final KnownKey zimbra_index_lru_size;
     public static final KnownKey zimbra_index_idle_flush_time;
@@ -264,6 +266,11 @@ public class LC {
         zimbra_log4j_properties.setDefault("${zimbra_home}" + FS + "conf" + FS + "log4j.properties");
         zimbra_log4j_properties.setDoc
             ("Path to log4j configuration properties file.");
+
+        zimbra_store_sweeper_max_age = new KnownKey("zimbra_store_sweeper_max_age");
+        zimbra_store_sweeper_max_age.setDefault("480");  // 480 mins = 8 hours
+        zimbra_store_sweeper_max_age.setDoc
+            ("Files older than this many minutes are auto-deleted from store incoming directory.");
 
         zimbra_index_max_uncommitted_operations = new KnownKey("zimbra_index_max_uncommitted_operations");
         zimbra_index_max_uncommitted_operations.setDefault("200");
