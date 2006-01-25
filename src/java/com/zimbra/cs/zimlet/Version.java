@@ -95,7 +95,7 @@ public class Version implements Comparable<Version> {
 	public void decrement() {
 		int lastToken = mTokens.size() - 1;
 		if (lastToken >= 0) {
-			int tok = mTokens.get(lastToken);
+			int tok = mTokens.remove(lastToken);
 			tok--;
 			mTokens.add(lastToken, tok);
 		}
@@ -107,7 +107,7 @@ public class Version implements Comparable<Version> {
 	public void increment() {
 		int lastToken = mTokens.size() - 1;
 		if (lastToken >= 0) {
-			int tok = mTokens.get(lastToken);
+			int tok = mTokens.remove(lastToken);
 			tok++;
 			mTokens.add(lastToken, tok);
 		}
