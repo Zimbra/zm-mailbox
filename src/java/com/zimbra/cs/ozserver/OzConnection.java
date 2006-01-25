@@ -168,6 +168,7 @@ public class OzConnection {
             try {
                 mLog.info("cancelling selection key");
                 mSelectionKey.cancel();
+                mServer.wakeupSelector();
             } finally {
                 mLog.info("closing channel");
                 mChannel.close();
