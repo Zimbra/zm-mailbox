@@ -34,6 +34,7 @@ package com.zimbra.cs.tcpserver;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
+import java.nio.channels.AsynchronousCloseException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -230,19 +231,25 @@ public abstract class ProtocolHandler implements Runnable {
 				cont = processCommand();
 				setIdle(true);
 				setMadeProgress(true);
-			} catch (SocketException e) {
-				// If we get a SocketException on a connection that was closed
-				// by watchdog due to idleness, treat it as if we got a QUIT
-				// command and closed the connection normally.
-                cont = false;
-				if (mIdleClosed) {
-					mLog.debug("Idle timeout", e);
-                } else if (getShuttingDown()) {
-                    // Don't print stack trace with info/error level if socket
-                    // was closed due to shutdown.
-                    mLog.debug("Shutdown in progress", e);
-                } else
+			} catch (IOException e) {
+                if (e instanceof SocketException || e instanceof AsynchronousCloseException ) {
+                    // If we get a network exception on a connection that was closed
+                    // by watchdog due to idleness, treat it as if we got a QUIT
+                    // command and closed the connection normally.
+                    cont = false;
+                    if (mIdleClosed) {
+                        mLog.debug("Idle timeout: " + e);
+                    } else if (getShuttingDown()) {
+                        // Don't print stack trace with info/error level if socket
+                        // was closed due to shutdown.
+                        mLog.debug("Shutdown in progress", e);
+                    } else {
+                        throw e;
+                    }
+                } else {
+                    // propagate other types of I/O exceptions
                     throw e;
+                }
 			}
 		}
 	}
