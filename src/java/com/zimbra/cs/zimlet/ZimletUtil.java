@@ -31,10 +31,12 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -63,6 +65,7 @@ public class ZimletUtil {
 	public static final String ZIMLET_ALLOWED_DOMAINS = "allowedDomains";
 	public static final String ZIMLET_DEFAULT_COS = "default";
 	
+	private static int P_MAX = Integer.MAX_VALUE;
 	private static boolean sZimletsLoaded = false;
 	private static Map<String,ZimletFile> sZimlets = new HashMap<String,ZimletFile>();
 	private static Map<String,ZimletFile> sDevZimlets = new HashMap<String,ZimletFile>();
@@ -78,6 +81,44 @@ public class ZimletUtil {
 		String[] zimlets = sDevZimlets.keySet().toArray(new String[0]);
 		Arrays.sort(zimlets);
 		return zimlets;
+	}
+	
+	public static List<Zimlet> orderZimletsByPriority(List<Zimlet> zimlets) {
+		TreeMap<Version,Zimlet> versionMap = new TreeMap<Version,Zimlet>();
+		List<Zimlet> plist = new ArrayList<Zimlet>();
+		for (Zimlet z : zimlets) {
+			String pstring = z.getPriority();
+			if (pstring == null) {
+				// no priority.  put it at the end of priority list
+				plist.add(z);
+			} else {
+				Version v = new Version(pstring);
+				versionMap.put(v, z);
+			}
+		}
+		
+		// go from low to high priority
+		while (!versionMap.isEmpty()) {
+			Version v = versionMap.lastKey();
+			plist.add(0, versionMap.remove(v));
+		}
+		return plist;
+	}
+	
+	public static List<Zimlet> orderZimletsByPriority(String[] zimlets) throws ServiceException {
+		Provisioning prov = Provisioning.getInstance();
+		List<Zimlet> zlist = new ArrayList<Zimlet>();
+		for (int i = 0; i < zimlets.length; i++) {
+			zlist.add(prov.getZimlet(zimlets[i]));
+		}
+		return orderZimletsByPriority(zlist);
+	}
+	
+	public static List<Zimlet> orderZimletsByPriority() throws ServiceException {
+		Provisioning prov = Provisioning.getInstance();
+		@SuppressWarnings({"unchecked"})
+		List<Zimlet> allzimlets = prov.listAllZimlets();
+		return orderZimletsByPriority(allzimlets);
 	}
 	
 	public static ZimletConfig getZimletConfig(String zimlet) {
@@ -215,7 +256,7 @@ public class ZimletUtil {
 	 * @param elem - Parent Element node
 	 * @param zimlet
 	 */
-	public static void listZimlet(Element elem, String zimlet) {
+	public static void listZimlet(Element elem, String zimlet, int priority) {
 		loadZimlets();
 		ZimletFile zim = (ZimletFile) sZimlets.get(zimlet);
 		if (zim == null) {
@@ -227,6 +268,9 @@ public class ZimletUtil {
 			Element entry = elem.addElement(AccountService.E_ZIMLET);
 			Element zimletContext = entry.addElement(AccountService.E_ZIMLET_CONTEXT);
 			zimletContext.addAttribute(AccountService.A_ZIMLET_BASE_URL, zimletBase);
+			if (priority >= 0) {
+				zimletContext.addAttribute(AccountService.A_ZIMLET_PRIORITY, priority);
+			}
 			zim.getZimletDescription().addToElement(entry);
 			if (zim.hasZimletConfig()) {
 				zim.getZimletConfig().addToElement(entry);
@@ -299,7 +343,7 @@ public class ZimletUtil {
 	 * @throws IOException
 	 * @throws ZimletException
 	 */
-	public static void deployZimlet(ZimletFile zf) throws IOException, ZimletException {
+	public static void deployZimlet(ZimletFile zf) throws IOException, ZimletException, ServiceException {
 		Provisioning prov = Provisioning.getInstance();
 		String zimletName = zf.getZimletName();
 		ZimletDescription zd = zf.getZimletDescription();
@@ -317,11 +361,22 @@ public class ZimletUtil {
 			// upgrade
 			ZimbraLog.zimlet.info("Upgrading Zimlet " + zimletName + " to " +zd.getVersion().toString());
 			try {
+				// save priority and config
+				String priority = z.getPriority();
+				String configString = z.getAttr(Provisioning.A_zimbraZimletHandlerConfig);
+				
+				// do the upgrade
 				prov.deleteZimlet(z.getName());
 				installZimlet(zf);
 				ldapDeploy(zimletName);
-				if (zf.hasZimletConfig()) {
-					installConfig(zf.getZimletConfig());
+				
+				// set the priority to the saved value
+				z = prov.getZimlet(zimletName);
+				z.setPriority(priority);
+				
+				// install saved config
+				if (configString != null) {
+					prov.updateZimletConfig(zimletName, configString);
 				}
 				return;
 			} catch (ServiceException se) {
@@ -340,6 +395,8 @@ public class ZimletUtil {
 		
 		// deploy in LDAP
 		ldapDeploy(zimletName);
+		
+		setPriority(zimletName, P_MAX);
 		
 		if (zf.hasZimletConfig()) {
 			installConfig(zf.getZimletConfig());
@@ -722,30 +779,63 @@ public class ZimletUtil {
 		installConfig(new ZimletConfig(new File(config)));
 	}
 	
-	public static void listPriority() {
-		Provisioning prov = Provisioning.getInstance();
-		try {
-			System.out.println("Pri\tZimlet");
-			Iterator iter = prov.listAllZimlets().iterator();
-			while (iter.hasNext()) {
-				Zimlet z = (Zimlet) iter.next();
-				if (z.getPriority() >= 0) {
-					System.out.println(z.getPriority() + "\t" + z.getName());
-				}
-			}
-		} catch (ServiceException se) {
-			ZimbraLog.zimlet.info("error reading zimlets : "+se.getMessage());
+	public static void listPriority() throws ServiceException {
+		List<Zimlet> plist = orderZimletsByPriority();
+		System.out.println("Pri\tZimlet");
+		for (int i = 0; i < plist.size(); i++) {
+			System.out.println(i + "\t" + plist.get(i).getName());
 		}
 	}
 	
-	public static void setPriority(String zimlet, int priority) {
+	
+	public static void setPriority(String zimlet, int priority) throws ServiceException {
+		List<Zimlet> plist = orderZimletsByPriority();
 		Provisioning prov = Provisioning.getInstance();
-		try {
-			Zimlet z = prov.getZimlet(zimlet);
-			z.setPriority(priority);
-		} catch (ServiceException se) {
-			ZimbraLog.zimlet.info("error setting zimlet priority : "+se.getMessage());
+
+		// remove self first
+		for (Zimlet z : plist) {
+			if (z.getName().equals(zimlet)) {
+				plist.remove(z);
+				break;
+			}
 		}
+		
+		if (priority == P_MAX) {
+			priority = plist.size();
+		}
+		Version newPriority;
+		if (priority == 0) {
+			newPriority = new Version("0");
+			if (plist.size() > 0) {
+				// take the current p0, bump down p0zimlet.
+				Zimlet p0zimlet = plist.get(0);
+				Version p0 = new Version(p0zimlet.getPriority());
+				newPriority = new Version(p0);
+				if (plist.size() > 1) {
+					Zimlet p1zimlet = plist.get(1);
+					Version p1 = new Version(p1zimlet.getPriority());
+					p0.increment(p1);
+				} else {
+					p0.increment();
+				}
+				p0zimlet.setPriority(p0.toString());
+			}
+		} else {
+			// take the priority of previous zimlet
+			Zimlet oneAbove = plist.get(priority-1);
+			newPriority = new Version(oneAbove.getPriority());
+			if (priority < plist.size()) {
+				// increment, while staying before the next zimlet
+				Zimlet oneBelow = plist.get(priority);
+				Version nextPriority = new Version(oneBelow.getPriority());
+				newPriority.increment(nextPriority);
+			} else {
+				// simply increment from the previous priority
+				newPriority.increment();
+			}
+		}
+		Zimlet z = prov.getZimlet(zimlet);
+		z.setPriority(newPriority.toString());
 	}
 	
 	private static void test() {
@@ -893,6 +983,7 @@ public class ZimletUtil {
 					usage();
 				}
 				setPriority(zimlet, Integer.parseInt(args[argPos]));
+				listPriority();
 				break;
 			case LIST_ACLS:
 				listAcls(zimlet);

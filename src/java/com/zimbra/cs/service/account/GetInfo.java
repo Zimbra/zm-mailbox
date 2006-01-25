@@ -29,6 +29,7 @@
 package com.zimbra.cs.service.account;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -38,7 +39,6 @@ import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.cs.zimlet.ZimletProperty;
 import com.zimbra.cs.zimlet.ZimletUserProperties;
@@ -131,17 +131,13 @@ public class GetInfo extends DocumentHandler  {
     private static void doZimlets(Element response, Account acct) throws ServiceException {
     	Cos cos = acct.getCOS();
     	String[] attrList = cos.getMultiAttr(Provisioning.A_zimbraZimletAvailableZimlets);
-    	String zimletName = null;
-    	for (int attrIndex = 0; attrIndex < attrList.length; attrIndex++) {
-    		try {
-    			zimletName = attrList[attrIndex];
-    			Zimlet z = Provisioning.getInstance().getZimlet(zimletName);
-    			if (z != null && z.isEnabled() && !z.isExtension()) {
-    				ZimletUtil.listZimlet(response, zimletName);
-    			}
-    		} catch (ServiceException se) {
-				ZimbraLog.zimlet.error("inconsistency in installed zimlets. "+zimletName+" does not exist.");
-    		}
+    	List<Zimlet> zimletList = ZimletUtil.orderZimletsByPriority(attrList);
+    	int priority = 0;
+    	for (Zimlet z : zimletList) {
+			if (z.isEnabled() && !z.isExtension()) {
+				ZimletUtil.listZimlet(response, z.getName(), priority);
+			}
+    		priority++;
     	}
     	
     	// load the zimlets in the dev directory and list them

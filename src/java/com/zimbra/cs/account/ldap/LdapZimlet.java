@@ -96,13 +96,13 @@ public class LdapZimlet extends LdapNamedEntry implements Zimlet, ObjectType {
    		modifyAttrs(attr);
     }
     
-    public int getPriority() {
-    	return getIntAttr(Provisioning.A_zimbraZimletPriority, -1);
+    public String getPriority() {
+    	return getAttr(Provisioning.A_zimbraZimletPriority);
     }
     
-    public void setPriority(int priority) throws ServiceException {
+    public void setPriority(String priority) throws ServiceException {
     	Map<String,String> attr = new HashMap<String,String>();
-    	attr.put(Provisioning.A_zimbraZimletPriority, Integer.toString(priority));
+    	attr.put(Provisioning.A_zimbraZimletPriority, priority);
     	modifyAttrs(attr);
     }
     

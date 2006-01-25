@@ -70,4 +70,8 @@ public class ZimletException extends Exception {
 	public static ZimletException CANNOT_DISABLE(String zimlet, String reason) {
 		return new ZimletException("Cannot disable Zimlet " + zimlet + ": " + reason);
 	}
+
+	public static ZimletException SERVICE_ERROR(com.zimbra.cs.service.ServiceException se) {
+		return new ZimletException("ServiceException: "+((se.getCause() == null) ? se.getMessage() : se.getCause().getMessage()));
+	}
 }

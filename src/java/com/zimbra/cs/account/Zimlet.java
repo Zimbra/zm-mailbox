@@ -29,8 +29,8 @@ import com.zimbra.cs.service.ServiceException;
 public interface Zimlet extends NamedEntry {
 	public boolean isEnabled();
 	public void setEnabled(boolean enabled) throws ServiceException;
-	public int getPriority();
-	public void setPriority(int priority) throws ServiceException;
+	public String getPriority();
+	public void setPriority(String priority) throws ServiceException;
 	public boolean isExtension();
 	public void setExtension(boolean extension) throws ServiceException;
 }
