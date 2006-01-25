@@ -2673,13 +2673,13 @@ public class Mailbox {
 
     public synchronized Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags, String tags, int conversationId)
     throws IOException, ServiceException {
-        SharedDeliveryContext sharedDeliveryCtxt = new SharedDeliveryContext(false);
+        SharedDeliveryContext sharedDeliveryCtxt = new SharedDeliveryContext();
         return addMessage(octxt, pm, folderId, noICal, flags, tags, conversationId, ":API:", sharedDeliveryCtxt);
     } 
 
     public synchronized Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags, String tags)
     throws IOException, ServiceException {
-        SharedDeliveryContext sharedDeliveryCtxt = new SharedDeliveryContext(false);
+        SharedDeliveryContext sharedDeliveryCtxt = new SharedDeliveryContext();
         return addMessage(octxt, pm, folderId, noICal, flags, tags, ID_AUTO_INCREMENT, ":API:", sharedDeliveryCtxt);
     }
 
@@ -2866,7 +2866,10 @@ public class Mailbox {
 
                     // Log entry in redolog for blob save.  Blob bytes are
                     // logged in StoreToIncoming entry.
-                    storeRedoRecorder = new StoreIncomingBlob(digest, msgSize);
+                    storeRedoRecorder =
+                    	new StoreIncomingBlob(
+                    			digest, msgSize,
+                    			sharedDeliveryCtxt.getMailboxIdList());
                     storeRedoRecorder.start(timestamp);
                     storeRedoRecorder.setBlobBodyInfo(data, blobPath, blobVolumeId);
                     storeRedoRecorder.log();
@@ -2988,7 +2991,7 @@ public class Mailbox {
             if (replyType != null && origId > 0)
                 dinfo = new Message.DraftInfo(replyType, origId);
             return addMessageInternal(octxt, pm, ID_FOLDER_DRAFTS, true, Flag.FLAG_DRAFT | Flag.FLAG_FROM_ME, null,
-                                      ID_AUTO_INCREMENT, ":API:", dinfo, new SharedDeliveryContext(false));
+                                      ID_AUTO_INCREMENT, ":API:", dinfo, new SharedDeliveryContext());
         }
 
         byte[] data;

@@ -40,6 +40,8 @@ import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
+import com.zimbra.cs.redolog.Version;
+
 /**
  * @author jhahm
  *
@@ -60,8 +62,10 @@ import java.util.Arrays;
  *                    data    - up to 127 bytes of serverId in UTF-8
  *                    padding - 0-value bytes of length = 127 - length(data)
  *                  serverId is the zimbraId LDAP attribute of the server entry
- *   firstOpTstamp  time of first op in file
- *   lastOpTstamp   time of last op in file
+ *   firstOpTstamp  4 bytes; time of first op in file
+ *   lastOpTstamp   4 bytes; time of last op in file
+ *   version        4 bytes; serialization version number
+ *                  (2-byte major, 2-byte minor)
  *   padding        0-value bytes to bring total header size to 512
  */
 public class FileHeader {
@@ -78,6 +82,8 @@ public class FileHeader {
     private long mFirstOpTstamp;        // time of first op in log file
     private long mLastOpTstamp;         // time of last op in log file
 
+    private Version mVersion;			// redo log version
+
     FileHeader() {
     	this("unknown");
     }
@@ -89,9 +95,13 @@ public class FileHeader {
         mServerId = serverId;
         mFirstOpTstamp = 0;
         mLastOpTstamp = 0;
+        mVersion = Version.latest();
     }
 
     void write(RandomAccessFile raf) throws IOException {
+    	// Update header redolog version to latest code version.
+    	if (!mVersion.isLatest())
+    		mVersion = Version.latest();
         byte[] buf = serialize();
         raf.seek(0);
         raf.write(buf);
@@ -216,6 +226,7 @@ public class FileHeader {
 
         dos.writeLong(mFirstOpTstamp);
         dos.writeLong(mLastOpTstamp);
+        mVersion.serialize(dos);
 
         int currentLen = baos.size();
         if (currentLen < HEADER_LEN) {
@@ -258,6 +269,16 @@ public class FileHeader {
 
             mFirstOpTstamp = dis.readLong();
             mLastOpTstamp = dis.readLong();
+            mVersion.deserialize(dis);
+            if (mVersion.tooHigh())
+    			throw new IOException("Redo log version " + mVersion +
+    								  " is higher than the highest known version " +
+    								  Version.latest());
+            // Versioning of file header was added late in the game.
+            // Any redolog files created previously will have version 0.0.
+            // Assume version 1.0 for those files.
+            if (!mVersion.atLeast(1, 0))
+            	mVersion = new Version(1, 0);
         } finally {
             dis.close();
         }
@@ -271,6 +292,7 @@ public class FileHeader {
         sb.append("serverId: ").append(mServerId).append("\n");
         sb.append("firstOpTstamp: ").append(mFirstOpTstamp).append("\n");
         sb.append("lastOpTstamp:  ").append(mLastOpTstamp).append("\n");
+        sb.append("version: ").append(mVersion).append("\n");
     	return sb.toString();
     }
 }

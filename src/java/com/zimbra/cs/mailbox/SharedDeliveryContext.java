@@ -28,6 +28,8 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.util.List;
+
 import com.zimbra.cs.store.Blob;
 
 /**
@@ -45,15 +47,36 @@ public class SharedDeliveryContext {
     private boolean mShared;
     private Blob mBlob;
     private MailboxBlob mMailboxBlob;
+    private List<Integer> mMailboxIdList;
 
-    public SharedDeliveryContext(boolean shared) {
+    /**
+     * Constructor for non-shared case
+     */
+    public SharedDeliveryContext() {
+    	mShared = false;
+        mBlob = null;
+        mMailboxBlob = null;
+        mMailboxIdList = null;
+    }
+
+    /**
+     * Constructor for shared/non-shared cases
+     * @param shared
+     * @param mboxIdList list of ID of mailboxes being delivered to
+     */
+    public SharedDeliveryContext(boolean shared, List<Integer> mboxIdList) {
     	mShared = shared;
         mBlob = null;
         mMailboxBlob = null;
+        mMailboxIdList = mboxIdList;
     }
 
     public boolean getShared() {
     	return mShared;
+    }
+
+    public List<Integer> getMailboxIdList() {
+    	return mMailboxIdList;
     }
 
     public Blob getBlob() {

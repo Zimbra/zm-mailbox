@@ -143,11 +143,6 @@ public class RedoLogVerify {
 		return good;
 	}
 
-	private static void usage() {
-		System.err.println("Usage: RedoLogVerify <logfile> [<logfile> ...]");
-		System.exit(-2);
-	}
-
 	public static void main(String[] cmdlineargs) throws Exception {
         Zimbra.toolSetup();
         CommandLine cl = parseArgs(cmdlineargs);

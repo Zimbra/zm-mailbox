@@ -42,31 +42,70 @@ import java.io.IOException;
  */
 public class Version {
 
+	// These should be incremented with changes to serialization format.
+	private static final int CURRENT_MAJOR = 1;  // range: 0 - Short.MAX_VALUE
+	private static final int CURRENT_MINOR = 0;  // range: 0 - Short.MAX_VALUE
+
+	/**
+	 * Returns a version object with latest major and minor version
+	 * supported by code.
+	 * @return
+	 */
+	public static Version latest() {
+		return new Version(CURRENT_MAJOR, CURRENT_MINOR);
+	}
+
 	private short mMajorVer;
 	private short mMinorVer;
 
-	public Version(short major, short minor) {
-		mMajorVer = major;
-		mMinorVer = minor;
-	}
-
 	public Version() {
-		mMajorVer = 0;
-		mMinorVer = 0;
+		mMajorVer = CURRENT_MAJOR;
+		mMinorVer = CURRENT_MINOR;
 	}
 
-	public int compareTo(Version b) {
-		if (mMajorVer == b.mMajorVer) {
-			if (mMinorVer == b.mMinorVer)
-				return 0;
-			else if (mMinorVer < b.mMinorVer)
-				return -1;
-			else
-				return 1;
-		} else if (mMajorVer < b.mMajorVer)
-			return -1;
-		else // mMajorVer > b.mMajorVer
-			return 1;
+	public Version(int major, int minor) {
+		mMajorVer = (short) major;
+		mMinorVer = (short) minor;
+	}
+
+	public Version(Version b) {
+		this(b.mMajorVer, b.mMinorVer);
+	}
+
+	/**
+	 * Returns if this version is at least as high as the version specified
+	 * by major and minor.
+	 * @param major
+	 * @param minor
+	 * @return true if this version is higher than or equal to major/minor,
+	 *         false if this version is lower
+	 */
+	public boolean atLeast(int major, int minor) {
+		return (mMajorVer > major ||
+				(mMajorVer == major && mMinorVer >= minor));
+	}
+
+	/**
+	 * Returns if this version is at least as high as version b.
+	 * @param b
+	 * @return true if this version is higher than or equal to version b,
+	 *         false if this version is lower than version b
+	 */
+	public boolean atLeast(Version b) {
+		return atLeast(b.mMajorVer, b.mMinorVer);
+	}
+
+	public boolean isLatest() {
+		return (mMajorVer == CURRENT_MAJOR && mMinorVer == CURRENT_MINOR);
+	}
+
+	/**
+	 * Returns if this version is higher than latest known code version.
+	 * @return
+	 */
+	public boolean tooHigh() {
+		return (mMajorVer > CURRENT_MAJOR ||
+				(mMajorVer == CURRENT_MAJOR && mMinorVer > CURRENT_MINOR));
 	}
 
 	public String toString() {
