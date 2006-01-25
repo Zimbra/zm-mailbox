@@ -34,6 +34,8 @@ package com.zimbra.cs.redolog.op;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
@@ -47,24 +49,32 @@ import com.zimbra.cs.store.StoreManager;
 public class StoreIncomingBlob extends RedoableOp {
 
     static final int MAX_BLOB_SIZE = 100 * 1024 * 1024;  // 100MB size limit
+    static final int MAX_MAILBOX_LIST_LENGTH = 1000000;
 
     private String mDigest;
     private String mPath;           // full path to blob file
     private short mVolumeId = -1;   // volume on which the blob is saved
     private int mMsgSize;           // original, uncompressed blob size in bytes
     private byte[] mData;
+    private List<Integer> mMailboxIdList;
 
     public StoreIncomingBlob() {
     }
 
-    public StoreIncomingBlob(String digest, int msgSize) {
+    public StoreIncomingBlob(String digest, int msgSize,
+    						 List<Integer> mboxIdList) {
         setMailboxId(MAILBOX_ID_ALL);
         mDigest = digest != null ? digest : "";
         mMsgSize = msgSize;
+        mMailboxIdList = mboxIdList;
     }
 
     public int getOpCode() {
         return OP_STORE_INCOMING_BLOB;
+    }
+
+    public List<Integer> getMailboxIdList() {
+    	return mMailboxIdList;
     }
 
     public void setBlobBodyInfo(byte[] data, String path, short volumeId) {
@@ -78,6 +88,17 @@ public class StoreIncomingBlob extends RedoableOp {
         sb.append(mDigest).append("\", size=").append(mMsgSize);
         sb.append(", vol=").append(mVolumeId);
         sb.append(", path=").append(mPath);
+        sb.append(", mbox=[");
+        if (mMailboxIdList != null) {
+	        int i = 0;
+	        for (Integer mboxId : mMailboxIdList) {
+	        	if (i > 0)
+	        		sb.append(", ");
+	        	sb.append(mboxId.toString());
+	        	i++;
+	        }
+        }
+        sb.append("]");
         return sb.toString();
     }
 
@@ -94,6 +115,14 @@ public class StoreIncomingBlob extends RedoableOp {
     }
 
     protected void serializeData(DataOutput out) throws IOException {
+    	if (getVersion().atLeast(1, 0)) {
+    		if (mMailboxIdList != null) {
+				out.writeInt(mMailboxIdList.size());
+				for (Integer mboxId : mMailboxIdList)
+					out.writeInt(mboxId.intValue());
+    		} else
+    			out.writeInt(0);
+    	}
         writeUTF8(out, mDigest);
         writeUTF8(out, mPath);
         out.writeShort(mVolumeId);
@@ -108,13 +137,26 @@ public class StoreIncomingBlob extends RedoableOp {
     }
 
     protected void deserializeData(DataInput in) throws IOException {
+    	if (getVersion().atLeast(1, 0)) {
+    		int listLen = in.readInt();
+    		if (listLen > MAX_MAILBOX_LIST_LENGTH)
+    			throw new IOException("Deserialized mailbox list too large (" +
+    								  listLen + ")");
+    		if (listLen >= 1) {
+	    		List<Integer> list = new ArrayList<Integer>(listLen);
+	    		for (int i = 0; i < listLen; i++)
+	    			list.add(new Integer(in.readInt()));
+	    		mMailboxIdList = list;
+    		}
+    	}
         mDigest = readUTF8(in);
         mPath = readUTF8(in);
         mVolumeId = in.readShort();
         mMsgSize = in.readInt();
         int dataLen = in.readInt();
         if (dataLen > MAX_BLOB_SIZE) {
-            throw new IOException("Deserialized blob size too large (" + dataLen + " bytes)");
+            throw new IOException("Deserialized blob size too large (" +
+            					  dataLen + " bytes)");
         }
         mData = new byte[dataLen];
         in.readFully(mData, 0, dataLen);
@@ -127,14 +169,17 @@ public class StoreIncomingBlob extends RedoableOp {
         // ops this is handled by Mailbox class, but StoreIncomingBlob is an
         // exception because of the way it is used in Mailbox.
 
-        StoreIncomingBlob redoRecorder = new StoreIncomingBlob(mDigest, mMsgSize);
+        StoreIncomingBlob redoRecorder =
+        	new StoreIncomingBlob(mDigest, mMsgSize, mMailboxIdList);
         redoRecorder.start(getTimestamp());
         redoRecorder.setBlobBodyInfo(mData, mPath, mVolumeId);
         redoRecorder.log();
 
         boolean success = false;
         try {
-            Blob blob = StoreManager.getInstance().storeIncoming(mData, mDigest, mPath, mVolumeId);
+            Blob blob =
+            	StoreManager.getInstance().storeIncoming(mData, mDigest, mPath,
+            											 mVolumeId);
             success = true;
         } finally {
         	if (success)

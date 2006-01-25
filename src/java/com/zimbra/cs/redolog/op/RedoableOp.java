@@ -60,10 +60,6 @@ public abstract class RedoableOp {
 	// magic marker for each redo item in redo log
 	private static final String REDO_MAGIC = "ZMREDO";
 
-	// versioning of serialization
-	// currently v0.1
-	private static final Version VERSION = new Version((short) 0, (short) 1);
-
 	// for initializing various ID member values
 	public static final int UNKNOWN_ID = 0;
 
@@ -218,15 +214,14 @@ public abstract class RedoableOp {
 
 	public RedoableOp() {
 		mRedoLogMgr = RedoLogProvider.getInstance().getRedoLogManager();
-		mVersion = VERSION;
+		mVersion = new Version();
 		mTxnId = null;
 		mActive = false;
 		mMailboxId = UNKNOWN_ID;
 	}
 
-	private void setVersion(Version v) {
-		mVersion = v;
-	}
+	protected Version getVersion() { return mVersion; }
+	private void setVersion(Version v) { mVersion = v; }
 
 	public void start(long timestamp) {
 		// Assign timestamp and txn ID to the operation.
@@ -408,7 +403,8 @@ public abstract class RedoableOp {
 	public String toString() {
 		StringBuffer sb = new StringBuffer("txn ");
 		sb.append(mTxnId).append(" [").append(getOpClassName(getOpCode()));
-        sb.append("] tstamp=").append(mTimestamp);
+		sb.append("] ver=").append(mVersion);
+        sb.append(", tstamp=").append(mTimestamp);
         if (mChangeId != -1)
             sb.append(", change=").append(mChangeId);
         if (mChangeConstraint != 0)
@@ -477,8 +473,10 @@ public abstract class RedoableOp {
 
 		Version ver = new Version();
 		ver.deserialize(is);
-		if (ver.compareTo(RedoableOp.VERSION) > 0)
-			throw new IOException("Redo log version " + ver + " is higher than " + RedoableOp.VERSION);
+		if (ver.tooHigh())
+			throw new IOException("Redo op version " + ver +
+								  " is higher than the highest known version " +
+								  Version.latest());
 
 		int opcode = is.readInt();
 		if (!skipDetail) {

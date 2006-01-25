@@ -64,8 +64,8 @@ public abstract class RedoLogProvider {
                 providerClass = Class.forName(className);
             } else {
                 providerClass = DefaultRedoLogProvider.class;
-                ZimbraLog.misc.info("Redolog provider name not specified.  Using default " +
-                                    providerClass.getName());
+                ZimbraLog.misc.debug("Redolog provider name not specified.  Using default " +
+                                     providerClass.getName());
             }
             provider = (RedoLogProvider) providerClass.newInstance();
         } catch (Throwable e) {

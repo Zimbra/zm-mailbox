@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.IOException;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -48,6 +49,7 @@ import com.zimbra.cs.redolog.op.AbortTxn;
 import com.zimbra.cs.redolog.op.Checkpoint;
 import com.zimbra.cs.redolog.op.CommitTxn;
 import com.zimbra.cs.redolog.op.RedoableOp;
+import com.zimbra.cs.redolog.op.StoreIncomingBlob;
 import com.zimbra.cs.service.ServiceException;
 
 /**
@@ -125,7 +127,7 @@ public class RedoPlayer {
     // used to detect/track if a commit/abort record is played back
     // before its change record
     private boolean mHasOrphanOps = false;
-    private HashMap mOrphanOps = new HashMap();
+    private Map mOrphanOps = new HashMap();
 
     public void playOp(RedoableOp op, boolean redoCommitted, int mailboxIds[], long startingTime)
     throws ServiceException {
@@ -210,25 +212,54 @@ public class RedoPlayer {
                     }
                 }
 
-                if (redoCommitted && prepareOp != null && (op instanceof CommitTxn)) {
-                    if (mailboxIds != null) {
+                if (redoCommitted && prepareOp != null && (op instanceof CommitTxn) &&
+                	(startingTime == -1 || prepareOp.getTimestamp() >= startingTime)) {
+                	boolean allowRedo = false;
+                	if (mailboxIds == null) {
+                		// Caller says to ignore which mailbox(es) the op is for.
+                		allowRedo = true;
+                	} else {
                         int opMailboxId = prepareOp.getMailboxId();
-                        for (int i = 0; i < mailboxIds.length; i++) {
-                            if (opMailboxId == mailboxIds[i] || opMailboxId == RedoableOp.MAILBOX_ID_ALL) {
-                                // FIXME: passing in timestamp of -1 disables timestamp check; should this condition be removed altogether?
-                                if (startingTime == -1 || prepareOp.getTimestamp() >= startingTime) {
-                                    try {
-                                        if (mLog.isDebugEnabled())
-                                            mLog.debug("Redoing: " + prepareOp.toString());
-                                        prepareOp.redo();
-                                        break;  // no need to check the other mailbox IDs
-                                    } catch(Exception e) {
-                                        throw ServiceException.FAILURE("Error executing redoOp", e);
-                                    }
-                                }
-                            }
+                        if (prepareOp instanceof StoreIncomingBlob) {
+                        	// special case for StoreIncomingBlob op that has
+                        	// a list of mailbox IDs (It has getMailboxId()
+                        	// == MAILBOX_ID_ALL.)
+                        	List<Integer> list =
+                        		((StoreIncomingBlob) prepareOp).getMailboxIdList();
+                        	if (list != null) {
+	                        	Set<Integer> opMboxIds =
+	                        		new HashSet<Integer>(
+	                        				((StoreIncomingBlob) prepareOp).
+	                        				getMailboxIdList());
+		                        for (int i = 0; i < mailboxIds.length; i++) {
+		                        	Integer mboxId = new Integer(mailboxIds[i]);
+		                        	if (opMboxIds.contains(mboxId)) {
+		                        		allowRedo = true;
+		                        		break;
+		                        	}
+		                        }
+                        	} else {
+                        		// Prior to redolog version 1.0 StoreIncomingBlob
+                        		// didn't keep track of mailbox list.  Always recreate
+                        		// the blob since we don't know which mailboxes will
+                        		// need it.
+                        		allowRedo = true;
+                        	}
+                        } else if (opMailboxId == RedoableOp.MAILBOX_ID_ALL) {
+                        	// This case should be checked after StoreIncomingBlob
+                        	// case because StoreIncomingBlob has mailbox ID of
+                        	// MAILBOX_ID_ALL.
+                        	allowRedo = true;
+                        } else {
+	                        for (int i = 0; i < mailboxIds.length; i++) {
+	                        	if (opMailboxId == mailboxIds[i]) {
+	                        		allowRedo = true;
+	                        		break;
+	                        	}
+	                        }
                         }
-                    } else {
+                	}
+                	if (allowRedo) {
                         try {
                             if (mLog.isDebugEnabled())
                                 mLog.debug("Redoing: " + prepareOp.toString());
@@ -236,7 +267,7 @@ public class RedoPlayer {
                         } catch(Exception e) {
                             throw ServiceException.FAILURE("Error executing redoOp", e);
                         }
-                    }
+                	}
                 }
             }
         }

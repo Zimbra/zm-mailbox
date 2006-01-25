@@ -33,6 +33,8 @@ import java.io.DataOutput;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.mail.internet.MimeMessage;
 
@@ -299,7 +301,9 @@ public class CreateMessage extends RedoableOp implements CreateAppointmentPlayer
         int mboxId = getMailboxId();
         Mailbox mbox = Mailbox.getMailboxById(mboxId);
 
-        SharedDeliveryContext sharedDeliveryCtxt = new SharedDeliveryContext(mShared);
+        List<Integer> mboxList = new ArrayList<Integer>(1);
+        mboxList.add(new Integer(mboxId));
+        SharedDeliveryContext sharedDeliveryCtxt = new SharedDeliveryContext(mShared, mboxList);
         ParsedMessage pm = null;
         if (mMsgBodyType == MSGBODY_LINK) {
             File file = new File(mPath);

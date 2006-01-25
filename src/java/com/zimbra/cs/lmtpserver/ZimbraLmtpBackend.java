@@ -26,6 +26,7 @@
 package com.zimbra.cs.lmtpserver;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -132,7 +133,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
     throws MessagingException, ServiceException {
 
         boolean shared = recipients.size() > 1;
-        SharedDeliveryContext sharedDeliveryCtxt = new SharedDeliveryContext(shared);
+        List<Integer> targetMailboxIds = new ArrayList<Integer>(recipients.size());
 
         Map /*<LmtpAddress, RecipientDetail>*/ rcptMap = new HashMap(recipients.size());
 
@@ -199,8 +200,13 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                         skip = false;
                     }
                     rcptMap.put(recipient, new RecipientDetail(account, mbox, pm, skip));
+                    if (!skip)
+	                    targetMailboxIds.add(new Integer(mbox.getId()));
                 }
             }
+
+            SharedDeliveryContext sharedDeliveryCtxt =
+            	new SharedDeliveryContext(shared, targetMailboxIds);
 
             // We now know which addresses are valid and which ParsedMessage
             // version each recipient needs.  Deliver!
