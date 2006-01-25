@@ -96,7 +96,7 @@ public class NetUtil {
         // Don't use log4j - when this code is called, log4j might not have been initialized
         // and we do not want to initialize log4j at this time because we are likely still
         // running as root.
-        System.err.println("Zimbra server reserving server socket port=" + port + " bindaddr=" + address);
+        System.err.println("Zimbra server reserving server socket port=" + port + " bindaddr=" + address + " ssl=" + ssl);
         String key = makeKey(address, port, ssl);
         ServerSocket serverSocket = NetUtil.newBoundServerSocket(address, port, ssl);
         //System.err.println("put table=" + mBoundSockets.hashCode() + " key=" + key + " sock=" + serverSocket);
