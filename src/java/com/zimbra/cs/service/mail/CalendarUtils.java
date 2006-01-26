@@ -360,7 +360,7 @@ public class CalendarUtils {
             if (tzName != null) {
                 zone = lookupAndAddToTzList(tzName, invTzMap, inv);
             }
-            return ParsedDateTime.parse(d, zone, inv.getTimeZoneMap()
+            return ParsedDateTime.parse(d, invTzMap, zone, inv.getTimeZoneMap()
                     .getLocalTimeZone());
         } catch (ParseException ex) {
             throw MailServiceException.INVALID_REQUEST("could not parse time "
@@ -616,7 +616,7 @@ private static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap i
         }
 
         try {
-            return ParsedDateTime.parse(d, timezone, inv.getTimeZoneMap()
+            return ParsedDateTime.parse(d, tzMap, timezone, inv.getTimeZoneMap()
                     .getLocalTimeZone());
         } catch (ParseException pe) {
             throw ServiceException.INVALID_REQUEST("Caught ParseException: " + pe, pe);
