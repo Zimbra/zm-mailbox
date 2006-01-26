@@ -53,8 +53,9 @@ public final class ParsedDateTime {
     
     public static void main(String[] args) {
         ICalTimeZone utc = ICalTimeZone.getUTC();
+    	TimeZoneMap tzmap = new TimeZoneMap(utc);
         try {
-            ParsedDateTime t1 = ParsedDateTime.parse("20050910", null, utc);
+            ParsedDateTime t1 = ParsedDateTime.parse("20050910", tzmap, null, utc);
             System.out.println(t1);
         } catch (ParseException e) {
             System.out.println("Caught "+e);
@@ -71,18 +72,24 @@ public final class ParsedDateTime {
     }
     
     public static ParsedDateTime parseUtcOnly(String str) throws ParseException {
-        return parse(str, null, null, true);
+        return parse(str, null, null, null, true);
     }    
-    
-    public static ParsedDateTime parse(String str, ICalTimeZone tz, ICalTimeZone localTZ)
+
+    public static ParsedDateTime parse(String str, TimeZoneMap tzmap, ICalTimeZone tz, ICalTimeZone localTZ)
     throws ParseException {
-        return parse(str, tz, localTZ, false);
+        return parse(str, tzmap, tz, localTZ, false);
     }
-    
-    
-    public static ParsedDateTime parse(String str, ICalTimeZone tz, ICalTimeZone localTZ, boolean utcOnly)
-            throws ParseException {
-        Matcher m = sDateTimePattern.matcher(str);
+
+    private static ParsedDateTime parse(String str,
+    									TimeZoneMap tzmap,
+    									ICalTimeZone tz,
+    									ICalTimeZone localTZ,
+    									boolean utcOnly)
+    throws ParseException {
+    	// Time zone map is required unless utcOnly == true.
+    	assert(tzmap != null || utcOnly);
+
+    	Matcher m = sDateTimePattern.matcher(str);
         
         if (m.matches()) {
             int year, month, date;
@@ -134,10 +141,13 @@ public final class ParsedDateTime {
             } else {
                 if (tz == null)
                     tz = localTZ;
-                
-                if (tz != null) // localTZ could have been null
+
+                if (tz != null) { // localTZ could have been null
                     cal.setTimeZone(tz);
-            }         
+                    if (tzmap != null)
+	                    tzmap.add(tz);
+                }
+            }
 
             cal.clear();
 
@@ -159,15 +169,15 @@ public final class ParsedDateTime {
             	//
             	// Since they requested "Z", we'll pass in UTC as their 'default timezone' 
             	// just in case it somehow comes to that (ie Outlook hack)
-                return parse(str.substring(0, 8), tz, ICalTimeZone.getUTC(), utcOnly);
+                return parse(str.substring(0, 8), tzmap, tz, ICalTimeZone.getUTC(), utcOnly);
             } else
                 throw new ParseException("Invalid TimeString specified: " + str, 0);
         }
     }
-    
-    
+
     public static ParsedDateTime parse(ZProperty prop, TimeZoneMap tzmap)
     throws ParseException, ServiceException {
+    	assert(tzmap != null);
         String tzname = prop.getParameterVal(ICalTok.TZID, null);
         
         ICalTimeZone tz = null;
@@ -177,18 +187,13 @@ public final class ParsedDateTime {
         if (tz == null) 
             tz = tzmap.getLocalTimeZone();
         
-        return parse(prop.getValue(), tz, tzmap.getLocalTimeZone());
-    }
-    
-    public static ParsedDateTime parseUtcOnly(ZProperty prop) throws ParseException
-    {
-        return parse(prop.getValue(), null, null, true);
+        return parse(prop.getValue(), tzmap, tz, tzmap.getLocalTimeZone());
     }
 
     public static ParsedDateTime parse(String str, TimeZoneMap tzmap)
     throws ParseException, ServiceException {
-        if (str == null)
-            return null;
+    	assert(tzmap != null);
+        if (str == null) return null;
 
         String datetime;
         ICalTimeZone tz = null;
@@ -217,7 +222,7 @@ public final class ParsedDateTime {
         	datetime = str;
         }
 
-        return parse(datetime, tz, tzmap.getLocalTimeZone());
+        return parse(datetime, tzmap, tz, tzmap.getLocalTimeZone());
     }
     
     public static ParsedDateTime MAX_DATETIME;

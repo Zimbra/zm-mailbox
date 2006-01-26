@@ -99,9 +99,10 @@ public class ZRecur {
     
     public static void main(String[] args) {
         ICalTimeZone tzUTC = ICalTimeZone.getUTC();
+        TimeZoneMap tzmap = new TimeZoneMap(tzUTC);
         ParsedDateTime dtStart = null;
         try {
-            dtStart = ParsedDateTime.parse("20050101T123456", tzUTC, tzUTC);
+            dtStart = ParsedDateTime.parse("20050101T123456", tzmap, tzUTC, tzUTC);
         } catch(ParseException e) {
             System.out.println("Caught ParseException at start: "+e);
         }
@@ -119,7 +120,6 @@ public class ZRecur {
         rangeEnd = cal.getTime();
         
 
-        TimeZoneMap tzmap = new TimeZoneMap(tzUTC);
         try {
             ZRecur test = new ZRecur("FREQ=DAILY;BYMONTH=5,6", tzmap);
             System.out.println("\n\n"+test.toString()+"\n-------------------------------------------------");
@@ -300,7 +300,7 @@ public class ZRecur {
         }
         
         try {
-            ParsedDateTime myDtStart = ParsedDateTime.parse("16010101T020000", tzUTC, tzUTC);
+            ParsedDateTime myDtStart = ParsedDateTime.parse("16010101T020000", tzmap, tzUTC, tzUTC);
             ZRecur test = new ZRecur("FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=12;BYDAY=-1SU", tzmap);
             System.out.println("\n\n"+test.toString()+"\n--------------------------------------------------------------");
             List<Date> dateList = test.expandRecurrenceOverRange(myDtStart, rangeStart.getTime(), rangeEnd.getTime());
