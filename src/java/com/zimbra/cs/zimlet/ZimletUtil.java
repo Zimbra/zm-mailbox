@@ -105,11 +105,15 @@ public class ZimletUtil {
 		return plist;
 	}
 	
-	public static List<Zimlet> orderZimletsByPriority(String[] zimlets) throws ServiceException {
+	public static List<Zimlet> orderZimletsByPriority(String[] zimlets) {
 		Provisioning prov = Provisioning.getInstance();
 		List<Zimlet> zlist = new ArrayList<Zimlet>();
 		for (int i = 0; i < zimlets.length; i++) {
-			zlist.add(prov.getZimlet(zimlets[i]));
+			try {
+				zlist.add(prov.getZimlet(zimlets[i]));
+			} catch (ServiceException se) {
+				// ignore error and continue on
+			}
 		}
 		return orderZimletsByPriority(zlist);
 	}
@@ -371,9 +375,12 @@ public class ZimletUtil {
 				ldapDeploy(zimletName);
 				
 				// set the priority to the saved value
-				z = prov.getZimlet(zimletName);
-				z.setPriority(priority);
-				
+				if (priority == null) {
+					setPriority(zimletName, P_MAX);
+				} else {
+					z = prov.getZimlet(zimletName);
+					z.setPriority(priority);
+				}
 				// install saved config
 				if (configString != null) {
 					prov.updateZimletConfig(zimletName, configString);
@@ -809,25 +816,46 @@ public class ZimletUtil {
 			if (plist.size() > 0) {
 				// take the current p0, bump down p0zimlet.
 				Zimlet p0zimlet = plist.get(0);
-				Version p0 = new Version(p0zimlet.getPriority());
-				newPriority = new Version(p0);
-				if (plist.size() > 1) {
-					Zimlet p1zimlet = plist.get(1);
-					Version p1 = new Version(p1zimlet.getPriority());
-					p0.increment(p1);
+				String pString = p0zimlet.getPriority();
+				if (pString == null) {
+					setPriority(p0zimlet.getName(), priority+1);
 				} else {
-					p0.increment();
+					Version p0 = new Version(pString);
+					newPriority = new Version(p0);
+					if (plist.size() > 1) {
+						Zimlet p1zimlet = plist.get(1);
+						pString = p1zimlet.getPriority();
+						if (pString == null) {
+							p0.increment();
+							Version p1 = new Version(p0);
+							p1.increment();
+							p1zimlet.setPriority(p1.toString());
+						} else {
+							Version p1 = new Version(pString);
+							p0.increment(p1);
+						}
+					} else {
+						p0.increment();
+					}
+					p0zimlet.setPriority(p0.toString());
 				}
-				p0zimlet.setPriority(p0.toString());
 			}
 		} else {
 			// take the priority of previous zimlet
 			Zimlet oneAbove = plist.get(priority-1);
-			newPriority = new Version(oneAbove.getPriority());
+			String pString = oneAbove.getPriority();
+			if (pString == null) {
+				pString = Integer.toString(priority);
+			}
+			newPriority = new Version(pString);
 			if (priority < plist.size()) {
 				// increment, while staying before the next zimlet
 				Zimlet oneBelow = plist.get(priority);
-				Version nextPriority = new Version(oneBelow.getPriority());
+				pString = oneBelow.getPriority();
+				if (pString == null) {
+					pString = Integer.toString(priority+2);
+				}
+				Version nextPriority = new Version(pString);
 				newPriority.increment(nextPriority);
 			} else {
 				// simply increment from the previous priority
