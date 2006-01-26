@@ -64,8 +64,8 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
     // magic # for parameter checking
     public static final int SEARCH_ALL_MAILBOXES = 1234;
     
-    // number of hits to request each time we make a round-trip to the remote server
-    protected static final int BUFFER_CHUNK_SIZE = 3; 
+    // minimum number of hits to request each time we make a round-trip to the remote server
+    protected static final int MIN_BUFFER_CHUNK_SIZE = 25; 
     
     protected ArrayList /* ProxiedHit */ mHitBuffer;
     protected int mBufferStartOffset = 0;  // inclusive
@@ -215,8 +215,15 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
         }
         
         mBufferStartOffset = mIterOffset;
-        mBufferEndOffset = mBufferStartOffset + BUFFER_CHUNK_SIZE;
-        mHitBuffer = new ArrayList(BUFFER_CHUNK_SIZE);
+
+        int chunkSizeToUse = mSearchParams.getLimit();
+        if (chunkSizeToUse < MIN_BUFFER_CHUNK_SIZE)
+        	chunkSizeToUse = MIN_BUFFER_CHUNK_SIZE;
+        if (chunkSizeToUse > 500)
+        	chunkSizeToUse = 500;
+
+        mBufferEndOffset = mBufferStartOffset + chunkSizeToUse;
+        mHitBuffer = new ArrayList(chunkSizeToUse);
         
         try {
             SoapTransport transp = getTransport();
@@ -231,7 +238,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
             searchElt.addAttribute(MailService.A_SEARCH_TYPES, "message");
             searchElt.addAttribute(MailService.A_SORTBY, mSearchParams.getSortByStr());
             searchElt.addAttribute(MailService.A_QUERY_OFFSET, mBufferStartOffset);
-            searchElt.addAttribute(MailService.A_QUERY_LIMIT, mBufferEndOffset-mBufferStartOffset);
+            searchElt.addAttribute(MailService.A_QUERY_LIMIT, chunkSizeToUse);
 
             searchElt.addAttribute(MailService.E_QUERY, mSearchParams.getQueryStr(), Element.DISP_CONTENT);
             
