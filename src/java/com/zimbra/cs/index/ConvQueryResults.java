@@ -92,7 +92,7 @@ class ConvQueryResults extends ZimbraQueryResultsImpl {
                     while (mResults.hasNext()) {
                         ZimbraHit nextHit = mResults.peekNext();
                         if ((!(nextHit instanceof MessageHit)) && (!(nextHit instanceof MessagePartHit)) && (!(nextHit instanceof ConversationHit))) {
-                            return nextHit;
+                            return curHit;
                         } else {
                             if (nextHit.getConversationId() != convId.intValue()) {
                                 return curHit; // no more, all done!
