@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -168,6 +169,7 @@ public class OzConnection {
             try {
                 mLog.info("cancelling selection key");
                 mSelectionKey.cancel();
+                mServer.wakeupSelector();
             } finally {
                 mLog.info("closing channel");
                 mChannel.close();
@@ -571,8 +573,17 @@ public class OzConnection {
         }
     }
 
-    private static final ScheduledExecutorService mIdleScheduler = Executors.newScheduledThreadPool(1);
-    
+    private static final ScheduledExecutorService mIdleScheduler = Executors.newScheduledThreadPool(1, new IdleReaperThreadFactory());
+
+    private static class IdleReaperThreadFactory implements ThreadFactory {
+        public Thread newThread(Runnable r) {
+            Thread t = new Thread("OzIdleConnectionTimer");
+            t.setDaemon(true);
+            t.setPriority(Thread.NORM_PRIORITY);
+            return t;
+        }
+    }
+
     /**
      * If there has been no input from the client in this many milliseconds,
      * invoke the handleIdle method.
