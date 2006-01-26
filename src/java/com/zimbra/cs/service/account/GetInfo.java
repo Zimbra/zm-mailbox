@@ -39,6 +39,7 @@ import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.cs.zimlet.ZimletProperty;
 import com.zimbra.cs.zimlet.ZimletUserProperties;
@@ -128,10 +129,18 @@ public class GetInfo extends DocumentHandler  {
         }
     }
     
-    private static void doZimlets(Element response, Account acct) throws ServiceException {
-    	Cos cos = acct.getCOS();
-    	String[] attrList = cos.getMultiAttr(Provisioning.A_zimbraZimletAvailableZimlets);
-    	List<Zimlet> zimletList = ZimletUtil.orderZimletsByPriority(attrList);
+    private static void doZimlets(Element response, Account acct) {
+    	Cos cos;
+    	String[] attrList;
+    	List<Zimlet> zimletList;
+    	try {
+        	cos = acct.getCOS();
+        	attrList = cos.getMultiAttr(Provisioning.A_zimbraZimletAvailableZimlets);
+        	zimletList = ZimletUtil.orderZimletsByPriority(attrList);
+    	} catch (ServiceException se) {
+			ZimbraLog.zimlet.info("Error getting Zimlet list "+se.getMessage());
+    		return;
+    	}
     	int priority = 0;
     	for (Zimlet z : zimletList) {
 			if (z.isEnabled() && !z.isExtension()) {
@@ -144,7 +153,7 @@ public class GetInfo extends DocumentHandler  {
     	ZimletUtil.listDevZimlets(response);
     }
     
-    private static void doProperties(Element response, Account acct) throws ServiceException {
+    private static void doProperties(Element response, Account acct) {
     	ZimletUserProperties zp = ZimletUserProperties.getProperties(acct);
     	Set props = zp.getAllProperties();
     	Iterator iter = props.iterator();
