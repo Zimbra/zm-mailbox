@@ -682,7 +682,7 @@ public class LdapProvisioning extends Provisioning {
         if (num > 1) oc.append(")");
         return oc.toString();
     }
-    
+   
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#searchAccounts(java.lang.String)
      */
@@ -759,6 +759,62 @@ public class LdapProvisioning extends Provisioning {
             Collections.sort(result);
         }
         return result;
+    }
+    
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.account.Provisioning#searchAccounts(java.lang.String)
+     */
+    void searchAccounts(String query, String returnAttrs[], String base, int flags, Domain.EntryVisitor visitor)
+        throws ServiceException
+    {
+        DirContext ctxt = null;
+        try {
+            ctxt = LdapUtil.getDirContext();
+            
+            String objectClass = getObjectClassQuery(flags);
+            
+            if (query == null || query.equals("")) {
+                query = objectClass;
+            } else {
+                if (query.startsWith("(") && query.endsWith(")")) {
+                    query = "(&"+query+objectClass+")";                    
+                } else {
+                    query = "(&("+query+")"+objectClass+")";
+                }
+            }
+            
+            returnAttrs = fixReturnAttrs(returnAttrs, flags);
+
+            SearchControls searchControls = 
+                new SearchControls(SearchControls.SUBTREE_SCOPE, 0, 0, returnAttrs, false, false);
+
+            // we don't want to ever cache any of these, since they might not have all their attributes
+
+            NamingEnumeration ne = null;
+
+            try {
+                ne = ctxt.search(base, query, searchControls);
+                while (ne.hasMoreElements()) {
+                    SearchResult sr = (SearchResult) ne.nextElement();
+                    String dn = sr.getNameInNamespace();
+                //  skip admin accounts
+                    if (dn.endsWith("cn=zimbra")) continue;
+                    Attributes attrs = sr.getAttributes();
+                    Attribute objectclass = attrs.get("objectclass");
+                    if (objectclass == null || objectclass.contains("zimbraAccount")) visitor.visit(new LdapAccount(dn, attrs, this));
+                    else if (objectclass.contains("zimbraAlias")) visitor.visit(new LdapAlias(dn, attrs));
+                    else if (objectclass.contains("zimbraDistributionList")) visitor.visit(new LdapDistributionList(dn, attrs));   
+                }
+            } finally {
+                if (ne != null) ne.close();
+            }
+        } catch (InvalidSearchFilterException e) {
+            throw ServiceException.INVALID_REQUEST("invalid search filter "+e.getMessage(), e);
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to list all accounts", e);
+        } finally {
+            LdapUtil.closeContext(ctxt);
+        }
     }
 
     /**
