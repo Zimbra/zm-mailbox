@@ -155,10 +155,10 @@ public class CancelAppointment extends CalendarRequest {
             }
         }
         
-        sendCalendarMessage(lc, appt.getFolderId(), acct, mbox, dat, null, true);
+        sendCalendarCancelMessage(lc, appt.getFolderId(),
+                                  acct, mbox, dat, true);
     }
-    
-    
+
     protected void cancelInvite(ZimbraContext lc, Element request, Account acct, Mailbox mbox, Appointment appt, Invite inv)
     throws ServiceException {
         String text = "The event has been cancelled";
@@ -207,7 +207,7 @@ public class CancelAppointment extends CalendarRequest {
             }
         }
         
-        sendCalendarMessage(lc, appt.getFolderId(), acct, mbox, dat, null, true);
+        sendCalendarCancelMessage(lc, appt.getFolderId(),
+                                  acct, mbox, dat, true);
     }
-     
 }

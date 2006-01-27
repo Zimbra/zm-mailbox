@@ -164,9 +164,73 @@ public abstract class CalendarRequest extends SendMsg {
         return toRet.toString();
     }
 
-    protected static Element sendCalendarMessage(ZimbraContext lc, int apptFolderId, Account acct, 
-            Mailbox mbox, CalSendData csd, Element response, boolean ignoreFailedAddresses)
-    throws ServiceException { 
+    protected static Element sendCalendarMessage(
+        ZimbraContext lc,
+        int apptFolderId,
+        Account acct,
+        Mailbox mbox,
+        CalSendData csd,
+        Element response,
+        boolean ignoreFailedAddresses)
+    throws ServiceException {
+        return sendCalendarMessageInternal(lc, apptFolderId,
+                                           acct, mbox, csd, response,
+                                           ignoreFailedAddresses, true);
+    }
+
+    /**
+     * Send a cancellation iCalendar email and optionally cancel sender's
+     * appointment.
+     * @param lc
+     * @param apptFolderId
+     * @param acct
+     * @param mbox
+     * @param csd
+     * @param cancelOwnAppointment if true, sender's appointment is canceled.
+     *                             if false, sender's appointment is not
+     *                             canceled. (this may be appropriate when
+     *                             sending out cancelleation message to
+     *                             removed attendees)
+     * @return
+     * @throws ServiceException
+     */
+    protected static Element sendCalendarCancelMessage(
+        ZimbraContext lc,
+        int apptFolderId,
+        Account acct,
+        Mailbox mbox,
+        CalSendData csd,
+        boolean cancelOwnAppointment)
+    throws ServiceException {
+    	return sendCalendarMessageInternal(lc, apptFolderId, acct, mbox, csd,
+                                           null, true, cancelOwnAppointment);
+    }
+
+    /**
+     * Send an iCalendar email message and optionally create/update/cancel
+     * corresponding appointment/invite in sender's calendar.
+     * @param lc
+     * @param apptFolderId
+     * @param acct
+     * @param mbox
+     * @param csd
+     * @param response
+     * @param ignoreFailedAddresses
+     * @param updateOwnAppointment if true, corresponding change is made to
+     *                             sender's calendar
+     * @return
+     * @throws ServiceException
+     */
+    private static Element sendCalendarMessageInternal(
+        ZimbraContext lc,
+        int apptFolderId,
+        Account acct,
+        Mailbox mbox,
+        CalSendData csd,
+        Element response,
+        boolean ignoreFailedAddresses,
+        boolean updateOwnAppointment)
+    throws ServiceException {
         synchronized (mbox) {
             OperationContext octxt = lc.getOperationContext();
 
@@ -244,14 +308,16 @@ public abstract class CalendarRequest extends SendMsg {
 //            } else {
             msgId = sendMimeMessage(octxt, mbox, acct, saveFolderId, csd, csd.mMm, csd.mOrigId, csd.mReplyType, ignoreFailedAddresses);
 //            }
-                
-            int[] ids = mbox.addInvite(octxt, csd.mInvite, apptFolderId, false, pm);
 
-            if (response != null && ids != null) {
-                response.addAttribute(MailService.A_APPT_ID, lc.formatItemId(ids[0]));
-                response.addAttribute(MailService.A_APPT_INV_ID, lc.formatItemId(ids[0], ids[1]));
-                if (saveToSent) {
-                    response.addUniqueElement(MailService.E_MSG).addAttribute(MailService.A_ID, lc.formatItemId(msgId));
+            if (updateOwnAppointment) {
+                int[] ids = mbox.addInvite(octxt, csd.mInvite, apptFolderId, false, pm);
+    
+                if (response != null && ids != null) {
+                    response.addAttribute(MailService.A_APPT_ID, lc.formatItemId(ids[0]));
+                    response.addAttribute(MailService.A_APPT_INV_ID, lc.formatItemId(ids[0], ids[1]));
+                    if (saveToSent) {
+                        response.addUniqueElement(MailService.E_MSG).addAttribute(MailService.A_ID, lc.formatItemId(msgId));
+                    }
                 }
             }
         }

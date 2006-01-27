@@ -513,8 +513,7 @@ public class Appointment extends MailItem {
     /**
      * A new Invite has come in, take a look at it and see what needs to happen.
      * Maybe we need to send updates out. Maybe we need to modify the
-     * Appointment table. Perhaps we need to ride around and around on a large
-     * pony screaming "yippie! yippie!"
+     * Appointment table.
      * 
      * @param invite
      * @param force if true, then force update to this appointment, otherwise use RFC2446 sequencing rules
