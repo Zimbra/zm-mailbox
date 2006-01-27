@@ -43,7 +43,13 @@ import com.zimbra.cs.service.ServiceException;
  */
 public interface Domain extends NamedEntry {
 
+    public interface EntryVisitor  {
+        public void visit(Entry entry) throws ServiceException;
+    }
+    
     public List getAllAccounts() throws ServiceException;
+    
+    public void getAllAccounts(EntryVisitor visitor) throws ServiceException;    
 
     public List getAllDistributionLists() throws ServiceException;
 

@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.Map.Entry;
 
+import com.zimbra.cs.account.Domain.EntryVisitor;
 import com.zimbra.cs.account.Domain.SearchGalResult;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Zimbra;
@@ -752,6 +753,18 @@ public class ProvUtil {
         }
     }    
 
+    private void doGetAllAccounts(Domain domain, final boolean verbose) throws ServiceException {
+        EntryVisitor visitor = new EntryVisitor() {
+            public void visit(com.zimbra.cs.account.Entry entry) throws ServiceException {
+                if (verbose)
+                    dumpAccount((Account) entry);
+                else 
+                    System.out.println(((Account) entry).getName());                        
+            }
+        };
+        domain.getAllAccounts(visitor);
+    }
+    
     private void doGetAllAccounts(String[] args) throws ServiceException {
         boolean verbose = false;
         String d = null;
@@ -777,25 +790,11 @@ public class ProvUtil {
             List domains = mProvisioning.getAllDomains();
             for (Iterator dit=domains.iterator(); dit.hasNext(); ) {
                 Domain domain = (Domain) dit.next();
-                Collection accounts = domain.getAllAccounts();
-                for (Iterator it=accounts.iterator(); it.hasNext(); ) {
-                    Account account = (Account) it.next();
-                    if (verbose)
-                        dumpAccount(account);
-                    else
-                        System.out.println(account.getName());
-                }
+                doGetAllAccounts(domain, verbose);
             }
         } else {
             Domain domain = lookupDomain(d);
-            Collection accounts = domain.getAllAccounts();
-            for (Iterator it=accounts.iterator(); it.hasNext(); ) {
-                Account account = (Account) it.next();
-                if (verbose)
-                    dumpAccount(account);
-                else
-                    System.out.println(account.getName());
-            }
+            doGetAllAccounts(domain, verbose);
         }
     }    
 

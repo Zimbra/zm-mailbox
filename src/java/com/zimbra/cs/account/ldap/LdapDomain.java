@@ -80,7 +80,11 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
     public List getAllAccounts() throws ServiceException {
         return searchAccounts("(objectclass=zimbraAccount)", null, null, true, Provisioning.SA_ACCOUNT_FLAG);
     }
-    
+
+    public void getAllAccounts(EntryVisitor visitor) throws ServiceException {
+        mProv.searchAccounts("(objectclass=zimbraAccount)", null, "ou=people,"+getDN(), Provisioning.SA_ACCOUNT_FLAG, visitor);
+    }
+
     public List getAllDistributionLists() throws ServiceException {
         return searchAccounts("(objectClass=zimbraDistributionList)", null, null, true, Provisioning.SA_DISTRIBUTION_LIST_FLAG);
     }
