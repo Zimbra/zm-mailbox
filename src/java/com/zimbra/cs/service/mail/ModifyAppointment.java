@@ -166,7 +166,8 @@ public class ModifyAppointment extends CalendarRequest {
                 dat.mMm = CalendarUtils.createDefaultCalendarMessage(acct.getName(), 
                         cancelAt.getAddress(), subject, text, inv.getUid(), cal);
                 
-                sendCalendarMessage(lc, appt.getFolderId(), acct, mbox, dat, null, true);
+                sendCalendarCancelMessage(lc, appt.getFolderId(),
+                                          acct, mbox, dat, false);
             } catch (ServiceException ex) {
                 ZimbraLog.calendar.debug("Could not inform attendee "+cancelAt+" that it was removed from meeting "+inv.toString()+" b/c of exception: "+ex.toString());
             }
