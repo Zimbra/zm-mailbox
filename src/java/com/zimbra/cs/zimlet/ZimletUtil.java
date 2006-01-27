@@ -947,7 +947,7 @@ public class ZimletUtil {
 		System.out.println("\tenable {zimlet} - enables the zimlet");
 		System.out.println("\tdisable {zimlet} - disables the zimlet");
 		System.out.println("\tacl {zimlet} {cos1} grant|deny [{cos2} grant|deny...] - change the ACL for the zimlet on a COS");
-		System.out.println("\tlistAcl {zimlet} - list ACLs for the Zimlet");
+		System.out.println("\tlistAcls {zimlet} - list ACLs for the Zimlet");
 		System.out.println("\tlistZimlets - show status of all the Zimlets in the system.");
 		System.out.println("\tdumpConfigTemplate {zimlet.zip} - dumps the configuration");
 		System.out.println("\tconfigure {zimlet} {config.xml} - installs the configuration");
