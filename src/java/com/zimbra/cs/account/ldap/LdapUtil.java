@@ -52,6 +52,7 @@ import javax.naming.directory.InitialDirContext;
 import javax.naming.directory.ModificationItem;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
+import javax.naming.ldap.InitialLdapContext;
 
 import org.apache.commons.codec.binary.Base64;
 
@@ -169,7 +170,7 @@ public class LdapUtil {
     public static DirContext getDirContext(boolean master) throws ServiceException {
         try {
             long start = ZimbraPerf.STOPWATCH_LDAP_DC.start();
-            DirContext dirContext = new InitialDirContext(getDefaultEnv(master));
+            DirContext dirContext = new InitialLdapContext(getDefaultEnv(master), null);
             ZimbraPerf.STOPWATCH_LDAP_DC.stop(start);
             //ZimbraLog.account.error("getDirContext", new RuntimeException("------------------- OPEN"));
             return dirContext;
@@ -209,7 +210,7 @@ public class LdapUtil {
         env.put("com.sun.jndi.ldap.connect.timeout", LC.ldap_connect_timeout.value());
         // enable connection pooling
         env.put("com.sun.jndi.ldap.connect.pool", "true");
-        return new InitialDirContext(env);
+        return new InitialLdapContext(env, null);
     }
 
     public static void ldapAuthenticate(String urls[], String principal, String password) throws NamingException {
@@ -226,7 +227,7 @@ public class LdapUtil {
         env.put(Context.SECURITY_CREDENTIALS, password);
         DirContext context = null;
         try {
-            context = new InitialDirContext(env);
+            context = new InitialLdapContext(env, null);
         } catch (NamingException e) {
             throw e;
         } finally {

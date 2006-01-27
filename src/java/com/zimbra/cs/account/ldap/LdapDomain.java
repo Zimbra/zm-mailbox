@@ -46,6 +46,7 @@ import javax.naming.directory.SearchResult;
 
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
 
@@ -81,7 +82,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
         return searchAccounts("(objectclass=zimbraAccount)", null, null, true, Provisioning.SA_ACCOUNT_FLAG);
     }
 
-    public void getAllAccounts(EntryVisitor visitor) throws ServiceException {
+    public void getAllAccounts(NamedEntry.Visitor visitor) throws ServiceException {
         mProv.searchAccounts("(objectclass=zimbraAccount)", null, "ou=people,"+getDN(), Provisioning.SA_ACCOUNT_FLAG, visitor);
     }
 

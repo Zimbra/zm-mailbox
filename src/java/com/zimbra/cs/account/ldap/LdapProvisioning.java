@@ -30,6 +30,7 @@
  */
 package com.zimbra.cs.account.ldap;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -63,6 +64,10 @@ import javax.naming.directory.InvalidAttributesException;
 import javax.naming.directory.InvalidSearchFilterException;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
+import javax.naming.ldap.Control;
+import javax.naming.ldap.LdapContext;
+import javax.naming.ldap.PagedResultsControl;
+import javax.naming.ldap.PagedResultsResponseControl;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -689,59 +694,15 @@ public class LdapProvisioning extends Provisioning {
     ArrayList searchAccounts(String query, String returnAttrs[], final String sortAttr, final boolean sortAscending, String base, int flags)  
         throws ServiceException
     {
-        ArrayList result = new ArrayList();
-        DirContext ctxt = null;
-        try {
-            ctxt = LdapUtil.getDirContext();
-            
-            String objectClass = getObjectClassQuery(flags);
-            
-            if (query == null || query.equals("")) {
-                query = objectClass;
-            } else {
-                if (query.startsWith("(") && query.endsWith(")")) {
-                    query = "(&"+query+objectClass+")";                    
-                } else {
-                    query = "(&("+query+")"+objectClass+")";
-                }
+        final ArrayList result = new ArrayList();
+        
+        NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
+            public void visit(com.zimbra.cs.account.NamedEntry entry) throws ServiceException {
+                result.add(entry);
             }
-            
-            returnAttrs = fixReturnAttrs(returnAttrs, flags);
-
-            SearchControls searchControls = 
-                new SearchControls(SearchControls.SUBTREE_SCOPE, 0, 0, returnAttrs, false, false);
-
-            // we don't want to ever cache any of these, since they might not have all their attributes
-
-            NamingEnumeration ne = null;
-
-            try {
-                ne = ctxt.search(base, query, searchControls);
-                while (ne.hasMoreElements()) {
-                    SearchResult sr = (SearchResult) ne.nextElement();
-                    String dn = sr.getNameInNamespace();
-                //  skip admin accounts
-                    if (dn.endsWith("cn=zimbra")) continue;
-                    Attributes attrs = sr.getAttributes();
-                    Attribute objectclass = attrs.get("objectclass");
-                    if (objectclass == null || objectclass.contains("zimbraAccount")) result.add(new LdapAccount(dn, attrs, this));
-                    else if (objectclass.contains("zimbraAlias")) result.add(new LdapAlias(dn, attrs));
-                    else if (objectclass.contains("zimbraDistributionList")) result.add(new LdapDistributionList(dn, attrs));   
-                }
-            } finally {
-                if (ne != null) ne.close();
-            }
-        } catch (NameNotFoundException e) {
-            return result;
-        } catch (InvalidNameException e) {
-            return result;
-        } catch (InvalidSearchFilterException e) {
-            throw ServiceException.INVALID_REQUEST("invalid search filter "+e.getMessage(), e);
-        } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to list all accounts", e);
-        } finally {
-            LdapUtil.closeContext(ctxt);
-        }
+        };
+        
+        searchAccounts(query, returnAttrs, base, flags, visitor);
 
         if (sortAttr != null) {
             Comparator comparator = new Comparator() {
@@ -764,7 +725,7 @@ public class LdapProvisioning extends Provisioning {
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#searchAccounts(java.lang.String)
      */
-    void searchAccounts(String query, String returnAttrs[], String base, int flags, Domain.EntryVisitor visitor)
+    void searchAccounts(String query, String returnAttrs[], String base, int flags, NamedEntry.Visitor visitor)
         throws ServiceException
     {
         DirContext ctxt = null;
@@ -788,23 +749,34 @@ public class LdapProvisioning extends Provisioning {
             SearchControls searchControls = 
                 new SearchControls(SearchControls.SUBTREE_SCOPE, 0, 0, returnAttrs, false, false);
 
+            //Set the page size and initialize the cookie that we pass back in subsequent pages
+            int pageSize = 1000;
+            byte[] cookie = null;
+ 
+            LdapContext lctxt = (LdapContext)ctxt; 
+ 
             // we don't want to ever cache any of these, since they might not have all their attributes
 
             NamingEnumeration ne = null;
 
             try {
-                ne = ctxt.search(base, query, searchControls);
-                while (ne.hasMoreElements()) {
-                    SearchResult sr = (SearchResult) ne.nextElement();
-                    String dn = sr.getNameInNamespace();
-                //  skip admin accounts
-                    if (dn.endsWith("cn=zimbra")) continue;
-                    Attributes attrs = sr.getAttributes();
-                    Attribute objectclass = attrs.get("objectclass");
-                    if (objectclass == null || objectclass.contains("zimbraAccount")) visitor.visit(new LdapAccount(dn, attrs, this));
-                    else if (objectclass.contains("zimbraAlias")) visitor.visit(new LdapAlias(dn, attrs));
-                    else if (objectclass.contains("zimbraDistributionList")) visitor.visit(new LdapDistributionList(dn, attrs));   
-                }
+                do {
+                    lctxt.setRequestControls(new Control[]{new PagedResultsControl(pageSize, cookie, Control.CRITICAL)});
+                    
+                    ne = ctxt.search(base, query, searchControls);
+                    while (ne != null && ne.hasMore()) {
+                        SearchResult sr = (SearchResult) ne.nextElement();
+                        String dn = sr.getNameInNamespace();
+                        // skip admin accounts
+                        if (dn.endsWith("cn=zimbra")) continue;
+                        Attributes attrs = sr.getAttributes();
+                        Attribute objectclass = attrs.get("objectclass");
+                        if (objectclass == null || objectclass.contains("zimbraAccount")) visitor.visit(new LdapAccount(dn, attrs, this));
+                        else if (objectclass.contains("zimbraAlias")) visitor.visit(new LdapAlias(dn, attrs));
+                        else if (objectclass.contains("zimbraDistributionList")) visitor.visit(new LdapDistributionList(dn, attrs));
+                    }
+                    cookie = getCookie(lctxt);
+                } while (cookie != null);
             } finally {
                 if (ne != null) ne.close();
             }
@@ -812,9 +784,25 @@ public class LdapProvisioning extends Provisioning {
             throw ServiceException.INVALID_REQUEST("invalid search filter "+e.getMessage(), e);
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to list all accounts", e);
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("unable to list all accounts", e);            
         } finally {
             LdapUtil.closeContext(ctxt);
         }
+    }
+
+    private byte[] getCookie(LdapContext lctxt) throws NamingException {
+        Control[] controls = lctxt.getResponseControls();
+        if (controls != null) {
+            for (int i = 0; i < controls.length; i++) {
+                if (controls[i] instanceof PagedResultsResponseControl) {
+                    PagedResultsResponseControl prrc =
+                        (PagedResultsResponseControl)controls[i];
+                    return prrc.getCookie();
+                }
+            }
+        }
+        return null;
     }
 
     /**

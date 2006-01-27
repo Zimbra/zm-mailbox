@@ -37,7 +37,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.Map.Entry;
 
-import com.zimbra.cs.account.Domain.EntryVisitor;
+import com.zimbra.cs.account.NamedEntry.Visitor;
 import com.zimbra.cs.account.Domain.SearchGalResult;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Zimbra;
@@ -754,12 +754,12 @@ public class ProvUtil {
     }    
 
     private void doGetAllAccounts(Domain domain, final boolean verbose) throws ServiceException {
-        EntryVisitor visitor = new EntryVisitor() {
-            public void visit(com.zimbra.cs.account.Entry entry) throws ServiceException {
+        NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
+            public void visit(com.zimbra.cs.account.NamedEntry entry) throws ServiceException {
                 if (verbose)
                     dumpAccount((Account) entry);
                 else 
-                    System.out.println(((Account) entry).getName());                        
+                    System.out.println(entry.getName());                        
             }
         };
         domain.getAllAccounts(visitor);

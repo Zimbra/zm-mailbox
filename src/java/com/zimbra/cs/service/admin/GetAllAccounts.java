@@ -35,6 +35,7 @@ import java.util.Map;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
@@ -98,10 +99,12 @@ public class GetAllAccounts extends AdminDocumentHandler {
         return response;        
 	}
     
-    public static void doDomain(Element e, Domain d) throws ServiceException {
-        List accounts = d.getAllAccounts();
-        for (Iterator it=accounts.iterator(); it.hasNext(); ) {
-            GetAccount.doAccount(e, (Account) it.next());
-        }        
+    public static void doDomain(final Element e, Domain d) throws ServiceException {
+        NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
+            public void visit(com.zimbra.cs.account.NamedEntry entry) throws ServiceException {
+                GetAccount.doAccount(e, (Account) entry);
+            }
+        };
+        d.getAllAccounts(visitor);
     }
 }

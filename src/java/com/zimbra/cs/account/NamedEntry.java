@@ -30,12 +30,18 @@
  */
 package com.zimbra.cs.account;
 
+import com.zimbra.cs.service.ServiceException;
+
 /**
  * @author schemers
  *
  * Window - Preferences - Java - Code Style - Code Templates
  */
 public interface NamedEntry extends Entry {
+    
+    public interface Visitor  {
+        public void visit(NamedEntry entry) throws ServiceException;
+    }
 
     public String getName();
     
