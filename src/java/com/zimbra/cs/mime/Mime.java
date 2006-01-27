@@ -653,6 +653,10 @@ public class Mime {
     }
 
     private static MPartInfo getBodySubpart(MPartInfo base, boolean preferHtml) {
+        // short-circuit malformed messages
+        if (!base.hasChildren())
+            return null;
+
         // go through top-level children, stopping at first text part we are interested in
         MPartInfo alternative = null;
         for (MPartInfo p : base.getChildren()) {
