@@ -520,7 +520,9 @@ public class ParsedMessage {
     }
 
     // these *should* be taken from a properties file
-    private static final Set<String> CALENDAR_PREFIXES = new HashSet<String>(Arrays.asList(new String[] { "Accepted:", "Declined:", "Tentative:" }));
+    private static final Set<String> CALENDAR_PREFIXES = new HashSet<String>(Arrays.asList(new String[] {
+            "Accept:", "Accepted:", "Decline:", "Declined:", "Tentative:", "CANCELLED:", "New Time Proposed:"
+    }));
     private static final String FWD_TRAILER = "(fwd)";
 
 	private static String trimPrefixes(String subject) {
