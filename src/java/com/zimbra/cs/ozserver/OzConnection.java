@@ -34,9 +34,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -164,28 +163,57 @@ public class OzConnection {
         }
     }
     
-    void channelClose() {
-        try {
+    public void close() {
+        synchronized (mLock) {
             try {
-                mLog.info("cancelling selection key");
-                mSelectionKey.cancel();
-                mServer.wakeupSelector();
-            } finally {
-                mLog.info("closing channel");
-                mChannel.close();
+                mFilters.get(0).close();
+            } catch (Throwable t) {
+                cleanupChannel(CleanupReason.ABRUPT);
             }
-        } catch (IOException ioe) {
-            mLog.warn("exception closing channel, ignoring and continuing", ioe);
+        }
+    }
+
+    /**
+     * Notify the connection handler object to terminate this connection. 
+     */
+    void cleanup() { 
+    	try {
+    		mConnectionHandler.handleDisconnect();
+    	} catch (Throwable t) {
+    		cleanupChannel(CleanupReason.ABRUPT);
+    	}
+    }
+    
+    /**
+	 * Close the underlying IO channel. Under normal circumstances this method
+	 * is called by the plain filter. However, when things go wrong, this method
+	 * can be called to shut down atleast the descriptor. Try as much as
+	 * possible to call cleanup first.
+	 */
+    enum CleanupReason { NORMAL, ABRUPT; }
+    
+    private void cleanupChannel(CleanupReason reason) {
+        try {
+        	mLog.info("channel cleanup - " + reason);
+
+    		synchronized (mLock) {
+    			if (mClosed) {
+    				if (mDebug) mLog.debug("duplicate close detected");
+    				return;
+    			}
+    		}
+
+        	cancelIdleNotifications();
         } finally {
-            if (mDebug && mClosed) mLog.debug("duplicate close detected");
-            mClosed = true;
-            synchronized (mIdleGuard) {
-                if (mIdleTaskHandle != null) {
-                    if (mDebug) mLog.debug("cancelling idle timer on close");
-                    mIdleTaskHandle.cancel(true);
-                    mIdleTaskHandle = null;
-                }
-            }
+        	try {
+        		mChannel.close();
+            	if (mDebug) mLog.debug("closed channel");
+        	} catch (IOException ioe) {
+                mLog.warn("exception closing channel, ignoring and continuing", ioe);
+        	}
+        	mClosed = true;
+        	mServer.wakeupSelector(); // to make the close immediate
+        	if (mDebug) mLog.debug("wokeup selector");
         }
     }
 
@@ -222,11 +250,11 @@ public class OzConnection {
     }
 
     private void disableReadInterest() {
-        synchronized (mSelectionKey) {
-            int iops = mSelectionKey.interestOps();
-            mSelectionKey.interestOps(iops & (~SelectionKey.OP_READ));
-            OzUtil.logKey(mLog, mSelectionKey, "disabled read interest");
-        }
+    	synchronized (mSelectionKey) {
+    		int iops = mSelectionKey.interestOps();
+    		mSelectionKey.interestOps(iops & (~SelectionKey.OP_READ));
+    		OzUtil.logKey(mLog, mSelectionKey, "disabled read interest");
+    	}
     }   
     
     private void enableWriteInterest() {
@@ -250,11 +278,11 @@ public class OzConnection {
     }
     
     private void disableWriteInterest() {
-        synchronized (mSelectionKey) {
-            int iops = mSelectionKey.interestOps();
-            mSelectionKey.interestOps(iops & (~SelectionKey.OP_WRITE));
-            OzUtil.logKey(mLog, mSelectionKey, "disabled write interest"); 
-        }
+    	synchronized (mSelectionKey) {
+    		int iops = mSelectionKey.interestOps();
+    		mSelectionKey.interestOps(iops & (~SelectionKey.OP_WRITE));
+    		OzUtil.logKey(mLog, mSelectionKey, "disabled write interest"); 
+    	}
     }
     
     OzConnectionHandler getConnectionHandler() {
@@ -282,42 +310,39 @@ public class OzConnection {
         }
         
         public void run() {
+    		if (mDebug) {
+    			ZimbraLog.addToContext("op", mName);
+    			ZimbraLog.addToContext("opid", new Integer(mTaskCounter.incrementAndGet()).toString());
+    		}
+    		addToNDC();
+    		if (mDebug) mLog.debug("starting " + mName);
             synchronized (mLock) {
-                try {
-                    if (mDebug) {
-                        ZimbraLog.addToContext("op", mName);
-                        ZimbraLog.addToContext("opid", new Integer(mTaskCounter.incrementAndGet()).toString());
-                    }
-                    addToNDC();
-                    if (mDebug) mLog.debug("starting " + mName);
-                    if (mClosed) {
-                        if (mDebug) mLog.debug("connection already closed, aborting " + mName);
-                        return;
-                    }
-                    doTask();
-                } finally {
-                    if (mDebug) mLog.debug("finished " + mName);
-                    clearFromNDC();
-                }
+            	try {
+            		if (mClosed) {
+            			if (mDebug) mLog.debug("connection already closed, aborting " + mName);
+            			return;
+            		}
+            		doTask();
+            	} catch (Throwable t) {
+            		mLog.warn("exception occurred during " + mName + " task", t);
+            		cleanup();
+            	} finally {
+            		if (mDebug) mLog.debug("finished " + mName);
+            		clearFromNDC();
+            	}
             }
         }
         
-        protected abstract void doTask();
+        protected abstract void doTask() throws IOException;
     }
     
     private class ConnectTask extends Task {
         ConnectTask() { super("connect"); }
         
-        protected void doTask() {
-            try {
-                mLog.info("connected");
-                mConnectionHandler = mServer.newConnectionHandler(OzConnection.this);
-                mConnectionHandler.handleConnect();
-            } catch (Throwable t) {
-                mLog.warn("exception occurred handling connect; will close connection", t);
-                channelClose();
-                return;
-            }
+        protected void doTask() throws IOException {
+        	mLog.info("connected");
+        	mConnectionHandler = mServer.newConnectionHandler(OzConnection.this);
+        	mConnectionHandler.handleConnect();
         }
     }
     
@@ -325,25 +350,14 @@ public class OzConnection {
         DisconnectTask() { super("disconnect"); }
     	
         protected void doTask() {
-    	    boolean closed = false;
-            try {
-                mConnectionHandler.handleDisconnect();
-                closeNow();
-                closed = true;
-            } catch (Throwable t) {
-                mLog.warn("exception occurred handling disconnect", t);
-                if (!closed) {
-                    channelClose();
-                }
-            }
+        	mConnectionHandler.handleDisconnect();
         }
     }
     
     private class ReadTask extends Task {
         ReadTask() { super("read"); }
 
-        public void doTask() {
-            try {
+        public void doTask() throws IOException {
                 int bytesRead = -1;
                 ByteBuffer rbb = mReadBuffer;
                 if (mDebug) mLog.debug("obtained buffer " + OzUtil.intToHexString(rbb.hashCode(), 0, ' '));
@@ -366,33 +380,7 @@ public class OzConnection {
                     return;
                 }
                 
-                while (rbb != null && rbb.position() > 0) {
-                    int filterChangeId = mFilterChangeId.get();
-                    for (int i = 0; i < mFilters.size(); i++) {
-                        OzFilter filter = mFilters.get(i);
-                        rbb = filter.read(rbb);
-                        if (filterChangeId != mFilterChangeId.get()) {
-                            // re-filtering
-                            break;
-                        }
-                        if (rbb == null) {
-                            break;
-                        }
-                    }
-                }
-                
-            } catch (Throwable t) {
-                if (mChannel.isOpen()) {
-                    mLog.warn("exception occurred read; will close connection", t);
-                } else {
-                    // someone else may have closed the channel, eg, a shutdown or
-                    // client went away, etc. Consider this case to be normal.
-                    if (mDebug) {
-                        mLog.debug("ignorable (" + t.getClass().getName() + ") when reading, connection already closed", t); 
-                    }
-                }
-                channelClose();
-            }
+                mFilters.get(0).read(rbb);
         }
     }
 
@@ -418,19 +406,14 @@ public class OzConnection {
     private class WriteTask extends Task {
         WriteTask() { super("write"); }
         
-        protected void doTask() {
-            try {
-                boolean allWritten;
-                allWritten = channelWrite();
-                if (allWritten) {
-                    for (OzFilter filter : mFilters) {
-                        filter.writeCompleted();
-                    }
-                }
-            } catch (Throwable t) {
-                mLog.info("exception occurred handling write; will close connection", t);
-                channelClose();
-            }
+        protected void doTask() throws IOException {
+        	boolean allWritten;
+        	allWritten = channelWrite();
+        	if (allWritten) {
+        		for (OzFilter filter : mFilters) {
+        			filter.writeCompleted();
+        		}
+        	}
         }
     }
 
@@ -475,6 +458,7 @@ public class OzConnection {
                 if (mFilterChangeId.get() != filterChangeId) {
                     mLog.info("plain filter: filter stack has changed, refiltering");
                     rbb.compact();
+                    mFilters.get(0).read(rbb);
                     return rbb;
                 }
             }
@@ -503,11 +487,6 @@ public class OzConnection {
         public void writeCompleted() throws IOException {
         }
 
-        public void closeNow() throws IOException {
-            if (mDebug) mLog.debug("plain filter: closeNow");
-            channelClose();
-        }
-
         public void close() throws IOException {
             synchronized (mLock) {
                 if (mClosed) {
@@ -519,7 +498,7 @@ public class OzConnection {
                 mCloseAfterWrite = true;
                 
                 if (mWriteBuffers.isEmpty()) {
-                    channelClose();
+                    cleanupChannel(CleanupReason.NORMAL);
                 }
             }
         }
@@ -538,9 +517,11 @@ public class OzConnection {
     
     private Object mIdleGuard = new Object();
     
-    private boolean mIdle = false;
+    private boolean mIdle = true;
     
     private ScheduledFuture<?> mIdleTaskHandle;
+    
+    private IdleTask mIdleTask = new IdleTask();
     
     /**
      * This task does NOT get scheduled in the server thread pool - it runs in
@@ -555,29 +536,24 @@ public class OzConnection {
             // Task just so we can get log context when it runs.
         }
         
-        protected void doTask() {
+        protected void doTask() throws IOException {
             synchronized (mIdleGuard) {
                 if (mIdle) {
-                    try {
-                        mLog.info("connection has been idle");
-                        mConnectionHandler.handleIdle();
-                    } catch (Throwable t) {
-                        mLog.warn("exception occurred handling idle; will close connection", t);
-                        channelClose();
-                    }
+                	mLog.info("connection has been idle");
+                	mConnectionHandler.handleIdle();
                 } else {
                     if (mDebug) mLog.debug("idle task - connection has been busy");
-                    mIdle = true;
+                    mIdle = true; // prove me wrong by setting this to false before I run again.
                 }
             }
         }
     }
 
-    private static final ScheduledExecutorService mIdleScheduler = Executors.newScheduledThreadPool(1, new IdleReaperThreadFactory());
+    private static final ScheduledThreadPoolExecutor mIdleExecutor = new ScheduledThreadPoolExecutor(1, new IdleReaperThreadFactory());
 
     private static class IdleReaperThreadFactory implements ThreadFactory {
-        public Thread newThread(Runnable r) {
-            Thread t = new Thread("OzIdleConnectionTimer");
+        public Thread newThread(Runnable runnable) {
+            Thread t = new Thread(runnable, "OzIdleConnectionTimer");
             t.setDaemon(true);
             t.setPriority(Thread.NORM_PRIORITY);
             return t;
@@ -590,13 +566,12 @@ public class OzConnection {
      */
     public void setIdleNotifyTime(int millis) {
         synchronized (mIdleGuard) {
-            if (mIdleMillis == millis) {
+            if (mIdleTaskHandle != null && mIdleMillis == millis) {
                 return;
             }
-            if (mIdleTaskHandle != null) {
-                mIdleTaskHandle.cancel(false);
-            }
-            mIdleTaskHandle = mIdleScheduler.scheduleAtFixedRate(new IdleTask(), millis, millis, TimeUnit.MILLISECONDS); 
+            cancelIdleNotifications(); // Get rid of current notifications
+            if (mDebug) mLog.debug("creating idle notifier at rate of " + millis + "ms");
+            mIdleTaskHandle = mIdleExecutor.scheduleAtFixedRate(mIdleTask, millis, millis, TimeUnit.MILLISECONDS);
         }
     }
     
@@ -605,6 +580,12 @@ public class OzConnection {
             if (mIdleTaskHandle != null) {
                 if (mDebug) mLog.debug("cancelling idle timer");
                 mIdleTaskHandle.cancel(false);
+                boolean removed = mIdleExecutor.remove((Runnable)mIdleTaskHandle);
+                if (removed) {
+                	if (mDebug) mLog.debug("idle timer removed");
+                } else {
+                	mLog.warn("idle timer not removed");
+                }
                 mIdleTaskHandle = null;
             }
         }
@@ -688,7 +669,7 @@ public class OzConnection {
             mWritePending = false;
 
             if (mCloseAfterWrite) {
-                channelClose();
+                cleanupChannel(CleanupReason.NORMAL);
             }
         }            
         
@@ -712,26 +693,6 @@ public class OzConnection {
     public boolean isWritePending() {
         synchronized (mLock) {
             return mWritePending;
-        }
-    }
-    
-    public void close() {
-        synchronized (mLock) {
-            try {
-                mFilters.get(0).close();
-            } catch (Throwable t) {
-                channelClose();
-            }
-        }
-    }
-
-    public void closeNow() {
-        synchronized (mLock) {
-            try {
-                mFilters.get(0).closeNow();
-            } catch (Throwable t) {
-                channelClose();
-            }
         }
     }
     

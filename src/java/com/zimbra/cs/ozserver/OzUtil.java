@@ -31,13 +31,13 @@ import org.apache.commons.logging.Log;
 
 public class OzUtil {
 
-    public static String byteBufferDebugDump(String bufferName, ByteBuffer buff, boolean flip) {
-        ByteBuffer buf = buff.duplicate();
+    public static String byteBufferDebugDump(String bufferName, ByteBuffer orig, boolean flip) {
+        ByteBuffer flipped = orig.duplicate();
         if (flip) {
-            buf.flip();
+            flipped.flip();
         }
 
-        StringBuilder sb = new StringBuilder(buf.remaining() * 5);
+        StringBuilder sb = new StringBuilder(flipped.remaining() * 5);
         
         sb.append(bufferName);
         if (flip) {
@@ -45,22 +45,22 @@ public class OzUtil {
         } else {
             sb.append(" [original]");
         }
-        sb.append(" position=").append(buf.position());
-        if (flip) sb.append('/').append(buff.position());
-        sb.append(" limit=").append(buf.limit());
-        if (flip) sb.append('/').append(buff.limit());
-        sb.append(" capacity=").append(buf.capacity());
-        if (flip) sb.append('/').append(buff.capacity());
-        sb.append(" hasRemaining=").append(buf.hasRemaining());
-        if (flip) sb.append('/').append(buff.hasRemaining());
+        sb.append(" position=").append(flipped.position());
+        if (flip) sb.append('/').append(orig.position());
+        sb.append(" limit=").append(flipped.limit());
+        if (flip) sb.append('/').append(orig.limit());
+        sb.append(" capacity=").append(flipped.capacity());
+        if (flip) sb.append('/').append(orig.capacity());
+        sb.append(" hasRemaining=").append(flipped.hasRemaining());
+        if (flip) sb.append('/').append(orig.hasRemaining());
         sb.append('\n');
 
         int n = 1;
-        int remaining = buf.remaining();
+        int remaining = flipped.remaining();
         sb.append("[").append(intToDecString(0, 10, ' ')).append("] ");
         
-        while (buf.hasRemaining()) {
-            int ch = (buf.get() & 0xFF);
+        while (flipped.hasRemaining()) {
+            int ch = (flipped.get() & 0xFF);
             if (ch >= 33 && ch <= 126) {
                 sb.append(" " + (char)ch);
             } else if (ch == '\r') {

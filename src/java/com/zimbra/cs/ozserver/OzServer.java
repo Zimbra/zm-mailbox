@@ -44,16 +44,13 @@ import EDU.oswego.cs.dl.util.concurrent.BoundedLinkedQueue;
 import EDU.oswego.cs.dl.util.concurrent.PooledExecutor;
 import EDU.oswego.cs.dl.util.concurrent.ThreadFactory;
 
-// TODO idle connection support and drop unauthenticated connections
-//      in sooner
+// TODO SSL - warn for truncation attack on pre-mature handshake termination 
 
-// TODO runWhenBlocked is bad for tasks scheduled from
-//      server thread because this will block server
-//      and stop it from reaping connections etc - because
-//      of tasks that execute in server thread.  Revisit this.
+// TODO switch over to java.util.concurrent thread pool
 
-// TODO add a clearConnection so that protocol handlers will
-//      let go of the connection objects
+// TODO recycle buffers
+
+// TODO lot of selects return with 0 selected, in a big sequence (SSL only?)
 
 public class OzServer {
     
@@ -111,10 +108,10 @@ public class OzServer {
 
     void wakeupSelector() {
         synchronized (mSelectorGuard) {
-            mSelector.wakeup();
+        	if (mLog.isTraceEnabled()) mLog.trace("waking up selector" /*, new Exception("wakeup context")*/);
+        	mSelector.wakeup();
         }
     }
-
 
     private void serverLoop() {
         while (true) {
@@ -128,8 +125,8 @@ public class OzServer {
 
             try {
                 if (mLog.isDebugEnabled()) mLog.debug("entering select");
-                readyCount = mSelector.select();
                 synchronized (mSelectorGuard) { }
+                readyCount = mSelector.select();
             } catch (IOException ioe) {
                 mLog.warn("OzServer IOException in select", ioe);
             }
@@ -177,7 +174,7 @@ public class OzServer {
                 } catch (Throwable t) {
                     mLog.warn("ignoring exception that occurred while handling selected key", t);
                     if (readyConnection != null) {
-                        readyConnection.channelClose();
+                        readyConnection.cleanup();
                     }
                 } finally {
                     if (readyConnection != null) {
