@@ -61,11 +61,27 @@ public class ParseMailboxID
      */
     public static ParseMailboxID parse(String idStr) throws ServiceException {
         try {
-            return new ParseMailboxID(idStr);
+            return new ParseMailboxID(idStr, false);
         } catch (IllegalArgumentException e) {
             throw ServiceException.FAILURE("Error parsing MailboxID specifier: "+idStr, e);
         }
     }
+    
+    /** 
+     * Parse the ID from a string
+     * 
+     * @param idStr
+     * @return
+     * @throws ServiceException
+     */
+    public static ParseMailboxID parseForceRemote(String idStr) throws ServiceException {
+        try {
+            return new ParseMailboxID(idStr, true);
+        } catch (IllegalArgumentException e) {
+            throw ServiceException.FAILURE("Error parsing MailboxID specifier: "+idStr, e);
+        }
+    }
+    
     
     /**
      * Create an ID which represents ALL mailboxes on a specified server
@@ -158,7 +174,7 @@ public class ParseMailboxID
     protected boolean mAllServers = false;
     protected String mInitialString;
     
-    protected ParseMailboxID(String idStr) throws ServiceException, IllegalArgumentException {
+    protected ParseMailboxID(String idStr, boolean forceRemote) throws ServiceException, IllegalArgumentException {
         mInitialString = idStr;
         
         Account acct = null;  
@@ -169,7 +185,7 @@ public class ParseMailboxID
                 throw AccountServiceException.NO_SUCH_ACCOUNT(idStr);
             }
             
-            if (acct.isCorrectHost()) {
+            if (!forceRemote && acct.isCorrectHost()) {
                 mIsLocal = true;
                 mMailbox = Mailbox.getMailboxByAccountId(acct.getId());
                 mMailboxId = mMailbox.getId();
@@ -183,7 +199,7 @@ public class ParseMailboxID
             if (acct == null)
                 throw AccountServiceException.NO_SUCH_ACCOUNT(idStr);
 
-            if (acct.isCorrectHost()) {
+            if (!forceRemote && acct.isCorrectHost()) {
                 mIsLocal = true;
                 mMailbox = Mailbox.getMailboxByAccountId(acct.getId());
                 mMailboxId = mMailbox.getId();
