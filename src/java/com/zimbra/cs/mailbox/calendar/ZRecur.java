@@ -469,24 +469,34 @@ public class ZRecur {
         return this.mByDayList;
     }
 
-    public List<java.util.Date> expandRecurrenceOverRange(ParsedDateTime dtStart, long rangeStart, long rangeEnd) throws ServiceException {
+    public List<java.util.Date> expandRecurrenceOverRange(
+        ParsedDateTime dtStart,
+        long rangeStart,
+        long rangeEnd)
+    throws ServiceException {
         List<java.util.Date> toRet = new LinkedList<java.util.Date>();
 
-        java.util.Date earliestDate = new java.util.Date(rangeStart);
-        java.util.Date rangeEndDate = new java.util.Date(rangeEnd);
+        java.util.Date rangeStartDate = new java.util.Date(rangeStart);
+        // subtract 1000ms (1sec) because the code in the method treats
+        // end time as inclusive while the rangeEnd input argument is
+        // exclusive value
+        java.util.Date rangeEndDate = new java.util.Date(rangeEnd - 1000);
         java.util.Date dtStartDate = new java.util.Date(dtStart.getUtcTime());
         
-        if (dtStartDate.after(earliestDate))
+        java.util.Date earliestDate;
+        if (dtStartDate.after(rangeStartDate))
             earliestDate = dtStartDate;
-        
-        if (earliestDate.compareTo(rangeEndDate)>=0)
-            return toRet;
+        else
+            earliestDate = rangeStartDate;
         
         if (mUntil != null) {
             Date until = mUntil.getDateForRecurUntil();
             if (until.before(rangeEndDate))
                 rangeEndDate = until;
         }
+
+        if (rangeEndDate.before(earliestDate))
+            return toRet;
         
         GregorianCalendar cur = dtStart.getCalendarCopy();
         
@@ -512,11 +522,19 @@ public class ZRecur {
         
         if (expansionsLeft > MAXIMUM_INSTANCES_EXPANDED)
         	expansionsLeft = MAXIMUM_INSTANCES_EXPANDED;
+
+        // DTSTART is always part of the expansion, as long as it falls within
+        // the range.
+        if (!dtStartDate.before(earliestDate) &&
+            !dtStartDate.after(rangeEndDate)) {
+            toRet.add(dtStartDate);
+        }
+        // Count DTSTART as an expansion, even if we don't return it.
+        expansionsLeft--;
         
-        while (expansionsLeft > 0
-        		&& toRet.size() < MAXIMUM_INSTANCES_RETURNED
-                && (toRet.size() == 0 || toRet.get(toRet.size()-1).before(rangeEndDate))
-                && !cur.getTime().after(rangeEndDate))
+        while (expansionsLeft > 0 &&
+        	   toRet.size() < MAXIMUM_INSTANCES_RETURNED &&
+               !cur.getTime().after(rangeEndDate))
         {
             List<Calendar> addList = new LinkedList<Calendar>();
             
@@ -715,13 +733,18 @@ public class ZRecur {
             // add all the ones that match!
             for (Calendar addCal : addList) {
                 Date toAdd = addCal.getTime();
+
+                // We already counted DTSTART before the main loop, so don't
+                // count it twice.
+                if (toAdd.compareTo(dtStartDate) == 0)
+                    continue;
                 
                 // we still have expanded this instance, even if it isn't in our 
                 // current date window
                 expansionsLeft--;
                 
-                if (toAdd.compareTo(earliestDate) >= 0 &&
-                    toAdd.compareTo(rangeEndDate) <= 0)
+                if (!toAdd.before(earliestDate) &&
+                    !toAdd.after(rangeEndDate))
                     toRet.add(toAdd);
 
                 // quick dropout if we know we're done
@@ -731,14 +754,6 @@ public class ZRecur {
             }
         }
 
-        // Special case for COUNT handling: (Bug 5634)
-        // DTSTART is always the first occurrence, so if the first date in the
-        // rule expansion is later than DTSTART the expanded list has one too
-        // many occurrence.  Discard the last one.
-        if (toRet.size() > 0 && toRet.get(0).after(dtStartDate)) {
-            toRet.remove(toRet.size() - 1);
-        }
-        
         return toRet;
     }
 
