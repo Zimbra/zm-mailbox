@@ -339,9 +339,34 @@ public final class ParsedDateTime {
     }
 
     /**
+     * Return Date suitable for use as UNTIL parameter of recurrence rule.
+     * UNTIL parameter is inclusive, and it can be specified as a date-only
+     * value.  For comparison with another Date object, such a time-less
+     * Date must be extended to 23:59:59 on the same day, in local time zone.
+     * @return
+     */
+    public Date getDateForRecurUntil() {
+        if (!mHasTime) {
+            GregorianCalendar cal = (GregorianCalendar) mCal.clone();
+            // Add one day, then subtract 1 second.
+            cal.add(java.util.Calendar.DAY_OF_MONTH, 1);
+            cal.add(java.util.Calendar.SECOND, -1);
+            return cal.getTime();
+        } else
+            return getDate();
+    }
+
+    /**
      * @return The YYYYMMDD['T'HHMMSS[Z]] part  
      */
     public String getDateTimePartString() {
+        return getDateTimePartString(USE_BROKEN_OUTLOOK_MODE);
+    }
+
+    /**
+     * @return The YYYYMMDD['T'HHMMSS[Z]] part  
+     */
+    public String getDateTimePartString(boolean useOutlookCompatMode) {
         DecimalFormat fourDigitFormat = new DecimalFormat("0000");
         DecimalFormat twoDigitFormat = new DecimalFormat("00");
 
@@ -375,7 +400,7 @@ public final class ParsedDateTime {
             if (isUTC()) {
                 toRet.append("Z");
             }
-        } else if (USE_BROKEN_OUTLOOK_MODE) {
+        } else if (useOutlookCompatMode) {
             toRet.append("T000000");
         	// OUTLOOK HACK -- remember, outlook all-day-appts 
         	// must be rendered as 0:00-0:00 in the client's timezone...but we
@@ -396,7 +421,16 @@ public final class ParsedDateTime {
             return false;
         }
     }
-    
+
+    public void toUTC() {
+        if (!isUTC()) {
+            mICalTimeZone = ICalTimeZone.getUTC();
+            Date time = mCal.getTime();
+            mCal.setTimeZone(mICalTimeZone);
+            mCal.setTime(time);
+        }
+    }
+
     /**
      * @return The name of the TimeZone
      */

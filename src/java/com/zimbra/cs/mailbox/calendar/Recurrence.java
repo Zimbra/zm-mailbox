@@ -529,14 +529,9 @@ public class Recurrence
             // UNTIL or COUNT
             ParsedDateTime untilDate = mRecur.getUntil();
             if (untilDate != null) {
-//              String d = DateTimeFormat.getInstance().format(untilDate);
-//                String d = untilDate.toString();
                 Element untilElt = rule.addElement(MailService.E_APPT_RULE_UNTIL);
-                untilElt.addAttribute(MailService.A_APPT_DATETIME, untilDate.getDateTimePartString());
-                String tzName = untilDate.getTZName();
-                if (tzName != null) {
-                    untilElt.addAttribute(MailService.A_APPT_TIMEZONE, tzName);
-                }
+                untilElt.addAttribute(MailService.A_APPT_DATETIME,
+                                      untilDate.getDateTimePartString(false));
             } else {
                 int count = mRecur.getCount();
                 if (count > 0) {
