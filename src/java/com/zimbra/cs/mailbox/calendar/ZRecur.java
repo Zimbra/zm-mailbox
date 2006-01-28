@@ -483,8 +483,9 @@ public class ZRecur {
             return toRet;
         
         if (mUntil != null) {
-        	if (mUntil.compareTo(rangeEndDate) < 0) 
-        		rangeEndDate = mUntil.getDate();
+            Date until = mUntil.getDateForRecurUntil();
+            if (until.before(rangeEndDate))
+                rangeEndDate = until;
         }
         
         GregorianCalendar cur = dtStart.getCalendarCopy();
@@ -514,8 +515,8 @@ public class ZRecur {
         
         while (expansionsLeft > 0
         		&& toRet.size() < MAXIMUM_INSTANCES_RETURNED
-                && (toRet.size() == 0 || (toRet.get(toRet.size()-1).before(rangeEndDate)))
-                && (cur.getTime().before(rangeEndDate)))
+                && (toRet.size() == 0 || toRet.get(toRet.size()-1).before(rangeEndDate))
+                && !cur.getTime().after(rangeEndDate))
         {
             List<Calendar> addList = new LinkedList<Calendar>();
             
@@ -719,7 +720,8 @@ public class ZRecur {
                 // current date window
                 expansionsLeft--;
                 
-                if (toAdd.compareTo(earliestDate)>=0 && toAdd.compareTo(rangeEndDate)<0)
+                if (toAdd.compareTo(earliestDate) >= 0 &&
+                    toAdd.compareTo(rangeEndDate) <= 0)
                     toRet.add(toAdd);
 
                 // quick dropout if we know we're done
@@ -742,9 +744,11 @@ public class ZRecur {
 
     public String toString() {
         StringBuffer toRet = new StringBuffer("FREQ=").append(mFreq);
-        
-        if (mUntil != null) 
-            toRet.append(';').append("UNTIL=").append(mUntil);
+
+        if (mUntil != null) {
+            toRet.append(';').append("UNTIL=");
+            toRet.append(mUntil.getDateTimePartString(false));
+        }
         if (mCount > 0) 
             toRet.append(';').append("COUNT=").append(mCount);
         if (mInterval > 0) 
@@ -767,7 +771,7 @@ public class ZRecur {
             toRet.append(';').append("BYMONTH=").append(listAsStr(mByMonthList));
         if (mBySetPosList.size() > 0)
             toRet.append(';').append("BYSETPOS=").append(listAsStr(mBySetPosList));
-        
+
         return toRet.toString();
     }
     /**
@@ -1198,7 +1202,11 @@ public class ZRecur {
                         mFreq = Frequency.valueOf(rhs);
                         break;
                     case UNTIL:
-                        mUntil = ParsedDateTime.parseUtcOnly(rhs);
+                        ParsedDateTime until = ParsedDateTime.parse(rhs, tzmap);
+                        if (until != null) {
+                            until.toUTC();
+                            mUntil = until;
+                        }
                         break;
                     case COUNT:
                         mCount = Integer.parseInt(rhs);
