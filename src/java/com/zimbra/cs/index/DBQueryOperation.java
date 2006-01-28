@@ -758,6 +758,13 @@ class DBQueryOperation extends QueryOperation
                             mLuceneChunk = mLuceneOp.getNextIndexedIdChunk(mHitsPerChunk);
                             c.indexIds = mLuceneChunk.getIndexIds();
                             
+                            
+                            // exponentially expand the chunk size in case we have to go back to the DB
+                            mHitsPerChunk*=2;
+                            if (mHitsPerChunk > MAX_HITS_PER_CHUNK) {
+                                mHitsPerChunk = MAX_HITS_PER_CHUNK;
+                            }
+                            
                             if (c.indexIds.length == 0) {
                                 // we know we got all the index-id's from lucene.  since we don't have a
                                 // LIMIT clause, we can be assured that this query will get all the remaining results.
@@ -796,10 +803,6 @@ class DBQueryOperation extends QueryOperation
                 DbPool.quietClose(conn);
             }
             
-            if (mHitsPerChunk > MAX_HITS_PER_CHUNK) {
-                mHitsPerChunk = MAX_HITS_PER_CHUNK;
-            }
-            
             if (mLog.isDebugEnabled()) {
                 mLog.debug(this.toString()+" Returned "+mDBHits.size()+" results ("+mCurHitsOffset+")");
             }
@@ -823,8 +826,6 @@ class DBQueryOperation extends QueryOperation
             mCurHitsOffset += mDBHits.size();
             mDBHitsIter = mDBHits.iterator();
             
-            // exponentially expand the chunk size
-            mHitsPerChunk*=2;
         }
     }
 
