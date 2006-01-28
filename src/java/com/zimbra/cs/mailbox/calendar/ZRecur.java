@@ -471,7 +471,7 @@ public class ZRecur {
 
     public List<java.util.Date> expandRecurrenceOverRange(ParsedDateTime dtStart, long rangeStart, long rangeEnd) throws ServiceException {
         List<java.util.Date> toRet = new LinkedList<java.util.Date>();
-        
+
         java.util.Date earliestDate = new java.util.Date(rangeStart);
         java.util.Date rangeEndDate = new java.util.Date(rangeEnd);
         java.util.Date dtStartDate = new java.util.Date(dtStart.getUtcTime());
@@ -723,13 +723,23 @@ public class ZRecur {
                     toRet.add(toAdd);
 
                 // quick dropout if we know we're done
-                if (expansionsLeft <= 0 || toRet.size() > MAXIMUM_INSTANCES_RETURNED)
-                	return toRet;
+                if (expansionsLeft <= 0 ||
+                    toRet.size() >= MAXIMUM_INSTANCES_RETURNED)
+                	break;;
             }
+        }
+
+        // Special case for COUNT handling: (Bug 5634)
+        // DTSTART is always the first occurrence, so if the first date in the
+        // rule expansion is later than DTSTART the expanded list has one too
+        // many occurrence.  Discard the last one.
+        if (toRet.size() > 0 && toRet.get(0).after(dtStartDate)) {
+            toRet.remove(toRet.size() - 1);
         }
         
         return toRet;
     }
+
     public String toString() {
         StringBuffer toRet = new StringBuffer("FREQ=").append(mFreq);
         
