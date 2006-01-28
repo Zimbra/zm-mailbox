@@ -39,6 +39,9 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.session.AdminSession;
+import com.zimbra.cs.session.Session;
+import com.zimbra.cs.session.SessionCache;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
@@ -83,8 +86,6 @@ public class SearchAccounts extends AdminDocumentHandler {
         
         String[] attrs = attrsStr == null ? null : attrsStr.split(",");
 
-        ArrayList accounts;
-        
         // if we are a domain admin only, restrict to domain
         if (isDomainAdminOnly(lc)) {
             if (domain == null) {
@@ -102,12 +103,16 @@ public class SearchAccounts extends AdminDocumentHandler {
                 throw AccountServiceException.NO_SUCH_DOMAIN(domain);
         }
 
-        // TODO: this is the point we should check in the session to see if we already have this query cached
-        // from the previous search
-        if (d != null) {
-            accounts = d.searchAccounts(query, attrs, sortBy, sortAscending, flags);
+        ArrayList accounts;
+        AdminSession session = (AdminSession) lc.getSession(SessionCache.SESSION_ADMIN);
+        if (session != null) {
+            accounts = session.searchAcounts(d, query, attrs, sortBy, sortAscending, flags, offset);
         } else {
-            accounts = prov.searchAccounts(query, attrs, sortBy, sortAscending, flags);
+            if (d != null) {
+                accounts = d.searchAccounts(query, attrs, sortBy, sortAscending, flags);
+            } else {
+                accounts = prov.searchAccounts(query, attrs, sortBy, sortAscending, flags);
+            }
         }
 
         Element response = lc.createElement(AdminService.SEARCH_ACCOUNTS_RESPONSE);
