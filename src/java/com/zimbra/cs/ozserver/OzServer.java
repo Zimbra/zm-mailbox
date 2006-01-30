@@ -52,6 +52,10 @@ import EDU.oswego.cs.dl.util.concurrent.ThreadFactory;
 
 // TODO lot of selects return with 0 selected, in a big sequence (SSL only?)
 
+// TODO limit total number of connections from config
+
+// TODO limit total bytes read in ByteArrayMatcher and enforce in IMAP
+
 public class OzServer {
     
     private Log mLog;
@@ -131,11 +135,7 @@ public class OzServer {
                 mLog.warn("OzServer IOException in select", ioe);
             }
 
-            if (mLog.isDebugEnabled()) mLog.debug("selected " + readyCount);
-
-            if (readyCount == 0) {
-                continue;
-            }
+            if (mLog.isDebugEnabled()) mLog.debug("selected " + readyCount + " set " + mSelector.selectedKeys().size());
 
             Iterator<SelectionKey> iter = mSelector.selectedKeys().iterator();
             while (iter.hasNext()) {

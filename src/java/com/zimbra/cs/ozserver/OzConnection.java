@@ -310,27 +310,27 @@ public class OzConnection {
         }
         
         public void run() {
-    		if (mDebug) {
-    			ZimbraLog.addToContext("op", mName);
-    			ZimbraLog.addToContext("opid", new Integer(mTaskCounter.incrementAndGet()).toString());
-    		}
-    		addToNDC();
-    		if (mDebug) mLog.debug("starting " + mName);
-            synchronized (mLock) {
-            	try {
-            		if (mClosed) {
-            			if (mDebug) mLog.debug("connection already closed, aborting " + mName);
-            			return;
-            		}
-            		doTask();
-            	} catch (Throwable t) {
-            		mLog.warn("exception occurred during " + mName + " task", t);
-            		cleanup();
-            	} finally {
-            		if (mDebug) mLog.debug("finished " + mName);
-            		clearFromNDC();
-            	}
-            }
+        	synchronized (mLock) {
+        		if (mDebug) {
+        			ZimbraLog.addToContext("op", mName);
+        			ZimbraLog.addToContext("opid", new Integer(mTaskCounter.incrementAndGet()).toString());
+        		}
+        		addToNDC();
+        		if (mDebug) mLog.debug("starting " + mName);
+        		try {
+        			if (mClosed) {
+        				if (mDebug) mLog.debug("connection already closed, aborting " + mName);
+        				return;
+        			}
+        			doTask();
+        		} catch (Throwable t) {
+        			mLog.warn("exception occurred during " + mName + " task", t);
+        			cleanup();
+        		} finally {
+        			if (mDebug) mLog.debug("finished " + mName);
+        			clearFromNDC();
+        		}
+        	}
         }
         
         protected abstract void doTask() throws IOException;

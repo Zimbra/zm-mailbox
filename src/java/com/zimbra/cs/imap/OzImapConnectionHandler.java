@@ -1937,13 +1937,12 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
     
     private void gotoClosedState(boolean sendBanner) {
         synchronized (mCloseLock) {
+        	// Close only once
+        	if (mState == ConnectionState.CLOSED) {
+        		throw new IllegalStateException("connection already closed");
+        	}
+        	
         	try {
-        		// Close only once
-        		if (mState == ConnectionState.CLOSED) {
-        			ZimbraLog.imap.info("goto closed state - already closed", new IllegalStateException("duplicate close"));
-        			return;
-        		}
-        		
         		if (mSession != null) {
         			mSession.setHandler(null);
         			SessionCache.clearSession(mSession.getSessionId(), mSession.getAccountId());
@@ -2019,9 +2018,10 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                 
         if (mState == ConnectionState.READLITERAL) {
             mCurrentRequestData.add(mCurrentData.array());
-            // at the end of a literal there is more of the
-            // command or there is just CRLF (which is the empty
-            // part of the command)
+            /*
+			 * at the end of a literal there is more of the command or there is
+			 * just CRLF (which is the empty part of the command)
+			 */
             gotoReadLineState(false);
             return;
         }
@@ -2052,11 +2052,6 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                 sendBAD(mCurrentRequestTag, ipe.getMessage());
                 gotoReadLineState(true);
                 return;
-            }
-            
-            /* If there was a literal specifier, remove said specifier. */
-            if (literal.length() > 0) {
-                line = line.substring(0, line.length() - literal.length());
             }
             
             /* Add either the literal removed line or a no-literal present at all
