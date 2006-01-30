@@ -22,6 +22,7 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
+
 package com.zimbra.cs.ozserver;
 
 import java.io.FileInputStream;
@@ -236,6 +237,8 @@ public class OzTLSFilter extends OzFilter {
         do {
             rbb.flip();
 
+            if (mTrace) trace(OzUtil.byteBufferDebugDump("read: before unwrap unwrappedBB", unwrappedBB, true));
+            if (mTrace) trace(OzUtil.byteBufferDebugDump("read: before unwrap readBB", rbb, true));
             if (mDebug) debug("read: invoking unwrap");
             result = mSSLEngine.unwrap(rbb, unwrappedBB);
             if (mTrace) trace(OzUtil.byteBufferDebugDump("read: after unwrap unwrappedBB", unwrappedBB, true));
@@ -256,6 +259,9 @@ public class OzTLSFilter extends OzFilter {
             case BUFFER_OVERFLOW:
                 throw new IOException("TLS filter: SSLEngine error during read: " + result.getStatus());
             }
+            
+            getNextFilter().read(unwrappedBB);
+            
         } while (rbb.position() != 0 && result.getStatus() == Status.OK);
         
         return unwrappedBB;
@@ -368,12 +374,6 @@ public class OzTLSFilter extends OzFilter {
         }
     }
 
-    public void closeNow() throws IOException {
-        if (mDebug) debug("closeNow");
-        mSSLEngine.closeInbound();
-        getNextFilter().closeNow();
-    }
-
     private Object mCloseLock = new Object();
     private boolean mClosePending = false;
     private boolean mClosedNextStage = false;
@@ -387,6 +387,8 @@ public class OzTLSFilter extends OzFilter {
     private void initiateNextStageClose() throws IOException {
         synchronized (mCloseLock) {
             mClosedNextStage = true;
+            //if (mDebug) debug("close - closing inbound");
+            //mSSLEngine.closeInbound();
             getNextFilter().close();
         }
     }
@@ -397,29 +399,34 @@ public class OzTLSFilter extends OzFilter {
         }
     }
     
-    private void initiateClose() {
-        if (mDebug) debug("initiating close");
+    public void close() throws IOException {
+        if (mDebug) debug("close");
+    
         synchronized (mCloseLock) {
-            if (!mClosePending) {
+            if (mClosePending) {
+            	if (mDebug) debug("close - already in progress");
+            	return;
+            } else {
+            	if (mDebug) debug("close - closing outbound");
                 mSSLEngine.closeOutbound();
                 mClosePending = true;
             }
         }
-    }
-
-    public void close() throws IOException {
-        if (mDebug) debug("close");
-    
-        initiateClose();
 
         /* "fire and forget" close_notify */
-        ByteBuffer dest = ByteBuffer.allocate(mPacketBufferSize);
-        SSLEngineResult result = mSSLEngine.wrap(mHandshakeBB, dest);
-        if (result.getStatus() != Status.CLOSED) {
-            throw new SSLException("Improper close state");
-        }
-        dest.flip();
-        getNextFilter().write(dest, true);
+        SSLEngineResult result = null;
+        int i = 1;
+        do {
+        	if (mDebug) debug("close - wrap iter=" + i++);
+        	ByteBuffer dest = ByteBuffer.allocate(mPacketBufferSize);
+        	result = mSSLEngine.wrap(mHandshakeBB, dest);
+        	if (result.getStatus() != Status.CLOSED) {
+        		throw new SSLException("Improper close state");
+        	}	
+        	dest.flip();
+            if (mTrace) trace(OzUtil.byteBufferDebugDump("close notify wrap", dest, false));
+            getNextFilter().write(dest, true);
+        } while (result != null && result.getHandshakeStatus() == HandshakeStatus.NEED_WRAP);
     }
 
     private void debug(String msg) {
@@ -433,5 +440,4 @@ public class OzTLSFilter extends OzFilter {
     public int getPreferredReadBufferSize() {
         return mPacketBufferSize;
     }
-
 }

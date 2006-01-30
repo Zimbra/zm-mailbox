@@ -179,6 +179,7 @@ class TestConnectionHandler implements OzConnectionHandler {
     }
     
     public void handleDisconnect() {
-        TestServer.mLog.info("connection closed by client");
+        TestServer.mLog.info("connection disconnect");
+        mConnection.close();
     }
 }

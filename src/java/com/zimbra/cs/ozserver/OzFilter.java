@@ -37,8 +37,6 @@ public abstract class OzFilter {
 
     public abstract void writeCompleted() throws IOException;
 
-    public abstract void closeNow() throws IOException;
-
     public abstract void close() throws IOException;
 
     public abstract void flush() throws IOException;
