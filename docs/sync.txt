@@ -2,7 +2,7 @@
 
 <SyncRequest/>   <-- no token = initial sync -->
 
-<SyncResponse token="403" md="1077924283">
+<SyncResponse token="403" md="1077924283" s="78624627">
   <folder id="11">
     <folder id="9" name="Conversations" l="11"/>
     <folder id="8" name="Tags" l="11">

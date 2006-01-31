@@ -1392,7 +1392,7 @@ list of ids of the mail items contained in each folder.
 
     ChangeList: TBD
     
-<SyncResponse token="new-sync-token">
+<SyncResponse token="{new-sync-token}" md="{current-time}" s="{mailbox-size}">
    <folder id="1">
      <m ids="x,y,z"/>
      <cn ids="a,b,c"/>
