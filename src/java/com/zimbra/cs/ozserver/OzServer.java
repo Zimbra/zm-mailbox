@@ -172,9 +172,11 @@ public class OzServer {
                         readyConnection.doWriteReady();
                     }
                 } catch (Throwable t) {
-                    mLog.warn("ignoring exception that occurred while handling selected key", t);
                     if (readyConnection != null) {
+                    	mLog.warn("exception occurred handling selecting key, closing connection", t);
                         readyConnection.cleanup();
+                    } else {
+                    	mLog.warn("ignoring exception occurred while handling a selected key", t);
                     }
                 } finally {
                     if (readyConnection != null) {

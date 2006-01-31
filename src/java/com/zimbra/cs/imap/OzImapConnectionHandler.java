@@ -1935,7 +1935,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
     
     private Object mCloseLock = new Object();
     
-    private void gotoClosedState(boolean sendBanner) {
+    private void gotoClosedState(boolean normalClose) {
         synchronized (mCloseLock) {
         	// Close only once
         	if (mState == ConnectionState.CLOSED) {
@@ -1949,26 +1949,32 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         			mSession = null;
         		}
         		
-        		if (sendBanner) {
-        			try {
-        				if (!mGoodbyeSent) {
-        					sendUntagged(ImapServer.getGoodbye(), true);
-        				}
-        				mGoodbyeSent = true;
-        			} catch (IOException e) {
-        				ZimbraLog.imap.info("exception sending goodbye banner", e);
+        		if (normalClose) {
+        			if (!mGoodbyeSent) {
+        				sendUntagged(ImapServer.getGoodbye(), true);
         			}
+        			mGoodbyeSent = true;
         		}
-        	} finally {        		
-        		mConnection.close();
+        	} catch (IOException ioe) {
+        		normalClose = false;
+        	} finally {
+        		if (normalClose) {
+        			mConnection.close();
+        		} else {
+        			mConnection.closeNow();
+        		}
         		mState = ConnectionState.CLOSED;
-        		if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("entered closed state: banner " + (sendBanner ? "" : "not") + " sent");
+        		if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("entered closed state: normal=" + normalClose);
         	}
         }
     }
 
     public void dropConnection() {
-        gotoClosedState(true);
+    	// TODO revist this. There appear to be two callers for this method. One
+		// is idle connection termination, and in that case it is okay to send
+		// the banner. The other is IOException - in that case we should not
+		// attempt to send the banner. IOException has occurred.
+        gotoClosedState(false);
     }
 
     public void handleConnect() throws IOException {

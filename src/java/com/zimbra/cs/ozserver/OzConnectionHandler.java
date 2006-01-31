@@ -33,6 +33,7 @@ public interface OzConnectionHandler {
 
     void handleInput(ByteBuffer buffer, boolean matched) throws IOException;
 
+    /* The contract of handleDisconnect is that you must call OzConnection.closeNow(), and not close(). */
     void handleDisconnect();
     
     void handleIdle() throws IOException;

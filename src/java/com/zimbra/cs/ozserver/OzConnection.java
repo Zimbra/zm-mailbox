@@ -173,6 +173,10 @@ public class OzConnection {
         }
     }
 
+    public void closeNow() {
+    	cleanupChannel(CleanupReason.ABRUPT);
+    }
+    
     /**
      * Notify the connection handler object to terminate this connection. 
      */
