@@ -40,7 +40,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.ZimbraLog;
@@ -75,6 +77,16 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
 		}
 		return null;
 	}
+
+	private AuthToken getAuthTokenForApp(HttpServletRequest req, HttpServletResponse resp)
+			throws IOException, ServiceException {
+		Config config = Provisioning.getInstance().getConfig();
+		int adminPort = config.getIntAttr(Provisioning.A_zimbraAdminPort, 0);
+		if (adminPort == req.getServerPort()) {
+			return getAdminAuthTokenFromCookie(req, resp);
+		}	
+		return getAuthTokenFromCookie(req, resp, true);
+	}
 	
 	public void doFilter(ServletRequest request, ServletResponse response,
 			FilterChain chain) throws IOException, ServletException {
@@ -84,17 +96,13 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
 		HttpServletRequest  req = (HttpServletRequest) request;
 		HttpServletResponse resp = (HttpServletResponse) response;
 
-        AuthToken authToken = getAuthTokenFromCookie(req, resp, true);
-        boolean isAdmin = false;
-        if (authToken == null) { //check for admin auth token
-        	authToken = getAdminAuthTokenFromCookie(req, resp);
-            if (authToken == null) {
-            	ZimbraLog.zimlet.info("no auth token");
-            	resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            	return;
-            } else {
-            	isAdmin = true;
-            }
+        AuthToken authToken;
+        try {
+        	authToken = getAuthTokenForApp(req, resp);
+        } catch (ServiceException se) {
+        	ZimbraLog.zimlet.info("can't get authToken: "+se.getMessage());
+        	resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        	return;
         }
         
     	String zimletName = getZimletName(req);
@@ -105,9 +113,18 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
     	}
     	
         try {
-        	Account account = Provisioning.getInstance().getAccountById(authToken.getAccountId());
-        	boolean isDomainAdmin = account.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);
-        	if (!isAdmin && !isDomainAdmin) {
+        	Provisioning prov = Provisioning.getInstance();
+        	Account account = prov.getAccountById(authToken.getAccountId());
+        	Zimlet z = prov.getZimlet(zimletName);
+        	boolean isAdmin = (authToken.isAdmin() || authToken.isDomainAdmin());
+        	if (z.isExtension()) {
+        		// admin zimlets are accessible only by admins through admin app.
+        		if (!isAdmin) {
+                	ZimbraLog.zimlet.info("unauthorized request to zimlet "+zimletName+" from non admin user "+authToken.getAccountId());
+                	resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            		return;
+        		}
+        	} else {
 	        	Set zimlets = account.getCOS().getMultiAttrSet(Provisioning.A_zimbraZimletAvailableZimlets);
 	        	if (!zimlets.contains(zimletName)) {
 	            	ZimbraLog.zimlet.info("unauthorized request to zimlet "+zimletName+" from user "+authToken.getAccountId());
