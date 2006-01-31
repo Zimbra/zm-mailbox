@@ -34,6 +34,11 @@ import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -482,14 +487,14 @@ public abstract class RedoableOp {
 		if (!skipDetail) {
 			String className = RedoableOp.getOpClassName(opcode);
 			if (className != null) {
-				Class cl = null;
+				Class clz = null;
 				try {
-					cl = Class.forName(sPackageName + "." + className);
+                	clz = loadOpClass(sPackageName + "." + className);
 				} catch (ClassNotFoundException e) {
 					throw new IOException("ClassNotFoundException for redo operation " + className);
 				}
 				try {
-					op = (RedoableOp) cl.newInstance();
+					op = (RedoableOp) clz.newInstance();
 				} catch (InstantiationException e) {
 					String msg = "Unable to instantiate " + className;
 					mLog.error(msg, e);
@@ -572,13 +577,6 @@ public abstract class RedoableOp {
         return ByteUtil.readUTF8(in);
     }
 
-    static {
-    	boolean allSubclassesGood = checkSubclasses();
-        if (!allSubclassesGood) {
-        	Zimbra.halt("Some RedoableOp subclasses are incomplete");
-        }
-    }
-
     private static boolean checkSubclasses() {
         boolean allGood = true;
         for (int opcode = OP_UNKNOWN + 1; opcode < OP_LAST; opcode++) {
@@ -587,14 +585,14 @@ public abstract class RedoableOp {
             	mLog.error("Invalid redo operation code: " + opcode);
                 allGood = false;
             } else if (className.compareTo("UNKNOWN") != 0) {
-                Class cl = null;
+                Class clz = null;
                 try {
-                    cl = Class.forName(sPackageName + "." + className);
-                    RedoableOp op = (RedoableOp) cl.newInstance();
+                	clz = loadOpClass(sPackageName + "." + className);
+                    clz.newInstance();
                 } catch (ClassNotFoundException e) {
                     // Some classes may not be found depending on which
                     // optional packages are installed.
-                    mLog.debug("ClassNotFoundException for redo operation " + className, e);
+                    mLog.debug("Ignoring ClassNotFoundException for redo operation " + className);
                 } catch (InstantiationException e) {
                     String msg = "Unable to instantiate " + className +
                                  "; Check default constructor is defined.";
@@ -608,5 +606,79 @@ public abstract class RedoableOp {
             }
         }
     	return allGood;
+    }
+
+    private static Map<String, Class> sOpClassMap;
+    private static List<ClassLoader> sOpClassLoaders;
+
+    static {
+    	sOpClassMap = new HashMap<String, Class>();
+    	sOpClassLoaders = new ArrayList<ClassLoader>();
+
+    	boolean allSubclassesGood = checkSubclasses();
+        if (!allSubclassesGood) {
+        	Zimbra.halt(
+        	    "Some RedoableOp subclasses are incomplete.  " +
+        	    "Hint: Make sure the subclass defines a default constructor.");
+        }
+    }
+
+    /**
+     * Register a class loader for instantiating redo op objects.
+     * @param ldr
+     */
+    public synchronized static void registerClassLoader(ClassLoader ldr) {
+    	mLog.debug("Registering class loader " + ldr);
+    	for (ClassLoader loader : sOpClassLoaders) {
+    		if (loader.equals(ldr)) return;
+    	}
+    	sOpClassLoaders.add(ldr);
+    }
+
+    public synchronized static void deregisterClassLoader(ClassLoader ldr) {
+    	mLog.debug("Deregistering class loader " + ldr);
+    	List<String> toRemove = new ArrayList<String>();
+    	for (Map.Entry<String, Class> entry : sOpClassMap.entrySet()) {
+    		Class clz = entry.getValue();
+    		if (clz.getClassLoader().equals(ldr))
+    			toRemove.add(entry.getKey());
+    	}
+    	for (String key : toRemove) {
+    		sOpClassMap.remove(key);
+    		mLog.debug("Removed " + key + " from redo op class map");
+    	}
+    	for (Iterator iter = sOpClassLoaders.iterator(); iter.hasNext(); ) {
+    		ClassLoader loader = (ClassLoader) iter.next();
+    		if (loader.equals(ldr))
+    			iter.remove();
+    	}
+    }
+
+    private synchronized static Class loadOpClass(String className)
+    throws ClassNotFoundException {
+    	Class clz = sOpClassMap.get(className);
+    	if (clz == null) {
+    		// Try default class loader first.
+    		try {
+	    		clz = Class.forName(className);
+	    		sOpClassMap.put(className, clz);
+    		} catch (ClassNotFoundException e) {
+        		// Try the registered class loaders.
+        		for (ClassLoader loader : sOpClassLoaders) {
+        			try {
+        				clz = loader.loadClass(className);
+        				mLog.debug(
+        				    "Loaded class " + className +
+        				    " using class loader " + loader);
+        				sOpClassMap.put(className, clz);
+        				break;
+        			} catch (ClassNotFoundException e2) {}
+        		}
+        		if (clz == null)
+        			throw e;
+    		}
+
+    	}
+    	return clz;
     }
 }
