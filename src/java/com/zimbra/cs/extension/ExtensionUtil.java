@@ -33,6 +33,7 @@ import java.util.ListIterator;
 import org.apache.commons.collections.map.ListOrderedMap;
 
 import com.zimbra.cs.localconfig.LC;
+import com.zimbra.cs.redolog.op.RedoableOp;
 import com.zimbra.cs.util.ZimbraLog;
 
 public class ExtensionUtil {
@@ -82,6 +83,7 @@ public class ExtensionUtil {
 					ZimbraExtension ext = (ZimbraExtension)clz.newInstance();
 					try {
 						ext.init();
+						RedoableOp.registerClassLoader(ext.getClass().getClassLoader());
                         String extName = ext.getName();
 						ZimbraLog.extensions.info("Initialized extension " + extName + ": " + name + "@" + zcl);
 						sInitializedExtensions.put(extName, ext);
@@ -109,6 +111,7 @@ public class ExtensionUtil {
             String extName = (String) iter.previous();
 			ZimbraExtension ext = (ZimbraExtension) getExtension(extName);
 			try {
+				RedoableOp.deregisterClassLoader(ext.getClass().getClassLoader());
 				ext.destroy();
 				ZimbraLog.extensions.info("Destroyed extension " + extName + ": " + ext.getClass().getName() + "@" + ext.getClass().getClassLoader());
 			} catch (Throwable t) {
