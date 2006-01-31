@@ -213,6 +213,10 @@ public class LmtpClient {
 		mTrace = onOff;
 	}
 	
+    public String getResponse() {
+    	return (mResponse);
+    }
+    
     private void warn(String s)  { System.err.println("[warn] "  + s); System.err.flush(); }
 	private void error(String s) { System.err.println("[error] " + s); System.err.flush(); }
 	private void info(String s)  { System.out.println("[info] "  + s); System.out.flush(); }
