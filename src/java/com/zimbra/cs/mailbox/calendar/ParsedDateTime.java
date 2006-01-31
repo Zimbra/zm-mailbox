@@ -42,6 +42,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.ZimbraLog;
 
 public final class ParsedDateTime {
     
@@ -504,9 +505,11 @@ public final class ParsedDateTime {
 	            zone = knownTZ.toTimeZone();
 	        if (zone != null)
             	tzMap.add(zone);
-	        else
-                throw MailServiceException.INVALID_REQUEST(
-                        "invalid time zone \"" + tzId + "\"", null);
+	        else {
+	        	ZimbraLog.calendar.warn(
+	        			"Encountered time zone with no definition: TZID=" +
+	        			tzId);
+	        }
         }
         return zone;
     }

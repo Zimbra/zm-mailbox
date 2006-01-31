@@ -297,15 +297,7 @@ public class Appointment extends MailItem {
             }
             
             if (meta.containsKey(Metadata.FN_REPLY_LIST)) {
-                //mReplyList = ReplyList.decodeFromMetadata(meta.getMap(Metadata.FN_REPLY_LIST), mTzMap);
-                try {
-                    mReplyList = ReplyList.decodeFromMetadata(meta.getMap(Metadata.FN_REPLY_LIST), mTzMap);
-                } catch (ServiceException e) {
-                    // TODO: This is temporary debug code for bug 5729.
-                    String msg = "BUG 5729: mbox=" + getMailboxId() + ", appt=" + getId();
-                    ZimbraLog.calendar.warn(msg, e);
-                    mReplyList = new ReplyList();
-                }
+                mReplyList = ReplyList.decodeFromMetadata(meta.getMap(Metadata.FN_REPLY_LIST), mTzMap);
             } else {
                 mReplyList = new ReplyList();
             }
