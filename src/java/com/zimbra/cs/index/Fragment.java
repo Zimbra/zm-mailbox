@@ -48,41 +48,49 @@ public class Fragment {
             char c = text.charAt(i);
             if (c == ':')
                 return (i != 0);
-            else if (!allowSpaces && Character.isWhitespace(c))
-                return false;
             else if (c == '\r' || c == '\n')
+                return false;
+            else if (!allowSpaces && Character.isWhitespace(c))
                 return false;
         }
         return false;
     }
 
     private static String skipFragmentHeader(String fragment, boolean calendar) {
-        String backup = fragment;
+        String backup = fragment, checkpoint = fragment;
 
         // skip all the "From:", "When:", "Organizer:", etc. lines 
         int returnIndex = -1;
         while (fragment.length() > 0) {
+            // try to special-case non-header colons in the text
+            char first = fragment.charAt(0);
+            fragment = fragment.trim();
+            if (first == '\r' || first == '\n')
+                checkpoint = fragment;
+            // find and examine the next line
             returnIndex = fragment.indexOf('\n');
-            if (returnIndex == -1)
-                return backup;
             if (!isHeader(fragment, calendar)) {
                 if (calendar) {
                     // if the next line is the separator, the fragment is the *rest* of the content
-                    String line = fragment.substring(0, returnIndex).trim();
+                    String line = returnIndex == -1 ? fragment : fragment.substring(0, returnIndex).trim();
                     if (line.equals(CALENDAR_SEPARATOR))
-                        fragment = fragment.substring(returnIndex + 1).trim();
+                        checkpoint = returnIndex == -1 ? "" : fragment.substring(returnIndex + 1).trim();
                 }
                 break;
             }
-            fragment = fragment.substring(returnIndex + 1).trim();
+            if (returnIndex == -1) {
+                checkpoint = "";
+                break;
+            }
+            fragment = fragment.substring(returnIndex + 1);
         }
 
-        return (fragment.length() > 0 ? fragment : backup);
+        return (checkpoint.length() > 0 ? checkpoint : backup);
     }
 
     private static String skipQuotedText(String fragment, boolean twoLineHeader) {
         String backup = fragment;
-        
+
         // skip the quote header ("On foosday, Herbie wrote:\n")
         int returnIndex = -1;
         int headerLines = (twoLineHeader ? 2 : 1);
@@ -104,7 +112,7 @@ public class Fragment {
                 break;
             }
         }
-        
+
         // skip quoted text
         if (fragment.startsWith(">")) {
             do {
@@ -134,11 +142,11 @@ public class Fragment {
             // compress repeated whitespace
             if (c == ' ' && last == c)
                 continue;
-            // more than 2 "line characters" get reduced to 2
-            if ((c == '=' || c == '-') && last == c && lastButOne == c)
-                continue;
             // skip non-XML-safe characters
             if (c < 0x20 || c == 0xFFFE || c == 0xFFFF || (c > 0xD7FF && c < 0xE000))
+                continue;
+            // more than 2 "line characters" get reduced to 2
+            if ((c == '=' || c == '-') && last == c && lastButOne == c)
                 continue;
             // if we've made it here, add the character!
             lastButOne = last;
