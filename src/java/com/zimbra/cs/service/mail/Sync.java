@@ -64,9 +64,9 @@ public class Sync extends DocumentHandler {
         synchronized (mbox) {
             mbox.beginTrackingSync(null);
 
-            long token = mbox.getLastChangeID();
-            response.addAttribute(MailService.A_TOKEN, token);
+            response.addAttribute(MailService.A_TOKEN, mbox.getLastChangeID());
             if (begin <= 0) {
+                response.addAttribute(MailService.A_SIZE, mbox.getSize());
                 Folder folder = mbox.getFolderById(octxt, DEFAULT_FOLDER_ID);
                 if (folder == null)
                     throw MailServiceException.NO_SUCH_FOLDER(DEFAULT_FOLDER_ID);
