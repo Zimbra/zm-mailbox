@@ -52,6 +52,10 @@ import EDU.oswego.cs.dl.util.concurrent.ThreadFactory;
 
 // TODO lot of selects return with 0 selected, in a big sequence (SSL only?)
 
+// TODO limit total number of connections from config
+
+// TODO limit total bytes read in ByteArrayMatcher and enforce in IMAP
+
 public class OzServer {
     
     private Log mLog;
@@ -131,11 +135,7 @@ public class OzServer {
                 mLog.warn("OzServer IOException in select", ioe);
             }
 
-            if (mLog.isDebugEnabled()) mLog.debug("selected " + readyCount);
-
-            if (readyCount == 0) {
-                continue;
-            }
+            if (mLog.isDebugEnabled()) mLog.debug("selected " + readyCount + " set " + mSelector.selectedKeys().size());
 
             Iterator<SelectionKey> iter = mSelector.selectedKeys().iterator();
             while (iter.hasNext()) {
@@ -155,33 +155,35 @@ public class OzServer {
 
                     synchronized (readyKey) {
                         OzUtil.logKey(mLog, readyKey, "ready key");
+                    
+                        if (readyKey.isAcceptable()) {
+                        	Socket newSocket = mServerSocket.accept();
+                        	SocketChannel newChannel = newSocket.getChannel(); 
+                        	newChannel.configureBlocking(false);
+                        	readyConnection= new OzConnection(OzServer.this, newChannel);
+                        }
+                        
+                        if (readyKey.isValid() && readyKey.isReadable()) {
+                        	readyConnection.doReadReady();
+                        }
+                        
+                        if (readyKey.isValid() && readyKey.isWritable()) {
+                        	readyConnection.doWriteReady();
+                        }
                     }
                     
-                    if (readyKey.isAcceptable()) {
-                        Socket newSocket = mServerSocket.accept();
-                        SocketChannel newChannel = newSocket.getChannel(); 
-                        newChannel.configureBlocking(false);
-                        readyConnection= new OzConnection(OzServer.this, newChannel);
-                    }
-                    
-                    if (readyKey.isReadable()) {
-                        readyConnection.doReadReady();
-                    }
-                    
-                    if (readyKey.isWritable()) {
-                        readyConnection.doWriteReady();
-                    }
                 } catch (Throwable t) {
-                    mLog.warn("ignoring exception that occurred while handling selected key", t);
                     if (readyConnection != null) {
+                    	mLog.warn("exception occurred handling selecting key, closing connection", t);
                         readyConnection.cleanup();
+                    } else {
+                    	mLog.warn("ignoring exception occurred while handling a selected key", t);
                     }
                 } finally {
                     if (readyConnection != null) {
                         readyConnection.clearFromNDC();
                     }
                 }
-                
             } /* end of ready keys loop */
 
             if (mLog.isDebugEnabled()) mLog.debug("processed " + readyCount + " ready keys");

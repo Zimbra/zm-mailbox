@@ -78,11 +78,16 @@ final class ImapLiteral {
             String number = line.substring(digitStart, digitLimit);
             if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("LITERAL found count string=" + number);
             result.mOctets = Integer.parseInt(number);
-            result.mLength = digitLimit - digitStart + 3; /* {+} */ 
+            result.mLength = digitLimit - digitStart + (result.mBlocking ? 2 /* {} */ : 3 /* {+} */); 
         } catch (NumberFormatException nfe) {
             if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("LITERAL exception", nfe);
             throw new ImapParseException(tag, "malformed literal octect count not a number");
         }
         return result;
+    }
+    
+    public static void main(String[] args) throws Exception {
+    	ImapLiteral l = parse(args[0], args[1]);
+    	System.err.println(l.length());
     }
 }

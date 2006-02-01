@@ -15,35 +15,26 @@
  * The Original Code is: Zimbra Collaboration Suite Server.
  * 
  * The Initial Developer of the Original Code is Zimbra, Inc.
- * Portions created by Zimbra are Copyright (C) 2005 Zimbra, Inc.
+ * Portions created by Zimbra are Copyright (C) 2006 Zimbra, Inc.
  * All Rights Reserved.
  * 
  * Contributor(s): 
  * 
  * ***** END LICENSE BLOCK *****
  */
+
 package com.zimbra.cs.ozserver;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
+public class OzOverflowException extends Exception {
+	
+	int mLimit = 0;
+	
+	public OzOverflowException(int limit) {
+		super("too many bytes in input");
+		mLimit = limit;
+	}
 
-public abstract class OzFilter {
-
-    public abstract void read(ByteBuffer rbb) throws IOException;
-
-    public abstract void write(ByteBuffer wbb) throws IOException;
-
-    public abstract void close() throws IOException;
-
-    private OzFilter mNextFilter;
-    
-    void setNextFilter(OzFilter next) {
-        mNextFilter = next;
-    }
-    
-    protected OzFilter getNextFilter() {
-        return mNextFilter;
-    }
-
-	public abstract void waitForWriteCompletion() throws IOException;
+	public int limit() {
+		return mLimit;
+	}
 }

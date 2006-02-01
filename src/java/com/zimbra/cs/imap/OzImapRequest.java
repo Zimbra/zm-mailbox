@@ -152,6 +152,7 @@ class OzImapRequest {
         Object part = mParts.get(mIndex + 1);
         if (!(part instanceof byte[]))
             throw new ImapParseException(mTag, "in string next not literal");
+        mIndex += 2;
         return (byte[]) part;
     }
 
@@ -179,7 +180,6 @@ class OzImapRequest {
             throw new ImapParseException(tag, "zero-length content");
         }
         String result = content.substring(offset, i);
-        offset = i;
         return result;
     }
     

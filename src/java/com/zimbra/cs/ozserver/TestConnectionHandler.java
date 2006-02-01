@@ -32,9 +32,9 @@ import com.zimbra.cs.util.ZimbraLog;
 
 class TestConnectionHandler implements OzConnectionHandler {
 
-    private OzByteArrayMatcher mCommandMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLF, ZimbraLog.misc);
+    private OzByteArrayMatcher mCommandMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLF, 1000, ZimbraLog.misc);
     
-    private OzByteArrayMatcher mSumDataMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLFDOTCRLF, ZimbraLog.misc);
+    private OzByteArrayMatcher mSumDataMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLFDOTCRLF, 32000, ZimbraLog.misc);
     
     private OzCountingMatcher mNsumDataMatcher = new OzCountingMatcher();
     
@@ -89,6 +89,11 @@ class TestConnectionHandler implements OzConnectionHandler {
         mConnection.writeAsciiWithCRLF("200 Hello, welcome to test server cid=" + mConnection.getId());
         gotoReadingCommandState();
     }   
+    
+    public void handleOverflow() throws IOException {
+        mConnection.writeAsciiWithCRLF("525 request too long");
+        gotoReadingCommandState();
+    }
     
     private void doCommand() throws IOException 
     {
@@ -174,12 +179,12 @@ class TestConnectionHandler implements OzConnectionHandler {
     
     public void handleIdle() throws IOException {
         TestServer.mLog.info("connection was idle, terminating");
-        mConnection.writeAsciiWithCRLF("250 sorry you have been idle and are being terminated");
+        mConnection.writeAsciiWithCRLF("550 sorry you have been idle and are being terminated");
         mConnection.close();
     }
     
     public void handleDisconnect() {
         TestServer.mLog.info("connection disconnect");
-        mConnection.close();
+        mConnection.closeNow();
     }
 }
