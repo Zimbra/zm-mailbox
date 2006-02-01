@@ -705,13 +705,21 @@ public class LdapProvisioning extends Provisioning {
         searchAccounts(query, returnAttrs, base, flags, visitor);
 
         if (sortAttr != null) {
+            final boolean byName = sortAttr.equals("name"); 
             Comparator comparator = new Comparator() {
                 public int compare(Object oa, Object ob) {
                     LdapNamedEntry a = (LdapNamedEntry) oa;
                     LdapNamedEntry b = (LdapNamedEntry) ob;
-                    String sa = a.getAttr(sortAttr);
-                    String sb = b.getAttr(sortAttr);
-                    int result = (sa == null || sb == null) ? -1 : sa.compareTo(sb);
+                    int result = 0;
+                    if (byName)
+                        result = a.getName().compareToIgnoreCase(b.getName());
+                    else {
+                        String sa = a.getAttr(sortAttr);
+                        String sb = b.getAttr(sortAttr);
+                        if (sa == null) sa = "";
+                        if (sb == null) sb = "";
+                        result = sa.compareToIgnoreCase(sb);
+                    }
                     return sortAscending ? result : -result;
                 }
             };
