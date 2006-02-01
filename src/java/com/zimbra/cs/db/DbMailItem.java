@@ -381,7 +381,9 @@ public class DbMailItem {
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
                     " SET type = ?, parent_id = ?, date = ?, size = ?, blob_digest = ?, flags = ?," +
-                    "     sender = ?, subject = ?, metadata = ?, mod_metadata = ?, change_date = ?, mod_content = ?" +
+                    " sender = ?, subject = ?, metadata = ?," +
+                    " mod_metadata = ?, change_date = ?, mod_content = ?," +
+                    " volume_id = ?" +
                     " WHERE id = ?");
             stmt.setByte(1, item.getType());
             if (item.getParentId() <= 0)
@@ -398,7 +400,12 @@ public class DbMailItem {
             stmt.setInt(10, mbox.getOperationChangeID());
             stmt.setInt(11, mbox.getOperationTimestamp());
             stmt.setInt(12, item.getSavedSequence());
-            stmt.setInt(13, item.getId());
+            short vol = item.getVolumeId();
+            if (vol > 0)
+                stmt.setShort(13, item.getVolumeId());
+            else
+                stmt.setNull(13, Types.TINYINT);
+            stmt.setInt(14, item.getId());
             stmt.executeUpdate();
             
             // Update the flagset cache.  Assume that the item's in-memory

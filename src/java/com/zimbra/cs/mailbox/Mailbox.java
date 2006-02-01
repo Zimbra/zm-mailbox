@@ -2521,11 +2521,14 @@ public class Mailbox {
             redoRecorder.setData(defaultInv, exceptions);
 
             // handle the DEFAULT appointment
+            short volumeId =
+                redoPlayer == null ? Volume.getCurrentMessageVolume().getId()
+                                   : redoPlayer.getVolumeId();
             Appointment appt = getAppointmentByUid(defaultInv.mInv.getUid());
             if (appt == null) { 
                 // ONLY create an appointment if this is a REQUEST method...otherwise don't.
                 if (defaultInv.mInv.getMethod().equals("REQUEST") || defaultInv.mInv.getMethod().equals("PUBLISH")) {
-                    appt = createAppointment(folderId, Volume.getCurrentMessageVolume().getId(), "",
+                    appt = createAppointment(folderId, volumeId, "",
                             defaultInv.mInv.getUid(), defaultInv.mPm, defaultInv.mInv);
                 } else {
 //                  mLog.info("Mailbox " + getId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c not a REQUEST and no Appointment could be found");
@@ -2533,15 +2536,18 @@ public class Mailbox {
                 }
             } else {
                 appt.removeAllInvites(); 
-                appt.processNewInvite(defaultInv.mPm, defaultInv.mInv, defaultInv.mForce, folderId, Volume.getCurrentMessageVolume().getId());
+                appt.processNewInvite(defaultInv.mPm, defaultInv.mInv,
+                                      defaultInv.mForce, folderId, volumeId);
             }
 
-            redoRecorder.setAppointmentId(appt.getId(), appt.getFolderId());
-             
+            redoRecorder.setAppointmentAttrs(appt.getId(),
+                                             appt.getFolderId(),
+                                             volumeId);
+
             // handle the exceptions!
             if (exceptions != null) {
                 for (SetAppointmentData sad : exceptions) {
-                    appt.processNewInvite(sad.mPm, sad.mInv, sad.mForce, folderId, Volume.getCurrentMessageVolume().getId());
+                    appt.processNewInvite(sad.mPm, sad.mInv, sad.mForce, folderId, volumeId);
                 }
             }
             
@@ -2583,6 +2589,9 @@ public class Mailbox {
     	
         CreateInvite redoRecorder = new CreateInvite(mId, inv, folderId, data, force);
         CreateInvite redoPlayer = (octxt == null ? null : (CreateInvite) octxt.player);
+        short volumeId =
+            redoPlayer == null ? Volume.getCurrentMessageVolume().getId()
+                               : redoPlayer.getVolumeId();
         
         boolean success = false;
         try {
@@ -2600,15 +2609,17 @@ public class Mailbox {
             if (appt == null) { 
                 // ONLY create an appointment if this is a REQUEST method...otherwise don't.
                 if (inv.getMethod().equals("REQUEST") || inv.getMethod().equals("PUBLISH")) {
-                    appt = createAppointment(folderId, Volume.getCurrentMessageVolume().getId(), "", inv.getUid(), pm, inv);
+                    appt = createAppointment(folderId, volumeId, "", inv.getUid(), pm, inv);
                 } else {
 //                  mLog.info("Mailbox " + getId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c not a REQUEST and no Appointment could be found");
                     return null; // for now, just ignore this Invitation
                 }
             } else {
-                appt.processNewInvite(pm, inv, force, folderId, Volume.getCurrentMessageVolume().getId());
-                redoRecorder.setAppointmentId(appt.getId(), appt.getFolderId());
+                appt.processNewInvite(pm, inv, force, folderId, volumeId);
             }
+            redoRecorder.setAppointmentAttrs(appt.getId(),
+                                             appt.getFolderId(),
+                                             volumeId);
 
             success = true;
             return new int[] { appt.getId(), inv.getMailItemId() };
@@ -3020,13 +3031,14 @@ public class Mailbox {
             int imapID = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getImapId());
             redoRecorder.setImapId(imapID);
 
-            // update the content and increment the revision number
-            msg.setContent(pm, digest, size, imapID);
-
-            // write the content to the store
             short volumeId =
                 redoPlayer == null ? Volume.getCurrentMessageVolume().getId()
                                    : redoPlayer.getVolumeId();
+
+            // update the content and increment the revision number
+            msg.setContent(pm, digest, size, volumeId, imapID);
+
+            // write the content to the store
             StoreManager sm = StoreManager.getInstance();
             blob = sm.storeIncoming(data, digest, null, volumeId);
             MailboxBlob mb = sm.renameTo(blob, this, id, msg.getSavedSequence(), volumeId);
@@ -3421,7 +3433,9 @@ public class Mailbox {
         Appointment appt = Appointment.create(createId, getFolderById(folderId), volumeId, tags, uid, pm, invite);
 
         if (redoRecorder != null)
-        	redoRecorder.setAppointmentId(appt.getId(), appt.getFolderId());
+        	redoRecorder.setAppointmentAttrs(appt.getId(),
+                                             appt.getFolderId(),
+                                             appt.getVolumeId());
         return appt;
     }
 
@@ -4275,6 +4289,7 @@ public class Mailbox {
     }
 
     public synchronized WikiItem createWiki(OperationContext octxt, ParsedMessage pm, int folderId) throws ServiceException {
+        // FIXME: Redo logging
     	beginTransaction("wiki", octxt);
     	int itemId = getNextItemId(ID_AUTO_INCREMENT);
        	short volumeId = Volume.getCurrentMessageVolume().getId();
