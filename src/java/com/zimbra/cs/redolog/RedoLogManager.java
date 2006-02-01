@@ -206,7 +206,7 @@ public class RedoLogManager {
 			try {
 				mLogWriter.open();
                 mRolloverMgr.initSequence(mLogWriter.getSequence());
-				RedoPlayer redoPlayer = new RedoPlayer();
+				RedoPlayer redoPlayer = new RedoPlayer(true);
 				numRecoveredOps = redoPlayer.runCrashRecovery(this, postStartupRecoveryOps);
                 redoPlayer.shutdown();
 				mLogWriter.close();

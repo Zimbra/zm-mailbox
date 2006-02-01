@@ -66,8 +66,11 @@ public class RedoPlayer {
     private LinkedHashMap mOpsMap;  // LinkedHashMap to ensure iteration order == insertion order
     private final Object mOpsMapGuard = new Object();
 
-    public RedoPlayer() {
+    private boolean mWriteable;
+
+    public RedoPlayer(boolean writeable) {
 		mOpsMap = new LinkedHashMap(INITIAL_MAP_SIZE);
+        mWriteable = writeable;
     }
 
     public void shutdown() {
@@ -88,7 +91,7 @@ public class RedoPlayer {
 	 */
 	public void scanLog(File logfile, boolean redoCommitted, int mailboxIds[], long startingTime)
     throws IOException, ServiceException {
-		FileLogReader logReader = new FileLogReader(logfile, true);
+		FileLogReader logReader = new FileLogReader(logfile, mWriteable);
 		logReader.open();
 		long lastPosition = 0;
 
@@ -115,9 +118,17 @@ public class RedoPlayer {
 			long size = logReader.getSize();
 			if (lastPosition < size) {
 				long diff = size - lastPosition;
-				mLog.warn("There were " + diff + " bytes of junk data at the end of " + logfile.getAbsolutePath() +
-						  ".  File will be truncated to " + lastPosition + " bytes.");
-				logReader.truncate(lastPosition);
+                String msg =
+                    "There were " + diff +
+                    " bytes of junk data at the end of " +
+                    logfile.getAbsolutePath() +
+                    ".";
+                if (mWriteable) {
+                    mLog.warn(msg + "  File will be truncated to " +
+                              lastPosition + " bytes");
+                    logReader.truncate(lastPosition);
+                } else
+                    mLog.warn(msg);
 			}
 		} finally {
 			logReader.close();
