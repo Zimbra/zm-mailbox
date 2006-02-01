@@ -926,9 +926,10 @@ public class ICalTimeZone extends SimpleTimeZone
             standard.addProperty(new ZProperty(ICalTok.DTSTART, mDayToStdDtStart));
             standard.addProperty(new ZProperty(ICalTok.TZOFFSETTO, timeToTzOffsetString(mStandardOffset)));
             standard.addProperty(new ZProperty(ICalTok.TZOFFSETFROM, timeToTzOffsetString(mDaylightOffset)));
-            standard.addProperty(new ZProperty(ICalTok.RRULE, mDayToStdRule));
+            if (mDayToStdRule != null)
+	            standard.addProperty(new ZProperty(ICalTok.RRULE, mDayToStdRule));
         }
-        
+
         if (mStdToDayDtStart != null) {
             ZComponent daylight = new ZComponent(ICalTok.DAYLIGHT);
             vtz.addComponent(daylight);
@@ -936,12 +937,13 @@ public class ICalTimeZone extends SimpleTimeZone
             daylight.addProperty(new ZProperty(ICalTok.DTSTART, mStdToDayDtStart));
             daylight.addProperty(new ZProperty(ICalTok.TZOFFSETTO, timeToTzOffsetString(mDaylightOffset)));
             daylight.addProperty(new ZProperty(ICalTok.TZOFFSETFROM, timeToTzOffsetString(mStandardOffset)));
-            daylight.addProperty(new ZProperty(ICalTok.RRULE, mStdToDayRule));
+            if (mStdToDayRule != null)
+	            daylight.addProperty(new ZProperty(ICalTok.RRULE, mStdToDayRule));
         }
-        
+
         return vtz;
     }
-    
+
     public static ICalTimeZone fromVTimeZone(ZComponent comp)
     {
         String tzname = comp.getPropVal(ICalTok.TZID, null);
