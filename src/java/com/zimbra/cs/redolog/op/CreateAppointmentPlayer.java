@@ -26,5 +26,7 @@
 package com.zimbra.cs.redolog.op;
 
 public interface CreateAppointmentPlayer {
-    int getAppointmentId();
+    public int getAppointmentId();
+    public int getFolderId();
+    public short getVolumeId();
 }

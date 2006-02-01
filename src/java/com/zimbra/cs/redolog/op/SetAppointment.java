@@ -43,16 +43,18 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.ParsedMessage;
 
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.store.Volume;
 import com.zimbra.cs.util.JMSession;
 
 
 public class SetAppointment extends RedoableOp implements CreateAppointmentRecorder, CreateAppointmentPlayer 
 {
     private int mFolderId;
-    private int mApptId;
+    private int mAppointmentId;
     private Mailbox.SetAppointmentData mDefaultInvite;
     private Mailbox.SetAppointmentData mExceptions[];
-    
+    private short mVolumeId = -1;
+
     public SetAppointment() {}
     
     static void serializeSetAppointmentData(DataOutput out, Mailbox.SetAppointmentData data) throws IOException, MessagingException {
@@ -104,7 +106,9 @@ public class SetAppointment extends RedoableOp implements CreateAppointmentRecor
     {
         assert(getMailboxId() != 0);
         out.writeInt(mFolderId);
-        out.writeInt(mApptId);
+        if (getVersion().atLeast(1, 0))
+            out.writeShort(mVolumeId);
+        out.writeInt(mAppointmentId);
         
         try {
             serializeSetAppointmentData(out, mDefaultInvite);
@@ -129,7 +133,9 @@ public class SetAppointment extends RedoableOp implements CreateAppointmentRecor
     protected void deserializeData(DataInput in) throws IOException {
         assert(getMailboxId() != 0);
         mFolderId = in.readInt();
-        mApptId = in.readInt();
+        if (getVersion().atLeast(1, 0))
+            mVolumeId = in.readShort();
+        mAppointmentId = in.readInt();
         
         try {
             Mailbox mbox = Mailbox.getMailboxById(getMailboxId());
@@ -179,14 +185,28 @@ public class SetAppointment extends RedoableOp implements CreateAppointmentRecor
         return mExceptions[exceptionNum];
     }
     
-    public int getAppointmentId() {
-        return mApptId;
-    }
-    
-    public void setAppointmentId(int id, int folderId) {
-        mApptId = id;
-        mFolderId = folderId;
-    }
+    public void setAppointmentAttrs(int appointmentId,
+								    int folderId,
+								    short volumeId) {
+		mAppointmentId = appointmentId;
+		mFolderId = folderId;
+		mVolumeId = volumeId;
+	}
+	
+	public int getAppointmentId() {
+		return mAppointmentId;
+	}
+	
+	public int getFolderId() {
+		return mFolderId;
+	}
+	
+	public short getVolumeId() {
+    	if (mVolumeId == -1)
+    		return Volume.getCurrentMessageVolume().getId();
+    	else
+    		return mVolumeId;
+	}
 
     public int getOpCode() {
         return OP_SET_APPOINTMENT;
@@ -201,9 +221,11 @@ public class SetAppointment extends RedoableOp implements CreateAppointmentRecor
     
     protected String getPrintableData() {
         StringBuffer toRet = new StringBuffer();
-        toRet.append("Folder=").append(mFolderId).append(",");
-        toRet.append("ApptId=").append(mApptId).append(",");
-        toRet.append("Default=").append(mDefaultInvite.toString()).append("\n");
+        toRet.append("apptId=").append(mAppointmentId).append(",");
+        toRet.append("folder=").append(mFolderId).append(",");
+        if (getVersion().atLeast(1, 0))
+            toRet.append(", vol=").append(mVolumeId);
+        toRet.append("default=").append(mDefaultInvite.toString()).append("\n");
         if (mExceptions != null) {
             for (int i = 0; i < mExceptions.length; i++) {
                 toRet.append("Exception").append(i).append("=").append(mExceptions[i].toString()).append("\n");

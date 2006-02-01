@@ -45,6 +45,7 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.RedoException;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.store.Volume;
 import com.zimbra.cs.util.JMSession;
 
 
@@ -158,13 +159,27 @@ public class CreateMessage extends RedoableOp implements CreateAppointmentPlayer
 		mConvId = convId;
 	}
 
+    public void setAppointmentAttrs(int appointmentId,
+									int folderId,
+									short volumeId) {
+		mAppointmentId = appointmentId;
+		mFolderId = folderId;
+		mVolumeId = volumeId;
+	}
+
     public int getAppointmentId() {
     	return mAppointmentId;
     }
 
-    public void setAppointmentId(int appointmentId, int folderId) {
-    	mAppointmentId = appointmentId;
-    	mFolderId = folderId;
+    public int getFolderId() {
+    	return mFolderId;
+    }
+
+    public short getVolumeId() {
+    	if (mVolumeId == -1)
+    		return Volume.getCurrentMessageVolume().getId();
+    	else
+    		return mVolumeId;
     }
 
 	public int getOpCode() {
@@ -177,10 +192,6 @@ public class CreateMessage extends RedoableOp implements CreateAppointmentPlayer
 
     public String getPath() {
     	return mPath;
-    }
-
-    public short getVolumeId() {
-    	return mVolumeId;
     }
 
     public void setMessageBodyInfo(byte[] data, String path, short volumeId) {

@@ -671,7 +671,8 @@ public class Appointment extends MailItem {
         }
     }
 
-    void setContent(ParsedMessage pm, String digest, int size) throws ServiceException {
+    void setContent(ParsedMessage pm, String digest, int size, short volumeId)
+    throws ServiceException {
         //
         // WARNING: this code is currently duplicated in Message.java -- until the two
         // functions are unified in MailItem, make sure you keep both versions in sync!
@@ -681,7 +682,9 @@ public class Appointment extends MailItem {
         markItemModified(Change.MODIFIED_CONTENT  | Change.MODIFIED_DATE |
                          Change.MODIFIED_IMAP_UID | Change.MODIFIED_SIZE);
         mData.blobDigest = digest;
+        mData.size       = size;
         mData.date       = mMailbox.getOperationTimestamp();
+        mData.volumeId   = volumeId;
         mData.contentChanged(mMailbox);
         mBlob = null;
         
@@ -761,7 +764,7 @@ public class Appointment extends MailItem {
             mMailbox.markOtherItemDirty(info);
         }
         
-        setContent(pm, digest, size);
+        setContent(pm, digest, size, volumeId);
 
         StoreManager sm = StoreManager.getInstance();
         Blob blob = sm.storeIncoming(data, digest, null, volumeId);
@@ -905,7 +908,7 @@ public class Appointment extends MailItem {
         }
         
     }
-    
+
     public static class ReplyInfo {
         public RecurId mRecurId;
         public int mSeqNo;

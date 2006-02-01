@@ -36,18 +36,21 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.ParsedMessage;
 
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.store.Volume;
 
 public class CreateInvite extends RedoableOp implements CreateAppointmentRecorder, CreateAppointmentPlayer 
 {
-    private int mApptId;
+    private int mAppointmentId;
     private Invite mInvite;
     private int mFolderId;
     private boolean mForce;
     private byte[] mData;
+    private short mVolumeId = -1;
     
     public CreateInvite() { }
 
-    public CreateInvite(int mailboxId, Invite inv, int folderId, byte[] data, boolean force) {
+    public CreateInvite(int mailboxId, Invite inv, int folderId,
+    					byte[] data, boolean force) {
         setMailboxId(mailboxId);
         mInvite = inv;
         mFolderId = folderId;
@@ -60,12 +63,23 @@ public class CreateInvite extends RedoableOp implements CreateAppointmentRecorde
     }
 
     protected String getPrintableData() {
-        return new String("ApptId = "+mApptId);
+        StringBuffer sb = new StringBuffer("apptId=").append(mAppointmentId);
+        sb.append(", folder=").append(mFolderId);
+    	if (getVersion().atLeast(1, 0))
+	        sb.append(", vol=").append(mVolumeId);
+        sb.append(", force=").append(mForce);
+        sb.append(", dataLen=").append(mData != null ? mData.length : 0);
+        ICalTimeZone localTz = mInvite.getTimeZoneMap().getLocalTimeZone();
+        sb.append(", localTZ=").append(localTz.encodeAsMetadata().toString());
+        sb.append(", inv=").append(Invite.encodeMetadata(mInvite).toString());
+        return sb.toString();
     }
 
     protected void serializeData(DataOutput out) throws IOException {
-        out.writeInt(mApptId);
+        out.writeInt(mAppointmentId);
         out.writeInt(mFolderId);
+        if (getVersion().atLeast(1, 0))
+            out.writeShort(mVolumeId);
         out.writeBoolean(mForce);
         
         int dataLen = mData != null ? mData.length : 0;
@@ -80,8 +94,10 @@ public class CreateInvite extends RedoableOp implements CreateAppointmentRecorde
     }
 
     protected void deserializeData(DataInput in) throws IOException {
-        mApptId = in.readInt();
+        mAppointmentId = in.readInt();
         mFolderId = in.readInt();
+        if (getVersion().atLeast(1, 0))
+            mVolumeId = in.readShort();
         mForce = in.readBoolean();
         
         int dataLen = in.readInt();
@@ -101,13 +117,27 @@ public class CreateInvite extends RedoableOp implements CreateAppointmentRecorde
         }
     }
     
+    public void setAppointmentAttrs(int appointmentId,
+								    int folderId,
+								    short volumeId) {
+		mAppointmentId = appointmentId;
+		mFolderId = folderId;
+		mVolumeId = volumeId;
+	}
+
     public int getAppointmentId() {
-        return mApptId;
+        return mAppointmentId;
     }
     
-    public void setAppointmentId(int id, int folderId) {
-        mApptId = id;
-        mFolderId = folderId;
+    public int getFolderId() {
+        return mFolderId;
+    }
+    
+    public short getVolumeId() {
+    	if (mVolumeId == -1)
+    		return Volume.getCurrentMessageVolume().getId();
+    	else
+    		return mVolumeId;
     }
 
     public void redo() throws Exception {

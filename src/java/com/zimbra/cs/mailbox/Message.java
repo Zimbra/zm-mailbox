@@ -495,7 +495,9 @@ public class Message extends MailItem {
 //        	mMailbox.recalculateSenderList(parent.getId(), true);
     }
 
-    void setContent(ParsedMessage pm, String digest, int size, int imapId) throws ServiceException {
+    void setContent(ParsedMessage pm, String digest, int size,
+                    short volumeId, int imapId)
+    throws ServiceException {
         //
         // WARNING: this code is currently duplicated in Appointment.java -- until the two
         // functions are unified in MailItem, make sure you keep both versions in sync!
@@ -511,6 +513,7 @@ public class Message extends MailItem {
                          Change.MODIFIED_IMAP_UID | Change.MODIFIED_SIZE);
         mData.blobDigest = digest;
         mData.date       = mMailbox.getOperationTimestamp();
+        mData.volumeId   = volumeId;
         mData.contentChanged(mMailbox);
         mImapUID = imapId;
         mBlob = null;

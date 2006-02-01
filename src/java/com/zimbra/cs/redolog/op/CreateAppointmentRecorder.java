@@ -26,5 +26,5 @@
 package com.zimbra.cs.redolog.op;
 
 public interface CreateAppointmentRecorder {
-    void setAppointmentId(int id, int folderId);
+    public void setAppointmentAttrs(int id, int folderId, short volumeId);
 }
