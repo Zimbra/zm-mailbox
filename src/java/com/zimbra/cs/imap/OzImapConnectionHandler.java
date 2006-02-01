@@ -43,6 +43,7 @@ import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.queryparser.ParseException;
+import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -608,7 +609,8 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         }
         sendOK(tag, "Begin TLS negotiation now");
 
-        mConnection.addFilter(new OzTLSFilter(mConnection, ZimbraLog.imap));
+        boolean debugLogging = LC.nio_imap_debug_logging.booleanValue();
+        mConnection.addFilter(new OzTLSFilter(mConnection, debugLogging, ZimbraLog.imap));
 
         mStartedTLS = true;
 

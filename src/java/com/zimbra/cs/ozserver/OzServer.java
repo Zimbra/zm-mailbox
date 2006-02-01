@@ -76,12 +76,15 @@ public class OzServer {
     
     private SSLContext mSSLContext;
 
+    private boolean mDebugLogging; 
+    
     public OzServer(String name, int readBufferSizeHint, ServerSocket serverSocket,
-                    OzConnectionHandlerFactory connectionHandlerFactory, Log log)
+                    OzConnectionHandlerFactory connectionHandlerFactory, boolean debugLoggging, Log log)
         throws IOException
     {
         mLog = log;
-
+        mDebugLogging = debugLoggging;
+        
         mServerSocket = serverSocket;
         mServerSocketChannel = serverSocket.getChannel();
         mServerSocketChannel.configureBlocking(false);
@@ -111,8 +114,12 @@ public class OzServer {
     private Object mSelectorGuard = new Object();
 
     void wakeupSelector() {
+        if (Thread.currentThread() == mServerThread) {
+           if (mDebugLogging) mLog.trace("noop wakeup selector - already in server thread");
+           return;
+        }
         synchronized (mSelectorGuard) {
-        	if (mLog.isTraceEnabled()) mLog.trace("waking up selector" /*, new Exception("wakeup context")*/);
+        	if (mDebugLogging) mLog.trace("waking up selector");
         	mSelector.wakeup();
         }
     }
@@ -350,6 +357,10 @@ public class OzServer {
         synchronized (mProperties) {
             mProperties.put(key, value);
         }
+    }
+
+    public boolean debugLogging() {
+        return mDebugLogging;
     }
 }
 

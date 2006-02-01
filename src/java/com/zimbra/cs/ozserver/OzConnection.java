@@ -76,10 +76,6 @@ public class OzConnection {
     
     private final boolean mTrace;
 
-    private boolean mReadPending;
-    
-    private boolean mWritePending;
-    
     private ConnectTask mConnectTask;
     
     private DisconnectTask mDisconnectTask;
@@ -102,7 +98,7 @@ public class OzConnection {
         mClosed = false;
         mLog = mServer.getLog();
         mDebug = mLog.isDebugEnabled();
-        mTrace = mLog.isTraceEnabled();
+        mTrace = mServer.debugLogging();
         mSelectionKey = channel.register(server.getSelector(), 0, this); 
 
         addFilter(new OzPlainFilter(), true);
@@ -231,97 +227,6 @@ public class OzConnection {
         ZimbraLog.clearContext();
     }
     
-    public void enableReadInterest() {
-        synchronized (mLock) {
-            if (mClosed) {
-                if (mTrace) mLog.trace("noop enable read interest - channel already closed"); 
-                return;
-            }
-
-            if (mReadPending) {
-                if (mTrace) mLog.trace("noop enable read interest - read already pending");
-                return;
-            }
-
-            mReadPending = true;
-            
-        	synchronized (mSelectionKey) {
-        		int iops = mSelectionKey.interestOps();
-        		mSelectionKey.interestOps(iops | SelectionKey.OP_READ);
-        		OzUtil.logKey(mLog, mSelectionKey, "enabled read interest");
-        	}
-        	
-        	mServer.wakeupSelector();
-        }
-    }
-    
-    private void disableReadInterest() {
-    	synchronized (mLock) {
-    		
-    		if (!mReadPending) {
-    			if (mTrace) mLog.trace("skipping disable read interest - no interest registered");
-    			return;
-    		}
-    		
-    		if (!mChannel.isOpen()) {
-    			if (mTrace) mLog.trace("skipping disable read interest - channel already closed");
-    			return;
-    		}
-    		
-    		mReadPending = false;
-    		
-    		synchronized (mSelectionKey) {
-    			int iops = mSelectionKey.interestOps();
-    			mSelectionKey.interestOps(iops & (~SelectionKey.OP_READ));
-    			OzUtil.logKey(mLog, mSelectionKey, "disabled read interest");
-    		}
-    	}
-    }
-
-    private void enableWriteInterest() {
-        synchronized (mLock) {
-            if (mWritePending) {
-                if (mTrace) mLog.trace("skipping enable write interest - write already pending");
-                return;
-            }
-            if (!mChannel.isOpen()) {
-                if (mTrace) mLog.trace("skipping enable write interest - channel already closed");
-                return;
-            }
-
-            mWritePending = true;
-
-            synchronized (mSelectionKey) {
-                int iops = mSelectionKey.interestOps();
-                mSelectionKey.interestOps(iops | SelectionKey.OP_WRITE);
-                OzUtil.logKey(mLog, mSelectionKey, "enabled write interest"); 
-            }
-
-            mServer.wakeupSelector();
-        }
-    }
-    
-    private void disableWriteInterest() {
-        synchronized (mLock) {
-            if (!mWritePending) {
-                if (mTrace) mLog.trace("skipping disable write interest - no interest registered");
-                return;
-            }
-            if (!mChannel.isOpen()) {
-                if (mTrace) mLog.trace("skipping disable write interest - channel already closed");
-                return;
-            }
-                        
-            mWritePending = false;
-                
-            synchronized (mSelectionKey) {
-                int iops = mSelectionKey.interestOps();
-                mSelectionKey.interestOps(iops & (~SelectionKey.OP_WRITE));
-                OzUtil.logKey(mLog, mSelectionKey, "disabled write interest"); 
-            }
-        }
-    }
-    
     OzConnectionHandler getConnectionHandler() {
         return mConnectionHandler;
     }
@@ -334,6 +239,14 @@ public class OzConnection {
         return mMatcher;
     }
 
+    private boolean mReadRequested;
+    
+    public void enableReadInterest() {
+        synchronized (mLock) {
+            mReadRequested = true;
+        }
+    }
+    
     private abstract class Task implements Runnable {
         private String mName;
      
@@ -360,6 +273,9 @@ public class OzConnection {
                         return;
                     }
                     doTask();
+                    if (mReadRequested) {
+                        registerReadInterest();
+                    }
                 } catch (Throwable t) {
                     mLog.warn("exception occurred during " + mName + " task", t);
                     cleanup();
@@ -391,6 +307,90 @@ public class OzConnection {
         }
     }
     
+    private void registerReadInterest() {
+        synchronized (mSelectionKey) {
+            if (!mSelectionKey.isValid()) {
+                if (mTrace) mLog.trace("noop register read interest - selection key is invalid"); 
+                return;
+            }
+            
+            int iops = mSelectionKey.interestOps();
+            
+            if ((iops & SelectionKey.OP_READ) != 0) {
+                if (mTrace) mLog.trace("noop register read interest - read interest already registered");
+                return;
+            }
+            
+            mSelectionKey.interestOps(iops | SelectionKey.OP_READ);
+            OzUtil.logKey(mLog, mSelectionKey, "registered read interest");
+            
+            mServer.wakeupSelector();
+        }
+    }
+    
+    private void unregisterReadInterest() {
+        synchronized (mSelectionKey) {
+            if (!mSelectionKey.isValid()) {
+                if (mTrace) mLog.trace("noop unregister read interest - selection key is invalid"); 
+                return;
+            }
+            
+            int iops = mSelectionKey.interestOps();
+            
+            if ((iops & SelectionKey.OP_READ) == 0) {
+                if (mTrace) mLog.trace("noop unregister read interest - read interest not registered");
+                return;
+            }
+            
+            mSelectionKey.interestOps(iops & (~SelectionKey.OP_READ));
+            OzUtil.logKey(mLog, mSelectionKey, "unregistered read interest");
+            
+            mServer.wakeupSelector();
+        }
+    }
+
+    private void registerWriteInterest() {
+        synchronized (mSelectionKey) {
+            if (!mSelectionKey.isValid()) {
+                if (mTrace) mLog.trace("noop register write interest - selection key is invalid"); 
+                return;
+            }
+            
+            int iops = mSelectionKey.interestOps();
+            
+            if ((iops & SelectionKey.OP_WRITE) != 0) {
+                if (mTrace) mLog.trace("noop register write interest - write interest already registered");
+                return;
+            }
+            
+            mSelectionKey.interestOps(iops | SelectionKey.OP_WRITE);
+            OzUtil.logKey(mLog, mSelectionKey, "registered write interest");
+            
+            mServer.wakeupSelector();
+        }
+    }
+    
+    private void unregisterWriteInterest() {
+        synchronized (mSelectionKey) {
+            if (!mSelectionKey.isValid()) {
+                if (mTrace) mLog.trace("noop unregister write interest - selection key is invalid"); 
+                return;
+            }
+            
+            int iops = mSelectionKey.interestOps();
+            
+            if ((iops & SelectionKey.OP_WRITE) == 0) {
+                if (mTrace) mLog.trace("noop unregister write interest - write interest not registered");
+                return;
+            }
+            
+            mSelectionKey.interestOps(iops & (~SelectionKey.OP_WRITE));
+            OzUtil.logKey(mLog, mSelectionKey, "unregistered write interest");
+            
+            mServer.wakeupSelector();
+        }
+    }
+
     public static final int MINIMUM_READ_BUFFER_SIZE = 4096;
     
     private void ensureReadBufferCapacity() {
@@ -416,6 +416,8 @@ public class OzConnection {
         ReadTask() { super("read"); }
 
         public void doTask() throws IOException {
+            mReadRequested = false;
+            
             int bytesRead = -1;
             
             ensureReadBufferCapacity();
@@ -450,12 +452,12 @@ public class OzConnection {
         // read interest here, and not in the worker thread, so that
         // we don't get another ready notification before the worker
         // will get a chance to run and disable read interest.
-        disableReadInterest();
+        unregisterReadInterest();
         mReadTask.schedule();
     }
 
     void doWriteReady() throws IOException {
-        disableWriteInterest();
+        unregisterWriteInterest();
         mWriteTask.schedule();
     }
 
@@ -508,13 +510,13 @@ public class OzConnection {
         			if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("channel write", data, false));
         			int wrote = mChannel.write(data);
         			totalWritten += wrote;
-        			if (mDebug) mLog.trace("channel wrote=" + wrote + " totalWritten=" + totalWritten);
+        			if (mTrace) mLog.trace("channel wrote=" + wrote + " totalWritten=" + totalWritten);
         			
         			if (data.hasRemaining()) {
         				// Not all data was written.  Enable write interest so we can write later.
         				if (mDebug) mLog.debug("partial write");
         				allWritten = false;
-        				enableWriteInterest();
+        				registerWriteInterest();
         				break;
         			}
         		}
@@ -524,10 +526,8 @@ public class OzConnection {
         		if (allWritten) {
         			if (mCloseAfterWrite) {
         				cleanupChannel(CleanupReason.NORMAL);
-        			} else {
-        				disableWriteInterest();
         			}
-        			
+                    
         			synchronized (mLock) {
         				mLock.notifyAll();
         			}
@@ -541,9 +541,8 @@ public class OzConnection {
     private class OzPlainFilter extends OzFilter {
 
         public void read(ByteBuffer rbb) throws IOException {
-            if (mTrace) mLog.trace("plain filter: rbb before flip: " + rbb);
+            if (mTrace) mLog.trace("plain filter: reading: " + rbb);
             rbb.flip();
-            if (mTrace) mLog.trace("plain filter: rbb after flip: " + rbb);
             
             int filterChangeId = mFilterChangeId.get();
             
@@ -617,7 +616,7 @@ public class OzConnection {
                     return;
                 }
                 
-                disableReadInterest();
+                unregisterReadInterest();
                 
                 mCloseAfterWrite = true;
                 

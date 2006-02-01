@@ -149,6 +149,9 @@ public class LC {
     public static final KnownKey wiki_enabled;
     public static final KnownKey wiki_user;
     
+    public static final KnownKey nio_imap_enable;
+    public static final KnownKey nio_imap_debug_logging;
+    
     static {
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  Changing this setting does not immediately reflect in MySQL server.  You will have to, with abundant precaution, re-generate my.cnf and restart MySQL server for the change to take effect.";
         final String FS = File.separator;
@@ -533,6 +536,16 @@ public class LC {
         wiki_user.setDefault("wiki");
         wiki_user.setDoc
             ("Wiki user.");
+        
+        nio_imap_enable = new KnownKey("nio_imap_enable");
+        nio_imap_enable.setDefault("false");
+        nio_imap_enable.setDoc
+            ("Enable NIO based IMAP server.  If false, then the thread per connection IO framework is used.");
+        
+        nio_imap_debug_logging = new KnownKey("nio_imap_log_buffers.");
+        nio_imap_debug_logging.setDefault("false");
+        nio_imap_debug_logging.setDoc
+            ("Log extremely large amounts of detail from the NIO IMAP server framework.  Useful only for debugging the IO framework.");
     }
 
 }
