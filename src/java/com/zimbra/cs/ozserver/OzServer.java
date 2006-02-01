@@ -155,22 +155,23 @@ public class OzServer {
 
                     synchronized (readyKey) {
                         OzUtil.logKey(mLog, readyKey, "ready key");
+                    
+                        if (readyKey.isAcceptable()) {
+                        	Socket newSocket = mServerSocket.accept();
+                        	SocketChannel newChannel = newSocket.getChannel(); 
+                        	newChannel.configureBlocking(false);
+                        	readyConnection= new OzConnection(OzServer.this, newChannel);
+                        }
+                        
+                        if (readyKey.isValid() && readyKey.isReadable()) {
+                        	readyConnection.doReadReady();
+                        }
+                        
+                        if (readyKey.isValid() && readyKey.isWritable()) {
+                        	readyConnection.doWriteReady();
+                        }
                     }
                     
-                    if (readyKey.isAcceptable()) {
-                        Socket newSocket = mServerSocket.accept();
-                        SocketChannel newChannel = newSocket.getChannel(); 
-                        newChannel.configureBlocking(false);
-                        readyConnection= new OzConnection(OzServer.this, newChannel);
-                    }
-                    
-                    if (readyKey.isReadable()) {
-                        readyConnection.doReadReady();
-                    }
-                    
-                    if (readyKey.isWritable()) {
-                        readyConnection.doWriteReady();
-                    }
                 } catch (Throwable t) {
                     if (readyConnection != null) {
                     	mLog.warn("exception occurred handling selecting key, closing connection", t);
@@ -183,7 +184,6 @@ public class OzServer {
                         readyConnection.clearFromNDC();
                     }
                 }
-                
             } /* end of ready keys loop */
 
             if (mLog.isDebugEnabled()) mLog.debug("processed " + readyCount + " ready keys");

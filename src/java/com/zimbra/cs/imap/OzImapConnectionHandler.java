@@ -1876,9 +1876,6 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
 
             if (received || removed)
                 sendUntagged(i4folder.getSize() + " EXISTS");
-
-            if (flush)
-                mConnection.flush();
         }
     }
 
@@ -1899,10 +1896,12 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
     }
 
     private void sendLine(String line, boolean flush) throws IOException {
-        mConnection.writeAsciiWithCRLF(line, flush);
+        mConnection.writeAsciiWithCRLF(line);
     }
 
-    private OzByteArrayMatcher mCommandMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLF, ZimbraLog.imap);
+    private static final int MAX_COMMAND_LENGTH = 2048;
+    
+    private OzByteArrayMatcher mCommandMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLF, MAX_COMMAND_LENGTH, ZimbraLog.imap);
 
     private OzCountingMatcher mLiteralMatcher = new OzCountingMatcher();
     
@@ -1995,6 +1994,12 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         assert(mState != ConnectionState.UNKNOWN);
         ZimbraLog.imap.info("connection closed by client");
         gotoClosedState(false);
+    }
+    
+    public void handleOverflow() throws IOException {
+        sendUntagged("BAD request too long", true);
+        gotoReadLineState(true);
+        return;
     }
     
     private OzByteBufferGatherer mCurrentData;

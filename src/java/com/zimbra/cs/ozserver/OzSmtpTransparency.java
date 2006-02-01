@@ -31,28 +31,30 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.zimbra.cs.util.ZimbraLog;
-
 public class OzSmtpTransparency {
     
     public static ByteBuffer apply(ByteBuffer orig) {
         
         ByteBuffer work = orig.duplicate();
         
-        OzByteArrayMatcher matcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLFDOTCRLF, ZimbraLog.lmtp);
+        OzByteArrayMatcher matcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLFDOTCRLF, 0, null);
         
         List positions = null;
         
         while (work.hasRemaining()) {
-            if (matcher.match(work)) {
-                if (positions == null) {
-                    positions = new LinkedList();
-                }
-                positions.add(new Integer(work.position()));
-            } else {
-                break;
-            }
-            matcher.reset();
+        	try {
+        		if (matcher.match(work)) {
+        			if (positions == null) {
+        				positions = new LinkedList();
+        			}
+        			positions.add(new Integer(work.position()));
+        		} else {
+        			break;
+        		}
+        		matcher.reset();
+        	} catch (OzOverflowException ooe) {
+        		// this can never happen because we set the limit check to 0 in the ctor
+        	}
         }
         
         if (positions == null) {

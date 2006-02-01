@@ -44,6 +44,8 @@ public class OzByteArrayMatcher implements OzMatcher {
     private final byte[] mMatchSequence;
     private final int mMatchSequenceLength;
     private int mMatched;
+    private int mLimit;
+    private int mSeen;
     
     public String toString() {
     	StringBuilder toRet = new StringBuilder("OzByteArrayMatcher(");
@@ -64,18 +66,27 @@ public class OzByteArrayMatcher implements OzMatcher {
     	return toRet.toString();
     }
     
-    public OzByteArrayMatcher(byte[] endSequence, Log log) {
+    
+    /** After maxBytes bytes are processed an OzOverflowException is thrown. */ 
+    public OzByteArrayMatcher(byte[] endSequence, int maxBytes, Log log) {
         mMatchSequence = endSequence;
         mMatchSequenceLength = endSequence.length;
         mMatched = 0;
+        mLimit = maxBytes;
+        mSeen = 0;
         mLog = log;
-        mTrace = log.isTraceEnabled();
+        if (mLog == null) {
+        	mTrace = false;
+        } else {
+        	mTrace = log.isTraceEnabled();
+        }
     }
     
-    public boolean match(ByteBuffer buf) {
+    public boolean match(ByteBuffer buf) throws OzOverflowException {
         assert(mMatched < mMatchSequenceLength);
         
         int n = buf.remaining();
+        
         if (mTrace) mLog.trace("new bytes to look at=" + n + ", already matched=" + mMatched);
         
         StringBuilder tsb = null;
@@ -83,7 +94,12 @@ public class OzByteArrayMatcher implements OzMatcher {
         
         for (int i = 0; i < n; i++) {
             byte b = buf.get();
-            
+
+            mSeen++;
+            if (mLimit > 0 && mSeen > mLimit) {
+            	throw new OzOverflowException(mLimit);
+            }
+
             if (mTrace) {
                 if (b >= 32 && b <=126) tsb.append("'" + (char)b + "'/"); 
                 if (mTrace) tsb.append((int)b + " ");
@@ -114,6 +130,7 @@ public class OzByteArrayMatcher implements OzMatcher {
 
     public void reset() {
         mMatched = 0;
+        mSeen = 0;
     }
 
     public int trailingTrimLength() {

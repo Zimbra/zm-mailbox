@@ -37,4 +37,6 @@ public interface OzConnectionHandler {
     void handleDisconnect();
     
     void handleIdle() throws IOException;
+
+	void handleOverflow() throws IOException;
 }

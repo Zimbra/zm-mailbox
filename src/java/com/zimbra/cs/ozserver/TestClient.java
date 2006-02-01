@@ -139,8 +139,7 @@ class TestClient {
     
     private static Random random = new Random();
     
-    private static final int MAX_DIGEST_BYTES = 20;
-
+    private static final int MAX_DIGEST_BYTES = 28192;
     
     public static void run(String host, int port, boolean ssl) throws IOException {
         TestClient client = new TestClient(host, port, ssl);
