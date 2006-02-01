@@ -61,7 +61,7 @@ public class FileLogReader {
 
 
 	public FileLogReader(File logfile) {
-		this(logfile, true);
+		this(logfile, false);
 	}
 
 	public FileLogReader(File logfile, boolean writable) {
