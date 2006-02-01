@@ -972,6 +972,7 @@ public abstract class MailItem implements Comparable {
             throw ServiceException.PERM_DENIED("you do not have the required rights on the item");
 
 	    markItemModified(Change.MODIFIED_UNREAD);
+	    mData.metadataChanged(mMailbox);
 	    updateUnread(unread ? 1 : -1);
 	    DbMailItem.alterUnread(this, unread);
 	}
