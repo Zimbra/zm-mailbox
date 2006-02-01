@@ -357,6 +357,9 @@ public class Mime {
         String[] subpart = part.split("\\.");
         for (int i = 0; i < subpart.length; i++) {
             int index = Integer.parseInt(subpart[i]);
+            if (index <= 0)
+                return null;
+            // the content-type determines the expected substructure
             String ct = mp.getContentType().toLowerCase();
             if (ct == null)
                 return null;

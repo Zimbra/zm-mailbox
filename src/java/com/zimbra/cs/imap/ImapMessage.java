@@ -253,6 +253,8 @@ class ImapMessage {
             MimeMultipart multi = (MimeMultipart) Mime.getMultipartContent(mp, mp.getContentType());
             for (int i = 0; i < multi.getCount(); i++)
                 getStructure(ps, (MimePart) multi.getBodyPart(i), extensions);
+            if (multi.getCount() <= 0)
+                ps.print("NIL");
             ps.write(' ');  ps.print(subtype);
             if (extensions)
                 ;   // FIXME: not implementing BODYSTRUCTURE extensions yet
