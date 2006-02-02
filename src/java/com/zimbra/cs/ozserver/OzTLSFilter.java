@@ -262,13 +262,12 @@ public class OzTLSFilter extends OzFilter {
             
             switch (result.getStatus()) {
             case BUFFER_UNDERFLOW:
-            case CLOSED:
             case OK:
                 if (result.getHandshakeStatus() == HandshakeStatus.NEED_TASK) {
                     runTasks();
                 }
                 break;
-            case BUFFER_OVERFLOW:
+            default: // CLOSED BUFFER_OVERFLOW
                 throw new IOException("TLS: invalid status during read: " + result.getStatus());
             }
             
@@ -309,11 +308,7 @@ public class OzTLSFilter extends OzFilter {
                     getNextFilter().write(dest);
                     iter.remove();
                     break;
-                case CLOSED:
-                	mLog.info("TLS - closed while processing writes, aborting write");
-                	break;
-                case BUFFER_OVERFLOW:
-                case BUFFER_UNDERFLOW:
+                default: // CLOSED BUFFER_OVERFLOW BUFFER_UNDERFLOW:
                     throw new IOException("TLS: invalid status during write: " + result.getStatus());
                 }
             }
