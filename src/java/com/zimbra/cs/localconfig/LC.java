@@ -542,7 +542,7 @@ public class LC {
         nio_imap_enable.setDoc
             ("Enable NIO based IMAP server.  If false, then the thread per connection IO framework is used.");
         
-        nio_imap_debug_logging = new KnownKey("nio_imap_log_buffers.");
+        nio_imap_debug_logging = new KnownKey("nio_imap_log_buffers");
         nio_imap_debug_logging.setDefault("false");
         nio_imap_debug_logging.setDoc
             ("Log extremely large amounts of detail from the NIO IMAP server framework.  Useful only for debugging the IO framework.");
