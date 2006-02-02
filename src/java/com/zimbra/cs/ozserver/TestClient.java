@@ -169,14 +169,14 @@ class TestClient {
         }
     }
     
-    private static Random random = new Random();
+    private static Random mRandom = new Random();
     
     private static final int DATA_SIZE_MINIMUM = 28000; 
     private static final int DATA_SIZE_VARIANCE = 1024;
     private static final int MAX_ECHO_CHUNKS = 16;
     
-    private static int randomPrintableAsciiChar(Random r) {
-    	return ' ' + r.nextInt(127 - '!') + 1;
+    private static byte randomPrintableAsciiByte(Random r) {
+    	return (byte)(' ' + r.nextInt(127 - '!') + 1);
     }
     
     public static void run(String host, int port, boolean ssl) throws IOException {
@@ -186,9 +186,9 @@ class TestClient {
         client.helo();
         mLog.info("response: " + client.getLastResponse());
 
-        int nb = DATA_SIZE_MINIMUM + random.nextInt(DATA_SIZE_VARIANCE) + 1;
-        int nc = random.nextInt(MAX_ECHO_CHUNKS) + 1;
-        byte bv = (byte)(random.nextInt(126) + 1);
+        int nb = DATA_SIZE_MINIMUM + mRandom.nextInt(DATA_SIZE_VARIANCE) + 1;
+        int nc = mRandom.nextInt(MAX_ECHO_CHUNKS) + 1;
+        byte bv = (byte)(mRandom.nextInt(126) + 1);
         byte[] ba = new byte[nb];
         Arrays.fill(ba, 0, nb, bv);
         
@@ -210,6 +210,7 @@ class TestClient {
             mLog.info("response: OK expected and got " + nsum);
         }
 
+        bv = randomPrintableAsciiByte(mRandom);
         mLog.info("sending: echo " + (char)bv + " " + nb + " " + nc);
         if (client.echo(bv, nb, nc)) {
             mLog.info("response: OK " + client.getLastResponse());
