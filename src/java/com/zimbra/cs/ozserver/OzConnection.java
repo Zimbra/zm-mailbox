@@ -652,14 +652,14 @@ public class OzConnection {
         
         protected void doTask() throws IOException {
             synchronized (mIdleGuard) {
-                if (mIdle) {
-                    mLog.info("connection has been idle");
-                    mConnectionHandler.handleIdle();
-                } else {
+                if (!mIdle) {
                     if (mDebug) mLog.debug("idle task - connection has been busy");
                     mIdle = true; // prove me wrong by setting this to false before I run again.
+                    return;
                 }
             }
+            mLog.info("connection has been idle");
+            mConnectionHandler.handleIdle();
         }
     }
 

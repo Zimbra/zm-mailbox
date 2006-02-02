@@ -156,13 +156,14 @@ public class OzServer {
                         readyConnection.addToNDC();
                     }
                     
-                    if (!readyKey.isValid()) {
-                        continue;
-                    }
-
                     synchronized (readyKey) {
+                        if (!readyKey.isValid()) {
+                        	if (mLog.isDebugEnabled()) mLog.debug("ignoring invalid key" + readyKey);
+                        	continue;
+                        }
+                        
                         OzUtil.logKey(mLog, readyKey, "ready key");
-                    
+
                         if (readyKey.isAcceptable()) {
                         	Socket newSocket = mServerSocket.accept();
                         	SocketChannel newChannel = newSocket.getChannel(); 
@@ -170,11 +171,11 @@ public class OzServer {
                         	readyConnection= new OzConnection(OzServer.this, newChannel);
                         }
                         
-                        if (readyKey.isValid() && readyKey.isReadable()) {
+                        if (readyKey.isReadable()) {
                         	readyConnection.doReadReady();
                         }
                         
-                        if (readyKey.isValid() && readyKey.isWritable()) {
+                        if (readyKey.isWritable()) {
                         	readyConnection.doWriteReady();
                         }
                     }

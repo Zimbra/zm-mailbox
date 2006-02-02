@@ -129,6 +129,38 @@ class TestClient {
         mLog.info("cgot: " + mResponse);
     }
     
+    public boolean echo(byte bv, int nb, int nc) throws IOException {
+    	mSocketOut.write(("echo " + (char)bv + " " + nb + " " + nc + "\r\n").getBytes());
+    	mSocketOut.flush();
+    	char[] arr = new char[nb];
+    	
+    	int target = nb * nc;
+    	int totalRead = 0;
+    	do {
+    		int nread = mSocketIn.read(arr);
+    		TestServer.mLog.info("client read " + nread + " bytes");
+    		if (nread < 0) {
+    			mResponse = "EOF reached";
+    			return false;
+    		}
+    		totalRead += nread; 
+    		for (int k = 0; k < nread; k++) {
+    			if (arr[k] != bv) {
+    				mResponse = "client found " + arr[k] + " at index " +  k + " when expecting " + (char)bv;
+    				return false;
+    			}
+    		}
+    	} while (totalRead < target);
+    		
+    	if (totalRead == target) {
+    		mResponse = "read " + (nb * nc) + " bytes";
+    		return true;
+    	} else {
+    		mResponse = "client read " + totalRead + " bytes total while expecting " + target + " bytes";
+    		return false;
+    	}
+    }
+    
     public void close() {
         try {
             mSocket.close();
@@ -139,7 +171,13 @@ class TestClient {
     
     private static Random random = new Random();
     
-    private static final int MAX_DIGEST_BYTES = 28192;
+    private static final int DATA_SIZE_MINIMUM = 28000; 
+    private static final int DATA_SIZE_VARIANCE = 1024;
+    private static final int MAX_ECHO_CHUNKS = 16;
+    
+    private static int randomPrintableAsciiChar(Random r) {
+    	return ' ' + r.nextInt(127 - '!') + 1;
+    }
     
     public static void run(String host, int port, boolean ssl) throws IOException {
         TestClient client = new TestClient(host, port, ssl);
@@ -148,7 +186,8 @@ class TestClient {
         client.helo();
         mLog.info("response: " + client.getLastResponse());
 
-        int nb = random.nextInt(MAX_DIGEST_BYTES) + 1;
+        int nb = DATA_SIZE_MINIMUM + random.nextInt(DATA_SIZE_VARIANCE) + 1;
+        int nc = random.nextInt(MAX_ECHO_CHUNKS) + 1;
         byte bv = (byte)(random.nextInt(126) + 1);
         byte[] ba = new byte[nb];
         Arrays.fill(ba, 0, nb, bv);
@@ -170,11 +209,18 @@ class TestClient {
         } else {
             mLog.info("response: OK expected and got " + nsum);
         }
-            
+
+        mLog.info("sending: echo " + (char)bv + " " + nb + " " + nc);
+        if (client.echo(bv, nb, nc)) {
+            mLog.info("response: OK " + client.getLastResponse());
+        } else { 
+        	mLog.info("response: FAIL " + client.getLastResponse());
+        }
+        
         mLog.info("sending: quit");
         client.quit();
         mLog.info("response: " + client.getLastResponse());
-        
+
         client.close();
     }
     
