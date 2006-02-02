@@ -27,6 +27,9 @@ package com.zimbra.cs.ozserver;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.zimbra.cs.util.ZimbraLog;
 
@@ -85,7 +88,7 @@ class TestConnectionHandler implements OzConnectionHandler {
     
     public void handleConnect() throws IOException {
         // Write greeting
-        mConnection.setIdleNotifyTime(5000);
+        mConnection.setIdleNotifyTime(50000);
         mConnection.writeAsciiWithCRLF("200 Hello, welcome to test server cid=" + mConnection.getId());
         gotoReadingCommandState();
     }   
@@ -106,6 +109,8 @@ class TestConnectionHandler implements OzConnectionHandler {
             TestServer.mLog.info("server finished: " + cmd);
         }
     }
+
+    private static Pattern ECHO = Pattern.compile("echo\\s+(.)\\s+([0-9]+)\\s+([0-9]+)");
 
     private void doCommandInternal(String cmd) throws IOException 
     {
@@ -134,9 +139,26 @@ class TestConnectionHandler implements OzConnectionHandler {
             }
             TestServer.mLog.info("nsum target is " + bytesToRead);
             gotoReadingNsumDataState(bytesToRead); 
+        } else if (cmd.startsWith("echo")) {
+            Matcher m = ECHO.matcher(cmd);
+            if (m.find()) {
+                int ch = m.group(1).charAt(0);
+                int chunk = Integer.parseInt(m.group(2));
+                int times = Integer.parseInt(m.group(3));
+                for (int i = 0; i < times; i++) {
+                    byte[] arr = new byte[chunk];
+                    Arrays.fill(arr, (byte)ch);
+                    ByteBuffer bb = ByteBuffer.wrap(arr);
+                    mConnection.write(bb);
+                }
+                TestServer.mLog.info("echo wrote " + times * chunk + " bytes");
+            } else {
+            	mConnection.writeAsciiWithCRLF("500 bad syntax for echo command");
+            }
+        	gotoReadingCommandState();
         } else if (cmd.equalsIgnoreCase("starttls")) {
             mConnection.writeAsciiWithCRLF("250 go ahead, start tls negotiation now");
-            mConnection.addFilter(new OzTLSFilter(mConnection, TestServer.mLog));
+            mConnection.addFilter(new OzTLSFilter(mConnection, TestServer.mLog.isTraceEnabled(), TestServer.mLog));
             gotoReadingCommandState();
         } else {
             mConnection.writeAsciiWithCRLF("500 command " + cmd + " not understood");

@@ -102,7 +102,7 @@ public class ImapServer extends TcpServer {
 
         ServerSocket serverSocket = NetUtil.getBoundServerSocket(address, port, false);
 
-        if (LC.get("nio_imap_enable").equalsIgnoreCase("true")) {
+        if (LC.nio_imap_enable.booleanValue()) {
             OzConnectionHandlerFactory imapHandlerFactory = new OzConnectionHandlerFactory() {
                 public OzConnectionHandler newConnectionHandler(OzConnection conn) {
                     conn.setIdleNotifyTime(IMAP_UNAUTHED_CONNECTION_MAX_IDLE_MILLISECONDS);
@@ -110,8 +110,9 @@ public class ImapServer extends TcpServer {
                 }
             };
 
+            boolean debugLog = LC.nio_imap_debug_logging.booleanValue();
             try {
-                OzServer ozserver = new OzServer("IMAP", IMAP_READ_SIZE_HINT, serverSocket, imapHandlerFactory, ZimbraLog.imap);
+                OzServer ozserver = new OzServer("IMAP", IMAP_READ_SIZE_HINT, serverSocket, imapHandlerFactory, debugLog, ZimbraLog.imap);
                 ozserver.setProperty(OzImapConnectionHandler.PROPERTY_ALLOW_CLEARTEXT_LOGINS, Boolean.toString(loginOK));
                 ozserver.start();
                 sImapServer = ozserver;
@@ -137,18 +138,20 @@ public class ImapServer extends TcpServer {
         String address = server.getAttr(Provisioning.A_zimbraImapSSLBindAddress, null);
         int port = server.getIntAttr(Provisioning.A_zimbraImapSSLBindPort, Config.D_IMAP_SSL_BIND_PORT);
         
-        if (LC.get("nio_imap_enable").equalsIgnoreCase("true")) {
+        if (LC.nio_imap_enable.booleanValue()) {
             ServerSocket serverSocket = NetUtil.getBoundServerSocket(address, port, false);
+            
+            final boolean debugLogging = LC.nio_imap_debug_logging.booleanValue();
             
             OzConnectionHandlerFactory imapHandlerFactory = new OzConnectionHandlerFactory() {
                 public OzConnectionHandler newConnectionHandler(OzConnection conn) {
                     conn.setIdleNotifyTime(IMAP_UNAUTHED_CONNECTION_MAX_IDLE_MILLISECONDS);
-                    conn.addFilter(new OzTLSFilter(conn, ZimbraLog.imap));
+                    conn.addFilter(new OzTLSFilter(conn, debugLogging, ZimbraLog.imap));
                     return new OzImapConnectionHandler(conn);
                 }
             };
             try {
-                OzServer ozserver = new OzServer("IMAPS", IMAP_READ_SIZE_HINT, serverSocket, imapHandlerFactory, ZimbraLog.imap);
+                OzServer ozserver = new OzServer("IMAPS", IMAP_READ_SIZE_HINT, serverSocket, imapHandlerFactory, debugLogging, ZimbraLog.imap);
                 ozserver.setProperty(OzImapConnectionHandler.PROPERTY_SECURE_SERVER, "true");
                 ozserver.start();
                 sImapSSLServer = ozserver;
