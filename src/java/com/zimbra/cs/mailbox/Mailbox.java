@@ -4294,11 +4294,7 @@ public class Mailbox {
         }
     }
 
-    public synchronized WikiItem createWiki(OperationContext octxt, ParsedMessage pm, int folderId) throws ServiceException {
-        // FIXME: Redo logging
-    	beginTransaction("wiki", octxt);
-    	int itemId = getNextItemId(ID_AUTO_INCREMENT);
-       	short volumeId = Volume.getCurrentMessageVolume().getId();
+    public synchronized WikiItem createWiki(OperationContext octxt, ParsedMessage pm, int folderId) throws IOException, ServiceException {
        	WikiItem wiki;
         boolean success = false;
         
@@ -4306,7 +4302,13 @@ public class Mailbox {
            	byte[] rawData = pm.getRawData();
            	String rawDigest = pm.getRawDigest();
            	int    rawSize = pm.getRawSize();
-            StoreManager sm = StoreManager.getInstance();
+            SaveWiki redoRecorder = new SaveWiki(mId, rawDigest, rawSize);
+
+            beginTransaction("wiki", octxt, redoRecorder);
+        	int itemId = getNextItemId(ID_AUTO_INCREMENT);
+           	short volumeId = Volume.getCurrentMessageVolume().getId();
+
+           	StoreManager sm = StoreManager.getInstance();
             Blob blob = sm.storeIncoming(rawData, rawDigest, null, volumeId);
             markOtherItemDirty(blob);
 
@@ -4320,8 +4322,9 @@ public class Mailbox {
             data.size       = rawSize;
             data.blobDigest = rawDigest;
 
-            wiki = WikiItem.create(this, data, pm, octxt.authuser.getId());
-            mCurrentChange.setIndexedItem(wiki, null);
+            wiki = WikiItem.create(this, data, pm, octxt.authuser.getName());
+            redoRecorder.setMessageBodyInfo(pm.getRawData(), blob.getPath(), blob.getVolumeId());
+            mCurrentChange.setIndexedItem(wiki, pm);
 
             sm.link(blob, this, itemId, wiki.getSavedSequence(), volumeId);
             sm.delete(blob);

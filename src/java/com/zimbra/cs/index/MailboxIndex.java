@@ -1141,6 +1141,7 @@ public final class MailboxIndex
     public static final String SEARCH_FOR_CONTACTS = "contact";
     public static final String SEARCH_FOR_APPOINTMENTS = "appointment";
     public static final String SEARCH_FOR_NOTES = "note";
+    public static final String SEARCH_FOR_WIKI = "wiki";
     
     public static enum SortBy {
     	DATE_ASCENDING  ("dateAsc",   (byte)(DbMailItem.SORT_BY_DATE | DbMailItem.SORT_ASCENDING)), 
@@ -1202,6 +1203,8 @@ public final class MailboxIndex
                 types[i] = MailItem.TYPE_APPOINTMENT;
             } else if (SEARCH_FOR_NOTES.equals(strs[i])) {
                 types[i] = MailItem.TYPE_NOTE;
+            } else if (SEARCH_FOR_WIKI.equals(strs[i])) {
+                types[i] = MailItem.TYPE_WIKI;
             } else 
                 throw ServiceException.INVALID_REQUEST("unknown groupBy: "+strs[i], null);
         }

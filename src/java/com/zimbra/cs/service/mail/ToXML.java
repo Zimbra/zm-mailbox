@@ -1245,4 +1245,14 @@ public class ToXML {
         return m;
 	}
 
+    public static Element encodeWikiSummary(Element parent, ZimbraContext lc, WikiItem wiki) {
+        Element e = encodeMessageCommon(parent, lc, wiki, NOTIFY_FIELDS);
+
+        e.addAttribute(MailService.A_ID, lc.formatItemId(wiki));
+        e.addAttribute(MailService.A_WIKIWORD, wiki.getWikiWord());
+        e.addAttribute(MailService.A_CREATOR, wiki.getCreator());
+
+        return e;
+    }
+    
 }

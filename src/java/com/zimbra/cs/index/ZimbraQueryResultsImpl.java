@@ -179,4 +179,19 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
       }
       return hit;
   }    
+
+  protected WikiHit getWikiHit(Mailbox mbx, int mailItemId, Document d, float score, MailItem.UnderlyingData underlyingData) throws ServiceException {
+      WikiHit hit = (WikiHit) mMessageHits.get(mailItemId);
+      if (hit == null) {
+          if (d != null) {
+              hit = new WikiHit(this, mbx, score, mailItemId, underlyingData, d);
+          } else {
+              hit = new WikiHit(this, mbx, score, mailItemId, underlyingData);
+          }
+          mMessageHits.put(mailItemId, hit);
+      } else {
+          hit.updateScore(score);
+      }
+      return hit;
+  }
 }

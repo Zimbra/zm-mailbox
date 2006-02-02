@@ -464,6 +464,10 @@ class DBQueryOperation extends QueryOperation
                 toAdd = this.getResultsSet().getAppointmentHit(this.getMailbox(), sr.id, null, score, sr.data);
                 mNextHits.add(toAdd);
                 break;
+            case MailItem.TYPE_WIKI:
+                toAdd = this.getResultsSet().getWikiHit(this.getMailbox(), sr.id, null, score, sr.data);
+                mNextHits.add(toAdd);
+                break;
                 // Unsupported right now:
                 //            case MailItem.TYPE_DOCUMENT:
             default:
@@ -543,6 +547,10 @@ class DBQueryOperation extends QueryOperation
                 break;
             case MailItem.TYPE_FLAG:
                 tmp[numUsed] = MailItem.TYPE_FLAG;
+                numUsed++;
+                break;
+            case MailItem.TYPE_WIKI:
+                tmp[numUsed] = MailItem.TYPE_WIKI;
                 numUsed++;
                 break;
             }

@@ -141,7 +141,9 @@ public abstract class RedoableOp {
     public static final int OP_SET_SUBSCRIPTION_DATA    = 50;    
     public static final int OP_SET_PERMISSIONS          = 51;    
 
-    public static final int OP_LAST				        = 52;
+    public static final int OP_SAVE_WIKI                = 52;
+    
+    public static final int OP_LAST				        = 53;
 
 	// Element index is same as Redoable.OP_* constants.
 	// The strings must match the class names.
@@ -198,6 +200,7 @@ public abstract class RedoableOp {
         "SetFolderUrl",
         "SetSubscriptionData",          // 50
         "SetPermissions",
+        "SaveWiki",
 	};
 
 	public static String getOpClassName(int opcode) {

@@ -24,6 +24,7 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.io.IOException;
 import java.util.Map;
 
 import javax.mail.MessagingException;
@@ -80,10 +81,13 @@ public class SaveWiki extends WriteOpDocumentHandler {
                 throw e;
         }
 
-		WikiItem wikiItem = mbox.createWiki(octxt, pm, wiki.getWikiFolderId());
-
+        WikiItem wikiItem;
+        try {
+    		wikiItem = mbox.createWiki(octxt, pm, wiki.getWikiFolderId());
+        } catch (IOException ioe) {
+        	throw ServiceException.FAILURE("creating wiki item", ioe);
+        }
 		wiki.addWiki(wikiItem);
-		
         // we can now purge the uploaded attachments
         if (mimeData.uploads != null)
             FileUploadServlet.deleteUploads(mimeData.uploads);

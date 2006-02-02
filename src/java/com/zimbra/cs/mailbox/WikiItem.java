@@ -30,11 +30,12 @@ import java.util.Iterator;
 import java.util.Map;
 
 import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.index.Indexer;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.wiki.WikiId;
 
 public class WikiItem extends MailItem {
 	
@@ -72,6 +73,16 @@ public class WikiItem extends MailItem {
             Map.Entry entry = (Map.Entry) it.next();
             mFields.put(entry.getKey().toString(), entry.getValue().toString());
         }
+    }
+
+    public void reindex(IndexItem redo, Object indexData) throws ServiceException {
+        ParsedMessage pm = (ParsedMessage) indexData;
+        if (pm == null)
+            throw ServiceException.FAILURE("WikiItem is missing data to index", null);
+
+        // FIXME: need to note this as dirty so we can reindex if things fail
+        if (!DebugConfig.disableIndexing)
+            Indexer.GetInstance().indexMessage(redo, mMailbox.getMailboxIndex(), mId, pm);
     }
 
 	public String getWikiWord() {

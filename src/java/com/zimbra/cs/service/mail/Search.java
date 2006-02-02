@@ -274,6 +274,9 @@ public class Search extends DocumentHandler  {
             } else if (hit instanceof AppointmentHit) {
                 AppointmentHit ah = (AppointmentHit)hit;
                 e = addAppointmentHit(lc, response, ah, inline, params);
+            } else if (hit instanceof WikiHit) {
+            	WikiHit wh = (WikiHit)hit;
+                e = addWikiHit(lc, response, wh);
             } else {
                 mLog.error("Got an unknown hit type putting search hits: "+hit);
             }
@@ -410,6 +413,10 @@ public class Search extends DocumentHandler  {
     
     Element addContactHit(ZimbraContext lc, Element response, ContactHit ch, EmailElementCache eecache) throws ServiceException {
         return ToXML.encodeContact(response, lc, ch.getContact(), null, true, null);
+    }
+    
+    Element addWikiHit(ZimbraContext lc, Element response, WikiHit wh) throws ServiceException {
+        return ToXML.encodeWikiSummary(response, lc, wh.getWiki());
     }
     
     Element addNoteHit(ZimbraContext lc, Element response, NoteHit nh, EmailElementCache eecache) throws ServiceException {

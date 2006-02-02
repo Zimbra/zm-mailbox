@@ -112,6 +112,7 @@ public class Indexer
         case MailItem.TYPE_APPOINTMENT:
             break;
         case MailItem.TYPE_MESSAGE:
+        case MailItem.TYPE_WIKI:
                 InputStream is = mbox.getMessageById(null, itemId).getRawMessage();
                 MimeMessage mm;
     			try {
