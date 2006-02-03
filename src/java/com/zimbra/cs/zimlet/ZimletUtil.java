@@ -963,18 +963,18 @@ public class ZimletUtil {
 	}
 	
 	private static void usage() {
-		System.out.println("zimlet: [command] [ zimlet.zip | config.xml | zimlet ]");
-		System.out.println("\tdeploy {zimlet.zip} - install, ldapDeploy, grant ACL on default COS, then enable zimlet");
-		System.out.println("\tundeploy {zimlet} - remove the zimlet entry from the system");
-		System.out.println("\tinstall {zimlet.zip} - installs the zimlet files on this host");
-		System.out.println("\tldapDeploy {zimlet} - add the zimlet entry to the system");
-		System.out.println("\tenable {zimlet} - enables the zimlet");
-		System.out.println("\tdisable {zimlet} - disables the zimlet");
-		System.out.println("\tacl {zimlet} {cos1} grant|deny [{cos2} grant|deny...] - change the ACL for the zimlet on a COS");
+		System.out.println("zmzimletctl: [command] [ zimlet.zip | config.xml | zimlet ]");
+		System.out.println("\tdeploy {zimlet.zip} - install, ldapDeploy, grant ACL on default COS, then enable Zimlet");
+		System.out.println("\tundeploy {zimlet} - remove the Zimlet entry from the system");
+		System.out.println("\tinstall {zimlet.zip} - installs the Zimlet files on this host");
+		System.out.println("\tldapDeploy {zimlet} - add the Zimlet entry to the system");
+		System.out.println("\tenable {zimlet} - enables the Zimlet");
+		System.out.println("\tdisable {zimlet} - disables the Zimlet");
+		System.out.println("\tacl {zimlet} {cos1} grant|deny [{cos2} grant|deny...] - change the ACL for the Zimlet on a COS");
 		System.out.println("\tlistAcls {zimlet} - list ACLs for the Zimlet");
 		System.out.println("\tlistZimlets - show status of all the Zimlets in the system.");
-		System.out.println("\tdumpConfigTemplate {zimlet.zip} - dumps the configuration");
-		System.out.println("\tconfigure {zimlet} {config.xml} - installs the configuration");
+		System.out.println("\tgetConfigTemplate {zimlet.zip} - dumps the configuration");
+		System.out.println("\tconfigure {config.xml} - installs the configuration");
 		System.out.println("\tlistPriority - show the current Zimlet priorities (0 high, 9 low)");
 		System.out.println("\tsetPriority {zimlet} {priority} - set Zimlet priority");
 		System.exit(1);
