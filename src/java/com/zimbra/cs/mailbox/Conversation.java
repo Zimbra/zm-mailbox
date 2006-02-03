@@ -399,6 +399,7 @@ public class Conversation extends MailItem {
                     TargetConstraint.checkItem(tcon, msg) &&
                     msg.canAccess(ACL.RIGHT_WRITE)) {
                 msg.updateUnread(unread ? 1 : -1);
+                msg.mData.metadataChanged(mMailbox);
                 targets.add(msg.getId());
             }
         }
