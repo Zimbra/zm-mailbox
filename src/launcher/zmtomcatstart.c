@@ -368,7 +368,11 @@ StartTomcat()
 
   fclose(stdin);
   
-  umask(0);
+  /* It is customary to not inherit umask and to clear the umask
+     completely so applications can set whatever exact permissions it
+     is that they want. However, Java programs can not set permissions
+     for new files, so we default the mask to something reasonable. */
+  umask(027);
   
   chdir(TOMCAT_HOME);
   
