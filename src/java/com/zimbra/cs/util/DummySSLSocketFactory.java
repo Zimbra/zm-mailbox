@@ -33,9 +33,6 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 /**
  * Allows Java code to make SSL connections without certificates.  This
  * class is insecure and should only be used for testing.  See SSLNOTES.txt
@@ -44,7 +41,6 @@ import org.apache.commons.logging.LogFactory;
  * @author bburtin
  */
 public class DummySSLSocketFactory extends SSLSocketFactory {
-    static Log sLog = LogFactory.getLog(DummySSLSocketFactory.class);
     private SSLSocketFactory factory;
     
     public DummySSLSocketFactory() {
@@ -55,7 +51,9 @@ public class DummySSLSocketFactory extends SSLSocketFactory {
                             null);
             factory = sslcontext.getSocketFactory();
         } catch(Exception ex) {
-            sLog.warn("Unable to initialize SSL", ex);
+            // Use System.out here instead of Log4j, since this class is likely
+            // to be used by client code and Log4J may not be available.
+            System.out.println("Unable to initialize SSL:\n" + SystemUtil.getStackTrace(ex));
         }
     }
     
