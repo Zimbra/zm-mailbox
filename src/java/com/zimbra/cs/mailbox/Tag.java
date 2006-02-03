@@ -211,6 +211,7 @@ public class Tag extends MailItem {
             Message msg = mMailbox.getMessage((UnderlyingData) it.next());
             if (msg.checkChangeID() || !msg.canAccess(ACL.RIGHT_WRITE)) {
                 msg.updateUnread(unread ? 1 : -1);
+                msg.mData.metadataChanged(mMailbox);
                 targets.add(msg.getId());
             } else
                 missed = true;
