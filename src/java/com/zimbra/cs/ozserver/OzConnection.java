@@ -78,8 +78,6 @@ public class OzConnection {
 
     private ConnectTask mConnectTask;
     
-    private DisconnectTask mDisconnectTask;
-    
     private ReadTask mReadTask;
     
     private WriteTask mWriteTask;
@@ -106,8 +104,7 @@ public class OzConnection {
         mConnectTask = new ConnectTask();
         mReadTask = new ReadTask();
         mWriteTask = new WriteTask();
-        mDisconnectTask = new DisconnectTask();
-        
+
         mConnectTask.schedule();
     }
 
@@ -299,14 +296,6 @@ public class OzConnection {
         }
     }
     
-    private class DisconnectTask extends Task {
-        DisconnectTask() { super("disconnect"); }
-        
-        protected void doTask() {
-            mConnectionHandler.handleDisconnect();
-        }
-    }
-    
     private void registerReadInterest() {
         synchronized (mSelectionKey) {
             if (!mSelectionKey.isValid()) {
@@ -422,22 +411,25 @@ public class OzConnection {
             
             ensureReadBufferCapacity();
             
-            if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("read buffer before channel read", mReadBuffer, true));
+            String before = null;
+            if (mDebug) before = OzUtil.toString(mReadBuffer);
             bytesRead = mChannel.read(mReadBuffer);
-            if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("read buffer after channel read", mReadBuffer, true));
-                
+            if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("channel read buffer", mReadBuffer, true));
+            if (mDebug) mLog.debug("channel read=" + bytesRead + " buffer: " + before + "->" + OzUtil.toString(mReadBuffer));
+
             assert(bytesRead == mReadBuffer.position());
 
             if (bytesRead == -1) {
-                if (mDebug) mLog.debug("channel read detected that client closed connection");
-                mDisconnectTask.schedule();
+                if (mDebug) mLog.debug("channel read -1 cleaning up connection");
+                cleanup();
                 return;
             }
-                
+
             if (bytesRead == 0) {
                 mLog.warn("got no bytes on supposedly read ready channel");
                 return;
             }
+            
             mFilters.get(0).read(mReadBuffer);
         }
     }
@@ -507,21 +499,21 @@ public class OzConnection {
         			assert(data != null);
         			assert(data.hasRemaining());
         			
-        			if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("channel write", data, false));
+                    String before = null;
+                    if (mDebug) before = OzUtil.toString(data);
+                    if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("channel write buffer", data, false));
         			int wrote = mChannel.write(data);
         			totalWritten += wrote;
-        			if (mTrace) mLog.trace("channel wrote=" + wrote + " totalWritten=" + totalWritten);
-        			
+                    if (mDebug) mLog.debug("channel wrote=" + wrote + " partial=" + data.hasRemaining() + " total=" + totalWritten + " buffer: " + before + "->" + OzUtil.toString(data));
+                    
         			if (data.hasRemaining()) {
-        				// Not all data was written.  Enable write interest so we can write later.
-        				if (mDebug) mLog.debug("partial write");
+        				// Not all data was written. Enable write interest so we
+                        // can write later.
         				allWritten = false;
         				registerWriteInterest();
         				break;
         			}
         		}
-        		
-        		if (mDebug) mLog.debug("wrote bytes total=" + totalWritten);
         		
         		if (allWritten) {
         			if (mCloseAfterWrite) {
@@ -541,17 +533,14 @@ public class OzConnection {
     private class OzPlainFilter extends OzFilter {
 
         public void read(ByteBuffer rbb) throws IOException {
-            if (mTrace) mLog.trace("plain filter: reading: " + rbb);
             rbb.flip();
-            
             int filterChangeId = mFilterChangeId.get();
-            
+
             // We may have read more than one PDU 
             while (rbb.hasRemaining()) {
                 ByteBuffer pdu = rbb.duplicate();
                 int initialPosition = rbb.position();
                 
-                if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("plain filter: invoking matcher", rbb, false));
                 boolean matched = false;
                 
                 try {
@@ -562,8 +551,6 @@ public class OzConnection {
                     return;
                 }
                 
-                if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("plain filter: after matcher", rbb, false));
-                
                 if (mDebug) mLog.debug("plain filter: match returned " + matched);
                 
                 if (!matched) {
@@ -573,7 +560,7 @@ public class OzConnection {
                     
                 pdu.position(initialPosition);
                 pdu.limit(rbb.position());
-                if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("plain filter: input matched", pdu, false));
+                //if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("plain filter: input matched", pdu, false));
                 mConnectionHandler.handleInput(pdu, true);
 
                 // The earlier call might have resulted in a filter being added
@@ -589,7 +576,7 @@ public class OzConnection {
             
             // Just spill all the unmatched stuff to the handler
             if (rbb.hasRemaining()) {
-                if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("plain filter: input unmatched", rbb, false));
+                //if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("plain filter: input unmatched", rbb, false));
                 mConnectionHandler.handleInput(rbb, false);
                 // automatically enable read interest in the case
                 // where match was not found.
@@ -601,7 +588,6 @@ public class OzConnection {
 
         public void write(ByteBuffer wbb) throws IOException {
             synchronized (mLock) {
-                if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("plain filter: write", wbb, false));
                 mWriteManager.write(wbb);
             }
         }

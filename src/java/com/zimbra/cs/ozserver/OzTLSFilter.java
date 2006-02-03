@@ -180,7 +180,7 @@ public class OzTLSFilter extends OzFilter {
                 SSLEngineResult result = mSSLEngine.wrap(mHandshakeBB, dest);
                 dest.flip();
                 mHandshakeStatus = result.getHandshakeStatus();
-                if (mDebug) debug("handshake: wrap result " + result);
+                if (mDebug) debug("handshake: wrap result " + toString(result));
                 switch (result.getStatus()) {
                 case OK:
                     if (mDebug) debug("handshake: writing wrapped bytes");
@@ -219,7 +219,6 @@ public class OzTLSFilter extends OzFilter {
     private HandshakeStatus runTasks() {
         Runnable runnable;
         while ((runnable = mSSLEngine.getDelegatedTask()) != null) {
-            if (mTrace) trace("run task " + runnable);
             runnable.run();
         }
         
@@ -239,7 +238,6 @@ public class OzTLSFilter extends OzFilter {
     }
     
     public void read(ByteBuffer rbb) throws IOException {
-        if (mTrace) trace("read: readBB: " + rbb);
 
         if (!handshake(rbb)) {
             return; 
@@ -251,12 +249,16 @@ public class OzTLSFilter extends OzFilter {
 
             ensureUnwrappedCapacity();
 
-            if (mTrace) trace(OzUtil.byteBufferDebugDump("read: before unwrap unwrapped", mUnwrapped, true));
-            if (mTrace) trace(OzUtil.byteBufferDebugDump("read: before unwrap rbb", rbb, false));
+            String ibefore = null, obefore = null;
+            if (mDebug) ibefore = OzUtil.toString(rbb);
+            if (mDebug) obefore = OzUtil.toString(mUnwrapped); 
+            
             result = mSSLEngine.unwrap(rbb, mUnwrapped);
-            if (mTrace) trace(OzUtil.byteBufferDebugDump("read: after unwrap unwrapped", mUnwrapped, true));
-            if (mTrace) trace(OzUtil.byteBufferDebugDump("read: after unwrap rbb", rbb, false));
-            if (mDebug) debug("read: unwrap result " + toString(result));
+            
+            if (mDebug) debug("read unwrap in: " + ibefore + "->" + OzUtil.toString(rbb));
+            if (mDebug) debug("read unwrap out: " + obefore + "->" + OzUtil.toString(mUnwrapped));
+            if (mDebug) debug("read unwrap result: " + toString(result));
+            if (mTrace) trace(OzUtil.byteBufferDebugDump("read unwrapped", mUnwrapped, true));
             
             rbb.compact();
             
@@ -271,9 +273,7 @@ public class OzTLSFilter extends OzFilter {
                 throw new IOException("TLS: invalid status during read: " + result.getStatus());
             }
             
-            if (mTrace) trace(OzUtil.byteBufferDebugDump("read: unwrapped before going to next filter", mUnwrapped, true)); 
             getNextFilter().read(mUnwrapped);
-            if (mTrace) trace(OzUtil.byteBufferDebugDump("read: unwrapped after going to next filter", mUnwrapped, true)); 
             
             if (result.getStatus() == Status.OK) {
             	continue;
@@ -288,27 +288,34 @@ public class OzTLSFilter extends OzFilter {
     
     private static String toString(SSLEngineResult result) {
     	return "Status=" + result.getStatus() + 
-    	       " HandshakeStatus=" + result.getHandshakeStatus() +
-    	       " bytesConsumed=" + result.bytesConsumed() +
-    	       " bytesProduced=" + result.bytesProduced();
+    	       " HSStatus=" + result.getHandshakeStatus() +
+    	       " consumed=" + result.bytesConsumed() +
+    	       " produced=" + result.bytesProduced();
 	}
 
 	List<ByteBuffer> mPendingWriteBuffers = new LinkedList<ByteBuffer>();
     
     public void processPendingWrites() throws IOException {
         synchronized (mPendingWriteBuffers) {
-            if (mTrace) trace("write: pending buffers size " + mPendingWriteBuffers.size());
 
             for (Iterator<ByteBuffer> iter = mPendingWriteBuffers.iterator(); iter.hasNext();) {
                 ByteBuffer srcbb = iter.next();
                 while (srcbb.hasRemaining()) {
                 	ByteBuffer dest = ByteBuffer.allocate(mPacketBufferSize);
-                	if (mTrace) trace(OzUtil.byteBufferDebugDump("application buffer before wrap", srcbb, false));
-                	SSLEngineResult result = mSSLEngine.wrap(srcbb, dest);
-                	if (mTrace) trace(OzUtil.byteBufferDebugDump("network buffer after wrap", dest, true));
-                	if (mDebug) debug("write: wrap result " + toString(result));
-                	if (mTrace) trace("application buffer after wrap " + srcbb);
-                	switch (result.getStatus()) {
+
+                    if (mTrace) trace(OzUtil.byteBufferDebugDump("write wrapping ", srcbb, false));
+                    String ibefore = null, obefore = null;
+                    if (mDebug) ibefore = OzUtil.toString(srcbb);
+                    if (mDebug) obefore = OzUtil.toString(dest); 
+                    
+                    SSLEngineResult result = mSSLEngine.wrap(srcbb, dest);
+
+                    if (mDebug) debug("read unwrap in: " + ibefore + "->" + OzUtil.toString(srcbb));
+                    if (mDebug) debug("read unwrap out: " + obefore + "->" + OzUtil.toString(dest));
+                    if (mDebug) debug("read unwrap result: " + toString(result));
+                    
+                    
+                    switch (result.getStatus()) {
                 	case OK:
                 		if (result.getHandshakeStatus() == HandshakeStatus.NEED_TASK) {
                 			runTasks();
@@ -359,17 +366,14 @@ public class OzTLSFilter extends OzFilter {
 
         /* "fire and forget" close_notify */
         SSLEngineResult result = null;
-        int i = 1;
         do {
-            if (mTrace) trace("close wrap iteration " + i++);
             ByteBuffer dest = ByteBuffer.allocate(mPacketBufferSize);
             result = mSSLEngine.wrap(mHandshakeBB, dest);
-            if (mTrace) trace("close wrap result " + toString(result));
+            if (mDebug) debug("close wrap result " + toString(result));
             if (result.getStatus() != Status.CLOSED) {
                 throw new SSLException("Improper close state");
             }	
             dest.flip();
-            if (mTrace) trace(OzUtil.byteBufferDebugDump("close notify wrap", dest, false));
             getNextFilter().write(dest);
         } while (result != null && result.getHandshakeStatus() == HandshakeStatus.NEED_WRAP);
 

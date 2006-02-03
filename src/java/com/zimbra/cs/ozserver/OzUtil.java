@@ -31,6 +31,10 @@ import org.apache.commons.logging.Log;
 
 public class OzUtil {
 
+    public static String toString(ByteBuffer bb) {
+        return "[pos=" + bb.position() + " lim=" + bb.limit() + " cap=" + bb.capacity() + "]";
+    }
+    
     public static String byteBufferDebugDump(String bufferName, ByteBuffer orig, boolean flip) {
         ByteBuffer flipped = orig.duplicate();
         if (flip) {
@@ -43,15 +47,15 @@ public class OzUtil {
         if (flip) {
             sb.append(" [flipped]");
         } else {
-            sb.append(" [original]");
+            sb.append(" [unflipped]");
         }
-        sb.append(" position=").append(flipped.position());
+        sb.append(" pos=").append(flipped.position());
         if (flip) sb.append('/').append(orig.position());
-        sb.append(" limit=").append(flipped.limit());
+        sb.append(" lim=").append(flipped.limit());
         if (flip) sb.append('/').append(orig.limit());
-        sb.append(" capacity=").append(flipped.capacity());
+        sb.append(" cap=").append(flipped.capacity());
         if (flip) sb.append('/').append(orig.capacity());
-        sb.append(" hasRemaining=").append(flipped.hasRemaining());
+        sb.append(" rem=").append(flipped.hasRemaining());
         if (flip) sb.append('/').append(orig.hasRemaining());
         sb.append('\n');
 

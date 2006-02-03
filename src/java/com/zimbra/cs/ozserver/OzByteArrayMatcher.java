@@ -82,12 +82,15 @@ public class OzByteArrayMatcher implements OzMatcher {
         }
     }
     
+    private void trace(String msg, Throwable t) { if (mTrace) mLog.trace(msg, t); }
+    private void trace(String msg) { if (mTrace) mLog.trace(msg); }
+
     public boolean match(ByteBuffer buf) throws OzOverflowException {
         assert(mMatched < mMatchSequenceLength);
         
         int n = buf.remaining();
         
-        if (mTrace) mLog.trace("new bytes to look at=" + n + ", already matched=" + mMatched);
+        if (mTrace) trace("new bytes to look at=" + n + ", already matched=" + mMatched);
         
         StringBuilder tsb = null;
         if (mTrace) tsb = new StringBuilder("byte array matcher trace ");
@@ -109,7 +112,7 @@ public class OzByteArrayMatcher implements OzMatcher {
                 mMatched++;
                 if (mTrace) tsb.append("+" + mMatched + " ");
                 if (mMatched == mMatchSequenceLength) {
-                    if (mTrace) mLog.trace(tsb.toString());
+                    if (mTrace) trace(tsb.toString());
                     return true;
                 }
             } else {
@@ -118,13 +121,13 @@ public class OzByteArrayMatcher implements OzMatcher {
                     mMatched++;
                     if (mTrace) tsb.append("+" + mMatched + " ");
                     if (mMatched == mMatchSequenceLength) {
-                        if (mTrace) mLog.trace(tsb.toString());
+                        if (mTrace) trace(tsb.toString());
                         return true;
                     }
                 }
             }
         }
-        if (mTrace) mLog.trace(tsb.toString());
+        if (mTrace) trace(tsb.toString());
         return false;
     }
 

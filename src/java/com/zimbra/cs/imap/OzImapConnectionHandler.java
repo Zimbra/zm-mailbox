@@ -516,8 +516,6 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             ZimbraLog.imap.error("unexpected (and uncaught) IMAP exception type", ie);
             mIncompleteRequest = null;
             keepGoing = STOP_PROCESSING;
-        } finally {
-            ZimbraLog.clearContext();
         }
 
         return keepGoing;
@@ -1903,7 +1901,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
 
     private static final int MAX_COMMAND_LENGTH = 2048;
     
-    private OzByteArrayMatcher mCommandMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLF, MAX_COMMAND_LENGTH, ZimbraLog.imap);
+    private OzByteArrayMatcher mCommandMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLF, MAX_COMMAND_LENGTH, null);
 
     private OzCountingMatcher mLiteralMatcher = new OzCountingMatcher();
     
@@ -2048,6 +2046,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
              * parse it twice?
              */
             if (mCurrentRequestData.size() == 0) {
+                logCommand(line);
                 try {
                     mCurrentRequestTag = OzImapRequest.readTag(line);
                 } catch (ImapParseException ipe) {
@@ -2091,4 +2090,21 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         throw new RuntimeException("internal error in IMAP server: bad state " + mState);
     }
 
+    private void logCommand(String command) {
+        if (!ZimbraLog.imap.isDebugEnabled()) {
+            return;
+        }
+        int space = command.indexOf(' ');
+        if ((space + "LOGIN ".length()) < command.length()) {
+            String possiblyLogin = command.substring(space + 1, space + 1 + "LOGIN ".length());
+            if (possiblyLogin.equalsIgnoreCase("LOGIN ")) {
+                int endLogin = space + 1 + "LOGIN ".length();
+                int endUser = command.indexOf(' ', endLogin);
+                if (endUser > 0) {
+                    command = command.substring(0, endUser) + "...";
+                }
+            }
+        }
+        ZimbraLog.imap.debug("  C: " + command);
+    }
 }

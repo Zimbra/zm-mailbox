@@ -76,7 +76,7 @@ final class ImapLiteral {
 
         try {
             String number = line.substring(digitStart, digitLimit);
-            if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("LITERAL found count string=" + number);
+            //if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("LITERAL found count string=" + number);
             result.mOctets = Integer.parseInt(number);
             result.mLength = digitLimit - digitStart + (result.mBlocking ? 2 /* {} */ : 3 /* {+} */); 
         } catch (NumberFormatException nfe) {
