@@ -52,9 +52,9 @@ import com.zimbra.cs.util.ZimbraLog;
 public class NativeFormatter extends Formatter {
 
     private static final String CONVERSION_PATH = "/extension/convertd";
-    private static final String ATTR_MIMEPART   = "mimepart";
-    private static final String ATTR_MSGDIGEST  = "msgdigest";
-    private static final String ATTR_CONTENTURL = "contenturl";
+    public static final String ATTR_MIMEPART   = "mimepart";
+    public static final String ATTR_MSGDIGEST  = "msgdigest";
+    public static final String ATTR_CONTENTURL = "contenturl";
     
     public String getType() {
         return "native";
