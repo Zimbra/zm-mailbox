@@ -581,6 +581,7 @@
 	</target>
 
 	<target name="reload-zimlets" depends="install-zimlets,restart-tomcat"/>
+	<target name="reload-zimlets-extra" depends="install-zimlets-extra,restart-tomcat"/>
 
 	<target name="package-zimlets" depends="build-init,package-zimlets-core,package-zimlets-extra"/>
 	<target name="package-zimlets-core">
@@ -621,13 +622,25 @@
 			<param name="action" value="deploy"/>
 		</foreach>
 	</target>
+
+	<target name="deploy-zimlets-extra" depends="package-zimlets">
+		<foreach list="${zimlets-extra}" target="install-zimlet-extra" param="zimlet">
+			<param name="action" value="deploy"/>
+		</foreach>
+	</target>
 	
 	<target name="install-zimlets" depends="package-zimlets">
 		<foreach list="${zimlets}" target="install-zimlet" param="zimlet">
 			<param name="action" value="install"/>
 		</foreach>
 	</target>
-	
+
+	<target name="install-zimlets-extra" depends="package-zimlets">
+		<foreach list="${zimlets-extra}" target="install-zimlet-extra" param="zimlet">
+			<param name="action" value="install"/>
+		</foreach>
+	</target>
+
 	<target name="install-zimlet">
 		<echo>${action} ${zimlet}</echo>
 		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
@@ -636,7 +649,16 @@
 			<arg file="${dist.zimlet.dir}/${zimlet}.zip" />
 		</java>
 	</target>
-	
+
+	<target name="install-zimlet-extra">
+		<echo>${action} ${zimlet}</echo>
+		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="-q" />
+			<arg line="${action}" />
+			<arg file="${dist.zimlet-extra.dir}/${zimlet}.zip" />
+		</java>
+	</target>
+
     <target name="tomcat-init" depends="localhost-ssl-cert,tomcat-init-unix">
 		<copy todir="${tomcat.home.dir}/common/lib" file="${jars.dir}/${ical4j.jar}" />
 		<copy todir="${tomcat.home.dir}/common/lib" file="${jars.dir}/activation.jar" />
