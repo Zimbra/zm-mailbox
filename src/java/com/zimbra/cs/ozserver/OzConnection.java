@@ -238,12 +238,20 @@ public class OzConnection {
 
     private boolean mReadRequested;
     
+    private boolean mWriteRequested;
+    
     public void enableReadInterest() {
         synchronized (mLock) {
             mReadRequested = true;
         }
     }
     
+    private void enableWriteInterest() {
+        synchronized (mLock) {
+            mWriteRequested = true;
+        }
+    }
+
     private abstract class Task implements Runnable {
         private String mName;
      
@@ -269,9 +277,14 @@ public class OzConnection {
                         if (mDebug) mLog.debug("connection already closed, aborting " + mName);
                         return;
                     }
+                    mReadRequested = false;
+                    mWriteRequested = false;
                     doTask();
                     if (mReadRequested) {
                         registerReadInterest();
+                    }
+                    if (mWriteRequested) {
+                        registerWriteInterest();
                     }
                 } catch (Throwable t) {
                     mLog.warn("exception occurred during " + mName + " task", t);
@@ -405,8 +418,6 @@ public class OzConnection {
         ReadTask() { super("read"); }
 
         public void doTask() throws IOException {
-            mReadRequested = false;
-            
             int bytesRead = -1;
             
             ensureReadBufferCapacity();
@@ -426,7 +437,8 @@ public class OzConnection {
             }
 
             if (bytesRead == 0) {
-                mLog.warn("got no bytes on supposedly read ready channel");
+                mLog.warn("no bytes on supposedly read ready channel re-enabling read interest");
+                enableReadInterest();
                 return;
             }
             
@@ -510,7 +522,7 @@ public class OzConnection {
         				// Not all data was written. Enable write interest so we
                         // can write later.
         				allWritten = false;
-        				registerWriteInterest();
+        				enableWriteInterest();
         				break;
         			}
         		}

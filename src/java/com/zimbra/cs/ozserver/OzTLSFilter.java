@@ -310,9 +310,9 @@ public class OzTLSFilter extends OzFilter {
                     
                     SSLEngineResult result = mSSLEngine.wrap(srcbb, dest);
 
-                    if (mDebug) debug("read unwrap in: " + ibefore + "->" + OzUtil.toString(srcbb));
-                    if (mDebug) debug("read unwrap out: " + obefore + "->" + OzUtil.toString(dest));
-                    if (mDebug) debug("read unwrap result: " + toString(result));
+                    if (mDebug) debug("write wrap in: " + ibefore + "->" + OzUtil.toString(srcbb));
+                    if (mDebug) debug("write wrap out: " + obefore + "->" + OzUtil.toString(dest));
+                    if (mDebug) debug("write wrap result: " + toString(result));
                     
                     
                     switch (result.getStatus()) {

@@ -31,13 +31,13 @@ import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.zimbra.cs.util.ZimbraLog;
+//import com.zimbra.cs.util.ZimbraLog;
 
 class TestConnectionHandler implements OzConnectionHandler {
 
-    private OzByteArrayMatcher mCommandMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLF, 1000, ZimbraLog.misc);
+    private OzByteArrayMatcher mCommandMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLF, 1000, null);
     
-    private OzByteArrayMatcher mSumDataMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLFDOTCRLF, 32000, ZimbraLog.misc);
+    private OzByteArrayMatcher mSumDataMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLFDOTCRLF, 32000, null);
     
     private OzCountingMatcher mNsumDataMatcher = new OzCountingMatcher();
     
@@ -52,6 +52,8 @@ class TestConnectionHandler implements OzConnectionHandler {
     private static final int READING_COMMAND = 1;
     private static final int READING_SUM_DATA = 2;
     private static final int READING_NSUM_DATA = 3;
+    
+    public static final int TIMEOUT_SECONDS = 120;
     
     TestConnectionHandler(OzConnection connection) {
         mConnection = connection;
@@ -88,7 +90,7 @@ class TestConnectionHandler implements OzConnectionHandler {
     
     public void handleConnect() throws IOException {
         // Write greeting
-        mConnection.setIdleNotifyTime(50000);
+        mConnection.setIdleNotifyTime(TIMEOUT_SECONDS * 1000);
         mConnection.writeAsciiWithCRLF("200 Hello, welcome to test server cid=" + mConnection.getId());
         gotoReadingCommandState();
     }   

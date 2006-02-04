@@ -115,12 +115,12 @@ public class OzServer {
 
     void wakeupSelector() {
         if (Thread.currentThread() == mServerThread) {
-           if (mDebugLogging) mLog.trace("noop wakeup selector - already in server thread");
-           return;
-        }
-        synchronized (mSelectorGuard) {
-        	if (mDebugLogging) mLog.trace("waking up selector");
-        	mSelector.wakeup();
+           if (mLog.isDebugEnabled()) mLog.debug("noop wakeup selector - already in server thread");
+        } else {
+            synchronized (mSelectorGuard) {
+                if (mLog.isDebugEnabled()) mLog.debug("waking up selector");
+                mSelector.wakeup();
+            }
         }
     }
 
