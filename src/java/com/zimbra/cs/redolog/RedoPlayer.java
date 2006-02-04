@@ -31,6 +31,7 @@ package com.zimbra.cs.redolog;
 import java.io.File;
 import java.io.IOException;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -85,11 +86,20 @@ public class RedoPlayer {
 	 * during mailbox restore.
 	 * @param logfile
 	 * @param redoCommitted
+     * @param mboxIDsMap If not null, restrict replay of log entries to
+     *                   mailboxes whose IDs are given by the key set of the
+     *                   map.  Replay is done against mailboxes whose IDs are
+     *                   given by the value set of the map.  Thus, it is
+     *                   possible to replay operations from one mailbox in
+     *                   a different mailbox.
      * @param mailboxIds[] - if set, then restrict the replay of log entries
-     *                       to ones which match Mailbox IDs 
+     *                       to ones which match Mailbox IDs
 	 * @throws IOException
 	 */
-	public void scanLog(File logfile, boolean redoCommitted, int mailboxIds[], long startingTime)
+	public void scanLog(File logfile,
+                        boolean redoCommitted,
+                        Map<Integer, Integer> mboxIDsMap,
+                        long startingTime)
     throws IOException, ServiceException {
 		FileLogReader logReader = new FileLogReader(logfile, mWriteable);
 		logReader.open();
@@ -104,7 +114,7 @@ public class RedoPlayer {
 				if (mLog.isDebugEnabled())
 					mLog.debug("Read: " + op);
 
-                playOp(op, redoCommitted, mailboxIds, startingTime);
+                playOp(op, redoCommitted, mboxIDsMap, startingTime);
 			}
 		} catch (IOException e) {
 			// The IOException could be a real I/O problem or it could mean
@@ -140,7 +150,10 @@ public class RedoPlayer {
     private boolean mHasOrphanOps = false;
     private Map mOrphanOps = new HashMap();
 
-    public void playOp(RedoableOp op, boolean redoCommitted, int mailboxIds[], long startingTime)
+    public void playOp(RedoableOp op,
+                       boolean redoCommitted,
+                       Map<Integer, Integer> mboxIDsMap,
+                       long startingTime)
     throws ServiceException {
 
         if (op.isStartMarker()) {
@@ -226,29 +239,31 @@ public class RedoPlayer {
                 if (redoCommitted && prepareOp != null && (op instanceof CommitTxn) &&
                 	(startingTime == -1 || prepareOp.getTimestamp() >= startingTime)) {
                 	boolean allowRedo = false;
-                	if (mailboxIds == null) {
-                		// Caller says to ignore which mailbox(es) the op is for.
+                	if (mboxIDsMap == null) {
+                		// Caller doesn't care which mailbox(es) the op is for.
                 		allowRedo = true;
                 	} else {
                         int opMailboxId = prepareOp.getMailboxId();
                         if (prepareOp instanceof StoreIncomingBlob) {
+                            assert(opMailboxId == RedoableOp.MAILBOX_ID_ALL);
                         	// special case for StoreIncomingBlob op that has
-                        	// a list of mailbox IDs (It has getMailboxId()
-                        	// == MAILBOX_ID_ALL.)
-                        	List<Integer> list =
-                        		((StoreIncomingBlob) prepareOp).getMailboxIdList();
+                        	// a list of mailbox IDs.
+                            StoreIncomingBlob storeOp = (StoreIncomingBlob) prepareOp;
+                        	List<Integer> list = storeOp.getMailboxIdList();
                         	if (list != null) {
-	                        	Set<Integer> opMboxIds =
-	                        		new HashSet<Integer>(
-	                        				((StoreIncomingBlob) prepareOp).
-	                        				getMailboxIdList());
-		                        for (int i = 0; i < mailboxIds.length; i++) {
-		                        	Integer mboxId = new Integer(mailboxIds[i]);
-		                        	if (opMboxIds.contains(mboxId)) {
-		                        		allowRedo = true;
-		                        		break;
-		                        	}
-		                        }
+	                        	Set<Integer> opMboxIds = new HashSet<Integer>(list);
+                                for (Map.Entry<Integer, Integer> entry : mboxIDsMap.entrySet()) {
+                                    if (opMboxIds.contains(entry.getKey())) {
+                                        allowRedo = true;
+                                        // Replace the mailbox ID list in the op.  We're
+                                        // replaying it only for the target mailbox ID we're
+                                        // interested in.
+                                        List<Integer> newList =
+                                            new ArrayList<Integer>(mboxIDsMap.values());
+                                        storeOp.setMailboxIdList(newList);
+                                        break;
+                                    }
+                                }
                         	} else {
                         		// Prior to redolog version 1.0 StoreIncomingBlob
                         		// didn't keep track of mailbox list.  Always recreate
@@ -262,12 +277,16 @@ public class RedoPlayer {
                         	// MAILBOX_ID_ALL.
                         	allowRedo = true;
                         } else {
-	                        for (int i = 0; i < mailboxIds.length; i++) {
-	                        	if (opMailboxId == mailboxIds[i]) {
-	                        		allowRedo = true;
-	                        		break;
-	                        	}
-	                        }
+                            for (Map.Entry<Integer, Integer> entry : mboxIDsMap.entrySet()) {
+                                if (opMailboxId == entry.getKey().intValue()) {
+                                    if (entry.getValue() != null) {
+                                        // restore to a different mailbox
+                                        prepareOp.setMailboxId(entry.getValue().intValue());
+                                    }
+                                    allowRedo = true;
+                                    break;
+                                }
+                            }
                         }
                 	}
                 	if (allowRedo) {

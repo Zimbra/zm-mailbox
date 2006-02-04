@@ -77,6 +77,10 @@ public class StoreIncomingBlob extends RedoableOp {
     	return mMailboxIdList;
     }
 
+    public void setMailboxIdList(List<Integer> list) {
+        mMailboxIdList = list;
+    }
+
     public void setBlobBodyInfo(byte[] data, String path, short volumeId) {
         mData = data;
         mPath = path;
