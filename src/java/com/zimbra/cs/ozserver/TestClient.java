@@ -51,6 +51,8 @@ import com.zimbra.cs.util.ZimbraLog;
 //
 // nsum <n>       -> calculated sum
 //
+// echo num_bytes num_chunks -> write (num_chunks * num_bytes), where first chunk is 'A', second chunk is 'B', etc. 
+//
 // quit           -> ok and close()
 
 class TestClient {
@@ -122,13 +124,14 @@ class TestClient {
         mLog.info("cgot: " + mResponse);
     }
     
-    public boolean echo(byte bv, int nb, int nc) throws IOException {
-    	mSocketOut.write(("echo " + (char)bv + " " + nb + " " + nc + "\r\n").getBytes());
+    public boolean echo(int nb, int nc) throws IOException {
+    	mSocketOut.write(("echo " + nb + " " + nc + "\r\n").getBytes());
     	mSocketOut.flush();
     	char[] arr = new char[nb];
     	
     	int target = nb * nc;
     	int totalRead = 0;
+        int bv = 'A';
     	do {
     		int nread = mSocketIn.read(arr);
     		TestServer.mLog.info("client read " + nread + " bytes");
@@ -136,12 +139,15 @@ class TestClient {
     			mResponse = "EOF reached";
     			return false;
     		}
-    		totalRead += nread; 
     		for (int k = 0; k < nread; k++) {
     			if (arr[k] != bv) {
     				mResponse = "client found " + arr[k] + " at index " +  k + " when expecting " + (char)bv;
     				return false;
     			}
+                totalRead++;
+                if ((totalRead % nb) == 0) {
+                    bv++;
+                }
     		}
     	} while (totalRead < target);
     		
@@ -203,9 +209,8 @@ class TestClient {
             mLog.info("response: OK expected and got " + nsum);
         }
 
-        bv = randomPrintableAsciiByte(mRandom);
-        mLog.info("sending: echo " + (char)bv + " " + nb + " " + nc);
-        if (client.echo(bv, nb, nc)) {
+        mLog.info("sending: echo " + nb + " " + nc);
+        if (client.echo(nb, nc)) {
             mLog.info("response: OK " + client.getLastResponse());
         } else { 
         	mLog.info("response: FAIL " + client.getLastResponse());

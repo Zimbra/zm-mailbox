@@ -32,7 +32,7 @@ import org.apache.commons.logging.Log;
 public class OzUtil {
 
     public static String toString(ByteBuffer bb) {
-        return "[pos=" + bb.position() + " lim=" + bb.limit() + " cap=" + bb.capacity() + "]";
+        return "[" + bb.position() + "," + bb.limit() + "," + bb.capacity() + "]";
     }
     
     public static String byteBufferDebugDump(String bufferName, ByteBuffer orig, boolean flip) {

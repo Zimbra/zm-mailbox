@@ -112,7 +112,7 @@ class TestConnectionHandler implements OzConnectionHandler {
         }
     }
 
-    private static Pattern ECHO = Pattern.compile("echo\\s+(.)\\s+([0-9]+)\\s+([0-9]+)");
+    private static Pattern ECHO = Pattern.compile("echo\\s+([0-9]+)\\s+([0-9]+)");
 
     private void doCommandInternal(String cmd) throws IOException 
     {
@@ -144,12 +144,11 @@ class TestConnectionHandler implements OzConnectionHandler {
         } else if (cmd.startsWith("echo")) {
             Matcher m = ECHO.matcher(cmd);
             if (m.find()) {
-                int ch = m.group(1).charAt(0);
-                int chunk = Integer.parseInt(m.group(2));
-                int times = Integer.parseInt(m.group(3));
+                int chunk = Integer.parseInt(m.group(1));
+                int times = Integer.parseInt(m.group(2));
                 for (int i = 0; i < times; i++) {
                     byte[] arr = new byte[chunk];
-                    Arrays.fill(arr, (byte)ch);
+                    Arrays.fill(arr, (byte)('A' + i));
                     ByteBuffer bb = ByteBuffer.wrap(arr);
                     mConnection.write(bb);
                 }

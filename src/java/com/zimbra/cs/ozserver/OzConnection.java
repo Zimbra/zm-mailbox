@@ -238,20 +238,12 @@ public class OzConnection {
 
     private boolean mReadRequested;
     
-    private boolean mWriteRequested;
-    
     public void enableReadInterest() {
         synchronized (mLock) {
             mReadRequested = true;
         }
     }
     
-    private void enableWriteInterest() {
-        synchronized (mLock) {
-            mWriteRequested = true;
-        }
-    }
-
     private abstract class Task implements Runnable {
         private String mName;
      
@@ -278,12 +270,11 @@ public class OzConnection {
                         return;
                     }
                     mReadRequested = false;
-                    mWriteRequested = false;
                     doTask();
                     if (mReadRequested) {
                         registerReadInterest();
                     }
-                    if (mWriteRequested) {
+                    if (mWriteManager.isWritePending()) {
                         registerWriteInterest();
                     }
                 } catch (Throwable t) {
@@ -512,17 +503,20 @@ public class OzConnection {
         			assert(data.hasRemaining());
         			
                     String before = null;
-                    if (mDebug) before = OzUtil.toString(data);
+                    int req = 0;
+                    if (mDebug) before = OzUtil.toString(data); 
+                    if (mDebug) req = data.remaining();
                     if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("channel write buffer", data, false));
-        			int wrote = mChannel.write(data);
-        			totalWritten += wrote;
-                    if (mDebug) mLog.debug("channel wrote=" + wrote + " partial=" + data.hasRemaining() + " total=" + totalWritten + " buffer: " + before + "->" + OzUtil.toString(data));
+
+                    int wrote = mChannel.write(data);
+        			
+                    totalWritten += wrote;
+                    if (mDebug) mLog.debug("channel wrote=" + wrote + " req=" + req + " partial=" + data.hasRemaining() + " total=" + totalWritten + " buffer: " + before + "->" + OzUtil.toString(data));
                     
         			if (data.hasRemaining()) {
-        				// Not all data was written. Enable write interest so we
-                        // can write later.
+        				// Not all data was written. Note that write interest is
+                        // enabled *elsewhere* when write is pending.
         				allWritten = false;
-        				enableWriteInterest();
         				break;
         			}
         		}
