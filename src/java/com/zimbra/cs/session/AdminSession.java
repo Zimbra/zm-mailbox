@@ -31,7 +31,6 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 
 import com.zimbra.cs.account.Domain;
@@ -39,7 +38,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Constants;
-import com.zimbra.cs.util.ZimbraLog;
 
 /** @author dkarp */
 public class AdminSession extends Session {
