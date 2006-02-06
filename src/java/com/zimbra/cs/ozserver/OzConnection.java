@@ -419,8 +419,6 @@ public class OzConnection {
             if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("channel read buffer", mReadBuffer, true));
             if (mDebug) mLog.debug("channel read=" + bytesRead + " buffer: " + before + "->" + OzUtil.toString(mReadBuffer));
 
-            assert(bytesRead == mReadBuffer.position());
-
             if (bytesRead == -1) {
                 if (mDebug) mLog.debug("channel read -1 cleaning up connection");
                 cleanup();
