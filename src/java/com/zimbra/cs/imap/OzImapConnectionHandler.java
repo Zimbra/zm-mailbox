@@ -1935,36 +1935,36 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
     private Object mCloseLock = new Object();
     
     private void gotoClosedState(boolean normalClose) {
-        synchronized (mCloseLock) {
-        	// Close only once
-        	if (mState == ConnectionState.CLOSED) {
-        		throw new IllegalStateException("connection already closed");
-        	}
-        	
-        	try {
-        		if (mSession != null) {
-        			mSession.setHandler(null);
-        			SessionCache.clearSession(mSession.getSessionId(), mSession.getAccountId());
-        			mSession = null;
+        try {
+            synchronized (mCloseLock) {
+                // Close only once
+                if (mState == ConnectionState.CLOSED) {
+                    throw new IllegalStateException("connection already closed");
+                }
+                
+                if (mSession != null) {
+                    mSession.setHandler(null);
+                    SessionCache.clearSession(mSession.getSessionId(), mSession.getAccountId());
+                    mSession = null;
+                }
+                
+                if (normalClose) {
+                    if (!mGoodbyeSent) {
+                        sendUntagged(ImapServer.getGoodbye(), true);
+                    }
+                    mGoodbyeSent = true;
         		}
-        		
-        		if (normalClose) {
-        			if (!mGoodbyeSent) {
-        				sendUntagged(ImapServer.getGoodbye(), true);
-        			}
-        			mGoodbyeSent = true;
-        		}
-        	} catch (IOException ioe) {
-        		normalClose = false;
-        	} finally {
-        		if (normalClose) {
-        			mConnection.close();
-        		} else {
-        			mConnection.closeNow();
-        		}
-        		mState = ConnectionState.CLOSED;
-        		if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("entered closed state: normal=" + normalClose);
-        	}
+            }
+        } catch (IOException ioe) {
+            normalClose = false;
+        } finally {
+            if (normalClose) {
+                mConnection.close();
+            } else {
+                mConnection.closeNow();
+            }
+            mState = ConnectionState.CLOSED;
+            if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("entered closed state: normal=" + normalClose);
         }
     }
 
