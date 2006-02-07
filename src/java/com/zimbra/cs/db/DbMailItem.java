@@ -475,33 +475,6 @@ public class DbMailItem {
         }
     }
 
-    public static int getTaggedUnreadChildCount(MailItem item, Tag tag) throws ServiceException {
-        Mailbox mbox = item.getMailbox();
-        if (mbox != tag.getMailbox())
-            throw MailServiceException.WRONG_MAILBOX();
-        Connection conn = mbox.getOperationConnection();
-
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-        try {
-            String relation = (item instanceof Folder ? "folder_id = ?" : "parent_id = ?");
-            stmt = conn.prepareStatement("SELECT COUNT(*) FROM " + getMailItemTableName(item) +
-                    " WHERE " + relation + " AND unread = ? AND tags & ?");
-            stmt.setInt(1, item.getId());
-            stmt.setBoolean(2, true);
-            stmt.setLong(3, tag.getBitmask());
-            rs = stmt.executeQuery();
-            if (rs.next())
-                return rs.getInt(1);
-            throw ServiceException.FAILURE("no data when fetching unread child count for item " + item.getId(), null);
-        } catch (SQLException e) {
-            throw ServiceException.FAILURE("fetching unread child count for item " + item.getId(), e);
-        } finally {
-            DbPool.closeResults(rs);
-            DbPool.closeStatement(stmt);
-        }
-    }
-
     public static void alterTag(MailItem item, Tag tag, boolean add) throws ServiceException {
         Mailbox mbox = item.getMailbox();
         if (mbox != tag.getMailbox())
@@ -520,18 +493,20 @@ public class DbMailItem {
             else if (item instanceof Tag)             relation = "tags & ?";
             else                                      relation = "id = ?";
 
+            String precondition = (add ? "NOT (" : "(") + column + " & ?)";
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
                     " SET " + column + " = " + column + (add ? " | ?" : " & ?") + ", mod_metadata = ?, change_date = ?" +
-                    " WHERE " + relation);
+                    " WHERE " + precondition + " AND " + relation);
             stmt.setLong(1, add ? tag.getBitmask() : ~tag.getBitmask());
             stmt.setInt(2, mbox.getOperationChangeID());
             stmt.setInt(3, mbox.getOperationTimestamp());
+            stmt.setLong(4, tag.getBitmask());
             if (item instanceof Tag)
-                stmt.setLong(4, ((Tag) item).getBitmask());
+                stmt.setLong(5, ((Tag) item).getBitmask());
             else if (item instanceof VirtualConversation)
-                stmt.setInt(4, ((VirtualConversation) item).getMessageId());
+                stmt.setInt(5, ((VirtualConversation) item).getMessageId());
             else
-                stmt.setInt(4, item.getId());
+                stmt.setInt(5, item.getId());
             stmt.executeUpdate();
 
             // Update the flagset or tagset cache.  Assume that the item's in-memory
@@ -560,14 +535,16 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             String column = (tag instanceof Flag ? "flags" : "tags");
+            String precondition = (add ? "NOT (" : "(") + column + " & ?)";
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(tag) +
                     " SET " + column + " = " + column + (add ? " | ?" : " & ?") + ", mod_metadata = ?, change_date = ?" +
-                    " WHERE id IN " + DbUtil.suitableNumberOfVariables(itemIDs));
+                    " WHERE " + precondition + " AND id IN " + DbUtil.suitableNumberOfVariables(itemIDs));
             stmt.setLong(1, add ? tag.getBitmask() : ~tag.getBitmask());
             stmt.setInt(2, mbox.getOperationChangeID());
             stmt.setInt(3, mbox.getOperationTimestamp());
+            stmt.setLong(4, tag.getBitmask());
             for (int i = 0; i < itemIDs.length; i++)
-                stmt.setInt(i + 4, itemIDs.array[i]);
+                stmt.setInt(i + 5, itemIDs.array[i]);
             stmt.executeUpdate();
 
             // Update the flagset or tagset cache.  Assume that the item's in-memory
@@ -585,7 +562,32 @@ public class DbMailItem {
             DbPool.closeStatement(stmt);
         }
     }
-	
+
+    public static void clearTag(Tag tag) throws ServiceException {
+        Mailbox mbox = tag.getMailbox();
+        Connection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        try {
+            stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(tag) +
+                    " SET tags = tags & ?, mod_metadata = ?, change_date = ?" +
+                    " WHERE tags & ?");
+            stmt.setLong(1, ~tag.getBitmask());
+            stmt.setInt(2, mbox.getOperationChangeID());
+            stmt.setInt(3, mbox.getOperationTimestamp());
+            stmt.setLong(4, tag.getBitmask());
+            stmt.executeUpdate();
+
+            if (areTagsetsLoaded(mbox.getId())) {
+                TagsetCache tagsets = getTagsetCache(conn, mbox.getId());
+                tagsets.applyMask(tag.getTagBitmask(), false);
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("clearing all references to tag " + tag.getId(), e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
+
     /**
      * Sets the <code>unread</code> column for the specified <code>MailItem</code>.
      * If the <code>MailItem</code> is a <code>Conversation</code>, <code>Tag</code>
@@ -608,16 +610,17 @@ public class DbMailItem {
 
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
                     " SET unread = ?, mod_metadata = ?, change_date = ?" +
-                    " WHERE " + relation + " AND type = " + MailItem.TYPE_MESSAGE);
+                    " WHERE unread = ? AND " + relation + " AND type = " + MailItem.TYPE_MESSAGE);
             stmt.setBoolean(1, unread);
             stmt.setInt(2, mbox.getOperationChangeID());
             stmt.setInt(3, mbox.getOperationTimestamp());
+            stmt.setBoolean(4, !unread);
             if (item instanceof Tag)
-                stmt.setLong(4, ((Tag) item).getBitmask());
+                stmt.setLong(5, ((Tag) item).getBitmask());
             else if (item instanceof VirtualConversation)
-                stmt.setInt(4, ((VirtualConversation) item).getMessageId());
+                stmt.setInt(5, ((VirtualConversation) item).getMessageId());
             else
-                stmt.setInt(4, item.getId());
+                stmt.setInt(5, item.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("updating unread state for item " + item.getId(), e);
@@ -636,42 +639,18 @@ public class DbMailItem {
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox) +
                     " SET unread = ?, mod_metadata = ?, change_date = ?" +
-                    " WHERE id IN" + DbUtil.suitableNumberOfVariables(itemIDs));
+                    " WHERE unread = ? AND id IN" + DbUtil.suitableNumberOfVariables(itemIDs));
             stmt.setBoolean(1, unread);
             stmt.setInt(2, mbox.getOperationChangeID());
             stmt.setInt(3, mbox.getOperationTimestamp());
+            stmt.setBoolean(4, !unread);
             for (int i = 0; i < itemIDs.length; i++)
-                stmt.setInt(i + 4, itemIDs.array[i]);
+                stmt.setInt(i + 5, itemIDs.array[i]);
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("updating tag data for items [" + itemIDs + "]", e);
         } finally {
             DbPool.closeStatement(stmt);
-        }
-    }
-
-    public static void clearTag(Tag tag) throws ServiceException {
-        Mailbox mbox = tag.getMailbox();
-        Connection conn = mbox.getOperationConnection();
-    	PreparedStatement stmt = null;
-        try {
-            stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(tag) +
-                    " SET tags = tags & ?, mod_metadata = ?, change_date = ?" +
-                    " WHERE tags & ?");
-            stmt.setLong(1, ~tag.getBitmask());
-            stmt.setInt(2, mbox.getOperationChangeID());
-            stmt.setInt(3, mbox.getOperationTimestamp());
-            stmt.setLong(4, tag.getBitmask());
-        	stmt.executeUpdate();
-
-            if (areTagsetsLoaded(mbox.getId())) {
-                TagsetCache tagsets = getTagsetCache(conn, mbox.getId());
-                tagsets.applyMask(tag.getTagBitmask(), false);
-            }
-        } catch (SQLException e) {
-        	throw ServiceException.FAILURE("clearing all references to tag " + tag.getId(), e);
-        } finally {
-        	DbPool.closeStatement(stmt);
         }
     }
 
