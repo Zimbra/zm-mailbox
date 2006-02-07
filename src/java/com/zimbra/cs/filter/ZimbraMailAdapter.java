@@ -52,12 +52,9 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ZimbraLog;
 
 /**
- * <p>Class ZimbraMailAdapter implements a mock MailAdapter for testing purposes.</p>
- * 
- * <p>Being a mock object, Actions are not performed against a mail server, but in 
- * most other respects it behaves as would expect a MailAdapter wrapping a JavaMail 
- * message should. To this extent, it is a useful demonstration of how to create an
- * implementation of a MailAdapter.
+ * Sieve evaluation engine adds a list of {@link org.apache.jsieve.mail.Action}s 
+ * that have matched the filter conditions to this object
+ * and invokes its {@link #executeActions()} method.
  */
 public class ZimbraMailAdapter implements MailAdapter
 {
@@ -318,13 +315,17 @@ public class ZimbraMailAdapter implements MailAdapter
     }
     
     private void alterMessage(Message msg, List nontermActions) throws IOException, ServiceException {
+        long oldTags  = msg.getTagBitmask();
+        int  oldFlags = msg.getFlagBitmask();
         TagAndFlag tf = getTagAndFlag(nontermActions);
         long tags = (tf.tags == null ? MailItem.TAG_UNCHANGED : Tag.tagsToBitmask(tf.tags));
-        mMailbox.setTags(null, msg.getId(), MailItem.TYPE_MESSAGE, tf.flagBits, tags, null);
+        tags |= oldTags;
+        int flags = tf.flagBits | oldFlags;
+        mMailbox.setTags(null, msg.getId(), MailItem.TYPE_MESSAGE, flags, tags, null);
     }
     
     private TagAndFlag getTagAndFlag(List nontermActions) throws ServiceException {
-        StringBuffer tagsBuf = null;
+        StringBuilder tagsBuf = null;
         int flagBits = Flag.FLAG_UNREAD;
         for (Iterator it = nontermActions.listIterator(); it.hasNext(); ) {
             Action action = (Action) it.next();
@@ -336,7 +337,7 @@ public class ZimbraMailAdapter implements MailAdapter
                 try {
                     Tag tag = mMailbox.getTagByName(tagName);
                     if (tagsBuf == null) {
-                        tagsBuf = new StringBuffer(String.valueOf(tag.getId()));
+                        tagsBuf = new StringBuilder(String.valueOf(tag.getId()));
                     } else {
                         tagsBuf.append(",").append(tag.getId());
                     }
