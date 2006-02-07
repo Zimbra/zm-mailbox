@@ -1,30 +1,39 @@
-// APIs needed for demo.
-
+//
 // Create
-// the syntax is pretty mucn identical to SaveDraft soap call.
-// the subject field becomes the wikiword or the title of the document.
+//
+// A Document represents a file.  A file can be created by uploading to FileUploadServlet.
+// Or it can refer to an attachment of an existing message.
+//
+<SaveDocumentRequest>
+  <doc name="{file-name}" [ctype="{content-type}"]>
+    [<upload id="{upload-id}"/>]
+    [<msg id="{msg-id}" part="{part-id}"/>]
+  </doc>
+</SaveDocumentRequest>
+
+<SaveDocumentResponse>
+  <m id="{item-id}"/>
+</SaveDocumentResponse>
+
+//
+// A Wiki is a versioned HTML document.
+//
 <SaveWikiRequest>
   <m>
-    <e t="{type}" a="{email-address}" p="{personal-name}"/>+
-    <su>{subject}</su>*
-    <mp ct="{content-type}">
-      <content>...</content>
-    </mp>
-    <attach [aid="{attach-upload-id}"]>
-      [<m id="{message-id}"/>]*
-      [<mp mid="{message-id}" part="{part-id}"/>]*
-    </attach>
+    <su>{subject}</su>
+    <content>...</content>
   </m>
 </SaveWikiRequest>
 
-
-// we can add more fields if we want.
 <SaveWikiResponse>
   <m id="{item-id}"/>
 </SaveWikiResponse>
 
+//
 // Search
-// can't search in WikiItems yet.
+// Documents and Wiki documents can be indexed.  
+// Use the existing Search API with "types" set to wiki or document.
+//
 
 // Get
 // through the rest URL:
@@ -34,29 +43,37 @@
 // the list of wiki words are managed by the server.  currently Subject:
 // header value is used for the wiki word.
 
+//
 // ListWiki
+// returns list of wiki words for this account
 <ListWikiRequest/>
 
-// returns list of wiki words for this account
-<ListWikiResponse xmlns:ns0="urn:zimbraMail">
-  [<w>{word}</w>]+
+<ListWikiResponse>
+  [<w>{word}</w><ver>{head-version}</ver>]+
 </ListWikiResponse>
 
+//
 // GetWiki
+// returns the latest version if version is omitted from the request.
 <GetWikiRequest>
-  <w name="{word}"/>
+  <w name="{word}" [ver="{version}"]/>
 </GetWikiRequest>
 
-// the format is identical to GetMsgResponse
 <GetWikiResponse>
-  <m l="2" rev="600" id="600" d="1137716227000" s="194">
-    <content>Message-ID: &lt;11724626.01137716227775.JavaMail.SYSTEM@JLee-D610&gt;
-Subject: save wiki test
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-
-test 123
-    </content>
+  <m id="{message-id}" f="{flags}" t="{tags}" s="{size}" d="{created-date}" l="{folder}">
+   <su>{subject}</su>
+   <ver>{version}</ver>
+   <cr>{creator}</cr>
+   <content>...</content>
   </m>
 </GetWikiResponse>
+
+//
+// DiffWiki
+<DiffWikiRequest>
+  <w name="{word}" v1="{version}" v2="{version}"/>
+</DiffWikiRequest>
+
+<DiffWikiResponse>
+  <!-- TBD -->
+</DiffWikiResponse>
