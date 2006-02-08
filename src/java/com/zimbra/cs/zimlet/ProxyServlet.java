@@ -211,7 +211,7 @@ public class ProxyServlet extends ZimbraServlet {
 			copyPostedData(req, httpconn);
 			int status = httpconn.getResponseCode();
 			if (status != HttpURLConnection.HTTP_OK) {
-				ZimbraLog.zimlet.info("remote host returned error on proxy request: "+status);
+				ZimbraLog.zimlet.info("remote host(" + url + ") returned error on proxy request: "+status);
 			}
 		}
 
