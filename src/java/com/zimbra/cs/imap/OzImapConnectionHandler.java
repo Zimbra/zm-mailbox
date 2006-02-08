@@ -2073,7 +2073,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             
             if (literal.octets() > 0) {
                 if (literal.blocking()) {
-                    mConnection.writeAsciiWithCRLF("+");
+                    sendContinuation();
                 }
                 gotoReadLiteralState(literal.octets());
                 return;
