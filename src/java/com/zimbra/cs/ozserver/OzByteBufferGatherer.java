@@ -55,7 +55,7 @@ public final class OzByteBufferGatherer {
         assert(mPosition <= mBuffer.length);
         int spaceLeft = mBuffer.length - mPosition;
         if (forThisManyMore > spaceLeft) {
-            byte newbuf[] = new byte[Math.max(mBuffer.length << 1, forThisManyMore)];
+            byte newbuf[] = new byte[Math.max(mBuffer.length << 1, (mPosition+forThisManyMore))];
             System.arraycopy(mBuffer, 0, newbuf, 0, mPosition);
             mBuffer= newbuf;
         }
