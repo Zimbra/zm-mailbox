@@ -39,6 +39,7 @@ public class OzByteArrayMatcher implements OzMatcher {
     public static final byte DOT = '.';
     
     public static final byte[] CRLF = new byte[]{ CR, LF };
+    public static final byte[] CRLFCRLF = new byte[]{ CR, LF, CR, LF };
     public static final byte[] CRLFDOTCRLF = new byte[] { CR, LF, DOT, CR, LF };
 
     private final byte[] mMatchSequence;

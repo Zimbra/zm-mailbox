@@ -41,6 +41,7 @@ import com.zimbra.cs.pop3.Pop3Server;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.servlet.PrivilegedServlet;
+import com.zimbra.cs.session.OzNotificationServer;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.store.StoreManager;
 
@@ -102,6 +103,8 @@ public class Zimbra {
         System.setProperty("ical4j.unfolding.relaxed", "true");
         
         if (!redoLog.isSlave()) {
+            OzNotificationServer.startup();
+            
             Server server = Provisioning.getInstance().getLocalServer();
             LmtpServer.startupLmtpServer();
             if (server.getBooleanAttr(Provisioning.A_zimbraPop3ServerEnabled, false))
@@ -112,8 +115,9 @@ public class Zimbra {
                 ImapServer.startupImapServer();
             if (server.getBooleanAttr(Provisioning.A_zimbraImapSSLServerEnabled, false))
                 ImapServer.startupImapSSLServer();
-        }
 
+        }
+        
         sInited = true;
     }
 
@@ -128,10 +132,11 @@ public class Zimbra {
             LmtpServer.shutdownLmtpServer();
             Pop3Server.shutdownPop3Servers();
             ImapServer.shutdownImapServers();
+            OzNotificationServer.shutdown();
         }
 
         SessionCache.shutdown();
-
+        
         Indexer.GetInstance().shutdown();
         IMRouter.getInstance().shutdown();
 

@@ -24,6 +24,8 @@
  */
 package com.zimbra.cs.ozserver;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 /**
@@ -59,6 +61,13 @@ public final class OzByteBufferGatherer {
             System.arraycopy(mBuffer, 0, newbuf, 0, mPosition);
             mBuffer= newbuf;
         }
+    }
+    
+    /**
+     * @return an InputStream view of this buffer
+     */
+    public InputStream getInputStream() {
+        return new ByteArrayInputStream(mBuffer, 0, mPosition);
     }
     
     public byte[] array() {

@@ -29,7 +29,10 @@
 package com.zimbra.cs.session;
 
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 
+import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 
@@ -68,15 +71,42 @@ public final class PendingModifications {
 	
 	    Change(Object thing, int reason)  { what = thing;  why = reason; }
 	}
+    
+    public PendingModifications() { }
+    public PendingModifications(int seqno) { mSeqNo = seqno; }
 
+    /**
+     * They key is MailItemID
+     */
 	public HashMap<Integer, MailItem> created;
     public HashMap<Integer, Change> modified;
     public HashMap<Integer, Object> deleted;
+    
+    /**
+     * IMNotifications are strictly sequential right now
+     */
+    public List<IMNotification> imNotifications;
+    
+    /**
+     * used by the Session object
+     */
+    private int mSeqNo;
 
+    public int getSeqNo() { 
+        return mSeqNo; 
+    }
+    
     public boolean hasNotifications() {
-        return ((deleted  != null && deleted.size() > 0) ||
+        return ((imNotifications != null && imNotifications.size() > 0) ||
+                (deleted  != null && deleted.size() > 0) ||
                 (created  != null && created.size() > 0) ||
                 (modified != null && modified.size() > 0));
+    }
+    
+    public void addIMNotification(IMNotification not) {
+        if (imNotifications == null) 
+            imNotifications = new LinkedList();
+        imNotifications.add(not);
     }
 
     public void recordCreated(MailItem item) {
@@ -132,5 +162,10 @@ public final class PendingModifications {
         modified.put(key, chg);
     }
     
-    public void clear()  { created = null;  deleted = null;  modified = null; }
+    public void clear()  { 
+        created = null;  
+        deleted = null;  
+        modified = null;
+        imNotifications = null;
+    }
 }

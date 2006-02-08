@@ -28,6 +28,7 @@ urn:zimbra  -- top-level namespace for global attributes/elements
        [<sessionId id="{returned-from-server-in-last-response}"/>]
        [<account by="name|id">{account-name-or-id}</account>]
        [<change token="{change-id}" [type="mod|new"]/>]
+       [<notify seq="{highest_notification_received}">]
        [<nonotify/>]
        [<targetServer>{proxy-target-server-id}</targetServer>]
     </context>
@@ -37,6 +38,15 @@ urn:zimbra  -- top-level namespace for global attributes/elements
    </FooRequest>
   </soap:Body>
 </soap:Envelope>
+
+Notification Reliability
+   To ensure that the client receives all notifications, the client 
+must send the highest known notification ID (the highest <notify>
+block that the client has received and processed) so that the server
+can discard them once it knows they have been received.  If the client
+is capable of sending multiple overlapping requests, the client is
+responsible for making sure that notifications are not applied more
+than once even if they are received more than one time.
 
 Race Conditions
 

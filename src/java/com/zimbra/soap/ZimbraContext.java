@@ -92,7 +92,9 @@ public class ZimbraContext {
     public static final String E_SESSION_ID = "sessionId";
     public static final String A_ACCOUNT_ID = "acct";
     public static final String A_ID         = "id";
+    public static final String E_NOTIFY     = "notify";
     public static final String A_NOTIFY     = "notify";
+    public static final String A_SEQNO      = "seq"; 
     public static final String E_CHANGE     = "change";
     public static final String A_CHANGE_ID  = "token";
     public static final String E_TARGET_SERVER = "targetServer";
@@ -116,6 +118,8 @@ public class ZimbraContext {
 
     private boolean mChangeConstraintType = OperationContext.CHECK_MODIFIED;
     private int     mMaximumChangeId = -1;
+    
+    private int mNotificationSeqNo = -1;
 
     private List    mSessionInfo = new ArrayList();
     private boolean mSessionSuppressed;
@@ -216,6 +220,12 @@ public class ZimbraContext {
 					sLog.debug("ZimbraContext AuthToken error: " + e.getMessage(), e);
 			}
 		}
+        
+        // look for the notification sequence id, for notification reliability
+        // <notify seq="nn">
+		Element notify = (ctxt == null ? null : ctxt.getOptionalElement(E_NOTIFY));
+        if (notify != null) 
+            mNotificationSeqNo = (int)notify.getAttributeLong(A_SEQNO, 0);
 
         // constrain operations if we know the max change number the client knows about
         Element change = (ctxt == null ? null : ctxt.getOptionalElement(E_CHANGE));
@@ -443,7 +453,8 @@ public class ZimbraContext {
                     ((SoapSession) session).putRefresh(ctxt, this);
                 // put <notify> blocks back for any SoapSession objects
                 if (session instanceof SoapSession)
-                    ((SoapSession) session).putNotifications(this, ctxt);
+                    ((SoapSession) session).putNotifications(this, ctxt, 
+                            mNotificationSeqNo >= 0 ? mNotificationSeqNo : 0);
             }
 //            if (ctxt != null && mAuthToken != null)
 //                ctxt.addAttribute(E_AUTH_TOKEN, mAuthToken.toString(), Element.DISP_CONTENT);

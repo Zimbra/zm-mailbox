@@ -38,5 +38,11 @@ public interface OzConnectionHandler {
     
     void handleIdle() throws IOException;
 
+	/**
+     * Write an error message depending on the state you are in and then either close the connection 
+     * or go back to a state that is safe - like reading commands
+     * 
+	 * @throws IOException
+	 */
 	void handleOverflow() throws IOException;
 }

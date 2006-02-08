@@ -429,6 +429,7 @@ public class Mailbox {
     public long getLastChangeDate() {
         return mData.lastChangeDate;
     }
+    
 
     /** Returns the change sequence number for the most recent
      *  transaction.  This will be either the change number for the
@@ -500,6 +501,18 @@ public class Mailbox {
     public int getLastItemId() {
         return (mCurrentChange.itemId == MailboxChange.NO_CHANGE ? mData.lastItemId : mCurrentChange.itemId);
     }
+    
+    /**
+     * MUST NOT be called while a transaction is in progress 
+     * 
+     * @return
+     */
+    public int incrementChangeId() throws ServiceException {
+        assert(!mCurrentChange.isActive());
+        
+        return getNextItemId(ID_AUTO_INCREMENT);
+    }
+    
 
     // Don't make this method package-visible.  Keep it private.
     //   idFromRedo: specific ID value to use during redo execution, or ID_AUTO_INCREMENT

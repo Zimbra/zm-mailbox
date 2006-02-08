@@ -123,6 +123,23 @@ public abstract class Session
     protected void finalize() {
         doCleanup(); // just in case it hasn't happened yet...
     }
+    
+    public static enum RegisterNotificationResult {
+        NO_NOTIFY, // notifications are not available for this session
+        SENT_DATA, // notifications were waiting, have been sent
+        WAITING; // none waiting, go ahead and block 
+    }
+    /**
+     * A push channel has come online
+     *
+     * @return TRUE if the channel should stay open (wait for more data) or FALSE if the channel 
+     *          has been used (data was sent         
+     * @param conn
+     */
+    public RegisterNotificationResult registerNotificationConnection(OzNotificationConnectionHandler conn) throws ServiceException 
+    { 
+        return RegisterNotificationResult.NO_NOTIFY; 
+    }
 
     /** Disconnects from any resources and deregisters as a {@link Mailbox} listener. */
     final void doCleanup() {
