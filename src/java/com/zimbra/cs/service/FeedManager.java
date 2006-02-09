@@ -51,6 +51,8 @@ import javax.mail.internet.MimePart;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
+import org.apache.commons.httpclient.HttpURL;
+import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.methods.GetMethod;
 
 import com.zimbra.cs.account.Account;
@@ -97,6 +99,15 @@ public class FeedManager {
 
         BufferedInputStream content = null;
         try {
+            // username and password are encoded in the URL as http://user:pass@host/...
+            if (url.indexOf('@') != -1) {
+                HttpURL httpurl = new HttpURL(url);
+                if (httpurl.getUser() != null) {
+                    UsernamePasswordCredentials creds = new UsernamePasswordCredentials(httpurl.getUser(), httpurl.getPassword());
+                    client.getState().setCredentials(null, null, creds);
+                }
+            }
+
             int redirects = 0;
             do {
                 if (url == null || url.equals(""))
@@ -109,8 +120,10 @@ public class FeedManager {
                 else if (!lcurl.startsWith("http:") && !lcurl.startsWith("https:"))
                     throw ServiceException.INVALID_REQUEST("url must begin with http: or https:", null);
 
+
                 GetMethod get = new GetMethod(url);
                 get.setFollowRedirects(true);
+                get.setDoAuthentication(true);
                 get.addRequestHeader("User-Agent", HTTP_USER_AGENT);
                 get.addRequestHeader("Accept", HTTP_ACCEPT);
                 client.executeMethod(get);
@@ -134,13 +147,11 @@ public class FeedManager {
                 case 'B':  case 'b':
                     Reader reader = new InputStreamReader(content);
                     ZVCalendar ical = ZCalendarBuilder.build(reader);
-                    // Bug 4984: Some ical files on the Internet are missing UID.
-                    // Add a fake one.
                     List<Invite> invites = Invite.createFromCalendar(acct, null, ical, false);
-                    for (Invite inv: invites) {
+                    // handle missing UIDs on remote calendars by generating them as needed
+                    for (Invite inv : invites)
                     	if (inv.getUid() == null)
                     		inv.setUid(LdapUtil.generateUUID());
-                    }
                     return new SubscriptionData(invites);
                 default:
                     throw ServiceException.PARSE_ERROR("unrecognized remote content", null);
