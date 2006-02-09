@@ -59,7 +59,6 @@ public final class OzByteBufferGatherer {
     }
     
     public void add(ByteBuffer buffer) {
-        System.out.println("new bytes=" + OzUtil.toString(buffer));
         int numNewBytes = buffer.remaining();
 
         if ((mPosition + numNewBytes) > mLimit) {
@@ -73,7 +72,6 @@ public final class OzByteBufferGatherer {
             // has overflown.
             buffer.position(buffer.limit());
         }
-        System.out.println("after read=" + OzUtil.toString(buffer));
         mPosition += numNewBytes;
     }
     
