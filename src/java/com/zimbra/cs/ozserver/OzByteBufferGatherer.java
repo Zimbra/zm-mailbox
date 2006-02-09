@@ -29,28 +29,59 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 /**
- * Build ByteBuffers into a single byte array - synchronization is entirely upto
- * the user of this class - two concurrent adds will blow up.
+ * A data structure that gathers data from multiple ByteBuffer objectsinto a
+ * single byte array. Synchronization is entirely upto the user of this class -
+ * concurrent adds will cause severe internal damage.
  */
 public final class OzByteBufferGatherer {
 
     private byte[] mBuffer;
     private int mPosition;
-
-    public OzByteBufferGatherer() {
-        this(32);
-    }
+    private int mLimit;
+    private boolean mOverflowed;
     
-    public OzByteBufferGatherer(int initialSize) {
+    /**
+     * Create a gatherer of specified initial size and limit.
+     * 
+     * @param limit
+     *            After limit number of bytes are added, the rest are discarded
+     *            and the overflow bit is toggled.
+     */
+    public OzByteBufferGatherer(int initialSize, int limit) {
         mBuffer = new byte[initialSize];
         mPosition = 0;
+        mOverflowed = false;
+        
+        if (mLimit < 0) {
+            throw new IllegalArgumentException("can not specify negative limit");
+        }
+        mLimit = limit;
     }
     
     public void add(ByteBuffer buffer) {
-        int remaining = buffer.remaining();
-        ensureCapacity(remaining);
-        buffer.get(mBuffer, mPosition, remaining);
-        mPosition += remaining;
+        System.out.println("new bytes=" + OzUtil.toString(buffer));
+        int numNewBytes = buffer.remaining();
+
+        if ((mPosition + numNewBytes) > mLimit) {
+            mOverflowed = true;
+            numNewBytes = mLimit - mPosition;
+        }
+        ensureCapacity(numNewBytes);
+        buffer.get(mBuffer, mPosition, numNewBytes);
+        if (buffer.hasRemaining()) {
+            // discard whatever is left - this is the stuff that
+            // has overflown.
+            buffer.position(buffer.limit());
+        }
+        System.out.println("after read=" + OzUtil.toString(buffer));
+        mPosition += numNewBytes;
+    }
+    
+    public static void main(String[] args) {
+        OzByteBufferGatherer bbg = new OzByteBufferGatherer(4, 8);
+        bbg.add(ByteBuffer.allocate(4));
+        bbg.add(ByteBuffer.allocate(4));
+        bbg.add(ByteBuffer.allocate(4));
     }
     
     private void ensureCapacity(int forThisManyMore) {
@@ -86,14 +117,27 @@ public final class OzByteBufferGatherer {
         return sb.toString();
     }
 
+    public boolean overflowed() {
+        return mOverflowed;
+    }
+    
     public int size() {
         return mPosition;
     }
     
     public void clear() {
         mPosition = 0;
+        mOverflowed = false;
     }
 
+    public void limit(int newLimit) {
+        mLimit = newLimit;
+    }
+    
+    public int limit() {
+        return mLimit;
+    }
+    
     public void trim(int n) {
         if (n > mPosition) {
             throw new IllegalArgumentException("Can not trim " + n + " bytes from " + mPosition + " total bytes");

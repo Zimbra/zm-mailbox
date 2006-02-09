@@ -199,7 +199,7 @@ public class OzConnection {
         			return;
         		}
         		
-        		cancelIdleNotifications();
+        		cancelAutoClose();
         	} finally {
         		try {
         			mChannel.close();
@@ -436,11 +436,6 @@ public class OzConnection {
     }
 
     void doReadReady() throws IOException {
-        synchronized (mIdleGuard) {
-            // Only a client producing input that this server can read is
-            // considered a busy connection.
-            mIdle = false;
-        }
         // This method runs in the server thread.  Note that we disable
         // read interest here, and not in the worker thread, so that
         // we don't get another ready notification before the worker
@@ -547,13 +542,7 @@ public class OzConnection {
                 
                 boolean matched = false;
                 
-                try {
-                    matched = mMatcher.match(rbb);
-                } catch (OzOverflowException oe) {
-                    mConnectionHandler.handleOverflow();
-                    rbb.clear();
-                    return;
-                }
+                matched = mMatcher.match(rbb);
                 
                 if (mDebug) mLog.debug("plain filter: match returned " + matched);
                 
@@ -617,47 +606,15 @@ public class OzConnection {
         }
     }
 
-    private int mIdleMillis;
+    private Object mAutoCloseLock = new Object();
     
-    private Object mIdleGuard = new Object();
+    private ScheduledFuture<?> mAutoCloseHandle;
     
-    private boolean mIdle = true;
-    
-    private ScheduledFuture<?> mIdleTaskHandle;
-    
-    private IdleTask mIdleTask = new IdleTask();
-    
-    /**
-     * This task does NOT get scheduled in the server thread pool - it runs in
-     * the periodically scheduled thread pool thread.
-     */
-    private class IdleTask extends Task {
-        public IdleTask() { super("idle"); }
-        
-        public void schedule() {
-            // idle task is run from the timer thread (also this
-            // method is never called - Idle task is a sub-class of
-            // Task just so we can get log context when it runs.
-        }
-        
-        protected void doTask() throws IOException {
-            synchronized (mIdleGuard) {
-                if (!mIdle) {
-                    if (mDebug) mLog.debug("idle task - connection has been busy");
-                    mIdle = true; // prove me wrong by setting this to false before I run again.
-                    return;
-                }
-            }
-            mLog.info("connection has been idle");
-            mConnectionHandler.handleIdle();
-        }
-    }
+    private static final ScheduledThreadPoolExecutor mAutoCloseExecutor = new ScheduledThreadPoolExecutor(1, new AutoCloseThreadFactory());
 
-    private static final ScheduledThreadPoolExecutor mIdleExecutor = new ScheduledThreadPoolExecutor(1, new IdleReaperThreadFactory());
-
-    private static class IdleReaperThreadFactory implements ThreadFactory {
+    private static class AutoCloseThreadFactory implements ThreadFactory {
         public Thread newThread(Runnable runnable) {
-            Thread t = new Thread(runnable, "OzIdleConnectionTimer");
+            Thread t = new Thread(runnable, "OzAutoCloseTimer");
             t.setDaemon(true);
             t.setPriority(Thread.NORM_PRIORITY);
             return t;
@@ -665,28 +622,41 @@ public class OzConnection {
     }
 
     /**
-     * If there has been no input from the client in this many milliseconds,
-     * invoke the handleIdle method.
+     * Close this connection after given milliseconds elapse. You can cancel
+     * this cancellation request with cancelAutoClose.
+     * 
+     * @param millis
      */
-    public void setIdleNotifyTime(int millis) {
-        synchronized (mIdleGuard) {
-            if (mIdleTaskHandle != null && mIdleMillis == millis) {
-                return;
+    public void autoClose(long millis) {
+        Runnable close = new Runnable() {
+            public void run() {
+                if (mDebug) mLog.debug("auto closing connection");
+                synchronized (mLock) {
+                    try {
+                        mConnectionHandler.handleAutoClose();
+                    } catch (Throwable t) {
+                        cleanupChannel(CleanupReason.ABRUPT);
+                    }
+                }
             }
-            cancelIdleNotifications(); // Get rid of current notifications
-            if (mDebug) mLog.debug("creating idle notifier at rate of " + millis + "ms");
-            mIdleTaskHandle = mIdleExecutor.scheduleAtFixedRate(mIdleTask, millis, millis, TimeUnit.MILLISECONDS);
+        };
+        synchronized (mAutoCloseLock) {
+            if (mAutoCloseHandle != null) {
+                cancelAutoClose();
+            }
+            if (mDebug) mLog.debug("creating auto close timer to fire after " + millis + "ms");
+            mAutoCloseHandle = mAutoCloseExecutor.schedule(close, millis, TimeUnit.MILLISECONDS);
         }
     }
     
-    public void cancelIdleNotifications() {
-        synchronized (mIdleGuard) {
-            if (mIdleTaskHandle != null) {
-                if (mDebug) mLog.debug("cancelling idle timer");
-                mIdleTaskHandle.cancel(false);
-                boolean removed = mIdleExecutor.remove((Runnable)mIdleTaskHandle);
-                if (mDebug) mLog.debug("idle timer removed (" + removed + ")");
-                mIdleTaskHandle = null;
+    public void cancelAutoClose() {
+        synchronized (mAutoCloseLock) {
+            if (mAutoCloseHandle != null) {
+                if (mDebug) mLog.debug("cancelling auto close timer");
+                mAutoCloseHandle.cancel(false);
+                boolean removed = mAutoCloseExecutor.remove((Runnable)mAutoCloseHandle);
+                if (mDebug) mLog.debug("auto close timer removed (" + removed + ")");
+                mAutoCloseHandle = null;
             }
         }
     }
@@ -746,4 +716,5 @@ public class OzConnection {
             mProperties.put(key, value);
         }
     }
+
 }

@@ -37,24 +37,20 @@ public class OzSmtpTransparency {
         
         ByteBuffer work = orig.duplicate();
         
-        OzByteArrayMatcher matcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLFDOTCRLF, 0, null);
+        OzByteArrayMatcher matcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLFDOTCRLF, null);
         
         List positions = null;
         
         while (work.hasRemaining()) {
-        	try {
-        		if (matcher.match(work)) {
-        			if (positions == null) {
-        				positions = new LinkedList();
-        			}
-        			positions.add(new Integer(work.position()));
-        		} else {
-        			break;
-        		}
-        		matcher.reset();
-        	} catch (OzOverflowException ooe) {
-        		// this can never happen because we set the limit check to 0 in the ctor
-        	}
+            if (matcher.match(work)) {
+                if (positions == null) {
+                    positions = new LinkedList();
+                }
+                positions.add(new Integer(work.position()));
+            } else {
+                break;
+            }
+            matcher.reset();
         }
         
         if (positions == null) {

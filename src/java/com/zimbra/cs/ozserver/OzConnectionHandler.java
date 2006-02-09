@@ -36,13 +36,5 @@ public interface OzConnectionHandler {
     /* The contract of handleDisconnect is that you must call OzConnection.closeNow(), and not close(). */
     void handleDisconnect();
     
-    void handleIdle() throws IOException;
-
-	/**
-     * Write an error message depending on the state you are in and then either close the connection 
-     * or go back to a state that is safe - like reading commands
-     * 
-	 * @throws IOException
-	 */
-	void handleOverflow() throws IOException;
+    void handleAutoClose() throws IOException;
 }

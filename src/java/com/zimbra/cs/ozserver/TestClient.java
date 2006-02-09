@@ -170,8 +170,8 @@ class TestClient {
     
     private static Random mRandom = new Random();
     
-    private static final int DATA_SIZE_MINIMUM = 28000; 
-    private static final int DATA_SIZE_VARIANCE = 1024;
+    public static final int DATA_SIZE_MINIMUM = 28000; 
+    public static final int DATA_SIZE_VARIANCE = 1024;
     private static final int MAX_ECHO_CHUNKS = 16;
     
     private static byte randomPrintableAsciiByte(Random r) {

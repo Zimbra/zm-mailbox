@@ -153,6 +153,7 @@ class OzImapRequest {
         if (!(part instanceof byte[]))
             throw new ImapParseException(mTag, "in string next not literal");
         mIndex += 2;
+        mOffset = 0;
         return (byte[]) part;
     }
 

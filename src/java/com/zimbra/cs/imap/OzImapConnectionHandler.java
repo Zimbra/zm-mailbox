@@ -689,10 +689,10 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                     session.cacheTag((Tag) it.next());
             }
 
-            // Session timeout will take care of closing an IMAP
-            // connection with no activity.
-            if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("post auth disabling idle notify in lieu of session expiry");
-            mConnection.cancelIdleNotifications();
+            // Session timeout will take care of closing an IMAP connection with
+            // no activity.
+            if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("post auth disabling auto close in lieu of session expiry");
+            mConnection.cancelAutoClose();
         } catch (ServiceException e) {
             if (mSession != null)
             	mSession.clearTagCache();
@@ -1901,7 +1901,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
 
     private static final int MAX_COMMAND_LENGTH = 2048;
     
-    private OzByteArrayMatcher mCommandMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLF, MAX_COMMAND_LENGTH, null);
+    private OzByteArrayMatcher mCommandMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLF, null);
 
     private OzCountingMatcher mLiteralMatcher = new OzCountingMatcher();
     
@@ -1914,7 +1914,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         mCommandMatcher.reset();
         mConnection.setMatcher(mCommandMatcher);
         mConnection.enableReadInterest();
-        mCurrentData = new OzByteBufferGatherer();
+        mCurrentData = new OzByteBufferGatherer(256, MAX_COMMAND_LENGTH);
         if (newRequest) {
             mCurrentRequestData = new ArrayList();
             mCurrentRequestTag = null;
@@ -1928,7 +1928,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         mLiteralMatcher.reset();
         mConnection.setMatcher(mLiteralMatcher);
         mConnection.enableReadInterest();
-        mCurrentData = new OzByteBufferGatherer(target);
+        mCurrentData = new OzByteBufferGatherer(target, target);
         if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("entered literal read state target=" + target);
     }
     
@@ -1996,25 +1996,21 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         gotoClosedState(false);
     }
     
-    public void handleOverflow() throws IOException {
-        sendUntagged("BAD request too long", true);
-        gotoReadLineState(true);
-        return;
-    }
-    
     private OzByteBufferGatherer mCurrentData;
     
     private ArrayList mCurrentRequestData;
 
     private String mCurrentRequestTag;
     
-    public void handleIdle() throws IOException {
+    public void handleAutoClose() throws IOException {
         ZimbraLog.imap.info("idle connection");
         gotoClosedState(true);
     }
 
     public void handleInput(ByteBuffer buffer, boolean matched) throws IOException {
+        
         mCurrentData.add(buffer);
+
         if (!matched) {
             return;
         }
@@ -2038,6 +2034,11 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         }
         
         if (mState == ConnectionState.READLINE) {
+            if (mCurrentData.overflowed()) {
+                sendUntagged("BAD request too long", true);
+                gotoReadLineState(true);
+                return;
+            }
             String line = mCurrentData.toAsciiString();
             /*
              * Is this the first line of this request? If so, then let's try

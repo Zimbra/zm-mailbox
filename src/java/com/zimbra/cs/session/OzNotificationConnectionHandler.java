@@ -22,7 +22,7 @@ public class OzNotificationConnectionHandler implements OzConnectionHandler
     private final int MAX_HTTPHEADER_BYTES = 32768;
     private final OzConnection mConnection;
     
-    private OzByteArrayMatcher mHTTPHeaderMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLFCRLF, MAX_HTTPHEADER_BYTES, ZimbraLog.imap);
+    private OzByteArrayMatcher mHTTPHeaderMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLFCRLF, ZimbraLog.imap);
     
     private OzByteBufferGatherer mCurrentData;
     
@@ -39,7 +39,7 @@ public class OzNotificationConnectionHandler implements OzConnectionHandler
         mConnection = connection;
     }
     
-    public void handleOverflow() throws IOException {
+    public void sendOverflowed() throws IOException {
         mConnection.writeAsciiWithCRLF("OVERFLOW reading HTTP header");
     }    
     
@@ -59,7 +59,7 @@ public class OzNotificationConnectionHandler implements OzConnectionHandler
         mHTTPHeaderMatcher.reset();
         mConnection.setMatcher(mHTTPHeaderMatcher);
         mConnection.enableReadInterest();
-        mCurrentData = new OzByteBufferGatherer();
+        mCurrentData = new OzByteBufferGatherer(256, MAX_HTTPHEADER_BYTES);
         
         if (ZimbraLog.mailbox.isDebugEnabled()) 
             ZimbraLog.mailbox.debug("Notification Handler got new connection: "+mConnection.getRemoteAddress().toString());
@@ -69,6 +69,11 @@ public class OzNotificationConnectionHandler implements OzConnectionHandler
         mCurrentData.add(buffer);
         if (!matched) 
             return;
+
+        if (mCurrentData.overflowed()) {
+            sendOverflowed();
+            return;
+        }
         
         String sessionId;
         String authToken;
@@ -156,6 +161,6 @@ public class OzNotificationConnectionHandler implements OzConnectionHandler
         
     }
 
-    public void handleIdle() throws IOException { }
+    public void handleAutoClose() throws IOException { }
 
 }
