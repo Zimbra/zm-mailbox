@@ -40,6 +40,7 @@ import java.util.Map;
 import javax.mail.MessagingException;
 import javax.mail.internet.*;
 
+import org.apache.commons.httpclient.HttpURL;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -147,8 +148,17 @@ public class ToXML {
         }
         if (needToOutput(fields, Change.MODIFIED_URL)) {
             String url = folder.getUrl();
-            if (!url.equals("") || fields != NOTIFY_FIELDS)
+            if (!url.equals("") || fields != NOTIFY_FIELDS) {
+                if (url.indexOf('@') != -1)
+                    try {
+                        HttpURL httpurl = new HttpURL(url);
+                        if (httpurl.getPassword() != null) {
+                            httpurl.setPassword("");
+                            url = httpurl.toString();
+                        }
+                    } catch (org.apache.commons.httpclient.URIException urie) { }
                 elem.addAttribute(MailService.A_URL, url);
+            }
         }
         if (lc.isDelegatedRequest())
             try {
