@@ -447,19 +447,35 @@ public class ZimletUtil {
 		if (!zimletDir.exists()) {
 			FileUtil.mkdirs(zimletDir);
 		}
+		
+		File serviceLibDir = new File(LC.tomcat_directory.value() + File.separator + 
+									"webapps" + File.separator + 
+									"service" + File.separator + 
+									"WEB-INF" + File.separator + 
+									"lib");
+		File msgPropDir = new File(LC.tomcat_directory.value() + File.separator + 
+									"webapps" + File.separator + 
+									"zimbra"  + File.separator + 
+									"WEB-INF" + File.separator + 
+									"classes" + File.separator + 
+									"msgs");
 
 		Iterator files = zf.getAllEntries().entrySet().iterator();
 		while (files.hasNext()) {
 			Map.Entry f = (Map.Entry) files.next();
 			ZimletFile.ZimletEntry entry = (ZimletFile.ZimletEntry) f.getValue();
 			String fname = entry.getName();
+			File rootDir = zimletDir;
 			if (fname.endsWith("/") || fname.endsWith("\\")) {
 				continue;
-			} else {
-				File file = new File(zimletDir, fname);
-				file.getParentFile().mkdirs();
-				writeFile(entry.getContents(), file);
+			} else if (fname.endsWith(".jar")) {
+				rootDir = serviceLibDir;
+			} else if (fname.endsWith(".properties")) {
+				rootDir = msgPropDir;
 			}
+			File file = new File(rootDir, fname);
+			file.getParentFile().mkdirs();
+			writeFile(entry.getContents(), file);
 		}
 	}
 	
