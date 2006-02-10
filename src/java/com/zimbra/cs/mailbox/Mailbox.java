@@ -4140,6 +4140,13 @@ public class Mailbox {
         new StatsFile("perf_item_cache", new String[] { "id", "type", "hit" }, false);
 
     private void logCacheActivity(Integer key, byte type, MailItem item) {
+        // The global item cache counter always gets updated
+        if (!isCachedType(type)) {
+            ZimbraPerf.COUNTER_MBOX_ITEM_CACHE.increment(item == null ? 0 : 1);
+        }
+        
+        // The per-access log only gets updated when cache or perf debug logging
+        // is on
         if (!ZimbraLog.cache.isDebugEnabled() && !ZimbraLog.perf.isDebugEnabled())
             return;
 
@@ -4156,7 +4163,6 @@ public class Mailbox {
         ZimbraLog.cache.debug("Cache hit for " + MailItem.getNameForType(type) + " " + key + " in mailbox " + getId());
         ZimbraPerf.writeStats(STATS_FILE, key, type, "1");
     }
-
 
     private static final String CN_ID         = "id";
     private static final String CN_ACCOUNT_ID = "account_id";

@@ -488,9 +488,10 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         ImapRequest req = null;
         boolean keepGoing = CONTINUE_PROCESSING;
         ZimbraLog.clearContext();
-        if (ZimbraLog.perf.isDebugEnabled()) {
+        if (ZimbraPerf.isPerfEnabled()) {
             ThreadLocalData.reset();
         }
+        long start = ZimbraPerf.STOPWATCH_IMAP.start();
 
         try {
             // FIXME: throw an exception instead?
@@ -527,9 +528,10 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             // FIXME: need to enqueue and process off queue, I think...
             setIdle(false);
             keepGoing = cmd.execute();
-            if (ZimbraLog.perf.isDebugEnabled()) {
+            if (ZimbraPerf.isPerfEnabled()) {
                 ZimbraPerf.writeStats(STATS_FILE, cmd.getCommandString());
             }
+            ZimbraPerf.STOPWATCH_IMAP.stop(start);
         } catch (ImapContinuationException ice) {
             mIncompleteRequest = req.rewind();
             if (ice.sendContinuation)
