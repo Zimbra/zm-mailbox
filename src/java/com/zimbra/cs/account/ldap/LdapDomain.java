@@ -44,6 +44,7 @@ import javax.naming.directory.DirContext;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 
+import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
@@ -86,15 +87,39 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
         mProv.searchAccounts("(objectclass=zimbraAccount)", null, "ou=people,"+getDN(), Provisioning.SA_ACCOUNT_FLAG, visitor);
     }
 
+    public List getAllCalendarResources() throws ServiceException {
+        return searchCalendarResources("(objectclass=zimbraCalendarResource)",
+                                       null, null, true);
+    }
+
+    public void getAllCalendarResources(NamedEntry.Visitor visitor)
+    throws ServiceException {
+        mProv.searchAccounts("(objectclass=zimbraCalendarResource)",
+                             null, "ou=people," + getDN(),
+                             Provisioning.SA_CALENDAR_RESOURCE_FLAG,
+                             visitor);
+    }
+
     public List getAllDistributionLists() throws ServiceException {
         return searchAccounts("(objectClass=zimbraDistributionList)", null, null, true, Provisioning.SA_DISTRIBUTION_LIST_FLAG);
     }
 
-    public ArrayList searchAccounts(String query, String returnAttrs[], String sortAttr, boolean sortAscending, int flags) throws ServiceException
+    public List searchAccounts(String query, String returnAttrs[], String sortAttr, boolean sortAscending, int flags) throws ServiceException
     {
         return mProv.searchAccounts(query, returnAttrs, sortAttr, sortAscending, "ou=people,"+getDN(), flags);
     }
-    
+
+    public List searchCalendarResources(
+        String query,
+        String returnAttrs[],
+        String sortAttr,
+        boolean sortAscending)
+    throws ServiceException {
+        return mProv.searchCalendarResources(query, returnAttrs,
+                                             sortAttr, sortAscending,
+                                             "ou=people," + getDN());
+    }
+
     /*
 	 * (non-Javadoc)
 	 * 

@@ -37,6 +37,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -100,6 +101,8 @@ public class LdapProvisioning extends Provisioning {
     public static final String C_zimbraMailList = "zimbraDistributionList";
     public static final String C_zimbraMailRecipient = "zimbraMailRecipient";
     public static final String C_zimbraServer = "zimbraServer";
+    public static final String C_zimbraCalendarResource = "zimbraCalendarResource";
+    public static final String C_zimbraAlias = "zimbraAlias";
 
     private static final long ONE_DAY_IN_MILLIS = 1000*60*60*24;
 
@@ -119,14 +122,20 @@ public class LdapProvisioning extends Provisioning {
             Provisioning.A_uid,
             Provisioning.A_userPassword
     };
-    
+
+    private static final String FILTER_ACCOUNT_OBJECTCLASS =
+        //"(objectclass=zimbraAccount)(!(objectclass=zimbraCalendarResource))";
+        "(objectclass=zimbraAccount)";
+    private static final String FILTER_CALENDAR_RESOURCE_OBJECTCLASS =
+        "(objectclass=zimbraCalendarResource)";
+
     /**
      *  TODO: 15 minutes. get from CONFIG...
      */
     private static final int ENTRY_TTL = 1000*60*15; 
     private static final int MAX_ACCOUNT_CACHE = 5000;
     private static ZimbraLdapEntryCache sAccountCache = new ZimbraLdapEntryCache(MAX_ACCOUNT_CACHE, ENTRY_TTL);
-	
+
 	private static final int MAX_COS_CACHE = 100;
     private static ZimbraLdapEntryCache sCosCache = new ZimbraLdapEntryCache(MAX_COS_CACHE, ENTRY_TTL);
 	
@@ -293,7 +302,7 @@ public class LdapProvisioning extends Provisioning {
                 if (ne.hasMore())
                     throw AccountServiceException.MULTIPLE_ACCOUNTS_MATCHED("getAccountByQuery: "+query);
                 ne.close();
-                return new LdapAccount(sr.getNameInNamespace(), sr.getAttributes(), this);
+                return makeLdapAccount(sr.getNameInNamespace(), sr.getAttributes(), this);
             }
         } catch (NameNotFoundException e) {
             return null;
@@ -314,7 +323,11 @@ public class LdapProvisioning extends Provisioning {
         LdapAccount a = (LdapAccount) sAccountCache.getById(zimbraId);
         if (a == null) {
             zimbraId= LdapUtil.escapeSearchFilterArg(zimbraId);
-            a = getAccountByQuery("","(&(zimbraId="+zimbraId+")(objectclass=zimbraAccount))", ctxt);
+            a = getAccountByQuery(
+                    "",
+                    "(&(zimbraId=" + zimbraId + ")" +
+                    FILTER_ACCOUNT_OBJECTCLASS + ")",
+                    ctxt);
             sAccountCache.put(a);
         }
         return a;
@@ -326,14 +339,22 @@ public class LdapProvisioning extends Provisioning {
 
     public Account getAccountByForeignPrincipal(String foreignPrincipal) throws ServiceException {
         foreignPrincipal = LdapUtil.escapeSearchFilterArg(foreignPrincipal);
-        return getAccountByQuery("","(&(zimbraForeignPrincipal="+foreignPrincipal+")(objectclass=zimbraAccount))", null);
+        return getAccountByQuery(
+                "",
+                "(&(zimbraForeignPrincipal=" + foreignPrincipal + ")" +
+                FILTER_ACCOUNT_OBJECTCLASS + ")",
+                null);
     }
 
     public Account getAdminAccountByName(String name) throws ServiceException {
         LdapAccount a = (LdapAccount) sAccountCache.getByName(name);
         if (a == null) {
             name = LdapUtil.escapeSearchFilterArg(name);
-            a = getAccountByQuery(ADMIN_BASE, "(&(uid="+name+")(objectclass=zimbraAccount))", null);
+            a = getAccountByQuery(
+                    ADMIN_BASE,
+                    "(&(uid="+name+")" +
+                    FILTER_ACCOUNT_OBJECTCLASS + ")",
+                    null);
             sAccountCache.put(a);
         }
         return a;
@@ -357,7 +378,12 @@ public class LdapProvisioning extends Provisioning {
         LdapAccount account = (LdapAccount) sAccountCache.getByName(emailAddress);
         if (account == null) {
             emailAddress = LdapUtil.escapeSearchFilterArg(emailAddress);
-            account = getAccountByQuery("", "(&(|(zimbraMailDeliveryAddress="+emailAddress+")(zimbraMailAlias="+emailAddress+"))(objectclass=zimbraAccount))", null);
+            account = getAccountByQuery(
+                    "",
+                    "(&(|(zimbraMailDeliveryAddress=" + emailAddress +
+                    ")(zimbraMailAlias=" + emailAddress + "))" +
+                    FILTER_ACCOUNT_OBJECTCLASS + ")",
+                    null);
             sAccountCache.put(account);
         }
         return account;
@@ -392,6 +418,14 @@ public class LdapProvisioning extends Provisioning {
     }
     
     public Account createAccount(String emailAddress, String password, Map acctAttrs) throws ServiceException {
+        return createAccount(emailAddress, password, acctAttrs, null);
+    }
+
+    private Account createAccount(String emailAddress,
+                                  String password,
+                                  Map acctAttrs,
+                                  String[] additionalObjectClasses)
+    throws ServiceException {
 
         emailAddress = emailAddress.toLowerCase().trim();
 
@@ -428,6 +462,10 @@ public class LdapProvisioning extends Provisioning {
             Attribute oc = LdapUtil.addAttr(attrs, A_objectClass, "organizationalPerson");
             oc.add(C_zimbraAccount);
             oc.add(C_amavisAccount);
+            if (additionalObjectClasses != null) {
+                for (int i = 0; i < additionalObjectClasses.length; i++)
+                    oc.add(additionalObjectClasses[i]);
+            }
             
             String zimbraIdStr = LdapUtil.generateUUID();
             attrs.put(A_zimbraId, zimbraIdStr);
@@ -581,8 +619,12 @@ public class LdapProvisioning extends Provisioning {
             rctxt = LdapUtil.getDirContext(new String[] {remoteURL}, remoteBindDn, remoteBindPassword);
             
             String dn = domainToAccountBaseDN(domain);
-            LdapAccount remoteAccount =
-                getAccountByQuery(dn, "(&(|(uid="+uid+")(zimbraMailAlias="+emailAddress+"))(objectclass=zimbraAccount))", rctxt);
+            LdapAccount remoteAccount = getAccountByQuery(
+                    dn,
+                    "(&(|(uid=" + uid +
+                    ")(zimbraMailAlias=" + emailAddress + "))" +
+                    FILTER_ACCOUNT_OBJECTCLASS + ")",
+                    rctxt);
             Attributes attrs = remoteAccount.getRawAttrs();
             
             String accountDn = emailToDN(uid, domain);
@@ -661,7 +703,7 @@ public class LdapProvisioning extends Provisioning {
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#searchAccounts(java.lang.String)
      */
-    public ArrayList searchAccounts(String query, String returnAttrs[], final String sortAttr, final boolean sortAscending, int flags)  
+    public List searchAccounts(String query, String returnAttrs[], final String sortAttr, final boolean sortAscending, int flags)  
         throws ServiceException
     {
         return searchAccounts(query, returnAttrs, sortAttr, sortAscending, "", flags);          
@@ -671,30 +713,48 @@ public class LdapProvisioning extends Provisioning {
         boolean accounts = (flags & Provisioning.SA_ACCOUNT_FLAG) != 0; 
         boolean aliases = (flags & Provisioning.SA_ALIAS_FLAG) != 0;
         boolean lists = (flags & Provisioning.SA_DISTRIBUTION_LIST_FLAG) != 0;
-        int num = (accounts ? 1 : 0) + (aliases ? 1 : 0) + (lists ? 1 : 0);
+        boolean calendarResources =
+            (flags & Provisioning.SA_CALENDAR_RESOURCE_FLAG) != 0;
 
-        if (num == 0) {
+        int num = (accounts ? 1 : 0) +
+                  (aliases ? 1 : 0) +
+                  (lists ? 1 : 0) +
+                  (calendarResources ? 1 : 0);
+        if (num == 0)
             accounts = true;
-            num = 1;
-        }
 
+        // If searching for user accounts/aliases/lists, filter looks like:
+        //
+        //   (&(objectclass=zimbraAccount)!(objectclass=zimbraCalendarResource))
+        //
+        // If searching for calendar resources, filter looks like:
+        //
+        //   (objectclass=zimbraCalendarResource)
+        //
+        // The !resource condition is there in first case because a calendar
+        // resource is also a zimbraAccount.
+        //
         StringBuffer oc = new StringBuffer();
-        
+        if (!calendarResources) oc.append("(&");
         if (num > 1) oc.append("(|");
         if (accounts) oc.append("(objectclass=zimbraAccount)");
         if (aliases) oc.append("(objectclass=zimbraAlias)");
-        if (lists) oc.append("(objectclass=zimbraDistributionList)");        
+        if (lists) oc.append("(objectclass=zimbraDistributionList)");
+        if (calendarResources)
+            oc.append("(objectclass=zimbraCalendarResource)");
         if (num > 1) oc.append(")");
+        if (!calendarResources)
+            oc.append("(!(objectclass=zimbraCalendarResource)))");
         return oc.toString();
     }
-   
+
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#searchAccounts(java.lang.String)
      */
-    ArrayList searchAccounts(String query, String returnAttrs[], final String sortAttr, final boolean sortAscending, String base, int flags)  
+    List searchAccounts(String query, String returnAttrs[], final String sortAttr, final boolean sortAscending, String base, int flags)  
         throws ServiceException
     {
-        final ArrayList result = new ArrayList();
+        final List result = new ArrayList();
         
         NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
             public void visit(com.zimbra.cs.account.NamedEntry entry) throws ServiceException {
@@ -779,9 +839,9 @@ public class LdapProvisioning extends Provisioning {
                         if (dn.endsWith("cn=zimbra")) continue;
                         Attributes attrs = sr.getAttributes();
                         Attribute objectclass = attrs.get("objectclass");
-                        if (objectclass == null || objectclass.contains("zimbraAccount")) visitor.visit(new LdapAccount(dn, attrs, this));
-                        else if (objectclass.contains("zimbraAlias")) visitor.visit(new LdapAlias(dn, attrs));
-                        else if (objectclass.contains("zimbraDistributionList")) visitor.visit(new LdapDistributionList(dn, attrs));
+                        if (objectclass == null || objectclass.contains(C_zimbraAccount)) visitor.visit(makeLdapAccount(dn, attrs, this));
+                        else if (objectclass.contains(C_zimbraAlias)) visitor.visit(new LdapAlias(dn, attrs));
+                        else if (objectclass.contains(C_zimbraMailList)) visitor.visit(new LdapDistributionList(dn, attrs));
                     }
                     cookie = getCookie(lctxt);
                 } while (cookie != null);
@@ -874,7 +934,7 @@ public class LdapProvisioning extends Provisioning {
 
     
     static String[] addMultiValue(String values[], String value) {
-        ArrayList list = new ArrayList(Arrays.asList(values));        
+        List list = new ArrayList(Arrays.asList(values));        
         list.add(value);
         return (String[]) list.toArray(new String[list.size()]);
     }
@@ -1154,7 +1214,7 @@ public class LdapProvisioning extends Provisioning {
      * @see com.zimbra.cs.account.Provisioning#getAllDomains()
      */
     public List getAllDomains() throws ServiceException {
-        ArrayList<LdapDomain> result = new ArrayList<LdapDomain>();
+        List<LdapDomain> result = new ArrayList<LdapDomain>();
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
@@ -1353,7 +1413,7 @@ public class LdapProvisioning extends Provisioning {
      * @see com.zimbra.cs.account.Provisioning#getAllCOS()
      */
     public List getAllCos() throws ServiceException {
-        ArrayList result = new ArrayList();
+        List result = new ArrayList();
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
@@ -1647,7 +1707,7 @@ public class LdapProvisioning extends Provisioning {
     }
 
     public List getAllServers() throws ServiceException {
-        ArrayList result = new ArrayList();
+        List result = new ArrayList();
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
@@ -2416,7 +2476,7 @@ public class LdapProvisioning extends Provisioning {
     }
     
     public List listAllZimlets() throws ServiceException {
-    	ArrayList result = new ArrayList();
+    	List result = new ArrayList();
     	DirContext ctxt = null;
     	try {
     		ctxt = LdapUtil.getDirContext();
@@ -2567,6 +2627,134 @@ public class LdapProvisioning extends Provisioning {
     	Map newlist = new HashMap();
     	newlist.put(Provisioning.A_zimbraProxyAllowedDomains, domainSet.toArray(new String[0]));
     	cos.modifyAttrs(newlist);
+    }
+
+    public CalendarResource createCalendarResource(String emailAddress,
+                                                   Map calResAttrs)
+    throws ServiceException {
+        emailAddress = emailAddress.toLowerCase().trim();
+
+        calResAttrs.put(Provisioning.A_zimbraAccountCalendarUserType,
+                        Account.CalendarUserType.RESOURCE.toString());
+
+        HashMap attrManagerContext = new HashMap();
+        AttributeManager.getInstance().
+            preModify(calResAttrs, null, attrManagerContext, true, true);
+        createAccount(emailAddress, null, calResAttrs,
+                      new String[] { C_zimbraCalendarResource });
+        LdapCalendarResource resource =
+            (LdapCalendarResource) getCalendarResourceByName(emailAddress);
+        AttributeManager.getInstance().
+            postModify(calResAttrs, resource, attrManagerContext, true);
+        return resource;
+    }
+
+    public void deleteCalendarResource(String zimbraId)
+    throws ServiceException {
+        deleteAccount(zimbraId);
+    }
+
+    public void renameCalendarResource(String zimbraId, String newName)
+    throws ServiceException {
+        renameAccount(zimbraId, newName);
+    }
+
+    public CalendarResource getCalendarResourceById(String zimbraId)
+    throws ServiceException {
+        if (zimbraId == null)
+            return null;
+        LdapCalendarResource resource =
+            (LdapCalendarResource) sAccountCache.getById(zimbraId);
+        if (resource == null) {
+            zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
+            resource = (LdapCalendarResource) getAccountByQuery(
+                "",
+                "(&(zimbraId=" + zimbraId + ")" +
+                FILTER_CALENDAR_RESOURCE_OBJECTCLASS + ")",
+                null);
+            sAccountCache.put(resource);
+        }
+        return resource;
+    }
+
+    public CalendarResource getCalendarResourceByName(String emailAddress)
+    throws ServiceException {
+        int index = emailAddress.indexOf('@');
+        String domain = null;
+        if (index == -1) {
+             domain = getConfig().getAttr(
+                     Provisioning.A_zimbraDefaultDomainName, null);
+            if (domain == null)
+                throw ServiceException.INVALID_REQUEST(
+                        "must be valid email address: "+ emailAddress, null);
+            else
+                emailAddress = emailAddress + "@" + domain;
+         }
+
+        LdapCalendarResource resource =
+            (LdapCalendarResource) sAccountCache.getByName(emailAddress);
+        if (resource == null) {
+            emailAddress = LdapUtil.escapeSearchFilterArg(emailAddress);
+            resource = (LdapCalendarResource) getAccountByQuery(
+                "",
+                "(&(|(zimbraMailDeliveryAddress=" + emailAddress +
+                ")(zimbraMailAlias=" + emailAddress + "))" +
+                FILTER_CALENDAR_RESOURCE_OBJECTCLASS + ")",
+                null);
+            sAccountCache.put(resource);
+        }
+        return resource;
+    }
+
+    public CalendarResource getCalendarResourceByForeignPrincipal(
+            String foreignPrincipal)
+    throws ServiceException {
+        LdapCalendarResource res = null;
+        foreignPrincipal = LdapUtil.escapeSearchFilterArg(foreignPrincipal);
+        LdapCalendarResource resource =
+            (LdapCalendarResource) getAccountByQuery(
+                "",
+                "(&(zimbraForeignPrincipal=" + foreignPrincipal + ")" +
+                FILTER_CALENDAR_RESOURCE_OBJECTCLASS + ")",
+                null);
+        sAccountCache.put(resource);
+        return resource;
+    }
+
+    public List searchCalendarResources(
+        String query,
+        String returnAttrs[],
+        String sortAttr,
+        boolean sortAscending)
+    throws ServiceException {
+        return searchCalendarResources(query, returnAttrs,
+                                       sortAttr, sortAscending,
+                                       "");
+    }
+
+    List searchCalendarResources(
+            String query,
+            String returnAttrs[],
+            String sortAttr,
+            boolean sortAscending,
+            String base)
+    throws ServiceException {
+        return searchAccounts(query, returnAttrs,
+                              sortAttr, sortAscending,
+                              base,
+                              Provisioning.SA_CALENDAR_RESOURCE_FLAG);
+    }
+
+    private static LdapAccount makeLdapAccount(String dn,
+                                               Attributes attrs,
+                                               LdapProvisioning prov)
+    throws ServiceException {
+        LdapAccount account = new LdapAccount(dn, attrs, prov);
+        if (account.getCalendarUserType().
+                equals(Account.CalendarUserType.RESOURCE))
+            return new LdapCalendarResource(account);
+        else
+            return account;
     }
 
     public static void main(String args[]) {

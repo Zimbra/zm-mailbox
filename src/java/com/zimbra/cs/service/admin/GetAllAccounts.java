@@ -32,6 +32,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.dom4j.QName;
+
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
@@ -85,11 +87,11 @@ public class GetAllAccounts extends AdminDocumentHandler {
             if (!canAccessDomain(lc, domain)) 
                 throw ServiceException.PERM_DENIED("can not access domain"); 
 
-            response = lc.createElement(AdminService.GET_ALL_ACCOUNTS_RESPONSE);
+            response = lc.createElement(getResponseQName());
             doDomain(response, domain);
 
         } else {
-            response = lc.createElement(AdminService.GET_ALL_ACCOUNTS_RESPONSE);
+            response = lc.createElement(getResponseQName());
             List domains = prov.getAllDomains();
             for (Iterator dit=domains.iterator(); dit.hasNext(); ) {
                 Domain domain = (Domain) dit.next();
@@ -98,8 +100,12 @@ public class GetAllAccounts extends AdminDocumentHandler {
         }
         return response;        
 	}
-    
-    public static void doDomain(final Element e, Domain d) throws ServiceException {
+
+    protected QName getResponseQName() {
+        return AdminService.GET_ALL_ACCOUNTS_RESPONSE;
+    }
+
+    protected void doDomain(final Element e, Domain d) throws ServiceException {
         NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
             public void visit(com.zimbra.cs.account.NamedEntry entry) throws ServiceException {
                 GetAccount.doAccount(e, (Account) entry);

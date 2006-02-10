@@ -82,6 +82,7 @@ public class SearchAccounts extends AdminDocumentHandler {
         if (types.indexOf("accounts") != -1) flags |= Provisioning.SA_ACCOUNT_FLAG;
         if (types.indexOf("aliases") != -1) flags |= Provisioning.SA_ALIAS_FLAG;
         if (types.indexOf("distributionlists") != -1) flags |= Provisioning.SA_DISTRIBUTION_LIST_FLAG;
+        if (types.indexOf("resources") != -1) flags |= Provisioning.SA_CALENDAR_RESOURCE_FLAG;
         
         String[] attrs = attrsStr == null ? null : attrsStr.split(",");
 
@@ -102,7 +103,7 @@ public class SearchAccounts extends AdminDocumentHandler {
                 throw AccountServiceException.NO_SUCH_DOMAIN(domain);
         }
 
-        ArrayList accounts;
+        List accounts;
         AdminSession session = (AdminSession) lc.getSession(SessionCache.SESSION_ADMIN);
         if (session != null) {
             accounts = session.searchAcounts(d, query, attrs, sortBy, sortAscending, flags, offset);

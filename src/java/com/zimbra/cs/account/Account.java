@@ -34,7 +34,12 @@ import com.zimbra.cs.service.ServiceException;
  * @author schemers
  */
 public interface Account extends NamedEntry {
-    
+
+    public static enum CalendarUserType {
+        USER,       // regular person account
+        RESOURCE    // calendar resource
+    }
+
     public String getUid();
     
     /**
@@ -90,4 +95,11 @@ public interface Account extends NamedEntry {
      * @throws ServiceException
      */
     public ICalTimeZone getTimeZone() throws ServiceException;
+
+    /**
+     * Returns calendar user type
+     * @return USER (default) or RESOURCE
+     * @throws ServiceException
+     */
+    public CalendarUserType getCalendarUserType() throws ServiceException;
 }

@@ -45,7 +45,7 @@ import com.zimbra.cs.service.ServiceException;
  */
 public class LdapAccount extends LdapNamedEntry implements Account {
 
-    private LdapProvisioning mProv;
+    protected LdapProvisioning mProv;
     private String mName;
     private String mDomainName;    
 
@@ -236,4 +236,9 @@ public class LdapAccount extends LdapNamedEntry implements Account {
         return mTimeZone;
     }
 
+    public CalendarUserType getCalendarUserType() throws ServiceException {
+        String cutype = getAttr(Provisioning.A_zimbraAccountCalendarUserType,
+                                CalendarUserType.USER.toString());
+        return CalendarUserType.valueOf(cutype);
+    }
 }

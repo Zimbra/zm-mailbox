@@ -514,10 +514,9 @@ public class Invite {
      * The Invite datastructure caches "my" partstat so that I don't have to search through all
      * of the Attendee records every time I want to know my status....this function updates the
      * catched PartStat data when I receive a new Invite 
-     * 
-     * @param iAmOrganizer
      */
-    public void updateMyPartStat(Account acct) throws ServiceException {
+    public void updateMyPartStat(Account acct, boolean shouldAutoAccept)
+    throws ServiceException {
         boolean iAmOrganizer = thisAcctIsOrganizer(acct);
         if (iAmOrganizer) {
             setPartStat(IcalXmlStrMap.PARTSTAT_ACCEPTED);
@@ -533,11 +532,20 @@ public class Invite {
             	// NEEDS_ACTION (ie is a Request or a Counter)
             	//
             	if (mMethod == ICalTok.REQUEST || mMethod == ICalTok.COUNTER) {
-            		String ps = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
-            		if (at.hasPartStat())
-            			ps = at.getPartStat();
-            		if (getRsvp() || ps.equals(IcalXmlStrMap.PARTSTAT_NEEDS_ACTION))
-            			setNeedsReply(true);
+                    if (shouldAutoAccept) {
+                        // TODO: Decline if time slot is busy, unless this is a modify request
+                        // and the previous version of this meeting is the one that kept the
+                        // time slot busy.
+                        // If declining, should an email be sent out to organizer?
+                        setPartStat(IcalXmlStrMap.PARTSTAT_ACCEPTED);
+                        at.setPartStat(IcalXmlStrMap.PARTSTAT_ACCEPTED);
+                    } else {
+                		String ps = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
+                		if (at.hasPartStat())
+                			ps = at.getPartStat();
+                		if (getRsvp() || ps.equals(IcalXmlStrMap.PARTSTAT_NEEDS_ACTION))
+                			setNeedsReply(true);
+                    }
             	}
             } else {
                 // if this is the first time we're parsing this, and we can't find ourself on the

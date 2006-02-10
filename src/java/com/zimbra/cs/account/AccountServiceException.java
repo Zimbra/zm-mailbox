@@ -54,6 +54,7 @@ public class AccountServiceException extends ServiceException {
     public static final String NO_SUCH_COS        = "account.NO_SUCH_COS";        
     public static final String NO_SUCH_SERVER     = "account.NO_SUCH_SERVER";        
     public static final String NO_SUCH_DISTRIBUTION_LIST = "account.NO_SUCH_DISTRIBUTION_LIST";
+    public static final String NO_SUCH_CALENDAR_RESOURCE = "account.NO_SUCH_CALENDAR_RESOURCE";
     public static final String NO_SUCH_MEMBER     = "account.NO_SUCH_MEMBER";
     public static final String MEMBER_EXISTS      = "account.MEMBER_EXISTS";
     public static final String ACCOUNT_EXISTS     = "account.ACCOUNT_EXISTS";        
@@ -140,7 +141,12 @@ public class AccountServiceException extends ServiceException {
         return new AccountServiceException("no such distribution list: " + name, NO_SUCH_DISTRIBUTION_LIST, 
                 SENDERS_FAULT, null);   
     }
-    
+
+    public static AccountServiceException NO_SUCH_CALENDAR_RESOURCE(String name) {
+        return new AccountServiceException("no such calendar resource: " + name, NO_SUCH_CALENDAR_RESOURCE,
+                SENDERS_FAULT, null);
+    }
+
     public static AccountServiceException NO_SUCH_MEMBER(String dlName, String mName, Exception e) {
         return new AccountServiceException("no such member: " + mName + " in distribution list: " + dlName, NO_SUCH_MEMBER, 
                 SENDERS_FAULT, e);   
