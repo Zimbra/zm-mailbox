@@ -28,7 +28,6 @@
  */
 package com.zimbra.cs.service.mail;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -94,23 +93,17 @@ public class Sync extends DocumentHandler {
             // anything else to be done for searchfolders?
         }
 
-        List subfolders = folder.getSubfolders(octxt);
+        List<Folder> subfolders = folder.getSubfolders(octxt);
         if (subfolders != null)
-            for (Iterator it = subfolders.iterator(); it.hasNext(); ) {
-                Folder subfolder = (Folder) it.next();
+        	for (Folder subfolder : subfolders)
                 if (subfolder != null)
                     initialFolderSync(lc, f, mbox, subfolder);
-        }
     }
 
     private void initialTagSync(ZimbraContext lc, Element response, Mailbox mbox) throws ServiceException {
-        List tags = mbox.getTagList(lc.getOperationContext());
-        if (tags != null)
-            for (Iterator it = tags.iterator(); it.hasNext(); ) {
-                Tag tag = (Tag) it.next();
-                if (tag != null && !(tag instanceof Flag))
-                    ToXML.encodeTag(response, lc, tag);
-            }
+        for (Tag tag : mbox.getTagList(lc.getOperationContext()))
+            if (tag != null && !(tag instanceof Flag))
+                ToXML.encodeTag(response, lc, tag);
     }
 
     private void initialItemSync(Element f, String ename, int[] items) {
@@ -146,12 +139,8 @@ public class Sync extends DocumentHandler {
         // now, handle created/modified items
         if (begin >= mbox.getLastChangeID())
             return;
-        for (int i = 0; i < SYNC_ORDER.length; i++) {
-            byte type = SYNC_ORDER[i];
-            List changed = mbox.getModifiedItems(type, begin);
-            for (Iterator it = changed.iterator(); it.hasNext(); ) {
-                MailItem item = (MailItem) it.next();
-                
+        for (byte type : SYNC_ORDER)
+            for (MailItem item : mbox.getModifiedItems(type, begin)) {
                 // For items in the system, if the content has changed since the user last sync'ed 
                 // (because it was edited or created), just send back the folder ID and saved date --
                 // the client will request the whole object out of band -- potentially using the 
@@ -165,6 +154,5 @@ public class Sync extends DocumentHandler {
                 else
                     ToXML.encodeItem(response, lc, item, isMetadataOnly ? Change.ALL_FIELDS : MUTABLE_FIELDS);
             }
-        }
     }
 }

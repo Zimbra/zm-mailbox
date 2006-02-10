@@ -216,7 +216,6 @@ public class MailService implements DocumentService {
     public static final String A_INHERIT = "inh";
     public static final String A_GRANT_TYPE = "gt";
     public static final String A_REMOTE_ID = "rid";
-    public static final String A_REVISION = "rev";
     public static final String A_NAME = "name";
     public static final String A_DATE = "d";
     public static final String A_SENT_DATE = "sd";
@@ -287,8 +286,10 @@ public class MailService implements DocumentService {
 
     // sync
     public static final String A_TOKEN = "token";
+    public static final String A_REVISION = "rev";
     public static final String A_FETCH_IF_EXISTS = "fie";
     public static final String A_CHANGE_DATE = "md";
+    public static final String A_MODIFIED_SEQUENCE = "ms";
 
     // filter rules
     public static final String A_LHS = "k0";
@@ -300,16 +301,16 @@ public class MailService implements DocumentService {
     public static final String A_QUERY_CONTEXT = "context";
     public static final String A_QUERY_OFFSET = "offset";
     public static final String A_QUERY_LIMIT = "limit";
-    public static final String A_QUERY_MORE= "more";
+    public static final String A_QUERY_MORE = "more";
     
     // calendar / appointment
     public static final String E_APPOINTMENT = "appt";
     public static final String E_INVITE = "inv";
     public static final String E_INVITE_COMPONENT = "comp";
     public static final String E_INSTANCE = "inst";
-    public static final String E_FREEBUSY_USER    = "usr";
-    public static final String E_FREEBUSY_FREE    = "f";
-    public static final String E_FREEBUSY_BUSY    = "b";
+    public static final String E_FREEBUSY_USER = "usr";
+    public static final String E_FREEBUSY_FREE = "f";
+    public static final String E_FREEBUSY_BUSY = "b";
     public static final String E_FREEBUSY_BUSY_TENTATIVE = "t";
     public static final String E_FREEBUSY_BUSY_UNAVAILABLE = "u";
     public static final String E_FREEBUSY_NO_DATA = "n";

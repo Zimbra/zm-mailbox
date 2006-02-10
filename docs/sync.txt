@@ -34,20 +34,15 @@
 
 <SyncResponse token="500" md="1078054283">
   <-- handle deletes first -->
-  <deleted>
-    <folder ids="..."/>
-    <tag ids="..."/>
-    <m ids="..."/>
-    <cn ids="..."/>
-  </deleted>
+  <deleted ids="..."/>
   <-- modified/created folders (none here) -->
   <-- modified/created tags (none here) -->
   <-- other modified/created things (only id/folder/date means new or content changed) */
-  <m id="275" l="2" cid="276" f="" t="" md="1078024283"/>
-  <m id="321" l="3" cid="312" f="u" t="" md="1078025663"/>
-  <tag id="68" name="bob" color="6" md="1078025983"/>
-  <cn id="664" l="7" f="" t="" md="1078026283"/>
-  <cn id="662" l="7" md="1078026270"/>
+  <m id="275" l="2" cid="276" f="" t="" md="1078024283" ms="409"/>
+  <m id="321" l="3" cid="312" f="u" t="" md="1078025663" ms="441"/>
+  <tag id="68" name="bob" color="6" md="1078025983" ms="442"/>
+  <cn id="664" l="7" f="" t="" md="1078026283" ms="496"/>
+  <cn id="662" l="7" md="1078026270" ms="499"/>
 </SyncResponse>
 
 
@@ -79,14 +74,12 @@
 
 <SyncResponse token="521" md="1078054298">
   <-- handle deletes first -->
-  <deleted>
-    <folder ids="903"/>
-  </deleted>
+  <deleted ids="903"/>
   <-- modified/created folders -->
-  <folder id="663" name="new name" l="1" md="1078054291"/>
+  <folder id="663" name="new name" l="1" md="1078054291" ms="520"/>
   <-- modified/created tags (none here) -->
   <-- other modified/created things (only id/folder/date means new or content changed) */
-  <m id="5526" l="2" md="1078054265"/>
-  <m id="5522" l="2" cid="5521" f="" t="" md="1078054297"/>
-  <cn id="5531" l="7" md="1078054296"/>
+  <m id="5526" l="2" md="1078054265" ms="503"/>
+  <m id="5522" l="2" cid="5521" f="" t="" md="1078054297" ms="519"/>
+  <cn id="5531" l="7" md="1078054296" ms="520"/>
 </SyncResponse>
