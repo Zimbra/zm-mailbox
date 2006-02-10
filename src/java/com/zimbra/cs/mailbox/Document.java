@@ -86,15 +86,13 @@ public class Document extends MailItem {
 	boolean canHaveChildren() { return false; }
 
 
-    static Document create(int id, Folder folder, short volumeId, String filename, String type, File content, MailItem parent)
+    static Document create(int id, Folder folder, short volumeId, String filename, String type, int length, MailItem parent)
     throws ServiceException {
     	assert(id != Mailbox.ID_AUTO_INCREMENT);
         if (folder == null || !folder.canContain(TYPE_DOCUMENT))
             throw MailServiceException.CANNOT_CONTAIN();
         if (!folder.canAccess(ACL.RIGHT_INSERT))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
-        if (content == null)
-            throw ServiceException.INVALID_REQUEST("content may not be empty", null);
 
 		Map<String,String> fields = new HashMap<String,String>();
         fields.put(Metadata.FN_MIME_TYPE, type);
@@ -110,7 +108,7 @@ public class Document extends MailItem {
         data.indexId     = id;
         data.volumeId    = volumeId;
         data.date        = mbox.getOperationTimestamp();
-        data.size        = (int) content.length();
+        data.size        = length;
         data.subject     = filename;
         data.metadata    = encodeMetadata(DEFAULT_COLOR, fields);
         data.contentChanged(mbox);

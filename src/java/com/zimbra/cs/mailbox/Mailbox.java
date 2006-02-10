@@ -4310,6 +4310,8 @@ public class Mailbox {
     public synchronized WikiItem createWiki(OperationContext octxt, ParsedMessage pm, int folderId) throws IOException, ServiceException {
        	WikiItem wiki;
         boolean success = false;
+       	StoreManager sm = StoreManager.getInstance();
+       	Blob blob = null;
         
         try {
            	byte[] rawData = pm.getRawData();
@@ -4321,8 +4323,7 @@ public class Mailbox {
         	int itemId = getNextItemId(ID_AUTO_INCREMENT);
            	short volumeId = Volume.getCurrentMessageVolume().getId();
 
-           	StoreManager sm = StoreManager.getInstance();
-            Blob blob = sm.storeIncoming(rawData, rawDigest, null, volumeId);
+           	blob = sm.storeIncoming(rawData, rawDigest, null, volumeId);
             markOtherItemDirty(blob);
 
     		UnderlyingData data = new UnderlyingData();
@@ -4340,7 +4341,6 @@ public class Mailbox {
             mCurrentChange.setIndexedItem(wiki, pm);
 
             sm.link(blob, this, itemId, wiki.getSavedSequence(), volumeId);
-            sm.delete(blob);
             
             success = true;
 
@@ -4350,6 +4350,8 @@ public class Mailbox {
             throw MailServiceException.MESSAGE_PARSE_ERROR(me);
         } finally {
         	endTransaction(success);
+            if (blob != null)
+            	sm.delete(blob);
         }
 
         return wiki;
@@ -4357,6 +4359,58 @@ public class Mailbox {
 
     public WikiItem getWikiById(OperationContext octxt, int id) throws ServiceException {
     	return (WikiItem) getItemById(octxt, id, MailItem.TYPE_WIKI);
+    }
+    
+    public synchronized Document createDocument(OperationContext octxt, 
+    											int folderId, 
+    											String filename, 
+    											String mimeType, 
+    											byte[] rawData,
+    											MailItem parent) throws ServiceException {
+       	Document doc;
+        boolean success = false;
+       	StoreManager sm = StoreManager.getInstance();
+       	Blob blob = null;
+        try {
+            SaveDocument redoRecorder = new SaveDocument(mId, null, 0);
+
+            beginTransaction("createDoc", octxt, redoRecorder);
+        	int itemId = getNextItemId(ID_AUTO_INCREMENT);
+           	short volumeId = Volume.getCurrentMessageVolume().getId();
+
+           	// TODO: digest, recording upload file info, indexing
+           	blob = sm.storeIncoming(rawData, null, null, volumeId);
+            markOtherItemDirty(blob);
+
+    		UnderlyingData data = new UnderlyingData();
+            data.id         = itemId;
+            data.folderId   = folderId;
+            data.indexId    = itemId;
+            data.volumeId   = volumeId;
+            data.flags      = 0;
+            data.date       = getOperationTimestamp();
+            data.size       = rawData.length;
+            //data.blobDigest = null;
+
+        	doc = Document.create(itemId, getFolderById(folderId), volumeId, filename, mimeType, rawData.length, parent);
+            mCurrentChange.setIndexedItem(doc, null);
+
+            sm.link(blob, this, itemId, doc.getSavedSequence(), volumeId);
+            
+            success = true;
+
+        } catch (IOException ioe) {
+            throw MailServiceException.MESSAGE_PARSE_ERROR(ioe);
+        } finally {
+        	endTransaction(success);
+            if (blob != null)
+            	try {
+            		sm.delete(blob);
+            	} catch (IOException ioe) {
+            		// no harm done
+            	}
+        }
+    	return doc;
     }
     
     public static void dumpMailboxCache() {
