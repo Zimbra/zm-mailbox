@@ -20,7 +20,7 @@ an example:
     # Example Sieve Filter
     # Declare any optional features or extension used by the script
     #
-    require ["fileinto", "reject", ?tag?];
+    require ["fileinto", "reject", "tag"];
 
     #
     # Reject any large messages (note that the four leading dots get
@@ -99,6 +99,8 @@ We support the following tests in rules:
 
   if address :all :contains "From" "foo" { action; }
 
+  This feature is not exposed in UI.
+  
 * An address (sender and/or recipients) is in the user's
   contacts. Zimbra specific.  
     addressbook :in header "contacts"  
@@ -148,7 +150,7 @@ available yet.
 
 We support the following actions when a rule matches:
 
-* keep		saves a message to the user?s INBOX.
+* keep		saves a message to the user's INBOX.
 
 * fileinto	saves a message to the specified folder. The folder name
   uses the path notation. E.g., /Drafts
