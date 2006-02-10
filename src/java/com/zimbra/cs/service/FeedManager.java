@@ -25,6 +25,7 @@
 /*
  * Created on Oct 23, 2005
  */
+
 package com.zimbra.cs.service;
 
 import java.io.BufferedInputStream;
@@ -53,6 +54,7 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpURL;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
 
 import com.zimbra.cs.account.Account;
@@ -104,7 +106,7 @@ public class FeedManager {
                 HttpURL httpurl = new HttpURL(url);
                 if (httpurl.getUser() != null) {
                     UsernamePasswordCredentials creds = new UsernamePasswordCredentials(httpurl.getUser(), httpurl.getPassword());
-                    client.getState().setCredentials(null, null, creds);
+                    client.getState().setCredentials(AuthScope.ANY, creds);
                 }
             }
 
