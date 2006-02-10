@@ -105,7 +105,7 @@ public class ImapServer extends TcpServer {
         if (LC.nio_imap_enable.booleanValue()) {
             OzConnectionHandlerFactory imapHandlerFactory = new OzConnectionHandlerFactory() {
                 public OzConnectionHandler newConnectionHandler(OzConnection conn) {
-                    conn.autoClose(IMAP_UNAUTHED_CONNECTION_MAX_IDLE_MILLISECONDS);
+                    conn.setAlarm(IMAP_UNAUTHED_CONNECTION_MAX_IDLE_MILLISECONDS);
                     return new OzImapConnectionHandler(conn);
                 }
             };
@@ -145,7 +145,7 @@ public class ImapServer extends TcpServer {
             
             OzConnectionHandlerFactory imapHandlerFactory = new OzConnectionHandlerFactory() {
                 public OzConnectionHandler newConnectionHandler(OzConnection conn) {
-                    conn.autoClose(IMAP_UNAUTHED_CONNECTION_MAX_IDLE_MILLISECONDS);
+                    conn.setAlarm(IMAP_UNAUTHED_CONNECTION_MAX_IDLE_MILLISECONDS);
                     conn.addFilter(new OzTLSFilter(conn, debugLogging, ZimbraLog.imap));
                     return new OzImapConnectionHandler(conn);
                 }

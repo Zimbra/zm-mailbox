@@ -29,12 +29,31 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 public interface OzConnectionHandler {
+    
+    /**
+     * A new connection has been accepted by the server. Initialize any per
+     * connection protocol specific state.
+     * 
+     * @throws IOException
+     */
     void handleConnect() throws IOException;
 
+    /**
+     * Input has arrived on the connection, and the current matcher may or may
+     * not have matched the input.
+     */
     void handleInput(ByteBuffer buffer, boolean matched) throws IOException;
 
-    /* The contract of handleDisconnect is that you must call OzConnection.closeNow(), and not close(). */
+    /**
+     * There was an error on the socket, and the underlying socket has been
+     * closed.  Cleanup any connection related data.
+     */
     void handleDisconnect();
     
-    void handleAutoClose() throws IOException;
+    /**
+     * When an alarm set on the connection fires, this method is called.
+     * 
+     * @throws IOException
+     */
+    void handleAlarm() throws IOException;
 }

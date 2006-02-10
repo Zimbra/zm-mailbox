@@ -161,6 +161,6 @@ public class OzNotificationConnectionHandler implements OzConnectionHandler
         
     }
 
-    public void handleAutoClose() throws IOException { }
+    public void handleAlarm() throws IOException { }
 
 }

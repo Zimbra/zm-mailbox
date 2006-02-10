@@ -691,8 +691,8 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
 
             // Session timeout will take care of closing an IMAP connection with
             // no activity.
-            if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("post auth disabling auto close in lieu of session expiry");
-            mConnection.cancelAutoClose();
+            if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("disabling unauth connection alarm");
+            mConnection.cancelAlarm();
         } catch (ServiceException e) {
             if (mSession != null)
             	mSession.clearTagCache();
@@ -2000,8 +2000,8 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
 
     private String mCurrentRequestTag;
     
-    public void handleAutoClose() throws IOException {
-        ZimbraLog.imap.info("idle connection");
+    public void handleAlarm() throws IOException {
+        ZimbraLog.imap.info("closing unauthenticated idle connection");
         gotoClosedState(true);
     }
 

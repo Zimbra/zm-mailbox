@@ -96,7 +96,7 @@ class TestConnectionHandler implements OzConnectionHandler {
     
     public void handleConnect() throws IOException {
         // Write greeting
-        mConnection.autoClose(TIMEOUT_SECONDS * 1000);
+        mConnection.setAlarm(TIMEOUT_SECONDS * 1000);
         mConnection.writeAsciiWithCRLF("200 Hello, welcome to test server cid=" + mConnection.getId());
         gotoReadingCommandState();
     }   
@@ -122,7 +122,7 @@ class TestConnectionHandler implements OzConnectionHandler {
     private void doCommandInternal(String cmd) throws IOException 
     {
         if (cmd.equals("helo")) {
-            mConnection.cancelAutoClose();
+            mConnection.cancelAlarm();
             mConnection.writeAsciiWithCRLF("200 pleased to meet you");
             gotoReadingCommandState();
         } else if (cmd.equals("quit")) {
@@ -208,7 +208,7 @@ class TestConnectionHandler implements OzConnectionHandler {
         }
     }
     
-    public void handleAutoClose() throws IOException {
+    public void handleAlarm() throws IOException {
         TestServer.mLog.info("connection was idle, terminating");
         mConnection.writeAsciiWithCRLF("550 sorry you have been idle and are being terminated");
         mConnection.close();

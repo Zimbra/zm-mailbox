@@ -162,7 +162,7 @@ public class OzConnection {
             try {
                 mFilters.get(0).close();
             } catch (Throwable t) {
-                closeChannel(CloseReason.ABRUPT);
+                closeChannel(CloseReason.CLOSE_EXCEPTION);
             }
         }
     }
@@ -177,13 +177,13 @@ public class OzConnection {
     
     private void cleanup() { 
         try {
-            closeChannel(CloseReason.ABRUPT);
+            closeChannel(CloseReason.CLEANUP);
         } catch (Throwable t) {
             mConnectionHandler.handleDisconnect();
         }
     }
     
-    enum CloseReason { WRITE_FAILED, NORMAL, ABRUPT; }
+    enum CloseReason { WRITE_FAILED, NORMAL, ABRUPT, ALARM_EXCEPTION, CLEANUP, CLOSE_EXCEPTION; }
 
     private boolean mChannelClosed;
 
@@ -199,12 +199,19 @@ public class OzConnection {
             mLog.info("channel cleanup - " + reason);
             
             if (mChannelClosed) {
-                if (mDebug) mLog.debug("duplicate close detected");
+                /*
+                 * if we errored in write, we close the channel first, and then
+                 * re-throw the IOException, and layers above may call back and
+                 * close the connection again. We definitely want to close the
+                 * connection right away on write errors, so that the selector
+                 * won't spin if someone forgets to call close.
+                 */ 
+                if (mDebug) mLog.debug("duplicate close (occurs on write exceptions)");
                 return;
             }
             mServer.schedule(mServerCloseChannelTask);
             mChannelClosed = true;
-            cancelAutoClose();
+            cancelAlarm();
         }
     }
 
@@ -330,7 +337,7 @@ public class OzConnection {
                         mServer.schedule(mServerRegisterWriteTask);
                     }
                 } catch (Throwable t) {
-                    mLog.warn("exception occurred during " + mName + " task", t);
+                    mLog.info("exception occurred during " + mName + " task", t);
                     cleanup();
                 } finally {
                     if (mDebug) mLog.debug("finished " + mName);
@@ -493,6 +500,7 @@ public class OzConnection {
                         wrote = mChannel.write(data);
                     } catch (IOException ioe) {
                         closeChannel(CloseReason.WRITE_FAILED);
+                        throw ioe;
                     }
         			
                     totalWritten += wrote;
@@ -591,15 +599,15 @@ public class OzConnection {
         }
     }
 
-    private Object mAutoCloseLock = new Object();
+    private Object mAlarmLock = new Object();
     
-    private ScheduledFuture<?> mAutoCloseHandle;
+    private ScheduledFuture<?> mAlarmHandle;
     
-    private static final ScheduledThreadPoolExecutor mAutoCloseExecutor = new ScheduledThreadPoolExecutor(1, new AutoCloseThreadFactory());
+    private static final ScheduledThreadPoolExecutor mAlarmExecutor = new ScheduledThreadPoolExecutor(1, new AlarmThreadFactory());
 
-    private static class AutoCloseThreadFactory implements ThreadFactory {
+    private static class AlarmThreadFactory implements ThreadFactory {
         public Thread newThread(Runnable runnable) {
-            Thread t = new Thread(runnable, "OzAutoCloseTimer");
+            Thread t = new Thread(runnable, "OzAlarmThread");
             t.setDaemon(true);
             t.setPriority(Thread.NORM_PRIORITY);
             return t;
@@ -607,41 +615,44 @@ public class OzConnection {
     }
 
     /**
-     * Close this connection after given milliseconds elapse. You can cancel
-     * this cancellation request with cancelAutoClose.
-     * 
-     * @param millis
+     * Call handleAlarm method with the connection locked after said time has
+     * elapsed.
      */
-    public void autoClose(long millis) {
-        Runnable close = new Runnable() {
+    public void setAlarm(long millis) {
+        Runnable alarm = new Runnable() {
             public void run() {
-                if (mDebug) mLog.debug("auto closing connection");
-                synchronized (mLock) {
-                    try {
-                        mConnectionHandler.handleAutoClose();
-                    } catch (Throwable t) {
-                        closeChannel(CloseReason.ABRUPT);
+                try {
+                    addToNDC();
+                    if (mDebug) mLog.debug("firing alarm");
+                    synchronized (mLock) {
+                        try {
+                            mConnectionHandler.handleAlarm();
+                        } catch (Throwable t) {
+                            closeChannel(CloseReason.ALARM_EXCEPTION);
+                        }
                     }
+                } finally {
+                    clearFromNDC();
                 }
             }
         };
-        synchronized (mAutoCloseLock) {
-            if (mAutoCloseHandle != null) {
-                cancelAutoClose();
+        synchronized (mAlarmLock) {
+            if (mAlarmHandle != null) {
+                cancelAlarm();
             }
-            if (mDebug) mLog.debug("creating auto close timer to fire after " + millis + "ms");
-            mAutoCloseHandle = mAutoCloseExecutor.schedule(close, millis, TimeUnit.MILLISECONDS);
+            if (mDebug) mLog.debug("creating alarm to fire in " + millis + "ms");
+            mAlarmHandle = mAlarmExecutor.schedule(alarm, millis, TimeUnit.MILLISECONDS);
         }
     }
     
-    public void cancelAutoClose() {
-        synchronized (mAutoCloseLock) {
-            if (mAutoCloseHandle != null) {
-                if (mDebug) mLog.debug("cancelling auto close timer");
-                mAutoCloseHandle.cancel(false);
-                boolean removed = mAutoCloseExecutor.remove((Runnable)mAutoCloseHandle);
-                if (mDebug) mLog.debug("auto close timer removed (" + removed + ")");
-                mAutoCloseHandle = null;
+    public void cancelAlarm() {
+        synchronized (mAlarmLock) {
+            if (mAlarmHandle != null) {
+                if (mDebug) mLog.debug("cancelling alarm");
+                mAlarmHandle.cancel(false);
+                boolean removed = mAlarmExecutor.remove((Runnable)mAlarmHandle);
+                if (mDebug) mLog.debug("alarm removed (" + removed + ")");
+                mAlarmHandle = null;
             }
         }
     }
