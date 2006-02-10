@@ -269,6 +269,9 @@ class TestBoth {
     }
     
     private static void endTest() {
+        if (mRunServer) {
+            mTestServer.shutdown();
+        }
     	if (mRunClient) {
     		for (int i = 0; i < mTestClientThreads.length; i++) {
     			try {
@@ -278,9 +281,6 @@ class TestBoth {
     				mLog.error("Interrupted while trying to join test clients", ie);
     			}
     		}
-    	}
-    	if (mRunServer) {
-    		mTestServer.shutdown();
     	}
     }
 }

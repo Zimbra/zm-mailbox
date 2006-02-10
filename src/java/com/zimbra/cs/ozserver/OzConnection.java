@@ -24,6 +24,7 @@
  */
 package com.zimbra.cs.ozserver;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
@@ -48,7 +49,7 @@ public class OzConnection {
 
     private OzConnectionHandler mConnectionHandler;
 
-    private Log mLog;
+    Log mLog;
 
     private OzServer mServer;
     
@@ -70,9 +71,7 @@ public class OzConnection {
 
     private final Object mLock = new Object();
     
-    private boolean mClosed;
-    
-    private final boolean mDebug;
+    final boolean mDebug;
     
     private final boolean mTrace;
 
@@ -82,6 +81,8 @@ public class OzConnection {
     
     private WriteTask mWriteTask;
 
+    private CleanupTask mCleanupTask;
+    
     private ByteBuffer mReadBuffer;
     
     OzConnection(OzServer server, SocketChannel channel) throws IOException {
@@ -93,7 +94,7 @@ public class OzConnection {
         mRemoteAddress = channel.socket().getInetAddress().getHostAddress();
         mChannel = channel;
         mServer = server;
-        mClosed = false;
+        mChannelClosed = false;
         mLog = mServer.getLog();
         mDebug = mLog.isDebugEnabled();
         mTrace = mServer.debugLogging();
@@ -161,56 +162,107 @@ public class OzConnection {
             try {
                 mFilters.get(0).close();
             } catch (Throwable t) {
-                cleanupChannel(CleanupReason.ABRUPT);
+                closeChannel(CloseReason.ABRUPT);
             }
         }
     }
 
-    public void closeNow() {
-        cleanupChannel(CleanupReason.ABRUPT);
+    /**
+     * Close the channel and notify the connection handler object to cleanup
+     * also.
+     */
+    void cleanupForServer() {
+        mCleanupTask.schedule();
     }
     
-    /**
-     * Notify the connection handler object to terminate this connection. 
-     */
-    void cleanup() { 
+    private void cleanup() { 
         try {
-            mConnectionHandler.handleDisconnect();
+            closeChannel(CloseReason.ABRUPT);
         } catch (Throwable t) {
-            cleanupChannel(CleanupReason.ABRUPT);
+            mConnectionHandler.handleDisconnect();
         }
     }
     
+    enum CloseReason { WRITE_FAILED, NORMAL, ABRUPT; }
+
+    private boolean mChannelClosed;
+
     /**
      * Close the underlying IO channel. Under normal circumstances this method
      * is called by the plain filter. However, when things go wrong, this method
-     * can be called to shut down atleast the descriptor. Try as much as
-     * possible to call cleanup first.
+     * can be called to shut down atleast the descriptor - but it is important
+     * to call cleanup() so the connection handler gets an opportunity to clean
+     * up too.
      */
-    enum CleanupReason { NORMAL, ABRUPT; }
-    
-    private void cleanupChannel(CleanupReason reason) {
+    private void closeChannel(CloseReason reason) {
         synchronized (mLock) {
-        	try {
-        		mLog.info("channel cleanup - " + reason);
-        		
-        		if (mClosed) {
-        			if (mDebug) mLog.debug("duplicate close detected");
-        			return;
-        		}
-        		
-        		cancelAutoClose();
-        	} finally {
-        		try {
-        			mChannel.close();
-        			if (mDebug) mLog.debug("closed channel");
-        		} catch (IOException ioe) {
-        			mLog.warn("exception closing channel, ignoring and continuing", ioe);
-        		}
-        		mClosed = true;
-        		mServer.wakeupSelector(); // to make the close immediate
-        		if (mDebug) mLog.debug("wokeup selector");
-        	}
+            mLog.info("channel cleanup - " + reason);
+            
+            if (mChannelClosed) {
+                if (mDebug) mLog.debug("duplicate close detected");
+                return;
+            }
+            mServer.schedule(mServerCloseChannelTask);
+            mChannelClosed = true;
+            cancelAutoClose();
+        }
+    }
+
+    abstract class ServerTask {
+        String mName;
+        
+        ServerTask(String name) {
+            mName = name;
+        }
+        
+        String getName() {
+            return mName;
+        }
+        
+        protected abstract void doTask() throws IOException;
+        
+        void run() {
+            try {
+                addToNDC();
+                if (mDebug) mLog.debug("server task " + mName);
+                doTask();
+            } catch (Throwable t) {
+                mLog.warn("exception performing server task " + mName);
+            } finally {
+                clearFromNDC();
+            }
+        }
+    }
+    
+    private ServerCloseChannel mServerCloseChannelTask = new ServerCloseChannel();
+    private ServerRegisterRead mServerRegisterReadTask = new ServerRegisterRead();
+    private ServerRegisterWrite mServerRegisterWriteTask = new ServerRegisterWrite();
+    
+    private class ServerCloseChannel extends ServerTask {
+        ServerCloseChannel() { super("close"); }
+        
+        protected void doTask() throws IOException {
+            mChannel.close();
+        }
+    }
+    
+    private class ServerRegisterRead extends ServerTask {
+        ServerRegisterRead() { super("eread"); }
+
+        protected void doTask() throws IOException {
+            int iops = mSelectionKey.interestOps();
+            mSelectionKey.interestOps(iops | SelectionKey.OP_READ);
+            OzUtil.logKey(mLog, mSelectionKey, "registered read interest");
+        }
+    }   
+    
+    private class ServerRegisterWrite extends ServerTask {
+        ServerRegisterWrite() { super("ewrite"); }
+
+        protected void doTask() throws IOException {
+            int iops = mSelectionKey.interestOps();
+            mSelectionKey.interestOps(iops | SelectionKey.OP_WRITE);
+            OzUtil.logKey(mLog, mSelectionKey, "registered write interest");
         }
     }
 
@@ -265,17 +317,17 @@ public class OzConnection {
                 addToNDC();
                 if (mDebug) mLog.debug("starting " + mName);
                 try {
-                    if (mClosed) {
+                    if (mChannelClosed) {
                         if (mDebug) mLog.debug("connection already closed, aborting " + mName);
                         return;
                     }
                     mReadRequested = false;
                     doTask();
                     if (mReadRequested) {
-                        registerReadInterest();
+                        mServer.schedule(mServerRegisterReadTask);
                     }
                     if (mWriteManager.isWritePending()) {
-                        registerWriteInterest();
+                        mServer.schedule(mServerRegisterWriteTask);
                     }
                 } catch (Throwable t) {
                     mLog.warn("exception occurred during " + mName + " task", t);
@@ -290,6 +342,15 @@ public class OzConnection {
         protected abstract void doTask() throws IOException;
     }
     
+    private class CleanupTask extends Task {
+        CleanupTask() { super("cleanup"); }
+        
+        protected void doTask() throws IOException {
+            mLog.info("cleanup");
+            cleanup();
+        }
+    }
+    
     private class ConnectTask extends Task {
         ConnectTask() { super("connect"); }
         
@@ -300,88 +361,16 @@ public class OzConnection {
         }
     }
     
-    private void registerReadInterest() {
-        synchronized (mSelectionKey) {
-            if (!mSelectionKey.isValid()) {
-                if (mTrace) mLog.trace("noop register read interest - selection key is invalid"); 
-                return;
-            }
-            
-            int iops = mSelectionKey.interestOps();
-            
-            if ((iops & SelectionKey.OP_READ) != 0) {
-                if (mTrace) mLog.trace("noop register read interest - read interest already registered");
-                return;
-            }
-            
-            mSelectionKey.interestOps(iops | SelectionKey.OP_READ);
-            OzUtil.logKey(mLog, mSelectionKey, "registered read interest");
-            
-            mServer.wakeupSelector();
-        }
-    }
-    
     private void unregisterReadInterest() {
-        synchronized (mSelectionKey) {
-            if (!mSelectionKey.isValid()) {
-                if (mTrace) mLog.trace("noop unregister read interest - selection key is invalid"); 
-                return;
-            }
-            
-            int iops = mSelectionKey.interestOps();
-            
-            if ((iops & SelectionKey.OP_READ) == 0) {
-                if (mTrace) mLog.trace("noop unregister read interest - read interest not registered");
-                return;
-            }
-            
-            mSelectionKey.interestOps(iops & (~SelectionKey.OP_READ));
-            OzUtil.logKey(mLog, mSelectionKey, "unregistered read interest");
-            
-            mServer.wakeupSelector();
-        }
+        int iops = mSelectionKey.interestOps();
+        mSelectionKey.interestOps(iops & (~SelectionKey.OP_READ));
+        OzUtil.logKey(mLog, mSelectionKey, "unregistered read interest");
     }
 
-    private void registerWriteInterest() {
-        synchronized (mSelectionKey) {
-            if (!mSelectionKey.isValid()) {
-                if (mTrace) mLog.trace("noop register write interest - selection key is invalid"); 
-                return;
-            }
-            
-            int iops = mSelectionKey.interestOps();
-            
-            if ((iops & SelectionKey.OP_WRITE) != 0) {
-                if (mTrace) mLog.trace("noop register write interest - write interest already registered");
-                return;
-            }
-            
-            mSelectionKey.interestOps(iops | SelectionKey.OP_WRITE);
-            OzUtil.logKey(mLog, mSelectionKey, "registered write interest");
-            
-            mServer.wakeupSelector();
-        }
-    }
-    
     private void unregisterWriteInterest() {
-        synchronized (mSelectionKey) {
-            if (!mSelectionKey.isValid()) {
-                if (mTrace) mLog.trace("noop unregister write interest - selection key is invalid"); 
-                return;
-            }
-            
-            int iops = mSelectionKey.interestOps();
-            
-            if ((iops & SelectionKey.OP_WRITE) == 0) {
-                if (mTrace) mLog.trace("noop unregister write interest - write interest not registered");
-                return;
-            }
-            
-            mSelectionKey.interestOps(iops & (~SelectionKey.OP_WRITE));
-            OzUtil.logKey(mLog, mSelectionKey, "unregistered write interest");
-            
-            mServer.wakeupSelector();
-        }
+        int iops = mSelectionKey.interestOps();
+        mSelectionKey.interestOps(iops & (~SelectionKey.OP_WRITE));
+        OzUtil.logKey(mLog, mSelectionKey, "unregistered write interest");
     }
 
     public static final int MINIMUM_READ_BUFFER_SIZE = 4096;
@@ -420,9 +409,7 @@ public class OzConnection {
             if (mDebug) mLog.debug("channel read=" + bytesRead + " buffer: " + before + "->" + OzUtil.toString(mReadBuffer));
 
             if (bytesRead == -1) {
-                if (mDebug) mLog.debug("channel read -1 cleaning up connection");
-                cleanup();
-                return;
+                throw new EOFException("socket channel read");
             }
 
             if (bytesRead == 0) {
@@ -501,7 +488,12 @@ public class OzConnection {
                     if (mDebug) req = data.remaining();
                     if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("channel write buffer", data, false));
 
-                    int wrote = mChannel.write(data);
+                    int wrote = 0;
+                    try {
+                        wrote = mChannel.write(data);
+                    } catch (IOException ioe) {
+                        closeChannel(CloseReason.WRITE_FAILED);
+                    }
         			
                     totalWritten += wrote;
                     if (mDebug) mLog.debug("channel wrote=" + wrote + " req=" + req + " partial=" + data.hasRemaining() + " total=" + totalWritten + " buffer: " + before + "->" + OzUtil.toString(data));
@@ -516,7 +508,7 @@ public class OzConnection {
         		
         		if (allWritten) {
         			if (mCloseAfterWrite) {
-        				cleanupChannel(CleanupReason.NORMAL);
+        				closeChannel(CloseReason.NORMAL);
         			}
                     
         			synchronized (mLock) {
@@ -591,16 +583,9 @@ public class OzConnection {
         
         public void close() throws IOException {
             synchronized (mLock) {
-                if (mClosed) {
-                    return;
-                }
-                
-                unregisterReadInterest();
-                
                 mCloseAfterWrite = true;
-                
                 if (!mWriteManager.isWritePending()) {
-                    cleanupChannel(CleanupReason.NORMAL);
+                    closeChannel(CloseReason.NORMAL);
                 }
             }
         }
@@ -635,7 +620,7 @@ public class OzConnection {
                     try {
                         mConnectionHandler.handleAutoClose();
                     } catch (Throwable t) {
-                        cleanupChannel(CleanupReason.ABRUPT);
+                        closeChannel(CloseReason.ABRUPT);
                     }
                 }
             }

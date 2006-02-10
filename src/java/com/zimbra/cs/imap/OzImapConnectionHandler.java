@@ -1960,8 +1960,6 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         } finally {
             if (normalClose) {
                 mConnection.close();
-            } else {
-                mConnection.closeNow();
             }
             mState = ConnectionState.CLOSED;
             if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("entered closed state: normal=" + normalClose);

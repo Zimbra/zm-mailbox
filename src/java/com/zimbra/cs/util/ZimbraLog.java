@@ -287,7 +287,7 @@ public class ZimbraLog {
         }
         p.put("log4j.appender.A1.layout", "org.apache.log4j.PatternLayout");
         if (showThreads) {
-        	p.put("log4j.appender.A1.layout.ConversionPattern", "[%t] [%x] %p: %m%n");
+        	p.put("log4j.appender.A1.layout.ConversionPattern", "%-4r [%t] [%x] %p: %m%n");
         } else {
         	p.put("log4j.appender.A1.layout.ConversionPattern", "[%x] %p: %m%n");
         }
