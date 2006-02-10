@@ -87,7 +87,7 @@ We support the following tests in rules:
   if body :contains "foo" { action; }
 
 * Date or date range in the Date header. Zimbra specific. 
-    date {:before | :after} ?MM/dd/yyyy?
+    date {:before | :after} "MM/dd/yyyy"
 
   E.g.,
 
@@ -179,16 +179,24 @@ behaviors of the following combination of actions are:
 
   if header :is "From" "boss@firm.com" {
 	tag "Important";
-	fileinto "/Boss";		# msg1 is in Boss folder, 
-                                        # and tagged Important
+	fileinto "/Boss";    # msg1 is in Boss folder, 
+                         # and tagged Important
 	flag "flagged";		
-	fileinto "/Archive";	        # msg2 is in Archive folder
-					# and marked as flagged
+	fileinto "/Archive"; # msg2 is in Archive folder
+                         # and marked as flagged
 	tag "FromBoss";		
-	keep;			        # msg3 is in INBOX and
-				        # tagged FromBoss
+	keep;                # msg3 is in INBOX and
+                         # tagged FromBoss
   }
 
+  If tag/flag actions are the last actions specified, they will be applied 
+  to *previous* message produced by fileinto/keep action. E.g.,
+  
+  fileinto "/Boss";
+  tag "Important";       # message is in Boss folder and 
+                         # tagged Important
+
+  
 * keep: multiple keep actions can be specified. But only one copy of
   the message will be saved in INBOX.
 
@@ -304,6 +312,32 @@ filtering feature. The challenge is how to do this efficiently so that
 the LMTP mail delivery loop can be completed as quickly as possible.
 
 2. Why not support redirect, reject?
+
+From anand:
+> What do we do if postfix rejects the message during the SMTP chatter.
+> I say if postfix rejects with a 400, we should send back 4XX on the
+> lmtp transaction so that the original message will be retried.  If we
+> get 500, do we send back a 500 on the LMTP - I think so.
+>
+> What is the envelope for the forward?  Does it have to be the original
+> envelope?
+>
+From RFC:
+The redirect command performs an MTA-style "forward"--that is, what
+   you get from a .forward file using sendmail under UNIX.  The address
+   on the SMTP envelope is replaced with the one on the redirect command
+   and the message is sent back out.  (This is not an MUA-style forward,
+   which creates a new message with a different sender and message ID,
+   wrapping the old message in a new one.)
+
+   Implementations SHOULD take measures to implement loop control,
+   possibly including adding headers to the message or counting received
+   headers.  If an implementation detects a loop, it causes an error.
+   
+> We definitely need to add a Received header so message loops can be
+> detected and dropped.
+>
+> Also must we add the Resent- headers per the RFCs? 
 
 3. Run the rules against INBOX or a particular folder?
 
