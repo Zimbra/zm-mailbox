@@ -1,13 +1,18 @@
 package com.zimbra.cs.session;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
+import java.util.Formatter;
 import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.HttpRequest;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.ozserver.OzByteArrayMatcher;
 import com.zimbra.cs.ozserver.OzByteBufferGatherer;
 import com.zimbra.cs.ozserver.OzConnection;
@@ -17,6 +22,12 @@ import com.zimbra.soap.SoapProtocol;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraContext;
 
+/**
+ * @author tim
+ * 
+ * Handle a connection on the NOTIFY port.  
+ *
+ */
 public class OzNotificationConnectionHandler implements OzConnectionHandler 
 {
     private final int MAX_HTTPHEADER_BYTES = 32768;
@@ -41,15 +52,92 @@ public class OzNotificationConnectionHandler implements OzConnectionHandler
     
     public void sendOverflowed() throws IOException {
         mConnection.writeAsciiWithCRLF("OVERFLOW reading HTTP header");
-    }    
+    }
     
-    public void writeData(byte[] data) throws ServiceException {
+    private void writeAsciiWithCRLF(String str) throws IOException {
+        mConnection.writeAsciiWithCRLF(str);
+    }
+    
+    private static File getJSFile() {
+        return sJSFile;
+    }
+    
+    private static byte[] readFile(File f) {
         try {
-            mConnection.write(ByteBuffer.wrap(data));
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("Caught IOException trying to flush Notification Channel "+this.toString(), e);
+            FileInputStream in = new FileInputStream(f);
+            
+            byte[] toRet = new byte[in.available()];
+            
+            in.read(toRet);
+            
+            return toRet;
+            
+        } catch (Exception e) {
+            System.out.println("Exception: "+e+" initializing OzNotificationConnectionHandler");
+            e.printStackTrace();
+            try {
+                return new String("<BODY>Could not load "+f.toString()+"</BODY>").getBytes("UTF8");
+            } catch(Exception ex) {
+                // bite me java
+                return new String("<BODY>Could not load "+f.toString()+"</BODY>").getBytes();
+            }
         }
     }
+    
+    private static File sJSFile;
+    private static byte[] sJSFileBytes;
+    private static long sJSFileLastMod;
+    
+    
+    static {
+        sJSFile = new File(LC.zimbra_home.value()+File.separator+"conf"+File.separator+"notify.html");
+        File JSFile = getJSFile();
+        sJSFileBytes = readFile(JSFile);
+        sJSFileLastMod = JSFile.lastModified();
+    }
+    
+    private synchronized static byte[] getJSFileBytes() {
+        File JSFile = getJSFile();
+        if (JSFile.lastModified() > sJSFileLastMod) {
+            sJSFileBytes = readFile(JSFile);
+        }
+        return sJSFileBytes;
+    }
+    
+    private static final String HTTP_PROTOCOL = "HTTP/1.1";
+    
+    private void putResponseHeader(int code, String str, String contentType) throws IOException
+    {
+        StringBuilder hdr = new StringBuilder();
+        Formatter fmt = new Formatter();
+        hdr.append(fmt.format("%s %d %s\r\n", HTTP_PROTOCOL, code, str));
+        hdr.append("Server: Zimbra Collaboration Server\r\n");
+        hdr.append("Content-Type: "+contentType+";charset=utf-8\r\n");
+        try {
+            byte[] bytes = hdr.toString().getBytes("UTF8");
+            mConnection.write(ByteBuffer.wrap(bytes));
+        } catch (UnsupportedEncodingException e) {
+            System.out.println("foo "+e);
+            e.printStackTrace();
+        }
+        
+    }
+    
+    public void writeHttpResponse(int code, String status, String contentType, String data) throws IOException {
+        byte[] bytes = data.getBytes("UTF8");
+        writeHttpResponse(code, status, contentType, bytes);
+    }
+    
+    public void writeHttpResponse(int code, String status, String contentType, byte[] data) throws IOException {
+        putResponseHeader(code, status, contentType);
+        
+        int length = data.length;
+
+        mConnection.writeAsciiWithCRLF("Content-Length: "+Integer.toString(length)+"\r\n");
+        mConnection.write(ByteBuffer.wrap(data));
+        mConnection.close();
+    }
+    
     
     public void close() {
         mConnection.close();
@@ -64,7 +152,7 @@ public class OzNotificationConnectionHandler implements OzConnectionHandler
         if (ZimbraLog.mailbox.isDebugEnabled()) 
             ZimbraLog.mailbox.debug("Notification Handler got new connection: "+mConnection.getRemoteAddress().toString());
     }
-
+    
     public void handleInput(ByteBuffer buffer, boolean matched) throws IOException {
         mCurrentData.add(buffer);
         if (!matched) 
@@ -74,6 +162,24 @@ public class OzNotificationConnectionHandler implements OzConnectionHandler
             sendOverflowed();
             return;
         }
+        
+        // at this point we know we've received CRLFCRLF -- so we have the entire
+        // HTTP header, which is all we care about.  Parse the HTTP header and look for
+        // the following parameters:
+        //
+        // ZimbraAuthToken (or URL param "a") -- encoded auth token
+        // ZimbraSession (or URL param "session") -- ID of session
+        // url param "seq" -- sequence no of last notification received by this client
+        //
+        // 
+        // All three parameters are required, if any is missing then the server 
+        // assumes the client does not have the correct javascript code to make the
+        // proper request, and so it returns the javascript page 
+        // 
+        //
+        // 
+        // 
+        
         
         String sessionId;
         String authToken;
@@ -91,7 +197,7 @@ public class OzNotificationConnectionHandler implements OzConnectionHandler
             seqNo = Integer.parseInt(seqNoStr);
         
         if (seqNo < 0) {
-            mConnection.writeAsciiWithCRLF("Invalid sequence number");
+            writeAsciiWithCRLF("Invalid sequence number");
             mConnection.close();
             return;
         }
@@ -103,8 +209,14 @@ public class OzNotificationConnectionHandler implements OzConnectionHandler
             authToken = (String)request.getHeaders().get("ZimbraAuthToken");
         }
         
+        if (sessionId == null && authToken == null && seqNoStr == null) {
+            byte[] js = getJSFileBytes();
+            writeHttpResponse(200, "OK", "text/html", js);
+            return;
+        }
+        
         if (sessionId == null || authToken == null) {
-            mConnection.writeAsciiWithCRLF("Missing ZimbraSession or ZimbraAuthToken");
+            writeHttpResponse(400, "Bad Request", "text/html", "Missing ZimbraSession or ZimbraAuthToken");
             mConnection.close();
             return;
         }
@@ -116,7 +228,7 @@ public class OzNotificationConnectionHandler implements OzConnectionHandler
                 ZimbraLog.mailbox.debug("NOTIFY: acct="+mAuthToken.getAccountId()+" session="+sessionId);
             }
         } catch(Exception e) {
-            mConnection.writeAsciiWithCRLF("Invalid Auth Token");
+            writeAsciiWithCRLF("Invalid Auth Token");
             mConnection.close();
             return;
         }
@@ -128,7 +240,7 @@ public class OzNotificationConnectionHandler implements OzConnectionHandler
             mContext = new ZimbraContext(null, ctxt, SoapProtocol.Soap12);
         } catch(ServiceException e) {
             ZimbraLog.mailbox.info("Could not fetch ZimbraContext: acct="+mAuthToken.getAccountId()+" session="+sessionId);
-            mConnection.writeAsciiWithCRLF("Error getting ZimbraContext: "+e);
+            writeAsciiWithCRLF("Error getting ZimbraContext: "+e);
             mConnection.close();
         }
         
@@ -143,13 +255,13 @@ public class OzNotificationConnectionHandler implements OzConnectionHandler
                     mConnection.close();
                 }
             } catch (ServiceException e) {
-                mConnection.writeAsciiWithCRLF("Caught exception: "+e.toString());
+                writeAsciiWithCRLF("Caught exception: "+e.toString());
                 mConnection.close();
                 return;
             }
         } else {
             ZimbraLog.mailbox.info("NOTIFY COULD NOT FIND REQUESTED SESSION: acct="+mAuthToken.getAccountId()+" session="+sessionId);
-            mConnection.writeAsciiWithCRLF("No such session");
+            writeAsciiWithCRLF("No such session");
             mConnection.close();
         }
 

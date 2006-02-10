@@ -159,8 +159,12 @@ public class SoapSession extends Session {
                     // yes!
                     Element e = new Element.XMLElement("notify");
                     putNotifications(conn.getZimbraContext(),e, conn.getLastKnownSeqNo());
-                    conn.writeData(e.toUTF8());
-                    return RegisterNotificationResult.SENT_DATA;
+                    try {
+                        conn.writeHttpResponse(200, "OK", "text/xml", e.toUTF8());
+                        return RegisterNotificationResult.SENT_DATA;
+                    } catch (IOException ex) {
+                        throw ServiceException.FAILURE("IOException writing HTTP response to stream "+ex, ex);
+                    }
                 } else {
                     mPushChannel = conn;
                     return RegisterNotificationResult.WAITING;
@@ -221,7 +225,11 @@ public class SoapSession extends Session {
                     if (mPushChannel != null) {
                         Element e = new Element.XMLElement("notify");
                         putNotifications(mPushChannel.getZimbraContext(),e, mPushChannel.getLastKnownSeqNo());
-                        mPushChannel.writeData(e.toUTF8());
+                        try {
+                            mPushChannel.writeHttpResponse(200, "OK", "text/xml", e.toUTF8());
+                        } catch (IOException ex) {
+                            throw ServiceException.FAILURE("IOException writing HTTP response to stream "+ex, ex);
+                        }
                         mPushChannel.close();
                         mPushChannel = null;
                     }
