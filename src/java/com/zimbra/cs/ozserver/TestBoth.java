@@ -269,18 +269,20 @@ class TestBoth {
     }
     
     private static void endTest() {
+        if (mRunClient) {
+            for (int i = 0; i < mTestClientThreads.length; i++) {
+                try {
+                    mTestClientThreads[i].shutdown();
+                    mTestClientThreads[i].join();
+                } catch (InterruptedException ie) {
+                    mLog.error("Interrupted while trying to join test clients", ie);
+                }
+            }
+        }
+
         if (mRunServer) {
             mTestServer.shutdown();
         }
-    	if (mRunClient) {
-    		for (int i = 0; i < mTestClientThreads.length; i++) {
-    			try {
-    				mTestClientThreads[i].shutdown();
-    				mTestClientThreads[i].join();
-    			} catch (InterruptedException ie) {
-    				mLog.error("Interrupted while trying to join test clients", ie);
-    			}
-    		}
-    	}
+        
     }
 }

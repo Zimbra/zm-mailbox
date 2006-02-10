@@ -108,6 +108,16 @@ public class OzConnection {
 
         mConnectTask.schedule();
     }
+    
+    static {
+        // Bug in JDK 1.5.0_06 - loading CloseReason class from an exception
+        // handler (I am guessing: in some cases) results in
+        // NoClassDefFoundErrro
+        if (System.currentTimeMillis() > 0) {
+            Class c = CloseReason.class;
+        }
+    };
+    
 
     private List<OzFilter> mFilters = new ArrayList<OzFilter>();
     
@@ -179,11 +189,12 @@ public class OzConnection {
         try {
             closeChannel(CloseReason.CLEANUP);
         } catch (Throwable t) {
+            mLog.warn("exception closing channel", t);
             mConnectionHandler.handleDisconnect();
         }
     }
     
-    enum CloseReason { WRITE_FAILED, NORMAL, ABRUPT, ALARM_EXCEPTION, CLEANUP, CLOSE_EXCEPTION; }
+    private enum CloseReason { WRITE_FAILED, NORMAL, ABRUPT, ALARM_EXCEPTION, CLEANUP, CLOSE_EXCEPTION; }
 
     private boolean mChannelClosed;
 
@@ -209,6 +220,7 @@ public class OzConnection {
                 if (mDebug) mLog.debug("duplicate close (occurs on write exceptions)");
                 return;
             }
+            if (mDebug) mLog.debug("scheduling close in server thread");
             mServer.schedule(mServerCloseChannelTask);
             mChannelClosed = true;
             cancelAlarm();
@@ -331,9 +343,11 @@ public class OzConnection {
                     mReadRequested = false;
                     doTask();
                     if (mReadRequested) {
+                        if (mDebug) mLog.debug("scheduling read register in server thread");
                         mServer.schedule(mServerRegisterReadTask);
                     }
                     if (mWriteManager.isWritePending()) {
+                        if (mDebug) mLog.debug("scheduling write register in server thread");
                         mServer.schedule(mServerRegisterWriteTask);
                     }
                 } catch (Throwable t) {

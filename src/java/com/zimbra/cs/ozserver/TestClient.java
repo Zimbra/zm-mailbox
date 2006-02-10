@@ -27,6 +27,7 @@ package com.zimbra.cs.ozserver;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
@@ -78,13 +79,22 @@ class TestClient {
         } else {
             mSocket = new Socket(host, port);
         }
+        if (!mSocket.isConnected()) {
+            throw new IOException("not connected");
+        }
         mSocketIn = new BufferedReader(new InputStreamReader(mSocket.getInputStream()));
         mSocketOut = new BufferedOutputStream(mSocket.getOutputStream());
-        mResponse = mSocketIn.readLine();
-        mLog.info("cgot: " + mResponse);
-        
+        readResponse();
         String cid = mResponse.substring(mResponse.indexOf('=') + 1);
         ZimbraLog.addToContext("cid", cid);
+    }
+    
+    private void readResponse() throws IOException {
+        mResponse = mSocketIn.readLine();
+        if (mResponse == null) {
+            throw new EOFException("expecting response");
+        }
+        mLog.info("cgot: " + mResponse);
     }
     
     public String getLastResponse() {
@@ -94,15 +104,13 @@ class TestClient {
     public void helo() throws IOException {
         mSocketOut.write("helo\r\n".getBytes());
         mSocketOut.flush();
-        mResponse = mSocketIn.readLine();
-        mLog.info("cgot: " + mResponse);
+        readResponse();
     }
     
     public void quit() throws IOException {
         mSocketOut.write("quit\r\n".getBytes());
         mSocketOut.flush();
-        mResponse = mSocketIn.readLine();
-        mLog.info("cgot: " + mResponse);
+        readResponse();
     }
     
     public void sum(byte[] bytes) throws IOException {
@@ -112,16 +120,14 @@ class TestClient {
         mSocketOut.write(OzSmtpTransparency.apply(buffer).array());
         mSocketOut.write(OzByteArrayMatcher.CRLFDOTCRLF);
         mSocketOut.flush();
-        mResponse = mSocketIn.readLine();
-        mLog.info("cgot: " + mResponse);
+        readResponse();
     }
     
     public void nsum(byte[] bytes) throws IOException {
         mSocketOut.write(("nsum " + bytes.length + "\r\n").getBytes());
         mSocketOut.write(bytes);
         mSocketOut.flush();
-        mResponse = mSocketIn.readLine();
-        mLog.info("cgot: " + mResponse);
+        readResponse();
     }
     
     public boolean echo(int nb, int nc) throws IOException {
