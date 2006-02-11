@@ -163,7 +163,9 @@ We support the following actions when a rule matches:
 
 * stop		stops further evaluation if the current rule is matched
 
-The actions of reject and redirect are NOT supported at the moment.
+* redirect	forward email to another address
+
+The actions of reject is NOT supported at the moment.
 
 If a condition is met, multiple actions may be specified. The
 behaviors of the following combination of actions are:
@@ -313,19 +315,19 @@ way we avoid two separate search engines and offer a more powerful
 filtering feature. The challenge is how to do this efficiently so that
 the LMTP mail delivery loop can be completed as quickly as possible.
 
-2. Why not support redirect, reject?
+2. redirect
 
-From anand:
-> What do we do if postfix rejects the message during the SMTP chatter.
-> I say if postfix rejects with a 400, we should send back 4XX on the
-> lmtp transaction so that the original message will be retried.  If we
-> get 500, do we send back a 500 on the LMTP - I think so.
->
-> What is the envelope for the forward?  Does it have to be the original
-> envelope?
->
-From RFC:
-The redirect command performs an MTA-style "forward"--that is, what
+If the specified redirect address is invalid (either syntactically or
+found in SendFailedException.getInvalidAddresses()), the message is bounced
+to the sender. This is because retry would repeat the same failures endlessly.
+
+Other errors LMTP will retry the message delivery (i.e., redirect).
+
+If the redirected message encounters problems further down the route,
+the message is bounced to the sender.
+
+Based on the RFC, 
+"The redirect command performs an MTA-style "forward"--that is, what
    you get from a .forward file using sendmail under UNIX.  The address
    on the SMTP envelope is replaced with the one on the redirect command
    and the message is sent back out.  (This is not an MUA-style forward,
@@ -334,12 +336,11 @@ The redirect command performs an MTA-style "forward"--that is, what
 
    Implementations SHOULD take measures to implement loop control,
    possibly including adding headers to the message or counting received
-   headers.  If an implementation detects a loop, it causes an error.
+   headers.  If an implementation detects a loop, it causes an error."
    
-> We definitely need to add a Received header so message loops can be
-> detected and dropped.
->
-> Also must we add the Resent- headers per the RFCs? 
+Received header is added by JavaMail automatically. We are not adding any
+Resent-* headers because gmail and others (e.g., email forward from Stanford)
+do not add these headers.
 
 3. Run the rules against INBOX or a particular folder?
 
