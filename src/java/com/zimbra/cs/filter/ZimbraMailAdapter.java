@@ -32,12 +32,16 @@ import java.util.regex.Pattern;
 
 import javax.mail.Header;
 import javax.mail.MessagingException;
+import javax.mail.SendFailedException;
+import javax.mail.Transport;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.MimeMessage;
 
 import org.apache.jsieve.SieveException;
 import org.apache.jsieve.mail.Action;
 import org.apache.jsieve.mail.ActionFileInto;
 import org.apache.jsieve.mail.ActionKeep;
-//import org.apache.jsieve.mail.ActionRedirect;
+import org.apache.jsieve.mail.ActionRedirect;
 //import org.apache.jsieve.mail.ActionReject;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.mail.MailUtils;
@@ -256,12 +260,26 @@ public class ZimbraMailAdapter implements MailAdapter
                     
                     nontermActions.add(action);
                     
-                } /* else if (actionClass == ActionRedirect.class) {
+                }  else if (actionClass == ActionRedirect.class) {
 
                     // redirect mail to another address
                     ActionRedirect redirect = (ActionRedirect) action;
+                    String addr = redirect.getAddress();
+                    ZimbraLog.filter.info("redirecting to " + addr);
+                    MimeMessage mm = mParsedMessage.getMimeMessage();
+                    try {
+                        mm.setRecipients(javax.mail.Message.RecipientType.TO, addr);
+                        // Received header will be automatically added by JavaMail
+                        // No Resent-* headers are added
+                        Transport.send(mm);
+                    } catch (AddressException e) {
+                        throw MailServiceException.PARSE_ERROR("wrongly formatted address: " + addr, e);
+                    } catch (SendFailedException e) {
+                        throw MailServiceException.SEND_FAILURE("redirect to " + addr + " failed", e, e.getInvalidAddresses(), e.getValidUnsentAddresses());
+                    }
                     
-                } else if (actionClass == ActionReject.class) {
+                } 
+                /* else if (actionClass == ActionReject.class) {
 
                     // reject mail back to sender
                     ActionReject reject = (ActionReject) action;
