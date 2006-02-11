@@ -1934,44 +1934,53 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
     
     private Object mCloseLock = new Object();
     
-    private void gotoClosedState(boolean normalClose) {
+    private void gotoClosedStateInternal(boolean sendBanner) throws IOException {
+        synchronized (mCloseLock) {
+            // Close only once
+            if (mState == ConnectionState.CLOSED) {
+                throw new IllegalStateException("connection already closed");
+            }
+            
+            if (mSession != null) {
+                mSession.setHandler(null);
+                SessionCache.clearSession(mSession.getSessionId(), mSession.getAccountId());
+                mSession = null;
+            }
+            
+            if (sendBanner) {
+                if (!mGoodbyeSent) {
+                    sendUntagged(ImapServer.getGoodbye(), true);
+                }
+                mGoodbyeSent = true;
+            }
+        }
+    }
+    
+    private void gotoClosedState(boolean sendBanner) {
         try {
-            synchronized (mCloseLock) {
-                // Close only once
-                if (mState == ConnectionState.CLOSED) {
-                    throw new IllegalStateException("connection already closed");
-                }
-                
-                if (mSession != null) {
-                    mSession.setHandler(null);
-                    SessionCache.clearSession(mSession.getSessionId(), mSession.getAccountId());
-                    mSession = null;
-                }
-                
-                if (normalClose) {
-                    if (!mGoodbyeSent) {
-                        sendUntagged(ImapServer.getGoodbye(), true);
-                    }
-                    mGoodbyeSent = true;
-        		}
-            }
+            gotoClosedStateInternal(sendBanner);
         } catch (IOException ioe) {
-            normalClose = false;
+            ZimbraLog.imap.info("exception occurred when closing IMAP connection", ioe);
         } finally {
-            if (normalClose) {
-                mConnection.close();
-            }
+            mConnection.close();
             mState = ConnectionState.CLOSED;
-            if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("entered closed state: normal=" + normalClose);
+            if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("entered closed state: banner=" + sendBanner);
         }
     }
 
-    public void dropConnection() {
-    	// TODO revist this. There appear to be two callers for this method. One
-		// is idle connection termination, and in that case it is okay to send
-		// the banner. The other is IOException - in that case we should not
-		// attempt to send the banner. IOException has occurred.
-        gotoClosedState(false);
+    public void handleDisconnect() {
+        assert(mState != ConnectionState.UNKNOWN);
+        ZimbraLog.imap.info("connection closed by client");
+        try {
+            gotoClosedStateInternal(false);
+        } catch (IOException ioe) {
+            // Can't happen because send banner is false
+            ZimbraLog.imap.info("exception occurred when disconnecting IMAP connection", ioe);
+        }
+    }
+    
+    public void dropConnection(boolean sendBanner) {
+        gotoClosedState(sendBanner);
     }
 
     public void handleConnect() throws IOException {
@@ -1988,12 +1997,6 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         gotoReadLineState(true);
     }
 
-    public void handleDisconnect() {
-        assert(mState != ConnectionState.UNKNOWN);
-        ZimbraLog.imap.info("connection closed by client");
-        gotoClosedState(false);
-    }
-    
     private OzByteBufferGatherer mCurrentData;
     
     private ArrayList mCurrentRequestData;

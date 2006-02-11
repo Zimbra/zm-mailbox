@@ -43,6 +43,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServer;
 import com.zimbra.cs.util.Config;
+import com.zimbra.cs.util.Constants;
 import com.zimbra.cs.util.NetUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraLog;
@@ -74,7 +75,7 @@ public class ImapServer extends TcpServer {
     boolean isConnectionSSL()       { return mConnectionSSL; }
 
 	public int getConfigMaxIdleMilliSeconds() {
-		return IMAP_AUTHED_CONNECTION_MAX_IDLE_MILLISECONDS;
+		return (int)ImapSession.IMAP_IDLE_TIMEOUT_MSEC;
 	}
 
     static String getBanner() {
@@ -86,9 +87,9 @@ public class ImapServer extends TcpServer {
     }
     
     public static final int IMAP_READ_SIZE_HINT = 4096;
-    public static final int IMAP_UNAUTHED_CONNECTION_MAX_IDLE_MILLISECONDS = 60 * 1000; // throw out connections that do not authenticate in a minute
-    public static final int IMAP_AUTHED_CONNECTION_MAX_IDLE_MILLISECONDS = 1800 * 1000; // Config idle. should be at least 30 minutes, per IMAP4 RFC 3501.
-
+    
+    /* Throw out connections that do not authenticate in a minute */
+    public static final long IMAP_UNAUTHED_CONNECTION_MAX_IDLE_MILLISECONDS = 1 * Constants.MILLIS_PER_MINUTE;
     
     public synchronized static void startupImapServer() throws ServiceException {
         if (sImapServer != null)

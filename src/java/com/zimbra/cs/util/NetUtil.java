@@ -75,7 +75,7 @@ public class NetUtil {
         }
         serverSocket.setReuseAddress(true);
         InetSocketAddress isa = new InetSocketAddress(bindAddress, port);
-        serverSocket.bind(isa);
+        serverSocket.bind(isa, 1024);
         return serverSocket;
     }
 

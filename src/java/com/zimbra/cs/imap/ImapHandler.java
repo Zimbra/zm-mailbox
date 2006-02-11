@@ -1919,6 +1919,10 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
     }
 
     public void dropConnection() {
+        dropConnection(true);
+    }
+    
+    public void dropConnection(boolean sendBanner) {
         if (mSession != null) {
             mSession.setHandler(null);
             SessionCache.clearSession(mSession.getSessionId(), mSession.getAccountId());
@@ -1927,13 +1931,15 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
 
         try {
             if (mOutputStream != null) {
-                if (!mGoodbyeSent) {
-                    // We never send out goodbye in non-NIO case because it would cause
-                    // the write to deadlock with the connection thread which might in the
-                    // middle of a read.
-                    // sendUntagged(ImapServer.getGoodbye(), true);
+                if (sendBanner) {
+                    if (!mGoodbyeSent) {
+                        // We never send out goodbye in non-NIO case because it would cause
+                        // the write to deadlock with the connection thread which might in the
+                        // middle of a read.
+                        // sendUntagged(ImapServer.getGoodbye(), true);
+                    }
+                    mGoodbyeSent = true;
                 }
-                mGoodbyeSent = true;
                 mOutputStream.close();
                 mOutputStream = null;
             }

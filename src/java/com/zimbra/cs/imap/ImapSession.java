@@ -56,8 +56,7 @@ public class ImapSession extends Session {
     static final byte STATE_LOGOUT            = 3;
     static final byte STATE_WRITABLE          = 4;
 
-    private static final long IMAP_IDLE_TIMEOUT_MSEC = 30 * Constants.MILLIS_PER_MINUTE;
-
+    public static final long IMAP_IDLE_TIMEOUT_MSEC = 30 * Constants.MILLIS_PER_MINUTE;
 
     private String      mUsername;
     private byte        mState;
@@ -349,7 +348,7 @@ public class ImapSession extends Session {
 			} catch (IOException e) {
                 // ImapHandler.dropConnection clears our mHandler and calls SessionCache.clearSession,
                 //   which calls Session.doCleanup, which calls Mailbox.removeListener
-                mHandler.dropConnection();
+                mHandler.dropConnection(false);
 			}
     }
 
@@ -465,8 +464,7 @@ public class ImapSession extends Session {
 
     protected void cleanup() {
         // XXX: is there a synchronization issue here?
-        //   (hack: omit the goodbye banner because it causes a read/write scoket deadlock with the non-NIO server)
         if (mHandler != null)
-            mHandler.dropConnection();
+            mHandler.dropConnection(true);
     }
 }
