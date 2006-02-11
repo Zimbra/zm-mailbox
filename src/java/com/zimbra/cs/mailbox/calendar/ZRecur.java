@@ -490,7 +490,7 @@ public class ZRecur {
             earliestDate = rangeStartDate;
         
         if (mUntil != null) {
-            Date until = mUntil.getDateForRecurUntil();
+            Date until = mUntil.getDateForRecurUntil(dtStart.getTimeZone());
             if (until.before(rangeEndDate))
                 rangeEndDate = until;
         }

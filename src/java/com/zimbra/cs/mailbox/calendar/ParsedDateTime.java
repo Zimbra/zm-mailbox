@@ -340,18 +340,41 @@ public final class ParsedDateTime {
 
     /**
      * Return Date suitable for use as UNTIL parameter of recurrence rule.
-     * UNTIL parameter is inclusive, and it can be specified as a date-only
-     * value.  For comparison with another Date object, such a time-less
-     * Date must be extended to 23:59:59 on the same day, in local time zone.
+     * Outlook always appends "T000000Z" to UNTIL, causing meeting instance
+     * on the last day of recurrence to be excluded if the UNTIL value was
+     * taken at face value.  (bug 5885)  To combat that, ignore the
+     * time component and extend the UNTIL time to the end of the day
+     * (23:59:59) in the time zone of DTSTART.  The same treatment is needed
+     * if UNTIL is specified as date-only.
      * @return
      */
-    public Date getDateForRecurUntil() {
-        if (!mHasTime) {
-            GregorianCalendar cal = (GregorianCalendar) mCal.clone();
+    public Date getDateForRecurUntil(ICalTimeZone dtStartTZ) {
+        // if date-only or if time component looks like bogus
+        // UTC midnight set by Outlook
+        if (!mHasTime ||
+            (isUTC() &&
+             mCal.get(java.util.Calendar.HOUR_OF_DAY) == 0 &&
+             mCal.get(java.util.Calendar.MINUTE) == 0 &&
+             mCal.get(java.util.Calendar.SECOND) == 0 &&
+             mCal.get(java.util.Calendar.MILLISECOND) == 0)) {
+            // Extend to end of day in DTSTART's time zone.
+            GregorianCalendar cal = new GregorianCalendar(dtStartTZ);
+            cal.set(mCal.get(java.util.Calendar.YEAR),
+                    mCal.get(java.util.Calendar.MONTH),
+                    mCal.get(java.util.Calendar.DAY_OF_MONTH),
+                    0, 0, 0);  // midnight
             // Add one day, then subtract 1 second.
             cal.add(java.util.Calendar.DAY_OF_MONTH, 1);
             cal.add(java.util.Calendar.SECOND, -1);
-            return cal.getTime();
+
+            // Sanity check: If the above calculation somehow changes
+            // UNTIL to an earlier time than what's in mCal, we should
+            // stick to mCal. (the later of the two)
+            Date until = cal.getTime();
+            Date untilOriginal = mCal.getTime();
+            if (until.before(untilOriginal))
+                until = untilOriginal;
+            return until;
         } else
             return getDate();
     }
