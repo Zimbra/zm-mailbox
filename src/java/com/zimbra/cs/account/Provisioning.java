@@ -668,6 +668,12 @@ public abstract class Provisioning {
     public static final String A_zimbraPop3CleartextLoginEnabled = "zimbraPop3CleartextLoginEnabled";    
     public static final String A_zimbraPop3Enabled = "zimbraPop3Enabled";
 
+    public static final String A_zimbraNotifyServerEnabled = "zimbraNotifyServerEnabled";
+    public static final String A_zimbraNotifyBindAddress = "zimbraNotifyBindAddress";
+    public static final String A_zimbraNotifyBindPort = "zimbraNotifyBindPort";
+    public static final String A_zimbraNotifySSLServerEnabled = "zimbraNotifySSLServerEnabled";
+    public static final String A_zimbraNotifySSLBindAddress = "zimbraNotifySSLBindAddress";
+    public static final String A_zimbraNotifySSLBindPort = "zimbraNotifySSLBindPort";
 
     public static final String A_zimbraMailTrashLifetime = "zimbraMailTrashLifetime";
     public static final String A_zimbraMailSpamLifetime = "zimbraMailSpamLifetime";
