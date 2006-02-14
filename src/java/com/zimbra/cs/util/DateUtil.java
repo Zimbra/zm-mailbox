@@ -195,26 +195,31 @@ public class DateUtil {
      * @return
      */
     public static long parseDateSpecifier(String dateStr, long defaultValue) {
+        Date date = parseDateSpecifier(dateStr);
+        return date == null ? defaultValue : date.getTime();
+    }
+
+    public static Date parseDateSpecifier(String dateStr) {
         try {
             Matcher m = sAbsMillisecsDatePattern.matcher(dateStr);
             String yearStr, monthStr, dayStr;
         
             if (m.matches()) {
-                return Long.parseLong(dateStr);
+                return new Date(Long.parseLong(dateStr));
             }
             m = sAbsYFirstPattern.matcher(dateStr);
             if (m.matches()) {
                 yearStr = m.group(1);
                 monthStr = m.group(2);                
                 dayStr = m.group(3);                
-                return new SimpleDateFormat("MM/dd/yyyy").parse(monthStr+"/"+dayStr+"/"+yearStr).getTime();
+                return new SimpleDateFormat("MM/dd/yyyy").parse(monthStr+"/"+dayStr+"/"+yearStr);
             }
             m = sAbsYLastPattern.matcher(dateStr);
             if (m.matches()) {
                 monthStr = m.group(1);
                 dayStr = m.group(2);                
                 yearStr = m.group(3);
-                return new SimpleDateFormat("MM/dd/yyyy").parse(monthStr+"/"+dayStr+"/"+yearStr).getTime();
+                return new SimpleDateFormat("MM/dd/yyyy").parse(monthStr+"/"+dayStr+"/"+yearStr);
             }
             m = sRelDatePattern.matcher(dateStr);
             if (m.matches()) {
@@ -245,12 +250,12 @@ public class DateUtil {
                 GregorianCalendar cal = new GregorianCalendar();
                 cal.setTime(new Date());
                 cal.add(field, value);
-                return cal.getTime().getTime();
+                return cal.getTime();
             }
         } catch (Exception e) {
             //
         }
-        return defaultValue;
+        return null;
     }
     
     public static void main(String args[]) {

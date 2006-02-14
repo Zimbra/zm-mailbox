@@ -134,7 +134,7 @@ Some examples:
 The second format is used to reference something by its mail item id:
 
 /zimbra/user/roland/?id=10                    // ICS view of calendar, referenced via ID
-/zimbra/user/roland/?id=945&fmt=vcard         // contact formatted as a vcard
+/zimbra/user/roland/?id=945&fmt=vcf           // contact formatted as a vcard
 /zimbra/user/roland/?id=100&part=2.3          // message with id 100, mime part 2.3
 
 Can also use "/zimbra/userid" to represent a user's zimbraId, giving a truly persistent URL:

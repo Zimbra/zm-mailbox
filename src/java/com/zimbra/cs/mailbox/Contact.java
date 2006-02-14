@@ -69,53 +69,55 @@ public class Contact extends MailItem {
     private static final int FA_DEFAULT = FA_LAST_C_FIRST;
     private static final int FA_MAXIMUM = FA_EXPLICIT;
 
-	public static final String A_callbackPhone = "callbackPhone";
-	public static final String A_carPhone = "carPhone";
-	public static final String A_company = "company";
-	public static final String A_companyPhone = "companyPhone";
-	public static final String A_department = "department";	
-	public static final String A_email = "email";
-	public static final String A_email2 = "email2";
-	public static final String A_email3 = "email3";
-	public static final String A_fileAs = "fileAs";
-	public static final String A_firstName = "firstName";
-	public static final String A_fullName = "fullName";
-	public static final String A_homeCity = "homeCity";
-	public static final String A_homeCountry = "homeCountry";
-	public static final String A_homeFax = "homeFax";
-	public static final String A_homePhone = "homePhone";
-	public static final String A_homePhone2 = "homePhone2";
-	public static final String A_homePostalCode = "homePostalCode";
-	public static final String A_homeState = "homeState";
-	public static final String A_homeStreet = "homeStreet";
-	public static final String A_homeURL = "homeURL";
-	public static final String A_initials = "initials";
-	public static final String A_jobTitle = "jobTitle";
-	public static final String A_lastName = "lastName";
-	public static final String A_middleName = "middleName";
-	public static final String A_mobilePhone = "mobilePhone";
-	public static final String A_namePrefix = "namePrefix";
-	public static final String A_nameSuffix = "nameSuffix";
-	public static final String A_notes = "notes";
-	public static final String A_office = "office";
-	public static final String A_otherCity = "otherCity";
-	public static final String A_otherCountry = "otherCountry";
-	public static final String A_otherFax = "otherFax";
-	public static final String A_otherPhone = "otherPhone";
-	public static final String A_otherPostalCode = "otherPostalCode";
-	public static final String A_otherState = "otherState";
-	public static final String A_otherStreet = "otherStreet";
-	public static final String A_otherURL = "otherURL";
-	public static final String A_pager = "pager";
-	public static final String A_workCity = "workCity";
-	public static final String A_workCountry = "workCountry";
-	public static final String A_workFax = "workFax";
-	public static final String A_workPhone = "workPhone";
-	public static final String A_workPhone2 = "workPhone2";
-	public static final String A_workPostalCode = "workPostalCode";
-	public static final String A_workState = "workState";
-	public static final String A_workStreet = "workStreet";
-	public static final String A_workURL = "workURL";
+    public static final String A_birthday = "birthday";
+    public static final String A_callbackPhone = "callbackPhone";
+    public static final String A_carPhone = "carPhone";
+    public static final String A_company = "company";
+    public static final String A_companyPhone = "companyPhone";
+    public static final String A_department = "department"; 
+    public static final String A_email = "email";
+    public static final String A_email2 = "email2";
+    public static final String A_email3 = "email3";
+    public static final String A_fileAs = "fileAs";
+    public static final String A_firstName = "firstName";
+    public static final String A_fullName = "fullName";
+    public static final String A_homeCity = "homeCity";
+    public static final String A_homeCountry = "homeCountry";
+    public static final String A_homeFax = "homeFax";
+    public static final String A_homePhone = "homePhone";
+    public static final String A_homePhone2 = "homePhone2";
+    public static final String A_homePostalCode = "homePostalCode";
+    public static final String A_homeState = "homeState";
+    public static final String A_homeStreet = "homeStreet";
+    public static final String A_homeURL = "homeURL";
+    public static final String A_initials = "initials";
+    public static final String A_jobTitle = "jobTitle";
+    public static final String A_lastName = "lastName";
+    public static final String A_middleName = "middleName";
+    public static final String A_mobilePhone = "mobilePhone";
+    public static final String A_namePrefix = "namePrefix";
+    public static final String A_nameSuffix = "nameSuffix";
+    public static final String A_nickname = "nickname";
+    public static final String A_notes = "notes";
+    public static final String A_office = "office";
+    public static final String A_otherCity = "otherCity";
+    public static final String A_otherCountry = "otherCountry";
+    public static final String A_otherFax = "otherFax";
+    public static final String A_otherPhone = "otherPhone";
+    public static final String A_otherPostalCode = "otherPostalCode";
+    public static final String A_otherState = "otherState";
+    public static final String A_otherStreet = "otherStreet";
+    public static final String A_otherURL = "otherURL";
+    public static final String A_pager = "pager";
+    public static final String A_workCity = "workCity";
+    public static final String A_workCountry = "workCountry";
+    public static final String A_workFax = "workFax";
+    public static final String A_workPhone = "workPhone";
+    public static final String A_workPhone2 = "workPhone2";
+    public static final String A_workPostalCode = "workPostalCode";
+    public static final String A_workState = "workState";
+    public static final String A_workStreet = "workStreet";
+    public static final String A_workURL = "workURL";
 
     /** Relates contact fields (<code>"firstName"</code>) to this contact's
      *  values (<code>"John"</code>). */
@@ -160,7 +162,7 @@ public class Contact extends MailItem {
         if (last == null)
             last = "";
         
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         switch (fileAsInt) {
             case FA_EXPLICIT:
                 if (fileParts.length == 2 && !fileParts[1].trim().equals("")) {
@@ -327,7 +329,7 @@ public class Contact extends MailItem {
         ArrayList<String> result = new ArrayList<String>();
         for (String field : EMAIL_FIELDS) {
             String value = mFields.get(field);
-            if (value != null)
+            if (value != null && !value.trim().equals(""))
                 result.add(value);
         }
         return result;
