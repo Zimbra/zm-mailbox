@@ -204,6 +204,9 @@ behaviors of the following combination of actions are:
 * keep: multiple keep actions can be specified. But only one copy of
   the message will be saved in INBOX.
 
+* redirect can be combined with any other actions. E.g., one can keep 
+  a copy of the message in INBOX and forward it to another address
+  
 At message delivery time, if a specified tag does not exist, the
 message is not tagged. The UI is expected to help avoid this problem
 by presenting all available tags as a drop-down list when the rule is
