@@ -162,6 +162,8 @@ public class MailService implements DocumentService {
 //    public static final QName OBJECT_ACTION_RESPONSE = QName.get("ObjectActionResponse", NAMESPACE);
     
     
+    public static final QName SAVE_DOCUMENT_REQUEST = QName.get("SaveDocumentRequest", NAMESPACE);
+    public static final QName SAVE_DOCUMENT_RESPONSE = QName.get("SaveDocumentResponse", NAMESPACE);
     public static final QName SAVE_WIKI_REQUEST = QName.get("SaveWikiRequest", NAMESPACE);
     public static final QName SAVE_WIKI_RESPONSE = QName.get("SaveWikiResponse", NAMESPACE);
     public static final QName LIST_WIKI_REQUEST = QName.get("ListWikiRequest", NAMESPACE);
@@ -432,6 +434,9 @@ public class MailService implements DocumentService {
     public static final String A_WIKIWORD = "w";
     public static final String A_CREATOR = "cr";
     public static final String E_WIKIWORD = "w";
+    public static final String E_DOC = "doc";
+    public static final String E_UPLOAD = "upload";
+    public static final String A_FOLDERID = "folder";
 
     public void registerHandlers(DocumentDispatcher dispatcher) {
 
@@ -516,6 +521,7 @@ public class MailService implements DocumentService {
 //        dispatcher.registerHandler(OBJECT_ACTION_REQUEST, new ObjectAction());
         
         // wiki
+        dispatcher.registerHandler(SAVE_DOCUMENT_REQUEST, new SaveDocument());
         dispatcher.registerHandler(SAVE_WIKI_REQUEST, new SaveWiki());
         dispatcher.registerHandler(LIST_WIKI_REQUEST, new ListWiki());
         dispatcher.registerHandler(GET_WIKI_REQUEST, new GetWiki());
