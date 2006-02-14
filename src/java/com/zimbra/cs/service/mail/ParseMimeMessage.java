@@ -43,6 +43,7 @@ import com.zimbra.cs.service.UploadDataSource;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
+import com.zimbra.cs.service.formatter.VcfFormatter;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.ExceptionToString;
@@ -141,9 +142,9 @@ public class ParseMimeMessage {
      * Wrapper class for data parsed out of the mime message
      */
     public static class MimeMessageData {
-        public List newContacts = new ArrayList();
-        public List uploads = null;      // NULL unless there are attachments
-        public String iCalUUID = null;   // NULL unless there is an iCal part
+        public List<InternetAddress> newContacts = new ArrayList<InternetAddress>();
+        public List<Upload> uploads = null;    // NULL unless there are attachments
+        public String iCalUUID = null;         // NULL unless there is an iCal part
     }
     
     public static MimeMessage parseMimeMsgSoap(ZimbraContext lc, Mailbox mbox, Element msgElem, 
@@ -257,6 +258,9 @@ public class ParseMimeMessage {
                         } else if (eName.equals(MailService.E_MSG)) {
                             int messageId = (int) elem.getAttributeLong(MailService.A_ID);
                             attachMessage(mmp, mbox.getMessageById(octxt, messageId));
+                        } else if (eName.equals(MailService.E_CONTACT)) {
+                            int contactId = (int) elem.getAttributeLong(MailService.A_ID);
+                            attachContact(mmp, mbox.getContactById(octxt, contactId));
                         }
                     }
                 }
@@ -441,9 +445,9 @@ public class ParseMimeMessage {
         }
     }
 
-    private static List attachUploads(Multipart mmp, ZimbraContext lc, String attachIds)
+    private static List<Upload> attachUploads(Multipart mmp, ZimbraContext lc, String attachIds)
     throws ServiceException, MessagingException {
-        List uploads = new ArrayList();
+        List<Upload> uploads = new ArrayList<Upload>();
         String[] uploadIds = attachIds.split(FileUploadServlet.UPLOAD_DELIMITER);
 
         for (int i = 0; i < uploadIds.length; i++) {
@@ -490,6 +494,20 @@ public class ParseMimeMessage {
         mmp.addBodyPart(mbp);
     }
 
+    private static void attachContact(Multipart mmp, com.zimbra.cs.mailbox.Contact contact)
+    throws MessagingException {
+        VcfFormatter.ParsedVcf vcf = VcfFormatter.formatContact(contact);
+
+        ContentDisposition cd = new ContentDisposition(Part.ATTACHMENT);
+        cd.setParameter("filename", vcf.fn + ".vcf");
+
+        MimeBodyPart mbp = new MimeBodyPart();
+        mbp.setText(vcf.formatted, Mime.P_CHARSET_UTF8);
+        mbp.setHeader("Content-Type", "text/x-vcard; charset=utf-8");
+        mbp.setHeader("Content-Disposition", cd.toString());
+        mmp.addBodyPart(mbp);
+    }
+
     private static void attachPart(Multipart mmp, com.zimbra.cs.mailbox.Message message, String part)
     throws IOException, MessagingException, ServiceException {
         MimePart mp = ContentServlet.getMimePart(message, part);
@@ -515,7 +533,7 @@ public class ParseMimeMessage {
     }
     
     private static void attachPart(Multipart mmp, MimePart mp, String part)
-    throws IOException, MessagingException, ServiceException {
+    throws MessagingException, ServiceException {
         if (mp == null)
             throw MailServiceException.NO_SUCH_PART(part);
 
@@ -539,10 +557,10 @@ public class ParseMimeMessage {
     
 
     private static final class MessageAddresses {
-        private final HashMap addrs = new HashMap();
-        private final List    newContacts;
+        private final HashMap<String, Object> addrs = new HashMap<String, Object>();
+        private final List<InternetAddress> newContacts;
 
-        MessageAddresses(List contacts) {
+        MessageAddresses(List<InternetAddress> contacts) {
             newContacts = contacts;
         }
 

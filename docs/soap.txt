@@ -1037,6 +1037,7 @@ u attribute is present iff count > 0
     <attach [aid="{attach-upload-id}"]>
       [<m id="{message-id}"/>]*
       [<mp mid="{message-id}" part="{part-id}"/>]*
+      [<cn id="{contact-id}"/>]*
     </attach>
   </m>
 </SendMsgRequest>
@@ -1077,6 +1078,7 @@ u attribute is present iff count > 0
     <attach [aid="{attach-upload-id}"]>
       [<m id="{message-id}"/>]*
       [<mp mid="{message-id}" part="{part-id}"/>]*
+      [<cn id="{contact-id}"/>]*
     </attach>
   </m>
 </SaveDraftRequest>
