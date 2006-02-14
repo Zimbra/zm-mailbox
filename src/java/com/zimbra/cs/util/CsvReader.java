@@ -103,4 +103,9 @@ public class CsvReader {
         }
         return mCurrent.get(colName);
     }
+    
+    public void close()
+    throws IOException {
+        mReader.close();
+    }
 }
