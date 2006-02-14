@@ -245,6 +245,68 @@ mails are filtered.
 
 A "raw" script screen will NOT be provided.
 
+
+jSieve Integration
+
+We use a Java implementation of Sieve from Apache James called jSieve. 
+It does not seem to be actively developed.
+
+The integration point of jSieve into Zimbra is the ZimbraServer/conf/sieveConfig.xml
+file, which is copied to tomcat/webapps/service/WEB-INF/classes after deployment.
+It maps Sieve commands (tests, actions, controls) to Java classes that implement
+the commands. We already have a number of Zimbra extensions (disabled_if, tag, flag,
+date, body, attachment, addressbook) defined in there.
+
+We have patched the jSieve code itself because it had synchronization problems.
+We also add a parameter to the ActionKeep class to distinguish between explicit
+and implicit keep. The source code is located at:
+
+ThirdParty/jsieve/trunk
+
+Use the build.bat or build.sh to build the source. The generated jsieve-0.1.jar file
+is then checked into ZimbraServer/jars.
+
+More background:
+
+Kirk Chen wrote:
+>
+> Hi, Steve,
+>
+> We are looking for a java implementation of sieve, and
+> I found your message in the james mailinglist archive
+> dated 11/27/03. I looked into apache james 2.2.0,
+> which doesn't seem to contain any sieve implementation
+> code yet.
+>
+> Could you tell me the current status/plan/pointer for
+> any open source implementation?
+>
+> Thanks much!
+> - Kirk
+
+Hmmm. I guess we should add a pointer in the main James page under
+subprojects. jSieve exists as a subproject of James and its SVN 
+repository
+is https://svn.apache.org/repos/asf/james/jsieve. The core 
+functionality is
+complete and ready for integration into any Java environment, but it 
+hasn't
+really been tested in the real world. It is designed to be pluggable 
+into
+any Java code - I use it within a mailet wrapper, I doubt anyone else 
+does.
+
+It isn't part of James yet as to be functional it requires a 
+MessageStore to
+expose a set of operations comparable with those provided by IMAP.  
+Others
+are working on an IMAP store for James. When this is done it should be 
+a
+short step to integrate James and jSieve.
+
+-- Steve
+
+
 SOAP API
 
 1. Getting all rules for a mailbox
