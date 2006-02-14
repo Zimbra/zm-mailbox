@@ -32,7 +32,6 @@ import javax.mail.internet.ContentDisposition;
 import javax.mail.internet.ParseException;
 
 import com.zimbra.cs.index.MailboxIndex;
-import com.zimbra.cs.mailbox.ContactCSV;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServlet.Context;

@@ -35,13 +35,13 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.cs.mailbox.Contact;
-import com.zimbra.cs.mailbox.ContactCSV;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.ContactCSV.ParseException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
+import com.zimbra.cs.service.formatter.ContactCSV;
+import com.zimbra.cs.service.formatter.ContactCSV.ParseException;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
