@@ -4375,14 +4375,16 @@ public class Mailbox {
        	StoreManager sm = StoreManager.getInstance();
        	Blob blob = null;
         try {
-            SaveDocument redoRecorder = new SaveDocument(mId, null, 0);
+            SaveDocument redoRecorder = new SaveDocument(mId, null, 0, folderId);
 
             beginTransaction("createDoc", octxt, redoRecorder);
+            redoRecorder.setFilename(filename);
+            redoRecorder.setMimeType(mimeType);
         	int itemId = getNextItemId(ID_AUTO_INCREMENT);
            	short volumeId = Volume.getCurrentMessageVolume().getId();
 
-           	// TODO: digest, recording upload file info, indexing
            	blob = sm.storeIncoming(rawData, null, null, volumeId);
+            redoRecorder.setMessageBodyInfo(rawData, blob.getPath(), blob.getVolumeId());
             markOtherItemDirty(blob);
 
     		UnderlyingData data = new UnderlyingData();
@@ -4393,9 +4395,11 @@ public class Mailbox {
             data.flags      = 0;
             data.date       = getOperationTimestamp();
             data.size       = rawData.length;
-            //data.blobDigest = null;
 
+            // TODO: do we need parent when creating document.
         	doc = Document.create(itemId, getFolderById(folderId), volumeId, filename, mimeType, rawData.length, parent);
+
+        	// TODO: indexing
             mCurrentChange.setIndexedItem(doc, null);
 
             sm.link(blob, this, itemId, doc.getSavedSequence(), volumeId);

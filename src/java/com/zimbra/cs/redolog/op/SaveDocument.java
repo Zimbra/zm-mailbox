@@ -25,24 +25,64 @@
 
 package com.zimbra.cs.redolog.op;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import com.zimbra.cs.mailbox.Mailbox;
 
 public class SaveDocument extends CreateMessage {
 
+	private String mFilename;
+	private String mMimeType;
+	
 	public SaveDocument() {
 	}
 	
-    public SaveDocument(int mailboxId, String digest, int msgSize) {
-        super(mailboxId, ":API:", false, digest, msgSize, -1, true, 0, null);
+    public SaveDocument(int mailboxId, String digest, int msgSize, int folderId) {
+        super(mailboxId, ":API:", false, digest, msgSize, folderId, true, 0, null);
     }
 
     public int getOpCode() {
-        return OP_SAVE_WIKI;
+        return OP_SAVE_DOCUMENT;
+    }
+
+    public String getFilename() {
+    	return mFilename;
+    }
+    
+    public void setFilename(String filename) {
+    	mFilename = filename;
+    }
+    
+    public String getMimeType() {
+    	return mMimeType;
+    }
+    
+    public void setMimeType(String mimeType) {
+    	mMimeType = mimeType;
+    }
+    
+    protected void serializeData(DataOutput out) throws IOException {
+        out.writeUTF(mFilename);
+        out.writeUTF(mMimeType);
+        super.serializeData(out);
+    }
+
+    protected void deserializeData(DataInput in) throws IOException {
+        mFilename = in.readUTF();
+        mMimeType = in.readUTF();
+        super.deserializeData(in);
     }
 
     public void redo() throws Exception {
         int mboxId = getMailboxId();
         Mailbox mbox = Mailbox.getMailboxById(mboxId);
-        // XXX tbd
+        mbox.createDocument(getOperationContext(), 
+							getFolderId(), 
+							mFilename, 
+							mMimeType, 
+							getMessageBody(),
+							null);
     }
 }
