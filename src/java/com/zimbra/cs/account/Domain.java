@@ -66,10 +66,14 @@ public interface Domain extends NamedEntry {
     /**
      * 
      * @param query Name search string
+     * @param type address type to search
      * @return List of GalContact objects
      * @throws ServiceException
      */
-    public SearchGalResult searchGal(String query, String token)  throws ServiceException;
+    public SearchGalResult searchGal(String query,
+                                     Provisioning.GAL_SEARCH_TYPE type,
+                                     String token)
+    throws ServiceException;
     
     public Map getAttrs(boolean applyConfig) throws ServiceException;
     

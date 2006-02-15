@@ -1028,7 +1028,7 @@ those of Account.
 
 <CreateCalendarResourceRequest>
   <name>...</name>
-  <a n="attr-name>...</a>+
+  <a n="attr-name">...</a>+
 </CreateCalendarResourceRequest>
 
 <CreateCalendarResourceResponse>

@@ -44,7 +44,6 @@ import javax.naming.directory.DirContext;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 
-import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
@@ -125,18 +124,22 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
 	 * 
 	 * @see com.zimbra.cs.account.Provisioning#searchGal(java.lang.String)
 	 */
-    public SearchGalResult searchGal(String n, String token) throws ServiceException {
+    public SearchGalResult searchGal(String n,
+                                     Provisioning.GAL_SEARCH_TYPE type,
+                                     String token)
+    throws ServiceException {
         // escape user-supplied string
         n = LdapUtil.escapeSearchFilterArg(n);
 
-        String mode = getAttr(Provisioning.A_zimbraGalMode);
         int maxResults = token != null ? 0 : getIntAttr(Provisioning.A_zimbraGalMaxResults, DEFAULT_GAL_MAX_RESULTS);
-        
-        if (mode == null || mode.equals(Provisioning.GM_ZIMBRA))
-            return searchZimbraGal(n, maxResults, token);
-        
-        SearchGalResult results = null; 
-        if (mode.equals(Provisioning.GM_LDAP)) {
+        if (type == Provisioning.GAL_SEARCH_TYPE.CALENDAR_RESOURCE)
+            return searchResources(n, maxResults, token);
+
+        String mode = getAttr(Provisioning.A_zimbraGalMode);
+        SearchGalResult results = null;
+        if (mode == null || mode.equals(Provisioning.GM_ZIMBRA)) {
+            results = searchZimbraGal(n, maxResults, token);
+        } else if (mode.equals(Provisioning.GM_LDAP)) {
             results = searchLdapGal(n, maxResults, token);
         } else if (mode.equals(Provisioning.GM_BOTH)) {
             String tokens[] = null;
@@ -147,10 +150,11 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
             if (tokens == null) tokens = new String[] {null, null}; 
                 
             results = searchZimbraGal(n, maxResults/2, tokens[0]);
-            SearchGalResult ldapResults = searchLdapGal(n, maxResults/2, tokens[1]);            
-            results.matches.addAll(ldapResults.matches);
-            if (results.token != null) {
-                results.token = results.token + ":" + ldapResults.token;
+            SearchGalResult ldapResults = searchLdapGal(n, maxResults/2, tokens[1]);
+            if (ldapResults != null) {
+                results.matches.addAll(ldapResults.matches);
+                if (results.token != null)
+                    results.token = results.token + ":" + ldapResults.token;
             }
         } else {
             results = searchZimbraGal(n, maxResults, token);
@@ -158,10 +162,28 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
         if (results == null) results = new SearchGalResult();
         if (results.matches == null) results.matches = new ArrayList();
 
+        if (type == Provisioning.GAL_SEARCH_TYPE.ALL) {
+            SearchGalResult resourceResults = null;
+            if (maxResults == 0)
+                resourceResults = searchResources(n, 0, token);
+            else {
+                int room = maxResults - results.matches.size();
+                if (room > 0)
+                    resourceResults = searchResources(n, room, token);
+            }
+            if (resourceResults != null) {
+                results.matches.addAll(resourceResults.matches);
+                if (results.token != null && resourceResults.token != null)
+                    results.token =
+                        results.token + ":" + resourceResults.token;
+            }
+        }
+
         return results;
     }
     
-    private static final String ZIMBRA_DEF = "zimbra";
+    private static final String GAL_FILTER_ZIMBRA_ACCOUNTS = "zimbraAccounts";
+    private static final String GAL_FILTER_ZIMBRA_CALENDAR_RESOURCES = "zimbraResources";
 
     public static String getFilterDef(String name) throws ServiceException {
         String queryExprs[] = Provisioning.getInstance().getConfig().getMultiAttr(Provisioning.A_zimbraGalLdapFilterDef);
@@ -199,11 +221,25 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
         return (Map) getCachedData(DATA_GAL_ATTR_MAP);
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.account.Provisioning#searchGal(java.lang.String)
-     */
-    private SearchGalResult searchZimbraGal(String n, int maxResults, String token) throws ServiceException {
-        String queryExpr = getFilterDef(ZIMBRA_DEF);
+    private SearchGalResult searchResources(String n, int maxResults, String token)
+    throws ServiceException {
+        return searchZimbraWithNamedFilter(
+                GAL_FILTER_ZIMBRA_CALENDAR_RESOURCES, n, maxResults, token);
+    }
+
+    private SearchGalResult searchZimbraGal(String n, int maxResults, String token)
+    throws ServiceException {
+        return searchZimbraWithNamedFilter(
+                GAL_FILTER_ZIMBRA_ACCOUNTS, n, maxResults, token);
+    }
+
+    private SearchGalResult searchZimbraWithNamedFilter(
+        String filterName,
+        String n,
+        int maxResults,
+        String token)
+    throws ServiceException {
+        String queryExpr = getFilterDef(filterName);
         SearchGalResult result = new SearchGalResult();
         result.matches = new ArrayList();
         if (queryExpr == null)
@@ -260,7 +296,10 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
         return result;
     }
 
-    private SearchGalResult searchLdapGal(String n, int maxResults, String token) throws ServiceException {
+    private SearchGalResult searchLdapGal(String n,
+                                          int maxResults,
+                                          String token)
+    throws ServiceException {
         String url[] = getMultiAttr(Provisioning.A_zimbraGalLdapURL);
         String bindDn = getAttr(Provisioning.A_zimbraGalLdapBindDn);
         String bindPassword = getAttr(Provisioning.A_zimbraGalLdapBindPassword);

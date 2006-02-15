@@ -35,8 +35,10 @@ import java.util.Map.Entry;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.GalContact;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Domain.SearchGalResult;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
@@ -54,10 +56,22 @@ public class SearchGal extends DocumentHandler {
         Element response = lc.createElement(AccountService.SEARCH_GAL_RESPONSE);
         Account acct = getRequestedAccount(getZimbraContext(context));
 
-        while (n.endsWith("*")) 
+        while (n.endsWith("*"))
             n = n.substring(0, n.length()-1);
-            
-        SearchGalResult result = acct.getDomain().searchGal(n, null);
+
+        String typeStr = request.getAttribute(AdminService.A_TYPE, "all");
+        Provisioning.GAL_SEARCH_TYPE type;
+        if (typeStr.equals("all"))
+            type = Provisioning.GAL_SEARCH_TYPE.ALL;
+        else if (typeStr.equals("account"))
+            type = Provisioning.GAL_SEARCH_TYPE.USER_ACCOUNT;
+        else if (typeStr.equals("resource"))
+            type = Provisioning.GAL_SEARCH_TYPE.CALENDAR_RESOURCE;
+        else
+            throw ServiceException.INVALID_REQUEST(
+                    "Invalid search type: " + typeStr, null);
+
+        SearchGalResult result = acct.getDomain().searchGal(n, type, null);
         List contacts = result.matches;
         for (Iterator it = contacts.iterator(); it.hasNext();) {
             GalContact contact = (GalContact) it.next();

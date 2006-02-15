@@ -907,6 +907,10 @@ public abstract class Provisioning {
     /** return calendar resource accounts from searchAccounts */
     public static final int SA_CALENDAR_RESOURCE_FLAG = 0x8;
 
+    public static enum GAL_SEARCH_TYPE {
+        ALL, USER_ACCOUNT, CALENDAR_RESOURCE
+    }
+
     /**
      * @param query LDAP search query
      * @param returnAttrs list of attributes to return. uid is always included. null will return all attrs.

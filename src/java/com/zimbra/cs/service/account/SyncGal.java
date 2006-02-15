@@ -34,6 +34,7 @@ import java.util.Map;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.GalContact;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Domain.SearchGalResult;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
@@ -51,9 +52,9 @@ public class SyncGal extends DocumentHandler {
         Element response = lc.createElement(AccountService.SYNC_GAL_RESPONSE);
         String tokenAttr = request.getAttribute(MailService.A_TOKEN, "");        
         Account acct = getRequestedAccount(getZimbraContext(context));
-        
 
-        SearchGalResult result = acct.getDomain().searchGal("", tokenAttr);
+        SearchGalResult result =
+            acct.getDomain().searchGal("", Provisioning.GAL_SEARCH_TYPE.ALL, tokenAttr);
         if (result.token != null)
             response.addAttribute(MailService.A_TOKEN, result.token);
         List contacts = result.matches;

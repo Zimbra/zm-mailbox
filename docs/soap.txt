@@ -390,13 +390,19 @@ one of <password> or <preauth> must be specified. see preauth.txt for a discussi
 
 ----------------------------
 
- <SearchGalRequest>
+ <SearchGalRequest [type="{type}"]>
    <name>...</name>
  </SearchGalRequest>
  
  <SearchGalResponse>
    <cn>...</cn>*
  </SearchGalResponse>
+
+  {type} = type of addresses to search
+           "account" for regular user accounts, aliases and distribution lists
+           "resource" for calendar resources
+           "all" for combination of both types
+           if omitted, defaults to "all"
 
 ----------------------------
 
