@@ -791,18 +791,22 @@ public class Conversation extends MailItem {
 
 
     void decodeMetadata(String metadata) throws ServiceException {
+        Metadata meta = null;
         String content = metadata;
-        while (content.length() > 0 && Character.isDigit(content.charAt(0))) {
-            int delimiter = content.indexOf(':');
-            if (delimiter == -1)
-                break;
-            content = content.substring(delimiter + 1);
+
+        if (content != null) {
+            // old-style message deletions -- should no longer occur
+            while (content.length() > 0 && Character.isDigit(content.charAt(0))) {
+                int delimiter = content.indexOf(':');
+                if (delimiter == -1)
+                    break;
+                content = content.substring(delimiter + 1);
+            }
+            // try to parse the serialized metadata
+            try { meta = new Metadata(content, this); } catch (ServiceException e) { }
         }
-        Metadata meta;
-        try {
-            meta = new Metadata(content, this);
-        } catch (ServiceException e) {
-            // parse failed, so recalculate the metadata by hand...
+        if (meta == null) {
+            // parse failed or metadata was null, so recalculate the metadata by hand...
             Message[] msgs = getMessages(SORT_ID_ASCENDING);
             recalculateMetadata(msgs, true);
             recalculateSubject(msgs[0]);
