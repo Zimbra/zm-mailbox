@@ -28,7 +28,6 @@
  */
 package com.zimbra.cs.mailbox;
 
-import java.io.File;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -50,8 +49,6 @@ public class Document extends MailItem {
 
 	public Document(Mailbox mbox, UnderlyingData data) throws ServiceException {
 		super(mbox, data);
-        if (mData.type != TYPE_DOCUMENT)
-            throw new IllegalArgumentException();
 	}
 
 	public String getFragment() {
@@ -78,39 +75,51 @@ public class Document extends MailItem {
     	return 0;  // XXX implement it
     }
 
-    boolean isTaggable()      { return true; }
-    boolean isCopyable()      { return true; }
-    boolean isMovable()       { return true; }
-	boolean isMutable()       { return false; }
-    boolean isIndexed()       { return true; }
-	boolean canHaveChildren() { return false; }
+    @Override boolean isTaggable()      { return true; }
+    @Override boolean isCopyable()      { return true; }
+    @Override boolean isMovable()       { return true; }
+    @Override boolean isMutable()       { return false; }
+    @Override boolean isIndexed()       { return true; }
+    @Override boolean canHaveChildren() { return false; }
 
-
-    static Document create(int id, Folder folder, short volumeId, String filename, String type, int length, MailItem parent)
+    protected static UnderlyingData prepareCreate(Map<String,String> fields, byte tp, int id, Folder folder, short volumeId, String subject, String type, int length) 
     throws ServiceException {
-    	assert(id != Mailbox.ID_AUTO_INCREMENT);
         if (folder == null || !folder.canContain(TYPE_DOCUMENT))
             throw MailServiceException.CANNOT_CONTAIN();
         if (!folder.canAccess(ACL.RIGHT_INSERT))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
 
-		Map<String,String> fields = new HashMap<String,String>();
+        if (fields == null) {
+            fields = new HashMap<String,String>();
+        }
         fields.put(Metadata.FN_MIME_TYPE, type);
         fields.put(Metadata.FN_VERSION, Long.toString(getNextVersion()));
 
 		Mailbox mbox = folder.getMailbox();
         UnderlyingData data = new UnderlyingData();
         data.id          = id;
-        data.type        = TYPE_DOCUMENT;
-        if (parent != null)
-            data.parentId = parent.getId();
+        data.type        = tp;
         data.folderId    = folder.getId();
         data.indexId     = id;
         data.volumeId    = volumeId;
         data.date        = mbox.getOperationTimestamp();
         data.size        = length;
-        data.subject     = filename;
+        data.subject     = subject;
+        data.blobDigest  = subject;
         data.metadata    = encodeMetadata(DEFAULT_COLOR, fields);
+        
+        return data;
+    }
+
+    static Document create(int id, Folder folder, short volumeId, String filename, String type, int length, MailItem parent)
+    throws ServiceException {
+    	assert(id != Mailbox.ID_AUTO_INCREMENT);
+
+        UnderlyingData data = prepareCreate(null, TYPE_DOCUMENT, id, folder, volumeId, filename, type, length);
+        if (parent != null)
+            data.parentId = parent.getId();
+
+        Mailbox mbox = folder.getMailbox();
         data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
 
@@ -120,6 +129,7 @@ public class Document extends MailItem {
         return doc;
     }
 
+    @Override 
     void decodeMetadata(Metadata meta) throws ServiceException {
         super.decodeMetadata(meta);
         Metadata metaAttrs = meta.getMap(Metadata.FN_FIELDS);
@@ -131,6 +141,7 @@ public class Document extends MailItem {
         }
     }
 
+    @Override 
     Metadata encodeMetadata(Metadata meta) {
         return encodeMetadata(meta, mColor);
     }
@@ -146,6 +157,7 @@ public class Document extends MailItem {
     private static final String CN_FRAGMENT  = "fragment";
     private static final String CN_MIME_TYPE = "mime_type";
 
+    @Override 
     public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("message: {");

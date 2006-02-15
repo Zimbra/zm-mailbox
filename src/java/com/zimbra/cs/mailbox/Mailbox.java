@@ -4310,54 +4310,59 @@ public class Mailbox {
         }
     }
 
-    public synchronized WikiItem createWiki(OperationContext octxt, ParsedMessage pm, int folderId) throws IOException, ServiceException {
-       	WikiItem wiki;
-        boolean success = false;
-       	StoreManager sm = StoreManager.getInstance();
-       	Blob blob = null;
-        
-        try {
-           	byte[] rawData = pm.getRawData();
-           	String rawDigest = pm.getRawDigest();
-           	int    rawSize = pm.getRawSize();
-            SaveWiki redoRecorder = new SaveWiki(mId, rawDigest, rawSize);
+    public synchronized WikiItem createWiki(OperationContext octxt, 
+			int folderId, 
+			String wikiword, 
+			byte[] rawData,
+			MailItem parent) throws ServiceException {
+    	return createWiki(octxt, folderId, wikiword, octxt.authuser.getName(), rawData, parent);
+    }
+    
+    public synchronized WikiItem createWiki(OperationContext octxt, 
+											int folderId, 
+											String wikiword, 
+											String author, 
+											byte[] rawData,
+											MailItem parent) throws ServiceException {
+    	WikiItem wikiItem;
+    	boolean success = false;
+    	StoreManager sm = StoreManager.getInstance();
+    	Blob blob = null;
+    	try {
+        	SaveWiki redoRecorder = new SaveWiki(mId, null, 0, folderId);
 
-            beginTransaction("wiki", octxt, redoRecorder);
+        	beginTransaction("createWiki", octxt, redoRecorder);
+        	redoRecorder.setFilename("wiki");
+        	redoRecorder.setMimeType(WikiItem.WIKI_CONTENT_TYPE);
+        	redoRecorder.setWikiword(wikiword);
+        	redoRecorder.setAuthor(author);
         	int itemId = getNextItemId(ID_AUTO_INCREMENT);
-           	short volumeId = Volume.getCurrentMessageVolume().getId();
+        	short volumeId = Volume.getCurrentMessageVolume().getId();
 
-           	blob = sm.storeIncoming(rawData, rawDigest, null, volumeId);
-            markOtherItemDirty(blob);
+        	blob = sm.storeIncoming(rawData, null, null, volumeId);
+        	redoRecorder.setMessageBodyInfo(rawData, blob.getPath(), blob.getVolumeId());
+        	markOtherItemDirty(blob);
 
-    		UnderlyingData data = new UnderlyingData();
-            data.id         = itemId;
-            data.folderId   = folderId;
-            data.indexId    = itemId;
-            data.volumeId   = volumeId;
-            data.flags      = 0;
-            data.date       = getOperationTimestamp();
-            data.size       = rawSize;
-            data.blobDigest = rawDigest;
+        	wikiItem = WikiItem.create(itemId, getFolderById(folderId), volumeId, wikiword, author, rawData.length, parent);
 
-            wiki = WikiItem.create(this, data, pm, octxt.authuser.getName());
-            redoRecorder.setMessageBodyInfo(pm.getRawData(), blob.getPath(), blob.getVolumeId());
-            mCurrentChange.setIndexedItem(wiki, pm);
+        	mCurrentChange.setIndexedItem(wikiItem, null);
 
-            sm.link(blob, this, itemId, wiki.getSavedSequence(), volumeId);
-            
-            success = true;
+        	sm.link(blob, this, itemId, wikiItem.getSavedSequence(), volumeId);
 
-        } catch (IOException ioe) {
-            throw MailServiceException.MESSAGE_PARSE_ERROR(ioe);
-        } catch (MessagingException me) {
-            throw MailServiceException.MESSAGE_PARSE_ERROR(me);
-        } finally {
+        	success = true;
+
+       	} catch (IOException ioe) {
+        	throw MailServiceException.MESSAGE_PARSE_ERROR(ioe);
+    	} finally {
         	endTransaction(success);
-            if (blob != null)
-            	sm.delete(blob);
-        }
-
-        return wiki;
+        	if (blob != null)
+            	try {
+                	sm.delete(blob);
+               	} catch (IOException ioe) {
+//                	 no harm done
+               	}
+    	}
+    	return wikiItem;
     }
 
     public WikiItem getWikiById(OperationContext octxt, int id) throws ServiceException {
@@ -4386,15 +4391,6 @@ public class Mailbox {
            	blob = sm.storeIncoming(rawData, null, null, volumeId);
             redoRecorder.setMessageBodyInfo(rawData, blob.getPath(), blob.getVolumeId());
             markOtherItemDirty(blob);
-
-    		UnderlyingData data = new UnderlyingData();
-            data.id         = itemId;
-            data.folderId   = folderId;
-            data.indexId    = itemId;
-            data.volumeId   = volumeId;
-            data.flags      = 0;
-            data.date       = getOperationTimestamp();
-            data.size       = rawData.length;
 
             // TODO: do we need parent when creating document.
         	doc = Document.create(itemId, getFolderById(folderId), volumeId, filename, mimeType, rawData.length, parent);

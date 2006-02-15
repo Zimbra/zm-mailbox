@@ -25,29 +25,65 @@
 
 package com.zimbra.cs.redolog.op;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.wiki.Wiki;
 
-public class SaveWiki extends CreateMessage {
+public class SaveWiki extends SaveDocument {
 
+	private String mWikiword;
+	private String mAuthor;
+	
 	public SaveWiki() {
 	}
 	
-    public SaveWiki(int mailboxId, String digest, int msgSize) {
-        super(mailboxId, ":API:", false, digest, msgSize, -1, true, 0, null);
+    public SaveWiki(int mailboxId, String digest, int msgSize, int folderId) {
+        super(mailboxId, digest, msgSize, folderId);
     }
 
     public int getOpCode() {
         return OP_SAVE_WIKI;
     }
 
+    public String getWikiword() {
+    	return mWikiword;
+    }
+    
+    public void setWikiword(String w) {
+    	mWikiword = w;
+    }
+    
+    public String getAuthor() {
+    	return mAuthor;
+    }
+    
+    public void setAuthor(String a) {
+    	mAuthor = a;
+    }
+    
+    protected void serializeData(DataOutput out) throws IOException {
+        out.writeUTF(mWikiword);
+        out.writeUTF(mAuthor);
+        super.serializeData(out);
+    }
+
+    protected void deserializeData(DataInput in) throws IOException {
+        mWikiword = in.readUTF();
+        mAuthor = in.readUTF();
+        super.deserializeData(in);
+    }
+
     public void redo() throws Exception {
         int mboxId = getMailboxId();
-        int folderId = Wiki.getInstance().getWikiFolderId();
         Mailbox mbox = Mailbox.getMailboxById(mboxId);
 
-        ParsedMessage pm = new ParsedMessage(getMessageBody(), getTimestamp(), mbox.attachmentsIndexingEnabled());
-        mbox.createWiki(getOperationContext(), pm, folderId);
+        mbox.createWiki(getOperationContext(), 
+						getFolderId(), 
+						mWikiword, 
+						mAuthor, 
+						getMessageBody(),
+						null);
     }
 }

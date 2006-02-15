@@ -19,10 +19,7 @@
 // A Wiki is a versioned HTML document.
 //
 <SaveWikiRequest>
-  <m>
-    <su>{subject}</su>
-    <content>...</content>
-  </m>
+  <m su="{subject}"> ... contents ... </m>
 </SaveWikiRequest>
 
 <SaveWikiResponse>
@@ -60,11 +57,8 @@
 </GetWikiRequest>
 
 <GetWikiResponse>
-  <m id="{message-id}" f="{flags}" t="{tags}" s="{size}" d="{created-date}" l="{folder}">
-   <su>{subject}</su>
-   <ver>{version}</ver>
-   <cr>{creator}</cr>
-   <content>...</content>
+  <m su="{subject}" ver="{version}" cr="{creator}" id="{message-id}" f="{flags}" t="{tags}" s="{size}" d="{created-date}" l="{folder}">
+   ... contents ...
   </m>
 </GetWikiResponse>
 

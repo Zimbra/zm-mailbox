@@ -26,24 +26,18 @@ package com.zimbra.cs.mailbox;
 
 import java.io.InputStream;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.index.Indexer;
-import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.service.ServiceException;
 
-public class WikiItem extends MailItem {
+public class WikiItem extends Document {
 	
 	WikiItem(Mailbox mbox, UnderlyingData data) throws ServiceException {
 		super(mbox, data);
 	}
-	
-	private Map<String,String> mFields;
 	
 	@Override boolean isTaggable() { return true; }
 	@Override boolean isCopyable() { return true; }
@@ -64,25 +58,8 @@ public class WikiItem extends MailItem {
         return Document.encodeMetadata(meta, color);
     }
 	
-    void decodeMetadata(Metadata meta) throws ServiceException {
-        super.decodeMetadata(meta);
-        Metadata metaAttrs = meta.getMap(Metadata.FN_FIELDS);
-
-        mFields = new HashMap<String,String>();
-        for (Iterator it = metaAttrs.asMap().entrySet().iterator(); it.hasNext(); ) {
-            Map.Entry entry = (Map.Entry) it.next();
-            mFields.put(entry.getKey().toString(), entry.getValue().toString());
-        }
-    }
-
     public void reindex(IndexItem redo, Object indexData) throws ServiceException {
-        ParsedMessage pm = (ParsedMessage) indexData;
-        if (pm == null)
-            throw ServiceException.FAILURE("WikiItem is missing data to index", null);
-
-        // FIXME: need to note this as dirty so we can reindex if things fail
-        if (!DebugConfig.disableIndexing)
-            Indexer.GetInstance().indexMessage(redo, mMailbox.getMailboxIndex(), mId, pm);
+    	// XXX implement me
     }
 
 	public String getWikiWord() {
@@ -105,19 +82,26 @@ public class WikiItem extends MailItem {
         return MessageCache.getRawContent(this);
     }
     
-	public static WikiItem create(Mailbox mbox, UnderlyingData data, ParsedMessage pm, String author) throws ServiceException {
-		Map<String,String> fields = new HashMap<String,String>();
-		fields.put(Metadata.FN_WIKI_WORD, pm.getSubject());
-		fields.put(Metadata.FN_CREATOR, author);
+	public static final String WIKI_CONTENT_TYPE = "text/html";
+	
+    static WikiItem create(int id, Folder folder, short volumeId, String wikiword, String author, int length, MailItem parent)
+    throws ServiceException {
 
-		data.type     = TYPE_WIKI;
-        data.metadata = encodeMetadata(DEFAULT_COLOR, fields);
-        data.contentChanged(mbox);
+        Map<String,String> fields = new HashMap<String,String>();
+		fields.put(Metadata.FN_WIKI_WORD, wikiword);
+		fields.put(Metadata.FN_CREATOR, author);
+		
+        UnderlyingData data = prepareCreate(fields, TYPE_WIKI, id, folder, volumeId, wikiword, WIKI_CONTENT_TYPE, length);
+        if (parent != null)
+            data.parentId = parent.getId();
+
+		Mailbox mbox = folder.getMailbox();
+		data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
 
-        WikiItem wikiItem = new WikiItem(mbox, data);
-        wikiItem.finishCreation(null);
-        return wikiItem;
-	}
-	
+        WikiItem wiki = new WikiItem(mbox, data);
+        wiki.finishCreation(parent);
+//        doc.reindex();
+        return wiki;
+    }
 }

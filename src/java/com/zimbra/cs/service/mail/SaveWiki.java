@@ -24,18 +24,11 @@
  */
 package com.zimbra.cs.service.mail;
 
-import java.io.IOException;
 import java.util.Map;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-
-import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.WikiItem;
-import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.wiki.Wiki;
 import com.zimbra.soap.Element;
@@ -54,43 +47,11 @@ public class SaveWiki extends WriteOpDocumentHandler {
         OperationContext octxt = lc.getOperationContext();
 
         Element msgElem = request.getElement(MailService.E_MSG);
+        String subject = msgElem.getAttribute(MailService.A_SUBJECT, null);
 
-        // check to see whether the entire message has been uploaded under separate cover
-        String attachment = msgElem.getAttribute(MailService.A_ATTACHMENT_ID, null);
-
-        ParseMimeMessage.MimeMessageData mimeData = new ParseMimeMessage.MimeMessageData();
-        MimeMessage mm;
-        if (attachment != null)
-            mm = SendMsg.parseUploadedMessage(lc, attachment, mimeData);
-        else
-            mm = ParseMimeMessage.parseMimeMsgSoap(lc, mbox, msgElem, null, mimeData);
-
-        long date = System.currentTimeMillis();
-
-        try {
-            mm.saveChanges();
-        } catch (MessagingException me) {
-            throw ServiceException.FAILURE("completing MIME message object", me);
-        }
-
-        ParsedMessage pm = new ParsedMessage(mm, date, mbox.attachmentsIndexingEnabled());
-        try {
-            pm.analyze();
-        } catch (ServiceException e) {
-            if (ConversionException.isTemporaryCauseOf(e))
-                throw e;
-        }
-
-        WikiItem wikiItem;
-        try {
-    		wikiItem = mbox.createWiki(octxt, pm, wiki.getWikiFolderId());
-        } catch (IOException ioe) {
-        	throw ServiceException.FAILURE("creating wiki item", ioe);
-        }
+        byte[] rawData = msgElem.getText().getBytes();
+        WikiItem wikiItem = mbox.createWiki(octxt, wiki.getWikiFolderId(), subject, rawData, null);
 		wiki.addWiki(wikiItem);
-        // we can now purge the uploaded attachments
-        if (mimeData.uploads != null)
-            FileUploadServlet.deleteUploads(mimeData.uploads);
 
         Element response = lc.createElement(MailService.SAVE_WIKI_RESPONSE);
         Element m = response.addElement(MailService.E_MSG);

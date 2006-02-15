@@ -436,6 +436,8 @@ public class MailService implements DocumentService {
     public static final String E_WIKIWORD = "w";
     public static final String E_DOC = "doc";
     public static final String E_UPLOAD = "upload";
+    public static final String A_VERSION = "ver";
+    public static final String A_SUBJECT = "su";
     public static final String A_FOLDERID = "folder";
 
     public void registerHandlers(DocumentDispatcher dispatcher) {
