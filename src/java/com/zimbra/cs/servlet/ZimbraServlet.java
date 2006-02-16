@@ -43,6 +43,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.httpclient.*;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -75,7 +76,9 @@ public class ZimbraServlet extends HttpServlet {
     protected static final String WWW_AUTHENTICATE_HEADER = "WWW-Authenticate";
     protected String getRealmHeader()  { return "BASIC realm=\"Zimbra\""; }
 
-    private static Map /* <String, ZimbraServlet> */ sServlets = new HashMap();
+    private static final int MAX_PROXY_HOPCOUNT = 3;
+
+    private static Map<String, ZimbraServlet> sServlets = new HashMap<String, ZimbraServlet>();
 
     private int[] mAllowedPorts;
 
@@ -115,7 +118,7 @@ public class ZimbraServlet extends HttpServlet {
     
     public static ZimbraServlet getServlet(String name) {
         synchronized (sServlets) {
-            return (ZimbraServlet) sServlets.get(name);
+            return sServlets.get(name);
         }
     }
 
@@ -248,8 +251,15 @@ public class ZimbraServlet extends HttpServlet {
 			throw new ServletException(e);
 		}
     }
-    
+
     protected void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, Server server, String authToken)
+    throws IOException, ServletException {
+        String uri = req.getRequestURI(), qs = req.getQueryString();
+        if (qs != null)
+            uri += '?' + qs;
+        proxyServletRequest(req, resp, server, uri, authToken);
+    }
+    protected void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, Server server, String uri, String authToken)
     throws IOException, ServletException {
         if (server == null) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "cannot find remote server");
@@ -267,11 +277,7 @@ public class ZimbraServlet extends HttpServlet {
             String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
 
             StringBuffer url = new StringBuffer(useHTTP ? "http" : "https");
-            url.append("://").append(hostname).append(':').append(port);
-            url.append(req.getRequestURI());
-            String qs = req.getQueryString();
-            if (qs != null)
-                url.append('?').append(qs);
+            url.append("://").append(hostname).append(':').append(port).append(uri);
 
             // create an HTTP client with the same cookies
             HttpState state = new HttpState();
@@ -279,27 +285,33 @@ public class ZimbraServlet extends HttpServlet {
             if (cookies != null)
                 for (int i = 0; i < cookies.length; i++)
                     state.addCookie(new Cookie(hostname, cookies[i].getName(), cookies[i].getValue(), "/", null, false));
-            if (authToken != null) {
+            if (authToken != null)
                 state.addCookie(new Cookie(hostname, COOKIE_ZM_AUTH_TOKEN, authToken, "/", null, false));                
-            }
+
             HttpClient client = new HttpClient();
             client.setState(state);
 
             // create a duplicate request (same method, same content, same X-headers)
             HttpMethod method = null;
+            int hopcount = 0;
             if (req.getMethod().equalsIgnoreCase("GET"))
                 method = new GetMethod(url.toString());
             else if (req.getMethod().equalsIgnoreCase("POST")) {
                 PostMethod post = new PostMethod(url.toString());
-                post.setRequestBody(req.getInputStream());
+                post.setRequestEntity(new InputStreamRequestEntity(req.getInputStream()));
                 method = post;
             } else
                 resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "cannot proxy method: " + req.getMethod());
             for (Enumeration enm = req.getHeaderNames(); enm.hasMoreElements(); ) {
                 String hname = (String) enm.nextElement(), hlc = hname.toLowerCase();
-                if (hlc.startsWith("x-") || hlc.startsWith("content-") || hlc.equals("authorization"))
+                if (hlc.equals("x-zimbra-hopcount"))
+                    try { hopcount = Math.max(Integer.parseInt(req.getHeader(hname)), 0); } catch (NumberFormatException e) { }
+                else if (hlc.startsWith("x-") || hlc.startsWith("content-") || hlc.equals("authorization"))
                     method.addRequestHeader(hname, req.getHeader(hname));
             }
+            if (hopcount >= MAX_PROXY_HOPCOUNT)
+                throw ServiceException.TOO_MANY_HOPS();
+            method.addRequestHeader("X-Zimbra-Hopcount", Integer.toString(hopcount + 1));
 
             // dispatch the request and copy over the results
             int statusCode = -1;
@@ -337,7 +349,6 @@ public class ZimbraServlet extends HttpServlet {
     }
     
     protected Account basicAuthRequest(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException, ServiceException {
-
         String auth = req.getHeader("Authorization");
 
         // TODO: more liberal parsing of Authorization value...
