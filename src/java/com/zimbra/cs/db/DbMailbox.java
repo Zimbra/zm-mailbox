@@ -242,15 +242,57 @@ public class DbMailbox {
         }
     }
 
+    /** Returns the zimbra IDs and mailbox IDs for all mailboxes on the
+     *  system.  Note that mailboxes are created lazily, so there may be
+     *  accounts homed on this system for whom there is is not yet a mailbox
+     *  and hence are not included in the returned <code>Map</code>.
+     * 
+     * @param conn  An open database connection.
+     * @return A <code>Map</code> whose keys are zimbra IDs and whose values
+     *         are the corresponding numeric mailbox IDs.
+     * @throws ServiceException  The following error codes are possible:<ul>
+     *    <li><code>service.FAILURE</code> - an error occurred while accessing
+     *        the database; a SQLException is encapsulated</ul> */
     public static Map<String, Integer> getMailboxes(Connection conn) throws ServiceException {
         HashMap<String, Integer> result = new HashMap<String, Integer>();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement("SELECT id, account_id FROM mailbox");
+            stmt = conn.prepareStatement("SELECT account_id, id FROM mailbox");
             rs = stmt.executeQuery();
             while (rs.next())
-                result.put(rs.getString(2), rs.getInt(1));
+                result.put(rs.getString(1), rs.getInt(2));
+            return result;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("fetching mailboxes", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    /** Returns the zimbra IDs and approximate sizes for all mailboxes on
+     *  the system.  Note that mailboxes are created lazily, so there may be
+     *  accounts homed on this system for whom there is is not yet a mailbox
+     *  and hence are not included in the returned <code>Map</code>.  Sizes
+     *  are checkpointed frequently, but there is no guarantee that the
+     *  approximate sizes are currently accurate.
+     * 
+     * @param conn  An open database connection.
+     * @return A <code>Map</code> whose keys are zimbra IDs and whose values
+     *         are the corresponding approximate mailbox sizes.
+     * @throws ServiceException  The following error codes are possible:<ul>
+     *    <li><code>service.FAILURE</code> - an error occurred while accessing
+     *        the database; a SQLException is encapsulated</ul> */
+    public static Map<String, Long> getMailboxSizes(Connection conn) throws ServiceException {
+        HashMap<String, Long> result = new HashMap<String, Long>();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement("SELECT account_id, size_checkpoint FROM mailbox");
+            rs = stmt.executeQuery();
+            while (rs.next())
+                result.put(rs.getString(1), rs.getLong(2));
             return result;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("fetching mailboxes", e);
