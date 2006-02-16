@@ -28,10 +28,8 @@
  */
 package com.zimbra.cs.service.account;
 
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.Set;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.GalContact;
@@ -57,7 +55,7 @@ public class SearchGal extends DocumentHandler {
         Account acct = getRequestedAccount(getZimbraContext(context));
 
         while (n.endsWith("*"))
-            n = n.substring(0, n.length()-1);
+            n = n.substring(0, n.length() - 1);
 
         String typeStr = request.getAttribute(AdminService.A_TYPE, "all");
         Provisioning.GAL_SEARCH_TYPE type;
@@ -68,15 +66,11 @@ public class SearchGal extends DocumentHandler {
         else if (typeStr.equals("resource"))
             type = Provisioning.GAL_SEARCH_TYPE.CALENDAR_RESOURCE;
         else
-            throw ServiceException.INVALID_REQUEST(
-                    "Invalid search type: " + typeStr, null);
+            throw ServiceException.INVALID_REQUEST("Invalid search type: " + typeStr, null);
 
         SearchGalResult result = acct.getDomain().searchGal(n, type, null);
-        List contacts = result.matches;
-        for (Iterator it = contacts.iterator(); it.hasNext();) {
-            GalContact contact = (GalContact) it.next();
+        for (GalContact contact : result.matches)
             addContact(response, contact);
-        }
         return response;
     }
 
@@ -88,16 +82,21 @@ public class SearchGal extends DocumentHandler {
         Element cn = response.addElement(MailService.E_CONTACT);
         cn.addAttribute(MailService.A_ID, contact.getId());
         Map attrs = contact.getAttrs();
-        for (Iterator it = attrs.entrySet().iterator(); it.hasNext();) {
-            Map.Entry entry = (Entry) it.next();
+        for (Map.Entry entry : (Set<Map.Entry>) attrs.entrySet()) {
             Object value = entry.getValue();
+            // can't use DISP_ELEMENT because some GAL contact attributes
+            //   (e.g. "objectClass") are multi-valued
             if (value instanceof String[]) {
                 String sa[] = (String[]) value;
                 for (int i = 0; i < sa.length; i++) {
-                    cn.addAttribute((String) entry.getKey(), sa[i], Element.DISP_ELEMENT);
+                    cn.addElement(MailService.E_ATTRIBUTE)
+                      .addAttribute(MailService.A_ATTRIBUTE_NAME, (String) entry.getKey())
+                      .setText(sa[i]);
                 }
             } else {
-                cn.addAttribute((String) entry.getKey(), (String) entry.getValue(), Element.DISP_ELEMENT);
+                cn.addElement(MailService.E_ATTRIBUTE)
+                  .addAttribute(MailService.A_ATTRIBUTE_NAME, (String) entry.getKey())
+                  .setText((String) entry.getValue());
             }
         }
     }

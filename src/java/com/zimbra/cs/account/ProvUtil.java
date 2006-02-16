@@ -942,13 +942,9 @@ public class ProvUtil {
         
         Domain d = lookupDomain(domain);
 
-        SearchGalResult result =
-            d.searchGal(query, Provisioning.GAL_SEARCH_TYPE.ALL, null);
-        List contacts = result.matches;
-        for (Iterator it=contacts.iterator(); it.hasNext(); ) {
-            GalContact contact = (GalContact) it.next();
+        SearchGalResult result = d.searchGal(query, Provisioning.GAL_SEARCH_TYPE.ALL, null);
+        for (GalContact contact : result.matches)
             dumpContact(contact);
-        }
     }    
 
     private void doSyncGal(String[] args) throws ServiceException {
@@ -979,15 +975,11 @@ public class ProvUtil {
         
         Domain d = lookupDomain(domain);
 
-        SearchGalResult result =
-            d.searchGal("", Provisioning.GAL_SEARCH_TYPE.ALL, token);
-        List contacts = result.matches;
+        SearchGalResult result = d.searchGal("", Provisioning.GAL_SEARCH_TYPE.ALL, token);
         if (result.token != null)
             System.out.println("# token = "+result.token);
-        for (Iterator it=contacts.iterator(); it.hasNext(); ) {
-            GalContact contact = (GalContact) it.next();
+        for (GalContact contact : result.matches)
             dumpContact(contact);
-        }
     }    
 
     private void doGetAllAdminAccounts(String[] args) throws ServiceException {

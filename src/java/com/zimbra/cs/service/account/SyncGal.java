@@ -28,8 +28,6 @@
  */
 package com.zimbra.cs.service.account;
 
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import com.zimbra.cs.account.Account;
@@ -53,15 +51,11 @@ public class SyncGal extends DocumentHandler {
         String tokenAttr = request.getAttribute(MailService.A_TOKEN, "");        
         Account acct = getRequestedAccount(getZimbraContext(context));
 
-        SearchGalResult result =
-            acct.getDomain().searchGal("", Provisioning.GAL_SEARCH_TYPE.ALL, tokenAttr);
+        SearchGalResult result = acct.getDomain().searchGal("", Provisioning.GAL_SEARCH_TYPE.ALL, tokenAttr);
         if (result.token != null)
             response.addAttribute(MailService.A_TOKEN, result.token);
-        List contacts = result.matches;
-        for (Iterator it = contacts.iterator(); it.hasNext();) {
-            GalContact contact = (GalContact) it.next();
+        for (GalContact contact : result.matches)
             SearchGal.addContact(response, contact);
-        }
         return response;
     }
 

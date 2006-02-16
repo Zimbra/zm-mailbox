@@ -55,6 +55,7 @@ import javax.naming.ldap.InitialLdapContext;
 
 import org.apache.commons.codec.binary.Base64;
 
+import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Domain.SearchGalResult;
 import com.zimbra.cs.localconfig.LC;
@@ -76,7 +77,7 @@ public class LdapUtil {
     private static String sLdapURL;
     private static String sLdapMasterURL;    
     
-    private static Hashtable sEnv;
+    private static Hashtable<String, String> sEnv;
     private static String[] sEmptyMulti = new String[0];
 
     static final SearchControls sSubtreeSC = new SearchControls(SearchControls.SUBTREE_SCOPE, 0, 0, null, false, false);
@@ -133,7 +134,7 @@ public class LdapUtil {
      */
     private static synchronized Hashtable getDefaultEnv(boolean master) {
         if (sEnv == null) {
-            sEnv = new Hashtable();
+            sEnv = new Hashtable<String, String>();
             sEnv.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
             sEnv.put(Context.PROVIDER_URL, master ? sLdapMasterURL : sLdapURL);
             sEnv.put(Context.SECURITY_AUTHENTICATION, "simple");
@@ -194,7 +195,7 @@ public class LdapUtil {
      * @throws NamingException
      */
     public static DirContext getDirContext(String urls[], String bindDn, String bindPassword)  throws NamingException {
-        Hashtable env = new Hashtable();
+        Hashtable<String, String> env = new Hashtable<String, String>();
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
         env.put(Context.PROVIDER_URL, joinURLS(urls));
         if (bindDn == null || bindPassword == null) {
@@ -216,7 +217,7 @@ public class LdapUtil {
         if (password == null || password.equals("")) 
             throw new AuthenticationException("empty password");
 
-        Hashtable env = new Hashtable();
+        Hashtable<String, String> env = new Hashtable<String, String>();
         // wait at most 10 seconds
         env.put("com.sun.jndi.ldap.connect.timeout", LC.ldap_connect_timeout.value());        
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
@@ -349,7 +350,7 @@ public class LdapUtil {
      * @param prefix returns only attrs that start with prefex
      * @throws NamingException
      */
-    public static void getAttrs(Attributes attrs, Map map, String prefix) throws NamingException  {
+    public static void getAttrs(Attributes attrs, Map<String, Object> map, String prefix) throws NamingException  {
         for (NamingEnumeration ne = attrs.getAll(); ne.hasMore(); ) {
             Attribute attr = (Attribute) ne.next();
             if (prefix != null && ! attr.getID().startsWith(prefix))
@@ -751,7 +752,7 @@ public class LdapUtil {
     
          int at = name.indexOf("@");
     
-         Map vars = new HashMap();
+         Map<String, String> vars = new HashMap<String, String>();
          vars.put("n", name);         
     
          if (at  == -1) {
@@ -781,7 +782,7 @@ public class LdapUtil {
             Map galAttrMap, String token) throws NamingException, ServiceException {
     
         SearchGalResult result = new SearchGalResult();
-        result.matches = new ArrayList();
+        result.matches = new ArrayList<GalContact>();
     
         if (url == null || url.length == 0 || base == null || filter == null) {
             if (url == null || url.length == 0)
@@ -800,7 +801,7 @@ public class LdapUtil {
         }
                 
 
-        Map vars = new HashMap();
+        Map<String, String> vars = new HashMap<String, String>();
         vars.put("s", n);
         String query = LdapProvisioning.expandStr(filter, vars);
         if (token != null) {
@@ -841,8 +842,8 @@ public class LdapUtil {
      * @param attrsList list of ldap attributes to populate
      * @param attrMap map of ldap attr to address book field to populate
      */
-    public static void initGalAttrs(String[] ldapAttrMap, List attrsList, Map attrMap) {
-        for (int i=0; i < ldapAttrMap.length; i++) {
+    public static void initGalAttrs(String[] ldapAttrMap, List<String> attrsList, Map<String, String> attrMap) {
+        for (int i = 0; i < ldapAttrMap.length; i++) {
             String val = ldapAttrMap[i];
             int p = val.indexOf('=');
             if (p != -1) {

@@ -46,6 +46,7 @@ import javax.naming.directory.SearchResult;
 
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
@@ -160,7 +161,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
             results = searchZimbraGal(n, maxResults, token);
         }
         if (results == null) results = new SearchGalResult();
-        if (results.matches == null) results.matches = new ArrayList();
+        if (results.matches == null) results.matches = new ArrayList<GalContact>();
 
         if (type == Provisioning.GAL_SEARCH_TYPE.ALL) {
             SearchGalResult resourceResults = null;
@@ -199,8 +200,8 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
 
     private synchronized void initGalAttrs() {
         String[] attrs = getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap);
-        ArrayList list = new ArrayList(attrs.length);
-        HashMap map = new HashMap();
+        ArrayList<String> list = new ArrayList<String>(attrs.length);
+        HashMap<String, String> map = new HashMap<String, String>();
         LdapUtil.initGalAttrs(attrs, list, map);
         setCachedData(DATA_GAL_ATTR_MAP, map);
         String[] attr_list = (String[]) list.toArray(new String[list.size()]);
@@ -241,13 +242,13 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
     throws ServiceException {
         String queryExpr = getFilterDef(filterName);
         SearchGalResult result = new SearchGalResult();
-        result.matches = new ArrayList();
+        result.matches = new ArrayList<GalContact>();
         if (queryExpr == null)
             return result;
 
         if (token != null) n = "";
 
-        Map vars = new HashMap();
+        Map<String, String> vars = new HashMap<String, String>();
         vars.put("s", n);
         String query = LdapProvisioning.expandStr(queryExpr, vars);
         if (token != null) {

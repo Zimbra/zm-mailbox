@@ -79,7 +79,7 @@ public interface Domain extends NamedEntry {
     
     public static class SearchGalResult {
         public String token;
-        public List matches;
+        public List<GalContact> matches;
     }
 
     /**

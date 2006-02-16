@@ -28,7 +28,6 @@
  */
 package com.zimbra.cs.service.admin;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -62,10 +61,9 @@ public class CheckGalConfig extends AdminDocumentHandler {
         if (message != null)
             response.addElement(AdminService.E_MESSAGE).addText(message);
 
-        List contacts = r.getContacts();
+        List<GalContact> contacts = r.getContacts();
         if (contacts != null) {
-            for (Iterator it = contacts.iterator(); it.hasNext();) {
-                GalContact contact = (GalContact) it.next();
+            for (GalContact contact : contacts) {
                 SearchGal.addContact(response, contact);
             }
         }

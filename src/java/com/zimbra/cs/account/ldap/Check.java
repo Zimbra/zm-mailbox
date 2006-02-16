@@ -41,6 +41,7 @@ import javax.naming.NamingException;
 import javax.naming.directory.InvalidSearchFilterException;
 import javax.net.ssl.SSLHandshakeException;
 
+import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Domain.SearchGalResult;
 import com.zimbra.cs.service.ServiceException;
@@ -86,7 +87,7 @@ public class Check {
         public String getCode() { return code; }
         public String getMessage() { return message; }
         public String getComputedDn() {return (String) detail; }
-        public List getContacts() { return (List) detail; }
+        public List<GalContact> getContacts() { return (List<GalContact>) detail; }
         public Object getDetail() { return  detail; }        
 
         public Result(String status, String message, Object detail) {
@@ -181,8 +182,8 @@ public class Check {
 
 
         String[] galAttrs = Provisioning.getInstance().getConfig().getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap);
-        ArrayList list = new ArrayList(galAttrs.length);
-        HashMap map = new HashMap();
+        ArrayList<String> list = new ArrayList<String>(galAttrs.length);
+        HashMap<String, String> map = new HashMap<String, String>();
         LdapUtil.initGalAttrs(galAttrs, list, map);
         String[] attr_list = (String[]) list.toArray(new String[list.size()]);
         
@@ -220,7 +221,7 @@ public class Check {
     }
     
     private static void testCheckAuth() {
-        HashMap attrs = new HashMap();
+        HashMap<String, String> attrs = new HashMap<String, String>();
         attrs.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_LDAP);
         attrs.put(Provisioning.A_zimbraAuthLdapURL, "ldap://exch1.example.zimbra.com/");
         attrs.put(Provisioning.A_zimbraAuthLdapBindDn, "%u@example.zimbra.com");
@@ -238,7 +239,7 @@ public class Check {
     }
 
    private static void testCheckGal() {
-        HashMap attrs = new HashMap();
+        HashMap<String, String> attrs = new HashMap<String, String>();
         attrs.put(Provisioning.A_zimbraGalMode, Provisioning.GM_LDAP);
         attrs.put(Provisioning.A_zimbraGalLdapURL, "ldap://exch1.example.zimbra.com/");
         attrs.put(Provisioning.A_zimbraGalLdapBindDn, "zz_gal");
