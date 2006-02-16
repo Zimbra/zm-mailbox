@@ -56,7 +56,7 @@ import com.zimbra.cs.filter.ZimbraMailAdapter;
  */
 public class DateTest extends AbstractTest {
     
-    static DateFormat mShortDateFormat = new SimpleDateFormat("MM/dd/yy");
+    static DateFormat mShortDateFormat = new SimpleDateFormat("yyyyMMdd");
     static final String BEFORE = ":before";
     static final String AFTER = ":after";
 
@@ -101,7 +101,7 @@ public class DateTest extends AbstractTest {
             }
         }
         if (null == date)
-            throw new SyntaxException("Expecting a valid date (mm/dd/yy)");
+            throw new SyntaxException("Expecting a valid date (yyyyMMdd)");
 
         // There MUST NOT be any further arguments
         if (argumentsIter.hasNext())

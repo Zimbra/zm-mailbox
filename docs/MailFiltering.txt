@@ -87,12 +87,12 @@ We support the following tests in rules:
   if body :contains "foo" { action; }
 
 * Date or date range in the Date header. Zimbra specific. 
-    date {:before | :after} "MM/dd/yyyy"
+    date {:before | :after} "yyyyMMdd"
 
   E.g.,
 
-  if date :before "11/12/2004" { action; }
-  if allof(date :before "12/31/2004", date :after "1/1/2004") { action; }
+  if date :before "20041112" { action; }
+  if allof(date :before "20041231", date :after "20040101") { action; }
 
 * Any full address, local part or domain part of an address in
   headers. See RFC 3028. E.g.,
