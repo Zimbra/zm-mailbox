@@ -200,7 +200,7 @@ public class ParsedMessage {
         return mRawDigest;
     }
 
-    public List /*<MPartInfo>*/ getMessageParts() {
+    public List<MPartInfo> getMessageParts() {
         parse();
     	return mMessageParts;
     }
@@ -354,7 +354,7 @@ public class ParsedMessage {
         return (zimbraDate == null ? -1 : zimbraDate.getTime());
     }
 
-    public List /*<Document>*/ getLuceneDocuments() {
+    public List<Document> getLuceneDocuments() {
         try {
             analyze();
         } catch (ServiceException e) {
@@ -403,9 +403,7 @@ public class ParsedMessage {
         int numParseErrors = 0;
         ServiceException conversionError = null;
 
-        
-		for (Iterator it = mMessageParts.iterator(); it.hasNext(); ) {
-            MPartInfo mpi = (MPartInfo) it.next();
+        for (MPartInfo mpi : mMessageParts) {
             try {
                 analyzePart(mpi, mpiBody, allTextHandler);
             } catch (MimeHandlerException e) {
@@ -437,8 +435,7 @@ public class ParsedMessage {
         }
         mLuceneDocuments.add(allTextHandler.getDocument(this));
 
-    	for (Iterator it = mLuceneDocuments.iterator(); it.hasNext(); ) {
-    		Document doc = (Document) it.next();
+        for (Document doc : mLuceneDocuments) {
     		if (doc != null) {
     			// foreach doc we are adding, add domains of message
     			//msgHandler.setEmailDomainsField(doc);
