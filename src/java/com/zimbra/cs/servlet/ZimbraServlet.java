@@ -43,7 +43,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.httpclient.*;
 import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -298,7 +297,7 @@ public class ZimbraServlet extends HttpServlet {
                 method = new GetMethod(url.toString());
             else if (req.getMethod().equalsIgnoreCase("POST")) {
                 PostMethod post = new PostMethod(url.toString());
-                post.setRequestEntity(new InputStreamRequestEntity(req.getInputStream()));
+                post.setRequestBody(req.getInputStream());
                 method = post;
             } else
                 resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "cannot proxy method: " + req.getMethod());
