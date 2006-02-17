@@ -33,21 +33,26 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.TermQuery;
 
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbMailItem.SearchConstraints;
 import com.zimbra.cs.db.DbMailItem.SearchResult;
 import com.zimbra.cs.db.DbPool.Connection;
-import com.zimbra.cs.index.LuceneQueryOperation.LuceneIndexIdChunk;
-import com.zimbra.cs.index.LuceneQueryOperation.LuceneIndexIdChunk.ScoredLuceneHit;
+import com.zimbra.cs.index.LuceneQueryOperation.LuceneResultsChunk;
+import com.zimbra.cs.index.LuceneQueryOperation.LuceneResultsChunk.ScoredLuceneHit;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -85,17 +90,24 @@ class DBQueryOperation extends QueryOperation
     
     private HashSet /* SearchConstraints.Range */ mSizes = new HashSet();
     
+    private HashSet mIncludedItemIds = null; // CAREFUL!  In this case NULL means "no constraint" -- which is very different from an empty set (which means NOTHING MATCHES)
+    private HashSet mExcludedItemIds = null; 
     
-    private HashSet mIncludedItemIds = null; // CAREFUL!  NULL means "no constraint" -- which is very different from an empty set
-    private HashSet mExcludedItemIds = null; // CAREFUL!  NULL means "no constraint" -- which is very different from an empty set
-
     // true if we have a SETTING pertaining to Spam/Trash.  This doesn't necessarily
     // mean we actually have "in trash" or something, it just means that we've got something
     // set which means we shouldn't add the default "not in:trash and not in:junk" thing.
     private boolean mHasSpamTrashSetting = false;
     
+    /**
+     * An attached Lucene constraint
+     */
     private LuceneQueryOperation mLuceneOp = null;
-    private LuceneQueryOperation.LuceneIndexIdChunk mLuceneChunk = null;
+
+    /**
+     * The current "chunk" of lucene results we are working through -- we need to keep it around
+     * so that we can look up the scores of hits that match the DB
+     */
+    private LuceneQueryOperation.LuceneResultsChunk mLuceneChunk = null;
     
     
     /**
@@ -114,11 +126,9 @@ class DBQueryOperation extends QueryOperation
         return OP_TYPE_DB;
     }
 
-    boolean hasSpamTrashSetting()
-    {
+    boolean hasSpamTrashSetting() {
         return mHasSpamTrashSetting;
     }
-    
     boolean hasNoResults() {
         return mNoResultsQuery;
     }
@@ -406,86 +416,71 @@ class DBQueryOperation extends QueryOperation
         }
     }
     
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.index.QueryOperation#peekNext()
+    /*
+     * Return the next hit in our search.  If there are no hits buffered
+     * then calculate the next hit and put it into the mNextHits list.
+     * 
+     *   Step 1: Get the list of DbMailItem.SearchResults chunk-by-chunk 
+     *           (50 or 100 or whatever at a time)
+     *            
+     *   Step 2: As we need them, grab the next SearchResult and build a
+     *           real ZimbraHit out of them
      */
     public ZimbraHit peekNext() throws ServiceException
     {
+    	ZimbraHit toRet = null;
         if (mNextHits.size() > 0) {
-            return (ZimbraHit)mNextHits.get(0);
-        }
-        
+        	// already have some hits, so our job is easy!
+        	toRet = (ZimbraHit)mNextHits.get(0);
+        } else {
+        	// we don't have any SearchResults
         if (mDBHitsIter == null || !mDBHitsIter.hasNext()) {
+        		// try to get another chunk of them
             getNextChunk();
         }
+        	    
+        	// okay, check again to see if we've got a chunk of SearchResults
         if (mDBHitsIter != null && mDBHitsIter.hasNext()) {
             SearchResult sr = (SearchResult) mDBHitsIter.next();
             
-            List /*Document*/ docs = null;
+        		// Sometimes, a single search result might yield more than one Lucene
+        		// document -- e.g. an RFC822 message with separately-indexed mimeparts.
+        		// Each of these parts will turn into a separate ZimbraHit at this point,
+        		// although they might be combined together at a higher level (via a HitGrouper)
+        		List <Document> docs = null;
             float score = 1.0f;
             if (mLuceneChunk != null) {
-            	LuceneIndexIdChunk.ScoredLuceneHit sh = mLuceneChunk.getScoredHit(sr.indexId);
+        			LuceneResultsChunk.ScoredLuceneHit sh = mLuceneChunk.getScoredHit(sr.indexId);
             	if (sh != null) { 
             		docs = sh.mDocs;
             		score = sh.mScore;
             	} else {
+        				// how can this happen??
             		mLog.info("Could not find ScoredLuceneHit for sr.indexId="+sr.indexId+" sr.id="+sr.id+" type="+sr.type);
             		docs = null;
             		score = 1.0f;
             	}
             }
             
-            ZimbraHit toAdd;
-            
-            switch(sr.type) {
-            case MailItem.TYPE_MESSAGE:
-                if (docs != null) {
-                    for (Iterator iter = docs.iterator(); iter.hasNext();) {
-                        Document doc = (Document)iter.next();
-                        toAdd = this.getResultsSet().getMessagePartHit(this.getMailbox(), sr.id, doc, score, sr.data);
-                        toAdd.cacheSortField(this.getResultsSet().getSortBy(), sr.sortkey);
+        		if (docs == null) {
+        			ZimbraHit toAdd = getResultsSet().getZimbraHit(getMailbox(), score, sr, null);
                         mNextHits.add(toAdd);
-                    }
                 } else {
-                    toAdd = this.getResultsSet().getMessageHit(this.getMailbox(), sr.id, null, score, sr.data);
-                    toAdd.cacheSortField(this.getResultsSet().getSortBy(), sr.sortkey);
+        			for (Document doc : docs) {
+        				ZimbraHit toAdd = getResultsSet().getZimbraHit(getMailbox(), score, sr, doc);
                     mNextHits.add(toAdd);
                 }
-                break;
-            case MailItem.TYPE_CONTACT:
-                toAdd = this.getResultsSet().getContactHit(this.getMailbox(), sr.id, null, score, sr.data);
-                mNextHits.add(toAdd);
-                break;
-            case MailItem.TYPE_NOTE:
-                toAdd = this.getResultsSet().getNoteHit(this.getMailbox(), sr.id, null, score, sr.data);
-                mNextHits.add(toAdd);
-                break;
-            case MailItem.TYPE_APPOINTMENT:
-                toAdd = this.getResultsSet().getAppointmentHit(this.getMailbox(), sr.id, null, score, sr.data);
-                mNextHits.add(toAdd);
-                break;
-            case MailItem.TYPE_WIKI:
-                toAdd = this.getResultsSet().getWikiHit(this.getMailbox(), sr.id, null, score, sr.data);
-                mNextHits.add(toAdd);
-                break;
-                // Unsupported right now:
-                //            case MailItem.TYPE_DOCUMENT:
-            default:
-                assert(false);
-                return null;
+        		}
+        			toRet = (ZimbraHit)mNextHits.get(0);
             }
-            return (ZimbraHit)mNextHits.get(0);
-        } else {
-            return null;
         }
+        
+        return toRet;
     }
     
     private List /*ZimbraHit*/ mNextHits = new ArrayList();
     
     
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.index.QueryOperation#getNext()
-     */
     public ZimbraHit getNext() throws ServiceException {
         atStart = false;
         if (mNextHits.size() == 0) {
@@ -562,6 +557,10 @@ class DBQueryOperation extends QueryOperation
         return toRet;
     }
     
+    /**
+     * TRUE if we know there are no more hits to get for mDBHitsIter 
+     *   -- ie there is no need to call getChunk() anymore
+     */
     private boolean mEndOfHits = false;
     
     private byte[] mTypes = new byte[0];
@@ -658,72 +657,56 @@ class DBQueryOperation extends QueryOperation
         }
     }
     
-    private void getNextChunk() throws ServiceException
-    {
-        if (mCurHitsOffset == -1 || mEndOfHits) {
-            return;
-        }
-        int mailboxId = this.getMailbox().getId();
+    /**
+     * Build a DbMailIte.SearchConstraints given all of the constraint parameters we have.
+     *
+     * @return
+     */
+    private SearchConstraints getSearchConstraints() {
         SortBy searchOrder = this.getResultsSet().getSortBy();
+        byte[] types = getDbQueryTypes();
+        if (types.length == 0)  {
+            mLog.debug("NO RESULTS -- no known types requested");
+            return null;
+        } else { 
+            DbMailItem.SearchConstraints c = new DbMailItem.SearchConstraints();
+            c.mailboxId = getMailbox().getId();
         
-        if (mIncludedItemIds != null && mIncludedItemIds.size() == 0) {
-            mNoResultsQuery = true;
+            // tags
+            if (mIncludeTags.size() > 0) {
+            	c.tags = (Tag[]) mIncludeTags.toArray(new Tag[mIncludeTags.size()]);
         }
         
-        if (!mNoResultsQuery) {
-            Connection conn = null;
-            try {
-                conn = DbPool.getConnection();
+            // exclude-tags
+            if (mExcludeTags.size() > 0) {
+            	c.excludeTags = (Tag[]) mExcludeTags.toArray(new Tag[mExcludeTags.size()]);
+            }
 
-                byte sort = searchOrder.getDbMailItemSortByte();
-
-                Folder[] folders = null;
-                Folder[] excludeFolders = null;
+            // folders
                 if (mFolder != null) {
-                    folders = new Folder[1];
-                    folders[0] = mFolder;
+            	c.folders = new Folder[1];
+            	c.folders[0] = mFolder;
                 } 
                 
+            // exclude-folders
                 if (mExcludeFolder.size() > 0) {
-                    excludeFolders = (Folder[])(mExcludeFolder.toArray(new Folder[mExcludeFolder.size()]));
+            	c.excludeFolders = (Folder[])(mExcludeFolder.toArray(new Folder[mExcludeFolder.size()]));
                 }
                 
-                byte[] types = getDbQueryTypes();
-                if (types.length == 0)  {
-                    mLog.debug("NO RESULTS -- no known types requested");
-                    mDBHitsIter = null;
-                    mCurHitsOffset = -1;
-                    return;
-                } else { 
-                    Tag[] includeTags = null;
-                    Tag[] excludeTags = null;
-                    if (mIncludeTags.size() > 0) {
-                        includeTags = (Tag[]) mIncludeTags.toArray(new Tag[mIncludeTags.size()]);
-                    }
-                    if (mExcludeTags.size() > 0) {
-                        excludeTags = (Tag[]) mExcludeTags.toArray(new Tag[mExcludeTags.size()]);
-                    }
+            c.convId = mConvId;
                     
-                    int[] prohibitedConvIds = null;
+            // prohibited-conv-ids
                     if (mProhibitedConvIds.size() > 0) {
-                        prohibitedConvIds = new int[mProhibitedConvIds.size()];
+            	c.prohibitedConvIds = new int[mProhibitedConvIds.size()];
                         int i = 0;
                         for (Iterator probIter = mProhibitedConvIds.iterator(); probIter.hasNext();) {
                             Integer cid = (Integer)probIter.next();
-                            prohibitedConvIds[i++] = cid.intValue();
+                    c.prohibitedConvIds[i++] = cid.intValue();
                         }
                     }
                     
-                    DbMailItem.SearchConstraints c = new DbMailItem.SearchConstraints();
-                    c.mailboxId = mailboxId;
-                    c.tags = includeTags;
-                    c.excludeTags = excludeTags;
-                    c.folders = folders;
-                    c.excludeFolders = excludeFolders;
-                    c.convId = mConvId;
-                    c.prohibitedConvIds = prohibitedConvIds;
                     c.types = types;
-                    c.sort = sort;
+            c.sort = searchOrder.getDbMailItemSortByte(); 
                     
                     if (mExcludeTypes.length > 0) {
                         c.excludeTypes = mExcludeTypes;
@@ -751,21 +734,155 @@ class DBQueryOperation extends QueryOperation
                     if (mSizes.size() > 0) {
                         c.sizes = (SearchConstraints.Range[])mSizes.toArray(new SearchConstraints.Range[mSizes.size()]);
                     }
+            return c;
+        }
+    }
+    
+    boolean mFailedDbFirst = false;
+    
+    /**
+     * The maximum DB results we will allow when running a DB-FIRST query: if there 
+     * are more than this many results we switch over to LUCENE-FIRST.
+     * 
+     * This limitation is necessary so that SCORE sorting is possible -- for score sorting
+     * to work, we have to get *all* of the results from the DB and pass them to lucene
+     * at the same time (since they don't come back in score-order from the DB) -- and
+     * we don't want fetch huge numbers of results from the DB.
+     * 
+     * This number *must* be smaller than the value of LuceneQuery.maxClauseCount 
+     * (LuceneQuery.getMaxClauseCount())
+     * 
+     */
+    private static final int MAX_DBFIRST_RESULTS = 5;
+    
+    private boolean tryDbFirst() {
+    	if (!mFailedDbFirst) {
+    		Mailbox mbox = getMailbox();
+    		
+    		if (mConvId != 0 || (mIncludeTags!=null && mIncludeTags.contains(mbox.mUnreadFlag))) 
+    		{
+    			return true;
+    		}
+    	}
+    	return false;
+    }
                     
+    /**
+     * Use all the search parameters (including the embedded LuceneQueryOperation) to
+     * get a chunk of SearchResults.
+     * 
+     * @throws ServiceException
+     */
+    private void getNextChunk() throws ServiceException
+    {
+        if (mCurHitsOffset == -1 || mEndOfHits) {
+            return;
+        }
+        if (mIncludedItemIds != null && mIncludedItemIds.size() == 0) {
+            mNoResultsQuery = true;
+        }
+        
+        if (!mNoResultsQuery) {
+            Connection conn = null;
+            try {
+                conn = DbPool.getConnection();
+                
+                SearchConstraints c = getSearchConstraints();
+                if (c == null) {
+                    mDBHitsIter = null;
+                    mCurHitsOffset = -1;
+                    return;
+                } else {
                     if (mLuceneOp == null) {
+                    	// no lucene op, this is easy
                         c.offset = mCurHitsOffset;
                         c.limit = mHitsPerChunk;
                         
                         boolean getFullRows = this.isTopLevelQueryOp();
                         mDBHits = DbMailItem.search(conn, c, getFullRows);
                     } else {
+                    	boolean success = false;
                         
+                    	////////////////////
+                    	//
+                    	// Possibly try doing a DB-FIRST query here
+                    	//
+                    	if (tryDbFirst()) {
+                    		assert(c.offset == -1);
+                    		assert(c.limit == -1);
+                    		assert(MAX_DBFIRST_RESULTS < BooleanQuery.getMaxClauseCount());
+                    		
+                    		mLog.debug("Attempting a DB-FIRST execution");
+                    		// do DB op first, pass results to Lucene op
+                            c.offset = 0;
+                            c.limit = MAX_DBFIRST_RESULTS;
+                            
+                            boolean getFullRows = this.isTopLevelQueryOp();
+                            Collection<SearchResult> dbRes = DbMailItem.search(conn, c, getFullRows);
+                            
+                            if (dbRes.size() == MAX_DBFIRST_RESULTS) {
+                            	mLog.info("FAILED DB-FIRST: Too many results");
+                            	mFailedDbFirst = true;
+                            	
+                            	// reset the offset/limit to what they should be (we're going to 
+                            	// fall through below)
+                            	c.offset = -1;
+                            	c.offset = -1;
+                            }
+                            
+                            if (!mFailedDbFirst) {
+                            	BooleanQuery idsQuery = new BooleanQuery();
+                            	
+                            	// maps an IndexID to a list of SearchResults
+                            	HashMap<Integer, List<SearchResult>> mailItemToResultsMap = new HashMap();
+                            	
+                            	for (SearchResult res : dbRes) {
+                            		List<SearchResult> l = mailItemToResultsMap.get(res.indexId);
+                            		if (l == null) {
+                            			l = new LinkedList<SearchResult>();
+                            			mailItemToResultsMap.put(res.indexId, l);
+                            		}
+                            		l.add(res);
+                            		
+                            		idsQuery.add(new TermQuery(new Term(LuceneFields.L_MAILBOX_BLOB_ID, Integer.toString(res.indexId))), false, false);
+                            	}
+                            	mLuceneOp.addClause(idsQuery, true);
+                            	
+                            	mLuceneChunk = mLuceneOp.getNextResultsChunk(dbRes.size());
+                            	
+                            	mDBHits = new ArrayList(dbRes.size());
+                            	
+                            	int[] indexIds = mLuceneChunk.getIndexIds();
+                            	for (int indexId : indexIds) {
+                            		List<SearchResult> l = mailItemToResultsMap.get(indexId);
+                            		
+                            		for (SearchResult sr : l) {
+                            			mDBHits.add(sr);
+                            		}
+                            	}
+                            	
+                            	// DB-first queries always calculate all the DB hits in one operation....
+                            	// we have to do it that way or else we cannot support Score searches (since
+                            	// we can't sort DB-results by score-order)
+                            	mEndOfHits = true;                    		
+                            	
+                            	success = true; 
+                            }
+                    	}
+                    		
+                    	////////////////////
+                    	//
+                    	// If we haven't run anything yet (b/c DB-FIRST wasn't called-for,
+                    	// or b/c DB-FIRST ran and failed) then do a LUCENE-FIRST query
+                    	//
+                    	if (!success) {
+                    		mLog.debug("Running a LUCENE-FIRST execution");
+                    		// do the Lucene op first, pass results to DB op
                         do {
                             // DON'T set an sql LIMIT if we're asking for lucene hits!!!  If we did, then we wouldn't be
                             // sure that we'd "consumed" all the Lucene-ID's, and therefore we could miss hits!
-                            mLuceneChunk = mLuceneOp.getNextIndexedIdChunk(mHitsPerChunk);
+                    			mLuceneChunk = mLuceneOp.getNextResultsChunk(mHitsPerChunk);
                             c.indexIds = mLuceneChunk.getIndexIds();
-                            
                             
                             // exponentially expand the chunk size in case we have to go back to the DB
                             mHitsPerChunk*=2;
@@ -782,8 +899,9 @@ class DBQueryOperation extends QueryOperation
                             } else {
                             	mDBHits = DbMailItem.search(conn, c);
                             	
-                            	if (searchOrder == SortBy.SCORE_DESCENDING) {
-                            		// oops, have to re-sort by SCORE here...
+                    				if (getSortBy() == SortBy.SCORE_DESCENDING) {
+                    					// We have to re-sort the chunk by score here b/c the DB doesn't
+                    					// know about scores
                             		ScoredDBHit[] scHits = new ScoredDBHit[mDBHits.size()];
                             		int offset = 0;
                             		for (SearchResult sr : mDBHits) {
@@ -801,6 +919,7 @@ class DBQueryOperation extends QueryOperation
                             	
                             }
                         } while (mDBHits.size() == 0 && !mEndOfHits);
+                    }
                     }
                 } // if types.length check...
                 

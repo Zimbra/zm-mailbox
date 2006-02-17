@@ -28,6 +28,7 @@
  */
 package com.zimbra.cs.index;
 
+import com.zimbra.cs.db.DbMailItem.SearchResult;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -178,7 +179,51 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
           hit.updateScore(score);
       }
       return hit;
-  }    
+  }
+  
+ /**
+  * We've got a mailbox, a score a DBMailItem.SearchResult and (optionally) a Lucene Doc...
+  * that's everything we need to build a real ZimbraHit.
+  * 
+  * @param mbox
+  * @param score
+  * @param sr
+  * @param doc - Optional, only set if this search had a Lucene part
+  * @return
+  * @throws ServiceException
+  */
+ZimbraHit getZimbraHit(Mailbox mbox, float score, SearchResult sr, Document doc) throws ServiceException {
+	  ZimbraHit toRet = null;
+	  switch(sr.type) {
+	  case MailItem.TYPE_MESSAGE:
+		  if (doc != null) {
+			  toRet = getMessagePartHit(mbox, sr.id, doc, score, sr.data);
+			  toRet.cacheSortField(getSortBy(), sr.sortkey);
+		  } else {
+			  toRet = getMessageHit(mbox, sr.id, null, score, sr.data);
+			  toRet.cacheSortField(getSortBy(), sr.sortkey);
+          }
+          break;
+      case MailItem.TYPE_CONTACT:
+          toRet = getContactHit(mbox, sr.id, null, score, sr.data);
+          break;
+      case MailItem.TYPE_NOTE:
+    	  toRet = getNoteHit(mbox, sr.id, null, score, sr.data);
+          break;
+      case MailItem.TYPE_APPOINTMENT:
+    	  toRet = getAppointmentHit(mbox, sr.id, null, score, sr.data);
+    	  break;
+      case MailItem.TYPE_WIKI:
+          toRet = getWikiHit(mbox, sr.id, null, score, sr.data);
+          break;          
+          // Unsupported right now:
+          //            case MailItem.TYPE_DOCUMENT:
+      default:
+          assert(false);
+      }
+	  
+	  return toRet;
+  }
 
   protected WikiHit getWikiHit(Mailbox mbx, int mailItemId, Document d, float score, MailItem.UnderlyingData underlyingData) throws ServiceException {
       WikiHit hit = (WikiHit) mMessageHits.get(mailItemId);
