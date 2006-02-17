@@ -53,6 +53,8 @@ class LuceneQueryOperation extends QueryOperation
     private Hits mLuceneHits = null;
     private int mCurHitNo = 0;
     private MailboxIndex.CountedIndexSearcher mSearcher = null;
+    private Sort mSort = null;
+    private boolean mHaveRunSearch = false;
     
     /**
      * because we don't store the real mail-item-id of documents, we ALWAYS need a DBOp 
@@ -92,6 +94,7 @@ class LuceneQueryOperation extends QueryOperation
     }
     
     public void doneWithSearchResults() throws ServiceException {
+    	mSort = null;
         if (mSearcher != null) {
             mSearcher.release();
         }
@@ -111,7 +114,7 @@ class LuceneQueryOperation extends QueryOperation
      * the DBQueryOperation will use to check against the DB.
      * 
      */
-    protected static class LuceneIndexIdChunk {
+    protected static class LuceneResultsChunk {
     	
     	static class ScoredLuceneHit {
     		ScoredLuceneHit(float score) { mScore= score; }
@@ -152,9 +155,12 @@ class LuceneQueryOperation extends QueryOperation
         private HashMap <Integer /*indexId*/, ScoredLuceneHit> mHits = new HashMap();
     }
     
-    protected LuceneIndexIdChunk getNextIndexedIdChunk(int maxChunkSize) throws ServiceException {
+    protected LuceneResultsChunk getNextResultsChunk(int maxChunkSize) throws ServiceException {
         try {
-            LuceneIndexIdChunk toRet = new LuceneIndexIdChunk();
+        	if (!mHaveRunSearch)
+        		runSearch();
+        	
+        	LuceneResultsChunk toRet = new LuceneResultsChunk();
             int luceneLen = mLuceneHits != null ? mLuceneHits.length() : 0;
             
             while ((toRet.size() < maxChunkSize) && (mCurHitNo < luceneLen)) {
@@ -174,7 +180,7 @@ class LuceneQueryOperation extends QueryOperation
             return toRet;
             
         } catch (IOException e) {
-            throw ServiceException.FAILURE("Caught IOException getting lucene results", e);
+        	throw ServiceException.FAILURE("Caught IOException getting lucene results", e);
         }
     }
     
@@ -214,6 +220,7 @@ class LuceneQueryOperation extends QueryOperation
     
     protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res, MailboxIndex mbidx, int chunkSize) throws ServiceException, IOException
     {
+    	assert(!mHaveRunSearch);
         if (mDBOp == null) {
             // wrap ourselves in a DBQueryOperation, since we're eventually going to need to go to the DB
             mDBOp = DBQueryOperation.Create();
@@ -223,25 +230,42 @@ class LuceneQueryOperation extends QueryOperation
             this.setupResults(mbx, res);
             
             try {
-                mSearcher = mbidx.getCountedIndexSearcher();
-                
-                if (mQuery != null) {
-                    
-                    BooleanQuery outerQuery = new BooleanQuery();
-                    outerQuery.add(new BooleanClause(new TermQuery(new Term(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE)), true, false));
-                    outerQuery.add(new BooleanClause(mQuery, true, false));
-                    mLuceneHits = mSearcher.getSearcher().search(outerQuery, mbidx.getSort(res.getSortBy()));
-                } else {
-                    assert(false);
-                }
+            	mSearcher = mbidx.getCountedIndexSearcher();
+            	mSort = mbidx.getSort(res.getSortBy());
+//            	runSearch();
             } catch (IOException e) {
                 e.printStackTrace();
                 if (mSearcher != null) {
                     mSearcher.release();
                     mSearcher = null;
                 }
+                mSort = null;
                 mLuceneHits = null;
             }
+        }
+    }
+    
+    private void runSearch() {
+    	assert(!mHaveRunSearch);
+		mHaveRunSearch = true;
+    	
+        try {
+        	if (mQuery != null) {
+                
+                BooleanQuery outerQuery = new BooleanQuery();
+                outerQuery.add(new BooleanClause(new TermQuery(new Term(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE)), true, false));
+                outerQuery.add(new BooleanClause(mQuery, true, false));
+                mLuceneHits = mSearcher.getSearcher().search(outerQuery, mSort);
+            } else {
+                assert(false);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            if (mSearcher != null) {
+                mSearcher.release();
+                mSearcher = null;
+            }
+            mLuceneHits = null;
         }
     }
     
@@ -254,8 +278,8 @@ class LuceneQueryOperation extends QueryOperation
         return "LUCENE(" + mQuery.toString() + ")";
     }
     
-    
     protected QueryOperation combineOps(QueryOperation other, boolean union) {
+    	assert(!mHaveRunSearch);
         
         if (union) {
             if (other.hasNoResults()) {
@@ -290,6 +314,8 @@ class LuceneQueryOperation extends QueryOperation
     }
 
     void addClause(Query q, boolean truth) {
+    	assert(!mHaveRunSearch);
+    	
         if (truth) {
             mQuery.add(new BooleanClause(q, true, false));
         } else {
