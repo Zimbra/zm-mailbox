@@ -213,6 +213,31 @@ Access: domain admin sufficient
 
 -----------------------------
 
+<GetQuotaUsageRequest [limit="..."] [offset="..."] [domain="{limit-to-domain}"] [cos="{limit-to-cos}"]
+         [sortBy="{sort-by}"] [sortAscending="{sort-ascending}"]]>
+</GetQuotaUsageRequest>
+
+<GetQuotaUsageResponse more="{more-flag}" [searchTotal="{search-total}"]>
+  <account name="{name}" id="{id}" used="quota-used" limit="quota-limit"/>+
+</GetQuotaUsageResponse>
+
+Notes:
+GetQuotaUsageRequest
+  limit - the number of accounts to return (0 is default and means all)
+  offset - the starting offset (0, 25, etc)
+  domain - the domain name to limit the search to
+  cos    - the cos name to limit the search to
+  sortBy - valid values: "percentUsed" and "totalUsed"
+  sortAscending - whether to sort in ascending order (0/1), 0 is default, so highest quotas are returned first
+  more-flag = true if more accounts left to return
+  search-total = total number of accounts that matched search (not affected by limit/offset)
+  used = used quota in bytes, or 0 if no quota used
+  limit = quota limit in bytes, or 0 if unlimited
+
+The target server should be specified in the soap header (see soap.txt, <targetServer>).
+
+-----------------------------
+
 <GetAllAccountsRequest>
   [<domain by="id|name">...</domain>]
 <GetAllAccountsRequest/>

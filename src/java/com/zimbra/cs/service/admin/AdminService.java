@@ -232,6 +232,9 @@ public class AdminService implements DocumentService {
     public static final QName DUMP_SESSIONS_REQUEST = QName.get("DumpSessionsRequest", NAMESPACE);
     public static final QName DUMP_SESSIONS_RESPONSE = QName.get("DumpSessionsResponse", NAMESPACE);
 
+    public static final QName GET_QUOTA_USAGE_REQUEST = QName.get("GetQuotaUsageRequest", NAMESPACE);
+    public static final QName GET_QUOTA_USAGE_RESPONSE = QName.get("GetQuotaUsageResponse", NAMESPACE);
+
     public static final String E_ACCOUNT = "account";
     public static final String E_CALENDAR_RESOURCE = "calresource";
     public static final String E_AUTH_TOKEN = "authToken";
@@ -337,6 +340,9 @@ public class AdminService implements DocumentService {
     public static final String A_PRIORITY = "priority";
     public static final String A_ACL = "acl";
 
+    public static final String A_QUOTA_USED = "used";
+    public static final String A_QUOTA_LIMIT = "limit";
+
     public static final String ADMIN_URI = "https://localhost:7071/";
 	
     public void registerHandlers(DocumentDispatcher dispatcher) {
@@ -435,6 +441,9 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(GET_CALENDAR_RESOURCE_REQUEST,      new GetCalendarResource());
         dispatcher.registerHandler(GET_ALL_CALENDAR_RESOURCES_REQUEST, new GetAllCalendarResources());
         dispatcher.registerHandler(SEARCH_CALENDAR_RESOURCES_REQUEST,  new SearchCalendarResources());
+
+        // QUOTA
+        dispatcher.registerHandler(GET_QUOTA_USAGE_REQUEST, new GetQuotaUsage());
     }
 
     /**
