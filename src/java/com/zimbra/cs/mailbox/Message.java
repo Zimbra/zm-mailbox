@@ -263,10 +263,10 @@ public class Message extends MailItem {
     }
 
     /** Returns a JavaMail {@link javax.mail.internet.MimeMessage}
-     *  encapsulating the message content.  If possible, TNEF attachments
-     *  are expanded and their components are presented as standard MIME
-     *  attachments.  If TNEF decoding fails, the MimeMessage wraps the raw
-     *  message content.
+     *  encapsulating the message content.  If possible, TNEF and uuencoded
+     *  attachments are expanded and their components are presented as
+     *  standard MIME attachments.  If TNEF or uuencode decoding fails, the
+     *  MimeMessage wraps the raw message content.
      * 
      * @return A MimeMessage wrapping the RFC822 content of the Message.
      * @throws ServiceException when errors occur opening, reading,
@@ -274,7 +274,8 @@ public class Message extends MailItem {
      *                          or when the file does not exist.
      * @see #getRawMessage()
      * @see #getMessageContent()
-     * @see TnefConverter */
+     * @see TnefConverter
+     * @see UUEncodeConverter */
     public MimeMessage getMimeMessage() throws ServiceException {
         return MessageCache.getMimeMessage(this);
     }

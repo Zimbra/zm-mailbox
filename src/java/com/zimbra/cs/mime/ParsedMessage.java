@@ -69,6 +69,7 @@ public class ParsedMessage {
     private static MailDateFormat sFormat = new MailDateFormat();
 
     private MimeMessage mMimeMessage;
+    private MimeMessage mExpandedMessage;
     private boolean mParsed = false;
     private boolean mAnalyzed = false;
     private boolean mIndexAttachments = true;
@@ -95,7 +96,7 @@ public class ParsedMessage {
     
     public ParsedMessage(MimeMessage msg, boolean indexAttachments) {
         mIndexAttachments = indexAttachments;
-        mMimeMessage = msg;
+        mMimeMessage = mExpandedMessage = msg;
         setReceivedDate(getZimbraDateHeader());
 	}
 
@@ -104,7 +105,7 @@ public class ParsedMessage {
     // document is initialized
     public ParsedMessage(MimeMessage msg, long receivedDate, boolean indexAttachments) {
         mIndexAttachments = indexAttachments;
-        mMimeMessage = msg;
+        mMimeMessage = mExpandedMessage = msg;
         setReceivedDate(receivedDate);
     }
 
@@ -112,7 +113,7 @@ public class ParsedMessage {
         mIndexAttachments = indexAttachments;
         setRawData(rawData);
         ByteArrayInputStream bais = new ByteArrayInputStream(rawData);
-        mMimeMessage = new MimeMessage(JMSession.getSession(), bais);
+        mMimeMessage = mExpandedMessage = new MimeMessage(JMSession.getSession(), bais);
         try {
             bais.close();
         } catch (IOException ioe) {
@@ -125,7 +126,7 @@ public class ParsedMessage {
         mIndexAttachments = indexAttachments;
         setRawData(rawData);
         ByteArrayInputStream bais = new ByteArrayInputStream(rawData);
-        mMimeMessage = new MimeMessage(JMSession.getSession(), bais);
+        mMimeMessage = mExpandedMessage = new MimeMessage(JMSession.getSession(), bais);
         try {
             bais.close();
         } catch (IOException ioe) {
@@ -140,7 +141,22 @@ public class ParsedMessage {
         mParsed = true;
 
 		try {
-            mMessageParts = Mime.getParts(mMimeMessage);
+            // this callback copies the MimeMessage if there's a uuencoded part, 
+            //   but doesn't alter the original MimeMessage
+            MimeVisitor.ModificationCallback forkCallback = new MimeVisitor.ModificationCallback() {
+                public boolean onModification() {
+                    try { forkMimeMessage(); } catch (Exception e) { }  return false;
+                } };
+            try {
+                Mime.accept(new UUEncodeConverter(forkCallback), mMimeMessage);
+                // if there are inlined uuencoded attachments, expand them in the MimeMessage *copy*
+                if (mExpandedMessage != mMimeMessage)
+                    Mime.accept(new UUEncodeConverter(), mExpandedMessage);
+            } catch (Exception e) {
+                sLog.warn("exception while uudecoding message; message will not be uudecoded", e);
+            }
+
+            mMessageParts = Mime.getParts(mExpandedMessage);
             mHasAttachments = Mime.hasAttachment(mMessageParts);
         } catch (Exception e) {
             sLog.warn("exception while parsing message; message will not be indexed", e);
@@ -164,6 +180,10 @@ public class ParsedMessage {
 	public MimeMessage getMimeMessage() {
 		return mMimeMessage;
 	}
+
+    void forkMimeMessage() throws MessagingException {
+        mExpandedMessage = new MimeMessage(mMimeMessage);
+    }
 
     private void setRawData(byte[] rawData) {
         mHaveRaw = true;
@@ -200,7 +220,7 @@ public class ParsedMessage {
         return mRawDigest;
     }
 
-    public List /*<MPartInfo>*/ getMessageParts() {
+    public List<MPartInfo> getMessageParts() {
         parse();
     	return mMessageParts;
     }
@@ -381,8 +401,7 @@ public class ParsedMessage {
         return miCalendar;
     }
     
-	private void analyzeMessage()
-        throws MessagingException, ServiceException {
+	private void analyzeMessage() throws MessagingException, ServiceException {
         if (mAnalyzed)
             return;
         mAnalyzed = true;
@@ -397,15 +416,12 @@ public class ParsedMessage {
 
 		MPartInfo mpiBody = Mime.getBody(mMessageParts, false);
 
-		TopLevelMessageHandler allTextHandler =
-            new TopLevelMessageHandler(mMimeMessage, mMessageParts);
+		TopLevelMessageHandler allTextHandler = new TopLevelMessageHandler(mMessageParts);
 
         int numParseErrors = 0;
         ServiceException conversionError = null;
 
-        
-		for (Iterator it = mMessageParts.iterator(); it.hasNext(); ) {
-            MPartInfo mpi = (MPartInfo) it.next();
+        for (MPartInfo mpi : mMessageParts) {
             try {
                 analyzePart(mpi, mpiBody, allTextHandler);
             } catch (MimeHandlerException e) {
@@ -431,14 +447,13 @@ public class ParsedMessage {
             allTextHandler.hasCalendarPart(true);
         if (numParseErrors > 0) {
             String msgid = getMessageID();
-            String sbj = mMimeMessage.getSubject();
+            String sbj = getSubject();
             sLog.warn("Message had parse errors in " + numParseErrors +
                       " parts (Message-Id: " + msgid + ", Subject: " + sbj + ")");
         }
         mLuceneDocuments.add(allTextHandler.getDocument(this));
 
-    	for (Iterator it = mLuceneDocuments.iterator(); it.hasNext(); ) {
-    		Document doc = (Document) it.next();
+        for (Document doc : mLuceneDocuments) {
     		if (doc != null) {
     			// foreach doc we are adding, add domains of message
     			//msgHandler.setEmailDomainsField(doc);
