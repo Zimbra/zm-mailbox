@@ -16,6 +16,7 @@ import javax.mail.internet.MimeMessage;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.TnefConverter;
+import com.zimbra.cs.mime.UUEncodeConverter;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.StoreManager;
@@ -39,7 +40,7 @@ public class MessageCache {
 
     private static final int DEFAULT_CACHE_SIZE = 16 * 1000 * 1000;
 
-    private static Map mCache = new LinkedHashMap(150, (float) 0.75, true);
+    private static Map<String, CacheNode> mCache = new LinkedHashMap<String, CacheNode>(150, (float) 0.75, true);
     private static int mTotalSize = 0;
     private static int mMaxCacheSize;
     static {
@@ -74,14 +75,14 @@ public class MessageCache {
             return null;
 
         boolean cacheHit = false;
-        CacheNode cn = null;
+        CacheNode cnode = null;
         synchronized (mCache) {
-            cn = (CacheNode) mCache.get(key);
-            cacheHit = cn != null && cn.mContent != null;
+            cnode = mCache.get(key);
+            cacheHit = cnode != null && cnode.mContent != null;
 
-            if (!cacheHit && cn != null) {
+            if (!cacheHit && cnode != null) {
                 // can't use a cached MimeMessage because of TNEF conversion
-                mCache.remove(key);  mTotalSize -= cn.mSize;
+                mCache.remove(key);  mTotalSize -= cnode.mSize;
             }
         }
 
@@ -90,10 +91,10 @@ public class MessageCache {
                 // wasn't cached; fetch, cache, and return it
                 int size = (int) item.getSize();
                 InputStream is = fetchFromStore(item);
-                cn = new CacheNode(size, ByteUtil.getContent(is, size));
+                cnode = new CacheNode(size, ByteUtil.getContent(is, size));
 
                 // cache the message content (if it'll fit)
-                cacheItem(key, cn);
+                cacheItem(key, cnode);
             } catch (IOException e) {
                 throw ServiceException.FAILURE("IOException while retrieving content for item " + item.getId(), e);
             }
@@ -104,7 +105,7 @@ public class MessageCache {
         
         ZimbraPerf.COUNTER_MBOX_MSG_CACHE.increment(cacheHit ? 1 : 0);
         
-        return cn.mContent;
+        return cnode.mContent;
     }
 
     /** Returns an {@link InputStream} of the raw, uncompressed content of
@@ -120,10 +121,10 @@ public class MessageCache {
     }
 
     /** Returns a JavaMail {@link javax.mail.internet.MimeMessage}
-     *  encapsulating the message content.  If possible, TNEF attachments
-     *  are expanded and their components are presented as standard MIME
-     *  attachments.  If TNEF decoding fails, the MimeMessage wraps the raw
-     *  message content.
+     *  encapsulating the message content.  If possible, TNEF and uuencoded
+     *  attachments are expanded and their components are presented as
+     *  standard MIME attachments.  If TNEF or uuencode decoding fails, the
+     *  MimeMessage wraps the raw message content.
      * 
      * @return A MimeMessage wrapping the RFC822 content of the Message.
      * @throws ServiceException when errors occur opening, reading,
@@ -131,18 +132,19 @@ public class MessageCache {
      *                          or when the file does not exist.
      * @see #getRawContent()
      * @see #getItemContent()
-     * @see TnefConverter */
+     * @see TnefConverter
+     * @see UUEncodeConverter */
     static MimeMessage getMimeMessage(Message msg) throws ServiceException {
         String key = msg.getDigest();
         boolean cacheHit = false;
-        CacheNode cn = null, cnOrig = null;
+        CacheNode cnode = null, cnOrig = null;
         synchronized (mCache) {
-            cn = cnOrig = (CacheNode) mCache.get(key);
-            cacheHit = cn != null && cn.mMessage != null;
+            cnode = cnOrig = mCache.get(key);
+            cacheHit = cnode != null && cnode.mMessage != null;
 
-            if (!cacheHit && cn != null) {
+            if (!cacheHit && cnode != null) {
                 // replacing the cached byte array with a MimeMessage
-                mCache.remove(key);  mTotalSize -= cn.mSize;
+                mCache.remove(key);  mTotalSize -= cnode.mSize;
             }
         }
 
@@ -151,23 +153,25 @@ public class MessageCache {
                 // wasn't cached; fetch the content and create the MimeMessage
                 int size = (int) msg.getSize();
                 InputStream is = (cnOrig == null ? fetchFromStore(msg) : new ByteArrayInputStream(cnOrig.mContent));
-                cn = new CacheNode(size, new MimeMessage(JMSession.getSession(), is));
+                cnode = new CacheNode(size, new MimeMessage(JMSession.getSession(), is));
                 is.close();
 
                 try {
                     // handle TNEF conversion here...
-                    Mime.accept(new TnefConverter(), cn.mMessage);
+                    Mime.accept(new TnefConverter(), cnode.mMessage);
+                    // handle UUENCODE conversion here...
+                    Mime.accept(new UUEncodeConverter(), cnode.mMessage);
                 } catch (Exception e) {
                     // if the conversion bombs for any reason, revert to the original
                     if (ZimbraLog.mailbox.isInfoEnabled())
                         ZimbraLog.mailbox.info("unable to convert TNEF attachment for message " + msg.getId(), e);
                     is = (cnOrig == null ? fetchFromStore(msg) : new ByteArrayInputStream(cnOrig.mContent));
-                    cn = new CacheNode(size, new MimeMessage(JMSession.getSession(), is));
+                    cnode = new CacheNode(size, new MimeMessage(JMSession.getSession(), is));
                     is.close();
                 }
 
                 // cache the MimeMessage (if it'll fit)
-                cacheItem(key, cn);
+                cacheItem(key, cnode);
             } catch (IOException e) {
                 throw ServiceException.FAILURE("IOException while retrieving content for item " + msg.getId(), e);
             } catch (MessagingException e) {
@@ -180,7 +184,7 @@ public class MessageCache {
 
         ZimbraPerf.COUNTER_MBOX_MSG_CACHE.increment(cacheHit ? 1 : 0);
         
-        return cn.mMessage;
+        return cnode.mMessage;
     }
 
     private static InputStream fetchFromStore(MailItem item) throws ServiceException, IOException {
@@ -190,15 +194,15 @@ public class MessageCache {
         return StoreManager.getInstance().getContent(msgBlob);
     }
 
-    private static void cacheItem(String key, CacheNode cn) {
-        if (cn.mSize >= mMaxCacheSize)
+    private static void cacheItem(String key, CacheNode cnode) {
+        if (cnode.mSize >= mMaxCacheSize)
             return;
 
         synchronized (mCache) {
             if (ZimbraLog.cache.isDebugEnabled())
-                ZimbraLog.cache.debug("msgcache: caching " + (cn.mContent != null ? "raw" : "mime") + " message: " + key);
-            mCache.put(key, cn);
-            mTotalSize += cn.mSize;
+                ZimbraLog.cache.debug("msgcache: caching " + (cnode.mContent != null ? "raw" : "mime") + " message: " + key);
+            mCache.put(key, cnode);
+            mTotalSize += cnode.mSize;
 
             // trim the cache if needed
             if (mTotalSize > mMaxCacheSize)

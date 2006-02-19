@@ -29,7 +29,6 @@
 package com.zimbra.cs.index;
 
 import java.io.UnsupportedEncodingException;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -43,13 +42,13 @@ import org.apache.lucene.document.DateField;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
+import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeHandler;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.TnefExtractor;
 import com.zimbra.cs.object.ObjectHandlerException;
 import com.zimbra.cs.service.ServiceException;
-
 
 
 /**
@@ -65,27 +64,25 @@ public final class TopLevelMessageHandler {
 	
 	private static final int STORE = 10;
 	private static final int DONT_STORE = 20;
-	
+
     private static final int INDEX = 30;
     private static final int DONT_INDEX = 40;
 
     private static final int TOKENIZE = 50;
 //    private static final int DONT_TOKENIZE = 60;
     
-    private MimeMessage  mMessage;
-    private List         mMessageParts;
+    private List<MPartInfo> mMessageParts;
     private Document     mDocument;
-    private StringBuffer mContent;
+    private StringBuilder mContent;
     private String       mBodyContent;
     private String       mFragment;
     private boolean      mHasCalendar;
 //    private String mDomains;
 
-    public TopLevelMessageHandler(MimeMessage mm, List parts) {
-    	mMessage = mm;
+    public TopLevelMessageHandler(List<MPartInfo> parts) {
     	mMessageParts = parts;
     	mDocument = new Document();
-    	mContent = new StringBuffer();
+    	mContent = new StringBuilder();
     }
 
     public void addContent(String text) {
@@ -94,18 +91,14 @@ public final class TopLevelMessageHandler {
     
     public void addContent(String text, boolean isMainBody) {
     	if (mContent.length() > 0)
-    		mContent.append(" ");
+    		mContent.append(' ');
     	mContent.append(text);
     	
     	if (isMainBody)
     		mBodyContent = text;
     }
-
-    public MimeMessage getMimeMessage() {
-    	return mMessage;
-    }
     
-    public List /*<MPartInfo>*/ getMessageParts() {
+    public List<MPartInfo> getMessageParts() {
     	return mMessageParts;
     }
     
@@ -127,9 +120,9 @@ public final class TopLevelMessageHandler {
         mDocument.add(Field.Text(LuceneFields.L_MIMETYPE, "message/rfc822"));
         mDocument.add(Field.Keyword(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_TOP));
         
-        String toValue = setHeaderAsField("to", LuceneFields.L_H_TO, DONT_STORE, INDEX, TOKENIZE);
-        String ccValue = setHeaderAsField("cc", LuceneFields.L_H_CC, DONT_STORE, INDEX, TOKENIZE);
-//      String subject = setHeaderAsField("subject", LuceneFields.L_H_SUBJECT, DONT_STORE, INDEX, TOKENIZE);
+        String toValue = setHeaderAsField("to", pm, LuceneFields.L_H_TO, DONT_STORE, INDEX, TOKENIZE);
+        String ccValue = setHeaderAsField("cc", pm, LuceneFields.L_H_CC, DONT_STORE, INDEX, TOKENIZE);
+//      String subject = setHeaderAsField("subject", pm, LuceneFields.L_H_SUBJECT, DONT_STORE, INDEX, TOKENIZE);
         
         String subject = pm.getNormalizedSubject();
         String sortFrom = pm.getParsedSender().getSortString();
@@ -145,31 +138,31 @@ public final class TopLevelMessageHandler {
 
         // add subject and from to main content for better searching
         addContent(subject);
-        
+
         // Bug 583: add all of the TOKENIZED versions of the email addresses to our CONTENT field...
         addContent(ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_FROM, from));
         addContent(ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_TO, toValue));
         addContent(ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_CC, ccValue));
-        
+
         String text = mContent.toString();
         
         mDocument.add(Field.UnStored(LuceneFields.L_CONTENT, text));
-        
-        String sizeStr = Integer.toString(mMessage.getSize());
+
+        String sizeStr = Integer.toString(pm.getMimeMessage().getSize());
         mDocument.add(Field.Text(LuceneFields.L_SIZE, sizeStr));
         
         try {
             MimeHandler.getObjects(text, mDocument);
         } catch (ObjectHandlerException e) {
             String msgid = pm.getMessageID();
-            String sbj = pm.getMimeMessage().getSubject();
+            String sbj = pm.getSubject();
             mLog.warn("Unable to recognize searchable objects in message (Message-ID: " +
                 msgid + ", Subject: " + sbj + ")", e);
         }
         
         // Get the list of attachment content types from this message and any
         // TNEF attachments
-        Set contentTypes = Mime.getAttachmentList(mMessageParts);
+        Set<String> contentTypes = Mime.getAttachmentList(mMessageParts);
         TnefExtractor tnef = new TnefExtractor();
         try {
             Mime.accept(tnef, pm.getMimeMessage());
@@ -177,8 +170,8 @@ public final class TopLevelMessageHandler {
             for (int i = 0; i < msgs.length; i++) {
                 mLog.debug("Adding embedded content types from TNEF attachment");
                 MimeMessage msg = msgs[i];
-                List parts = Mime.getParts(msg);
-                Set moreTypes = Mime.getAttachmentList(parts);
+                List<MPartInfo> parts = Mime.getParts(msg);
+                Set<String> moreTypes = Mime.getAttachmentList(parts);
                 contentTypes.addAll(moreTypes);
             }
         } catch (Exception e) {
@@ -186,13 +179,10 @@ public final class TopLevelMessageHandler {
         }
         
         // Assemble a comma-separated list of attachment content types
-        StringBuffer buf = new StringBuffer();
-        Iterator i = contentTypes.iterator();
-        while (i.hasNext()) {
-            String contentType = (String) i.next();
-            if (buf.length() > 0) {
+        StringBuilder buf = new StringBuilder();
+        for (String contentType : contentTypes) {
+            if (buf.length() > 0)
                 buf.append(',');
-            }
             buf.append(contentType);
         }
         
@@ -220,20 +210,20 @@ public final class TopLevelMessageHandler {
         return mDocument;
     }
     
-	private String setHeaderAsField(String headerName, String fieldName,
-			int stored, int indexed, int tokenized)
+	private String setHeaderAsField(String headerName, ParsedMessage pm, String fieldName,
+			                        int stored, int indexed, int tokenized)
 	throws MessagingException  {
-		return setHeaderAsField(mDocument, headerName, fieldName, stored, indexed, tokenized);
+		return setHeaderAsField(mDocument, pm, headerName, fieldName, stored, indexed, tokenized);
 	}	
 	
-	private String setHeaderAsField(Document d, String headerName, String fieldName,
-			int stored, int indexed, int tokenized)
+	private String setHeaderAsField(Document d, ParsedMessage pm, String headerName,
+			String fieldName, int stored, int indexed, int tokenized)
 	throws MessagingException  {
 	    assert((stored == STORE) || (stored == DONT_STORE));
 	    assert((indexed == INDEX) || (stored == DONT_INDEX));
-	    
-		String value = mMessage.getHeader(headerName, null);
-		
+
+		String value = pm.getMimeMessage().getHeader(headerName, null);
+
 		if (value == null || value.length() == 0)
 			return "";
 		try {
@@ -252,8 +242,8 @@ public final class TopLevelMessageHandler {
 	 * @param d subdocument of top level 
 	 */
 	public void setLuceneHeadersFromContainer(Document d, ParsedMessage pm) throws MessagingException {
-	    setHeaderAsField(d, "to", LuceneFields.L_H_TO, DONT_STORE, INDEX, TOKENIZE);
-		setHeaderAsField(d, "cc", LuceneFields.L_H_CC, DONT_STORE, INDEX, TOKENIZE);
+	    setHeaderAsField(d, pm, "to", LuceneFields.L_H_TO, DONT_STORE, INDEX, TOKENIZE);
+		setHeaderAsField(d, pm, "cc", LuceneFields.L_H_CC, DONT_STORE, INDEX, TOKENIZE);
         
         String subject = pm.getNormalizedSubject();
         String sortFrom = pm.getParsedSender().getSortString();

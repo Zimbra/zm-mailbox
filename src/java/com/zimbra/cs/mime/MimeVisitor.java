@@ -39,6 +39,19 @@ import javax.mail.internet.MimeMultipart;
  * @author bburtin
  */
 public interface MimeVisitor {
+
+    /** This inner interface permits the {@link Mime#accept} caller to be
+     *  notified immediately before any changes to the MimeMessage are
+     *  performed by a <code>MimeVistor</code>.  Note that when a call to
+     *  {@link Mime#accept} results in multiple modifications, the callback
+     *  will be invoked multiple times. */
+    public static interface ModificationCallback {
+        /** A callback function invoked immediately prior to any modification
+         *  of the message.  If the callback returns <code>false</code>, the
+         *  modification is not performed. */
+        public boolean onModification();
+    }
+
     /**
      * This flag is passed to the <code>visitXXX</code> methods
      * before a node's children are visited.
@@ -49,21 +62,21 @@ public interface MimeVisitor {
      * after a node's children have been visited.
      */
     public static int VISIT_END = 2;
-    
+
     /**
      * @see #VISIT_BEGIN
      * @see #VISIT_END
      */
     public void visitMessage(MimeMessage msg, int visitKind)
     throws MessagingException, IOException;
-    
+
     /**
      * @see #VISIT_BEGIN
      * @see #VISIT_END
      */
     public void visitMultipart(MimeMultipart mp, int visitKind)
     throws MessagingException, IOException;
-    
+
     public void visitBodyPart(MimeBodyPart bp)
     throws MessagingException, IOException;
 }

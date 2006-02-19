@@ -63,6 +63,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.TnefConverter;
+import com.zimbra.cs.mime.UUEncodeConverter;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.Blob;
@@ -423,7 +424,7 @@ public class Appointment extends MailItem {
         }
 
         public String toString() {
-            StringBuffer toRet = new StringBuffer("INST(");
+            StringBuilder toRet = new StringBuilder("INST(");
             Date dstart = new Date(mStart);
             Date dend = new Date(mEnd);
             toRet.append(dstart).append(",").append(dend).append(",").append(
@@ -1413,8 +1414,8 @@ public class Appointment extends MailItem {
             is.close();
 
             try {
-                TnefConverter conv = new TnefConverter();
-                Mime.accept(conv, mm);
+                Mime.accept(new TnefConverter(), mm);
+                Mime.accept(new UUEncodeConverter(), mm);
             } catch (Exception e) {
                 // If the conversion bombs for any reason, revert to the original
                 ZimbraLog.mailbox.info(
@@ -1446,8 +1447,8 @@ public class Appointment extends MailItem {
             is.close();
 
             try {
-                TnefConverter conv = new TnefConverter();
-                Mime.accept(conv, mm);
+                Mime.accept(new TnefConverter(), mm);
+                Mime.accept(new UUEncodeConverter(), mm);
             } catch (Exception e) {
                 // If the conversion bombs for any reason, revert to the original
                 ZimbraLog.mailbox.info(
@@ -1456,7 +1457,6 @@ public class Appointment extends MailItem {
                 mm = new MimeMessage(JMSession.getSession(), is);
                 is.close();
             }
-            
             
             // it'll be multipart/digest
             MimeMultipart mmp = (MimeMultipart)mm.getContent();
