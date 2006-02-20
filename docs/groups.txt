@@ -182,9 +182,9 @@ Step 2: Add all groups listed directly in the user's zimbraMemberOf attrs to the
         
 Step 3: while group in  "groupsToCheck":
             add group to "groups", remove from groupsToCheck
-            lookup group (potentially in the server's cache already)
-            if the group is a member of another group AND
-                group isn't alread in "groups", add it to "groupsToCheck" # prevents cycles
+            if the group is a member of other groups then
+                 for all those other groups not already in "groups" (stops cycles)
+                      add them to "groupsToCheck" 
             end
         end
 
