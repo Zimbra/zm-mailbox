@@ -49,15 +49,17 @@ public class CreateDistributionList extends AdminDocumentHandler {
         Provisioning prov = Provisioning.getInstance();
 	    
         String name = request.getAttribute(AdminService.E_NAME).toLowerCase();
+        String isgroup = request.getAttribute(AdminService.E_ISGROUP, "0");
         Map attrs = AdminService.getAttrs(request, true);
 
         if (!canAccessEmail(lc, name))
             throw ServiceException.PERM_DENIED("can not access address: "+name);
 
         DistributionList dl = prov.createDistributionList(name, attrs);
-
+        if (isgroup.equals("1")) dl.setSecurityGroup(true);
+        
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                                                      new String[] {"cmd", "CreateDistributionList","name", name}, attrs));         
+                 new String[] {"cmd", "CreateDistributionList","name", name, "isgroup", isgroup}, attrs));         
 
         Element response = lc.createElement(AdminService.CREATE_DISTRIBUTION_LIST_RESPONSE);
         

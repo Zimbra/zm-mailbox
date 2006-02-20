@@ -508,7 +508,7 @@ public class LdapUtil {
             boolean doRemove = key.charAt(0) == '-';
             
             if (doAdd || doRemove) {
-                // make sure there other changes without +/- going on at the same time 
+                // make sure there aren't other changes without +/- going on at the same time 
                 key = key.substring(1);
                 if (attrs.containsKey(key)) 
                     throw ServiceException.INVALID_REQUEST("can't mix +attrName/-attrName with attrName", null);

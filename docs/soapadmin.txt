@@ -783,6 +783,7 @@ Notes:
 
 <CreateDistributionListRequest>
   <name>...</name>
+  <isgroup>0|1</isgroup>
   <a n="...">...</a>+
 </CreateDistributionListRequest>
 
@@ -809,7 +810,7 @@ Access: domain admin sufficient
 </GetDistributionListRequest>
 
 <GetDistributionListResponse more="{more-flag}" [total="{total}"]>
-  <dl name="{name}" id="{id}">
+  <dl name="{name}" id="{id}"  isgroup="{is-group}" >
     <dlm>{member}</dlm>+
     <a n="...">...</a>+
   </dl>
@@ -825,6 +826,7 @@ Notes:
 
     more-flag = true if more accounts left to return
     total = total number of distribution lists (not affected by limit/offset)
+    is-group - set to 1 if the distribution list is also a security group, 0 otherwise
 
 Access: domain admin sufficient
 
@@ -870,6 +872,7 @@ Access: domain admin sufficient
 
 <ModifyDistributionListRequest>
   <id>{value-of-zimbraId}</id>
+  <isgroup>0|1</isgroup>
   <a n="...">...</a>+
 </ModifyDistributionListRequest>
   

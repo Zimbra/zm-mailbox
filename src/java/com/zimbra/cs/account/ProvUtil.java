@@ -108,6 +108,7 @@ public class ProvUtil {
         System.out.println("  AddDistributionListAlias(adla) {list@domain|id} {alias@domain}");
         System.out.println("  RemoveDistributionListAlias(rdla) {list@domain|id} {alias@domain}");
         System.out.println("  RenameDistributionList(rdl) {list@domain|id} {newName@domain}");
+        System.out.println("  DistributionListIsGroup(dlig) {list@domain|id} {0|1}");
         System.out.println();
 
         System.out.println("  CreateCalendarResource(ccr) {name@domain} [attr1 value1 [attr2 value2...]]");
@@ -180,6 +181,7 @@ public class ProvUtil {
     private static final int REMOVE_DISTRIBUTION_LIST_ALIAS = 709;
     private static final int RENAME_DISTRIBUTION_LIST = 710;
     private static final int CREATE_DISTRIBUTION_LISTS_BULK = 711;
+    private static final int DISTRIBUTION_LIST_IS_GROUP = 712;
     
     private static final int SEARCH_ACCOUNTS = 801;
     private static final int SEARCH_GAL = 802;
@@ -284,6 +286,7 @@ public class ProvUtil {
         addCommand("removeDistributionListAlias", "rdla", REMOVE_DISTRIBUTION_LIST_ALIAS);
         addCommand("renameDistributionList", "rdl", RENAME_DISTRIBUTION_LIST);
         addCommand("createDistributionListsBulk", "cdlbulk", CREATE_DISTRIBUTION_LISTS_BULK);
+        addCommand("distributionListIsGroup", "dlig", DISTRIBUTION_LIST_IS_GROUP);
         
         addCommand("createCalendarResource",  "ccr",  CREATE_CALENDAR_RESOURCE);
         addCommand("deleteCalendarResource",  "dcr",  DELETE_CALENDAR_RESOURCE);
@@ -437,6 +440,9 @@ public class ProvUtil {
             break;
         case CREATE_DISTRIBUTION_LISTS_BULK:
             doCreateDistributionListsBulk(args);
+            break;            
+        case DISTRIBUTION_LIST_IS_GROUP:
+            doDistributionListIsGroup(args);
             break;            
         case GET_ALL_DISTRIBUTION_LISTS:
             doGetAllDistributionLists(args);
@@ -1256,6 +1262,16 @@ public class ProvUtil {
             Map attrs = getMap(args, 2);
             DistributionList dl = lookupDistributionList(key);
             dl.modifyAttrs(attrs, true);
+        }
+    }
+
+    private void doDistributionListIsGroup(String[] args) throws ServiceException, ArgException {
+        if (args.length != 3) {
+            usage();
+        } else {
+            String key = args[1];
+            DistributionList dl = lookupDistributionList(key);
+            dl.setSecurityGroup(args[2].equals("1") || args[2].equalsIgnoreCase("TRUE"));
         }
     }
 

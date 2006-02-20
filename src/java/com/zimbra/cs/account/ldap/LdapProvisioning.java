@@ -37,7 +37,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -1042,13 +1041,17 @@ public class LdapProvisioning extends Provisioning {
                 ZimbraLog.account.warn("unable to remove zimbraMailAlias/mail attrs: "+alias);
                 // try to remove alias
             }
-            
+
+            // remove address from all DLs
+            removeAddressFromAllDistributionLists(alias);
+
             try {
                 Attributes aliasAttrs = ctxt.getAttributes(aliasDn);
                 // make sure aliasedObjectName points to this account
                 Attribute a = aliasAttrs.get(Provisioning.A_zimbraAliasTargetId);
                 if ( a != null && ( (String)a.get()).equals(entry.getId())) {
                     ctxt.unbind(aliasDn);
+                    removeAddressFromAllDistributionLists(alias); // doesn't throw exception
                 } else {
                     ZimbraLog.account.warn("unable to remove alias object: "+alias);
                 }                
@@ -1440,10 +1443,12 @@ public class LdapProvisioning extends Provisioning {
         if (acc == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(zimbraId);
 
+        removeAddressFromAllDistributionLists(acc.getName()); // this doesn't throw any exceptions
+
         String aliases[] = acc.getAliases();
         if (aliases != null)
             for (int i=0; i < aliases.length; i++)
-                removeAlias(acc, aliases[i]);
+                removeAlias(acc, aliases[i]); // this also removes each alias from any DLs
 
         DirContext ctxt = null;
         try {
@@ -1455,6 +1460,7 @@ public class LdapProvisioning extends Provisioning {
         } finally {
             LdapUtil.closeContext(ctxt);
         }
+        
     }
 
     /* (non-Javadoc)
@@ -1485,6 +1491,9 @@ public class LdapProvisioning extends Provisioning {
             
             String newDn = emailToDN(newLocal,domain.getName());
             ctxt.rename(acc.mDn, newDn);
+
+            renameAddressInAllDistributionLists(oldEmail, newName); // doesn't throw exceptions, just logs
+            
             // remove old account from cache
             sAccountCache.remove(acc);
             acc = (LdapAccount) getAccountById(zimbraId,ctxt);
@@ -1903,6 +1912,9 @@ public class LdapProvisioning extends Provisioning {
     
             String newDn = emailToDN(newLocal, domain.getName());
             ctxt.rename(dl.mDn, newDn);
+            
+            renameAddressInAllDistributionLists(oldEmail, newEmail); // doesn't throw exceptions, just logs
+            
             dl = (LdapDistributionList) getDistributionListById(zimbraId,ctxt);
             HashMap attrs = new HashMap();
             String mail[] = dl.getMultiAttr(Provisioning.A_mail);
@@ -1957,6 +1969,16 @@ public class LdapProvisioning extends Provisioning {
         if (dl == null)
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(zimbraId);
 
+        // if it is a security group, turn of security group to update zimbraMemberOf on all members
+        try {
+            if (dl.isSecurityGroup())
+                dl.setSecurityGroup(false);
+        } catch (ServiceException se) {
+            ZimbraLog.account.warn("exception while clearing security group", se);
+        }
+        
+        removeAddressFromAllDistributionLists(dl.getName()); // this doesn't throw any exceptions
+        
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext(true);
@@ -2757,6 +2779,87 @@ public class LdapProvisioning extends Provisioning {
             return account;
     }
 
+    /**
+     *  called when an account/dl is renamed
+     *  
+     */
+    void renameAddressInAllDistributionLists(String oldName, String newName)
+    {
+        String addrs[] = new String[] { oldName };
+        List<DistributionList> lists = null; 
+        HashMap attrs = null;
+        
+        try {
+            lists = getAllDistributionListsForAddresses(addrs);
+        } catch (ServiceException se) {
+            ZimbraLog.account.warn("unable to rename addr "+oldName+" in all DLs ", se);
+            return;
+        }
+        
+        for (DistributionList list: lists) {
+            // should we just call removeMember/addMember? This might be quicker, because calling
+            // removeMember/addMember might have to update an entry's zimbraMemberId twice
+            if (attrs == null) {
+                attrs = new HashMap();
+                attrs.put("-"+Provisioning.A_zimbraMailForwardingAddress, oldName);
+                attrs.put("+"+Provisioning.A_zimbraMailForwardingAddress, newName);                
+            }
+            try {
+                list.modifyAttrs(attrs);
+                //list.removeMember(oldName)
+                //list.addMember(newName);                
+            } catch (ServiceException se) {
+                // log warning an continue
+                ZimbraLog.account.warn("unable to rename "+oldName+" to "+newName+" in DL "+list.getName(), se);
+            }
+        }
+    }
+
+    /**
+     *  called when an account is being deleted. swallows all exceptions (logs warnings).
+     */
+    void removeAddressFromAllDistributionLists(String address)
+    {
+        String addrs[] = new String[] { address } ;
+        List<DistributionList> lists = null; 
+        HashMap attrs = null;
+        try {
+            lists = getAllDistributionListsForAddresses(addrs);
+        } catch (ServiceException se) {
+            ZimbraLog.account.warn("unable to remove "+address+" from all DLs ", se);
+            return;
+        }
+
+        for (DistributionList list: lists) { 
+            try {
+                list.removeMember(address);                
+            } catch (ServiceException se) {
+                // log warning and continue
+                ZimbraLog.account.warn("unable to remove "+address+" from DL "+list.getName(), se);
+            }
+        }
+    }
+
+    static String[] getAllAddrsForDistributionList(DistributionList list) throws ServiceException {
+        String aliases[] =list.getAliases();
+        String addrs[] = new String[aliases.length+1];
+        addrs[0] = list.getName();
+        for (int i=0; i < aliases.length; i++)
+            addrs[i+1] = aliases[i];
+        return addrs;
+    }
+
+    public List<DistributionList> getAllDistributionListsForAddresses(String addrs[]) throws ServiceException {
+        if (addrs == null || addrs.length == 0) return new ArrayList<DistributionList>();
+        StringBuilder sb = new StringBuilder();
+        if (addrs.length > 1) sb.append("(&");
+        for (int i=0; i < addrs.length; i++) {
+            sb.append(String.format("(%s=%s)", Provisioning.A_zimbraMailForwardingAddress, addrs[0]));    
+        }
+        if (addrs.length > 1) sb.append(")");
+        return (List<DistributionList>)searchAccounts(sb.toString(), null, null, true, Provisioning.SA_DISTRIBUTION_LIST_FLAG);        
+    }
+    
     public static void main(String args[]) {
         System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", null));
         System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", ""));

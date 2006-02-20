@@ -147,12 +147,16 @@ public abstract class Provisioning {
      */
     public enum MAIL_MODE { http, https, mixed, both }
 
+    // object classes
+    
+    public static final String OC_zimbraSecurityGroup = "zimbraSecurityGroup";
+
     // attributes
 
     public static final String A_zimbraServiceEnabled = "zimbraServiceEnabled";
 
     public static final String A_dc = "dc";
-    
+        
     /**
      * aliased object name. The dn that an alias points to
      */
@@ -604,11 +608,6 @@ public abstract class Provisioning {
     public static final String A_zimbraPrefDeleteInviteOnReply = "zimbraPrefDeleteInviteOnReply";
     
     /**
-     * for zimbraGroup objects, the UUID (zimbraId) of accounts that are a member of the group. 
-     */
-    public static final String A_zimbraMember = "zimbraMember";
-    
-    /**
      * An attribute present on accounts for each group the account is a member of. Its value
      * is the liquiId of the zimbraGroup the account is a member of. 
      */
@@ -1005,6 +1004,8 @@ public abstract class Provisioning {
     public abstract DistributionList getDistributionListById(String zimbraId) throws ServiceException;
     
     public abstract DistributionList getDistributionListByName(String name) throws ServiceException;
+    
+    public abstract List<DistributionList> getAllDistributionListsForAddresses(String addrs[]) throws ServiceException;
     
     public abstract void deleteDistributionList(String zimbraId) throws ServiceException;
 

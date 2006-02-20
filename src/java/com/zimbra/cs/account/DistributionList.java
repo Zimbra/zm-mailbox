@@ -36,4 +36,8 @@ public interface DistributionList extends NamedEntry {
     public String[] getAllMembers() throws ServiceException;
 
     public String[] getAliases() throws ServiceException;
+    
+    public boolean isSecurityGroup() throws ServiceException;
+    
+    public void setSecurityGroup(boolean enabled) throws ServiceException;
 }
