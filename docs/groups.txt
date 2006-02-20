@@ -180,7 +180,7 @@ Step 1: Initialize the set "groups" to the empty set. When we are done, this set
 Step 2: Add all groups listed directly in the user's zimbraMemberOf attrs to the 
         "groupsToCheck" set.
         
-Step 2: while group in  "groupsToCheck":
+Step 3: while group in  "groupsToCheck":
             add group to "groups", remove from groupsToCheck
             lookup group (potentially in the server's cache already)
             if the group is a member of another group AND
@@ -200,7 +200,6 @@ groupsToCheck: {6f29b614-2017-4ae6-8ba0-e18ac697033b}
 
 We'd then see that the all@g5.local group isn't a member of any other groups and end
 up with:
-
 
 groups: {d498dfa5-3f5c-478f-aa8d-895caf66ffda, 
          6f29b614-2017-4ae6-8ba0-e18ac697033b}
