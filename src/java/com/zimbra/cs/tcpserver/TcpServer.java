@@ -119,7 +119,7 @@ public abstract class TcpServer implements Runnable {
 		}
 	}
 
-	private int numActiveHandlers() {
+	protected int numActiveHandlers() {
 		synchronized (mActiveHandlers) {
 			return mActiveHandlers.size();
 		}
@@ -201,37 +201,4 @@ public abstract class TcpServer implements Runnable {
 		}
 		mLog.info("finished accept loop");
 	}
-    
-    /**
-     * Registers an <code>Accumulator</code> that tracks the number of active
-     * handlers for this <code>TcpServer</code>.
-
-     * @param statName the name of the column logged to zimbrastats.csv
-     */
-    protected final void trackHandlerStats(String statName) {
-        ZimbraPerf.addAccumulator(new NumHandlers(statName));
-    }
-    
-    private class NumHandlers
-    implements Accumulator {
-        List<String> mNames;
-        
-        NumHandlers(String name) {
-            mNames = new ArrayList<String>();
-            mNames.add(name);
-        }
-
-        public List<Object> getData() {
-            List l = new ArrayList();
-            l.add(numActiveHandlers());
-            return l;
-        }
-
-        public List<String> getNames() {
-            return mNames;
-        }
-
-        public void reset() {
-        }
-    }
 }

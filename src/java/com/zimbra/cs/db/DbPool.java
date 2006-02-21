@@ -209,7 +209,7 @@ public class DbPool {
             System.exit(1);
         }
         
-        ZimbraPerf.addAccumulator(new DbStats());
+        ZimbraPerf.addStatsCallback(new DbStats());
     };
 
     private static Properties getZimbraDbProps() {

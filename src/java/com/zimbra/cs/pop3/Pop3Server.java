@@ -26,6 +26,8 @@
 package com.zimbra.cs.pop3;
 
 import java.net.ServerSocket;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -34,13 +36,16 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.stats.RealtimeStatsCallback;
+import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServer;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.NetUtil;
 import com.zimbra.cs.util.Zimbra;
 
-public class Pop3Server extends TcpServer {
+public class Pop3Server extends TcpServer
+implements RealtimeStatsCallback {
 
     private static final int D_POP3_THREADS = 10;
     private static final String D_POP3_BIND_ADDRESS = null;
@@ -61,7 +66,7 @@ public class Pop3Server extends TcpServer {
 		mLog = LogFactory.getLog(Pop3Server.class.getName() + "/" + serverSocket.getLocalPort());
         mAllowCleartextLogins = loginOK;
         mConnectionSSL = ssl;
-        trackHandlerStats(ssl ? "pop_ssl_conn" : "pop_conn");
+        ZimbraPerf.addStatsCallback(this);
 	}
 
 	protected ProtocolHandler newProtocolHandler() {
@@ -193,6 +198,17 @@ public class Pop3Server extends TcpServer {
         sPopSSLServer = null;
 	}
 
+    /**
+     * Implementation of <code>RealtimeStatsCallback</code> that returns the number
+     * of active handlers for this server.
+     */
+    public Map<String, Object> getStatData() {
+        Map<String, Object> data = new HashMap<String, Object>();
+        String statName = mConnectionSSL ? ZimbraPerf.RTS_POP_SSL_CONN : ZimbraPerf.RTS_POP_CONN;
+        data.put(statName, numActiveHandlers());
+        return data;
+    }
+    
     public static void main(String args[]) throws ServiceException {
         Zimbra.toolSetup();
         startupPop3Server();
