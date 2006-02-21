@@ -68,6 +68,7 @@ public class Mime {
     public static final String CT_TEXT_PLAIN = "text/plain";
     public static final String CT_TEXT_HTML = "text/html";
     public static final String CT_TEXT_CALENDAR = "text/calendar";
+    public static final String CT_TEXT_VCARD = "text/x-vcard";
 	public static final String CT_MESSAGE_RFC822 = "message/rfc822";
 	public static final String CT_APPLICATION_OCTET_STREAM = "application/octet-stream";
     public static final String CT_MULTIPART = "multipart";

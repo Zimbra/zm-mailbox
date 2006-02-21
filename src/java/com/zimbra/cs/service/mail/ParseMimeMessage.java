@@ -43,7 +43,7 @@ import com.zimbra.cs.service.UploadDataSource;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
-import com.zimbra.cs.service.formatter.VcfFormatter;
+import com.zimbra.cs.service.formatter.VCard;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.ExceptionToString;
@@ -496,7 +496,7 @@ public class ParseMimeMessage {
 
     private static void attachContact(Multipart mmp, com.zimbra.cs.mailbox.Contact contact)
     throws MessagingException {
-        VcfFormatter.ParsedVcf vcf = VcfFormatter.formatContact(contact);
+        VCard.ParsedVcf vcf = VCard.formatContact(contact);
 
         ContentDisposition cd = new ContentDisposition(Part.ATTACHMENT);
         cd.setParameter("filename", vcf.fn + ".vcf");

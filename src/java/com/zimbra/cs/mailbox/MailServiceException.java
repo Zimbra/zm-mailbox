@@ -61,6 +61,7 @@ public class MailServiceException extends ServiceException {
     public static final String INVALID_ID      = "mail.INVALID_ID";
     public static final String INVALID_NAME    = "mail.INVALID_NAME";
     public static final String INVALID_TYPE    = "mail.INVALID_TYPE";
+    public static final String INVALID_CONTENT_TYPE = "mail.INVALID_CONTENT_TYPE";
 	public static final String WRONG_MAILBOX   = "mail.WRONG_MAILBOX";
     public static final String CANNOT_SUBSCRIBE = "mail.CANNOT_SUBSCRIBE";
 	public static final String CANNOT_CONTAIN  = "mail.CANNOT_CONTAIN";
@@ -230,6 +231,10 @@ public class MailServiceException extends ServiceException {
 
     public static MailServiceException INVALID_TYPE(byte type) {
         return new MailServiceException("invalid item type: " + type, INVALID_TYPE, SENDERS_FAULT, new Argument(TYPE, type));
+    }
+
+    public static MailServiceException INVALID_CONTENT_TYPE(String type) {
+        return new MailServiceException("invalid content type: " + type, INVALID_CONTENT_TYPE, SENDERS_FAULT, new Argument(TYPE, type));
     }
 
     public static MailServiceException WRONG_MAILBOX() {

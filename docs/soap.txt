@@ -1170,6 +1170,21 @@ Contacts:
   </cn>
 </CreateContactRequest>
 
+  or, if you have an existing vCard to add, you can specify a <vcard> element with *one* of
+    -- inlined content
+    -- mid/part attributes specifying an existing message part
+    -- aid attribute specifying an uploaded text/calendar file
+
+<CreateContactRequest>
+  <cn [l="{folder-id}"] [t="{tags}"]>
+    <vcard [mid="{message-id}" part="{part-identifier}] [aid={uploaded-attachment-id"}"]>
+[BEGIN:VCARD
+...
+END:VCARD]
+    </vcard>
+  </cn>
+</CreateContactRequest>
+
 <CreateContactResponse>
    (<cn> definition above)
 </CreateContactResponse>
