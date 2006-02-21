@@ -50,6 +50,22 @@ public class ZimbraPerf {
 
     static Log sLog = LogFactory.getLog(ZimbraPerf.class);
 
+    // Name constants for real-time statistics
+    public static final String RTS_JAVA_HEAP_MB = "java_heap_MB"; 
+    
+    public static final String RTS_DB_POOL_SIZE = "db_pool_size";
+    public static final String RTS_MYSQL_OPENED_TABLES = "mysql_opened_tables";
+    public static final String RTS_MYSQL_SLOW_QUERIES = "mysql_slow_queries";
+    public static final String RTS_MYSQL_THREADS_CONNECTED = "mysql_threads_connected";
+    public static final String RTS_INNODB_PAGES_READ = "innodb_pages_read";
+    public static final String RTS_INNODB_PAGES_WRITTEN = "innodb_pages_written";
+    public static final String RTS_INNODB_BP_HIT_RATE = "innodb_bp_hit_rate";
+    
+    public static final String RTS_POP_CONN = "pop_conn";
+    public static final String RTS_POP_SSL_CONN = "pop_ssl_conn";
+    public static final String RTS_IMAP_CONN = "imap_conn";
+    public static final String RTS_IMAP_SSL_CONN = "imap_ssl_conn";
+
     // Accumulators.  To add a new accumulator, create a static instance here,
     // add it to the CORE_ACCUMULATORS array and if necessary, set options
     // in the static init code below.
@@ -68,7 +84,16 @@ public class ZimbraPerf {
     public static StopWatch STOPWATCH_POP = new StopWatch("pop");
     public static Counter COUNTER_IDX_WRT = new Counter("idx_wrt");
     
-    private static Accumulator[] CORE_ACCUMULATORS = {
+    private static RealtimeStats sRealtimeStats = new RealtimeStats(
+        new String[] {
+            RTS_JAVA_HEAP_MB, 
+            RTS_DB_POOL_SIZE,
+            RTS_MYSQL_OPENED_TABLES, RTS_MYSQL_SLOW_QUERIES, RTS_MYSQL_THREADS_CONNECTED,
+            RTS_INNODB_PAGES_READ, RTS_INNODB_PAGES_WRITTEN, RTS_INNODB_BP_HIT_RATE,
+            RTS_POP_CONN, RTS_POP_SSL_CONN, RTS_IMAP_CONN, RTS_IMAP_SSL_CONN
+        });
+
+    private static Accumulator[] sAccumulators = {
         COUNTER_LMTP_RCVD_MSGS, COUNTER_LMTP_RCVD_BYTES, COUNTER_LMTP_RCVD_RCPT,
         COUNTER_LMTP_DLVD_MSGS, COUNTER_LMTP_DLVD_BYTES,
         STOPWATCH_DB_CONN,
@@ -77,9 +102,9 @@ public class ZimbraPerf {
         STOPWATCH_SOAP,
         STOPWATCH_IMAP,
         STOPWATCH_POP,
-        COUNTER_IDX_WRT
+        COUNTER_IDX_WRT,
+        sRealtimeStats
     };
-    private static List<Accumulator> sAccumulators;
     private static boolean sStartedZimbraStats = false;
     
     private static Map /* <String, StatementStats */ sSqlToStats = new HashMap();
@@ -111,21 +136,6 @@ public class ZimbraPerf {
         return ZimbraLog.perf.isDebugEnabled();
     }
 
-    public static void addAccumulator(Accumulator a) {
-        if (a == null) {
-            throw new IllegalArgumentException("Accumulator cannot be null");
-        }
-        if (sStartedZimbraStats) {
-            sLog.warn("addAccumulator() called for " + StringUtil.join(", ", a.getNames()) +
-                " after zimbrastats logging has started.  Not tracking this statistic.");
-        } else {
-            sLog.debug("Adding accumulator for stats: " + StringUtil.join(",", a.getNames()));
-            synchronized(sAccumulators) {
-                sAccumulators.add(a);
-            }
-        }
-    }
-    
     private static class StatementStats {
         String mSql;
         int mCount = 0;
@@ -444,14 +454,19 @@ public class ZimbraPerf {
         }
     }
 
+    /**
+     * Adds the given callback to the list of callbacks that are called
+     * during realtime stats collection. 
+     */
+    public static void addStatsCallback(RealtimeStatsCallback callback) {
+        sRealtimeStats.addCallback(callback);
+    }
+    
     static final long DUMP_FREQUENCY = Constants.MILLIS_PER_MINUTE;
     private static StatsFile sZimbraStatsFile = null;
 
     static  {
-        sAccumulators = new ArrayList<Accumulator>();
-        for (Accumulator a : CORE_ACCUMULATORS) {
-            addAccumulator(a);
-        }
+        addStatsCallback(new SystemStats());
         
         // Only the average is interesting for these counters
         COUNTER_MBOX_MSG_CACHE.setShowAverage(true);
@@ -484,7 +499,6 @@ public class ZimbraPerf {
         public void run() {
             try {
                 if (!sStartedZimbraStats) {
-                    sStartedZimbraStats = true;
                     // Initialize the stats file
                     List<String> columns = new ArrayList<String>();
                     synchronized (sAccumulators) {
@@ -497,6 +511,7 @@ public class ZimbraPerf {
                     String[] columnsArray = new String[columns.size()];
                     columns.toArray(columnsArray);
                     sZimbraStatsFile = new StatsFile("zimbrastats", columnsArray, false);
+                    sStartedZimbraStats = true;
                 }
                 
                 List<Object> data = new ArrayList<Object>();

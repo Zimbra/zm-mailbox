@@ -30,6 +30,8 @@ package com.zimbra.cs.imap;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -40,6 +42,8 @@ import com.zimbra.cs.ozserver.OzConnectionHandlerFactory;
 import com.zimbra.cs.ozserver.OzServer;
 import com.zimbra.cs.ozserver.OzTLSFilter;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.stats.RealtimeStatsCallback;
+import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServer;
 import com.zimbra.cs.util.Config;
@@ -51,7 +55,8 @@ import com.zimbra.cs.util.ZimbraLog;
 /**
  * @author dkarp
  */
-public class ImapServer extends TcpServer {
+public class ImapServer extends TcpServer
+implements RealtimeStatsCallback {
 
     private static Object sImapServer;
     private static Object sImapSSLServer;
@@ -64,7 +69,7 @@ public class ImapServer extends TcpServer {
         super(ssl ? "ImapSSLServer" : "ImapServer", numThreads, serverSocket);
         mAllowCleartextLogins = loginOK;
         mConnectionSSL = ssl;
-        trackHandlerStats(ssl ? "imap_ssl_conn" : "imap_conn");
+        ZimbraPerf.addStatsCallback(this);
     }
 
 	protected ProtocolHandler newProtocolHandler() {
@@ -189,6 +194,17 @@ public class ImapServer extends TcpServer {
             }
             sImapSSLServer = null;
         }
+    }
+    
+    /**
+     * Implementation of <code>RealtimeStatsCallback</code> that returns the number
+     * of active handlers for this server.
+     */
+    public Map<String, Object> getStatData() {
+        Map<String, Object> data = new HashMap<String, Object>();
+        String statName = mConnectionSSL ? ZimbraPerf.RTS_IMAP_SSL_CONN : ZimbraPerf.RTS_IMAP_CONN;
+        data.put(statName, numActiveHandlers());
+        return data;
     }
     
     public static void main(String args[]) throws ServiceException {
