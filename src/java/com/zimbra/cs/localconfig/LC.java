@@ -136,6 +136,31 @@ public class LC {
     public static final KnownKey logger_mysql_port;
     public static final KnownKey zimbra_logger_mysql_password;
 
+	public static final KnownKey postfix_alias_maps;
+	public static final KnownKey postfix_broken_sasl_auth_clients;
+	public static final KnownKey postfix_command_directory;
+	public static final KnownKey postfix_daemon_directory;
+	public static final KnownKey postfix_header_checks;
+	public static final KnownKey postfix_mailq_path;
+	public static final KnownKey postfix_manpage_directory;
+	public static final KnownKey postfix_newaliases_path;
+	public static final KnownKey postfix_queue_directory;
+	public static final KnownKey postfix_sender_canonical_maps;
+	public static final KnownKey postfix_sendmail_path;
+	public static final KnownKey postfix_smtpd_client_restrictions;
+	public static final KnownKey postfix_smtpd_data_restrictions;
+	public static final KnownKey postfix_smtpd_helo_required;
+	public static final KnownKey postfix_smtpd_tls_cert_file;
+	public static final KnownKey postfix_smtpd_tls_key_file;
+	public static final KnownKey postfix_smtpd_tls_loglevel;
+	public static final KnownKey postfix_transport_maps;
+	public static final KnownKey postfix_version;
+	public static final KnownKey postfix_virtual_alias_domains;
+	public static final KnownKey postfix_virtual_alias_maps;
+	public static final KnownKey postfix_virtual_mailbox_domains;
+	public static final KnownKey postfix_virtual_mailbox_maps;
+	public static final KnownKey postfix_virtual_transport;
+
     public static final KnownKey tomcat_directory;
     public static final KnownKey tomcat_java_heap_memory_percent;
     public static final KnownKey tomcat_java_options;
@@ -486,6 +511,102 @@ public class LC {
         logger_mysql_port.setDefault("7307");
         logger_mysql_port.setDoc
             ("Port number on which logger MySQL server should listen.");
+
+		postfix_alias_maps  = new KnownKey("postfix_alias_maps");
+		postfix_alias_maps.setDefault("hash:/etc/aliases");
+		postfix_alias_maps.setDoc("postfix_alias_maps");
+
+		postfix_broken_sasl_auth_clients  = new KnownKey("postfix_broken_sasl_auth_clients");
+		postfix_broken_sasl_auth_clients.setDefault("yes");
+		postfix_broken_sasl_auth_clients.setDoc("postfix_broken_sasl_auth_clients");
+
+		postfix_command_directory  = new KnownKey("postfix_command_directory");
+		postfix_command_directory.setDefault("/opt/zimbra/postfix-${postfix_version}/sbin");
+		postfix_command_directory.setDoc("postfix_command_directory");
+
+		postfix_daemon_directory  = new KnownKey("postfix_daemon_directory");
+		postfix_daemon_directory.setDefault("/opt/zimbra/postfix-${postfix_version}/libexec");
+		postfix_daemon_directory.setDoc("postfix_daemon_directory");
+
+		postfix_header_checks  = new KnownKey("postfix_header_checks");
+		postfix_header_checks.setDefault("pcre:/opt/zimbra/conf/postfix_header_checks");
+		postfix_header_checks.setDoc("postfix_header_checks");
+
+		postfix_mailq_path  = new KnownKey("postfix_mailq_path");
+		postfix_mailq_path.setDefault("/opt/zimbra/postfix-${postfix_version}/sbin/mailq");
+		postfix_mailq_path.setDoc("postfix_mailq_path");
+
+		postfix_manpage_directory  = new KnownKey("postfix_manpage_directory");
+		postfix_manpage_directory.setDefault("/opt/zimbra/postfix-${postfix_version}/man");
+		postfix_manpage_directory.setDoc("postfix_manpage_directory");
+
+		postfix_newaliases_path  = new KnownKey("postfix_newaliases_path");
+		postfix_newaliases_path.setDefault("/opt/zimbra/postfix-${postfix_version}/sbin/newaliases");
+		postfix_newaliases_path.setDoc("postfix_newaliases_path");
+
+		postfix_queue_directory  = new KnownKey("postfix_queue_directory");
+		postfix_queue_directory.setDefault("/opt/zimbra/postfix-${postfix_version}/spool");
+		postfix_queue_directory.setDoc("postfix_queue_directory");
+
+		postfix_sender_canonical_maps  = new KnownKey("postfix_sender_canonical_maps");
+		postfix_sender_canonical_maps.setDefault("ldap:/opt/zimbra/conf/ldap-scm.cf");
+		postfix_sender_canonical_maps.setDoc("postfix_sender_canonical_maps");
+
+		postfix_sendmail_path  = new KnownKey("postfix_sendmail_path");
+		postfix_sendmail_path.setDefault("/opt/zimbra/postfix-${postfix_version}/sbin/sendmail");
+		postfix_sendmail_path.setDoc("postfix_sendmail_path");
+
+		postfix_smtpd_client_restrictions  = new KnownKey("postfix_smtpd_client_restrictions");
+		postfix_smtpd_client_restrictions.setDefault("reject_unauth_pipelining");
+		postfix_smtpd_client_restrictions.setDoc("postfix_smtpd_client_restrictions");
+
+		postfix_smtpd_data_restrictions  = new KnownKey("postfix_smtpd_data_restrictions");
+		postfix_smtpd_data_restrictions.setDefault("reject_unauth_pipelining");
+		postfix_smtpd_data_restrictions.setDoc("postfix_smtpd_data_restrictions");
+
+		postfix_smtpd_helo_required  = new KnownKey("postfix_smtpd_helo_required");
+		postfix_smtpd_helo_required.setDefault("yes");
+		postfix_smtpd_helo_required.setDoc("postfix_smtpd_helo_required");
+
+		postfix_smtpd_tls_cert_file  = new KnownKey("postfix_smtpd_tls_cert_file");
+		postfix_smtpd_tls_cert_file.setDefault("${zimbra_home}"+FS+"conf"+FS+"smtpd.crt");
+		postfix_smtpd_tls_cert_file.setDoc("postfix_smtpd_tls_cert_file");
+
+		postfix_smtpd_tls_key_file  = new KnownKey("postfix_smtpd_tls_key_file");
+		postfix_smtpd_tls_key_file.setDefault("${zimbra_home}"+FS+"conf"+FS+"smtpd.key");
+		postfix_smtpd_tls_key_file.setDoc("postfix_smtpd_tls_key_file");
+
+		postfix_smtpd_tls_loglevel  = new KnownKey("postfix_smtpd_tls_loglevel");
+		postfix_smtpd_tls_loglevel.setDefault("3");
+		postfix_smtpd_tls_loglevel.setDoc("postfix_smtpd_tls_loglevel");
+
+		postfix_transport_maps  = new KnownKey("postfix_transport_maps");
+		postfix_transport_maps.setDefault("ldap:/opt/zimbra/conf/ldap-transport.cf");
+		postfix_transport_maps.setDoc("postfix_transport_maps");
+
+		postfix_version  = new KnownKey("postfix_version");
+		postfix_version.setDefault("2.2.8");
+		postfix_version.setDoc("postfix_version");
+
+		postfix_virtual_alias_domains  = new KnownKey("postfix_virtual_alias_domains");
+		postfix_virtual_alias_domains.setDefault("ldap://opt/zimbra/conf/ldap-vad.cf");
+		postfix_virtual_alias_domains.setDoc("postfix_virtual_alias_domains");
+
+		postfix_virtual_alias_maps  = new KnownKey("postfix_virtual_alias_maps");
+		postfix_virtual_alias_maps.setDefault("ldap:/opt/zimbra/conf/ldap-vam.cf");
+		postfix_virtual_alias_maps.setDoc("postfix_virtual_alias_maps");
+
+		postfix_virtual_mailbox_domains  = new KnownKey("postfix_virtual_mailbox_domains");
+		postfix_virtual_mailbox_domains.setDefault("ldap:/opt/zimbra/conf/ldap-vmd.cf");
+		postfix_virtual_mailbox_domains.setDoc("postfix_virtual_mailbox_domains");
+
+		postfix_virtual_mailbox_maps  = new KnownKey("postfix_virtual_mailbox_maps");
+		postfix_virtual_mailbox_maps.setDefault("ldap:/opt/zimbra/conf/ldap-vmm.cf");
+		postfix_virtual_mailbox_maps.setDoc("postfix_virtual_mailbox_maps");
+
+		postfix_virtual_transport  = new KnownKey("postfix_virtual_transport");
+		postfix_virtual_transport.setDefault("error");
+		postfix_virtual_transport.setDoc("postfix_virtual_transport");
 
         tomcat_directory = new KnownKey("tomcat_directory");
         tomcat_directory.setDefault("${zimbra_home}" + FS + "tomcat");
