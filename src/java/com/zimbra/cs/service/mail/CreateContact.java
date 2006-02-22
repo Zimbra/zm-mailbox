@@ -44,6 +44,7 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.formatter.VCard;
 import com.zimbra.cs.util.ByteUtil;
@@ -99,38 +100,54 @@ public class CreateContact extends WriteOpDocumentHandler  {
     private static Map<String, String> parseAttachedVCard(ZimbraContext lc, Mailbox mbox, Element vcard)
     throws ServiceException {
         String text = null;
-        int msgid = (int) vcard.getAttributeLong(MailService.A_MESSAGE_ID, -1);
+        String messageId = vcard.getAttribute(MailService.A_MESSAGE_ID, null);
         String attachId = vcard.getAttribute(MailService.A_ATTACHMENT_ID, null);
 
-        if (msgid < 0)
-            text = vcard.getText();
-        else if (attachId != null) {
+        if (attachId != null) {
+            // separately-uploaded vcard attachment
             FileUploadServlet.Upload up = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), attachId, lc.getRawAuthToken());
             try {
                 text = new String(ByteUtil.getContent(up.getInputStream(), 0));
             } catch (IOException e) {
                 throw ServiceException.FAILURE("error reading vCard", e);
             }
+        } else if (messageId == null) {
+            // inlined content in the <vcard> element
+            text = vcard.getText();
         } else {
-            Message msg = mbox.getMessageById(lc.getOperationContext(), msgid);
-            try {
-                String part = vcard.getAttribute(MailService.A_PART);
-                MimePart mp = Mime.getMimePart(msg.getMimeMessage(), part);
-                ContentType ctype = new ContentType(mp.getContentType());
-                if (!ctype.match(Mime.CT_TEXT_PLAIN) && !ctype.match(Mime.CT_TEXT_VCARD))
-                    throw MailServiceException.INVALID_CONTENT_TYPE(ctype.getBaseType());
-                Object content = mp.getContent();
-                if (content instanceof InputStream)
-                    text = new String(ByteUtil.getContent((InputStream) content, mp.getSize()));
-                else if (content instanceof String)
-                    text = (String) content;
-                else
-                    throw MailServiceException.UNABLE_TO_IMPORT_CONTACTS("could not extract part content", null);
-            } catch (IOException e) {
-                throw ServiceException.FAILURE("error reading vCard", e);
-            } catch (MessagingException e) {
-                throw ServiceException.FAILURE("error fetching message part", e);
-            }
+            // part of existing message
+            ItemId iid = new ItemId(messageId, lc);
+            String part = vcard.getAttribute(MailService.A_PART);
+            if (iid.isLocal())
+                try {
+                    // fetch from local store
+                    if (!mbox.getAccountId().equals(iid.getAccountId()))
+                        mbox = Mailbox.getMailboxByAccountId(iid.getAccountId());
+                    Message msg = mbox.getMessageById(lc.getOperationContext(), iid.getId());
+                    MimePart mp = Mime.getMimePart(msg.getMimeMessage(), part);
+                    ContentType ctype = new ContentType(mp.getContentType());
+                    if (!ctype.match(Mime.CT_TEXT_PLAIN) && !ctype.match(Mime.CT_TEXT_VCARD))
+                        throw MailServiceException.INVALID_CONTENT_TYPE(ctype.getBaseType());
+                    Object content = mp.getContent();
+                    if (content instanceof InputStream)
+                        text = new String(ByteUtil.getContent((InputStream) content, mp.getSize()));
+                    else if (content instanceof String)
+                        text = (String) content;
+                    else
+                        throw MailServiceException.UNABLE_TO_IMPORT_CONTACTS("could not extract part content", null);
+                } catch (IOException e) {
+                    throw ServiceException.FAILURE("error reading vCard", e);
+                } catch (MessagingException e) {
+                    throw ServiceException.FAILURE("error fetching message part", e);
+                }
+            else
+                try {
+                    // fetch from remote store
+                    InputStream is = UserServlet.getMessagePart(lc.getAuthToken(), iid, part);
+                    text = new String(ByteUtil.getContent(is, 0));
+                } catch (IOException e) {
+                    throw ServiceException.FAILURE("error reading vCard", e);
+                }
         }
 
         VCard.ParsedVcf vcf = VCard.parseVCard(text);

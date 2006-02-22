@@ -26,6 +26,7 @@
 package com.zimbra.cs.service;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,10 +38,17 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpException;
+import org.apache.commons.httpclient.HttpState;
+import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.methods.GetMethod;
+
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -59,6 +67,7 @@ import com.zimbra.cs.service.formatter.VcfFormatter;
 import com.zimbra.cs.service.formatter.ZipFormatter;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.DateUtil;
 import com.zimbra.cs.util.ZimbraLog;
 
@@ -94,7 +103,7 @@ import com.zimbra.cs.util.ZimbraLog;
 
 public class UserServlet extends ZimbraServlet {
 
-    private static final String SERVLET_PATH = "/service/user";
+    public static final String SERVLET_PATH = "/service/user";
 
     public static final String QP_FMT = "fmt"; // format query param
 
@@ -567,5 +576,45 @@ public class UserServlet extends ZimbraServlet {
         String name = getServletName();
         ZimbraLog.mailbox.info("Servlet " + name + " shutting down");
         super.destroy();
+    }
+
+    public static InputStream getMessagePart(AuthToken auth, ItemId iid, String part) throws ServiceException {
+        // fetch from remote store
+        Server server = Provisioning.getInstance().getAccountById(iid.getAccountId()).getServer();
+        int port = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
+        boolean useHTTP = port > 0;
+        if (!useHTTP)
+            port = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
+        if (port <= 0)
+            throw ServiceException.FAILURE("remote server " + server.getName() + " has neither http nor https port enabled", null);
+        String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
+
+        StringBuffer url = new StringBuffer(useHTTP ? "http" : "https");
+        url.append("://").append(hostname).append(':').append(port);
+        url.append(SERVLET_PATH).append("/~/?");
+        url.append(QP_ID).append('=').append(iid.toString());
+        url.append('&').append(QP_PART).append('=').append(part);
+        url.append('&').append(QP_AUTH).append('=').append(AUTH_COOKIE);
+
+        // create an HTTP client with the same cookies
+        HttpState state = new HttpState();
+        try {
+            state.addCookie(new org.apache.commons.httpclient.Cookie(hostname, COOKIE_ZM_AUTH_TOKEN, auth.getEncoded(), "/", null, false));
+        } catch (AuthTokenException ate) {
+            throw ServiceException.PROXY_ERROR(ate, url.toString());
+        }
+        HttpClient client = new HttpClient();
+        client.setState(state);
+        GetMethod get = new GetMethod(url.toString());
+        try {
+            int statusCode = client.executeMethod(get);
+            if (statusCode != HttpStatus.SC_OK)
+                throw ServiceException.RESOURCE_UNREACHABLE(get.getStatusText(), null);
+            return get.getResponseBodyAsStream();
+        } catch (HttpException e) {
+            throw ServiceException.RESOURCE_UNREACHABLE(get.getStatusText(), e);
+        } catch (IOException e) {
+            throw ServiceException.RESOURCE_UNREACHABLE(get.getStatusText(), e);
+        }
     }
 }
