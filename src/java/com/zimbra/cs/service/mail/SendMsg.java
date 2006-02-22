@@ -113,8 +113,9 @@ public class SendMsg extends WriteOpDocumentHandler {
         return response;
     }
 
-    protected static boolean shouldSaveToSent(Account acct) {
-        return acct.getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, false);        
+    protected static boolean shouldSaveToSent(Account acct)
+    throws ServiceException {
+        return acct.saveToSent();        
     }
     
     protected static int getSentFolder(Account acct, Mailbox mbox, OperationContext octxt) throws ServiceException{

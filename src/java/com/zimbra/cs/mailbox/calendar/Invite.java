@@ -515,7 +515,7 @@ public class Invite {
      * of the Attendee records every time I want to know my status....this function updates the
      * catched PartStat data when I receive a new Invite 
      */
-    public void updateMyPartStat(Account acct, boolean shouldAutoAccept)
+    public void updateMyPartStat(Account acct, String partStat)
     throws ServiceException {
         boolean iAmOrganizer = thisAcctIsOrganizer(acct);
         if (iAmOrganizer) {
@@ -532,20 +532,9 @@ public class Invite {
             	// NEEDS_ACTION (ie is a Request or a Counter)
             	//
             	if (mMethod == ICalTok.REQUEST || mMethod == ICalTok.COUNTER) {
-                    if (shouldAutoAccept) {
-                        // TODO: Decline if time slot is busy, unless this is a modify request
-                        // and the previous version of this meeting is the one that kept the
-                        // time slot busy.
-                        // If declining, should an email be sent out to organizer?
-                        setPartStat(IcalXmlStrMap.PARTSTAT_ACCEPTED);
-                        at.setPartStat(IcalXmlStrMap.PARTSTAT_ACCEPTED);
-                    } else {
-                		String ps = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
-                		if (at.hasPartStat())
-                			ps = at.getPartStat();
-                		if (getRsvp() || ps.equals(IcalXmlStrMap.PARTSTAT_NEEDS_ACTION))
-                			setNeedsReply(true);
-                    }
+                    setPartStat(partStat);
+                    at.setPartStat(partStat);
+                    setNeedsReply(IcalXmlStrMap.PARTSTAT_NEEDS_ACTION.equals(partStat));
             	}
             } else {
                 // if this is the first time we're parsing this, and we can't find ourself on the

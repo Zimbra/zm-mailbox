@@ -102,4 +102,6 @@ public interface Account extends NamedEntry {
      * @throws ServiceException
      */
     public CalendarUserType getCalendarUserType() throws ServiceException;
+
+    public boolean saveToSent() throws ServiceException;
 }

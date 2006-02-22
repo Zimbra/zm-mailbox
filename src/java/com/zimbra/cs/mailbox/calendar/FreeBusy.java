@@ -173,7 +173,7 @@ public class FreeBusy {
 //            System.out.println("AFTER combining: "+toString());
             
         }
-        
+
         public String toString()
         {
             StringBuffer toRet = new StringBuffer("\n");
@@ -259,8 +259,37 @@ public class FreeBusy {
         public Interval getNext() { return mNext; }
     }
 
+    public String getBusiest() {
+        String val = IcalXmlStrMap.FBTYPE_FREE;
+        for (Iterator iter = iterator(); iter.hasNext(); ) {
+            Interval interval = (Interval) iter.next();
+            val = chooseBusier(val, interval.getStatus());
+        }
+        return val;
+    }
 
-    public static FreeBusy getFreeBusyList(Mailbox mbox, long start, long end) throws ServiceException {
+
+    public static FreeBusy getFreeBusyList(Mailbox mbox,
+                                          long start, long end)
+    throws ServiceException {
+        return getFreeBusyList(mbox, start, end, null);
+    }
+
+    /**
+     * 
+     * @param mbox
+     * @param start
+     * @param end
+     * @param exAppt appointment to exclude; calculate free/busy assuming
+     *               the specified appointment wasn't there
+     * @return
+     * @throws ServiceException
+     */
+    public static FreeBusy getFreeBusyList(Mailbox mbox,
+                                           long start, long end,
+                                           Appointment exAppt)
+    throws ServiceException {
+        int exApptId = exAppt == null ? -1 : exAppt.getId();
 
         List /* Folder */ folders = mbox.getItemList(null, MailItem.TYPE_FOLDER);
         ArrayList /* Folder */ excludeFolders = new ArrayList();
@@ -288,6 +317,8 @@ public class FreeBusy {
         
         for (Iterator iter = appts.iterator(); iter.hasNext(); ) {
             Appointment cur = (Appointment)iter.next();
+            if (cur.getId() == exApptId)
+                continue;
             
             Collection instances = cur.expandInstances(start, end); 
             for (Iterator instIter = instances.iterator(); instIter.hasNext();) {
@@ -299,8 +330,10 @@ public class FreeBusy {
                     Invite inv = appt.getInvite(invId);
                     if (!inv.isTransparent()) {
                         String freeBusy = appt.getEffectiveFreeBusyActual(acct, inv, inst);
-                        Interval ival = new Interval(inst.getStart(), inst.getEnd(), freeBusy);
-                        intervals.addInterval(ival);
+                        if (!IcalXmlStrMap.FBTYPE_FREE.equals(freeBusy)) {
+                            Interval ival = new Interval(inst.getStart(), inst.getEnd(), freeBusy);
+                            intervals.addInterval(ival);
+                        }
                     }
                 } catch (MailServiceException.NoSuchItemException e) {
                     sLog.debug("Could not load invite "+invId.toString() + " for appt "+mbox.getId());
@@ -379,6 +412,4 @@ public class FreeBusy {
         }
             
     }
-    
-    
 }

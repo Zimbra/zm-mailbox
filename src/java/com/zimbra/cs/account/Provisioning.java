@@ -808,8 +808,11 @@ public abstract class Provisioning {
     /**
      * Calendar resources
      */
-    public static final String A_zimbraCalResType              = "zimbraCalResType";
-    public static final String A_zimbraCalResAutoAcceptDecline = "zimbraCalResAutoAcceptDecline";
+    public static final String A_zimbraCalResType                 = "zimbraCalResType";
+    public static final String A_zimbraCalResAutoAcceptDecline    = "zimbraCalResAutoAcceptDecline";
+    public static final String A_zimbraCalResAutoDeclineIfBusy    = "zimbraCalResAutoDeclineIfBusy";
+    public static final String A_zimbraCalResAutoDeclineRecurring = "zimbraCalResAutoDeclineRecurring";
+    public static final String A_zimbraCalResAlwaysFree           = "zimbraCalResAlwaysFree";
 
     private static Provisioning mProvisioning;
 

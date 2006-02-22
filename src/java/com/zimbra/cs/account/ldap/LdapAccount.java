@@ -241,4 +241,8 @@ public class LdapAccount extends LdapNamedEntry implements Account {
                                 CalendarUserType.USER.toString());
         return CalendarUserType.valueOf(cutype);
     }
+
+    public boolean saveToSent() throws ServiceException {
+        return getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, false);
+    }
 }

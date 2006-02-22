@@ -39,11 +39,27 @@ extends LdapAccount implements CalendarResource {
     }
 
     public String getResourceType() {
-        return super.getAttr(Provisioning.A_zimbraCalResType, "ROOM");
+        return getAttr(Provisioning.A_zimbraCalResType, "ROOM");
     }
 
     public boolean autoAcceptDecline() {
-        return super.getBooleanAttr(
+        return getBooleanAttr(
                 Provisioning.A_zimbraCalResAutoAcceptDecline, true);
     }
+
+    public boolean autoDeclineIfBusy() {
+        return getBooleanAttr(
+                Provisioning.A_zimbraCalResAutoDeclineIfBusy, true);
+    }
+
+    public boolean autoDeclineRecurring() {
+        return getBooleanAttr(
+                Provisioning.A_zimbraCalResAutoDeclineRecurring, false);
+    }
+
+    public boolean alwaysFree() {
+        return getBooleanAttr(
+                Provisioning.A_zimbraCalResAlwaysFree, false);
+    }
+
 }
