@@ -67,7 +67,6 @@ import com.zimbra.cs.service.formatter.VcfFormatter;
 import com.zimbra.cs.service.formatter.ZipFormatter;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.DateUtil;
 import com.zimbra.cs.util.ZimbraLog;
 
@@ -578,7 +577,7 @@ public class UserServlet extends ZimbraServlet {
         super.destroy();
     }
 
-    public static InputStream getMessagePart(AuthToken auth, ItemId iid, String part) throws ServiceException {
+    public static InputStream getResourceAsStream(AuthToken auth, ItemId iid, Map<String,String> params) throws ServiceException {
         // fetch from remote store
         Server server = Provisioning.getInstance().getAccountById(iid.getAccountId()).getServer();
         int port = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
@@ -593,8 +592,10 @@ public class UserServlet extends ZimbraServlet {
         url.append("://").append(hostname).append(':').append(port);
         url.append(SERVLET_PATH).append("/~/?");
         url.append(QP_ID).append('=').append(iid.toString());
-        url.append('&').append(QP_PART).append('=').append(part);
         url.append('&').append(QP_AUTH).append('=').append(AUTH_COOKIE);
+        if (params != null)
+            for (Map.Entry<String, String> param : params.entrySet())
+                url.append('&').append(param.getKey()).append('=').append(param.getValue());
 
         // create an HTTP client with the same cookies
         HttpState state = new HttpState();

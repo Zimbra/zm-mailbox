@@ -143,7 +143,9 @@ public class CreateContact extends WriteOpDocumentHandler  {
             else
                 try {
                     // fetch from remote store
-                    InputStream is = UserServlet.getMessagePart(lc.getAuthToken(), iid, part);
+                    Map<String, String> params = new HashMap<String, String>();
+                    params.put(UserServlet.QP_PART, part);
+                    InputStream is = UserServlet.getResourceAsStream(lc.getAuthToken(), iid, params);
                     text = new String(ByteUtil.getContent(is, 0));
                 } catch (IOException e) {
                     throw ServiceException.FAILURE("error reading vCard", e);
