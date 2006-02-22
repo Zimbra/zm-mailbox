@@ -738,7 +738,7 @@ class DBQueryOperation extends QueryOperation
         }
     }
     
-    boolean mFailedDbFirst = false;
+    private boolean mFailedDbFirst = false;
     
     /**
      * The maximum DB results we will allow when running a DB-FIRST query: if there 
@@ -753,7 +753,7 @@ class DBQueryOperation extends QueryOperation
      * (LuceneQuery.getMaxClauseCount())
      * 
      */
-    private static final int MAX_DBFIRST_RESULTS = 5;
+    private static final int MAX_DBFIRST_RESULTS = 1000;
     
     private boolean tryDbFirst() {
     	if (!mFailedDbFirst) {
