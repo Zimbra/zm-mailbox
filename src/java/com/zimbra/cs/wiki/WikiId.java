@@ -27,22 +27,61 @@ package com.zimbra.cs.wiki;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.ServiceException;
 
-public class WikiId {
+public class WikiId implements Comparable {
 	Account mAcct;
 	int     mId;
+	long    mCreatedDate;
+	String  mCreator;
+	long    mVersion;
 	
+	public static WikiId getWikiId(long ver) {
+		return new WikiId(ver);
+	}
+	
+	private WikiId(long ver) {
+		mVersion = ver;
+	}
 	public WikiId(WikiItem wikiItem) throws ServiceException {
 		Mailbox mbox = wikiItem.getMailbox();
 		mAcct = mbox.getAccount();
 		mId = wikiItem.getId();
+		mCreatedDate = wikiItem.getCreatedTime();
+		mCreator = wikiItem.getCreator();
+		mVersion = wikiItem.getVersion();
 	}
 	
 	public WikiItem getWikiItem(OperationContext octxt) throws ServiceException {
 		Mailbox mbox = Mailbox.getMailboxByAccount(mAcct);
 		WikiItem wiki = mbox.getWikiById(octxt, mId);
 		return wiki;
+	}
+	
+	public void deleteWikiItem(OperationContext octxt) throws ServiceException {
+		Mailbox mbox = Mailbox.getMailboxByAccount(mAcct);
+		mbox.move(octxt, mId, MailItem.TYPE_WIKI, Mailbox.ID_FOLDER_TRASH);
+	}
+	
+	public long getCreatedDate() {
+		return mCreatedDate;
+	}
+	
+	public String getCreator() {
+		return mCreator;
+	}
+	
+	public long getVersion() {
+		return mVersion;
+	}
+	
+	public int compareTo(Object obj) {
+		if (obj instanceof WikiId) {
+			WikiId that = (WikiId) obj;
+			return (int) (mVersion - that.mVersion);
+		}
+		return 0;
 	}
 }

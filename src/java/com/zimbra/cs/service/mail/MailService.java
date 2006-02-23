@@ -170,6 +170,8 @@ public class MailService implements DocumentService {
     public static final QName LIST_WIKI_RESPONSE = QName.get("ListWikiResponse", NAMESPACE);
     public static final QName GET_WIKI_REQUEST = QName.get("GetWikiRequest", NAMESPACE);
     public static final QName GET_WIKI_RESPONSE = QName.get("GetWikiResponse", NAMESPACE);
+    public static final QName DELETE_WIKI_REQUEST = QName.get("DeleteWikiRequest", NAMESPACE);
+    public static final QName DELETE_WIKI_RESPONSE = QName.get("DeleteWikiResponse", NAMESPACE);
 
     public static final QName GET_ZIMLETS_REQUEST = QName.get("GetZimletsRequest", NAMESPACE);
     public static final QName GET_ZIMLETS_RESPONSE = QName.get("GetZimletsResponse", NAMESPACE);
@@ -439,7 +441,8 @@ public class MailService implements DocumentService {
     public static final String E_UPLOAD = "upload";
     public static final String A_VERSION = "ver";
     public static final String A_SUBJECT = "su";
-    public static final String A_FOLDERID = "folder";
+    public static final String A_MODIFIED_DATE = "md";
+    public static final String A_LAST_EDITED_BY = "leb";
 
     public void registerHandlers(DocumentDispatcher dispatcher) {
 
@@ -528,5 +531,6 @@ public class MailService implements DocumentService {
         dispatcher.registerHandler(SAVE_WIKI_REQUEST, new SaveWiki());
         dispatcher.registerHandler(LIST_WIKI_REQUEST, new ListWiki());
         dispatcher.registerHandler(GET_WIKI_REQUEST, new GetWiki());
+        dispatcher.registerHandler(DELETE_WIKI_REQUEST, new DeleteWiki());
 	}
 }

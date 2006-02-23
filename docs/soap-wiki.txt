@@ -3,9 +3,13 @@
 //
 // A Document represents a file.  A file can be created by uploading to FileUploadServlet.
 // Or it can refer to an attachment of an existing message.
-//
+// The request should contain either <upload> element or <msg> element, but not both.
+// When <upload> is used, the document should be first uploaded to FileUploadServlet, and
+// then use the upload-id from the FileUploadResponse.
+// When <msg> is used, the document is retrieved from an existing message in the mailbox,
+// identified by the msg-id and part-id.
 <SaveDocumentRequest>
-  <doc [name="{file-name}"] [ct="{content-type}"] [folder="{folder-id}"]>
+  <doc [name="{file-name}"] [ct="{content-type}"] [l="{folder-id}"]>
     [<upload id="{upload-id}"/>]
     [<msg id="{msg-id}" part="{part-id}"/>]
   </doc>
@@ -17,9 +21,10 @@
 
 //
 // A Wiki is a versioned HTML document.
-//
+// folder-id argument is valid when the new wiki document is being created,
+// otherwise it's ignored, and the subsequent revision is stored in the same folder.
 <SaveWikiRequest>
-  <m su="{subject}"> ... contents ... </m>
+  <m su="{wikiword}" [l="{folder-id}"]> ... contents ... </m>
 </SaveWikiRequest>
 
 <SaveWikiResponse>
@@ -37,16 +42,18 @@
 // http://server/zimbra/user/[~]{account-name}/?id={item-id}
 //
 // through the SOAP API:
-// the list of wiki words are managed by the server.  currently Subject:
-// header value is used for the wiki word.
+// the list of wiki words are managed by the server.  
 
 //
 // ListWiki
 // returns list of wiki words for this account
+// created-date: date the first revision was created.
+// modified-date: date the last revision was made.
+// last-edited-by: user that made the last revision.
 <ListWikiRequest/>
 
 <ListWikiResponse>
-  [<w>{word}</w><ver>{head-version}</ver>]+
+  [<w name="{word}" ver="{head-version}" cd="{created-date}" md="{modified-date}" cr="{creator}" leb="{last-edited-by}"/>]+
 </ListWikiResponse>
 
 //
@@ -57,10 +64,20 @@
 </GetWikiRequest>
 
 <GetWikiResponse>
-  <m su="{subject}" ver="{version}" cr="{creator}" id="{message-id}" f="{flags}" t="{tags}" s="{size}" d="{created-date}" l="{folder}">
+  <m su="{subject}" ver="{version}" cr="{creator}" id="{message-id}" s="{size}" d="{created-date}" l="{folder}" [f="{flags}"] [t="{tags}"]>
    ... contents ...
   </m>
 </GetWikiResponse>
+
+//
+// DeleteWiki
+// deletes all the revision of the wiki document by moving to trash folder.
+// delete can be performed by anyone who has delete access to the folder the wiki document is stored.
+<DeleteWikiRequest>
+  <w name="{word}"/>
+</DeleteWikiRequest>
+
+<DeleteWikiResponse/>
 
 //
 // DiffWiki

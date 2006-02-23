@@ -30,32 +30,21 @@ import java.util.Map;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.wiki.Wiki;
-import com.zimbra.cs.wiki.WikiWord;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
-public class GetWiki extends DocumentHandler {
+public class DeleteWiki extends DocumentHandler {
 
 	public Element handle(Element request, Map context) throws ServiceException {
 		ZimbraContext lc = getZimbraContext(context);
         OperationContext octxt = lc.getOperationContext();
         Element eword = request.getElement(MailService.E_WIKIWORD);
         String word = eword.getAttribute(MailService.A_NAME);
-        long rev = eword.getAttributeLong(MailService.A_VERSION, -1);
 
-        Element response = lc.createElement(MailService.GET_WIKI_RESPONSE);
+        Wiki.getInstance().deleteWiki(octxt, word);
+        Element response = lc.createElement(MailService.DELETE_WIKI_RESPONSE);
 
-        WikiWord w = Wiki.getInstance().lookupWiki(word);
-        if (w == null) {
-        	// error handling here
-        	return response;
-        }
-        if (rev > 0) {
-            ToXML.encodeWiki(response, lc, w.getWikiItem(octxt, rev), null);
-        } else {
-            ToXML.encodeWiki(response, lc, w.getWikiItem(octxt), null);
-        }
         return response;
 	}
 }

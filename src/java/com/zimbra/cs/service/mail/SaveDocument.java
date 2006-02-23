@@ -82,7 +82,7 @@ public class SaveDocument extends WriteOpDocumentHandler {
         
         String name = docElem.getAttribute(MailService.A_NAME, doc.name);
         String ctype = docElem.getAttribute(MailService.A_CONTENT_TYPE, doc.contentType);
-        int fid = (int)docElem.getAttributeLong(MailService.A_FOLDERID, wiki.getWikiFolderId());
+        int fid = (int)docElem.getAttributeLong(MailService.A_FOLDER, wiki.getWikiFolderId());
 
         Document docItem;
    		docItem = mbox.createDocument(octxt, fid, name, ctype, doc.contents, null);

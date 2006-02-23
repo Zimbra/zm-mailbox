@@ -29,9 +29,6 @@
 package com.zimbra.cs.mailbox;
 
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.service.ServiceException;
@@ -42,7 +39,6 @@ import com.zimbra.cs.service.ServiceException;
  */
 public class Document extends MailItem {
 
-	Map<String,String> mFields;
 	long   mVersion;
     String mContentType;
     String mFragment;
@@ -52,11 +48,11 @@ public class Document extends MailItem {
 	}
 
 	public String getFragment() {
-    	return mFields.get(Metadata.FN_FRAGMENT);
+    	return mFragment;
 	}
 	
 	public long getVersion() {
-		return Long.valueOf(mFields.get(Metadata.FN_VERSION));
+		return mVersion;
 	}
 	
 	public String getFilename() {
@@ -64,15 +60,19 @@ public class Document extends MailItem {
 	}
 	
     public String getContentType() {
-    	return mFields.get(Metadata.FN_MIME_TYPE);
+    	return mContentType;
     }
 
     public InputStream getRawDocument() throws ServiceException {
         return MessageCache.getRawContent(this);
     }
 
-    synchronized static long getNextVersion() {
-    	return 0;  // XXX implement it
+    synchronized static long getNextVersion(Document parent) {
+    	if (parent != null) {
+    		return parent.getVersion() + 1;
+    	} else {
+    		return 1;
+    	}
     }
 
     @Override boolean isTaggable()      { return true; }
@@ -82,18 +82,12 @@ public class Document extends MailItem {
     @Override boolean isIndexed()       { return true; }
     @Override boolean canHaveChildren() { return false; }
 
-    protected static UnderlyingData prepareCreate(Map<String,String> fields, byte tp, int id, Folder folder, short volumeId, String subject, String type, int length) 
+    protected static UnderlyingData prepareCreate(byte tp, int id, Folder folder, short volumeId, String subject, String type, int length, Document parent, Metadata meta) 
     throws ServiceException {
         if (folder == null || !folder.canContain(TYPE_DOCUMENT))
             throw MailServiceException.CANNOT_CONTAIN();
         if (!folder.canAccess(ACL.RIGHT_INSERT))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
-
-        if (fields == null) {
-            fields = new HashMap<String,String>();
-        }
-        fields.put(Metadata.FN_MIME_TYPE, type);
-        fields.put(Metadata.FN_VERSION, Long.toString(getNextVersion()));
 
 		Mailbox mbox = folder.getMailbox();
         UnderlyingData data = new UnderlyingData();
@@ -106,7 +100,7 @@ public class Document extends MailItem {
         data.size        = length;
         data.subject     = subject;
         data.blobDigest  = subject;
-        data.metadata    = encodeMetadata(DEFAULT_COLOR, fields);
+       	data.metadata    = encodeMetadata(meta, DEFAULT_COLOR, type, getNextVersion(parent)).toString();
         
         return data;
     }
@@ -114,8 +108,9 @@ public class Document extends MailItem {
     static Document create(int id, Folder folder, short volumeId, String filename, String type, int length, MailItem parent)
     throws ServiceException {
     	assert(id != Mailbox.ID_AUTO_INCREMENT);
+    	assert(parent instanceof Document);
 
-        UnderlyingData data = prepareCreate(null, TYPE_DOCUMENT, id, folder, volumeId, filename, type, length);
+        UnderlyingData data = prepareCreate(TYPE_DOCUMENT, id, folder, volumeId, filename, type, length, (Document) parent, null);
         if (parent != null)
             data.parentId = parent.getId();
 
@@ -124,7 +119,7 @@ public class Document extends MailItem {
         DbMailItem.create(mbox, data);
 
         Document doc = new Document(mbox, data);
-        doc.finishCreation(parent);
+        doc.finishCreation(null);
 //        doc.reindex();
         return doc;
     }
@@ -132,24 +127,21 @@ public class Document extends MailItem {
     @Override 
     void decodeMetadata(Metadata meta) throws ServiceException {
         super.decodeMetadata(meta);
-        Metadata metaAttrs = meta.getMap(Metadata.FN_FIELDS);
-
-        mFields = new HashMap<String,String>();
-        for (Iterator it = metaAttrs.asMap().entrySet().iterator(); it.hasNext(); ) {
-            Map.Entry entry = (Map.Entry) it.next();
-            mFields.put(entry.getKey().toString(), entry.getValue().toString());
-        }
+        mContentType = meta.get(Metadata.FN_MIME_TYPE);
+        mVersion = Long.valueOf(meta.get(Metadata.FN_VERSION));
     }
 
     @Override 
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mColor);
+        return encodeMetadata(meta, mColor, mContentType, mVersion);
     }
-    static String encodeMetadata(byte color, Map fields) {
-        return encodeMetadata(new Metadata(), color, fields).toString();
-    }
-    static Metadata encodeMetadata(Metadata meta, byte color, Map fields) {
-        meta.put(Metadata.FN_FIELDS, new Metadata(fields));
+    
+    static Metadata encodeMetadata(Metadata meta, byte color, String mimeType, long version) {
+    	if (meta == null) {
+    		meta = new Metadata();
+    	}
+        meta.put(Metadata.FN_MIME_TYPE, mimeType);
+        meta.put(Metadata.FN_VERSION, Long.toString(version));
         return MailItem.encodeMetadata(meta, color);
     }
 

@@ -24,7 +24,7 @@
  */
 package com.zimbra.cs.wiki;
 
-import java.util.Vector;
+import java.util.TreeSet;
 
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.WikiItem;
@@ -33,11 +33,11 @@ import com.zimbra.cs.service.ServiceException;
 public class WikiWord {
 	
 	private String mWikiWord;
-	private Vector<WikiId> mWikiIds;
+	private TreeSet<WikiId> mWikiIds;
 	
 	WikiWord(String wikiWord) throws ServiceException {
 		mWikiWord = wikiWord;
-		mWikiIds = new Vector<WikiId>();
+		mWikiIds = new TreeSet<WikiId>();
 	}
 
 	public String getWikiWord() {
@@ -47,19 +47,45 @@ public class WikiWord {
 	public void addWikiItem(WikiItem newItem) throws ServiceException {
 		mWikiIds.add(new WikiId(newItem));
 	}
-
-	public int lastRevision() {
-		return mWikiIds.size();
-	}
-
-	public WikiItem getWikiItem(OperationContext octxt) throws ServiceException {
-		return mWikiIds.lastElement().getWikiItem(octxt);
-	}
-
-	public WikiItem getWikiItem(OperationContext octxt, int rev) throws ServiceException {
-		if (rev >= mWikiIds.size()) {
-			throw new IllegalArgumentException();
+	
+	public void deleteAllRevisions(OperationContext octxt) throws ServiceException {
+		for (WikiId wiki : mWikiIds) {
+			wiki.deleteWikiItem(octxt);
 		}
-		return mWikiIds.get(rev).getWikiItem(octxt);
+		mWikiIds.clear();
+	}
+
+	public long lastRevision() {
+		return mWikiIds.last().getVersion();
+	}
+
+	public long getCreatedDate() {
+		return mWikiIds.first().getCreatedDate();
+	}
+	
+	public long getModifiedDate() {
+		return mWikiIds.last().getCreatedDate();
+	}
+	
+	public String getCreator() {
+		return mWikiIds.first().getCreator();
+	}
+	
+	public String getLastEditor() {
+		return mWikiIds.last().getCreator();
+	}
+	
+	public WikiItem getWikiItem(OperationContext octxt) throws ServiceException {
+		return mWikiIds.last().getWikiItem(octxt);
+	}
+
+	public WikiItem getWikiItem(OperationContext octxt, long rev) throws ServiceException {
+		if (rev > 0 && rev <= lastRevision()) {
+			WikiId item = mWikiIds.tailSet(WikiId.getWikiId(rev)).first();
+			if (item != null && item.mVersion == rev) {
+				return item.getWikiItem(octxt);
+			}
+		}
+		throw ServiceException.FAILURE("no such item", null);
 	}
 }

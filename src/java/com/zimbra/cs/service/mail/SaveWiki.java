@@ -31,6 +31,7 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.wiki.Wiki;
+import com.zimbra.cs.wiki.WikiWord;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.WriteOpDocumentHandler;
@@ -48,9 +49,16 @@ public class SaveWiki extends WriteOpDocumentHandler {
 
         Element msgElem = request.getElement(MailService.E_MSG);
         String subject = msgElem.getAttribute(MailService.A_SUBJECT, null);
+        int fid = (int)msgElem.getAttributeLong(MailService.A_FOLDER, wiki.getWikiFolderId());
 
         byte[] rawData = msgElem.getText().getBytes();
-        WikiItem wikiItem = mbox.createWiki(octxt, wiki.getWikiFolderId(), subject, rawData, null);
+        
+        WikiWord ww = wiki.lookupWiki(subject);
+        WikiItem parent = null;
+        if (ww != null) {
+        	parent = ww.getWikiItem(octxt);
+        }
+        WikiItem wikiItem = mbox.createWiki(octxt, fid, subject, rawData, parent);
 		wiki.addWiki(wikiItem);
 
         Element response = lc.createElement(MailService.SAVE_WIKI_RESPONSE);

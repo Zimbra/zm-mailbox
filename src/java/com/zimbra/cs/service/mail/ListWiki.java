@@ -30,6 +30,7 @@ import java.util.Set;
 
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.wiki.Wiki;
+import com.zimbra.cs.wiki.WikiWord;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
@@ -39,11 +40,18 @@ public class ListWiki extends DocumentHandler {
 	public Element handle(Element request, Map context) throws ServiceException {
 		ZimbraContext lc = getZimbraContext(context);
 
-        Set<String> wikiWords = Wiki.getInstance().listWiki();
+		Wiki wiki = Wiki.getInstance();
+        Set<String> wikiWords = wiki.listWiki();
         Element response = lc.createElement(MailService.LIST_WIKI_RESPONSE);
         for (String w : wikiWords) {
+        	WikiWord ww = wiki.lookupWiki(w);
             Element m = response.addElement(MailService.E_WIKIWORD);
-            m.addText(w);
+            m.addAttribute(MailService.A_NAME, w);
+            m.addAttribute(MailService.A_VERSION, ww.lastRevision());
+            m.addAttribute(MailService.A_CREATED_DATE, ww.getCreatedDate());
+            m.addAttribute(MailService.A_MODIFIED_DATE, ww.getModifiedDate());
+            m.addAttribute(MailService.A_CREATOR, ww.getCreator());
+            m.addAttribute(MailService.A_LAST_EDITED_BY, ww.getLastEditor());
         }
         return response;
 	}

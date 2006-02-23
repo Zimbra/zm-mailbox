@@ -38,7 +38,6 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.ZimbraLog;
 
 public class Wiki {
 	private String mWikiAccount;
@@ -89,7 +88,7 @@ public class Wiki {
 	}
 	
 	private void loadWiki(OperationContext octxt, Mailbox mbox) throws ServiceException {
-	    List<MailItem> wikiList = mbox.getItemList(octxt, MailItem.TYPE_WIKI, mFolderId);
+	    List<MailItem> wikiList = mbox.getItemList(octxt, MailItem.TYPE_WIKI);
 	    // this is List, so it'd better be in the natural chronological order of MailItem in the folder.
 
 	    for (MailItem item : wikiList) {
@@ -123,10 +122,6 @@ public class Wiki {
 	}
 	
 	public void addWiki(WikiItem wikiItem) throws ServiceException {
-		ZimbraLog.wiki.debug("adding wiki item " + 
-				wikiItem.getWikiWord() + " : " + 
-				wikiItem.getChangeDate() + " : " + 
-				wikiItem.getCreator());
 		String wikiStr = wikiItem.getWikiWord();
 		WikiWord w;
 		w = mWikiWords.get(wikiStr);
@@ -135,5 +130,12 @@ public class Wiki {
 			mWikiWords.put(wikiStr, w);
 		}
 		w.addWikiItem(wikiItem);
+	}
+	
+	public void deleteWiki(OperationContext octxt, String wikiWord) throws ServiceException {
+		WikiWord w = mWikiWords.remove(wikiWord);
+		if (w != null) {
+			w.deleteAllRevisions(octxt);
+		}
 	}
 }

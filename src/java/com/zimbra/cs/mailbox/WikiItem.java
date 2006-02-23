@@ -25,8 +25,6 @@
 package com.zimbra.cs.mailbox;
 
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
 
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -34,6 +32,9 @@ import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.service.ServiceException;
 
 public class WikiItem extends Document {
+	
+	String mWikiWord;
+	String mCreator;
 	
 	WikiItem(Mailbox mbox, UnderlyingData data) throws ServiceException {
 		super(mbox, data);
@@ -48,26 +49,21 @@ public class WikiItem extends Document {
 
 	@Override 
 	Metadata encodeMetadata(Metadata meta) {
-		return encodeMetadata(meta, mColor);
+		meta.put(Metadata.FN_WIKI_WORD, mWikiWord);
+		meta.put(Metadata.FN_CREATOR, mCreator);
+		return super.encodeMetadata(meta);
 	}
-    static String encodeMetadata(byte color, Map fields) {
-        return encodeMetadata(new Metadata(), color, fields).toString();
-    }
-    static Metadata encodeMetadata(Metadata meta, byte color, Map fields) {
-        meta.put(Metadata.FN_FIELDS, new Metadata(fields));
-        return Document.encodeMetadata(meta, color);
-    }
 	
     public void reindex(IndexItem redo, Object indexData) throws ServiceException {
     	// XXX implement me
     }
 
 	public String getWikiWord() {
-		return mFields.get(Metadata.FN_WIKI_WORD);
+		return mWikiWord;
 	}
 	
 	public String getCreator() {
-		return mFields.get(Metadata.FN_CREATOR);
+		return mCreator;
 	}
 	
 	public long getCreatedTime() {
@@ -82,16 +78,24 @@ public class WikiItem extends Document {
         return MessageCache.getRawContent(this);
     }
     
-	public static final String WIKI_CONTENT_TYPE = "text/html";
+    @Override 
+    void decodeMetadata(Metadata meta) throws ServiceException {
+        super.decodeMetadata(meta);
+        mWikiWord = meta.get(Metadata.FN_WIKI_WORD);
+        mCreator = meta.get(Metadata.FN_CREATOR);
+    }
+
+    public static final String WIKI_CONTENT_TYPE = "text/html";
 	
     static WikiItem create(int id, Folder folder, short volumeId, String wikiword, String author, int length, MailItem parent)
     throws ServiceException {
+    	assert(parent instanceof Document);
 
-        Map<String,String> fields = new HashMap<String,String>();
-		fields.put(Metadata.FN_WIKI_WORD, wikiword);
-		fields.put(Metadata.FN_CREATOR, author);
+        Metadata meta = new Metadata();
+		meta.put(Metadata.FN_WIKI_WORD, wikiword);
+		meta.put(Metadata.FN_CREATOR, author);
 		
-        UnderlyingData data = prepareCreate(fields, TYPE_WIKI, id, folder, volumeId, wikiword, WIKI_CONTENT_TYPE, length);
+        UnderlyingData data = prepareCreate(TYPE_WIKI, id, folder, volumeId, wikiword, WIKI_CONTENT_TYPE, length, (Document)parent, meta);
         if (parent != null)
             data.parentId = parent.getId();
 
@@ -100,7 +104,7 @@ public class WikiItem extends Document {
         DbMailItem.create(mbox, data);
 
         WikiItem wiki = new WikiItem(mbox, data);
-        wiki.finishCreation(parent);
+        wiki.finishCreation(null);
 //        doc.reindex();
         return wiki;
     }
