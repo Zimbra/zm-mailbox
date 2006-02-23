@@ -660,9 +660,18 @@ public class Mime {
         if (!base.hasChildren())
             return null;
 
+        List<MPartInfo> children;
+        if (base.getContentType().match(CT_MULTIPART_ALTERNATIVE))
+            children = base.getChildren();
+        else {
+            // for multipart/mixed (etc.), only the first part is really "body"
+            children = new ArrayList<MPartInfo>();
+            children.add(base.getChildren().get(0));
+        }
+
         // go through top-level children, stopping at first text part we are interested in
         MPartInfo alternative = null;
-        for (MPartInfo p : base.getChildren()) {
+        for (MPartInfo p : children) {
             boolean isAttachment = p.getDisposition().equals(Part.ATTACHMENT);
             // the Content-Type we want and the one we'd settle for...
             String wantType = preferHtml ? CT_TEXT_HTML  : CT_TEXT_PLAIN;
