@@ -491,9 +491,8 @@ public class ToXML {
                 part = "";
 
             EmailElementCache eecache = new EmailElementCache();
-            HashSet unique = new HashSet();
-            addEmails(m, eecache, Mime.parseAddressHeader(mm, "From"), EmailElementCache.EMAIL_TYPE_FROM, unique);
-            addEmails(m, eecache, Mime.parseAddressHeader(mm, "Reply-To"), EmailElementCache.EMAIL_TYPE_REPLY_TO, unique);
+            addEmails(m, eecache, Mime.parseAddressHeader(mm, "From"), EmailElementCache.EMAIL_TYPE_FROM);
+            addEmails(m, eecache, Mime.parseAddressHeader(mm, "Reply-To"), EmailElementCache.EMAIL_TYPE_REPLY_TO);
             addEmails(m, eecache, Mime.parseAddressHeader(mm, "To"), EmailElementCache.EMAIL_TYPE_TO);
             addEmails(m, eecache, Mime.parseAddressHeader(mm, "Cc"), EmailElementCache.EMAIL_TYPE_CC);
             addEmails(m, eecache, Mime.parseAddressHeader(mm, "Bcc"), EmailElementCache.EMAIL_TYPE_BCC);
@@ -661,9 +660,8 @@ public class ToXML {
                 part = "";
 
             EmailElementCache eecache = new EmailElementCache();
-            HashSet unique = new HashSet();
-            addEmails(m, eecache, Mime.parseAddressHeader(mm, "From"), EmailElementCache.EMAIL_TYPE_FROM, unique);
-            addEmails(m, eecache, Mime.parseAddressHeader(mm, "Reply-To"), EmailElementCache.EMAIL_TYPE_REPLY_TO, unique);
+            addEmails(m, eecache, Mime.parseAddressHeader(mm, "From"), EmailElementCache.EMAIL_TYPE_FROM);
+            addEmails(m, eecache, Mime.parseAddressHeader(mm, "Reply-To"), EmailElementCache.EMAIL_TYPE_REPLY_TO);
             addEmails(m, eecache, Mime.parseAddressHeader(mm, "To"), EmailElementCache.EMAIL_TYPE_TO);
             addEmails(m, eecache, Mime.parseAddressHeader(mm, "Cc"), EmailElementCache.EMAIL_TYPE_CC);
             addEmails(m, eecache, Mime.parseAddressHeader(mm, "Bcc"), EmailElementCache.EMAIL_TYPE_BCC);
