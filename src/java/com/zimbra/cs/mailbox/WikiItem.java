@@ -54,10 +54,6 @@ public class WikiItem extends Document {
 		return super.encodeMetadata(meta);
 	}
 	
-    public void reindex(IndexItem redo, Object indexData) throws ServiceException {
-    	// XXX implement me
-    }
-
 	public String getWikiWord() {
 		return mWikiWord;
 	}

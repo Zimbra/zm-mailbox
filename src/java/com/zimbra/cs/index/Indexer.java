@@ -47,6 +47,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Note;
+import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.service.ServiceException;
@@ -111,8 +112,11 @@ public class Indexer
         switch (itemType) {
         case MailItem.TYPE_APPOINTMENT:
             break;
-        case MailItem.TYPE_MESSAGE:
+        case MailItem.TYPE_DOCUMENT:
         case MailItem.TYPE_WIKI:
+        	indexDocument(redo, idx, itemId, (com.zimbra.cs.mailbox.Document) item);
+        	break;
+        case MailItem.TYPE_MESSAGE:
                 InputStream is = mbox.getMessageById(null, itemId).getRawMessage();
                 MimeMessage mm;
     			try {
@@ -281,6 +285,28 @@ public class Indexer
         	incrementNumIndexedBy(1);
         } catch (IOException e) {
         	throw ServiceException.FAILURE("indexNote caught IOException", e);
+        }
+    }
+    
+    
+    /**
+     * Index a Document/WikiItem in the specified mailbox.
+     * @param mailboxId
+     * @param mailItemId
+     * @param document
+     * @throws ServiceException
+     */
+    public void indexDocument(IndexItem redo, MailboxIndex idx, int mailItemId, com.zimbra.cs.mailbox.Document document)
+    throws ServiceException {
+        try {
+        	ParsedDocument pd = new ParsedDocument(document.getBlob().getBlob().getFile(),
+        											document.getFilename(), 
+        											document.getContentType());
+            addDocument(redo, pd.getDocument(), idx, mailItemId, document.getDate());
+
+        	incrementNumIndexedBy(1);
+        } catch (Exception e) {
+        	throw ServiceException.FAILURE("indexDocument caught Exception", e);
         }
     }
     

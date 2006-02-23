@@ -31,6 +31,9 @@ package com.zimbra.cs.mailbox;
 import java.io.InputStream;
 
 import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.index.Indexer;
+import com.zimbra.cs.localconfig.DebugConfig;
+import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.service.ServiceException;
 
 
@@ -81,6 +84,12 @@ public class Document extends MailItem {
     @Override boolean isMutable()       { return false; }
     @Override boolean isIndexed()       { return true; }
     @Override boolean canHaveChildren() { return false; }
+
+    @Override
+    public void reindex(IndexItem redo, Object indexData) throws ServiceException {
+        if (!DebugConfig.disableIndexing)
+            Indexer.GetInstance().indexDocument(redo, mMailbox.getMailboxIndex(), mId, this);
+    }
 
     protected static UnderlyingData prepareCreate(byte tp, int id, Folder folder, short volumeId, String subject, String type, int length, Document parent, Metadata meta) 
     throws ServiceException {

@@ -4416,7 +4416,6 @@ public class Mailbox {
             // TODO: do we need parent when creating document.
         	doc = Document.create(itemId, getFolderById(folderId), volumeId, filename, mimeType, rawData.length, parent);
 
-        	// TODO: indexing
             mCurrentChange.setIndexedItem(doc, null);
 
             sm.link(blob, this, itemId, doc.getSavedSequence(), volumeId);
