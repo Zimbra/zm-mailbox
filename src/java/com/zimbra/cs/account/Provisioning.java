@@ -320,7 +320,12 @@ public abstract class Provisioning {
      * UUID for the entry
      */
     public static final String A_zimbraId = "zimbraId";
-    
+
+    /**
+     * UUID for the group
+     */
+    public static final String A_zimbraGroupId = "zimbraGroupId";
+
     /**
      * pointer to the aliased id
      */

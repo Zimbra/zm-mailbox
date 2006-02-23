@@ -28,6 +28,7 @@ package com.zimbra.cs.account.ldap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 import javax.naming.NamingException;
 import javax.naming.directory.AttributeInUseException;
@@ -56,6 +57,10 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
         return getAttr(Provisioning.A_zimbraId);
     }
 
+    public String getGroupId() {
+        return getAttr(Provisioning.A_zimbraGroupId);
+    }
+
     public String getName() {
         return mName;
     }
@@ -70,21 +75,28 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
         boolean updateOC =  (enabled && !hasZimbraSecurityGroupObjectClass()) ||
                             (!enabled && hasZimbraSecurityGroupObjectClass());
         
+        String groupId = getGroupId();
+
         if (updateOC) {
             HashMap attrs = new HashMap();
             attrs.put((enabled ? "+" : "-")+Provisioning.A_objectClass, Provisioning.OC_zimbraSecurityGroup);
             if (!enabled) {
                 attrs.put(Provisioning.A_zimbraMemberOf, "");
+                attrs.put(Provisioning.A_zimbraGroupId, "");
+                modifyAttrs(attrs);                
             } else {
                 // need to do a search for all DLs this DL is on that are also security groups, and update
                 // our zimbraMemberOf attr with their zimbraIds
+                groupId = UUID.randomUUID().toString();
+                attrs.put(Provisioning.A_zimbraGroupId, groupId);
+                modifyAttrs(attrs);                
                 String addrs[] = LdapProvisioning.getAllAddrsForDistributionList(this);
                 List<DistributionList> lists = Provisioning.getInstance().getAllDistributionListsForAddresses(addrs);
                 ArrayList memberOf = null;
                 for (DistributionList list: lists) { 
                     if (list.isSecurityGroup()) {
                         if (memberOf == null) memberOf = new ArrayList();
-                        memberOf.add(list.getId());
+                        memberOf.add(list.getGroupId());
                     }
                 }
                 if (memberOf != null) {
@@ -92,15 +104,13 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
                     attrs.put(Provisioning.A_zimbraMemberOf, members);
                 }
             }
-            modifyAttrs(attrs);
+            
         }
         
         String members[] = getAllMembers();
         if (members == null || members.length == 0) return;
         for (int i=0; i < members.length; i++)
-            updateZimbraMemberOf(members[i], enabled);
-        
-
+            updateZimbraMemberOf(members[i], groupId, enabled);
     }
 
     public void addMember(String member) throws ServiceException {
@@ -114,7 +124,7 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
         try {
             ctxt = LdapUtil.getDirContext(true);
             addAttr(ctxt, Provisioning.A_zimbraMailForwardingAddress, member);
-            if (isSecurityGroup()) updateZimbraMemberOf(member, true);
+            if (isSecurityGroup()) updateZimbraMemberOf(member, getGroupId(), true);
         } catch (AttributeInUseException aiue) {
             throw AccountServiceException.MEMBER_EXISTS(getName(), member, aiue);
         } catch (NamingException ne) {
@@ -130,7 +140,7 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
         try {
             ctxt = LdapUtil.getDirContext(true);
             removeAttr(ctxt, Provisioning.A_zimbraMailForwardingAddress, member);
-            if (isSecurityGroup()) updateZimbraMemberOf(member, false);
+            if (isSecurityGroup()) updateZimbraMemberOf(member, getGroupId(), false);
         } catch (NoSuchAttributeException nsae) {
             throw AccountServiceException.NO_SUCH_MEMBER(getName(), member, nsae);
         } catch (NamingException ne) {
@@ -140,10 +150,10 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
         }
     }
 
-    private boolean inMemberOf(NamedEntry e) {
+    private boolean inMemberOf(NamedEntry e, String groupId) {
         String[] memberOf = e.getMultiAttr(Provisioning.A_zimbraMemberOf);
         for (int i=0; i < memberOf.length; i++)
-            if (getId().equalsIgnoreCase(memberOf[i])) return true;
+            if (groupId.equalsIgnoreCase(memberOf[i])) return true;
         return false;
     }
     
@@ -154,7 +164,7 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
         return false;
     }
     
-    private void updateZimbraMemberOf(String member, boolean add) throws ServiceException {
+    private void updateZimbraMemberOf(String member, String groupId, boolean add) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         NamedEntry entry = prov.getAccountByName(member);
         if (entry == null){
@@ -164,15 +174,15 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
         }
 
         if (add) {
-            if (!inMemberOf(entry)) {
+            if (!inMemberOf(entry, groupId)) {
                 HashMap attrs = new HashMap();
-                attrs.put("+"+Provisioning.A_zimbraMemberOf, getId());
+                attrs.put("+"+Provisioning.A_zimbraMemberOf, groupId);
                 entry.modifyAttrs(attrs);
             }
         } else {
-            if (inMemberOf(entry)) {
+            if (inMemberOf(entry, groupId)) {
                 HashMap attrs = new HashMap();
-                attrs.put("-"+Provisioning.A_zimbraMemberOf, getId());
+                attrs.put("-"+Provisioning.A_zimbraMemberOf, groupId);
                 entry.modifyAttrs(attrs);
             }
         }

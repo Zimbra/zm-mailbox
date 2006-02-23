@@ -31,18 +31,20 @@ What makes a distribution list a group?
 A distribution list is a group if it has the object class "zimbraSecurityGroup"
 listed in its object classes. Mixing in this auxiliary object class changes the
 behavior of the provisioning code with respect to distribution lists, and also
-allows distribution lists themselves to members of other groups.
+allows distribution lists themselves to members of other groups. When a DL is a
+group, it will also have a zimbraGroupId assigned to it, which is a UUID like
+zimbraId.
 
 Adding this object class to a distribution list changes the behavior of 
 provisioning code in the following ways:
 
   1) when adding a member to a DL that ia security group:
 
-     add the DL's zimbraId to the member's zimbraMemberOf attr
+     add the DL's zimbraGroupId to the member's zimbraMemberOf attr
    
   2) when removing a member from a DL that is a security group:
 
-     remove the DL's zimbraId from the member's zimbraMemberOf attr
+     remove the DL's zimbraGroupId from the member's zimbraMemberOf attr
      
   3) when deleting a DL that is a group:
 
@@ -52,61 +54,72 @@ provisioning code in the following ways:
 What makes a user a member of a group?
 --------------------------------------
 A user is a member of a group if their LDAP entry has a "zimbraMemberOf" attr
-that is set to the zimbraId of the DL/group.
+that is set to the zimbraGroupId of the DL/group.
 
 Example
 -------
 Normally, a user is a member of DL if their primary email address or any of
 their aliases is present in the DL's zimbraMailForwardingAddress attr.
 
-For example, if you add "user1@g5.local" to the "users@g5.local" DL, the
+For example, if you add "user1@test.com" to the "users@test.com" DL, the
 DL's LDAP attrs would look like:
-
-# distributionList users@g5.local memberCount=1
-mail: users@g5.local
+$ /opt/zimbra/bin/zmprov
+prov> cd test.com
+e2603c41-7bb6-4089-894c-19c48e725f70
+prov> ca user1@test.com test123
+8a672812-b849-40d3-9a37-ffbdb63a6fcd
+prov> cdl users@test.com
+2a459593-abe8-40f8-8e75-2f5d491a5e12
+prov> adlm users@test.com user1@test.com
+prov> gdl users@test.com
+# distributionList users@test.com memberCount=1
+mail: users@test.com
 objectClass: zimbraDistributionList
 objectClass: zimbraMailRecipient
 uid: users
-zimbraId: a5e95d80-2531-4708-b406-8b736443b202
-zimbraMailAlias: users@g5.local
-zimbraMailForwardingAddress: user1@g5.local
+zimbraId: 2a459593-abe8-40f8-8e75-2f5d491a5e12
+zimbraMailAlias: users@test.com
+zimbraMailForwardingAddress: user1@test.com
 zimbraMailStatus: enabled
 
 Postfix uses the zibraMailForwardingAddress to route all mail for the DL to the
 members.
 
 If you looked at user1's LDAP entry, there would be no indication that it is a
-member of the "users@g5.local" DL. If we allow "users@g5.local" to be a group
-and look at the DL entry again, we'd see one difference:
+member of the "users@test.com" DL. If we allow "users@test.com" to be a group
+and look at the DL entry again, we'd see two differences:
 
-# distributionList users@g5.local memberCount=1
-mail: users@g5.local
+prov> dlig users@test.com 1
+prov> gdl users@test.com
+# distributionList users@test.com memberCount=1
+mail: users@test.com
 objectClass: zimbraDistributionList
 objectClass: zimbraMailRecipient
 objectClass: zimbraSecurityGroup
 uid: users
-zimbraId: a5e95d80-2531-4708-b406-8b736443b202
-zimbraMailAlias: users@g5.local
-zimbraMailForwardingAddress: user1@g5.local
+zimbraGroupId: cfb87acc-590a-4ed2-a847-99cdc920fe1f
+zimbraId: 2a459593-abe8-40f8-8e75-2f5d491a5e12
+zimbraMailAlias: users@test.com
+zimbraMailForwardingAddress: user1@test.com
 zimbraMailStatus: enabled
 
-The only difference is the presence of the "zimbraSecurityGroup" objectClass
-attr. But now, if we look at user1's LDAP entry, we'd see a "zimbraMemberOf"
-attribute:
+The two differences are the presence of the "zimbraSecurityGroup" objectClass
+attr, and the zimbraGroupId attr. 
 
-# name user1@g5.local
-cn: Demo User One
-displayName: Demo User One
-mail: user1@g5.local
-mail: user.one@g5.local
+If we now look at user1's LDAP entry, we'd see a "zimbraMemberOf" attribute:
+
+rov> ga user1@test.com
+# name user1@test.com
+cn: user1
+mail: user1@test.com
 objectClass: organizationalPerson
 objectClass: zimbraAccount
 objectClass: amavisAccount
 ...
-zimbraMemberOf: a5e95d80-2531-4708-b406-8b736443b202
-....
+zimbraMemberOf: cfb87acc-590a-4ed2-a847-99cdc920fe1f
+...
 
-If you compare the value of the zimbraMemberOf attr with the zimbraId of the DL,
+If you compare the value of the zimbraMemberOf attr with the zimbraGroupId of the DL,
 you'll see they are the same. If the DL is delete and/or the user is removed
 from the DL, then this attr will be removed from the user's entry.
 
@@ -114,50 +127,64 @@ GROUPS OF GROUPS
 ================
 DLs can contain other DLs, and thus groups can contain other groups. If a user
 is in DL A, and DL A is also in DL B, then the user will be in both groups. For
-example, lets consider the case where all@g5.local and engineering@g5.local are both
+example, lets consider the case where all@test.com and engineering@test.com are both
 DLs that are groups, and engineering is a mmeber of "all".
 
-If we look at "all@g5.local", we see that it has one member, engineering@g5.local:
+prov> cdl all@test.com
+047d0f54-4acd-41c5-a03b-7a6a4ce54c02
+prov> cdl engineering@test.com
+ba01ba46-7379-4a67-bc76-1a88e3c096fc
+prov> adlm all@test.com engineering@test.com
+prov> adlm engineering@test.com user1@test.com
+prov> dlig engineering@test.com 1
+prov> dlig all@test.com 1
+ 
 
-# distributionList all@g5.local memberCount=1
-mail: all@g5.local
+If we look at "all@test.com", we see that it has one member, engineering@test.com:
+
+prov> gdl all@test.com
+# distributionList all@test.com memberCount=1
+mail: all@test.com
 objectClass: zimbraDistributionList
 objectClass: zimbraMailRecipient
 objectClass: zimbraSecurityGroup
 uid: all
-zimbraId: 6f29b614-2017-4ae6-8ba0-e18ac697033b
-zimbraMailAlias: all@g5.local
-zimbraMailForwardingAddress: engineering@g5.local
+zimbraGroupId: 02c87950-242b-49e7-a830-84b3e5714a59
+zimbraId: 047d0f54-4acd-41c5-a03b-7a6a4ce54c02
+zimbraMailAlias: all@test.com
+zimbraMailForwardingAddress: engineering@test.com
 zimbraMailStatus: enabled
 
-If we look at engineering@g5.local, we see that is has one member, user1@g5.local:
+If we look at engineering@etst.com, we see that is has one member, user1@test.com:
 
-# distributionList engineering@g5.local memberCount=1
-mail: engineering@g5.local
+prov> gdl engineering@test.com
+# distributionList engineering@test.com memberCount=1
+mail: engineering@test.com
 objectClass: zimbraDistributionList
 objectClass: zimbraMailRecipient
 objectClass: zimbraSecurityGroup
 uid: engineering
-zimbraId: d498dfa5-3f5c-478f-aa8d-895caf66ffda
-zimbraMailAlias: engineering@g5.local
-zimbraMailForwardingAddress: user1@g5.local
+zimbraGroupId: c05117b0-2c0c-4433-be35-ea5365be9b13
+zimbraId: ba01ba46-7379-4a67-bc76-1a88e3c096fc
+zimbraMailAlias: engineering@test.com
+zimbraMailForwardingAddress: user1@test.com
 zimbraMailStatus: enabled
-zimbraMemberOf: 6f29b614-2017-4ae6-8ba0-e18ac697033b
+zimbraMemberOf: 02c87950-242b-49e7-a830-84b3e5714a59
 
 But you'll also noticate that it also has a "zimbraMemberOf" attr, that indicates itself 
 is a member of another group.
 
 If we look at user1's entry however, it only has a single zimbraMemberOf attr:
 
-zimbraMemberOf: d498dfa5-3f5c-478f-aa8d-895caf66ffda
+zimbraMemberOf: c05117b0-2c0c-4433-be35-ea5365be9b13
 
-It indicates that it is a member of only the engineering@g5.local group. Is the user
-also a member of the all@g5.local group, the answer is yes, and we'll see why.
+It indicates that it is a member of only the engineering@test.com. Is the user
+also a member of the all@test.com? The answer is yes, and we'll see why.
 
 CALCULATING A USER'S GROUP MEMBERSHIP LIST
 ==========================================
 When calculating all the groups a user belongs to, we don't just stop at all the
-"zimbraMemberOf" ids. If we did, then user1 wouldn't be a member of the all@g5.local group,
+"zimbraMemberOf" ids. If we did, then user1 wouldn't be a member of the all@test.com group,
 even thogh logically they should be. We could try and maintain the zimbraMemberOf attr
 for all groups a user logically belongs to, but that would quite expensive to maintain
 in realtime. The fanout problem becomes fairly big when you have nested groups of groups.
@@ -191,18 +218,18 @@ Step 3: while group in  "groupsToCheck":
 If we apply this algorithm to our example above, you'd have:
 
 groups: {}
-groupsToCheck: {d498dfa5-3f5c-478f-aa8d-895caf66ffda}
+groupsToCheck: {c05117b0-2c0c-4433-be35-ea5365be9b13}
 
 After checking the group, we'd see that it is a meber of a group, and we'd then have:
 
-groups: {d498dfa5-3f5c-478f-aa8d-895caf66ffda}
-groupsToCheck: {6f29b614-2017-4ae6-8ba0-e18ac697033b}
+groups: {c05117b0-2c0c-4433-be35-ea5365be9b13}
+groupsToCheck: {02c87950-242b-49e7-a830-84b3e5714a59}
 
-We'd then see that the all@g5.local group isn't a member of any other groups and end
+We'd then see that the all@test.com group isn't a member of any other groups and end
 up with:
 
 groups: {d498dfa5-3f5c-478f-aa8d-895caf66ffda, 
-         6f29b614-2017-4ae6-8ba0-e18ac697033b}
+         02c87950-242b-49e7-a830-84b3e5714a59}
 groupsToCheck: {}
 
 And we'd stop with user1 belonging to two groups.
@@ -216,7 +243,7 @@ TURNING A DL GROUP capability on/off
 
 When enabling a DL as a group there are three things that need to be done:
 
-  1. add the zimbraSecurityGroup object class to the DL
+  1. add the zimbraSecurityGroup object class to the DL and assign it a new zimbraGroupId
 
   2. update the DL's zimbraMemberOf attr for each DL it is in that is also a group.
 
@@ -224,7 +251,7 @@ When enabling a DL as a group there are three things that need to be done:
 
 When disabling a DL as a group:
 
-  1. remove zimbraSecurityGroup object class and all zibraMemberOf attrs 
+  1. remove zimbraSecurityGroup object class, zimbraGroupId attr, and all zibraMemberOf attrs
 
   2. for all members in the DL local to Zimbra, update their zimbraMemberOf attr
 
@@ -251,6 +278,10 @@ zmprov has a new command to turn on/off group status for a DL:
     
 NOTES
 =======================
+
+Toggle a group on/off
+---------------------
+Everytime you turn group support on for a DL, a new zimbraGroupId is assigned to it
 
 Remote Users
 ------------

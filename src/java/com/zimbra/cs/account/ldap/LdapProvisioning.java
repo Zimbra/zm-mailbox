@@ -73,6 +73,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.*;
+import com.zimbra.cs.account.ldap.LdapGroupEntryCache.LdapGroupEntry;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.mime.MimeTypeInfo;
@@ -109,6 +110,14 @@ public class LdapProvisioning extends Provisioning {
 
     static final SearchControls sSubtreeSC = new SearchControls(SearchControls.SUBTREE_SCOPE, 0, 0, null, false, false);
     
+    
+    private final static String[] sGroupReturnAttrs = 
+        { Provisioning.A_zimbraId, Provisioning.A_zimbraGroupId, Provisioning.A_zimbraMemberOf };
+
+    private final static SearchControls sGroupSearchControls = 
+                new SearchControls(SearchControls.SUBTREE_SCOPE, 0, 0, sGroupReturnAttrs, false, false);
+    
+    
     private static Log mLog = LogFactory.getLog(LdapProvisioning.class);
     
     private static LdapConfig sConfig = null;
@@ -135,7 +144,7 @@ public class LdapProvisioning extends Provisioning {
     private static final int MAX_ACCOUNT_CACHE = 5000;
     private static ZimbraLdapEntryCache sAccountCache = new ZimbraLdapEntryCache(MAX_ACCOUNT_CACHE, ENTRY_TTL);
 
-	private static final int MAX_COS_CACHE = 100;
+    private static final int MAX_COS_CACHE = 100;
     private static ZimbraLdapEntryCache sCosCache = new ZimbraLdapEntryCache(MAX_COS_CACHE, ENTRY_TTL);
 	
     private static final int MAX_DOMAIN_CACHE = 100;
@@ -143,6 +152,9 @@ public class LdapProvisioning extends Provisioning {
     
     private static final int MAX_SERVER_CACHE = 100;
     private static ZimbraLdapEntryCache sServerCache = new ZimbraLdapEntryCache(MAX_SERVER_CACHE, ENTRY_TTL);
+    
+    private static final int MAX_GROUP_CACHE = 1000; // we are only caching zimbraGroupId/zimbraMemberOf
+    private static LdapGroupEntryCache sGroupCache = new LdapGroupEntryCache(MAX_GROUP_CACHE, ENTRY_TTL);    
 
     private static final int MAX_TIMEZONE_CACHE = 100;
     private static boolean sTimeZoneInited = false;
@@ -1133,11 +1145,6 @@ public class LdapProvisioning extends Provisioning {
             LdapUtil.simpleCreate(ctxt, "ou=people,"+dn, "organizationalRole",
                     new String[] { A_ou, "people", A_cn, "people"});
             
-            /*
-             * LdapUtil.simpleCreate(ctxt, "ou=groups,"+dn, "organizationalRole",
-             * new String[] { A_ou, "groups", A_cn, "groups"});
-             */
-            
             Domain domain = getDomainById(zimbraIdStr, ctxt);
             
             AttributeManager.getInstance().postModify(domainAttrs, domain, attrManagerContext, true);
@@ -1527,8 +1534,8 @@ public class LdapProvisioning extends Provisioning {
     }
         
     public void deleteDomain(String zimbraId) throws ServiceException {
-        // TODO: should only allow a domain delete to succeed if there are no people/groups.
-        // if there aren't, we need to delete the group/people trees first, then delete the domain.
+        // TODO: should only allow a domain delete to succeed if there are no people
+        // if there aren't, we need to delete the people trees first, then delete the domain.
         DirContext ctxt = null;
         LdapDomain d = null;
         try {
@@ -1959,7 +1966,38 @@ public class LdapProvisioning extends Provisioning {
         //zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
         return getDistributionListByQuery("","(&(zimbraId="+zimbraId+")(objectclass=zimbraDistributionList))", ctxt);
     }
-    
+
+    LdapGroupEntry getGroupEntryById(String zimbraGroupId, DirContext initCtxt) throws ServiceException {
+        //zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
+        LdapGroupEntry group = sGroupCache.getByGroupId(zimbraGroupId);
+        if (group != null) return group;
+        
+        String query = "(&(zimbraGroupId="+zimbraGroupId+")(objectclass=zimbraDistributionList)(objectclass=zimbraSecurityGroup)";
+
+        DirContext ctxt = initCtxt;
+        try {
+            if (ctxt == null)
+                ctxt = LdapUtil.getDirContext();
+            NamingEnumeration ne = ctxt.search("", query, sGroupSearchControls);            
+            
+            if (ne.hasMore()) {
+                SearchResult sr = (SearchResult) ne.next();
+                ne.close();
+                group = sGroupCache.put(new LdapDistributionList(sr.getNameInNamespace(), sr.getAttributes()));
+            }
+        } catch (NameNotFoundException e) {
+            return null;
+        } catch (InvalidNameException e) {
+            return null;                        
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to lookup distribution list via query: "+query, e);
+        } finally {
+            if (initCtxt == null)
+                LdapUtil.closeContext(ctxt);
+        }
+        return group;        
+    }
+
     public DistributionList getDistributionListById(String zimbraId) throws ServiceException {
         return getDistributionListById(zimbraId, null);
     }
