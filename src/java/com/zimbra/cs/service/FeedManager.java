@@ -64,8 +64,8 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.service.mail.ParseMimeMessage;
 import com.zimbra.cs.util.DateUtil;
+import com.zimbra.cs.util.FileUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.soap.Element;
 
@@ -204,7 +204,7 @@ public class FeedManager {
             } catch (javax.mail.internet.ParseException e) {
                 ctype = new ContentType("text", "plain", null);
             }
-            ctype.setParameter("name", ParseMimeMessage.trimFilename(URLDecoder.decode(mUrl)));
+            ctype.setParameter("name", FileUtil.trimFilename(URLDecoder.decode(mUrl)));
             return ctype.toString();
         }
     }

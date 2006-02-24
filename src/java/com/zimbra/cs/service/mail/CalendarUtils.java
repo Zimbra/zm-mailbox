@@ -32,16 +32,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.activation.DataHandler;
-import javax.mail.Address;
-import javax.mail.MessagingException;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
-
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.JMSession;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -56,7 +47,6 @@ import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.Recurrence;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
-import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mailbox.calendar.ZRecur;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
@@ -67,97 +57,6 @@ import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.soap.Element;
 
 public class CalendarUtils {
-    public static MimeBodyPart makeICalIntoMimePart(String uid,
-            ZCalendar.ZVCalendar iCal) throws ServiceException {
-        try {
-            MimeBodyPart mbp = new MimeBodyPart();
-
-            String filename = "meeting.ics";
-            mbp.setDataHandler(new DataHandler(new CalendarDataSource(iCal,
-                    uid, filename)));
-
-            return mbp;
-        } catch (MessagingException e) {
-            throw ServiceException.FAILURE(
-                    "Failure creating MimeBodyPart for InviteReply", e);
-        }
-    }
-
-    /**
-     * Builds the TO: list for appointment updates by iterating over the list of
-     * ATTENDEEs
-     * 
-     * @param iter
-     * @return
-     */
-    static List /* String */toListFromAts(List /* ZAttendee */list) {
-        List /* String */toList = new ArrayList();
-        for (Iterator iter = list.iterator(); iter.hasNext();) {
-            ZAttendee curAt = (ZAttendee) iter.next();
-            toList.add(curAt.getAddress());
-        }
-        return toList;
-    }
-
-    public static MimeMessage createDefaultCalendarMessage(String fromAddr,
-            String addr, String subject, String text, String uid,
-            ZCalendar.ZVCalendar cal) throws ServiceException {
-        List list = new ArrayList();
-        list.add(addr);
-        return createDefaultCalendarMessage(fromAddr, list, subject, text, uid, cal);
-    }
-
-    public static MimeMessage createDefaultCalendarMessage(String fromAddr,
-            List /* String */toAts, String subject, String text, String uid,
-            ZCalendar.ZVCalendar cal) throws ServiceException {
-        try {
-            MimeMessage mm = new MimeMessage(JMSession.getSession()) {
-                protected void updateHeaders() throws MessagingException {
-                    String msgid = getMessageID();
-                    super.updateHeaders();
-                    if (msgid != null)
-                        setHeader("Message-ID", msgid);
-                }
-            };
-            MimeMultipart mmp = new MimeMultipart("alternative");
-            mm.setContent(mmp);
-
-            // ///////
-            // TEXT part (add me first!)
-            MimeBodyPart textPart = new MimeBodyPart();
-            textPart.setText(text); // implicitly sets content-type to
-                                    // "text/plain"
-            mmp.addBodyPart(textPart);
-
-            // ///////
-            // CALENDAR part
-            MimeBodyPart icalPart = CalendarUtils
-                    .makeICalIntoMimePart(uid, cal);
-            mmp.addBodyPart(icalPart);
-
-            // ///////
-            // MESSAGE HEADERS
-            mm.setSubject(subject);
-
-            Address[] addrs = new Address[toAts.size()];
-
-            for (int i = toAts.size() - 1; i >= 0; i--) {
-                String toAddr = (String) toAts.get(i);
-                InternetAddress addr = new InternetAddress(toAddr);
-                addrs[i] = addr;
-            }
-            mm.addRecipients(javax.mail.Message.RecipientType.TO, addrs);
-            mm.setFrom(new InternetAddress(fromAddr));
-            mm.setSentDate(new Date());
-            mm.saveChanges();
-
-            return mm;
-        } catch (MessagingException e) {
-            throw ServiceException.FAILURE(
-                    "Messaging Exception while building InviteReply", e);
-        }
-    }
-
     /**
      * Useful for sync and import, parse an <inv> that is specified using raw
      * iCalendar data in the format: <inv> <content uid="UID" summary="summary">
@@ -882,105 +781,6 @@ private static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap i
                     + value + "' specified for attribute:" + attrName, null);
         }
 
-    }
-
-    // static List cancelAppointment(Account acct, Appointment appt, String
-    // comment) {
-    // List<ZComponent> toRet = new ArrayList<ZComponent>();
-    //
-    // // for each invite, get the recurrence and add an UNTIL
-    // for (int i = appt.numInvites()-1; i >= 0; i--) {
-    // Invite inv = appt.getInvite(i);
-    // try {
-    // ZComponent event = cancelInvite(acct, inv, comment, null,
-    // null).newToVEvent();
-    // toRet.add(event);
-    // } catch (ServiceException e) {
-    // sLog.debug("Error creating cancellation for invite "+i+" for appt
-    // "+appt.getId());
-    // }
-    // }
-    //        
-    // return toRet;
-    // }
-    //    
-    /**
-     * RFC2446 4.2.2:
-     * 
-     * BEGIN:VCALENDAR PRODID:-//ACME/DesktopCalendar//EN METHOD:REPLY
-     * VERSION:2.0 BEGIN:VEVENT ATTENDEE;PARTSTAT=ACCEPTED:Mailto:B@example.com
-     * ORGANIZER:MAILTO:A@example.com
-     * UID:calsrv.example.com-873970198738777@example.com SEQUENCE:0
-     * REQUEST-STATUS:2.0;Success DTSTAMP:19970612T190000Z END:VEVENT
-     * END:VCALENDAR
-     * 
-     * @param acct
-     * @param oldInv
-     * @param verb
-     * @param replySubject
-     * @return
-     * @throws ServiceException
-     */
-    public static Invite replyToInvite(Account acct, Invite oldInv,
-            SendInviteReply.ParsedVerb verb, String replySubject,
-            ParsedDateTime exceptDt) throws ServiceException {
-        Invite reply = new Invite(ICalTok.REPLY.toString(), new TimeZoneMap(
-                acct.getTimeZone()));
-
-        reply.getTimeZoneMap().add(oldInv.getTimeZoneMap());
-
-        // ATTENDEE -- send back this attendee with the proper status
-        ZAttendee meReply = null;
-        ZAttendee me = oldInv.getMatchingAttendee(acct);
-        if (me != null) {
-            meReply = new ZAttendee(me.getAddress());
-            meReply.setPartStat(verb.getXmlPartStat());
-            meReply.setRole(me.getRole());
-            meReply.setCn(me.getCn());
-            reply.addAttendee(meReply);
-        } else {
-            String name = acct.getName();
-            meReply = new ZAttendee(name);
-            meReply.setPartStat(verb.getXmlPartStat());
-            reply.addAttendee(meReply);
-        }
-
-        // DTSTART (outlook seems to require this, even though it shouldn't)
-        reply.setDtStart(oldInv.getStartTime());
-
-        // ORGANIZER
-        reply.setOrganizer(oldInv.getOrganizer());
-
-        // UID
-        reply.setUid(oldInv.getUid());
-
-        // RECURRENCE-ID (if necessary)
-        if (exceptDt != null) {
-            reply.setRecurId(new RecurId(exceptDt, RecurId.RANGE_NONE));
-        } else if (oldInv.hasRecurId()) {
-            reply.setRecurId(oldInv.getRecurId());
-        }
-
-        // SEQUENCE
-        reply.setSeqNo(oldInv.getSeqNo());
-
-        // DTSTAMP
-        // we should pick "now" -- but the dtstamp MUST be >= the one sent by
-        // the organizer,
-        // so we'll use theirs if it is after "now"...
-        Date now = new Date();
-        Date dtStampDate = new Date(oldInv.getDTStamp());
-        if (now.after(dtStampDate)) {
-            dtStampDate = now;
-        }
-        reply.setDtStamp(dtStampDate.getTime());
-
-        // SUMMARY
-        reply.setName(replySubject);
-
-        // System.out.println("REPLY: "+reply.toVEvent().toString());
-
-        return reply;
     }
 
     static Invite buildCancelInviteCalendar(Account acct, Invite inv,

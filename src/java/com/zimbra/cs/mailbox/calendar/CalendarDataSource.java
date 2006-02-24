@@ -26,7 +26,7 @@
 /**
  * 
  */
-package com.zimbra.cs.service.mail;
+package com.zimbra.cs.mailbox.calendar;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -38,8 +38,8 @@ import java.io.OutputStreamWriter;
 import javax.activation.DataSource;
 import javax.mail.internet.ContentType;
 
-import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
+
 
 /**
  * @author tim

@@ -45,9 +45,6 @@ import java.util.Date;
 
 /**
  * @author jhahm
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Generation - Code and Comments
  */
 public class FileUtil {
 
@@ -177,4 +174,26 @@ public class FileUtil {
 		} else
 			return false;
 	}
+
+    /**
+     * Returns the filename without path/scheme.  (substring trailing the
+     * last occurrence of '/', '\', or ':' delimiter; null returned if
+     * delimiter is the last character of input string)
+     * @param filename
+     * @return
+     */
+    public static String trimFilename(String filename) {
+        final char[] delimiter = { '/', '\\', ':' };
+    
+        if (filename == null || filename.equals(""))
+            return null;
+        for (int i = 0; i < delimiter.length; i++) {
+            int index = filename.lastIndexOf(delimiter[i]);
+            if (index == filename.length() - 1)
+                return null;
+            if (index != -1)
+                filename = filename.substring(index + 1);
+        }
+        return filename;
+    }
 }

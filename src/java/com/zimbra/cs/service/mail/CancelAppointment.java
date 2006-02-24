@@ -37,9 +37,11 @@ import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
@@ -111,26 +113,26 @@ public class CancelAppointment extends CalendarRequest {
     throws ServiceException {
         String text = "The instance has been cancelled";
         String subject = "CANCELLED: " + defaultInv.getName();
-        
+
         if (sLog.isDebugEnabled()) {
             sLog.debug("Sending cancellation message \"" + subject + "\" for instance " + recurId + " of invite " + defaultInv);
         }
-        
+
         CalSendData dat = new CalSendData();
         dat.mOrigId = defaultInv.getMailItemId();
-        dat.mReplyType = TYPE_REPLY;
-        dat.mSaveToSent = shouldSaveToSent(acct);
+        dat.mReplyType = MailSender.MSGTYPE_REPLY;
+        dat.mSaveToSent = acct.saveToSent();
         dat.mInvite = CalendarUtils.buildCancelInstanceCalendar(acct, defaultInv, text, recurId);
 
         ZVCalendar iCal = dat.mInvite.newToICalendar();
-        
+
         // did they specify a custom <m> message?  If so, then we don't have to build one...
         Element msgElem = request.getOptionalElement(MailService.E_MSG);
-        
+
         if (msgElem != null) {
             MimeBodyPart[] mbps = new MimeBodyPart[1];
-            mbps[0] = CalendarUtils.makeICalIntoMimePart(defaultInv.getUid(), iCal);
-            
+            mbps[0] = CalendarMailSender.makeICalIntoMimePart(defaultInv.getUid(), iCal);
+
             // the <inv> element is *NOT* allowed -- we always build it manually
             // based on the params to the <CancelAppointment> and stick it in the 
             // mbps (additionalParts) parameter...
@@ -138,9 +140,9 @@ public class CancelAppointment extends CalendarRequest {
                     ParseMimeMessage.NO_INV_ALLOWED_PARSER, dat);
             
         } else {
-            List /* URI */ atURIs = CalendarUtils.toListFromAts(defaultInv.getAttendees());
+            List<String> atURIs = CalendarMailSender.toListFromAts(defaultInv.getAttendees());
 
-            dat.mMm = CalendarUtils.createDefaultCalendarMessage(acct.getName(), atURIs, subject, text, 
+            dat.mMm = CalendarMailSender.createDefaultCalendarMessage(acct.getName(), atURIs, subject, text, 
                     defaultInv.getUid(), iCal);
         }
         
@@ -169,8 +171,8 @@ public class CancelAppointment extends CalendarRequest {
         
         CalSendData dat = new CalSendData();
         dat.mOrigId = inv.getMailItemId();
-        dat.mReplyType = TYPE_REPLY;
-        dat.mSaveToSent = shouldSaveToSent(acct);
+        dat.mReplyType = MailSender.MSGTYPE_REPLY;
+        dat.mSaveToSent = acct.saveToSent();
         dat.mInvite = CalendarUtils.buildCancelInviteCalendar(acct, inv, text);
         
         ZVCalendar iCal = dat.mInvite.newToICalendar();
@@ -181,7 +183,7 @@ public class CancelAppointment extends CalendarRequest {
         
         if (msgElem != null) {
             MimeBodyPart[] mbps = new MimeBodyPart[1];
-            mbps[0] = CalendarUtils.makeICalIntoMimePart(inv.getUid(), iCal);
+            mbps[0] = CalendarMailSender.makeICalIntoMimePart(inv.getUid(), iCal);
             
             // the <inv> element is *NOT* allowed -- we always build it manually
             // based on the params to the <CancelAppointment> and stick it in the 
@@ -190,9 +192,9 @@ public class CancelAppointment extends CalendarRequest {
                     ParseMimeMessage.NO_INV_ALLOWED_PARSER, dat);
             
         } else {
-            List /* URI */ atURIs = CalendarUtils.toListFromAts(inv.getAttendees());
+            List<String> atURIs = CalendarMailSender.toListFromAts(inv.getAttendees());
 
-            dat.mMm = CalendarUtils.createDefaultCalendarMessage(acct.getName(), atURIs, subject, text, 
+            dat.mMm = CalendarMailSender.createDefaultCalendarMessage(acct.getName(), atURIs, subject, text, 
                     inv.getUid(), iCal);
         }
         

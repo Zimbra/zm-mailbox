@@ -35,6 +35,7 @@ import javax.mail.internet.MimeMessage;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -43,10 +44,11 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
+import com.zimbra.soap.WriteOpDocumentHandler;
 import com.zimbra.soap.ZimbraContext;
 
 
-public abstract class CalendarRequest extends SendMsg {
+public abstract class CalendarRequest extends WriteOpDocumentHandler {
 
     protected static class CalSendData extends ParseMimeMessage.MimeMessageData {
         int mOrigId; // orig id if this is a reply
@@ -78,7 +80,7 @@ public abstract class CalendarRequest extends SendMsg {
         // check to see if this message is a reply -- if so, then we'll want to note that so 
         // we can more-correctly match the conversations up
         csd.mOrigId = (int) msgElem.getAttributeLong(MailService.A_ORIG_ID, 0);
-        csd.mReplyType = msgElem.getAttribute(MailService.A_REPLY_TYPE, TYPE_REPLY);
+        csd.mReplyType = msgElem.getAttribute(MailService.A_REPLY_TYPE, MailSender.MSGTYPE_REPLY);
 
         // parse the data
         csd.mMm = ParseMimeMessage.parseMimeMsgSoap(lc, mbox, msgElem, null, inviteParser, csd);
@@ -91,7 +93,7 @@ public abstract class CalendarRequest extends SendMsg {
 
         csd.mInvite = inviteParser.getResult().mInvite;
         
-        csd.mSaveToSent = shouldSaveToSent(acct);
+        csd.mSaveToSent = acct.saveToSent();
 
         return csd;
     }
@@ -277,7 +279,7 @@ public abstract class CalendarRequest extends SendMsg {
             } catch (MessagingException e) { }
 
             boolean saveToSent = csd.mSaveToSent && hasRecipients && !lc.isDelegatedRequest();
-            int saveFolderId = saveToSent ? getSentFolder(acct, mbox, octxt) : 0;
+            int saveFolderId = saveToSent ? MailSender.getSentFolder(octxt, mbox) : 0;
             
             int msgId = 0;
 
@@ -306,7 +308,10 @@ public abstract class CalendarRequest extends SendMsg {
 //                    }
 //                } catch (MessagingException e) { }
 //            } else {
-            msgId = sendMimeMessage(octxt, mbox, acct, saveFolderId, csd, csd.mMm, csd.mOrigId, csd.mReplyType, ignoreFailedAddresses);
+            msgId = MailSender.sendMimeMessage(
+                    octxt, mbox, saveFolderId, csd.mMm,
+                    csd.newContacts, csd.uploads, csd.mOrigId,
+                    csd.mReplyType, ignoreFailedAddresses);
 //            }
 
             if (updateOwnAppointment) {

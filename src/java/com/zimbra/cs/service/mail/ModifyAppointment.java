@@ -38,9 +38,11 @@ import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
@@ -144,9 +146,9 @@ public class ModifyAppointment extends CalendarRequest {
         }
         
         CalSendData dat = new CalSendData();
-        dat.mSaveToSent = shouldSaveToSent(acct);
+        dat.mSaveToSent = acct.saveToSent();
         dat.mOrigId = inv.getMailItemId();
-        dat.mReplyType = TYPE_REPLY;
+        dat.mReplyType = MailSender.MSGTYPE_REPLY;
 
         String text = "You have been removed from the Attendee list by the organizer";
         String subject = "CANCELLED: " + inv.getName();
@@ -163,7 +165,7 @@ public class ModifyAppointment extends CalendarRequest {
                 dat.mInvite = CalendarUtils.buildCancelInviteCalendar(acct, inv, text, cancelAt);
                 ZVCalendar cal = dat.mInvite.newToICalendar();
                 
-                dat.mMm = CalendarUtils.createDefaultCalendarMessage(acct.getName(), 
+                dat.mMm = CalendarMailSender.createDefaultCalendarMessage(acct.getName(), 
                         cancelAt.getAddress(), subject, text, inv.getUid(), cal);
                 
                 sendCalendarCancelMessage(lc, appt.getFolderId(),

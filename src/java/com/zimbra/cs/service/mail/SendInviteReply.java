@@ -28,11 +28,9 @@
  */
 package com.zimbra.cs.service.mail;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -42,16 +40,19 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
+import com.zimbra.cs.mailbox.calendar.CalendarMailSender.Verb;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
@@ -79,7 +80,7 @@ public class SendInviteReply extends CalendarRequest {
         int compNum = (int) request.getAttributeLong(MailService.A_APPT_COMPONENT_NUM);
         
         String verbStr = request.getAttribute(MailService.A_VERB);
-        ParsedVerb verb = parseVerb(verbStr);
+        Verb verb = CalendarMailSender.parseVerb(verbStr);
         
         boolean updateOrg = request.getAttributeBool(MailService.A_APPT_UPDATE_ORGANIZER, true);
         
@@ -137,13 +138,13 @@ public class SendInviteReply extends CalendarRequest {
             }
             
             if (updateOrg) {
-                String replySubject = getReplySubject(verb, oldInv);
-                
+                String replySubject = CalendarMailSender.getReplySubject(verb, oldInv);
+
                 CalSendData csd = new CalSendData();
                 csd.mOrigId = oldInv.getMailItemId();
-                csd.mReplyType = TYPE_REPLY;
-                csd.mSaveToSent = shouldSaveToSent(acct);
-                csd.mInvite = CalendarUtils.replyToInvite(acct, oldInv, verb, replySubject, exceptDt);
+                csd.mReplyType = MailSender.MSGTYPE_REPLY;
+                csd.mSaveToSent = acct.saveToSent();
+                csd.mInvite = CalendarMailSender.replyToInvite(acct, oldInv, verb, replySubject, exceptDt);
                 
                 ZVCalendar iCal = csd.mInvite.newToICalendar();
                 
@@ -153,8 +154,8 @@ public class SendInviteReply extends CalendarRequest {
                 Element msgElem = request.getOptionalElement(MailService.E_MSG);
                 if (msgElem != null) {
                     MimeBodyPart[] mbps = new MimeBodyPart[1];
-                    mbps[0] = CalendarUtils.makeICalIntoMimePart(oldInv.getUid(), iCal);
-                    
+                    mbps[0] = CalendarMailSender.makeICalIntoMimePart(oldInv.getUid(), iCal);
+
                     // the <inv> element is *NOT* allowed -- we always build it manually
                     // based on the params to the <SendInviteReply> and stick it in the 
                     // mbps (additionalParts) parameter...
@@ -162,12 +163,14 @@ public class SendInviteReply extends CalendarRequest {
                         ParseMimeMessage.NO_INV_ALLOWED_PARSER, parsedMessageData);
                 } else {
                     // build a default "Accepted" response
-                    csd.mMm = createDefaultReply(acct.getName(), oldInv, replySubject, verb, iCal); 
+                    csd.mMm = CalendarMailSender.createDefaultReply(
+                            acct.getName(), oldInv, replySubject,
+                            verb, null, iCal);
                 }
-                
-                sendCalendarMessage(lc, appt.getFolderId(), acct, mbox, csd, response, false);  
+
+                sendCalendarMessage(lc, appt.getFolderId(), acct, mbox, csd, response, false);
             }
-            
+
             RecurId recurId = null;
             if (exceptDt != null) {
                 recurId = new RecurId(exceptDt, RecurId.RANGE_NONE);
@@ -201,53 +204,5 @@ public class SendInviteReply extends CalendarRequest {
         }
         
         return response;
-    }
-    
-    public static String getReplySubject(ParsedVerb verb, Invite inv) {
-        return verb + ": " + inv.getName();
-    }
-
-    public static MimeMessage createDefaultReply(String from, Invite inv, String replySubject, ParsedVerb verb, ZVCalendar iCal)
-    throws ServiceException {
-        /////////
-        // Build the default text part and add it to the mime multipart
-        StringBuffer replyText = new StringBuffer(from);
-        replyText.append(" has ");
-        replyText.append(verb.toString());
-        replyText.append(" your invitation");
-        
-        return CalendarUtils.createDefaultCalendarMessage(from, inv.getOrganizer().getAddress(), replySubject, 
-                replyText.toString(), inv.getUid(), iCal);
-    }
-    
-    public final static class ParsedVerb {
-        String mName;
-        String mPartStat;      // XML participant status
-        public ParsedVerb(String name, String xmlPartStat) {
-            mName = name;
-            mPartStat = xmlPartStat;
-        }
-        public String toString() { return mName; }
-        public String getXmlPartStat() { return mPartStat; }
-    }
-    
-    public final static ParsedVerb VERB_ACCEPT = new ParsedVerb("ACCEPT", IcalXmlStrMap.PARTSTAT_ACCEPTED);
-    public final static ParsedVerb VERB_DECLINE = new ParsedVerb("DECLINE", IcalXmlStrMap.PARTSTAT_DECLINED);
-    public final static ParsedVerb VERB_TENTATIVE = new ParsedVerb("TENTATIVE", IcalXmlStrMap.PARTSTAT_TENTATIVE);
-    
-    protected static HashMap /* string, parsedverb */ sVerbs;
-    static {
-        sVerbs = new HashMap();
-        sVerbs.put(MailService.A_APPT_ACCEPT, VERB_ACCEPT); 
-        sVerbs.put(MailService.A_APPT_DECLINE, VERB_DECLINE); 
-        sVerbs.put(MailService.A_APPT_TENTATIVE, VERB_TENTATIVE); 
-    }
-    
-    public static ParsedVerb parseVerb(String str) throws ServiceException
-    {
-        Object obj = sVerbs.get(str.toLowerCase());
-        if (obj != null)
-            return (ParsedVerb)obj;
-        throw ServiceException.INVALID_REQUEST("Unknown Reply Verb: " + str, null);
     }
 }
