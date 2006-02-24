@@ -26,6 +26,7 @@
 package com.zimbra.cs.account;
 
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.service.ServiceException;
@@ -76,6 +77,19 @@ public interface Account extends NamedEntry {
    
     public String[] getAliases() throws ServiceException;
     
+    /**
+     * @param zimbraGroupId the zimbraGroupId of the group we are checking for
+     * @return true if this account (or one of the gropus it belongs to) is a member of the specified group.
+     * @throws ServiceException
+     */
+    public boolean inGroup(String zimbraGroupId) throws ServiceException;
+
+    /**
+     * @return set of all groups this account (including any groups in other groups)
+     * @throws ServiceException
+     */
+    public Set<String> getGroups() throws ServiceException; 
+
     /**
      * check whether this account's mailbox is supposed to be on this host
      * 

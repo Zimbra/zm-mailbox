@@ -1966,13 +1966,13 @@ public class LdapProvisioning extends Provisioning {
         //zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
         return getDistributionListByQuery("","(&(zimbraId="+zimbraId+")(objectclass=zimbraDistributionList))", ctxt);
     }
-
+    
     LdapGroupEntry getGroupEntryById(String zimbraGroupId, DirContext initCtxt) throws ServiceException {
         //zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
         LdapGroupEntry group = sGroupCache.getByGroupId(zimbraGroupId);
         if (group != null) return group;
         
-        String query = "(&(zimbraGroupId="+zimbraGroupId+")(objectclass=zimbraDistributionList)(objectclass=zimbraSecurityGroup)";
+        String query = "(&(zimbraGroupId="+zimbraGroupId+")(objectclass=zimbraDistributionList)(objectclass=zimbraSecurityGroup))";
 
         DirContext ctxt = initCtxt;
         try {
@@ -2002,6 +2002,10 @@ public class LdapProvisioning extends Provisioning {
         return getDistributionListById(zimbraId, null);
     }
 
+    public DistributionList getDistributionListByGroupId(String zimbraGroupId) throws ServiceException {
+        return getDistributionListByQuery("","(&(zimbraGroupId="+zimbraGroupId+")(objectclass=zimbraDistributionList))", null);
+    }
+    
     public void deleteDistributionList(String zimbraId) throws ServiceException {
         LdapDistributionList dl = (LdapDistributionList) getDistributionListById(zimbraId);
         if (dl == null)

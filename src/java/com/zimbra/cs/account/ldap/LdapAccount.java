@@ -25,8 +25,13 @@
 
 package com.zimbra.cs.account.ldap;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
 
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
@@ -37,6 +42,7 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.WellKnownTimeZone;
+import com.zimbra.cs.account.ldap.LdapGroupEntryCache.LdapGroupEntry;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.service.ServiceException;
 
@@ -45,9 +51,12 @@ import com.zimbra.cs.service.ServiceException;
  */
 public class LdapAccount extends LdapNamedEntry implements Account {
 
+    private static final String DATA_GROUP_SET = "GROUP_SET";
+    
     protected LdapProvisioning mProv;
     private String mName;
-    private String mDomainName;    
+    private String mDomainName;
+    private static Set<String> sEmptyGroups = Collections.unmodifiableSet(new HashSet<String>());
 
     private static final String DATA_COS = "COS";
     
@@ -69,6 +78,43 @@ public class LdapAccount extends LdapNamedEntry implements Account {
         return mName;
     }
 
+    public boolean inGroup(String zimbraGroupId) throws ServiceException {
+        return getGroups().contains(zimbraGroupId);
+    }
+    
+    public Set<String> getGroups() throws ServiceException 
+    {      
+        Set<String> groups = (Set<String>) getCachedData(DATA_GROUP_SET);
+        if (groups != null) return groups;
+     
+        String[] accountGroups = getMultiAttr(Provisioning.A_zimbraMemberOf);
+        if (accountGroups.length == 0) return sEmptyGroups;
+
+        groups = new HashSet<String>();
+
+        Stack<String> groupsToCheck = new Stack<String>();
+        for (int i=0; i < accountGroups.length; i++) {
+            groupsToCheck.push(accountGroups[i]);
+        }
+
+        while (!groupsToCheck.isEmpty()) {
+            String groupId = groupsToCheck.pop();
+            if (groups.contains(groupId)) continue; // skip if already in groups
+            LdapGroupEntry entry = mProv.getGroupEntryById(groupId, null);
+            // skip if not currently a valid group.
+            // TODO: garbage collect invalid group? Could be dangerous due to caching?                
+            if (entry == null) continue;
+            groups.add(groupId);
+            String[] newGroups = entry.getMemberOf();
+            for (int i=0; i < newGroups.length; i++) {
+                groupsToCheck.push(newGroups[i]);
+            }
+        }
+        groups = Collections.unmodifiableSet(groups);
+        setCachedData(DATA_GROUP_SET, groups);
+        return groups;
+    }
+    
     /**
      * @return the domain name for this account (foo.com), or null if an admin account. 
      */
@@ -245,4 +291,5 @@ public class LdapAccount extends LdapNamedEntry implements Account {
     public boolean saveToSent() throws ServiceException {
         return getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, false);
     }
+    
 }

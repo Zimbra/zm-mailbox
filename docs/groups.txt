@@ -208,10 +208,9 @@ Step 2: Add all groups listed directly in the user's zimbraMemberOf attrs to the
         "groupsToCheck" set.
         
 Step 3: while group in  "groupsToCheck":
-            add group to "groups", remove from groupsToCheck
-            if the group is a member of other groups then
-                 for all those other groups not already in "groups" (stops cycles)
-                      add them to "groupsToCheck" 
+            if group not in groups // stop cycles
+                 add group to "groups", remove from groupsToCheck
+                 for all groups that group is a member of add to "groupsToCheck" 
             end
         end
 
@@ -233,10 +232,6 @@ groups: {d498dfa5-3f5c-478f-aa8d-895caf66ffda,
 groupsToCheck: {}
 
 And we'd stop with user1 belonging to two groups.
-
-NOTE: We also will most likely treat the domain the user belongs to as an "implicit" group,
-      and add its zimbraId to the list of "groups" a user belongs to.
-
 
 TURNING A DL GROUP capability on/off
 =======================
@@ -275,6 +270,12 @@ ZMPROV CHANGES
 zmprov has a new command to turn on/off group status for a DL:
 
     DistributionListIsGroup(dlig) {list@domain|id} 0|1
+    
+and a new command to get all the groups a user belongs to (including any groups they belong to
+due to groups being included in gropus):
+
+    GetAccountGroups(gag) {name@domain|id}
+    
     
 NOTES
 =======================

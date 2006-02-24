@@ -1011,6 +1011,8 @@ public abstract class Provisioning {
 
     public abstract DistributionList getDistributionListById(String zimbraId) throws ServiceException;
     
+    public abstract DistributionList getDistributionListByGroupId(String zimbraGroupId) throws ServiceException;    
+    
     public abstract DistributionList getDistributionListByName(String name) throws ServiceException;
     
     public abstract List<DistributionList> getAllDistributionListsForAddresses(String addrs[]) throws ServiceException;

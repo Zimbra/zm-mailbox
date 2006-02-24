@@ -33,6 +33,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.Map.Entry;
 
@@ -66,7 +67,8 @@ public class ProvUtil {
         System.out.println("  SetAccountCos(sac) {name@domain|id} {cos-name|cos-id}");        
         System.out.println("  SearchAccounts(sa) [-v] {ldap-query} [limit {limit}] [offset {offset}] [sortBy {attr}] [attrs {a1,a2...}] [sortAscending 0|1*] [applyCos [0|1*] [domain {domain}]");
         System.out.println("  SearchGal(sg) {domain} {name}");
-        System.out.println("  RenameAccount(ra) {name@domain|id} {newName@domain}");        
+        System.out.println("  RenameAccount(ra) {name@domain|id} {newName@domain}");
+        System.out.println("  GetAccountGroups(gag) {name@domain|id}");        
         System.out.println();
 
         System.out.println("  CreateDomain(cd) {domain} [attr1 value1 [attr2 value2...]]");
@@ -142,6 +144,7 @@ public class ProvUtil {
     private static final int RENAME_ACCOUNT = 110;
     private static final int COPY_ACCOUNT = 111;
     private static final int CREATE_BULK_ACCOUNTS = 112;
+    private static final int GET_ACCOUNT_GROUPS = 113;    
 
     private static final int CREATE_DOMAIN = 201;
     private static final int GET_DOMAIN =  202;
@@ -230,7 +233,7 @@ public class ProvUtil {
         mCommandIndex.put(name, i);
         mCommandIndex.put(alias, i);
     }
-    
+
     private void initCommands() {
         mCommandIndex = new HashMap();
         addCommand("addAccountAlias", "aaa", ADD_ACCOUNT_ALIAS);
@@ -238,6 +241,7 @@ public class ProvUtil {
         addCommand("createBulkAccounts", "cabulk", CREATE_BULK_ACCOUNTS);
         addCommand("copyAccount", "cpa", COPY_ACCOUNT);        
         addCommand("getAccount", "ga", GET_ACCOUNT);        
+        addCommand("getAccountGroups", "gag", GET_ACCOUNT_GROUPS);        
         addCommand("getAllAccounts","gaa", GET_ALL_ACCOUNTS);
         addCommand("getAllAdminAccounts", "gaaa", GET_ALL_ADMIN_ACCOUNTS);
         addCommand("modifyAccount", "ma", MODIFY_ACCOUNT);
@@ -246,7 +250,7 @@ public class ProvUtil {
         addCommand("setPassword", "sp", SET_PASSWORD);
         addCommand("setAccountCos", "sac", SET_ACCOUNT_COS);        
         addCommand("searchAccounts", "sa", SEARCH_ACCOUNTS);                
-        addCommand("renameAccount", "ra", RENAME_ACCOUNT);                        
+        addCommand("renameAccount", "ra", RENAME_ACCOUNT);
         addCommand("searchGal", "sg", SEARCH_GAL);                                
         addCommand("syncGal", "syg", SYNC_GAL);
     
@@ -351,6 +355,9 @@ public class ProvUtil {
         case GET_ACCOUNT:
             doGetAccount(args); 
             break;
+        case GET_ACCOUNT_GROUPS:
+            doGetAccountGroups(args); 
+            break;            
         case GET_ALL_ACCOUNTS:
             doGetAllAccounts(args); 
             break;            
@@ -759,6 +766,24 @@ public class ProvUtil {
         }
     }
 
+    private void doGetAccountGroups(String[] args) throws ServiceException {
+        if (args.length != 2) {
+            usage();
+        } else {
+            String key = args[1];
+            Account account = lookupAccount(key);
+            Set<String> groups = account.getGroups();
+            for (String gid: groups) {
+                DistributionList dl = mProvisioning.getDistributionListByGroupId(gid);
+                if (dl != null) {
+                    System.out.println(dl.getName());
+                } else {
+                    System.out.println(gid);                    
+                }
+            }
+        }
+    }
+    
     private void doGetCos(String[] args) throws ServiceException {
         if (args.length != 2) {
             usage();

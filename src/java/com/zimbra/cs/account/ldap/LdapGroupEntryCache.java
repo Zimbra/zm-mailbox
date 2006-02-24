@@ -31,8 +31,6 @@
  */
 package com.zimbra.cs.account.ldap;
 
-import java.util.List;
-
 import org.apache.commons.collections.map.LRUMap;
 
 import com.zimbra.cs.account.Provisioning;
