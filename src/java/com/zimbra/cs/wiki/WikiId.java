@@ -37,6 +37,7 @@ public class WikiId implements Comparable {
 	long    mCreatedDate;
 	String  mCreator;
 	long    mVersion;
+	int     mFolderId;
 	
 	public static WikiId getWikiId(long ver) {
 		return new WikiId(ver);
@@ -52,6 +53,7 @@ public class WikiId implements Comparable {
 		mCreatedDate = wikiItem.getCreatedTime();
 		mCreator = wikiItem.getCreator();
 		mVersion = wikiItem.getVersion();
+		mFolderId = wikiItem.getFolderId();
 	}
 	
 	public WikiItem getWikiItem(OperationContext octxt) throws ServiceException {
@@ -75,6 +77,10 @@ public class WikiId implements Comparable {
 	
 	public long getVersion() {
 		return mVersion;
+	}
+	
+	public int getFolderId() {
+		return mFolderId;
 	}
 	
 	public int compareTo(Object obj) {

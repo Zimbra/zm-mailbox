@@ -102,6 +102,8 @@ public class ToXML {
             return encodeApptSummary(parent, lc, (Appointment) item, fields);
         else if (item instanceof Conversation)
             return encodeConversationSummary(parent, lc, (Conversation) item, fields);
+        else if (item instanceof WikiItem)
+            return encodeWiki(parent, lc, (WikiItem) item, fields);
         else if (item instanceof Message) {
             OutputParticipants output = (fields == NOTIFY_FIELDS ? OutputParticipants.PUT_BOTH : OutputParticipants.PUT_SENDERS);
             return encodeMessageSummary(parent, lc, (Message) item, output, fields);
@@ -1220,21 +1222,26 @@ public class ToXML {
     }
     
     
-	public static Element encodeWiki(Element parent, ZimbraContext lc, WikiItem wiki, String part)
-	throws ServiceException {
+	public static Element encodeWiki(Element parent, ZimbraContext lc, WikiItem wiki) {
+		return encodeWiki(parent, lc, wiki, NOTIFY_FIELDS);
+	}
+	public static Element encodeWiki(Element parent, ZimbraContext lc, WikiItem wiki, int fields) {
 
         Element m;
-        m = encodeMessageCommon(parent, lc, wiki, NOTIFY_FIELDS);
-        m.addAttribute(MailService.A_ID, lc.formatItemId(wiki));
-        m.addAttribute(MailService.A_SUBJECT, wiki.getSubject());
-        m.addAttribute(MailService.A_VERSION, wiki.getVersion());
-        m.addAttribute(MailService.A_CREATOR, wiki.getCreator());
-
-        try {
-			byte[] raw = ByteUtil.getContent(wiki.getBlob().getBlob().getFile());
-			m.setText(new String(raw, "UTF-8"));
-        } catch (IOException ex) {
-            throw ServiceException.FAILURE(ex.getMessage(), ex);
+        m = encodeMessageCommon(parent, lc, wiki, fields);
+        
+        if (needToOutput(fields, Change.MODIFIED_CONTENT)) {
+        	m.addAttribute(MailService.A_ID, lc.formatItemId(wiki));
+        	m.addAttribute(MailService.A_NAME, wiki.getSubject());
+        	m.addAttribute(MailService.A_VERSION, wiki.getVersion());
+        	m.addAttribute(MailService.A_CREATOR, wiki.getCreator());
+        	
+            try {
+    			byte[] raw = ByteUtil.getContent(wiki.getBlob().getBlob().getFile());
+    			m.setText(new String(raw, "UTF-8"));
+            } catch (Exception ex) {
+                mLog.warn("ignoring exception while fetching blob for Wiki " + wiki.getSubject(), ex);
+            }
         }
 
         return m;

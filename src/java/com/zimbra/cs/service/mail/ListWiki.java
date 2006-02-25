@@ -52,6 +52,7 @@ public class ListWiki extends DocumentHandler {
             m.addAttribute(MailService.A_MODIFIED_DATE, ww.getModifiedDate());
             m.addAttribute(MailService.A_CREATOR, ww.getCreator());
             m.addAttribute(MailService.A_LAST_EDITED_BY, ww.getLastEditor());
+            m.addAttribute(MailService.A_FOLDER, ww.getFolderId());
         }
         return response;
 	}

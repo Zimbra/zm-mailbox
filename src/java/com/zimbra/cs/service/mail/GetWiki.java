@@ -52,9 +52,9 @@ public class GetWiki extends DocumentHandler {
         	return response;
         }
         if (rev > 0) {
-            ToXML.encodeWiki(response, lc, w.getWikiItem(octxt, rev), null);
+            ToXML.encodeWiki(response, lc, w.getWikiItem(octxt, rev));
         } else {
-            ToXML.encodeWiki(response, lc, w.getWikiItem(octxt), null);
+            ToXML.encodeWiki(response, lc, w.getWikiItem(octxt));
         }
         return response;
 	}

@@ -75,6 +75,10 @@ public class WikiWord {
 		return mWikiIds.last().getCreator();
 	}
 	
+	public int getFolderId() {
+		return mWikiIds.last().getFolderId();
+	}
+	
 	public WikiItem getWikiItem(OperationContext octxt) throws ServiceException {
 		return mWikiIds.last().getWikiItem(octxt);
 	}
