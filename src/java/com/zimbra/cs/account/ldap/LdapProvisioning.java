@@ -137,10 +137,6 @@ public class LdapProvisioning extends Provisioning {
     private static final String FILTER_CALENDAR_RESOURCE_OBJECTCLASS =
         "(objectclass=zimbraCalendarResource)";
 
-    /**
-     *  TODO: 15 minutes. get from CONFIG...
-     */
-
     private static ZimbraLdapEntryCache sAccountCache =
         new ZimbraLdapEntryCache(
                 LC.ldap_cache_account_maxsize.intValue(),
