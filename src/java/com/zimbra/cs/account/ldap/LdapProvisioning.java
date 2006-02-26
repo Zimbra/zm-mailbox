@@ -140,31 +140,43 @@ public class LdapProvisioning extends Provisioning {
     /**
      *  TODO: 15 minutes. get from CONFIG...
      */
-    private static final int ENTRY_TTL = 1000*60*15; 
-    private static final int MAX_ACCOUNT_CACHE = 5000;
-    private static ZimbraLdapEntryCache sAccountCache = new ZimbraLdapEntryCache(MAX_ACCOUNT_CACHE, ENTRY_TTL);
 
-    private static final int MAX_COS_CACHE = 100;
-    private static ZimbraLdapEntryCache sCosCache = new ZimbraLdapEntryCache(MAX_COS_CACHE, ENTRY_TTL);
-	
-    private static final int MAX_DOMAIN_CACHE = 100;
-    private static ZimbraLdapEntryCache sDomainCache = new ZimbraLdapEntryCache(MAX_DOMAIN_CACHE, ENTRY_TTL);
-    
-    private static final int MAX_SERVER_CACHE = 100;
-    private static ZimbraLdapEntryCache sServerCache = new ZimbraLdapEntryCache(MAX_SERVER_CACHE, ENTRY_TTL);
-    
-    private static final int MAX_GROUP_CACHE = 1000; // we are only caching zimbraGroupId/zimbraMemberOf
-    private static LdapGroupEntryCache sGroupCache = new LdapGroupEntryCache(MAX_GROUP_CACHE, ENTRY_TTL);    
+    private static ZimbraLdapEntryCache sAccountCache =
+        new ZimbraLdapEntryCache(
+                LC.ldap_cache_account_maxsize.intValue(),
+                LC.ldap_cache_account_maxage.intValue() * Constants.MILLIS_PER_MINUTE); 
 
-    private static final int MAX_TIMEZONE_CACHE = 100;
+    private static ZimbraLdapEntryCache sCosCache =
+        new ZimbraLdapEntryCache(
+                LC.ldap_cache_cos_maxsize.intValue(),
+                LC.ldap_cache_cos_maxage.intValue() * Constants.MILLIS_PER_MINUTE); 
+
+    private static ZimbraLdapEntryCache sDomainCache =
+        new ZimbraLdapEntryCache(
+                LC.ldap_cache_domain_maxsize.intValue(),
+                LC.ldap_cache_domain_maxage.intValue() * Constants.MILLIS_PER_MINUTE);     
+
+    private static ZimbraLdapEntryCache sServerCache =
+        new ZimbraLdapEntryCache(
+                LC.ldap_cache_server_maxsize.intValue(),
+                LC.ldap_cache_server_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
+
+    // we are only caching zimbraGroupId/zimbraMemberOf
+    private static LdapGroupEntryCache sGroupCache = 
+        new LdapGroupEntryCache(
+                LC.ldap_cache_group_maxsize.intValue(),
+                LC.ldap_cache_group_maxage.intValue() * Constants.MILLIS_PER_MINUTE);                
+
     private static boolean sTimeZoneInited = false;
     private static final Object sTimeZoneGuard = new Object();
-    private static Map /*<String tzId, WellKnownTimeZone>*/ sTimeZoneMap = new HashMap(MAX_TIMEZONE_CACHE);
+    private static Map /*<String tzId, WellKnownTimeZone>*/ sTimeZoneMap = new HashMap(LC.ldap_cache_timezone_maxsize.intValue());
     // list of time zones to preserve sort order
-    private static List /*<WellKnownTimeZone>*/ sTimeZoneList = new ArrayList(MAX_TIMEZONE_CACHE);
+    private static List /*<WellKnownTimeZone>*/ sTimeZoneList = new ArrayList(LC.ldap_cache_timezone_maxsize.intValue());
 
-    private static final int MAX_ZIMLET_CACHE = 100;
-    private static ZimbraLdapEntryCache sZimletCache = new ZimbraLdapEntryCache(MAX_ZIMLET_CACHE, ENTRY_TTL);
+    private static ZimbraLdapEntryCache sZimletCache = 
+        new ZimbraLdapEntryCache(
+                LC.ldap_cache_zimlet_maxsize.intValue(),
+                LC.ldap_cache_zimlet_maxage.intValue() * Constants.MILLIS_PER_MINUTE);                
 
     private static final String CONFIG_BASE = "cn=config,cn=zimbra";     
     private static final String COS_BASE = "cn=cos,cn=zimbra"; 

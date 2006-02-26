@@ -111,6 +111,20 @@ public class LC {
     public static final KnownKey ldap_connect_pool_maxsize;
     public static final KnownKey ldap_connect_pool_prefsize;
     public static final KnownKey ldap_connect_pool_timeout;
+    
+    public static final KnownKey ldap_cache_account_maxsize;
+    public static final KnownKey ldap_cache_account_maxage;
+    public static final KnownKey ldap_cache_cos_maxsize;
+    public static final KnownKey ldap_cache_cos_maxage;
+    public static final KnownKey ldap_cache_domain_maxsize;
+    public static final KnownKey ldap_cache_domain_maxage;
+    public static final KnownKey ldap_cache_server_maxsize;
+    public static final KnownKey ldap_cache_server_maxage;
+    public static final KnownKey ldap_cache_group_maxsize;
+    public static final KnownKey ldap_cache_group_maxage;
+    public static final KnownKey ldap_cache_timezone_maxsize;
+    public static final KnownKey ldap_cache_zimlet_maxsize;
+    public static final KnownKey ldap_cache_zimlet_maxage;
 
     public static final KnownKey mysql_directory;
     public static final KnownKey mysql_data_directory;
@@ -385,6 +399,45 @@ public class LC {
         ldap_connect_pool_timeout.setDoc
             ("Milliseconds of idle time before an idle connection is bumped" +
              " from the pool.");
+        
+        ldap_cache_account_maxsize = 
+            new KnownKey("ldap_cache_account_maxsize", "5000", "Maximum number of account objects to cache");
+        
+        ldap_cache_account_maxage =
+            new KnownKey("ldap_cache_account_maxage", "15", "maximum age (in minutes) of account object in cache");
+
+        ldap_cache_cos_maxsize = 
+            new KnownKey("ldap_cache_cos_maxsize", "100", "Maximum number of cos objects to cache");
+        
+        ldap_cache_cos_maxage = 
+            new KnownKey("ldap_cache_cos_maxage", "15", "maximum age (in minutes) of cos object in cache");        
+
+        ldap_cache_domain_maxsize = 
+            new KnownKey("ldap_cache_domain_maxsize", "100", "Maximum number of domain objects to cache");
+        
+        ldap_cache_domain_maxage = 
+            new KnownKey("ldap_cache_domain_maxage", "15", "maximum age (in minutes) of domain object in cache");        
+
+        ldap_cache_server_maxsize = 
+            new KnownKey("ldap_cache_server_maxsize", "100", "Maximum number of server objects to cache");
+
+        ldap_cache_server_maxage =
+            new KnownKey("ldap_cache_server_maxage", "15", "maximum age (in minutes) of group object in cache");        
+
+        ldap_cache_group_maxsize = 
+            new KnownKey("ldap_cache_group_maxsize", "500", "Maximum number of group objects to cache");
+        
+        ldap_cache_group_maxage =
+            new KnownKey("ldap_cache_group_maxage", "15", "maximum age (in minutes) of group object in cache");        
+
+        ldap_cache_timezone_maxsize =
+            new KnownKey("ldap_cache_timezone_maxsize", "100", "Maximum number of timezone objects to cache");
+        
+        ldap_cache_zimlet_maxsize =
+            new KnownKey("ldap_cache_zimlet_maxsize", "100", "Maximum number of zimlet objects to cache");
+        
+        ldap_cache_zimlet_maxage = 
+            new KnownKey("ldap_cache_zimlet_maxage", "15", "maximum age (in minutes) of zimlet object in cache");        
 
         mysql_directory = new KnownKey("mysql_directory");
         mysql_directory.setDefault("${zimbra_home}" + FS + "mysql");

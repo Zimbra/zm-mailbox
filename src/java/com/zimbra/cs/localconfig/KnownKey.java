@@ -105,11 +105,29 @@ public class KnownKey {
         }
         return Integer.parseInt(s);
     }
-
+    
+    public long longValue() {
+        String s = LC.get(mKey);
+        if (s == null || s.length() == 0) {
+            throw new IllegalStateException("'" + mKey + "' is not defined in LocalConfig");
+        }
+        return Long.parseLong(s);
+    }
+    
     public String key() {
     	return mKey;   
     }
-    
+
+    public KnownKey(String key, String defaultValue, String doc) {
+        mKey = key;
+        if (mKnownKeys.containsKey(key)) {
+            Logging.warn("programming error - known key added more than once: " + key);
+        }
+        mKnownKeys.put(key, this);
+        mDefaultValue = defaultValue;
+        mDoc = doc;
+    }
+
     public KnownKey(String key) 
     {
         mKey = key;

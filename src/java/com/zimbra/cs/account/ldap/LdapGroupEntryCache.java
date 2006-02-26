@@ -60,13 +60,13 @@ class LdapGroupEntryCache {
     
     private LRUMap mIdCache;
     
-    private int mRefreshTTL;
+    private long mRefreshTTL;
 
 /**
  * @param maxItems
  * @param refreshTTL
  */
-    public LdapGroupEntryCache(int maxItems, int refreshTTL) {
+    public LdapGroupEntryCache(int maxItems, long refreshTTL) {
         mIdCache = new LRUMap(maxItems);
         mRefreshTTL = refreshTTL;
     }

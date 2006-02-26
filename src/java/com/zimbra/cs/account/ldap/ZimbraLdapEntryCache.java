@@ -37,20 +37,19 @@ import org.apache.commons.collections.map.LRUMap;
 
 /**
  * @author schemers
- * 01/13/05 Greg Solovyev - added an option to keep a map only by IDs
- * */
-public class ZimbraLdapEntryCache {
+ **/
+class ZimbraLdapEntryCache {
     
     private LRUMap mNamedCache;
     private LRUMap mIdCache;
     
-    private int mRefreshTTL;
+    private long mRefreshTTL;
 
 /**
  * @param maxItems
  * @param refreshTTL
  */
-    public ZimbraLdapEntryCache(int maxItems, int refreshTTL) {
+    public ZimbraLdapEntryCache(int maxItems, long refreshTTL) {
     	mNamedCache = new LRUMap(maxItems);
     	mIdCache = new LRUMap(maxItems);
         mRefreshTTL = refreshTTL;
