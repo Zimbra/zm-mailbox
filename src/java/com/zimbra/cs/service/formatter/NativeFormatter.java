@@ -80,8 +80,8 @@ public class NativeFormatter extends Formatter {
                 handleMessage(context, (Message) item);
             } else if (item instanceof Appointment) {
                 handleAppt(context, (Appointment) item);
-            } else if (mailItem instanceof WikiItem) {
-                handleWiki(context, (WikiItem)mailItem);
+            } else if (item instanceof WikiItem) {
+                handleWiki(context, (WikiItem) item);
             } else {
                 throw UserServletException.notImplemented("can only handle messages/appts");
             }
@@ -124,7 +124,7 @@ public class NativeFormatter extends Formatter {
         }
     }
     
-    private void handleWiki(Context context, WikiItem wiki) throws IOException, ServiceException, MessagingException {
+    private void handleWiki(Context context, WikiItem wiki) throws IOException, ServiceException {
         context.resp.setContentType(Mime.CT_TEXT_PLAIN);
         InputStream is = wiki.getRawMessage();
         ByteUtil.copy(is, context.resp.getOutputStream());
