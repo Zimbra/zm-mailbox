@@ -65,7 +65,7 @@
 </GetWikiRequest>
 
 <GetWikiResponse>
-  <m name="{word}" ver="{version}" cr="{creator}" id="{message-id}" s="{size}" d="{created-date}" l="{folder}" [f="{flags}"] [t="{tags}"]>
+  <m name="{word}" ver="{version}" cr="{creator}" id="{message-id}" s="{size}" d="{created-date}" md="{modified-date}" l="{folder}" [f="{flags}"] [t="{tags}"]>
    ... contents ...
   </m>
 </GetWikiResponse>

@@ -53,16 +53,18 @@ public class SaveWiki extends WriteOpDocumentHandler {
 
         byte[] rawData = msgElem.getText().getBytes();
         
-        WikiWord ww = wiki.lookupWiki(subject);
         WikiItem wikiItem;
-        if (ww == null) {
-            wikiItem = mbox.createWiki(octxt, fid, subject, rawData, null);
-        } else {
-        	wikiItem = ww.getWikiItem(octxt);
-        	mbox.addDocumentRevision(octxt, wikiItem, rawData);
+        synchronized (wiki) {
+            WikiWord ww = wiki.lookupWiki(subject);
+            if (ww == null) {
+                wikiItem = mbox.createWiki(octxt, fid, subject, rawData, null);
+            } else {
+            	wikiItem = ww.getWikiItem(octxt);
+            	mbox.addDocumentRevision(octxt, wikiItem, rawData);
+            }
+    		wiki.addWiki(wikiItem);
         }
-		wiki.addWiki(wikiItem);
-
+        
         Element response = lc.createElement(MailService.SAVE_WIKI_RESPONSE);
         Element m = response.addElement(MailService.E_MSG);
         m.addAttribute(MailService.A_ID, lc.formatItemId(wikiItem));

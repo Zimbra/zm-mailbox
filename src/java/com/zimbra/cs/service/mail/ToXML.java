@@ -1241,6 +1241,7 @@ public class ToXML {
             	Document.DocumentRevision revision = (rev > 0) ? wiki.getRevision(rev) : wiki.getLastRevision(); 
             	m.addAttribute(MailService.A_VERSION, revision.getVersion());
             	m.addAttribute(MailService.A_CREATOR, revision.getCreator());
+            	m.addAttribute(MailService.A_MODIFIED_DATE, revision.getRevDate());
     			byte[] raw = ByteUtil.getContent(revision.getBlob().getFile());
     			m.setText(new String(raw, "UTF-8"));
             } catch (Exception ex) {
