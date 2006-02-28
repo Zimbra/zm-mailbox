@@ -208,7 +208,7 @@ public class ToXML {
         }
         if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
             elem.addAttribute(MailService.A_CHANGE_DATE, folder.getChangeDate() / 1000);
-            elem.addAttribute(MailService.A_REVISION, folder.getModifiedSequence());
+            elem.addAttribute(MailService.A_MODIFIED_SEQUENCE, folder.getModifiedSequence());
         }
         return elem;
     }
@@ -264,11 +264,12 @@ public class ToXML {
         if (needToOutput(fields, Change.MODIFIED_FOLDER))
             elem.addAttribute(MailService.A_FOLDER, lc.formatItemId(contact.getFolderId()));
         recordItemTags(elem, contact, fields);
-        if (needToOutput(fields, Change.MODIFIED_CONFLICT))
-            elem.addAttribute(MailService.A_CHANGE_DATE, contact.getChangeDate() / 1000);
-        if (needToOutput(fields, Change.MODIFIED_CONFLICT | Change.MODIFIED_CONTENT))
-            if (contact.getSavedSequence() != 0)
-                elem.addAttribute(MailService.A_REVISION, contact.getSavedSequence());
+        if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
+        	elem.addAttribute(MailService.A_CHANGE_DATE, contact.getChangeDate() / 1000);
+        	elem.addAttribute(MailService.A_MODIFIED_SEQUENCE, contact.getModifiedSequence());
+        }
+        if (needToOutput(fields, Change.MODIFIED_CONTENT))
+            elem.addAttribute(MailService.A_REVISION, contact.getSavedSequence());
 
         if (summary || !needToOutput(fields, Change.MODIFIED_CONTENT))
             return elem;
@@ -322,7 +323,7 @@ public class ToXML {
             elem.addAttribute(MailService.E_CONTENT, note.getContent(), Element.DISP_CONTENT);
         if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
             elem.addAttribute(MailService.A_CHANGE_DATE, note.getChangeDate() / 1000);
-            elem.addAttribute(MailService.A_REVISION, note.getModifiedSequence());
+            elem.addAttribute(MailService.A_MODIFIED_SEQUENCE, note.getModifiedSequence());
         }
         return elem;
 	}
@@ -344,7 +345,7 @@ public class ToXML {
         }
         if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
             elem.addAttribute(MailService.A_CHANGE_DATE, tag.getChangeDate() / 1000);
-            elem.addAttribute(MailService.A_REVISION, tag.getModifiedSequence());
+            elem.addAttribute(MailService.A_MODIFIED_SEQUENCE, tag.getModifiedSequence());
         }
 		return elem;
 	}
@@ -427,7 +428,7 @@ public class ToXML {
 
         if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
             c.addAttribute(MailService.A_CHANGE_DATE, conv.getChangeDate() / 1000);
-            c.addAttribute(MailService.A_REVISION, conv.getModifiedSequence());
+            c.addAttribute(MailService.A_MODIFIED_SEQUENCE, conv.getModifiedSequence());
         }
         return c;
     }
@@ -565,7 +566,7 @@ public class ToXML {
         recordItemTags(apptElt, appt, fields);
         if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
             apptElt.addAttribute(MailService.A_CHANGE_DATE, appt.getChangeDate() / 1000);
-            apptElt.addAttribute(MailService.A_REVISION, appt.getModifiedSequence());
+            apptElt.addAttribute(MailService.A_MODIFIED_SEQUENCE, appt.getModifiedSequence());
         }
 
         for (int i = 0; i < appt.numInvites(); i++) {
@@ -807,7 +808,7 @@ public class ToXML {
         recordItemTags(elem, mi, fields);
         if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
             elem.addAttribute(MailService.A_CHANGE_DATE, mi.getChangeDate() / 1000);
-            elem.addAttribute(MailService.A_REVISION, mi.getModifiedSequence());
+            elem.addAttribute(MailService.A_MODIFIED_SEQUENCE, mi.getModifiedSequence());
         }
         return elem;
     }

@@ -1853,7 +1853,7 @@ public class Mailbox {
     }
     public synchronized List<MailItem> getItemList(OperationContext octxt, byte type, int folderId, byte sort) throws ServiceException {
         if (type == MailItem.TYPE_UNKNOWN)
-            return null;
+            return Collections.emptyList();
         List<MailItem> result = new ArrayList<MailItem>();
 
         boolean success = false;
@@ -1867,7 +1867,7 @@ public class Mailbox {
 
             if (type == MailItem.TYPE_TAG) {
                 if (folderId != -1 && folderId != ID_FOLDER_TAGS)
-                    return null;
+                    return Collections.emptyList();
                 for (Map.Entry<Object, Tag> entry : mTagCache.entrySet())
                     if (entry.getKey() instanceof String)
                         result.add(entry.getValue());
@@ -1894,7 +1894,7 @@ public class Mailbox {
             else
                 dataList = DbMailItem.getByType(this, type, sort);
             if (dataList == null)
-                return null;
+                return Collections.emptyList();
             for (MailItem.UnderlyingData data : dataList)
                 if (data != null)
                     result.add(getItem(data));
@@ -2027,8 +2027,11 @@ public class Mailbox {
     Tag getTagById(int id) throws ServiceException {
         return (Tag) getItemById(id, MailItem.TYPE_TAG);
     }
-    public synchronized List getTagList(OperationContext octxt) throws ServiceException {
-        return getItemList(octxt, MailItem.TYPE_TAG);
+    public synchronized List<Tag> getTagList(OperationContext octxt) throws ServiceException {
+        List<Tag> tags = new ArrayList<Tag>();
+        for (MailItem item : getItemList(octxt, MailItem.TYPE_TAG))
+            tags.add((Tag) item);
+        return tags;
     }
     public synchronized Tag getTagByName(String name) throws ServiceException {
         boolean success = false;
