@@ -4331,6 +4331,34 @@ public class Mailbox {
         }
     }
 
+    public void addDocumentRevision(OperationContext octxt, Document doc, byte[] rawData) throws ServiceException {
+    	StoreManager sm = StoreManager.getInstance();
+    	Blob blob = null;
+    	boolean success = false;
+    	try {
+    		beginTransaction("addDocumentRevision", octxt, null);
+    		short volumeId = Volume.getCurrentMessageVolume().getId();
+        	blob = sm.storeIncoming(rawData, null, null, volumeId);
+        	markOtherItemDirty(blob);
+        	doc.addRevision(octxt.authuser.getName(), rawData.length);
+
+        	mCurrentChange.setIndexedItem(doc, null);
+
+        	sm.link(blob, this, doc.getId(), doc.getLastRevision().getRevId(), volumeId);
+        	success = true;
+       	} catch (IOException ioe) {
+        	throw MailServiceException.MESSAGE_PARSE_ERROR(ioe);
+    	} finally {
+        	endTransaction(success);
+        	if (blob != null)
+            	try {
+                	sm.delete(blob);
+               	} catch (IOException ioe) {
+//                	 no harm done
+               	}
+    	}
+    }
+    
     public synchronized WikiItem createWiki(OperationContext octxt, 
 			int folderId, 
 			String wikiword, 
@@ -4368,7 +4396,7 @@ public class Mailbox {
 
         	mCurrentChange.setIndexedItem(wikiItem, null);
 
-        	sm.link(blob, this, itemId, wikiItem.getSavedSequence(), volumeId);
+        	sm.link(blob, this, itemId, wikiItem.getLastRevision().getRevId(), volumeId);
 
         	success = true;
 
@@ -4414,11 +4442,11 @@ public class Mailbox {
             markOtherItemDirty(blob);
 
             // TODO: do we need parent when creating document.
-        	doc = Document.create(itemId, getFolderById(folderId), volumeId, filename, mimeType, rawData.length, parent);
+        	doc = Document.create(itemId, getFolderById(folderId), volumeId, filename, octxt.authuser.getName(), mimeType, rawData.length, parent);
 
             mCurrentChange.setIndexedItem(doc, null);
 
-            sm.link(blob, this, itemId, doc.getSavedSequence(), volumeId);
+            sm.link(blob, this, itemId, doc.getLastRevision().getRevId(), volumeId);
             
             success = true;
 

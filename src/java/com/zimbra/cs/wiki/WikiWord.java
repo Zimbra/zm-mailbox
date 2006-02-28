@@ -24,20 +24,26 @@
  */
 package com.zimbra.cs.wiki;
 
-import java.util.TreeSet;
-
+import com.zimbra.cs.mailbox.Document;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.ServiceException;
 
 public class WikiWord {
 	
 	private String mWikiWord;
-	private TreeSet<WikiId> mWikiIds;
+	private Mailbox mMailbox;
+	private int mId;
+	private int mRevision;
+	private int mModifiedDate;
+	private String mModifiedBy;
+	private String mCreator;
+	private int mFolderId;
 	
 	WikiWord(String wikiWord) throws ServiceException {
 		mWikiWord = wikiWord;
-		mWikiIds = new TreeSet<WikiId>();
 	}
 
 	public String getWikiWord() {
@@ -45,51 +51,46 @@ public class WikiWord {
 	}
 
 	public void addWikiItem(WikiItem newItem) throws ServiceException {
-		mWikiIds.add(new WikiId(newItem));
+		Document.DocumentRevision rev = newItem.getLastRevision();
+		mMailbox = newItem.getMailbox();
+		mId = newItem.getId();
+		mRevision = newItem.getVersion();
+		mModifiedDate = rev.getRevDate();
+		mModifiedBy = rev.getCreator();
+		mCreator = newItem.getCreator();
+		mFolderId = newItem.getFolderId();
 	}
 	
 	public void deleteAllRevisions(OperationContext octxt) throws ServiceException {
-		for (WikiId wiki : mWikiIds) {
-			wiki.deleteWikiItem(octxt);
-		}
-		mWikiIds.clear();
+		mMailbox.delete(octxt, mId, MailItem.TYPE_WIKI);
 	}
 
 	public long lastRevision() {
-		return mWikiIds.last().getVersion();
+		return mRevision;
 	}
 
 	public long getCreatedDate() {
-		return mWikiIds.first().getCreatedDate();
+		return mRevision;
 	}
 	
 	public long getModifiedDate() {
-		return mWikiIds.last().getCreatedDate();
+		return mModifiedDate;
 	}
 	
 	public String getCreator() {
-		return mWikiIds.first().getCreator();
+		return mCreator;
 	}
 	
 	public String getLastEditor() {
-		return mWikiIds.last().getCreator();
+		return mModifiedBy;
 	}
 	
 	public int getFolderId() {
-		return mWikiIds.last().getFolderId();
+		return mFolderId;
 	}
 	
 	public WikiItem getWikiItem(OperationContext octxt) throws ServiceException {
-		return mWikiIds.last().getWikiItem(octxt);
+		return mMailbox.getWikiById(octxt, mId);
 	}
 
-	public WikiItem getWikiItem(OperationContext octxt, long rev) throws ServiceException {
-		if (rev > 0 && rev <= lastRevision()) {
-			WikiId item = mWikiIds.tailSet(WikiId.getWikiId(rev)).first();
-			if (item != null && item.mVersion == rev) {
-				return item.getWikiItem(octxt);
-			}
-		}
-		throw ServiceException.FAILURE("no such item", null);
-	}
 }

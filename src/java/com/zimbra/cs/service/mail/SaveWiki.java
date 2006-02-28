@@ -54,11 +54,13 @@ public class SaveWiki extends WriteOpDocumentHandler {
         byte[] rawData = msgElem.getText().getBytes();
         
         WikiWord ww = wiki.lookupWiki(subject);
-        WikiItem parent = null;
-        if (ww != null) {
-        	parent = ww.getWikiItem(octxt);
+        WikiItem wikiItem;
+        if (ww == null) {
+            wikiItem = mbox.createWiki(octxt, fid, subject, rawData, null);
+        } else {
+        	wikiItem = ww.getWikiItem(octxt);
+        	mbox.addDocumentRevision(octxt, wikiItem, rawData);
         }
-        WikiItem wikiItem = mbox.createWiki(octxt, fid, subject, rawData, parent);
 		wiki.addWiki(wikiItem);
 
         Element response = lc.createElement(MailService.SAVE_WIKI_RESPONSE);

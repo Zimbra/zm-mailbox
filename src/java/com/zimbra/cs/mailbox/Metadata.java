@@ -79,7 +79,11 @@ public class Metadata {
     static final String FN_PREFIX          = "p";
     static final String FN_QUERY           = "q";
     static final String FN_RAW_SUBJ        = "r";
+    static final String FN_REV_DATE        = "rd";
+    static final String FN_REVISIONS       = "rev";
+    static final String FN_REV_ID          = "rid";
     static final String FN_REPLY_LIST      = "rl";
+    static final String FN_REV_SIZE        = "rs";
     static final String FN_REPLY_TO        = "rt";
     static final String FN_SENDER          = "s";
     static final String FN_SORT            = "s";

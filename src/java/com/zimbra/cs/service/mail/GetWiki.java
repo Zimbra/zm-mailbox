@@ -42,7 +42,7 @@ public class GetWiki extends DocumentHandler {
         OperationContext octxt = lc.getOperationContext();
         Element eword = request.getElement(MailService.E_WIKIWORD);
         String word = eword.getAttribute(MailService.A_NAME);
-        long rev = eword.getAttributeLong(MailService.A_VERSION, -1);
+        int rev = (int)eword.getAttributeLong(MailService.A_VERSION, -1);
 
         Element response = lc.createElement(MailService.GET_WIKI_RESPONSE);
 
@@ -52,7 +52,7 @@ public class GetWiki extends DocumentHandler {
         	return response;
         }
         if (rev > 0) {
-            ToXML.encodeWiki(response, lc, w.getWikiItem(octxt, rev));
+            ToXML.encodeWiki(response, lc, w.getWikiItem(octxt), rev);
         } else {
             ToXML.encodeWiki(response, lc, w.getWikiItem(octxt));
         }

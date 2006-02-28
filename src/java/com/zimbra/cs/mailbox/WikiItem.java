@@ -28,7 +28,6 @@ import java.io.InputStream;
 
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.service.ServiceException;
 
 public class WikiItem extends Document {
@@ -91,7 +90,7 @@ public class WikiItem extends Document {
 		meta.put(Metadata.FN_WIKI_WORD, wikiword);
 		meta.put(Metadata.FN_CREATOR, author);
 		
-        UnderlyingData data = prepareCreate(TYPE_WIKI, id, folder, volumeId, wikiword, WIKI_CONTENT_TYPE, length, (Document)parent, meta);
+        UnderlyingData data = prepareCreate(TYPE_WIKI, id, folder, volumeId, wikiword, author, WIKI_CONTENT_TYPE, length, (Document)parent, meta);
         if (parent != null)
             data.parentId = parent.getId();
 
@@ -100,7 +99,7 @@ public class WikiItem extends Document {
         DbMailItem.create(mbox, data);
 
         WikiItem wiki = new WikiItem(mbox, data);
-        wiki.finishCreation(null);
+        wiki.finishCreation(parent);
 //        doc.reindex();
         return wiki;
     }
