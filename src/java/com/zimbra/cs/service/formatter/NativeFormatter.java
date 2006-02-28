@@ -64,12 +64,21 @@ public class NativeFormatter extends Formatter {
         return MailboxIndex.SEARCH_FOR_MESSAGES;
     }
 
-    public void format(Context context, MailItem mailItem) throws IOException, ServiceException, UserServletException, ServletException {
+    public void format(Context context, MailItem item) throws IOException, ServiceException, UserServletException, ServletException {
+        if (context.sync && !context.hasPart()) {
+            // for sync, return metadata as headers to avoid extra SOAP round-trips
+            context.resp.addHeader("X-Zimbra-Tags", item.getTagString());
+            context.resp.addHeader("X-Zimbra-Flags", item.getFlagString());
+            context.resp.addHeader("X-Zimbra-Received", Long.toString(item.getDate()));
+            if (item.getChangeDate() != item.getDate())
+                context.resp.addHeader("X-Zimbra-Modified", Long.toString(item.getChangeDate()));
+        }
+
         try {
-            if (mailItem instanceof Message) {
-                handleMessage(context, (Message)mailItem);
-            } else if (mailItem instanceof Appointment) {
-                handleAppt(context, (Appointment)mailItem);
+            if (item instanceof Message) {
+                handleMessage(context, (Message) item);
+            } else if (item instanceof Appointment) {
+                handleAppt(context, (Appointment) item);
             } else {
                 throw UserServletException.notImplemented("can only handle messages/appts");
             }
@@ -78,19 +87,17 @@ public class NativeFormatter extends Formatter {
         }
     }
     
-    private void handleMessage(Context context, Message message) throws IOException, ServiceException, MessagingException, ServletException {
-        /*
-        if (sync) {
-            hdr.append("X-Zimbra-Conv: ").append(msg.getConversationId()).append("\n");
-            resp.getOutputStream().write(hdr.toString().getBytes());
-        }
-        */
+    private void handleMessage(Context context, Message msg) throws IOException, ServiceException, MessagingException, ServletException {
         if (context.hasPart()) {
-            MimePart mp = getMimePart(message, context.getPart());            
-            handleMessagePart(context, mp, message);
+            MimePart mp = getMimePart(msg, context.getPart());            
+            handleMessagePart(context, mp, msg);
         } else {
+            if (context.sync) {
+                // for sync, return metadata as headers to avoid extra SOAP round-trips
+                context.resp.addHeader("X-Zimbra-Conv", Integer.toString(msg.getConversationId()));
+            }
             context.resp.setContentType(Mime.CT_TEXT_PLAIN);
-            InputStream is = message.getRawMessage();
+            InputStream is = msg.getRawMessage();
             ByteUtil.copy(is, context.resp.getOutputStream());
             is.close();
         }
@@ -104,7 +111,7 @@ public class NativeFormatter extends Formatter {
                 mp = Mime.getMimePart(mbp, context.getPart());
             } else {
                 mp = getMimePart(appt, context.getPart());
-            }            
+            }
             handleMessagePart(context, mp, appt);
         } else {
             context.resp.setContentType(Mime.CT_TEXT_PLAIN);
@@ -114,7 +121,7 @@ public class NativeFormatter extends Formatter {
         }
     }
     
-    private void handleMessagePart(Context context, MimePart mp, MailItem mi) throws IOException, ServiceException, MessagingException, ServletException {
+    private void handleMessagePart(Context context, MimePart mp, MailItem item) throws IOException, MessagingException, ServletException {
         if (mp == null) {
             context.resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "part not found");
         } else {
@@ -132,7 +139,7 @@ public class NativeFormatter extends Formatter {
                 sendbackOriginalDoc(mp, contentType, context.resp);
             } else {
                 context.req.setAttribute(ATTR_MIMEPART, mp);
-                context.req.setAttribute(ATTR_MSGDIGEST, mi.getDigest());
+                context.req.setAttribute(ATTR_MSGDIGEST, item.getDigest());
                 context.req.setAttribute(ATTR_CONTENTURL, context.req.getRequestURL().toString());
                 RequestDispatcher dispatcher = context.req.getRequestDispatcher(CONVERSION_PATH);
                 dispatcher.forward(context.req, context.resp);

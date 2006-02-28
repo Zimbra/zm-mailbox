@@ -59,6 +59,7 @@ URL
           types={types} // when searching
           start={date-specifier}
           end={date-specifier}
+          sync="1"
           auth={auth-types}
  
           {types}   = comma-separated list.  Legal values are:
@@ -98,7 +99,9 @@ URL
               +1week    1 week from now
               +6mon     6 months from now 
               1year     1 year from now
-  
+
+          sync="1" -- requests that the server return additional metadata in response as X-Zimbra-* HTTP headers
+
           {auth-types} = comma-separated list. Legal values are:
               co     cookie
               ba     basic auth
@@ -112,7 +115,7 @@ EXAMPLES
 There are two primary formats, one using a folder, and one using a mail item id.
 
 http://server/zimbra/user/[~]{account-name}/{folder-path}    // path to a folder 
-http://server/zimbra/user/[~]{account-name}/?id={item-id}       // a mail item id
+http://server/zimbra/user/[~]{account-name}/?id={item-id}    // a mail item id
 
 A single ~ is allowed and references the authenticated user accessing the data. 
 
@@ -134,7 +137,7 @@ Some examples:
 The second format is used to reference something by its mail item id:
 
 /zimbra/user/roland/?id=10                    // ICS view of calendar, referenced via ID
-/zimbra/user/roland/?id=945&fmt=vcard         // contact formatted as a vcard
+/zimbra/user/roland/?id=945&fmt=vcf           // contact formatted as a vcard
 /zimbra/user/roland/?id=100&part=2.3          // message with id 100, mime part 2.3
 
 Can also use "/zimbra/userid" to represent a user's zimbraId, giving a truly persistent URL:
@@ -281,7 +284,7 @@ ISSUES/NOTES
    
    /zimbra/user/roland/inbox?fmt=rss
 
-  If there is a folder/document that is actually named "inbox.rss", then it takes precedent
+  If there is a folder/document that is actually named "inbox.rss", then it takes precedence
   over the "inbox" folder. So you'll have to explicitly use the fmt query parameter to 
   disambiguate between the two:
 

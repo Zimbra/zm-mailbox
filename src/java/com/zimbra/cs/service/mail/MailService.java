@@ -134,22 +134,21 @@ public class MailService implements DocumentService {
     public static final QName GET_APPT_SUMMARIES_REQUEST = QName.get("GetApptSummariesRequest", NAMESPACE);
     public static final QName GET_APPT_SUMMARIES_RESPONSE = QName.get("GetApptSummariesResponse", NAMESPACE);
     public static final QName SEND_INVITE_REPLY_REQUEST = QName.get("SendInviteReplyRequest", NAMESPACE);
-    public static final QName SEND_INVITE_REPLY_RESPONSE= QName.get("SendInviteReplyResponse", NAMESPACE);
+    public static final QName SEND_INVITE_REPLY_RESPONSE = QName.get("SendInviteReplyResponse", NAMESPACE);
     public static final QName CREATE_APPOINTMENT_REQUEST = QName.get("CreateAppointmentRequest", NAMESPACE);
-    public static final QName CREATE_APPOINTMENT_RESPONSE= QName.get("CreateAppointmentResponse", NAMESPACE);
+    public static final QName CREATE_APPOINTMENT_RESPONSE = QName.get("CreateAppointmentResponse", NAMESPACE);
     public static final QName CREATE_APPOINTMENT_EXCEPTION_REQUEST = QName.get("CreateAppointmentExceptionRequest", NAMESPACE);
-    public static final QName CREATE_APPOINTMENT_EXCEPTION_RESPONSE= QName.get("CreateAppointmentExceptionResponse", NAMESPACE);
+    public static final QName CREATE_APPOINTMENT_EXCEPTION_RESPONSE = QName.get("CreateAppointmentExceptionResponse", NAMESPACE);
     public static final QName MODIFY_APPOINTMENT_REQUEST = QName.get("ModifyAppointmentRequest", NAMESPACE);
-    public static final QName MODIFY_APPOINTMENT_RESPONSE= QName.get("ModifyAppointmentResponse", NAMESPACE);
+    public static final QName MODIFY_APPOINTMENT_RESPONSE = QName.get("ModifyAppointmentResponse", NAMESPACE);
     public static final QName CANCEL_APPOINTMENT_REQUEST = QName.get("CancelAppointmentRequest", NAMESPACE);
-    public static final QName CANCEL_APPOINTMENT_RESPONSE= QName.get("CancelAppointmentResponse", NAMESPACE);
+    public static final QName CANCEL_APPOINTMENT_RESPONSE = QName.get("CancelAppointmentResponse", NAMESPACE);
     public static final QName GET_APPOINTMENT_REQUEST = QName.get("GetAppointmentRequest", NAMESPACE);
-    public static final QName GET_APPOINTMENT_RESPONSE= QName.get("GetAppointmentResponse", NAMESPACE);
+    public static final QName GET_APPOINTMENT_RESPONSE = QName.get("GetAppointmentResponse", NAMESPACE);
     
     public static final QName SET_APPOINTMENT_REQUEST = QName.get("SetAppointmentRequest", NAMESPACE);
-    public static final QName SET_APPOINTMENT_RESPONSE= QName.get("SetAppointmentResponse", NAMESPACE);
-    
-    
+    public static final QName SET_APPOINTMENT_RESPONSE = QName.get("SetAppointmentResponse", NAMESPACE);
+
     public static final QName GET_FREE_BUSY_REQUEST = QName.get("GetFreeBusyRequest", NAMESPACE);
     public static final QName GET_FREE_BUSY_RESPONSE = QName.get("GetFreeBusyResponse", NAMESPACE);
     public static final QName GET_ICAL_REQUEST = QName.get("GetICalRequest", NAMESPACE);
@@ -157,11 +156,7 @@ public class MailService implements DocumentService {
     // spell checking
     public static final QName CHECK_SPELLING_REQUEST = QName.get("CheckSpellingRequest", NAMESPACE);
     public static final QName CHECK_SPELLING_RESPONSE = QName.get("CheckSpellingResponse", NAMESPACE);
-    // objects
-//    public static final QName OBJECT_ACTION_REQUEST = QName.get("ObjectActionRequest", NAMESPACE);
-//    public static final QName OBJECT_ACTION_RESPONSE = QName.get("ObjectActionResponse", NAMESPACE);
-    
-    
+
     public static final QName SAVE_WIKI_REQUEST = QName.get("SaveWikiRequest", NAMESPACE);
     public static final QName SAVE_WIKI_RESPONSE = QName.get("SaveWikiResponse", NAMESPACE);
 
@@ -285,6 +280,7 @@ public class MailService implements DocumentService {
     public static final String A_TOKEN = "token";
     public static final String A_FETCH_IF_EXISTS = "fie";
     public static final String A_CHANGE_DATE = "md";
+    public static final String A_SYNC = "sync";
 
     // filter rules
     public static final String A_LHS = "k0";
@@ -502,10 +498,7 @@ public class MailService implements DocumentService {
         
         // spell check
         dispatcher.registerHandler(CHECK_SPELLING_REQUEST, new CheckSpelling());
-        
-        // objects
-//        dispatcher.registerHandler(OBJECT_ACTION_REQUEST, new ObjectAction());
-        
+
         // wiki
         dispatcher.registerHandler(SAVE_WIKI_REQUEST, new SaveWiki());
         
