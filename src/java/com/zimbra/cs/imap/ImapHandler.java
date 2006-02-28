@@ -77,6 +77,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
     private ImapSession mSession;
     private Mailbox     mMailbox;
     private ImapRequest mIncompleteRequest = null;
+    private String      mLastCommand;
     private boolean     mStartedTLS;
     private boolean     mGoodbyeSent;
 
@@ -121,358 +122,6 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         return true;
     }
 
-
-    private final class ImapCommand {
-        static final int CMD_CAPABILITY   = 1;
-        static final int CMD_NOOP         = 2;
-        static final int CMD_LOGOUT       = 3;
-        static final int CMD_STARTTLS     = 4;
-        static final int CMD_AUTHENTICATE = 5;
-        static final int CMD_LOGIN        = 6;
-        static final int CMD_SELECT       = 7;
-        static final int CMD_EXAMINE      = 8;
-        static final int CMD_CREATE       = 9;
-        static final int CMD_DELETE       = 10;
-        static final int CMD_RENAME       = 11;
-        static final int CMD_SUBSCRIBE    = 12;
-        static final int CMD_UNSUBSCRIBE  = 13;
-        static final int CMD_LIST         = 14;
-        static final int CMD_LSUB         = 15;
-        static final int CMD_STATUS       = 16;
-        static final int CMD_APPEND       = 17;
-        static final int CMD_CHECK        = 18;
-        static final int CMD_CLOSE        = 19;
-        static final int CMD_EXPUNGE      = 20;
-        static final int CMD_SEARCH       = 21;
-        static final int CMD_FETCH        = 22;
-        static final int CMD_STORE        = 23;
-        static final int CMD_COPY         = 24;
-        static final int CMD_UNSELECT     = 25;
-        static final int CMD_ID           = 26;
-        static final int CMD_IDLE         = 27;
-        static final int CMD_SETQUOTA     = 28;
-        static final int CMD_GETQUOTA     = 29;
-        static final int CMD_GETQUOTAROOT = 30;
-        static final int CMD_NAMESPACE    = 31;
-
-        boolean mValid;
-        String  mTag;
-        int     mCommand;
-        String  mCommandString;  // For performance logging
-        List<Object> mArguments = new LinkedList<Object>();
-
-        ImapCommand(ImapRequest req, ImapSession session) throws IOException, ImapException {
-            if (session != null && session.isIdle()) {
-                mCommand = CMD_IDLE;  mValid = true;
-                mArguments.add(IDLE_STOP);
-                try {
-                    mArguments.add(new Boolean(req.readAtom().equals("DONE") && req.eof()));
-                } catch (ImapParseException ipe) {
-                    mArguments.add(Boolean.FALSE);
-                }
-                return;
-            }
-            mTag = req.readTag();
-
-            Boolean byUID = Boolean.FALSE;
-            req.skipSpace();
-            String command = req.readAtom();
-            mCommandString = command;
-            do {
-                switch (command.charAt(0)) {
-                    case 'A':
-                        if (command.equals("AUTHENTICATE")) {
-                            mCommand = CMD_AUTHENTICATE;
-                            req.skipSpace();  mArguments.add(req.readAtom());
-                            mValid = req.eof();
-                            return;
-                        } else if (command.equals("APPEND")) {
-                            mCommand = CMD_APPEND;
-                            List tags = new ArrayList();  Date date = null;
-                            req.skipSpace();  mArguments.add(req.readFolder());
-                            req.skipSpace();
-                            if (req.peekChar() == '(') {
-                                tags = req.readFlags();  req.skipSpace();
-                            }
-                            if (req.peekChar() == '"') {
-                                date = req.readDate(mTimeFormat);  req.skipSpace();
-                            }
-                            mArguments.add(tags);  mArguments.add(date);
-                            mArguments.add(req.readLiteral());
-                            mValid = req.eof();
-                            return;
-                        }
-                        break;
-                    case 'C':
-                        if (command.equals("CAPABILITY")) {
-                            mCommand = CMD_CAPABILITY;  mValid = req.eof();
-                            return;
-                        } else if (command.equals("CLOSE")) {
-                            mCommand = CMD_CLOSE;  mValid = req.eof();
-                            return;
-                        } else if (command.equals("COPY")) {
-                            mCommand = CMD_COPY;
-                            req.skipSpace();  mArguments.add(req.readSequence());
-                            req.skipSpace();  mArguments.add(req.readFolder());
-                            mArguments.add(byUID);
-                            mValid = req.eof();
-                            return;
-                        } else if (command.equals("CREATE")) {
-                            mCommand = CMD_CREATE;
-                            req.skipSpace();  mArguments.add(req.readFolder());
-                            mValid = req.eof();
-                            return;
-                        } else if (command.equals("CHECK")) {
-                            mCommand = CMD_CHECK;  mValid = req.eof();
-                            return;
-                        }
-                        break;
-                    case 'D':
-                        if (command.equals("DELETE")) {
-                            mCommand = CMD_DELETE;
-                            req.skipSpace();  mArguments.add(req.readFolder());
-                            mValid = req.eof();
-                            return;
-//                        } else if (command.equals("DONE")) {
-//                            mCommand = CMD_IDLE;  mArguments.add(Boolean.FALSE);
-//                            mValid = req.eof();
-//                            return;
-                        }
-                        break;
-                    case 'E':
-                        if (command.equals("EXPUNGE")) {
-                            mCommand = CMD_EXPUNGE;  mArguments.add(byUID);
-                            String sequence = null;
-                            if (byUID == Boolean.TRUE) {
-                                req.skipSpace();  sequence = req.readSequence();
-                            }
-                            mArguments.add(sequence);
-                            mValid = req.eof();
-                            return;
-                        } else if (command.equals("EXAMINE")) {
-                            mCommand = CMD_EXAMINE;
-                            req.skipSpace();  mArguments.add(req.readFolder());
-                            mValid = req.eof();
-                            return;
-                        }
-                        break;
-                    case 'F':
-                        if (command.equals("FETCH")) {
-                            mCommand = CMD_FETCH;
-                            List<ImapPartSpecifier> parts = new ArrayList<ImapPartSpecifier>();
-                            req.skipSpace();  mArguments.add(req.readSequence());
-                            req.skipSpace();  mArguments.add(new Integer(req.readFetch(parts)));
-                            mArguments.add(parts);  mArguments.add(byUID);
-                            mValid = req.eof();
-                            return;
-                        }
-                        break;
-                    case 'G':
-                        if (command.equals("GETQUOTA")) {
-                            mCommand = CMD_GETQUOTA;
-                            req.skipSpace();  mArguments.add(req.readAstring());
-                            mValid = req.eof();
-                            return;
-                        } else if (command.equals("GETQUOTAROOT")) {
-                            mCommand = CMD_GETQUOTAROOT;
-                            req.skipSpace();  mArguments.add(req.readFolder());
-                            mValid = req.eof();
-                            return;
-                        }
-                        break;
-                    case 'I':
-                        if (command.equals("ID")) {
-                            mCommand = CMD_ID;
-                            req.skipSpace();  mArguments.add(req.readParameters(true));
-                            mValid = req.eof();
-                            return;
-//                        } else if (command.equals("IDLE")) {
-//                            mCommand = CMD_IDLE;  mValid = req.eof();
-//                            mArguments.add(IDLE_START);  mArguments.add(Boolean.TRUE);
-//                            return;
-                        }
-                        break;
-                    case 'L':
-                        if (command.equals("LIST")) {
-                            mCommand = CMD_LIST;
-                            req.skipSpace();  mArguments.add(req.readEscapedFolder());
-                            req.skipSpace();  mArguments.add(req.readFolderPattern());
-                            mValid = req.eof();
-                            return;
-                        } if (command.equals("LSUB")) {
-                            mCommand = CMD_LSUB;
-                            req.skipSpace();  mArguments.add(req.readEscapedFolder());
-                            req.skipSpace();  mArguments.add(req.readFolderPattern());
-                            mValid = req.eof();
-                            return;
-                        } else if (command.equals("LOGIN")) {
-                            mCommand = CMD_LOGIN;
-                            req.skipSpace();  mArguments.add(req.readAstring());
-                            req.skipSpace();  mArguments.add(req.readAstring());
-                            mValid = req.eof();
-                            return;
-                        } else if (command.equals("LOGOUT")) {
-                            mCommand = CMD_LOGOUT;  mValid = req.eof();
-                            return;
-                        }
-                        break;
-                    case 'N':
-                        if (command.equals("NOOP")) {
-                            mCommand = CMD_NOOP;  mValid = req.eof();
-                            return;
-                        } else if (command.equals("NAMESPACE")) {
-                            mCommand = CMD_NAMESPACE;  mValid = req.eof();
-                            return;
-                        }
-                        break;
-                    case 'R':
-                        if (command.equals("RENAME")) {
-                            mCommand = CMD_RENAME;
-                            req.skipSpace();  mArguments.add(req.readFolder());
-                            req.skipSpace();  mArguments.add(req.readFolder());
-                            mValid = req.eof();
-                            return;
-                        }
-                        break;
-                    case 'S':
-                        if (command.equals("STORE")) {
-                            mCommand = CMD_STORE;
-                            Byte operation = STORE_REPLACE;  Boolean silent = Boolean.FALSE;
-                            req.skipSpace();  mArguments.add(req.readSequence());
-                            req.skipSpace();
-                            switch (req.peekChar()) {
-                                case '+':  req.skipChar('+');  operation = STORE_ADD;     break;
-                                case '-':  req.skipChar('-');  operation = STORE_REMOVE;  break;
-                            }
-                            String cmd = req.readAtom();
-                            if (cmd.equals("FLAGS.SILENT"))  silent = Boolean.TRUE;
-                            else if (!cmd.equals("FLAGS"))   throw new ImapParseException(mTag, "invalid store-att-flags");
-                            req.skipSpace();  mArguments.add(req.readFlags());
-                            mArguments.add(operation);  mArguments.add(silent);  mArguments.add(byUID);
-                            mValid = req.eof();
-                            return;
-                        } else if (command.equals("SEARCH")) {
-                            mCommand = CMD_SEARCH;
-                            TreeMap<Integer, Object> insertions = new TreeMap<Integer, Object>();
-                            req.skipSpace();  mArguments.add(req.readSearch(insertions));
-                            mArguments.add(insertions);  mArguments.add(byUID);
-                            mValid = req.eof();
-                            return;
-                        } else if (command.equals("SELECT")) {
-                            mCommand = CMD_SELECT;
-                            req.skipSpace();  mArguments.add(req.readFolder());
-                            mValid = req.eof();
-                            return;
-                        } else if (command.equals("STARTTLS")) {
-                            mCommand = CMD_STARTTLS;  mValid = req.eof();
-                            return;
-                        } else if (command.equals("STATUS")) {
-                            mCommand = CMD_STATUS;
-                            int statusFlags = 0;
-                            req.skipSpace();  mArguments.add(req.readFolder());
-                            req.skipSpace();  req.skipChar('(');
-                            while (req.peekChar() != ')') {
-                                String flag = req.readAtom();
-                                if (flag.equals("MESSAGES"))          statusFlags |= STATUS_MESSAGES;
-                                else if (flag.equals("RECENT"))       statusFlags |= STATUS_RECENT;
-                                else if (flag.equals("UIDNEXT"))      statusFlags |= STATUS_UIDNEXT;
-                                else if (flag.equals("UIDVALIDITY"))  statusFlags |= STATUS_UIDVALIDITY;
-                                else if (flag.equals("UNSEEN"))       statusFlags |= STATUS_UNSEEN;
-                                else
-                                    throw new ImapParseException(mTag, "unknown STATUS attribute \"" + flag + '"');
-                                if (req.peekChar() != ')')
-                                    req.skipSpace();
-                            }
-                            req.skipChar(')');  mArguments.add(new Integer(statusFlags));
-                            mValid = req.eof();
-                            return;
-                        } else if (command.equals("SUBSCRIBE")) {
-                            mCommand = CMD_SUBSCRIBE;
-                            req.skipSpace();  mArguments.add(req.readFolder());
-                            mValid = req.eof();
-                            return;
-                        } else if (command.equals("SETQUOTA")) {
-                            mCommand = CMD_SETQUOTA;
-                            HashMap<String, String> limits = new HashMap<String, String>();
-                            req.skipSpace();  mArguments.add(req.readAstring());
-                            req.skipSpace();  req.skipChar('(');
-                            while (req.peekChar() != ')') {
-                                String resource = req.readAtom();  req.skipSpace();
-                                limits.put(resource, req.readNumber());
-                            }
-                            req.skipChar(')');  mValid = req.eof();
-                            return;
-                        }
-                        break;
-                    case 'U':
-                        if (command.equals("UID")) {
-                            req.skipSpace();  command = req.readAtom();
-                            if (!command.equals("FETCH") && !command.equals("SEARCH") && !command.equals("COPY") && !command.equals("STORE") && !command.equals("EXPUNGE"))
-                                throw new ImapParseException(mTag, "command not permitted with UID");
-                            byUID = Boolean.TRUE;
-                            continue;
-                        } else if (command.equals("UNSUBSCRIBE")) {
-                            mCommand = CMD_UNSUBSCRIBE;
-                            req.skipSpace();  mArguments.add(req.readFolder());
-                            mValid = req.eof();
-                            return;
-                        } else if (command.equals("UNSELECT")) {
-                            mCommand = CMD_UNSELECT;  mValid = req.eof();
-                            return;
-                        }
-                        break;
-                }
-            } while (byUID == Boolean.TRUE);
-
-            throw new ImapParseException(mTag, "command not implemented");
-        }
-
-        boolean execute() throws IOException {
-            if (!mValid)
-                return true;
-            switch (mCommand) {
-                case CMD_CAPABILITY:   return doCAPABILITY(mTag);
-                case CMD_NOOP:         return doNOOP(mTag);
-                case CMD_ID:           return doID(mTag, mArguments);
-                case CMD_STARTTLS:     return doSTARTTLS(mTag);
-                case CMD_AUTHENTICATE: return doAUTHENTICATE(mTag, mArguments);
-                case CMD_LOGOUT:       return doLOGOUT(mTag);
-                case CMD_LOGIN:        return doLOGIN(mTag, mArguments);
-                case CMD_SELECT:       return doSELECT(mTag, mArguments);
-                case CMD_EXAMINE:      return doEXAMINE(mTag, mArguments);
-                case CMD_CREATE:       return doCREATE(mTag, mArguments);
-                case CMD_DELETE:       return doDELETE(mTag, mArguments);
-                case CMD_RENAME:       return doRENAME(mTag, mArguments);
-                case CMD_SUBSCRIBE:    return doSUBSCRIBE(mTag, mArguments);
-                case CMD_UNSUBSCRIBE:  return doUNSUBSCRIBE(mTag, mArguments);
-                case CMD_LIST:         return doLIST(mTag, mArguments);
-                case CMD_LSUB:         return doLSUB(mTag, mArguments);
-                case CMD_STATUS:       return doSTATUS(mTag, mArguments);
-                case CMD_APPEND:       return doAPPEND(mTag, mArguments);
-                case CMD_IDLE:         return doIDLE(mTag, mArguments);
-                case CMD_SETQUOTA:     return doSETQUOTA(mTag, mArguments);
-                case CMD_GETQUOTA:     return doGETQUOTA(mTag, mArguments);
-                case CMD_GETQUOTAROOT: return doGETQUOTAROOT(mTag, mArguments);
-                case CMD_NAMESPACE:    return doNAMESPACE(mTag, mArguments);
-                case CMD_CHECK:        return doCHECK(mTag);
-                case CMD_CLOSE:        return doCLOSE(mTag);
-                case CMD_UNSELECT:     return doUNSELECT(mTag);
-                case CMD_EXPUNGE:      return doEXPUNGE(mTag, mArguments);
-                case CMD_SEARCH:       return doSEARCH(mTag, mArguments);
-                case CMD_FETCH:        return doFETCH(mTag, mArguments);
-                case CMD_STORE:        return doSTORE(mTag, mArguments);
-                case CMD_COPY:         return doCOPY(mTag, mArguments);
-                default:
-                    sendBAD(mTag, "command not implemented");
-                    return true;
-            }
-        }
-        
-        String getCommandString() {
-            return mCommandString;
-        }
-    }
-
     protected void setIdle(boolean idle) {
         super.setIdle(idle);
         if (mSession != null)
@@ -488,9 +137,8 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         ImapRequest req = null;
         boolean keepGoing = CONTINUE_PROCESSING;
         ZimbraLog.clearContext();
-        if (ZimbraPerf.isPerfEnabled()) {
+        if (ZimbraPerf.isPerfEnabled())
             ThreadLocalData.reset();
-        }
         long start = ZimbraPerf.STOPWATCH_IMAP.start();
 
         try {
@@ -506,12 +154,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             if (req == null)
                 req = new ImapRequest(mInputStream, mSession);
             req.continuation();
-
-            ImapCommand cmd = new ImapCommand(req, mSession);
-            mIncompleteRequest = req = null;
-            if (!cmd.mValid)
-                throw new ImapParseException(cmd.mTag, "excess characters at end of command");
-
+            
             // check account status before executing command
             if (mMailbox != null)
                 try {
@@ -525,12 +168,12 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                     return STOP_PROCESSING;
                 }
 
-            // FIXME: need to enqueue and process off queue, I think...
+            keepGoing = executeRequest(req, mSession);
             setIdle(false);
-            keepGoing = cmd.execute();
-            if (ZimbraPerf.isPerfEnabled()) {
-                ZimbraPerf.writeStats(STATS_FILE, cmd.getCommandString());
-            }
+            mIncompleteRequest = null;
+
+            if (ZimbraPerf.isPerfEnabled())
+                ZimbraPerf.writeStats(STATS_FILE, mLastCommand);
             ZimbraPerf.STOPWATCH_IMAP.stop(start);
         } catch (ImapContinuationException ice) {
             mIncompleteRequest = req.rewind();
@@ -556,6 +199,236 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         }
 
         return keepGoing;
+    }
+
+    private void checkEOF(String tag, ImapRequest req) throws ImapParseException {
+        if (!req.eof())
+            throw new ImapParseException(tag, "excess characters at end of command");
+    }
+
+    private boolean executeRequest(ImapRequest req, ImapSession session) throws IOException, ImapException {
+        if (session != null && session.isIdle())
+            return doIDLE(null, IDLE_STOP, req.readAtom().equals("DONE") && req.eof());
+
+        String tag = req.readTag();
+
+        boolean byUID = false;
+        req.skipSpace();
+        String command = mLastCommand = req.readAtom();
+        do {
+            switch (command.charAt(0)) {
+                case 'A':
+                    if (command.equals("AUTHENTICATE")) {
+                        req.skipSpace();  String mechanism = req.readAtom();
+                        checkEOF(tag, req);
+                        return doAUTHENTICATE(tag, mechanism);
+                    } else if (command.equals("APPEND")) {
+                        List<String> flags = null;  Date date = null;
+                        req.skipSpace();  String folder = req.readFolder();
+                        req.skipSpace();
+                        if (req.peekChar() == '(') {
+                            flags = req.readFlags();  req.skipSpace();
+                        }
+                        if (req.peekChar() == '"') {
+                            date = req.readDate(mTimeFormat);  req.skipSpace();
+                        }
+                        byte[] content = req.readLiteral();
+                        checkEOF(tag, req);
+                        return doAPPEND(tag, folder, flags, date, content);
+                    }
+                    break;
+                case 'C':
+                    if (command.equals("CAPABILITY")) {
+                        checkEOF(tag, req);
+                        return doCAPABILITY(tag);
+                    } else if (command.equals("COPY")) {
+                        req.skipSpace();  String sequence = req.readSequence();
+                        req.skipSpace();  String folder = req.readFolder();
+                        checkEOF(tag, req);
+                        return doCOPY(tag, sequence, folder, byUID);
+                    } else if (command.equals("CLOSE")) {
+                        checkEOF(tag, req);
+                        return doCLOSE(tag);
+                    } else if (command.equals("CREATE")) {
+                        req.skipSpace();  String folder = req.readFolder();
+                        checkEOF(tag, req);
+                        return doCREATE(tag, folder);
+                    } else if (command.equals("CHECK")) {
+                        checkEOF(tag, req);
+                        return doCHECK(tag);
+                    }
+                    break;
+                case 'D':
+                    if (command.equals("DELETE")) {
+                        req.skipSpace();  String folder = req.readFolder();
+                        checkEOF(tag, req);
+                        return doDELETE(tag, folder);
+                    }
+                    break;
+                case 'E':
+                    if (command.equals("EXPUNGE")) {
+                        String sequence = null;
+                        if (byUID) {
+                            req.skipSpace();  sequence = req.readSequence();
+                        }
+                        checkEOF(tag, req);
+                        return doEXPUNGE(tag, byUID, sequence);
+                    } else if (command.equals("EXAMINE")) {
+                        req.skipSpace();  String folder = req.readFolder();
+                        checkEOF(tag, req);
+                        return doEXAMINE(tag, folder);
+                    }
+                    break;
+                case 'F':
+                    if (command.equals("FETCH")) {
+                        List<ImapPartSpecifier> parts = new ArrayList<ImapPartSpecifier>();
+                        req.skipSpace();  String sequence = req.readSequence();
+                        req.skipSpace();  int attributes = req.readFetch(parts);
+                        checkEOF(tag, req);
+                        return doFETCH(tag, sequence, attributes, parts, byUID);
+                    }
+                    break;
+                case 'G':
+                    if (command.equals("GETQUOTA")) {
+                        req.skipSpace();  String qroot = req.readAstring();
+                        checkEOF(tag, req);
+                        return doGETQUOTA(tag, qroot);
+                    } else if (command.equals("GETQUOTAROOT")) {
+                        req.skipSpace();  String path = req.readFolder();
+                        checkEOF(tag, req);
+                        return doGETQUOTAROOT(tag, path);
+                    }
+                    break;
+                case 'I':
+                    if (command.equals("ID")) {
+                        req.skipSpace();  Map<String, String> params = req.readParameters(true);
+                        checkEOF(tag, req);
+                        return doID(tag, params);
+//                        } else if (command.equals("IDLE")) {
+//                            checkEOF(tag, req);
+//                            return doIDLE(tag, IDLE_START, true);
+                    }
+                    break;
+                case 'L':
+                    if (command.equals("LOGIN")) {
+                        req.skipSpace();  String user = req.readAstring();
+                        req.skipSpace();  String pass = req.readAstring();
+                        checkEOF(tag, req);
+                        return doLOGIN(tag, user, pass);
+                    } else if (command.equals("LOGOUT")) {
+                        checkEOF(tag, req);
+                        return doLOGOUT(tag);
+                    } else if (command.equals("LIST")) {
+                        req.skipSpace();  String base = req.readEscapedFolder();
+                        req.skipSpace();  String pattern = req.readFolderPattern();
+                        checkEOF(tag, req);
+                        return doLIST(tag, base, pattern);
+                    } else if (command.equals("LSUB")) {
+                        req.skipSpace();  String base = req.readEscapedFolder();
+                        req.skipSpace();  String pattern = req.readFolderPattern();
+                        checkEOF(tag, req);
+                        return doLSUB(tag, base, pattern);
+                    }
+                    break;
+                case 'N':
+                    if (command.equals("NOOP")) {
+                        checkEOF(tag, req);
+                        return doNOOP(tag);
+                    } else if (command.equals("NAMESPACE")) {
+                        checkEOF(tag, req);
+                        return doNAMESPACE(tag);
+                    }
+                    break;
+                case 'R':
+                    if (command.equals("RENAME")) {
+                        req.skipSpace();  String folder = req.readFolder();
+                        req.skipSpace();  String name = req.readFolder();
+                        checkEOF(tag, req);
+                        return doRENAME(tag, folder, name);
+                    }
+                    break;
+                case 'S':
+                    if (command.equals("STORE")) {
+                        byte operation = STORE_REPLACE;  boolean silent = false;
+                        req.skipSpace();  String sequence = req.readSequence();
+                        req.skipSpace();
+                        switch (req.peekChar()) {
+                            case '+':  req.skipChar('+');  operation = STORE_ADD;     break;
+                            case '-':  req.skipChar('-');  operation = STORE_REMOVE;  break;
+                        }
+                        String cmd = req.readAtom();
+                        if (cmd.equals("FLAGS.SILENT"))  silent = true;
+                        else if (!cmd.equals("FLAGS"))   throw new ImapParseException(tag, "invalid store-att-flags");
+                        req.skipSpace();  List<String> flags = req.readFlags();
+                        checkEOF(tag, req);
+                        return doSTORE(tag, sequence, flags, operation, silent, byUID);
+                    } else if (command.equals("SEARCH")) {
+                        TreeMap<Integer, Object> insertions = new TreeMap<Integer, Object>();
+                        req.skipSpace();  String search = req.readSearch(insertions);
+                        checkEOF(tag, req);
+                        return doSEARCH(tag, search, insertions, byUID);
+                    } else if (command.equals("SELECT")) {
+                        req.skipSpace();  String folder = req.readFolder();
+                        return doSELECT(tag, folder);
+                    } else if (command.equals("STARTTLS")) {
+                        checkEOF(tag, req);
+                        return doSTARTTLS(tag);
+                    } else if (command.equals("STATUS")) {
+                        int status = 0;
+                        req.skipSpace();  String folder = req.readFolder();
+                        req.skipSpace();  req.skipChar('(');
+                        while (req.peekChar() != ')') {
+                            String flag = req.readAtom();
+                            if (flag.equals("MESSAGES"))          status |= STATUS_MESSAGES;
+                            else if (flag.equals("RECENT"))       status |= STATUS_RECENT;
+                            else if (flag.equals("UIDNEXT"))      status |= STATUS_UIDNEXT;
+                            else if (flag.equals("UIDVALIDITY"))  status |= STATUS_UIDVALIDITY;
+                            else if (flag.equals("UNSEEN"))       status |= STATUS_UNSEEN;
+                            else
+                                throw new ImapParseException(tag, "unknown STATUS attribute \"" + flag + '"');
+                            if (req.peekChar() != ')')
+                                req.skipSpace();
+                        }
+                        req.skipChar(')');
+                        checkEOF(tag, req);
+                        return doSTATUS(tag, folder, status);
+                    } else if (command.equals("SUBSCRIBE")) {
+                        req.skipSpace();  String folder = req.readFolder();
+                        checkEOF(tag, req);
+                        return doSUBSCRIBE(tag, folder);
+                    } else if (command.equals("SETQUOTA")) {
+                        Map<String, String> limits = new HashMap<String, String>();
+                        req.skipSpace();  String qroot = req.readAstring();
+                        req.skipSpace();  req.skipChar('(');
+                        while (req.peekChar() != ')') {
+                            String resource = req.readAtom();  req.skipSpace();
+                            limits.put(resource, req.readNumber());
+                        }
+                        req.skipChar(')');
+                        checkEOF(tag, req);
+                        return doSETQUOTA(tag, qroot, limits);
+                    }
+                    break;
+                case 'U':
+                    if (command.equals("UID")) {
+                        req.skipSpace();  command = req.readAtom();
+                        if (!command.equals("FETCH") && !command.equals("SEARCH") && !command.equals("COPY") && !command.equals("STORE") && !command.equals("EXPUNGE"))
+                            throw new ImapParseException(tag, "command not permitted with UID");
+                        byUID = true;
+                        continue;
+                    } else if (command.equals("UNSUBSCRIBE")) {
+                        req.skipSpace();  String folder = req.readFolder();
+                        checkEOF(tag, req);
+                        return doUNSUBSCRIBE(tag, folder);
+                    } else if (command.equals("UNSELECT")) {
+                        checkEOF(tag, req);
+                        return doUNSELECT(tag);
+                    }
+                    break;
+            }
+        } while (byUID);
+
+        throw new ImapParseException(tag, "command not implemented");
     }
 
     boolean checkState(String tag, byte required) throws IOException {
@@ -621,8 +494,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
     // RFC 2971 3: "The sole purpose of the ID extension is to enable clients and servers
     //              to exchange information on their implementations for the purposes of
     //              statistical analysis and problem determination.
-    boolean doID(String tag, List args) throws IOException {
-        Map attrs = (Map) args.remove(0);
+    boolean doID(String tag, Map<String, String> attrs) throws IOException {
         if (attrs != null)
             ZimbraLog.imap.info("IMAP client identified as: " + attrs);
 
@@ -652,12 +524,10 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         return CONTINUE_PROCESSING;
     }
 
-    boolean doAUTHENTICATE(String tag, List args) throws IOException {
+    boolean doAUTHENTICATE(String tag, String mechanism) throws IOException {
         if (!checkState(tag, ImapSession.STATE_NOT_AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
-//        String mechanism = (String) args.remove(0);
-//
 //        if (mechanism.equals("PLAIN")) {
 //            if (!mStartedTLS) {
 //                sendNO(tag, "cleartext logins disabled");
@@ -679,16 +549,13 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         return STOP_PROCESSING;
     }
 
-    boolean doLOGIN(String tag, List args) throws IOException {
+    boolean doLOGIN(String tag, String username, String password) throws IOException {
         if (!checkState(tag, ImapSession.STATE_NOT_AUTHENTICATED))
             return CONTINUE_PROCESSING;
         else if (!mStartedTLS && !mServer.allowCleartextLogins()) {
             sendNO(tag, "cleartext logins disabled");
             return CONTINUE_PROCESSING;
         }
-
-        String username = (String) args.remove(0);
-        String password = (String) args.remove(0);
 
         Mailbox mailbox = null;
         ImapSession session = null;
@@ -747,15 +614,15 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         return CONTINUE_PROCESSING;
     }
 
-    boolean doSELECT(String tag, List args) throws IOException {
-        return selectFolder(tag, args, "SELECT");
+    boolean doSELECT(String tag, String folderName) throws IOException {
+        return selectFolder(tag, "SELECT", folderName);
     }
 
-    boolean doEXAMINE(String tag, List args) throws IOException {
-        return selectFolder(tag, args, "EXAMINE");
+    boolean doEXAMINE(String tag, String folderName) throws IOException {
+        return selectFolder(tag, "EXAMINE", folderName);
     }
 
-    private boolean selectFolder(String tag, List args, String command) throws IOException {
+    private boolean selectFolder(String tag, String command, String folderName) throws IOException {
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
@@ -764,8 +631,6 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         //         and a SELECT command that fails is attempted, no mailbox is selected."
         if (mSession.isSelected())
             mSession.deselectFolder();
-
-        String folderName = (String) args.remove(0);
 
         boolean writable = command.equals("SELECT");
         ImapFolder i4folder = null;
@@ -804,11 +669,10 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         return CONTINUE_PROCESSING;
     }
 
-    boolean doCREATE(String tag, List args) throws IOException {
+    boolean doCREATE(String tag, String folderName) throws IOException {
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
-        String folderName = (String) args.remove(0);
         if (!folderName.startsWith("/"))
             folderName = '/' + folderName;
         if (!ImapFolder.isPathCreatable(folderName)) {
@@ -837,11 +701,9 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         return CONTINUE_PROCESSING;
     }
 
-    boolean doDELETE(String tag, List args) throws IOException {
+    boolean doDELETE(String tag, String folderName) throws IOException {
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
             return CONTINUE_PROCESSING;
-
-        String folderName = (String) args.remove(0);
 
         int folderId = 0;
         try {
@@ -886,12 +748,10 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         return CONTINUE_PROCESSING;
     }
 
-    boolean doRENAME(String tag, List args) throws IOException {
+    boolean doRENAME(String tag, String oldName, String newName) throws IOException {
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
-        String oldName = (String) args.remove(0);
-        String newName = (String) args.remove(0);
         if (!newName.startsWith("/"))
             newName = '/' + newName;
 
@@ -926,11 +786,10 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         return CONTINUE_PROCESSING;
     }
 
-    boolean doSUBSCRIBE(String tag, List args) throws IOException {
+    boolean doSUBSCRIBE(String tag, String folderName) throws IOException {
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
-        String folderName = (String) args.remove(0);
         if (folderName.startsWith("/"))
             folderName = folderName.substring(1);
 
@@ -958,11 +817,10 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         return CONTINUE_PROCESSING;
     }
 
-    boolean doUNSUBSCRIBE(String tag, List args) throws IOException {
+    boolean doUNSUBSCRIBE(String tag, String folderName) throws IOException {
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
-        String folderName = (String) args.remove(0);
         if (folderName.startsWith("/"))
             folderName = folderName.substring(1);
 
@@ -983,12 +841,9 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         return CONTINUE_PROCESSING;
     }
 
-    boolean doLIST(String tag, List args) throws IOException {
+    boolean doLIST(String tag, String referenceName, String mailboxName) throws IOException {
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
             return CONTINUE_PROCESSING;
-
-        String referenceName = (String) args.remove(0);
-        String mailboxName   = (String) args.remove(0);
 
         if (mailboxName.equals("")) {
             // 6.3.8: "An empty ("" string) mailbox name argument is a special request to return
@@ -1044,12 +899,9 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         return FOLDER_ATTRIBUTES[attributes];
     }
 
-    boolean doLSUB(String tag, List args) throws IOException {
+    boolean doLSUB(String tag, String referenceName, String mailboxName) throws IOException {
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
             return CONTINUE_PROCESSING;
-
-        String referenceName = (String) args.remove(0);
-        String mailboxName   = (String) args.remove(0);
 
         String pattern = mailboxName;
         if (!mailboxName.startsWith("/")) {
@@ -1094,12 +946,9 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
     private static final int STATUS_UIDVALIDITY = 0x08;
     private static final int STATUS_UNSEEN      = 0x10;
 
-    boolean doSTATUS(String tag, List args) throws IOException {
+    boolean doSTATUS(String tag, String folderName, int status) throws IOException {
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
             return CONTINUE_PROCESSING;
-
-        String folderName = (String) args.remove(0);
-        int status        = ((Integer) args.remove(0)).intValue();
 
         StringBuffer data = new StringBuffer();
         try {
@@ -1134,14 +983,9 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         return CONTINUE_PROCESSING;
     }
 
-    boolean doAPPEND(String tag, List args) throws IOException {
+    boolean doAPPEND(String tag, String folderName, List<String> flagNames, Date date, byte[] content) throws IOException {
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
             return CONTINUE_PROCESSING;
-
-        String folderName = (String) args.remove(0);
-        List   tagNames   = (List) args.remove(0);
-        Date   date       = (Date) args.remove(0);
-        byte[] content    = (byte[]) args.remove(0);
 
         // server uses UNIX time, so range-check specified date (is there a better place for this?)
         if (date != null && date.getTime() > Integer.MAX_VALUE * 1000L) {
@@ -1168,8 +1012,8 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                 byte sflags = 0;
                 int flagMask = Flag.FLAG_UNREAD;
                 StringBuffer tagStr = new StringBuffer();
-                if (tagNames != null) {
-                    List i4flags = findOrCreateTags(tagNames, newTags);
+                if (flagNames != null) {
+                    List i4flags = findOrCreateTags(flagNames, newTags);
                     for (int i = 0; i < i4flags.size(); i++) {
                         ImapFlag i4flag = (ImapFlag) i4flags.get(i);
                         if (!i4flag.mPermanent)
@@ -1241,12 +1085,11 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         // notification will update mTags hash
         return mMailbox.createTag(getContext(), name, MailItem.DEFAULT_COLOR);
     }
-    private List<ImapFlag> findOrCreateTags(List tagNames, List<Tag> newTags) throws ServiceException {
+    private List<ImapFlag> findOrCreateTags(List<String> tagNames, List<Tag> newTags) throws ServiceException {
         if (tagNames == null || tagNames.size() == 0)
             return Collections.emptyList();
         ArrayList<ImapFlag> result = new ArrayList<ImapFlag>();
-        for (int i = 0; i < tagNames.size(); i++) {
-            String name = (String) tagNames.get(i);
+        for (String name : tagNames) {
             ImapFlag i4flag = mSession.getFlagByName(name);
             if (i4flag == null) {
                 if (name.startsWith("\\"))
@@ -1276,8 +1119,8 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                 }
     }
 
-    static final Boolean IDLE_START = Boolean.TRUE;
-    static final Boolean IDLE_STOP  = Boolean.FALSE;
+    static final boolean IDLE_START = true;
+    static final boolean IDLE_STOP  = false;
 
     // RFC 2177 3: "The IDLE command is sent from the client to the server when the client is
     //              ready to accept unsolicited mailbox update messages.  The server requests
@@ -1285,12 +1128,9 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
     //              IDLE command remains active until the client responds to the continuation,
     //              and as long as an IDLE command is active, the server is now free to send
     //              untagged EXISTS, EXPUNGE, and other messages at any time."
-    boolean doIDLE(String tag, List args) throws IOException {
+    boolean doIDLE(String tag, boolean begin, boolean success) throws IOException {
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
             return CONTINUE_PROCESSING;
-
-        Object begin    = args.remove(0);
-        boolean success = ((Boolean) args.remove(0)).booleanValue();
 
         if (begin == IDLE_START) {
             mSession.beginIdle(tag);
@@ -1304,7 +1144,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         return CONTINUE_PROCESSING;
     }
 
-    boolean doSETQUOTA(String tag, List args) throws IOException {
+    boolean doSETQUOTA(String tag, String qroot, Map<String, String> limits) throws IOException {
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
@@ -1313,11 +1153,10 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         return CONTINUE_PROCESSING;
     }
 
-    boolean doGETQUOTA(String tag, List args) throws IOException {
+    boolean doGETQUOTA(String tag, String qroot) throws IOException {
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
-        String qroot = (String) args.remove(0);
         try {
             long quota = mMailbox.getAccount().getIntAttr(Provisioning.A_zimbraMailQuota, 0);
             if (qroot == null || !qroot.equals("") || quota <= 0) {
@@ -1338,11 +1177,9 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         return CONTINUE_PROCESSING;
     }
 
-    boolean doGETQUOTAROOT(String tag, List args) throws IOException {
+    boolean doGETQUOTAROOT(String tag, String path) throws IOException {
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
             return CONTINUE_PROCESSING;
-
-        String path = (String) args.remove(0);
 
         try {
             // make sure the folder exists and is visible
@@ -1372,7 +1209,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         return CONTINUE_PROCESSING;
     }
 
-    boolean doNAMESPACE(String tag, List args) throws IOException {
+    boolean doNAMESPACE(String tag) throws IOException {
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
@@ -1431,7 +1268,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         return CONTINUE_PROCESSING;
     }
 
-    boolean doEXPUNGE(String tag, List args) throws IOException {
+    boolean doEXPUNGE(String tag, boolean byUID, String sequenceSet) throws IOException {
         if (!checkState(tag, ImapSession.STATE_SELECTED))
             return CONTINUE_PROCESSING;
         else if (!mSession.getFolder().isWritable()) {
@@ -1439,9 +1276,6 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             return CONTINUE_PROCESSING;
         }
 
-        boolean byUID      = ((Boolean) args.remove(0)).booleanValue();
-        String sequenceSet = (String) args.remove(0);
-        
         String command = (byUID ? "UID EXPUNGE" : "EXPUNGE");
         try {
             mSession.getFolder().expungeMessages(mMailbox, sequenceSet);
@@ -1459,13 +1293,9 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
     private static final int LARGEST_FOLDER_BATCH = 600;
     static final byte[] MESSAGE_TYPES = new byte[] { MailItem.TYPE_MESSAGE };
 
-    boolean doSEARCH(String tag, List args) throws IOException {
+    boolean doSEARCH(String tag, String search, TreeMap<Integer, Object> insertions, boolean byUID) throws IOException {
         if (!checkState(tag, ImapSession.STATE_SELECTED))
             return CONTINUE_PROCESSING;
-
-        String search  = (String) args.remove(0);
-        TreeMap insertions = (TreeMap) args.remove(0);
-        boolean byUID  = ((Boolean) args.remove(0)).booleanValue();
 
         ArrayList<Integer> hits = new ArrayList<Integer>();
         try {
@@ -1477,7 +1307,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                     for (Iterator it = insertions.entrySet().iterator(); it.hasNext(); )
                         pieces[--count] = (Map.Entry) it.next();
                     for (int i = 0; i < pieces.length; i++) {
-                        int point = ((Integer) pieces[i].getKey()).intValue();
+                        int point = (Integer) pieces[i].getKey();
                         Set i4set;
                         if (pieces[i].getValue() instanceof String) {
                             String key = (String) pieces[i].getValue();
@@ -1566,14 +1396,9 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
     static final int FETCH_FULL = FETCH_ALL   | FETCH_BODY;
     
 
-    boolean doFETCH(String tag, List args) throws IOException {
+    boolean doFETCH(String tag, String sequenceSet, int attributes, List<ImapPartSpecifier> parts, boolean byUID) throws IOException {
         if (!checkState(tag, ImapSession.STATE_SELECTED))
             return CONTINUE_PROCESSING;
-
-        String sequenceSet = (String) args.remove(0);
-        int attributes     = ((Integer) args.remove(0)).intValue();
-        List parts         = (List) args.remove(0);
-        boolean byUID      = ((Boolean) args.remove(0)).booleanValue();
 
         // 6.4.8: "However, server implementations MUST implicitly include the UID message
         //         data item as part of any FETCH response caused by a UID command, regardless
@@ -1584,8 +1409,8 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
 
         List<ImapPartSpecifier> fullMessage = new ArrayList<ImapPartSpecifier>();
         if (parts != null && !parts.isEmpty())
-            for (Iterator it = parts.iterator(); it.hasNext(); ) {
-                ImapPartSpecifier pspec = (ImapPartSpecifier) it.next();
+            for (Iterator<ImapPartSpecifier> it = parts.iterator(); it.hasNext(); ) {
+                ImapPartSpecifier pspec = it.next();
                 if (pspec.mPart.equals("") && pspec.mModifier.equals("")) {
                     it.remove();  fullMessage.add(pspec);
                 }
@@ -1649,8 +1474,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                         result.print(empty ? "" : " ");  result.print("ENVELOPE ");
                         i4msg.getEnvelope(result, mm);  empty = false;
                     }
-                    for (int i = 0; i < parts.size(); i++) {
-                        ImapPartSpecifier pspec = (ImapPartSpecifier) parts.get(i);
+                    for (ImapPartSpecifier pspec : parts) {
                         byte[] content = i4msg.getPart(mm, pspec);
                         result.print(empty ? "" : " ");  pspec.write(result, baos, content);  empty = false;
                     }
@@ -1690,23 +1514,17 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         return CONTINUE_PROCESSING;
     }
 
-    static final Byte STORE_REPLACE = new Byte((byte) 0x00);
-    static final Byte STORE_ADD     = new Byte((byte) 0x01);
-    static final Byte STORE_REMOVE  = new Byte((byte) 0x02);
+    static final byte STORE_REPLACE = (byte) 0x00;
+    static final byte STORE_ADD     = (byte) 0x01;
+    static final byte STORE_REMOVE  = (byte) 0x02;
 
-    boolean doSTORE(String tag, List args) throws IOException {
+    boolean doSTORE(String tag, String sequenceSet, List<String> flagList, byte operation, boolean silent, boolean byUID) throws IOException {
         if (!checkState(tag, ImapSession.STATE_SELECTED))
             return CONTINUE_PROCESSING;
         else if (!mSession.getFolder().isWritable()) {
             sendNO(tag, "mailbox selected READ-ONLY");
             return CONTINUE_PROCESSING;
         }
-
-        String sequenceSet = (String) args.remove(0);
-        List flagList      = (List) args.remove(0);
-        Byte operation     = (Byte) args.remove(0);
-        boolean silent     = ((Boolean) args.remove(0)).booleanValue();
-        boolean byUID      = ((Boolean) args.remove(0)).booleanValue();
 
         String command = (byUID ? "UID STORE" : "STORE");
         boolean allPresent = true;
@@ -1720,7 +1538,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
 
                 // get sets of relevant messages and tags
                 Set i4set = mSession.getFolder().getSubsequence(sequenceSet, byUID);
-                List i4flags = findOrCreateTags(flagList, newTags);
+                List<ImapFlag> i4flags = findOrCreateTags(flagList, newTags);
                 allPresent = byUID || !i4set.contains(null);
 
                 for (Iterator it = i4set.iterator(); it.hasNext(); ) {
@@ -1733,8 +1551,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                         byte sflags = (operation != STORE_REPLACE ? i4msg.sflags : 0);
                         int  flags  = (operation != STORE_REPLACE ? i4msg.flags : Flag.FLAG_UNREAD | (i4msg.flags & ~ImapMessage.IMAP_FLAGS));
                         long tags   = (operation != STORE_REPLACE ? i4msg.tags : 0);
-                        for (int i = 0; i < i4flags.size(); i++) {
-                            ImapFlag i4flag = (ImapFlag) i4flags.get(i);
+                        for (ImapFlag i4flag : i4flags) {
                             if (Tag.validateId(i4flag.mId))
                                 tags = (operation == STORE_REMOVE ^ !i4flag.mPositive ? tags & ~i4flag.mBitmask : tags | i4flag.mBitmask);
                             else if (!i4flag.mPermanent)
@@ -1789,13 +1606,9 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         return CONTINUE_PROCESSING;
     }
 
-    boolean doCOPY(String tag, List args) throws IOException {
+    boolean doCOPY(String tag, String sequenceSet, String folderName, boolean byUID) throws IOException {
         if (!checkState(tag, ImapSession.STATE_SELECTED))
             return CONTINUE_PROCESSING;
-
-        String sequenceSet = (String) args.remove(0);
-        String folderName  = (String) args.remove(0);
-        boolean byUID      = ((Boolean) args.remove(0)).booleanValue();
 
         String command = (byUID ? "UID COPY" : "COPY");
         String copyuid = "";
@@ -2005,7 +1818,6 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
 
 
     public static void main(String[] args) throws IOException, ImapException {
-        List<Object> fargs = new LinkedList<Object>();
         List<ImapPartSpecifier> parts = new ArrayList<ImapPartSpecifier>();
         List<String> pieces = new ArrayList<String>();
         ImapHandler handler = new ImapHandler(null);
@@ -2015,79 +1827,61 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         handler.doCAPABILITY("A001");
 
         System.out.println("> A002 LOGIN \"user1@example.zimbra.com\" \"test123\"");
-        fargs.clear();  fargs.add("user1@example.zimbra.com");  fargs.add("test123");
-        handler.doLOGIN("A002", fargs);
+        handler.doLOGIN("A002", "user1@example.zimbra.com", "test123");
 
         System.out.println("> B002 ID NIL");
-        fargs.clear();  fargs.add(null);
-        handler.doID("B002", fargs);
+        handler.doID("B002", null);
 
         System.out.println("> A003 LIST \"\" \"\"");
-        fargs.clear();  fargs.add("");  fargs.add("");
-        handler.doLIST("A003", fargs);
+        handler.doLIST("A003", "", "");
 
         System.out.println("> B003 CREATE \"/test/slap\"");
-        fargs.clear();  fargs.add("/test/slap");
-        handler.doCREATE("B003", fargs);
+        handler.doCREATE("B003", "/test/slap");
 
         System.out.println("> A004 LIST \"/\" \"%\"");
-        fargs.clear();  fargs.add("/");  fargs.add("[^/]*");
-        handler.doLIST("A004", fargs);
+        handler.doLIST("A004", "/", "[^/]*");
 
         System.out.println("> B004 DELETE \"/test/slap\"");
-        fargs.clear();  fargs.add("/test/slap");
-        handler.doDELETE("B004", fargs);
+        handler.doDELETE("B004", "/test/slap");
 
         System.out.println("> A005 LIST \"/\" \"*\"");
-        fargs.clear();  fargs.add("/");  fargs.add(".*");
-        handler.doLIST("A005", fargs);
+        handler.doLIST("A005", "/", ".*");
 
         System.out.println("> B005 LIST \"/\" \"inbox\"");
-        fargs.clear();  fargs.add("/");  fargs.add("INBOX");
-        handler.doLIST("B005", fargs);
+        handler.doLIST("B005", "/", "INBOX");
 
         System.out.println("> C005 LIST \"/\" \"$NBOX+?\"");
-        fargs.clear();  fargs.add("/");  fargs.add("\\$NBOX\\+\\?");
-        handler.doLIST("C005", fargs);
+        handler.doLIST("C005", "/", "\\$NBOX\\+\\?");
 
         System.out.println("> D005 LIST \"/\" \"%/sub()\"");
-        fargs.clear();  fargs.add("/");  fargs.add("[^/]*/SUB\\(\\)");
-        handler.doLIST("D005", fargs);
+        handler.doLIST("D005", "/", "[^/]*/SUB\\(\\)");
 
         System.out.println("> A006 SELECT \"/floo\"");
-        fargs.clear();  fargs.add("/floo");
-        handler.doSELECT("A006", fargs);
+        handler.doSELECT("A006", "/floo");
 
         System.out.println("> B006 SELECT \"/INBOX\"");
-        fargs.clear();  fargs.add("/INBOX");
-        handler.doSELECT("B006", fargs);
+        handler.doSELECT("B006", "/INBOX");
 
         System.out.println("> A007 STATUS \"/Sent\" (UNSEEN UIDVALIDITY MESSAGES)");
-        fargs.clear();  fargs.add("/Sent");  fargs.add(new Integer(STATUS_UNSEEN | STATUS_UIDVALIDITY | STATUS_MESSAGES));
-        handler.doSTATUS("A007", fargs);
+        handler.doSTATUS("A007", "/Sent", STATUS_UNSEEN | STATUS_UIDVALIDITY | STATUS_MESSAGES);
 
         System.out.println("> B007 STATUS \"/INBOX\" (UNSEEN UIDVALIDITY MESSAGES)");
-        fargs.clear();  fargs.add("/INBOX");  fargs.add(new Integer(STATUS_UNSEEN | STATUS_UIDVALIDITY | STATUS_MESSAGES));
-        handler.doSTATUS("B007", fargs);
+        handler.doSTATUS("B007", "/INBOX", STATUS_UNSEEN | STATUS_UIDVALIDITY | STATUS_MESSAGES);
 
         System.out.println("> A008 FETCH 1:3,*:1234 FULL");
-        fargs.clear();  fargs.add("1:3,*:1234");  fargs.add(new Integer(FETCH_FULL));  fargs.add(Collections.EMPTY_LIST);  fargs.add(Boolean.FALSE);
-        handler.doFETCH("A008", fargs);
+        handler.doFETCH("A008", "1:3,*:1234", FETCH_FULL, parts, false);
 
         System.out.println("> A009 UID FETCH 444,288,602:593 FULL");
-        fargs.clear();  fargs.add("444,288,602:593");  fargs.add(new Integer(FETCH_FULL));  fargs.add(Collections.EMPTY_LIST);  fargs.add(Boolean.TRUE);
-        handler.doFETCH("A009", fargs);
+        handler.doFETCH("A009", "444,288,602:593", FETCH_FULL, parts, true);
 
         System.out.println("> A010 FETCH 7 (ENVELOPE BODY.PEEK[1] BODY[HEADER.FIELDS (DATE SUBJECT)]");
         List<String> headers = new LinkedList<String>();  headers.add("date");  headers.add("subject");
         parts.clear();  parts.add(new ImapPartSpecifier("BODY", "1", ""));  parts.add(new ImapPartSpecifier("BODY", "", "HEADER.FIELDS").setHeaders(headers));
-        fargs.clear();  fargs.add("7");  fargs.add(new Integer(FETCH_ENVELOPE));  fargs.add(parts);  fargs.add(Boolean.FALSE);
-        handler.doFETCH("A010", fargs);
+        handler.doFETCH("A010", "7", FETCH_ENVELOPE, parts, false);
 
         System.out.println("> A011 STORE 1 +FLAGS ($MDNSent)");
         List<String> flags = new ArrayList<String>();  flags.add("$MDNSENT");
-        fargs.clear();  fargs.add("1");  fargs.add(flags);  fargs.add(STORE_ADD);  fargs.add(Boolean.FALSE);  fargs.add(Boolean.FALSE);
-        handler.doSTORE("A011", fargs);
+        handler.doSTORE("A011", "1", flags, STORE_ADD, false, false);
 
         ImapRequest req = new ImapRequest("X001 LOGIN user1@example.zimbra.com \"\\\\\\\"test123\\\"\\\\\"");
         pieces.clear();  pieces.add(req.readTag());  req.skipSpace();  pieces.add(req.readAtom());  req.skipSpace();  pieces.add(req.readAstring());  req.skipSpace();  pieces.add(req.readAstring());  assert(req.eof());

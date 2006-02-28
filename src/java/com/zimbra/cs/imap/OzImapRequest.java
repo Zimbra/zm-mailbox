@@ -24,7 +24,6 @@
  */
 package com.zimbra.cs.imap;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
@@ -32,10 +31,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.imap.ImapSession.ImapFlag;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ZimbraLog;
 
 /**
@@ -77,40 +73,18 @@ class OzImapRequest {
     }
 
     private ImapSession mSession;
-    private ArrayList mParts;
+    private List<Object> mParts;
     private String mTag;
     private int mIndex, mOffset;
-    private int mLiteral = -1;
-    private int mSize;
-    private boolean mUnlogged;
 
     OzImapRequest(ImapSession session) {
         mSession = session;
     }
 
-    public OzImapRequest(String tag, ArrayList currentRequestParts, ImapSession session) {
+    public OzImapRequest(String tag, List<Object> currentRequestParts, ImapSession session) {
         mSession = session;
         mTag = tag;
         mParts = currentRequestParts;
-    }
-
-    OzImapRequest rewind()  { mIndex = mOffset = 0;  mTag = null;  return this; }
-
-    private static int DEFAULT_MAX_REQUEST_LENGTH = 10000000;
-
-    private void incrementSize(long increment) throws ImapParseException {
-        mSize += increment;
-
-        int maxSize = DEFAULT_MAX_REQUEST_LENGTH;
-        try {
-            Server server = Provisioning.getInstance().getLocalServer();
-            maxSize = server.getIntAttr(Provisioning.A_zimbraFileUploadMaxSize, DEFAULT_MAX_REQUEST_LENGTH);
-            if (maxSize <= 0)
-                maxSize = DEFAULT_MAX_REQUEST_LENGTH;
-        } catch (ServiceException e) { }
-
-        if (mSize > maxSize)
-            throw new ImapParseException(mTag, "request too long");
     }
 
     boolean eof()  { return peekChar() == -1; }
@@ -154,13 +128,6 @@ class OzImapRequest {
             throw new ImapParseException(mTag, "in string next not literal");
         mIndex += 2;
         mOffset = 0;
-        return (byte[]) part;
-    }
-
-    private byte[] getCurrentBuffer() throws ImapParseException {
-        Object part = mParts.get(mIndex);
-        if (!(part instanceof byte[]))
-            throw new ImapParseException(mTag, "not inside literal");
         return (byte[]) part;
     }
 
@@ -248,11 +215,11 @@ class OzImapRequest {
         throw new ImapParseException(mTag, "unexpected end of line in quoted string");
     }
 
-    byte[] readLiteral() throws IOException, ImapException {
+    byte[] readLiteral() throws ImapParseException {
         return getNextBuffer();
     }
     
-    private String readLiteral(String charset) throws IOException, ImapException {
+    private String readLiteral(String charset) throws ImapParseException {
         try {
             return new String(readLiteral(), charset);
         } catch (UnsupportedEncodingException e) {
@@ -260,15 +227,15 @@ class OzImapRequest {
         }
     }
 
-    String readAstring() throws IOException, ImapException {
+    String readAstring() throws ImapParseException {
         return readAstring(null);
     }
     
-    String readAstring(String charset) throws IOException, ImapException {
+    String readAstring(String charset) throws ImapParseException {
         return readAstring(charset, ASTRING_CHARS);
     }
     
-    private String readAstring(String charset, boolean[] acceptable) throws IOException, ImapException {
+    private String readAstring(String charset, boolean[] acceptable) throws ImapParseException {
         int c = peekChar();
         if (c == -1)        throw new ImapParseException(mTag, "unexpected end of line");
         else if (c == '{')  return readLiteral(charset != null ? charset : "utf-8");
@@ -276,14 +243,14 @@ class OzImapRequest {
         else                return readQuoted();
     }
 
-    private String readString(String charset) throws IOException, ImapException {
+    private String readString(String charset) throws ImapParseException {
         int c = peekChar();
         if (c == -1)        throw new ImapParseException(mTag, "unexpected end of line");
         else if (c == '{')  return readLiteral(charset != null ? charset : "utf-8");
         else                return readQuoted();
     }
 
-    private String readNstring(String charset) throws IOException, ImapException {
+    private String readNstring(String charset) throws ImapParseException {
         int c = peekChar();
         if (c == -1)        throw new ImapParseException(mTag, "unexpected end of line");
         else if (c == '{')  return readLiteral(charset != null ? charset : "utf-8");
@@ -291,19 +258,19 @@ class OzImapRequest {
         else                return readQuoted();
     }
 
-    String readFolder() throws IOException, ImapException {
+    String readFolder() throws ImapParseException {
         return readFolder(false);
     }
     
-    String readEscapedFolder() throws IOException, ImapException {
+    String readEscapedFolder() throws ImapParseException {
         return escapeFolder(readFolder(false), false);
     }
     
-    String readFolderPattern() throws IOException, ImapException {
+    String readFolderPattern() throws ImapParseException {
         return escapeFolder(readFolder(true), true);
     }
     
-    private String readFolder(boolean isPattern) throws IOException, ImapException {
+    private String readFolder(boolean isPattern) throws ImapParseException {
         String raw = readAstring(null, isPattern ? PATTERN_CHARS : ASTRING_CHARS);
         if (raw == null || raw.indexOf("&") == -1)
             return raw;
@@ -370,7 +337,7 @@ class OzImapRequest {
         }
     }
 
-    Map<String, String> readParameters(boolean nil) throws IOException, ImapException {
+    Map<String, String> readParameters(boolean nil) throws ImapParseException {
         if (peekChar() != '(') {
             if (!nil)
                 throw new ImapParseException(mTag, "did not find expected '('");
@@ -389,7 +356,7 @@ class OzImapRequest {
         return params;
     }
 
-    int readFetch(List<ImapPartSpecifier> parts) throws IOException, ImapException {
+    int readFetch(List<ImapPartSpecifier> parts) throws ImapParseException {
         boolean list = peekChar() == '(';
         int attributes = 0;
         if (list)  skipChar('(');
@@ -489,7 +456,7 @@ class OzImapRequest {
             INDEXED_HEADER.put("TO",      "to:");
         }
 
-    private void readAndQuoteString(StringBuffer sb, String charset) throws IOException, ImapException {
+    private void readAndQuoteString(StringBuffer sb, String charset) throws ImapParseException {
         String content = readAstring(charset);
         sb.append('"');
         for (int i = 0; i < content.length(); i++) {
@@ -520,7 +487,7 @@ class OzImapRequest {
     private static final String SUBCLAUSE = "";
 
     private StringBuffer readSearchClause(StringBuffer search, TreeMap<Integer, Object> insertions, String charset, boolean single)
-    throws IOException, ImapException {
+    throws ImapParseException {
         boolean first = true;
         int nots = 0;
         do {
@@ -598,7 +565,7 @@ class OzImapRequest {
             throw new ImapParseException(mTag, "missing search-key after NOT");
         return search;
     }
-    String readSearch(TreeMap<Integer, Object> insertions) throws IOException, ImapException {
+    String readSearch(TreeMap<Integer, Object> insertions) throws ImapParseException {
         String charset = null;
         StringBuffer search = new StringBuffer();
         int c = peekChar();

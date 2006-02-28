@@ -373,7 +373,7 @@ class ImapRequest {
         return escaped.toString().toUpperCase();
     }
     
-    List readFlags() throws ImapParseException {
+    List<String> readFlags() throws ImapParseException {
         List<String> tags = new ArrayList<String>();
         String content = getCurrentLine();
         boolean parens = (peekChar() == '(');
