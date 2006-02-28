@@ -26,6 +26,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
     
     public static final String SORT_PERCENT_USED = "percentUsed";
     public static final String SORT_TOTAL_USED = "totalUsed";
+    public static final String SORT_QUOTA_LIMIT = "quotaLimit";
         
     
     public Element handle(Element request, Map context) throws ServiceException {
@@ -43,11 +44,9 @@ public class GetQuotaUsage extends AdminDocumentHandler {
         String sortBy = request.getAttribute(AdminService.A_SORT_BY, SORT_TOTAL_USED);        
         final boolean sortAscending = request.getAttributeBool(AdminService.A_SORT_ASCENDING, false);        
 
-        if (!(sortBy.equals(SORT_TOTAL_USED) || sortBy.equals(SORT_PERCENT_USED)))
+        if (!(sortBy.equals(SORT_TOTAL_USED) || sortBy.equals(SORT_PERCENT_USED) || sortBy.equals(SORT_QUOTA_LIMIT)))
             throw ServiceException.INVALID_REQUEST("sortBy must be percentUsed or totalUsed", null);
 
-        final boolean sortByTotal = sortBy.equals(SORT_TOTAL_USED);
-        
         int flags = Provisioning.SA_ACCOUNT_FLAG;
         
         String[] attrs = attrsStr == null ? null : attrsStr.split(",");
@@ -112,6 +111,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
         public String name;
         public String id;
         public long quotaLimit;
+        public long sortQuotaLimit;        
         public long quotaUsed;
         public float percentQuotaUsed; 
     }
@@ -180,6 +180,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
                 aq.id = acct.getId();
                 aq.name = acct.getName();
                 aq.quotaLimit = acct.getLongAttr(Provisioning.A_zimbraMailQuota, 0);
+                aq.sortQuotaLimit = aq.quotaLimit == 0 ? Long.MAX_VALUE : aq.quotaLimit;
                 Long used = quotaUsed.get(acct.getId());
                 aq.quotaUsed = used == null ? 0 : used;
                 aq.percentQuotaUsed = aq.quotaLimit > 0 ? (aq.quotaUsed / (float)aq.quotaLimit) : 0;
@@ -187,6 +188,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
             }
 
             final boolean sortByTotal = mSortBy.equals(SORT_TOTAL_USED);
+            final boolean sortByQuota = mSortBy.equals(SORT_QUOTA_LIMIT);
 
             Comparator comparator = new Comparator() {
                 public int compare(Object oa, Object ob) {
@@ -195,7 +197,10 @@ public class GetQuotaUsage extends AdminDocumentHandler {
                     int result = 0;
                     if (sortByTotal) {
                         if (a.quotaUsed > b.quotaUsed) result = 1;
-                        else if (a.quotaUsed < b.quotaUsed) result = -1;                    
+                        else if (a.quotaUsed < b.quotaUsed) result = -1;
+                    } else if (sortByQuota) {
+                        if (a.sortQuotaLimit > b.sortQuotaLimit) result = 1;
+                        else if (a.sortQuotaLimit < b.sortQuotaLimit) result = -1;                            
                     } else {
                         if (a.percentQuotaUsed > b.percentQuotaUsed) result = 1;
                         else if (a.percentQuotaUsed < b.percentQuotaUsed) result = -1;
