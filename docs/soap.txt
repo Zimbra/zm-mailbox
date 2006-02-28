@@ -1215,16 +1215,17 @@ NOTE: should we return modified attrs in response?
 
 ----------
 
-<GetContactsRequest [sortBy="nameAsc|nameDesc"]>
+<GetContactsRequest [sortBy="nameAsc|nameDesc"] [sync="1"]>
   <a n="..."/>*
   <cn id="{contact-id}"/>*
 </GetContactsRequest>
 
+  if sync="1" present, return modified date (md) on contacts.
   if <a n="..."/> present, return only the specified attribute(s).
   if <cn id="..."/> present, only get the specified contact(s).
 
 <GetContactsResponse>
-  <cn>...</cn>*
+  <cn [md="{metadata-change-date}"]>...</cn>*
 </GetContactsResponse>
 
 ----------

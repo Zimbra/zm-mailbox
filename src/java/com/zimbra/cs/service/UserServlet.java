@@ -82,6 +82,7 @@ import com.zimbra.cs.util.ZimbraLog;
  *          auth={auth-types}
  *          start={time}
  *          end={time}
+ *          sync="1"
  *          
  *             {types}   = comma-separated list.  Legal values are:
  *                         conversation|message|contact|appointment|note
@@ -107,6 +108,8 @@ public class UserServlet extends ZimbraServlet {
     public static final String QP_FMT = "fmt"; // format query param
 
     public static final String QP_ID = "id"; // id query param
+
+    public static final String QP_SYNC = "sync"; // add-sync-info query param
 
     public static final String QP_PART = "part"; // part query param
 
@@ -393,6 +396,7 @@ public class UserServlet extends ZimbraServlet {
         public String authTokenCookie;
         public String itemPath;
         public ItemId itemId;
+        public boolean sync;
         public Account authAccount;
         public Account targetAccount;
         public Mailbox targetMailbox;
@@ -400,15 +404,14 @@ public class UserServlet extends ZimbraServlet {
         private long mStartTime = -2;
         private long mEndTime = -2;
 
-        Context(HttpServletRequest req, HttpServletResponse resp, UserServlet servlet)
-                throws UserServletException, ServiceException {
-            
+        Context(HttpServletRequest request, HttpServletResponse response, UserServlet servlet)
+        throws UserServletException, ServiceException {
             Provisioning prov = Provisioning.getInstance();
-            
-            this.req = req;
-            this.resp = resp;
 
-            String pathInfo = req.getPathInfo().toLowerCase();
+            this.req = request;
+            this.resp = response;
+
+            String pathInfo = request.getPathInfo().toLowerCase();
             if (pathInfo == null || pathInfo.equals("/") || pathInfo.equals("")
                     || !pathInfo.startsWith("/")) {
                 throw new UserServletException(
@@ -423,8 +426,9 @@ public class UserServlet extends ZimbraServlet {
             this.accountPath = pathInfo.substring(1, pos);
 
             this.itemPath = pathInfo.substring(pos + 1);
-            this.format = req.getParameter(QP_FMT);
-            String id = req.getParameter(QP_ID);
+            this.format = request.getParameter(QP_FMT);
+            this.sync = "1".equals(request.getParameter(QP_SYNC));
+            String id = request.getParameter(QP_ID);
             try {
                 this.itemId = id == null ? null : new ItemId(id, null);
             } catch (ServiceException e) {

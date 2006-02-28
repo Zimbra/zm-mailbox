@@ -36,6 +36,7 @@ import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
@@ -50,6 +51,7 @@ public class GetContacts extends DocumentHandler  {
         Mailbox mbox = getRequestedMailbox(lc);
         Mailbox.OperationContext octxt = lc.getOperationContext();
 
+        boolean sync = request.getAttributeBool(MailService.A_SYNC, false);
         byte sort = DbMailItem.SORT_NONE;
         String sortStr = request.getAttribute(MailService.A_SORTBY, "");
         if (sortStr.equals(MailboxIndex.SortBy.NAME_ASCENDING.getName()))
@@ -75,16 +77,21 @@ public class GetContacts extends DocumentHandler  {
         Element response = lc.createElement(MailService.GET_CONTACTS_RESPONSE);
         ContactAttrCache cacache = null; //new ContactAttrCache();
 
+        // want to return modified date only on sync-related requests
+        int fields = ToXML.NOTIFY_FIELDS;
+        if (sync)
+            fields |= Change.MODIFIED_CONFLICT;
+
         if (ids != null) {
             for (int id : ids) {
             	Contact con = mbox.getContactById(octxt, id);
                 if (con != null)
-                    ToXML.encodeContact(response, lc, con, cacache, false, attrs);
+                    ToXML.encodeContact(response, lc, con, cacache, false, attrs, fields);
             }
         } else {
         	for (Contact con : mbox.getContactList(octxt, -1, sort))
                 if (con != null)
-                    ToXML.encodeContact(response, lc, con, cacache, false, attrs);
+                    ToXML.encodeContact(response, lc, con, cacache, false, attrs, fields);
         }
         return response;
     }

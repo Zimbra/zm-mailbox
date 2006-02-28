@@ -128,8 +128,8 @@ public class ContentServlet extends ZimbraServlet {
             }
             ZimbraLog.addToContext(mbox);
 
-            MailItem mi = mbox.getItemById(new Mailbox.OperationContext(authId), iid.getId(), MailItem.TYPE_UNKNOWN);
-            if (mi == null) {
+            MailItem item = mbox.getItemById(new Mailbox.OperationContext(authId), iid.getId(), MailItem.TYPE_UNKNOWN);
+            if (item == null) {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "message not found");
                 return;				
             }
@@ -141,14 +141,23 @@ public class ContentServlet extends ZimbraServlet {
                     StringBuffer hdr = new StringBuffer();
                     if (sync) {
                         // for sync, return metadata as headers to avoid extra SOAP round-trips
-                        hdr.append("X-Zimbra-Tags: ").append(mi.getTagString()).append("\n");
-                        hdr.append("X-Zimbra-Flags: ").append(mi.getFlagString()).append("\n");
-                        hdr.append("X-Zimbra-Received: ").append(mi.getDate()).append("\n");
+                        resp.addHeader("X-Zimbra-Tags", item.getTagString());
+                        resp.addHeader("X-Zimbra-Flags", item.getFlagString());
+                        resp.addHeader("X-Zimbra-Received", Long.toString(item.getDate()));
+                        if (item.getChangeDate() != item.getDate())
+                            resp.addHeader("X-Zimbra-Modified", Long.toString(item.getChangeDate()));
+                        // also return metadata inline in the message content for now
+                        hdr.append("X-Zimbra-Tags: ").append(item.getTagString()).append("\n");
+                        hdr.append("X-Zimbra-Flags: ").append(item.getFlagString()).append("\n");
+                        hdr.append("X-Zimbra-Received: ").append(item.getDate()).append("\n");
+                        if (item.getChangeDate() != item.getDate())
+                            hdr.append("X-Zimbra-Modified: ").append(item.getChangeDate()).append("\n");
                     }
                     
-                    if (mi instanceof Message) {
-                        Message msg = (Message) mi;
+                    if (item instanceof Message) {
+                        Message msg = (Message) item;
                         if (sync) {
+                            resp.addHeader("X-Zimbra-Conv", Integer.toString(msg.getConversationId()));
                             hdr.append("X-Zimbra-Conv: ").append(msg.getConversationId()).append("\n");
                             resp.getOutputStream().write(hdr.toString().getBytes());
                         }
@@ -157,15 +166,15 @@ public class ContentServlet extends ZimbraServlet {
                         InputStream is = msg.getRawMessage();
                         ByteUtil.copy(is, resp.getOutputStream());
                         is.close();
-                    } else if (mi instanceof Appointment) {
-                        Appointment appt = (Appointment) mi;
+                    } else if (item instanceof Appointment) {
+                        Appointment appt = (Appointment) item;
                         if (sync) {
                             resp.getOutputStream().write(hdr.toString().getBytes());
                         }
                         
                         resp.setContentType(Mime.CT_TEXT_PLAIN);
                         if (iid.hasSubpart()) {
-                            MimeMessage mm = ((Appointment) mi).getMimeMessage(iid.getSubpartId());
+                            MimeMessage mm = appt.getMimeMessage(iid.getSubpartId());
                             mm.writeTo(resp.getOutputStream());
                         } else { 
 //                            Invite[] invites = appt.getInvites();
@@ -176,7 +185,7 @@ public class ContentServlet extends ZimbraServlet {
 //                                resp.getWriter().write(cal.toString());
 //                            }
                             
-                            InputStream is = ((Appointment) mi).getRawMessage();
+                            InputStream is = appt.getRawMessage();
                             ByteUtil.copy(is, resp.getOutputStream());
                             is.close();
                         }
@@ -184,10 +193,10 @@ public class ContentServlet extends ZimbraServlet {
                     return;
                 } else {
                     MimePart mp;
-                    if (mi instanceof Message) {
-                        mp = getMimePart((Message)mi, part); 
+                    if (item instanceof Message) {
+                        mp = getMimePart((Message) item, part); 
                     } else {
-                        Appointment appt = (Appointment)mi;
+                        Appointment appt = (Appointment) item;
                         if (iid.hasSubpart()) {
                             MimeMessage mbp = appt.getMimeMessage(iid.getSubpartId());
                             mp = Mime.getMimePart(mbp, part);
@@ -207,7 +216,7 @@ public class ContentServlet extends ZimbraServlet {
                                 sendbackOriginalDoc(mp, contentType, resp);
                             } else {
                                 req.setAttribute(ATTR_MIMEPART, mp);
-                                req.setAttribute(ATTR_MSGDIGEST, mi.getDigest());
+                                req.setAttribute(ATTR_MSGDIGEST, item.getDigest());
                                 req.setAttribute(ATTR_CONTENTURL, req.getRequestURL().toString());
                                 RequestDispatcher dispatcher = getServletContext().getRequestDispatcher(CONVERSION_PATH);
                                 dispatcher.forward(req, resp);
