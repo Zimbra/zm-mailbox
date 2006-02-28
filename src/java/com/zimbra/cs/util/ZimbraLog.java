@@ -311,13 +311,14 @@ public class ZimbraLog {
 
     
     private static void encodeArg(StringBuffer sb, String name, String value) {
+        if (value == null) value = "";
         if (value.indexOf(';') != -1) value = value.replaceAll(";", ";;");
         // replace returns ref to original string if char to replace doesn't exist
         value = value.replace('\r', ' ');        
         value = value.replace('\n', ' ');
         sb.append(name);
         sb.append("=");
-        sb.append(value != null ? value : "");
+        sb.append(value);
         sb.append(';');
     }
 
