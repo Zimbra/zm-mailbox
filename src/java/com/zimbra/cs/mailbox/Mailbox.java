@@ -2515,7 +2515,7 @@ public class Mailbox {
         public ParsedMessage mPm;
         
         public String toString() {
-            StringBuffer toRet = new StringBuffer();
+            StringBuilder toRet = new StringBuilder();
             toRet.append("inv:").append(mInv.toString()).append("\n");
             toRet.append("force:").append(mForce ? "true\n" : "false\n");
             toRet.append("pm:").append(mPm.getFragment()).append("\n");
@@ -2887,11 +2887,7 @@ public class Mailbox {
             }
             redoRecorder.setConversationId(conv != null && !(conv instanceof VirtualConversation) ? conv.getId() : -1);
 
-            // step 5: remember the Message-ID header so that we can avoid receiving duplicates
-            if (isSent && checkDuplicates)
-                mSentMessageIDs.put(msgidHeader, new Integer(msg.getId()));
-
-            // step 6: store the blob
+            // step 5: store the blob
             // TODO: Add partition support.  Need to store as many times as there
             //       are unique partitions in the set of recipient mailboxes.
             blob = sharedDeliveryCtxt.getBlob();
@@ -2969,15 +2965,9 @@ public class Mailbox {
             mCurrentChange.setIndexedItem(msg, pm);
             success = true;
         } finally {
-            // XXX: should we do this via mOtherDirtyStuff instead?
-            if (!success && isSent && checkDuplicates)
-                mSentMessageIDs.remove(msgidHeader);
-
             if (storeRedoRecorder != null) {
-                if (success)
-                    storeRedoRecorder.commit();
-                else
-                    storeRedoRecorder.abort();
+                if (success)  storeRedoRecorder.commit();
+                else          storeRedoRecorder.abort();
             }
 
             endTransaction(success);
@@ -2990,6 +2980,10 @@ public class Mailbox {
                 sharedDeliveryCtxt.setMailboxBlob(mboxBlob);
             }
         }
+
+        // step 6: remember the Message-ID header so that we can avoid receiving duplicates
+        if (isSent && checkDuplicates)
+            mSentMessageIDs.put(msgidHeader, new Integer(msg.getId()));
 
         if (msg != null && ZimbraLog.mailbox.isInfoEnabled())
             ZimbraLog.mailbox.info("Added message id=" + msg.getId() + " digest=" + digest +
@@ -3023,7 +3017,7 @@ public class Mailbox {
         id = Math.max(id, ID_AUTO_INCREMENT);
         Conversation conv = Conversation.create(this, getNextItemId(id), contents);
         if (ZimbraLog.mailbox.isDebugEnabled()) {
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             for (int i = 0; i < contents.length; i++)
                 sb.append(i == 0 ? "" : ",").append(contents[i].getId());
             ZimbraLog.mailbox.debug("  created conv " + conv.getId() + " holding msg(s): " + sb);
@@ -4207,7 +4201,7 @@ public class Mailbox {
     private static final String CN_SIZE       = "size";
 
     public String toString() {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("mailbox: {");
         sb.append(CN_ID).append(": ").append(mId).append(", ");
         sb.append(CN_ACCOUNT_ID).append(": ").append(mData.accountId).append(", ");
@@ -4465,7 +4459,7 @@ public class Mailbox {
     }
     
     public static void dumpMailboxCache() {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("MAILBOX CACHE DUMP\n");
         sb.append("----------------------------------------------------------------------\n");
         synchronized (sMailboxCache) {
