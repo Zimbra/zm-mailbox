@@ -39,13 +39,6 @@ public class WikiItem extends Document {
 		super(mbox, data);
 	}
 	
-	@Override boolean isTaggable() { return true; }
-	@Override boolean isCopyable() { return true; }
-	@Override boolean isMovable() { return true; }
-	@Override boolean isMutable() { return false; }
-	@Override boolean isIndexed() { return true; }
-	@Override boolean canHaveChildren() { return false; }
-
 	@Override 
 	Metadata encodeMetadata(Metadata meta) {
 		meta.put(Metadata.FN_WIKI_WORD, mWikiWord);

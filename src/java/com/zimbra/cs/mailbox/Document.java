@@ -107,7 +107,7 @@ public class Document extends MailItem {
     @Override boolean isTaggable()      { return true; }
     @Override boolean isCopyable()      { return true; }
     @Override boolean isMovable()       { return true; }
-    @Override boolean isMutable()       { return false; }
+    @Override boolean isMutable()       { return true; }
     @Override boolean isIndexed()       { return true; }
     @Override boolean canHaveChildren() { return false; }
 
