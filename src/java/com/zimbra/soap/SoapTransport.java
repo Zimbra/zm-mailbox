@@ -98,13 +98,16 @@ public abstract class SoapTransport {
         return mSoapProto;
     }
 
-    protected String generateSoapMessage(Element document, boolean raw, boolean noSession, boolean noNotify) {
+    protected String generateSoapMessage(Element document, boolean raw, boolean noSession, boolean noNotify, String requestedAccountId) {
     	if (raw)
     		return SoapProtocol.toString(document, mPrettyPrint);
-
+        
         Element context = ZimbraContext.toCtxt(mSoapProto, mAuthToken, noSession);
         ZimbraContext.addSessionToCtxt(context, mSessionId, noNotify);
 
+        if (requestedAccountId != null) {
+            context.addElement(ZimbraContext.E_ACCOUNT).addAttribute(ZimbraContext.A_BY, ZimbraContext.BY_ID).setText(requestedAccountId);
+        }
         Element envelope = mSoapProto.soapEnvelope(document, context);
         String soapMessage = SoapProtocol.toString(envelope, getPrettyPrint());
     	return soapMessage;
@@ -157,7 +160,7 @@ public abstract class SoapTransport {
      *
      */
     public final Element invoke(Element document) throws SoapFaultException, IOException {
-    	return invoke(document, false, false, false);
+    	return invoke(document, false, false, false, null);
     }
 
     /**
@@ -168,7 +171,7 @@ public abstract class SoapTransport {
      * @throws IOException
      */
     public final Element invokeRaw(Element envelope) throws SoapFaultException, IOException {
-    	return invoke(envelope, true, false, false);
+    	return invoke(envelope, true, false, false, null);
     }
 
     /**
@@ -180,7 +183,7 @@ public abstract class SoapTransport {
      * @throws IOException
      */
     public final Element invokeWithoutSession(Element document) throws SoapFaultException, IOException {
-    	return invoke(document, false, true, true);
+    	return invoke(document, false, true, true, null);
     }
 
     /**
@@ -192,7 +195,7 @@ public abstract class SoapTransport {
      * @throws IOException
      */
     public final Element invokeWithoutNotify(Element document) throws SoapFaultException, IOException {
-    	return invoke(document, false, false, true);
+    	return invoke(document, false, false, true, null);
     }
 
     /**
@@ -204,7 +207,7 @@ public abstract class SoapTransport {
      * 
      * If <code>noNotify</code> is true, response omits change notification block.
      */
-    protected abstract Element invoke(Element document, boolean raw, boolean noSession, boolean noNotify) 
+    public abstract Element invoke(Element document, boolean raw, boolean noSession, boolean noNotify, String requestedAccountId) 
     	throws SoapFaultException, IOException;
 
 }

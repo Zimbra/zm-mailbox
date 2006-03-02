@@ -585,6 +585,20 @@
 			<arg line="ca user4@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} cn 'Demo User Four' displayName 'Demo User Four' zimbraAttachmentsIndexingEnabled FALSE zimbraPrefTimeZoneId '(GMT-07.00) Arizona' zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}"/>
 		</java>
 
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="ca spam-sink@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} zimbraAttachmentsIndexingEnabled FALSE" />
+		</java>
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="mcf zimbraSpamIsSpamAccount spam-sink@${zimbra.server.hostname}" />
+		</java>
+		<echo>Setting up not junk account</echo>
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="ca ham-sink@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} zimbraAttachmentsIndexingEnabled FALSE" />
+		</java>
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="mcf zimbraSpamIsNotSpamAccount ham-sink@${zimbra.server.hostname}" />
+		</java>
+
 		<echo>Creating calendar resource: room1@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="ccr room1@${zimbra.server.hostname}
