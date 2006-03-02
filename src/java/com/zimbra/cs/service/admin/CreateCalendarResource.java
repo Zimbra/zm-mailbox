@@ -28,6 +28,7 @@ package com.zimbra.cs.service.admin;
 import java.util.Map;
 
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
@@ -68,7 +69,7 @@ public class CreateCalendarResource extends AdminDocumentHandler {
         Element response = lc.createElement(
                 AdminService.CREATE_CALENDAR_RESOURCE_RESPONSE);
 
-        GetCalendarResource.doCalendarResource(response, resource);
+        ToXML.encodeCalendarResource(response, resource);
 
         return response;
     }

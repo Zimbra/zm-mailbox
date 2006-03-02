@@ -119,7 +119,15 @@ public class ProvUtil {
         System.out.println("  RenameCalendarResource(rcr) {name@domain|id} {newName@domain}");        
         System.out.println("  GetCalendarResource(gcr) {name@domain|id}");
         System.out.println("  GetAllCalendarResources(gacr) [-v] [{domain}]");
-        System.out.println("  SearchCalendarResources(scr) [-v] {ldap-query} [limit {limit}] [offset {offset}] [sortBy {attr}] [attrs {a1,a2...}] [sortAscending 0|1*] [applyCos [0|1*] [domain {domain}]");
+        System.out.println("  SearchCalendarResources(scr) [-v] domain attr op value [attr op value...]");
+        StringBuilder sb = new StringBuilder();
+        EntrySearchFilter.Operator vals[] = EntrySearchFilter.Operator.values();
+        for (int i = 0; i < vals.length; i++) {
+            if (i > 0)
+                sb.append(", ");
+            sb.append(vals[i].toString());
+        }
+        System.out.println("    op = " + sb.toString());
         System.out.println();
 
         System.out.println("  exit (quit)");
@@ -298,7 +306,7 @@ public class ProvUtil {
         addCommand("renameCalendarResource",  "rcr",  RENAME_CALENDAR_RESOURCE);
         addCommand("getCalendarResource",     "gcr",  GET_CALENDAR_RESOURCE);
         addCommand("getAllCalendarResources", "gacr", GET_ALL_CALENDAR_RESOURCES);
-        addCommand("searchCalendarResources", "scr",  MODIFY_CALENDAR_RESOURCE);
+        addCommand("searchCalendarResources", "scr",  SEARCH_CALENDAR_RESOURCES);
 
         addCommand("exit", "quit", EXIT);
         addCommand("help", "?", HELP);        
@@ -1478,64 +1486,37 @@ public class ProvUtil {
     throws ServiceException, ArgException {
         boolean verbose = false;
         int i = 1;
-        
-        if (args.length < i+1) {
-            usage();
-            return;
-        }
 
-        if (args[i].equals("-v")) {
-            verbose = true;
-            i++;
-            if (args.length < i-1) {
+        if (args.length < i + 1) { usage(); return; }
+        if (args[i].equals("-v")) { verbose = true; i++; }
+
+        if (args.length < i + 1) { usage(); return; }
+        Domain d = lookupDomain(args[i++]);
+
+        if ((args.length - i) % 3 != 0) { usage(); return; }
+
+        EntrySearchFilter.Multi multi =
+            new EntrySearchFilter.Multi(false, EntrySearchFilter.AndOr.and);
+        for (; i < args.length; ) {
+            String attr = args[i++];
+            String op = args[i++];
+            String value = args[i++];
+            try {
+                EntrySearchFilter.Single single =
+                    new EntrySearchFilter.Single(false, attr, op, value);
+                multi.add(single);
+            } catch (IllegalArgumentException e) {
+                System.err.println("Bad search op in: " + attr + " " + op + " '" + value + "'");
+                e.printStackTrace();
                 usage();
                 return;
-                
             }
         }
-        
-        if (args.length < i+1) {
-            usage();
-            return;
-        }
-            
-        String query = args[i];
+        EntrySearchFilter filter = new EntrySearchFilter(multi);
 
-        Map attrs = getMap(args, i+1);
-        int iPageNum = 0;
-        int iPerPage = 0;        
-
-        String limitStr = (String) attrs.get("limit");
-        int limit = limitStr == null ? Integer.MAX_VALUE : Integer.parseInt(limitStr);
-        
-        String offsetStr = (String) attrs.get("offset");
-        int offset = offsetStr == null ? 0 : Integer.parseInt(offsetStr);        
-        
-        String sortBy  = (String)attrs.get("sortBy");
-        String sortAscending  = (String) attrs.get("sortAscending");
-        boolean isSortAscending = (sortAscending != null) ? "1".equalsIgnoreCase(sortAscending) : true;    
-
-        String attrsStr = (String)attrs.get("attrs");
-        String[] attrsToGet = attrsStr == null ? null : attrsStr.split(",");
-
-        String applyCosStr  = (String) attrs.get("applyCos");
-        boolean applyCos = (applyCosStr != null) ? "1".equalsIgnoreCase(applyCosStr) : true;    
-
-        String domainStr = (String)attrs.get("domain");
-        List resources;
-        if (domainStr != null) {
-            Domain d = lookupDomain(domainStr);
-            resources = d.searchCalendarResources(
-                            query, attrsToGet,
-                            sortBy, isSortAscending);
-        } else {
-            resources = mProvisioning.searchCalendarResources(
-                            query, attrsToGet,
-                            sortBy, isSortAscending);
-        }
-
-        for (int j=offset; j < offset+limit && j < resources.size(); j++) {
-            CalendarResource resource = (CalendarResource) resources.get(j);
+        List resources = d.searchCalendarResources(filter, null, null, true);
+        for (Iterator iter = resources.iterator(); iter.hasNext(); ) {
+            CalendarResource resource = (CalendarResource) iter.next();
             if (verbose)
                 dumpCalendarResource(resource);
             else

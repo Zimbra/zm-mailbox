@@ -36,6 +36,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
@@ -83,7 +84,7 @@ public class ModifyAccount extends AdminDocumentHandler {
                 new String[] {"cmd", "ModifyAccount","name", account.getName()}, attrs));
 
         Element response = lc.createElement(AdminService.MODIFY_ACCOUNT_RESPONSE);
-        GetAccount.doAccount(response, account);
+        ToXML.encodeAccount(response, account);
 	    return response;
 	}
 }

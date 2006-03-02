@@ -2794,23 +2794,24 @@ public class LdapProvisioning extends Provisioning {
     }
 
     public List searchCalendarResources(
-        String query,
+        EntrySearchFilter filter,
         String returnAttrs[],
         String sortAttr,
         boolean sortAscending)
     throws ServiceException {
-        return searchCalendarResources(query, returnAttrs,
+        return searchCalendarResources(filter, returnAttrs,
                                        sortAttr, sortAscending,
                                        "");
     }
 
     List searchCalendarResources(
-            String query,
-            String returnAttrs[],
-            String sortAttr,
-            boolean sortAscending,
-            String base)
+        EntrySearchFilter filter,
+        String returnAttrs[],
+        String sortAttr,
+        boolean sortAscending,
+        String base)
     throws ServiceException {
+        String query = LdapEntrySearchFilter.toLdapFilter(filter);
         return searchAccounts(query, returnAttrs,
                               sortAttr, sortAscending,
                               base,

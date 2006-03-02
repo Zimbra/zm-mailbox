@@ -46,6 +46,7 @@ import javax.naming.directory.SearchResult;
 
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
@@ -88,8 +89,9 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
     }
 
     public List getAllCalendarResources() throws ServiceException {
-        return searchCalendarResources("(objectclass=zimbraCalendarResource)",
-                                       null, null, true);
+        return searchCalendarResources(
+                LdapEntrySearchFilter.sCalendarResourcesFilter,
+                null, null, true);
     }
 
     public void getAllCalendarResources(NamedEntry.Visitor visitor)
@@ -110,12 +112,12 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
     }
 
     public List searchCalendarResources(
-        String query,
+        EntrySearchFilter filter,
         String returnAttrs[],
         String sortAttr,
         boolean sortAscending)
     throws ServiceException {
-        return mProv.searchCalendarResources(query, returnAttrs,
+        return mProv.searchCalendarResources(filter, returnAttrs,
                                              sortAttr, sortAscending,
                                              "ou=people," + getDN());
     }
@@ -134,7 +136,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
 
         int maxResults = token != null ? 0 : getIntAttr(Provisioning.A_zimbraGalMaxResults, DEFAULT_GAL_MAX_RESULTS);
         if (type == Provisioning.GAL_SEARCH_TYPE.CALENDAR_RESOURCE)
-            return searchResources(n, maxResults, token);
+            return searchResourcesGal(n, maxResults, token);
 
         String mode = getAttr(Provisioning.A_zimbraGalMode);
         SearchGalResult results = null;
@@ -166,11 +168,11 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
         if (type == Provisioning.GAL_SEARCH_TYPE.ALL) {
             SearchGalResult resourceResults = null;
             if (maxResults == 0)
-                resourceResults = searchResources(n, 0, token);
+                resourceResults = searchResourcesGal(n, 0, token);
             else {
                 int room = maxResults - results.matches.size();
                 if (room > 0)
-                    resourceResults = searchResources(n, room, token);
+                    resourceResults = searchResourcesGal(n, room, token);
             }
             if (resourceResults != null) {
                 results.matches.addAll(resourceResults.matches);
@@ -222,7 +224,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
         return (Map) getCachedData(DATA_GAL_ATTR_MAP);
     }
 
-    private SearchGalResult searchResources(String n, int maxResults, String token)
+    private SearchGalResult searchResourcesGal(String n, int maxResults, String token)
     throws ServiceException {
         return searchZimbraWithNamedFilter(
                 GAL_FILTER_ZIMBRA_CALENDAR_RESOURCES, n, maxResults, token);
@@ -241,25 +243,36 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
         String token)
     throws ServiceException {
         String queryExpr = getFilterDef(filterName);
-        SearchGalResult result = new SearchGalResult();
-        result.matches = new ArrayList<GalContact>();
-        if (queryExpr == null)
-            return result;
-
-        if (token != null) n = "";
-
-        Map<String, String> vars = new HashMap<String, String>();
-        vars.put("s", n);
-        String query = LdapProvisioning.expandStr(queryExpr, vars);
-        if (token != null) {
-            if (token.equals(""))
-                query = query.replaceAll("\\*\\*", "*");
-            else {
-                String arg = LdapUtil.escapeSearchFilterArg(token);
-                //query = "(&(modifyTimeStamp>="+arg+")"+query.replaceAll("\\*\\*", "*")+")";
-                query = "(&(|(modifyTimeStamp>="+arg+")(createTimeStamp>="+arg+"))"+query.replaceAll("\\*\\*", "*")+")";
+        String query = null;
+        if (queryExpr != null) {
+            if (token != null) n = "";
+    
+            Map<String, String> vars = new HashMap<String, String>();
+            vars.put("s", n);
+            query = LdapProvisioning.expandStr(queryExpr, vars);
+            if (token != null) {
+                if (token.equals(""))
+                    query = query.replaceAll("\\*\\*", "*");
+                else {
+                    String arg = LdapUtil.escapeSearchFilterArg(token);
+                    //query = "(&(modifyTimeStamp>="+arg+")"+query.replaceAll("\\*\\*", "*")+")";
+                    query = "(&(|(modifyTimeStamp>="+arg+")(createTimeStamp>="+arg+"))"+query.replaceAll("\\*\\*", "*")+")";
+                }
             }
         }
+        return searchZimbraWithQuery(query, maxResults, token);
+    }
+
+    private SearchGalResult searchZimbraWithQuery(
+        String query,
+        int maxResults,
+        String token)
+    throws ServiceException {
+        SearchGalResult result = new SearchGalResult();
+        result.matches = new ArrayList<GalContact>();
+        if (query == null)
+            return result;
+
         Map galAttrMap = getGalAttrMap();
         String[] galAttrList = getGalAttrList();
 

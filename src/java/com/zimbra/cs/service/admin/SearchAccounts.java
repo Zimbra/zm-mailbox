@@ -39,6 +39,7 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.soap.Element;
@@ -120,7 +121,7 @@ public class SearchAccounts extends AdminDocumentHandler {
         for (i=offset; i < limitMax && i < accounts.size(); i++) {
             NamedEntry entry = (NamedEntry) accounts.get(i);
             if (entry instanceof Account) {
-                GetAccount.doAccount(response, (Account) entry, applyCos);
+                ToXML.encodeAccount(response, (Account) entry, applyCos);
             } else if (entry instanceof DistributionList) {
                 doDistributionList(response, (DistributionList) entry);
             } else if (entry instanceof Alias) {

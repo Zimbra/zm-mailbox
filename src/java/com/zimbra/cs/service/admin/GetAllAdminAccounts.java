@@ -35,6 +35,7 @@ import java.util.Map;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
@@ -52,7 +53,7 @@ public class GetAllAdminAccounts extends AdminDocumentHandler {
 
         Element response = lc.createElement(AdminService.GET_ALL_ADMIN_ACCOUNTS_RESPONSE);
         for (Iterator it=accounts.iterator(); it.hasNext(); ) {
-            GetAccount.doAccount(response, (Account) it.next());
+            ToXML.encodeAccount(response, (Account) it.next());
         }
 	    return response;
 	}

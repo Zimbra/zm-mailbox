@@ -1157,7 +1157,7 @@ Access: domain admin sufficient
 
 <SearchCalendarResourcesRequest [limit="..."] [offset="..."] [domain="{domain-name}"] [applyCos="{apply-cos}"]
          [attrs="a1,a2,a3"] [sortBy="{sort-by}"] [sortAscending="{sort-ascending}"] >
-  <query>...</query>
+  <searchFilter> ... </searchFilter>
 </SearchCalendarResourcesRequest>
 
 <SearchCalendarResourcesResponse more="{more-flag}" [searchTotal="{search-total}"]>
@@ -1168,7 +1168,6 @@ Access: domain admin sufficient
 
 Notes:
 SearchCalendarResourcesRequest
-	<query> - query string should be an LDAP-style filter string (RFC 2254)
 	limit - the number of calendar resources to return (0 is default and means all)
 	offset - the starting offset (0, 25, etc)
 	domain - the domain name to limit the search to
@@ -1179,6 +1178,8 @@ SearchCalendarResourcesRequest
 	sortAscending - whether to sort in ascending order (0/1), 1 is default
     more-flag = true if more calendar resources left to return
     search-total = total number of calendar resources that matched search (not affected by limit/offset)
+
+searchFilter: See SearchCalendarResourcesRequest section in soap.txt.
 
 Access: domain admin sufficient
 

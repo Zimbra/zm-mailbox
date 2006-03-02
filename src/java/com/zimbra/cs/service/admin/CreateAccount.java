@@ -31,6 +31,7 @@ package com.zimbra.cs.service.admin;
 import java.util.Map;
 
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -68,7 +69,7 @@ public class CreateAccount extends AdminDocumentHandler {
 
 	    Element response = lc.createElement(AdminService.CREATE_ACCOUNT_RESPONSE);
 
-	    GetAccount.doAccount(response, account);
+        ToXML.encodeAccount(response, account);
 
 	    return response;
 	}

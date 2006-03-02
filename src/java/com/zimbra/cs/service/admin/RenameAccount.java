@@ -34,6 +34,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
@@ -81,8 +82,7 @@ public class RenameAccount extends AdminDocumentHandler {
         if (account == null)
             throw ServiceException.FAILURE("unable to get account after rename: " + id, null);
 	    Element response = lc.createElement(AdminService.RENAME_ACCOUNT_RESPONSE);
-	    GetAccount.doAccount(response, account);
+        ToXML.encodeAccount(response, account);
 	    return response;
 	}
-
 }

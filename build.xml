@@ -603,11 +603,24 @@
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="ccr room1@${zimbra.server.hostname}
 				       displayName 'Conference Room One'
-				       zimbraCalResType ROOM
+				       zimbraCalResType Location
 					   zimbraCalResAutoAcceptDecline TRUE
 					   zimbraCalResAutoDeclineIfBusy TRUE
 					   zimbraCalResAutoDeclineRecurring FALSE
 					   zimbraCalResAlwaysFree FALSE
+					   zimbraCalResSite HQ
+					   zimbraCalResBuilding 'Building A'
+					   zimbraCalResFloor 11
+					   zimbraCalResRoom 1101
+					   zimbraCalResCapacity 10
+					   zimbraCalResContactName 'Administrator'
+					   zimbraCalResContactEmail admin@${zimbra.server.hostname}
+					   zimbraCalResContactPhone '(650)555-1212'
+					   street '1500 Fashion Island Blvd., Suite 100'
+					   l 'San Mateo'
+					   st 'California'
+					   postalCode 94404
+					   co USA
 				       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana'
 				       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}"/>
 		</java>
@@ -615,11 +628,19 @@
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="ccr room2@${zimbra.server.hostname}
 				       displayName 'Conference Room Two'
-				       zimbraCalResType ROOM
+				       zimbraCalResType Location
 					   zimbraCalResAutoAcceptDecline FALSE
 					   zimbraCalResAutoDeclineIfBusy TRUE
 					   zimbraCalResAutoDeclineRecurring FALSE
 					   zimbraCalResAlwaysFree FALSE
+					   zimbraCalResSite HQ
+					   zimbraCalResBuilding 'Building A'
+					   zimbraCalResFloor 12
+					   zimbraCalResRoom 1202
+					   zimbraCalResCapacity 20
+					   zimbraCalResContactName 'Administrator'
+					   zimbraCalResContactEmail admin@${zimbra.server.hostname}
+					   zimbraCalResContactPhone '(650)555-1212'
 				       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana'
 				       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}"/>
 		</java>
@@ -627,11 +648,19 @@
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="ccr room3@${zimbra.server.hostname}
 				       displayName 'Conference Room Three'
-				       zimbraCalResType ROOM
+				       zimbraCalResType Location
 					   zimbraCalResAutoAcceptDecline TRUE
 					   zimbraCalResAutoDeclineIfBusy TRUE
 					   zimbraCalResAutoDeclineRecurring TRUE
 					   zimbraCalResAlwaysFree TRUE
+					   zimbraCalResSite HQ
+					   zimbraCalResBuilding 'Building B'
+					   zimbraCalResFloor B2
+					   zimbraCalResRoom B201
+					   zimbraCalResCapacity 100
+					   zimbraCalResContactName 'Administrator'
+					   zimbraCalResContactEmail admin@${zimbra.server.hostname}
+					   zimbraCalResContactPhone '(650)555-1212'
 				       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana'
 				       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}"/>
 		</java>

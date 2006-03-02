@@ -29,13 +29,13 @@ package com.zimbra.cs.session;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapEntrySearchFilter;
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Constants;
@@ -90,9 +90,10 @@ public class AdminSession extends Session {
     }
 
     public List searchCalendarResources(
-            Domain d, String query, String[] attrs, String sortBy,
+            Domain d, EntrySearchFilter filter, String[] attrs, String sortBy,
             boolean sortAscending, int offset)
     throws ServiceException {
+        String query = LdapEntrySearchFilter.toLdapFilter(filter);
         return searchAcounts(
                 d, query, attrs, sortBy, sortAscending,
                 Provisioning.SA_CALENDAR_RESOURCE_FLAG,
