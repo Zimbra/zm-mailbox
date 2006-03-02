@@ -106,7 +106,7 @@ public class Conversation extends MailItem {
                 int mask = 1 << j; 
                 if ((flags & mask) != 0) {
                     if (add)  mTags.add(-j - 1);
-                    else      mTags.remove(-j - 1);
+                    else      mTags.remove((Integer) (-j - 1));
                     flags &= ~mask;
                 }
             }
@@ -118,7 +118,7 @@ public class Conversation extends MailItem {
                 if ((tags & mask) != 0) {
                     // should really check to make sure the tag is reasonable
                     if (add)  mTags.add(j + TAG_ID_OFFSET);
-                    else      mTags.remove(j + TAG_ID_OFFSET);
+                    else      mTags.remove((Integer) (j + TAG_ID_OFFSET));
                     tags &= ~mask;
                 }
             }

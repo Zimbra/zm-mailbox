@@ -1219,7 +1219,7 @@ public abstract class MailItem implements Comparable {
 		// update child list
 		if (mData.children == null || !mData.children.contains(child.getId()))
 			throw MailServiceException.IS_NOT_CHILD();
-		mData.children.remove(child.getId());
+        mData.children.remove((Integer) child.getId());
         
         // remove parent reference from the child 
         child.mData.parentId = -1;
