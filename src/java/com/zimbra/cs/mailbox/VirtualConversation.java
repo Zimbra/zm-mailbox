@@ -28,6 +28,8 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.util.ArrayList;
+
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.service.ServiceException;
 
@@ -69,6 +71,9 @@ public class VirtualConversation extends Conversation {
     }
 
     private static UnderlyingData wrapMessage(Message msg) {
+        ArrayList<Integer> children = new ArrayList<Integer>();
+        children.add(msg.getId());
+
         UnderlyingData data = new UnderlyingData();
         data.id          = -msg.getId();
         data.type        = TYPE_VIRTUAL_CONVERSATION;
@@ -80,7 +85,7 @@ public class VirtualConversation extends Conversation {
         data.size        = 1;
         data.metadata    = encodeMetadata(DEFAULT_COLOR, new SenderList(msg), data.subject, msg.getSubject());
         data.unreadCount = msg.getUnreadCount();
-        data.children    = Integer.toString(msg.getId());
+        data.children    = children;
         data.inheritedTags = "-" + msg.mData.flags + ',' + msg.mData.tags;
         return data;
     }

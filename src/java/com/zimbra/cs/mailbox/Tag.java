@@ -30,7 +30,6 @@ package com.zimbra.cs.mailbox;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 import com.zimbra.cs.db.DbMailItem;
@@ -218,11 +217,10 @@ public class Tag extends MailItem {
         // decrement the in-memory unread count of each message.  each message will
         // then implicitly decrement the unread count for its conversation, folder
         // and tags.
-        List unreadData = DbMailItem.getUnreadMessages(this);
-        Array targets = new Array();
+        List<Integer> targets = new ArrayList<Integer>();
         boolean missed = false;
-        for (Iterator it = unreadData.iterator(); it.hasNext(); ) {
-            Message msg = mMailbox.getMessage((UnderlyingData) it.next());
+        for (UnderlyingData data : DbMailItem.getUnreadMessages(this)) {
+            Message msg = mMailbox.getMessage(data);
             if (msg.checkChangeID() || !msg.canAccess(ACL.RIGHT_WRITE)) {
                 msg.updateUnread(unread ? 1 : -1);
                 msg.mData.metadataChanged(mMailbox);

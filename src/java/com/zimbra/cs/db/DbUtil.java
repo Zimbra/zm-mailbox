@@ -36,7 +36,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.zimbra.cs.db.DbPool.Connection;
-import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.ServiceException;
 
 /**
@@ -320,13 +319,6 @@ public class DbUtil {
      * given array.  Used for generating SQL IN clauses.
      */
     public static String suitableNumberOfVariables(Collection c)        { return DbUtil.suitableNumberOfVariables(c.size()); }
-
-    /**
-     * Returns a string with the form <code>(?, ?, ?, ...)</code>, which
-     * contains as many question marks as the number of elements in the
-     * given <code>Collection</code>.  Used for generating SQL IN clauses.
-     */
-    public static String suitableNumberOfVariables(MailItem.Array arr)  { return DbUtil.suitableNumberOfVariables(arr.length); }
 
     /**
      * Returns a string with the form <code>(?, ?, ?, ...)</code>.

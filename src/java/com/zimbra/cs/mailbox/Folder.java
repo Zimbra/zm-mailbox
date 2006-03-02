@@ -42,7 +42,6 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.StringUtil;
 
-
 /**
  * @author dkarp
  */
@@ -66,7 +65,7 @@ public class Folder extends MailItem {
 
 	protected byte    mAttributes;
     protected byte    mDefaultView;
-	private ArrayList<Folder> mSubfolders;
+	private List<Folder> mSubfolders;
     private Folder    mParent;
     private ACL       mRights;
     private SyncData  mSyncData;
@@ -663,11 +662,10 @@ public class Folder extends MailItem {
         // decrement the in-memory unread count of each message.  each message will
         // then implicitly decrement the unread count for its conversation, folder
         // and tags.
-        List unreadData = DbMailItem.getUnreadMessages(this);
-        Array targets = new Array();
+        List<Integer> targets = new ArrayList<Integer>();
         boolean missed = false;
-        for (Iterator it = unreadData.iterator(); it.hasNext(); ) {
-            Message msg = mMailbox.getMessage((UnderlyingData) it.next());
+        for (UnderlyingData data : DbMailItem.getUnreadMessages(this)) {
+            Message msg = mMailbox.getMessage(data);
             if (msg.checkChangeID() || !msg.canAccess(ACL.RIGHT_WRITE)) {
                 msg.updateUnread(-1);
                 msg.mData.metadataChanged(mMailbox);
@@ -707,7 +705,10 @@ public class Folder extends MailItem {
         // change the tag on the Folder itself, not on its contents
         markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
         tagChanged(tag, add);
-        DbMailItem.alterTag(tag, new Array(mId), add);
+
+        List<Integer> ids = new ArrayList<Integer>();
+        ids.add(mId);
+        DbMailItem.alterTag(tag, ids, add);
     }
 
     protected void updateUnread(int delta) throws ServiceException {
@@ -804,9 +805,9 @@ public class Folder extends MailItem {
 
     /** Deletes this folder and all its subfolders. */
     void delete() throws ServiceException {
-        List subfolders = getSubfolderHierarchy();
+        List<Folder> subfolders = getSubfolderHierarchy();
         for (int i = subfolders.size() - 1; i >= 0; i--) {
-            Folder subfolder = (Folder) subfolders.get(i);
+            Folder subfolder = subfolders.get(i);
             subfolder.deleteSingleFolder();
         }
     }
@@ -814,10 +815,10 @@ public class Folder extends MailItem {
     void empty(boolean includeSubfolders) throws ServiceException {
         // kill all subfolders, if so requested
         if (includeSubfolders) {
-            List subfolders = getSubfolderHierarchy();
+            List<Folder> subfolders = getSubfolderHierarchy();
             // we DO NOT include *this* folder, the first in the list...
             for (int i = subfolders.size() - 1; i >= 1; i--) {
-                Folder subfolder = (Folder) subfolders.get(i);
+                Folder subfolder = subfolders.get(i);
                 subfolder.deleteSingleFolder();
             }
         }
@@ -878,7 +879,7 @@ public class Folder extends MailItem {
         if (beforeDate <= 0 || beforeDate >= mbox.getOperationTimestamp())
             return;
         boolean allFolders = (folder == null);
-        List folders = (allFolders ? null : folder.getSubfolderHierarchy());
+        List<Folder> folders = (allFolders ? null : folder.getSubfolderHierarchy());
 
         // get the full list of things that are being removed
         PendingDelete info = DbMailItem.getLeafNodes(mbox, folders, beforeDate, allFolders);
@@ -899,9 +900,9 @@ public class Folder extends MailItem {
         mbox.updateContactCount(-info.contacts);
 
         // update unread counts on folders and tags
-        List unreadData = DbMailItem.getById(mbox, info.unreadIds, TYPE_MESSAGE);
-        for (Iterator it = unreadData.iterator(); it.hasNext(); )
-            mbox.getItem((UnderlyingData) it.next()).updateUnread(-1);
+        List<UnderlyingData> unreadData = DbMailItem.getById(mbox, info.unreadIds, TYPE_MESSAGE);
+        for (UnderlyingData data : unreadData)
+            mbox.getItem(data).updateUnread(-1);
 
         // remove the deleted item(s) from the mailbox's cache
         if (!info.itemIds.isEmpty()) {

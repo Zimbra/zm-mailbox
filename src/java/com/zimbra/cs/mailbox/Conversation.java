@@ -28,9 +28,10 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -51,12 +52,12 @@ public class Conversation extends MailItem {
     private static Log sLog = LogFactory.getLog(Conversation.class);
 
     protected final class TagSet {
-        private Array mTags;
+        private List<Integer> mTags;
 
-        TagSet()           { mTags = new Array(); }
-        TagSet(Tag tag)    { mTags = new Array(tag.getId()); }
+        TagSet()           { mTags = new ArrayList<Integer>(); }
+        TagSet(Tag tag)    { (mTags = new ArrayList<Integer>()).add(tag.getId()); }
         TagSet(String csv) {
-            mTags = new Array();
+            mTags = new ArrayList<Integer>();
             if (csv == null || csv.equals(""))
                 return;
             String[] tags = csv.split(",");
@@ -78,7 +79,13 @@ public class Conversation extends MailItem {
         boolean contains(int tagId) { return mTags.contains(tagId); }
 
         int count(Tag tag)   { return count(tag.getId()); }
-        int count(int tagId) { return mTags.count(tagId); }
+        int count(int tagId) {
+            int count = 0;
+            for (int i : mTags)
+                if (i == tagId)
+                    count++;
+            return count;
+        }
 
         boolean update(Tag tag, boolean add)                    { return update(tag.getId(), add, false); }
         boolean update(Tag tag, boolean add, boolean affectAll) { return update(tag.getId(), add, affectAll); }
@@ -86,8 +93,10 @@ public class Conversation extends MailItem {
         boolean update(int tagId, boolean add, boolean affectAll) {
             if (add)
                 mTags.add(tagId);
+            else if (!affectAll)
+                mTags.remove((Integer) tagId);
             else
-                mTags.remove(tagId, affectAll);
+                while (mTags.remove((Integer) tagId)) ;
             recalculate();
             return true;
         }
@@ -97,7 +106,7 @@ public class Conversation extends MailItem {
                 int mask = 1 << j; 
                 if ((flags & mask) != 0) {
                     if (add)  mTags.add(-j - 1);
-                    else      mTags.remove(-j - 1, false);
+                    else      mTags.remove(-j - 1);
                     flags &= ~mask;
                 }
             }
@@ -109,7 +118,7 @@ public class Conversation extends MailItem {
                 if ((tags & mask) != 0) {
                     // should really check to make sure the tag is reasonable
                     if (add)  mTags.add(j + TAG_ID_OFFSET);
-                    else      mTags.remove(j + TAG_ID_OFFSET, false);
+                    else      mTags.remove(j + TAG_ID_OFFSET);
                     tags &= ~mask;
                 }
             }
@@ -119,8 +128,7 @@ public class Conversation extends MailItem {
         void recalculate() {
             mData.flags = 0;
             mData.tags  = 0;
-            for (int i = 0; i < mTags.length; i++) {
-                int value = mTags.array[i];
+            for (int value : mTags) {
                 if (value < 0)
                     mData.flags |= 1 << Flag.getIndex(value);
                 else
@@ -164,7 +172,7 @@ public class Conversation extends MailItem {
     }
 
     public int getMessageCount() {
-        return (mChildren == null ? 0 : mChildren.length);
+        return (mData.children == null ? 0 : mData.children.size());
     }
 
     public int getInternalFlagBitmask() {
@@ -213,7 +221,7 @@ public class Conversation extends MailItem {
         mSenderList = new SenderList();
         mEncodedSenders = null;
         mInheritedTagSet = null;
-        mChildren = null;
+        mData.children = null;
         recalculateSubject(msgs.length > 0 ? msgs[0] : null);
 
         mData.size = msgs.length;
@@ -264,36 +272,38 @@ public class Conversation extends MailItem {
     Message[] getMessages(byte sort) throws ServiceException {
         if ((sort & DbMailItem.SORT_FIELD_MASK) == DbMailItem.SORT_BY_ID) {
             // try to get all our info from the cache to avoid a database trip
-            mChildren.sort((sort & DbMailItem.SORT_DIRECTION_MASK) == DbMailItem.SORT_ASCENDING);
-            Message[] msgs = new Message[mChildren.length];
+            Collections.sort(mData.children);
+            if ((sort & DbMailItem.SORT_DIRECTION_MASK) == DbMailItem.SORT_DESCENDING)
+                Collections.reverse(mData.children);
+            Message[] msgs = new Message[mData.children.size()];
             int found;
-            for (found = 0; found < mChildren.length; found++) {
-                msgs[found] = (Message) mMailbox.getCachedItem(new Integer(mChildren.array[found]));
+            for (found = 0; found < mData.children.size(); found++) {
+                msgs[found] = (Message) mMailbox.getCachedItem(mData.children.get(found));
                 if (msgs[found] == null)
                     break;
             }
-            if (found == mChildren.length)
+            if (found == mData.children.size())
                 return msgs;
         }
 
-        List listData = DbMailItem.getByParent(this, sort);
+        List<UnderlyingData> listData = DbMailItem.getByParent(this, sort);
         Message[] msgs = new Message[listData.size()];
-        Iterator it = listData.iterator();
-        for (int i = 0; it.hasNext(); i++)
-            msgs[i] = mMailbox.getMessage((UnderlyingData) it.next());
+        int i = 0;
+        for (UnderlyingData data : listData)
+            msgs[i++] = mMailbox.getMessage(data);
         return msgs;
     }
     /** Returns all the unread {@link Message}s in this conversation.
      *  The messages are fetched from the database; they are not returned
      *  in any particular order. */
     Message[] getUnreadMessages() throws ServiceException {
-        List unreadData = DbMailItem.getUnreadMessages(this);
+        List<UnderlyingData> unreadData = DbMailItem.getUnreadMessages(this);
         if (unreadData == null)
             return null;
         Message[] msgs = new Message[unreadData.size()];
-        Iterator it = unreadData.iterator();
-        for (int i = 0; it.hasNext(); i++)
-            msgs[i] = mMailbox.getMessage((UnderlyingData) it.next());
+        int i = 0;
+        for (UnderlyingData data : unreadData)
+            msgs[i] = mMailbox.getMessage(data);
         return msgs;
     }
 
@@ -313,7 +323,8 @@ public class Conversation extends MailItem {
         assert(id != Mailbox.ID_AUTO_INCREMENT && msgs.length > 0);
         Arrays.sort(msgs, new Message.SortDateAscending());
         int date = 0, unread = 0;
-        StringBuffer children = new StringBuffer(), tags = new StringBuffer();
+        List<Integer> children = new ArrayList<Integer>();
+        StringBuilder tags = new StringBuilder();
         SenderList sl = new SenderList();
         for (int i = 0; i < msgs.length; i++) {
             Message msg = msgs[i];
@@ -322,11 +333,11 @@ public class Conversation extends MailItem {
             if (!msg.canAccess(ACL.RIGHT_READ))
                 throw ServiceException.PERM_DENIED("you do not have sufficient rights on one of the messages");
             date = Math.max(date, msg.mData.date);
-            unread += msgs[i].mData.unreadCount;
-            children.append(i == 0 ? "" : ",").append(msg.mId);
+            unread += msg.mData.unreadCount;
+            children.add(msg.mId);
             tags.append(i == 0 ? "-" : ",-").append(msg.mData.flags)
                 .append(',').append(msg.mData.tags);
-            sl.add(msgs[i]);
+            sl.add(msg);
         }
 
         UnderlyingData data = new UnderlyingData();
@@ -338,7 +349,7 @@ public class Conversation extends MailItem {
         data.size        = msgs.length;
         data.metadata    = encodeMetadata(DEFAULT_COLOR, sl, data.subject, msgs.length > 0 ? msgs[0].getSubject() : "");
         data.unreadCount = unread;
-        data.children    = children.toString();
+        data.children    = children;
         data.inheritedTags = tags.toString();
         data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
@@ -390,11 +401,9 @@ public class Conversation extends MailItem {
         // Decrement the in-memory unread count of each message.  Each message will
         // then implicitly decrement the unread count for its conversation, folder
         // and tags.
-        Message[] msgs = getMessages(DbMailItem.DEFAULT_SORT_ORDER);
         TargetConstraint tcon = mMailbox.getOperationTargetConstraint();
-        Array targets = new Array();
-        for (int i = 0; i < msgs.length; i++) {
-            Message msg = msgs[i];
+        List<Integer> targets = new ArrayList<Integer>();
+        for (Message msg : getMessages(DbMailItem.DEFAULT_SORT_ORDER)) {
             if (msg.isUnread() != unread && msg.checkChangeID() &&
                     TargetConstraint.checkItem(tcon, msg) &&
                     msg.canAccess(ACL.RIGHT_WRITE)) {
@@ -405,7 +414,7 @@ public class Conversation extends MailItem {
         }
 
         // mark the selected messages in this conversation as read in the database
-        if (targets.length > 0)
+        if (!targets.isEmpty())
             DbMailItem.alterUnread(mMailbox, targets, unread);
     }
 
@@ -437,11 +446,9 @@ public class Conversation extends MailItem {
         
         markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
 
-        Message[] msgs = getMessages(SORT_ID_ASCENDING);
         TargetConstraint tcon = mMailbox.getOperationTargetConstraint();
-        Array targets = new Array();
-        for (int i = 0; i < msgs.length; i++) {
-            Message msg = msgs[i];
+        List<Integer> targets = new ArrayList<Integer>();
+        for (Message msg : getMessages(SORT_ID_ASCENDING)) {
             if (msg.isTagged(tag) != add && msg.checkChangeID() &&
                     TargetConstraint.checkItem(tcon, msg) &&
                     msg.canAccess(ACL.RIGHT_WRITE)) {
@@ -455,7 +462,7 @@ public class Conversation extends MailItem {
             }
         }
 
-        if (targets.length > 0)
+        if (!targets.isEmpty())
             DbMailItem.alterTag(tag, targets, add);
     }
 
@@ -501,15 +508,14 @@ public class Conversation extends MailItem {
         TargetConstraint tcon = mMailbox.getOperationTargetConstraint();
         boolean toTrash = target.inTrash();
         int oldUnread = 0;
-        for (int i = 0; i < msgs.length; i++)
-            if (msgs[i].isUnread())
+        for (Message msg : msgs)
+            if (msg.isUnread())
                 oldUnread++;
         // if mData.unread is wrong, what to do?  right now, always use the calculated value
         mData.unreadCount = oldUnread;
 
-        Array markedRead = new Array(), moved = new Array();
-        for (int i = 0; i < msgs.length; i++) {
-            Message msg = msgs[i];
+        List<Integer> markedRead = new ArrayList<Integer>(), moved = new ArrayList<Integer>();
+        for (Message msg : msgs) {
             Folder source = msg.getFolder();
 
             // skip messages that the client doesn't know about, can't modify, or has explicitly excluded
@@ -541,7 +547,7 @@ public class Conversation extends MailItem {
             msg.folderChanged(target);
         }
         // mark unread messages moved from Mailbox to Trash/Spam as read in the DB
-        if (markedRead.length > 0)
+        if (!markedRead.isEmpty())
             DbMailItem.alterUnread(target.getMailbox(), markedRead, false);
 
         // moving a conversation to spam closes it
@@ -549,7 +555,7 @@ public class Conversation extends MailItem {
         if (target.inSpam())
             detach();
 
-        if (moved.length > 0)
+        if (!moved.isEmpty())
             DbMailItem.setFolder(moved, target);
     }
 
@@ -598,7 +604,7 @@ public class Conversation extends MailItem {
     void removeChild(MailItem child) throws ServiceException {
         super.removeChild(child);
         // remove the last message and the conversation goes away
-        if (mChildren.length == 0) {
+        if (mData.children.isEmpty()) {
             delete();
             return;
         }
@@ -688,13 +694,12 @@ public class Conversation extends MailItem {
 
         // change the messages' parent relation
         DbMailItem.reparentChildren(other, this);
-        if (other.mChildren != null) {
-            if (mChildren == null)
-                mChildren = new Array();
-            for (int i = 0; i < other.mChildren.length; i++) {
-                int childId = other.mChildren.array[i];
-                mChildren.add(childId);
-                Message msg = mMailbox.getCachedMessage(new Integer(childId));
+        if (other.mData.children != null) {
+            if (mData.children == null)
+                mData.children = new ArrayList<Integer>();
+            for (int childId : other.mData.children) {
+                mData.children.add(childId);
+                Message msg = mMailbox.getCachedMessage(childId);
                 if (msg != null) {
                     msg.markItemModified(Change.MODIFIED_PARENT);
                     msg.mData.parentId = mId;
@@ -734,7 +739,7 @@ public class Conversation extends MailItem {
         info.rootId = mId;
         info.itemIds.add(new Integer(mId));
 
-        if (mChildren == null || mChildren.length == 0)
+        if (mData.children == null || mData.children.isEmpty())
             return info;
         Message[] msgs = getMessages(SORT_ID_ASCENDING);
         TargetConstraint tcon = mMailbox.getOperationTargetConstraint();
@@ -780,11 +785,11 @@ public class Conversation extends MailItem {
     void purgeCache(PendingDelete info, boolean purgeItem) throws ServiceException {
         if (info.incomplete) {
             // *some* of the messages remain; recalculate the data based on this
-            int remaining = mChildren.length - info.itemIds.size();
+            int remaining = mData.children.size() - info.itemIds.size();
             Message[] msgs = new Message[remaining];
-            for (int i = 0, loc = 0; i < mChildren.length; i++)
-                if (!info.itemIds.contains(mChildren.array[i]))
-                    msgs[loc++] = mMailbox.getMessageById(mChildren.array[i]);
+            for (int i = 0, loc = 0; i < mData.children.size(); i++)
+                if (!info.itemIds.contains(mData.children.get(i)))
+                    msgs[loc++] = mMailbox.getMessageById(mData.children.get(i));
             recalculateMetadata(msgs, true);
         }
 

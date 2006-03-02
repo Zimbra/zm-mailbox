@@ -136,95 +136,6 @@ public abstract class MailItem implements Comparable {
 
     public static final byte DEFAULT_COLOR = 0;
 
-    public static final class Array {
-        private static final int INITIAL_ARRAY_SIZE = 3;
-
-        public int[] array;
-        public int length = 0;
-
-        Array()           { array = new int[INITIAL_ARRAY_SIZE]; }
-        Array(int value) { add(value); }
-        Array(String csv) {
-            if (csv == null || csv.equals(""))
-                return;
-            String[] tags = csv.split(",");
-            grow(tags.length);
-            for (int i = 0; i < tags.length; i++)
-                add(Integer.parseInt(tags[i]));
-        }
-        Array(Array other) {
-            grow(other.array.length);
-            length = other.length;
-            for (int i = 0; i < length; i++)
-                array[i] = other.array[i];
-        }
-
-        void grow(int needed) {
-            int oldLength = (array == null ? 0 : array.length);
-            if (length + needed > oldLength) {
-                int[] newArray = new int[oldLength + INITIAL_ARRAY_SIZE];
-                if (array != null)
-                    System.arraycopy(array, 0, newArray, 0, length);
-                array = newArray;
-            }
-        }
-
-        boolean contains(int value) {
-            for (int i = 0; i < length; i++)
-                if (array[i] == value)
-                    return true;
-            return false;       }
-
-        void add(int value) {
-            grow(1);
-            array[length++] = value;
-        }
-        void add(Array other) {
-            grow(other.length);
-            for (int i = 0; i < other.length; i++)
-                array[length++] = other.array[i];
-        }
-
-        void remove(int value) { remove(value, true); }
-        void remove(int value, boolean removeAll) {
-            for (int i = 0; i < length; i++)
-                if (array[i] == value) {
-                    array[i--] = array[length-- - 1];
-                    if (!removeAll)
-                        break;
-                }
-        }
-
-        void sort(boolean ascending) {
-            Arrays.sort(array, 0, length);
-            if (!ascending)
-                for (int i = 0; i < length / 2; i++) {
-                    int other = length - 1 - i, tmp = array[i];
-                    array[i] = array[other];  array[other] = tmp;
-                }
-        }
-
-        int count(int value) {
-            int count = 0;
-            for (int i = 0; i < length; i++)
-                if (array[i] == value)
-                    count++;
-            return count;
-        }
-
-        public String toString() {
-            if (length == 0)
-                return null;
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < length; i++) {
-                if (i > 0)
-                    sb.append(',');
-                sb.append(array[i]);
-            }
-            return sb.toString();
-        }
-    }
-
     public static final class UnderlyingData {
         public int    id;
         public byte   type;
@@ -245,7 +156,7 @@ public abstract class MailItem implements Comparable {
         public int    modContent;
 
         public String inheritedTags;
-        public String children;
+        public List<Integer> children;
         public int    unreadCount;
         public int    messageCount;
 
@@ -396,7 +307,6 @@ public abstract class MailItem implements Comparable {
     protected byte           mColor;
 	protected UnderlyingData mData;
 	protected Mailbox        mMailbox;
-	protected Array          mChildren;
     protected MailboxBlob    mBlob;
 
     MailItem(Mailbox mbox, UnderlyingData data) throws ServiceException {
@@ -406,9 +316,8 @@ public abstract class MailItem implements Comparable {
         mId      = data.id;
         mData    = data;
         mMailbox = mbox;
-        if (mData.children != null && !mData.children.equals("") && canHaveChildren())
-            mChildren = new Array(mData.children);
-        mData.children = null;
+        if (mData.children != null && !canHaveChildren())
+            mData.children = null;
         decodeMetadata(mData.metadata);
         mData.metadata = null;
         // store the item in the mailbox's cache
@@ -901,9 +810,9 @@ public abstract class MailItem implements Comparable {
     /** Removes all this item's children from the {@link Mailbox}'s cache.
      *  Does not uncache the item itself. */
     void uncacheChildren() throws ServiceException {
-		if (mChildren != null)
-			for (int i = 0; i < mChildren.length; i++)
-				mMailbox.uncacheItem(new Integer(mChildren.array[i]));
+		if (mData.children != null)
+            for (Integer childId : mData.children)
+				mMailbox.uncacheItem(childId);
 	}
 
 
@@ -1295,10 +1204,10 @@ public abstract class MailItem implements Comparable {
 			throw MailServiceException.WRONG_MAILBOX();
 
 		// update child list
-		if (mChildren == null)
-			mChildren = new Array(child.getId());
-		else if (!mChildren.contains(child.getId()))
-			mChildren.add(child.getId());
+		if (mData.children == null)
+			(mData.children = new ArrayList<Integer>()).add(child.getId());
+		else if (!mData.children.contains(child.getId()))
+			mData.children.add(child.getId());
 
 		// update unread counts
 		updateUnread(child.mData.unreadCount);
@@ -1308,9 +1217,9 @@ public abstract class MailItem implements Comparable {
         markItemModified(Change.MODIFIED_CHILDREN);
 
 		// update child list
-		if (mChildren == null || !mChildren.contains(child.getId()))
+		if (mData.children == null || !mData.children.contains(child.getId()))
 			throw MailServiceException.IS_NOT_CHILD();
-		mChildren.remove(child.getId());
+		mData.children.remove(child.getId());
         
         // remove parent reference from the child 
         child.mData.parentId = -1;
@@ -1569,8 +1478,8 @@ public abstract class MailItem implements Comparable {
         	sb.append(CN_TAGS).append(": [").append(getTagString()).append("], ");
         if (mData.subject != null)
             sb.append(CN_SUBJECT).append(": ").append(mData.subject).append(", ");
-        if (mChildren != null)
-        	sb.append(CN_CHILDREN).append(": [").append(mChildren.toString()).append("], ");
+        if (mData.children != null)
+        	sb.append(CN_CHILDREN).append(": [").append(mData.children.toString()).append("], ");
         if (mData.blobDigest != null)
             sb.append(CN_BLOB_DIGEST).append(": ").append(mData.blobDigest);
         return sb;

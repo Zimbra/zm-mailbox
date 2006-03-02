@@ -238,8 +238,8 @@ public class DbMailItem {
         }
     }
 
-    public static void setFolder(MailItem.Array itemIDs, Folder folder) throws ServiceException {
-        if (itemIDs == null || itemIDs.length == 0)
+    public static void setFolder(List<Integer> itemIDs, Folder folder) throws ServiceException {
+        if (itemIDs == null || itemIDs.isEmpty())
             return;
         Mailbox mbox = folder.getMailbox();
         Connection conn = mbox.getOperationConnection();
@@ -248,11 +248,12 @@ public class DbMailItem {
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(folder) +
                     " SET folder_id = ?, mod_metadata = ?, change_date = ? WHERE id IN " + DbUtil.suitableNumberOfVariables(itemIDs));
-            stmt.setInt(1, folder.getId());
-            stmt.setInt(2, mbox.getOperationChangeID());
-            stmt.setInt(3, mbox.getOperationTimestamp());
-            for (int i = 0; i < itemIDs.length; i++)
-                stmt.setInt(i + 4, itemIDs.array[i]);
+            int arg = 1;
+            stmt.setInt(arg++, folder.getId());
+            stmt.setInt(arg++, mbox.getOperationChangeID());
+            stmt.setInt(arg++, mbox.getOperationTimestamp());
+            for (int id : itemIDs)
+                stmt.setInt(arg++, id);
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("writing new folder data for item [" + itemIDs + ']', e);
@@ -525,9 +526,9 @@ public class DbMailItem {
         }
     }
 
-    public static void alterTag(Tag tag, MailItem.Array itemIDs, boolean add)
+    public static void alterTag(Tag tag, List<Integer> itemIDs, boolean add)
     throws ServiceException {
-        if (itemIDs == null || itemIDs.length == 0)
+        if (itemIDs == null || itemIDs.isEmpty())
             return;
         Mailbox mbox = tag.getMailbox();
         Connection conn = mbox.getOperationConnection();
@@ -539,12 +540,13 @@ public class DbMailItem {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(tag) +
                     " SET " + column + " = " + column + (add ? " | ?" : " & ?") + ", mod_metadata = ?, change_date = ?" +
                     " WHERE " + precondition + " AND id IN " + DbUtil.suitableNumberOfVariables(itemIDs));
-            stmt.setLong(1, add ? tag.getBitmask() : ~tag.getBitmask());
-            stmt.setInt(2, mbox.getOperationChangeID());
-            stmt.setInt(3, mbox.getOperationTimestamp());
-            stmt.setLong(4, tag.getBitmask());
-            for (int i = 0; i < itemIDs.length; i++)
-                stmt.setInt(i + 5, itemIDs.array[i]);
+            int arg = 1;
+            stmt.setLong(arg++, add ? tag.getBitmask() : ~tag.getBitmask());
+            stmt.setInt(arg++, mbox.getOperationChangeID());
+            stmt.setInt(arg++, mbox.getOperationTimestamp());
+            stmt.setLong(arg++, tag.getBitmask());
+            for (int id : itemIDs)
+                stmt.setInt(arg++, id);
             stmt.executeUpdate();
 
             // Update the flagset or tagset cache.  Assume that the item's in-memory
@@ -629,9 +631,9 @@ public class DbMailItem {
         }
     }
 
-    public static void alterUnread(Mailbox mbox, MailItem.Array itemIDs, boolean unread)
+    public static void alterUnread(Mailbox mbox, List<Integer> itemIDs, boolean unread)
     throws ServiceException {
-        if (itemIDs == null || itemIDs.length == 0)
+        if (itemIDs == null || itemIDs.isEmpty())
             return;
         Connection conn = mbox.getOperationConnection();
 
@@ -640,12 +642,13 @@ public class DbMailItem {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox) +
                     " SET unread = ?, mod_metadata = ?, change_date = ?" +
                     " WHERE unread = ? AND id IN" + DbUtil.suitableNumberOfVariables(itemIDs));
-            stmt.setBoolean(1, unread);
-            stmt.setInt(2, mbox.getOperationChangeID());
-            stmt.setInt(3, mbox.getOperationTimestamp());
-            stmt.setBoolean(4, !unread);
-            for (int i = 0; i < itemIDs.length; i++)
-                stmt.setInt(i + 5, itemIDs.array[i]);
+            int arg = 1;
+            stmt.setBoolean(arg++, unread);
+            stmt.setInt(arg++, mbox.getOperationChangeID());
+            stmt.setInt(arg++, mbox.getOperationTimestamp());
+            stmt.setBoolean(arg++, !unread);
+            for (int id : itemIDs)
+                stmt.setInt(arg++, id);
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("updating tag data for items [" + itemIDs + "]", e);
@@ -1286,7 +1289,6 @@ public class DbMailItem {
                 rs = stmt.executeQuery();
 
                 int lastConvId = -1;
-                boolean firstTime = true;
                 List<Long> inheritedTags = new ArrayList<Long>();
                 List<Integer> children = new ArrayList<Integer>();
                 int unreadCount = 0;
@@ -1295,28 +1297,24 @@ public class DbMailItem {
                     int convId = rs.getInt(1);
                     if (convId != lastConvId) {
                         // New conversation.  Update stats for the last one and reset counters.
-                        if (!firstTime) {
+                        if (lastConvId != -1) {
                             // Update stats for the previous conversation
                             UnderlyingData data = conversations.get(lastConvId);
-                            data.children      = StringUtil.join(",", children);
+                            data.children      = children;
                             data.unreadCount   = unreadCount;
                             data.inheritedTags = StringUtil.join(",", inheritedTags);
                             data.messageCount  = children.size();
-                        } else {
-                            firstTime = false;
                         }
                         lastConvId = convId;
-                        children.clear();
+                        children = new ArrayList<Integer>();
                         inheritedTags.clear();
                         unreadCount = 0;
                     }
                     
                     // Read next row
                     children.add(rs.getInt(2));
-                    boolean unread = rs.getBoolean(3);
-                    if (unread) {
+                    if (rs.getBoolean(3))
                         unreadCount++;
-                    }
                     inheritedTags.add(-rs.getLong(4));
                     inheritedTags.add(rs.getLong(5));
                 }
@@ -1324,7 +1322,7 @@ public class DbMailItem {
                 // Update the last conversation.
                 UnderlyingData data = conversations.get(lastConvId);
                 if (data != null) {
-                    data.children      = StringUtil.join(",", children);
+                    data.children      = children;
                     data.unreadCount   = unreadCount;
                     data.inheritedTags = StringUtil.join(",", inheritedTags);
                     data.messageCount  = children.size();
