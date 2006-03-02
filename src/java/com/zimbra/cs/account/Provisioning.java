@@ -398,11 +398,6 @@ public abstract class Provisioning {
     public static final String A_zimbraIsDomainAdminAccount = "zimbraIsDomainAdminAccount";    
 
     /**
-     * Set for entries (accounts/lists) in the directory that have a local address
-     */
-    public static final String A_zimbraMailAddress = "zimbraMailAddress";
-    
-    /**
      * Set for entries (accounts/lists) in the directory that have an alias
      */
     public static final String A_zimbraMailAlias = "zimbraMailAlias";    
