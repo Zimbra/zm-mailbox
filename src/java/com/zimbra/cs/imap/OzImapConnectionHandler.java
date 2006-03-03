@@ -516,8 +516,6 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             ZimbraLog.imap.error("unexpected (and uncaught) IMAP exception type", ie);
             mIncompleteRequest = null;
             keepGoing = STOP_PROCESSING;
-        } finally {
-            ZimbraLog.clearContext();
         }
 
         return keepGoing;
@@ -691,10 +689,10 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                     session.cacheTag((Tag) it.next());
             }
 
-            // Session timeout will take care of closing an IMAP
-            // connection with no activity.
-            if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("post auth disabling idle notify in lieu of session expiry");
-            mConnection.cancelIdleNotifications();
+            // Session timeout will take care of closing an IMAP connection with
+            // no activity.
+            if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("disabling unauth connection alarm");
+            mConnection.cancelAlarm();
         } catch (ServiceException e) {
             if (mSession != null)
             	mSession.clearTagCache();
@@ -1903,7 +1901,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
 
     private static final int MAX_COMMAND_LENGTH = 2048;
     
-    private OzByteArrayMatcher mCommandMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLF, MAX_COMMAND_LENGTH, ZimbraLog.imap);
+    private OzByteArrayMatcher mCommandMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLF, null);
 
     private OzCountingMatcher mLiteralMatcher = new OzCountingMatcher();
     
@@ -1916,7 +1914,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         mCommandMatcher.reset();
         mConnection.setMatcher(mCommandMatcher);
         mConnection.enableReadInterest();
-        mCurrentData = new OzByteBufferGatherer();
+        mCurrentData = new OzByteBufferGatherer(256, MAX_COMMAND_LENGTH);
         if (newRequest) {
             mCurrentRequestData = new ArrayList();
             mCurrentRequestTag = null;
@@ -1930,52 +1928,59 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         mLiteralMatcher.reset();
         mConnection.setMatcher(mLiteralMatcher);
         mConnection.enableReadInterest();
-        mCurrentData = new OzByteBufferGatherer(target);
+        mCurrentData = new OzByteBufferGatherer(target, target);
         if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("entered literal read state target=" + target);
     }
     
     private Object mCloseLock = new Object();
     
-    private void gotoClosedState(boolean normalClose) {
+    private void gotoClosedStateInternal(boolean sendBanner) throws IOException {
         synchronized (mCloseLock) {
-        	// Close only once
-        	if (mState == ConnectionState.CLOSED) {
-        		throw new IllegalStateException("connection already closed");
-        	}
-        	
-        	try {
-        		if (mSession != null) {
-        			mSession.setHandler(null);
-        			SessionCache.clearSession(mSession.getSessionId(), mSession.getAccountId());
-        			mSession = null;
-        		}
-        		
-        		if (normalClose) {
-        			if (!mGoodbyeSent) {
-        				sendUntagged(ImapServer.getGoodbye(), true);
-        			}
-        			mGoodbyeSent = true;
-        		}
-        	} catch (IOException ioe) {
-        		normalClose = false;
-        	} finally {
-        		if (normalClose) {
-        			mConnection.close();
-        		} else {
-        			mConnection.closeNow();
-        		}
-        		mState = ConnectionState.CLOSED;
-        		if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("entered closed state: normal=" + normalClose);
-        	}
+            // Close only once
+            if (mState == ConnectionState.CLOSED) {
+                throw new IllegalStateException("connection already closed");
+            }
+            
+            if (mSession != null) {
+                mSession.setHandler(null);
+                SessionCache.clearSession(mSession.getSessionId(), mSession.getAccountId());
+                mSession = null;
+            }
+            
+            if (sendBanner) {
+                if (!mGoodbyeSent) {
+                    sendUntagged(ImapServer.getGoodbye(), true);
+                }
+                mGoodbyeSent = true;
+            }
+        }
+    }
+    
+    private void gotoClosedState(boolean sendBanner) {
+        try {
+            gotoClosedStateInternal(sendBanner);
+        } catch (IOException ioe) {
+            ZimbraLog.imap.info("exception occurred when closing IMAP connection", ioe);
+        } finally {
+            mConnection.close();
+            mState = ConnectionState.CLOSED;
+            if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("entered closed state: banner=" + sendBanner);
         }
     }
 
-    public void dropConnection() {
-    	// TODO revist this. There appear to be two callers for this method. One
-		// is idle connection termination, and in that case it is okay to send
-		// the banner. The other is IOException - in that case we should not
-		// attempt to send the banner. IOException has occurred.
-        gotoClosedState(false);
+    public void handleDisconnect() {
+        assert(mState != ConnectionState.UNKNOWN);
+        ZimbraLog.imap.info("connection closed by client");
+        try {
+            gotoClosedStateInternal(false);
+        } catch (IOException ioe) {
+            // Can't happen because send banner is false
+            ZimbraLog.imap.info("exception occurred when disconnecting IMAP connection", ioe);
+        }
+    }
+    
+    public void dropConnection(boolean sendBanner) {
+        gotoClosedState(sendBanner);
     }
 
     public void handleConnect() throws IOException {
@@ -1992,31 +1997,21 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         gotoReadLineState(true);
     }
 
-    public void handleDisconnect() {
-        assert(mState != ConnectionState.UNKNOWN);
-        ZimbraLog.imap.info("connection closed by client");
-        gotoClosedState(false);
-    }
-    
-    public void handleOverflow() throws IOException {
-        sendUntagged("BAD request too long", true);
-        gotoReadLineState(true);
-        return;
-    }
-    
     private OzByteBufferGatherer mCurrentData;
     
     private ArrayList mCurrentRequestData;
 
     private String mCurrentRequestTag;
     
-    public void handleIdle() throws IOException {
-        ZimbraLog.imap.info("idle connection");
+    public void handleAlarm() throws IOException {
+        ZimbraLog.imap.info("closing unauthenticated idle connection");
         gotoClosedState(true);
     }
 
     public void handleInput(ByteBuffer buffer, boolean matched) throws IOException {
+        
         mCurrentData.add(buffer);
+
         if (!matched) {
             return;
         }
@@ -2040,6 +2035,11 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         }
         
         if (mState == ConnectionState.READLINE) {
+            if (mCurrentData.overflowed()) {
+                sendUntagged("BAD request too long", true);
+                gotoReadLineState(true);
+                return;
+            }
             String line = mCurrentData.toAsciiString();
             /*
              * Is this the first line of this request? If so, then let's try
@@ -2048,6 +2048,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
              * parse it twice?
              */
             if (mCurrentRequestData.size() == 0) {
+                logCommand(line);
                 try {
                     mCurrentRequestTag = OzImapRequest.readTag(line);
                 } catch (ImapParseException ipe) {
@@ -2074,7 +2075,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             
             if (literal.octets() > 0) {
                 if (literal.blocking()) {
-                    mConnection.writeAsciiWithCRLF("+");
+                    sendContinuation();
                 }
                 gotoReadLiteralState(literal.octets());
                 return;
@@ -2091,4 +2092,21 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         throw new RuntimeException("internal error in IMAP server: bad state " + mState);
     }
 
+    private void logCommand(String command) {
+        if (!ZimbraLog.imap.isDebugEnabled()) {
+            return;
+        }
+        int space = command.indexOf(' ');
+        if ((space + "LOGIN ".length()) < command.length()) {
+            String possiblyLogin = command.substring(space + 1, space + 1 + "LOGIN ".length());
+            if (possiblyLogin.equalsIgnoreCase("LOGIN ")) {
+                int endLogin = space + 1 + "LOGIN ".length();
+                int endUser = command.indexOf(' ', endLogin);
+                if (endUser > 0) {
+                    command = command.substring(0, endUser) + "...";
+                }
+            }
+        }
+        ZimbraLog.imap.debug("  C: " + command);
+    }
 }

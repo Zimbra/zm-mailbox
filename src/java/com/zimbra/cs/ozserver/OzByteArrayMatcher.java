@@ -44,8 +44,6 @@ public class OzByteArrayMatcher implements OzMatcher {
     private final byte[] mMatchSequence;
     private final int mMatchSequenceLength;
     private int mMatched;
-    private int mLimit;
-    private int mSeen;
     
     public String toString() {
     	StringBuilder toRet = new StringBuilder("OzByteArrayMatcher(");
@@ -68,12 +66,10 @@ public class OzByteArrayMatcher implements OzMatcher {
     
     
     /** After maxBytes bytes are processed an OzOverflowException is thrown. */ 
-    public OzByteArrayMatcher(byte[] endSequence, int maxBytes, Log log) {
+    public OzByteArrayMatcher(byte[] endSequence, Log log) {
         mMatchSequence = endSequence;
         mMatchSequenceLength = endSequence.length;
         mMatched = 0;
-        mLimit = maxBytes;
-        mSeen = 0;
         mLog = log;
         if (mLog == null) {
         	mTrace = false;
@@ -82,23 +78,21 @@ public class OzByteArrayMatcher implements OzMatcher {
         }
     }
     
-    public boolean match(ByteBuffer buf) throws OzOverflowException {
+    private void trace(String msg, Throwable t) { if (mTrace) mLog.trace(msg, t); }
+    private void trace(String msg) { if (mTrace) mLog.trace(msg); }
+
+    public boolean match(ByteBuffer buf) {
         assert(mMatched < mMatchSequenceLength);
         
         int n = buf.remaining();
         
-        if (mTrace) mLog.trace("new bytes to look at=" + n + ", already matched=" + mMatched);
+        if (mTrace) trace("new bytes to look at=" + n + ", already matched=" + mMatched);
         
         StringBuilder tsb = null;
         if (mTrace) tsb = new StringBuilder("byte array matcher trace ");
         
         for (int i = 0; i < n; i++) {
             byte b = buf.get();
-
-            mSeen++;
-            if (mLimit > 0 && mSeen > mLimit) {
-            	throw new OzOverflowException(mLimit);
-            }
 
             if (mTrace) {
                 if (b >= 32 && b <=126) tsb.append("'" + (char)b + "'/"); 
@@ -109,7 +103,7 @@ public class OzByteArrayMatcher implements OzMatcher {
                 mMatched++;
                 if (mTrace) tsb.append("+" + mMatched + " ");
                 if (mMatched == mMatchSequenceLength) {
-                    if (mTrace) mLog.trace(tsb.toString());
+                    if (mTrace) trace(tsb.toString());
                     return true;
                 }
             } else {
@@ -118,19 +112,18 @@ public class OzByteArrayMatcher implements OzMatcher {
                     mMatched++;
                     if (mTrace) tsb.append("+" + mMatched + " ");
                     if (mMatched == mMatchSequenceLength) {
-                        if (mTrace) mLog.trace(tsb.toString());
+                        if (mTrace) trace(tsb.toString());
                         return true;
                     }
                 }
             }
         }
-        if (mTrace) mLog.trace(tsb.toString());
+        if (mTrace) trace(tsb.toString());
         return false;
     }
 
     public void reset() {
         mMatched = 0;
-        mSeen = 0;
     }
 
     public int trailingTrimLength() {

@@ -41,24 +41,25 @@ class TestServer {
 
     private static OzServer mServer;
 
-    public TestServer(int port, boolean secure) throws IOException, ServiceException {
+    public TestServer(int port, boolean secure, boolean debugLogging) throws IOException, ServiceException {
         final boolean isSecure = secure;
+        final boolean isDebugLogging = debugLogging;
         OzConnectionHandlerFactory testHandlerFactory = new OzConnectionHandlerFactory() {
             public OzConnectionHandler newConnectionHandler(OzConnection connection) {
                 if (isSecure) {
-                    connection.addFilter(new OzTLSFilter(connection, mLog.isTraceEnabled(), mLog));
+                    connection.addFilter(new OzTLSFilter(connection, isDebugLogging, mLog));
                 }
                 return new TestConnectionHandler(connection);
             }
         };
         ServerSocket serverSocket = NetUtil.getBoundServerSocket(null, port, false);
-    	mServer = new OzServer("Test", 64, serverSocket, testHandlerFactory, mLog.isTraceEnabled(), mLog);
+    	mServer = new OzServer("Test", 64, serverSocket, testHandlerFactory, debugLogging, mLog);
         mServer.start();
     }
     
     public static void main(String[] args) throws IOException, ServiceException {
         Zimbra.toolSetup("TRACE", null, true);
-    	new TestServer(Integer.parseInt(args[0]), Boolean.parseBoolean(args[1]));
+    	new TestServer(Integer.parseInt(args[0]), Boolean.parseBoolean(args[1]), true);
     }
     
     void shutdown() {

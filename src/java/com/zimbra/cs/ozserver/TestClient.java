@@ -27,6 +27,7 @@ package com.zimbra.cs.ozserver;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetAddress;
@@ -58,6 +59,8 @@ import java.security.cert.X509Certificate;
 //
 // nsum <n>       -> calculated sum
 //
+// echo num_bytes num_chunks -> write (num_chunks * num_bytes), where first chunk is 'A', second chunk is 'B', etc. 
+//
 // quit           -> ok and close()
 
 class TestClient {
@@ -83,13 +86,22 @@ class TestClient {
         } else {
             mSocket = new Socket(host, port);
         }
+        if (!mSocket.isConnected()) {
+            throw new IOException("not connected");
+        }
         mSocketIn = new BufferedReader(new InputStreamReader(mSocket.getInputStream()));
         mSocketOut = new BufferedOutputStream(mSocket.getOutputStream());
-        mResponse = mSocketIn.readLine();
-        mLog.info("cgot: " + mResponse);
-        
+        readResponse();
         String cid = mResponse.substring(mResponse.indexOf('=') + 1);
         ZimbraLog.addToContext("cid", cid);
+    }
+    
+    private void readResponse() throws IOException {
+        mResponse = mSocketIn.readLine();
+        if (mResponse == null) {
+            throw new EOFException("expecting response");
+        }
+        mLog.info("cgot: " + mResponse);
     }
     
     public String getLastResponse() {
@@ -99,15 +111,13 @@ class TestClient {
     public void helo() throws IOException {
         mSocketOut.write("helo\r\n".getBytes());
         mSocketOut.flush();
-        mResponse = mSocketIn.readLine();
-        mLog.info("cgot: " + mResponse);
+        readResponse();
     }
     
     public void quit() throws IOException {
         mSocketOut.write("quit\r\n".getBytes());
         mSocketOut.flush();
-        mResponse = mSocketIn.readLine();
-        mLog.info("cgot: " + mResponse);
+        readResponse();
     }
     
     public void sum(byte[] bytes) throws IOException {
@@ -117,25 +127,24 @@ class TestClient {
         mSocketOut.write(OzSmtpTransparency.apply(buffer).array());
         mSocketOut.write(OzByteArrayMatcher.CRLFDOTCRLF);
         mSocketOut.flush();
-        mResponse = mSocketIn.readLine();
-        mLog.info("cgot: " + mResponse);
+        readResponse();
     }
     
     public void nsum(byte[] bytes) throws IOException {
         mSocketOut.write(("nsum " + bytes.length + "\r\n").getBytes());
         mSocketOut.write(bytes);
         mSocketOut.flush();
-        mResponse = mSocketIn.readLine();
-        mLog.info("cgot: " + mResponse);
+        readResponse();
     }
     
-    public boolean echo(byte bv, int nb, int nc) throws IOException {
-    	mSocketOut.write(("echo " + (char)bv + " " + nb + " " + nc + "\r\n").getBytes());
+    public boolean echo(int nb, int nc) throws IOException {
+    	mSocketOut.write(("echo " + nb + " " + nc + "\r\n").getBytes());
     	mSocketOut.flush();
     	char[] arr = new char[nb];
     	
     	int target = nb * nc;
     	int totalRead = 0;
+        int bv = 'A';
     	do {
     		int nread = mSocketIn.read(arr);
     		TestServer.mLog.info("client read " + nread + " bytes");
@@ -143,12 +152,15 @@ class TestClient {
     			mResponse = "EOF reached";
     			return false;
     		}
-    		totalRead += nread; 
     		for (int k = 0; k < nread; k++) {
     			if (arr[k] != bv) {
     				mResponse = "client found " + arr[k] + " at index " +  k + " when expecting " + (char)bv;
     				return false;
     			}
+                totalRead++;
+                if ((totalRead % nb) == 0) {
+                    bv++;
+                }
     		}
     	} while (totalRead < target);
     		
@@ -171,8 +183,8 @@ class TestClient {
     
     private static Random mRandom = new Random();
     
-    private static final int DATA_SIZE_MINIMUM = 28000; 
-    private static final int DATA_SIZE_VARIANCE = 1024;
+    public static final int DATA_SIZE_MINIMUM = 28000; 
+    public static final int DATA_SIZE_VARIANCE = 1024;
     private static final int MAX_ECHO_CHUNKS = 16;
     
     private static byte randomPrintableAsciiByte(Random r) {
@@ -210,9 +222,8 @@ class TestClient {
             mLog.info("response: OK expected and got " + nsum);
         }
 
-        bv = randomPrintableAsciiByte(mRandom);
-        mLog.info("sending: echo " + (char)bv + " " + nb + " " + nc);
-        if (client.echo(bv, nb, nc)) {
+        mLog.info("sending: echo " + nb + " " + nc);
+        if (client.echo(nb, nc)) {
             mLog.info("response: OK " + client.getLastResponse());
         } else { 
         	mLog.info("response: FAIL " + client.getLastResponse());

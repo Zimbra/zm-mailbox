@@ -33,6 +33,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
@@ -44,17 +45,7 @@ import EDU.oswego.cs.dl.util.concurrent.BoundedLinkedQueue;
 import EDU.oswego.cs.dl.util.concurrent.PooledExecutor;
 import EDU.oswego.cs.dl.util.concurrent.ThreadFactory;
 
-// TODO SSL - warn for truncation attack on pre-mature handshake termination 
-
-// TODO switch over to java.util.concurrent thread pool
-
-// TODO recycle buffers
-
-// TODO lot of selects return with 0 selected, in a big sequence (SSL only?)
-
-// TODO limit total number of connections from config
-
-// TODO limit total bytes read in ByteArrayMatcher and enforce in IMAP
+import com.zimbra.cs.ozserver.OzConnection.ServerTask;
 
 public class OzServer {
     
@@ -113,17 +104,26 @@ public class OzServer {
 
     private Object mSelectorGuard = new Object();
 
-    void wakeupSelector() {
+    private void wakeupSelector(String reason) {
         if (Thread.currentThread() == mServerThread) {
-           if (mDebugLogging) mLog.trace("noop wakeup selector - already in server thread");
-           return;
-        }
-        synchronized (mSelectorGuard) {
-        	if (mDebugLogging) mLog.trace("waking up selector");
-        	mSelector.wakeup();
+           if (mLog.isDebugEnabled()) mLog.debug("noop wakeup selector - already in server thread");
+        } else {
+            synchronized (mSelectorGuard) {
+                if (mLog.isDebugEnabled()) mLog.debug("waking up selector for " + reason);
+                mSelector.wakeup();
+            }
         }
     }
 
+    LinkedList<ServerTask> mServerTaskList = new LinkedList<ServerTask>();
+    
+    void schedule(ServerTask task) {
+        synchronized (mServerTaskList) {
+            mServerTaskList.add(task);
+        }
+        wakeupSelector(task.getName());
+    }
+    
     private void serverLoop() {
         while (true) {
             synchronized (this) {
@@ -142,12 +142,24 @@ public class OzServer {
                 mLog.warn("OzServer IOException in select", ioe);
             }
 
+            synchronized (mServerTaskList) {
+                for (Iterator<ServerTask> iter = mServerTaskList.iterator(); iter.hasNext(); iter.remove()) {
+                    ServerTask task = iter.next();
+                    task.run();
+                }
+            }
+            
             if (mLog.isDebugEnabled()) mLog.debug("selected " + readyCount + " set " + mSelector.selectedKeys().size());
 
             Iterator<SelectionKey> iter = mSelector.selectedKeys().iterator();
             while (iter.hasNext()) {
                 SelectionKey readyKey = iter.next();
                 iter.remove();
+
+                if (!readyKey.isValid()) {
+                    if (mLog.isDebugEnabled()) mLog.debug("ignoring invalid key" + readyKey);
+                    continue;
+                }
 
                 OzConnection readyConnection = null; 
                 try {
@@ -156,34 +168,26 @@ public class OzServer {
                         readyConnection.addToNDC();
                     }
                     
-                    synchronized (readyKey) {
-                        if (!readyKey.isValid()) {
-                        	if (mLog.isDebugEnabled()) mLog.debug("ignoring invalid key" + readyKey);
-                        	continue;
-                        }
-                        
-                        OzUtil.logKey(mLog, readyKey, "ready key");
-
-                        if (readyKey.isAcceptable()) {
-                        	Socket newSocket = mServerSocket.accept();
-                        	SocketChannel newChannel = newSocket.getChannel(); 
-                        	newChannel.configureBlocking(false);
-                        	readyConnection= new OzConnection(OzServer.this, newChannel);
-                        }
-                        
-                        if (readyKey.isReadable()) {
-                        	readyConnection.doReadReady();
-                        }
-                        
-                        if (readyKey.isWritable()) {
-                        	readyConnection.doWriteReady();
-                        }
+                    OzUtil.logKey(mLog, readyKey, "ready key");
+                    
+                    if (readyKey.isAcceptable()) {
+                        Socket newSocket = mServerSocket.accept();
+                        SocketChannel newChannel = newSocket.getChannel(); 
+                        newChannel.configureBlocking(false);
+                        readyConnection= new OzConnection(OzServer.this, newChannel);
                     }
                     
+                    if (readyKey.isReadable()) {
+                        readyConnection.doReadReady();
+                    }
+                    
+                    if (readyKey.isWritable()) {
+                        readyConnection.doWriteReady();
+                    }
                 } catch (Throwable t) {
                     if (readyConnection != null) {
                     	mLog.warn("exception occurred handling selecting key, closing connection", t);
-                        readyConnection.cleanup();
+                        readyConnection.cleanupForServer();
                     } else {
                     	mLog.warn("ignoring exception occurred while handling a selected key", t);
                     }
@@ -245,7 +249,7 @@ public class OzServer {
             mShutdownRequested = true;
         }
 
-        wakeupSelector();
+        wakeupSelector("shutdown");
         
         synchronized (mShutdownCompleteCondition) {
             while (!mShutdownComplete) {
@@ -265,6 +269,7 @@ public class OzServer {
                     mLog.info("starting server loop");
                     serverLoop();
                 } catch (Throwable t) {
+                    mLog.warn("server loop encountered exception", t);
                     shutdown();
                 } finally {
                     mLog.info("ended server loop");

@@ -25,16 +25,32 @@
 
 package com.zimbra.cs.ozserver;
 
-public class OzOverflowException extends Exception {
-	
-	int mLimit = 0;
-	
-	public OzOverflowException(int limit) {
-		super("too many bytes in input");
-		mLimit = limit;
-	}
+import java.io.IOException;
 
-	public int limit() {
-		return mLimit;
-	}
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import com.zimbra.cs.util.Zimbra;
+
+public class TestMaxConn {
+    private static TestClient[] mClients;
+
+    static Log mLog = LogFactory.getLog(TestMaxConn.class);
+
+    public static void main(String[] args) {
+        Zimbra.toolSetup("TRACE", null, true);
+
+        String host = args[0];
+        int port = Integer.parseInt(args[1]);
+        int n = Integer.parseInt(args[2]);
+        mClients = new TestClient[n];
+        for (int i = 0; i < n; i++) {
+            try {
+                mClients[i] = new TestClient(host, port, false);
+            } catch (IOException ioe) {
+                mLog.warn("connection number " + i + " excepted", ioe);
+                return;
+            }
+        }
+    }
 }

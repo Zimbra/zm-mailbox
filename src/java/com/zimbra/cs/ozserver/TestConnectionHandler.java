@@ -31,13 +31,13 @@ import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.zimbra.cs.util.ZimbraLog;
+//import com.zimbra.cs.util.ZimbraLog;
 
 class TestConnectionHandler implements OzConnectionHandler {
 
-    private OzByteArrayMatcher mCommandMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLF, 1000, ZimbraLog.misc);
+    private OzByteArrayMatcher mCommandMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLF, null);
     
-    private OzByteArrayMatcher mSumDataMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLFDOTCRLF, 32000, ZimbraLog.misc);
+    private OzByteArrayMatcher mSumDataMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLFDOTCRLF, null);
     
     private OzCountingMatcher mNsumDataMatcher = new OzCountingMatcher();
     
@@ -53,15 +53,21 @@ class TestConnectionHandler implements OzConnectionHandler {
     private static final int READING_SUM_DATA = 2;
     private static final int READING_NSUM_DATA = 3;
     
+    public static final int TIMEOUT_SECONDS = 10;
+    
+    public static final int MAX_COMMAND_LENGTH = 100;
+    public static final int MAX_SUM_LENGTH = 32000;
+    
     TestConnectionHandler(OzConnection connection) {
         mConnection = connection;
-        mIncomingData = new OzByteBufferGatherer(4096);
+        mIncomingData = new OzByteBufferGatherer(256, MAX_COMMAND_LENGTH);
     }
     
     private void gotoReadingCommandState() {
         mReadState = READING_COMMAND;
         mCommandMatcher.reset();
         mIncomingData.clear();
+        mIncomingData.limit(MAX_COMMAND_LENGTH);
         mConnection.setMatcher(mCommandMatcher);
         mConnection.enableReadInterest();
         TestServer.mLog.info("entered command read state");
@@ -71,6 +77,7 @@ class TestConnectionHandler implements OzConnectionHandler {
         mReadState = READING_SUM_DATA;
         mSumDataMatcher.reset();
         mIncomingData.clear();
+        mIncomingData.limit(MAX_SUM_LENGTH);
         mConnection.setMatcher(mSumDataMatcher);
         mConnection.enableReadInterest();
         TestServer.mLog.info("entered sum read state");
@@ -81,6 +88,7 @@ class TestConnectionHandler implements OzConnectionHandler {
         mNsumDataMatcher.target(target);
         mNsumDataMatcher.reset();
         mIncomingData.clear();
+        mIncomingData.limit(MAX_SUM_LENGTH);
         mConnection.setMatcher(mNsumDataMatcher);
         mConnection.enableReadInterest();
         TestServer.mLog.info("entered nsum read state");
@@ -88,19 +96,18 @@ class TestConnectionHandler implements OzConnectionHandler {
     
     public void handleConnect() throws IOException {
         // Write greeting
-        mConnection.setIdleNotifyTime(50000);
+        mConnection.setAlarm(TIMEOUT_SECONDS * 1000);
         mConnection.writeAsciiWithCRLF("200 Hello, welcome to test server cid=" + mConnection.getId());
         gotoReadingCommandState();
     }   
     
-    public void handleOverflow() throws IOException {
-        mConnection.writeAsciiWithCRLF("525 request too long");
-        gotoReadingCommandState();
-    }
-    
     private void doCommand() throws IOException 
     {
         assert(mReadState == READING_COMMAND);
+        if (mIncomingData.overflowed()) {
+            mConnection.writeAsciiWithCRLF("525 request too long");
+            gotoReadingCommandState();
+        }
         String cmd = mIncomingData.toAsciiString();
         try {
             TestServer.mLog.info("server executing: " + cmd);
@@ -110,11 +117,12 @@ class TestConnectionHandler implements OzConnectionHandler {
         }
     }
 
-    private static Pattern ECHO = Pattern.compile("echo\\s+(.)\\s+([0-9]+)\\s+([0-9]+)");
+    private static Pattern ECHO = Pattern.compile("echo\\s+([0-9]+)\\s+([0-9]+)");
 
     private void doCommandInternal(String cmd) throws IOException 
     {
         if (cmd.equals("helo")) {
+            mConnection.cancelAlarm();
             mConnection.writeAsciiWithCRLF("200 pleased to meet you");
             gotoReadingCommandState();
         } else if (cmd.equals("quit")) {
@@ -142,12 +150,11 @@ class TestConnectionHandler implements OzConnectionHandler {
         } else if (cmd.startsWith("echo")) {
             Matcher m = ECHO.matcher(cmd);
             if (m.find()) {
-                int ch = m.group(1).charAt(0);
-                int chunk = Integer.parseInt(m.group(2));
-                int times = Integer.parseInt(m.group(3));
+                int chunk = Integer.parseInt(m.group(1));
+                int times = Integer.parseInt(m.group(2));
                 for (int i = 0; i < times; i++) {
                     byte[] arr = new byte[chunk];
-                    Arrays.fill(arr, (byte)ch);
+                    Arrays.fill(arr, (byte)('A' + i));
                     ByteBuffer bb = ByteBuffer.wrap(arr);
                     mConnection.write(bb);
                 }
@@ -168,7 +175,9 @@ class TestConnectionHandler implements OzConnectionHandler {
     
     private void doSum() throws IOException
     {
+        assert(!mIncomingData.overflowed());
         byte[] data = mIncomingData.array();
+        
         int n = data.length;
         for (int i = 0; i < mIncomingData.size(); i++) {
             mSum += data[i];
@@ -199,7 +208,7 @@ class TestConnectionHandler implements OzConnectionHandler {
         }
     }
     
-    public void handleIdle() throws IOException {
+    public void handleAlarm() throws IOException {
         TestServer.mLog.info("connection was idle, terminating");
         mConnection.writeAsciiWithCRLF("550 sorry you have been idle and are being terminated");
         mConnection.close();
@@ -207,6 +216,5 @@ class TestConnectionHandler implements OzConnectionHandler {
     
     public void handleDisconnect() {
         TestServer.mLog.info("connection disconnect");
-        mConnection.closeNow();
     }
 }

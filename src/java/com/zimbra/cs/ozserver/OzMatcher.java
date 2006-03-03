@@ -38,7 +38,7 @@ public interface OzMatcher {
      * of PDU is reached.  Never advance the buffer's position beyond the match.
      * This method will be invoked will different buffers, as and when IO occurs.
      */ 
-    boolean match(ByteBuffer buffer) throws OzOverflowException;
+    boolean match(ByteBuffer buffer);
     
     /**
      * Some PDUs have a sequence of bytes at the end that are used to demarcate
