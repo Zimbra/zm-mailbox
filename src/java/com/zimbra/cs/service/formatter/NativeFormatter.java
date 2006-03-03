@@ -39,9 +39,9 @@ import javax.servlet.http.HttpServletResponse;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServletException;
@@ -80,8 +80,8 @@ public class NativeFormatter extends Formatter {
                 handleMessage(context, (Message) item);
             } else if (item instanceof Appointment) {
                 handleAppt(context, (Appointment) item);
-            } else if (item instanceof WikiItem) {
-                handleWiki(context, (WikiItem) item);
+            } else if (item instanceof Document) {
+                handleDocument(context, (Document) item);
             } else {
                 throw UserServletException.notImplemented("can only handle messages/appts");
             }
@@ -124,9 +124,9 @@ public class NativeFormatter extends Formatter {
         }
     }
     
-    private void handleWiki(Context context, WikiItem wiki) throws IOException, ServiceException {
-        context.resp.setContentType(Mime.CT_TEXT_PLAIN);
-        InputStream is = wiki.getRawMessage();
+    private void handleDocument(Context context, Document doc) throws IOException, ServiceException {
+        context.resp.setContentType(doc.getContentType());
+        InputStream is = doc.getRawDocument();
         ByteUtil.copy(is, context.resp.getOutputStream());
         is.close();
     }
