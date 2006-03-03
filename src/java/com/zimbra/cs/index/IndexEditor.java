@@ -164,43 +164,34 @@ public class IndexEditor {
 	public class SingleQueryRunner implements QueryRunner
 	{
 	    int mMailboxId;
-	    MailboxIndex mMailbox;
 	    
 	    SingleQueryRunner(int mailboxId) throws ServiceException {
 	        mMailboxId = mailboxId;
-            mMailbox = Mailbox.getMailboxById(mailboxId).getMailboxIndex();
 	    }
 	    
 	    public ZimbraQueryResults runQuery(String qstr, byte[] types, SortBy sortBy) throws IOException, MailServiceException, ParseException, ServiceException
 	    {
-	        ZimbraQuery zq = new ZimbraQuery(qstr, Mailbox.getMailboxById(mMailboxId));
+	    	Mailbox mbox = Mailbox.getMailboxById(mMailboxId);
+	    	ZimbraQuery zq = new ZimbraQuery(qstr, mbox, types, sortBy, false, false, 100);
             
-//	        return new SingleQueryResults(mMailbox.search(zq, types, sortBy), mMailbox);
-            return mMailbox.search(zq, types, sortBy, false, false, 100); 
+	    	return zq.execute(mbox); 
 	    }
 	}
 	
 	public class MultiQueryRunner implements QueryRunner
 	{
-	    MailboxIndex[] mMailbox;
 	    int mMailboxId[];
 	    
 	    MultiQueryRunner(int[] mailboxId) throws ServiceException {
-	        mMailbox = new MailboxIndex[mailboxId.length];
 	        mMailboxId = new int[mailboxId.length];
 	        for (int i = 0; i < mailboxId.length; i++) {
-//	            mMailbox[i] = Indexer.GetInstance().getMailboxIndex(mailboxId[i]);
-                mMailbox[i] = Mailbox.getMailboxById(mailboxId[i]).getMailboxIndex();
 	            mMailboxId[i] = mailboxId[i];
 	        }
 	    }
 	    
 	    MultiQueryRunner(ArrayList /* Integer */ mailboxId) throws ServiceException {
-	        mMailbox = new MailboxIndex[mailboxId.size()];
 	        mMailboxId = new int[mailboxId.size()];
 	        for (int i = 0; i < mailboxId.size(); i++) {
-                mMailbox[i] = Mailbox.getMailboxById(((Integer) mailboxId.get(i)).intValue()).getMailboxIndex();
-//	            mMailbox[i] = Indexer.GetInstance().getMailboxIndex(((Integer) mailboxId.get(i)).intValue());
 	            mMailboxId[i] = ((Integer) mailboxId.get(i)).intValue();
 	        }
 	    }
@@ -208,10 +199,11 @@ public class IndexEditor {
 	    
 	    public ZimbraQueryResults runQuery(String qstr, byte[] types, SortBy sortBy) throws IOException, MailServiceException, ParseException, ServiceException
 	    {
-	        ZimbraQueryResults[] res = new ZimbraQueryResults[mMailbox.length];
-	        for (int i = 0; i < mMailbox.length; i++) {
-		        ZimbraQuery zq = new ZimbraQuery(qstr, Mailbox.getMailboxById(mMailboxId[i]));
-	            res[i] = mMailbox[i].search(zq, types, sortBy, false, false, 100);
+	    	ZimbraQueryResults[] res = new ZimbraQueryResults[mMailboxId.length];
+	        for (int i = 0; i < mMailboxId.length; i++) {
+	        	Mailbox mbox = Mailbox.getMailboxById(mMailboxId[i]);
+	        	ZimbraQuery zq = new ZimbraQuery(qstr, mbox, types, sortBy, false, false, 100);
+	        	res[i] = zq.execute(mbox);
 	        }
 	        return new HitIdGrouper(new MultiQueryResults(res, sortBy), sortBy);
 	    }

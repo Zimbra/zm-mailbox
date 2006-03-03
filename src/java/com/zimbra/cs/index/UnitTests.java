@@ -200,7 +200,6 @@ public class UnitTests extends TestCase {
                 ,new QueryResult("code to contribute: JAM")
                 ,new QueryResult("Getting the distribution onto a download site somewhere ...")
                 ,new QueryResult("Getting an XMLBeans distribution onto a download site somewhere")
-                ,new QueryResult("[xmlbeans-dev] Future XMLBeans feature work?")
                 ,new QueryResult("About me")
                 ,new QueryResult("XmlBeans source code has been checked in ...")
                 ,new QueryResult("XmlBeans source code has been checked in ...")
@@ -459,116 +458,116 @@ public class UnitTests extends TestCase {
         return true;
     }
     
-	public static QueryResult[] RunQuery(int mailboxId, String qstr, 
-	        boolean conv, ResultValidator validator) throws IOException, MailServiceException, ParseException, ServiceException
-	{
-	    ArrayList ret = new ArrayList();
-	    
-//	    MailboxIndex searcher = Indexer.GetInstance().getMailboxIndex(mailboxId);
-        MailboxIndex searcher = Mailbox.getMailboxById(mailboxId).getMailboxIndex();
-        
-//        try {
-//            System.out.println("\nRun Query: "+qstr);
-//            long startTime = System.currentTimeMillis();
-            
-            ZimbraQuery zq = new ZimbraQuery(qstr, Mailbox.getMailboxById(mailboxId));
-            
-            int groupBy = MailboxIndex.SEARCH_RETURN_MESSAGES;
-            if (conv) {
-                groupBy = MailboxIndex.SEARCH_RETURN_CONVERSATIONS;
-            }
-            
-            byte types[] = new byte[1];
-            switch(groupBy) {
-            case MailboxIndex.SEARCH_RETURN_CONVERSATIONS:
-                types[0] = MailItem.TYPE_CONVERSATION;
-                break;
-            case MailboxIndex.SEARCH_RETURN_MESSAGES:
-                types[0] = MailItem.TYPE_MESSAGE;
-                break;
-            default:
-                types[0] = 0;
-                break;
-            }
-            
-            ZimbraQueryResults res = searcher.search(zq, types, SortBy.DATE_DESCENDING, false, false, 100);
-            try {
-                
-//                long endTime = System.currentTimeMillis();
-        		    
-                // compute numMessages the slow way, so we get a true count...for testing only!
-                if (true) {
-                int numMessages = 0;
-                {
-                    ZimbraHit hit = res.getFirstHit();
-                    while (hit != null) {
-                        numMessages++;
-                        hit=res.getNext();
-                    }
-                }
-  
-				System.out.println("Query: \""+qstr+"\" matched "+numMessages+" documents");
-                }
-//                System.out.println(numMessages + " total matching documents in " + (endTime-startTime) + " ms");
-                
-                int HITS_PER_PAGE = 20;
-                if (conv) {
-                    HITS_PER_PAGE = 20;
-                }
-                
-                int totalShown = 0;
-                
-                ZimbraHit hit = res.skipToHit(0);
-                while (hit != null) {
-                    for (int i = 0; (hit != null) && (i < HITS_PER_PAGE); i++) {
-                        if (conv) {
-                            ConversationHit ch = (ConversationHit) hit;
-                            Date date = new Date(ch.getHitDate());
-                            System.out.println(ch.toString() + " " + date + " " + ch.getSubject() + "  (" + ch.getNumMessageHits() + ")");
-//                            Collection mhs = ch.getMessageHits();
-                            totalShown++;
-                            ret.add(new QueryResult(ch.getSubject()));
-                            if (validator != null) {
-                                validator.validate(hit);
-                            }
-//                            for (Iterator iter = mhs.iterator(); iter.hasNext(); )
-//                            {
-//                                SimpleQueryResults.MessageHit mh = (SimpleQueryResults.MessageHit)iter.next();
-//                                Date date1 = new Date(mh.getDateHeader());
-//                                Date date2 = new Date(mh.getDate());
-//                                
-////                                System.out.println("\t" + mh.toString() + " " + date1 + " " + mh.getSender() + " " + mh.getSubject());
-//                            }
-                        } else {
-                            if (hit instanceof MessageHit) {
-                                MessageHit mh = (MessageHit)hit;
-//                                Date date = new Date(mh.getDateHeader());
-                                //                            System.out.println(mh.toString() + " " + date + " " + mh.getSender() + " " + mh.getSubject());
-                                totalShown++;
-                                ret.add(new QueryResult(mh.getSubject()));
-                                if (null != validator) {
-                                    validator.validate(hit);
-                                }
-                            }
-                        }
-                        hit = res.getNext();
-                    }
-                }
-//                System.out.println(numMessages + " total matching documents in " + (endTime-startTime) + " ms");
-//                System.out.println("Showed a total of " + totalShown + (conv ? " Conversations" : " Messages"));
-            } finally {
-                res.doneWithSearchResults();
-            }
-//        } catch(Exception e) {
-//            e.printStackTrace();
-//        } finally {
-//        	searcher.close();
-//        }
-        QueryResult[] retArray = new QueryResult[ret.size()];
-        return (QueryResult[])ret.toArray(retArray);
-	}
-    
-    
+    public static QueryResult[] RunQuery(int mailboxId, String qstr, 
+    		boolean conv, ResultValidator validator) throws IOException, MailServiceException, ParseException, ServiceException {
+    	ArrayList ret = new ArrayList();
+
+    	MailboxIndex searcher = Mailbox.getMailboxById(mailboxId).getMailboxIndex();
+
+    	int groupBy = MailboxIndex.SEARCH_RETURN_MESSAGES;
+    	if (conv) {
+    		groupBy = MailboxIndex.SEARCH_RETURN_CONVERSATIONS;
+    	}
+
+    	byte types[] = new byte[1];
+    	switch(groupBy) {
+    	case MailboxIndex.SEARCH_RETURN_CONVERSATIONS:
+    		types[0] = MailItem.TYPE_CONVERSATION;
+    		break;
+    	case MailboxIndex.SEARCH_RETURN_MESSAGES:
+    		types[0] = MailItem.TYPE_MESSAGE;
+    		break;
+    	default:
+    		types[0] = 0;
+    	break;
+    	}
+
+    	Mailbox mbox = Mailbox.getMailboxById(mailboxId);
+
+    	ZimbraQuery zq = new ZimbraQuery(qstr, mbox, 
+    			types, SortBy.DATE_DESCENDING,
+    			false, false, 100);
+
+    	ZimbraQueryResults res = zq.execute(mbox);
+
+    	try {
+
+//  		long endTime = System.currentTimeMillis();
+
+//  		compute numMessages the slow way, so we get a true count...for testing only!
+    		if (true) {
+    			int numMessages = 0;
+    			{
+    				ZimbraHit hit = res.getFirstHit();
+    				while (hit != null) {
+    					numMessages++;
+    					hit=res.getNext();
+    				}
+    			}
+
+    			System.out.println("Query: \""+qstr+"\" matched "+numMessages+" documents");
+    		}
+//  		System.out.println(numMessages + " total matching documents in " + (endTime-startTime) + " ms");
+
+    		int HITS_PER_PAGE = 20;
+    		if (conv) {
+    			HITS_PER_PAGE = 20;
+    		}
+
+    		int totalShown = 0;
+
+    		ZimbraHit hit = res.skipToHit(0);
+    		while (hit != null) {
+    			for (int i = 0; (hit != null) && (i < HITS_PER_PAGE); i++) {
+    				if (conv) {
+    					ConversationHit ch = (ConversationHit) hit;
+    					Date date = new Date(ch.getHitDate());
+    					System.out.println(ch.toString() + " " + date + " " + ch.getSubject() + "  (" + ch.getNumMessageHits() + ")");
+//  					Collection mhs = ch.getMessageHits();
+    					totalShown++;
+    					ret.add(new QueryResult(ch.getSubject()));
+    					if (validator != null) {
+    						validator.validate(hit);
+    					}
+//  					for (Iterator iter = mhs.iterator(); iter.hasNext(); )
+//  					{
+//  					SimpleQueryResults.MessageHit mh = (SimpleQueryResults.MessageHit)iter.next();
+//  					Date date1 = new Date(mh.getDateHeader());
+//  					Date date2 = new Date(mh.getDate());
+
+////					System.out.println("\t" + mh.toString() + " " + date1 + " " + mh.getSender() + " " + mh.getSubject());
+//  					}
+    				} else {
+    					if (hit instanceof MessageHit) {
+    						MessageHit mh = (MessageHit)hit;
+//  						Date date = new Date(mh.getDateHeader());
+    						//                            System.out.println(mh.toString() + " " + date + " " + mh.getSender() + " " + mh.getSubject());
+    						totalShown++;
+    						ret.add(new QueryResult(mh.getSubject()));
+    						if (null != validator) {
+    							validator.validate(hit);
+    						}
+    					}
+    				}
+    				hit = res.getNext();
+    			}
+    		}
+//  		System.out.println(numMessages + " total matching documents in " + (endTime-startTime) + " ms");
+//  		System.out.println("Showed a total of " + totalShown + (conv ? " Conversations" : " Messages"));
+    	} finally {
+    		res.doneWithSearchResults();
+    	}
+//  	} catch(Exception e) {
+//  	e.printStackTrace();
+//  	} finally {
+//  	searcher.close();
+//  	}
+    	QueryResult[] retArray = new QueryResult[ret.size()];
+    	return (QueryResult[])ret.toArray(retArray);
+
+    }
+
+
     /*
      * @see TestCase#tearDown()
      */

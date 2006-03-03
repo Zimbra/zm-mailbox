@@ -119,7 +119,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
     {
         assert(target == ITEM);
 
-        return ZimbraQuery.ItemQuery.Create(mMailbox, mAnalyzer, modifier, tok);
+        return ZimbraQuery.ItemQuery.Create(mAnalyzer, modifier, tok);
     }
 
     public ZimbraQuery.BaseQuery GetQuery(int modifier, int target, String tok) throws ParseException, ServiceException, MailServiceException
@@ -161,7 +161,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
                 return new ZimbraQuery.ConvQuery(mAnalyzer, modifier, tok);
             } else {
                 // virtual-conversation: search for the item-id with id = -1*X
-                return ZimbraQuery.ItemQuery.Create(mMailbox, mAnalyzer, modifier, tok.substring(1));
+                return ZimbraQuery.ItemQuery.Create(mAnalyzer, modifier, tok.substring(1));
             }
           case DATE:
           case DAY:

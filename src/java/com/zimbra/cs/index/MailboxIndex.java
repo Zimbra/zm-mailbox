@@ -448,32 +448,19 @@ public final class MailboxIndex
         }
     }
     
-    // you **MUST** call ZimbraQueryResults.doneWithSearchResults() when you are done with them!
-    public synchronized ZimbraQueryResults search(ZimbraQuery query, byte[] types, SortBy searchOrder,
-            boolean includeTrash, boolean includeSpam, int chunkSize) throws IOException
-    {
-        try {
-            if (mLog.isDebugEnabled()) {
-                String str = this.toString() +" search([";
-                for (int i = 0; i < types.length; i++) {
-                    if (i > 0) {
-                        str += ",";
-                    }
-                    str+=types[i];
-                }
-                str += "]," + searchOrder + ")";
-                mLog.debug(str);
-            }
-            
-            ZimbraQueryResults toret = query.execute(mMailboxId, this, types, searchOrder, includeTrash, includeSpam, chunkSize);
-            
-            return new HitIdGrouper(toret, searchOrder);
-            
-        } catch(Exception e) {
-            e.printStackTrace();
-            return new EmptyQueryResults(types, searchOrder);
-        }
-    }
+//    // you **MUST** call ZimbraQueryResults.doneWithSearchResults() when you are done with them!
+//    public synchronized ZimbraQueryResults search(Mailbox mbox, ZimbraQuery query, byte[] types, SortBy searchOrder) throws IOException
+//    {
+//        try {
+//        	ZimbraQueryResults toret = query.doIt(mbox, this);
+//            
+//            return new HitIdGrouper(toret, searchOrder);
+//            
+//        } catch(Exception e) {
+//            e.printStackTrace();
+//            return new EmptyQueryResults(types, searchOrder);
+//        }
+//    }
     
     synchronized Sort getSort(SortBy searchOrder) {
         switch (searchOrder) {

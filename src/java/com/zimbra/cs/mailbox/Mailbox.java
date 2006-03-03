@@ -2429,22 +2429,25 @@ public class Mailbox {
      * @throws ParseException
      * @throws ServiceException
      */
-    public synchronized ZimbraQueryResults search(OperationContext octxt, String queryString, byte[] types,
+    public ZimbraQueryResults search(OperationContext octxt, String queryString, byte[] types,
                                                   SortBy sortBy, boolean includeTrash, boolean includeSpam, int chunkSize)
     throws IOException, ParseException, ServiceException {
-        boolean success = false;
-        try {
-            beginTransaction("search", octxt);
+    	ZimbraQuery zq = new ZimbraQuery(queryString, this, types, sortBy, includeTrash, includeSpam, chunkSize);
+    	
+		boolean success = false;
+    	try {
+    		synchronized(this) {
+    			beginTransaction("search", octxt);
 
-            ZimbraQuery zq = new ZimbraQuery(queryString, this); 
-            ZimbraQueryResults results = getMailboxIndex().search(zq, types, sortBy, includeTrash, includeSpam, chunkSize);
-            success = true;
-            return results;
-        } finally {
-            endTransaction(success);
-        }
+    			ZimbraQueryResults results = zq.execute(this); 
+    			success = true;
+    			return results;
+    		}
+    	} finally {
+    		endTransaction(success);
+    	}
     }
-
+    
 
     public synchronized FreeBusy getFreeBusy(long start, long end) throws ServiceException {
         return FreeBusy.getFreeBusyList(this, start, end);

@@ -58,6 +58,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.ZimbraLog;
 
 
 
@@ -992,7 +993,7 @@ public final class ZimbraQuery {
 
     public static class ItemQuery extends BaseQuery
     {
-        public static BaseQuery Create(Mailbox mailbox, Analyzer analyzer, int modifier, String str) 
+        public static BaseQuery Create(Analyzer analyzer, int modifier, String str) 
         throws ServiceException {
             boolean allQuery = false;
             boolean noneQuery = false;
@@ -1015,14 +1016,14 @@ public final class ZimbraQuery {
                 }
             }
             
-            return new ItemQuery(analyzer, mailbox, modifier, allQuery, noneQuery, itemIds);
+            return new ItemQuery(analyzer, modifier, allQuery, noneQuery, itemIds);
         }
         
         private boolean mIsAllQuery;
         private boolean mIsNoneQuery;
         private List mItemIds;
         
-        public ItemQuery(Analyzer analyzer, Mailbox mbx, int modifier, boolean all, boolean none, List ids) 
+        public ItemQuery(Analyzer analyzer, int modifier, boolean all, boolean none, List ids) 
         {
             super(modifier, ZimbraQueryParser.ITEM);
             mIsAllQuery = all;
@@ -1516,17 +1517,34 @@ public final class ZimbraQuery {
     	
     	mSortByOverride = sortBy;
    }
+
+	private QueryOperation mOp;
+	private byte[] mTypes;
+	private SortBy mSearchOrder;
+	private int mChunkSize;
+	
+	
     
 	/**
+	 * Parse a query string and build a query plan from it.
+	 * 
+	 * @param queryString
+	 * @param mbox
+	 * @param types
+	 * @param searchOrder
+	 * @param includeTrash
+	 * @param includeSpam
+	 * @param chunkSize
 	 * @throws ParseException
 	 * @throws ServiceException
-	 * 
 	 */
-	public ZimbraQuery(String queryString, Mailbox mbx) throws ParseException, ServiceException
+	public ZimbraQuery(String queryString, Mailbox mbox, byte[] types, SortBy searchOrder, boolean includeTrash, boolean includeSpam, int chunkSize) 
+	throws ParseException, ServiceException
 	{
         ZimbraQueryParser parser = new ZimbraQueryParser(new StringReader(queryString));
-        parser.init(new ZimbraAnalyzer(), mbx);
+        parser.init(new ZimbraAnalyzer(), mbox);
          
+        
         mClauses = parser.Parse();
         
         String sortByStr = parser.getSortByStr();
@@ -1550,6 +1568,91 @@ public final class ZimbraQuery {
         if (ParseTree.SPEW)System.out.println("PT: "+pt.toString());
         
         mParseTree = pt;
+		mSearchOrder = searchOrder;
+		mTypes = types;
+		mChunkSize = chunkSize;
+		mOp = null;
+		
+		if (mSortByOverride != null) {
+	    	if (mLog.isDebugEnabled())
+	    		mLog.debug("Overriding SortBy parameter to execute ("+searchOrder.toString()+") w/ specification from QueryString: "+mSortByOverride.toString());
+			
+	    	mSearchOrder = mSortByOverride;
+		}
+		
+		BaseQuery head = getHead();
+	    if (null != head) {
+            
+	    	mOp = mParseTree.getQueryOperation();
+	        
+	        if (mLog.isDebugEnabled()) {
+	            mLog.debug("OP="+mOp.toString());
+	        }
+	        
+	        mOp = mOp.optimize(mbox);
+	        if (mOp == null) {
+	            mOp = new NoTermQueryOperation();
+	        }
+	        
+	        if (mLog.isDebugEnabled()) {
+	            mLog.debug("OPTIMIZED="+mOp.toString());
+	        }
+	        
+	        if (!includeTrash || !includeSpam) {
+	            if (!mOp.hasSpamTrashSetting()) {
+	                mOp = mOp.ensureSpamTrashSetting(mbox, includeTrash, includeSpam);
+	                if (mLog.isDebugEnabled()) {
+	                    mLog.debug("AFTERTS="+mOp.toString());
+	                }
+	                mOp = mOp.optimize(mbox); // optimize again now that we have the trash/spam setting
+	            }
+	        }
+	    }
+	}
+	
+	/**
+	 * Runs the search and gets an open result set.
+	 * 
+	 * WARNING: You **MUST** call ZimbraQueryResults.doneWithSearchResults() when you are done with them!
+	 * 
+	 * @param mbox
+	 * @return Open ZimbraQueryResults -- YOU MUST CALL doneWithSearchResults() to release the results set! 
+	 * @throws ServiceException
+	 * @throws IOException
+	 */
+	public ZimbraQueryResults execute(Mailbox mbox) throws ServiceException, IOException
+	{
+		MailboxIndex mbidx = mbox.getMailboxIndex();
+		
+		try {
+			if (ZimbraLog.index.isDebugEnabled()) {
+				String str = this.toString() +" search([";
+				for (int i = 0; i < mTypes.length; i++) {
+					if (i > 0) {
+						str += ",";
+					}
+					str+=mTypes[i];
+				}
+				str += "]," + mSearchOrder + ")";
+				mLog.debug(str);
+			}
+			
+			if (mOp!= null) {
+				if (mLog.isDebugEnabled())
+					mLog.debug("OPERATION:"+mOp.toString());
+				
+				ZimbraQueryResults res = mOp.run(mbox, mbidx, mTypes, mSearchOrder, mChunkSize);
+				
+	            return new HitIdGrouper(res, mSearchOrder);
+			} else {
+				mLog.debug("Operation optimized to nothing.  Returning no results");
+			}
+		} catch(Exception e) {
+        	if (ZimbraLog.index.isDebugEnabled()) 
+        		ZimbraLog.index.debug("Caught exception running search "+e, e);
+        }
+		
+    	return new EmptyQueryResults(mTypes, mSearchOrder);
 	}
     
     /**
@@ -1565,64 +1668,64 @@ public final class ZimbraQuery {
 	 * @throws IOException
 	 * @throws ServiceException
 	 */
-	public ZimbraQueryResults execute(int mailboxId, MailboxIndex mbidx, byte[] types, SortBy searchOrder,
-	        boolean includeTrash, boolean includeSpam, int chunkSize) throws IOException, ServiceException  
-    {
-		if (mSortByOverride != null) {
-	    	if (mLog.isDebugEnabled())
-	    		mLog.debug("Overriding SortBy parameter to execute ("+searchOrder.toString()+") w/ specification from QueryString: "+mSortByOverride.toString());
-			
-			searchOrder = mSortByOverride;
-		}
-		
-	    BaseQuery head = getHead();
-	    if (null != head) {
-            
-	        Mailbox mbox = Mailbox.getMailboxById(mailboxId);
-	        
-	        QueryOperation op= mParseTree.getQueryOperation();
-	        
-	        if (mLog.isDebugEnabled()) {
-	            mLog.debug("OP="+op.toString());
-	        }
-	        
-	        op = op.optimize(mbox);
-	        if (op == null) {
-	            op = new NoTermQueryOperation();
-	        }
-	        
-	        if (mLog.isDebugEnabled()) {
-	            mLog.debug("OPTIMIZED="+op.toString());
-	        }
-	        
-	        if (!includeTrash || !includeSpam) {
-	            if (!op.hasSpamTrashSetting()) {
-	                op = op.ensureSpamTrashSetting(mbox, includeTrash, includeSpam);
-	                if (mLog.isDebugEnabled()) {
-	                    mLog.debug("AFTERTS="+op.toString());
-	                }
-	                op = op.optimize(mbox); // optimize again now that we have the trash/spam setting
-	            }
-	        }
-            
-            if (op != null) {
-	        
-                if (mLog.isDebugEnabled()) {
-                    mLog.debug("OPERATION:"+op.toString());
-                }
-                
-                ZimbraQueryResults res = op.run(mbox, mbidx, types, searchOrder, chunkSize);
-                return res;
-            } else {
-                mLog.debug("Operation optimized to nothing.  Returning no results");
-                return new EmptyQueryResults(types, searchOrder);
-            }
-	        
-	    }
-
-	    // return an empty SimpleQueryResults set...
-	    return new EmptyQueryResults(types, searchOrder);
-    }
+//	public ZimbraQueryResults execute(int mailboxId, MailboxIndex mbidx, byte[] types, SortBy searchOrder,
+//	        boolean includeTrash, boolean includeSpam, int chunkSize) throws IOException, ServiceException  
+//    {
+//		if (mSortByOverride != null) {
+//	    	if (mLog.isDebugEnabled())
+//	    		mLog.debug("Overriding SortBy parameter to execute ("+searchOrder.toString()+") w/ specification from QueryString: "+mSortByOverride.toString());
+//			
+//			searchOrder = mSortByOverride;
+//		}
+//		
+//	    BaseQuery head = getHead();
+//	    if (null != head) {
+//            
+//	        Mailbox mbox = Mailbox.getMailboxById(mailboxId);
+//	        
+//	        QueryOperation op= mParseTree.getQueryOperation();
+//	        
+//	        if (mLog.isDebugEnabled()) {
+//	            mLog.debug("OP="+op.toString());
+//	        }
+//	        
+//	        op = op.optimize(mbox);
+//	        if (op == null) {
+//	            op = new NoTermQueryOperation();
+//	        }
+//	        
+//	        if (mLog.isDebugEnabled()) {
+//	            mLog.debug("OPTIMIZED="+op.toString());
+//	        }
+//	        
+//	        if (!includeTrash || !includeSpam) {
+//	            if (!op.hasSpamTrashSetting()) {
+//	                op = op.ensureSpamTrashSetting(mbox, includeTrash, includeSpam);
+//	                if (mLog.isDebugEnabled()) {
+//	                    mLog.debug("AFTERTS="+op.toString());
+//	                }
+//	                op = op.optimize(mbox); // optimize again now that we have the trash/spam setting
+//	            }
+//	        }
+//            
+//            if (op != null) {
+//	        
+//                if (mLog.isDebugEnabled()) {
+//                    mLog.debug("OPERATION:"+op.toString());
+//                }
+//                
+//                ZimbraQueryResults res = op.run(mbox, mbidx, types, searchOrder, chunkSize);
+//                return res;
+//            } else {
+//                mLog.debug("Operation optimized to nothing.  Returning no results");
+//                return new EmptyQueryResults(types, searchOrder);
+//            }
+//	        
+//	    }
+//
+//	    // return an empty SimpleQueryResults set...
+//	    return new EmptyQueryResults(types, searchOrder);
+//    }
 	
 	public String toString() {
         String ret = "ZQ:\n";
