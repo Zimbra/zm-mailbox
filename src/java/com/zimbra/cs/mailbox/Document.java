@@ -37,6 +37,7 @@ import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 
@@ -144,6 +145,7 @@ public class Document extends MailItem {
     	mData.size = size;
         mData.contentChanged(mMailbox);
         DbMailItem.saveMetadata(this, size, encodeMetadata(new Metadata()).toString());
+        markItemModified(Change.MODIFIED_SIZE | Change.MODIFIED_DATE | Change.MODIFIED_CONTENT);
     }
     
     protected static UnderlyingData prepareCreate(byte tp, int id, Folder folder, short volumeId, String subject, String creator, String type, int length, Document parent, Metadata meta) 
