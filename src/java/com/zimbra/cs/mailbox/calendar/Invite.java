@@ -326,7 +326,16 @@ public class Invite {
 //        METHOD_MAP.put(Method.PUBLISH.getValue(), Method.PUBLISH);
 //    }
     public static ICalTok lookupMethod(String methodName) {
-        ICalTok toRet = ICalTok.valueOf(methodName);
+        ICalTok toRet;
+        try {
+            toRet = ICalTok.valueOf(methodName);
+        } catch (IllegalArgumentException e) {
+            toRet = ICalTok.PUBLISH;
+            // Apple iCal generates non-standard "METHOD:EXPORT".
+            if (methodName.compareToIgnoreCase("EXPORT") != 0)
+                sLog.warn("Invalid METHOD " + methodName +
+                          "; assuming PUBLISH", e);
+        }
         switch (toRet) {
         case REQUEST:
         case PUBLISH:
