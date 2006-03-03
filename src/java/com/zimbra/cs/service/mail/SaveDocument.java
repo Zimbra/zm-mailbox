@@ -27,9 +27,14 @@ package com.zimbra.cs.service.mail;
 import java.io.IOException;
 import java.util.Map;
 
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimePart;
+
+import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.mailbox.Document;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
@@ -46,6 +51,22 @@ public class SaveDocument extends WriteOpDocumentHandler {
 		public byte[] contents;
 		public String name;
 		public String contentType;
+	}
+	
+	protected Doc getDocumentDataFromMessage(OperationContext octxt, Mailbox mbox, String msgid, String part) throws ServiceException {
+		Message item = mbox.getMessageById(octxt, Integer.parseInt(msgid));
+        MimeMessage mm = item.getMimeMessage();
+		Doc doc = new Doc();
+		try {
+	        MimePart mp = Mime.getMimePart(mm, part);
+			doc.contents = ByteUtil.getContent(mp.getInputStream(), 0);
+			doc.name = mp.getFileName();
+			doc.contentType = mp.getContentType();
+		} catch (Exception e) {
+			throw ServiceException.FAILURE("cannot get part "+part+" from message "+msgid, e);
+		}
+		
+		return doc;
 	}
 	
 	protected Doc getDocumentDataFromAttachment(ZimbraContext lc, String aid) throws ServiceException {
@@ -75,10 +96,18 @@ public class SaveDocument extends WriteOpDocumentHandler {
 
         Element docElem = request.getElement(MailService.E_DOC);
 
-        Element attElem = docElem.getElement(MailService.E_UPLOAD);
-        String aid = attElem.getAttribute(MailService.A_ID, null);
+        Doc doc;
+        Element attElem = docElem.getOptionalElement(MailService.E_UPLOAD);;
+        if (attElem != null) {
+            String aid = attElem.getAttribute(MailService.A_ID, null);
+            doc = getDocumentDataFromAttachment(lc, aid);
+        } else {
+        	attElem = docElem.getElement(MailService.E_MSG);
+            String msgid = attElem.getAttribute(MailService.A_ID, null);
+            String part = attElem.getAttribute(MailService.A_PART, null);
+        	doc = getDocumentDataFromMessage(octxt, mbox, msgid, part);
+        }
 
-        Doc doc = getDocumentDataFromAttachment(lc, aid);
         
         String name = docElem.getAttribute(MailService.A_NAME, doc.name);
         String ctype = docElem.getAttribute(MailService.A_CONTENT_TYPE, doc.contentType);

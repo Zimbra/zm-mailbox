@@ -6,12 +6,12 @@
 // The request should contain either <upload> element or <msg> element, but not both.
 // When <upload> is used, the document should be first uploaded to FileUploadServlet, and
 // then use the upload-id from the FileUploadResponse.
-// When <msg> is used, the document is retrieved from an existing message in the mailbox,
+// When <m> is used, the document is retrieved from an existing message in the mailbox,
 // identified by the msg-id and part-id.
 <SaveDocumentRequest>
   <doc [name="{file-name}"] [ct="{content-type}"] [l="{folder-id}"]>
     [<upload id="{upload-id}"/>]
-    [<msg id="{msg-id}" part="{part-id}"/>]
+    [<m id="{msg-id}" part="{part-id}"/>]
   </doc>
 </SaveDocumentRequest>
 
