@@ -437,7 +437,20 @@
 		</java>
 	</target>
 
-	<target name="localhost-ssl-cert" description="make a cert for ssl access">
+    <!-- Insert one directory (data/testmsgs) of mail -->
+    <target name="inject1" depends="compile">
+        <echo message="Wait for lmtp host=${lmtp.host} port=${lmtp.port}" />
+        <waitfor checkevery="1" checkeveryunit="second" maxwait="60" maxwaitunit="second">
+            <socket server="${lmtp.host}" port="${lmtp.port}" />
+        </waitfor>
+        <echo>LmtpInject messages</echo>
+        <java classname="com.zimbra.cs.lmtpserver.utils.LmtpInject" fork="true" classpathref="class.path" failonerror="true">
+            <arg line="-t ${lmtpinject.numthreads} -a ${lmtp.host} -p ${lmtp.port} -r user1@${zimbra.server.hostname} -s ho@example.zimbra.com -d" />
+            <arg path="data/testmsg" />
+        </java>
+    </target>
+
+    <target name="localhost-ssl-cert" description="make a cert for ssl access">
 		<delete failonerror="no">
 			<fileset dir="${tomcat.home.dir}/conf" includes="keystore" />
 		</delete>
