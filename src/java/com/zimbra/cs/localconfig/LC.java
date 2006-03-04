@@ -97,6 +97,8 @@ public class LC {
     public static final KnownKey zimbra_index_lru_size;
     public static final KnownKey zimbra_index_idle_flush_time;
     
+    public static final KnownKey zimbra_spam_report_queue_size;
+    
     public static final KnownKey stats_img_folder;
     
     public static final KnownKey ldap_host;
@@ -330,6 +332,12 @@ public class LC {
         zimbra_index_idle_flush_time.setDoc
             ("If idle for longer than this value (in seconds), flush" +
              " uncommitted indexing ops in mailbox.");
+
+        zimbra_spam_report_queue_size = new KnownKey("zimbra_spam_report_queue_size");
+        zimbra_spam_report_queue_size.setDefault("100");
+        zimbra_spam_report_queue_size.setDoc
+            ("For Junk/Not Junk Msg/ConvActionRequests this queue size limits the" +
+             " the server workqueue for processing the forwards");
 
         stats_img_folder = new KnownKey("stats_img_folder");
         stats_img_folder.setDefault("${zimbra_home}" + FS + "zimbramon" + FS + "rrdtool" + FS + "work");

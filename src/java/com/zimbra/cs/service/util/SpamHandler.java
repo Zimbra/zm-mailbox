@@ -25,6 +25,9 @@
 
 package com.zimbra.cs.service.util;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.activation.DataHandler;
 import javax.mail.MessagingException;
 import javax.mail.Part;
@@ -40,6 +43,7 @@ import org.apache.commons.logging.LogFactory;
 import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailboxBlob;
@@ -70,11 +74,9 @@ public class SpamHandler {
         
     private InternetAddress mIsNotSpamAddress;
         
+    private Thread mSpamHandlerThread;
+    
     public SpamHandler() {
-        reload();
-    }
-
-    public void reload() {
         Config config;
         
         try {
@@ -109,44 +111,143 @@ public class SpamHandler {
                 ZimbraLog.misc.warn("exception parsing " + Provisioning.A_zimbraSpamIsNotSpamAccount + " " + mIsNotSpamAccount, ae); 
             }
         }
+
+        if (mIsSpamAddress != null || mIsNotSpamAddress != null) {
+            Runnable r = new Runnable() {
+                public void run() {
+                    reportLoop();
+                }
+            };
+            mSpamHandlerThread = new Thread(r);
+            mSpamHandlerThread.setName("Junk-NotJunk-Handler");
+            mSpamHandlerThread.setDaemon(true);
+            mSpamHandlerThread.start();
+        }
     }
+   
+    private void sendReport(SpamReport sr) throws ServiceException, MessagingException {
+        String isSpamString = sr.mIsSpam ? "spam" : "!spam";
+        InternetAddress toAddress = sr.mIsSpam ? mIsSpamAddress : mIsNotSpamAddress;
         
-    public void handle(Mailbox mbox, int id, byte type, boolean isSpam) {
-        String accountName = null;
-        try {
-            accountName = mbox.getAccount().getName();
-            handle0(accountName, mbox, id, type, isSpam);
-        } catch (Throwable t1) {
-            // We do not want failed spam training to get in the way of
-            // anything, so we log errors and ignore them. This could end up
-            // catching an OOM, but some other thread doing something else
-            // will also catch the OOM and take appropriate action, so an OOM
-            // swallowed here is probably OK. In the future, we should move the
-            // spam training to it's own thread - in that case, ignoring any
-            // errors would be perfectly OK.
-            try {
-                ZimbraLog.misc.warn("exception processing spam/notspam for" + 
-                                    " account=" + accountName + " id=" + id + 
-                                    " type=" + MailItem.getNameForType(type), t1);
-            } catch (Throwable t2) {
-            }
-        } 
+        SMTPMessage out = new SMTPMessage(JMSession.getSession());
+        
+        Mailbox mbox = Mailbox.getMailboxById(sr.mMailboxId);
+        Message msg = mbox.getMessageById(null, sr.mMessageId);
+        
+        MimeMultipart mmp = null;
+        mmp = new MimeMultipart("mixed");
+        out.setContent(mmp);
+        
+        MimeBodyPart infoPart = new MimeBodyPart();
+        infoPart.setHeader("Content-Description", "Zimbra spam classification report");
+        StringBuffer sb = new StringBuffer(128);
+        sb.append("Classified-By: ").append(sr.mAccountName).append("\r\n");
+        sb.append("Classified-As: ").append(isSpamString).append("\r\n");
+        infoPart.setContent(sb.toString(), "text/plain");
+        mmp.addBodyPart(infoPart);
+        
+        MailboxBlob blob = msg.getBlob();
+        MimeBodyPart mbp = new MimeBodyPart();
+        mbp.setDataHandler(new DataHandler(new BlobDataSource(blob)));
+        mbp.setHeader("Content-Type", blob.getMimeType());
+        mbp.setHeader("Content-Disposition", Part.ATTACHMENT);
+        mmp.addBodyPart(mbp);
+        
+        out.setRecipient(javax.mail.Message.RecipientType.TO, toAddress);
+        out.setEnvelopeFrom("<>");
+        out.setSubject("zimbra-spam-report: " + sr.mAccountName + ": " + isSpamString);
+        Transport.send(out);
+        
+        ZimbraLog.misc.info("Sent " + sr);
     }
 
-    public void handle0(String accountName, Mailbox mbox, int id, byte type, boolean isSpam) throws ServiceException, MessagingException {
-        if (isSpam && mIsSpamAddress == null) {
-            if (mLog.isDebugEnabled()) {
-                mLog.debug("isSpam, but isSpamAddress is null, nothing to do");
+    private static final class SpamReport {
+        final String mAccountName;
+        final int mMailboxId;
+        final int mMessageId;
+        final boolean mIsSpam;
+        private String mDescString;
+        
+        SpamReport(String accountName, int mailboxId, int messageId, boolean isSpam) {
+            mAccountName = accountName;
+            mMailboxId = mailboxId;
+            mMessageId = messageId;
+            mIsSpam = isSpam;
+            
+        }
+        
+        public String toString() {
+            if (mDescString == null) {
+                mDescString = "spamreport: acct=" + mAccountName + " mbox=" + mMailboxId + " id=" + mMessageId + " report=" + (!mIsSpam ? "!" : "") + "spam"; 
             }
+            return mDescString;
+        }
+    }
+    
+    private static final int mSpamReportQueueSize = LC.zimbra_spam_report_queue_size.intValue();
+    
+    private Object mSpamReportQueueLock = new Object();
+    
+    List<SpamReport> mSpamReportQueue = new ArrayList<SpamReport>(mSpamReportQueueSize);
+
+    private void reportLoop() {
+        while (true) {
+            List<SpamReport> workQueue = null; 
+            synchronized (mSpamReportQueueLock) {
+                while (mSpamReportQueue.size() == 0) {
+                    try {
+                        mSpamReportQueueLock.wait();
+                    } catch (InterruptedException ie) {
+                        ZimbraLog.misc.warn("SpamHandler interrupted", ie);
+                    }
+                }
+                workQueue = mSpamReportQueue;
+                mSpamReportQueue = new ArrayList<SpamReport>(mSpamReportQueueSize);
+            }
+            
+            if (workQueue == null) {
+                if (ZimbraLog.misc.isDebugEnabled()) ZimbraLog.misc.debug("SpamHandler nothing to drain");
+            } else {
+                for (SpamReport sr : workQueue) {
+                    try {
+                        sendReport(sr);
+                    } catch (Exception e) {
+                        /* We don't care what errors occurred, we continue to try and send future reports */
+                        ZimbraLog.misc.warn("exception occurred sending spam report " + sr, e);
+                    }
+                }
+            }
+        }
+    }
+
+    private void enqueue(String accountName, Mailbox mbox, Message[] msgs, boolean isSpam) {
+        synchronized (mSpamReportQueueLock) {
+            for (int i = 0; i < msgs.length; i++) {
+                SpamReport sr = new SpamReport(accountName, mbox.getId(), msgs[i].getId(), isSpam);
+                if (mSpamReportQueue.size() > mSpamReportQueueSize) {
+                    ZimbraLog.misc.warn("SpamHandler queue size " + mSpamReportQueue.size() + " too large, ignored " + sr);
+                    continue;
+                }
+                mSpamReportQueue.add(sr);
+                if (ZimbraLog.misc.isDebugEnabled()) ZimbraLog.misc.debug("SpamHandler enqueued " + sr);
+            }
+            mSpamReportQueueLock.notify();
+        }
+    }
+        
+    public void handle(Mailbox mbox, int id, byte type, boolean isSpam) throws ServiceException {
+        if (isSpam && mIsSpamAddress == null) {
+            if (mLog.isDebugEnabled()) mLog.debug("isSpam, but isSpamAddress is null, nothing to do");
             return;
         }
         if ((!isSpam) && mIsNotSpamAddress == null) {
-            if (mLog.isDebugEnabled()) {
-                mLog.debug("isNotSpam, but isNotSpamAddress is null, nothing to do");
-            }
+            if (mLog.isDebugEnabled()) mLog.debug("isNotSpam, but isNotSpamAddress is null, nothing to do");
             return;
         }
 
+        String accountName = null;
+        accountName = mbox.getAccount().getName();
+        
         Message[] msgs = null;
         if (type == MailItem.TYPE_MESSAGE) {
             msgs = new Message[] { mbox.getMessageById(null, id) };
@@ -154,43 +255,12 @@ public class SpamHandler {
             msgs = mbox.getMessagesByConversation(null, id);
         } else {
             if (type != MailItem.TYPE_MESSAGE && type != MailItem.TYPE_CONVERSATION) {
-                ZimbraLog.misc.warn("SpamHandler called on unhandleable item of type" + MailItem.getNameForType(type));
+                ZimbraLog.misc.warn("SpamHandler called on unhandled item type=" + MailItem.getNameForType(type) + " account=" + accountName +  " id=" + id);
                 return;
             }
         }
 
-        String isSpamString = isSpam ? "spam" : "!spam";
-        InternetAddress toAddress = isSpam ? mIsSpamAddress : mIsNotSpamAddress;
-                
-        for (int i = 0; i < msgs.length; i++) {
-            SMTPMessage out = new SMTPMessage(JMSession.getSession());
-                        
-            MimeMultipart mmp = null;
-            mmp = new MimeMultipart("mixed");
-            out.setContent(mmp);
-
-            MimeBodyPart infoPart = new MimeBodyPart();
-            infoPart.setHeader("Content-Description", "Zimbra spam classification report");
-            StringBuffer sb = new StringBuffer(128);
-            sb.append("Classified-By: ").append(accountName).append("\r\n");
-            sb.append("Classified-As: ").append(isSpamString).append("\r\n");
-            infoPart.setContent(sb.toString(), "text/plain");
-            mmp.addBodyPart(infoPart);
-            
-            MailboxBlob blob = msgs[i].getBlob();
-            MimeBodyPart mbp = new MimeBodyPart();
-            mbp.setDataHandler(new DataHandler(new BlobDataSource(blob)));
-            mbp.setHeader("Content-Type", blob.getMimeType());
-            mbp.setHeader("Content-Disposition", Part.ATTACHMENT);
-            mmp.addBodyPart(mbp);
-
-            out.setRecipient(javax.mail.Message.RecipientType.TO, toAddress);
-            out.setEnvelopeFrom("<>");
-            out.setSubject("zimbra-spam-report: " + accountName + ": " + isSpamString);
-            Transport.send(out);
-            
-            ZimbraLog.misc.info("spam report sent flag=" + isSpamString + " to=" + toAddress + 
-                                " for=" + accountName + " mid=" + msgs[i].getId());
-        }
+        enqueue(accountName, mbox, msgs, isSpam);
     }
+    
 }
