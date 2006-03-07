@@ -79,7 +79,7 @@ public class ToXML {
         Element parent,
         CalendarResource resource)
     throws ServiceException {
-        return encodeCalendarResource(parent, resource, true);
+        return encodeCalendarResource(parent, resource, false);
     }
 
     private static void addAccountAttrs(Element e, Map attrs) {

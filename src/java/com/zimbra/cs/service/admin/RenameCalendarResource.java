@@ -86,7 +86,7 @@ public class RenameCalendarResource extends AdminDocumentHandler {
                     null);
         Element response =
             lc.createElement(AdminService.RENAME_CALENDAR_RESOURCE_RESPONSE);
-        ToXML.encodeCalendarResource(response, resource);
+        ToXML.encodeCalendarResource(response, resource, true);
         return response;
     }
 }
