@@ -121,10 +121,10 @@ public class SearchAccounts extends AdminDocumentHandler {
         int i, limitMax = offset+limit;
         for (i=offset; i < limitMax && i < accounts.size(); i++) {
             NamedEntry entry = (NamedEntry) accounts.get(i);
-            if (entry instanceof Account) {
+        	if (entry instanceof CalendarResource) {
+            ToXML.encodeCalendarResource(response, (CalendarResource) entry, applyCos);
+        	} else if (entry instanceof Account) {
                 ToXML.encodeAccount(response, (Account) entry, applyCos);
-            } else if (entry instanceof CalendarResource) {
-                ToXML.encodeCalendarResource(response, (CalendarResource) entry, applyCos);
             } else if (entry instanceof DistributionList) {
                 doDistributionList(response, (DistributionList) entry);
             } else if (entry instanceof Alias) {
