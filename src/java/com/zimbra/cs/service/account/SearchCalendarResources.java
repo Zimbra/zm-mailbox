@@ -81,7 +81,7 @@ public class SearchCalendarResources extends DocumentHandler {
         Term term = parseFilterTermElem(termElem);
         EntrySearchFilter filter = new EntrySearchFilter(term);
 
-        return null;
+        return filter;
     }
 
     private static Term parseFilterTermElem(Element termElem)
