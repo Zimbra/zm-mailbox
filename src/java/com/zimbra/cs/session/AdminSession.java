@@ -74,7 +74,7 @@ public class AdminSession extends Session {
     protected void cleanup() {
     }
 
-    public List searchAcounts(Domain d, String query, String[] attrs, String sortBy,
+    public List searchAccounts(Domain d, String query, String[] attrs, String sortBy,
             boolean sortAscending, int flags, int offset) throws ServiceException {
         AccountSearchParams params = new AccountSearchParams(d, query, attrs, sortBy, sortAscending, flags);
         boolean needToSearch = (mSearchParams == null) || !mSearchParams.equals(params);
@@ -94,7 +94,7 @@ public class AdminSession extends Session {
             boolean sortAscending, int offset)
     throws ServiceException {
         String query = LdapEntrySearchFilter.toLdapCalendarResourcesFilter(filter);
-        return searchAcounts(
+        return searchAccounts(
                 d, query, attrs, sortBy, sortAscending,
                 Provisioning.SA_CALENDAR_RESOURCE_FLAG,
                 offset);

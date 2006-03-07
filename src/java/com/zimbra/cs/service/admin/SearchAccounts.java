@@ -108,7 +108,7 @@ public class SearchAccounts extends AdminDocumentHandler {
         List accounts;
         AdminSession session = (AdminSession) lc.getSession(SessionCache.SESSION_ADMIN);
         if (session != null) {
-            accounts = session.searchAcounts(d, query, attrs, sortBy, sortAscending, flags, offset);
+            accounts = session.searchAccounts(d, query, attrs, sortBy, sortAscending, flags, offset);
         } else {
             if (d != null) {
                 accounts = d.searchAccounts(query, attrs, sortBy, sortAscending, flags);
