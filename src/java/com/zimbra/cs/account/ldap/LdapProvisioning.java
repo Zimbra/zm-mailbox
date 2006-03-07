@@ -2815,7 +2815,7 @@ public class LdapProvisioning extends Provisioning {
         boolean sortAscending,
         String base)
     throws ServiceException {
-        String query = LdapEntrySearchFilter.toLdapFilter(filter);
+        String query = LdapEntrySearchFilter.toLdapCalendarResourcesFilter(filter);
         return searchAccounts(query, returnAttrs,
                               sortAttr, sortAscending,
                               base,

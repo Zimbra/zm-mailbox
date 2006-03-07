@@ -93,7 +93,7 @@ public class AdminSession extends Session {
             Domain d, EntrySearchFilter filter, String[] attrs, String sortBy,
             boolean sortAscending, int offset)
     throws ServiceException {
-        String query = LdapEntrySearchFilter.toLdapFilter(filter);
+        String query = LdapEntrySearchFilter.toLdapCalendarResourcesFilter(filter);
         return searchAcounts(
                 d, query, attrs, sortBy, sortAscending,
                 Provisioning.SA_CALENDAR_RESOURCE_FLAG,
