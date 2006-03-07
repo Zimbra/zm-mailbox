@@ -151,7 +151,10 @@ public class LC {
     
     public static final KnownKey nio_imap_enable;
     public static final KnownKey nio_imap_debug_logging;
-    
+
+    public static final KnownKey zimbra_mtareport_max_recipients;
+    public static final KnownKey zimbra_mtareport_max_senders;
+
     static {
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  Changing this setting does not immediately reflect in MySQL server.  You will have to, with abundant precaution, re-generate my.cnf and restart MySQL server for the change to take effect.";
         final String FS = File.separator;
@@ -546,6 +549,18 @@ public class LC {
         nio_imap_debug_logging.setDefault("false");
         nio_imap_debug_logging.setDoc
             ("Log extremely large amounts of detail from the NIO IMAP server framework.  Useful only for debugging the IO framework.");
+
+
+		zimbra_mtareport_max_recipients = new KnownKey("zimbra_mtareport_max_recipients");
+		zimbra_mtareport_max_recipients.setDefault("50");
+		zimbra_mtareport_max_recipients.setDoc
+			("Number of recipients to list in daily mta reports");
+
+		zimbra_mtareport_max_senders = new KnownKey("zimbra_mtareport_max_senders");
+		zimbra_mtareport_max_senders.setDefault("50");
+		zimbra_mtareport_max_senders.setDoc
+			("Number of senders to list in daily mta reports");
+
     }
 
 }
