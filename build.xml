@@ -29,6 +29,19 @@
 		</not>
 	</condition>
 
+	<!--
+		 Default email view, group by conversation or by message
+	-->
+	<condition property="zimbra.prefGroupMailBy"
+			   value="${env.ZIMBRA_GROUP_MAIL_BY}">
+		<isset property="env.ZIMBRA_GROUP_MAIL_BY"/>
+	</condition>
+	<condition property="zimbra.prefGroupMailBy" value="conversation">
+		<not>
+			<isset property="zimbra.prefGroupMailBy"/>
+		</not>
+	</condition>
+
 	<property name="build.dir" location="build" />
 	<property name="build.classes.dir" location="${build.dir}/classes" />
 	<property name="build.metainf.dir" location="${build.dir}/classes/META-INF/services" />
@@ -49,7 +62,6 @@
 	<property name="dist.openldap.schema.dir" location="${dist.openldap.etc.dir}/schema" />
 	<property name="dist.tarfile" value="dev-service.tar" />
 	<property name="dist.zimlet.dir" location="${dist.dir}/zimlets" />
-	<property name="dist.zimlet-extra.dir" location="${dist.dir}/zimlets-extra" />
 
 	<property name="config.dir" location="conf" />
 	<condition property="web.xml.source" value="${config.dir}/web.xml">
@@ -92,8 +104,7 @@
 
 	<property name="ical4j.jar" value="ical4j-0.9.16-patched.jar" />
 
-	<property name="zimlets" value="com_zimbra_phone,com_zimbra_tracking,com_zimbra_url,com_zimbra_ymaps,com_zimbra_wikipedia,com_zimbra_amzn"/>
-	<property name="zimlets-extra" value="com_zimbra_po,com_zimbra_sforce,com_zimbra_sms"/>
+	<property name="zimlets" value="com_zimbra_phone,com_zimbra_tracking,com_zimbra_url"/>
 
 	<condition property="is-windows">
 		<os family="windows" />
@@ -184,7 +195,6 @@
 		<mkdir dir="${dist.openldap.schema.dir}" />
 		<mkdir dir="${generated.java.dir}" />
 		<mkdir dir="${dist.zimlet.dir}" />
-		<mkdir dir="${dist.zimlet-extra.dir}" />
 	</target>
 
     <target name="javadoc" depends="set-buildinfo-vars">
@@ -424,7 +434,20 @@
 		</java>
 	</target>
 
-	<target name="localhost-ssl-cert" description="make a cert for ssl access">
+    <!-- Insert one directory (data/testmsgs) of mail -->
+    <target name="inject1" depends="compile">
+        <echo message="Wait for lmtp host=${lmtp.host} port=${lmtp.port}" />
+        <waitfor checkevery="1" checkeveryunit="second" maxwait="60" maxwaitunit="second">
+            <socket server="${lmtp.host}" port="${lmtp.port}" />
+        </waitfor>
+        <echo>LmtpInject messages</echo>
+        <java classname="com.zimbra.cs.lmtpserver.utils.LmtpInject" fork="true" classpathref="class.path" failonerror="true">
+            <arg line="-t ${lmtpinject.numthreads} -a ${lmtp.host} -p ${lmtp.port} -r user1@${zimbra.server.hostname} -s ho@example.zimbra.com -d" />
+            <arg path="data/testmsg" />
+        </java>
+    </target>
+
+    <target name="localhost-ssl-cert" description="make a cert for ssl access">
 		<delete failonerror="no">
 			<fileset dir="${tomcat.home.dir}/conf" includes="keystore" />
 		</delete>
@@ -553,24 +576,143 @@
 		</java>
 		<!-- This account is used during QA tests. -->
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="ca admin@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} cn 'Administrator' displayName 'Administrator' zimbraIsAdminAccount TRUE zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana'" />
+			<arg line="ca admin@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} cn 'Administrator' displayName 'Administrator' zimbraIsAdminAccount TRUE zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana' zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} telephoneNumber '+1 650 555 0000'"/>
 		</java>
 		<echo>Creating account: user1@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="ca user1@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} cn 'Demo User One' displayName 'Demo User One' zimbraMailQuota 62914560 zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana'" />
+			<arg line="ca user1@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} cn 'Demo User One' displayName 'Demo User One' zimbraMailQuota 62914560 zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana' zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} telephoneNumber '+1 650 555 1111'"/>
 		</java>
 		<echo>Creating account: user2@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="ca user2@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} cn 'Demo User Two' displayName 'Demo User Two' zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana'" />
+			<arg line="ca user2@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} cn 'Demo User Two' displayName 'Demo User Two' zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana' zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} telephoneNumber '+1 650 555 2222'"/>
 		</java>
 		<echo>Creating account: user3@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="ca user3@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} cn 'Demo User Three' displayName 'Demo User Three' zimbraAttachmentsIndexingEnabled FALSE zimbraPrefTimeZoneId '(GMT-05.00) Eastern Time (US &amp; Canada)'" />
+			<arg line="ca user3@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} cn 'Demo User Three' displayName 'Demo User Three' zimbraAttachmentsIndexingEnabled FALSE zimbraPrefTimeZoneId '(GMT-05.00) Eastern Time (US &amp; Canada)' zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} telephoneNumber '+1 650 555 3333'"/>
 		</java>
 		<echo>Creating account: user4@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="ca user4@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} cn 'Demo User Four' displayName 'Demo User Four' zimbraAttachmentsIndexingEnabled FALSE zimbraPrefTimeZoneId '(GMT-05.00) Indiana (East)'" />
+			<arg line="ca user4@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} cn 'Demo User Four' displayName 'Demo User Four' zimbraAttachmentsIndexingEnabled FALSE zimbraPrefTimeZoneId '(GMT-07.00) Arizona' zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} telephoneNumber '+1 650 555 4444'"/>
 		</java>
+
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="ca spam-sink@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} zimbraAttachmentsIndexingEnabled FALSE" />
+		</java>
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="mcf zimbraSpamIsSpamAccount spam-sink@${zimbra.server.hostname}" />
+		</java>
+		<echo>Setting up not junk account</echo>
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="ca ham-sink@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} zimbraAttachmentsIndexingEnabled FALSE" />
+		</java>
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="mcf zimbraSpamIsNotSpamAccount ham-sink@${zimbra.server.hostname}" />
+		</java>
+
+		<echo>Creating calendar resource: room1@${zimbra.server.hostname}</echo>
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="ccr room1@${zimbra.server.hostname}
+				       displayName 'Conference Room One'
+					   zimbraNotes 'has TV and VCR'
+				       zimbraCalResType Location
+					   zimbraCalResAutoAcceptDecline TRUE
+					   zimbraCalResAutoDeclineIfBusy TRUE
+					   zimbraCalResAutoDeclineRecurring FALSE
+					   zimbraCalResSite HQ
+					   zimbraCalResBuilding A
+					   zimbraCalResFloor 11
+					   zimbraCalResRoom 1101
+					   zimbraCalResCapacity 10
+					   zimbraCalResContactName 'Administrator'
+					   zimbraCalResContactEmail admin@${zimbra.server.hostname}
+					   zimbraCalResContactPhone '(650)555-1212'
+					   street '1500 Fashion Island Blvd., Suite 100'
+					   l 'San Mateo'
+					   st 'California'
+					   postalCode 94404
+					   co USA
+				       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana'
+				       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}"/>
+		</java>
+		<echo>Creating calendar resource: room2@${zimbra.server.hostname}</echo>
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="ccr room2@${zimbra.server.hostname}
+				       displayName 'Conference Room Two'
+				       zimbraNotes 'This room lacks air conditioning; room is always available'
+				       zimbraCalResType Location
+					   zimbraCalResAutoAcceptDecline TRUE
+					   zimbraCalResAutoDeclineIfBusy FALSE
+					   zimbraCalResAutoDeclineRecurring FALSE
+					   zimbraCalResSite HQ
+					   zimbraCalResBuilding A
+					   zimbraCalResFloor 12
+					   zimbraCalResRoom 1202
+					   zimbraCalResCapacity 20
+					   zimbraCalResContactName 'Administrator'
+					   zimbraCalResContactEmail admin@${zimbra.server.hostname}
+					   zimbraCalResContactPhone '(650)555-1212'
+				       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana'
+				       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}"/>
+		</java>
+		<echo>Creating calendar resource: room3@${zimbra.server.hostname}</echo>
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="ccr room3@${zimbra.server.hostname}
+				       displayName 'Conference Room Three'
+					   zimbraNotes 'This room cannot be booked for recurring appointments.'
+				       zimbraCalResType Location
+					   zimbraCalResAutoAcceptDecline TRUE
+					   zimbraCalResAutoDeclineIfBusy TRUE
+					   zimbraCalResAutoDeclineRecurring TRUE
+					   zimbraCalResSite HQ
+					   zimbraCalResBuilding B
+					   zimbraCalResFloor B2
+					   zimbraCalResRoom B201
+					   zimbraCalResCapacity 100
+					   zimbraCalResContactName 'Administrator'
+					   zimbraCalResContactEmail admin@${zimbra.server.hostname}
+					   zimbraCalResContactPhone '(650)555-1212'
+				       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana'
+				       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}"/>
+		</java>
+		<echo>Creating calendar resource: projector1@${zimbra.server.hostname}</echo>
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="ccr projector1@${zimbra.server.hostname}
+				       displayName 'Projector'
+				       zimbraCalResType Equipment
+					   zimbraCalResAutoAcceptDecline FALSE
+					   zimbraCalResAutoDeclineIfBusy FALSE
+					   zimbraCalResAutoDeclineRecurring FALSE
+					   zimbraCalResSite HQ
+					   zimbraCalResBuilding B
+					   zimbraCalResFloor B2
+					   zimbraCalResRoom B201
+					   zimbraCalResContactName 'Administrator'
+					   zimbraCalResContactEmail admin@${zimbra.server.hostname}
+					   zimbraCalResContactPhone '(650)555-1212'
+				       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana'
+				       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}"/>
+		</java>
+		<echo>Creating calendar resource: pencil1@${zimbra.server.hostname}</echo>
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="ccr pencil1@${zimbra.server.hostname}
+				       displayName '#2 pencil'
+				       zimbraNotes 'Must occasionally be sharpened'
+				       zimbraCalResType Equipment
+					   zimbraCalResAutoAcceptDecline TRUE
+					   zimbraCalResAutoDeclineIfBusy TRUE
+					   zimbraCalResAutoDeclineRecurring TRUE
+					   street '1500 Fashion Island Blvd, Suite 100'
+					   l 'San Mateo'
+				       st CA
+				       postalCode 94404
+				       co USA
+					   zimbraCalResContactName 'Administrator'
+					   zimbraCalResContactEmail admin@${zimbra.server.hostname}
+					   zimbraCalResContactPhone '(650)555-1212'
+				       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana'
+				       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}"/>
+		</java>
+
 	</target>
 
 	<target name="ldap-load-mime-handlers">
@@ -582,7 +724,7 @@
 
 	<target name="reload-zimlets" depends="install-zimlets,restart-tomcat"/>
 
-	<target name="package-zimlets" depends="build-init,package-zimlets-core,package-zimlets-extra"/>
+	<target name="package-zimlets" depends="build-init,package-zimlets-core"/>
 	<target name="package-zimlets-core">
 		<foreach list="${zimlets}" target="package-zimlet" param="zimlet"/>
 		<!-- todo:  remove these classes from service.jar -->
@@ -598,20 +740,9 @@
 		</zip>
 	</target>
 
-	<target name="package-zimlets-extra">
-		<foreach list="${zimlets-extra}" target="package-zimlet-extra" param="zimlet"/>
-	</target>
-	
 	<target name="package-zimlet">
 		<echo>${zimlet}</echo>
 		<zip destfile="${dist.zimlet.dir}/${zimlet}.zip" update="true" >
-			<fileset dir="${config.dir}/zimlets/${zimlet}" />
-		</zip>
-	</target>
-
-	<target name="package-zimlet-extra">
-		<echo>${zimlet}</echo>
-		<zip destfile="${dist.zimlet-extra.dir}/${zimlet}.zip" update="true" >
 			<fileset dir="${config.dir}/zimlets/${zimlet}" />
 		</zip>
 	</target>
@@ -621,13 +752,13 @@
 			<param name="action" value="deploy"/>
 		</foreach>
 	</target>
-	
+
 	<target name="install-zimlets" depends="package-zimlets">
 		<foreach list="${zimlets}" target="install-zimlet" param="zimlet">
 			<param name="action" value="install"/>
 		</foreach>
 	</target>
-	
+
 	<target name="install-zimlet">
 		<echo>${action} ${zimlet}</echo>
 		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
@@ -636,7 +767,7 @@
 			<arg file="${dist.zimlet.dir}/${zimlet}.zip" />
 		</java>
 	</target>
-	
+
     <target name="tomcat-init" depends="localhost-ssl-cert,tomcat-init-unix">
 		<copy todir="${tomcat.home.dir}/common/lib" file="${jars.dir}/${ical4j.jar}" />
 		<copy todir="${tomcat.home.dir}/common/lib" file="${jars.dir}/activation.jar" />
