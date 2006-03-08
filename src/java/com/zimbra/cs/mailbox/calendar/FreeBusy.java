@@ -31,6 +31,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
@@ -289,6 +290,16 @@ public class FreeBusy {
                                            long start, long end,
                                            Appointment exAppt)
     throws ServiceException {
+        // Check if this account is an always-free calendar resource.
+        Account acct = mbox.getAccount();
+        if (acct instanceof CalendarResource) {
+            CalendarResource resource = (CalendarResource) acct;
+            if (resource.autoAcceptDecline() && !resource.autoDeclineIfBusy()) {
+                IntervalList intervals = new IntervalList(start, end);
+                return new FreeBusy(intervals);
+            }
+        }
+
         int exApptId = exAppt == null ? -1 : exAppt.getId();
 
         List /* Folder */ folders = mbox.getItemList(null, MailItem.TYPE_FOLDER);
@@ -313,8 +324,6 @@ public class FreeBusy {
 
         IntervalList intervals = new IntervalList(start, end);
         
-        Account acct = mbox.getAccount();
-
         Date startDate = new Date(start);
         for (Iterator iter = appts.iterator(); iter.hasNext(); ) {
             Appointment cur = (Appointment)iter.next();

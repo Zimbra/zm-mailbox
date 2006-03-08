@@ -551,18 +551,6 @@ public class Appointment extends MailItem {
         saveMetadata();
     }
 
-    private static boolean shouldAutoAcceptDecline(Account account)
-    throws ServiceException{
-        Account.CalendarUserType cutype = account.getCalendarUserType();
-        if (cutype.equals(Account.CalendarUserType.RESOURCE)) {
-            CalendarResource resource = Provisioning.getInstance().
-                getCalendarResourceById(account.getId());
-            if (resource != null)
-                return resource.autoAcceptDecline();
-        }
-        return false;
-    }
-
     private void processNewInviteRequestOrCancel(ParsedMessage pm, Invite newInvite, boolean force, int folderId, short volumeId)
     throws ServiceException {
         String method = newInvite.getMethod();
@@ -1559,26 +1547,15 @@ public class Appointment extends MailItem {
         return list;
     }
 
-    private static CalendarResource toCalendarResource(Account account)
-    throws ServiceException {
-        CalendarResource resource = null;
-        Account.CalendarUserType cutype = account.getCalendarUserType();
-        if (cutype.equals(Account.CalendarUserType.RESOURCE)) {
-            resource = Provisioning.getInstance().
-                getCalendarResourceById(account.getId());
-        }
-        return resource;
-    }
-
     private String processPartStat(Invite invite)
     throws ServiceException {
         String partStat = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
         Account account = getMailbox().getAccount();
         if (invite.thisAcctIsOrganizer(account)) {
             partStat = IcalXmlStrMap.PARTSTAT_ACCEPTED;
-        } else {
-            CalendarResource resource = toCalendarResource(account);
-            if (resource != null && resource.autoAcceptDecline()) {
+        } else if (account instanceof CalendarResource) {
+            CalendarResource resource = (CalendarResource) account;
+            if (resource.autoAcceptDecline()) {
                 partStat = IcalXmlStrMap.PARTSTAT_ACCEPTED;
                 if (isRecurring() && resource.autoDeclineRecurring()) {
                     partStat = IcalXmlStrMap.PARTSTAT_DECLINED;

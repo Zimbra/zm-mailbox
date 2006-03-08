@@ -613,11 +613,11 @@
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="ccr room1@${zimbra.server.hostname}
 				       displayName 'Conference Room One'
+					   zimbraNotes 'has TV and VCR'
 				       zimbraCalResType Location
 					   zimbraCalResAutoAcceptDecline TRUE
 					   zimbraCalResAutoDeclineIfBusy TRUE
 					   zimbraCalResAutoDeclineRecurring FALSE
-					   zimbraCalResAlwaysFree FALSE
 					   zimbraCalResSite HQ
 					   zimbraCalResBuilding A
 					   zimbraCalResFloor 11
@@ -638,12 +638,11 @@
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="ccr room2@${zimbra.server.hostname}
 				       displayName 'Conference Room Two'
-				       zimbraNotes 'This room lacks air conditioning'
+				       zimbraNotes 'This room lacks air conditioning; room is always available'
 				       zimbraCalResType Location
-					   zimbraCalResAutoAcceptDecline FALSE
-					   zimbraCalResAutoDeclineIfBusy TRUE
+					   zimbraCalResAutoAcceptDecline TRUE
+					   zimbraCalResAutoDeclineIfBusy FALSE
 					   zimbraCalResAutoDeclineRecurring FALSE
-					   zimbraCalResAlwaysFree FALSE
 					   zimbraCalResSite HQ
 					   zimbraCalResBuilding A
 					   zimbraCalResFloor 12
@@ -659,11 +658,11 @@
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="ccr room3@${zimbra.server.hostname}
 				       displayName 'Conference Room Three'
+					   zimbraNotes 'This room cannot be booked for recurring appointments.'
 				       zimbraCalResType Location
 					   zimbraCalResAutoAcceptDecline TRUE
 					   zimbraCalResAutoDeclineIfBusy TRUE
 					   zimbraCalResAutoDeclineRecurring TRUE
-					   zimbraCalResAlwaysFree TRUE
 					   zimbraCalResSite HQ
 					   zimbraCalResBuilding B
 					   zimbraCalResFloor B2
@@ -680,10 +679,9 @@
 			<arg line="ccr projector1@${zimbra.server.hostname}
 				       displayName 'Projector'
 				       zimbraCalResType Equipment
-					   zimbraCalResAutoAcceptDecline TRUE
-					   zimbraCalResAutoDeclineIfBusy TRUE
-					   zimbraCalResAutoDeclineRecurring TRUE
-					   zimbraCalResAlwaysFree TRUE
+					   zimbraCalResAutoAcceptDecline FALSE
+					   zimbraCalResAutoDeclineIfBusy FALSE
+					   zimbraCalResAutoDeclineRecurring FALSE
 					   zimbraCalResSite HQ
 					   zimbraCalResBuilding B
 					   zimbraCalResFloor B2
@@ -703,7 +701,6 @@
 					   zimbraCalResAutoAcceptDecline TRUE
 					   zimbraCalResAutoDeclineIfBusy TRUE
 					   zimbraCalResAutoDeclineRecurring TRUE
-					   zimbraCalResAlwaysFree TRUE
 					   street '1500 Fashion Island Blvd, Suite 100'
 					   l 'San Mateo'
 				       st CA
