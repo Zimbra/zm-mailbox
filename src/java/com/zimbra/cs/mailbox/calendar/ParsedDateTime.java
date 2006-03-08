@@ -37,7 +37,6 @@ import java.util.regex.Pattern;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.WellKnownTimeZone;
-import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
@@ -55,7 +54,7 @@ public final class ParsedDateTime {
     public static void main(String[] args) {
         ICalTimeZone utc = ICalTimeZone.getUTC();
     	TimeZoneMap tzmap = new TimeZoneMap(utc);
-        try {
+    	try {
             ParsedDateTime t1 = ParsedDateTime.parse("20050910", tzmap, null, utc);
             System.out.println(t1);
         } catch (ParseException e) {

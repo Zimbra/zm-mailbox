@@ -45,6 +45,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * Invite
@@ -1500,8 +1501,6 @@ public class Invite {
                     compNum++;
                     
                     for (ZProperty prop : comp.mProperties) {
-                        System.out.println(prop);
-
                         if (prop.mTok == null) 
                             continue;
                         
@@ -1636,11 +1635,9 @@ public class Invite {
                         }
                     }
                 } catch (ServiceException e) {
-                    System.out.println(e);
-                    e.printStackTrace();
+                    ZimbraLog.calendar.debug(e.toString(), e);
                 } catch (ParseException e) {
-                    System.out.println(e);
-                    e.printStackTrace();
+                	ZimbraLog.calendar.debug(e.toString(), e);
                 }
                 
                 break;
