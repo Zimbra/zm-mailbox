@@ -54,7 +54,7 @@ public final class ParsedDateTime {
     public static void main(String[] args) {
         ICalTimeZone utc = ICalTimeZone.getUTC();
     	TimeZoneMap tzmap = new TimeZoneMap(utc);
-        try {
+    	try {
             ParsedDateTime t1 = ParsedDateTime.parse("20050910", tzmap, null, utc);
             System.out.println(t1);
         } catch (ParseException e) {

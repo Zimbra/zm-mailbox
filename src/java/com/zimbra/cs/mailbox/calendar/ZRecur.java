@@ -1261,7 +1261,7 @@ public class ZRecur {
                         break;
                     }
                 } catch(IllegalArgumentException e) {
-                    System.out.println(new Formatter().format("Skipping unknown RECUR token: \"%s\" in Recur \"%s\"", s[0], str));
+                    ZimbraLog.calendar.debug(new Formatter().format("Skipping unknown RECUR token: \"%s\" in Recur \"%s\"", s[0], str));
                 }
             }
         } catch (ParseException e) {
@@ -1299,7 +1299,7 @@ public class ZRecur {
                     list.add(readInt);
                 }
             } catch (Exception e) {
-                System.out.println(new Formatter().format("Skipping unparsable Recur int list entry: \"%s\" in parameter list: \"%s\"", s, str));
+                ZimbraLog.calendar.debug(new Formatter().format("Skipping unparsable Recur int list entry: \"%s\" in parameter list: \"%s\"", s, str));
             }
         
         Collections.sort(list);
