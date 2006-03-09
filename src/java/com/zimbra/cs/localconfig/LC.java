@@ -102,6 +102,7 @@ public class LC {
     public static final KnownKey stats_img_folder;
     
     public static final KnownKey ldap_host;
+    public static final KnownKey ldap_log_level;
     public static final KnownKey ldap_port;
     public static final KnownKey ldap_url;
     public static final KnownKey ldap_master_url;
@@ -273,7 +274,7 @@ public class LC {
         zimbra_ldap_userdn.setDefault("uid=zimbra,cn=admins,cn=zimbra");
         zimbra_ldap_userdn.setDoc
             ("LDAP dn used to authenticate the store application with LDAP.");
-        
+
         zimbra_ldap_password = new KnownKey("zimbra_ldap_password");
         zimbra_ldap_password.setDefault("zimbra");
         zimbra_ldap_password.setForceToEdit(true);
@@ -350,6 +351,11 @@ public class LC {
         ldap_host = new KnownKey("ldap_host");
         ldap_host.setDefault("");
         ldap_host.setDoc("LDAP host to use.  Deprecated - please use ldap_url instead.");
+
+        ldap_log_level = new KnownKey("ldap_log_level");
+        ldap_log_level.setDefault("0");
+        ldap_log_level.setDoc
+            ("LDAP logging level");
 
         ldap_port = new KnownKey("ldap_port");
         ldap_port.setDefault("");
