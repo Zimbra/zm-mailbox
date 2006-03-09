@@ -50,7 +50,6 @@ import javax.mail.internet.MimeMultipart;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
@@ -1557,18 +1556,16 @@ public class Appointment extends MailItem {
             CalendarResource resource = (CalendarResource) account;
             if (resource.autoAcceptDecline()) {
                 partStat = IcalXmlStrMap.PARTSTAT_ACCEPTED;
+                Mailbox mbox = getMailbox();
+                OperationContext octxt = mbox.getOperationContext();
                 if (isRecurring() && resource.autoDeclineRecurring()) {
                     partStat = IcalXmlStrMap.PARTSTAT_DECLINED;
-                    Mailbox mbox = getMailbox();
-                    OperationContext octxt = mbox.getOperationContext();
                     CalendarMailSender.sendReply(
                             octxt, mbox, false,
                             CalendarMailSender.VERB_DECLINE,
                             "This resource/location cannot be booked in a recurring appointment.",
                             invite);
                 } else if (resource.autoDeclineIfBusy()) {
-                    Mailbox mbox = getMailbox();
-                    OperationContext octxt = mbox.getOperationContext();
                     List<Availability> avail = checkAvailability();
                     if (!Availability.isAvailable(avail)) {
                         partStat = IcalXmlStrMap.PARTSTAT_DECLINED;
@@ -1581,13 +1578,14 @@ public class Appointment extends MailItem {
                                 CalendarMailSender.VERB_DECLINE,
                                 msg,
                                 invite);
-                    } else {
-                        CalendarMailSender.sendReply(
-                                octxt, mbox, false,
-                                CalendarMailSender.VERB_ACCEPT,
-                                null,
-                                invite);
                     }
+                }
+                if (IcalXmlStrMap.PARTSTAT_ACCEPTED.equals(partStat)) {
+                    CalendarMailSender.sendReply(
+                            octxt, mbox, false,
+                            CalendarMailSender.VERB_ACCEPT,
+                            null,
+                            invite);
                 }
             }
         }
