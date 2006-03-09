@@ -436,8 +436,11 @@ public class ContactCSV {
         
         // create mapping from CSV field name to column
         mFieldCols = new HashMap<String, Integer>(mFields.size());
-        for (int i = 0; i < mFields.size(); i++)
-            mFieldCols.put(mFields.get(i).toString().toLowerCase(), i);
+        for (int i = 0; i < mFields.size(); i++) {
+            String fieldName = mFields.get(i);
+            if (fieldName != null && !fieldName.equals(""))
+                mFieldCols.put(fieldName.toLowerCase(), i);
+        }
     }
 
     private String getField(String colName, List<String> csv) {
