@@ -62,27 +62,27 @@ public class SyncFormatter extends Formatter {
         context.resp.addHeader(name, value);
     }
     
-    private static void addXZimbraHeaders(Context context, MailItem mailItem) throws IOException {
+    private static void addXZimbraHeaders(Context context, MailItem item) throws IOException {
         StringBuffer hdr = new StringBuffer();
-        addHeader(context, hdr, "X-Zimbra-Tags", mailItem.getTagString());
-        addHeader(context, hdr, "X-Zimbra-Flags", mailItem.getFlagString());
-        addHeader(context, hdr, "X-Zimbra-Received", mailItem.getDate()+"");
-                
-        if (mailItem instanceof Message) {
-            addHeader(context, hdr, "X-Zimbra-Conv", ((Message)mailItem).getConversationId()+"");
+        addHeader(context, hdr, "X-Zimbra-Tags", item.getTagString());
+        addHeader(context, hdr, "X-Zimbra-Flags", item.getFlagString());
+        addHeader(context, hdr, "X-Zimbra-Received", item.getDate() + "");
+        addHeader(context, hdr, "X-Zimbra-Modified", item.getChangeDate() + "");
+        if (item instanceof Message) {
+            addHeader(context, hdr, "X-Zimbra-Conv", ((Message)item).getConversationId()+"");
         }
         // dump headers to content
         context.resp.getOutputStream().write(hdr.toString().getBytes());
     }
 
-    public void format(Context context, MailItem mailItem) throws IOException, ServiceException, UserServletException {
+    public void format(Context context, MailItem item) throws IOException, ServiceException, UserServletException {
         try {
             if (context.hasPart()) {
-                handleMessagePart(context, mailItem);
-            } else if (mailItem instanceof Message) {
-                handleMessage(context, (Message) mailItem);
-            } else if (mailItem instanceof Appointment) {
-                handleAppointment(context, (Appointment) mailItem);                
+                handleMessagePart(context, item);
+            } else if (item instanceof Message) {
+                handleMessage(context, (Message) item);
+            } else if (item instanceof Appointment) {
+                handleAppointment(context, (Appointment) item);                
             }
         } catch (MessagingException me) {
             throw ServiceException.FAILURE(me.getMessage(), me);
@@ -102,18 +102,18 @@ public class SyncFormatter extends Formatter {
         }        
     }
     
-    private void handleMessage(Context context, Message message) throws IOException, ServiceException, MessagingException {
-        addXZimbraHeaders(context, message);
+    private void handleMessage(Context context, Message msg) throws IOException, ServiceException {
+        addXZimbraHeaders(context, msg);
         context.resp.setContentType(Mime.CT_TEXT_PLAIN);
-        InputStream is = message.getRawMessage();
+        InputStream is = msg.getRawMessage();
         ByteUtil.copy(is, context.resp.getOutputStream());
         is.close();
     }
 
-    private void handleMessagePart(Context context, MailItem mailItem) throws IOException, ServiceException, MessagingException, UserServletException {
-        if (!(mailItem instanceof Message))
+    private void handleMessagePart(Context context, MailItem item) throws IOException, ServiceException, MessagingException, UserServletException {
+        if (!(item instanceof Message))
             throw UserServletException.notImplemented("can only handle messages");
-        Message message = (Message) mailItem;
+        Message message = (Message) item;
         
         MimePart mp = getMimePart(message, context.getPart());
         if (mp != null) {
