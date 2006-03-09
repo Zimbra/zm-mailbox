@@ -431,15 +431,17 @@ public class ContactCSV {
      */
     private void initFields(BufferedReader reader) throws IOException, ParseException {
         mFields = new ArrayList<String>();
-        
-        parseLine(reader, mFields, true);
-        
+
+        if (!parseLine(reader, mFields, true))
+            throw new ParseException("no column name definitions");
+
         // create mapping from CSV field name to column
         mFieldCols = new HashMap<String, Integer>(mFields.size());
         for (int i = 0; i < mFields.size(); i++) {
             String fieldName = mFields.get(i);
-            if (fieldName != null && !fieldName.equals(""))
-                mFieldCols.put(fieldName.toLowerCase(), i);
+            if (fieldName == null || fieldName.equals(""))
+                throw new ParseException("missing column name for column " + i);
+            mFieldCols.put(fieldName.toLowerCase(), i);
         }
     }
 
