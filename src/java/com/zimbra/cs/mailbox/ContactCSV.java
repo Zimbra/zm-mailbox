@@ -432,14 +432,16 @@ public class ContactCSV {
     private void initFields(BufferedReader reader) throws IOException, ParseException {
         mFields = new ArrayList();
         
-        parseLine(reader, mFields, true);
+        if (!parseLine(reader, mFields, true))
+            throw new ParseException("no column name definitions");
         
         // create mapping from CSV field name to column
         mFieldCols = new HashMap(mFields.size());
         for (int i = 0; i < mFields.size(); i++) {
             String fieldName = (String) mFields.get(i);
-            if (fieldName != null && !fieldName.equals(""))
-                mFieldCols.put(fieldName.toLowerCase(), new Integer(i));
+            if (fieldName == null || fieldName.equals(""))
+                throw new ParseException("missing column name for column " + i);
+            mFieldCols.put(fieldName.toLowerCase(), i);
         }
         
         mNumFields = mFields.size();
@@ -447,14 +449,16 @@ public class ContactCSV {
 
     private String getField(String colName, List csv) {
         Integer col = (Integer) mFieldCols.get(colName.toLowerCase());
-        if (col == null || col.intValue() >= csv.size()) return null;
-        else return (String) csv.get(col.intValue());
+        if (col == null || col.intValue() >= csv.size())
+            return null;
+        else
+            return (String) csv.get(col.intValue());
     }
 
     private void addField(String colName, List csv, String field, Map contact) {
         String value = getField(colName, csv);
         if (value != null && value.length() > 0) {
-                contact.put(field, value);
+            contact.put(field, value);
         }
     }
 
