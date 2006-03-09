@@ -35,6 +35,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
@@ -60,13 +61,19 @@ public class GetAppointment extends DocumentHandler {
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
 
+        boolean sync = request.getAttributeBool(MailService.A_SYNC, false);
         ItemId iid = new ItemId(request.getAttribute("id"), lc);
         sLog.info("<GetAppointment id=" + iid.getId() + "> " + lc);
+
+        // want to return modified date only on sync-related requests
+        int fields = ToXML.NOTIFY_FIELDS;
+        if (sync)
+            fields |= Change.MODIFIED_CONFLICT;
 
         Element response = lc.createElement(MailService.GET_APPOINTMENT_RESPONSE);
         synchronized(mbox) {
             Appointment appointment = mbox.getAppointmentById(octxt, iid.getId());
-            ToXML.encodeApptSummary(response, lc, appointment, ToXML.NOTIFY_FIELDS);
+            ToXML.encodeApptSummary(response, lc, appointment, fields);
         }
 
         return response;
