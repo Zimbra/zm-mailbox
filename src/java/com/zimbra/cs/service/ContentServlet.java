@@ -144,14 +144,12 @@ public class ContentServlet extends ZimbraServlet {
                         resp.addHeader("X-Zimbra-Tags", item.getTagString());
                         resp.addHeader("X-Zimbra-Flags", item.getFlagString());
                         resp.addHeader("X-Zimbra-Received", Long.toString(item.getDate()));
-                        if (item.getChangeDate() != item.getDate())
-                            resp.addHeader("X-Zimbra-Modified", Long.toString(item.getChangeDate()));
+                        resp.addHeader("X-Zimbra-Modified", Long.toString(item.getChangeDate()));
                         // also return metadata inline in the message content for now
                         hdr.append("X-Zimbra-Tags: ").append(item.getTagString()).append("\n");
                         hdr.append("X-Zimbra-Flags: ").append(item.getFlagString()).append("\n");
                         hdr.append("X-Zimbra-Received: ").append(item.getDate()).append("\n");
-                        if (item.getChangeDate() != item.getDate())
-                            hdr.append("X-Zimbra-Modified: ").append(item.getChangeDate()).append("\n");
+                        hdr.append("X-Zimbra-Modified: ").append(item.getChangeDate()).append("\n");
                     }
                     
                     if (item instanceof Message) {

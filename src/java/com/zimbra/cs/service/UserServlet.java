@@ -100,18 +100,16 @@ public class UserServlet extends ZimbraServlet {
 
     public static final String QP_ID = "id"; // id query param
 
-    public static final String QP_SYNC = "sync"; // add-sync-info query param
-
     public static final String QP_PART = "part"; // part query param
 
     public static final String QP_QUERY = "query"; // query query param
-    
+
     public static final String QP_VIEW = "view"; // view query param    
 
     public static final String QP_TYPES = "types"; // types
-    
+
     public static final String QP_START = "start"; // start time
-    
+
     public static final String QP_END = "end"; // end time
 
     public static final String QP_AUTH = "auth"; // auth types
@@ -121,7 +119,7 @@ public class UserServlet extends ZimbraServlet {
     public static final String AUTH_BASIC = "ba"; // basic auth
 
     public static final String AUTH_NO_SET_COOKIE = "nsc"; // don't set auth token cookie after basic auth
-    
+
     public static final String AUTH_DEFAULT = "co,ba"; // both
 
     private HashMap<String, Formatter> mFormatters;
@@ -417,7 +415,6 @@ public class UserServlet extends ZimbraServlet {
 
             this.itemPath = pathInfo.substring(pos + 1);
             this.format = request.getParameter(QP_FMT);
-            this.sync = "1".equals(request.getParameter(QP_SYNC));
             String id = request.getParameter(QP_ID);
             try {
                 this.itemId = id == null ? null : new ItemId(id, null);

@@ -65,15 +65,6 @@ public class NativeFormatter extends Formatter {
     }
 
     public void format(Context context, MailItem item) throws IOException, ServiceException, UserServletException, ServletException {
-        if (context.sync && !context.hasPart()) {
-            // for sync, return metadata as headers to avoid extra SOAP round-trips
-            context.resp.addHeader("X-Zimbra-Tags", item.getTagString());
-            context.resp.addHeader("X-Zimbra-Flags", item.getFlagString());
-            context.resp.addHeader("X-Zimbra-Received", Long.toString(item.getDate()));
-            if (item.getChangeDate() != item.getDate())
-                context.resp.addHeader("X-Zimbra-Modified", Long.toString(item.getChangeDate()));
-        }
-
         try {
             if (item instanceof Message) {
                 handleMessage(context, (Message) item);
@@ -92,10 +83,6 @@ public class NativeFormatter extends Formatter {
             MimePart mp = getMimePart(msg, context.getPart());            
             handleMessagePart(context, mp, msg);
         } else {
-            if (context.sync) {
-                // for sync, return metadata as headers to avoid extra SOAP round-trips
-                context.resp.addHeader("X-Zimbra-Conv", Integer.toString(msg.getConversationId()));
-            }
             context.resp.setContentType(Mime.CT_TEXT_PLAIN);
             InputStream is = msg.getRawMessage();
             ByteUtil.copy(is, context.resp.getOutputStream());
