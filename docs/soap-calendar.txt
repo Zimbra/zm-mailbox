@@ -670,7 +670,7 @@ OR
 // sometimes, however the invite is a standard mail-message it can be deleted by the user at
 // any time!
 //
-<GetAppointmentRequest id="appointment_id"/>
+<GetAppointmentRequest id="appointment_id" [sync="1"]/>
 
 <GetAppointmentResponse>
   <appt uid="UID" id="appointment_id" f="{flags}" t="{tags}" s="{size}" d="{date}" l="{folder}">
@@ -684,6 +684,8 @@ OR
     </inv>]+
   </appt>
 </GetAppointmentResponse>
+
+  if sync="1" present, return modified date (md) on appointment.
 
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
