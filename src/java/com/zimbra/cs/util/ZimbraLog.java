@@ -180,14 +180,14 @@ public class ZimbraLog {
     public static final org.apache.commons.logging.Log system = LogFactory.getLog("zimbra.system");
     
     /**
-     * the "zimbra.mobile" logger. For mobile client interface logs.
+     * the "zimbra.sync" logger. For sync client interface logs.
      */
-    public static final org.apache.commons.logging.Log mobile = LogFactory.getLog("zimbra.mobile");
+    public static final org.apache.commons.logging.Log sync = LogFactory.getLog("zimbra.sync");
     
     /**
-     * the "zimbra.mswbxml" logger. For mobile client interface logs.
+     * the "zimbra.wbxml" logger. For wbxml client interface logs.
      */
-    public static final org.apache.commons.logging.Log mswbxml = LogFactory.getLog("zimbra.mswbxml");
+    public static final org.apache.commons.logging.Log wbxml = LogFactory.getLog("zimbra.wbxml");
     
     /**
      * the "zimbra.extensions" logger. For logging extension loading related info. 
