@@ -97,9 +97,12 @@ public class LC {
     public static final KnownKey zimbra_index_lru_size;
     public static final KnownKey zimbra_index_idle_flush_time;
     
+    public static final KnownKey zimbra_spam_report_queue_size;
+    
     public static final KnownKey stats_img_folder;
     
     public static final KnownKey ldap_host;
+    public static final KnownKey ldap_log_level;
     public static final KnownKey ldap_port;
     public static final KnownKey ldap_url;
     public static final KnownKey ldap_master_url;
@@ -111,6 +114,20 @@ public class LC {
     public static final KnownKey ldap_connect_pool_maxsize;
     public static final KnownKey ldap_connect_pool_prefsize;
     public static final KnownKey ldap_connect_pool_timeout;
+    
+    public static final KnownKey ldap_cache_account_maxsize;
+    public static final KnownKey ldap_cache_account_maxage;
+    public static final KnownKey ldap_cache_cos_maxsize;
+    public static final KnownKey ldap_cache_cos_maxage;
+    public static final KnownKey ldap_cache_domain_maxsize;
+    public static final KnownKey ldap_cache_domain_maxage;
+    public static final KnownKey ldap_cache_server_maxsize;
+    public static final KnownKey ldap_cache_server_maxage;
+    public static final KnownKey ldap_cache_group_maxsize;
+    public static final KnownKey ldap_cache_group_maxage;
+    public static final KnownKey ldap_cache_timezone_maxsize;
+    public static final KnownKey ldap_cache_zimlet_maxsize;
+    public static final KnownKey ldap_cache_zimlet_maxage;
 
     public static final KnownKey mysql_directory;
     public static final KnownKey mysql_data_directory;
@@ -135,6 +152,31 @@ public class LC {
     public static final KnownKey logger_mysql_bind_address;
     public static final KnownKey logger_mysql_port;
     public static final KnownKey zimbra_logger_mysql_password;
+
+	public static final KnownKey postfix_alias_maps;
+	public static final KnownKey postfix_broken_sasl_auth_clients;
+	public static final KnownKey postfix_command_directory;
+	public static final KnownKey postfix_daemon_directory;
+	public static final KnownKey postfix_header_checks;
+	public static final KnownKey postfix_mailq_path;
+	public static final KnownKey postfix_manpage_directory;
+	public static final KnownKey postfix_newaliases_path;
+	public static final KnownKey postfix_queue_directory;
+	public static final KnownKey postfix_sender_canonical_maps;
+	public static final KnownKey postfix_sendmail_path;
+	public static final KnownKey postfix_smtpd_client_restrictions;
+	public static final KnownKey postfix_smtpd_data_restrictions;
+	public static final KnownKey postfix_smtpd_helo_required;
+	public static final KnownKey postfix_smtpd_tls_cert_file;
+	public static final KnownKey postfix_smtpd_tls_key_file;
+	public static final KnownKey postfix_smtpd_tls_loglevel;
+	public static final KnownKey postfix_transport_maps;
+	public static final KnownKey postfix_version;
+	public static final KnownKey postfix_virtual_alias_domains;
+	public static final KnownKey postfix_virtual_alias_maps;
+	public static final KnownKey postfix_virtual_mailbox_domains;
+	public static final KnownKey postfix_virtual_mailbox_maps;
+	public static final KnownKey postfix_virtual_transport;
 
     public static final KnownKey tomcat_directory;
     public static final KnownKey tomcat_java_heap_memory_percent;
@@ -232,7 +274,7 @@ public class LC {
         zimbra_ldap_userdn.setDefault("uid=zimbra,cn=admins,cn=zimbra");
         zimbra_ldap_userdn.setDoc
             ("LDAP dn used to authenticate the store application with LDAP.");
-        
+
         zimbra_ldap_password = new KnownKey("zimbra_ldap_password");
         zimbra_ldap_password.setDefault("zimbra");
         zimbra_ldap_password.setForceToEdit(true);
@@ -295,6 +337,12 @@ public class LC {
             ("If idle for longer than this value (in seconds), flush" +
              " uncommitted indexing ops in mailbox.");
 
+        zimbra_spam_report_queue_size = new KnownKey("zimbra_spam_report_queue_size");
+        zimbra_spam_report_queue_size.setDefault("100");
+        zimbra_spam_report_queue_size.setDoc
+            ("For Junk/Not Junk Msg/ConvActionRequests this queue size limits the" +
+             " the server workqueue for processing the forwards");
+
         stats_img_folder = new KnownKey("stats_img_folder");
         stats_img_folder.setDefault("${zimbra_home}" + FS + "zimbramon" + FS + "rrdtool" + FS + "work");
         stats_img_folder.setDoc
@@ -303,6 +351,11 @@ public class LC {
         ldap_host = new KnownKey("ldap_host");
         ldap_host.setDefault("");
         ldap_host.setDoc("LDAP host to use.  Deprecated - please use ldap_url instead.");
+
+        ldap_log_level = new KnownKey("ldap_log_level");
+        ldap_log_level.setDefault("0");
+        ldap_log_level.setDoc
+            ("LDAP logging level");
 
         ldap_port = new KnownKey("ldap_port");
         ldap_port.setDefault("");
@@ -363,6 +416,45 @@ public class LC {
         ldap_connect_pool_timeout.setDoc
             ("Milliseconds of idle time before an idle connection is bumped" +
              " from the pool.");
+        
+        ldap_cache_account_maxsize = 
+            new KnownKey("ldap_cache_account_maxsize", "5000", "Maximum number of account objects to cache");
+        
+        ldap_cache_account_maxage =
+            new KnownKey("ldap_cache_account_maxage", "15", "maximum age (in minutes) of account object in cache");
+
+        ldap_cache_cos_maxsize = 
+            new KnownKey("ldap_cache_cos_maxsize", "100", "Maximum number of cos objects to cache");
+        
+        ldap_cache_cos_maxage = 
+            new KnownKey("ldap_cache_cos_maxage", "15", "maximum age (in minutes) of cos object in cache");        
+
+        ldap_cache_domain_maxsize = 
+            new KnownKey("ldap_cache_domain_maxsize", "100", "Maximum number of domain objects to cache");
+        
+        ldap_cache_domain_maxage = 
+            new KnownKey("ldap_cache_domain_maxage", "15", "maximum age (in minutes) of domain object in cache");        
+
+        ldap_cache_server_maxsize = 
+            new KnownKey("ldap_cache_server_maxsize", "100", "Maximum number of server objects to cache");
+
+        ldap_cache_server_maxage =
+            new KnownKey("ldap_cache_server_maxage", "15", "maximum age (in minutes) of group object in cache");        
+
+        ldap_cache_group_maxsize = 
+            new KnownKey("ldap_cache_group_maxsize", "500", "Maximum number of group objects to cache");
+        
+        ldap_cache_group_maxage =
+            new KnownKey("ldap_cache_group_maxage", "15", "maximum age (in minutes) of group object in cache");        
+
+        ldap_cache_timezone_maxsize =
+            new KnownKey("ldap_cache_timezone_maxsize", "100", "Maximum number of timezone objects to cache");
+        
+        ldap_cache_zimlet_maxsize =
+            new KnownKey("ldap_cache_zimlet_maxsize", "100", "Maximum number of zimlet objects to cache");
+        
+        ldap_cache_zimlet_maxage = 
+            new KnownKey("ldap_cache_zimlet_maxage", "15", "maximum age (in minutes) of zimlet object in cache");        
 
         mysql_directory = new KnownKey("mysql_directory");
         mysql_directory.setDefault("${zimbra_home}" + FS + "mysql");
@@ -489,6 +581,102 @@ public class LC {
         logger_mysql_port.setDefault("7307");
         logger_mysql_port.setDoc
             ("Port number on which logger MySQL server should listen.");
+
+		postfix_alias_maps  = new KnownKey("postfix_alias_maps");
+		postfix_alias_maps.setDefault("hash:/etc/aliases");
+		postfix_alias_maps.setDoc("postfix_alias_maps");
+
+		postfix_broken_sasl_auth_clients  = new KnownKey("postfix_broken_sasl_auth_clients");
+		postfix_broken_sasl_auth_clients.setDefault("yes");
+		postfix_broken_sasl_auth_clients.setDoc("postfix_broken_sasl_auth_clients");
+
+		postfix_command_directory  = new KnownKey("postfix_command_directory");
+		postfix_command_directory.setDefault("/opt/zimbra/postfix-${postfix_version}/sbin");
+		postfix_command_directory.setDoc("postfix_command_directory");
+
+		postfix_daemon_directory  = new KnownKey("postfix_daemon_directory");
+		postfix_daemon_directory.setDefault("/opt/zimbra/postfix-${postfix_version}/libexec");
+		postfix_daemon_directory.setDoc("postfix_daemon_directory");
+
+		postfix_header_checks  = new KnownKey("postfix_header_checks");
+		postfix_header_checks.setDefault("pcre:/opt/zimbra/conf/postfix_header_checks");
+		postfix_header_checks.setDoc("postfix_header_checks");
+
+		postfix_mailq_path  = new KnownKey("postfix_mailq_path");
+		postfix_mailq_path.setDefault("/opt/zimbra/postfix-${postfix_version}/sbin/mailq");
+		postfix_mailq_path.setDoc("postfix_mailq_path");
+
+		postfix_manpage_directory  = new KnownKey("postfix_manpage_directory");
+		postfix_manpage_directory.setDefault("/opt/zimbra/postfix-${postfix_version}/man");
+		postfix_manpage_directory.setDoc("postfix_manpage_directory");
+
+		postfix_newaliases_path  = new KnownKey("postfix_newaliases_path");
+		postfix_newaliases_path.setDefault("/opt/zimbra/postfix-${postfix_version}/sbin/newaliases");
+		postfix_newaliases_path.setDoc("postfix_newaliases_path");
+
+		postfix_queue_directory  = new KnownKey("postfix_queue_directory");
+		postfix_queue_directory.setDefault("/opt/zimbra/postfix-${postfix_version}/spool");
+		postfix_queue_directory.setDoc("postfix_queue_directory");
+
+		postfix_sender_canonical_maps  = new KnownKey("postfix_sender_canonical_maps");
+		postfix_sender_canonical_maps.setDefault("ldap:/opt/zimbra/conf/ldap-scm.cf");
+		postfix_sender_canonical_maps.setDoc("postfix_sender_canonical_maps");
+
+		postfix_sendmail_path  = new KnownKey("postfix_sendmail_path");
+		postfix_sendmail_path.setDefault("/opt/zimbra/postfix-${postfix_version}/sbin/sendmail");
+		postfix_sendmail_path.setDoc("postfix_sendmail_path");
+
+		postfix_smtpd_client_restrictions  = new KnownKey("postfix_smtpd_client_restrictions");
+		postfix_smtpd_client_restrictions.setDefault("reject_unauth_pipelining");
+		postfix_smtpd_client_restrictions.setDoc("postfix_smtpd_client_restrictions");
+
+		postfix_smtpd_data_restrictions  = new KnownKey("postfix_smtpd_data_restrictions");
+		postfix_smtpd_data_restrictions.setDefault("reject_unauth_pipelining");
+		postfix_smtpd_data_restrictions.setDoc("postfix_smtpd_data_restrictions");
+
+		postfix_smtpd_helo_required  = new KnownKey("postfix_smtpd_helo_required");
+		postfix_smtpd_helo_required.setDefault("yes");
+		postfix_smtpd_helo_required.setDoc("postfix_smtpd_helo_required");
+
+		postfix_smtpd_tls_cert_file  = new KnownKey("postfix_smtpd_tls_cert_file");
+		postfix_smtpd_tls_cert_file.setDefault("${zimbra_home}"+FS+"conf"+FS+"smtpd.crt");
+		postfix_smtpd_tls_cert_file.setDoc("postfix_smtpd_tls_cert_file");
+
+		postfix_smtpd_tls_key_file  = new KnownKey("postfix_smtpd_tls_key_file");
+		postfix_smtpd_tls_key_file.setDefault("${zimbra_home}"+FS+"conf"+FS+"smtpd.key");
+		postfix_smtpd_tls_key_file.setDoc("postfix_smtpd_tls_key_file");
+
+		postfix_smtpd_tls_loglevel  = new KnownKey("postfix_smtpd_tls_loglevel");
+		postfix_smtpd_tls_loglevel.setDefault("3");
+		postfix_smtpd_tls_loglevel.setDoc("postfix_smtpd_tls_loglevel");
+
+		postfix_transport_maps  = new KnownKey("postfix_transport_maps");
+		postfix_transport_maps.setDefault("ldap:/opt/zimbra/conf/ldap-transport.cf");
+		postfix_transport_maps.setDoc("postfix_transport_maps");
+
+		postfix_version  = new KnownKey("postfix_version");
+		postfix_version.setDefault("2.2.9");
+		postfix_version.setDoc("postfix_version");
+
+		postfix_virtual_alias_domains  = new KnownKey("postfix_virtual_alias_domains");
+		postfix_virtual_alias_domains.setDefault("ldap://opt/zimbra/conf/ldap-vad.cf");
+		postfix_virtual_alias_domains.setDoc("postfix_virtual_alias_domains");
+
+		postfix_virtual_alias_maps  = new KnownKey("postfix_virtual_alias_maps");
+		postfix_virtual_alias_maps.setDefault("ldap:/opt/zimbra/conf/ldap-vam.cf");
+		postfix_virtual_alias_maps.setDoc("postfix_virtual_alias_maps");
+
+		postfix_virtual_mailbox_domains  = new KnownKey("postfix_virtual_mailbox_domains");
+		postfix_virtual_mailbox_domains.setDefault("ldap:/opt/zimbra/conf/ldap-vmd.cf");
+		postfix_virtual_mailbox_domains.setDoc("postfix_virtual_mailbox_domains");
+
+		postfix_virtual_mailbox_maps  = new KnownKey("postfix_virtual_mailbox_maps");
+		postfix_virtual_mailbox_maps.setDefault("ldap:/opt/zimbra/conf/ldap-vmm.cf");
+		postfix_virtual_mailbox_maps.setDoc("postfix_virtual_mailbox_maps");
+
+		postfix_virtual_transport  = new KnownKey("postfix_virtual_transport");
+		postfix_virtual_transport.setDefault("error");
+		postfix_virtual_transport.setDoc("postfix_virtual_transport");
 
         tomcat_directory = new KnownKey("tomcat_directory");
         tomcat_directory.setDefault("${zimbra_home}" + FS + "tomcat");
