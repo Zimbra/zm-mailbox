@@ -70,15 +70,14 @@ import com.zimbra.cs.util.ZimbraLog;
  *    -- execute() -- Begin the search, get the ZimbraQueryResults iterator
  */
 public final class ZimbraQuery {
-     
-    /************************************************************************
+    /**
+     * @author tim
      * 
      * BaseQuery
-     *
-     * Very simple wrapper classes that each represent a node in the parse tree for the
-     * query string.
-     * 
-     ***********************************************************************/
+	 *
+	 * Very simple wrapper classes that each represent a node in the parse tree for the
+	 * query string.
+     */
     public static abstract class BaseQuery
     {
         protected boolean mTruth = true;
@@ -180,19 +179,20 @@ public final class ZimbraQuery {
         static {
             mMap = new HashMap();
 
-            addMapping(mMap, new String[] { "any" }  , "any");
-            addMapping(mMap, new String[] { "application", "application/*"}  , "application");
-            addMapping(mMap, new String[] { "bmp", "image/bmp" }  , "image/bmp");
-            addMapping(mMap, new String[] { "gif", "image/gif" }  , "image/gif");
-            addMapping(mMap, new String[] { "image", "image/*" }  , "image");
-            addMapping(mMap, new String[] { "jpeg", "image/jpeg", }  , "image/jpeg");
-            addMapping(mMap, new String[] { "excel", "application/vnd.ms-excel", "xls" }  , "application/vnd.ms-excel");
-            addMapping(mMap, new String[] { "ppt", "application/vnd.ms-powerpoint"}  , "application/vnd.ms-powerpoint");
-            addMapping(mMap, new String[] { "ms-tnef", "application/ms-tnef"}  , "application/ms-tnef");
-            addMapping(mMap, new String[] { "word", "application/msword", "msword" }  , "application/msword");
-            addMapping(mMap, new String[] { "none" }  , "none");
-            addMapping(mMap, new String[] { "pdf", "application/pdf" }  , "application/pdf");
-            addMapping(mMap, new String[] { "text", "text/*" }  , "text");
+            //                              Friendly Name                                  Mime Type 
+            addMapping(mMap, new String[] { "any" }                                      , "any");
+            addMapping(mMap, new String[] { "application", "application/*"}              , "application");
+            addMapping(mMap, new String[] { "bmp", "image/bmp" }                         , "image/bmp");
+            addMapping(mMap, new String[] { "gif", "image/gif" }                         , "image/gif");
+            addMapping(mMap, new String[] { "image", "image/*" }                         , "image");
+            addMapping(mMap, new String[] { "jpeg", "image/jpeg", }                      , "image/jpeg");
+            addMapping(mMap, new String[] { "excel", "application/vnd.ms-excel", "xls" } , "application/vnd.ms-excel");
+            addMapping(mMap, new String[] { "ppt", "application/vnd.ms-powerpoint"}      , "application/vnd.ms-powerpoint");
+            addMapping(mMap, new String[] { "ms-tnef", "application/ms-tnef"}            , "application/ms-tnef");
+            addMapping(mMap, new String[] { "word", "application/msword", "msword" }     , "application/msword");
+            addMapping(mMap, new String[] { "none" }                                     , "none");
+            addMapping(mMap, new String[] { "pdf", "application/pdf" }                   , "application/pdf");
+            addMapping(mMap, new String[] { "text", "text/*" }                           , "text");
         }
         
         public AttachmentQuery(Analyzer analyzer, int modifier, String what) {
@@ -990,7 +990,6 @@ public final class ZimbraQuery {
         }
     }
     
-
     public static class ItemQuery extends BaseQuery
     {
         public static BaseQuery Create(Analyzer analyzer, int modifier, String str) 
@@ -1064,7 +1063,6 @@ public final class ZimbraQuery {
             return toRet.toString();
         }
     }
-    
     
     public static class TextQuery extends BaseQuery
     {
@@ -1219,7 +1217,14 @@ public final class ZimbraQuery {
     private static Log mLog = LogFactory.getLog(ZimbraQuery.class);
 
     private static final int SUBQUERY_TOKEN = 9999;
-
+    
+    private AbstractList mClauses;
+    private ParseTree.Node mParseTree = null;
+	private QueryOperation mOp;
+	private byte[] mTypes;
+	private SortBy mSearchOrder;
+	private int mChunkSize;
+    
     private static String QueryTypeString(int qType) {
         switch (qType) {
           case ZimbraQueryParser.CONTENT:    return LuceneFields.L_CONTENT;
@@ -1274,7 +1279,7 @@ public final class ZimbraQuery {
         private static final int STATE_AND    = 1; 
         private static final int STATE_OR     = 2;
         
-        private static final boolean SPEW = false;
+        private static final boolean SPEW = true;
         
         public static abstract class Node {
             boolean mTruthFlag = true;
@@ -1399,6 +1404,7 @@ public final class ZimbraQuery {
             }
             
             public QueryOperation getQueryOperation() {
+            	assert(mTruthFlag == true); // we should have pushed the NOT's down the tree already
                 if (mKind == STATE_AND) {
                     if (ParseTree.SPEW) System.out.print(" AND(");
                     
@@ -1498,9 +1504,6 @@ public final class ZimbraQuery {
         }
     }
 	
-    private AbstractList mClauses;
-    private ParseTree.Node mParseTree = null;
-    
 	
     /**
      * the query string can OPTIONALLY have a "sortby:" element which will override 
@@ -1517,13 +1520,6 @@ public final class ZimbraQuery {
     	
     	mSortByOverride = sortBy;
    }
-
-	private QueryOperation mOp;
-	private byte[] mTypes;
-	private SortBy mSearchOrder;
-	private int mChunkSize;
-	
-	
     
 	/**
 	 * Parse a query string and build a query plan from it.
@@ -1541,48 +1537,52 @@ public final class ZimbraQuery {
 	public ZimbraQuery(String queryString, Mailbox mbox, byte[] types, SortBy searchOrder, boolean includeTrash, boolean includeSpam, int chunkSize) 
 	throws ParseException, ServiceException
 	{
+		//
+		// Step 1: parse the text using the JavaCC parser
         ZimbraQueryParser parser = new ZimbraQueryParser(new StringReader(queryString));
         parser.init(new ZimbraAnalyzer(), mbox);
-         
-        
         mClauses = parser.Parse();
         
         String sortByStr = parser.getSortByStr();
         if (sortByStr != null)
         	handleSortByOverride(sortByStr);
         
+        //
+        // Step 2: build a parse tree and push all the "NOT's" down to the
+        // bottom level -- this is because we cannot invert result sets 
         if (ParseTree.SPEW) System.out.println("QueryString: "+queryString);
-        
         ParseTree.Node pt = ParseTree.build(mClauses);
-        
         if (ParseTree.SPEW) System.out.println("PT: "+pt.toString());
         if (ParseTree.SPEW)System.out.println("Simplified:");
-        
         pt = pt.simplify();
-        
         if (ParseTree.SPEW)System.out.println("PT: "+pt.toString());
         if (ParseTree.SPEW)System.out.println("Pushing nots down:");
-        
         pt.pushNotsDown();
-        
         if (ParseTree.SPEW)System.out.println("PT: "+pt.toString());
         
+        // 
+        // Store some variables that we'll need later
         mParseTree = pt;
 		mSearchOrder = searchOrder;
 		mTypes = types;
 		mChunkSize = chunkSize;
 		mOp = null;
 		
+		//
+		// handle the special "sort:" tag in the search string
 		if (mSortByOverride != null) {
 	    	if (mLog.isDebugEnabled())
 	    		mLog.debug("Overriding SortBy parameter to execute ("+searchOrder.toString()+") w/ specification from QueryString: "+mSortByOverride.toString());
 			
 	    	mSearchOrder = mSortByOverride;
 		}
-		
+
+		// 
+		// Optimize the query 
 		BaseQuery head = getHead();
 	    if (null != head) {
             
+	    	// this generates all of the query operations
 	    	mOp = mParseTree.getQueryOperation();
 	        
 	        if (mLog.isDebugEnabled()) {
@@ -1655,78 +1655,6 @@ public final class ZimbraQuery {
     	return new EmptyQueryResults(mTypes, mSearchOrder);
 	}
     
-    /**
-     * 
-     * Convert this query into QueryOperations, optimize the operations, run them, and return
-     * an iterable Results set. 
-     * 
-	 * @param mailboxId
-	 * @param mbidx
-	 * @param types
-	 * @param searchOrder
-	 * @return
-	 * @throws IOException
-	 * @throws ServiceException
-	 */
-//	public ZimbraQueryResults execute(int mailboxId, MailboxIndex mbidx, byte[] types, SortBy searchOrder,
-//	        boolean includeTrash, boolean includeSpam, int chunkSize) throws IOException, ServiceException  
-//    {
-//		if (mSortByOverride != null) {
-//	    	if (mLog.isDebugEnabled())
-//	    		mLog.debug("Overriding SortBy parameter to execute ("+searchOrder.toString()+") w/ specification from QueryString: "+mSortByOverride.toString());
-//			
-//			searchOrder = mSortByOverride;
-//		}
-//		
-//	    BaseQuery head = getHead();
-//	    if (null != head) {
-//            
-//	        Mailbox mbox = Mailbox.getMailboxById(mailboxId);
-//	        
-//	        QueryOperation op= mParseTree.getQueryOperation();
-//	        
-//	        if (mLog.isDebugEnabled()) {
-//	            mLog.debug("OP="+op.toString());
-//	        }
-//	        
-//	        op = op.optimize(mbox);
-//	        if (op == null) {
-//	            op = new NoTermQueryOperation();
-//	        }
-//	        
-//	        if (mLog.isDebugEnabled()) {
-//	            mLog.debug("OPTIMIZED="+op.toString());
-//	        }
-//	        
-//	        if (!includeTrash || !includeSpam) {
-//	            if (!op.hasSpamTrashSetting()) {
-//	                op = op.ensureSpamTrashSetting(mbox, includeTrash, includeSpam);
-//	                if (mLog.isDebugEnabled()) {
-//	                    mLog.debug("AFTERTS="+op.toString());
-//	                }
-//	                op = op.optimize(mbox); // optimize again now that we have the trash/spam setting
-//	            }
-//	        }
-//            
-//            if (op != null) {
-//	        
-//                if (mLog.isDebugEnabled()) {
-//                    mLog.debug("OPERATION:"+op.toString());
-//                }
-//                
-//                ZimbraQueryResults res = op.run(mbox, mbidx, types, searchOrder, chunkSize);
-//                return res;
-//            } else {
-//                mLog.debug("Operation optimized to nothing.  Returning no results");
-//                return new EmptyQueryResults(types, searchOrder);
-//            }
-//	        
-//	    }
-//
-//	    // return an empty SimpleQueryResults set...
-//	    return new EmptyQueryResults(types, searchOrder);
-//    }
-	
 	public String toString() {
         String ret = "ZQ:\n";
         for (BaseQuery q = getHead(); q != null; q = q.getNext()) {

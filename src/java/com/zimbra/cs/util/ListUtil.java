@@ -28,6 +28,15 @@ package com.zimbra.cs.util;
 import java.util.*;
 
 public class ListUtil {
+	
+	public static boolean isEmpty(List l) {
+		return (l == null || l.size() == 0);
+	}
+	
+	public static boolean isEmpty(Collection c) {
+		return (c == null || c.size() == 0);
+	}
+	
     
     /**
      * Merge two sorted Lists

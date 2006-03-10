@@ -447,7 +447,7 @@ class IntersectionQueryOperation extends QueryOperation {
     /**
      * a SORTED (sorted at add time) list of query operations which are ANDed together
      */
-    List mQueryOperations = null;
+    List<QueryOperation>mQueryOperations = null;
 
     boolean hasSpamTrashSetting() {
         boolean hasOne = false;
@@ -464,6 +464,28 @@ class IntersectionQueryOperation extends QueryOperation {
             QueryOperation op = (QueryOperation) iter.next();
             op.forceHasSpamTrashSetting();
         }
+    }
+    
+    QueryTarget getQueryTarget() {
+    	QueryTarget toRet = null;
+    	
+    	for (QueryOperation op : mQueryOperations) {
+    		QueryTarget oqt = op.getQueryTarget();
+    		
+    		if (oqt == null)
+    			continue;
+    		
+    		if (toRet == null) {
+    			toRet = oqt;
+    		} else if (!oqt.compatible(toRet)) {
+    			mLog.debug("INTERSECTION query target should evaluate to no results!");
+    			assert(false);
+    			return null;
+    		} else {
+    			toRet = op.getQueryTarget();
+    		}
+    	}
+    	return toRet;
     }
     
     
@@ -529,7 +551,27 @@ class IntersectionQueryOperation extends QueryOperation {
 
     QueryOperation optimize(Mailbox mbox) throws ServiceException 
     {
-    
+    	//
+    	// Step 0: check to see if this query intersection has incompatible
+    	// query targets -- if that is the case, then we can quickly
+    	// optimize this entire subtree out!
+    	//
+    	QueryTarget toRet = null;
+    	
+    	for (QueryOperation op : mQueryOperations) {
+    		QueryTarget oqt = op.getQueryTarget();
+    		
+    		if (oqt == null)
+    			continue;
+    		
+    		if (toRet == null) {
+    			toRet = oqt;
+    		} else if (!oqt.compatible(toRet)) {
+    			mLog.debug("Optimizing out INTERSECTION (incompatible query targets)");
+    			return new NullQueryOperation();
+    		}
+    	}
+    	
         //
         // Step 1: optimize each individual sub-operation we have
         //

@@ -31,6 +31,7 @@ package com.zimbra.cs.db;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -788,11 +789,38 @@ public class DbTest {
         System.out.println(mbox);
         if (mbox != null) {
             Connection conn = DbPool.getConnection();
-	        DbMailItem.search(conn, mbox.getId(), new Tag[] {mbox.mAttachFlag}, null, 
-	                null, null, MailItem.TYPE_MESSAGE, (byte) (DbMailItem.SORT_BY_DATE | DbMailItem.SORT_DESCENDING));
+	        
+	        {
+	            DbSearchConstraints c = new DbSearchConstraints();
+	            c.mailboxId = mbox.getId();
+	            c.tags      = new ArrayList<Tag>();
+	            c.tags.add(mbox.mAttachFlag);
+	            c.excludeTags = null;
+	            c.folders   = null;
+	            c.excludeFolders = null;
+	            c.types     = new ArrayList<Byte>();
+	            c.types.add(MailItem.TYPE_MESSAGE);
+	            c.sort      = (byte) (DbMailItem.SORT_BY_DATE | DbMailItem.SORT_DESCENDING);
+	            DbMailItem.search(conn, c);
+	        }
+	        
 //	        DbMailItem.listByFolder(mbox.getFolderById(Mailbox.ID_FOLDER_TRASH), MailItem.TYPE_MESSAGE);
-            Collection result = DbMailItem.search(conn, mbox.getId(), new Tag[] {mbox.mUnreadFlag}, null, new Folder[] {mbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX)},
-	                null, MailItem.TYPE_MESSAGE, (byte) (DbMailItem.SORT_BY_SUBJECT | DbMailItem.SORT_DESCENDING));
+	        Collection result;
+	        {
+	            DbSearchConstraints c = new DbSearchConstraints();
+	            c.mailboxId = mbox.getId();
+	            c.tags      = new ArrayList<Tag>();
+	            c.tags.add(mbox.mUnreadFlag);
+	            c.excludeTags = null;
+	            c.folders   = new ArrayList<Folder>();
+	            c.folders.add(mbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX)); 
+	            c.excludeFolders = null;
+	            c.types     = new ArrayList<Byte>();
+	            c.types.add(MailItem.TYPE_MESSAGE);
+	            c.sort      = (byte) (DbMailItem.SORT_BY_SUBJECT | DbMailItem.SORT_DESCENDING);
+	            result = DbMailItem.search(conn, c);
+	        }
+            
             for (Iterator it = result.iterator(); it.hasNext(); )
                 System.out.println(it.next());
 	        conn.close();

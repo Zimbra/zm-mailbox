@@ -66,6 +66,8 @@ class NullQueryOperation extends QueryOperation {
     void forceHasSpamTrashSetting() {
     }
     
+    QueryTarget getQueryTarget() { return null; }    
+    
     boolean hasNoResults() {
         return true;
     }

@@ -61,6 +61,11 @@ class UnionQueryOperation extends QueryOperation
         return OP_TYPE_UNION;
     }
     
+    QueryTarget getQueryTarget() {
+    	return null;
+    }
+    
+    
     /******************
      * 
      * Hits iteration
@@ -138,7 +143,7 @@ class UnionQueryOperation extends QueryOperation
     }
     
     
-    ArrayList /* QueryOperation */ mQueryOperations = new ArrayList();
+    ArrayList<QueryOperation>mQueryOperations = new ArrayList<QueryOperation>();
     
     public boolean hasSpamTrashSetting() {
         boolean hasAll = true;
@@ -157,6 +162,10 @@ class UnionQueryOperation extends QueryOperation
             QueryOperation op = (QueryOperation)iter.next();
             op.forceHasSpamTrashSetting();
         }
+    }
+    
+    QueryTarget getQueryTarget(QueryTarget targetOfParent) {
+    	return targetOfParent;
     }
     
     

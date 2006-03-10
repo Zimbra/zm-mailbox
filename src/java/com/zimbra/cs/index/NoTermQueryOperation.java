@@ -74,6 +74,8 @@ public class NoTermQueryOperation extends QueryOperation {
         assert(false);
     }
 
+    QueryTarget getQueryTarget() { return null; }
+    
     boolean hasNoResults() {
         // TODO Auto-generated method stub
         return false;

@@ -52,6 +52,7 @@ import org.apache.lucene.store.FSDirectory;
 
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbSearchConstraints;
 import com.zimbra.cs.db.DbMailItem.SearchResult;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.localconfig.LC;
@@ -1377,7 +1378,7 @@ public final class MailboxIndex
         Connection conn = null;
         conn = DbPool.getConnection();
         
-        DbMailItem.SearchConstraints c = new DbMailItem.SearchConstraints();
+        DbSearchConstraints c = new DbSearchConstraints();
         
         c.mailboxId = mMailboxId;
         c.sort = DbMailItem.SORT_BY_DATE;
@@ -1663,15 +1664,14 @@ public final class MailboxIndex
         // Stage 1 -- look for missing or extra messages and reindex/delete as necessary.
         //
         {
-            DbMailItem.SearchConstraints c = new DbMailItem.SearchConstraints();
+            DbSearchConstraints c = new DbSearchConstraints();
             
             c.mailboxId = mMailboxId;
             c.sort = DbMailItem.SORT_BY_DATE;
-            c.types = new byte[] {
-                    MailItem.TYPE_CONTACT, 
-                    MailItem.TYPE_MESSAGE,
-                    MailItem.TYPE_NOTE
-            };
+            c.types = new ArrayList<Byte>();
+            c.types.add(MailItem.TYPE_CONTACT); 
+            c.types.add(MailItem.TYPE_MESSAGE);
+            c.types.add(MailItem.TYPE_NOTE);
             
             ChkIndexStage1Callback callback = new ChkIndexStage1Callback(this);
             
@@ -1705,16 +1705,14 @@ public final class MailboxIndex
             mLog.info("Stage 2 Verify SORT_DATE_ASCENDNIG for Mailbox "+this.mMailboxId);
             
             // SORT_BY__DATE_ASC
-            DbMailItem.SearchConstraints c = new DbMailItem.SearchConstraints();
+            DbSearchConstraints c = new DbSearchConstraints();
             
             c.mailboxId = mMailboxId;
             c.sort = DbMailItem.SORT_BY_DATE | DbMailItem.SORT_ASCENDING;
-            c.types = new byte[] {
-                    MailItem.TYPE_CONTACT, 
-//                    MailItem.TYPE_INVITE,
-                    MailItem.TYPE_MESSAGE,
-                    MailItem.TYPE_NOTE
-            };
+            c.types = new ArrayList<Byte>();
+            c.types.add(MailItem.TYPE_CONTACT); 
+            c.types.add(MailItem.TYPE_MESSAGE);
+            c.types.add(MailItem.TYPE_NOTE);
             
             String lucSortField = LuceneFields.L_DATE;
             
@@ -1752,16 +1750,16 @@ public final class MailboxIndex
             mLog.info("Stage 3 Verify SORT_DATE_DESCENDING for Mailbox "+this.mMailboxId);
             
             // SORT_BY__DATE_ASC
-            DbMailItem.SearchConstraints c = new DbMailItem.SearchConstraints();
+            DbSearchConstraints c = new DbSearchConstraints();
             
             c.mailboxId = mMailboxId;
             c.sort = DbMailItem.SORT_BY_DATE | DbMailItem.SORT_DESCENDING;
-            c.types = new byte[] {
-                    MailItem.TYPE_CONTACT, 
-//                    MailItem.TYPE_INVITE,
-                    MailItem.TYPE_MESSAGE,
-                    MailItem.TYPE_NOTE
-            };
+            
+            c.types = new ArrayList<Byte>();
+            c.types.add(MailItem.TYPE_CONTACT); 
+            c.types.add(MailItem.TYPE_MESSAGE);
+            c.types.add(MailItem.TYPE_NOTE);
+            
             
             String lucSortField = LuceneFields.L_DATE;
             

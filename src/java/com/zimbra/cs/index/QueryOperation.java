@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.util.Comparator;
 
 import com.zimbra.cs.index.MailboxIndex.SortBy;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
@@ -52,12 +53,8 @@ import com.zimbra.cs.service.ServiceException;
  ***********************************************************************/
 abstract class QueryOperation implements ZimbraQueryResults
 {
-    /**
-     * Bitfield of QueryOperation types.  ORDER DOES MATTER, queries
-     * are executed in order from lowest ID to highest: this is because
-     * there is a preferred-order between queryOps (DB can be more efficient
-     * if it has the Lucene results, etc)
-     */
+	// order does matter somewhat -- order is used to sort execution order when
+	// there are multiple operations to choose from (e.g. an OR of two operations, etc)
     public static final int OP_TYPE_NULL        = 1; // no results at all
     public static final int OP_TYPE_LUCENE      = 2;
     public static final int OP_TYPE_DB          = 3;
@@ -65,9 +62,16 @@ abstract class QueryOperation implements ZimbraQueryResults
     public static final int OP_TYPE_INTERSECT   = 5; // AND
     public static final int OP_TYPE_UNION       = 6; // OR
     public static final int OP_TYPE_NO_TERM     = 7; // pseudo-op, always optimized away
+    
+    private static final int MIN_CHUNK_SIZE = 26;
+    private static final int MAX_CHUNK_SIZE = 5000;
 
     abstract int getOpType();
     
+    /**
+     * @author tim
+     *
+     */
     protected static class QueryOpSortComparator implements Comparator {
         public int compare(Object o1, Object o2) {
             QueryOperation lhs = (QueryOperation)o1;
@@ -97,10 +101,10 @@ abstract class QueryOperation implements ZimbraQueryResults
         
         chunkSize++; // one extra for checking the "more" flag at the end of the results
         
-        if (chunkSize < 26) {
-            chunkSize = 26;
-        } else if (chunkSize > 5000) {
-            chunkSize = 5000;
+        if (chunkSize < MIN_CHUNK_SIZE) {
+            chunkSize = MIN_CHUNK_SIZE;
+        } else if (chunkSize > MAX_CHUNK_SIZE) {
+            chunkSize = MAX_CHUNK_SIZE;
         }
         
         int retType = MailboxIndex.SEARCH_RETURN_DOCUMENTS;
@@ -212,6 +216,27 @@ abstract class QueryOperation implements ZimbraQueryResults
      * Internals
      *
      *******************/
+
+
+    /**
+     * A QueryTarget is something we run a query against, 
+     * ie a mailbox
+     */
+    static class QueryTarget {
+    	Folder mFolder;
+    	
+    	public QueryTarget(Folder f) {
+    		mFolder = f;
+    	}
+    	
+    	boolean compatible(QueryTarget other) {
+    		if (other.mFolder == null || mFolder == null)
+    			return true;
+    		return other.mFolder.equals(mFolder);
+    	}
+    }
+    
+    abstract QueryTarget getQueryTarget();
     
     private boolean mIsToplevelQueryOp = false;
     protected boolean isTopLevelQueryOp() { return mIsToplevelQueryOp; }

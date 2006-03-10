@@ -31,6 +31,7 @@ package com.zimbra.cs.index;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -93,6 +94,8 @@ class LuceneQueryOperation extends QueryOperation
         mHasSpamTrashSetting = true;
     }
     
+    QueryTarget getQueryTarget() { return null; }
+    
     public void doneWithSearchResults() throws ServiceException {
     	mSort = null;
         if (mSearcher != null) {
@@ -118,16 +121,15 @@ class LuceneQueryOperation extends QueryOperation
     	
     	static class ScoredLuceneHit {
     		ScoredLuceneHit(float score) { mScore= score; }
-    		public List<Document> mDocs = new ArrayList();
+    		public List<Document> mDocs = new ArrayList<Document>();
     		public float mScore; // highest score in list
     	}
     	
-        int[] getIndexIds() { 
-            int[] toRet = new int[mHits.keySet().size()];
-            int i = 0;
+        Collection<Integer> getIndexIds() { 
+        	ArrayList<Integer>toRet = new ArrayList<Integer>(mHits.keySet().size());
             for (Iterator iter = mHits.keySet().iterator(); iter.hasNext();) {
                 Integer curInt = (Integer)iter.next();
-                toRet[i++] = curInt.intValue(); 
+                toRet.add(curInt);
             }
             return toRet;
         }

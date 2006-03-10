@@ -48,9 +48,10 @@ import org.apache.lucene.search.TermQuery;
 
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.DbMailItem.SearchConstraints;
+import com.zimbra.cs.db.DbSearchConstraints;
 import com.zimbra.cs.db.DbMailItem.SearchResult;
 import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.db.DbSearchConstraints.Range;
 import com.zimbra.cs.index.LuceneQueryOperation.LuceneResultsChunk;
 import com.zimbra.cs.index.LuceneQueryOperation.LuceneResultsChunk.ScoredLuceneHit;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
@@ -75,23 +76,21 @@ class DBQueryOperation extends QueryOperation
     // this gets set to FALSE if we have any real work to do
     // this lets us optimize away queries that might match "everything"
     private boolean mAllResultsQuery = true;
-    
-    private HashSet mExcludeFolder = new HashSet();
-    
     private boolean mNoResultsQuery = false;
     
-    private HashSet mIncludeTags = new HashSet();
-    private HashSet mExcludeTags = new HashSet();
+    private HashSet<Folder> mExcludeFolder = new HashSet<Folder>();
+    
+    private HashSet<Tag> mIncludeTags = new HashSet<Tag>();
+    private HashSet<Tag> mExcludeTags = new HashSet<Tag>();
     
     private int mConvId = 0;
-    private HashSet mProhibitedConvIds = new HashSet();
+    private HashSet<Integer> mProhibitedConvIds = new HashSet<Integer>();
     
-    private HashSet /* DbMailItem.SearchConstraints.Range */mDates = new HashSet();
+    private HashSet<DbSearchConstraints.Range>mDates = new HashSet<DbSearchConstraints.Range>();
+    private HashSet<DbSearchConstraints.Range> mSizes = new HashSet<DbSearchConstraints.Range>();
     
-    private HashSet /* SearchConstraints.Range */ mSizes = new HashSet();
-    
-    private HashSet mIncludedItemIds = null; // CAREFUL!  In this case NULL means "no constraint" -- which is very different from an empty set (which means NOTHING MATCHES)
-    private HashSet mExcludedItemIds = null; 
+    private HashSet<Integer> mIncludedItemIds = null; // CAREFUL!  In this case NULL means "no constraint" -- which is very different from an empty set (which means NOTHING MATCHES)
+    private HashSet<Integer> mExcludedItemIds = null; 
     
     // true if we have a SETTING pertaining to Spam/Trash.  This doesn't necessarily
     // mean we actually have "in trash" or something, it just means that we've got something
@@ -139,6 +138,12 @@ class DBQueryOperation extends QueryOperation
         mHasSpamTrashSetting = true;
     }
     
+    QueryTarget getQueryTarget() {
+    	if (mFolder != null)  
+    		return new QueryTarget(mFolder);
+    	else 
+    		return null;
+    }
     
     /**
      * Since Trash can be an entire folder hierarchy, when we want to exclude trash from a query,
@@ -192,7 +197,7 @@ class DBQueryOperation extends QueryOperation
         mAllResultsQuery = false;
         if (truth) {
             if (mIncludedItemIds == null) {
-                mIncludedItemIds = new HashSet();
+                mIncludedItemIds = new HashSet<Integer>();
             }
             if (!mIncludedItemIds.contains(itemId)) {
                 //
@@ -204,7 +209,7 @@ class DBQueryOperation extends QueryOperation
             }
         } else {
             if (mExcludedItemIds == null) {
-                mExcludedItemIds = new HashSet();
+                mExcludedItemIds = new HashSet<Integer>();
             }
             if (!mExcludedItemIds.contains(itemId)) {
                 //
@@ -226,7 +231,7 @@ class DBQueryOperation extends QueryOperation
      */
     void addDateClause(long lowestDate, long highestDate, boolean truth)  {
         mAllResultsQuery = false;
-        SearchConstraints.Range intv = new SearchConstraints.Range();
+        DbSearchConstraints.Range intv = new DbSearchConstraints.Range();
         intv.lowest = lowestDate;
         intv.highest = highestDate;
         intv.negated = !truth;
@@ -242,7 +247,7 @@ class DBQueryOperation extends QueryOperation
      */
     void addSizeClause(long lowestSize, long highestSize, boolean truth)  {
         mAllResultsQuery = false;
-        SearchConstraints.Range intv = new SearchConstraints.Range();
+        DbSearchConstraints.Range intv = new DbSearchConstraints.Range();
         intv.lowest = lowestSize;
         intv.highest = highestSize;
         intv.negated = !truth;
@@ -478,7 +483,7 @@ class DBQueryOperation extends QueryOperation
         return toRet;
     }
     
-    private List /*ZimbraHit*/ mNextHits = new ArrayList();
+    private List<ZimbraHit>mNextHits = new ArrayList<ZimbraHit>();
     
     
     public ZimbraHit getNext() throws ServiceException {
@@ -563,97 +568,32 @@ class DBQueryOperation extends QueryOperation
      */
     private boolean mEndOfHits = false;
     
-    private byte[] mTypes = new byte[0];
-    private byte[] mExcludeTypes = new byte[0];
+    private HashSet<Byte> mTypes = new HashSet<Byte>();
+    private HashSet<Byte>mExcludeTypes = new HashSet<Byte>();
     
-    private boolean byteArrayContains(byte[] array, byte val) {
-        for (int i = array.length-1; i >= 0; i--) {
-            if (array[i] == val) {
-                return true;
-            }
-        }
-        return false;
-    }
-    
-    /**
-     * @param a1
-     * @param a2
-     * @return the UNION of the two byte arrays
-     */
-    private byte[] combineByteArraysNoDups(byte[] a1, byte[] a2) {
-        byte[] tmp = new byte[a2.length];
-        int tmpOff = 0;
-        
-        for (int i = a2.length-1; i>=0; i--) {
-            if (!byteArrayContains(a1, a2[i])) {
-                tmp[tmpOff++] = a2[i];
-            }
-        }
-        
-        byte[] toRet = new byte[tmpOff + a1.length];
-        
-        System.arraycopy(tmp, 0, toRet, 0, tmpOff);
-        System.arraycopy(a1, 0, toRet, tmpOff, a1.length);
-
-        return toRet;
-    }
-    
-    private byte[] addToByteArrayNoDup(byte[] array, byte val) {
-        if (!byteArrayContains(array, val)) {
-            byte[] toRet = new byte[array.length+1];
-            System.arraycopy(array, 0, toRet, 0, array.length);
-            toRet[toRet.length-1] = val;
-            return toRet;
-        }
-        return array;
-    }
-    
-    /**
-     * @param a1
-     * @param a2
-     * @return the INTERSECTION of the two byte arrays
-     */
-    private byte[] intersectByteArrays(byte[] a1, byte[] a2) {
-        byte[] tmp = new byte[a1.length + a2.length];
-        int tmpOff = 0;
-        
-        for (int i = a1.length-1; i >=0; i--) {
-            if (byteArrayContains(a2, a1[i])) {
-                tmp[tmpOff++] = a1[i];
-            }
-        }
-
-        byte[] toRet = new byte[tmpOff];
-        for (int i = 0; i < tmpOff; i++) {
-            toRet[i] = tmp[i];
-        }
-        
-        // FIXME testing code only!
-        for (int i = toRet.length-1; i>=0; i--) {
-            assert(byteArrayContains(a1, toRet[i]) &&
-                    byteArrayContains(a2, toRet[i]));
-        }
-        
-        return toRet;
-    }
-    
-    private byte[] getDbQueryTypes() 
+    private Collection<Byte> getDbQueryTypes() 
     {
-        byte[] defTypes = convertTypesToDbQueryTypes(this.getResultsSet().getTypes());
-        
-        if (mTypes.length > 0) {
-            return intersectByteArrays(defTypes, mTypes);
-        } else {
-            return defTypes;
+    	byte[] defTypes = convertTypesToDbQueryTypes(this.getResultsSet().getTypes());
+    	ArrayList<Byte> toRet = new ArrayList<Byte>();
+    	for (Byte b : defTypes)
+    		toRet.add(b);
+    	
+        if (mTypes.size() > 0) {
+        	for (Byte b : mTypes)
+        		if (!toRet.contains(b))
+        			toRet.add(b);
         }
+    	return toRet;
     }
     
     void addTypeClause(byte type, boolean truth) {
         mAllResultsQuery = false;
         if (truth) {
-            mTypes = addToByteArrayNoDup(mTypes, type);
+        	if (!mTypes.contains(type))
+        		mTypes.add(type);
         } else {
-            mExcludeTypes = addToByteArrayNoDup(mExcludeTypes, type);
+        	if (!mExcludeTypes.contains(type))
+        		mExcludeTypes.add(type);
         }
     }
     
@@ -662,77 +602,67 @@ class DBQueryOperation extends QueryOperation
      *
      * @return
      */
-    private SearchConstraints getSearchConstraints() {
+    private DbSearchConstraints getSearchConstraints() {
         SortBy searchOrder = this.getResultsSet().getSortBy();
-        byte[] types = getDbQueryTypes();
-        if (types.length == 0)  {
+        Collection<Byte> types = getDbQueryTypes();
+        if (types.size() == 0)  {
             mLog.debug("NO RESULTS -- no known types requested");
             return null;
         } else { 
-            DbMailItem.SearchConstraints c = new DbMailItem.SearchConstraints();
+            DbSearchConstraints c = new DbSearchConstraints();
             c.mailboxId = getMailbox().getId();
         
             // tags
             if (mIncludeTags.size() > 0) {
-            	c.tags = (Tag[]) mIncludeTags.toArray(new Tag[mIncludeTags.size()]);
+            	c.tags = mIncludeTags;
+//            	c.tags = (Tag[]) mIncludeTags.toArray(new Tag[mIncludeTags.size()]);
+            	
+            	
         }
         
             // exclude-tags
             if (mExcludeTags.size() > 0) {
-            	c.excludeTags = (Tag[]) mExcludeTags.toArray(new Tag[mExcludeTags.size()]);
+            	c.excludeTags = mExcludeTags;
             }
 
             // folders
                 if (mFolder != null) {
-            	c.folders = new Folder[1];
-            	c.folders[0] = mFolder;
+                	c.folders = new ArrayList<Folder>(1);
+                	c.folders.add(mFolder);
                 } 
                 
             // exclude-folders
                 if (mExcludeFolder.size() > 0) {
-            	c.excludeFolders = (Folder[])(mExcludeFolder.toArray(new Folder[mExcludeFolder.size()]));
+                	c.excludeFolders = mExcludeFolder;
                 }
                 
             c.convId = mConvId;
                     
             // prohibited-conv-ids
                     if (mProhibitedConvIds.size() > 0) {
-            	c.prohibitedConvIds = new int[mProhibitedConvIds.size()];
-                        int i = 0;
-                        for (Iterator probIter = mProhibitedConvIds.iterator(); probIter.hasNext();) {
-                            Integer cid = (Integer)probIter.next();
-                    c.prohibitedConvIds[i++] = cid.intValue();
-                        }
+                    	c.prohibitedConvIds = mProhibitedConvIds;
                     }
                     
                     c.types = types;
-            c.sort = searchOrder.getDbMailItemSortByte(); 
+                    c.sort = searchOrder.getDbMailItemSortByte(); 
                     
-                    if (mExcludeTypes.length > 0) {
+                    if (mExcludeTypes.size() > 0) {
                         c.excludeTypes = mExcludeTypes;
                     }
                     
                     if (mIncludedItemIds != null) {
-                        c.itemIds = new int[mIncludedItemIds.size()];
-                        int offset = 0;
-                        for (Iterator iter = mIncludedItemIds.iterator(); iter.hasNext(); offset++) {
-                            c.itemIds[offset] = ((Integer)iter.next()).intValue();
-                        }
+                    	c.itemIds = mIncludedItemIds;
                     }
                     if (mExcludedItemIds != null && mExcludedItemIds.size() > 0) {
-                        c.prohibitedItemIds = new int[mExcludedItemIds.size()];
-                        int offset = 0;
-                        for (Iterator iter = mExcludedItemIds.iterator(); iter.hasNext(); offset++) {
-                            c.prohibitedItemIds[offset] = ((Integer)iter.next()).intValue();
-                        }
+                        c.prohibitedItemIds = mExcludedItemIds;
                     }
                     
                     if (mDates.size() > 0) {
-                        c.dates = (SearchConstraints.Range[])mDates.toArray(new SearchConstraints.Range[mDates.size()]);
+                    	c.dates = mDates;
                     }
                     
                     if (mSizes.size() > 0) {
-                        c.sizes = (SearchConstraints.Range[])mSizes.toArray(new SearchConstraints.Range[mSizes.size()]);
+                    	c.sizes = mSizes;
                     }
             return c;
         }
@@ -787,7 +717,7 @@ class DBQueryOperation extends QueryOperation
             try {
                 conn = DbPool.getConnection();
                 
-                SearchConstraints c = getSearchConstraints();
+                DbSearchConstraints c = getSearchConstraints();
                 if (c == null) {
                     mDBHitsIter = null;
                     mCurHitsOffset = -1;
@@ -834,7 +764,7 @@ class DBQueryOperation extends QueryOperation
                             	BooleanQuery idsQuery = new BooleanQuery();
                             	
                             	// maps an IndexID to a list of SearchResults
-                            	HashMap<Integer, List<SearchResult>> mailItemToResultsMap = new HashMap();
+                            	HashMap<Integer, List<SearchResult>> mailItemToResultsMap = new HashMap<Integer, List<SearchResult>>();
                             	
                             	for (SearchResult res : dbRes) {
                             		List<SearchResult> l = mailItemToResultsMap.get(res.indexId);
@@ -850,9 +780,9 @@ class DBQueryOperation extends QueryOperation
                             	
                             	mLuceneChunk = mLuceneOp.getNextResultsChunk(dbRes.size());
                             	
-                            	mDBHits = new ArrayList(dbRes.size());
+                            	mDBHits = new ArrayList<SearchResult>(dbRes.size());
                             	
-                            	int[] indexIds = mLuceneChunk.getIndexIds();
+                            	Collection<Integer> indexIds = mLuceneChunk.getIndexIds();
                             	for (int indexId : indexIds) {
                             		List<SearchResult> l = mailItemToResultsMap.get(indexId);
                             		
@@ -890,12 +820,12 @@ class DBQueryOperation extends QueryOperation
                                 mHitsPerChunk = MAX_HITS_PER_CHUNK;
                             }
                             
-                            if (c.indexIds.length == 0) {
+                            if (c.indexIds.size() == 0) {
                                 // we know we got all the index-id's from lucene.  since we don't have a
                                 // LIMIT clause, we can be assured that this query will get all the remaining results.
                                 mEndOfHits = true;
                                 
-                                mDBHits = new ArrayList(); 
+                                mDBHits = new ArrayList<SearchResult>(); 
                             } else {
                             	mDBHits = DbMailItem.search(conn, c);
                             	
@@ -912,7 +842,7 @@ class DBQueryOperation extends QueryOperation
                             		
                             		Arrays.sort(scHits);
                             		
-                            		mDBHits = new ArrayList(scHits.length);
+                            		mDBHits = new ArrayList<SearchResult>(scHits.length);
                             		for (ScoredDBHit sdbHit : scHits)
                             			mDBHits.add(sdbHit.mSr);
                             	}
@@ -1042,7 +972,7 @@ class DBQueryOperation extends QueryOperation
 
         
         for (Iterator iter = mDates.iterator(); iter.hasNext();) {
-            SearchConstraints.Range intv = (SearchConstraints.Range)(iter.next());
+            DbSearchConstraints.Range intv = (DbSearchConstraints.Range)(iter.next());
             if (intv.negated) {
                 retVal.append("NOT (");
             }
@@ -1076,7 +1006,7 @@ class DBQueryOperation extends QueryOperation
     }
     
     /* (non-Javadoc)
-     * @see com.zimbra.cs.index.QueryOperation#combineOps(com.zimbra.cs.index.QueryOperation, boolean)
+     * @see com.zimbra.cs.index.QueryOperation#combineOps(com.zimbra.cs.index.QueryOperation, boolean)  
      */
     protected QueryOperation combineOps(QueryOperation other, boolean union) 
     {
@@ -1137,17 +1067,17 @@ class DBQueryOperation extends QueryOperation
         }
 
         { // dates
-            toRet.mDates = (HashSet)mDates.clone();
+            toRet.mDates = (HashSet<Range>)mDates.clone();
             for (Iterator iter = dbOther.mDates.iterator(); iter.hasNext();) {
-                SearchConstraints.Range r = (SearchConstraints.Range)iter.next();
+                DbSearchConstraints.Range r = (DbSearchConstraints.Range)iter.next();
                 toRet.addDateClause(r.lowest, r.highest, !r.negated);
             }
         }
         
         { // sizes
-            toRet.mSizes = (HashSet)mSizes.clone();
+            toRet.mSizes = (HashSet<Range>)mSizes.clone();
             for (Iterator iter = dbOther.mSizes.iterator(); iter.hasNext();) {
-                SearchConstraints.Range r = (SearchConstraints.Range)iter.next();
+                DbSearchConstraints.Range r = (DbSearchConstraints.Range)iter.next();
                 toRet.addSizeClause(r.lowest, r.highest, !r.negated);
             }
         }
@@ -1165,7 +1095,7 @@ class DBQueryOperation extends QueryOperation
             } else if (dbOther.mIncludedItemIds == null) {
                 toRet.mIncludedItemIds = mIncludedItemIds;
             } else {
-                toRet.mIncludedItemIds = new HashSet(); // start out with EMPTY SET (no results!)
+                toRet.mIncludedItemIds = new HashSet<Integer>(); // start out with EMPTY SET (no results!)
                 for (Iterator iter = mIncludedItemIds.iterator(); iter.hasNext();)
                 {
                     Integer i = (Integer)(iter.next());
@@ -1237,13 +1167,18 @@ class DBQueryOperation extends QueryOperation
         }
         
         { // ...combine types...
-            toRet.mTypes = combineByteArraysNoDups(mTypes, dbOther.mTypes);
-            toRet.mExcludeTypes = combineByteArraysNoDups(mExcludeTypes, dbOther.mExcludeTypes);
+//            toRet.mTypes = combineByteArraysNoDups(mTypes, dbOther.mTypes);
+        	toRet.mTypes = (HashSet<Byte>)mTypes.clone();
+        	toRet.mTypes.addAll(dbOther.mTypes);
+        	
+//          toRet.mExcludeTypes = combineByteArraysNoDups(mExcludeTypes, dbOther.mExcludeTypes);
+        	toRet.mExcludeTypes = (HashSet<Byte>)mExcludeTypes.clone();
+        	toRet.mExcludeTypes.addAll(dbOther.mExcludeTypes);
         }
         
         
         { // ...combine tags...
-            toRet.mIncludeTags = (HashSet)mIncludeTags.clone();
+            toRet.mIncludeTags = (HashSet<Tag>)mIncludeTags.clone();
             for (Iterator iter = dbOther.mIncludeTags.iterator(); iter.hasNext();)
             {
                 Tag t = (Tag)(iter.next());

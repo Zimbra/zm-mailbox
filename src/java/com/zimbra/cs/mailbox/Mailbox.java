@@ -43,6 +43,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbSearchConstraints;
 import com.zimbra.cs.db.DbMailItem.SearchResult;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.im.IMNotification;
@@ -1519,7 +1520,7 @@ public class Mailbox {
                     redoRecorder.log();
                     redoInitted = true;
 
-                    DbMailItem.SearchConstraints c = new DbMailItem.SearchConstraints();
+                    DbSearchConstraints c = new DbSearchConstraints();
                     c.mailboxId = this.getId();
                     c.sort = DbMailItem.SORT_BY_DATE;
                     
