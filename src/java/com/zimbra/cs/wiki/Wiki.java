@@ -55,13 +55,13 @@ public class Wiki {
 	}
 	
 	public static Wiki getInstance() throws ServiceException {
+		if (!LC.wiki_enabled.booleanValue()) {
+			throw ServiceException.FAILURE("wiki disabled", null);
+		}
 		return getInstance(LC.wiki_user.value());
 	}
 	
 	public static Wiki getInstance(String acct) throws ServiceException {
-		if (!LC.wiki_enabled.booleanValue()) {
-			throw ServiceException.FAILURE("wiki disabled", null);
-		}
 		Wiki w;
 		synchronized (wikiMap) {
 			w = wikiMap.get(acct);

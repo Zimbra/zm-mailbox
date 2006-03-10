@@ -23,37 +23,35 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.service.mail;
+package com.zimbra.cs.service.wiki;
 
 import java.util.Map;
-import java.util.Set;
 
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.wiki.Wiki;
-import com.zimbra.cs.wiki.WikiWord;
-import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
-public class ListWiki extends DocumentHandler {
+public class DeleteWiki extends WikiDocumentHandler {
 
+	@Override
+    public boolean isReadOnly() {
+        return false;
+    }
+    
+	@Override
 	public Element handle(Element request, Map context) throws ServiceException {
 		ZimbraContext lc = getZimbraContext(context);
+        OperationContext octxt = lc.getOperationContext();
+        Element eword = request.getElement(MailService.E_WIKIWORD);
+        String word = eword.getAttribute(MailService.A_NAME);
 
-		Wiki wiki = Wiki.getInstance();
-        Set<String> wikiWords = wiki.listWiki();
-        Element response = lc.createElement(MailService.LIST_WIKI_RESPONSE);
-        for (String w : wikiWords) {
-        	WikiWord ww = wiki.lookupWiki(w);
-            Element m = response.addElement(MailService.E_WIKIWORD);
-            m.addAttribute(MailService.A_NAME, w);
-            m.addAttribute(MailService.A_VERSION, ww.lastRevision());
-            m.addAttribute(MailService.A_CREATED_DATE, ww.getCreatedDate());
-            m.addAttribute(MailService.A_MODIFIED_DATE, ww.getModifiedDate());
-            m.addAttribute(MailService.A_CREATOR, ww.getCreator());
-            m.addAttribute(MailService.A_LAST_EDITED_BY, ww.getLastEditor());
-            m.addAttribute(MailService.A_FOLDER, ww.getFolderId());
-        }
+        Wiki wiki = getRequestedWiki(request, lc);
+        wiki.deleteWiki(octxt, word);
+        Element response = lc.createElement(MailService.DELETE_WIKI_RESPONSE);
+
         return response;
 	}
 }

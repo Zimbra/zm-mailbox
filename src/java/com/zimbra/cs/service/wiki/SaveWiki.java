@@ -22,7 +22,7 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.service.mail;
+package com.zimbra.cs.service.wiki;
 
 import java.util.Map;
 
@@ -30,26 +30,32 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.wiki.Wiki;
 import com.zimbra.cs.wiki.WikiWord;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
-import com.zimbra.soap.WriteOpDocumentHandler;
 import com.zimbra.soap.ZimbraContext;
 
-public class SaveWiki extends WriteOpDocumentHandler {
+public class SaveWiki extends WikiDocumentHandler {
 
+	@Override
+    public boolean isReadOnly() {
+        return false;
+    }
+    
 	@Override
 	public Element handle(Element request, Map context)
 			throws ServiceException, SoapFaultException {
-		Wiki wiki = Wiki.getInstance();
         ZimbraContext lc = getZimbraContext(context);
-        Mailbox mbox = Mailbox.getMailboxByAccountId(wiki.getWikiAccountId());
         OperationContext octxt = lc.getOperationContext();
+		Wiki wiki = getRequestedWiki(request, lc);
 
         Element msgElem = request.getElement(MailService.E_MSG);
         String subject = msgElem.getAttribute(MailService.A_SUBJECT, null);
         int fid = (int)msgElem.getAttributeLong(MailService.A_FOLDER, wiki.getWikiFolderId());
+
+        Mailbox mbox = Mailbox.getMailboxByAccountId(wiki.getWikiAccountId());
 
         byte[] rawData = msgElem.getText().getBytes();
         

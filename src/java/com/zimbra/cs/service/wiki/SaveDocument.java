@@ -22,7 +22,7 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.service.mail;
+package com.zimbra.cs.service.wiki;
 
 import java.io.IOException;
 import java.util.Map;
@@ -38,14 +38,14 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
+import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.wiki.Wiki;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
-import com.zimbra.soap.WriteOpDocumentHandler;
 import com.zimbra.soap.ZimbraContext;
 
-public class SaveDocument extends WriteOpDocumentHandler {
+public class SaveDocument extends WikiDocumentHandler {
 
 	private static class Doc {
 		public byte[] contents;
@@ -87,14 +87,19 @@ public class SaveDocument extends WriteOpDocumentHandler {
 	}
 	
 	@Override
+    public boolean isReadOnly() {
+        return false;
+    }
+
+	@Override
 	public Element handle(Element request, Map context)
 			throws ServiceException, SoapFaultException {
         ZimbraContext lc = getZimbraContext(context);
-        Wiki wiki = Wiki.getInstance();
-        Mailbox mbox = Mailbox.getMailboxByAccountId(wiki.getWikiAccountId());
-        OperationContext octxt = lc.getOperationContext();
+        Wiki wiki = getRequestedWiki(request, lc);
 
         Element docElem = request.getElement(MailService.E_DOC);
+        Mailbox mbox = Mailbox.getMailboxByAccountId(wiki.getWikiAccountId());
+        OperationContext octxt = lc.getOperationContext();
 
         Doc doc;
         Element attElem = docElem.getOptionalElement(MailService.E_UPLOAD);;

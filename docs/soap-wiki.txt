@@ -1,4 +1,21 @@
 //
+// This set of API can be used to access private Notes, or public Wiki pages.
+//
+// Private Notes get stored in the mailbox of the requestor.  The access to
+// the private Notes will be determined by ACL of the folder the Notes are stored.
+// By default Notes are accesible to the account holder only, thus private.
+// 
+// Public Wiki pages are stored in a central location allocated to ZCS at the
+// installation time.  The access to the Wiki pages also follow the ACL on the
+// folder the pages are stored.  By default the Wiki pages are available to
+// everyone.  Anyone can add a new revision or delete the Wiki page created by
+// someone else.
+//
+// The optional attribute 'type' for each command determines whether the request
+// is for Notes or Wiki.  If the type element is not specified, the server will
+// default to Wiki.
+//
+
 // Create
 //
 // A Document represents a file.  A file can be created by uploading to FileUploadServlet.
@@ -8,7 +25,7 @@
 // then use the upload-id from the FileUploadResponse.
 // When <m> is used, the document is retrieved from an existing message in the mailbox,
 // identified by the msg-id and part-id.
-<SaveDocumentRequest>
+<SaveDocumentRequest [type="wiki|note"]>
   <doc [name="{file-name}"] [ct="{content-type}"] [l="{folder-id}"]>
     [<upload id="{upload-id}"/>]
     [<m id="{msg-id}" part="{part-id}"/>]
@@ -23,7 +40,7 @@
 // A Wiki is a versioned HTML document.
 // folder-id argument is valid when the new wiki document is being created,
 // otherwise it's ignored, and the subsequent revision is stored in the same folder.
-<SaveWikiRequest>
+<SaveWikiRequest [type="wiki|note"]>
   <m su="{wikiword}" [l="{folder-id}"]> ... contents ... </m>
 </SaveWikiRequest>
 
@@ -51,7 +68,7 @@
 // created-date: date the first revision was created.
 // modified-date: date the last revision was made.
 // last-edited-by: user that made the last revision.
-<ListWikiRequest [l="{folder-id}"]/>
+<ListWikiRequest [type="wiki|note"] [l="{folder-id}"]/>
 
 <ListWikiResponse>
   [<w name="{word}" ver="{head-version}" cd="{created-date}" md="{modified-date}" cr="{creator}" leb="{last-edited-by}" l="{folder}"/>]+
@@ -60,7 +77,7 @@
 //
 // GetWiki
 // returns the latest version if version is omitted from the request.
-<GetWikiRequest>
+<GetWikiRequest [type="wiki|note"]>
   <w name="{word}" [ver="{version}"]/>
 </GetWikiRequest>
 
@@ -74,7 +91,7 @@
 // DeleteWiki
 // deletes all the revision of the wiki document by moving to trash folder.
 // delete can be performed by anyone who has delete access to the folder the wiki document is stored.
-<DeleteWikiRequest>
+<DeleteWikiRequest [type="wiki|note"]>
   <w name="{word}"/>
 </DeleteWikiRequest>
 

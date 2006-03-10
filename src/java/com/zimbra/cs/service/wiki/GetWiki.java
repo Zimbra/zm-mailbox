@@ -23,28 +23,42 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.service.mail;
+package com.zimbra.cs.service.wiki;
 
 import java.util.Map;
 
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.wiki.Wiki;
-import com.zimbra.soap.DocumentHandler;
+import com.zimbra.cs.wiki.WikiWord;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
-public class DeleteWiki extends DocumentHandler {
+public class GetWiki extends WikiDocumentHandler {
 
+	@Override
 	public Element handle(Element request, Map context) throws ServiceException {
 		ZimbraContext lc = getZimbraContext(context);
         OperationContext octxt = lc.getOperationContext();
         Element eword = request.getElement(MailService.E_WIKIWORD);
         String word = eword.getAttribute(MailService.A_NAME);
+        int rev = (int)eword.getAttributeLong(MailService.A_VERSION, -1);
 
-        Wiki.getInstance().deleteWiki(octxt, word);
-        Element response = lc.createElement(MailService.DELETE_WIKI_RESPONSE);
+        Element response = lc.createElement(MailService.GET_WIKI_RESPONSE);
 
+        Wiki wiki = getRequestedWiki(request, lc);
+        WikiWord w = wiki.lookupWiki(word);
+        if (w == null) {
+        	// error handling here
+        	return response;
+        }
+        if (rev > 0) {
+            ToXML.encodeWiki(response, lc, w.getWikiItem(octxt), rev);
+        } else {
+            ToXML.encodeWiki(response, lc, w.getWikiItem(octxt));
+        }
         return response;
 	}
 }

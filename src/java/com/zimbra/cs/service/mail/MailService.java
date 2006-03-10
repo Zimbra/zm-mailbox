@@ -429,9 +429,12 @@ public class MailService implements DocumentService {
     public static final String A_WORD = "word";
     public static final String A_SUGGESTIONS = "suggestions";
 
+    
+    // TODO: move to a different service.
     // wiki
     public static final String A_WIKIWORD = "w";
     public static final String A_CREATOR = "cr";
+    public static final String A_TYPE = "t";
     public static final String E_WIKIWORD = "w";
     public static final String E_DOC = "doc";
     public static final String E_UPLOAD = "upload";
@@ -519,11 +522,12 @@ public class MailService implements DocumentService {
         // spell check
         dispatcher.registerHandler(CHECK_SPELLING_REQUEST, new CheckSpelling());
 
+        // TODO: move to a different service.
         // wiki
-        dispatcher.registerHandler(SAVE_DOCUMENT_REQUEST, new SaveDocument());
-        dispatcher.registerHandler(SAVE_WIKI_REQUEST, new SaveWiki());
-        dispatcher.registerHandler(LIST_WIKI_REQUEST, new ListWiki());
-        dispatcher.registerHandler(GET_WIKI_REQUEST, new GetWiki());
-        dispatcher.registerHandler(DELETE_WIKI_REQUEST, new DeleteWiki());
+        dispatcher.registerHandler(SAVE_DOCUMENT_REQUEST, new com.zimbra.cs.service.wiki.SaveDocument());
+        dispatcher.registerHandler(SAVE_WIKI_REQUEST, new com.zimbra.cs.service.wiki.SaveWiki());
+        dispatcher.registerHandler(LIST_WIKI_REQUEST, new com.zimbra.cs.service.wiki.ListWiki());
+        dispatcher.registerHandler(GET_WIKI_REQUEST, new com.zimbra.cs.service.wiki.GetWiki());
+        dispatcher.registerHandler(DELETE_WIKI_REQUEST, new com.zimbra.cs.service.wiki.DeleteWiki());
 	}
 }
