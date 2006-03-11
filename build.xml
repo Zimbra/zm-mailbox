@@ -573,14 +573,14 @@
 		</java>
 
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="ca spam-sink@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} zimbraAttachmentsIndexingEnabled FALSE" />
+			<arg line="ca spam-sink@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} zimbraAttachmentsIndexingEnabled FALSE zimbraMailQuota 0" />
 		</java>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="mcf zimbraSpamIsSpamAccount spam-sink@${zimbra.server.hostname}" />
 		</java>
 		<echo>Setting up not junk account</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="ca ham-sink@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} zimbraAttachmentsIndexingEnabled FALSE" />
+			<arg line="ca ham-sink@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} zimbraAttachmentsIndexingEnabled FALSE zimbraMailQuota 0" />
 		</java>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="mcf zimbraSpamIsNotSpamAccount ham-sink@${zimbra.server.hostname}" />
