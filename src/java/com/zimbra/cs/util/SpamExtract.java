@@ -216,7 +216,7 @@ public class SpamExtract {
         hc.setState(state);
         hc.getHostConfiguration().setHost(restURL.getHost(), restURL.getPort(), Protocol.getProtocol(restURL.getProtocol()));
         hc.getHttpConnectionManager().getParams().setConnectionTimeout(60000);
-        hc.getHttpConnectionManager().getParams().setTimeout(60000);
+        hc.setTimeout(60000);
 
         if (mVerbose) mLog.info("Mailbox requests to: " + restURL);
 
