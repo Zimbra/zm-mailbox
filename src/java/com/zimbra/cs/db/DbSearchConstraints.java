@@ -1,15 +1,16 @@
 package com.zimbra.cs.db;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.util.ListUtil;
+import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * @author tim
@@ -26,6 +27,31 @@ public class DbSearchConstraints {
 		public long lowest = -1;
 		public long highest = -1;
 
+		public String toString() {
+			StringBuilder retVal = new StringBuilder();
+			
+			if (negated) {
+                retVal.append("NOT (");
+            }
+            
+			if (lowest > -1) {
+                retVal.append("AFTER:");
+                retVal.append((new java.util.Date(lowest)).toString());
+                retVal.append(' ');
+            }
+            
+            if (highest > -1) {
+                retVal.append("BEFORE:");
+                retVal.append((new java.util.Date(highest)).toString());
+                retVal.append(' ');
+            }
+            if (negated) {
+            	retVal.append(")");
+            }
+            
+            return retVal.toString();
+		}
+		
 		public boolean equals(Object o) {
 			DbSearchConstraints.Range other = (DbSearchConstraints.Range) o;
 			return ((other.negated == negated) && (other.lowest == lowest) && (other.highest == highest));
@@ -43,29 +69,271 @@ public class DbSearchConstraints {
 	public int offset = -1;                 /* optional */
 	public int limit = -1;                  /* optional */
 
-	public Collection<Tag> tags = null;              /* optional */
-	public Collection<Tag> excludeTags = null;       /* optional */
+	//
+	// These are the main constraints 
+	//
+	public Set<Tag> tags = null; /* optional - SPECIAL CASE -- ALL listed tags must be present.  NULL IS DIFFERENT THAN EMPTY SET!!! */
+	public Set<Tag> excludeTags = new HashSet<Tag>(); /* optional - ALL listed tags must be NOT present*/
+	
 	public Boolean hasTags = null;                   /* optional */
-	public Collection<Folder> folders = null;        /* optional */
-	public Collection<Folder> excludeFolders = null; /* optional */
-	public int convId = -1;                          /* optional */
-	public Collection<Integer> prohibitedConvIds = null;          /* optional */
-	public Collection<Integer> itemIds = null;                    /* optional */
-	public Collection<Integer> prohibitedItemIds = null;          /* optional */
-	public Collection<Integer> indexIds = null;                   /* optional */
-	public Collection<Byte> types = null;                         /* optional */
-	public Collection<Byte> excludeTypes = null;                  /* optional */
-	public Collection<DbSearchConstraints.Range> dates = null;    /* optional */
-	public Collection<DbSearchConstraints.Range> modified = null; /* optional */
-	public Collection<DbSearchConstraints.Range> sizes = null;    /* optional */
+	
+	public Set<Folder> folders = new HashSet<Folder>();        /* optional - ANY of these folders are OK */
+	public Set<Folder> excludeFolders = new HashSet<Folder>(); /* optional - ALL listed folders not allowed */
+	
+	public int convId = 0;                          /* optional */
+	public Set<Integer> prohibitedConvIds = new HashSet<Integer>();          /* optional */
+	
+	public Set<Integer> itemIds = new HashSet<Integer>();                             /* optional - ANY of these itemIDs are OK.*/
+	public Set<Integer> prohibitedItemIds = new HashSet<Integer>(); /* optional - ALL of these itemIDs are excluded*/
+	
+	public Set<Integer> indexIds = new HashSet<Integer>();                   /* optional - ANY of these indexIDs are OK.  */
+	
+	public Set<Byte> types = new HashSet<Byte>();                         /* optional - ANY of these types are OK.  */
+	public Set<Byte> excludeTypes = new HashSet<Byte>();                  /* optional - ALL of these types are excluded */
+	
+	public Collection<Range> dates = new ArrayList<Range>();    /* optional */
+	public Collection<Range> modified = new ArrayList<Range>(); /* optional */
+	public Collection<Range> sizes = new ArrayList<Range>();    /* optional */
+	
+	//
+	// When we COMBINE the operations, we'll need to track some state values
+	// for example "no results" 
+	//
+	public boolean noResults = false;
+	
+	
+	private static abstract class Printer<T> {
+		void run(StringBuilder str, Collection<T> collect, String intro) {
+			if (!ListUtil.isEmpty(collect)) {
+				str.append(intro).append(":(");
+				for (T elt: collect) {
+					printOne(str, elt);
+					str.append(',');
+				}
+				str.append(") ");
+			}
+		}
+		
+		abstract void printOne(StringBuilder s, T t);
+	}
+	
+    public String toString()
+    {
+        StringBuilder retVal = new StringBuilder("");
+        
+        //
+        // all this pain could have been eliminated with a simple preprocessor macro...fucking java...
+        //
+        Printer<Tag> tp = new Printer<Tag>()         { void printOne(StringBuilder s, Tag t)     { s.append(t.getName()); } };
+        Printer<Folder> fp = new Printer<Folder>()   { void printOne(StringBuilder s, Folder f)  { s.append(f.getName()); } };
+        Printer<Integer> ip = new Printer<Integer>() { void printOne(StringBuilder s, Integer i) { s.append(i); } };
+        Printer<Byte> bp = new Printer<Byte>()       { void printOne(StringBuilder s, Byte b)    { s.append(b); } };
+        Printer<Range> rp = new Printer<Range>()     { void printOne(StringBuilder s, Range r)   { s.append(r.toString()); } };
+        
+        // tags
+        tp.run(retVal, tags, "TAG");
+        tp.run(retVal, excludeTags, "-TAG");
+        
+        // hasTags?
+        if (hasTags != null) {
+        	if (hasTags) {
+        		retVal.append("HAS_TAG ");
+        	} else {
+        		retVal.append("-HAS_TAG ");
+        	}
+        }
+        
+        // folders
+        fp.run(retVal, folders, "IN");
+        fp.run(retVal, excludeFolders, "-IN");
+        
+        // convId
+        if (convId != 0) {
+        	retVal.append("CONV:(").append(convId).append(") ");
+        }
+        ip.run(retVal, prohibitedConvIds, "-CONVID");
+        ip.run(retVal, prohibitedConvIds, "-CONVID");
 
+        // itemId
+        ip.run(retVal, itemIds, "ITEM");
+        ip.run(retVal, prohibitedItemIds, "-ITEM");
+        
+        // indexId
+        ip.run(retVal, indexIds, "INDEXID");
+        
+        // type
+        bp.run(retVal, types, "TYPE"); 
+        bp.run(retVal, excludeTypes, "-TYPE"); 
+
+        // dates
+        rp.run(retVal, dates, "DATES"); 
+
+        // modified
+        rp.run(retVal, modified, "MOD") ;
+
+        // size
+        rp.run(retVal, sizes, "SIZE");
+        
+        return retVal.toString();
+    }
+    
+    /**
+     * @author tim
+     * 
+     * NOT general-purpose, makes assumptions about when-to-copy and
+     * that NULL != empty-set that are not something one would generally want 
+     *
+     * @param <T>
+     */
+    static class MySetUtil<T> {
+    	Set<T> clone(Set<T> s) {
+    		Set<T> toRet = null;
+    		if (s != null) {
+    			toRet = new HashSet<T>();
+    			toRet.addAll(s);
+    		}
+    		return toRet;
+    	}
+    	
+    	Set<T> intersect(Set<T> lhs, Set<T> rhs) {
+    		assert(lhs != null && rhs != null);
+    		
+    		if (rhs == null) {
+    			return lhs;
+    		} else if (lhs == null) {
+    			return clone(rhs);
+    		} else {
+    			Set<T> newSet = new HashSet<T>();
+    			for (T t : rhs) {
+    				if (lhs.contains(t))
+    					newSet.add(t);
+    			}
+    			return newSet;
+    		}
+    	}
+    	
+    	Set<T> union(Set<T> lhs, Set<T> rhs) {
+    		if (rhs == null) {
+    			return lhs;
+    		} else if (lhs == null) {
+    			return clone(rhs);
+    		} else {
+    			lhs.addAll(rhs);
+    			return lhs;
+    		}
+    	}
+    }
+    
+    /**
+     * this = this AND other
+     * 
+     * @param other
+     */
+    public void andConstraints(DbSearchConstraints other) 
+    {
+    	if (noResults || other.noResults) {
+    		noResults = true;
+    		return;
+    	}
+    	
+    	MySetUtil<Tag> tu = new MySetUtil<Tag>();
+    	MySetUtil<Folder> fu = new MySetUtil<Folder>();
+    	MySetUtil<Integer> iu = new MySetUtil<Integer>();
+    	MySetUtil<Byte> bu = new MySetUtil<Byte>();
+            
+    	// tags
+    	tags = tu.union(tags, other.tags);
+    	excludeTags = tu.union(excludeTags, other.excludeTags);
+    	
+    	// has tags 
+    	if (hasTags == null)
+    		hasTags = other.hasTags;
+    	else if (other.hasTags != null) {
+    		if (hasTags != other.hasTags) {
+    			noResults = true;
+    			ZimbraLog.index.debug("Adding a HAS_NO_TAGS constraint to a HAS_TAGS one, this is a NO_RESULTS result");
+    			return;
+    		}
+    	}
+            
+    	// folders
+    	//
+    	// these we have to intersect:
+        //
+        //   Folder{A or B or C} AND Folder{B or C or D} --> Folder{IN-BOTH}
+    	folders = fu.intersect(folders, other.folders);
+    	excludeFolders = fu.union(excludeFolders, other.excludeFolders);
+    	
+    	// convId
+    	if (other.convId != 0) {
+    		if (convId != 0) { 
+    			if (convId != other.convId) {
+    				ZimbraLog.index.debug("ANDING a constraint with incompatible folders, this is a NO_RESULTS constraint now");
+    				noResults = true;
+    			}
+    		} else {
+    			convId = other.convId;
+    		}
+    	}
+    	prohibitedConvIds = iu.union(prohibitedConvIds, other.prohibitedConvIds);
+    	
+    	
+    	// itemId
+    	
+    	// these we have to intersect:
+        //
+        //   Item{A or B or C} AND Item{B or C or D} --> Item{IN-BOTH}
+    	itemIds = iu.intersect(itemIds, other.itemIds);
+
+        // these we can just union, since:
+    	//
+        // -Item{A or B} AND -Item{C or D} --> 
+        //   (-Item(A) AND -Item(B)) AND (-C AND -D) -->
+        //     (A AND B AND C AND D)
+    	prohibitedItemIds = iu.union(prohibitedItemIds, other.prohibitedItemIds);
+    	
+    	// indexId
+    	//   IndexId{A or B or C} AND IndexId{B or C or D} --> IndexId{IN-BOTH}
+    	indexIds = iu.intersect(indexIds, other.indexIds);
+    	
+    	// types
+    	// see comments above
+    	types = bu.intersect(types, other.types);
+    	// see comments above
+    	excludeTypes = bu.union(excludeTypes, other.excludeTypes);
+    	
+    	// dates
+    	if (other.dates != null) {
+    		if (dates == null) 
+    			dates = new ArrayList<Range>();
+    		dates.addAll(other.dates);
+    	}
+
+    	// modified
+    	if (other.modified != null) {
+    		if (modified == null) 
+    			modified = new ArrayList<Range>();
+    		modified.addAll(other.modified);
+    	}
+    	
+    	// sizes
+    	if (other.sizes!= null) {
+    		if (sizes == null) 
+    			sizes = new ArrayList<Range>();
+    		sizes.addAll(other.sizes);
+    	}
+    	
+    }
+
+        
+	
 	boolean automaticEmptySet() {
 		// Check for tags and folders that are both included and excluded.
 		Set<Integer> s = new HashSet<Integer>();
 		addIdsToSet(s, tags);
 		addIdsToSet(s, folders);
-		assert(!(setContainsAnyId(s, excludeTags) || setContainsAnyId(s, excludeFolders)));
-//		return true;
+//		assert(!(setContainsAnyId(s, excludeTags) || setContainsAnyId(s, excludeFolders)));
+
 		if (hasTags == Boolean.FALSE && tags != null && tags.size() != 0)
 			return true;
 
@@ -102,26 +370,8 @@ public class DbSearchConstraints {
 				iter.remove();
 		}
 		return intervals;
-		
-//		HashSet<DbSearchConstraints.Range> badDates = new HashSet<DbSearchConstraints.Range>();
-//		for (DbSearchConstraints.Range range : intervals)
-//			if (!range.isValid())
-//				badDates.add(range);
-//		
-//		if (badDates.size() == 0)
-//			return intervals;
-//		else if (badDates.size() == intervals.size())
-//			intervals = null;
-//		else {
-//			DbSearchConstraints.Range[] fixedDates = new DbSearchConstraints.Range[intervals.length - badDates.size()];
-//			for (int i = 0, j = 0; i < intervals.length; i++)
-//				if (!badDates.contains(intervals[i]))
-//					fixedDates[j++] = intervals[i];
-//			intervals = fixedDates;
-//		}
-//		return intervals;
 	}
-	
+		
 	private void addIdsToSet(Set<Integer> s, Collection<?> items)
 	{
 		if (items != null)
@@ -136,4 +386,9 @@ public class DbSearchConstraints {
 					return true;
 		return false;
 	}
+	
+	
+
+	
+	
 }

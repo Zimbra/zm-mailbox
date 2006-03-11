@@ -33,8 +33,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.*;
@@ -125,8 +127,8 @@ class LuceneQueryOperation extends QueryOperation
     		public float mScore; // highest score in list
     	}
     	
-        Collection<Integer> getIndexIds() { 
-        	ArrayList<Integer>toRet = new ArrayList<Integer>(mHits.keySet().size());
+        Set<Integer> getIndexIds() { 
+        	Set<Integer>toRet = new HashSet<Integer>(mHits.keySet().size());
             for (Iterator iter = mHits.keySet().iterator(); iter.hasNext();) {
                 Integer curInt = (Integer)iter.next();
                 toRet.add(curInt);
@@ -316,14 +318,21 @@ class LuceneQueryOperation extends QueryOperation
     }
     
     void addAndedClause(Query q, boolean truth) {
-    	BooleanQuery top = new BooleanQuery();
-    	BooleanClause lhs = new BooleanClause(mQuery, true, false);
-    	BooleanClause rhs = new BooleanClause(q, truth, !truth);
-    	top.add(lhs);
-    	top.add(rhs);
-    	mQuery = top;
-    }
+    	assert(!mHaveRunSearch);
+    	
+        BooleanQuery top = new BooleanQuery();
+        BooleanClause lhs = new BooleanClause(mQuery, true, false);
+        BooleanClause rhs = new BooleanClause(q, truth, !truth);
+        top.add(lhs);
+        top.add(rhs);
+        mQuery = top;
+    }    
 
+    /**
+     * 
+     * @param q
+     * @param truth
+     */
     void addClause(Query q, boolean truth) {
     	assert(!mHaveRunSearch);
     	

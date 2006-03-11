@@ -32,12 +32,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -69,28 +69,30 @@ import com.zimbra.cs.service.ServiceException;
  ***********************************************************************/
 class DBQueryOperation extends QueryOperation
 {
-    private Folder mFolder = null;
+//    private Folder mFolder = null;
     
     private static Log mLog = LogFactory.getLog(DBQueryOperation.class);
+    
+    DbSearchConstraints mConstraints = new DbSearchConstraints();
 
     // this gets set to FALSE if we have any real work to do
     // this lets us optimize away queries that might match "everything"
     private boolean mAllResultsQuery = true;
-    private boolean mNoResultsQuery = false;
+//    private boolean mNoResultsQuery = false;
     
-    private HashSet<Folder> mExcludeFolder = new HashSet<Folder>();
+//    private HashSet<Folder> mExcludeFolder = new HashSet<Folder>();
     
-    private HashSet<Tag> mIncludeTags = new HashSet<Tag>();
-    private HashSet<Tag> mExcludeTags = new HashSet<Tag>();
+//    private HashSet<Tag> mIncludeTags = new HashSet<Tag>();
+//    private HashSet<Tag> mExcludeTags = new HashSet<Tag>();
     
-    private int mConvId = 0;
-    private HashSet<Integer> mProhibitedConvIds = new HashSet<Integer>();
+//    private int mConvId = 0;
+//    private HashSet<Integer> mProhibitedConvIds = new HashSet<Integer>();
     
-    private HashSet<DbSearchConstraints.Range>mDates = new HashSet<DbSearchConstraints.Range>();
-    private HashSet<DbSearchConstraints.Range> mSizes = new HashSet<DbSearchConstraints.Range>();
+//    private HashSet<DbSearchConstraints.Range>mDates = new HashSet<DbSearchConstraints.Range>();
+//    private HashSet<DbSearchConstraints.Range> mSizes = new HashSet<DbSearchConstraints.Range>();
     
-    private HashSet<Integer> mIncludedItemIds = null; // CAREFUL!  In this case NULL means "no constraint" -- which is very different from an empty set (which means NOTHING MATCHES)
-    private HashSet<Integer> mExcludedItemIds = null; 
+//    private HashSet<Integer> mIncludedItemIds = null; // CAREFUL!  In this case NULL means "no constraint" -- which is very different from an empty set (which means NOTHING MATCHES)
+//    private HashSet<Integer> mExcludedItemIds = null; 
     
     // true if we have a SETTING pertaining to Spam/Trash.  This doesn't necessarily
     // mean we actually have "in trash" or something, it just means that we've got something
@@ -129,7 +131,7 @@ class DBQueryOperation extends QueryOperation
         return mHasSpamTrashSetting;
     }
     boolean hasNoResults() {
-        return mNoResultsQuery;
+    	return mConstraints.noResults;
     }
     boolean hasAllResults() {
         return mAllResultsQuery;
@@ -139,8 +141,8 @@ class DBQueryOperation extends QueryOperation
     }
     
     QueryTarget getQueryTarget() {
-    	if (mFolder != null)  
-    		return new QueryTarget(mFolder);
+    	if (mConstraints.folders != null)  
+    		return new QueryTarget(mConstraints.folders);
     	else 
     		return null;
     }
@@ -196,29 +198,23 @@ class DBQueryOperation extends QueryOperation
     void addItemIdClause(Integer itemId, boolean truth) {
         mAllResultsQuery = false;
         if (truth) {
-            if (mIncludedItemIds == null) {
-                mIncludedItemIds = new HashSet<Integer>();
-            }
-            if (!mIncludedItemIds.contains(itemId)) {
+        	if (!mConstraints.itemIds.contains(itemId)) {
                 //
                 // {1} AND {-1} AND {1} == no-results 
                 //  ... NOT {1} (which could happen if you removed from both arrays on combining!)
-                if (mExcludedItemIds == null || !mExcludedItemIds.contains(itemId)) {
-                    mIncludedItemIds.add(itemId);
+            	if (mConstraints.prohibitedItemIds== null || !mConstraints.prohibitedItemIds.contains(itemId)) {
+            		mConstraints.itemIds.add(itemId);
                 }
             }
         } else {
-            if (mExcludedItemIds == null) {
-                mExcludedItemIds = new HashSet<Integer>();
-            }
-            if (!mExcludedItemIds.contains(itemId)) {
+            if (!mConstraints.prohibitedItemIds.contains(itemId)) {
                 //
                 // {1} AND {-1} AND {1} == no-results 
                 //  ... NOT {1} (which could happen if you removed from both arrays on combining!)
-                if (mIncludedItemIds != null && mIncludedItemIds.contains(itemId)) {
-                    mIncludedItemIds.remove(itemId);
+                if (mConstraints.itemIds != null && mConstraints.itemIds.contains(itemId)) {
+                	mConstraints.itemIds.remove(itemId);
                 }
-                mExcludedItemIds.add(itemId);
+                mConstraints.prohibitedItemIds.add(itemId);
             }
         }
     }
@@ -236,7 +232,7 @@ class DBQueryOperation extends QueryOperation
         intv.highest = highestDate;
         intv.negated = !truth;
         
-        this.mDates.add(intv);
+        mConstraints.dates.add(intv);
     }
     
     /**
@@ -252,7 +248,7 @@ class DBQueryOperation extends QueryOperation
         intv.highest = highestSize;
         intv.negated = !truth;
         
-        this.mSizes.add(intv);
+        mConstraints.sizes.add(intv);
     }
     
     
@@ -261,27 +257,27 @@ class DBQueryOperation extends QueryOperation
      * @param prohibited
      */
     void addConvId(int convId, boolean truth) {
-        mAllResultsQuery = false;
+    	mAllResultsQuery = false;
         Integer cid = new Integer(convId);
         if (truth) {
-            if (mProhibitedConvIds.contains(cid)) {
-                mNoResultsQuery = true;
+        	if (mConstraints.prohibitedConvIds.contains(cid)) {
+        		mConstraints.noResults = true;
             }
             
-            if (mConvId == 0) {
-                mConvId = convId;
-            } else {
-                if (mLog.isDebugEnabled()) {
-                    mLog.debug("Query requested two conflicting convIDs, this is now a no-results-query");
+        	if (mConstraints.convId == 0) {
+        		mConstraints.convId = convId;
+        	} else {
+        		if (mLog.isDebugEnabled()) {
+        			mLog.debug("Query requested two conflicting convIDs, this is now a no-results-query");
                 }
-                mConvId = Integer.MAX_VALUE;
-                mNoResultsQuery = true;
+        		mConstraints.convId = Integer.MAX_VALUE;
+                mConstraints.noResults = true;
             }
         } else {
-            if (convId == mConvId) {
-                mNoResultsQuery = true;
+            if (convId == mConstraints.convId) {
+            	mConstraints.noResults = true;
             }
-            mProhibitedConvIds.add(cid);
+            mConstraints.prohibitedConvIds.add(cid);
         }
     }
     
@@ -291,29 +287,34 @@ class DBQueryOperation extends QueryOperation
      */
     void addInClause(Folder folder, boolean truth) 
     {
-        mAllResultsQuery = false;
-        if (truth) {
-            if ((mFolder != null && mFolder != folder) || (mExcludeFolder.contains(folder))) {
-                if (mLog.isDebugEnabled()) {
-                    mLog.debug("AND of conflicting folders, no-results-query");
-                }
-                mNoResultsQuery = true;
-            }
-            mFolder = folder;
-            mHasSpamTrashSetting = true;
+    	mAllResultsQuery = false;
+    	if (truth) {
+    		if ((mConstraints.folders.size() > 0 && !mConstraints.folders.contains(folder)) 
+        			|| mConstraints.excludeFolders.contains(folder)) {
+        		if (mLog.isDebugEnabled()) {
+        			mLog.debug("AND of conflicting folders, no-results-query");
+        		}
+        		mConstraints.noResults = true;
+        	}
+        	mConstraints.folders.clear();
+        	mConstraints.folders.add(folder);
+        	mHasSpamTrashSetting = true;
         } else {
-            if (mFolder == folder) {
-                if (mLog.isDebugEnabled()) {
-                    mLog.debug("AND of conflicting folders, no-results-query");
-                }
-                mNoResultsQuery = true;
-            }
-            mExcludeFolder.add(folder);
-
-            int fid = folder.getId();
-            if (fid == Mailbox.ID_FOLDER_TRASH || fid == Mailbox.ID_FOLDER_SPAM) {
-                mHasSpamTrashSetting = true;
-            }
+        	if (mConstraints.folders.contains(folder)) {
+        		mConstraints.folders.remove(folder);
+        		if (mConstraints.folders.size() == 0) {
+                    if (mLog.isDebugEnabled()) {
+                        mLog.debug("AND of conflicting folders, no-results-query");
+                    }
+                    mConstraints.noResults = true;
+        		}
+        	}
+        	mConstraints.excludeFolders.add(folder);
+        	
+        	int fid = folder.getId();
+        	if (fid == Mailbox.ID_FOLDER_TRASH || fid == Mailbox.ID_FOLDER_SPAM) {
+        		mHasSpamTrashSetting = true;
+        	}
         }
     }
     
@@ -325,10 +326,10 @@ class DBQueryOperation extends QueryOperation
             // if they are weird enough to say "NOT is:anywhere" then we
             // just make it a no-results-query.
             
-            if (mLog.isDebugEnabled()) {
+        	if (mLog.isDebugEnabled()) {
                 mLog.debug("addAnyFolderClause(FALSE) called -- changing to no-results-query.");
             }
-            mNoResultsQuery = true;
+        	mConstraints.noResults = true;
             mAllResultsQuery = false;
         }
     }
@@ -343,15 +344,25 @@ class DBQueryOperation extends QueryOperation
             mLog.debug("AddTagClause("+tag+","+truth+")");
         }
         if (truth) {
-            if (mExcludeTags.contains(tag)) {
-                mNoResultsQuery = true;
-            }
-            mIncludeTags.add(tag);
+        	if (mConstraints.excludeTags!=null && mConstraints.excludeTags.contains(tag)) {
+            	if (mLog.isDebugEnabled()) {
+            		mLog.debug("TAG and NOT TAG = no results");
+                }
+            	mConstraints.noResults = true;
+        	}
+        	if (mConstraints.tags == null) 
+        		mConstraints.tags = new HashSet<Tag>();
+        	mConstraints.tags.add(tag);
         } else {
-            if (mIncludeTags.contains(tag)) {
-                mNoResultsQuery = true;
-            }
-            mExcludeTags.add(tag);
+        	if (mConstraints.tags != null && mConstraints.tags.contains(tag)) {
+            	if (mLog.isDebugEnabled()) {
+            		mLog.debug("TAG and NOT TAG = no results");
+                }
+            	mConstraints.noResults = true;
+        	}
+        	if (mConstraints.excludeTags == null)
+        		mConstraints.excludeTags = new HashSet<Tag>();
+        	mConstraints.excludeTags.add(tag);
         }
     }
     
@@ -571,10 +582,10 @@ class DBQueryOperation extends QueryOperation
     private HashSet<Byte> mTypes = new HashSet<Byte>();
     private HashSet<Byte>mExcludeTypes = new HashSet<Byte>();
     
-    private Collection<Byte> getDbQueryTypes() 
+    private Set<Byte> getDbQueryTypes() 
     {
     	byte[] defTypes = convertTypesToDbQueryTypes(this.getResultsSet().getTypes());
-    	ArrayList<Byte> toRet = new ArrayList<Byte>();
+    	HashSet<Byte> toRet = new HashSet<Byte>();
     	for (Byte b : defTypes)
     		toRet.add(b);
     	
@@ -603,69 +614,82 @@ class DBQueryOperation extends QueryOperation
      * @return
      */
     private DbSearchConstraints getSearchConstraints() {
+    	
         SortBy searchOrder = this.getResultsSet().getSortBy();
-        Collection<Byte> types = getDbQueryTypes();
+        Set<Byte> types = getDbQueryTypes();
         if (types.size() == 0)  {
             mLog.debug("NO RESULTS -- no known types requested");
             return null;
-        } else { 
-            DbSearchConstraints c = new DbSearchConstraints();
-            c.mailboxId = getMailbox().getId();
-        
-            // tags
-            if (mIncludeTags.size() > 0) {
-            	c.tags = mIncludeTags;
-//            	c.tags = (Tag[]) mIncludeTags.toArray(new Tag[mIncludeTags.size()]);
-            	
-            	
-        }
-        
-            // exclude-tags
-            if (mExcludeTags.size() > 0) {
-            	c.excludeTags = mExcludeTags;
-            }
-
-            // folders
-                if (mFolder != null) {
-                	c.folders = new ArrayList<Folder>(1);
-                	c.folders.add(mFolder);
-                } 
-                
-            // exclude-folders
-                if (mExcludeFolder.size() > 0) {
-                	c.excludeFolders = mExcludeFolder;
-                }
-                
-            c.convId = mConvId;
-                    
-            // prohibited-conv-ids
-                    if (mProhibitedConvIds.size() > 0) {
-                    	c.prohibitedConvIds = mProhibitedConvIds;
-                    }
-                    
-                    c.types = types;
-                    c.sort = searchOrder.getDbMailItemSortByte(); 
-                    
-                    if (mExcludeTypes.size() > 0) {
-                        c.excludeTypes = mExcludeTypes;
-                    }
-                    
-                    if (mIncludedItemIds != null) {
-                    	c.itemIds = mIncludedItemIds;
-                    }
-                    if (mExcludedItemIds != null && mExcludedItemIds.size() > 0) {
-                        c.prohibitedItemIds = mExcludedItemIds;
-                    }
-                    
-                    if (mDates.size() > 0) {
-                    	c.dates = mDates;
-                    }
-                    
-                    if (mSizes.size() > 0) {
-                    	c.sizes = mSizes;
-                    }
-            return c;
-        }
+        } 
+    	mConstraints.mailboxId = getMailbox().getId();
+    	mConstraints.types = types;
+    	mConstraints.sort = searchOrder.getDbMailItemSortByte();
+    	
+    	return mConstraints;
+    	
+//    	
+//        if (types.size() == 0)  {
+//            mLog.debug("NO RESULTS -- no known types requested");
+//            return null;
+//        } else { 
+//            DbSearchConstraints c = new DbSearchConstraints();
+//            c.mailboxId = getMailbox().getId();
+//        
+//            // tags
+//            if (mIncludeTags.size() > 0) {
+//            	c.tags = mIncludeTags;
+////            	c.tags = (Tag[]) mIncludeTags.toArray(new Tag[mIncludeTags.size()]);
+//            	
+//            	
+//        }
+//        
+//            // exclude-tags
+//            if (mExcludeTags.size() > 0) {
+//            	c.excludeTags = mExcludeTags;
+//            }
+//
+//            // folders
+//                if (mFolder != null) {
+//                	c.folders = new HashSet<Folder>(1);
+//                	c.folders.add(mFolder);
+//                } 
+//                
+//            // exclude-folders
+//                if (mExcludeFolder.size() > 0) {
+//                	c.excludeFolders = mExcludeFolder;
+//                }
+//                
+//            c.convId = mConvId;
+//                    
+//            // prohibited-conv-ids
+//                    if (mProhibitedConvIds.size() > 0) {
+//                    	c.prohibitedConvIds = mProhibitedConvIds;
+//                    }
+//                    
+//                    c.types = types;
+//                    c.sort = searchOrder.getDbMailItemSortByte(); 
+//                    
+//                    if (mExcludeTypes.size() > 0) {
+//                        c.excludeTypes = mExcludeTypes;
+//                    }
+//                    
+//                    if (mIncludedItemIds != null) {
+//                    	c.itemIds = mIncludedItemIds;
+//                    }
+//                    if (mExcludedItemIds != null && mExcludedItemIds.size() > 0) {
+//                        c.prohibitedItemIds = mExcludedItemIds;
+//                    }
+//                    
+//                    if (mDates.size() > 0) {
+//                    	c.dates = mDates;
+//                    }
+//                    
+//                    if (mSizes.size() > 0) {
+//                    	c.sizes = mSizes;
+//                    }
+//                    System.out.println("SC == "+c.toString());
+//            return c;
+//        }
     }
     
     private boolean mFailedDbFirst = false;
@@ -689,7 +713,7 @@ class DBQueryOperation extends QueryOperation
     	if (!mFailedDbFirst) {
     		Mailbox mbox = getMailbox();
     		
-    		if (mConvId != 0 || (mIncludeTags!=null && mIncludeTags.contains(mbox.mUnreadFlag))) 
+    		if (mConstraints.convId != 0 || (mConstraints.tags != null && mConstraints.tags.contains(mbox.mUnreadFlag))) 
     		{
     			return true;
     		}
@@ -708,11 +732,7 @@ class DBQueryOperation extends QueryOperation
         if (mCurHitsOffset == -1 || mEndOfHits) {
             return;
         }
-        if (mIncludedItemIds != null && mIncludedItemIds.size() == 0) {
-            mNoResultsQuery = true;
-        }
-        
-        if (!mNoResultsQuery) {
+        if (!mConstraints.noResults) {
             Connection conn = null;
             try {
                 conn = DbPool.getConnection();
@@ -923,78 +943,7 @@ class DBQueryOperation extends QueryOperation
         if (mAllResultsQuery) {
             retVal.append("ANYWHERE ");
         }
-        if (mFolder != null) {
-            retVal.append("IN:"+mFolder.getName());
-            retVal.append(' ');
-        }
-        if (mExcludeFolder.size() > 0) {
-            for (Iterator iter = mExcludeFolder.iterator(); iter.hasNext();) 
-            {
-                retVal.append("-IN:");
-                retVal.append(((Folder)iter.next()).getName());
-                retVal.append(' ');
-            }
-        }
-        
-        for (Iterator iter = mIncludeTags.iterator(); iter.hasNext();) {
-            Tag cur = (Tag)iter.next(); 
-            retVal.append(" TAG:"+cur.getName());
-            retVal.append(' ');
-        }
-        
-        for (Iterator iter = mExcludeTags.iterator(); iter.hasNext();) {
-            Tag cur = (Tag)iter.next(); 
-            retVal.append("-TAG:"+cur.getName());
-            retVal.append(' ');
-        }
-        
-        if (mIncludedItemIds != null) {
-            for (Iterator iter = mIncludedItemIds.iterator(); iter.hasNext();) {
-                Integer cur = (Integer)(iter.next());
-                retVal.append("ITEM:"+cur+" ");
-            }
-        }
-        if (mExcludedItemIds != null) {
-            for (Iterator iter = mExcludedItemIds.iterator(); iter.hasNext();) {
-                Integer cur = (Integer)(iter.next());
-                retVal.append("-ITEM:"+cur+" ");
-            }
-        }
-        
-        if (mConvId != 0) {
-            retVal.append("CONV:"+mConvId+" ");
-        }
-        
-        for (Iterator iter = mProhibitedConvIds.iterator(); iter.hasNext();) {
-            Integer cur = (Integer)(iter.next());
-            retVal.append("-CONV:"+cur+" ");
-        }
-
-        
-        for (Iterator iter = mDates.iterator(); iter.hasNext();) {
-            DbSearchConstraints.Range intv = (DbSearchConstraints.Range)(iter.next());
-            if (intv.negated) {
-                retVal.append("NOT (");
-            }
-            
-            if (intv.lowest > -1) {
-                retVal.append("AFTER:");
-                retVal.append((new Date(intv.lowest)).toString());
-                retVal.append(' ');
-            }
-            
-            if (intv.highest > -1) {
-                retVal.append("BEFORE:");
-                retVal.append((new Date(intv.highest)).toString());
-                retVal.append(' ');
-            }
-            if (intv.negated) {
-                retVal.append(")");
-            }
-            
-        }
-        
-        if (mNoResultsQuery) {
+        if (mConstraints.noResults) {
             retVal.append("--- NO RESULT ---");
         }
         retVal.append(")");
@@ -1012,7 +961,7 @@ class DBQueryOperation extends QueryOperation
     {
         if (union) {
             // only join on intersection right now...
-            if (mNoResultsQuery) {
+        	if (mConstraints.noResults) {
                 // a query for (other OR nothing) == other
                 return other;
             }
@@ -1061,142 +1010,145 @@ class DBQueryOperation extends QueryOperation
             toRet.mAllResultsQuery = false;
         }
         
-        if (mNoResultsQuery || dbOther.mNoResultsQuery) {
-            toRet.mNoResultsQuery = true;
-            return toRet;
+        if (mConstraints.noResults|| dbOther.mConstraints.noResults) {
+        	toRet.mConstraints.noResults = true;
+        	return toRet;
         }
+        
+        toRet.mConstraints = mConstraints;
+        mConstraints.andConstraints(dbOther.mConstraints);
 
-        { // dates
-            toRet.mDates = (HashSet<Range>)mDates.clone();
-            for (Iterator iter = dbOther.mDates.iterator(); iter.hasNext();) {
-                DbSearchConstraints.Range r = (DbSearchConstraints.Range)iter.next();
-                toRet.addDateClause(r.lowest, r.highest, !r.negated);
-            }
-        }
-        
-        { // sizes
-            toRet.mSizes = (HashSet<Range>)mSizes.clone();
-            for (Iterator iter = dbOther.mSizes.iterator(); iter.hasNext();) {
-                DbSearchConstraints.Range r = (DbSearchConstraints.Range)iter.next();
-                toRet.addSizeClause(r.lowest, r.highest, !r.negated);
-            }
-        }
-        
-        {   // item-id's are INTERSECTED because they are SETS (ie "one of...") instead of
-            // additive required parameters (tags="UNSEEN and TAG1...")
-            
-            
-            // these we have to intersect:
-            //
-            //   Item{A or B or C} AND Item{B or C or D} --> Item{IN-BOTH}
-            //
-            if (mIncludedItemIds == null) {
-                toRet.mIncludedItemIds = dbOther.mIncludedItemIds;
-            } else if (dbOther.mIncludedItemIds == null) {
-                toRet.mIncludedItemIds = mIncludedItemIds;
-            } else {
-                toRet.mIncludedItemIds = new HashSet<Integer>(); // start out with EMPTY SET (no results!)
-                for (Iterator iter = mIncludedItemIds.iterator(); iter.hasNext();)
-                {
-                    Integer i = (Integer)(iter.next());
-                    if (dbOther.mIncludedItemIds.contains(i)) {
-                        toRet.addItemIdClause(i, true);
-                    }
-                }
-            }
-
-            //
-            // these we can just combine, since:
-            //
-            // -Item{A or B} AND -Item{C or D} --> 
-            //   (-Item(A) AND -Item(B)) AND (-C AND -D) -->
-            //     (A AND B AND C AND D)
-            //
-            if (mExcludedItemIds == null) {
-                toRet.mExcludedItemIds = dbOther.mExcludedItemIds;
-            } else if (dbOther.mExcludedItemIds == null) {
-                toRet.mExcludedItemIds = mExcludedItemIds;
-            } else {
-                toRet.mExcludedItemIds = (HashSet)mExcludedItemIds.clone();
-                
-                for (Iterator iter = dbOther.mExcludedItemIds.iterator(); iter.hasNext();)
-                {
-                    Integer i = (Integer)(iter.next());
-                    toRet.addItemIdClause(i, false);
-                }
-            }
-        }
-     
-
-        { // conversation id's
-            toRet.mProhibitedConvIds = (HashSet)mProhibitedConvIds.clone();
-            for (Iterator iter = dbOther.mProhibitedConvIds.iterator(); iter.hasNext();)
-            {
-                Integer i = (Integer)(iter.next());
-                toRet.addConvId(i.intValue(), false);
-            }
-            
-            if (mConvId != 0) {
-                toRet.addConvId(mConvId, true);
-            }
-            if (dbOther.mConvId != 0) {
-                toRet.addConvId(dbOther.mConvId, true);
-            }
-            
-        }
-        
-        { // FOLDERS
-            if (mFolder != null) {
-                toRet.addInClause(mFolder, true);
-            }
-            if (dbOther.mFolder != null) {
-                toRet.addInClause(dbOther.mFolder, true);
-            }
-            
-            for (Iterator iter = mExcludeFolder.iterator(); iter.hasNext();)
-            {
-                Folder f = (Folder)(iter.next());
-                toRet.addInClause(f, false);
-            }
-            
-            for (Iterator iter = dbOther.mExcludeFolder.iterator(); iter.hasNext();)
-            {
-                Folder f = (Folder)(iter.next());
-                toRet.addInClause(f, false);
-            }
-        }
-        
-        { // ...combine types...
-//            toRet.mTypes = combineByteArraysNoDups(mTypes, dbOther.mTypes);
-        	toRet.mTypes = (HashSet<Byte>)mTypes.clone();
-        	toRet.mTypes.addAll(dbOther.mTypes);
-        	
-//          toRet.mExcludeTypes = combineByteArraysNoDups(mExcludeTypes, dbOther.mExcludeTypes);
-        	toRet.mExcludeTypes = (HashSet<Byte>)mExcludeTypes.clone();
-        	toRet.mExcludeTypes.addAll(dbOther.mExcludeTypes);
-        }
-        
-        
-        { // ...combine tags...
-            toRet.mIncludeTags = (HashSet<Tag>)mIncludeTags.clone();
-            for (Iterator iter = dbOther.mIncludeTags.iterator(); iter.hasNext();)
-            {
-                Tag t = (Tag)(iter.next());
-                toRet.addTagClause(t, true);
-            }
-            
-            for (Iterator iter = mExcludeTags.iterator(); iter.hasNext();)
-            {
-                Tag t = (Tag)(iter.next());
-                toRet.addTagClause(t, false);
-            }
-            
-            for (Iterator iter = dbOther.mExcludeTags.iterator(); iter.hasNext();)
-            {
-                Tag t = (Tag)(iter.next());
-                toRet.addTagClause(t, false);
-            }
-        }
+//        { // dates
+//            toRet.mDates = (HashSet<Range>)mDates.clone();
+//            for (Iterator iter = dbOther.mDates.iterator(); iter.hasNext();) {
+//                DbSearchConstraints.Range r = (DbSearchConstraints.Range)iter.next();
+//                toRet.addDateClause(r.lowest, r.highest, !r.negated);
+//            }
+//        }
+//        
+//        { // sizes
+//            toRet.mSizes = (HashSet<Range>)mSizes.clone();
+//            for (Iterator iter = dbOther.mSizes.iterator(); iter.hasNext();) {
+//                DbSearchConstraints.Range r = (DbSearchConstraints.Range)iter.next();
+//                toRet.addSizeClause(r.lowest, r.highest, !r.negated);
+//            }
+//        }
+//        
+//        {   // item-id's are INTERSECTED because they are SETS (ie "one of...") instead of
+//            // additive required parameters (tags="UNSEEN and TAG1...")
+//            
+//            
+//            // these we have to intersect:
+//            //
+//            //   Item{A or B or C} AND Item{B or C or D} --> Item{IN-BOTH}
+//            //
+//            if (mIncludedItemIds == null) {
+//                toRet.mIncludedItemIds = dbOther.mIncludedItemIds;
+//            } else if (dbOther.mIncludedItemIds == null) {
+//                toRet.mIncludedItemIds = mIncludedItemIds;
+//            } else {
+//                toRet.mIncludedItemIds = new HashSet<Integer>(); // start out with EMPTY SET (no results!)
+//                for (Iterator iter = mIncludedItemIds.iterator(); iter.hasNext();)
+//                {
+//                    Integer i = (Integer)(iter.next());
+//                    if (dbOther.mIncludedItemIds.contains(i)) {
+//                        toRet.addItemIdClause(i, true);
+//                    }
+//                }
+//            }
+//
+//            //
+//            // these we can just combine, since:
+//            //
+//            // -Item{A or B} AND -Item{C or D} --> 
+//            //   (-Item(A) AND -Item(B)) AND (-C AND -D) -->
+//            //     (A AND B AND C AND D)
+//            //
+//            if (mExcludedItemIds == null) {
+//                toRet.mExcludedItemIds = dbOther.mExcludedItemIds;
+//            } else if (dbOther.mExcludedItemIds == null) {
+//                toRet.mExcludedItemIds = mExcludedItemIds;
+//            } else {
+//                toRet.mExcludedItemIds = (HashSet)mExcludedItemIds.clone();
+//                
+//                for (Iterator iter = dbOther.mExcludedItemIds.iterator(); iter.hasNext();)
+//                {
+//                    Integer i = (Integer)(iter.next());
+//                    toRet.addItemIdClause(i, false);
+//                }
+//            }
+//        }
+//     
+//
+//        { // conversation id's
+//            toRet.mProhibitedConvIds = (HashSet)mProhibitedConvIds.clone();
+//            for (Iterator iter = dbOther.mProhibitedConvIds.iterator(); iter.hasNext();)
+//            {
+//                Integer i = (Integer)(iter.next());
+//                toRet.addConvId(i.intValue(), false);
+//            }
+//            
+//            if (mConvId != 0) {
+//                toRet.addConvId(mConvId, true);
+//            }
+//            if (dbOther.mConvId != 0) {
+//                toRet.addConvId(dbOther.mConvId, true);
+//            }
+//            
+//        }
+//        
+//        { // FOLDERS
+//            if (mFolder != null) {
+//                toRet.addInClause(mFolder, true);
+//            }
+//            if (dbOther.mFolder != null) {
+//                toRet.addInClause(dbOther.mFolder, true);
+//            }
+//            
+//            for (Iterator iter = mExcludeFolder.iterator(); iter.hasNext();)
+//            {
+//                Folder f = (Folder)(iter.next());
+//                toRet.addInClause(f, false);
+//            }
+//            
+//            for (Iterator iter = dbOther.mExcludeFolder.iterator(); iter.hasNext();)
+//            {
+//                Folder f = (Folder)(iter.next());
+//                toRet.addInClause(f, false);
+//            }
+//        }
+//        
+//        { // ...combine types...
+////            toRet.mTypes = combineByteArraysNoDups(mTypes, dbOther.mTypes);
+//        	toRet.mTypes = (HashSet<Byte>)mTypes.clone();
+//        	toRet.mTypes.addAll(dbOther.mTypes);
+//        	
+////          toRet.mExcludeTypes = combineByteArraysNoDups(mExcludeTypes, dbOther.mExcludeTypes);
+//        	toRet.mExcludeTypes = (HashSet<Byte>)mExcludeTypes.clone();
+//        	toRet.mExcludeTypes.addAll(dbOther.mExcludeTypes);
+//        }
+//        
+//        
+//        { // ...combine tags...
+//            toRet.mIncludeTags = (HashSet<Tag>)mIncludeTags.clone();
+//            for (Iterator iter = dbOther.mIncludeTags.iterator(); iter.hasNext();)
+//            {
+//                Tag t = (Tag)(iter.next());
+//                toRet.addTagClause(t, true);
+//            }
+//            
+//            for (Iterator iter = mExcludeTags.iterator(); iter.hasNext();)
+//            {
+//                Tag t = (Tag)(iter.next());
+//                toRet.addTagClause(t, false);
+//            }
+//            
+//            for (Iterator iter = dbOther.mExcludeTags.iterator(); iter.hasNext();)
+//            {
+//                Tag t = (Tag)(iter.next());
+//                toRet.addTagClause(t, false);
+//            }
+//        }
         
         
         return toRet;

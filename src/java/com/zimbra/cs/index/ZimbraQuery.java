@@ -1179,6 +1179,7 @@ public final class ZimbraQuery {
                 }
                 
                 if (mOredTokens.size() > 0) {
+                	// probably don't need to do this here...can probably just call addClause
                     BooleanQuery orQuery = new BooleanQuery();
                     for (String token : mOredTokens) {
                         orQuery.add(new TermQuery(new Term(fieldName, token)), false, false);

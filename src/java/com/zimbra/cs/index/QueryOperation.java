@@ -30,6 +30,7 @@ package com.zimbra.cs.index;
 
 import java.io.IOException;
 import java.util.Comparator;
+import java.util.Set;
 
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.Folder;
@@ -229,6 +230,10 @@ abstract class QueryOperation implements ZimbraQueryResults
     		mFolder = f;
     	}
     	
+    	public QueryTarget(Set<Folder> s) {
+    		
+    	}
+
     	boolean compatible(QueryTarget other) {
     		if (other.mFolder == null || mFolder == null)
     			return true;

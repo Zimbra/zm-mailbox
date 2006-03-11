@@ -1628,7 +1628,7 @@ public class DbMailItem {
                 long setTagMask = 0;
                 
                 // tags
-                if (c.tags != null)
+                if (!ListUtil.isEmpty(c.tags))
                 	for (Tag curTag : c.tags)
                 		if (curTag.getId() == Flag.ID_FLAG_UNREAD) {
                 			unread = Boolean.TRUE; 
@@ -1658,14 +1658,15 @@ public class DbMailItem {
 //                        tagMask |= c.excludeTags[i].getBitmask();
 //                    }
                 
-                for (Tag t : c.excludeTags) 
-                    if (t.getId() == Flag.ID_FLAG_UNREAD) {
-                        unread = Boolean.FALSE;
-                    } else if (t instanceof Flag) {
-                        flagMask |= t.getBitmask();
-                    } else {
-                        tagMask |= t.getBitmask();
-                    }
+                if (!ListUtil.isEmpty(c.excludeTags))                 
+                	for (Tag t : c.excludeTags) 
+                		if (t.getId() == Flag.ID_FLAG_UNREAD) {
+                			unread = Boolean.FALSE;
+                		} else if (t instanceof Flag) {
+                			flagMask |= t.getBitmask();
+                		} else {
+                			tagMask |= t.getBitmask();
+                		}
 
                 
                 TagsetCache tcFlags = getFlagsetCache(conn, c.mailboxId);
@@ -1692,12 +1693,12 @@ public class DbMailItem {
                 statement.append(", " + DB_FIELDS);
             statement.append(" FROM " + getMailItemTableName(c.mailboxId, "mi"));
             statement.append(" WHERE ");
-            if (c.types == null)
+            if (ListUtil.isEmpty(c.types))
                 statement.append("type NOT IN " + NON_SEARCHABLE_TYPES);
             else
                 statement.append("type IN").append(DbUtil.suitableNumberOfVariables(c.types));
 
-            if (c.excludeTypes != null)
+            if (!ListUtil.isEmpty(c.excludeTypes))
                 statement.append(" AND type NOT IN").append(DbUtil.suitableNumberOfVariables(c.excludeTypes));
 
             if (c.hasTags != null)
@@ -1715,7 +1716,7 @@ public class DbMailItem {
 
             if (c.convId > 0)
                 statement.append(" AND parent_id = ?");
-            else if (c.prohibitedConvIds != null)
+            else if (!ListUtil.isEmpty(c.prohibitedConvIds))
                 statement.append(" AND parent_id NOT IN").append(DbUtil.suitableNumberOfVariables(c.prohibitedConvIds));
 
             if (!ListUtil.isEmpty(c.itemIds))
@@ -1793,10 +1794,10 @@ public class DbMailItem {
 
             stmt = conn.prepareStatement(statement.toString());
             int param = 1;
-            if (c.types != null)
+            if (!ListUtil.isEmpty(c.types))
                 for (byte type : c.types)
                     stmt.setByte(param++, type);
-            if (c.excludeTypes != null && c.types != null)
+            if (!ListUtil.isEmpty(c.excludeTypes))
                 for (byte type : c.excludeTypes)
                     stmt.setByte(param++, type); 
             if (searchTagsets != null)
@@ -1812,33 +1813,33 @@ public class DbMailItem {
                     stmt.setInt(param++, folder.getId());
             if (c.convId > 0)
                 stmt.setInt(param++, c.convId);
-            else if (c.prohibitedConvIds != null)
+            else if (!ListUtil.isEmpty(c.prohibitedConvIds))
                 for (int id : c.prohibitedConvIds)
                     stmt.setInt(param++, id);
-            if (c.itemIds != null)
+            if (!ListUtil.isEmpty(c.itemIds))
                 for (int id : c.itemIds)
                     stmt.setInt(param++, id);
-            if (c.prohibitedItemIds != null)
+            if (!ListUtil.isEmpty(c.prohibitedItemIds))
                 for (int id : c.prohibitedItemIds)
                     stmt.setInt(param++, id);
-            if (c.indexIds != null)
+            if (!ListUtil.isEmpty(c.indexIds))
                 for (int id : c.indexIds)
                     stmt.setInt(param++, id);
-            if (c.dates != null)
+            if (!ListUtil.isEmpty(c.dates))
                 for (DbSearchConstraints.Range date : c.dates) {
                     if (date.lowest > 0)
                         stmt.setInt(param++, (int) Math.min(date.lowest / 1000, Integer.MAX_VALUE));
                     if (date.highest > 0)
                         stmt.setInt(param++, (int) Math.min(date.highest / 1000, Integer.MAX_VALUE));
                 }
-            if (c.sizes != null)
+            if (!ListUtil.isEmpty(c.sizes))
                 for (DbSearchConstraints.Range size : c.sizes) {
                     if (size.lowest >= 0)
                         stmt.setInt(param++, (int) size.lowest);
                     if (size.highest >= 0)
                         stmt.setInt(param++, (int) size.highest);
                 }
-            if (c.modified != null)
+            if (!ListUtil.isEmpty(c.modified)) 
                 for (DbSearchConstraints.Range modified : c.modified) {
                     if (modified.lowest > 0)
                         stmt.setLong(param++, modified.lowest);

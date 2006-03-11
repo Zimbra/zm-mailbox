@@ -1668,7 +1668,7 @@ public final class MailboxIndex
             
             c.mailboxId = mMailboxId;
             c.sort = DbMailItem.SORT_BY_DATE;
-            c.types = new ArrayList<Byte>();
+            c.types = new HashSet<Byte>();
             c.types.add(MailItem.TYPE_CONTACT); 
             c.types.add(MailItem.TYPE_MESSAGE);
             c.types.add(MailItem.TYPE_NOTE);
@@ -1709,7 +1709,7 @@ public final class MailboxIndex
             
             c.mailboxId = mMailboxId;
             c.sort = DbMailItem.SORT_BY_DATE | DbMailItem.SORT_ASCENDING;
-            c.types = new ArrayList<Byte>();
+            c.types = new HashSet<Byte>();
             c.types.add(MailItem.TYPE_CONTACT); 
             c.types.add(MailItem.TYPE_MESSAGE);
             c.types.add(MailItem.TYPE_NOTE);
@@ -1755,7 +1755,7 @@ public final class MailboxIndex
             c.mailboxId = mMailboxId;
             c.sort = DbMailItem.SORT_BY_DATE | DbMailItem.SORT_DESCENDING;
             
-            c.types = new ArrayList<Byte>();
+            c.types = new HashSet<Byte>();
             c.types.add(MailItem.TYPE_CONTACT); 
             c.types.add(MailItem.TYPE_MESSAGE);
             c.types.add(MailItem.TYPE_NOTE);

@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Collection;
@@ -793,12 +794,12 @@ public class DbTest {
 	        {
 	            DbSearchConstraints c = new DbSearchConstraints();
 	            c.mailboxId = mbox.getId();
-	            c.tags      = new ArrayList<Tag>();
+	            c.tags      = new HashSet<Tag>();
 	            c.tags.add(mbox.mAttachFlag);
 	            c.excludeTags = null;
 	            c.folders   = null;
 	            c.excludeFolders = null;
-	            c.types     = new ArrayList<Byte>();
+	            c.types     = new HashSet<Byte>();
 	            c.types.add(MailItem.TYPE_MESSAGE);
 	            c.sort      = (byte) (DbMailItem.SORT_BY_DATE | DbMailItem.SORT_DESCENDING);
 	            DbMailItem.search(conn, c);
@@ -809,13 +810,13 @@ public class DbTest {
 	        {
 	            DbSearchConstraints c = new DbSearchConstraints();
 	            c.mailboxId = mbox.getId();
-	            c.tags      = new ArrayList<Tag>();
+	            c.tags      = new HashSet<Tag>();
 	            c.tags.add(mbox.mUnreadFlag);
 	            c.excludeTags = null;
-	            c.folders   = new ArrayList<Folder>();
+	            c.folders   = new HashSet<Folder>();
 	            c.folders.add(mbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX)); 
 	            c.excludeFolders = null;
-	            c.types     = new ArrayList<Byte>();
+	            c.types     = new HashSet<Byte>();
 	            c.types.add(MailItem.TYPE_MESSAGE);
 	            c.sort      = (byte) (DbMailItem.SORT_BY_SUBJECT | DbMailItem.SORT_DESCENDING);
 	            result = DbMailItem.search(conn, c);
