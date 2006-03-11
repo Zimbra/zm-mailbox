@@ -21,7 +21,16 @@ import com.zimbra.cs.util.ZimbraLog;
  * 
  * "optional" entries are ignored if the default value is passed 
  */
-public class DbSearchConstraints {
+public class DbSearchConstraints implements DbSearchConstraintsNode {
+	
+	public static enum NodeType {
+		   AND, OR, LEAF;
+	   }
+	   
+	public DbSearchConstraintsNode.NodeType getNodeType() { return DbSearchConstraintsNode.NodeType.LEAF; }
+	public Iterable<DbSearchConstraintsNode> getSubNodes() { return null; }
+	public DbSearchConstraints getSearchConstraints() { return this; }
+	
 	public static class Range {
 		public boolean negated = false;
 		public long lowest = -1;
@@ -332,6 +341,9 @@ public class DbSearchConstraints {
 		Set<Integer> s = new HashSet<Integer>();
 		addIdsToSet(s, tags);
 		addIdsToSet(s, folders);
+		
+		// FIXME: Tim removed this assert temporarily while I'm reorganizing the DbQueryObject code...I know
+		// about this and will fix it soon.
 //		assert(!(setContainsAnyId(s, excludeTags) || setContainsAnyId(s, excludeFolders)));
 
 		if (hasTags == Boolean.FALSE && tags != null && tags.size() != 0)
