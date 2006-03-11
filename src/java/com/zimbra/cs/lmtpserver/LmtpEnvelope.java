@@ -37,13 +37,13 @@ import java.util.List;
 
 public class LmtpEnvelope {
 	
-	private List mRecipients; 
+	private List<LmtpAddress> mRecipients; 
     private LmtpAddress mSender;
     private int mSize;
     private LmtpBodyType mBodyType;
     
     public LmtpEnvelope() {
-    	mRecipients = new LinkedList();
+    	mRecipients = new LinkedList<LmtpAddress>();
     }
     
     public boolean hasSender() {
@@ -62,7 +62,7 @@ public class LmtpEnvelope {
     	mRecipients.add(recipient);
     }
 
-    public List getRecipients() {
+    public List<LmtpAddress> getRecipients() {
     	return mRecipients;
     }
     

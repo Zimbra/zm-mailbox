@@ -28,12 +28,14 @@ package com.zimbra.cs.lmtpserver;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.mail.MessagingException;
 
+import org.apache.commons.collections.map.LRUMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -56,9 +58,19 @@ import com.zimbra.cs.util.ZimbraLog;
 
 public class ZimbraLmtpBackend implements LmtpBackend {
 	private static Log mLog = LogFactory.getLog(ZimbraLmtpBackend.class);
-	
+
+	private static LRUMap sReceivedMessageIDs = null;
+        static {
+            try {
+                int cacheSize = Provisioning.getInstance().getConfig().getIntAttr(Provisioning.A_zimbraMessageIdDedupeCacheSize, 0);
+                if (cacheSize > 0)
+                    sReceivedMessageIDs = new LRUMap(cacheSize);
+            } catch (ServiceException e) {
+                ZimbraLog.lmtp.error("could not read zimbraMessageIdDedupeCacheSize; no deduping will be performed", e);
+            }
+        }
+
 	public LmtpStatus getAddressStatus(LmtpAddress address) {
-        
         String addr = address.getEmailAddress();
 
         try {
@@ -116,26 +128,65 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         }
     }
 
+    private boolean dedupe(ParsedMessage pm, Mailbox mbox) {
+        if (sReceivedMessageIDs == null || pm == null || mbox == null)
+            return false;
+        String msgid = pm.getMessageID();
+        if (msgid == null || msgid.equals(""))
+            return false;
+
+        synchronized (sReceivedMessageIDs) {
+            Object hit = sReceivedMessageIDs.get(msgid);
+            if (hit instanceof Integer)
+                return hit.equals(new Integer(mbox.getId()));
+            else if (hit instanceof Set)
+                return ((Set) hit).contains(new Integer(mbox.getId()));
+            else
+                return false;
+        }
+    }
+
+    private void recordReceipt(ParsedMessage pm, Mailbox mbox) {
+        if (sReceivedMessageIDs == null || pm == null || mbox == null)
+            return;
+        String msgid = pm.getMessageID();
+        if (msgid == null || msgid.equals(""))
+            return;
+        Integer mboxid = mbox.getId();
+
+        synchronized (sReceivedMessageIDs) {
+            Object hit = sReceivedMessageIDs.get(msgid);
+            if (hit instanceof Integer) {
+                Set<Integer> set = new HashSet<Integer>();
+                set.add((Integer) hit);  set.add(mboxid);
+                sReceivedMessageIDs.put(msgid, set);
+            } else if (hit instanceof Set)
+                ((Set) hit).add(mboxid);
+            else
+                sReceivedMessageIDs.put(msgid, mboxid);
+        }
+    }
+
     private static class RecipientDetail {
     	public Account account;
         public Mailbox mbox;
         public ParsedMessage pm;
         public boolean skip;  // whether delivery to mailbox should be skipped
-        public RecipientDetail(Account a, Mailbox m, ParsedMessage p, boolean skip) {
+        public RecipientDetail(Account a, Mailbox m, ParsedMessage p, boolean skipping) {
         	account = a;
             mbox = m;
             pm = p;
-            this.skip = skip;
+            skip = skipping;
         }
     }
 
-    private void deliverMessageToLocalMailboxes(byte[] data, List /*<LmtpAddress>*/ recipients, String envSender)
+    private void deliverMessageToLocalMailboxes(byte[] data, List<LmtpAddress> recipients, String envSender)
     throws MessagingException, ServiceException {
 
         boolean shared = recipients.size() > 1;
         List<Integer> targetMailboxIds = new ArrayList<Integer>(recipients.size());
 
-        Map /*<LmtpAddress, RecipientDetail>*/ rcptMap = new HashMap(recipients.size());
+        Map<LmtpAddress, RecipientDetail> rcptMap = new HashMap<LmtpAddress, RecipientDetail>(recipients.size());
 
         try {
             // Examine attachments indexing option for all recipients and
@@ -148,8 +199,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
             // ParsedMessage for users without attachments indexing
             ParsedMessage pmNoAttachIndex = null;
 
-            for (Iterator iter = recipients.iterator(); iter.hasNext(); ) {
-                LmtpAddress recipient = (LmtpAddress) iter.next();
+            for (LmtpAddress recipient : recipients) {
                 String rcptEmail = recipient.getEmailAddress();
 
                 Account account = null;
@@ -212,15 +262,13 @@ public class ZimbraLmtpBackend implements LmtpBackend {
             // version each recipient needs.  Deliver!
             try {
                 // Performance
-                if (ZimbraLog.perf.isDebugEnabled()) {
+                if (ZimbraLog.perf.isDebugEnabled())
                     ThreadLocalData.reset();
-                }
 
-                for (Iterator iter = recipients.iterator(); iter.hasNext(); ) {
-                    LmtpAddress recipient = (LmtpAddress) iter.next();
+                for (LmtpAddress recipient : recipients) {
                     String rcptEmail = recipient.getEmailAddress();
                     LmtpStatus status = LmtpStatus.TRYAGAIN;
-                    RecipientDetail rd = (RecipientDetail) rcptMap.get(recipient);
+                    RecipientDetail rd = rcptMap.get(recipient);
                     try {
                         if (rd != null) {
                             if (!rd.skip) {
@@ -230,7 +278,10 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                                 Message msg = null;
                                 
                                 ZimbraLog.addAccountNameToContext(account.getName());
-                                if (!DebugConfig.disableFilter) {
+                                if (dedupe(pm, mbox)) {
+                                    // message was already delivered to this mailbox
+                                    msg = null;
+                                } else if (!DebugConfig.disableFilter) {
                                     msg = RuleManager.getInstance().applyRules(account, mbox, pm, pm.getRawData().length,
                                                                                rcptEmail, sharedDeliveryCtxt);
                                 } else {
@@ -238,6 +289,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                                                           rcptEmail, sharedDeliveryCtxt);
                                 }
                                 if (msg != null) {
+                                    recordReceipt(pm, mbox);
                                     notify(account, mbox, msg, rcptEmail, envSender, pm);
                                 }
                                 status = LmtpStatus.ACCEPT;
@@ -295,8 +347,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         } finally {
             // Take mailboxes out of shared delivery mode.
             if (shared) {
-                for (Iterator iter = rcptMap.values().iterator(); iter.hasNext(); ) {
-                	RecipientDetail rd = (RecipientDetail) iter.next();
+                for (RecipientDetail rd : rcptMap.values()) {
                     if (!rd.skip && rd.mbox != null)
                         rd.mbox.endSharedDelivery();
                 }
@@ -325,10 +376,8 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         }
     }
     
-    private void setDeliveryStatuses(List recipients, LmtpStatus status) {
-        for (Iterator iter = recipients.iterator(); iter.hasNext();) {
-            LmtpAddress recipient = (LmtpAddress)iter.next();
+    private void setDeliveryStatuses(List<LmtpAddress> recipients, LmtpStatus status) {
+        for (LmtpAddress recipient : recipients)
             recipient.setDeliveryStatus(status);
-        }
     }
 }
