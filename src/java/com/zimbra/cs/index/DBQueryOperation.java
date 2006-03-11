@@ -776,7 +776,7 @@ class DBQueryOperation extends QueryOperation
                             		
                             		idsQuery.add(new TermQuery(new Term(LuceneFields.L_MAILBOX_BLOB_ID, Integer.toString(res.indexId))), false, false);
                             	}
-                            	mLuceneOp.addClause(idsQuery, true);
+                            	mLuceneOp.addAndedClause(idsQuery, true);
                             	
                             	mLuceneChunk = mLuceneOp.getNextResultsChunk(dbRes.size());
                             	

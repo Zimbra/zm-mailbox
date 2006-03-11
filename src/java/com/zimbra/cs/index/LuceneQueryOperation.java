@@ -314,6 +314,15 @@ class LuceneQueryOperation extends QueryOperation
     {
         return 20;
     }
+    
+    void addAndedClause(Query q, boolean truth) {
+    	BooleanQuery top = new BooleanQuery();
+    	BooleanClause lhs = new BooleanClause(mQuery, true, false);
+    	BooleanClause rhs = new BooleanClause(q, truth, !truth);
+    	top.add(lhs);
+    	top.add(rhs);
+    	mQuery = top;
+    }
 
     void addClause(Query q, boolean truth) {
     	assert(!mHaveRunSearch);
