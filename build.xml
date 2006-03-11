@@ -571,6 +571,21 @@
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="ca user4@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} cn 'Demo User Four' displayName 'Demo User Four' zimbraAttachmentsIndexingEnabled FALSE zimbraPrefTimeZoneId '(GMT-05.00) Indiana (East)'" />
 		</java>
+
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="ca spam-sink@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} zimbraAttachmentsIndexingEnabled FALSE" />
+		</java>
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="mcf zimbraSpamIsSpamAccount spam-sink@${zimbra.server.hostname}" />
+		</java>
+		<echo>Setting up not junk account</echo>
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="ca ham-sink@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} zimbraAttachmentsIndexingEnabled FALSE" />
+		</java>
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="mcf zimbraSpamIsNotSpamAccount ham-sink@${zimbra.server.hostname}" />
+		</java>
+
 	</target>
 
 	<target name="ldap-load-mime-handlers">
