@@ -33,6 +33,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Properties;
 
@@ -228,6 +229,9 @@ public class SpamExtract {
         int totalProcessed = 0;
         boolean haveMore = true;
         int offset = 0;
+
+        ArrayList<String> deletions = new ArrayList<String>();
+        
         while (haveMore) {
             Element searchReq = new Element.XMLElement(MailService.SEARCH_REQUEST);
             searchReq.setText(query);
@@ -271,20 +275,24 @@ public class SpamExtract {
                 
                 if (delete && deleteList.length() > 0) {
                     deleteList.deleteCharAt(deleteList.length()-1); // -1 removes trailing comma
-                    Element msgActionReq = new Element.XMLElement(MailService.MSG_ACTION_REQUEST);
-                    Element action = msgActionReq.addElement(MailService.E_ACTION);
-                    action.addAttribute(MailService.A_ID, deleteList.toString());
-                    action.addAttribute(MailService.A_OPERATION, ItemAction.OP_HARD_DELETE);
-                    
-                    if (mLog.isDebugEnabled()) mLog.debug(msgActionReq.prettyPrint());
-                    Element msgActionResp = transport.invoke(msgActionReq, false, true, true, account.getId());
-                    if (mLog.isDebugEnabled()) mLog.debug(msgActionResp.prettyPrint());
+                    deletions.add(deleteList.toString());
                 }
             } finally {
                 gm.releaseConnection();
             }
-
         }
+        
+        for (String deletion : deletions) {
+            Element msgActionReq = new Element.XMLElement(MailService.MSG_ACTION_REQUEST);
+            Element action = msgActionReq.addElement(MailService.E_ACTION);
+            action.addAttribute(MailService.A_ID, deletion);
+            action.addAttribute(MailService.A_OPERATION, ItemAction.OP_HARD_DELETE);
+            
+            if (mLog.isDebugEnabled()) mLog.debug(msgActionReq.prettyPrint());
+            Element msgActionResp = transport.invoke(msgActionReq, false, true, true, account.getId());
+            if (mLog.isDebugEnabled()) mLog.debug(msgActionResp.prettyPrint());
+        }
+
         mLog.info("Total messages processed: " + totalProcessed);
     }
 
@@ -301,6 +309,7 @@ public class SpamExtract {
     
     private static boolean extractMessage(HttpClient hc, GetMethod gm, String path, File outdir, boolean raw) {
         try {
+            gm.recycle();
             extractMessage0(hc, gm, path, outdir, raw);
             return true;
         } catch (MessagingException me) {
