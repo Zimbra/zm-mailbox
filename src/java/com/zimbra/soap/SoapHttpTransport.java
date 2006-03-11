@@ -170,7 +170,7 @@ public class SoapHttpTransport extends SoapTransport {
         return mTimeout;
     }
 
-    protected Element invoke(Element document, boolean raw, boolean noSession, boolean noNotify) 
+    public Element invoke(Element document, boolean raw, boolean noSession, boolean noNotify, String requestedAccountId) 
     	throws SoapFaultException, IOException, HttpException
 	{
     	int statusCode = -1;
@@ -179,7 +179,7 @@ public class SoapHttpTransport extends SoapTransport {
     	// when we set the request body
     	PostMethod method = new PostMethod(mUri);
     	method.setRequestHeader("Content-type", getSoapProtocol().getContentType());
-    	String soapMessage = generateSoapMessage(document, raw, noSession, noNotify);
+    	String soapMessage = generateSoapMessage(document, raw, noSession, noNotify, requestedAccountId);
     	method.setRequestBody(soapMessage);
     	method.setRequestContentLength(EntityEnclosingMethod.CONTENT_LENGTH_AUTO);
     	
