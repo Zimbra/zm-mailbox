@@ -536,9 +536,11 @@ public class ParsedMessage {
 
     // these *should* be taken from a properties file
     private static final Set<String> CALENDAR_PREFIXES = new HashSet<String>(Arrays.asList(new String[] {
-            "Accept:", "Accepted:", "Decline:", "Declined:", "Tentative:", "CANCELLED:", "New Time Proposed:"
+            "Accept:", "Accepted:", "Decline:", "Declined:", "Tentative:", "Cancelled:", "CANCELLED:", "New Time Proposed:"
     }));
     private static final String FWD_TRAILER = "(fwd)";
+
+    private static final int MAX_PREFIX_LENGTH = 3;
 
 	private static String trimPrefixes(String subject) {
 		while (true) {
@@ -552,22 +554,30 @@ public class ParsedMessage {
                 return subject;
 
             // find the first ':' in the subject
-    		boolean matched = false, braced = false;
-            if (subject.charAt(0) == '[')
-                braced = true;
+    		boolean braced = subject.charAt(0) == '[';
             int colon = subject.indexOf(':');
             if (colon <= (braced ? 1 : 0))
                 return subject;
 
             // figure out if it's either a known calendar response prefix or a 1-3 letter prefix
             String prefix = subject.substring(braced ? 1 : 0, colon + 1);
+            boolean matched = true;
             if (CALENDAR_PREFIXES.contains(prefix))
                 matched = true;
-            else if (colon <= (braced ? 4 : 3)) {
-            	matched = true;
-            	for (int i = braced ? 1 : 0; i < colon; i++)
-                    if (!Character.isLetter(subject.charAt(i)))
-                    	matched = false;
+            else {
+                // make sure to catch "re(2):" and "fwd[5]:" as well...
+                int paren = -1;
+            	for (int i = 0; matched && i < prefix.length() - 1; i++) {
+                    char c = prefix.charAt(i);
+                    if ((c == '(' || c == '[') && i > 0 && paren == -1)
+                        paren = i;
+                    else if ((c == ')' || c == ']') && paren != -1)
+                        matched &= i > paren + 1 && i == prefix.length() - 2;
+                    else if (!Character.isLetter(c))
+                    	matched &= c >= '0' && c <= '9' && paren != -1;
+                    else if (i >= MAX_PREFIX_LENGTH)
+                        matched = false;
+            	}
             }
 
 			if (!matched)
