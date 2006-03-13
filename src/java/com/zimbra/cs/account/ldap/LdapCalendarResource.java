@@ -57,8 +57,12 @@ extends LdapAccount implements CalendarResource {
                 Provisioning.A_zimbraCalResAutoDeclineRecurring, false);
     }
 
-    public String getLocationName() {
+    public String getDisplayName() {
         return getAttr(Provisioning.A_displayName);
+    }
+
+    public String getLocationDisplayName() {
+        return getAttr(Provisioning.A_zimbraCalResLocationDisplayName);
     }
 
     public String getSite() {
