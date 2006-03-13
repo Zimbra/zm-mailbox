@@ -575,7 +575,7 @@ public class ParsedMessage {
                         matched &= i > paren + 1 && i == prefix.length() - 2;
                     else if (!Character.isLetter(c))
                     	matched &= c >= '0' && c <= '9' && paren != -1;
-                    else if (i >= MAX_PREFIX_LENGTH)
+                    else if (i >= MAX_PREFIX_LENGTH || paren != -1)
                         matched = false;
             	}
             }
