@@ -618,6 +618,7 @@
 					   zimbraCalResAutoAcceptDecline TRUE
 					   zimbraCalResAutoDeclineIfBusy TRUE
 					   zimbraCalResAutoDeclineRecurring FALSE
+					   zimbraCalResLocationDisplayName 'Site: HQ, Building: A, Floor: 11, Room 1101'
 					   zimbraCalResSite HQ
 					   zimbraCalResBuilding A
 					   zimbraCalResFloor 11
@@ -643,6 +644,7 @@
 					   zimbraCalResAutoAcceptDecline TRUE
 					   zimbraCalResAutoDeclineIfBusy FALSE
 					   zimbraCalResAutoDeclineRecurring FALSE
+					   zimbraCalResLocationDisplayName 'Room 1201, 2nd Floor of Building A at HQ'
 					   zimbraCalResSite HQ
 					   zimbraCalResBuilding A
 					   zimbraCalResFloor 12
@@ -663,6 +665,7 @@
 					   zimbraCalResAutoAcceptDecline TRUE
 					   zimbraCalResAutoDeclineIfBusy TRUE
 					   zimbraCalResAutoDeclineRecurring TRUE
+					   zimbraCalResLocationDisplayName 'Room B201, 2nd basement floor, HQ Building B'
 					   zimbraCalResSite HQ
 					   zimbraCalResBuilding B
 					   zimbraCalResFloor B2
@@ -682,6 +685,7 @@
 					   zimbraCalResAutoAcceptDecline FALSE
 					   zimbraCalResAutoDeclineIfBusy FALSE
 					   zimbraCalResAutoDeclineRecurring FALSE
+					   zimbraCalResLocationDisplayName 'HQ Building B, B2 floor'
 					   zimbraCalResSite HQ
 					   zimbraCalResBuilding B
 					   zimbraCalResFloor B2
