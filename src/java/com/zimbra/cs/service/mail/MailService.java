@@ -382,9 +382,6 @@ public class MailService implements DocumentService {
     public static final String A_APPT_OTHER_ATTENDEES = "otherAtt";
     public static final String A_APPT_ALARM = "alarm";
     public static final String A_APPT_RECUR = "recur";
-    public static final String A_APPT_ACCEPT = "accept";
-    public static final String A_APPT_DECLINE = "decline";
-    public static final String A_APPT_TENTATIVE= "tentative";
     public static final String A_APPT_UPDATE_ORGANIZER = "updateOrganizer";
     public static final String A_APPT_THIS_AND_FUTURE = "thisAndFuture";
     public static final String A_APPT_TIMEZONE= "tz";
