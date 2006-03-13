@@ -234,7 +234,7 @@ public class SpamExtract {
         
         while (haveMore) {
             Element searchReq = new Element.XMLElement(MailService.SEARCH_REQUEST);
-            searchReq.setText(query);
+            searchReq.addElement(MailService.A_QUERY).setText(query);
             searchReq.addAttribute(MailService.A_SEARCH_TYPES, TYPE_MESSAGE);
             searchReq.addAttribute(MailService.A_QUERY_OFFSET, offset);
 
