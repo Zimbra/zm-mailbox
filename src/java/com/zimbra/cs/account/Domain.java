@@ -30,7 +30,6 @@
  */
 package com.zimbra.cs.account;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -45,7 +44,12 @@ public interface Domain extends NamedEntry {
 
     public List getAllAccounts() throws ServiceException;
     
-    public void getAllAccounts(NamedEntry.Visitor visitor) throws ServiceException;    
+    public void getAllAccounts(NamedEntry.Visitor visitor) throws ServiceException;
+
+    public List getAllCalendarResources() throws ServiceException;
+
+    public void getAllCalendarResources(NamedEntry.Visitor visitor)
+    throws ServiceException;
 
     public List getAllDistributionLists() throws ServiceException;
 
@@ -54,10 +58,10 @@ public interface Domain extends NamedEntry {
      * @param returnAttrs list of attributes to return. uid is always included.
      * @param sortAttr attr to sort on. if not specified, sorting will be by account name.
      * @param sortAscending sort ascending (true) or descending (false).
-     * @return an ArrayList of all the accounts that matched.
+     * @return a list of all the accounts that matched.
      * @throws ServiceException
      */
-    public abstract ArrayList searchAccounts(String query, String returnAttrs[], String sortAttr, boolean sortAscending, int flags) throws ServiceException;  
+    public abstract List searchAccounts(String query, String returnAttrs[], String sortAttr, boolean sortAscending, int flags) throws ServiceException;  
 
     /**
      * 
@@ -73,4 +77,19 @@ public interface Domain extends NamedEntry {
         public String token;
         public List matches;
     }
+
+    /**
+     * @param query LDAP search query
+     * @param returnAttrs list of attributes to return. uid is always included
+     * @param sortAttr attr to sort on. if not specified, sorting will be by account name
+     * @param sortAscending sort ascending (true) or descending (false)
+     * @return a list of all calendar resources that matched
+     * @throws ServiceException
+     */
+    public abstract List searchCalendarResources(
+        String query,
+        String returnAttrs[],
+        String sortAttr,
+        boolean sortAscending)
+    throws ServiceException;
 }

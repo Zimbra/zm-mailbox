@@ -209,7 +209,23 @@ public class AdminService implements DocumentService {
     public static final QName CONFIGURE_ZIMLET_RESPONSE = QName.get("ConfigureZimletResponse", NAMESPACE);
     public static final QName MODIFY_ZIMLET_REQUEST = QName.get("ModifyZimletRequest", NAMESPACE);
     public static final QName MODIFY_ZIMLET_RESPONSE = QName.get("ModifyZimletResponse", NAMESPACE);
-    
+
+    public static final QName CREATE_CALENDAR_RESOURCE_REQUEST    = QName.get("CreateCalendarResourceRequest",   NAMESPACE);
+    public static final QName CREATE_CALENDAR_RESOURCE_RESPONSE   = QName.get("CreateCalendarResourceResponse",  NAMESPACE);
+    public static final QName DELETE_CALENDAR_RESOURCE_REQUEST    = QName.get("DeleteCalendarResourceRequest",   NAMESPACE);
+    public static final QName DELETE_CALENDAR_RESOURCE_RESPONSE   = QName.get("DeleteCalendarResourceResponse",  NAMESPACE);
+    public static final QName MODIFY_CALENDAR_RESOURCE_REQUEST    = QName.get("ModifyCalendarResourceRequest",   NAMESPACE);
+    public static final QName MODIFY_CALENDAR_RESOURCE_RESPONSE   = QName.get("ModifyCalendarResourceResponse",  NAMESPACE);
+    public static final QName RENAME_CALENDAR_RESOURCE_REQUEST    = QName.get("RenameCalendarResourceRequest",   NAMESPACE);
+    public static final QName RENAME_CALENDAR_RESOURCE_RESPONSE   = QName.get("RenameCalendarResourceResponse",  NAMESPACE);
+    public static final QName GET_CALENDAR_RESOURCE_REQUEST       = QName.get("GetCalendarResourceRequest",      NAMESPACE);
+    public static final QName GET_CALENDAR_RESOURCE_RESPONSE      = QName.get("GetCalendarResourceResponse",     NAMESPACE);
+    public static final QName GET_ALL_CALENDAR_RESOURCES_REQUEST  = QName.get("GetAllCalendarResourcesRequest",  NAMESPACE);
+    public static final QName GET_ALL_CALENDAR_RESOURCES_RESPONSE = QName.get("GetAllCalendarResourcesResponse", NAMESPACE);
+    public static final QName SEARCH_CALENDAR_RESOURCES_REQUEST   = QName.get("SearchCalendarResourcesRequest",  NAMESPACE);
+    public static final QName SEARCH_CALENDAR_RESOURCES_RESPONSE  = QName.get("SearchCalendarResourcesResponse", NAMESPACE);
+
+
     public static final QName SEARCH_MULTIPLE_MAILBOXES_REQUEST = QName.get("SearchMultiMailboxRequest", NAMESPACE);
     public static final QName SEARCH_MULTIPLE_MAILBOXES_RESPONSE = QName.get("SearchMultiMailboxResponse", NAMESPACE);
 
@@ -217,6 +233,7 @@ public class AdminService implements DocumentService {
     public static final QName DUMP_SESSIONS_RESPONSE = QName.get("DumpSessionsResponse", NAMESPACE);
 
     public static final String E_ACCOUNT = "account";
+    public static final String E_CALENDAR_RESOURCE = "calresource";
     public static final String E_AUTH_TOKEN = "authToken";
     public static final String E_NAME = "name";
     public static final String E_NEW_NAME = "newName";
@@ -318,8 +335,8 @@ public class AdminService implements DocumentService {
     public static final String A_VALUE = "value";
     public static final String A_PRIORITY = "priority";
     public static final String A_ACL = "acl";
-    
-	public static final String ADMIN_URI = "https://localhost:7071/";
+
+    public static final String ADMIN_URI = "https://localhost:7071/";
 	
     public void registerHandlers(DocumentDispatcher dispatcher) {
         dispatcher.registerHandler(PING_REQUEST, new Ping());
@@ -408,6 +425,15 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(CONFIGURE_ZIMLET_REQUEST, new ConfigureZimlet());
         dispatcher.registerHandler(MODIFY_ZIMLET_REQUEST, new ModifyZimlet());
         dispatcher.registerHandler(DUMP_SESSIONS_REQUEST, new DumpSessions());
+
+        // calendar resources
+        dispatcher.registerHandler(CREATE_CALENDAR_RESOURCE_REQUEST,   new CreateCalendarResource());
+        dispatcher.registerHandler(DELETE_CALENDAR_RESOURCE_REQUEST,   new DeleteCalendarResource());
+        dispatcher.registerHandler(MODIFY_CALENDAR_RESOURCE_REQUEST,   new ModifyCalendarResource());
+        dispatcher.registerHandler(RENAME_CALENDAR_RESOURCE_REQUEST,   new RenameCalendarResource());
+        dispatcher.registerHandler(GET_CALENDAR_RESOURCE_REQUEST,      new GetCalendarResource());
+        dispatcher.registerHandler(GET_ALL_CALENDAR_RESOURCES_REQUEST, new GetAllCalendarResources());
+        dispatcher.registerHandler(SEARCH_CALENDAR_RESOURCES_REQUEST,  new SearchCalendarResources());
     }
 
     /**

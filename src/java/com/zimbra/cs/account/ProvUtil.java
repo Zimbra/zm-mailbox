@@ -28,7 +28,6 @@ package com.zimbra.cs.account;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -111,7 +110,16 @@ public class ProvUtil {
         System.out.println("  RemoveDistributionListAlias(rdla) {list@domain|id} {alias@domain}");
         System.out.println("  RenameDistributionList(rdl) {list@domain|id} {newName@domain}");
         System.out.println();
-        
+
+        System.out.println("  CreateCalendarResource(ccr) {name@domain} [attr1 value1 [attr2 value2...]]");
+        System.out.println("  DeleteCalendarResource(dcr) {name@domain|id}");
+        System.out.println("  ModifyCalendarResource(mcr) {name@domain|id} [attr1 value1 [attr2 value2...]]");
+        System.out.println("  RenameCalendarResource(rcr) {name@domain|id} {newName@domain}");        
+        System.out.println("  GetCalendarResource(gcr) {name@domain|id}");
+        System.out.println("  GetAllCalendarResources(gacr) [-v] [{domain}]");
+        System.out.println("  SearchCalendarResources(scr) [-v] {ldap-query} [limit {limit}] [offset {offset}] [sortBy {attr}] [attrs {a1,a2...}] [sortAscending 0|1*] [applyCos [0|1*] [domain {domain}]");
+        System.out.println();
+
         System.out.println("  exit (quit)");
         System.out.println("  help (?)");
         System.out.println();
@@ -179,7 +187,15 @@ public class ProvUtil {
     private static final int SYNC_GAL = 803;
     
     private static final int GENERATE_DOMAIN_PRE_AUTH_KEY =  804;
-    private static final int GENERATE_DOMAIN_PRE_AUTH =  805;    
+    private static final int GENERATE_DOMAIN_PRE_AUTH =  805;
+
+    private static final int CREATE_CALENDAR_RESOURCE   = 901;
+    private static final int DELETE_CALENDAR_RESOURCE   = 902;
+    private static final int MODIFY_CALENDAR_RESOURCE   = 903;
+    private static final int RENAME_CALENDAR_RESOURCE   = 904;
+    private static final int GET_CALENDAR_RESOURCE      = 905;
+    private static final int GET_ALL_CALENDAR_RESOURCES = 906;
+    private static final int SEARCH_CALENDAR_RESOURCES  = 907;
 
     private static final int BY_ID = 1;
     private static final int BY_EMAIL = 2;
@@ -270,6 +286,14 @@ public class ProvUtil {
         addCommand("renameDistributionList", "rdl", RENAME_DISTRIBUTION_LIST);
         addCommand("createDistributionListsBulk", "cdlbulk", CREATE_DISTRIBUTION_LISTS_BULK);
         
+        addCommand("createCalendarResource",  "ccr",  CREATE_CALENDAR_RESOURCE);
+        addCommand("deleteCalendarResource",  "dcr",  DELETE_CALENDAR_RESOURCE);
+        addCommand("modifyCalendarResource",  "mcr",  MODIFY_CALENDAR_RESOURCE);
+        addCommand("renameCalendarResource",  "rcr",  RENAME_CALENDAR_RESOURCE);
+        addCommand("getCalendarResource",     "gcr",  GET_CALENDAR_RESOURCE);
+        addCommand("getAllCalendarResources", "gacr", GET_ALL_CALENDAR_RESOURCES);
+        addCommand("searchCalendarResources", "scr",  MODIFY_CALENDAR_RESOURCE);
+
         addCommand("exit", "quit", EXIT);
         addCommand("help", "?", HELP);        
     }
@@ -444,6 +468,27 @@ public class ProvUtil {
             break;
         case RENAME_DISTRIBUTION_LIST:
             doRenameDistributionList(args);
+            break;
+        case CREATE_CALENDAR_RESOURCE:
+            doCreateCalendarResource(args);
+            break;
+        case DELETE_CALENDAR_RESOURCE:
+            doDeleteCalendarResource(args);
+            break;
+        case MODIFY_CALENDAR_RESOURCE:
+            doModifyCalendarResource(args);
+            break;
+        case RENAME_CALENDAR_RESOURCE:
+            doRenameCalendarResource(args);
+            break;
+        case GET_CALENDAR_RESOURCE:
+            doGetCalendarResource(args);
+            break;
+        case GET_ALL_CALENDAR_RESOURCES:
+            doGetAllCalendarResources(args);
+            break;
+        case SEARCH_CALENDAR_RESOURCES:
+            doSearchCalendarResources(args);
             break;
         default:
             return false;
@@ -845,7 +890,7 @@ public class ProvUtil {
         boolean applyCos = (applyCosStr != null) ? "1".equalsIgnoreCase(applyCosStr) : true;    
 
         String domainStr = (String)attrs.get("domain");
-        ArrayList accounts;
+        List accounts;
         if (domainStr != null) {
             Domain d = lookupDomain(domainStr);
             accounts = d.searchAccounts(query, attrsToGet, sortBy, isSortAscending, Provisioning.SA_ACCOUNT_FLAG);    
@@ -1039,6 +1084,17 @@ public class ProvUtil {
     private void dumpAccount(Account account, boolean expandCos) throws ServiceException {
         System.out.println("# name "+account.getName());
         Map attrs = account.getAttrs(false, expandCos);
+        dumpAttrs(attrs);
+        System.out.println();
+    }
+    
+    private void dumpCalendarResource(CalendarResource  resource) throws ServiceException {
+        dumpCalendarResource(resource, true);
+    }
+
+    private void dumpCalendarResource(CalendarResource resource, boolean expandCos) throws ServiceException {
+        System.out.println("# name "+resource.getName());
+        Map attrs = resource.getAttrs(false, expandCos);
         dumpAttrs(attrs);
         System.out.println();
     }
@@ -1275,6 +1331,184 @@ public class ProvUtil {
         }
     }
 
+    private void doCreateCalendarResource(String[] args)
+    throws ServiceException, ArgException {
+        if (args.length < 2) {
+            usage();
+        } else {
+            String name = args[1];
+            Map attrs = getMap(args, 2);
+            CalendarResource resource =
+                mProvisioning.createCalendarResource(name, attrs);
+            System.out.println(resource.getId());
+        }
+    }
+
+    private void doDeleteCalendarResource(String[] args)
+    throws ServiceException {
+        if (args.length != 2) {
+            usage();
+        } else {
+            String key = args[1];
+            CalendarResource resource = lookupCalendarResource(key);
+            mProvisioning.deleteCalendarResource(resource.getId());
+        }
+    }
+
+    private void doModifyCalendarResource(String[] args)
+    throws ServiceException, ArgException {
+        if (args.length < 4) {
+            usage();
+        } else {
+            String key = args[1];
+            Map attrs = getMap(args, 2);
+            CalendarResource res = lookupCalendarResource(key);
+            res.modifyAttrs(attrs, true);
+        }
+    }
+
+    private void doRenameCalendarResource(String[] args)
+    throws ServiceException {
+        if (args.length < 3) {
+            usage();
+        } else {
+            String key = args[1];
+            String newName = args[2];
+            CalendarResource res = lookupCalendarResource(key);
+            mProvisioning.renameCalendarResource(res.getId(), newName);
+        }
+    }
+
+    private void doGetCalendarResource(String[] args)
+    throws ServiceException {
+        if (args.length != 2) {
+            usage();
+        } else {
+            String key = args[1];
+            CalendarResource res = lookupCalendarResource(key);
+            dumpCalendarResource(res);
+        }
+    }
+
+    private void doGetAllCalendarResources(String[] args)
+    throws ServiceException {
+        boolean verbose = false;
+        String d = null;
+        if (args.length == 2) {
+            if (args[1].equals("-v")) 
+                verbose = true;
+            else 
+                d = args[1];
+        } else if (args.length == 3) {
+            if (args[1].equals("-v")) 
+                verbose = true;
+            else  {
+                usage();
+                return;
+            }
+            d = args[2];            
+        } else if (args.length != 1) {
+            usage();
+            return;
+        }
+
+        if (d == null) {
+            List domains = mProvisioning.getAllDomains();
+            for (Iterator dit=domains.iterator(); dit.hasNext(); ) {
+                Domain domain = (Domain) dit.next();
+                doGetAllCalendarResources(domain, verbose);
+            }
+        } else {
+            Domain domain = lookupDomain(d);
+            doGetAllCalendarResources(domain, verbose);
+        }
+    }    
+
+    private void doGetAllCalendarResources(Domain domain,
+                                           final boolean verbose)
+    throws ServiceException {
+        NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
+            public void visit(com.zimbra.cs.account.NamedEntry entry)
+            throws ServiceException {
+                if (verbose) {
+                    dumpCalendarResource((CalendarResource) entry);
+                } else {
+                    System.out.println(entry.getName());                        
+                }
+            }
+        };
+        domain.getAllCalendarResources(visitor);
+    }
+
+    private void doSearchCalendarResources(String[] args)
+    throws ServiceException, ArgException {
+        boolean verbose = false;
+        int i = 1;
+        
+        if (args.length < i+1) {
+            usage();
+            return;
+        }
+
+        if (args[i].equals("-v")) {
+            verbose = true;
+            i++;
+            if (args.length < i-1) {
+                usage();
+                return;
+                
+            }
+        }
+        
+        if (args.length < i+1) {
+            usage();
+            return;
+        }
+            
+        String query = args[i];
+
+        Map attrs = getMap(args, i+1);
+        int iPageNum = 0;
+        int iPerPage = 0;        
+
+        String limitStr = (String) attrs.get("limit");
+        int limit = limitStr == null ? Integer.MAX_VALUE : Integer.parseInt(limitStr);
+        
+        String offsetStr = (String) attrs.get("offset");
+        int offset = offsetStr == null ? 0 : Integer.parseInt(offsetStr);        
+        
+        String sortBy  = (String)attrs.get("sortBy");
+        String sortAscending  = (String) attrs.get("sortAscending");
+        boolean isSortAscending = (sortAscending != null) ? "1".equalsIgnoreCase(sortAscending) : true;    
+
+        String attrsStr = (String)attrs.get("attrs");
+        String[] attrsToGet = attrsStr == null ? null : attrsStr.split(",");
+
+        String applyCosStr  = (String) attrs.get("applyCos");
+        boolean applyCos = (applyCosStr != null) ? "1".equalsIgnoreCase(applyCosStr) : true;    
+
+        String domainStr = (String)attrs.get("domain");
+        List resources;
+        if (domainStr != null) {
+            Domain d = lookupDomain(domainStr);
+            resources = d.searchCalendarResources(
+                            query, attrsToGet,
+                            sortBy, isSortAscending);
+        } else {
+            resources = mProvisioning.searchCalendarResources(
+                            query, attrsToGet,
+                            sortBy, isSortAscending);
+        }
+
+        for (int j=offset; j < offset+limit && j < resources.size(); j++) {
+            CalendarResource resource = (CalendarResource) resources.get(j);
+            if (verbose)
+                dumpCalendarResource(resource);
+            else
+                System.out.println(resource.getName());
+        }
+    }
+
     private Account lookupAccount(String key) throws ServiceException {
         Account a = null;
         switch(guessType(key)) {
@@ -1292,6 +1526,25 @@ public class ProvUtil {
             throw AccountServiceException.NO_SUCH_ACCOUNT(key);
         else
             return a;
+    }
+
+    private CalendarResource lookupCalendarResource(String key) throws ServiceException {
+        CalendarResource res = null;
+        switch(guessType(key)) {
+        case BY_ID:
+            res = mProvisioning.getCalendarResourceById(key);
+            break;
+        case BY_EMAIL:
+            res = mProvisioning.getCalendarResourceByName(key);
+            break;
+        case BY_NAME:
+            res = mProvisioning.getCalendarResourceByName(key);            
+            break;
+        }
+        if (res == null)
+            throw AccountServiceException.NO_SUCH_CALENDAR_RESOURCE(key);
+        else
+            return res;
     }
 
     private Domain lookupDomain(String key) throws ServiceException {

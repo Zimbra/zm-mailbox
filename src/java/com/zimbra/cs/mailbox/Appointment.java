@@ -46,6 +46,8 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.CalendarResource;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
@@ -166,8 +168,9 @@ public class Appointment extends MailItem {
             else
                 endTime = startTime;
         }
-        
-        firstInvite.updateMyPartStat(mbox.getAccount());
+
+        Account account = mbox.getAccount();
+        firstInvite.updateMyPartStat(account, shouldAutoAcceptDecline(account));
 
         UnderlyingData data = new UnderlyingData();
         data.id       = id;
@@ -541,6 +544,18 @@ public class Appointment extends MailItem {
         saveMetadata();
     }
 
+    private static boolean shouldAutoAcceptDecline(Account account)
+    throws ServiceException{
+        Account.CalendarUserType cutype = account.getCalendarUserType();
+        if (cutype.equals(Account.CalendarUserType.RESOURCE)) {
+            CalendarResource resource = Provisioning.getInstance().
+                getCalendarResourceById(account.getId());
+            if (resource != null)
+                return resource.autoAcceptDecline();
+        }
+        return false;
+    }
+
     private void processNewInviteRequestOrCancel(ParsedMessage pm, Invite newInvite, boolean force, int folderId, short volumeId)
     throws ServiceException {
         String method = newInvite.getMethod();
@@ -605,11 +620,13 @@ public class Appointment extends MailItem {
 
         if (addNewOne) {
             newInvite.setAppointment(this);
-            
-            if (prev!=null && !newInvite.thisAcctIsOrganizer(getMailbox().getAccount()) && newInvite.sentByMe()) {
+            Account account = getMailbox().getAccount();
+            boolean thisAcctIsOrganizer =
+                newInvite.thisAcctIsOrganizer(account);
+            if (prev!=null && !thisAcctIsOrganizer && newInvite.sentByMe()) {
                 // A non-organizer attendee is modifying data on his/her
                 // appointment.  Any information that is tracked in
-                    // metadata rather than in the iCal MIME part must be
+                // metadata rather than in the iCal MIME part must be
                 // carried over from the last invite to the new one.
                 newInvite.setPartStat(prev.getPartStat());
                 newInvite.setRsvp(prev.getRsvp());
@@ -618,7 +635,8 @@ public class Appointment extends MailItem {
                 // No need to mark invite as modified item in mailbox as
                 // it has already been marked as a created item.
             } else {
-                newInvite.updateMyPartStat(getMailbox().getAccount());
+                newInvite.updateMyPartStat(account,
+                                           shouldAutoAcceptDecline(account));
             }
 
             mInvites.add(newInvite);

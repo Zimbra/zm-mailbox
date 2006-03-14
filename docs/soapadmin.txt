@@ -206,7 +206,7 @@ SearchAccountsRequest
     more-flag = true if more accounts left to return
     search-total = total number of accounts that matched search (not affected by limit/offset)
     types = comma-separated list of types to return. legal values are: 
-            accounts|distributionlists|aliases 
+            accounts|distributionlists|aliases|resources
             (default is accounts)
 
 Access: domain admin sufficient
@@ -1018,5 +1018,138 @@ Access: domain admin sufficient
 <DumpSessionsResponse>
    Session State Dump
 </DumpSessionsResponse>
+
+-----------------------------
+
+Note: Calendar resource is a special type of Account.  The Create, Delete,
+Modify, Rename, Get, GetAll, and Search operations are very similar to
+those of Account.
+
+
+<CreateCalendarResourceRequest>
+  <name>...</name>
+  <a n="attr-name>...</a>+
+</CreateCalendarResourceRequest>
+
+<CreateCalendarResourceResponse>
+  <calresource name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </calresource>  
+</CreateCalendarResourceResponse>
+
+Notes:
+
+  name must include domain (uid@name), and domain specified in name must exist
+
+  a calendar resource does not have a password (you can't login as a resource)
+
+Access: domain admin sufficient
+
+-----------------------------
+
+<DeleteCalendarResourceRequest>
+  <id>{value-of-zimbraId}</id>
+</DeleteCalendarResourceRequest>
+
+<DeleteCalendarResourceResponse/>
+
+Access: domain admin sufficient
+
+-----------------------------
+
+<ModifyCalendarResourceRequest>
+  <id>{value-of-zimbraId}</id>
+  <a n="...">...</a>+
+</ModifyCalendarResourceRequest>
+
+<ModifyCalendarResourceResponse>
+  <calresource name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </calresource>  
+</ModifyCalendarResourceResponse>
+
+Notes:
+
+  an empty attribute value removes the specified attr
+
+Access: domain admin sufficient. limited set of attributes that can be updated by a domain admin.
+
+-----------------------------
+
+<RenameCalendarResourceRequest>
+  <id>{value-of-zimbraId}</id>
+  <newName>{new-resource-name}</newName>
+</RenameCalendarResourceRequest>
+
+<RenameCalendarResourceResponse>
+  <calresource name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </calresource>  
+</RenameCalendarResourceResponse>
+
+Access: domain admin sufficient
+
+-----------------------------
+
+<GetCalendarResourceRequest [applyCos="{apply-cos}"]>
+  <calresource by="id|name|foreignPrincipal">...</calresource>
+</GetCalendarResourceRequest>
+
+<GetCalendarResourceResponse>
+  <calresource name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </calresource>  
+</GetCalendarResourceResponse>
+
+{apply-cos} = 0|1 (1 is default)
+
+ if {apply-cos} is 1, then COS rules apply and unset attrs on the calendar resource will get their value from the COS.
+
+ if {apply-cos} is 0, then only attributes directly set on the calendar resource will be returned
+
+Access: domain admin sufficient
+
+-----------------------------
+
+<GetAllCalendarResourcesRequest>
+  [<domain by="id|name">...</domain>]
+<GetAllCalendarResourcesRequest/>
+
+<GetAllCalendarResourcesResponse>
+  <calresource name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </calresource>  
+</GetAllCalendarResourcesResponse>
+
+Access: domain admin sufficient
+
+-----------------------------
+
+<SearchCalendarResourcesRequest [limit="..."] [offset="..."] [domain="{domain-name}"] [applyCos="{apply-cos}"]
+         [attrs="a1,a2,a3"] [sortBy="{sort-by}"] [sortAscending="{sort-ascending}"] >
+  <query>...</query>
+</SearchCalendarResourcesRequest>
+
+<SearchCalendarResourcesResponse more="{more-flag}" [searchTotal="{search-total}"]>
+  <calresource name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </calresource>
+</SearchCalendarResourcesResponse>
+
+Notes:
+SearchCalendarResourcesRequest
+	<query> - query string should be an LDAP-style filter string (RFC 2254)
+	limit - the number of calendar resources to return (0 is default and means all)
+	offset - the starting offset (0, 25, etc)
+	domain - the domain name to limit the search to
+	applyCos - whether or not (0/1) to apply the COS policy to calendar resource. specify 0 if only
+	           requesting attrs that aren't inherited from COS
+	attrs - comma-seperated list of attrs to return ("displayName", "zimbraId", "zimbraAccountStatus")
+	sortBy - name of attribute to sort on. default is the calendar resource name.
+	sortAscending - whether to sort in ascending order (0/1), 1 is default
+    more-flag = true if more calendar resources left to return
+    search-total = total number of calendar resources that matched search (not affected by limit/offset)
+
+Access: domain admin sufficient
 
 -----------------------------

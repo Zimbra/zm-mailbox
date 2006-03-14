@@ -29,10 +29,10 @@ package com.zimbra.cs.session;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
@@ -54,7 +54,7 @@ public class AdminSession extends Session {
         String mSortBy;
         boolean mSortAscending;
         int mFlags;
-        ArrayList mResult;
+        List mResult;
         
         AccountSearchParams(Domain d, String query, String[] attrs, String sortBy, boolean sortAscending, int flags) {
             mDomainId = (d == null) ? "" : d.getId();
@@ -116,7 +116,7 @@ public class AdminSession extends Session {
     protected void cleanup() {
     }
 
-    public ArrayList searchAcounts(Domain d, String query, String[] attrs, String sortBy,
+    public List searchAcounts(Domain d, String query, String[] attrs, String sortBy,
             boolean sortAscending, int flags, int offset) throws ServiceException {
         AccountSearchParams params = new AccountSearchParams(d, query, attrs, sortBy, sortAscending, flags);
         boolean needToSearch = (mSearchParams == null) || (offset == 0) || !mSearchParams.equals(params);
@@ -129,5 +129,15 @@ public class AdminSession extends Session {
             //ZimbraLog.account.info("cached search: "+query+ " offset="+offset);
         }
         return mSearchParams.mResult;
+    }
+
+    public List searchCalendarResources(
+            Domain d, String query, String[] attrs, String sortBy,
+            boolean sortAscending, int offset)
+    throws ServiceException {
+        return searchAcounts(
+                d, query, attrs, sortBy, sortAscending,
+                Provisioning.SA_CALENDAR_RESOURCE_FLAG,
+                offset);
     }
 }

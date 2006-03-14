@@ -30,7 +30,6 @@
  */
 package com.zimbra.cs.account;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -149,6 +148,9 @@ public abstract class Provisioning {
     public enum MAIL_MODE { http, https, mixed, both }
 
     // attributes
+
+    public static final String A_zimbraServiceEnabled = "zimbraServiceEnabled";
+
     public static final String A_dc = "dc";
     
     /**
@@ -614,6 +616,13 @@ public abstract class Provisioning {
      */
     public static final String A_zimbraCOSId = "zimbraCOSId";
 
+    /**
+     * for accounts or calendar resources
+     *   "USER" for regular accounts (default if not set)
+     *   "RESOURCE" for calendar resources
+     */
+    public static final String A_zimbraAccountCalendarUserType = "zimbraAccountCalendarUserType";
+
     public static final String A_zimbraMailPort = "zimbraMailPort";
     public static final String A_zimbraMailSSLPort = "zimbraMailSSLPort";
     public static final String A_zimbraMailMode = "zimbraMailMode";
@@ -788,6 +797,12 @@ public abstract class Provisioning {
     public static final String A_zimbraProxyAllowedDomains     = "zimbraProxyAllowedDomains";
     public static final String A_zimbraProxyCacheableContentTypes = "zimbraProxyCacheableContentTypes";
 
+    /**
+     * Calendar resources
+     */
+    public static final String A_zimbraCalResType              = "zimbraCalResType";
+    public static final String A_zimbraCalResAutoAcceptDecline = "zimbraCalResAutoAcceptDecline";
+
     private static Provisioning mProvisioning;
 
     public static Provisioning getInstance() {
@@ -868,14 +883,20 @@ public abstract class Provisioning {
     
     public abstract Account getAccountByForeignPrincipal(String principal) throws ServiceException;
 
-    /** return accounts from search accounts */
+    /**
+     * return regular accounts from searchAccounts;
+     * calendar resource accounts are excluded
+     */
     public static final int SA_ACCOUNT_FLAG = 0x1;
     
-    /** return aliases from search accounts */
+    /** return aliases from searchAccounts */
     public static final int SA_ALIAS_FLAG = 0x2;
     
-    /** return distribution lists from search accounts */
+    /** return distribution lists from searchAccounts */
     public static final int SA_DISTRIBUTION_LIST_FLAG = 0x4;
+
+    /** return calendar resource accounts from searchAccounts */
+    public static final int SA_CALENDAR_RESOURCE_FLAG = 0x8;
 
     /**
      * @param query LDAP search query
@@ -883,10 +904,10 @@ public abstract class Provisioning {
      * @param sortAttr attr to sort on. if null, sorting will be by account name.
      * @param sortAscending sort ascending (true) or descending (false).
      * @param flags - whether to addtionally return distribution lists and/or aliases
-     * @return an ArrayList of all the accounts that matched.
+     * @return a list of all the accounts that matched.
      * @throws ServiceException
      */
-    public abstract ArrayList searchAccounts(String query, String returnAttrs[], String sortAttr, boolean sortAscending, int flags) throws ServiceException;  
+    public abstract List searchAccounts(String query, String returnAttrs[], String sortAttr, boolean sortAscending, int flags) throws ServiceException;  
 
     public abstract Account createAdminAccount(String name, String password, Map attrs) throws ServiceException;
     
@@ -998,4 +1019,54 @@ public abstract class Provisioning {
 
     public abstract void removeAllowedDomains(String domains, String cos) throws ServiceException;
     
+    /**
+     * Creates the specified calendar resource. The A_zimbraId and A_uid attributes are automatically
+     * created and should not be passed in.
+     * 
+     * For example:
+     * <pre>
+     * HashMap attrs  = new HashMap();
+     * attrs.put(Provisioning.A_zimbraCalResType, "ROOM");
+     * attrs.put(Provisioning.A_zimbraCalResAutoRespondEnabled, "TRUE");
+     * prov.createCalendarResource("room-1001@domain.com", attrs);
+     * </pre>
+     * 
+     * @param emailAddress email address (domain must already exist) of calendar resource being created.
+     * @param attrs other initial attributes
+     * @return
+     * @throws ServiceException
+     */
+    public abstract CalendarResource createCalendarResource(String emailAddress, Map attrs) throws ServiceException;
+
+    /**
+     * deletes the specified calendar resource, removing the account and all email aliases.
+     * does not remove any mailbox associated with the resourceaccount.
+     * @param zimbraId
+     * @throws ServiceException
+     */
+    public abstract void deleteCalendarResource(String zimbraId) throws ServiceException;
+
+    /**
+     * renames the specified calendar resource
+     * @param zimbraId
+     * @param newName
+     * @throws ServiceException
+     */
+    public abstract void renameCalendarResource(String zimbraId, String newName) throws ServiceException;
+
+    public abstract CalendarResource getCalendarResourceById(String zimbraId) throws ServiceException;
+
+    public abstract CalendarResource getCalendarResourceByName(String emailAddress) throws ServiceException;
+
+    public abstract CalendarResource getCalendarResourceByForeignPrincipal(String foreignPrincipal) throws ServiceException;
+
+    /**
+     * @param query LDAP search query
+     * @param returnAttrs list of attributes to return. uid is always included. null will return all attrs.
+     * @param sortAttr attr to sort on. if null, sorting will be by account name.
+     * @param sortAscending sort ascending (true) or descending (false).
+     * @return a List of all the calendar resources that matched.
+     * @throws ServiceException
+     */
+    public abstract List searchCalendarResources(String query, String returnAttrs[], String sortAttr, boolean sortAscending) throws ServiceException;
 }

@@ -62,13 +62,26 @@ public class GetServiceStatus extends AdminDocumentHandler {
             return proxyRequest(request, context, monitorServer, new ZimbraContext(lc, lc.getRequestedAccountId()));
 
         Element response = lc.createElement(AdminService.GET_SERVICE_STATUS_RESPONSE);
-	    Connection conn = null;
-        try { 
-            conn = DbPool.getLoggerConnection();
-            List stats = DbServiceStatus.getStatus(conn.getConnection());
-            doServiceStatus(response, stats);            
-        } finally {
-            DbPool.quietClose(conn);
+        boolean loggerEnabled = false;
+        Server local = prov.getLocalServer();
+        String[] services = local.getMultiAttr(Provisioning.A_zimbraServiceEnabled);
+        if (services != null) {
+            for (int i = 0; i < services.length; i++) {
+                if ("logger".equals(services[i])) {
+                    loggerEnabled = true;
+                    break;
+                }
+            }
+        }
+        if (loggerEnabled) {
+    	    Connection conn = null;
+            try { 
+                conn = DbPool.getLoggerConnection();
+                List stats = DbServiceStatus.getStatus(conn.getConnection());
+                doServiceStatus(response, stats);            
+            } finally {
+                DbPool.quietClose(conn);
+            }
         }
 	    return response;
 	}
