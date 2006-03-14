@@ -590,6 +590,10 @@
 			<arg line="ccr room1@${zimbra.server.hostname}
 				       displayName 'Conference Room One'
 				       zimbraCalResType ROOM
+					   zimbraCalResAutoAcceptDecline TRUE
+					   zimbraCalResAutoDeclineIfBusy TRUE
+					   zimbraCalResAutoDeclineRecurring FALSE
+					   zimbraCalResAlwaysFree FALSE
 				       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana'
 				       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}"/>
 		</java>
@@ -599,6 +603,21 @@
 				       displayName 'Conference Room Two'
 				       zimbraCalResType ROOM
 					   zimbraCalResAutoAcceptDecline FALSE
+					   zimbraCalResAutoDeclineIfBusy TRUE
+					   zimbraCalResAutoDeclineRecurring FALSE
+					   zimbraCalResAlwaysFree FALSE
+				       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana'
+				       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}"/>
+		</java>
+		<echo>Creating calendar resource: room3@${zimbra.server.hostname}</echo>
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="ccr room3@${zimbra.server.hostname}
+				       displayName 'Conference Room Three'
+				       zimbraCalResType ROOM
+					   zimbraCalResAutoAcceptDecline TRUE
+					   zimbraCalResAutoDeclineIfBusy TRUE
+					   zimbraCalResAutoDeclineRecurring TRUE
+					   zimbraCalResAlwaysFree TRUE
 				       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana'
 				       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}"/>
 		</java>
