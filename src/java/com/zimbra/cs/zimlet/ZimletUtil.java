@@ -244,6 +244,9 @@ public class ZimletUtil {
         	String[] zimletNames = zimletRootDir.list();
         	assert(zimletNames != null);
         	for (int i = 0; i < zimletNames.length; i++) {
+        		if (zimletNames[i].equals(ZIMLET_DEV_DIR)) {
+        			continue;
+        		}
         		try {
         			zimlets.put(zimletNames[i], new ZimletFile(zimletRootDir, zimletNames[i]));
         		} catch (IOException ioe) {
