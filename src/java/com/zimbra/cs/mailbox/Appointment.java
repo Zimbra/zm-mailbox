@@ -50,7 +50,6 @@ import javax.mail.internet.MimeMultipart;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
@@ -549,18 +548,6 @@ public class Appointment extends MailItem {
             throw ServiceException.FAILURE("IOException", e);
         }
         saveMetadata();
-    }
-
-    private static boolean shouldAutoAcceptDecline(Account account)
-    throws ServiceException{
-        Account.CalendarUserType cutype = account.getCalendarUserType();
-        if (cutype.equals(Account.CalendarUserType.RESOURCE)) {
-            CalendarResource resource = Provisioning.getInstance().
-                getCalendarResourceById(account.getId());
-            if (resource != null)
-                return resource.autoAcceptDecline();
-        }
-        return false;
     }
 
     private void processNewInviteRequestOrCancel(ParsedMessage pm, Invite newInvite, boolean force, int folderId, short volumeId)
@@ -1559,39 +1546,26 @@ public class Appointment extends MailItem {
         return list;
     }
 
-    private static CalendarResource toCalendarResource(Account account)
-    throws ServiceException {
-        CalendarResource resource = null;
-        Account.CalendarUserType cutype = account.getCalendarUserType();
-        if (cutype.equals(Account.CalendarUserType.RESOURCE)) {
-            resource = Provisioning.getInstance().
-                getCalendarResourceById(account.getId());
-        }
-        return resource;
-    }
-
     private String processPartStat(Invite invite)
     throws ServiceException {
         String partStat = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
         Account account = getMailbox().getAccount();
         if (invite.thisAcctIsOrganizer(account)) {
             partStat = IcalXmlStrMap.PARTSTAT_ACCEPTED;
-        } else {
-            CalendarResource resource = toCalendarResource(account);
-            if (resource != null && resource.autoAcceptDecline()) {
+        } else if (account instanceof CalendarResource) {
+            CalendarResource resource = (CalendarResource) account;
+            if (resource.autoAcceptDecline()) {
                 partStat = IcalXmlStrMap.PARTSTAT_ACCEPTED;
+                Mailbox mbox = getMailbox();
+                OperationContext octxt = mbox.getOperationContext();
                 if (isRecurring() && resource.autoDeclineRecurring()) {
                     partStat = IcalXmlStrMap.PARTSTAT_DECLINED;
-                    Mailbox mbox = getMailbox();
-                    OperationContext octxt = mbox.getOperationContext();
                     CalendarMailSender.sendReply(
                             octxt, mbox, false,
                             CalendarMailSender.VERB_DECLINE,
                             "This resource/location cannot be booked in a recurring appointment.",
                             invite);
                 } else if (resource.autoDeclineIfBusy()) {
-                    Mailbox mbox = getMailbox();
-                    OperationContext octxt = mbox.getOperationContext();
                     List<Availability> avail = checkAvailability();
                     if (!Availability.isAvailable(avail)) {
                         partStat = IcalXmlStrMap.PARTSTAT_DECLINED;
@@ -1604,13 +1578,14 @@ public class Appointment extends MailItem {
                                 CalendarMailSender.VERB_DECLINE,
                                 msg,
                                 invite);
-                    } else {
-                        CalendarMailSender.sendReply(
-                                octxt, mbox, false,
-                                CalendarMailSender.VERB_ACCEPT,
-                                null,
-                                invite);
                     }
+                }
+                if (IcalXmlStrMap.PARTSTAT_ACCEPTED.equals(partStat)) {
+                    CalendarMailSender.sendReply(
+                            octxt, mbox, false,
+                            CalendarMailSender.VERB_ACCEPT,
+                            null,
+                            invite);
                 }
             }
         }

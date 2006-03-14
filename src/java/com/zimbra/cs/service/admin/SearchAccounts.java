@@ -34,6 +34,7 @@ import java.util.Map.Entry;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Alias;
+import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
@@ -107,7 +108,7 @@ public class SearchAccounts extends AdminDocumentHandler {
         List accounts;
         AdminSession session = (AdminSession) lc.getSession(SessionCache.SESSION_ADMIN);
         if (session != null) {
-            accounts = session.searchAcounts(d, query, attrs, sortBy, sortAscending, flags, offset);
+            accounts = session.searchAccounts(d, query, attrs, sortBy, sortAscending, flags, offset);
         } else {
             if (d != null) {
                 accounts = d.searchAccounts(query, attrs, sortBy, sortAscending, flags);
@@ -120,7 +121,9 @@ public class SearchAccounts extends AdminDocumentHandler {
         int i, limitMax = offset+limit;
         for (i=offset; i < limitMax && i < accounts.size(); i++) {
             NamedEntry entry = (NamedEntry) accounts.get(i);
-            if (entry instanceof Account) {
+        	if (entry instanceof CalendarResource) {
+            ToXML.encodeCalendarResource(response, (CalendarResource) entry, applyCos);
+        	} else if (entry instanceof Account) {
                 ToXML.encodeAccount(response, (Account) entry, applyCos);
             } else if (entry instanceof DistributionList) {
                 doDistributionList(response, (DistributionList) entry);

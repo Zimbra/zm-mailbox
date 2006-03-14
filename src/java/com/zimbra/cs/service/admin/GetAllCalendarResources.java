@@ -48,7 +48,7 @@ public class GetAllCalendarResources extends GetAllAccounts {
         NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
             public void visit(com.zimbra.cs.account.NamedEntry entry)
             throws ServiceException {
-                ToXML.encodeCalendarResource(e, (CalendarResource) entry);
+                ToXML.encodeCalendarResource(e, (CalendarResource) entry, true);
             }
         };
         d.getAllCalendarResources(visitor);

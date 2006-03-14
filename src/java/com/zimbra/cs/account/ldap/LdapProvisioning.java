@@ -887,6 +887,7 @@ public class LdapProvisioning extends Provisioning {
         boolean needCOSId = true;
         boolean needObjectClass = true;        
         boolean needAliasTargetId = (flags & Provisioning.SA_ALIAS_FLAG) != 0;
+        boolean needCalendarUserType = true;
         
         for (int i=0; i < returnAttrs.length; i++) {
             if (Provisioning.A_uid.equalsIgnoreCase(returnAttrs[i]))
@@ -899,9 +900,11 @@ public class LdapProvisioning extends Provisioning {
                 needAliasTargetId = false;
             else if (Provisioning.A_objectClass.equalsIgnoreCase(returnAttrs[i]))
                 needObjectClass = false;            
+            else if (Provisioning.A_zimbraAccountCalendarUserType.equalsIgnoreCase(returnAttrs[i]))
+            	needCalendarUserType = false;
         }
         
-        int num = (needUID ? 1 : 0) + (needID ? 1 : 0) + (needCOSId ? 1 : 0) + (needAliasTargetId ? 1 : 0) + (needObjectClass ? 1 :0);
+        int num = (needUID ? 1 : 0) + (needID ? 1 : 0) + (needCOSId ? 1 : 0) + (needAliasTargetId ? 1 : 0) + (needObjectClass ? 1 :0) + (needCalendarUserType ? 1 : 0);
         
         if (num == 0) return returnAttrs;
        
@@ -912,6 +915,7 @@ public class LdapProvisioning extends Provisioning {
         if (needCOSId) result[i++] = Provisioning.A_zimbraCOSId;
         if (needAliasTargetId) result[i++] = Provisioning.A_zimbraAliasTargetId;
         if (needObjectClass) result[i++] = Provisioning.A_objectClass;
+        if (needCalendarUserType) result[i++] = Provisioning.A_zimbraAccountCalendarUserType;
         System.arraycopy(returnAttrs, 0, result, i, returnAttrs.length);
         return result;
     }
@@ -2739,7 +2743,7 @@ public class LdapProvisioning extends Provisioning {
         boolean sortAscending,
         String base)
     throws ServiceException {
-        String query = LdapEntrySearchFilter.toLdapFilter(filter);
+        String query = LdapEntrySearchFilter.toLdapCalendarResourcesFilter(filter);
         return searchAccounts(query, returnAttrs,
                               sortAttr, sortAscending,
                               base,
