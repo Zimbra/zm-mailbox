@@ -40,6 +40,7 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
@@ -108,7 +109,7 @@ public class GetAllAccounts extends AdminDocumentHandler {
     protected void doDomain(final Element e, Domain d) throws ServiceException {
         NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
             public void visit(com.zimbra.cs.account.NamedEntry entry) throws ServiceException {
-                GetAccount.doAccount(e, (Account) entry);
+                ToXML.encodeAccount(e, (Account) entry);
             }
         };
         d.getAllAccounts(visitor);

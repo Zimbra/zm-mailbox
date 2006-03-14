@@ -31,9 +31,11 @@ import java.util.Map;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.soap.Element;
@@ -59,22 +61,22 @@ public class SearchCalendarResources extends AdminDocumentHandler {
         ZimbraContext lc = getZimbraContext(context);
         Provisioning prov = Provisioning.getInstance();
 
-        String query = request.getAttribute(AdminService.E_QUERY);
-
         int limit = (int) request.getAttributeLong(AdminService.A_LIMIT,
                                                    Integer.MAX_VALUE);
-        if (limit == 0)
-            limit = Integer.MAX_VALUE;
+        if (limit == 0) limit = Integer.MAX_VALUE;
         int offset = (int) request.getAttributeLong(AdminService.A_OFFSET, 0);        
         String domain = request.getAttribute(AdminService.A_DOMAIN, null);
         boolean applyCos =
             request.getAttributeBool(AdminService.A_APPLY_COS, true);
-        String attrsStr = request.getAttribute(AdminService.A_ATTRS, null);
         String sortBy = request.getAttribute(AdminService.A_SORT_BY, null);        
         boolean sortAscending =
             request.getAttributeBool(AdminService.A_SORT_ASCENDING, true);        
-
+        String attrsStr = request.getAttribute(AdminService.A_ATTRS, null);
         String[] attrs = attrsStr == null ? null : attrsStr.split(",");
+
+        EntrySearchFilter filter =
+            com.zimbra.cs.service.account.SearchCalendarResources.
+            parseSearchFilter(request);
 
         // if we are a domain admin only, restrict to domain
         if (isDomainAdminOnly(lc)) {
@@ -98,14 +100,14 @@ public class SearchCalendarResources extends AdminDocumentHandler {
             (AdminSession) lc.getSession(SessionCache.SESSION_ADMIN);
         if (session != null) {
             resources = session.searchCalendarResources(
-                    d, query, attrs, sortBy, sortAscending, offset);
+                    d, filter, attrs, sortBy, sortAscending, offset);
         } else {
             if (d != null) {
                 resources = d.searchCalendarResources(
-                        query, attrs, sortBy, sortAscending);
+                        filter, attrs, sortBy, sortAscending);
             } else {
                 resources = prov.searchCalendarResources(
-                        query, attrs, sortBy, sortAscending);
+                        filter, attrs, sortBy, sortAscending);
             }
         }
 
@@ -114,8 +116,9 @@ public class SearchCalendarResources extends AdminDocumentHandler {
         int i, limitMax = offset+limit;
         for (i=offset; i < limitMax && i < resources.size(); i++) {
             NamedEntry entry = (NamedEntry) resources.get(i);
-            GetCalendarResource.doCalendarResource(
-                    response, (CalendarResource) entry, applyCos);
+            ToXML.encodeCalendarResource(response,
+                                         (CalendarResource) entry,
+                                         applyCos);
         }
 
         response.addAttribute(AdminService.A_MORE, i < resources.size());

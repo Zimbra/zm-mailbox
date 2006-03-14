@@ -217,6 +217,7 @@ public abstract class Provisioning {
      * account's given name (first name)
      */
     public static final String A_givenName = "givenName";
+    public static final String A_gn = "gn";
     
     /**
      * account's company
@@ -246,7 +247,7 @@ public abstract class Provisioning {
     /**
      * account's street address
      */
-    public static final String A_postalAddress = "postalAddress";
+    public static final String A_street = "street";
 
     
     /**
@@ -805,6 +806,14 @@ public abstract class Provisioning {
     public static final String A_zimbraCalResAutoDeclineIfBusy    = "zimbraCalResAutoDeclineIfBusy";
     public static final String A_zimbraCalResAutoDeclineRecurring = "zimbraCalResAutoDeclineRecurring";
     public static final String A_zimbraCalResAlwaysFree           = "zimbraCalResAlwaysFree";
+    public static final String A_zimbraCalResSite                 = "zimbraCalResSite";
+    public static final String A_zimbraCalResBuilding             = "zimbraCalResBuilding";
+    public static final String A_zimbraCalResFloor                = "zimbraCalResFloor";
+    public static final String A_zimbraCalResRoom                 = "zimbraCalResRoom";
+    public static final String A_zimbraCalResCapacity             = "zimbraCalResCapacity";
+    public static final String A_zimbraCalResContactName          = "zimbraCalResContactName";
+    public static final String A_zimbraCalResContactEmail         = "zimbraCalResContactEmail";
+    public static final String A_zimbraCalResContactPhone         = "zimbraCalResContactPhone";
 
     private static Provisioning mProvisioning;
 
@@ -1033,7 +1042,7 @@ public abstract class Provisioning {
      * For example:
      * <pre>
      * HashMap attrs  = new HashMap();
-     * attrs.put(Provisioning.A_zimbraCalResType, "ROOM");
+     * attrs.put(Provisioning.A_zimbraCalResType, "Location");
      * attrs.put(Provisioning.A_zimbraCalResAutoRespondEnabled, "TRUE");
      * prov.createCalendarResource("room-1001@domain.com", attrs);
      * </pre>
@@ -1068,12 +1077,12 @@ public abstract class Provisioning {
     public abstract CalendarResource getCalendarResourceByForeignPrincipal(String foreignPrincipal) throws ServiceException;
 
     /**
-     * @param query LDAP search query
+     * @param filter search filter
      * @param returnAttrs list of attributes to return. uid is always included. null will return all attrs.
      * @param sortAttr attr to sort on. if null, sorting will be by account name.
      * @param sortAscending sort ascending (true) or descending (false).
      * @return a List of all the calendar resources that matched.
      * @throws ServiceException
      */
-    public abstract List searchCalendarResources(String query, String returnAttrs[], String sortAttr, boolean sortAscending) throws ServiceException;
+    public abstract List searchCalendarResources(EntrySearchFilter filter, String returnAttrs[], String sortAttr, boolean sortAscending) throws ServiceException;
 }

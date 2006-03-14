@@ -65,7 +65,7 @@ public interface Domain extends NamedEntry {
 
     /**
      * 
-     * @param query Name search string
+     * @param query LDAP search query
      * @param type address type to search
      * @return List of GalContact objects
      * @throws ServiceException
@@ -83,7 +83,7 @@ public interface Domain extends NamedEntry {
     }
 
     /**
-     * @param query LDAP search query
+     * @param filter search filter
      * @param returnAttrs list of attributes to return. uid is always included
      * @param sortAttr attr to sort on. if not specified, sorting will be by account name
      * @param sortAscending sort ascending (true) or descending (false)
@@ -91,7 +91,7 @@ public interface Domain extends NamedEntry {
      * @throws ServiceException
      */
     public abstract List searchCalendarResources(
-        String query,
+        EntrySearchFilter filter,
         String returnAttrs[],
         String sortAttr,
         boolean sortAscending)

@@ -65,6 +65,9 @@ public class AccountService implements DocumentService {
     public static final QName SYNC_GAL_REQUEST = QName.get("SyncGalRequest", NAMESPACE);
     public static final QName SYNC_GAL_RESPONSE = QName.get("SyncGalResponse", NAMESPACE);  
 
+    public static final QName SEARCH_CALENDAR_RESOURCES_REQUEST = QName.get("SearchCalendarResourcesRequest", NAMESPACE);
+    public static final QName SEARCH_CALENDAR_RESOURCES_RESPONSE = QName.get("SearchCalendarResourcesResponse", NAMESPACE);
+
     public static final QName MODIFY_PROPERTIES_REQUEST = QName.get("ModifyPropertiesRequest", NAMESPACE);
     public static final QName MODIFY_PROPERTIES_RESPONSE = QName.get("ModifyPropertiesResponse", NAMESPACE);
 
@@ -73,7 +76,8 @@ public class AccountService implements DocumentService {
     public static final String E_REFERRAL = "refer";
     public static final String E_LIFETIME = "lifetime";
     public static final String E_ACCOUNT = "account";
-    public static final String E_NAME = "name";	
+    public static final String E_CALENDAR_RESOURCE = "calresource";
+    public static final String E_NAME = "name";
     public static final String E_PASSWORD = "password";
     public static final String E_OLD_PASSWORD = "oldPassword";
     public static final String E_PREF = "pref";
@@ -89,14 +93,31 @@ public class AccountService implements DocumentService {
     public static final String E_PROPERTIES = "props";
     public static final String E_SOAP_URL = "soapURL";
     public static final String E_PREAUTH = "preauth";
-    
+    public static final String E_A = "a";
+    public static final String E_ENTRY_SEARCH_FILTER = "searchFilter";
+    public static final String E_ENTRY_SEARCH_FILTER_MULTICOND = "conds";
+    public static final String E_ENTRY_SEARCH_FILTER_SINGLECOND = "cond";
+
+    public static final String A_N = "n";
     public static final String A_NAME = "name";
-    public static final String A_BY = "by";    
+    public static final String A_ID = "id";
+    public static final String A_BY = "by";
     public static final String A_ZIMLET = "zimlet";
     public static final String A_ZIMLET_BASE_URL = "baseUrl";
     public static final String A_ZIMLET_PRIORITY = "priority";
     public static final String A_TIMESTAMP = "timestamp";
     public static final String A_EXPIRES = "expires";
+
+    public static final String A_ATTRS = "attrs";  
+    public static final String A_SORT_BY = "sortBy";
+    public static final String A_SORT_ASCENDING = "sortAscending";
+
+    // calendar resource search
+    public static final String A_ENTRY_SEARCH_FILTER_OR = "or";
+    public static final String A_ENTRY_SEARCH_FILTER_NEGATION = "not";
+    public static final String A_ENTRY_SEARCH_FILTER_ATTR = "attr";
+    public static final String A_ENTRY_SEARCH_FILTER_OP = "op";
+    public static final String A_ENTRY_SEARCH_FILTER_VALUE = "value";
 
 	public void registerHandlers(DocumentDispatcher dispatcher) {
 
@@ -112,8 +133,8 @@ public class AccountService implements DocumentService {
         dispatcher.registerHandler(GET_ACCOUNT_INFO_REQUEST, new GetAccountInfo());        
         
         dispatcher.registerHandler(SEARCH_GAL_REQUEST, new SearchGal());
-        
         dispatcher.registerHandler(SYNC_GAL_REQUEST, new SyncGal());        
+        dispatcher.registerHandler(SEARCH_CALENDAR_RESOURCES_REQUEST, new SearchCalendarResources());
 
         dispatcher.registerHandler(MODIFY_PROPERTIES_REQUEST, new ModifyProperties());
 	}

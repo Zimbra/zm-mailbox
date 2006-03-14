@@ -33,6 +33,7 @@ import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
@@ -84,7 +85,7 @@ public class ModifyCalendarResource extends AdminDocumentHandler {
 
         Element response =
             lc.createElement(AdminService.MODIFY_CALENDAR_RESOURCE_RESPONSE);
-        GetCalendarResource.doCalendarResource(response, resource);
+        ToXML.encodeCalendarResource(response, resource);
         return response;
     }
 }

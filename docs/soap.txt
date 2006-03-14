@@ -403,6 +403,56 @@ one of <password> or <preauth> must be specified. see preauth.txt for a discussi
  </SyncGalResponse>
 
 ----------------------------
+
+ <SearchCalendarResourcesRequest
+     [attrs="a1,a2,a3"] [sortBy="{sortBy}"] [sortAscending="{sortAscending}"] >
+
+   <searchFilter>
+     <conds [not="1|0"] [or="1|0"] >
+       [<cond> or <conds>]+
+     </conds>  (exactly one instance of <conds>)
+
+     -- or --
+
+     <cond [not="1|0"] attr="{attr}" op="{op}" value="{value}" />  (exactly one instance of <cond>)
+   </searchFilter>
+
+ </SearchCalendarResourcesRequest>
+
+ <SearchCalendarResourcesResponse>
+   <calresource name="{name}" id="{id}">
+     <a n="...">...</a>+
+   </calresource>*
+ </SearchCalendarResourcesResponse>
+
+ Notes:
+   SearchCalendarResourcesRequest:
+	 attrs - comma-seperated list of attrs to return ("displayName", "zimbraId", "zimbraCalResType")
+	 sortBy - name of attribute to sort on. default is the calendar resource name.
+	 sortAscending - whether to sort in ascending order (0/1), 1 is default
+	 must have exactly one <conds> child or exactly one <cond> child and no other child element
+
+   conds: denotes a compound condition
+     must have 1 or more children
+     each child can be a <cond> or <conds>
+     not - if 1, negate the compound condition
+     or - if 1, child conditions are OR'd together; if 0 (default), they are AND'ed together
+
+   cond: denotes a simple condition of "attr operator value" form
+     not - if 1, negate the condition
+     attr - attribute name
+     op - operator; valid operators are:
+          "eq" - attr equals value (integer or string)
+          "has" - attr has value (substring search)
+          "ge" - attr greater than or equal to integer value
+          "le" - attr less than or equal to integer value
+          "gt" - attr greater than (but not equal to) integer value
+          "lt" - attr less than (but not equal to) integer value
+          "startswith" - attr starts with value (string)
+          "endswith" - attr ends with value (string)
+     value - value
+
+----------------------------
   
  <ModifyPrefsRequest>
    [<pref name="{name}">{value}</pref>...]+

@@ -28,6 +28,7 @@ package com.zimbra.cs.service.admin;
 import java.util.Map;
 
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
@@ -84,24 +85,8 @@ public class GetCalendarResource extends AdminDocumentHandler {
 
         Element response = lc.createElement(
                 AdminService.GET_CALENDAR_RESOURCE_RESPONSE);
-        doCalendarResource(response, resource, applyCos);
+        ToXML.encodeCalendarResource(response, resource, applyCos);
 
         return response;
-    }
-
-    public static void doCalendarResource(Element e, CalendarResource r)
-    throws ServiceException {
-        doCalendarResource(e, r, true);
-    }
-    
-    public static void doCalendarResource(Element e,
-                                          CalendarResource r,
-                                          boolean applyCos)
-    throws ServiceException {
-        Element resource = e.addElement(AdminService.E_CALENDAR_RESOURCE);
-        resource.addAttribute(AdminService.A_NAME, r.getName());
-        resource.addAttribute(AdminService.A_ID, r.getId());        
-        Map attrs = r.getAttrs(false, applyCos);
-        GetAccount.doAttrs(resource, attrs);
     }
 }

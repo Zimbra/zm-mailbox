@@ -39,7 +39,7 @@ extends LdapAccount implements CalendarResource {
     }
 
     public String getResourceType() {
-        return getAttr(Provisioning.A_zimbraCalResType, "ROOM");
+        return getAttr(Provisioning.A_zimbraCalResType, "Location");
     }
 
     public boolean autoAcceptDecline() {
@@ -62,4 +62,39 @@ extends LdapAccount implements CalendarResource {
                 Provisioning.A_zimbraCalResAlwaysFree, false);
     }
 
+    public String getLocationName() {
+        return getAttr(Provisioning.A_displayName);
+    }
+
+    public String getSite() {
+        return getAttr(Provisioning.A_zimbraCalResSite);
+    }
+
+    public String getBuilding() {
+        return getAttr(Provisioning.A_zimbraCalResBuilding);
+    }
+
+    public String getFloor() {
+        return getAttr(Provisioning.A_zimbraCalResFloor);
+    }
+
+    public String getRoom() {
+        return getAttr(Provisioning.A_zimbraCalResRoom);
+    }
+
+    public int getCapacity() {
+        return getIntAttr(Provisioning.A_zimbraCalResCapacity, 0);
+    }
+
+    public String getContactName() {
+        return getAttr(Provisioning.A_zimbraCalResContactName);
+    }
+
+    public String getContactEmail(){
+        return getAttr(Provisioning.A_zimbraCalResContactEmail);
+    }
+
+    public String getContactPhone(){
+        return getAttr(Provisioning.A_zimbraCalResContactPhone);
+    }
 }

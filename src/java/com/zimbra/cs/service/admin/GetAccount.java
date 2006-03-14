@@ -28,11 +28,10 @@
  */
 package com.zimbra.cs.service.admin;
 
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
@@ -87,43 +86,8 @@ public class GetAccount extends AdminDocumentHandler {
             throw ServiceException.PERM_DENIED("can not access account");
 
 	    Element response = lc.createElement(AdminService.GET_ACCOUNT_RESPONSE);
-        doAccount(response, account, applyCos);
+        ToXML.encodeAccount(response, account, applyCos);
 
 	    return response;
 	}
-
-    public static void doAccount(Element e, Account a) throws ServiceException {
-        doAccount(e, a, true);
-    }
-    
-    public static void doAccount(Element e, Account a, boolean applyCos) throws ServiceException {
-        Element account = e.addElement(AdminService.E_ACCOUNT);
-        account.addAttribute(AdminService.A_NAME, a.getName());
-        account.addAttribute(AdminService.A_ID, a.getId());        
-        Map attrs = a.getAttrs(false, applyCos);
-        doAttrs(account, attrs);
-    }
-    
-    public static void doAttrs(Element e, Map attrs) {
-        for (Iterator mit = attrs.entrySet().iterator(); mit.hasNext(); ) {
-            Map.Entry entry = (Entry) mit.next();
-            String name = (String) entry.getKey();
-            Object value = entry.getValue();
-            // TODO: might be being too paranoid, but there doesn't seem like a good reason to return this
-            if (name.equals(Provisioning.A_userPassword))
-                value = "VALUE-BLOCKED";
-            if (value instanceof String[]) {
-                String sv[] = (String[]) value;
-                for (int i = 0; i < sv.length; i++) {
-                    Element pref = e.addElement(AdminService.E_A);
-                    pref.addAttribute(AdminService.A_N, name);
-                    pref.setText(sv[i]);
-                }
-            } else if (value instanceof String) {
-                Element pref = e.addElement(AdminService.E_A);
-                pref.addAttribute(AdminService.A_N, name);
-                pref.setText((String) value);
-            }
-        }       
-    }
 }
