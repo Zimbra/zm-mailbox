@@ -943,7 +943,8 @@ public class ProvUtil {
         
         Domain d = lookupDomain(domain);
 
-        SearchGalResult result = d.searchGal(query, null);
+        SearchGalResult result =
+            d.searchGal(query, Provisioning.GAL_SEARCH_TYPE.ALL, null);
         List contacts = result.matches;
         for (Iterator it=contacts.iterator(); it.hasNext(); ) {
             GalContact contact = (GalContact) it.next();
@@ -979,7 +980,8 @@ public class ProvUtil {
         
         Domain d = lookupDomain(domain);
 
-        SearchGalResult result = d.searchGal("", token);
+        SearchGalResult result =
+            d.searchGal("", Provisioning.GAL_SEARCH_TYPE.ALL, token);
         List contacts = result.matches;
         if (result.token != null)
             System.out.println("# token = "+result.token);

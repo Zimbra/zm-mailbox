@@ -281,7 +281,8 @@ public class AdminService implements DocumentService {
     public static final String A_ATTRS = "attrs";  
     public static final String A_SEARCH_TOTAL = "searchTotal";
     public static final String A_SORT_BY = "sortBy";
-    public static final String A_SORT_ASCENDING = "sortAscending";    
+    public static final String A_SORT_ASCENDING = "sortAscending";
+    public static final String A_TYPE = "type";
     public static final String A_C = "c";    
     public static final String A_T = "t";    
     public static final String A_NAME = "name"; 
