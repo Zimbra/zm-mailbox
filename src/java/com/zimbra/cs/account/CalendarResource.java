@@ -35,7 +35,8 @@ public interface CalendarResource extends Account {
     public boolean autoDeclineIfBusy();
     public boolean autoDeclineRecurring();
 
-    public String getLocationName();
+    public String getDisplayName();
+    public String getLocationDisplayName();
     public String getSite();
     public String getBuilding();
     public String getFloor();

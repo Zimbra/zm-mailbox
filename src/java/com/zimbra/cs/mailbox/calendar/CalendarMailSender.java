@@ -25,11 +25,14 @@
 
 package com.zimbra.cs.mailbox.calendar;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.activation.DataHandler;
@@ -41,13 +44,14 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.util.JMSession;
 
 public class CalendarMailSender {
@@ -70,9 +74,17 @@ public class CalendarMailSender {
     protected static Map<String, Verb> sVerbs;
     static {
         sVerbs = new HashMap<String, Verb>();
-        sVerbs.put(MailService.A_APPT_ACCEPT, VERB_ACCEPT);
-        sVerbs.put(MailService.A_APPT_DECLINE, VERB_DECLINE);
-        sVerbs.put(MailService.A_APPT_TENTATIVE, VERB_TENTATIVE);
+        sVerbs.put("accept", VERB_ACCEPT);
+        sVerbs.put("decline", VERB_DECLINE);
+        sVerbs.put("tentative", VERB_TENTATIVE);
+    }
+
+    private static Map<Verb, String> sVerbDisplayNames;
+    static {
+        sVerbDisplayNames = new HashMap<Verb, String>();
+        sVerbDisplayNames.put(VERB_ACCEPT, "Accept");
+        sVerbDisplayNames.put(VERB_DECLINE, "Decline");
+        sVerbDisplayNames.put(VERB_TENTATIVE, "Tentative");
     }
 
     public static Verb parseVerb(String str) throws ServiceException {
@@ -84,34 +96,122 @@ public class CalendarMailSender {
     }
 
     public static String getReplySubject(Verb verb, Invite inv) {
-        return verb + ": " + inv.getName();
+        return sVerbDisplayNames.get(verb) + ": " + inv.getName();
     }
 
-    public static MimeMessage createDefaultReply(String from,
+    public static MimeMessage createDefaultReply(Account fromAccount,
+                                                 Appointment appt,
                                                  Invite inv,
                                                  String replySubject,
                                                  Verb verb,
+                                                 boolean insertSummary,
                                                  String additionalMsgBody,
                                                  ZVCalendar iCal)
     throws ServiceException {
         // TODO: Localization
-        StringBuffer replyText = new StringBuffer(from);
-        replyText.append(" has ");
+        String fromAddress = fromAccount.getName();
+        String fromDisplayName =
+            fromAccount.getAttr(Provisioning.A_displayName, fromAddress);
+        StringBuffer replyText = new StringBuffer(fromDisplayName);
         if (VERB_ACCEPT.equals(verb))
-            replyText.append("accepted");
+            replyText.append(" has accepted your invitation.");
         else if (VERB_DECLINE.equals(verb))
-            replyText.append("declined");
+            replyText.append(" has declined your invitation.");
         else if (VERB_TENTATIVE.equals(verb))
-            replyText.append("tentatively accepted");
+            replyText.append(" has tentatively accepted your invitation.");
         else
-            replyText.append(verb.toString());
-        replyText.append(" your invitation.\r\n");
-        if (additionalMsgBody != null)
-            replyText.append("\r\n").append(additionalMsgBody).append("\r\n");
+            replyText.append(" responded with: ").append(verb.toString());
+        replyText.append("\r\n\r\n");
+
+        if (insertSummary) {
+            replyText.append(getInviteSummary(appt, inv));
+        }
+
+        if (additionalMsgBody != null) {
+            if (insertSummary) {
+                replyText.append("\r\n\r\n");
+                replyText.append("*~*~*~*~*~*~*~*~*~*\r\n");
+                replyText.append("\r\n\r\n");
+            }
+            replyText.append(additionalMsgBody).append("\r\n");
+            replyText.append("\r\n\r\n");
+        }
 
         return createDefaultCalendarMessage(
-                from, inv.getOrganizer().getAddress(), replySubject, 
+                fromAddress, inv.getOrganizer().getAddress(), replySubject,
                 replyText.toString(), inv.getUid(), iCal);
+    }
+
+    private static DateFormat sDateTimeFormat =
+        new SimpleDateFormat("EEEE, MMMM d, yyyy h:mm:ss aa Z", Locale.US);
+    private static DateFormat sTimeFormat =
+        new SimpleDateFormat("h:mm:ss aa", Locale.US);
+
+    public static String formatDateTime(Date d) {
+        synchronized (sDateTimeFormat) {
+            return sDateTimeFormat.format(d);
+        }
+    }
+
+    public static String formatTime(Date t) {
+        synchronized (sTimeFormat) {
+            return sTimeFormat.format(t);
+        }
+    }
+
+    private static String getInviteSummary(Appointment appt, Invite inv) {
+        String subject = inv.getName();
+        String location = inv.getLocation();
+        Date startTime = new Date(inv.getStartTime().getUtcTime());
+        Date endTime = new Date(inv.getEffectiveEndTime().getUtcTime());
+        StringBuilder sb = new StringBuilder();
+        sb.append("Subject: ").append(subject).append("\r\n");
+        ZOrganizer organizer = inv.getOrganizer();
+        if (organizer != null) {
+            sb.append("Organizer: ");
+            if (organizer.hasCn())
+                sb.append(organizer.getCn()).append(" <").append(organizer.getAddress()).append(">\r\n");
+            else
+                sb.append(organizer.getAddress()).append("\r\n");
+        }
+        sb.append("\r\n");
+        if (location != null && location.length() > 0)
+            sb.append("Location: ").append(location).append("\r\n");
+
+        boolean isRecurrence = false;
+        if (appt.isRecurring()) {
+            // inv is the invite that describes the recurrence if its start
+            // time matches the appointment's overall start time (DTSTART)
+            // Otherwise, inv is an invite for an instance of recurrence.
+            Invite defInv = appt.getDefaultInvite();
+            long invStart = inv.getStartTime().getUtcTime();
+            long apptStart = appt.getStartTime();
+            isRecurrence = invStart == apptStart;
+        }
+        if (isRecurrence) {
+            sb.append("Start: ").append(formatTime(startTime)).append("\r\n");
+            sb.append("End: ").append(formatTime(endTime)).append("\r\n");
+            sb.append("(recurring appointment)\r\n");
+        } else {
+            sb.append("Start: ").append(formatDateTime(startTime)).append("\r\n");
+            sb.append("End: ").append(formatDateTime(endTime)).append("\r\n");
+        }
+        List attendees = inv.getAttendees();
+        if (attendees != null) {
+            sb.append("\r\n");
+            int atCount = 0;
+            sb.append("Invitees:\r\n");
+            for (Iterator iter = attendees.iterator(); iter.hasNext(); ) {
+                ZAttendee at = (ZAttendee) iter.next();
+                sb.append("    ");
+                if (at.hasCn())
+                    sb.append(at.getCn()).append(" <").append(at.getAddress()).append(">");
+                else
+                    sb.append(at.getAddress());
+                sb.append("\r\n");
+            }
+        }
+        return sb.toString();
     }
 
     /**
@@ -221,8 +321,12 @@ public class CalendarMailSender {
         if (me != null) {
             meReply = new ZAttendee(me.getAddress());
             meReply.setPartStat(verb.getXmlPartStat());
-            meReply.setRole(me.getRole());
-            meReply.setCn(me.getCn());
+            if (me.hasRole())
+                meReply.setRole(me.getRole());
+            if (me.hasCUType())
+                meReply.setCUType(me.getCUType());
+            if (me.hasCn())
+                meReply.setCn(me.getCn());
             reply.addAttendee(meReply);
         } else {
             String name = acct.getName();
@@ -289,7 +393,9 @@ public class CalendarMailSender {
                                 Mailbox mbox,
                                 boolean saveToSent,
                                 Verb verb,
+                                boolean insertSummary,
                                 String additionalMsgBody,
+                                Appointment appt,
                                 Invite inv)
     throws ServiceException {
         Account acct = mbox.getAccount();
@@ -301,8 +407,8 @@ public class CalendarMailSender {
 
         ZVCalendar iCal = replyInv.newToICalendar();
         MimeMessage mm = createDefaultReply(
-                acct.getName(), inv, replySubject,
-                verb, additionalMsgBody, iCal);
+                acct, appt, inv, replySubject,
+                verb, insertSummary, additionalMsgBody, iCal);
 
         int replyMsgId = MailSender.sendMimeMessage(
                 octxt, mbox, saveToSent, mm,

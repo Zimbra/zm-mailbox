@@ -32,14 +32,12 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
@@ -63,6 +61,7 @@ import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.Recurrence;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
+import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
@@ -1481,21 +1480,23 @@ public class Appointment extends MailItem {
     public static class Availability {
         private long mStart;
         private long mEnd;
-        private String mFreeBusy;
+        private FreeBusy mFreeBusy;
+        private String mFreeBusyStatus;
 
-        public Availability(long start, long end, String fb) {
+        public Availability(long start, long end, String fbStatus, FreeBusy fb) {
             mStart = start;
             mEnd = end;
+            mFreeBusyStatus = fbStatus;
             mFreeBusy = fb;
         }
 
         public long getStartTime() { return mStart; }
         public long getEndTime() { return mEnd; }
-        public String getFreeBusy() { return mFreeBusy; }
+        public FreeBusy getFreeBusy() { return mFreeBusy; }
         public boolean isBusy() {
             return
-                IcalXmlStrMap.FBTYPE_BUSY.equals(mFreeBusy) ||
-                IcalXmlStrMap.FBTYPE_BUSY_UNAVAILABLE.equals(mFreeBusy);                
+                IcalXmlStrMap.FBTYPE_BUSY.equals(mFreeBusyStatus) ||
+                IcalXmlStrMap.FBTYPE_BUSY_UNAVAILABLE.equals(mFreeBusyStatus);                
         }
 
         public static boolean isAvailable(List<Availability> list) {
@@ -1505,21 +1506,50 @@ public class Appointment extends MailItem {
             return true;
         }
 
-        private static DateFormat sFmt =
-            new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z", Locale.US);
-
         public static String getBusyTimesString(List<Availability> list) {
             StringBuilder sb = new StringBuilder();
+            int availCount = 0;
             for (Availability avail : list) {
-                if (avail.isBusy()) {
-                    Date s = new Date(avail.getStartTime());
-                    Date e = new Date(avail.getEndTime());
-                    synchronized (sFmt) {
-                        sb.append(sFmt.format(s));
-                        sb.append("  --  ");
-                        sb.append(sFmt.format(e));
-                        sb.append("\r\n");
-                    }
+                if (!avail.isBusy()) continue;
+
+                if (availCount++ > 0)
+                    sb.append("\r\n----------\r\n\r\n");
+                sb.append("Requested time:").append("\r\n");
+                sb.append("    Start: ");
+                sb.append(CalendarMailSender.formatDateTime(new Date(avail.getStartTime())));
+                sb.append("\r\n");
+                sb.append("    End: ");
+                sb.append(CalendarMailSender.formatDateTime(new Date(avail.getEndTime())));
+                sb.append("\r\n");
+                sb.append("\r\n");
+
+                // List conflicting appointments and their organizers.
+                sb.append("Conflicts with:").append("\r\n");
+                FreeBusy fb = avail.getFreeBusy();
+                LinkedHashSet<Invite> invites = fb.getAllInvites();
+                for (Invite inv : invites) {
+                    sb.append("\r\n");
+                    // Don't show appointment name because it's private data.
+                    //sb.append("Appointment: ").append(inv.getName()).append("\r\n");
+                    ZOrganizer organizer = inv.getOrganizer();
+                    if (organizer != null) {
+                        sb.append("    Organizer: ");
+                        String orgAddr = organizer.getAddress();
+                        if (organizer.hasCn())
+                            sb.append(organizer.getCn()).append(" <").append(orgAddr).append(">\r\n");
+                        else
+                            sb.append(orgAddr).append("\r\n");
+                    } else
+                        sb.append("    Organizer: unknown\r\n");
+
+                    Date invStart = new Date(inv.getStartTime().getUtcTime());
+                    Date invEnd = new Date(inv.getEffectiveEndTime().getUtcTime());
+                    sb.append("    Start: ");
+                    sb.append(CalendarMailSender.formatDateTime(new Date(inv.getStartTime().getUtcTime())));
+                    sb.append("\r\n");
+                    sb.append("    End: ");
+                    sb.append(CalendarMailSender.formatDateTime(new Date(inv.getEffectiveEndTime().getUtcTime())));
+                    sb.append("\r\n");
                 }
             }
             return sb.toString();
@@ -1541,7 +1571,7 @@ public class Appointment extends MailItem {
                 FreeBusy.getFreeBusyList(getMailbox(), start, end, this);
             String status = fb.getBusiest();
             if (!IcalXmlStrMap.FBTYPE_FREE.equals(status))
-                list.add(new Availability(start, end, status));
+                list.add(new Availability(start, end, status, fb));
         }
         return list;
     }
@@ -1563,8 +1593,9 @@ public class Appointment extends MailItem {
                     CalendarMailSender.sendReply(
                             octxt, mbox, false,
                             CalendarMailSender.VERB_DECLINE,
+                            true,
                             "This resource/location cannot be booked in a recurring appointment.",
-                            invite);
+                            this, invite);
                 } else if (resource.autoDeclineIfBusy()) {
                     List<Availability> avail = checkAvailability();
                     if (!Availability.isAvailable(avail)) {
@@ -1576,16 +1607,18 @@ public class Appointment extends MailItem {
                         CalendarMailSender.sendReply(
                                 octxt, mbox, false,
                                 CalendarMailSender.VERB_DECLINE,
+                                true,
                                 msg,
-                                invite);
+                                this, invite);
                     }
                 }
                 if (IcalXmlStrMap.PARTSTAT_ACCEPTED.equals(partStat)) {
                     CalendarMailSender.sendReply(
                             octxt, mbox, false,
                             CalendarMailSender.VERB_ACCEPT,
+                            true,
                             null,
-                            invite);
+                            this, invite);
                 }
             }
         }

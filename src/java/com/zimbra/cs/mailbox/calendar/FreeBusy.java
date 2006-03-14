@@ -101,10 +101,13 @@ public class FreeBusy {
             if (toAdd.mEnd > mEnd) {
                 toAdd.mEnd = mEnd;
             }
-            
-            // step 1: find previous the interval already in the list which overlaps
-            //         the start of toAdd 
-            //    
+
+            // step 1: Of the intervals already in the list, find the one that
+            //         contains the start of toAdd.
+            //
+            //         <---> <---> <-- uber-start --> <---> <---> ...
+            //                            <------- toAdd -------->
+            //
             //         Remember this "uber-start" interval, we'll need it below
             //
             Interval uberStart;
@@ -115,9 +118,7 @@ public class FreeBusy {
                 }
             }
             assert(uberStart.mStart <= toAdd.mStart);
-            if (!uberStart.overlapsOrAbuts(toAdd)) {
-                assert(uberStart.overlapsOrAbuts(toAdd));
-            }
+            assert(uberStart.overlapsOrAbuts(toAdd));
             
             Interval cur = uberStart;
             
@@ -125,23 +126,74 @@ public class FreeBusy {
                 assert(cur.mEnd >= cur.mStart);
                 assert(cur.mStart <= toAdd.mStart);
 
-                //      -- if some of cur is before toAdd, then split it off
+                // if some of cur is before toAdd, then split it off
+                //
+                // before:
+                // <-------------------- cur ------------>
+                //                 <------------ toAdd ------------>
+                //
+                // via:
+                // <-------------------- cur ------------>
+                //                 <---- newInt --------->
+                //                 <------------ toAdd ------------>
+                //
+                // after:
+                // <--------------><---- cur ------------>
+                //                 <------------ toAdd ------------>
+                //
                 if (toAdd.mStart > cur.mStart) {
-                    Interval newInt = new Interval(toAdd.mStart, cur.mEnd, cur.mStatus);
+                    Interval newInt = new Interval(toAdd.mStart,
+                                                   cur.mEnd, cur.mStatus,
+                                                   cur.getInvites());
                     cur.insertAfter(newInt);
                     cur.mEnd = newInt.mStart;
                     cur = newInt;
                 }
                 
-                //      -- if some of cur is AFTER toAdd then split it off
+                // if some of cur is AFTER toAdd then split it off
+                //
+                // before:
+                // <------------- cur ---------------------------->
+                // <--------- toAdd --------->
+                //
+                // via:
+                // <------------- cur ---------------------------->
+                //                            <----- afterUs ----->
+                // <--------- toAdd --------->
+                //
+                // after:
+                // <------------- cur -------><----- afterUs ----->
+                // <--------- toAdd --------->
+                //
                 if (toAdd.mEnd < cur.mEnd) {
-                    Interval afterUs = new Interval(toAdd.mEnd, cur.mEnd, cur.mStatus);
+                    Interval afterUs = new Interval(toAdd.mEnd,
+                                                    cur.mEnd, cur.mStatus,
+                                                    cur.getInvites());
                     cur.insertAfter(afterUs);
                     cur.mEnd = toAdd.mEnd;
                 }
                 
                 // OK -- so now cur is some chunk of toAdd which we can use!
+                //
+                // Either they are identical intervals:
+                // <------------- cur ---------------->
+                // <------------ toAdd --------------->
+                //
+                // Or cur is part of toAdd with same start time:
+                // <------------- cur ---------------->
+                // <------------ toAdd ---------------------------->
                 cur.combineStatus(toAdd.mStatus);
+                cur.addInvites(toAdd.getInvites());
+
+                // Now let's look at the rest of toAdd not covered by cur.
+                //
+                // before:
+                // <------------- cur ---------------->
+                // <------------ toAdd ------------------------------>
+                //
+                // after:
+                // <------------- cur ---------------->
+                // <----------------------------------><--- toAdd --->
                 toAdd.mStart = cur.mEnd;
                 
                 if (cur.mNext != null) {
@@ -203,19 +255,38 @@ public class FreeBusy {
             if (status != null) {
                 mStatus = status;
             } else {
-//                assert(false);
                 mStatus = IcalXmlStrMap.FBTYPE_FREE;
             }
+            mInvites = new LinkedHashSet<Invite>();
         }
-        
+
+        public Interval(long start, long end, String status, Invite invite) {
+            this(start, end, status);
+            if (invite != null)
+                mInvites.add(invite);
+        }
+
+        public Interval(long start, long end, String status,
+                        LinkedHashSet<Invite> invites) {
+            this(start, end, status);
+            addInvites(invites);
+        }
+
         public String toString() 
         {
-            StringBuffer toRet = new StringBuffer();
-            toRet.append("s=").append(mStart);
-            toRet.append(" ");
-            toRet.append("e=").append(mEnd);
-            toRet.append(" ");
-            toRet.append(mStatus);
+            StringBuilder toRet = new StringBuilder();
+            toRet.append("start=").append(mStart);
+            toRet.append(", end=").append(mEnd);
+            toRet.append(", status=").append(mStatus);
+            toRet.append(", invites=[");
+            int i = 0;
+            for (Invite inv : mInvites) {
+                if (i > 0)
+                    toRet.append(", ");
+                i++;
+                toRet.append(inv.getMailItemId());
+            }
+            toRet.append("]");
             return toRet.toString();
         }
         
@@ -224,7 +295,10 @@ public class FreeBusy {
         Interval mNext = null;
         Interval mPrev = null;
         String mStatus;
-        
+        LinkedHashSet<Invite> mInvites;  // invites relevant to this interval
+                                         // LinkedHashSet rather than generic
+                                         // set to preserve insertion order
+
         void insertAfter(Interval other) {
             other.mNext = mNext;
             other.mPrev = this;
@@ -241,6 +315,11 @@ public class FreeBusy {
             }
         }
 
+        void addInvites(LinkedHashSet<Invite> invites) {
+            if (invites != null)
+                mInvites.addAll(invites);
+        }
+
         // Set this.mStatus to the "busier" of this.mStatus and otherStatus.
         void combineStatus(String otherStatus) {
             mStatus = chooseBusier(mStatus, otherStatus);
@@ -249,7 +328,8 @@ public class FreeBusy {
         public long getStart() { return mStart; }
         public long getEnd() { return mEnd; }
         public String getStatus() { return mStatus; }
-        
+        public LinkedHashSet<Invite> getInvites() { return mInvites; }
+
         public boolean overlapsOrAbuts(Interval other) {
 //            return (other.mEnd > mStart && other.mStart < mEnd);  
             return (other.mEnd >= mStart && other.mStart < mEnd);  
@@ -267,6 +347,20 @@ public class FreeBusy {
             val = chooseBusier(val, interval.getStatus());
         }
         return val;
+    }
+
+    /**
+     * Returns all invites (and therefore appointments) that caused non-free
+     * times.
+     * @return
+     */
+    public LinkedHashSet<Invite> getAllInvites() {
+        LinkedHashSet<Invite> invites = new LinkedHashSet<Invite>();
+        for (Iterator iter = iterator(); iter.hasNext(); ) {
+            Interval interval = (Interval) iter.next();
+            invites.addAll(interval.getInvites());
+        }
+        return invites;
     }
 
 
@@ -348,7 +442,7 @@ public class FreeBusy {
                     if (!inv.isTransparent()) {
                         String freeBusy = appt.getEffectiveFreeBusyActual(acct, inv, inst);
                         if (!IcalXmlStrMap.FBTYPE_FREE.equals(freeBusy)) {
-                            Interval ival = new Interval(inst.getStart(), inst.getEnd(), freeBusy);
+                            Interval ival = new Interval(inst.getStart(), inst.getEnd(), freeBusy, inv);
                             intervals.addInterval(ival);
                         }
                     }
