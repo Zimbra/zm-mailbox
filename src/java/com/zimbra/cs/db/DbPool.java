@@ -183,7 +183,7 @@ public class DbPool {
                 sLog.warn("exception parsing maxActive", nfe);
             }
         }
-        ZimbraLog.misc.info("Setting mysql connection pool size to " + sConnectionPoolSize);
+        ZimbraLog.misc.debug("Setting mysql connection pool size to " + sConnectionPoolSize);
 
         sConnectionPool = new GenericObjectPool(
             null, sConnectionPoolSize, GenericObjectPool.WHEN_EXHAUSTED_BLOCK, -1, sConnectionPoolSize);

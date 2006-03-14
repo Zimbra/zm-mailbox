@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
 import java.util.TreeMap;
 
 import com.zimbra.cs.service.ServiceException;
@@ -193,5 +194,54 @@ public class Metadata {
     public String toString() {
         put(FN_MD_VERSION, mVersion);  String result = BEncoding.encode(mMap);
         mMap.remove(FN_MD_VERSION);    return result;
+    }
+
+    public String prettyPrint() {
+        StringBuffer sb = new StringBuffer(2048);
+        sb.append("MetaData version = ").append(mVersion).append("\n");
+        prettyEncode(sb, mMap, 0);
+        sb.setLength(sb.length() - 1);  // Remove the last newline.
+        return sb.toString();
+    }
+
+    private static StringBuffer prettyEncode(StringBuffer sb, Object object, int indentLevel) {
+        if (object instanceof Map) {
+            SortedMap tree = (object instanceof SortedMap ? (SortedMap) object : new TreeMap((Map) object));
+            sb.append("{\n");
+            if (!tree.isEmpty())
+                for (Iterator it = tree.entrySet().iterator(); it.hasNext(); ) {
+                    Map.Entry entry = (Map.Entry) it.next();
+                    if (entry.getKey() != null && entry.getValue() != null) {
+                        appendIndent(sb, indentLevel + 1);
+                        sb.append(entry.getKey().toString()).append(" = ");
+                        prettyEncode(sb, entry.getValue(), indentLevel + 1);
+                    }
+                }
+            appendIndent(sb, indentLevel);
+            sb.append("}\n");
+        } else if (object instanceof List) {
+            Object value;
+            sb.append("[\n");
+            for (Iterator it = ((List) object).iterator(); it.hasNext(); )
+                if ((value = it.next()) != null) {
+                    appendIndent(sb, indentLevel);
+                    prettyEncode(sb, value, indentLevel);
+                    sb.append("\n");
+                }
+            appendIndent(sb, indentLevel);
+            sb.append("]\n");
+        } else if (object instanceof Long || object instanceof Integer || object instanceof Short || object instanceof Byte) {
+            sb.append(object).append("\n");
+        } else if (object != null) {
+            sb.append(object.toString()).append("\n");
+        }
+        return sb;
+    }
+
+    private static void appendIndent(StringBuffer sb, int indentLevel) {
+        int num = indentLevel * 2;
+        for (int i = 0; i < num; i++) {
+            sb.append(' ');
+        }
     }
 }
