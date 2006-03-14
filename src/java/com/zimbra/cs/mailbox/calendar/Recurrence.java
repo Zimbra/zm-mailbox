@@ -686,6 +686,10 @@ public class Recurrence
 //                }
 //                return peekNextInstance().getEnd();
 //            }
+            if (mRecur != null) {
+                ParsedDateTime until = mRecur.getUntil();
+                if (until != null) return until;
+            }
             return ParsedDateTime.MAX_DATETIME;
         }
         

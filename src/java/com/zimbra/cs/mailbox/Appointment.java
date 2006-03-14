@@ -49,6 +49,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.mailbox.calendar.FreeBusy;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -170,7 +171,7 @@ public class Appointment extends MailItem {
         }
 
         Account account = mbox.getAccount();
-        firstInvite.updateMyPartStat(account, shouldAutoAcceptDecline(account));
+        firstInvite.updateMyPartStat(account, firstInvite.getPartStat());
 
         UnderlyingData data = new UnderlyingData();
         data.id       = id;
@@ -186,6 +187,7 @@ public class Appointment extends MailItem {
         DbMailItem.create(mbox, data);
 
         Appointment appt = new Appointment(mbox, data);
+        appt.processPartStat(firstInvite);
         appt.createBlob(pm, firstInvite, volumeId);
         appt.finishCreation(null);
 
@@ -635,8 +637,7 @@ public class Appointment extends MailItem {
                 // No need to mark invite as modified item in mailbox as
                 // it has already been marked as a created item.
             } else {
-                newInvite.updateMyPartStat(account,
-                                           shouldAutoAcceptDecline(account));
+                String partStat = processPartStat(newInvite);
             }
 
             mInvites.add(newInvite);
@@ -1479,5 +1480,96 @@ public class Appointment extends MailItem {
         } catch (MessagingException e) {
             throw ServiceException.FAILURE("MessagingException while getting MimeMessage for item " + mId, e);
         }
+    }
+
+    public static class Availability {
+        private long mStart;
+        private long mEnd;
+        private String mFreeBusy;
+
+        public Availability(long start, long end, String fb) {
+            mStart = start;
+            mEnd = end;
+            mFreeBusy = fb;
+        }
+
+        public long getStartTime() { return mStart; }
+        public long getEndTime() { return mEnd; }
+        public String getFreeBusy() { return mFreeBusy; }
+        public boolean isBusy() {
+            return
+                IcalXmlStrMap.FBTYPE_BUSY.equals(mFreeBusy) ||
+                IcalXmlStrMap.FBTYPE_BUSY_UNAVAILABLE.equals(mFreeBusy);                
+        }
+
+        public static boolean isAvailable(List<Availability> list) {
+            for (Availability avail : list) {
+                if (avail.isBusy()) return false;
+            }
+            return true;
+        }
+    }
+
+    private List<Availability> checkAvailability()
+    throws ServiceException {
+        long start = getStartTime();
+        long end = getEndTime();
+        Collection instances = expandInstances(start, end);
+        List<Availability> list = new ArrayList<Availability>(instances.size());
+        for (Iterator iter = instances.iterator(); iter.hasNext(); ) {
+            Instance inst = (Instance) iter.next();
+            FreeBusy fb =
+                FreeBusy.getFreeBusyList(getMailbox(), start, end, this);
+            String status = fb.getBusiest();
+            if (!IcalXmlStrMap.FBTYPE_FREE.equals(status))
+                list.add(new Availability(start, end, status));
+        }
+        return list;
+    }
+
+    private static CalendarResource toCalendarResource(Account account)
+    throws ServiceException {
+        CalendarResource resource = null;
+        Account.CalendarUserType cutype = account.getCalendarUserType();
+        if (cutype.equals(Account.CalendarUserType.RESOURCE)) {
+            resource = Provisioning.getInstance().
+                getCalendarResourceById(account.getId());
+        }
+        return resource;
+    }
+
+    private String processPartStat(Invite invite)
+    throws ServiceException {
+        String partStat = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
+        Account account = getMailbox().getAccount();
+        if (invite.thisAcctIsOrganizer(account)) {
+            partStat = IcalXmlStrMap.PARTSTAT_ACCEPTED;
+        } else {
+            CalendarResource resource = toCalendarResource(account);
+            if (resource != null && resource.autoAcceptDecline()) {
+                partStat = IcalXmlStrMap.PARTSTAT_ACCEPTED;
+                if (isRecurring() && resource.autoDeclineRecurring()) {
+                    partStat = IcalXmlStrMap.PARTSTAT_DECLINED;
+                    // TODO: Send decline email.
+                } else if (resource.autoDeclineIfBusy()) {
+                    List<Availability> avail = checkAvailability();
+                    if (!Availability.isAvailable(avail)) {
+                        partStat = IcalXmlStrMap.PARTSTAT_DECLINED;
+                        // TODO: Send decline email.
+                    }
+                }
+            }
+        }
+
+        // TODO: Skip the update below if no real change is being made.
+        // The saveMetadata call goes to the database and thus is
+        // expensive.
+
+        invite.updateMyPartStat(account, partStat);
+        Invite defaultInvite = getDefaultInvite();
+        if (!defaultInvite.equals(invite))
+            getDefaultInvite().updateMyPartStat(account, partStat);
+        saveMetadata();
+        return partStat;
     }
 }

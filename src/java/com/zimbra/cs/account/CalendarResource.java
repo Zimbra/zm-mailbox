@@ -31,4 +31,7 @@ package com.zimbra.cs.account;
 public interface CalendarResource extends Account {
     public String getResourceType();
     public boolean autoAcceptDecline();
+    public boolean autoDeclineIfBusy();
+    public boolean autoDeclineRecurring();
+    public boolean alwaysFree();
 }
