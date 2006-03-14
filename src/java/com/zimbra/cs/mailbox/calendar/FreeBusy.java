@@ -314,13 +314,21 @@ public class FreeBusy {
         IntervalList intervals = new IntervalList(start, end);
         
         Account acct = mbox.getAccount();
-        
+
+        Date startDate = new Date(start);
         for (Iterator iter = appts.iterator(); iter.hasNext(); ) {
             Appointment cur = (Appointment)iter.next();
             if (cur.getId() == exApptId)
                 continue;
-            
-            Collection instances = cur.expandInstances(start, end); 
+
+            // Move start time of expansion up by default instance's duration
+            // to catch instances whose tail end overlap the F/B time window.
+            Invite defInv = cur.getDefaultInvite();
+            long defInvStart = defInv.getStartTime().getDate().getTime();
+            long defInvEnd = defInv.getEffectiveEndTime().getDate().getTime();
+            long startAdjusted = start - (defInvEnd - defInvStart) + 1;
+
+            Collection instances = cur.expandInstances(startAdjusted, end); 
             for (Iterator instIter = instances.iterator(); instIter.hasNext();) {
                 Appointment.Instance inst = (Appointment.Instance)(instIter.next());
                 assert(inst.getStart() < end && inst.getEnd() > start);
