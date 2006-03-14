@@ -190,7 +190,7 @@ public class Appointment extends MailItem {
         DbMailItem.create(mbox, data);
 
         Appointment appt = new Appointment(mbox, data);
-        appt.processPartStat(firstInvite);
+        appt.processPartStat(firstInvite, true);
         appt.createBlob(pm, firstInvite, volumeId);
         appt.finishCreation(null);
 
@@ -628,7 +628,7 @@ public class Appointment extends MailItem {
                 // No need to mark invite as modified item in mailbox as
                 // it has already been marked as a created item.
             } else {
-                String partStat = processPartStat(newInvite);
+                String partStat = processPartStat(newInvite, false);
             }
 
             mInvites.add(newInvite);
@@ -1576,7 +1576,7 @@ public class Appointment extends MailItem {
         return list;
     }
 
-    private String processPartStat(Invite invite)
+    private String processPartStat(Invite invite, boolean forCreate)
     throws ServiceException {
         String partStat = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
         Account account = getMailbox().getAccount();
@@ -1628,10 +1628,13 @@ public class Appointment extends MailItem {
         // expensive.
 
         invite.updateMyPartStat(account, partStat);
-        Invite defaultInvite = getDefaultInvite();
-        if (!defaultInvite.equals(invite))
-            getDefaultInvite().updateMyPartStat(account, partStat);
-        saveMetadata();
+        if (forCreate) {
+            Invite defaultInvite = getDefaultInvite();
+            assert(defaultInvite != null);
+            if (!defaultInvite.equals(invite))
+                defaultInvite.updateMyPartStat(account, partStat);
+            saveMetadata();
+        }
         return partStat;
     }
 }
