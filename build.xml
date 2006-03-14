@@ -566,36 +566,50 @@
 		</java>
 		<!-- This account is used during QA tests. -->
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="ca admin@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} cn 'Administrator' displayName 'Administrator' zimbraIsAdminAccount TRUE zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana' zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}"/>
+			<arg line="ca admin@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} cn 'Administrator' displayName 'Administrator' zimbraIsAdminAccount TRUE zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana' zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} telephoneNumber '+1 650 555 0000'"/>
 		</java>
 		<echo>Creating account: user1@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="ca user1@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} cn 'Demo User One' displayName 'Demo User One' zimbraMailQuota 62914560 zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana' zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}"/>
+			<arg line="ca user1@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} cn 'Demo User One' displayName 'Demo User One' zimbraMailQuota 62914560 zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana' zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} telephoneNumber '+1 650 555 1111'"/>
 		</java>
 		<echo>Creating account: user2@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="ca user2@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} cn 'Demo User Two' displayName 'Demo User Two' zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana' zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}"/>
+			<arg line="ca user2@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} cn 'Demo User Two' displayName 'Demo User Two' zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana' zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} telephoneNumber '+1 650 555 2222'"/>
 		</java>
 		<echo>Creating account: user3@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="ca user3@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} cn 'Demo User Three' displayName 'Demo User Three' zimbraAttachmentsIndexingEnabled FALSE zimbraPrefTimeZoneId '(GMT-05.00) Eastern Time (US &amp; Canada)' zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}"/>
+			<arg line="ca user3@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} cn 'Demo User Three' displayName 'Demo User Three' zimbraAttachmentsIndexingEnabled FALSE zimbraPrefTimeZoneId '(GMT-05.00) Eastern Time (US &amp; Canada)' zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} telephoneNumber '+1 650 555 3333'"/>
 		</java>
 		<echo>Creating account: user4@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="ca user4@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} cn 'Demo User Four' displayName 'Demo User Four' zimbraAttachmentsIndexingEnabled FALSE zimbraPrefTimeZoneId '(GMT-07.00) Arizona' zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}"/>
+			<arg line="ca user4@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} cn 'Demo User Four' displayName 'Demo User Four' zimbraAttachmentsIndexingEnabled FALSE zimbraPrefTimeZoneId '(GMT-07.00) Arizona' zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} telephoneNumber '+1 650 555 4444'"/>
+		</java>
+
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="ca spam-sink@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} zimbraAttachmentsIndexingEnabled FALSE zimbraMailQuota 0" />
+		</java>
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="mcf zimbraSpamIsSpamAccount spam-sink@${zimbra.server.hostname}" />
+		</java>
+		<echo>Setting up not junk account</echo>
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="ca ham-sink@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} zimbraAttachmentsIndexingEnabled FALSE zimbraMailQuota 0" />
+		</java>
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="mcf zimbraSpamIsNotSpamAccount ham-sink@${zimbra.server.hostname}" />
 		</java>
 
 		<echo>Creating calendar resource: room1@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="ccr room1@${zimbra.server.hostname}
 				       displayName 'Conference Room One'
+					   zimbraNotes 'has TV and VCR'
 				       zimbraCalResType Location
 					   zimbraCalResAutoAcceptDecline TRUE
 					   zimbraCalResAutoDeclineIfBusy TRUE
 					   zimbraCalResAutoDeclineRecurring FALSE
-					   zimbraCalResAlwaysFree FALSE
 					   zimbraCalResSite HQ
-					   zimbraCalResBuilding 'Building A'
+					   zimbraCalResBuilding A
 					   zimbraCalResFloor 11
 					   zimbraCalResRoom 1101
 					   zimbraCalResCapacity 10
@@ -614,13 +628,13 @@
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="ccr room2@${zimbra.server.hostname}
 				       displayName 'Conference Room Two'
+				       zimbraNotes 'This room lacks air conditioning; room is always available'
 				       zimbraCalResType Location
-					   zimbraCalResAutoAcceptDecline FALSE
-					   zimbraCalResAutoDeclineIfBusy TRUE
+					   zimbraCalResAutoAcceptDecline TRUE
+					   zimbraCalResAutoDeclineIfBusy FALSE
 					   zimbraCalResAutoDeclineRecurring FALSE
-					   zimbraCalResAlwaysFree FALSE
 					   zimbraCalResSite HQ
-					   zimbraCalResBuilding 'Building A'
+					   zimbraCalResBuilding A
 					   zimbraCalResFloor 12
 					   zimbraCalResRoom 1202
 					   zimbraCalResCapacity 20
@@ -634,13 +648,13 @@
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="ccr room3@${zimbra.server.hostname}
 				       displayName 'Conference Room Three'
+					   zimbraNotes 'This room cannot be booked for recurring appointments.'
 				       zimbraCalResType Location
 					   zimbraCalResAutoAcceptDecline TRUE
 					   zimbraCalResAutoDeclineIfBusy TRUE
 					   zimbraCalResAutoDeclineRecurring TRUE
-					   zimbraCalResAlwaysFree TRUE
 					   zimbraCalResSite HQ
-					   zimbraCalResBuilding 'Building B'
+					   zimbraCalResBuilding B
 					   zimbraCalResFloor B2
 					   zimbraCalResRoom B201
 					   zimbraCalResCapacity 100
@@ -650,19 +664,43 @@
 				       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana'
 				       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}"/>
 		</java>
-
+		<echo>Creating calendar resource: projector1@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="ca spam-sink@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} zimbraAttachmentsIndexingEnabled FALSE zimbraMailQuota 0" />
+			<arg line="ccr projector1@${zimbra.server.hostname}
+				       displayName 'Projector'
+				       zimbraCalResType Equipment
+					   zimbraCalResAutoAcceptDecline FALSE
+					   zimbraCalResAutoDeclineIfBusy FALSE
+					   zimbraCalResAutoDeclineRecurring FALSE
+					   zimbraCalResSite HQ
+					   zimbraCalResBuilding B
+					   zimbraCalResFloor B2
+					   zimbraCalResRoom B201
+					   zimbraCalResContactName 'Administrator'
+					   zimbraCalResContactEmail admin@${zimbra.server.hostname}
+					   zimbraCalResContactPhone '(650)555-1212'
+				       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana'
+				       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}"/>
 		</java>
+		<echo>Creating calendar resource: pencil1@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="mcf zimbraSpamIsSpamAccount spam-sink@${zimbra.server.hostname}" />
-		</java>
-		<echo>Setting up not junk account</echo>
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="ca ham-sink@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} zimbraAttachmentsIndexingEnabled FALSE zimbraMailQuota 0" />
-		</java>
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="mcf zimbraSpamIsNotSpamAccount ham-sink@${zimbra.server.hostname}" />
+			<arg line="ccr pencil1@${zimbra.server.hostname}
+				       displayName '#2 pencil'
+				       zimbraNotes 'Must occasionally be sharpened'
+				       zimbraCalResType Equipment
+					   zimbraCalResAutoAcceptDecline TRUE
+					   zimbraCalResAutoDeclineIfBusy TRUE
+					   zimbraCalResAutoDeclineRecurring TRUE
+					   street '1500 Fashion Island Blvd, Suite 100'
+					   l 'San Mateo'
+				       st CA
+				       postalCode 94404
+				       co USA
+					   zimbraCalResContactName 'Administrator'
+					   zimbraCalResContactEmail admin@${zimbra.server.hostname}
+					   zimbraCalResContactPhone '(650)555-1212'
+				       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana'
+				       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}"/>
 		</java>
 
 	</target>
