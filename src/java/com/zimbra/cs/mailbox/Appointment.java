@@ -32,11 +32,14 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
@@ -49,6 +52,8 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.FreeBusy;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
@@ -1482,6 +1487,10 @@ public class Appointment extends MailItem {
         }
     }
 
+
+    // code related to calendar resources
+    // TODO: move this stuff to its own class(es)
+
     public static class Availability {
         private long mStart;
         private long mEnd;
@@ -1508,16 +1517,39 @@ public class Appointment extends MailItem {
             }
             return true;
         }
+
+        private static DateFormat sFmt =
+            new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z", Locale.US);
+
+        public static String getBusyTimesString(List<Availability> list) {
+            StringBuilder sb = new StringBuilder();
+            for (Availability avail : list) {
+                if (avail.isBusy()) {
+                    Date s = new Date(avail.getStartTime());
+                    Date e = new Date(avail.getEndTime());
+                    synchronized (sFmt) {
+                        sb.append(sFmt.format(s));
+                        sb.append("  --  ");
+                        sb.append(sFmt.format(e));
+                        sb.append("\r\n");
+                    }
+                }
+            }
+            return sb.toString();
+        }
     }
 
+    // TODO: Running free/busy search over many recurring instances is
+    // very expensive...  Recurrence expansion itself is expensive, and
+    // each F/B call is expensive as well.  Need a more efficient way.
     private List<Availability> checkAvailability()
     throws ServiceException {
-        long start = getStartTime();
-        long end = getEndTime();
-        Collection instances = expandInstances(start, end);
+        Collection instances = expandInstances(getStartTime(), getEndTime());
         List<Availability> list = new ArrayList<Availability>(instances.size());
         for (Iterator iter = instances.iterator(); iter.hasNext(); ) {
             Instance inst = (Instance) iter.next();
+            long start = inst.getStart();
+            long end = inst.getEnd();
             FreeBusy fb =
                 FreeBusy.getFreeBusyList(getMailbox(), start, end, this);
             String status = fb.getBusiest();
@@ -1550,12 +1582,34 @@ public class Appointment extends MailItem {
                 partStat = IcalXmlStrMap.PARTSTAT_ACCEPTED;
                 if (isRecurring() && resource.autoDeclineRecurring()) {
                     partStat = IcalXmlStrMap.PARTSTAT_DECLINED;
-                    // TODO: Send decline email.
+                    Mailbox mbox = getMailbox();
+                    OperationContext octxt = mbox.getOperationContext();
+                    CalendarMailSender.sendReply(
+                            octxt, mbox, false,
+                            CalendarMailSender.VERB_DECLINE,
+                            "This resource/location cannot be booked in a recurring appointment.",
+                            invite);
                 } else if (resource.autoDeclineIfBusy()) {
+                    Mailbox mbox = getMailbox();
+                    OperationContext octxt = mbox.getOperationContext();
                     List<Availability> avail = checkAvailability();
                     if (!Availability.isAvailable(avail)) {
                         partStat = IcalXmlStrMap.PARTSTAT_DECLINED;
-                        // TODO: Send decline email.
+                        String msg =
+                            "This resource/location is already booked for other appointments,\r\n" +
+                            "and is unavailable for the following requested times:\r\n\r\n" +
+                            Availability.getBusyTimesString(avail);
+                        CalendarMailSender.sendReply(
+                                octxt, mbox, false,
+                                CalendarMailSender.VERB_DECLINE,
+                                msg,
+                                invite);
+                    } else {
+                        CalendarMailSender.sendReply(
+                                octxt, mbox, false,
+                                CalendarMailSender.VERB_ACCEPT,
+                                null,
+                                invite);
                     }
                 }
             }

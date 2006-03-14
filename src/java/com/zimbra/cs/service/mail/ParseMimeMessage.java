@@ -34,6 +34,7 @@ import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mime.BlobDataSource;
@@ -44,6 +45,7 @@ import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.util.FileUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.ExceptionToString;
 import com.zimbra.soap.Element;
@@ -216,7 +218,7 @@ public class ParseMimeMessage {
                 
                 // goes into the "content" subpart
                 InviteParserResult result = inviteParser.parse(lc, mbox.getAccount(), inviteElem);
-                MimeBodyPart mbp = CalendarUtils.makeICalIntoMimePart(result.mUid, result.mCal);
+                MimeBodyPart mbp = CalendarMailSender.makeICalIntoMimePart(result.mUid, result.mCal);
                 alternatives[curAltPart++] = mbp;
                 
                 if (additionalParts != null) {
@@ -468,7 +470,7 @@ public class ParseMimeMessage {
 
             ContentDisposition cd = new ContentDisposition(Part.ATTACHMENT);
             if (up.getName() != null) {
-                String filename = trimFilename(up.getName());
+                String filename = FileUtil.trimFilename(up.getName());
                 if (filename != null)
                 	cd.setParameter("filename", filename);
             }
@@ -640,21 +642,6 @@ public class ParseMimeMessage {
         } catch (Exception e) { e.printStackTrace(); };
         mLog.debug("--------------------------------------\n");
     }
-
-	public static String trimFilename(String filename) {
-	    final char[] delimiter = { '/', '\\', ':' };
-	
-	    if (filename == null || filename.equals(""))
-	        return null;
-	    for (int i = 0; i < delimiter.length; i++) {
-	        int index = filename.lastIndexOf(delimiter[i]);
-	        if (index == filename.length() - 1)
-	            return null;
-	        if (index != -1)
-	            filename = filename.substring(index + 1);
-	    }
-	    return filename;
-	}
 
     private static void unsupportedChildElement(Element child, Element parent) {
 		mLog.warn("Unsupported child element \"" + child.getName() + "\" under parent " + parent.getName());

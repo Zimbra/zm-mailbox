@@ -40,7 +40,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
-import com.zimbra.cs.service.mail.ParseMimeMessage;
+import com.zimbra.cs.util.FileUtil;
 
 public class UUEncodeConverter implements MimeVisitor {
     private ModificationCallback mCallback;
@@ -138,7 +138,7 @@ public class UUEncodeConverter implements MimeVisitor {
             start = pos;
             while ((c = text.charAt(pos)) != '\r' && c != '\n')
                 pos++;
-            mFilename = ParseMimeMessage.trimFilename(text.substring(start, pos));
+            mFilename = FileUtil.trimFilename(text.substring(start, pos));
             while ((c = text.charAt(pos)) == '\r' || c == '\n')
                 pos++;
 
