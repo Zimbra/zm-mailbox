@@ -22,11 +22,7 @@ import com.zimbra.cs.util.ZimbraLog;
  * "optional" entries are ignored if the default value is passed 
  */
 public class DbSearchConstraints implements DbSearchConstraintsNode {
-	
-	public static enum NodeType {
-		   AND, OR, LEAF;
-	   }
-	   
+
 	public DbSearchConstraintsNode.NodeType getNodeType() { return DbSearchConstraintsNode.NodeType.LEAF; }
 	public Iterable<DbSearchConstraintsNode> getSubNodes() { return null; }
 	public DbSearchConstraints getSearchConstraints() { return this; }
@@ -109,6 +105,8 @@ public class DbSearchConstraints implements DbSearchConstraintsNode {
 	// for example "no results" 
 	//
 	public boolean noResults = false;
+
+    DbMailItem.TagConstraints tagConstraints;
 	
 	
 	private static abstract class Printer<T> {

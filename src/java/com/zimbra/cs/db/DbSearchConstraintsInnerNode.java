@@ -1,5 +1,6 @@
 package com.zimbra.cs.db;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class DbSearchConstraintsInnerNode implements DbSearchConstraintsNode {
@@ -11,20 +12,23 @@ public class DbSearchConstraintsInnerNode implements DbSearchConstraintsNode {
 		mNodeType = ntype;
 	}
 	
-	DbSearchConstraintsInnerNode AND() { 
+	public static DbSearchConstraintsInnerNode AND() { 
 		return new DbSearchConstraintsInnerNode(NodeType.AND);
 	}
 	
-	DbSearchConstraintsInnerNode OR() {
+    public static DbSearchConstraintsInnerNode OR() {
 		return new DbSearchConstraintsInnerNode(NodeType.OR);
 	}
 	
-	public void addSubNode(DbSearchConstraintsInnerNode node) {
+	public void addSubNode(DbSearchConstraintsNode node) {
+        if (mSubNodes == null)
+            mSubNodes = new ArrayList<DbSearchConstraintsNode>();
 		mSubNodes.add(node);
 	}
 	
-	public void removeSubNode(DbSearchConstraintsInnerNode node) {
-		mSubNodes.remove(node);
+	public void removeSubNode(DbSearchConstraintsNode node) {
+        if (mSubNodes != null)
+            mSubNodes.remove(node);
 	}
 	
 	public NodeType getNodeType() {

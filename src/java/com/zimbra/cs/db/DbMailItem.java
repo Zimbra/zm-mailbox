@@ -47,13 +47,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.db.DbPool.Connection;
-import com.zimbra.cs.db.DbSearchConstraints.Range;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.util.ArrayUtil;
 import com.zimbra.cs.util.Constants;
 import com.zimbra.cs.util.ListUtil;
 import com.zimbra.cs.util.StringUtil;
@@ -832,11 +830,11 @@ public class DbMailItem {
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
-            StringBuffer ids = null;
+            StringBuilder ids = null;
             if (info != null) {
                 if (info.itemIds == null || info.itemIds.size() == 0)
                     return;
-                ids = new StringBuffer();
+                ids = new StringBuilder();
                 for (int i = 0; i < info.itemIds.size(); i++)
                     ids.append(i == 0 ? "" : ",").append(info.itemIds.get(i));
             }
@@ -861,7 +859,7 @@ public class DbMailItem {
 
     public static String readTombstones(Mailbox mbox, long lastSync) throws ServiceException {
         Connection conn = mbox.getOperationConnection();
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
 
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -925,7 +923,7 @@ public class DbMailItem {
         String field = sortField(sort);
         if ("NULL".equalsIgnoreCase(field))
             return "";
-        StringBuffer statement = new StringBuffer(" ORDER BY ");
+        StringBuilder statement = new StringBuilder(" ORDER BY ");
         statement.append(prefix).append(field);
         if ((sort & SORT_DIRECTION_MASK) == SORT_DESCENDING)
             statement.append(" DESC");
@@ -1577,9 +1575,17 @@ public class DbMailItem {
         return search(result, conn, c, false);
     }
     public static Collection<SearchResult> search(Collection<SearchResult> result, Connection conn, DbSearchConstraints c, boolean fullRows) throws ServiceException {
-        if (c.automaticEmptySet())
-            return result;
-        c.checkDates();
+        return search(result, conn, c, c.mailboxId, c.sort, c.offset, c.limit, fullRows);
+    }
+    public static Collection<SearchResult> search(Collection<SearchResult> result, Connection conn, DbSearchConstraintsNode node, 
+                                                  int mailboxId, byte sort, int offset, int limit, boolean fullRows)
+    throws ServiceException {
+        // Assemble the search query
+        StringBuilder statement = new StringBuilder("SELECT id, index_id, type, " + sortField(sort));
+        if (fullRows)
+            statement.append(", " + DB_FIELDS);
+        statement.append(" FROM " + getMailItemTableName(mailboxId, "mi"));
+        statement.append(" WHERE ");
 
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -1589,249 +1595,28 @@ public class DbMailItem {
              *    (AND folder_id [NOT] IN (?,?,?)) (AND date > ?) (AND date < ?) (AND mod_metadata > ?) (AND mod_metadata < ?)
              *    ORDER BY date|subject|sender (DESC)? LIMIT ?, ?
              */
+            encodeConstraint(mailboxId, node, statement, conn);
 
-            // Determine the set of matching tags
-            Set<Long> searchTagsets = null;
-            Set<Long> searchFlagsets = null;
-            Boolean unread = null;
-            
-            if (!ListUtil.isEmpty(c.tags) || !ListUtil.isEmpty(c.excludeTags)) {
-                int setFlagMask = 0;
-                long setTagMask = 0;
-                
-                // tags
-                if (!ListUtil.isEmpty(c.tags))
-                	for (Tag curTag : c.tags)
-                		if (curTag.getId() == Flag.ID_FLAG_UNREAD) {
-                			unread = Boolean.TRUE; 
-                		} else if (curTag instanceof Flag) {
-                			setFlagMask |= curTag.getBitmask();
-                		} else {
-                			setTagMask |= curTag.getBitmask();
-                		}
-                			
-//                          for (int i = 0; c.tags != null && i < c.tags.length; i++) 
-//                    if (c.tags[i].getId() == Flag.ID_FLAG_UNREAD) {
-//                        unread = Boolean.TRUE; 
-//                    } else if (c.tags[i] instanceof Flag) {
-//                        setFlagMask |= c.tags[i].getBitmask();
-//                    } else {
-//                        setTagMask |= c.tags[i].getBitmask();
-//                    }
-                int flagMask = setFlagMask;
-                long tagMask = setTagMask;
-                
-//                for (int i = 0; c.excludeTags != null && i < c.excludeTags.length; i++)
-//                    if (c.excludeTags[i].getId() == Flag.ID_FLAG_UNREAD) {
-//                        unread = Boolean.FALSE;
-//                    } else if (c.excludeTags[i] instanceof Flag) {
-//                        flagMask |= c.excludeTags[i].getBitmask();
-//                    } else {
-//                        tagMask |= c.excludeTags[i].getBitmask();
-//                    }
-                
-                if (!ListUtil.isEmpty(c.excludeTags))                 
-                	for (Tag t : c.excludeTags) 
-                		if (t.getId() == Flag.ID_FLAG_UNREAD) {
-                			unread = Boolean.FALSE;
-                		} else if (t instanceof Flag) {
-                			flagMask |= t.getBitmask();
-                		} else {
-                			tagMask |= t.getBitmask();
-                		}
-
-                
-                TagsetCache tcFlags = getFlagsetCache(conn, c.mailboxId);
-                TagsetCache tcTags  = getTagsetCache(conn, c.mailboxId);
-                if (setTagMask != 0 || tagMask != 0) {
-                    searchTagsets = tcTags.getMatchingTagsets(tagMask, setTagMask);
-                    if (searchTagsets.size() == 0) {
-                        // No items match the specified tags
-                        return result;
-                    }
-                }
-                if (setFlagMask != 0 || flagMask != 0) {
-                    searchFlagsets = tcFlags.getMatchingTagsets(flagMask, setFlagMask);
-                    if (searchFlagsets.size() == 0) {
-                        // No items match the specified flags
-                        return result;
-                    }
-                }
-            }
-            
-            // Assemble the search query
-            StringBuffer statement = new StringBuffer("SELECT id, index_id, type, " + sortField(c.sort));
-            if (fullRows)
-                statement.append(", " + DB_FIELDS);
-            statement.append(" FROM " + getMailItemTableName(c.mailboxId, "mi"));
-            statement.append(" WHERE ");
-            if (ListUtil.isEmpty(c.types))
-                statement.append("type NOT IN " + NON_SEARCHABLE_TYPES);
-            else
-                statement.append("type IN").append(DbUtil.suitableNumberOfVariables(c.types));
-
-            if (!ListUtil.isEmpty(c.excludeTypes))
-                statement.append(" AND type NOT IN").append(DbUtil.suitableNumberOfVariables(c.excludeTypes));
-
-            if (c.hasTags != null)
-                statement.append(" AND tags ").append(c.hasTags.booleanValue() ? "!= 0" : "= 0");
-            if (searchTagsets != null)
-                statement.append(" AND tags IN").append(DbUtil.suitableNumberOfVariables(searchTagsets));
-            if (searchFlagsets != null)
-                statement.append(" AND flags IN").append(DbUtil.suitableNumberOfVariables(searchFlagsets));
-            if (unread != null)
-                statement.append(" AND unread = ?");
-
-            Collection<Folder> targetFolders = (!ListUtil.isEmpty(c.folders)) ? c.folders : c.excludeFolders;
-            if (!ListUtil.isEmpty(targetFolders))
-                statement.append(" AND folder_id").append(targetFolders == c.folders ? "" : " NOT").append(" IN").append(DbUtil.suitableNumberOfVariables(targetFolders));
-
-            if (c.convId > 0)
-                statement.append(" AND parent_id = ?");
-            else if (!ListUtil.isEmpty(c.prohibitedConvIds))
-                statement.append(" AND parent_id NOT IN").append(DbUtil.suitableNumberOfVariables(c.prohibitedConvIds));
-
-            if (!ListUtil.isEmpty(c.itemIds))
-                statement.append(" AND id IN").append(DbUtil.suitableNumberOfVariables(c.itemIds));
-            if (!ListUtil.isEmpty(c.prohibitedItemIds))
-                statement.append(" AND id NOT IN").append(DbUtil.suitableNumberOfVariables(c.prohibitedItemIds));
-
-            if (!ListUtil.isEmpty(c.indexIds))
-                statement.append(" AND index_id IN").append(DbUtil.suitableNumberOfVariables(c.indexIds));
-
-            if (!ListUtil.isEmpty(c.dates)) {
-            	    for (DbSearchConstraints.Range r : c.dates) {
-                    statement.append(" AND ");
-                    if (r.negated)
-                        statement.append(" NOT ");
-                    statement.append('(');
-                    boolean hasOne = false;
-                    if (r.lowest > 0) { 
-                        statement.append(" date > ?");
-                        hasOne = true;
-                    }
-                    if (r.highest > 0) {
-                        if (hasOne)
-                            statement.append(" AND");
-                        statement.append(" date < ?");
-                    }
-                    statement.append(')');
-                }
-            }
-            
-            if (!ListUtil.isEmpty(c.modified)) {
-            	    for (DbSearchConstraints.Range r : c.modified) {
-                    statement.append(" AND ");
-                    if (r.negated)
-                        statement.append(" NOT ");
-                    statement.append('(');
-                    boolean hasOne = false;
-                    if (r.lowest > 0) { 
-                        statement.append(" mod_metadata > ?");
-                        hasOne = true;
-                    }
-                    if (r.highest > 0) {
-                        if (hasOne)
-                            statement.append(" AND");
-                        statement.append(" mod_metadata < ?");
-                    }
-                    statement.append(')');
-                }
-            }
-            
-            if (!ListUtil.isEmpty(c.sizes)) {
-                	for (DbSearchConstraints.Range r : c.sizes) {
-                    statement.append(" AND ");
-                    if (r.negated)
-                        statement.append(" NOT ");
-                    statement.append('(');
-                    boolean hasOne = false;
-                    if (r.lowest >= 0) { 
-                        statement.append(" size > ?");
-                        hasOne = true;
-                    }
-                    if (r.highest >= 0) {
-                        if (hasOne)
-                            statement.append(" AND");
-                        statement.append(" size < ?");
-                    }
-                    statement.append(')');
-                }
-            }
-
-            statement.append(sortQuery(c.sort));
-
-            if (c.offset >= 0 && c.limit >= 0)
+            statement.append(sortQuery(sort));
+            if (offset >= 0 && limit >= 0)
                 statement.append(" LIMIT ?, ?");
 
             stmt = conn.prepareStatement(statement.toString());
-            int param = 1;
-            if (!ListUtil.isEmpty(c.types))
-                for (byte type : c.types)
-                    stmt.setByte(param++, type);
-            if (!ListUtil.isEmpty(c.excludeTypes))
-                for (byte type : c.excludeTypes)
-                    stmt.setByte(param++, type); 
-            if (searchTagsets != null)
-                for (long tagset : searchTagsets)
-                    stmt.setLong(param++, tagset);
-            if (searchFlagsets != null)
-                for (long flagset : searchFlagsets)
-                    stmt.setLong(param++, flagset);
-            if (unread != null)
-                stmt.setBoolean(param++, unread.booleanValue());
-            if (targetFolders != null)
-                for (Folder folder : targetFolders)
-                    stmt.setInt(param++, folder.getId());
-            if (c.convId > 0)
-                stmt.setInt(param++, c.convId);
-            else if (!ListUtil.isEmpty(c.prohibitedConvIds))
-                for (int id : c.prohibitedConvIds)
-                    stmt.setInt(param++, id);
-            if (!ListUtil.isEmpty(c.itemIds))
-                for (int id : c.itemIds)
-                    stmt.setInt(param++, id);
-            if (!ListUtil.isEmpty(c.prohibitedItemIds))
-                for (int id : c.prohibitedItemIds)
-                    stmt.setInt(param++, id);
-            if (!ListUtil.isEmpty(c.indexIds))
-                for (int id : c.indexIds)
-                    stmt.setInt(param++, id);
-            if (!ListUtil.isEmpty(c.dates))
-                for (DbSearchConstraints.Range date : c.dates) {
-                    if (date.lowest > 0)
-                        stmt.setInt(param++, (int) Math.min(date.lowest / 1000, Integer.MAX_VALUE));
-                    if (date.highest > 0)
-                        stmt.setInt(param++, (int) Math.min(date.highest / 1000, Integer.MAX_VALUE));
-                }
-            if (!ListUtil.isEmpty(c.sizes))
-                for (DbSearchConstraints.Range size : c.sizes) {
-                    if (size.lowest >= 0)
-                        stmt.setInt(param++, (int) size.lowest);
-                    if (size.highest >= 0)
-                        stmt.setInt(param++, (int) size.highest);
-                }
-            if (!ListUtil.isEmpty(c.modified)) 
-                for (DbSearchConstraints.Range modified : c.modified) {
-                    if (modified.lowest > 0)
-                        stmt.setLong(param++, modified.lowest);
-                    if (modified.highest > 0)
-                        stmt.setLong(param++, modified.highest);
-                }
+            int param = setSearchVars(stmt, node, 1);
 
             // FIXME: include COLLATION for sender/subject sort
 
-            if (c.offset >= 0 && c.limit >= 0) {
-                stmt.setInt(param++, c.offset);
-                stmt.setInt(param++, c.limit);
+            if (offset >= 0 && limit >= 0) {
+                stmt.setInt(param++, offset);
+                stmt.setInt(param++, limit);
             }
-            
+
             if (sLog.isDebugEnabled())
                 sLog.debug("SQL: " + statement);
-            
+
             rs = stmt.executeQuery();
             while (rs.next())
-                result.add(SearchResult.createResult(rs, c.sort, fullRows));
+                result.add(SearchResult.createResult(rs, sort, fullRows));
             return result;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("fetching search metadata", e);
@@ -1839,6 +1624,228 @@ public class DbMailItem {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
         }
+    }
+
+    private static void encodeConstraint(int mailboxId, DbSearchConstraintsNode node, StringBuilder statement, Connection conn) throws ServiceException {
+        DbSearchConstraintsNode.NodeType ntype = node.getNodeType();
+        if (ntype == DbSearchConstraintsNode.NodeType.AND || ntype == DbSearchConstraintsNode.NodeType.OR) {
+            boolean first = true, and = ntype == DbSearchConstraintsNode.NodeType.AND;
+            statement.append('(');
+            for (DbSearchConstraintsNode subnode : node.getSubNodes()) {
+                if (!first)
+                    statement.append(and ? " AND " : " OR ");
+                encodeConstraint(mailboxId, subnode, statement, conn);
+                first = false;
+            }
+            statement.append(')');
+            return;
+        }
+
+        // we're here, so we must be in a DbSearchConstraints leaf node
+        DbSearchConstraints c = node.getSearchConstraints();
+        assert(ntype == DbSearchConstraintsNode.NodeType.LEAF && c != null);
+        c.checkDates();
+
+        // if there are no possible matches, short-circuit here...
+        if (c.automaticEmptySet()) {
+            statement.append("FALSE");
+            return;
+        }
+
+        statement.append('(');
+
+        if (ListUtil.isEmpty(c.types))
+            statement.append("type NOT IN " + NON_SEARCHABLE_TYPES);
+        else
+            statement.append("type IN").append(DbUtil.suitableNumberOfVariables(c.types));
+        
+        if (!ListUtil.isEmpty(c.excludeTypes))
+            statement.append(" AND type NOT IN").append(DbUtil.suitableNumberOfVariables(c.excludeTypes));
+
+        // Determine the set of matching tags
+        TagConstraints tc = TagConstraints.getTagContraints(mailboxId, c, conn);
+        if (tc.noMatches)
+            statement.append(" AND FALSE");
+
+        if (c.hasTags != null)
+            statement.append(" AND tags ").append(c.hasTags.booleanValue() ? "!= 0" : "= 0");
+        if (tc.searchTagsets != null)
+            statement.append(" AND tags IN").append(DbUtil.suitableNumberOfVariables(tc.searchTagsets));
+        if (tc.searchFlagsets != null)
+            statement.append(" AND flags IN").append(DbUtil.suitableNumberOfVariables(tc.searchFlagsets));
+        if (tc.unread != null)
+            statement.append(" AND unread = ?");
+
+        Collection<Folder> targetFolders = (!ListUtil.isEmpty(c.folders)) ? c.folders : c.excludeFolders;
+        if (!ListUtil.isEmpty(targetFolders))
+            statement.append(" AND folder_id").append(targetFolders == c.folders ? "" : " NOT").append(" IN").append(DbUtil.suitableNumberOfVariables(targetFolders));
+
+        if (c.convId > 0)
+            statement.append(" AND parent_id = ?");
+        else if (!ListUtil.isEmpty(c.prohibitedConvIds))
+            statement.append(" AND parent_id NOT IN").append(DbUtil.suitableNumberOfVariables(c.prohibitedConvIds));
+
+        if (!ListUtil.isEmpty(c.itemIds))
+            statement.append(" AND id IN").append(DbUtil.suitableNumberOfVariables(c.itemIds));
+        if (!ListUtil.isEmpty(c.prohibitedItemIds))
+            statement.append(" AND id NOT IN").append(DbUtil.suitableNumberOfVariables(c.prohibitedItemIds));
+
+        if (!ListUtil.isEmpty(c.indexIds))
+            statement.append(" AND index_id IN").append(DbUtil.suitableNumberOfVariables(c.indexIds));
+
+        if (!ListUtil.isEmpty(c.dates))
+            encodeRanges(c.dates, "date", statement);
+        
+        if (!ListUtil.isEmpty(c.modified))
+            encodeRanges(c.modified, "mod_metadata", statement);
+
+        if (!ListUtil.isEmpty(c.sizes))
+            encodeRanges(c.sizes, "size", statement);
+
+        statement.append(')');
+    }
+
+    private static void encodeRanges(Collection<DbSearchConstraints.Range> ranges, String column, StringBuilder statement) {
+        for (DbSearchConstraints.Range r : ranges) {
+            statement.append(r.negated ? " AND NOT (" : " AND (");
+            if (r.lowest > 0)
+                statement.append(" " + column + " > ?");
+            if (r.highest > 0) {
+                if (r.lowest > 0)
+                    statement.append(" AND");
+                statement.append(" " + column + " < ?");
+            }
+            statement.append(')');
+        }
+    }
+
+    static class TagConstraints {
+        Set<Long> searchTagsets;
+        Set<Long> searchFlagsets;
+        Boolean unread;
+        boolean noMatches;
+
+        static TagConstraints getTagContraints(int mailboxId, DbSearchConstraints c, Connection conn) throws ServiceException {
+            TagConstraints tc = c.tagConstraints = new TagConstraints();
+            if (ListUtil.isEmpty(c.tags) && ListUtil.isEmpty(c.excludeTags))
+                return tc;
+
+            int setFlagMask = 0;
+            long setTagMask = 0;
+
+            if (!ListUtil.isEmpty(c.tags))
+                for (Tag curTag : c.tags)
+                    if (curTag.getId() == Flag.ID_FLAG_UNREAD) {
+                        tc.unread = Boolean.TRUE; 
+                    } else if (curTag instanceof Flag) {
+                        setFlagMask |= curTag.getBitmask();
+                    } else {
+                        setTagMask |= curTag.getBitmask();
+                    }
+
+            int flagMask = setFlagMask;
+            long tagMask = setTagMask;
+
+            if (!ListUtil.isEmpty(c.excludeTags))                 
+                for (Tag t : c.excludeTags) 
+                    if (t.getId() == Flag.ID_FLAG_UNREAD) {
+                        tc.unread = Boolean.FALSE;
+                    } else if (t instanceof Flag) {
+                        flagMask |= t.getBitmask();
+                    } else {
+                        tagMask |= t.getBitmask();
+                    }
+
+            TagsetCache tcFlags = getFlagsetCache(conn, mailboxId);
+            TagsetCache tcTags  = getTagsetCache(conn, mailboxId);
+            if (setTagMask != 0 || tagMask != 0) {
+                tc.searchTagsets = tcTags.getMatchingTagsets(tagMask, setTagMask);
+                // if no items match the specified tags...
+                if (tc.searchTagsets.size() == 0)
+                    tc.noMatches = true;
+            }
+            if (setFlagMask != 0 || flagMask != 0) {
+                tc.searchFlagsets = tcFlags.getMatchingTagsets(flagMask, setFlagMask);
+                // if no items match the specified flags...
+                if (tc.searchFlagsets.size() == 0)
+                    tc.noMatches = true;
+            }
+
+            return tc;
+        }
+    }
+
+    private static int setSearchVars(PreparedStatement stmt, DbSearchConstraintsNode node, int param) throws SQLException {
+        DbSearchConstraintsNode.NodeType ntype = node.getNodeType();
+        if (ntype == DbSearchConstraintsNode.NodeType.AND || ntype == DbSearchConstraintsNode.NodeType.OR) {
+            for (DbSearchConstraintsNode subnode : node.getSubNodes())
+                param = setSearchVars(stmt, subnode, param);
+            return param;
+        }
+
+        // we're here, so we must be in a DbSearchConstraints leaf node
+        DbSearchConstraints c = node.getSearchConstraints();
+        assert(ntype == DbSearchConstraintsNode.NodeType.LEAF && c != null);
+
+        // if there are no possible matches, short-circuit here...
+        if (c.automaticEmptySet())
+            return param;
+
+        if (!ListUtil.isEmpty(c.types))
+            for (byte type : c.types)
+                stmt.setByte(param++, type);
+        if (!ListUtil.isEmpty(c.excludeTypes))
+            for (byte type : c.excludeTypes)
+                stmt.setByte(param++, type); 
+        if (c.tagConstraints.searchTagsets != null)
+            for (long tagset : c.tagConstraints.searchTagsets)
+                stmt.setLong(param++, tagset);
+        if (c.tagConstraints.searchFlagsets != null)
+            for (long flagset : c.tagConstraints.searchFlagsets)
+                stmt.setLong(param++, flagset);
+        if (c.tagConstraints.unread != null)
+            stmt.setBoolean(param++, c.tagConstraints.unread);
+        Collection<Folder> targetFolders = (!ListUtil.isEmpty(c.folders)) ? c.folders : c.excludeFolders;
+        if (targetFolders != null)
+            for (Folder folder : targetFolders)
+                stmt.setInt(param++, folder.getId());
+        if (c.convId > 0)
+            stmt.setInt(param++, c.convId);
+        else if (!ListUtil.isEmpty(c.prohibitedConvIds))
+            for (int id : c.prohibitedConvIds)
+                stmt.setInt(param++, id);
+        if (!ListUtil.isEmpty(c.itemIds))
+            for (int id : c.itemIds)
+                stmt.setInt(param++, id);
+        if (!ListUtil.isEmpty(c.prohibitedItemIds))
+            for (int id : c.prohibitedItemIds)
+                stmt.setInt(param++, id);
+        if (!ListUtil.isEmpty(c.indexIds))
+            for (int id : c.indexIds)
+                stmt.setInt(param++, id);
+        if (!ListUtil.isEmpty(c.dates))
+            for (DbSearchConstraints.Range date : c.dates) {
+                if (date.lowest > 0)
+                    stmt.setInt(param++, (int) Math.min(date.lowest / 1000, Integer.MAX_VALUE));
+                if (date.highest > 0)
+                    stmt.setInt(param++, (int) Math.min(date.highest / 1000, Integer.MAX_VALUE));
+            }
+        if (!ListUtil.isEmpty(c.sizes))
+            for (DbSearchConstraints.Range size : c.sizes) {
+                if (size.lowest >= 0)
+                    stmt.setInt(param++, (int) size.lowest);
+                if (size.highest >= 0)
+                    stmt.setInt(param++, (int) size.highest);
+            }
+        if (!ListUtil.isEmpty(c.modified)) 
+            for (DbSearchConstraints.Range modified : c.modified) {
+                if (modified.lowest > 0)
+                    stmt.setLong(param++, modified.lowest);
+                if (modified.highest > 0)
+                    stmt.setLong(param++, modified.highest);
+            }
+
+        return param;
     }
 
     public static List<SearchResult> listByFolder(Folder folder, byte type) throws ServiceException {
@@ -2136,7 +2143,7 @@ public class DbMailItem {
         }
     }
 
-    private static TagsetCache getTagsetCache(Connection conn, int mailboxId)
+    static TagsetCache getTagsetCache(Connection conn, int mailboxId)
     throws ServiceException {
         Integer id = new Integer(mailboxId);
         TagsetCache tagsets = null;
@@ -2152,12 +2159,12 @@ public class DbMailItem {
             ZimbraLog.cache.info("Loading tagset cache");
             tagsets = new TagsetCache("Mailbox " + mailboxId + " tags");
             tagsets.addTagsets(DbMailbox.getDistinctTagsets(conn, mailboxId));
+
+            synchronized (sTagsetCache) {
+                sTagsetCache.put(id, tagsets);
+            }
         }
-        
-        synchronized (sTagsetCache) {
-            sTagsetCache.put(id, tagsets);
-        }
-        
+
         return tagsets;
     }
 
@@ -2167,7 +2174,7 @@ public class DbMailItem {
         }
     }
 
-    private static TagsetCache getFlagsetCache(Connection conn, int mailboxId)
+    static TagsetCache getFlagsetCache(Connection conn, int mailboxId)
     throws ServiceException {
         Integer id = new Integer(mailboxId);
         TagsetCache flagsets = null;
@@ -2183,12 +2190,39 @@ public class DbMailItem {
             ZimbraLog.cache.info("Loading tagset cache");
             flagsets = new TagsetCache("Mailbox " + mailboxId + " flags");
             flagsets.addTagsets(DbMailbox.getDistinctFlagsets(conn, mailboxId));
-        }
-        
-        synchronized (sFlagsetCache) {
-            sFlagsetCache.put(id, flagsets);
+
+            synchronized (sFlagsetCache) {
+                sFlagsetCache.put(id, flagsets);
+            }
         }
         
         return flagsets;
+    }
+
+    public static void main(String[] args) throws ServiceException {
+        Mailbox mbox = Mailbox.getMailboxById(1);
+
+        DbSearchConstraints hasTags = new DbSearchConstraints();
+        hasTags.hasTags = true;
+
+        DbSearchConstraints inTrash = new DbSearchConstraints();
+        Set<Folder> folders = new HashSet<Folder>();  folders.add(mbox.getFolderById(null, Mailbox.ID_FOLDER_TRASH));
+        inTrash.folders = folders;
+
+        DbSearchConstraints isUnread = new DbSearchConstraints();
+        Set<Tag> tags = new HashSet<Tag>();  tags.add(mbox.mUnreadFlag);
+        isUnread.tags = tags;
+
+        DbSearchConstraintsInnerNode orClause = DbSearchConstraintsInnerNode.OR();
+        orClause.addSubNode(hasTags);
+        DbSearchConstraintsInnerNode andClause = DbSearchConstraintsInnerNode.AND();
+        andClause.addSubNode(inTrash);
+        andClause.addSubNode(isUnread);
+        orClause.addSubNode(andClause);
+
+        // "is:unread" (first 5 results)
+        System.out.println(search(new ArrayList<SearchResult>(), DbPool.getConnection(), isUnread, 1, DEFAULT_SORT_ORDER, 0, 5, false));
+        // "has:tags or (in:trash is:unread)" (first 5 results)
+        System.out.println(search(new ArrayList<SearchResult>(), DbPool.getConnection(), orClause, 1, DEFAULT_SORT_ORDER, 0, 5, false));
     }
 }
