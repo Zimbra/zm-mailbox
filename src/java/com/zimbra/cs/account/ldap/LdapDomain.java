@@ -156,8 +156,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
             SearchGalResult ldapResults = searchLdapGal(n, maxResults/2, tokens[1]);
             if (ldapResults != null) {
                 results.matches.addAll(ldapResults.matches);
-                if (results.token != null)
-                    results.token = results.token + ":" + ldapResults.token;
+                results.token = LdapUtil.getLaterTimestamp(results.token, ldapResults.token);
             }
         } else {
             results = searchZimbraGal(n, maxResults, token);
@@ -176,9 +175,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
             }
             if (resourceResults != null) {
                 results.matches.addAll(resourceResults.matches);
-                if (results.token != null && resourceResults.token != null)
-                    results.token =
-                        results.token + ":" + resourceResults.token;
+                results.token = LdapUtil.getLaterTimestamp(results.token, resourceResults.token);
             }
         }
 
@@ -278,7 +275,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
 
         SearchControls sc = new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, galAttrList, true, false);
 
-        result.token = null;
+        result.token = token != null ? token : LdapUtil.EARLIEST_SYNC_TOKEN;
         DirContext ctxt = null;
         NamingEnumeration ne = null;
         try {
@@ -291,9 +288,9 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
                 String dn = sr.getNameInNamespace();
                 LdapGalContact lgc = new LdapGalContact(dn, sr.getAttributes(), galAttrList, galAttrMap);
                 String mts = (String) lgc.getAttrs().get("modifyTimeStamp");
-                if (result.token == null || (mts !=null && (mts.compareTo(result.token) > 0))) result.token = mts;                    
-                String cts = (String) lgc.getAttrs().get("createTimeStamp");                    
-                if (result.token == null || (cts !=null && (cts.compareTo(result.token) > 0))) result.token = cts;                    
+                result.token = LdapUtil.getLaterTimestamp(result.token, mts);
+                String cts = (String) lgc.getAttrs().get("createTimeStamp");
+                result.token = LdapUtil.getLaterTimestamp(result.token, cts);
                 result.matches.add(lgc);
             }
             ne.close();
