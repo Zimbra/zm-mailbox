@@ -48,7 +48,6 @@ import javax.naming.directory.Attributes;
 import javax.naming.directory.BasicAttribute;
 import javax.naming.directory.BasicAttributes;
 import javax.naming.directory.DirContext;
-import javax.naming.directory.InitialDirContext;
 import javax.naming.directory.ModificationItem;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
@@ -70,6 +69,8 @@ public class LdapUtil {
         
     public final static String LDAP_TRUE  = "TRUE";
     public final static String LDAP_FALSE = "FALSE";
+
+    final static String EARLIEST_SYNC_TOKEN = "19700101000000Z";
 
     private static int SALT_LEN = 4; // to match LDAP SSHA password encoding
     private static String ENCODING = "{SSHA}";
@@ -814,7 +815,7 @@ public class LdapUtil {
         }
         ZimbraLog.misc.debug("searchLdapGal query:"+query);
         SearchControls sc = new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, galAttrList, false, false);
-        result.token = null;        
+        result.token = token != null ? token : EARLIEST_SYNC_TOKEN;
         DirContext ctxt = null;
         try {
             ctxt = getDirContext(url, bindDn, bindPassword);
@@ -824,7 +825,7 @@ public class LdapUtil {
                 String dn = sr.getNameInNamespace();
                 LdapGalContact lgc = new LdapGalContact(dn, sr.getAttributes(), galAttrList, galAttrMap); 
                 String mts = (String) lgc.getAttrs().get("modifyTimeStamp");
-                if (result.token == null || (mts !=null && (mts.compareTo(result.token) > 0))) result.token = mts;
+                result.token = getLaterTimestamp(result.token, mts);
                 result.matches.add(lgc);
             }
             ne.close();
@@ -862,5 +863,22 @@ public class LdapUtil {
             }
         }
     }
-    
+
+    /**
+     * Return the later (more recent) of two LDAP timestamps.  Timestamp
+     * format is YYYYMMDDhhmmssZ. (e.g. 20060315023000Z)
+     * @param timeA
+     * @param timeB
+     * @return later of the two timestamps; a non-null timestamp is considered
+     *         later than a null timestamp; null is returned if both timestamps
+     *         are null
+     */
+    public static String getLaterTimestamp(String timeA, String timeB) {
+        if (timeA == null) {
+            return timeB;
+        } else if (timeB == null) {
+            return null;
+        }
+        return timeA.compareTo(timeB) > 0 ? timeA : timeB;
+    }
 }
