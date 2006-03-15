@@ -25,6 +25,12 @@
 
 package com.zimbra.cs.mailbox.calendar;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -34,8 +40,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import javax.activation.DataHandler;
+import javax.activation.DataSource;
 import javax.mail.Address;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
@@ -261,6 +269,12 @@ public class CalendarMailSender {
                                     // "text/plain"
             mmp.addBodyPart(textPart);
 
+            // HTML part is needed to keep Outlook happy as it doesn't know
+            // how to deal with a message with only text/plain but no HTML.
+            MimeBodyPart htmlPart = new MimeBodyPart();
+            htmlPart.setDataHandler(new DataHandler(new HtmlDataSource(text)));
+            mmp.addBodyPart(htmlPart);
+
             // ///////
             // CALENDAR part
             MimeBodyPart icalPart = makeICalIntoMimePart(uid, cal);
@@ -415,5 +429,54 @@ public class CalendarMailSender {
                 null, null, inv.getMailItemId(),
                 replyType, false);
         return replyMsgId;
+    }
+
+    private static class HtmlDataSource implements DataSource {
+        private static final String CONTENT_TYPE = "text/html";
+        private static final String HEAD = "<html><body><pre>";
+        private static final String TAIL = "</pre></body></html>\n";
+        private static final String NAME = "HtmlDataSource";
+
+        private String mText;
+        private byte[] mBuf = null;
+
+        public HtmlDataSource(String text) {
+            mText = text;
+            //mText = Pattern.compile("&", Pattern.MULTILINE).matcher(mText).replaceAll("&amp;");
+            //mText = Pattern.compile("<", Pattern.MULTILINE).matcher(mText).replaceAll("&lt;");
+            //mText = Pattern.compile(">", Pattern.MULTILINE).matcher(mText).replaceAll("&gt;");
+            mText = mText.replaceAll("&", "&amp;");
+            mText = mText.replaceAll("<", "&lt;");
+            mText = mText.replaceAll(">", "&gt;");
+        }
+
+        public String getContentType() {
+            return CONTENT_TYPE;
+        }
+
+        public InputStream getInputStream() throws IOException {
+            synchronized(this) {
+                if (mBuf == null) {
+                    ByteArrayOutputStream buf = new ByteArrayOutputStream();
+                    OutputStreamWriter wout = new OutputStreamWriter(buf);
+                    wout.write(HEAD);
+                    wout.write(mText);
+                    wout.write(TAIL);
+                    wout.flush();
+                    mBuf = buf.toByteArray();
+                }
+            }
+            ByteArrayInputStream in = new ByteArrayInputStream(mBuf);
+            return in;
+        }
+
+        public String getName() {
+            return NAME;
+        }
+
+        public OutputStream getOutputStream() throws IOException {
+            throw new UnsupportedOperationException();
+        }
+        
     }
 }
