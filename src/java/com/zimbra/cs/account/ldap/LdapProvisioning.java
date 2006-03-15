@@ -37,7 +37,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -1711,11 +1710,21 @@ public class LdapProvisioning extends Provisioning {
     }
 
     public List getAllServers() throws ServiceException {
+        return getAllServers(null);
+    }
+    
+    public List getAllServers(String service) throws ServiceException {
         List result = new ArrayList();
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
-            NamingEnumeration ne = ctxt.search(SERVER_BASE, "(objectclass=zimbraServer)", sSubtreeSC);
+            String filter = "(objectclass=zimbraServer)";
+            if (service != null) {
+                filter = "(&(objectclass=zimbraServer)(zimbraServiceEnabled=" + LdapUtil.escapeSearchFilterArg(service) + "))";
+            } else {
+                filter = "(objectclass=zimbraServer)";
+            }
+            NamingEnumeration ne = ctxt.search(SERVER_BASE, filter, sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 LdapServer s = new LdapServer(sr.getNameInNamespace(), sr.getAttributes(), this);

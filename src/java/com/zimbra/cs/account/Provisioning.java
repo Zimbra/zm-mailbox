@@ -996,6 +996,8 @@ public abstract class Provisioning {
     public abstract Server getServerByName(String name, boolean reload) throws ServiceException;
 
     public abstract List getAllServers()  throws ServiceException;
+
+    public abstract List getAllServers(String service)  throws ServiceException;
     
     public abstract void deleteServer(String zimbraId) throws ServiceException;
 
