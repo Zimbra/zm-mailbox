@@ -42,7 +42,6 @@ import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.wiki.Wiki;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraContext;
 
 public class SaveDocument extends WikiDocumentHandler {
@@ -60,7 +59,7 @@ public class SaveDocument extends WikiDocumentHandler {
 		try {
 	        MimePart mp = Mime.getMimePart(mm, part);
 			doc.contents = ByteUtil.getContent(mp.getInputStream(), 0);
-			doc.name = mp.getFileName();
+			doc.name = Mime.getFilename(mp);
 			doc.contentType = mp.getContentType();
 		} catch (Exception e) {
 			throw ServiceException.FAILURE("cannot get part "+part+" from message "+msgid, e);
@@ -92,8 +91,7 @@ public class SaveDocument extends WikiDocumentHandler {
     }
 
 	@Override
-	public Element handle(Element request, Map context)
-			throws ServiceException, SoapFaultException {
+	public Element handle(Element request, Map context) throws ServiceException {
         ZimbraContext lc = getZimbraContext(context);
         Wiki wiki = getRequestedWiki(request, lc);
 

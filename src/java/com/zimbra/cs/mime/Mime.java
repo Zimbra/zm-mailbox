@@ -34,9 +34,12 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.activation.DataSource;
@@ -52,6 +55,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimePart;
+import javax.mail.internet.MimeUtility;
 import javax.mail.internet.ParseException;
 
 import org.apache.commons.logging.Log;
@@ -167,7 +171,7 @@ public class Mime {
         String disp = null, filename = null;
         try {
             disp = mp.getDisposition();
-            filename = mp.getFileName();
+            filename = Mime.getFilename(mp);
         } catch (ParseException pe) { }
 
         // the top-level part of a non-multipart message is numbered "1"
@@ -484,13 +488,9 @@ public class Mime {
         }
     }
 
-    static RecipientType[] sRcptTypes;
-    static {
-        sRcptTypes = new RecipientType[3];
-        sRcptTypes[0] = RecipientType.TO;
-        sRcptTypes[1] = RecipientType.CC;
-        sRcptTypes[2] = RecipientType.BCC;
-    }
+    static RecipientType[] sRcptTypes = new RecipientType[] {
+        RecipientType.TO, RecipientType.CC, RecipientType.BCC
+    };
 
     /**
      * Remove all email addresses in rcpts from To/Cc/Bcc headers of a
@@ -625,7 +625,7 @@ public class Mime {
             reader = new InputStreamReader(input);
         return reader;
     }
-     
+
     public static String getCharset(String contentType) {
         ContentType ct;
         try {
@@ -643,7 +643,211 @@ public class Mime {
             charset = Mime.P_CHARSET_DEFAULT;
         return charset;
     }
-     
+
+    public static String getFilename(MimePart mp) throws MessagingException {
+        String name = mp.getFileName();
+
+        // catch (legal, but uncommon) RFC 2231 encoded filenames
+        try {
+            String cd = mp.getHeader("Content-Disposition", null);
+            if (cd != null && cd.indexOf('*') != -1) {
+                // catch things like filename*=UTF-8''%E3%82%BD%E3%83%AB%E3%83%86%E3%82%A3.rtf
+                Map<String, String> cdattrs = decodeRFC2231(cd);
+                if (cdattrs != null && cdattrs.containsKey("filename"))
+                    name = cdattrs.get("filename");
+            }
+        } catch (MessagingException me) { }
+
+        if (name == null)
+            return null;
+
+        // catch (illegal, but common) RFC 2047 encoded-words
+        if (name.indexOf("=?") != -1 && name.indexOf("?=") != -1)
+            try {
+                return MimeUtility.decodeText(name);
+            } catch (UnsupportedEncodingException uee) { }
+
+        // catch (illegal, but less common) character entities
+        if (name.indexOf("&#") != -1 && name.indexOf(';') != -1)
+            return expandNumericCharacterReferences(name);
+
+        return name;
+    }
+
+    public static String expandNumericCharacterReferences(String raw) {
+        if (raw == null)
+            return null;
+
+        int start = -1;
+        boolean hex = false;
+        int calc = 0;
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0, len = raw.length(); i < len; i++) {
+            char c = raw.charAt(i);
+            if (start != -1) {
+                if (c >= '0' && c <= '9') {
+                    calc = calc * (hex ? 16 : 10) + c - '0';
+                } else if (hex && c >= 'a' && c <= 'f') {
+                    calc = calc * 16 + 10 + c - 'a';
+                } else if (hex && c >= 'A' && c <= 'F') {
+                    calc = calc * 16 + 10 + c - 'A';
+                } else if (c == ';' && i > start + (hex ? 4 : 3)) {
+                    sb.append((char) calc);  start = -1;
+                } else {
+                    sb.append(raw.substring(start, i--));  start = -1;
+                }
+            } else if (c == '&' && i < len - 3 && raw.charAt(i + 1) == '#') {
+                hex = raw.charAt(i + 2) == 'x' || raw.charAt(i + 2) == 'X';
+                start = i;
+                i += hex ? 2 : 1;
+                calc = 0;
+            } else {
+                sb.append(c);
+            }
+        }
+        if (start != -1)
+            sb.append(raw.substring(start));
+
+        return sb.toString();
+    }
+
+    private enum RFC2231State { PARAM, CONTINUED, EXTENDED, EQUALS, CHARSET, LANG, VALUE, QVALUE, SLOP };
+
+    private static class RFC2231Data {
+        RFC2231State state = RFC2231State.EQUALS;
+        StringBuilder key = null;
+        StringBuilder value = new StringBuilder();
+        boolean continued = false;
+        boolean encoded = false;
+        StringBuilder charset = null;
+
+        void setState(RFC2231State newstate) {
+            state = newstate;
+            if (newstate == RFC2231State.PARAM) {
+                key = new StringBuilder();  value = new StringBuilder();
+                continued = false;  encoded = false;
+            }
+        }
+
+        void setContinued()  { continued = true; }
+        void setEncoded() {
+            encoded = true;
+            if (!continued)
+                charset = new StringBuilder();
+        }
+
+        void addCharsetChar(char c)  { charset.append(c); }
+        void addKeyChar(char c)      { key.append(c); }
+        void addValueChar(char c)    { value.append(c); }
+
+        void saveToMap(Map<String, String> attrs) {
+            if (value == null)
+                return;
+            String pname = key == null ? null : key.toString().toLowerCase();
+            String pvalue = value.toString();
+            if ("".equals(pname) && "".equals(pvalue))
+                return;
+            if (encoded) {
+                if (charset.equals(""))
+                    charset.append("us-ascii");
+                try {
+                    pvalue = URLDecoder.decode(pvalue, charset.toString());
+                } catch (UnsupportedEncodingException uee) { 
+                    System.out.println(uee);
+                }
+            }
+            String existing = continued ? attrs.get(pname) : null;
+            attrs.put(pname, existing == null ? pvalue : existing + pvalue);
+            key = null;  value = null;
+        }
+    }
+
+    private static Map<String, String> decodeRFC2231(String header) {
+        if (header == null)
+            return null;
+        header = header.trim();
+
+        RFC2231Data rfc2231 = new RFC2231Data();
+        Map<String, String> attrs = new HashMap<String, String>();
+        boolean escaped = false;
+
+        for (int i = 0, count = header.length(); i < count; i++) {
+            char c = header.charAt(i);
+            if (rfc2231.state == RFC2231State.SLOP) {
+                if (c == ';' || c == '\n' || c == '\r')
+                    rfc2231.setState(RFC2231State.PARAM);
+            } else if (c == '\r' || c == '\n') {
+                if (!attrs.isEmpty() || rfc2231.value.length() > 0) {
+                    rfc2231.saveToMap(attrs);
+                    rfc2231.setState(RFC2231State.PARAM);
+                }
+                // otherwise, it's just folding and we can effectively just ignore the CR/LF
+            } else if (rfc2231.state == RFC2231State.PARAM) {
+                if (c == '=')
+                    rfc2231.setState(RFC2231State.EQUALS);
+                else if (c == '*')
+                    rfc2231.setState(RFC2231State.EXTENDED);
+                else if (c != ' ' && c != '\t')
+                    rfc2231.addKeyChar(c);
+            } else if (rfc2231.state == RFC2231State.VALUE) {
+                if (c != ';' && c != ' ' && c != '\t') {
+                    rfc2231.addValueChar(c);
+                } else {
+                    rfc2231.saveToMap(attrs);
+                    rfc2231.setState(c == ';' ? RFC2231State.PARAM : RFC2231State.SLOP);
+                }
+            } else if (rfc2231.state == RFC2231State.QVALUE) {
+                if (!escaped && c == '\\') {
+                    escaped = true;
+                } else if (escaped || c != '"') {
+                    rfc2231.addValueChar(c);  escaped = false;
+                } else {
+                    rfc2231.saveToMap(attrs);
+                    rfc2231.setState(RFC2231State.SLOP);
+                }
+            } else if (rfc2231.state == RFC2231State.EQUALS) {
+                if (c == ';') {
+                    rfc2231.saveToMap(attrs);
+                    rfc2231.setState(RFC2231State.PARAM);
+                } if (c == '"') {
+                    escaped = false;
+                    rfc2231.setState(RFC2231State.QVALUE);
+                } else {
+                    rfc2231.addValueChar(c);
+                    rfc2231.setState(RFC2231State.VALUE);
+                }
+            } else if (rfc2231.state == RFC2231State.EXTENDED) {
+                if (c >= '0' && c <= '9') {
+                    if (c != '0')
+                        rfc2231.setContinued();
+                    rfc2231.setState(RFC2231State.CONTINUED);
+                } else if (c == '=') {
+                    rfc2231.setEncoded();
+                    rfc2231.setState(rfc2231.continued ? RFC2231State.VALUE : RFC2231State.CHARSET);
+                }
+            } else if (rfc2231.state == RFC2231State.CONTINUED) {
+                if (c == '=')
+                    rfc2231.setState(RFC2231State.EQUALS);
+                else if (c == '*')
+                    rfc2231.setState(RFC2231State.EXTENDED);
+                else if (c >= '0' && c <= '9')
+                    rfc2231.setContinued();
+            } else if (rfc2231.state == RFC2231State.CHARSET) {
+                if (c == '\'')
+                    rfc2231.setState(RFC2231State.LANG);
+                else
+                    rfc2231.addCharsetChar(c);
+            } else if (rfc2231.state == RFC2231State.LANG) {
+                if (c == '\'')
+                    rfc2231.setState(RFC2231State.VALUE);
+            }
+        }
+
+        rfc2231.saveToMap(attrs);
+        return attrs;
+    }
+
     public static MPartInfo getBody(List parts, boolean preferHtml) {
      	if (parts.isEmpty())
      		return null;
@@ -694,5 +898,17 @@ public class Mime {
             }
         }
         return alternative;
+    }
+
+    public static void main(String[] args) throws UnsupportedEncodingException {
+        String s = URLDecoder.decode("Zimbra%20&#26085;&#26412;&#35486;&#21270;&#12398;&#32771;&#24942;&#28857;.txt", "utf-8");
+        System.out.println(s);
+        System.out.println(expandNumericCharacterReferences("Zimbra%20&#26085;&#26412;&#35486;&#21270;&#12398;&#32771;&#24942;&#28857;.txt&#x40;&;&#;&#x;&#&#3876;&#55"));
+
+        System.out.println(decodeRFC2231("   \n  attachment;\n filename*=UTF-8''%E3%82%BD%E3%83%AB%E3%83%86%E3%82%A3%E3%83%AC%E3%82%A4.rtf\n  \n "));
+        System.out.println(decodeRFC2231("application/x-stuff; title*0*=us-ascii'en'This%20is%20even%20more%20; title*1*=%2A%2A%2Afun%2A%2A%2A%20; title*2=\"isn't it!\"\n"));
+        System.out.println(decodeRFC2231("multipart/mixed; charset=us-ascii;\n foo=\n  boundary=\"---\" \n"));
+        System.out.println(decodeRFC2231("message/external-body; access-type=URL;\n URL*0=\"ftp://\";\n URL*1=\"cs.utk.edu/pub/moore/bulk-mailer/bulk-mailer.tar\"\n"));
+        System.out.println(decodeRFC2231("application/x-stuff;\n\ttitle*=us-ascii'en-us'This%20is%20%2A%2A%2Afun%2A%2A%2A"));
     }
 }

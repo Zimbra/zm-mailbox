@@ -32,6 +32,7 @@ import javax.mail.Part;
 import javax.mail.internet.ContentDisposition;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Appointment;
@@ -42,6 +43,8 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.cs.util.HttpUtil;
+import com.zimbra.cs.util.StringUtil;
 
 public class SyncFormatter extends Formatter {
 
@@ -121,7 +124,7 @@ public class SyncFormatter extends Formatter {
             if (contentType == null) {
                 contentType = Mime.CT_APPLICATION_OCTET_STREAM;
             }
-            sendbackOriginalDoc(mp, contentType, context.resp);
+            sendbackOriginalDoc(mp, contentType, context.req, context.resp);
             return;
         }
         context.resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "part not found");
@@ -135,13 +138,12 @@ public class SyncFormatter extends Formatter {
         return Mime.getMimePart(msg.getMimeMessage(), part);
     }
 
-    public static void sendbackOriginalDoc(MimePart mp, String contentType, HttpServletResponse resp) throws IOException, MessagingException {
-        ContentDisposition cd = new ContentDisposition(Part.INLINE);
-        String filename = mp.getFileName();
+    public static void sendbackOriginalDoc(MimePart mp, String contentType, HttpServletRequest req, HttpServletResponse resp) throws IOException, MessagingException {
+        String filename = Mime.getFilename(mp);
         if (filename == null)
             filename = "unknown";
-        cd.setParameter("filename", filename);
-        resp.addHeader("Content-Disposition", cd.toString());
+        String cd = Part.INLINE + "; filename=" + HttpUtil.encodeFilename(req, filename);
+        resp.addHeader("Content-Disposition", cd);
         String desc = mp.getDescription();
         if (desc != null)
             resp.addHeader("Content-Description", desc);

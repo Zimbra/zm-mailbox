@@ -101,9 +101,9 @@ public class TestConversion extends TestCase {
             return mFound;
         }
         
-        public void visitBodyPart(MimeBodyPart bp)
-        throws MessagingException {
-            if (bp.getFileName() != null && bp.getFileName().equals(mFilename)) {
+        public void visitBodyPart(MimeBodyPart bp) throws MessagingException {
+            String filename = Mime.getFilename(bp);
+            if (filename != null && filename.equals(mFilename)) {
                 mFound = true;
             }
         }

@@ -523,8 +523,9 @@ public class ParseMimeMessage {
         mbp.setHeader("Content-Type", type == null ? Mime.CT_APPLICATION_OCTET_STREAM : type);
 
         ContentDisposition cd = new ContentDisposition(Part.ATTACHMENT);
-        if (mp.getFileName() != null)
-            cd.setParameter("filename", mp.getFileName());
+        String filename = Mime.getFilename(mp);
+        if (filename != null)
+            cd.setParameter("filename", filename);
         mbp.setHeader("Content-Disposition", cd.toString());
 
         String desc = mp.getDescription();
@@ -546,8 +547,9 @@ public class ParseMimeMessage {
         mbp.setHeader("Content-Type", type == null ? Mime.CT_APPLICATION_OCTET_STREAM : type);
 
         ContentDisposition cd = new ContentDisposition(Part.ATTACHMENT);
-        if (mp.getFileName() != null)
-            cd.setParameter("filename", mp.getFileName());
+        String filename = Mime.getFilename(mp);
+        if (filename != null)
+            cd.setParameter("filename", filename);
         mbp.setHeader("Content-Disposition", cd.toString());
 
         String desc = mp.getDescription();
@@ -579,10 +581,10 @@ public class ParseMimeMessage {
             if (content == null)
                 addrs.put(addressType, addr);
             else if (content instanceof List)
-                ((List) content).add(addr);
+                ((List<InternetAddress>) content).add(addr);
             else {
-                ArrayList list = new ArrayList();
-                list.add(content);
+                ArrayList<InternetAddress> list = new ArrayList<InternetAddress>();
+                list.add((InternetAddress) content);
                 list.add(addr);
                 addrs.put(addressType, list);
             }
