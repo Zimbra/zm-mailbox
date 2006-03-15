@@ -63,7 +63,18 @@ public class StringUtil {
 		}
 		return sb.toString();
 	}
-    
+
+    public static boolean isAsciiString(String str) {
+        if (str == null)
+            return false;
+        for (int i = 0, len = str.length(); i < len; i++) {
+            char c = str.charAt(i);
+            if ((c < 0x20 || c >= 0x7F) && c != '\r' && c != '\n' && c != '\t')
+                return false;
+        }
+        return true;
+    }
+
     /**
      * add the name/value mapping to the map. If an entry doesn't exist, value remains
      * a String. If an entry already exists as a String, convert to String[] and add new
