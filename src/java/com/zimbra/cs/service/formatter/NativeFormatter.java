@@ -29,11 +29,11 @@ import java.io.InputStream;
 
 import javax.mail.MessagingException;
 import javax.mail.Part;
-import javax.mail.internet.ContentDisposition;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.cs.account.Provisioning;
@@ -46,6 +46,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.cs.util.HttpUtil;
 import com.zimbra.cs.util.ZimbraLog;
 
 public class NativeFormatter extends Formatter {
@@ -113,17 +114,15 @@ public class NativeFormatter extends Formatter {
             context.resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "part not found");
         } else {
             String contentType = mp.getContentType();
-            if (contentType == null) {
+            if (contentType == null)
                 contentType = Mime.CT_APPLICATION_OCTET_STREAM;
-            }
             boolean html = checkGlobalOverride(Provisioning.A_zimbraAttachmentsViewInHtmlOnly, context.authAccount) ||
                             (context.hasView() && context.getView().equals("html"));
             ZimbraLog.mailbox.info("view = "+context.getView());
             ZimbraLog.mailbox.info("html = "+html);
-            
 
             if (!html) {
-                sendbackOriginalDoc(mp, contentType, context.resp);
+                sendbackOriginalDoc(mp, contentType, context.req, context.resp);
             } else {
                 context.req.setAttribute(ATTR_MIMEPART, mp);
                 context.req.setAttribute(ATTR_MSGDIGEST, item.getDigest());
@@ -131,7 +130,7 @@ public class NativeFormatter extends Formatter {
                 RequestDispatcher dispatcher = context.req.getRequestDispatcher(CONVERSION_PATH);
                 dispatcher.forward(context.req, context.resp);
             }
-//            sendbackOriginalDoc(mp, contentType, context.resp);
+//            sendbackOriginalDoc(mp, contentType, context.req, context.resp);
             return;
         }
     }
@@ -144,13 +143,12 @@ public class NativeFormatter extends Formatter {
         return Mime.getMimePart(msg.getMimeMessage(), part);
     }
 
-    public static void sendbackOriginalDoc(MimePart mp, String contentType, HttpServletResponse resp) throws IOException, MessagingException {
-        ContentDisposition cd = new ContentDisposition(Part.INLINE);
-        String filename = mp.getFileName();
+    public static void sendbackOriginalDoc(MimePart mp, String contentType, HttpServletRequest req, HttpServletResponse resp) throws IOException, MessagingException {
+        String filename = Mime.getFilename(mp);
         if (filename == null)
             filename = "unknown";
-        cd.setParameter("filename", filename);
-        resp.addHeader("Content-Disposition", cd.toString());
+        String cd = Part.INLINE + "; filename=" + HttpUtil.encodeFilename(req, filename);
+        resp.addHeader("Content-Disposition", cd);
         String desc = mp.getDescription();
         if (desc != null)
             resp.addHeader("Content-Description", desc);

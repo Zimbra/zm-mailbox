@@ -1099,7 +1099,7 @@ public class ToXML {
         
         // figure out attachment name
         try {
-            String fname = mp.getFileName();
+            String fname = Mime.getFilename(mp);
             if (fname == null && Mime.CT_MESSAGE_RFC822.equals(contentTypeString)) {
                 // "filename" for attached messages is the Subject
                 Object content = Mime.getMessageContent(mp);

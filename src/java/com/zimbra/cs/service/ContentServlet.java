@@ -58,6 +58,7 @@ import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.util.*;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.cs.util.HttpUtil;
 import com.zimbra.cs.util.ZimbraLog;
 
 /**
@@ -211,7 +212,7 @@ public class ContentServlet extends ZimbraServlet {
                             sendbackDefangedHtml(mp, contentType, resp, fmt);
                         } else {
                             if (!isTrue(Provisioning.A_zimbraAttachmentsViewInHtmlOnly, mbox.getAccountId())) {
-                                sendbackOriginalDoc(mp, contentType, resp);
+                                sendbackOriginalDoc(mp, contentType, req, resp);
                             } else {
                                 req.setAttribute(ATTR_MIMEPART, mp);
                                 req.setAttribute(ATTR_MSGDIGEST, item.getDigest());
@@ -305,14 +306,13 @@ public class ContentServlet extends ZimbraServlet {
         return Mime.getMimePart(msg.getMimeMessage(), part);
     }
     
-    public static void sendbackOriginalDoc(MimePart mp, String contentType, HttpServletResponse resp) 
+    public static void sendbackOriginalDoc(MimePart mp, String contentType, HttpServletRequest req, HttpServletResponse resp)
     throws IOException, MessagingException {
-        ContentDisposition cd = new ContentDisposition(Part.INLINE);
-        String filename = mp.getFileName();
+        String filename = Mime.getFilename(mp);
         if (filename == null)
             filename = "unknown";
-        cd.setParameter("filename", filename);
-        resp.addHeader("Content-Disposition", cd.toString());
+        String cd = Part.INLINE + "; filename=" + HttpUtil.encodeFilename(req, filename);
+        resp.addHeader("Content-Disposition", cd);
         String desc = mp.getDescription();
         if (desc != null)
             resp.addHeader("Content-Description", desc);
