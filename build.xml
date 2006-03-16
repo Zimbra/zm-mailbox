@@ -609,11 +609,12 @@
 			<arg line="mcf zimbraSpamIsNotSpamAccount ham-sink@${zimbra.server.hostname}" />
 		</java>
 
-		<echo>Creating calendar resource: room1@${zimbra.server.hostname}</echo>
+		<echo>Creating calendar resource: room-mississippi@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="ccr room1@${zimbra.server.hostname}
-				       displayName 'Conference Room One'
-					   zimbraNotes 'has TV and VCR'
+			<arg line="ccr room-mississippi@${zimbra.server.hostname}
+				       displayName 'Mississippi Conference Room'
+					   description 'Projector, DVD'
+					   zimbraNotes 'The door squeaks.'
 				       zimbraCalResType Location
 					   zimbraCalResAutoAcceptDecline TRUE
 					   zimbraCalResAutoDeclineIfBusy TRUE
@@ -635,11 +636,12 @@
 				       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana'
 				       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}"/>
 		</java>
-		<echo>Creating calendar resource: room2@${zimbra.server.hostname}</echo>
+		<echo>Creating calendar resource: room-amazon@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="ccr room2@${zimbra.server.hostname}
-				       displayName 'Conference Room Two'
-				       zimbraNotes 'This room lacks air conditioning; room is always available'
+			<arg line="ccr room-amazon@${zimbra.server.hostname}
+				       displayName 'Amazon Conference Room'
+					   description 'TV, VCR; room is always available'
+				       zimbraNotes 'A/C not working well'
 				       zimbraCalResType Location
 					   zimbraCalResAutoAcceptDecline TRUE
 					   zimbraCalResAutoDeclineIfBusy FALSE
@@ -656,11 +658,12 @@
 				       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana'
 				       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}"/>
 		</java>
-		<echo>Creating calendar resource: room3@${zimbra.server.hostname}</echo>
+		<echo>Creating calendar resource: room-nile@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="ccr room3@${zimbra.server.hostname}
-				       displayName 'Conference Room Three'
-					   zimbraNotes 'This room cannot be booked for recurring appointments.'
+			<arg line="ccr room-nile@${zimbra.server.hostname}
+				       displayName 'Nile Conference Room'
+					   description 'Projector; for single meetings only'
+					   zimbraNotes 'need to get some more chairs in here'
 				       zimbraCalResType Location
 					   zimbraCalResAutoAcceptDecline TRUE
 					   zimbraCalResAutoDeclineIfBusy TRUE
@@ -681,6 +684,8 @@
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="ccr projector1@${zimbra.server.hostname}
 				       displayName 'Projector'
+					   description '800x600 max resolution'
+					   zimbraNotes 'usually works okay'
 				       zimbraCalResType Equipment
 					   zimbraCalResAutoAcceptDecline FALSE
 					   zimbraCalResAutoDeclineIfBusy FALSE
@@ -700,7 +705,8 @@
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="ccr pencil1@${zimbra.server.hostname}
 				       displayName '#2 pencil'
-				       zimbraNotes 'Must occasionally be sharpened'
+					   description 'a writing tool'
+				       zimbraNotes 'must occasionally be sharpened'
 				       zimbraCalResType Equipment
 					   zimbraCalResAutoAcceptDecline TRUE
 					   zimbraCalResAutoDeclineIfBusy TRUE
