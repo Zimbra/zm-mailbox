@@ -44,7 +44,7 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
-import com.zimbra.cs.service.formatter.VCard.ParsedVcf;
+import com.zimbra.cs.service.formatter.VCard;
 
 public class VcfFormatter extends Formatter {
 
@@ -71,7 +71,7 @@ public class VcfFormatter extends Formatter {
         }
 
         if (item instanceof Contact) {
-            ParsedVcf vcf = VCard.formatContact((Contact) item);
+            VCard vcf = VCard.formatContact((Contact) item);
 
             cd.setParameter("filename", getZipEntryName(vcf, null));
             context.resp.addHeader("Content-Disposition", cd.toString());
@@ -96,7 +96,7 @@ public class VcfFormatter extends Formatter {
             MailItem itItem = (MailItem) iterator.next();
             if (!(itItem instanceof Contact))
                 continue;
-            ParsedVcf vcf = VCard.formatContact((Contact) itItem);
+            VCard vcf = VCard.formatContact((Contact) itItem);
 
             // add ZIP entry to output stream.
             out.putNextEntry(new ZipEntry(getZipEntryName(vcf, usedNames)));
@@ -107,7 +107,7 @@ public class VcfFormatter extends Formatter {
         out.close();
     }
 
-    private String getZipEntryName(ParsedVcf vcf, HashSet<String> used) {
+    private String getZipEntryName(VCard vcf, HashSet<String> used) {
         // TODO: more bullet proofing on path lengths and illegal chars
         String fn = vcf.fn, folder = (used == null ? "" : "contacts/"), path;
         if (fn.length() > 115)
@@ -123,7 +123,7 @@ public class VcfFormatter extends Formatter {
     }
 
     public void save(byte[] body, Context context, Folder folder) throws ServiceException, IOException, UserServletException {
-        ParsedVcf vcf = VCard.parseVCard(new String(body, "utf-8"));
+        VCard vcf = VCard.parseVCard(new String(body, "utf-8"));
         if (vcf.fields.isEmpty())
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "no contact fields found in vcard");
         folder.getMailbox().createContact(context.opContext, vcf.fields, folder.getId(), null);

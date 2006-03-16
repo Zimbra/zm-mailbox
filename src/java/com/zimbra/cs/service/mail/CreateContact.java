@@ -152,7 +152,7 @@ public class CreateContact extends WriteOpDocumentHandler  {
                 }
         }
 
-        VCard.ParsedVcf vcf = VCard.parseVCard(text);
+        VCard vcf = VCard.parseVCard(text);
         return vcf.fields;
     }
 }

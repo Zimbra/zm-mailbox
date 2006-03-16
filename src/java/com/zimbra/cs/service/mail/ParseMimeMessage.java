@@ -498,7 +498,7 @@ public class ParseMimeMessage {
 
     private static void attachContact(Multipart mmp, com.zimbra.cs.mailbox.Contact contact)
     throws MessagingException {
-        VCard.ParsedVcf vcf = VCard.formatContact(contact);
+        VCard vcf = VCard.formatContact(contact);
 
         ContentDisposition cd = new ContentDisposition(Part.ATTACHMENT);
         cd.setParameter("filename", vcf.fn + ".vcf");
