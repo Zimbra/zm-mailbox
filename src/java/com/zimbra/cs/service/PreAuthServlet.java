@@ -30,6 +30,8 @@
 package com.zimbra.cs.service;
 
 import java.io.IOException;
+import java.util.Enumeration;
+import java.util.HashSet;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
@@ -58,6 +60,18 @@ public class PreAuthServlet extends ZimbraServlet {
     
     private static final String DEFAULT_MAIL_URL = "/zimbra/mail";
     
+    private static final HashSet<String> sPreAuthParams = new HashSet<String>();
+    
+    static {
+        sPreAuthParams.add(PARAM_PREAUTH);
+        sPreAuthParams.add(PARAM_AUTHTOKEN);
+        sPreAuthParams.add(PARAM_ACCOUNT);
+        sPreAuthParams.add(PARAM_ISREDIRECT);
+        sPreAuthParams.add(PARAM_BY);
+        sPreAuthParams.add(PARAM_TIMESTAMP);
+        sPreAuthParams.add(PARAM_EXPIRES);
+    }
+
     public void init() throws ServletException {
         String name = getServletName();
         ZimbraLog.account.info("Servlet " + name + " starting up");
@@ -91,14 +105,14 @@ public class PreAuthServlet extends ZimbraServlet {
             String isRedirect = getOptionalParam(req, PARAM_ISREDIRECT, "0");
             String authToken = getOptionalParam(req, PARAM_AUTHTOKEN, null);            
             if (isRedirect.equals("1") && authToken != null) {
-                setCookieAndRedirect(resp, authToken);
+                setCookieAndRedirect(req, resp, authToken);
                 return;
             } else if (authToken != null) {
                 // see if we need a redirect to the correct server
                 AuthToken at = AuthToken.getAuthToken(authToken);
                 Account acct = prov.getAccountById(at.getAccountId());
                 if (acct.isCorrectHost()) {
-                    setCookieAndRedirect(resp, authToken);
+                    setCookieAndRedirect(req, resp, authToken);
                 } else {
                     redirectToCorrectServer(req, resp, acct, authToken);
                 }
@@ -128,7 +142,7 @@ public class PreAuthServlet extends ZimbraServlet {
                     authToken = at.getEncoded();
                     
                     if (acct.isCorrectHost()) {
-                        setCookieAndRedirect(resp, at.getEncoded());
+                        setCookieAndRedirect(req, resp, at.getEncoded());
                     } else {
                         redirectToCorrectServer(req, resp, acct, at.getEncoded());
                     }
@@ -145,19 +159,44 @@ public class PreAuthServlet extends ZimbraServlet {
         }
     }
 
+    private void addNonPreAuthParams(HttpServletRequest req, StringBuilder sb, boolean first) {
+        Enumeration names = req.getParameterNames();
+        while (names.hasMoreElements()) {
+            String name = (String) names.nextElement();
+            if (sPreAuthParams.contains(name)) continue;
+            String values[] = req.getParameterValues(name);
+            if (values != null) {
+                for (int i=0; i < values.length; i++) {
+                    if (!first) {
+                        sb.append('&');
+                        first = false;
+                    }
+                    sb.append(name).append("=").append(values[i]);
+                }
+            }
+        }
+    }
+    
     private void redirectToCorrectServer(HttpServletRequest req, HttpServletResponse resp, Account acct, String token) throws ServiceException, IOException {
         StringBuilder sb = new StringBuilder();
         sb.append(URLUtil.getMailURL(acct.getServer(), req.getRequestURI(), true));
         sb.append('?').append(PARAM_ISREDIRECT).append('=').append('1');
         sb.append('&').append(PARAM_AUTHTOKEN).append('=').append(token);
+        addNonPreAuthParams(req, sb, false);
         resp.sendRedirect(sb.toString());
     }
 
-    private void setCookieAndRedirect(HttpServletResponse resp, String authToken) throws IOException {
+    private void setCookieAndRedirect(HttpServletRequest req, HttpServletResponse resp, String authToken) throws IOException {
         Cookie c = new Cookie(COOKIE_ZM_AUTH_TOKEN, authToken);
         c.setPath("/");
         resp.addCookie(c);
-        resp.sendRedirect(DEFAULT_MAIL_URL);
+        StringBuilder sb = new StringBuilder();
+        addNonPreAuthParams(req, sb, true);
+        if (sb.length() > 0) {
+            resp.sendRedirect(DEFAULT_MAIL_URL+"?"+sb.toString());
+        } else { 
+            resp.sendRedirect(DEFAULT_MAIL_URL);
+        }
     }
 
 }
