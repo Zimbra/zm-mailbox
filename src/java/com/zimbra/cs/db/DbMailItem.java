@@ -1761,14 +1761,19 @@ public class DbMailItem {
             if (setTagMask != 0 || tagMask != 0) {
                 tc.searchTagsets = tcTags.getMatchingTagsets(tagMask, setTagMask);
                 // if no items match the specified tags...
-                if (tc.searchTagsets.size() == 0)
+                if (tc.searchTagsets.size() == 0) {
                     tc.noMatches = true;
+                    tc.searchTagsets = null; // otherwise we encode "tags IN()" which MySQL doesn't like
+                }
+                    
             }
             if (setFlagMask != 0 || flagMask != 0) {
                 tc.searchFlagsets = tcFlags.getMatchingTagsets(flagMask, setFlagMask);
                 // if no items match the specified flags...
-                if (tc.searchFlagsets.size() == 0)
+                if (tc.searchFlagsets.size() == 0) {
                     tc.noMatches = true;
+                    tc.searchFlagsets = null;  // otherwise we encode "flags IN()" which MySQL doesn't like
+                }
             }
 
             return tc;

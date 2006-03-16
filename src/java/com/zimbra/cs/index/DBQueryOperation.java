@@ -51,7 +51,6 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbSearchConstraints;
 import com.zimbra.cs.db.DbMailItem.SearchResult;
 import com.zimbra.cs.db.DbPool.Connection;
-import com.zimbra.cs.db.DbSearchConstraints.Range;
 import com.zimbra.cs.index.LuceneQueryOperation.LuceneResultsChunk;
 import com.zimbra.cs.index.LuceneQueryOperation.LuceneResultsChunk.ScoredLuceneHit;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
@@ -69,35 +68,50 @@ import com.zimbra.cs.service.ServiceException;
  ***********************************************************************/
 class DBQueryOperation extends QueryOperation
 {
-//    private Folder mFolder = null;
-    
     private static Log mLog = LogFactory.getLog(DBQueryOperation.class);
     
-    DbSearchConstraints mConstraints = new DbSearchConstraints();
+    SearchConstraints mConstraints = new SearchConstraints();
 
-    // this gets set to FALSE if we have any real work to do
-    // this lets us optimize away queries that might match "everything"
+    /**
+     * this gets set to FALSE if we have any real work to do this lets 
+     * us optimize away queries that might match "everything"
+     */
     private boolean mAllResultsQuery = true;
-//    private boolean mNoResultsQuery = false;
+     
+
+//    private boolean mHasSpamTrashSetting = false;
     
-//    private HashSet<Folder> mExcludeFolder = new HashSet<Folder>();
+    private Collection <SearchResult> mDBHits;
+    private Iterator mDBHitsIter;
+    private int mCurHitsOffset = 0; // -1 means "no more results"
+    private boolean atStart = true; // don't re-fill buffer twice if they call hasNext() then reset() w/o actually getting next
+    private int mHitsPerChunk = 100;
+    private static final int MAX_HITS_PER_CHUNK = 2000;
+    private boolean mFailedDbFirst = false;
     
-//    private HashSet<Tag> mIncludeTags = new HashSet<Tag>();
-//    private HashSet<Tag> mExcludeTags = new HashSet<Tag>();
+    /**
+     * The maximum DB results we will allow when running a DB-FIRST query: if there 
+     * are more than this many results we switch over to LUCENE-FIRST.
+     * 
+     * This limitation is necessary so that SCORE sorting is possible -- for score sorting
+     * to work, we have to get *all* of the results from the DB and pass them to lucene
+     * at the same time (since they don't come back in score-order from the DB) -- and
+     * we don't want fetch huge numbers of results from the DB.
+     * 
+     * This number *must* be smaller than the value of LuceneQuery.maxClauseCount 
+     * (LuceneQuery.getMaxClauseCount())
+     * 
+     */
+    private static final int MAX_DBFIRST_RESULTS = 900;
     
-//    private int mConvId = 0;
-//    private HashSet<Integer> mProhibitedConvIds = new HashSet<Integer>();
+    /**
+     * TRUE if we know there are no more hits to get for mDBHitsIter 
+     *   -- ie there is no need to call getChunk() anymore
+     */
+    private boolean mEndOfHits = false;
     
-//    private HashSet<DbSearchConstraints.Range>mDates = new HashSet<DbSearchConstraints.Range>();
-//    private HashSet<DbSearchConstraints.Range> mSizes = new HashSet<DbSearchConstraints.Range>();
-    
-//    private HashSet<Integer> mIncludedItemIds = null; // CAREFUL!  In this case NULL means "no constraint" -- which is very different from an empty set (which means NOTHING MATCHES)
-//    private HashSet<Integer> mExcludedItemIds = null; 
-    
-    // true if we have a SETTING pertaining to Spam/Trash.  This doesn't necessarily
-    // mean we actually have "in trash" or something, it just means that we've got something
-    // set which means we shouldn't add the default "not in:trash and not in:junk" thing.
-    private boolean mHasSpamTrashSetting = false;
+    private HashSet<Byte> mTypes = new HashSet<Byte>();
+    private HashSet<Byte>mExcludeTypes = new HashSet<Byte>();
     
     /**
      * An attached Lucene constraint
@@ -109,7 +123,6 @@ class DBQueryOperation extends QueryOperation
      * so that we can look up the scores of hits that match the DB
      */
     private LuceneQueryOperation.LuceneResultsChunk mLuceneChunk = null;
-    
     
     /**
      * In an INTERSECTION, we can gain some efficiencies by using the output of the Lucene op
@@ -127,26 +140,6 @@ class DBQueryOperation extends QueryOperation
         return OP_TYPE_DB;
     }
 
-    boolean hasSpamTrashSetting() {
-        return mHasSpamTrashSetting;
-    }
-    boolean hasNoResults() {
-    	return mConstraints.noResults;
-    }
-    boolean hasAllResults() {
-        return mAllResultsQuery;
-    }
-    void forceHasSpamTrashSetting() {
-        mHasSpamTrashSetting = true;
-    }
-    
-    QueryTarget getQueryTarget() {
-    	if (mConstraints.folders != null)  
-    		return new QueryTarget(mConstraints.folders);
-    	else 
-    		return null;
-    }
-    
     /**
      * Since Trash can be an entire folder hierarchy, when we want to exclude trash from a query,
      * we actually have to walk that hierarchy and figure out all the folders within it.
@@ -158,28 +151,97 @@ class DBQueryOperation extends QueryOperation
     private List /* Folder */ getTrashFolders(Mailbox mbox) throws ServiceException {
         return mbox.getFolderById(null, Mailbox.ID_FOLDER_TRASH).getSubfolderHierarchy(); 
     }
+    
+    private static class SearchConstraints extends DbSearchConstraints {
+    	void ensureSpamTrashSetting(Mailbox mbox, List<Folder> excludeFolders) throws ServiceException
+        {
+    		if (!mHasSpamTrashSetting) {
+        		for (Folder f : folders) {
+        			excludeFolders.add(f);
+        		}
+        		mHasSpamTrashSetting = true;
+        	}
+        }
+    	
+    	void andConstraints(SearchConstraints other) {
+    		super.andConstraints(other);
+    		if (other.hasSpamTrashSetting()) 
+    			forceHasSpamTrashSetting();
+    		
+    		if (other.hasNoResults()) {
+    			noResults = true;
+            }
+    	}
+
+        boolean hasSpamTrashSetting() {
+        	return mHasSpamTrashSetting;
+        }
+        void forceHasSpamTrashSetting() {
+            mHasSpamTrashSetting = true;
+        }
+
+        boolean hasNoResults() {
+        	return noResults;
+        }
+
+        /**
+         * true if we have a SETTING pertaining to Spam/Trash.  This doesn't 
+         * necessarily mean we actually have "in trash" or something, it just
+         * means that we've got something set which means we shouldn't add 
+         * the default "not in:trash and not in:junk" thing.
+         */        
+        protected boolean mHasSpamTrashSetting = false;
+    }
+    
 
     /* (non-Javadoc)
      * @see com.zimbra.cs.index.QueryOperation#ensureSpamTrashSetting(com.zimbra.cs.mailbox.Mailbox)
      */
     QueryOperation ensureSpamTrashSetting(Mailbox mbox, boolean includeTrash, boolean includeSpam) throws ServiceException
     {
-        if (!mHasSpamTrashSetting) {
+    	if (!hasSpamTrashSetting()) {
+    		List<Folder> exclude = new ArrayList<Folder>();
             if (!includeSpam) {
-                Folder spam = mbox.getFolderById(null, Mailbox.ID_FOLDER_SPAM);            
-                addInClause(spam, false);
+            	Folder spam = mbox.getFolderById(null, Mailbox.ID_FOLDER_SPAM);            
+            	exclude.add(spam);
             }
             
             if (!includeTrash) {
-                List trashFolders = getTrashFolders(mbox);
-                for (Iterator iter  = trashFolders.iterator(); iter.hasNext();) {
-                    Folder cur = (Folder)(iter.next());
-                    addInClause(cur,false);
-                }
+            	List trashFolders = getTrashFolders(mbox);
+            	for (Iterator iter  = trashFolders.iterator(); iter.hasNext();) {
+            		Folder cur = (Folder)(iter.next());
+            		exclude.add(cur);
+            	}
             }
-            mHasSpamTrashSetting = true;
-        }
-        return this;
+            
+            mConstraints.ensureSpamTrashSetting(mbox, exclude);
+    	}
+    	return this;
+    }
+    
+    boolean hasSpamTrashSetting() {
+        return mConstraints.hasSpamTrashSetting();
+    }
+    void forceHasSpamTrashSetting() {
+        mConstraints.forceHasSpamTrashSetting();
+    }
+
+    boolean hasNoResults() {
+    	return mConstraints.noResults;
+    }
+    
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.index.QueryOperation#hasAllResults()
+     */
+    boolean hasAllResults() {
+        return mAllResultsQuery;
+    }
+    
+    QueryTarget getQueryTarget() {
+    	if (mConstraints.folders != null)  
+    		return new QueryTarget(mConstraints.folders);
+    	else 
+    		return null;
     }
     
     /* (non-Javadoc)
@@ -191,9 +253,9 @@ class DBQueryOperation extends QueryOperation
         }
     };
     
-    static DBQueryOperation Create() { return new DBQueryOperation(); }
-    
     protected DBQueryOperation() { }
+
+    static DBQueryOperation Create() { return new DBQueryOperation(); }
     
     void addItemIdClause(Integer itemId, boolean truth) {
         mAllResultsQuery = false;
@@ -251,7 +313,6 @@ class DBQueryOperation extends QueryOperation
         mConstraints.sizes.add(intv);
     }
     
-    
     /**
      * @param convId
      * @param prohibited
@@ -298,7 +359,7 @@ class DBQueryOperation extends QueryOperation
         	}
         	mConstraints.folders.clear();
         	mConstraints.folders.add(folder);
-        	mHasSpamTrashSetting = true;
+        	forceHasSpamTrashSetting();
         } else {
         	if (mConstraints.folders.contains(folder)) {
         		mConstraints.folders.remove(folder);
@@ -313,7 +374,7 @@ class DBQueryOperation extends QueryOperation
         	
         	int fid = folder.getId();
         	if (fid == Mailbox.ID_FOLDER_TRASH || fid == Mailbox.ID_FOLDER_SPAM) {
-        		mHasSpamTrashSetting = true;
+        		forceHasSpamTrashSetting();
         	}
         }
     }
@@ -321,7 +382,8 @@ class DBQueryOperation extends QueryOperation
     void addAnyFolderClause(boolean truth) {
         // support for "is:anywhere" basically as a way to get around
         // the trash/spam autosetting
-        mHasSpamTrashSetting = true;
+		forceHasSpamTrashSetting();
+    	
         if (!truth) {
             // if they are weird enough to say "NOT is:anywhere" then we
             // just make it a no-results-query.
@@ -365,14 +427,6 @@ class DBQueryOperation extends QueryOperation
         	mConstraints.excludeTags.add(tag);
         }
     }
-    
-    private Collection <SearchResult> mDBHits;
-    private Iterator mDBHitsIter;
-    private int mCurHitsOffset = 0; // -1 means "no more results"
-    private boolean atStart = true; // don't re-fill buffer twice if they call hasNext() then reset() w/o actually getting next
-    
-    private int mHitsPerChunk = 100;
-    private static final int MAX_HITS_PER_CHUNK = 2000;
     
     private static class ScoredDBHit implements Comparable {
     	public SearchResult mSr;
@@ -496,7 +550,6 @@ class DBQueryOperation extends QueryOperation
     
     private List<ZimbraHit>mNextHits = new ArrayList<ZimbraHit>();
     
-    
     public ZimbraHit getNext() throws ServiceException {
         atStart = false;
         if (mNextHits.size() == 0) {
@@ -509,9 +562,6 @@ class DBQueryOperation extends QueryOperation
         return toRet;
     }
     
-    /**
-     * @param types
-     */
     private byte[] convertTypesToDbQueryTypes(byte[] types) 
     {
         // hackery
@@ -573,15 +623,6 @@ class DBQueryOperation extends QueryOperation
         return toRet;
     }
     
-    /**
-     * TRUE if we know there are no more hits to get for mDBHitsIter 
-     *   -- ie there is no need to call getChunk() anymore
-     */
-    private boolean mEndOfHits = false;
-    
-    private HashSet<Byte> mTypes = new HashSet<Byte>();
-    private HashSet<Byte>mExcludeTypes = new HashSet<Byte>();
-    
     private Set<Byte> getDbQueryTypes() 
     {
     	byte[] defTypes = convertTypesToDbQueryTypes(this.getResultsSet().getTypes());
@@ -626,88 +667,7 @@ class DBQueryOperation extends QueryOperation
     	mConstraints.sort = searchOrder.getDbMailItemSortByte();
     	
     	return mConstraints;
-    	
-//    	
-//        if (types.size() == 0)  {
-//            mLog.debug("NO RESULTS -- no known types requested");
-//            return null;
-//        } else { 
-//            DbSearchConstraints c = new DbSearchConstraints();
-//            c.mailboxId = getMailbox().getId();
-//        
-//            // tags
-//            if (mIncludeTags.size() > 0) {
-//            	c.tags = mIncludeTags;
-////            	c.tags = (Tag[]) mIncludeTags.toArray(new Tag[mIncludeTags.size()]);
-//            	
-//            	
-//        }
-//        
-//            // exclude-tags
-//            if (mExcludeTags.size() > 0) {
-//            	c.excludeTags = mExcludeTags;
-//            }
-//
-//            // folders
-//                if (mFolder != null) {
-//                	c.folders = new HashSet<Folder>(1);
-//                	c.folders.add(mFolder);
-//                } 
-//                
-//            // exclude-folders
-//                if (mExcludeFolder.size() > 0) {
-//                	c.excludeFolders = mExcludeFolder;
-//                }
-//                
-//            c.convId = mConvId;
-//                    
-//            // prohibited-conv-ids
-//                    if (mProhibitedConvIds.size() > 0) {
-//                    	c.prohibitedConvIds = mProhibitedConvIds;
-//                    }
-//                    
-//                    c.types = types;
-//                    c.sort = searchOrder.getDbMailItemSortByte(); 
-//                    
-//                    if (mExcludeTypes.size() > 0) {
-//                        c.excludeTypes = mExcludeTypes;
-//                    }
-//                    
-//                    if (mIncludedItemIds != null) {
-//                    	c.itemIds = mIncludedItemIds;
-//                    }
-//                    if (mExcludedItemIds != null && mExcludedItemIds.size() > 0) {
-//                        c.prohibitedItemIds = mExcludedItemIds;
-//                    }
-//                    
-//                    if (mDates.size() > 0) {
-//                    	c.dates = mDates;
-//                    }
-//                    
-//                    if (mSizes.size() > 0) {
-//                    	c.sizes = mSizes;
-//                    }
-//                    System.out.println("SC == "+c.toString());
-//            return c;
-//        }
     }
-    
-    private boolean mFailedDbFirst = false;
-    
-    /**
-     * The maximum DB results we will allow when running a DB-FIRST query: if there 
-     * are more than this many results we switch over to LUCENE-FIRST.
-     * 
-     * This limitation is necessary so that SCORE sorting is possible -- for score sorting
-     * to work, we have to get *all* of the results from the DB and pass them to lucene
-     * at the same time (since they don't come back in score-order from the DB) -- and
-     * we don't want fetch huge numbers of results from the DB.
-     * 
-     * This number *must* be smaller than the value of LuceneQuery.maxClauseCount 
-     * (LuceneQuery.getMaxClauseCount())
-     * 
-     */
-    private static final int MAX_DBFIRST_RESULTS = 1000;
     
     private boolean tryDbFirst() {
     	if (!mFailedDbFirst) {
@@ -962,7 +922,7 @@ class DBQueryOperation extends QueryOperation
         if (union) {
             // only join on intersection right now...
         	if (mConstraints.noResults) {
-                // a query for (other OR nothing) == other
+        		// a query for (other OR nothing) == other
                 return other;
             }
             return null;
@@ -998,158 +958,14 @@ class DBQueryOperation extends QueryOperation
             toRet.mLuceneOp = dbOther.mLuceneOp;
         }
         
-        if (mHasSpamTrashSetting || dbOther.mHasSpamTrashSetting) {
-            toRet.mHasSpamTrashSetting = true;
-        } else {
-            toRet.mHasSpamTrashSetting = false;
-        }
-        
         if (mAllResultsQuery && dbOther.mAllResultsQuery) {
             toRet.mAllResultsQuery = true;
         } else {
             toRet.mAllResultsQuery = false;
         }
         
-        if (mConstraints.noResults|| dbOther.mConstraints.noResults) {
-        	toRet.mConstraints.noResults = true;
-        	return toRet;
-        }
-        
         toRet.mConstraints = mConstraints;
         mConstraints.andConstraints(dbOther.mConstraints);
-
-//        { // dates
-//            toRet.mDates = (HashSet<Range>)mDates.clone();
-//            for (Iterator iter = dbOther.mDates.iterator(); iter.hasNext();) {
-//                DbSearchConstraints.Range r = (DbSearchConstraints.Range)iter.next();
-//                toRet.addDateClause(r.lowest, r.highest, !r.negated);
-//            }
-//        }
-//        
-//        { // sizes
-//            toRet.mSizes = (HashSet<Range>)mSizes.clone();
-//            for (Iterator iter = dbOther.mSizes.iterator(); iter.hasNext();) {
-//                DbSearchConstraints.Range r = (DbSearchConstraints.Range)iter.next();
-//                toRet.addSizeClause(r.lowest, r.highest, !r.negated);
-//            }
-//        }
-//        
-//        {   // item-id's are INTERSECTED because they are SETS (ie "one of...") instead of
-//            // additive required parameters (tags="UNSEEN and TAG1...")
-//            
-//            
-//            // these we have to intersect:
-//            //
-//            //   Item{A or B or C} AND Item{B or C or D} --> Item{IN-BOTH}
-//            //
-//            if (mIncludedItemIds == null) {
-//                toRet.mIncludedItemIds = dbOther.mIncludedItemIds;
-//            } else if (dbOther.mIncludedItemIds == null) {
-//                toRet.mIncludedItemIds = mIncludedItemIds;
-//            } else {
-//                toRet.mIncludedItemIds = new HashSet<Integer>(); // start out with EMPTY SET (no results!)
-//                for (Iterator iter = mIncludedItemIds.iterator(); iter.hasNext();)
-//                {
-//                    Integer i = (Integer)(iter.next());
-//                    if (dbOther.mIncludedItemIds.contains(i)) {
-//                        toRet.addItemIdClause(i, true);
-//                    }
-//                }
-//            }
-//
-//            //
-//            // these we can just combine, since:
-//            //
-//            // -Item{A or B} AND -Item{C or D} --> 
-//            //   (-Item(A) AND -Item(B)) AND (-C AND -D) -->
-//            //     (A AND B AND C AND D)
-//            //
-//            if (mExcludedItemIds == null) {
-//                toRet.mExcludedItemIds = dbOther.mExcludedItemIds;
-//            } else if (dbOther.mExcludedItemIds == null) {
-//                toRet.mExcludedItemIds = mExcludedItemIds;
-//            } else {
-//                toRet.mExcludedItemIds = (HashSet)mExcludedItemIds.clone();
-//                
-//                for (Iterator iter = dbOther.mExcludedItemIds.iterator(); iter.hasNext();)
-//                {
-//                    Integer i = (Integer)(iter.next());
-//                    toRet.addItemIdClause(i, false);
-//                }
-//            }
-//        }
-//     
-//
-//        { // conversation id's
-//            toRet.mProhibitedConvIds = (HashSet)mProhibitedConvIds.clone();
-//            for (Iterator iter = dbOther.mProhibitedConvIds.iterator(); iter.hasNext();)
-//            {
-//                Integer i = (Integer)(iter.next());
-//                toRet.addConvId(i.intValue(), false);
-//            }
-//            
-//            if (mConvId != 0) {
-//                toRet.addConvId(mConvId, true);
-//            }
-//            if (dbOther.mConvId != 0) {
-//                toRet.addConvId(dbOther.mConvId, true);
-//            }
-//            
-//        }
-//        
-//        { // FOLDERS
-//            if (mFolder != null) {
-//                toRet.addInClause(mFolder, true);
-//            }
-//            if (dbOther.mFolder != null) {
-//                toRet.addInClause(dbOther.mFolder, true);
-//            }
-//            
-//            for (Iterator iter = mExcludeFolder.iterator(); iter.hasNext();)
-//            {
-//                Folder f = (Folder)(iter.next());
-//                toRet.addInClause(f, false);
-//            }
-//            
-//            for (Iterator iter = dbOther.mExcludeFolder.iterator(); iter.hasNext();)
-//            {
-//                Folder f = (Folder)(iter.next());
-//                toRet.addInClause(f, false);
-//            }
-//        }
-//        
-//        { // ...combine types...
-////            toRet.mTypes = combineByteArraysNoDups(mTypes, dbOther.mTypes);
-//        	toRet.mTypes = (HashSet<Byte>)mTypes.clone();
-//        	toRet.mTypes.addAll(dbOther.mTypes);
-//        	
-////          toRet.mExcludeTypes = combineByteArraysNoDups(mExcludeTypes, dbOther.mExcludeTypes);
-//        	toRet.mExcludeTypes = (HashSet<Byte>)mExcludeTypes.clone();
-//        	toRet.mExcludeTypes.addAll(dbOther.mExcludeTypes);
-//        }
-//        
-//        
-//        { // ...combine tags...
-//            toRet.mIncludeTags = (HashSet<Tag>)mIncludeTags.clone();
-//            for (Iterator iter = dbOther.mIncludeTags.iterator(); iter.hasNext();)
-//            {
-//                Tag t = (Tag)(iter.next());
-//                toRet.addTagClause(t, true);
-//            }
-//            
-//            for (Iterator iter = mExcludeTags.iterator(); iter.hasNext();)
-//            {
-//                Tag t = (Tag)(iter.next());
-//                toRet.addTagClause(t, false);
-//            }
-//            
-//            for (Iterator iter = dbOther.mExcludeTags.iterator(); iter.hasNext();)
-//            {
-//                Tag t = (Tag)(iter.next());
-//                toRet.addTagClause(t, false);
-//            }
-//        }
-        
         
         return toRet;
     }
