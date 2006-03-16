@@ -211,6 +211,13 @@ public class CalendarMailSender {
             sb.append("Invitees:\r\n");
             for (Iterator iter = attendees.iterator(); iter.hasNext(); ) {
                 ZAttendee at = (ZAttendee) iter.next();
+                if (at.hasCUType()) {
+                    // Don't list non-person attendees.
+                    String cutype = at.getCUType();
+                    if (!IcalXmlStrMap.CUTYPE_INDIVIDUAL.equals(cutype) &&
+                        !IcalXmlStrMap.CUTYPE_GROUP.equals(cutype))
+                        continue;
+                }
                 sb.append("    ");
                 if (at.hasCn())
                     sb.append(at.getCn()).append(" <").append(at.getAddress()).append(">");
