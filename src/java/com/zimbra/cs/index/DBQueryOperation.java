@@ -71,7 +71,7 @@ class DBQueryOperation extends QueryOperation
 {
     private static Log mLog = LogFactory.getLog(DBQueryOperation.class);
     
-    private IConstraints mConstraints = new SearchConstraints();
+    private IConstraints mConstraints = new LeafNode();
     private int mOffset = -1;
     private int mLimit = -1;
 
@@ -132,7 +132,8 @@ class DBQueryOperation extends QueryOperation
     
     private static interface IConstraints extends DbSearchConstraintsNode {
     	void ensureSpamTrashSetting(Mailbox mbox, List<Folder> excludeFolders) throws ServiceException;
-    	void andConstraints(SearchConstraints other);
+    	IConstraints andIConstraints(IConstraints other);
+    	IConstraints orIConstraints(IConstraints other);
     	boolean hasSpamTrashSetting();
     	void forceHasSpamTrashSetting();
     	boolean hasNoResults();
@@ -157,6 +158,27 @@ class DBQueryOperation extends QueryOperation
  	   
  	   protected List<IConstraints> mSubNodes = new ArrayList<IConstraints>();
  	   
+ 	   public IConstraints andIConstraints(IConstraints other) {
+ 		   if (other.getNodeType() == NodeType.AND) {
+ 			   return other.andIConstraints(this);
+ 		   } else {
+ 			   IConstraints top = new AndNode();
+ 			   top = top.andIConstraints(this);
+ 			   top = top.andIConstraints(other);
+ 			   return top;
+ 		   }
+ 	   }
+ 	   
+ 	   public IConstraints orIConstraints(IConstraints other) {
+ 		   if (other.getNodeType() == NodeType.OR) {
+ 			   for (IConstraints n : ((OrNode)other).mSubNodes) 
+ 				   mSubNodes.add(n);
+ 		   } else {
+ 			   mSubNodes.add(other);
+ 		   }
+ 		   return this;
+ 	   }
+ 	   
  	   public void ensureSpamTrashSetting(Mailbox mbox, List<Folder> excludeFolders) throws ServiceException {
  		   //
  		   // push down instead of ANDing this at the toplevel!
@@ -172,10 +194,6 @@ class DBQueryOperation extends QueryOperation
  		   //
  		   for (IConstraints n : mSubNodes) 
  			   n.ensureSpamTrashSetting(mbox, excludeFolders);
- 	   }
- 	   
- 	   public void andConstraints(SearchConstraints other) {
- 		   throw new UnsupportedOperationException("Cannot AND a constraint with an OR node");
  	   }
  	   
  	   public boolean hasSpamTrashSetting() {
@@ -207,6 +225,14 @@ class DBQueryOperation extends QueryOperation
  			   n.setTypes(types);
  	   }
  	   
+ 	   public String toString()
+ 	   {
+ 		   StringBuilder toRet = new StringBuilder("OR(");
+ 		   for (IConstraints n : mSubNodes)
+ 			   toRet.append(n.toString()).append(' ');
+ 		   return toRet.append(')').toString();
+ 	   }
+ 	   
      }
     
     private static class AndNode implements IConstraints {
@@ -216,24 +242,56 @@ class DBQueryOperation extends QueryOperation
  	   
  	   protected List<IConstraints> mSubNodes = new ArrayList<IConstraints>();
  	   
- 	   SearchConstraints getLeafChild() {
+ 	   LeafNode getLeafChild() {
  		   for (IConstraints n : mSubNodes)
  			   if (n.getNodeType() == NodeType.LEAF)
- 				   return (SearchConstraints)n;
+ 				   return (LeafNode)n;
  		   
- 		   SearchConstraints c = new SearchConstraints();
+ 		   LeafNode c = new LeafNode();
  		   mSubNodes.add(c);
  		   return c;
  	   }
  	   
- 	   public void ensureSpamTrashSetting(Mailbox mbox, List<Folder> excludeFolders) throws ServiceException {
- 		   SearchConstraints c = getLeafChild();
- 		   c.ensureSpamTrashSetting(mbox, excludeFolders);
+ 	   public IConstraints andIConstraints(IConstraints other) {
+ 		   switch(other.getNodeType()) {
+ 		   case LEAF:
+ 			   LeafNode otherLeaf = (LeafNode)other;
+ 			   IConstraints ret = getLeafChild().andIConstraints(otherLeaf);
+ 			   assert(mSubNodes.contains(ret));
+ 			   break;
+ 		   case AND:
+ 			   for (IConstraints n : ((AndNode)other).mSubNodes) {
+ 				   if (n.getNodeType() == NodeType.LEAF) {
+ 					   IConstraints c = getLeafChild().andIConstraints((LeafNode)n);
+ 					   assert(c == this);
+ 				   } else {
+ 					   mSubNodes.add(n);
+ 				   }
+ 			   }
+ 			   break;
+ 		   case OR:
+ 			   mSubNodes.add(other);
+ 			   break;
+ 		   }
+ 		   
+ 		   return this;
  	   }
  	   
- 	   public void andConstraints(SearchConstraints other) {
- 		   SearchConstraints c = getLeafChild();
- 		   c.andConstraints(other);
+ 	   public IConstraints orIConstraints(IConstraints other) 
+ 	   {
+ 		   if (other.getNodeType() == NodeType.OR) {
+ 			   return other.orIConstraints(other);
+ 		   } else {
+ 			   IConstraints top = new OrNode();
+ 			   top = top.orIConstraints(this);
+ 			   top = top.orIConstraints(other);
+ 			   return top;
+ 		   }
+ 	   }
+ 	   
+ 	   public void ensureSpamTrashSetting(Mailbox mbox, List<Folder> excludeFolders) throws ServiceException {
+ 		   LeafNode c = getLeafChild();
+ 		   c.ensureSpamTrashSetting(mbox, excludeFolders);
  	   }
  	   
  	   public boolean hasSpamTrashSetting() {
@@ -264,10 +322,19 @@ class DBQueryOperation extends QueryOperation
  		   for (IConstraints n : mSubNodes) 
  			   n.setTypes(types);
  	   }
+ 	   
+ 	   public String toString()
+ 	   {
+ 		   StringBuilder toRet = new StringBuilder("AND(");
+ 		   for (IConstraints n : mSubNodes)
+ 			   toRet.append(n.toString()).append(' ');
+ 		   return toRet.append(')').toString();
+ 	   }
+ 	   
     }
     
     
-    private static class SearchConstraints extends DbSearchConstraints implements IConstraints {
+    private static class LeafNode extends DbSearchConstraints implements IConstraints {
     	public void ensureSpamTrashSetting(Mailbox mbox, List<Folder> excludeFolders) throws ServiceException
         {
     		if (!mHasSpamTrashSetting) {
@@ -278,15 +345,39 @@ class DBQueryOperation extends QueryOperation
         	}
         }
     	
-    	public void andConstraints(SearchConstraints other) {
-    		super.andConstraints(other);
-    		if (other.hasSpamTrashSetting()) 
-    			forceHasSpamTrashSetting();
-    		
-    		if (other.hasNoResults()) {
-    			noResults = true;
-            }
+    	public IConstraints andIConstraints(IConstraints other) 
+    	{
+    		switch(other.getNodeType()) {
+    		case AND:
+    			return other.andIConstraints(this);
+    		case OR:
+    			return other.andIConstraints(this);
+    		case LEAF:
+    			if (other.hasSpamTrashSetting()) 
+    				forceHasSpamTrashSetting();
+    			
+    			if (other.hasNoResults()) {
+    				noResults = true;
+    			}
+    			andConstraints((LeafNode)other);
+    			return this;
+    		}
+    		assert(false);
+    		return null;
     	}
+    	
+  	   public IConstraints orIConstraints(IConstraints other)
+  	   {
+  		   if (other.getNodeType() == NodeType.OR) {
+  			   return other.orIConstraints(this);
+  		   } else {
+ 			   IConstraints top = new OrNode();
+ 			   top = top.orIConstraints(this);
+ 			   top = top.orIConstraints(other);
+ 			   return top;
+  		   }
+  	   }
+    	
 
         public boolean hasSpamTrashSetting() {
         	return mHasSpamTrashSetting;
@@ -480,7 +571,11 @@ class DBQueryOperation extends QueryOperation
   	   public void setTypes(Set<Byte> _types) {
   		   this.types = _types;
   	   }
-        
+  	   
+ 	   public String toString()
+ 	   {
+ 		   return super.toString();
+ 	   }
     }
     
 
@@ -549,10 +644,22 @@ class DBQueryOperation extends QueryOperation
 	 * 
 	 * @return
 	 */
-	SearchConstraints topLevelAndedConstraint() {
-		return (SearchConstraints)mConstraints;
+	LeafNode topLevelAndedConstraint() {
+		switch (mConstraints.getNodeType()) {
+		case LEAF:
+			return (LeafNode)mConstraints;
+		case AND:
+			AndNode and = (AndNode)mConstraints;
+			return and.getLeafChild();
+		case OR:
+			IConstraints top = new AndNode();
+			mConstraints = top.andIConstraints(mConstraints);
+			return ((AndNode)mConstraints).getLeafChild();
+		}
+		assert(false);
+		return  null;
 	}
-
+	
 	/**
 	 * In an INTERSECTION, we can gain some efficiencies by using the output of the Lucene op
 	 * as parameters to our SearchConstraints....we do that by taking over the lucene op
@@ -1005,7 +1112,7 @@ class DBQueryOperation extends QueryOperation
                         	mLuceneChunk = mLuceneOp.getNextResultsChunk(mHitsPerChunk);
                         	
                         	// we need to set our index-id's here!
-                        	SearchConstraints sc = topLevelAndedConstraint();
+                        	LeafNode sc = topLevelAndedConstraint();
                         	sc.indexIds = mLuceneChunk.getIndexIds();
                             
                             // exponentially expand the chunk size in case we have to go back to the DB
@@ -1116,16 +1223,17 @@ class DBQueryOperation extends QueryOperation
     
     public String toString()
     {
-        StringBuffer retVal = new StringBuffer("");
+        StringBuilder retVal = new StringBuilder("");
         if (mLuceneOp != null) {
             retVal.append(" (").append(mLuceneOp.toString()).append(" AND ");
         }
         retVal.append("DB(");
         if (mAllResultsQuery) {
             retVal.append("ANYWHERE ");
-        }
-        if (hasNoResults()) {
+        } else if (hasNoResults()) {
             retVal.append("--- NO RESULT ---");
+        } else {
+        	retVal.append(mConstraints.toString());
         }
         retVal.append(")");
         if (mLuceneOp != null) {
@@ -1140,55 +1248,78 @@ class DBQueryOperation extends QueryOperation
      */
     protected QueryOperation combineOps(QueryOperation other, boolean union) 
     {
-        if (union) {
-            // only join on intersection right now...
-        	if (hasNoResults()) {
-        		// a query for (other OR nothing) == other
-                return other;
-            }
-        	if (other.hasNoResults()) {
-        		return this;
-        	}
-            return null;
-        } else {
-            if (mAllResultsQuery) {
-                // we match all results.  (other AND anything) == other
-                
-                assert(mLuceneOp == null);
-                if (hasSpamTrashSetting()) {
-                    other.forceHasSpamTrashSetting();
-                }
-                return other;
-            }
-        }
-        
-        DBQueryOperation dbOther = null;
-        
-        if (other instanceof DBQueryOperation) {
-            dbOther = (DBQueryOperation)other;
-        } else {
-            return null;
-        }
+    	if (union) {
+    		// only join on intersection right now...
+    		if (hasNoResults()) {
+    			// a query for (other OR nothing) == other
+    			return other;
+    		}
+    		if (other.hasNoResults()) {
+    			return this;
+    		}
+    		
+    		if (mAllResultsQuery)
+    			return this;
 
-        if (mLuceneOp != null) {
-            if (dbOther.mLuceneOp != null) {
-            	mLuceneOp.combineOps(dbOther.mLuceneOp, false);
-            }
-        } else {
-            mLuceneOp = dbOther.mLuceneOp;
-        }
-        
-        if (mAllResultsQuery && dbOther.mAllResultsQuery) {
-        	mAllResultsQuery = true;
-        } else {
-        	mAllResultsQuery = false;
-        }
-        
-        ((SearchConstraints)mConstraints).andConstraints((SearchConstraints)dbOther.mConstraints);
-        
-        return this;
+    		DBQueryOperation dbOther = null;
+
+    		if (other instanceof DBQueryOperation) {
+    			dbOther = (DBQueryOperation)other;
+    			
+    			if (dbOther.mAllResultsQuery) // (something OR ALL ) == ALL
+    				return dbOther;
+
+    			if (mLuceneOp != null && dbOther.mLuceneOp != null){
+    				// can't combine
+    				return null;
+    			}
+    				
+    			mConstraints = mConstraints.orIConstraints(dbOther.mConstraints);
+    			return this;
+    		} else {
+    			return null;
+    		}
+    	} else {
+    		if (mAllResultsQuery) {
+    			// we match all results.  (other AND anything) == other
+
+    			assert(mLuceneOp == null);
+    			if (hasSpamTrashSetting()) {
+    				other.forceHasSpamTrashSetting();
+    			}
+    			return other;
+    		}
+
+    		DBQueryOperation dbOther = null;
+
+    		if (other instanceof DBQueryOperation) {
+    			dbOther = (DBQueryOperation)other;
+    		} else {
+    			return null;
+    		}
+
+    		if (mLuceneOp != null) {
+    			if (dbOther.mLuceneOp != null) {
+    				mLuceneOp.combineOps(dbOther.mLuceneOp, false);
+    			}
+    		} else {
+    			mLuceneOp = dbOther.mLuceneOp;
+    		}
+
+    		if (mAllResultsQuery && dbOther.mAllResultsQuery) {
+    			mAllResultsQuery = true;
+    		} else {
+    			mAllResultsQuery = false;
+    		}
+
+//  		((LeafNode)mConstraints).andConstraints((LeafNode)dbOther.mConstraints);
+    		mConstraints = mConstraints.andIConstraints(dbOther.mConstraints);
+
+    		return this;
+    	}
+
     }
-    
+
     /* (non-Javadoc)
      * @see com.zimbra.cs.index.QueryOperation#inheritedGetExecutionCost()
      */
