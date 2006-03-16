@@ -34,12 +34,14 @@ import java.util.zip.ZipOutputStream;
 import javax.mail.Part;
 import javax.mail.internet.ContentDisposition;
 import javax.mail.internet.ParseException;
+import javax.servlet.http.HttpServletResponse;
 
 
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.util.ByteUtil;
 
@@ -107,5 +109,10 @@ public class ZipFormatter extends Formatter {
 
     public boolean canBeBlocked() {
         return true;
+    }
+
+    // FIXME: should add each item to the specified folder...
+    public void save(byte[] body, Context context, Folder folder) throws UserServletException {
+        throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "format not supported for save");
     }
 }

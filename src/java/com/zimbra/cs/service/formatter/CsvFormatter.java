@@ -24,16 +24,24 @@
  */
 package com.zimbra.cs.service.formatter;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.util.Iterator;
+import java.util.Map;
 
 import javax.mail.Part;
 import javax.mail.internet.ContentDisposition;
 import javax.mail.internet.ParseException;
+import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 
 public class CsvFormatter extends Formatter {
@@ -68,4 +76,15 @@ public class CsvFormatter extends Formatter {
         return false;
     }
 
+    public void save(byte[] body, Context context, Folder folder) throws UserServletException, ServiceException {
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(body), "UTF-8"));
+            for (Map<String, String> fields : ContactCSV.getContacts(reader))
+                folder.getMailbox().createContact(context.opContext, fields, folder.getId(), null);
+        } catch (ContactCSV.ParseException e) {
+            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "could not parse csv file");
+        } catch (UnsupportedEncodingException uee) {
+            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "could not parse csv file");
+        }
+    }
 }

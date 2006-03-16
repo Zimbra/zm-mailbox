@@ -28,7 +28,6 @@ import com.zimbra.cs.util.ZimbraLog;
 public abstract class Formatter {
     
     public abstract String getType();
-    private static final byte[] SEARCH_TYPES = new byte[] { MailItem.TYPE_MESSAGE };
 
     /**
      * @return true if this formatter requires auth
@@ -58,6 +57,8 @@ public abstract class Formatter {
 
     public abstract void format(UserServlet.Context context, MailItem item) throws UserServletException, ServiceException, IOException, ServletException;
 
+    public abstract void save(byte[] body, UserServlet.Context context, Folder folder) throws UserServletException, ServiceException, IOException, ServletException;
+
     public Iterator getMailItems(Context context, MailItem item, long startTime, long endTime) throws ServiceException {
         String query = context.getQueryString();
         if (query != null) {
@@ -83,22 +84,21 @@ public abstract class Formatter {
         } else if (item instanceof Folder) {
             Collection items = getMailItemsFromFolder(context, (Folder) item, startTime, endTime);
             return items != null ? items.iterator() : null;
-        } else if (item instanceof MailItem) {
-            ArrayList result = new ArrayList();
+        } else {
+            ArrayList<MailItem> result = new ArrayList<MailItem>();
             result.add(item);
             return result.iterator();
         }
-        return null;
     }
 
     private Collection getMailItemsFromFolder(Context context, Folder folder, long startTime, long endTime) throws ServiceException {
         switch (folder.getDefaultView()) {
-        case MailItem.TYPE_APPOINTMENT:            
-            return context.targetMailbox.getAppointmentsForRange(context.opContext, startTime, endTime, folder.getId(), null);
-        case MailItem.TYPE_CONTACT:
-            return context.targetMailbox.getContactList(context.opContext, folder.getId());
-        default:
-            return context.targetMailbox.getItemList(context.opContext, MailItem.TYPE_MESSAGE, folder.getId());
+            case MailItem.TYPE_APPOINTMENT:            
+                return context.targetMailbox.getAppointmentsForRange(context.opContext, startTime, endTime, folder.getId(), null);
+            case MailItem.TYPE_CONTACT:
+                return context.targetMailbox.getContactList(context.opContext, folder.getId());
+            default:
+                return context.targetMailbox.getItemList(context.opContext, MailItem.TYPE_MESSAGE, folder.getId());
         }
     }
  

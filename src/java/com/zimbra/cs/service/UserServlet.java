@@ -55,18 +55,10 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.service.formatter.AtomFormatter;
-import com.zimbra.cs.service.formatter.CsvFormatter;
-import com.zimbra.cs.service.formatter.Formatter;
-import com.zimbra.cs.service.formatter.IcsFormatter;
-import com.zimbra.cs.service.formatter.IfbFormatter;
-import com.zimbra.cs.service.formatter.NativeFormatter;
-import com.zimbra.cs.service.formatter.RssFormatter;
-import com.zimbra.cs.service.formatter.SyncFormatter;
-import com.zimbra.cs.service.formatter.VcfFormatter;
-import com.zimbra.cs.service.formatter.ZipFormatter;
+import com.zimbra.cs.service.formatter.*;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.DateUtil;
 import com.zimbra.cs.util.ZimbraLog;
 
@@ -199,49 +191,13 @@ public class UserServlet extends ZimbraServlet {
             throws ServletException, IOException {
         try {
             Context context = new Context(req, resp, this);
-
-            // if they specify /~/, we must auth
-            if (context.targetAccount == null && context.accountPath.equals("~")) {
-                getAccount(context);
-                if (context.authAccount == null)
-                    return;
-                context.targetAccount = context.authAccount;
-            }
-
-            // at this point we must have a target account
-            if (context.targetAccount == null)
-                throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "target account not found");
-
-            // auth is required if we haven't, or if they haven't specified a formatter that doesn't need auth.
-            boolean authRequired = context.authAccount == null &&
-                            (context.formatter == null || context.formatter.requiresAuth());
-
-            // need this before proxy if we want to support sending cookie from a basic-auth
-            if (authRequired) {
-                getAccount(context);
-                if (context.authAccount == null)
-                    return;                
-            }
+            if (!checkAuthentication(req, resp, context))
+                return;
 
             if (context.authAccount != null)
                 ZimbraLog.addAccountNameToContext(context.authAccount.getName());
             ZimbraLog.addIpToContext(context.req.getRemoteAddr());
-            
-            // this should handle both explicit /user/user-on-other-server/ and
-            // /user/~/?id={account-id-on-other-server}:id            
-            if (!context.targetAccount.isCorrectHost()) {
-                try {
-                    if (context.basicAuthHappened && context.authTokenCookie == null) 
-                        context.authTokenCookie = new AuthToken(context.authAccount).getEncoded();
-                    proxyServletRequest(req, resp, context.targetAccount.getServer(),
-                                        context.basicAuthHappened ? context.authTokenCookie : null);
-                    return;
-                } catch (ServletException e) {
-                    throw ServiceException.FAILURE("proxy error", e);
-                } catch (AuthTokenException e) {
-                    throw ServiceException.FAILURE("proxy error", e);
-                }
-            }
+
             if (context.authAccount == null)
                 doUnAuthGet(req, resp, context);
             else
@@ -261,6 +217,49 @@ public class UserServlet extends ZimbraServlet {
         }
     }
 
+    private boolean checkAuthentication(HttpServletRequest req, HttpServletResponse resp, Context context) throws IOException, ServletException, ServiceException, UserServletException {
+        // if they specify /~/, we must auth
+        if (context.targetAccount == null && context.accountPath.equals("~")) {
+            getAccount(context);
+            if (context.authAccount == null)
+                return false;
+            context.targetAccount = context.authAccount;
+        }
+
+        // at this point we must have a target account
+        if (context.targetAccount == null)
+            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "target account not found");
+
+        // auth is required if we haven't yet authed and they've specified a formatter that requires auth (including write ops).
+        boolean authRequired = context.authAccount == null &&
+                        (context.formatter == null || context.formatter.requiresAuth() || req.getMethod().equalsIgnoreCase("POST"));
+
+        // need this before proxy if we want to support sending cookie from a basic-auth
+        if (authRequired) {
+            getAccount(context);
+            if (context.authAccount == null)
+                return false;                
+        }
+
+        // this should handle both explicit /user/user-on-other-server/ and
+        // /user/~/?id={account-id-on-other-server}:id            
+        if (!context.targetAccount.isCorrectHost()) {
+            try {
+                if (context.basicAuthHappened && context.authTokenCookie == null) 
+                    context.authTokenCookie = new AuthToken(context.authAccount).getEncoded();
+                proxyServletRequest(req, resp, context.targetAccount.getServer(),
+                                    context.basicAuthHappened ? context.authTokenCookie : null);
+                return false;
+            } catch (ServletException e) {
+                throw ServiceException.FAILURE("proxy error", e);
+            } catch (AuthTokenException e) {
+                throw ServiceException.FAILURE("proxy error", e);
+            }
+        }
+
+        return true;
+    }
+
     private void doAuthGet(HttpServletRequest req, HttpServletResponse resp, Context context)
     throws ServletException, IOException, ServiceException, UserServletException {
         Mailbox mbox = context.targetMailbox = Mailbox.getMailboxByAccount(context.targetAccount);
@@ -273,7 +272,6 @@ public class UserServlet extends ZimbraServlet {
         context.opContext = new OperationContext(context.authAccount);
 
         MailItem item = null;
-
         if (context.itemId != null) {
             item = mbox.getItemById(context.opContext, context.itemId.getId(), MailItem.TYPE_UNKNOWN);
         } else {
@@ -356,6 +354,67 @@ public class UserServlet extends ZimbraServlet {
         if (context.formatter == null)
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "unsupported format");
         context.formatter.format(context, item);
+    }
+
+    public void doPost(HttpServletRequest req, HttpServletResponse resp)
+    throws ServletException, IOException {
+        try {
+            byte[] body = ByteUtil.getContent(req.getInputStream(), req.getContentLength());
+
+            Context context = new Context(req, resp, this);
+            if (!checkAuthentication(req, resp, context))
+                return;
+
+            if (context.authAccount != null)
+                ZimbraLog.addAccountNameToContext(context.authAccount.getName());
+            ZimbraLog.addIpToContext(context.req.getRemoteAddr());
+
+            Mailbox mbox = context.targetMailbox = Mailbox.getMailboxByAccount(context.targetAccount);
+            if (mbox == null)
+                throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "mailbox not found");
+            ZimbraLog.addToContext(mbox);
+
+            ZimbraLog.mailbox.info("UserServlet (POST): " + context.req.getRequestURL().toString());
+
+            context.opContext = new OperationContext(context.authAccount);
+
+            Folder folder = null;
+            if (context.itemId != null)
+                folder = mbox.getFolderById(context.opContext, context.itemId.getId());
+            else
+                folder = mbox.getFolderByPath(context.opContext, context.itemPath);
+
+            if (context.format == null) {
+                context.format = defaultFormat(folder, context);
+                if (context.format == null)
+                    throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "unsupported format");
+            }
+
+            if (folder instanceof Mountpoint) {
+                // if the target is a mountpoint, proxy the request on to the resolved target
+                proxyOnMountpoint(req, resp, context, (Mountpoint) folder);
+                return;
+            }
+            
+            if (context.formatter == null)
+                context.formatter = mFormatters.get(context.format);
+            if (context.formatter == null)
+                throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "unsupported format");
+
+            context.formatter.save(body, context, folder);
+        } catch (NoSuchItemException e) {
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND, "no such item");
+        } catch (ServiceException se) {
+            if (se.getCode() == ServiceException.PERM_DENIED)
+                resp.sendError(HttpServletResponse.SC_FORBIDDEN, se.getMessage());
+            else
+                throw new ServletException(se);
+        } catch (UserServletException e) {
+            // add check for ServiceException root cause?
+            resp.sendError(e.getHttpStatusCode(), e.getMessage());
+        } finally {
+            ZimbraLog.clearContext();
+        }
     }
 
     private void proxyOnMountpoint(HttpServletRequest req, HttpServletResponse resp, Context context, Mountpoint mpt)

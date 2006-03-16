@@ -34,12 +34,15 @@ import java.util.zip.ZipOutputStream;
 import javax.mail.Part;
 import javax.mail.internet.ContentDisposition;
 import javax.mail.internet.ParseException;
+import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.service.formatter.VCard.ParsedVcf;
 
@@ -117,5 +120,12 @@ public class VcfFormatter extends Formatter {
             counter++;
         } while (used != null && used.contains(path));
         return path + ".vcf";
+    }
+
+    public void save(byte[] body, Context context, Folder folder) throws ServiceException, IOException, UserServletException {
+        ParsedVcf vcf = VCard.parseVCard(new String(body, "utf-8"));
+        if (vcf.fields.isEmpty())
+            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "no contact fields found in vcard");
+        folder.getMailbox().createContact(context.opContext, vcf.fields, folder.getId(), null);
     }
 }

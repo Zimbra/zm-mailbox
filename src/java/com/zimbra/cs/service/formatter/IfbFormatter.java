@@ -30,6 +30,7 @@ import java.util.Iterator;
 import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.calendar.FreeBusy;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
@@ -148,4 +149,7 @@ public class IfbFormatter extends Formatter {
         return false;
     }
 
+    public void save(byte[] body, Context context, Folder folder) throws UserServletException {
+        throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "format not supported for save");
+    }
 }
