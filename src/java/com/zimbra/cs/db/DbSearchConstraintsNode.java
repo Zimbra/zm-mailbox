@@ -19,7 +19,7 @@ public interface DbSearchConstraintsNode {
 	    * @return The list of ANDed or ORed subnodes, or NULL if 
 	    * this is a LEAF node.
 	    */
-	   Iterable<DbSearchConstraintsNode> getSubNodes();
+	   Iterable<? extends DbSearchConstraintsNode> getSubNodes();
 	   
 	   /**
 	    * @return The SearchConstraints for this node, if it is a LEAF
