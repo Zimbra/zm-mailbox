@@ -167,9 +167,10 @@ public class PreAuthServlet extends ZimbraServlet {
             String values[] = req.getParameterValues(name);
             if (values != null) {
                 for (int i=0; i < values.length; i++) {
-                    if (!first) {
-                        sb.append('&');
+                    if (first) {
                         first = false;
+                    } else {
+                        sb.append('&');
                     }
                     sb.append(name).append("=").append(values[i]);
                 }
