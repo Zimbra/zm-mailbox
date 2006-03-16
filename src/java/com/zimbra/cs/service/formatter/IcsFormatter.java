@@ -105,7 +105,7 @@ public class IcsFormatter extends Formatter {
             if (inv.getUid() == null)
                 inv.setUid(LdapUtil.generateUUID());
             // and add the invite to the calendar!
-            folder.getMailbox().addInvite(context.opContext, inv, folder.getId(), true, null);
+            folder.getMailbox().addInvite(context.opContext, inv, folder.getId(), false, null);
         }
     }
 }
