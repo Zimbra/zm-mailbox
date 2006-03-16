@@ -41,7 +41,6 @@ import com.zimbra.cs.mailbox.Message;
  */
 class Pop3Msg {
     boolean mDeleted;
-    private Pop3Mbx mMbx;
     private int mId;
     private int mSize; // raw size from blob store
     String mDigest;
