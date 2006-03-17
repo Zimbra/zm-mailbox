@@ -5,6 +5,8 @@
 // the private Notes will be determined by ACL of the folder the Notes are stored.
 // By default Notes are accesible to the account holder only, thus private.
 // 
+// XXX public Wiki API is being under review, and not supported.
+
 // Public Wiki pages are stored in a central location allocated to ZCS at the
 // installation time.  The access to the Wiki pages also follow the ACL on the
 // folder the pages are stored.  By default the Wiki pages are available to
@@ -25,7 +27,7 @@
 // then use the upload-id from the FileUploadResponse.
 // When <m> is used, the document is retrieved from an existing message in the mailbox,
 // identified by the msg-id and part-id.
-<SaveDocumentRequest [type="wiki|note"]>
+<SaveDocumentRequest>
   <doc [name="{file-name}"] [ct="{content-type}"] [l="{folder-id}"]>
     [<upload id="{upload-id}"/>]
     [<m id="{msg-id}" part="{part-id}"/>]
@@ -40,8 +42,8 @@
 // A Wiki is a versioned HTML document.
 // folder-id argument is valid when the new wiki document is being created,
 // otherwise it's ignored, and the subsequent revision is stored in the same folder.
-<SaveWikiRequest [type="wiki|note"]>
-  <w su="{wikiword}" [l="{folder-id}"]> ... contents ... </w>
+<SaveWikiRequest>
+  <w name="{wikiword}" [l="{folder-id}"]> ... contents ... </w>
 </SaveWikiRequest>
 
 <SaveWikiResponse>
@@ -63,12 +65,13 @@
 
 //
 // ListWiki
+// XXX ListWiki is under the review.  using the search is probably a better long term solution.
 // returns list of wiki words for this account.  if folder-id is specified, then the list
 // will include only the items in the folder.
 // created-date: date the first revision was created.
 // modified-date: date the last revision was made.
 // last-edited-by: user that made the last revision.
-<ListWikiRequest [type="wiki|note"] [l="{folder-id}"]/>
+<ListWikiRequest [l="{folder-id}"]/>
 
 <ListWikiResponse>
   [<w name="{word}" ver="{head-version}" cd="{created-date}" md="{modified-date}" cr="{creator}" leb="{last-edited-by}" l="{folder}"/>]+
@@ -77,7 +80,7 @@
 //
 // GetWiki
 // returns the latest version if version is omitted from the request.
-<GetWikiRequest [type="wiki|note"]>
+<GetWikiRequest>
   <w name="{word}" [ver="{version}"]/>
 </GetWikiRequest>
 

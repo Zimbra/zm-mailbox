@@ -52,7 +52,7 @@ public class SaveWiki extends WikiDocumentHandler {
 		Wiki wiki = getRequestedWiki(request, lc);
 
         Element msgElem = request.getElement(MailService.E_WIKIWORD);
-        String subject = msgElem.getAttribute(MailService.A_SUBJECT, null);
+        String subject = msgElem.getAttribute(MailService.A_NAME, null);
         int fid = (int)msgElem.getAttributeLong(MailService.A_FOLDER, wiki.getWikiFolderId());
 
         Mailbox mbox = Mailbox.getMailboxByAccountId(wiki.getWikiAccountId());

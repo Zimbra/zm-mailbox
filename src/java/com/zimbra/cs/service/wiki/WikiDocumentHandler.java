@@ -10,6 +10,8 @@ import com.zimbra.soap.ZimbraContext;
 public abstract class WikiDocumentHandler extends DocumentHandler {
 
 	protected Wiki getRequestedWiki(Element request, ZimbraContext lc) throws ServiceException {
+		
+		/*
 		Wiki wiki;
         String type = request.getAttribute(MailService.A_TYPE, "wiki");
         if (type.equals("wiki")) {
@@ -19,6 +21,8 @@ public abstract class WikiDocumentHandler extends DocumentHandler {
         } else {
         	throw ServiceException.INVALID_REQUEST("unknown type "+type, null);
         }
-        return wiki;
+        */
+		
+		return Wiki.getInstance(lc.getAuthtokenAccount().getName());
 	}
 }
