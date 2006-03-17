@@ -1230,8 +1230,15 @@ public class ToXML {
 	}
 	public static Element encodeWiki(Element parent, ZimbraContext lc, WikiItem wiki, int fields, int rev) {
 
-        Element m;
-        m = encodeMessageCommon(parent, lc, wiki, fields);
+        Element m = parent.addElement(MailService.E_WIKIWORD);
+        // DO NOT encode the item-id here, as some Invite-Messages-In-Appointments have special item-id's
+        if (needToOutput(fields, Change.MODIFIED_SIZE))
+            m.addAttribute(MailService.A_SIZE, wiki.getSize());
+        if (needToOutput(fields, Change.MODIFIED_DATE))
+            m.addAttribute(MailService.A_DATE, wiki.getDate());
+        if (needToOutput(fields, Change.MODIFIED_FOLDER))
+            m.addAttribute(MailService.A_FOLDER, lc.formatItemId(wiki.getFolderId()));
+        recordItemTags(m, wiki, fields);
         
         if (needToOutput(fields, Change.MODIFIED_CONTENT)) {
         	m.addAttribute(MailService.A_ID, lc.formatItemId(wiki));

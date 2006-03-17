@@ -33,7 +33,7 @@
 </SaveDocumentRequest>
 
 <SaveDocumentResponse>
-  <m id="{item-id}"/>
+  <doc id="{item-id}"/>
 </SaveDocumentResponse>
 
 //
@@ -41,11 +41,11 @@
 // folder-id argument is valid when the new wiki document is being created,
 // otherwise it's ignored, and the subsequent revision is stored in the same folder.
 <SaveWikiRequest [type="wiki|note"]>
-  <m su="{wikiword}" [l="{folder-id}"]> ... contents ... </m>
+  <w su="{wikiword}" [l="{folder-id}"]> ... contents ... </w>
 </SaveWikiRequest>
 
 <SaveWikiResponse>
-  <m id="{item-id}"/>
+  <w id="{item-id}"/>
 </SaveWikiResponse>
 
 //
@@ -82,9 +82,9 @@
 </GetWikiRequest>
 
 <GetWikiResponse>
-  <m name="{word}" ver="{version}" cr="{creator}" id="{message-id}" s="{size}" d="{created-date}" md="{modified-date}" l="{folder}" [f="{flags}"] [t="{tags}"]>
+  <w name="{word}" ver="{version}" cr="{creator}" id="{message-id}" s="{size}" d="{created-date}" md="{modified-date}" l="{folder}" [f="{flags}"] [t="{tags}"]>
    ... contents ...
-  </m>
+  </w>
 </GetWikiResponse>
 
 //

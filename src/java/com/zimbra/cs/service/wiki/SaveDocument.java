@@ -121,7 +121,7 @@ public class SaveDocument extends WikiDocumentHandler {
         //wiki.addWiki(docItem);  // XXX need to keep track of documents.
 
         Element response = lc.createElement(MailService.SAVE_DOCUMENT_RESPONSE);
-        Element m = response.addElement(MailService.E_MSG);
+        Element m = response.addElement(MailService.E_DOC);
         m.addAttribute(MailService.A_ID, lc.formatItemId(docItem));
         return response;
 	}

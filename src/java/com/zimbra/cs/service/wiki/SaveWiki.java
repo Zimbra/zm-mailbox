@@ -51,7 +51,7 @@ public class SaveWiki extends WikiDocumentHandler {
         OperationContext octxt = lc.getOperationContext();
 		Wiki wiki = getRequestedWiki(request, lc);
 
-        Element msgElem = request.getElement(MailService.E_MSG);
+        Element msgElem = request.getElement(MailService.E_WIKIWORD);
         String subject = msgElem.getAttribute(MailService.A_SUBJECT, null);
         int fid = (int)msgElem.getAttributeLong(MailService.A_FOLDER, wiki.getWikiFolderId());
 
@@ -72,7 +72,7 @@ public class SaveWiki extends WikiDocumentHandler {
         }
         
         Element response = lc.createElement(MailService.SAVE_WIKI_RESPONSE);
-        Element m = response.addElement(MailService.E_MSG);
+        Element m = response.addElement(MailService.E_WIKIWORD);
         m.addAttribute(MailService.A_ID, lc.formatItemId(wikiItem));
         return response;
 	}
