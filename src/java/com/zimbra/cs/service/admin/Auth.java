@@ -63,30 +63,33 @@ public class Auth extends AdminDocumentHandler {
 		Provisioning prov = Provisioning.getInstance();
 		Account acct = null;
         boolean isDomainAdmin = false;
-        if (name.indexOf("@") == -1) {
-            acct = prov.getAdminAccountByName(name);
-        } else {
-            acct = prov.getAccountByName(name);
-            if (acct != null) {
-                isDomainAdmin = acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);
-                boolean isAdmin= acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);            
-                boolean ok = (isDomainAdmin || isAdmin);
-                if (!ok) 
-                    throw ServiceException.PERM_DENIED("not an admin account");
-            }
-        }
-
-        if (acct == null)
-			throw AccountServiceException.AUTH_FAILED(name);
         
-        ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                new String[] {"cmd", "AdminAuth","account", name})); 
-
         try {
+            
+            if (name.indexOf("@") == -1) {
+                acct = prov.getAdminAccountByName(name);
+            } else {
+                acct = prov.getAccountByName(name);
+            }
+
+            if (acct == null)
+                throw AccountServiceException.AUTH_FAILED(name);
+        
+            ZimbraLog.security.info(ZimbraLog.encodeAttrs(
+                    new String[] {"cmd", "AdminAuth","account", name})); 
+
+        
             prov.authAccount(acct, password);
+            
+            isDomainAdmin = acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);
+            boolean isAdmin= acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);            
+            boolean ok = (isDomainAdmin || isAdmin);
+            if (!ok) 
+                    throw ServiceException.PERM_DENIED("not an admin account");
+
         } catch (ServiceException se) {
             ZimbraLog.security.warn(ZimbraLog.encodeAttrs(
-                    new String[] {"cmd", "AdminAuth","account", name, "error", se.getMessage()}));             
+                    new String[] {"cmd", "AdminAuth","account", name, "error", se.getMessage()}));    
             throw se;
         }
 
