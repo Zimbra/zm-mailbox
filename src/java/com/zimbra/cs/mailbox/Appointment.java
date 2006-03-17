@@ -1506,14 +1506,24 @@ public class Appointment extends MailItem {
             return true;
         }
 
+        private static final int MAX_CONFLICT_LIST_SIZE = 20;
+
         public static String getBusyTimesString(List<Availability> list) {
             StringBuilder sb = new StringBuilder();
             int availCount = 0;
+            int conflictCount = 0;
             for (Availability avail : list) {
                 if (!avail.isBusy()) continue;
 
                 if (availCount++ > 0)
                     sb.append("\r\n----------\r\n\r\n");
+
+                if (conflictCount >= MAX_CONFLICT_LIST_SIZE) {
+                    int more = list.size() - conflictCount;
+                    sb.append("(not showing ").append(more).append(" more conflicts)\r\n");
+                    break;
+                }
+
                 sb.append("Requested time:").append("\r\n");
                 sb.append("    Start: ");
                 sb.append(CalendarMailSender.formatDateTime(new Date(avail.getStartTime())));
@@ -1542,8 +1552,6 @@ public class Appointment extends MailItem {
                     } else
                         sb.append("    Organizer: unknown\r\n");
 
-                    Date invStart = new Date(inv.getStartTime().getUtcTime());
-                    Date invEnd = new Date(inv.getEffectiveEndTime().getUtcTime());
                     sb.append("    Start: ");
                     sb.append(CalendarMailSender.formatDateTime(new Date(inv.getStartTime().getUtcTime())));
                     sb.append("\r\n");
@@ -1551,6 +1559,7 @@ public class Appointment extends MailItem {
                     sb.append(CalendarMailSender.formatDateTime(new Date(inv.getEffectiveEndTime().getUtcTime())));
                     sb.append("\r\n");
                 }
+                conflictCount++;
             }
             return sb.toString();
         }

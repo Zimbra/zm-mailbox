@@ -40,7 +40,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
@@ -50,6 +49,7 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+import javax.mail.internet.MimeUtility;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -138,7 +138,7 @@ public class CalendarMailSender {
         if (additionalMsgBody != null) {
             if (insertSummary) {
                 replyText.append("\r\n\r\n");
-                replyText.append("*~*~*~*~*~*~*~*~*~*\r\n");
+                replyText.append("- - - - - - - - - - - - - - - - - - - -\r\n");
                 replyText.append("\r\n\r\n");
             }
             replyText.append(additionalMsgBody).append("\r\n");
@@ -191,7 +191,6 @@ public class CalendarMailSender {
             // inv is the invite that describes the recurrence if its start
             // time matches the appointment's overall start time (DTSTART)
             // Otherwise, inv is an invite for an instance of recurrence.
-            Invite defInv = appt.getDefaultInvite();
             long invStart = inv.getStartTime().getUtcTime();
             long apptStart = appt.getStartTime();
             isRecurrence = invStart == apptStart;
@@ -206,24 +205,36 @@ public class CalendarMailSender {
         }
         List attendees = inv.getAttendees();
         if (attendees != null) {
-            sb.append("\r\n");
-            int atCount = 0;
-            sb.append("Invitees:\r\n");
+            int numHumanAttendees = 0;
             for (Iterator iter = attendees.iterator(); iter.hasNext(); ) {
                 ZAttendee at = (ZAttendee) iter.next();
                 if (at.hasCUType()) {
-                    // Don't list non-person attendees.
                     String cutype = at.getCUType();
                     if (!IcalXmlStrMap.CUTYPE_INDIVIDUAL.equals(cutype) &&
                         !IcalXmlStrMap.CUTYPE_GROUP.equals(cutype))
                         continue;
                 }
-                sb.append("    ");
-                if (at.hasCn())
-                    sb.append(at.getCn()).append(" <").append(at.getAddress()).append(">");
-                else
-                    sb.append(at.getAddress());
+                numHumanAttendees++;
+            }
+            if (numHumanAttendees > 0) {
                 sb.append("\r\n");
+                sb.append("Invitees:\r\n");
+                for (Iterator iter = attendees.iterator(); iter.hasNext(); ) {
+                    ZAttendee at = (ZAttendee) iter.next();
+                    if (at.hasCUType()) {
+                        // Don't list non-person attendees.
+                        String cutype = at.getCUType();
+                        if (!IcalXmlStrMap.CUTYPE_INDIVIDUAL.equals(cutype) &&
+                            !IcalXmlStrMap.CUTYPE_GROUP.equals(cutype))
+                            continue;
+                    }
+                    sb.append("    ");
+                    if (at.hasCn())
+                        sb.append(at.getCn()).append(" <").append(at.getAddress()).append(">");
+                    else
+                        sb.append(at.getAddress());
+                    sb.append("\r\n");
+                }
             }
         }
         return sb.toString();
@@ -279,7 +290,8 @@ public class CalendarMailSender {
             // HTML part is needed to keep Outlook happy as it doesn't know
             // how to deal with a message with only text/plain but no HTML.
             MimeBodyPart htmlPart = new MimeBodyPart();
-            htmlPart.setDataHandler(new DataHandler(new HtmlDataSource(text)));
+            htmlPart.setDataHandler(new DataHandler(new HtmlQPDataSource(text)));
+            htmlPart.setHeader("Content-Transfer-Encoding", "quoted-printable");
             mmp.addBodyPart(htmlPart);
 
             // ///////
@@ -438,20 +450,21 @@ public class CalendarMailSender {
         return replyMsgId;
     }
 
-    private static class HtmlDataSource implements DataSource {
-        private static final String CONTENT_TYPE = "text/html";
-        private static final String HEAD = "<html><body><pre>";
-        private static final String TAIL = "</pre></body></html>\n";
+    // data source that returns quoted-printable encoded HTML content
+    private static class HtmlQPDataSource implements DataSource {
+        private static final String CONTENT_TYPE = "text/html; charset=us-ascii";
+        private static final String HEAD =
+            "<HTML><BODY>\n" +
+            "<FONT FACE=\"Courier New\">\n" +
+            "<PRE style=\"font-family: monospace; font-size: 14px\">\n";
+        private static final String TAIL = "</PRE>\n</FONT></BODY></HTML>\n";
         private static final String NAME = "HtmlDataSource";
 
         private String mText;
         private byte[] mBuf = null;
 
-        public HtmlDataSource(String text) {
+        public HtmlQPDataSource(String text) {
             mText = text;
-            //mText = Pattern.compile("&", Pattern.MULTILINE).matcher(mText).replaceAll("&amp;");
-            //mText = Pattern.compile("<", Pattern.MULTILINE).matcher(mText).replaceAll("&lt;");
-            //mText = Pattern.compile(">", Pattern.MULTILINE).matcher(mText).replaceAll("&gt;");
             mText = mText.replaceAll("&", "&amp;");
             mText = mText.replaceAll("<", "&lt;");
             mText = mText.replaceAll(">", "&gt;");
@@ -466,9 +479,9 @@ public class CalendarMailSender {
                 if (mBuf == null) {
                     ByteArrayOutputStream buf = new ByteArrayOutputStream();
                     OutputStreamWriter wout = new OutputStreamWriter(buf);
-                    wout.write(HEAD);
-                    wout.write(mText);
-                    wout.write(TAIL);
+                    String text = HEAD + mText + TAIL;
+                    String qp = MimeUtility.encodeText(text, "utf-8", "Q");
+                    wout.write(qp);
                     wout.flush();
                     mBuf = buf.toByteArray();
                 }
