@@ -60,6 +60,7 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.DateUtil;
+import com.zimbra.cs.util.HttpUtil;
 import com.zimbra.cs.util.ZimbraLog;
 
 /**
@@ -128,6 +129,9 @@ public class UserServlet extends ZimbraServlet {
     protected static final String MSGPAGE_BLOCK = "errorpage.attachment.blocked";
     private String mBlockPage = null;
 
+    /** Default maximum upload size for PUT/POST write ops: 10MB. */
+    private static final long DEFAULT_MAX_SIZE = 10 * 1024 * 1024;
+
     public UserServlet() {
         mFormatters = new HashMap<String, Formatter>();
         addFormatter(new CsvFormatter());
@@ -167,8 +171,7 @@ public class UserServlet extends ZimbraServlet {
                     // send cookie back if need be. 
                     if (!context.noSetCookie()) {
                         try {
-                            AuthToken authToken = new AuthToken(context.authAccount);
-                            context.authTokenCookie = authToken.getEncoded();
+                            context.authTokenCookie = new AuthToken(context.authAccount).getEncoded();
                             context.resp.addCookie(new Cookie(COOKIE_ZM_AUTH_TOKEN, context.authTokenCookie));
                         } catch (AuthTokenException e) {
                         }
@@ -188,7 +191,7 @@ public class UserServlet extends ZimbraServlet {
     }
 
     public void doGet(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
+    throws ServletException, IOException {
         try {
             Context context = new Context(req, resp, this);
             if (!checkAuthentication(req, resp, context))
@@ -294,23 +297,13 @@ public class UserServlet extends ZimbraServlet {
         if (item == null && context.getQueryString() == null)
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "item not found");
 
-        if (context.format == null) {
-            context.format = defaultFormat(item, context);
-            if (context.format == null)
-                throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "unsupported format");
-        }            
-
         if (item instanceof Mountpoint) {
             // if the target is a mountpoint, proxy the request on to the resolved target
             proxyOnMountpoint(req, resp, context, (Mountpoint) item);
             return;
         }
 
-        if (context.formatter == null)
-            context.formatter = mFormatters.get(context.format);
-        if (context.formatter == null)
-            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "unsupported format");
-
+        resolveFormatter(context, item);
         if (context.formatter.canBeBlocked()) {
             if (Formatter.checkGlobalOverride(Provisioning.A_zimbraAttachmentsBlocked, context.authAccount)) {
                 sendbackBlockMessage(context.req, context.resp);
@@ -356,11 +349,19 @@ public class UserServlet extends ZimbraServlet {
         context.formatter.format(context, item);
     }
 
+    /** Adds an item to a folder specified in the URI.  The item content is
+     *  provided in the PUT request's body.
+     * @see #doPost(HttpServletRequest, HttpServletResponse) */
+    public void doPut(HttpServletRequest req, HttpServletResponse resp)
+    throws ServletException, IOException {
+        doPost(req, resp);
+    }
+
+    /** Adds an item to a folder specified in the URI.  The item content is
+     *  provided in the POST request's body. */
     public void doPost(HttpServletRequest req, HttpServletResponse resp)
     throws ServletException, IOException {
         try {
-            byte[] body = ByteUtil.getContent(req.getInputStream(), req.getContentLength());
-
             Context context = new Context(req, resp, this);
             if (!checkAuthentication(req, resp, context))
                 return;
@@ -384,23 +385,16 @@ public class UserServlet extends ZimbraServlet {
             else
                 folder = mbox.getFolderByPath(context.opContext, context.itemPath);
 
-            if (context.format == null) {
-                context.format = defaultFormat(folder, context);
-                if (context.format == null)
-                    throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "unsupported format");
-            }
-
             if (folder instanceof Mountpoint) {
                 // if the target is a mountpoint, proxy the request on to the resolved target
                 proxyOnMountpoint(req, resp, context, (Mountpoint) folder);
                 return;
             }
-            
-            if (context.formatter == null)
-                context.formatter = mFormatters.get(context.format);
-            if (context.formatter == null)
-                throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "unsupported format");
 
+            long sizeLimit = Provisioning.getInstance().getLocalServer().getLongAttr(Provisioning.A_zimbraFileUploadMaxSize, DEFAULT_MAX_SIZE);
+            byte[] body = ByteUtil.getContent(req.getInputStream(), req.getContentLength(), sizeLimit);
+
+            resolveFormatter(context, folder);
             context.formatter.save(body, context, folder);
         } catch (NoSuchItemException e) {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND, "no such item");
@@ -417,12 +411,28 @@ public class UserServlet extends ZimbraServlet {
         }
     }
 
+    /** Determines the <code>format</code> and <code>formatter<code> for the
+     *  request, if not already set. */
+    private void resolveFormatter(Context context, MailItem target) throws UserServletException {
+        if (context.format == null) {
+            context.format = defaultFormat(target, context);
+            if (context.format == null)
+                throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "unsupported format");
+        }
+
+        if (context.formatter == null)
+            context.formatter = mFormatters.get(context.format);
+        if (context.formatter == null)
+            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "unsupported format");
+
+    }
+
     private void proxyOnMountpoint(HttpServletRequest req, HttpServletResponse resp, Context context, Mountpoint mpt)
     throws IOException, ServletException, ServiceException, UserServletException {
         String uri = SERVLET_PATH + "/~/?" + QP_ID + '=' + mpt.getOwnerId() + "%3A" + mpt.getRemoteId();
         if (context.format != null)
             uri += '&' + QP_FMT + '=' + URLEncoder.encode(context.format, "UTF-8");
-        for (Map.Entry entry : (Set<Map.Entry>) req.getParameterMap().entrySet()) {
+        for (Map.Entry entry : (Set<Map.Entry>) HttpUtil.getUriParams(req).entrySet()) {
             String qp = (String) entry.getKey();
             if (!qp.equals(QP_ID) && !qp.equals(QP_FMT))
                 uri += '&' + URLEncoder.encode(qp, "UTF-8") + '=' + URLEncoder.encode((String) entry.getValue(), "UTF-8");
@@ -446,6 +456,7 @@ public class UserServlet extends ZimbraServlet {
     public static class Context {
         public HttpServletRequest req;
         public HttpServletResponse resp;
+        public Map<String, String> params;
         public String format;
         public Formatter formatter;        
         public boolean basicAuthHappened;
@@ -467,6 +478,7 @@ public class UserServlet extends ZimbraServlet {
 
             this.req = request;
             this.resp = response;
+            this.params = HttpUtil.getUriParams(request);
 
             String pathInfo = request.getPathInfo().toLowerCase();
             if (pathInfo == null || pathInfo.equals("/") || pathInfo.equals("")
@@ -474,7 +486,7 @@ public class UserServlet extends ZimbraServlet {
                 throw new UserServletException(
                         HttpServletResponse.SC_BAD_REQUEST, "invalid path");
             }
-
+            
             int pos = pathInfo.indexOf('/', 1);
             if (pos == -1) {
                 throw new UserServletException(
@@ -483,8 +495,8 @@ public class UserServlet extends ZimbraServlet {
             this.accountPath = pathInfo.substring(1, pos);
 
             this.itemPath = pathInfo.substring(pos + 1);
-            this.format = request.getParameter(QP_FMT);
-            String id = request.getParameter(QP_ID);
+            this.format = this.params.get(QP_FMT);
+            String id = this.params.get(QP_ID);
             try {
                 this.itemId = id == null ? null : new ItemId(id, null);
             } catch (ServiceException e) {
@@ -517,7 +529,7 @@ public class UserServlet extends ZimbraServlet {
 
         public long getStartTime() {
             if (mStartTime == -2) {
-                String st = req.getParameter(QP_START);
+                String st = params.get(QP_START);
                 long defaultStartTime = formatter.getDefaultStartTime();
                 mStartTime = (st != null) ? DateUtil.parseDateSpecifier(st, defaultStartTime) : defaultStartTime;
             }
@@ -526,7 +538,7 @@ public class UserServlet extends ZimbraServlet {
 
         public long getEndTime() {
             if (mEndTime == -2) {
-                String et = req.getParameter(QP_END);
+                String et = params.get(QP_END);
                 long defaultEndTime = formatter.getDefaultEndTime();                
                 mEndTime = (et != null) ? DateUtil.parseDateSpecifier(et, defaultEndTime) : defaultEndTime;
             }
@@ -534,7 +546,7 @@ public class UserServlet extends ZimbraServlet {
         }
 
         public String getQueryString() {
-            return req.getParameter(QP_QUERY);
+            return params.get(QP_QUERY);
         }
 
         public boolean cookieAuthAllowed() {
@@ -550,7 +562,7 @@ public class UserServlet extends ZimbraServlet {
         }
 
         public String getAuth() {
-            String a = req.getParameter(QP_AUTH);
+            String a = params.get(QP_AUTH);
             return (a == null || a.length() == 0) ? AUTH_DEFAULT : a;
         }
 
@@ -560,7 +572,7 @@ public class UserServlet extends ZimbraServlet {
         }
 
         public String getPart() {
-            return req.getParameter(QP_PART);
+            return params.get(QP_PART);
         }
 
         public boolean hasView() {
@@ -569,11 +581,11 @@ public class UserServlet extends ZimbraServlet {
         }
 
         public String getView() {
-            return req.getParameter(QP_VIEW);
+            return params.get(QP_VIEW);
         }
 
         public String getTypesString() {
-            return req.getParameter(QP_TYPES);
+            return params.get(QP_TYPES);
         }
 
         public String toString() {

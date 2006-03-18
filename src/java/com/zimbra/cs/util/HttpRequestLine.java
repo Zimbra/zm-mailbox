@@ -5,6 +5,8 @@
 package com.zimbra.cs.util;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -59,31 +61,23 @@ public class HttpRequestLine {
     
     public String getBaseURI() {
         int idx = uri.indexOf('?');
-        String toRet;
-        if (idx >= 0) {
-            toRet = uri.substring(0,idx);
-        } else
-            toRet = uri;
-        
-        return toRet;
+        String baseURI = idx >= 0 ? uri.substring(0, idx) : uri;
+        try {
+            return URLDecoder.decode(baseURI, "utf-8");
+        } catch (UnsupportedEncodingException uee) {
+            return baseURI;
+        }
     }
     
     public Map<String, String> getUriParams() {
         if (mUriParams != null)
             return mUriParams;
         
-        mUriParams = new HashMap<String,String>();
-        
         int idx = uri.indexOf('?');
         if (idx >= 0 && idx < uri.length()) {
-            String paramStr = uri.substring(idx+1);
-            String[] pairs = paramStr.split("&");
-            for (String pair : pairs) {
-                String[] keyVal = pair.split("=");
-                String lhs = keyVal[0];
-                String rhs = keyVal.length > 1 ? keyVal[1] : "";
-                mUriParams.put(lhs, rhs);
-            }
+            mUriParams = HttpUtil.getURIParams(uri.substring(idx+1));
+        } else {
+            mUriParams = new HashMap<String,String>();
         }
         return mUriParams;
     }

@@ -109,7 +109,11 @@ public class ByteUtil {
     public static byte[] getRawContent(MimeBodyPart part) throws MessagingException, IOException {
     	return getContent(part.getRawInputStream(), part.getSize());
     }
-    
+
+    public static byte[] getContent(InputStream is, int sizeHint) throws IOException {
+        return getContent(is, sizeHint, -1);
+    }
+
     /**
      * read all data from specified InputStream. InputStream
      * is closed.
@@ -119,7 +123,7 @@ public class ByteUtil {
      * @throws MessagingException
      * @throws IOException
      */
-    public static byte[] getContent(InputStream is, int sizeHint) throws IOException {
+    public static byte[] getContent(InputStream is, int sizeHint, long sizeLimit) throws IOException {
         ByteArrayOutputStream baos = null;
     	try {
     		if (sizeHint < 0)
@@ -129,6 +133,8 @@ public class ByteUtil {
     		int num;
     		while ((num = is.read(buffer)) != -1) {
     			baos.write(buffer, 0, num);
+                if (sizeLimit > 0 && baos.size() > sizeLimit)
+                    throw new IOException("stream too large");
     		}
     		return baos.toByteArray();
     	} finally {

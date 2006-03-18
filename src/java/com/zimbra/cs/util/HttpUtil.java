@@ -25,7 +25,10 @@
 package com.zimbra.cs.util;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.mail.internet.MimeUtility;
 import javax.servlet.http.HttpServletRequest;
@@ -69,5 +72,31 @@ public class HttpUtil {
         } catch (UnsupportedEncodingException uee) {
             return filename;
         }
+    }
+
+    public static Map<String, String> getUriParams(HttpServletRequest req) {
+        return getURIParams(req.getQueryString());
+    }
+
+    public static Map<String, String> getURIParams(String queryString) {
+        Map<String, String> params = new HashMap<String, String>();
+        if (queryString == null || queryString.trim().equals(""))
+            return params;
+
+        for (String pair : queryString.split("&")) {
+            String[] keyVal = pair.split("=");
+            try {
+                String value = keyVal.length > 1 ? URLDecoder.decode(keyVal[1], "utf-8") : "";
+                params.put(URLDecoder.decode(keyVal[0], "utf-8"), value);
+            } catch (UnsupportedEncodingException uee) { }
+        }
+        return params;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(getURIParams((String) null));
+        System.out.println(getURIParams("foo=bar"));
+        System.out.println(getURIParams("foo=bar&baz&ben=wak"));
+        System.out.println(getURIParams("foo=bar&%45t%4E=%33%20%6eford"));
     }
 }
