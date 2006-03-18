@@ -30,6 +30,7 @@ package com.zimbra.cs.session;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
@@ -45,53 +46,9 @@ import com.zimbra.cs.util.Constants;
 public class AdminSession extends Session {
 
     private static final long ADMIN_SESSION_TIMEOUT_MSEC = 10 * Constants.MILLIS_PER_MINUTE;
-    
-    private class AccountSearchParams {
-        String mDomainId;
-        String mQuery;
-        String[] mAttrs;
-        HashSet mAttrsSet;
-        String mSortBy;
-        boolean mSortAscending;
-        int mFlags;
-        List mResult;
-        
-        AccountSearchParams(Domain d, String query, String[] attrs, String sortBy, boolean sortAscending, int flags) {
-            mDomainId = (d == null) ? "" : d.getId();
-            mQuery = (query == null) ? "" : query;
-            mAttrs = new String[attrs == null ? 0 : attrs.length];
-            for (int i=0; i < mAttrs.length; i++) mAttrs[i] = attrs[i];
-            mAttrsSet = new HashSet(Arrays.asList(mAttrs));
-            mSortBy = (sortBy == null) ? "" : sortBy;
-            mSortAscending = sortAscending;
-            mFlags = flags;
-        }
-
-        public boolean equals(Object o) {
-            if (!(o instanceof AccountSearchParams)) return false;
-            if (o == this) return true;
-            
-            AccountSearchParams other = (AccountSearchParams) o; 
-            return 
-                mDomainId.equals(other.mDomainId) &&
-                mQuery.equals(other.mQuery) &&
-                mAttrsSet.equals(other.mAttrsSet) &&
-                mSortBy.equals(other.mSortBy) &&
-                mSortAscending == other.mSortAscending &&
-                mFlags == other.mFlags;
-        }
-        
-        void doSearch() throws ServiceException {
-            if (!mDomainId.equals("")) {
-                mResult = Provisioning.getInstance().getDomainById(mDomainId).searchAccounts(mQuery, mAttrs, mSortBy, mSortAscending, mFlags);
-            } else {
-                mResult = Provisioning.getInstance().searchAccounts(mQuery, mAttrs, mSortBy, mSortAscending, mFlags);
-            }
-        }
-        
-    }
-    
+  
     private AccountSearchParams mSearchParams;
+    private HashMap<String,Object> mData = new HashMap<String,Object>();
 
     AdminSession(String accountId, String sessionId) throws ServiceException {
         super(accountId, sessionId, SessionCache.SESSION_ADMIN);
@@ -108,6 +65,9 @@ public class AdminSession extends Session {
     	super.dumpState(w);
     }
 
+    public Object getData(String key) { return mData.get(key); }
+    public void setData(String key, Object data) { mData.put(key, data); }
+    
     public void notifyPendingChanges(PendingModifications pns) { }
     
     public void notifyIM(IMNotification imn) { }
@@ -119,7 +79,7 @@ public class AdminSession extends Session {
     public List searchAccounts(Domain d, String query, String[] attrs, String sortBy,
             boolean sortAscending, int flags, int offset) throws ServiceException {
         AccountSearchParams params = new AccountSearchParams(d, query, attrs, sortBy, sortAscending, flags);
-        boolean needToSearch = (mSearchParams == null) || (offset == 0) || !mSearchParams.equals(params);
+        boolean needToSearch = (mSearchParams == null) || !mSearchParams.equals(params);
         //ZimbraLog.account.info("this="+this+" mSearchParams="+mSearchParams+" equal="+!params.equals(mSearchParams));
         if (needToSearch) {
             //ZimbraLog.account.info("doing new search: "+query+ " offset="+offset);
