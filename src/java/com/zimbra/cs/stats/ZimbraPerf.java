@@ -29,7 +29,15 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.TimerTask;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -49,6 +57,7 @@ import com.zimbra.cs.util.ZimbraLog;
 public class ZimbraPerf {
 
     static Log sLog = LogFactory.getLog(ZimbraPerf.class);
+    private static final org.apache.commons.logging.Log sZimbraStats = LogFactory.getLog("zimbra.stats");
 
     // Name constants for real-time statistics
     public static final String RTS_JAVA_HEAP_MB = "java_heap_MB"; 
@@ -105,9 +114,9 @@ public class ZimbraPerf {
         COUNTER_IDX_WRT,
         sRealtimeStats
     };
-    private static boolean sStartedZimbraStats = false;
     
-    private static Map /* <String, StatementStats */ sSqlToStats = new HashMap();
+    private static Map<String, StatementStats> sSqlToStats =
+        new HashMap<String, StatementStats>();
     
     /**
      * The number of statements that were executed, as reported by
@@ -223,10 +232,8 @@ public class ZimbraPerf {
      * Sorts stats in reverse order by count. 
      */
     private static class StatsComparator
-    implements Comparator {
-        public int compare(Object o1, Object o2) {
-            StatementStats stats1 = (StatementStats) o1;
-            StatementStats stats2 = (StatementStats) o2;
+    implements Comparator<StatementStats> {
+        public int compare(StatementStats stats1, StatementStats stats2) {
             if (stats1.mCount < stats2.mCount) {
                 return 1;
             } else if (stats1.mCount > stats2.mCount) {
@@ -256,7 +263,7 @@ public class ZimbraPerf {
                 
                 writer = new FileWriter(filename);
                 writer.write("sql,count,min_time,avg_time,max_time,total_time,percent_total_time\n");
-                List statsList = new ArrayList(sSqlToStats.values());
+                List<StatementStats> statsList = new ArrayList<StatementStats>(sSqlToStats.values());
                 Collections.sort(statsList, STATS_COMPARATOR);
                 i = statsList.iterator();
                 while (i.hasNext()) {
@@ -300,7 +307,7 @@ public class ZimbraPerf {
         }
     }
     
-    private static Map /* <String, FileWriter> */ sWriterMap = new HashMap();
+    private static Map<String, FileWriter> sWriterMap = new HashMap<String, FileWriter>();
 
     private static FileWriter getWriter(StatsFile statsFile)
     throws IOException {
@@ -354,7 +361,7 @@ public class ZimbraPerf {
      * @param stat the statistic to be logged
      */
     public static void writeStats(StatsFile statsFile, Object stat) {
-        List stats = new ArrayList();
+        List<Object> stats = new ArrayList<Object>();
         stats.add(stat);
         writeStats(statsFile, stats);
     }
@@ -371,7 +378,7 @@ public class ZimbraPerf {
      * @param eventName the event name
      */
     public static void writeStats(StatsFile statsFile, Object stat1, Object stat2) {
-        List stats = new ArrayList();
+        List<Object> stats = new ArrayList<Object>();
         stats.add(stat1);
         stats.add(stat2);
         writeStats(statsFile, stats);
@@ -390,7 +397,7 @@ public class ZimbraPerf {
      */
     public static void writeStats(StatsFile statsFile,
                                   Object stat1, Object stat2, Object stat3) {
-        List stats = new ArrayList();
+        List<Object> stats = new ArrayList<Object>();
         stats.add(stat1);
         stats.add(stat2);
         stats.add(stat3);
@@ -462,8 +469,23 @@ public class ZimbraPerf {
         sRealtimeStats.addCallback(callback);
     }
     
+    /**
+     * Returns the names of the columns for zimbrastats.csv.
+     */
+    static List<String> getZimbraStatsColumns() {
+        List<String> columns = new ArrayList<String>();
+        columns.add("timestamp");
+        synchronized (sAccumulators) {
+            for (Accumulator a : sAccumulators) {
+                for (String column : a.getNames()) {
+                    columns.add(column);
+                }
+            }
+        }
+        return columns;
+    }
+    
     static final long DUMP_FREQUENCY = Constants.MILLIS_PER_MINUTE;
-    private static StatsFile sZimbraStatsFile = null;
 
     static  {
         addStatsCallback(new SystemStats());
@@ -498,37 +520,28 @@ public class ZimbraPerf {
         
         public void run() {
             try {
-                if (!sStartedZimbraStats) {
-                    // Initialize the stats file
-                    List<String> columns = new ArrayList<String>();
-                    synchronized (sAccumulators) {
-                        for (Accumulator a : sAccumulators) {
-                            for (String column : a.getNames()) {
-                                columns.add(column);
-                            }
-                        }
-                    }
-                    String[] columnsArray = new String[columns.size()];
-                    columns.toArray(columnsArray);
-                    sZimbraStatsFile = new StatsFile("zimbrastats", columnsArray, false);
-                    sStartedZimbraStats = true;
-                }
-                
                 List<Object> data = new ArrayList<Object>();
+                data.add(TIMESTAMP_FORMATTER.format(new Date()));
                 for (Accumulator a : sAccumulators) {
                     synchronized (a) {
                         data.addAll(a.getData());
                         a.reset();
                     }
                 }
-                writeStats(sZimbraStatsFile, data);
+                
+                // Clean up nulls 
+                for (int i = 0; i < data.size(); i++) {
+                    if (data.get(i) == null) {
+                        data.set(i, "");
+                    }
+                }
+                sZimbraStats.info(StringUtil.join(",", data));
             } catch (Throwable t) {
                 if (t instanceof OutOfMemoryError) {
                     throw (OutOfMemoryError) t;
                 }
-                ZimbraLog.misc.error("Accumulator error", t);
+                ZimbraLog.perf.error("Accumulator error", t);
             }
         }
-        
     }
 }
