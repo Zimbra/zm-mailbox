@@ -30,7 +30,6 @@ import java.io.InputStream;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -432,10 +431,10 @@ public class UserServlet extends ZimbraServlet {
         String uri = SERVLET_PATH + "/~/?" + QP_ID + '=' + mpt.getOwnerId() + "%3A" + mpt.getRemoteId();
         if (context.format != null)
             uri += '&' + QP_FMT + '=' + URLEncoder.encode(context.format, "UTF-8");
-        for (Map.Entry entry : (Set<Map.Entry>) HttpUtil.getUriParams(req).entrySet()) {
-            String qp = (String) entry.getKey();
+        for (Map.Entry<String, String> entry : HttpUtil.getURIParams(req).entrySet()) {
+            String qp = entry.getKey();
             if (!qp.equals(QP_ID) && !qp.equals(QP_FMT))
-                uri += '&' + URLEncoder.encode(qp, "UTF-8") + '=' + URLEncoder.encode((String) entry.getValue(), "UTF-8");
+                uri += '&' + URLEncoder.encode(qp, "UTF-8") + '=' + URLEncoder.encode(entry.getValue(), "UTF-8");
         }
 
         try {
@@ -478,7 +477,7 @@ public class UserServlet extends ZimbraServlet {
 
             this.req = request;
             this.resp = response;
-            this.params = HttpUtil.getUriParams(request);
+            this.params = HttpUtil.getURIParams(request);
 
             String pathInfo = request.getPathInfo().toLowerCase();
             if (pathInfo == null || pathInfo.equals("/") || pathInfo.equals("")

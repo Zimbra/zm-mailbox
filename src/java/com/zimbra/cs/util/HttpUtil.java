@@ -74,7 +74,7 @@ public class HttpUtil {
         }
     }
 
-    public static Map<String, String> getUriParams(HttpServletRequest req) {
+    public static Map<String, String> getURIParams(HttpServletRequest req) {
         return getURIParams(req.getQueryString());
     }
 
