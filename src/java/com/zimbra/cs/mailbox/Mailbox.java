@@ -1123,7 +1123,7 @@ public class Mailbox {
         System.arraycopy(mailboxIds, 0, result, 0, i);
         return result;
     }
-    
+
     /** Returns an array of the account IDs of all the mailboxes on this host.
      *  Note that <code>Mailbox</code>es are lazily created, so this is not
      *  the same as the set of accounts whose <code>zimbraMailHost</code> LDAP
@@ -1144,7 +1144,28 @@ public class Mailbox {
         System.arraycopy(accountIds, 0, result, 0, i);
         return result;
     }
-    
+
+    /** Returns the zimbra IDs and approximate sizes for all mailboxes on
+     *  the system.  Note that mailboxes are created lazily, so there may be
+     *  accounts homed on this system for whom there is is not yet a mailbox
+     *  and hence are not included in the returned <code>Map</code>.  Sizes
+     *  are checkpointed frequently, but there is no guarantee that the
+     *  approximate sizes are currently accurate.
+     *  
+     * @throws ServiceException  The following error codes are possible:<ul>
+     *    <li><code>service.FAILURE</code> - an error occurred while accessing
+     *        the database; a SQLException is encapsulated</ul> */
+    public static Map<String, Long> getMailboxSizes() throws ServiceException {
+        Connection conn = null;
+        try {
+            conn = DbPool.getConnection();
+            return DbMailbox.getMailboxSizes(conn);
+        } finally {
+            if (conn != null)
+                DbPool.quietClose(conn);
+        }
+    }
+
 
     /** Creates a <code>Mailbox</code> for the given {@link Account}, caches
      *  it for the lifetime of the server, inserts the default set of system
