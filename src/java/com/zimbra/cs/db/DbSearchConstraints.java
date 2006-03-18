@@ -21,7 +21,7 @@ import com.zimbra.cs.util.ZimbraLog;
  * 
  * "optional" entries are ignored if the default value is passed 
  */
-public class DbSearchConstraints implements DbSearchConstraintsNode {
+public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
 
 	public DbSearchConstraintsNode.NodeType getNodeType() { return DbSearchConstraintsNode.NodeType.LEAF; }
 	public Iterable<DbSearchConstraintsNode> getSubNodes() { return null; }
@@ -73,6 +73,12 @@ public class DbSearchConstraints implements DbSearchConstraintsNode {
 	public byte sort;                                /* required */
 	public int offset = -1;                 /* optional */
 	public int limit = -1;                  /* optional */
+	
+	//
+	// When we COMBINE the operations, we'll need to track some state values
+	// for example "no results" 
+	//
+	public boolean noResults = false;
 
 	//
 	// These are the main constraints 
@@ -99,12 +105,39 @@ public class DbSearchConstraints implements DbSearchConstraintsNode {
 	public Collection<Range> dates = new ArrayList<Range>();    /* optional */
 	public Collection<Range> modified = new ArrayList<Range>(); /* optional */
 	public Collection<Range> sizes = new ArrayList<Range>();    /* optional */
+
 	
-	//
-	// When we COMBINE the operations, we'll need to track some state values
-	// for example "no results" 
-	//
-	public boolean noResults = false;
+	public Object clone() throws CloneNotSupportedException {
+		DbSearchConstraints toRet = (DbSearchConstraints)super.clone();
+		
+		if (tags != null) {
+			toRet.tags = new HashSet<Tag>();          
+			toRet.tags.addAll(tags);
+		}
+		
+		toRet.excludeTags = new HashSet<Tag>();   toRet.excludeTags.addAll(excludeTags);
+		
+		toRet.folders = new HashSet<Folder>();        toRet.folders.addAll(folders);
+		toRet.excludeFolders = new HashSet<Folder>(); toRet.excludeFolders.addAll(excludeFolders);
+
+		toRet.convId = convId;
+		toRet.prohibitedConvIds = new HashSet<Integer>(); toRet.prohibitedConvIds.addAll(prohibitedConvIds);
+		
+		toRet.itemIds = new HashSet<Integer>();  toRet.itemIds.addAll(itemIds);
+		toRet.prohibitedItemIds = new HashSet<Integer>(); toRet.prohibitedItemIds.addAll(prohibitedItemIds);
+		
+		toRet.indexIds = new HashSet<Integer>(); toRet.indexIds.addAll(indexIds);
+		
+		toRet.types = new HashSet<Byte>(); toRet.types.addAll(types);
+		toRet.excludeTypes = new HashSet<Byte>(); toRet.excludeTypes.addAll(excludeTypes);
+		
+		toRet.dates = new HashSet<Range>(); toRet.dates.addAll(dates);
+		toRet.modified = new HashSet<Range>(); toRet.modified.addAll(modified);
+		toRet.sizes = new HashSet<Range>(); toRet.sizes.addAll(sizes);
+		
+		return toRet;
+	}
+	
 
     DbMailItem.TagConstraints tagConstraints;
 	

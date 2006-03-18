@@ -43,16 +43,17 @@ import com.zimbra.cs.service.ServiceException;
  * 
  * QueryOperation
  *
- * A QueryOperation is a part of a Search request -- there are potentially mutliple query operations
- * in a search.  QueryOperations return ZimbraQueryResultsImpl sets -- which can be iterated
- * over to get ZimbraHit objects.  
+ * A QueryOperation is a part of a Search request -- there are potentially 
+ * mutliple query operations in a search.  QueryOperations return 
+ * ZimbraQueryResultsImpl sets -- which can be iterated over to get ZimbraHit
+ * objects.  
  * 
- * The difference between a QueryOperation and a simple ZimbraQueryResultsImpl set is that 
- * a QueryOperation knows how to Optimize and Execute itself -- whereas a QueryResults set is 
- * just a set of results and can only be iterated.  
+ * The difference between a QueryOperation and a simple ZimbraQueryResultsImpl
+ * set is that a QueryOperation knows how to Optimize and Execute itself -- 
+ * whereas a QueryResults set is just a set of results and can only be iterated.  
  * 
  ***********************************************************************/
-abstract class QueryOperation implements ZimbraQueryResults
+abstract class QueryOperation implements Cloneable, ZimbraQueryResults
 {
 	// order does matter somewhat -- order is used to sort execution order when
 	// there are multiple operations to choose from (e.g. an OR of two operations, etc)
@@ -243,28 +244,21 @@ abstract class QueryOperation implements ZimbraQueryResults
     
     abstract QueryTarget getQueryTarget();
     
+    public Object clone() throws CloneNotSupportedException {
+    	return super.clone();
+    }
+    
     private boolean mIsToplevelQueryOp = false;
     protected boolean isTopLevelQueryOp() { return mIsToplevelQueryOp; }
-    
     private ZimbraQueryResultsImpl mResults;
     private Mailbox mMailbox;
+    
+    
     final protected Mailbox getMailbox() { return mMailbox; }
     final protected ZimbraQueryResultsImpl getResultsSet() { return mResults; }
     final protected void setupResults(Mailbox mbx, ZimbraQueryResultsImpl res) {
         mMailbox = mbx;
         mResults = res;
-    }
-    
-    private int mExecutionCost = -1;
-    
-    
-    ////////////////////
-    // Execution Cost
-    final protected int getExecutionCost() {
-        if (mExecutionCost == -1) {
-            mExecutionCost = inheritedGetExecutionCost();
-        }
-        return mExecutionCost;
     }
     
     /**
@@ -315,8 +309,5 @@ abstract class QueryOperation implements ZimbraQueryResults
      * not be combined.
      */
     protected abstract QueryOperation combineOps(QueryOperation other, boolean union);
-    
-    protected abstract int inheritedGetExecutionCost();
-
     
 }

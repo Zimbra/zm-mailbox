@@ -209,7 +209,7 @@ class LuceneQueryOperation extends QueryOperation
         return null;
     }
     
-    protected BooleanQuery mQuery;
+    private BooleanQuery mQuery;
     
     static LuceneQueryOperation Create() {
         LuceneQueryOperation toRet = new LuceneQueryOperation();
@@ -280,6 +280,34 @@ class LuceneQueryOperation extends QueryOperation
     public String toString()
     {
         return "LUCENE(" + mQuery.toString() + ")";
+    }
+    
+    private LuceneQueryOperation cloneInternal() throws CloneNotSupportedException {
+    	LuceneQueryOperation toRet = (LuceneQueryOperation)super.clone();
+    	
+    	assert(mSearcher == null);
+    	assert(mSort == null);
+    	assert(!mHaveRunSearch);
+    	
+    	mQuery = (BooleanQuery)mQuery.clone();
+    	
+    	return toRet;
+    }
+    
+    public Object clone() throws CloneNotSupportedException {
+    	LuceneQueryOperation toRet = cloneInternal();
+    	
+    	toRet.mDBOp = (DBQueryOperation)mDBOp.clone(this);
+    	
+    	return toRet;
+    }
+    
+    public Object clone(DBQueryOperation caller) throws CloneNotSupportedException {
+    	LuceneQueryOperation toRet = cloneInternal();
+    	
+    	toRet.mDBOp = caller;
+    	
+    	return toRet;
     }
     
     protected QueryOperation combineOps(QueryOperation other, boolean union) {

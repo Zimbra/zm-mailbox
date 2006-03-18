@@ -58,6 +58,7 @@ import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.ServiceException;
 
@@ -69,26 +70,26 @@ import com.zimbra.cs.service.ServiceException;
  ***********************************************************************/
 class DBQueryOperation extends QueryOperation
 {
-    private static Log mLog = LogFactory.getLog(DBQueryOperation.class);
+    protected static Log mLog = LogFactory.getLog(DBQueryOperation.class);
     
-    private IConstraints mConstraints = new LeafNode();
-    private int mOffset = -1;
-    private int mLimit = -1;
+    protected IConstraints mConstraints = new LeafNode();
+    protected int mOffset = -1;
+    protected int mLimit = -1;
 
     /**
      * this gets set to FALSE if we have any real work to do this lets 
      * us optimize away queries that might match "everything"
      */
-    private boolean mAllResultsQuery = true;
+    protected boolean mAllResultsQuery = true;
      
-    private Collection <SearchResult> mDBHits;
-    private List<ZimbraHit>mNextHits = new ArrayList<ZimbraHit>();
-    private Iterator mDBHitsIter;
-    private int mCurHitsOffset = 0; // -1 means "no more results"
-    private boolean atStart = true; // don't re-fill buffer twice if they call hasNext() then reset() w/o actually getting next
-    private int mHitsPerChunk = 100;
-    private static final int MAX_HITS_PER_CHUNK = 2000;
-    private boolean mFailedDbFirst = false;
+    protected Collection <SearchResult> mDBHits;
+    protected List<ZimbraHit>mNextHits = new ArrayList<ZimbraHit>();
+    protected Iterator mDBHitsIter;
+    protected int mCurHitsOffset = 0; // -1 means "no more results"
+    protected boolean atStart = true; // don't re-fill buffer twice if they call hasNext() then reset() w/o actually getting next
+    protected int mHitsPerChunk = 100;
+    protected static final int MAX_HITS_PER_CHUNK = 2000;
+    protected boolean mFailedDbFirst = false;
     
     /**
      * The maximum DB results we will allow when running a DB-FIRST query: if there 
@@ -103,34 +104,42 @@ class DBQueryOperation extends QueryOperation
      * (LuceneQuery.getMaxClauseCount())
      * 
      */
-    private static final int MAX_DBFIRST_RESULTS = 900;
+    protected static final int MAX_DBFIRST_RESULTS = 900;
     
     /**
      * TRUE if we know there are no more hits to get for mDBHitsIter 
      *   -- ie there is no need to call getChunk() anymore
      */
-    private boolean mEndOfHits = false;
+    protected boolean mEndOfHits = false;
     
-    private HashSet<Byte> mTypes = new HashSet<Byte>();
-    private HashSet<Byte>mExcludeTypes = new HashSet<Byte>();
+    protected HashSet<Byte>mTypes = new HashSet<Byte>();
+    protected HashSet<Byte>mExcludeTypes = new HashSet<Byte>();
     
     /**
      * An attached Lucene constraint
      */
-    private LuceneQueryOperation mLuceneOp = null;
+    protected LuceneQueryOperation mLuceneOp = null;
 
     /**
      * The current "chunk" of lucene results we are working through -- we need to keep it around
      * so that we can look up the scores of hits that match the DB
      */
-    private LuceneQueryOperation.LuceneResultsChunk mLuceneChunk = null;
+    protected LuceneQueryOperation.LuceneResultsChunk mLuceneChunk = null;
+    
+    /**
+     * If set, then this is the AccountId of the owner of a folder
+     * we are searching.  We track it at the toplevel here b/c we need
+     * to make sure that we handle unions (don't combine) and intersections
+     * (always empty set) correctly
+     */
+    protected String mTargetAccountId = null;
     
     protected DBQueryOperation() { }
 
     static DBQueryOperation Create() { return new DBQueryOperation(); }
     
     
-    private static interface IConstraints extends DbSearchConstraintsNode {
+    protected static interface IConstraints extends DbSearchConstraintsNode, Cloneable {
     	void ensureSpamTrashSetting(Mailbox mbox, List<Folder> excludeFolders) throws ServiceException;
     	IConstraints andIConstraints(IConstraints other);
     	IConstraints orIConstraints(IConstraints other);
@@ -139,9 +148,10 @@ class DBQueryOperation extends QueryOperation
     	boolean hasNoResults();
     	boolean tryDbFirst(Mailbox mbox);
     	void setTypes(Set<Byte> types);
+    	public Object clone() throws CloneNotSupportedException;
     }
     
-    private static class OrNode implements IConstraints {
+    protected static class OrNode implements IConstraints {
  	   public NodeType getNodeType() { return NodeType.OR; }
  	   
  	   /**
@@ -157,6 +167,16 @@ class DBQueryOperation extends QueryOperation
  	   public DbSearchConstraints getSearchConstraints() { return null; }
  	   
  	   protected List<IConstraints> mSubNodes = new ArrayList<IConstraints>();
+ 	   
+ 	   public Object clone() throws CloneNotSupportedException {
+ 		   OrNode toRet = (OrNode)super.clone();
+ 		   
+ 		   toRet.mSubNodes = new ArrayList<IConstraints>();  
+ 		   for (IConstraints node : mSubNodes)
+ 			   toRet.mSubNodes.add((IConstraints)node.clone());
+ 		   
+ 		   return toRet;
+ 	   }
  	   
  	   public IConstraints andIConstraints(IConstraints other) {
  		   if (other.getNodeType() == NodeType.AND) {
@@ -235,12 +255,22 @@ class DBQueryOperation extends QueryOperation
  	   
      }
     
-    private static class AndNode implements IConstraints {
+    protected static class AndNode implements IConstraints {
  	   public NodeType getNodeType() { return NodeType.AND; }
  	   public Iterable<? extends DbSearchConstraintsNode> getSubNodes() { return mSubNodes; }
  	   public DbSearchConstraints getSearchConstraints() { return null; }
  	   
  	   protected List<IConstraints> mSubNodes = new ArrayList<IConstraints>();
+ 	   
+ 	   public Object clone() throws CloneNotSupportedException {
+ 		   AndNode toRet = (AndNode)super.clone();
+ 		   
+ 		   toRet.mSubNodes = new ArrayList<IConstraints>();  
+ 		   for (IConstraints node : mSubNodes)
+ 			   toRet.mSubNodes.add((IConstraints)node.clone());
+ 		   
+ 		   return toRet;
+ 	   }
  	   
  	   LeafNode getLeafChild() {
  		   for (IConstraints n : mSubNodes)
@@ -333,8 +363,17 @@ class DBQueryOperation extends QueryOperation
  	   
     }
     
-    
-    private static class LeafNode extends DbSearchConstraints implements IConstraints {
+    protected static class LeafNode extends DbSearchConstraints implements IConstraints {
+    	
+    	public Object clone() throws CloneNotSupportedException {
+    		LeafNode toRet = (LeafNode)super.clone();
+    		
+    		// make sure we cloned folders instead of just copying them!
+    		assert(toRet.folders != folders);
+    		
+    		return toRet;
+    	}
+    	
     	public void ensureSpamTrashSetting(Mailbox mbox, List<Folder> excludeFolders) throws ServiceException
         {
     		if (!mHasSpamTrashSetting) {
@@ -484,14 +523,14 @@ class DBQueryOperation extends QueryOperation
         	if (truth) {
         		if ((folders.size() > 0 && !folders.contains(folder)) 
         				|| excludeFolders.contains(folder)) {
-            		if (mLog.isDebugEnabled()) {
-            			mLog.debug("AND of conflicting folders, no-results-query");
-            		}
-            		noResults = true;
-            	}
+        			if (mLog.isDebugEnabled()) {
+        				mLog.debug("AND of conflicting folders, no-results-query");
+        			}
+        			noResults = true;
+        		}
         		folders.clear();
         		folders.add(folder);
-            	forceHasSpamTrashSetting();
+        		forceHasSpamTrashSetting();
             } else {
             	if (folders.contains(folder)) {
             		folders.remove(folder);
@@ -559,16 +598,7 @@ class DBQueryOperation extends QueryOperation
         }
         
 
-        /**
-         * true if we have a SETTING pertaining to Spam/Trash.  This doesn't 
-         * necessarily mean we actually have "in trash" or something, it just
-         * means that we've got something set which means we shouldn't add 
-         * the default "not in:trash and not in:junk" thing.
-         */        
-        protected boolean mHasSpamTrashSetting = false;
-        
-  	   
-  	   public void setTypes(Set<Byte> _types) {
+        public void setTypes(Set<Byte> _types) {
   		   this.types = _types;
   	   }
   	   
@@ -576,6 +606,15 @@ class DBQueryOperation extends QueryOperation
  	   {
  		   return super.toString();
  	   }
+ 	   
+ 	   /**
+ 	    * true if we have a SETTING pertaining to Spam/Trash.  This doesn't 
+ 	    * necessarily mean we actually have "in trash" or something, it just 
+ 	    * means that we've got something set which means we shouldn't add 
+ 	    * the default "not in:trash and not in:junk" thing.
+ 	    */
+ 	   protected boolean mHasSpamTrashSetting = false;
+ 	   
     }
     
 
@@ -715,6 +754,28 @@ class DBQueryOperation extends QueryOperation
     void addInClause(Folder folder, boolean truth) 
     {
     	mAllResultsQuery = false;
+
+    	// is it a mountpoint?
+    	if (folder instanceof Mountpoint) {
+    		Mountpoint mpt = (Mountpoint)folder;
+    		
+    		if (mTargetAccountId != null && !mTargetAccountId.equals(mpt.getOwnerId()))
+    			throw new IllegalArgumentException("Cannot addInClause b/c DBQueryOperation already has an incompatible remote target");
+    		
+    		mTargetAccountId = mpt.getOwnerId();
+    		
+//    		 check to see if this mountpoint is local or remote...
+//    		if (!mpt.getOwnerId().equals(mpt.getMailbox().getAccountId())) {
+//    			// remote!
+//    		}
+    		
+    	} else {
+    		if (mTargetAccountId != null && mTargetAccountId != folder.getMailbox().getAccountId())
+    			throw new IllegalArgumentException("Cannot addInClause w/ local target b/c DBQueryOperation already has a remote target");
+    		
+    		mTargetAccountId = folder.getMailbox().getAccountId();
+    	}
+    	
     	topLevelAndedConstraint().addInClause(folder, truth);
     }
     
@@ -792,6 +853,15 @@ class DBQueryOperation extends QueryOperation
 	        mLuceneOp.doneWithSearchResults();
 	    }
 	}
+	
+	   public String getTargetAccountId() {
+ 		   return mTargetAccountId;
+ 	   }
+	   
+	   boolean isRemote() {
+		   return (mTargetAccountId == null || !mTargetAccountId.equals(getMailbox().getAccountId()));
+	   }
+	   
 
 	/******************
      * 
@@ -1243,13 +1313,44 @@ class DBQueryOperation extends QueryOperation
         return retVal.toString();
     }
     
+    private DBQueryOperation cloneInternal() throws CloneNotSupportedException {
+    	DBQueryOperation toRet = (DBQueryOperation)super.clone();
+    	
+    	assert(mDBHits == null);
+    	assert(mDBHitsIter == null);
+    	assert(mLuceneChunk == null);
+    	
+    	
+    	toRet.mConstraints = (IConstraints)mConstraints.clone();
+
+    	toRet.mTypes = new HashSet<Byte>();  toRet.mTypes.addAll(mTypes);
+    	toRet.mExcludeTypes = new HashSet<Byte>();  toRet.mExcludeTypes.addAll(mExcludeTypes);
+    	
+    	toRet.mNextHits = new ArrayList<ZimbraHit>();
+    	
+    	return toRet;
+    }
+    
+    public Object clone() throws CloneNotSupportedException {
+    	DBQueryOperation toRet = cloneInternal();
+    	toRet.mLuceneOp = (LuceneQueryOperation)mLuceneOp.clone(this);
+    	return toRet;
+    }
+    
+    public Object clone(LuceneQueryOperation caller) throws CloneNotSupportedException {
+    	DBQueryOperation toRet = cloneInternal();
+    	toRet.mLuceneOp = caller;
+    	return toRet;
+    }
+    
+    
+    
     /* (non-Javadoc)
      * @see com.zimbra.cs.index.QueryOperation#combineOps(com.zimbra.cs.index.QueryOperation, boolean)  
      */
     protected QueryOperation combineOps(QueryOperation other, boolean union) 
     {
     	if (union) {
-    		// only join on intersection right now...
     		if (hasNoResults()) {
     			// a query for (other OR nothing) == other
     			return other;
@@ -1258,12 +1359,18 @@ class DBQueryOperation extends QueryOperation
     			return this;
     		}
     		
-    		if (mAllResultsQuery)
-    			return this;
-
     		DBQueryOperation dbOther = null;
 
     		if (other instanceof DBQueryOperation) {
+    			
+    			if (mTargetAccountId != null && dbOther.mTargetAccountId != null) {
+    				if (!mTargetAccountId.equals(dbOther.mTargetAccountId))
+    					return null;  // can't OR entries with different targets
+    			}
+    			
+    			if (mAllResultsQuery)
+        			return this;
+
     			dbOther = (DBQueryOperation)other;
     			
     			if (dbOther.mAllResultsQuery) // (something OR ALL ) == ALL
@@ -1273,7 +1380,10 @@ class DBQueryOperation extends QueryOperation
     				// can't combine
     				return null;
     			}
-    				
+    			
+    			if (mTargetAccountId == null)
+    				mTargetAccountId = dbOther.mTargetAccountId;
+    			
     			mConstraints = mConstraints.orIConstraints(dbOther.mConstraints);
     			return this;
     		} else {
@@ -1289,7 +1399,7 @@ class DBQueryOperation extends QueryOperation
     			}
     			return other;
     		}
-
+    		
     		DBQueryOperation dbOther = null;
 
     		if (other instanceof DBQueryOperation) {
@@ -1297,7 +1407,20 @@ class DBQueryOperation extends QueryOperation
     		} else {
     			return null;
     		}
-
+    		
+    		if (dbOther.mAllResultsQuery)
+    			return this;
+    		
+    		if (mTargetAccountId != null && dbOther.mTargetAccountId != null) {
+    			if (!mTargetAccountId.equals(dbOther.mTargetAccountId)) {
+    				mLog.debug("ANDing two DBOps with different targets -- this is a no results query!");
+    				return new NullQueryOperation();
+    			}
+			}
+    		
+    		if (mTargetAccountId == null) 
+    			mTargetAccountId = dbOther.mTargetAccountId;
+    		
     		if (mLuceneOp != null) {
     			if (dbOther.mLuceneOp != null) {
     				mLuceneOp.combineOps(dbOther.mLuceneOp, false);
@@ -1312,7 +1435,6 @@ class DBQueryOperation extends QueryOperation
     			mAllResultsQuery = false;
     		}
 
-//  		((LeafNode)mConstraints).andConstraints((LeafNode)dbOther.mConstraints);
     		mConstraints = mConstraints.andIConstraints(dbOther.mConstraints);
 
     		return this;

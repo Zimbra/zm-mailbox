@@ -243,17 +243,6 @@ class UnionQueryOperation extends QueryOperation
                         mQueryOperations.add(joined);
                         continue outer;
                     }
-                    
-                    // order the operations by execution cost -- cheapest first.  no
-                    // real point here - TODO remove this probably
-                    if (rhs.getExecutionCost() < lhs.getExecutionCost()) {
-                        // move i to the end...
-                        // note that this effectively makes the big loop a cubic (N^3) operation.
-                        // It probably doesn't matter, but TODO maybe fixme
-                        mQueryOperations.remove(i);
-                        mQueryOperations.add(lhs);
-                        continue outer;
-                    }
                 }
             }
             break;
@@ -280,6 +269,17 @@ class UnionQueryOperation extends QueryOperation
         return retval.toString();
     }
     
+    public Object clone() throws CloneNotSupportedException {
+    	UnionQueryOperation toRet = (UnionQueryOperation)super.clone();
+    	
+    	assert(mCachedNextHit == null);
+    	
+    	toRet.mQueryOperations = new ArrayList<QueryOperation>(mQueryOperations.size());
+    	for (QueryOperation q : mQueryOperations)
+    		toRet.mQueryOperations.add(q);
+    	
+    	return toRet;
+    }
     
     protected QueryOperation combineOps(QueryOperation other, boolean union) {
         if (mLog.isDebugEnabled()) {
@@ -308,12 +308,4 @@ class UnionQueryOperation extends QueryOperation
         internalGetNext();
     }
     
-    protected int inheritedGetExecutionCost()
-    {
-        int retVal = 10;
-        for (int i = 0; i < mQueryOperations.size(); i++) {
-            retVal += ((QueryOperation)mQueryOperations.get(i)).getExecutionCost();
-        }
-        return retVal;
-    }
 }

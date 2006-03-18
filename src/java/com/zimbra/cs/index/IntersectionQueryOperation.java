@@ -82,7 +82,7 @@ class IntersectionQueryOperation extends QueryOperation {
 
     }
 
-    ArrayList /* ZimbraHit */mBufferedNext = new ArrayList(1);
+    ArrayList<ZimbraHit>mBufferedNext = new ArrayList<ZimbraHit>(1);
 
     /**
      * There can be multiple Hits with the same exact sort-field.  This function does
@@ -124,7 +124,7 @@ class IntersectionQueryOperation extends QueryOperation {
                     
                 }
                 
-                ArrayList seenMsgs = new ArrayList();
+                ArrayList<Integer>seenMsgs = new ArrayList<Integer>();
                 
                 do {
                     if (curHit != null && msgId > 0) {
@@ -259,7 +259,7 @@ class IntersectionQueryOperation extends QueryOperation {
             
         }
 
-        private ArrayList /* ZimbraHit */mBufferedHit = new ArrayList();
+        private ArrayList <ZimbraHit>mBufferedHit = new ArrayList<ZimbraHit>();
 
         int getNextMessageId(ArrayList seenMsgs) throws ServiceException {
             for (int i = 1; i < mBufferedHit.size(); i++) {
@@ -538,13 +538,13 @@ class IntersectionQueryOperation extends QueryOperation {
     void addQueryOp(QueryOperation op) {
         assert(op!=null);
         if (mQueryOperations == null) {
-            mQueryOperations = new ArrayList();
+            mQueryOperations = new ArrayList<QueryOperation>();
         }
         mQueryOperations.add(op);
         Collections.sort(mQueryOperations, sQueryOpSortComparator);
     }
     
-    void addQueryOps(List /* QueryOperation */ ops) {
+    void addQueryOps(List<QueryOperation>ops) {
         mQueryOperations.addAll(ops);
         Collections.sort(mQueryOperations, sQueryOpSortComparator);
     }
@@ -682,6 +682,21 @@ class IntersectionQueryOperation extends QueryOperation {
         return retval.toString();
     }
 
+    public Object clone() throws CloneNotSupportedException {
+    	IntersectionQueryOperation toRet = (IntersectionQueryOperation)super.clone();
+    	
+    	assert(mMessageGrouper == null);
+    	
+    	toRet.mBufferedNext = new ArrayList<ZimbraHit>(1);
+    	
+    	toRet.mQueryOperations = new ArrayList<QueryOperation>(mQueryOperations.size());
+    	for (QueryOperation q : mQueryOperations)
+    		toRet.mQueryOperations.add(q);
+    	
+    	return toRet;
+    }
+    
+    
     protected QueryOperation combineOps(QueryOperation other, boolean union) {
         if (!union && other instanceof IntersectionQueryOperation) {
             addQueryOps(((IntersectionQueryOperation) other).mQueryOperations);
@@ -739,14 +754,4 @@ class IntersectionQueryOperation extends QueryOperation {
             }
         }
     }
-
-    protected int inheritedGetExecutionCost() {
-        int retVal = 15;
-        for (Iterator iter = mQueryOperations.iterator(); iter.hasNext();) {
-            QueryOperation op = (QueryOperation) iter.next();
-            retVal += op.getExecutionCost();
-        }
-        return retVal;
-    }
-
 }
