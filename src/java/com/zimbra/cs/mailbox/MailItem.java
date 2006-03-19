@@ -215,7 +215,7 @@ public abstract class MailItem implements Comparable {
         public String toString() {
             if (length == 0)
                 return null;
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             for (int i = 0; i < length; i++) {
                 if (i > 0)
                     sb.append(',');
@@ -338,7 +338,7 @@ public abstract class MailItem implements Comparable {
         public String toString() {
             if (inclusions == 0)
                 return "";
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             if ((inclusions & INCLUDE_TRASH) != 0)   sb.append(ENC_TRASH);
             if ((inclusions & INCLUDE_SPAM) != 0)    sb.append(ENC_SPAM);
             if ((inclusions & INCLUDE_SENT) != 0)    sb.append(ENC_SENT);
@@ -526,10 +526,10 @@ public abstract class MailItem implements Comparable {
      *  formed by concatenating the appropriate {@link Flag#FLAG_REP}
      *  characters for all flags set on the item. */
     public String getFlagString() {
-        String baseFlags = isUnread() ? Flag.UNREAD_FLAG_ONLY : "";
         if (mData.flags == 0)
-            return baseFlags;
-        return Flag.bitmaskToFlags(mData.flags, new StringBuffer(baseFlags)).toString();
+            return isUnread() ? Flag.UNREAD_FLAG_ONLY : "";
+        int flags = mData.flags | (isUnread() ? Flag.FLAG_UNREAD : 0);
+        return Flag.bitmaskToFlags(flags);
     }
 
     public long getTagBitmask() {
@@ -544,6 +544,10 @@ public abstract class MailItem implements Comparable {
 		long bitmask = (tag == null ? 0 : (tag instanceof Flag ? mData.flags : mData.tags));
 		return ((bitmask & tag.getBitmask()) != 0);
 	}
+    
+    public List<Tag> getTagList() throws ServiceException {
+        return Tag.bitmaskToTagList(mMailbox, mData.tags);
+    }
 
     private boolean isTagged(int tagId) {
         long bitmask = (tagId < 0 ? mData.flags : mData.tags);

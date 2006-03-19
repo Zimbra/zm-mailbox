@@ -23,7 +23,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.mailbox;
+package com.zimbra.cs.service.formatter;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -34,7 +34,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.Map.Entry;
+
+import com.zimbra.cs.mailbox.Contact;
 
 public class ContactCSV {
 
@@ -167,7 +168,7 @@ public class ContactCSV {
     private static final int OP_STREETADDRESS = 3;
     private static final int OP_NAME = 4;
 
-    private static List sMappings = new ArrayList();
+    private static List<Mapping> sMappings = new ArrayList<Mapping>();
     
     private static class Mapping {
         private Object mCsvName;
@@ -217,7 +218,7 @@ public class ContactCSV {
     }    
 
     private static Mapping addMapping(String[] csvName, String contactName, int op) {
-	return addMapping(csvName, contactName, op, true);
+        return addMapping(csvName, contactName, op, true);
     }    
     
     static {
@@ -226,7 +227,7 @@ public class ContactCSV {
         //CSV_Assistant_s_Name
         //CSV_Assistant_s_Phone
         //CSV_Billing_Information
-        //CSV_Birthday
+        addMapping(CSV_Birthday, Contact.A_birthday, OP_MAP);
         //CSV_Business_Address_PO_Box
         
         addMapping(CSV_Alternate_Email_1, Contact.A_email2, OP_MAP, false);
@@ -342,14 +343,13 @@ public class ContactCSV {
         addMapping(CSV_Work_ZIP, Contact.A_workPostalCode, OP_MAP, false);
     };
 
-    private HashMap mFieldCols;
-    private ArrayList mFields;
-    private int mNumFields;
+    private HashMap<String, Integer> mFieldCols;
+    private ArrayList<String> mFields;
 
     /**
      * read a line of fields into an array list. blank fields (,, or ,"",) will be null. 
      */
-    private boolean parseLine(BufferedReader reader, List result, boolean parsingHeader) throws IOException, ParseException {
+    private boolean parseLine(BufferedReader reader, List<String> result, boolean parsingHeader) throws IOException, ParseException {
         result.clear();
         int ch;
         boolean inField = false;
@@ -423,46 +423,38 @@ public class ContactCSV {
     }
     
     private int getColumn(String field) {
-        Integer col = (Integer) mFieldCols.get(field.toLowerCase());
+        Integer col = mFieldCols.get(field.toLowerCase());
         return col == null ? -1 : col.intValue();
     }
 
     /**
      */
     private void initFields(BufferedReader reader) throws IOException, ParseException {
-        mFields = new ArrayList();
+        mFields = new ArrayList<String>();
         
-        if (!parseLine(reader, mFields, true))
-            throw new ParseException("no column name definitions");
+        parseLine(reader, mFields, true);
         
         // create mapping from CSV field name to column
-        mFieldCols = new HashMap(mFields.size());
-        for (int i = 0; i < mFields.size(); i++) {
-            String fieldName = (String) mFields.get(i);
-            if (fieldName == null || fieldName.equals(""))
-                throw new ParseException("missing column name for column " + i);
-            mFieldCols.put(fieldName.toLowerCase(), i);
-        }
-        
-        mNumFields = mFields.size();
+        mFieldCols = new HashMap<String, Integer>(mFields.size());
+        for (int i = 0; i < mFields.size(); i++)
+            mFieldCols.put(mFields.get(i).toString().toLowerCase(), i);
     }
 
-    private String getField(String colName, List csv) {
-        Integer col = (Integer) mFieldCols.get(colName.toLowerCase());
+    private String getField(String colName, List<String> csv) {
+        Integer col = mFieldCols.get(colName.toLowerCase());
         if (col == null || col.intValue() >= csv.size())
             return null;
-        else
-            return (String) csv.get(col.intValue());
+        else return csv.get(col);
     }
 
-    private void addField(String colName, List csv, String field, Map contact) {
+    private void addField(String colName, List<String> csv, String field, Map<String, String> contact) {
         String value = getField(colName, csv);
         if (value != null && value.length() > 0) {
             contact.put(field, value);
         }
     }
 
-    private void addStreetField(String cols[], List csv, String field, Map contact) {
+    private void addStreetField(String cols[], List<String> csv, String field, Map<String, String> contact) {
         StringBuffer sb = new StringBuffer();        
         for (int i=0; i < cols.length; i++) {
             String value = getField(cols[i], csv);
@@ -474,7 +466,7 @@ public class ContactCSV {
         if (sb.length() > 0) contact.put(field, sb.toString());
     }
 
-    private void addEmailField(String cols[], List csv, String field, Map contact) {
+    private void addEmailField(String cols[], List<String> csv, String field, Map<String, String> contact) {
         String colAddress = cols[0];
         String colDisplayName = cols[1];
         String colType = cols[2];        
@@ -487,7 +479,7 @@ public class ContactCSV {
         }
     }
 
-    private void addNameField(String name, List csv, Map contact) {
+    private void addNameField(String name, List<String> csv, Map<String, String> contact) {
         String value = getField(name, csv);
         if (value != null) {
             if (value.indexOf(',') != -1) {
@@ -518,11 +510,10 @@ public class ContactCSV {
         }
     }
 
-    private Map toContact(List csv) {
-        Map contact = new HashMap();
-     
-        for (Iterator it = sMappings.iterator(); it.hasNext(); ) {
-            Mapping mp = (Mapping) it.next();
+    private Map<String, String> toContact(List<String> csv) {
+        Map<String, String> contact = new HashMap<String, String>();
+
+        for (Mapping mp : sMappings) {
             switch(mp.getOp()) {
                 case OP_MAP:
                     addField(mp.getCsvName(), csv, mp.getContactName(), contact);
@@ -548,15 +539,15 @@ public class ContactCSV {
      * @throws ParseException 
      * @throws IOException 
      */
-    private List getContactsInternal(BufferedReader reader) throws ParseException {
+    private List<Map<String, String>> getContactsInternal(BufferedReader reader) throws ParseException {
         try {
             initFields(reader);
 
-            List result = new ArrayList();
-            List fields = new ArrayList();
+            List<Map<String, String>> result = new ArrayList<Map<String, String>>();
+            List<String> fields = new ArrayList<String>();
             
-            while(parseLine(reader, fields, false)) {
-                Map contact = toContact(fields);
+            while (parseLine(reader, fields, false)) {
+                Map<String, String> contact = toContact(fields);
                 if (contact.size() > 0)
                     result.add(contact);
             }
@@ -573,7 +564,7 @@ public class ContactCSV {
      * @throws ParseException 
      * @throws IOException 
      */
-    public static List getContacts(BufferedReader reader) throws ParseException {
+    public static List<Map<String, String>> getContacts(BufferedReader reader) throws ParseException {
         ContactCSV csv = new ContactCSV();
         return csv.getContactsInternal(reader);
     }
@@ -596,7 +587,7 @@ public class ContactCSV {
  
     private static void addStreetFieldValue(Map contact, String cols[], String field, StringBuffer sb, boolean isFirst) {
         // TODO: split them back into cols.length fields    
-        for (int i=0; i < cols.length; i++) {
+        for (int i = 0; i < cols.length; i++) {
             if (i == 0) {
                 addFieldValue(contact, field, sb, isFirst);
             } else {
@@ -614,9 +605,9 @@ public class ContactCSV {
 
     private static void toCSVContact(Map contact, StringBuffer sb) {
         boolean isFirst = true;
-        for (Iterator it = sMappings.iterator(); it.hasNext(); ) {
-            Mapping mp = (Mapping) it.next();
-            if (!mp.includeInExport()) continue;
+        for (Mapping mp : sMappings) {
+            if (!mp.includeInExport())
+                continue;
             switch(mp.getOp()) {
                 case OP_MAP:
                     addFieldValue(contact, mp.getContactName(), sb, isFirst);
@@ -638,14 +629,11 @@ public class ContactCSV {
     }        
 
     public static void toCSV(Iterator contacts, StringBuffer sb) {
-
-        for (Iterator it = sMappings.iterator(); it.hasNext(); ) {
-            Mapping mp = (Mapping) it.next();
+        for (Mapping mp : sMappings) {
             if (mp.includeInExport()) {
                 if (mp.hasMultiple()) {
-                    String names[] = mp.getCsvNames();
-                    for (int i=0; i < names.length; i++)
-                        addFieldDef(names[i], sb);
+                    for (String name : mp.getCsvNames())
+                        addFieldDef(name, sb);
                 } else {
                     addFieldDef(mp.getCsvName(), sb);
                 }
@@ -680,16 +668,14 @@ public class ContactCSV {
         BufferedReader reader = new BufferedReader(new FileReader(fileName));
         //ContactCSV csv = new ContactCSV();
         
-        List list = ContactCSV.getContacts(reader);
+        List<Map<String, String>> list = ContactCSV.getContacts(reader);
 
-        for (int n=0; n < list.size(); n++) {
-            Map contact = (Map)list.get(n);
-            TreeMap tm = new TreeMap(contact);
-            System.out.println("contact: "+n);
-            for (Iterator it = tm.entrySet().iterator(); it.hasNext(); ) {
-                Map.Entry entry = (Entry) it.next();
-                System.out.println("  "+entry.getKey()+": "+entry.getValue());
-            }
+        for (int n = 0; n < list.size(); n++) {
+            Map<String, String> contact = list.get(n);
+            TreeMap<String, String> tm = new TreeMap<String, String>(contact);
+            System.out.println("contact: " + n);
+            for (Map.Entry entry : tm.entrySet())
+                System.out.println("  " + entry.getKey() + ": " + entry.getValue());
         }
 
         System.out.println("=========================");

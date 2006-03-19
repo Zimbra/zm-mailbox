@@ -192,6 +192,7 @@ public class MailService implements DocumentService {
     public static final String E_NAME = "name";    
     public static final String E_LOCATION = "loc";    
     public static final String E_DESCRIPTION = "desc";    
+    public static final String E_VCARD = "vcard";    
 
     public static final String E_DELETED = "deleted";    
     

@@ -295,7 +295,7 @@ public class ZimbraServlet extends HttpServlet {
             int hopcount = 0;
             if (req.getMethod().equalsIgnoreCase("GET"))
                 method = new GetMethod(url.toString());
-            else if (req.getMethod().equalsIgnoreCase("POST")) {
+            else if (req.getMethod().equalsIgnoreCase("POST") || req.getMethod().equalsIgnoreCase("PUT")) {
                 PostMethod post = new PostMethod(url.toString());
                 post.setRequestBody(req.getInputStream());
                 method = post;

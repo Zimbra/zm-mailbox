@@ -28,13 +28,26 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.mail.MessagingException;
+import javax.mail.internet.ContentType;
+import javax.mail.internet.MimePart;
+
 import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.formatter.VCard;
+import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
@@ -55,24 +68,91 @@ public class CreateContact extends WriteOpDocumentHandler  {
     public Element handle(Element request, Map context) throws ServiceException {
         ZimbraContext lc = getZimbraContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
+        Mailbox.OperationContext octxt = lc.getOperationContext();
 
         Element cn = request.getElement(MailService.E_CONTACT);
         ItemId iidFolder = new ItemId(cn.getAttribute(MailService.A_FOLDER, DEFAULT_FOLDER), lc);
         String tagsStr = cn.getAttribute(MailService.A_TAGS, null);
-        HashMap<String, String> attrs = new HashMap<String, String>();
 
-        for (Element e : cn.listElements(MailService.E_ATTRIBUTE)) {
-            String name = e.getAttribute(MailService.A_ATTRIBUTE_NAME);
-            if (name.trim().equals(""))
-                throw ServiceException.INVALID_REQUEST("at least one contact field name is blank", null);
-            String value = e.getText();
-            if (value != null && !value.equals(""))
-                attrs.put(name, value);
+        Map<String, String> attrs;
+        Element vcard = cn.getOptionalElement(MailService.E_VCARD);
+        if (vcard != null) {
+            attrs = parseAttachedVCard(lc, mbox, vcard);
+        } else {
+            attrs = new HashMap<String, String>();
+            for (Element e : cn.listElements(MailService.E_ATTRIBUTE)) {
+                String name = e.getAttribute(MailService.A_ATTRIBUTE_NAME);
+                if (name.trim().equals(""))
+                    throw ServiceException.INVALID_REQUEST("at least one contact field name is blank", null);
+                String value = e.getText();
+                if (value != null && !value.equals(""))
+                    attrs.put(name, value);
+            }
         }
-        Contact con = mbox.createContact(null, attrs, iidFolder.getId(), tagsStr);
+
+        Contact con = mbox.createContact(octxt, attrs, iidFolder.getId(), tagsStr);
         Element response = lc.createElement(MailService.CREATE_CONTACT_RESPONSE);
         if (con != null)
             ToXML.encodeContact(response, lc, con, null, true, null);
         return response;
+    }
+
+    private static Map<String, String> parseAttachedVCard(ZimbraContext lc, Mailbox mbox, Element vcard)
+    throws ServiceException {
+        String text = null;
+        String messageId = vcard.getAttribute(MailService.A_MESSAGE_ID, null);
+        String attachId = vcard.getAttribute(MailService.A_ATTACHMENT_ID, null);
+
+        if (attachId != null) {
+            // separately-uploaded vcard attachment
+            FileUploadServlet.Upload up = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), attachId, lc.getRawAuthToken());
+            try {
+                text = new String(ByteUtil.getContent(up.getInputStream(), 0));
+            } catch (IOException e) {
+                throw ServiceException.FAILURE("error reading vCard", e);
+            }
+        } else if (messageId == null) {
+            // inlined content in the <vcard> element
+            text = vcard.getText();
+        } else {
+            // part of existing message
+            ItemId iid = new ItemId(messageId, lc);
+            String part = vcard.getAttribute(MailService.A_PART);
+            if (iid.isLocal())
+                try {
+                    // fetch from local store
+                    if (!mbox.getAccountId().equals(iid.getAccountId()))
+                        mbox = Mailbox.getMailboxByAccountId(iid.getAccountId());
+                    Message msg = mbox.getMessageById(lc.getOperationContext(), iid.getId());
+                    MimePart mp = Mime.getMimePart(msg.getMimeMessage(), part);
+                    ContentType ctype = new ContentType(mp.getContentType());
+                    if (!ctype.match(Mime.CT_TEXT_PLAIN) && !ctype.match(Mime.CT_TEXT_VCARD))
+                        throw MailServiceException.INVALID_CONTENT_TYPE(ctype.getBaseType());
+                    Object content = mp.getContent();
+                    if (content instanceof InputStream)
+                        text = new String(ByteUtil.getContent((InputStream) content, mp.getSize()));
+                    else if (content instanceof String)
+                        text = (String) content;
+                    else
+                        throw MailServiceException.UNABLE_TO_IMPORT_CONTACTS("could not extract part content", null);
+                } catch (IOException e) {
+                    throw ServiceException.FAILURE("error reading vCard", e);
+                } catch (MessagingException e) {
+                    throw ServiceException.FAILURE("error fetching message part", e);
+                }
+            else
+                try {
+                    // fetch from remote store
+                    Map<String, String> params = new HashMap<String, String>();
+                    params.put(UserServlet.QP_PART, part);
+                    InputStream is = UserServlet.getResourceAsStream(lc.getAuthToken(), iid, params);
+                    text = new String(ByteUtil.getContent(is, 0));
+                } catch (IOException e) {
+                    throw ServiceException.FAILURE("error reading vCard", e);
+                }
+        }
+
+        VCard vcf = VCard.parseVCard(text);
+        return vcf.fields;
     }
 }

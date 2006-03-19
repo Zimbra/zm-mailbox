@@ -117,8 +117,8 @@ public class FileUploadServlet extends ZimbraServlet {
 
     static HashMap mPending = new HashMap(100);
     static Log mLog = LogFactory.getLog(FileUploadServlet.class);
-    
-    private static final int DEFAULT_MAX_SIZE = 5 * 1024 * 1024;
+
+    static final long DEFAULT_MAX_SIZE = 10 * 1024 * 1024;
 
     /** Returns the zimbra id of the server the specified upload resides on.
      * 
@@ -387,10 +387,10 @@ public class FileUploadServlet extends ZimbraServlet {
 
     private static DiskFileUpload getUploader() {
         // look up the maximum file size for uploads
-        int maxSize = DEFAULT_MAX_SIZE;
+        long maxSize = DEFAULT_MAX_SIZE;
         try {
             Server config = Provisioning.getInstance().getLocalServer();
-            maxSize = config.getIntAttr(Provisioning.A_zimbraFileUploadMaxSize, DEFAULT_MAX_SIZE);
+            maxSize = config.getLongAttr(Provisioning.A_zimbraFileUploadMaxSize, DEFAULT_MAX_SIZE);
         } catch (ServiceException e) {
             mLog.error("Unable to read " + Provisioning.A_zimbraFileUploadMaxSize + " attribute", e);
         }

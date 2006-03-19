@@ -29,22 +29,23 @@ import java.io.InputStream;
 
 import javax.mail.MessagingException;
 import javax.mail.Part;
-import javax.mail.internet.ContentDisposition;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.HttpUtil;
-import com.zimbra.cs.util.StringUtil;
 
 public class SyncFormatter extends Formatter {
 
@@ -162,6 +163,17 @@ public class SyncFormatter extends Formatter {
 
     public boolean canBeBlocked() {
         return true;
+    }
+
+    // FIXME: need to support tags, flags, date, etc...
+    public void save(byte[] body, Context context, Folder folder) throws IOException, ServiceException, UserServletException {
+        try {
+            Mailbox mbox = folder.getMailbox();
+            ParsedMessage pm = new ParsedMessage(body, mbox.attachmentsIndexingEnabled());
+            mbox.addMessage(context.opContext, pm, folder.getId(), true, 0, null);
+        } catch (MessagingException e) {
+            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "error parsing message");
+        }
     }
 }
 

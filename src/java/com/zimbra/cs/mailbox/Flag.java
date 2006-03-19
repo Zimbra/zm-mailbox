@@ -166,13 +166,14 @@ public class Flag extends Tag {
         return bitmask;
     }
 
-    static StringBuffer bitmaskToFlags(int bitmask, StringBuffer sb) {
+    static String bitmaskToFlags(int bitmask) {
+        StringBuilder sb = new StringBuilder();
         for (int i = 0; bitmask != 0 && i < MAX_FLAG_COUNT - 1; i++)
             if ((bitmask & (1 << i)) != 0) {
                 sb.append(FLAG_REP[i]);
                 bitmask &= ~(1 << i);
             }
-        return sb;
+        return sb.toString();
     }
 
 

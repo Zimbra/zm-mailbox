@@ -97,9 +97,9 @@ public class ParsedAddress {
         return (personalPart != null ? personalPart : emailPart);
     }
 
-    public Map getAttributes() {
+    public Map<String, String> getAttributes() {
         parse();
-        HashMap map = new HashMap();
+        HashMap<String, String> map = new HashMap<String, String>();
         if (honorific != null)     map.put(Contact.A_namePrefix, honorific);
         if (firstName != null)     map.put(Contact.A_firstName, firstName);
         if (lastName != null)      map.put(Contact.A_lastName, lastName);

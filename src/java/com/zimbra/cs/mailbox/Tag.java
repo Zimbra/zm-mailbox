@@ -28,6 +28,8 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -104,7 +106,7 @@ public class Tag extends MailItem {
     static String bitmaskToTags(long bitmask) {
         if (bitmask == 0)
             return "";
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (int i = 0; bitmask != 0 && i < MAX_TAG_COUNT - 1; i++)
             if ((bitmask & (1L << i)) != 0) {
                 if (sb.length() > 0)
@@ -113,6 +115,18 @@ public class Tag extends MailItem {
                 bitmask &= ~(1L << i);
             }
         return sb.toString();
+    }
+
+    static List<Tag> bitmaskToTagList(Mailbox mbox, long bitmask) throws ServiceException {
+        if (bitmask == 0)
+            return Collections.emptyList();
+        ArrayList<Tag> tags = new ArrayList<Tag>();
+        for (int i = 0; bitmask != 0 && i < MAX_TAG_COUNT - 1; i++)
+            if ((bitmask & (1L << i)) != 0) {
+                tags.add(mbox.getTagById(i + TAG_ID_OFFSET));
+                bitmask &= ~(1L << i);
+            }
+        return tags;
     }
 
 

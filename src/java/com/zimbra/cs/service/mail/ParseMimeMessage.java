@@ -44,6 +44,7 @@ import com.zimbra.cs.service.UploadDataSource;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
+import com.zimbra.cs.service.formatter.VCard;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.FileUtil;
 import com.zimbra.cs.util.JMSession;
@@ -489,6 +490,20 @@ public class ParseMimeMessage {
         mbp.setDataHandler(new DataHandler(new BlobDataSource(blob)));
         mbp.setHeader("Content-Type", blob.getMimeType());
         mbp.setHeader("Content-Disposition", Part.ATTACHMENT);
+        mmp.addBodyPart(mbp);
+    }
+
+    private static void attachContact(Multipart mmp, com.zimbra.cs.mailbox.Contact contact)
+    throws MessagingException {
+        VCard vcf = VCard.formatContact(contact);
+
+        ContentDisposition cd = new ContentDisposition(Part.ATTACHMENT);
+        cd.setParameter("filename", vcf.fn + ".vcf");
+
+        MimeBodyPart mbp = new MimeBodyPart();
+        mbp.setText(vcf.formatted, Mime.P_CHARSET_UTF8);
+        mbp.setHeader("Content-Type", "text/x-vcard; charset=utf-8");
+        mbp.setHeader("Content-Disposition", cd.toString());
         mmp.addBodyPart(mbp);
     }
 

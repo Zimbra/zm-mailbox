@@ -27,13 +27,19 @@ package com.zimbra.cs.service.formatter;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServlet.Context;
@@ -83,10 +89,23 @@ public class IcsFormatter extends Formatter {
 
     // eventually get this from query param ?end=long|YYYYMMMDDHHMMSS
     public long getDefaultEndTime() {
-        return  System.currentTimeMillis() + (365 * 100 * Constants.MILLIS_PER_DAY);            
+        return System.currentTimeMillis() + (365 * 100 * Constants.MILLIS_PER_DAY);            
     }
 
     public boolean canBeBlocked() {
         return false;
+    }
+
+    public void save(byte[] body, Context context, Folder folder) throws ServiceException, IOException {
+        Reader reader = new StringReader(new String(body, "utf-8"));
+        ZVCalendar ical = ZCalendarBuilder.build(reader);
+        List<Invite> invites = Invite.createFromCalendar(context.authAccount, null, ical, false);
+        for (Invite inv : invites) {
+            // handle missing UIDs on remote calendars by generating them as needed
+            if (inv.getUid() == null)
+                inv.setUid(LdapUtil.generateUUID());
+            // and add the invite to the calendar!
+            folder.getMailbox().addInvite(context.opContext, inv, folder.getId(), true, null);
+        }
     }
 }
