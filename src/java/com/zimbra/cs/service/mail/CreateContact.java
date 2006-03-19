@@ -31,6 +31,7 @@ package com.zimbra.cs.service.mail;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.mail.MessagingException;
@@ -152,7 +153,9 @@ public class CreateContact extends WriteOpDocumentHandler  {
                 }
         }
 
-        VCard vcf = VCard.parseVCard(text);
-        return vcf.fields;
+        List<VCard> cards = VCard.parseVCard(text);
+        if (cards == null || cards.size() != 1)
+            throw MailServiceException.UNABLE_TO_IMPORT_CONTACTS("cannot import more than 1 vCard at once", null);
+        return cards.get(0).fields;
     }
 }

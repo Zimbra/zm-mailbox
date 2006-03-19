@@ -59,19 +59,20 @@ public abstract class Formatter {
 
     public abstract void save(byte[] body, UserServlet.Context context, Folder folder) throws UserServletException, ServiceException, IOException, ServletException;
 
-    public Iterator getMailItems(Context context, MailItem item, long startTime, long endTime) throws ServiceException {
+    public Iterator<? extends MailItem> getMailItems(Context context, MailItem item, long startTime, long endTime) throws ServiceException {
         String query = context.getQueryString();
         if (query != null) {
             try {
                 if (item instanceof Folder) {
                     Folder f = (Folder) item;
-                    ZimbraLog.misc.info("folderId: "+f.getId());
+                    ZimbraLog.misc.info("folderId: " + f.getId());
                     if (f.getId() != Mailbox.ID_FOLDER_USER_ROOT)
-                        query = "in:"+f.getPath()+" "+query; 
+                        query = "in:" + f.getPath() + " " + query; 
                 }
-                ZimbraLog.misc.info("query: "+query);
+                ZimbraLog.misc.info("query: " + query);
                 String searchTypes = context.getTypesString();
-                if (searchTypes == null) searchTypes = getDefaultSearchTypes();
+                if (searchTypes == null)
+                    searchTypes = getDefaultSearchTypes();
                 byte[] types = MailboxIndex.parseGroupByString(searchTypes);
                 ZimbraQueryResults results = context.targetMailbox.search(context.opContext, query, types, MailboxIndex.SortBy.DATE_DESCENDING, 500);
                 return new QueryResultIterator(results);                
@@ -82,7 +83,7 @@ public abstract class Formatter {
                 throw ServiceException.FAILURE("search error", e);
             }
         } else if (item instanceof Folder) {
-            Collection items = getMailItemsFromFolder(context, (Folder) item, startTime, endTime);
+            Collection<? extends MailItem> items = getMailItemsFromFolder(context, (Folder) item, startTime, endTime);
             return items != null ? items.iterator() : null;
         } else {
             ArrayList<MailItem> result = new ArrayList<MailItem>();
@@ -91,7 +92,7 @@ public abstract class Formatter {
         }
     }
 
-    private Collection getMailItemsFromFolder(Context context, Folder folder, long startTime, long endTime) throws ServiceException {
+    private Collection<? extends MailItem> getMailItemsFromFolder(Context context, Folder folder, long startTime, long endTime) throws ServiceException {
         switch (folder.getDefaultView()) {
             case MailItem.TYPE_APPOINTMENT:            
                 return context.targetMailbox.getAppointmentsForRange(context.opContext, startTime, endTime, folder.getId(), null);
@@ -119,7 +120,7 @@ public abstract class Formatter {
         }
     }
 
-    private static class QueryResultIterator implements Iterator {
+    private static class QueryResultIterator implements Iterator<MailItem> {
 
         private ZimbraQueryResults mResults;
         
@@ -136,16 +137,17 @@ public abstract class Formatter {
             }
         }
 
-        public Object next() {
+        public MailItem next() {
             try {
                 ZimbraHit hit = mResults.getNext();
-                if (hit == null) return null;
+                if (hit == null)
+                    return null;
                 if (hit instanceof MessageHit) {
-                    return ((MessageHit)hit).getMessage();
+                    return ((MessageHit) hit).getMessage();
                 } else if (hit instanceof ContactHit) {
-                    return ((ContactHit)hit).getContact();
+                    return ((ContactHit) hit).getContact();
                 } else if (hit instanceof AppointmentHit) {
-                    return ((AppointmentHit)hit).getAppointment();
+                    return ((AppointmentHit) hit).getAppointment();
                 }
             } catch (ServiceException e) {
                 ZimbraLog.misc.warn("caught exception", e);                

@@ -25,15 +25,9 @@
 package com.zimbra.cs.service.formatter;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.regex.Pattern;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
-
+import java.util.List;
 import javax.mail.Part;
-import javax.mail.internet.ContentDisposition;
-import javax.mail.internet.ParseException;
 import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.cs.index.MailboxIndex;
@@ -45,10 +39,9 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.service.formatter.VCard;
+import com.zimbra.cs.util.HttpUtil;
 
 public class VcfFormatter extends Formatter {
-
-    private Pattern ILLEGAL_CHARS = Pattern.compile("[\\/\\:\\*\\?\\\"\\<\\>\\|]");
 
     public String getType() {
         return "vcf";
@@ -62,70 +55,37 @@ public class VcfFormatter extends Formatter {
         return false;
     }
 
-    public void format(Context context, MailItem item) throws IOException, ServiceException {
-        ContentDisposition cd;
-        try {
-            cd = new ContentDisposition(Part.ATTACHMENT);
-        } catch (ParseException e) {
-            throw ServiceException.FAILURE(e.getMessage(), e);
-        }
+    public void format(Context context, MailItem target) throws IOException, ServiceException {
+        Iterator<? extends MailItem> iterator = getMailItems(context, target, getDefaultStartTime(), getDefaultEndTime());
 
-        if (item instanceof Contact) {
-            VCard vcf = VCard.formatContact((Contact) item);
+        String filename = target instanceof Contact ? ((Contact) target).getFileAsString() : "contacts";
+        String cd = Part.ATTACHMENT + "; filename=" + HttpUtil.encodeFilename(context.req, filename + ".vcf");
+        context.resp.addHeader("Content-Disposition", cd);
+        context.resp.setContentType(Mime.CT_TEXT_VCARD);
+        context.resp.setCharacterEncoding(Mime.P_CHARSET_UTF8);
 
-            cd.setParameter("filename", getZipEntryName(vcf, null));
-            context.resp.addHeader("Content-Disposition", cd.toString());
-            context.resp.setContentType(Mime.CT_TEXT_VCARD);
-            context.resp.setCharacterEncoding(Mime.P_CHARSET_UTF8);
-            context.resp.getOutputStream().write(vcf.formatted.getBytes(Mime.P_CHARSET_UTF8));
-            return;
-        }
-
-        // passed-in item is a folder or a tag or somesuch -- get the list of contacts
-        Iterator iterator = getMailItems(context, item, getDefaultStartTime(), getDefaultEndTime());
-
-        cd.setParameter("filename", "contacts.zip");
-        context.resp.addHeader("Content-Disposition", cd.toString());
-        context.resp.setContentType("application/x-zip-compressed");
-
-        // create the ZIP file
-        ZipOutputStream out = new ZipOutputStream(context.resp.getOutputStream());
-        HashSet<String> usedNames = new HashSet<String>();
-
+        int count = 0;
         while (iterator.hasNext()) {
-            MailItem itItem = (MailItem) iterator.next();
-            if (!(itItem instanceof Contact))
+            MailItem item = iterator.next();
+            if (!(item instanceof Contact))
                 continue;
-            VCard vcf = VCard.formatContact((Contact) itItem);
-
-            // add ZIP entry to output stream.
-            out.putNextEntry(new ZipEntry(getZipEntryName(vcf, usedNames)));
-            out.write(vcf.formatted.getBytes(Mime.P_CHARSET_UTF8));
-            out.closeEntry();
+            VCard vcf = VCard.formatContact((Contact) item);
+            context.resp.getOutputStream().write(vcf.formatted.getBytes(Mime.P_CHARSET_UTF8));
+            count++;
         }
-        // complete the ZIP file
-        out.close();
-    }
-
-    private String getZipEntryName(VCard vcf, HashSet<String> used) {
-        // TODO: more bullet proofing on path lengths and illegal chars
-        String fn = vcf.fn, folder = (used == null ? "" : "contacts/"), path;
-        if (fn.length() > 115)
-            fn = fn.substring(0, 114);
-        int counter = 0;
-        do {
-            path = folder + ILLEGAL_CHARS.matcher(fn).replaceAll("_");
-            if (counter > 0)
-                path += "-" + counter;
-            counter++;
-        } while (used != null && used.contains(path));
-        return path + ".vcf";
+//        if (count == 0)
+//            throw new UserServletException(HttpServletResponse.SC_NO_CONTENT, "no matching contacts");
     }
 
     public void save(byte[] body, Context context, Folder folder) throws ServiceException, IOException, UserServletException {
-        VCard vcf = VCard.parseVCard(new String(body, "utf-8"));
-        if (vcf.fields.isEmpty())
+        List<VCard> cards = VCard.parseVCard(new String(body, Mime.P_CHARSET_UTF8));
+        if (cards == null || cards.size() == 0 || (cards.size() == 1 && cards.get(0).fields.isEmpty()))
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "no contact fields found in vcard");
-        folder.getMailbox().createContact(context.opContext, vcf.fields, folder.getId(), null);
+
+        for (VCard vcf : cards) {
+            if (vcf.fields.isEmpty())
+                continue;
+            folder.getMailbox().createContact(context.opContext, vcf.fields, folder.getId(), null);
+        }
     }
 }
