@@ -43,13 +43,12 @@ import com.zimbra.cs.util.DateUtil;
 
 public class VCard {
 
-    public static class ParsedVcf {
-        public String fn;
-        public String formatted;
-        public Map<String, String> fields;
-        ParsedVcf(String xfn, String xformatted, Map<String, String> xfields) {
-            fn = xfn;  formatted = xformatted;  fields = xfields;
-        }
+    public String fn;
+    public String formatted;
+    public Map<String, String> fields;
+
+    VCard(String xfn, String xformatted, Map<String, String> xfields) {
+        fn = xfn;  formatted = xformatted;  fields = xfields;
     }
 
 
@@ -71,7 +70,7 @@ public class VCard {
 
     private enum Encoding { NONE, B, Q };
 
-    public static ParsedVcf parseVCard(String vcard) throws ServiceException {
+    public static VCard parseVCard(String vcard) throws ServiceException {
         HashMap<String, String> fields = new HashMap<String, String>();
 
         Set<String> params = new HashSet<String>();
@@ -172,7 +171,7 @@ public class VCard {
         }
 
         Contact.normalizeFileAs(fields);
-        return new ParsedVcf(fields.get(Contact.A_fullName), vcard, fields);
+        return new VCard(fields.get(Contact.A_fullName), vcard, fields);
     }
 
     private static void decodeTelephone(String value, Set<String> params, Map<String, String> fields) {
@@ -262,7 +261,7 @@ public class VCard {
     }
 
 
-    public static ParsedVcf formatContact(Contact con) {
+    public static VCard formatContact(Contact con) {
         Map<String, String> fields = con.getFields();
         List<String> emails = con.getEmailAddresses();
 
@@ -350,7 +349,7 @@ public class VCard {
         sb.append("UID:").append(con.getMailbox().getAccountId()).append(':').append(con.getId()).append('\n');
         // sb.append("MAILER:Zimbra ").append(BuildInfo.VERSION).append("\n");
         sb.append("END:VCARD\n");
-        return new ParsedVcf(fn, sb.toString(), fields);
+        return new VCard(fn, sb.toString(), fields);
     }
 
     private static void encodeField(StringBuilder sb, String name, String value) {
