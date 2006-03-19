@@ -26,89 +26,105 @@ package com.zimbra.cs.service.formatter;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import javax.mail.Part;
-import javax.mail.internet.ContentDisposition;
-import javax.mail.internet.ParseException;
 import javax.servlet.http.HttpServletResponse;
 
 
+import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.cs.util.HttpUtil;
 
 public class ZipFormatter extends Formatter {
 
     private Pattern ILLEGAL_CHARS = Pattern.compile("[\\/\\:\\*\\?\\\"\\<\\>\\|]");
-    
-    public void format(Context context, MailItem mailItem) throws IOException, ServiceException {
-        
-        Iterator iterator = getMailItems(context, mailItem, getDefaultStartTime(), getDefaultEndTime());
-        
-        context.resp.setContentType("application/x-zip-compressed");
-
-        
-        try {
-            ContentDisposition cd =  new ContentDisposition(Part.ATTACHMENT);
-            // TODO: get name from folder/search/query/etc
-            String filename = "messages.zip";
-            cd.setParameter("filename", filename);
-            context.resp.addHeader("Content-Disposition", cd.toString());
-        } catch (ParseException e) {
-            throw ServiceException.FAILURE(e.getMessage(), e);
-        }
-        
-        // Create the ZIP file
-        ZipOutputStream out = new ZipOutputStream(context.resp.getOutputStream());
-
-        while(iterator.hasNext()) {
-            MailItem itItem = (MailItem) iterator.next();
-            if (!(itItem instanceof Message)) continue;
-            Message message = (Message) itItem;
-            
-            // Add ZIP entry to output stream.
-            out.putNextEntry(new ZipEntry(getZipEntryName(message, context)));
-        
-            // Transfer bytes from the file to the ZIP file
-            InputStream is = message.getRawMessage();
-            ByteUtil.copy(is, out);
-            is.close();
-            // Complete the entry
-            out.closeEntry();
-        }
-        // Complete the ZIP file
-        out.close();
-    }
-
-    private String getZipEntryName(Message m, Context context) throws ServiceException {
-        Folder f = context.targetMailbox.getFolderById(context.opContext, m.getFolderId());
-        String folderPath = f.getPath();
-        if (folderPath.startsWith("/")) {
-            if (folderPath.length() == 1) folderPath = "";
-            else folderPath = folderPath.substring(1);
-        }
-
-        // TODO: more bullet proofing on path lengths and illegal chars        
-        String subject = m.getSubject();
-        if (subject == null) subject = "";
-        if (subject.length() > 128) subject = subject.substring(0, 127); 
-        return folderPath + (folderPath.length() > 0 ? "/" : "") + ILLEGAL_CHARS.matcher(subject).replaceAll("_") + " "+ m.getId() + ".eml";
-    }
 
     public String getType() {
         return "zip";
     }
 
+    public String getDefaultSearchTypes() {
+        return MailboxIndex.SEARCH_FOR_MESSAGES + ',' + MailboxIndex.SEARCH_FOR_CONTACTS;
+    }
+
     public boolean canBeBlocked() {
         return true;
+    }
+
+    public void format(Context context, MailItem target) throws IOException, ServiceException {
+        Iterator<? extends MailItem> iterator = getMailItems(context, target, getDefaultStartTime(), getDefaultEndTime());
+
+        // TODO: get name from folder/search/query/etc
+        String filename = "items.zip";
+        String cd = Part.ATTACHMENT + "; filename=" + HttpUtil.encodeFilename(context.req, filename);
+        context.resp.addHeader("Content-Disposition", cd.toString());
+        context.resp.setContentType("application/x-zip-compressed");
+
+        // create the ZIP file
+        ZipOutputStream out = new ZipOutputStream(context.resp.getOutputStream());
+        HashSet<String> usedNames = new HashSet<String>();
+
+        while (iterator.hasNext()) {
+            MailItem item = iterator.next();
+            if (item instanceof Message) {
+                InputStream is = ((Message) item).getRawMessage();
+    
+                // add ZIP entry to output stream
+                out.putNextEntry(new ZipEntry(getZipEntryName(item, item.getSubject(), ".eml", context, usedNames)));
+                ByteUtil.copy(is, out);
+                is.close();
+                out.closeEntry();
+            } else if (item instanceof Contact) {
+                VCard vcf = VCard.formatContact((Contact) item);
+
+                // add ZIP entry to output stream
+                out.putNextEntry(new ZipEntry(getZipEntryName(item, vcf.fn, ".vcf", context, usedNames)));
+                out.write(vcf.formatted.getBytes(Mime.P_CHARSET_UTF8));
+                out.closeEntry();
+            }
+        }
+        // complete the ZIP file
+        out.close();
+    }
+
+    private String getZipEntryName(MailItem item, String title, String suffix, Context context, HashSet<String> used)
+    throws ServiceException {
+        Folder folder = item.getMailbox().getFolderById(context.opContext, item.getFolderId());
+        String filename, path = folder.getPath();
+        if (path.startsWith("/"))
+            path = path.substring(1);
+        path = ILLEGAL_CHARS.matcher(path).replaceAll("_") + (path.equals("") ? "" : "/");
+
+        // TODO: more bullet proofing on path lengths and illegal chars        
+        if (title == null)
+            title = "";
+        if (title.length() > 115)
+            title = title.substring(0, 114);
+        title = ILLEGAL_CHARS.matcher(title).replaceAll("_").trim();
+
+        int counter = 0;
+        do {
+            filename = path + title;
+            if (counter > 0)
+                filename += "-" + counter;
+            filename += suffix;
+            counter++;
+        } while (used != null && used.contains(filename.toLowerCase()));
+        used.add(filename.toLowerCase());
+        return filename;
     }
 
     // FIXME: should add each item to the specified folder...

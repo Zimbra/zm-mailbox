@@ -614,7 +614,7 @@ public class UserServlet extends ZimbraServlet {
             case MailItem.TYPE_APPOINTMENT:
                 return "ics";
             case MailItem.TYPE_CONTACT:
-                return "csv";
+                return item instanceof Folder? "csv" : "vcf";
             default:
                 return "native";
         }

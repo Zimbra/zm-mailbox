@@ -25,6 +25,7 @@
 package com.zimbra.cs.service.formatter;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -70,7 +71,7 @@ public class VCard {
 
     private enum Encoding { NONE, B, Q };
 
-    public static VCard parseVCard(String vcard) throws ServiceException {
+    public static List<VCard> parseVCard(String vcard) throws ServiceException {
         HashMap<String, String> fields = new HashMap<String, String>();
 
         Set<String> params = new HashSet<String>();
@@ -171,7 +172,11 @@ public class VCard {
         }
 
         Contact.normalizeFileAs(fields);
-        return new VCard(fields.get(Contact.A_fullName), vcard, fields);
+        VCard vcf = new VCard(fields.get(Contact.A_fullName), vcard, fields);
+
+        List<VCard> result = new ArrayList<VCard>();
+        result.add(vcf);
+        return result;
     }
 
     private static void decodeTelephone(String value, Set<String> params, Map<String, String> fields) {

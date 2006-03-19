@@ -54,14 +54,14 @@ public class HttpUtil {
     }
 
     public static String encodeFilename(HttpServletRequest req, String filename) {
-        if (StringUtil.isAsciiString(filename))
-            return filename;
+        if (StringUtil.isAsciiString(filename) && filename.indexOf('"') == -1)
+            return '"' + filename + '"';
         return encodeFilename(guessBrowser(req), filename);
     }
 
     public static String encodeFilename(Browser browser, String filename) {
-        if (StringUtil.isAsciiString(filename))
-            return filename;
+        if (StringUtil.isAsciiString(filename) && filename.indexOf('"') == -1)
+            return '"' + filename + '"';
         try {
             if (browser == Browser.IE)
                 return URLEncoder.encode(filename, "utf-8");
