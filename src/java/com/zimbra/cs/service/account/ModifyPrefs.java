@@ -33,6 +33,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
@@ -58,6 +59,11 @@ public class ModifyPrefs extends WriteOpDocumentHandler {
     		        throw ServiceException.INVALID_REQUEST("pref name must start with zimbraPref", null);
     		    }
     		    prefs.put(name, value);
+        }
+        if (prefs.containsKey(Provisioning.A_zimbraPrefMailForwardingAddress)) {
+            if (!acct.getBooleanAttr(Provisioning.A_zimbraFeatureMailForwardingEnabled, false)) {
+                throw ServiceException.PERM_DENIED("forwarding not enabled");
+            }
         }
         // call modifyAttrs and pass true to checkImmutable
         acct.modifyAttrs(prefs, true);

@@ -504,6 +504,8 @@ public abstract class Provisioning {
      */
     public static final String A_zimbraPrefMailSignatureEnabled = "zimbraPrefMailSignatureEnabled";
 
+    public static final String A_zimbraPrefMailForwardingAddress = "zimbraPrefMailForwardingAddress";
+
     public static final String A_zimbraPrefMailInitialSearch = "zimbraPrefMailInitialSearch";
 
     public static final String A_zimbraPrefGroupMailBy = "zimbraPrefGroupMailBy";
@@ -529,6 +531,8 @@ public abstract class Provisioning {
     public static final String A_zimbraPrefNewMailNotificationAddress = "zimbraPrefNewMailNotificationAddress";
     
     public static final String A_zimbraPrefDedupeMessagesSentToSelf = "zimbraPrefDedupeMessagesSentToSelf";
+    
+    public static final String A_zimbraFeatureMailForwardingEnabled = "zimbraFeatureMailForwardingEnabled";
 
     /**
      * administrative notes for an entry.
