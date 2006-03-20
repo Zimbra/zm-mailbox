@@ -25,12 +25,17 @@
 
 package com.zimbra.cs.service.wiki;
 
+import java.io.IOException;
 import java.util.Map;
 
+import com.zimbra.cs.mailbox.Document;
+import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.mail.ToXML;
+import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.cs.wiki.Wiki;
 import com.zimbra.cs.wiki.WikiWord;
 import com.zimbra.soap.Element;
@@ -51,14 +56,18 @@ public class GetWiki extends WikiDocumentHandler {
         Wiki wiki = getRequestedWiki(request, lc);
         WikiWord w = wiki.lookupWiki(word);
         if (w == null) {
-        	// error handling here
+    		ZimbraLog.wiki.error("requested wiki word "+word+" does not exist");
         	return response;
         }
-        if (rev > 0) {
-            ToXML.encodeWiki(response, lc, w.getWikiItem(octxt), rev);
-        } else {
-            ToXML.encodeWiki(response, lc, w.getWikiItem(octxt));
-        }
+        WikiItem wikiItem = w.getWikiItem(octxt);
+        Element wikiElem = ToXML.encodeWiki(response, lc, wikiItem, rev);
+    	Document.DocumentRevision revision = (rev > 0) ? wikiItem.getRevision(rev) : wikiItem.getLastRevision(); 
+    	try {
+    		byte[] raw = ByteUtil.getContent(revision.getBlob().getFile());
+    		wikiElem.setText(new String(raw, "UTF-8"));
+    	} catch (IOException ioe) {
+    		ZimbraLog.wiki.error("cannot read the wiki message body", ioe);
+    	}
         return response;
 	}
 }

@@ -1221,17 +1221,12 @@ public class ToXML {
             eecache.makeEmail(m, recipients[i], emailType, unique);
     }
     
-    
-	public static Element encodeWiki(Element parent, ZimbraContext lc, WikiItem wiki) {
-		return encodeWiki(parent, lc, wiki, -1);
-	}
 	public static Element encodeWiki(Element parent, ZimbraContext lc, WikiItem wiki, int rev) {
 		return encodeWiki(parent, lc, wiki, NOTIFY_FIELDS, rev);
 	}
 	public static Element encodeWiki(Element parent, ZimbraContext lc, WikiItem wiki, int fields, int rev) {
 
         Element m = parent.addElement(MailService.E_WIKIWORD);
-        // DO NOT encode the item-id here, as some Invite-Messages-In-Appointments have special item-id's
         if (needToOutput(fields, Change.MODIFIED_SIZE))
             m.addAttribute(MailService.A_SIZE, wiki.getSize());
         if (needToOutput(fields, Change.MODIFIED_DATE))
@@ -1249,8 +1244,6 @@ public class ToXML {
             	m.addAttribute(MailService.A_VERSION, revision.getVersion());
             	m.addAttribute(MailService.A_CREATOR, revision.getCreator());
             	m.addAttribute(MailService.A_MODIFIED_DATE, revision.getRevDate());
-    			byte[] raw = ByteUtil.getContent(revision.getBlob().getFile());
-    			m.setText(new String(raw, "UTF-8"));
             } catch (Exception ex) {
                 mLog.warn("ignoring exception while fetching blob for Wiki " + wiki.getSubject(), ex);
             }
@@ -1258,15 +1251,4 @@ public class ToXML {
 
         return m;
 	}
-
-    public static Element encodeWikiSummary(Element parent, ZimbraContext lc, WikiItem wiki) {
-        Element e = encodeMessageCommon(parent, lc, wiki, NOTIFY_FIELDS);
-
-        e.addAttribute(MailService.A_ID, lc.formatItemId(wiki));
-        e.addAttribute(MailService.A_WIKIWORD, wiki.getWikiWord());
-        e.addAttribute(MailService.A_CREATOR, wiki.getCreator());
-
-        return e;
-    }
-    
 }

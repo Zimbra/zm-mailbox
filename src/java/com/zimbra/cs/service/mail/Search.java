@@ -416,7 +416,7 @@ public class Search extends DocumentHandler  {
     }
     
     Element addWikiHit(ZimbraContext lc, Element response, WikiHit wh) throws ServiceException {
-        return ToXML.encodeWikiSummary(response, lc, wh.getWiki());
+        return ToXML.encodeWiki(response, lc, wh.getWiki(), -1);
     }
     
     Element addNoteHit(ZimbraContext lc, Element response, NoteHit nh, EmailElementCache eecache) throws ServiceException {
