@@ -25,10 +25,17 @@
 
 package com.zimbra.cs.mailbox.calendar;
 
+import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import javax.mail.BodyPart;
+import javax.mail.MessagingException;
+import javax.mail.internet.ContentType;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -452,8 +459,52 @@ public class Invite {
     public boolean needsReply() {
         return ((mFlags & APPT_FLAG_NEEDS_REPLY)!=0);
     }
-    
-    
+
+
+    /**
+     * Returns the meeting notes.  Meeting notes is the text/plain part in an
+     * invite.  It typically includes CUA-generated meeting summary as well as
+     * text entered by the user.
+     *
+     * This method can be called for existing invites only. 
+     * NullPointerException is returned if this method is called on an
+     * incoming invite.
+     *
+     * @return null if notes is not found
+     * @throws ServiceException
+     */
+    public String getNotes() throws ServiceException {
+        assert(mAppt != null);
+        MimeMessage mmInv = mAppt.getMimeMessage(mMailItemId);
+        try {
+            Object mmInvContent = mmInv.getContent();
+            if (!(mmInvContent instanceof MimeMultipart)) return null;
+            MimeMultipart mm = (MimeMultipart) mmInvContent;
+            int numParts = mm.getCount();
+            BodyPart textPlain = null;
+            for (int i  = 0; i < numParts; i++) {
+                BodyPart part = mm.getBodyPart(i);
+                ContentType ct = new ContentType(part.getContentType());
+                if (ct.match("text/plain")) {
+                    textPlain = part;
+                    break;
+                }
+            }
+            if (textPlain == null) return null;
+
+            Object notes = textPlain.getContent();
+            if (notes instanceof String)
+                return (String) notes;
+            else
+                return null;
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Unable to get appointment notes MIME part", e);
+        } catch (MessagingException e) {
+            throw ServiceException.FAILURE("Unable to get appointment notes MIME part", e);
+        }
+    }
+
+
     /**
      * WARNING - does NOT save the metadata.  Make sure you know that it is being
      * saved if you call this func.
