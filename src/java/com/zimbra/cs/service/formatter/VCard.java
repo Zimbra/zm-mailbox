@@ -48,13 +48,13 @@ public class VCard {
     public String formatted;
     public Map<String, String> fields;
 
-    VCard(String xfn, String xformatted, Map<String, String> xfields) {
+    private VCard(String xfn, String xformatted, Map<String, String> xfields) {
         fn = xfn;  formatted = xformatted;  fields = xfields;
     }
 
 
     private static final Set<String> PROPERTY_NAMES = new HashSet<String>(Arrays.asList(new String[] {
-        "FN", "N", "NICKNAME", "BDAY", "ADR", "TEL", "EMAIL", "URL", "ORG", "TITLE", "NOTE"
+        "BEGIN", "FN", "N", "NICKNAME", "BDAY", "ADR", "TEL", "EMAIL", "URL", "ORG", "TITLE", "NOTE", "AGENT", "END"
     }));
 
     private static final HashMap<String, String> PARAM_ABBREVIATIONS = new HashMap<String, String>();
@@ -72,13 +72,17 @@ public class VCard {
     private enum Encoding { NONE, B, Q };
 
     public static List<VCard> parseVCard(String vcard) throws ServiceException {
+        List<VCard> cards = new ArrayList<VCard>();
+
+        int depth = 0;
         HashMap<String, String> fields = new HashMap<String, String>();
 
         Set<String> params = new HashSet<String>();
-        int limit = vcard.length(), emails = 0;
-        for (int start = 0, pos = 0, lines = 0; pos < limit; lines++) {
+        int cardstart = 0, emails = 0;
+        for (int start = 0, pos = 0, lines = 0, limit = vcard.length(); pos < limit; lines++) {
             // unfold the next line in the vcard
             String line = "";
+            int linestart = pos;
             boolean folded = true;
             do {
                 start = pos;
@@ -94,7 +98,7 @@ public class VCard {
                 else
                     folded = false;
             } while (folded);
-            if (line.equals(""))
+            if (line.trim().equals(""))
                 continue;
 
             // find the delimiter between property name and property value
@@ -110,11 +114,37 @@ public class VCard {
                 if ((c = line.charAt(i)) == '.')  start = i + 1;
                 else if (c == ';')                break;
             }
-            String name = line.substring(start, i).toUpperCase();
+            String name = line.substring(start, i).trim().toUpperCase();
+
             if (name.equals(""))
                 throw ServiceException.PARSE_ERROR("missing property name in line " + line, null);
             else if (!PROPERTY_NAMES.contains(name))
                 continue;
+            else if (name.equals("BEGIN")) {
+                if (++depth == 1) {
+                    // starting a top-level vCard; reset state
+                    fields = new HashMap<String, String>();
+                    cardstart = linestart;
+                    emails = 0;
+                }
+                continue;
+            } else if (name.equals("END")) {
+                if (depth > 0 && depth-- == 1) {
+                    // finished a vCard; add to list if non-empty
+                    if (!fields.isEmpty()) {
+                        Contact.normalizeFileAs(fields);
+                        cards.add(new VCard(fields.get(Contact.A_fullName), vcard.substring(cardstart, pos), fields));
+                    }
+                }
+                continue;
+            } else if (depth <= 0) {
+                continue;
+            } else if (name.equals("AGENT")) {
+                // catch AGENT on same line as BEGIN block when rest of AGENT is not on the same line
+                if (value.trim().toUpperCase().matches("BEGIN\\s*:\\s*VCARD"))
+                    depth++;
+                continue;
+            }
 
             // get the property's parameters
             params.clear();
@@ -171,12 +201,7 @@ public class VCard {
                 fields.put(EMAIL_FIELDS[emails++], vcfDecode(value));
         }
 
-        Contact.normalizeFileAs(fields);
-        VCard vcf = new VCard(fields.get(Contact.A_fullName), vcard, fields);
-
-        List<VCard> result = new ArrayList<VCard>();
-        result.add(vcf);
-        return result;
+        return cards;
     }
 
     private static void decodeTelephone(String value, Set<String> params, Map<String, String> fields) {
@@ -407,6 +432,7 @@ public class VCard {
     public static void main(String args[]) throws ServiceException {
         parseVCard("BEGIN:VCARD\r\n\r\nFN\n :dr. john doe\nADR;HOME;WORK:;;Hambone Ltd.\\N5 Main St.;Charlotte;NC;24243\nEMAIL:foo@bar.con\nEMAIL:bar@goo.com\nN:doe;john;\\;\\\\;dr.;;;;\nEND:VCARD\n");
         parseVCard("BEGIN:VCARD\r\n\r\nFN\n :john doe\\, jr.\nORG:Zimbra;Marketing;Annoying Marketing\nA.TEL;type=fax,WORK:+1-800-555-1212\nTEL;type=home,work,voice:+1-800-555-1313\nNOTE;QUOTED-PRINTABLE:foo=3Dbar\nc.D.e.NOTE;ENCODING=B;charset=iso-8859-1:SWYgeW91IGNhbiByZWFkIHRoaXMgeW8=\nEND:VCARD\n");
+        parseVCard("BEGIN : VCARD\nFN\n :john doe\\, jr.\nAGENT:\\nBEGIN:VCARD\\nEND:VCARD\nEND:VCARD");
 //        parseVCard("BEGIN:VCARD\r\n\r\nFN\n :john doe\nA.TEL;WORK:+1-800-555-1212\n.:?\n:\nEND:VCARD\n");
     }
 }
