@@ -213,11 +213,10 @@ ZimbraHit getZimbraHit(Mailbox mbox, float score, SearchResult sr, Document doc)
       case MailItem.TYPE_APPOINTMENT:
     	  toRet = getAppointmentHit(mbox, sr.id, null, score, sr.data);
     	  break;
+      case MailItem.TYPE_DOCUMENT:
       case MailItem.TYPE_WIKI:
-          toRet = getWikiHit(mbox, sr.id, null, score, sr.data);
+          toRet = getDocumentHit(mbox, sr.id, null, score, sr.data);
           break;          
-          // Unsupported right now:
-          //            case MailItem.TYPE_DOCUMENT:
       default:
           assert(false);
       }
@@ -225,13 +224,13 @@ ZimbraHit getZimbraHit(Mailbox mbox, float score, SearchResult sr, Document doc)
 	  return toRet;
   }
 
-  protected WikiHit getWikiHit(Mailbox mbx, int mailItemId, Document d, float score, MailItem.UnderlyingData underlyingData) throws ServiceException {
-      WikiHit hit = (WikiHit) mMessageHits.get(mailItemId);
+  protected DocumentHit getDocumentHit(Mailbox mbx, int mailItemId, Document d, float score, MailItem.UnderlyingData underlyingData) throws ServiceException {
+      DocumentHit hit = (DocumentHit) mMessageHits.get(mailItemId);
       if (hit == null) {
           if (d != null) {
-              hit = new WikiHit(this, mbx, score, mailItemId, underlyingData, d);
+              hit = new DocumentHit(this, mbx, score, mailItemId, underlyingData, d);
           } else {
-              hit = new WikiHit(this, mbx, score, mailItemId, underlyingData);
+              hit = new DocumentHit(this, mbx, score, mailItemId, underlyingData);
           }
           mMessageHits.put(mailItemId, hit);
       } else {

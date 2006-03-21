@@ -13,10 +13,7 @@
 // everyone.  Anyone can add a new revision or delete the Wiki page created by
 // someone else.
 //
-// The optional attribute 'type' for each command determines whether the request
-// is for Notes or Wiki.  If the type element is not specified, the server will
-// default to Wiki.
-//
+
 
 // Create
 //
@@ -53,7 +50,7 @@
 //
 // Search
 // Documents and Wiki documents can be indexed.  
-// Use the existing Search API with "types" set to wiki or document.
+// Use the existing Search API with "types" set to "wiki" or "document".
 //
 
 // Get
@@ -94,7 +91,7 @@
 // DeleteWiki
 // deletes all the revision of the wiki document by moving to trash folder.
 // delete can be performed by anyone who has delete access to the folder the wiki document is stored.
-<DeleteWikiRequest [type="wiki|note"]>
+<DeleteWikiRequest>
   <w name="{word}"/>
 </DeleteWikiRequest>
 

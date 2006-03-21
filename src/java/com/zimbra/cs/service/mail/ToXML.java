@@ -1225,27 +1225,36 @@ public class ToXML {
 		return encodeWiki(parent, lc, wiki, NOTIFY_FIELDS, rev);
 	}
 	public static Element encodeWiki(Element parent, ZimbraContext lc, WikiItem wiki, int fields, int rev) {
-
         Element m = parent.addElement(MailService.E_WIKIWORD);
+        encodeDocumentCommon(m, lc, wiki, fields, rev);
+        return m;
+	}
+	public static Element encodeDocument(Element parent, ZimbraContext lc, Document doc, int rev) {
+        Element m = parent.addElement(MailService.E_DOC);
+        encodeDocumentCommon(m, lc, doc, NOTIFY_FIELDS, rev);
+        return m;
+	}
+	public static Element encodeDocumentCommon(Element m, ZimbraContext lc, Document doc, int fields, int rev) {
+
         if (needToOutput(fields, Change.MODIFIED_SIZE))
-            m.addAttribute(MailService.A_SIZE, wiki.getSize());
+            m.addAttribute(MailService.A_SIZE, doc.getSize());
         if (needToOutput(fields, Change.MODIFIED_DATE))
-            m.addAttribute(MailService.A_DATE, wiki.getDate());
+            m.addAttribute(MailService.A_DATE, doc.getDate());
         if (needToOutput(fields, Change.MODIFIED_FOLDER))
-            m.addAttribute(MailService.A_FOLDER, lc.formatItemId(wiki.getFolderId()));
-        recordItemTags(m, wiki, fields);
+            m.addAttribute(MailService.A_FOLDER, lc.formatItemId(doc.getFolderId()));
+        recordItemTags(m, doc, fields);
         
         if (needToOutput(fields, Change.MODIFIED_CONTENT)) {
-        	m.addAttribute(MailService.A_ID, lc.formatItemId(wiki));
-        	m.addAttribute(MailService.A_NAME, wiki.getSubject());
+        	m.addAttribute(MailService.A_ID, lc.formatItemId(doc));
+        	m.addAttribute(MailService.A_NAME, doc.getSubject());
         	
             try {
-            	Document.DocumentRevision revision = (rev > 0) ? wiki.getRevision(rev) : wiki.getLastRevision(); 
+            	Document.DocumentRevision revision = (rev > 0) ? doc.getRevision(rev) : doc.getLastRevision(); 
             	m.addAttribute(MailService.A_VERSION, revision.getVersion());
             	m.addAttribute(MailService.A_CREATOR, revision.getCreator());
             	m.addAttribute(MailService.A_MODIFIED_DATE, revision.getRevDate());
             } catch (Exception ex) {
-                mLog.warn("ignoring exception while fetching blob for Wiki " + wiki.getSubject(), ex);
+                mLog.warn("ignoring exception while fetching revision for document " + doc.getSubject(), ex);
             }
         }
 

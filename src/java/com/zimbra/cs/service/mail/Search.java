@@ -44,10 +44,13 @@ import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Conversation;
+import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.PendingModifications;
@@ -274,9 +277,9 @@ public class Search extends DocumentHandler  {
             } else if (hit instanceof AppointmentHit) {
                 AppointmentHit ah = (AppointmentHit)hit;
                 e = addAppointmentHit(lc, response, ah, inline, params);
-            } else if (hit instanceof WikiHit) {
-            	WikiHit wh = (WikiHit)hit;
-                e = addWikiHit(lc, response, wh);
+            } else if (hit instanceof DocumentHit) {
+            	DocumentHit dh = (DocumentHit)hit;
+                e = addDocumentHit(lc, response, dh);
             } else {
                 mLog.error("Got an unknown hit type putting search hits: "+hit);
             }
@@ -415,8 +418,12 @@ public class Search extends DocumentHandler  {
         return ToXML.encodeContact(response, lc, ch.getContact(), null, true, null);
     }
     
-    Element addWikiHit(ZimbraContext lc, Element response, WikiHit wh) throws ServiceException {
-        return ToXML.encodeWiki(response, lc, wh.getWiki(), -1);
+    Element addDocumentHit(ZimbraContext lc, Element response, DocumentHit dh) throws ServiceException {
+    	if (dh.getItemType() == MailItem.TYPE_DOCUMENT)
+    		return ToXML.encodeDocument(response, lc, (Document)dh.getDocument(), -1);
+    	else if (dh.getItemType() == MailItem.TYPE_WIKI)
+            return ToXML.encodeWiki(response, lc, (WikiItem)dh.getDocument(), -1);
+    	throw ServiceException.UNKNOWN_DOCUMENT("invalid document type "+dh.getItemType(), null);
     }
     
     Element addNoteHit(ZimbraContext lc, Element response, NoteHit nh, EmailElementCache eecache) throws ServiceException {

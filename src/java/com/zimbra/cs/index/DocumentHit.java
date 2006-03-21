@@ -28,50 +28,49 @@ import org.apache.lucene.document.Document;
 
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.ServiceException;
 
-public class WikiHit extends ZimbraHit {
+public class DocumentHit extends ZimbraHit {
 
-	private WikiItem mWiki;
-	private int mMessageId;
-	private Document mDoc;
+	protected MailItem mDocument;
+	protected int mMessageId;
+	protected Document mDoc;
 	
-    protected WikiHit(ZimbraQueryResultsImpl results, Mailbox mbx, float score, int mailItemId, MailItem.UnderlyingData underlyingData, Document d) throws ServiceException {
+    protected DocumentHit(ZimbraQueryResultsImpl results, Mailbox mbx, float score, int mailItemId, MailItem.UnderlyingData underlyingData, Document d) throws ServiceException {
         this(results, mbx, score, mailItemId, underlyingData);
         mDoc = d;
     }
 
-    protected WikiHit(ZimbraQueryResultsImpl results, Mailbox mbx, float score, int mailItemId, MailItem.UnderlyingData underlyingData) throws ServiceException {
+    protected DocumentHit(ZimbraQueryResultsImpl results, Mailbox mbx, float score, int mailItemId, MailItem.UnderlyingData underlyingData) throws ServiceException {
         this(results, mbx, score);
         mMessageId = mailItemId;
         if (underlyingData != null) {
-            mWiki = (WikiItem)mbx.getItemFromUnderlyingData(underlyingData);
+            mDocument = mbx.getItemFromUnderlyingData(underlyingData);
         }
     }
     
-    WikiHit(ZimbraQueryResultsImpl results, Mailbox mbx, float score) {
+    protected DocumentHit(ZimbraQueryResultsImpl results, Mailbox mbx, float score) {
     	super(results, mbx, score);
     }
     
     boolean inMailbox() throws ServiceException {
-        return mWiki.inMailbox();
+        return mDocument.inMailbox();
     }
     
     boolean inTrash() throws ServiceException {
-        return mWiki.inTrash();
+        return mDocument.inTrash();
     }
     
     boolean inSpam() throws ServiceException {
-        return mWiki.inSpam();
+        return mDocument.inSpam();
     }
     
     public long getDate() throws ServiceException {
-    	return mWiki.getDate();
+    	return mDocument.getDate();
     }
     
     public int getSize() throws ServiceException {
-    	return (int)mWiki.getSize();
+    	return (int)mDocument.getSize();
     }
     
     public int getConversationId() throws ServiceException {
@@ -83,26 +82,26 @@ public class WikiHit extends ZimbraHit {
     }
     
     public byte getItemType() throws ServiceException {
-    	return MailItem.TYPE_WIKI;
+    	return mDocument.getType();
     }
     
     void setItem(MailItem item) throws ServiceException {
-    	mWiki = (WikiItem)item;
+    	mDocument = item;
     }
     
     boolean itemIsLoaded() throws ServiceException {
-    	return mWiki != null;
+    	return mDocument != null;
     }
     
     public String getSubject() throws ServiceException {
-    	return mWiki.getSubject();
+    	return mDocument.getSubject();
     }
     
     public String getName() throws ServiceException {
     	return getSubject();
     }
     
-    public WikiItem getWiki() {
-    	return mWiki;
+    public MailItem getDocument() {
+    	return mDocument;
     }
 }
