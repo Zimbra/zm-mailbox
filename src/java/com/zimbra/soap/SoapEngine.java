@@ -65,7 +65,7 @@ public class SoapEngine {
         mDispatcher = new DocumentDispatcher();
     }
 
-    public Element dispatch(String path, byte[] soapMessage, Map context) {
+    public Element dispatch(String path, byte[] soapMessage, Map<String, Object> context) {
         InputStream in = new ByteArrayInputStream(soapMessage);
         Element document = null;
         try {
@@ -94,7 +94,7 @@ public class SoapEngine {
      * @return an XmlObject which is a SoapEnvelope containing the response
      *         
      */
-    private Element dispatch(String path, Element envelope, Map context) {
+    private Element dispatch(String path, Element envelope, Map<String, Object> context) {
     	// if (mLog.isDebugEnabled()) mLog.debug("dispatch(path, envelope, context: " + envelope.getQualifiedName());
     	
         SoapProtocol soapProto = SoapProtocol.determineProtocol(envelope);
@@ -180,6 +180,9 @@ public class SoapEngine {
                 } catch (ServiceException e) {
                     responseBody = responseProto.soapFault(e);
                     mLog.info("proxy handler exception", e);
+                } catch (SoapFaultException e) {
+                    responseBody = e.getFault().detach();
+                    mLog.debug("proxy handler exception", e);
                 } catch (Throwable e) {
                     responseBody = responseProto.soapFault(ServiceException.FAILURE(e.toString(), e));
                     if (e instanceof OutOfMemoryError)
@@ -204,7 +207,7 @@ public class SoapEngine {
      * @param lc
      * @return
      */
-    Element dispatchRequest(Element request, Map context, ZimbraContext lc) {
+    Element dispatchRequest(Element request, Map<String, Object> context, ZimbraContext lc) {
         SoapProtocol soapProto = lc.getResponseProtocol();
 
         if (request == null)
@@ -257,7 +260,7 @@ public class SoapEngine {
             mLog.info("handler exception", e);
         } catch (SoapFaultException e) {
             response = e.getFault().detach();
-            mLog.info("handler exception", e);
+            mLog.debug("handler exception", e);
         } catch (Throwable e) {
             // TODO: better exception stack traces during develope?
             response = soapProto.soapFault(ServiceException.FAILURE(e.toString(), e));
