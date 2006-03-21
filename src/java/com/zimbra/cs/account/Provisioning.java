@@ -635,6 +635,8 @@ public abstract class Provisioning {
     public static final String A_zimbraMailPort = "zimbraMailPort";
     public static final String A_zimbraMailSSLPort = "zimbraMailSSLPort";
     public static final String A_zimbraMailMode = "zimbraMailMode";
+    public static final String A_zimbraMailURL = "zimbraMailURL";
+
     public static final String A_zimbraAdminPort = "zimbraAdminPort";
 
     public static final String A_zimbraSmtpHostname = "zimbraSmtpHostname";
