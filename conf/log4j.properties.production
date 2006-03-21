@@ -74,6 +74,18 @@ log4j.appender.WBXML.Append=true
 log4j.appender.WBXML.layout=org.apache.log4j.PatternLayout
 log4j.appender.WBXML.layout.ConversionPattern=%d %-5p [%t] [%x] %c{1} - %m%n
 
+# Appender CONVERTDLOG writes to the file "convertd.log".
+log4j.appender.CONVERTDLOG=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.CONVERTDLOG.File=/opt/zimbra/log/convertd.log
+log4j.appender.CONVERTDLOG.DatePattern='.'yyyy-MM-dd
+log4j.appender.CONVERTDLOG.Append=true
+log4j.appender.CONVERTDLOG.layout=org.apache.log4j.PatternLayout
+log4j.appender.CONVERTDLOG.layout.ConversionPattern=%d %-5p [%t] [%x] %c{1} - %m%n
+
+# Save com.zimbra.cs.convertd to CONVERTDLOG appender 
+log4j.additivity.com.zimbra.cs.convertd=false
+log4j.logger.com.zimbra.cs.convertd=DEBUG,CONVERTDLOG
+
 log4j.additivity.zimbra.sync=false
 log4j.logger.zimbra.sync=DEBUG,SYNC
 log4j.additivity.zimbra.syncstate=false
