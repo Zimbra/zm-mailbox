@@ -24,6 +24,7 @@
  */
 package com.zimbra.cs.zimlet;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ByteArrayInputStream;
@@ -163,7 +164,7 @@ public class ProxyServlet extends ZimbraServlet {
 			header.equals("keep-alive") ||
 			header.equals("pragma") ||
 			header.equals("host") ||
-			header.equals("user-agent") ||
+			//header.equals("user-agent") ||
 			header.equals("cache-control") ||
 			header.equals("cookie")) {
 			return false;
@@ -171,15 +172,30 @@ public class ProxyServlet extends ZimbraServlet {
 		return true;
 	}
 	
-	private void copyPostedData(HttpServletRequest req, HttpURLConnection conn) throws IOException {
-		if (req.getMethod().equals("GET") || req.getContentLength() <= 0) {
-			return;
+	private byte[] copyPostedData(HttpServletRequest req) throws IOException {
+        int size = req.getContentLength();
+		if (req.getMethod().equals("GET") || size <= 0) {
+			return null;
 		}
-		conn.setDoOutput(true);
-		ByteUtil.copy(req.getInputStream(), conn.getOutputStream());
+		InputStream is = req.getInputStream();
+        ByteArrayOutputStream baos = null;
+    	try {
+    		if (size < 0)
+    			size = 0; 
+    		baos = new ByteArrayOutputStream(size);
+    		byte[] buffer = new byte[8192];
+    		int num;
+    		while ((num = is.read(buffer)) != -1) {
+    			baos.write(buffer, 0, num);
+    		}
+    		return baos.toByteArray();
+    	} finally {
+            if (baos != null)
+                baos.close();
+    	}
 	}
 	
-	private URLContents fetchURLContent(HttpServletRequest req, URL url) throws IOException {
+	private URLContents fetchURLContent(HttpServletRequest req, URL url, byte[] body) throws IOException {
 		URLConnection conn = url.openConnection();
 		
 		// handle basic auth
@@ -208,10 +224,13 @@ public class ProxyServlet extends ZimbraServlet {
 			HttpURLConnection httpconn = (HttpURLConnection) conn;
 			
 			httpconn.setRequestMethod(req.getMethod());
-			copyPostedData(req, httpconn);
+			if (body != null) {
+				conn.setDoOutput(true);
+				httpconn.getOutputStream().write(body);
+			}
 			int status = httpconn.getResponseCode();
 			if (status != HttpURLConnection.HTTP_OK) {
-				ZimbraLog.zimlet.info("remote host returned error on proxy request: "+status);
+				ZimbraLog.zimlet.info("remote host(" + url + ") returned error on proxy request: "+status);
 			}
 		}
 
@@ -242,14 +261,14 @@ public class ProxyServlet extends ZimbraServlet {
 		return false;
 	}
 	
-	private URLContents getURLContent(HttpServletRequest req, URL url, AuthToken authToken) 
+	private URLContents getURLContent(HttpServletRequest req, URL url, AuthToken authToken, byte[] body) 
 			throws IOException {
 		// check the cache first
 		URLContents content = checkCachedURLContent(url);
 		if (content == null) {
 			
 			// fetch from the internet
-			content = fetchURLContent(req, url);
+			content = fetchURLContent(req, url, body);
 
 			try {
 				// cache the result for later use
@@ -278,6 +297,9 @@ public class ProxyServlet extends ZimbraServlet {
         	return;
         }
         
+        // get the posted body before the server read and parse them.
+        byte[] body = copyPostedData(req);
+        
         // sanity check
 		String target = req.getParameter(TARGET_PARAM);
 		if (target == null) {
@@ -294,7 +316,7 @@ public class ProxyServlet extends ZimbraServlet {
 		}
 		
 		// fetch the contents
-		URLContents content = getURLContent(req, url, authToken);
+		URLContents content = getURLContent(req, url, authToken, body);
 		if (content.returnCode != HttpServletResponse.SC_OK) {
 			resp.setStatus(content.returnCode);
 		}

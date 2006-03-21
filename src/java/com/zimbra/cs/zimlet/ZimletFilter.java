@@ -112,31 +112,33 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
     		return;
     	}
     	
-        try {
-        	Provisioning prov = Provisioning.getInstance();
-        	Account account = prov.getAccountById(authToken.getAccountId());
-        	Zimlet z = prov.getZimlet(zimletName);
-        	boolean isAdmin = (authToken.isAdmin() || authToken.isDomainAdmin());
-        	if (z.isExtension()) {
-        		// admin zimlets are accessible only by admins through admin app.
-        		if (!isAdmin) {
-                	ZimbraLog.zimlet.info("unauthorized request to zimlet "+zimletName+" from non admin user "+authToken.getAccountId());
-                	resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            		return;
-        		}
-        	} else {
-	        	Set zimlets = account.getCOS().getMultiAttrSet(Provisioning.A_zimbraZimletAvailableZimlets);
-	        	if (!zimlets.contains(zimletName)) {
-	            	ZimbraLog.zimlet.info("unauthorized request to zimlet "+zimletName+" from user "+authToken.getAccountId());
-	            	resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
-	        		return;
-	        	}
-        	}
-        } catch (ServiceException se) {
-        	ZimbraLog.zimlet.info("cannot resolve account "+authToken.getAccountId());
-        	resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
-        	return;
-        }
+    	if (!zimletName.equals(com.zimbra.cs.zimlet.ZimletUtil.ZIMLET_DEV_DIR)) {
+            try {
+            	Provisioning prov = Provisioning.getInstance();
+            	Account account = prov.getAccountById(authToken.getAccountId());
+            	Zimlet z = prov.getZimlet(zimletName);
+            	boolean isAdmin = (authToken.isAdmin() || authToken.isDomainAdmin());
+            	if (z.isExtension()) {
+            		// admin zimlets are accessible only by admins through admin app.
+            		if (!isAdmin) {
+                    	ZimbraLog.zimlet.info("unauthorized request to zimlet "+zimletName+" from non admin user "+authToken.getAccountId());
+                    	resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                		return;
+            		}
+            	} else {
+    	        	Set zimlets = account.getCOS().getMultiAttrSet(Provisioning.A_zimbraZimletAvailableZimlets);
+    	        	if (!zimlets.contains(zimletName)) {
+    	            	ZimbraLog.zimlet.info("unauthorized request to zimlet "+zimletName+" from user "+authToken.getAccountId());
+    	            	resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+    	        		return;
+    	        	}
+            	}
+            } catch (ServiceException se) {
+            	ZimbraLog.zimlet.info("cannot resolve account "+authToken.getAccountId());
+            	resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            	return;
+            }
+    	}
         chain.doFilter(req, resp);
 	}
 
