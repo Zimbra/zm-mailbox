@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import com.zimbra.cs.mailbox.Document;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
@@ -48,18 +49,29 @@ public class GetWiki extends WikiDocumentHandler {
 		ZimbraContext lc = getZimbraContext(context);
         OperationContext octxt = lc.getOperationContext();
         Element eword = request.getElement(MailService.E_WIKIWORD);
-        String word = eword.getAttribute(MailService.A_NAME);
+        String word = eword.getAttribute(MailService.A_NAME, null);
+        String id = eword.getAttribute(MailService.A_ID, null);
         int rev = (int)eword.getAttributeLong(MailService.A_VERSION, -1);
 
         Element response = lc.createElement(MailService.GET_WIKI_RESPONSE);
 
-        Wiki wiki = getRequestedWiki(request, lc);
-        WikiWord w = wiki.lookupWiki(word);
-        if (w == null) {
-    		ZimbraLog.wiki.error("requested wiki word "+word+" does not exist");
-        	return response;
+        WikiItem wikiItem;
+        
+        if (word != null) {
+            Wiki wiki = getRequestedWiki(request, lc);
+            WikiWord w = wiki.lookupWiki(word);
+            if (w == null) {
+        		ZimbraLog.wiki.error("requested wiki word "+word+" does not exist");
+            	return response;
+            }
+            wikiItem = w.getWikiItem(octxt);
+        } else if (id != null) {
+            Mailbox mbox = getRequestedMailbox(lc);
+        	wikiItem = mbox.getWikiById(octxt, Integer.parseInt(id));
+        } else {
+        	throw ServiceException.FAILURE("missing attribute w or id", null);
         }
-        WikiItem wikiItem = w.getWikiItem(octxt);
+        
         Element wikiElem = ToXML.encodeWiki(response, lc, wikiItem, rev);
     	Document.DocumentRevision revision = (rev > 0) ? wikiItem.getRevision(rev) : wikiItem.getLastRevision(); 
     	try {

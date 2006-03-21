@@ -81,7 +81,7 @@
 // GetWiki
 // returns the latest version if version is omitted from the request.
 <GetWikiRequest>
-  <w name="{word}" [ver="{version}"]/>
+  <w [name="{word}"|id="{message-id}"] [ver="{version}"]/>
 </GetWikiRequest>
 
 <GetWikiResponse>
