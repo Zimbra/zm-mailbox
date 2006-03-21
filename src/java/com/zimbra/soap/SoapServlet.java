@@ -218,7 +218,7 @@ public class SoapServlet extends ZimbraServlet {
 
         long startTime = ZimbraPerf.STOPWATCH_SOAP.start();
         
-        HashMap context = new HashMap();
+        HashMap<String, Object> context = new HashMap<String, Object>();
         context.put(SERVLET_REQUEST, req);
         context.put(SoapEngine.REQUEST_IP, req.getRemoteAddr());            
         //checkAuthToken(req.getCookies(), context);

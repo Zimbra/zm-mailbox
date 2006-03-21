@@ -65,9 +65,9 @@ public abstract class DocumentHandler {
         }
     }
 
-    public abstract Element handle(Element request, Map context) throws ServiceException, SoapFaultException;
+    public abstract Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException;
 
-    public static ZimbraContext getZimbraContext(Map context) {
+    public static ZimbraContext getZimbraContext(Map<String, Object> context) {
         return (ZimbraContext) context.get(SoapEngine.ZIMBRA_CONTEXT);
     }
 
@@ -89,13 +89,13 @@ public abstract class DocumentHandler {
     }
 
     /** Returns whether the command's caller must be authenticated. */
-    public boolean needsAuth(Map context) {
+    public boolean needsAuth(Map<String, Object> context) {
         return true;
     }
 
     /** Returns whether this is an administrative command (and thus requires
      *  a valid admin auth token). */
-    public boolean needsAdminAuth(Map context) {
+    public boolean needsAdminAuth(Map<String, Object> context) {
         return false;
     }
 
@@ -130,7 +130,7 @@ public abstract class DocumentHandler {
      * returns true if domain admin auth is sufficient to run this command. This should be overriden only on admin
      * commands that can be run in a restricted "domain admin" mode.
      */
-    public boolean domainAuthSufficient(Map context) {
+    public boolean domainAuthSufficient(Map<String, Object> context) {
         return false; 
     }
 
@@ -146,7 +146,7 @@ public abstract class DocumentHandler {
     }
 
     /** Returns whether the client making the SOAP request is localhost. */
-    protected boolean clientIsLocal(Map context) {
+    protected boolean clientIsLocal(Map<String, Object> context) {
         HttpServletRequest req = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
         if (req == null) return true;
         String peerIP = req.getRemoteAddr();
@@ -160,7 +160,7 @@ public abstract class DocumentHandler {
      *                 request.
      * @return A {@link com.zimbra.cs.session.SoapSession}, or
      *         <code>null</code>. */
-    public Session getSession(Map context) {
+    public Session getSession(Map<String, Object> context) {
         return getSession(context, SessionCache.SESSION_SOAP);
     }
 
@@ -176,7 +176,7 @@ public abstract class DocumentHandler {
      *         <code>null</code>.
      * @see SessionCache#SESSION_SOAP
      * @see SessionCache#SESSION_ADMIN */
-    protected Session getSession(Map context, int sessionType) {
+    protected Session getSession(Map<String, Object> context, int sessionType) {
         ZimbraContext lc = getZimbraContext(context);
         return (lc == null ? null : lc.getSession(sessionType));
     }
@@ -234,7 +234,7 @@ public abstract class DocumentHandler {
     protected boolean checkMountpointProxy(Element request)  { return false; }
     protected String[] getResponseItemPath()  { return null; }
 
-    protected Element proxyIfNecessary(Element request, Map context) throws ServiceException, SoapFaultException {
+    protected Element proxyIfNecessary(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
         // find the id of the item we're proxying on...
         String[] xpath = getProxiedIdPath(request);
         if (xpath == null)
@@ -260,7 +260,7 @@ public abstract class DocumentHandler {
         return null;
     }
 
-    protected Element proxyRequest(Element request, Map context, ItemId iidRequested, ItemId iidResolved) throws ServiceException, SoapFaultException {
+    protected Element proxyRequest(Element request, Map<String, Object> context, ItemId iidRequested, ItemId iidResolved) throws ServiceException, SoapFaultException {
         // prepare the request for re-processing
         boolean mountpoint = iidRequested != iidResolved;
         if (mountpoint)
@@ -276,11 +276,11 @@ public abstract class DocumentHandler {
         return response;
     }
 
-    protected static Element proxyRequest(Element request, Map context, String acctId) throws SoapFaultException, ServiceException {
+    protected static Element proxyRequest(Element request, Map<String, Object> context, String acctId) throws SoapFaultException, ServiceException {
         return proxyRequest(request, context, acctId, false);
     }
 
-    private static Element proxyRequest(Element request, Map context, String acctId, boolean mountpoint) throws SoapFaultException, ServiceException {
+    private static Element proxyRequest(Element request, Map<String, Object> context, String acctId, boolean mountpoint) throws SoapFaultException, ServiceException {
         ZimbraContext lc = getZimbraContext(context);
         // new context for proxied request has a different "requested account"
         ZimbraContext lcTarget = new ZimbraContext(lc, acctId);
@@ -299,7 +299,7 @@ public abstract class DocumentHandler {
         return proxyRequest(request, context, serverTarget, lcTarget);
     }
 
-    protected static Element proxyRequest(Element request, Map context, Server server, ZimbraContext lc) throws SoapFaultException, ServiceException {
+    protected static Element proxyRequest(Element request, Map<String, Object> context, Server server, ZimbraContext lc) throws SoapFaultException, ServiceException {
         SoapEngine engine = (SoapEngine) context.get(SoapEngine.ZIMBRA_ENGINE);
         boolean isLocal = LOCAL_HOST.equalsIgnoreCase(server.getName()) && engine != null;
 
@@ -307,7 +307,7 @@ public abstract class DocumentHandler {
         request.detach();
         if (isLocal) {
             // executing on same server; just hand back to the SoapEngine
-            Map contextTarget = new HashMap(context);
+            Map<String, Object> contextTarget = new HashMap<String, Object>(context);
             contextTarget.put(SoapEngine.ZIMBRA_CONTEXT, lc);
             response = engine.dispatchRequest(request, contextTarget, lc);
             if (lc.getResponseProtocol().isFault(response))

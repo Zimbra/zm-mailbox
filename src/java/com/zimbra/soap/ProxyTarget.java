@@ -94,7 +94,7 @@ public class ProxyTarget {
         return mServer.equals(localServer);
     }
 
-    public Element dispatch(Element request) throws ServiceException {
+    public Element dispatch(Element request) throws ServiceException, SoapFaultException {
         Element response = null;
         SoapHttpTransport transport = null;
         try {
@@ -102,8 +102,6 @@ public class ProxyTarget {
             transport.setAuthToken(mAuthToken);
             response = transport.invokeWithoutSession(request);
         } catch (IOException e) {
-            throw ServiceException.PROXY_ERROR(e, mURL);
-        } catch (SoapFaultException e) {
             throw ServiceException.PROXY_ERROR(e, mURL);
         } finally {
             if (transport != null)
