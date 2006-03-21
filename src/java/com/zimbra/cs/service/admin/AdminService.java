@@ -225,7 +225,6 @@ public class AdminService implements DocumentService {
     public static final QName SEARCH_CALENDAR_RESOURCES_REQUEST   = QName.get("SearchCalendarResourcesRequest",  NAMESPACE);
     public static final QName SEARCH_CALENDAR_RESOURCES_RESPONSE  = QName.get("SearchCalendarResourcesResponse", NAMESPACE);
 
-
     public static final QName SEARCH_MULTIPLE_MAILBOXES_REQUEST = QName.get("SearchMultiMailboxRequest", NAMESPACE);
     public static final QName SEARCH_MULTIPLE_MAILBOXES_RESPONSE = QName.get("SearchMultiMailboxResponse", NAMESPACE);
 
@@ -234,6 +233,15 @@ public class AdminService implements DocumentService {
 
     public static final QName GET_QUOTA_USAGE_REQUEST = QName.get("GetQuotaUsageRequest", NAMESPACE);
     public static final QName GET_QUOTA_USAGE_RESPONSE = QName.get("GetQuotaUsageResponse", NAMESPACE);
+    
+    public static final QName GET_MAIL_QUEUE_INFO_REQUEST = QName.get("GetMailQueueInfoRequest", NAMESPACE);
+    public static final QName GET_MAIL_QUEUE_INFO_RESPONSE = QName.get("GetMailQueueInfoResponse", NAMESPACE);
+    public static final QName GET_MAIL_QUEUE_REQUEST = QName.get("GetMailQueueRequest", NAMESPACE);
+    public static final QName GET_MAIL_QUEUE_RESPONSE = QName.get("GetMailQueueResponse", NAMESPACE);
+    public static final QName MAIL_QUEUE_ACTION_REQUEST = QName.get("MailQueueActionRequest", NAMESPACE);
+    public static final QName MAIL_QUEUE_ACTION_RESPONSE = QName.get("MailQueueActionResponse", NAMESPACE);
+    public static final QName MAIL_QUEUE_FLUSH_REQUEST = QName.get("MailQueueFlushRequest", NAMESPACE);
+    public static final QName MAIL_QUEUE_FLUSH_RESPONSE = QName.get("MailQueueFlushResponse", NAMESPACE);
 
     public static final String E_ACCOUNT = "account";
     public static final String E_CALENDAR_RESOURCE = "calresource";
@@ -254,6 +262,7 @@ public class AdminService implements DocumentService {
     public static final String E_PASSWORD = "password";
     public static final String E_NEW_PASSWORD = "newPassword";
     public static final String E_QUERY = "query";
+    public static final String E_QUEUE = "queue";
     public static final String E_SERVER = "server";
     public static final String E_STATUS = "status";    
     public static final String E_END_TIME = "endTime";
@@ -444,6 +453,12 @@ public class AdminService implements DocumentService {
 
         // QUOTA
         dispatcher.registerHandler(GET_QUOTA_USAGE_REQUEST, new GetQuotaUsage());
+
+        // Mail queue management
+        dispatcher.registerHandler(GET_MAIL_QUEUE_INFO_REQUEST, new GetMailQueueInfo());
+        dispatcher.registerHandler(GET_MAIL_QUEUE_REQUEST, new GetMailQueue());
+        dispatcher.registerHandler(MAIL_QUEUE_ACTION_REQUEST, new MailQueueAction());
+        dispatcher.registerHandler(MAIL_QUEUE_FLUSH_REQUEST, new MailQueueFlush());
     }
 
     /**
