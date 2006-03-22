@@ -1240,7 +1240,7 @@ and the client should ask again in a little while.
 
 <GetMailQueueResponse>
   <server name="{mta-server}">
-    <queue name="{queue-name}" stale="{0,1}" time="{scan-time}">
+    <queue name="{queue-name}" stale="{0,1}" time="{scan-time}"  more="{more-flag}">
 
       <qs type="error|sdomain|saddress|rdomain|raddress|origip">
         <item n="{count}" t="{text-for-item}" [d={description}]>+
