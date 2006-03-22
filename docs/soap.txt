@@ -274,10 +274,13 @@ global soap/system errors used with zimbra:Error/Code:
    <authToken>...</authToken>
    <lifetime>...</lifetime>
    <sessionId .../>
+   <refer>{mail-host}</refer>  
    [<prefs><pref name="{name}" modified="{modified-time}">{value}</pref>...</prefs>]
  </AuthResponse>
 
 one of <password> or <preauth> must be specified. see preauth.txt for a discussion of preauth.
+
+  {mail-host} = host additional SOAP requests should be directed to. Always returned, might be same as original host request was sent to.
 
 ---------
 
