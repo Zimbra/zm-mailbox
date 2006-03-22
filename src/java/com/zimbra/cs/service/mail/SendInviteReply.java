@@ -164,8 +164,8 @@ public class SendInviteReply extends CalendarRequest {
                 } else {
                     // build a default "Accepted" response
                     csd.mMm = CalendarMailSender.createDefaultReply(
-                            acct, appt, oldInv, replySubject,
-                            verb, true, null, iCal);
+                            acct, appt, oldInv, null, replySubject,
+                            verb, null, iCal);
                 }
 
                 sendCalendarMessage(lc, appt.getFolderId(), acct, mbox, csd, response, false);

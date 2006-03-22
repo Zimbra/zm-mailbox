@@ -466,16 +466,29 @@ public class Invite {
      * invite.  It typically includes CUA-generated meeting summary as well as
      * text entered by the user.
      *
-     * This method can be called for existing invites only. 
-     * NullPointerException is returned if this method is called on an
-     * incoming invite.
+     * This method can be called for existing invites only.
+     * Null is returned if this method is called on an incoming invite that
+     * hasn't been committed to the backend yet.
      *
      * @return null if notes is not found
      * @throws ServiceException
      */
     public String getNotes() throws ServiceException {
-        assert(mAppt != null);
+        if (mAppt == null) return null;
         MimeMessage mmInv = mAppt.getMimeMessage(mMailItemId);
+        return getNotes(mmInv);
+    }
+
+    /**
+     * Returns the meeting notes.  Meeting notes is the text/plain part in an
+     * invite.  It typically includes CUA-generated meeting summary as well as
+     * text entered by the user.
+     *
+     * @return null if notes is not found
+     * @throws ServiceException
+     */
+    public static String getNotes(MimeMessage mmInv) throws ServiceException {
+        if (mmInv == null) return null;
         try {
             Object mmInvContent = mmInv.getContent();
             if (!(mmInvContent instanceof MimeMultipart)) return null;
@@ -503,7 +516,6 @@ public class Invite {
             throw ServiceException.FAILURE("Unable to get appointment notes MIME part", e);
         }
     }
-
 
     /**
      * WARNING - does NOT save the metadata.  Make sure you know that it is being
@@ -1016,7 +1028,7 @@ public class Invite {
     // how MS Outlook sets free-busy type of a meeting
     public static final String MICROSOFT_BUSYSTATUS = "X-MICROSOFT-CDO-BUSYSTATUS";
     public static final String MICROSOFT_INTENDEDSTATUS = "X-MICROSOFT-CDO-INTENDEDSTATUS";
-    
+
 //    void parseVEvent(VEvent vevent) throws ServiceException 
 //    {
 //        assert(mTzMap != null);

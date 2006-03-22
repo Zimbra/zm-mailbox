@@ -33,11 +33,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.TimeZone;
 
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
@@ -190,7 +193,7 @@ public class Appointment extends MailItem {
         DbMailItem.create(mbox, data);
 
         Appointment appt = new Appointment(mbox, data);
-        appt.processPartStat(firstInvite, true);
+        appt.processPartStat(firstInvite, pm.getMimeMessage(), true);
         appt.createBlob(pm, firstInvite, volumeId);
         appt.finishCreation(null);
 
@@ -385,13 +388,13 @@ public class Appointment extends MailItem {
 
         private InviteInfo mInvId;
         
-        private int mApptId;
+        private Appointment mAppt;
 
         public Instance(Appointment appt, InviteInfo invInfo, long _start, long _end,
                 boolean _exception) 
         {
             mInvId = invInfo;
-            mApptId = appt.getId();
+            mAppt = appt;
             mStart = _start;
             mEnd = _end;
             mIsException = _exception;
@@ -400,7 +403,7 @@ public class Appointment extends MailItem {
         public int compareTo(Object o) {
             Instance other = (Instance) o;
 
-            long toRet = mApptId - other.mApptId;
+            long toRet = mAppt.getId() - other.mAppt.getId();
             if (toRet == 0) {
                 toRet = mStart - other.mStart;
                 if (toRet == 0) {
@@ -440,7 +443,7 @@ public class Appointment extends MailItem {
             return toRet.toString();
         }
         
-        public int getAppointmentId() { return mApptId; }
+        public Appointment getAppointment() { return mAppt; }
         public int getMailItemId() { return mInvId.getMsgId(); }
         public int getComponentNum() { return mInvId.getComponentId(); }
         public long getStart() { return mStart; }
@@ -628,7 +631,8 @@ public class Appointment extends MailItem {
                 // No need to mark invite as modified item in mailbox as
                 // it has already been marked as a created item.
             } else {
-                String partStat = processPartStat(newInvite, false);
+                String partStat =
+                    processPartStat(newInvite, pm.getMimeMessage(), false);
             }
 
             mInvites.add(newInvite);
@@ -1506,62 +1510,69 @@ public class Appointment extends MailItem {
             return true;
         }
 
-        private static final int MAX_CONFLICT_LIST_SIZE = 20;
+        public static final int MAX_CONFLICT_LIST_SIZE = 5;
 
-        public static String getBusyTimesString(List<Availability> list) {
+        public static String getBusyTimesString(List<Availability> list, TimeZone tz) {
             StringBuilder sb = new StringBuilder();
             int availCount = 0;
+            boolean hasMoreConflicts = false;
             int conflictCount = 0;
             for (Availability avail : list) {
-                if (!avail.isBusy()) continue;
-
-                if (availCount++ > 0)
-                    sb.append("\r\n----------\r\n\r\n");
-
                 if (conflictCount >= MAX_CONFLICT_LIST_SIZE) {
-                    int more = list.size() - conflictCount;
-                    sb.append("(not showing ").append(more).append(" more conflicts)\r\n");
+                    hasMoreConflicts = true;
                     break;
                 }
-
-                sb.append("Requested time:").append("\r\n");
-                sb.append("    Start: ");
-                sb.append(CalendarMailSender.formatDateTime(new Date(avail.getStartTime())));
-                sb.append("\r\n");
-                sb.append("    End: ");
-                sb.append(CalendarMailSender.formatDateTime(new Date(avail.getEndTime())));
-                sb.append("\r\n");
-                sb.append("\r\n");
+                if (!avail.isBusy()) continue;
 
                 // List conflicting appointments and their organizers.
-                sb.append("Conflicts with:").append("\r\n");
                 FreeBusy fb = avail.getFreeBusy();
-                LinkedHashSet<Invite> invites = fb.getAllInvites();
-                for (Invite inv : invites) {
-                    sb.append("\r\n");
-                    // Don't show appointment name because it's private data.
-                    //sb.append("Appointment: ").append(inv.getName()).append("\r\n");
-                    ZOrganizer organizer = inv.getOrganizer();
+                LinkedHashSet<Instance> instances = fb.getAllInstances();
+                for (Instance instance : instances) {
+                    if (conflictCount >= MAX_CONFLICT_LIST_SIZE) {
+                        hasMoreConflicts = true;
+                        break;
+                    }
+
+                    Date startDate = new Date(instance.getStart());
+                    Date endDate = new Date(instance.getEnd());
+                    String start = CalendarMailSender.formatDateTime(startDate, tz);
+                    sb.append(" * ").append(start);
+                    String end;
+                    if (sameDay(startDate, endDate, tz)) {
+                        end = CalendarMailSender.formatTime(endDate, tz);
+                        sb.append(" - ").append(end);
+                    } else {
+                        end = CalendarMailSender.formatDateTime(endDate, tz);
+                        sb.append("\r\n   - ").append(end);
+                    }
+
+                    ZOrganizer organizer = instance.getAppointment().getDefaultInvite().getOrganizer();
                     if (organizer != null) {
-                        sb.append("    Organizer: ");
+                        sb.append(", by ");
                         String orgAddr = organizer.getAddress();
                         if (organizer.hasCn())
-                            sb.append(organizer.getCn()).append(" <").append(orgAddr).append(">\r\n");
+                            sb.append(organizer.getCn()).append(" <").append(orgAddr).append(">");
                         else
-                            sb.append(orgAddr).append("\r\n");
-                    } else
-                        sb.append("    Organizer: unknown\r\n");
-
-                    sb.append("    Start: ");
-                    sb.append(CalendarMailSender.formatDateTime(new Date(inv.getStartTime().getUtcTime())));
+                            sb.append(orgAddr);
+                    }
                     sb.append("\r\n");
-                    sb.append("    End: ");
-                    sb.append(CalendarMailSender.formatDateTime(new Date(inv.getEffectiveEndTime().getUtcTime())));
-                    sb.append("\r\n");
+                    conflictCount++;
                 }
-                conflictCount++;
             }
+            if (hasMoreConflicts)
+                sb.append(" * ...\r\n");
             return sb.toString();
+        }
+
+        private static boolean sameDay(Date t1, Date t2, TimeZone tz) {
+            Calendar cal1 = new GregorianCalendar(tz);
+            cal1.setTime(t1);
+            Calendar cal2 = new GregorianCalendar(tz);
+            cal2.setTime(t2);
+            return
+                cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
+                cal1.get(Calendar.MONTH) == cal2.get(Calendar.MONTH) &&
+                cal1.get(Calendar.DAY_OF_MONTH) == cal2.get(Calendar.DAY_OF_MONTH);
         }
     }
 
@@ -1572,20 +1583,27 @@ public class Appointment extends MailItem {
     throws ServiceException {
         Collection instances = expandInstances(getStartTime(), getEndTime());
         List<Availability> list = new ArrayList<Availability>(instances.size());
+        int numConflicts = 0;
         for (Iterator iter = instances.iterator(); iter.hasNext(); ) {
+            if (numConflicts > Availability.MAX_CONFLICT_LIST_SIZE)
+                break;
             Instance inst = (Instance) iter.next();
             long start = inst.getStart();
             long end = inst.getEnd();
             FreeBusy fb =
                 FreeBusy.getFreeBusyList(getMailbox(), start, end, this);
             String status = fb.getBusiest();
-            if (!IcalXmlStrMap.FBTYPE_FREE.equals(status))
+            if (!IcalXmlStrMap.FBTYPE_FREE.equals(status)) {
                 list.add(new Availability(start, end, status, fb));
+                numConflicts++;
+            }
         }
         return list;
     }
 
-    private String processPartStat(Invite invite, boolean forCreate)
+    private String processPartStat(Invite invite,
+                                   MimeMessage mmInv,
+                                   boolean forCreate)
     throws ServiceException {
         String partStat = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
         Account account = getMailbox().getAccount();
@@ -1602,32 +1620,28 @@ public class Appointment extends MailItem {
                     CalendarMailSender.sendReply(
                             octxt, mbox, false,
                             CalendarMailSender.VERB_DECLINE,
-                            true,
-                            "This resource/location cannot be booked in a recurring appointment.",
-                            this, invite);
+                            "This resource/location cannot be scheduled in a recurring appointment.\r\n",
+                            this, invite, mmInv);
                 } else if (resource.autoDeclineIfBusy()) {
                     List<Availability> avail = checkAvailability();
                     if (!Availability.isAvailable(avail)) {
                         partStat = IcalXmlStrMap.PARTSTAT_DECLINED;
                         String msg =
-                            "This resource/location is already booked for other appointments,\r\n" +
-                            "and is unavailable for the following requested times:\r\n\r\n" +
-                            Availability.getBusyTimesString(avail);
+                            "This resource/location is already scheduled on:\r\n\r\n" +
+                            Availability.getBusyTimesString(avail, invite.getStartTime().getTimeZone());
                         CalendarMailSender.sendReply(
                                 octxt, mbox, false,
                                 CalendarMailSender.VERB_DECLINE,
-                                true,
                                 msg,
-                                this, invite);
+                                this, invite, mmInv);
                     }
                 }
                 if (IcalXmlStrMap.PARTSTAT_ACCEPTED.equals(partStat)) {
                     CalendarMailSender.sendReply(
                             octxt, mbox, false,
                             CalendarMailSender.VERB_ACCEPT,
-                            true,
                             null,
-                            this, invite);
+                            this, invite, mmInv);
                 }
             }
         }

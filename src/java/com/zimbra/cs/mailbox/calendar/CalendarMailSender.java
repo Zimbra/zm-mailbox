@@ -40,6 +40,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
@@ -52,6 +53,7 @@ import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimeUtility;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.MailSender;
@@ -110,9 +112,9 @@ public class CalendarMailSender {
     public static MimeMessage createDefaultReply(Account fromAccount,
                                                  Appointment appt,
                                                  Invite inv,
+                                                 MimeMessage mmInv,
                                                  String replySubject,
                                                  Verb verb,
-                                                 boolean insertSummary,
                                                  String additionalMsgBody,
                                                  ZVCalendar iCal)
     throws ServiceException {
@@ -121,28 +123,38 @@ public class CalendarMailSender {
         String fromDisplayName =
             fromAccount.getAttr(Provisioning.A_displayName, fromAddress);
         StringBuffer replyText = new StringBuffer(fromDisplayName);
-        if (VERB_ACCEPT.equals(verb))
-            replyText.append(" has accepted your invitation.");
-        else if (VERB_DECLINE.equals(verb))
-            replyText.append(" has declined your invitation.");
-        else if (VERB_TENTATIVE.equals(verb))
-            replyText.append(" has tentatively accepted your invitation.");
-        else
+        boolean isResourceAccount = fromAccount instanceof CalendarResource;
+        if (VERB_ACCEPT.equals(verb)) {
+            if (isResourceAccount)
+                replyText.append(" has been scheduled for your appointment.");
+            else
+                replyText.append(" has accepted your invitation.");
+        } else if (VERB_DECLINE.equals(verb)) {
+            if (isResourceAccount)
+                replyText.append(" could not be scheduled.");
+            else
+                replyText.append(" has declined your invitation.");
+        } else if (VERB_TENTATIVE.equals(verb)) {
+            if (isResourceAccount)
+                replyText.append(" has been tentatively scheduled.");
+            else
+                replyText.append(" has tentatively accepted your invitation.");
+        } else
             replyText.append(" responded with: ").append(verb.toString());
         replyText.append("\r\n\r\n");
 
-        if (insertSummary) {
-            replyText.append(getInviteSummary(appt, inv));
+        if (additionalMsgBody != null) {
+            replyText.append(additionalMsgBody).append("\r\n");
         }
 
-        if (additionalMsgBody != null) {
-            if (insertSummary) {
-                replyText.append("\r\n\r\n");
-                replyText.append("- - - - - - - - - - - - - - - - - - - -\r\n");
-                replyText.append("\r\n\r\n");
-            }
-            replyText.append(additionalMsgBody).append("\r\n");
-            replyText.append("\r\n\r\n");
+        String notes = Invite.getNotes(mmInv);
+        if (notes != null) {
+            // Remove Outlook's special "*~*~*~*" delimiter from original body.
+            // If we leave it in, Outlook will hide all text above that line.
+            notes = notes.replaceAll("[\\r\\n]+[\\*~]+[\\r\\n]+",
+                                     "\r\n\r\n ~ ~ ~ ~ ~ ~ ~ ~ ~\r\n\r\n");
+            replyText.append("\r\n-----Original Invite-----\r\n");
+            replyText.append(notes);
         }
 
         return createDefaultCalendarMessage(
@@ -150,94 +162,22 @@ public class CalendarMailSender {
                 replyText.toString(), inv.getUid(), iCal);
     }
 
-    private static DateFormat sDateTimeFormat =
-        new SimpleDateFormat("EEEE, MMMM d, yyyy h:mm:ss aa Z", Locale.US);
-    private static DateFormat sTimeFormat =
-        new SimpleDateFormat("h:mm:ss aa", Locale.US);
+    private static final String DATE_TIME_FORMAT = "EEEE, MMMM d, yyyy h:mm aa";
+    private static final String TIME_FORMAT = "h:mm aa";
+    private static final Locale DATE_TIME_FORMAT_LOCALE = Locale.US;
 
-    public static String formatDateTime(Date d) {
-        synchronized (sDateTimeFormat) {
-            return sDateTimeFormat.format(d);
-        }
+    public static String formatDateTime(Date d, TimeZone tz) {
+        SimpleDateFormat dateTimeFormat =
+            new SimpleDateFormat(DATE_TIME_FORMAT, DATE_TIME_FORMAT_LOCALE);
+        dateTimeFormat.setTimeZone(tz);
+        return dateTimeFormat.format(d);
     }
 
-    public static String formatTime(Date t) {
-        synchronized (sTimeFormat) {
-            return sTimeFormat.format(t);
-        }
-    }
-
-    private static String getInviteSummary(Appointment appt, Invite inv) {
-        String subject = inv.getName();
-        String location = inv.getLocation();
-        Date startTime = new Date(inv.getStartTime().getUtcTime());
-        Date endTime = new Date(inv.getEffectiveEndTime().getUtcTime());
-        StringBuilder sb = new StringBuilder();
-        sb.append("Subject: ").append(subject).append("\r\n");
-        ZOrganizer organizer = inv.getOrganizer();
-        if (organizer != null) {
-            sb.append("Organizer: ");
-            if (organizer.hasCn())
-                sb.append(organizer.getCn()).append(" <").append(organizer.getAddress()).append(">\r\n");
-            else
-                sb.append(organizer.getAddress()).append("\r\n");
-        }
-        sb.append("\r\n");
-        if (location != null && location.length() > 0)
-            sb.append("Location: ").append(location).append("\r\n");
-
-        boolean isRecurrence = false;
-        if (appt.isRecurring()) {
-            // inv is the invite that describes the recurrence if its start
-            // time matches the appointment's overall start time (DTSTART)
-            // Otherwise, inv is an invite for an instance of recurrence.
-            long invStart = inv.getStartTime().getUtcTime();
-            long apptStart = appt.getStartTime();
-            isRecurrence = invStart == apptStart;
-        }
-        if (isRecurrence) {
-            sb.append("Start: ").append(formatTime(startTime)).append("\r\n");
-            sb.append("End: ").append(formatTime(endTime)).append("\r\n");
-            sb.append("(recurring appointment)\r\n");
-        } else {
-            sb.append("Start: ").append(formatDateTime(startTime)).append("\r\n");
-            sb.append("End: ").append(formatDateTime(endTime)).append("\r\n");
-        }
-        List attendees = inv.getAttendees();
-        if (attendees != null) {
-            int numHumanAttendees = 0;
-            for (Iterator iter = attendees.iterator(); iter.hasNext(); ) {
-                ZAttendee at = (ZAttendee) iter.next();
-                if (at.hasCUType()) {
-                    String cutype = at.getCUType();
-                    if (!IcalXmlStrMap.CUTYPE_INDIVIDUAL.equals(cutype) &&
-                        !IcalXmlStrMap.CUTYPE_GROUP.equals(cutype))
-                        continue;
-                }
-                numHumanAttendees++;
-            }
-            if (numHumanAttendees > 0) {
-                sb.append("\r\n");
-                sb.append("Invitees:\r\n");
-                for (Iterator iter = attendees.iterator(); iter.hasNext(); ) {
-                    ZAttendee at = (ZAttendee) iter.next();
-                    if (at.hasCUType()) {
-                        // Don't list non-person attendees.
-                        String cutype = at.getCUType();
-                        if (!IcalXmlStrMap.CUTYPE_INDIVIDUAL.equals(cutype) &&
-                            !IcalXmlStrMap.CUTYPE_GROUP.equals(cutype))
-                            continue;
-                    }
-                    sb.append("    ");
-                    if (at.hasCn())
-                        sb.append(at.getCn()).append(" <").append(at.getAddress()).append(">");
-                    else
-                        sb.append(at.getAddress());
-                    sb.append("\r\n");
-                }
-            }
-        }
-        return sb.toString();
+    public static String formatTime(Date t, TimeZone tz) {
+        SimpleDateFormat timeFormat =
+            new SimpleDateFormat(TIME_FORMAT, DATE_TIME_FORMAT_LOCALE);
+        timeFormat.setTimeZone(tz);
+        return timeFormat.format(t);
     }
 
     /**
@@ -426,10 +366,10 @@ public class CalendarMailSender {
                                 Mailbox mbox,
                                 boolean saveToSent,
                                 Verb verb,
-                                boolean insertSummary,
                                 String additionalMsgBody,
                                 Appointment appt,
-                                Invite inv)
+                                Invite inv,
+                                MimeMessage mmInv)
     throws ServiceException {
         Account acct = mbox.getAccount();
         String replySubject = getReplySubject(verb, inv);
@@ -440,8 +380,8 @@ public class CalendarMailSender {
 
         ZVCalendar iCal = replyInv.newToICalendar();
         MimeMessage mm = createDefaultReply(
-                acct, appt, inv, replySubject,
-                verb, insertSummary, additionalMsgBody, iCal);
+                acct, appt, inv, mmInv, replySubject,
+                verb, additionalMsgBody, iCal);
 
         int replyMsgId = MailSender.sendMimeMessage(
                 octxt, mbox, saveToSent, mm,
@@ -455,9 +395,8 @@ public class CalendarMailSender {
         private static final String CONTENT_TYPE = "text/html; charset=us-ascii";
         private static final String HEAD =
             "<HTML><BODY>\n" +
-            "<FONT FACE=\"Courier New\">\n" +
             "<PRE style=\"font-family: monospace; font-size: 14px\">\n";
-        private static final String TAIL = "</PRE>\n</FONT></BODY></HTML>\n";
+        private static final String TAIL = "</PRE>\n</BODY></HTML>\n";
         private static final String NAME = "HtmlDataSource";
 
         private String mText;

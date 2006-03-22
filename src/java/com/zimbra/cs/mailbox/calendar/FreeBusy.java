@@ -38,6 +38,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Appointment.Instance;
 import com.zimbra.cs.service.*;
 
 /**
@@ -144,7 +145,7 @@ public class FreeBusy {
                 if (toAdd.mStart > cur.mStart) {
                     Interval newInt = new Interval(toAdd.mStart,
                                                    cur.mEnd, cur.mStatus,
-                                                   cur.getInvites());
+                                                   cur.getInstances());
                     cur.insertAfter(newInt);
                     cur.mEnd = newInt.mStart;
                     cur = newInt;
@@ -168,7 +169,7 @@ public class FreeBusy {
                 if (toAdd.mEnd < cur.mEnd) {
                     Interval afterUs = new Interval(toAdd.mEnd,
                                                     cur.mEnd, cur.mStatus,
-                                                    cur.getInvites());
+                                                    cur.getInstances());
                     cur.insertAfter(afterUs);
                     cur.mEnd = toAdd.mEnd;
                 }
@@ -183,7 +184,7 @@ public class FreeBusy {
                 // <------------- cur ---------------->
                 // <------------ toAdd ---------------------------->
                 cur.combineStatus(toAdd.mStatus);
-                cur.addInvites(toAdd.getInvites());
+                cur.addInstances(toAdd.getInstances());
 
                 // Now let's look at the rest of toAdd not covered by cur.
                 //
@@ -257,19 +258,19 @@ public class FreeBusy {
             } else {
                 mStatus = IcalXmlStrMap.FBTYPE_FREE;
             }
-            mInvites = new LinkedHashSet<Invite>();
+            mInstances = new LinkedHashSet<Instance>();
         }
 
-        public Interval(long start, long end, String status, Invite invite) {
+        public Interval(long start, long end, String status, Instance instance) {
             this(start, end, status);
-            if (invite != null)
-                mInvites.add(invite);
+            if (instance != null)
+                mInstances.add(instance);
         }
 
         public Interval(long start, long end, String status,
-                        LinkedHashSet<Invite> invites) {
+                        LinkedHashSet<Instance> instances) {
             this(start, end, status);
-            addInvites(invites);
+            addInstances(instances);
         }
 
         public String toString() 
@@ -280,11 +281,11 @@ public class FreeBusy {
             toRet.append(", status=").append(mStatus);
             toRet.append(", invites=[");
             int i = 0;
-            for (Invite inv : mInvites) {
+            for (Instance instance : mInstances) {
                 if (i > 0)
                     toRet.append(", ");
                 i++;
-                toRet.append(inv.getMailItemId());
+                toRet.append(instance.toString());
             }
             toRet.append("]");
             return toRet.toString();
@@ -295,9 +296,9 @@ public class FreeBusy {
         Interval mNext = null;
         Interval mPrev = null;
         String mStatus;
-        LinkedHashSet<Invite> mInvites;  // invites relevant to this interval
-                                         // LinkedHashSet rather than generic
-                                         // set to preserve insertion order
+        LinkedHashSet<Instance> mInstances;  // invites relevant to this interval
+                                             // LinkedHashSet rather than generic
+                                             // set to preserve insertion order
 
         void insertAfter(Interval other) {
             other.mNext = mNext;
@@ -315,9 +316,9 @@ public class FreeBusy {
             }
         }
 
-        void addInvites(LinkedHashSet<Invite> invites) {
-            if (invites != null)
-                mInvites.addAll(invites);
+        void addInstances(LinkedHashSet<Instance> instances) {
+            if (instances != null)
+                mInstances.addAll(instances);
         }
 
         // Set this.mStatus to the "busier" of this.mStatus and otherStatus.
@@ -328,7 +329,7 @@ public class FreeBusy {
         public long getStart() { return mStart; }
         public long getEnd() { return mEnd; }
         public String getStatus() { return mStatus; }
-        public LinkedHashSet<Invite> getInvites() { return mInvites; }
+        public LinkedHashSet<Instance> getInstances() { return mInstances; }
 
         public boolean overlapsOrAbuts(Interval other) {
 //            return (other.mEnd > mStart && other.mStart < mEnd);  
@@ -354,13 +355,13 @@ public class FreeBusy {
      * times.
      * @return
      */
-    public LinkedHashSet<Invite> getAllInvites() {
-        LinkedHashSet<Invite> invites = new LinkedHashSet<Invite>();
+    public LinkedHashSet<Instance> getAllInstances() {
+        LinkedHashSet<Instance> instances = new LinkedHashSet<Instance>();
         for (Iterator iter = iterator(); iter.hasNext(); ) {
             Interval interval = (Interval) iter.next();
-            invites.addAll(interval.getInvites());
+            instances.addAll(interval.getInstances());
         }
-        return invites;
+        return instances;
     }
 
 
@@ -418,7 +419,6 @@ public class FreeBusy {
 
         IntervalList intervals = new IntervalList(start, end);
         
-        Date startDate = new Date(start);
         for (Iterator iter = appts.iterator(); iter.hasNext(); ) {
             Appointment cur = (Appointment)iter.next();
             if (cur.getId() == exApptId)
@@ -437,12 +437,12 @@ public class FreeBusy {
                 assert(inst.getStart() < end && inst.getEnd() > start);
                 InviteInfo invId = inst.getInviteInfo();
                 try {
-                    Appointment appt = mbox.getAppointmentById(null, inst.getAppointmentId());
+                    Appointment appt = inst.getAppointment();
                     Invite inv = appt.getInvite(invId);
                     if (!inv.isTransparent()) {
                         String freeBusy = appt.getEffectiveFreeBusyActual(acct, inv, inst);
                         if (!IcalXmlStrMap.FBTYPE_FREE.equals(freeBusy)) {
-                            Interval ival = new Interval(inst.getStart(), inst.getEnd(), freeBusy, inv);
+                            Interval ival = new Interval(inst.getStart(), inst.getEnd(), freeBusy, inst);
                             intervals.addInterval(ival);
                         }
                     }
