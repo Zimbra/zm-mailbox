@@ -24,12 +24,15 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.io.IOException;
 import java.util.Map;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.rmgmt.RemoteCommands;
 import com.zimbra.cs.rmgmt.RemoteManager;
+import com.zimbra.cs.rmgmt.RemoteResult;
+import com.zimbra.cs.rmgmt.RemoteResultParser;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
@@ -37,7 +40,6 @@ import com.zimbra.soap.ZimbraContext;
 public class GetMailQueueInfo extends AdminDocumentHandler {
 
 	public Element handle(Element request, Map context) throws ServiceException {
-
 		ZimbraContext lc = getZimbraContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 	    
@@ -50,7 +52,13 @@ public class GetMailQueueInfo extends AdminDocumentHandler {
 	    }
 	    
         RemoteManager rmgr = RemoteManager.getRemoteManager(server);
-        Map<String,String> queueInfo = rmgr.executeWithSimpleMapResult(RemoteCommands.ZMQSTAT_ALL);
+        RemoteResult rr = rmgr.execute(RemoteCommands.ZMQSTAT_ALL);
+        Map<String,String> queueInfo;
+        try { 
+            queueInfo = RemoteResultParser.parseSingleMap(rr);
+        } catch (IOException ioe) {
+            throw ServiceException.FAILURE("exception occurred handling command", ioe);
+        }
         if (queueInfo == null) {
             throw ServiceException.FAILURE("server " + serverName + " returned no result", null);
         }
@@ -65,5 +73,4 @@ public class GetMailQueueInfo extends AdminDocumentHandler {
         }
         return response;
 	}
-
 }

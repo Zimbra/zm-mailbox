@@ -49,7 +49,7 @@ public class MailQueueFlush extends AdminDocumentHandler {
         }
         
         RemoteManager rmgr = RemoteManager.getRemoteManager(server);
-        rmgr.executeIgnoreResult(RemoteCommands.FLUSHQUEUE);
+        rmgr.execute(RemoteCommands.FLUSHQUEUE);
         Element response = lc.createElement(AdminService.MAIL_QUEUE_FLUSH_RESPONSE);
 	    return response;
 	}

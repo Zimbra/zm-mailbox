@@ -25,6 +25,7 @@
 package com.zimbra.cs.rmgmt;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,10 +40,10 @@ import java.util.regex.Pattern;
  * Parse a list of simple key_string=value_string\n maps from standard input.
  * Maps are seperated any lines that do not contain a = seperator.
  */
-public class SimpleMapsParser {
+public class RemoteResultParser {
     
     public interface Visitor {
-        public void handle(int lineNo, Map<String, String> map);
+        public void handle(int lineNo, Map<String, String> map) throws IOException;
     }
     
     private static final Pattern KEY_VALUE_PATTERN = Pattern.compile("^([^=]+)=(.*)$");
@@ -73,6 +74,32 @@ public class SimpleMapsParser {
         }
     }
     
+    public static void parse(InputStream is, Visitor v) throws IOException {
+        parse(new InputStreamReader(is), v);
+    }
+    
+    public static void parse(RemoteResult rr, Visitor v) throws IOException {
+        parse(new InputStreamReader(new ByteArrayInputStream(rr.mStdout)), v);
+    }
+    
+    private static class SingleVisitor implements Visitor {
+        private Map<String,String> mValue;
+        
+        public void handle(int lineNo, Map<String, String> map) {
+            mValue = map;
+        }
+    }
+    
+    public static Map<String,String> parseSingleMap(Reader reader) throws IOException {
+        SingleVisitor v = new SingleVisitor();
+        parse(reader, v);
+        return v.mValue;
+    }
+    
+    public static Map<String,String> parseSingleMap(InputStream is) throws IOException {
+        return parseSingleMap(new InputStreamReader(is));
+    }
+    
     public static void main(String[] args) throws IOException {
         InputStream is;
         if (args.length == 0) {
@@ -81,7 +108,7 @@ public class SimpleMapsParser {
             is = new FileInputStream(args[0]);
         }
         
-        SimpleMapsParser.parse(new InputStreamReader(is), new Visitor() {
+        RemoteResultParser.parse(new InputStreamReader(is), new Visitor() {
             
             public void handle(int lineNumber, Map<String, String> map) {
                 for (String key : map.keySet()) {
@@ -92,5 +119,9 @@ public class SimpleMapsParser {
                 System.out.println();
             }
         });
+    }
+
+    public static Map<String, String> parseSingleMap(RemoteResult rr) throws IOException {
+        return parseSingleMap(new InputStreamReader(new ByteArrayInputStream(rr.mStdout)));
     }
 }

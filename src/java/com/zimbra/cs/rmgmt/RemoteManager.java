@@ -24,11 +24,9 @@
  */
 package com.zimbra.cs.rmgmt;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
@@ -99,49 +97,41 @@ public class RemoteManager {
     	return mDescription; 
     }
     
-	private static class RemoteIOHandler {}
-	
-    private static class RemoteCommandResult {
-        private byte[] mStdout;
-        private byte[] mStderr;
-        private int mExitStatus;
-        private String mExitSignal;
-    }
-
-    private static class SingleMapVisitor implements SimpleMapsParser.Visitor {
-        private Map<String,String> mResult;
-        
-        public void handle(int lineNumber, Map<String, String> map) {
-            mResult = map;
-        }
-    }
-
-    public Map<String, String> executeWithSimpleMapResult(String command) throws ServiceException {
+    private void executeBackground0(String command, RemoteBackgroundHandler handler) {
+        Session s = null;
         try {
-            RemoteCommandResult r = execute(command);
-            if (true) {
-                System.out.println("====STATUS===="); System.out.println("status=" + r.mExitStatus + " mExitSignal=" + r.mExitSignal);
-                System.out.println("====STDOUT===="); System.out.write(r.mStdout);
-                System.out.println("====STDERR===="); System.out.write(r.mStderr); System.out.flush();
+            s = getSession();
+            s.execCommand(mShimCommand);
+            OutputStream os = s.getStdin();
+            String send = "HOST:" + mHost + " " + command; 
+            os.write(send.getBytes());
+            os.close();
+            InputStream stdout = new StreamGobbler(s.getStdout());
+            InputStream stderr = new StreamGobbler(s.getStderr());
+            handler.read(stdout, stderr);
+        } catch (Throwable t) {
+            handler.error(t);
+        } finally {
+            if (s != null) {
+                releaseSession(s);
             }
-            Map<String, String> ret;
-            SingleMapVisitor visitor = new SingleMapVisitor();
-            SimpleMapsParser.parse(new InputStreamReader(new ByteArrayInputStream(r.mStdout)), visitor);
-            return visitor.mResult;
-        } catch (IOException ioe) {
-            throw ServiceException.FAILURE("exception executing command: " + command + " with " + this, ioe);
         }
     }
     
-    public void executeIgnoreResult(String command) throws ServiceException {
-        try {
-            execute(command);
-        } catch (IOException ioe) {
-            throw ServiceException.FAILURE("exception executing command: " + command + " with " + this, ioe);
-        }
+    public void executeBackground(final String command, final RemoteBackgroundHandler handler) {
+        Runnable r = new Runnable() {
+            public void run() {
+                executeBackground0(command, handler);
+            }
+        };
+        
+        Thread t = new Thread(r);
+        t.setName(this + "-" + command);
+        t.setDaemon(true);
+        t.start();
     }
-    
-	private RemoteCommandResult execute(String command) throws IOException, ServiceException {
+	
+    public RemoteResult execute(String command) throws ServiceException {
 		Session s = null;
 		try {
 		    s = getSession();
@@ -151,7 +141,7 @@ public class RemoteManager {
             os.write(send.getBytes());
             os.close();
 
-            RemoteCommandResult result = new RemoteCommandResult();
+            RemoteResult result = new RemoteResult();
 
             InputStream stdout = new StreamGobbler(s.getStdout());
             InputStream stderr = new StreamGobbler(s.getStderr());
@@ -163,6 +153,8 @@ public class RemoteManager {
             }
             result.mExitSignal = s.getExitSignal();
 			return result;
+		} catch (IOException ioe) {
+            throw ServiceException.FAILURE("exception executing command: " + command + " with " + this, ioe);
 		} finally {
             if (s != null) {
                 releaseSession(s);
@@ -261,13 +253,13 @@ public class RemoteManager {
 	
 	public static RemoteManager getRemoteManager(Server server) throws ServiceException {
 		synchronized (mRemoteManagerCache) {
-			RemoteManager rm = mRemoteManagerCache.get(server.getName());
+			RemoteManager rm = mRemoteManagerCache.get(server.getId());
 			if (rm != null) {
 				return rm;
 			}
 			
 			rm = new RemoteManager(server);
-			mRemoteManagerCache.put(server.getName(), rm);
+			mRemoteManagerCache.put(server.getId(), rm);
 			return rm;
 		}
 	}
@@ -277,7 +269,8 @@ public class RemoteManager {
         Provisioning prov = Provisioning.getInstance();
         Server remote = prov.getServerByName(args[0]);
         RemoteManager rm = RemoteManager.getRemoteManager(remote);
-        Map<String,String> m = rm.executeWithSimpleMapResult(args[1]);
+        RemoteResult rr = rm.execute(args[1]);
+        Map<String,String> m = RemoteResultParser.parseSingleMap(rr); 
         if (m == null) {
             System.out.println("NO RESULT RETURNED");
         } else {
