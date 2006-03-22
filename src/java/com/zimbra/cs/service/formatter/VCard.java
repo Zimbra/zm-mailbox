@@ -39,6 +39,7 @@ import org.apache.commons.codec.net.QuotedPrintableCodec;
 
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.DateUtil;
 
@@ -57,7 +58,7 @@ public class VCard {
         "BEGIN", "FN", "N", "NICKNAME", "BDAY", "ADR", "TEL", "EMAIL", "URL", "ORG", "TITLE", "NOTE", "AGENT", "END"
     }));
 
-    private static final HashMap<String, String> PARAM_ABBREVIATIONS = new HashMap<String, String>();
+    static final HashMap<String, String> PARAM_ABBREVIATIONS = new HashMap<String, String>();
         static {
             PARAM_ABBREVIATIONS.put("BASE64", "ENCODING=B");
             PARAM_ABBREVIATIONS.put("QUOTED-PRINTABLE", "ENCODING=QUOTED-PRINTABLE");
@@ -71,17 +72,102 @@ public class VCard {
 
     private enum Encoding { NONE, B, Q };
 
+    private static class VCardProperty {
+        private String name;
+        private Set<String> params = new HashSet<String>();
+        private String charset;
+        private Encoding encoding = Encoding.NONE;
+        private String value;
+        private boolean isEmpty;
+
+        boolean isEmpty()       { return isEmpty; }
+        Encoding getEncoding()  { return encoding; }
+        boolean containsParam(String param) { return params.contains(param); }
+
+        private void reset() {
+            name = value = null;
+            charset = Mime.P_CHARSET_UTF8;
+            params.clear();
+            encoding = Encoding.NONE;
+            isEmpty = false;
+        }
+
+        String parse(String line) throws ServiceException {
+            reset();
+            if ((isEmpty = line.trim().equals("")) == true)
+                return "";
+
+            // find the delimiter between property name and property value
+            int colon = line.indexOf(':');
+            if (colon == -1)
+                throw ServiceException.PARSE_ERROR("missing ':' in line " + line, null);
+            value = line.substring(colon + 1);
+
+            // find the property name, stripping off any groups (e.g. "FOO.ADR")
+            int i, start;
+            char c = '\0';
+            for (i = start = 0; i < colon; i++) {
+                if ((c = line.charAt(i)) == '.')  start = i + 1;
+                else if (c == ';')                break;
+            }
+            name = line.substring(start, i).trim().toUpperCase();
+
+            // get the property's parameters
+            String pname = null;
+            while (i < colon) {
+                for (start = ++i; i < colon; i++) {
+                    if ((c = line.charAt(i)) == ';')     break;
+                    else if (c == ',' && pname != null)  break;
+                    else if (c == '=' && pname == null && i > start) {
+                        pname = line.substring(start, i).toUpperCase();
+                        start = i + 1;
+                    }
+                }
+                String pval = line.substring(start, i).toUpperCase();
+                if (!pval.equals("")) {
+                    String param = (pname != null ? pname + '=' + pval : PARAM_ABBREVIATIONS.get(pval));
+                    if (param == null)                                   continue;
+                    else if (param.equals("ENCODING=B"))                 encoding = Encoding.B;
+                    else if (param.equals("ENCODING=BASE64"))            encoding = Encoding.B;
+                    else if (param.equals("ENCODING=QUOTED-PRINTABLE"))  encoding = Encoding.Q;
+                    else if (pname != null && pname.equals("CHARSET"))   charset = pval;
+                    else                                                 params.add(param);
+                }
+
+                if (c == ';')
+                    pname = null;
+            }
+
+            return name;
+        }
+
+        String getValue() {
+            // if it's a 2.1 vCard, decode the property value if necessary
+            try {
+                if (encoding == Encoding.B) {
+                    byte[] encoded = value.getBytes();
+                    if (Base64.isArrayByteBase64(encoded))
+                        value = new String(Base64.decodeBase64(encoded), charset);
+                } else if (encoding == Encoding.Q) {
+                    value = new QuotedPrintableCodec(charset).decode(value);
+                }
+                encoding = Encoding.NONE;
+            } catch (Exception e) { }
+            return value;
+        }
+    }
+
     public static List<VCard> parseVCard(String vcard) throws ServiceException {
         List<VCard> cards = new ArrayList<VCard>();
 
-        int depth = 0;
         HashMap<String, String> fields = new HashMap<String, String>();
 
-        Set<String> params = new HashSet<String>();
+        VCardProperty vcprop = new VCardProperty();
+        int depth = 0;
         int cardstart = 0, emails = 0;
         for (int start = 0, pos = 0, lines = 0, limit = vcard.length(); pos < limit; lines++) {
             // unfold the next line in the vcard
-            String line = "";
+            String line = "", name = null, value = null;
             int linestart = pos;
             boolean folded = true;
             do {
@@ -95,26 +181,16 @@ public class VCard {
                 }
                 if (pos < limit && (vcard.charAt(pos) == ' ' || vcard.charAt(pos) == '\t'))
                     pos++;
-                else
-                    folded = false;
+                else {
+                    name = vcprop.parse(line);
+                    if (vcprop.getEncoding() != Encoding.Q || !line.endsWith("="))
+                        folded = false;
+                }
             } while (folded);
-            if (line.trim().equals(""))
+            if (vcprop.isEmpty())
                 continue;
-
-            // find the delimiter between property name and property value
-            int colon = line.indexOf(':');
-            if (colon == -1)
-                throw ServiceException.PARSE_ERROR("missing ':' in line " + line, null);
-            String value = line.substring(colon + 1);
-
-            // find the property name, stripping off any groups (e.g. "FOO.ADR")
-            int i = 0;
-            char c = '\0';
-            for (i = start = 0; i < colon; i++) {
-                if ((c = line.charAt(i)) == '.')  start = i + 1;
-                else if (c == ';')                break;
-            }
-            String name = line.substring(start, i).trim().toUpperCase();
+            
+            value = vcprop.getValue();
 
             if (name.equals(""))
                 throw ServiceException.PARSE_ERROR("missing property name in line " + line, null);
@@ -146,54 +222,14 @@ public class VCard {
                 continue;
             }
 
-            // get the property's parameters
-            params.clear();
-            Encoding encoding = Encoding.NONE;
-            String pname = null, charset = "utf-8";
-            while (i < colon) {
-                for (start = ++i; i < colon; i++) {
-                    if ((c = line.charAt(i)) == ';')     break;
-                    else if (c == ',' && pname != null)  break;
-                    else if (c == '=' && pname == null && i > start) {
-                        pname = line.substring(start, i).toUpperCase();
-                        start = i + 1;
-                    }
-                }
-                String pval = line.substring(start, i).toUpperCase();
-                if (!pval.equals("")) {
-                    String param = (pname != null ? pname + '=' + pval : PARAM_ABBREVIATIONS.get(pval));
-                    if (param == null)                                   continue;
-                    else if (param.equals("ENCODING=B"))                 encoding = Encoding.B;
-                    else if (param.equals("ENCODING=BASE64"))            encoding = Encoding.B;
-                    else if (param.equals("ENCODING=QUOTED-PRINTABLE"))  encoding = Encoding.Q;
-                    else if (pname != null && pname.equals("CHARSET"))   charset = pval;
-                    else                                                 params.add(param);
-                }
-
-                if (c == ';')
-                    pname = null;
-            }
-
-            // if it's a 2.1 vCard, decode the property value if necessary
-            try {
-                if (encoding == Encoding.B) {
-                    byte[] encoded = value.getBytes();
-                    if (Base64.isArrayByteBase64(encoded))
-                        value = new String(Base64.decodeBase64(encoded), charset);
-                } else if (encoding == Encoding.Q)
-                    value = new QuotedPrintableCodec(charset).decode(value);
-            } catch (Exception e) {
-                continue;
-            }
-
             // decode the property's value and assign to the appropriate contact field(s)
             if (name.equals("FN"))             fields.put(Contact.A_fullName, vcfDecode(value));
             else if (name.equals("N"))         decodeStructured(value, NAME_FIELDS, fields);
             else if (name.equals("NICKNAME"))  fields.put(Contact.A_nickname, vcfDecode(value));
             else if (name.equals("BDAY"))      fields.put(Contact.A_birthday, vcfDecode(value));
-            else if (name.equals("ADR"))       decodeAddress(value, params, fields);
-            else if (name.equals("TEL"))       decodeTelephone(value, params, fields);
-            else if (name.equals("URL"))       fields.put(Contact.A_otherURL, vcfDecode(value));
+            else if (name.equals("ADR"))       decodeAddress(value, vcprop, fields);
+            else if (name.equals("TEL"))       decodeTelephone(value, vcprop, fields);
+            else if (name.equals("URL"))       decodeURL(value, vcprop, fields);
             else if (name.equals("ORG"))       decodeStructured(value, ORG_FIELDS, fields);
             else if (name.equals("TITLE"))     fields.put(Contact.A_jobTitle, vcfDecode(value));
             else if (name.equals("NOTE"))      fields.put(Contact.A_notes, vcfDecode(value));
@@ -204,14 +240,14 @@ public class VCard {
         return cards;
     }
 
-    private static void decodeTelephone(String value, Set<String> params, Map<String, String> fields) {
+    private static void decodeTelephone(String value, VCardProperty vcprop, Map<String, String> fields) {
         value = vcfDecode(value);
-        if (params.contains("TYPE=CAR"))         { fields.put(Contact.A_carPhone, value);  return; }
-        else if (params.contains("TYPE=CELL"))   { fields.put(Contact.A_mobilePhone, value);  return; }
-        else if (params.contains("TYPE=PAGER"))  { fields.put(Contact.A_pager, value);  return; }
+        if (vcprop.containsParam("TYPE=CAR"))         { fields.put(Contact.A_carPhone, value);  return; }
+        else if (vcprop.containsParam("TYPE=CELL"))   { fields.put(Contact.A_mobilePhone, value);  return; }
+        else if (vcprop.containsParam("TYPE=PAGER"))  { fields.put(Contact.A_pager, value);  return; }
 
-        boolean home = params.contains("TYPE=HOME"), work = params.contains("TYPE=WORK");
-        boolean fax = params.contains("TYPE=FAX"), voice = params.contains("TYPE=VOICE");
+        boolean home = vcprop.containsParam("TYPE=HOME"), work = vcprop.containsParam("TYPE=WORK");
+        boolean fax = vcprop.containsParam("TYPE=FAX"), voice = vcprop.containsParam("TYPE=VOICE");
         if (home) {
             if (fax)  fields.put(Contact.A_homeFax, value);
             if (voice || !fax) {
@@ -232,11 +268,18 @@ public class VCard {
         }
     }
 
-    private static void decodeAddress(String value, Set<String> params, Map<String, String> fields) {
-        boolean home = params.contains("TYPE=HOME"), work = params.contains("TYPE=WORK");
+    private static void decodeAddress(String value, VCardProperty vcprop, Map<String, String> fields) {
+        boolean home = vcprop.containsParam("TYPE=HOME"), work = vcprop.containsParam("TYPE=WORK");
         if (home)            decodeStructured(value, ADR_HOME_FIELDS, fields);
         if (work)            decodeStructured(value, ADR_WORK_FIELDS, fields);
         if (!home && !work)  decodeStructured(value, ADR_OTHER_FIELDS, fields);
+    }
+
+    private static void decodeURL(String value, VCardProperty vcprop, Map<String, String> fields) {
+        boolean home = vcprop.containsParam("TYPE=HOME"), work = vcprop.containsParam("TYPE=WORK");
+        if (home)            fields.put(Contact.A_homeURL, vcfDecode(value));
+        if (work)            fields.put(Contact.A_workURL, vcfDecode(value));
+        if (!home && !work)  fields.put(Contact.A_otherURL, vcfDecode(value));
     }
 
     private static final String[] NAME_FIELDS = new String[] {
@@ -349,9 +392,9 @@ public class VCard {
         for (String email : emails)
             encodeField(sb, "EMAIL;TYPE=internet", email);
 
-        encodeField(sb, "URL", fields.get(Contact.A_homeURL));
+        encodeField(sb, "URL;TYPE=home", fields.get(Contact.A_homeURL));
         encodeField(sb, "URL", fields.get(Contact.A_otherURL));
-        encodeField(sb, "URL", fields.get(Contact.A_workURL));
+        encodeField(sb, "URL;TYPE=work", fields.get(Contact.A_workURL));
 
         String org = fields.get(Contact.A_company);
         if (org != null && !org.trim().equals("")) {
