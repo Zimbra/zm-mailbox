@@ -1356,9 +1356,6 @@ public abstract class MailItem implements Comparable {
         Integer id = new Integer(mId);
 		PendingDelete info = new PendingDelete();
         info.rootId = mId;
-        if (!checkChangeID())
-            return info;
-
 		info.size   = mData.size;
 		info.itemIds.add(id);
         if (mData.unreadCount != 0 && mMailbox.mUnreadFlag.canTag(this))
