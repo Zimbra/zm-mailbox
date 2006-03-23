@@ -34,12 +34,16 @@ package com.zimbra.cs.index;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.SetUtil;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -466,23 +470,17 @@ class IntersectionQueryOperation extends QueryOperation {
         }
     }
     
-    QueryTarget getQueryTarget() {
-    	QueryTarget toRet = null;
+    QueryTargetSet getQueryTargets() {
+    	QueryTargetSet  toRet = new QueryTargetSet();
     	
-    	for (QueryOperation op : mQueryOperations) {
-    		QueryTarget oqt = op.getQueryTarget();
+    	for (Iterator qopIter = mQueryOperations.iterator(); qopIter.hasNext();)
+    	{
+    		toRet = ((QueryOperation)qopIter.next()).getQueryTargets();
     		
-    		if (oqt == null)
-    			continue;
-    		
-    		if (toRet == null) {
-    			toRet = oqt;
-    		} else if (!oqt.compatible(toRet)) {
-    			mLog.debug("INTERSECTION query target should evaluate to no results!");
-    			assert(false);
-    			return null;
-    		} else {
-    			toRet = op.getQueryTarget();
+    		// loop through rest of ops add to toRet if it is in every other set
+    		while (qopIter.hasNext()) {
+    			QueryTargetSet curSet = ((QueryOperation)qopIter.next()).getQueryTargets();
+    			toRet = (QueryTargetSet)SetUtil.intersect(new QueryTargetSet(), toRet, curSet);
     		}
     	}
     	return toRet;
@@ -548,49 +546,65 @@ class IntersectionQueryOperation extends QueryOperation {
         mQueryOperations.addAll(ops);
         Collections.sort(mQueryOperations, sQueryOpSortComparator);
     }
+    
+    void pruneIncompatibleTargets(QueryTargetSet targets) {
+    	for (QueryOperation op : mQueryOperations) {
+    		if (op instanceof UnionQueryOperation) {
+    			((UnionQueryOperation)op).pruneIncompatibleTargets(targets);
+    		} else if (op instanceof IntersectionQueryOperation) {
+    			assert(false); // shouldn't be here, should have optimized already
+    			((IntersectionQueryOperation)op).pruneIncompatibleTargets(targets);
+    		} else {
+    			// do nothing, must be part of the right set
+    			assert(op.getQueryTargets().size() == 1);
+    			assert(op.getQueryTargets().isSubset(targets));
+    		}
+    	}
+    }
+    
 
     QueryOperation optimize(Mailbox mbox) throws ServiceException 
     {
-    	//
-    	// Step 0: check to see if this query intersection has incompatible
-    	// query targets -- if that is the case, then we can quickly
-    	// optimize this entire subtree out!
-    	//
-    	QueryTarget toRet = null;
-    	
-    	for (QueryOperation op : mQueryOperations) {
-    		QueryTarget oqt = op.getQueryTarget();
-    		
-    		if (oqt == null)
-    			continue;
-    		
-    		if (toRet == null) {
-    			toRet = oqt;
-    		} else if (!oqt.compatible(toRet)) {
-    			mLog.debug("Optimizing out INTERSECTION (incompatible query targets)");
-    			return new NullQueryOperation();
-    		}
-    	}
+//    	//
+//    	// Step 0: check to see if this query intersection has incompatible
+//    	// query targets -- if that is the case, then we can quickly
+//    	// optimize this entire subtree out!
+//    	//
+//    	QueryTarget toRet = null;
+//    	
+//    	for (QueryOperation op : mQueryOperations) {
+//    		QueryTarget oqt = op.getQueryTarget();
+//    		
+//    		if (oqt == null)
+//    			continue;
+//    		
+//    		if (toRet == null) {
+//    			toRet = oqt;
+//    		} else if (!oqt.compatible(toRet)) {
+//    			mLog.debug("Optimizing out INTERSECTION (incompatible query targets)");
+//    			return new NullQueryOperation();
+//    		}
+//    	}
     	
         //
         // Step 1: optimize each individual sub-operation we have
         //
-        restartSubOpt: do {
-            for (Iterator iter = mQueryOperations.iterator(); iter.hasNext();) {
-                QueryOperation q = (QueryOperation) iter.next();
-                QueryOperation newQ = q.optimize(mbox);
-                if (newQ != q) {
-                    iter.remove();
-                    if (newQ != null) {
-                        addQueryOp(newQ);
-                    }
-                    continue restartSubOpt;
-                }
-
-            }
-            break;
-        } while (true);
-
+    	restartSubOpt: do {
+    		for (Iterator iter = mQueryOperations.iterator(); iter.hasNext();) {
+    			QueryOperation q = (QueryOperation) iter.next();
+    			QueryOperation newQ = q.optimize(mbox);
+    			if (newQ != q) {
+    				iter.remove();
+    				if (newQ != null) {
+    					addQueryOp(newQ);
+    				}
+    				continue restartSubOpt;
+    			}
+    			
+    		}
+    		break;
+    	} while (true);
+    
         // if all of our sub-ops optimized-away, then we're golden!
         if (mQueryOperations.size() == 0) {
             return new NoTermQueryOperation();
@@ -626,6 +640,61 @@ class IntersectionQueryOperation extends QueryOperation {
             }
             break outer;
         } while (true);
+        
+        if (false) {
+        	QueryTargetSet targets = getQueryTargets();
+        	
+        	if (targets.size() == 0) {
+        		mLog.debug("ELIMINATING "+toString()+" b/c of incompatible QueryTargets");
+        		return new NullQueryOperation();
+        	}
+        	
+            //
+            // prune incompatible targets!
+            //
+        	pruneIncompatibleTargets(targets);
+            
+            
+            //
+            // incompat targets are pruned, now distribute as necessary
+            //
+            // at this point we can assume that all the invalid targets have been pruned      
+            //
+        	int distributeLhs = -1;
+        	
+        	for (int i = 0; i < mQueryOperations.size(); i++) {
+        		QueryOperation lhs = (QueryOperation) mQueryOperations.get(i);
+        		
+        		if (lhs.getQueryTargets().countExplicitTargets() > 1) {
+        			// need to distribute!
+        			distributeLhs = i;
+        			break;
+        		}
+        	}
+        	
+        	if (distributeLhs >= 0) {
+        		// if lhs has >1 explicit target at this point, it MUST be a union... 
+        		UnionQueryOperation lhs = (UnionQueryOperation)(mQueryOperations.remove(distributeLhs));
+        		
+        		assert(lhs instanceof UnionQueryOperation);
+        		UnionQueryOperation topOp = new UnionQueryOperation();
+        		
+        		for (QueryOperation lhsCur : lhs.mQueryOperations)
+        		{
+        			IntersectionQueryOperation newAnd = new IntersectionQueryOperation();
+        			topOp.add(newAnd);
+        			
+        			newAnd.addQueryOp(lhsCur);
+        			
+        			for (QueryOperation rhsCur : mQueryOperations) {
+        				newAnd.addQueryOp((QueryOperation)(rhsCur.clone()));
+        			}
+        		}
+
+        		// recurse!
+        		return topOp.optimize(mbox);
+        	}
+        }
         
         //
         // Step 3: hacky special case for Lucene Ops and DB Ops: Lucene and DB don't 
@@ -682,7 +751,7 @@ class IntersectionQueryOperation extends QueryOperation {
         return retval.toString();
     }
 
-    public Object clone() throws CloneNotSupportedException {
+    public Object clone() {
     	IntersectionQueryOperation toRet = (IntersectionQueryOperation)super.clone();
     	
     	assert(mMessageGrouper == null);

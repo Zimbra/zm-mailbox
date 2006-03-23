@@ -33,10 +33,14 @@ package com.zimbra.cs.index;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.SetUtil;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -61,10 +65,14 @@ class UnionQueryOperation extends QueryOperation
         return OP_TYPE_UNION;
     }
     
-    QueryTarget getQueryTarget() {
-    	return null;
+    QueryTargetSet getQueryTargets() {
+    	QueryTargetSet toRet = new QueryTargetSet();
+    	
+    	for (QueryOperation op : mQueryOperations) {
+    		toRet = (QueryTargetSet)SetUtil.union(toRet, op.getQueryTargets());
+    	}
+    	return toRet;
     }
-    
     
     /******************
      * 
@@ -198,6 +206,26 @@ class UnionQueryOperation extends QueryOperation
         mQueryOperations.add(op);
     }
     
+    void pruneIncompatibleTargets(QueryTargetSet targets) {
+    	// go from end--front so we don't get confused when entries are removed
+    	for (int i = mQueryOperations.size()-1; i >= 0; i--) {
+    		QueryOperation op = mQueryOperations.get(i);
+    		if (op instanceof UnionQueryOperation) {
+    			assert(false); // shouldn't be here, should have optimized already
+    			((UnionQueryOperation)op).pruneIncompatibleTargets(targets);
+    		} else if (op instanceof IntersectionQueryOperation) {
+    			((IntersectionQueryOperation)op).pruneIncompatibleTargets(targets);
+    		} else {
+    			QueryTargetSet opTargets = op.getQueryTargets();
+    			assert(opTargets.size() == 1);
+    			if (!opTargets.isSubset(targets)) {
+    				mQueryOperations.remove(i);
+    			}
+    		}
+    	}
+    }
+    
+    
     public QueryOperation optimize(Mailbox mbox) throws ServiceException {
         restartSubOpt:
             do {
@@ -269,8 +297,9 @@ class UnionQueryOperation extends QueryOperation
         return retval.toString();
     }
     
-    public Object clone() throws CloneNotSupportedException {
-    	UnionQueryOperation toRet = (UnionQueryOperation)super.clone();
+    public Object clone() {
+		UnionQueryOperation toRet = null;
+		toRet = (UnionQueryOperation)super.clone();
     	
     	assert(mCachedNextHit == null);
     	

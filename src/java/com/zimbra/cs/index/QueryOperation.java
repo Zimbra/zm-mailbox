@@ -30,10 +30,8 @@ package com.zimbra.cs.index;
 
 import java.io.IOException;
 import java.util.Comparator;
-import java.util.Set;
 
 import com.zimbra.cs.index.MailboxIndex.SortBy;
-import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
@@ -53,6 +51,8 @@ import com.zimbra.cs.service.ServiceException;
  * whereas a QueryResults set is just a set of results and can only be iterated.  
  * 
  ***********************************************************************/
+
+
 abstract class QueryOperation implements Cloneable, ZimbraQueryResults
 {
 	// order does matter somewhat -- order is used to sort execution order when
@@ -220,32 +220,15 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults
      *******************/
 
 
-    /**
-     * A QueryTarget is something we run a query against, 
-     * ie a mailbox
-     */
-    static class QueryTarget {
-    	Folder mFolder;
-    	
-    	public QueryTarget(Folder f) {
-    		mFolder = f;
-    	}
-    	
-    	public QueryTarget(Set<Folder> s) {
-    		
-    	}
-
-    	boolean compatible(QueryTarget other) {
-    		if (other.mFolder == null || mFolder == null)
-    			return true;
-    		return other.mFolder.equals(mFolder);
-    	}
-    }
+    abstract QueryTargetSet getQueryTargets();
     
-    abstract QueryTarget getQueryTarget();
-    
-    public Object clone() throws CloneNotSupportedException {
-    	return super.clone();
+    public Object clone() {
+    	try {
+    		return super.clone();
+    	} catch (CloneNotSupportedException e) {
+    		assert(false); // better not happen
+    	}
+    	return null;
     }
     
     private boolean mIsToplevelQueryOp = false;

@@ -48,8 +48,6 @@ import org.apache.lucene.search.TermQuery;
 
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.DbSearchConstraints;
-import com.zimbra.cs.db.DbSearchConstraintsNode;
 import com.zimbra.cs.db.DbMailItem.SearchResult;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.index.LuceneQueryOperation.LuceneResultsChunk;
@@ -72,7 +70,7 @@ class DBQueryOperation extends QueryOperation
 {
     protected static Log mLog = LogFactory.getLog(DBQueryOperation.class);
     
-    protected IConstraints mConstraints = new LeafNode();
+    protected IConstraints mConstraints = new DbLeafNode();
     protected int mOffset = -1;
     protected int mLimit = -1;
 
@@ -132,492 +130,13 @@ class DBQueryOperation extends QueryOperation
      * to make sure that we handle unions (don't combine) and intersections
      * (always empty set) correctly
      */
-    protected String mTargetAccountId = null;
+    protected QueryTarget mQueryTarget = QueryTarget.UNSPECIFIED;
     
     protected DBQueryOperation() { }
 
     static DBQueryOperation Create() { return new DBQueryOperation(); }
     
     
-    protected static interface IConstraints extends DbSearchConstraintsNode, Cloneable {
-    	void ensureSpamTrashSetting(Mailbox mbox, List<Folder> excludeFolders) throws ServiceException;
-    	IConstraints andIConstraints(IConstraints other);
-    	IConstraints orIConstraints(IConstraints other);
-    	boolean hasSpamTrashSetting();
-    	void forceHasSpamTrashSetting();
-    	boolean hasNoResults();
-    	boolean tryDbFirst(Mailbox mbox);
-    	void setTypes(Set<Byte> types);
-    	public Object clone() throws CloneNotSupportedException;
-    }
-    
-    protected static class OrNode implements IConstraints {
- 	   public NodeType getNodeType() { return NodeType.OR; }
- 	   
- 	   /**
- 	    * @return The list of ANDed or ORed subnodes, or NULL if 
- 	    * this is a LEAF node.
- 	    */
- 	   public Iterable<? extends DbSearchConstraintsNode> getSubNodes() { return mSubNodes; }
- 	   
- 	   /**
- 	    * @return The SearchConstraints for this node, if it is a LEAF
- 	    * node, or NULL if it is not.
- 	    */
- 	   public DbSearchConstraints getSearchConstraints() { return null; }
- 	   
- 	   protected List<IConstraints> mSubNodes = new ArrayList<IConstraints>();
- 	   
- 	   public Object clone() throws CloneNotSupportedException {
- 		   OrNode toRet = (OrNode)super.clone();
- 		   
- 		   toRet.mSubNodes = new ArrayList<IConstraints>();  
- 		   for (IConstraints node : mSubNodes)
- 			   toRet.mSubNodes.add((IConstraints)node.clone());
- 		   
- 		   return toRet;
- 	   }
- 	   
- 	   public IConstraints andIConstraints(IConstraints other) {
- 		   if (other.getNodeType() == NodeType.AND) {
- 			   return other.andIConstraints(this);
- 		   } else {
- 			   IConstraints top = new AndNode();
- 			   top = top.andIConstraints(this);
- 			   top = top.andIConstraints(other);
- 			   return top;
- 		   }
- 	   }
- 	   
- 	   public IConstraints orIConstraints(IConstraints other) {
- 		   if (other.getNodeType() == NodeType.OR) {
- 			   for (IConstraints n : ((OrNode)other).mSubNodes) 
- 				   mSubNodes.add(n);
- 		   } else {
- 			   mSubNodes.add(other);
- 		   }
- 		   return this;
- 	   }
- 	   
- 	   public void ensureSpamTrashSetting(Mailbox mbox, List<Folder> excludeFolders) throws ServiceException {
- 		   //
- 		   // push down instead of ANDing this at the toplevel!
- 		   //
- 		   // This is important because we exclude (trash spam) and the query is:
- 		   //
- 		   //    (tag:foo is:anywhere) or (tag:bar)
- 		   //
- 		   // we want the resultant query to be:
- 		   //
- 		   //    (tag foo is:anywhere) or (tag:bar -in:trash -in:spam)
- 		   //
- 		   //
- 		   for (IConstraints n : mSubNodes) 
- 			   n.ensureSpamTrashSetting(mbox, excludeFolders);
- 	   }
- 	   
- 	   public boolean hasSpamTrashSetting() {
- 		   for (IConstraints n : mSubNodes) 
- 			   if (!n.hasSpamTrashSetting())
- 				   return false;
- 		   return true;
- 	   }
- 	   
- 	   public void forceHasSpamTrashSetting() {
- 		   for (IConstraints n : mSubNodes) 
- 			   if (!n.hasSpamTrashSetting())
- 				   n.forceHasSpamTrashSetting();
- 	   }
- 	   
- 	   public boolean hasNoResults() {
- 		   for (IConstraints n : mSubNodes) 
- 			   if (!n.hasNoResults())
- 				   return false;
- 		   return true;
- 	   }
- 	   
- 	   public boolean tryDbFirst(Mailbox mbox) {
- 		   return false;
- 	   }
- 	   
- 	   public void setTypes(Set<Byte> types) {
- 		   for (IConstraints n : mSubNodes) 
- 			   n.setTypes(types);
- 	   }
- 	   
- 	   public String toString()
- 	   {
- 		   StringBuilder toRet = new StringBuilder("OR(");
- 		   for (IConstraints n : mSubNodes)
- 			   toRet.append(n.toString()).append(' ');
- 		   return toRet.append(')').toString();
- 	   }
- 	   
-     }
-    
-    protected static class AndNode implements IConstraints {
- 	   public NodeType getNodeType() { return NodeType.AND; }
- 	   public Iterable<? extends DbSearchConstraintsNode> getSubNodes() { return mSubNodes; }
- 	   public DbSearchConstraints getSearchConstraints() { return null; }
- 	   
- 	   protected List<IConstraints> mSubNodes = new ArrayList<IConstraints>();
- 	   
- 	   public Object clone() throws CloneNotSupportedException {
- 		   AndNode toRet = (AndNode)super.clone();
- 		   
- 		   toRet.mSubNodes = new ArrayList<IConstraints>();  
- 		   for (IConstraints node : mSubNodes)
- 			   toRet.mSubNodes.add((IConstraints)node.clone());
- 		   
- 		   return toRet;
- 	   }
- 	   
- 	   LeafNode getLeafChild() {
- 		   for (IConstraints n : mSubNodes)
- 			   if (n.getNodeType() == NodeType.LEAF)
- 				   return (LeafNode)n;
- 		   
- 		   LeafNode c = new LeafNode();
- 		   mSubNodes.add(c);
- 		   return c;
- 	   }
- 	   
- 	   public IConstraints andIConstraints(IConstraints other) {
- 		   switch(other.getNodeType()) {
- 		   case LEAF:
- 			   LeafNode otherLeaf = (LeafNode)other;
- 			   IConstraints ret = getLeafChild().andIConstraints(otherLeaf);
- 			   assert(mSubNodes.contains(ret));
- 			   break;
- 		   case AND:
- 			   for (IConstraints n : ((AndNode)other).mSubNodes) {
- 				   if (n.getNodeType() == NodeType.LEAF) {
- 					   IConstraints c = getLeafChild().andIConstraints((LeafNode)n);
- 					   assert(c == this);
- 				   } else {
- 					   mSubNodes.add(n);
- 				   }
- 			   }
- 			   break;
- 		   case OR:
- 			   mSubNodes.add(other);
- 			   break;
- 		   }
- 		   
- 		   return this;
- 	   }
- 	   
- 	   public IConstraints orIConstraints(IConstraints other) 
- 	   {
- 		   if (other.getNodeType() == NodeType.OR) {
- 			   return other.orIConstraints(other);
- 		   } else {
- 			   IConstraints top = new OrNode();
- 			   top = top.orIConstraints(this);
- 			   top = top.orIConstraints(other);
- 			   return top;
- 		   }
- 	   }
- 	   
- 	   public void ensureSpamTrashSetting(Mailbox mbox, List<Folder> excludeFolders) throws ServiceException {
- 		   LeafNode c = getLeafChild();
- 		   c.ensureSpamTrashSetting(mbox, excludeFolders);
- 	   }
- 	   
- 	   public boolean hasSpamTrashSetting() {
- 		   for (IConstraints n : mSubNodes) 
- 			   if (n.hasSpamTrashSetting())
- 				   return true;
- 		   return false;
- 	   }
- 	   
- 	   public void forceHasSpamTrashSetting() {
- 		   for (IConstraints n : mSubNodes) 
- 			   if (!n.hasSpamTrashSetting())
- 				   n.forceHasSpamTrashSetting();
- 	   }
- 	   
- 	   public boolean hasNoResults() {
- 		   for (IConstraints n : mSubNodes) 
- 			   if (n.hasNoResults())
- 				   return true;
- 		   return false;
- 	   }
- 	   
- 	   public boolean tryDbFirst(Mailbox mbox) {
- 		   return false;
- 	   }
-
- 	   public void setTypes(Set<Byte> types) {
- 		   for (IConstraints n : mSubNodes) 
- 			   n.setTypes(types);
- 	   }
- 	   
- 	   public String toString()
- 	   {
- 		   StringBuilder toRet = new StringBuilder("AND(");
- 		   for (IConstraints n : mSubNodes)
- 			   toRet.append(n.toString()).append(' ');
- 		   return toRet.append(')').toString();
- 	   }
- 	   
-    }
-    
-    protected static class LeafNode extends DbSearchConstraints implements IConstraints {
-    	
-    	public Object clone() throws CloneNotSupportedException {
-    		LeafNode toRet = (LeafNode)super.clone();
-    		
-    		// make sure we cloned folders instead of just copying them!
-    		assert(toRet.folders != folders);
-    		
-    		return toRet;
-    	}
-    	
-    	public void ensureSpamTrashSetting(Mailbox mbox, List<Folder> excludeFolders) throws ServiceException
-        {
-    		if (!mHasSpamTrashSetting) {
-        		for (Folder f : folders) {
-        			excludeFolders.add(f);
-        		}
-        		mHasSpamTrashSetting = true;
-        	}
-        }
-    	
-    	public IConstraints andIConstraints(IConstraints other) 
-    	{
-    		switch(other.getNodeType()) {
-    		case AND:
-    			return other.andIConstraints(this);
-    		case OR:
-    			return other.andIConstraints(this);
-    		case LEAF:
-    			if (other.hasSpamTrashSetting()) 
-    				forceHasSpamTrashSetting();
-    			
-    			if (other.hasNoResults()) {
-    				noResults = true;
-    			}
-    			andConstraints((LeafNode)other);
-    			return this;
-    		}
-    		assert(false);
-    		return null;
-    	}
-    	
-  	   public IConstraints orIConstraints(IConstraints other)
-  	   {
-  		   if (other.getNodeType() == NodeType.OR) {
-  			   return other.orIConstraints(this);
-  		   } else {
- 			   IConstraints top = new OrNode();
- 			   top = top.orIConstraints(this);
- 			   top = top.orIConstraints(other);
- 			   return top;
-  		   }
-  	   }
-    	
-
-        public boolean hasSpamTrashSetting() {
-        	return mHasSpamTrashSetting;
-        }
-        public void forceHasSpamTrashSetting() {
-            mHasSpamTrashSetting = true;
-        }
-
-        public boolean hasNoResults() {
-        	return noResults;
-        }
-        
-        public boolean tryDbFirst(Mailbox mbox) {
-        	return (convId != 0 || (tags != null && tags.contains(mbox.mUnreadFlag))); 
-        }
-        
-        
-        void addItemIdClause(Integer itemId, boolean truth) {
-            if (truth) {
-            	if (!itemIds.contains(itemId)) {
-                    //
-                    // {1} AND {-1} AND {1} == no-results 
-                    //  ... NOT {1} (which could happen if you removed from both arrays on combining!)
-                	if (prohibitedItemIds== null || !prohibitedItemIds.contains(itemId)) {
-                		itemIds.add(itemId);
-                    }
-                }
-            } else {
-                if (!prohibitedItemIds.contains(itemId)) {
-                    //
-                    // {1} AND {-1} AND {1} == no-results 
-                    //  ... NOT {1} (which could happen if you removed from both arrays on combining!)
-                	if (itemIds != null && itemIds.contains(itemId)) {
-                    	itemIds.remove(itemId);
-                    }
-                	prohibitedItemIds.add(itemId);
-                }
-            }
-        }
-        
-        /**
-         * @param lowest
-         * @param highest
-         * @param truth
-         * @throws ServiceException
-         */
-        void addDateClause(long lowestDate, long highestDate, boolean truth)  {
-            DbSearchConstraints.Range intv = new DbSearchConstraints.Range();
-            intv.lowest = lowestDate;
-            intv.highest = highestDate;
-            intv.negated = !truth;
-            
-            dates.add(intv);
-        }
-        
-        /**
-         * @param lowest
-         * @param highest
-         * @param truth
-         * @throws ServiceException
-         */
-        void addSizeClause(long lowestSize, long highestSize, boolean truth)  {
-            DbSearchConstraints.Range intv = new DbSearchConstraints.Range();
-            intv.lowest = lowestSize;
-            intv.highest = highestSize;
-            intv.negated = !truth;
-            
-            sizes.add(intv);
-        }
-        
-        /**
-         * @param convId
-         * @param prohibited
-         */
-        void addConvId(int cid, boolean truth) {
-            if (truth) {
-            	if (prohibitedConvIds.contains(cid)) {
-            		noResults = true;
-                }
-                
-            	if (cid == 0) {
-            		convId = cid;
-            	} else {
-            		if (mLog.isDebugEnabled()) {
-            			mLog.debug("Query requested two conflicting convIDs, this is now a no-results-query");
-                    }
-            		convId = Integer.MAX_VALUE;
-            		noResults = true;
-                }
-            } else {
-                if (convId == cid) {
-                	noResults = true;
-                }
-                prohibitedConvIds.add(cid);
-            }
-        }
-        
-        /**
-         * @param folder
-         * @param truth
-         */
-        void addInClause(Folder folder, boolean truth) 
-        {
-        	if (truth) {
-        		if ((folders.size() > 0 && !folders.contains(folder)) 
-        				|| excludeFolders.contains(folder)) {
-        			if (mLog.isDebugEnabled()) {
-        				mLog.debug("AND of conflicting folders, no-results-query");
-        			}
-        			noResults = true;
-        		}
-        		folders.clear();
-        		folders.add(folder);
-        		forceHasSpamTrashSetting();
-            } else {
-            	if (folders.contains(folder)) {
-            		folders.remove(folder);
-            		if (folders.size() == 0) {
-                        if (mLog.isDebugEnabled()) {
-                            mLog.debug("AND of conflicting folders, no-results-query");
-                        }
-                        noResults = true;
-            		}
-            	}
-            	excludeFolders.add(folder);
-            	
-            	int fid = folder.getId();
-            	if (fid == Mailbox.ID_FOLDER_TRASH || fid == Mailbox.ID_FOLDER_SPAM) {
-            		forceHasSpamTrashSetting();
-            	}
-            }
-        }
-        
-        void addAnyFolderClause(boolean truth) {
-            // support for "is:anywhere" basically as a way to get around
-            // the trash/spam autosetting
-        	forceHasSpamTrashSetting();
-        	
-            if (!truth) {
-                // if they are weird enough to say "NOT is:anywhere" then we
-                // just make it a no-results-query.
-                
-            	if (mLog.isDebugEnabled()) {
-                    mLog.debug("addAnyFolderClause(FALSE) called -- changing to no-results-query.");
-                }
-            	noResults = true;
-            }
-        }
-        
-        /**
-         * @param tag
-         * @param truth
-         */
-        void addTagClause(Tag tag, boolean truth) {
-            if (mLog.isDebugEnabled()) {
-                mLog.debug("AddTagClause("+tag+","+truth+")");
-            }
-            if (truth) {
-            	if (excludeTags!=null && excludeTags.contains(tag)) {
-                	if (mLog.isDebugEnabled()) {
-                		mLog.debug("TAG and NOT TAG = no results");
-                    }
-                	noResults = true;
-            	}
-            	if (tags == null) 
-            		tags = new HashSet<Tag>();
-            	tags.add(tag);
-            } else {
-            	if (tags != null && tags.contains(tag)) {
-            		if (mLog.isDebugEnabled()) {
-                		mLog.debug("TAG and NOT TAG = no results");
-                    }
-            		noResults = true;
-            	}
-            	if (excludeTags == null)
-            		excludeTags = new HashSet<Tag>();
-            	excludeTags.add(tag);
-            }
-        }
-        
-
-        public void setTypes(Set<Byte> _types) {
-  		   this.types = _types;
-  	   }
-  	   
- 	   public String toString()
- 	   {
- 		   return super.toString();
- 	   }
- 	   
- 	   /**
- 	    * true if we have a SETTING pertaining to Spam/Trash.  This doesn't 
- 	    * necessarily mean we actually have "in trash" or something, it just 
- 	    * means that we've got something set which means we shouldn't add 
- 	    * the default "not in:trash and not in:junk" thing.
- 	    */
- 	   protected boolean mHasSpamTrashSetting = false;
- 	   
-    }
-    
-
     /**
 	 * Since Trash can be an entire folder hierarchy, when we want to exclude trash from a query,
 	 * we actually have to walk that hierarchy and figure out all the folders within it.
@@ -672,8 +191,10 @@ class DBQueryOperation extends QueryOperation
         return mAllResultsQuery;
     }
     
-    QueryTarget getQueryTarget() {
-    	return null;
+    QueryTargetSet getQueryTargets() {
+    	QueryTargetSet toRet = new QueryTargetSet(1);
+    	toRet.add(mQueryTarget);
+    	return toRet;
     }
     
     /**
@@ -683,17 +204,17 @@ class DBQueryOperation extends QueryOperation
 	 * 
 	 * @return
 	 */
-	LeafNode topLevelAndedConstraint() {
+	DbLeafNode topLevelAndedConstraint() {
 		switch (mConstraints.getNodeType()) {
 		case LEAF:
-			return (LeafNode)mConstraints;
+			return (DbLeafNode)mConstraints;
 		case AND:
-			AndNode and = (AndNode)mConstraints;
+			DbAndNode and = (DbAndNode)mConstraints;
 			return and.getLeafChild();
 		case OR:
-			IConstraints top = new AndNode();
+			IConstraints top = new DbAndNode();
 			mConstraints = top.andIConstraints(mConstraints);
-			return ((AndNode)mConstraints).getLeafChild();
+			return ((DbAndNode)mConstraints).getLeafChild();
 		}
 		assert(false);
 		return  null;
@@ -755,25 +276,30 @@ class DBQueryOperation extends QueryOperation
     {
     	mAllResultsQuery = false;
 
+    	boolean isRemote = false;
+    	
     	// is it a mountpoint?
-    	if (folder instanceof Mountpoint) {
+    	if (folder instanceof Mountpoint) { 
     		Mountpoint mpt = (Mountpoint)folder;
     		
-    		if (mTargetAccountId != null && !mTargetAccountId.equals(mpt.getOwnerId()))
-    			throw new IllegalArgumentException("Cannot addInClause b/c DBQueryOperation already has an incompatible remote target");
-    		
-    		mTargetAccountId = mpt.getOwnerId();
-    		
-//    		 check to see if this mountpoint is local or remote...
-//    		if (!mpt.getOwnerId().equals(mpt.getMailbox().getAccountId())) {
-//    			// remote!
-//    		}
-    		
-    	} else {
-    		if (mTargetAccountId != null && mTargetAccountId != folder.getMailbox().getAccountId())
+    		// check to see if this mountpoint is local, just in case...
+    		if  (!mpt.getOwnerId().equals(mpt.getMailbox().getAccountId())) 
+    		{
+    			// remote!
+    			isRemote = true;
+    			
+    			if (mQueryTarget != QueryTarget.UNSPECIFIED && !mQueryTarget.toString().equals(mpt.getOwnerId()))
+    				throw new IllegalArgumentException("Cannot addInClause b/c DBQueryOperation already has an incompatible remote target");
+    			
+    			mQueryTarget = new QueryTarget(mpt.getOwnerId());
+    		}
+    	}
+    	
+    	if (!isRemote) {
+    		if (mQueryTarget != QueryTarget.LOCAL && mQueryTarget != QueryTarget.UNSPECIFIED) 
     			throw new IllegalArgumentException("Cannot addInClause w/ local target b/c DBQueryOperation already has a remote target");
     		
-    		mTargetAccountId = folder.getMailbox().getAccountId();
+    		mQueryTarget = QueryTarget.LOCAL;
     	}
     	
     	topLevelAndedConstraint().addInClause(folder, truth);
@@ -854,15 +380,6 @@ class DBQueryOperation extends QueryOperation
 	    }
 	}
 	
-	   public String getTargetAccountId() {
- 		   return mTargetAccountId;
- 	   }
-	   
-	   boolean isRemote() {
-		   return (mTargetAccountId == null || !mTargetAccountId.equals(getMailbox().getAccountId()));
-	   }
-	   
-
 	/******************
      * 
      * Hits iteration
@@ -1182,7 +699,7 @@ class DBQueryOperation extends QueryOperation
                         	mLuceneChunk = mLuceneOp.getNextResultsChunk(mHitsPerChunk);
                         	
                         	// we need to set our index-id's here!
-                        	LeafNode sc = topLevelAndedConstraint();
+                        	DbLeafNode sc = topLevelAndedConstraint();
                         	sc.indexIds = mLuceneChunk.getIndexIds();
                             
                             // exponentially expand the chunk size in case we have to go back to the DB
@@ -1313,28 +830,38 @@ class DBQueryOperation extends QueryOperation
         return retVal.toString();
     }
     
-    private DBQueryOperation cloneInternal() throws CloneNotSupportedException {
-    	DBQueryOperation toRet = (DBQueryOperation)super.clone();
-    	
-    	assert(mDBHits == null);
-    	assert(mDBHitsIter == null);
-    	assert(mLuceneChunk == null);
-    	
-    	
-    	toRet.mConstraints = (IConstraints)mConstraints.clone();
-
-    	toRet.mTypes = new HashSet<Byte>();  toRet.mTypes.addAll(mTypes);
-    	toRet.mExcludeTypes = new HashSet<Byte>();  toRet.mExcludeTypes.addAll(mExcludeTypes);
-    	
-    	toRet.mNextHits = new ArrayList<ZimbraHit>();
-    	
-    	return toRet;
+    private DBQueryOperation cloneInternal() {
+    	try {
+    		DBQueryOperation toRet = (DBQueryOperation)super.clone();
+    		
+    		assert(mDBHits == null);
+    		assert(mDBHitsIter == null);
+    		assert(mLuceneChunk == null);
+    		
+    		
+    		toRet.mConstraints = (IConstraints)mConstraints.clone();
+    		
+    		toRet.mTypes = new HashSet<Byte>();  toRet.mTypes.addAll(mTypes);
+    		toRet.mExcludeTypes = new HashSet<Byte>();  toRet.mExcludeTypes.addAll(mExcludeTypes);
+    		
+    		toRet.mNextHits = new ArrayList<ZimbraHit>();
+    		
+    		return toRet;
+    	} catch (CloneNotSupportedException e) {
+    		assert(false);
+    		return null;
+    	}
     }
     
-    public Object clone() throws CloneNotSupportedException {
-    	DBQueryOperation toRet = cloneInternal();
-    	toRet.mLuceneOp = (LuceneQueryOperation)mLuceneOp.clone(this);
-    	return toRet;
+    public Object clone() {
+    	try {
+    		DBQueryOperation toRet = cloneInternal();
+    		toRet.mLuceneOp = (LuceneQueryOperation)mLuceneOp.clone(this);
+    		return toRet;
+    	} catch (CloneNotSupportedException e) {
+    		assert(false);
+    		return null;
+    	}
     }
     
     public Object clone(LuceneQueryOperation caller) throws CloneNotSupportedException {
@@ -1359,12 +886,11 @@ class DBQueryOperation extends QueryOperation
     			return this;
     		}
     		
-    		DBQueryOperation dbOther = null;
-
     		if (other instanceof DBQueryOperation) {
-    			
-    			if (mTargetAccountId != null && dbOther.mTargetAccountId != null) {
-    				if (!mTargetAccountId.equals(dbOther.mTargetAccountId))
+        		DBQueryOperation dbOther = (DBQueryOperation)other;
+
+    			if (mQueryTarget != null && dbOther.mQueryTarget != null) {
+    				if (!mQueryTarget.equals(dbOther.mQueryTarget))
     					return null;  // can't OR entries with different targets
     			}
     			
@@ -1381,8 +907,8 @@ class DBQueryOperation extends QueryOperation
     				return null;
     			}
     			
-    			if (mTargetAccountId == null)
-    				mTargetAccountId = dbOther.mTargetAccountId;
+    			if (mQueryTarget == null)
+    				mQueryTarget = dbOther.mQueryTarget;
     			
     			mConstraints = mConstraints.orIConstraints(dbOther.mConstraints);
     			return this;
@@ -1411,15 +937,15 @@ class DBQueryOperation extends QueryOperation
     		if (dbOther.mAllResultsQuery)
     			return this;
     		
-    		if (mTargetAccountId != null && dbOther.mTargetAccountId != null) {
-    			if (!mTargetAccountId.equals(dbOther.mTargetAccountId)) {
+    		if (mQueryTarget != null && dbOther.mQueryTarget != null) {
+    			if (!mQueryTarget.equals(dbOther.mQueryTarget)) {
     				mLog.debug("ANDing two DBOps with different targets -- this is a no results query!");
     				return new NullQueryOperation();
     			}
 			}
     		
-    		if (mTargetAccountId == null) 
-    			mTargetAccountId = dbOther.mTargetAccountId;
+    		if (mQueryTarget == null) 
+    			mQueryTarget = dbOther.mQueryTarget;
     		
     		if (mLuceneOp != null) {
     			if (dbOther.mLuceneOp != null) {

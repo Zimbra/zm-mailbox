@@ -31,7 +31,6 @@ package com.zimbra.cs.index;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -96,7 +95,11 @@ class LuceneQueryOperation extends QueryOperation
         mHasSpamTrashSetting = true;
     }
     
-    QueryTarget getQueryTarget() { return null; }
+    QueryTargetSet getQueryTargets() {
+    	QueryTargetSet toRet = new QueryTargetSet(1);
+    	toRet.add(QueryTarget.UNSPECIFIED);
+    	return toRet;
+    }
     
     public void doneWithSearchResults() throws ServiceException {
     	mSort = null;
@@ -294,12 +297,15 @@ class LuceneQueryOperation extends QueryOperation
     	return toRet;
     }
     
-    public Object clone() throws CloneNotSupportedException {
-    	LuceneQueryOperation toRet = cloneInternal();
-    	
-    	toRet.mDBOp = (DBQueryOperation)mDBOp.clone(this);
-    	
-    	return toRet;
+    public Object clone() {
+    	try {
+    		LuceneQueryOperation toRet = cloneInternal();
+    		toRet.mDBOp = (DBQueryOperation)mDBOp.clone(this);
+    		return toRet;
+    	} catch (CloneNotSupportedException e) {
+    		assert(false);
+    		return null;
+    	}
     }
     
     public Object clone(DBQueryOperation caller) throws CloneNotSupportedException {

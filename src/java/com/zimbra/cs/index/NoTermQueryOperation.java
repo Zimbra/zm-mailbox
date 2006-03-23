@@ -26,6 +26,10 @@
 package com.zimbra.cs.index;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
@@ -74,7 +78,11 @@ public class NoTermQueryOperation extends QueryOperation {
         assert(false);
     }
 
-    QueryTarget getQueryTarget() { return null; }
+    QueryTargetSet getQueryTargets() {
+    	QueryTargetSet toRet = new QueryTargetSet(1);
+    	toRet.add(QueryTarget.UNSPECIFIED);
+    	return toRet;
+    }
     
     boolean hasNoResults() {
         // TODO Auto-generated method stub

@@ -1302,7 +1302,7 @@ public final class ZimbraQuery {
         public static class OperatorNode extends Node {
             int mKind;
             boolean mTruthFlag = true;
-            public ArrayList mNodes = new ArrayList();
+            public ArrayList<Node> mNodes = new ArrayList<Node>();
             
             public OperatorNode(int kind) {
                 mKind = kind;
@@ -1341,7 +1341,7 @@ public final class ZimbraQuery {
                 do {
                     simplifyAgain = false;
                     // first, simplify our sub-ops...
-                    ArrayList newNodes = new ArrayList();
+                    ArrayList<Node> newNodes = new ArrayList<Node>();
                     for (Iterator cur = mNodes.iterator(); cur.hasNext();) {
                         Node n = (Node)cur.next();
                         
@@ -1350,7 +1350,7 @@ public final class ZimbraQuery {
                     mNodes = newNodes;
                     
                     // now, see if any of our subops can be trivially combined with us
-                    newNodes = new ArrayList();
+                    newNodes = new ArrayList<Node>();
                     for (Iterator cur = mNodes.iterator(); cur.hasNext();) {
                         Node n = (Node)cur.next();
                         
@@ -1362,7 +1362,7 @@ public final class ZimbraQuery {
                                 addIt = false;
                                 simplifyAgain = true;
                                 for (Iterator opIter = opn.mNodes.iterator(); opIter.hasNext();) {
-                                    newNodes.add(opIter.next());
+                                	newNodes.add((Node)(opIter.next()));
                                 }
                             }
                         }
@@ -1590,15 +1590,16 @@ public final class ZimbraQuery {
 	            mLog.debug("OP="+mOp.toString());
 	        }
 	        
+	        // optimize the query down
 	        mOp = mOp.optimize(mbox);
 	        if (mOp == null) {
 	            mOp = new NoTermQueryOperation();
 	        }
-	        
 	        if (mLog.isDebugEnabled()) {
 	            mLog.debug("OPTIMIZED="+mOp.toString());
 	        }
-	        
+
+	        // do spam/trash hackery!
 	        if (!includeTrash || !includeSpam) {
 	            if (!mOp.hasSpamTrashSetting()) {
 	                mOp = mOp.ensureSpamTrashSetting(mbox, includeTrash, includeSpam);
