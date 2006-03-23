@@ -26,8 +26,12 @@ import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.util.ZimbraLog;
 
 public abstract class Formatter {
-    
+
     public abstract String getType();
+
+    public String[] getDefaultMimeTypes() {
+        return new String[0];
+    }
 
     /**
      * @return true if this formatter requires auth

@@ -124,6 +124,7 @@ public class UserServlet extends ZimbraServlet {
     public static final String AUTH_DEFAULT = "co,ba"; // both
 
     private HashMap<String, Formatter> mFormatters;
+    private HashMap<String, Formatter> mDefaultFormatters;
 
     protected static final String MSGPAGE_BLOCK = "errorpage.attachment.blocked";
     private String mBlockPage = null;
@@ -142,6 +143,11 @@ public class UserServlet extends ZimbraServlet {
         addFormatter(new ZipFormatter());
         addFormatter(new IfbFormatter());
         addFormatter(new SyncFormatter());
+
+        mDefaultFormatters = new HashMap<String, Formatter>();
+        for (Formatter fmt : mFormatters.values())
+            for (String mimeType : fmt.getDefaultMimeTypes())
+                mDefaultFormatters.put(mimeType, fmt);
     }
 
     private void addFormatter(Formatter f) {
@@ -390,6 +396,19 @@ public class UserServlet extends ZimbraServlet {
                 return;
             }
 
+            // if no format explicitly specified, try to guess it from the Content-Type header
+            if (context.format == null) {
+                String ctype = context.req.getContentType();
+                if (ctype != null) {
+                    if (ctype.indexOf(';') != -1)
+                        ctype = ctype.substring(0, ctype.indexOf(';'));
+                    Formatter fmt = mDefaultFormatters.get(ctype.trim().toLowerCase());
+                    if (fmt != null)
+                        context.format = fmt.getType();
+                }
+            }
+
+            // get the POST body content
             long sizeLimit = Provisioning.getInstance().getLocalServer().getLongAttr(Provisioning.A_zimbraFileUploadMaxSize, DEFAULT_MAX_SIZE);
             byte[] body = ByteUtil.getContent(req.getInputStream(), req.getContentLength(), sizeLimit);
 

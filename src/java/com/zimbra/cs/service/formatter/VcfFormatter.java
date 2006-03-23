@@ -47,6 +47,10 @@ public class VcfFormatter extends Formatter {
         return "vcf";
     }
 
+    public String[] getDefaultMimeTypes() {
+        return new String[] { Mime.CT_TEXT_VCARD, "application/vcard" };
+    }
+
     public String getDefaultSearchTypes() {
         return MailboxIndex.SEARCH_FOR_CONTACTS;
     }
