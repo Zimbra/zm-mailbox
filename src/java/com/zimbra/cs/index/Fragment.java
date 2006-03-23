@@ -145,6 +145,9 @@ public class Fragment {
             // skip non-XML-safe characters
             if (c < 0x20 || c == 0xFFFE || c == 0xFFFF || (c > 0xD7FF && c < 0xE000))
                 continue;
+            // ignore OBJECT REPLACEMENT CHARACTER
+            if (c == 0xFFFC)
+                continue;
             // more than 2 "line characters" get reduced to 2
             if ((c == '=' || c == '-') && last == c && lastButOne == c)
                 continue;
