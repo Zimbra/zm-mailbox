@@ -1666,7 +1666,8 @@ public class ProvUtil {
             } catch (ServiceException e) {
                 Throwable cause = e.getCause();
                 System.err.println("ERROR: " + e.getCode() + " (" + e.getMessage() + ")" + 
-                        (cause == null ? "" : " (cause: " + cause.getClass().getName() + " " + cause.getMessage() + ")"));  
+                        (cause == null ? "" : " (cause: " + cause.getClass().getName() + " " + cause.getMessage() + ")"));
+                if (verbose) e.printStackTrace(System.err);
             } catch (ArgException e) {
                     usage();
             }
