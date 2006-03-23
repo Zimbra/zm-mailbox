@@ -56,6 +56,10 @@ public class ZipFormatter extends Formatter {
         return "zip";
     }
 
+    public String[] getDefaultMimeTypes() {
+        return new String[] { "application/x-zip-compressed" };
+    }
+
     public String getDefaultSearchTypes() {
         return MailboxIndex.SEARCH_FOR_MESSAGES + ',' + MailboxIndex.SEARCH_FOR_CONTACTS;
     }

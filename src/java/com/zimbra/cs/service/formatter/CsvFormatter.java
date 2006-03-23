@@ -33,21 +33,25 @@ import java.util.Iterator;
 import java.util.Map;
 
 import javax.mail.Part;
-import javax.mail.internet.ContentDisposition;
-import javax.mail.internet.ParseException;
 import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
+import com.zimbra.cs.util.HttpUtil;
 
 public class CsvFormatter extends Formatter {
 
     public String getType() {
         return "csv";
+    }
+
+    public String[] getDefaultMimeTypes() {
+        return new String[] { "text/csv", "text/comma-separated-values", Mime.CT_TEXT_PLAIN };
     }
 
     public String getDefaultSearchTypes() {
@@ -60,15 +64,14 @@ public class CsvFormatter extends Formatter {
         StringBuffer sb = new StringBuffer();
         ContactCSV.toCSV(iterator, sb);
 
-        ContentDisposition cd = null;
-        try { cd = new ContentDisposition(Part.ATTACHMENT); } catch (ParseException e) {}
         // todo: get from folder name
-        String fname = context.itemPath;
-        if (fname == null || fname.length() == 0) fname ="contacts";
-        cd.setParameter("filename", fname+".csv");
-        context.resp.addHeader("Content-Disposition", cd.toString());
-        context.resp.setCharacterEncoding("UTF-8");
-        context.resp.setContentType("text/plain");
+        String filename = context.itemPath;
+        if (filename == null || filename.length() == 0)
+            filename = "contacts";
+        String cd = Part.ATTACHMENT + "; filename=" + HttpUtil.encodeFilename(context.req, filename + ".csv");
+        context.resp.addHeader("Content-Disposition", cd);
+        context.resp.setCharacterEncoding(Mime.P_CHARSET_UTF8);
+        context.resp.setContentType("text/csv");
         context.resp.getOutputStream().print(sb.toString());
     }
 

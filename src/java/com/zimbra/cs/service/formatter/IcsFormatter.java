@@ -41,6 +41,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.util.Constants;
@@ -50,7 +51,11 @@ public class IcsFormatter extends Formatter {
     public String getType() {
         return "ics";
     }
-    
+
+    public String[] getDefaultMimeTypes() {
+        return new String[] { Mime.CT_TEXT_CALENDAR, "text/x-vcalendar" };
+    }
+
     public String getDefaultSearchTypes() {
         return MailboxIndex.SEARCH_FOR_APPOINTMENTS;
     }
@@ -67,13 +72,13 @@ public class IcsFormatter extends Formatter {
             if (item instanceof Appointment) appts.add((Appointment) item);
         }
         
-        context.resp.setCharacterEncoding("UTF-8");
-        context.resp.setContentType("text/calendar");
+        context.resp.setCharacterEncoding(Mime.P_CHARSET_UTF8);
+        context.resp.setContentType(Mime.CT_TEXT_CALENDAR );
 
 //        try {
             ZVCalendar cal = context.targetMailbox.getZCalendarForAppointments(appts);
             ByteArrayOutputStream buf = new ByteArrayOutputStream();
-            OutputStreamWriter wout = new OutputStreamWriter(buf, "UTF-8");
+            OutputStreamWriter wout = new OutputStreamWriter(buf, Mime.P_CHARSET_UTF8);
             cal.toICalendar(wout);
             wout.flush();
             context.resp.getOutputStream().write(buf.toByteArray());
@@ -97,7 +102,7 @@ public class IcsFormatter extends Formatter {
     }
 
     public void save(byte[] body, Context context, Folder folder) throws ServiceException, IOException {
-        Reader reader = new StringReader(new String(body, "utf-8"));
+        Reader reader = new StringReader(new String(body, Mime.P_CHARSET_UTF8));
         ZVCalendar ical = ZCalendarBuilder.build(reader);
         List<Invite> invites = Invite.createFromCalendar(context.authAccount, null, ical, false);
         for (Invite inv : invites) {
