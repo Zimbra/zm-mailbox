@@ -2723,28 +2723,31 @@ public class Mailbox {
         return ID_AUTO_INCREMENT;
     }
 
-    public synchronized Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags, String tags, int conversationId)
+    public Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags, String tags, int conversationId)
     throws IOException, ServiceException {
         SharedDeliveryContext sharedDeliveryCtxt = new SharedDeliveryContext();
         return addMessage(octxt, pm, folderId, noICal, flags, tags, conversationId, ":API:", sharedDeliveryCtxt);
     } 
 
-    public synchronized Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags, String tags)
+    public Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags, String tags)
     throws IOException, ServiceException {
         SharedDeliveryContext sharedDeliveryCtxt = new SharedDeliveryContext();
         return addMessage(octxt, pm, folderId, noICal, flags, tags, ID_AUTO_INCREMENT, ":API:", sharedDeliveryCtxt);
     }
 
-    public synchronized Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags, String tags,
+    public Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags, String tags,
                                            String rcptEmail, SharedDeliveryContext sharedDeliveryCtxt)
     throws IOException, ServiceException {
         return addMessage(octxt, pm, folderId, noICal, flags, tags, ID_AUTO_INCREMENT, rcptEmail, sharedDeliveryCtxt);
     }
 
-    public synchronized Message addMessage(OperationContext octxt, ParsedMessage pm,
-                                           int folderId, boolean noICal, int flags, String tagStr, int conversationId,
-                                           String rcptEmail, SharedDeliveryContext sharedDeliveryCtxt)
+    public Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId,
+                              boolean noICal, int flags, String tagStr, int conversationId,
+                              String rcptEmail, SharedDeliveryContext sharedDeliveryCtxt)
     throws IOException, ServiceException {
+        // make sure the message has been analyzed before taking the Mailbox lock
+        pm.analyze();
+        // and then actually add the message
         long start = ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.start();
         Message msg = addMessageInternal(octxt, pm, folderId, noICal, flags, tagStr, conversationId,
                                          rcptEmail, null, sharedDeliveryCtxt);
@@ -3029,8 +3032,10 @@ public class Mailbox {
         return conv;
     }
 
-    public synchronized Message saveDraft(OperationContext octxt, ParsedMessage pm, int id, int origId, String replyType)
+    public Message saveDraft(OperationContext octxt, ParsedMessage pm, int id, int origId, String replyType)
     throws IOException, ServiceException {
+        // make sure the message has been analzyed before taking the Mailbox lock
+        pm.analyze();
         // special-case saving a new draft
         if (id == ID_AUTO_INCREMENT) {
             Message.DraftInfo dinfo = null;
@@ -3038,8 +3043,12 @@ public class Mailbox {
                 dinfo = new Message.DraftInfo(replyType, origId);
             return addMessageInternal(octxt, pm, ID_FOLDER_DRAFTS, true, Flag.FLAG_DRAFT | Flag.FLAG_FROM_ME, null,
                                       ID_AUTO_INCREMENT, ":API:", dinfo, new SharedDeliveryContext());
-        }
+        } else
+            return saveDraftInternal(octxt, pm, id);
+    }
 
+    private synchronized Message saveDraftInternal(OperationContext octxt, ParsedMessage pm, int id)
+    throws IOException, ServiceException {
         byte[] data;
         String digest;
         int size;
