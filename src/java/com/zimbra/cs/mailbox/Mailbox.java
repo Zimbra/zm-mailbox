@@ -3678,7 +3678,7 @@ public class Mailbox {
                 if (obj instanceof Invite)
                     addInvite(octxt, (Invite) obj, folderId, true, null);
                 else if (obj instanceof ParsedMessage)
-                    addMessage(octxt, (ParsedMessage) obj, folderId, false, Flag.FLAG_UNREAD, null);
+                    addMessage(octxt, (ParsedMessage) obj, folderId, true, Flag.FLAG_UNREAD, null);
             } catch (IOException e) {
                 throw ServiceException.FAILURE("IOException", e);
             }
