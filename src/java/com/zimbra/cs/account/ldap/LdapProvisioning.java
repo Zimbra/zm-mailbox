@@ -485,7 +485,9 @@ public class LdapProvisioning extends Provisioning {
                 }
                 attrs.put(Provisioning.A_zimbraCOSId, cosId);
             } else {
-                cos = getCosByName(Provisioning.DEFAULT_COS_NAME, ctxt);
+                String domainCosId = domain != null ? d.getAttr(Provisioning.A_zimbraDomainDefaultCOSId, null) : null;
+                if (domainCosId != null) cos = getCosById(domainCosId);
+                if (cos == null) cos = getCosByName(Provisioning.DEFAULT_COS_NAME, ctxt);
             }
 
             // if zimbraMailHost is not specified, and we have a COS, see if there is a pool to
@@ -849,6 +851,9 @@ public class LdapProvisioning extends Provisioning {
             }
         } catch (InvalidSearchFilterException e) {
             throw ServiceException.INVALID_REQUEST("invalid search filter "+e.getMessage(), e);
+        } catch (NameNotFoundException e) {
+            // happens when base doesn't exist
+            ZimbraLog.account.warn("uable to list all accounts", e);
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to list all accounts", e);
         } catch (IOException e) {
