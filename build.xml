@@ -49,6 +49,7 @@
 	<property name="dist.bin.dir" location="${dist.dir}/bin" />
 	<property name="dist.libexec.dir" location="${dist.dir}/libexec" />
 	<property name="dist.conf.dir" location="${dist.dir}/conf" />
+	<property name="dist.l10n.msgs.dir" location="${dist.dir}/conf/msgs" />
 	<property name="dist.db.dir" location="${dist.dir}/db" />
 	<property name="dist.lib.dir" location="${dist.dir}/lib" />
 	<property name="dist.jars.dir" location="${dist.dir}/lib/jars" />
@@ -184,6 +185,7 @@
 		<mkdir dir="${dist.bin.dir}" />
 		<mkdir dir="${dist.libexec.dir}" />
 		<mkdir dir="${dist.conf.dir}" />
+		<mkdir dir="${dist.l10n.msgs.dir}" />
 		<mkdir dir="${dist.lib.dir}" />
 		<mkdir dir="${dist.jars.dir}" />
 		<mkdir dir="${dist.ext.dir}" />
@@ -326,6 +328,10 @@
 	<target name="service-deploy" depends="war">
 		<echo message="Updating ${zimbra.home.dir}/conf/log4j.properties; if it fails on windows, try again." />
 		<copy todir="${zimbra.home.dir}/conf" file="${config.dir}/log4j.properties" />
+		<echo message="Updating localized message files" />
+		<copy todir="${zimbra.home.dir}/conf/msgs" overwrite="true">
+			<fileset dir="${config.dir}/msgs"/>
+		</copy>
 		<echo message="Wait for tomcat to start at http://${deploy.host}:${deploy.port}/" />
 		<waitfor checkevery="1" checkeveryunit="second" maxwait="60" maxwaitunit="second">
 			<http url="http://${deploy.host}:${deploy.port}/" />
@@ -355,6 +361,9 @@
 
 		<copy todir="${dist.conf.dir}" overwrite="true">
 			<fileset dir="${config.dir}" includes="log4j.properties*"/>
+		</copy>
+		<copy todir="${dist.l10n.msgs.dir}" overwrite="true">
+			<fileset dir="${config.dir}/msgs"/>
 		</copy>
 
 		<copy todir="${dist.openldap.etc.dir}" file="${config.dir}/ldap/zimbra.ldif" />
@@ -479,6 +488,7 @@
 		<delete dir="${zimbra.home.dir}/repl" />
 		<delete dir="${zimbra.home.dir}/backup" />
 		<delete dir="${zimbra.home.dir}/lib/ext" />
+		<delete dir="${zimbra.home.dir}/conf/msgs" />
 		<delete failonerror="no">
 			<fileset dir="${zimbra.home.dir}/log" includes="*.log" />
 		</delete>
@@ -501,6 +511,7 @@
 		<copy todir="${zimbra.home.dir}/conf" file="${config.dir}/log4j.properties" />
 		<mkdir dir="${tomcat.home.dir}" />
 		<mkdir dir="${tomcat.home.dir}/conf" />
+		<mkdir dir="${tomcat.home.dir}/conf/msgs" />
 		<mkdir dir="${tomcat.home.dir}/common" />
 		<mkdir dir="${tomcat.home.dir}/common/lib" />
 		<mkdir dir="${zimbra.home.dir}/db" />

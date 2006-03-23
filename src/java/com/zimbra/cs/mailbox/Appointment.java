@@ -40,6 +40,7 @@ import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.TimeZone;
 
 import javax.activation.DataHandler;
@@ -53,6 +54,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.calendar.CalendarL10n;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.FreeBusy;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
@@ -65,6 +67,7 @@ import com.zimbra.cs.mailbox.calendar.Recurrence;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
+import com.zimbra.cs.mailbox.calendar.CalendarL10n.MsgKey;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
@@ -1512,7 +1515,7 @@ public class Appointment extends MailItem {
 
         public static final int MAX_CONFLICT_LIST_SIZE = 5;
 
-        public static String getBusyTimesString(List<Availability> list, TimeZone tz) {
+        public static String getBusyTimesString(List<Availability> list, TimeZone tz, Locale lc) {
             StringBuilder sb = new StringBuilder();
             int availCount = 0;
             boolean hasMoreConflicts = false;
@@ -1535,25 +1538,25 @@ public class Appointment extends MailItem {
 
                     Date startDate = new Date(instance.getStart());
                     Date endDate = new Date(instance.getEnd());
-                    String start = CalendarMailSender.formatDateTime(startDate, tz);
+                    String start = CalendarMailSender.formatDateTime(startDate, tz, lc);
                     sb.append(" * ").append(start);
                     String end;
                     if (sameDay(startDate, endDate, tz)) {
-                        end = CalendarMailSender.formatTime(endDate, tz);
+                        end = CalendarMailSender.formatTime(endDate, tz, lc);
                         sb.append(" - ").append(end);
                     } else {
-                        end = CalendarMailSender.formatDateTime(endDate, tz);
+                        end = CalendarMailSender.formatDateTime(endDate, tz, lc);
                         sb.append("\r\n   - ").append(end);
                     }
 
                     ZOrganizer organizer = instance.getAppointment().getDefaultInvite().getOrganizer();
                     if (organizer != null) {
-                        sb.append(", by ");
-                        String orgAddr = organizer.getAddress();
+                        String orgDispName;
                         if (organizer.hasCn())
-                            sb.append(organizer.getCn()).append(" <").append(orgAddr).append(">");
+                            orgDispName = organizer.getCn() + " <" + organizer.getAddress() + ">";
                         else
-                            sb.append(orgAddr);
+                            orgDispName = organizer.getAddress();
+                        sb.append(CalendarL10n.getMessage(MsgKey.resourceConflictScheduledBy, lc, orgDispName));
                     }
                     sb.append("\r\n");
                     conflictCount++;
@@ -1605,6 +1608,7 @@ public class Appointment extends MailItem {
                                    MimeMessage mmInv,
                                    boolean forCreate)
     throws ServiceException {
+        Locale lc = Locale.getDefault();    // TODO: Use organizer's locale.
         String partStat = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
         Account account = getMailbox().getAccount();
         if (invite.thisAcctIsOrganizer(account)) {
@@ -1617,18 +1621,21 @@ public class Appointment extends MailItem {
                 OperationContext octxt = mbox.getOperationContext();
                 if (isRecurring() && resource.autoDeclineRecurring()) {
                     partStat = IcalXmlStrMap.PARTSTAT_DECLINED;
+                    String reason =
+                        CalendarL10n.getMessage(MsgKey.resourceDeclineReasonRecurring, lc);
                     CalendarMailSender.sendReply(
                             octxt, mbox, false,
                             CalendarMailSender.VERB_DECLINE,
-                            "This resource/location cannot be scheduled in a recurring appointment.\r\n",
+                            reason + "\r\n",
                             this, invite, mmInv);
                 } else if (resource.autoDeclineIfBusy()) {
                     List<Availability> avail = checkAvailability();
                     if (!Availability.isAvailable(avail)) {
                         partStat = IcalXmlStrMap.PARTSTAT_DECLINED;
                         String msg =
-                            "This resource/location is already scheduled on:\r\n\r\n" +
-                            Availability.getBusyTimesString(avail, invite.getStartTime().getTimeZone());
+                            CalendarL10n.getMessage(MsgKey.resourceDeclineReasonConflict, lc) +
+                            "\r\n\r\n" +
+                            Availability.getBusyTimesString(avail, invite.getStartTime().getTimeZone(), lc);
                         CalendarMailSender.sendReply(
                                 octxt, mbox, false,
                                 CalendarMailSender.VERB_DECLINE,
