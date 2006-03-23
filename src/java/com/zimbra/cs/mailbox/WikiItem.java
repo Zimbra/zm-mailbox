@@ -75,7 +75,7 @@ public class WikiItem extends Document {
 
     public static final String WIKI_CONTENT_TYPE = "text/html";
 	
-    static WikiItem create(int id, Folder folder, short volumeId, String wikiword, String author, int length, MailItem parent)
+    static WikiItem create(int id, Folder folder, short volumeId, String wikiword, String author, byte[] content, MailItem parent)
     throws ServiceException {
     	assert(parent instanceof Document);
 
@@ -83,7 +83,7 @@ public class WikiItem extends Document {
 		meta.put(Metadata.FN_WIKI_WORD, wikiword);
 		meta.put(Metadata.FN_CREATOR, author);
 		
-        UnderlyingData data = prepareCreate(TYPE_WIKI, id, folder, volumeId, wikiword, author, WIKI_CONTENT_TYPE, length, (Document)parent, meta);
+        UnderlyingData data = prepareCreate(TYPE_WIKI, id, folder, volumeId, wikiword, author, WIKI_CONTENT_TYPE, content, (Document)parent, meta);
         if (parent != null)
             data.parentId = parent.getId();
 

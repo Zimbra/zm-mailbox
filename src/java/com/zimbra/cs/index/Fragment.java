@@ -155,6 +155,13 @@ public class Fragment {
         return sb.toString().trim();
     }
 
+    public static String getFragment(byte[] content) {
+    	// Don't create lengthy string
+    	int maxLen = Fragment.MAX_FRAGMENT_LENGTH * 20;
+    	maxLen = (content.length > maxLen) ? maxLen : content.length;
+    	return getFragment(new String(content, 0, maxLen), false);
+    }
+    
     public static String getFragment(String content, boolean hasCalendar) {
         String remainder = content.trim();
         String backup    = remainder;

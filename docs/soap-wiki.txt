@@ -71,7 +71,9 @@
 <ListWikiRequest [l="{folder-id}"]/>
 
 <ListWikiResponse>
-  [<w name="{word}" ver="{head-version}" cd="{created-date}" md="{modified-date}" cr="{creator}" leb="{last-edited-by}" l="{folder}"/>]+
+  [<w name="{word}" ver="{head-version}" cd="{created-date}" md="{modified-date}" cr="{creator}" leb="{last-edited-by}" l="{folder}">
+     <fr>... fragment ...</fr>
+  </w>]+
 </ListWikiResponse>
 
 //
@@ -83,7 +85,8 @@
 
 <GetWikiResponse>
   <w name="{word}" ver="{version}" cr="{creator}" id="{message-id}" s="{size}" d="{created-date}" md="{modified-date}" l="{folder}" [f="{flags}"] [t="{tags}"]>
-   ... contents ...
+     <fr>... fragment ...</fr>
+     <body>... contents ...</body>
   </w>
 </GetWikiResponse>
 

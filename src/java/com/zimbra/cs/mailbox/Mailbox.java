@@ -4347,7 +4347,7 @@ public class Mailbox {
     		short volumeId = Volume.getCurrentMessageVolume().getId();
         	blob = sm.storeIncoming(rawData, null, null, volumeId);
         	markOtherItemDirty(blob);
-        	doc.addRevision(octxt.authuser.getName(), rawData.length);
+        	doc.addRevision(octxt.authuser.getName(), rawData);
 
         	mCurrentChange.setIndexedItem(doc, null);
 
@@ -4399,7 +4399,7 @@ public class Mailbox {
         	redoRecorder.setMessageBodyInfo(rawData, blob.getPath(), blob.getVolumeId());
         	markOtherItemDirty(blob);
 
-        	wikiItem = WikiItem.create(itemId, getFolderById(folderId), volumeId, wikiword, author, rawData.length, parent);
+        	wikiItem = WikiItem.create(itemId, getFolderById(folderId), volumeId, wikiword, author, rawData, parent);
 
         	mCurrentChange.setIndexedItem(wikiItem, null);
 
@@ -4449,7 +4449,7 @@ public class Mailbox {
             markOtherItemDirty(blob);
 
             // TODO: do we need parent when creating document.
-        	doc = Document.create(itemId, getFolderById(folderId), volumeId, filename, octxt.authuser.getName(), mimeType, rawData.length, parent);
+        	doc = Document.create(itemId, getFolderById(folderId), volumeId, filename, octxt.authuser.getName(), mimeType, rawData, parent);
 
             mCurrentChange.setIndexedItem(doc, null);
 

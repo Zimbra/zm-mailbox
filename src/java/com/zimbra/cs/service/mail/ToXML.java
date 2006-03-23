@@ -1244,6 +1244,14 @@ public class ToXML {
             m.addAttribute(MailService.A_FOLDER, lc.formatItemId(doc.getFolderId()));
         recordItemTags(m, doc, fields);
         
+        try {
+        	Document.DocumentRevision revision = doc.getRevision(1);
+        	m.addAttribute(MailService.A_CREATOR, revision.getCreator());
+        	m.addAttribute(MailService.A_CREATED_DATE, revision.getRevDate());
+        } catch (Exception ex) {
+            mLog.warn("ignoring exception while fetching initial revision for document " + doc.getSubject(), ex);
+        }
+        
         if (needToOutput(fields, Change.MODIFIED_CONTENT)) {
         	m.addAttribute(MailService.A_ID, lc.formatItemId(doc));
         	m.addAttribute(MailService.A_NAME, doc.getSubject());
@@ -1251,8 +1259,9 @@ public class ToXML {
             try {
             	Document.DocumentRevision revision = (rev > 0) ? doc.getRevision(rev) : doc.getLastRevision(); 
             	m.addAttribute(MailService.A_VERSION, revision.getVersion());
-            	m.addAttribute(MailService.A_CREATOR, revision.getCreator());
+            	m.addAttribute(MailService.A_LAST_EDITED_BY, revision.getCreator());
             	m.addAttribute(MailService.A_MODIFIED_DATE, revision.getRevDate());
+                m.addAttribute(MailService.E_FRAG, revision.getFragment(), Element.DISP_CONTENT);
             } catch (Exception ex) {
                 mLog.warn("ignoring exception while fetching revision for document " + doc.getSubject(), ex);
             }

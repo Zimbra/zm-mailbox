@@ -37,7 +37,7 @@ public class WikiWord {
 	private Mailbox mMailbox;
 	private int mId;
 	private int mRevision;
-	private int mModifiedDate;
+	private long mModifiedDate;
 	private String mModifiedBy;
 	private String mCreator;
 	private int mFolderId;
