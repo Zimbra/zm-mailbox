@@ -1194,7 +1194,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                     }
                 } catch (Exception e) { }
 
-                Message msg = mMailbox.addMessage(getContext(), pm, folder.getId(), false, flagMask, tagStr.toString());
+                Message msg = mMailbox.addMessage(getContext(), pm, folder.getId(), true, flagMask, tagStr.toString());
                 if (msg != null) {
                     appendHint.append("[APPENDUID ").append(ImapFolder.getUIDValidity(folder))
                               .append(' ').append(msg.getImapUID()).append("] ");
