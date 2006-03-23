@@ -59,6 +59,7 @@ import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.calendar.CalendarL10n.MsgKey;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.service.ServiceException;
@@ -89,12 +90,12 @@ public class CalendarMailSender {
         sVerbs.put("tentative", VERB_TENTATIVE);
     }
 
-    private static Map<Verb, String> sVerbDisplayNames;
+    private static Map<Verb, MsgKey> sVerbMsgKeys;
     static {
-        sVerbDisplayNames = new HashMap<Verb, String>();
-        sVerbDisplayNames.put(VERB_ACCEPT, "Accept");
-        sVerbDisplayNames.put(VERB_DECLINE, "Decline");
-        sVerbDisplayNames.put(VERB_TENTATIVE, "Tentative");
+        sVerbMsgKeys = new HashMap<Verb, MsgKey>();
+        sVerbMsgKeys.put(VERB_ACCEPT, MsgKey.replySubjectAccept);
+        sVerbMsgKeys.put(VERB_DECLINE, MsgKey.replySubjectDecline);
+        sVerbMsgKeys.put(VERB_TENTATIVE, MsgKey.replySubjectTentative);
     }
 
     public static Verb parseVerb(String str) throws ServiceException {
@@ -105,8 +106,10 @@ public class CalendarMailSender {
                                                null);
     }
 
-    public static String getReplySubject(Verb verb, Invite inv) {
-        return sVerbDisplayNames.get(verb) + ": " + inv.getName();
+    public static String getReplySubject(Verb verb, Invite inv, Locale lc) {
+        MsgKey key = sVerbMsgKeys.get(verb);
+        String prefix = CalendarL10n.getMessage(key, lc);
+        return prefix + ": " + inv.getName();
     }
 
     public static MimeMessage createDefaultReply(Account fromAccount,
@@ -118,30 +121,42 @@ public class CalendarMailSender {
                                                  String additionalMsgBody,
                                                  ZVCalendar iCal)
     throws ServiceException {
-        // TODO: Localization
+        // TODO: Use organizer's locale.
+        Locale lc = Locale.getDefault();
         String fromAddress = fromAccount.getName();
         String fromDisplayName =
             fromAccount.getAttr(Provisioning.A_displayName, fromAddress);
-        StringBuffer replyText = new StringBuffer(fromDisplayName);
+        StringBuffer replyText = new StringBuffer();
+        MsgKey statusMsgKey;
         boolean isResourceAccount = fromAccount instanceof CalendarResource;
         if (VERB_ACCEPT.equals(verb)) {
             if (isResourceAccount)
-                replyText.append(" has been scheduled for your appointment.");
+                statusMsgKey = MsgKey.resourceDefaultReplyAccept;
             else
-                replyText.append(" has accepted your invitation.");
+                statusMsgKey = MsgKey.defaultReplyAccept;
         } else if (VERB_DECLINE.equals(verb)) {
             if (isResourceAccount)
-                replyText.append(" could not be scheduled.");
+                statusMsgKey = MsgKey.resourceDefaultReplyDecline;
             else
-                replyText.append(" has declined your invitation.");
+                statusMsgKey = MsgKey.defaultReplyDecline;
         } else if (VERB_TENTATIVE.equals(verb)) {
             if (isResourceAccount)
-                replyText.append(" has been tentatively scheduled.");
+                statusMsgKey = MsgKey.resourceDefaultReplyTentativelyAccept;
             else
-                replyText.append(" has tentatively accepted your invitation.");
+                statusMsgKey = MsgKey.defaultReplyTentativelyAccept;
         } else
-            replyText.append(" responded with: ").append(verb.toString());
-        replyText.append("\r\n\r\n");
+            statusMsgKey = MsgKey.defaultReplyOther;
+        String statusMsg;
+        if (!statusMsgKey.equals(MsgKey.defaultReplyOther))
+            statusMsg = CalendarL10n.getMessage(statusMsgKey,
+                                                lc,
+                                                fromDisplayName);
+        else
+            statusMsg = CalendarL10n.getMessage(statusMsgKey,
+                                                lc,
+                                                fromDisplayName,
+                                                verb.toString());
+        replyText.append(statusMsg).append("\r\n\r\n");
 
         if (additionalMsgBody != null) {
             replyText.append(additionalMsgBody).append("\r\n");
@@ -153,7 +168,10 @@ public class CalendarMailSender {
             // If we leave it in, Outlook will hide all text above that line.
             notes = notes.replaceAll("[\\r\\n]+[\\*~]+[\\r\\n]+",
                                      "\r\n\r\n ~ ~ ~ ~ ~ ~ ~ ~ ~\r\n\r\n");
-            replyText.append("\r\n-----Original Invite-----\r\n");
+            replyText.append("\r\n-----");
+            replyText.append(
+                CalendarL10n.getMessage(MsgKey.resourceReplyOriginalInviteSeparatorLabel, lc));
+            replyText.append("-----\r\n");
             replyText.append(notes);
         }
 
@@ -162,20 +180,18 @@ public class CalendarMailSender {
                 replyText.toString(), inv.getUid(), iCal);
     }
 
-    private static final String DATE_TIME_FORMAT = "EEEE, MMMM d, yyyy h:mm aa";
-    private static final String TIME_FORMAT = "h:mm aa";
-    private static final Locale DATE_TIME_FORMAT_LOCALE = Locale.US;
-
-    public static String formatDateTime(Date d, TimeZone tz) {
-        SimpleDateFormat dateTimeFormat =
-            new SimpleDateFormat(DATE_TIME_FORMAT, DATE_TIME_FORMAT_LOCALE);
+    public static String formatDateTime(Date d, TimeZone tz, Locale lc) {
+        String dateTimeFmt =
+            CalendarL10n.getMessage(MsgKey.resourceConflictDateTimeFormat, lc);
+        SimpleDateFormat dateTimeFormat = new SimpleDateFormat(dateTimeFmt, lc);
         dateTimeFormat.setTimeZone(tz);
         return dateTimeFormat.format(d);
     }
 
-    public static String formatTime(Date t, TimeZone tz) {
-        SimpleDateFormat timeFormat =
-            new SimpleDateFormat(TIME_FORMAT, DATE_TIME_FORMAT_LOCALE);
+    public static String formatTime(Date t, TimeZone tz, Locale lc) {
+        String timeOnlyFmt =
+            CalendarL10n.getMessage(MsgKey.resourceConflictTimeOnlyFormat, lc);
+        SimpleDateFormat timeFormat = new SimpleDateFormat(timeOnlyFmt, lc);
         timeFormat.setTimeZone(tz);
         return timeFormat.format(t);
     }
@@ -372,7 +388,8 @@ public class CalendarMailSender {
                                 MimeMessage mmInv)
     throws ServiceException {
         Account acct = mbox.getAccount();
-        String replySubject = getReplySubject(verb, inv);
+        Locale lc = Locale.getDefault();    // TODO: Use organizer's locale.
+        String replySubject = getReplySubject(verb, inv, lc);
 
         String replyType = MailSender.MSGTYPE_REPLY;
         // TODO: Handle Exception ID. (last arg of replyToInvite)

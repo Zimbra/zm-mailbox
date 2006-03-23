@@ -90,6 +90,7 @@ public class LC {
     public static final KnownKey zimbra_uid;
     public static final KnownKey zimbra_gid;
     public static final KnownKey zimbra_log4j_properties;
+    public static final KnownKey localized_msgs_directory;
 
     public static final KnownKey zimbra_store_sweeper_max_age;
 
@@ -300,6 +301,11 @@ public class LC {
         zimbra_log4j_properties.setDefault("${zimbra_home}" + FS + "conf" + FS + "log4j.properties");
         zimbra_log4j_properties.setDoc
             ("Path to log4j configuration properties file.");
+
+        localized_msgs_directory = new KnownKey("localized_msgs_directory");
+        localized_msgs_directory.setDefault("${zimbra_home}" + FS + "conf" + FS + "msgs");
+        localized_msgs_directory.setDoc
+            ("Directory for localized message files");
 
         zimbra_store_sweeper_max_age = new KnownKey("zimbra_store_sweeper_max_age");
         zimbra_store_sweeper_max_age.setDefault("480");  // 480 mins = 8 hours

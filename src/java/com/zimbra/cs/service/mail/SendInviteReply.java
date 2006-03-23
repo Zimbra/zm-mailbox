@@ -28,6 +28,7 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.util.Locale;
 import java.util.Map;
 
 import javax.mail.internet.MimeBodyPart;
@@ -138,7 +139,9 @@ public class SendInviteReply extends CalendarRequest {
             }
             
             if (updateOrg) {
-                String replySubject = CalendarMailSender.getReplySubject(verb, oldInv);
+                Locale locale = Locale.getDefault();    // TODO: Use organizer's locale
+                String replySubject =
+                    CalendarMailSender.getReplySubject(verb, oldInv, locale);
 
                 CalSendData csd = new CalSendData();
                 csd.mOrigId = oldInv.getMailItemId();

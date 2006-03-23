@@ -1,0 +1,134 @@
+HOW TO LOCALIZE SERVER CODE
+===========================
+
+There are some end-user facing string data created by the server.  These need
+to be localized.  The first such code localized is the code that generates the
+text of auto accept/decline responses sent by calendar resource accounts.
+
+Localization relies on Java's java.util.ResourceBundle mechanism.  There is a
+utility Java class and a set of localized message files.
+
+
+Java Code
+---------
+
+The primary localization class is:
+
+    com.zimbra.cs.util.L10nUtil
+
+Each localized code "module" is declared in the Module enum in this class.
+The enum name is significant as its toString() value is the basename of the
+module's message files.  The only public method in this class is static
+getMessage():
+
+    public static String getMessage(Module module,
+                                    String key,
+                                    Locale lc,
+                                    Object... args)
+
+This method finds the resource bundle for the specified module and locale,
+retrieves the string for the specified key, and applies variable substitution
+with any arguments supplied.
+
+The first localized module is calendar.  L10nUtil.Module enum has a "calendar"
+entry.  There is a helper class:
+
+    com.zimbra.cs.mailbox.calendar.CalendarL10n
+
+This class has a public static method getMessage():
+
+    public static String getMessage(CalendarL10n.MsgKey key,
+                                    Locale lc,
+                                    Object... args)
+
+It is a helper method that calls L10nUtil.getMessage().  It offers two
+benefits:
+
+    - no need to mention module as it always uses calendar module
+    - all calendar-related string keys are defined in MsgKey enum
+
+So, for example, you can do this in code to get a localized string for
+"<calendar resource> has been scheduled for your appointment" line that appears
+in the auto-accept reply:
+
+	import com.zimbra.cs.mailbox.calendar.CalendarL10n.MsgKey;
+	...
+	Locale lc = <some locale>
+	String resName = <calendar resource display name>
+    String prefix =
+        CalendarL10n.getMessage(MsgKey.resourceDefaultReplyAccept, lc,
+                                resName);
+
+Follow the same strategy for any additional localization modules added in the
+future.  To summarize:
+
+    1. Add module name to L10nUtil.Module enum.
+    2. Add helper class with:
+       - module-specific getMessage() method
+       - module-specific MsgKey enum
+
+
+Message Files
+-------------
+
+All message files are stored under /opt/zimbra/conf/msgs directory.  Each
+module must have the default message file whose filename is
+"<module>.properties".  To localize the module for a particular locale, you can
+add a file named "<module>_<locale name>.properties".  The default version must
+be checked into source repository and is part of the build.  Locale-specific
+specializations can be added to a running installation.  Tomcat restart is
+required to recognize newly added message files.
+
+For calendar module, the checked-in default file is "calendar.properties" and
+is installed as:
+
+    /opt/zimbra/conf/msgs/calendar.properties
+
+If, for example, you want to add a version for Japanese, it would be added as:
+
+    /opt/zimbra/conf/msgs/calendar_ja.properties
+
+The message files are not built into the service.war web app archive for two
+reasons:
+
+    1. to allow easy installation of localized files
+    2. to allow command-line invoked Java processes to use the same localized
+       files
+
+Message formatting tip: The single-quote character is the quote character.
+If your message file has this line:
+
+    foo = bar
+
+the value of foo key is "bar".  The leading space is not included in the value.
+If your value starts with spaces, you can do:
+
+    foo = ' bar '
+
+If the value contains single-quote character, it must be specified as two
+single-quote characters in a row:
+
+    foo = It''s okay.
+
+Substitution variables cannot appear inside a quoted string.  End the quoted
+part before specifying variables:
+
+    foo = ' It''s a very '{0} car.
+
+
+To Do
+-----
+
+- Add locale attribute to COS and accounts.
+- Add locale to domain, server, and global config.
+
+Order of precedence would be: (high to low)
+
+1. account
+2. COS
+3. domain
+4. server
+5. global config
+6. Locale.getDefault()
+
+<end>
