@@ -25,13 +25,18 @@
 
 package com.zimbra.cs.rmgmt;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.index.IndexWriter;
+
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraLog;
@@ -90,20 +95,35 @@ public class RemoteMailQueue {
 	
     private class QueueHandler implements RemoteBackgroundHandler {
 
+        private int mNumMessages = 0;
+        
+        private IndexWriter mIndexWriter;
+        
+        public QueueHandler(Server server, String queueName) throws IOException {
+            File indexPath = new File(LC.zimbra_tmp_directory.value() + File.separator + server.getId() + "-" + queueName);
+            if (indexPath.exists()) {
+                if (!indexPath.isDirectory()) {
+                    throw new IOException("directory for mail queue cache index is a file: " + indexPath);
+                }
+                File[] files = indexPath.listFiles();
+            }
+            
+            
+            // TODO - what if index is corrupt...
+            mIndexWriter = new IndexWriter(indexPath, new StandardAnalyzer(), true);
+            
+        }
+        
         public void read(InputStream stdout, InputStream stderr) {
             try {
-                synchronized (mScanLock) {
-                    mScanStartTime = System.currentTimeMillis();
-                }
+                mScanStartTime = System.currentTimeMillis();
                 QueueItemVisitor v = new QueueItemVisitor();
                 RemoteResultParser.parse(stdout, v);
-                
+                mScanEndTime = System.currentTimeMillis();
                 synchronized (mScanLock) {
-                    mScanEndTime = System.currentTimeMillis();
                     mScanInProgress = false;
                     mScanLock.notifyAll();
                 }
-                
             } catch (IOException ioe) {
                 error(ioe);
             }
@@ -124,14 +144,18 @@ public class RemoteMailQueue {
     
     public void startScan(Server server, String queueName) throws ServiceException {
         synchronized (mScanLock) {
-            if (mScanInProgress) {
-                // One day, we should interrupt the scan.
-                throw ServiceException.FAILURE("scan already in progress and can not be interrupted", null);
+            try {
+                if (mScanInProgress) {
+                    // One day, we should interrupt the scan.
+                    throw ServiceException.FAILURE("scan already in progress and can not be interrupted", null);
+                }
+                mScanInProgress = true;
+                RemoteManager rm = RemoteManager.getRemoteManager(server);
+                rm.executeBackground(RemoteCommands.ZMQSTAT + " " + queueName, new QueueHandler(server, queueName));
+            } catch (IOException ioe) {
+                throw ServiceException.FAILURE("exception initiating queue scan", ioe);
             }
-            mScanInProgress = true;
         }
-        RemoteManager rm = RemoteManager.getRemoteManager(server);
-        rm.executeBackground(RemoteCommands.ZMQSTAT + " " + queueName, new QueueHandler());
     }
 
     public void waitForScan(long timeout) {
