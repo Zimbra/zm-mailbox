@@ -32,10 +32,13 @@ import java.util.Map;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.EntrySearchFilter;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.EntrySearchFilter.AndOr;
 import com.zimbra.cs.account.EntrySearchFilter.Multi;
+import com.zimbra.cs.account.EntrySearchFilter.Operator;
 import com.zimbra.cs.account.EntrySearchFilter.Single;
 import com.zimbra.cs.account.EntrySearchFilter.Term;
+import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
@@ -61,6 +64,7 @@ public class SearchCalendarResources extends DocumentHandler {
         String[] attrs = attrsStr == null ? null : attrsStr.split(",");
 
         EntrySearchFilter filter = parseSearchFilter(request);
+        filter.andWith(sFilterActiveResourcesOnly);
 
         List resources = acct.getDomain().
             searchCalendarResources(filter, attrs, sortBy, sortAscending);
@@ -115,5 +119,24 @@ public class SearchCalendarResources extends DocumentHandler {
                     null);
         }
         return term;
+    }
+
+    // When end-user client searches resources, expose only those resources
+    // that are in active or maintenance status.  Hide locked and closed
+    // resources.
+    private static EntrySearchFilter sFilterActiveResourcesOnly;
+    static {
+        Single active = new Single(
+                false,
+                Provisioning.A_zimbraAccountStatus,
+                Operator.eq,
+                Provisioning.ACCOUNT_STATUS_ACTIVE);
+        Single maint = new Single(
+                false,
+                Provisioning.A_zimbraAccountStatus,
+                Operator.eq,
+                Provisioning.ACCOUNT_STATUS_MAINTENANCE);
+        Multi activeOrMaint = new Multi(false, AndOr.or, active, maint);
+        sFilterActiveResourcesOnly = new EntrySearchFilter(activeOrMaint);
     }
 }
