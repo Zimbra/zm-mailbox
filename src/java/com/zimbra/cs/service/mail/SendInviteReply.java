@@ -139,7 +139,12 @@ public class SendInviteReply extends CalendarRequest {
             }
             
             if (updateOrg) {
-                Locale locale = Locale.getDefault();    // TODO: Use organizer's locale
+                Locale locale;
+                Account organizer = oldInv.getOrganizerAccount();
+                if (organizer != null)
+                    locale = organizer.getLocale();
+                else
+                    locale = acct.getLocale();
                 String replySubject =
                     CalendarMailSender.getReplySubject(verb, oldInv, locale);
 

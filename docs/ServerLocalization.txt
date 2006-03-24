@@ -116,19 +116,12 @@ part before specifying variables:
     foo = ' It''s a very '{0} car.
 
 
-To Do
------
+Windows/Cygwin Gotcha
+---------------------
 
-- Add locale attribute to COS and accounts.
-- Add locale to domain, server, and global config.
-
-Order of precedence would be: (high to low)
-
-1. account
-2. COS
-3. domain
-4. server
-5. global config
-6. Locale.getDefault()
+If you're using Windows and cygwin, don't use cygwin shell to copy the localized
+file under conf/msgs directory.  Use the Windows command prompt.  Cygwin shell
+somehow sets the permission on the file differently, and Tomcat running as
+Windows service cannot read the file.
 
 <end>

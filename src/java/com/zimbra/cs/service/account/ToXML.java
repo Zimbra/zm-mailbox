@@ -26,6 +26,7 @@
 package com.zimbra.cs.service.account;
 
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Stack;
 import java.util.Map.Entry;
@@ -149,5 +150,13 @@ public class ToXML {
         EntrySearchFilterXmlVisitor visitor = new EntrySearchFilterXmlVisitor(parent);
         filter.traverse(visitor);
         return visitor.getRootElement();
+    }
+
+    public static Element encodeLocale(Element parent, Locale locale) {
+        Element e = parent.addElement(AccountService.E_LOCALE);
+        // Always use US English for locale's display name.
+        e.addAttribute(AccountService.A_NAME, locale.getDisplayName(Locale.US));
+        e.addAttribute(AccountService.A_ID, locale.toString());
+        return e;
     }
 }

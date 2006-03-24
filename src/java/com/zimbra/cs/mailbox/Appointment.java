@@ -1608,9 +1608,14 @@ public class Appointment extends MailItem {
                                    MimeMessage mmInv,
                                    boolean forCreate)
     throws ServiceException {
-        Locale lc = Locale.getDefault();    // TODO: Use organizer's locale.
-        String partStat = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
         Account account = getMailbox().getAccount();
+        Locale lc;
+        Account organizer = invite.getOrganizerAccount();
+        if (organizer != null)
+            lc = organizer.getLocale();
+        else
+            lc = account.getLocale();
+        String partStat = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
         if (invite.thisAcctIsOrganizer(account)) {
             partStat = IcalXmlStrMap.PARTSTAT_ACCEPTED;
         } else if (account instanceof CalendarResource) {

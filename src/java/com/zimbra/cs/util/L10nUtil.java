@@ -29,7 +29,11 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.text.MessageFormat;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
@@ -40,6 +44,9 @@ public class L10nUtil {
     // class loader that loads message .properties files from
     // /opt/zimbra/conf/msgs directory
     private static ClassLoader sMsgClassLoader;
+
+    private static Map<String, Locale> sLocaleMap;
+
     static {
         try {
             String msgsDir = LC.localized_msgs_directory.value();
@@ -52,6 +59,12 @@ public class L10nUtil {
             sMsgClassLoader = new URLClassLoader(urls);
         } catch (MalformedURLException e) {
             Zimbra.halt("Unable to initialize localization", e);
+        }
+
+        Locale[] locales = Locale.getAvailableLocales();
+        sLocaleMap = new HashMap<String, Locale>(locales.length);
+        for (Locale lc : locales) {
+            sLocaleMap.put(lc.toString(), lc);
         }
     }
 
@@ -94,5 +107,51 @@ public class L10nUtil {
                                  e);
             return null;
         }
+    }
+
+    /**
+     * Lookup a Locale object from locale string specified in
+     * language[_country[_variant]] format, e.g. en_US.
+     * @param locale
+     * @return
+     */
+    public static Locale lookupLocale(String name) {
+        Locale lc = null;
+        if (name != null) {
+            synchronized (sLocaleMap) {
+                lc = sLocaleMap.get(name);
+                if (lc == null) {
+                    String parts[] = name.split("_");
+                    if (parts.length == 1)
+                        lc = new Locale(parts[0]);
+                    else if (parts.length == 2)
+                        lc = new Locale(parts[0], parts[1]);
+                    else if (parts.length >= 3)
+                        lc = new Locale(parts[0], parts[1], parts[2]);
+                    if (lc != null)
+                        sLocaleMap.put(name, lc);
+                }
+            }
+        }
+        return lc;
+    }
+
+    private static class LocaleComparatorByDisplayName
+    implements Comparator<Locale> {
+        public int compare(Locale a, Locale b) {
+            String da = a.getDisplayName(Locale.US);
+            String db = b.getDisplayName(Locale.US);
+            return da.compareTo(db);
+        }
+    }
+
+    /**
+     * Return all known locales sorted by their US English display name.
+     * @return
+     */
+    public static Locale[] getAllLocalesSorted() {
+        Locale[] locales = Locale.getAvailableLocales();
+        Arrays.sort(locales, new LocaleComparatorByDisplayName());
+        return locales;
     }
 }

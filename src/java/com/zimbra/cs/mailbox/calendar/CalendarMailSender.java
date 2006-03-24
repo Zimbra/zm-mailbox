@@ -121,8 +121,12 @@ public class CalendarMailSender {
                                                  String additionalMsgBody,
                                                  ZVCalendar iCal)
     throws ServiceException {
-        // TODO: Use organizer's locale.
-        Locale lc = Locale.getDefault();
+        Locale lc;
+        Account organizer = inv.getOrganizerAccount();
+        if (organizer != null)
+            lc = organizer.getLocale();
+        else
+            lc = fromAccount.getLocale();
         String fromAddress = fromAccount.getName();
         String fromDisplayName =
             fromAccount.getAttr(Provisioning.A_displayName, fromAddress);
@@ -388,7 +392,12 @@ public class CalendarMailSender {
                                 MimeMessage mmInv)
     throws ServiceException {
         Account acct = mbox.getAccount();
-        Locale lc = Locale.getDefault();    // TODO: Use organizer's locale.
+        Locale lc;
+        Account organizer = inv.getOrganizerAccount();
+        if (organizer != null)
+            lc = organizer.getLocale();
+        else
+            lc = acct.getLocale();
         String replySubject = getReplySubject(verb, inv, lc);
 
         String replyType = MailSender.MSGTYPE_REPLY;
