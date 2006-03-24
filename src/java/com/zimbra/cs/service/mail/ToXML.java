@@ -1232,6 +1232,7 @@ public class ToXML {
 	public static Element encodeDocument(Element parent, ZimbraContext lc, Document doc, int rev) {
         Element m = parent.addElement(MailService.E_DOC);
         encodeDocumentCommon(m, lc, doc, NOTIFY_FIELDS, rev);
+        m.addAttribute(MailService.A_CONTENT_TYPE, doc.getContentType());
         return m;
 	}
 	public static Element encodeDocumentCommon(Element m, ZimbraContext lc, Document doc, int fields, int rev) {
@@ -1261,7 +1262,8 @@ public class ToXML {
             	m.addAttribute(MailService.A_VERSION, revision.getVersion());
             	m.addAttribute(MailService.A_LAST_EDITED_BY, revision.getCreator());
             	m.addAttribute(MailService.A_MODIFIED_DATE, revision.getRevDate());
-                m.addAttribute(MailService.E_FRAG, revision.getFragment(), Element.DISP_CONTENT);
+            	if (doc instanceof WikiItem)
+            		m.addAttribute(MailService.E_FRAG, revision.getFragment(), Element.DISP_CONTENT);
             } catch (Exception ex) {
                 mLog.warn("ignoring exception while fetching revision for document " + doc.getSubject(), ex);
             }
