@@ -71,6 +71,13 @@ public class EntrySearchFilter {
             mTerms = new ArrayList<Term>();
         }
 
+        public Multi(boolean negation, AndOr andOr, Term... terms) {
+            this(negation, andOr);
+            for (Term t: terms) {
+                add(t);
+            }
+        }
+
         public List<Term> getTerms() { return mTerms; }
         public boolean isAnd() { return AndOr.and.equals(mAndOr); }
         public void add(Term t) { mTerms.add(t); }
