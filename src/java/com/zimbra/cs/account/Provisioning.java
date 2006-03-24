@@ -31,11 +31,13 @@
 package com.zimbra.cs.account;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.L10nUtil;
 
 /**
  * @author schemers
@@ -327,7 +329,9 @@ public abstract class Provisioning {
      * the account's status (see ACCOUNT_STATUS_*). Must be "active" to allow logins.
      */
     public static final String A_zimbraAccountStatus = "zimbraAccountStatus";
-    
+
+    public static final String A_zimbraLocale = "zimbraLocale";
+
     /**
      * compat mode for calendar
      */
@@ -1099,4 +1103,64 @@ public abstract class Provisioning {
      * @throws ServiceException
      */
     public abstract List searchCalendarResources(EntrySearchFilter filter, String returnAttrs[], String sortAttr, boolean sortAscending) throws ServiceException;
+
+    private static Locale getEntryLocale(Entry entry) {
+        Locale lc = null;
+        String lcName = entry.getAttr(A_zimbraLocale);
+        if (lcName != null)
+            lc = L10nUtil.lookupLocale(lcName);
+        return lc;
+    }
+
+    public static Locale getLocale(Entry entry) throws ServiceException {
+        if (entry instanceof Account) {
+            // Order of precedence for Account's locale: (including
+            // CalendarResource which extends Account)
+            //
+            // 1. locale set at Account level
+            // 2. locale set at Account's COS level
+            // 3. locale set at Account's domain level
+            // 4. locale set at Account's Server level
+            // 5. locale set at global Config level
+            // 6. Locale.getDefault() of current JVM
+            Account account = (Account) entry;
+            Locale lc = getEntryLocale(account);
+            if (lc != null) return lc;
+            lc = getEntryLocale(account.getCOS());
+            if (lc != null) return lc;
+            lc = getEntryLocale(account.getDomain());
+            if (lc != null) return lc;
+            return getLocale(account.getServer());
+        } else if (entry instanceof Server) {
+            // Order of precedence for Server's locale:
+            //
+            // 1. locale set at Server level
+            // 2. locale set at global Config level
+            // 3. Locale.getDefault() of current JVM
+            Locale lc = getEntryLocale(entry);
+            if (lc != null) return lc;
+            return getLocale(getInstance().getConfig());
+        } else if (entry instanceof Config) {
+            // Order of precedence for global Config's locale:
+            //
+            // 1. locale set at global Config level
+            // 2. Locale.getDefault() of current JVM
+            Locale lc = getEntryLocale(entry);
+            if (lc != null) return lc;
+            return Locale.getDefault();
+        } else {
+            // Order of precedence for locale of all other types of entries,
+            // including COS and Domain:
+            //
+            // 1. locale set at entry level
+            // 2. locale set at current Server level
+            //    (server the code is executing on, since these entries don't
+            //    have the notion of "home" server like Accounts do)
+            // 3. locale set at global Config level
+            // 4. Locale.getDefault() of current JVM
+            Locale lc = getEntryLocale(entry);
+            if (lc != null) return lc;
+            return getLocale(getInstance().getLocalServer());
+        }
+    }
 }

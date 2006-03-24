@@ -1498,3 +1498,14 @@ Suggested words are listed in decreasing order of their match score.
 The "available" attribute specifies whether the server-side spell checking
 interface is available or not.
 
+---------------------------
+
+<GetAllLocalesRequest/>
+
+<GetAllLocalesResponse>
+  <locale id="en_US" name="English (United States)"/>
+  ...
+</GetAllLocalesResponse>
+
+Returns all locales defined in the system.  This is the same list returned by
+java.util.Locale.getAvailableLocales(), sorted by display name (name attribute).

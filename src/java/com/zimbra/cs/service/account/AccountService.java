@@ -71,6 +71,9 @@ public class AccountService implements DocumentService {
     public static final QName MODIFY_PROPERTIES_REQUEST = QName.get("ModifyPropertiesRequest", NAMESPACE);
     public static final QName MODIFY_PROPERTIES_RESPONSE = QName.get("ModifyPropertiesResponse", NAMESPACE);
 
+    public static final QName GET_ALL_LOCALES_REQUEST = QName.get("GetAllLocalesRequest", NAMESPACE);
+    public static final QName GET_ALL_LOCALES_RESPONSE = QName.get("GetAllLocalesResponse", NAMESPACE);
+
     public static final String E_ACTION = "action";
     public static final String E_AUTH_TOKEN = "authToken";
     public static final String E_REFERRAL = "refer";
@@ -97,6 +100,7 @@ public class AccountService implements DocumentService {
     public static final String E_ENTRY_SEARCH_FILTER = "searchFilter";
     public static final String E_ENTRY_SEARCH_FILTER_MULTICOND = "conds";
     public static final String E_ENTRY_SEARCH_FILTER_SINGLECOND = "cond";
+    public static final String E_LOCALE = "locale";
 
     public static final String A_N = "n";
     public static final String A_NAME = "name";
@@ -137,6 +141,8 @@ public class AccountService implements DocumentService {
         dispatcher.registerHandler(SEARCH_CALENDAR_RESOURCES_REQUEST, new SearchCalendarResources());
 
         dispatcher.registerHandler(MODIFY_PROPERTIES_REQUEST, new ModifyProperties());
+
+        dispatcher.registerHandler(GET_ALL_LOCALES_REQUEST, new GetAllLocales());
 	}
 
 }

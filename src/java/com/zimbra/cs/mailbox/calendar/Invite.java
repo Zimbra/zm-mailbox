@@ -41,6 +41,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
@@ -1198,6 +1199,23 @@ public class Invite {
     
     public ZOrganizer getOrganizer() {
         return mOrganizer;
+    }
+
+    /**
+     * Returns Account object for the invite's organizer.
+     * @return null if organizer info is missing or organizer is not an
+     *         internal user
+     * @throws ServiceException
+     */
+    public Account getOrganizerAccount() throws ServiceException {
+        Account account = null;
+        if (mOrganizer != null) {
+            String address = mOrganizer.getAddress();
+            if (address != null) {
+                account = Provisioning.getInstance().getAccountByName(address);
+            }
+        }
+        return account;
     }
 
     public boolean isOrganizer(ZAttendee attendee) {

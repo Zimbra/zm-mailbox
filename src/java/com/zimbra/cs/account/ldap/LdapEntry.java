@@ -32,6 +32,7 @@ package com.zimbra.cs.account.ldap;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -45,6 +46,7 @@ import javax.naming.directory.InvalidAttributesException;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Constants;
 import com.zimbra.cs.util.DateUtil;
@@ -327,7 +329,26 @@ public class LdapEntry implements Entry {
         return attrs;
     }
     
-	public synchronized String toString() {
+
+    private Locale mLocale;
+
+    public Locale getLocale() throws ServiceException {
+        // Don't synchronize the entire method because Provisioning.getLocale
+        // can recursively call LdapEntry.getLocale() on multiple entries.
+        // If LdapEntry.getLocale() was synchronized, we might get into a
+        // deadlock.
+        synchronized (this) {
+            if (mLocale != null)
+                return mLocale;
+        }
+        Locale lc = Provisioning.getLocale(this);
+        synchronized (this) {
+            mLocale = lc;
+            return mLocale;
+        }
+    }
+
+    public synchronized String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append(getClass().getName()).append(": { dn=").append(mDn).append(" ");
         sb.append(mAttrs.toString());

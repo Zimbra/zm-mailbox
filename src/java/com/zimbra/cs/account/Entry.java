@@ -31,6 +31,7 @@
 package com.zimbra.cs.account;
 
 import java.util.Date;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -157,4 +158,11 @@ public interface Entry {
      * @return
      */
     public Object getCachedData(Object key);
+
+    /**
+     * return the entry's Locale
+     * @return
+     * @throws ServiceException
+     */
+    public Locale getLocale() throws ServiceException ;
 }
