@@ -50,9 +50,11 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.ZimbraLog;
 
 /**
@@ -496,21 +498,22 @@ public class Invite {
             MimeMultipart mm = (MimeMultipart) mmInvContent;
             int numParts = mm.getCount();
             BodyPart textPlain = null;
+            String charset = null;
             for (int i  = 0; i < numParts; i++) {
                 BodyPart part = mm.getBodyPart(i);
                 ContentType ct = new ContentType(part.getContentType());
-                if (ct.match("text/plain")) {
+                if (ct.match(Mime.CT_TEXT_PLAIN)) {
                     textPlain = part;
+                    charset = ct.getParameter(Mime.P_CHARSET);
+                    if (charset == null) charset = Mime.P_CHARSET_DEFAULT;
                     break;
                 }
             }
             if (textPlain == null) return null;
 
-            Object notes = textPlain.getContent();
-            if (notes instanceof String)
-                return (String) notes;
-            else
-                return null;
+            byte[] notesBytes = ByteUtil.getContent(textPlain.getInputStream(),
+                                                    textPlain.getSize());
+            return new String(notesBytes, charset);
         } catch (IOException e) {
             throw ServiceException.FAILURE("Unable to get appointment notes MIME part", e);
         } catch (MessagingException e) {

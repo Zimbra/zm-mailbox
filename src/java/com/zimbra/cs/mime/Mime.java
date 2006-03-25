@@ -479,7 +479,7 @@ public class Mime {
             if (header == null)
                 return NO_ADDRESSES;
             try {
-                return new InternetAddress[] { new InternetAddress(null, header) };
+                return new InternetAddress[] { new InternetAddress(null, header, P_CHARSET_UTF8) };
             } catch (UnsupportedEncodingException e1) {
                 return NO_ADDRESSES;
             }

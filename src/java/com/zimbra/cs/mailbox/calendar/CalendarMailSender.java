@@ -31,7 +31,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -50,7 +49,6 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
-import javax.mail.internet.MimeUtility;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
@@ -62,6 +60,7 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.CalendarL10n.MsgKey;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.JMSession;
 
@@ -243,15 +242,13 @@ public class CalendarMailSender {
             // ///////
             // TEXT part (add me first!)
             MimeBodyPart textPart = new MimeBodyPart();
-            textPart.setText(text); // implicitly sets content-type to
-                                    // "text/plain"
+            textPart.setText(text, Mime.P_CHARSET_UTF8);
             mmp.addBodyPart(textPart);
 
             // HTML part is needed to keep Outlook happy as it doesn't know
             // how to deal with a message with only text/plain but no HTML.
             MimeBodyPart htmlPart = new MimeBodyPart();
-            htmlPart.setDataHandler(new DataHandler(new HtmlQPDataSource(text)));
-            htmlPart.setHeader("Content-Transfer-Encoding", "quoted-printable");
+            htmlPart.setDataHandler(new DataHandler(new HtmlPartDataSource(text)));
             mmp.addBodyPart(htmlPart);
 
             // ///////
@@ -261,7 +258,7 @@ public class CalendarMailSender {
 
             // ///////
             // MESSAGE HEADERS
-            mm.setSubject(subject);
+            mm.setSubject(subject, Mime.P_CHARSET_UTF8);
 
             Address[] addrs = new Address[toAts.size()];
 
@@ -416,9 +413,9 @@ public class CalendarMailSender {
         return replyMsgId;
     }
 
-    // data source that returns quoted-printable encoded HTML content
-    private static class HtmlQPDataSource implements DataSource {
-        private static final String CONTENT_TYPE = "text/html; charset=us-ascii";
+    private static class HtmlPartDataSource implements DataSource {
+        private static final String CONTENT_TYPE =
+            Mime.CT_TEXT_HTML + "; " + Mime.P_CHARSET + "=" + Mime.P_CHARSET_UTF8;
         private static final String HEAD =
             "<HTML><BODY>\n" +
             "<PRE style=\"font-family: monospace; font-size: 14px\">\n";
@@ -428,7 +425,7 @@ public class CalendarMailSender {
         private String mText;
         private byte[] mBuf = null;
 
-        public HtmlQPDataSource(String text) {
+        public HtmlPartDataSource(String text) {
             mText = text;
             mText = mText.replaceAll("&", "&amp;");
             mText = mText.replaceAll("<", "&lt;");
@@ -443,10 +440,10 @@ public class CalendarMailSender {
             synchronized(this) {
                 if (mBuf == null) {
                     ByteArrayOutputStream buf = new ByteArrayOutputStream();
-                    OutputStreamWriter wout = new OutputStreamWriter(buf);
+                    OutputStreamWriter wout =
+                        new OutputStreamWriter(buf, Mime.P_CHARSET_UTF8);
                     String text = HEAD + mText + TAIL;
-                    String qp = MimeUtility.encodeText(text, "utf-8", "Q");
-                    wout.write(qp);
+                    wout.write(text);
                     wout.flush();
                     mBuf = buf.toByteArray();
                 }

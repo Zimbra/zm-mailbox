@@ -35,11 +35,12 @@ import javax.mail.internet.MimeMessage;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.ServiceException;
 
 public class AccountUtil {
 
-    public static InternetAddress getOutgoingFromAddress(Account acct) throws UnsupportedEncodingException {
+    public static InternetAddress getFriendlyEmailAddress(Account acct) throws UnsupportedEncodingException {
         // check "displayName" for personal part, and fall back to "cn" if not present
         String personalPart = acct.getAttr(Provisioning.A_displayName);
         if (personalPart == null)
@@ -48,15 +49,15 @@ public class AccountUtil {
         if (personalPart == null || personalPart.trim().equals("") || personalPart.equals(acct.getAttr("uid")))
             personalPart = null;
 
-        String fromAddress;
+        String address;
         try {
-            fromAddress = getCanonicalAddress(acct);
+            address = getCanonicalAddress(acct);
         } catch (ServiceException se) {
             ZimbraLog.misc.warn("unexpected exception canonicalizing address, will use account name", se);
-            fromAddress = acct.getName();
+            address = acct.getName();
         }
 
-        return new InternetAddress(fromAddress, personalPart);
+        return new InternetAddress(address, personalPart, Mime.P_CHARSET_UTF8);
     }
 
     public static boolean isDirectRecipient(Account acct, MimeMessage mm) throws ServiceException, MessagingException {

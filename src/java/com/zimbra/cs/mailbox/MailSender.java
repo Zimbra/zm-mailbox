@@ -164,7 +164,7 @@ public class MailSender {
             Account acct = mbox.getAccount();
             String replyTo =
                 acct.getAttr(Provisioning.A_zimbraPrefReplyToAddress);
-            mm.setFrom(AccountUtil.getOutgoingFromAddress(acct));
+            mm.setFrom(AccountUtil.getFriendlyEmailAddress(acct));
             mm.setSentDate(new Date());
             if (replyTo != null && !replyTo.trim().equals(""))
                 mm.setHeader("Reply-To", replyTo);

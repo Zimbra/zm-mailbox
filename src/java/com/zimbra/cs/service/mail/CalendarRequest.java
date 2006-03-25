@@ -26,6 +26,7 @@
 package com.zimbra.cs.service.mail;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -43,6 +44,7 @@ import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.WriteOpDocumentHandler;
 import com.zimbra.soap.ZimbraContext;
@@ -239,9 +241,11 @@ public abstract class CalendarRequest extends WriteOpDocumentHandler {
             boolean notifyOwner = lc.isDelegatedRequest() && acct.getBooleanAttr(Provisioning.A_zimbraPrefCalendarNotifyDelegatedChanges, false);
             if (notifyOwner) {
                 try {
-                    InternetAddress addr = new InternetAddress(acct.getName());
+                    InternetAddress addr = AccountUtil.getFriendlyEmailAddress(acct);
                     csd.mMm.addRecipient(javax.mail.Message.RecipientType.TO, addr);
                 } catch (MessagingException e) {
+                    throw ServiceException.FAILURE("count not add calendar owner to recipient list", e);
+                } catch (UnsupportedEncodingException e) {
                     throw ServiceException.FAILURE("count not add calendar owner to recipient list", e);
                 }
             }

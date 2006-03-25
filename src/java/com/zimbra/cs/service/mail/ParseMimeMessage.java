@@ -570,7 +570,8 @@ public class ParseMimeMessage {
             String personalName = elem.getAttribute(MailService.A_PERSONAL, null);
             String addressType = elem.getAttribute(MailService.A_ADDRESS_TYPE);
 
-            InternetAddress addr = new InternetAddress(emailAddress, personalName);
+            InternetAddress addr = new InternetAddress(emailAddress, personalName,
+                                                       Mime.P_CHARSET_UTF8);
             if (elem.getAttributeBool(MailService.A_ADD_TO_AB, false))
                 newContacts.add(addr);
 
