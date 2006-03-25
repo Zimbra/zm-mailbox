@@ -201,7 +201,7 @@ public class Notification {
             SMTPMessage out = new SMTPMessage(JMSession.getSession());
             
             // From
-            out.setFrom(AccountUtil.getOutgoingFromAddress(account));
+            out.setFrom(AccountUtil.getFriendlyEmailAddress(account));
             
             // Reply-To
             String replyTo = account.getAttr(Provisioning.A_zimbraPrefReplyToAddress);

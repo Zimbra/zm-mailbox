@@ -63,6 +63,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.util.DateUtil;
 import com.zimbra.cs.util.FileUtil;
@@ -110,6 +111,7 @@ public class FeedManager {
                 }
             }
 
+            String charset = Mime.P_CHARSET_DEFAULT;
             int redirects = 0;
             do {
                 if (url == null || url.equals(""))
@@ -133,6 +135,8 @@ public class FeedManager {
                 Header locationHeader = get.getResponseHeader("location");
                 if (locationHeader == null) {
                     content = new BufferedInputStream(get.getResponseBodyAsStream());
+                    String cs = get.getResponseCharSet();
+                    if (cs != null) charset = cs;
                     break;
                 }
                 url = locationHeader.getValue();
@@ -147,7 +151,7 @@ public class FeedManager {
                 case '<':
                     return parseRssFeed(Element.parseXML(content), fsd);
                 case 'B':  case 'b':
-                    Reader reader = new InputStreamReader(content);
+                    Reader reader = new InputStreamReader(content, charset);
                     ZVCalendar ical = ZCalendarBuilder.build(reader);
                     List<Invite> invites = Invite.createFromCalendar(acct, null, ical, false);
                     // handle missing UIDs on remote calendars by generating them as needed

@@ -77,7 +77,7 @@ public class SaveDraft extends WriteOpDocumentHandler {
 
         long date = System.currentTimeMillis();
         try {
-            mm.setFrom(AccountUtil.getOutgoingFromAddress(acct));
+            mm.setFrom(AccountUtil.getFriendlyEmailAddress(acct));
             Date d = new Date();
             mm.setSentDate(d);
             date = d.getTime();

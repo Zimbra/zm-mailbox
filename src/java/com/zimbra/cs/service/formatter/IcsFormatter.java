@@ -102,6 +102,8 @@ public class IcsFormatter extends Formatter {
     }
 
     public void save(byte[] body, Context context, Folder folder) throws ServiceException, IOException {
+        // TODO: Modify Formatter.save() API to pass in charset of body, then
+        // use that charset in String() constructor.
         Reader reader = new StringReader(new String(body, Mime.P_CHARSET_UTF8));
         ZVCalendar ical = ZCalendarBuilder.build(reader);
         List<Invite> invites = Invite.createFromCalendar(context.authAccount, null, ical, false);

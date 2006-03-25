@@ -32,6 +32,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.util.*;
@@ -527,7 +528,12 @@ public class ParsedMessage {
             if (handler.isIndexingEnabled())
                 ZimbraLog.index.warn("TextCalendarHandler not correctly installed");
             try {
-                miCalendar = ZCalendarBuilder.build(new InputStreamReader(mpi.getMimePart().getInputStream()));
+                String charset = ct.getParameter(Mime.P_CHARSET);
+                if (charset == null) charset = Mime.P_CHARSET_DEFAULT;
+                Reader reader =
+                    new InputStreamReader(mpi.getMimePart().getInputStream(),
+                                          charset);
+                miCalendar = ZCalendarBuilder.build(reader);
             } catch (IOException ioe) {
                 ZimbraLog.index.warn("error reading text/calendar mime part", ioe);
             }
