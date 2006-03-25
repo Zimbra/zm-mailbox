@@ -305,7 +305,13 @@ public class AdminService implements DocumentService {
     public static final String A_ACCOUNTID = "id";
     public static final String A_MAILBOXID = "mbxid";
     public static final String A_TOTAL = "total";
-    
+
+    public static final String A_SCAN = "scan";
+    public static final String A_WAIT = "wait";
+    public static final String A_QUEUE_SUMMARY = "qs";
+    public static final String A_QUEUE_SUMMARY_ITEM = "qsi";
+    public static final String A_QUEUE_ITEM = "qi";
+
     public static final String A_HEALTHY = "healthy";
     public static final String A_SIZE = "s";
     public static final String A_SERVICE = "service";
