@@ -421,6 +421,9 @@ public class RemoteMailQueue {
         SearchResult result = new SearchResult();
         IndexReader indexReader = null;
         try {
+        	if (!mIndexPath.exists()) {
+        		return result;
+        	}
             indexReader = IndexReader.open(mIndexPath);
             summarize(result, indexReader);
             if (queryText == null || queryText.length() == 0) {
