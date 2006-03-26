@@ -54,6 +54,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraLog;
 
@@ -83,6 +84,10 @@ public class RemoteMailQueue {
         id, time, size, from, to, host, addr, reason, filter, todomain, fromdomain
     }
     
+    public enum QueueAction {
+    	hold, release, delete, requeue
+    }
+
     public static final int MAIL_QUEUE_INDEX_FLUSH_THRESHOLD = 1000;
         
     private class QueueItemVisitor implements RemoteResultParser.Visitor {
@@ -134,16 +139,11 @@ public class RemoteMailQueue {
             }
 
             mIndexWriter.addDocument(doc);
-            
-            for (String s : map.keySet()) {
-                System.out.println(s + "=" + map.get(s));
-            }
-            System.out.println();
         }
     }
         
     private void addSimpleField(Document doc, Map<String,String> map, QueueAttr attr) {
-        String value = map.get(attr);
+        String value = map.get(attr.toString());
         if (value != null && value.length() > 0) {
             doc.add(new Field(attr.toString(), value.toLowerCase(), true, true, false, false));
         }
@@ -151,12 +151,12 @@ public class RemoteMailQueue {
         
     private void addEmailAddress(Document doc, String id, String address, QueueAttr addressAttr, QueueAttr domainAttr) {
         address = address.toLowerCase();
-        doc.add(new Field(addressAttr.toString(), address, true, true, false, true));
+        doc.add(new Field(addressAttr.toString(), address, true, true, false, false));
         String[] parts = address.split("@");
         if (parts == null || parts.length != 2) {
             ZimbraLog.rmgmt.warn("queue file " + id + " on " + mServerName + " " + mQueueName + " queue invalid " + addressAttr + ": " + address); 
         } else {
-            doc.add(new Field(domainAttr.toString(), parts[1], true, true, false, true));
+            doc.add(new Field(domainAttr.toString(), parts[1], true, true, false, false));
         }
     }
     
@@ -171,12 +171,18 @@ public class RemoteMailQueue {
                 RemoteResultParser.parse(stdout, v);
                 closeIndexWriter();
                 mScanEndTime = System.currentTimeMillis();
+                
+                byte[] err = ByteUtil.getContent(stderr, 0);
+                if (err != null && err.length > 0) {
+                	ZimbraLog.rmgmt.error("error scanning mail queue " + mQueueName + " on host " + mServerName + ": " + new String(err));
+                }
+            } catch (IOException ioe) {
+                error(ioe);
+            } finally {
                 synchronized (mScanLock) {
                     mScanInProgress = false;
                     mScanLock.notifyAll();
                 }
-            } catch (IOException ioe) {
-                error(ioe);
             }
         }
 
@@ -278,8 +284,9 @@ public class RemoteMailQueue {
     }
     
     private void closeIndexWriter() throws IOException {
-        System.out.println("closing index writer");
-        mIndexWriter.close();
+    	if (mIndexWriter != null) {
+        	mIndexWriter.close();
+        }
     }
     
     public static final class SummaryItem implements Comparable {
@@ -319,7 +326,7 @@ public class RemoteMailQueue {
             String field = term.field();
             if (field != null && field.length() > 0) {
                 QueueAttr attr = QueueAttr.valueOf(field);
-                if (attr != null) {
+                if (attr != null && attr != QueueAttr.id) {
                     List<SummaryItem> list = result.sitems.get(attr);
                     if (list == null) {
                         list = new LinkedList<SummaryItem>();
@@ -398,6 +405,31 @@ public class RemoteMailQueue {
         return result;
     }
     
+    private static final int MAX_REMOTE_EXECUTION_QUEUEIDS = 50;
+    private static final int MAX_LENGTH_OF_QUEUEIDS = 12;
+
+    public void action(Server server, QueueAction action, String[] ids) throws ServiceException {
+    	int done = 0;
+    	int total = ids.length;
+    	boolean firstTime = true;
+    	RemoteManager rm = RemoteManager.getRemoteManager(server);
+    	while (done < total) {
+    		int numQueueIds = Math.min(total - done, MAX_REMOTE_EXECUTION_QUEUEIDS);
+    		StringBuilder sb = new StringBuilder(128 + (numQueueIds * MAX_LENGTH_OF_QUEUEIDS));
+    		sb.append("zmqaction " + action.toString() + " " + mQueueName + " "); 
+    		int i;
+    		for (i = 0; i < numQueueIds; i++) {
+    			if (i > 0) {
+    				sb.append(",");
+    			}
+    			sb.append(ids[done + i]);
+    		}
+    		done = i;
+    		System.out.println("will execute action command: " + sb.toString());
+        	rm.execute(sb.toString());
+    	}
+    }
+
     public static void main(String[] args) throws ServiceException {
         Zimbra.toolSetup("DEBUG");
         Provisioning prov = Provisioning.getInstance();
