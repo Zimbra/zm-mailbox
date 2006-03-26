@@ -147,13 +147,17 @@ public class RemoteManager {
             InputStream stderr = new StreamGobbler(s.getStderr());
             result.mStdout = ByteUtil.getContent(stdout, -1);
             result.mStderr = ByteUtil.getContent(stderr, -1);
-            result.mExitStatus = s.getExitStatus();
             if (false) {
             	System.out.println("#### STDOUT");
             	System.out.println(new String(result.mStdout));
             	System.out.println("#### STDERR");
+    			System.out.println(new String(result.mStderr));
             }
-			System.out.println(new String(result.mStderr));
+            try {
+            	result.mExitStatus = s.getExitStatus();
+            } catch (NullPointerException npe) {
+            	// wow this is strange - on hold command we hit NPE here.  TODO file a bug against ganymed
+            }
             if (result.mExitStatus != 0) {
                 throw new IOException("command failed" + result.mExitStatus);
             }

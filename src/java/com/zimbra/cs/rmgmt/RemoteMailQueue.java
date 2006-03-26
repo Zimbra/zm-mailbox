@@ -339,6 +339,55 @@ public class RemoteMailQueue {
         } while (terms.next());
     }
 
+    private Map<QueueAttr,String> docToQueueItem(Document doc) {
+        Map<QueueAttr, String> qitem = new HashMap<QueueAttr,String>();
+        for (QueueAttr attr : QueueAttr.values()) {
+            Field[] fields = doc.getFields(attr.toString());
+            if (fields != null) {
+                StringBuilder sb = new StringBuilder();
+                boolean first = true;
+                for (Field field : fields) {
+                    if (first) {
+                        first = false;
+                    } else {
+                        sb.append(",");
+                    }
+                    sb.append(field.stringValue());
+                }
+                qitem.put(attr, sb.toString());
+            }
+        }
+        return qitem;
+    }
+    
+    private void list0(SearchResult result, IndexReader indexReader, int offset, int limit) throws IOException {
+    	int num = indexReader.numDocs();
+    	int max = indexReader.maxDoc();
+    	
+    	int skip = 0;
+    	int listed = 0;
+    	
+    	for (int i = 0; i < max; i++) {
+    		if (indexReader.isDeleted(i)) {
+    			continue;
+    		}
+    		
+    		if (skip < offset) {
+    			skip++;
+    			continue;
+    		}
+    		
+    		Document doc = indexReader.document(i);
+            Map<QueueAttr,String> qitem = docToQueueItem(doc);
+            result.qitems.add(qitem);
+            
+            listed++;
+            if (listed >= limit) {
+            	break;
+            }
+    	}
+    }
+    
     private void search0(SearchResult result, IndexReader indexReader, String queryText, int offset, int limit) throws ParseException, IOException {
         Searcher searcher = null;
         try {
@@ -357,23 +406,7 @@ public class RemoteMailQueue {
                 
                 for (int i = offset; i < n; i++) {
                     Document doc = hits.doc(i);
-                    Map<QueueAttr, String> qitem = new HashMap<QueueAttr,String>();
-                    for (QueueAttr attr : QueueAttr.values()) {
-                        Field[] fields = doc.getFields(attr.toString());
-                        if (fields != null) {
-                            StringBuilder sb = new StringBuilder();
-                            boolean first = true;
-                            for (Field field : fields) {
-                                if (first) {
-                                    first = false;
-                                } else {
-                                    sb.append(",");
-                                }
-                                sb.append(field.stringValue());
-                            }
-                            qitem.put(attr, sb.toString());
-                        }
-                    }
+                    Map<QueueAttr,String> qitem = docToQueueItem(doc);
                     result.qitems.add(qitem);
                 }
             }
@@ -390,7 +423,11 @@ public class RemoteMailQueue {
         try {
             indexReader = IndexReader.open(mIndexPath);
             summarize(result, indexReader);
-            search0(result, indexReader, queryText, offset, limit);
+            if (queryText == null || queryText.length() == 0) {
+            	list0(result, indexReader, offset, limit);
+            } else {
+            	search0(result, indexReader, queryText, offset, limit);
+            }
         } catch (Exception e) {
             throw ServiceException.FAILURE("exception occurred searching mail queue", e);
         } finally {
