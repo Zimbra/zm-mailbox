@@ -74,6 +74,7 @@ public class MailServiceException extends ServiceException {
 	public static final String ALREADY_EXISTS    = "mail.ALREADY_EXISTS";
 	public static final String QUERY_PARSE_ERROR = "mail.QUERY_PARSE_ERROR";
     public static final String MESSAGE_PARSE_ERROR = "mail.MESSAGE_PARSE_ERROR";
+    public static final String ADDRESS_PARSE_ERROR = "mail.ADDRESS_PARSE_ERROR";
     public static final String ICALENDAR_PARSE_ERROR = "mail.ICALENDAR_PARSE_ERROR";
     public static final String MUST_BE_ORGANIZER = "mail.MUST_BE_ORGANIZER";
     public static final String CANNOT_CANCEL_INSTANCE_OF_EXCEPTION = "mail.CANNOT_CANCEL_INSTANCE_OF_EXCEPTION";
@@ -288,7 +289,11 @@ public class MailServiceException extends ServiceException {
     public static MailServiceException MESSAGE_PARSE_ERROR(Throwable t) {
         return new MailServiceException("Couldn't parse message", MESSAGE_PARSE_ERROR, SENDERS_FAULT, t);
     }
-    
+
+    public static MailServiceException ADDRESS_PARSE_ERROR(Throwable t) {
+        return new MailServiceException("Couldn't parse address", ADDRESS_PARSE_ERROR, SENDERS_FAULT, t);
+    }
+
     public static MailServiceException ICALENDAR_PARSE_ERROR(String s, Throwable t) {
         return new MailServiceException("Couldn't parse iCalendar information: "+s, ICALENDAR_PARSE_ERROR, SENDERS_FAULT, t);
     }

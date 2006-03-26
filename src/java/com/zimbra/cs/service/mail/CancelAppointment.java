@@ -25,6 +25,7 @@
 
 package com.zimbra.cs.service.mail;
 
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Map;
 
@@ -48,6 +49,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
@@ -140,10 +142,16 @@ public class CancelAppointment extends CalendarRequest {
                     ParseMimeMessage.NO_INV_ALLOWED_PARSER, dat);
             
         } else {
-            List<String> atURIs = CalendarMailSender.toListFromAts(defaultInv.getAttendees());
-
-            dat.mMm = CalendarMailSender.createDefaultCalendarMessage(acct.getName(), atURIs, subject, text, 
-                    defaultInv.getUid(), iCal);
+            Address sender;
+            try {
+                sender = AccountUtil.getFriendlyEmailAddress(acct);
+            } catch (UnsupportedEncodingException e) {
+                throw MailServiceException.ADDRESS_PARSE_ERROR(e);
+            }
+            List<Address> rcpts =
+                CalendarMailSender.toListFromAttendees(defaultInv.getAttendees());
+            dat.mMm = CalendarMailSender.createDefaultCalendarMessage(
+                    sender, rcpts, subject, text, defaultInv.getUid(), iCal);
         }
         
         if (!defaultInv.thisAcctIsOrganizer(acct)) {
@@ -192,10 +200,16 @@ public class CancelAppointment extends CalendarRequest {
                     ParseMimeMessage.NO_INV_ALLOWED_PARSER, dat);
             
         } else {
-            List<String> atURIs = CalendarMailSender.toListFromAts(inv.getAttendees());
-
-            dat.mMm = CalendarMailSender.createDefaultCalendarMessage(acct.getName(), atURIs, subject, text, 
-                    inv.getUid(), iCal);
+            Address sender;
+            try {
+                sender = AccountUtil.getFriendlyEmailAddress(acct);
+            } catch (UnsupportedEncodingException e) {
+                throw MailServiceException.ADDRESS_PARSE_ERROR(e);
+            }
+            List<Address> rcpts =
+                CalendarMailSender.toListFromAttendees(inv.getAttendees());
+            dat.mMm = CalendarMailSender.createDefaultCalendarMessage(
+                    sender, rcpts, subject, text, inv.getUid(), iCal);
         }
         
         if (!inv.thisAcctIsOrganizer(acct)) {
