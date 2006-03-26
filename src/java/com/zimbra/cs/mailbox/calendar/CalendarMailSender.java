@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -45,7 +46,6 @@ import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.mail.Address;
 import javax.mail.MessagingException;
-import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
@@ -55,6 +55,7 @@ import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.MailSender;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.CalendarL10n.MsgKey;
@@ -62,6 +63,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 
 public class CalendarMailSender {
@@ -120,67 +122,79 @@ public class CalendarMailSender {
                                                  String additionalMsgBody,
                                                  ZVCalendar iCal)
     throws ServiceException {
-        Locale lc;
-        Account organizer = inv.getOrganizerAccount();
-        if (organizer != null)
-            lc = organizer.getLocale();
-        else
-            lc = fromAccount.getLocale();
-        String fromAddress = fromAccount.getName();
-        String fromDisplayName =
-            fromAccount.getAttr(Provisioning.A_displayName, fromAddress);
-        StringBuffer replyText = new StringBuffer();
-        MsgKey statusMsgKey;
-        boolean isResourceAccount = fromAccount instanceof CalendarResource;
-        if (VERB_ACCEPT.equals(verb)) {
-            if (isResourceAccount)
-                statusMsgKey = MsgKey.resourceDefaultReplyAccept;
+        try {
+            Locale lc;
+            Address organizerAddress;
+            Account organizer = inv.getOrganizerAccount();
+            if (organizer != null) {
+                lc = organizer.getLocale();
+                organizerAddress =
+                    AccountUtil.getFriendlyEmailAddress(organizer);
+            } else {
+                lc = fromAccount.getLocale();
+                organizerAddress = inv.getOrganizer().getFriendlyAddress();
+            }
+    
+            String fromDisplayName =
+                fromAccount.getAttr(Provisioning.A_displayName,
+                                    fromAccount.getName());
+            StringBuffer replyText = new StringBuffer();
+            MsgKey statusMsgKey;
+            boolean isResourceAccount = fromAccount instanceof CalendarResource;
+            if (VERB_ACCEPT.equals(verb)) {
+                if (isResourceAccount)
+                    statusMsgKey = MsgKey.resourceDefaultReplyAccept;
+                else
+                    statusMsgKey = MsgKey.defaultReplyAccept;
+            } else if (VERB_DECLINE.equals(verb)) {
+                if (isResourceAccount)
+                    statusMsgKey = MsgKey.resourceDefaultReplyDecline;
+                else
+                    statusMsgKey = MsgKey.defaultReplyDecline;
+            } else if (VERB_TENTATIVE.equals(verb)) {
+                if (isResourceAccount)
+                    statusMsgKey = MsgKey.resourceDefaultReplyTentativelyAccept;
+                else
+                    statusMsgKey = MsgKey.defaultReplyTentativelyAccept;
+            } else
+                statusMsgKey = MsgKey.defaultReplyOther;
+            String statusMsg;
+            if (!statusMsgKey.equals(MsgKey.defaultReplyOther))
+                statusMsg = CalendarL10n.getMessage(statusMsgKey,
+                                                    lc,
+                                                    fromDisplayName);
             else
-                statusMsgKey = MsgKey.defaultReplyAccept;
-        } else if (VERB_DECLINE.equals(verb)) {
-            if (isResourceAccount)
-                statusMsgKey = MsgKey.resourceDefaultReplyDecline;
-            else
-                statusMsgKey = MsgKey.defaultReplyDecline;
-        } else if (VERB_TENTATIVE.equals(verb)) {
-            if (isResourceAccount)
-                statusMsgKey = MsgKey.resourceDefaultReplyTentativelyAccept;
-            else
-                statusMsgKey = MsgKey.defaultReplyTentativelyAccept;
-        } else
-            statusMsgKey = MsgKey.defaultReplyOther;
-        String statusMsg;
-        if (!statusMsgKey.equals(MsgKey.defaultReplyOther))
-            statusMsg = CalendarL10n.getMessage(statusMsgKey,
-                                                lc,
-                                                fromDisplayName);
-        else
-            statusMsg = CalendarL10n.getMessage(statusMsgKey,
-                                                lc,
-                                                fromDisplayName,
-                                                verb.toString());
-        replyText.append(statusMsg).append("\r\n\r\n");
-
-        if (additionalMsgBody != null) {
-            replyText.append(additionalMsgBody).append("\r\n");
+                statusMsg = CalendarL10n.getMessage(statusMsgKey,
+                                                    lc,
+                                                    fromDisplayName,
+                                                    verb.toString());
+            replyText.append(statusMsg).append("\r\n\r\n");
+    
+            if (additionalMsgBody != null) {
+                replyText.append(additionalMsgBody).append("\r\n");
+            }
+    
+            String notes = Invite.getNotes(mmInv);
+            if (notes != null) {
+                // Remove Outlook's special "*~*~*~*" delimiter from original
+                // body. If we leave it in, Outlook will hide all text above
+                // that line.
+                notes = notes.replaceAll("[\\r\\n]+[\\*~]+[\\r\\n]+",
+                                         "\r\n\r\n ~ ~ ~ ~ ~ ~ ~ ~ ~\r\n\r\n");
+                replyText.append("\r\n-----");
+                replyText.append(CalendarL10n.getMessage(
+                        MsgKey.resourceReplyOriginalInviteSeparatorLabel, lc));
+                replyText.append("-----\r\n");
+                replyText.append(notes);
+            }
+    
+            return createDefaultCalendarMessage(
+                    AccountUtil.getFriendlyEmailAddress(fromAccount),
+                    organizerAddress, replySubject,
+                    replyText.toString(), inv.getUid(), iCal);
+        } catch (UnsupportedEncodingException e) {
+            throw MailServiceException.ADDRESS_PARSE_ERROR(e);
         }
-
-        String notes = Invite.getNotes(mmInv);
-        if (notes != null) {
-            // Remove Outlook's special "*~*~*~*" delimiter from original body.
-            // If we leave it in, Outlook will hide all text above that line.
-            notes = notes.replaceAll("[\\r\\n]+[\\*~]+[\\r\\n]+",
-                                     "\r\n\r\n ~ ~ ~ ~ ~ ~ ~ ~ ~\r\n\r\n");
-            replyText.append("\r\n-----");
-            replyText.append(
-                CalendarL10n.getMessage(MsgKey.resourceReplyOriginalInviteSeparatorLabel, lc));
-            replyText.append("-----\r\n");
-            replyText.append(notes);
-        }
-
-        return createDefaultCalendarMessage(
-                fromAddress, inv.getOrganizer().getAddress(), replySubject,
-                replyText.toString(), inv.getUid(), iCal);
     }
 
     public static String formatDateTime(Date d, TimeZone tz, Locale lc) {
@@ -206,26 +220,27 @@ public class CalendarMailSender {
      * @param iter
      * @return
      */
-    public static List<String> toListFromAts(List /* ZAttendee */ list) {
-        List<String> toList = new ArrayList<String>();
-        for (Iterator iter = list.iterator(); iter.hasNext();) {
-            ZAttendee curAt = (ZAttendee) iter.next();
-            toList.add(curAt.getAddress());
+    public static List<Address> toListFromAttendees(List<ZAttendee> list)
+    throws MailServiceException {
+        List<Address> toList = new ArrayList<Address>(list.size());
+        for (ZAttendee attendee : list) {
+            toList.add(attendee.getFriendlyAddress());
         }
         return toList;
     }
 
-    public static MimeMessage createDefaultCalendarMessage(String fromAddr,
-            String addr, String subject, String text, String uid,
+    public static MimeMessage createDefaultCalendarMessage(
+            Address fromAddr, Address toAddr,
+            String subject, String text, String uid,
             ZCalendar.ZVCalendar cal) throws ServiceException {
-        List<String> list = new ArrayList<String>(1);
-        list.add(addr);
+        List<Address> list = new ArrayList<Address>(1);
+        list.add(toAddr);
         return createDefaultCalendarMessage(
                 fromAddr, list, subject, text, uid, cal);
     }
 
-    public static MimeMessage createDefaultCalendarMessage(String fromAddr,
-            List<String> toAts, String subject, String text, String uid,
+    public static MimeMessage createDefaultCalendarMessage(Address fromAddr,
+            List<Address> toAddrs, String subject, String text, String uid,
             ZCalendar.ZVCalendar cal) throws ServiceException {
         try {
             MimeMessage mm = new MimeMessage(JMSession.getSession()) {
@@ -260,15 +275,10 @@ public class CalendarMailSender {
             // MESSAGE HEADERS
             mm.setSubject(subject, Mime.P_CHARSET_UTF8);
 
-            Address[] addrs = new Address[toAts.size()];
-
-            for (int i = toAts.size() - 1; i >= 0; i--) {
-                String toAddr = (String) toAts.get(i);
-                InternetAddress addr = new InternetAddress(toAddr);
-                addrs[i] = addr;
-            }
+            Address[] addrs = new Address[toAddrs.size()];
+            toAddrs.toArray(addrs);
             mm.addRecipients(javax.mail.Message.RecipientType.TO, addrs);
-            mm.setFrom(new InternetAddress(fromAddr));
+            mm.setFrom(fromAddr);
             mm.setSentDate(new Date());
             mm.saveChanges();
 

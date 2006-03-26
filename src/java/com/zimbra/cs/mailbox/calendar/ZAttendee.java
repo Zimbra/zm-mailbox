@@ -24,10 +24,18 @@
  */
 package com.zimbra.cs.mailbox.calendar;
 
+import java.io.UnsupportedEncodingException;
+
+import javax.mail.Address;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
+
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.StringUtil;
 
@@ -68,6 +76,23 @@ public class ZAttendee {
     public String getRole() { return mRole != null ? mRole : ""; }
     public String getPartStat() { return mPartStat != null ? mPartStat : ""; }
     public Boolean getRsvp() { return mRsvp != null ? mRsvp : Boolean.FALSE; }
+
+    public Address getFriendlyAddress() throws MailServiceException {
+        InternetAddress addr;
+        try {
+            if (hasCn())
+                addr = new InternetAddress(getAddress(),
+                                           getCn(),
+                                           Mime.P_CHARSET_UTF8);
+            else
+                addr = new InternetAddress(getAddress());
+            return addr;
+        } catch (UnsupportedEncodingException e) {
+            throw MailServiceException.ADDRESS_PARSE_ERROR(e);
+        } catch (AddressException e) {
+            throw MailServiceException.ADDRESS_PARSE_ERROR(e);
+        }
+    }
     
     public void setAddress(String address) {
         if (address != null) {

@@ -1,12 +1,19 @@
 package com.zimbra.cs.mailbox.calendar;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import javax.mail.Address;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
+
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.ServiceException;
 
 public class ZOrganizer {
@@ -57,6 +64,23 @@ public class ZOrganizer {
     public String getCn() { return mCn; }
     public String getAddress() { return mAddress; }
     public boolean hasCn() { return mCn != null && !mCn.equals(""); }
+
+    public Address getFriendlyAddress() throws MailServiceException {
+        InternetAddress addr;
+        try {
+            if (hasCn())
+                addr = new InternetAddress(getAddress(),
+                                           getCn(),
+                                           Mime.P_CHARSET_UTF8);
+            else
+                addr = new InternetAddress(getAddress());
+            return addr;
+        } catch (UnsupportedEncodingException e) {
+            throw MailServiceException.ADDRESS_PARSE_ERROR(e);
+        } catch (AddressException e) {
+            throw MailServiceException.ADDRESS_PARSE_ERROR(e);
+        }
+    }
     
     public void setCn(String cn) { mCn = cn; }
     public void setAddress(String address) { 

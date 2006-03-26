@@ -25,6 +25,7 @@
 
 package com.zimbra.cs.service.mail;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -48,6 +49,7 @@ import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
@@ -165,11 +167,15 @@ public class ModifyAppointment extends CalendarRequest {
                 dat.mInvite = CalendarUtils.buildCancelInviteCalendar(acct, inv, text, cancelAt);
                 ZVCalendar cal = dat.mInvite.newToICalendar();
                 
-                dat.mMm = CalendarMailSender.createDefaultCalendarMessage(acct.getName(), 
-                        cancelAt.getAddress(), subject, text, inv.getUid(), cal);
+                dat.mMm = CalendarMailSender.createDefaultCalendarMessage(
+                        AccountUtil.getFriendlyEmailAddress(acct),
+                        cancelAt.getFriendlyAddress(),
+                        subject, text, inv.getUid(), cal);
                 
                 sendCalendarCancelMessage(lc, appt.getFolderId(),
                                           acct, mbox, dat, false);
+            } catch (UnsupportedEncodingException ex) {
+                ZimbraLog.calendar.debug("Could not inform attendee "+cancelAt+" that it was removed from meeting "+inv.toString()+" b/c of exception: "+ex.toString());
             } catch (ServiceException ex) {
                 ZimbraLog.calendar.debug("Could not inform attendee "+cancelAt+" that it was removed from meeting "+inv.toString()+" b/c of exception: "+ex.toString());
             }

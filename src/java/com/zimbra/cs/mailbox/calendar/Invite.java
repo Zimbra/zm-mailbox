@@ -89,7 +89,7 @@ public class Invite {
             ParsedDuration duration,
             Recurrence.IRecurrence recurrence,
             ZOrganizer org,
-            List attendees,
+            List<ZAttendee> attendees,
             String name, 
             String comment, 
             String loc,
@@ -185,7 +185,7 @@ public class Invite {
             RecurId recurId,
             Recurrence.IRecurrence recurrenceOrNull,
             ZOrganizer organizer,
-            List /* ZAttendee */ attendees,
+            List<ZAttendee> attendees,
             String name,
             String comment, 
             String location,
@@ -439,8 +439,8 @@ public class Invite {
                     + " invite "+mailItemId+"-" + componentNum);
         }
         
-        ArrayList attendees = new ArrayList();
         long numAts = meta.getLong(FN_NUM_ATTENDEES, 0);
+        ArrayList<ZAttendee> attendees = new ArrayList<ZAttendee>((int) numAts);
         for (int i = 0; i < numAts; i++) {
             try {
                 ZAttendee at = ZAttendee.parseAtFromMetadata(meta.getMap(FN_ATTENDEE + i, true));
@@ -863,8 +863,8 @@ public class Invite {
     protected int mMailboxId = 0;
     protected int mMailItemId = 0;
     protected int mComponentNum = 0;
-    
-    private List <ZAttendee> mAttendees = new ArrayList();
+
+    private List<ZAttendee> mAttendees = new ArrayList<ZAttendee>();
     private ZOrganizer mOrganizer;
     private ArrayList /* VAlarm */ mAlarms = new ArrayList();
 //    private Method mMethod;
@@ -1183,7 +1183,7 @@ public class Invite {
 //        }
 //    }
     
-    public List /* ZAttendee */ getAttendees() {
+    public List<ZAttendee> getAttendees() {
         return mAttendees;
     }
     
