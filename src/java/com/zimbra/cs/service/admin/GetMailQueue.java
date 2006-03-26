@@ -62,7 +62,7 @@ public class GetMailQueue extends AdminDocumentHandler {
         Element queryElem = queueElem.getElement(AdminService.E_QUERY);
         int offset = (int)queryElem.getAttributeLong(AdminService.A_OFFSET, 0);
         int limit = (int)queryElem.getAttributeLong(AdminService.A_LIMIT, MAIL_QUEUE_QUERY_DEFAULT_LIMIT);
-        String queryText = queryElem.getTextTrim();
+        String queryText = queryElem.getText();
         
         RemoteMailQueue rmq = RemoteMailQueue.getRemoteMailQueue(server, queueName, scan);
         rmq.waitForScan(waitMillis);

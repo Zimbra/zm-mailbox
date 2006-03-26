@@ -63,9 +63,9 @@ public class MailQueueAction extends AdminDocumentHandler {
         String by = actionElem.getAttribute(AdminService.A_BY);
         String[] ids;
         if (by.equals(AdminService.BY_ID)) {
-        	ids = actionElem.getTextTrim().split(",");
+        	ids = actionElem.getText().split(",");
         } else if (by.equals(AdminService.BY_QUERY)) {
-            RemoteMailQueue.SearchResult sr = rmq.search(actionElem.getTextTrim(), 0, 0);
+            RemoteMailQueue.SearchResult sr = rmq.search(actionElem.getText(), 0, 0);
             ids = new String[sr.qitems.size()];
             int i = 0;
             for (Map<QueueAttr,String> qitem : sr.qitems) {

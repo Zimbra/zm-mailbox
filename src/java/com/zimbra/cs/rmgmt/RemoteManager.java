@@ -148,6 +148,12 @@ public class RemoteManager {
             result.mStdout = ByteUtil.getContent(stdout, -1);
             result.mStderr = ByteUtil.getContent(stderr, -1);
             result.mExitStatus = s.getExitStatus();
+            if (false) {
+            	System.out.println("#### STDOUT");
+            	System.out.println(new String(result.mStdout));
+            	System.out.println("#### STDERR");
+            }
+			System.out.println(new String(result.mStderr));
             if (result.mExitStatus != 0) {
                 throw new IOException("command failed" + result.mExitStatus);
             }

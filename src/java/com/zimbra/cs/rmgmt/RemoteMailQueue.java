@@ -413,44 +413,88 @@ public class RemoteMailQueue {
     	int total = ids.length;
     	boolean firstTime = true;
     	RemoteManager rm = RemoteManager.getRemoteManager(server);
-    	while (done < total) {
-    		int numQueueIds = Math.min(total - done, MAX_REMOTE_EXECUTION_QUEUEIDS);
-    		StringBuilder sb = new StringBuilder(128 + (numQueueIds * MAX_LENGTH_OF_QUEUEIDS));
-    		sb.append("zmqaction " + action.toString() + " " + mQueueName + " "); 
-    		int i;
-    		for (i = 0; i < numQueueIds; i++) {
-    			if (i > 0) {
-    				sb.append(",");
+    	IndexReader indexReader = null;
+    	try {
+    		indexReader = IndexReader.open(mIndexPath);
+    		while (done < total) {
+    			int numQueueIds = Math.min(total - done, MAX_REMOTE_EXECUTION_QUEUEIDS);
+    			StringBuilder sb = new StringBuilder(128 + (numQueueIds * MAX_LENGTH_OF_QUEUEIDS));
+    			sb.append("zmqaction " + action.toString() + " " + mQueueName + " "); 
+    			int i;
+    			for (i = 0; i < numQueueIds; i++) {
+    				if (i > 0) {
+    					sb.append(",");
+    				}
+    	            Term toDelete = new Term(QueueAttr.id.toString(), ids[i]);
+    	            indexReader.delete(toDelete);
+    				sb.append(ids[done + i].toUpperCase()); // lucene wants to lower case and I don't want to store it twice - perhaps I should
     			}
-    			sb.append(ids[done + i]);
+    			done = i;
+    			//System.out.println("will execute action command: " + sb.toString());
+    			RemoteResult rr = rm.execute(sb.toString());
     		}
-    		done = i;
-    		System.out.println("will execute action command: " + sb.toString());
-        	rm.execute(sb.toString());
+    	} catch (IOException ioe) {
+    		throw ServiceException.FAILURE("exception occurred performing queue action", ioe);
+    	} finally {
+    		if (indexReader != null) {
+    			try {
+    				indexReader.close();
+    			} catch  (IOException ioe) {
+    				throw ServiceException.FAILURE("exception occured closing index reader", ioe);
+    			}
+    		}
     	}
+    }
+
+    private enum TestTask { scan, search, action };
+
+    private static void usage(String err) {
+    	if (err != null) {
+    		System.err.println("ERROR: " + err + "\n");
+    	}
+        System.err.println("Usage: " + RemoteMailQueue.class.getName() + " scan|search|action host queue [query] [action-name queueids]");
+        System.exit(1);
     }
 
     public static void main(String[] args) throws ServiceException {
         Zimbra.toolSetup("DEBUG");
         Provisioning prov = Provisioning.getInstance();
 
-        String host;
-        String queueName;
-        String query = null;
-        if (args.length == 3) {
-            query = args[2];
-        } else if (args.length != 2) {
-            System.err.println("Usage: " + RemoteMailQueue.class.getName() + " host queue [query]");
-            System.exit(1);
-        }            
-        host = args[0];
-        queueName = args[1];
-
-        Server server = prov.getServerByName(host);
-        RemoteMailQueue queue = new RemoteMailQueue(server, queueName, query == null);
-        queue.waitForScan(0);
+        if (args.length < 3) {
+        	usage(null);
+        }
         
-        if (query != null) {
+        TestTask task = TestTask.valueOf(args[0]);
+        
+        String host = args[1];
+        String queueName = args[2];
+
+        String query = null;
+        if (task == TestTask.search) {
+        	if (args.length < 4) {
+        		usage("no query specified");
+        	}
+        	query = args[3];
+        }
+        
+        QueueAction action = null;
+        String queueIds = null;
+        if (task == TestTask.action) {
+        	if (args.length < 5) {
+        		usage("not enough arguments for action");
+        	}
+        	action = QueueAction.valueOf(args[3]);
+        	if (action == null) {
+        		usage("invalid action " + args[3]);
+        	}
+        	queueIds = args[4];
+        }
+        
+        Server server = prov.getServerByName(host);
+        RemoteMailQueue queue = new RemoteMailQueue(server, queueName, task == TestTask.scan);
+        queue.waitForScan(0);
+
+        if (task == TestTask.search) {
             SearchResult sr = queue.search(query, 0, 30);
             
             for (QueueAttr attr : sr.sitems.keySet()) {
@@ -470,6 +514,10 @@ public class RemoteMailQueue {
                     System.out.println("   " + attr + "=" + qitem.get(attr));
                 }
             }
+        }
+        
+        if (task == TestTask.action) {
+        	queue.action(server, action, queueIds.split(","));
         }
     }
 }
