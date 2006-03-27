@@ -835,6 +835,14 @@ public abstract class Provisioning {
     public static final String A_zimbraCalResContactEmail         = "zimbraCalResContactEmail";
     public static final String A_zimbraCalResContactPhone         = "zimbraCalResContactPhone";
 
+    /*
+     * Remote management
+     */
+    public static final String A_zimbraRemoteManagementCommand = "zimbraRemoteManagementCommand";
+    public static final String A_zimbraRemoteManagementUser = "zimbraRemoteManagementUser";
+    public static final String A_zimbraRemoteManagementPrivateKeyPath = "zimbraRemoteManagementPrivateKeyPath";
+    public static final String A_zimbraRemoteManagementPort = "zimbraRemoteManagementPort";
+
     private static Provisioning mProvisioning;
 
     public static Provisioning getInstance() {
