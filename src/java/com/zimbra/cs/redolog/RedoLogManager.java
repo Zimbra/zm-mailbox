@@ -84,6 +84,8 @@ public class RedoLogManager {
 	}
 
 	private boolean mEnabled;
+    private boolean mInCrashRecovery;
+    private final Object mInCrashRecoveryGuard = new Object();
     private boolean mShuttingDown;
 	private boolean mSupportsCrashRecovery;
 	private boolean mRecoveryMode;	// Are we in crash-recovery mode?
@@ -168,6 +170,18 @@ public class RedoLogManager {
         return new FileLogWriter(redoMgr, logfile, fsyncIntervalMS);
     }
 
+    private void setInCrashRecovery(boolean b) {
+        synchronized (mInCrashRecoveryGuard) {
+            mInCrashRecovery = b;
+        }
+    }
+
+    public boolean getInCrashRecovery() {
+        synchronized (mInCrashRecoveryGuard) {
+            return mInCrashRecovery;
+        }
+    }
+
     public synchronized void start() {
 		mEnabled = true;
 
@@ -184,6 +198,8 @@ public class RedoLogManager {
 		} catch (IOException e) {
 			signalFatalError(e);
 		}
+
+        setInCrashRecovery(true);
 
         // Recover from crash during rollover.  We do this even when
         // mSupportsCrashRecovery is false.
@@ -217,6 +233,8 @@ public class RedoLogManager {
 			mLog.info("Finished pre-startup crash recovery");
 			mRecoveryMode = false;
 		}
+
+        setInCrashRecovery(false);
 
 		// Reopen log after crash recovery.
 		try {
