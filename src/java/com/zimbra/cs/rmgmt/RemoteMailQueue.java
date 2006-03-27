@@ -153,9 +153,7 @@ public class RemoteMailQueue {
         address = address.toLowerCase();
         doc.add(new Field(addressAttr.toString(), address, true, true, false, false));
         String[] parts = address.split("@");
-        if (parts == null || parts.length != 2) {
-            ZimbraLog.rmgmt.warn("queue file " + id + " on " + mServerName + " " + mQueueName + " queue invalid " + addressAttr + ": " + address); 
-        } else {
+        if (parts != null && parts.length > 1) {
             doc.add(new Field(domainAttr.toString(), parts[1], true, true, false, false));
         }
     }
@@ -215,34 +213,32 @@ public class RemoteMailQueue {
         }
     }
     
-    public void startScan(Server server, String queueName) throws ServiceException {
+    public void clearIndex() throws ServiceException {
         try {
-            synchronized (mScanLock) {
-                if (mScanInProgress) {
-                    // One day, we should interrupt the scan.
-                    throw ServiceException.FAILURE("scan already in progress and can not be interrupted", null);
+            IndexWriter writer = null;
+            try {
+                if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("deleting index " + mIndexPath);
+                writer = new IndexWriter(mIndexPath, new StandardAnalyzer(), true);
+            } finally {
+                if (writer != null) {
+                    writer.close();
                 }
-                mScanInProgress = true;
-                        
-                if (mIndexPath.exists()) {
-                    if (!mIndexPath.isDirectory()) {
-                        throw new IOException("directory for mail queue cache index is a file: " + mIndexPath);
-                    }
-                    if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("clearing index directory");
-                    File[] files = mIndexPath.listFiles();
-                    for (File f : files) {
-                        if (!f.isDirectory()) {
-                            if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("deleting file: " + f);
-                            f.delete();
-                        }
-                    }
-                }
-                        
-                RemoteManager rm = RemoteManager.getRemoteManager(server);
-                rm.executeBackground(RemoteCommands.ZMQSTAT + " " + queueName, new QueueHandler());
             }
         } catch (IOException ioe) {
-            throw ServiceException.FAILURE("exception initiating scan", ioe);
+            throw ServiceException.FAILURE("exception deleting queue index", ioe);
+        }
+    }
+    
+    public void startScan(Server server, String queueName) throws ServiceException {
+        synchronized (mScanLock) {
+            if (mScanInProgress) {
+                // One day, we should interrupt the scan.
+                throw ServiceException.FAILURE("scan already in progress and can not be interrupted", null);
+            }
+            mScanInProgress = true;
+            clearIndex();
+            RemoteManager rm = RemoteManager.getRemoteManager(server);
+            rm.executeBackground(RemoteCommands.ZMQSTAT + " " + queueName, new QueueHandler());
         }
     }
 
@@ -365,7 +361,7 @@ public class RemoteMailQueue {
         }
         return qitem;
     }
-    
+
     private void list0(SearchResult result, IndexReader indexReader, int offset, int limit) throws IOException {
     	int num = indexReader.numDocs();
     	int max = indexReader.maxDoc();
@@ -471,9 +467,10 @@ public class RemoteMailQueue {
     				if (i > 0) {
     					sb.append(",");
     				}
-    	            Term toDelete = new Term(QueueAttr.id.toString(), ids[i]);
-    	            indexReader.delete(toDelete);
-    				sb.append(ids[done + i].toUpperCase()); // lucene wants to lower case and I don't want to store it twice - perhaps I should
+    	            Term toDelete = new Term(QueueAttr.id.toString(), ids[i].toLowerCase());
+    	            int numDeleted = indexReader.delete(toDelete);
+    	            if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("deleting term:" + toDelete + ", docs deleted=" + numDeleted);
+    				sb.append(ids[done + i].toUpperCase());
     			}
     			done = i;
     			//System.out.println("will execute action command: " + sb.toString());
@@ -553,9 +550,9 @@ public class RemoteMailQueue {
             }
 
             //public List<Map<QueueAttr, String>> qitems = new LinkedList<Map<QueueAttr, String>>();
-            
+            int i = 0;
             for (Map<QueueAttr,String> qitem : sr.qitems) {
-                System.out.println("qi"); 
+                System.out.println("qi[" + i++ + "]");
                 for (QueueAttr attr : qitem.keySet()) {
                     System.out.println("   " + attr + "=" + qitem.get(attr));
                 }

@@ -41,6 +41,7 @@ public class GetMailQueue extends AdminDocumentHandler {
 
     public static final int MAIL_QUEUE_QUERY_DEFAULT_LIMIT = 30;
     public static final int MAIL_QUEUE_SCAN_DEFUALT_WAIT_SECONDS = 3;
+    public static final int MAIL_QUEUE_SUMMARY_CUTOFF = 100;
     
 	public Element handle(Element request, Map context) throws ServiceException {
         ZimbraContext lc = getZimbraContext(context);
@@ -82,7 +83,12 @@ public class GetMailQueue extends AdminDocumentHandler {
             Collections.sort(slist);
             Element qsElem = queueElem.addElement(AdminService.A_QUEUE_SUMMARY);
             qsElem.addAttribute(AdminService.A_TYPE, attr.toString());
+            int i = 0;
             for (SummaryItem sitem : slist) {
+                i++;
+                if (i > MAIL_QUEUE_SUMMARY_CUTOFF) {
+                    break;
+                }
                 Element qsiElem = qsElem.addElement(AdminService.A_QUEUE_SUMMARY_ITEM);
                 qsiElem.addAttribute(AdminService.A_N, sitem.count());
                 qsiElem.addAttribute(AdminService.A_T, sitem.term());
@@ -95,7 +101,6 @@ public class GetMailQueue extends AdminDocumentHandler {
                 qiElem.addAttribute(attr.toString(), qitem.get(attr));
             }
         }
-
 	    return response;
 	}
 
