@@ -452,7 +452,11 @@ by "serviceHostname" will return the server that has zimbraServiceHostname set t
 
 -----------------------------
 
-<GetAllServersRequest/>
+You can get all servers defined in the system or you can get all
+servers that have a particular service enabled (eg, mta, antispam,
+spell).
+
+<GetAllServersRequest [service="service-name"]/>
 
 <GetAllServersResponse>
   <server name="{name}" id="{id}">
@@ -1190,3 +1194,4 @@ searchFilter: See SearchCalendarResourcesRequest section in soap.txt.
 Access: domain admin sufficient
 
 -----------------------------
+

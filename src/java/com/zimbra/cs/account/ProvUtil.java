@@ -91,7 +91,7 @@ public class ProvUtil {
         System.out.println("  CreateServer(cs) {name} [attr1 value1 [attr2 value2...]]");
         System.out.println("  DeleteServer(ds) {name|id}");        
         System.out.println("  GetServer(gs) {name|id}");
-        System.out.println("  GetAllServers(gas) [-v]");        
+        System.out.println("  GetAllServers(gas) [-v] [service]");
         System.out.println("  ModifyServer(ms) {name|id} [attr1 value1 [attr2 value2...]]");        
         System.out.println();
         
@@ -1091,8 +1091,22 @@ public class ProvUtil {
     }
 
     private void doGetAllServers(String[] args) throws ServiceException {
-        boolean verbose = args.length > 1 && args[1].equals("-v");
-        List servers = mProvisioning.getAllServers();
+        boolean verbose = false;
+        String service = null;
+        if (args.length > 1) {
+            for (int i = 1; i < args.length; i++) {
+                if (args[i].equals("-v")) {
+                    verbose = true;
+                } else {
+                    if (service != null) {
+                        throw ServiceException.INVALID_REQUEST("more than one service specified in get all servers", null); 
+                    }
+                    service = args[i];
+                }
+            }
+        }
+        
+        List servers = mProvisioning.getAllServers(service);
         for (Iterator it=servers.iterator(); it.hasNext(); ) {
             Server server = (Server) it.next();
             if (verbose)
