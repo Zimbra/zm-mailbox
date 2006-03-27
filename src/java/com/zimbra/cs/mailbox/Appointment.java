@@ -74,6 +74,7 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.TnefConverter;
 import com.zimbra.cs.mime.UUEncodeConverter;
+import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.redolog.op.CreateAppointmentPlayer;
 import com.zimbra.cs.redolog.op.CreateAppointmentRecorder;
 import com.zimbra.cs.service.ServiceException;
@@ -1629,10 +1630,15 @@ public class Appointment extends MailItem {
             if (p != null) partStat = p;
         }
 
+        RedoLogProvider redoProvider = RedoLogProvider.getInstance();
+        boolean needResourceAutoReply =
+            redoProvider.isMaster() &&
+            (player == null || redoProvider.getRedoLogManager().getInCrashRecovery());
+
         if (invite.thisAcctIsOrganizer(account)) {
             // Organizer always accepts.
             partStat = IcalXmlStrMap.PARTSTAT_ACCEPTED;
-        } else if (account instanceof CalendarResource) {
+        } else if (account instanceof CalendarResource && needResourceAutoReply) {
             CalendarResource resource = (CalendarResource) account;
             if (resource.autoAcceptDecline()) {
                 partStat = IcalXmlStrMap.PARTSTAT_ACCEPTED;
