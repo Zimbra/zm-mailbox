@@ -25,10 +25,9 @@
 
 package com.zimbra.cs.rmgmt;
 
-public class RemoteCommands {
-    public static final String ZMQSTAT_ALL = "zmqstat all";
-    
-    public static final String FLUSHQUEUE = "flushqueue";
-
-    public static final String ZMQSTAT = "zmqstat";
+public class RemoteResult {
+    byte[] mStdout;
+    byte[] mStderr;
+    int mExitStatus;
+    String mExitSignal;
 }
