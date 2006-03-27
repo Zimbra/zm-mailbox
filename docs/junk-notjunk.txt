@@ -66,6 +66,20 @@ spam feedback messages.  When creating these accounts, we recommend:
     temporary holding places.  It would be a waste of resources to
     index these mailboxes.
 
+  - Disable  spam  checking on  these  accounts.
+  
+For example:
+
+   $ domain=`zmprov gcf zimbraDefaultDomainName | sed 's/^.*: //g'`
+   $ rand_name=`zmjava com.zimbra.cs.util.RandomPassword 8 10 | sed 's/\.//g'`
+   $ rand_passwd=`zmjava com.zimbra.cs.util.RandomPassword 31 37`
+   $ echo "Creating account $rand_name@$domain with passwd=$rand_passwd"
+   $ zmprov ca $rand_name@$domain $rand_passwd \
+           zimbraAttachmentsIndexingEnabled FALSE \
+           zimbraMailQuota 0 \
+           amavisBypassSpamChecks TRUE
+   $ zmprov mcf zimbraSpamIsSpamAccount $rand_name@$domain
+
 The zimbra installer creates these accounts for you by default.
 
 Note on Server Implementation
