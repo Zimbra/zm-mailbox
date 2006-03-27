@@ -356,7 +356,11 @@ public class RemoteMailQueue {
                     }
                     sb.append(field.stringValue());
                 }
-                qitem.put(attr, sb.toString());
+                if (attr ==  QueueAttr.id) {
+                    qitem.put(attr, sb.toString().toUpperCase());
+                } else {
+                    qitem.put(attr, sb.toString());
+                }
             }
         }
         return qitem;
