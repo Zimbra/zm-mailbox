@@ -263,6 +263,7 @@ public class AdminService implements DocumentService {
     public static final String E_NEW_PASSWORD = "newPassword";
     public static final String E_QUERY = "query";
     public static final String E_QUEUE = "queue";
+    public static final String E_ACTION = "action";
     public static final String E_SERVER = "server";
     public static final String E_STATUS = "status";    
     public static final String E_END_TIME = "endTime";
@@ -308,11 +309,15 @@ public class AdminService implements DocumentService {
     public static final String A_TOTAL = "total";
     public static final String A_ISGROUP = "isgroup";
 
+    public static final String BY_ID = "id";
+    public static final String BY_QUERY = "query";
+    
     public static final String A_SCAN = "scan";
     public static final String A_WAIT = "wait";
     public static final String A_QUEUE_SUMMARY = "qs";
     public static final String A_QUEUE_SUMMARY_ITEM = "qsi";
     public static final String A_QUEUE_ITEM = "qi";
+    public static final String A_OP = "op";
 
     public static final String A_HEALTHY = "healthy";
     public static final String A_SIZE = "s";
