@@ -323,18 +323,20 @@ public class RemoteMailQueue {
         boolean hasDeletions = indexReader.hasDeletions();
         do {
             Term term = terms.term();
-            String field = term.field();
-            if (field != null && field.length() > 0) {
-                QueueAttr attr = QueueAttr.valueOf(field);
-                if (attr != null && attr != QueueAttr.id) {
-                    List<SummaryItem> list = result.sitems.get(attr);
-                    if (list == null) {
-                        list = new LinkedList<SummaryItem>();
-                        result.sitems.put(attr, list);
+            if (term != null) {
+                String field = term.field();
+                if (field != null && field.length() > 0) {
+                    QueueAttr attr = QueueAttr.valueOf(field);
+                    if (attr != null && attr != QueueAttr.id) {
+                        List<SummaryItem> list = result.sitems.get(attr);
+                        if (list == null) {
+                            list = new LinkedList<SummaryItem>();
+                            result.sitems.put(attr, list);
+                        }
+                        list.add(new SummaryItem(term.text(), terms.docFreq()));
                     }
-                    list.add(new SummaryItem(term.text(), terms.docFreq()));
+                    //System.out.println(term + "[" + terms.docFreq() + "]");
                 }
-                //System.out.println(term + "[" + terms.docFreq() + "]");
             }
         } while (terms.next());
     }
