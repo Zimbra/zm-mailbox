@@ -261,6 +261,8 @@ public class Mailbox {
             changetype = checkCreated;  change = changeId;
         }
 
+        public RedoableOp getPlayer() { return player; }
+
         long getTimestamp() {
             return (player == null ? System.currentTimeMillis() : player.getTimestamp());
         }
@@ -539,6 +541,10 @@ public class Mailbox {
 
     public OperationContext getOperationContext() {
         return (mCurrentChange.active ? mCurrentChange.octxt : null);
+    }
+
+    RedoableOp getRedoRecorder() {
+        return mCurrentChange.recorder;
     }
 
 

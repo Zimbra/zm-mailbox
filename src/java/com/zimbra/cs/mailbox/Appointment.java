@@ -74,6 +74,8 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.TnefConverter;
 import com.zimbra.cs.mime.UUEncodeConverter;
+import com.zimbra.cs.redolog.op.CreateAppointmentPlayer;
+import com.zimbra.cs.redolog.op.CreateAppointmentRecorder;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.Blob;
@@ -1608,6 +1610,11 @@ public class Appointment extends MailItem {
                                    MimeMessage mmInv,
                                    boolean forCreate)
     throws ServiceException {
+        Mailbox mbox = getMailbox();
+        OperationContext octxt = mbox.getOperationContext();
+        CreateAppointmentPlayer player =
+            octxt != null ? (CreateAppointmentPlayer) octxt.getPlayer() : null;
+
         Account account = getMailbox().getAccount();
         Locale lc;
         Account organizer = invite.getOrganizerAccount();
@@ -1615,15 +1622,20 @@ public class Appointment extends MailItem {
             lc = organizer.getLocale();
         else
             lc = account.getLocale();
+
         String partStat = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
+        if (player != null) {
+            String p = player.getAppointmentPartStat();
+            if (p != null) partStat = p;
+        }
+
         if (invite.thisAcctIsOrganizer(account)) {
+            // Organizer always accepts.
             partStat = IcalXmlStrMap.PARTSTAT_ACCEPTED;
         } else if (account instanceof CalendarResource) {
             CalendarResource resource = (CalendarResource) account;
             if (resource.autoAcceptDecline()) {
                 partStat = IcalXmlStrMap.PARTSTAT_ACCEPTED;
-                Mailbox mbox = getMailbox();
-                OperationContext octxt = mbox.getOperationContext();
                 if (isRecurring() && resource.autoDeclineRecurring()) {
                     partStat = IcalXmlStrMap.PARTSTAT_DECLINED;
                     String reason =
@@ -1658,17 +1670,19 @@ public class Appointment extends MailItem {
             }
         }
 
-        // TODO: Skip the update below if no real change is being made.
-        // The saveMetadata call goes to the database and thus is
-        // expensive.
+        CreateAppointmentRecorder recorder =
+            (CreateAppointmentRecorder) mbox.getRedoRecorder();
+        recorder.setAppointmentPartStat(partStat);
 
         invite.updateMyPartStat(account, partStat);
         if (forCreate) {
             Invite defaultInvite = getDefaultInvite();
             assert(defaultInvite != null);
-            if (!defaultInvite.equals(invite))
+            if (!defaultInvite.equals(invite) &&
+                !partStat.equals(defaultInvite.getPartStat())) {
                 defaultInvite.updateMyPartStat(account, partStat);
-            saveMetadata();
+                saveMetadata();
+            }
         }
         return partStat;
     }

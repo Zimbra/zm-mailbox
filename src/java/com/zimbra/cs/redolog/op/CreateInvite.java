@@ -32,6 +32,7 @@ import java.io.IOException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
+import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.ParsedMessage;
 
@@ -41,6 +42,7 @@ import com.zimbra.cs.store.Volume;
 public class CreateInvite extends RedoableOp implements CreateAppointmentRecorder, CreateAppointmentPlayer 
 {
     private int mAppointmentId;
+    private String mAppointmentPartStat = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
     private Invite mInvite;
     private int mFolderId;
     private boolean mForce;
@@ -64,6 +66,7 @@ public class CreateInvite extends RedoableOp implements CreateAppointmentRecorde
 
     protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("apptId=").append(mAppointmentId);
+        sb.append(", apptPartStat=").append(mAppointmentPartStat);
         sb.append(", folder=").append(mFolderId);
     	if (getVersion().atLeast(1, 0))
 	        sb.append(", vol=").append(mVolumeId);
@@ -77,6 +80,8 @@ public class CreateInvite extends RedoableOp implements CreateAppointmentRecorde
 
     protected void serializeData(DataOutput out) throws IOException {
         out.writeInt(mAppointmentId);
+        if (getVersion().atLeast(1, 1))
+            writeUTF8(out, mAppointmentPartStat);
         out.writeInt(mFolderId);
         if (getVersion().atLeast(1, 0))
             out.writeShort(mVolumeId);
@@ -95,6 +100,8 @@ public class CreateInvite extends RedoableOp implements CreateAppointmentRecorde
 
     protected void deserializeData(DataInput in) throws IOException {
         mAppointmentId = in.readInt();
+        if (getVersion().atLeast(1, 1))
+            mAppointmentPartStat = readUTF8(in);
         mFolderId = in.readInt();
         if (getVersion().atLeast(1, 0))
             mVolumeId = in.readShort();
@@ -128,7 +135,15 @@ public class CreateInvite extends RedoableOp implements CreateAppointmentRecorde
     public int getAppointmentId() {
         return mAppointmentId;
     }
-    
+
+    public String getAppointmentPartStat() {
+        return mAppointmentPartStat;
+    }
+
+    public void setAppointmentPartStat(String partStat) {
+        mAppointmentPartStat = partStat;
+    }
+
     public int getFolderId() {
         return mFolderId;
     }

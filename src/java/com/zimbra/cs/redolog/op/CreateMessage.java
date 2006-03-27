@@ -41,6 +41,7 @@ import javax.mail.internet.MimeMessage;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.SharedDeliveryContext;
+import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.RedoException;
 import com.zimbra.cs.store.Blob;
@@ -52,8 +53,8 @@ import com.zimbra.cs.util.JMSession;
 /**
  * @author jhahm
  */
-public class CreateMessage extends RedoableOp implements CreateAppointmentPlayer,CreateAppointmentRecorder 
-{
+public class CreateMessage extends RedoableOp
+implements CreateAppointmentPlayer,CreateAppointmentRecorder {
 
     private static final byte MSGBODY_INLINE = 1;   // message body buffer is included in this op
     private static final byte MSGBODY_LINK   = 2;   // message link information is included in this op
@@ -70,6 +71,7 @@ public class CreateMessage extends RedoableOp implements CreateAppointmentPlayer
 	private int mFlags;				// flags applied to the new message
 	private String mTags;			// tags applied to the new message
     private int mAppointmentId;     // new appointment created if this is meeting invite message
+    private String mAppointmentPartStat = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
     private boolean mNoICal;        // true if we should NOT process the iCalendar part
 
     private byte mMsgBodyType;
@@ -171,6 +173,14 @@ public class CreateMessage extends RedoableOp implements CreateAppointmentPlayer
     	return mAppointmentId;
     }
 
+    public String getAppointmentPartStat() {
+        return mAppointmentPartStat;
+    }
+
+    public void setAppointmentPartStat(String partStat) {
+        mAppointmentPartStat = partStat;
+    }
+
     public int getFolderId() {
     	return mFolderId;
     }
@@ -220,7 +230,8 @@ public class CreateMessage extends RedoableOp implements CreateAppointmentPlayer
         sb.append(", blobDigest=\"").append(mDigest).append("\", size=").append(mMsgSize);
         sb.append(", conv=").append(mConvId).append(", folder=").append(mFolderId);
         if (mAppointmentId != UNKNOWN_ID)
-            sb.append(", appointment=").append(mAppointmentId);
+            sb.append(", apptId=").append(mAppointmentId);
+        sb.append(", apptPartStat=").append(mAppointmentPartStat);
         sb.append(", noICal=").append(mNoICal);
         sb.append(", flags=").append(mFlags).append(", tags=\"").append(mTags).append("\"");
         sb.append(", bodyType=").append(mMsgBodyType);
@@ -258,6 +269,8 @@ public class CreateMessage extends RedoableOp implements CreateAppointmentPlayer
 		out.writeInt(mFolderId);
 		out.writeInt(mConvId);
         out.writeInt(mAppointmentId);
+        if (getVersion().atLeast(1, 1))
+            writeUTF8(out, mAppointmentPartStat);
         out.writeInt(mFlags);
         out.writeBoolean(mNoICal);
 		writeUTF8(out, mTags);
@@ -287,6 +300,8 @@ public class CreateMessage extends RedoableOp implements CreateAppointmentPlayer
 		mFolderId = in.readInt();
 		mConvId = in.readInt();
         mAppointmentId = in.readInt();
+        if (getVersion().atLeast(1, 1))
+            mAppointmentPartStat = readUTF8(in);
 		mFlags = in.readInt();
         mNoICal = in.readBoolean();
 		mTags = readUTF8(in);

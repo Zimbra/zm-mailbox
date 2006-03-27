@@ -39,6 +39,7 @@ import javax.mail.internet.MimeMessage;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
+import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.ParsedMessage;
 
@@ -51,6 +52,7 @@ public class SetAppointment extends RedoableOp implements CreateAppointmentRecor
 {
     private int mFolderId;
     private int mAppointmentId;
+    private String mAppointmentPartStat = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
     private Mailbox.SetAppointmentData mDefaultInvite;
     private Mailbox.SetAppointmentData mExceptions[];
     private short mVolumeId = -1;
@@ -109,6 +111,8 @@ public class SetAppointment extends RedoableOp implements CreateAppointmentRecor
         if (getVersion().atLeast(1, 0))
             out.writeShort(mVolumeId);
         out.writeInt(mAppointmentId);
+        if (getVersion().atLeast(1, 1))
+            writeUTF8(out, mAppointmentPartStat);
         
         try {
             serializeSetAppointmentData(out, mDefaultInvite);
@@ -136,6 +140,8 @@ public class SetAppointment extends RedoableOp implements CreateAppointmentRecor
         if (getVersion().atLeast(1, 0))
             mVolumeId = in.readShort();
         mAppointmentId = in.readInt();
+        if (getVersion().atLeast(1, 1))
+            mAppointmentPartStat = readUTF8(in);
         
         try {
             Mailbox mbox = Mailbox.getMailboxById(getMailboxId());
@@ -195,8 +201,16 @@ public class SetAppointment extends RedoableOp implements CreateAppointmentRecor
 	
 	public int getAppointmentId() {
 		return mAppointmentId;
-	}
-	
+    }
+
+    public String getAppointmentPartStat() {
+        return mAppointmentPartStat;
+    }
+
+    public void setAppointmentPartStat(String partStat) {
+        mAppointmentPartStat = partStat;
+    }
+
 	public int getFolderId() {
 		return mFolderId;
 	}
@@ -222,6 +236,7 @@ public class SetAppointment extends RedoableOp implements CreateAppointmentRecor
     protected String getPrintableData() {
         StringBuffer toRet = new StringBuffer();
         toRet.append("apptId=").append(mAppointmentId).append(",");
+        toRet.append("apptPartStat=").append(mAppointmentPartStat).append(".");
         toRet.append("folder=").append(mFolderId).append(",");
         if (getVersion().atLeast(1, 0))
             toRet.append(", vol=").append(mVolumeId);
