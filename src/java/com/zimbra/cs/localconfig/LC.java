@@ -80,6 +80,7 @@ public class LC {
     public static final KnownKey zimbra_index_directory;
     public static final KnownKey zimbra_store_directory;
     public static final KnownKey zimbra_db_directory;
+    public static final KnownKey zimbra_tmp_directory;
     public static final KnownKey zimbra_extensions_directory;
     public static final KnownKey zimbra_mysql_user;
     public static final KnownKey zimbra_mysql_password;
@@ -248,6 +249,11 @@ public class LC {
         zimbra_db_directory.setDefault("${zimbra_home}" + FS + "db");
         zimbra_db_directory.setDoc
             ("Directory for database files.");
+
+        zimbra_tmp_directory = new KnownKey("zimbra_tmp_directory");
+        zimbra_tmp_directory.setDefault(System.getProperty("java.io.tmpdir") + FS + "zimbra");
+        zimbra_tmp_directory.setDoc
+            ("Directory for temporary files.");
 
         zimbra_extensions_directory = new KnownKey("zimbra_extension_directory");
         zimbra_extensions_directory.setDefault("${zimbra_home}" + FS + "lib" + FS + "ext");
