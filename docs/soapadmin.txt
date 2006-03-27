@@ -1241,7 +1241,7 @@ and the client should ask again in a little while.
 
 <GetMailQueueRequest>
   <server name="{mta-server}">
-    <queue name="{queue-name}" [scan="{0,1}"]>
+    <queue name="{queue-name}" [scan="{0,1}"] [wait={seconds}]>
       <query [offset={offset}] [limit={limit}]>{query-text}</query>
     </queue>
   </server>
@@ -1251,25 +1251,25 @@ and the client should ask again in a little while.
   <server name="{mta-server}">
     <queue name="{queue-name}" stale="{0,1}" time="{scan-time}">
 
-      <qs type="error|sdomain|saddress|rdomain|raddress|origip">
-        <item n="{count}" t="{text-for-item}" [d={description}]>+
+      <qs type="reason|to|from|todomain|fromdomain|addr|host">
+        <qsi n="{count}" t="{text-for-item}">+
       </qs>+
 
-      <qi id="{id}" s="{sender}" r="{recipients-comma-seperated}"
-          t="{arrival-time}" f="{content-filter}"
-          oi="{origin-ip-address} oh="{origin-host-name}"/>+
+      <qi id="{id}" from="{sender}" to="{recipients-comma-seperated}"
+          time="{arrival-time}" filter="{content-filter}"
+          addr="{origin-ip-address} host="{origin-host-name}"/>+
     </queue>
   </server>
 </GetMailQueueResponse>
 
 Example of qs node is:
 
-   <qs type="sdomain">
+   <qs type="fromdomain">
       <item n="10" t="yahoo.com"/>
       <item n="10" t="google.com"/>
    </qs>
 
-   <qs type="error">
+   <qs type="reason">
       <item n="10" t="connect to 10.10.20.40 failed"/>
       <item n="10" t="connect to 10.10.20.50 timed out"/>
    </qs>
@@ -1277,12 +1277,12 @@ Example of qs node is:
 Example of qi nodes:
 
    <qi id="ABCDEF1234" 
-       s="jack@example.com" 
-       r="foo@example.com,bar@example.com"
-       t="1142622329"  XXX - should this be in milliseconds?
-       f="smtp-amavis:[127.0.0.1]:10024"
-       oi="10.10.130.27"
-       oh="phillip.liquidsys.com">
+       from="jack@example.com" 
+       to="foo@example.com,bar@example.com"
+       time="1142622329"  XXX - should this be in milliseconds?
+       filter="smtp-amavis:[127.0.0.1]:10024"
+       addr="10.10.130.27"
+       host="phillip.liquidsys.com">
 
 -----------------------------
 
