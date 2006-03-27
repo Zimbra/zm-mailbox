@@ -1195,3 +1195,125 @@ Access: domain admin sufficient
 
 -----------------------------
 
+Get a count of all the mail queues by counting the number of files in
+the queue directories.  Note that the admin server waits for queue
+counting to complete before responding - client should invoke requests
+for different servers in parallel.
+
+<GetMailQueueInfoRequest>
+  <server name="{mta-server}"/>
+</GetMailQueueInfoRequest>
+
+
+<GetMailQueueInfoResponse/>
+  <server name="{mta-server}">
+    <queue name="deferred" n="{N}"/>
+    <queue name="incoming" n="{N}"/>
+    <queue name="active" n="{N}"/>
+    <queue name="hold" n="{N}"/>
+    <queue name="corrupt" n="{N}"/>
+  </server>
+</GetMailQueueInfoResponse>
+
+-----------------------------
+
+Summarize and/or search a particular mail queue on a particular
+server.  The admin SOAP server initiates a MTA queue scan (via ssh)
+and then caches the result of the queue scan.  To force a queue scan,
+specify scan=1 in the request.
+
+The response has two parts.
+
+- <qs> elements summarize queue by various types of data (sender
+  addresss, recipient domain, etc).  Only the deferred queue has error
+  summary type.
+
+- <qi> elements list the various queue items that match the requested
+  query.
+
+The stale flag in the response means that since the scan, some queue
+action was done and the data being presented is now stale.  This
+allows us to let the user dictate when to do a queue scan.
+
+The more flag in the response indicates that the server has not
+completed scanning the MTA queue, and that this scan is in progress,
+and the client should ask again in a little while.
+
+<GetMailQueueRequest>
+  <server name="{mta-server}">
+    <queue name="{queue-name}" [scan="{0,1}"]>
+      <query [offset={offset}] [limit={limit}]>{query-text}</query>
+    </queue>
+  </server>
+<GetMailQueueRequest>
+
+<GetMailQueueResponse>
+  <server name="{mta-server}">
+    <queue name="{queue-name}" stale="{0,1}" time="{scan-time}">
+
+      <qs type="error|sdomain|saddress|rdomain|raddress|origip">
+        <item n="{count}" t="{text-for-item}" [d={description}]>+
+      </qs>+
+
+      <qi id="{id}" s="{sender}" r="{recipients-comma-seperated}"
+          t="{arrival-time}" f="{content-filter}"
+          oi="{origin-ip-address} oh="{origin-host-name}"/>+
+    </queue>
+  </server>
+</GetMailQueueResponse>
+
+Example of qs node is:
+
+   <qs type="sdomain">
+      <item n="10" t="yahoo.com"/>
+      <item n="10" t="google.com"/>
+   </qs>
+
+   <qs type="error">
+      <item n="10" t="connect to 10.10.20.40 failed"/>
+      <item n="10" t="connect to 10.10.20.50 timed out"/>
+   </qs>
+
+Example of qi nodes:
+
+   <qi id="ABCDEF1234" 
+       s="jack@example.com" 
+       r="foo@example.com,bar@example.com"
+       t="1142622329"  XXX - should this be in milliseconds?
+       f="smtp-amavis:[127.0.0.1]:10024"
+       oi="10.10.130.27"
+       oh="phillip.liquidsys.com">
+
+-----------------------------
+
+Command to act on invidual queue files.  This proxies through to
+postsuper.  list-of-ids can be ALL.
+
+<MailQueueActionRequest>
+  <server name="{mta-server}">
+     <queue name="{queue-name}">
+       <action op="delete|hold|release|requeue"/ by="id|query">
+          {list-of-ids|query}
+       </action>
+     </queue>
+  </server>
+</MailQueueActionRequest>
+
+<MailQueueActionResponse>
+  - response is same as GetMailQueueResponse above.
+</MailQueueActionResponse>
+
+-----------------------------
+
+Command to invoke postqueue -f.  All queues cached in the server are
+are stale after invoking this because this is a global operation to
+all the queues in a given server.
+
+<MailQueueFlushRequest>
+  <server name="{mta-server}">
+</MailQueueFlushRequest>
+
+<MailQueueFlushResponse/>
+
+-----------------------------
+
