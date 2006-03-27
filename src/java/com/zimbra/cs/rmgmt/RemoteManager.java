@@ -81,10 +81,10 @@ public class RemoteManager {
 				
 				File key = new File(privateKey);
 				if (!key.exists()) {
-					throw ServiceException.FAILURE("server " + localName + " " + Provisioning.A_zimbraRemoteManagementPrivateKeyPath + " does not exist", null);
+					throw ServiceException.FAILURE("server " + localName + " " + Provisioning.A_zimbraRemoteManagementPrivateKeyPath + " (" + key + ") does not exist", null);
 				}
 				if (!key.canRead()) {
-					throw ServiceException.FAILURE("server " + localName + " " + Provisioning.A_zimbraRemoteManagementPrivateKeyPath + " is not readable", null);
+					throw ServiceException.FAILURE("server " + localName + " " + Provisioning.A_zimbraRemoteManagementPrivateKeyPath + " (" + key + ") is not readable", null);
 				}
 				mPrivateKey = key;
 			}
