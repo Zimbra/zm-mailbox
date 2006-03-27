@@ -806,15 +806,15 @@ public abstract class Element {
         }
 
         public Element getOptionalElement(String name) {
-            if (mChildren != null)
+            if (mChildren != null && name != null)
                 for (Element elt : mChildren)
                     if (elt.getName().equals(name))
                         return elt;
             return null;
         }
 
-        public Element getOptionalElement(QName qname) { 
-            if (mChildren != null)
+        public Element getOptionalElement(QName qname) {
+            if (mChildren != null && qname != null)
                 for (Element elt : mChildren)
                     if (elt.getQName().equals(qname))
                         return elt;
@@ -837,27 +837,28 @@ public abstract class Element {
             if (name == null || name.trim().equals(""))
                 list.addAll(mChildren);
             else
-                for (Iterator it = mChildren.iterator(); it.hasNext(); ) {
-                    Element elt = (Element) it.next();
+            	for (Element elt : mChildren)
                     if (elt.getName().equals(name))
                         list.add(elt);
-                }
             return list;
         }
 
         public String getText() { return (mText == null ? "" : mText); }
 
         public String getAttribute(String key, String defaultValue) {
+            if (key == null)
+                return defaultValue;
+            // also need to check downcased version of attribute names because of safari bug
             String result;
-            if (mAttributes != null && (result = (String) mAttributes.get(key)) != null)
-                return result;
+            if (mAttributes != null)
+                if ((result = (String) mAttributes.get(key)) != null || (result = (String) mAttributes.get(key.toLowerCase())) != null)
+                    return result;
             if (mChildren == null)
                 return defaultValue;
-            for (Iterator it = mChildren.iterator(); it.hasNext(); ) {
-                Element elt = (Element) it.next();
-                if (elt.getName().equals(key))
+            for (Element elt : mChildren) {
+                if (elt.getName().equalsIgnoreCase(key))
                     return elt.getText();
-                else if (elt.getName().equals(E_ATTRIBUTE) && elt.getAttribute(A_ATTR_NAME, "").equals(key))
+                else if (elt.getName().equals(E_ATTRIBUTE) && elt.getAttribute(A_ATTR_NAME, "").equalsIgnoreCase(key))
                     return elt.getText();
             }
             return defaultValue;
@@ -979,8 +980,10 @@ public abstract class Element {
          .addAttribute("firstName", "Ross \"Killa\"", DISP_ELEMENT).addAttribute("lastName", "Dargahi", DISP_ELEMENT);
         e.addElement("cn").addAttribute("id", 257).addAttribute("md", 1111196674000L).addAttribute("l", 7)
          .addAttribute("workPhone", "(408) 973-0500 x111", DISP_ELEMENT).addAttribute("jobTitle", "CEO", DISP_ELEMENT)
-         .addAttribute("firstName", "Satish", DISP_ELEMENT).addAttribute("lastName", "Dharmaraj", DISP_ELEMENT);
+         .addAttribute("firstname", "Satish", DISP_ELEMENT).addAttribute("lastName", "Dharmaraj", DISP_ELEMENT);
         System.out.println(e);
+        for (Element cn : e.listElements())
+        	System.out.println("  found: id=" + cn.getAttribute("ID", null));
 
 //        System.out.println(com.zimbra.soap.SoapProtocol.toString(e.toXML(), true));
         System.out.println(new XMLElement("test").setText("  this\t    is\nthe\rway ").getTextTrim() + "|");
