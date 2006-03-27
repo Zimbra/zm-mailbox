@@ -51,7 +51,7 @@ public class GetAllServers extends AdminDocumentHandler {
         ZimbraContext lc = getZimbraContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 
-        String service = request.getAttribute(AdminService.A_SERVICE);
+        String service = request.getAttribute(AdminService.A_SERVICE, null);
         List cos = prov.getAllServers(service);
         
         Element response = lc.createElement(AdminService.GET_ALL_SERVERS_RESPONSE);        
