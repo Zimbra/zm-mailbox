@@ -42,15 +42,15 @@ import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.mailbox.calendar.CalendarL10n;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.RecurId;
-import com.zimbra.cs.mailbox.calendar.CalendarL10n.MsgKey;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.util.L10nUtil;
+import com.zimbra.cs.util.L10nUtil.MsgKey;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
@@ -115,7 +115,7 @@ public class CancelAppointment extends CalendarRequest {
     void cancelInstance(ZimbraContext lc, Element request, Account acct, Mailbox mbox, Appointment appt, Invite defaultInv, RecurId recurId) 
     throws ServiceException {
         Locale locale = acct.getLocale();
-        String text = CalendarL10n.getMessage(MsgKey.cancelAppointmentInstance, locale);
+        String text = L10nUtil.getMessage(MsgKey.calendarCancelAppointmentInstance, locale);
 
         if (sLog.isDebugEnabled()) {
             sLog.debug("Sending cancellation message for \"" + defaultInv.getName() + "\" for instance " + recurId + " of invite " + defaultInv);
@@ -168,7 +168,7 @@ public class CancelAppointment extends CalendarRequest {
     protected void cancelInvite(ZimbraContext lc, Element request, Account acct, Mailbox mbox, Appointment appt, Invite inv)
     throws ServiceException {
         Locale locale = acct.getLocale();
-        String text = CalendarL10n.getMessage(MsgKey.cancelAppointment, locale);
+        String text = L10nUtil.getMessage(MsgKey.calendarCancelAppointment, locale);
 
         if (sLog.isDebugEnabled())
             sLog.debug("Sending cancellation message for \"" + inv.getName() + "\" for " + inv.toString());

@@ -57,13 +57,14 @@ import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.mailbox.calendar.CalendarL10n.MsgKey;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.L10nUtil;
+import com.zimbra.cs.util.L10nUtil.MsgKey;
 
 public class CalendarMailSender {
 
@@ -93,9 +94,9 @@ public class CalendarMailSender {
     private static Map<Verb, MsgKey> sVerbMsgKeys;
     static {
         sVerbMsgKeys = new HashMap<Verb, MsgKey>();
-        sVerbMsgKeys.put(VERB_ACCEPT, MsgKey.replySubjectAccept);
-        sVerbMsgKeys.put(VERB_DECLINE, MsgKey.replySubjectDecline);
-        sVerbMsgKeys.put(VERB_TENTATIVE, MsgKey.replySubjectTentative);
+        sVerbMsgKeys.put(VERB_ACCEPT, MsgKey.calendarReplySubjectAccept);
+        sVerbMsgKeys.put(VERB_DECLINE, MsgKey.calendarReplySubjectDecline);
+        sVerbMsgKeys.put(VERB_TENTATIVE, MsgKey.calendarReplySubjectTentative);
     }
 
     public static Verb parseVerb(String str) throws ServiceException {
@@ -108,12 +109,12 @@ public class CalendarMailSender {
 
     public static String getReplySubject(Verb verb, Invite inv, Locale lc) {
         MsgKey key = sVerbMsgKeys.get(verb);
-        String prefix = CalendarL10n.getMessage(key, lc);
+        String prefix = L10nUtil.getMessage(key, lc);
         return prefix + ": " + inv.getName();
     }
 
     public static String getCancelSubject(Invite inv, Locale lc) {
-        String prefix = CalendarL10n.getMessage(MsgKey.subjectCancelled, lc);
+        String prefix = L10nUtil.getMessage(MsgKey.calendarSubjectCancelled, lc);
         return prefix + ": " + inv.getName();
     }
 
@@ -147,31 +148,31 @@ public class CalendarMailSender {
             boolean isResourceAccount = fromAccount instanceof CalendarResource;
             if (VERB_ACCEPT.equals(verb)) {
                 if (isResourceAccount)
-                    statusMsgKey = MsgKey.resourceDefaultReplyAccept;
+                    statusMsgKey = MsgKey.calendarResourceDefaultReplyAccept;
                 else
-                    statusMsgKey = MsgKey.defaultReplyAccept;
+                    statusMsgKey = MsgKey.calendarDefaultReplyAccept;
             } else if (VERB_DECLINE.equals(verb)) {
                 if (isResourceAccount)
-                    statusMsgKey = MsgKey.resourceDefaultReplyDecline;
+                    statusMsgKey = MsgKey.calendarResourceDefaultReplyDecline;
                 else
-                    statusMsgKey = MsgKey.defaultReplyDecline;
+                    statusMsgKey = MsgKey.calendarDefaultReplyDecline;
             } else if (VERB_TENTATIVE.equals(verb)) {
                 if (isResourceAccount)
-                    statusMsgKey = MsgKey.resourceDefaultReplyTentativelyAccept;
+                    statusMsgKey = MsgKey.calendarResourceDefaultReplyTentativelyAccept;
                 else
-                    statusMsgKey = MsgKey.defaultReplyTentativelyAccept;
+                    statusMsgKey = MsgKey.calendarDefaultReplyTentativelyAccept;
             } else
-                statusMsgKey = MsgKey.defaultReplyOther;
+                statusMsgKey = MsgKey.calendarDefaultReplyOther;
             String statusMsg;
-            if (!statusMsgKey.equals(MsgKey.defaultReplyOther))
-                statusMsg = CalendarL10n.getMessage(statusMsgKey,
-                                                    lc,
-                                                    fromDisplayName);
+            if (!statusMsgKey.equals(MsgKey.calendarDefaultReplyOther))
+                statusMsg = L10nUtil.getMessage(statusMsgKey,
+                                                lc,
+                                                fromDisplayName);
             else
-                statusMsg = CalendarL10n.getMessage(statusMsgKey,
-                                                    lc,
-                                                    fromDisplayName,
-                                                    verb.toString());
+                statusMsg = L10nUtil.getMessage(statusMsgKey,
+                                                lc,
+                                                fromDisplayName,
+                                                verb.toString());
             replyText.append(statusMsg).append("\r\n\r\n");
 
             if (additionalMsgBody != null) {
@@ -203,8 +204,8 @@ public class CalendarMailSender {
             notes = notes.replaceAll("[\\r\\n]+[\\*~]+[\\r\\n]+",
                                      "\r\n\r\n ~ ~ ~ ~ ~ ~ ~ ~ ~\r\n\r\n");
             sb.append("\r\n-----");
-            sb.append(CalendarL10n.getMessage(
-                    MsgKey.resourceReplyOriginalInviteSeparatorLabel, lc));
+            sb.append(L10nUtil.getMessage(
+                    MsgKey.calendarResourceReplyOriginalInviteSeparatorLabel, lc));
             sb.append("-----\r\n");
             sb.append(notes);
         }
@@ -212,7 +213,7 @@ public class CalendarMailSender {
 
     public static String formatDateTime(Date d, TimeZone tz, Locale lc) {
         String dateTimeFmt =
-            CalendarL10n.getMessage(MsgKey.resourceConflictDateTimeFormat, lc);
+            L10nUtil.getMessage(MsgKey.calendarResourceConflictDateTimeFormat, lc);
         SimpleDateFormat dateTimeFormat = new SimpleDateFormat(dateTimeFmt, lc);
         dateTimeFormat.setTimeZone(tz);
         return dateTimeFormat.format(d);
@@ -220,7 +221,7 @@ public class CalendarMailSender {
 
     public static String formatTime(Date t, TimeZone tz, Locale lc) {
         String timeOnlyFmt =
-            CalendarL10n.getMessage(MsgKey.resourceConflictTimeOnlyFormat, lc);
+            L10nUtil.getMessage(MsgKey.calendarResourceConflictTimeOnlyFormat, lc);
         SimpleDateFormat timeFormat = new SimpleDateFormat(timeOnlyFmt, lc);
         timeFormat.setTimeZone(tz);
         return timeFormat.format(t);
@@ -254,7 +255,7 @@ public class CalendarMailSender {
         StringBuilder sb = new StringBuilder(text);
         sb.append("\r\n\r\n");
         if (cancelInstanceInv != null) {
-            sb.append(CalendarL10n.getMessage(MsgKey.cancelAppointmentInstanceWhich, locale));
+            sb.append(L10nUtil.getMessage(MsgKey.calendarCancelAppointmentInstanceWhich, locale));
             sb.append(" ");
             ParsedDateTime start = cancelInstanceInv.getStartTime();
             TimeZone tz = start.getTimeZone();
@@ -275,7 +276,7 @@ public class CalendarMailSender {
         }
 
         return createDefaultCalendarMessage(
-                sender, toAddrs, sbj, sb.toString(), cancelInstanceInv.getUid(), iCal);
+                sender, toAddrs, sbj, sb.toString(), defaultInv.getUid(), iCal);
     }
 
     private static MimeMessage createDefaultCalendarMessage(
