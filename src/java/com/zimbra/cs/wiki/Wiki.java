@@ -32,6 +32,7 @@ import java.util.Set;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.localconfig.LC;
+import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -85,16 +86,24 @@ public class Wiki {
 		mWikiAccountId = acct.getId();
 		mFolderId = f.getId();
 		loadWiki(octxt, mbox);
+		loadDoc(octxt, mbox);
 	}
 	
 	private void loadWiki(OperationContext octxt, Mailbox mbox) throws ServiceException {
 	    List<MailItem> wikiList = mbox.getItemList(octxt, MailItem.TYPE_WIKI);
-	    // this is List, so it'd better be in the natural chronological order of MailItem in the folder.
-
 	    for (MailItem item : wikiList) {
 	    	assert(item instanceof WikiItem);
 	    	WikiItem witem = (WikiItem) item;
 	    	addWiki(witem);
+	    }
+	}
+	
+	private void loadDoc(OperationContext octxt, Mailbox mbox) throws ServiceException {
+	    List<MailItem> docList = mbox.getItemList(octxt, MailItem.TYPE_DOCUMENT);
+	    for (MailItem item : docList) {
+	    	assert(item instanceof Document);
+	    	Document doc = (Document) item;
+	    	addDoc(doc);
 	    }
 	}
 	
@@ -121,15 +130,22 @@ public class Wiki {
 		return mWikiWords.get(wikiWord);
 	}
 	
+	public void addDoc(Document doc) throws ServiceException {
+		addDocImpl(doc.getFilename(), doc);
+	}
+	
 	public void addWiki(WikiItem wikiItem) throws ServiceException {
-		String wikiStr = wikiItem.getWikiWord();
+		addDocImpl(wikiItem.getWikiWord(), wikiItem);
+	}
+	
+	public void addDocImpl(String wikiStr, Document doc) throws ServiceException {
 		WikiWord w;
 		w = mWikiWords.get(wikiStr);
 		if (w == null) {
 			w = new WikiWord(wikiStr);
 			mWikiWords.put(wikiStr, w);
 		}
-		w.addWikiItem(wikiItem);
+		w.addWikiItem(doc);
 	}
 	
 	public void deleteWiki(OperationContext octxt, String wikiWord) throws ServiceException {

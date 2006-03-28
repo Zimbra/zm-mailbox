@@ -300,12 +300,19 @@ public class Indexer
     throws ServiceException {
         try {
         	ParsedDocument pd = new ParsedDocument(document.getBlob().getBlob().getFile(),
-        											document.getFilename(), 
-        											document.getContentType());
-            addDocument(redo, pd.getDocument(), idx, mailItemId, document.getDate());
-
+        							document.getFilename(), 
+        							document.getContentType());
+        	indexDocument(redo, idx, mailItemId, pd);
+        } catch (IOException e) {
+        	throw ServiceException.FAILURE("indexDocument caught Exception", e);
+        }
+    }
+    public void indexDocument(IndexItem redo, MailboxIndex idx, int mailItemId, ParsedDocument pd)
+    throws ServiceException {
+        try {
+            addDocument(redo, pd.getDocument(), idx, mailItemId, pd.getCreatedDate());
         	incrementNumIndexedBy(1);
-        } catch (Exception e) {
+        } catch (IOException e) {
         	throw ServiceException.FAILURE("indexDocument caught Exception", e);
         }
     }

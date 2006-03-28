@@ -66,6 +66,7 @@ import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.op.*;
 import com.zimbra.cs.service.FeedManager;
@@ -4350,18 +4351,24 @@ public class Mailbox {
         }
     }
 
-    public void addDocumentRevision(OperationContext octxt, Document doc, byte[] rawData) throws ServiceException {
+    public void addDocumentRevision(OperationContext octxt, Document doc, byte[] rawData, String author) throws ServiceException {
     	StoreManager sm = StoreManager.getInstance();
     	Blob blob = null;
     	boolean success = false;
     	try {
-    		beginTransaction("addDocumentRevision", octxt, null);
+    		AddDocumentRevision redoRecorder = new AddDocumentRevision(mId, null, 0, 0);
+    		
+    		beginTransaction("addDocumentRevision", octxt, redoRecorder);
+        	redoRecorder.setAuthor(author);
+        	redoRecorder.setDocument(doc);
     		short volumeId = Volume.getCurrentMessageVolume().getId();
         	blob = sm.storeIncoming(rawData, null, null, volumeId);
+        	redoRecorder.setMessageBodyInfo(rawData, blob.getPath(), blob.getVolumeId());
         	markOtherItemDirty(blob);
-        	doc.addRevision(octxt.authuser.getName(), rawData);
-
-        	mCurrentChange.setIndexedItem(doc, null);
+        	
+        	ParsedDocument pd = new ParsedDocument(blob.getFile(), doc.getFilename(), doc.getContentType(), getOperationTimestampMillis());
+        	doc.addRevision(author, pd);
+        	mCurrentChange.setIndexedItem(doc, pd);
 
         	sm.link(blob, this, doc.getId(), doc.getLastRevision().getRevId(), volumeId);
         	success = true;
@@ -4376,14 +4383,6 @@ public class Mailbox {
 //                	 no harm done
                	}
     	}
-    }
-    
-    public synchronized WikiItem createWiki(OperationContext octxt, 
-			int folderId, 
-			String wikiword, 
-			byte[] rawData,
-			MailItem parent) throws ServiceException {
-    	return createWiki(octxt, folderId, wikiword, octxt.authuser.getName(), rawData, parent);
     }
     
     public synchronized WikiItem createWiki(OperationContext octxt, 
@@ -4411,9 +4410,9 @@ public class Mailbox {
         	redoRecorder.setMessageBodyInfo(rawData, blob.getPath(), blob.getVolumeId());
         	markOtherItemDirty(blob);
 
-        	wikiItem = WikiItem.create(itemId, getFolderById(folderId), volumeId, wikiword, author, rawData, parent);
-
-        	mCurrentChange.setIndexedItem(wikiItem, null);
+        	ParsedDocument pd = new ParsedDocument(blob.getFile(), wikiword, WikiItem.WIKI_CONTENT_TYPE, getOperationTimestampMillis());
+        	wikiItem = WikiItem.create(itemId, getFolderById(folderId), volumeId, wikiword, author, pd, parent);
+        	mCurrentChange.setIndexedItem(wikiItem, pd);
 
         	sm.link(blob, this, itemId, wikiItem.getLastRevision().getRevId(), volumeId);
 
@@ -4441,6 +4440,7 @@ public class Mailbox {
     											int folderId, 
     											String filename, 
     											String mimeType, 
+    											String author,
     											byte[] rawData,
     											MailItem parent) throws ServiceException {
        	Document doc;
@@ -4453,6 +4453,7 @@ public class Mailbox {
             beginTransaction("createDoc", octxt, redoRecorder);
             redoRecorder.setFilename(filename);
             redoRecorder.setMimeType(mimeType);
+        	redoRecorder.setAuthor(author);
         	int itemId = getNextItemId(ID_AUTO_INCREMENT);
            	short volumeId = Volume.getCurrentMessageVolume().getId();
 
@@ -4460,10 +4461,9 @@ public class Mailbox {
             redoRecorder.setMessageBodyInfo(rawData, blob.getPath(), blob.getVolumeId());
             markOtherItemDirty(blob);
 
-            // TODO: do we need parent when creating document.
-        	doc = Document.create(itemId, getFolderById(folderId), volumeId, filename, octxt.authuser.getName(), mimeType, rawData, parent);
-
-            mCurrentChange.setIndexedItem(doc, null);
+        	ParsedDocument pd = new ParsedDocument(blob.getFile(), filename, mimeType, getOperationTimestampMillis());
+        	doc = Document.create(itemId, getFolderById(folderId), volumeId, filename, author, mimeType, pd, parent);
+            mCurrentChange.setIndexedItem(doc, pd);
 
             sm.link(blob, this, itemId, doc.getLastRevision().getRevId(), volumeId);
             

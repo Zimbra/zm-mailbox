@@ -34,7 +34,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 public class SaveWiki extends SaveDocument {
 
 	private String mWikiword;
-	private String mAuthor;
 	
 	public SaveWiki() {
 	}
@@ -55,23 +54,13 @@ public class SaveWiki extends SaveDocument {
     	mWikiword = w;
     }
     
-    public String getAuthor() {
-    	return mAuthor;
-    }
-    
-    public void setAuthor(String a) {
-    	mAuthor = a;
-    }
-    
     protected void serializeData(DataOutput out) throws IOException {
         out.writeUTF(mWikiword);
-        out.writeUTF(mAuthor);
         super.serializeData(out);
     }
 
     protected void deserializeData(DataInput in) throws IOException {
         mWikiword = in.readUTF();
-        mAuthor = in.readUTF();
         super.deserializeData(in);
     }
 
@@ -82,7 +71,7 @@ public class SaveWiki extends SaveDocument {
         mbox.createWiki(getOperationContext(), 
 						getFolderId(), 
 						mWikiword, 
-						mAuthor, 
+						getAuthor(), 
 						getMessageBody(),
 						null);
     }

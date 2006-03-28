@@ -38,7 +38,7 @@ import com.zimbra.soap.ZimbraContext;
 public class ListWiki extends WikiDocumentHandler {
 
 	@Override
-	public Element handle(Element request, Map context) throws ServiceException {
+	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraContext lc = getZimbraContext(context);
 		Wiki wiki = getRequestedWiki(request, lc);
 

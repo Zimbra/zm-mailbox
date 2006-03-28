@@ -112,25 +112,38 @@ public class ParsedDocument {
     private String mDigest;
     private Document mDocument;
     private String mFragment;
+    private long mCreatedDate;
 
     public ParsedDocument(File file, String filename, String ctype)
-    throws MimeHandlerException, ObjectHandlerException, ServiceException, IOException {
+    throws ServiceException, IOException {
+    	this(file, filename, ctype, file.lastModified());
+    }
+    
+    public ParsedDocument(File file, String filename, String ctype, long createdDate)
+    throws ServiceException, IOException {
         mFile = file;
         mFilename = filename;
         mContentType = ctype;
+        mCreatedDate = createdDate;
 
-        MimeHandler handler = MimeHandler.getMimeHandler(ctype);
-        assert(handler != null);
+        try {
+            MimeHandler handler = MimeHandler.getMimeHandler(ctype);
+            assert(handler != null);
 
-        DocumentDataSource ds = new DocumentDataSource();
-        if (handler.isIndexingEnabled())
-            handler.init(ds);
-        mFragment = Fragment.getFragment(handler.getContent(), false);
-        handler.setFilename(filename);
-        handler.setPartName(LuceneFields.L_PARTNAME_TOP);
-        handler.setMessageDigest(mDigest = ds.getDigest());
-        mDocument = handler.getDocument();
-        mDocument.add(Field.Text(LuceneFields.L_SIZE, Integer.toString(mSize = ds.getSize())));
+            DocumentDataSource ds = new DocumentDataSource();
+            if (handler.isIndexingEnabled())
+                handler.init(ds);
+            mFragment = Fragment.getFragment(handler.getContent(), false);
+            handler.setFilename(filename);
+            handler.setPartName(LuceneFields.L_PARTNAME_TOP);
+            handler.setMessageDigest(mDigest = ds.getDigest());
+            mDocument = handler.getDocument();
+            mDocument.add(Field.Text(LuceneFields.L_SIZE, Integer.toString(mSize = ds.getSize())));
+        } catch (MimeHandlerException mhe) {
+        	throw ServiceException.FAILURE("cannot create ParsedDocument", mhe);
+        } catch (ObjectHandlerException ohe) {
+        	throw ServiceException.FAILURE("cannot create ParsedDocument", ohe);
+        }
     }
 
     public String getFilename()     { return mFilename; }
@@ -139,6 +152,7 @@ public class ParsedDocument {
     public String getDigest()       { return mDigest; }
     public Document getDocument()   { return mDocument; }
     public String getFragment()     { return mFragment; }
+    public long getCreatedDate()    { return mCreatedDate; }
 
     static String encodeDigest(byte[] digest) {
         byte[] encoded = Base64.encodeBase64(digest);

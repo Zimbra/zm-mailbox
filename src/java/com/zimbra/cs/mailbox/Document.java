@@ -33,9 +33,9 @@ import java.io.InputStream;
 
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.Indexer;
-import com.zimbra.cs.index.Fragment;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.MetadataList;
+import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -86,6 +86,7 @@ public class Document extends MailItem {
 
 	public Document(Mailbox mbox, UnderlyingData data) throws ServiceException {
 		super(mbox, data);
+		mFragment = getLastRevision().getFragment();
 	}
 
 	public String getFragment() {
@@ -100,6 +101,10 @@ public class Document extends MailItem {
     	return mContentType;
     }
 
+	public String getCreator() throws ServiceException {
+		return getLastRevision().getCreator();
+	}
+	
     public InputStream getRawDocument() throws IOException, ServiceException {
     	StoreManager sm = StoreManager.getInstance();
     	int revId = getLastRevision().getRevId();
@@ -118,8 +123,10 @@ public class Document extends MailItem {
 
     @Override
     public void reindex(IndexItem redo, Object indexData) throws ServiceException {
-        if (!DebugConfig.disableIndexing)
-            Indexer.GetInstance().indexDocument(redo, mMailbox.getMailboxIndex(), mId, this);
+        if (!DebugConfig.disableIndexing &&
+        		indexData != null &&
+        		indexData instanceof ParsedDocument)
+            Indexer.GetInstance().indexDocument(redo, mMailbox.getMailboxIndex(), mId, (ParsedDocument) indexData);
     }
 
     public DocumentRevision getRevision(int rev) throws ServiceException {
@@ -138,28 +145,28 @@ public class Document extends MailItem {
     	return getVersion() + 1;
     }
     
-    private static Metadata getRevisionMetadata(Mailbox mbox, String author, byte[] contents) throws ServiceException {
+    private static Metadata getRevisionMetadata(int changeID, String author, ParsedDocument pd) throws ServiceException {
     	Metadata rev = new Metadata();
-    	rev.put(Metadata.FN_REV_ID, mbox.getOperationChangeID());
+    	rev.put(Metadata.FN_REV_ID, changeID);
     	rev.put(Metadata.FN_CREATOR, author);
-    	rev.put(Metadata.FN_REV_DATE, mbox.getOperationTimestampMillis());
-    	rev.put(Metadata.FN_REV_SIZE, contents.length);
-        rev.put(Metadata.FN_FRAGMENT, Fragment.getFragment(contents));
+    	rev.put(Metadata.FN_REV_DATE, pd.getCreatedDate());
+    	rev.put(Metadata.FN_REV_SIZE, pd.getSize());
+        rev.put(Metadata.FN_FRAGMENT, pd.getFragment());
     	return rev;
     }
     
-    public synchronized void addRevision(String author, byte[] contents) throws ServiceException {
-    	Metadata rev = getRevisionMetadata(mMailbox, author, contents);
+    public synchronized void addRevision(String author, ParsedDocument pd) throws ServiceException {
+    	Metadata rev = getRevisionMetadata(mMailbox.getOperationChangeID(), author, pd);
     	rev.put(Metadata.FN_VERSION, getNextVersion());
-    	mFragment = rev.get(Metadata.FN_FRAGMENT);
     	mRevisionList.add(rev);
-    	mData.size = contents.length;
+    	mFragment = pd.getFragment();
+    	mData.size = pd.getSize();
         mData.contentChanged(mMailbox);
-        DbMailItem.saveMetadata(this, contents.length, encodeMetadata(new Metadata()).toString());
+        DbMailItem.saveMetadata(this, pd.getSize(), encodeMetadata(new Metadata()).toString());
         markItemModified(Change.MODIFIED_SIZE | Change.MODIFIED_DATE | Change.MODIFIED_CONTENT);
     }
     
-    protected static UnderlyingData prepareCreate(byte tp, int id, Folder folder, short volumeId, String subject, String creator, String type, byte[] contents, Document parent, Metadata meta) 
+    protected static UnderlyingData prepareCreate(byte tp, int id, Folder folder, short volumeId, String subject, String creator, String type, ParsedDocument pd, Document parent, Metadata meta) 
     throws ServiceException {
         if (folder == null || !folder.canContain(TYPE_DOCUMENT))
             throw MailServiceException.CANNOT_CONTAIN();
@@ -169,7 +176,7 @@ public class Document extends MailItem {
 		Mailbox mbox = folder.getMailbox();
         UnderlyingData data = new UnderlyingData();
     	MetadataList revisions = new MetadataList();
-    	Metadata rev = getRevisionMetadata(mbox, creator, contents);
+    	Metadata rev = getRevisionMetadata(mbox.getOperationChangeID(), creator, pd);
     	rev.put(Metadata.FN_VERSION, 1);
     	revisions.add(rev);
         data.id          = id;
@@ -178,20 +185,20 @@ public class Document extends MailItem {
         data.indexId     = id;
         data.volumeId    = volumeId;
         data.date        = mbox.getOperationTimestamp();
-        data.size        = contents.length;
+        data.size        = pd.getSize();
         data.subject     = subject;
         data.blobDigest  = subject;
-       	data.metadata    = encodeMetadata(meta, DEFAULT_COLOR, type, rev.get(Metadata.FN_FRAGMENT), revisions).toString();
+       	data.metadata    = encodeMetadata(meta, DEFAULT_COLOR, type, revisions).toString();
         
         return data;
     }
 
-    static Document create(int id, Folder folder, short volumeId, String filename, String creator, String type, byte[] contents, MailItem parent)
+    static Document create(int id, Folder folder, short volumeId, String filename, String creator, String type, ParsedDocument pd, MailItem parent)
     throws ServiceException {
     	assert(id != Mailbox.ID_AUTO_INCREMENT);
     	assert(parent instanceof Document);
 
-        UnderlyingData data = prepareCreate(TYPE_DOCUMENT, id, folder, volumeId, filename, creator, type, contents, (Document) parent, null);
+        UnderlyingData data = prepareCreate(TYPE_DOCUMENT, id, folder, volumeId, filename, creator, type, pd, (Document) parent, null);
         if (parent != null)
             data.parentId = parent.getId();
 
@@ -209,21 +216,19 @@ public class Document extends MailItem {
     void decodeMetadata(Metadata meta) throws ServiceException {
         super.decodeMetadata(meta);
         mContentType = meta.get(Metadata.FN_MIME_TYPE);
-        mFragment = meta.get(Metadata.FN_FRAGMENT);
         mRevisionList = meta.getList(Metadata.FN_REVISIONS);
     }
 
     @Override 
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mColor, mContentType, mFragment, mRevisionList);
+        return encodeMetadata(meta, mColor, mContentType, mRevisionList);
     }
     
-    static Metadata encodeMetadata(Metadata meta, byte color, String mimeType, String fragment, MetadataList revisions) {
+    static Metadata encodeMetadata(Metadata meta, byte color, String mimeType, MetadataList revisions) {
     	if (meta == null) {
     		meta = new Metadata();
     	}
         meta.put(Metadata.FN_MIME_TYPE, mimeType);
-        meta.put(Metadata.FN_FRAGMENT, fragment);
         meta.put(Metadata.FN_REVISIONS, revisions);
         return MailItem.encodeMetadata(meta, color);
     }

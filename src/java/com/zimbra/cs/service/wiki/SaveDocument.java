@@ -41,6 +41,7 @@ import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.wiki.Wiki;
+import com.zimbra.cs.wiki.WikiWord;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
@@ -91,7 +92,7 @@ public class SaveDocument extends WikiDocumentHandler {
     }
 
 	@Override
-	public Element handle(Element request, Map context) throws ServiceException {
+	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraContext lc = getZimbraContext(context);
         Wiki wiki = getRequestedWiki(request, lc);
 
@@ -117,8 +118,16 @@ public class SaveDocument extends WikiDocumentHandler {
         int fid = (int)docElem.getAttributeLong(MailService.A_FOLDER, wiki.getWikiFolderId());
 
         Document docItem;
-   		docItem = mbox.createDocument(octxt, fid, name, ctype, doc.contents, null);
-        //wiki.addWiki(docItem);  // XXX need to keep track of documents.
+        synchronized (wiki) {
+            WikiWord ww = wiki.lookupWiki(name);
+            if (ww == null) {
+           		docItem = mbox.createDocument(octxt, fid, name, ctype, getAuthor(lc), doc.contents, null);
+            } else {
+            	docItem = ww.getWikiItem(octxt);
+            	mbox.addDocumentRevision(octxt, docItem, doc.contents, getAuthor(lc));
+            }
+    		wiki.addDoc(docItem);
+        }
 
         Element response = lc.createElement(MailService.SAVE_DOCUMENT_RESPONSE);
         Element m = response.addElement(MailService.E_DOC);

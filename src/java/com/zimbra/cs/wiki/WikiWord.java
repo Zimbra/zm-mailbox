@@ -28,7 +28,6 @@ import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.ServiceException;
 
 public class WikiWord {
@@ -50,7 +49,7 @@ public class WikiWord {
 		return mWikiWord;
 	}
 
-	public void addWikiItem(WikiItem newItem) throws ServiceException {
+	public void addWikiItem(Document newItem) throws ServiceException {
 		Document.DocumentRevision rev = newItem.getLastRevision();
 		mMailbox = newItem.getMailbox();
 		mId = newItem.getId();
@@ -62,7 +61,7 @@ public class WikiWord {
 	}
 	
 	public void deleteAllRevisions(OperationContext octxt) throws ServiceException {
-		mMailbox.delete(octxt, mId, MailItem.TYPE_WIKI);
+		mMailbox.delete(octxt, mId, MailItem.TYPE_UNKNOWN);
 	}
 
 	public long lastRevision() {
@@ -89,8 +88,8 @@ public class WikiWord {
 		return mFolderId;
 	}
 	
-	public WikiItem getWikiItem(OperationContext octxt) throws ServiceException {
-		return mMailbox.getWikiById(octxt, mId);
+	public Document getWikiItem(OperationContext octxt) throws ServiceException {
+		return (Document)mMailbox.getItemById(octxt, mId, MailItem.TYPE_UNKNOWN);
 	}
 
 }

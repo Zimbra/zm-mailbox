@@ -9,6 +9,10 @@ import com.zimbra.soap.ZimbraContext;
 
 public abstract class WikiDocumentHandler extends DocumentHandler {
 
+	protected String getAuthor(ZimbraContext lc) throws ServiceException {
+		return lc.getAuthtokenAccount().getName();
+	}
+	
 	protected Wiki getRequestedWiki(Element request, ZimbraContext lc) throws ServiceException {
 		
 		/*

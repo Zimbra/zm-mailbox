@@ -1262,8 +1262,9 @@ public class ToXML {
             	m.addAttribute(MailService.A_VERSION, revision.getVersion());
             	m.addAttribute(MailService.A_LAST_EDITED_BY, revision.getCreator());
             	m.addAttribute(MailService.A_MODIFIED_DATE, revision.getRevDate());
-            	if (doc instanceof WikiItem)
-            		m.addAttribute(MailService.E_FRAG, revision.getFragment(), Element.DISP_CONTENT);
+            	String frag = revision.getFragment();
+            	if (frag != null && !frag.equals(""))
+            		m.addAttribute(MailService.E_FRAG, frag, Element.DISP_CONTENT);
             } catch (Exception ex) {
                 mLog.warn("ignoring exception while fetching revision for document " + doc.getSubject(), ex);
             }

@@ -28,12 +28,12 @@ import java.io.InputStream;
 
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.service.ServiceException;
 
 public class WikiItem extends Document {
 	
 	String mWikiWord;
-	String mCreator;
 	
 	WikiItem(Mailbox mbox, UnderlyingData data) throws ServiceException {
 		super(mbox, data);
@@ -42,16 +42,11 @@ public class WikiItem extends Document {
 	@Override 
 	Metadata encodeMetadata(Metadata meta) {
 		meta.put(Metadata.FN_WIKI_WORD, mWikiWord);
-		meta.put(Metadata.FN_CREATOR, mCreator);
 		return super.encodeMetadata(meta);
 	}
 	
 	public String getWikiWord() {
 		return mWikiWord;
-	}
-	
-	public String getCreator() {
-		return mCreator;
 	}
 	
 	public long getCreatedTime() {
@@ -70,20 +65,18 @@ public class WikiItem extends Document {
     void decodeMetadata(Metadata meta) throws ServiceException {
         super.decodeMetadata(meta);
         mWikiWord = meta.get(Metadata.FN_WIKI_WORD);
-        mCreator = meta.get(Metadata.FN_CREATOR);
     }
 
     public static final String WIKI_CONTENT_TYPE = "text/html";
 	
-    static WikiItem create(int id, Folder folder, short volumeId, String wikiword, String author, byte[] content, MailItem parent)
+    static WikiItem create(int id, Folder folder, short volumeId, String wikiword, String author, ParsedDocument pd, MailItem parent)
     throws ServiceException {
     	assert(parent instanceof Document);
 
         Metadata meta = new Metadata();
 		meta.put(Metadata.FN_WIKI_WORD, wikiword);
-		meta.put(Metadata.FN_CREATOR, author);
 		
-        UnderlyingData data = prepareCreate(TYPE_WIKI, id, folder, volumeId, wikiword, author, WIKI_CONTENT_TYPE, content, (Document)parent, meta);
+        UnderlyingData data = prepareCreate(TYPE_WIKI, id, folder, volumeId, wikiword, author, WIKI_CONTENT_TYPE, pd, (Document)parent, meta);
         if (parent != null)
             data.parentId = parent.getId();
 

@@ -29,72 +29,58 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.service.ServiceException;
 
-public class SaveDocument extends CreateMessage {
-
-	private String mFilename;
-	private String mMimeType;
-	private String mAuthor;
+public class AddDocumentRevision extends SaveDocument {
+	private int mDocId;
 	
-	public SaveDocument() {
+	public AddDocumentRevision() {
 	}
 	
-    public SaveDocument(int mailboxId, String digest, int msgSize, int folderId) {
-        super(mailboxId, ":API:", false, digest, msgSize, folderId, true, 0, null);
+    public AddDocumentRevision(int mailboxId, String digest, int msgSize, int folderId) {
+        super(mailboxId, digest, msgSize, folderId);
     }
 
     public int getOpCode() {
-        return OP_SAVE_DOCUMENT;
+        return OP_ADD_DOCUMENT_REVISION;
     }
 
-    public String getFilename() {
-    	return mFilename;
+    public int getDocId() {
+    	return mDocId;
     }
     
-    public void setFilename(String filename) {
-    	mFilename = filename;
-    }
-    
-    public String getMimeType() {
-    	return mMimeType;
-    }
-    
-    public void setMimeType(String mimeType) {
-    	mMimeType = mimeType;
-    }
-    
-    public String getAuthor() {
-    	return mAuthor;
-    }
-    
-    public void setAuthor(String a) {
-    	mAuthor = a;
+    public void setDocument(Document doc) {
+    	mDocId = doc.getId();
+    	setFilename(doc.getFilename());
+    	setMimeType(doc.getContentType());
     }
     
     protected void serializeData(DataOutput out) throws IOException {
-        out.writeUTF(mFilename);
-        out.writeUTF(mMimeType);
-        out.writeUTF(mAuthor);
+        out.writeInt(mDocId);
         super.serializeData(out);
     }
 
     protected void deserializeData(DataInput in) throws IOException {
-        mFilename = in.readUTF();
-        mMimeType = in.readUTF();
-        mAuthor = in.readUTF();
+        mDocId = in.readInt();
         super.deserializeData(in);
     }
-
+    
     public void redo() throws Exception {
+    	OperationContext octxt = getOperationContext();
         int mboxId = getMailboxId();
         Mailbox mbox = Mailbox.getMailboxById(mboxId);
-        mbox.createDocument(getOperationContext(), 
-							getFolderId(), 
-							mFilename, 
-							mMimeType,
-							mAuthor,
+        MailItem doc = mbox.getItemById(octxt, mDocId, MailItem.TYPE_UNKNOWN);
+        if (doc.getType() != MailItem.TYPE_WIKI &&
+        	doc.getType() != MailItem.TYPE_DOCUMENT) {
+        	throw ServiceException.FAILURE("invalid MailItem type "+doc.getType(), null);
+        }
+        mbox.addDocumentRevision(octxt, 
+							(Document)doc, 
 							getMessageBody(),
-							null);
+							getAuthor());
     }
 }

@@ -143,8 +143,9 @@ public abstract class RedoableOp {
 
     public static final int OP_SAVE_WIKI                = 52;
     public static final int OP_SAVE_DOCUMENT            = 53;
+    public static final int OP_ADD_DOCUMENT_REVISION    = 54;
     
-    public static final int OP_LAST				        = 54;
+    public static final int OP_LAST				        = 55;
 
 	// Element index is same as Redoable.OP_* constants.
 	// The strings must match the class names.
@@ -203,6 +204,7 @@ public abstract class RedoableOp {
         "SetPermissions",
         "SaveWiki",
         "SaveDocument",
+        "AddDocumentRevision",
 	};
 
 	public static String getOpClassName(int opcode) {

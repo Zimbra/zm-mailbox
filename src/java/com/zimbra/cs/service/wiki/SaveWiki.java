@@ -26,6 +26,8 @@ package com.zimbra.cs.service.wiki;
 
 import java.util.Map;
 
+import com.zimbra.cs.mailbox.Document;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.WikiItem;
@@ -45,7 +47,7 @@ public class SaveWiki extends WikiDocumentHandler {
     }
     
 	@Override
-	public Element handle(Element request, Map context)
+	public Element handle(Element request, Map<String, Object> context)
 			throws ServiceException, SoapFaultException {
         ZimbraContext lc = getZimbraContext(context);
         OperationContext octxt = lc.getOperationContext();
@@ -63,10 +65,14 @@ public class SaveWiki extends WikiDocumentHandler {
         synchronized (wiki) {
             WikiWord ww = wiki.lookupWiki(subject);
             if (ww == null) {
-                wikiItem = mbox.createWiki(octxt, fid, subject, rawData, null);
+                wikiItem = mbox.createWiki(octxt, fid, subject, getAuthor(lc), rawData, null);
             } else {
-            	wikiItem = ww.getWikiItem(octxt);
-            	mbox.addDocumentRevision(octxt, wikiItem, rawData);
+                Document doc = ww.getWikiItem(octxt);
+                if (doc.getType() != MailItem.TYPE_WIKI) {
+                	throw ServiceException.FAILURE("requested MailItem is not WikiItem", null);
+                }
+            	wikiItem = (WikiItem)doc;
+            	mbox.addDocumentRevision(octxt, wikiItem, rawData, getAuthor(lc));
             }
     		wiki.addWiki(wikiItem);
         }
