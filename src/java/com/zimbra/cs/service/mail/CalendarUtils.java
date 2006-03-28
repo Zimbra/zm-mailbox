@@ -166,7 +166,7 @@ public class CalendarUtils {
      */
     static ParseMimeMessage.InviteParserResult parseInviteForModify(
             Account account, Element inviteElem, Invite oldInv,
-            List /* Attendee */attendeesToCancel, boolean recurAllowed)
+            List<ZAttendee> attendeesToCancel, boolean recurAllowed)
             throws ServiceException {
         Invite mod = new Invite(ICalTok.PUBLISH.toString(), oldInv
                 .getTimeZoneMap());
@@ -784,8 +784,8 @@ private static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap i
     }
 
     static Invite buildCancelInviteCalendar(Account acct, Invite inv,
-            String comment, ZAttendee forAttendee) throws ServiceException {
-        return cancelInvite(acct, inv, comment, forAttendee, null);
+            String comment, List<ZAttendee> forAttendees) throws ServiceException {
+        return cancelInvite(acct, inv, comment, forAttendees, null);
     }
 
     static Invite buildCancelInviteCalendar(Account acct, Invite inv,
@@ -801,7 +801,8 @@ private static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap i
     /**
      * See 4.2.10
      * 
-     * Cancel an Invite for an Attendee (or for ALL attendees if NULL is passed)
+     * Cancel an Invite for specified Attendees (or for ALL attendees if NULL
+     * is passed)
      * 
      * See RFC2446 4.2.9
      * 
@@ -831,7 +832,7 @@ private static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap i
      * @throws ServiceException
      */
     static Invite cancelInvite(Account acct, Invite inv, String comment,
-            ZAttendee forAttendee, RecurId recurId) throws ServiceException {
+            List<ZAttendee> forAttendees, RecurId recurId) throws ServiceException {
         // TimeZoneMap tzMap = new TimeZoneMap(acct.getTimeZone());
         Invite cancel = new Invite(ICalTok.CANCEL.toString(), comment, inv
                 .getTimeZoneMap());
@@ -840,14 +841,10 @@ private static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap i
         cancel.setOrganizer(inv.getOrganizer());
 
         // ATTENDEEs
-        if (forAttendee == null) {
-            for (Iterator iter = inv.getAttendees().iterator(); iter.hasNext();) {
-                ZAttendee at = (ZAttendee) iter.next();
-                cancel.addAttendee(at);
-            }
-        } else {
-            cancel.addAttendee(forAttendee);
-        }
+        List<ZAttendee> attendees =
+            forAttendees != null ? forAttendees : inv.getAttendees();
+        for (ZAttendee a : attendees)
+            cancel.addAttendee(a);
 
         // COMMENT
         if (comment != null && !comment.equals("")) {
