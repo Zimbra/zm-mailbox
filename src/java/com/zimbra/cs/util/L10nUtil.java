@@ -41,7 +41,47 @@ import com.zimbra.cs.localconfig.LC;
 
 public class L10nUtil {
 
-    // class loader that loads message .properties files from
+    /**
+     * List all message keys here
+     */
+    public static enum MsgKey {
+
+        // calendar messages
+
+        calendarSubjectCancelled,
+        calendarCancelRemovedFromAttendeeList,
+        calendarCancelAppointment,
+        calendarCancelAppointmentInstance,
+        calendarCancelAppointmentInstanceWhich,
+
+        calendarReplySubjectAccept,
+        calendarReplySubjectTentative,
+        calendarReplySubjectDecline,
+
+        calendarDefaultReplyAccept,
+        calendarDefaultReplyTentativelyAccept,
+        calendarDefaultReplyDecline,
+        calendarDefaultReplyOther,
+        calendarResourceDefaultReplyAccept,
+        calendarResourceDefaultReplyTentativelyAccept,
+        calendarResourceDefaultReplyDecline,
+
+        calendarResourceReplyOriginalInviteSeparatorLabel,
+
+        calendarResourceConflictDateTimeFormat,
+        calendarResourceConflictTimeOnlyFormat,
+
+        calendarResourceDeclineReasonRecurring,
+        calendarResourceDeclineReasonConflict,
+        calendarResourceConflictScheduledBy,
+
+        // add other messages in the future...
+    }
+
+
+    private static final String MSG_FILE_BASENAME = "ZsMsg";
+
+    // class loader that loads ZsMsg.properties files from
     // /opt/zimbra/conf/msgs directory
     private static ClassLoader sMsgClassLoader;
 
@@ -69,40 +109,26 @@ public class L10nUtil {
     }
 
     /**
-     * List of localized code modules.  The module separation exists purely
-     * for localization purpose.  The module name is significant as it is
-     * used as basename of message files.
-     *
-     * Suggested convention: Use short, single-word, all-lowercase names.
-     */
-    public static enum Module {
-        calendar
-    }
-
-    /**
      * Get the message for specified key in given locale, applying variable
      * substitutions with any args.  ({0}, {1}, etc.)
-     * @param module localization module
      * @param key message key
      * @param lc locale
      * @param args variable-length argument list for {N} variable substitution
      * @return
      */
-    public static String getMessage(Module module,
-                                    String key,
+    public static String getMessage(MsgKey key,
                                     Locale lc,
                                     Object... args) {
-        String basename = module.toString();
         ResourceBundle rb;
         try {
-            rb = ResourceBundle.getBundle(basename, lc, sMsgClassLoader);
-            String fmt = rb.getString(key);
+            rb = ResourceBundle.getBundle(MSG_FILE_BASENAME, lc, sMsgClassLoader);
+            String fmt = rb.getString(key.toString());
             if (fmt != null && args != null && args.length > 0)
                 return MessageFormat.format(fmt, args);
             else
                 return fmt;
         } catch (MissingResourceException e) {
-            ZimbraLog.misc.error("Resource bundle \"" + basename +
+            ZimbraLog.misc.error("Resource bundle \"" + MSG_FILE_BASENAME +
                                  "\" not found (locale=" + lc.toString() + ")",
                                  e);
             return null;

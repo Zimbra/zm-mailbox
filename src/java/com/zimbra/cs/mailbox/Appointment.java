@@ -33,10 +33,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -54,7 +52,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.mailbox.calendar.CalendarL10n;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.FreeBusy;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
@@ -67,7 +64,6 @@ import com.zimbra.cs.mailbox.calendar.Recurrence;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
-import com.zimbra.cs.mailbox.calendar.CalendarL10n.MsgKey;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
@@ -84,7 +80,9 @@ import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.DateTimeUtil;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.L10nUtil;
 import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.cs.util.L10nUtil.MsgKey;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -1560,7 +1558,7 @@ public class Appointment extends MailItem {
                             orgDispName = organizer.getCn() + " <" + organizer.getAddress() + ">";
                         else
                             orgDispName = organizer.getAddress();
-                        sb.append(CalendarL10n.getMessage(MsgKey.resourceConflictScheduledBy, lc, orgDispName));
+                        sb.append(L10nUtil.getMessage(MsgKey.calendarResourceConflictScheduledBy, lc, orgDispName));
                     }
                     sb.append("\r\n");
                     conflictCount++;
@@ -1635,7 +1633,7 @@ public class Appointment extends MailItem {
                 if (isRecurring() && resource.autoDeclineRecurring()) {
                     partStat = IcalXmlStrMap.PARTSTAT_DECLINED;
                     String reason =
-                        CalendarL10n.getMessage(MsgKey.resourceDeclineReasonRecurring, lc);
+                        L10nUtil.getMessage(MsgKey.calendarResourceDeclineReasonRecurring, lc);
                     CalendarMailSender.sendReply(
                             octxt, mbox, false,
                             CalendarMailSender.VERB_DECLINE,
@@ -1646,7 +1644,7 @@ public class Appointment extends MailItem {
                     if (!Availability.isAvailable(avail)) {
                         partStat = IcalXmlStrMap.PARTSTAT_DECLINED;
                         String msg =
-                            CalendarL10n.getMessage(MsgKey.resourceDeclineReasonConflict, lc) +
+                            L10nUtil.getMessage(MsgKey.calendarResourceDeclineReasonConflict, lc) +
                             "\r\n\r\n" +
                             Availability.getBusyTimesString(avail, invite.getStartTime().getTimeZone(), lc);
                         CalendarMailSender.sendReply(

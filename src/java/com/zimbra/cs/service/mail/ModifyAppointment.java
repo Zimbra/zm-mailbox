@@ -25,9 +25,7 @@
 
 package com.zimbra.cs.service.mail;
 
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -44,16 +42,15 @@ import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.mailbox.calendar.CalendarL10n;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
-import com.zimbra.cs.mailbox.calendar.CalendarL10n.MsgKey;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.L10nUtil;
 import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.cs.util.L10nUtil.MsgKey;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
@@ -160,7 +157,7 @@ public class ModifyAppointment extends CalendarRequest {
         dat.mOrigId = inv.getMailItemId();
         dat.mReplyType = MailSender.MSGTYPE_REPLY;
 
-        String text = CalendarL10n.getMessage(MsgKey.cancelRemovedFromAttendeeList, locale);
+        String text = L10nUtil.getMessage(MsgKey.calendarCancelRemovedFromAttendeeList, locale);
 
         if (sLog.isDebugEnabled()) {
             StringBuilder sb = new StringBuilder("Sending cancellation message for \"");

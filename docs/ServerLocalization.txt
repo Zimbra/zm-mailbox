@@ -16,84 +16,49 @@ The primary localization class is:
 
     com.zimbra.cs.util.L10nUtil
 
-Each localized code "module" is declared in the Module enum in this class.
-The enum name is significant as its toString() value is the basename of the
-module's message files.  The only public method in this class is static
-getMessage():
+This class has a static public method called getMessage():
 
-    public static String getMessage(Module module,
-                                    String key,
+    public static String getMessage(MsgKey key,
                                     Locale lc,
                                     Object... args)
 
-This method finds the resource bundle for the specified module and locale,
-retrieves the string for the specified key, and applies variable substitution
-with any arguments supplied.
+This method finds the resource bundle for the specified locale, retrieves the
+string for the specified key, and applies variable substitution with any
+arguments supplied.  The MsgKey enum lists all message keys known to code.
 
-The first localized module is calendar.  L10nUtil.Module enum has a "calendar"
-entry.  There is a helper class:
-
-    com.zimbra.cs.mailbox.calendar.CalendarL10n
-
-This class has a public static method getMessage():
-
-    public static String getMessage(CalendarL10n.MsgKey key,
-                                    Locale lc,
-                                    Object... args)
-
-It is a helper method that calls L10nUtil.getMessage().  It offers two
-benefits:
-
-    - no need to mention module as it always uses calendar module
-    - all calendar-related string keys are defined in MsgKey enum
-
-So, for example, you can do this in code to get a localized string for
+So, for example, you can do this to get a localized string for
 "<calendar resource> has been scheduled for your appointment" line that appears
 in the auto-accept reply:
 
-	import com.zimbra.cs.mailbox.calendar.CalendarL10n.MsgKey;
+    ipmort com.zimbra.cs.util.L10nUtil;
+	import com.zimbra.cs.util.L10nUtil.MsgKey;
 	...
 	Locale lc = <some locale>
 	String resName = <calendar resource display name>
-    String prefix =
-        CalendarL10n.getMessage(MsgKey.resourceDefaultReplyAccept, lc,
-                                resName);
-
-Follow the same strategy for any additional localization modules added in the
-future.  To summarize:
-
-    1. Add module name to L10nUtil.Module enum.
-    2. Add helper class with:
-       - module-specific getMessage() method
-       - module-specific MsgKey enum
+    String str =
+        L10nUtil.getMessage(MsgKey.resourceDefaultReplyAccept, lc, resName);
 
 
 Message Files
 -------------
 
-All message files are stored under /opt/zimbra/conf/msgs directory.  Each
-module must have the default message file whose filename is
-"<module>.properties".  To localize the module for a particular locale, you can
-add a file named "<module>_<locale name>.properties".  The default version must
-be checked into source repository and is part of the build.  Locale-specific
-specializations can be added to a running installation.  Tomcat restart is
-required to recognize newly added message files.
+All message files are stored under /opt/zimbra/conf/msgs directory.  The deafult
+message file is called "ZsMsg.properties".  This name was chosen to be
+consistent with the convention used in web client code.  "Z" is for Zimbra and
+"s" is for server.  To add localize for a particular locale, you can add a file
+named "ZsMsg_<locale name>.properties" to this directory and restart Tomcat.
+Whether you're adding a new localized message file or editing one, Tomcat must
+be restarted for changes to take effect.
 
-For calendar module, the checked-in default file is "calendar.properties" and
-is installed as:
-
-    /opt/zimbra/conf/msgs/calendar.properties
-
-If, for example, you want to add a version for Japanese, it would be added as:
-
-    /opt/zimbra/conf/msgs/calendar_ja.properties
+Examples of locale name are "en_US", "en_GB", and "ja".  In other words, what
+you get by calling Locale object's toString() method.
 
 The message files are not built into the service.war web app archive for two
 reasons:
 
-    1. to allow easy installation of localized files
+    1. to allow easy installation of localized message files
     2. to allow command-line invoked Java processes to use the same localized
-       files
+       message files
 
 Message formatting tip: The single-quote character is the quote character.
 If your message file has this line:
