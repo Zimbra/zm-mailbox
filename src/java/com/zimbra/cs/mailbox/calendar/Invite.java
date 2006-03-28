@@ -522,6 +522,17 @@ public class Invite {
     }
 
     /**
+     * Returns the MimeMessage that corresponds to this invite.  This method
+     * should be called only for invites that have been created on the server
+     * already.
+     * @return can return null
+     */
+    public MimeMessage getMimeMessage() throws ServiceException {
+        if (mAppt == null || mMailItemId <= 0) return null;
+        return mAppt.getMimeMessage(mMailItemId);
+    }
+
+    /**
      * WARNING - does NOT save the metadata.  Make sure you know that it is being
      * saved if you call this func.
      * 

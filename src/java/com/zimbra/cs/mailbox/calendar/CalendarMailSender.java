@@ -36,7 +36,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -113,6 +112,11 @@ public class CalendarMailSender {
         return prefix + ": " + inv.getName();
     }
 
+    public static String getCancelSubject(Invite inv, Locale lc) {
+        String prefix = CalendarL10n.getMessage(MsgKey.subjectCancelled, lc);
+        return prefix + ": " + inv.getName();
+    }
+
     public static MimeMessage createDefaultReply(Account fromAccount,
                                                  Appointment appt,
                                                  Invite inv,
@@ -134,11 +138,11 @@ public class CalendarMailSender {
                 lc = fromAccount.getLocale();
                 organizerAddress = inv.getOrganizer().getFriendlyAddress();
             }
-    
+
             String fromDisplayName =
                 fromAccount.getAttr(Provisioning.A_displayName,
                                     fromAccount.getName());
-            StringBuffer replyText = new StringBuffer();
+            StringBuilder replyText = new StringBuilder();
             MsgKey statusMsgKey;
             boolean isResourceAccount = fromAccount instanceof CalendarResource;
             if (VERB_ACCEPT.equals(verb)) {
@@ -169,31 +173,40 @@ public class CalendarMailSender {
                                                     fromDisplayName,
                                                     verb.toString());
             replyText.append(statusMsg).append("\r\n\r\n");
-    
+
             if (additionalMsgBody != null) {
                 replyText.append(additionalMsgBody).append("\r\n");
             }
-    
-            String notes = Invite.getNotes(mmInv);
-            if (notes != null) {
-                // Remove Outlook's special "*~*~*~*" delimiter from original
-                // body. If we leave it in, Outlook will hide all text above
-                // that line.
-                notes = notes.replaceAll("[\\r\\n]+[\\*~]+[\\r\\n]+",
-                                         "\r\n\r\n ~ ~ ~ ~ ~ ~ ~ ~ ~\r\n\r\n");
-                replyText.append("\r\n-----");
-                replyText.append(CalendarL10n.getMessage(
-                        MsgKey.resourceReplyOriginalInviteSeparatorLabel, lc));
-                replyText.append("-----\r\n");
-                replyText.append(notes);
-            }
-    
+
+            attachInviteSummary(replyText, mmInv, lc);
+
+            List<Address> toList = new ArrayList<Address>(1);
+            toList.add(organizerAddress);
             return createDefaultCalendarMessage(
                     AccountUtil.getFriendlyEmailAddress(fromAccount),
-                    organizerAddress, replySubject,
+                    toList, replySubject,
                     replyText.toString(), inv.getUid(), iCal);
         } catch (UnsupportedEncodingException e) {
             throw MailServiceException.ADDRESS_PARSE_ERROR(e);
+        }
+    }
+
+    private static void attachInviteSummary(StringBuilder sb,
+                                            MimeMessage mmInv,
+                                            Locale lc)
+    throws ServiceException {
+        String notes = Invite.getNotes(mmInv);
+        if (notes != null) {
+            // Remove Outlook's special "*~*~*~*" delimiter from original
+            // body. If we leave it in, Outlook will hide all text above
+            // that line.
+            notes = notes.replaceAll("[\\r\\n]+[\\*~]+[\\r\\n]+",
+                                     "\r\n\r\n ~ ~ ~ ~ ~ ~ ~ ~ ~\r\n\r\n");
+            sb.append("\r\n-----");
+            sb.append(CalendarL10n.getMessage(
+                    MsgKey.resourceReplyOriginalInviteSeparatorLabel, lc));
+            sb.append("-----\r\n");
+            sb.append(notes);
         }
     }
 
@@ -229,19 +242,47 @@ public class CalendarMailSender {
         return toList;
     }
 
-    public static MimeMessage createDefaultCalendarMessage(
-            Address fromAddr, Address toAddr,
-            String subject, String text, String uid,
-            ZCalendar.ZVCalendar cal) throws ServiceException {
-        List<Address> list = new ArrayList<Address>(1);
-        list.add(toAddr);
+    public static MimeMessage createCancelMessage(Account fromAccount,
+                                                  List<Address> toAddrs,
+                                                  Invite defaultInv,
+                                                  Invite cancelInstanceInv,
+                                                  String text,
+                                                  ZVCalendar iCal)
+    throws ServiceException {
+        Locale locale = fromAccount.getLocale();
+        String sbj = getCancelSubject(defaultInv, locale);
+        StringBuilder sb = new StringBuilder(text);
+        sb.append("\r\n\r\n");
+        if (cancelInstanceInv != null) {
+            sb.append(CalendarL10n.getMessage(MsgKey.cancelAppointmentInstanceWhich, locale));
+            sb.append(" ");
+            ParsedDateTime start = cancelInstanceInv.getStartTime();
+            TimeZone tz = start.getTimeZone();
+            Date startDate = new Date(start.getUtcTime());
+            sb.append(CalendarMailSender.formatDateTime(startDate, tz, locale));
+            sb.append("\r\n\r\n");
+        }
+
+        MimeMessage mmInv = defaultInv.getMimeMessage();
+        if (mmInv != null)
+            attachInviteSummary(sb, mmInv, locale);
+        
+        Address sender;
+        try {
+            sender = AccountUtil.getFriendlyEmailAddress(fromAccount);
+        } catch (UnsupportedEncodingException e) {
+            throw MailServiceException.ADDRESS_PARSE_ERROR(e);
+        }
+
         return createDefaultCalendarMessage(
-                fromAddr, list, subject, text, uid, cal);
+                sender, toAddrs, sbj, sb.toString(), cancelInstanceInv.getUid(), iCal);
     }
 
-    public static MimeMessage createDefaultCalendarMessage(Address fromAddr,
-            List<Address> toAddrs, String subject, String text, String uid,
-            ZCalendar.ZVCalendar cal) throws ServiceException {
+    private static MimeMessage createDefaultCalendarMessage(
+            Address fromAddr, List<Address> toAddrs,
+            String subject, String text,
+            String uid, ZCalendar.ZVCalendar cal)
+    throws ServiceException {
         try {
             MimeMessage mm = new MimeMessage(JMSession.getSession()) {
                 protected void updateHeaders() throws MessagingException {

@@ -43,6 +43,12 @@ public class CalendarL10n {
      * List all calendar-specific message keys here
      */
     public static enum MsgKey {
+        subjectCancelled,
+        cancelRemovedFromAttendeeList,
+        cancelAppointment,
+        cancelAppointmentInstance,
+        cancelAppointmentInstanceWhich,
+
         replySubjectAccept,
         replySubjectTentative,
         replySubjectDecline,

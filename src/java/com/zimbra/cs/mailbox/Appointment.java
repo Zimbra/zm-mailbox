@@ -82,6 +82,7 @@ import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.DateTimeUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.ZimbraLog;
 
@@ -1544,7 +1545,7 @@ public class Appointment extends MailItem {
                     String start = CalendarMailSender.formatDateTime(startDate, tz, lc);
                     sb.append(" * ").append(start);
                     String end;
-                    if (sameDay(startDate, endDate, tz)) {
+                    if (DateTimeUtil.sameDay(startDate, endDate, tz)) {
                         end = CalendarMailSender.formatTime(endDate, tz, lc);
                         sb.append(" - ").append(end);
                     } else {
@@ -1568,17 +1569,6 @@ public class Appointment extends MailItem {
             if (hasMoreConflicts)
                 sb.append(" * ...\r\n");
             return sb.toString();
-        }
-
-        private static boolean sameDay(Date t1, Date t2, TimeZone tz) {
-            Calendar cal1 = new GregorianCalendar(tz);
-            cal1.setTime(t1);
-            Calendar cal2 = new GregorianCalendar(tz);
-            cal2.setTime(t2);
-            return
-                cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
-                cal1.get(Calendar.MONTH) == cal2.get(Calendar.MONTH) &&
-                cal1.get(Calendar.DAY_OF_MONTH) == cal2.get(Calendar.DAY_OF_MONTH);
         }
     }
 
