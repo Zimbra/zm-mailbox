@@ -66,7 +66,7 @@ public class GetMailQueue extends AdminDocumentHandler {
         String queryText = queryElem.getText();
         
         RemoteMailQueue rmq = RemoteMailQueue.getRemoteMailQueue(server, queueName, scan);
-        rmq.waitForScan(waitMillis);
+        boolean more = rmq.waitForScan(waitMillis);
         RemoteMailQueue.SearchResult sr = rmq.search(queryText, offset, limit);
         
         Element response = lc.createElement(AdminService.GET_MAIL_QUEUE_RESPONSE);
@@ -76,7 +76,7 @@ public class GetMailQueue extends AdminDocumentHandler {
         queueElem = serverElem.addElement(AdminService.E_QUEUE);
         queueElem.addAttribute(AdminService.A_NAME, queueName);
         queueElem.addAttribute(AdminService.A_TIME, rmq.getScanTime());
-        queueElem.addAttribute(AdminService.A_MORE, rmq.scanInProgress());
+        queueElem.addAttribute(AdminService.A_MORE, more);
         
         for (QueueAttr attr : sr.sitems.keySet()) {
             List<SummaryItem> slist = sr.sitems.get(attr);
