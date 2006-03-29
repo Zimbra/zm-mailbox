@@ -28,11 +28,13 @@ package com.zimbra.cs.rmgmt;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -68,11 +70,14 @@ public class RemoteMailQueue {
             
             queue = mMailQueueCache.get(cacheKey);
             if (queue != null) {
+                if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("queue cache: exists " + queue);
                 if (forceScan) {
+                    if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("queue cache: forcing scan " + queue);
                     queue.startScan(server, queueName);
                 }
             } else {
                 queue = new RemoteMailQueue(server, queueName, true);
+                if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("queue cache: new object " + queue);
                 mMailQueueCache.put(cacheKey, queue);
             }
             return queue;
@@ -89,14 +94,25 @@ public class RemoteMailQueue {
 
     public static final int MAIL_QUEUE_INDEX_FLUSH_THRESHOLD = 1000;
         
+    private static AtomicInteger mVisitorIdCounter = new AtomicInteger(0);
+    
     private class QueueItemVisitor implements RemoteResultParser.Visitor {
+
+        private final int mId;
+        
+        private int mNumMessages = 0;
+        
+        QueueItemVisitor() {
+            mId = mVisitorIdCounter.incrementAndGet();
+        }
+        
         public void handle(int lineNo, Map<String, String> map) throws IOException {
             if (map == null) {
                 return;
             }
                         
-            if ((mNumMessages % MAIL_QUEUE_INDEX_FLUSH_THRESHOLD) == 0) {
-                openIndexWriter();
+            if (mNumMessages > 0 && ((mNumMessages % MAIL_QUEUE_INDEX_FLUSH_THRESHOLD) == 0)) {
+                reopenIndexWriter();
             }   
             mNumMessages++;
             
@@ -137,7 +153,7 @@ public class RemoteMailQueue {
                 }
             }
 
-            if (ZimbraLog.rmgmt.isDebugEnabled()) { ZimbraLog.rmgmt.debug("adding: " + doc); }
+            if (ZimbraLog.rmgmt.isDebugEnabled()) { ZimbraLog.rmgmt.debug("[scan id=" + mId + "] " +  doc); }
             mIndexWriter.addDocument(doc);
         }
     }
@@ -158,21 +174,23 @@ public class RemoteMailQueue {
         }
     }
     
-    private int mNumMessages = 0;
-    
     private class QueueHandler implements RemoteBackgroundHandler {
 
         public void read(InputStream stdout, InputStream stderr) {
             try {
                 mScanStartTime = System.currentTimeMillis();
                 QueueItemVisitor v = new QueueItemVisitor();
+                if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("starting scan with visitor id=" + v.mId + " " + mDescription);
+                // This is a long running if the mail queues are backed up
+                clearIndexInternal();
+                openIndexWriter();
                 RemoteResultParser.parse(stdout, v);
                 closeIndexWriter();
                 mScanEndTime = System.currentTimeMillis();
-                
+                if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("finished scan with visitor id=" + v.mId + " total=" + v.mNumMessages + " " + mDescription);
                 byte[] err = ByteUtil.getContent(stderr, 0);
                 if (err != null && err.length > 0) {
-                	ZimbraLog.rmgmt.error("error scanning mail queue " + mQueueName + " on host " + mServerName + ": " + new String(err));
+                	ZimbraLog.rmgmt.error("error scanning " + this + ": " + new String(err));
                 }
             } catch (IOException ioe) {
                 error(ioe);
@@ -213,19 +231,28 @@ public class RemoteMailQueue {
         }
     }
     
-    public void clearIndex() throws ServiceException {
+    private void clearIndexInternal() throws IOException {
+        IndexWriter writer = null;
         try {
-            IndexWriter writer = null;
-            try {
-                if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("deleting index " + mIndexPath);
-                writer = new IndexWriter(mIndexPath, new StandardAnalyzer(), true);
-            } finally {
-                if (writer != null) {
-                    writer.close();
-                }
+            if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("clearing index (" + mIndexPath + ") for " + this);
+            writer = new IndexWriter(mIndexPath, new StandardAnalyzer(), true);
+        } finally {
+            if (writer != null) {
+                writer.close();
             }
-        } catch (IOException ioe) {
-            throw ServiceException.FAILURE("exception deleting queue index", ioe);
+        }
+    }
+
+    public void clearIndex() throws ServiceException {
+        synchronized (mScanLock) {
+            try {
+                if (mScanInProgress) {
+                    throw ServiceException.TEMPORARILY_UNAVAILABLE();
+                }
+                clearIndexInternal();
+            } catch (IOException ioe) {
+                throw ServiceException.FAILURE("could not clear queue cache", ioe);
+            }
         }
     }
     
@@ -236,34 +263,43 @@ public class RemoteMailQueue {
                 throw ServiceException.ALREADY_IN_PROGRESS("scan server=" + mServerName + " queue=" + mQueueName);
             }
             mScanInProgress = true;
-            clearIndex();
             RemoteManager rm = RemoteManager.getRemoteManager(server);
+            if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("initiating scan in background " + this);
             rm.executeBackground(RemoteCommands.ZMQSTAT + " " + queueName, new QueueHandler());
         }
     }
 
-    public void waitForScan(long timeout) {
+    public boolean waitForScan(long timeout) {
         synchronized (mScanLock) {
+            if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("wait for scan " + this);
             while (mScanInProgress) {
                 try {
+                    if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("will waiting " + timeout + "ms " + this);
                     mScanLock.wait(timeout);
                 } catch (InterruptedException ie) {
                     ZimbraLog.rmgmt.warn("interrupted while waiting for queue scan", ie);
                 }
             }
+            return mScanInProgress;
         }
     }
     
     private final String mQueueName;
         
     private final String mServerName;
-        
+
+    private final String mDescription;
+    
+    public String toString() {
+        return mDescription;
+    }
+    
     private RemoteMailQueue(Server server, String queueName, boolean scan) throws ServiceException {
         mServerName = server.getName();
         mQueueName = queueName;
+        mDescription = "[mail-queue: server=" + mServerName + " name=" + mQueueName + " hash=" + hashCode() + "]";
         mIndexPath = new File(LC.zimbra_tmp_directory.value() + File.separator + server.getId() + "-" + queueName);
         if (scan) {
-            if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("starting mailq queue scan on " + server.getName() + " for queue " + queueName);
             startScan(server, queueName);
         }
     }
@@ -273,16 +309,19 @@ public class RemoteMailQueue {
     private final File mIndexPath;
 
     private void openIndexWriter() throws IOException {
-        if (mIndexWriter != null) {
-            closeIndexWriter();
-        }
+        if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("opening indexwriter " + this);
         mIndexWriter = new IndexWriter(mIndexPath, new StandardAnalyzer(), true);
     }
     
     private void closeIndexWriter() throws IOException {
-    	if (mIndexWriter != null) {
-        	mIndexWriter.close();
-        }
+        if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("closing indexwriter " + this);
+        mIndexWriter.close();
+    }
+    
+    private void reopenIndexWriter() throws IOException {
+        if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("reopening indexwriter " + this);
+        closeIndexWriter();
+        openIndexWriter();
     }
     
     public static final class SummaryItem implements Comparable {
@@ -370,7 +409,8 @@ public class RemoteMailQueue {
     }
 
     private void list0(SearchResult result, IndexReader indexReader, int offset, int limit) throws IOException {
-    	int num = indexReader.numDocs();
+        if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("listing offset=" + offset + " limit=" + limit + " " + this);
+        int num = indexReader.numDocs();
     	int max = indexReader.maxDoc();
     	
     	int skip = 0;
@@ -398,6 +438,7 @@ public class RemoteMailQueue {
     }
     
     private void search0(SearchResult result, IndexReader indexReader, String queryText, int offset, int limit) throws ParseException, IOException {
+        if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("searching query=" + queryText + " offset=" + offset + " limit=" + limit + " " + this);
         Searcher searcher = null;
         try {
             searcher = new IndexSearcher(indexReader);
@@ -458,6 +499,7 @@ public class RemoteMailQueue {
     private static final int MAX_LENGTH_OF_QUEUEIDS = 12;
 
     public void action(Server server, QueueAction action, String[] ids) throws ServiceException {
+        if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("action=" + action + " ids=" + Arrays.deepToString(ids) + " " + this);
     	int done = 0;
     	int total = ids.length;
     	boolean firstTime = true;

@@ -211,7 +211,7 @@ public class ZimbraLog {
     /**
      * remote management.
      */
-    public static final org.apache.commons.logging.Log rmgmt = LogFactory.getLog("rmgmt");
+    public static final org.apache.commons.logging.Log rmgmt = LogFactory.getLog("zimbra.rmgmt");
 
     /**
      * adds key/value to context. Doesn't check to see if already in context.
