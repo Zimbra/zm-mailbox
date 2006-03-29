@@ -60,9 +60,8 @@ public class IfbFormatter extends Formatter {
     public String getDefaultSearchTypes() {
         return MailboxIndex.SEARCH_FOR_APPOINTMENTS;
     }
-  
-    
-    public void format(Context context, MailItem mailItem) throws IOException, ServiceException, UserServletException {
+
+    public void format(Context context, MailItem item) throws IOException, ServiceException, UserServletException {
         context.resp.setCharacterEncoding("UTF-8");
         context.resp.setContentType(Mime.CT_TEXT_CALENDAR);
 
@@ -93,9 +92,9 @@ public class IfbFormatter extends Formatter {
         toRet.append("DTSTART:").append(dtStart.toString()).append(NL);
         toRet.append("DTEND:").append(dtEnd.toString()).append(NL);
         toRet.append("URL:").append(context.req.getRequestURL()).append('?').append(context.req.getQueryString()).append(NL);
-            
+
         FreeBusy fb = context.targetMailbox.getFreeBusy(rangeStart, rangeEnd);
-            
+
 //            BEGIN:VFREEBUSY
 //            ORGANIZER:jsmith@host.com
 //            DTSTART:19980313T141711Z
@@ -137,12 +136,12 @@ public class IfbFormatter extends Formatter {
     }
     
     public long getDefaultStartTime() {
-        return  System.currentTimeMillis() - ONE_MONTH;
+        return System.currentTimeMillis() - ONE_MONTH;
     }
 
     // eventually get this from query param ?end=long|YYYYMMMDDHHMMSS
     public long getDefaultEndTime() {
-        return  System.currentTimeMillis() + (2 * ONE_MONTH);
+        return System.currentTimeMillis() + (2 * ONE_MONTH);
     }
 
     public boolean canBeBlocked() {

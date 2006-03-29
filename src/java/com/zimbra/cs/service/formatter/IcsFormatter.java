@@ -61,15 +61,22 @@ public class IcsFormatter extends Formatter {
     }
 
     public void format(Context context, MailItem mailItem) throws IOException, ServiceException {
+        Iterator<? extends MailItem> iterator = null;
+        List<Appointment> appts = new ArrayList<Appointment>();
         //ZimbraLog.mailbox.info("start = "+new Date(context.getStartTime()));
         //ZimbraLog.mailbox.info("end = "+new Date(context.getEndTime()));
-        Iterator iterator = getMailItems(context, mailItem, context.getStartTime(), context.getEndTime());
-        
-        List<Appointment> appts = new ArrayList<Appointment>();
-        // this is lame
-        while (iterator.hasNext()) {
-            MailItem item = (MailItem) iterator.next();
-            if (item instanceof Appointment) appts.add((Appointment) item);
+        try {
+            iterator = getMailItems(context, mailItem, context.getStartTime(), context.getEndTime());
+
+            // this is lame
+            while (iterator.hasNext()) {
+                MailItem item = iterator.next();
+                if (item instanceof Appointment)
+                    appts.add((Appointment) item);
+            }
+        } finally {
+            if (iterator instanceof QueryResultIterator)
+                ((QueryResultIterator) iterator).finished();
         }
         
         context.resp.setCharacterEncoding(Mime.P_CHARSET_UTF8);

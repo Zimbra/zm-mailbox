@@ -60,25 +60,31 @@ public class VcfFormatter extends Formatter {
     }
 
     public void format(Context context, MailItem target) throws IOException, ServiceException {
-        Iterator<? extends MailItem> iterator = getMailItems(context, target, getDefaultStartTime(), getDefaultEndTime());
+        Iterator<? extends MailItem> iterator = null;
+        try {
+            iterator = getMailItems(context, target, getDefaultStartTime(), getDefaultEndTime());
 
-        String filename = target instanceof Contact ? ((Contact) target).getFileAsString() : "contacts";
-        String cd = Part.ATTACHMENT + "; filename=" + HttpUtil.encodeFilename(context.req, filename + ".vcf");
-        context.resp.addHeader("Content-Disposition", cd);
-        context.resp.setContentType(Mime.CT_TEXT_VCARD);
-        context.resp.setCharacterEncoding(Mime.P_CHARSET_UTF8);
+            String filename = target instanceof Contact ? ((Contact) target).getFileAsString() : "contacts";
+            String cd = Part.ATTACHMENT + "; filename=" + HttpUtil.encodeFilename(context.req, filename + ".vcf");
+            context.resp.addHeader("Content-Disposition", cd);
+            context.resp.setContentType(Mime.CT_TEXT_VCARD);
+            context.resp.setCharacterEncoding(Mime.P_CHARSET_UTF8);
 
-        int count = 0;
-        while (iterator.hasNext()) {
-            MailItem item = iterator.next();
-            if (!(item instanceof Contact))
-                continue;
-            VCard vcf = VCard.formatContact((Contact) item);
-            context.resp.getOutputStream().write(vcf.formatted.getBytes(Mime.P_CHARSET_UTF8));
-            count++;
+            int count = 0;
+            while (iterator.hasNext()) {
+                MailItem item = iterator.next();
+                if (!(item instanceof Contact))
+                    continue;
+                VCard vcf = VCard.formatContact((Contact) item);
+                context.resp.getOutputStream().write(vcf.formatted.getBytes(Mime.P_CHARSET_UTF8));
+                count++;
+            }
+//            if (count == 0)
+//                throw new UserServletException(HttpServletResponse.SC_NO_CONTENT, "no matching contacts");
+        } finally {
+            if (iterator instanceof QueryResultIterator)
+                ((QueryResultIterator) iterator).finished();
         }
-//        if (count == 0)
-//            throw new UserServletException(HttpServletResponse.SC_NO_CONTENT, "no matching contacts");
     }
 
     public void save(byte[] body, Context context, Folder folder) throws ServiceException, IOException, UserServletException {
