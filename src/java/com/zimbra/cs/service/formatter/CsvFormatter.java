@@ -58,11 +58,16 @@ public class CsvFormatter extends Formatter {
         return MailboxIndex.SEARCH_FOR_CONTACTS;
     }
 
-    public void format(Context context, MailItem mailItem) throws IOException, ServiceException {
-        Iterator iterator = getMailItems(context, mailItem, -1, -1);
-        
+    public void format(Context context, MailItem item) throws IOException, ServiceException {
+        Iterator<? extends MailItem> iterator = null;
         StringBuffer sb = new StringBuffer();
-        ContactCSV.toCSV(iterator, sb);
+        try {
+            iterator = getMailItems(context, item, -1, -1);
+            ContactCSV.toCSV(iterator, sb);
+        } finally {
+            if (iterator instanceof QueryResultIterator)
+                ((QueryResultIterator) iterator).finished();
+        }
 
         // todo: get from folder name
         String filename = context.itemPath;

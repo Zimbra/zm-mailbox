@@ -35,7 +35,6 @@ import java.util.zip.ZipOutputStream;
 import javax.mail.Part;
 import javax.servlet.http.HttpServletResponse;
 
-
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Folder;
@@ -69,39 +68,47 @@ public class ZipFormatter extends Formatter {
     }
 
     public void format(Context context, MailItem target) throws IOException, ServiceException {
-        Iterator<? extends MailItem> iterator = getMailItems(context, target, getDefaultStartTime(), getDefaultEndTime());
+        Iterator<? extends MailItem> iterator = null;
+        ZipOutputStream out = null;
+        try {
+            iterator = getMailItems(context, target, getDefaultStartTime(), getDefaultEndTime());
 
-        // TODO: get name from folder/search/query/etc
-        String filename = "items.zip";
-        String cd = Part.ATTACHMENT + "; filename=" + HttpUtil.encodeFilename(context.req, filename);
-        context.resp.addHeader("Content-Disposition", cd.toString());
-        context.resp.setContentType("application/x-zip-compressed");
-
-        // create the ZIP file
-        ZipOutputStream out = new ZipOutputStream(context.resp.getOutputStream());
-        HashSet<String> usedNames = new HashSet<String>();
-
-        while (iterator.hasNext()) {
-            MailItem item = iterator.next();
-            if (item instanceof Message) {
-                InputStream is = ((Message) item).getRawMessage();
+            // TODO: get name from folder/search/query/etc
+            String filename = "items.zip";
+            String cd = Part.ATTACHMENT + "; filename=" + HttpUtil.encodeFilename(context.req, filename);
+            context.resp.addHeader("Content-Disposition", cd.toString());
+            context.resp.setContentType("application/x-zip-compressed");
     
-                // add ZIP entry to output stream
-                out.putNextEntry(new ZipEntry(getZipEntryName(item, item.getSubject(), ".eml", context, usedNames)));
-                ByteUtil.copy(is, out);
-                is.close();
-                out.closeEntry();
-            } else if (item instanceof Contact) {
-                VCard vcf = VCard.formatContact((Contact) item);
-
-                // add ZIP entry to output stream
-                out.putNextEntry(new ZipEntry(getZipEntryName(item, vcf.fn, ".vcf", context, usedNames)));
-                out.write(vcf.formatted.getBytes(Mime.P_CHARSET_UTF8));
-                out.closeEntry();
+            // create the ZIP file
+            out = new ZipOutputStream(context.resp.getOutputStream());
+            HashSet<String> usedNames = new HashSet<String>();
+    
+            while (iterator.hasNext()) {
+                MailItem item = iterator.next();
+                if (item instanceof Message) {
+                    InputStream is = ((Message) item).getRawMessage();
+        
+                    // add ZIP entry to output stream
+                    out.putNextEntry(new ZipEntry(getZipEntryName(item, item.getSubject(), ".eml", context, usedNames)));
+                    ByteUtil.copy(is, out);
+                    is.close();
+                    out.closeEntry();
+                } else if (item instanceof Contact) {
+                    VCard vcf = VCard.formatContact((Contact) item);
+    
+                    // add ZIP entry to output stream
+                    out.putNextEntry(new ZipEntry(getZipEntryName(item, vcf.fn, ".vcf", context, usedNames)));
+                    out.write(vcf.formatted.getBytes(Mime.P_CHARSET_UTF8));
+                    out.closeEntry();
+                }
             }
+        } finally {
+            if (iterator instanceof QueryResultIterator)
+                ((QueryResultIterator) iterator).finished();
+            // complete the ZIP file
+            if (out != null)
+                out.close();
         }
-        // complete the ZIP file
-        out.close();
     }
 
     private String getZipEntryName(MailItem item, String title, String suffix, Context context, HashSet<String> used)

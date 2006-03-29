@@ -47,34 +47,36 @@ import com.zimbra.soap.Element;
 public class AtomFormatter extends Formatter {
 
     
-    public void format(Context context, MailItem mailItem) throws IOException, ServiceException {
-        
-        Iterator iterator = getMailItems(context, mailItem, context.getStartTime(), context.getEndTime());
-        
-        context.resp.setCharacterEncoding("UTF-8");
-        context.resp.setContentType("application/atom+xml");
-        
+    public void format(Context context, MailItem item) throws IOException, ServiceException {
+        Iterator<? extends MailItem> iterator = null;
         StringBuffer sb = new StringBuffer();
-
-        sb.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
-            
         Element.XMLElement feed = new Element.XMLElement("feed");
-        feed.addAttribute("xmlns", "http://www.w3.org/2005/Atom");
-
-        feed.addElement("title").setText("Zimbra " + context.itemPath);
+        try {
+            iterator = getMailItems(context, item, context.getStartTime(), context.getEndTime());
             
-        feed.addElement("generator").setText("Zimbra Atom Feed Servlet");
-        
-        feed.addElement("id").setText(context.req.getRequestURL().toString());
-        feed.addElement("updated").setText(DateUtil.toISO8601(new Date(context.targetMailbox.getLastChangeDate())));
+            context.resp.setCharacterEncoding("UTF-8");
+            context.resp.setContentType("application/atom+xml");
+
+            sb.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
                 
-        while(iterator.hasNext()) {
-            MailItem itItem = (MailItem) iterator.next();
-            if (itItem instanceof Appointment) {
-                addAppointment((Appointment)itItem, feed, context);                
-            } else if (itItem instanceof Message) {
-                addMessage((Message) itItem, feed, context);
+            feed.addAttribute("xmlns", "http://www.w3.org/2005/Atom");
+    
+            feed.addElement("title").setText("Zimbra " + context.itemPath);
+            feed.addElement("generator").setText("Zimbra Atom Feed Servlet");
+            feed.addElement("id").setText(context.req.getRequestURL().toString());
+            feed.addElement("updated").setText(DateUtil.toISO8601(new Date(context.targetMailbox.getLastChangeDate())));
+                    
+            while (iterator.hasNext()) {
+                MailItem itItem = iterator.next();
+                if (itItem instanceof Appointment) {
+                    addAppointment((Appointment) itItem, feed, context);                
+                } else if (itItem instanceof Message) {
+                    addMessage((Message) itItem, feed, context);
+                }
             }
+        } finally {
+            if (iterator instanceof QueryResultIterator)
+                ((QueryResultIterator) iterator).finished();
         }
         sb.append(feed.toString());
         context.resp.getOutputStream().write(sb.toString().getBytes("UTF-8"));

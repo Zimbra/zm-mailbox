@@ -126,7 +126,7 @@ public abstract class Formatter {
         }
     }
 
-    private static class QueryResultIterator implements Iterator<MailItem> {
+    protected static class QueryResultIterator implements Iterator<MailItem> {
 
         private ZimbraQueryResults mResults;
         
@@ -135,6 +135,8 @@ public abstract class Formatter {
         }
 
         public boolean hasNext() {
+            if (mResults == null)
+                return false;
             try {
                 return mResults.hasNext();
             } catch (ServiceException e) {
@@ -144,6 +146,8 @@ public abstract class Formatter {
         }
 
         public MailItem next() {
+            if (mResults == null)
+                return null;
             try {
                 ZimbraHit hit = mResults.getNext();
                 if (hit == null)
@@ -164,6 +168,13 @@ public abstract class Formatter {
         public void remove() {
             throw new UnsupportedOperationException();
         }
-        
+
+        public void finished() {
+            try {
+                if (mResults != null)
+                    mResults.doneWithSearchResults();
+            } catch (ServiceException e) { }
+            mResults = null;
+        }
     }
 }

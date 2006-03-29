@@ -49,43 +49,42 @@ public class RssFormatter extends Formatter {
 
     private SimpleDateFormat mDateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
         
-    public void format(Context context, MailItem mailItem) throws IOException, ServiceException {
+    public void format(Context context, MailItem item) throws IOException, ServiceException {
         //ZimbraLog.mailbox.info("start = "+new Date(context.getStartTime()));
         //ZimbraLog.mailbox.info("end = "+new Date(context.getEndTime()));
-        
-        Iterator iterator = getMailItems(context, mailItem, context.getStartTime(), context.getEndTime());
-        
-        context.resp.setCharacterEncoding("UTF-8");
-        context.resp.setContentType("application/rss+xml");
-        
+        Iterator<? extends MailItem> iterator = null;
         StringBuffer sb = new StringBuffer();
-
-        sb.append("<?xml version=\"1.0\"?>\n");
-            
         Element.XMLElement rss = new Element.XMLElement("rss");
-        rss.addAttribute("version", "2.0");
-
-        Element channel = rss.addElement("channel");
-        channel.addElement("title").setText("Zimbra " + context.itemPath);
-        channel.addElement("link").setText("http://www.zimbra.com");
-        channel.addElement("description").setText("Zimbra item " + context.itemPath + " in RSS format.");
-            
-        channel.addElement("generator").setText("Zimbra RSS Feed Servlet");
-
-                
-        //channel.addElement("description").setText(query);
+        try {
+            iterator = getMailItems(context, item, context.getStartTime(), context.getEndTime());
         
-//        MailDateFormat mdf = new MailDateFormat();
-        while(iterator.hasNext()) {
+            context.resp.setCharacterEncoding("UTF-8");
+            context.resp.setContentType("application/rss+xml");
+
+            sb.append("<?xml version=\"1.0\"?>\n");
+                
+            rss.addAttribute("version", "2.0");
+            Element channel = rss.addElement("channel");
+            channel.addElement("title").setText("Zimbra " + context.itemPath);
+            channel.addElement("link").setText("http://www.zimbra.com");
+            channel.addElement("description").setText("Zimbra item " + context.itemPath + " in RSS format.");
+            channel.addElement("generator").setText("Zimbra RSS Feed Servlet");
+            //channel.addElement("description").setText(query);
             
-            MailItem itItem = (MailItem) iterator.next();
-            if (itItem instanceof Appointment) {
-                addAppointment((Appointment)itItem, channel, context);                
-            } else if (itItem instanceof Message) {
-                addMessage((Message) itItem, channel, context);
-            } else if (itItem instanceof Document) {
-                addDocument((Document) itItem, channel, context);
+//            MailDateFormat mdf = new MailDateFormat();
+            while (iterator.hasNext()) {
+                MailItem itItem = iterator.next();
+                if (itItem instanceof Appointment) {
+                    addAppointment((Appointment) itItem, channel, context);                
+                } else if (itItem instanceof Message) {
+                    addMessage((Message) itItem, channel, context);
+                } else if (itItem instanceof Document) {
+                    addDocument((Document) itItem, channel, context);
+                }
             }
+        } finally {
+            if (iterator instanceof QueryResultIterator)
+                ((QueryResultIterator) iterator).finished();
         }
         sb.append(rss.toString());
         context.resp.getOutputStream().write(sb.toString().getBytes("UTF-8"));

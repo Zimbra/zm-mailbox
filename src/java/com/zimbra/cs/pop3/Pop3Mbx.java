@@ -53,7 +53,7 @@ class Pop3Mbx {
     private int mNumDeleted; // number of messages deleted
     private long mTotalSize; // raw size from blob store
     private long mDeletedSize; // raw size from blob store    
-    private ArrayList mMessages; // array of pop messages
+    private ArrayList<Pop3Msg> mMessages; // array of pop messages
     private Mailbox.OperationContext mOpContext;
     
     /**
@@ -72,7 +72,7 @@ class Pop3Mbx {
 
         if (query == null || query.equals("")) {
            List items = mailbox.getItemList(mOpContext, MailItem.TYPE_MESSAGE, Mailbox.ID_FOLDER_INBOX);
-           mMessages = new ArrayList(items.size());           
+           mMessages = new ArrayList<Pop3Msg>(items.size());           
            for (Iterator it=items.iterator(); it.hasNext(); ) {
                Object obj = it.next();
                if (obj instanceof Message) {
@@ -82,8 +82,8 @@ class Pop3Mbx {
                }
            }
         } else {
-            ZimbraQueryResults results;
-            mMessages = new ArrayList(500);            
+            ZimbraQueryResults results = null;
+            mMessages = new ArrayList<Pop3Msg>(500);            
             try {
                 results = mailbox.search(mOpContext, query, new byte[] { MailItem.TYPE_MESSAGE }, MailboxIndex.SortBy.DATE_DESCENDING, 500);
 
@@ -100,6 +100,9 @@ class Pop3Mbx {
                 throw ServiceException.FAILURE(e.getMessage(), e);
             } catch (ParseException e) {
                 throw ServiceException.FAILURE(e.getMessage(), e);
+            } finally {
+                if (results != null)
+                    results.doneWithSearchResults();
             }
         }
     }
@@ -150,10 +153,10 @@ class Pop3Mbx {
     Pop3Msg getMsg(int index) throws Pop3CmdException {
         if (index < 0 || index >= mMessages.size()) 
             throw new Pop3CmdException("invalid message");
-        Pop3Msg pm = (Pop3Msg) mMessages.get(index);
-        //if (pm.isDeleted()) 
+        Pop3Msg p3m = mMessages.get(index);
+        //if (p3m.isDeleted()) 
         //    throw new Pop3CmdException("message is deleted");
-        return pm;
+        return p3m;
     }
     
     private int parseInt(String s, String message) throws Pop3CmdException {
@@ -173,10 +176,10 @@ class Pop3Mbx {
      */
     Pop3Msg getPop3Msg(String msg) throws Pop3CmdException {
         int index = parseInt(msg, "unable to parse msg");
-        Pop3Msg pm = getMsg(index-1);
-        if (pm.isDeleted())
+        Pop3Msg p3m = getMsg(index - 1);
+        if (p3m.isDeleted())
             throw new Pop3CmdException("message is deleted");
-        return pm;
+        return p3m;
     }
 
     /**
@@ -187,20 +190,20 @@ class Pop3Mbx {
      * @throws ServiceException
      */
     Message getMessage(String msg) throws Pop3CmdException, ServiceException {
-        Pop3Msg pm = getPop3Msg(msg);
+        Pop3Msg p3m = getPop3Msg(msg);
         Mailbox mbox = Mailbox.getMailboxById(mId);
-        return mbox.getMessageById(mOpContext, pm.getId());
+        return mbox.getMessageById(mOpContext, p3m.getId());
     }
     
     /**
      * Mark the message as deleted and update counts and mailbox size.
-     * @param pm
+     * @param p3m
      */
-    public void delete(Pop3Msg pm) {
-        if (!pm.isDeleted()) {
-            pm.mDeleted = true;
+    public void delete(Pop3Msg p3m) {
+        if (!p3m.isDeleted()) {
+            p3m.mDeleted = true;
             mNumDeleted++;
-            mDeletedSize += pm.getSize();
+            mDeletedSize += p3m.getSize();
         }
     }
 
@@ -209,12 +212,12 @@ class Pop3Mbx {
      */
     public int undeleteMarked() {
         int count = 0;
-        for (int i=0; i < mMessages.size(); i++) {
-            Pop3Msg pm = (Pop3Msg) mMessages.get(i);
-            if (pm.isDeleted()) {
+        for (int i = 0; i < mMessages.size(); i++) {
+            Pop3Msg p3m = mMessages.get(i);
+            if (p3m.isDeleted()) {
                 mNumDeleted--;
-                mDeletedSize -= pm.getSize();
-                pm.mDeleted = false;
+                mDeletedSize -= p3m.getSize();
+                p3m.mDeleted = false;
                 count++;
             }
         }
@@ -231,22 +234,22 @@ class Pop3Mbx {
         Mailbox mbox = Mailbox.getMailboxById(mId);
         int count = 0;
         int failed = 0;
-        for (int i=0; i < mMessages.size(); i++) {
-            Pop3Msg pm = (Pop3Msg) mMessages.get(i);
-            if (pm.isDeleted()) {
+        for (int i = 0; i < mMessages.size(); i++) {
+            Pop3Msg p3m = mMessages.get(i);
+            if (p3m.isDeleted()) {
                 try {
                     if (hard) {
-                        mbox.delete(mOpContext, pm.getId(), MailItem.TYPE_MESSAGE);                        
+                        mbox.delete(mOpContext, p3m.getId(), MailItem.TYPE_MESSAGE);                        
                     } else {
-                        mbox.move(mOpContext, pm.getId(), MailItem.TYPE_MESSAGE, Mailbox.ID_FOLDER_TRASH);
+                        mbox.move(mOpContext, p3m.getId(), MailItem.TYPE_MESSAGE, Mailbox.ID_FOLDER_TRASH);
                     }
                     count++;                    
                 } catch (ServiceException e) {
                     failed++;
                 }
                 mNumDeleted--;
-                mDeletedSize -= pm.getSize();
-                pm.mDeleted = false;
+                mDeletedSize -= p3m.getSize();
+                p3m.mDeleted = false;
             }
         }
         if (failed != 0) {
