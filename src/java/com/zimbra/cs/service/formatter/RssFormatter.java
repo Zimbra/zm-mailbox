@@ -33,6 +33,7 @@ import java.util.Iterator;
 import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Message;
@@ -66,6 +67,8 @@ public class RssFormatter extends Formatter {
 
         Element channel = rss.addElement("channel");
         channel.addElement("title").setText("Zimbra " + context.itemPath);
+        channel.addElement("link").setText("http://www.zimbra.com");
+        channel.addElement("description").setText("Zimbra item " + context.itemPath + " in RSS format.");
             
         channel.addElement("generator").setText("Zimbra RSS Feed Servlet");
 
@@ -80,6 +83,8 @@ public class RssFormatter extends Formatter {
                 addAppointment((Appointment)itItem, channel, context);                
             } else if (itItem instanceof Message) {
                 addMessage((Message) itItem, channel, context);
+            } else if (itItem instanceof Document) {
+                addDocument((Document) itItem, channel, context);
             }
         }
         sb.append(rss.toString());
@@ -130,6 +135,15 @@ public class RssFormatter extends Formatter {
         // guid.addAttribute("isPermaLink", "false");
     }
 
+    private void addDocument(Document doc, Element channel, Context context) throws ServiceException {
+        Element item = channel.addElement("item");
+        item.addElement("title").setText(doc.getFilename() + " ver " + doc.getVersion());
+        item.addElement("description").setText(doc.getFragment());
+        item.addElement("author").setText(doc.getLastRevision().getCreator());
+        item.addElement("pubDate").setText(mDateFormat.format(new Date(doc.getLastRevision().getRevDate())));
+        item.addElement("link").setText(context.req.getRequestURL().append("?id="+doc.getId()).toString());
+    }
+    
     public String getType() {
         return "rss";
     }

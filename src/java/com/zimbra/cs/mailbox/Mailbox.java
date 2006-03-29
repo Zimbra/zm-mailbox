@@ -4436,6 +4436,17 @@ public class Mailbox {
     	return (WikiItem) getItemById(octxt, id, MailItem.TYPE_WIKI);
     }
     
+    public synchronized List<Document> getWikiList(OperationContext octxt, int folderId) throws ServiceException {
+        return getWikiList(octxt, folderId, DbMailItem.SORT_NONE);
+    }
+    public synchronized List<Document> getWikiList(OperationContext octxt, int folderId, byte sort) throws ServiceException {
+        List<Document> docs = new ArrayList<Document>();
+        for (MailItem item : getItemList(octxt, MailItem.TYPE_DOCUMENT, folderId, sort))
+            docs.add((Document) item);
+        for (MailItem item : getItemList(octxt, MailItem.TYPE_WIKI, folderId, sort))
+            docs.add((Document) item);
+        return docs;
+    }
     public synchronized Document createDocument(OperationContext octxt, 
     											int folderId, 
     											String filename, 
