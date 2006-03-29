@@ -57,8 +57,9 @@ public class TextHtmlHandler extends MimeHandler {
         private StringBuffer sb = new StringBuffer();
         private String title = null;
         boolean inTitle = false;
+        boolean inCharacters = false;
         int skipping = 0;
-        
+
         public void startDocument() { sb.setLength(0); }
         public void startElement(String uri, String localName, String qName, org.xml.sax.Attributes attributes) {
             String element = localName.toUpperCase();
@@ -74,25 +75,36 @@ public class TextHtmlHandler extends MimeHandler {
                     sb.append('[').append(altText).append(']');
                 }
             }
+            inCharacters = false;
         }
         public void characters(char[] ch, int offset, int length) {
-            if (skipping > 0 || length == 0)
+            if (skipping > 0 || length == 0) {
                 return;
-            else if (inTitle)
-                title = new String(ch, offset, length);
-            else {
+            } else if (inTitle) {
+                String content = new String(ch, offset, length);
+                if (length > 0) {
+                    if (title == null)
+                        title = content;
+                    else
+                        title = title + (inCharacters ? "" : " ") + content;
+                }
+            } else {
+                int original = offset;
+                // trim leading spaces (don't bother with trailers; the output isn't for public viewing)
                 while (length > 0) {
                     char c = ch[offset];
                     if (c > ' ' && c != 0xA0)
                         break;
                     offset++;  length--;
                 }
+                // and if there's anything left, append it
                 if (length > 0) {
-                    if (sb.length() > 0)
+                    if (sb.length() > 0 && (!inCharacters || original != offset))
                         sb.append(' ');
                     sb.append(ch, offset, length);
                 }
             }
+            inCharacters = (length > 0);
         }
         public void endElement(String uri, String localName, String qName) {
             String element = localName.toUpperCase();
@@ -100,6 +112,7 @@ public class TextHtmlHandler extends MimeHandler {
                 inTitle = false;
             else if ("STYLE".equals(element) || "SCRIPT".equals(element))
                 skipping--;
+            inCharacters = false;
         }
 
         public String toString()  { return sb.toString(); }
