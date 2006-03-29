@@ -64,10 +64,6 @@ public class MailQueueAction extends AdminDocumentHandler {
         String[] ids;
         if (by.equals(AdminService.BY_ID)) {
             String idText = actionElem.getText();
-            if (idText.equals("ALL")) {
-                // Special case ALL that postsuper supports
-                rmq.clearIndex();
-            }
             ids = actionElem.getText().split(",");
         } else if (by.equals(AdminService.BY_QUERY)) {
             RemoteMailQueue.SearchResult sr = rmq.search(actionElem.getText(), 0, 0);

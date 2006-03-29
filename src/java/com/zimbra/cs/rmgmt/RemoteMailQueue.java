@@ -271,15 +271,33 @@ public class RemoteMailQueue {
 
     public boolean waitForScan(long timeout) {
         synchronized (mScanLock) {
-            if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("wait for scan " + this);
+            if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("scan wait " + this);
+            long waitTime = timeout;
+            long startTime = System.currentTimeMillis();
             while (mScanInProgress) {
                 try {
-                    if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("will waiting " + timeout + "ms " + this);
-                    mScanLock.wait(timeout);
+                    if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("scan wait time " + waitTime + "ms " + this);
+                    mScanLock.wait(waitTime);
+                    // Re-check condition so we can see if this was (a) a spurious wakeup, (b) timeout
+                    // or (c) condition was reached.
+                    if (!mScanInProgress) {
+                        if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("scan wait done " + this);
+                        break; // (c) condition was reached
+                    }
+                    
+                    long now = System.currentTimeMillis(); // Doug Lea - 1ed
+                    long timeSoFar = now - startTime;
+                    if (timeSoFar >= timeout) {
+                        if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("scan wait timed out " + this);
+                        break; // (b) timeout
+                    }
+                    waitTime = timeout - timeSoFar;
+                    // (a) spurious wakeup
                 } catch (InterruptedException ie) {
                     ZimbraLog.rmgmt.warn("interrupted while waiting for queue scan", ie);
                 }
             }
+            if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("scan wait returning progress=" + mScanInProgress + " " + this);
             return mScanInProgress;
         }
     }
@@ -315,13 +333,12 @@ public class RemoteMailQueue {
     
     private void closeIndexWriter() throws IOException {
         if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("closing indexwriter " + this);
-        mIndexWriter.close();
     }
     
     private void reopenIndexWriter() throws IOException {
         if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("reopening indexwriter " + this);
-        closeIndexWriter();
-        openIndexWriter();
+        mIndexWriter.close();
+        mIndexWriter = new IndexWriter(mIndexPath, new StandardAnalyzer(), false);
     }
     
     public static final class SummaryItem implements Comparable {
@@ -505,8 +522,17 @@ public class RemoteMailQueue {
     	boolean firstTime = true;
     	RemoteManager rm = RemoteManager.getRemoteManager(server);
     	IndexReader indexReader = null;
+
     	try {
-    		indexReader = IndexReader.open(mIndexPath);
+            boolean all = false;
+            if (ids.length == 1 && ids[0].equals("ALL")) {
+                // Special case ALL that postsuper supports
+                clearIndex();
+                all = true;
+            } else {
+                indexReader = IndexReader.open(mIndexPath);
+            }
+
     		while (done < total) {
     			int numQueueIds = Math.min(total - done, MAX_REMOTE_EXECUTION_QUEUEIDS);
     			StringBuilder sb = new StringBuilder(128 + (numQueueIds * MAX_LENGTH_OF_QUEUEIDS));
@@ -516,9 +542,11 @@ public class RemoteMailQueue {
     				if (i > 0) {
     					sb.append(",");
     				}
-    	            Term toDelete = new Term(QueueAttr.id.toString(), ids[i].toLowerCase());
-    	            int numDeleted = indexReader.delete(toDelete);
-    	            if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("deleting term:" + toDelete + ", docs deleted=" + numDeleted);
+                    if (!all) {
+                        Term toDelete = new Term(QueueAttr.id.toString(), ids[i].toLowerCase());
+                        int numDeleted = indexReader.delete(toDelete);
+                        if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("deleting term:" + toDelete + ", docs deleted=" + numDeleted);
+                    }
     				sb.append(ids[done + i].toUpperCase());
     			}
     			done = i;
