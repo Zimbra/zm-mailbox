@@ -225,7 +225,7 @@ public class ParsedMessage {
             // if there are attachments to be expanded, expand them in the MimeMessage *copy*
             if (mExpandedMessage != mMimeMessage)
                 for (Class vclass : MimeVisitor.getConverters())
-                    ((MimeVisitor) vclass.newInstance()).accept(mMimeMessage);
+                    ((MimeVisitor) vclass.newInstance()).accept(mExpandedMessage);
         } catch (Exception e) {
             // roll back if necessary
             mExpandedMessage = mMimeMessage;
@@ -252,7 +252,7 @@ public class ParsedMessage {
 	}
 
     void forkMimeMessage() throws MessagingException {
-        mExpandedMessage = new MimeMessage(mMimeMessage);
+        mExpandedMessage = new Mime.FixedMimeMessage(mMimeMessage);
     }
 
     private void setRawData(byte[] rawData) {
