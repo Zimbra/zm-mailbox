@@ -186,6 +186,10 @@ public class ServiceException extends Exception {
         return new ServiceException("mountpoint loop detected", TOO_MANY_HOPS, SENDERS_FAULT);
     }
     
+    public static ServiceException ALREADY_IN_PROGRESS(String message) {
+        return new ServiceException(message, ALREADY_IN_PROGRESS, SENDERS_FAULT);
+    }
+    
     public static ServiceException ALREADY_IN_PROGRESS(String mboxId, String action) {
         return new ServiceException("mbox "+mboxId+" is already running action "+action, ALREADY_IN_PROGRESS, SENDERS_FAULT, new Argument(MAILBOX_ID, mboxId), new Argument("action", action));
     }

@@ -36,7 +36,6 @@ import java.util.Map;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.document.DateField;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
@@ -109,12 +108,12 @@ public class RemoteMailQueue {
             }
             doc.add(new Field(QueueAttr.id.toString(), id.toLowerCase(), true, true, false, false));
 
-            String time = map.get(QueueAttr.time);
+            String time = map.get(QueueAttr.time.toString());
             if (time != null && time.length() > 0) {
                 long timeMillis = Long.parseLong(time) * 1000;
-                doc.add(Field.Keyword(QueueAttr.time.toString(), DateField.timeToString(timeMillis)));
+                doc.add(new Field(QueueAttr.time.toString(), Long.toString(timeMillis), true, true, false, false));
             }
-            
+
             addSimpleField(doc, map, QueueAttr.size);
             addSimpleField(doc, map, QueueAttr.addr);
             addSimpleField(doc, map, QueueAttr.host);
@@ -138,6 +137,7 @@ public class RemoteMailQueue {
                 }
             }
 
+            if (ZimbraLog.rmgmt.isDebugEnabled()) { ZimbraLog.rmgmt.debug("adding: " + doc); }
             mIndexWriter.addDocument(doc);
         }
     }
@@ -233,7 +233,7 @@ public class RemoteMailQueue {
         synchronized (mScanLock) {
             if (mScanInProgress) {
                 // One day, we should interrupt the scan.
-                throw ServiceException.FAILURE("scan already in progress and can not be interrupted", null);
+                throw ServiceException.ALREADY_IN_PROGRESS("scan server=" + mServerName + " queue=" + mQueueName);
             }
             mScanInProgress = true;
             clearIndex();
@@ -323,7 +323,14 @@ public class RemoteMailQueue {
                 String field = term.field();
                 if (field != null && field.length() > 0) {
                     QueueAttr attr = QueueAttr.valueOf(field);
-                    if (attr != null && attr != QueueAttr.id) {
+                    if (attr == QueueAttr.addr ||
+                        attr == QueueAttr.host ||
+                        attr == QueueAttr.from ||
+                        attr == QueueAttr.to ||
+                        attr == QueueAttr.fromdomain ||
+                        attr == QueueAttr.todomain ||
+                        attr == QueueAttr.reason) 
+                    {
                         List<SummaryItem> list = result.sitems.get(attr);
                         if (list == null) {
                             list = new LinkedList<SummaryItem>();
