@@ -547,6 +547,8 @@ public abstract class Provisioning {
     
     public static final String A_zimbraFeatureMailForwardingEnabled = "zimbraFeatureMailForwardingEnabled";
 
+    public static final String A_zimbraFeatureMobileSyncEnabled = "zimbraFeatureMobileSyncEnabled";
+
     /**
      * administrative notes for an entry.
      */
