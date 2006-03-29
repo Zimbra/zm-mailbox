@@ -1743,6 +1743,14 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         }
 
         try {
+            // Bug 6623: close the input stream first so that the lock inside the JDK
+            // is relesaed, and then close the output side. The downside to closing
+            // the input side first is that the underlying socket appears to get closed
+            // and if we tried to send a goodbye banner that is just lost into ether.
+            if (mInputStream != null) {
+                mInputStream.close();
+                mInputStream = null;
+            }
             if (mOutputStream != null) {
                 if (sendBanner) {
                     if (!mGoodbyeSent) {
@@ -1755,10 +1763,6 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                 }
                 mOutputStream.close();
                 mOutputStream = null;
-            }
-            if (mInputStream != null) {
-                mInputStream.close();
-                mInputStream = null;
             }
         } catch (IOException e) {
             INFO("exception while closing connection", e);
