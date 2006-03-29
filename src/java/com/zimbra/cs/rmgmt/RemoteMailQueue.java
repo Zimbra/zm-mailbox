@@ -338,6 +338,7 @@ public class RemoteMailQueue {
     
     private void closeIndexWriter() throws IOException {
         if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("closing indexwriter " + this);
+        mIndexWriter.close();
     }
     
     private void reopenIndexWriter() throws IOException {
