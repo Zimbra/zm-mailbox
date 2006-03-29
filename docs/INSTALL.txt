@@ -1,4 +1,4 @@
-This install doc is aimed at developers internal to Zimbra.
+  This install doc is aimed at developers internal to Zimbra.
 You'll see paths to internal shares and the like.  It's also 
 useful to setting up a development build with CVS, but that's 
 not the main focus.
@@ -142,7 +142,7 @@ installers to your local machine before installing.
   
     You can log into the Admin Console by going to:
   
-        https://localhost:7071/zimbra/admin
+        https://localhost:7071/zimbraAdmin
     
     and login as "admin@{hostname}" (the domain is mandatory), with
     the password "test123", where {hostname} is the name of your local
