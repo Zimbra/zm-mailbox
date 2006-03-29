@@ -43,6 +43,7 @@ import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
@@ -111,7 +112,7 @@ public class SendMsg extends WriteOpDocumentHandler {
             throw MailServiceException.NO_SUCH_UPLOAD(attachId);
         (mimeData.uploads = new ArrayList<Upload>()).add(up);
         try {
-            return new MimeMessage(JMSession.getSession(), up.getInputStream());
+            return new Mime.FixedMimeMessage(JMSession.getSession(), up.getInputStream());
         } catch (MessagingException e) {
             throw MailServiceException.MESSAGE_PARSE_ERROR(e);
         } catch (IOException e) {

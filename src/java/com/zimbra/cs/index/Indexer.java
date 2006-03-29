@@ -47,6 +47,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Note;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.service.ServiceException;
@@ -115,7 +116,7 @@ public class Indexer
                 InputStream is = mbox.getMessageById(null, itemId).getRawMessage();
                 MimeMessage mm;
     			try {
-    				mm = new MimeMessage(JMSession.getSession(), is);
+    				mm = new Mime.FixedMimeMessage(JMSession.getSession(), is);
                     ParsedMessage pm = new ParsedMessage(mm, timestamp, mbox.attachmentsIndexingEnabled());
                     indexMessage(redo, idx, itemId, pm);
     			} catch (Throwable e) {

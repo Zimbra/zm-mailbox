@@ -41,6 +41,7 @@ import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 
 import com.zimbra.cs.service.ServiceException;
@@ -91,9 +92,9 @@ public class SetAppointment extends RedoableOp implements CreateAppointmentRecor
             int dataLen = in.readInt();
             byte[] rawPmData = new byte[dataLen];
             in.readFully(rawPmData, 0, dataLen);
-            
+
             InputStream is = new ByteArrayInputStream(rawPmData);
-            MimeMessage mm = new MimeMessage(JMSession.getSession(), is);
+            MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), is);
             
             toRet.mPm = new ParsedMessage(mm, receivedDate, mbox.attachmentsIndexingEnabled());
         } catch (ServiceException ex) {

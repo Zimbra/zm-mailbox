@@ -66,10 +66,8 @@ import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
-import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.mime.TnefConverter;
-import com.zimbra.cs.mime.UUEncodeConverter;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.redolog.op.CreateAppointmentPlayer;
 import com.zimbra.cs.redolog.op.CreateAppointmentRecorder;
@@ -111,7 +109,7 @@ public class Appointment extends MailItem {
     private Recurrence.IRecurrence mRecurrence;
     private TimeZoneMap mTzMap;
 
-    private List /* Invite */ mInvites;
+    private List<Invite> mInvites;
     
     private ReplyList mReplyList;
 
@@ -163,7 +161,7 @@ public class Appointment extends MailItem {
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
         Mailbox mbox = folder.getMailbox();
 
-        List invites = new ArrayList();
+        List<Invite> invites = new ArrayList<Invite>();
         invites.add(firstInvite);
 
         Recurrence.IRecurrence recur = firstInvite.getRecurrence();
@@ -288,7 +286,7 @@ public class Appointment extends MailItem {
         int mdVersion = meta.getVersion();
 
         mUid = meta.get(Metadata.FN_UID, null);
-        mInvites = new ArrayList();
+        mInvites = new ArrayList<Invite>();
 
         ICalTimeZone accountTZ = getMailbox().getAccount().getTimeZone();
         if (mdVersion < 6) {
@@ -359,7 +357,7 @@ public class Appointment extends MailItem {
     // * @return list of Instances for the specified time period
     // */
     public Collection /* Instance */expandInstances(long start, long end) {
-        List /* Instance */instances = new ArrayList();
+        List<Instance> instances = new ArrayList<Instance>();
 
         if (mRecurrence != null) {
             instances = mRecurrence.expandInstances(this, start, end);
@@ -488,23 +486,18 @@ public class Appointment extends MailItem {
     }
     
     public Invite[] getInvites() {
-        ArrayList toRet = new ArrayList();
-        for (Iterator iter = mInvites.iterator(); iter.hasNext();) {
-            Invite inv = (Invite)iter.next();
+        ArrayList<Invite> toRet = new ArrayList<Invite>();
+        for (Invite inv : mInvites)
             toRet.add(inv);
-        }
-        return (Invite[])toRet.toArray(new Invite[0]);
+        return toRet.toArray(new Invite[0]);
     }
     
     public Invite[] getInvites(int invId) {
-        ArrayList toRet = new ArrayList();
-        for (Iterator iter = mInvites.iterator(); iter.hasNext();) {
-            Invite inv = (Invite)iter.next();
-            if (inv.getMailItemId() == invId) {
+        ArrayList<Invite> toRet = new ArrayList<Invite>();
+        for (Invite inv : mInvites)
+            if (inv.getMailItemId() == invId)
                 toRet.add(inv);
-            }
-        }
-        return (Invite[])toRet.toArray(new Invite[0]);
+        return toRet.toArray(new Invite[0]);
     }
     
     public int numInvites() {
@@ -512,7 +505,7 @@ public class Appointment extends MailItem {
     }
 
     public Invite getInvite(int num) {
-        return (Invite)(mInvites.get(num));
+        return mInvites.get(num);
     }
     
     public Invite getDefaultInvite() {
@@ -1415,8 +1408,8 @@ public class Appointment extends MailItem {
             is.close();
 
             try {
-                Mime.accept(new TnefConverter(), mm);
-                Mime.accept(new UUEncodeConverter(), mm);
+                for (Class visitor : MimeVisitor.getConverters())
+                    ((MimeVisitor) visitor.newInstance()).accept(mm);
             } catch (Exception e) {
                 // If the conversion bombs for any reason, revert to the original
                 ZimbraLog.mailbox.info(
@@ -1448,8 +1441,8 @@ public class Appointment extends MailItem {
             is.close();
 
             try {
-                Mime.accept(new TnefConverter(), mm);
-                Mime.accept(new UUEncodeConverter(), mm);
+                for (Class visitor : MimeVisitor.getConverters())
+                    ((MimeVisitor) visitor.newInstance()).accept(mm);
             } catch (Exception e) {
                 // If the conversion bombs for any reason, revert to the original
                 ZimbraLog.mailbox.info(

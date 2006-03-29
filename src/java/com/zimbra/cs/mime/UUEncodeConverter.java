@@ -41,71 +41,78 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
 import com.zimbra.cs.util.FileUtil;
+import com.zimbra.cs.util.ZimbraLog;
 
-public class UUEncodeConverter implements MimeVisitor {
-    private ModificationCallback mCallback;
+public class UUEncodeConverter extends MimeVisitor {
+    protected boolean visitMultipart(MimeMultipart mp, VisitPhase visitKind)  { return false; }
+    protected boolean visitBodyPart(MimeBodyPart bp)                          { return false; }
 
-    public UUEncodeConverter() { }
-    public UUEncodeConverter(ModificationCallback callback)  { mCallback = callback; }
+    protected boolean visitMessage(MimeMessage msg, VisitPhase visitKind) throws MessagingException {
+        // do the decode in the exit phase
+        if (visitKind != VisitPhase.VISIT_END)
+            return false;
 
-    public void visitMultipart(MimeMultipart mp, int visitKind) { }
-    public void visitBodyPart(MimeBodyPart bp)  { }
-
-    public void visitMessage(MimeMessage msg, int visitKind) throws MessagingException, IOException {
-        if (visitKind != VISIT_END)
-            return;
-        if (!msg.isMimeType(Mime.CT_TEXT_PLAIN))
-            return;
-        
-        Object content = msg.getContent();
-        // FIXME: check for char or byte arrays, SharedByteInputStream or whatever
-        if (!(content instanceof String))
-            return;
-        String text = (String) content;
-
-        // go through top-level text/plain part and extract uuencoded files
         MimeMultipart mmp = null;
-        boolean initial = text.startsWith("begin ");
-        for (int location = 0; initial || (location = text.indexOf("\nbegin ", location)) != -1; initial = false, location++) {
-            // find the end of the uuencoded block
-            int end = text.indexOf("\nend");
-            if (end != -1)
-                try {
-                    // parse the uuencoded content into a String
-                    int start = initial ? location: location + 1;
-                    UUDecodedFile uu = new UUDecodedFile(text.substring(start, end + 4));
-
-                    MimeBodyPart mbp = new MimeBodyPart();
-                    mbp.setHeader("Content-Type", Mime.CT_APPLICATION_OCTET_STREAM);
-                    ContentDisposition cd = new ContentDisposition(Part.ATTACHMENT);
-                    cd.setParameter("filename", uu.getFilename());
-                    mbp.setHeader("Content-Disposition", cd.toString());
-                    mbp.setDataHandler(new DataHandler(uu.getDataSource()));
-
-                    if (mmp == null)
-                        mmp = new MimeMultipart("mixed");
-                    mmp.addBodyPart(mbp);
-
-                    text = text.substring(0, start) + text.substring(end + 4);
-                    location--;
-                } catch (ParseException pe) { }
+        try {
+            // only check "text/plain" parts for uudecodeable attachments
+            if (!msg.isMimeType(Mime.CT_TEXT_PLAIN))
+                return false;
+            
+            Object content = msg.getContent();
+            // FIXME: check for char or byte arrays, SharedByteInputStream or whatever
+            if (!(content instanceof String))
+                return false;
+            String text = (String) content;
+    
+            // go through top-level text/plain part and extract uuencoded files
+            boolean initial = text.startsWith("begin ");
+            for (int location = 0; initial || (location = text.indexOf("\nbegin ", location)) != -1; initial = false, location++) {
+                // find the end of the uuencoded block
+                int end = text.indexOf("\nend");
+                if (end != -1)
+                    try {
+                        // parse the uuencoded content into a String
+                        int start = initial ? location: location + 1;
+                        UUDecodedFile uu = new UUDecodedFile(text.substring(start, end + 4));
+    
+                        MimeBodyPart mbp = new MimeBodyPart();
+                        mbp.setHeader("Content-Type", Mime.CT_APPLICATION_OCTET_STREAM);
+                        ContentDisposition cd = new ContentDisposition(Part.ATTACHMENT);
+                        cd.setParameter("filename", uu.getFilename());
+                        mbp.setHeader("Content-Disposition", cd.toString());
+                        mbp.setDataHandler(new DataHandler(uu.getDataSource()));
+    
+                        if (mmp == null)
+                            mmp = new MimeMultipart("mixed");
+                        mmp.addBodyPart(mbp);
+    
+                        text = text.substring(0, start) + text.substring(end + 4);
+                        location--;
+                    } catch (ParseException pe) { }
+            }
+            
+            if (mmp == null)
+                return false;
+    
+            // take the remaining text and put it in as the first "related" part
+            MimeBodyPart mbp = new MimeBodyPart();
+            mbp.setText(text, Mime.P_CHARSET_UTF8);
+            mbp.setHeader("Content-Type", "text/plain; charset=utf-8");
+            mmp.addBodyPart(mbp, 0);
+        } catch (MessagingException e) {
+            ZimbraLog.extensions.warn("exception while uudecoding message part; skipping part", e);
+            return false;
+        } catch (IOException e) {
+            ZimbraLog.extensions.warn("exception while uudecoding message part; skipping part", e);
+            return false;
         }
-        
-        if (mmp == null)
-            return;
-
-        // take the remaining text and put it in as the first "related" part
-        MimeBodyPart mbp = new MimeBodyPart();
-        mbp.setText(text, Mime.P_CHARSET_UTF8);
-        mbp.setHeader("Content-Type", "text/plain; charset=utf-8");
-        mmp.addBodyPart(mbp, 0);
 
         // check to make sure that the caller's OK with altering the message
         if (mCallback != null && !mCallback.onModification())
-            return;
+            return false;
         // and replace the top-level part with a new multipart/related
         msg.setContent(mmp);
-        msg.saveChanges();
+        return true;
     }
 
     private static class UUDecodedFile {
@@ -195,11 +202,13 @@ public class UUEncodeConverter implements MimeVisitor {
         System.out.println(new String(uu.getContent(), "euc-jp"));
 
         MimeMessage mm = new MimeMessage(com.zimbra.cs.util.JMSession.getSession(), new java.io.FileInputStream("c:\\tmp\\uuencode-1"));
-        Mime.accept(new UUEncodeConverter(), mm);
+        new UUEncodeConverter().accept(mm);
+        mm.saveChanges();
         mm.writeTo(new java.io.FileOutputStream("c:\\tmp\\decoded-1"));
 
         mm = new MimeMessage(com.zimbra.cs.util.JMSession.getSession(), new java.io.FileInputStream("c:\\tmp\\uuencode-2"));
-        Mime.accept(new UUEncodeConverter(), mm);
+        new UUEncodeConverter().accept(mm);
+        mm.saveChanges();
         mm.writeTo(new java.io.FileOutputStream("c:\\tmp\\decoded-2"));
     }
 }
