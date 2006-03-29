@@ -31,6 +31,7 @@ import java.util.Map;
 
 import javax.mail.BodyPart;
 import javax.mail.MessagingException;
+import javax.mail.Part;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
@@ -132,7 +133,7 @@ public class TnefConverter extends MimeVisitor {
                     }
                     if (multi == null)
                         continue;
-    
+
                     // create a BodyPart to contain the new Multipart (JavaMail bookkeeping)
                     MimeBodyPart replacement = new MimeBodyPart();
                     replacement.setContent(multi);
@@ -169,18 +170,25 @@ public class TnefConverter extends MimeVisitor {
         if (!TNEFUtils.isTNEFMimeType(bp.getContentType()))
             return null;
 
-        // Convert TNEF to a Message and remove it from the parent
+        // convert TNEF to a MimeMessage and remove it from the parent
         TNEFInputStream in = new TNEFInputStream(bp.getInputStream());
         MimeMessage converted = TNEFMime.convert(JMSession.getSession(), in);
+
+        MimeMultipart convertedMulti = (MimeMultipart) converted.getContent();
+        // make sure that all the attachments are marked as attachments
+        for (int i = 0; i < convertedMulti.getCount(); i++) {
+            BodyPart subpart = convertedMulti.getBodyPart(i);
+            if (subpart.getHeader("Content-Disposition") == null)
+                subpart.setHeader("Content-Disposition", Part.ATTACHMENT);
+        }
 
         // Create a MimeBodyPart for the converted data.  Currently we're throwing
         // away the top-level message because its content shows up as blank after
         // the conversion.
-        MimeMultipart convertedMulti = (MimeMultipart) converted.getContent();
         MimeBodyPart convertedPart = new MimeBodyPart();
         convertedPart.setContent(convertedMulti);
 
-        // Create a multipart/alternative for the TNEF and its MIME version
+        // create a multipart/alternative for the TNEF and its MIME version
         MimeMultipart altMulti = new MimeMultipart("alternative");
         altMulti.addBodyPart(bp);
         altMulti.addBodyPart(convertedPart);
