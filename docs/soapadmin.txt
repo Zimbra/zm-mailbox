@@ -1231,13 +1231,16 @@ The response has two parts.
 - <qi> elements list the various queue items that match the requested
   query.
 
-The stale flag in the response means that since the scan, some queue
+The stale-flag in the response means that since the scan, some queue
 action was done and the data being presented is now stale.  This
 allows us to let the user dictate when to do a queue scan.
 
-The more flag in the response indicates that the server has not
+The scan-flag in the response indicates that the server has not
 completed scanning the MTA queue, and that this scan is in progress,
 and the client should ask again in a little while.
+
+The more-flag in the response indicates that more qi's are available
+past the limit specified in the request.
 
 <GetMailQueueRequest>
   <server name="{mta-server}">
@@ -1249,7 +1252,7 @@ and the client should ask again in a little while.
 
 <GetMailQueueResponse>
   <server name="{mta-server}">
-    <queue name="{queue-name}" stale="{0,1}" time="{scan-time}">
+    <queue name="{queue-name}" stale="{stale-flag}" time="{scan-time}" more="{more-flag}" scan="{scan-flag}">
 
       <qs type="reason|to|from|todomain|fromdomain|addr|host">
         <qsi n="{count}" t="{text-for-item}">+
