@@ -94,7 +94,7 @@ public class ParseMimeMessage {
         String content = contentElement.getText();
         ByteArrayInputStream messageStream = new ByteArrayInputStream(content.getBytes());
         try {
-            return new MimeMessage(JMSession.getSession(), messageStream);
+            return new Mime.FixedMimeMessage(JMSession.getSession(), messageStream);
         } catch (MessagingException me) {
             mLog.warn(ExceptionToString.ToString(me));
             throw ServiceException.FAILURE("MessagingExecption", me);
@@ -178,8 +178,7 @@ public class ParseMimeMessage {
         OperationContext octxt = lc.getOperationContext();
 
 	    try {
-            // anonymous subclass of MimeMessage to preserve Message-ID once it's been set
-			MimeMessage mm = new MimeMessage(JMSession.getSession()) { protected void updateHeaders() throws MessagingException { String msgid = getMessageID(); super.updateHeaders(); if (msgid != null) setHeader("Message-ID", msgid); } };
+			MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
             MimeMultipart mmp = null;
 
             Element partElem   = msgElem.getOptionalElement(MailService.E_MIMEPART);

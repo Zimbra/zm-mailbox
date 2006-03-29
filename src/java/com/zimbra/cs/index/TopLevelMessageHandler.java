@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Set;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeUtility;
 
 import org.apache.commons.logging.Log;
@@ -46,7 +45,6 @@ import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeHandler;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.mime.TnefExtractor;
 import com.zimbra.cs.object.ObjectHandlerException;
 import com.zimbra.cs.service.ServiceException;
 
@@ -163,20 +161,6 @@ public final class TopLevelMessageHandler {
         // Get the list of attachment content types from this message and any
         // TNEF attachments
         Set<String> contentTypes = Mime.getAttachmentList(mMessageParts);
-        TnefExtractor tnef = new TnefExtractor();
-        try {
-            Mime.accept(tnef, pm.getMimeMessage());
-            MimeMessage[] msgs = tnef.getTnefsAsMime();
-            for (int i = 0; i < msgs.length; i++) {
-                mLog.debug("Adding embedded content types from TNEF attachment");
-                MimeMessage msg = msgs[i];
-                List<MPartInfo> parts = Mime.getParts(msg);
-                Set<String> moreTypes = Mime.getAttachmentList(parts);
-                contentTypes.addAll(moreTypes);
-            }
-        } catch (Exception e) {
-            mLog.info("Unable to determine embedded TNEF content types", e);
-        }
         
         // Assemble a comma-separated list of attachment content types
         StringBuilder buf = new StringBuilder();

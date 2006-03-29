@@ -42,6 +42,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.RedoException;
 import com.zimbra.cs.store.Blob;
@@ -341,7 +342,7 @@ implements CreateAppointmentPlayer,CreateAppointmentRecorder {
             sharedDeliveryCtxt.setBlob(src);
 
             InputStream is = StoreManager.getInstance().getContent(src);
-            MimeMessage mm = new MimeMessage(JMSession.getSession(), is);
+            MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), is);
             is.close();
             pm = new ParsedMessage(mm, getTimestamp(), mbox.attachmentsIndexingEnabled());
         } else { // mMsgBodyType == MSGBODY_INLINE

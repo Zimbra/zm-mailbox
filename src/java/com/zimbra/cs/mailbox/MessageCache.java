@@ -15,8 +15,7 @@ import javax.mail.internet.MimeMessage;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.mime.TnefConverter;
-import com.zimbra.cs.mime.UUEncodeConverter;
+import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.StoreManager;
@@ -132,8 +131,8 @@ public class MessageCache {
      *                          or when the file does not exist.
      * @see #getRawContent()
      * @see #getItemContent()
-     * @see TnefConverter
-     * @see UUEncodeConverter */
+     * @see com.zimbra.cs.mime.TnefConverter
+     * @see com.zimbra.cs.mime.UUEncodeConverter */
     static MimeMessage getMimeMessage(Message msg) throws ServiceException {
         String key = msg.getDigest();
         boolean cacheHit = false;
@@ -153,18 +152,17 @@ public class MessageCache {
                 // wasn't cached; fetch the content and create the MimeMessage
                 int size = (int) msg.getSize();
                 InputStream is = (cnOrig == null ? fetchFromStore(msg) : new ByteArrayInputStream(cnOrig.mContent));
-                cnode = new CacheNode(size, new MimeMessage(JMSession.getSession(), is));
+                cnode = new CacheNode(size, new Mime.FixedMimeMessage(JMSession.getSession(), is));
                 is.close();
 
                 try {
-                    // handle TNEF conversion here...
-                    Mime.accept(new TnefConverter(), cnode.mMessage);
-                    // handle UUENCODE conversion here...
-                    Mime.accept(new UUEncodeConverter(), cnode.mMessage);
+                    // handle UUENCODE and TNEF conversion here...
+                    for (Class visitor : MimeVisitor.getConverters())
+                        ((MimeVisitor) visitor.newInstance()).accept(cnode.mMessage);
                 } catch (Exception e) {
                     // if the conversion bombs for any reason, revert to the original
                     if (ZimbraLog.mailbox.isInfoEnabled())
-                        ZimbraLog.mailbox.info("unable to convert TNEF attachment for message " + msg.getId(), e);
+                        ZimbraLog.mailbox.info("unable to convert attachments for message " + msg.getId(), e);
                     is = (cnOrig == null ? fetchFromStore(msg) : new ByteArrayInputStream(cnOrig.mContent));
                     cnode = new CacheNode(size, new MimeMessage(JMSession.getSession(), is));
                     is.close();

@@ -41,7 +41,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeVisitor;
-import com.zimbra.cs.mime.TnefExtractor;
 import com.zimbra.cs.util.ZimbraLog;
 
 
@@ -56,24 +55,14 @@ public class TestConversion extends TestCase {
         
         AttachmentFinder finder = new AttachmentFinder("upload.gif");
         Message msg = getTnefMessage();
-        Mime.accept(finder, msg.getMimeMessage());
+        finder.accept(msg.getMimeMessage());
         assertTrue("Could not find upload.gif", finder.found());
         
         finder = new AttachmentFinder("upload2.gif");
-        Mime.accept(finder, msg.getMimeMessage());
+        finder.accept(msg.getMimeMessage());
         assertTrue("Could not find upload2.gif", finder.found());
     }
-    
-    public void testTnefExtractor()
-    throws Exception {
-        ZimbraLog.test.debug("testTnefExtractor()");
-        
-        TnefExtractor extractor = new TnefExtractor();
-        Message msg = getTnefMessage();
-        Mime.accept(extractor, msg.getMimeMessage());
-        assertEquals("Could not find TNEF attachment", 1, extractor.getTnefsAsMime().length);
-    }
-    
+
     private Message getTnefMessage()
     throws Exception {
         // Search for the sample message that has a TNEF attachment
@@ -89,7 +78,7 @@ public class TestConversion extends TestCase {
         return mbox.getMessageById(null, hit.getItemId());
     }
     
-    private class AttachmentFinder implements MimeVisitor {
+    private class AttachmentFinder extends MimeVisitor {
         private String mFilename;
         private boolean mFound = false;
         
@@ -101,17 +90,19 @@ public class TestConversion extends TestCase {
             return mFound;
         }
         
-        public void visitBodyPart(MimeBodyPart bp) throws MessagingException {
+        protected boolean visitBodyPart(MimeBodyPart bp) throws MessagingException {
             String filename = Mime.getFilename(bp);
-            if (filename != null && filename.equals(mFilename)) {
+            if (filename != null && filename.equals(mFilename))
                 mFound = true;
-            }
+            return false;
         }
         
-        public void visitMessage(MimeMessage msg, int visitKind) {
+        protected boolean visitMessage(MimeMessage msg, VisitPhase visitKind) {
+            return false;
         }
         
-        public void visitMultipart(MimeMultipart mp, int visitKind) {
+        protected boolean visitMultipart(MimeMultipart mp, VisitPhase visitKind) {
+            return false;
         }
     }
 }

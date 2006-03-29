@@ -48,10 +48,10 @@ import javax.mail.Message.RecipientType;
 import javax.mail.Address;
 import javax.mail.MessagingException;
 import javax.mail.Part;
+import javax.mail.Session;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.ContentType;
 import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimePart;
@@ -61,12 +61,14 @@ import javax.mail.internet.ParseException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.zimbra.cs.util.JMSession;
+
 /**
  * @author schemers
  */
 public class Mime {
     
-    private static Log mLog = LogFactory.getLog(Mime.class);
+    static Log mLog = LogFactory.getLog(Mime.class);
 
     // content types
     public static final String CT_TEXT_PLAIN = "text/plain";
@@ -116,7 +118,20 @@ public class Mime {
     public static final String P_CHARSET_DEFAULT = "us-ascii";
     
     private static final int MAX_DECODE_BUFFER = 2048;
-    
+
+    public static class FixedMimeMessage extends MimeMessage {
+        public FixedMimeMessage(Session session)  { super(session); }
+        public FixedMimeMessage(Session session, InputStream is) throws MessagingException  { super(session, is); }
+        public FixedMimeMessage(MimeMessage mm) throws MessagingException  { super(mm); }
+
+        protected void updateHeaders() throws MessagingException {
+            String msgid = getMessageID();
+            super.updateHeaders();
+            if (msgid != null)
+                setHeader("Message-ID", msgid);
+        }
+    }
+
     /**
      * return complete List of MPartInfo objects. 
      * @param mm
@@ -233,7 +248,7 @@ public class Mime {
         if (content instanceof InputStream)
             try {
                 // handle unparsed content due to miscapitalization of content-type value
-                content = new MimeMessage(null, (InputStream) content);
+                content = new Mime.FixedMimeMessage(JMSession.getSession(), (InputStream) content);
             } catch (Exception e) {}
             return content;
     }
@@ -251,90 +266,6 @@ public class Mime {
             } catch (Exception e) {}
             return content;
     }
-
-    /**
-     * Walks the mail object tree depth-first, starting at the specified <code>MimePart</code>.
-     * Invokes the various methods in <code>MimeVisitor</code> for each visited node.
-     * 
-     * @param visitor the instance of <code>MimeVisitor</code> that will traverse
-     * the tree
-     * @param mp the root node at which to start the traversal
-     */
-    public static void accept(MimeVisitor visitor, MimePart mp)
-    throws IOException, MessagingException {
-        if (mp instanceof MimeMessage) {
-            visitor.visitMessage((MimeMessage) mp, MimeVisitor.VISIT_BEGIN);
-        }
-        String cts = mp.getContentType();
-        if (cts == null)
-            cts = CT_DEFAULT;
-        else {
-            // only use "type/subtype"
-            // This is a workaround for messages sent by some broken mailers
-            // that generate an invalid content type string which causes
-            // JavaMail ParseException.  The broken mailer that necessitated
-            // this hack is "X-Mailer: Balsa 2.0.17", which generated
-            // Content-Type of "Content-Type:   text/plain; charset=US-ASCII;\r\n"
-            // "\tFormat=Flowed   DelSp=Yes\r\n".  Notice it is missing ';' after
-            // "Flowed".
-            int semicolon = cts.indexOf(';');
-            if (semicolon != -1)
-                cts = cts.substring(0, semicolon);
-
-            // Some mailers don't specify subtype at all, e.g. "Content-Type: text"
-            // Special case "text" to "text/plain".
-            if (cts.equals("text"))
-                cts = CT_TEXT_PLAIN;
-        }
-        ContentType ct = null;
-        try {
-            ct = new ContentType(cts.toLowerCase());
-            cts = ct.getPrimaryType() + "/" + ct.getSubType();
-        } catch (ParseException e) {
-            if (mLog.isInfoEnabled())
-                mLog.info("Unrecognized Content-Type " + cts + "; assuming " + CT_DEFAULT);
-            ct = new ContentType(CT_DEFAULT);
-        }
-        
-        boolean isMultipart = ct.match(CT_MULTIPART_WILD);
-        boolean isMessage = !isMultipart && ct.match(CT_MESSAGE_RFC822);
-        
-        if (isMultipart) {
-            Object content = getMultipartContent(mp, cts);
-            if (content instanceof MimeMultipart) {
-                MimeMultipart multi = (MimeMultipart) content;
-                visitor.visitMultipart(multi, MimeVisitor.VISIT_BEGIN);
-                
-                // Make a copy of the parts array and iterate the copy,
-                // in case the visitor is adding or removing parts.
-                List<BodyPart> parts = new ArrayList<BodyPart>();
-                for (int i = 0; i < multi.getCount(); i++)
-                    parts.add(multi.getBodyPart(i));
-                for (BodyPart bodyPart : parts) {
-                    if (bodyPart instanceof MimeBodyPart)
-                        accept(visitor, (MimeBodyPart) bodyPart);
-                    else
-                        mLog.info("Mime.accept(): Unexpected BodyPart subclass: " + bodyPart.getClass().getName());
-                }
-                visitor.visitMultipart(multi, MimeVisitor.VISIT_END);
-            }
-        } else if (isMessage) {
-            Object content = getMessageContent(mp);
-            if (content instanceof MimeMessage) {
-                accept(visitor, (MimeMessage) content);
-            }
-        } else if (mp instanceof MimeBodyPart) {
-            visitor.visitBodyPart((MimeBodyPart) mp);
-        } else if (!(mp instanceof MimeMessage)) {
-            mLog.info("Mime.accept(): Unexpected type: " + mp.getClass().getName() +
-                ".  Content-Type='" + cts + "'");
-        }
-
-        if (mp instanceof MimeMessage) {
-            visitor.visitMessage((MimeMessage) mp, MimeVisitor.VISIT_END);
-        }
-    }
-
 
     private static final class InputStreamDataSource implements DataSource {
         private InputStream is;
@@ -763,7 +694,7 @@ public class Mime {
         }
     }
 
-    private static Map<String, String> decodeRFC2231(String header) {
+    static Map<String, String> decodeRFC2231(String header) {
         if (header == null)
             return null;
         header = header.trim();
@@ -905,6 +836,7 @@ public class Mime {
         System.out.println(s);
         System.out.println(expandNumericCharacterReferences("Zimbra%20&#26085;&#26412;&#35486;&#21270;&#12398;&#32771;&#24942;&#28857;.txt&#x40;&;&#;&#x;&#&#3876;&#55"));
 
+        System.out.println(decodeRFC2231("text/plain; charset=US-ASCII;\r\n\tFormat=Flowed   DelSp=Yes\r\n"));
         System.out.println(decodeRFC2231("   \n  attachment;\n filename*=UTF-8''%E3%82%BD%E3%83%AB%E3%83%86%E3%82%A3%E3%83%AC%E3%82%A4.rtf\n  \n "));
         System.out.println(decodeRFC2231("application/x-stuff; title*0*=us-ascii'en'This%20is%20even%20more%20; title*1*=%2A%2A%2Afun%2A%2A%2A%20; title*2=\"isn't it!\"\n"));
         System.out.println(decodeRFC2231("multipart/mixed; charset=us-ascii;\n foo=\n  boundary=\"---\" \n"));

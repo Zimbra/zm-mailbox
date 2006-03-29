@@ -45,6 +45,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.mime.ParsedAddress;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.FileUploadServlet;
@@ -52,6 +53,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.ZimbraLog;
 
 public class MailSender {
 
@@ -162,16 +164,23 @@ public class MailSender {
                 convId = mbox.getConversationIdFromReferent(mm, origMsgId);
 
             Account acct = mbox.getAccount();
-            String replyTo =
-                acct.getAttr(Provisioning.A_zimbraPrefReplyToAddress);
+            String replyTo = acct.getAttr(Provisioning.A_zimbraPrefReplyToAddress);
             mm.setFrom(AccountUtil.getFriendlyEmailAddress(acct));
             mm.setSentDate(new Date());
             if (replyTo != null && !replyTo.trim().equals(""))
                 mm.setHeader("Reply-To", replyTo);
             mm.saveChanges();
 
-            // save a copy of the message to the Sent Mail folder
-            Message  msg = null;
+            try {
+                for (Class vclass : MimeVisitor.getMutators())
+                    ((MimeVisitor) vclass.newInstance()).accept(mm);
+            } catch (Exception e) {
+                ZimbraLog.misc.warn("failure to modify outbound message; aborting send", e);
+                throw ServiceException.FAILURE("mutator error; aborting send", e);
+            }
+
+            // if requested, save a copy of the message to the Sent Mail folder
+            Message msg = null;
             if (saveToFolder != 0) {
                 int flags = Flag.FLAG_FROM_ME;
                 ParsedMessage pm =

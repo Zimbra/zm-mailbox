@@ -26,15 +26,21 @@
 package com.zimbra.cs.mime;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
-//import javax.mail.BodyPart;
+import javax.mail.BodyPart;
 import javax.mail.MessagingException;
-//import javax.mail.Multipart;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
-//import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.ZimbraLog;
+
+import net.freeutils.tnef.TNEFInputStream;
+import net.freeutils.tnef.TNEFUtils;
+import net.freeutils.tnef.mime.TNEFMime;
 
 
 /**
@@ -66,24 +72,125 @@ import javax.mail.internet.MimeMultipart;
  * </ul>
  * @author bburtin
  */
-public class TnefConverter implements MimeVisitor {
+public class TnefConverter extends MimeVisitor {
+    protected boolean visitBodyPart(MimeBodyPart bp)  { return false; }
 
-    public void visitBodyPart(MimeBodyPart tnefPart) {
+    protected boolean visitMessage(MimeMessage msg, VisitPhase visitKind) throws MessagingException {
+        // do the decode in the exit phase
+        if (visitKind != VisitPhase.VISIT_END)
+            return false;
+
+        MimeMultipart multi = null;
+        try {
+            // we only care about "application/ms-tnef" content
+            if (!TNEFUtils.isTNEFMimeType(msg.getContentType()))
+                return false;
+    
+            Object content = msg.getContent();
+            if (!(content instanceof MimeBodyPart))
+                return false;
+            // try to expand the TNEF into a suitable Multipart
+            multi = expandTNEF((MimeBodyPart) content);
+            if (multi == null)
+                return false;
+        } catch (MessagingException e) {
+            ZimbraLog.extensions.warn("exception while uudecoding message part; skipping part", e);
+            return false;
+        } catch (IOException e) {
+            ZimbraLog.extensions.warn("exception while uudecoding message part; skipping part", e);
+            return false;
+        }
+
+        // check to make sure that the caller's OK with altering the message
+        if (mCallback != null && !mCallback.onModification())
+            return false;
+        // and put the new multipart/alternative where the TNEF used to be
+        msg.setContent(multi);
+        return false;
+    }
+
+    protected boolean visitMultipart(MimeMultipart mp, VisitPhase visitKind) throws MessagingException {
+        // do the decode in the exit phase
+        if (visitKind != VisitPhase.VISIT_END)
+            return false;
+        // proactively ignore already-converted TNEF attachments
+        if (Mime.CT_MULTIPART_ALTERNATIVE.equals(mp.getContentType()))
+            return false;
+
+        Map<Integer, MimeBodyPart> changedParts = null;
+        try {
+            for (int i = 0; i < mp.getCount(); i++) {
+                BodyPart bp = mp.getBodyPart(i);
+                if (bp instanceof MimeBodyPart && TNEFUtils.isTNEFMimeType(bp.getContentType())) {
+                    // try to expand the TNEF into a suitable Multipart
+                    MimeMultipart multi = null;
+                    try {
+                        multi = expandTNEF((MimeBodyPart) bp);
+                    } catch (Exception e) {
+                        ZimbraLog.extensions.warn("exception while decoding TNEF; skipping part", e);
+                        continue;
+                    }
+                    if (multi == null)
+                        continue;
+    
+                    // create a BodyPart to contain the new Multipart (JavaMail bookkeeping)
+                    MimeBodyPart replacement = new MimeBodyPart();
+                    replacement.setContent(multi);
+                    // and keep track of it for later
+                    if (changedParts == null)
+                        changedParts = new HashMap<Integer, MimeBodyPart>();
+                    changedParts.put(i, replacement);
+                }
+            }
+        } catch (MessagingException e) {
+            ZimbraLog.extensions.warn("exception while traversing multipart; skipping", e);
+            return false;
+        }
+
+        if (changedParts == null || changedParts.isEmpty())
+            return false;
+        // check to make sure that the caller's OK with altering the message
+        if (mCallback != null && !mCallback.onModification())
+            return false;
+        // and put the new multipart/alternatives where the TNEF used to be
+        for (Map.Entry<Integer, MimeBodyPart> change : changedParts.entrySet()) {
+            mp.removeBodyPart(change.getKey());
+            mp.addBodyPart(change.getValue(), change.getKey());
+        }
+        return true;
     }
 
     /**
      * Performs the TNEF->MIME conversion on any TNEF body parts that
      * make up the given message. 
      */
-    public void visitMessage(MimeMessage msg, int visitKind)
-    throws MessagingException, IOException {
-        if (visitKind != VISIT_END) {
-            return;
-        }
-        
-        // xxx Perform TNEF conversion of all TNEF body parts here
+
+    private MimeMultipart expandTNEF(MimeBodyPart bp) throws MessagingException, IOException {
+        if (!TNEFUtils.isTNEFMimeType(bp.getContentType()))
+            return null;
+
+        // Convert TNEF to a Message and remove it from the parent
+        TNEFInputStream in = new TNEFInputStream(bp.getInputStream());
+        MimeMessage converted = TNEFMime.convert(JMSession.getSession(), in);
+
+        // Create a MimeBodyPart for the converted data.  Currently we're throwing
+        // away the top-level message because its content shows up as blank after
+        // the conversion.
+        MimeMultipart convertedMulti = (MimeMultipart) converted.getContent();
+        MimeBodyPart convertedPart = new MimeBodyPart();
+        convertedPart.setContent(convertedMulti);
+
+        // Create a multipart/alternative for the TNEF and its MIME version
+        MimeMultipart altMulti = new MimeMultipart("alternative");
+        altMulti.addBodyPart(bp);
+        altMulti.addBodyPart(convertedPart);
+
+        return altMulti;
     }
 
-    public void visitMultipart(MimeMultipart multipart, int visitKind) {
+    public static void main(String[] args) throws MessagingException, IOException {
+        MimeMessage mm = new MimeMessage(com.zimbra.cs.util.JMSession.getSession(), new java.io.FileInputStream("c:\\tmp\\tnef"));
+        new TnefConverter().accept(mm);
+        mm.writeTo(new java.io.FileOutputStream("c:\\tmp\\decoded-tnef"));
     }
 }

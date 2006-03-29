@@ -83,7 +83,6 @@ public class ParsedMessage {
 	private String mFragment = "";
 	private long mDateHeader = -1;
     private long mReceivedDate = -1;
-    private long mZimbraDate = -1;
     private String mSubject;
     private String mNormalizedSubject;
 	private boolean mSubjectPrefixed;
@@ -94,69 +93,82 @@ public class ParsedMessage {
     private byte[] mRawData;
     private String mRawDigest;
     private boolean mHaveRaw;
-    
+
+
     public ParsedMessage(MimeMessage msg, boolean indexAttachments) {
-        mIndexAttachments = indexAttachments;
-        mMimeMessage = mExpandedMessage = msg;
-        setReceivedDate(getZimbraDateHeader());
+        this(msg, getZimbraDateHeader(msg), indexAttachments);
 	}
 
-    // When re-indexing, we must force the received-date to be correct
-    // and we need to do it here in the constructor, before the Lucene
-    // document is initialized
     public ParsedMessage(MimeMessage msg, long receivedDate, boolean indexAttachments) {
         mIndexAttachments = indexAttachments;
         mMimeMessage = mExpandedMessage = msg;
+        // FIXME: not running mutators yet because of exception throwing!
+//        runMimeMutators();
+        // must set received-date before Lucene document is initialized
         setReceivedDate(receivedDate);
     }
 
     public ParsedMessage(byte[] rawData, boolean indexAttachments) throws MessagingException {
         mIndexAttachments = indexAttachments;
-        setRawData(rawData);
-        ByteArrayInputStream bais = new ByteArrayInputStream(rawData);
-        mMimeMessage = mExpandedMessage = new MimeMessage(JMSession.getSession(), bais);
+        parseRawData(rawData);
+
+        // if there are no mutators, the raw data is valid and storeable
         try {
-            bais.close();
-        } catch (IOException ioe) {
-            // we know ByteArrayInputStream.close() is a no-op
+            if (runMimeMutators())
+                setRawData(rawData);
+        } catch (MessagingException e) {
+            // mutator threw an exception, so go back to the raw and use it verbatim
+            ZimbraLog.extensions.warn("error applying message mutator; using raw instead", e);
+            parseRawData(rawData);
+            setRawData(rawData);
         }
-        setReceivedDate(getZimbraDateHeader());
+        // must set received-date before Lucene document is initialized
+        setReceivedDate(getZimbraDateHeader(mMimeMessage));
     }
 
     public ParsedMessage(byte[] rawData, long receivedDate, boolean indexAttachments) throws MessagingException {
         mIndexAttachments = indexAttachments;
-        setRawData(rawData);
+        parseRawData(rawData);
+
+        // if there are no mutators, the raw data is valid and storeable
+        try {
+            if (runMimeMutators())
+                setRawData(rawData);
+        } catch (MessagingException e) {
+            // mutator threw an exception, so go back to the raw and use it verbatim
+            ZimbraLog.extensions.warn("error applying message mutator; using raw instead", e);
+            parseRawData(rawData);
+            setRawData(rawData);
+        }
+        // must set received-date before Lucene document is initialized
+        setReceivedDate(receivedDate);
+    }
+
+    private void parseRawData(byte[] rawData) throws MessagingException {
         ByteArrayInputStream bais = new ByteArrayInputStream(rawData);
-        mMimeMessage = mExpandedMessage = new MimeMessage(JMSession.getSession(), bais);
+        mMimeMessage = mExpandedMessage = new Mime.FixedMimeMessage(JMSession.getSession(), bais);
         try {
             bais.close();
         } catch (IOException ioe) {
             // we know ByteArrayInputStream.close() is a no-op
         }
-        setReceivedDate(receivedDate);
     }
 
+
+    /** Applies all registered on-the-fly MIME converters to a copy of the
+     *  encapsulated message (leaving the original message intact), then
+     *  generates the list of message parts.
+     *  
+     * @return the ParsedMessage itself
+     * @see #runMimeConverters() */
 	private ParsedMessage parse() {
         if (mParsed)
             return this;
         mParsed = true;
 
+        // do an on-the-fly temporary expansion of the raw message (uudecode, tnef-decode, etc.)
+        runMimeConverters();
 		try {
-            // this callback copies the MimeMessage if there's a uuencoded part, 
-            //   but doesn't alter the original MimeMessage
-            MimeVisitor.ModificationCallback forkCallback = new MimeVisitor.ModificationCallback() {
-                public boolean onModification() {
-                    try { forkMimeMessage(); } catch (Exception e) { }  return false;
-                } };
-            try {
-                Mime.accept(new UUEncodeConverter(forkCallback), mMimeMessage);
-                // if there are inlined uuencoded attachments, expand them in the MimeMessage *copy*
-                if (mExpandedMessage != mMimeMessage)
-                    Mime.accept(new UUEncodeConverter(), mExpandedMessage);
-            } catch (Exception e) {
-                sLog.warn("exception while uudecoding message; message will not be uudecoded", e);
-            }
-
             mMessageParts = Mime.getParts(mExpandedMessage);
             mHasAttachments = Mime.hasAttachment(mMessageParts);
         } catch (Exception e) {
@@ -165,7 +177,64 @@ public class ParsedMessage {
         }
         return this;
     }
-    
+
+    /** Applies all registered MIME mutators to the encapsulated message.
+     *  The message is not forked, so both {@link #mMimeMessage} and
+     *  {@link #mExpandedMessage} are affected by the changes.
+     *  
+     * @return <code>true</code> if the encapsulated message is unchanged,
+     *         <code>false</code> if a mutator altered the content
+     * @see MimeVisitor#registerMutator(Class) */
+    private boolean runMimeMutators() throws MessagingException {
+        boolean rawInvalid = false;
+        for (Class vclass : MimeVisitor.getMutators())
+            try {
+                rawInvalid |= ((MimeVisitor) vclass.newInstance()).accept(mMimeMessage);
+                if (mMimeMessage != mExpandedMessage)
+                    ((MimeVisitor) vclass.newInstance()).accept(mExpandedMessage);
+            } catch (MessagingException e) {
+                throw e;
+            } catch (Exception e) {
+                ZimbraLog.misc.warn("exception ignored running mutator; skipping", e);
+            }
+        return !rawInvalid;
+    }
+
+    /** Applies all registered on-the-fly MIME converters to a copy of the
+     *  encapsulated message, forking it from the original MimeMessage if any
+     *  changes are made.  Thus {@link #mMimeMessage} should always contain
+     *  the original message content, while {@link #mExpandedMessage} may
+     *  point to a version altered by the converters.
+     *   
+     * @return <code>true</code> if the encapsulated message is unchanged,
+     *         <code>false</code> if a converter forked and altered it
+     * @see MimeVisitor#registerConverter(Class) */
+    private boolean runMimeConverters() {
+        // this callback copies the MimeMessage if a converter would want 
+        //   to make a change, but doesn't alter the original MimeMessage
+        MimeVisitor.ModificationCallback forkCallback = new MimeVisitor.ModificationCallback() {
+            public boolean onModification() {
+                try { forkMimeMessage(); } catch (Exception e) { }  return false;
+            } };
+
+        try {
+            // first, find out if *any* of the converters would be triggered (but don't change the message)
+            for (Class vclass : MimeVisitor.getConverters())
+                if (mExpandedMessage == mMimeMessage)
+                    ((MimeVisitor) vclass.newInstance()).setCallback(forkCallback).accept(mMimeMessage);
+            // if there are attachments to be expanded, expand them in the MimeMessage *copy*
+            if (mExpandedMessage != mMimeMessage)
+                for (Class vclass : MimeVisitor.getConverters())
+                    ((MimeVisitor) vclass.newInstance()).accept(mMimeMessage);
+        } catch (Exception e) {
+            // roll back if necessary
+            mExpandedMessage = mMimeMessage;
+            sLog.warn("exception while converting message; message will be analyzed unconverted", e);
+        }
+
+        return mExpandedMessage == mMimeMessage;
+    }
+
     public ParsedMessage analyze() throws ServiceException {
         parse();
 		try {
@@ -351,13 +420,10 @@ public class ParsedMessage {
         return mReceivedDate;
     }
 
-    public long getZimbraDateHeader() {
-        if (mZimbraDate != -1)
-            return mZimbraDate;
-
+    private static long getZimbraDateHeader(MimeMessage mm) {
         String zimbraHeader = null;
         try {
-            zimbraHeader = mMimeMessage.getHeader("X-Zimbra-Received", null);
+            zimbraHeader = mm.getHeader("X-Zimbra-Received", null);
             if (zimbraHeader == null || zimbraHeader.trim().equals(""))
                 return -1;
         } catch (MessagingException mex) {
@@ -379,7 +445,7 @@ public class ParsedMessage {
         try {
             analyze();
         } catch (ServiceException e) {
-            sLog.warn("Message analysis failed when getting lucene documents");
+            sLog.warn("message analysis failed when getting lucene documents");
         }
 		return mLuceneDocuments;
 	}
