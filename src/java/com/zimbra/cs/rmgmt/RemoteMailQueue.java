@@ -505,7 +505,7 @@ public class RemoteMailQueue {
                 try {
                     indexReader.close();
                 } catch  (IOException ioe) {
-                    throw ServiceException.FAILURE("exception occured closing index reader", ioe);
+                    ZimbraLog.rmgmt.warn("exception occured closing index reader from search", ioe);
                 }
             }
         }
@@ -560,7 +560,7 @@ public class RemoteMailQueue {
     			try {
     				indexReader.close();
     			} catch  (IOException ioe) {
-    				throw ServiceException.FAILURE("exception occured closing index reader", ioe);
+    				ZimbraLog.rmgmt.warn("exception occured closing index reader during action", ioe);
     			}
     		}
     	}
