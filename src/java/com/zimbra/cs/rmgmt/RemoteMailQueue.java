@@ -95,12 +95,16 @@ public class RemoteMailQueue {
     public static final int MAIL_QUEUE_INDEX_FLUSH_THRESHOLD = 1000;
         
     private static AtomicInteger mVisitorIdCounter = new AtomicInteger(0);
+
+    private int mNumMessages;
+
+    public int getNumMessages() {
+        return mNumMessages;
+    }
     
     private class QueueItemVisitor implements RemoteResultParser.Visitor {
 
         private final int mId;
-        
-        private int mNumMessages = 0;
         
         QueueItemVisitor() {
             mId = mVisitorIdCounter.incrementAndGet();
@@ -184,10 +188,11 @@ public class RemoteMailQueue {
                 // This is a long running if the mail queues are backed up
                 clearIndexInternal();
                 openIndexWriter();
+                mNumMessages = 0;
                 RemoteResultParser.parse(stdout, v);
                 closeIndexWriter();
                 mScanEndTime = System.currentTimeMillis();
-                if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("finished scan with visitor id=" + v.mId + " total=" + v.mNumMessages + " " + mDescription);
+                if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("finished scan with visitor id=" + v.mId + " total=" + mNumMessages + " " + mDescription);
                 byte[] err = ByteUtil.getContent(stderr, 0);
                 if (err != null && err.length > 0) {
                 	ZimbraLog.rmgmt.error("error scanning " + this + ": " + new String(err));
