@@ -254,7 +254,9 @@ public class ParseMimeMessage {
                                 Appointment appt = mbox.getAppointmentById(octxt, iid.getId());
                                 MimeMessage apptMm = appt.getMimeMessage(iid.getSubpartId());
                                 MimePart apptMp = Mime.getMimePart(apptMm, part);
-                                attachPart(mmp, apptMp, part);
+                                if (apptMp == null)
+                                    throw MailServiceException.NO_SUCH_PART(part);
+                                attachPart(mmp, apptMp);
                             }
                         } else if (eName.equals(MailService.E_MSG)) {
                             int messageId = (int) elem.getAttributeLong(MailService.A_ID);
@@ -516,7 +518,10 @@ public class ParseMimeMessage {
             throw MailServiceException.NO_SUCH_PART(part);
 
         MimeBodyPart mbp = new MimeBodyPart();
-        mbp.setDataHandler(new DataHandler(new MimePartDataSource(mp)));
+        if (mp instanceof MimeBodyPart)
+            mbp.setDataHandler(((MimeBodyPart) mp).getDataHandler());
+        else
+            mbp.setDataHandler(new DataHandler(new MimePartDataSource(mp)));
 
         String type = mp.getContentType();
         mbp.setHeader("Content-Type", type == null ? Mime.CT_APPLICATION_OCTET_STREAM : type);
@@ -533,14 +538,14 @@ public class ParseMimeMessage {
 
         mmp.addBodyPart(mbp);
     }
-    
-    private static void attachPart(Multipart mmp, MimePart mp, String part)
-    throws MessagingException, ServiceException {
-        if (mp == null)
-            throw MailServiceException.NO_SUCH_PART(part);
 
+    private static void attachPart(Multipart mmp, MimePart mp)
+    throws MessagingException {
         MimeBodyPart mbp = new MimeBodyPart();
-        mbp.setDataHandler(new DataHandler(new MimePartDataSource(mp)));
+        if (mp instanceof MimeBodyPart)
+            mbp.setDataHandler(((MimeBodyPart) mp).getDataHandler());
+        else
+            mbp.setDataHandler(new DataHandler(new MimePartDataSource(mp)));
 
         String type = mp.getContentType();
         mbp.setHeader("Content-Type", type == null ? Mime.CT_APPLICATION_OCTET_STREAM : type);
