@@ -162,8 +162,10 @@ public class Document extends MailItem {
     	mFragment = pd.getFragment();
     	mData.size = pd.getSize();
         mData.contentChanged(mMailbox);
+        mMailbox.updateSize(mData.size);
         DbMailItem.saveMetadata(this, pd.getSize(), encodeMetadata(new Metadata()).toString());
         markItemModified(Change.MODIFIED_SIZE | Change.MODIFIED_DATE | Change.MODIFIED_CONTENT);
+        pd.setVersion(getVersion());
     }
     
     protected static UnderlyingData prepareCreate(byte tp, int id, Folder folder, short volumeId, String subject, String creator, String type, ParsedDocument pd, Document parent, Metadata meta) 
@@ -208,7 +210,7 @@ public class Document extends MailItem {
 
         Document doc = new Document(mbox, data);
         doc.finishCreation(parent);
-//        doc.reindex();
+        pd.setVersion(doc.getVersion());
         return doc;
     }
 

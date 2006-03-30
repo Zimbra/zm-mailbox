@@ -32,7 +32,7 @@ import com.zimbra.cs.service.ServiceException;
 
 public class DocumentHit extends ZimbraHit {
 
-	protected MailItem mDocument;
+	protected com.zimbra.cs.mailbox.Document mDocument;
 	protected int mMessageId;
 	protected Document mDoc;
 	
@@ -45,7 +45,9 @@ public class DocumentHit extends ZimbraHit {
         this(results, mbx, score);
         mMessageId = mailItemId;
         if (underlyingData != null) {
-            mDocument = mbx.getItemFromUnderlyingData(underlyingData);
+        	MailItem item = mbx.getItemFromUnderlyingData(underlyingData);
+        	assert(item instanceof com.zimbra.cs.mailbox.Document);
+            mDocument = (com.zimbra.cs.mailbox.Document) item;
         }
     }
     
@@ -86,7 +88,8 @@ public class DocumentHit extends ZimbraHit {
     }
     
     void setItem(MailItem item) throws ServiceException {
-    	mDocument = item;
+    	if (item instanceof com.zimbra.cs.mailbox.Document)
+    		mDocument = (com.zimbra.cs.mailbox.Document) item;
     }
     
     boolean itemIsLoaded() throws ServiceException {
@@ -101,7 +104,19 @@ public class DocumentHit extends ZimbraHit {
     	return getSubject();
     }
     
-    public MailItem getDocument() {
+    public com.zimbra.cs.mailbox.Document getDocument() {
     	return mDocument;
+    }
+    
+    public int getVersion() {
+        if (mDoc != null) {
+            String verStr = mDoc.get(LuceneFields.L_VERSION);
+            if (verStr != null) {
+                return Integer.parseInt(verStr);
+            }
+        }
+        // if there is no lucene Document, only the db search was done.
+        // then just match the latest version.
+    	return mDocument.getVersion();
     }
 }

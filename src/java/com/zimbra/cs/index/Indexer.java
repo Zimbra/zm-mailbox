@@ -115,7 +115,7 @@ public class Indexer
             break;
         case MailItem.TYPE_DOCUMENT:
         case MailItem.TYPE_WIKI:
-        	indexDocument(redo, idx, itemId, (com.zimbra.cs.mailbox.Document) item);
+        	indexDocument(redo, idx, itemId, (com.zimbra.cs.mailbox.Document) item, timestamp);
         	break;
         case MailItem.TYPE_MESSAGE:
                 InputStream is = mbox.getMessageById(null, itemId).getRawMessage();
@@ -297,12 +297,13 @@ public class Indexer
      * @param document
      * @throws ServiceException
      */
-    public void indexDocument(IndexItem redo, MailboxIndex idx, int mailItemId, com.zimbra.cs.mailbox.Document document)
+    public void indexDocument(IndexItem redo, MailboxIndex idx, int mailItemId, com.zimbra.cs.mailbox.Document document, long timestamp)
     throws ServiceException {
         try {
         	ParsedDocument pd = new ParsedDocument(document.getBlob().getBlob().getFile(),
         							document.getFilename(), 
-        							document.getContentType());
+        							document.getContentType(),
+        							timestamp);
         	indexDocument(redo, idx, mailItemId, pd);
         } catch (IOException e) {
         	throw ServiceException.FAILURE("indexDocument caught Exception", e);

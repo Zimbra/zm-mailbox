@@ -64,6 +64,8 @@ public class LuceneFields {
     public static final String L_MIMETYPE = "type"; 
     /** size of blob */
     public static final String L_SIZE = "l.size";
+    /** version */
+    public static final String L_VERSION = "l.version";
 
     /** dotted-number MIME part name or CONTACT for contact*/
     public static final String L_PARTNAME = "l.partname";

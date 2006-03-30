@@ -215,7 +215,7 @@ ZimbraHit getZimbraHit(Mailbox mbox, float score, SearchResult sr, Document doc)
     	  break;
       case MailItem.TYPE_DOCUMENT:
       case MailItem.TYPE_WIKI:
-          toRet = getDocumentHit(mbox, sr.id, null, score, sr.data);
+          toRet = getDocumentHit(mbox, sr.id, doc, score, sr.data);
           break;          
       default:
           assert(false);
@@ -225,16 +225,11 @@ ZimbraHit getZimbraHit(Mailbox mbox, float score, SearchResult sr, Document doc)
   }
 
   protected DocumentHit getDocumentHit(Mailbox mbx, int mailItemId, Document d, float score, MailItem.UnderlyingData underlyingData) throws ServiceException {
-      DocumentHit hit = (DocumentHit) mMessageHits.get(mailItemId);
-      if (hit == null) {
-          if (d != null) {
-              hit = new DocumentHit(this, mbx, score, mailItemId, underlyingData, d);
-          } else {
-              hit = new DocumentHit(this, mbx, score, mailItemId, underlyingData);
-          }
-          mMessageHits.put(mailItemId, hit);
+	  DocumentHit hit;
+      if (d != null) {
+          hit = new DocumentHit(this, mbx, score, mailItemId, underlyingData, d);
       } else {
-          hit.updateScore(score);
+          hit = new DocumentHit(this, mbx, score, mailItemId, underlyingData);
       }
       return hit;
   }

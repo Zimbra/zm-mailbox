@@ -86,7 +86,7 @@ public class WikiItem extends Document {
 
         WikiItem wiki = new WikiItem(mbox, data);
         wiki.finishCreation(parent);
-//        doc.reindex();
+        pd.setVersion(wiki.getVersion());
         return wiki;
     }
 }

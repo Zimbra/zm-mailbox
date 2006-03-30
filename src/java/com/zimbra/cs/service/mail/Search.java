@@ -279,6 +279,12 @@ public class Search extends DocumentHandler  {
                 e = addAppointmentHit(lc, response, ah, inline, params);
             } else if (hit instanceof DocumentHit) {
             	DocumentHit dh = (DocumentHit)hit;
+            	Document doc = dh.getDocument();
+            	if (doc.getVersion() != dh.getVersion()) {
+            		// show the search result only for the latest ver.
+            		// change the API in the future to accomodate search across all the versions.
+            		continue;
+            	}
                 e = addDocumentHit(lc, response, dh);
             } else {
                 mLog.error("Got an unknown hit type putting search hits: "+hit);
@@ -419,10 +425,11 @@ public class Search extends DocumentHandler  {
     }
     
     Element addDocumentHit(ZimbraContext lc, Element response, DocumentHit dh) throws ServiceException {
+    	int ver = dh.getVersion();
     	if (dh.getItemType() == MailItem.TYPE_DOCUMENT)
-    		return ToXML.encodeDocument(response, lc, (Document)dh.getDocument(), -1);
+    		return ToXML.encodeDocument(response, lc, dh.getDocument(), ver);
     	else if (dh.getItemType() == MailItem.TYPE_WIKI)
-            return ToXML.encodeWiki(response, lc, (WikiItem)dh.getDocument(), -1);
+            return ToXML.encodeWiki(response, lc, (WikiItem)dh.getDocument(), ver);
     	throw ServiceException.UNKNOWN_DOCUMENT("invalid document type "+dh.getItemType(), null);
     }
     

@@ -146,6 +146,10 @@ public class ParsedDocument {
         }
     }
 
+    public void setVersion(int v) {
+    	mDocument.add(Field.UnIndexed(LuceneFields.L_VERSION, Integer.toString(v)));
+    }
+    
     public String getFilename()     { return mFilename; }
     public String getContentType()  { return mContentType; }
     public int getSize()            { return mSize; }
