@@ -488,7 +488,7 @@ public class UnitTests extends TestCase {
     			types, SortBy.DATE_DESCENDING,
     			false, false, 100);
 
-    	ZimbraQueryResults res = zq.execute(mbox);
+    	ZimbraQueryResults res = zq.execute();
 
     	try {
 
