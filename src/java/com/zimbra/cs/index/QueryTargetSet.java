@@ -26,7 +26,7 @@ package com.zimbra.cs.index;
 
 import java.util.HashSet;
 
-public class QueryTargetSet extends HashSet<QueryTarget> 
+class QueryTargetSet extends HashSet<QueryTarget> 
 {
 	public QueryTargetSet() {
 	}
@@ -49,11 +49,20 @@ public class QueryTargetSet extends HashSet<QueryTarget>
 		return toRet;		
 	}
 	
-	public boolean isSubset(QueryTargetSet other) {
+	boolean isSubset(QueryTargetSet other) {
 		for (QueryTarget t : this) {
 			if (!other.contains(t))
 				return false;
 		}
 		return true;
 	}
+
+	boolean hasExternalTargets() {
+		for (QueryTarget t : this) {
+			if (t != QueryTarget.UNSPECIFIED && t != QueryTarget.LOCAL)
+				return true;
+		}
+		return false;
+	}
+	
 }

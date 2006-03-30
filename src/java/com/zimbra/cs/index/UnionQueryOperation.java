@@ -33,10 +33,9 @@ package com.zimbra.cs.index;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Set;
 
+import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.SetUtil;
@@ -56,7 +55,6 @@ import org.apache.commons.logging.LogFactory;
  ***********************************************************************/
 class UnionQueryOperation extends QueryOperation
 {
-    
     private static Log mLog = LogFactory.getLog(UnionQueryOperation.class);
     
     private boolean atStart = true; // don't re-fill buffer twice if they call hasNext() then reset() w/o actually getting next
@@ -150,7 +148,6 @@ class UnionQueryOperation extends QueryOperation
         }
     }
     
-    
     ArrayList<QueryOperation>mQueryOperations = new ArrayList<QueryOperation>();
     
     public boolean hasSpamTrashSetting() {
@@ -225,6 +222,61 @@ class UnionQueryOperation extends QueryOperation
     	}
     }
     
+    QueryOperation runRemoteSearches(Mailbox mbox, MailboxIndex mbidx, byte[] types, SortBy searchOrder, int offset, int limit) 
+    throws ServiceException, IOException {
+    	
+    	boolean hasRemoteOps = false;
+    	
+    	for (int i = mQueryOperations.size()-1; i >= 0; i--) {
+    		QueryOperation op = mQueryOperations.get(i);
+    		
+    		QueryTargetSet targets = op.getQueryTargets();
+    		assert(targets.countExplicitTargets() <= 1);
+    		
+    		if (targets.hasExternalTargets()) {
+    			mQueryOperations.remove(i);
+
+    			hasRemoteOps = true;
+    			boolean foundOne = false;
+    			
+    			// find a remoteOp to add this one to
+    			for (QueryOperation tryIt : mQueryOperations) {
+    				if (tryIt instanceof RemoteQueryOperation) {
+    					if (((RemoteQueryOperation)tryIt).tryAddOredOperation(op)) {
+    						foundOne = true;
+    						break;
+    					}
+    				}
+    			}
+    			
+    			if (!foundOne) {
+    				RemoteQueryOperation remoteOp = new RemoteQueryOperation();
+    				remoteOp.tryAddOredOperation(op);
+        			mQueryOperations.add(i, remoteOp);
+    			}
+    		}
+    	}
+
+    	if (hasRemoteOps) {
+        	// okay, if we actually have remote operations, then we need to call setup() once per --Ï
+        	// this actually runs the remote operation
+    		for (QueryOperation toSetup : mQueryOperations) {
+    			if (toSetup instanceof RemoteQueryOperation) {
+    				((RemoteQueryOperation)toSetup).setup(mbox.getAccount(), types, searchOrder, offset, limit);
+    			}
+    		}
+    	}
+    	
+    	assert(mQueryOperations.size() > 0);
+    
+    	if (mQueryOperations.size() == 1) {
+    		// this can happen if we replaced ALL of our operations with a single remote op...
+    		return mQueryOperations.get(0);
+    	}
+    	
+    	return this;
+    }
+    
     
     public QueryOperation optimize(Mailbox mbox) throws ServiceException {
         restartSubOpt:
@@ -286,8 +338,25 @@ class UnionQueryOperation extends QueryOperation
     return this;
     }
     
+    String toQueryString() {
+    	StringBuilder ret = new StringBuilder("(");
+    	
+    	boolean atFirst = true;
+    	
+    	for (QueryOperation op : mQueryOperations) {
+    		if (!atFirst)
+    			ret.append(" OR ");
+    		
+    		ret.append(op.toQueryString());
+    		atFirst = false;
+    	}
+
+    	ret.append(')');
+    	return ret.toString();
+    }
+    
     public String toString() {
-        StringBuffer retval = new StringBuffer("(");
+        StringBuilder retval = new StringBuilder("(");
         
         for (int i = 0; i < mQueryOperations.size(); i++) {
             retval.append(" OR ");

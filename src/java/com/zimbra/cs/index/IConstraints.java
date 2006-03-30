@@ -32,6 +32,12 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 
+/**
+ * @author tim
+ *
+ * An interface to constraints for the DB-backed data in a search
+ * request.
+ */
 interface IConstraints extends DbSearchConstraintsNode, Cloneable {
 	void ensureSpamTrashSetting(Mailbox mbox, List<Folder> excludeFolders) throws ServiceException;
 	IConstraints andIConstraints(IConstraints other);
@@ -42,4 +48,5 @@ interface IConstraints extends DbSearchConstraintsNode, Cloneable {
 	boolean tryDbFirst(Mailbox mbox);
 	void setTypes(Set<Byte> types);
 	public Object clone() throws CloneNotSupportedException;
+	String toQueryString();
 }

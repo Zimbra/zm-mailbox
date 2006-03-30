@@ -81,6 +81,14 @@ class NullQueryOperation extends QueryOperation {
         return false;
     }
     
+    String toQueryString() {
+    	return "";
+    }
+    
+    public String toString() {
+    	return "NULL_QUERY_OP";
+    }
+    
     
     /* (non-Javadoc)
      * @see com.zimbra.cs.index.QueryOperation#resetIterator()

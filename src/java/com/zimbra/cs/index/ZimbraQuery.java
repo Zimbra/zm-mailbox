@@ -52,6 +52,7 @@ import org.apache.lucene.search.TermQuery;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.index.queryparser.ZimbraQueryParser;
 import com.zimbra.cs.index.queryparser.ParseException;
+import com.zimbra.cs.index.queryparser.ZimbraQueryParserConstants;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -101,6 +102,11 @@ public final class ZimbraQuery {
         public final BaseQuery getNext() {
             return mNext;
         }
+        
+        String getQueryOperatorString() {
+        	return ZimbraQuery.unquotedTokenImage[mQueryType];
+        }
+        
 
         /**
          * Used by the QueryParser when building up the list of Query terms.
@@ -582,7 +588,7 @@ public final class ZimbraQuery {
         protected QueryOperation getQueryOperation(boolean truth) {
             LuceneQueryOperation op = LuceneQueryOperation.Create();
             Query q = new TermQuery(new Term(QueryTypeString(getQueryType()), mTarget));
-            op.addClause(q,calcTruth(truth));
+            op.addClause(getQueryOperatorString()+mTarget, q,calcTruth(truth));
             return op;
         }
 
@@ -663,25 +669,26 @@ public final class ZimbraQuery {
         public static final Integer IN_ANY_FOLDER = new Integer(-2);
         
         public static InQuery Create(Mailbox mailbox, Analyzer analyzer, int modifier, Integer folderId) throws ServiceException {
-            try {
+//        	try {
                 if (folderId == IN_ANY_FOLDER) {
                     return new InQuery(mailbox, analyzer, modifier);
                 } else { 
                     Folder folder = mailbox.getFolderById(null, folderId.intValue());
                     return new InQuery(mailbox, analyzer, modifier, folder);
                 }
-            } catch (NoSuchItemException nsie) {
-                return null;
-            }
+//        	} catch (NoSuchItemException nsie) {
+//        		 TIM: why is this here?  Seems strange to eat this error!
+//                return null;
+//        	} 
         }
         
         public static InQuery Create(Mailbox mailbox, Analyzer analyzer, int modifier, String folderName) throws ServiceException {
-            try {
+//            try {
                 Folder folder = mailbox.getFolderByPath(null, folderName);
                 return new InQuery(mailbox, analyzer, modifier, folder);
-            } catch (NoSuchItemException nsie) {
-                return null;
-            }
+//            } catch (NoSuchItemException nsie) {
+//                return null;
+//            }
         }
         private Folder mFolder;
 
@@ -716,7 +723,7 @@ public final class ZimbraQuery {
         }
        
         public String toString(int expLevel) {
-            return super.toString(expLevel)+",IN:"+(mFolder!=null?mFolder.toString():"ANY_FOLDER")+")";
+            return super.toString(expLevel)+",IN:"+(mFolder!=null?mFolder.getName():"ANY_FOLDER")+")";
         }
 	}
 
@@ -754,7 +761,7 @@ public final class ZimbraQuery {
             if (mValue != null) {
                 q = new TermQuery(new Term(mLuceneField, mValue));
             }
-            op.addClause(q,calcTruth(truth));
+            op.addClause(getQueryOperatorString()+mValue, q,calcTruth(truth));
             
             return op;
         }
@@ -1074,6 +1081,7 @@ public final class ZimbraQuery {
         // for complicated wildcards
         private LinkedList<String> mOredTokens;
         private String mWildcardTerm;
+        private String mOrigText;
         
         private static final int MAX_WILDCARD_TERMS = 500;
         
@@ -1084,6 +1092,7 @@ public final class ZimbraQuery {
             mTokens = new ArrayList(1);
             mWildcardTerm = null;
             mWildcardPrefix = null;
+            mOrigText = text;
             
             TokenStream source = analyzer.tokenStream(QueryTypeString(qType), new StringReader(text));
             org.apache.lucene.analysis.Token t;
@@ -1164,28 +1173,26 @@ public final class ZimbraQuery {
                     TermQuery q = null;
                     String queryTerm = mTokens.get(0);
                     q = new TermQuery(new Term(fieldName, queryTerm));
-                    lop.addClause(q,calcTruth(truth));
+                    lop.addClause(this.getQueryOperatorString()+mOrigText,  q,calcTruth(truth));
                 } else if (mTokens.size() > 1) {
                     PhraseQuery p = new PhraseQuery();
                     p.setSlop(0); // TODO configurable?
-                    for (int i=0; i<mTokens.size(); i++) {
-                        p.add(new Term(fieldName, mTokens.get(i)));
-                    }
-                    lop.addClause(p,calcTruth(truth));
+                    for (int i=0; i<mTokens.size(); i++) 
+                    	p.add(new Term(fieldName, mTokens.get(i)));
+                    lop.addClause(this.getQueryOperatorString()+mOrigText, p,calcTruth(truth));
                 }
                 
                 if (mWildcardPrefix != null) {
-                    lop.addClause(new PrefixQuery(new Term(fieldName, mWildcardPrefix)), calcTruth(truth));
+                	lop.addClause("", new PrefixQuery(new Term(fieldName, mWildcardPrefix)), calcTruth(truth));
                 }
                 
                 if (mOredTokens.size() > 0) {
                 	// probably don't need to do this here...can probably just call addClause
                     BooleanQuery orQuery = new BooleanQuery();
-                    for (String token : mOredTokens) {
-                        orQuery.add(new TermQuery(new Term(fieldName, token)), false, false);
-                    }
+                    for (String token : mOredTokens)
+                    	orQuery.add(new TermQuery(new Term(fieldName, token)), false, false);
                     
-                    lop.addClause(orQuery, calcTruth(truth));
+                    lop.addClause("", orQuery, calcTruth(truth));
                 }
                 
                 return lop;
@@ -1225,7 +1232,19 @@ public final class ZimbraQuery {
 	private byte[] mTypes;
 	private SortBy mSearchOrder;
 	private int mChunkSize;
-    
+	private Mailbox mMbox;
+	private ZimbraQueryResults mResults;
+	
+	private static String[] unquotedTokenImage;
+	
+	static {
+		unquotedTokenImage = new String[ZimbraQueryParserConstants.tokenImage.length];
+		for (int i = 0; i < ZimbraQueryParserConstants.tokenImage.length; i++) {
+			unquotedTokenImage[i] = ZimbraQueryParserConstants.tokenImage[i].substring(1, ZimbraQueryParserConstants.tokenImage[i].length()-1);
+		}
+		
+	}
+	
     private static String QueryTypeString(int qType) {
         switch (qType) {
           case ZimbraQueryParser.CONTENT:    return LuceneFields.L_CONTENT;
@@ -1538,10 +1557,12 @@ public final class ZimbraQuery {
 	public ZimbraQuery(String queryString, Mailbox mbox, byte[] types, SortBy searchOrder, boolean includeTrash, boolean includeSpam, int chunkSize) 
 	throws ParseException, ServiceException
 	{
+		mMbox = mbox;
+		
 		//
 		// Step 1: parse the text using the JavaCC parser
         ZimbraQueryParser parser = new ZimbraQueryParser(new StringReader(queryString));
-        parser.init(new ZimbraAnalyzer(), mbox);
+        parser.init(new ZimbraAnalyzer(), mMbox);
         mClauses = parser.Parse();
         
         String sortByStr = parser.getSortByStr();
@@ -1591,7 +1612,7 @@ public final class ZimbraQuery {
 	        }
 	        
 	        // optimize the query down
-	        mOp = mOp.optimize(mbox);
+	        mOp = mOp.optimize(mMbox);
 	        if (mOp == null) {
 	            mOp = new NoTermQueryOperation();
 	        }
@@ -1602,14 +1623,44 @@ public final class ZimbraQuery {
 	        // do spam/trash hackery!
 	        if (!includeTrash || !includeSpam) {
 	            if (!mOp.hasSpamTrashSetting()) {
-	                mOp = mOp.ensureSpamTrashSetting(mbox, includeTrash, includeSpam);
+	                mOp = mOp.ensureSpamTrashSetting(mMbox, includeTrash, includeSpam);
 	                if (mLog.isDebugEnabled()) {
 	                    mLog.debug("AFTERTS="+mOp.toString());
 	                }
-	                mOp = mOp.optimize(mbox); // optimize again now that we have the trash/spam setting
+	                mOp = mOp.optimize(mMbox); // optimize again now that we have the trash/spam setting
 	            }
 	        }
 	    }
+	    
+	}
+	
+	public void doneWithQuery() throws ServiceException {
+		if (mResults != null)
+			mResults.doneWithSearchResults();
+		
+		if (mOp != null) 
+			mOp.doneWithSearchResults();
+	}
+	
+	public void executeRemoteOps() throws ServiceException, IOException
+	{
+		if (mOp!= null) {
+			QueryTargetSet targets = mOp.getQueryTargets();
+			assert(mOp instanceof UnionQueryOperation || targets.countExplicitTargets() <=1);
+			MailboxIndex mbidx = mMbox.getMailboxIndex();
+			
+			if (targets.size() > 1) {
+				UnionQueryOperation union = (UnionQueryOperation)mOp;
+				mOp = union.runRemoteSearches(mMbox, mbidx, mTypes, mSearchOrder, 0, mChunkSize);
+			} else {
+				if (targets.hasExternalTargets()) {
+					RemoteQueryOperation remote = new RemoteQueryOperation();
+					remote.tryAddOredOperation(mOp);
+					remote.setup(mMbox.getAccount(), mTypes, mSearchOrder, 0, mChunkSize);
+					mOp = remote;
+				}
+			}
+		}
 	}
 	
 	/**
@@ -1622,11 +1673,11 @@ public final class ZimbraQuery {
 	 * @throws ServiceException
 	 * @throws IOException
 	 */
-	public ZimbraQueryResults execute(Mailbox mbox) throws ServiceException, IOException
+	public ZimbraQueryResults execute() throws ServiceException, IOException
 	{
-		MailboxIndex mbidx = mbox.getMailboxIndex();
+		MailboxIndex mbidx = mMbox.getMailboxIndex();
 		
-		try {
+//		try {
 			if (ZimbraLog.index.isDebugEnabled()) {
 				String str = this.toString() +" search([";
 				for (int i = 0; i < mTypes.length; i++) {
@@ -1636,23 +1687,39 @@ public final class ZimbraQuery {
 					str+=mTypes[i];
 				}
 				str += "]," + mSearchOrder + ")";
-				mLog.debug(str);
+				ZimbraLog.index.debug(str);
 			}
 			
 			if (mOp!= null) {
 				if (mLog.isDebugEnabled())
 					mLog.debug("OPERATION:"+mOp.toString());
 				
-				ZimbraQueryResults res = mOp.run(mbox, mbidx, mTypes, mSearchOrder, mChunkSize);
+				QueryTargetSet targets = mOp.getQueryTargets();
+				assert(mOp instanceof UnionQueryOperation || targets.countExplicitTargets() <=1);
+				assert(mResults == null);
 				
-	            return new HitIdGrouper(res, mSearchOrder);
+				if (targets.size() > 1) {
+					mResults = mOp.run(mMbox, mbidx, mTypes, mSearchOrder, mChunkSize);
+				} else {
+					if (targets.hasExternalTargets()) {
+						RemoteQueryOperation remote = new RemoteQueryOperation();
+						remote.tryAddOredOperation(mOp);
+						remote.setup(mMbox.getAccount(), mTypes, mSearchOrder, 0, 100);
+						mResults = remote.run(mMbox, mbidx, mTypes, mSearchOrder, mChunkSize);
+					} else {
+						mResults = mOp.run(mMbox, mbidx, mTypes, mSearchOrder, mChunkSize);
+					}
+				}
+				
+				mResults = new HitIdGrouper(mResults, mSearchOrder);
+				return mResults;
 			} else {
 				mLog.debug("Operation optimized to nothing.  Returning no results");
 			}
-		} catch(Exception e) {
-        	if (ZimbraLog.index.isDebugEnabled()) 
-        		ZimbraLog.index.debug("Caught exception running search "+e, e);
-        }
+//		} catch(Exception e) {
+//        	if (ZimbraLog.index.isDebugEnabled()) 
+//        		ZimbraLog.index.debug("Caught exception running search "+e, e);
+//        }
 		
     	return new EmptyQueryResults(mTypes, mSearchOrder);
 	}

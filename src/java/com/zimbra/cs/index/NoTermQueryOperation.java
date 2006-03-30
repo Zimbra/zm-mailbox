@@ -77,6 +77,14 @@ public class NoTermQueryOperation extends QueryOperation {
     void forceHasSpamTrashSetting() {
         assert(false);
     }
+    
+    String toQueryString() {
+    	return "";
+    }
+    
+    public String toString() {
+    	return "NO_TERM_QUERY_OP";
+    }
 
     QueryTargetSet getQueryTargets() {
     	QueryTargetSet toRet = new QueryTargetSet(1);

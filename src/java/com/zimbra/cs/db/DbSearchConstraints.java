@@ -8,6 +8,7 @@ import java.util.Set;
 
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.util.ListUtil;
 import com.zimbra.cs.util.ZimbraLog;
@@ -146,9 +147,12 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
 		void run(StringBuilder str, Collection<T> collect, String intro) {
 			if (!ListUtil.isEmpty(collect)) {
 				str.append(intro).append(":(");
+				boolean atFirst = true;
 				for (T elt: collect) {
+					if (!atFirst) 
+						str.append(", ");
 					printOne(str, elt);
-					str.append(',');
+					atFirst = false;
 				}
 				str.append(") ");
 			}
@@ -156,6 +160,32 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
 		
 		abstract void printOne(StringBuilder s, T t);
 	}
+	
+	private static class FolderPrinter {
+		void run(StringBuilder str, boolean truthiness, Collection<Folder> collect) {
+			if (!ListUtil.isEmpty(collect)) {
+				str.append("(");
+				boolean atFirst = true;
+				for (Folder f: collect) {
+					if (!atFirst) 
+						str.append(", ");
+					
+					if (f instanceof Mountpoint) {
+						if (!truthiness)
+							str.append("-");
+						str.append("inid:");
+						Mountpoint mpt = (Mountpoint)f;
+						str.append(mpt.getRemoteId());
+	        		} else {
+	        			str.append("in:").append(f.getName());
+	        		}
+					atFirst = false;
+				}
+				str.append(") ");
+			}
+		}
+	}
+	
 	
     public String toString()
     {
@@ -165,10 +195,22 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         // all this pain could have been eliminated with a simple preprocessor macro...fucking java...
         //
         Printer<Tag> tp = new Printer<Tag>()         { void printOne(StringBuilder s, Tag t)     { s.append(t.getName()); } };
-        Printer<Folder> fp = new Printer<Folder>()   { void printOne(StringBuilder s, Folder f)  { s.append(f.getName()); } };
         Printer<Integer> ip = new Printer<Integer>() { void printOne(StringBuilder s, Integer i) { s.append(i); } };
         Printer<Byte> bp = new Printer<Byte>()       { void printOne(StringBuilder s, Byte b)    { s.append(b); } };
         Printer<Range> rp = new Printer<Range>()     { void printOne(StringBuilder s, Range r)   { s.append(r.toString()); } };
+
+        FolderPrinter fp = new FolderPrinter();
+        
+//        Printer<Folder> fp = new Printer<Folder>()   {
+//        	void printOne(StringBuilder s, Folder f)  {
+//        		if (f instanceof Mountpoint) {
+//        			Mountpoint mpt = (Mountpoint)f;
+//        			s.append(mpt.getRemoteId());
+//        		} else {
+//        			s.append(f.getName());
+//        		}
+//        	} 
+//        };
         
         // tags
         tp.run(retVal, tags, "TAG");
@@ -184,8 +226,8 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         }
         
         // folders
-        fp.run(retVal, folders, "IN");
-        fp.run(retVal, excludeFolders, "-IN");
+        fp.run(retVal, true, folders);
+        fp.run(retVal, false, excludeFolders);
         
         // convId
         if (convId != 0) {

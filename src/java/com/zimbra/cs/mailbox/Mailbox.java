@@ -2261,45 +2261,6 @@ public class Mailbox {
         return getItemList(octxt, MailItem.TYPE_APPOINTMENT, folderId);
     }
 
-//    public synchronized Calendar getCalendarForAppointments(Collection appts)
-//    throws ServiceException {
-//        Calendar cal = new Calendar();
-//
-//        // PRODID, VERSION always required
-//        cal.getProperties().add(new ProdId("Zimbra-Calendar-Provider"));
-//        cal.getProperties().add(Version.VERSION_2_0);
-//            
-//        // REPLY
-//        cal.getProperties().add(Method.PUBLISH);
-//            
-//            
-//        // timezones
-//        {
-//            ICalTimeZone localTz = getAccount().getTimeZone();
-//            TimeZoneMap tzmap = new TimeZoneMap(localTz);
-//                
-//            for (Iterator iter = appts.iterator(); iter.hasNext();) {
-//                Appointment appt = (Appointment)iter.next();
-//                tzmap.add(appt.getTimeZoneMap());
-//            }
-//                
-//            // iterate the tzmap and add all the VTimeZone's 
-//            // (TODO: should this code live in TimeZoneMap???) 
-//            for (Iterator iter = tzmap.tzIterator(); iter.hasNext();) {
-//                ICalTimeZone cur = (ICalTimeZone) iter.next();
-//                VTimeZone vtz = cur.toVTimeZone();
-//                cal.getComponents().add(vtz);
-//            }
-//        }
-//            
-//        // build all the event components and add them to the Calendar
-//        for (Iterator iter = appts.iterator(); iter.hasNext();) {
-//            Appointment appt = (Appointment)iter.next();
-//            appt.appendRawCalendarData(cal);
-//        }
-//        return cal;
-//    }
-    
     public synchronized ZVCalendar getZCalendarForAppointments(Collection<Appointment> appts) throws ServiceException {
         ZVCalendar cal = new ZVCalendar();
 
@@ -2327,19 +2288,6 @@ public class Mailbox {
             appt.appendRawCalendarData(cal);
         return cal;
     }
-    
-//
-//    public synchronized Calendar getCalendarForRange(OperationContext octxt, long start, long end, int folderId)
-//    throws ServiceException {
-//        boolean success = false;
-//        try {
-//            beginTransaction("getCalendarForRange", octxt);
-//            Collection /* Appointment */ appts = getAppointmentsForRange(octxt, start, end, folderId, null);
-//            return getCalendarForAppointments(appts);
-//        } finally {
-//            endTransaction(success);
-//        }
-//    }
     
     public synchronized ZVCalendar getZCalendarForRange(OperationContext octxt, long start, long end, int folderId)
     throws ServiceException {
@@ -2403,6 +2351,9 @@ public class Mailbox {
     }
     
     /**
+     * You **MUST** call doneWithSearchResults() when you are done with the search results, otherwise
+     * resources will be leaked.
+     * 
      * @param octxt
      * @param queryString
      * @param types
@@ -2417,45 +2368,36 @@ public class Mailbox {
     throws IOException, ParseException, ServiceException {
         Account acct = getAccount();
         boolean includeTrash = 
-            acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeTrashInSearch, false);
+        	acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeTrashInSearch, false);
         boolean includeSpam = 
-            acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeSpamInSearch, false);
+        	acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeSpamInSearch, false);
         
-        return search(octxt, queryString, types, sortBy, includeTrash, includeSpam, chunkSize);
-    }
-
-    /**
-     * @param octxt
-     * @param queryString
-     * @param types
-     * @param sortBy
-     * @param includeTrash
-     * @param includeSpam
-     * @param chunkSize A hint to the search engine telling it the size of the result set you are expecting
-     * @return
-     * @throws IOException
-     * @throws ParseException
-     * @throws ServiceException
-     */
-    public ZimbraQueryResults search(OperationContext octxt, String queryString, byte[] types,
-                                                  SortBy sortBy, boolean includeTrash, boolean includeSpam, int chunkSize)
-    throws IOException, ParseException, ServiceException {
     	ZimbraQuery zq = new ZimbraQuery(queryString, this, types, sortBy, includeTrash, includeSpam, chunkSize);
-    	
-		boolean success = false;
     	try {
-    		synchronized(this) {
-    			beginTransaction("search", octxt);
-
-    			ZimbraQueryResults results = zq.execute(this); 
-    			success = true;
-    			return results;
+    		zq.executeRemoteOps();
+    	
+    		boolean success = false;
+    		try {
+    			synchronized(this) {
+    				beginTransaction("search", octxt);
+    				ZimbraQueryResults results = zq.execute(); 
+    				success = true;
+    				return results;
+    			}
+    		} finally {
+    			endTransaction(success);
     		}
-    	} finally {
-    		endTransaction(success);
+    	} catch (IOException e) {
+    		zq.doneWithQuery();
+    		throw e;
+    	} catch (ServiceException e) {
+    		zq.doneWithQuery();
+    		throw e;
+    	} catch (Throwable t) {
+    		zq.doneWithQuery();
+    		throw ServiceException.FAILURE("Caught "+t.getMessage(), t);
     	}
     }
-    
 
     public synchronized FreeBusy getFreeBusy(long start, long end) throws ServiceException {
         return FreeBusy.getFreeBusyList(this, start, end);

@@ -808,6 +808,15 @@ class DBQueryOperation extends QueryOperation
         return this;
     }
     
+    String toQueryString() {
+    	StringBuilder ret = new StringBuilder("(");
+    	if (mLuceneOp != null)
+    		ret.append(mLuceneOp.toQueryString()).append(" AND ");
+    	ret.append(mConstraints.toQueryString());
+    	ret.append(')');
+    	return ret.toString();
+    }
+    
     public String toString()
     {
         StringBuilder retVal = new StringBuilder("");
@@ -856,7 +865,8 @@ class DBQueryOperation extends QueryOperation
     public Object clone() {
     	try {
     		DBQueryOperation toRet = cloneInternal();
-    		toRet.mLuceneOp = (LuceneQueryOperation)mLuceneOp.clone(this);
+    		if (mLuceneOp != null) 
+    			toRet.mLuceneOp = (LuceneQueryOperation)mLuceneOp.clone(this);
     		return toRet;
     	} catch (CloneNotSupportedException e) {
     		assert(false);

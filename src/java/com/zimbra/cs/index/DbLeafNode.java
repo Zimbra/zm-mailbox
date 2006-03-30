@@ -34,6 +34,8 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.ListUtil;
+import com.zimbra.cs.util.SetUtil;
 
 class DbLeafNode extends DbSearchConstraints implements IConstraints {
 	
@@ -272,7 +274,70 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
 
     public void setTypes(Set<Byte> _types) {
 	   this.types = _types;
-   }
+    }
+    
+    public String toQueryString() {
+    	if (noResults)
+    		return "-is:anywhere";
+    	
+    	return toString();
+    	
+//    	StringBuilder ret = new StringBuilder('(');
+//    	
+//    	if (tags != null) {
+//    		if (tags.size() == 0) {
+//    			ret.append(" -has:tags ");
+//    		} else {
+//    			for (Tag t : tags) 
+//    				ret.append("tag:").append(t.getName()).append(' ');
+//    		}
+//    	}
+//    	if (!ListUtil.isEmpty(excludeTags)) {
+//			for (Tag t : excludeTags) 
+//				ret.append("-tag:").append(t.getName()).append(' ');
+//    	}
+//    	if (hasTags) 
+//    		ret.append("is:tagged ");
+//    	
+//    	if (!ListUtil.isEmpty(folders)) {
+//    		ret.append('(');
+//    		boolean atFirst = true;
+//    		for (Folder f : folders) {
+//    			if (!atFirst)
+//    				ret.append(" OR ");
+//    			
+//    			ret.append("in:").append(f.getName());
+//    			atFirst = false;
+//    		}
+//    		ret.append(") ");
+//    	}
+//    	if (!ListUtil.isEmpty(excludeFolders)) {
+//    		for (Folder f : excludeFolders) 
+//    			ret.append("-in:").append(f.getName()).append(' ');
+//    	}
+//    	if (convId != 0) {
+//    		ret.append("conv:").append(convId).append(' ');
+//    	}
+//    	if (!ListUtil.isEmpty(prohibitedConvIds)) {
+//    		for (Integer i: prohibitedConvIds) 
+//    			ret.append("-conv:").append(i).append(' ');
+//    	}
+//    	if (!ListUtil.isEmpty(itemIds)) {
+//    		ret.append("item:{");
+//    		boolean atFirst = true;
+//    		for (Integer i: itemIds) {
+//    			if (!atFirst)
+//    				ret.append(
+//    				ret.append("-conv:").append(i).append(' ');
+//    	}
+//    	
+//    	
+//    	
+//    	
+//    	
+//    	return ret.append(')').toString();
+    }
+    
 
    public String toString()
    {

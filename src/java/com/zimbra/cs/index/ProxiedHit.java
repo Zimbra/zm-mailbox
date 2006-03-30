@@ -78,19 +78,19 @@ public class ProxiedHit extends ZimbraHit
     }
 
     public int getSize() throws ServiceException {
-        return (int) mElement.getAttributeLong(MailService.A_SIZE);
+        return (int) mElement.getAttributeLong(MailService.A_SIZE, 0);
     }
     
     public long getDate() throws ServiceException {
         if (mProxiedDate < 0) {
-            mProxiedDate = mElement.getAttributeLong(MailService.A_DATE);
+            mProxiedDate = mElement.getAttributeLong(MailService.A_DATE, 0);
         }
         return mProxiedDate;
     }
 
     public int getConversationId() throws ServiceException {
         if (mProxiedConvId <= 0) {
-            mProxiedConvId = (int) mElement.getAttributeLong(MailService.A_CONV_ID);
+            mProxiedConvId = (int) mElement.getAttributeLong(MailService.A_CONV_ID, 0);
         }
         return mProxiedConvId;
     }

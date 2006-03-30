@@ -28,6 +28,7 @@
  */
 package com.zimbra.cs.index;
 
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.httpclient.URLUtil;
@@ -48,13 +49,10 @@ import java.util.List;
 
 
 /**
- * @author tim
- *
  * Represents the results of a query made on a remote server.  This class takes the ServerID
  * and the query parameters and makes does smart chunking (buffering) of the results - making
  * SOAP requests to the remote Zimbra server as necessary.
- * 
- *  
+ *
  * TODO wish this could be a QueryOperation subclass instead of just a results subclass:
  * unfortunately right now the intersection and other operations assume you can get to the
  * actual hit objects (for doing Intersections and the like)....  Long-term-fixme...
@@ -75,6 +73,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
     
     protected String mServer;
     protected String mAuthToken;
+    protected String mTargetAcctId = null;
     protected SoapTransport mTransport = null;
     SearchParams mSearchParams;
     
@@ -83,6 +82,23 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
     boolean isAllMailboxes = false;
     List /*ParseMailboxID*/ mMailboxes;
 
+    
+    /**
+     * A search request in the current mailbox on a different server
+     * 
+     * @param encodedAuthToken (call ZimbraContext.getAuthToken().getEncoded() if necessary) 
+     * @param server hostname of server
+     * @param params
+     */
+    public ProxiedQueryResults(String encodedAuthToken, String targetAccountId, String server, SearchParams params) {
+        super(params.getTypes(), params.getSortBy());
+        
+        this.mSearchParams = params;
+        this.mAuthToken = encodedAuthToken;
+        this.mServer = server;
+        this.mTargetAcctId = targetAccountId;
+    }
+    
     /**
      * A search request in the current mailbox on a different server
      * 
@@ -199,6 +215,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
         String url = URLUtil.getAdminURL(server, "/service/admin/soap");
         SoapTransport toRet = new SoapHttpTransport(url);
         toRet.setAuthToken(mAuthToken);
+        toRet.setTargetAcctId(mTargetAcctId);
         return toRet;
     }
     
@@ -235,7 +252,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
                 searchElt = new Element.XMLElement(MailService.SEARCH_REQUEST);
             }
             
-            searchElt.addAttribute(MailService.A_SEARCH_TYPES, "message");
+            searchElt.addAttribute(MailService.A_SEARCH_TYPES, mSearchParams.getTypesStr());
             searchElt.addAttribute(MailService.A_SORTBY, mSearchParams.getSortByStr());
             searchElt.addAttribute(MailService.A_QUERY_OFFSET, mBufferStartOffset);
             searchElt.addAttribute(MailService.A_QUERY_LIMIT, chunkSizeToUse);
@@ -271,7 +288,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
             // put these hits into our buffer!
             int bufferIdx = 0;
             int stop = mBufferEndOffset - mBufferStartOffset;
-            for (Iterator iter = searchResp.elementIterator(MailService.E_MSG); iter.hasNext() && bufferIdx < stop;) {
+            for (Iterator iter = searchResp.elementIterator(); iter.hasNext() && bufferIdx < stop;) {
                 Element e = (Element)iter.next();
                 mHitBuffer.add(bufferIdx++, new ProxiedHit(this, e));
             }
@@ -298,7 +315,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
         } catch (IOException e) {
             throw ServiceException.FAILURE("IOException ", e);
         } catch (SoapFaultException e) {
-            throw ServiceException.FAILURE("SoapFaultException ", e);
+        	throw ServiceException.FAILURE("SoapFaultException ", e);
         } 
     }
     

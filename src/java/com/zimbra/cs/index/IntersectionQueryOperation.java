@@ -480,7 +480,24 @@ class IntersectionQueryOperation extends QueryOperation {
     		// loop through rest of ops add to toRet if it is in every other set
     		while (qopIter.hasNext()) {
     			QueryTargetSet curSet = ((QueryOperation)qopIter.next()).getQueryTargets();
-    			toRet = (QueryTargetSet)SetUtil.intersect(new QueryTargetSet(), toRet, curSet);
+    			
+    			// so this gets wacky:  
+    			//  -- If both sides have an UNSPECIFIED, then the result is
+    			//     (RHS union LHS) including UNSPECIFIED
+    			//  -- If only LHS has an UNSPECIFIED, then the result is (RHS)
+    			//     If RHS then the result is LHS  
+    			
+    			if (toRet.contains(QueryTarget.UNSPECIFIED)) {
+    				if (curSet.contains(QueryTarget.UNSPECIFIED)) {
+    					toRet = (QueryTargetSet)SetUtil.union(toRet, curSet);
+    				} else {
+    					toRet = curSet;
+    				} 
+    			} else if (curSet.contains(QueryTarget.UNSPECIFIED)) {
+    				// toRet stays as it is...
+    			} else {
+    				toRet = (QueryTargetSet)SetUtil.intersect(new QueryTargetSet(), toRet, curSet);    				
+    			}
     		}
     	}
     	return toRet;
@@ -556,8 +573,9 @@ class IntersectionQueryOperation extends QueryOperation {
     			((IntersectionQueryOperation)op).pruneIncompatibleTargets(targets);
     		} else {
     			// do nothing, must be part of the right set
-    			assert(op.getQueryTargets().size() == 1);
-    			assert(op.getQueryTargets().isSubset(targets));
+    			QueryTargetSet qts = op.getQueryTargets();
+    			assert(qts.size() == 1);
+    			assert(qts.contains(QueryTarget.UNSPECIFIED) || qts.isSubset(targets));
     		}
     	}
     }
@@ -565,27 +583,6 @@ class IntersectionQueryOperation extends QueryOperation {
 
     QueryOperation optimize(Mailbox mbox) throws ServiceException 
     {
-//    	//
-//    	// Step 0: check to see if this query intersection has incompatible
-//    	// query targets -- if that is the case, then we can quickly
-//    	// optimize this entire subtree out!
-//    	//
-//    	QueryTarget toRet = null;
-//    	
-//    	for (QueryOperation op : mQueryOperations) {
-//    		QueryTarget oqt = op.getQueryTarget();
-//    		
-//    		if (oqt == null)
-//    			continue;
-//    		
-//    		if (toRet == null) {
-//    			toRet = oqt;
-//    		} else if (!oqt.compatible(toRet)) {
-//    			mLog.debug("Optimizing out INTERSECTION (incompatible query targets)");
-//    			return new NullQueryOperation();
-//    		}
-//    	}
-    	
         //
         // Step 1: optimize each individual sub-operation we have
         //
@@ -640,61 +637,72 @@ class IntersectionQueryOperation extends QueryOperation {
             }
             break outer;
         } while (true);
-        
-        if (false) {
+
+        if (true) { // temp, for testing
+        	//
+        	// Step 2.5: now we want to eliminate any subtrees that have query targets
+            // which aren't compatible (ie (AorBorC) and (BorC) means we elim A
+        	//
         	QueryTargetSet targets = getQueryTargets();
-        	
         	if (targets.size() == 0) {
         		mLog.debug("ELIMINATING "+toString()+" b/c of incompatible QueryTargets");
         		return new NullQueryOperation();
-        	}
+        	} 
         	
-            //
-            // prune incompatible targets!
-            //
         	pruneIncompatibleTargets(targets);
             
             
             //
+        	// Step 2.6
+        	//
             // incompat targets are pruned, now distribute as necessary
             //
-            // at this point we can assume that all the invalid targets have been pruned      
-            //
-        	int distributeLhs = -1;
-        	
-        	for (int i = 0; i < mQueryOperations.size(); i++) {
-        		QueryOperation lhs = (QueryOperation) mQueryOperations.get(i);
+            // at this point we can assume that all the invalid targets have been pruned
+        	//
+        	// We only have to distribute if there is more than one explicit target,
+        	// otherwise we know we can be executed on one server so we're golden.
+        	//
+        	if (targets.size() > 1) {
+        		int distributeLhs = -1;
         		
-        		if (lhs.getQueryTargets().countExplicitTargets() > 1) {
-        			// need to distribute!
-        			distributeLhs = i;
-        			break;
-        		}
-        	}
-        	
-        	if (distributeLhs >= 0) {
-        		// if lhs has >1 explicit target at this point, it MUST be a union... 
-        		UnionQueryOperation lhs = (UnionQueryOperation)(mQueryOperations.remove(distributeLhs));
-        		
-        		assert(lhs instanceof UnionQueryOperation);
-        		UnionQueryOperation topOp = new UnionQueryOperation();
-        		
-        		for (QueryOperation lhsCur : lhs.mQueryOperations)
-        		{
-        			IntersectionQueryOperation newAnd = new IntersectionQueryOperation();
-        			topOp.add(newAnd);
+        		for (int i = 0; i < mQueryOperations.size(); i++) {
+        			QueryOperation lhs = (QueryOperation) mQueryOperations.get(i);
         			
-        			newAnd.addQueryOp(lhsCur);
-        			
-        			for (QueryOperation rhsCur : mQueryOperations) {
-        				newAnd.addQueryOp((QueryOperation)(rhsCur.clone()));
+        			if (lhs.getQueryTargets().size() > 1) {
+        				// need to distribute!
+        				distributeLhs = i;
+        				break;
         			}
         		}
-
-        		// recurse!
-        		return topOp.optimize(mbox);
+        		
+        		if (distributeLhs >= 0) {
+        			// if lhs has >1 explicit target at this point, it MUST be a union... 
+        			UnionQueryOperation lhs = (UnionQueryOperation)(mQueryOperations.remove(distributeLhs));
+        			
+        			assert(lhs instanceof UnionQueryOperation);
+        			UnionQueryOperation topOp = new UnionQueryOperation();
+        			
+        			for (QueryOperation lhsCur : lhs.mQueryOperations)
+        			{
+        				IntersectionQueryOperation newAnd = new IntersectionQueryOperation();
+        				topOp.add(newAnd);
+        				
+        				newAnd.addQueryOp(lhsCur);
+        				
+        				for (QueryOperation rhsCur : mQueryOperations) {
+        					newAnd.addQueryOp((QueryOperation)(rhsCur.clone()));
+        				}
+        			}
+        			
+        			// recurse!
+        			return topOp.optimize(mbox);
+        		}
         	}
+        	
         }
+        
+        // at this point, we know that the entire query has one and only one QueryTarget. 
+        assert(getQueryTargets().countExplicitTargets() <= 1);
         
         //
         // Step 3: hacky special case for Lucene Ops and DB Ops: Lucene and DB don't 
@@ -707,7 +715,7 @@ class IntersectionQueryOperation extends QueryOperation {
             LuceneQueryOperation lop = null;
             for (Iterator iter = mQueryOperations.iterator(); iter.hasNext();) {
                 QueryOperation op = (QueryOperation) iter.next();
-                if (op.getOpType() == OP_TYPE_LUCENE) {
+                if (op instanceof LuceneQueryOperation) {
                     lop = (LuceneQueryOperation)op;
                     iter.remove();
                     break;
@@ -717,7 +725,7 @@ class IntersectionQueryOperation extends QueryOperation {
                 boolean foundIt = false;
                 for (Iterator iter = mQueryOperations.iterator(); iter.hasNext();) {
                     QueryOperation op = (QueryOperation) iter.next();
-                    if (op.getOpType() == OP_TYPE_DB) {
+                    if (op instanceof DBQueryOperation) {
                         ((DBQueryOperation)op).addLuceneOp(lop);
                         foundIt = true;
                     }
@@ -738,10 +746,27 @@ class IntersectionQueryOperation extends QueryOperation {
 
         return this;
     }
+    
+    String toQueryString() {
+    	StringBuilder ret = new StringBuilder("(");
+    	
+    	boolean atFirst = true;
+    	
+    	for (QueryOperation op : mQueryOperations) {
+    		if (!atFirst)
+    			ret.append(" AND ");
+    		
+    		ret.append(op.toQueryString());
+    		atFirst = false;
+    	}
+
+    	ret.append(')');
+    	return ret.toString();
+    }
 
     public String toString() {
-        StringBuffer retval = new StringBuffer("(");
-
+        StringBuilder retval = new StringBuilder("(");
+        
         for (Iterator iter = mQueryOperations.iterator(); iter.hasNext();) {
             QueryOperation op = (QueryOperation) iter.next();
             retval.append(" AND ");

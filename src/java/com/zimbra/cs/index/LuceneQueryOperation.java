@@ -57,6 +57,7 @@ class LuceneQueryOperation extends QueryOperation
     private MailboxIndex.CountedIndexSearcher mSearcher = null;
     private Sort mSort = null;
     private boolean mHaveRunSearch = false;
+    private String mQueryString = "";
     
     /**
      * because we don't store the real mail-item-id of documents, we ALWAYS need a DBOp 
@@ -280,6 +281,14 @@ class LuceneQueryOperation extends QueryOperation
         return this;
     }
     
+    String toQueryString() {
+    	StringBuilder ret = new StringBuilder("(");
+    	
+    	ret.append(this.mQueryString);
+    	
+    	return ret.append(")").toString();
+    }
+    
     public String toString()
     {
         return "LUCENE(" + mQuery.toString() + ")";
@@ -300,7 +309,8 @@ class LuceneQueryOperation extends QueryOperation
     public Object clone() {
     	try {
     		LuceneQueryOperation toRet = cloneInternal();
-    		toRet.mDBOp = (DBQueryOperation)mDBOp.clone(this);
+    		if (mDBOp != null)
+    			toRet.mDBOp = (DBQueryOperation)mDBOp.clone(this);
     		return toRet;
     	} catch (CloneNotSupportedException e) {
     		assert(false);
@@ -335,9 +345,16 @@ class LuceneQueryOperation extends QueryOperation
         }
         
         if (other instanceof LuceneQueryOperation) {
-            BooleanQuery top = new BooleanQuery();
+        	LuceneQueryOperation otherLuc = (LuceneQueryOperation)other;
+        	if (union) {
+        		mQueryString = '('+mQueryString+") OR ("+otherLuc.mQueryString+')';
+        	} else {
+        		mQueryString = '('+mQueryString+") AND ("+otherLuc.mQueryString+')';
+        	}
+        	
+        	BooleanQuery top = new BooleanQuery();
             BooleanClause lhs = new BooleanClause(mQuery, !union, false);
-            BooleanClause rhs = new BooleanClause(((LuceneQueryOperation)other).mQuery, !union, false);
+            BooleanClause rhs = new BooleanClause(otherLuc.mQuery, !union, false);
             top.add(lhs);
             top.add(rhs);
             mQuery = top;
@@ -352,6 +369,8 @@ class LuceneQueryOperation extends QueryOperation
     }
     
     void addAndedClause(Query q, boolean truth) {
+    	mQueryString = "UNKNOWN"; // not supported yet for this case
+    	
     	assert(!mHaveRunSearch);
     	
         BooleanQuery top = new BooleanQuery();
@@ -367,12 +386,13 @@ class LuceneQueryOperation extends QueryOperation
      * @param q
      * @param truth
      */
-    void addClause(Query q, boolean truth) {
+    void addClause(String queryStr, Query q, boolean truth) {
+    	mQueryString = mQueryString+" "+queryStr;
     	assert(!mHaveRunSearch);
     	
-        if (truth) {
-            mQuery.add(new BooleanClause(q, true, false));
-        } else {
+    	if (truth) {
+    		mQuery.add(new BooleanClause(q, true, false));
+    	} else {
             // Why do we add this here?  Because lucene won't allow naked "NOT" queries.
             // Why do we check against Partname=TOP instead of against "All"?  Well, it is a simple case
             // of "do mostly what the user wants" --->

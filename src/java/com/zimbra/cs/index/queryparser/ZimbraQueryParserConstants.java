@@ -15,49 +15,50 @@ public interface ZimbraQueryParserConstants {
   int TO = 13;
   int CC = 14;
   int IN = 15;
-  int HAS = 16;
-  int FILENAME = 17;
-  int TYPE = 18;
-  int ATTACHMENT = 19;
-  int IS = 20;
-  int DATE = 21;
-  int DAY = 22;
-  int WEEK = 23;
-  int MONTH = 24;
-  int YEAR = 25;
-  int AFTER = 26;
-  int BEFORE = 27;
-  int SIZE = 28;
-  int BIGGER = 29;
-  int BIGGER_STR = 30;
-  int LARGER = 31;
-  int SMALLER = 32;
-  int TAG = 33;
-  int MESSAGE = 34;
-  int MY = 35;
-  int CONV = 36;
-  int CONV_COUNT = 37;
-  int CONV_MINM = 38;
-  int CONV_MAXM = 39;
-  int CONV_START = 40;
-  int CONV_END = 41;
-  int AUTHOR = 42;
-  int TITLE = 43;
-  int KEYWORDS = 44;
-  int COMPANY = 45;
-  int METADATA = 46;
-  int ITEM = 47;
-  int SORTBY = 48;
-  int SORT = 49;
-  int PLUS = 50;
-  int MINUS = 51;
-  int TEXT_TOK = 52;
-  int INITIAL_TERM_CHAR = 53;
-  int SUBSEQUENT_TERM_CHAR = 54;
-  int ERROR_BRACES_WITH_NEWLINE = 56;
-  int BRACES_TOK = 57;
-  int ERROR_QUOTE_WITH_NEWLINE = 59;
-  int QUOTED_TOK = 60;
+  int INID = 16;
+  int HAS = 17;
+  int FILENAME = 18;
+  int TYPE = 19;
+  int ATTACHMENT = 20;
+  int IS = 21;
+  int DATE = 22;
+  int DAY = 23;
+  int WEEK = 24;
+  int MONTH = 25;
+  int YEAR = 26;
+  int AFTER = 27;
+  int BEFORE = 28;
+  int SIZE = 29;
+  int BIGGER = 30;
+  int BIGGER_STR = 31;
+  int LARGER = 32;
+  int SMALLER = 33;
+  int TAG = 34;
+  int MESSAGE = 35;
+  int MY = 36;
+  int CONV = 37;
+  int CONV_COUNT = 38;
+  int CONV_MINM = 39;
+  int CONV_MAXM = 40;
+  int CONV_START = 41;
+  int CONV_END = 42;
+  int AUTHOR = 43;
+  int TITLE = 44;
+  int KEYWORDS = 45;
+  int COMPANY = 46;
+  int METADATA = 47;
+  int ITEM = 48;
+  int SORTBY = 49;
+  int SORT = 50;
+  int PLUS = 51;
+  int MINUS = 52;
+  int TEXT_TOK = 53;
+  int INITIAL_TERM_CHAR = 54;
+  int SUBSEQUENT_TERM_CHAR = 55;
+  int ERROR_BRACES_WITH_NEWLINE = 57;
+  int BRACES_TOK = 58;
+  int ERROR_QUOTE_WITH_NEWLINE = 60;
+  int QUOTED_TOK = 61;
 
   int DEFAULT = 0;
   int BRACES_STATE = 1;
@@ -80,6 +81,7 @@ public interface ZimbraQueryParserConstants {
     "\"to:\"",
     "\"cc:\"",
     "\"in:\"",
+    "\"inid:\"",
     "\"has:\"",
     "\"filename:\"",
     "\"type:\"",

@@ -76,7 +76,7 @@ public class ItemPreloadingGrouper extends BufferingResultsGrouper {
             ZimbraHit nextHit = mHits.getNext();
             mBufferedHit.add(nextHit);
 
-            if (nextHit.getMailbox() == mbx) {
+            if (nextHit.getMailbox() == mbx && mbx != null) {
                 toLoad.add(nextHit);
             }
              

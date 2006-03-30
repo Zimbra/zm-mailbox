@@ -33,6 +33,7 @@
 package com.zimbra.cs.index;
 
 import com.zimbra.cs.index.MailboxIndex.SortBy;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.ToXML.OutputParticipants;
 
@@ -68,6 +69,24 @@ public final class SearchParams
     public void setTypesStr(String groupByStr) throws ServiceException {
         mGroupByStr = groupByStr;
         types = MailboxIndex.parseGroupByString(getTypesStr());
+    }
+    public void setTypes(byte[] _types) { 
+    	types = _types;
+    	boolean atFirst = true;
+    	StringBuilder s = new StringBuilder();
+    	for (byte b : _types) {
+    		if (!atFirst)
+    			s.append(',');
+    		s.append(MailItem.getNameForType(b));
+    		atFirst = false;
+    	}
+    	mGroupByStr = s.toString();
+    }
+    
+    
+    public void setSortBy(SortBy sortBy) {
+    	mSortBy = sortBy;
+    	mSortByStr = mSortBy.toString(); 
     }
     public void setSortByStr(String sortByStr) throws ServiceException { 
         mSortByStr = sortByStr;

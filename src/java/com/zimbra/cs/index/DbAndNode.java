@@ -133,6 +133,23 @@ class DbAndNode implements IConstraints {
 	   for (IConstraints n : mSubNodes) 
 		   n.setTypes(types);
    }
+   
+   public String toQueryString() {
+	   StringBuilder ret = new StringBuilder("(");
+	   
+	   boolean atFirst = true;
+	   
+	   for (IConstraints n : mSubNodes) {
+		   if (!atFirst)
+			   ret.append(" AND ");
+		   
+		   ret.append(n.toQueryString());
+		   atFirst = false;
+	   }
+	   
+	   ret.append(')');
+	   return ret.toString();
+   }
 
    public String toString()
    {

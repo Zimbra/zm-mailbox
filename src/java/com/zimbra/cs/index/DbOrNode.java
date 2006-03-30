@@ -129,6 +129,23 @@ class DbOrNode implements IConstraints {
 		   n.setTypes(types);
    }
 
+   public String toQueryString() {
+	   StringBuilder ret = new StringBuilder("(");
+	   
+	   boolean atFirst = true;
+	   
+	   for (IConstraints n : mSubNodes) {
+		   if (!atFirst)
+			   ret.append(" OR ");
+		   
+		   ret.append(n.toQueryString());
+		   atFirst = false;
+	   }
+	   
+	   ret.append(')');
+	   return ret.toString();
+   }
+
    public String toString()
    {
 	   StringBuilder toRet = new StringBuilder("OR(");

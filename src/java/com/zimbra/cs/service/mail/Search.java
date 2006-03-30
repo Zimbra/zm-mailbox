@@ -76,42 +76,45 @@ public class Search extends DocumentHandler  {
         
         SearchParams params = parseCommonParameters(request, lc);
         ZimbraQueryResults results = getResults(mbox, params, lc, session);
-        
-        Element response = lc.createElement(MailService.SEARCH_RESPONSE);
-        
-        // must use results.getSortBy() because the results might have ignored our sortBy
-        // request and used something else...
-        SortBy sb = results.getSortBy();
-        response.addAttribute(MailService.A_SORTBY, sb.getName());
-        
-        //
-        // create a "pager" which generate one page's worth of data for the client (using
-        // the cursor data, etc)
-        //
-        // If the pager detects "new results at head" -- ie new data came into our search, then
-        // we'll skip back to the beginning of the search
-        //
-        ResultsPager pager;            
         try {
-            pager = ResultsPager.create(results, params);
-            response.addAttribute(MailService.A_QUERY_OFFSET, params.getOffset());
-        } catch (ResultsPager.NewResultsAtHeadException e) {
-            // NOTE: this branch is unused right now, TODO remove this depending on usability
-            // decisions
-            
-            // FIXME!  workaround bug in resetIterator()
-            results = getResults(mbox, params, lc, session);
-
-            pager = new ResultsPager(results, sb, params.getLimit(), 0);
-            response.addAttribute(MailService.A_QUERY_OFFSET, 0);
-            response.addAttribute("newResults", true);
+        
+        	Element response = lc.createElement(MailService.SEARCH_RESPONSE);
+        	
+        	// must use results.getSortBy() because the results might have ignored our sortBy
+        	// request and used something else...
+        	SortBy sb = results.getSortBy();
+        	response.addAttribute(MailService.A_SORTBY, sb.getName());
+        	
+        	//
+        	// create a "pager" which generate one page's worth of data for the client (using
+        	// the cursor data, etc)
+        	//
+        	// If the pager detects "new results at head" -- ie new data came into our search, then
+        	// we'll skip back to the beginning of the search
+        	//
+        	ResultsPager pager;            
+        	try {
+        		pager = ResultsPager.create(results, params);
+        		response.addAttribute(MailService.A_QUERY_OFFSET, params.getOffset());
+        	} catch (ResultsPager.NewResultsAtHeadException e) {
+        		// NOTE: this branch is unused right now, TODO remove this depending on usability
+        		// decisions
+        		
+        		// FIXME!  workaround bug in resetIterator()
+        		results = getResults(mbox, params, lc, session);
+        		
+        		pager = new ResultsPager(results, sb, params.getLimit(), 0);
+        		response.addAttribute(MailService.A_QUERY_OFFSET, 0);
+        		response.addAttribute("newResults", true);
+        	}
+        	
+        	Element retVal = putHits(lc, response, pager, DONT_INCLUDE_MAILBOX_INFO, params);
+        	
+            return retVal;
+        } finally {
+        	if (DONT_CACHE_RESULTS)
+        		results.doneWithSearchResults();
         }
-        
-        Element retVal = putHits(lc, response, pager, DONT_INCLUDE_MAILBOX_INFO, params);
-        if (DONT_CACHE_RESULTS)
-            results.doneWithSearchResults();
-        
-        return retVal;
     }
     
     protected SearchParams parseCommonParameters(Element request, ZimbraContext lc) throws ServiceException {

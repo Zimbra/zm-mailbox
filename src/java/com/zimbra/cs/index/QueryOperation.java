@@ -57,18 +57,19 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults
 {
 	// order does matter somewhat -- order is used to sort execution order when
 	// there are multiple operations to choose from (e.g. an OR of two operations, etc)
-    public static final int OP_TYPE_NULL        = 1; // no results at all
-    public static final int OP_TYPE_LUCENE      = 2;
-    public static final int OP_TYPE_DB          = 3;
-    public static final int OP_TYPE_SUBTRACT    = 4;
-    public static final int OP_TYPE_INTERSECT   = 5; // AND
-    public static final int OP_TYPE_UNION       = 6; // OR
-    public static final int OP_TYPE_NO_TERM     = 7; // pseudo-op, always optimized away
+    public static final int OP_TYPE_REMOTE      = 1;
+    public static final int OP_TYPE_NULL        = 2; // no results at all
+    public static final int OP_TYPE_LUCENE      = 3;
+    public static final int OP_TYPE_DB          = 4;
+    public static final int OP_TYPE_SUBTRACT    = 5;
+    public static final int OP_TYPE_INTERSECT   = 6; // AND
+    public static final int OP_TYPE_UNION       = 7; // OR
+    public static final int OP_TYPE_NO_TERM     = 8; // pseudo-op, always optimized away
     
     private static final int MIN_CHUNK_SIZE = 26;
     private static final int MAX_CHUNK_SIZE = 5000;
 
-    abstract int getOpType();
+    abstract int getOpType(); 
     
     /**
      * @author tim
@@ -86,6 +87,11 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults
             return false;
         }
     }
+    
+    /**
+     * @return A representation of this operation as a parsable query string
+     */
+    abstract String toQueryString(); 
     
     final static QueryOpSortComparator sQueryOpSortComparator = new QueryOpSortComparator();
 

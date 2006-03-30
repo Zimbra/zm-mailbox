@@ -515,6 +515,28 @@ public class ZimbraContext {
      * @param authToken  The serialized authorization token for the user.
      * @param noSession  Whether to suppress the default new session creation.
      * @return A new <code>context</code> Element in the appropriate markup. */
+	static Element toCtxt(SoapProtocol protocol, String authToken, String targetAccountId, boolean noSession) {
+		Element ctxt = toCtxt(protocol, authToken, noSession);
+
+		if (targetAccountId != null) {
+			Element acctElt = ctxt.addUniqueElement(E_ACCOUNT);
+			acctElt.addAttribute(A_BY, "id");
+			acctElt.setText(targetAccountId);
+		}
+		
+		return ctxt;
+	}
+	
+    /** Creates a SOAP request <code>&lt;context></code> {@link Element}.<p>
+     * 
+     *  All requests except Auth and a few others must specify an auth token.
+     *  If noSession is true, the server will not create a session and any
+     *  sessionId specified will be ignored.
+     * 
+     * @param protocol   The markup to use when creating the <code>context</code>.
+     * @param authToken  The serialized authorization token for the user.
+     * @param noSession  Whether to suppress the default new session creation.
+     * @return A new <code>context</code> Element in the appropriate markup. */
 	static Element toCtxt(SoapProtocol protocol, String authToken, boolean noSession) {
 		Element ctxt = protocol.getFactory().createElement(CONTEXT);
 		if (authToken != null)
@@ -522,7 +544,7 @@ public class ZimbraContext {
         if (noSession)
             ctxt.addUniqueElement(E_NO_SESSION);
 		return ctxt;
-	}
+	}	
 
     /** Adds session information to a <code>&lt;context></code> {@link Element}
      *  created by a call to {@link #toCtxt}.  By default, the server creates

@@ -152,15 +152,10 @@ public final class ZimbraQueryParser {
         
     }
 
-    public ZimbraQuery.BaseQuery ItemQuery(int modifier, int target, String tok) throws ParseException, ServiceException, MailServiceException
-    {
-        assert(target == ITEM);
-
-        return ZimbraQuery.ItemQuery.Create(mAnalyzer, modifier, tok);
-    }
-
     public ZimbraQuery.BaseQuery GetQuery(int modifier, int target, String tok) throws ParseException, ServiceException, MailServiceException
     {
+        Integer folderId = null;
+        
         switch(target) {
           case HAS:
           	if (!tok.equalsIgnoreCase("attachment")) {
@@ -172,8 +167,14 @@ public final class ZimbraQueryParser {
             return new ZimbraQuery.AttachmentQuery(mAnalyzer, modifier,tok);
           case TYPE:
             return new ZimbraQuery.TypeQuery(mAnalyzer, modifier,tok);
+          case ITEM:
+            return ZimbraQuery.ItemQuery.Create(mAnalyzer, modifier, tok);
+          case INID:
+              folderId = new Integer(tok);
+              // FALL THROUGH TO BELOW!
           case IN:
-            Integer folderId = (Integer) sFolderStrMap.get(tok.toLowerCase());
+            if (folderId == null)
+                folderId = (Integer) sFolderStrMap.get(tok.toLowerCase());
             ZimbraQuery.InQuery inq;
             if (folderId != null) {
                 inq = ZimbraQuery.InQuery.Create(mMailbox, mAnalyzer, modifier, folderId);
@@ -308,6 +309,7 @@ PARSER_END(ZimbraQueryParser)
 |  <TO:         "to:">         
 |  <CC:         "cc:">         
 |  <IN:         "in:">  
+|  <INID:         "inid:">  
 |  <HAS:        "has:">
 |  <FILENAME:   "filename:">
 |  <TYPE:       "type:">
@@ -461,7 +463,7 @@ ZimbraQuery.BaseQuery Rhs_Item(int target) throws ServiceException :
             )*
             <RPAREN> { return new ZimbraQuery.SubQuery(mAnalyzer, 0,clauses); }
         )   
-        |  (t=<TEXT_TOK>|t=<QUOTED_TOK>|t=<BRACES_TOK>) { return ItemQuery(modifier, target, t.image); }
+        |  (t=<TEXT_TOK>|t=<QUOTED_TOK>|t=<BRACES_TOK>) { return GetQuery(modifier, target, t.image); }
 }
 
 
@@ -510,7 +512,7 @@ ZimbraQuery.BaseQuery Clause() throws ServiceException :
     | (
         (t=<FROM>|t=<TO>|t=<CC>) q=Rhs_Text(t.kind) 
         | (t=<ITEM>) q=Rhs_Item(t.kind)
-      | (t=<CONTENT>|t=<MESSAGE>|t=<SUBJECT>|t=<IN>|t=<TYPE>|t=<ATTACHMENT>|t=<HAS>|t=<FILENAME>|t=<AUTHOR>|t=<TITLE>|t=<KEYWORDS>|t=<COMPANY>|t=<METADATA>) q=Rhs_Text(t.kind) 
+      | (t=<CONTENT>|t=<MESSAGE>|t=<SUBJECT>|t=<IN>|t=<INID>|t=<TYPE>|t=<ATTACHMENT>|t=<HAS>|t=<FILENAME>|t=<AUTHOR>|t=<TITLE>|t=<KEYWORDS>|t=<COMPANY>|t=<METADATA>) q=Rhs_Text(t.kind) 
       | (t=<MY>|t=<IS>|t=<TAG>|t=<CONV>|t=<CONV_COUNT>|t=<CONV_MINM>|t=<CONV_MAXM>) q=Rhs_Text(t.kind) 
         | (t=<DATE>|t=<DAY>|t=<MONTH>|t=<WEEK>|t=<YEAR>|t=<AFTER>|t=<BEFORE>|t=<CONV_START>|t=<CONV_END>) q=Rhs_Date(t.kind)
       | (t=<SIZE>|t=<BIGGER>|t=<SMALLER>) q=Rhs_Text(t.kind)
