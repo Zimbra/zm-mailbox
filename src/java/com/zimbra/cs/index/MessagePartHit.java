@@ -73,20 +73,6 @@ public final class MessagePartHit extends ZimbraHit {
         return mCachedDate;
     }
     
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.index.ZimbraHit#inTrashOrSpam()
-     */
-    boolean inMailbox() throws ServiceException {
-        return getMessageResult().inMailbox();
-    }
-    boolean inTrash() throws ServiceException {
-        return getMessageResult().inTrash();
-    }
-    boolean inSpam() throws ServiceException {
-        return getMessageResult().inSpam();
-    }
-    
-
     public int getConversationId() throws ServiceException {
         return getMessageResult().getConversationId();
     }

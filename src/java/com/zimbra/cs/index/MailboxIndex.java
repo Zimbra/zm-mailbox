@@ -185,7 +185,7 @@ public final class MailboxIndex
    }
     
     private List<String> suggestSpelling(String field, String token) throws ServiceException {
-        LinkedList<String> toRet = new LinkedList();
+        LinkedList<String> toRet = new LinkedList<String>();
         
         token = token.toLowerCase();
         
@@ -216,7 +216,7 @@ public final class MailboxIndex
                                 int curDiff = editDistance(curText, token, curText.length(), token.length());
                                 if (curDiff < suggestionDistance) {
                                     suggestionDistance = curDiff;
-                                    toRet = new LinkedList();
+                                    toRet = new LinkedList<String>();
                                     toRet.add(curText);
                                 }
                             }
@@ -1141,7 +1141,7 @@ public final class MailboxIndex
     	NAME_DESCENDING ("nameDesc",  (byte)(DbMailItem.SORT_BY_SENDER | DbMailItem.SORT_DESCENDING)),
     	SCORE_DESCENDING("score", (byte)0);
 
-		static HashMap<String, SortBy> sNameMap = new HashMap();
+		static HashMap<String, SortBy> sNameMap = new HashMap<String, SortBy>();
     	
     	static {
     		for (SortBy s : SortBy.values()) 
@@ -1156,7 +1156,7 @@ public final class MailboxIndex
     		mSort = sort;
     	}
     	
-    	public String getName() { return mName; }
+    	public String toString() { return mName; }
     	
     	public byte getDbMailItemSortByte() {
     		return mSort;

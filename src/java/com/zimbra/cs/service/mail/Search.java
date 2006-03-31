@@ -83,7 +83,7 @@ public class Search extends DocumentHandler  {
         	// must use results.getSortBy() because the results might have ignored our sortBy
         	// request and used something else...
         	SortBy sb = results.getSortBy();
-        	response.addAttribute(MailService.A_SORTBY, sb.getName());
+        	response.addAttribute(MailService.A_SORTBY, sb.toString());
         	
         	//
         	// create a "pager" which generate one page's worth of data for the client (using
@@ -132,7 +132,7 @@ public class Search extends DocumentHandler  {
         if (groupByStr == null)
             groupByStr = request.getAttribute(MailService.A_GROUPBY, MailboxIndex.GROUP_BY_CONVERSATION);
         params.setTypesStr(groupByStr);
-        params.setSortByStr(request.getAttribute(MailService.A_SORTBY, MailboxIndex.SortBy.DATE_DESCENDING.getName()));
+        params.setSortByStr(request.getAttribute(MailService.A_SORTBY, MailboxIndex.SortBy.DATE_DESCENDING.toString()));
         params.setFetchFirst(request.getAttributeBool(MailService.A_FETCH, false));
         if (params.getFetchFirst()) {
             params.setWantHtml(request.getAttributeBool(MailService.A_WANT_HTML, false));

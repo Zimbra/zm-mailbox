@@ -251,9 +251,6 @@ public class ResultsPager
             mItemId = itemId;
         }
         
-        boolean inMailbox() { return false; } 
-        boolean inTrash() { return false; }
-        boolean inSpam() { return false; }
         public long getDate() { return mDate; } 
         public int getSize() { return 0; }
         public int getConversationId() { return 0; }

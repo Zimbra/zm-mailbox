@@ -55,18 +55,6 @@ public class DocumentHit extends ZimbraHit {
     	super(results, mbx, score);
     }
     
-    boolean inMailbox() throws ServiceException {
-        return mDocument.inMailbox();
-    }
-    
-    boolean inTrash() throws ServiceException {
-        return mDocument.inTrash();
-    }
-    
-    boolean inSpam() throws ServiceException {
-        return mDocument.inSpam();
-    }
-    
     public long getDate() throws ServiceException {
     	return mDocument.getDate();
     }

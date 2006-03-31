@@ -89,20 +89,6 @@ public class MessageHit extends ZimbraHit {
         }
     }
     
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.index.ZimbraHit#inTrashOrSpam()
-     */
-    boolean inMailbox() throws ServiceException {
-        return getMessage().inMailbox();
-    }
-    boolean inTrash() throws ServiceException {
-        return getMessage().inTrash();
-    }
-    boolean inSpam() throws ServiceException {
-        return getMessage().inSpam();
-    }
-    
-    
     int getFolderId() throws ServiceException {
         return getMessage().getFolderId();
     }

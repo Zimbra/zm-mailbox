@@ -93,7 +93,7 @@ public final class SearchParams
         mSortBy = MailboxIndex.SortBy.lookup(sortByStr);
         if (mSortBy == null) {
         	mSortBy = SortBy.DATE_DESCENDING;
-        	mSortByStr = mSortByStr.toString();
+        	mSortByStr = mSortBy.toString();
         }
     }
     public void setFetchFirst(boolean fetch) { mFetchFirst = fetch; }

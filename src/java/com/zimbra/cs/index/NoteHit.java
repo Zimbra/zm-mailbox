@@ -80,20 +80,6 @@ public final class NoteHit extends ZimbraHit {
     }
     
     
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.index.ZimbraHit#inTrashOrSpam()
-     */
-    boolean inMailbox() throws ServiceException {
-        return getNote().inMailbox();
-    }
-    boolean inTrash() throws ServiceException {
-        return getNote().inTrash();
-    }
-    boolean inSpam() throws ServiceException {
-        return getNote().inSpam();
-    }
-    
-    
     public String getSubject() throws ServiceException
     {
         if (mCachedSubj == null) {

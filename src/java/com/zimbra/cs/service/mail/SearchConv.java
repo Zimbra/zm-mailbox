@@ -91,7 +91,7 @@ public class SearchConv extends Search {
         response.addAttribute(MailService.A_QUERY_OFFSET, Integer.toString(params.getOffset()));
         
         SortBy sb = results.getSortBy();
-        response.addAttribute(MailService.A_SORTBY, sb.getName());
+        response.addAttribute(MailService.A_SORTBY, sb.toString());
         
         Message[] msgs = mbox.getMessagesByConversation(octxt, cid, sb.getDbMailItemSortByte());
         

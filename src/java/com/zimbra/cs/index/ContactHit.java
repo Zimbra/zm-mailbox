@@ -69,20 +69,6 @@ public final class ContactHit extends ZimbraHit {
         return mContact;
     }
     
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.index.ZimbraHit#inTrashOrSpam()
-     */
-    boolean inMailbox() throws ServiceException {
-        return getContact().inMailbox();
-    }
-    boolean inTrash() throws ServiceException {
-        return getContact().inTrash();
-    }
-    boolean inSpam() throws ServiceException {
-        return getContact().inSpam();
-    }
-    
-    
     public int getSize() throws ServiceException {
         Contact c = getContact();
         return (int) c.getSize();

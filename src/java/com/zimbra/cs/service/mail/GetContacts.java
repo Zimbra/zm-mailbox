@@ -54,9 +54,9 @@ public class GetContacts extends DocumentHandler  {
         boolean sync = request.getAttributeBool(MailService.A_SYNC, false);
         byte sort = DbMailItem.SORT_NONE;
         String sortStr = request.getAttribute(MailService.A_SORTBY, "");
-        if (sortStr.equals(MailboxIndex.SortBy.NAME_ASCENDING.getName()))
+        if (sortStr.equals(MailboxIndex.SortBy.NAME_ASCENDING.toString()))
             sort = DbMailItem.SORT_BY_SENDER | DbMailItem.SORT_ASCENDING;
-        else if (sortStr.equals(MailboxIndex.SortBy.NAME_DESCENDING.getName()))
+        else if (sortStr.equals(MailboxIndex.SortBy.NAME_DESCENDING.toString()))
             sort = DbMailItem.SORT_BY_SENDER | DbMailItem.SORT_DESCENDING;
 
         ArrayList<String> attrs = null;

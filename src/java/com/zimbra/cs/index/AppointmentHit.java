@@ -86,18 +86,6 @@ public class AppointmentHit extends ZimbraHit {
         return mAppt;
     }
 
-    
-    boolean inMailbox() throws ServiceException {
-        return getAppointment().inMailbox();
-    }
-    boolean inTrash() throws ServiceException {
-        return getAppointment().inTrash();
-    }
-    
-    boolean inSpam() throws ServiceException {
-        return getAppointment().inSpam();
-    }
-    
     public long getDate() throws ServiceException {
         return getAppointment().getDate();
     }

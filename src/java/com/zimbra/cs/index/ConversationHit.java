@@ -63,22 +63,6 @@ import com.zimbra.cs.service.ServiceException;
             mConversationId = conversationId;
         }
         
-        /* (non-Javadoc)
-         * @see com.zimbra.cs.index.ZimbraHit#inTrashOrSpam()
-         */
-        boolean inMailbox() {
-            // if we have a ConvHit, then we must have at least one matching message hit
-            // to make it....
-            return true;
-        }
-        boolean inTrash() {
-            return true;
-        }
-        boolean inSpam() {
-            return true;
-        }
-        
-        
         public int getConversationId() {
             return getId();
         }
