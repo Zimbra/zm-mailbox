@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.lucene.analysis.Analyzer;
@@ -85,7 +86,7 @@ public class RemoteMailQueue {
     }
     
     public enum QueueAttr {
-        id, time, size, from, to, host, addr, reason, filter, todomain, fromdomain
+        id, time, size, from, to, host, addr, reason, reason_summary, filter, todomain, fromdomain
     }
     
     public enum QueueAction {
@@ -141,7 +142,8 @@ public class RemoteMailQueue {
             
             String reason = map.get(QueueAttr.reason.toString());
             if (reason != null && reason.length() > 0) {
-                doc.add(new Field(QueueAttr.reason.toString(), reason.toLowerCase(), true, true, false, true));
+                doc.add(new Field(QueueAttr.reason.toString(), reason.toLowerCase(), true, true, true, false));
+                doc.add(new Field(QueueAttr.reason_summary.toString(), reason.toLowerCase(), true, true, false, false));
             }
             
             String from = map.get(QueueAttr.from.toString());
@@ -391,12 +393,18 @@ public class RemoteMailQueue {
                         attr == QueueAttr.to ||
                         attr == QueueAttr.fromdomain ||
                         attr == QueueAttr.todomain ||
-                        attr == QueueAttr.reason) 
+                        attr == QueueAttr.reason_summary) 
                     {
-                        List<SummaryItem> list = result.sitems.get(attr);
+                        QueueAttr displayedAttr; // TODO: fix this - this is getting out of hand - let's have a rational QueueItem class
+                        if (attr == QueueAttr.reason_summary) {
+                            displayedAttr = QueueAttr.reason;
+                        } else {
+                            displayedAttr = attr;
+                        }
+                        List<SummaryItem> list = result.sitems.get(displayedAttr);
                         if (list == null) {
                             list = new LinkedList<SummaryItem>();
-                            result.sitems.put(attr, list);
+                            result.sitems.put(displayedAttr, list);
                         }
                         list.add(new SummaryItem(term.text(), terms.docFreq()));
                     }
