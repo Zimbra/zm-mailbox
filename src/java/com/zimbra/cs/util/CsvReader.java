@@ -94,6 +94,18 @@ public class CsvReader {
     }
 
     /**
+     * Returns <code>true</code> if the specified column exists.
+     */
+    public boolean columnExists(String name) {
+        for (String currentName : mColNames) {
+            if (currentName.equals(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
      * Returns the value for the specified column in the current
      * line.
      */
