@@ -133,9 +133,9 @@ public class ParsedDocument {
             DocumentDataSource ds = new DocumentDataSource();
             if (handler.isIndexingEnabled())
                 handler.init(ds);
-            mFragment = Fragment.getFragment(handler.getContent(), false);
             handler.setFilename(filename);
             handler.setPartName(LuceneFields.L_PARTNAME_TOP);
+            mFragment = Fragment.getFragment(handler.getContent(), false);
             handler.setMessageDigest(mDigest = ds.getDigest());
             mDocument = handler.getDocument();
             mDocument.add(Field.Text(LuceneFields.L_SIZE, Integer.toString(mSize = ds.getSize())));
