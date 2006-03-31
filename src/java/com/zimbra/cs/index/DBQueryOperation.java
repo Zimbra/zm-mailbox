@@ -420,44 +420,44 @@ class DBQueryOperation extends QueryOperation
         	toRet = (ZimbraHit)mNextHits.get(0);
         } else {
         	// we don't have any SearchResults
-        if (mDBHitsIter == null || !mDBHitsIter.hasNext()) {
+            if (mDBHitsIter == null || !mDBHitsIter.hasNext()) {
         		// try to get another chunk of them
-            getNextChunk();
-        }
+                getNextChunk();
+            }
         	    
         	// okay, check again to see if we've got a chunk of SearchResults
-        if (mDBHitsIter != null && mDBHitsIter.hasNext()) {
-            SearchResult sr = (SearchResult) mDBHitsIter.next();
-            
+            if (mDBHitsIter != null && mDBHitsIter.hasNext()) {
+                SearchResult sr = (SearchResult) mDBHitsIter.next();
+                
         		// Sometimes, a single search result might yield more than one Lucene
         		// document -- e.g. an RFC822 message with separately-indexed mimeparts.
         		// Each of these parts will turn into a separate ZimbraHit at this point,
         		// although they might be combined together at a higher level (via a HitGrouper)
         		List <Document> docs = null;
-            float score = 1.0f;
-            if (mLuceneChunk != null) {
+                float score = 1.0f;
+                if (mLuceneChunk != null) {
         			LuceneResultsChunk.ScoredLuceneHit sh = mLuceneChunk.getScoredHit(sr.indexId);
-            	if (sh != null) { 
-            		docs = sh.mDocs;
-            		score = sh.mScore;
-            	} else {
-        				// how can this happen??
-            		mLog.info("Could not find ScoredLuceneHit for sr.indexId="+sr.indexId+" sr.id="+sr.id+" type="+sr.type);
-            		docs = null;
-            		score = 1.0f;
-            	}
-            }
-            
+                	if (sh != null) { 
+                		docs = sh.mDocs;
+                		score = sh.mScore;
+                	} else {
+            				// how can this happen??
+                		mLog.info("Could not find ScoredLuceneHit for sr.indexId="+sr.indexId+" sr.id="+sr.id+" type="+sr.type);
+                		docs = null;
+                		score = 1.0f;
+                	}
+                }
+                
         		if (docs == null) {
         			ZimbraHit toAdd = getResultsSet().getZimbraHit(getMailbox(), score, sr, null);
                         mNextHits.add(toAdd);
                 } else {
         			for (Document doc : docs) {
         				ZimbraHit toAdd = getResultsSet().getZimbraHit(getMailbox(), score, sr, doc);
-                    mNextHits.add(toAdd);
-                }
+                        mNextHits.add(toAdd);
+                    }
         		}
-        			toRet = (ZimbraHit)mNextHits.get(0);
+    			toRet = (ZimbraHit)mNextHits.get(0);
             }
         }
         
