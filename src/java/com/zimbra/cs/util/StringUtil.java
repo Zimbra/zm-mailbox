@@ -219,8 +219,8 @@ public class StringUtil {
         dump("a           b");
     }
 
-    // A pattern that matches the beginning of a string followed by $(VAR_NAME) followed
-    // by the end.  There are three groups:  the beginning, VAR_NAME and the end.
+    // A pattern that matches the beginning of a string followed by ${KEY_NAME} followed
+    // by the end.  There are three groups:  the beginning, KEY_NAME and the end.
     // Pattern.DOTALL is required in case one of the values in the map has a newline
     // in it.
     private static Pattern templatePattern =
@@ -228,7 +228,7 @@ public class StringUtil {
     
     /**
      * Substitutes all occurrences of the specified values into a template.  Keys
-     * for the values are specified in the template as <code>$(KEY_NAME)</code>.
+     * for the values are specified in the template as <code>${KEY_NAME}</code>.
      * @param template the template
      * @param vars a <code>Map</code> filled with keys and values.  The keys must
      * be <code>String</code>s. 
