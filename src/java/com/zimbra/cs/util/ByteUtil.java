@@ -358,11 +358,12 @@ public class ByteUtil {
         int len = str.length();
         if (len > MAX_STRING_LEN)
             throw new IOException("String too long in RedoableOp.writeUTF8(); max=" + MAX_STRING_LEN);
-        out.writeInt(len);
         if (len > 0) {
             byte[] buf = str.getBytes("UTF-8");
+            out.writeInt(buf.length);
             out.write(buf);
-        }
+        } else
+            out.writeInt(0);
     }
 
     public static String readUTF8(DataInput in) throws IOException {
