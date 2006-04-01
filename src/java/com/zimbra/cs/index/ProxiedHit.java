@@ -196,7 +196,7 @@ public class ProxiedHit extends ZimbraHit
         return mElement.toString();
     }
     
-    String getServer() {
+    public String getServer() {
         ProxiedQueryResults res = (ProxiedQueryResults) getResults();
         return res.getServer();
     }
