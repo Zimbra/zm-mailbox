@@ -47,6 +47,7 @@ import org.apache.jsieve.tests.AbstractTest;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author kchen
@@ -114,14 +115,12 @@ public class BodyTest extends AbstractTest {
     private boolean test(MailAdapter mail, String comparator, String key) throws SieveException {
         ZimbraMailAdapter zimbraMail = (ZimbraMailAdapter) mail;
         ParsedMessage pm = zimbraMail.getParsedMessage();
-        List msgParts = pm.getMessageParts();
         try {
             /*
              * We check the first level MIME parts that are text. If the key word appears there,
              * we consider it a match.
              */
-            for (Iterator it = msgParts.iterator(); it.hasNext(); ) {
-                MPartInfo part = (MPartInfo) it.next();
+            for (MPartInfo part : pm.getMessageParts()) {
                 Object content = part.getMimePart().getContent();
                 if (content instanceof String) {
                     String contentStr = (String) content;
@@ -131,6 +130,7 @@ public class BodyTest extends AbstractTest {
                 }
             }
         } catch (IOException e) {
+        } catch (ServiceException e) {
         } catch (MessagingException e) {
         }
         return false;
