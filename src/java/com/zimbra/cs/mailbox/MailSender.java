@@ -183,13 +183,8 @@ public class MailSender {
             Message msg = null;
             if (saveToFolder != 0) {
                 int flags = Flag.FLAG_FROM_ME;
-                ParsedMessage pm =
-                    new ParsedMessage(mm,
-                                      mm.getSentDate().getTime(),
-                                      mbox.attachmentsIndexingEnabled());
-
-                pm.analyze();
-
+                ParsedMessage pm = new ParsedMessage(mm, mm.getSentDate().getTime(),
+                                                     mbox.attachmentsIndexingEnabled());
                 // save it to the requested folder
                 msg = mbox.addMessage(octxt, pm, saveToFolder, true,
                                       flags, null, convId);

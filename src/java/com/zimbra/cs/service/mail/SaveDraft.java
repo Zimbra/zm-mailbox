@@ -36,7 +36,6 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -89,15 +88,8 @@ public class SaveDraft extends WriteOpDocumentHandler {
             throw ServiceException.FAILURE("completing MIME message object", me);
         }
 
-        ParsedMessage pm = new ParsedMessage(mm, date, mbox.attachmentsIndexingEnabled());
-        try {
-            pm.analyze();
-        } catch (ServiceException e) {
-            if (ConversionException.isTemporaryCauseOf(e))
-                throw e;
-        }
-
 		try {
+		    ParsedMessage pm = new ParsedMessage(mm, date, mbox.attachmentsIndexingEnabled());
 			Message msg = mbox.saveDraft(octxt, pm, id, origId, replyType);
 
             // we can now purge the uploaded attachments

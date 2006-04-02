@@ -71,6 +71,7 @@ public class ParsedMessage {
 
     private MimeMessage mMimeMessage;
     private MimeMessage mExpandedMessage;
+    private boolean mMutatorsRun = false;
     private boolean mParsed = false;
     private boolean mAnalyzed = false;
     private boolean mIndexAttachments = true;
@@ -160,12 +161,19 @@ public class ParsedMessage {
      *  generates the list of message parts.
      *  
      * @return the ParsedMessage itself
+     * @throws ServiceException 
      * @see #runMimeConverters() */
-	private ParsedMessage parse() {
+	private ParsedMessage parse() throws ServiceException {
         if (mParsed)
             return this;
         mParsed = true;
 
+        // apply any mutators that affect the on-disk representation of the message
+        try {
+            runMimeMutators();
+        } catch (MessagingException e) {
+            throw ServiceException.FAILURE("error applying message mutator", e);
+        }
         // do an on-the-fly temporary expansion of the raw message (uudecode, tnef-decode, etc.)
         runMimeConverters();
 		try {
@@ -186,6 +194,8 @@ public class ParsedMessage {
      *         <code>false</code> if a mutator altered the content
      * @see MimeVisitor#registerMutator(Class) */
     private boolean runMimeMutators() throws MessagingException {
+        if (mMutatorsRun)
+            return true;
         boolean rawInvalid = false;
         for (Class vclass : MimeVisitor.getMutators())
             try {
@@ -197,6 +207,7 @@ public class ParsedMessage {
             } catch (Exception e) {
                 ZimbraLog.misc.warn("exception ignored running mutator; skipping", e);
             }
+        mMutatorsRun = true;
         return !rawInvalid;
     }
 
@@ -219,13 +230,13 @@ public class ParsedMessage {
 
         try {
             // first, find out if *any* of the converters would be triggered (but don't change the message)
-            for (Class vclass : MimeVisitor.getConverters())
+            for (Class vclass : MimeVisitor.getConverters()) {
                 if (mExpandedMessage == mMimeMessage)
                     ((MimeVisitor) vclass.newInstance()).setCallback(forkCallback).accept(mMimeMessage);
-            // if there are attachments to be expanded, expand them in the MimeMessage *copy*
-            if (mExpandedMessage != mMimeMessage)
-                for (Class vclass : MimeVisitor.getConverters())
+                // if there are attachments to be expanded, expand them in the MimeMessage *copy*
+                if (mExpandedMessage != mMimeMessage)
                     ((MimeVisitor) vclass.newInstance()).accept(mExpandedMessage);
+            }
         } catch (Exception e) {
             // roll back if necessary
             mExpandedMessage = mMimeMessage;
@@ -267,11 +278,15 @@ public class ParsedMessage {
         if (mHaveRaw)
             return;
 
+        // mutate the message *before* generating its byte[] representation
+        runMimeMutators();
+
         int size = mMimeMessage.getSize() + 2048;
         ByteArrayOutputStream baos = new ByteArrayOutputStream(size);
         mMimeMessage.writeTo(baos);
         byte[] rawData = baos.toByteArray();
         baos.close();
+
         setRawData(rawData);
     }
 
@@ -290,12 +305,12 @@ public class ParsedMessage {
         return mRawDigest;
     }
 
-    public List<MPartInfo> getMessageParts() {
+    public List<MPartInfo> getMessageParts() throws ServiceException {
         parse();
     	return mMessageParts;
     }
 
-	public boolean hasAttachments() {
+	public boolean hasAttachments() throws ServiceException {
         parse();
 		return mHasAttachments;
 	}

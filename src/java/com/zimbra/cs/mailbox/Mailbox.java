@@ -2696,6 +2696,11 @@ public class Mailbox {
     throws IOException, ServiceException {
         // make sure the message has been analyzed before taking the Mailbox lock
         pm.analyze();
+        try {
+            pm.getRawData();
+        } catch (MessagingException me) {
+            throw MailServiceException.MESSAGE_PARSE_ERROR(me);
+        }
         // and then actually add the message
         long start = ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.start();
         Message msg = addMessageInternal(octxt, pm, folderId, noICal, flags, tagStr, conversationId,
@@ -2718,9 +2723,7 @@ public class Mailbox {
         String digest;
         int msgSize;
         try {
-            data = pm.getRawData();
-            digest = pm.getRawDigest();
-            msgSize = pm.getRawSize();
+            data = pm.getRawData();  digest = pm.getRawDigest();  msgSize = pm.getRawSize();
         } catch (MessagingException me) {
             throw MailServiceException.MESSAGE_PARSE_ERROR(me);
         }
@@ -2985,6 +2988,11 @@ public class Mailbox {
     throws IOException, ServiceException {
         // make sure the message has been analzyed before taking the Mailbox lock
         pm.analyze();
+        try {
+            pm.getRawData();
+        } catch (MessagingException me) {
+            throw MailServiceException.MESSAGE_PARSE_ERROR(me);
+        }
         // special-case saving a new draft
         if (id == ID_AUTO_INCREMENT) {
             Message.DraftInfo dinfo = null;
