@@ -79,7 +79,7 @@ public class AdminSession extends Session {
     public List searchAccounts(Domain d, String query, String[] attrs, String sortBy,
             boolean sortAscending, int flags, int offset) throws ServiceException {
         AccountSearchParams params = new AccountSearchParams(d, query, attrs, sortBy, sortAscending, flags);
-        boolean needToSearch = (mSearchParams == null) || !mSearchParams.equals(params);
+        boolean needToSearch =  (offset == 0) || (mSearchParams == null) || !mSearchParams.equals(params);
         //ZimbraLog.account.info("this="+this+" mSearchParams="+mSearchParams+" equal="+!params.equals(mSearchParams));
         if (needToSearch) {
             //ZimbraLog.account.info("doing new search: "+query+ " offset="+offset);
