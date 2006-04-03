@@ -28,8 +28,6 @@
  */
 package com.zimbra.cs.index;
 
-import java.util.Iterator;
-
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.util.ItemId;

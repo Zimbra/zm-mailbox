@@ -182,7 +182,7 @@ class UnionQueryOperation extends QueryOperation
     }
     QueryOperation ensureSpamTrashSetting(Mailbox mbox, boolean includeTrash, boolean includeSpam) throws ServiceException
     {
-        ArrayList /* QueryOperation */ newList = new ArrayList();
+        ArrayList<QueryOperation> newList = new ArrayList<QueryOperation>();
         
         for (Iterator iter = mQueryOperations.iterator(); iter.hasNext(); )
         {

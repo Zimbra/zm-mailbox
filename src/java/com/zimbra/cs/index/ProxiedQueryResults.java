@@ -28,7 +28,6 @@
  */
 package com.zimbra.cs.index;
 
-import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.httpclient.URLUtil;
@@ -65,7 +64,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
     // minimum number of hits to request each time we make a round-trip to the remote server
     protected static final int MIN_BUFFER_CHUNK_SIZE = 25; 
     
-    protected ArrayList /* ProxiedHit */ mHitBuffer;
+    protected ArrayList<ProxiedHit> mHitBuffer;
     protected int mBufferStartOffset = 0;  // inclusive
     protected int mBufferEndOffset = 0; // not-inclusive
     protected int mIterOffset = 0; // globally, NOT an index into the buffer
@@ -240,7 +239,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
         	chunkSizeToUse = 500;
 
         mBufferEndOffset = mBufferStartOffset + chunkSizeToUse;
-        mHitBuffer = new ArrayList(chunkSizeToUse);
+        mHitBuffer = new ArrayList<ProxiedHit>(chunkSizeToUse);
         
         try {
             SoapTransport transp = getTransport();

@@ -54,7 +54,7 @@ import com.zimbra.cs.service.ServiceException;
         
         private Conversation mConversation = null;
 
-        private AbstractMap mMessageHits = null;
+        private AbstractMap<Long, MessageHit> mMessageHits = null;
 
         private int mConversationId = 0;
         
@@ -69,7 +69,7 @@ import com.zimbra.cs.service.ServiceException;
 
         public void addMessageHit(MessageHit mh) {
             if (mMessageHits == null) {
-                mMessageHits = new LinkedHashMap();
+                mMessageHits = new LinkedHashMap<Long, MessageHit>();
             }
             mMessageHits.put(new Long(mh.getItemId()), mh);
         }

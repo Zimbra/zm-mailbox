@@ -39,7 +39,7 @@ import com.zimbra.cs.service.ServiceException;
 public abstract class BufferingResultsGrouper implements ZimbraQueryResults {
 
     protected ZimbraQueryResults mHits;
-    protected List /* ZimbraHit */mBufferedHit = new LinkedList();
+    protected List<ZimbraHit> mBufferedHit = new LinkedList<ZimbraHit>();
     protected boolean atStart = true;
     
     

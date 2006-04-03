@@ -29,13 +29,10 @@ import java.util.List;
 import java.util.Set;
 
 import com.zimbra.cs.db.DbSearchConstraints;
-import com.zimbra.cs.db.DbSearchConstraintsNode.NodeType;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.ListUtil;
-import com.zimbra.cs.util.SetUtil;
 
 class DbLeafNode extends DbSearchConstraints implements IConstraints {
 	

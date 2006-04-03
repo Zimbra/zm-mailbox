@@ -69,24 +69,24 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
         return (peekNext() != null);
     }
     
-    private HashMap mConversationHits;
-    private HashMap mMessageHits;
-    private HashMap mPartHits;
-    private HashMap mContactHits;
-    private HashMap mNoteHits;
-    private HashMap mApptHits;
+    private HashMap<Integer, ConversationHit> mConversationHits;
+    private HashMap<Integer, MessageHit> mMessageHits;
+    private HashMap<String, MessagePartHit> mPartHits;
+    private HashMap<Integer, ContactHit> mContactHits;
+    private HashMap<Integer, NoteHit>  mNoteHits;
+    private HashMap<Integer, AppointmentHit> mApptHits;
   
   ZimbraQueryResultsImpl(byte[] types, SortBy searchOrder) { 
       mTypes = types;
       
       mSearchOrder = searchOrder;
       
-      mConversationHits = new LinkedHashMap();
-      mMessageHits = new LinkedHashMap();
-      mPartHits = new LinkedHashMap();
-      mContactHits = new LinkedHashMap();
-      mNoteHits = new LinkedHashMap();
-      mApptHits = new LinkedHashMap();
+      mConversationHits = new LinkedHashMap<Integer, ConversationHit>();
+      mMessageHits = new LinkedHashMap<Integer, MessageHit>();
+      mPartHits = new LinkedHashMap<String, MessagePartHit>();
+      mContactHits = new LinkedHashMap<Integer, ContactHit>();
+      mNoteHits = new LinkedHashMap<Integer, NoteHit>();
+      mApptHits = new LinkedHashMap<Integer, AppointmentHit>();
   };
   
   public ZimbraHit getFirstHit() throws ServiceException {

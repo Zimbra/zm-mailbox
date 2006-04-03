@@ -50,7 +50,7 @@ public class ResultsPager
 
     private boolean mFixedOffset;
     
-    private List mHits;
+    private List<ZimbraHit> mHits;
     
     public MailboxIndex.SortBy getSortOrder() { return mSortOrder; }
     
@@ -160,7 +160,7 @@ public class ResultsPager
     }
     
     private void forward() throws ServiceException {
-        mHits = new ArrayList(mNumResultsRequested);
+        mHits = new ArrayList<ZimbraHit>(mNumResultsRequested);
         
         ZimbraHit hit;
 
@@ -182,7 +182,7 @@ public class ResultsPager
     }
     
     private void backward() throws ServiceException {
-        LinkedList ll = new LinkedList();
+        LinkedList<ZimbraHit> ll = new LinkedList<ZimbraHit>();
         mHits = ll;
 
         int offset = 0;

@@ -47,7 +47,7 @@ class MsgQueryResults extends ZimbraQueryResultsImpl
 
     ZimbraHit mNextHit = null;
     
-    HashMap mSeenMsgs = new HashMap();
+    HashMap<Integer, MessageHit> mSeenMsgs = new HashMap<Integer, MessageHit>();
     
     /**
      * Gets the next hit from the QueryOp.  

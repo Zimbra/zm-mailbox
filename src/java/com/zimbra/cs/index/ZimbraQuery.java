@@ -57,7 +57,6 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Tag;
-import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ZimbraLog;
 
@@ -180,10 +179,10 @@ public final class ZimbraQuery {
 
     public static class AttachmentQuery extends LuceneTableQuery
     {
-        protected static HashMap mMap;
+        protected static HashMap<String, String> mMap;
         
         static {
-            mMap = new HashMap();
+            mMap = new HashMap<String, String>();
 
             //                              Friendly Name                                  Mime Type 
             addMapping(mMap, new String[] { "any" }                                      , "any");
@@ -647,10 +646,10 @@ public final class ZimbraQuery {
     
     public static class HasQuery extends LuceneTableQuery
 	{
-        protected static HashMap mMap;
+        protected static HashMap<String, String> mMap;
         
         static {
-            mMap = new HashMap();
+            mMap = new HashMap<String, String>();
             
             addMapping(mMap, new String[] { "attachment", "att" }  , "any");
             addMapping(mMap, new String[] { "phone" }              , "phone");
@@ -729,7 +728,7 @@ public final class ZimbraQuery {
 
     public abstract static class LuceneTableQuery extends BaseQuery
     {
-        protected static void addMapping(HashMap map, String[] array, String value) {
+        protected static void addMapping(HashMap<String, String> map, String[] array, String value) {
             for (int i = array.length-1; i>=0; i--) {
                 map.put(array[i], value);
             }
@@ -1003,7 +1002,7 @@ public final class ZimbraQuery {
         throws ServiceException {
             boolean allQuery = false;
             boolean noneQuery = false;
-            List itemIds = new ArrayList();
+            List<Integer> itemIds = new ArrayList<Integer>();
             
             if (str.equalsIgnoreCase("all")) {
                 allQuery = true;
@@ -1088,8 +1087,8 @@ public final class ZimbraQuery {
         public TextQuery(Mailbox mbox, Analyzer analyzer, int modifier, int qType, String text) throws ServiceException {
             super(modifier, qType);
 
-            mOredTokens = new LinkedList();
-            mTokens = new ArrayList(1);
+            mOredTokens = new LinkedList<String>();
+            mTokens = new ArrayList<String>(1);
             mWildcardTerm = null;
             mWildcardPrefix = null;
             mOrigText = text;

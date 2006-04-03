@@ -31,7 +31,6 @@ import java.util.Set;
 
 import com.zimbra.cs.db.DbSearchConstraints;
 import com.zimbra.cs.db.DbSearchConstraintsNode;
-import com.zimbra.cs.db.DbSearchConstraintsNode.NodeType;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;

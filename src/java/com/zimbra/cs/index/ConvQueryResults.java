@@ -48,9 +48,9 @@ class ConvQueryResults extends ZimbraQueryResultsImpl {
     private ZimbraHit mNextHit = null;
     
     private int mNextHitNo = 0;
-    private ArrayList mCachedResults = new ArrayList();
+    private ArrayList<ZimbraHit> mCachedResults = new ArrayList<ZimbraHit>();
     
-    HashMap mSeenConversations = new HashMap();
+    HashMap<Integer, ConversationHit> mSeenConversations = new HashMap<Integer, ConversationHit>();
 
     /**
      * Get the next Conversation Hit from our subOp 

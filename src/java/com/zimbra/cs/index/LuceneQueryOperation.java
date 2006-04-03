@@ -160,7 +160,7 @@ class LuceneQueryOperation extends QueryOperation
         	return mHits.get(indexId);
         }
         
-        private HashMap <Integer /*indexId*/, ScoredLuceneHit> mHits = new HashMap();
+        private HashMap <Integer /*indexId*/, ScoredLuceneHit> mHits = new HashMap<Integer, ScoredLuceneHit>();
     }
     
     protected LuceneResultsChunk getNextResultsChunk(int maxChunkSize) throws ServiceException {
