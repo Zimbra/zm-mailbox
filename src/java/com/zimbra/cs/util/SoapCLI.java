@@ -123,7 +123,15 @@ public abstract class SoapCLI {
     protected CommandLine getCommandLine(String[] args) throws ParseException {
         CommandLineParser clParser = new GnuParser();
         CommandLine cl = null;
-        cl = clParser.parse(mOptions, args);
+        try {
+            cl = clParser.parse(mOptions, args);
+        } catch (ParseException e) {
+            if (helpOptionSpecified(args)) {
+                usage();
+                return null;
+            } else
+                throw e;
+        }
         if (cl.hasOption(O_H)) {
             usage();
             return null;
@@ -131,6 +139,12 @@ public abstract class SoapCLI {
         if (cl.hasOption(O_S))
             mHost = cl.getOptionValue(O_S);
         return cl;
+    }
+
+    private boolean helpOptionSpecified(String[] args) {
+        return
+            args != null && args.length == 1 &&
+            ("-h".equals(args[0]) || "--help".equals(args[0]));
     }
     
     /**
