@@ -31,6 +31,8 @@ import java.util.Map;
 
 import javax.mail.BodyPart;
 import javax.mail.MessagingException;
+import javax.mail.Multipart;
+import javax.mail.Part;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
@@ -38,9 +40,8 @@ import javax.mail.internet.MimePart;
 
 import com.zimbra.cs.util.ZimbraLog;
 
-/**
- * A class that implements this interface can be passed to {@link Mime#accept}
- * to walk a MIME node tree.
+/** A class that implements this interface can be passed to {@link Mime#accept}
+ *  to walk a MIME node tree.
  *   
  * @author bburtin
  */
@@ -90,13 +91,6 @@ public abstract class MimeVisitor {
         return new ArrayList<Class>(sMimeMutators);
     }
 
-    /** Returns whether the system has any registered MimeVisitor mutator
-     *  classes.
-     * @see #registerMutator(Class) */
-    public static boolean hasMutators() {
-        return !sMimeMutators.isEmpty();
-    }
-
 
     /** This inner interface permits the {@link Mime#accept} caller to be
      *  notified immediately before any changes to the MimeMessage are
@@ -132,7 +126,7 @@ public abstract class MimeVisitor {
      *  or as an attachment to another MimeMessage.
      * @return whether any changes were performed during the visit
      * @see VisitPhase */
-    protected abstract boolean visitMessage(MimeMessage msg, VisitPhase visitKind) throws MessagingException;
+    protected abstract boolean visitMessage(MimeMessage mm, VisitPhase visitKind) throws MessagingException;
 
     /** Visitor callback for traversing a Multipart.
      * @return whether any changes were performed during the visit
@@ -145,17 +139,27 @@ public abstract class MimeVisitor {
     protected abstract boolean visitBodyPart(MimeBodyPart bp) throws MessagingException;
 
 
-    /** Determines the "primary/subtype" part of a MimePart's Content-Type
+    /** Determines the "primary/subtype" part of a Part's Content-Type
      *  header.  Uses a permissive, RFC2231-capable parser, and defaults
      *  when appropriate. */
-    private static final String getContentType(MimePart mp) {
-        Map<String, String> ctattrs;
+    protected static final String getContentType(Part part) {
         try {
-            ctattrs = Mime.decodeRFC2231(mp.getContentType());
+            return getContentType(part.getContentType());
         } catch (MessagingException e) {
             ZimbraLog.extensions.warn("could not fetch part's content-type; defaulting to " + Mime.CT_DEFAULT, e);
             return Mime.CT_DEFAULT;
         }
+    }
+
+    /** Determines the "primary/subtype" part of a Multipart's Content-Type
+     *  header.  Uses a permissive, RFC2231-capable parser, and defaults
+     *  when appropriate. */
+    protected static final String getContentType(Multipart multi) {
+        return getContentType(multi.getContentType());
+    }
+
+    private static final String getContentType(String cthdr) {
+        Map<String, String> ctattrs = Mime.decodeRFC2231(cthdr);
         String ctype = (ctattrs == null ? null : ctattrs.get(null));
         if (ctype != null)
             ctype = ctype.trim();
@@ -175,7 +179,7 @@ public abstract class MimeVisitor {
      * 
      * @param mp the root MIME part at which to start the traversal */
     public synchronized final boolean accept(MimePart mp) throws MessagingException {
-        boolean modified = false, msgModified = false;
+        boolean modified = false, multiModified = false;
         MimeMultipart multi = null;
 
         if (mp instanceof MimeMessage)
@@ -194,24 +198,26 @@ public abstract class MimeVisitor {
             }
             if (content instanceof MimeMultipart) {
                 multi = (MimeMultipart) content;
-                modified |= visitMultipart(multi, VisitPhase.VISIT_BEGIN);
-                
-                // Make a copy of the parts array and iterate the copy,
-                // in case the visitor is adding or removing parts.
-                List<BodyPart> parts = new ArrayList<BodyPart>();
+                if (visitMultipart(multi, VisitPhase.VISIT_BEGIN))
+                    modified = multiModified = true;
+
                 try {
-                    for (int i = 0; i < multi.getCount(); i++)
-                        parts.add(multi.getBodyPart(i));
+                    for (int i = 0; i < multi.getCount(); i++) {
+                        BodyPart bp = multi.getBodyPart(i);
+                        if (bp instanceof MimeBodyPart) {
+                            if (accept((MimeBodyPart) bp))
+                                modified = multiModified = true;
+                        } else
+                            ZimbraLog.extensions.info("unexpected BodyPart subclass: " + bp.getClass().getName());
+                    }
                 } catch (MessagingException e) {
                     ZimbraLog.extensions.warn("could not fetch body subpart; skipping remainder", e);
                 }
-                for (BodyPart bp : parts) {
-                    if (bp instanceof MimeBodyPart)
-                        modified |= accept((MimeBodyPart) bp);
-                    else
-                        ZimbraLog.extensions.info("unexpected BodyPart subclass: " + bp.getClass().getName());
-                }
-                modified |= visitMultipart(multi, VisitPhase.VISIT_END);
+
+                if (visitMultipart(multi, VisitPhase.VISIT_END))
+                    modified = multiModified = true;
+                if (multiModified)
+                    mp.setContent(multi);
             }
         } else if (isMessage) {
             try {
@@ -229,15 +235,11 @@ public abstract class MimeVisitor {
 
         if (mp instanceof MimeMessage) {
             MimeMessage mm = (MimeMessage) mp;
-            modified |= (msgModified = visitMessage(mm, VisitPhase.VISIT_END));
+            modified |= visitMessage(mm, VisitPhase.VISIT_END);
 
-            if (modified) {
-                // JavaMail oddity: any changes to multipart content require call to setContent()
-                if (multi != null && !msgModified)
-                    mm.setContent(multi);
-                // commit changes to the message
+            // commit changes to the message
+            if (modified)
                 mm.saveChanges();
-            }
         }
 
         return modified;

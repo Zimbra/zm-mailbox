@@ -50,11 +50,16 @@ import com.zimbra.cs.util.ZimbraLog;
  */
 public class ImapSession extends Session {
 
+    /** The various special modes the server can be thrown into in order to
+     *  deal with client weirdnesses.  These modes are specified by appending
+     *  various suffixes to the USERNAME when logging into the IMAP server; for
+     *  instance, the Windows Mobile 5 hack is enabled via the suffix "/wm". */
+    static enum EnabledHack { NONE, WM5 };
+
     static final byte STATE_NOT_AUTHENTICATED = 0;
     static final byte STATE_AUTHENTICATED     = 1;
     static final byte STATE_SELECTED          = 2;
     static final byte STATE_LOGOUT            = 3;
-    static final byte STATE_WRITABLE          = 4;
 
     public static final long IMAP_IDLE_TIMEOUT_MSEC = 30 * Constants.MILLIS_PER_MINUTE;
 
@@ -66,6 +71,7 @@ public class ImapSession extends Session {
     private Map<Object, ImapFlag> mFlags = new LinkedHashMap<Object, ImapFlag>();
     private Map<Object, ImapFlag> mTags = new HashMap<Object, ImapFlag>();
     private boolean     mCheckingSpam;
+    private EnabledHack mEnabledHack;
 
     public ImapSession(String accountId, String contextId) throws ServiceException {
         super(accountId, contextId, SessionCache.SESSION_IMAP);
@@ -77,7 +83,7 @@ public class ImapSession extends Session {
             parseConfig(getMailbox().getConfig(getContext(), "imap"));
         } catch (ServiceException e) { }
     }
-    
+
     public void dumpState(Writer w) {
     	try {
     		StringBuilder s = new StringBuilder(this.toString());
@@ -85,7 +91,8 @@ public class ImapSession extends Session {
     		s.append("\n\t\tstate=").append(mState);
     		s.append("\n\t\tidleTag=").append(mIdleTag);
     		s.append("\n\t\tselectedFolder=").append(mSelectedFolder.toString());
-    		s.append("\n\t\tcheckingSpam=").append(mCheckingSpam);
+            s.append("\n\t\tcheckingSpam=").append(mCheckingSpam);
+            s.append("\n\t\thacks=").append(mEnabledHack);
     		
     		w.write(s.toString());
     		if (mHandler != null) 
@@ -103,6 +110,9 @@ public class ImapSession extends Session {
 
     String getUsername()          { return mUsername; }
     void setUsername(String name) { mUsername = name; }
+
+    void enableHack(EnabledHack hack)        { mEnabledHack = hack; }
+    boolean isHackEnabled(EnabledHack hack)  { return mEnabledHack == hack; }
 
     OperationContext getContext() throws ServiceException {
         return new OperationContext(getAccountId());

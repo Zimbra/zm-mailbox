@@ -694,7 +694,7 @@ public class Mime {
         }
     }
 
-    static Map<String, String> decodeRFC2231(String header) {
+    public static Map<String, String> decodeRFC2231(String header) {
         if (header == null)
             return null;
         header = header.trim();

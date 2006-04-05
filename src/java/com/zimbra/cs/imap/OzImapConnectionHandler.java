@@ -38,6 +38,7 @@ import javax.mail.internet.MimeMessage;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.imap.ImapSession.EnabledHack;
 import com.zimbra.cs.imap.ImapSession.ImapFlag;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
@@ -46,6 +47,7 @@ import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.ozserver.OzByteArrayMatcher;
 import com.zimbra.cs.ozserver.OzByteBufferGatherer;
@@ -654,6 +656,13 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         String username = (String) args.remove(0);
         String password = (String) args.remove(0);
 
+        // the Windows Mobile 5 hacks are enabled by appending "/wm" to the username
+        EnabledHack hack = EnabledHack.NONE;
+        if (username.endsWith("/wm")) {
+            username = username.substring(0, username.length() - 3);
+            hack = EnabledHack.WM5;
+        }
+
         Mailbox mailbox = null;
         ImapSession session = null;
         try {
@@ -681,6 +690,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                 sendNO(tag, "LOGIN failed");
                 return CONTINUE_PROCESSING;
             }
+            session.enableHack(hack);
             mailbox = session.getMailbox();
             synchronized (mailbox) {
                 session.setUsername(account.getName());
@@ -1597,7 +1607,9 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                         try {
                             // don't use msg.getMimeMessage() because it implicitly expands TNEF attachments
                             InputStream is = raw != null ? new ByteArrayInputStream(raw) : mMailbox.getMessageById(getContext(), i4msg.id).getRawMessage();
-                            mm = new MimeMessage(JMSession.getSession(), is);
+                            mm = new Mime.FixedMimeMessage(JMSession.getSession(), is);
+                            if (mSession.isHackEnabled(EnabledHack.WM5))
+                                new ImapMessage.WindowsMobile5Converter().accept(mm);
                             is.close();
                         } catch (IOException e) {
                             throw ServiceException.FAILURE("error fetching raw content for message " + i4msg.id, e);
