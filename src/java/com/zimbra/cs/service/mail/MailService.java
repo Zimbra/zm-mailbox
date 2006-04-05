@@ -439,6 +439,7 @@ public class MailService implements DocumentService {
     public static final String A_SUBJECT = "su";
     public static final String A_MODIFIED_DATE = "md";
     public static final String A_LAST_EDITED_BY = "leb";
+    public static final String A_COUNT = "count";
 
     public void registerHandlers(DocumentDispatcher dispatcher) {
 

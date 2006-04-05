@@ -40,6 +40,7 @@ public class WikiWord {
 	private String mModifiedBy;
 	private String mCreator;
 	private int mFolderId;
+	private boolean mEmpty = true;
 	
 	WikiWord(String wikiWord) throws ServiceException {
 		mWikiWord = wikiWord;
@@ -49,6 +50,16 @@ public class WikiWord {
 		return mWikiWord;
 	}
 
+	public void addWikiItem(OperationContext octxt, String acctid, int fid, String wikiWord, String mime, 
+							String author, byte[] data, byte type) throws ServiceException {
+		Mailbox mbox = Mailbox.getMailboxByAccountId(acctid);
+		if (mEmpty) {
+	        addWikiItem(mbox.createDocument(octxt, fid, wikiWord, mime, author, data, null, type));
+		} else {
+			addWikiItem(mbox.addDocumentRevision(octxt, getWikiItem(octxt), data, author));
+		}
+	}
+	
 	public void addWikiItem(Document newItem) throws ServiceException {
 		Document.DocumentRevision rev = newItem.getLastRevision();
 		mMailbox = newItem.getMailbox();
@@ -58,13 +69,14 @@ public class WikiWord {
 		mModifiedBy = rev.getCreator();
 		mCreator = newItem.getCreator();
 		mFolderId = newItem.getFolderId();
+		mEmpty = false;
 	}
 	
 	public void deleteAllRevisions(OperationContext octxt) throws ServiceException {
 		mMailbox.delete(octxt, mId, MailItem.TYPE_UNKNOWN);
 	}
 
-	public long lastRevision() {
+	public long getLastRevision() {
 		return mRevision;
 	}
 
@@ -86,6 +98,10 @@ public class WikiWord {
 	
 	public int getFolderId() {
 		return mFolderId;
+	}
+	
+	public int getId() {
+		return mId;
 	}
 	
 	public Document getWikiItem(OperationContext octxt) throws ServiceException {

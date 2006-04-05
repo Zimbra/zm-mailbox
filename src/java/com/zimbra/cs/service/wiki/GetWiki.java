@@ -49,17 +49,18 @@ public class GetWiki extends WikiDocumentHandler {
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraContext lc = getZimbraContext(context);
         OperationContext octxt = lc.getOperationContext();
-        Element eword = request.getElement(MailService.E_WIKIWORD);
-        String word = eword.getAttribute(MailService.A_NAME, null);
-        String id = eword.getAttribute(MailService.A_ID, null);
-        int rev = (int)eword.getAttributeLong(MailService.A_VERSION, -1);
+        Element wElem = request.getElement(MailService.E_WIKIWORD);
+        String word = wElem.getAttribute(MailService.A_NAME, null);
+        String id = wElem.getAttribute(MailService.A_ID, null);
+        int rev = (int)wElem.getAttributeLong(MailService.A_VERSION, -1);
+        int count = (int)wElem.getAttributeLong(MailService.A_COUNT, -1);
 
         Element response = lc.createElement(MailService.GET_WIKI_RESPONSE);
 
         WikiItem wikiItem;
         
         if (word != null) {
-            Wiki wiki = getRequestedWiki(request, lc);
+            Wiki wiki = getRequestedWikiNotebook(request, lc);
             WikiWord w = wiki.lookupWiki(word);
             if (w == null) {
         		ZimbraLog.wiki.error("requested wiki word "+word+" does not exist");
@@ -78,13 +79,28 @@ public class GetWiki extends WikiDocumentHandler {
         }
         
         Element wikiElem = ToXML.encodeWiki(response, lc, wikiItem, rev);
-    	Document.DocumentRevision revision = (rev > 0) ? wikiItem.getRevision(rev) : wikiItem.getLastRevision(); 
-    	try {
-    		byte[] raw = ByteUtil.getContent(revision.getBlob().getFile());
-    		wikiElem.addAttribute(MailService.A_BODY, new String(raw, "UTF-8"), Element.DISP_CONTENT);
-    	} catch (IOException ioe) {
-    		ZimbraLog.wiki.error("cannot read the wiki message body", ioe);
-    	}
+        
+        if (count > 1) {
+    		count--;  // head version was already printed
+        	if (rev <= 0) {
+        		rev = wikiItem.getVersion();
+        	}
+        	while (--rev > 0) {
+                ToXML.encodeWiki(response, lc, wikiItem, rev);
+        		count--;
+        		if (count == 0) {
+        			break;
+        		}
+        	}
+        } else {
+        	Document.DocumentRevision revision = (rev > 0) ? wikiItem.getRevision(rev) : wikiItem.getLastRevision(); 
+        	try {
+        		byte[] raw = ByteUtil.getContent(revision.getBlob().getFile());
+        		wikiElem.addAttribute(MailService.A_BODY, new String(raw, "UTF-8"), Element.DISP_CONTENT);
+        	} catch (IOException ioe) {
+        		ZimbraLog.wiki.error("cannot read the wiki message body", ioe);
+        	}
+        }
         return response;
 	}
 }

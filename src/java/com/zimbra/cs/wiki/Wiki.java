@@ -39,20 +39,39 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.Pair;
 
+/**
+ * This class represents a Wiki notebook.
+ * 
+ * @author jylee
+ *
+ */
 public class Wiki {
 	private String mWikiAccount;
-	private String mWikiAccountId;
 	private int    mFolderId;
 	
 	private Map<String,WikiWord>    mWikiWords;
 	
-	private static Map<String,Wiki> wikiMap;
+	private static Map<Pair<String,String>,Wiki> wikiMap;
 	
+	//private static final String WIKI_FOLDER =  "wiki";
 	private static final String WIKI_FOLDER =  "inbox";
 	
 	static {
-		wikiMap = new HashMap<String,Wiki>();
+		wikiMap = new HashMap<Pair<String,String>,Wiki>();
+	}
+	
+	public static int getDefaultFolderId(Account acct) throws ServiceException {
+		Mailbox mbox = Mailbox.getMailboxByAccount(acct);
+		OperationContext octxt = new OperationContext(acct);
+		Folder f;
+		try {
+			f = mbox.getFolderByPath(octxt, WIKI_FOLDER);
+		} catch (ServiceException se) {
+			f = mbox.createFolder(octxt, WIKI_FOLDER, Mailbox.ID_FOLDER_USER_ROOT, MailItem.TYPE_WIKI, null);
+		}
+		return f.getId();
 	}
 	
 	public static Wiki getInstance() throws ServiceException {
@@ -63,60 +82,46 @@ public class Wiki {
 	}
 	
 	public static Wiki getInstance(String acct) throws ServiceException {
+		return getInstance(Provisioning.getInstance().getAccountByName(acct));
+	}
+	
+	public static Wiki getInstance(Account acct) throws ServiceException {
+		return getInstance(acct, getDefaultFolderId(acct));
+	}
+	
+	public static Wiki getInstance(Account acct, int folderId) throws ServiceException {
 		Wiki w;
 		synchronized (wikiMap) {
-			w = wikiMap.get(acct);
+			Pair<String,String> key = Pair.get(acct.getName(), Integer.toString(folderId));
+			w = wikiMap.get(key);
 			if (w == null) {
-				w = new Wiki(acct);
-				wikiMap.put(acct, w);
+				w = new Wiki(acct, folderId);
+				// XXX should be able to handle delete before start caching.
+				//wikiMap.put(key, w);
 			}
 		}
 		return w;
 	}
 	
-	private Wiki(String wikiAcct) throws ServiceException {
+	private Wiki(Account acct, int fid) throws ServiceException {
 		mWikiWords = new HashMap<String,WikiWord>();
 		
-		mWikiAccount = wikiAcct;
-		
-		Account acct = Provisioning.getInstance().getAccountByName(mWikiAccount);
+		mWikiAccount = acct.getId();
+		mFolderId = fid;
 		Mailbox mbox = Mailbox.getMailboxByAccount(acct);
 		OperationContext octxt = new OperationContext(acct);
-		Folder f = mbox.getFolderByPath(octxt, WIKI_FOLDER);
-		mWikiAccountId = acct.getId();
-		mFolderId = f.getId();
 		loadWiki(octxt, mbox);
-		loadDoc(octxt, mbox);
 	}
 	
 	private void loadWiki(OperationContext octxt, Mailbox mbox) throws ServiceException {
-	    List<MailItem> wikiList = mbox.getItemList(octxt, MailItem.TYPE_WIKI);
-	    for (MailItem item : wikiList) {
-	    	assert(item instanceof WikiItem);
-	    	WikiItem witem = (WikiItem) item;
-	    	addWiki(witem);
-	    }
-	}
-	
-	private void loadDoc(OperationContext octxt, Mailbox mbox) throws ServiceException {
-	    List<MailItem> docList = mbox.getItemList(octxt, MailItem.TYPE_DOCUMENT);
-	    for (MailItem item : docList) {
-	    	assert(item instanceof Document);
-	    	Document doc = (Document) item;
-	    	addDoc(doc);
+	    List<Document> wikiList = mbox.getWikiList(octxt, mFolderId);
+	    for (Document item : wikiList) {
+	    	addDoc(item);
 	    }
 	}
 	
 	public String getWikiAccount() {
 		return mWikiAccount;
-	}
-	
-	public String getWikiAccountId() {
-		return mWikiAccountId;
-	}
-	
-	public String getWikiFolder() {
-		return WIKI_FOLDER;
 	}
 	
 	public int getWikiFolderId() {
@@ -131,7 +136,10 @@ public class Wiki {
 	}
 	
 	public void addDoc(Document doc) throws ServiceException {
-		addDocImpl(doc.getFilename(), doc);
+		if (doc instanceof WikiItem) 
+			addWiki((WikiItem)doc);
+		else
+			addDocImpl(doc.getFilename(), doc);
 	}
 	
 	public void addWiki(WikiItem wikiItem) throws ServiceException {
@@ -146,6 +154,25 @@ public class Wiki {
 			mWikiWords.put(wikiStr, w);
 		}
 		w.addWikiItem(doc);
+	}
+	
+	public synchronized WikiWord createWiki(OperationContext octxt, String wikiword, String author, byte[] data) throws ServiceException {
+		return createDocument(octxt, WikiItem.WIKI_CONTENT_TYPE, wikiword, author, data, MailItem.TYPE_WIKI);
+	}
+	
+	public synchronized WikiWord createDocument(OperationContext octxt, String ct, String filename, String author, byte[] data) throws ServiceException {
+		return createDocument(octxt, ct, filename, author, data, MailItem.TYPE_DOCUMENT);
+	}
+	
+	public synchronized WikiWord createDocument(OperationContext octxt, String ct, String filename, String author, byte[] data, byte type) throws ServiceException {
+		WikiWord ww = lookupWiki(filename);
+		
+		if (ww == null) {
+			ww = new WikiWord(filename);
+			mWikiWords.put(filename, ww);
+		}
+		ww.addWikiItem(octxt, mWikiAccount, mFolderId, filename, ct, author, data, type);
+		return ww;
 	}
 	
 	public void deleteWiki(OperationContext octxt, String wikiWord) throws ServiceException {

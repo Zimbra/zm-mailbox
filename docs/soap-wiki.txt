@@ -19,20 +19,28 @@
 //
 // A Document represents a file.  A file can be created by uploading to FileUploadServlet.
 // Or it can refer to an attachment of an existing message.
+//
+// Saving a new document, as opposed to adding a revision of existing document, should leave
+// the id and ver fields empty in the request.  Then the server checks and see if the named
+// document already exists, if so returns an error.  Saving a new version should specify
+// the existing item's id and the last known version.  If there is a version conflict, such as
+// if someone else has added a new version since it was checked last time, then the server returns
+// an error.
+//
 // The request should contain either <upload> element or <msg> element, but not both.
 // When <upload> is used, the document should be first uploaded to FileUploadServlet, and
 // then use the upload-id from the FileUploadResponse.
 // When <m> is used, the document is retrieved from an existing message in the mailbox,
 // identified by the msg-id and part-id.
 <SaveDocumentRequest>
-  <doc [name="{file-name}"] [ct="{content-type}"] [l="{folder-id}"]>
+  <doc [id="{item-id}" ver="{last-known-version}"] [name="{file-name}"] [ct="{content-type}"] [l="{folder-id}"]>
     [<upload id="{upload-id}"/>]
     [<m id="{msg-id}" part="{part-id}"/>]
   </doc>
 </SaveDocumentRequest>
 
 <SaveDocumentResponse>
-  <doc id="{item-id}"/>
+  <doc id="{item-id}" ver="{version}"/>
 </SaveDocumentResponse>
 
 //
@@ -40,11 +48,11 @@
 // folder-id argument is valid when the new wiki document is being created,
 // otherwise it's ignored, and the subsequent revision is stored in the same folder.
 <SaveWikiRequest>
-  <w name="{wikiword}" [l="{folder-id}"]> ... contents ... </w>
+  <w name="{wikiword}" [id="{item-id}" ver="{last-known-version}"] [l="{folder-id}"]> ... contents ... </w>
 </SaveWikiRequest>
 
 <SaveWikiResponse>
-  <w id="{item-id}"/>
+  <w id="{item-id}" ver="{version}"/>
 </SaveWikiResponse>
 
 //
@@ -79,15 +87,17 @@
 //
 // GetWiki
 // returns the latest version if version is omitted from the request.
+// if count attribute is present it will return the N revision history of the metadata and fragment,
+// without body, where N <= count.
 <GetWikiRequest>
-  <w [name="{word}"|id="{message-id}"] [ver="{version}"]/>
+  <w [name="{word}"|id="{message-id}"] [ver="{version}"] [count="{num}"]/>
 </GetWikiRequest>
 
 <GetWikiResponse>
-  <w name="{word}" ver="{version}" cr="{creator}" id="{message-id}" s="{size}" d="{created-date}" md="{modified-date}" l="{folder}" [f="{flags}"] [t="{tags}"]>
+  [<w name="{word}" ver="{version}" cr="{creator}" id="{message-id}" s="{size}" d="{created-date}" md="{modified-date}" l="{folder}" [f="{flags}"] [t="{tags}"]>
      <fr>... fragment ...</fr>
      <body>... contents ...</body>
-  </w>
+  </w>]+
 </GetWikiResponse>
 
 //

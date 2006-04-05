@@ -40,7 +40,7 @@ public class ListWiki extends WikiDocumentHandler {
 	@Override
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraContext lc = getZimbraContext(context);
-		Wiki wiki = getRequestedWiki(request, lc);
+		Wiki wiki = getRequestedWikiNotebook(request, lc);
 
         Set<String> wikiWords = wiki.listWiki();
         Element response = lc.createElement(MailService.LIST_WIKI_RESPONSE);
@@ -48,7 +48,7 @@ public class ListWiki extends WikiDocumentHandler {
         	WikiWord ww = wiki.lookupWiki(w);
             Element m = response.addElement(MailService.E_WIKIWORD);
             m.addAttribute(MailService.A_NAME, w);
-            m.addAttribute(MailService.A_VERSION, ww.lastRevision());
+            m.addAttribute(MailService.A_VERSION, ww.getLastRevision());
             m.addAttribute(MailService.A_CREATED_DATE, ww.getCreatedDate());
             m.addAttribute(MailService.A_MODIFIED_DATE, ww.getModifiedDate());
             m.addAttribute(MailService.A_CREATOR, ww.getCreator());

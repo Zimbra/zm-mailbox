@@ -48,7 +48,7 @@ public class DeleteWiki extends WikiDocumentHandler {
         Element eword = request.getElement(MailService.E_WIKIWORD);
         String word = eword.getAttribute(MailService.A_NAME);
 
-        Wiki wiki = getRequestedWiki(request, lc);
+        Wiki wiki = getRequestedWikiNotebook(request, lc);
         wiki.deleteWiki(octxt, word);
         Element response = lc.createElement(MailService.DELETE_WIKI_RESPONSE);
 

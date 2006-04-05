@@ -51,9 +51,15 @@ public class SaveDocument extends WikiDocumentHandler {
 		public byte[] contents;
 		public String name;
 		public String contentType;
+		public Upload up = null;
+		public void cleanup() {
+			if (up != null) {
+                FileUploadServlet.deleteUpload(up);
+			}
+		}
 	}
 	
-	protected Doc getDocumentDataFromMessage(OperationContext octxt, Mailbox mbox, String msgid, String part) throws ServiceException {
+	protected Doc getDocumentDataFromMimePart(OperationContext octxt, Mailbox mbox, String msgid, String part) throws ServiceException {
 		Message item = mbox.getMessageById(octxt, Integer.parseInt(msgid));
         MimeMessage mm = item.getMimeMessage();
 		Doc doc = new Doc();
@@ -69,19 +75,18 @@ public class SaveDocument extends WikiDocumentHandler {
 		return doc;
 	}
 	
-	protected Doc getDocumentDataFromAttachment(ZimbraContext lc, String aid) throws ServiceException {
+	protected Doc getDocumentDataFromUpload(ZimbraContext lc, String aid) throws ServiceException {
         Upload up = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), aid, lc.getRawAuthToken());
 
         Doc doc = new Doc();
         try {
+        	doc.up = up;
         	doc.contents = ByteUtil.getContent(up.getInputStream(), 0);
         	doc.name = up.getName();
         	doc.contentType = up.getContentType();
         } catch (IOException ioe) {
+       		doc.cleanup();
         	throw ServiceException.FAILURE("cannot get uploaded file", ioe);
-        } finally {
-            if (up != null)
-                FileUploadServlet.deleteUpload(up);
         }
         return doc;
 	}
@@ -94,44 +99,41 @@ public class SaveDocument extends WikiDocumentHandler {
 	@Override
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraContext lc = getZimbraContext(context);
-        Wiki wiki = getRequestedWiki(request, lc);
+        Wiki wiki = getRequestedWikiNotebook(request, lc);
 
         Element docElem = request.getElement(MailService.E_DOC);
-        Mailbox mbox = Mailbox.getMailboxByAccountId(wiki.getWikiAccountId());
+        Mailbox mbox = Mailbox.getMailboxByAccountId(wiki.getWikiAccount());
         OperationContext octxt = lc.getOperationContext();
 
         Doc doc;
-        Element attElem = docElem.getOptionalElement(MailService.E_UPLOAD);;
+        Element attElem = docElem.getOptionalElement(MailService.E_UPLOAD);
         if (attElem != null) {
             String aid = attElem.getAttribute(MailService.A_ID, null);
-            doc = getDocumentDataFromAttachment(lc, aid);
+            doc = getDocumentDataFromUpload(lc, aid);
         } else {
         	attElem = docElem.getElement(MailService.E_MSG);
             String msgid = attElem.getAttribute(MailService.A_ID, null);
             String part = attElem.getAttribute(MailService.A_PART, null);
-        	doc = getDocumentDataFromMessage(octxt, mbox, msgid, part);
+        	doc = getDocumentDataFromMimePart(octxt, mbox, msgid, part);
         }
 
         
         String name = docElem.getAttribute(MailService.A_NAME, doc.name);
         String ctype = docElem.getAttribute(MailService.A_CONTENT_TYPE, doc.contentType);
-        int fid = (int)docElem.getAttributeLong(MailService.A_FOLDER, wiki.getWikiFolderId());
 
-        Document docItem;
-        synchronized (wiki) {
-            WikiWord ww = wiki.lookupWiki(name);
-            if (ww == null) {
-           		docItem = mbox.createDocument(octxt, fid, name, ctype, getAuthor(lc), doc.contents, null);
-            } else {
-            	docItem = ww.getWikiItem(octxt);
-            	mbox.addDocumentRevision(octxt, docItem, doc.contents, getAuthor(lc));
-            }
-    		wiki.addDoc(docItem);
-        }
+        validateRequest(wiki,
+        				(int)docElem.getAttributeLong(MailService.A_ID, 0),
+        				docElem.getAttributeLong(MailService.A_VERSION, 0),
+        				name);
+        
+        WikiWord ww = wiki.createDocument(octxt, ctype, name, getAuthor(lc), doc.contents);
+        Document docItem = ww.getWikiItem(octxt);
 
         Element response = lc.createElement(MailService.SAVE_DOCUMENT_RESPONSE);
         Element m = response.addElement(MailService.E_DOC);
         m.addAttribute(MailService.A_ID, lc.formatItemId(docItem));
+        m.addAttribute(MailService.A_VERSION, docItem.getVersion());
+        doc.cleanup();
         return response;
 	}
 }

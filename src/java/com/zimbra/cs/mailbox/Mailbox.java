@@ -4301,7 +4301,7 @@ public class Mailbox {
         }
     }
 
-    public void addDocumentRevision(OperationContext octxt, Document doc, byte[] rawData, String author) throws ServiceException {
+    public Document addDocumentRevision(OperationContext octxt, Document doc, byte[] rawData, String author) throws ServiceException {
     	StoreManager sm = StoreManager.getInstance();
     	Blob blob = null;
     	boolean success = false;
@@ -4333,55 +4333,9 @@ public class Mailbox {
 //                	 no harm done
                	}
     	}
+    	return doc;
     }
     
-    public synchronized WikiItem createWiki(OperationContext octxt, 
-											int folderId, 
-											String wikiword, 
-											String author, 
-											byte[] rawData,
-											MailItem parent) throws ServiceException {
-    	WikiItem wikiItem;
-    	boolean success = false;
-    	StoreManager sm = StoreManager.getInstance();
-    	Blob blob = null;
-    	try {
-        	SaveWiki redoRecorder = new SaveWiki(mId, null, 0, folderId);
-
-        	beginTransaction("createWiki", octxt, redoRecorder);
-        	redoRecorder.setFilename("wiki");
-        	redoRecorder.setMimeType(WikiItem.WIKI_CONTENT_TYPE);
-        	redoRecorder.setWikiword(wikiword);
-        	redoRecorder.setAuthor(author);
-        	int itemId = getNextItemId(ID_AUTO_INCREMENT);
-        	short volumeId = Volume.getCurrentMessageVolume().getId();
-
-        	blob = sm.storeIncoming(rawData, null, null, volumeId);
-        	redoRecorder.setMessageBodyInfo(rawData, blob.getPath(), blob.getVolumeId());
-        	markOtherItemDirty(blob);
-
-        	ParsedDocument pd = new ParsedDocument(blob.getFile(), wikiword, WikiItem.WIKI_CONTENT_TYPE, getOperationTimestampMillis());
-        	wikiItem = WikiItem.create(itemId, getFolderById(folderId), volumeId, wikiword, author, pd, parent);
-        	mCurrentChange.setIndexedItem(wikiItem, pd);
-
-        	sm.link(blob, this, itemId, wikiItem.getLastRevision().getRevId(), volumeId);
-
-        	success = true;
-
-       	} catch (IOException ioe) {
-        	throw MailServiceException.MESSAGE_PARSE_ERROR(ioe);
-    	} finally {
-        	endTransaction(success);
-        	if (blob != null)
-            	try {
-                	sm.delete(blob);
-               	} catch (IOException ioe) {
-//                	 no harm done
-               	}
-    	}
-    	return wikiItem;
-    }
-
     public WikiItem getWikiById(OperationContext octxt, int id) throws ServiceException {
     	return (WikiItem) getItemById(octxt, id, MailItem.TYPE_WIKI);
     }
@@ -4397,6 +4351,17 @@ public class Mailbox {
             docs.add((Document) item);
         return docs;
     }
+    
+    public synchronized WikiItem createWiki(OperationContext octxt, 
+											int folderId, 
+											String wikiword, 
+											String author, 
+											byte[] rawData,
+											MailItem parent) throws ServiceException {
+    	return (WikiItem)createDocument(octxt, folderId, wikiword, WikiItem.WIKI_CONTENT_TYPE, 
+    									author, rawData, parent, MailItem.TYPE_WIKI);
+    }
+
     public synchronized Document createDocument(OperationContext octxt, 
     											int folderId, 
     											String filename, 
@@ -4404,6 +4369,17 @@ public class Mailbox {
     											String author,
     											byte[] rawData,
     											MailItem parent) throws ServiceException {
+    	return createDocument(octxt, folderId, filename, mimeType, author, rawData, parent, MailItem.TYPE_DOCUMENT);
+    }
+    
+    public synchronized Document createDocument(OperationContext octxt, 
+    											int folderId, 
+    											String filename, 
+    											String mimeType, 
+    											String author,
+    											byte[] rawData,
+    											MailItem parent,
+    											byte type) throws ServiceException {
        	Document doc;
         boolean success = false;
        	StoreManager sm = StoreManager.getInstance();
@@ -4423,11 +4399,16 @@ public class Mailbox {
             markOtherItemDirty(blob);
 
         	ParsedDocument pd = new ParsedDocument(blob.getFile(), filename, mimeType, getOperationTimestampMillis());
-        	doc = Document.create(itemId, getFolderById(folderId), volumeId, filename, author, mimeType, pd, parent);
+        	
+        	if (type == MailItem.TYPE_DOCUMENT)
+        		doc = Document.create(itemId, getFolderById(folderId), volumeId, filename, author, mimeType, pd, parent);
+        	else if (type == MailItem.TYPE_WIKI)
+        		doc = WikiItem.create(itemId, getFolderById(folderId), volumeId, filename, author, pd, parent);
+        	else
+        		throw MailServiceException.INVALID_TYPE(type);
+        	
             mCurrentChange.setIndexedItem(doc, pd);
-
             sm.link(blob, this, itemId, doc.getLastRevision().getRevId(), volumeId);
-            
             success = true;
 
         } catch (IOException ioe) {

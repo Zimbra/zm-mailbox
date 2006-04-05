@@ -27,10 +27,7 @@ package com.zimbra.cs.service.wiki;
 import java.util.Map;
 
 import com.zimbra.cs.mailbox.Document;
-import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.wiki.Wiki;
@@ -51,36 +48,25 @@ public class SaveWiki extends WikiDocumentHandler {
 			throws ServiceException, SoapFaultException {
         ZimbraContext lc = getZimbraContext(context);
         OperationContext octxt = lc.getOperationContext();
-		Wiki wiki = getRequestedWiki(request, lc);
+		Wiki wiki = getRequestedWikiNotebook(request, lc);
 
         Element msgElem = request.getElement(MailService.E_WIKIWORD);
         String subject = msgElem.getAttribute(MailService.A_NAME, null);
-        int fid = (int)msgElem.getAttributeLong(MailService.A_FOLDER, wiki.getWikiFolderId());
 
-        Mailbox mbox = Mailbox.getMailboxByAccountId(wiki.getWikiAccountId());
-
+        validateRequest(wiki,
+        				(int)msgElem.getAttributeLong(MailService.A_ID, 0),
+        				msgElem.getAttributeLong(MailService.A_VERSION, 0),
+        				subject);
+        
         byte[] rawData = msgElem.getText().getBytes();
         
-        WikiItem wikiItem;
-        synchronized (wiki) {
-            WikiWord ww = wiki.lookupWiki(subject);
-            if (ww == null) {
-                wikiItem = mbox.createWiki(octxt, fid, subject, getAuthor(lc), rawData, null);
-            } else {
-                Document doc = ww.getWikiItem(octxt);
-                if (doc.getType() != MailItem.TYPE_WIKI) {
-                	throw ServiceException.FAILURE("requested MailItem is not WikiItem", null);
-                }
-            	wikiItem = (WikiItem)doc;
-            	mbox.addDocumentRevision(octxt, wikiItem, rawData, getAuthor(lc));
-            }
-    		wiki.addWiki(wikiItem);
-        }
+        WikiWord ww = wiki.createWiki(octxt, subject, getAuthor(lc), rawData);
+        Document wikiItem = ww.getWikiItem(octxt);
         
         Element response = lc.createElement(MailService.SAVE_WIKI_RESPONSE);
         Element m = response.addElement(MailService.E_WIKIWORD);
         m.addAttribute(MailService.A_ID, lc.formatItemId(wikiItem));
+        m.addAttribute(MailService.A_VERSION, wikiItem.getVersion());
         return response;
 	}
-
 }
