@@ -28,11 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 
 import ch.ethz.ssh2.Connection;
 import ch.ethz.ssh2.Session;
@@ -42,13 +38,12 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ByteUtil;
-import com.zimbra.cs.util.Constants;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraLog;
 
 public class RemoteManager {
 
-	private static File mPrivateKey;
+	private File mPrivateKey;
 	
 	private final String mUser;
 	private final String mHost;
@@ -56,7 +51,7 @@ public class RemoteManager {
 	private final String mShimCommand;
 	private final String mDescription;
 	
-	public RemoteManager(Server remote) throws ServiceException {
+	private RemoteManager(Server remote) throws ServiceException {
 	    mHost = remote.getAttr(Provisioning.A_zimbraServiceHostname, null);
 	    if (mHost == null) throw ServiceException.FAILURE("server " + remote.getName() + " does not have a service host name", null);
 	    
@@ -69,26 +64,21 @@ public class RemoteManager {
 	    mShimCommand = remote.getAttr(Provisioning.A_zimbraRemoteManagementCommand, null);
 	    if (mShimCommand == null) throw ServiceException.FAILURE("server " + remote.getName() + " has no " + Provisioning.A_zimbraRemoteManagementCommand, null);
 		
-	    String localName = null;
-	    synchronized (RemoteManager.class) {
-			if (mPrivateKey == null) {
-				Server local = Provisioning.getInstance().getLocalServer();
-				localName = local.getName(); 
-				String privateKey = local.getAttr(Provisioning.A_zimbraRemoteManagementPrivateKeyPath, null);
-				if (privateKey == null) {
-					throw ServiceException.FAILURE("server " + localName + " has no " + Provisioning.A_zimbraRemoteManagementPrivateKeyPath, null);
-				}
-				
-				File key = new File(privateKey);
-				if (!key.exists()) {
-					throw ServiceException.FAILURE("server " + localName + " " + Provisioning.A_zimbraRemoteManagementPrivateKeyPath + " (" + key + ") does not exist", null);
-				}
-				if (!key.canRead()) {
-					throw ServiceException.FAILURE("server " + localName + " " + Provisioning.A_zimbraRemoteManagementPrivateKeyPath + " (" + key + ") is not readable", null);
-				}
-				mPrivateKey = key;
-			}
-		}
+	    Server local = Provisioning.getInstance().getLocalServer();
+	    String localName = local.getName(); 
+	    String privateKey = local.getAttr(Provisioning.A_zimbraRemoteManagementPrivateKeyPath, null);
+	    if (privateKey == null) {
+	        throw ServiceException.FAILURE("server " + localName + " has no " + Provisioning.A_zimbraRemoteManagementPrivateKeyPath, null);
+	    }
+	    
+	    File key = new File(privateKey);
+	    if (!key.exists()) {
+	        throw ServiceException.FAILURE("server " + localName + " " + Provisioning.A_zimbraRemoteManagementPrivateKeyPath + " (" + key + ") does not exist", null);
+	    }
+	    if (!key.canRead()) {
+	        throw ServiceException.FAILURE("server " + localName + " " + Provisioning.A_zimbraRemoteManagementPrivateKeyPath + " (" + key + ") is not readable", null);
+	    }
+	    mPrivateKey = key;
 
 	    mDescription = "{RemoteManager: " + localName + "->" + mUser + "@" + mHost + ":" + mPort + "}";
 	}
@@ -97,13 +87,15 @@ public class RemoteManager {
     	return mDescription; 
     }
     
-    private void executeBackground0(String command, RemoteBackgroundHandler handler) {
+    private synchronized void executeBackground0(String command, RemoteBackgroundHandler handler) {
         Session s = null;
         try {
             s = getSession();
+            if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("(bg) executing shim command  '" + mShimCommand + "' on " + this); 
             s.execCommand(mShimCommand);
             OutputStream os = s.getStdin();
             String send = "HOST:" + mHost + " " + command; 
+            if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("(bg) sending mgmt command '" + send + "' on " + this); 
             os.write(send.getBytes());
             os.close();
             InputStream stdout = new StreamGobbler(s.getStdout());
@@ -131,13 +123,15 @@ public class RemoteManager {
         t.start();
     }
 	
-    public RemoteResult execute(String command) throws ServiceException {
+    public synchronized RemoteResult execute(String command) throws ServiceException {
 		Session s = null;
 		try {
 		    s = getSession();
-			s.execCommand(mShimCommand);
+            if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("executing shim command  '" + mShimCommand + "' on " + this); 
+            s.execCommand(mShimCommand);
             OutputStream os = s.getStdin();
             String send = "HOST:" + mHost + " " + command; 
+            if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("sending mgmt command '" + send + "' on " + this); 
             os.write(send.getBytes());
             os.close();
 
@@ -172,120 +166,56 @@ public class RemoteManager {
 		}
 	}
 	
-    private static class ConnectionReaperThreadFactory implements ThreadFactory {
-        public Thread newThread(Runnable runnable) {
-            Thread t = new Thread(runnable, "RemoteManager-ConnectionReaper");
-            t.setDaemon(true);
-            t.setPriority(Thread.NORM_PRIORITY);
-            return t;
-        }
-    }
-
-    private class ConnectionReaper implements Runnable {
-        public void run() {
-        	synchronized (mConnectionLock) {
-        		if (mConnection == null) {
-        			if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("reaper: connection is null " + this);
-        			return;
-        		}
-        		
-        		if (mSessionsActive > 0) {
-        			// Session release will take care of scheduling idle check
-        			if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("sessions (" + mSessionsActive + ") are active " + this);
-        			return;
-        		}
-        		
-        		long now = System.currentTimeMillis();
-        		long elapsed = now - mLastSessionTimestamp;
-        		if (elapsed < IDLE_CONNECTION_LIFETIME_MILLIS) {
-        			if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("check for idle in " + (IDLE_CONNECTION_LIFETIME_MILLIS - elapsed) + " millis " + this);
-        			mConnectionReaperExecutor.schedule(this, IDLE_CONNECTION_LIFETIME_MILLIS - elapsed, TimeUnit.MILLISECONDS);
-        			return;
-        		}
-        				
-    			if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("connection reaped " + this);
-        		mConnection.close();
-        		mConnection = null;
-        	}
-        }
-    }
-
-	private Object mConnectionLock = new Object();
-
-    private static final ScheduledThreadPoolExecutor mConnectionReaperExecutor = new ScheduledThreadPoolExecutor(1, new ConnectionReaperThreadFactory());
-
-    private ConnectionReaper mConnectionReaper = new ConnectionReaper();
-    
-    private long mLastSessionTimestamp;
-    
-    private static final long IDLE_CONNECTION_LIFETIME_MILLIS = 5 * Constants.MILLIS_PER_MINUTE;
-    	
-	private int mSessionsActive;
-	
 	private Connection mConnection;
 	
 	private void releaseSession(Session sess) {
 		try {
 			sess.close();
 		} finally {
-			synchronized (mConnectionLock) {
-				mSessionsActive--;
-				mLastSessionTimestamp = System.currentTimeMillis();
-				if (mSessionsActive == 0) {
-					mConnectionReaperExecutor.schedule(mConnectionReaper, IDLE_CONNECTION_LIFETIME_MILLIS, TimeUnit.MILLISECONDS);
-				}
-			}
-		}
+		    mConnection.close();
+            mConnection = null;
+        }
 	}
 	
 	private Session getSession() throws ServiceException {
-		synchronized (mConnectionLock) {
-			try {
-				if (mConnection == null) {
-					Connection c = new Connection(mHost, mPort);
-                    c.connect();
-					if (!c.authenticateWithPublicKey(mUser, mPrivateKey, null)) {
-						throw new IOException("auth failed");
-					}
-					mConnection = c;
-				}
-				
-				Session sess = mConnection.openSession();
-				mSessionsActive++;
-				return sess;
-			} catch (IOException ioe) {
-				throw ServiceException.FAILURE("exception during auth " + this, ioe);
-			}
+        try {
+            mConnection = new Connection(mHost, mPort);
+            mConnection.connect();
+            if (!mConnection.authenticateWithPublicKey(mUser, mPrivateKey, null)) {
+                throw new IOException("auth failed");
+            }
+            return mConnection.openSession();
+        } catch (IOException ioe) {
+            if (mConnection != null) {
+                mConnection.close();
+            }
+            throw ServiceException.FAILURE("exception during auth " + this, ioe);
 		}
 	}
-	
-	private static Map<String,RemoteManager> mRemoteManagerCache = new HashMap<String,RemoteManager>();
-	
-	public static RemoteManager getRemoteManager(Server server) throws ServiceException {
-		synchronized (mRemoteManagerCache) {
-			RemoteManager rm = mRemoteManagerCache.get(server.getId());
-			if (rm != null) {
-				return rm;
-			}
-			
-			rm = new RemoteManager(server);
-			mRemoteManagerCache.put(server.getId(), rm);
-			return rm;
-		}
+
+    public static RemoteManager getRemoteManager(Server server) throws ServiceException {
+        return new RemoteManager(server);
 	}
     
     public static void main(String[] args) throws Exception {
+        int iterations = Integer.parseInt(args[0]);
+        String serverName = args[1];
+        String command = args[2];
+
         Zimbra.toolSetup("DEBUG");
         Provisioning prov = Provisioning.getInstance();
-        Server remote = prov.getServerByName(args[0]);
-        RemoteManager rm = RemoteManager.getRemoteManager(remote);
-        RemoteResult rr = rm.execute(args[1]);
-        Map<String,String> m = RemoteResultParser.parseSingleMap(rr); 
-        if (m == null) {
-            System.out.println("NO RESULT RETURNED");
-        } else {
-            for (String k : m.keySet()) {
-                System.out.println(k + "=" + m.get(k));
+        Server remote = prov.getServerByName(serverName);
+        
+        for (int i = 0; i < iterations; i++) {
+            RemoteManager rm = RemoteManager.getRemoteManager(remote);
+            RemoteResult rr = rm.execute(command);
+            Map<String,String> m = RemoteResultParser.parseSingleMap(rr); 
+            if (m == null) {
+                System.out.println("NO RESULT RETURNED");
+            } else {
+                for (String k : m.keySet()) {
+                    System.out.println(k + "=" + m.get(k));
+                }
             }
         }
     }
