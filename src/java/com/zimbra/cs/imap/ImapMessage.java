@@ -34,6 +34,7 @@ import java.io.UnsupportedEncodingException;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.LinkedList;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.*;
@@ -45,7 +46,9 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.cs.util.ZimbraLog;
 
 
 class ImapMessage {
@@ -160,7 +163,9 @@ class ImapMessage {
 
     private static final byte[] NIL = { 'N', 'I', 'L' };
 
+    private void nstring(PrintStream ps, String value) { if (value == null)  ps.write(NIL, 0, 3);  else astring(ps, value); }
     private void astring(PrintStream ps, String value) { astring(ps, value, false); }
+    private void aSTRING(PrintStream ps, String value) { astring(ps, value, true); }
     private void astring(PrintStream ps, String value, boolean upcase) {
         boolean literal = false;
         StringBuffer nonulls = null;
@@ -187,8 +192,7 @@ class ImapMessage {
             }
         }
     }
-    private void aSTRING(PrintStream ps, String value) { astring(ps, value, true); }
-    private void nstring(PrintStream ps, String value) { if (value == null)  ps.write(NIL, 0, 3);  else astring(ps, value); }
+
     private void naddresses(PrintStream ps, InternetAddress[] addrs) {
         int count = 0;
         if (addrs != null && addrs.length > 0) {
@@ -348,6 +352,47 @@ class ImapMessage {
             return null;
         } catch (MessagingException e) {
             return null;
+        }
+    }
+
+    static class WindowsMobile5Converter extends MimeVisitor {
+        protected boolean visitMessage(MimeMessage mm, VisitPhase visitKind)  { return false; }
+        protected boolean visitBodyPart(MimeBodyPart bp)  { return false; }
+        
+        protected boolean visitMultipart(MimeMultipart multi, VisitPhase visitKind) throws MessagingException {
+            if (visitKind != VisitPhase.VISIT_END)
+                return false;
+            // only want to kill the HTML part of multipart/alternative messages
+            if (!getContentType(multi).equals(Mime.CT_MULTIPART_ALTERNATIVE))
+                return false;
+
+            LinkedList<Integer> htmlParts = null;
+            boolean hasPlain = false;
+            try {
+                for (int i = 0; i < multi.getCount(); i++) {
+                    String ctype = getContentType(multi.getBodyPart(i));
+                    if (ctype.equals(Mime.CT_TEXT_PLAIN)) {
+                        hasPlain = true;
+                    } else if (ctype.equals(Mime.CT_TEXT_HTML)) {
+                        if (htmlParts == null)
+                            htmlParts = new LinkedList<Integer>();
+                        htmlParts.add(0, i);
+                    }
+                }
+            } catch (MessagingException e) {
+                ZimbraLog.extensions.warn("exception while traversing multipart; skipping", e);
+                return false;
+            }
+
+            if (hasPlain == false || htmlParts == null || htmlParts.isEmpty())
+                return false;
+            // check to make sure that the caller's OK with altering the message
+            if (mCallback != null && !mCallback.onModification())
+                return false;
+            // and put the new multipart/alternatives where the TNEF used to be
+            for (int position : htmlParts)
+                multi.removeBodyPart(position);
+            return true;
         }
     }
 }
