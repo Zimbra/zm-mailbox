@@ -232,10 +232,14 @@ public final class TopLevelMessageHandler {
         String subject = pm.getNormalizedSubject();
         String sortFrom = pm.getParsedSender().getSortString();
         String from = pm.getSender();
-        d.add(new Field(LuceneFields.L_H_FROM, from, false, true, true));
-        d.add(new Field(LuceneFields.L_H_SUBJECT, subject, false, true, true));
-        d.add(new Field(LuceneFields.L_SORT_SUBJECT, subject.toUpperCase(), true, true, false));
-        d.add(new Field(LuceneFields.L_SORT_NAME, sortFrom.toUpperCase(), false, true, false));
+        if (from != null)
+            d.add(new Field(LuceneFields.L_H_FROM, from, false, true, true));
+        if (subject != null) {
+            d.add(new Field(LuceneFields.L_H_SUBJECT, subject, false, true, true));
+            d.add(new Field(LuceneFields.L_SORT_SUBJECT, subject.toUpperCase(), true, true, false));
+        }
+        if (sortFrom != null)
+            d.add(new Field(LuceneFields.L_SORT_NAME, sortFrom.toUpperCase(), false, true, false));
         
 		/* If the document already has a date set (e.g. the word doc we parsed had a modified date or something) 
 		 * then we'll just use that date -- otherwise, we'll use the date from our container's document
