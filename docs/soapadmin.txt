@@ -1195,7 +1195,6 @@ for different servers in parallel.
   <server name="{mta-server}"/>
 </GetMailQueueInfoRequest>
 
-
 <GetMailQueueInfoResponse/>
   <server name="{mta-server}">
     <queue name="deferred" n="{N}"/>
@@ -1243,7 +1242,7 @@ past the limit specified in the request.
 
 <GetMailQueueResponse>
   <server name="{mta-server}">
-    <queue name="{queue-name}" stale="{stale-flag}" time="{scan-time}" more="{more-flag}" scan="{scan-flag}">
+    <queue name="{queue-name}" stale="{stale-flag}" time="{scan-time}" more="{more-flag}" scan="{scan-flag} total="{total}">
 
       <qs type="reason|to|from|todomain|fromdomain|addr|host">
         <qsi n="{count}" t="{text-for-item}">+

@@ -34,7 +34,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.lucene.analysis.Analyzer;
@@ -97,10 +96,10 @@ public class RemoteMailQueue {
         
     private static AtomicInteger mVisitorIdCounter = new AtomicInteger(0);
 
-    private int mNumMessages;
+    private AtomicInteger mNumMessages = new AtomicInteger(0);
 
     public int getNumMessages() {
-        return mNumMessages;
+        return mNumMessages.get();
     }
     
     private class QueueItemVisitor implements RemoteResultParser.Visitor {
@@ -116,10 +115,11 @@ public class RemoteMailQueue {
                 return;
             }
                         
-            if (mNumMessages > 0 && ((mNumMessages % MAIL_QUEUE_INDEX_FLUSH_THRESHOLD) == 0)) {
+            int n = mNumMessages.get();
+            if (mNumMessages.get() > 0 && ((mNumMessages.get() % MAIL_QUEUE_INDEX_FLUSH_THRESHOLD) == 0)) {
                 reopenIndexWriter();
             }   
-            mNumMessages++;
+            mNumMessages.incrementAndGet();
             
             Document doc = new Document();
             // public Field(String name, String string, boolean store, boolean index, boolean token, boolean storeTermVector) {
@@ -190,7 +190,7 @@ public class RemoteMailQueue {
                 // This is a long running if the mail queues are backed up
                 clearIndexInternal();
                 openIndexWriter();
-                mNumMessages = 0;
+                mNumMessages.set(0);
                 RemoteResultParser.parse(stdout, v);
                 closeIndexWriter();
                 mScanEndTime = System.currentTimeMillis();
@@ -232,17 +232,12 @@ public class RemoteMailQueue {
         }
     }
     
-    public boolean scanInProgress() {
-        synchronized (mScanLock) {
-            return mScanInProgress;
-        }
-    }
-    
     private void clearIndexInternal() throws IOException {
         IndexWriter writer = null;
         try {
             if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("clearing index (" + mIndexPath + ") for " + this);
             writer = new IndexWriter(mIndexPath, new StandardAnalyzer(), true);
+            mNumMessages.set(0);
         } finally {
             if (writer != null) {
                 writer.close();
@@ -559,6 +554,7 @@ public class RemoteMailQueue {
                     if (!all) {
                         Term toDelete = new Term(QueueAttr.id.toString(), ids[i].toLowerCase());
                         int numDeleted = indexReader.delete(toDelete);
+                        mNumMessages.getAndAdd(-numDeleted);
                         if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("deleting term:" + toDelete + ", docs deleted=" + numDeleted);
                     }
     				sb.append(ids[done + i].toUpperCase());
