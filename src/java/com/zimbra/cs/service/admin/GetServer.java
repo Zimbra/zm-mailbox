@@ -31,7 +31,7 @@ package com.zimbra.cs.service.admin;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.Set;
 
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Server;
@@ -53,37 +53,37 @@ public class GetServer extends AdminDocumentHandler {
 	    
         ZimbraContext lc = getZimbraContext(context);
 	    Provisioning prov = Provisioning.getInstance();
-        
+
         boolean applyConfig = request.getAttributeBool(AdminService.A_APPLY_CONFIG, true);
         Element d = request.getElement(AdminService.E_SERVER);
-	    String key = d.getAttribute(AdminService.A_BY);
-        String value = d.getText();
-	    
+	    String method = d.getAttribute(AdminService.A_BY);
+        String name = d.getText();
+
 	    Server server = null;
-        
-        if (value == null || value.equals(""))
+
+        if (name == null || name.equals(""))
             throw ServiceException.INVALID_REQUEST("must specify a value for a server", null);
 
-        if (key.equals(BY_NAME)) {
-            server = prov.getServerByName(value, true);
-        } else if (key.equals(BY_ID)) {
-            server = prov.getServerById(value, true);
-        } else if (key.equals(BY_SERVICE_HOSTNAME)) {
+        if (method.equals(BY_NAME)) {
+            server = prov.getServerByName(name, true);
+        } else if (method.equals(BY_ID)) {
+            server = prov.getServerById(name, true);
+        } else if (method.equals(BY_SERVICE_HOSTNAME)) {
             List servers = prov.getAllServers();
             for (Iterator it = servers.iterator(); it.hasNext(); ) {
                 Server s = (Server) it.next();
                 // when replication is enabled, should return server representing current master
-                if (value.equalsIgnoreCase(s.getAttr(Provisioning.A_zimbraServiceHostname, ""))) {
+                if (name.equalsIgnoreCase(s.getAttr(Provisioning.A_zimbraServiceHostname, ""))) {
                     server = s;
                     break;
                 }
             }
         } else {
-            throw ServiceException.INVALID_REQUEST("unknown value for by: "+key, null);
+            throw ServiceException.INVALID_REQUEST("unknown value for by: "+method, null);
         }
 
         if (server == null)
-            throw AccountServiceException.NO_SUCH_SERVER(value);
+            throw AccountServiceException.NO_SUCH_SERVER(name);
         
 	    Element response = lc.createElement(AdminService.GET_SERVER_RESPONSE);
         doServer(response, server, applyConfig);
@@ -100,16 +100,15 @@ public class GetServer extends AdminDocumentHandler {
         server.addAttribute(AdminService.A_NAME, s.getName());
         server.addAttribute(AdminService.A_ID, s.getId());
         Map attrs = s.getAttrs(applyConfig);
-        for (Iterator mit=attrs.entrySet().iterator(); mit.hasNext(); ) {
-            Map.Entry entry = (Entry) mit.next();
+        for (Map.Entry entry : (Set<Map.Entry>) attrs.entrySet()) {
             String name = (String) entry.getKey();
             Object value = entry.getValue();
             if (value instanceof String[]) {
                 String sv[] = (String[]) value;
                 for (int i = 0; i < sv.length; i++)
-                    server.addAttribute(name, sv[i], Element.DISP_ELEMENT);
+                    server.addElement(AdminService.E_A).addAttribute(AdminService.A_N, name).setText(sv[i]);
             } else if (value instanceof String)
-                server.addAttribute(name, (String) value, Element.DISP_ELEMENT);
+                server.addElement(AdminService.E_A).addAttribute(AdminService.A_N, name).setText((String) value);
         }
     }
 }
