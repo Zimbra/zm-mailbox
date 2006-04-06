@@ -33,6 +33,8 @@ package com.zimbra.cs.redolog.util;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -41,6 +43,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+import com.zimbra.cs.redolog.RolloverManager;
 import com.zimbra.cs.redolog.logger.FileHeader;
 import com.zimbra.cs.redolog.logger.FileLogReader;
 import com.zimbra.cs.redolog.op.CreateMessage;
@@ -50,15 +53,13 @@ import com.zimbra.cs.util.Zimbra;
 
 /**
  * @author jhahm
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Generation - Code and Comments
  */
 public class RedoLogVerify {
 
     private static Options mOptions = new Options();
     
     static {
+        mOptions.addOption("q", "quiet",   false, "quiet mode");
         mOptions.addOption("m", "message",   false, "show message body data");
     }
 
@@ -67,7 +68,7 @@ public class RedoLogVerify {
             System.err.println(errmsg);
         }
         HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("RedoLogVerify [options] [log files]",
+        formatter.printHelp("RedoLogVerify [options] [log files/directories]",
             "where [options] are:", mOptions,
             "and [log files] are redo log files.");
         System.exit((errmsg == null) ? 0 : 1);
@@ -90,13 +91,23 @@ public class RedoLogVerify {
     }
 
 
-    private boolean mDumpMessageBody;
-    
-    private RedoLogVerify(boolean dumpMsgBody) {
-        mDumpMessageBody = dumpMsgBody;
+    private static class BadFile {
+        public File file;
+        public Throwable error;
+        public BadFile(File f, Throwable e) { file = f; error = e; }
     }
 
-	public boolean scanLog(File logfile) throws Exception {
+    private boolean mQuiet;
+    private boolean mDumpMessageBody;
+    private List<BadFile> mBadFiles;
+
+    private RedoLogVerify(boolean quiet, boolean dumpMsgBody) {
+        mQuiet = quiet;
+        mDumpMessageBody = dumpMsgBody;
+        mBadFiles = new ArrayList<BadFile>();
+    }
+
+	public boolean scanLog(File logfile) throws IOException {
 		boolean good = false;
 		FileLogReader logReader = new FileLogReader(logfile, false);
 		logReader.open();
@@ -111,7 +122,8 @@ public class RedoLogVerify {
 			RedoableOp op = null;
 			while ((op = logReader.getNextOp()) != null) {
 				lastPosition = logReader.position();
-				System.out.println(op);
+                if (!mQuiet)
+    				System.out.println(op);
                 if (mDumpMessageBody && op instanceof CreateMessage) {
                 	CreateMessage cm = (CreateMessage) op;
                     byte[] body = cm.getMessageBody();
@@ -136,12 +148,72 @@ public class RedoLogVerify {
 			if (lastPosition < size) {
 				long diff = size - lastPosition;
 				System.out.println("There were " + diff + " bytes of junk data at the end.");
+                throw e;
 			}
 		} finally {
 			logReader.close();
 		}
 		return good;
 	}
+
+    private boolean verifyFile(File file) {
+        System.out.println("VERIFYING: " + file.getName());
+        boolean good = false;
+        try {
+            good = scanLog(file);
+        } catch (IOException e) {
+            mBadFiles.add(new BadFile(file, e));
+            System.err.println("Exception while verifying " + file.getName());
+            e.printStackTrace();
+        }
+        System.out.println();
+        return good;
+    }
+
+    private boolean verifyFiles(File[] files) {
+        boolean allGood = true;
+        for (File log : files) {
+            boolean b = verifyFile(log);
+            allGood = allGood && b;
+        }
+        return allGood;
+    }
+
+    private boolean verifyDirectory(File dir) {
+        System.out.println("VERIFYING DIRECTORY: " + dir.getName());
+        File[] all = dir.listFiles();
+        if (all == null || all.length == 0)
+            return true;
+
+        List<File> fileList = new ArrayList<File>(all.length);
+        for (File f : all) {
+            if (!f.isDirectory()) {
+                String fname = f.getName();
+                if (fname.lastIndexOf(".log") == fname.length() - 4)
+                    fileList.add(f);
+            }
+        }
+
+        File[] files = new File[fileList.size()];
+        fileList.toArray(files);
+        RolloverManager.sortArchiveLogFiles(files);
+        return verifyFiles(files);
+    }
+
+    private void listErrors() {
+        if (mBadFiles.size() == 0)
+            return;
+        System.out.println();
+        System.out.println();
+        System.out.println("-----------------------------------------------");
+        System.out.println();
+        System.out.println("The following files had errors:");
+        System.out.println();
+        for (BadFile bf : mBadFiles) {
+            System.out.println(bf.file.getName());
+            System.out.println("    " + bf.error.getMessage());
+        }
+    }
 
 	public static void main(String[] cmdlineargs) throws Exception {
         Zimbra.toolSetup();
@@ -151,24 +223,26 @@ public class RedoLogVerify {
 		if (args.length < 1)
 			usage(null);
 
+        FileLogReader.setSkipBadBytes(true);
+
 		boolean allGood = true;
-		RedoLogVerify verify = new RedoLogVerify(cl.hasOption('m'));
+		RedoLogVerify verify =
+            new RedoLogVerify(cl.hasOption('q'), cl.hasOption('m'));
 
 		for (int i = 0; i < args.length; i++) {
-			File log = new File(args[i]);
-			System.out.println("VERIFYING: " + log.getName());
+			File f = new File(args[i]);
 			boolean good = false;
-			try {
-				good = verify.scanLog(log);
-			} catch (IOException e) {
-				System.err.println("Exception while verifying " + log.getName());
-				e.printStackTrace();
-			}
-			allGood &= good;
+            if (f.isDirectory())
+                good = verify.verifyDirectory(f);
+            else
+                good = verify.verifyFile(f);
+            allGood = allGood && good;
 			System.out.println();
 		}
 
-		if (!allGood)
-			System.exit(-1);
+		if (!allGood) {
+		    verify.listErrors();
+            System.exit(1);
+        }
 	}
 }
