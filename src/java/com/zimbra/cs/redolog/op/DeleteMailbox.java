@@ -31,6 +31,7 @@ package com.zimbra.cs.redolog.op;
 import java.io.DataInput;
 import java.io.DataOutput;
 
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**
@@ -56,8 +57,16 @@ public class DeleteMailbox extends RedoableOp {
      * @see com.zimbra.cs.redolog.op.RedoableOp#redo()
      */
     public void redo() throws Exception {
-        Mailbox mbox = Mailbox.getMailboxById(getMailboxId(), true);
-        mbox.deleteMailbox(getOperationContext());
+        try {
+            Mailbox mbox = Mailbox.getMailboxById(getMailboxId(), true);
+            mbox.deleteMailbox(getOperationContext());
+        } catch (MailServiceException e) {
+            // Ignore error when mailbox we're trying to delete doesn't exist.
+            if (MailServiceException.NO_SUCH_MBOX.equals(e.getCode()))
+                mLog.info("Mailbox " + getMailboxId() + " already deleted");
+            else
+                throw e;
+        }
     }
 
     /* (non-Javadoc)
