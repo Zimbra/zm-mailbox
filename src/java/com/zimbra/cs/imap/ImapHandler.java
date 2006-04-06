@@ -141,7 +141,6 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         ZimbraLog.clearContext();
         if (ZimbraPerf.isPerfEnabled())
             ThreadLocalData.reset();
-        long start = ZimbraPerf.STOPWATCH_IMAP.start();
 
         try {
             // FIXME: throw an exception instead?
@@ -156,6 +155,8 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             if (req == null)
                 req = new ImapRequest(mInputStream, mSession);
             req.continuation();
+            
+            long start = ZimbraPerf.STOPWATCH_IMAP.start();
             
             // check account status before executing command
             if (mMailbox != null)
