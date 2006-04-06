@@ -212,7 +212,7 @@ public abstract class SoapCLI {
         HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp(pw, formatter.getWidth(), getCommandUsage(),
                 null, mOptions, formatter.getLeftPadding(), formatter.getDescPadding(),
-                getTrailer());
+                "\n" + getTrailer());
         
     }
 

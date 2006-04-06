@@ -56,7 +56,7 @@ public class DeleteMailbox extends RedoableOp {
      * @see com.zimbra.cs.redolog.op.RedoableOp#redo()
      */
     public void redo() throws Exception {
-        Mailbox mbox = Mailbox.getMailboxById(getMailboxId());
+        Mailbox mbox = Mailbox.getMailboxById(getMailboxId(), true);
         mbox.deleteMailbox(getOperationContext());
     }
 
