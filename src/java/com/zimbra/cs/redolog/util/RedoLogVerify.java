@@ -223,7 +223,7 @@ public class RedoLogVerify {
 		if (args.length < 1)
 			usage(null);
 
-        FileLogReader.setSkipBadBytes(true);
+        //FileLogReader.setSkipBadBytes(true);
 
 		boolean allGood = true;
 		RedoLogVerify verify =
