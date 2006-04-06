@@ -493,7 +493,6 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         if (ZimbraPerf.isPerfEnabled()) {
             ThreadLocalData.reset();
         }
-        long start = ZimbraPerf.STOPWATCH_IMAP.start();
 
         try {
             // FIXME: throw an exception instead?
@@ -514,6 +513,8 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             if (!cmd.mValid)
                 throw new ImapParseException(cmd.mTag, "excess characters at end of command");
 
+            long start = ZimbraPerf.STOPWATCH_IMAP.start();
+            
             // check account status before executing command
             if (mMailbox != null)
                 try {
