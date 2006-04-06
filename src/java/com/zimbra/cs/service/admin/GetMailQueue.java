@@ -25,8 +25,14 @@
 package com.zimbra.cs.service.admin;
 
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.TermQuery;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -63,11 +69,11 @@ public class GetMailQueue extends AdminDocumentHandler {
         Element queryElem = queueElem.getElement(AdminService.E_QUERY);
         int offset = (int)queryElem.getAttributeLong(AdminService.A_OFFSET, 0);
         int limit = (int)queryElem.getAttributeLong(AdminService.A_LIMIT, MAIL_QUEUE_QUERY_DEFAULT_LIMIT);
-        String queryText = queryElem.getText();
+        Query query = buildLuceneQuery(queryElem);
         
         RemoteMailQueue rmq = RemoteMailQueue.getRemoteMailQueue(server, queueName, scan);
         boolean stillScanning = rmq.waitForScan(waitMillis);
-        RemoteMailQueue.SearchResult sr = rmq.search(queryText, offset, limit);
+        RemoteMailQueue.SearchResult sr = rmq.search(query, offset, limit);
         
         Element response = lc.createElement(AdminService.GET_MAIL_QUEUE_RESPONSE);
         serverElem = response.addElement(AdminService.E_SERVER);
@@ -104,6 +110,30 @@ public class GetMailQueue extends AdminDocumentHandler {
             }
         }
 	    return response;
+	}
+
+	static Query buildLuceneQuery(Element queryElem) throws ServiceException {
+		BooleanQuery fq = new BooleanQuery();
+		boolean emptyQuery = true;
+        for (Iterator fieldIter = queryElem.elementIterator(AdminService.E_FIELD); fieldIter.hasNext();) {
+        	emptyQuery = false;
+        	Element fieldElement = (Element)fieldIter.next();
+        	String fieldName = fieldElement.getAttribute(AdminService.A_NAME);
+        	BooleanQuery mq = new BooleanQuery();
+        	for (Iterator matchIter = fieldElement.elementIterator(AdminService.E_MATCH); matchIter.hasNext();) {
+        		Element matchElement = (Element)matchIter.next();
+        		String matchValue = fieldElement.getAttribute(AdminService.A_VALUE);
+        		Term term = new Term(fieldName, matchValue);
+        		TermQuery termQuery = new TermQuery(term);
+                mq.add(new TermQuery(term), false, false); // OR all the matches
+        	}
+        	fq.add(mq, true, false); // AND all the fields
+        }
+        if (emptyQuery) {
+        	return null;
+        } else {
+        	return fq;
+        }
 	}
 
 }

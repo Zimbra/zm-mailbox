@@ -26,6 +26,8 @@ package com.zimbra.cs.service.admin;
 
 import java.util.Map;
 
+import org.apache.lucene.search.Query;
+
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.rmgmt.RemoteMailQueue;
@@ -66,7 +68,8 @@ public class MailQueueAction extends AdminDocumentHandler {
             String idText = actionElem.getText();
             ids = actionElem.getText().split(",");
         } else if (by.equals(AdminService.BY_QUERY)) {
-            RemoteMailQueue.SearchResult sr = rmq.search(actionElem.getText(), 0, 0);
+        	Query query = GetMailQueue.buildLuceneQuery(actionElem);
+            RemoteMailQueue.SearchResult sr = rmq.search(query, 0, 0);
             ids = new String[sr.qitems.size()];
             int i = 0;
             for (Map<QueueAttr,String> qitem : sr.qitems) {
