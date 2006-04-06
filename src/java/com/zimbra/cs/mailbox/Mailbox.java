@@ -1011,6 +1011,34 @@ public class Mailbox {
      *    <li><code>service.WRONG_HOST</code> - if the Account's mailbox
      *        lives on a different host</ul> */
     public static Mailbox getMailboxById(int mailboxId) throws ServiceException {
+        return getMailboxById(mailboxId, false);
+    }
+
+    /** Returns the <code>Mailbox</code> with the given id.  Throws an
+     *  exception if no such <code>Mailbox</code> exists.  If the
+     *  <code>Mailbox</code> is undergoing maintenance, still returns the
+     *  <code>Mailbox</code> if the calling thread is the holder of the lock.
+     *
+     * @param mailboxId  The id of the mailbox we want.
+     * @param skipMailHostCheck If true, don't throw WRONG_HOST exception if
+     *                          current host is not the mailbox's mail host.
+     *                          Most callers should use getMailboxById(int),
+     *                          which internally calls this method with
+     *                          skipMailHostCheck=false.  Pass true only in the
+     *                          special case of retrieving a mailbox for the
+     *                          purpose of deleting it.
+     * @return The requested <code>Mailbox</code> object.
+     * @throws ServiceException  The following error codes are possible:<ul>
+     *    <li><code>mail.NO_SUCH_MBOX</code> - if no such mailbox exists (yet)
+     *        on this server
+     *    <li><code>mail.MAINTENANCE</code> - if the mailbox is in maintenance
+     *        mode and the calling thread doesn't hold the lock
+     *    <li><code>service.FAILURE</code> - if there's a database failure
+     *    <li><code>service.WRONG_HOST</code> - if the Account's mailbox
+     *        lives on a different host</ul> */
+    public static Mailbox getMailboxById(int mailboxId,
+                                         boolean skipMailHostCheck)
+    throws ServiceException {
         if (mailboxId <= 0)
             throw MailServiceException.NO_SUCH_MBOX(mailboxId);
 
@@ -1034,6 +1062,20 @@ public class Mailbox {
                 if (mdata == null)
                     throw MailServiceException.NO_SUCH_MBOX(mailboxId);
                 Mailbox mailbox = new Mailbox(mdata);
+                if (!skipMailHostCheck) {
+                    // The host check here makes sure that sessions that were
+                    // already connected at the time of mailbox move are not
+                    // allowed to continue working with this mailbox which is
+                    // essentially a soft-deleted copy.  The WRONG_HOST
+                    // exception forces the clients to reconnect to the new
+                    // server.
+                    Account account = mailbox.getAccount();
+                    if (!account.isCorrectHost()) {
+                        throw MailServiceException.WRONG_HOST(
+                                account.getAttr(Provisioning.A_zimbraMailHost),
+                                null);
+                    }
+                }
                 if (obj instanceof MailboxLock)
                     ((MailboxLock) obj).mailbox = mailbox;
                 else

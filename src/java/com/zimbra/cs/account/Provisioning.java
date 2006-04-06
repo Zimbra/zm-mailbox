@@ -449,6 +449,12 @@ public abstract class Provisioning {
     public static final String A_zimbraMailHost = "zimbraMailHost";
 
     /**
+     * "<server zimbraId>:<mailbox ID on that host>" indicating the location of
+     * mailbox prior to being moved to new server
+     */
+    public static final String A_zimbraMailboxLocationBeforeMove = "zimbraMailboxLocationBeforeMove";
+
+    /**
      * the postfix transport for the mailbox (derived from zimbraMailHost)
      */
     public static final String A_zimbraMailTransport = "zimbraMailTransport";
