@@ -75,7 +75,7 @@ public class ItemAction extends WriteOpDocumentHandler {
     public static final String OP_SPAM        = "spam";
     public static final String OP_UPDATE      = "update";
 
-    public Element handle(Element request, Map context) throws ServiceException, SoapFaultException {
+    public Element handle(Element request, Map<String,Object> context) throws ServiceException, SoapFaultException {
         ZimbraContext lc = getZimbraContext(context);
 
         Element action = request.getElement(MailService.E_ACTION);
@@ -90,7 +90,7 @@ public class ItemAction extends WriteOpDocumentHandler {
         return response;
     }
 
-    String handleCommon(Map context, Element request, String opAttr, byte type) throws ServiceException, SoapFaultException {
+    String handleCommon(Map<String,Object> context, Element request, String opAttr, byte type) throws ServiceException, SoapFaultException {
         Element action = request.getElement(MailService.E_ACTION);
         ZimbraContext lc = getZimbraContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
@@ -181,7 +181,7 @@ public class ItemAction extends WriteOpDocumentHandler {
         }
     }
 
-    private StringBuffer proxyRemoteItems(Element action, Map remote, Element request, Map context)
+    private StringBuffer proxyRemoteItems(Element action, Map remote, Element request, Map<String,Object> context)
     throws ServiceException, SoapFaultException {
         StringBuffer successes = new StringBuffer();
         for (Iterator it = remote.entrySet().iterator(); it.hasNext(); ) {

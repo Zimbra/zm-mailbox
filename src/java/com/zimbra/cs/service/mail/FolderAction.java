@@ -83,7 +83,7 @@ public class FolderAction extends ItemAction {
         OP_RENAME, OP_EMPTY, OP_REFRESH, OP_SET_URL, OP_IMPORT, OP_FREEBUSY, OP_GRANT, OP_REVOKE, OP_UPDATE
     }));
 
-	public Element handle(Element request, Map context) throws ServiceException, SoapFaultException {
+	public Element handle(Element request, Map<String,Object> context) throws ServiceException, SoapFaultException {
         ZimbraContext lc = getZimbraContext(context);
 
         Element action = request.getElement(MailService.E_ACTION);
@@ -107,7 +107,7 @@ public class FolderAction extends ItemAction {
         return response;
 	}
 
-    private String handleFolder(Map context, Element request, String operation, Element result)
+    private String handleFolder(Map<String,Object> context, Element request, String operation, Element result)
     throws ServiceException {
         Element action = request.getElement(MailService.E_ACTION);
 
@@ -149,15 +149,17 @@ public class FolderAction extends ItemAction {
             byte gtype   = stringToType(grant.getAttribute(MailService.A_GRANT_TYPE));
             String zid   = grant.getAttribute(MailService.A_ZIMBRA_ID, null);
             NamedEntry nentry = null;
-            if (gtype != ACL.GRANTEE_ALL) {
-                if (zid == null) {
-                    nentry = lookupGranteeByName(grant.getAttribute(MailService.A_DISPLAY), gtype, lc);
-                    zid = nentry.getId();
-                } else
-                    nentry = lookupGranteeByZimbraId(zid, gtype);
-            } else
-                zid = ACL.GUID_ALL;
-
+            if (gtype == ACL.GRANTEE_AUTHUSER)
+                zid = ACL.GUID_AUTHUSER;
+            else if (gtype == ACL.GRANTEE_PUBLIC)
+                zid = ACL.GUID_PUBLIC;
+            else if (zid != null)
+            	nentry = lookupGranteeByZimbraId(zid, gtype);
+            else {
+            	nentry = lookupGranteeByName(grant.getAttribute(MailService.A_DISPLAY), gtype, lc);
+            	zid = nentry.getId();
+            }
+            
             mbox.grantAccess(octxt, iid.getId(), zid, gtype, rights, inherit);
             // kinda hacky -- return the zimbra id and name of the grantee in the response
             result.addAttribute(MailService.A_ZIMBRA_ID, zid);
@@ -203,7 +205,8 @@ public class FolderAction extends ItemAction {
         if (typeStr.equalsIgnoreCase("grp"))  return ACL.GRANTEE_GROUP;
         if (typeStr.equalsIgnoreCase("cos"))  return ACL.GRANTEE_COS;
         if (typeStr.equalsIgnoreCase("dom"))  return ACL.GRANTEE_DOMAIN;
-        if (typeStr.equalsIgnoreCase("all"))  return ACL.GRANTEE_ALL;
+        if (typeStr.equalsIgnoreCase("all"))  return ACL.GRANTEE_AUTHUSER;
+        if (typeStr.equalsIgnoreCase("pub"))  return ACL.GRANTEE_PUBLIC;
         throw ServiceException.INVALID_REQUEST("unknown grantee type: " + typeStr, null);
     }
 
@@ -212,12 +215,13 @@ public class FolderAction extends ItemAction {
         if (type == ACL.GRANTEE_GROUP)   return "grp";
         if (type == ACL.GRANTEE_COS)     return "cos";
         if (type == ACL.GRANTEE_DOMAIN)  return "dom";
-        if (type == ACL.GRANTEE_ALL)     return "all";
+        if (type == ACL.GRANTEE_AUTHUSER)return "all";
+        if (type == ACL.GRANTEE_PUBLIC)  return "pub";
         return null;
     }
 
     static NamedEntry lookupGranteeByName(String name, byte type, ZimbraContext lc) throws ServiceException {
-        if (type == ACL.GRANTEE_ALL)
+        if (type == ACL.GRANTEE_AUTHUSER || type == ACL.GRANTEE_PUBLIC)
             return null;
 
         Provisioning prov = Provisioning.getInstance();
@@ -254,7 +258,8 @@ public class FolderAction extends ItemAction {
                 case ACL.GRANTEE_COS:     return Provisioning.getInstance().getCosById(zid);
                 case ACL.GRANTEE_DOMAIN:  return Provisioning.getInstance().getDomainById(zid);
                 case ACL.GRANTEE_GROUP:   return null;
-                case ACL.GRANTEE_ALL:
+                case ACL.GRANTEE_AUTHUSER:
+                case ACL.GRANTEE_PUBLIC:
                 default:                  return null;
             }
         } catch (ServiceException e) {

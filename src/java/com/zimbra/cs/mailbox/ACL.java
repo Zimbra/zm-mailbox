@@ -55,18 +55,22 @@ public class ACL {
 	public static final short RIGHT_ADMIN   = 0x0100;
 
     /** The grantee of these rights is the zimbraId for a user. */
-	public static final byte GRANTEE_USER   = 1;
+	public static final byte GRANTEE_USER     = 1;
     /** The grantee of these rights is the zimbraId for a group. */
-	public static final byte GRANTEE_GROUP  = 2;
+	public static final byte GRANTEE_GROUP    = 2;
     /** The grantee of these rights is all authenticated users. */
-	public static final byte GRANTEE_ALL    = 3;
+	public static final byte GRANTEE_AUTHUSER = 3;
     /** The grantee of these rights is the zimbraId for a domain. */
-	public static final byte GRANTEE_DOMAIN = 4;
+	public static final byte GRANTEE_DOMAIN   = 4;
     /** The grantee of these rights is the zimbraId for a COS. */
-	public static final byte GRANTEE_COS    = 5;
+	public static final byte GRANTEE_COS      = 5;
+    /** The grantee of these rights is all authenticated and unauthenticated users. */
+	public static final byte GRANTEE_PUBLIC   = 6;
 
-    /** The pseudo-GUID signifying "all users". */
-    public static final String GUID_ALL = "00000000-0000-0000-0000-000000000000";
+    /** The pseudo-GUID signifying "all authenticated users". */
+    public static final String GUID_AUTHUSER = "00000000-0000-0000-0000-000000000000";
+    /** The pseudo-GUID signifying "all authenticated and unauthenticated users". */
+    public static final String GUID_PUBLIC   = "99999999-9999-9999-9999-999999999999";
 
     public static class Grant {
         /** The zimbraId of the entry being granted rights. */
@@ -82,7 +86,7 @@ public class ACL {
 
         /** Creates a new Grant object granting access to a user or class
          *  of users.  <code>zimbraId</code> may be <code>null</code>
-         *  if the <code>type</code> is {@link ACL#GRANTEE_ALL}.
+         *  if the <code>type</code> is {@link ACL#GRANTEE_PUBLIC}.
          * 
          * @param zimbraId  The zimbraId of the entry being granted rights.
          * @param type      The type of object the grantee's ID refers to.
@@ -102,12 +106,14 @@ public class ACL {
             mType    = (byte) meta.getLong(FN_TYPE);
             mRights  = (short) meta.getLong(FN_RIGHTS);
             mInherit = meta.getBool(FN_INHERIT, false);
-            if (mType != ACL.GRANTEE_ALL)
+            if (hasGrantee())
                 mGrantee = meta.get(FN_GRANTEE);
         }
 
+        /** Returns true if there is an explicit grantee. */
+        public boolean hasGrantee() { return mType != ACL.GRANTEE_AUTHUSER && mType != ACL.GRANTEE_PUBLIC; }
         /** Returns the zimbraId of the entry granted rights. */
-        public String getGranteeId() { return mType == GRANTEE_ALL ? null : mGrantee; }
+        public String getGranteeId() { return hasGrantee() ? mGrantee : null; }
         /** Returns type of object the grantee's ID refers to. */
         public byte getGranteeType() { return mType; }
         /** Returns the bitmask of the rights granted. */
@@ -124,12 +130,13 @@ public class ACL {
 
         /** Returns whether this grant applies to the given {@link Account}.
          *  If <code>acct</code> is <code>null</code>, only return
-         *  <code>true</code> if the grantee is {@link ACL#GRANTEE_ALL}. */
+         *  <code>true</code> if the grantee is {@link ACL#GRANTEE_PUBLIC}. */
         private boolean matches(Account acct) throws ServiceException {
             if (acct == null)
-                return mType == ACL.GRANTEE_ALL;
+                return mType == ACL.GRANTEE_PUBLIC;
             switch (mType) {
-                case ACL.GRANTEE_ALL:    return true;
+                case ACL.GRANTEE_AUTHUSER:
+                case ACL.GRANTEE_PUBLIC:  return true;
                 case ACL.GRANTEE_COS:    return mGrantee.equals(getId(acct.getCOS()));
                 case ACL.GRANTEE_DOMAIN: return mGrantee.equals(getId(acct.getDomain()));
                 case ACL.GRANTEE_USER:   return mGrantee.equals(acct.getId());
@@ -151,13 +158,17 @@ public class ACL {
         }
 
         /** Returns whether the id exactly matches the grantee.
-         *  <code>zimbraId</code> may be {@link ACL#GUID_ALL} if the
-         *  actual grantee is {@link ACL#GRANTEE_ALL}.
+         *  <code>zimbraId</code> must be {@link ACL#GUID_AUTHUSER} if the
+         *  actual grantee is {@link ACL#GRANTEE_AUTHUSER}.
+         *  <code>zimbraId</code> may be {@link ACL#GUID_PUBLIC} if the
+         *  actual grantee is {@link ACL#GRANTEE_PUBLIC}.
          * 
          * @param zimbraId  The zimbraId of the entry being granted rights.*/
         public boolean isGrantee(String zimbraId) {
-            if (zimbraId == null || zimbraId.equals(GUID_ALL))
-                return mType == GRANTEE_ALL;
+        	if (zimbraId == null || zimbraId.equals(GUID_PUBLIC))
+                return (mType == GRANTEE_PUBLIC);
+        	else if (zimbraId.equals(GUID_AUTHUSER))
+                return (mType == GRANTEE_AUTHUSER);
             return zimbraId.equals(mGrantee);
         }
 
@@ -181,7 +192,7 @@ public class ACL {
          *  for serialization. */
         public Metadata encode() {
             Metadata meta = new Metadata();
-            meta.put(FN_GRANTEE, mType == GRANTEE_ALL ? null : mGrantee);
+            meta.put(FN_GRANTEE, hasGrantee() ? mGrantee : null);
             meta.put(FN_TYPE,    mType);
             // FIXME: use "rwidxsca" instead of numeric value
             meta.put(FN_RIGHTS,  mRights);
@@ -237,8 +248,10 @@ public class ACL {
      * @param rights    A bitmask of the rights being granted.
      * @param inherit   Whether subfolders inherit these same rights. */
     public void grantAccess(String zimbraId, byte type, short rights, boolean inherit) throws ServiceException {
-        if (type == GRANTEE_ALL)
-            zimbraId = GUID_ALL;
+        if (type == GRANTEE_AUTHUSER)
+            zimbraId = GUID_AUTHUSER;
+        else if (type == GRANTEE_PUBLIC)
+        	zimbraId = GUID_PUBLIC;
         else if (zimbraId == null)
             throw ServiceException.INVALID_REQUEST("missing grantee id", null);
         if (!mGrants.isEmpty())
