@@ -45,20 +45,21 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.queryParser.ParseException;
-import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Hits;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Searcher;
-import org.apache.lucene.search.TermQuery;
+import org.dom4j.DocumentException;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.admin.GetMailQueue;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.soap.Element;
 
 public class RemoteMailQueue {
 
@@ -453,7 +454,7 @@ public class RemoteMailQueue {
     	int max = indexReader.maxDoc();
     	
     	int skip = 0;
-    	int listed = 1;
+    	int listed = 0;
     	
     	for (int i = 0; i < max; i++) {
             if (indexReader.isDeleted(i)) {
@@ -614,7 +615,7 @@ public class RemoteMailQueue {
         System.exit(1);
     }
 
-    public static void main(String[] args) throws ServiceException {
+    public static void main(String[] args) throws ServiceException, IOException, DocumentException {
         Zimbra.toolSetup("DEBUG");
         Provisioning prov = Provisioning.getInstance();
 
@@ -627,12 +628,10 @@ public class RemoteMailQueue {
         String host = args[1];
         String queueName = args[2];
 
-        String query = null;
+        Query query = null;
         if (task == TestTask.search) {
-        	if (args.length < 4) {
-        		usage("no query specified");
-        	}
-        	query = args[3];
+        	Element queryElement = Element.parseXML(System.in);
+        	query = GetMailQueue.buildLuceneQuery(queryElement);
         }
         
         QueueAction action = null;
@@ -653,22 +652,7 @@ public class RemoteMailQueue {
         queue.waitForScan(0);
 
         if (task == TestTask.search) {
-            String[] terms = query.split(" ");
-            BooleanQuery bq = new BooleanQuery();
-            for (int i = 0; i < terms.length; i++) {
-                int colon = terms[i].indexOf(":");
-                if (colon < 0) {
-                    usage("search term has no specify field: " + terms[i]);
-                }
-                String field = terms[i].substring(0, colon);
-                String text = terms[i].substring(colon + 1, terms[i].length());
-                if (field.length() == 0 || text.length() == 0) {
-                    usage("search term empty field or text");
-                }
-                Term term = new Term(field, text);
-                bq.add(new TermQuery(term), true, false); // AND query
-            }
-            SearchResult sr = queue.search(bq, 0, 30);
+            SearchResult sr = queue.search(query, 0, 250);
             
             for (QueueAttr attr : sr.sitems.keySet()) {
                 List<SummaryItem> slist = sr.sitems.get(attr);

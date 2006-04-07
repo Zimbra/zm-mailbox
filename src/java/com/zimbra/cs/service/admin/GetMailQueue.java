@@ -112,7 +112,7 @@ public class GetMailQueue extends AdminDocumentHandler {
 	    return response;
 	}
 
-	static Query buildLuceneQuery(Element queryElem) throws ServiceException {
+	public static Query buildLuceneQuery(Element queryElem) throws ServiceException {
 		BooleanQuery fq = new BooleanQuery();
 		boolean emptyQuery = true;
         for (Iterator fieldIter = queryElem.elementIterator(AdminService.E_FIELD); fieldIter.hasNext();) {
@@ -122,7 +122,7 @@ public class GetMailQueue extends AdminDocumentHandler {
         	BooleanQuery mq = new BooleanQuery();
         	for (Iterator matchIter = fieldElement.elementIterator(AdminService.E_MATCH); matchIter.hasNext();) {
         		Element matchElement = (Element)matchIter.next();
-        		String matchValue = fieldElement.getAttribute(AdminService.A_VALUE);
+        		String matchValue = matchElement.getAttribute(AdminService.A_VALUE);
         		Term term = new Term(fieldName, matchValue);
         		TermQuery termQuery = new TermQuery(term);
                 mq.add(new TermQuery(term), false, false); // OR all the matches
