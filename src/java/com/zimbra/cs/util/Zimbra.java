@@ -42,6 +42,7 @@ import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.servlet.PrivilegedServlet;
 import com.zimbra.cs.session.SessionCache;
+import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.StoreManager;
 
 /**
@@ -114,6 +115,7 @@ public class Zimbra {
                 ImapServer.startupImapSSLServer();
         }
 
+        ZimbraPerf.initialize();
         sInited = true;
     }
 
