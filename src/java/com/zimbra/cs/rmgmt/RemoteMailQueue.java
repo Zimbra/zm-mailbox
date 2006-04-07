@@ -87,7 +87,7 @@ public class RemoteMailQueue {
     }
     
     public enum QueueAttr {
-        id, time, size, from, to, host, addr, reason, reason_summary, filter, todomain, fromdomain
+        id, time, size, from, to, host, addr, reason, filter, todomain, fromdomain
     }
     
     public enum QueueAction {
@@ -141,12 +141,7 @@ public class RemoteMailQueue {
             addSimpleField(doc, map, QueueAttr.addr);
             addSimpleField(doc, map, QueueAttr.host);
             addSimpleField(doc, map, QueueAttr.filter);
-            
-            String reason = map.get(QueueAttr.reason.toString());
-            if (reason != null && reason.length() > 0) {
-                doc.add(new Field(QueueAttr.reason.toString(), reason.toLowerCase(), true, true, true, false));
-                doc.add(new Field(QueueAttr.reason_summary.toString(), reason.toLowerCase(), true, true, false, false));
-            }
+            addSimpleField(doc, map, QueueAttr.reason);
             
             String from = map.get(QueueAttr.from.toString());
             if (from != null && from.length() > 0) {
@@ -391,18 +386,12 @@ public class RemoteMailQueue {
                         attr == QueueAttr.to ||
                         attr == QueueAttr.fromdomain ||
                         attr == QueueAttr.todomain ||
-                        attr == QueueAttr.reason_summary) 
+                        attr == QueueAttr.reason) 
                     {
-                        QueueAttr displayedAttr; // TODO: fix this - this is getting out of hand - let's have a rational QueueItem class
-                        if (attr == QueueAttr.reason_summary) {
-                            displayedAttr = QueueAttr.reason;
-                        } else {
-                            displayedAttr = attr;
-                        }
-                        List<SummaryItem> list = result.sitems.get(displayedAttr);
+                        List<SummaryItem> list = result.sitems.get(attr);
                         if (list == null) {
                             list = new LinkedList<SummaryItem>();
-                            result.sitems.put(displayedAttr, list);
+                            result.sitems.put(attr, list);
                         }
                         int count = 0;
                         if (hasDeletions) {
