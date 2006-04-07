@@ -77,6 +77,7 @@ public class GetMailQueue extends AdminDocumentHandler {
         queueElem.addAttribute(AdminService.A_NAME, queueName);
         queueElem.addAttribute(AdminService.A_TIME, rmq.getScanTime());
         queueElem.addAttribute(AdminService.A_SCAN, stillScanning);
+        queueElem.addAttribute(AdminService.A_TOTAL, rmq.getNumMessages());
         queueElem.addAttribute(AdminService.A_MORE, ((offset + limit) < rmq.getNumMessages())); 
         
         for (QueueAttr attr : sr.sitems.keySet()) {
