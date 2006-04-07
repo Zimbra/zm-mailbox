@@ -47,10 +47,13 @@ import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.QueryParser;
+import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Hits;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Searcher;
+import org.apache.lucene.search.TermQuery;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -371,6 +374,7 @@ public class RemoteMailQueue {
   
     public static class SearchResult {
         public Map<QueueAttr, List<SummaryItem>> sitems = new HashMap<QueueAttr,List<SummaryItem>>(); 
+        public int hits;
         public List<Map<QueueAttr, String>> qitems = new LinkedList<Map<QueueAttr, String>>();
     }
 
@@ -452,36 +456,35 @@ public class RemoteMailQueue {
     	int max = indexReader.maxDoc();
     	
     	int skip = 0;
-    	int listed = 0;
+    	int listed = 1;
     	
     	for (int i = 0; i < max; i++) {
-    		if (indexReader.isDeleted(i)) {
-    			continue;
-    		}
+            if (indexReader.isDeleted(i)) {
+                continue;
+            }
+            
+            if (skip < offset) {
+                skip++;
+                continue;
+            }
     		
-    		if (skip < offset) {
-    			skip++;
-    			continue;
-    		}
-    		
-    		Document doc = indexReader.document(i);
+            Document doc = indexReader.document(i);
             Map<QueueAttr,String> qitem = docToQueueItem(doc);
             result.qitems.add(qitem);
             
             listed++;
-            if (listed >= limit) {
+            if (listed == limit) {
             	break;
             }
     	}
+        result.hits = getNumMessages();
     }
     
-    private void search0(SearchResult result, IndexReader indexReader, String queryText, int offset, int limit) throws ParseException, IOException {
-        if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("searching query=" + queryText + " offset=" + offset + " limit=" + limit + " " + this);
+    private void search0(SearchResult result, IndexReader indexReader, Query query, int offset, int limit) throws ParseException, IOException {
+        if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("searching query=" + query + " offset=" + offset + " limit=" + limit + " " + this);
         Searcher searcher = null;
         try {
             searcher = new IndexSearcher(indexReader);
-            Analyzer analyzer = new StandardAnalyzer();
-            Query query = QueryParser.parse(queryText, "id", analyzer);
             Hits hits = searcher.search(query);
             
             if (offset < hits.length()) {
@@ -498,6 +501,7 @@ public class RemoteMailQueue {
                     result.qitems.add(qitem);
                 }
             }
+            result.hits = hits.length();
         } finally {
             if (searcher != null) {
                 searcher.close();
@@ -506,18 +510,30 @@ public class RemoteMailQueue {
     }
     
     public SearchResult search(String queryText, int offset, int limit) throws ServiceException {
+        Query query = null;
+        if (queryText != null && queryText.length() > 0) {
+            try {
+                query = QueryParser.parse(queryText, "id", new StandardAnalyzer());
+            } catch (ParseException pe) {
+                throw ServiceException.FAILURE("bad query", pe); 
+            }
+        }
+        return search(query, offset, limit);
+    }
+
+    public SearchResult search(Query query, int offset, int limit) throws ServiceException {
         SearchResult result = new SearchResult();
         IndexReader indexReader = null;
         try {
-        	if (!mIndexPath.exists()) {
-        		return result;
-        	}
+            if (!mIndexPath.exists()) {
+                return result;
+            }
             indexReader = IndexReader.open(mIndexPath);
             summarize(result, indexReader);
-            if (queryText == null || queryText.length() == 0) {
+            if (query == null) {
             	list0(result, indexReader, offset, limit);
             } else {
-            	search0(result, indexReader, queryText, offset, limit);
+            	search0(result, indexReader, query, offset, limit);
             }
         } catch (Exception e) {
             throw ServiceException.FAILURE("exception occurred searching mail queue", e);
@@ -554,40 +570,40 @@ public class RemoteMailQueue {
 
             int done = 0;
             int total = ids.length;
-    		while (done < total) {
-    			int last = Math.min(total, done + MAX_REMOTE_EXECUTION_QUEUEIDS);
-    			StringBuilder sb = new StringBuilder(128 + (last * MAX_LENGTH_OF_QUEUEIDS));
-    			sb.append("zmqaction " + action.toString() + " " + mQueueName + " "); 
-    			int i;
+            while (done < total) {
+                int last = Math.min(total, done + MAX_REMOTE_EXECUTION_QUEUEIDS);
+                StringBuilder sb = new StringBuilder(128 + (last * MAX_LENGTH_OF_QUEUEIDS));
+                sb.append("zmqaction " + action.toString() + " " + mQueueName + " "); 
+                int i;
                 boolean first = true;
-    			for (i = done; i < last; i++) {
-    				if (first) {
+                for (i = done; i < last; i++) {
+                    if (first) {
                         first = false;
                     } else {
-    					sb.append(",");
-    				}
+                        sb.append(",");
+                    }
                     if (!all) {
                         Term toDelete = new Term(QueueAttr.id.toString(), ids[i].toLowerCase());
                         int numDeleted = indexReader.delete(toDelete);
                         mNumMessages.getAndAdd(-numDeleted);
                         if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("deleting term:" + toDelete + ", docs deleted=" + numDeleted);
                     }
-    				sb.append(ids[i].toUpperCase());
-    			}
-    			done = last;
-    			//System.out.println("will execute action command: " + sb.toString());
-    			RemoteResult rr = rm.execute(sb.toString());
-    		}
+                    sb.append(ids[i].toUpperCase());
+                }
+                done = last;
+                //System.out.println("will execute action command: " + sb.toString());
+                RemoteResult rr = rm.execute(sb.toString());
+            }
     	} catch (IOException ioe) {
-    		throw ServiceException.FAILURE("exception occurred performing queue action", ioe);
+            throw ServiceException.FAILURE("exception occurred performing queue action", ioe);
     	} finally {
-    		if (indexReader != null) {
-    			try {
-    				indexReader.close();
-    			} catch  (IOException ioe) {
-    				ZimbraLog.rmgmt.warn("exception occured closing index reader during action", ioe);
-    			}
-    		}
+            if (indexReader != null) {
+                try {
+                    indexReader.close();
+                } catch  (IOException ioe) {
+                    ZimbraLog.rmgmt.warn("exception occured closing index reader during action", ioe);
+                }
+            }
     	}
     }
 
@@ -640,7 +656,23 @@ public class RemoteMailQueue {
         queue.waitForScan(0);
 
         if (task == TestTask.search) {
-            SearchResult sr = queue.search(query, 0, 30);
+            String[] terms = query.split(" ");
+            BooleanQuery bq = new BooleanQuery();
+            for (int i = 0; i < terms.length; i++) {
+                int colon = terms[i].indexOf(":");
+                if (colon < 0) {
+                    usage("search term has no specify field: " + terms[i]);
+                }
+                String field = terms[i].substring(0, colon);
+                String text = terms[i].substring(colon + 1, terms[i].length());
+                if (field.length() == 0 || text.length() == 0) {
+                    usage("search term empty field or text");
+                }
+                PhraseQuery pq = new PhraseQuery();
+                Term term = new Term(field, text);
+                bq.add(new TermQuery(term), true, false); // AND query
+            }
+            SearchResult sr = queue.search(bq, 0, 30);
             
             for (QueueAttr attr : sr.sitems.keySet()) {
                 List<SummaryItem> slist = sr.sitems.get(attr);
