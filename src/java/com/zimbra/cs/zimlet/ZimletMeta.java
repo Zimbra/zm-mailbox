@@ -24,7 +24,6 @@
  */
 package com.zimbra.cs.zimlet;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -105,9 +104,7 @@ public abstract class ZimletMeta {
 
 	private static String readFile(File f) throws ZimletException {
 		try {
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			ByteUtil.copy(new FileInputStream(f), baos);
-			return baos.toString();
+			return new String(ByteUtil.getContent(new FileInputStream(f), -1));
 		} catch (IOException ie) {
 			throw ZimletException.INVALID_ZIMLET_DESCRIPTION("Cannot find Zimlet description file: " + f.getName());
 		}
