@@ -43,6 +43,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.QueryParser;
@@ -379,10 +380,6 @@ public class RemoteMailQueue {
         do {
             Term term = terms.term();
             if (term != null) {
-                if (hasDeletions && !indexReader.termDocs(term).next()) {
-                    // There are deletions in this index, and the term matches only deleted docs.
-                    continue;
-                }
                 String field = term.field();
                 if (field != null && field.length() > 0) {
                     QueueAttr attr = QueueAttr.valueOf(field);
@@ -404,6 +401,17 @@ public class RemoteMailQueue {
                         if (list == null) {
                             list = new LinkedList<SummaryItem>();
                             result.sitems.put(displayedAttr, list);
+                        }
+                        int count = 0;
+                        if (hasDeletions) {
+                            TermDocs termDocs = indexReader.termDocs(term);
+                            while (termDocs.next()) {
+                                if (!indexReader.isDeleted(termDocs.doc())) {
+                                    count++;
+                                }
+                            }
+                        } else {
+                            count = terms.docFreq();   
                         }
                         list.add(new SummaryItem(term.text(), terms.docFreq()));
                     }
