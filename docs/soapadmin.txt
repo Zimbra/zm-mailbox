@@ -1305,7 +1305,13 @@ postsuper.  list-of-ids can be ALL.
   <server name="{mta-server}">
      <queue name="{queue-name}">
        <action op="delete|hold|release|requeue"/ by="id|query">
-          {list-of-ids|query:like:getmailqueue}
+               {list-of-ids|}
+          ||
+               {<query> # just like GetMailQueue
+                  <field name="name">
+                    <match value="val"/>
+                  </field>
+                </query>}
        </action>
      </queue>
   </server>
