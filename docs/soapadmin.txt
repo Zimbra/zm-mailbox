@@ -1244,7 +1244,17 @@ past the limit specified in the request.
 <GetMailQueueRequest>
   <server name="{mta-server}">
     <queue name="{queue-name}" [scan="{0,1}"] [wait={seconds}]>
-      <query [offset={offset}] [limit={limit}]>{query-text}</query>
+      <query [offset={offset}] [limit={limit}]>
+          <field name="{field1}">
+              <match value="{value1}"/>     # OR's all values
+              <match value="{value2}"/>
+              <match value="{value3}"/>
+          </field>
+          <field name="{field2}">           # AND's all fields
+              <match value="{value3}"/>
+              <match value="{value5}"/>
+          </field>
+      </query>
     </queue>
   </server>
 <GetMailQueueRequest>
@@ -1295,7 +1305,7 @@ postsuper.  list-of-ids can be ALL.
   <server name="{mta-server}">
      <queue name="{queue-name}">
        <action op="delete|hold|release|requeue"/ by="id|query">
-          {list-of-ids|query}
+          {list-of-ids|query:like:getmailqueue}
        </action>
      </queue>
   </server>

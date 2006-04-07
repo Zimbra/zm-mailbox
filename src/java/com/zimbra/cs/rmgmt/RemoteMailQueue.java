@@ -36,7 +36,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -46,11 +45,9 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.queryParser.ParseException;
-import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Hits;
 import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.TermQuery;
@@ -509,17 +506,17 @@ public class RemoteMailQueue {
         }
     }
     
-    public SearchResult search(String queryText, int offset, int limit) throws ServiceException {
-        Query query = null;
-        if (queryText != null && queryText.length() > 0) {
-            try {
-                query = QueryParser.parse(queryText, "id", new StandardAnalyzer());
-            } catch (ParseException pe) {
-                throw ServiceException.FAILURE("bad query", pe); 
-            }
-        }
-        return search(query, offset, limit);
-    }
+//    public SearchResult search(String queryText, int offset, int limit) throws ServiceException {
+//        Query query = null;
+//        if (queryText != null && queryText.length() > 0) {
+//            try {
+//                query = QueryParser.parse(queryText, "id", new StandardAnalyzer());
+//            } catch (ParseException pe) {
+//                throw ServiceException.FAILURE("bad query", pe); 
+//            }
+//        }
+//        return search(query, offset, limit);
+//    }
 
     public SearchResult search(Query query, int offset, int limit) throws ServiceException {
         SearchResult result = new SearchResult();
@@ -668,7 +665,6 @@ public class RemoteMailQueue {
                 if (field.length() == 0 || text.length() == 0) {
                     usage("search term empty field or text");
                 }
-                PhraseQuery pq = new PhraseQuery();
                 Term term = new Term(field, text);
                 bq.add(new TermQuery(term), true, false); // AND query
             }

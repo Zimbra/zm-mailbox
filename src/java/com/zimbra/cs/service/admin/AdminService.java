@@ -312,6 +312,8 @@ public class AdminService implements DocumentService {
     public static final String BY_ID = "id";
     public static final String BY_QUERY = "query";
     
+	public static final String E_FIELD = "field";
+	public static final String E_MATCH = "match";
     public static final String A_SCAN = "scan";
     public static final String A_WAIT = "wait";
     public static final String A_QUEUE_SUMMARY = "qs";
