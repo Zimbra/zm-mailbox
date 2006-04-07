@@ -485,9 +485,15 @@ public class ZimbraPerf {
         return columns;
     }
     
-    static final long DUMP_FREQUENCY = Constants.MILLIS_PER_MINUTE;
+    private static final long DUMP_FREQUENCY = Constants.MILLIS_PER_MINUTE;
+    private static boolean sIsInitialized = false;
 
-    static  {
+    public synchronized static void initialize() {
+        if (sIsInitialized) {
+            sLog.warn("Detected a second call to ZimbraPerf.initialize()", new Exception());
+            return;
+        }
+        
         addStatsCallback(new SystemStats());
         
         // Only the average is interesting for these counters
@@ -506,6 +512,7 @@ public class ZimbraPerf {
         COUNTER_IDX_WRT.setShowTotal(false);
         
         Zimbra.sTimer.scheduleAtFixedRate(new ZimbraStatsDumper(), DUMP_FREQUENCY, DUMP_FREQUENCY);
+        sIsInitialized = true;
     }
 
     /**

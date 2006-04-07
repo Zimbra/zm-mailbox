@@ -43,6 +43,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.servlet.PrivilegedServlet;
 import com.zimbra.cs.session.OzNotificationServer;
 import com.zimbra.cs.session.SessionCache;
+import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.StoreManager;
 
 /**
@@ -118,6 +119,7 @@ public class Zimbra {
 
         }
         
+        ZimbraPerf.initialize();
         sInited = true;
     }
 
