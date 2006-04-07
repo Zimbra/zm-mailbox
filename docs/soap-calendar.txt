@@ -46,13 +46,6 @@
 //    This is the API to create a new Appointment, optionally  sending out
 //  meeting Invitations to other people.
 //
-//
-// WARNING!!!  THIS DEFINITION IS CURRENTLY OUT OF SYNC WITH IMPLEMENTATION.
-// The format defined below is the one used in <inv>s in responses.
-// In requests, <comp> is called <inv> and the outer <inv> is not
-// there.  This should be fixed soon, so requests and responses use the same
-// format.
-//
 <CreateAppointmentRequest>
   <m f="{flags}" l="{folder}">
      [<e .../>*]  // users to send request to
@@ -66,11 +59,11 @@
                                     // referenced.
        <tz
            id="timezonename"        // this name is referenced in various DATETIME data in the rest of <inv>
-           stdoffset="<minutes>"    // offset from UTC in standard time; local = UTC + offset
-           [dayoffset="<minutes>"]  // offset from UTC in daylight time; present only if DST is used
+           stdoff="<minutes>"       // offset from UTC in standard time; local = UTC + offset
+           [dayoff="<minutes>"]     // offset from UTC in daylight time; present only if DST is used
        >
-           [                        // If daylight savings time is not used, <stddate> and <daydate> must be
-                                    // omitted.  If DST is used, both <stddate> and <daydate> must be present.
+           [                        // If daylight savings time is not used, <standard> and <daylight> must be
+                                    // omitted.  If DST is used, both <standard> and <daylight> must be present.
            <standard                // time/rule for transitioning from daylight time to standard time
                                     // Either specify week/wkday combo, or mday.
                [
