@@ -379,6 +379,10 @@ public class RemoteMailQueue {
         do {
             Term term = terms.term();
             if (term != null) {
+                if (hasDeletions && !indexReader.termDocs(term).next()) {
+                    // There are deletions in this index, and the term matches only deleted docs.
+                    continue;
+                }
                 String field = term.field();
                 if (field != null && field.length() > 0) {
                     QueueAttr attr = QueueAttr.valueOf(field);
@@ -526,8 +530,6 @@ public class RemoteMailQueue {
 
     public void action(Server server, QueueAction action, String[] ids) throws ServiceException {
         if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("action=" + action + " ids=" + Arrays.deepToString(ids) + " " + this);
-    	int done = 0;
-    	int total = ids.length;
     	boolean firstTime = true;
     	RemoteManager rm = RemoteManager.getRemoteManager(server);
     	IndexReader indexReader = null;
@@ -542,13 +544,18 @@ public class RemoteMailQueue {
                 indexReader = IndexReader.open(mIndexPath);
             }
 
+            int done = 0;
+            int total = ids.length;
     		while (done < total) {
-    			int numQueueIds = Math.min(total - done, MAX_REMOTE_EXECUTION_QUEUEIDS);
-    			StringBuilder sb = new StringBuilder(128 + (numQueueIds * MAX_LENGTH_OF_QUEUEIDS));
+    			int last = Math.min(total, done + MAX_REMOTE_EXECUTION_QUEUEIDS);
+    			StringBuilder sb = new StringBuilder(128 + (last * MAX_LENGTH_OF_QUEUEIDS));
     			sb.append("zmqaction " + action.toString() + " " + mQueueName + " "); 
     			int i;
-    			for (i = 0; i < numQueueIds; i++) {
-    				if (i > 0) {
+                boolean first = true;
+    			for (i = done; i < last; i++) {
+    				if (first) {
+                        first = false;
+                    } else {
     					sb.append(",");
     				}
                     if (!all) {
@@ -557,9 +564,9 @@ public class RemoteMailQueue {
                         mNumMessages.getAndAdd(-numDeleted);
                         if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("deleting term:" + toDelete + ", docs deleted=" + numDeleted);
                     }
-    				sb.append(ids[done + i].toUpperCase());
+    				sb.append(ids[i].toUpperCase());
     			}
-    			done = i;
+    			done = last;
     			//System.out.println("will execute action command: " + sb.toString());
     			RemoteResult rr = rm.execute(sb.toString());
     		}
