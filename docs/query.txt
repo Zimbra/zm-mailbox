@@ -124,6 +124,8 @@ mime-related
 flags
 
   is:anywhere --> in any folder (overrides spam-trash setting for that query part)
+                     note that "is:anywhere" does NOT imply "across all mountpoints".  Mountpoints must
+                     be explicitly included with an "in:" term -- in:mountpointname.
   is:unread
   is:read
   is:flagged
