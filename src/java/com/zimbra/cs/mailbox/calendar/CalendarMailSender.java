@@ -179,7 +179,8 @@ public class CalendarMailSender {
                 replyText.append(additionalMsgBody).append("\r\n");
             }
 
-            attachInviteSummary(replyText, mmInv, lc);
+            if (mmInv != null)
+                attachInviteSummary(replyText, mmInv, lc);
 
             List<Address> toList = new ArrayList<Address>(1);
             toList.add(organizerAddress);

@@ -196,7 +196,9 @@ public class Appointment extends MailItem {
         DbMailItem.create(mbox, data);
 
         Appointment appt = new Appointment(mbox, data);
-        appt.processPartStat(firstInvite, pm.getMimeMessage(), true);
+        appt.processPartStat(firstInvite,
+                             pm != null ? pm.getMimeMessage() : null,
+                             true);
         appt.createBlob(pm, firstInvite, volumeId);
         appt.finishCreation(null);
 
@@ -629,8 +631,9 @@ public class Appointment extends MailItem {
                 // No need to mark invite as modified item in mailbox as
                 // it has already been marked as a created item.
             } else {
-                String partStat =
-                    processPartStat(newInvite, pm.getMimeMessage(), false);
+                processPartStat(newInvite,
+                                pm != null ? pm.getMimeMessage() : null,
+                                false);
             }
 
             mInvites.add(newInvite);
