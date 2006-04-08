@@ -123,9 +123,7 @@ public class StatsImageServlet extends ZimbraServlet {
         	resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "FNF image File not found");
         	return;
         }
-    	resp.setContentType("image/gif");    	
-    	ByteUtil.copy(is, resp.getOutputStream());
-    	is.close();
+    	resp.setContentType("image/gif");
+    	ByteUtil.copy(is, true, resp.getOutputStream(), false);
     }
-
 }

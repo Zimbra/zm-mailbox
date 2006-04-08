@@ -523,9 +523,7 @@ public class ZimletUtil {
 		dest.createNewFile();
 		ByteArrayInputStream bais = new ByteArrayInputStream(src);
 		FileOutputStream fos = new FileOutputStream(dest);
-		ByteUtil.copy(bais, fos);
-		fos.close();
-		bais.close();
+		ByteUtil.copy(bais, true, fos, true);
 	}
 
 	/**

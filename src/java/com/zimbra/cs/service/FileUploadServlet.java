@@ -212,7 +212,8 @@ public class FileUploadServlet extends ZimbraServlet {
             // store the fetched file as a normal upload
             DiskFileUpload upload = getUploader();
             FileItem fi = upload.getFileItemFactory().createItem("upload", contentType, false, filename);
-            ByteUtil.copy(is = method.getResponseBodyAsStream(), fi.getOutputStream());
+            ByteUtil.copy(is = method.getResponseBodyAsStream(), false,
+                          fi.getOutputStream(), false);
             return new Upload(accountId, fi);
         } catch (HttpException e) {
             throw ServiceException.PROXY_ERROR(e, url);

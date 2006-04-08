@@ -335,7 +335,6 @@ public class ProxyServlet extends ZimbraServlet {
 			}
 		}
 		resp.setContentType(content.contentType);
-		ByteUtil.copy(data, resp.getOutputStream());
-		data.close();
+		ByteUtil.copy(data, true, resp.getOutputStream(), false);
 	}
 }

@@ -90,9 +90,11 @@ public class ZipFormatter extends Formatter {
         
                     // add ZIP entry to output stream
                     out.putNextEntry(new ZipEntry(getZipEntryName(item, item.getSubject(), ".eml", context, usedNames)));
-                    ByteUtil.copy(is, out);
-                    is.close();
-                    out.closeEntry();
+                    try {
+                        ByteUtil.copy(is, true, out, false);
+                    } finally {
+                        out.closeEntry();
+                    }
                 } else if (item instanceof Contact) {
                     VCard vcf = VCard.formatContact((Contact) item);
     

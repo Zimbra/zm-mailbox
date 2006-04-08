@@ -55,22 +55,39 @@ public class FileUtil {
 	}
 
 	public static void copy(File src, File dest) throws IOException {
-		FileInputStream in = new FileInputStream(src);
-        copy(in, dest);
-		in.close();
+		FileInputStream in = in = new FileInputStream(src);
+        copy(in, true, dest);
 	}
 
-    public static void copy(InputStream in, File dest) throws IOException {
-        FileOutputStream fos = new FileOutputStream(dest);
-        byte[] buf = new byte[COPYBUFLEN];
-        BufferedOutputStream out = new BufferedOutputStream(fos);
+    /**
+     * Copy an input stream to file.
+     * @param in
+     * @param closeIn If true, input stream is closed before returning, even
+     *                when there is an error
+     * @param dest
+     * @throws IOException
+     */
+    public static void copy(InputStream in, boolean closeIn, File dest) throws IOException {
         try {
-            int byteRead;
-            while ((byteRead = in.read(buf)) != -1) {
-                out.write(buf, 0, byteRead);
+            FileOutputStream fos = new FileOutputStream(dest);
+            byte[] buf = new byte[COPYBUFLEN];
+            BufferedOutputStream out = new BufferedOutputStream(fos);
+            try {
+                int byteRead;
+                while ((byteRead = in.read(buf)) != -1) {
+                    out.write(buf, 0, byteRead);
+                }
+            } finally {
+                out.close();
             }
         } finally {
-            out.close();
+            if (closeIn) {
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    ZimbraLog.misc.warn("Ignoring exception while closing input stream", e);
+                }
+            }
         }
     }
     

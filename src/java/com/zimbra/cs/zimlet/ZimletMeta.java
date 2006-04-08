@@ -27,6 +27,7 @@ package com.zimbra.cs.zimlet;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Iterator;
 
 import org.dom4j.DocumentException;
