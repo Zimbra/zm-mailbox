@@ -163,8 +163,7 @@ public class ContentServlet extends ZimbraServlet {
 
                         resp.setContentType(Mime.CT_TEXT_PLAIN);
                         InputStream is = msg.getRawMessage();
-                        ByteUtil.copy(is, resp.getOutputStream());
-                        is.close();
+                        ByteUtil.copy(is, true, resp.getOutputStream(), false);
                     } else if (item instanceof Appointment) {
                         Appointment appt = (Appointment) item;
                         if (sync) {
@@ -185,8 +184,7 @@ public class ContentServlet extends ZimbraServlet {
 //                            }
                             
                             InputStream is = appt.getRawMessage();
-                            ByteUtil.copy(is, resp.getOutputStream());
-                            is.close();
+                            ByteUtil.copy(is, true, resp.getOutputStream(), false);
                         }
                     }
                     return;
@@ -322,12 +320,7 @@ public class ContentServlet extends ZimbraServlet {
     public static void sendbackOriginalDoc(InputStream is, String contentType, HttpServletResponse resp)
     throws IOException {
         resp.setContentType(contentType);
-        try {
-            ByteUtil.copy(is, resp.getOutputStream());
-        } finally {
-            if (is != null)
-                is.close();
-        }
+        ByteUtil.copy(is, true, resp.getOutputStream(), false);
     }
 
     static void sendbackDefangedHtml(MimePart mp, String contentType, HttpServletResponse resp, String fmt) 
@@ -338,7 +331,7 @@ public class ContentServlet extends ZimbraServlet {
             is = mp.getInputStream();
             String html = HtmlDefang.defang(is, FORMAT_DEFANGED_HTML.equals(fmt));
             ByteArrayInputStream bais = new ByteArrayInputStream(html.getBytes("utf-8"));
-            ByteUtil.copy(bais, resp.getOutputStream());
+            ByteUtil.copy(bais, false, resp.getOutputStream(), false);
         } finally {
             if (is != null)
                 is.close();

@@ -101,8 +101,7 @@ public class SyncFormatter extends Formatter {
             mm.writeTo(context.resp.getOutputStream());
         } else { 
             InputStream is = appt.getRawMessage();
-            ByteUtil.copy(is, context.resp.getOutputStream());
-            is.close();
+            ByteUtil.copy(is, true, context.resp.getOutputStream(), false);
         }        
     }
     
@@ -110,8 +109,7 @@ public class SyncFormatter extends Formatter {
         addXZimbraHeaders(context, msg);
         context.resp.setContentType(Mime.CT_TEXT_PLAIN);
         InputStream is = msg.getRawMessage();
-        ByteUtil.copy(is, context.resp.getOutputStream());
-        is.close();
+        ByteUtil.copy(is, true, context.resp.getOutputStream(), false);
     }
 
     private void handleMessagePart(Context context, MailItem item) throws IOException, ServiceException, MessagingException, UserServletException {
@@ -153,12 +151,7 @@ public class SyncFormatter extends Formatter {
 
     public static void sendbackOriginalDoc(InputStream is, String contentType, HttpServletResponse resp) throws IOException {
         resp.setContentType(contentType);
-        try {
-            ByteUtil.copy(is, resp.getOutputStream());
-        } finally {
-            if (is != null)
-                is.close();
-        }
+        ByteUtil.copy(is, true, resp.getOutputStream(), false);
     }
 
     public boolean canBeBlocked() {

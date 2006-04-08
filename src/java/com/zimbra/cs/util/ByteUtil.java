@@ -338,15 +338,47 @@ public class ByteUtil {
 		return Base64.decodeBase64(bytes);
 	}
 
-	public static int copy(InputStream is, OutputStream os) throws IOException {
-		byte buffer[] = new byte[8192];
-		int numRead;
-        int transferred = 0;
-		while ((numRead = is.read(buffer)) >= 0) {
-			os.write(buffer, 0, numRead);
-            transferred += numRead;
-		}
-        return transferred;
+    /**
+     * Copy an input stream fully to output stream.
+     * @param in
+     * @param closeIn If true, input stream is closed before returning, even
+     *                when there is an error.
+     * @param out
+     * @param closeOut If true, output stream is closed before returning, even
+     *                 when there is an error.
+     * @return
+     * @throws IOException
+     */
+	public static int copy(InputStream in,
+                           boolean closeIn,
+                           OutputStream out,
+                           boolean closeOut)
+    throws IOException {
+        try {
+    		byte buffer[] = new byte[8192];
+    		int numRead;
+            int transferred = 0;
+    		while ((numRead = in.read(buffer)) >= 0) {
+    			out.write(buffer, 0, numRead);
+                transferred += numRead;
+    		}
+            return transferred;
+        } finally {
+            if (closeIn) {
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    ZimbraLog.misc.warn("Ignoring exception while closing input stream", e);
+                }
+            }
+            if (closeOut) {
+                try {
+                    out.close();
+                } catch (IOException e) {
+                    ZimbraLog.misc.warn("Ignoring exception while closing output stream", e);
+                }
+            }
+        }
 	}
 
     // Custom read/writeUTF8 methods to replace DataInputStream.readUTF() and 

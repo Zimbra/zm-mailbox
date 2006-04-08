@@ -331,7 +331,7 @@ public class ZimbraServlet extends HttpServlet {
                 if (hlc.startsWith("x-") || hlc.startsWith("content-") || hlc.startsWith("www-"))
                     resp.addHeader(hname, headers[i].getValue());
             }
-            ByteUtil.copy(method.getResponseBodyAsStream(), resp.getOutputStream());
+            ByteUtil.copy(method.getResponseBodyAsStream(), false, resp.getOutputStream(), false);
 
             method.releaseConnection();
         } catch (ServiceException e) {

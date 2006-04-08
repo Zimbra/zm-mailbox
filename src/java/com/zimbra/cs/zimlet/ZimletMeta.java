@@ -28,6 +28,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Iterator;
 
 import org.dom4j.DocumentException;
@@ -106,7 +107,8 @@ public abstract class ZimletMeta {
 	private static String readFile(File f) throws ZimletException {
 		try {
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			ByteUtil.copy(new FileInputStream(f), baos);
+            InputStream is = new FileInputStream(f);
+            ByteUtil.copy(is, true, baos, false);
 			return baos.toString();
 		} catch (IOException ie) {
 			throw ZimletException.INVALID_ZIMLET_DESCRIPTION("Cannot find Zimlet description file: " + f.getName());
