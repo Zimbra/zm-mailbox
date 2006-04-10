@@ -1454,35 +1454,7 @@ Sieve Mail Filtering manipluation.  See MailFiltering.doc for details
 
 Synchronization:
 
-Currently we only support initial sync.  The client sends a sync request with no
-sync token.  The server responds with the folder hierarchy, tag hierarchy, and 
-list of ids of the mail items contained in each folder.
-
-<SyncRequest [token="sync-token"]>
-  (<ChangeList></ChangeList>)*
-</SyncRequest>
-
-    sync-token: absense of sync-token implies client has no previous knowledge of the 
-                state of the mailbox (ie, initial sync)
-
-    ChangeList: TBD
-    
-<SyncResponse token="{new-sync-token}" md="{current-time}" s="{mailbox-size}">
-   <folder id="1">
-     <m ids="x,y,z"/>
-     <cn ids="a,b,c"/>
-     <note ids="1,2,3"/>
-     <folder name="Spam" id="3" l="1"/>
-     <folder name="INBOX" id="2" l="1" n="3">
-       <m ids="555,533,501"/>
-       <cn ids="675,673,671"/>
-       <note ids="603,602,403"/>
-       <folder name="subfolder" id="286" l="1"/>
-     </folder>
-   </folder>
-   <tag name="tag1" id="64" color="3"/>
-</SyncResponse>
-
+   *** PLEASE SEE sync.txt FOR SYNC-RELATED DOCUMENTATION ***
 
 ---------------------------
 
