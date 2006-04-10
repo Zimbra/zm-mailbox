@@ -56,16 +56,16 @@ public class GetConfig extends AdminDocumentHandler {
 	    return response;
 	}
 
-	public static void doConfig(Element e, String name, String[] value) throws ServiceException {
+	public static void doConfig(Element e, String name, String[] value) {
 	    if (value == null)
 	        return;
 	    for (int i = 0; i < value.length; i++)
-            e.addAttribute(name, value[i], Element.DISP_ELEMENT);
+            e.addElement(AdminService.E_A).addAttribute(AdminService.A_N, name).setText(value[i]);
     }
 
-	public static void doConfig(Element e, String name, String value) throws ServiceException {
+	public static void doConfig(Element e, String name, String value) {
 	    if (value == null)
 	        return;
-        e.addAttribute(name, value, Element.DISP_ELEMENT);
+        e.addElement(AdminService.E_A).addAttribute(AdminService.A_N, name).setText(value);
     }
 }

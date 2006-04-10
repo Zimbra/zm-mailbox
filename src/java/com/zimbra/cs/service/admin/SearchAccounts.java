@@ -153,7 +153,7 @@ public class SearchAccounts extends AdminDocumentHandler {
         doAttrs(ealias, attrs);
     }
 
-    static void doAttrs(Element e, Map attrs) throws ServiceException {
+    static void doAttrs(Element e, Map attrs) {
         for (Iterator mit = attrs.entrySet().iterator(); mit.hasNext(); ) {
             Map.Entry entry = (Entry) mit.next();
             String name = (String) entry.getKey();
@@ -161,9 +161,9 @@ public class SearchAccounts extends AdminDocumentHandler {
             if (value instanceof String[]) {
                 String sv[] = (String[]) value;
                 for (int i = 0; i < sv.length; i++)
-                    e.addAttribute(name, sv[i], Element.DISP_ELEMENT);
+                    e.addElement(AdminService.E_A).addAttribute(AdminService.A_N, name).setText(sv[i]);
             } else if (value instanceof String)
-                e.addAttribute(name, (String) value, Element.DISP_ELEMENT);
+                e.addElement(AdminService.E_A).addAttribute(AdminService.A_N, name).setText((String) value);
         }       
 }   
 }

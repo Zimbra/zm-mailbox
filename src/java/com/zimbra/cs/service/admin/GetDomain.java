@@ -92,9 +92,9 @@ public class GetDomain extends AdminDocumentHandler {
             if (value instanceof String[]) {
                 String sv[] = (String[]) value;
                 for (int i = 0; i < sv.length; i++)
-                    domain.addAttribute(name, sv[i], Element.DISP_ELEMENT);
+                    domain.addElement(AdminService.E_A).addAttribute(AdminService.A_N, name).setText(sv[i]);
             } else if (value instanceof String)
-                domain.addAttribute(name, (String) value, Element.DISP_ELEMENT);
+                domain.addElement(AdminService.E_A).addAttribute(AdminService.A_N, name).setText((String) value);
         }
     }
 }
