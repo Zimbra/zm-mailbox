@@ -404,9 +404,10 @@ public class RemoteMailQueue {
                         } else {
                             count = terms.docFreq();   
                         }
-                        list.add(new SummaryItem(term.text(), terms.docFreq()));
+                        if (count > 0) {
+                        	list.add(new SummaryItem(term.text(), count));
+                        }
                     }
-                    //System.out.println(term + "[" + terms.docFreq() + "]");
                 }
             }
         } while (terms.next());
@@ -496,18 +497,6 @@ public class RemoteMailQueue {
         }
     }
     
-//    public SearchResult search(String queryText, int offset, int limit) throws ServiceException {
-//        Query query = null;
-//        if (queryText != null && queryText.length() > 0) {
-//            try {
-//                query = QueryParser.parse(queryText, "id", new StandardAnalyzer());
-//            } catch (ParseException pe) {
-//                throw ServiceException.FAILURE("bad query", pe); 
-//            }
-//        }
-//        return search(query, offset, limit);
-//    }
-
     public SearchResult search(Query query, int offset, int limit) throws ServiceException {
         SearchResult result = new SearchResult();
         IndexReader indexReader = null;
