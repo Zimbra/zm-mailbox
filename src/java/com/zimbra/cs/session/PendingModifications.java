@@ -105,7 +105,7 @@ public final class PendingModifications {
     
     public void addIMNotification(IMNotification not) {
         if (imNotifications == null) 
-            imNotifications = new LinkedList();
+            imNotifications = new LinkedList<IMNotification>();
         imNotifications.add(not);
     }
 

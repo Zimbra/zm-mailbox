@@ -551,6 +551,9 @@ public class OzConnection {
 
             // We may have read more than one PDU 
             while (rbb.hasRemaining()) {
+                if (mMatcher == null)
+                	break;
+            	
                 ByteBuffer pdu = rbb.duplicate();
                 int initialPosition = rbb.position();
                 
