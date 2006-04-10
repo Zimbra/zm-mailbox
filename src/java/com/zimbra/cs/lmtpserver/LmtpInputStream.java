@@ -60,6 +60,10 @@ public class LmtpInputStream extends TcpServerInputStream {
 			if (ch == EOM[matched + 1]) {
 				matched++;
 				if (matched == (EOMLEN-1)) {
+                    // see bug 6326 and RFC 2821 section 4.1.1.4 for why we need
+                    // to preserve the CRLF that was part of the <CRLF>.<CRLF>
+                    bos.write(CR);
+                    bos.write(LF);
 					return bos.toByteArray();
 				} else {
 					continue; // match more characters
