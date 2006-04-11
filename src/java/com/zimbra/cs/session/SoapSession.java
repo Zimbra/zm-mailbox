@@ -33,7 +33,6 @@ import java.io.Writer;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
 
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.index.ZimbraQueryResults;
@@ -45,7 +44,6 @@ import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.Constants;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
-import com.zimbra.soap.Element.XMLElement;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -451,17 +449,30 @@ public class SoapSession extends Session {
 
         if (pm.created != null && pm.created.size() > 0) {
             Element eCreated = eNotify.addUniqueElement(E_CREATED);
-            for (Iterator it = pm.created.values().iterator(); it.hasNext(); )
-                ToXML.encodeItem(eCreated, zc, (MailItem) it.next(), ToXML.NOTIFY_FIELDS);
+            for (Iterator it = pm.created.values().iterator(); it.hasNext(); ) {
+                MailItem mi = (MailItem) it.next();
+                try {
+                    ToXML.encodeItem(eCreated, zc, mi, ToXML.NOTIFY_FIELDS);
+                } catch (ServiceException e) {
+                    mLog.warn("error encoding item " + mi.getId(), e);
+                    return;
+                }
+            }
         }
 
         if (pm.modified != null && pm.modified.size() > 0) {
             Element eModified = eNotify.addUniqueElement(E_MODIFIED);
             for (Iterator it = pm.modified.values().iterator(); it.hasNext(); ) {
                 Change chg = (Change) it.next();
-                if (chg.why != 0 && chg.what instanceof MailItem)
-                    ToXML.encodeItem(eModified, zc, (MailItem) chg.what, chg.why);
-                else if (chg.why != 0 && chg.what instanceof Mailbox)
+                if (chg.why != 0 && chg.what instanceof MailItem) {
+                    MailItem mi = (MailItem) chg.what;
+                    try {
+                        ToXML.encodeItem(eModified, zc, mi, chg.why);
+                    } catch (ServiceException e) {
+                        mLog.warn("error encoding item " + mi.getId(), e);
+                        return;
+                    }
+                } else if (chg.why != 0 && chg.what instanceof Mailbox)
                     ToXML.encodeMailbox(eModified, (Mailbox) chg.what, chg.why);
             }
         }
