@@ -53,6 +53,7 @@ public class AttributeManager {
     private static final String A_MAX = "max";
     private static final String A_MIN = "min";
     private static final String A_CALLBACK = "callback";
+    private static final String A_ID = "id";
 
     private static AttributeManager mInstance;
     
@@ -106,6 +107,7 @@ public class AttributeManager {
                 long max = Long.MAX_VALUE;
                 boolean immutable = false;
                 boolean ignore = false;
+                int id = -1;
                 
                 for (Iterator attrIter = eattr.attributeIterator(); attrIter.hasNext();) {
                     Attribute attr = (Attribute) attrIter.next();
@@ -126,9 +128,14 @@ public class AttributeManager {
                              ZimbraLog.misc.warn("attrs file("+file+") unknown <attr> type: "+attr.getValue());
                              ignore = true;
                          }
-                         
                     } else if (aname.equals(A_VALUE)) { 
                         value = attr.getValue();
+                    } else if (aname.equals(A_ID)) {
+                    	try {
+                    		id = Integer.parseInt(attr.getValue());
+                    	} catch (NumberFormatException nfe) {
+                    		throw new DocumentException("attribute " + A_ID + " value is not a number: " + attr.getValue(), nfe);
+                    	}
                     } else {
                         ZimbraLog.misc.warn("attrs file("+file+") unknown <attr> attr: "+aname);
                     }
@@ -143,7 +150,7 @@ public class AttributeManager {
                         ZimbraLog.misc.warn("attrs file("+file+") no type specified for attr: "+name);
                         continue;
                     }
-                    AttributeInfo info = new AttributeInfo(name, callback, type, value, immutable, min, max);
+                    AttributeInfo info = new AttributeInfo(name, id, callback, type, value, immutable, min, max);
                     mAttrs.put(name, info);
                 }
             }
