@@ -347,14 +347,16 @@ public class ZimbraServlet extends HttpServlet {
         AuthToken at = getAuthTokenFromCookie(req, resp, doNotSendHttpError);
         return at == null ? null : Provisioning.getInstance().getAccountById(at.getAccountId()); 
     }
-    
-    protected Account basicAuthRequest(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException, ServiceException {
+
+    protected Account basicAuthRequest(HttpServletRequest req, HttpServletResponse resp, boolean sendChallenge) throws IOException, ServletException, ServiceException {
         String auth = req.getHeader("Authorization");
 
         // TODO: more liberal parsing of Authorization value...
         if (auth == null || !auth.startsWith("Basic ")) {
-            resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader());            
-            resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "must authenticate");
+        	if (sendChallenge) {
+        		resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader());            
+        		resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "must authenticate");
+        	}
             return null;
         }
 
@@ -373,15 +375,19 @@ public class ZimbraServlet extends HttpServlet {
         Provisioning prov = Provisioning.getInstance();
         Account acct = prov.getAccountByName(user);
         if (acct == null) {
-            resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader());
-            resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "invalid username/password");
+        	if (sendChallenge) {
+        		resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader());
+        		resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "invalid username/password");
+        	}
             return null;
         }
         try {
             prov.authAccount(acct, pass);
         } catch (ServiceException se) {
-            resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader());
-            resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "invalid username/password");
+        	if (sendChallenge) {
+        		resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader());
+        		resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "invalid username/password");
+        	}
             return null;
         }
         return acct;

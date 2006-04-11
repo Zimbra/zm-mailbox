@@ -28,12 +28,21 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.Cos;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ZimbraLog;
 
@@ -72,6 +81,46 @@ public class ACL {
     /** The pseudo-GUID signifying "all authenticated and unauthenticated users". */
     public static final String GUID_PUBLIC   = "99999999-9999-9999-9999-999999999999";
 
+    public static final Account ANONYMOUS_ACCT = new AnonymousAccount();
+    
+    private static class AnonymousAccount implements Account {
+    	// useful fields
+        public String getId() { return GUID_PUBLIC; }
+        public String getUid() { return "public"; }
+        public boolean isCorrectHost() throws ServiceException { return true; }
+        
+        // empty fields
+        public String getAttr(String name) { return null; }
+        public String[] getMultiAttr(String name) { return null; }    
+        public String getAttr(String name, String defaultValue) { return defaultValue; }
+        public Set getMultiAttrSet(String name) { return null; }
+        public Map getAttrs() throws ServiceException { return null; }
+        public void modifyAttrs(Map attrs) throws ServiceException { return; }
+        public void modifyAttrs(Map attrs, boolean checkImmutable) throws ServiceException { return; }
+        public boolean getBooleanAttr(String name, boolean defaultValue) { return defaultValue; }
+        public void setBooleanAttr(String name, boolean value) throws ServiceException { return; }
+        public int getIntAttr(String name, int defaultValue) { return 0; }
+        public long getLongAttr(String name, long defaultValue) { return 0; }
+        public long getTimeInterval(String name, long defaultValue) throws AccountServiceException { return defaultValue; }
+        public Date getGeneralizedTimeAttr(String name, Date defaultValue) { return defaultValue; }
+        public void reload() throws ServiceException { return; }
+        public void setCachedData(Object key, Object value) { return; }
+        public Object getCachedData(Object key) { return null; }
+        public Locale getLocale() throws ServiceException  { return null; }
+        public String getName() { return null; }
+        public String getDomainName() { return null; }
+        public Domain getDomain() throws ServiceException { return null; }
+        public String getAccountStatus() { return null; }
+        public Map getAttrs(boolean prefsOnly, boolean applyCos) throws ServiceException { return null; }
+        public Cos getCOS() throws ServiceException { return null; }
+        public String[] getAliases() throws ServiceException { return null; }
+        public boolean inGroup(String zimbraGroupId) throws ServiceException { return false; }
+        public Set<String> getGroups() throws ServiceException { return null; }
+        public Server getServer() throws ServiceException { return null; }
+        public ICalTimeZone getTimeZone() throws ServiceException { return null; }
+        public CalendarUserType getCalendarUserType() throws ServiceException { return null; }
+        public boolean saveToSent() throws ServiceException { return false; }
+    }
     public static class Grant {
         /** The zimbraId of the entry being granted rights. */
         private String mGrantee;
@@ -135,11 +184,11 @@ public class ACL {
             if (acct == null)
                 return mType == ACL.GRANTEE_PUBLIC;
             switch (mType) {
-                case ACL.GRANTEE_AUTHUSER:
-                case ACL.GRANTEE_PUBLIC:  return true;
-                case ACL.GRANTEE_COS:    return mGrantee.equals(getId(acct.getCOS()));
-                case ACL.GRANTEE_DOMAIN: return mGrantee.equals(getId(acct.getDomain()));
-                case ACL.GRANTEE_USER:   return mGrantee.equals(acct.getId());
+                case ACL.GRANTEE_PUBLIC:   return true;
+                case ACL.GRANTEE_AUTHUSER: return !acct.equals(ANONYMOUS_ACCT);
+                case ACL.GRANTEE_COS:      return mGrantee.equals(getId(acct.getCOS()));
+                case ACL.GRANTEE_DOMAIN:   return mGrantee.equals(getId(acct.getDomain()));
+                case ACL.GRANTEE_USER:     return mGrantee.equals(acct.getId());
                 case ACL.GRANTEE_GROUP:
                     String[] groups = acct.getMultiAttr(Provisioning.A_zimbraMemberOf);
                     if (groups != null)

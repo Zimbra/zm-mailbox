@@ -197,6 +197,7 @@ public class Folder extends MailItem {
     private short checkRights(short rightsNeeded, Account authuser, boolean inheritedOnly) throws ServiceException {
         if (rightsNeeded == 0)
             return rightsNeeded;
+        // XXX in Mailbox, authuser is set to null if authuser == owner.
         // the mailbox owner can do anything they want
         if (authuser == null || authuser.getId().equals(mMailbox.getAccountId()))
             return rightsNeeded;

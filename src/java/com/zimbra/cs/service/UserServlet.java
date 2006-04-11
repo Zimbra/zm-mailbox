@@ -48,6 +48,7 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -164,13 +165,15 @@ public class UserServlet extends ZimbraServlet {
             // check cookie first
             if (context.cookieAuthAllowed()) {
                 context.authAccount = cookieAuthRequest(context.req, context.resp, true);
-                if (context.authAccount != null)
+                if (context.authAccount != null) {
+                	context.cookieAuthHappened = true;
                     return;
+                }
             }
 
             // fallback to basic auth
             if (context.basicAuthAllowed()) {
-                context.authAccount = basicAuthRequest(context.req, context.resp);
+                context.authAccount = basicAuthRequest(context.req, context.resp, false);
                 if (context.authAccount != null) {
                     context.basicAuthHappened = true;
                     // send cookie back if need be. 
@@ -185,36 +188,50 @@ public class UserServlet extends ZimbraServlet {
                 // always return
                 return;
             }
-
-            // when we support unauth'd/public things, change this to create the
-            // special "public" account
-            throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED,
-                    "need to authenticate");
+            
+            // there is no credential at this point.  assume anonymous public access and continue.
         } catch (ServiceException e) {
             throw new ServletException(e);
         }
     }
 
+    private void sendError(Context ctxt, HttpServletRequest req, HttpServletResponse resp, String message) throws IOException {
+    	if (ctxt == null) {
+    		resp.sendError(HttpServletResponse.SC_FORBIDDEN, message);
+    	} else if (!ctxt.cookieAuthHappened && ctxt.basicAuthAllowed() && !ctxt.basicAuthHappened) {
+    		resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader());            
+    		resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, message);
+    	} else {
+    		resp.sendError(HttpServletResponse.SC_FORBIDDEN, message);
+    	}
+    }
+    
     public void doGet(HttpServletRequest req, HttpServletResponse resp)
     throws ServletException, IOException {
+    	Context context = null;
         try {
-            Context context = new Context(req, resp, this);
-            if (!checkAuthentication(req, resp, context))
+            context = new Context(req, resp, this);
+            if (!checkAuthentication(req, resp, context)) {
+                sendError(context, req, resp, "must authenticate");
                 return;
+            }
 
-            if (context.authAccount != null)
-                ZimbraLog.addAccountNameToContext(context.authAccount.getName());
+            if (isProxyRequest(req, resp, context))
+            	return;
+            
+            // at this point context.authAccount is set either from the Cookie,
+            // or from basic auth.  if there was no credential in either the Cookie
+            // or basic auth, authAccount is set to anonymous account.
+            ZimbraLog.addAccountNameToContext(context.authAccount.getName());
             ZimbraLog.addIpToContext(context.req.getRemoteAddr());
 
-            if (context.authAccount == null)
-                doUnAuthGet(req, resp, context);
-            else
-                doAuthGet(req, resp, context);
+            doAuthGet(req, resp, context);
+            
         } catch (NoSuchItemException e) {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND, "no such item");
         } catch (ServiceException se) {
             if (se.getCode() == ServiceException.PERM_DENIED)
-                resp.sendError(HttpServletResponse.SC_FORBIDDEN, se.getMessage());
+                sendError(context, req, resp, se.getMessage());
             else
                 throw new ServletException(se);
         } catch (UserServletException e) {
@@ -245,10 +262,15 @@ public class UserServlet extends ZimbraServlet {
         // need this before proxy if we want to support sending cookie from a basic-auth
         if (authRequired) {
             getAccount(context);
-            if (context.authAccount == null)
-                return false;                
+            if (context.authAccount == null) {
+            	context.setAnonymousRequest();
+            }
         }
 
+        return true;
+    }
+    
+    private boolean isProxyRequest(HttpServletRequest req, HttpServletResponse resp, Context context) throws IOException, ServiceException {
         // this should handle both explicit /user/user-on-other-server/ and
         // /user/~/?id={account-id-on-other-server}:id            
         if (!context.targetAccount.isCorrectHost()) {
@@ -257,7 +279,7 @@ public class UserServlet extends ZimbraServlet {
                     context.authTokenCookie = new AuthToken(context.authAccount).getEncoded();
                 proxyServletRequest(req, resp, context.targetAccount.getServer(),
                                     context.basicAuthHappened ? context.authTokenCookie : null);
-                return false;
+                return true;
             } catch (ServletException e) {
                 throw ServiceException.FAILURE("proxy error", e);
             } catch (AuthTokenException e) {
@@ -265,7 +287,7 @@ public class UserServlet extends ZimbraServlet {
             }
         }
 
-        return true;
+        return false;
     }
 
     private void doAuthGet(HttpServletRequest req, HttpServletResponse resp, Context context)
@@ -318,42 +340,6 @@ public class UserServlet extends ZimbraServlet {
         context.formatter.format(context, item);
     }
 
-    private void doUnAuthGet(HttpServletRequest req, HttpServletResponse resp, Context context)
-    throws ServletException, IOException, ServiceException, UserServletException {
-        context.targetMailbox = Mailbox.getMailboxByAccount(context.targetAccount);
-        if (context.targetMailbox == null)
-            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "mailbox not found");
-
-        ZimbraLog.addToContext(context.targetMailbox);
-        
-        ZimbraLog.mailbox.info("UserServlet: " + context.req.getRequestURL());
-        
-        // this SUCKS! Need an OperationContext that is for "public/unauth'd" access
-        context.opContext = null; // new OperationContext(context.authAccount);
-
-        MailItem item = null;
-
-        if (context.itemId != null) {
-            item = context.targetMailbox.getItemById(context.opContext, context.itemId.getId(), MailItem.TYPE_UNKNOWN);
-        } else {
-            item = context.targetMailbox.getFolderByPath(context.opContext, context.itemPath);
-        }
-        
-        if (item == null && context.getQueryString() == null)
-            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "item not found");
-
-        if (item instanceof Mountpoint) {
-            // if the target is a mountpoint, proxy the request on to the resolved target
-            proxyOnMountpoint(req, resp, context, (Mountpoint) item);
-            return;
-        }
-
-        // UnAuth'd get *MUST* already have formatter set!
-        if (context.formatter == null)
-            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "unsupported format");
-        context.formatter.format(context, item);
-    }
-
     /** Adds an item to a folder specified in the URI.  The item content is
      *  provided in the PUT request's body.
      * @see #doPost(HttpServletRequest, HttpServletResponse) */
@@ -366,11 +352,17 @@ public class UserServlet extends ZimbraServlet {
      *  provided in the POST request's body. */
     public void doPost(HttpServletRequest req, HttpServletResponse resp)
     throws ServletException, IOException {
+    	Context context = null;
         try {
-            Context context = new Context(req, resp, this);
-            if (!checkAuthentication(req, resp, context))
+            context = new Context(req, resp, this);
+            if (!checkAuthentication(req, resp, context)) {
+                sendError(context, req, resp, "must authenticate");
                 return;
+            }
 
+            if (isProxyRequest(req, resp, context))
+            	return;
+            
             if (context.authAccount != null)
                 ZimbraLog.addAccountNameToContext(context.authAccount.getName());
             ZimbraLog.addIpToContext(context.req.getRemoteAddr());
@@ -418,7 +410,7 @@ public class UserServlet extends ZimbraServlet {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND, "no such item");
         } catch (ServiceException se) {
             if (se.getCode() == ServiceException.PERM_DENIED)
-                resp.sendError(HttpServletResponse.SC_FORBIDDEN, se.getMessage());
+            	sendError(context, req, resp, se.getMessage());
             else
                 throw new ServletException(se);
         } catch (UserServletException e) {
@@ -477,6 +469,7 @@ public class UserServlet extends ZimbraServlet {
         public Map<String, String> params;
         public String format;
         public Formatter formatter;        
+        public boolean cookieAuthHappened;
         public boolean basicAuthHappened;
         public String accountPath;
         public String authTokenCookie;
@@ -605,7 +598,15 @@ public class UserServlet extends ZimbraServlet {
         public String getTypesString() {
             return params.get(QP_TYPES);
         }
+        
+        public void setAnonymousRequest() {
+        	authAccount = ACL.ANONYMOUS_ACCT;
+        }
 
+        public boolean isAnonymousRequest() {
+        	return authAccount.equals(ACL.ANONYMOUS_ACCT);
+        }
+        
         public String toString() {
             StringBuffer sb = new StringBuffer();
             sb.append("account(" + accountPath + ")\n");

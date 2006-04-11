@@ -557,6 +557,9 @@ public class Mailbox {
         Account authuser = null;
         if (mCurrentChange.active && mCurrentChange.octxt != null)
             authuser = mCurrentChange.octxt.authuser;
+        // XXX if the current authenticated user is the owner, it will return null.
+        // later on in Folder.checkRights(), the same assumption is used to validate
+        // the access.
         if (authuser != null && authuser.getId().equals(getAccountId()))
             authuser = null;
         return authuser;
@@ -1944,11 +1947,17 @@ public class Mailbox {
         try {
             // tag/folder caches are populated in beginTransaction...
             beginTransaction("getItemList", octxt);
-            if (!hasFullAccess())
-                throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
 
             Folder folder = folderId == -1 ? null : getFolderById(folderId);
 
+            if (folder == null) {
+                if (!hasFullAccess())
+                    throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
+            } else {
+            	if (!folder.canAccess(ACL.RIGHT_READ, getAuthenticatedAccount()))
+                    throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
+            }
+            
             if (type == MailItem.TYPE_TAG) {
                 if (folderId != -1 && folderId != ID_FOLDER_TAGS)
                     return Collections.emptyList();
