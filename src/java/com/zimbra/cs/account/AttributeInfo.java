@@ -99,6 +99,8 @@ public class AttributeInfo {
 
     private long mMin = Long.MIN_VALUE, mMax = Long.MAX_VALUE;
 
+    private int mId;
+    
     static int parseLong(String value, int def) {
         try {
             return Integer.parseInt(value);
@@ -107,7 +109,7 @@ public class AttributeInfo {
         }
     }
 
-    public AttributeInfo (String attrName, AttributeCallback callback, int type, String value, boolean immutable, 
+    public AttributeInfo (String attrName, int id, AttributeCallback callback, int type, String value, boolean immutable, 
             long min, long max)
     {
         mName = attrName;
@@ -117,6 +119,8 @@ public class AttributeInfo {
         mValue = value;
         mMin = min;
         mMax = max;
+        mId = id;
+        
         switch (mType) {
         case TYPE_INTEGER:
             if (mMin < Integer.MIN_VALUE) mMin = Integer.MIN_VALUE;
