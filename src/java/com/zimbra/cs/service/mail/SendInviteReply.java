@@ -51,7 +51,6 @@ import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.RecurId;
-import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender.Verb;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
@@ -71,7 +70,8 @@ public class SendInviteReply extends CalendarRequest {
     protected String[] getProxiedIdPath(Element request)     { return TARGET_APPT_PATH; }
     protected boolean checkMountpointProxy(Element request)  { return false; }
 
-    public Element handle(Element request, Map context) throws ServiceException {
+    public Element handle(Element request, Map<String, Object> context)
+    throws ServiceException {
         ZimbraContext lc = getZimbraContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         Account acct = getRequestedAccount(lc);
@@ -131,13 +131,16 @@ public class SendInviteReply extends CalendarRequest {
             
             
             // see if there is a specific Exception being referenced by this reply...
-            Element exc = request.getOptionalElement("exceptId");
+            Element exc = request.getOptionalElement(MailService.A_APPT_EXCEPTION_ID);
             ParsedDateTime exceptDt = null;
             if (exc != null) {
-                Invite tmp = new Invite(new TimeZoneMap(acct.getTimeZone())); 
-                exceptDt = CalendarUtils.parseDateTime(exc, null, tmp);
+                exceptDt = CalendarUtils.parseDateTime(exc,
+                                                       oldInv.getTimeZoneMap(),
+                                                       oldInv);
+            } else if (oldInv.hasRecurId()) {
+                exceptDt = oldInv.getRecurId().getDt();
             }
-            
+
             if (updateOrg) {
                 Locale locale;
                 Account organizer = oldInv.getOrganizerAccount();

@@ -152,9 +152,6 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
                         if (inst.isException()) {
                             instElt.addAttribute(MailService.A_APPT_IS_EXCEPTION, true);
                             
-                            // testing temp removeme TODO
-                            instElt.addAttribute("x_recurid", inv.getRecurId().toString());
-                            
                             if ((defaultInvite.getMailItemId() != invId.getMsgId()) ||
                                 (defaultInvite.getComponentNum() != invId.getComponentId())) 
                             {
