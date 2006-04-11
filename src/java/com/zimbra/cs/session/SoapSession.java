@@ -292,17 +292,30 @@ public class SoapSession extends Session {
 
                 if (mChanges.created != null && mChanges.created.size() > 0) {
                     Element eCreated = eNotify.addUniqueElement(E_CREATED);
-                    for (Iterator it = mChanges.created.values().iterator(); it.hasNext(); )
-                        ToXML.encodeItem(eCreated, lc, (MailItem) it.next(), ToXML.NOTIFY_FIELDS);
+                    for (Iterator it = mChanges.created.values().iterator(); it.hasNext(); ) {
+                        MailItem mi = (MailItem) it.next();
+                        try {
+                            ToXML.encodeItem(eCreated, lc, mi, ToXML.NOTIFY_FIELDS);
+                        } catch (ServiceException e) {
+                            mLog.warn("error encoding item " + mi.getId(), e);
+                            return ctxt;
+                        }
+                    }
                 }
 
                 if (mChanges.modified != null && mChanges.modified.size() > 0) {
                     Element eModified = eNotify.addUniqueElement(E_MODIFIED);
                     for (Iterator it = mChanges.modified.values().iterator(); it.hasNext(); ) {
                         Change chg = (Change) it.next();
-                        if (chg.why != 0 && chg.what instanceof MailItem)
-                            ToXML.encodeItem(eModified, lc, (MailItem) chg.what, chg.why);
-                        else if (chg.why != 0 && chg.what instanceof Mailbox)
+                        if (chg.why != 0 && chg.what instanceof MailItem) {
+                            MailItem mi = (MailItem) chg.what;
+                            try {
+                                ToXML.encodeItem(eModified, lc, mi, chg.why);
+                            } catch (ServiceException e) {
+                                mLog.warn("error encoding item " + mi.getId(), e);
+                                return ctxt;
+                            }
+                        } else if (chg.why != 0 && chg.what instanceof Mailbox)
                             ToXML.encodeMailbox(eModified, (Mailbox) chg.what, chg.why);
                     }
                 }

@@ -43,11 +43,14 @@ import javax.mail.internet.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.mailbox.*;
+import com.zimbra.cs.mailbox.Appointment.Instance;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mailbox.calendar.InviteInfo;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.ParsedDuration;
 import com.zimbra.cs.mailbox.calendar.Recurrence;
@@ -83,10 +86,14 @@ public class ToXML {
 	// no construction
 	private ToXML()  {}
 
-    public static Element encodeItem(Element parent, ZimbraContext lc, MailItem item) {
+    public static Element encodeItem(Element parent, ZimbraContext lc,
+                                     MailItem item)
+    throws ServiceException {
         return encodeItem(parent, lc, item, NOTIFY_FIELDS);
     }
-    public static Element encodeItem(Element parent, ZimbraContext lc, MailItem item, int fields) {
+    public static Element encodeItem(Element parent, ZimbraContext lc,
+                                     MailItem item, int fields)
+    throws ServiceException {
         if (item instanceof SearchFolder)
             return encodeSearchFolder(parent, lc, (SearchFolder) item, fields);
         else if (item instanceof Folder)
@@ -548,7 +555,9 @@ public class ToXML {
      * 
      * @return
      */
-    public static Element encodeApptSummary(Element parent, ZimbraContext lc, Appointment appt, int fields) {
+    public static Element encodeApptSummary(Element parent, ZimbraContext lc,
+                                            Appointment appt, int fields)
+    throws ServiceException {
         Element apptElt = parent.addElement(MailService.E_APPOINTMENT);
         
         apptElt.addAttribute(MailService.A_UID, appt.getUid());
@@ -853,7 +862,13 @@ public class ToXML {
         }
     }
 
-    public static Element encodeInvite(Element parent, ZimbraContext lc, Appointment apptOrNull, Invite invite, int fields, boolean includeReplies) {
+    public static Element encodeInvite(Element parent,
+                                       ZimbraContext lc,
+                                       Appointment appt,
+                                       Invite invite,
+                                       int fields,
+                                       boolean includeReplies)
+    throws ServiceException {
         boolean allFields = true;
         
         if (fields != NOTIFY_FIELDS) {
@@ -868,16 +883,15 @@ public class ToXML {
         e.addAttribute(MailService.A_APPT_COMPONENT_NUM, invite.getComponentNum());
         
         e.addAttribute(MailService.A_APPT_RSVP, invite.getRsvp());
-        
+
+        Account acct = appt.getMailbox().getAccount();
         if (allFields) {
             try {
                 e.addAttribute("x_uid", invite.getUid());
                 
-                Appointment appt = invite.getAppointment();
-                if (appt != null)
-                    e.addAttribute(MailService.A_APPT_ID, lc.formatItemId(appt));
+                e.addAttribute(MailService.A_APPT_ID, lc.formatItemId(appt));
                 
-                if (invite.thisAcctIsOrganizer(appt.getMailbox().getAccount())) {
+                if (invite.thisAcctIsOrganizer(acct)) {
                     e.addAttribute(MailService.A_APPT_ISORG, true);
                 }
                 
@@ -896,10 +910,17 @@ public class ToXML {
 
             e.addAttribute(MailService.A_APPT_FREEBUSY, invite.getFreeBusy());
 
-            e.addAttribute(MailService.A_APPT_FREEBUSY_ACTUAL, invite.getFreeBusyActual());
+            Instance inst =
+                new Instance(appt,
+                             new InviteInfo(invite),
+                             invite.getStartTime().getUtcTime(),
+                             invite.getEffectiveEndTime().getUtcTime(),
+                             invite.hasRecurId());
+            e.addAttribute(MailService.A_APPT_FREEBUSY_ACTUAL,
+                           appt.getEffectiveFreeBusyActual(acct, invite, inst));
             
-            if (includeReplies && apptOrNull != null) {
-                List /*Appointment.ReplyInfo */ fbas = apptOrNull.getReplyInfo(invite);
+            if (includeReplies) {
+                List /*Appointment.ReplyInfo */ fbas = appt.getReplyInfo(invite);
 
                 Element repliesElt = e.addElement(MailService.A_APPT_REPLIES);
                 for (Iterator iter = fbas.iterator(); iter.hasNext(); ) {
@@ -1039,7 +1060,7 @@ public class ToXML {
                         addedMethod = true;
                     }
                     encodeTimeZoneMap(ie, appt.getTimeZoneMap());
-                    encodeInvite(ie, lc, null, inv, fields, true); // NULL b/c we don't want to encode all of the reply-status here!
+                    encodeInvite(ie, lc, appt, inv, fields, false);
                 } else {
                     // invite not in this appointment anymore
                 }
