@@ -440,7 +440,7 @@ public class FreeBusy {
                     Appointment appt = inst.getAppointment();
                     Invite inv = appt.getInvite(invId);
                     if (!inv.isTransparent()) {
-                        String freeBusy = appt.getEffectiveFreeBusyActual(acct, inv, inst);
+                        String freeBusy = appt.getEffectiveFreeBusyActual(inv, inst);
                         if (!IcalXmlStrMap.FBTYPE_FREE.equals(freeBusy)) {
                             Interval ival = new Interval(inst.getStart(), inst.getEnd(), freeBusy, inst);
                             intervals.addInterval(ival);

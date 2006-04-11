@@ -45,6 +45,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.mailbox.Appointment.Instance;
 import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
@@ -776,7 +777,13 @@ public class Invite {
             }
         }
     }
-    
+
+    public String getEffectivePartStat() throws ServiceException {
+        if (mAppt == null) return getPartStat();
+        Instance inst = Instance.fromInvite(mAppt, this);
+        return mAppt.getEffectivePartStat(this, inst);
+    }
+
     public String getLocation() { return mLocation; }
     public void setLocation(String location) { mLocation = location; }
     public boolean isAllDayEvent() { return ((mFlags & APPT_FLAG_ALLDAY)!=0); }

@@ -388,12 +388,25 @@ public class Appointment extends MailItem {
         private long mEnd; // calculated end time of this instance
 
         private boolean mIsException; // TRUE if this instance is an exception
-                                        // to a recurrance
-        // private InviteMessage.Invite mInvite;
+                                        // to a recurrence
 
         private InviteInfo mInvId;
         
         private Appointment mAppt;
+
+        /**
+         * Create an Instance object using data in an Invite that points to
+         * a specific instance of an Appointment.
+         * @param inv
+         * @return
+         */
+        public static Instance fromInvite(Appointment appt, Invite inv) {
+            return new Instance(appt,
+                                new InviteInfo(inv),
+                                inv.getStartTime().getUtcTime(),
+                                inv.getEffectiveEndTime().getUtcTime(),
+                                inv.hasRecurId());
+        }
 
         public Instance(Appointment appt, InviteInfo invInfo, long _start, long _end,
                 boolean _exception) 
@@ -1208,14 +1221,14 @@ public class Appointment extends MailItem {
      * The FBA for the 10/10 instance will obviously be different than the one for any other instance.  If you
      * add Exceptions into the mix, then there are even more permutations.
      * 
-     * @param acct
      * @param inv
      * @param inst
      * @return
      * @throws ServiceException
      */
-    public String getEffectiveFreeBusyActual(Account acct, Invite inv, Instance inst) throws ServiceException 
+    public String getEffectiveFreeBusyActual(Invite inv, Instance inst) throws ServiceException 
     {
+        Account acct = getMailbox().getAccount();
         ZAttendee at = mReplyList.getEffectiveAttendee(acct, inv, inst);
         if (at == null || inv.isOrganizer(at)) {
             return inv.getFreeBusyActual();
@@ -1232,14 +1245,14 @@ public class Appointment extends MailItem {
      * Returns the effective PartStat given the Invite and Instance.  See the description of
      * getEffectiveFreeBusyActual above for more info
      * 
-     * @param acct
      * @param inv
      * @param inst
      * @return
      * @throws ServiceException
      */
-    public String getEffectivePartStat(Account acct, Invite inv, Instance inst) throws ServiceException
+    public String getEffectivePartStat(Invite inv, Instance inst) throws ServiceException
     {
+        Account acct = getMailbox().getAccount();
         ZAttendee at = mReplyList.getEffectiveAttendee(acct, inv, inst);
         if (at == null || inv.isOrganizer(at)) {
             return inv.getPartStat();
