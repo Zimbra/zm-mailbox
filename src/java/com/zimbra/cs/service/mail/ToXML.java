@@ -50,7 +50,6 @@ import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.Appointment.Instance;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
-import com.zimbra.cs.mailbox.calendar.InviteInfo;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.ParsedDuration;
 import com.zimbra.cs.mailbox.calendar.Recurrence;
@@ -910,14 +909,9 @@ public class ToXML {
 
             e.addAttribute(MailService.A_APPT_FREEBUSY, invite.getFreeBusy());
 
-            Instance inst =
-                new Instance(appt,
-                             new InviteInfo(invite),
-                             invite.getStartTime().getUtcTime(),
-                             invite.getEffectiveEndTime().getUtcTime(),
-                             invite.hasRecurId());
+            Instance inst = Instance.fromInvite(appt, invite);
             e.addAttribute(MailService.A_APPT_FREEBUSY_ACTUAL,
-                           appt.getEffectiveFreeBusyActual(acct, invite, inst));
+                           appt.getEffectiveFreeBusyActual(invite, inst));
             
             if (includeReplies) {
                 List /*Appointment.ReplyInfo */ fbas = appt.getReplyInfo(invite);

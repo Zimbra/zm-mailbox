@@ -113,8 +113,8 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
                 
                 boolean defIsOrg = defaultInvite.thisAcctIsOrganizer(acct);
                 
-                String defaultFba = appointment.getEffectiveFreeBusyActual(acct, defaultInvite, null);
-                String defaultPtSt = appointment.getEffectivePartStat(acct, defaultInvite, null); 
+                String defaultFba = appointment.getEffectiveFreeBusyActual(defaultInvite, null);
+                String defaultPtSt = appointment.getEffectivePartStat(defaultInvite, null); 
                 
                 // add all the instances:
                 boolean someInRange = false;
@@ -140,8 +140,8 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
                         
                         instElt.addAttribute(MailService.A_APPT_START_TIME, instStart);
                         
-                        String instFba = appointment.getEffectiveFreeBusyActual(acct, inv, inst);
-                        String instPtSt = appointment.getEffectivePartStat(acct, inv, inst);
+                        String instFba = appointment.getEffectiveFreeBusyActual(inv, inst);
+                        String instPtSt = appointment.getEffectivePartStat(inv, inst);
                         if (!defaultFba.equals(instFba)) {
                             instElt.addAttribute(MailService.A_APPT_FREEBUSY_ACTUAL, instFba); 
                         }
