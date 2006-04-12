@@ -299,6 +299,11 @@ public class ZimbraPerf {
             } else {
                 writer = new FileWriter(file, true);
             }
+            if (sql.indexOf('"') >= 0) {
+                // Escape quotes for CSV.
+                // replace() does regexp operations, so only use it when necessary.
+                sql.replace("\"", "\"\"");
+            }
             writer.write(TIMESTAMP_FORMATTER.format(new Date()) + "," + durationMillis +
                 ",\"" + sql + "\",\"" + normalized + "\"\n");
             writer.close();
