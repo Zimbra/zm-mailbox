@@ -39,6 +39,7 @@ import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.wiki.Wiki;
 import com.zimbra.cs.wiki.WikiWord;
@@ -46,6 +47,8 @@ import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
 public class SaveDocument extends WikiDocumentHandler {
+    private static final String[] TARGET_DOC_PATH = new String[] { MailService.E_DOC, MailService.A_ID };
+    protected String[] getProxiedIdPath(Element request)     { return TARGET_DOC_PATH; }
 
 	private static class Doc {
 		public byte[] contents;
@@ -120,9 +123,17 @@ public class SaveDocument extends WikiDocumentHandler {
         
         String name = docElem.getAttribute(MailService.A_NAME, doc.name);
         String ctype = docElem.getAttribute(MailService.A_CONTENT_TYPE, doc.contentType);
+        String id = docElem.getAttribute(MailService.A_ID, null);
+        int itemId;
+        if (id == null) {
+        	itemId = 0;
+        } else {
+        	ItemId iid = new ItemId(id, lc);
+        	itemId = iid.getId();
+        }
 
         validateRequest(wiki,
-        				(int)docElem.getAttributeLong(MailService.A_ID, 0),
+        				itemId,
         				docElem.getAttributeLong(MailService.A_VERSION, 0),
         				name);
         

@@ -30,6 +30,7 @@ import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.wiki.Wiki;
 import com.zimbra.cs.wiki.WikiWord;
 import com.zimbra.soap.Element;
@@ -52,9 +53,17 @@ public class SaveWiki extends WikiDocumentHandler {
 
         Element msgElem = request.getElement(MailService.E_WIKIWORD);
         String subject = msgElem.getAttribute(MailService.A_NAME, null);
+        String id = msgElem.getAttribute(MailService.A_ID, null);
+        int itemId;
+        if (id == null) {
+        	itemId = 0;
+        } else {
+        	ItemId iid = new ItemId(id, lc);
+        	itemId = iid.getId();
+        }
 
         validateRequest(wiki,
-        				(int)msgElem.getAttributeLong(MailService.A_ID, 0),
+        				itemId,
         				msgElem.getAttributeLong(MailService.A_VERSION, 0),
         				subject);
         

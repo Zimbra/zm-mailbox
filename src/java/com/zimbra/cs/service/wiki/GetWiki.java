@@ -36,6 +36,7 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.mail.ToXML;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.cs.wiki.Wiki;
@@ -72,8 +73,9 @@ public class GetWiki extends WikiDocumentHandler {
             }
             wikiItem = (WikiItem)doc;
         } else if (id != null) {
+        	ItemId iid = new ItemId(id, lc);
             Mailbox mbox = getRequestedMailbox(lc);
-        	wikiItem = mbox.getWikiById(octxt, Integer.parseInt(id));
+        	wikiItem = mbox.getWikiById(octxt, iid.getId());
         } else {
         	throw ServiceException.FAILURE("missing attribute w or id", null);
         }

@@ -34,6 +34,9 @@ import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraContext;
 
 public abstract class WikiDocumentHandler extends DocumentHandler {
+    private static final String[] TARGET_WIKI_PATH = new String[] { MailService.E_WIKIWORD, MailService.A_ID };
+    protected String[] getProxiedIdPath(Element request)     { return TARGET_WIKI_PATH; }
+    protected boolean checkMountpointProxy(Element request)  { return false; }
 
 	protected String getAuthor(ZimbraContext lc) throws ServiceException {
 		return lc.getAuthtokenAccount().getName();
